@@ -62,7 +62,11 @@ BoxDecoration _barDecoration() {
       topRight: Radius.circular(MinglitRadius.card),
     ),
     border: Border(
-      top: BorderSide(color: MinglitColors.primary.withValues(alpha: 0.1)),
+      top: BorderSide(
+        color: MinglitColors.primary.withValues(
+          alpha: MinglitOpacity.highlight,
+        ),
+      ),
     ),
   );
 }

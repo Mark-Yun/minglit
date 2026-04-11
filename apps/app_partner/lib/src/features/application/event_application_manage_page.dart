@@ -91,28 +91,26 @@ eventApplicationsGroupedProvider = FutureProvider.family
     .autoDispose<
       Map<Event, List<EventApplication>>,
       ({String partnerId, List<String> statusFilter})
-    >(
-      (ref, params) async {
-        final eventRepo = ref.read(eventRepositoryProvider);
+    >((ref, params) async {
+      final eventRepo = ref.read(eventRepositoryProvider);
 
-        // Get all upcoming events for this partner
-        final events = await eventRepo.getUpcomingEvents(params.partnerId);
+      // Get all upcoming events for this partner
+      final events = await eventRepo.getUpcomingEvents(params.partnerId);
 
-        final grouped = <Event, List<EventApplication>>{};
+      final grouped = <Event, List<EventApplication>>{};
 
-        for (final event in events) {
-          final apps = await eventRepo.getApplicationsByEventId(event.id);
-          final filtered = apps
-              .where((a) => params.statusFilter.contains(a.status))
-              .toList();
-          if (filtered.isNotEmpty) {
-            grouped[event] = filtered;
-          }
+      for (final event in events) {
+        final apps = await eventRepo.getApplicationsByEventId(event.id);
+        final filtered = apps
+            .where((a) => params.statusFilter.contains(a.status))
+            .toList();
+        if (filtered.isNotEmpty) {
+          grouped[event] = filtered;
         }
+      }
 
-        return grouped;
-      },
-    );
+      return grouped;
+    });
 
 class _ApplicationTab extends ConsumerWidget {
   const _ApplicationTab({
@@ -128,9 +126,10 @@ class _ApplicationTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final groupedAsync = ref.watch(
-      eventApplicationsGroupedProvider(
-        (partnerId: partnerId, statusFilter: statusFilter),
-      ),
+      eventApplicationsGroupedProvider((
+        partnerId: partnerId,
+        statusFilter: statusFilter,
+      )),
     );
 
     return groupedAsync.when(
@@ -143,9 +142,10 @@ class _ApplicationTab extends ConsumerWidget {
             const SizedBox(height: MinglitSpacing.small),
             FilledButton(
               onPressed: () => ref.invalidate(
-                eventApplicationsGroupedProvider(
-                  (partnerId: partnerId, statusFilter: statusFilter),
-                ),
+                eventApplicationsGroupedProvider((
+                  partnerId: partnerId,
+                  statusFilter: statusFilter,
+                )),
               ),
               child: const Text('다시 시도'),
             ),
@@ -185,9 +185,10 @@ class _ApplicationTab extends ConsumerWidget {
               child: RefreshIndicator(
                 onRefresh: () async {
                   ref.invalidate(
-                    eventApplicationsGroupedProvider(
-                      (partnerId: partnerId, statusFilter: statusFilter),
-                    ),
+                    eventApplicationsGroupedProvider((
+                      partnerId: partnerId,
+                      statusFilter: statusFilter,
+                    )),
                   );
                 },
                 child: ListView.builder(
@@ -238,16 +239,16 @@ class _ApplicationTab extends ConsumerWidget {
       final eventRepo = ref.read(eventRepositoryProvider);
       await eventRepo.approveApplication(applicationId: appId);
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('승인되었습니다')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('승인되었습니다')));
         ref.invalidate(eventApplicationsGroupedProvider);
       }
     } on Exception catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('승인 실패: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('승인 실패: $e')));
       }
     }
   }
@@ -264,9 +265,7 @@ class _ApplicationTab extends ConsumerWidget {
         title: const Text('신청 거절'),
         content: TextField(
           controller: reasonController,
-          decoration: const InputDecoration(
-            hintText: '거절 사유를 입력하세요',
-          ),
+          decoration: const InputDecoration(hintText: '거절 사유를 입력하세요'),
           maxLines: 3,
         ),
         actions: [
@@ -293,16 +292,16 @@ class _ApplicationTab extends ConsumerWidget {
         reason: reason.trim(),
       );
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('거절되었습니다')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('거절되었습니다')));
         ref.invalidate(eventApplicationsGroupedProvider);
       }
     } on Exception catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('거절 실패: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('거절 실패: $e')));
       }
     }
   }
@@ -345,15 +344,13 @@ class _ApplicationTab extends ConsumerWidget {
     }
     if (context.mounted) {
       if (failures.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$total건 승인 완료')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$total건 승인 완료')));
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              '일부 승인 실패 (${failures.length}건): ${failures.first}',
-            ),
+            content: Text('일부 승인 실패 (${failures.length}건): ${failures.first}'),
           ),
         );
       }
@@ -393,7 +390,7 @@ class _EventGroupSection extends StatelessWidget {
             vertical: MinglitSpacing.sm,
           ),
           color: theme.colorScheme.surfaceContainerHighest.withValues(
-            alpha: 0.3,
+            alpha: MinglitOpacity.muted,
           ),
           child: Row(
             children: [
@@ -476,7 +473,7 @@ class _ApplicationItem extends StatelessWidget {
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(
-            color: theme.dividerColor.withValues(alpha: 0.3),
+            color: theme.dividerColor.withValues(alpha: MinglitOpacity.muted),
           ),
         ),
       ),
@@ -485,7 +482,9 @@ class _ApplicationItem extends StatelessWidget {
           // Avatar
           CircleAvatar(
             radius: 20,
-            backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+            backgroundColor: theme.colorScheme.primary.withValues(
+              alpha: MinglitOpacity.highlight,
+            ),
             child: Text(
               name.isNotEmpty ? name[0] : '?',
               style: theme.textTheme.titleSmall?.copyWith(
@@ -522,9 +521,7 @@ class _ApplicationItem extends StatelessWidget {
               tooltip: '거절',
               style: IconButton.styleFrom(
                 shape: CircleBorder(
-                  side: BorderSide(
-                    color: theme.dividerColor,
-                  ),
+                  side: BorderSide(color: theme.dividerColor),
                 ),
                 minimumSize: const Size(36, 36),
               ),
@@ -577,7 +574,7 @@ class _StatusBadge extends StatelessWidget {
         vertical: MinglitSpacing.xsmall,
       ),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withValues(alpha: MinglitOpacity.highlight),
         borderRadius: BorderRadius.circular(MinglitRadius.small),
       ),
       child: Text(

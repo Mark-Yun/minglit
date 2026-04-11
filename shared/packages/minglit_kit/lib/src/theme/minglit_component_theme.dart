@@ -12,7 +12,7 @@ class _MinglitComponentThemes {
       color: c.textPrimary,
       fontSize: 18,
       fontWeight: FontWeight.w600,
-      fontFamily: 'NotoSansKR',
+      fontFamily: 'Pretendard',
     ),
   );
 
@@ -116,11 +116,9 @@ class _MinglitComponentThemes {
       }
       return null;
     }),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(4),
-    ),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
     side: BorderSide(
-      color: c.textSecondary.withValues(alpha: 0.5),
+      color: c.textSecondary.withValues(alpha: MinglitOpacity.strong),
       width: 1.5,
     ),
   );
@@ -135,13 +133,13 @@ class _MinglitComponentThemes {
       // ignore: minglit_no_hardcoded_text_style -- theme definition
       fontSize: 14,
       fontWeight: FontWeight.bold,
-      fontFamily: 'NotoSansKR',
+      fontFamily: 'Pretendard',
     ),
     unselectedLabelStyle: const TextStyle(
       // ignore: minglit_no_hardcoded_text_style -- theme definition
       fontSize: 14,
       fontWeight: FontWeight.w500,
-      fontFamily: 'NotoSansKR',
+      fontFamily: 'Pretendard',
     ),
   );
 

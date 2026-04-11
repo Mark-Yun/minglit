@@ -112,7 +112,9 @@ class _RefundPolicySection extends ConsumerWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(MinglitSpacing.small),
       decoration: BoxDecoration(
-        color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
+        color: theme.colorScheme.primaryContainer.withValues(
+          alpha: MinglitOpacity.muted,
+        ),
         borderRadius: BorderRadius.circular(MinglitRadius.card),
       ),
       child: Row(
@@ -159,7 +161,9 @@ class _RefundPolicySection extends ConsumerWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(MinglitSpacing.small),
       decoration: BoxDecoration(
-        color: theme.colorScheme.secondaryContainer.withValues(alpha: 0.3),
+        color: theme.colorScheme.secondaryContainer.withValues(
+          alpha: MinglitOpacity.muted,
+        ),
         borderRadius: BorderRadius.circular(MinglitRadius.card),
       ),
       child: Row(
@@ -225,7 +229,8 @@ class _RefundPolicySection extends ConsumerWidget {
                 const SizedBox(height: MinglitSpacing.small),
                 _buildPolicyRow(context, '이벤트 시작 $cutoffDays일 전까지', '전액 환불'),
                 const SizedBox(height: MinglitSpacing.small),
-                _buildPolicyRow(context, '그 외', '환불 불가', isRefundable: false),
+                // Fix #1140: "환불 불가" → "고객센터 문의"로 변경 — 대안 경로 제공
+                _buildPolicyRow(context, '그 외', '고객센터 문의', isRefundable: false),
                 const SizedBox(height: MinglitSpacing.medium),
                 Text(
                   '자세한 내용은 고객센터로 문의해주세요.',

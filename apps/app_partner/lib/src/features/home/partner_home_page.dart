@@ -76,10 +76,11 @@ class PartnerHomePage extends ConsumerWidget {
       body: MinglitAsyncValueWidget(
         value: state.status,
         data: (_) {
-          // Onboarding: show step guide if no events yet
-          final hasEvents = state.upcomingEvents.isNotEmpty;
+          // Onboarding: show step guide until partner has created any event.
+          // Fix #1215: use hasAnyEvents (all-time) instead of upcomingEvents
+          // to avoid re-showing onboarding after all events end or are >7d out.
           final hasParties = state.activeParties.isNotEmpty;
-          final showOnboarding = !hasEvents;
+          final showOnboarding = !state.hasAnyEvents;
 
           return RefreshIndicator(
             onRefresh: () => ref

@@ -48,6 +48,9 @@ void main() {
       () => mockEventRepo.getClosingSoonEvents(any()),
     ).thenAnswer((_) async => []);
     when(
+      () => mockEventRepo.getHasAnyEvents(any()),
+    ).thenAnswer((_) async => true);
+    when(
       () => mockPartyRepo.getPartiesByPartnerId(any()),
     ).thenAnswer((_) async => [_testParty]);
   });
@@ -114,7 +117,51 @@ void main() {
       expect(state.pendingReviewCount, 3);
       expect(state.upcomingEvents, contains(_testEvent));
       expect(state.activeParties, contains(_testParty));
+      expect(state.hasAnyEvents, isTrue);
     });
+
+    // Regression test for #1215: partner with past events (no upcoming events)
+    // must not see the onboarding guide.
+    test(
+      'hasAnyEvents is true even when upcomingEvents is empty',
+      () async {
+        // Simulate partner whose events are all in the past (>7 days ago).
+        when(
+          () => mockEventRepo.getUpcomingEvents(any()),
+        ).thenAnswer((_) async => []);
+        when(
+          () => mockEventRepo.getHasAnyEvents(any()),
+        ).thenAnswer((_) async => true);
+
+        final container = await buildAndPump();
+        final state = container.read(partnerDashboardControllerProvider);
+
+        expect(state.upcomingEvents, isEmpty);
+        expect(
+          state.hasAnyEvents,
+          isTrue,
+          reason: 'Partner with past events should not see onboarding (#1215)',
+        );
+      },
+    );
+
+    test(
+      'hasAnyEvents is false for brand-new partner with no events',
+      () async {
+        when(
+          () => mockEventRepo.getUpcomingEvents(any()),
+        ).thenAnswer((_) async => []);
+        when(
+          () => mockEventRepo.getHasAnyEvents(any()),
+        ).thenAnswer((_) async => false);
+
+        final container = await buildAndPump();
+        final state = container.read(partnerDashboardControllerProvider);
+
+        expect(state.upcomingEvents, isEmpty);
+        expect(state.hasAnyEvents, isFalse);
+      },
+    );
 
     test('loadDashboardData sets empty state when partner is null', () async {
       final container = createContainer(
@@ -138,6 +185,7 @@ void main() {
       expect(state.pendingReviewCount, 0);
       expect(state.upcomingEvents, isEmpty);
       expect(state.activeParties, isEmpty);
+      expect(state.hasAnyEvents, isFalse);
     });
 
     test('loadDashboardData sets error state on exception', () async {

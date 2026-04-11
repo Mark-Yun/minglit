@@ -4,14 +4,15 @@ import 'package:minglit_kit/src/data/models/party.dart';
 import 'package:minglit_kit/src/data/models/party_entry_group.dart';
 import 'package:minglit_kit/src/data/models/ticket.dart';
 import 'package:minglit_kit/src/data/models/ticket_template.dart';
+import 'package:minglit_kit/src/utils/image_utils.dart';
 import 'package:minglit_kit/src/utils/log.dart';
 import 'package:path/path.dart' as p;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-part 'party_repository.g.dart';
 part 'party_event_repository.dart';
 part 'party_matching_repository.dart';
+part 'party_repository.g.dart';
 
 /// Provider for PartyRepository.
 @Riverpod(keepAlive: true)
@@ -78,7 +79,9 @@ abstract class _SupabasePartyContextBase implements _SupabasePartyContext {
       // same timestamp
       final random = DateTime.now().microsecond;
       final path = '$partnerId/${timestamp}_$random$extension';
-      final bytes = await file.readAsBytes();
+      final rawBytes = await file.readAsBytes();
+      // Fix #1230: GPS/EXIF 메타데이터 유출 방지 — 업로드 전 재인코딩으로 완전 제거
+      final bytes = stripExifAndReencode(rawBytes, filename: file.name);
 
       await supabaseClient.storage
           .from('party-assets')
@@ -109,12 +112,13 @@ abstract class _SupabasePartyContextBase implements _SupabasePartyContext {
   }) async {
     Log.d('createParty called | partnerId: ${party.partnerId}');
     try {
-      final partyJson = party.toDbJson()..addAll(extraFields ?? {});
-      // Remove partner_id — server injects it from JWT membership
-      partyJson.remove('partner_id');
-      // Remove location — handled separately
-      partyJson.remove('location');
-      partyJson.remove('location_id');
+      final partyJson = party.toDbJson()
+        ..addAll(extraFields ?? {})
+        // Remove partner_id — server injects it from JWT membership
+        ..remove('partner_id')
+        // Remove location — handled separately
+        ..remove('location')
+        ..remove('location_id');
 
       final body = <String, dynamic>{
         'action': 'create',
@@ -210,7 +214,10 @@ abstract class _SupabasePartyContextBase implements _SupabasePartyContext {
 
   // Fix #316: updateParty via EF (partner-manage-party)
   /// Updates an existing party via Edge Function.
-  Future<Party> updateParty(Party party) async {
+  ///
+  /// [tagIds] — 태그 ID 목록. 제공 시 EF에서 party_tags를 전체 교체한다.
+  /// 빈 리스트를 전달하면 기존 태그를 모두 제거한다.
+  Future<Party> updateParty(Party party, {List<String>? tagIds}) async {
     Log.d('updateParty called | id: ${party.id}');
     try {
       final partyJson = party.toDbJson();
@@ -218,13 +225,17 @@ abstract class _SupabasePartyContextBase implements _SupabasePartyContext {
       partyJson.remove('location');
       partyJson.remove('location_id');
 
+      final body = <String, dynamic>{
+        'action': 'update',
+        'party_id': party.id,
+        'party': partyJson,
+        // Fix #1136: tag_ids는 null일 때 키 자체를 제외 — undefined와 null 구분을 위해
+        'tag_ids': ?tagIds,
+      };
+
       final response = await supabaseClient.functions.invoke(
         'partner-manage-party',
-        body: {
-          'action': 'update',
-          'party_id': party.id,
-          'party': partyJson,
-        },
+        body: body,
       );
 
       if (response.status != 200) {

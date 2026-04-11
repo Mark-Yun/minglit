@@ -49,10 +49,10 @@ class MinglitGlobalLoadingOverlay extends ConsumerWidget {
           if (isLoading)
             Positioned.fill(
               child: ColoredBox(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.54),
-                child: const ModalBarrier(
-                  dismissible: false,
+                color: theme.colorScheme.onSurface.withValues(
+                  alpha: MinglitOpacity.mediumEmphasis,
                 ),
+                child: const ModalBarrier(dismissible: false),
               ),
             ),
           if (isLoading)
@@ -75,7 +75,7 @@ class MinglitGlobalLoadingOverlay extends ConsumerWidget {
                       style: TextButton.styleFrom(
                         foregroundColor: theme.colorScheme.surface,
                         backgroundColor: theme.colorScheme.surface.withValues(
-                          alpha: 0.2,
+                          alpha: MinglitOpacity.subtle,
                         ),
                       ),
                       child: const Text('취소'),

@@ -85,7 +85,9 @@ class _DragHandle extends StatelessWidget {
       width: 40,
       height: 4,
       decoration: BoxDecoration(
-        color: MinglitColors.textSecondary.withValues(alpha: 0.3),
+        color: MinglitColors.textSecondary.withValues(
+          alpha: MinglitOpacity.muted,
+        ),
         borderRadius: BorderRadius.circular(2),
       ),
     );

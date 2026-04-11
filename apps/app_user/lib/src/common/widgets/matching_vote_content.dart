@@ -39,11 +39,7 @@ class MatchingVoteContent extends ConsumerWidget {
     // Listen to vote action state
     ref.listen(matchingVoteControllerProvider, (_, state) {
       if (state.hasError) {
-        handleMinglitError(
-          context,
-          state.error!,
-          state.stackTrace,
-        );
+        handleMinglitError(context, state.error!, state.stackTrace);
       } else if (!state.isLoading && state.hasValue) {
         // Void async value technically has null value,
         // but let's check !hasError
@@ -60,7 +56,7 @@ class MatchingVoteContent extends ConsumerWidget {
             if (matches.isEmpty) return const SizedBox.shrink();
             return ColoredBox(
               color: theme.colorScheme.secondaryContainer.withValues(
-                alpha: 0.2,
+                alpha: MinglitOpacity.subtle,
               ),
               child: Padding(
                 padding: const EdgeInsets.all(MinglitSpacing.medium),
@@ -233,7 +229,9 @@ class MatchingVoteContent extends ConsumerWidget {
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(MinglitRadius.small),
         border: Border.all(
-          color: theme.colorScheme.error.withValues(alpha: 0.5),
+          color: theme.colorScheme.error.withValues(
+            alpha: MinglitOpacity.strong,
+          ),
         ),
       ),
       child: Column(
@@ -300,7 +298,9 @@ class MatchingVoteContent extends ConsumerWidget {
           if (isVoted)
             Positioned.fill(
               child: ColoredBox(
-                color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                color: theme.colorScheme.primary.withValues(
+                  alpha: MinglitOpacity.subtle,
+                ),
                 child: Center(
                   child: Icon(
                     Icons.check_circle,
@@ -322,7 +322,9 @@ class MatchingVoteContent extends ConsumerWidget {
                   begin: Alignment.bottomCenter,
                   end: Alignment.topCenter,
                   colors: [
-                    MinglitColors.textPrimary.withValues(alpha: 0.87),
+                    MinglitColors.textPrimary.withValues(
+                      alpha: MinglitOpacity.highEmphasis,
+                    ),
                     MinglitColors.transparent,
                   ],
                 ),
@@ -385,10 +387,7 @@ class MatchingVoteContent extends ConsumerWidget {
     if (confirmed) {
       await ref
           .read(matchingVoteControllerProvider.notifier)
-          .vote(
-            eventId: eventId,
-            candidateId: candidate.id,
-          );
+          .vote(eventId: eventId, candidateId: candidate.id);
     }
   }
 }

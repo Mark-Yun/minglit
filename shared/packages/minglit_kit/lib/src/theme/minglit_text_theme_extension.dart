@@ -65,7 +65,7 @@ class MinglitTextThemeExtension
       fontSize: 18,
       fontWeight: FontWeight.w600,
       color: MinglitColors.textPrimary,
-      fontFamily: 'NotoSansKR',
+      fontFamily: 'Pretendard',
     ),
     captionTiny: TextStyle(
       fontSize: 10,
@@ -86,7 +86,7 @@ class MinglitTextThemeExtension
       fontSize: 18,
       fontWeight: FontWeight.w600,
       color: MinglitColorsDark.textPrimary,
-      fontFamily: 'NotoSansKR',
+      fontFamily: 'Pretendard',
     ),
     captionTiny: TextStyle(
       fontSize: 10,

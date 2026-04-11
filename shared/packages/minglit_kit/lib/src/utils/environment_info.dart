@@ -117,7 +117,8 @@ Future<String?> _getScreenSize() async {
 Future<String?> _getNetworkStatus() async {
   try {
     final result = await Connectivity().checkConnectivity();
-    return result.first.name;
+    // Fix #1115: firstOrNull prevents StateError when checkConnectivity returns empty list
+    return result.firstOrNull?.name;
   } on Exception {
     return null;
   }

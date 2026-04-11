@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:minglit_kit/src/data/models/partner.dart';
 import 'package:minglit_kit/src/data/models/party_entry_group.dart';
+import 'package:minglit_kit/src/data/models/tag.dart';
 import 'package:minglit_kit/src/data/models/ticket_template.dart';
 
 part 'party.freezed.dart';
@@ -79,6 +80,8 @@ abstract class Party with _$Party {
     @JsonKey(includeToJson: false) Partner? partner,
     @JsonKey(name: 'entry_group_templates', includeToJson: false)
     List<EntryGroupTemplate>? entryGroups,
+    // Tag Discovery (#1094-1096)
+    @JsonKey(includeToJson: false) List<Tag>? tags,
   }) = _Party;
   const Party._();
 

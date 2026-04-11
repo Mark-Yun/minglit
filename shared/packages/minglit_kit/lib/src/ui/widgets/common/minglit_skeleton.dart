@@ -52,7 +52,9 @@ class _MinglitSkeletonState extends State<MinglitSkeleton>
     _colorAnimation = ColorTween(
       begin: isDark ? MinglitColorsDark.surface : MinglitColors.surface,
       end: (isDark ? MinglitColorsDark.textPrimary : MinglitColors.textPrimary)
-          .withOpacity(isDark ? 0.3 : 0.1),
+          .withValues(
+            alpha: isDark ? MinglitOpacity.muted : MinglitOpacity.highlight,
+          ),
     ).animate(_controller);
   }
 

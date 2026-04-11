@@ -62,7 +62,7 @@ class MinglitTheme {
   static ThemeData get materialTheme {
     return ThemeData(
       useMaterial3: true,
-      fontFamily: 'NotoSansKR',
+      fontFamily: 'Pretendard',
       colorScheme: ColorScheme.fromSeed(
         seedColor: MinglitColors.primary,
         primary: MinglitColors.primary,
@@ -73,7 +73,7 @@ class MinglitTheme {
         onSurfaceVariant: MinglitColors.textSecondary,
       ),
       scaffoldBackgroundColor: MinglitColors.surface,
-      // Layer 1: 텍스트 통일성 (Using local fontFamily 'NotoSansKR')
+      // Layer 1: 텍스트 통일성 (Using local fontFamily 'Pretendard')
       textTheme: const TextTheme(
         displayLarge: TextStyle(
           // ignore: minglit_no_hardcoded_text_style -- theme definition
@@ -162,7 +162,10 @@ class MinglitTheme {
       // Fix #474: ThemeExtension 등록
       extensions: const [MinglitTextThemeExtension.light],
       // Layer 2: 컴포넌트 테마 (see minglit_component_theme.dart)
-      appBarTheme: _MinglitComponentThemes.appBar(MinglitColorSet.light),
+      // Fix #1218: AppBar 배경색을 scaffold와 통일 (background → surface)
+      appBarTheme: _MinglitComponentThemes.appBar(
+        MinglitColorSet.light,
+      ).copyWith(backgroundColor: MinglitColors.surface),
       elevatedButtonTheme: _MinglitComponentThemes.elevatedButton(
         MinglitColorSet.light,
       ),
@@ -315,7 +318,7 @@ class MinglitTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
-      fontFamily: 'NotoSansKR',
+      fontFamily: 'Pretendard',
       colorScheme: ColorScheme.fromSeed(
         seedColor: MinglitColorsDark.primary,
         brightness: Brightness.dark,

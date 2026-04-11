@@ -3,7 +3,7 @@ import { requireEnv } from '../_shared/env_keystore.ts'
 import { runWorkerLoop } from './loop_worker.ts'
 import { WorkerUtils } from '../_shared/worker_utils.ts'
 import { isoToUnix } from '../_shared/temporal_utils.ts'
-import * as jose from 'https://deno.land/x/jose@v4.14.4/index.ts'
+import * as jose from 'jose'
 import { initSentry, withHandler, log } from '../_shared/logger.ts'
 
 const FN = "notification-worker";

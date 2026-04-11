@@ -99,7 +99,7 @@ class MinglitLoginScreen extends ConsumerWidget {
                 label: 'Google로 시작하기',
                 backgroundColor: MinglitColors.background,
                 foregroundColor: MinglitColors.textPrimary.withValues(
-                  alpha: 0.87,
+                  alpha: MinglitOpacity.highEmphasis,
                 ),
                 borderColor: theme.colorScheme.outlineVariant,
               ),
@@ -120,7 +120,7 @@ class MinglitLoginScreen extends ConsumerWidget {
                 label: 'Kakao로 시작하기',
                 backgroundColor: MinglitColors.warning,
                 foregroundColor: MinglitColors.textPrimary.withValues(
-                  alpha: 0.87,
+                  alpha: MinglitOpacity.highEmphasis,
                 ),
               ),
               if (!isPartner && onVerifyIdentity != null) ...[
@@ -267,9 +267,9 @@ class _LoginButton extends StatelessWidget {
             const SizedBox(width: MinglitSpacing.small),
             Text(
               label,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                color: foregroundColor,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(color: foregroundColor),
             ),
           ],
         ),

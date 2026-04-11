@@ -115,6 +115,30 @@ runs:
       run: |
         sed -i '' "s/PRODUCT_BUNDLE_IDENTIFIER = ${{ inputs.bundle-id }};/PRODUCT_BUNDLE_IDENTIFIER = ${{ inputs.bundle-id }}.dev;/g" ios/Runner.xcodeproj/project.pbxproj
 
+    # Fix #1249: dev 빌드에서만 minglit-dev:// URL scheme 추가 (보안 요구사항)
+    # prod Info.plist에는 이 scheme이 존재하지 않음을 보장
+    # app_user 전용 — partner 앱에는 minglit-dev:// scheme 불필요
+    - name: Add Dev URL Scheme
+      if: ${{ inputs.git-ref == 'refs/heads/dev' && inputs.app-directory == 'apps/app_user' }}
+      shell: bash
+      working-directory: ./${{ inputs.app-directory }}
+      run: |
+        PLIST="ios/Runner/Info.plist"
+        # Fix #1249: 멱등성 보장 — minglit-dev 가 이미 존재하면 스킵
+        if /usr/libexec/PlistBuddy -c "Print :CFBundleURLTypes" "$PLIST" | grep -q "minglit-dev"; then
+          echo "minglit-dev scheme already present — skipping"
+          exit 0
+        fi
+        # 배열 끝에 추가 (인덱스 하드코딩 대신 현재 크기 사용)
+        IDX=$(/usr/libexec/PlistBuddy -c "Print :CFBundleURLTypes" "$PLIST" | grep -c "Dict {")
+        /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:${IDX} dict" "$PLIST"
+        /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:${IDX}:CFBundleTypeRole string Editor" "$PLIST"
+        /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:${IDX}:CFBundleURLSchemes array" "$PLIST"
+        /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:${IDX}:CFBundleURLSchemes:0 string minglit-dev" "$PLIST"
+        # Note: feature 브랜치 빌드에는 이 scheme을 포함하지 않는다.
+        # dev flavor 딥링크는 dev 브랜치 CI 빌드에서만 필요하며,
+        # 로컬 개발은 adb/flutter run으로 직접 접근 가능하다.
+
     - name: Generate keychain password
       shell: bash
       working-directory: ./${{ inputs.app-directory }}

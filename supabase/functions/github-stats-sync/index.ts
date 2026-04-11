@@ -7,6 +7,7 @@ import {
   errorResponse,
   successResponse,
 } from "../_shared/response_utils.ts";
+import { requireServiceRole } from "../_shared/auth_utils.ts";
 
 const REPO = "Mark-Yun/minglit";
 const GITHUB_API = "https://api.github.com";
@@ -22,14 +23,11 @@ interface GitHubItem {
 Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return corsResponse();
 
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   const githubToken = Deno.env.get("GITHUB_ACCESS_TOKEN");
 
-  // Fix #380: service role key 검증 추가 — verify_jwt=false이므로 자체 인증 필수
-  const authHeader = req.headers.get("Authorization") ?? "";
-  if (!serviceRoleKey || authHeader !== `Bearer ${serviceRoleKey}`) {
-    return errorResponse("Unauthorized", 401);
-  }
+  // Fix #1121: requireServiceRole로 통일 (auth_utils 마이그레이션)
+  const authResult = requireServiceRole(req);
+  if (authResult !== true) return authResult;
 
   const supabase = createServiceClient();
 

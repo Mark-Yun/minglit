@@ -5,11 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 class DeletionVerifyPage extends ConsumerStatefulWidget {
-  const DeletionVerifyPage({
-    this.reasonCode,
-    this.reasonText,
-    super.key,
-  });
+  const DeletionVerifyPage({this.reasonCode, this.reasonText, super.key});
 
   final String? reasonCode;
   final String? reasonText;
@@ -179,9 +175,7 @@ class _DeletionVerifyPageState extends ConsumerState<DeletionVerifyPage> {
 }
 
 class _PartnerDeletionGuardCard extends ConsumerWidget {
-  const _PartnerDeletionGuardCard({
-    required this.guardState,
-  });
+  const _PartnerDeletionGuardCard({required this.guardState});
 
   final AsyncValue<PartnerAccountDeletionGuard> guardState;
 
@@ -203,7 +197,7 @@ class _PartnerDeletionGuardCard extends ConsumerWidget {
         ),
       ),
       error: (error, stackTrace) => Card(
-        color: MinglitColors.error.withValues(alpha: 0.08),
+        color: MinglitColors.error.withValues(alpha: MinglitOpacity.activeChip),
         child: const ListTile(
           leading: Icon(Icons.error_outline, color: MinglitColors.error),
           title: Text('탈퇴 가능 여부를 확인하지 못했어요'),
@@ -260,7 +254,9 @@ class _PartnerDeletionGuardCard extends ConsumerWidget {
         }
 
         return Card(
-          color: MinglitColors.error.withValues(alpha: 0.08),
+          color: MinglitColors.error.withValues(
+            alpha: MinglitOpacity.activeChip,
+          ),
           child: Padding(
             padding: const EdgeInsets.all(MinglitSpacing.medium),
             child: Column(

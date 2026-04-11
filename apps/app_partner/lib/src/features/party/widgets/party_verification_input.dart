@@ -61,7 +61,7 @@ class PartyVerificationInput extends StatelessWidget {
                 duration: MinglitAnimation.fast,
                 decoration: BoxDecoration(
                   color: colorScheme.tertiary.withValues(
-                    alpha: 0.08,
+                    alpha: MinglitOpacity.activeChip,
                   ), // Lime/Mint Background
                   borderRadius: BorderRadius.circular(MinglitRadius.card),
                   // Border is explicitly removed
@@ -79,7 +79,9 @@ class PartyVerificationInput extends StatelessWidget {
                             MinglitSpacing.small + MinglitSpacing.xxsmall,
                           ), // 10
                           decoration: BoxDecoration(
-                            color: colorScheme.tertiary.withValues(alpha: 0.15),
+                            color: colorScheme.tertiary.withValues(
+                              alpha: MinglitOpacity.placeholder,
+                            ),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
@@ -107,7 +109,9 @@ class PartyVerificationInput extends StatelessWidget {
                                 '원하는 참가 자격이 없다면 직접 만들어보세요.',
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   color: colorScheme.onSurfaceVariant
-                                      .withValues(alpha: 0.8),
+                                      .withValues(
+                                        alpha: MinglitOpacity.scrimLight,
+                                      ),
                                 ),
                               ),
                             ],
@@ -119,7 +123,9 @@ class PartyVerificationInput extends StatelessWidget {
                         // Right Indicator
                         Icon(
                           Icons.chevron_right,
-                          color: colorScheme.tertiary.withValues(alpha: 0.6),
+                          color: colorScheme.tertiary.withValues(
+                            alpha: MinglitOpacity.separator,
+                          ),
                           size: MinglitIconSize.large,
                         ),
                       ],

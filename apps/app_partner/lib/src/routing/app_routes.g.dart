@@ -311,6 +311,10 @@ RouteBase get $partnerShellRoute => StatefulShellRouteData.$route(
                 ),
               ],
             ),
+            GoRouteData.$route(
+              path: 'account',
+              factory: $PartnerAccountManagementRoute._fromState,
+            ),
           ],
         ),
       ],
@@ -976,6 +980,27 @@ mixin $MemberPermissionRoute on GoRouteData {
   String get location => GoRouteData.$location(
     '/more/partners/${Uri.encodeComponent(_self.partnerId)}/members/${Uri.encodeComponent(_self.targetUserId)}/permission',
   );
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+mixin $PartnerAccountManagementRoute on GoRouteData {
+  static PartnerAccountManagementRoute _fromState(GoRouterState state) =>
+      const PartnerAccountManagementRoute();
+
+  @override
+  String get location => GoRouteData.$location('/more/account');
 
   @override
   void go(BuildContext context) => context.go(location);

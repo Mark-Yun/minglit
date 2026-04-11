@@ -241,6 +241,29 @@ void main() {
     expect(find.text('회원 탈퇴 시작하기'), findsOneWidget);
   });
 
+  // Fix #1157: 관심 태그 보유기간·파기 정책이 보관 기간 섹션에 표시되는지 검증
+  testWidgets('개인정보 수집·이용 상세에서 관심 태그 파기 정책이 표시된다', (tester) async {
+    await pumpPage(tester);
+
+    // '개인정보 수집·이용'은 동의 현황 섹션(최상단)에 위치하므로 별도 스크롤 불필요.
+    // 스크롤 후 off-screen 위젯은 hit-test 불가 → 직접 tap.
+    await tester.tap(find.widgetWithText(ListTile, '개인정보 수집·이용'));
+    await tester.pumpAndSettle();
+
+    // DraggableScrollableSheet 내부의 ListView를 아래로 스크롤하여 보관 기간 섹션 확보.
+    // 시트 초기 높이(82%)에서 보관 기간 섹션이 뷰포트 밖에 있을 수 있으므로 스크롤 필요.
+    await tester.drag(find.byType(ListView).last, const Offset(0, -300));
+    await tester.pumpAndSettle();
+
+    // 관심 태그 파기 정책 문구가 존재하는지 확인 (bullet prefix '• ' 포함)
+    expect(
+      find.text(
+        '• 관심 태그, 이용 기록, 기기 정보: 회원 탈퇴 시 즉시 파기합니다.',
+      ),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('동의 정보 로드 실패 시 에러 메시지가 표시된다', (tester) async {
     when(
       () => mockRepository.getConsents('user_1'),

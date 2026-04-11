@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>밍글릿 — 파트너 상세 이벤트 카드 레이아웃 개선</title>
+<style>
+  /* ===== Minglit Design Tokens ===== */
+  :root {
+    --color-background: #FFFFFF;
+    --color-primary: #9900FF;
+    --color-primary-light: rgba(153, 0, 255, 0.08);
+    --color-secondary: #FF9900;
+    --color-surface: #F9FAFB;
+    --color-text-primary: #111827;
+    --color-text-secondary: #4B5563;
+    --color-text-tertiary: #9CA3AF;
+    --color-tertiary: #48C9B0;
+    --color-divider: #E5E7EB;
+    --color-error: #EF4444;
+
+    --sp-xxsmall: 2px;
+    --sp-xsmall: 4px;
+    --sp-small: 8px;
+    --sp-sm: 12px;
+    --sp-medium: 16px;
+    --sp-large: 24px;
+    --sp-xlarge: 32px;
+    --sp-screen-edge: 20px;
+
+    --radius-small: 8px;
+    --radius-card: 16px;
+    --radius-chip: 100px;
+
+    --font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font-family);
+    background: #E5E7EB;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+  }
+
+  .page-title {
+    text-align: center;
+    margin-bottom: 12px;
+  }
+  .page-title h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    letter-spacing: -0.5px;
+  }
+  .page-title p {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    margin-top: 6px;
+    line-height: 1.5;
+  }
+  .version-tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--color-primary);
+    background: var(--color-primary-light);
+    padding: 2px 10px;
+    border-radius: var(--radius-chip);
+    margin-top: 8px;
+  }
+
+  /* ===== Comparison Layout ===== */
+  .comparison {
+    display: flex;
+    gap: 40px;
+    margin: 32px 0;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .variant {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .variant-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .variant-label.before { color: var(--color-error); }
+  .variant-label.after { color: #22C55E; }
+
+  /* ===== Phone Frame ===== */
+  .phone {
+    width: 375px;
+    background: var(--color-background);
+    border-radius: 40px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+    border: 8px solid #1a1a1a;
+  }
+
+  .status-bar {
+    height: 44px;
+    background: var(--color-background);
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    padding-bottom: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+  }
+
+  .app-bar {
+    height: 48px;
+    display: flex;
+    align-items: center;
+    padding: 0 var(--sp-medium);
+    border-bottom: 1px solid var(--color-divider);
+  }
+  .app-bar .back-btn {
+    font-size: 20px;
+    color: var(--color-text-primary);
+    cursor: pointer;
+    width: 32px;
+  }
+  .app-bar .title {
+    flex: 1;
+    text-align: center;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin-right: 32px;
+  }
+
+  .page-content {
+    padding: var(--sp-large);
+    min-height: 500px;
+  }
+
+  /* ===== Partner Header ===== */
+  .partner-header {
+    display: flex;
+    gap: var(--sp-medium);
+    margin-bottom: var(--sp-xlarge);
+  }
+  .partner-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--color-surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: var(--color-text-tertiary);
+    flex-shrink: 0;
+  }
+  .partner-info h2 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: 4px;
+  }
+  .partner-subscribe {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    margin-top: 6px;
+  }
+
+  /* ===== Section ===== */
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--sp-medium);
+  }
+  .section-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+  }
+  .section-more {
+    font-size: 13px;
+    color: var(--color-primary);
+    cursor: pointer;
+  }
+
+  /* ===== Event Card ===== */
+  .event-cards-row {
+    display: flex;
+    gap: var(--sp-small);
+    overflow-x: auto;
+    margin: 0 calc(-1 * var(--sp-large));
+    padding: 0 var(--sp-large);
+  }
+  .event-cards-row::-webkit-scrollbar { display: none; }
+
+  .event-card {
+    flex-shrink: 0;
+    width: 210px;
+    border-radius: var(--radius-card);
+    overflow: hidden;
+    background: var(--color-background);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+
+  .event-card-image {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: linear-gradient(135deg, #ddd 0%, #bbb 100%);
+    overflow: hidden;
+  }
+  .event-card-image::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 55%;
+    background: linear-gradient(transparent, rgba(17,24,39,0.45));
+  }
+
+  .event-card-image .placeholder-icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 28px;
+    color: rgba(255,255,255,0.5);
+  }
+
+  /* Partner overlay (Before) */
+  .partner-overlay {
+    position: absolute;
+    top: var(--sp-small);
+    left: var(--sp-small);
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    background: rgba(17,24,39,0.55);
+    border-radius: var(--radius-small);
+  }
+  .partner-overlay .mini-avatar {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: #fff;
+  }
+  .partner-overlay .name {
+    font-size: 11px;
+    color: #fff;
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* D-Day + Participant overlay */
+  .dday-overlay {
+    position: absolute;
+    top: var(--sp-small);
+    right: var(--sp-small);
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    background: rgba(17,24,39,0.55);
+    border-radius: var(--radius-small);
+    font-size: 11px;
+    color: #fff;
+  }
+  .battery-gauge {
+    display: flex;
+    gap: 2px;
+  }
+  .battery-segment {
+    width: 10px;
+    height: 8px;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.2);
+  }
+  .battery-segment.filled { background: var(--color-primary); }
+  .battery-segment.filled.orange { background: var(--color-secondary); }
+  .battery-segment.filled.mint { background: var(--color-tertiary); }
+
+  .event-card-content {
+    padding: var(--sp-small) var(--sp-medium);
+  }
+  .event-card-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 2px;
+  }
+  .event-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 12px;
+    color: var(--color-text-tertiary);
+  }
+  .event-card-meta .price {
+    margin-left: auto;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-secondary);
+  }
+
+  /* ===== Bug Annotations ===== */
+  .bug-marker {
+    position: absolute;
+    z-index: 10;
+  }
+  .bug-box {
+    border: 2px solid var(--color-error);
+    border-radius: 4px;
+    position: absolute;
+  }
+  .bug-label {
+    position: absolute;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--color-error);
+    background: rgba(239, 68, 68, 0.1);
+    padding: 1px 6px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+
+  /* ===== Overflow warning stripe ===== */
+  .overflow-stripe {
+    height: 14px;
+    background: repeating-linear-gradient(
+      45deg,
+      #000,
+      #000 5px,
+      #FFCF00 5px,
+      #FFCF00 10px
+    );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    margin-top: -1px;
+  }
+  .overflow-stripe span {
+    font-size: 7px;
+    font-weight: 900;
+    color: #fff;
+    text-shadow: 0 0 2px #000;
+    letter-spacing: 0.5px;
+  }
+
+  /* ===== Section Divider ===== */
+  .section-notes {
+    max-width: 800px;
+    width: 100%;
+    margin: 40px 0 20px;
+  }
+  .section-notes h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--color-divider);
+  }
+
+  .note-card {
+    background: var(--color-background);
+    border-radius: var(--radius-card);
+    padding: 20px 24px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+  .note-card h3 {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .note-card p, .note-card ul {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    line-height: 1.7;
+  }
+  .note-card ul {
+    padding-left: 18px;
+    margin-top: 4px;
+  }
+  .note-card code {
+    font-size: 12px;
+    background: var(--color-surface);
+    padding: 1px 6px;
+    border-radius: 4px;
+    color: var(--color-primary);
+    font-family: 'SF Mono', Menlo, monospace;
+  }
+
+  .badge-type {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: var(--radius-chip);
+  }
+  .badge-bug {
+    color: var(--color-error);
+    background: rgba(239, 68, 68, 0.08);
+  }
+  .badge-improve {
+    color: #22C55E;
+    background: rgba(34, 197, 94, 0.08);
+  }
+</style>
+</head>
+<body>
+
+<!-- Title -->
+<div class="page-title">
+  <h1>파트너 상세 — 이벤트 카드 레이아웃 개선</h1>
+  <p>Issue #1214: 파트너 뱃지 중복 제거 + 오버플로우 수정</p>
+  <span class="version-tag">UX Review v1</span>
+</div>
+
+<!-- Before / After Comparison -->
+<div class="comparison">
+
+  <!-- ===== BEFORE ===== -->
+  <div class="variant">
+    <span class="variant-label before">Before (현재)</span>
+    <div class="phone">
+      <div class="status-bar">9:41</div>
+      <div class="app-bar">
+        <span class="back-btn">←</span>
+        <span class="title">밍글 스튜디오</span>
+      </div>
+      <div class="page-content">
+        <div class="partner-header">
+          <div class="partner-avatar">🏠</div>
+          <div class="partner-info">
+            <h2>밍글 스튜디오</h2>
+            <div class="partner-subscribe">🔔 알림받기</div>
+          </div>
+        </div>
+
+        <div class="section-header">
+          <span class="section-title">진행중인 이벤트</span>
+          <span class="section-more">더 보기</span>
+        </div>
+
+        <div class="event-cards-row">
+          <!-- Card 1 (Before) -->
+          <div class="event-card" style="position: relative;">
+            <div class="event-card-image">
+              <div class="placeholder-icon">🖼</div>
+              <!-- Bug 1: 중복 파트너 뱃지 -->
+              <div class="partner-overlay" style="outline: 2px dashed var(--color-error); outline-offset: 2px;">
+                <div class="mini-avatar">🏠</div>
+                <span class="name">밍글 스...</span>
+              </div>
+              <div class="dday-overlay">
+                <span>👤</span>
+                <div class="battery-gauge">
+                  <div class="battery-segment filled"></div>
+                  <div class="battery-segment filled"></div>
+                  <div class="battery-segment filled"></div>
+                </div>
+                <span>8/10</span>
+                <span style="opacity:0.5">·</span>
+                <span>📅</span>
+                <span>D-8</span>
+              </div>
+            </div>
+            <div class="event-card-content">
+              <div class="event-card-title">성수 네트워킹 파티</div>
+              <div class="event-card-meta">
+                <span>📍</span>
+                <span>성수동 · 4월 18일</span>
+                <span class="price">15,000원~</span>
+              </div>
+            </div>
+            <!-- Bug 2: Overflow stripe -->
+            <div class="overflow-stripe">
+              <span>BOTTOM OVERFLOWED BY 1.0 PIXELS</span>
+            </div>
+          </div>
+
+          <!-- Card 2 (Before, peeking) -->
+          <div class="event-card" style="position: relative;">
+            <div class="event-card-image">
+              <div class="placeholder-icon">🖼</div>
+              <div class="partner-overlay" style="outline: 2px dashed var(--color-error); outline-offset: 2px;">
+                <div class="mini-avatar">🏠</div>
+                <span class="name">밍글 스...</span>
+              </div>
+              <div class="dday-overlay">
+                <span>👤</span>
+                <div class="battery-gauge">
+                  <div class="battery-segment filled orange"></div>
+                  <div class="battery-segment"></div>
+                  <div class="battery-segment"></div>
+                </div>
+                <span>3/10</span>
+                <span style="opacity:0.5">·</span>
+                <span>📅</span>
+                <span>D-12</span>
+              </div>
+            </div>
+            <div class="event-card-content">
+              <div class="event-card-title">성수 네트워킹 P...</div>
+              <div class="event-card-meta">
+                <span>📍</span>
+                <span>성수동 · 4월 22일</span>
+                <span class="price">무료</span>
+              </div>
+            </div>
+            <div class="overflow-stripe">
+              <span>BOTTOM OVERFLOWED BY 1.0 PIXELS</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== AFTER ===== -->
+  <div class="variant">
+    <span class="variant-label after">After (개선안)</span>
+    <div class="phone">
+      <div class="status-bar">9:41</div>
+      <div class="app-bar">
+        <span class="back-btn">←</span>
+        <span class="title">밍글 스튜디오</span>
+      </div>
+      <div class="page-content">
+        <div class="partner-header">
+          <div class="partner-avatar">🏠</div>
+          <div class="partner-info">
+            <h2>밍글 스튜디오</h2>
+            <div class="partner-subscribe">🔔 알림받기</div>
+          </div>
+        </div>
+
+        <div class="section-header">
+          <span class="section-title">진행중인 이벤트</span>
+          <span class="section-more">더 보기</span>
+        </div>
+
+        <div class="event-cards-row">
+          <!-- Card 1 (After — no partner badge, no overflow) -->
+          <div class="event-card">
+            <div class="event-card-image">
+              <div class="placeholder-icon">🖼</div>
+              <!-- Partner overlay REMOVED — context already provided by page -->
+              <div class="dday-overlay">
+                <span>👤</span>
+                <div class="battery-gauge">
+                  <div class="battery-segment filled"></div>
+                  <div class="battery-segment filled"></div>
+                  <div class="battery-segment filled"></div>
+                </div>
+                <span>8/10</span>
+                <span style="opacity:0.5">·</span>
+                <span>📅</span>
+                <span>D-8</span>
+              </div>
+            </div>
+            <div class="event-card-content">
+              <div class="event-card-title">성수 네트워킹 파티</div>
+              <div class="event-card-meta">
+                <span>📍</span>
+                <span>성수동 · 4월 18일</span>
+                <span class="price">15,000원~</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2 (After, peeking) -->
+          <div class="event-card">
+            <div class="event-card-image">
+              <div class="placeholder-icon">🖼</div>
+              <div class="dday-overlay">
+                <span>👤</span>
+                <div class="battery-gauge">
+                  <div class="battery-segment filled orange"></div>
+                  <div class="battery-segment"></div>
+                  <div class="battery-segment"></div>
+                </div>
+                <span>3/10</span>
+                <span style="opacity:0.5">·</span>
+                <span>📅</span>
+                <span>D-12</span>
+              </div>
+            </div>
+            <div class="event-card-content">
+              <div class="event-card-title">성수 네트워킹 파티 2nd</div>
+              <div class="event-card-meta">
+                <span>📍</span>
+                <span>성수동 · 4월 22일</span>
+                <span class="price">무료</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===== Implementation Notes ===== -->
+<div class="section-notes">
+  <h2>변경 사항</h2>
+
+  <div class="note-card">
+    <h3><span class="badge-type badge-bug">BUG</span> 1. 오버플로우 수정</h3>
+    <p><strong>문제</strong>: 이벤트 카드 하단 1px 오버플로우 (BOTTOM OVERFLOWED BY 1.0 PIXELS)</p>
+    <p><strong>원인</strong>: <code>eventCardContentHeight = 64.0</code>이 실제 콘텐츠 높이보다 부족</p>
+    <p><strong>수정</strong>:</p>
+    <ul>
+      <li><code>partner_detail_view.dart</code> L175: <code>eventCardContentHeight</code>를 <code>64.0</code> → <code>68.0</code>으로 변경</li>
+      <li>padding(8+8) + titleMedium(~24) + xxsmall(2) + bodySmall row(~20) = ~62px인데, 디바이스별 폰트 메트릭 차이로 1px 초과 발생. 여유 4px 확보</li>
+    </ul>
+  </div>
+
+  <div class="note-card">
+    <h3><span class="badge-type badge-improve">UX</span> 2. 파트너 뱃지 조건부 표시</h3>
+    <p><strong>문제</strong>: 파트너 상세 페이지 안에서 이벤트 카드마다 동일한 파트너 이름/아바타가 반복 표시. 정보 중복이고 이미지 가시 영역을 불필요하게 차지</p>
+    <p><strong>수정</strong>:</p>
+    <ul>
+      <li><code>MinglitEventCard</code>에 <code>showPartnerOverlay</code> 파라미터 추가 (기본값 <code>true</code>)</li>
+      <li><code>PartnerDetailView._buildHorizontalEventList()</code>에서 <code>showPartnerOverlay: false</code> 전달</li>
+      <li><code>PartnerEventsPage</code> (더 보기 전체 목록)에서도 동일하게 <code>showPartnerOverlay: false</code></li>
+      <li>홈 피드, 검색 등 다른 컨텍스트에서는 기존대로 파트너 뱃지 표시 유지</li>
+    </ul>
+  </div>
+
+  <div class="note-card">
+    <h3><span class="badge-type badge-improve">UX</span> 3. 디자인 근거</h3>
+    <p>파트너 뱃지를 제거하면:</p>
+    <ul>
+      <li><strong>정보 중복 제거</strong>: 이미 "밍글 스튜디오" 페이지 안에 있으므로 각 카드에 파트너 정보를 반복할 필요 없음</li>
+      <li><strong>이미지 가시성 향상</strong>: 좌상단 오버레이가 사라져 이벤트 이미지가 더 넓게 보임</li>
+      <li><strong>시각적 밀도 감소</strong>: 작은 카드(210px)에 오버레이가 2개 → 1개로 줄어 더 깔끔</li>
+      <li><strong>참고 사례</strong>: 인스타그램 프로필 페이지의 릴스/게시물에 프로필 뱃지를 표시하지 않는 것과 동일한 패턴</li>
+    </ul>
+  </div>
+</div>
+
+</body>
+</html>

@@ -78,7 +78,9 @@ class _DocumentPicker extends StatelessWidget {
             decoration: BoxDecoration(
               border: Border.all(color: MinglitColors.success),
               borderRadius: BorderRadius.circular(MinglitRadius.input),
-              color: MinglitColors.success.withValues(alpha: 0.1),
+              color: MinglitColors.success.withValues(
+                alpha: MinglitOpacity.highlight,
+              ),
             ),
             child: Row(
               children: [
@@ -107,8 +109,10 @@ class _DocumentPicker extends StatelessWidget {
         OutlinedButton.icon(
           onPressed: () async {
             final picker = ImagePicker();
+            // Fix #1230: requestFullMetadata: false로 iOS EXIF/GPS 메타데이터 접근 최소화
             final pickedFile = await picker.pickImage(
               source: ImageSource.gallery,
+              requestFullMetadata: false,
             );
             if (pickedFile != null) onPick(pickedFile);
           },

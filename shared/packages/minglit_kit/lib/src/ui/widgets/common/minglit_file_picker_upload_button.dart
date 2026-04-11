@@ -26,12 +26,10 @@ class MinglitFilePickerUploadButton extends StatelessWidget {
         height: 120,
         decoration: BoxDecoration(
           color: theme.colorScheme.surfaceContainerHighest.withValues(
-            alpha: 0.3,
+            alpha: MinglitOpacity.muted,
           ),
           borderRadius: BorderRadius.circular(MinglitRadius.small),
-          border: Border.all(
-            color: theme.colorScheme.outlineVariant,
-          ),
+          border: Border.all(color: theme.colorScheme.outlineVariant),
         ),
         child: Center(
           child: Column(

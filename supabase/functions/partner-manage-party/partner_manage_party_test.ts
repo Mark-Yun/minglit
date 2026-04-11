@@ -95,18 +95,10 @@ function updateLocationRoute(): FetchRoute {
 }
 
 // Party routes
-function insertPartyRoute(id = TEST_PARTY_ID): FetchRoute {
-  return {
-    matcher: (req) =>
-      req.url.includes("/rest/v1/parties") && req.method === "POST",
-    handler: () => jsonResponse({ id }),
-  };
-}
-
 function insertPartyErrorRoute(): FetchRoute {
   return {
     matcher: (req) =>
-      req.url.includes("/rest/v1/parties") && req.method === "POST",
+      req.url.includes("/rest/v1/rpc/create_party_with_tags") && req.method === "POST",
     handler: () => jsonResponse({ message: "insert error" }, { status: 500 }),
   };
 }
@@ -148,6 +140,32 @@ function updatePartyErrorRoute(): FetchRoute {
     matcher: (req) =>
       req.url.includes("/rest/v1/parties") && req.method === "PATCH",
     handler: () => jsonResponse({ message: "update error" }, { status: 500 }),
+  };
+}
+
+// RPC routes
+// Fix #1223: parties INSERT + party_tags INSERT are now handled atomically via RPCs
+function rpcCreatePartyRoute(id = TEST_PARTY_ID): FetchRoute {
+  return {
+    matcher: (req) =>
+      req.url.includes("/rest/v1/rpc/create_party_with_tags") && req.method === "POST",
+    handler: () => jsonResponse(id),
+  };
+}
+
+function rpcUpdatePartyTagsRoute(): FetchRoute {
+  return {
+    matcher: (req) =>
+      req.url.includes("/rest/v1/rpc/update_party_tags") && req.method === "POST",
+    handler: () => jsonResponse(null),
+  };
+}
+
+function selectTagsRoute(tagIds: string[]): FetchRoute {
+  return {
+    matcher: (req) =>
+      req.url.includes("/rest/v1/tags") && req.method === "GET",
+    handler: () => jsonResponse(tagIds.map((id) => ({ id }))),
   };
 }
 
@@ -289,7 +307,7 @@ Deno.test({
       authRoute(),
       permRoute(),
       insertLocationRoute(),
-      insertPartyRoute(),
+      rpcCreatePartyRoute(),
       insertEntryGroupTemplatesRoute(),
       insertTicketTemplatesRoute(),
     ]);
@@ -330,7 +348,7 @@ Deno.test({
       authRoute(),
       permRoute(),
       selectLocationRoute(),
-      insertPartyRoute(),
+      rpcCreatePartyRoute(),
     ]);
 
     await withEnv(ENV, async () => {
@@ -478,7 +496,7 @@ Deno.test({
     const { fetchMock } = createFetchMock([
       authRoute(),
       permRoute(),
-      insertPartyRoute(),
+      rpcCreatePartyRoute(),
     ]);
 
     await withEnv(ENV, async () => {
@@ -507,7 +525,7 @@ Deno.test({
     const { fetchMock } = createFetchMock([
       authRoute(),
       permRoute(),
-      insertPartyRoute(),
+      rpcCreatePartyRoute(),
     ]);
 
     await withEnv(ENV, async () => {
@@ -839,6 +857,449 @@ Deno.test({
         });
         const res = await handler(req);
         assertEquals(res.status, 403);
+      });
+    });
+  },
+});
+
+// ─── create: tag_ids ───
+
+Deno.test({
+  name: "create: with tag_ids 3 tags — party_tags inserted",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const tagIds = [
+      "00000000-0000-0000-0000-000000000001",
+      "00000000-0000-0000-0000-000000000002",
+      "00000000-0000-0000-0000-000000000003",
+    ];
+    // Fix #1223: create_party_with_tags RPC handles both party + tags in one call
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      permRoute(),
+      selectTagsRoute(tagIds),
+      rpcCreatePartyRoute(),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "create",
+          partner_id: TEST_PARTNER_ID,
+          party: { title: "태그 있는 파티" },
+          tag_ids: tagIds,
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 200);
+        const body = await readJson(res);
+        assertEquals(body.success, true);
+        assertEquals(body.party_id, TEST_PARTY_ID);
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "create: without tag_ids — party created without tags",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    // party_tags INSERT route 없이도 성공해야 함
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      permRoute(),
+      rpcCreatePartyRoute(),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "create",
+          partner_id: TEST_PARTNER_ID,
+          party: { title: "태그 없는 파티" },
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 200);
+        const body = await readJson(res);
+        assertEquals(body.success, true);
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "create: tag_ids with 6 items returns 400",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    // tag_ids validation now runs before any DB write — no rpcCreatePartyRoute needed
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      permRoute(),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "create",
+          partner_id: TEST_PARTNER_ID,
+          party: { title: "태그 초과 파티" },
+          tag_ids: [
+            "00000000-0000-0000-0000-000000000001",
+            "00000000-0000-0000-0000-000000000002",
+            "00000000-0000-0000-0000-000000000003",
+            "00000000-0000-0000-0000-000000000004",
+            "00000000-0000-0000-0000-000000000005",
+            "00000000-0000-0000-0000-000000000006",
+          ],
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 400);
+        const body = await readJson(res);
+        assertEquals(body.error, "tag_ids must contain at most 5 tags");
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "create: tag_ids with nonexistent IDs returns 400 — no party INSERT attempted",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    // Fix #1136: DB existence check on create path — orphaned party prevented
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const requestedIds = [
+      "00000000-0000-0000-0000-000000000001",
+      "00000000-0000-0000-0000-000000000099", // nonexistent
+    ];
+    // selectTagsRoute returns only 1 of the 2 IDs — simulates missing tag
+    const { fetchMock, calls } = createFetchMock([
+      authRoute(),
+      permRoute(),
+      selectTagsRoute(["00000000-0000-0000-0000-000000000001"]),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "create",
+          partner_id: TEST_PARTNER_ID,
+          party: { title: "잘못된 태그 파티" },
+          tag_ids: requestedIds,
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 400);
+        const body = await readJson(res);
+        assertEquals(body.error, "One or more tag_ids do not exist");
+        // Verify no create_party_with_tags RPC was called — orphan prevention confirmed
+        const partyInserts = calls.filter(
+          (c) => c.url.includes("/rest/v1/rpc/create_party_with_tags") && c.method === "POST",
+        );
+        assertEquals(partyInserts.length, 0);
+      });
+    });
+  },
+});
+
+// ─── update: tag_ids ───
+
+Deno.test({
+  name: "update: tag_ids provided — existing tags replaced",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    // INSERT new tags first, then DELETE old ones not in new set (safe order)
+    const tagIds = [
+      "00000000-0000-0000-0000-000000000010",
+      "00000000-0000-0000-0000-000000000011",
+    ];
+    // Fix #1223: update_party_tags RPC handles DELETE stale + INSERT new atomically
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      selectPartyRoute(),
+      permRoute(),
+      selectTagsRoute(tagIds),
+      rpcUpdatePartyTagsRoute(),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "update",
+          party_id: TEST_PARTY_ID,
+          tag_ids: tagIds,
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 200);
+        const body = await readJson(res);
+        assertEquals(body.success, true);
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "update: tag_ids empty array — all tags removed",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    // Fix #1223: update_party_tags RPC handles empty array (clears all tags) atomically
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      selectPartyRoute(),
+      permRoute(),
+      rpcUpdatePartyTagsRoute(),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "update",
+          party_id: TEST_PARTY_ID,
+          tag_ids: [],
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 200);
+        const body = await readJson(res);
+        assertEquals(body.success, true);
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "update: tag_ids undefined — tags not changed",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    // tag_ids 없으면 party_tags route 불필요
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      selectPartyRoute(),
+      permRoute(),
+      updatePartyRoute(),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "update",
+          party_id: TEST_PARTY_ID,
+          party: { title: "태그 변경 없이 제목만 수정" },
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 200);
+        const body = await readJson(res);
+        assertEquals(body.success, true);
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "update: tag_ids with 6 items returns 400",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      selectPartyRoute(),
+      permRoute(),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "update",
+          party_id: TEST_PARTY_ID,
+          tag_ids: [
+            "00000000-0000-0000-0000-000000000001",
+            "00000000-0000-0000-0000-000000000002",
+            "00000000-0000-0000-0000-000000000003",
+            "00000000-0000-0000-0000-000000000004",
+            "00000000-0000-0000-0000-000000000005",
+            "00000000-0000-0000-0000-000000000006",
+          ],
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 400);
+        const body = await readJson(res);
+        assertEquals(body.error, "tag_ids must contain at most 5 tags");
+      });
+    });
+  },
+});
+
+// Fix #1136: tag_ids validation must run before any DB write (regression tests)
+
+Deno.test({
+  name: "create: tag_ids not array returns 400 — no party INSERT attempted",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    // No rpcCreatePartyRoute — if create_party_with_tags RPC were called it would throw "Unhandled fetch"
+    const { fetchMock, calls } = createFetchMock([
+      authRoute(),
+      permRoute(),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "create",
+          partner_id: TEST_PARTNER_ID,
+          party: { title: "태그 타입 오류" },
+          tag_ids: "not-an-array",
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 400);
+        const body = await readJson(res);
+        assertEquals(body.error, "tag_ids must be an array");
+        // Verify no create_party_with_tags RPC was called
+        const partyInserts = calls.filter((c) => c.url.includes("/rest/v1/rpc/create_party_with_tags") && c.method === "POST");
+        assertEquals(partyInserts.length, 0);
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "update: tag_ids not array returns 400 — no party PATCH attempted",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    // No updatePartyRoute — if party PATCH were attempted it would throw "Unhandled fetch"
+    const { fetchMock, calls } = createFetchMock([
+      authRoute(),
+      selectPartyRoute(),
+      permRoute(),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "update",
+          party_id: TEST_PARTY_ID,
+          party: { title: "동시 수정" },
+          tag_ids: "not-an-array",
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 400);
+        const body = await readJson(res);
+        assertEquals(body.error, "tag_ids must be an array");
+        // Verify no party PATCH was attempted
+        const partyPatches = calls.filter((c) => c.url.includes("/rest/v1/parties") && c.method === "PATCH");
+        assertEquals(partyPatches.length, 0);
+      });
+    });
+  },
+});
+
+// Fix #1182: UUID format validation + deduplication (Findings #12, #13)
+
+Deno.test({
+  name: "create: tag_ids with invalid UUID format returns 400",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const { fetchMock, calls } = createFetchMock([
+      authRoute(),
+      permRoute(),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "create",
+          partner_id: TEST_PARTNER_ID,
+          party: { title: "UUID 테스트" },
+          tag_ids: ["not-a-uuid"],
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 400);
+        const body = await readJson(res);
+        assertEquals(body.error, "tag_ids[0] must be a valid UUID");
+        // Verify no create_party_with_tags RPC was called
+        const partyInserts = calls.filter(
+          (c) => c.url.includes("/rest/v1/rpc/create_party_with_tags") && c.method === "POST",
+        );
+        assertEquals(partyInserts.length, 0);
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "create: duplicate tag_ids are deduplicated",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const uniqueId = "00000000-0000-0000-0000-000000000001";
+    // Fix #1223: create_party_with_tags RPC handles both party + deduped tags atomically
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      permRoute(),
+      selectTagsRoute([uniqueId]),
+      rpcCreatePartyRoute(),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "create",
+          partner_id: TEST_PARTNER_ID,
+          party: { title: "중복 태그 파티" },
+          tag_ids: [uniqueId, uniqueId, uniqueId],
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 200);
+        const body = await readJson(res);
+        assertEquals(body.success, true);
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "update: tag_ids with invalid UUID format returns 400",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const { fetchMock, calls } = createFetchMock([
+      authRoute(),
+      selectPartyRoute(),
+      permRoute(),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "update",
+          party_id: TEST_PARTY_ID,
+          tag_ids: ["12345"],
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 400);
+        const body = await readJson(res);
+        assertEquals(body.error, "tag_ids[0] must be a valid UUID");
+        const partyPatches = calls.filter(
+          (c) => c.url.includes("/rest/v1/parties") && c.method === "PATCH",
+        );
+        assertEquals(partyPatches.length, 0);
       });
     });
   },

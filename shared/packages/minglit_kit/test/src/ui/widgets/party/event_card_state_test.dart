@@ -11,6 +11,8 @@ void main() {
 
   // Fixed base time: event starts 2026-06-15 19:00
   final baseTime = DateTime(2026, 6, 15, 19);
+  final fiveDaysBefore = DateTime(2026, 6, 10, 12);
+  const partner = Partner(id: 'partner-1', name: '밍글릿 라운지');
 
   final party = Party(
     id: 'party-1',
@@ -18,15 +20,21 @@ void main() {
     title: '금요일 네트워킹',
     createdAt: baseTime,
     updatedAt: baseTime,
+    partner: partner,
   );
 
-  Widget buildCard(Event event, {required DateTime currentTime}) {
+  Widget buildCard(
+    Event event, {
+    required DateTime currentTime,
+    bool showPartnerOverlay = true,
+  }) {
     return MaterialApp(
       theme: MinglitTheme.materialTheme,
       home: Scaffold(
         body: MinglitEventCard(
           event: event,
           currentTime: currentTime,
+          showPartnerOverlay: showPartnerOverlay,
         ),
       ),
     );
@@ -76,9 +84,7 @@ void main() {
       // currentTime is 2 days after event start → difference == -2 → ended
       final twoDaysAfter = DateTime(2026, 6, 17, 12);
 
-      await tester.pumpWidget(
-        buildCard(pastEvent, currentTime: twoDaysAfter),
-      );
+      await tester.pumpWidget(buildCard(pastEvent, currentTime: twoDaysAfter));
       await tester.pump();
 
       // Fix #478: ColorFiltered with BlendMode.saturation for grayscale
@@ -116,9 +122,7 @@ void main() {
       await tester.pump();
 
       // Fix #478: A Container with amber border must exist for today state
-      final containers = tester.widgetList<Container>(
-        find.byType(Container),
-      );
+      final containers = tester.widgetList<Container>(find.byType(Container));
       final hasBorder = containers.any((c) {
         final decoration = c.decoration;
         if (decoration is BoxDecoration) {
@@ -130,11 +134,7 @@ void main() {
         }
         return false;
       });
-      expect(
-        hasBorder,
-        isTrue,
-        reason: 'today state should show amber border',
-      );
+      expect(hasBorder, isTrue, reason: 'today state should show amber border');
     });
 
     testWidgets('normal state has no 마감 overlay and no saturation filter', (
@@ -176,6 +176,52 @@ void main() {
         isFalse,
         reason: 'normal state should not apply grayscale ColorFilter',
       );
+    });
+
+    testWidgets('partner overlay can be hidden in partner-owned context', (
+      tester,
+    ) async {
+      final event = Event(
+        id: 'e-partner-hidden',
+        partyId: 'party-1',
+        startTime: baseTime,
+        endTime: baseTime.add(const Duration(hours: 3)),
+        createdAt: baseTime,
+        updatedAt: baseTime,
+        currentParticipants: 8,
+        party: party,
+      );
+
+      await tester.pumpWidget(
+        buildCard(
+          event,
+          currentTime: fiveDaysBefore,
+          showPartnerOverlay: false,
+        ),
+      );
+      await tester.pump();
+
+      expect(find.text(partner.name), findsNothing);
+    });
+
+    testWidgets('partner overlay is shown by default', (tester) async {
+      final event = Event(
+        id: 'e-partner-visible',
+        partyId: 'party-1',
+        startTime: baseTime,
+        endTime: baseTime.add(const Duration(hours: 3)),
+        createdAt: baseTime,
+        updatedAt: baseTime,
+        currentParticipants: 8,
+        party: party,
+      );
+
+      await tester.pumpWidget(
+        buildCard(event, currentTime: fiveDaysBefore),
+      );
+      await tester.pump();
+
+      expect(find.text(partner.name), findsOneWidget);
     });
   });
 }

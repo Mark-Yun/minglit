@@ -100,6 +100,7 @@ mixin _PartyCreateWizardSubmit
           extraFields: {
             'balance_config': balanceConfig,
             'visibility': state.visibility,
+            if (state.tagIds.isNotEmpty) 'tag_ids': state.tagIds,
           },
         );
 
@@ -206,6 +207,9 @@ mixin _PartyCreateWizardSubmit
         requiredVerificationIds: allVerifIds,
         updatedAt: DateTime.now(),
       ),
+      // tag_ids를 항상 전달하여 EF에서 party_tags를 동기화한다
+      // (빈 리스트 = 기존 태그 전체 제거)
+      tagIds: state.tagIds,
     );
 
     await partyRepo.replaceEntryGroupTemplates(partyId, state.entryGroups);

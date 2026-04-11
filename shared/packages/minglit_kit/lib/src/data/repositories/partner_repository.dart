@@ -2,14 +2,15 @@ import 'package:image_picker/image_picker.dart' show XFile;
 import 'package:minglit_kit/src/data/models/partner.dart';
 import 'package:minglit_kit/src/data/models/partner_application.dart';
 import 'package:minglit_kit/src/utils/exceptions.dart';
+import 'package:minglit_kit/src/utils/image_utils.dart';
 import 'package:minglit_kit/src/utils/log.dart';
 import 'package:path/path.dart' as p;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-part 'partner_repository.g.dart';
-part 'partner_member_repository.dart';
 part 'partner_application_repository.dart';
+part 'partner_member_repository.dart';
+part 'partner_repository.g.dart';
 
 /// Provider for PartnerRepository.
 @Riverpod(keepAlive: true)
@@ -63,7 +64,13 @@ abstract class _SupabasePartnerContextBase implements _SupabasePartnerContext {
     }
   }
 
+  // Fix #1217: partner_member_permissions 누락 시 승인 신청서 기반 폴백 조회로 관리 파트너를 복구
   /// Fetches partners managed by the current user.
+  ///
+  /// When partner_member_permissions has no records (e.g., data seeded without
+  /// the approval trigger, or trigger failed), falls back to finding partners
+  /// via approved partner_applications matched by business identifiers
+  /// (biz_name + biz_number).
   Future<List<Partner>> getMyManagedPartners() async {
     final userId = supabaseClient.auth.currentUser?.id;
     Log.d('getMyManagedPartners called | user: $userId');
@@ -73,8 +80,8 @@ abstract class _SupabasePartnerContextBase implements _SupabasePartnerContext {
       return [];
     }
 
-    // 1. Get partner_ids from permissions
     try {
+      // 1. Primary: Get partner_ids from permissions
       final permissions =
           await supabaseClient
                   .from('partner_member_permissions')
@@ -83,19 +90,27 @@ abstract class _SupabasePartnerContextBase implements _SupabasePartnerContext {
               as List;
 
       Log.d('🔍 [PartnerRepo] Found permissions raw data: $permissions');
-      final partnerIds = permissions
+      var partnerIds = permissions
           .map((e) {
             return (e as Map<String, dynamic>)['partner_id'] as String?;
           })
           .whereType<String>()
           .toList();
 
+      // 2. Fallback: Find partners via approved applications
+      if (partnerIds.isEmpty) {
+        Log.d(
+          '🔍 [PartnerRepo] No permissions, checking approved applications',
+        );
+        partnerIds = await _findPartnersFromApprovedApplications(userId);
+      }
+
       if (partnerIds.isEmpty) {
         Log.w('⚠️ [PartnerRepo] No managed partners found for user');
         return [];
       }
 
-      // 2. Get partners details
+      // 3. Get partners details
       final data =
           await supabaseClient
                   .from('partners')
@@ -110,6 +125,64 @@ abstract class _SupabasePartnerContextBase implements _SupabasePartnerContext {
       return result;
     } catch (e, st) {
       Log.e('❌ [PartnerRepo] getMyManagedPartners Error', e, st);
+      rethrow;
+    }
+  }
+
+  /// Fallback: Find partner IDs from approved partner applications.
+  ///
+  /// Matches approved applications to partners by biz_name + biz_number,
+  /// which are set identically by the approval trigger.
+  Future<List<String>> _findPartnersFromApprovedApplications(
+    String userId,
+  ) async {
+    try {
+      final applications =
+          await supabaseClient
+                  .from('partner_applications')
+                  .select('biz_name, biz_number')
+                  .eq('user_id', userId)
+                  .eq('status', 'approved')
+              as List;
+
+      if (applications.isEmpty) {
+        Log.d('🔍 [PartnerRepo] No approved applications found');
+        return [];
+      }
+
+      final partnerIds = <String>[];
+      for (final app in applications) {
+        final appMap = app as Map<String, dynamic>;
+        final bizName = appMap['biz_name'] as String?;
+        final bizNumber = appMap['biz_number'] as String?;
+        if (bizName == null || bizNumber == null) continue;
+
+        final partner = await supabaseClient
+            .from('partners')
+            .select('id')
+            .eq('biz_name', bizName)
+            .eq('biz_number', bizNumber)
+            .eq('is_active', true)
+            .maybeSingle();
+
+        if (partner != null) {
+          partnerIds.add(partner['id'] as String);
+        }
+      }
+
+      if (partnerIds.isNotEmpty) {
+        Log.d(
+          '🔍 [PartnerRepo] Found ${partnerIds.length} partners via '
+          'approved applications fallback',
+        );
+      }
+      return partnerIds;
+    } catch (e, st) {
+      Log.e(
+        '❌ [PartnerRepo] _findPartnersFromApprovedApplications Error',
+        e,
+        st,
+      );
       rethrow;
     }
   }

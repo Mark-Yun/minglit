@@ -30,11 +30,8 @@ class MinglitDialog extends StatelessWidget {
   }) {
     return showDialog<T>(
       context: context,
-      builder: (context) => MinglitDialog(
-        title: title,
-        content: content,
-        actions: actions,
-      ),
+      builder: (context) =>
+          MinglitDialog(title: title, content: content, actions: actions),
     );
   }
 
@@ -45,7 +42,9 @@ class MinglitDialog extends StatelessWidget {
 
     return AlertDialog(
       backgroundColor: colorScheme.surface,
-      surfaceTintColor: colorScheme.surface.withValues(alpha: 0),
+      surfaceTintColor: colorScheme.surface.withValues(
+        alpha: MinglitOpacity.none,
+      ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(MinglitRadius.card),
       ),

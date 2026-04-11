@@ -110,7 +110,9 @@ class _MinglitImageCarouselState extends State<MinglitImageCarousel> {
                 vertical: MinglitSpacing.xsmall,
               ),
               decoration: BoxDecoration(
-                color: MinglitColors.textPrimary.withValues(alpha: 0.5),
+                color: MinglitColors.textPrimary.withValues(
+                  alpha: MinglitOpacity.strong,
+                ),
                 borderRadius: BorderRadius.circular(MinglitRadius.card),
               ),
               child: Text(

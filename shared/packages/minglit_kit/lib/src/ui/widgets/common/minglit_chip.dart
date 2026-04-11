@@ -78,7 +78,10 @@ class MinglitChip extends StatelessWidget {
     };
 
     final bgColor =
-        color ?? colorScheme.surfaceContainerHighest.withValues(alpha: 0.5);
+        color ??
+        colorScheme.surfaceContainerHighest.withValues(
+          alpha: MinglitOpacity.strong,
+        );
     final textColor = color != null
         ? (ThemeData.estimateBrightnessForColor(color!) == Brightness.dark
               ? theme.colorScheme.onPrimary
@@ -91,7 +94,9 @@ class MinglitChip extends StatelessWidget {
         color: bgColor,
         borderRadius: BorderRadius.circular(MinglitRadius.small),
         border: Border.all(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+          color: colorScheme.outlineVariant.withValues(
+            alpha: MinglitOpacity.muted,
+          ),
           width: 0.5,
         ),
       ),

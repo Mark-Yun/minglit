@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>밍글릿 — Trust Badge UI 설계</title>
+<style>
+  /* ===== Minglit Design Tokens ===== */
+  :root {
+    --color-background: #FFFFFF;
+    --color-primary: #9900FF;
+    --color-primary-light: rgba(153, 0, 255, 0.08);
+    --color-primary-container: rgba(153, 0, 255, 0.12);
+    --color-secondary: #FF9900;
+    --color-surface: #F9FAFB;
+    --color-error: #EF4444;
+    --color-text-primary: #111827;
+    --color-text-secondary: #4B5563;
+    --color-text-tertiary: #9CA3AF;
+    --color-success: #22C55E;
+    --color-warning: #F59E0B;
+    --color-divider: #E5E7EB;
+    --color-divider-light: #F3F4F6;
+    --color-scrim: rgba(0,0,0,0.5);
+    --color-tertiary: #48C9B0;
+
+    --sp-xxsmall: 2px;
+    --sp-xsmall: 4px;
+    --sp-small: 8px;
+    --sp-sm: 12px;
+    --sp-medium: 16px;
+    --sp-large: 24px;
+    --sp-xlarge: 32px;
+    --sp-screen-edge: 20px;
+
+    --radius-small: 8px;
+    --radius-button: 12px;
+    --radius-card: 16px;
+    --radius-chip: 100px;
+    --radius-dialog: 28px;
+
+    --font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font-family);
+    background: #E5E7EB;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px;
+  }
+
+  /* ===== Page Title ===== */
+  .page-title {
+    text-align: center;
+    margin-bottom: 12px;
+  }
+  .page-title h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    letter-spacing: -0.5px;
+  }
+  .page-title p {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    margin-top: 6px;
+    line-height: 1.5;
+  }
+  .version-tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--color-primary);
+    background: var(--color-primary-light);
+    padding: 2px 8px;
+    border-radius: var(--radius-chip);
+    margin-bottom: 4px;
+  }
+
+  /* ===== Screen Row ===== */
+  .screen-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 40px;
+    margin-top: 32px;
+  }
+
+  /* ===== Screen Frame ===== */
+  .screen-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  .screen-label {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    text-align: center;
+  }
+  .screen-sublabel {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    text-align: center;
+    margin-top: -8px;
+  }
+  .phone-frame {
+    width: 375px;
+    height: 812px;
+    background: var(--color-background);
+    border-radius: 40px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ===== Status Bar ===== */
+  .status-bar {
+    height: 54px;
+    background: var(--color-background);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    flex-shrink: 0;
+  }
+
+  /* ===== Content ===== */
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+  .content-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--sp-large) var(--sp-screen-edge) var(--sp-large);
+  }
+
+  /* ===== Common ===== */
+  .section-divider {
+    height: 1px;
+    background: var(--color-divider-light);
+    margin: 12px 0;
+  }
+
+  /* ===== Badge Inline Styles ===== */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1;
+    padding: 3px 8px 3px 5px;
+    border-radius: var(--radius-chip);
+    vertical-align: middle;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .badge svg {
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
+  }
+  .badge-tier1 {
+    color: var(--color-primary);
+    border: 1.5px solid var(--color-primary);
+    background: var(--color-background);
+  }
+  .badge-tier2 {
+    color: #FFFFFF;
+    background: var(--color-primary);
+    border: 1.5px solid var(--color-primary);
+  }
+  .badge-tier3 {
+    color: #FFFFFF;
+    background: linear-gradient(135deg, var(--color-primary), #B44AFF 50%, #D4A017);
+    border: none;
+    padding: 4px 9px 4px 6px;
+    box-shadow: 0 1px 6px rgba(153, 0, 255, 0.3);
+  }
+
+  /* ===== Badge Large (for overview cards) ===== */
+  .badge-lg {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1;
+    padding: 5px 12px 5px 8px;
+    border-radius: var(--radius-chip);
+    white-space: nowrap;
+  }
+  .badge-lg svg {
+    width: 16px;
+    height: 16px;
+  }
+  .badge-lg.badge-tier1 {
+    color: var(--color-primary);
+    border: 1.5px solid var(--color-primary);
+    background: var(--color-background);
+  }
+  .badge-lg.badge-tier2 {
+    color: #FFFFFF;
+    background: var(--color-primary);
+    border: 1.5px solid var(--color-primary);
+  }
+  .badge-lg.badge-tier3 {
+    color: #FFFFFF;
+    background: linear-gradient(135deg, var(--color-primary), #B44AFF 50%, #D4A017);
+    border: none;
+    padding: 6px 13px 6px 9px;
+    box-shadow: 0 2px 8px rgba(153, 0, 255, 0.3);
+  }
+
+  /* ===== Avatar ===== */
+  .avatar {
+    border-radius: 50%;
+    background: var(--color-divider);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-tertiary);
+    font-size: 14px;
+    overflow: hidden;
+  }
+  .avatar-64 { width: 64px; height: 64px; font-size: 18px; }
+  .avatar-56 { width: 56px; height: 56px; font-size: 16px; }
+  .avatar-40 { width: 40px; height: 40px; font-size: 13px; }
+  .avatar-32 { width: 32px; height: 32px; font-size: 11px; }
+  .avatar-24 { width: 24px; height: 24px; font-size: 9px; }
+
+  /* ===== Overview Screen ===== */
+  .overview-header {
+    text-align: center;
+    margin-bottom: var(--sp-large);
+  }
+  .overview-header h2 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    letter-spacing: -0.3px;
+  }
+  .overview-header p {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    margin-top: 6px;
+    line-height: 1.5;
+  }
+  .tier-card {
+    background: var(--color-surface);
+    border-radius: var(--radius-card);
+    padding: 20px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .tier-card-elite {
+    background: linear-gradient(135deg, rgba(153,0,255,0.04), rgba(212,160,23,0.06));
+    border: 1px solid rgba(153,0,255,0.1);
+  }
+  .tier-card .tier-info {
+    flex: 1;
+  }
+  .tier-card .tier-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: 4px;
+  }
+  .tier-card .tier-desc {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+  }
+  .tier-card .tier-req {
+    font-size: 11px;
+    color: var(--color-text-tertiary);
+    margin-top: 6px;
+    line-height: 1.4;
+  }
+
+  /* ===== Profile Card Screen ===== */
+  .profile-card {
+    background: var(--color-background);
+    border-radius: var(--radius-card);
+    border: 1px solid var(--color-divider-light);
+    padding: 24px var(--sp-screen-edge);
+  }
+  .profile-top {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+  .profile-name-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 2px;
+  }
+  .profile-name-row .name {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+  }
+  .profile-meta {
+    font-size: 13px;
+    color: var(--color-text-tertiary);
+  }
+  .profile-qualifications {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    margin-bottom: 4px;
+  }
+  .profile-bio {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    line-height: 1.6;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--color-divider-light);
+  }
+
+  /* ===== Participant List ===== */
+  .participant-header {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: 16px;
+  }
+  .participant-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--color-divider-light);
+  }
+  .participant-row:last-child {
+    border-bottom: none;
+  }
+  .participant-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .participant-name-row {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .participant-name-row .name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+  }
+  .participant-detail {
+    font-size: 12px;
+    color: var(--color-text-tertiary);
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* ===== Bottom Sheet (Trust Sheet) ===== */
+  .sheet-scrim {
+    position: absolute;
+    inset: 0;
+    background: var(--color-scrim);
+    z-index: 10;
+  }
+  .bottom-sheet {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--color-background);
+    border-radius: var(--radius-dialog) var(--radius-dialog) 0 0;
+    z-index: 20;
+    padding: 12px var(--sp-screen-edge) 40px;
+  }
+  .sheet-handle {
+    width: 36px;
+    height: 4px;
+    background: var(--color-divider);
+    border-radius: 2px;
+    margin: 0 auto 20px;
+  }
+  .sheet-user {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .sheet-user .name {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+  }
+  .sheet-section-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-text-secondary);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .sheet-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--color-divider-light);
+  }
+  .sheet-item:last-child {
+    border-bottom: none;
+  }
+  .sheet-item-icon {
+    font-size: 16px;
+    flex-shrink: 0;
+    width: 20px;
+    text-align: center;
+  }
+  .sheet-item-content {
+    flex: 1;
+  }
+  .sheet-item-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+  }
+  .sheet-item-date {
+    font-size: 12px;
+    color: var(--color-text-tertiary);
+    margin-top: 2px;
+  }
+  .sheet-note {
+    font-size: 12px;
+    color: var(--color-text-tertiary);
+    line-height: 1.5;
+    margin-top: 16px;
+    padding: 12px;
+    background: var(--color-surface);
+    border-radius: var(--radius-small);
+  }
+  .sheet-elite-accent {
+    border-top: 3px solid transparent;
+    border-image: linear-gradient(90deg, var(--color-primary), #D4A017) 1;
+  }
+
+  /* ===== Event Card ===== */
+  .event-card {
+    background: var(--color-background);
+    border-radius: var(--radius-card);
+    overflow: hidden;
+    border: 1px solid var(--color-divider-light);
+  }
+  .event-image {
+    width: 100%;
+    height: 180px;
+    background: linear-gradient(135deg, #E5E7EB, #D1D5DB);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-tertiary);
+    font-size: 13px;
+  }
+  .event-body {
+    padding: 16px;
+  }
+  .event-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: 10px;
+  }
+  .event-host {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .event-host .name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+  }
+  .event-meta {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    margin-bottom: 12px;
+  }
+  .event-participants {
+    display: flex;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+  .event-participants .avatar {
+    margin-left: -8px;
+    border: 2px solid var(--color-background);
+  }
+  .event-participants .avatar:first-child {
+    margin-left: 0;
+  }
+  .event-participants .more {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    margin-left: 8px;
+  }
+  .trust-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 0;
+    border-top: 1px solid var(--color-divider-light);
+    margin-bottom: 12px;
+  }
+  .trust-indicator .label {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    flex: 1;
+  }
+  .trust-bar {
+    width: 60px;
+    height: 4px;
+    background: var(--color-divider-light);
+    border-radius: 2px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .trust-bar-fill {
+    height: 100%;
+    background: var(--color-primary);
+    border-radius: 2px;
+  }
+  .event-price {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    text-align: right;
+  }
+
+  /* ===== App Bar ===== */
+  .app-bar {
+    height: 48px;
+    display: flex;
+    align-items: center;
+    padding: 0 var(--sp-medium);
+    flex-shrink: 0;
+  }
+  .app-bar-back {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-primary);
+  }
+  .app-bar-title {
+    flex: 1;
+    text-align: center;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin-right: 32px;
+  }
+
+  /* ===== Background content behind sheet ===== */
+  .bg-content {
+    flex: 1;
+    padding: var(--sp-large) var(--sp-screen-edge);
+    opacity: 0.4;
+    overflow: hidden;
+  }
+  .bg-profile-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .bg-line {
+    height: 12px;
+    background: var(--color-divider-light);
+    border-radius: 6px;
+    margin-bottom: 10px;
+  }
+
+  /* ===== Activity Stat ===== */
+  .stat-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--color-divider-light);
+  }
+  .stat-row:last-child { border-bottom: none; }
+  .stat-icon {
+    font-size: 16px;
+    width: 20px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .stat-label {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+  }
+  .stat-value {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-primary);
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== Page Title ===== -->
+<div class="page-title">
+  <span class="version-tag">v1.0 — 2026-04-07</span>
+  <h1>밍글릿 — Trust Badge UI 설계</h1>
+  <p>2-Layer 신뢰 모델 기반 배지 시스템 와이어프레임<br>본인인증(Identity) + 자격인증(Qualification) + 활동 지표(Activity)</p>
+</div>
+
+<!-- ===== Row 1: Overview + Profile Card + Participant List ===== -->
+<div class="screen-row">
+
+  <!-- Screen 1: Badge 시스템 개요 -->
+  <div class="screen-wrapper">
+    <div class="screen-label">1. Badge 시스템 개요</div>
+    <div class="screen-sublabel">온보딩 / 교육용 화면</div>
+    <div class="phone-frame">
+      <div class="status-bar">9:41</div>
+      <div class="content">
+        <div class="content-scroll">
+          <div class="overview-header">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" style="margin-bottom: 12px;">
+              <circle cx="24" cy="24" r="24" fill="rgba(153,0,255,0.08)"/>
+              <path d="M24 10L14 16v8c0 7.73 4.28 14.96 10 18 5.72-3.04 10-10.27 10-18v-8l-10-6z" fill="none" stroke="#9900FF" stroke-width="2"/>
+              <path d="M20 24l3 3 6-6" stroke="#9900FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <h2>신뢰 배지 시스템</h2>
+            <p>밍글릿은 안전한 만남을 위해<br>3단계 신뢰 배지를 운영해요</p>
+          </div>
+
+          <!-- Tier 1 -->
+          <div class="tier-card">
+            <span class="badge-lg badge-tier1">
+              <svg viewBox="0 0 16 16" fill="none"><path d="M8 1.5L3 4.5v4c0 3.87 2.14 7.48 5 9 2.86-1.52 5-5.13 5-9v-4L8 1.5z" stroke="#9900FF" stroke-width="1.5"/></svg>
+              인증
+            </span>
+            <div class="tier-info">
+              <div class="tier-name">인증됨 (Verified)</div>
+              <div class="tier-desc">본인인증을 완료한 사용자예요. 실명이 확인된 분이에요.</div>
+              <div class="tier-req">필요 조건: 본인인증(정부 ID) 완료</div>
+            </div>
+          </div>
+
+          <!-- Tier 2 -->
+          <div class="tier-card">
+            <span class="badge-lg badge-tier2">
+              <svg viewBox="0 0 16 16" fill="none"><path d="M8 1.5L3 4.5v4c0 3.87 2.14 7.48 5 9 2.86-1.52 5-5.13 5-9v-4L8 1.5z" fill="white" fill-opacity="0.2" stroke="white" stroke-width="1.5"/><path d="M5.5 8l2 2 3.5-3.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              자격인증
+            </span>
+            <div class="tier-info">
+              <div class="tier-name">자격인증 (Certified)</div>
+              <div class="tier-desc">본인인증에 더해 직장, 학력 등 자격이 파트너에 의해 확인된 분이에요.</div>
+              <div class="tier-req">필요 조건: 본인인증 + 1개 이상 자격 인증</div>
+            </div>
+          </div>
+
+          <!-- Tier 3 -->
+          <div class="tier-card tier-card-elite">
+            <span class="badge-lg badge-tier3">
+              <svg viewBox="0 0 16 16" fill="none"><path d="M8 1L3 5.5 4.5 10 8 15l3.5-5L13 5.5 8 1z" fill="white" fill-opacity="0.3" stroke="white" stroke-width="1.2"/><circle cx="8" cy="7.5" r="2" fill="white" fill-opacity="0.6"/></svg>
+              엘리트
+            </span>
+            <div class="tier-info">
+              <div class="tier-name">엘리트 (Elite)</div>
+              <div class="tier-desc">자격인증은 물론, 95% 이상의 출석률을 유지하는 최상위 신뢰 등급이에요.</div>
+              <div class="tier-req">필요 조건: 자격인증 + 출석률 95% 이상</div>
+            </div>
+          </div>
+
+          <!-- Explanation note -->
+          <div style="margin-top: 20px; padding: 16px; background: var(--color-surface); border-radius: var(--radius-card);">
+            <div style="font-size: 13px; font-weight: 600; color: var(--color-text-primary); margin-bottom: 6px;">배지는 어떻게 받나요?</div>
+            <div style="font-size: 12px; color: var(--color-text-secondary); line-height: 1.6;">
+              1. 회원가입 시 <strong>본인인증</strong>을 완료하면 인증 배지가 부여돼요<br>
+              2. <strong>파트너가 직장·학력을 확인</strong>하면 자격인증 배지로 승급해요<br>
+              3. 꾸준히 참여하며 <strong>출석률 95%</strong>를 달성하면 엘리트가 돼요
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Screen 2: 프로필 카드 -->
+  <div class="screen-wrapper">
+    <div class="screen-label">2. 프로필 카드</div>
+    <div class="screen-sublabel">배지가 프로필에 표시되는 방식</div>
+    <div class="phone-frame">
+      <div class="status-bar">9:41</div>
+      <div class="app-bar">
+        <div class="app-bar-back">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="app-bar-title">프로필</div>
+      </div>
+      <div class="content">
+        <div class="content-scroll">
+          <!-- Profile card -->
+          <div style="text-align: center; margin-bottom: 24px;">
+            <div class="avatar avatar-64" style="margin: 0 auto 12px;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="#9CA3AF" stroke-width="1.5"/><path d="M4 20c0-4 3.58-7 8-7s8 3 8 7" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </div>
+            <div class="profile-name-row" style="justify-content: center;">
+              <span class="name" style="font-size: 20px; font-weight: 700; color: var(--color-text-primary);">김민준</span>
+              <span class="badge badge-tier2">
+                <svg viewBox="0 0 16 16" fill="none"><path d="M8 1.5L3 4.5v4c0 3.87 2.14 7.48 5 9 2.86-1.52 5-5.13 5-9v-4L8 1.5z" fill="white" fill-opacity="0.2" stroke="white" stroke-width="1.5"/><path d="M5.5 8l2 2 3.5-3.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                자격인증
+              </span>
+            </div>
+            <div style="font-size: 13px; color: var(--color-text-secondary); margin-top: 4px;">삼성전자 · 서울대학교</div>
+            <div style="font-size: 13px; color: var(--color-text-tertiary); margin-top: 2px;">28세 · 강남구</div>
+          </div>
+
+          <!-- Profile sections -->
+          <div style="background: var(--color-surface); border-radius: var(--radius-card); padding: 16px; margin-bottom: 12px;">
+            <div style="font-size: 13px; font-weight: 600; color: var(--color-text-secondary); margin-bottom: 8px;">자기소개</div>
+            <div style="font-size: 14px; color: var(--color-text-primary); line-height: 1.6;">
+              와인과 독서를 좋아하는 28살 직장인이에요. 새로운 사람들과 의미 있는 대화를 나누는 걸 좋아해요. 주말에는 한강 러닝도 즐겨요 🏃
+            </div>
+          </div>
+
+          <div style="background: var(--color-surface); border-radius: var(--radius-card); padding: 16px; margin-bottom: 12px;">
+            <div style="font-size: 13px; font-weight: 600; color: var(--color-text-secondary); margin-bottom: 10px;">관심사</div>
+            <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+              <span style="font-size: 12px; color: var(--color-text-secondary); background: var(--color-background); padding: 5px 12px; border-radius: var(--radius-chip); border: 1px solid var(--color-divider);">와인</span>
+              <span style="font-size: 12px; color: var(--color-text-secondary); background: var(--color-background); padding: 5px 12px; border-radius: var(--radius-chip); border: 1px solid var(--color-divider);">독서</span>
+              <span style="font-size: 12px; color: var(--color-text-secondary); background: var(--color-background); padding: 5px 12px; border-radius: var(--radius-chip); border: 1px solid var(--color-divider);">러닝</span>
+              <span style="font-size: 12px; color: var(--color-text-secondary); background: var(--color-background); padding: 5px 12px; border-radius: var(--radius-chip); border: 1px solid var(--color-divider);">재테크</span>
+              <span style="font-size: 12px; color: var(--color-text-secondary); background: var(--color-background); padding: 5px 12px; border-radius: var(--radius-chip); border: 1px solid var(--color-divider);">여행</span>
+            </div>
+          </div>
+
+          <div style="background: var(--color-surface); border-radius: var(--radius-card); padding: 16px;">
+            <div style="font-size: 13px; font-weight: 600; color: var(--color-text-secondary); margin-bottom: 10px;">인증 정보</div>
+            <div style="display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--color-divider-light);">
+              <span style="font-size: 14px;">🛡️</span>
+              <span style="font-size: 13px; color: var(--color-text-primary); flex: 1;">본인인증 완료</span>
+              <span style="font-size: 11px; color: var(--color-success);">확인됨</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--color-divider-light);">
+              <span style="font-size: 14px;">💼</span>
+              <span style="font-size: 13px; color: var(--color-text-primary); flex: 1;">삼성전자 재직</span>
+              <span style="font-size: 11px; color: var(--color-success);">확인됨</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; padding: 8px 0;">
+              <span style="font-size: 14px;">🎓</span>
+              <span style="font-size: 13px; color: var(--color-text-primary); flex: 1;">서울대학교 졸업</span>
+              <span style="font-size: 11px; color: var(--color-success);">확인됨</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Screen 3: 이벤트 참가자 목록 -->
+  <div class="screen-wrapper">
+    <div class="screen-label">3. 이벤트 참가자 목록</div>
+    <div class="screen-sublabel">배지가 시각적 위계를 형성하는 방식</div>
+    <div class="phone-frame">
+      <div class="status-bar">9:41</div>
+      <div class="app-bar">
+        <div class="app-bar-back">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="app-bar-title">참가자</div>
+      </div>
+      <div class="content">
+        <div class="content-scroll">
+          <div class="participant-header">참가자 8명</div>
+
+          <!-- Elite -->
+          <div class="participant-row">
+            <div class="avatar avatar-40">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="#9CA3AF" stroke-width="1.5"/><path d="M4 20c0-4 3.58-7 8-7s8 3 8 7" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </div>
+            <div class="participant-info">
+              <div class="participant-name-row">
+                <span class="name">이서윤</span>
+                <span class="badge badge-tier3">
+                  <svg viewBox="0 0 16 16" fill="none"><path d="M8 1L3 5.5 4.5 10 8 15l3.5-5L13 5.5 8 1z" fill="white" fill-opacity="0.3" stroke="white" stroke-width="1.2"/><circle cx="8" cy="7.5" r="2" fill="white" fill-opacity="0.6"/></svg>
+                  엘리트
+                </span>
+              </div>
+              <div class="participant-detail">구글코리아 · KAIST · 출석률 97%</div>
+            </div>
+          </div>
+
+          <!-- Certified 1 -->
+          <div class="participant-row">
+            <div class="avatar avatar-40">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="#9CA3AF" stroke-width="1.5"/><path d="M4 20c0-4 3.58-7 8-7s8 3 8 7" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </div>
+            <div class="participant-info">
+              <div class="participant-name-row">
+                <span class="name">김민준</span>
+                <span class="badge badge-tier2">
+                  <svg viewBox="0 0 16 16" fill="none"><path d="M8 1.5L3 4.5v4c0 3.87 2.14 7.48 5 9 2.86-1.52 5-5.13 5-9v-4L8 1.5z" fill="white" fill-opacity="0.2" stroke="white" stroke-width="1.5"/><path d="M5.5 8l2 2 3.5-3.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  자격인증
+                </span>
+              </div>
+              <div class="participant-detail">삼성전자 · 서울대학교</div>
+            </div>
+          </div>
+
+          <!-- Certified 2 -->
+          <div class="participant-row">
+            <div class="avatar avatar-40">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="#9CA3AF" stroke-width="1.5"/><path d="M4 20c0-4 3.58-7 8-7s8 3 8 7" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </div>
+            <div class="participant-info">
+              <div class="participant-name-row">
+                <span class="name">박지현</span>
+                <span class="badge badge-tier2">
+                  <svg viewBox="0 0 16 16" fill="none"><path d="M8 1.5L3 4.5v4c0 3.87 2.14 7.48 5 9 2.86-1.52 5-5.13 5-9v-4L8 1.5z" fill="white" fill-opacity="0.2" stroke="white" stroke-width="1.5"/><path d="M5.5 8l2 2 3.5-3.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  자격인증
+                </span>
+              </div>
+              <div class="participant-detail">네이버 · 연세대학교</div>
+            </div>
+          </div>
+
+          <!-- Verified -->
+          <div class="participant-row">
+            <div class="avatar avatar-40">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="#9CA3AF" stroke-width="1.5"/><path d="M4 20c0-4 3.58-7 8-7s8 3 8 7" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </div>
+            <div class="participant-info">
+              <div class="participant-name-row">
+                <span class="name">최준혁</span>
+                <span class="badge badge-tier1">
+                  <svg viewBox="0 0 16 16" fill="none"><path d="M8 1.5L3 4.5v4c0 3.87 2.14 7.48 5 9 2.86-1.52 5-5.13 5-9v-4L8 1.5z" stroke="#9900FF" stroke-width="1.5"/></svg>
+                  인증
+                </span>
+              </div>
+              <div class="participant-detail">27세 · 서초구</div>
+            </div>
+          </div>
+
+          <!-- No badge -->
+          <div class="participant-row">
+            <div class="avatar avatar-40">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="#9CA3AF" stroke-width="1.5"/><path d="M4 20c0-4 3.58-7 8-7s8 3 8 7" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </div>
+            <div class="participant-info">
+              <div class="participant-name-row">
+                <span class="name">정하늘</span>
+              </div>
+              <div class="participant-detail">26세 · 마포구</div>
+            </div>
+          </div>
+
+          <!-- More participants indicator -->
+          <div style="text-align: center; padding: 16px 0; color: var(--color-text-tertiary); font-size: 13px;">
+            + 3명 더 보기
+          </div>
+
+          <!-- Legend -->
+          <div style="background: var(--color-surface); border-radius: var(--radius-card); padding: 14px 16px; margin-top: 8px;">
+            <div style="font-size: 11px; font-weight: 600; color: var(--color-text-tertiary); margin-bottom: 8px;">배지 안내</div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="badge badge-tier3" style="font-size: 10px;">
+                  <svg viewBox="0 0 16 16" fill="none" style="width:10px;height:10px;"><path d="M8 1L3 5.5 4.5 10 8 15l3.5-5L13 5.5 8 1z" fill="white" fill-opacity="0.3" stroke="white" stroke-width="1.2"/></svg>
+                  엘리트
+                </span>
+                <span style="font-size: 11px; color: var(--color-text-secondary);">자격인증 + 출석률 95%↑</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="badge badge-tier2" style="font-size: 10px;">
+                  <svg viewBox="0 0 16 16" fill="none" style="width:10px;height:10px;"><path d="M8 1.5L3 4.5v4c0 3.87 2.14 7.48 5 9 2.86-1.52 5-5.13 5-9v-4L8 1.5z" fill="white" fill-opacity="0.2" stroke="white" stroke-width="1.5"/></svg>
+                  자격인증
+                </span>
+                <span style="font-size: 11px; color: var(--color-text-secondary);">본인인증 + 직장/학력 확인</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="badge badge-tier1" style="font-size: 10px;">
+                  <svg viewBox="0 0 16 16" fill="none" style="width:10px;height:10px;"><path d="M8 1.5L3 4.5v4c0 3.87 2.14 7.48 5 9 2.86-1.52 5-5.13 5-9v-4L8 1.5z" stroke="#9900FF" stroke-width="1.5"/></svg>
+                  인증
+                </span>
+                <span style="font-size: 11px; color: var(--color-text-secondary);">본인인증 완료</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Row 2: Trust Sheets + Event Card ===== -->
+<div class="screen-row">
+
+  <!-- Screen 4: Trust Sheet — Tier 2 -->
+  <div class="screen-wrapper">
+    <div class="screen-label">4. Trust Sheet — Tier 2 (자격인증)</div>
+    <div class="screen-sublabel">배지 탭 시 열리는 상세 바텀시트</div>
+    <div class="phone-frame">
+      <div class="status-bar">9:41</div>
+      <!-- Background content -->
+      <div class="bg-content">
+        <div class="bg-profile-row">
+          <div class="avatar avatar-40" style="opacity: 0.5;"></div>
+          <div style="flex: 1;">
+            <div class="bg-line" style="width: 120px; height: 14px;"></div>
+            <div class="bg-line" style="width: 80px; height: 10px;"></div>
+          </div>
+        </div>
+        <div class="bg-line" style="width: 100%;"></div>
+        <div class="bg-line" style="width: 90%;"></div>
+        <div class="bg-line" style="width: 70%;"></div>
+        <div class="bg-line" style="width: 100%; margin-top: 20px;"></div>
+        <div class="bg-line" style="width: 85%;"></div>
+        <div class="bg-line" style="width: 95%;"></div>
+      </div>
+      <!-- Scrim -->
+      <div class="sheet-scrim"></div>
+      <!-- Bottom Sheet -->
+      <div class="bottom-sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-user">
+          <div class="avatar avatar-56">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="#9CA3AF" stroke-width="1.5"/><path d="M4 20c0-4 3.58-7 8-7s8 3 8 7" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </div>
+          <div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span class="name" style="font-size: 17px; font-weight: 700; color: var(--color-text-primary);">김민준</span>
+              <span class="badge badge-tier2">
+                <svg viewBox="0 0 16 16" fill="none"><path d="M8 1.5L3 4.5v4c0 3.87 2.14 7.48 5 9 2.86-1.52 5-5.13 5-9v-4L8 1.5z" fill="white" fill-opacity="0.2" stroke="white" stroke-width="1.5"/><path d="M5.5 8l2 2 3.5-3.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                자격인증
+              </span>
+            </div>
+            <div style="font-size: 13px; color: var(--color-text-tertiary); margin-top: 2px;">28세 · 강남구</div>
+          </div>
+        </div>
+
+        <div class="sheet-section-title">인증된 항목</div>
+
+        <div class="sheet-item">
+          <span class="sheet-item-icon">🛡️</span>
+          <div class="sheet-item-content">
+            <div class="sheet-item-label">본인인증 완료</div>
+            <div class="sheet-item-date">2026.01.15</div>
+          </div>
+        </div>
+        <div class="sheet-item">
+          <span class="sheet-item-icon">💼</span>
+          <div class="sheet-item-content">
+            <div class="sheet-item-label">삼성전자 재직 확인</div>
+            <div class="sheet-item-date">유효기간: 2027.01.15</div>
+          </div>
+        </div>
+        <div class="sheet-item">
+          <span class="sheet-item-icon">🎓</span>
+          <div class="sheet-item-content">
+            <div class="sheet-item-label">서울대학교 졸업 확인</div>
+            <div class="sheet-item-date">유효기간: 없음</div>
+          </div>
+        </div>
+
+        <div class="sheet-note">
+          인증 정보는 파트너가 직접 확인한 내용이에요. 밍글릿은 인증 절차의 정확성을 위해 최선을 다하고 있어요.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Screen 5: Trust Sheet — Tier 3 Elite -->
+  <div class="screen-wrapper">
+    <div class="screen-label">5. Trust Sheet — Tier 3 (엘리트)</div>
+    <div class="screen-sublabel">엘리트 배지 상세 — 활동 지표 포함</div>
+    <div class="phone-frame">
+      <div class="status-bar">9:41</div>
+      <!-- Background content -->
+      <div class="bg-content">
+        <div class="bg-profile-row">
+          <div class="avatar avatar-40" style="opacity: 0.5;"></div>
+          <div style="flex: 1;">
+            <div class="bg-line" style="width: 120px; height: 14px;"></div>
+            <div class="bg-line" style="width: 80px; height: 10px;"></div>
+          </div>
+        </div>
+        <div class="bg-line" style="width: 100%;"></div>
+        <div class="bg-line" style="width: 90%;"></div>
+        <div class="bg-line" style="width: 70%;"></div>
+        <div class="bg-line" style="width: 100%; margin-top: 20px;"></div>
+        <div class="bg-line" style="width: 85%;"></div>
+      </div>
+      <!-- Scrim -->
+      <div class="sheet-scrim"></div>
+      <!-- Bottom Sheet with Elite accent -->
+      <div class="bottom-sheet sheet-elite-accent">
+        <div class="sheet-handle"></div>
+        <div class="sheet-user">
+          <div class="avatar avatar-56">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="#9CA3AF" stroke-width="1.5"/><path d="M4 20c0-4 3.58-7 8-7s8 3 8 7" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </div>
+          <div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span class="name" style="font-size: 17px; font-weight: 700; color: var(--color-text-primary);">이서윤</span>
+              <span class="badge badge-tier3">
+                <svg viewBox="0 0 16 16" fill="none"><path d="M8 1L3 5.5 4.5 10 8 15l3.5-5L13 5.5 8 1z" fill="white" fill-opacity="0.3" stroke="white" stroke-width="1.2"/><circle cx="8" cy="7.5" r="2" fill="white" fill-opacity="0.6"/></svg>
+                엘리트
+              </span>
+            </div>
+            <div style="font-size: 13px; color: var(--color-text-tertiary); margin-top: 2px;">30세 · 판교</div>
+          </div>
+        </div>
+
+        <div class="sheet-section-title">인증된 항목</div>
+
+        <div class="sheet-item">
+          <span class="sheet-item-icon">🛡️</span>
+          <div class="sheet-item-content">
+            <div class="sheet-item-label">본인인증 완료</div>
+            <div class="sheet-item-date">2025.11.20</div>
+          </div>
+        </div>
+        <div class="sheet-item">
+          <span class="sheet-item-icon">💼</span>
+          <div class="sheet-item-content">
+            <div class="sheet-item-label">구글코리아 재직 확인</div>
+            <div class="sheet-item-date">유효기간: 2027.05.01</div>
+          </div>
+        </div>
+        <div class="sheet-item">
+          <span class="sheet-item-icon">🎓</span>
+          <div class="sheet-item-content">
+            <div class="sheet-item-label">KAIST 졸업 확인</div>
+            <div class="sheet-item-date">유효기간: 없음</div>
+          </div>
+        </div>
+
+        <div style="margin-top: 16px;">
+          <div class="sheet-section-title">활동 지표</div>
+          <div class="stat-row">
+            <span class="stat-icon">📊</span>
+            <span class="stat-label">출석률 (최근 6개월)</span>
+            <span class="stat-value">97%</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-icon">⭐</span>
+            <span class="stat-label">이벤트 참여</span>
+            <span class="stat-value">23회</span>
+          </div>
+        </div>
+
+        <div class="sheet-note">
+          엘리트 배지는 높은 출석률과 자격 인증을 모두 갖춘 분에게 부여돼요. 꾸준한 참여가 신뢰의 증거예요.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Screen 6: 이벤트 카드 + 배지 -->
+  <div class="screen-wrapper">
+    <div class="screen-label">6. 이벤트 카드 + 배지</div>
+    <div class="screen-sublabel">디스커버리 피드에서의 신뢰 정보 표시</div>
+    <div class="phone-frame">
+      <div class="status-bar">9:41</div>
+      <div class="app-bar">
+        <div class="app-bar-title" style="margin-right: 0; text-align: left; padding-left: 4px; font-size: 18px; font-weight: 700;">
+          이벤트 탐색
+        </div>
+      </div>
+      <div class="content">
+        <div class="content-scroll">
+          <!-- Event Card -->
+          <div class="event-card" style="margin-bottom: 16px;">
+            <div class="event-image">
+              <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                <rect x="8" y="12" width="24" height="18" rx="2" stroke="#9CA3AF" stroke-width="1.5"/>
+                <circle cx="15" cy="19" r="3" stroke="#9CA3AF" stroke-width="1.5"/>
+                <path d="M8 26l7-5 5 3 7-6 5 4" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div class="event-body">
+              <div class="event-title">강남 와인 테이스팅 모임</div>
+              <div class="event-host">
+                <div class="avatar avatar-32">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="#9CA3AF" stroke-width="1.5"/><path d="M4 20c0-4 3.58-7 8-7s8 3 8 7" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round"/></svg>
+                </div>
+                <span class="name">김민준</span>
+                <span class="badge badge-tier2">
+                  <svg viewBox="0 0 16 16" fill="none"><path d="M8 1.5L3 4.5v4c0 3.87 2.14 7.48 5 9 2.86-1.52 5-5.13 5-9v-4L8 1.5z" fill="white" fill-opacity="0.2" stroke="white" stroke-width="1.5"/><path d="M5.5 8l2 2 3.5-3.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  자격인증
+                </span>
+              </div>
+              <div class="event-meta">4월 12일 토 · 19:00 · 강남역 3번 출구</div>
+              <div class="event-participants">
+                <div class="avatar avatar-24" style="background: #D1D5DB;"></div>
+                <div class="avatar avatar-24" style="background: #C4B5FD;"></div>
+                <div class="avatar avatar-24" style="background: #FCD34D;"></div>
+                <span class="more">+5명</span>
+              </div>
+              <div class="trust-indicator">
+                <span class="label">참가자 62%가 자격인증 완료</span>
+                <div class="trust-bar">
+                  <div class="trust-bar-fill" style="width: 62%;"></div>
+                </div>
+              </div>
+              <div class="event-price">25,000원</div>
+            </div>
+          </div>
+
+          <!-- Second Event Card (for context) -->
+          <div class="event-card">
+            <div class="event-image" style="height: 140px;">
+              <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                <rect x="8" y="12" width="24" height="18" rx="2" stroke="#9CA3AF" stroke-width="1.5"/>
+                <circle cx="15" cy="19" r="3" stroke="#9CA3AF" stroke-width="1.5"/>
+                <path d="M8 26l7-5 5 3 7-6 5 4" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div class="event-body">
+              <div class="event-title">한남동 브런치 독서 모임</div>
+              <div class="event-host">
+                <div class="avatar avatar-32">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="#9CA3AF" stroke-width="1.5"/><path d="M4 20c0-4 3.58-7 8-7s8 3 8 7" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round"/></svg>
+                </div>
+                <span class="name">이서윤</span>
+                <span class="badge badge-tier3">
+                  <svg viewBox="0 0 16 16" fill="none"><path d="M8 1L3 5.5 4.5 10 8 15l3.5-5L13 5.5 8 1z" fill="white" fill-opacity="0.3" stroke="white" stroke-width="1.2"/><circle cx="8" cy="7.5" r="2" fill="white" fill-opacity="0.6"/></svg>
+                  엘리트
+                </span>
+              </div>
+              <div class="event-meta">4월 13일 일 · 11:00 · 한남동</div>
+              <div class="event-participants">
+                <div class="avatar avatar-24" style="background: #D1D5DB;"></div>
+                <div class="avatar avatar-24" style="background: #A7F3D0;"></div>
+                <div class="avatar avatar-24" style="background: #FCA5A5;"></div>
+                <span class="more">+3명</span>
+              </div>
+              <div class="trust-indicator">
+                <span class="label">참가자 83%가 자격인증 완료</span>
+                <div class="trust-bar">
+                  <div class="trust-bar-fill" style="width: 83%;"></div>
+                </div>
+              </div>
+              <div class="event-price">18,000원</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

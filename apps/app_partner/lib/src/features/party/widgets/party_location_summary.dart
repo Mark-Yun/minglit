@@ -50,7 +50,9 @@ class PartyLocationSummary extends StatelessWidget {
           color: colorScheme.surface,
           borderRadius: BorderRadius.circular(MinglitRadius.card),
           border: Border.all(
-            color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+            color: colorScheme.outlineVariant.withValues(
+              alpha: MinglitOpacity.strong,
+            ),
           ),
         ),
         child: Column(

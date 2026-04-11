@@ -7,6 +7,7 @@ mixin _PartyCreateWizardLoad on _$PartyCreateWizardController {
     final partyRepo = ref.read(partyRepositoryProvider);
     final ticketRepo = ref.read(ticketRepositoryProvider);
     final locationRepo = ref.read(locationRepositoryProvider);
+    final tagRepo = ref.read(tagRepositoryProvider);
 
     final party = await partyRepo.getPartyById(partyId);
     if (party == null) {
@@ -19,6 +20,9 @@ mixin _PartyCreateWizardLoad on _$PartyCreateWizardController {
     if (locationId != null && locationId.isNotEmpty) {
       location = await locationRepo.getLocationById(locationId);
     }
+
+    // 기존 파티의 태그 목록 로드
+    final existingTags = await tagRepo.getTagsByPartyId(partyId);
 
     final contactOptions = party.contactOptions;
     final enabledMethods = <String>{};
@@ -45,6 +49,7 @@ mixin _PartyCreateWizardLoad on _$PartyCreateWizardController {
       enabledContactMethods: enabledMethods,
       entryGroups: party.entryGroups ?? [],
       tickets: templates,
+      tagIds: existingTags.map((t) => t.id).toList(),
       isPrefilled: true,
     );
   }

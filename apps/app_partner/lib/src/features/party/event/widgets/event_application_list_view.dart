@@ -17,9 +17,9 @@ class EventApplicationListView extends ConsumerWidget {
     ref.listen(eventApplicationReviewControllerProvider, (_, next) {
       if (next is AsyncData) {
         ref.invalidate(eventApplicationsProvider(eventId));
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('심사 처리가 완료되었습니다.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('심사 처리가 완료되었습니다.')));
       }
       if (next is AsyncError) {
         handleMinglitError(context, next.error, next.stackTrace);
@@ -30,9 +30,7 @@ class EventApplicationListView extends ConsumerWidget {
       value: applicationsAsync,
       data: (applications) {
         if (applications.isEmpty) {
-          return const Center(
-            child: Text('신청 내역이 없습니다.'),
-          );
+          return const Center(child: Text('신청 내역이 없습니다.'));
         }
 
         final pendingReviews = applications
@@ -159,9 +157,11 @@ class _StatusBadge extends StatelessWidget {
         vertical: MinglitSpacing.xxsmall,
       ),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withValues(alpha: MinglitOpacity.highlight),
         borderRadius: BorderRadius.circular(MinglitRadius.small),
-        border: Border.all(color: color.withValues(alpha: 0.5)),
+        border: Border.all(
+          color: color.withValues(alpha: MinglitOpacity.strong),
+        ),
       ),
       child: Text(
         label,

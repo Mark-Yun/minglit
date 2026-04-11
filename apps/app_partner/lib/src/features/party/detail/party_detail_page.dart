@@ -118,7 +118,7 @@ class PartyDetailPage extends ConsumerWidget {
                         height: 1,
                         thickness: 1,
                         color: colorScheme.outlineVariant.withValues(
-                          alpha: 0.5,
+                          alpha: MinglitOpacity.strong,
                         ),
                       ),
                     ],

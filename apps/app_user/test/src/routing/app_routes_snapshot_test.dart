@@ -60,6 +60,8 @@ void main() {
             '/purchase-history',
             '/notifications',
             '/my/notification-settings',
+            // Fix #1213: 계정 관리 서브페이지 경로 추가
+            '/my/account',
             // Shell routes
             '/',
             '/curation',
@@ -71,6 +73,8 @@ void main() {
             '/my/privacy/delete/verify',
             '/my/privacy/delete/complete',
             '/my/blocked-partners',
+            // Tag discovery routes (#1136)
+            '/tags/:tagId',
           ]),
         );
       },

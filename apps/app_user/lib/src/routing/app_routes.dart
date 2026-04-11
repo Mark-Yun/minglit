@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:app_user/src/features/account_deletion/logic/account_deletion_coordinator.dart';
 import 'package:app_user/src/features/account_deletion/ui/deletion_complete_page.dart';
 import 'package:app_user/src/features/account_deletion/ui/deletion_info_page.dart';
 import 'package:app_user/src/features/account_deletion/ui/deletion_reason_page.dart';
@@ -17,6 +20,7 @@ import 'package:app_user/src/features/payment/ui/purchase_history_page.dart';
 import 'package:app_user/src/features/search/search_page.dart';
 import 'package:app_user/src/features/settings/blocked_partners_page.dart';
 import 'package:app_user/src/features/settings/privacy_page.dart';
+import 'package:app_user/src/features/tag/ui/tag_event_list_page.dart';
 import 'package:app_user/src/features/ticket/ui/ticket_qr_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -211,6 +215,39 @@ class NotificationSettingsRoute extends GoRouteData
       const NotificationSettingsScreen();
 }
 
+/// **Account Management Route**: Logout and account deletion sub-settings page.
+/// Path: `/my/account`
+@TypedGoRoute<AccountManagementRoute>(path: '/my/account')
+class AccountManagementRoute extends GoRouteData with $AccountManagementRoute {
+  const AccountManagementRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) {
+    // Fix #1213: 계정 관리 서브페이지 — 로그아웃/회원탈퇴 통합
+    return Consumer(
+      builder: (context, ref, _) {
+        return AccountManagementPage(
+          onLogout: () {
+            // Fix #404: navigate first, then sign out.
+            // Future.delayed(Duration.zero) avoids
+            // context-after-dispose errors.
+            GoRouter.of(context).go('/');
+            unawaited(
+              Future<void>.delayed(Duration.zero).then((_) {
+                unawaited(ref.read(authControllerProvider.notifier).signOut());
+              }),
+            );
+          },
+          onDeleteAccount: () {
+            // Fix #1213: 기존 회원 탈퇴 플로우를 계정 관리에서 재사용
+            ref.read(accountDeletionCoordinatorProvider).start();
+          },
+        );
+      },
+    );
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Shell Routes (promoted to top-level)
 // ---------------------------------------------------------------------------
@@ -330,4 +367,20 @@ class BlockedPartnersRoute extends GoRouteData with $BlockedPartnersRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       const BlockedPartnersPage();
+}
+
+/// **Tag Event List Route**: Paginated event list for a specific tag.
+/// Path: `/tags/:tagId`
+///
+/// [tagName] is passed as a query parameter for AppBar display.
+@TypedGoRoute<TagEventListRoute>(path: '/tags/:tagId')
+class TagEventListRoute extends GoRouteData with $TagEventListRoute {
+  const TagEventListRoute({required this.tagId, required this.tagName});
+
+  final String tagId;
+  final String tagName;
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      TagEventListPage(tagId: tagId, tagName: tagName);
 }

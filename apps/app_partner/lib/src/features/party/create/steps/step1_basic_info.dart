@@ -1,4 +1,5 @@
 import 'package:app_partner/src/features/party/create/party_create_wizard_controller.dart';
+import 'package:app_partner/src/features/party/create/widgets/tag_selection_section.dart';
 import 'package:app_partner/src/features/party/widgets/party_description_input.dart';
 import 'package:app_partner/src/features/party/widgets/party_image_editor.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
@@ -126,6 +127,8 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
                   .setVisibility(value ? 'private' : 'public');
             },
           ),
+          const SizedBox(height: MinglitSpacing.large),
+          const TagSelectionSection(),
         ],
       ),
     );

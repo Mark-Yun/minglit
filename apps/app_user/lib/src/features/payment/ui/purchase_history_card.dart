@@ -36,7 +36,9 @@ class PurchaseHistoryCard extends ConsumerWidget {
         border: Border.all(color: theme.colorScheme.outlineVariant),
         boxShadow: [
           BoxShadow(
-            color: MinglitColors.textPrimary.withValues(alpha: 0.02),
+            color: MinglitColors.textPrimary.withValues(
+              alpha: MinglitOpacity.shadowXs,
+            ),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -96,10 +98,7 @@ class PurchaseHistoryCard extends ConsumerWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: MinglitSpacing.xsmall),
-                    Text(
-                      dateLabel,
-                      style: theme.textTheme.bodySmall,
-                    ),
+                    Text(dateLabel, style: theme.textTheme.bodySmall),
                     Text(
                       location?.name ?? '장소 정보 없음',
                       style: theme.textTheme.bodySmall?.copyWith(
@@ -132,10 +131,15 @@ class PurchaseHistoryCard extends ConsumerWidget {
           const SizedBox(height: MinglitSpacing.medium),
 
           // 4. Actions
+          // Fix #1234: 예매 취소 버튼 2줄 깨짐 — 버튼 3개 Expanded 균등 분할 시
+          // '예매 취소' 텍스트가 2줄로 넘침. 취소 버튼은 flex:2로 넓히고
+          // 나머지 버튼은 flex:1로 유지하여 1줄 표시 보장.
+          // Fix #1236: 보조 버튼(영수증/문의하기)을 OutlinedButton → TextButton으로
+          // 낮춤 — 브랜드 보라 아웃라인 제거, 정보 위계 명확화
           Row(
             children: [
               Expanded(
-                child: OutlinedButton(
+                child: TextButton(
                   onPressed: () async {
                     if (paymentId == null || paymentId.isEmpty) {
                       context.showMinglitWarning('영수증 정보를 확인할 수 없습니다.');
@@ -160,19 +164,13 @@ class PurchaseHistoryCard extends ConsumerWidget {
               ),
               const SizedBox(width: MinglitSpacing.small),
               Expanded(
-                child: OutlinedButton(
+                child: TextButton(
                   onPressed: () async {
                     final phone =
-                        _resolveContactValue(
-                          contactOptions,
-                          'phone',
-                        ) ??
+                        _resolveContactValue(contactOptions, 'phone') ??
                         party?.partner?.contactPhone;
                     final email =
-                        _resolveContactValue(
-                          contactOptions,
-                          'email',
-                        ) ??
+                        _resolveContactValue(contactOptions, 'email') ??
                         party?.partner?.contactEmail;
 
                     Uri? uri;
@@ -202,6 +200,7 @@ class PurchaseHistoryCard extends ConsumerWidget {
               if (canCancel) ...[
                 const SizedBox(width: MinglitSpacing.small),
                 Expanded(
+                  flex: 2,
                   child: ElevatedButton(
                     onPressed: () => _onCancelPressed(
                       context: context,
@@ -217,7 +216,11 @@ class PurchaseHistoryCard extends ConsumerWidget {
                       backgroundColor: theme.colorScheme.errorContainer,
                       foregroundColor: theme.colorScheme.onErrorContainer,
                     ),
-                    child: const Text('예매 취소'),
+                    child: const Text(
+                      '예매 취소',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ),
               ],
@@ -271,7 +274,9 @@ class PurchaseHistoryCard extends ConsumerWidget {
         if (!context.mounted) return;
         await context.showMinglitAlert(
           title: '환불 불가',
-          message: '결제 후 2시간 이내 또는 이벤트 시작 7일 전까지만 환불 가능합니다.',
+          // Fix #1140: 환불 불가 메시지에 고객센터 대안 경로 추가 — 전자상거래법 준수
+          message:
+              '자동 환불 기간이 지났습니다. 환불이 필요하시면 고객센터(support@minglit.com)로 문의해주세요.',
         );
       },
       confirmRefund: (calculation) async {
@@ -288,10 +293,7 @@ class PurchaseHistoryCard extends ConsumerWidget {
       },
       showError: (message) async {
         if (!context.mounted) return false;
-        return _showRefundErrorDialog(
-          context: context,
-          message: message,
-        );
+        return _showRefundErrorDialog(context: context, message: message);
       },
       onSuccess: () async {
         if (!context.mounted) return;
@@ -328,10 +330,7 @@ class PurchaseHistoryCard extends ConsumerWidget {
             label: '결제 금액',
             value: '${formatter.format(paymentAmount)}원',
           ),
-          _RefundRow(
-            label: '환불 비율',
-            value: '${calculation.refundPercentage}%',
-          ),
+          _RefundRow(label: '환불 비율', value: '${calculation.refundPercentage}%'),
           _RefundRow(
             label: '환불 금액',
             value: '${formatter.format(calculation.refundAmount)}원',

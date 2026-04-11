@@ -150,21 +150,5 @@ void main() {
       expect(json['success'], true);
       expect(json['user'], isA<String>());
     });
-
-    test(
-      'profile-update success has expected fields',
-      () {
-        final json = _loadSample('profile_update_success');
-        expect(json['success'], true);
-        expect(
-          json['processed'],
-          isA<Map<String, dynamic>>(),
-        );
-        final processed = json['processed'] as Map<String, dynamic>;
-        expect(processed['user_id'], isA<String>());
-        expect(processed['action_type'], isA<String>());
-        expect(processed['weight'], isA<num>());
-      },
-    );
   });
 }

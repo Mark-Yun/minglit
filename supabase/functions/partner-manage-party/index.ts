@@ -122,6 +122,40 @@ async function handleRequest(req: Request): Promise<Response> {
       }
     }
 
+    // Validate tag_ids if provided (must validate before any DB write)
+    // Fix #1136: tag_ids 검증을 party INSERT 전으로 이동 — 잘못된 입력 시 고아 row 방지
+    const rawTagIds = body.tag_ids;
+    // Fix #1182: deduplicate tag_ids before validation (#13)
+    const tagIds = rawTagIds !== undefined && Array.isArray(rawTagIds)
+      ? [...new Set(rawTagIds as string[])]
+      : rawTagIds;
+    if (tagIds !== undefined) {
+      if (!Array.isArray(tagIds)) {
+        return errorResponse("tag_ids must be an array", 400);
+      }
+      if (tagIds.length > 5) {
+        return errorResponse("tag_ids must contain at most 5 tags", 400);
+      }
+      // Fix #1182: UUID format validation (#12)
+      const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      for (let i = 0; i < tagIds.length; i++) {
+        if (!UUID_RE.test(tagIds[i])) {
+          return errorResponse(`tag_ids[${i}] must be a valid UUID`, 400);
+        }
+      }
+      // Fix #1136: validate tag IDs exist before party creation
+      // Prevents orphaned party rows when FK constraint would fail during party_tags INSERT
+      if (tagIds.length > 0) {
+        const { data: existingTags, error: tagCheckError } = await supabase
+          .from("tags")
+          .select("id")
+          .in("id", tagIds as string[]);
+        if (tagCheckError) return errorResponse("Failed to validate tag IDs", 500);
+        if (!existingTags || existingTags.length !== (tagIds as string[]).length)
+          return errorResponse("One or more tag_ids do not exist", 400);
+      }
+    }
+
     // Validate entry_group_templates
     const entryGroupTemplates = body.entry_group_templates;
     if (Array.isArray(entryGroupTemplates) && entryGroupTemplates.length > 0) {
@@ -186,18 +220,23 @@ async function handleRequest(req: Request): Promise<Response> {
       }
     }
 
-    // Insert party
-    const { data: newParty, error: partyInsertError } = await supabase
-      .from("parties")
-      .insert(partyRecord)
-      .select("id")
-      .single();
+    // Fix #1223: parties INSERT + party_tags INSERT を RPC로 원자적 처리
+    // 기존 2단계 write(INSERT parties → INSERT party_tags) 는 2단계 실패 시 고아 row 발생.
+    // create_party_with_tags RPC 가 단일 트랜잭션으로 두 write를 묶어 처리한다.
+    const { data: rpcData, error: rpcError } = await supabase
+      .rpc("create_party_with_tags", {
+        p_party: partyRecord,
+        p_tag_ids: Array.isArray(tagIds) ? tagIds as string[] : [],
+      });
 
-    if (partyInsertError) {
-      return errorResponse(`Failed to create party: ${partyInsertError.message}`, 500);
+    if (rpcError) {
+      return errorResponse(`Failed to create party: ${rpcError.message}`, 500);
+    }
+    if (!rpcData) {
+      return errorResponse("Failed to create party: no party_id returned", 500);
     }
 
-    const partyId = newParty.id as string;
+    const partyId = rpcData as string;
 
     // Insert entry_group_templates if provided (already validated above)
     if (Array.isArray(entryGroupTemplates) && entryGroupTemplates.length > 0) {
@@ -264,6 +303,8 @@ async function handleRequest(req: Request): Promise<Response> {
     const permCheck = await checkPartnerPermission(supabase, existingParty.partner_id, userId);
     if (permCheck instanceof Response) return permCheck;
 
+    // ── Pre-validate all payloads before any DB writes ──
+
     // Build party updates
     const partyData = body.party;
     const partyUpdates: Record<string, unknown> = {};
@@ -282,6 +323,54 @@ async function handleRequest(req: Request): Promise<Response> {
         }
       }
     }
+
+    // Validate tag_ids before any DB writes
+    // Fix #1136: tag_ids 검증을 모든 write 전으로 이동 — 부분 업데이트 방지
+    const rawUpdateTagIds = body.tag_ids;
+    // Fix #1182: deduplicate tag_ids before validation (#13)
+    const updateTagIds = rawUpdateTagIds !== undefined && Array.isArray(rawUpdateTagIds)
+      ? [...new Set(rawUpdateTagIds as string[])]
+      : rawUpdateTagIds;
+    if (updateTagIds !== undefined) {
+      if (!Array.isArray(updateTagIds)) {
+        return errorResponse("tag_ids must be an array", 400);
+      }
+      if (updateTagIds.length > 5) {
+        return errorResponse("tag_ids must contain at most 5 tags", 400);
+      }
+      // Fix #1182: UUID format validation (#12)
+      const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      for (let i = 0; i < updateTagIds.length; i++) {
+        if (!UUID_RE.test(updateTagIds[i])) {
+          return errorResponse(`tag_ids[${i}] must be a valid UUID`, 400);
+        }
+      }
+      // Validate tag IDs exist in the database — prevents partial writes
+      // if FK constraint would fail during the INSERT phase
+      if (updateTagIds.length > 0) {
+        const { data: existingTags, error: tagCheckError } = await supabase
+          .from("tags")
+          .select("id")
+          .in("id", updateTagIds as string[]);
+        if (tagCheckError) {
+          return errorResponse("Failed to validate tag IDs", 500);
+        }
+        if (!existingTags || existingTags.length !== (updateTagIds as string[]).length) {
+          return errorResponse("One or more tag_ids do not exist", 400);
+        }
+      }
+    }
+
+    if (
+      Object.keys(partyUpdates).length === 0 &&
+      !body.location &&
+      body.location_id === undefined &&
+      updateTagIds === undefined
+    ) {
+      return errorResponse("No fields to update", 400);
+    }
+
+    // ── All validations passed — now perform DB writes ──
 
     // Update party fields if any
     if (Object.keys(partyUpdates).length > 0) {
@@ -359,8 +448,19 @@ async function handleRequest(req: Request): Promise<Response> {
       }
     }
 
-    if (Object.keys(partyUpdates).length === 0 && !locationData && body.location_id === undefined) {
-      return errorResponse("No fields to update", 400);
+    // Update party_tags if tag_ids present in body (undefined = no change, [] = clear all)
+    // Fix #1223: 2단계 DELETE+UPSERT 를 RPC로 원자적 처리
+    // update_party_tags RPC 가 단일 트랜잭션으로 DELETE stale rows → INSERT new rows 처리.
+    // Fix #1149 패턴(DELETE-first)도 RPC 내부에서 동일하게 유지됨.
+    if (updateTagIds !== undefined) {
+      const { error: ptRpcError } = await supabase
+        .rpc("update_party_tags", {
+          p_party_id: partyId,
+          p_tag_ids: updateTagIds as string[],
+        });
+      if (ptRpcError) {
+        return errorResponse(`Failed to update party tags: ${ptRpcError.message}`, 500);
+      }
     }
 
     return successResponse({ success: true });

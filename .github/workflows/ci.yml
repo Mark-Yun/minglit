@@ -16,7 +16,7 @@ jobs:
   check-migration-versions:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Check duplicate migration versions
         run: |
           VERSIONS=$(ls supabase/migrations/*.sql 2>/dev/null | xargs -n1 basename | cut -c1-14 | sort)
@@ -32,7 +32,7 @@ jobs:
   check-env-manifest-sync:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Check env-manifest.json / EnvKeyStore sync
         run: bash scripts/check-env-manifest-sync.sh
 
@@ -49,8 +49,8 @@ jobs:
       landing_partner: ${{ steps.filter.outputs.landing_partner }}
       supabase: ${{ steps.filter.outputs.supabase }}
     steps:
-    - uses: actions/checkout@v4
-    - uses: dorny/paths-filter@v3
+    - uses: actions/checkout@v6
+    - uses: dorny/paths-filter@v4
       id: filter
       with:
         filters: |
@@ -103,7 +103,7 @@ jobs:
             coverage_flag: minglit-kit
             coverage_flag_logic: ''
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
         with:
           ref: ${{ github.head_ref || github.ref }}
@@ -115,7 +115,7 @@ jobs:
           cache: true
       - name: Cache pub packages
         if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.pub-cache
           key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
@@ -156,7 +156,7 @@ jobs:
         working-directory: ${{ matrix.directory }}
       - name: Upload golden failures
         if: ${{ steps.golden_compare.outcome == 'failure' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         continue-on-error: true
         with:
           name: golden-failures-${{ matrix.app }}
@@ -198,20 +198,20 @@ jobs:
           echo "Updated goldens have been auto-committed for review."
           exit 1
       - name: Test Report
-        uses: dorny/test-reporter@v1
+        uses: dorny/test-reporter@v3
         if: ${{ (success() || failure()) && needs.changes.outputs[matrix.change_key] == 'true' }}
         with:
           name: ${{ matrix.report_name }}
           path: ${{ matrix.directory }}/test-results.json
           reporter: dart-json
           fail-on-error: false
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
         with:
           name: ${{ matrix.artifact_name }}
           path: ${{ matrix.directory }}/coverage
       - name: Upload Allure Results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: ${{ (success() || failure()) && needs.changes.outputs[matrix.change_key] == 'true' }}
         continue-on-error: true
         with:
@@ -219,7 +219,7 @@ jobs:
           path: ${{ matrix.directory }}/allure-results
           retention-days: 30
       - name: Upload coverage
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v6
         if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
         with:
           file: ${{ matrix.directory }}/coverage/lcov.info
@@ -227,7 +227,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
       - name: Upload logic layer coverage
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v6
         if: ${{ needs.changes.outputs[matrix.change_key] == 'true' && matrix.coverage_flag_logic != '' }}
         with:
           file: ${{ matrix.directory }}/coverage/lcov.info
@@ -244,8 +244,8 @@ jobs:
       run:
         working-directory: ./apps/landing_user
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: '20'
           cache: 'npm'
@@ -265,8 +265,8 @@ jobs:
       run:
         working-directory: ./apps/landing_partner
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: '20'
           cache: 'npm'
@@ -283,7 +283,7 @@ jobs:
     if: ${{ needs.changes.outputs.supabase == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: supabase/setup-cli@v1
         with:
           version: latest
@@ -311,10 +311,28 @@ jobs:
     if: ${{ needs.changes.outputs.supabase == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
+      - name: Validate deno.json presence
+        run: |
+          missing=()
+          for dir in functions/*/; do
+            name=$(basename "$dir")
+            if [[ "$name" != _* ]] && [ ! -f "${dir}deno.json" ]; then
+              missing+=("$name")
+            fi
+          done
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "❌ deno.json missing in the following Edge Functions:"
+            for ef in "${missing[@]}"; do
+              echo "  - $ef"
+            done
+            exit 1
+          fi
+          echo "✅ All Edge Functions have deno.json"
+        working-directory: supabase
       - name: Test (edge functions)
         run: deno test --allow-all functions/
         working-directory: supabase

@@ -147,7 +147,9 @@ class _Step3ContactSettlementState
           Text(
             '등록된 주소는 파트너 정보에 공개됩니다',
             style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.6),
+              color: theme.textTheme.bodySmall?.color?.withValues(
+                alpha: MinglitOpacity.separator,
+              ),
             ),
           ),
           const SizedBox(height: MinglitSpacing.large),

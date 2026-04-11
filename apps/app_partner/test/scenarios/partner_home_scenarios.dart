@@ -121,5 +121,8 @@ class _LoadedDashboardController extends PartnerDashboardController {
     upcomingEvents: upcoming,
     closingSoonEvents: closingSoon,
     activeParties: active,
+    // Fix #1215: 골든 시나리오에서 hasAnyEvents 기본값(false)으로
+    // 온보딩이 재표시되는 회귀를 방지한다.
+    hasAnyEvents: true,
   );
 }

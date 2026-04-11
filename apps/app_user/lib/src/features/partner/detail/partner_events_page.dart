@@ -18,10 +18,7 @@ class PartnerEventsPage extends ConsumerWidget {
     final eventsAsync = ref.watch(partnerEventsProvider(partnerId: partnerId));
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('$partnerName 이벤트'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: Text('$partnerName 이벤트'), centerTitle: true),
       body: MinglitAsyncValueWidget(
         value: eventsAsync,
         data: (events) {
@@ -42,6 +39,7 @@ class PartnerEventsPage extends ConsumerWidget {
               // Fix #634: home_coordinator 직접 참조 → partner_coordinator 전환
               return MinglitEventCard(
                 event: event,
+                showPartnerOverlay: false,
                 onTap: () => ref
                     .read(partnerCoordinatorProvider)
                     .pushEventDetail(event.id),

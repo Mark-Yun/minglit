@@ -39,10 +39,7 @@ class IdentityVerificationConsentSheet extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '본인확인정보 수집·이용 동의',
-            style: theme.textTheme.titleLarge,
-          ),
+          Text('본인확인정보 수집·이용 동의', style: theme.textTheme.titleLarge),
           const SizedBox(height: MinglitSpacing.small),
           Text(
             '본인확인 및 중복가입 방지를 위해 아래 정보를 수집합니다.',
@@ -59,10 +56,7 @@ class IdentityVerificationConsentSheet extends StatelessWidget {
             items: ['본인확인 및 실명 인증', '중복가입 방지'],
           ),
           const SizedBox(height: MinglitSpacing.medium),
-          const _ConsentSection(
-            title: '보유 기간',
-            items: ['회원 탈퇴 시까지'],
-          ),
+          const _ConsentSection(title: '보유 기간', items: ['회원 탈퇴 시까지']),
           const SizedBox(height: MinglitSpacing.medium),
           Text(
             'CI/DI는 암호화되어 안전하게 저장됩니다.',
@@ -81,10 +75,7 @@ class IdentityVerificationConsentSheet extends StatelessWidget {
           const SizedBox(height: MinglitSpacing.small),
           SizedBox(
             width: double.infinity,
-            child: TextButton(
-              onPressed: onCancel,
-              child: const Text('취소'),
-            ),
+            child: TextButton(onPressed: onCancel, child: const Text('취소')),
           ),
         ],
       ),
@@ -93,10 +84,7 @@ class IdentityVerificationConsentSheet extends StatelessWidget {
 }
 
 class _ConsentSection extends StatelessWidget {
-  const _ConsentSection({
-    required this.title,
-    required this.items,
-  });
+  const _ConsentSection({required this.title, required this.items});
 
   final String title;
   final List<String> items;
@@ -107,7 +95,9 @@ class _ConsentSection extends StatelessWidget {
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(
+          alpha: MinglitOpacity.scrimMedium,
+        ),
         borderRadius: BorderRadius.circular(MinglitRadius.card),
       ),
       child: Padding(
@@ -115,18 +105,12 @@ class _ConsentSection extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              title,
-              style: theme.textTheme.titleSmall,
-            ),
+            Text(title, style: theme.textTheme.titleSmall),
             const SizedBox(height: MinglitSpacing.xsmall),
             for (final item in items)
               Padding(
                 padding: const EdgeInsets.only(bottom: MinglitSpacing.xxsmall),
-                child: Text(
-                  '• $item',
-                  style: theme.textTheme.bodyMedium,
-                ),
+                child: Text('• $item', style: theme.textTheme.bodyMedium),
               ),
           ],
         ),

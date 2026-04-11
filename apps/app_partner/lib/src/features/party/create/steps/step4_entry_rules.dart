@@ -36,7 +36,9 @@ class Step4EntryRules extends ConsumerWidget {
 
           // List of Entry Groups
           if (state.entryGroups.isEmpty)
-            _buildEmptyState(context)
+            MinglitEmptyState.inline(
+              title: context.l10n.partyCreate_empty_entryGroups,
+            )
           else
             ListView.separated(
               shrinkWrap: true,
@@ -53,7 +55,9 @@ class Step4EntryRules extends ConsumerWidget {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(MinglitRadius.card),
                     side: BorderSide(
-                      color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+                      color: colorScheme.outlineVariant.withValues(
+                        alpha: MinglitOpacity.strong,
+                      ),
                     ),
                   ),
                   child: Column(
@@ -65,7 +69,7 @@ class Step4EntryRules extends ConsumerWidget {
                           vertical: MinglitSpacing.small,
                         ),
                         color: colorScheme.surfaceContainerHighest.withValues(
-                          alpha: 0.3,
+                          alpha: MinglitOpacity.muted,
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -122,19 +126,6 @@ class Step4EntryRules extends ConsumerWidget {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildEmptyState(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(MinglitSpacing.large),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(MinglitRadius.card),
-        border: Border.all(color: theme.colorScheme.outlineVariant),
-      ),
-      child: Center(child: Text(context.l10n.partyCreate_empty_entryGroups)),
     );
   }
 

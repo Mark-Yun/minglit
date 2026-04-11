@@ -33,12 +33,6 @@ Deno.serve(withHandler(async (req) => {
     const openAi = new OpenAIService(openAiKey);
     const utils = new WorkerUtils(supabase, 'q_vectors');
 
-    // DEBUG LOG
-    await supabase.from('debug_logs').insert({
-      message: 'Vector Worker Invoked',
-      payload: { batchSize, timestamp: nowISO() }
-    });
-
     // 1. Read Batch from PGMQ
     const { data: messages, error: readError } = await supabase.rpc('pgmq_read', {
       queue_name: 'q_vectors',
@@ -119,15 +113,6 @@ Deno.serve(withHandler(async (req) => {
           log({ function: FN, level: "info", message: `Requesting ${texts.length} embeddings from OpenAI...` });
           const embeddings = await openAi.generateEmbeddings(texts);
           log({ function: FN, level: "info", message: `Received ${embeddings.length} embeddings.` });
-
-          await supabase.from('debug_logs').insert({
-            message: 'OpenAI Result Check',
-            payload: {
-              textCount: texts.length,
-              embeddingCount: embeddings.length,
-              sample: embeddings.length > 0 ? Array.from(embeddings[0]).slice(0, 5) : null
-            }
-          });
 
           for (let i = 0; i < publicPartyTasks.length; i++) {
             const t = publicPartyTasks[i];

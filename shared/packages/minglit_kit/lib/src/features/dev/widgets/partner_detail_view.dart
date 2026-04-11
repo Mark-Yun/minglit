@@ -17,10 +17,7 @@ part 'partner_detail_view.g.dart';
 /// A detailed view of a Partner profile.
 class PartnerDetailView extends ConsumerWidget {
   /// Creates a [PartnerDetailView].
-  const PartnerDetailView({
-    required this.partner,
-    super.key,
-  });
+  const PartnerDetailView({required this.partner, super.key});
 
   /// The partner data to display.
   final Partner partner;
@@ -169,7 +166,9 @@ class PartnerDetailView extends ConsumerWidget {
           width: 48,
           height: 48,
           decoration: BoxDecoration(
-            color: theme.colorScheme.secondaryContainer.withValues(alpha: 0.1),
+            color: theme.colorScheme.secondaryContainer.withValues(
+              alpha: MinglitOpacity.highlight,
+            ),
             borderRadius: BorderRadius.circular(MinglitRadius.small),
           ),
           child: Icon(Icons.celebration, color: theme.colorScheme.secondary),

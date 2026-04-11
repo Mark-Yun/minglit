@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>밍릿 — 구매 내역 색상 위계 리디자인</title>
+<style>
+  @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css');
+
+  :root {
+    --color-background: #FFFFFF;
+    --color-primary: #9900FF;
+    --color-primary-light: rgba(153, 0, 255, 0.08);
+    --color-secondary: #FF9900;
+    --color-surface: #F9FAFB;
+    --color-error: #EF4444;
+    --color-text-primary: #111827;
+    --color-text-secondary: #4B5563;
+    --color-text-tertiary: #9CA3AF;
+    --color-success: #22C55E;
+    --color-warning: #F59E0B;
+    --color-info: #3B82F6;
+    --color-divider: #E5E7EB;
+    --color-divider-light: #F3F4F6;
+    --color-outline: #D1D5DB;
+
+    --sp-xxsmall: 2px;
+    --sp-xsmall: 4px;
+    --sp-xsmall2: 6px;
+    --sp-small: 8px;
+    --sp-sm: 12px;
+    --sp-medium: 16px;
+    --sp-large: 24px;
+    --sp-xlarge: 32px;
+    --sp-screen-edge: 20px;
+
+    --radius-small: 8px;
+    --radius-button: 12px;
+    --radius-card: 16px;
+    --radius-chip: 100px;
+
+    --font-family: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font-family);
+    background: #E5E7EB;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+    color: var(--color-text-primary);
+  }
+
+  .page-title {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    text-align: center;
+  }
+
+  .page-subtitle {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    margin-bottom: 40px;
+    text-align: center;
+  }
+
+  .section {
+    width: 100%;
+    max-width: 900px;
+    margin-bottom: 40px;
+  }
+
+  .section-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-title::before {
+    content: '';
+    width: 4px;
+    height: 20px;
+    background: var(--color-primary);
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .card {
+    background: var(--color-background);
+    border-radius: var(--radius-card);
+    padding: var(--sp-large);
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+
+  /* === Phone Mockup === */
+  .phone-mockup-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    justify-items: center;
+  }
+
+  .phone-frame {
+    width: 340px;
+    background: var(--color-surface);
+    border-radius: 36px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12), inset 0 0 0 2px #E5E7EB;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  .phone-status-bar {
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-background);
+  }
+
+  .phone-status-bar .notch {
+    width: 120px;
+    height: 28px;
+    background: #000;
+    border-radius: 0 0 16px 16px;
+  }
+
+  .phone-appbar {
+    height: 56px;
+    padding: 0 var(--sp-medium);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-background);
+    position: relative;
+  }
+
+  .phone-appbar .back-icon {
+    position: absolute;
+    left: 16px;
+    font-size: 20px;
+    color: var(--color-text-primary);
+  }
+
+  .phone-appbar-title {
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  .phone-content {
+    flex: 1;
+    padding: var(--sp-medium);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* === Purchase Card === */
+  .purchase-card {
+    background: var(--color-background);
+    border-radius: var(--radius-card);
+    padding: var(--sp-medium);
+    border: 1px solid var(--color-divider);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+  }
+
+  .purchase-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .purchase-date {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--color-text-tertiary);
+  }
+
+  /* === Status Badges === */
+  .status-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: var(--radius-small);
+    letter-spacing: 0.2px;
+  }
+
+  .badge-paid {
+    background: rgba(34, 197, 94, 0.12);
+    color: #16A34A;
+  }
+
+  .badge-approved {
+    background: rgba(59, 130, 246, 0.12);
+    color: #2563EB;
+  }
+
+  .badge-pending {
+    background: rgba(156, 163, 175, 0.15);
+    color: #6B7280;
+  }
+
+  .badge-pending-review {
+    background: rgba(245, 158, 11, 0.12);
+    color: #D97706;
+  }
+
+  .badge-cancelled {
+    background: rgba(239, 68, 68, 0.12);
+    color: #DC2626;
+  }
+
+  .badge-rejected {
+    background: rgba(239, 68, 68, 0.12);
+    color: #DC2626;
+  }
+
+  /* Before: Purple badges */
+  .badge-paid-before {
+    background: rgba(153, 0, 255, 0.2);
+    color: #9900FF;
+  }
+
+  .badge-approved-before {
+    background: rgba(153, 0, 255, 0.2);
+    color: #9900FF;
+  }
+
+  /* === Event Info === */
+  .event-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .event-thumb {
+    width: 72px;
+    height: 72px;
+    border-radius: var(--radius-small);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: var(--color-text-tertiary);
+  }
+
+  .event-thumb.before {
+    background: rgba(153, 0, 255, 0.06);
+  }
+
+  .event-thumb.after {
+    background: var(--color-divider-light);
+  }
+
+  .event-thumb-icon {
+    width: 28px;
+    height: 28px;
+    opacity: 0.4;
+    background: currentColor;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z'/%3E%3C/svg%3E") center/contain no-repeat;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z'/%3E%3C/svg%3E") center/contain no-repeat;
+  }
+
+  .event-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .event-name {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .event-meta {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+  }
+
+  .purchase-divider {
+    height: 1px;
+    background: var(--color-divider-light);
+    margin: 12px 0;
+  }
+
+  /* === Ticket & Price === */
+  .ticket-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .ticket-name {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+  }
+
+  .ticket-price {
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  /* === Action Buttons === */
+  .action-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .action-btn {
+    flex: 1;
+    height: 44px;
+    border-radius: var(--radius-button);
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  /* Before: All purple */
+  .btn-outline-purple {
+    background: transparent;
+    border: 1.5px solid var(--color-primary);
+    color: var(--color-primary);
+  }
+
+  .btn-filled-pink {
+    background: rgba(239, 68, 68, 0.12);
+    border: none;
+    color: #DC2626;
+  }
+
+  /* After: Differentiated hierarchy */
+  .btn-outline-neutral {
+    background: transparent;
+    border: 1.5px solid var(--color-outline);
+    color: var(--color-text-primary);
+  }
+
+  .btn-text-secondary {
+    background: transparent;
+    border: 1.5px solid transparent;
+    color: var(--color-text-secondary);
+    text-decoration: underline;
+    text-decoration-color: var(--color-divider);
+    text-underline-offset: 3px;
+  }
+
+  .btn-text-destructive {
+    background: transparent;
+    border: 1.5px solid transparent;
+    color: var(--color-text-tertiary);
+    font-weight: 500;
+  }
+
+  /* === Comparison Table === */
+  .compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  .compare-table th {
+    text-align: left;
+    padding: 10px 12px;
+    background: var(--color-surface);
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--color-text-secondary);
+    border-bottom: 2px solid var(--color-divider);
+  }
+
+  .compare-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--color-divider-light);
+    vertical-align: middle;
+  }
+
+  .compare-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .inline-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 6px;
+    white-space: nowrap;
+  }
+
+  .arrow {
+    color: var(--color-text-tertiary);
+    font-size: 16px;
+  }
+
+  .annotation {
+    font-size: 12px;
+    color: var(--color-text-tertiary);
+    font-style: italic;
+    margin-top: 12px;
+    padding: 10px 14px;
+    border-left: 3px solid var(--color-primary);
+    background: var(--color-primary-light);
+    border-radius: 0 8px 8px 0;
+    line-height: 1.6;
+  }
+
+  /* === Badge Legend === */
+  .badge-legend {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+  }
+
+  /* === Color Swatch === */
+  .swatch-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding: 8px 0;
+  }
+
+  .swatch {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    flex-shrink: 0;
+  }
+
+  .swatch-label {
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .swatch-hex {
+    font-size: 11px;
+    color: var(--color-text-tertiary);
+    font-family: monospace;
+  }
+
+  /* === Design Principle === */
+  .principle {
+    display: flex;
+    gap: 16px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--color-divider-light);
+  }
+
+  .principle:last-child {
+    border-bottom: none;
+  }
+
+  .principle-number {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+    font-weight: 700;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .principle h4 {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .principle p {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .phone-mockup-row { grid-template-columns: 1fr; }
+    .badge-legend { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-title">구매 내역 화면 — 색상 위계 리디자인</div>
+<div class="page-subtitle">Issue #1236 · needs-uiux-claude-1 · 2026-04-10</div>
+
+<!-- Section 1: Problem → Solution -->
+<div class="section">
+  <div class="section-title">문제 요약 & 디자인 원칙</div>
+  <div class="card">
+    <div class="principle">
+      <div class="principle-number">1</div>
+      <div>
+        <h4>60-30-10 색상 규칙</h4>
+        <p>화면의 60%는 중성색(흰/회), 30%는 보조색(회색 변형), 10% 이하만 브랜드 컬러. 현재는 보라가 40%+ 차지하여 피로도가 높다.</p>
+      </div>
+    </div>
+    <div class="principle">
+      <div class="principle-number">2</div>
+      <div>
+        <h4>상태 배지는 의미 기반 색상</h4>
+        <p>결제완료=초록(성공), 승인됨=파랑(정보), 심사중=노랑(주의), 결제대기=회색(비활성), 취소/반려=빨강(오류). 브랜드 컬러는 상태를 전달하지 않는다.</p>
+      </div>
+    </div>
+    <div class="principle">
+      <div class="principle-number">3</div>
+      <div>
+        <h4>버튼 위계를 시각적으로 분리</h4>
+        <p>Primary CTA만 브랜드 컬러, 보조 액션은 중성색 outline, 3차 액션은 text only. Destructive 액션은 최소 visual weight로 실수 방지.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Section 2: Status Badge Redesign -->
+<div class="section">
+  <div class="section-title">상태 배지 색상 재정의</div>
+  <div class="card">
+    <div class="badge-legend">
+      <div class="legend-item">
+        <span class="inline-badge badge-paid">결제완료</span>
+        <span style="font-size:12px; color:var(--color-text-tertiary);">success</span>
+      </div>
+      <div class="legend-item">
+        <span class="inline-badge badge-approved">승인됨</span>
+        <span style="font-size:12px; color:var(--color-text-tertiary);">info</span>
+      </div>
+      <div class="legend-item">
+        <span class="inline-badge badge-pending-review">심사중</span>
+        <span style="font-size:12px; color:var(--color-text-tertiary);">warning</span>
+      </div>
+      <div class="legend-item">
+        <span class="inline-badge badge-pending">결제대기</span>
+        <span style="font-size:12px; color:var(--color-text-tertiary);">neutral</span>
+      </div>
+      <div class="legend-item">
+        <span class="inline-badge badge-cancelled">취소됨</span>
+        <span style="font-size:12px; color:var(--color-text-tertiary);">error</span>
+      </div>
+      <div class="legend-item">
+        <span class="inline-badge badge-rejected">반려됨</span>
+        <span style="font-size:12px; color:var(--color-text-tertiary);">error</span>
+      </div>
+    </div>
+
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>상태</th>
+          <th>현재 (Before)</th>
+          <th></th>
+          <th>리디자인 (After)</th>
+          <th>이유</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>결제완료</strong></td>
+          <td><span class="inline-badge badge-paid-before">결제완료</span></td>
+          <td class="arrow">→</td>
+          <td><span class="inline-badge badge-paid">결제완료</span></td>
+          <td>결제 성공 = 긍정 상태. 초록은 보편적 성공 색.</td>
+        </tr>
+        <tr>
+          <td><strong>승인됨</strong></td>
+          <td><span class="inline-badge badge-approved-before">승인됨</span></td>
+          <td class="arrow">→</td>
+          <td><span class="inline-badge badge-approved">승인됨</span></td>
+          <td>승인 = 정보성 확인 상태. 파랑으로 결제완료와 구분.</td>
+        </tr>
+        <tr>
+          <td><strong>심사중</strong></td>
+          <td><span class="inline-badge" style="background:rgba(72,201,176,0.2); color:#48C9B0;">심사중</span></td>
+          <td class="arrow">→</td>
+          <td><span class="inline-badge badge-pending-review">심사중</span></td>
+          <td>대기/주의 상태. 민트→노랑으로 주의 의미 강화.</td>
+        </tr>
+        <tr>
+          <td><strong>결제대기</strong></td>
+          <td><span class="inline-badge" style="background:rgba(156,163,175,0.15); color:#6B7280;">결제대기</span></td>
+          <td class="arrow">→</td>
+          <td><span class="inline-badge badge-pending">결제대기</span></td>
+          <td>유지. 비활성/대기 = 회색이 적절.</td>
+        </tr>
+        <tr>
+          <td><strong>취소됨/반려됨</strong></td>
+          <td><span class="inline-badge badge-cancelled">취소됨</span></td>
+          <td class="arrow">→</td>
+          <td><span class="inline-badge badge-cancelled">취소됨</span></td>
+          <td>유지. 오류/취소 = 빨강이 적절.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="annotation">
+      핵심: <strong>결제완료(paid)와 승인됨(approved)을 더 이상 같은 색으로 표시하지 않는다.</strong>
+      결제완료는 금전 거래 완료(초록), 승인됨은 참가 확정(파랑)으로 의미 분리.
+    </div>
+  </div>
+</div>
+
+<!-- Section 3: Button Hierarchy -->
+<div class="section">
+  <div class="section-title">버튼 위계 재설계</div>
+  <div class="card">
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>버튼</th>
+          <th>현재</th>
+          <th></th>
+          <th>리디자인</th>
+          <th>이유</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>영수증</strong></td>
+          <td><span style="padding:4px 12px; border:1.5px solid var(--color-primary); border-radius:8px; color:var(--color-primary); font-size:12px; font-weight:600;">영수증</span></td>
+          <td class="arrow">→</td>
+          <td><span style="padding:4px 12px; border:1.5px solid var(--color-outline); border-radius:8px; color:var(--color-text-primary); font-size:12px; font-weight:600;">영수증</span></td>
+          <td>보조 액션. 중성 outline으로 강도 낮춤.</td>
+        </tr>
+        <tr>
+          <td><strong>문의하기</strong></td>
+          <td><span style="padding:4px 12px; border:1.5px solid var(--color-primary); border-radius:8px; color:var(--color-primary); font-size:12px; font-weight:600;">문의하기</span></td>
+          <td class="arrow">→</td>
+          <td><span style="padding:4px 12px; color:var(--color-text-secondary); font-size:12px; font-weight:600; text-decoration:underline; text-decoration-color:var(--color-divider); text-underline-offset:3px;">문의하기</span></td>
+          <td>3차 액션. text button으로 최소화.</td>
+        </tr>
+        <tr>
+          <td><strong>예매 취소</strong></td>
+          <td><span style="padding:4px 12px; background:rgba(239,68,68,0.12); border-radius:8px; color:#DC2626; font-size:12px; font-weight:600;">예매 취소</span></td>
+          <td class="arrow">→</td>
+          <td><span style="padding:4px 12px; color:var(--color-text-tertiary); font-size:12px; font-weight:500;">예매 취소</span></td>
+          <td>Destructive action. 최소 visual weight + 탭 시 confirm dialog.</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="annotation">
+      버튼 위계: <strong>Primary(filled) > Secondary(outlined neutral) > Tertiary(text) > Destructive(text muted).</strong>
+      구매 내역에는 Primary CTA가 없으므로 가장 강한 버튼이 neutral outline. 보라색은 이 화면에서 사라진다.
+    </div>
+  </div>
+</div>
+
+<!-- Section 4: Phone Mockup Before/After -->
+<div class="section">
+  <div class="section-title">화면 비교 — Before / After</div>
+  <div class="phone-mockup-row">
+    <!-- BEFORE -->
+    <div>
+      <div style="text-align:center; font-size:12px; font-weight:600; color:var(--color-text-tertiary); margin-bottom:12px; text-transform:uppercase; letter-spacing:1px;">Before — 보라 과포화</div>
+      <div class="phone-frame">
+        <div class="phone-status-bar"><div class="notch"></div></div>
+        <div class="phone-appbar">
+          <span class="back-icon">←</span>
+          <div class="phone-appbar-title">구매 내역</div>
+        </div>
+        <div class="phone-content">
+          <!-- Card 1: 결제완료 -->
+          <div class="purchase-card">
+            <div class="purchase-header">
+              <span class="purchase-date">2026.04.10</span>
+              <span class="status-badge badge-paid-before">결제완료</span>
+            </div>
+            <div class="event-row">
+              <div class="event-thumb before"><div class="event-thumb-icon"></div></div>
+              <div class="event-info">
+                <div class="event-name">[E2E] 네트워킹</div>
+                <div class="event-meta">4월 10일 (금) 10:36<br>서울 강남</div>
+              </div>
+            </div>
+            <div class="purchase-divider"></div>
+            <div class="ticket-row">
+              <span class="ticket-name">[E2E] 일반 티켓</span>
+              <span class="ticket-price">20,000원</span>
+            </div>
+            <div class="action-row">
+              <div class="action-btn btn-outline-purple">영수증</div>
+              <div class="action-btn btn-outline-purple">문의하기</div>
+              <div class="action-btn btn-filled-pink">예매 취소</div>
+            </div>
+          </div>
+
+          <!-- Card 2: 취소됨 -->
+          <div class="purchase-card">
+            <div class="purchase-header">
+              <span class="purchase-date">2026.04.10</span>
+              <span class="status-badge badge-cancelled">취소됨</span>
+            </div>
+            <div class="event-row">
+              <div class="event-thumb before"><div class="event-thumb-icon"></div></div>
+              <div class="event-info">
+                <div class="event-name">[E2E] 직장인 밍글</div>
+                <div class="event-meta">4월 11일 (토) 22:35<br>서울 강남</div>
+              </div>
+            </div>
+            <div class="purchase-divider"></div>
+            <div class="ticket-row">
+              <span class="ticket-name">[E2E] 일반 티켓</span>
+              <span class="ticket-price">20,000원</span>
+            </div>
+            <div class="action-row">
+              <div class="action-btn btn-outline-purple">영수증</div>
+              <div class="action-btn btn-outline-purple">문의하기</div>
+            </div>
+          </div>
+
+          <!-- Card 3: 승인됨 -->
+          <div class="purchase-card">
+            <div class="purchase-header">
+              <span class="purchase-date">2026.04.10</span>
+              <span class="status-badge badge-approved-before">승인됨</span>
+            </div>
+            <div class="event-row">
+              <div class="event-thumb before"><div class="event-thumb-icon"></div></div>
+              <div class="event-info">
+                <div class="event-name">[E2E] 직장인 밍글</div>
+                <div class="event-meta">4월 10일 (금) 10:35<br>서울 강남</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AFTER -->
+    <div>
+      <div style="text-align:center; font-size:12px; font-weight:600; color:var(--color-primary); margin-bottom:12px; text-transform:uppercase; letter-spacing:1px;">After — 의미 기반 색상</div>
+      <div class="phone-frame">
+        <div class="phone-status-bar"><div class="notch"></div></div>
+        <div class="phone-appbar">
+          <span class="back-icon">←</span>
+          <div class="phone-appbar-title">구매 내역</div>
+        </div>
+        <div class="phone-content">
+          <!-- Card 1: 결제완료 — GREEN -->
+          <div class="purchase-card">
+            <div class="purchase-header">
+              <span class="purchase-date">2026.04.10</span>
+              <span class="status-badge badge-paid">결제완료</span>
+            </div>
+            <div class="event-row">
+              <div class="event-thumb after"><div class="event-thumb-icon"></div></div>
+              <div class="event-info">
+                <div class="event-name">[E2E] 네트워킹</div>
+                <div class="event-meta">4월 10일 (금) 10:36<br>서울 강남</div>
+              </div>
+            </div>
+            <div class="purchase-divider"></div>
+            <div class="ticket-row">
+              <span class="ticket-name">[E2E] 일반 티켓</span>
+              <span class="ticket-price">20,000원</span>
+            </div>
+            <div class="action-row">
+              <div class="action-btn btn-outline-neutral">영수증</div>
+              <div class="action-btn btn-text-secondary">문의하기</div>
+              <div class="action-btn btn-text-destructive">예매 취소</div>
+            </div>
+          </div>
+
+          <!-- Card 2: 취소됨 — RED (unchanged) -->
+          <div class="purchase-card">
+            <div class="purchase-header">
+              <span class="purchase-date">2026.04.10</span>
+              <span class="status-badge badge-cancelled">취소됨</span>
+            </div>
+            <div class="event-row">
+              <div class="event-thumb after"><div class="event-thumb-icon"></div></div>
+              <div class="event-info">
+                <div class="event-name">[E2E] 직장인 밍글</div>
+                <div class="event-meta">4월 11일 (토) 22:35<br>서울 강남</div>
+              </div>
+            </div>
+            <div class="purchase-divider"></div>
+            <div class="ticket-row">
+              <span class="ticket-name">[E2E] 일반 티켓</span>
+              <span class="ticket-price">20,000원</span>
+            </div>
+            <div class="action-row">
+              <div class="action-btn btn-outline-neutral">영수증</div>
+              <div class="action-btn btn-text-secondary">문의하기</div>
+            </div>
+          </div>
+
+          <!-- Card 3: 승인됨 — BLUE -->
+          <div class="purchase-card">
+            <div class="purchase-header">
+              <span class="purchase-date">2026.04.10</span>
+              <span class="status-badge badge-approved">승인됨</span>
+            </div>
+            <div class="event-row">
+              <div class="event-thumb after"><div class="event-thumb-icon"></div></div>
+              <div class="event-info">
+                <div class="event-name">[E2E] 직장인 밍글</div>
+                <div class="event-meta">4월 10일 (금) 10:35<br>서울 강남</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Section 5: New Design Tokens -->
+<div class="section">
+  <div class="section-title">신규 디자인 토큰 제안</div>
+  <div class="card">
+    <p style="font-size:13px; color:var(--color-text-secondary); margin-bottom:16px;">
+      <code>minglit_design_tokens.dart</code>에 추가할 시맨틱 상태 색상 토큰.
+      기존 <code>MinglitColors.success/warning/error</code>와 함께 사용.
+    </p>
+
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>토큰명</th>
+          <th>색상</th>
+          <th>Hex</th>
+          <th>용도</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>statusSuccess</code></td>
+          <td><div style="display:inline-block; width:20px; height:20px; border-radius:4px; background:#22C55E; vertical-align:middle;"></div></td>
+          <td><code>#22C55E</code> (= 기존 success)</td>
+          <td>결제완료 배지</td>
+        </tr>
+        <tr>
+          <td><code>statusInfo</code></td>
+          <td><div style="display:inline-block; width:20px; height:20px; border-radius:4px; background:#3B82F6; vertical-align:middle;"></div></td>
+          <td><code>#3B82F6</code></td>
+          <td>승인됨 배지</td>
+        </tr>
+        <tr>
+          <td><code>statusWarning</code></td>
+          <td><div style="display:inline-block; width:20px; height:20px; border-radius:4px; background:#F59E0B; vertical-align:middle;"></div></td>
+          <td><code>#F59E0B</code> (= 기존 warning)</td>
+          <td>심사중 배지</td>
+        </tr>
+        <tr>
+          <td><code>statusNeutral</code></td>
+          <td><div style="display:inline-block; width:20px; height:20px; border-radius:4px; background:#9CA3AF; vertical-align:middle;"></div></td>
+          <td><code>#9CA3AF</code></td>
+          <td>결제대기 배지</td>
+        </tr>
+        <tr>
+          <td><code>statusError</code></td>
+          <td><div style="display:inline-block; width:20px; height:20px; border-radius:4px; background:#EF4444; vertical-align:middle;"></div></td>
+          <td><code>#EF4444</code> (= 기존 error)</td>
+          <td>취소됨/반려됨 배지</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="annotation">
+      <strong>기존 success/warning/error와 값이 같은 토큰도 별도 시맨틱 이름을 부여하는 이유:</strong>
+      status* 토큰은 배지 전용이고, success/warning/error는 범용이다. 나중에 배지 색만 변경해야 할 때 분리되어 있어야 안전하다.
+    </div>
+  </div>
+</div>
+
+<!-- Section 6: Implementation Spec -->
+<div class="section">
+  <div class="section-title">구현 명세 — StatusBadge 수정</div>
+  <div class="card">
+    <p style="font-size:13px; color:var(--color-text-secondary); margin-bottom:16px;">
+      <code>apps/app_user/lib/src/common/widgets/status_badge.dart</code> 변경:
+    </p>
+    <pre style="background:var(--color-surface); padding:16px; border-radius:12px; font-size:12px; line-height:1.6; overflow-x:auto;"><code>// Before
+case 'approved':
+  color = theme.colorScheme.primary;  // ← 보라
+case 'paid':
+  color = theme.colorScheme.primary;  // ← 보라
+
+// After
+case 'approved':
+  color = MinglitColors.statusInfo;   // ← 파랑 #3B82F6
+case 'paid':
+  color = MinglitColors.statusSuccess; // ← 초록 #22C55E
+case 'pending_review':
+  color = MinglitColors.statusWarning; // ← 노랑 #F59E0B</code></pre>
+
+    <p style="font-size:13px; color:var(--color-text-secondary); margin-top:16px; margin-bottom:16px;">
+      <code>purchase_history_card.dart</code> 버튼 변경:
+    </p>
+    <pre style="background:var(--color-surface); padding:16px; border-radius:12px; font-size:12px; line-height:1.6; overflow-x:auto;"><code>// 영수증: OutlinedButton → neutral outline
+OutlinedButton(
+  style: OutlinedButton.styleFrom(
+    foregroundColor: theme.colorScheme.onSurface,
+    side: BorderSide(color: theme.colorScheme.outlineVariant),
+  ),
+  child: const Text('영수증'),
+),
+
+// 문의하기: OutlinedButton → TextButton
+TextButton(
+  style: TextButton.styleFrom(
+    foregroundColor: theme.colorScheme.onSurfaceVariant,
+  ),
+  child: const Text('문의하기'),
+),
+
+// 예매 취소: ElevatedButton → TextButton (muted)
+TextButton(
+  style: TextButton.styleFrom(
+    foregroundColor: theme.colorScheme.outline,
+  ),
+  child: const Text('예매 취소'),
+),</code></pre>
+  </div>
+</div>
+
+<!-- Section 7: Scope & Impact -->
+<div class="section">
+  <div class="section-title">영향 범위 & 후속 작업</div>
+  <div class="card">
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>범위</th>
+          <th>이번 PR</th>
+          <th>후속 작업</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>StatusBadge 색상</strong></td>
+          <td>paid→초록, approved→파랑, pending_review→노랑</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td><strong>구매 내역 버튼</strong></td>
+          <td>neutral outline + text button 적용</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td><strong>이미지 플레이스홀더</strong></td>
+          <td>MinglitImage의 기본 placeholder 색 neutral gray 확인</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td><strong>Design Token</strong></td>
+          <td>status* 토큰 5종 추가</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td><strong>전체 앱 보라색 감사</strong></td>
+          <td>—</td>
+          <td>별도 이슈 (다른 화면도 동일 문제 가능)</td>
+        </tr>
+        <tr>
+          <td><strong>디자인 시스템 문서</strong></td>
+          <td>—</td>
+          <td>UX 디자이너가 01-foundation.md 업데이트</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</body>
+</html>

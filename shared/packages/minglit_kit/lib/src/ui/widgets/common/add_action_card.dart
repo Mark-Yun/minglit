@@ -33,7 +33,9 @@ class AddActionCard extends StatelessWidget {
     return AnimatedContainer(
       duration: MinglitAnimation.fast,
       decoration: BoxDecoration(
-        color: colorScheme.tertiary.withValues(alpha: 0.08),
+        color: colorScheme.tertiary.withValues(
+          alpha: MinglitOpacity.activeChip,
+        ),
         borderRadius: BorderRadius.circular(MinglitRadius.input),
       ),
       child: InkWell(
@@ -73,7 +75,9 @@ class AddActionCard extends StatelessWidget {
               const SizedBox(width: MinglitSpacing.small),
               Icon(
                 Icons.chevron_right,
-                color: colorScheme.tertiary.withValues(alpha: 0.6),
+                color: colorScheme.tertiary.withValues(
+                  alpha: MinglitOpacity.separator,
+                ),
                 size: MinglitIconSize.medium,
               ),
             ],

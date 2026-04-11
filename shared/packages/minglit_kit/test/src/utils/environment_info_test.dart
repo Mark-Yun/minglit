@@ -1,3 +1,4 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/src/utils/environment_info.dart';
 
@@ -44,6 +45,17 @@ void main() {
         collectEnvironmentInfo,
         returnsNormally,
       );
+    });
+
+    // Fix #1115 regression: firstOrNull prevents StateError on empty list
+    test('firstOrNull on empty ConnectivityResult list returns null', () {
+      const emptyResults = <ConnectivityResult>[];
+      expect(emptyResults.firstOrNull?.name, isNull);
+    });
+
+    test('firstOrNull on non-empty ConnectivityResult list returns name', () {
+      const results = [ConnectivityResult.wifi];
+      expect(results.firstOrNull?.name, isNotNull);
     });
   });
 }

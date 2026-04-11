@@ -48,10 +48,7 @@ class OnboardingStepGuide extends StatelessWidget {
             ),
           ),
           Center(
-            child: Text(
-              '파트너 가입이 승인되었어요',
-              style: theme.textTheme.bodyMedium,
-            ),
+            child: Text('파트너 가입이 승인되었어요', style: theme.textTheme.bodyMedium),
           ),
           const SizedBox(height: MinglitSpacing.large),
         ],
@@ -150,9 +147,13 @@ class OnboardingStepGuide extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(MinglitSpacing.medium),
             decoration: BoxDecoration(
-              color: colorScheme.primary.withValues(alpha: 0.05),
+              color: colorScheme.primary.withValues(
+                alpha: MinglitOpacity.tintFill,
+              ),
               border: Border.all(
-                color: colorScheme.primary.withValues(alpha: 0.2),
+                color: colorScheme.primary.withValues(
+                  alpha: MinglitOpacity.subtle,
+                ),
               ),
               borderRadius: BorderRadius.circular(MinglitRadius.button),
             ),
@@ -162,14 +163,13 @@ class OnboardingStepGuide extends StatelessWidget {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: colorScheme.primary.withValues(alpha: 0.1),
+                    color: colorScheme.primary.withValues(
+                      alpha: MinglitOpacity.highlight,
+                    ),
                     borderRadius: BorderRadius.circular(MinglitRadius.input),
                   ),
                   child: Center(
-                    child: Text(
-                      '🎉',
-                      style: theme.textTheme.titleLarge,
-                    ),
+                    child: Text('🎉', style: theme.textTheme.titleLarge),
                   ),
                 ),
                 const SizedBox(width: MinglitSpacing.sm),
@@ -183,10 +183,7 @@ class OnboardingStepGuide extends StatelessWidget {
                           fontWeight: FontWeight.w800,
                         ),
                       ),
-                      Text(
-                        '이벤트 0개',
-                        style: theme.textTheme.bodySmall,
-                      ),
+                      Text('이벤트 0개', style: theme.textTheme.bodySmall),
                     ],
                   ),
                 ),
@@ -208,9 +205,7 @@ class OnboardingStepGuide extends StatelessWidget {
             ),
             label: Text(hasParty ? '첫 이벤트 만들기' : '첫 파티 만들기'),
             style: FilledButton.styleFrom(
-              padding: const EdgeInsets.symmetric(
-                vertical: MinglitSpacing.sm,
-              ),
+              padding: const EdgeInsets.symmetric(vertical: MinglitSpacing.sm),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(MinglitRadius.input),
               ),
@@ -225,7 +220,7 @@ class OnboardingStepGuide extends StatelessWidget {
             padding: const EdgeInsets.all(MinglitSpacing.medium),
             decoration: BoxDecoration(
               color: theme.colorScheme.surfaceContainerHighest.withValues(
-                alpha: 0.3,
+                alpha: MinglitOpacity.muted,
               ),
               borderRadius: BorderRadius.circular(MinglitRadius.input),
             ),
@@ -307,7 +302,9 @@ class _StepRow extends StatelessWidget {
     return Opacity(
       opacity: opacity,
       child: Container(
-        color: isCurrent ? colorScheme.primary.withValues(alpha: 0.05) : null,
+        color: isCurrent
+            ? colorScheme.primary.withValues(alpha: MinglitOpacity.tintFill)
+            : null,
         padding: const EdgeInsets.symmetric(
           horizontal: MinglitSpacing.medium,
           vertical: MinglitSpacing.sm,
@@ -328,11 +325,7 @@ class _StepRow extends StatelessWidget {
               ),
               child: Center(
                 child: isDone
-                    ? Icon(
-                        Icons.check,
-                        color: colorScheme.onPrimary,
-                        size: 16,
-                      )
+                    ? Icon(Icons.check, color: colorScheme.onPrimary, size: 16)
                     : Text(
                         number.toString(),
                         style: theme.textTheme.labelSmall?.copyWith(
@@ -416,9 +409,7 @@ class _FlowStep extends StatelessWidget {
             style: theme
                 .extension<MinglitTextThemeExtension>()!
                 .captionTiny
-                .copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
+                .copyWith(color: theme.colorScheme.onSurfaceVariant),
           ),
         ],
       ),

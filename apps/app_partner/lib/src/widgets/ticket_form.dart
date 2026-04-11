@@ -185,9 +185,7 @@ class _TicketFormState extends State<TicketForm> {
             child: ElevatedButton(
               onPressed: widget.isLoading ? null : _handleSubmit,
               child: widget.isLoading
-                  ? const MinglitCircularProgressIndicator(
-                      size: 20,
-                    )
+                  ? const MinglitCircularProgressIndicator(size: 20)
                   : Text(widget.submitButtonLabel),
             ),
           ),
@@ -200,7 +198,9 @@ class _TicketFormState extends State<TicketForm> {
     return Container(
       padding: const EdgeInsets.all(MinglitSpacing.medium),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(
+          alpha: MinglitOpacity.muted,
+        ),
         borderRadius: BorderRadius.circular(MinglitRadius.card),
       ),
       child: Text(context.l10n.ticket_empty_groups),

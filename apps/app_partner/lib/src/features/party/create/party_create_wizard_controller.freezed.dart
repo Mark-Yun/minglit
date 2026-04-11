@@ -19,7 +19,8 @@ mixin _$PartyCreateWizardState {
  Location? get selectedLocation; String get addressDetail; String get directionsGuide;// Step 3: Capacity & Contact
  int get minConfirmedCount; int get maxParticipants; String get contactPhone; String get contactEmail; String? get contactKakao; Set<String> get enabledContactMethods; bool get balanceEnabled; int get balanceTolerance;// Step 4: Entry Rules (Entry Groups)
  List<EntryGroupTemplate> get entryGroups;// Step 5: Ticket Templates
- List<TicketTemplate> get tickets; String get visibility;// Global Status
+ List<TicketTemplate> get tickets; String get visibility;// Tag Selection (Step 1)
+ List<String> get tagIds;// Global Status
  AsyncValue<void> get status;
 /// Create a copy of PartyCreateWizardState
 /// with the given fields replaced by the non-null parameter values.
@@ -51,7 +52,7 @@ abstract mixin class $PartyCreateWizardStateCopyWith<$Res>  {
   factory $PartyCreateWizardStateCopyWith(PartyCreateWizardState value, $Res Function(PartyCreateWizardState) _then) = _$PartyCreateWizardStateCopyWithImpl;
 @useResult
 $Res call({
- PartyCreateStep currentStep, bool isPrefilled, String? editingPartyId, String title, Map<String, dynamic> description, List<String> imageUrls, List<XFile> imageFiles, Location? selectedLocation, String addressDetail, String directionsGuide, int minConfirmedCount, int maxParticipants, String contactPhone, String contactEmail, String? contactKakao, Set<String> enabledContactMethods, bool balanceEnabled, int balanceTolerance, List<EntryGroupTemplate> entryGroups, List<TicketTemplate> tickets, String visibility, AsyncValue<void> status
+ PartyCreateStep currentStep, bool isPrefilled, String? editingPartyId, String title, Map<String, dynamic> description, List<String> imageUrls, List<XFile> imageFiles, Location? selectedLocation, String addressDetail, String directionsGuide, int minConfirmedCount, int maxParticipants, String contactPhone, String contactEmail, String? contactKakao, Set<String> enabledContactMethods, bool balanceEnabled, int balanceTolerance, List<EntryGroupTemplate> entryGroups, List<TicketTemplate> tickets, String visibility, List<String> tagIds, AsyncValue<void> status
 });
 
 
@@ -68,7 +69,7 @@ class _$PartyCreateWizardStateCopyWithImpl<$Res>
 
 /// Create a copy of PartyCreateWizardState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? currentStep = null,Object? isPrefilled = null,Object? editingPartyId = freezed,Object? title = null,Object? description = null,Object? imageUrls = null,Object? imageFiles = null,Object? selectedLocation = freezed,Object? addressDetail = null,Object? directionsGuide = null,Object? minConfirmedCount = null,Object? maxParticipants = null,Object? contactPhone = null,Object? contactEmail = null,Object? contactKakao = freezed,Object? enabledContactMethods = null,Object? balanceEnabled = null,Object? balanceTolerance = null,Object? entryGroups = null,Object? tickets = null,Object? visibility = null,Object? status = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? currentStep = null,Object? isPrefilled = null,Object? editingPartyId = freezed,Object? title = null,Object? description = null,Object? imageUrls = null,Object? imageFiles = null,Object? selectedLocation = freezed,Object? addressDetail = null,Object? directionsGuide = null,Object? minConfirmedCount = null,Object? maxParticipants = null,Object? contactPhone = null,Object? contactEmail = null,Object? contactKakao = freezed,Object? enabledContactMethods = null,Object? balanceEnabled = null,Object? balanceTolerance = null,Object? entryGroups = null,Object? tickets = null,Object? visibility = null,Object? tagIds = null,Object? status = null,}) {
   return _then(_self.copyWith(
 currentStep: null == currentStep ? _self.currentStep : currentStep // ignore: cast_nullable_to_non_nullable
 as PartyCreateStep,isPrefilled: null == isPrefilled ? _self.isPrefilled : isPrefilled // ignore: cast_nullable_to_non_nullable
@@ -91,7 +92,8 @@ as bool,balanceTolerance: null == balanceTolerance ? _self.balanceTolerance : ba
 as int,entryGroups: null == entryGroups ? _self.entryGroups : entryGroups // ignore: cast_nullable_to_non_nullable
 as List<EntryGroupTemplate>,tickets: null == tickets ? _self.tickets : tickets // ignore: cast_nullable_to_non_nullable
 as List<TicketTemplate>,visibility: null == visibility ? _self.visibility : visibility // ignore: cast_nullable_to_non_nullable
-as String,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as String,tagIds: null == tagIds ? _self.tagIds : tagIds // ignore: cast_nullable_to_non_nullable
+as List<String>,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as AsyncValue<void>,
   ));
 }
@@ -189,10 +191,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( PartyCreateStep currentStep,  bool isPrefilled,  String? editingPartyId,  String title,  Map<String, dynamic> description,  List<String> imageUrls,  List<XFile> imageFiles,  Location? selectedLocation,  String addressDetail,  String directionsGuide,  int minConfirmedCount,  int maxParticipants,  String contactPhone,  String contactEmail,  String? contactKakao,  Set<String> enabledContactMethods,  bool balanceEnabled,  int balanceTolerance,  List<EntryGroupTemplate> entryGroups,  List<TicketTemplate> tickets,  String visibility,  AsyncValue<void> status)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( PartyCreateStep currentStep,  bool isPrefilled,  String? editingPartyId,  String title,  Map<String, dynamic> description,  List<String> imageUrls,  List<XFile> imageFiles,  Location? selectedLocation,  String addressDetail,  String directionsGuide,  int minConfirmedCount,  int maxParticipants,  String contactPhone,  String contactEmail,  String? contactKakao,  Set<String> enabledContactMethods,  bool balanceEnabled,  int balanceTolerance,  List<EntryGroupTemplate> entryGroups,  List<TicketTemplate> tickets,  String visibility,  List<String> tagIds,  AsyncValue<void> status)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PartyCreateWizardState() when $default != null:
-return $default(_that.currentStep,_that.isPrefilled,_that.editingPartyId,_that.title,_that.description,_that.imageUrls,_that.imageFiles,_that.selectedLocation,_that.addressDetail,_that.directionsGuide,_that.minConfirmedCount,_that.maxParticipants,_that.contactPhone,_that.contactEmail,_that.contactKakao,_that.enabledContactMethods,_that.balanceEnabled,_that.balanceTolerance,_that.entryGroups,_that.tickets,_that.visibility,_that.status);case _:
+return $default(_that.currentStep,_that.isPrefilled,_that.editingPartyId,_that.title,_that.description,_that.imageUrls,_that.imageFiles,_that.selectedLocation,_that.addressDetail,_that.directionsGuide,_that.minConfirmedCount,_that.maxParticipants,_that.contactPhone,_that.contactEmail,_that.contactKakao,_that.enabledContactMethods,_that.balanceEnabled,_that.balanceTolerance,_that.entryGroups,_that.tickets,_that.visibility,_that.tagIds,_that.status);case _:
   return orElse();
 
 }
@@ -210,10 +212,10 @@ return $default(_that.currentStep,_that.isPrefilled,_that.editingPartyId,_that.t
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( PartyCreateStep currentStep,  bool isPrefilled,  String? editingPartyId,  String title,  Map<String, dynamic> description,  List<String> imageUrls,  List<XFile> imageFiles,  Location? selectedLocation,  String addressDetail,  String directionsGuide,  int minConfirmedCount,  int maxParticipants,  String contactPhone,  String contactEmail,  String? contactKakao,  Set<String> enabledContactMethods,  bool balanceEnabled,  int balanceTolerance,  List<EntryGroupTemplate> entryGroups,  List<TicketTemplate> tickets,  String visibility,  AsyncValue<void> status)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( PartyCreateStep currentStep,  bool isPrefilled,  String? editingPartyId,  String title,  Map<String, dynamic> description,  List<String> imageUrls,  List<XFile> imageFiles,  Location? selectedLocation,  String addressDetail,  String directionsGuide,  int minConfirmedCount,  int maxParticipants,  String contactPhone,  String contactEmail,  String? contactKakao,  Set<String> enabledContactMethods,  bool balanceEnabled,  int balanceTolerance,  List<EntryGroupTemplate> entryGroups,  List<TicketTemplate> tickets,  String visibility,  List<String> tagIds,  AsyncValue<void> status)  $default,) {final _that = this;
 switch (_that) {
 case _PartyCreateWizardState():
-return $default(_that.currentStep,_that.isPrefilled,_that.editingPartyId,_that.title,_that.description,_that.imageUrls,_that.imageFiles,_that.selectedLocation,_that.addressDetail,_that.directionsGuide,_that.minConfirmedCount,_that.maxParticipants,_that.contactPhone,_that.contactEmail,_that.contactKakao,_that.enabledContactMethods,_that.balanceEnabled,_that.balanceTolerance,_that.entryGroups,_that.tickets,_that.visibility,_that.status);case _:
+return $default(_that.currentStep,_that.isPrefilled,_that.editingPartyId,_that.title,_that.description,_that.imageUrls,_that.imageFiles,_that.selectedLocation,_that.addressDetail,_that.directionsGuide,_that.minConfirmedCount,_that.maxParticipants,_that.contactPhone,_that.contactEmail,_that.contactKakao,_that.enabledContactMethods,_that.balanceEnabled,_that.balanceTolerance,_that.entryGroups,_that.tickets,_that.visibility,_that.tagIds,_that.status);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -230,10 +232,10 @@ return $default(_that.currentStep,_that.isPrefilled,_that.editingPartyId,_that.t
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( PartyCreateStep currentStep,  bool isPrefilled,  String? editingPartyId,  String title,  Map<String, dynamic> description,  List<String> imageUrls,  List<XFile> imageFiles,  Location? selectedLocation,  String addressDetail,  String directionsGuide,  int minConfirmedCount,  int maxParticipants,  String contactPhone,  String contactEmail,  String? contactKakao,  Set<String> enabledContactMethods,  bool balanceEnabled,  int balanceTolerance,  List<EntryGroupTemplate> entryGroups,  List<TicketTemplate> tickets,  String visibility,  AsyncValue<void> status)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( PartyCreateStep currentStep,  bool isPrefilled,  String? editingPartyId,  String title,  Map<String, dynamic> description,  List<String> imageUrls,  List<XFile> imageFiles,  Location? selectedLocation,  String addressDetail,  String directionsGuide,  int minConfirmedCount,  int maxParticipants,  String contactPhone,  String contactEmail,  String? contactKakao,  Set<String> enabledContactMethods,  bool balanceEnabled,  int balanceTolerance,  List<EntryGroupTemplate> entryGroups,  List<TicketTemplate> tickets,  String visibility,  List<String> tagIds,  AsyncValue<void> status)?  $default,) {final _that = this;
 switch (_that) {
 case _PartyCreateWizardState() when $default != null:
-return $default(_that.currentStep,_that.isPrefilled,_that.editingPartyId,_that.title,_that.description,_that.imageUrls,_that.imageFiles,_that.selectedLocation,_that.addressDetail,_that.directionsGuide,_that.minConfirmedCount,_that.maxParticipants,_that.contactPhone,_that.contactEmail,_that.contactKakao,_that.enabledContactMethods,_that.balanceEnabled,_that.balanceTolerance,_that.entryGroups,_that.tickets,_that.visibility,_that.status);case _:
+return $default(_that.currentStep,_that.isPrefilled,_that.editingPartyId,_that.title,_that.description,_that.imageUrls,_that.imageFiles,_that.selectedLocation,_that.addressDetail,_that.directionsGuide,_that.minConfirmedCount,_that.maxParticipants,_that.contactPhone,_that.contactEmail,_that.contactKakao,_that.enabledContactMethods,_that.balanceEnabled,_that.balanceTolerance,_that.entryGroups,_that.tickets,_that.visibility,_that.tagIds,_that.status);case _:
   return null;
 
 }
@@ -245,7 +247,7 @@ return $default(_that.currentStep,_that.isPrefilled,_that.editingPartyId,_that.t
 
 
 class _PartyCreateWizardState implements PartyCreateWizardState {
-  const _PartyCreateWizardState({this.currentStep = PartyCreateStep.basicInfo, this.isPrefilled = true, this.editingPartyId, this.title = '', final  Map<String, dynamic> description = const {}, final  List<String> imageUrls = const [], final  List<XFile> imageFiles = const [], this.selectedLocation, this.addressDetail = '', this.directionsGuide = '', this.minConfirmedCount = 5, this.maxParticipants = 0, this.contactPhone = '', this.contactEmail = '', this.contactKakao, final  Set<String> enabledContactMethods = const {}, this.balanceEnabled = false, this.balanceTolerance = 2, final  List<EntryGroupTemplate> entryGroups = const [], final  List<TicketTemplate> tickets = const [], this.visibility = 'public', this.status = const AsyncValue.data(null)}): _description = description,_imageUrls = imageUrls,_imageFiles = imageFiles,_enabledContactMethods = enabledContactMethods,_entryGroups = entryGroups,_tickets = tickets;
+  const _PartyCreateWizardState({this.currentStep = PartyCreateStep.basicInfo, this.isPrefilled = true, this.editingPartyId, this.title = '', final  Map<String, dynamic> description = const {}, final  List<String> imageUrls = const [], final  List<XFile> imageFiles = const [], this.selectedLocation, this.addressDetail = '', this.directionsGuide = '', this.minConfirmedCount = 5, this.maxParticipants = 0, this.contactPhone = '', this.contactEmail = '', this.contactKakao, final  Set<String> enabledContactMethods = const {}, this.balanceEnabled = false, this.balanceTolerance = 2, final  List<EntryGroupTemplate> entryGroups = const [], final  List<TicketTemplate> tickets = const [], this.visibility = 'public', final  List<String> tagIds = const [], this.status = const AsyncValue.data(null)}): _description = description,_imageUrls = imageUrls,_imageFiles = imageFiles,_enabledContactMethods = enabledContactMethods,_entryGroups = entryGroups,_tickets = tickets,_tagIds = tagIds;
   
 
 @override@JsonKey() final  PartyCreateStep currentStep;
@@ -312,6 +314,15 @@ class _PartyCreateWizardState implements PartyCreateWizardState {
 }
 
 @override@JsonKey() final  String visibility;
+// Tag Selection (Step 1)
+ final  List<String> _tagIds;
+// Tag Selection (Step 1)
+@override@JsonKey() List<String> get tagIds {
+  if (_tagIds is EqualUnmodifiableListView) return _tagIds;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_tagIds);
+}
+
 // Global Status
 @override@JsonKey() final  AsyncValue<void> status;
 
@@ -325,16 +336,16 @@ _$PartyCreateWizardStateCopyWith<_PartyCreateWizardState> get copyWith => __$Par
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PartyCreateWizardState&&(identical(other.currentStep, currentStep) || other.currentStep == currentStep)&&(identical(other.isPrefilled, isPrefilled) || other.isPrefilled == isPrefilled)&&(identical(other.editingPartyId, editingPartyId) || other.editingPartyId == editingPartyId)&&(identical(other.title, title) || other.title == title)&&const DeepCollectionEquality().equals(other._description, _description)&&const DeepCollectionEquality().equals(other._imageUrls, _imageUrls)&&const DeepCollectionEquality().equals(other._imageFiles, _imageFiles)&&(identical(other.selectedLocation, selectedLocation) || other.selectedLocation == selectedLocation)&&(identical(other.addressDetail, addressDetail) || other.addressDetail == addressDetail)&&(identical(other.directionsGuide, directionsGuide) || other.directionsGuide == directionsGuide)&&(identical(other.minConfirmedCount, minConfirmedCount) || other.minConfirmedCount == minConfirmedCount)&&(identical(other.maxParticipants, maxParticipants) || other.maxParticipants == maxParticipants)&&(identical(other.contactPhone, contactPhone) || other.contactPhone == contactPhone)&&(identical(other.contactEmail, contactEmail) || other.contactEmail == contactEmail)&&(identical(other.contactKakao, contactKakao) || other.contactKakao == contactKakao)&&const DeepCollectionEquality().equals(other._enabledContactMethods, _enabledContactMethods)&&(identical(other.balanceEnabled, balanceEnabled) || other.balanceEnabled == balanceEnabled)&&(identical(other.balanceTolerance, balanceTolerance) || other.balanceTolerance == balanceTolerance)&&const DeepCollectionEquality().equals(other._entryGroups, _entryGroups)&&const DeepCollectionEquality().equals(other._tickets, _tickets)&&(identical(other.visibility, visibility) || other.visibility == visibility)&&(identical(other.status, status) || other.status == status));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PartyCreateWizardState&&(identical(other.currentStep, currentStep) || other.currentStep == currentStep)&&(identical(other.isPrefilled, isPrefilled) || other.isPrefilled == isPrefilled)&&(identical(other.editingPartyId, editingPartyId) || other.editingPartyId == editingPartyId)&&(identical(other.title, title) || other.title == title)&&const DeepCollectionEquality().equals(other._description, _description)&&const DeepCollectionEquality().equals(other._imageUrls, _imageUrls)&&const DeepCollectionEquality().equals(other._imageFiles, _imageFiles)&&(identical(other.selectedLocation, selectedLocation) || other.selectedLocation == selectedLocation)&&(identical(other.addressDetail, addressDetail) || other.addressDetail == addressDetail)&&(identical(other.directionsGuide, directionsGuide) || other.directionsGuide == directionsGuide)&&(identical(other.minConfirmedCount, minConfirmedCount) || other.minConfirmedCount == minConfirmedCount)&&(identical(other.maxParticipants, maxParticipants) || other.maxParticipants == maxParticipants)&&(identical(other.contactPhone, contactPhone) || other.contactPhone == contactPhone)&&(identical(other.contactEmail, contactEmail) || other.contactEmail == contactEmail)&&(identical(other.contactKakao, contactKakao) || other.contactKakao == contactKakao)&&const DeepCollectionEquality().equals(other._enabledContactMethods, _enabledContactMethods)&&(identical(other.balanceEnabled, balanceEnabled) || other.balanceEnabled == balanceEnabled)&&(identical(other.balanceTolerance, balanceTolerance) || other.balanceTolerance == balanceTolerance)&&const DeepCollectionEquality().equals(other._entryGroups, _entryGroups)&&const DeepCollectionEquality().equals(other._tickets, _tickets)&&(identical(other.visibility, visibility) || other.visibility == visibility)&&const DeepCollectionEquality().equals(other._tagIds, _tagIds)&&(identical(other.status, status) || other.status == status));
 }
 
 
 @override
-int get hashCode => Object.hashAll([runtimeType,currentStep,isPrefilled,editingPartyId,title,const DeepCollectionEquality().hash(_description),const DeepCollectionEquality().hash(_imageUrls),const DeepCollectionEquality().hash(_imageFiles),selectedLocation,addressDetail,directionsGuide,minConfirmedCount,maxParticipants,contactPhone,contactEmail,contactKakao,const DeepCollectionEquality().hash(_enabledContactMethods),balanceEnabled,balanceTolerance,const DeepCollectionEquality().hash(_entryGroups),const DeepCollectionEquality().hash(_tickets),visibility,status]);
+int get hashCode => Object.hashAll([runtimeType,currentStep,isPrefilled,editingPartyId,title,const DeepCollectionEquality().hash(_description),const DeepCollectionEquality().hash(_imageUrls),const DeepCollectionEquality().hash(_imageFiles),selectedLocation,addressDetail,directionsGuide,minConfirmedCount,maxParticipants,contactPhone,contactEmail,contactKakao,const DeepCollectionEquality().hash(_enabledContactMethods),balanceEnabled,balanceTolerance,const DeepCollectionEquality().hash(_entryGroups),const DeepCollectionEquality().hash(_tickets),visibility,const DeepCollectionEquality().hash(_tagIds),status]);
 
 @override
 String toString() {
-  return 'PartyCreateWizardState(currentStep: $currentStep, isPrefilled: $isPrefilled, editingPartyId: $editingPartyId, title: $title, description: $description, imageUrls: $imageUrls, imageFiles: $imageFiles, selectedLocation: $selectedLocation, addressDetail: $addressDetail, directionsGuide: $directionsGuide, minConfirmedCount: $minConfirmedCount, maxParticipants: $maxParticipants, contactPhone: $contactPhone, contactEmail: $contactEmail, contactKakao: $contactKakao, enabledContactMethods: $enabledContactMethods, balanceEnabled: $balanceEnabled, balanceTolerance: $balanceTolerance, entryGroups: $entryGroups, tickets: $tickets, visibility: $visibility, status: $status)';
+  return 'PartyCreateWizardState(currentStep: $currentStep, isPrefilled: $isPrefilled, editingPartyId: $editingPartyId, title: $title, description: $description, imageUrls: $imageUrls, imageFiles: $imageFiles, selectedLocation: $selectedLocation, addressDetail: $addressDetail, directionsGuide: $directionsGuide, minConfirmedCount: $minConfirmedCount, maxParticipants: $maxParticipants, contactPhone: $contactPhone, contactEmail: $contactEmail, contactKakao: $contactKakao, enabledContactMethods: $enabledContactMethods, balanceEnabled: $balanceEnabled, balanceTolerance: $balanceTolerance, entryGroups: $entryGroups, tickets: $tickets, visibility: $visibility, tagIds: $tagIds, status: $status)';
 }
 
 
@@ -345,7 +356,7 @@ abstract mixin class _$PartyCreateWizardStateCopyWith<$Res> implements $PartyCre
   factory _$PartyCreateWizardStateCopyWith(_PartyCreateWizardState value, $Res Function(_PartyCreateWizardState) _then) = __$PartyCreateWizardStateCopyWithImpl;
 @override @useResult
 $Res call({
- PartyCreateStep currentStep, bool isPrefilled, String? editingPartyId, String title, Map<String, dynamic> description, List<String> imageUrls, List<XFile> imageFiles, Location? selectedLocation, String addressDetail, String directionsGuide, int minConfirmedCount, int maxParticipants, String contactPhone, String contactEmail, String? contactKakao, Set<String> enabledContactMethods, bool balanceEnabled, int balanceTolerance, List<EntryGroupTemplate> entryGroups, List<TicketTemplate> tickets, String visibility, AsyncValue<void> status
+ PartyCreateStep currentStep, bool isPrefilled, String? editingPartyId, String title, Map<String, dynamic> description, List<String> imageUrls, List<XFile> imageFiles, Location? selectedLocation, String addressDetail, String directionsGuide, int minConfirmedCount, int maxParticipants, String contactPhone, String contactEmail, String? contactKakao, Set<String> enabledContactMethods, bool balanceEnabled, int balanceTolerance, List<EntryGroupTemplate> entryGroups, List<TicketTemplate> tickets, String visibility, List<String> tagIds, AsyncValue<void> status
 });
 
 
@@ -362,7 +373,7 @@ class __$PartyCreateWizardStateCopyWithImpl<$Res>
 
 /// Create a copy of PartyCreateWizardState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? currentStep = null,Object? isPrefilled = null,Object? editingPartyId = freezed,Object? title = null,Object? description = null,Object? imageUrls = null,Object? imageFiles = null,Object? selectedLocation = freezed,Object? addressDetail = null,Object? directionsGuide = null,Object? minConfirmedCount = null,Object? maxParticipants = null,Object? contactPhone = null,Object? contactEmail = null,Object? contactKakao = freezed,Object? enabledContactMethods = null,Object? balanceEnabled = null,Object? balanceTolerance = null,Object? entryGroups = null,Object? tickets = null,Object? visibility = null,Object? status = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? currentStep = null,Object? isPrefilled = null,Object? editingPartyId = freezed,Object? title = null,Object? description = null,Object? imageUrls = null,Object? imageFiles = null,Object? selectedLocation = freezed,Object? addressDetail = null,Object? directionsGuide = null,Object? minConfirmedCount = null,Object? maxParticipants = null,Object? contactPhone = null,Object? contactEmail = null,Object? contactKakao = freezed,Object? enabledContactMethods = null,Object? balanceEnabled = null,Object? balanceTolerance = null,Object? entryGroups = null,Object? tickets = null,Object? visibility = null,Object? tagIds = null,Object? status = null,}) {
   return _then(_PartyCreateWizardState(
 currentStep: null == currentStep ? _self.currentStep : currentStep // ignore: cast_nullable_to_non_nullable
 as PartyCreateStep,isPrefilled: null == isPrefilled ? _self.isPrefilled : isPrefilled // ignore: cast_nullable_to_non_nullable
@@ -385,7 +396,8 @@ as bool,balanceTolerance: null == balanceTolerance ? _self.balanceTolerance : ba
 as int,entryGroups: null == entryGroups ? _self._entryGroups : entryGroups // ignore: cast_nullable_to_non_nullable
 as List<EntryGroupTemplate>,tickets: null == tickets ? _self._tickets : tickets // ignore: cast_nullable_to_non_nullable
 as List<TicketTemplate>,visibility: null == visibility ? _self.visibility : visibility // ignore: cast_nullable_to_non_nullable
-as String,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as String,tagIds: null == tagIds ? _self._tagIds : tagIds // ignore: cast_nullable_to_non_nullable
+as List<String>,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as AsyncValue<void>,
   ));
 }

@@ -22,7 +22,7 @@ jobs:
     environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: iOS Deploy
         uses: ./.github/actions/ios-deploy

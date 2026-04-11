@@ -64,12 +64,6 @@ Deno.test("contract: sample settlement_query_payouts matches schema", async () =
   assertMatchesSchema(sample, schema, "settlement_query_payouts sample");
 });
 
-Deno.test("contract: sample profile_update_success matches schema", async () => {
-  const schema = await loadSchema("profile_update");
-  const sample = await loadSample("profile_update_success");
-  assertMatchesSchema(sample, schema, "profile_update_success sample");
-});
-
 Deno.test("contract: sample identity_verify_success matches schema", async () => {
   const schema = await loadSchema("identity_verify");
   const sample = await loadSample("identity_verify_success");

@@ -199,7 +199,8 @@ void main() {
       expect(find.text('그 외'), findsOneWidget);
       // 환불 가능/불가 결과
       expect(find.text('전액 환불'), findsNWidgets(2));
-      expect(find.text('환불 불가'), findsOneWidget);
+      // Fix #1140: "환불 불가" → "고객센터 문의"로 변경됨
+      expect(find.text('고객센터 문의'), findsOneWidget);
       // 고객센터 안내
       expect(find.text('자세한 내용은 고객센터로 문의해주세요.'), findsOneWidget);
     });

@@ -21,6 +21,7 @@ List<RouteBase> get $appRoutes => [
   $purchaseHistoryRoute,
   $notificationCenterRoute,
   $notificationSettingsRoute,
+  $accountManagementRoute,
   $homeRoute,
   $searchRoute,
   $myPageRoute,
@@ -30,6 +31,7 @@ List<RouteBase> get $appRoutes => [
   $deletionVerifyRoute,
   $deletionCompleteRoute,
   $blockedPartnersRoute,
+  $tagEventListRoute,
 ];
 
 RouteBase get $devUserSwitchRoute => GoRouteData.$route(
@@ -431,6 +433,32 @@ mixin $NotificationSettingsRoute on GoRouteData {
   void replace(BuildContext context) => context.replace(location);
 }
 
+RouteBase get $accountManagementRoute => GoRouteData.$route(
+  path: '/my/account',
+  factory: $AccountManagementRoute._fromState,
+);
+
+mixin $AccountManagementRoute on GoRouteData {
+  static AccountManagementRoute _fromState(GoRouterState state) =>
+      const AccountManagementRoute();
+
+  @override
+  String get location => GoRouteData.$location('/my/account');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
 RouteBase get $homeRoute => GoRouteData.$route(
   path: '/',
   factory: $HomeRoute._fromState,
@@ -726,6 +754,39 @@ mixin $BlockedPartnersRoute on GoRouteData {
 
   @override
   String get location => GoRouteData.$location('/my/blocked-partners');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $tagEventListRoute => GoRouteData.$route(
+  path: '/tags/:tagId',
+  factory: $TagEventListRoute._fromState,
+);
+
+mixin $TagEventListRoute on GoRouteData {
+  static TagEventListRoute _fromState(GoRouterState state) => TagEventListRoute(
+    tagId: state.pathParameters['tagId']!,
+    tagName: state.uri.queryParameters['tag-name']!,
+  );
+
+  TagEventListRoute get _self => this as TagEventListRoute;
+
+  @override
+  String get location => GoRouteData.$location(
+    '/tags/${Uri.encodeComponent(_self.tagId)}',
+    queryParams: {'tag-name': _self.tagName},
+  );
 
   @override
   void go(BuildContext context) => context.go(location);

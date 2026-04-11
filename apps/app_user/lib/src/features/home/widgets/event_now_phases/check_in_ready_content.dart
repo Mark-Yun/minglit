@@ -18,9 +18,7 @@ class CheckInReadyContent extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final event = activeEvent.event;
     final theme = Theme.of(context);
-    final ticketTokenAsync = ref.watch(
-      eventTicketTokenProvider(event.id),
-    );
+    final ticketTokenAsync = ref.watch(eventTicketTokenProvider(event.id));
 
     return Padding(
       padding: const EdgeInsets.symmetric(
@@ -35,7 +33,9 @@ class CheckInReadyContent extends ConsumerWidget {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: MinglitColors.textSecondary.withValues(alpha: 0.3),
+              color: MinglitColors.textSecondary.withValues(
+                alpha: MinglitOpacity.muted,
+              ),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -108,16 +108,9 @@ class _QRErrorWidget extends ConsumerWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
-            Icons.error_outline,
-            size: 48,
-            color: MinglitColors.error,
-          ),
+          const Icon(Icons.error_outline, size: 48, color: MinglitColors.error),
           const SizedBox(height: MinglitSpacing.medium),
-          Text(
-            'QR 코드를 불러올 수 없습니다',
-            style: theme.textTheme.bodyMedium,
-          ),
+          Text('QR 코드를 불러올 수 없습니다', style: theme.textTheme.bodyMedium),
           const SizedBox(height: MinglitSpacing.medium),
           TextButton.icon(
             onPressed: () => ref.invalidate(eventTicketTokenProvider(eventId)),
@@ -191,9 +184,9 @@ class _LocationRow extends StatelessWidget {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } on Object catch (_) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('지도 앱을 열 수 없습니다')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('지도 앱을 열 수 없습니다')));
       }
     }
   }

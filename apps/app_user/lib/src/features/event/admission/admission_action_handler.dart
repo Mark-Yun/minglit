@@ -21,6 +21,13 @@ extension AdmissionActions on EventAdmissionController {
         );
       case EventAdmissionStatus.eligible:
         return const AdmissionButtonConfig(label: '참가 신청하기');
+      // Fix #1211: Disable the apply CTA when the event is already full or sold out.
+      case EventAdmissionStatus.fullOrSoldOut:
+        return const AdmissionButtonConfig(
+          label: '마감된 이벤트',
+          enabled: false,
+          style: AdmissionButtonStyle.disabled,
+        );
       case EventAdmissionStatus.pendingPayment:
         return const AdmissionButtonConfig(label: '결제 계속하기');
       case EventAdmissionStatus.applied:
@@ -29,6 +36,21 @@ extension AdmissionActions on EventAdmissionController {
         return const AdmissionButtonConfig(
           label: '심사 반려 (사유 확인)',
           style: AdmissionButtonStyle.destructive,
+        );
+      // Fix #1208: Ended event button configs
+      case EventAdmissionStatus.eventEnded:
+        return const AdmissionButtonConfig(
+          label: '종료된 이벤트',
+          enabled: false,
+          style: AdmissionButtonStyle.disabled,
+        );
+      case EventAdmissionStatus.eventEndedWithResults:
+        return const AdmissionButtonConfig(label: '매칭 결과 보기');
+      case EventAdmissionStatus.eventEndedParticipated:
+        return const AdmissionButtonConfig(
+          label: '참여 완료',
+          enabled: false,
+          style: AdmissionButtonStyle.disabled,
         );
     }
   }
