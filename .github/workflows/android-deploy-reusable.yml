@@ -56,6 +56,8 @@ on:
         required: true
       GOOGLE_PLAY_SERVICE_ACCOUNT_JSON:
         required: true
+      JUSO_CONFIRM_KEY:
+        required: false
 
 jobs:
   build:
@@ -115,11 +117,11 @@ jobs:
 
       - name: Build APK (Dev)
         if: github.ref == 'refs/heads/dev'
-        run: flutter build apk --flavor dev --release --build-number=${{ github.run_number }} --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_DEV_URL }} --dart-define=SUPABASE_PUBLISHABLE_KEY=${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }} --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN_FLUTTER }} --dart-define=ENVIRONMENT=development
+        run: flutter build apk --flavor dev --release --build-number=${{ github.run_number }} --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_DEV_URL }} --dart-define=SUPABASE_PUBLISHABLE_KEY=${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }} --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN_FLUTTER }} --dart-define=ENVIRONMENT=development --dart-define=JUSO_CONFIRM_KEY=${{ secrets.JUSO_CONFIRM_KEY }}
 
       - name: Build AAB (Main)
         if: github.ref == 'refs/heads/main'
-        run: flutter build appbundle --flavor prod --release --build-number=${{ github.run_number }} --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_MAIN_URL }} --dart-define=SUPABASE_PUBLISHABLE_KEY=${{ secrets.SUPABASE_MAIN_PUBLISHABLE_KEY }} --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN_FLUTTER }} --dart-define=ENVIRONMENT=production
+        run: flutter build appbundle --flavor prod --release --build-number=${{ github.run_number }} --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_MAIN_URL }} --dart-define=SUPABASE_PUBLISHABLE_KEY=${{ secrets.SUPABASE_MAIN_PUBLISHABLE_KEY }} --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN_FLUTTER }} --dart-define=ENVIRONMENT=production --dart-define=JUSO_CONFIRM_KEY=${{ secrets.JUSO_CONFIRM_KEY }}
 
       - name: Upload Artifact (Dev APK)
         if: github.ref == 'refs/heads/dev'

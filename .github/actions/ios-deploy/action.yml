@@ -57,6 +57,10 @@ inputs:
   KAKAO_LOCAL_REST_API_KEY:
     description: 'Kakao Local REST API key'
     required: true
+  JUSO_CONFIRM_KEY:
+    description: 'JUSO (Korean address API) confirmation key'
+    required: false
+    default: ''
   SENTRY_DSN_FLUTTER:
     description: 'Sentry DSN for Flutter'
     required: true
@@ -221,6 +225,7 @@ runs:
           --dart-define=SUPABASE_URL=${{ inputs.SUPABASE_DEV_URL }} \
           --dart-define=SUPABASE_PUBLISHABLE_KEY=${{ inputs.SUPABASE_DEV_PUBLISHABLE_KEY }} \
           --dart-define=KAKAO_LOCAL_REST_API_KEY=${{ inputs.KAKAO_LOCAL_REST_API_KEY }} \
+          --dart-define=JUSO_CONFIRM_KEY=${{ inputs.JUSO_CONFIRM_KEY }} \
           --dart-define=SENTRY_DSN=${{ inputs.SENTRY_DSN_FLUTTER }} \
           --dart-define=ENVIRONMENT=development
 
@@ -234,6 +239,7 @@ runs:
           --dart-define=SUPABASE_URL=${{ inputs.SUPABASE_MAIN_URL }} \
           --dart-define=SUPABASE_PUBLISHABLE_KEY=${{ inputs.SUPABASE_MAIN_PUBLISHABLE_KEY }} \
           --dart-define=KAKAO_LOCAL_REST_API_KEY=${{ inputs.KAKAO_LOCAL_REST_API_KEY }} \
+          --dart-define=JUSO_CONFIRM_KEY=${{ inputs.JUSO_CONFIRM_KEY }} \
           --dart-define=SENTRY_DSN=${{ inputs.SENTRY_DSN_FLUTTER }} \
           --dart-define=ENVIRONMENT=production
 
