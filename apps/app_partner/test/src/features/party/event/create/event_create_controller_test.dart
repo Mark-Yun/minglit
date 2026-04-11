@@ -1,7 +1,7 @@
 import 'package:app_partner/src/features/home/partner_dashboard_controller.dart';
 import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
-import 'package:app_partner/src/logic/current_partner_provider.dart';
 import 'package:app_partner/src/features/party/event/create/event_create_controller.dart';
+import 'package:app_partner/src/logic/current_partner_provider.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
@@ -667,9 +667,7 @@ void main() {
 
           // 초기 로드 완료 확인 후 sentinel 상태로 강제 변경
           expect(
-            container
-                .read(partnerDashboardControllerProvider)
-                .status,
+            container.read(partnerDashboardControllerProvider).status,
             isA<AsyncData<void>>(),
           );
           container
