@@ -67,38 +67,68 @@ void main() {
       expect(find.text('두 글자 이상 입력해주세요'), findsOneWidget);
     });
 
-    // Fix #691: API 예외 시 Log.e 호출 검증
-    testWidgets('logs error via Log.e when network request fails', (
+    // Fix #1263: confmKey가 비어있으면 적절한 에러 표시 및 로깅
+    testWidgets(
+      'shows service unavailable error when JUSO_CONFIRM_KEY is empty',
+      (
+        tester,
+      ) async {
+        // Note: String.fromEnvironment('JUSO_CONFIRM_KEY') returns '' in test environment
+        // (no --dart-define=JUSO_CONFIRM_KEY=... is passed during flutter test)
+        await tester.pumpWidget(buildTestWidget());
+        await tester.pump();
+
+        await tester.enterText(find.byType(TextField), '서울시');
+        await tester.tap(find.byIcon(Icons.search));
+        await tester.pumpAndSettle();
+
+        // Should show service unavailable error, not network error
+        expect(find.text('주소 검색 서비스를 사용할 수 없습니다'), findsOneWidget);
+
+        // Should log the configuration error
+        final logOutput = Log.export();
+        expect(logOutput, contains('[AddressSearchDialog]'));
+        expect(logOutput, contains('JUSO_CONFIRM_KEY'));
+      },
+    );
+
+    // Fix #1263: 테스트 환경에서는 JUSO_CONFIRM_KEY가 비어있어 confmKey guard가 먼저 실행됨
+    testWidgets('logs configuration error when JUSO_CONFIRM_KEY is empty', (
       tester,
     ) async {
       await tester.pumpWidget(buildTestWidget());
       await tester.pump();
 
-      // Enter a valid keyword (>= 2 chars) and trigger search
+      // Enter a valid keyword (>= 2 chars) and trigger the missing-key guard.
       await tester.enterText(find.byType(TextField), '서울시');
       await tester.tap(find.byIcon(Icons.search));
       await tester.pumpAndSettle();
 
-      // Verify error message is displayed to user
-      expect(find.text('네트워크 연결을 확인해주세요'), findsOneWidget);
+      expect(find.text('주소 검색 서비스를 사용할 수 없습니다'), findsOneWidget);
 
-      // Verify Log.e was called with the expected error context
+      // Verify Log.e was called with the expected configuration error context.
       final logOutput = Log.export();
       expect(logOutput, contains('[AddressSearchDialog]'));
-      expect(logOutput, contains('Address search Error'));
+      expect(logOutput, contains('JUSO_CONFIRM_KEY'));
     });
 
-    testWidgets('shows network error message on exception', (tester) async {
-      await tester.pumpWidget(buildTestWidget());
-      await tester.pump();
+    testWidgets(
+      'shows service unavailable message when JUSO_CONFIRM_KEY is empty',
+      (
+        tester,
+      ) async {
+        await tester.pumpWidget(buildTestWidget());
+        await tester.pump();
 
-      await tester.enterText(find.byType(TextField), '테스트주소');
-      await tester.tap(find.byIcon(Icons.search));
-      await tester.pumpAndSettle();
+        await tester.enterText(find.byType(TextField), '테스트주소');
+        await tester.tap(find.byIcon(Icons.search));
+        await tester.pumpAndSettle();
 
-      expect(find.text('네트워크 연결을 확인해주세요'), findsOneWidget);
-      // Results should be empty
-      expect(find.byType(ListTile), findsNothing);
-    });
+        // Fix #1263: In test env JUSO_CONFIRM_KEY is empty, so confmKey guard triggers.
+        expect(find.text('주소 검색 서비스를 사용할 수 없습니다'), findsOneWidget);
+        // Results should be empty
+        expect(find.byType(ListTile), findsNothing);
+      },
+    );
   });
 }
