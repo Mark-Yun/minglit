@@ -186,8 +186,7 @@ void main() {
       expect(find.text('Staff (단순 업무)'), findsWidgets);
     });
 
-    testWidgets('역할 변경 시 권한 자동 동기화 — owner 선택 시 모든 권한 활성화',
-        (tester) async {
+    testWidgets('역할 변경 시 권한 자동 동기화 — owner 선택 시 모든 권한 활성화', (tester) async {
       final memberData = {
         'user_id': _targetUserId,
         'role': 'staff',
@@ -224,8 +223,9 @@ void main() {
       expect(checkboxes.every((cb) => cb.value == true), isTrue);
     });
 
-    testWidgets('저장 버튼 탭 — updateMemberRole + updateMemberPermissions 호출',
-        (tester) async {
+    testWidgets('저장 버튼 탭 — updateMemberRole + updateMemberPermissions 호출', (
+      tester,
+    ) async {
       final mockRepo = MockPartnerRepository();
       when(
         () => mockRepo.updateMemberRole(
