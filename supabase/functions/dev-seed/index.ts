@@ -385,6 +385,8 @@ function generateDescription(
   };
 }
 
+const SEED_PASSWORD = "password1234!";
+
 // Merged generatePersonas + generate30sPersonas: covers age 20-34 in a single loop.
 // Phone prefix: 20-24 → 1000+age (preserves original), 25-34 → 2000+age (preserves original).
 // Email pattern: user_{age}_{m|f}_{ok|no}@test.com — preserved for E2E test compat.
@@ -392,7 +394,7 @@ function generateAllPersonas(): UserPersona[] {
   // Fix #446: Date → Temporal API migration
   const currentYear = Temporal.Now.plainDateISO().year;
   const personas: UserPersona[] = [];
-  const password = "password1234!";
+  const password = SEED_PASSWORD;
 
   for (let age = 20; age <= 34; age++) {
     const birthYear = currentYear - age + 1;
@@ -758,18 +760,45 @@ async function ensureGlobalVerifications(
 
 // ─── Domain Seeding Functions ───────────────────────────────────────
 
-// Merged seedUsers + seed30sUsers: covers ages 20-34 via generateAllPersonas.
+// Fix #1272: listUsers를 1회만 호출하고 Map으로 캐시 — 60회 반복 호출 제거
 async function seedAllUsers(supabase: SupabaseClient): Promise<number> {
   const personas = generateAllPersonas();
-  let createdUsers = 0;
 
+  // 1회만 조회하고 Map으로 캐시 (240회 → 최소 1회)
+  const { data: listData } = await supabase.auth.admin.listUsers({ perPage: 1000 });
+  const existingByEmail = new Map<string, { id: string; user_metadata: Record<string, unknown> }>(
+    (listData?.users ?? []).map((u: any) => [u.email as string, { id: u.id, user_metadata: u.user_metadata ?? {} }]),
+  );
+
+  let createdUsers = 0;
   for (const persona of personas) {
     try {
-      await createAdminUser(supabase, persona);
+      const existing = existingByEmail.get(persona.email);
+      if (existing) {
+        // metadata 변경이 있을 때만 update
+        const metaChanged =
+          JSON.stringify(existing.user_metadata) !== JSON.stringify(persona.metadata);
+        if (metaChanged) {
+          const { error: updateError } = await supabase.auth.admin.updateUserById(existing.id, {
+            password: persona.password,
+            user_metadata: persona.metadata,
+          });
+          if (updateError) throw updateError;
+        }
+      } else {
+        const { error: createError } = await supabase.auth.admin.createUser({
+          email: persona.email,
+          password: persona.password,
+          email_confirm: true,
+          app_metadata: { has_password: true },
+          user_metadata: persona.metadata,
+        });
+        if (createError) throw createError;
+      }
       createdUsers++;
     } catch (err) {
-      console.error(`Failed to create ${persona.email}:`, err);
-      throw err;
+      // Fix #1272: 개별 실패는 로깅만 — 나머지 유저 계속 진행
+      console.error(`Failed to seed ${persona.email}:`, err);
     }
   }
 
@@ -809,11 +838,15 @@ async function uploadSeedImages(supabase: SupabaseClient): Promise<string[]> {
 
   // Sign in as the first partner owner so storage trigger can set minglit_files.owner_id
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-  const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+  const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+  if (!anonKey) {
+    console.error("SUPABASE_ANON_KEY not set — skipping authed image upload");
+    return urls;
+  };
   const { data: authData, error: authError } = await supabase.auth
     .signInWithPassword({
       email: ALL_PARTNERS[0].ownerEmail,
-      password: "password1234!",
+      password: SEED_PASSWORD,
     });
   if (authError || !authData.session) {
     console.error(
@@ -860,9 +893,18 @@ async function updatePartyImages(
 ): Promise<void> {
   if (imageUrls.length === 0) return;
 
-  const { data: parties } = await supabase.from("parties").select("id").order(
-    "created_at",
-  );
+  // Fix #1272: seed 파트너의 파티만 대상 — 실사용 데이터 보호
+  const seedBizNumbers = ALL_PARTNERS.map((p) => p.biz_number);
+  const { data: seedPartners } = await supabase
+    .from("partners")
+    .select("id")
+    .in("biz_number", seedBizNumbers);
+  const seedPartnerIds = (seedPartners ?? []).map((p: { id: string }) => p.id);
+  const { data: parties } = await supabase
+    .from("parties")
+    .select("id")
+    .in("partner_id", seedPartnerIds)
+    .order("created_at");
   if (!parties) return;
 
   for (let i = 0; i < parties.length; i++) {
@@ -889,14 +931,15 @@ async function seedGlobalVerifications(
 async function seedAllPartners(
   supabase: SupabaseClient,
   globalVerifs: Record<string, string>,
-): Promise<{ createdPartners: number }> {
-  let createdPartners = 0;
+): Promise<{ processedPartners: number; newPartners: number }> {
+  let processedPartners = 0;
+  let newPartners = 0;
 
   for (let idx = 0; idx < ALL_PARTNERS.length; idx++) {
     const pDef = ALL_PARTNERS[idx];
     const ownerPersona: UserPersona = {
       email: pDef.ownerEmail,
-      password: "password1234!",
+      password: SEED_PASSWORD,
       metadata: {
         name: `${pDef.name} 대표`,
         username: pDef.ownerEmail.replace("@test.com", ""),
@@ -925,12 +968,37 @@ async function seedAllPartners(
       .maybeSingle();
 
     if (existingPartner) {
-      createdPartners++;
+      // 파트너는 있으나 location/verification이 누락됐을 수 있음 — 보수적으로 확인
+      const existingPartnerId = existingPartner.id;
+      const { data: existingLoc } = await supabase
+        .from("locations")
+        .select("id")
+        .eq("partner_id", existingPartnerId)
+        .maybeSingle();
+      if (!existingLoc) {
+        await createLocation(supabase, existingPartnerId, pDef.location);
+      }
+      for (const lv of pDef.localVerifications) {
+        const { data: existingVerif } = await supabase
+          .from("verifications")
+          .select("id")
+          .eq("partner_id", existingPartnerId)
+          .eq("internal_name", lv.internal_name)
+          .maybeSingle();
+        if (!existingVerif) {
+          const vid = await createVerification(supabase, existingPartnerId, lv);
+          globalVerifs[`${existingPartnerId}_${lv.category}`] = vid;
+        } else {
+          globalVerifs[`${existingPartnerId}_${lv.category}`] = existingVerif.id;
+        }
+      }
+      processedPartners++;
       continue;
     }
 
     const partnerId = await createPartner(supabase, ownerId, pDef);
-    createdPartners++;
+    processedPartners++;
+    newPartners++;
 
     await createLocation(supabase, partnerId, pDef.location);
 
@@ -940,7 +1008,7 @@ async function seedAllPartners(
     }
   }
 
-  return { createdPartners };
+  return { processedPartners, newPartners };
 }
 
 async function seedPartnerRoles(supabase: SupabaseClient): Promise<void> {
@@ -1025,6 +1093,15 @@ async function createFreshEvents(
       ? [globalVerifs[scenario.verificationCategory]].filter(Boolean)
       : [];
 
+    // Fix #1272: 멱등성 — 이미 존재하는 파티는 skip
+    const { data: existingParty } = await supabase
+      .from("parties")
+      .select("id")
+      .eq("partner_id", partnerId)
+      .eq("title", scenario.title)
+      .maybeSingle();
+    if (existingParty) continue;
+
     const { eventIds } = await createPartyWithEvents(
       supabase,
       partnerId,
@@ -1073,7 +1150,7 @@ Deno.serve(async (req) => {
     // static mode: idempotent seed of users, verifications, partners, roles, images
     const createdUsers = await seedAllUsers(supabase);
     const globalVerifs = await seedGlobalVerifications(supabase);
-    const { createdPartners } = await seedAllPartners(supabase, globalVerifs);
+    const { processedPartners } = await seedAllPartners(supabase, globalVerifs);
     await seedPartnerRoles(supabase);
     const imageUrls = await uploadSeedImages(supabase);
 
@@ -1093,7 +1170,7 @@ Deno.serve(async (req) => {
       return successResponse({
         mode,
         created_users: createdUsers,
-        created_partners: createdPartners,
+        created_partners: processedPartners,
         uploaded_images: imageUrls.length,
       });
     }
