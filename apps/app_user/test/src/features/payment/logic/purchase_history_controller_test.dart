@@ -210,4 +210,151 @@ void main() {
       },
     );
   });
+
+  // Fix #1287: PurchaseHistoryController 에러 경로 테스트
+  group('PurchaseHistoryController — error paths (Fix #1287)', () {
+    test(
+      'build error field is set when getMyPurchaseHistory throws',
+      () async {
+        const userId = 'test_user_id';
+        final mockUser = MockUser();
+        when(() => mockUser.id).thenReturn(userId);
+
+        when(
+          () => mockEventRepository.getMyPurchaseHistory(userId),
+        ).thenThrow(Exception('History fetch failed'));
+
+        final container = ProviderContainer(
+          overrides: [
+            currentUserProvider.overrideWith((ref) => mockUser),
+            eventRepositoryProvider.overrideWithValue(mockEventRepository),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        // Subscribe to keep the provider alive while we wait for completion
+        final sub = container.listen(
+          purchaseHistoryControllerProvider,
+          (_, _) {},
+        );
+        addTearDown(sub.close);
+
+        await pumpEventQueue();
+
+        final state = container.read(purchaseHistoryControllerProvider);
+        expect(state.error, isA<Exception>());
+      },
+    );
+
+    test(
+      'build error is the original exception when getMyPurchaseHistory throws',
+      () async {
+        const userId = 'test_user_id';
+        final mockUser = MockUser();
+        when(() => mockUser.id).thenReturn(userId);
+
+        final specificException = Exception('Network timeout');
+        when(
+          () => mockEventRepository.getMyPurchaseHistory(userId),
+        ).thenThrow(specificException);
+
+        final container = ProviderContainer(
+          overrides: [
+            currentUserProvider.overrideWith((ref) => mockUser),
+            eventRepositoryProvider.overrideWithValue(mockEventRepository),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        final sub = container.listen(
+          purchaseHistoryControllerProvider,
+          (_, _) {},
+        );
+        addTearDown(sub.close);
+
+        await pumpEventQueue();
+
+        final state = container.read(purchaseHistoryControllerProvider);
+        expect(state.error, equals(specificException));
+      },
+    );
+
+    test(
+      'isRefundReady returns false when paymentId is null',
+      () {
+        final futureEvent = _makeEvent(
+          startTime: DateTime.now().add(const Duration(hours: 24)),
+        );
+        final application = _makeApplication(
+          event: futureEvent,
+          paymentId: null,
+        );
+
+        final testContainer = ProviderContainer(
+          overrides: [
+            currentUserProvider.overrideWith((ref) => null),
+            eventRepositoryProvider.overrideWithValue(mockEventRepository),
+          ],
+        );
+        addTearDown(testContainer.dispose);
+
+        final ctrl = testContainer.read(
+          purchaseHistoryControllerProvider.notifier,
+        );
+        expect(ctrl.isRefundReady(application), isFalse);
+      },
+    );
+
+    test(
+      'isRefundReady returns false when paymentAmount is null',
+      () {
+        final futureEvent = _makeEvent(
+          startTime: DateTime.now().add(const Duration(hours: 24)),
+        );
+        final application = _makeApplication(
+          event: futureEvent,
+          paymentAmount: null,
+        );
+
+        final testContainer = ProviderContainer(
+          overrides: [
+            currentUserProvider.overrideWith((ref) => null),
+            eventRepositoryProvider.overrideWithValue(mockEventRepository),
+          ],
+        );
+        addTearDown(testContainer.dispose);
+
+        final ctrl = testContainer.read(
+          purchaseHistoryControllerProvider.notifier,
+        );
+        expect(ctrl.isRefundReady(application), isFalse);
+      },
+    );
+
+    test(
+      'canCancel returns false when isRefundReady is false (null paymentId)',
+      () {
+        final futureEvent = _makeEvent(
+          startTime: DateTime.now().add(const Duration(hours: 24)),
+        );
+        final application = _makeApplication(
+          event: futureEvent,
+          paymentId: null,
+        );
+
+        final testContainer = ProviderContainer(
+          overrides: [
+            currentUserProvider.overrideWith((ref) => null),
+            eventRepositoryProvider.overrideWithValue(mockEventRepository),
+          ],
+        );
+        addTearDown(testContainer.dispose);
+
+        final ctrl = testContainer.read(
+          purchaseHistoryControllerProvider.notifier,
+        );
+        expect(ctrl.canCancel(application), isFalse);
+      },
+    );
+  });
 }

@@ -528,6 +528,183 @@ void main() {
     });
   });
 
+  // Fix #1287: EventApplicationController 에러 경로 테스트
+  group('EventApplicationController — error paths (Fix #1287)', () {
+    test(
+      'submitApplication sets error state with message when applyEvent throws',
+      () async {
+        when(
+          () => mockEventRepo.applyEvent(
+            eventId: any(named: 'eventId'),
+            ticketId: any(named: 'ticketId'),
+            verificationData: any(named: 'verificationData'),
+          ),
+        ).thenThrow(Exception('Payment gateway timeout'));
+
+        final container = createContainer(
+          overrides: [
+            currentUserProvider.overrideWith((ref) => mockUser),
+            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
+          ],
+        );
+
+        final notifier = container.read(
+          eventApplicationControllerProvider(testEvent).notifier,
+        );
+        notifier.selectTicket(freeTicket);
+        await notifier.submitApplication(mockContext);
+
+        final state = container.read(
+          eventApplicationControllerProvider(testEvent),
+        );
+        expect(state.status, EventApplicationStatus.error);
+        expect(state.errorMessage, isNotNull);
+        expect(state.errorMessage, isA<String>());
+      },
+    );
+
+    test(
+      'errorMessage is generic user-friendly message when applyEvent throws unknown exception',
+      () async {
+        when(
+          () => mockEventRepo.applyEvent(
+            eventId: any(named: 'eventId'),
+            ticketId: any(named: 'ticketId'),
+            verificationData: any(named: 'verificationData'),
+          ),
+        ).thenThrow(Exception('Insufficient funds'));
+
+        final container = createContainer(
+          overrides: [
+            currentUserProvider.overrideWith((ref) => mockUser),
+            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
+          ],
+        );
+
+        final notifier = container.read(
+          eventApplicationControllerProvider(testEvent).notifier,
+        );
+        notifier.selectTicket(freeTicket);
+        await notifier.submitApplication(mockContext);
+
+        final state = container.read(
+          eventApplicationControllerProvider(testEvent),
+        );
+        expect(state.status, EventApplicationStatus.error);
+        expect(state.errorMessage, isNotNull);
+        // Fix #1287: MinglitException.from() wraps unknown exceptions as
+        // MinglitSystemException, whose userMessage is the generic Korean
+        // user-facing string — not the raw exception text.
+        expect(state.errorMessage, contains('일시적인 오류가 발생했습니다'));
+      },
+    );
+
+    test(
+      'error state at payment step is preserved after failure',
+      () async {
+        when(
+          () => mockEventRepo.applyEvent(
+            eventId: any(named: 'eventId'),
+            ticketId: any(named: 'ticketId'),
+            verificationData: any(named: 'verificationData'),
+          ),
+        ).thenThrow(Exception('Network error'));
+
+        final container = createContainer(
+          overrides: [
+            currentUserProvider.overrideWith((ref) => mockUser),
+            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
+          ],
+        );
+
+        final notifier = container.read(
+          eventApplicationControllerProvider(testEvent).notifier,
+        );
+        notifier.selectTicket(freeTicket);
+        notifier.nextStep();
+        await notifier.submitApplication(mockContext);
+
+        final state = container.read(
+          eventApplicationControllerProvider(testEvent),
+        );
+        expect(state.status, EventApplicationStatus.error);
+        expect(state.step, EventApplicationStep.payment);
+        expect(state.selectedTicket?.id, 'ticket_free');
+      },
+    );
+
+    test(
+      'submitApplication fails gracefully when applyEvent throws StateError',
+      () async {
+        when(
+          () => mockEventRepo.applyEvent(
+            eventId: any(named: 'eventId'),
+            ticketId: any(named: 'ticketId'),
+            verificationData: any(named: 'verificationData'),
+          ),
+        ).thenThrow(StateError('Invalid state'));
+
+        final container = createContainer(
+          overrides: [
+            currentUserProvider.overrideWith((ref) => mockUser),
+            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
+          ],
+        );
+
+        final notifier = container.read(
+          eventApplicationControllerProvider(testEvent).notifier,
+        );
+        notifier.selectTicket(freeTicket);
+        await notifier.submitApplication(mockContext);
+
+        final state = container.read(
+          eventApplicationControllerProvider(testEvent),
+        );
+        expect(state.status, EventApplicationStatus.error);
+      },
+    );
+
+    test(
+      'resetStatus clears error after failed submitApplication',
+      () async {
+        when(
+          () => mockEventRepo.applyEvent(
+            eventId: any(named: 'eventId'),
+            ticketId: any(named: 'ticketId'),
+            verificationData: any(named: 'verificationData'),
+          ),
+        ).thenThrow(Exception('Service unavailable'));
+
+        final container = createContainer(
+          overrides: [
+            currentUserProvider.overrideWith((ref) => mockUser),
+            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
+          ],
+        );
+
+        final notifier = container.read(
+          eventApplicationControllerProvider(testEvent).notifier,
+        );
+        notifier.selectTicket(freeTicket);
+        await notifier.submitApplication(mockContext);
+
+        var state = container.read(
+          eventApplicationControllerProvider(testEvent),
+        );
+        expect(state.status, EventApplicationStatus.error);
+        expect(state.errorMessage, isNotNull);
+
+        notifier.resetStatus();
+
+        state = container.read(
+          eventApplicationControllerProvider(testEvent),
+        );
+        expect(state.status, EventApplicationStatus.initial);
+        expect(state.errorMessage, isNull);
+      },
+    );
+  });
+
   group('EventApplicationState.copyWith', () {
     test('copies all fields', () {
       final ticket = Ticket(
