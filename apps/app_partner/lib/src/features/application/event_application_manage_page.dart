@@ -258,29 +258,13 @@ class _ApplicationTab extends ConsumerWidget {
     BuildContext context,
     String appId,
   ) async {
-    final reasonController = TextEditingController();
+    // Fix #1316: Use _RejectDialog StatefulWidget so the TextEditingController
+    // is disposed by Flutter after the dialog close animation completes,
+    // not immediately when showDialog resolves.
     final reason = await showDialog<String>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('신청 거절'),
-        content: TextField(
-          controller: reasonController,
-          decoration: const InputDecoration(hintText: '거절 사유를 입력하세요'),
-          maxLines: 3,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('취소'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, reasonController.text),
-            child: const Text('거절'),
-          ),
-        ],
-      ),
+      builder: (ctx) => const _RejectDialog(),
     );
-    reasonController.dispose();
 
     if (reason == null || reason.trim().isEmpty) return;
 
@@ -295,7 +279,12 @@ class _ApplicationTab extends ConsumerWidget {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('거절되었습니다')));
-        ref.invalidate(eventApplicationsGroupedProvider);
+        // Fix #1316: Defer invalidate by one frame so dialog close animation
+        // completes before the provider rebuild — avoids _FocusInheritedScope
+        // build-scope conflict.
+        WidgetsBinding.instance.addPostFrameCallback(
+          (_) => ref.invalidate(eventApplicationsGroupedProvider),
+        );
       }
     } on Exception catch (e) {
       if (context.mounted) {
@@ -354,8 +343,55 @@ class _ApplicationTab extends ConsumerWidget {
           ),
         );
       }
-      ref.invalidate(eventApplicationsGroupedProvider);
+      // Fix #1316: Defer invalidate by one frame so dialog close animation
+      // completes before the provider rebuild — avoids _FocusInheritedScope
+      // build-scope conflict.
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => ref.invalidate(eventApplicationsGroupedProvider),
+      );
     }
+  }
+}
+
+/// Dialog for entering a rejection reason.
+/// Manages the TextEditingController internally so Flutter disposes it
+/// after the close animation completes (not when showDialog resolves).
+class _RejectDialog extends StatefulWidget {
+  const _RejectDialog();
+
+  @override
+  State<_RejectDialog> createState() => _RejectDialogState();
+}
+
+class _RejectDialogState extends State<_RejectDialog> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('신청 거절'),
+      content: TextField(
+        controller: _controller,
+        decoration: const InputDecoration(hintText: '거절 사유를 입력하세요'),
+        maxLines: 3,
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('취소'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, _controller.text),
+          child: const Text('거절'),
+        ),
+      ],
+    );
   }
 }
 
