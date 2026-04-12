@@ -10,7 +10,7 @@
 // 7. 이메일 유저 → 비밀번호 입력 필드 표시
 // 8. 소셜 유저 → 소셜 재인증 안내 표시
 // 9. 빈 비밀번호 제출 → 에러 메시지 표시
-// 10. 비밀번호 입력 후 탈퇴 요청 → 확인 다이얼로그 표시
+// 10. 비밀번호 입력 후 탈퇴 요청 확인 → goComplete() 호출
 // 11. 탈퇴 완료 페이지 렌더링
 import 'dart:async';
 
@@ -30,6 +30,12 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'utils/test_app.dart';
 import 'utils/test_mocks.dart';
+
+/// 라우터 기반 테스트에서 반복되는 overrides 헬퍼.
+List<Override> _deletionRouterOverrides() => [
+  accountDeletionControllerProvider.overrideWith(_FakeDeletionController.new),
+  accountRepositoryProvider.overrideWithValue(_FakeAccountRepository()),
+];
 
 void main() {
   setUpAll(() async {
@@ -60,14 +66,7 @@ void main() {
           isLoggedIn: true,
           currentUser: testUser,
           initialLocation: '/my/privacy/delete/reason',
-          additionalOverrides: [
-            accountDeletionControllerProvider.overrideWith(
-              _FakeDeletionController.new,
-            ),
-            accountRepositoryProvider.overrideWithValue(
-              _FakeAccountRepository(),
-            ),
-          ],
+          additionalOverrides: _deletionRouterOverrides(),
         ),
       );
       await tester.pumpAndSettle();
@@ -82,14 +81,7 @@ void main() {
           isLoggedIn: true,
           currentUser: testUser,
           initialLocation: '/my/privacy/delete/info',
-          additionalOverrides: [
-            accountDeletionControllerProvider.overrideWith(
-              _FakeDeletionController.new,
-            ),
-            accountRepositoryProvider.overrideWithValue(
-              _FakeAccountRepository(),
-            ),
-          ],
+          additionalOverrides: _deletionRouterOverrides(),
         ),
       );
       await tester.pumpAndSettle();
@@ -106,14 +98,7 @@ void main() {
           isLoggedIn: true,
           currentUser: testUser,
           initialLocation: '/my/privacy/delete/complete',
-          additionalOverrides: [
-            accountDeletionControllerProvider.overrideWith(
-              _FakeDeletionController.new,
-            ),
-            accountRepositoryProvider.overrideWithValue(
-              _FakeAccountRepository(),
-            ),
-          ],
+          additionalOverrides: _deletionRouterOverrides(),
         ),
       );
       await tester.pumpAndSettle();
@@ -210,7 +195,9 @@ void main() {
     Widget buildVerifyPage({
       required User user,
       _FakeDeletionController? controller,
+      _SpyDeletionCoordinator? coordinator,
     }) {
+      final spy = coordinator ?? _SpyDeletionCoordinator();
       return ProviderScope(
         overrides: [
           currentUserProvider.overrideWith((_) => user),
@@ -218,9 +205,7 @@ void main() {
           accountDeletionControllerProvider.overrideWith(
             controller != null ? () => controller : _FakeDeletionController.new,
           ),
-          accountDeletionCoordinatorProvider.overrideWith(
-            (ref) => _SpyDeletionCoordinator(),
-          ),
+          accountDeletionCoordinatorProvider.overrideWith((ref) => spy),
         ],
         child: const MaterialApp(
           home: DeletionVerifyPage(reasonCode: 'no_longer_use'),
@@ -257,9 +242,12 @@ void main() {
       expect(find.text('비밀번호를 입력해주세요.'), findsOneWidget);
     });
 
-    testWidgets('비밀번호 입력 후 탈퇴 요청 → 확인 다이얼로그 표시', (tester) async {
+    testWidgets('비밀번호 입력 후 탈퇴 요청 확인 → coordinator.goComplete() 호출', (
+      tester,
+    ) async {
       final emailUser = _makeEmailUser();
-      await tester.pumpWidget(buildVerifyPage(user: emailUser));
+      final spy = _SpyDeletionCoordinator();
+      await tester.pumpWidget(buildVerifyPage(user: emailUser, coordinator: spy));
       await tester.pump();
 
       // 비밀번호 입력
@@ -271,7 +259,12 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('정말 탈퇴할까요?'), findsOneWidget);
-      expect(find.text('탈퇴 요청'), findsWidgets);
+
+      // 다이얼로그 확인 버튼 탭 → goComplete() 호출
+      await tester.tap(find.text('탈퇴 요청').last);
+      await tester.pumpAndSettle();
+
+      expect(spy.goCompleteCalled, isTrue);
     });
   });
 }
