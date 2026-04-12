@@ -716,7 +716,6 @@ void main() {
         // Wait for the async build to complete deterministically
         await container
             .read(eventAdmissionControllerProvider(testEvent).future)
-            // ignore: avoid_catches_without_on_clauses
             .catchError((_) {});
 
         final raw = container.read(eventAdmissionControllerProvider(testEvent));
@@ -756,7 +755,6 @@ void main() {
 
         await container
             .read(eventAdmissionControllerProvider(testEvent).future)
-            // ignore: avoid_catches_without_on_clauses
             .catchError((_) {});
 
         final raw = container.read(eventAdmissionControllerProvider(testEvent));
@@ -805,7 +803,6 @@ void main() {
 
         await container
             .read(eventAdmissionControllerProvider(testEvent).future)
-            // ignore: avoid_catches_without_on_clauses
             .catchError((_) {});
 
         final raw = container.read(eventAdmissionControllerProvider(testEvent));
@@ -856,7 +853,6 @@ void main() {
 
         await container
             .read(eventAdmissionControllerProvider(completedEvent).future)
-            // ignore: avoid_catches_without_on_clauses
             .catchError((_) {});
 
         final raw = container.read(
@@ -894,7 +890,6 @@ void main() {
 
         await container
             .read(eventAdmissionControllerProvider(testEvent).future)
-            // ignore: avoid_catches_without_on_clauses
             .catchError((_) {});
 
         final raw = container.read(eventAdmissionControllerProvider(testEvent));

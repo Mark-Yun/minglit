@@ -241,7 +241,6 @@ void main() {
 
         await container
             .read(purchaseHistoryControllerProvider.future)
-            // ignore: avoid_catches_without_on_clauses
             .catchError((_) {});
 
         final state = container.read(purchaseHistoryControllerProvider);
@@ -277,7 +276,6 @@ void main() {
 
         await container
             .read(purchaseHistoryControllerProvider.future)
-            // ignore: avoid_catches_without_on_clauses
             .catchError((_) {});
 
         final state = container.read(purchaseHistoryControllerProvider);
