@@ -13,7 +13,6 @@ const DEFAULT_CONFIG: SimConfig = {
   user_batch_size: 10,
   checkin_rate: 0.7,
   no_show_rate: 0.3,
-  strict: false,
 };
 
 const noop = () => {};
@@ -817,44 +816,21 @@ Deno.test({
   },
 });
 
-// sanitizeResources/sanitizeOps disabled: @supabase/auth-js internally calls setInterval for
-// token auto-refresh even when persistSession=false. The interval leaks within the test but is
-// harmless — suppressing the leak check is correct here rather than patching the library.
-Deno.test({
-  name: "simDiscoverAndApply - skips when credentials not available",
-  sanitizeResources: false,
-  sanitizeOps: false,
-  fn: async () => {
-  const warnings: string[] = [];
-  const warnLog = (entry: { level: string; message: string }) => {
-    if (entry.level === "error" || entry.level === "warn") warnings.push(entry.message);
-  };
+// Fix #1283: credentials 누락 시 즉시 throw (strict 제거 후 유일한 동작)
+Deno.test("simDiscoverAndApply - throws when credentials not available", async () => {
+  const mock = createMockSupabaseClient({});
 
-  const mock = createMockSupabaseClient({
-    tables: {
-      user_profiles: {
-        select: () => ({
-          data: [{ id: "user-1", gender: "male", birth_date: "1998-01-01", username: "user1" }],
-          error: null,
-        }),
-      },
-    },
-  });
-
-  // No SIM_USER_PASSWORD set, no supabaseUrl/anonKey — credentials unavailable
-  const result = await simDiscoverAndApply(
-    mock as unknown as SupabaseClient,
-    DEFAULT_CONFIG,
-    warnLog as Parameters<typeof simDiscoverAndApply>[2],
-    ["event-1"],
-    // supabaseUrl and anonKey intentionally omitted
+  // No SIM_USER_PASSWORD set — throws immediately
+  await assertRejects(
+    () => simDiscoverAndApply(
+      mock as unknown as SupabaseClient,
+      DEFAULT_CONFIG,
+      noop,
+      ["event-1"],
+    ),
+    Error,
+    "SIM_USER_PASSWORD not set",
   );
-
-  // No applications created because credentials are missing
-  assertEquals(result.applicationIds.length, 0);
-  // A warning/error about missing credentials was logged
-  assertEquals(warnings.some((w) => w.includes("SIM_USER_PASSWORD") || w.includes("supabaseUrl") || w.includes("cannot")), true);
-  },
 });
 
 // sanitizeResources/sanitizeOps disabled: @supabase/auth-js internally calls setInterval for

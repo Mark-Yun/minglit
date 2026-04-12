@@ -338,9 +338,9 @@ Deno.test("simApproveVerifications - handles DB error gracefully (no throw)", as
   assertEquals(result.rejectedApplicationIds.length, 0);
 });
 
-// Fix #1280: EF failure (verification flow) must throw regardless of strict flag.
+// Fix #1283: EF failure always throws (strict parameter removed).
 Deno.test({
-  name: "simApproveVerifications - EF failure on verification flow throws error (strict=false)",
+  name: "simApproveVerifications - EF failure on verification flow throws error",
   sanitizeResources: false,
   sanitizeOps: false,
   fn: async () => {
@@ -366,11 +366,6 @@ Deno.test({
         },
       }),
     });
-
-    const logs: string[] = [];
-    const logFn = (entry: { level: string; message: string }) => {
-      logs.push(`${entry.level}: ${entry.message}`);
-    };
 
     Deno.env.set("SIM_USER_PASSWORD", "test-password");
     try {
@@ -392,83 +387,14 @@ Deno.test({
         }
         return new Response(JSON.stringify({}), { status: 404 });
       }, async () => {
-        // strict=false: error is logged, not propagated; result has 0 approved
-        const result = await simApproveVerifications(
-          mock as unknown as SupabaseClient,
-          ["app-ef-fail-1"],
-          logFn as unknown as Parameters<typeof simApproveVerifications>[2],
-          1.0,
-          "https://mock.supabase.co",
-          "anon-key",
-          false,
-        );
-        assertEquals(result.approvedApplicationIds.length, 0);
-        // Error was logged (not silent)
-        assertEquals(logs.some((l) => l.includes("error:")), true);
-      });
-    } finally {
-      Deno.env.delete("SIM_USER_PASSWORD");
-    }
-  },
-});
-
-// Fix #1280: EF failure (verification flow) must throw when strict=true.
-Deno.test({
-  name: "simApproveVerifications - EF failure on verification flow throws when strict=true",
-  sanitizeResources: false,
-  sanitizeOps: false,
-  fn: async () => {
-    const mock = createMockSupabaseClient({
-      ...makePartnerEmailMockOptions({
-        event_applications: {
-          select: ({ filters }: { filters: Record<string, unknown> }) => ({
-            data: {
-              id: filters["id"] as string,
-              event_id: "event-1",
-              ticket_id: "ticket-1",
-              user_id: "user-1",
-              status: "pending_review",
-            },
-            error: null,
-          }),
-        },
-        events: { select: makeEventSelectHandler() },
-        verifications: { select: makeVerificationSelectHandler("verif-1") },
-        // Fix #1326: user-submit-verification EF로 전환 — verification_submissions 직접 insert 제거
-        user_profiles: {
-          select: () => ({ data: { username: "user_001" }, error: null }),
-        },
-      }),
-    });
-
-    Deno.env.set("SIM_USER_PASSWORD", "test-password");
-    try {
-      await withMockFetch((url, init) => {
-        if (url.includes("auth/v1/token")) {
-          return new Response(
-            JSON.stringify({ access_token: "mock-token", token_type: "bearer", expires_in: 3600, refresh_token: "r", user: {} }),
-            { status: 200 },
-          );
-        }
-        // Fix #1326: user-submit-verification EF mock — succeeds so partner-review-submission is reached
-        if (url.includes("user-submit-verification")) {
-          const body = JSON.parse((init.body as string) ?? "{}");
-          return new Response(JSON.stringify({ submission_id: `sub-${body.application_id as string}` }), { status: 200 });
-        }
-        if (url.includes("partner-review-submission")) {
-          return new Response(JSON.stringify({ error: "internal" }), { status: 500 });
-        }
-        return new Response(JSON.stringify({}), { status: 404 });
-      }, async () => {
         await assertRejects(
           () => simApproveVerifications(
             mock as unknown as SupabaseClient,
-            ["app-strict-1"],
+            ["app-ef-fail-1"],
             noop,
             1.0,
             "https://mock.supabase.co",
             "anon-key",
-            true,
           ),
           Error,
           "partner-review-submission EF returned 500",

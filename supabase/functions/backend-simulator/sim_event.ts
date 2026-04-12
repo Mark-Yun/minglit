@@ -39,9 +39,8 @@ export interface SimEventResult {
  * - checkinRate (default 0.7) fraction → status='checked_in' via event-checkin EF
  * - remaining fraction → status='no_show' via direct DB (no EF for passive state)
  *
- * EF is the primary path for checked_in. Direct DB fallback only applies when
- * supabaseUrl/anonKey are missing AND strict=false. With strict=true, missing
- * credentials cause an immediate error.
+ * EF is the only path for checked_in. supabaseUrl/anonKey are required.
+ * Missing credentials cause an immediate error.
  *
  * Asserts checkin ratio within ±0.15 tolerance.
  */
@@ -52,7 +51,6 @@ export async function simCheckin(
   checkinRate: number = 0.7,
   supabaseUrl?: string,
   anonKey?: string,
-  strict?: boolean,
 ): Promise<{ checkedInParticipantIds: string[]; noShowParticipantIds: string[]; assertions: SimAssertionResult[] }> {
   const checkedInParticipantIds: string[] = [];
   const noShowParticipantIds: string[] = [];
@@ -65,31 +63,10 @@ export async function simCheckin(
     return { checkedInParticipantIds, noShowParticipantIds, assertions };
   }
 
-  // Fix #1281: EF-first — supabaseUrl/anonKey are required for checked_in path.
-  // In strict mode, fail fast before processing any events.
+  // Fix #1281: EF-only — supabaseUrl/anonKey are required for checked_in path.
+  // Fix #1283: strict parameter removed — fail fast always.
   if (!supabaseUrl || !anonKey) {
-    if (strict) {
-      throw new Error("Strict mode: supabaseUrl and anonKey are required for event-checkin EF");
-    }
-    log({ level: "warn", phase: "checkin", step: "no_credentials", message: "supabaseUrl/anonKey not provided — checked_in participants will use direct DB fallback" });
-  }
-
-  // Fix #998: event-checkin EF requires status='active' or 'ongoing', but simCheckin is called
-  // before simCompleteEvents (which drives scheduled→active→ongoing→completed). Pre-activate
-  // all scheduled events here so the EF status gate passes — mirrors real-world cron activation.
-  // Skip pre-activation in strict mode: events should already be active in a production-like run.
-  if (!strict) {
-    const { error: preActivateErr } = await supabase
-      .from("events")
-      .update({ status: "active" })
-      .eq("status", "scheduled")
-      .in("id", eventIds);
-
-    if (preActivateErr) {
-      log({ level: "warn", phase: "checkin", step: "pre_activate", message: `Failed to pre-activate scheduled events: ${preActivateErr.message}` });
-    } else {
-      log({ level: "info", phase: "checkin", step: "pre_activate", message: `Pre-activated scheduled events to active for EF check-in (${eventIds.length} event IDs processed)` });
-    }
+    throw new Error("supabaseUrl and anonKey are required for event-checkin EF");
   }
 
   // Fix #531: Process events in batches to prevent curl 120s timeout.
@@ -167,20 +144,6 @@ export async function simCheckin(
             log({ level: "info", phase: "checkin", step: "direct_checkin", message: `Checked in partner participant ${participant.id} via direct DB (no user token available)` });
             continue;
           }
-        } else {
-          // No credentials provided and strict=false — direct DB fallback with warning already logged above
-          const { error: updErr } = await supabase
-            .from("event_participants")
-            .update({ status: "checked_in" })
-            .eq("id", participant.id);
-
-          if (updErr) {
-            log({ level: "error", phase: "checkin", step: "update_participant", message: `Failed to update participant ${participant.id}: ${updErr.message}` });
-            continue;
-          }
-
-          checkedInParticipantIds.push(participant.id);
-          continue;
         }
       }
 
@@ -247,7 +210,6 @@ export async function simMatch(
   log: (entry: Omit<SimLogEntry, "timestamp">) => void,
   supabaseUrl?: string,
   serviceRoleKey?: string,
-  strict?: boolean,
 ): Promise<{ matchPairs: Array<{ userId1: string; userId2: string; eventId: string }>; assertions: SimAssertionResult[] }> {
   const matchPairs: Array<{ userId1: string; userId2: string; eventId: string }> = [];
   const assertions: SimAssertionResult[] = [];
@@ -258,14 +220,9 @@ export async function simMatch(
   }
 
   // Fix #1281: EF-only — supabaseUrl/serviceRoleKey are required
+  // Fix #1283: strict parameter removed — fail fast always.
   if (!supabaseUrl || !serviceRoleKey) {
-    const msg = "supabaseUrl and serviceRoleKey are required for event-matching EF";
-    if (strict) {
-      throw new Error(`Strict mode: ${msg}`);
-    }
-    // Non-strict: log warning and return empty result — no direct DB fallback
-    log({ level: "warn", phase: "match", step: "no_credentials", message: `${msg} — skipping match phase` });
-    return { matchPairs, assertions };
+    throw new Error("supabaseUrl and serviceRoleKey are required for event-matching EF");
   }
 
   // Fix #531: Process events in batches to prevent curl 120s timeout.

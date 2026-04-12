@@ -449,7 +449,7 @@ async function applyForUser(
 }
 
 // Fix #1323: User-centric discover-and-apply loop
-// Note: #1283 에서 strict 파라미터 제거 및 EF-only 전환 예정 (simCreateParties/simCreateDisplayEvents와 일관성)
+// Fix #1283: strict 파라미터 제거 — EF-only 전환 완료
 export async function simDiscoverAndApply(
   supabase: SupabaseClient,
   config: SimConfig,
@@ -457,7 +457,6 @@ export async function simDiscoverAndApply(
   newEventIds: string[],
   supabaseUrl?: string,
   anonKey?: string,
-  strict?: boolean,
 ): Promise<{ applicationIds: string[]; paidApplicationIds: string[]; pendingReviewApplicationIds: string[] }> {
   const applicationIds: string[] = [];
   const paidApplicationIds: string[] = [];
@@ -465,16 +464,11 @@ export async function simDiscoverAndApply(
 
   const simUserPassword = Deno.env.get("SIM_USER_PASSWORD");
   if (!simUserPassword) {
-    const errMsg = "SIM_USER_PASSWORD not set; cannot acquire user token for user-event-feed EF";
-    if (strict) throw new Error(errMsg);
-    log({ level: "warn", phase: "apply", step: "sim_user_password", message: errMsg });
+    throw new Error("SIM_USER_PASSWORD not set; cannot acquire user token for user-event-feed EF");
   }
 
   if (!supabaseUrl || !anonKey || !simUserPassword) {
-    const errMsg = "supabaseUrl, anonKey, or SIM_USER_PASSWORD not available — cannot call user-event-feed EF";
-    if (strict) throw new Error(errMsg);
-    log({ level: "error", phase: "apply", step: "event_feed", message: errMsg });
-    return { applicationIds, paidApplicationIds, pendingReviewApplicationIds };
+    throw new Error("supabaseUrl, anonKey, or SIM_USER_PASSWORD not available — cannot call user-event-feed EF");
   }
 
   const { data: usersRaw } = await supabase

@@ -21,7 +21,7 @@ export interface SimRefundResult {
  *   5. Assert refund processed correctly
  *
  * Fix #1327: Replace payment-cancel EF + direct DB with user-cancel-order EF as the sole
- * refund path. EF failure throws regardless of strict mode.
+ * refund path. EF failure throws.
  */
 export async function simRefundRequests(
   supabase: SupabaseClient,
@@ -30,7 +30,6 @@ export async function simRefundRequests(
   refundRate: number = 0.2,
   supabaseUrl?: string,
   anonKey?: string,
-  _strict?: boolean,
 ): Promise<SimRefundResult> {
   const refundedApplicationIds: string[] = [];
   const assertions: SimAssertionResult[] = [];
