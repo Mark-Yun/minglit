@@ -194,12 +194,19 @@ Deno.test({
   },
 });
 
-Deno.test("simDiscoverAndApply - prevents duplicate applications", async () => {
-  let insertCount = 0;
+// sanitizeResources/sanitizeOps disabled: @supabase/auth-js internally calls setInterval for
+// token auto-refresh even when persistSession=false. The interval leaks within the test but is
+// harmless — suppressing the leak check is correct here rather than patching the library.
+Deno.test({
+  name: "simDiscoverAndApply - prevents duplicate applications",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+  // Track apply_event RPC calls to assert dedup skips the already-applied user
+  const rpcCalls: Record<string, unknown>[] = [];
 
   const mock = createMockSupabaseClient({
     tables: {
-      events: { select: () => ({ data: [], error: null }) },
       user_profiles: {
         select: () => ({
           data: [{ id: "user-1", gender: "male", birth_date: "1998-01-01", username: "user1" }],
@@ -213,27 +220,56 @@ Deno.test("simDiscoverAndApply - prevents duplicate applications", async () => {
         }),
       },
       tickets: {
-        select: () => ({ data: [{ id: "ticket-1", price: 20000 }], error: null }),
+        select: () => ({ data: [{ id: "ticket-1", price: 20000, status: "on_sale" }], error: null }),
       },
+      // Simulate user-1 already has an existing application for event-1
       event_applications: {
         select: () => ({
           data: [{ user_id: "user-1" }],
           error: null,
         }),
-        insert: () => {
-          insertCount++;
-          return { data: { id: "app-1" }, error: null };
-        },
-      },
-      event_participants: {
-        insert: () => ({ data: null, error: null }),
       },
     },
   });
 
-  await simDiscoverAndApply(mock as unknown as SupabaseClient, DEFAULT_CONFIG, noop, ["event-1"]);
+  Deno.env.set("SIM_USER_PASSWORD", "test-password");
+  try {
+    await withMockFetch((url, init) => {
+      if (url.includes("auth/v1/token")) {
+        return new Response(
+          JSON.stringify({ access_token: "mock-user-token", token_type: "bearer", expires_in: 3600, refresh_token: "r", user: {} }),
+          { status: 200 },
+        );
+      }
+      if (url.includes("functions/v1/user-event-feed")) {
+        return new Response(JSON.stringify({ events: [] }), { status: 200 });
+      }
+      if (url.includes("rest/v1/rpc/apply_event")) {
+        try {
+          rpcCalls.push(JSON.parse((init.body as string) ?? "{}") as Record<string, unknown>);
+        } catch {
+          // intentionally empty
+        }
+        return new Response(JSON.stringify("app-new"), { status: 200 });
+      }
+      return new Response(JSON.stringify({}), { status: 404 });
+    }, () =>
+      simDiscoverAndApply(
+        mock as unknown as SupabaseClient,
+        DEFAULT_CONFIG,
+        noop,
+        ["event-1"],
+        "https://mock.supabase.co",
+        "anon-key",
+      )
+    );
 
-  assertEquals(insertCount, 0);
+    // apply_event RPC must NOT have been called for user-1 (already applied)
+    assertEquals(rpcCalls.length, 0);
+  } finally {
+    Deno.env.delete("SIM_USER_PASSWORD");
+  }
+  },
 });
 
 // ── EF path tests ────────────────────────────────────────────────────────────
@@ -241,10 +277,10 @@ Deno.test("simDiscoverAndApply - prevents duplicate applications", async () => {
 // Intercept module-level EF calls via mock fetch. We replace globalThis.fetch
 // for the duration of the test to simulate EF responses without a real server.
 
-function withMockFetch(
+function withMockFetch<T>(
   handler: (url: string, init: RequestInit) => Response,
-  fn: () => Promise<void>,
-): Promise<void> {
+  fn: () => Promise<T>,
+): Promise<T> {
   const original = globalThis.fetch;
   globalThis.fetch = (url: string | URL | Request, init?: RequestInit) =>
     Promise.resolve(handler(url.toString(), init ?? {}));
