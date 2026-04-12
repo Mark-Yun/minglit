@@ -9,6 +9,7 @@ import '../../../../utils/test_utils.dart';
 void main() {
   late MockEventRepository mockEventRepo;
   late MockUser mockUser;
+  late MockBuildContext mockContext;
 
   final testEvent = Event(
     id: 'event_1',
@@ -54,6 +55,7 @@ void main() {
   setUp(() {
     mockEventRepo = MockEventRepository();
     mockUser = MockUser();
+    mockContext = MockBuildContext();
     when(() => mockUser.id).thenReturn('user_1');
     when(() => mockUser.userMetadata).thenReturn({'name': 'Test User'});
     when(() => mockUser.phone).thenReturn('01012345678');
@@ -249,7 +251,7 @@ void main() {
           eventApplicationControllerProvider(testEvent).notifier,
         );
 
-        await notifier.submitApplication();
+        await notifier.submitApplication(mockContext);
 
         final state = container.read(
           eventApplicationControllerProvider(testEvent),
@@ -257,7 +259,7 @@ void main() {
         // Status stays initial since no ticket was selected
         expect(state.status, EventApplicationStatus.initial);
         verifyNever(
-          () => mockEventRepo.createOrderViaEF(
+          () => mockEventRepo.applyEvent(
             eventId: any(named: 'eventId'),
             ticketId: any(named: 'ticketId'),
             verificationData: any(named: 'verificationData'),
@@ -278,7 +280,7 @@ void main() {
         );
         notifier.selectTicket(freeTicket);
 
-        await notifier.submitApplication();
+        await notifier.submitApplication(mockContext);
 
         final state = container.read(
           eventApplicationControllerProvider(testEvent),
@@ -286,20 +288,15 @@ void main() {
         expect(state.status, EventApplicationStatus.initial);
       });
 
-      test('succeeds when ticket and user are present', () async {
+      test('succeeds when ticket and user are present (free ticket)', () async {
         when(
-          () => mockEventRepo.createOrderViaEF(
+          () => mockEventRepo.applyEvent(
             eventId: any(named: 'eventId'),
             ticketId: any(named: 'ticketId'),
             verificationData: any(named: 'verificationData'),
           ),
         ).thenAnswer(
-          (_) async => const CreateOrderResult(
-            applicationId: 'app_123',
-            amount: 0,
-            requiresPayment: false,
-            ticketName: '무료 티켓',
-          ),
+          (_) async => const FreeApplyEventResult(applicationId: 'app_123'),
         );
 
         final container = createContainer(
@@ -314,14 +311,14 @@ void main() {
         );
         notifier.selectTicket(freeTicket);
 
-        await notifier.submitApplication();
+        await notifier.submitApplication(mockContext);
 
         final state = container.read(
           eventApplicationControllerProvider(testEvent),
         );
         expect(state.status, EventApplicationStatus.success);
         verify(
-          () => mockEventRepo.createOrderViaEF(
+          () => mockEventRepo.applyEvent(
             eventId: 'event_1',
             ticketId: 'ticket_free',
             verificationData: any(named: 'verificationData'),
@@ -331,12 +328,12 @@ void main() {
 
       test('sets error state on failure', () async {
         when(
-          () => mockEventRepo.createOrderViaEF(
+          () => mockEventRepo.applyEvent(
             eventId: any(named: 'eventId'),
             ticketId: any(named: 'ticketId'),
             verificationData: any(named: 'verificationData'),
           ),
-        ).thenThrow(Exception('Server error'));
+        ).thenThrow(const MinglitUserException('신청에 실패했습니다.'));
 
         final container = createContainer(
           overrides: [
@@ -350,25 +347,25 @@ void main() {
         );
         notifier.selectTicket(freeTicket);
 
-        await notifier.submitApplication();
+        await notifier.submitApplication(mockContext);
 
         final state = container.read(
           eventApplicationControllerProvider(testEvent),
         );
         expect(state.status, EventApplicationStatus.error);
-        expect(state.errorMessage, contains('Server error'));
+        expect(state.errorMessage, contains('신청에 실패했습니다.'));
       });
     });
 
     group('resetStatus', () {
       test('resets status to initial, preserving ticket and step', () async {
         when(
-          () => mockEventRepo.createOrderViaEF(
+          () => mockEventRepo.applyEvent(
             eventId: any(named: 'eventId'),
             ticketId: any(named: 'ticketId'),
             verificationData: any(named: 'verificationData'),
           ),
-        ).thenThrow(Exception('Fail'));
+        ).thenThrow(const MinglitUserException('실패'));
 
         final container = createContainer(
           overrides: [
@@ -382,7 +379,7 @@ void main() {
         );
         notifier.selectTicket(freeTicket);
         notifier.nextStep();
-        await notifier.submitApplication();
+        await notifier.submitApplication(mockContext);
 
         // In error state at payment step
         var state = container.read(
@@ -421,17 +418,16 @@ void main() {
           );
 
           when(
-            () => mockEventRepo.createOrderViaEF(
+            () => mockEventRepo.applyEvent(
               eventId: any(named: 'eventId'),
               ticketId: any(named: 'ticketId'),
               verificationData: any(named: 'verificationData'),
             ),
           ).thenAnswer(
-            (_) async => const CreateOrderResult(
+            (_) async => const PaidApplyEventResult(
               applicationId: 'app_456',
-              amount: 5000,
-              requiresPayment: true,
-              ticketName: 'Bad Group Ticket',
+              orderId: 'order_456',
+              paymentAmount: 5000,
             ),
           );
 
@@ -448,11 +444,11 @@ void main() {
           notifier.selectTicket(ticketWithBadGroup);
           notifier.updateVerificationData('company', 'TestCo');
 
-          await notifier.submitApplication();
+          await notifier.submitApplication(mockContext);
 
           // verificationData should be null because reqIds is empty
           verify(
-            () => mockEventRepo.createOrderViaEF(
+            () => mockEventRepo.applyEvent(
               eventId: any(named: 'eventId'),
               ticketId: any(named: 'ticketId'),
             ),
@@ -467,17 +463,16 @@ void main() {
           // but entry group's requiredVerificationIds is empty (default).
           // So reqIds will be empty → null.
           when(
-            () => mockEventRepo.createOrderViaEF(
+            () => mockEventRepo.applyEvent(
               eventId: any(named: 'eventId'),
               ticketId: any(named: 'ticketId'),
               verificationData: any(named: 'verificationData'),
             ),
           ).thenAnswer(
-            (_) async => const CreateOrderResult(
+            (_) async => const PaidApplyEventResult(
               applicationId: 'app_789',
-              amount: 10000,
-              requiresPayment: true,
-              ticketName: '일반 티켓',
+              orderId: 'order_789',
+              paymentAmount: 10000,
             ),
           );
 
@@ -494,11 +489,11 @@ void main() {
           notifier.selectTicket(testEvent.tickets!.first);
           // Don't call updateVerificationData — stays empty
 
-          await notifier.submitApplication();
+          await notifier.submitApplication(mockContext);
 
           // verificationData should be null because verificationData is empty
           verify(
-            () => mockEventRepo.createOrderViaEF(
+            () => mockEventRepo.applyEvent(
               eventId: any(named: 'eventId'),
               ticketId: any(named: 'ticketId'),
             ),

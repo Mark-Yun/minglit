@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -43,3 +44,5 @@ class MockUserProfile extends Mock implements UserProfile {}
 class MockEvent extends Mock implements Event {}
 
 class MockRealtimeChannel extends Mock implements RealtimeChannel {}
+
+class MockBuildContext extends Mock implements BuildContext {}
