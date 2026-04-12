@@ -39,7 +39,7 @@ function createBroadMock() {
   }
 
   return createFetchMock([
-    // ── Auth token endpoint (partner/user sign-in for EF path) ───────────────
+    // ── Auth token endpoint (partner/user sign-in for EF path) ──────────────
     {
       matcher: (req) => req.url.includes("/auth/v1/token"),
       handler: () =>
