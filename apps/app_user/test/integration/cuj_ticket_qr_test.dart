@@ -318,8 +318,9 @@ void main() {
 
     testWidgets('유효한 티켓 → QR 코드가 표시되고 안내 문구가 노출된다', (tester) async {
       final token = _makeValidToken();
-      when(() => mockService.getToken('ticket_1'))
-          .thenAnswer((_) async => token);
+      when(
+        () => mockService.getToken('ticket_1'),
+      ).thenAnswer((_) async => token);
 
       await tester.pumpWidget(buildQRScreen('ticket_1'));
       await tester.pump(); // FutureProvider 시작
@@ -331,8 +332,9 @@ void main() {
     });
 
     testWidgets('저장된 티켓 없음 → 오류 메시지 표시', (tester) async {
-      when(() => mockService.getToken('ticket_nonexistent'))
-          .thenAnswer((_) async => null);
+      when(
+        () => mockService.getToken('ticket_nonexistent'),
+      ).thenAnswer((_) async => null);
 
       await tester.pumpWidget(buildQRScreen('ticket_nonexistent'));
       await tester.pump();
@@ -344,8 +346,9 @@ void main() {
 
     testWidgets('서비스 예외 발생 → AsyncError 에러 상태가 렌더된다', (tester) async {
       // TicketTokenService.getToken()이 예외를 던지는 상황 시뮬레이션
-      when(() => mockService.getToken('ticket_error'))
-          .thenThrow(Exception('network error'));
+      when(
+        () => mockService.getToken('ticket_error'),
+      ).thenThrow(Exception('network error'));
 
       await tester.pumpWidget(buildQRScreen('ticket_error'));
       await tester.pump();
@@ -381,7 +384,8 @@ void main() {
 
     test('QR payload에 검증에 필요한 모든 키가 존재한다', () {
       final token = _makeValidToken();
-      final payload = jsonDecode(jsonEncode(token.toJson())) as Map<String, dynamic>;
+      final payload =
+          jsonDecode(jsonEncode(token.toJson())) as Map<String, dynamic>;
 
       // 입장 검증 시 파트너 앱이 읽어야 하는 필드 (camelCase — json_serializable 기본값)
       expect(payload.containsKey('ticketId'), isTrue);
