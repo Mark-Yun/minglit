@@ -133,7 +133,7 @@ class _WizardBodyState extends ConsumerState<_WizardBody> {
           state: state,
           onPrev: controller.previousStep,
           onNext: controller.nextStep,
-          onSubmit: () => controller.processPayment(context),
+          onSubmit: () => controller.submitApplication(context),
         ),
       ],
     );
@@ -163,7 +163,7 @@ class _WizardBodyState extends ConsumerState<_WizardBody> {
             .read(
               eventApplicationControllerProvider(widget.event).notifier,
             )
-            .processPayment(context),
+            .submitApplication(context),
       );
     }
   }
