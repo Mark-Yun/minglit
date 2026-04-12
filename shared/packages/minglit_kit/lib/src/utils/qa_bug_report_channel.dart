@@ -11,7 +11,7 @@ import 'package:minglit_kit/src/ui/widgets/bug_reporter_wrapper.dart'
 import 'package:minglit_kit/src/utils/log.dart';
 
 /// Listens on the native MethodChannel `com.minglit.dev/qa_bug_report` and
-/// triggers a programmatic bug report when the Android [QaBugReportReceiver]
+/// triggers a programmatic bug report when the Android `QaBugReportReceiver`
 /// broadcasts `com.minglit.dev.QA_BUG_REPORT`.
 ///
 /// Only active on Android — the channel is a no-op on other platforms.
@@ -24,7 +24,7 @@ class QaBugReportChannel {
 
   /// Initialises the MethodChannel handler.
   ///
-  /// Call once from [BugReporterWrapper.initState] when [enabled] is true
+  /// Call once from `BugReporterWrapper.initState` when `enabled` is true
   /// and the platform is Android.
   ///
   /// [collector] must be bound to the [RepaintBoundary] key of the wrapped
@@ -38,8 +38,8 @@ class QaBugReportChannel {
       final args = call.arguments as Map<Object?, Object?>;
       final title = (args['title'] as String?) ?? 'QA Bug Report';
       final description = (args['description'] as String?) ?? '';
-      final scenarioId = args['scenario_id'] as String?;
-      final sessionId = args['session_id'] as String?;
+      final scenarioId = _nonEmptyString(args['scenario_id'] as String?);
+      final sessionId = _nonEmptyString(args['session_id'] as String?);
 
       Log.i(
         'QaBugReportChannel: received triggerBugReport '
@@ -59,4 +59,10 @@ class QaBugReportChannel {
       }
     });
   }
+
+  /// Returns [value] unchanged unless it is empty, in which case null is
+  /// returned. Android broadcasts missing optional IDs as empty strings;
+  /// normalising here keeps downstream consumers free of empty-string checks.
+  static String? _nonEmptyString(String? value) =>
+      (value == null || value.isEmpty) ? null : value;
 }
