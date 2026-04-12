@@ -14,12 +14,16 @@ export interface SimRefundResult {
  * Simulates refund requests for a subset of paid applications.
  *
  * For each selected application:
- *   1. Fetch payment_amount + event_id from event_applications
+ *   1. Fetch payment_amount + payment_id + event_id + user_id from event_applications
  *   2. Fetch start_time from events
  *   3. Calculate refund using simCalcRefund()
- *   4. Update event_applications: status='cancelled', refund_status, refund_amount
- *   5. DELETE event_participants (triggers on_participant_change → decrements counts)
- *   6. Assert refund processed correctly
+ *   4. Call payment-cancel EF (the only refund path — no direct DB fallback)
+ *   5. Update event_applications: status='cancelled' (EF sets refund_status/refund_amount)
+ *   6. DELETE event_participants (no DB trigger handles this on refund)
+ *   7. Assert refund processed correctly
+ *
+ * Fix #1280: Remove direct DB fallback for refund. payment-cancel EF is now the sole
+ * refund path. EF failure throws regardless of strict mode.
  */
 export async function simRefundRequests(
   supabase: SupabaseClient,
@@ -28,7 +32,7 @@ export async function simRefundRequests(
   refundRate: number = 0.2,
   supabaseUrl?: string,
   anonKey?: string,
-  strict?: boolean,
+  _strict?: boolean,
 ): Promise<SimRefundResult> {
   const refundedApplicationIds: string[] = [];
   const assertions: SimAssertionResult[] = [];
@@ -109,108 +113,88 @@ export async function simRefundRequests(
 
     const refundCalc = simCalcRefund(startTime, paymentAmount, new Date(), null, 2, 7);
 
-    // Attempt to call payment-cancel EF with user token when credentials and payment_id are available
-    let efSuccess = false;
-    if (supabaseUrl && anonKey && paymentId) {
-      // Look up user email from user_profiles
-      const { data: profileData } = await supabase
-        .from("user_profiles")
-        .select("username")
-        .eq("id", userId)
-        .maybeSingle();
-      const username = (profileData as { username?: string } | null)?.username;
-
-      if (username && !username.startsWith("partner_")) {
-        const userEmail = `${username}@test.com`;
-        try {
-          const userToken = await getSimUserToken(supabaseUrl, anonKey, userEmail, simUserPassword);
-          const efResult = await callEdgeFunction(supabaseUrl, "payment-cancel", {
-            payment_id: paymentId,
-            reason: "[E2E] 시뮬레이션 환불",
-            amount: refundCalc.refund_amount > 0 ? refundCalc.refund_amount : undefined,
-          }, userToken);
-
-          if (efResult.status === 200) {
-            efSuccess = true;
-            log({
-              level: "info",
-              phase: "refund",
-              step: "ef_cancel",
-              message: `payment-cancel EF succeeded for app ${appId}`,
-              data: { appId, paymentId, efStatus: efResult.status },
-            });
-          } else {
-            log({
-              level: "warn",
-              phase: "refund",
-              step: "ef_cancel_failed",
-              message: `payment-cancel EF returned ${efResult.status} for app ${appId}, falling back to direct update`,
-              data: { appId, efStatus: efResult.status },
-            });
-          }
-        } catch (authErr) {
-          if (strict) {
-            throw new Error(`Strict mode: auth failed for ${username}, cannot refund app ${appId}: ${String(authErr)}`);
-          }
-          log({
-            level: "warn",
-            phase: "refund",
-            step: "ef_auth_fallback",
-            message: `Auth failed for ${username}, using direct update: ${String(authErr)}`,
-          });
-        }
-      }
+    // Fix #1280: payment-cancel EF is the only refund path. No direct DB fallback.
+    // Missing credentials or payment_id → throw immediately.
+    if (!supabaseUrl || !anonKey) {
+      throw new Error(`App ${appId}: supabaseUrl/anonKey required for payment-cancel EF`);
     }
 
-    if (!efSuccess) {
-      if (strict) {
-        // Strict mode: EF was attempted but failed — do not fall back to direct DB update
-        throw new Error(`Strict mode: EF failed for app ${appId}, direct DB fallback not permitted`);
-      }
-      // Fallback: direct DB update (used when EF call unavailable or failed)
-      const refundStatus = refundCalc.refund_percentage > 0 ? "completed" : "failed";
-      const { error: updateErr } = await supabase
+    if (!paymentId) {
+      throw new Error(`App ${appId}: payment_id is null, cannot call payment-cancel EF`);
+    }
+
+    // Look up user email from user_profiles
+    const { data: profileData } = await supabase
+      .from("user_profiles")
+      .select("username")
+      .eq("id", userId)
+      .maybeSingle();
+    const username = (profileData as { username?: string } | null)?.username;
+
+    if (!username || username.startsWith("partner_")) {
+      throw new Error(`App ${appId}: no valid user username (got: ${username ?? "null"}), cannot call payment-cancel EF`);
+    }
+
+    const userEmail = `${username}@test.com`;
+    const userToken = await getSimUserToken(supabaseUrl, anonKey, userEmail, simUserPassword);
+    const efResult = await callEdgeFunction(supabaseUrl, "payment-cancel", {
+      payment_id: paymentId,
+      reason: "[E2E] 시뮬레이션 환불",
+      amount: refundCalc.refund_amount > 0 ? refundCalc.refund_amount : undefined,
+    }, userToken);
+
+    if (efResult.status !== 200) {
+      throw new Error(`App ${appId}: payment-cancel EF returned ${efResult.status}`);
+    }
+
+    log({
+      level: "info",
+      phase: "refund",
+      step: "ef_cancel",
+      message: `payment-cancel EF succeeded for app ${appId}`,
+      data: { appId, paymentId, efStatus: efResult.status },
+    });
+
+    // EF sets refund_status and refund_amount. Update status='cancelled' separately,
+    // since payment-cancel EF does not touch the status field.
+    const { error: updateErr } = await supabase
+      .from("event_applications")
+      .update({ status: "cancelled" })
+      .eq("id", appId);
+
+    if (updateErr) {
+      log({
+        level: "error",
+        phase: "refund",
+        step: "update_app_status",
+        message: `Failed to set status=cancelled for app ${appId}: ${updateErr.message}`,
+      });
+      return null;
+    }
+
+    // Delete participant. No DB trigger handles this on refund — must be done explicitly.
+    const { error: deleteErr } = await supabase
+      .from("event_participants")
+      .delete()
+      .eq("event_id", eventId)
+      .eq("user_id", userId);
+
+    if (deleteErr) {
+      // Rollback: participant delete failed — revert application status to avoid cancelled-but-has-participant state
+      // Fix #507: capture rollback error to avoid masking failures
+      const { error: rollbackErr } = await supabase
         .from("event_applications")
-        .update({
-          status: "cancelled",
-          refund_status: refundStatus,
-          refund_amount: refundCalc.refund_amount,
-        })
+        .update({ status: "paid" })
         .eq("id", appId);
-
-      if (updateErr) {
-        log({
-          level: "error",
-          phase: "refund",
-          step: "update_app",
-          message: `Failed to update app ${appId}: ${updateErr.message}`,
-        });
-        return null;
-      }
-
-      const { error: deleteErr } = await supabase
-        .from("event_participants")
-        .delete()
-        .eq("event_id", eventId)
-        .eq("user_id", userId);
-
-      if (deleteErr) {
-        // Rollback: participant delete failed — revert application status to avoid cancelled-but-has-participant state
-        // Fix #507: capture rollback error to avoid masking failures
-        const { error: rollbackErr } = await supabase
-          .from("event_applications")
-          .update({ status: "paid", refund_status: null, refund_amount: null })
-          .eq("id", appId);
-        log({
-          level: "error",
-          phase: "refund",
-          step: rollbackErr ? "rollback_app_failed" : "delete_participant",
-          message: rollbackErr
-            ? `Participant delete failed and rollback also failed for app ${appId}: ${deleteErr.message}; rollback error: ${rollbackErr.message}`
-            : `Participant delete failed, reverted application ${appId}: ${deleteErr.message}`,
-        });
-        return null;
-      }
+      log({
+        level: "error",
+        phase: "refund",
+        step: rollbackErr ? "rollback_app_failed" : "delete_participant",
+        message: rollbackErr
+          ? `Participant delete failed and rollback also failed for app ${appId}: ${deleteErr.message}; rollback error: ${rollbackErr.message}`
+          : `Participant delete failed, reverted application ${appId}: ${deleteErr.message}`,
+      });
+      return null;
     }
 
     const assertion = await simAssertRefundProcessed(
@@ -225,13 +209,13 @@ export async function simRefundRequests(
         level: "info",
         phase: "refund",
         step: "refunded",
-        message: `App ${appId} refunded: ${refundCalc.refund_percentage}% (${refundCalc.refund_amount}/${paymentAmount}) via ${efSuccess ? "EF" : "direct"}`,
+        message: `App ${appId} refunded: ${refundCalc.refund_percentage}% (${refundCalc.refund_amount}/${paymentAmount}) via EF`,
         data: {
           appId,
           refund_percentage: refundCalc.refund_percentage,
           refund_amount: refundCalc.refund_amount,
           fee_amount: refundCalc.fee_amount,
-          via_ef: efSuccess,
+          via_ef: true,
         },
       });
     } else {
