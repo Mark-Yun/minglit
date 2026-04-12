@@ -8,12 +8,14 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:minglit_kit/src/data/repositories/bug_report_repository.dart';
 import 'package:minglit_kit/src/data/repositories/storage_repository.dart';
+import 'package:minglit_kit/src/data/services/bug_report_collector.dart';
 import 'package:minglit_kit/src/logic/providers/supabase_provider.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
 import 'package:minglit_kit/src/ui/widgets/common/loading_indicator.dart';
 import 'package:minglit_kit/src/utils/environment_info.dart';
 import 'package:minglit_kit/src/utils/layout_dump.dart';
 import 'package:minglit_kit/src/utils/log.dart';
+import 'package:minglit_kit/src/utils/qa_bug_report_channel.dart';
 
 /// Dev-only: callback registered by [BugReporterWrapper] so that any screen
 /// can trigger the bug report dialog via [BugReportAction].
@@ -71,17 +73,15 @@ class _BugReporterWrapperState extends ConsumerState<BugReporterWrapper> {
   Map<String, dynamic>? _environmentInfo;
   String? _layoutDumpUrl;
 
-  /// Returns a [BuildContext] that has a [Navigator] ancestor.
-  ///
-  /// Prefers the overlay context from `widget.navigatorKey` (which sits
-  /// below the [Navigator]), falling back to [context] for desktop/web
-  /// where the FAB already has a valid context.
-  BuildContext? get _dialogContext =>
-      widget.navigatorKey?.currentState?.overlay?.context ?? context;
-
   @override
   void initState() {
     super.initState();
+    // Fix #1295: QaBugReportChannel 초기화 — ADB 인텐트 기반 버그 리포트 수신
+    if (widget.enabled) {
+      QaBugReportChannel.initialize(
+        BugReportCollector(boundaryKey: _boundaryKey),
+      );
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         ref
@@ -90,6 +90,14 @@ class _BugReporterWrapperState extends ConsumerState<BugReporterWrapper> {
       }
     });
   }
+
+  /// Returns a [BuildContext] that has a [Navigator] ancestor.
+  ///
+  /// Prefers the overlay context from `widget.navigatorKey` (which sits
+  /// below the [Navigator]), falling back to [context] for desktop/web
+  /// where the FAB already has a valid context.
+  BuildContext? get _dialogContext =>
+      widget.navigatorKey?.currentState?.overlay?.context ?? context;
 
   @override
   void dispose() {

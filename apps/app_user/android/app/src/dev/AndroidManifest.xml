@@ -1,9 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Dev flavor only: minglit-dev:// custom scheme deep link -->
-<!-- This manifest is merged into dev flavor builds only via Android manifest merger. -->
-<!-- prod flavor will NOT include this intent-filter. -->
-<!-- Fix #1249: dev 전용 딥링크(/dev/switch 등) 접근을 위한 minglit-dev:// scheme 등록 -->
-<!-- ADB test: adb shell am start -a android.intent.action.VIEW -d 'minglit-dev:///dev/switch' -p com.minglit.app_user.dev -->
+<!-- Dev flavor only: deep link + QA bug report receiver -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application>
         <activity android:name=".MainActivity">
@@ -15,5 +11,13 @@
                 <data android:scheme="minglit-dev" />
             </intent-filter>
         </activity>
+        <!-- Dev-only: ADB intent receiver for QA automated bug reporting -->
+        <receiver
+            android:name=".QaBugReportReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.minglit.dev.QA_BUG_REPORT" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>
