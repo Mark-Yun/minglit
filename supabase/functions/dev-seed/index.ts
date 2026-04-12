@@ -73,7 +73,7 @@ const SCENARIOS: {
   summary: string;
   minConfirmed: number;
   maxParticipants: number;
-  verificationCategory: "career" | "academic" | "asset" | null;
+  verificationCategories: ("career" | "academic" | "asset")[];
   entryGroups: {
     label: string;
     gender: "male" | "female";
@@ -88,7 +88,7 @@ const SCENARIOS: {
     summary: "같은 또래 대학생들이 모여 자연스럽게 네트워킹하는 자리",
     minConfirmed: 4,
     maxParticipants: 10,
-    verificationCategory: "academic",
+    verificationCategories: ["academic"],
     entryGroups: [
       { label: "남성", gender: "male", birthYearMin: 2001, birthYearMax: 2005 },
       {
@@ -109,7 +109,7 @@ const SCENARIOS: {
     summary: "퇴근 후 가볍게 즐기는 직장인 소셜 파티",
     minConfirmed: 6,
     maxParticipants: 16,
-    verificationCategory: "career",
+    verificationCategories: ["career"],
     entryGroups: [
       { label: "남성", gender: "male", birthYearMin: 1995, birthYearMax: 2002 },
       {
@@ -130,7 +130,7 @@ const SCENARIOS: {
     summary: "검증된 멤버들만 참여하는 프리미엄 소셜 모임",
     minConfirmed: 4,
     maxParticipants: 8,
-    verificationCategory: "asset",
+    verificationCategories: ["asset"],
     entryGroups: [
       { label: "남성", gender: "male", birthYearMin: 1990, birthYearMax: 2000 },
       {
@@ -151,7 +151,7 @@ const SCENARIOS: {
     summary: "보드게임으로 시작하는 가벼운 동네 모임",
     minConfirmed: 4,
     maxParticipants: 8,
-    verificationCategory: null,
+    verificationCategories: [],
     entryGroups: [
       {
         label: "참가자",
@@ -176,7 +176,7 @@ const SCENARIOS: {
     summary: "다양한 배경의 사람들이 만나는 복합 네트워킹",
     minConfirmed: 6,
     maxParticipants: 12,
-    verificationCategory: "career",
+    verificationCategories: ["career"],
     entryGroups: [
       {
         label: "남성 (20대)",
@@ -214,7 +214,7 @@ const SCENARIOS: {
     summary: "누구나 참여 가능한 오픈 소셜 네트워킹",
     minConfirmed: 4,
     maxParticipants: 12,
-    verificationCategory: null,
+    verificationCategories: [],
     entryGroups: [
       { label: "남성", gender: "male", birthYearMin: 1990, birthYearMax: 2005 },
       {
@@ -232,7 +232,7 @@ const SCENARIOS: {
     summary: "직장인 인증 필수 — 오후의 여유로운 네트워킹",
     minConfirmed: 4,
     maxParticipants: 10,
-    verificationCategory: "career",
+    verificationCategories: ["career"],
     entryGroups: [
       { label: "남성", gender: "male", birthYearMin: 1988, birthYearMax: 2000 },
       {
@@ -250,7 +250,7 @@ const SCENARIOS: {
     summary: "파트너 자체 인증 필수 — 엄선된 VIP 멤버십 파티",
     minConfirmed: 4,
     maxParticipants: 8,
-    verificationCategory: "asset",
+    verificationCategories: ["asset"],
     entryGroups: [
       {
         label: "남성 VIP",
@@ -266,6 +266,120 @@ const SCENARIOS: {
       },
     ],
     tickets: [{ name: "VIP 멤버십", price: 60000, quantity: 8 }],
+    metadata: { show_participant_list: false, visibility: "private" },
+  },
+  // Edge Case 1: 최소 정원 이벤트 (정원 2명) — 매칭/정산의 최소 케이스
+  {
+    title: "[E2E] 1:1 프리미엄 디너",
+    summary: "소수 정예 1:1 매칭 디너",
+    minConfirmed: 2,
+    maxParticipants: 2,
+    verificationCategories: ["asset"],
+    entryGroups: [
+      { label: "남성", gender: "male", birthYearMin: 1985, birthYearMax: 2000 },
+      { label: "여성", gender: "female", birthYearMin: 1985, birthYearMax: 2000 },
+    ],
+    tickets: [{ name: "디너 티켓", price: 100000, quantity: 2 }],
+    metadata: { show_participant_list: false, visibility: "private" },
+  },
+  // Edge Case 2: 대규모 이벤트 (정원 50명) — 대용량 처리 검증
+  {
+    title: "[E2E] 대규모 네트워킹 파티",
+    summary: "50명 규모의 대형 소셜 네트워킹",
+    minConfirmed: 10,
+    maxParticipants: 50,
+    verificationCategories: [],
+    entryGroups: [
+      { label: "남성", gender: "male", birthYearMin: 1990, birthYearMax: 2005 },
+      { label: "여성", gender: "female", birthYearMin: 1990, birthYearMax: 2005 },
+    ],
+    tickets: [
+      { name: "일반", price: 15000, quantity: 25 },
+      { name: "VIP", price: 30000, quantity: 25 },
+    ],
+    metadata: { show_participant_list: true, visibility: "public" },
+  },
+  // Edge Case 3: 무료 이벤트 (price: 0) — 0원 결제/환불/정산 처리 검증
+  {
+    title: "[E2E] 무료 동네 산책 모임",
+    summary: "참가비 없는 가벼운 동네 산책",
+    minConfirmed: 4,
+    maxParticipants: 12,
+    verificationCategories: [],
+    entryGroups: [
+      { label: "남성", gender: "male", birthYearMin: 1990, birthYearMax: 2005 },
+      { label: "여성", gender: "female", birthYearMin: 1990, birthYearMax: 2005 },
+    ],
+    tickets: [{ name: "무료 참가", price: 0, quantity: 12 }],
+    metadata: { show_participant_list: true, visibility: "public" },
+  },
+  // Edge Case 4: 여성 전용 이벤트 (단일 entryGroup) — 단일 그룹 매칭 graceful skip 검증
+  {
+    title: "[E2E] 여성 전용 와인 클래스",
+    summary: "여성만 참가 가능한 와인 테이스팅",
+    minConfirmed: 4,
+    maxParticipants: 8,
+    verificationCategories: [],
+    entryGroups: [
+      { label: "여성", gender: "female", birthYearMin: 1990, birthYearMax: 2005 },
+    ],
+    tickets: [{ name: "와인 클래스", price: 35000, quantity: 8 }],
+    metadata: { show_participant_list: true, visibility: "public" },
+  },
+  // Edge Case 5: 연령 제한 극단 (40대 전용) — seed 유저 연령 불일치, 빈 이벤트 graceful 처리
+  {
+    title: "[E2E] 40대 소셜 디너",
+    summary: "40대만 참가 가능한 프리미엄 디너",
+    minConfirmed: 4,
+    maxParticipants: 8,
+    verificationCategories: ["career"],
+    entryGroups: [
+      { label: "남성", gender: "male", birthYearMin: 1980, birthYearMax: 1989 },
+      { label: "여성", gender: "female", birthYearMin: 1980, birthYearMax: 1989 },
+    ],
+    tickets: [{ name: "디너 티켓", price: 45000, quantity: 8 }],
+    metadata: { show_participant_list: false, visibility: "private" },
+  },
+  // Edge Case 6: 복수 인증 요구 (career + asset 동시) — 다중 인증 승인 플로우 검증
+  {
+    title: "[E2E] 엘리트 멤버십 라운지",
+    summary: "직장인 + 자산 인증 동시 필요",
+    minConfirmed: 4,
+    maxParticipants: 6,
+    verificationCategories: ["career", "asset"],
+    entryGroups: [
+      { label: "남성", gender: "male", birthYearMin: 1988, birthYearMax: 1998 },
+      { label: "여성", gender: "female", birthYearMin: 1988, birthYearMax: 1998 },
+    ],
+    tickets: [{ name: "멤버십", price: 80000, quantity: 6 }],
+    metadata: { show_participant_list: false, visibility: "private" },
+  },
+  // Edge Case 7: 정원 = 신청 수 (capacity guard 검증, #1219)
+  {
+    title: "[E2E] 마감 임박 소규모 모임",
+    summary: "정원과 신청 수가 동일한 소규모 이벤트",
+    minConfirmed: 4,
+    maxParticipants: 6,
+    verificationCategories: [],
+    entryGroups: [
+      { label: "남성", gender: "male", birthYearMin: 1995, birthYearMax: 2005 },
+      { label: "여성", gender: "female", birthYearMin: 1995, birthYearMax: 2005 },
+    ],
+    tickets: [{ name: "참가비", price: 20000, quantity: 6 }],
+    metadata: { show_participant_list: true, visibility: "public" },
+  },
+  // Edge Case 8: 고가 티켓 (200,000원) — 환불/정산 금액 정확성 검증
+  {
+    title: "[E2E] 럭셔리 요트 파티",
+    summary: "프리미엄 요트 위 네트워킹 파티",
+    minConfirmed: 4,
+    maxParticipants: 8,
+    verificationCategories: ["asset"],
+    entryGroups: [
+      { label: "남성 VIP", gender: "male", birthYearMin: 1985, birthYearMax: 1998 },
+      { label: "여성 VIP", gender: "female", birthYearMin: 1985, birthYearMax: 1998 },
+    ],
+    tickets: [{ name: "요트 파티", price: 200000, quantity: 8 }],
     metadata: { show_participant_list: false, visibility: "private" },
   },
 ];
@@ -1089,9 +1203,9 @@ async function createFreshEvents(
     if (!location) continue;
 
     const scenario = SCENARIOS[pi % SCENARIOS.length];
-    const verifIds = scenario.verificationCategory
-      ? [globalVerifs[scenario.verificationCategory]].filter(Boolean)
-      : [];
+    const verifIds = scenario.verificationCategories
+      .map((cat) => globalVerifs[cat])
+      .filter(Boolean);
 
     // Fix #1272: 멱등성 — 이미 존재하는 파티는 skip
     const { data: existingParty } = await supabase
