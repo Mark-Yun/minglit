@@ -106,6 +106,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('인증 심사 관리'), findsOneWidget);
+      expect(find.text('파티 관리'), findsOneWidget);
       expect(find.text('멤버 관리'), findsOneWidget);
       expect(find.text('알림 설정'), findsOneWidget);
       // Fix #1213: 로그아웃/회원탈퇴/파트너프로필이 계정 관리 서브페이지로 이동 —
@@ -128,6 +129,19 @@ void main() {
       await tester.pumpAndSettle();
 
       verify(() => mockCoordinator.pushAccountManagement()).called(1);
+    });
+
+    testWidgets('tapping 파티 관리 forwards to coordinator', (tester) async {
+      // Fix #1269: 더보기에서 파티 관리 메뉴가 누락된 회귀를 막는다.
+      when(() => mockCoordinator.pushPartyList()).thenReturn(null);
+
+      await tester.pumpWidget(buildSubject());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('파티 관리'));
+      await tester.pumpAndSettle();
+
+      verify(() => mockCoordinator.pushPartyList()).called(1);
     });
 
     testWidgets('계정 관리 is visible on MorePage', (tester) async {

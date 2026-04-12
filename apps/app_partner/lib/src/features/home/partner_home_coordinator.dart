@@ -22,6 +22,11 @@ class PartnerHomeCoordinator {
     unawaited(_router.push(const ApplicationListRoute().location));
   }
 
+  // Fix #1269: 홈에서 장소 가이드 화면으로 이동하는 진입점을 연결한다.
+  void pushLocationGuide() {
+    unawaited(_router.push(const LocationGuideRoute().location));
+  }
+
   // Fix #635: settlement 탭 전환을 home coordinator를 통해 위임 (feature 격리)
   void goToSettlement() {
     _router.go(const SettlementRoute().location);

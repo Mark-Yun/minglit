@@ -110,6 +110,12 @@ class MorePage extends ConsumerWidget {
           ),
           const Divider(),
           ListTile(
+            leading: const Icon(Icons.event_note_outlined),
+            title: const Text('파티 관리'),
+            // Fix #1269: 파티 목록/편집 화면 진입점을 더보기 메뉴에 복구한다.
+            onTap: moreCoordinator.pushPartyList,
+          ),
+          ListTile(
             leading: const Icon(Icons.verified_user_outlined),
             title: const Text('인증 심사 관리'),
             onTap: moreCoordinator.pushVerificationManage,

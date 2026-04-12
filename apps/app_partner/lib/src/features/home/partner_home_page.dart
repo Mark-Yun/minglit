@@ -3,6 +3,7 @@ import 'dart:async' show unawaited;
 import 'package:app_partner/src/features/home/partner_dashboard_controller.dart';
 import 'package:app_partner/src/features/home/partner_home_coordinator.dart';
 import 'package:app_partner/src/features/home/widgets/event_action_card.dart';
+import 'package:app_partner/src/features/home/widgets/location_guide_banner.dart';
 import 'package:app_partner/src/features/home/widgets/onboarding_step_guide.dart';
 import 'package:app_partner/src/features/home/widgets/todo_summary_chips.dart';
 import 'package:app_partner/src/features/home/widgets/weekly_stats_row.dart';
@@ -56,9 +57,7 @@ class PartnerHomePage extends ConsumerWidget {
                     decoration: BoxDecoration(
                       color: MinglitColors.error,
                       borderRadius: BorderRadius.circular(MinglitRadius.button),
-                      border: Border.all(
-                        color: theme.colorScheme.surface,
-                      ),
+                      border: Border.all(color: theme.colorScheme.surface),
                     ),
                     child: Text(
                       unreadCount > 99 ? '99+' : unreadCount.toString(),
@@ -99,15 +98,16 @@ class PartnerHomePage extends ConsumerWidget {
                       pendingCount: 0,
                     ),
                     const SizedBox(height: MinglitSpacing.medium),
+                    // Fix #1269: P-S06 장소 가이드 배너가 홈에서 렌더링되지 않던 회귀를 복구한다.
+                    LocationGuideBanner(onTap: coordinator.pushLocationGuide),
+                    const SizedBox(height: MinglitSpacing.medium),
                     OnboardingStepGuide(
                       hasParty: hasParties,
                       partyName: hasParties
                           ? state.activeParties.first.title
                           : null,
                       onCreateParty: () {
-                        unawaited(
-                          const PartyCreateRoute().push<void>(context),
-                        );
+                        unawaited(const PartyCreateRoute().push<void>(context));
                       },
                       onCreateEvent: () async {
                         final parties = state.activeParties;
@@ -142,6 +142,9 @@ class PartnerHomePage extends ConsumerWidget {
                       primaryEvent: selectPrimaryEvent(state.upcomingEvents),
                     ),
                     const SizedBox(height: MinglitSpacing.medium),
+                    // Fix #1269: P-S06 장소 가이드 배너가 홈에서 렌더링되지 않던 회귀를 복구한다.
+                    LocationGuideBanner(onTap: coordinator.pushLocationGuide),
+                    const SizedBox(height: MinglitSpacing.large),
 
                     // 2. Todo Summary Chips
                     TodoSummaryChips(
@@ -149,9 +152,7 @@ class PartnerHomePage extends ConsumerWidget {
                       upcomingEvents: state.upcomingEvents.length,
                       onPendingTap: coordinator.goToApplicationList,
                       onUpcomingTap: () {
-                        unawaited(
-                          const PartyListRoute().push<void>(context),
-                        );
+                        unawaited(const PartyListRoute().push<void>(context));
                       },
                     ),
                     const SizedBox(height: MinglitSpacing.large),
@@ -290,9 +291,9 @@ class PartnerHomePage extends ConsumerWidget {
           phase == EventPhase.recruiting || phase == EventPhase.preparing
           ? () {
               // 공유/홍보 or 안내 발송 — placeholder
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('준비 중입니다')),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text('준비 중입니다')));
             }
           : null,
     );
@@ -332,10 +333,7 @@ class _GreetingSection extends StatelessWidget {
           ),
         ),
         const SizedBox(height: MinglitSpacing.xxsmall),
-        Text(
-          subtitle,
-          style: theme.textTheme.bodySmall,
-        ),
+        Text(subtitle, style: theme.textTheme.bodySmall),
       ],
     );
   }
@@ -349,9 +347,9 @@ class _SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       title,
-      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-        fontWeight: FontWeight.w800,
-      ),
+      style: Theme.of(
+        context,
+      ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
     );
   }
 }
