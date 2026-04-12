@@ -17,6 +17,26 @@ import 'package:minglit_kit/src/utils/layout_dump.dart';
 import 'package:minglit_kit/src/utils/log.dart';
 import 'package:minglit_kit/src/utils/qa_bug_report_channel.dart';
 
+/// Dev-only: callback registered by [BugReporterWrapper] so that any screen
+/// can trigger the bug report dialog via [BugReportAction].
+// Fix #1285: FAB 제거 후 앱바 액션 버튼 지원 — callback을 Provider로 노출
+final bugReporterCallbackProvider =
+    NotifierProvider<_BugReporterCallbackNotifier, Future<void> Function()?>(
+      _BugReporterCallbackNotifier.new,
+    );
+
+class _BugReporterCallbackNotifier extends Notifier<Future<void> Function()?> {
+  @override
+  Future<void> Function()? build() => null;
+
+  /// Registers or clears the bug report callback.
+  ///
+  /// A setter is not used here: the paired getter required by
+  /// `avoid_setters_without_getters` would add unnecessary boilerplate.
+  // ignore: use_setters_to_change_properties
+  void update(Future<void> Function()? callback) => state = callback;
+}
+
 /// Wraps [child] with bug reporting UI.
 // Fix #412: ConsumerStatefulWidget 전환 — Supabase 직접 접근 제거, Riverpod Provider 주입
 class BugReporterWrapper extends ConsumerStatefulWidget {
@@ -70,6 +90,29 @@ class _BugReporterWrapperState extends ConsumerState<BugReporterWrapper> {
   /// where the FAB already has a valid context.
   BuildContext? get _dialogContext =>
       widget.navigatorKey?.currentState?.overlay?.context ?? context;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref
+            .read(bugReporterCallbackProvider.notifier)
+            .update(_showReportDialog);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    // Note: the callback intentionally holds a reference to this state's
+    // _showReportDialog, which guards unmounted access at its top.
+    // Clearing the provider here is unsafe in Riverpod v3 (modifying providers
+    // during finalization is forbidden), so cleanup is omitted.
+    // BugReporterWrapper lives for the app's lifetime, so stale callbacks
+    // are not a concern in practice.
+    super.dispose();
+  }
 
   /// Captures a screenshot of the wrapped child and uploads it to Storage.
   ///
@@ -353,32 +396,28 @@ class _BugReporterWrapperState extends ConsumerState<BugReporterWrapper> {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        RepaintBoundary(key: _boundaryKey, child: widget.child),
-        // Fix #1262: bottom → top 이동 — BottomNavigationBar 탭 터치 영역 침범 방지
-        if (widget.enabled)
-          Positioned(
-            right: MinglitSpacing.medium,
-            top: MediaQuery.of(context).padding.top + MinglitSpacing.medium,
-            child: Material(
-              type: MaterialType.transparency,
-              // Fix #147: show progress indicator while capturing
-              child: FloatingActionButton(
-                mini: true,
-                onPressed: _isCapturing ? null : _showReportDialog,
-                backgroundColor: MinglitColors.error,
-                child: _isCapturing
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: MinglitCircularProgressIndicator(),
-                      )
-                    : const Icon(Icons.bug_report),
-              ),
-            ),
-          ),
-      ],
+    return RepaintBoundary(key: _boundaryKey, child: widget.child);
+  }
+}
+
+/// Action button for the app bar that triggers the bug reporter.
+///
+/// Only renders in non-release mode when [BugReporterWrapper] is active.
+// Fix #1285: FAB 대체 — 앱바 액션 버튼 (dev only)
+class BugReportAction extends ConsumerWidget {
+  /// Creates a bug report action button.
+  const BugReportAction({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (kReleaseMode) return const SizedBox.shrink();
+    final showDialog = ref.watch(bugReporterCallbackProvider);
+    if (showDialog == null) return const SizedBox.shrink();
+    return IconButton(
+      icon: const Icon(Icons.bug_report),
+      color: MinglitColors.error,
+      tooltip: 'Bug Report',
+      onPressed: showDialog,
     );
   }
 }
