@@ -39,10 +39,12 @@ export class UserActionFactory {
       ((feedRes.data as Record<string, unknown>)?.events as Array<Record<string, unknown>>) ?? [];
 
     // 2. Get my existing applications (with nested event status)
-    const { data: myApps } = await supabase
+    const { data: myApps, error: myAppsError } = await supabase
       .from("event_applications")
       .select("id, event_id, status, events(status)")
       .eq("user_id", this.userId);
+
+    if (myAppsError) throw new Error(`Failed to fetch applications: ${myAppsError.message}`);
 
     const appliedIds = new Set((myApps ?? []).map((a) => a.event_id as string));
     let activeAppCount = (myApps ?? []).filter(
@@ -81,12 +83,14 @@ export class UserActionFactory {
 
       // Approved + active → maybe checkin
       if (app.status === "approved" && eventStatus === "active") {
-        const { data: participant } = await supabase
+        const { data: participant, error: participantError } = await supabase
           .from("event_participants")
           .select("id, status")
           .eq("event_id", eventId)
           .eq("user_id", this.userId)
           .maybeSingle();
+
+        if (participantError) throw new Error(`Failed to fetch participant: ${participantError.message}`);
 
         if (participant && (participant.status as string) === "ticket_issued") {
           if (Math.random() < this.config.checkinRate) {
@@ -105,16 +109,18 @@ export class UserActionFactory {
 
       // Checked in + ongoing → vote on other checked-in participants
       if (eventStatus === "ongoing") {
-        const { data: participant } = await supabase
+        const { data: participant, error: ongoingParticipantError } = await supabase
           .from("event_participants")
           .select("status")
           .eq("event_id", eventId)
           .eq("user_id", this.userId)
           .maybeSingle();
 
+        if (ongoingParticipantError) throw new Error(`Failed to fetch participant status: ${ongoingParticipantError.message}`);
+
         if ((participant?.status as string) === "checked_in") {
           // Get other checked-in participants as candidates (up to 5)
-          const { data: candidates } = await supabase
+          const { data: candidates, error: candidatesError } = await supabase
             .from("event_participants")
             .select("user_id")
             .eq("event_id", eventId)
@@ -122,15 +128,19 @@ export class UserActionFactory {
             .neq("user_id", this.userId)
             .limit(5);
 
+          if (candidatesError) throw new Error(`Failed to fetch vote candidates: ${candidatesError.message}`);
+
           for (const c of (candidates ?? [])) {
             // Only vote if not already voted for this candidate
-            const { data: existingVote } = await supabase
+            const { data: existingVote, error: existingVoteError } = await supabase
               .from("match_votes")
               .select("id")
               .eq("event_id", eventId)
               .eq("voter_id", this.userId)
               .eq("candidate_id", c.user_id as string)
               .maybeSingle();
+
+            if (existingVoteError) throw new Error(`Failed to fetch existing vote: ${existingVoteError.message}`);
 
             if (!existingVote) {
               actions.push(

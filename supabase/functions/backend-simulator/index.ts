@@ -141,12 +141,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
       await simCreateGitHubIssue(simSummary, logUrl, runId, logText);
     }
 
-    return new Response(
-      JSON.stringify({ success: summary.failed === 0, run_id: runId, ...summary }),
-      {
-        status: summary.failed > 0 ? 500 : 200,
-        headers: { "Content-Type": "application/json" },
-      },
+    return successResponse(
+      { success: summary.failed === 0, run_id: runId, ...summary },
+      summary.failed > 0 ? 500 : 200,
     );
   }
 
