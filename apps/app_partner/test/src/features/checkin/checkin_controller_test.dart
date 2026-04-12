@@ -269,6 +269,11 @@ void main() {
           ).thenAnswer((_) async => true);
 
           final container = makeContainer();
+          // 리스너 등록으로 auto-dispose 방지 — async 공백에서 provider 유지 필요
+          container.listen(
+            checkinControllerProvider,
+            (_, __) {},
+          );
           final notifier = container.read(checkinControllerProvider.notifier);
 
           // 첫 번째 호출 시작 — fetchServerPublicKey에서 blocking
@@ -382,6 +387,12 @@ void main() {
           ).thenAnswer((_) async => true);
 
           final container = makeContainer();
+          // 리스너 등록으로 auto-dispose 방지 — 3초 딜레이 동안 provider 유지 필요
+          final capturedStates = <CheckinState>[];
+          container.listen(
+            checkinControllerProvider,
+            (_, s) => capturedStates.add(s),
+          );
           await container
               .read(checkinControllerProvider.notifier)
               .processQR(_makeQrPayload(userId: 'user-test99'));
@@ -407,6 +418,11 @@ void main() {
           ).thenAnswer((_) async => true);
 
           final container = makeContainer();
+          // 리스너 등록으로 auto-dispose 방지 — 두 번의 processQR 동안 provider 유지 필요
+          container.listen(
+            checkinControllerProvider,
+            (_, __) {},
+          );
           final notifier = container.read(checkinControllerProvider.notifier);
 
           // 첫 번째 사용자 체크인 완료
