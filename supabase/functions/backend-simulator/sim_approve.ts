@@ -23,8 +23,8 @@ export interface SimApproveResult {
  * For each application:
  *   1. Fetch app details (event_id, user_id)
  *   2. Fetch event's party for partner_id + required_verification_ids
- *   3. If verification needed: create submission → update status → trigger fires
- *   4. If no verification: directly update application.status
+ *   3. If verification needed: create submission → call partner-review-submission EF
+ *   4. If no verification: call partner-approve-application EF (approve) or direct DB update (reject)
  */
 export async function simApproveVerifications(
   supabase: SupabaseClient,
@@ -75,7 +75,7 @@ export async function simApproveVerifications(
       }
 
       if (verificationId && partnerId) {
-        // Verification flow: insert submission → update to approved → trigger fires
+        // Verification flow: insert submission → call partner-review-submission EF
         const submissionId = crypto.randomUUID();
         const { error: insErr } = await supabase.from("verification_submissions").insert({
           id: submissionId,
@@ -91,52 +91,23 @@ export async function simApproveVerifications(
           continue;
         }
 
-        // Attempt to approve via partner-review-submission EF; fall back to direct DB update
-        if (supabaseUrl && anonKey && partnerId) {
-          const simUserPassword = Deno.env.get("SIM_USER_PASSWORD") ?? "password1234!";
-          try {
-            const partnerEmail = await getPartnerEmail(supabase, partnerId);
-            if (partnerEmail) {
-              const partnerToken = await getSimPartnerToken(supabaseUrl, anonKey, partnerEmail, simUserPassword);
-              const efResult = await callEdgeFunction(supabaseUrl, "partner-review-submission", {
-                action: "review",
-                submission_id: submissionId,
-                result: "approved",
-              }, partnerToken);
-              if (efResult.status === 200) {
-                log({ level: "info", phase: "approve", step: "ef_approve", message: `Approved submission ${submissionId} via EF` });
-                // EF handled the status update — skip direct DB update, continue to assertions below
-              } else {
-                throw new Error(`EF returned ${efResult.status}`);
-              }
-            } else {
-              throw new Error("Partner email not found");
-            }
-          } catch (efErr) {
-            if (strict) {
-              throw new Error(`Strict mode: EF failed for submission ${submissionId} (app ${appId}): ${String(efErr)}`);
-            }
-            log({ level: "warn", phase: "approve", step: "ef_approve_fallback", message: `EF failed, falling back to direct update: ${String(efErr)}` });
-            const { error: updErr } = await supabase
-              .from("verification_submissions")
-              .update({ status: "approved" })
-              .eq("id", submissionId);
-            if (updErr) {
-              log({ level: "error", phase: "approve", step: "update_submission", message: `Failed to approve submission ${submissionId}: ${updErr.message}` });
-              continue;
-            }
-          }
-        } else {
-          // No EF credentials — use direct DB update
-          const { error: updErr } = await supabase
-            .from("verification_submissions")
-            .update({ status: "approved" })
-            .eq("id", submissionId);
-          if (updErr) {
-            log({ level: "error", phase: "approve", step: "update_submission", message: `Failed to approve submission ${submissionId}: ${updErr.message}` });
-            continue;
-          }
+        // Call partner-review-submission EF — no fallback. EF is the only path.
+        // Fix #1280: remove direct DB fallback; EF failure is always an error.
+        const simUserPassword = Deno.env.get("SIM_USER_PASSWORD") ?? "password1234!";
+        const partnerEmail = await getPartnerEmail(supabase, partnerId);
+        if (!partnerEmail) {
+          throw new Error(`Partner email not found for partner ${partnerId} (submission ${submissionId}, app ${appId})`);
         }
+        const partnerToken = await getSimPartnerToken(supabaseUrl!, anonKey!, partnerEmail, simUserPassword);
+        const efResult = await callEdgeFunction(supabaseUrl!, "partner-review-submission", {
+          action: "review",
+          submission_id: submissionId,
+          result: "approved",
+        }, partnerToken);
+        if (efResult.status !== 200) {
+          throw new Error(`partner-review-submission EF returned ${efResult.status} for submission ${submissionId} (app ${appId})`);
+        }
+        log({ level: "info", phase: "approve", step: "ef_approve", message: `Approved submission ${submissionId} via EF` });
 
         // Assert verification approved (trigger should have created partner_verified_users)
         const verifAssertion = await simAssertVerificationApproved(supabase, submissionId);
@@ -153,15 +124,22 @@ export async function simApproveVerifications(
           log({ level: "warn", phase: "approve", step: "approved", message: `App ${appId} approval assertion failed: ${appAssertion.details}` });
         }
       } else {
-        // No verification needed: directly update application status
-        const { error: updErr } = await supabase
-          .from("event_applications")
-          .update({ status: "approved" })
-          .eq("id", appId);
-        if (updErr) {
-          log({ level: "error", phase: "approve", step: "direct_approve", message: `Failed to directly approve app ${appId}: ${updErr.message}` });
-          continue;
+        // No verification needed: call partner-approve-application EF
+        // Fix #1280: replace direct DB update with EF call for consistency.
+        const simUserPassword = Deno.env.get("SIM_USER_PASSWORD") ?? "password1234!";
+        const partnerEmail = partnerId ? await getPartnerEmail(supabase, partnerId) : null;
+        if (!partnerEmail) {
+          throw new Error(`Partner email not found for partner ${partnerId} (app ${appId})`);
         }
+        const partnerToken = await getSimPartnerToken(supabaseUrl!, anonKey!, partnerEmail, simUserPassword);
+        const efResult = await callEdgeFunction(supabaseUrl!, "partner-approve-application", {
+          action: "approve",
+          application_id: appId,
+        }, partnerToken);
+        if (efResult.status !== 200) {
+          throw new Error(`partner-approve-application EF returned ${efResult.status} for app ${appId}`);
+        }
+        log({ level: "info", phase: "approve", step: "ef_direct_approve", message: `Approved app ${appId} via partner-approve-application EF` });
 
         const appAssertion = await simAssertApplicationApproved(supabase, appId);
         assertions.push(appAssertion);
@@ -199,7 +177,7 @@ export async function simApproveVerifications(
       }
 
       if (verificationId && partnerId) {
-        // Verification flow: insert submission → update to rejected → trigger fires
+        // Verification flow: insert submission → call partner-review-submission EF
         const submissionId = crypto.randomUUID();
         const { error: insErr } = await supabase.from("verification_submissions").insert({
           id: submissionId,
@@ -215,52 +193,23 @@ export async function simApproveVerifications(
           continue;
         }
 
-        // Attempt to reject via partner-review-submission EF; fall back to direct DB update
-        if (supabaseUrl && anonKey && partnerId) {
-          const simUserPassword = Deno.env.get("SIM_USER_PASSWORD") ?? "password1234!";
-          try {
-            const partnerEmail = await getPartnerEmail(supabase, partnerId);
-            if (partnerEmail) {
-              const partnerToken = await getSimPartnerToken(supabaseUrl, anonKey, partnerEmail, simUserPassword);
-              const efResult = await callEdgeFunction(supabaseUrl, "partner-review-submission", {
-                action: "review",
-                submission_id: submissionId,
-                result: "rejected",
-              }, partnerToken);
-              if (efResult.status === 200) {
-                log({ level: "info", phase: "approve", step: "ef_reject", message: `Rejected submission ${submissionId} via EF` });
-                // EF handled the status update — skip direct DB update, continue to assertions below
-              } else {
-                throw new Error(`EF returned ${efResult.status}`);
-              }
-            } else {
-              throw new Error("Partner email not found");
-            }
-          } catch (efErr) {
-            if (strict) {
-              throw new Error(`Strict mode: EF failed for submission ${submissionId} (app ${appId}): ${String(efErr)}`);
-            }
-            log({ level: "warn", phase: "approve", step: "ef_reject_fallback", message: `EF failed, falling back to direct update: ${String(efErr)}` });
-            const { error: updErr } = await supabase
-              .from("verification_submissions")
-              .update({ status: "rejected" })
-              .eq("id", submissionId);
-            if (updErr) {
-              log({ level: "error", phase: "approve", step: "update_submission", message: `Failed to reject submission ${submissionId}: ${updErr.message}` });
-              continue;
-            }
-          }
-        } else {
-          // No EF credentials — use direct DB update
-          const { error: updErr } = await supabase
-            .from("verification_submissions")
-            .update({ status: "rejected" })
-            .eq("id", submissionId);
-          if (updErr) {
-            log({ level: "error", phase: "approve", step: "update_submission", message: `Failed to reject submission ${submissionId}: ${updErr.message}` });
-            continue;
-          }
+        // Call partner-review-submission EF — no fallback. EF is the only path.
+        // Fix #1280: remove direct DB fallback; EF failure is always an error.
+        const simUserPassword = Deno.env.get("SIM_USER_PASSWORD") ?? "password1234!";
+        const partnerEmail = await getPartnerEmail(supabase, partnerId);
+        if (!partnerEmail) {
+          throw new Error(`Partner email not found for partner ${partnerId} (submission ${submissionId}, app ${appId})`);
         }
+        const partnerToken = await getSimPartnerToken(supabaseUrl!, anonKey!, partnerEmail, simUserPassword);
+        const efResult = await callEdgeFunction(supabaseUrl!, "partner-review-submission", {
+          action: "review",
+          submission_id: submissionId,
+          result: "rejected",
+        }, partnerToken);
+        if (efResult.status !== 200) {
+          throw new Error(`partner-review-submission EF returned ${efResult.status} for submission ${submissionId} (app ${appId})`);
+        }
+        log({ level: "info", phase: "approve", step: "ef_reject", message: `Rejected submission ${submissionId} via EF` });
 
         // Assert application rejected (trigger should have updated status)
         const appAssertion = await simAssertApplicationRejected(supabase, appId);
@@ -273,7 +222,10 @@ export async function simApproveVerifications(
           log({ level: "warn", phase: "approve", step: "rejected", message: `App ${appId} rejection assertion failed: ${appAssertion.details}` });
         }
       } else {
-        // No verification needed: directly update application status
+        // No verification needed: reject via direct DB update.
+        // Fix #1280: partner-approve-application EF does not support a "reject" action,
+        // and there is no partner-reject-application EF. Direct DB update is intentional
+        // until a dedicated reject EF is introduced.
         const { error: updErr } = await supabase
           .from("event_applications")
           .update({ status: "rejected" })
@@ -288,7 +240,7 @@ export async function simApproveVerifications(
 
         if (appAssertion.passed) {
           rejectedApplicationIds.push(appId);
-          log({ level: "info", phase: "approve", step: "rejected", message: `App ${appId} directly rejected (no verification required)` });
+          log({ level: "info", phase: "approve", step: "rejected", message: `App ${appId} directly rejected (no verification required, no reject EF available)` });
         } else {
           log({ level: "warn", phase: "approve", step: "rejected", message: `App ${appId} direct rejection assertion failed: ${appAssertion.details}` });
         }
