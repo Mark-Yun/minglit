@@ -26,8 +26,8 @@
 | U-S02 | 큐레이션 목록 | `/curation` | `PartyCurationPage` | OK | OK | OK | ⚠️ BLOCKED — 홈에서 진입 UI 없음 (see #1293). 라우트는 존재하나 네비게이션 경로 orphaned |
 | U-S03 | 검색 | `/search` | `SearchPage` | OK | OK | OK | |
 | U-S04 | 이벤트 상세 | `/events/:eventId` | `EventDetailPage` | OK | OK | OK | 유효한 eventId 필요 |
-| U-S05 | 파트너 상세 | `/partners/:partnerId` | `PartnerDetailPage` | OK | OK | OK | 유효한 partnerId 필요 |
-| U-S06 | 파트너 이벤트 목록 | `/partners/:partnerId/events` | `PartnerEventsPage` | OK | OK | OK | |
+| U-S05 | 파트너 상세 | `/partners/:partnerId` | `PartnerDetailPage` | OK | OK | OK | 진입: 이벤트 상세 → 파트너 프로필 행 탭. 사전조건: 파트너가 연결된 이벤트 필요 (`partner != null`) |
+| U-S06 | 파트너 이벤트 목록 | `/partners/:partnerId/events` | `PartnerEventsPage` | OK | OK | OK | 진입: 파트너 상세 → "더 보기" 탭. U-S05 선행 필요 |
 | U-S07 | 로그인 | `/login` | `LoginPage` | OK | → `/` | → `/` | 이미 로그인 시 홈으로 리다이렉트 |
 | U-S08 | OAuth 콜백 | `/auth/callback` | `AuthCallbackPage` | OK | OK | OK | OAuth 플로우 전용 |
 
@@ -105,7 +105,7 @@
 |------|-----------|-------------|
 | 검색어 입력 + 검색 | 검색 결과 표시 | 결과 없음 → 빈 상태 |
 | 검색 결과 이벤트 탭 | `/events/:eventId`로 이동 | - |
-| 검색 결과 파트너 탭 | `/partners/:partnerId`로 이동 | - |
+| 검색 결과 파트너 탭 | `/partners/:partnerId`로 이동 | ⚠️ 미구현 — 현재 검색 결과에 파트너 항목 없음 |
 | 필터 적용 | 필터된 결과 표시 | - |
 
 ### 5.3 이벤트 상세 (EventDetailPage)
@@ -113,7 +113,7 @@
 | 액션 | 기대 결과 | 에러 시나리오 |
 |------|-----------|-------------|
 | 신청 버튼 탭 | `/events/:eventId/apply`로 이동 | GUEST → 로그인 리다이렉트 |
-| 파트너 프로필 탭 | `/partners/:partnerId`로 이동 | - |
+| 파트너 프로필 탭 | `/partners/:partnerId`로 이동 | 파트너 미연결 이벤트(`partner == null`)면 행 자체가 미표시 |
 | 공유 버튼 | 공유 시트 표시 | - |
 | 뒤로가기 | 이전 화면으로 복귀 | - |
 
