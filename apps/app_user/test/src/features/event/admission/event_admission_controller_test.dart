@@ -713,11 +713,9 @@ void main() {
         );
         addTearDown(sub.close);
 
-        // Wait for the async build to complete deterministically
-        await expectLater(
-          container.read(eventAdmissionControllerProvider(testEvent).future),
-          throwsA(isA<Exception>()),
-        );
+        // pumpEventQueue flushes all pending microtasks so the async build
+        // can complete before we read the final provider state.
+        await pumpEventQueue();
 
         final raw = container.read(eventAdmissionControllerProvider(testEvent));
         // Riverpod 3: error is available via .error on any AsyncValue state
@@ -754,10 +752,7 @@ void main() {
         );
         addTearDown(sub.close);
 
-        await expectLater(
-          container.read(eventAdmissionControllerProvider(testEvent).future),
-          throwsA(isA<Exception>()),
-        );
+        await pumpEventQueue();
 
         final raw = container.read(eventAdmissionControllerProvider(testEvent));
         expect(raw.error, isA<Exception>());
@@ -803,10 +798,7 @@ void main() {
         );
         addTearDown(sub.close);
 
-        await expectLater(
-          container.read(eventAdmissionControllerProvider(testEvent).future),
-          throwsA(isA<Exception>()),
-        );
+        await pumpEventQueue();
 
         final raw = container.read(eventAdmissionControllerProvider(testEvent));
         expect(raw.error, isA<Exception>());
@@ -854,12 +846,7 @@ void main() {
         );
         addTearDown(sub.close);
 
-        await expectLater(
-          container.read(
-            eventAdmissionControllerProvider(completedEvent).future,
-          ),
-          throwsA(isA<Exception>()),
-        );
+        await pumpEventQueue();
 
         final raw = container.read(
           eventAdmissionControllerProvider(completedEvent),
@@ -894,10 +881,7 @@ void main() {
         );
         addTearDown(sub.close);
 
-        await expectLater(
-          container.read(eventAdmissionControllerProvider(testEvent).future),
-          throwsA(equals(specificException)),
-        );
+        await pumpEventQueue();
 
         final raw = container.read(eventAdmissionControllerProvider(testEvent));
         expect(raw.error, specificException);

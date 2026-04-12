@@ -239,10 +239,7 @@ void main() {
         );
         addTearDown(sub.close);
 
-        await expectLater(
-          container.read(purchaseHistoryControllerProvider.future),
-          throwsA(isA<Exception>()),
-        );
+        await pumpEventQueue();
 
         final state = container.read(purchaseHistoryControllerProvider);
         expect(state.error, isA<Exception>());
@@ -275,10 +272,7 @@ void main() {
         );
         addTearDown(sub.close);
 
-        await expectLater(
-          container.read(purchaseHistoryControllerProvider.future),
-          throwsA(equals(specificException)),
-        );
+        await pumpEventQueue();
 
         final state = container.read(purchaseHistoryControllerProvider);
         expect(state.error, equals(specificException));
