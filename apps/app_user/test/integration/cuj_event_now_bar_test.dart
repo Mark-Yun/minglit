@@ -55,9 +55,9 @@ void main() {
       ],
       child: MaterialApp(
         theme: MinglitTheme.materialTheme,
-        home: Scaffold(
+        home: const Scaffold(
           body: Stack(
-            children: const [
+            children: [
               Positioned(
                 left: 0,
                 right: 0,
