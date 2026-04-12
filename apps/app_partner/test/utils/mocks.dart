@@ -10,6 +10,12 @@ class MockEventRepository extends Mock implements EventRepository {}
 
 class MockPartnerRepository extends Mock implements PartnerRepository {}
 
+class MockPartyRepository extends Mock implements PartyRepository {}
+
+class MockTicketRepository extends Mock implements TicketRepository {}
+
+class MockLocationRepository extends Mock implements LocationRepository {}
+
 class MockVerificationRepository extends Mock
     implements VerificationRepository {}
 
