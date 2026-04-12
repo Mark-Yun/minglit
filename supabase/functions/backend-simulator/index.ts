@@ -118,6 +118,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       createResult.eventIds,
       supabaseUrl,
       anonKey,
+      config.strict,
     );
     return successResponse({
       success: true,
@@ -355,6 +356,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     createResult.eventIds,
     supabaseUrl,
     anonKey,
+    config.strict,
   );
 
   // Phase 3: Approve verifications (80% approve, 20% reject)
