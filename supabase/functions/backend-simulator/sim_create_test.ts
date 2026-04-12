@@ -445,6 +445,100 @@ Deno.test({
 // token auto-refresh even when persistSession=false. The interval leaks within the test but is
 // harmless — suppressing the leak check is correct here rather than patching the library.
 Deno.test({
+  name: "simDiscoverAndApply - excludes [E2E] party events from applicationIds",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+  // Track which event IDs were passed to apply_event RPC
+  const appliedEventIds: string[] = [];
+
+  const mock = createMockSupabaseClient({
+    tables: {
+      user_profiles: {
+        // First call: maybeSingle() for feed token acquisition → single object.
+        // Second call: full user list for application loop → array.
+        select: (() => {
+          let callCount = 0;
+          return () => {
+            callCount++;
+            if (callCount === 1) {
+              return { data: { username: "user1" }, error: null };
+            }
+            return { data: [{ id: "user-1", gender: "male", birth_date: "1998-01-01", username: "user1" }], error: null };
+          };
+        })(),
+      },
+      entry_groups: {
+        select: () => ({
+          data: [{ id: "group-1", gender: "male", birth_year_min: 1990, birth_year_max: 2005 }],
+          error: null,
+        }),
+      },
+      tickets: {
+        select: () => ({ data: [{ id: "ticket-1", price: 20000, status: "on_sale" }], error: null }),
+      },
+      event_applications: {
+        select: () => ({ data: [], error: null }),
+      },
+    },
+  });
+
+  Deno.env.set("SIM_USER_PASSWORD", "test-password");
+  try {
+    await withMockFetch((url, init) => {
+      if (url.includes("auth/v1/token")) {
+        return new Response(
+          JSON.stringify({ access_token: "mock-user-token", token_type: "bearer", expires_in: 3600, refresh_token: "r", user: {} }),
+          { status: 200 },
+        );
+      }
+      if (url.includes("functions/v1/user-event-feed")) {
+        // Return one [E2E] party event and one normal event from the feed.
+        // Only the normal event (feed-event-normal) should be included in applicationIds.
+        return new Response(JSON.stringify({
+          events: [
+            {
+              id: "feed-event-e2e",
+              party: { title: "[E2E] 테스트 파티" },
+            },
+            {
+              id: "feed-event-normal",
+              party: { title: "일반 소셜 파티" },
+            },
+          ],
+        }), { status: 200 });
+      }
+      if (url.includes("rest/v1/rpc/apply_event")) {
+        const body = JSON.parse((init.body as string) ?? "{}") as { p_event_id?: string };
+        if (body.p_event_id) appliedEventIds.push(body.p_event_id);
+        return new Response(JSON.stringify("app-1"), { status: 200 });
+      }
+      return new Response(JSON.stringify({}), { status: 404 });
+    }, () =>
+      simDiscoverAndApply(
+        mock as unknown as SupabaseClient,
+        { ...DEFAULT_CONFIG, error_rate: 0.0, apps_per_event: 1 },
+        noop,
+        [], // no newEventIds — only feed events
+        "https://mock.supabase.co",
+        "anon-key",
+      )
+    );
+
+    // [E2E] event must never be passed to apply_event RPC
+    assertEquals(appliedEventIds.includes("feed-event-e2e"), false, "[E2E] event must be excluded");
+    // Normal event must be included
+    assertEquals(appliedEventIds.includes("feed-event-normal"), true, "Normal event must be applied");
+  } finally {
+    Deno.env.delete("SIM_USER_PASSWORD");
+  }
+  },
+});
+
+// sanitizeResources/sanitizeOps disabled: @supabase/auth-js internally calls setInterval for
+// token auto-refresh even when persistSession=false. The interval leaks within the test but is
+// harmless — suppressing the leak check is correct here rather than patching the library.
+Deno.test({
   name: "simCreateParties - throws when EF fails and strict=true",
   sanitizeResources: false,
   sanitizeOps: false,
