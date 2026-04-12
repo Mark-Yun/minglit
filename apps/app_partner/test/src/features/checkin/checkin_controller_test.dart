@@ -272,7 +272,7 @@ void main() {
           // 리스너 등록으로 auto-dispose 방지 — async 공백에서 provider 유지 필요
           container.listen(
             checkinControllerProvider,
-            (_, __) {},
+            (_, _) {},
           );
           final notifier = container.read(checkinControllerProvider.notifier);
 
@@ -421,7 +421,7 @@ void main() {
           // 리스너 등록으로 auto-dispose 방지 — 두 번의 processQR 동안 provider 유지 필요
           container.listen(
             checkinControllerProvider,
-            (_, __) {},
+            (_, _) {},
           );
           final notifier = container.read(checkinControllerProvider.notifier);
 
