@@ -527,115 +527,119 @@ async function prewarmAuthTokens(
   });
 }
 
-// Fix #705: Process a single event's applications (extracted for parallel execution)
-async function applyForEvent(
-  supabase: SupabaseClient,
-  eventId: string,
-  // deno-lint-ignore no-explicit-any
-  users: any[],
+// Fix #1323: User-centric apply loop — each user discovers events via their own feed,
+// then applies up to config.max_apps_per_user times. This ensures per-user RLS is respected
+// and eliminates the need for direct DB queries for entry_groups, tickets, or existing apps.
+async function applyForUser(
+  username: string,
   config: SimConfig,
   log: (entry: Omit<SimLogEntry, "timestamp">) => void,
-  supabaseUrl?: string,
-  anonKey?: string,
-  simUserPassword?: string,
+  newEventIds: string[],
+  supabaseUrl: string,
+  anonKey: string,
+  simUserPassword: string,
 ): Promise<{ applicationIds: string[]; paidApplicationIds: string[]; pendingReviewApplicationIds: string[] }> {
   const applicationIds: string[] = [];
   const paidApplicationIds: string[] = [];
   const pendingReviewApplicationIds: string[] = [];
 
-  const { data: entryGroups } = await supabase
-    .from("entry_groups")
-    .select("id, gender, birth_year_min, birth_year_max")
-    .eq("event_id", eventId);
-  if (!entryGroups || entryGroups.length === 0) {
+  const userEmail = `${username}@test.com`;
+  let userToken: string;
+  try {
+    userToken = await getSimUserToken(supabaseUrl, anonKey, userEmail, simUserPassword);
+  } catch (authErr) {
+    log({ level: "error", phase: "apply", step: "auth_token", message: `Auth failed for ${username}, skipping: ${String(authErr)}` });
     return { applicationIds, paidApplicationIds, pendingReviewApplicationIds };
   }
 
-  const { data: ticketsRaw } = await supabase
-    .from("tickets")
-    .select("id, price, status")
-    .eq("event_id", eventId);
-  const tickets = (ticketsRaw ?? []).filter((t: { status: string }) => t.status === "on_sale");
-  if (tickets.length === 0) {
-    return { applicationIds, paidApplicationIds, pendingReviewApplicationIds };
+  // Each user fetches their own feed — RLS ensures they only see events they can apply to
+  let feedEvents: { id: string; title?: string; party?: { title?: string }; tickets?: { id: string; price: number }[] }[] = [];
+  try {
+    const feedResult = await callEdgeFunction(supabaseUrl, "user-event-feed", { sort_by: "closing_soon", limit: 20 }, userToken);
+    if (feedResult.status === 200) {
+      const feedData = feedResult.data as { events?: { id: string; title?: string; party?: { title?: string }; tickets?: { id: string; price: number }[] }[] } | null;
+      feedEvents = feedData?.events ?? [];
+    } else {
+      log({ level: "warn", phase: "apply", step: "user_feed", message: `user-event-feed returned status=${feedResult.status} for ${username}` });
+    }
+  } catch (efErr) {
+    log({ level: "warn", phase: "apply", step: "user_feed", message: `user-event-feed threw for ${username}: ${String(efErr)}` });
   }
-  const ticket = tickets[0] as { id: string; price: number };
 
-  const { data: existingApps } = await supabase
-    .from("event_applications")
-    .select("user_id")
-    .eq("event_id", eventId);
-  const appliedUserIds = new Set((existingApps ?? []).map((a: { user_id: string }) => a.user_id));
+  // Build the list of events to attempt: feed events (non-E2E) + newEventIds
+  // newEventIds are E2E-created; log if they appear in the feed
+  const e2eEventIdSet = new Set(newEventIds);
+  const feedE2eCount = feedEvents.filter((e) => {
+    const partyTitle: string = e.party?.title ?? "";
+    return partyTitle.startsWith("[E2E]") || e2eEventIdSet.has(e.id);
+  }).length;
+  if (feedE2eCount > 0) {
+    log({ level: "info", phase: "apply", step: "user_feed", message: `${username}: ${feedE2eCount} E2E event(s) appeared in user feed` });
+  }
+
+  // Non-E2E feed events (already visible to this user via their feed)
+  const nonE2eFeedEvents = feedEvents.filter((e) => {
+    const partyTitle: string = e.party?.title ?? "";
+    return !partyTitle.startsWith("[E2E]");
+  });
+
+  // E2E events are appended as minimal objects (ticket from newEventIds won't have feed data)
+  const e2eEventObjects = newEventIds.map((id) => ({ id, party: { title: "[E2E]" }, tickets: undefined }));
+
+  const candidateEvents = [...nonE2eFeedEvents, ...e2eEventObjects];
 
   let appsCreated = 0;
-  const shuffledUsers = [...users].sort(() => Math.random() - 0.5);
+  for (const event of candidateEvents) {
+    if (appsCreated >= config.max_apps_per_user) break;
 
-  for (const user of shuffledUsers) {
-    if (appsCreated >= config.apps_per_event) break;
-    if (appliedUserIds.has(user.id)) continue;
+    // Skip [E2E] events in this user-centric loop — they are E2E-created and
+    // ineligibility/RLS will be enforced by the EF itself; we only skip them
+    // here to avoid unneeded EF calls that are expected to fail for regular users.
+    const partyTitle: string = (event as { party?: { title?: string } }).party?.title ?? "";
+    if (partyTitle.startsWith("[E2E]")) continue;
 
-    const birthYear = user.birth_date ? new Date(user.birth_date).getFullYear() : 1995;
-    const eligible = (entryGroups as { gender: string; birth_year_min: number; birth_year_max: number }[]).some(
-      (g) => g.gender === user.gender && birthYear >= g.birth_year_min && birthYear <= g.birth_year_max
-    );
-    if (!eligible) continue;
-
-    // Fix #1324: apply-event EF is the ONLY path — RPC bypassed server-side payment/validation logic
-    if (!supabaseUrl || !anonKey || !simUserPassword || !user.username) {
-      log({ level: "error", phase: "apply", step: "ef_apply_event", message: `Credentials not available for user ${user.id}, skipping application` });
+    // Use ticket from feed response if available
+    const ticket = event.tickets?.[0];
+    if (!ticket) {
+      log({ level: "warn", phase: "apply", step: "ef_apply_event", message: `No ticket in feed for event ${event.id}, skipping` });
       continue;
     }
 
-    const userEmail = `${user.username}@test.com`;
-    let userToken: string;
-    try {
-      userToken = await getSimUserToken(supabaseUrl, anonKey, userEmail, simUserPassword);
-    } catch (authErr) {
-      log({ level: "error", phase: "apply", step: "auth_token", message: `Auth failed for ${user.username}, skipping: ${String(authErr)}` });
-      continue;
-    }
-
-    // apply-event EF: server determines free vs paid based on ticket price
+    // apply-event EF: server enforces eligibility, capacity, duplicate checks
     const efResult = await callEdgeFunction(supabaseUrl, "apply-event", {
-      event_id: eventId,
+      event_id: event.id,
       ticket_id: ticket.id,
     }, userToken);
 
     if (efResult.status !== 200) {
-      log({ level: "warn", phase: "apply", step: "ef_apply_event", message: `apply-event EF returned status=${efResult.status} for user ${userEmail} event ${eventId}` });
+      log({ level: "warn", phase: "apply", step: "ef_apply_event", message: `apply-event EF returned status=${efResult.status} for user ${username} event ${event.id}` });
       continue;
     }
 
     const efData = efResult.data as { type: "free" | "paid"; application_id: string } | null;
     if (!efData?.application_id) {
-      log({ level: "warn", phase: "apply", step: "ef_apply_event", message: `apply-event EF returned no application_id for user ${userEmail} event ${eventId}` });
+      log({ level: "warn", phase: "apply", step: "ef_apply_event", message: `apply-event EF returned no application_id for user ${username} event ${event.id}` });
       continue;
     }
 
-    const newAppId = efData.application_id;
-    applicationIds.push(newAppId);
-    appliedUserIds.add(user.id);
+    applicationIds.push(efData.application_id);
     appsCreated++;
 
-    // free = 파트너 승인 대기 (pendingReview), paid = 결제 완료 후 refund 시뮬레이션 대상
     if (efData.type === "free") {
-      pendingReviewApplicationIds.push(newAppId);
+      pendingReviewApplicationIds.push(efData.application_id);
     } else {
-      // paid = PG 결제 필요 — 시뮬레이터에서는 결제 시뮬레이션 후 paid로 전이
-      paidApplicationIds.push(newAppId);
+      paidApplicationIds.push(efData.application_id);
     }
   }
 
   if (appsCreated > 0) {
-    log({ level: "info", phase: "apply", step: "event_applied", message: `Event ${eventId}: ${appsCreated} applications` });
+    log({ level: "info", phase: "apply", step: "user_applied", message: `User ${username}: ${appsCreated} applications` });
   }
 
   return { applicationIds, paidApplicationIds, pendingReviewApplicationIds };
 }
 
-// Fix #705: Concurrency limit for parallel event processing to avoid overwhelming DB
-const EVENT_CONCURRENCY = 5;
-
+// Fix #1323: User-centric discover-and-apply loop
 export async function simDiscoverAndApply(
   supabase: SupabaseClient,
   config: SimConfig,
@@ -656,83 +660,35 @@ export async function simDiscoverAndApply(
     log({ level: "warn", phase: "apply", step: "sim_user_password", message: errMsg });
   }
 
-  // Fix #1279: Discover existing events via user-event-feed EF instead of direct DB query.
-  // The EF already handles scheduled+active status (post state machine extension) and excludes
-  // non-public events via its RLS-aware RPC — no direct DB access needed.
-  let existingEventIds: string[] = [];
-  if (supabaseUrl && anonKey && simUserPassword) {
-    // Acquire the first seed user's token to call the EF (optional auth: anonymous also works)
-    let feedToken: string | null = null;
-    try {
-      const { data: firstUser } = await supabase
-        .from("user_profiles")
-        .select("username")
-        .not("username", "like", "partner_%")
-        .limit(1)
-        .maybeSingle();
-      if (firstUser?.username) {
-        feedToken = await getSimUserToken(supabaseUrl, anonKey, `${(firstUser as { username: string }).username}@test.com`, simUserPassword);
-      }
-    } catch (tokenErr) {
-      log({ level: "warn", phase: "apply", step: "feed_token", message: `Failed to get user token for event feed: ${String(tokenErr)}` });
-    }
-
-    if (feedToken) {
-      try {
-        const feedResult = await callEdgeFunction(supabaseUrl, "user-event-feed", { sort_by: "closing_soon", limit: 20 }, feedToken);
-        if (feedResult.status === 200) {
-          const feedData = feedResult.data as { events?: { id: string; title?: string; party?: { title?: string } }[] } | null;
-          existingEventIds = (feedData?.events ?? [])
-            .filter((e) => {
-              const partyTitle: string = e.party?.title ?? "";
-              return !partyTitle.startsWith("[E2E]");
-            })
-            .map((e) => e.id);
-          log({ level: "info", phase: "apply", step: "event_feed", message: `Discovered ${existingEventIds.length} events via user-event-feed EF` });
-        } else {
-          const errMsg = `user-event-feed EF returned status=${feedResult.status}`;
-          if (strict) throw new Error(errMsg);
-          log({ level: "warn", phase: "apply", step: "event_feed", message: `${errMsg}, proceeding with no discovered events` });
-        }
-      } catch (efErr) {
-        if (strict) throw efErr;
-        log({ level: "warn", phase: "apply", step: "event_feed", message: `user-event-feed EF threw: ${String(efErr)}, proceeding with no discovered events` });
-      }
-    } else {
-      const errMsg = "No user token available to call user-event-feed EF";
-      if (strict) throw new Error(errMsg);
-      log({ level: "warn", phase: "apply", step: "event_feed", message: `${errMsg}, proceeding with no discovered events` });
-    }
-  } else {
+  if (!supabaseUrl || !anonKey || !simUserPassword) {
     const errMsg = "supabaseUrl, anonKey, or SIM_USER_PASSWORD not available — cannot call user-event-feed EF";
     if (strict) throw new Error(errMsg);
     log({ level: "error", phase: "apply", step: "event_feed", message: errMsg });
+    return { applicationIds, paidApplicationIds, pendingReviewApplicationIds };
   }
-
-  const allEventIds = [...newEventIds, ...existingEventIds];
 
   const { data: usersRaw } = await supabase
     .from("user_profiles")
     .select("id, gender, birth_date, username");
   const users = (usersRaw ?? [])
     .filter((u: { username: string }) => !u.username?.startsWith("partner_"))
-    .slice(0, 60);
+    .slice(0, 60) as { id: string; username: string }[];
+
   if (users.length === 0) {
     log({ level: "warn", phase: "apply", step: "get_users", message: "No seed users found" });
     return { applicationIds, paidApplicationIds, pendingReviewApplicationIds };
   }
 
   // Fix #705: Pre-warm auth token cache to eliminate sequential auth latency in the apply loop
-  if (supabaseUrl && anonKey && simUserPassword) {
-    await prewarmAuthTokens(users as { username: string }[], supabaseUrl, anonKey, simUserPassword, log);
-  }
+  await prewarmAuthTokens(users, supabaseUrl, anonKey, simUserPassword, log);
 
-  // Fix #705: Process events in parallel batches instead of sequentially
-  for (let i = 0; i < allEventIds.length; i += EVENT_CONCURRENCY) {
-    const batch = allEventIds.slice(i, i + EVENT_CONCURRENCY);
+  // Fix #1323: Process users in parallel batches (user-centric loop)
+  const batchSize = config.user_batch_size;
+  for (let i = 0; i < users.length; i += batchSize) {
+    const batch = users.slice(i, i + batchSize);
     const results = await Promise.allSettled(
-      batch.map((eventId) =>
-        applyForEvent(supabase, eventId, users, config, log, supabaseUrl, anonKey, simUserPassword)
+      batch.map((user) =>
+        applyForUser(user.username, config, log, newEventIds, supabaseUrl!, anonKey!, simUserPassword!)
       ),
     );
 

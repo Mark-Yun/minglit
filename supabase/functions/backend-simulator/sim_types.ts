@@ -5,7 +5,8 @@ export interface SimConfig {
   refund_rate: number;        // 0-1, 20% = 0.2
   party_count: number;        // number of new E2E parties to create
   events_per_party: number;   // events per party
-  apps_per_event: number;     // applications per event
+  max_apps_per_user: number;  // max applications per user (default: 3)
+  user_batch_size: number;    // concurrent user processing batch size (default: 10)
   checkin_rate: number;       // 0-1, 70% = 0.7
   no_show_rate: number;       // 0-1, 30% = 0.3
   // Controls EF failure behaviour: true = throw on EF failure (no fallback),
