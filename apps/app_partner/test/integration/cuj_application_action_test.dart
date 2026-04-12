@@ -111,7 +111,9 @@ void main() {
     ) async {
       final mockEventRepo = MockEventRepository();
       when(
-        () => mockEventRepo.approveApplication(applicationId: any(named: 'applicationId')),
+        () => mockEventRepo.approveApplication(
+          applicationId: any(named: 'applicationId'),
+        ),
       ).thenAnswer((_) async {});
 
       final testEvent = makeEvent();
@@ -127,7 +129,9 @@ void main() {
             eventRepositoryProvider.overrideWithValue(mockEventRepo),
             eventApplicationsGroupedProvider.overrideWith((ref, params) async {
               if (params.statusFilter.contains('pending')) {
-                return {testEvent: [makeApp('approve-1')]};
+                return {
+                  testEvent: [makeApp('approve-1')],
+                };
               }
               return <Event, List<EventApplication>>{};
             }),
@@ -174,7 +178,9 @@ void main() {
             eventRepositoryProvider.overrideWithValue(mockEventRepo),
             eventApplicationsGroupedProvider.overrideWith((ref, params) async {
               if (params.statusFilter.contains('pending')) {
-                return {testEvent: [makeApp('reject-1')]};
+                return {
+                  testEvent: [makeApp('reject-1')],
+                };
               }
               return <Event, List<EventApplication>>{};
             }),
@@ -225,7 +231,9 @@ void main() {
             eventRepositoryProvider.overrideWithValue(mockEventRepo),
             eventApplicationsGroupedProvider.overrideWith((ref, params) async {
               if (params.statusFilter.contains('pending')) {
-                return {testEvent: [makeApp('reject-empty')]};
+                return {
+                  testEvent: [makeApp('reject-empty')],
+                };
               }
               return <Event, List<EventApplication>>{};
             }),
@@ -278,7 +286,9 @@ void main() {
             eventRepositoryProvider.overrideWithValue(mockEventRepo),
             eventApplicationsGroupedProvider.overrideWith((ref, params) async {
               if (params.statusFilter.contains('pending')) {
-                return {testEvent: [makeApp('bulk-1'), makeApp('bulk-2')]};
+                return {
+                  testEvent: [makeApp('bulk-1'), makeApp('bulk-2')],
+                };
               }
               return <Event, List<EventApplication>>{};
             }),
@@ -312,7 +322,6 @@ void main() {
     testWidgets('이벤트 헤더에 현재/최대 인원 정보가 표시된다', (tester) async {
       final testEvent = makeEvent(
         currentParticipants: 3,
-        maxParticipants: 10,
       );
       await tester.pumpWidget(
         createPartnerTestApp(
@@ -325,7 +334,9 @@ void main() {
             ),
             eventApplicationsGroupedProvider.overrideWith((ref, params) async {
               if (params.statusFilter.contains('pending')) {
-                return {testEvent: [makeApp('cap-1')]};
+                return {
+                  testEvent: [makeApp('cap-1')],
+                };
               }
               return <Event, List<EventApplication>>{};
             }),
