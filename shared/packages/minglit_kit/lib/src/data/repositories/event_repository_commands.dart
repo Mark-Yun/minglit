@@ -1,9 +1,37 @@
 part of 'event_repository.dart';
 
+/// Result returned by [EventRepository.applyEvent].
+///
+/// The `apply-event` Edge Function responds with a `type` field that
+/// distinguishes free and paid applications.
+sealed class ApplyEventResult {
+  const ApplyEventResult({required this.applicationId});
+
+  final String applicationId;
+}
+
+/// Returned when the event ticket is free — application is immediately
+/// confirmed, no payment step required.
+final class FreeApplyEventResult extends ApplyEventResult {
+  const FreeApplyEventResult({required super.applicationId});
+}
+
+/// Returned when the event ticket is paid — caller must proceed to the
+/// PG payment flow using [orderId] and [paymentAmount].
+final class PaidApplyEventResult extends ApplyEventResult {
+  const PaidApplyEventResult({
+    required super.applicationId,
+    required this.orderId,
+    required this.paymentAmount,
+  });
+
+  final String orderId;
+  final int paymentAmount;
+}
+
 mixin _EventRepositoryCommands
     on _SupabaseEventContext, _EventRepositoryQueries {
   /// Deletes an application record.
-  @Deprecated('Use cancelOrder() instead — #299 user-cancel-order EF 전환')
   Future<void> deleteApplication({
     required String eventId,
     required String userId,
@@ -34,7 +62,7 @@ mixin _EventRepositoryCommands
         'user-cancel-order',
         body: {
           'event_id': eventId,
-          'reason': ?reason,
+          'reason': reason,
         },
       );
 
@@ -57,130 +85,6 @@ mixin _EventRepositoryCommands
       return CancelOrderResult(type: type, refundAmount: refundAmount);
     } catch (e, st) {
       Log.e('❌ [EventRepo] cancelOrder Error', e, st);
-      rethrow;
-    }
-  }
-
-  /// Creates a pending order for payment processing.
-  /// Returns the application ID (merchant_uid).
-  Future<String> createOrder({
-    required String eventId,
-    required String ticketId,
-    required String userId,
-    required int amount,
-    Map<String, dynamic>? verificationData,
-  }) async {
-    Log.d('createOrder called | event: $eventId');
-    try {
-      final pendingPaymentId =
-          'PENDING_${DateTime.now().millisecondsSinceEpoch}';
-      final existingApp = await getApplication(
-        eventId: eventId,
-        userId: userId,
-      );
-
-      if (existingApp == null) {
-        final appId = await applyEvent(
-          eventId: eventId,
-          ticketId: ticketId,
-          userId: userId,
-          paymentId: pendingPaymentId,
-          paymentAmount: amount,
-          verificationData: verificationData,
-        );
-
-        await supabaseClient
-            .from('event_applications')
-            .update({
-              'status': 'pending',
-              'payment_id': pendingPaymentId,
-              'ticket_id': ticketId,
-              'payment_amount': amount,
-              'updated_at': DateTime.now().toIso8601String(),
-            })
-            .eq('id', appId);
-
-        return appId;
-      }
-
-      await supabaseClient
-          .from('event_applications')
-          .update({
-            'ticket_id': ticketId,
-            'payment_id': pendingPaymentId,
-            'payment_amount': amount,
-            'status': 'pending',
-            'updated_at': DateTime.now().toIso8601String(),
-          })
-          .eq('id', existingApp.id);
-
-      if (verificationData == null) {
-        await supabaseClient
-            .from('verification_submissions')
-            .delete()
-            .eq('application_id', existingApp.id)
-            .eq('status', 'pending');
-        return existingApp.id;
-      }
-
-      await supabaseClient
-          .from('verification_submissions')
-          .delete()
-          .eq('application_id', existingApp.id)
-          .eq('status', 'pending');
-
-      await supabaseClient.from('verification_submissions').insert({
-        'application_id': existingApp.id,
-        'partner_id': verificationData['partner_id'],
-        'verification_id': verificationData['verification_id'],
-        'user_id': userId,
-        'status': 'pending',
-        'snapshot_data': verificationData['data'],
-      });
-
-      return existingApp.id;
-    } catch (e, st) {
-      Log.e('❌ [EventRepo] createOrder Error', e, st);
-      rethrow;
-    }
-  }
-
-  /// Creates a pending order via user-create-order Edge Function.
-  /// Server validates all business rules (price, eligibility, capacity, etc.).
-  /// Returns the order result with server-determined amount.
-  Future<CreateOrderResult> createOrderViaEF({
-    required String eventId,
-    required String ticketId,
-    Map<String, dynamic>? verificationData,
-  }) async {
-    Log.d('createOrderViaEF called | event: $eventId, ticket: $ticketId');
-    try {
-      final response = await supabaseClient.functions.invoke(
-        'user-create-order',
-        body: {
-          'event_id': eventId,
-          'ticket_id': ticketId,
-          'verification_data': ?verificationData,
-        },
-      );
-
-      if (response.status != 200) {
-        final data = response.data;
-        final errorMsg = data is Map
-            ? (data['error'] as String?) ?? '주문 생성에 실패했습니다.'
-            : '주문 생성에 실패했습니다.';
-        throw MinglitUserException(errorMsg);
-      }
-
-      final data = response.data as Map<String, dynamic>;
-      return CreateOrderResult(
-        applicationId: data['application_id'] as String,
-        amount: data['amount'] as int,
-        requiresPayment: data['requires_payment'] as bool,
-        ticketName: data['ticket_name'] as String,
-      );
-    } catch (e, st) {
-      Log.e('❌ [EventRepo] createOrderViaEF Error', e, st);
       rethrow;
     }
   }
@@ -233,34 +137,46 @@ mixin _EventRepositoryCommands
     }
   }
 
-  /// Submits an event application (One-Shot Flow).
-  /// Handles application creation and verification submission in one trans.
-  Future<String> applyEvent({
+  /// Submits an event application via the `apply-event` Edge Function.
+  ///
+  /// Returns [FreeApplyEventResult] for free tickets (application confirmed
+  /// immediately) or [PaidApplyEventResult] for paid tickets (caller must
+  /// drive the PG payment flow).
+  Future<ApplyEventResult> applyEvent({
     required String eventId,
     required String ticketId,
-    required String userId,
-    required String paymentId,
-    required int paymentAmount,
     Map<String, dynamic>? verificationData,
   }) async {
     Log.d('applyEvent called | event: $eventId, ticket: $ticketId');
     try {
-      final params = {
-        'p_event_id': eventId,
-        'p_ticket_id': ticketId,
-        'p_user_id': userId,
-        'p_payment_id': paymentId,
-        'p_payment_amount': paymentAmount,
-        'p_verification_data': verificationData,
-      };
-
-      final response = await supabaseClient.rpc<String>(
-        'apply_event',
-        params: params,
+      final response = await supabaseClient.functions.invoke(
+        'apply-event',
+        body: {
+          'event_id': eventId,
+          'ticket_id': ticketId,
+          'verification_data': ?verificationData,
+        },
       );
 
-      Log.i('✅ [EventRepo] Application successful. ID: $response');
-      return response;
+      final data = response.data as Map<String, dynamic>;
+      final type = data['type'] as String;
+      final applicationId = data['application_id'] as String;
+
+      if (type == 'paid') {
+        final result = PaidApplyEventResult(
+          applicationId: applicationId,
+          orderId: data['order_id'] as String,
+          paymentAmount: data['payment_amount'] as int,
+        );
+        Log.i(
+          '✅ [EventRepo] Paid application created. '
+          'ID: $applicationId, orderId: ${result.orderId}',
+        );
+        return result;
+      }
+
+      Log.i('✅ [EventRepo] Free application confirmed. ID: $applicationId');
+      return FreeApplyEventResult(applicationId: applicationId);
     } catch (e, st) {
       Log.e('❌ [EventRepo] applyEvent Error', e, st);
       rethrow;

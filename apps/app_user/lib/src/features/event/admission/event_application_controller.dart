@@ -84,9 +84,14 @@ class EventApplicationController extends _$EventApplicationController {
     }
   }
 
-  // Fix #286: uses user-create-order EF for server-side validation
-  Future<void> processPayment(BuildContext context) async {
+  /// Submits an event application via the unified `apply-event` Edge Function.
+  ///
+  /// The EF determines whether the ticket is free or paid and responds
+  /// accordingly. Free tickets are confirmed immediately; paid tickets
+  /// require proceeding through the PG payment flow.
+  Future<void> submitApplication(BuildContext context) async {
     if (state.selectedTicket == null) return;
+
     final user = ref.read(currentUserProvider);
     if (user == null) return;
 
@@ -98,107 +103,70 @@ class EventApplicationController extends _$EventApplicationController {
       final event = await _loadEvent();
       final verificationData = _buildVerificationPayload(event, ticket);
 
-      // Fix #286: Server validates all business rules and determines price
-      final orderResult = await repository.createOrderViaEF(
+      final result = await repository.applyEvent(
         eventId: _event.id,
         ticketId: ticket.id,
         verificationData: verificationData,
       );
 
-      if (!orderResult.requiresPayment) {
-        // Fix #286: Free event — server already set status='paid'
-        _handlePaymentSuccess();
-        return;
+      switch (result) {
+        case FreeApplyEventResult():
+          state = state.copyWith(status: EventApplicationStatus.success);
+        case PaidApplyEventResult():
+          if (!context.mounted) return;
+          await _processPaidApplication(
+            context: context,
+            repository: repository,
+            ticket: ticket,
+            user: user,
+            result: result,
+          );
       }
-
-      if (!context.mounted) return;
-
-      final config = ref.read(iamportConfigProvider);
-      final impUid = await _requestPayment(
-        context: context,
-        userCode: config.userCode,
-        orderResult: orderResult,
-        user: user,
-      );
-
-      if (impUid == null) {
-        throw const MinglitUserException('결제가 취소되었습니다.');
-      }
-
-      await _verifyPayment(
-        repository: repository,
-        impUid: impUid,
-        merchantUid: orderResult.applicationId,
-      );
-
-      _handlePaymentSuccess();
     } on Object catch (e, st) {
-      _handlePaymentFailure(e, st);
+      _handleError(e, st);
     }
   }
 
-  // Fix #286: Use server-determined amount from EF response
-  Future<String?> _requestPayment({
+  Future<void> _processPaidApplication({
     required BuildContext context,
-    required String userCode,
-    required CreateOrderResult orderResult,
+    required EventRepository repository,
+    required Ticket ticket,
     required User user,
+    required PaidApplyEventResult result,
   }) async {
-    return ref
+    final config = ref.read(iamportConfigProvider);
+    final impUid = await ref
         .read(iamportControllerProvider.notifier)
         .startPayment(
           context: context,
-          userCode: userCode,
+          userCode: config.userCode,
           data: {
             'pg': 'html5_inicis',
             'pay_method': 'card',
-            'merchant_uid': orderResult.applicationId,
-            'name': orderResult.ticketName,
-            'amount': orderResult.amount,
+            'merchant_uid': result.orderId,
+            'name': ticket.name,
+            'amount': result.paymentAmount,
             'buyer_name': user.userMetadata?['name'] ?? '게스트',
             'buyer_tel': user.phone ?? '01000000000',
             'buyer_email': user.email ?? 'guest@minglit.com',
             'app_scheme': 'minglit',
           },
         );
-  }
 
-  Future<void> _verifyPayment({
-    required EventRepository repository,
-    required String impUid,
-    required String merchantUid,
-  }) async {
+    if (impUid == null) {
+      throw const MinglitUserException('결제가 취소되었습니다.');
+    }
+
     await repository.confirmPayment(
       impUid: impUid,
-      merchantUid: merchantUid,
+      merchantUid: result.orderId,
     );
-  }
 
-  void _handlePaymentSuccess() {
-    StatsigAnalytics.logEvent(
-      MingLitEvent.paymentCompleted,
-      metadata: {'event_id': _event.id},
-    );
-    StatsigAnalytics.logEvent(
-      MingLitEvent.eventApplied,
-      metadata: {'event_id': _event.id},
-    );
     state = state.copyWith(status: EventApplicationStatus.success);
   }
 
-  void _handlePaymentFailure(Object error, StackTrace st) {
+  void _handleError(Object error, StackTrace st) {
     final exception = MinglitException.from(error, st);
-    if (exception is MinglitSystemException) {
-      StatsigAnalytics.logEvent(
-        MingLitEvent.errorOccurred,
-        metadata: {'context': 'payment', 'event_id': _event.id},
-      );
-    } else {
-      StatsigAnalytics.logEvent(
-        MingLitEvent.paymentFailed,
-        metadata: {'event_id': _event.id},
-      );
-    }
     final message = exception is MinglitSystemException
         ? exception.userMessage
         : exception.message;
@@ -206,45 +174,6 @@ class EventApplicationController extends _$EventApplicationController {
       status: EventApplicationStatus.error,
       errorMessage: message,
     );
-  }
-
-  // Fix #286: uses user-create-order EF for server-side validation
-  Future<void> submitApplication() async {
-    if (state.selectedTicket == null) return;
-
-    final user = ref.read(currentUserProvider);
-    if (user == null) return;
-
-    state = state.copyWith(status: EventApplicationStatus.submitting);
-
-    try {
-      final repository = ref.read(eventRepositoryProvider);
-      final ticket = state.selectedTicket!;
-      final event = await _loadEvent();
-      final vData = _buildVerificationPayload(event, ticket);
-
-      // Fix #286: Server validates all business rules via EF
-      await repository.createOrderViaEF(
-        eventId: _event.id,
-        ticketId: ticket.id,
-        verificationData: vData,
-      );
-
-      StatsigAnalytics.logEvent(
-        MingLitEvent.eventApplied,
-        metadata: {'event_id': _event.id},
-      );
-      state = state.copyWith(status: EventApplicationStatus.success);
-    } on Object catch (e) {
-      StatsigAnalytics.logEvent(
-        MingLitEvent.errorOccurred,
-        metadata: {'context': 'event_application', 'event_id': _event.id},
-      );
-      state = state.copyWith(
-        status: EventApplicationStatus.error,
-        errorMessage: e.toString(),
-      );
-    }
   }
 
   Map<String, dynamic>? _buildVerificationPayload(Event event, Ticket ticket) {
@@ -255,9 +184,7 @@ class EventApplicationController extends _$EventApplicationController {
         .toSet()
         .toList();
 
-    // Fix #1115: split OR guard — reqIds.isEmpty must gate .first independently
-    if (reqIds.isEmpty) return null;
-    if (state.verificationData.isEmpty) return null;
+    if (reqIds.isEmpty || state.verificationData.isEmpty) return null;
     return {
       'partner_id': event.party?.partnerId,
       'verification_id': reqIds.first,
