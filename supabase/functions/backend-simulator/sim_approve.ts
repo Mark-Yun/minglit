@@ -93,13 +93,16 @@ export async function simApproveVerifications(
 
         // Call partner-review-submission EF — no fallback. EF is the only path.
         // Fix #1280: remove direct DB fallback; EF failure is always an error.
+        if (!supabaseUrl || !anonKey) {
+          throw new Error(`App ${appId}: supabaseUrl/anonKey required for partner-review-submission EF`);
+        }
         const simUserPassword = Deno.env.get("SIM_USER_PASSWORD") ?? "password1234!";
         const partnerEmail = await getPartnerEmail(supabase, partnerId);
         if (!partnerEmail) {
           throw new Error(`Partner email not found for partner ${partnerId} (submission ${submissionId}, app ${appId})`);
         }
-        const partnerToken = await getSimPartnerToken(supabaseUrl!, anonKey!, partnerEmail, simUserPassword);
-        const efResult = await callEdgeFunction(supabaseUrl!, "partner-review-submission", {
+        const partnerToken = await getSimPartnerToken(supabaseUrl, anonKey, partnerEmail, simUserPassword);
+        const efResult = await callEdgeFunction(supabaseUrl, "partner-review-submission", {
           action: "review",
           submission_id: submissionId,
           result: "approved",
@@ -126,13 +129,16 @@ export async function simApproveVerifications(
       } else {
         // No verification needed: call partner-approve-application EF
         // Fix #1280: replace direct DB update with EF call for consistency.
+        if (!supabaseUrl || !anonKey) {
+          throw new Error(`App ${appId}: supabaseUrl/anonKey required for partner-approve-application EF`);
+        }
         const simUserPassword = Deno.env.get("SIM_USER_PASSWORD") ?? "password1234!";
         const partnerEmail = partnerId ? await getPartnerEmail(supabase, partnerId) : null;
         if (!partnerEmail) {
           throw new Error(`Partner email not found for partner ${partnerId} (app ${appId})`);
         }
-        const partnerToken = await getSimPartnerToken(supabaseUrl!, anonKey!, partnerEmail, simUserPassword);
-        const efResult = await callEdgeFunction(supabaseUrl!, "partner-approve-application", {
+        const partnerToken = await getSimPartnerToken(supabaseUrl, anonKey, partnerEmail, simUserPassword);
+        const efResult = await callEdgeFunction(supabaseUrl, "partner-approve-application", {
           action: "approve",
           application_id: appId,
         }, partnerToken);
@@ -195,13 +201,16 @@ export async function simApproveVerifications(
 
         // Call partner-review-submission EF — no fallback. EF is the only path.
         // Fix #1280: remove direct DB fallback; EF failure is always an error.
+        if (!supabaseUrl || !anonKey) {
+          throw new Error(`App ${appId}: supabaseUrl/anonKey required for partner-review-submission EF`);
+        }
         const simUserPassword = Deno.env.get("SIM_USER_PASSWORD") ?? "password1234!";
         const partnerEmail = await getPartnerEmail(supabase, partnerId);
         if (!partnerEmail) {
           throw new Error(`Partner email not found for partner ${partnerId} (submission ${submissionId}, app ${appId})`);
         }
-        const partnerToken = await getSimPartnerToken(supabaseUrl!, anonKey!, partnerEmail, simUserPassword);
-        const efResult = await callEdgeFunction(supabaseUrl!, "partner-review-submission", {
+        const partnerToken = await getSimPartnerToken(supabaseUrl, anonKey, partnerEmail, simUserPassword);
+        const efResult = await callEdgeFunction(supabaseUrl, "partner-review-submission", {
           action: "review",
           submission_id: submissionId,
           result: "rejected",
