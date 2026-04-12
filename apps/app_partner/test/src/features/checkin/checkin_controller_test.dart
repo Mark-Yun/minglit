@@ -1,10 +1,45 @@
-import 'package:app_partner/src/features/checkin/checkin_controller.dart';
-import 'package:flutter_test/flutter_test.dart';
+import 'dart:async';
+import 'dart:convert';
 
+import 'package:app_partner/src/features/checkin/checkin_controller.dart';
+import 'package:cryptography/cryptography.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:minglit_kit/minglit_kit.dart';
+import 'package:mocktail/mocktail.dart';
+
+import '../../../utils/mocks.dart';
 import '../../../utils/test_utils.dart';
+
+/// Minimal valid TicketToken JSON for processQR tests.
+String _makeQrPayload({
+  String ticketId = 'ticket-001',
+  String eventId = 'event-001',
+  String userId = 'user-abcd',
+  String signature = 'sig',
+  DateTime? expiresAt,
+}) {
+  final exp =
+      (expiresAt ?? DateTime.now().add(const Duration(days: 7)))
+          .toIso8601String();
+  return jsonEncode({
+    'ticket_id': ticketId,
+    'event_id': eventId,
+    'user_id': userId,
+    'signature': signature,
+    'expires_at': exp,
+  });
+}
+
+/// A deterministic fake Ed25519 public key for tests (crypto ops are mocked).
+final _fakePublicKey = SimplePublicKey(
+  List.filled(32, 0),
+  type: KeyPairType.ed25519,
+);
 
 void main() {
   group('CheckinController', () {
+    // ── data class tests (existing) ──────────────────────────────────────
+
     test('initial state is idle with no message or userName', () {
       final container = createContainer();
       final state = container.read(checkinControllerProvider);
@@ -64,6 +99,217 @@ void main() {
           CheckinResult.invalid,
           CheckinResult.error,
         ]),
+      );
+    });
+
+    // ── processQR behaviour tests ─────────────────────────────────────────
+    //
+    // processQR는 내부에 3초 피드백 딜레이가 있어 완료까지 ~3초가 걸린다.
+    // 각 테스트는 10초 타임아웃을 설정한다.
+    // 중간 상태는 provider listener로 캡처한다.
+
+    group('processQR', () {
+      late MockCheckinRepository mockRepo;
+
+      setUp(() {
+        mockRepo = MockCheckinRepository();
+        when(
+          () => mockRepo.fetchServerPublicKey(),
+        ).thenAnswer((_) async => _fakePublicKey);
+        registerFallbackValue(_fakePublicKey);
+      });
+
+      ProviderContainer makeContainer() => createContainer(
+        overrides: [
+          checkinRepositoryProvider.overrideWithValue(mockRepo),
+        ],
+      );
+
+      // Fix #1288: processQR 성공 경로 — 유효한 QR로 success 상태 전환 검증
+      test(
+        '성공 — 유효한 QR 데이터로 success 상태 전환 후 idle 복귀',
+        () async {
+          when(
+            () => mockRepo.verifyAndCheckin(
+              token: any(named: 'token'),
+              serverPublicKey: any(named: 'serverPublicKey'),
+            ),
+          ).thenAnswer((_) async => true);
+
+          final container = makeContainer();
+          final capturedStates = <CheckinState>[];
+          container.listen(
+            checkinControllerProvider,
+            (_, s) => capturedStates.add(s),
+            fireImmediately: false,
+          );
+
+          await container
+              .read(checkinControllerProvider.notifier)
+              .processQR(_makeQrPayload(userId: 'user-abcdef'));
+
+          // 상태 시퀀스: processing → success → idle
+          final results = capturedStates.map((s) => s.result).toList();
+          expect(results, containsAllInOrder([
+            CheckinResult.processing,
+            CheckinResult.success,
+            CheckinResult.idle,
+          ]));
+
+          // success 시점의 userName은 userId 앞 4자리로 구성됨
+          final successState = capturedStates.firstWhere(
+            (s) => s.result == CheckinResult.success,
+          );
+          expect(successState.userName, 'User user');
+        },
+        timeout: const Timeout(Duration(seconds: 10)),
+      );
+
+      // Fix #1288: processQR 실패 경로 — 서버 검증 실패 시 invalid 상태 검증
+      test(
+        '검증 실패 — verifyAndCheckin false 반환 시 invalid 상태 전환',
+        () async {
+          when(
+            () => mockRepo.verifyAndCheckin(
+              token: any(named: 'token'),
+              serverPublicKey: any(named: 'serverPublicKey'),
+            ),
+          ).thenAnswer((_) async => false);
+
+          final container = makeContainer();
+          final capturedStates = <CheckinState>[];
+          container.listen(
+            checkinControllerProvider,
+            (_, s) => capturedStates.add(s),
+            fireImmediately: false,
+          );
+
+          await container
+              .read(checkinControllerProvider.notifier)
+              .processQR(_makeQrPayload());
+
+          final results = capturedStates.map((s) => s.result).toList();
+          expect(results, containsAllInOrder([
+            CheckinResult.processing,
+            CheckinResult.invalid,
+          ]));
+
+          final invalidState = capturedStates.firstWhere(
+            (s) => s.result == CheckinResult.invalid,
+          );
+          expect(invalidState.message, '유효하지 않은 티켓입니다.');
+        },
+        timeout: const Timeout(Duration(seconds: 10)),
+      );
+
+      // Fix #1288: processQR JSON 파싱 실패 경로 — malformed QR는 invalid 상태 검증
+      test(
+        'JSON 파싱 실패 — malformed QR 데이터는 invalid 상태 전환, repo 미호출',
+        () async {
+          final container = makeContainer();
+          final capturedStates = <CheckinState>[];
+          container.listen(
+            checkinControllerProvider,
+            (_, s) => capturedStates.add(s),
+            fireImmediately: false,
+          );
+
+          await container
+              .read(checkinControllerProvider.notifier)
+              .processQR('not-valid-json{{{{');
+
+          final results = capturedStates.map((s) => s.result).toList();
+          expect(results, containsAllInOrder([
+            CheckinResult.processing,
+            CheckinResult.invalid,
+          ]));
+
+          final invalidState = capturedStates.firstWhere(
+            (s) => s.result == CheckinResult.invalid,
+          );
+          expect(invalidState.message, '티켓 데이터를 읽을 수 없습니다.');
+
+          // JSON 파싱 실패 시 repo는 호출되지 않아야 함
+          verifyNever(() => mockRepo.fetchServerPublicKey());
+        },
+        timeout: const Timeout(Duration(seconds: 10)),
+      );
+
+      // Fix #1288: processQR 중복 호출 방지 — processing 중 재호출은 무시 검증
+      test(
+        '중복 호출 방지 — processing 중에는 재호출이 무시됨',
+        () async {
+          // fetchServerPublicKey는 completer로 첫 번째 호출을 blocking 상태로 유지
+          final serverKeyCompleter = Completer<SimplePublicKey>();
+          when(
+            () => mockRepo.fetchServerPublicKey(),
+          ).thenAnswer((_) => serverKeyCompleter.future);
+          when(
+            () => mockRepo.verifyAndCheckin(
+              token: any(named: 'token'),
+              serverPublicKey: any(named: 'serverPublicKey'),
+            ),
+          ).thenAnswer((_) async => true);
+
+          final container = makeContainer();
+          final notifier = container.read(checkinControllerProvider.notifier);
+
+          // 첫 번째 호출 시작 — fetchServerPublicKey에서 blocking
+          final firstFuture = notifier.processQR(_makeQrPayload());
+
+          // 마이크로태스크 실행 — state=processing까지 진행
+          await Future<void>.delayed(Duration.zero);
+
+          expect(
+            container.read(checkinControllerProvider).result,
+            CheckinResult.processing,
+          );
+
+          // 두 번째 호출 — processing 상태이므로 즉시 반환, repo 추가 호출 없음
+          await notifier.processQR(_makeQrPayload());
+
+          // fetchServerPublicKey는 첫 번째 호출에서만 1회 호출됨
+          verify(() => mockRepo.fetchServerPublicKey()).called(1);
+
+          // 정리: 첫 번째 호출 완료 (3초 딜레이 포함)
+          serverKeyCompleter.complete(_fakePublicKey);
+          await firstFuture;
+        },
+        timeout: const Timeout(Duration(seconds: 10)),
+      );
+
+      // Fix #1288: processQR 에러 경로 — fetchServerPublicKey 예외 시 invalid 상태 검증
+      test(
+        '서버 키 fetch 실패 — 예외 발생 시 invalid 상태 전환',
+        () async {
+          when(
+            () => mockRepo.fetchServerPublicKey(),
+          ).thenThrow(StateError('Server public key not configured'));
+
+          final container = makeContainer();
+          final capturedStates = <CheckinState>[];
+          container.listen(
+            checkinControllerProvider,
+            (_, s) => capturedStates.add(s),
+            fireImmediately: false,
+          );
+
+          await container
+              .read(checkinControllerProvider.notifier)
+              .processQR(_makeQrPayload());
+
+          final results = capturedStates.map((s) => s.result).toList();
+          expect(results, containsAllInOrder([
+            CheckinResult.processing,
+            CheckinResult.invalid,
+          ]));
+
+          final invalidState = capturedStates.firstWhere(
+            (s) => s.result == CheckinResult.invalid,
+          );
+          expect(invalidState.message, '티켓 데이터를 읽을 수 없습니다.');
+        },
+        timeout: const Timeout(Duration(seconds: 10)),
       );
     });
   });
