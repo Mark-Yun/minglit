@@ -152,8 +152,19 @@ export async function simCheckin(
               throw new Error(`event-checkin EF failed for participant ${participant.id} (${username}): ${String(authErr)}`);
             }
           } else {
-            // Partner user or no username — skip EF, not eligible for user-side checkin
-            log({ level: "warn", phase: "checkin", step: "ef_skip", message: `Skipping EF checkin for participant ${participant.id}: invalid username (${username ?? "null"})` });
+            // Fix #1281: Partner user or no username — use direct DB as these accounts can't acquire user tokens
+            const { error: updErr } = await supabase
+              .from("event_participants")
+              .update({ status: "checked_in" })
+              .eq("id", participant.id);
+
+            if (updErr) {
+              log({ level: "error", phase: "checkin", step: "update_participant", message: `Failed to update partner participant ${participant.id}: ${updErr.message}` });
+              continue;
+            }
+
+            checkedInParticipantIds.push(participant.id);
+            log({ level: "info", phase: "checkin", step: "direct_checkin", message: `Checked in partner participant ${participant.id} via direct DB (no user token available)` });
             continue;
           }
         } else {
