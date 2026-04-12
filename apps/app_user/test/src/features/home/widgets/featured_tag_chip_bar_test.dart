@@ -54,11 +54,13 @@ void main() {
     testWidgets(
       '빈 태그 목록 — 아무것도 렌더링하지 않는다',
       (tester) async {
-        await tester.pumpWidget(buildSubject(
-          stub: () =>
-              when(() => mockTagRepo.getFeaturedTags())
-                  .thenAnswer((_) async => []),
-        ));
+        await tester.pumpWidget(
+          buildSubject(
+            stub: () => when(
+              () => mockTagRepo.getFeaturedTags(),
+            ).thenAnswer((_) async => []),
+          ),
+        );
         await tester.pump();
 
         expect(find.byType(ListView), findsNothing);
@@ -69,11 +71,13 @@ void main() {
       '태그 목록 — #tagName 칩이 렌더링된다',
       (tester) async {
         final tags = [makeTag('클럽'), makeTag('영화')];
-        await tester.pumpWidget(buildSubject(
-          stub: () =>
-              when(() => mockTagRepo.getFeaturedTags())
-                  .thenAnswer((_) async => tags),
-        ));
+        await tester.pumpWidget(
+          buildSubject(
+            stub: () => when(
+              () => mockTagRepo.getFeaturedTags(),
+            ).thenAnswer((_) async => tags),
+          ),
+        );
         await tester.pump();
 
         expect(find.text('#클럽'), findsOneWidget);
@@ -84,11 +88,13 @@ void main() {
     testWidgets(
       '에러 상태 — 아무것도 렌더링하지 않는다',
       (tester) async {
-        await tester.pumpWidget(buildSubject(
-          stub: () =>
-              when(() => mockTagRepo.getFeaturedTags())
-                  .thenThrow(Exception('network error')),
-        ));
+        await tester.pumpWidget(
+          buildSubject(
+            stub: () => when(
+              () => mockTagRepo.getFeaturedTags(),
+            ).thenThrow(Exception('network error')),
+          ),
+        );
         await tester.pump();
 
         expect(find.byType(ListView), findsNothing);
@@ -98,11 +104,13 @@ void main() {
     testWidgets(
       '칩 탭 — TagCoordinator.goToTagEventList()가 올바른 tagId/tagName으로 호출된다',
       (tester) async {
-        await tester.pumpWidget(buildSubject(
-          stub: () =>
-              when(() => mockTagRepo.getFeaturedTags())
-                  .thenAnswer((_) async => [makeTag('클럽')]),
-        ));
+        await tester.pumpWidget(
+          buildSubject(
+            stub: () => when(
+              () => mockTagRepo.getFeaturedTags(),
+            ).thenAnswer((_) async => [makeTag('클럽')]),
+          ),
+        );
         await tester.pump();
 
         await tester.tap(find.text('#클럽'));
