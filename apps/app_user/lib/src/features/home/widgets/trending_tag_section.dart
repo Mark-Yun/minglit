@@ -15,7 +15,9 @@ class TrendingTagSection extends ConsumerWidget {
 
     return tagsAsync.when(
       data: (tags) {
-        if (tags.isEmpty) return const SizedBox.shrink();
+        // Fix #1286: recentCount가 0인 태그는 '핫 태그'가 아님 — 필터링 후 빈 목록이면 숨김
+        final activeTags = tags.where((tag) => tag.recentCount > 0).toList();
+        if (activeTags.isEmpty) return const SizedBox.shrink();
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -38,11 +40,11 @@ class TrendingTagSection extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(
                   horizontal: MinglitSpacing.medium,
                 ),
-                itemCount: tags.length,
+                itemCount: activeTags.length,
                 separatorBuilder: (_, _) =>
                     const SizedBox(width: MinglitSpacing.small),
                 itemBuilder: (context, index) {
-                  final tag = tags[index];
+                  final tag = activeTags[index];
                   // Fix #1224: use recentCount (7-day sum) for the trending
                   // metric instead of usageCount (cumulative total).
                   return _TrendingTagCard(
