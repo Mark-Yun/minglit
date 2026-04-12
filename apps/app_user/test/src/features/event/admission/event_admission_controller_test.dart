@@ -709,7 +709,7 @@ void main() {
         // Subscribe so the provider stays alive
         final sub = container.listen(
           eventAdmissionControllerProvider(testEvent),
-          (_, __) {},
+          (_, _) {},
         );
         addTearDown(sub.close);
 
@@ -747,7 +747,7 @@ void main() {
 
         final sub = container.listen(
           eventAdmissionControllerProvider(testEvent),
-          (_, __) {},
+          (_, _) {},
         );
         addTearDown(sub.close);
 
@@ -793,7 +793,7 @@ void main() {
 
         final sub = container.listen(
           eventAdmissionControllerProvider(testEvent),
-          (_, __) {},
+          (_, _) {},
         );
         addTearDown(sub.close);
 
@@ -841,14 +841,15 @@ void main() {
 
         final sub = container.listen(
           eventAdmissionControllerProvider(completedEvent),
-          (_, __) {},
+          (_, _) {},
         );
         addTearDown(sub.close);
 
         await Future<void>.delayed(const Duration(milliseconds: 100));
 
-        final raw =
-            container.read(eventAdmissionControllerProvider(completedEvent));
+        final raw = container.read(
+          eventAdmissionControllerProvider(completedEvent),
+        );
         expect(raw.error, isA<Exception>());
       },
     );
@@ -875,7 +876,7 @@ void main() {
 
         final sub = container.listen(
           eventAdmissionControllerProvider(testEvent),
-          (_, __) {},
+          (_, _) {},
         );
         addTearDown(sub.close);
 

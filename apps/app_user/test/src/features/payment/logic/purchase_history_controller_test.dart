@@ -235,7 +235,7 @@ void main() {
         // Subscribe to keep the provider alive while we wait for completion
         final sub = container.listen(
           purchaseHistoryControllerProvider,
-          (_, __) {},
+          (_, _) {},
         );
         addTearDown(sub.close);
 
@@ -268,7 +268,7 @@ void main() {
 
         final sub = container.listen(
           purchaseHistoryControllerProvider,
-          (_, __) {},
+          (_, _) {},
         );
         addTearDown(sub.close);
 
@@ -288,7 +288,6 @@ void main() {
         final application = _makeApplication(
           event: futureEvent,
           paymentId: null,
-          paymentAmount: 10000,
         );
 
         final testContainer = ProviderContainer(
@@ -314,7 +313,6 @@ void main() {
         );
         final application = _makeApplication(
           event: futureEvent,
-          paymentId: 'pay_123',
           paymentAmount: null,
         );
 
