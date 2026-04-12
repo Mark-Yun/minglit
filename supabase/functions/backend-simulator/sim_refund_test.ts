@@ -12,16 +12,17 @@ const ANON_KEY = "test-anon-key";
 /**
  * Creates a fetch mock that handles:
  *   - POST /auth/v1/token → returns a JWT (triggers supabase-js token refresh interval)
- *   - POST /functions/v1/payment-cancel → returns configured response
+ *   - POST /functions/v1/user-cancel-order → returns configured response
  *
+ * Fix #1327: payment-cancel EF → user-cancel-order EF로 전환.
  * Tests that use this mock must set sanitizeOps: false to avoid interval leak
  * failures caused by the supabase-js client's token refresh timer.
  */
 function makeEfFetchMock(opts: {
-  paymentCancelStatus?: number;
-  paymentCancelBody?: unknown;
+  cancelOrderStatus?: number;
+  cancelOrderBody?: unknown;
 } = {}) {
-  const { paymentCancelStatus = 200, paymentCancelBody = { success: true, data: {} } } = opts;
+  const { cancelOrderStatus = 200, cancelOrderBody = { success: true, data: {} } } = opts;
 
   const fetchMock = async (input: RequestInfo | URL, _init?: RequestInit): Promise<Response> => {
     const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
@@ -31,10 +32,11 @@ function makeEfFetchMock(opts: {
         { status: 200, headers: { "Content-Type": "application/json" } },
       );
     }
-    if (url.includes("/functions/v1/payment-cancel")) {
+    // Fix #1327: user-cancel-order EF mock (replaces payment-cancel)
+    if (url.includes("/functions/v1/user-cancel-order")) {
       return new Response(
-        JSON.stringify(paymentCancelBody),
-        { status: paymentCancelStatus, headers: { "Content-Type": "application/json" } },
+        JSON.stringify(cancelOrderBody),
+        { status: cancelOrderStatus, headers: { "Content-Type": "application/json" } },
       );
     }
     throw new Error(`Unhandled fetch in test: ${url}`);
@@ -58,9 +60,12 @@ function hoursFromNow(hours: number): string {
 /**
  * Builds a mock supabase client for the standard EF-based refund flow.
  *
+ * Fix #1327: user-cancel-order EF handles cancellation, refund, and participant cleanup
+ * atomically. The sim no longer calls event_applications.update or event_participants.delete
+ * directly — those are now done by the EF.
+ *
  * The mock reflects post-EF DB state: refund_status and refund_amount are set
  * by the EF (simulated via efRefundStatus/efRefundAmount in the select response).
- * The sim itself then calls update({status:'cancelled'}) and delete on event_participants.
  */
 function buildRefundMock(opts: {
   paymentAmount: number;
@@ -73,12 +78,10 @@ function buildRefundMock(opts: {
 }): {
   mock: ReturnType<typeof createMockSupabaseClient>;
   appStates: Record<string, { status?: string; refund_status?: string; refund_amount?: number }>;
-  deletedParticipants: Array<{ event_id: string; user_id: string }>;
 } {
   const { paymentAmount, startTime, eventId, userId, username, efRefundStatus, efRefundAmount } = opts;
 
   const appStates: Record<string, { status?: string; refund_status?: string; refund_amount?: number }> = {};
-  const deletedParticipants: Array<{ event_id: string; user_id: string }> = [];
 
   const mock = createMockSupabaseClient({
     tables: {
@@ -119,15 +122,6 @@ function buildRefundMock(opts: {
           error: null,
         }),
       },
-      event_participants: {
-        delete: ({ filters }) => {
-          deletedParticipants.push({
-            event_id: filters["event_id"] as string,
-            user_id: filters["user_id"] as string,
-          });
-          return { data: null, error: null };
-        },
-      },
       user_profiles: {
         select: () => ({
           data: { username },
@@ -137,7 +131,7 @@ function buildRefundMock(opts: {
     },
   });
 
-  return { mock, appStates, deletedParticipants };
+  return { mock, appStates };
 }
 
 // ============================================================
@@ -183,7 +177,7 @@ Deno.test({
     assertEquals(expectedCalc.refund_percentage, 100);
     assertEquals(expectedCalc.refund_amount, paymentAmount);
 
-    const { mock, appStates, deletedParticipants } = buildRefundMock({
+    const { mock } = buildRefundMock({
       paymentAmount,
       startTime,
       eventId: "event-30d",
@@ -207,12 +201,8 @@ Deno.test({
 
     assertEquals(result.refundedApplicationIds.length, 1);
     assertEquals(result.refundedApplicationIds[0], "app-100pct");
-    // sim sets status='cancelled' after EF succeeds (EF does not touch status field)
-    assertEquals(appStates["app-100pct"].status, "cancelled");
-    // participant deleted explicitly (no DB trigger handles this on refund)
-    assertEquals(deletedParticipants.length, 1);
-    assertEquals(deletedParticipants[0].event_id, "event-30d");
-    assertEquals(deletedParticipants[0].user_id, "user-1");
+    // Fix #1327: user-cancel-order EF handles status update + participant cleanup atomically
+    // The sim no longer calls event_applications.update or event_participants.delete directly.
   },
 });
 
@@ -228,7 +218,7 @@ Deno.test({
     assertEquals(expectedCalc.refund_percentage, 0);
     assertEquals(expectedCalc.refund_amount, 0);
 
-    const { mock, appStates } = buildRefundMock({
+    const { mock } = buildRefundMock({
       paymentAmount,
       startTime,
       eventId: "event-5d",
@@ -250,8 +240,8 @@ Deno.test({
       )
     );
 
+    // Fix #1327: user-cancel-order EF handles status update atomically; sim does not update DB directly
     assertEquals(result.refundedApplicationIds.length, 1);
-    assertEquals(appStates["app-0pct-5d"].status, "cancelled");
   },
 });
 
@@ -267,7 +257,7 @@ Deno.test({
     assertEquals(expectedCalc.refund_percentage, 0);
     assertEquals(expectedCalc.refund_amount, 0);
 
-    const { mock, appStates } = buildRefundMock({
+    const { mock } = buildRefundMock({
       paymentAmount,
       startTime,
       eventId: "event-2d",
@@ -289,8 +279,8 @@ Deno.test({
       )
     );
 
+    // Fix #1327: user-cancel-order EF handles status update atomically; sim does not update DB directly
     assertEquals(result.assertions.length, 1);
-    assertEquals(appStates["app-0pct-2d"].status, "cancelled");
   },
 });
 
@@ -306,7 +296,7 @@ Deno.test({
     assertEquals(expectedCalc.refund_percentage, 0);
     assertEquals(expectedCalc.refund_amount, 0);
 
-    const { mock, appStates, deletedParticipants } = buildRefundMock({
+    const { mock } = buildRefundMock({
       paymentAmount,
       startTime,
       eventId: "event-12h",
@@ -317,7 +307,7 @@ Deno.test({
     });
 
     const fetchMock = makeEfFetchMock();
-    await withMockedFetch(fetchMock, () =>
+    const result = await withMockedFetch(fetchMock, () =>
       simRefundRequests(
         mock as unknown as SupabaseClient,
         ["app-0pct-12h"],
@@ -328,20 +318,22 @@ Deno.test({
       )
     );
 
-    assertEquals(appStates["app-0pct-12h"].status, "cancelled");
-    assertEquals(deletedParticipants.length, 1);
+    // Fix #1327: user-cancel-order EF handles status update + participant cleanup atomically
+    assertEquals(result.refundedApplicationIds.length, 1);
   },
 });
 
+// Fix #1327: participant cleanup is now handled atomically by user-cancel-order EF.
+// The sim no longer calls event_participants.delete directly.
 Deno.test({
-  name: "simRefundRequests - participant is deleted after EF succeeds",
+  name: "simRefundRequests - EF succeeds → refund recorded (participant cleanup handled by EF)",
   sanitizeOps: false,
   sanitizeResources: false,
   fn: async () => {
     const paymentAmount = 5000;
     const startTime = daysFromNow(30);
 
-    const { mock, deletedParticipants } = buildRefundMock({
+    const { mock } = buildRefundMock({
       paymentAmount,
       startTime,
       eventId: "event-del",
@@ -352,7 +344,7 @@ Deno.test({
     });
 
     const fetchMock = makeEfFetchMock();
-    await withMockedFetch(fetchMock, () =>
+    const result = await withMockedFetch(fetchMock, () =>
       simRefundRequests(
         mock as unknown as SupabaseClient,
         ["app-del-1"],
@@ -363,9 +355,9 @@ Deno.test({
       )
     );
 
-    assertEquals(deletedParticipants.length, 1);
-    assertEquals(deletedParticipants[0].event_id, "event-del");
-    assertEquals(deletedParticipants[0].user_id, "user-del");
+    // EF handles participant cleanup atomically — sim only records the refund result
+    assertEquals(result.refundedApplicationIds.length, 1);
+    assertEquals(result.refundedApplicationIds[0], "app-del-1");
   },
 });
 
@@ -377,14 +369,12 @@ Deno.test({
     const paymentAmount = 10000;
     const startTime = daysFromNow(30);
     const appIds = ["app-a", "app-b", "app-c", "app-d", "app-e"];
-    const cancelledApps: string[] = [];
 
     const mock = createMockSupabaseClient({
       tables: {
         event_applications: {
           select: ({ filters }) => {
             const appId = filters["id"] as string;
-            const wasCancelled = cancelledApps.includes(appId);
             return {
               data: {
                 id: appId,
@@ -392,28 +382,21 @@ Deno.test({
                 payment_id: `pay-${appId}`,
                 event_id: "event-20pct",
                 user_id: "user-1",
-                status: wasCancelled ? "cancelled" : "paid",
-                refund_status: wasCancelled ? "completed" : "none",
-                refund_amount: wasCancelled ? paymentAmount : 0,
+                status: "paid",
+                // Fix #1327: EF sets these values; sim reads them for assertion
+                refund_status: "completed",
+                refund_amount: paymentAmount,
               },
               error: null,
             };
           },
-          update: ({ values, filters }) => {
-            const appId = filters["id"] as string;
-            const v = values as Record<string, unknown>;
-            if (v.status === "cancelled") cancelledApps.push(appId);
-            return { data: null, error: null };
-          },
+          update: () => ({ data: null, error: null }),
         },
         events: {
           select: () => ({
             data: { id: "event-20pct", start_time: startTime },
             error: null,
           }),
-        },
-        event_participants: {
-          delete: () => ({ data: null, error: null }),
         },
         user_profiles: {
           select: () => ({
@@ -436,9 +419,9 @@ Deno.test({
       )
     );
 
+    // Fix #1327: only 1 app (20% of 5) processed; EF handles status update atomically
     assertEquals(result.refundedApplicationIds.length, 1);
-    assertEquals(cancelledApps.length, 1);
-    assertEquals(cancelledApps[0], "app-a");
+    assertEquals(result.refundedApplicationIds[0], "app-a");
   },
 });
 
@@ -477,7 +460,9 @@ Deno.test({ name: "simRefundRequests - missing supabaseUrl → error logged, no 
   assertMatch(errors[0], /supabaseUrl\/anonKey required/);
 }});
 
-Deno.test("simRefundRequests - missing payment_id → error logged, no refunds", async () => {
+// Fix #1327: payment_id is no longer validated by sim (user-cancel-order EF uses event_id).
+// Instead test that a partner username (starts with "partner_") triggers an error.
+Deno.test("simRefundRequests - partner username → error logged, no refunds", async () => {
   const paymentAmount = 10000;
   const startTime = daysFromNow(30);
 
@@ -488,8 +473,8 @@ Deno.test("simRefundRequests - missing payment_id → error logged, no refunds",
           data: {
             id: filters["id"] as string,
             payment_amount: paymentAmount,
-            payment_id: null, // no payment_id → must throw
-            event_id: "event-no-pid",
+            payment_id: `pay-${filters["id"] as string}`,
+            event_id: "event-partner-user",
             user_id: "user-1",
             status: "paid",
             refund_status: "none",
@@ -501,15 +486,13 @@ Deno.test("simRefundRequests - missing payment_id → error logged, no refunds",
       },
       events: {
         select: () => ({
-          data: { id: "event-no-pid", start_time: startTime },
+          data: { id: "event-partner-user", start_time: startTime },
           error: null,
         }),
       },
-      event_participants: {
-        delete: () => ({ data: null, error: null }),
-      },
       user_profiles: {
-        select: () => ({ data: { username: "user_001" }, error: null }),
+        // Fix #1327: partner_ username is rejected — user-cancel-order EF requires a real user
+        select: () => ({ data: { username: "partner_001" }, error: null }),
       },
     },
   });
@@ -517,7 +500,7 @@ Deno.test("simRefundRequests - missing payment_id → error logged, no refunds",
   const errors: string[] = [];
   const result = await simRefundRequests(
     mock as unknown as SupabaseClient,
-    ["app-no-pid"],
+    ["app-partner-user"],
     (entry) => {
       if (entry.level === "error") errors.push(entry.message);
     },
@@ -528,7 +511,7 @@ Deno.test("simRefundRequests - missing payment_id → error logged, no refunds",
 
   assertEquals(result.refundedApplicationIds.length, 0);
   assertEquals(errors.length, 1);
-  assertMatch(errors[0], /payment_id is null/);
+  assertMatch(errors[0], /no valid user username/);
 });
 
 Deno.test({
@@ -549,9 +532,10 @@ Deno.test({
       efRefundAmount: 0,
     });
 
+    // Fix #1327: payment-cancel → user-cancel-order EF
     const fetchMock = makeEfFetchMock({
-      paymentCancelStatus: 500,
-      paymentCancelBody: { error: "internal error" },
+      cancelOrderStatus: 500,
+      cancelOrderBody: { error: "internal error" },
     });
 
     const errors: string[] = [];
@@ -571,7 +555,8 @@ Deno.test({
     // No refunds succeed — error thrown, no direct DB fallback
     assertEquals(result.refundedApplicationIds.length, 0);
     assertEquals(errors.length, 1);
-    assertMatch(errors[0], /payment-cancel EF returned 500/);
+    // Fix #1327: error message updated to reflect user-cancel-order EF
+    assertMatch(errors[0], /user-cancel-order EF returned 500/);
     // No status update was written to DB
     assertEquals(appStates["app-ef-fail"], undefined);
   },

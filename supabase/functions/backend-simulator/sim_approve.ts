@@ -7,7 +7,7 @@ import {
   simAssertApplicationApproved,
   simAssertApplicationRejected,
 } from "./sim_assertions.ts";
-import { getSimPartnerToken, getPartnerEmail, callEdgeFunction } from "./sim_auth.ts";
+import { getSimUserToken, getSimPartnerToken, getPartnerEmail, callEdgeFunction } from "./sim_auth.ts";
 
 export interface SimApproveResult {
   approvedApplicationIds: string[];
@@ -75,28 +75,44 @@ export async function simApproveVerifications(
       }
 
       if (verificationId && partnerId) {
-        // Verification flow: insert submission → call partner-review-submission EF
-        const submissionId = crypto.randomUUID();
-        const { error: insErr } = await supabase.from("verification_submissions").insert({
-          id: submissionId,
+        // Verification flow: call user-submit-verification EF → call partner-review-submission EF
+        // Fix #1326: user-submit-verification EF로 전환 — direct DB insert 제거
+        if (!supabaseUrl || !anonKey) {
+          throw new Error(`App ${appId}: supabaseUrl/anonKey required for user-submit-verification EF`);
+        }
+        const simUserPassword = Deno.env.get("SIM_USER_PASSWORD") ?? "password1234!";
+
+        const { data: profileData } = await supabase
+          .from("user_profiles")
+          .select("username")
+          .eq("id", userId)
+          .maybeSingle();
+        const username = (profileData as { username?: string } | null)?.username;
+        if (!username || username.startsWith("partner_")) {
+          throw new Error(`App ${appId}: no valid user username (got: ${username ?? "null"}), cannot call user-submit-verification EF`);
+        }
+        const userEmail = `${username}@test.com`;
+        const userToken = await getSimUserToken(supabaseUrl, anonKey, userEmail, simUserPassword);
+        const submitResult = await callEdgeFunction(supabaseUrl, "user-submit-verification", {
+          action: "submit",
           partner_id: partnerId,
-          user_id: userId,
           verification_id: verificationId,
           application_id: appId,
-          status: "pending",
-          snapshot_data: {},
-        });
-        if (insErr) {
-          log({ level: "error", phase: "approve", step: "insert_submission", message: `Failed to insert submission for app ${appId}: ${insErr.message}` });
-          continue;
+        }, userToken);
+        if (submitResult.status !== 200 && submitResult.status !== 201) {
+          throw new Error(`user-submit-verification EF returned ${submitResult.status} for app ${appId}`);
         }
+
+        // Retrieve the submission_id from EF response to pass to partner-review-submission
+        // deno-lint-ignore no-explicit-any
+        const submissionId: string = (submitResult.data as any)?.submission_id ?? (submitResult.data as any)?.id;
+        if (!submissionId) {
+          throw new Error(`user-submit-verification EF did not return submission_id for app ${appId}`);
+        }
+        log({ level: "info", phase: "approve", step: "ef_submit_verification", message: `Submitted verification ${submissionId} via EF for app ${appId}` });
 
         // Call partner-review-submission EF — no fallback. EF is the only path.
         // Fix #1280: remove direct DB fallback; EF failure is always an error.
-        if (!supabaseUrl || !anonKey) {
-          throw new Error(`App ${appId}: supabaseUrl/anonKey required for partner-review-submission EF`);
-        }
-        const simUserPassword = Deno.env.get("SIM_USER_PASSWORD") ?? "password1234!";
         const partnerEmail = await getPartnerEmail(supabase, partnerId);
         if (!partnerEmail) {
           throw new Error(`Partner email not found for partner ${partnerId} (submission ${submissionId}, app ${appId})`);
@@ -183,28 +199,44 @@ export async function simApproveVerifications(
       }
 
       if (verificationId && partnerId) {
-        // Verification flow: insert submission → call partner-review-submission EF
-        const submissionId = crypto.randomUUID();
-        const { error: insErr } = await supabase.from("verification_submissions").insert({
-          id: submissionId,
+        // Verification flow: call user-submit-verification EF → call partner-review-submission EF
+        // Fix #1326: user-submit-verification EF로 전환 — direct DB insert 제거
+        if (!supabaseUrl || !anonKey) {
+          throw new Error(`App ${appId}: supabaseUrl/anonKey required for user-submit-verification EF`);
+        }
+        const simUserPassword = Deno.env.get("SIM_USER_PASSWORD") ?? "password1234!";
+
+        const { data: profileData } = await supabase
+          .from("user_profiles")
+          .select("username")
+          .eq("id", userId)
+          .maybeSingle();
+        const username = (profileData as { username?: string } | null)?.username;
+        if (!username || username.startsWith("partner_")) {
+          throw new Error(`App ${appId}: no valid user username (got: ${username ?? "null"}), cannot call user-submit-verification EF`);
+        }
+        const userEmail = `${username}@test.com`;
+        const userToken = await getSimUserToken(supabaseUrl, anonKey, userEmail, simUserPassword);
+        const submitResult = await callEdgeFunction(supabaseUrl, "user-submit-verification", {
+          action: "submit",
           partner_id: partnerId,
-          user_id: userId,
           verification_id: verificationId,
           application_id: appId,
-          status: "pending",
-          snapshot_data: {},
-        });
-        if (insErr) {
-          log({ level: "error", phase: "approve", step: "insert_submission", message: `Failed to insert submission for app ${appId}: ${insErr.message}` });
-          continue;
+        }, userToken);
+        if (submitResult.status !== 200 && submitResult.status !== 201) {
+          throw new Error(`user-submit-verification EF returned ${submitResult.status} for app ${appId}`);
         }
+
+        // Retrieve the submission_id from EF response to pass to partner-review-submission
+        // deno-lint-ignore no-explicit-any
+        const submissionId: string = (submitResult.data as any)?.submission_id ?? (submitResult.data as any)?.id;
+        if (!submissionId) {
+          throw new Error(`user-submit-verification EF did not return submission_id for app ${appId}`);
+        }
+        log({ level: "info", phase: "approve", step: "ef_submit_verification", message: `Submitted verification ${submissionId} via EF for app ${appId}` });
 
         // Call partner-review-submission EF — no fallback. EF is the only path.
         // Fix #1280: remove direct DB fallback; EF failure is always an error.
-        if (!supabaseUrl || !anonKey) {
-          throw new Error(`App ${appId}: supabaseUrl/anonKey required for partner-review-submission EF`);
-        }
-        const simUserPassword = Deno.env.get("SIM_USER_PASSWORD") ?? "password1234!";
         const partnerEmail = await getPartnerEmail(supabase, partnerId);
         if (!partnerEmail) {
           throw new Error(`Partner email not found for partner ${partnerId} (submission ${submissionId}, app ${appId})`);
@@ -231,27 +263,34 @@ export async function simApproveVerifications(
           log({ level: "warn", phase: "approve", step: "rejected", message: `App ${appId} rejection assertion failed: ${appAssertion.details}` });
         }
       } else {
-        // No verification needed: reject via direct DB update.
-        // Fix #1280: partner-approve-application EF does not support a "reject" action,
-        // and there is no partner-reject-application EF. Direct DB update is intentional
-        // until a dedicated reject EF is introduced.
-        const { error: updErr } = await supabase
-          .from("event_applications")
-          .update({ status: "rejected" })
-          .eq("id", appId);
-        if (updErr) {
-          log({ level: "error", phase: "approve", step: "direct_reject", message: `Failed to directly reject app ${appId}: ${updErr.message}` });
-          continue;
+        // No verification needed: reject via partner-reject-application EF
+        // Fix #1328: partner-reject-application EF 호출 — direct DB update 제거
+        if (!supabaseUrl || !anonKey) {
+          throw new Error(`App ${appId}: supabaseUrl/anonKey required for partner-reject-application EF`);
         }
+        const simUserPassword = Deno.env.get("SIM_USER_PASSWORD") ?? "password1234!";
+        const partnerEmail = partnerId ? await getPartnerEmail(supabase, partnerId) : null;
+        if (!partnerEmail) {
+          throw new Error(`Partner email not found for partner ${partnerId} (app ${appId})`);
+        }
+        const partnerToken = await getSimPartnerToken(supabaseUrl, anonKey, partnerEmail, simUserPassword);
+        const efResult = await callEdgeFunction(supabaseUrl, "partner-reject-application", {
+          application_id: appId,
+          reason: "[E2E] 시뮬레이션 거부",
+        }, partnerToken);
+        if (efResult.status !== 200) {
+          throw new Error(`partner-reject-application EF returned ${efResult.status} for app ${appId}`);
+        }
+        log({ level: "info", phase: "approve", step: "ef_direct_reject", message: `Rejected app ${appId} via partner-reject-application EF` });
 
         const appAssertion = await simAssertApplicationRejected(supabase, appId);
         assertions.push(appAssertion);
 
         if (appAssertion.passed) {
           rejectedApplicationIds.push(appId);
-          log({ level: "info", phase: "approve", step: "rejected", message: `App ${appId} directly rejected (no verification required, no reject EF available)` });
+          log({ level: "info", phase: "approve", step: "rejected", message: `App ${appId} directly rejected via EF (no verification required)` });
         } else {
-          log({ level: "warn", phase: "approve", step: "rejected", message: `App ${appId} direct rejection assertion failed: ${appAssertion.details}` });
+          log({ level: "warn", phase: "approve", step: "rejected", message: `App ${appId} EF rejection assertion failed: ${appAssertion.details}` });
         }
       }
     } catch (e) {

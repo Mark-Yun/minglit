@@ -100,25 +100,9 @@ Deno.test({
         },
         events: { select: makeEventSelectHandler() },
         verifications: { select: makeVerificationSelectHandler("verif-1") },
-        verification_submissions: {
-          insert: ({ values }: { values: unknown }) => {
-            const v = values as { id: string; application_id: string };
-            subAppMap[v.id] = v.application_id;
-            return { data: null, error: null };
-          },
-          select: ({ filters }: { filters: Record<string, unknown> }) => {
-            const subId = filters["id"] as string;
-            return {
-              data: {
-                id: subId,
-                status: "approved",
-                partner_id: "partner-1",
-                user_id: "user-1",
-                verification_id: "verif-1",
-              },
-              error: null,
-            };
-          },
+        // Fix #1326: user-submit-verification EF로 전환 — verification_submissions 직접 insert 제거
+        user_profiles: {
+          select: () => ({ data: { username: "user_001" }, error: null }),
         },
         partner_verified_users: {
           select: () => ({ data: { id: "pvu-1" }, error: null }),
@@ -134,6 +118,13 @@ Deno.test({
             JSON.stringify({ access_token: "mock-token", token_type: "bearer", expires_in: 3600, refresh_token: "r", user: {} }),
             { status: 200 },
           );
+        }
+        // Fix #1326: user-submit-verification EF mock — returns submission_id
+        if (url.includes("user-submit-verification")) {
+          const body = JSON.parse((init.body as string) ?? "{}");
+          const subId = `sub-${body.application_id as string}`;
+          subAppMap[subId] = body.application_id as string;
+          return new Response(JSON.stringify({ submission_id: subId }), { status: 200 });
         }
         if (url.includes("partner-review-submission")) {
           // Simulate EF approving/rejecting — update app status via side effect
@@ -193,25 +184,9 @@ Deno.test({
         },
         events: { select: makeEventSelectHandler() },
         verifications: { select: makeVerificationSelectHandler("verif-1") },
-        verification_submissions: {
-          insert: ({ values }: { values: unknown }) => {
-            const v = values as { id: string; application_id: string };
-            subAppMap[v.id] = v.application_id;
-            return { data: null, error: null };
-          },
-          select: ({ filters }: { filters: Record<string, unknown> }) => {
-            const subId = filters["id"] as string;
-            return {
-              data: {
-                id: subId,
-                status: appStatuses[subAppMap[subId]] ?? "approved",
-                partner_id: "partner-1",
-                user_id: "user-1",
-                verification_id: "verif-1",
-              },
-              error: null,
-            };
-          },
+        // Fix #1326: user-submit-verification EF로 전환 — verification_submissions 직접 insert 제거
+        user_profiles: {
+          select: () => ({ data: { username: "user_001" }, error: null }),
         },
         partner_verified_users: {
           select: () => ({ data: { id: "pvu-1" }, error: null }),
@@ -227,6 +202,13 @@ Deno.test({
             JSON.stringify({ access_token: "mock-token", token_type: "bearer", expires_in: 3600, refresh_token: "r", user: {} }),
             { status: 200 },
           );
+        }
+        // Fix #1326: user-submit-verification EF mock — returns submission_id
+        if (url.includes("user-submit-verification")) {
+          const body = JSON.parse((init.body as string) ?? "{}");
+          const subId = `sub-${body.application_id as string}`;
+          subAppMap[subId] = body.application_id as string;
+          return new Response(JSON.stringify({ submission_id: subId }), { status: 200 });
         }
         if (url.includes("partner-review-submission")) {
           const body = JSON.parse((init.body as string) ?? "{}");
@@ -283,25 +265,9 @@ Deno.test({
         },
         events: { select: makeEventSelectHandler() },
         verifications: { select: makeVerificationSelectHandler("verif-1") },
-        verification_submissions: {
-          insert: ({ values }: { values: unknown }) => {
-            const v = values as { id: string; application_id: string };
-            subAppMap[v.id] = v.application_id;
-            return { data: null, error: null };
-          },
-          select: ({ filters }: { filters: Record<string, unknown> }) => {
-            const subId = filters["id"] as string;
-            return {
-              data: {
-                id: subId,
-                status: appStatuses[subAppMap[subId]] ?? "rejected",
-                partner_id: "partner-1",
-                user_id: "user-1",
-                verification_id: "verif-1",
-              },
-              error: null,
-            };
-          },
+        // Fix #1326: user-submit-verification EF로 전환 — verification_submissions 직접 insert 제거
+        user_profiles: {
+          select: () => ({ data: { username: "user_001" }, error: null }),
         },
         partner_verified_users: {
           select: () => ({ data: { id: "pvu-1" }, error: null }),
@@ -317,6 +283,13 @@ Deno.test({
             JSON.stringify({ access_token: "mock-token", token_type: "bearer", expires_in: 3600, refresh_token: "r", user: {} }),
             { status: 200 },
           );
+        }
+        // Fix #1326: user-submit-verification EF mock — returns submission_id
+        if (url.includes("user-submit-verification")) {
+          const body = JSON.parse((init.body as string) ?? "{}");
+          const subId = `sub-${body.application_id as string}`;
+          subAppMap[subId] = body.application_id as string;
+          return new Response(JSON.stringify({ submission_id: subId }), { status: 200 });
         }
         if (url.includes("partner-review-submission")) {
           const body = JSON.parse((init.body as string) ?? "{}");
@@ -387,9 +360,9 @@ Deno.test({
         },
         events: { select: makeEventSelectHandler() },
         verifications: { select: makeVerificationSelectHandler("verif-1") },
-        verification_submissions: {
-          insert: () => ({ data: null, error: null }),
-          select: () => ({ data: { id: "sub-1", status: "pending" }, error: null }),
+        // Fix #1326: user-submit-verification EF로 전환 — verification_submissions 직접 insert 제거
+        user_profiles: {
+          select: () => ({ data: { username: "user_001" }, error: null }),
         },
       }),
     });
@@ -401,12 +374,17 @@ Deno.test({
 
     Deno.env.set("SIM_USER_PASSWORD", "test-password");
     try {
-      await withMockFetch((url) => {
+      await withMockFetch((url, init) => {
         if (url.includes("auth/v1/token")) {
           return new Response(
             JSON.stringify({ access_token: "mock-token", token_type: "bearer", expires_in: 3600, refresh_token: "r", user: {} }),
             { status: 200 },
           );
+        }
+        // Fix #1326: user-submit-verification EF mock — succeeds so partner-review-submission is reached
+        if (url.includes("user-submit-verification")) {
+          const body = JSON.parse((init.body as string) ?? "{}");
+          return new Response(JSON.stringify({ submission_id: `sub-${body.application_id as string}` }), { status: 200 });
         }
         // EF returns 500 — should not fall back, should throw
         if (url.includes("partner-review-submission")) {
@@ -456,21 +434,26 @@ Deno.test({
         },
         events: { select: makeEventSelectHandler() },
         verifications: { select: makeVerificationSelectHandler("verif-1") },
-        verification_submissions: {
-          insert: () => ({ data: null, error: null }),
-          select: () => ({ data: { id: "sub-1", status: "pending" }, error: null }),
+        // Fix #1326: user-submit-verification EF로 전환 — verification_submissions 직접 insert 제거
+        user_profiles: {
+          select: () => ({ data: { username: "user_001" }, error: null }),
         },
       }),
     });
 
     Deno.env.set("SIM_USER_PASSWORD", "test-password");
     try {
-      await withMockFetch((url) => {
+      await withMockFetch((url, init) => {
         if (url.includes("auth/v1/token")) {
           return new Response(
             JSON.stringify({ access_token: "mock-token", token_type: "bearer", expires_in: 3600, refresh_token: "r", user: {} }),
             { status: 200 },
           );
+        }
+        // Fix #1326: user-submit-verification EF mock — succeeds so partner-review-submission is reached
+        if (url.includes("user-submit-verification")) {
+          const body = JSON.parse((init.body as string) ?? "{}");
+          return new Response(JSON.stringify({ submission_id: `sub-${body.application_id as string}` }), { status: 200 });
         }
         if (url.includes("partner-review-submission")) {
           return new Response(JSON.stringify({ error: "internal" }), { status: 500 });
@@ -588,63 +571,88 @@ Deno.test({
   },
 });
 
-// Fix #1280: no-verification reject path remains direct DB (no reject EF available).
-Deno.test("simApproveVerifications - no verification needed: reject uses direct DB update", async () => {
-  const appIds = ["app-rej-1", "app-rej-2"];
-  const appStatuses: Record<string, string> = {};
+// Fix #1328: no-verification reject path now uses partner-reject-application EF.
+Deno.test({
+  name: "simApproveVerifications - no verification needed: reject uses partner-reject-application EF",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const appIds = ["app-rej-1", "app-rej-2"];
+    const appStatuses: Record<string, string> = {};
+    const efRejectIds: string[] = [];
 
-  const mock = createMockSupabaseClient({
-    tables: {
-      event_applications: {
-        select: ({ filters }: { filters: Record<string, unknown> }) => {
-          const appId = filters["id"] as string;
-          return {
+    const mock = createMockSupabaseClient({
+      ...makePartnerEmailMockOptions({
+        event_applications: {
+          select: ({ filters }: { filters: Record<string, unknown> }) => {
+            const appId = filters["id"] as string;
+            return {
+              data: {
+                id: appId,
+                event_id: "event-1",
+                ticket_id: "ticket-1",
+                user_id: "user-1",
+                status: appStatuses[appId] ?? "pending_review",
+              },
+              error: null,
+            };
+          },
+        },
+        events: {
+          select: () => ({
             data: {
-              id: appId,
-              event_id: "event-1",
-              ticket_id: "ticket-1",
-              user_id: "user-1",
-              status: appStatuses[appId] ?? "pending_review",
+              id: "event-1",
+              parties: {
+                partner_id: "partner-1",
+                required_verification_ids: [],
+              },
             },
             error: null,
-          };
+          }),
         },
-        update: ({ values, filters }: { values: unknown; filters: Record<string, unknown> }) => {
-          const appId = filters["id"] as string;
-          const v = values as { status: string };
-          appStatuses[appId] = v.status;
-          return { data: null, error: null };
+        verifications: {
+          select: makeVerificationSelectHandler(null),
         },
-      },
-      events: {
-        select: () => ({
-          data: {
-            id: "event-1",
-            parties: {
-              partner_id: "partner-1",
-              required_verification_ids: [],
-            },
-          },
-          error: null,
-        }),
-      },
-      verifications: {
-        select: makeVerificationSelectHandler(null),
-      },
-    },
-  });
+      }),
+    });
 
-  // approveRate=0.0 → all apps go to reject path (no EF available → direct DB)
-  // No supabaseUrl/anonKey needed since reject has no EF call
-  const result = await simApproveVerifications(
-    mock as unknown as SupabaseClient,
-    appIds,
-    noop,
-    0.0,
-  );
+    Deno.env.set("SIM_USER_PASSWORD", "test-password");
+    try {
+      await withMockFetch((url, init) => {
+        if (url.includes("auth/v1/token")) {
+          return new Response(
+            JSON.stringify({ access_token: "mock-token", token_type: "bearer", expires_in: 3600, refresh_token: "r", user: {} }),
+            { status: 200 },
+          );
+        }
+        // Fix #1328: partner-reject-application EF mock
+        if (url.includes("partner-reject-application")) {
+          const body = JSON.parse((init.body as string) ?? "{}");
+          const appId = body.application_id as string;
+          efRejectIds.push(appId);
+          appStatuses[appId] = "rejected";
+          return new Response(JSON.stringify({ success: true }), { status: 200 });
+        }
+        return new Response(JSON.stringify({}), { status: 404 });
+      }, async () => {
+        // approveRate=0.0 → all apps go to reject path → partner-reject-application EF
+        const result = await simApproveVerifications(
+          mock as unknown as SupabaseClient,
+          appIds,
+          noop,
+          0.0,
+          "https://mock.supabase.co",
+          "anon-key",
+        );
 
-  assertEquals(result.approvedApplicationIds.length, 0);
-  assertEquals(result.rejectedApplicationIds.length, 2);
-  assertEquals(appStatuses["app-rej-1"], "rejected");
-  assertEquals(appStatuses["app-rej-2"], "rejected");
+        assertEquals(result.approvedApplicationIds.length, 0);
+        assertEquals(result.rejectedApplicationIds.length, 2);
+        // EF was called for both apps
+        assertEquals(efRejectIds.includes("app-rej-1"), true);
+        assertEquals(efRejectIds.includes("app-rej-2"), true);
+      });
+    } finally {
+      Deno.env.delete("SIM_USER_PASSWORD");
+    }
+  },
 });
