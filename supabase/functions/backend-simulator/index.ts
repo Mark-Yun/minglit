@@ -17,6 +17,9 @@ import { simApproveVerifications } from "./sim_approve.ts";
 import { simRefundRequests } from "./sim_refund.ts";
 import { simCheckin, simCompleteEvents, simMatch } from "./sim_event.ts";
 import { simTransitionToReady, simVerifySettlement } from "./sim_settle.ts";
+import { tick } from "./tick/sim_tick.ts";
+import { DEFAULT_TICK_CONFIG } from "./tick/tick_types.ts";
+import type { TickConfig } from "./tick/tick_types.ts";
 import type {
   SimAssertionResult,
   SimConfig,
@@ -68,9 +71,10 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   // Parse request body
   let body: {
+    mode?: string;
     phase?: string;
     force_fail?: boolean;
-    config?: Partial<SimConfig>;
+    config?: Partial<SimConfig> | Partial<TickConfig>;
   } = {};
   try {
     if (req.headers.get("content-type")?.includes("application/json")) {
@@ -83,9 +87,10 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const config: SimConfig = { ...DEFAULT_CONFIG, ...(body.config ?? {}) };
   const forceFail = body.force_fail ?? false;
   const phase = body.phase;
+  const mode = body.mode;
 
   const runId = crypto.randomUUID();
-  log({ function: FN, level: "info", message: "invoked", metadata: { runId, phase: body.phase ?? "full", forceFail } });
+  log({ function: FN, level: "info", message: "invoked", metadata: { runId, mode: mode ?? "phase", phase: body.phase ?? "full", forceFail } });
 
   try {
 
@@ -101,6 +106,49 @@ Deno.serve(async (req: Request): Promise<Response> => {
       entry.data,
     );
   };
+
+  // ─────────────────────────────────────────────────────────
+  // Mode: "tick" → Continuous tick simulation
+  // ─────────────────────────────────────────────────────────
+
+  if (mode === "tick") {
+    const tickConfig: TickConfig = {
+      ...DEFAULT_TICK_CONFIG,
+      ...(body.config as Partial<TickConfig> ?? {}),
+    };
+
+    const summary = await tick(supabase, supabaseUrl, anonKey, logFn, tickConfig);
+
+    // Create GitHub issue on failures
+    if (summary.failed > 0) {
+      const simSummary = {
+        total_checks: summary.total_actions,
+        passed: summary.passed,
+        failed: summary.failed,
+        assertion_results: summary.results
+          .filter((r) => !r.passed)
+          .map((r) => ({
+            check_name: `${r.actionType}:${r.description}`,
+            passed: false,
+            expected: "success",
+            actual: r.error
+              ? String(r.error)
+              : r.efAssertion?.details ?? r.dbAssertion?.details ?? "failed",
+          })),
+      };
+      const logText = collector.formatAsText();
+      const logUrl = await simUploadLog(supabase, runId, logText);
+      await simCreateGitHubIssue(simSummary, logUrl, runId, logText);
+    }
+
+    return new Response(
+      JSON.stringify({ success: summary.failed === 0, run_id: runId, ...summary }),
+      {
+        status: summary.failed > 0 ? 500 : 200,
+        headers: { "Content-Type": "application/json" },
+      },
+    );
+  }
 
   // ─────────────────────────────────────────────────────────
   // Phase routing
