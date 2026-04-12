@@ -11,7 +11,6 @@ import {
   type FetchRoute,
 } from "../_test_utils/mock_http.ts";
 
-const TEST_OPTS = { sanitizeOps: false, sanitizeResources: false };
 
 const ENV = {
   SUPABASE_URL: "https://supabase.test",
@@ -114,7 +113,7 @@ const rulesUpdateRoute: FetchRoute = {
 
 // ─── Auth tests ───────────────────────────────────────────────────────────────
 
-Deno.test("recurrence-cron - missing auth returns 401", TEST_OPTS, async () => {
+Deno.test("recurrence-cron - missing auth returns 401", async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(
       new URL("./index.ts", import.meta.url),
@@ -127,7 +126,7 @@ Deno.test("recurrence-cron - missing auth returns 401", TEST_OPTS, async () => {
   });
 });
 
-Deno.test("recurrence-cron - wrong service role key returns 401", TEST_OPTS, async () => {
+Deno.test("recurrence-cron - wrong service role key returns 401", async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(
       new URL("./index.ts", import.meta.url),
@@ -143,7 +142,7 @@ Deno.test("recurrence-cron - wrong service role key returns 401", TEST_OPTS, asy
   });
 });
 
-Deno.test("recurrence-cron - OPTIONS preflight returns 200", TEST_OPTS, async () => {
+Deno.test("recurrence-cron - OPTIONS preflight returns 200", async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(
       new URL("./index.ts", import.meta.url),
@@ -159,9 +158,7 @@ Deno.test("recurrence-cron - OPTIONS preflight returns 200", TEST_OPTS, async ()
 // ─── Happy path: weekly rule generates correct events ──────────────────────────
 
 Deno.test(
-  "recurrence-cron - weekly rule with 2 days generates ~8-9 events over 30 days",
-  TEST_OPTS,
-  async () => {
+  "recurrence-cron - weekly rule with 2 days generates ~8-9 events over 30 days", async () => {
     await withEnv(ENV, async () => {
       const handler = await captureServeHandler(
         new URL("./index.ts", import.meta.url),
@@ -202,9 +199,7 @@ Deno.test(
 // ─── Paused rules are skipped ──────────────────────────────────────────────────
 
 Deno.test(
-  "recurrence-cron - paused rule is not returned by query and generates 0 events",
-  TEST_OPTS,
-  async () => {
+  "recurrence-cron - paused rule is not returned by query and generates 0 events", async () => {
     await withEnv(ENV, async () => {
       const handler = await captureServeHandler(
         new URL("./index.ts", import.meta.url),
@@ -232,9 +227,7 @@ Deno.test(
 // ─── Cancelled rules are skipped ──────────────────────────────────────────────
 
 Deno.test(
-  "recurrence-cron - cancelled rule generates 0 events",
-  TEST_OPTS,
-  async () => {
+  "recurrence-cron - cancelled rule generates 0 events", async () => {
     await withEnv(ENV, async () => {
       const handler = await captureServeHandler(
         new URL("./index.ts", import.meta.url),
@@ -262,9 +255,7 @@ Deno.test(
 // ─── end_date in the past → 0 events ─────────────────────────────────────────
 
 Deno.test(
-  "recurrence-cron - rule with end_date in the past generates 0 events",
-  TEST_OPTS,
-  async () => {
+  "recurrence-cron - rule with end_date in the past generates 0 events", async () => {
     await withEnv(ENV, async () => {
       const handler = await captureServeHandler(
         new URL("./index.ts", import.meta.url),
@@ -296,9 +287,7 @@ Deno.test(
 // ─── end_date in 10 days → events only up to end_date ─────────────────────────
 
 Deno.test(
-  "recurrence-cron - rule with end_date in 10 days limits event generation",
-  TEST_OPTS,
-  async () => {
+  "recurrence-cron - rule with end_date in 10 days limits event generation", async () => {
     await withEnv(ENV, async () => {
       const handler = await captureServeHandler(
         new URL("./index.ts", import.meta.url),
@@ -347,9 +336,7 @@ Deno.test(
 // ─── Monthly pattern: generates only on month_day ─────────────────────────────
 
 Deno.test(
-  "recurrence-cron - monthly rule generates events only on month_day",
-  TEST_OPTS,
-  async () => {
+  "recurrence-cron - monthly rule generates events only on month_day", async () => {
     // Freeze clock at 2026-04-05: window = [2026-04-05, 2026-05-05]
     // month_day=15 → only 2026-04-15 qualifies → exactly 1 event
     const fakeTime = new FakeTime("2026-04-05T00:00:00Z");
@@ -403,7 +390,6 @@ Deno.test(
 
 Deno.test(
   "recurrence-cron - duplicate events (23505) are counted as skipped, not errors",
-  TEST_OPTS,
   async () => {
     // Freeze clock: window [2026-04-05, 2026-05-05], month_day=15 → exactly 1 candidate date
     const fakeTime = new FakeTime("2026-04-05T00:00:00Z");
@@ -449,9 +435,7 @@ Deno.test(
 // ─── entry_group_templates + ticket_templates are copied ──────────────────────
 
 Deno.test(
-  "recurrence-cron - entry_group_templates and ticket_templates are copied for each event",
-  TEST_OPTS,
-  async () => {
+  "recurrence-cron - entry_group_templates and ticket_templates are copied for each event", async () => {
     // Freeze clock: window [2026-04-05, 2026-05-05], month_day=15 → exactly 1 event
     const fakeTime = new FakeTime("2026-04-05T00:00:00Z");
     try {
@@ -546,9 +530,7 @@ Deno.test(
 // ─── No active rules → processed=0 ───────────────────────────────────────────
 
 Deno.test(
-  "recurrence-cron - no active rules returns processed=0",
-  TEST_OPTS,
-  async () => {
+  "recurrence-cron - no active rules returns processed=0", async () => {
     await withEnv(ENV, async () => {
       const handler = await captureServeHandler(
         new URL("./index.ts", import.meta.url),

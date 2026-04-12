@@ -11,12 +11,11 @@ const ANON_KEY = "test-anon-key";
 
 /**
  * Creates a fetch mock that handles:
- *   - POST /auth/v1/token → returns a JWT (triggers supabase-js token refresh interval)
+ *   - POST /auth/v1/token → returns a JWT
  *   - POST /functions/v1/user-cancel-order → returns configured response
  *
  * Fix #1327: payment-cancel EF → user-cancel-order EF로 전환.
- * Tests that use this mock must set sanitizeOps: false to avoid interval leak
- * failures caused by the supabase-js client's token refresh timer.
+ * Fix #1292: sim_auth.ts에서 autoRefreshToken: false로 interval 누수 해결됨.
  */
 function makeEfFetchMock(opts: {
   cancelOrderStatus?: number;
@@ -161,14 +160,10 @@ Deno.test("simRefundRequests - refundRate=0.0 → no refunds processed", async (
 
 // ============================================================
 // Tests: EF-only refund path
-// sanitizeOps: false required — supabase-js createClient starts a token refresh
-// interval after signIn succeeds, which outlives the test scope.
 // ============================================================
 
 Deno.test({
   name: "simRefundRequests - 100% refund (event +30 days) → refund via EF",
-  sanitizeOps: false,
-  sanitizeResources: false,
   fn: async () => {
     const paymentAmount = 10000;
     const startTime = daysFromNow(30);
@@ -208,8 +203,6 @@ Deno.test({
 
 Deno.test({
   name: "simRefundRequests - 0% refund (event +5 days, binary policy) → refund_amount=0 via EF",
-  sanitizeOps: false,
-  sanitizeResources: false,
   fn: async () => {
     const paymentAmount = 10000;
     const startTime = daysFromNow(5);
@@ -247,8 +240,6 @@ Deno.test({
 
 Deno.test({
   name: "simRefundRequests - 0% refund (event +2 days, binary policy) → refund_amount=0 via EF",
-  sanitizeOps: false,
-  sanitizeResources: false,
   fn: async () => {
     const paymentAmount = 9999;
     const startTime = daysFromNow(2);
@@ -286,8 +277,6 @@ Deno.test({
 
 Deno.test({
   name: "simRefundRequests - 0% refund (+12 hours) → refund_amount=0 via EF",
-  sanitizeOps: false,
-  sanitizeResources: false,
   fn: async () => {
     const paymentAmount = 10000;
     const startTime = hoursFromNow(12);
@@ -327,8 +316,6 @@ Deno.test({
 // The sim no longer calls event_participants.delete directly.
 Deno.test({
   name: "simRefundRequests - EF succeeds → refund recorded (participant cleanup handled by EF)",
-  sanitizeOps: false,
-  sanitizeResources: false,
   fn: async () => {
     const paymentAmount = 5000;
     const startTime = daysFromNow(30);
@@ -363,8 +350,6 @@ Deno.test({
 
 Deno.test({
   name: "simRefundRequests - 20% of 5 apps → 1 refunded via EF",
-  sanitizeOps: false,
-  sanitizeResources: false,
   fn: async () => {
     const paymentAmount = 10000;
     const startTime = daysFromNow(30);
@@ -429,7 +414,8 @@ Deno.test({
 // Tests: error cases — EF failure throws (no direct DB fallback)
 // ============================================================
 
-Deno.test({ name: "simRefundRequests - missing supabaseUrl → error logged, no refunds", sanitizeOps: false, sanitizeResources: false, fn: async () => {
+// Fix #1292: sanitizer 복원 — autoRefreshToken: false로 supabase-js interval 누수 해결
+Deno.test({ name: "simRefundRequests - missing supabaseUrl → error logged, no refunds", fn: async () => {
   const paymentAmount = 10000;
   const startTime = daysFromNow(30);
 
@@ -516,8 +502,6 @@ Deno.test("simRefundRequests - partner username → error logged, no refunds", a
 
 Deno.test({
   name: "simRefundRequests - EF returns non-200 → error logged, no refunds, no DB fallback",
-  sanitizeOps: false,
-  sanitizeResources: false,
   fn: async () => {
     const paymentAmount = 10000;
     const startTime = daysFromNow(30);

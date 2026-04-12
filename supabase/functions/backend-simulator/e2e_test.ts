@@ -258,8 +258,6 @@ function createBroadMock() {
 
 Deno.test({
   name: "backend-simulator - blocks in production",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const h = await getHandler();
 
@@ -272,8 +270,6 @@ Deno.test({
 
 Deno.test({
   name: "backend-simulator - full run returns success structure",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const h = await getHandler();
     const { fetchMock } = createBroadMock();
@@ -312,8 +308,6 @@ Deno.test({
 
 Deno.test({
   name: "backend-simulator - force_fail creates failure and GitHub issue",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const h = await getHandler();
     const { fetchMock } = createBroadMock();
@@ -346,8 +340,6 @@ Deno.test({
 
 Deno.test({
   name: "backend-simulator - phase=create returns party_ids and event_ids",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const h = await getHandler();
     const { fetchMock } = createBroadMock();
@@ -380,8 +372,6 @@ Deno.test({
 
 Deno.test({
   name: "backend-simulator - phase=verify returns verification summary",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const h = await getHandler();
     const { fetchMock } = createBroadMock();
@@ -425,8 +415,6 @@ Deno.test({
 
 Deno.test({
   name: "backend-simulator - phase=run only processes [E2E] events (non-E2E events remain scheduled)",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const h = await getHandler();
 
@@ -531,8 +519,6 @@ Deno.test({
 
 Deno.test({
   name: "backend-simulator - phase=create response includes display_party_ids and display_event_ids",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const h = await getHandler();
 

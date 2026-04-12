@@ -71,8 +71,6 @@ function updateErrorRoute(): FetchRoute {
 // ─── CORS preflight ───
 Deno.test({
   name: "handles OPTIONS preflight request",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([]);
@@ -91,8 +89,6 @@ Deno.test({
 // ─── 401: no auth ───
 Deno.test({
   name: "returns 401 without authorization",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authFailRoute()]);
@@ -114,8 +110,6 @@ Deno.test({
 // ─── 400: missing action ───
 Deno.test({
   name: "returns 400 for missing action",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
@@ -136,8 +130,6 @@ Deno.test({
 // ─── 400: unknown action ───
 Deno.test({
   name: "returns 400 for unknown action",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
@@ -158,8 +150,6 @@ Deno.test({
 // ─── update_role: success ───
 Deno.test({
   name: "update_role: updates role successfully",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -189,8 +179,6 @@ Deno.test({
 // ─── update_role: verify payload sent to DB ───
 Deno.test({
   name: "update_role: sends correct payload to DB",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     let updateBody: string | null = null;
@@ -230,8 +218,6 @@ Deno.test({
 // ─── update_role: missing partner_id → 400 ───
 Deno.test({
   name: "update_role: returns 400 for missing partner_id",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
@@ -256,8 +242,6 @@ Deno.test({
 // ─── update_role: missing user_id → 400 ───
 Deno.test({
   name: "update_role: returns 400 for missing user_id",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
@@ -282,8 +266,6 @@ Deno.test({
 // ─── update_role: missing role → 400 ───
 Deno.test({
   name: "update_role: returns 400 for missing role",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
@@ -308,8 +290,6 @@ Deno.test({
 // ─── update_role: invalid role → 400 ───
 Deno.test({
   name: "update_role: returns 400 for invalid role",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
@@ -335,8 +315,6 @@ Deno.test({
 // ─── update_role: self role change → 400 ───
 Deno.test({
   name: "update_role: returns 400 when changing own role",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
@@ -362,8 +340,6 @@ Deno.test({
 // ─── update_role: 403 no permission ───
 Deno.test({
   name: "update_role: returns 403 when user lacks MEMBER_MANAGE permission",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -390,8 +366,6 @@ Deno.test({
 // ─── update_role: 500 permission DB error ───
 Deno.test({
   name: "update_role: returns 500 when permission query fails",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -420,8 +394,6 @@ Deno.test({
 // ─── update_role: 500 update error ───
 Deno.test({
   name: "update_role: returns 500 when update fails",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -449,8 +421,6 @@ Deno.test({
 // ─── update_permissions: success ───
 Deno.test({
   name: "update_permissions: updates permissions successfully",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -480,8 +450,6 @@ Deno.test({
 // ─── update_permissions: verify payload sent to DB ───
 Deno.test({
   name: "update_permissions: sends correct payload to DB",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     let updateBody: string | null = null;
@@ -521,8 +489,6 @@ Deno.test({
 // ─── update_permissions: missing partner_id → 400 ───
 Deno.test({
   name: "update_permissions: returns 400 for missing partner_id",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
@@ -547,8 +513,6 @@ Deno.test({
 // ─── update_permissions: missing user_id → 400 ───
 Deno.test({
   name: "update_permissions: returns 400 for missing user_id",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
@@ -573,8 +537,6 @@ Deno.test({
 // ─── update_permissions: missing permissions → 400 ───
 Deno.test({
   name: "update_permissions: returns 400 for missing permissions",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
@@ -599,8 +561,6 @@ Deno.test({
 // ─── update_permissions: invalid permission → 400 ───
 Deno.test({
   name: "update_permissions: returns 400 for invalid permission",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
@@ -626,8 +586,6 @@ Deno.test({
 // ─── update_permissions: 403 no permission ───
 Deno.test({
   name: "update_permissions: returns 403 when user lacks MEMBER_MANAGE permission",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -654,8 +612,6 @@ Deno.test({
 // ─── update_permissions: 500 update error ───
 Deno.test({
   name: "update_permissions: returns 500 when update fails",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([

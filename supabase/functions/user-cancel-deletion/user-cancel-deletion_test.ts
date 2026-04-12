@@ -11,7 +11,6 @@ import {
 } from "../_test_utils/mock_http.ts";
 import { authRoute } from "../_test_utils/fixtures.ts";
 
-const TEST_OPTS = { sanitizeOps: false, sanitizeResources: false };
 
 const ENV = {
   SUPABASE_URL: "https://supabase.test",
@@ -32,7 +31,7 @@ const restoreRoute = {
   handler: () => jsonResponse({}),
 };
 
-Deno.test("인증 없는 요청 → 401", TEST_OPTS, async () => {
+Deno.test("인증 없는 요청 → 401", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock } = createFetchMock([]);
@@ -50,7 +49,7 @@ Deno.test("인증 없는 요청 → 401", TEST_OPTS, async () => {
   });
 });
 
-Deno.test("유예 기간 중 취소 → deleted_at 복구", TEST_OPTS, async () => {
+Deno.test("유예 기간 중 취소 → deleted_at 복구", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
   const deletedAt = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
 
@@ -79,7 +78,7 @@ Deno.test("유예 기간 중 취소 → deleted_at 복구", TEST_OPTS, async () 
   });
 });
 
-Deno.test("deleted_at 이 null인 유저 → 404", TEST_OPTS, async () => {
+Deno.test("deleted_at 이 null인 유저 → 404", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock } = createFetchMock([
@@ -100,7 +99,7 @@ Deno.test("deleted_at 이 null인 유저 → 404", TEST_OPTS, async () => {
   });
 });
 
-Deno.test("유예 기간 초과 → 400", TEST_OPTS, async () => {
+Deno.test("유예 기간 초과 → 400", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
   const deletedAt = new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString();
 

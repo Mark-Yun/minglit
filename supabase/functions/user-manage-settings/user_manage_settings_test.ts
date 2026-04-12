@@ -12,7 +12,6 @@ import {
 } from "../_test_utils/mock_http.ts";
 import { authRoute } from "../_test_utils/fixtures.ts";
 
-const TEST_OPTS = { sanitizeOps: false, sanitizeResources: false };
 
 const ENV = {
   SUPABASE_URL: "https://supabase.test",
@@ -50,7 +49,7 @@ function dbUpsertSettingsRoute(overrides?: Record<string, unknown>) {
 
 // ===== upsert_token tests =====
 
-Deno.test("upsert_token — 정상 등록", TEST_OPTS, async () => {
+Deno.test("upsert_token — 정상 등록", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock, calls } = createFetchMock([
@@ -85,7 +84,7 @@ Deno.test("upsert_token — 정상 등록", TEST_OPTS, async () => {
   });
 });
 
-Deno.test("upsert_token — 같은 토큰 재등록 → last_updated_at 갱신", TEST_OPTS, async () => {
+Deno.test("upsert_token — 같은 토큰 재등록 → last_updated_at 갱신", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock, calls } = createFetchMock([
@@ -117,7 +116,7 @@ Deno.test("upsert_token — 같은 토큰 재등록 → last_updated_at 갱신",
   });
 });
 
-Deno.test("upsert_token — token 누락 → 400", TEST_OPTS, async () => {
+Deno.test("upsert_token — token 누락 → 400", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock } = createFetchMock([authRoute]);
@@ -139,7 +138,7 @@ Deno.test("upsert_token — token 누락 → 400", TEST_OPTS, async () => {
   });
 });
 
-Deno.test("upsert_token — 잘못된 device_type → 400", TEST_OPTS, async () => {
+Deno.test("upsert_token — 잘못된 device_type → 400", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock } = createFetchMock([authRoute]);
@@ -167,7 +166,7 @@ Deno.test("upsert_token — 잘못된 device_type → 400", TEST_OPTS, async () 
 
 // ===== delete_token tests =====
 
-Deno.test("delete_token — 정상 삭제", TEST_OPTS, async () => {
+Deno.test("delete_token — 정상 삭제", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock, calls } = createFetchMock([
@@ -197,7 +196,7 @@ Deno.test("delete_token — 정상 삭제", TEST_OPTS, async () => {
   });
 });
 
-Deno.test("delete_token — 존재하지 않는 토큰 → 에러 없이 성공", TEST_OPTS, async () => {
+Deno.test("delete_token — 존재하지 않는 토큰 → 에러 없이 성공", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock } = createFetchMock([
@@ -222,7 +221,7 @@ Deno.test("delete_token — 존재하지 않는 토큰 → 에러 없이 성공"
   });
 });
 
-Deno.test("delete_token — token 누락 → 400", TEST_OPTS, async () => {
+Deno.test("delete_token — token 누락 → 400", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock } = createFetchMock([authRoute]);
@@ -245,7 +244,7 @@ Deno.test("delete_token — token 누락 → 400", TEST_OPTS, async () => {
 
 // ===== update_settings tests =====
 
-Deno.test("update_settings — marketing_consent 변경 → DB 반영", TEST_OPTS, async () => {
+Deno.test("update_settings — marketing_consent 변경 → DB 반영", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock, calls } = createFetchMock([
@@ -278,7 +277,7 @@ Deno.test("update_settings — marketing_consent 변경 → DB 반영", TEST_OPT
   });
 });
 
-Deno.test("update_settings — service_notification 변경", TEST_OPTS, async () => {
+Deno.test("update_settings — service_notification 변경", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock } = createFetchMock([
@@ -304,7 +303,7 @@ Deno.test("update_settings — service_notification 변경", TEST_OPTS, async ()
   });
 });
 
-Deno.test("update_settings — 허용되지 않은 필드만 → 400", TEST_OPTS, async () => {
+Deno.test("update_settings — 허용되지 않은 필드만 → 400", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock } = createFetchMock([authRoute]);
@@ -329,7 +328,7 @@ Deno.test("update_settings — 허용되지 않은 필드만 → 400", TEST_OPTS
   });
 });
 
-Deno.test("update_settings — boolean이 아닌 값 → 400", TEST_OPTS, async () => {
+Deno.test("update_settings — boolean이 아닌 값 → 400", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock } = createFetchMock([authRoute]);
@@ -351,7 +350,7 @@ Deno.test("update_settings — boolean이 아닌 값 → 400", TEST_OPTS, async 
   });
 });
 
-Deno.test("update_settings — settings 누락 → 400", TEST_OPTS, async () => {
+Deno.test("update_settings — settings 누락 → 400", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock } = createFetchMock([authRoute]);
@@ -374,7 +373,7 @@ Deno.test("update_settings — settings 누락 → 400", TEST_OPTS, async () => 
 
 // ===== Auth & Edge cases =====
 
-Deno.test("인증 없이 호출 → 401", TEST_OPTS, async () => {
+Deno.test("인증 없이 호출 → 401", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock } = createFetchMock([
@@ -400,7 +399,7 @@ Deno.test("인증 없이 호출 → 401", TEST_OPTS, async () => {
   });
 });
 
-Deno.test("잘못된 action → 400", TEST_OPTS, async () => {
+Deno.test("잘못된 action → 400", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock } = createFetchMock([authRoute]);
@@ -421,7 +420,7 @@ Deno.test("잘못된 action → 400", TEST_OPTS, async () => {
   });
 });
 
-Deno.test("action 누락 → 400", TEST_OPTS, async () => {
+Deno.test("action 누락 → 400", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock } = createFetchMock([authRoute]);
@@ -442,7 +441,7 @@ Deno.test("action 누락 → 400", TEST_OPTS, async () => {
   });
 });
 
-Deno.test("malformed JSON → 400", TEST_OPTS, async () => {
+Deno.test("malformed JSON → 400", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock } = createFetchMock([authRoute]);

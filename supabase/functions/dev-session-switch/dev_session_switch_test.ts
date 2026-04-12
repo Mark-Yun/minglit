@@ -10,8 +10,6 @@ import {
 
 Deno.test({
   name: "dev-session-switch - blocks in production (ENVIRONMENT=production)",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     
@@ -26,8 +24,6 @@ Deno.test({
 
 Deno.test({
   name: "dev-session-switch - returns user profiles in local env",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     
@@ -61,8 +57,6 @@ Deno.test({
 
 Deno.test({
   name: "dev-session-switch - handles Supabase error",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     
