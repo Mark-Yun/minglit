@@ -441,7 +441,14 @@ Deno.test({
   },
 });
 
-Deno.test("simCreateParties - throws when EF fails and strict=true", async () => {
+// sanitizeResources/sanitizeOps disabled: @supabase/auth-js internally calls setInterval for
+// token auto-refresh even when persistSession=false. The interval leaks within the test but is
+// harmless — suppressing the leak check is correct here rather than patching the library.
+Deno.test({
+  name: "simCreateParties - throws when EF fails and strict=true",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
   const mock = createMockSupabaseClient({
     tables: {
       partners: { select: () => ({ data: [{ id: "partner-1" }], error: null }) },
@@ -482,6 +489,7 @@ Deno.test("simCreateParties - throws when EF fails and strict=true", async () =>
   } finally {
     Deno.env.delete("SIM_USER_PASSWORD");
   }
+  },
 });
 
 Deno.test("simCreateParties - direct DB path when supabaseUrl/anonKey not provided", async () => {
@@ -753,7 +761,14 @@ Deno.test({
   },
 });
 
-Deno.test("simDiscoverAndApply - skips when credentials not available", async () => {
+// sanitizeResources/sanitizeOps disabled: @supabase/auth-js internally calls setInterval for
+// token auto-refresh even when persistSession=false. The interval leaks within the test but is
+// harmless — suppressing the leak check is correct here rather than patching the library.
+Deno.test({
+  name: "simDiscoverAndApply - skips when credentials not available",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
   const warnings: string[] = [];
   const warnLog = (entry: { level: string; message: string }) => {
     if (entry.level === "error" || entry.level === "warn") warnings.push(entry.message);
@@ -795,6 +810,7 @@ Deno.test("simDiscoverAndApply - skips when credentials not available", async ()
   assertEquals(result.applicationIds.length, 0);
   // A warning/error about missing credentials was logged
   assertEquals(warnings.some((w) => w.includes("SIM_USER_PASSWORD") || w.includes("supabaseUrl") || w.includes("cannot")), true);
+  },
 });
 
 // sanitizeResources/sanitizeOps disabled: @supabase/auth-js internally calls setInterval for
