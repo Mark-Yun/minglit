@@ -617,10 +617,9 @@ async function applyForEvent(
     appliedUserIds.add(user.id);
     appsCreated++;
 
-    // free = 무료 신청 완료 (DB status='paid'), paid = 결제 대기 (payment_pending)
-    // 시뮬레이터에서 free는 이미 완료 상태이므로 paidApplicationIds에 분류
+    // free = 파트너 승인 대기 (pendingReview), paid = 결제 완료 후 refund 시뮬레이션 대상
     if (efData.type === "free") {
-      paidApplicationIds.push(newAppId);
+      pendingReviewApplicationIds.push(newAppId);
     } else {
       // paid = PG 결제 필요 — 시뮬레이터에서는 결제 시뮬레이션 후 paid로 전이
       paidApplicationIds.push(newAppId);

@@ -888,6 +888,8 @@ Deno.test({
       assertEquals(body.event_id, "target-event-1");
       assertEquals(body.ticket_id, "ticket-99");
       // EF body must NOT contain RPC-era parameters
+      assertEquals(body.p_event_id, undefined);
+      assertEquals(body.p_ticket_id, undefined);
       assertEquals(body.p_user_id, undefined);
       assertEquals(body.p_payment_id, undefined);
       assertEquals(body.p_payment_amount, undefined);
@@ -963,10 +965,10 @@ Deno.test({
         "anon-key",
       );
 
-      // Free application = already confirmed (DB status='paid'), goes into paidApplicationIds
+      // Free application = partner approval pending, goes into pendingReviewApplicationIds
       assertEquals(result.applicationIds, ["free-app-1"]);
-      assertEquals(result.paidApplicationIds, ["free-app-1"]);
-      assertEquals(result.pendingReviewApplicationIds, []);
+      assertEquals(result.paidApplicationIds, []);
+      assertEquals(result.pendingReviewApplicationIds, ["free-app-1"]);
     });
   } finally {
     Deno.env.delete("SIM_USER_PASSWORD");
