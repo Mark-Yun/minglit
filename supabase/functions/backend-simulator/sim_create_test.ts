@@ -1,6 +1,6 @@
-import { assertEquals, assertRejects, assertStringIncludes } from "@std/assert";
+import { assertEquals, assertRejects } from "@std/assert";
 import { createMockSupabaseClient } from "../_test_utils/mock_supabase_client.ts";
-import { simCreateParties, simDiscoverAndApply } from "./sim_create.ts";
+import { simCreateParties, simCreateDisplayEvents, simDiscoverAndApply } from "./sim_create.ts";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { SimConfig } from "./sim_types.ts";
 
@@ -18,97 +18,7 @@ const DEFAULT_CONFIG: SimConfig = {
 
 const noop = () => {};
 
-Deno.test("simCreateParties - creates parties with [E2E] prefix", async () => {
-  const createdParties: unknown[] = [];
-  const createdEvents: unknown[] = [];
-  const createdGroups: unknown[] = [];
-  const createdTickets: unknown[] = [];
-
-  const mock = createMockSupabaseClient({
-    tables: {
-      partners: { select: () => ({ data: [{ id: "partner-1" }, { id: "partner-2" }], error: null }) },
-      locations: { select: () => ({ data: { id: "loc-1" }, error: null }) },
-      parties: {
-        insert: ({ values }: { values: unknown }) => {
-          createdParties.push(values);
-          return { data: { id: "party-1" }, error: null };
-        },
-      },
-      events: {
-        insert: ({ values }) => {
-          createdEvents.push(values as { start_time: string });
-          return { data: { id: `event-${createdEvents.length}` }, error: null };
-        },
-      },
-      entry_groups: {
-        insert: ({ values }: { values: unknown }) => {
-          createdGroups.push(values);
-          return { data: { id: `group-${createdGroups.length}` }, error: null };
-        },
-      },
-      tickets: {
-        insert: ({ values }: { values: unknown }) => {
-          createdTickets.push(values);
-          return { data: null, error: null };
-        },
-      },
-    },
-  });
-
-  await simCreateParties(mock as unknown as SupabaseClient, DEFAULT_CONFIG, noop);
-
-  assertEquals(createdParties.length, 2);
-  const party = createdParties[0] as { title: string };
-  assertStringIncludes(party.title, "[E2E]");
-  assertEquals(createdEvents.length, 4);
-});
-
-Deno.test("simCreateParties - creates 4 distinct start_time zones", async () => {
-  const createdEvents: { start_time: string }[] = [];
-
-  const mock = createMockSupabaseClient({
-    tables: {
-      partners: { select: () => ({ data: [{ id: "partner-1" }], error: null }) },
-      locations: { select: () => ({ data: { id: "loc-1" }, error: null }) },
-      parties: { insert: () => ({ data: { id: "party-1" }, error: null }) },
-      events: {
-        insert: ({ values }) => {
-          const v = values as { start_time: string };
-          createdEvents.push(v);
-          return { data: { id: `event-${createdEvents.length}` }, error: null };
-        },
-      },
-      entry_groups: { insert: () => ({ data: { id: "group-1" }, error: null }) },
-      tickets: { insert: () => ({ data: null, error: null }) },
-    },
-  });
-
-  const config: SimConfig = { ...DEFAULT_CONFIG, party_count: 1, events_per_party: 4 };
-  await simCreateParties(mock as unknown as SupabaseClient, config, noop);
-
-  assertEquals(createdEvents.length, 4);
-  const now = Date.now();
-  const times = createdEvents.map((e) => new Date(e.start_time).getTime());
-
-  const plusTwoDays = now + 2 * 24 * 60 * 60 * 1000;
-  const plusFiveDays = now + 5 * 24 * 60 * 60 * 1000;
-  const plusThirtyDays = now + 30 * 24 * 60 * 60 * 1000;
-  const plusTwelveHours = now + 12 * 60 * 60 * 1000;
-
-  const allAboveTwoHours = times.every((t) => t - now > 2 * 60 * 60 * 1000);
-  assertEquals(allAboveTwoHours, true);
-
-  const hasManyDaysApart = times.some((t) => t > plusThirtyDays - 60000);
-  assertEquals(hasManyDaysApart, true);
-  const hasFiveDays = times.some((t) => t > plusFiveDays - 60000 && t < plusFiveDays + 60000);
-  assertEquals(hasFiveDays, true);
-  const hasTwoDays = times.some((t) => t > plusTwoDays - 60000 && t < plusTwoDays + 60000);
-  assertEquals(hasTwoDays, true);
-  const hasTwelveHours = times.some((t) => t > plusTwelveHours - 60000 && t < plusTwelveHours + 60000);
-  assertEquals(hasTwelveHours, true);
-});
-
-// ── EF path tests ────────────────────────────────────────────────────────────
+// ── simCreateParties / simCreateDisplayEvents EF-only tests ──────────────────
 
 // Intercept module-level EF calls via mock fetch. We replace globalThis.fetch
 // for the duration of the test to simulate EF responses without a real server.
@@ -129,12 +39,11 @@ function withMockFetch<T>(
 // token auto-refresh even when persistSession=false. The interval leaks within the test but is
 // harmless — suppressing the leak check is correct here rather than patching the library.
 Deno.test({
-  name: "simCreateParties - uses EF path when supabaseUrl/anonKey provided and EF succeeds",
+  name: "simCreateParties - creates parties and events via EF and returns IDs",
   sanitizeResources: false,
   sanitizeOps: false,
   fn: async () => {
   const efCalls: { url: string; body: unknown }[] = [];
-  const directInserts: string[] = [];
 
   const mock = createMockSupabaseClient({
     tables: {
@@ -142,21 +51,6 @@ Deno.test({
       locations: { select: () => ({ data: { id: "loc-1" }, error: null }) },
       partner_members: { select: () => ({ data: [{ user_id: "partner-user-1" }], error: null }) },
       ticket_templates: { select: () => ({ data: [{ id: "tmpl-1", name: "일반" }], error: null }) },
-      // direct DB inserts should NOT be called on EF success path
-      parties: {
-        insert: ({ values }: { values: unknown }) => {
-          directInserts.push("party");
-          return { data: { id: "direct-party" }, error: null };
-        },
-      },
-      events: {
-        insert: ({ values }: { values: unknown }) => {
-          directInserts.push("event");
-          return { data: { id: "direct-event" }, error: null };
-        },
-      },
-      entry_groups: { insert: () => ({ data: { id: "grp-1" }, error: null }) },
-      tickets: { insert: () => ({ data: null, error: null }) },
     },
     authAdminGetUserById: (_userId: string) => ({ data: { user: { email: "partner1@test.com" } }, error: null }),
   });
@@ -165,111 +59,34 @@ Deno.test({
 
   Deno.env.set("SIM_USER_PASSWORD", "test-password");
   try {
-  await withMockFetch((url, init) => {
-    const body = JSON.parse((init.body as string) ?? "{}");
-    efCalls.push({ url, body });
+    await withMockFetch((url, init) => {
+      const body = JSON.parse((init.body as string) ?? "{}");
+      efCalls.push({ url, body });
 
-    if (url.includes("auth/v1/token")) {
-      // Simulate successful partner sign-in
-      return new Response(JSON.stringify({ access_token: "mock-token", token_type: "bearer", expires_in: 3600, refresh_token: "r", user: {} }), { status: 200 });
-    }
-    if (url.includes("partner-manage-party")) {
-      return new Response(JSON.stringify({ success: true, party_id: "ef-party-1" }), { status: 200 });
-    }
-    if (url.includes("partner-manage-event")) {
-      return new Response(JSON.stringify({ success: true, event_id: "ef-event-1" }), { status: 200 });
-    }
-    return new Response(JSON.stringify({}), { status: 404 });
-  }, async () => {
-    const result = await simCreateParties(
-      mock as unknown as SupabaseClient,
-      config,
-      noop,
-      "https://mock.supabase.co",
-      "anon-key",
-    );
-
-    assertEquals(result.partyIds, ["ef-party-1"]);
-    assertEquals(result.eventIds, ["ef-event-1"]);
-    // Direct DB inserts should not have been called for party/event
-    assertEquals(directInserts.filter((d) => d === "party").length, 0);
-    assertEquals(directInserts.filter((d) => d === "event").length, 0);
-    // EF calls were made for party and event
-    assertEquals(efCalls.some((c) => c.url.includes("partner-manage-party")), true);
-    assertEquals(efCalls.some((c) => c.url.includes("partner-manage-event")), true);
-  });
-  } finally {
-    Deno.env.delete("SIM_USER_PASSWORD");
-  }
-  },
-});
-
-// sanitizeResources/sanitizeOps disabled: @supabase/auth-js internally calls setInterval for
-// token auto-refresh even when persistSession=false. The interval leaks within the test but is
-// harmless — suppressing the leak check is correct here rather than patching the library.
-Deno.test({
-  name: "simCreateParties - falls back to direct DB when EF fails and strict=false",
-  sanitizeResources: false,
-  sanitizeOps: false,
-  fn: async () => {
-  const directPartyInserts: unknown[] = [];
-  const directEventInserts: unknown[] = [];
-
-  const mock = createMockSupabaseClient({
-    tables: {
-      partners: { select: () => ({ data: [{ id: "partner-1" }], error: null }) },
-      locations: { select: () => ({ data: { id: "loc-1" }, error: null }) },
-      partner_members: { select: () => ({ data: [{ user_id: "partner-user-1" }], error: null }) },
-      ticket_templates: { select: () => ({ data: [], error: null }) },
-      parties: {
-        insert: ({ values }: { values: unknown }) => {
-          directPartyInserts.push(values);
-          return { data: { id: "db-party-1" }, error: null };
-        },
-      },
-      events: {
-        insert: ({ values }: { values: unknown }) => {
-          directEventInserts.push(values);
-          return { data: { id: "db-event-1" }, error: null };
-        },
-      },
-      entry_groups: { insert: () => ({ data: { id: "grp-1" }, error: null }) },
-      tickets: { insert: () => ({ data: null, error: null }) },
-    },
-    authAdminGetUserById: (_userId: string) => ({ data: { user: { email: "partner1@test.com" } }, error: null }),
-  });
-
-  const config: SimConfig = { ...DEFAULT_CONFIG, party_count: 1, events_per_party: 1 };
-  const warnings: string[] = [];
-  const warnLog = (entry: { level: string; message: string }) => {
-    if (entry.level === "warn") warnings.push(entry.message);
-  };
-
-  Deno.env.set("SIM_USER_PASSWORD", "test-password");
-  try {
-    await withMockFetch((url) => {
       if (url.includes("auth/v1/token")) {
         return new Response(JSON.stringify({ access_token: "mock-token", token_type: "bearer", expires_in: 3600, refresh_token: "r", user: {} }), { status: 200 });
       }
-      // EF returns 500 to simulate failure
-      return new Response(JSON.stringify({ error: "internal" }), { status: 500 });
+      if (url.includes("partner-manage-party")) {
+        return new Response(JSON.stringify({ success: true, party_id: "ef-party-1" }), { status: 200 });
+      }
+      if (url.includes("partner-manage-event")) {
+        return new Response(JSON.stringify({ success: true, event_id: "ef-event-1" }), { status: 200 });
+      }
+      return new Response(JSON.stringify({}), { status: 404 });
     }, async () => {
       const result = await simCreateParties(
         mock as unknown as SupabaseClient,
         config,
-        warnLog as Parameters<typeof simCreateParties>[2],
+        noop,
         "https://mock.supabase.co",
         "anon-key",
-        false, // strict=false
       );
 
-      // Should have fallen back to direct DB for both party and event
-      assertEquals(directPartyInserts.length, 1);
-      assertEquals(directEventInserts.length, 1);
-      assertEquals(result.partyIds.length, 1);
-      assertEquals(result.eventIds.length, 1);
-      // Warning was emitted for EF failure
-      assertEquals(warnings.some((w) => w.includes("falling back to direct DB")), true);
+      assertEquals(result.partyIds, ["ef-party-1"]);
+      assertEquals(result.eventIds, ["ef-event-1"]);
+      // EF calls were made for party and event
+      assertEquals(efCalls.some((c) => c.url.includes("partner-manage-party")), true);
+      assertEquals(efCalls.some((c) => c.url.includes("partner-manage-event")), true);
     });
   } finally {
     Deno.env.delete("SIM_USER_PASSWORD");
@@ -281,7 +98,66 @@ Deno.test({
 // token auto-refresh even when persistSession=false. The interval leaks within the test but is
 // harmless — suppressing the leak check is correct here rather than patching the library.
 Deno.test({
-  name: "simCreateParties - throws when EF fails and strict=true",
+  name: "simCreateParties - event EF body includes min_confirmed_count and metadata",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+  const eventEfBodies: Record<string, unknown>[] = [];
+
+  const mock = createMockSupabaseClient({
+    tables: {
+      partners: { select: () => ({ data: [{ id: "partner-1" }], error: null }) },
+      locations: { select: () => ({ data: { id: "loc-1" }, error: null }) },
+      partner_members: { select: () => ({ data: [{ user_id: "partner-user-1" }], error: null }) },
+      ticket_templates: { select: () => ({ data: [{ id: "tmpl-1", name: "일반" }], error: null }) },
+    },
+    authAdminGetUserById: (_userId: string) => ({ data: { user: { email: "partner1@test.com" } }, error: null }),
+  });
+
+  const config: SimConfig = { ...DEFAULT_CONFIG, party_count: 1, events_per_party: 1 };
+
+  Deno.env.set("SIM_USER_PASSWORD", "test-password");
+  try {
+    await withMockFetch((url, init) => {
+      if (url.includes("auth/v1/token")) {
+        return new Response(JSON.stringify({ access_token: "mock-token", token_type: "bearer", expires_in: 3600, refresh_token: "r", user: {} }), { status: 200 });
+      }
+      if (url.includes("partner-manage-party")) {
+        return new Response(JSON.stringify({ success: true, party_id: "ef-party-1" }), { status: 200 });
+      }
+      if (url.includes("partner-manage-event")) {
+        try {
+          eventEfBodies.push(JSON.parse((init.body as string) ?? "{}") as Record<string, unknown>);
+        } catch { /* intentionally empty */ }
+        return new Response(JSON.stringify({ success: true, event_id: "ef-event-1" }), { status: 200 });
+      }
+      return new Response(JSON.stringify({}), { status: 404 });
+    }, async () => {
+      await simCreateParties(
+        mock as unknown as SupabaseClient,
+        config,
+        noop,
+        "https://mock.supabase.co",
+        "anon-key",
+      );
+
+      assertEquals(eventEfBodies.length, 1);
+      const eventBody = eventEfBodies[0].event as Record<string, unknown>;
+      assertEquals(eventBody.min_confirmed_count, 4);
+      assertEquals((eventBody.metadata as Record<string, unknown>).show_participant_list, true);
+      assertEquals((eventBody.metadata as Record<string, unknown>).visibility, "public");
+    });
+  } finally {
+    Deno.env.delete("SIM_USER_PASSWORD");
+  }
+  },
+});
+
+// sanitizeResources/sanitizeOps disabled: @supabase/auth-js internally calls setInterval for
+// token auto-refresh even when persistSession=false. The interval leaks within the test but is
+// harmless — suppressing the leak check is correct here rather than patching the library.
+Deno.test({
+  name: "simCreateParties - throws when EF fails",
   sanitizeResources: false,
   sanitizeOps: false,
   fn: async () => {
@@ -291,10 +167,6 @@ Deno.test({
       locations: { select: () => ({ data: { id: "loc-1" }, error: null }) },
       partner_members: { select: () => ({ data: [{ user_id: "partner-user-1" }], error: null }) },
       ticket_templates: { select: () => ({ data: [], error: null }) },
-      parties: { insert: () => ({ data: { id: "db-party-1" }, error: null }) },
-      events: { insert: () => ({ data: { id: "db-event-1" }, error: null }) },
-      entry_groups: { insert: () => ({ data: { id: "grp-1" }, error: null }) },
-      tickets: { insert: () => ({ data: null, error: null }) },
     },
     authAdminGetUserById: (_userId: string) => ({ data: { user: { email: "partner1@test.com" } }, error: null }),
   });
@@ -303,64 +175,277 @@ Deno.test({
 
   Deno.env.set("SIM_USER_PASSWORD", "test-password");
   try {
-  await withMockFetch((url) => {
-    if (url.includes("auth/v1/token")) {
-      return new Response(JSON.stringify({ access_token: "mock-token", token_type: "bearer", expires_in: 3600, refresh_token: "r", user: {} }), { status: 200 });
-    }
-    return new Response(JSON.stringify({ error: "internal" }), { status: 500 });
-  }, async () => {
-    await assertRejects(
-      () => simCreateParties(
-        mock as unknown as SupabaseClient,
-        config,
-        noop,
-        "https://mock.supabase.co",
-        "anon-key",
-        true, // strict=true → should throw
-      ),
-      Error,
-      "EF partner-manage-party returned status=500",
-    );
-  });
+    await withMockFetch((url) => {
+      if (url.includes("auth/v1/token")) {
+        return new Response(JSON.stringify({ access_token: "mock-token", token_type: "bearer", expires_in: 3600, refresh_token: "r", user: {} }), { status: 200 });
+      }
+      return new Response(JSON.stringify({ error: "internal" }), { status: 500 });
+    }, async () => {
+      await assertRejects(
+        () => simCreateParties(
+          mock as unknown as SupabaseClient,
+          config,
+          noop,
+          "https://mock.supabase.co",
+          "anon-key",
+        ),
+        Error,
+        "EF partner-manage-party returned status=500",
+      );
+    });
   } finally {
     Deno.env.delete("SIM_USER_PASSWORD");
   }
   },
 });
 
-Deno.test("simCreateParties - direct DB path when supabaseUrl/anonKey not provided", async () => {
-  const createdParties: unknown[] = [];
-  const createdEvents: unknown[] = [];
+Deno.test({
+  name: "simCreateParties - throws when SIM_USER_PASSWORD not set",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+  const mock = createMockSupabaseClient({
+    tables: {
+      partners: { select: () => ({ data: [{ id: "partner-1" }], error: null }) },
+      locations: { select: () => ({ data: { id: "loc-1" }, error: null }) },
+    },
+  });
+
+  // Ensure SIM_USER_PASSWORD is not set
+  Deno.env.delete("SIM_USER_PASSWORD");
+
+  await assertRejects(
+    () => simCreateParties(
+      mock as unknown as SupabaseClient,
+      DEFAULT_CONFIG,
+      noop,
+      "https://mock.supabase.co",
+      "anon-key",
+    ),
+    Error,
+    "SIM_USER_PASSWORD is required",
+  );
+  },
+});
+
+// sanitizeResources/sanitizeOps disabled: @supabase/auth-js internally calls setInterval for
+// token auto-refresh even when persistSession=false. The interval leaks within the test but is
+// harmless — suppressing the leak check is correct here rather than patching the library.
+Deno.test({
+  name: "simCreateParties - creates 4 distinct start_time zones via EF",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+  const eventStartTimes: string[] = [];
 
   const mock = createMockSupabaseClient({
     tables: {
       partners: { select: () => ({ data: [{ id: "partner-1" }], error: null }) },
       locations: { select: () => ({ data: { id: "loc-1" }, error: null }) },
+      partner_members: { select: () => ({ data: [{ user_id: "partner-user-1" }], error: null }) },
+      ticket_templates: { select: () => ({ data: [{ id: "tmpl-1", name: "일반" }], error: null }) },
+    },
+    authAdminGetUserById: (_userId: string) => ({ data: { user: { email: "partner1@test.com" } }, error: null }),
+  });
+
+  const config: SimConfig = { ...DEFAULT_CONFIG, party_count: 1, events_per_party: 4 };
+
+  Deno.env.set("SIM_USER_PASSWORD", "test-password");
+  try {
+    await withMockFetch((url, init) => {
+      if (url.includes("auth/v1/token")) {
+        return new Response(JSON.stringify({ access_token: "mock-token", token_type: "bearer", expires_in: 3600, refresh_token: "r", user: {} }), { status: 200 });
+      }
+      if (url.includes("partner-manage-party")) {
+        return new Response(JSON.stringify({ success: true, party_id: "ef-party-1" }), { status: 200 });
+      }
+      if (url.includes("partner-manage-event")) {
+        try {
+          const body = JSON.parse((init.body as string) ?? "{}") as { event?: { start_time?: string } };
+          if (body.event?.start_time) eventStartTimes.push(body.event.start_time);
+        } catch { /* intentionally empty */ }
+        return new Response(JSON.stringify({ success: true, event_id: `ef-event-${eventStartTimes.length}` }), { status: 200 });
+      }
+      return new Response(JSON.stringify({}), { status: 404 });
+    }, async () => {
+      await simCreateParties(
+        mock as unknown as SupabaseClient,
+        config,
+        noop,
+        "https://mock.supabase.co",
+        "anon-key",
+      );
+
+      assertEquals(eventStartTimes.length, 4);
+      const now = Date.now();
+      const times = eventStartTimes.map((t) => new Date(t).getTime());
+
+      const plusTwoDays = now + 2 * 24 * 60 * 60 * 1000;
+      const plusFiveDays = now + 5 * 24 * 60 * 60 * 1000;
+      const plusThirtyDays = now + 30 * 24 * 60 * 60 * 1000;
+      const plusTwelveHours = now + 12 * 60 * 60 * 1000;
+
+      assertEquals(times.every((t) => t - now > 2 * 60 * 60 * 1000), true);
+      assertEquals(times.some((t) => t > plusThirtyDays - 60000), true);
+      assertEquals(times.some((t) => t > plusFiveDays - 60000 && t < plusFiveDays + 60000), true);
+      assertEquals(times.some((t) => t > plusTwoDays - 60000 && t < plusTwoDays + 60000), true);
+      assertEquals(times.some((t) => t > plusTwelveHours - 60000 && t < plusTwelveHours + 60000), true);
+    });
+  } finally {
+    Deno.env.delete("SIM_USER_PASSWORD");
+  }
+  },
+});
+
+// sanitizeResources/sanitizeOps disabled: @supabase/auth-js internally calls setInterval for
+// token auto-refresh even when persistSession=false. The interval leaks within the test but is
+// harmless — suppressing the leak check is correct here rather than patching the library.
+Deno.test({
+  name: "simCreateDisplayEvents - creates display parties and events via EF",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+  const efCalls: { url: string; body: unknown }[] = [];
+  let partyCallCount = 0;
+  let eventCallCount = 0;
+
+  const mock = createMockSupabaseClient({
+    tables: {
+      parties: { select: () => ({ data: [], error: null }) },
+      partners: { select: () => ({ data: [{ id: "partner-1" }], error: null }) },
+      locations: { select: () => ({ data: null, error: null }) },
+      partner_members: { select: () => ({ data: [{ user_id: "partner-user-1" }], error: null }) },
+      ticket_templates: { select: () => ({ data: [{ id: "tmpl-display-1", name: "일반 티켓" }], error: null }) },
+    },
+    authAdminGetUserById: (_userId: string) => ({ data: { user: { email: "partner1@test.com" } }, error: null }),
+  });
+
+  Deno.env.set("SIM_USER_PASSWORD", "test-password");
+  try {
+    await withMockFetch((url, init) => {
+      const body = JSON.parse((init.body as string) ?? "{}");
+      efCalls.push({ url, body });
+
+      if (url.includes("auth/v1/token")) {
+        return new Response(JSON.stringify({ access_token: "mock-token", token_type: "bearer", expires_in: 3600, refresh_token: "r", user: {} }), { status: 200 });
+      }
+      if (url.includes("partner-manage-party")) {
+        partyCallCount++;
+        return new Response(JSON.stringify({ success: true, party_id: `ef-display-party-${partyCallCount}` }), { status: 200 });
+      }
+      if (url.includes("partner-manage-event")) {
+        eventCallCount++;
+        return new Response(JSON.stringify({ success: true, event_id: `ef-display-event-${eventCallCount}` }), { status: 200 });
+      }
+      return new Response(JSON.stringify({}), { status: 404 });
+    }, async () => {
+      const result = await simCreateDisplayEvents(
+        mock as unknown as SupabaseClient,
+        noop,
+        "https://mock.supabase.co",
+        "anon-key",
+      );
+
+      // 5 display scenarios → 5 parties, 2 events each = 10 events
+      assertEquals(result.displayPartyIds.length, 5);
+      assertEquals(result.displayEventIds.length, 10);
+      assertEquals(partyCallCount, 5);
+      assertEquals(eventCallCount, 10);
+    });
+  } finally {
+    Deno.env.delete("SIM_USER_PASSWORD");
+  }
+  },
+});
+
+// sanitizeResources/sanitizeOps disabled: @supabase/auth-js internally calls setInterval for
+// token auto-refresh even when persistSession=false. The interval leaks within the test but is
+// harmless — suppressing the leak check is correct here rather than patching the library.
+Deno.test({
+  name: "simCreateDisplayEvents - skips when display parties already exist",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+  let efCallCount = 0;
+
+  // Return 5 existing parties (all DISPLAY_SCENARIOS already exist)
+  const mock = createMockSupabaseClient({
+    tables: {
       parties: {
-        insert: ({ values }: { values: unknown }) => {
-          createdParties.push(values);
-          return { data: { id: "db-party-1" }, error: null };
-        },
+        select: () => ({
+          data: Array.from({ length: 5 }, (_, i) => ({ id: `existing-party-${i}` })),
+          error: null,
+        }),
       },
-      events: {
-        insert: ({ values }: { values: unknown }) => {
-          createdEvents.push(values);
-          return { data: { id: "db-event-1" }, error: null };
-        },
-      },
-      entry_groups: { insert: () => ({ data: { id: "grp-1" }, error: null }) },
-      tickets: { insert: () => ({ data: null, error: null }) },
     },
   });
 
-  const config: SimConfig = { ...DEFAULT_CONFIG, party_count: 1, events_per_party: 2 };
-  // No supabaseUrl/anonKey → always direct DB
-  const result = await simCreateParties(mock as unknown as SupabaseClient, config, noop);
+  Deno.env.set("SIM_USER_PASSWORD", "test-password");
+  try {
+    await withMockFetch((url) => {
+      if (!url.includes("auth/v1/token")) efCallCount++;
+      return new Response(JSON.stringify({}), { status: 200 });
+    }, async () => {
+      const result = await simCreateDisplayEvents(
+        mock as unknown as SupabaseClient,
+        noop,
+        "https://mock.supabase.co",
+        "anon-key",
+      );
 
-  assertEquals(result.partyIds.length, 1);
-  assertEquals(result.eventIds.length, 2);
-  assertEquals(createdParties.length, 1);
-  assertEquals(createdEvents.length, 2);
+      // No EF calls made — dedup check triggered early return
+      assertEquals(efCallCount, 0);
+      assertEquals(result.displayPartyIds.length, 0);
+      assertEquals(result.displayEventIds.length, 0);
+    });
+  } finally {
+    Deno.env.delete("SIM_USER_PASSWORD");
+  }
+  },
+});
+
+// sanitizeResources/sanitizeOps disabled: @supabase/auth-js internally calls setInterval for
+// token auto-refresh even when persistSession=false. The interval leaks within the test but is
+// harmless — suppressing the leak check is correct here rather than patching the library.
+Deno.test({
+  name: "simCreateDisplayEvents - throws when display party EF fails",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+  const mock = createMockSupabaseClient({
+    tables: {
+      parties: { select: () => ({ data: [], error: null }) },
+      partners: { select: () => ({ data: [{ id: "partner-1" }], error: null }) },
+      locations: { select: () => ({ data: null, error: null }) },
+      partner_members: { select: () => ({ data: [{ user_id: "partner-user-1" }], error: null }) },
+      ticket_templates: { select: () => ({ data: [], error: null }) },
+    },
+    authAdminGetUserById: (_userId: string) => ({ data: { user: { email: "partner1@test.com" } }, error: null }),
+  });
+
+  Deno.env.set("SIM_USER_PASSWORD", "test-password");
+  try {
+    await withMockFetch((url) => {
+      if (url.includes("auth/v1/token")) {
+        return new Response(JSON.stringify({ access_token: "mock-token", token_type: "bearer", expires_in: 3600, refresh_token: "r", user: {} }), { status: 200 });
+      }
+      return new Response(JSON.stringify({ error: "internal" }), { status: 500 });
+    }, async () => {
+      await assertRejects(
+        () => simCreateDisplayEvents(
+          mock as unknown as SupabaseClient,
+          noop,
+          "https://mock.supabase.co",
+          "anon-key",
+        ),
+        Error,
+        "EF partner-manage-party returned status=500",
+      );
+    });
+  } finally {
+    Deno.env.delete("SIM_USER_PASSWORD");
+  }
+  },
 });
 
 // ── simDiscoverAndApply — user-centric loop tests (Fix #1323) ────────────────
