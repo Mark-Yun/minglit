@@ -20,7 +20,6 @@ import 'package:app_user/src/features/account_deletion/ui/deletion_info_page.dar
 import 'package:app_user/src/features/account_deletion/ui/deletion_reason_page.dart';
 import 'package:app_user/src/features/account_deletion/ui/deletion_verify_page.dart';
 import 'package:app_user/src/features/auth/login_page.dart';
-import 'package:app_user/src/features/home/logic/home_coordinator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -334,22 +333,21 @@ class _FakeDeletionController extends AccountDeletionController {
 
 /// Spy coordinator: records navigation method calls without actual routing.
 class _SpyDeletionCoordinator extends AccountDeletionCoordinator {
-  bool pushInfoCalled = false;
-  WithdrawalReason? lastPushInfoReason;
-  bool pushVerifyCalled = false;
-  bool goCompleteCalled = false;
-
   _SpyDeletionCoordinator()
     : super(
         GoRouter(
           routes: [
             GoRoute(
               path: '/',
-              builder: (_, __) => const SizedBox.shrink(),
+              builder: (_, _) => const SizedBox.shrink(),
             ),
           ],
         ),
       );
+  bool pushInfoCalled = false;
+  WithdrawalReason? lastPushInfoReason;
+  bool pushVerifyCalled = false;
+  bool goCompleteCalled = false;
 
   @override
   void start() {}
