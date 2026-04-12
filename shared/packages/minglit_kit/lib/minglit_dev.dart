@@ -1,3 +1,4 @@
+export 'src/data/services/bug_report_collector.dart';
 export 'src/features/dev/catalog_tabs/patterns/async_wrapper_demo.dart';
 export 'src/features/dev/catalog_tabs/patterns/data_states_demo.dart';
 export 'src/features/dev/catalog_tabs/patterns/transaction_flow_demo.dart';
@@ -10,3 +11,4 @@ export 'src/features/dev/party_list_preview_screen.dart';
 export 'src/features/dev/widgets/party_detail_view.dart';
 export 'src/ui/widgets/debug/user_session_info.dart';
 export 'src/utils/dev_screen_list.dart';
+export 'src/utils/qa_bug_report_channel.dart';
