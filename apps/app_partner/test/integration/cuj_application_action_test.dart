@@ -40,7 +40,7 @@ void main() {
     String id = 'event-p06-1',
     String title = 'P06 테스트 이벤트',
     int currentParticipants = 2,
-    int? maxParticipants = 10,
+    int maxParticipants = 10,
   }) => Event(
     id: id,
     partyId: 'party-1',
