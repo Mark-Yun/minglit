@@ -94,7 +94,7 @@ void main() {
 
     testWidgets('잔여 투표 수 표시 — 남은 투표 카운터', (tester) async {
       await tester.pumpWidget(
-        buildVoteContent(voteCount: 1, maxVoteCount: 3),
+        buildVoteContent(voteCount: 1),
       );
       await tester.pumpAndSettle();
 
@@ -103,7 +103,7 @@ void main() {
 
     testWidgets('투표 완료 상태 — 투표 완료! 배지 표시', (tester) async {
       await tester.pumpWidget(
-        buildVoteContent(voteCount: 3, maxVoteCount: 3),
+        buildVoteContent(voteCount: 3),
       );
       await tester.pumpAndSettle();
 
@@ -116,7 +116,7 @@ void main() {
           matchId: 'm1',
           eventId: _testEventId,
           partnerId: 'p1',
-          matchedAt: DateTime(2026, 4, 1),
+          matchedAt: DateTime(2026, 4),
           partnerName: '김지우',
         ),
       ];
@@ -152,7 +152,6 @@ void main() {
           candidates: candidates,
           votedIds: {'u1'},
           voteCount: 1,
-          maxVoteCount: 3,
         ),
       );
       await tester.pumpAndSettle();
@@ -171,8 +170,6 @@ void main() {
       await tester.pumpWidget(
         buildVoteContent(
           candidates: candidates,
-          voteCount: 0,
-          maxVoteCount: 3,
         ),
       );
       await tester.pumpAndSettle();
