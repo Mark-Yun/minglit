@@ -33,6 +33,32 @@ import 'package:mocktail/mocktail.dart';
 
 import '../utils/mocks.dart';
 
+/// processQR 완료를 확정적으로 대기한다.
+///
+/// [container]의 [checkinControllerProvider]를 구독하여
+/// idle/processing이 아닌 상태로 전이될 때까지 기다린다.
+/// 고정 딜레이(100ms) 대신 상태 전이를 직접 감지하므로 CI 부하 환경에서도 안정적이다.
+Future<void> _runProcessQR(
+  WidgetTester tester,
+  ProviderContainer container,
+  Future<void> Function() processQRCall,
+) async {
+  await tester.runAsync(() async {
+    final completer = Completer<void>();
+    final sub = container.listen(
+      checkinControllerProvider,
+      (_, next) {
+        final isTerminal = next.result != CheckinResult.idle &&
+            next.result != CheckinResult.processing;
+        if (isTerminal && !completer.isCompleted) completer.complete();
+      },
+    );
+    unawaited(processQRCall());
+    await completer.future.timeout(const Duration(seconds: 10));
+    sub.close();
+  });
+}
+
 /// 최소한의 유효한 TicketToken JSON을 생성한다.
 String _makeQrPayload({
   String ticketId = 'ticket-001',
@@ -315,16 +341,14 @@ void main() {
           );
 
           // Fix #1317: processQR는 3초 딜레이를 포함하므로 tester.runAsync 사용.
-          // pump() 호출로 성공 상태 후 UI 재빌드를 트리거한다.
-          await tester.runAsync(() async {
-            unawaited(
-              container
-                  .read(checkinControllerProvider.notifier)
-                  .processQR(_makeQrPayload(userId: 'user-abcd1234')),
-            );
-            // 짧은 딜레이로 async 흐름이 성공 상태까지 진행되도록 대기
-            await Future<void>.delayed(const Duration(milliseconds: 100));
-          });
+          // 상태 전이를 구독하여 확정적으로 완료를 감지한 뒤 pump()로 UI를 재빌드한다.
+          await _runProcessQR(
+            tester,
+            container,
+            () => container
+                .read(checkinControllerProvider.notifier)
+                .processQR(_makeQrPayload(userId: 'user-abcd1234')),
+          );
           await tester.pump();
 
           expect(find.text('체크인 완료'), findsOneWidget);
@@ -352,14 +376,13 @@ void main() {
             tester.element(find.byType(QRScannerScreen)),
           );
 
-          await tester.runAsync(() async {
-            unawaited(
-              container
-                  .read(checkinControllerProvider.notifier)
-                  .processQR(_makeQrPayload()),
-            );
-            await Future<void>.delayed(const Duration(milliseconds: 100));
-          });
+          await _runProcessQR(
+            tester,
+            container,
+            () => container
+                .read(checkinControllerProvider.notifier)
+                .processQR(_makeQrPayload()),
+          );
           await tester.pump();
 
           expect(find.text('입장 제한'), findsOneWidget);
@@ -379,14 +402,13 @@ void main() {
             tester.element(find.byType(QRScannerScreen)),
           );
 
-          await tester.runAsync(() async {
-            unawaited(
-              container
-                  .read(checkinControllerProvider.notifier)
-                  .processQR('not-valid-json{{{'),
-            );
-            await Future<void>.delayed(const Duration(milliseconds: 100));
-          });
+          await _runProcessQR(
+            tester,
+            container,
+            () => container
+                .read(checkinControllerProvider.notifier)
+                .processQR('not-valid-json{{{'),
+          );
           await tester.pump();
 
           expect(find.text('입장 제한'), findsOneWidget);
