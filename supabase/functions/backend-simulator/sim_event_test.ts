@@ -220,6 +220,8 @@ Deno.test({ name: "simCheckin - empty participants returns empty", sanitizeOps: 
     ["event-empty"],
     noop,
     0.7,
+    "https://example.supabase.co",
+    "anon-key",
   );
 
   assertEquals(result.checkedInParticipantIds, []);
