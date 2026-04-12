@@ -37,6 +37,8 @@ class PartnerHomePage extends ConsumerWidget {
         centerTitle: false,
         surfaceTintColor: Colors.transparent,
         actions: [
+          // Fix #1285: FAB 대체 — dev 전용 버그 리포트 액션 버튼
+          const BugReportAction(),
           Stack(
             clipBehavior: Clip.none,
             children: [
