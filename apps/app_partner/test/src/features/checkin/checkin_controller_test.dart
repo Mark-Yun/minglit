@@ -426,7 +426,7 @@ void main() {
           final notifier = container.read(checkinControllerProvider.notifier);
 
           // 첫 번째 사용자 체크인 완료
-          await notifier.processQR(_makeQrPayload(userId: 'user-aaaa11'));
+          await notifier.processQR(_makeQrPayload(userId: 'alic-aaaa11'));
           expect(
             container.read(checkinControllerProvider).result,
             CheckinResult.idle,
@@ -439,13 +439,13 @@ void main() {
             (_, s) => capturedStates.add(s),
           );
 
-          await notifier.processQR(_makeQrPayload(userId: 'user-bbbb22'));
+          await notifier.processQR(_makeQrPayload(userId: 'bobb-bbbb22'));
 
           final successState = capturedStates.firstWhere(
             (s) => s.result == CheckinResult.success,
           );
-          // 두 번째 사용자의 userName이 반영됨
-          expect(successState.userName, 'User user');
+          // Fix #1288: 두 번째 사용자의 userName이 반영됨 (첫 4글자로 구분)
+          expect(successState.userName, 'User bobb');
         },
         timeout: const Timeout(Duration(seconds: 20)),
       );
