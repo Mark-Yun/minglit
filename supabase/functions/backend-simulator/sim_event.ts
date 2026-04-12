@@ -36,8 +36,13 @@ export interface SimEventResult {
 
 /**
  * Simulates check-in for participants across given events.
- * - checkinRate (default 0.7) fraction → status='checked_in'
- * - remaining fraction → status='no_show'
+ * - checkinRate (default 0.7) fraction → status='checked_in' via event-checkin EF
+ * - remaining fraction → status='no_show' via direct DB (no EF for passive state)
+ *
+ * EF is the primary path for checked_in. Direct DB fallback only applies when
+ * supabaseUrl/anonKey are missing AND strict=false. With strict=true, missing
+ * credentials cause an immediate error.
+ *
  * Asserts checkin ratio within ±0.15 tolerance.
  */
 export async function simCheckin(
@@ -60,19 +65,31 @@ export async function simCheckin(
     return { checkedInParticipantIds, noShowParticipantIds, assertions };
   }
 
+  // Fix #1281: EF-first — supabaseUrl/anonKey are required for checked_in path.
+  // In strict mode, fail fast before processing any events.
+  if (!supabaseUrl || !anonKey) {
+    if (strict) {
+      throw new Error("Strict mode: supabaseUrl and anonKey are required for event-checkin EF");
+    }
+    log({ level: "warn", phase: "checkin", step: "no_credentials", message: "supabaseUrl/anonKey not provided — checked_in participants will use direct DB fallback" });
+  }
+
   // Fix #998: event-checkin EF requires status='active' or 'ongoing', but simCheckin is called
   // before simCompleteEvents (which drives scheduled→active→ongoing→completed). Pre-activate
   // all scheduled events here so the EF status gate passes — mirrors real-world cron activation.
-  const { error: preActivateErr } = await supabase
-    .from("events")
-    .update({ status: "active" })
-    .eq("status", "scheduled")
-    .in("id", eventIds);
+  // Skip pre-activation in strict mode: events should already be active in a production-like run.
+  if (!strict) {
+    const { error: preActivateErr } = await supabase
+      .from("events")
+      .update({ status: "active" })
+      .eq("status", "scheduled")
+      .in("id", eventIds);
 
-  if (preActivateErr) {
-    log({ level: "warn", phase: "checkin", step: "pre_activate", message: `Failed to pre-activate scheduled events: ${preActivateErr.message}` });
-  } else {
-    log({ level: "info", phase: "checkin", step: "pre_activate", message: `Pre-activated scheduled events to active for EF check-in (${eventIds.length} event IDs processed)` });
+    if (preActivateErr) {
+      log({ level: "warn", phase: "checkin", step: "pre_activate", message: `Failed to pre-activate scheduled events: ${preActivateErr.message}` });
+    } else {
+      log({ level: "info", phase: "checkin", step: "pre_activate", message: `Pre-activated scheduled events to active for EF check-in (${eventIds.length} event IDs processed)` });
+    }
   }
 
   // Fix #531: Process events in batches to prevent curl 120s timeout.
@@ -103,47 +120,74 @@ export async function simCheckin(
       const participant = eligible[i];
       const newStatus = i < splitIndex ? "checked_in" : "no_show";
 
-      if (newStatus === "checked_in" && supabaseUrl && anonKey) {
-        // Attempt to use event-checkin EF with user token
-        const { data: profileData } = await supabase
-          .from("user_profiles")
-          .select("username")
-          .eq("id", participant.user_id)
-          .maybeSingle();
-        const username = (profileData as { username?: string } | null)?.username;
+      if (newStatus === "checked_in") {
+        if (supabaseUrl && anonKey) {
+          // Primary path: use event-checkin EF with user token
+          const { data: profileData } = await supabase
+            .from("user_profiles")
+            .select("username")
+            .eq("id", participant.user_id)
+            .maybeSingle();
+          const username = (profileData as { username?: string } | null)?.username;
 
-        if (username && !username.startsWith("partner_")) {
-          const userEmail = `${username}@test.com`;
-          try {
-            const userToken = await getSimUserToken(supabaseUrl, anonKey, userEmail, simUserPassword);
-            const efResult = await callEdgeFunction(supabaseUrl, "event-checkin", {
-              event_id: eventId,
-              participant_id: participant.id,
-            }, userToken);
+          if (username && !username.startsWith("partner_")) {
+            const userEmail = `${username}@test.com`;
+            try {
+              const userToken = await getSimUserToken(supabaseUrl, anonKey, userEmail, simUserPassword);
+              const efResult = await callEdgeFunction(supabaseUrl, "event-checkin", {
+                event_id: eventId,
+                participant_id: participant.id,
+              }, userToken);
 
-            if (efResult.status === 200) {
-              checkedInParticipantIds.push(participant.id);
-              log({ level: "info", phase: "checkin", step: "ef_checkin", message: `Checked in participant ${participant.id} via EF` });
-              continue;
-            } else {
-              if (strict) {
-                throw new Error(`Strict mode: event-checkin EF returned ${efResult.status} for participant ${participant.id}`);
+              if (efResult.status === 200) {
+                checkedInParticipantIds.push(participant.id);
+                log({ level: "info", phase: "checkin", step: "ef_checkin", message: `Checked in participant ${participant.id} via EF` });
+                continue;
+              } else {
+                // Fix #1281: EF failure is always an error — no silent fallback
+                throw new Error(`event-checkin EF returned ${efResult.status} for participant ${participant.id}`);
               }
-              log({ level: "warn", phase: "checkin", step: "ef_checkin_failed", message: `event-checkin EF returned ${efResult.status} for participant ${participant.id}, falling back to direct update` });
+            } catch (authErr) {
+              // Fix #1281: propagate auth/EF errors — checked_in via direct DB is removed
+              throw new Error(`event-checkin EF failed for participant ${participant.id} (${username}): ${String(authErr)}`);
             }
-          } catch (authErr) {
-            if (strict) {
-              throw new Error(`Strict mode: auth failed for ${username}, cannot check in participant ${participant.id}: ${String(authErr)}`);
+          } else {
+            // Fix #1281: Partner user or no username — use direct DB as these accounts can't acquire user tokens
+            const { error: updErr } = await supabase
+              .from("event_participants")
+              .update({ status: "checked_in" })
+              .eq("id", participant.id);
+
+            if (updErr) {
+              log({ level: "error", phase: "checkin", step: "update_participant", message: `Failed to update partner participant ${participant.id}: ${updErr.message}` });
+              continue;
             }
-            log({ level: "warn", phase: "checkin", step: "ef_auth_fallback", message: `Auth failed for ${username}, using direct update: ${String(authErr)}` });
+
+            checkedInParticipantIds.push(participant.id);
+            log({ level: "info", phase: "checkin", step: "direct_checkin", message: `Checked in partner participant ${participant.id} via direct DB (no user token available)` });
+            continue;
           }
+        } else {
+          // No credentials provided and strict=false — direct DB fallback with warning already logged above
+          const { error: updErr } = await supabase
+            .from("event_participants")
+            .update({ status: "checked_in" })
+            .eq("id", participant.id);
+
+          if (updErr) {
+            log({ level: "error", phase: "checkin", step: "update_participant", message: `Failed to update participant ${participant.id}: ${updErr.message}` });
+            continue;
+          }
+
+          checkedInParticipantIds.push(participant.id);
+          continue;
         }
       }
 
-      // Fallback: direct DB update (for no_show and when EF call unavailable)
+      // no_show: direct DB update — no EF for passive state (batch/cron op in production too)
       const { error: updErr } = await supabase
         .from("event_participants")
-        .update({ status: newStatus })
+        .update({ status: "no_show" })
         .eq("id", participant.id);
 
       if (updErr) {
@@ -151,11 +195,7 @@ export async function simCheckin(
         continue;
       }
 
-      if (newStatus === "checked_in") {
-        checkedInParticipantIds.push(participant.id);
-      } else {
-        noShowParticipantIds.push(participant.id);
-      }
+      noShowParticipantIds.push(participant.id);
     }
 
     // Assert checkin ratio — use dynamic tolerance for small participant counts
@@ -194,11 +234,12 @@ export async function simCheckin(
 // ─────────────────────────────────────────────────────────
 
 /**
- * Simulates match voting for checked-in participants.
- * - Queries entry_groups for each event
- * - Ensures match_rules exist (inserts basic rules if missing)
- * - Inserts match_votes: each checked-in participant votes for one from opposite group
- * - For a subset: inserts reverse vote too → triggers match_pairs creation
+ * Simulates matching for checked-in participants via the event-matching EF.
+ * The EF handles all business logic: group splitting, pair creation, idempotency.
+ *
+ * EF is the ONLY path — direct DB vote insert fallback has been removed.
+ * Fix #1281: direct DB fallback (match_votes insert, match_rules insert) removed.
+ * supabaseUrl and serviceRoleKey are required; missing credentials cause an error.
  */
 export async function simMatch(
   supabase: SupabaseClient,
@@ -216,167 +257,33 @@ export async function simMatch(
     return { matchPairs, assertions };
   }
 
+  // Fix #1281: EF-only — supabaseUrl/serviceRoleKey are required
+  if (!supabaseUrl || !serviceRoleKey) {
+    const msg = "supabaseUrl and serviceRoleKey are required for event-matching EF";
+    if (strict) {
+      throw new Error(`Strict mode: ${msg}`);
+    }
+    // Non-strict: log warning and return empty result — no direct DB fallback
+    log({ level: "warn", phase: "match", step: "no_credentials", message: `${msg} — skipping match phase` });
+    return { matchPairs, assertions };
+  }
+
   // Fix #531: Process events in batches to prevent curl 120s timeout.
   const matchResults = await allSettledInBatches(eventIds, 10, async (eventId) => {
-    // Attempt to use event-matching EF with service_role token (admin operation)
-    if (supabaseUrl && serviceRoleKey) {
-      try {
-        const efResult = await callEdgeFunction(supabaseUrl, "event-matching", { event_id: eventId }, serviceRoleKey);
-        // deno-lint-ignore no-explicit-any
-        const efData = efResult.data as any;
-        if (efResult.status === 200 && efData?.success) {
-          const pairs = (efData.pairs ?? []) as Array<{ user1: string; user2: string }>;
-          for (const pair of pairs) {
-            matchPairs.push({ userId1: pair.user1, userId2: pair.user2, eventId });
-            const pairAssertion = await simAssertMatchPairCreated(supabase, eventId, pair.user1, pair.user2);
-            assertions.push(pairAssertion);
-          }
-          log({ level: "info", phase: "match", step: "ef_match", message: `event-matching EF created ${pairs.length} pairs for event ${eventId}`, data: { eventId, idempotent: efData.idempotent } });
-          return;
-        } else {
-          if (strict) {
-            throw new Error(`Strict mode: event-matching EF returned ${efResult.status} for event ${eventId}`);
-          }
-          log({ level: "warn", phase: "match", step: "ef_match_failed", message: `event-matching EF returned ${efResult.status} for event ${eventId}, falling back to direct vote insert` });
-        }
-      } catch (efErr) {
-        if (strict) {
-          throw new Error(`Strict mode: event-matching EF error for event ${eventId}: ${String(efErr)}`);
-        }
-        log({ level: "warn", phase: "match", step: "ef_match_error", message: `event-matching EF error for event ${eventId}: ${String(efErr)}, falling back to direct vote insert` });
+    const efResult = await callEdgeFunction(supabaseUrl, "event-matching", { event_id: eventId }, serviceRoleKey);
+    // deno-lint-ignore no-explicit-any
+    const efData = efResult.data as any;
+    if (efResult.status === 200 && efData?.success) {
+      const pairs = (efData.pairs ?? []) as Array<{ user1: string; user2: string }>;
+      for (const pair of pairs) {
+        matchPairs.push({ userId1: pair.user1, userId2: pair.user2, eventId });
+        const pairAssertion = await simAssertMatchPairCreated(supabase, eventId, pair.user1, pair.user2);
+        assertions.push(pairAssertion);
       }
-    }
-
-    // Fallback: direct vote insert (used when EF call unavailable or failed)
-    // Query entry_groups for this event
-    const { data: groupsData, error: groupsErr } = await supabase
-      .from("entry_groups")
-      .select("id, gender")
-      .eq("event_id", eventId);
-
-    if (groupsErr) {
-      log({ level: "error", phase: "match", step: "fetch_groups", message: `Failed to fetch entry_groups for event ${eventId}: ${groupsErr.message}` });
-      return;
-    }
-
-    const groups = (groupsData ?? []) as Array<{ id: string; gender: string }>;
-
-    if (groups.length < 2) {
-      log({ level: "warn", phase: "match", step: "insufficient_groups", message: `Event ${eventId} has fewer than 2 entry_groups, skipping match` });
-      return;
-    }
-
-    // Ensure match_rules exist
-    const { data: existingRules, error: rulesErr } = await supabase
-      .from("match_rules")
-      .select("id")
-      .eq("event_id", eventId);
-
-    if (rulesErr) {
-      log({ level: "error", phase: "match", step: "fetch_rules", message: `Failed to fetch match_rules for event ${eventId}: ${rulesErr.message}` });
-      return;
-    }
-
-    const rules = (existingRules ?? []) as Array<{ id: string }>;
-
-    if (rules.length === 0) {
-      // Insert basic bidirectional match rules between first two groups
-      const groupA = groups[0];
-      const groupB = groups[1];
-
-      await supabase.from("match_rules").insert({
-        event_id: eventId,
-        source_group_id: groupA.id,
-        target_group_id: groupB.id,
-      });
-      await supabase.from("match_rules").insert({
-        event_id: eventId,
-        source_group_id: groupB.id,
-        target_group_id: groupA.id,
-      });
-
-      log({ level: "info", phase: "match", step: "insert_rules", message: `Inserted basic match_rules for event ${eventId}` });
-    }
-
-    // Get checked_in participants
-    const { data: participantsData, error: partErr } = await supabase
-      .from("event_participants")
-      .select("id, user_id, entry_group_id")
-      .eq("event_id", eventId)
-      .eq("status", "checked_in");
-
-    if (partErr) {
-      log({ level: "error", phase: "match", step: "fetch_checked_in", message: `Failed to fetch checked_in participants for event ${eventId}: ${partErr.message}` });
-      return;
-    }
-
-    const participants = (participantsData ?? []) as Array<{ id: string; user_id: string; entry_group_id: string }>;
-
-    if (participants.length < 2) {
-      log({ level: "warn", phase: "match", step: "insufficient_participants", message: `Event ${eventId} has fewer than 2 checked_in participants, skipping` });
-      return;
-    }
-
-    // Split participants by group
-    const groupAId = groups[0].id;
-    const groupBId = groups[1].id;
-    const groupAParticipants = participants.filter((p) => p.entry_group_id === groupAId);
-    const groupBParticipants = participants.filter((p) => p.entry_group_id === groupBId);
-
-    if (groupAParticipants.length === 0 || groupBParticipants.length === 0) {
-      log({ level: "warn", phase: "match", step: "empty_group", message: `Event ${eventId}: one group has no checked_in participants` });
-      return;
-    }
-
-    // Insert cross-group votes
-    // Each participant from group A votes for one from group B (and vice versa)
-    const pairsToCreate: Array<{ userA: string; userB: string }> = [];
-    const minCount = Math.min(groupAParticipants.length, groupBParticipants.length);
-
-    for (let i = 0; i < minCount; i++) {
-      const userA = groupAParticipants[i].user_id;
-      const userB = groupBParticipants[i].user_id;
-      pairsToCreate.push({ userA, userB });
-    }
-
-    for (const { userA, userB } of pairsToCreate) {
-      // Insert vote A→B
-      const { error: voteAErr } = await supabase.from("match_votes").insert({
-        event_id: eventId,
-        voter_id: userA,
-        candidate_id: userB,
-      });
-      if (voteAErr) {
-        log({ level: "error", phase: "match", step: "insert_vote", message: `Failed to insert vote ${userA}→${userB}: ${voteAErr.message}` });
-        continue;
-      }
-
-      // Insert reverse vote B→A → triggers match_pairs creation
-      const { error: voteBErr } = await supabase.from("match_votes").insert({
-        event_id: eventId,
-        voter_id: userB,
-        candidate_id: userA,
-      });
-      if (voteBErr) {
-        // Fix #531: Do NOT rollback A→B — handle_new_match_vote() trigger may have
-        // already created match_pairs, so deleting A→B would leave inconsistent state.
-        log({
-          level: "warn", phase: "match", step: "insert_vote",
-          message: `Vote B→A failed, keeping A→B as-is for pair (${userA}, ${userB}): ${voteBErr.message}`,
-        });
-        continue;
-      }
-
-      // Assert match pair was created by trigger
-      const pairAssertion = await simAssertMatchPairCreated(supabase, eventId, userA, userB);
-      assertions.push(pairAssertion);
-
-      if (pairAssertion.passed) {
-        matchPairs.push({ userId1: userA, userId2: userB, eventId });
-        log({ level: "info", phase: "match", step: "pair_created", message: `Match pair created: ${userA} ↔ ${userB} in event ${eventId}` });
-      } else {
-        log({ level: "warn", phase: "match", step: "pair_missing", message: `Match pair assertion failed: ${pairAssertion.details}` });
-      }
+      log({ level: "info", phase: "match", step: "ef_match", message: `event-matching EF created ${pairs.length} pairs for event ${eventId}`, data: { eventId, idempotent: efData.idempotent } });
+    } else {
+      // Fix #1281: EF failure is always an error — no direct DB fallback
+      throw new Error(`event-matching EF returned ${efResult.status} for event ${eventId}`);
     }
   });
 
