@@ -16,8 +16,7 @@ class TrendingTagSection extends ConsumerWidget {
     return tagsAsync.when(
       data: (tags) {
         // Fix #1286: recentCount가 0인 태그는 '핫 태그'가 아님 — 필터링 후 빈 목록이면 숨김
-        final activeTags =
-            tags.where((tag) => tag.recentCount > 0).toList();
+        final activeTags = tags.where((tag) => tag.recentCount > 0).toList();
         if (activeTags.isEmpty) return const SizedBox.shrink();
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,

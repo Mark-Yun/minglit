@@ -1,6 +1,5 @@
 import 'package:app_user/src/features/home/widgets/trending_tag_section.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
@@ -13,12 +12,11 @@ void main() {
   Tag makeTag({
     required String name,
     required int recentCount,
-  }) =>
-      Tag(
-        id: 'tag-$name',
-        name: name,
-        recentCount: recentCount,
-      );
+  }) => Tag(
+    id: 'tag-$name',
+    name: name,
+    recentCount: recentCount,
+  );
 
   Widget buildSubject({
     required List<Tag> tags,
