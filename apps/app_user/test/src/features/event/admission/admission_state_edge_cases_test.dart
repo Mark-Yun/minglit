@@ -6,6 +6,9 @@ import 'package:mocktail/mocktail.dart';
 import '../../../../utils/mocks.dart';
 import '../../../../utils/test_utils.dart';
 
+// Fix #1321: DateTime.now() → 고정 시간으로 교체 (flaky test 방지)
+final _fixedNow = DateTime(2026, 4, 13, 12, 0, 0);
+
 void main() {
   late MockEventRepository mockEventRepo;
   late MockUserRepository mockUserRepo;
@@ -14,18 +17,18 @@ void main() {
   final testEvent = Event(
     id: 'event_1',
     partyId: 'party_1',
-    startTime: DateTime.now(),
-    endTime: DateTime.now().add(const Duration(hours: 2)),
-    createdAt: DateTime.now(),
-    updatedAt: DateTime.now(),
+    startTime: _fixedNow,
+    endTime: _fixedNow.add(const Duration(hours: 2)),
+    createdAt: _fixedNow,
+    updatedAt: _fixedNow,
     contactOptions: {},
     tickets: [
       Ticket(
         id: 'ticket_1',
         eventId: 'event_1',
         name: 'Normal',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
+        createdAt: _fixedNow,
+        updatedAt: _fixedNow,
         targetEntryGroupIds: [],
         requiredVerificationIds: [],
         price: 10000,
@@ -55,8 +58,8 @@ void main() {
           ticketId: 'ticket_1',
           userId: 'user_1',
           status: 'pending',
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
+          createdAt: _fixedNow,
+          updatedAt: _fixedNow,
         ),
       );
 
@@ -88,8 +91,8 @@ void main() {
           userId: 'user_1',
           status: 'rejected',
           rejectionReason: '서류 부족',
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
+          createdAt: _fixedNow,
+          updatedAt: _fixedNow,
         ),
       );
 
@@ -157,8 +160,8 @@ void main() {
           ticketId: 'ticket_1',
           userId: 'user_1',
           status: 'cancelled',
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
+          createdAt: _fixedNow,
+          updatedAt: _fixedNow,
         ),
       );
       when(() => mockUserRepo.getUserProfile('user_1')).thenAnswer(

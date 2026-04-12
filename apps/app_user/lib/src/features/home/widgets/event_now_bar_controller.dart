@@ -30,6 +30,12 @@ enum EventNowBarState {
   ended,
 }
 
+/// Returns the current [DateTime] used for time-state computations.
+///
+/// Override in tests with a fixed time to make state transitions deterministic.
+@riverpod
+DateTime clock(Ref ref) => DateTime.now();
+
 /// Fetches today's active events for the current user.
 ///
 /// Returns events where the user is a participant and the event is within
@@ -108,7 +114,7 @@ class EventNowBarStateNotifier extends _$EventNowBarStateNotifier {
     }
 
     // CHECK_IN_READY: event start time has been reached.
-    final now = DateTime.now();
+    final now = ref.watch(clockProvider);
     if (!now.isBefore(event.startTime)) {
       return EventNowBarState.checkInReady;
     }

@@ -8,6 +8,55 @@ part of 'event_now_bar_controller.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Returns the current [DateTime] used for time-state computations.
+///
+/// Override in tests with a fixed time to make state transitions deterministic.
+
+@ProviderFor(clock)
+const clockProvider = ClockProvider._();
+
+/// Returns the current [DateTime] used for time-state computations.
+///
+/// Override in tests with a fixed time to make state transitions deterministic.
+
+final class ClockProvider
+    extends $FunctionalProvider<DateTime, DateTime, DateTime>
+    with $Provider<DateTime> {
+  const ClockProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'clockProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$clockHash();
+
+  @$internal
+  @override
+  $ProviderElement<DateTime> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  DateTime create(Ref ref) {
+    return clock(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(DateTime value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<DateTime>(value),
+    );
+  }
+}
+
+String _$clockHash() => r'clock_provider_fixed_time_injection';
+
 /// Fetches today's active events for the current user.
 ///
 /// Returns events where the user is a participant and the event is within
