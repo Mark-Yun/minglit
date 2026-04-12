@@ -24,6 +24,7 @@ const PARTY_FIELDS = [
   "max_participants",
   "balance_config",
   "status",
+  "metadata",
 ] as const;
 
 // Fields allowed in location create/update

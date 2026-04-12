@@ -25,6 +25,7 @@ const EVENT_FIELDS = [
   "contact_options",
   "vote_start_at",
   "vote_end_at",
+  "metadata",
 ] as const;
 
 // Fields allowed in ticket update

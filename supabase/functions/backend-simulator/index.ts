@@ -62,7 +62,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
-  if (!supabaseUrl || !serviceRoleKey) {
+  if (!supabaseUrl || !serviceRoleKey || !anonKey) {
     return errorResponse("Missing required environment variables", 500);
   }
   const supabase = createServiceClient();
@@ -109,9 +109,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   // Phase: "create" → Phase 1-2 only
   if (phase === "create") {
-    const createResult = await simCreateParties(supabase, config, logFn, supabaseUrl, anonKey, config.strict);
+    const createResult = await simCreateParties(supabase, config, logFn, supabaseUrl, anonKey);
     // Fix #964: 피드 전시용 이벤트 생성 — 일반 유저 피드에 표시할 display 이벤트를 E2E와 분리해 생성
-    const displayResult = await simCreateDisplayEvents(supabase, logFn);
+    const displayResult = await simCreateDisplayEvents(supabase, logFn, supabaseUrl, anonKey);
     const applyResult = await simDiscoverAndApply(
       supabase,
       config,
@@ -347,9 +347,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
   // ─────────────────────────────────────────────────────────
 
   // Phase 1-2: Create parties + display events + discover & apply
-  const createResult = await simCreateParties(supabase, config, logFn, supabaseUrl, anonKey, config.strict);
+  const createResult = await simCreateParties(supabase, config, logFn, supabaseUrl, anonKey);
   // Fix #964: 피드 전시용 이벤트 생성 — 일반 유저 피드에 표시할 display 이벤트를 E2E와 분리해 생성
-  await simCreateDisplayEvents(supabase, logFn);
+  await simCreateDisplayEvents(supabase, logFn, supabaseUrl, anonKey);
   const applyResult = await simDiscoverAndApply(
     supabase,
     config,

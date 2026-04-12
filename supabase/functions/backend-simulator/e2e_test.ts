@@ -39,6 +39,39 @@ function createBroadMock() {
   }
 
   return createFetchMock([
+    // ── Auth token endpoint (partner/user sign-in for EF path) ───────────────
+    {
+      matcher: (req) => req.url.includes("/auth/v1/token"),
+      handler: () =>
+        jsonResponse({
+          access_token: "mock-ef-token",
+          token_type: "bearer",
+          expires_in: 3600,
+          refresh_token: "mock-refresh",
+          user: { id: "mock-user-id" },
+        }),
+    },
+    // ── Admin: getUserById — called by getPartnerEmail to resolve partner email ──
+    {
+      matcher: (req) => req.url.includes("/auth/v1/admin/users/"),
+      handler: () =>
+        jsonResponse({ user: { id: "00000000-0000-0000-0000-000000000001", email: "partner1@test.com" } }),
+    },
+    // ── EF functions (partner-manage-party, partner-manage-event, etc.) ──────
+    {
+      matcher: (req) => req.url.includes("/functions/v1/partner-manage-party"),
+      handler: () =>
+        jsonResponse({ success: true, party_id: crypto.randomUUID() }),
+    },
+    {
+      matcher: (req) => req.url.includes("/functions/v1/partner-manage-event"),
+      handler: () =>
+        jsonResponse({ success: true, event_id: crypto.randomUUID() }),
+    },
+    {
+      matcher: (req) => req.url.includes("/functions/v1/"),
+      handler: () => jsonResponse({}),
+    },
     {
       matcher: (req) =>
         req.url.includes("/rest/v1/") &&
@@ -50,6 +83,12 @@ function createBroadMock() {
 
         if (table === "partners") {
           return jsonResponse(wrapSingle(req, [{ id: "partner-1" }]));
+        }
+        if (table === "partner_members") {
+          return jsonResponse(wrapSingle(req, [{ user_id: "00000000-0000-0000-0000-000000000001" }]));
+        }
+        if (table === "ticket_templates") {
+          return jsonResponse(wrapSingle(req, [{ id: "tmpl-1", name: "일반" }]));
         }
         if (table === "user_profiles") {
           return jsonResponse(wrapSingle(req, [
@@ -244,6 +283,8 @@ Deno.test({
         ENVIRONMENT: "development",
         SUPABASE_URL: "http://localhost:54321",
         SUPABASE_SERVICE_ROLE_KEY: "test-service-role-key",
+        SUPABASE_ANON_KEY: "test-anon-key",
+        SIM_USER_PASSWORD: "test-password",
         GITHUB_ACCESS_TOKEN: "test-github-token",
       },
       async () => {
@@ -282,6 +323,8 @@ Deno.test({
         ENVIRONMENT: "development",
         SUPABASE_URL: "http://localhost:54321",
         SUPABASE_SERVICE_ROLE_KEY: "test-service-role-key",
+        SUPABASE_ANON_KEY: "test-anon-key",
+        SIM_USER_PASSWORD: "test-password",
         GITHUB_ACCESS_TOKEN: "test-github-token",
       },
       async () => {
@@ -314,6 +357,8 @@ Deno.test({
         ENVIRONMENT: "development",
         SUPABASE_URL: "http://localhost:54321",
         SUPABASE_SERVICE_ROLE_KEY: "test-service-role-key",
+        SUPABASE_ANON_KEY: "test-anon-key",
+        SIM_USER_PASSWORD: "test-password",
       },
       async () => {
         await withMockedFetch(fetchMock, async () => {
@@ -346,6 +391,8 @@ Deno.test({
         ENVIRONMENT: "development",
         SUPABASE_URL: "http://localhost:54321",
         SUPABASE_SERVICE_ROLE_KEY: "test-service-role-key",
+        SUPABASE_ANON_KEY: "test-anon-key",
+        SIM_USER_PASSWORD: "test-password",
         GITHUB_ACCESS_TOKEN: "test-github-token",
       },
       async () => {
@@ -452,6 +499,8 @@ Deno.test({
         ENVIRONMENT: "development",
         SUPABASE_URL: "http://localhost:54321",
         SUPABASE_SERVICE_ROLE_KEY: "test-service-role-key",
+        SUPABASE_ANON_KEY: "test-anon-key",
+        SIM_USER_PASSWORD: "test-password",
       },
       async () => {
         await withMockedFetch(fetchMock, async () => {
@@ -487,47 +536,67 @@ Deno.test({
   fn: async () => {
     const h = await getHandler();
 
-    // Track created parties to distinguish E2E vs display
-    const createdParties: { title?: string }[] = [];
+    // Track EF party creation calls to verify titles
+    const efPartyTitles: string[] = [];
 
     const { fetchMock } = createFetchMock([
+      // Auth token sign-in
       {
-        matcher: (req) =>
-          req.url.includes("/rest/v1/partners") && req.method === "GET",
-        handler: (req) => jsonResponse(wrapSingle(req, [{ id: "partner-1" }])),
+        matcher: (req) => req.url.includes("/auth/v1/token"),
+        handler: () =>
+          jsonResponse({
+            access_token: "mock-token",
+            token_type: "bearer",
+            expires_in: 3600,
+            refresh_token: "mock-refresh",
+            user: { id: "mock-user-id" },
+          }),
       },
+      // Auth admin: getUserById — called by getPartnerEmail
       {
-        matcher: (req) =>
-          req.url.includes("/rest/v1/locations") && req.method === "GET",
-        handler: (req) => jsonResponse(wrapSingle(req, [{ id: "loc-1" }])),
+        matcher: (req) => req.url.includes("/auth/v1/admin/users/"),
+        handler: () =>
+          jsonResponse({ user: { id: "00000000-0000-0000-0000-000000000001", email: "partner1@test.com" } }),
       },
+      // EF: partner-manage-party — capture party title
       {
-        matcher: (req) =>
-          req.url.includes("/rest/v1/parties") && req.method === "POST",
+        matcher: (req) => req.url.includes("/functions/v1/partner-manage-party"),
         handler: async (req) => {
-          const body = await req.json() as { title?: string };
-          createdParties.push({ title: body.title });
-          return jsonResponse({ id: crypto.randomUUID() }, { status: 201 });
+          try {
+            const body = await req.json() as { party?: { title?: string } };
+            if (body.party?.title) efPartyTitles.push(body.party.title);
+          } catch { /* intentionally empty */ }
+          return jsonResponse({ success: true, party_id: crypto.randomUUID() });
         },
       },
+      // EF: partner-manage-event
       {
-        matcher: (req) =>
-          req.url.includes("/rest/v1/events") && req.method === "POST",
-        handler: () =>
-          jsonResponse({ id: crypto.randomUUID() }, { status: 201 }),
+        matcher: (req) => req.url.includes("/functions/v1/partner-manage-event"),
+        handler: () => jsonResponse({ success: true, event_id: crypto.randomUUID() }),
       },
+      // EF: other functions (user-event-feed, apply-event, etc.)
       {
-        matcher: (req) =>
-          req.url.includes("/rest/v1/events") && req.method === "GET",
-        handler: (req) => jsonResponse(wrapSingle(req, [])),
+        matcher: (req) => req.url.includes("/functions/v1/"),
+        handler: () => jsonResponse({}),
+      },
+      // DB: REST API
+      {
+        matcher: (req) => req.url.includes("/rest/v1/") && req.method === "GET",
+        handler: (req) => {
+          const url = new URL(req.url);
+          const table = url.pathname.split("/rest/v1/")[1]?.split("?")[0];
+          if (table === "partners") return jsonResponse(wrapSingle(req, [{ id: "partner-1" }]));
+          if (table === "partner_members") return jsonResponse(wrapSingle(req, [{ user_id: "00000000-0000-0000-0000-000000000001" }]));
+          if (table === "ticket_templates") return jsonResponse(wrapSingle(req, [{ id: "tmpl-1", name: "일반" }]));
+          if (table === "locations") return jsonResponse(wrapSingle(req, [{ id: "loc-1" }]));
+          if (table === "events") return jsonResponse(wrapSingle(req, []));
+          if (table === "user_profiles") return jsonResponse(wrapSingle(req, []));
+          return jsonResponse(wrapSingle(req, []));
+        },
       },
       {
         matcher: (req) => req.url.includes("/rest/v1/") && req.method === "POST",
         handler: () => jsonResponse({ id: crypto.randomUUID() }, { status: 201 }),
-      },
-      {
-        matcher: (req) => req.url.includes("/rest/v1/") && req.method === "GET",
-        handler: (req) => jsonResponse(wrapSingle(req, [])),
       },
       {
         matcher: (req) => req.url.includes("/storage/v1/"),
@@ -540,6 +609,8 @@ Deno.test({
         ENVIRONMENT: "development",
         SUPABASE_URL: "http://localhost:54321",
         SUPABASE_SERVICE_ROLE_KEY: "test-service-role-key",
+        SUPABASE_ANON_KEY: "test-anon-key",
+        SIM_USER_PASSWORD: "test-password",
       },
       async () => {
         await withMockedFetch(fetchMock, async () => {
@@ -562,16 +633,14 @@ Deno.test({
           assertEquals(Array.isArray(body.display_party_ids), true);
           assertEquals(Array.isArray(body.display_event_ids), true);
 
-          // Display events must NOT have [E2E] prefix in their parties
-          const displayOnlyParties = createdParties.filter(
-            (p) => p.title && !p.title.startsWith("[E2E]"),
-          );
+          // Display parties must NOT have [E2E] prefix in their titles
+          const displayOnlyTitles = efPartyTitles.filter((t) => !t.startsWith("[E2E]"));
           // If simCreateDisplayEvents created any parties, they must not be E2E-prefixed
-          for (const party of displayOnlyParties) {
+          for (const title of displayOnlyTitles) {
             assertEquals(
-              party.title?.startsWith("[E2E]"),
+              title.startsWith("[E2E]"),
               false,
-              `Display party title must not start with [E2E], got: ${party.title}`,
+              `Display party title must not start with [E2E], got: ${title}`,
             );
           }
         });
