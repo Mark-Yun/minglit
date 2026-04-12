@@ -33,6 +33,7 @@ void main() {
     int maxVoteCount = 3,
     Set<String> votedIds = const {},
     bool metaHasError = false,
+    MatchingVoteController Function()? controllerFactory,
   }) {
     return ProviderScope(
       overrides: [
@@ -60,7 +61,9 @@ void main() {
             return votedIds;
           },
         ),
-        matchingVoteControllerProvider.overrideWith(_FakeVoteController.new),
+        matchingVoteControllerProvider.overrideWith(
+          controllerFactory ?? _FakeVoteController.new,
+        ),
       ],
       child: MaterialApp(
         theme: MinglitTheme.materialTheme,
@@ -167,7 +170,8 @@ void main() {
       expect(find.text('투표하기'), findsNothing);
     });
 
-    testWidgets('투표 버튼 탭 → 확인 다이얼로그 표시', (tester) async {
+    testWidgets('투표 버튼 탭 → 확인 다이얼로그 표시 + 투표하기 탭 → vote() 호출', (tester) async {
+      final spy = _SpyVoteController();
       final candidates = [
         const UserProfile(id: 'u1', name: '정수아', username: ''),
       ];
@@ -175,16 +179,21 @@ void main() {
       await tester.pumpWidget(
         buildVoteContent(
           candidates: candidates,
+          controllerFactory: () => spy,
         ),
       );
       await tester.pumpAndSettle();
 
-      // '선택' 버튼 탭
+      // '선택' 버튼 탭 → 확인 다이얼로그 표시
       await tester.tap(find.text('선택'));
       await tester.pumpAndSettle();
-
-      // 투표 확인 다이얼로그에 '투표하기' 버튼이 나타남
       expect(find.text('투표하기'), findsOneWidget);
+
+      // '투표하기' 탭 → vote() 실제 호출 검증
+      await tester.tap(find.text('투표하기'));
+      await tester.pumpAndSettle();
+      expect(spy.wasVoteCalled, isTrue);
+      expect(spy.lastCandidateId, 'u1');
     });
   });
 }
@@ -198,6 +207,25 @@ class _FakeVoteController extends MatchingVoteController {
     required String eventId,
     required String candidateId,
   }) async {
+    state = const AsyncData(null);
+  }
+}
+
+/// Spy controller that records vote() calls for assertion in tests.
+class _SpyVoteController extends MatchingVoteController {
+  bool wasVoteCalled = false;
+  String? lastCandidateId;
+
+  @override
+  FutureOr<void> build() {}
+
+  @override
+  Future<void> vote({
+    required String eventId,
+    required String candidateId,
+  }) async {
+    wasVoteCalled = true;
+    lastCandidateId = candidateId;
     state = const AsyncData(null);
   }
 }
