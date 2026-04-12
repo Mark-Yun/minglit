@@ -247,7 +247,9 @@ void main() {
     ) async {
       final emailUser = _makeEmailUser();
       final spy = _SpyDeletionCoordinator();
-      await tester.pumpWidget(buildVerifyPage(user: emailUser, coordinator: spy));
+      await tester.pumpWidget(
+        buildVerifyPage(user: emailUser, coordinator: spy),
+      );
       await tester.pump();
 
       // 비밀번호 입력
