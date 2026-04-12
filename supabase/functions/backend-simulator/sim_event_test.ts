@@ -1,77 +1,214 @@
-import { assertEquals } from "@std/assert";
+import { assertEquals, assertRejects } from "@std/assert";
 import { createMockSupabaseClient } from "../_test_utils/mock_supabase_client.ts";
 import { simCheckin, simMatch, simCompleteEvents } from "./sim_event.ts";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 const noop = () => {};
 
+// Intercept module-level EF + auth calls via mock fetch.
+// callEdgeFunction and getSimUserToken both use globalThis.fetch internally.
+function withMockFetch<T>(
+  handler: (url: string, init: RequestInit) => Response,
+  fn: () => Promise<T>,
+): Promise<T> {
+  const original = globalThis.fetch;
+  globalThis.fetch = (url: string | URL | Request, init?: RequestInit) =>
+    Promise.resolve(handler(url.toString(), init ?? {}));
+  return fn().finally(() => {
+    globalThis.fetch = original;
+  });
+}
+
+// Returns a mock fetch handler that:
+// - Responds to Supabase auth signIn with a fake JWT
+// - Responds to event-checkin EF with success or failure based on opts.efStatus
+function makeCheckinFetchHandler(opts: { efStatus?: number } = {}): (url: string, init: RequestInit) => Response {
+  const efStatus = opts.efStatus ?? 200;
+  return (url: string, _init: RequestInit) => {
+    if (url.includes("auth/v1/token")) {
+      // getSimUserToken calls supabase.auth.signInWithPassword → POST /auth/v1/token
+      // supabase-js requires expires_in and refresh_token to build a valid session
+      return new Response(
+        JSON.stringify({
+          access_token: "mock-user-token",
+          token_type: "bearer",
+          expires_in: 3600,
+          refresh_token: "mock-refresh",
+          user: { id: "user-id" },
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      );
+    }
+    if (url.includes("functions/v1/event-checkin")) {
+      if (efStatus === 200) {
+        return new Response(
+          JSON.stringify({ success: true, participant_id: "mock-pid", status: "checked_in" }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      return new Response(
+        JSON.stringify({ error: "Simulated EF failure" }),
+        { status: efStatus, headers: { "Content-Type": "application/json" } },
+      );
+    }
+    // Unexpected URL — return 500 to surface test issues
+    return new Response(JSON.stringify({ error: "unexpected url" }), { status: 500 });
+  };
+}
+
+// Returns a mock fetch handler for event-matching EF
+function makeMatchFetchHandler(opts: { efStatus?: number; pairs?: Array<{ user1: string; user2: string }> } = {}): (url: string, init: RequestInit) => Response {
+  const efStatus = opts.efStatus ?? 200;
+  const pairs = opts.pairs ?? [{ user1: "user-a", user2: "user-b" }];
+  return (url: string, _init: RequestInit) => {
+    if (url.includes("functions/v1/event-matching")) {
+      if (efStatus === 200) {
+        return new Response(
+          JSON.stringify({ success: true, match_count: pairs.length, pairs, idempotent: false }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      return new Response(
+        JSON.stringify({ error: "Simulated EF failure" }),
+        { status: efStatus, headers: { "Content-Type": "application/json" } },
+      );
+    }
+    return new Response(JSON.stringify({ error: "unexpected url" }), { status: 500 });
+  };
+}
+
 // ─────────────────────────────────────────────────────────
 // simCheckin tests
 // ─────────────────────────────────────────────────────────
 
-Deno.test("simCheckin - 70% checked_in, 30% no_show", async () => {
-  const participantStatuses: Record<string, string> = {};
+// sanitizeResources/sanitizeOps disabled: @supabase/auth-js internally calls setInterval for
+// token auto-refresh even when persistSession=false. The interval leaks within the test but is
+// harmless — suppressing the leak check is correct here rather than patching the library.
+Deno.test({
+  name: "simCheckin - 70% checked_in via EF, 30% no_show via direct DB",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const noShowUpdated: string[] = [];
+    // Track statuses for both EF (via fetch mock side-effect) and direct DB (via update mock)
+    const participantStatuses: Record<string, string> = {};
 
-  const participants = [
-    { id: "p-1", user_id: "u-1", status: "ticket_issued" },
-    { id: "p-2", user_id: "u-2", status: "ticket_issued" },
-    { id: "p-3", user_id: "u-3", status: "ticket_issued" },
-    { id: "p-4", user_id: "u-4", status: "ticket_issued" },
-    { id: "p-5", user_id: "u-5", status: "ticket_issued" },
-    { id: "p-6", user_id: "u-6", status: "ticket_issued" },
-    { id: "p-7", user_id: "u-7", status: "ticket_issued" },
-    { id: "p-8", user_id: "u-8", status: "ticket_issued" },
-    { id: "p-9", user_id: "u-9", status: "ticket_issued" },
-    { id: "p-10", user_id: "u-10", status: "ticket_issued" },
-  ];
+    const participants = [
+      { id: "p-1", user_id: "u-1", status: "ticket_issued" },
+      { id: "p-2", user_id: "u-2", status: "ticket_issued" },
+      { id: "p-3", user_id: "u-3", status: "ticket_issued" },
+      { id: "p-4", user_id: "u-4", status: "ticket_issued" },
+      { id: "p-5", user_id: "u-5", status: "ticket_issued" },
+      { id: "p-6", user_id: "u-6", status: "ticket_issued" },
+      { id: "p-7", user_id: "u-7", status: "ticket_issued" },
+      { id: "p-8", user_id: "u-8", status: "ticket_issued" },
+      { id: "p-9", user_id: "u-9", status: "ticket_issued" },
+      { id: "p-10", user_id: "u-10", status: "ticket_issued" },
+    ];
 
-  const mock = createMockSupabaseClient({
-    tables: {
-      event_participants: {
-        select: ({ filters }) => {
-          if (filters["event_id"]) {
-            return {
-              data: participants.map((p) => ({
-                ...p,
-                status: participantStatuses[p.id] ?? p.status,
-              })),
-              error: null,
-            };
-          }
-          const id = filters["id"] as string;
-          const p = participants.find((x) => x.id === id);
-          if (!p) return { data: null, error: null };
-          return {
-            data: { ...p, status: participantStatuses[p.id] ?? p.status },
-            error: null,
-          };
+    const mock = createMockSupabaseClient({
+      tables: {
+        events: {
+          update: () => ({ data: null, error: null }),
         },
-        update: ({ values, filters }) => {
-          const id = filters["id"] as string;
-          const v = values as { status: string };
-          participantStatuses[id] = v.status;
-          return { data: null, error: null };
+        event_participants: {
+          select: ({ filters }) => {
+            // simAssertCheckinRatio queries by status=checked_in to count checked-in participants.
+            // Since EF does the actual DB update in production (not in test mock), we count
+            // participantStatuses entries updated by both EF side-effect and direct DB update.
+            if (filters["event_id"] && filters["status"] === "checked_in") {
+              const checkedInCount = Object.values(participantStatuses).filter((s) => s === "checked_in").length;
+              return { data: new Array(checkedInCount).fill({ id: "x", status: "checked_in" }), error: null };
+            }
+            if (filters["event_id"]) {
+              return {
+                data: participants.map((p) => ({
+                  ...p,
+                  status: participantStatuses[p.id] ?? p.status,
+                })),
+                error: null,
+              };
+            }
+            return { data: [], error: null };
+          },
+          update: ({ values, filters }) => {
+            const id = filters["id"] as string;
+            const v = values as { status: string };
+            if (v.status === "no_show") {
+              noShowUpdated.push(id);
+            }
+            participantStatuses[id] = v.status;
+            return { data: null, error: null };
+          },
+        },
+        user_profiles: {
+          select: ({ filters }) => {
+            const userId = filters["id"] as string;
+            const idx = participants.findIndex((p) => p.user_id === userId);
+            if (idx >= 0) {
+              return { data: { username: `user_${idx + 1}` }, error: null };
+            }
+            return { data: null, error: null };
+          },
         },
       },
-    },
-  });
+    });
 
-  const result = await simCheckin(
-    mock as unknown as SupabaseClient,
-    ["event-1"],
-    noop,
-    0.7,
-  );
+    // Custom fetch handler that also tracks EF checkins in participantStatuses,
+    // mirroring what the real EF would do to the DB.
+    const fetchHandler = (url: string, init: RequestInit): Response => {
+      if (url.includes("auth/v1/token")) {
+        return new Response(
+          JSON.stringify({
+            access_token: "mock-user-token",
+            token_type: "bearer",
+            expires_in: 3600,
+            refresh_token: "mock-refresh",
+            user: { id: "user-id" },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      if (url.includes("functions/v1/event-checkin")) {
+        // Parse request body to get participant_id and simulate DB update
+        const body = JSON.parse((init.body as string) ?? "{}") as { participant_id?: string };
+        const pid = body.participant_id ?? "unknown";
+        participantStatuses[pid] = "checked_in"; // mirrors EF's DB update
+        return new Response(
+          JSON.stringify({ success: true, participant_id: pid, status: "checked_in" }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      return new Response(JSON.stringify({ error: "unexpected url" }), { status: 500 });
+    };
 
-  assertEquals(result.checkedInParticipantIds.length, 7);
-  assertEquals(result.noShowParticipantIds.length, 3);
-  assertEquals(result.assertions.length, 1);
-  assertEquals(result.assertions[0].passed, true);
+    const result = await withMockFetch(
+      fetchHandler,
+      () => simCheckin(
+        mock as unknown as SupabaseClient,
+        ["event-1"],
+        noop,
+        0.7,
+        "https://example.supabase.co",
+        "anon-key",
+      ),
+    );
+
+    // 7 participants checked in via EF, 3 no_show via direct DB
+    assertEquals(result.checkedInParticipantIds.length, 7);
+    assertEquals(result.noShowParticipantIds.length, 3);
+    assertEquals(noShowUpdated.length, 3);
+    assertEquals(result.assertions.length, 1);
+    assertEquals(result.assertions[0].passed, true);
+  },
 });
 
 Deno.test("simCheckin - empty participants returns empty", async () => {
   const mock = createMockSupabaseClient({
     tables: {
+      events: {
+        update: () => ({ data: null, error: null }),
+      },
       event_participants: {
         select: () => ({ data: [], error: null }),
       },
@@ -90,56 +227,159 @@ Deno.test("simCheckin - empty participants returns empty", async () => {
   assertEquals(result.assertions, []);
 });
 
-// ─────────────────────────────────────────────────────────
-// simMatch tests
-// ─────────────────────────────────────────────────────────
+// sanitizeResources/sanitizeOps disabled: supabase-js auth client leaks setInterval
+Deno.test({
+  name: "simCheckin - EF failure is logged as error (not silently skipped)",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const participants = [
+      { id: "p-1", user_id: "u-1", status: "ticket_issued" },
+      { id: "p-2", user_id: "u-2", status: "ticket_issued" },
+      { id: "p-3", user_id: "u-3", status: "ticket_issued" },
+    ];
 
-Deno.test("simMatch - bidirectional votes → match pair created (assert passes)", async () => {
-  const insertedVotes: Array<{ voter_id: string; candidate_id: string }> = [];
+    const mock = createMockSupabaseClient({
+      tables: {
+        events: {
+          update: () => ({ data: null, error: null }),
+        },
+        event_participants: {
+          select: ({ filters }) => {
+            if (filters["event_id"]) {
+              return { data: participants, error: null };
+            }
+            return { data: [], error: null };
+          },
+          update: () => ({ data: null, error: null }),
+        },
+        user_profiles: {
+          select: () => ({ data: { username: "user_1" }, error: null }),
+        },
+      },
+    });
+
+    // EF returns 500 — this causes an error to be thrown in the participant loop,
+    // which propagates to allSettledInBatches and is logged as error.
+    const logs: string[] = [];
+    const collectLog = (entry: { level: string; message: string }) => {
+      logs.push(`${entry.level}: ${entry.message}`);
+    };
+
+    await withMockFetch(
+      makeCheckinFetchHandler({ efStatus: 500 }),
+      () => simCheckin(
+        mock as unknown as SupabaseClient,
+        ["event-1"],
+        collectLog,
+        0.7,
+        "https://example.supabase.co",
+        "anon-key",
+      ),
+    );
+
+    // The error should have been caught and logged by the batch handler
+    const errorLogs = logs.filter((l) => l.startsWith("error:"));
+    assertEquals(errorLogs.length >= 1, true);
+  },
+});
+
+Deno.test("simCheckin - strict mode + no credentials throws immediately", async () => {
+  const mock = createMockSupabaseClient({});
+
+  await assertRejects(
+    () => simCheckin(
+      mock as unknown as SupabaseClient,
+      ["event-1"],
+      noop,
+      0.7,
+      undefined,
+      undefined,
+      true, // strict
+    ),
+    Error,
+    "supabaseUrl and anonKey are required",
+  );
+});
+
+Deno.test("simCheckin - no credentials + strict=false falls back to direct DB", async () => {
+  const participantStatuses: Record<string, string> = {};
+
+  const participants = [
+    { id: "p-1", user_id: "u-1", status: "ticket_issued" },
+    { id: "p-2", user_id: "u-2", status: "ticket_issued" },
+    { id: "p-3", user_id: "u-3", status: "ticket_issued" },
+    { id: "p-4", user_id: "u-4", status: "ticket_issued" },
+    { id: "p-5", user_id: "u-5", status: "ticket_issued" },
+    { id: "p-6", user_id: "u-6", status: "ticket_issued" },
+    { id: "p-7", user_id: "u-7", status: "ticket_issued" },
+    { id: "p-8", user_id: "u-8", status: "ticket_issued" },
+    { id: "p-9", user_id: "u-9", status: "ticket_issued" },
+    { id: "p-10", user_id: "u-10", status: "ticket_issued" },
+  ];
 
   const mock = createMockSupabaseClient({
     tables: {
-      entry_groups: {
-        select: () => ({
-          data: [
-            { id: "group-a", gender: "male" },
-            { id: "group-b", gender: "female" },
-          ],
-          error: null,
-        }),
-      },
-      match_rules: {
-        select: () => ({ data: [{ id: "rule-1" }], error: null }),
-        insert: () => ({ data: null, error: null }),
+      events: {
+        update: () => ({ data: null, error: null }),
       },
       event_participants: {
         select: ({ filters }) => {
-          if (filters["status"] === "checked_in") {
+          if (filters["event_id"] && filters["status"] === "checked_in") {
+            const checkedIn = Object.entries(participantStatuses)
+              .filter(([, s]) => s === "checked_in").length;
+            return { data: new Array(checkedIn).fill({ id: "x", status: "checked_in" }), error: null };
+          }
+          if (filters["event_id"]) {
             return {
-              data: [
-                { id: "ep-1", user_id: "user-a", entry_group_id: "group-a" },
-                { id: "ep-2", user_id: "user-b", entry_group_id: "group-b" },
-              ],
+              data: participants.map((p) => ({
+                ...p,
+                status: participantStatuses[p.id] ?? p.status,
+              })),
               error: null,
             };
           }
           return { data: [], error: null };
         },
-      },
-      match_votes: {
-        insert: ({ values }) => {
-          const v = values as { voter_id: string; candidate_id: string };
-          insertedVotes.push({ voter_id: v.voter_id, candidate_id: v.candidate_id });
+        update: ({ values, filters }) => {
+          const id = filters["id"] as string;
+          const v = values as { status: string };
+          participantStatuses[id] = v.status;
           return { data: null, error: null };
         },
       },
+    },
+  });
+
+  const result = await simCheckin(
+    mock as unknown as SupabaseClient,
+    ["event-1"],
+    noop,
+    0.7,
+    // No supabaseUrl/anonKey — strict=false (default) → direct DB fallback
+  );
+
+  assertEquals(result.checkedInParticipantIds.length, 7);
+  assertEquals(result.noShowParticipantIds.length, 3);
+  assertEquals(result.assertions.length, 1);
+  assertEquals(result.assertions[0].passed, true);
+});
+
+// ─────────────────────────────────────────────────────────
+// simMatch tests
+// ─────────────────────────────────────────────────────────
+
+Deno.test("simMatch - successful matching via EF", async () => {
+  const pairs = [{ user1: "user-a", user2: "user-b" }];
+
+  const mock = createMockSupabaseClient({
+    tables: {
       match_pairs: {
         select: ({ filters }) => {
+          // simAssertMatchPairCreated queries by user_lower_id + user_higher_id
           const lowerUserId = filters["user_lower_id"] as string;
           const higherUserId = filters["user_higher_id"] as string;
-          const hasAtoB = insertedVotes.some((v) => v.voter_id === "user-a" && v.candidate_id === "user-b");
-          const hasBtoA = insertedVotes.some((v) => v.voter_id === "user-b" && v.candidate_id === "user-a");
-          if (hasAtoB && hasBtoA && lowerUserId && higherUserId) {
+          if (lowerUserId && higherUserId) {
             return { data: { id: "pair-1" }, error: null };
           }
           return { data: null, error: null };
@@ -148,68 +388,109 @@ Deno.test("simMatch - bidirectional votes → match pair created (assert passes)
     },
   });
 
-  const result = await simMatch(
-    mock as unknown as SupabaseClient,
-    ["event-1"],
-    noop,
+  const result = await withMockFetch(
+    makeMatchFetchHandler({ pairs }),
+    () => simMatch(
+      mock as unknown as SupabaseClient,
+      ["event-1"],
+      noop,
+      "https://example.supabase.co",
+      "service-role-key",
+    ),
   );
 
   assertEquals(result.matchPairs.length, 1);
   assertEquals(result.matchPairs[0].userId1, "user-a");
   assertEquals(result.matchPairs[0].userId2, "user-b");
+  assertEquals(result.matchPairs[0].eventId, "event-1");
   assertEquals(result.assertions.length, 1);
   assertEquals(result.assertions[0].passed, true);
 });
 
-Deno.test("simMatch - unidirectional vote → no match pair (negative test)", async () => {
-  const insertedVotes: Array<{ voter_id: string; candidate_id: string }> = [];
-  let voteCount = 0;
+Deno.test("simMatch - EF failure is logged as error (not silently skipped)", async () => {
+  const mock = createMockSupabaseClient({});
 
+  const logs: string[] = [];
+  const collectLog = (entry: { level: string; message: string }) => {
+    logs.push(`${entry.level}: ${entry.message}`);
+  };
+
+  await withMockFetch(
+    makeMatchFetchHandler({ efStatus: 500 }),
+    () => simMatch(
+      mock as unknown as SupabaseClient,
+      ["event-1"],
+      collectLog,
+      "https://example.supabase.co",
+      "service-role-key",
+    ),
+  );
+
+  // Error should be caught by allSettledInBatches and logged
+  const errorLogs = logs.filter((l) => l.startsWith("error:"));
+  assertEquals(errorLogs.length >= 1, true);
+});
+
+Deno.test("simMatch - empty event list returns empty result", async () => {
+  const mock = createMockSupabaseClient({});
+
+  const result = await simMatch(
+    mock as unknown as SupabaseClient,
+    [],
+    noop,
+    "https://example.supabase.co",
+    "service-role-key",
+  );
+
+  assertEquals(result.matchPairs, []);
+  assertEquals(result.assertions, []);
+});
+
+Deno.test("simMatch - strict mode + no credentials throws immediately", async () => {
+  const mock = createMockSupabaseClient({});
+
+  await assertRejects(
+    () => simMatch(
+      mock as unknown as SupabaseClient,
+      ["event-1"],
+      noop,
+      undefined,
+      undefined,
+      true, // strict
+    ),
+    Error,
+    "supabaseUrl and serviceRoleKey are required",
+  );
+});
+
+Deno.test("simMatch - no credentials + strict=false returns empty (no direct DB fallback)", async () => {
+  const mock = createMockSupabaseClient({});
+
+  const logs: string[] = [];
+  const collectLog = (entry: { level: string; message: string }) => {
+    logs.push(`${entry.level}: ${entry.message}`);
+  };
+
+  const result = await simMatch(
+    mock as unknown as SupabaseClient,
+    ["event-1"],
+    collectLog,
+    // No supabaseUrl/serviceRoleKey
+  );
+
+  assertEquals(result.matchPairs, []);
+  assertEquals(result.assertions, []);
+  // Should warn about missing credentials
+  const warnLogs = logs.filter((l) => l.startsWith("warn:"));
+  assertEquals(warnLogs.length >= 1, true);
+});
+
+Deno.test("simMatch - multiple events, multiple pairs via EF", async () => {
   const mock = createMockSupabaseClient({
     tables: {
-      entry_groups: {
-        select: () => ({
-          data: [
-            { id: "group-a", gender: "male" },
-            { id: "group-b", gender: "female" },
-          ],
-          error: null,
-        }),
-      },
-      match_rules: {
-        select: () => ({ data: [{ id: "rule-1" }], error: null }),
-        insert: () => ({ data: null, error: null }),
-      },
-      event_participants: {
-        select: ({ filters }) => {
-          if (filters["status"] === "checked_in") {
-            return {
-              data: [
-                { id: "ep-1", user_id: "user-a", entry_group_id: "group-a" },
-                { id: "ep-2", user_id: "user-b", entry_group_id: "group-b" },
-              ],
-              error: null,
-            };
-          }
-          return { data: [], error: null };
-        },
-      },
-      match_votes: {
-        insert: ({ values }) => {
-          const v = values as { voter_id: string; candidate_id: string };
-          voteCount++;
-          if (voteCount === 2) {
-            return { data: null, error: { message: "Simulated failure for reverse vote" } };
-          }
-          insertedVotes.push({ voter_id: v.voter_id, candidate_id: v.candidate_id });
-          return { data: null, error: null };
-        },
-      },
       match_pairs: {
-        select: () => {
-          const hasAtoB = insertedVotes.some((v) => v.voter_id === "user-a" && v.candidate_id === "user-b");
-          const hasBtoA = insertedVotes.some((v) => v.voter_id === "user-b" && v.candidate_id === "user-a");
-          if (hasAtoB && hasBtoA) {
+        select: ({ filters }) => {
+          if (filters["user_lower_id"] && filters["user_higher_id"]) {
             return { data: { id: "pair-1" }, error: null };
           }
           return { data: null, error: null };
@@ -218,14 +499,20 @@ Deno.test("simMatch - unidirectional vote → no match pair (negative test)", as
     },
   });
 
-  const result = await simMatch(
-    mock as unknown as SupabaseClient,
-    ["event-1"],
-    noop,
+  const result = await withMockFetch(
+    makeMatchFetchHandler({ pairs: [{ user1: "user-a", user2: "user-b" }] }),
+    () => simMatch(
+      mock as unknown as SupabaseClient,
+      ["event-1", "event-2"],
+      noop,
+      "https://example.supabase.co",
+      "service-role-key",
+    ),
   );
 
-  assertEquals(result.matchPairs.length, 0);
-  assertEquals(result.assertions.length, 0);
+  // 1 pair per event × 2 events
+  assertEquals(result.matchPairs.length, 2);
+  assertEquals(result.assertions.length, 2);
 });
 
 // ─────────────────────────────────────────────────────────
