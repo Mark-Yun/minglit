@@ -17,6 +17,10 @@ interface UserPersona {
     birth_date: string;
     phone_number: string;
     is_verified: boolean;
+    // Simulator location fields — only set for regional personas (#1334)
+    sim_region?: string;
+    sim_lat?: number;
+    sim_lng?: number;
   };
 }
 
@@ -501,6 +505,68 @@ function generateDescription(
 
 const SEED_PASSWORD = "password1234!";
 
+// ─── Regional Persona Generation (#1334) ───────────────────────────────────
+
+// 10 major regions with simulator GPS coordinates.
+const REGIONS = [
+  { name: "강남", lat: 37.4979, lng: 127.0276 },
+  { name: "홍대", lat: 37.5575, lng: 126.9245 },
+  { name: "성수", lat: 37.5445, lng: 127.0559 },
+  { name: "이태원", lat: 37.5340, lng: 126.9948 },
+  { name: "잠실", lat: 37.5133, lng: 127.1001 },
+  { name: "판교", lat: 37.3948, lng: 127.1112 },
+  { name: "부산_해운대", lat: 35.1631, lng: 129.1635 },
+  { name: "부산_서면", lat: 35.1578, lng: 129.0596 },
+  { name: "대구_동성로", lat: 35.8690, lng: 128.5941 },
+  { name: "제주", lat: 33.4996, lng: 126.5312 },
+] as const;
+
+// 25 ages(18-42) × 2 genders × 10 regions = 500 regional personas.
+// All regional users are is_verified: true for simulation.
+// Phone scheme: 010-5{regionIdx:1}{age-18:2}-{gender:1}000
+//   → 5000+regionIdx*100+(age-18), last4=1000(male)/2000(female)
+//   Max prefix = 5000+9*100+24 = 5924 (4 digits, no overflow).
+function generateRegionalPersonas(): UserPersona[] {
+  const currentYear = Temporal.Now.plainDateISO().year;
+  const personas: UserPersona[] = [];
+
+  for (let age = 18; age <= 42; age++) {
+    const birthYear = currentYear - age + 1;
+    const birthDate = `${birthYear}-01-01`;
+
+    for (const gender of ["male", "female"] as const) {
+      const genderShort = gender === "male" ? "m" : "f";
+      const last4 = gender === "male" ? "1000" : "2000";
+
+      for (let ri = 0; ri < REGIONS.length; ri++) {
+        const region = REGIONS[ri];
+        const prefix = 5000 + ri * 100 + (age - 18);
+        const username = `user_${age}_${genderShort}_${region.name}`;
+
+        personas.push({
+          email: `${username}@test.com`,
+          password: SEED_PASSWORD,
+          metadata: {
+            name: `${age}${gender === "male" ? "남" : "여"}_${region.name}`,
+            username,
+            gender,
+            birth_date: birthDate,
+            phone_number: `010-${prefix}-${last4}`,
+            is_verified: true,
+            sim_region: region.name,
+            sim_lat: region.lat,
+            sim_lng: region.lng,
+          },
+        });
+      }
+    }
+  }
+
+  return personas;
+}
+
+// ─── Legacy Persona Generation ──────────────────────────────────────────────
+
 // Merged generatePersonas + generate30sPersonas: covers age 20-34 in a single loop.
 // Phone prefix: 20-24 → 1000+age (preserves original), 25-34 → 2000+age (preserves original).
 // Email pattern: user_{age}_{m|f}_{ok|no}@test.com — preserved for E2E test compat.
@@ -549,6 +615,10 @@ function generateAllPersonas(): UserPersona[] {
       });
     }
   }
+
+  // Fix #1334: include 500 regional personas (25 ages × 2 genders × 10 regions)
+  // after the 60 legacy personas. generateAllPersonas() = 60 + 500 = 560 total.
+  personas.push(...generateRegionalPersonas());
 
   return personas;
 }
@@ -875,8 +945,16 @@ async function ensureGlobalVerifications(
 // ─── Domain Seeding Functions ───────────────────────────────────────
 
 // Fix #1272: listUsers를 1회만 호출하고 Map으로 캐시 — 60회 반복 호출 제거
-async function seedAllUsers(supabase: SupabaseClient): Promise<number> {
-  const personas = generateAllPersonas();
+// Fix #1334: offset/limit 지원 — 560명을 100명씩 6 배치로 분할 처리
+async function seedAllUsers(
+  supabase: SupabaseClient,
+  offset = 0,
+  limit: number | null = null,
+): Promise<number> {
+  const allPersonas = generateAllPersonas();
+  const personas = limit !== null
+    ? allPersonas.slice(offset, offset + limit)
+    : allPersonas.slice(offset);
 
   // 1회만 조회하고 Map으로 캐시 (240회 → 최소 1회)
   const { data: listData } = await supabase.auth.admin.listUsers({ perPage: 1000 });
@@ -1258,11 +1336,17 @@ Deno.serve(async (req) => {
     );
   }
 
+  // Fix #1334: offset/limit for batched user seeding (560 total ÷ 100/batch = 6 calls)
+  const offsetParam = url.searchParams.get("offset");
+  const limitParam = url.searchParams.get("limit");
+  const offset = offsetParam !== null ? parseInt(offsetParam, 10) : 0;
+  const limit = limitParam !== null ? parseInt(limitParam, 10) : null;
+
   try {
     const supabase = createServiceClient();
 
     // static mode: idempotent seed of users, verifications, partners, roles, images
-    const createdUsers = await seedAllUsers(supabase);
+    const createdUsers = await seedAllUsers(supabase, offset, limit);
     const globalVerifs = await seedGlobalVerifications(supabase);
     const { processedPartners } = await seedAllPartners(supabase, globalVerifs);
     await seedPartnerRoles(supabase);
