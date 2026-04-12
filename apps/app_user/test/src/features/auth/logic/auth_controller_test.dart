@@ -101,5 +101,136 @@ void main() {
 
       verify(() => mockAuthRepo.signOut()).called(1);
     });
+
+    // Fix #1287: AuthController 에러 경로 테스트
+    test(
+      'signInWithEmail sets AsyncError when repository throws',
+      () async {
+        final exception = Exception('Invalid credentials');
+        when(
+          () => mockAuthRepo.signInWithEmail(
+            email: any(named: 'email'),
+            password: any(named: 'password'),
+          ),
+        ).thenThrow(exception);
+
+        final container = createContainer(
+          overrides: [
+            authRepositoryProvider.overrideWith((ref) => mockAuthRepo),
+          ],
+        );
+
+        final controller = container.read(authControllerProvider.notifier);
+        await controller.signInWithEmail(
+          email: 'bad@example.com',
+          password: 'wrong',
+        );
+
+        final state = container.read(authControllerProvider);
+        expect(state, isA<AsyncError<void>>());
+        expect(state.error, isA<Exception>());
+      },
+    );
+
+    test(
+      'signInWithEmail error preserves exception reference',
+      () async {
+        final exception = Exception('Auth service down');
+        when(
+          () => mockAuthRepo.signInWithEmail(
+            email: any(named: 'email'),
+            password: any(named: 'password'),
+          ),
+        ).thenThrow(exception);
+
+        final container = createContainer(
+          overrides: [
+            authRepositoryProvider.overrideWith((ref) => mockAuthRepo),
+          ],
+        );
+
+        final controller = container.read(authControllerProvider.notifier);
+        await controller.signInWithEmail(
+          email: 'test@example.com',
+          password: 'pass',
+        );
+
+        final state = container.read(authControllerProvider);
+        expect(state, isA<AsyncError<void>>());
+        expect(state.error, exception);
+      },
+    );
+
+    test(
+      'signInWithGoogle sets AsyncError when repository throws',
+      () async {
+        when(
+          () => mockAuthRepo.signInWithGoogle(
+            redirectTo: any(named: 'redirectTo'),
+          ),
+        ).thenThrow(Exception('Google auth failed'));
+
+        final container = createContainer(
+          overrides: [
+            authRepositoryProvider.overrideWith((ref) => mockAuthRepo),
+          ],
+        );
+
+        final controller = container.read(authControllerProvider.notifier);
+        await controller.signInWithGoogle();
+
+        final state = container.read(authControllerProvider);
+        expect(state, isA<AsyncError<void>>());
+        expect(state.error, isA<Exception>());
+      },
+    );
+
+    test(
+      'signInWithApple sets AsyncError when repository throws',
+      () async {
+        when(
+          () => mockAuthRepo.signInWithApple(
+            redirectTo: any(named: 'redirectTo'),
+          ),
+        ).thenThrow(Exception('Apple auth failed'));
+
+        final container = createContainer(
+          overrides: [
+            authRepositoryProvider.overrideWith((ref) => mockAuthRepo),
+          ],
+        );
+
+        final controller = container.read(authControllerProvider.notifier);
+        await controller.signInWithApple();
+
+        final state = container.read(authControllerProvider);
+        expect(state, isA<AsyncError<void>>());
+        expect(state.error, isA<Exception>());
+      },
+    );
+
+    test(
+      'signInWithKakao sets AsyncError when repository throws',
+      () async {
+        when(
+          () => mockAuthRepo.signInWithKakao(
+            redirectTo: any(named: 'redirectTo'),
+          ),
+        ).thenThrow(Exception('Kakao auth failed'));
+
+        final container = createContainer(
+          overrides: [
+            authRepositoryProvider.overrideWith((ref) => mockAuthRepo),
+          ],
+        );
+
+        final controller = container.read(authControllerProvider.notifier);
+        await controller.signInWithKakao();
+
+        final state = container.read(authControllerProvider);
+        expect(state, isA<AsyncError<void>>());
+        expect(state.error, isA<Exception>());
+      },
+    );
   });
 }

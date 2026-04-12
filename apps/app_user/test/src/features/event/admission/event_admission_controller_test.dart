@@ -683,4 +683,207 @@ void main() {
       expect(config.style, AdmissionButtonStyle.disabled);
     });
   });
+
+  // Fix #1287: EventAdmissionController 에러 경로 테스트
+  group('EventAdmissionController — error paths (Fix #1287)', () {
+    test(
+      'provider error field is set when getApplication throws on active event',
+      () async {
+        when(
+          () => mockEventRepo.getApplication(
+            eventId: any(named: 'eventId'),
+            userId: any(named: 'userId'),
+          ),
+        ).thenThrow(Exception('DB connection failed'));
+
+        // Use a long-lived container and listen to keep provider alive
+        final container = ProviderContainer(
+          overrides: [
+            currentUserProvider.overrideWith((ref) => mockUser),
+            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
+            userRepositoryProvider.overrideWith((ref) => mockUserRepo),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        // Subscribe so the provider stays alive
+        final sub = container.listen(
+          eventAdmissionControllerProvider(testEvent),
+          (_, __) {},
+        );
+        addTearDown(sub.close);
+
+        // Wait for the async build to complete
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+
+        final raw = container.read(eventAdmissionControllerProvider(testEvent));
+        // Riverpod 3: error is available via .error on any AsyncValue state
+        expect(raw.error, isA<Exception>());
+      },
+    );
+
+    test(
+      'provider error field is set when getUserProfile throws',
+      () async {
+        when(
+          () => mockEventRepo.getApplication(
+            eventId: any(named: 'eventId'),
+            userId: any(named: 'userId'),
+          ),
+        ).thenAnswer((_) async => null);
+
+        when(
+          () => mockUserRepo.getUserProfile(any()),
+        ).thenThrow(Exception('Profile fetch error'));
+
+        final container = ProviderContainer(
+          overrides: [
+            currentUserProvider.overrideWith((ref) => mockUser),
+            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
+            userRepositoryProvider.overrideWith((ref) => mockUserRepo),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        final sub = container.listen(
+          eventAdmissionControllerProvider(testEvent),
+          (_, __) {},
+        );
+        addTearDown(sub.close);
+
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+
+        final raw = container.read(eventAdmissionControllerProvider(testEvent));
+        expect(raw.error, isA<Exception>());
+      },
+    );
+
+    test(
+      'provider error field is set when getApprovedVerificationIds throws',
+      () async {
+        when(
+          () => mockEventRepo.getApplication(
+            eventId: any(named: 'eventId'),
+            userId: any(named: 'userId'),
+          ),
+        ).thenAnswer((_) async => null);
+
+        when(() => mockUserRepo.getUserProfile('user_1')).thenAnswer(
+          (_) async => UserProfile(
+            id: 'user_1',
+            name: 'Test User',
+            username: 'test_user',
+            isVerified: true,
+            gender: 'male',
+            birthDate: DateTime(1995),
+          ),
+        );
+        when(
+          () => mockUserRepo.getApprovedVerificationIds(any()),
+        ).thenThrow(Exception('Verification DB error'));
+
+        final container = ProviderContainer(
+          overrides: [
+            currentUserProvider.overrideWith((ref) => mockUser),
+            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
+            userRepositoryProvider.overrideWith((ref) => mockUserRepo),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        final sub = container.listen(
+          eventAdmissionControllerProvider(testEvent),
+          (_, __) {},
+        );
+        addTearDown(sub.close);
+
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+
+        final raw = container.read(eventAdmissionControllerProvider(testEvent));
+        expect(raw.error, isA<Exception>());
+      },
+    );
+
+    test(
+      'provider error field is set when getMyMatches throws on completed event',
+      () async {
+        when(
+          () => mockEventRepo.getApplication(
+            eventId: any(named: 'eventId'),
+            userId: any(named: 'userId'),
+          ),
+        ).thenAnswer(
+          (_) async => EventApplication(
+            id: 'app_1',
+            eventId: 'event_1',
+            ticketId: 'ticket_1',
+            userId: 'user_1',
+            status: 'confirmed',
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        );
+        when(
+          () => mockMatchingRepo.getMyMatches(any()),
+        ).thenThrow(Exception('Matching service unavailable'));
+
+        final container = ProviderContainer(
+          overrides: [
+            currentUserProvider.overrideWith((ref) => mockUser),
+            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
+            userRepositoryProvider.overrideWith((ref) => mockUserRepo),
+            matchingRepositoryProvider.overrideWith(
+              (ref) => mockMatchingRepo,
+            ),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        final sub = container.listen(
+          eventAdmissionControllerProvider(completedEvent),
+          (_, __) {},
+        );
+        addTearDown(sub.close);
+
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+
+        final raw =
+            container.read(eventAdmissionControllerProvider(completedEvent));
+        expect(raw.error, isA<Exception>());
+      },
+    );
+
+    test(
+      'error object is preserved when getApplication throws specific exception',
+      () async {
+        final specificException = Exception('Specific DB error');
+        when(
+          () => mockEventRepo.getApplication(
+            eventId: any(named: 'eventId'),
+            userId: any(named: 'userId'),
+          ),
+        ).thenThrow(specificException);
+
+        final container = ProviderContainer(
+          overrides: [
+            currentUserProvider.overrideWith((ref) => mockUser),
+            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
+            userRepositoryProvider.overrideWith((ref) => mockUserRepo),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        final sub = container.listen(
+          eventAdmissionControllerProvider(testEvent),
+          (_, __) {},
+        );
+        addTearDown(sub.close);
+
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+
+        final raw = container.read(eventAdmissionControllerProvider(testEvent));
+        expect(raw.error, specificException);
+      },
+    );
+  });
 }
