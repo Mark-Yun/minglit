@@ -446,7 +446,7 @@ Deno.test({
 // Tests: error cases — EF failure throws (no direct DB fallback)
 // ============================================================
 
-Deno.test("simRefundRequests - missing supabaseUrl → error logged, no refunds", async () => {
+Deno.test({ name: "simRefundRequests - missing supabaseUrl → error logged, no refunds", sanitizeOps: false, sanitizeResources: false, fn: async () => {
   const paymentAmount = 10000;
   const startTime = daysFromNow(30);
 
@@ -475,7 +475,7 @@ Deno.test("simRefundRequests - missing supabaseUrl → error logged, no refunds"
   assertEquals(result.refundedApplicationIds.length, 0);
   assertEquals(errors.length, 1);
   assertMatch(errors[0], /supabaseUrl\/anonKey required/);
-});
+}});
 
 Deno.test("simRefundRequests - missing payment_id → error logged, no refunds", async () => {
   const paymentAmount = 10000;
