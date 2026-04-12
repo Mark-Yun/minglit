@@ -50,8 +50,8 @@ void _fillValidState(PartyCreateWizardController notifier) {
         partnerId: 'partner_1',
         name: '테스트 장소',
         address: '서울시 강남구 테스트로 1',
-        createdAt: DateTime(2026, 1, 1),
-        updatedAt: DateTime(2026, 1, 1),
+        createdAt: DateTime(2026),
+        updatedAt: DateTime(2026),
       ),
     )
     ..toggleContactMethod('phone')
@@ -66,8 +66,8 @@ void _fillValidState(PartyCreateWizardController notifier) {
         name: '일반 티켓',
         price: 10000,
         quantity: 10,
-        createdAt: DateTime(2026, 1, 1),
-        updatedAt: DateTime(2026, 1, 1),
+        createdAt: DateTime(2026),
+        updatedAt: DateTime(2026),
       ),
     );
 }
@@ -126,8 +126,9 @@ void main() {
         ticketRepo: mockTicketRepo,
         locationRepo: mockLocationRepo,
       );
-      final notifier =
-          container.read(partyCreateWizardControllerProvider.notifier);
+      final notifier = container.read(
+        partyCreateWizardControllerProvider.notifier,
+      );
 
       notifier.updateTitle('멋진 파티');
 
@@ -147,8 +148,9 @@ void main() {
         ticketRepo: mockTicketRepo,
         locationRepo: mockLocationRepo,
       );
-      final notifier =
-          container.read(partyCreateWizardControllerProvider.notifier);
+      final notifier = container.read(
+        partyCreateWizardControllerProvider.notifier,
+      );
 
       // basicInfo → location
       notifier.nextStep();
@@ -196,8 +198,9 @@ void main() {
         ticketRepo: mockTicketRepo,
         locationRepo: mockLocationRepo,
       );
-      final notifier =
-          container.read(partyCreateWizardControllerProvider.notifier);
+      final notifier = container.read(
+        partyCreateWizardControllerProvider.notifier,
+      );
 
       notifier.setStep(PartyCreateStep.review);
       notifier.nextStep();
@@ -218,8 +221,9 @@ void main() {
         ticketRepo: mockTicketRepo,
         locationRepo: mockLocationRepo,
       );
-      final notifier =
-          container.read(partyCreateWizardControllerProvider.notifier);
+      final notifier = container.read(
+        partyCreateWizardControllerProvider.notifier,
+      );
 
       const group = EntryGroupTemplate(id: 'eg_1', partyId: '', label: '남성');
       notifier.addEntryGroup(group);
@@ -247,18 +251,18 @@ void main() {
         ticketRepo: mockTicketRepo,
         locationRepo: mockLocationRepo,
       );
-      final notifier =
-          container.read(partyCreateWizardControllerProvider.notifier);
+      final notifier = container.read(
+        partyCreateWizardControllerProvider.notifier,
+      );
 
       notifier.addTicket(
         TicketTemplate(
           id: '',
           partyId: '',
           name: '일반',
-          price: 0,
           quantity: 20,
-          createdAt: DateTime(2026, 1, 1),
-          updatedAt: DateTime(2026, 1, 1),
+          createdAt: DateTime(2026),
+          updatedAt: DateTime(2026),
         ),
       );
       notifier.addTicket(
@@ -268,8 +272,8 @@ void main() {
           name: 'VIP',
           price: 50000,
           quantity: 5,
-          createdAt: DateTime(2026, 1, 1),
-          updatedAt: DateTime(2026, 1, 1),
+          createdAt: DateTime(2026),
+          updatedAt: DateTime(2026),
         ),
       );
 
@@ -289,8 +293,9 @@ void main() {
         ticketRepo: mockTicketRepo,
         locationRepo: mockLocationRepo,
       );
-      final notifier =
-          container.read(partyCreateWizardControllerProvider.notifier);
+      final notifier = container.read(
+        partyCreateWizardControllerProvider.notifier,
+      );
 
       _fillValidState(notifier);
 
@@ -301,10 +306,9 @@ void main() {
           id: '',
           partyId: '',
           name: '무료 티켓',
-          price: 0,
           quantity: 10,
-          createdAt: DateTime(2026, 1, 1),
-          updatedAt: DateTime(2026, 1, 1),
+          createdAt: DateTime(2026),
+          updatedAt: DateTime(2026),
         ),
       );
 
@@ -322,8 +326,9 @@ void main() {
         ticketRepo: mockTicketRepo,
         locationRepo: mockLocationRepo,
       );
-      final notifier =
-          container.read(partyCreateWizardControllerProvider.notifier);
+      final notifier = container.read(
+        partyCreateWizardControllerProvider.notifier,
+      );
 
       final errors = notifier.validationErrors;
 
@@ -337,8 +342,9 @@ void main() {
         ticketRepo: mockTicketRepo,
         locationRepo: mockLocationRepo,
       );
-      final notifier =
-          container.read(partyCreateWizardControllerProvider.notifier);
+      final notifier = container.read(
+        partyCreateWizardControllerProvider.notifier,
+      );
 
       final errors = notifier.validationErrors;
       expect(errors.any((e) => e.contains('제목')), isTrue);
@@ -351,8 +357,9 @@ void main() {
         ticketRepo: mockTicketRepo,
         locationRepo: mockLocationRepo,
       );
-      final notifier =
-          container.read(partyCreateWizardControllerProvider.notifier);
+      final notifier = container.read(
+        partyCreateWizardControllerProvider.notifier,
+      );
 
       final errors = notifier.validationErrors;
       expect(errors.any((e) => e.contains('입장 그룹')), isTrue);
@@ -365,8 +372,9 @@ void main() {
         ticketRepo: mockTicketRepo,
         locationRepo: mockLocationRepo,
       );
-      final notifier =
-          container.read(partyCreateWizardControllerProvider.notifier);
+      final notifier = container.read(
+        partyCreateWizardControllerProvider.notifier,
+      );
 
       final errors = notifier.validationErrors;
       expect(errors.any((e) => e.contains('티켓')), isTrue);
@@ -382,8 +390,9 @@ void main() {
         ticketRepo: mockTicketRepo,
         locationRepo: mockLocationRepo,
       );
-      final notifier =
-          container.read(partyCreateWizardControllerProvider.notifier);
+      final notifier = container.read(
+        partyCreateWizardControllerProvider.notifier,
+      );
 
       _fillValidState(notifier);
 
@@ -399,16 +408,16 @@ void main() {
         id: 'party_new',
         partnerId: partnerId,
         title: '테스트 파티',
-        createdAt: DateTime(2026, 1, 1),
-        updatedAt: DateTime(2026, 1, 1),
+        createdAt: DateTime(2026),
+        updatedAt: DateTime(2026),
       );
       final createdLocation = Location(
         id: 'loc_created',
         partnerId: partnerId,
         name: '테스트 장소',
         address: '서울시 강남구 테스트로 1',
-        createdAt: DateTime(2026, 1, 1),
-        updatedAt: DateTime(2026, 1, 1),
+        createdAt: DateTime(2026),
+        updatedAt: DateTime(2026),
       );
       final createdTicket = TicketTemplate(
         id: 'tkt_1',
@@ -416,18 +425,23 @@ void main() {
         name: '일반 티켓',
         price: 10000,
         quantity: 10,
-        createdAt: DateTime(2026, 1, 1),
-        updatedAt: DateTime(2026, 1, 1),
+        createdAt: DateTime(2026),
+        updatedAt: DateTime(2026),
       );
 
       when(
         () => mockPartnerRepo.getMyManagedPartners(),
-      ).thenAnswer((_) async => [const Partner(id: partnerId, name: '테스트 파트너')]);
+      ).thenAnswer(
+        (_) async => [const Partner(id: partnerId, name: '테스트 파트너')],
+      );
       when(
         () => mockLocationRepo.createLocation(any()),
       ).thenAnswer((_) async => createdLocation);
       when(
-        () => mockPartyRepo.createParty(any(), extraFields: any(named: 'extraFields')),
+        () => mockPartyRepo.createParty(
+          any(),
+          extraFields: any(named: 'extraFields'),
+        ),
       ).thenAnswer((_) async => createdParty);
       when(
         () => mockTicketRepo.createTicketTemplate(any()),
@@ -439,8 +453,9 @@ void main() {
         ticketRepo: mockTicketRepo,
         locationRepo: mockLocationRepo,
       );
-      final notifier =
-          container.read(partyCreateWizardControllerProvider.notifier);
+      final notifier = container.read(
+        partyCreateWizardControllerProvider.notifier,
+      );
 
       _fillValidState(notifier);
       await notifier.submit();
@@ -465,8 +480,9 @@ void main() {
         ticketRepo: mockTicketRepo,
         locationRepo: mockLocationRepo,
       );
-      final notifier =
-          container.read(partyCreateWizardControllerProvider.notifier);
+      final notifier = container.read(
+        partyCreateWizardControllerProvider.notifier,
+      );
 
       _fillValidState(notifier);
       await notifier.submit();
@@ -485,8 +501,9 @@ void main() {
         ticketRepo: mockTicketRepo,
         locationRepo: mockLocationRepo,
       );
-      final notifier =
-          container.read(partyCreateWizardControllerProvider.notifier);
+      final notifier = container.read(
+        partyCreateWizardControllerProvider.notifier,
+      );
 
       // Step 1에서 데이터 입력
       notifier.updateTitle('보존 테스트 파티');
@@ -534,8 +551,9 @@ void main() {
         ticketRepo: mockTicketRepo,
         locationRepo: mockLocationRepo,
       );
-      final notifier =
-          container.read(partyCreateWizardControllerProvider.notifier);
+      final notifier = container.read(
+        partyCreateWizardControllerProvider.notifier,
+      );
 
       notifier.toggleContactMethod('phone');
       expect(
@@ -564,8 +582,9 @@ void main() {
         ticketRepo: mockTicketRepo,
         locationRepo: mockLocationRepo,
       );
-      final notifier =
-          container.read(partyCreateWizardControllerProvider.notifier);
+      final notifier = container.read(
+        partyCreateWizardControllerProvider.notifier,
+      );
 
       notifier.setVisibility('private');
       expect(

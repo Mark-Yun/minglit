@@ -29,7 +29,9 @@ void main() {
             eventId: 'event_1',
             rules: rules,
           ),
-        ).thenAnswer((_) async {});
+        ).thenAnswer((_) async {
+          return null;
+        });
 
         final container = createContainer(
           overrides: [
