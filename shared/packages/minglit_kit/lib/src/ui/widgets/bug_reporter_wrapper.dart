@@ -11,9 +11,12 @@ import 'package:minglit_kit/src/data/repositories/storage_repository.dart';
 import 'package:minglit_kit/src/logic/providers/supabase_provider.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
 import 'package:minglit_kit/src/ui/widgets/common/loading_indicator.dart';
+
+import 'package:minglit_kit/src/data/services/bug_report_collector.dart';
 import 'package:minglit_kit/src/utils/environment_info.dart';
 import 'package:minglit_kit/src/utils/layout_dump.dart';
 import 'package:minglit_kit/src/utils/log.dart';
+import 'package:minglit_kit/src/utils/qa_bug_report_channel.dart';
 
 /// Wraps [child] with bug reporting UI.
 // Fix #412: ConsumerStatefulWidget 전환 — Supabase 직접 접근 제거, Riverpod Provider 주입
@@ -50,6 +53,16 @@ class _BugReporterWrapperState extends ConsumerState<BugReporterWrapper> {
   String? _screenshotUrl;
   Map<String, dynamic>? _environmentInfo;
   String? _layoutDumpUrl;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.enabled) {
+      QaBugReportChannel.initialize(
+        BugReportCollector(boundaryKey: _boundaryKey),
+      );
+    }
+  }
 
   /// Returns a [BuildContext] that has a [Navigator] ancestor.
   ///
