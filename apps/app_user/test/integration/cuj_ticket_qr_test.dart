@@ -9,6 +9,7 @@
 import 'dart:convert';
 
 import 'package:app_user/src/features/payment/logic/purchase_history_controller.dart';
+import 'package:app_user/src/features/ticket/data/ticket_token_service.dart';
 import 'package:app_user/src/features/ticket/data/ticket_wallet_repository.dart';
 import 'package:app_user/src/features/ticket/ui/ticket_qr_screen.dart';
 import 'package:flutter/material.dart';
