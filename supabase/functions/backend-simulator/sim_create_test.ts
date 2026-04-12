@@ -1,4 +1,4 @@
-import { assertEquals, assertRejects } from "@std/assert";
+import { assertEquals, assertExists, assertRejects } from "@std/assert";
 import { createMockSupabaseClient } from "../_test_utils/mock_supabase_client.ts";
 import { simCreateParties, simCreateDisplayEvents, simDiscoverAndApply } from "./sim_create.ts";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -351,6 +351,13 @@ Deno.test({
       assertEquals(result.displayEventIds.length, 10);
       assertEquals(partyCallCount, 5);
       assertEquals(eventCallCount, 10);
+
+      // Verify event payloads include title
+      const eventCalls = efCalls.filter(c => c.url.includes("partner-manage-event"));
+      for (const call of eventCalls) {
+        const body = call.body as { event?: { title?: string } };
+        assertExists(body.event?.title, "display event must have a title");
+      }
     });
   } finally {
     Deno.env.delete("SIM_USER_PASSWORD");

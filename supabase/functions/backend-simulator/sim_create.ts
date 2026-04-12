@@ -275,6 +275,7 @@ export async function simCreateDisplayEvents(
         action: "create",
         party_id: partyId,
         event: {
+          title: `${scenario.title} #${ei + 1}`,
           start_time: startTime.toISOString(),
           end_time: endTime.toISOString(),
           max_participants: 30,
@@ -448,6 +449,7 @@ async function applyForUser(
 }
 
 // Fix #1323: User-centric discover-and-apply loop
+// Note: #1283 에서 strict 파라미터 제거 및 EF-only 전환 예정 (simCreateParties/simCreateDisplayEvents와 일관성)
 export async function simDiscoverAndApply(
   supabase: SupabaseClient,
   config: SimConfig,
