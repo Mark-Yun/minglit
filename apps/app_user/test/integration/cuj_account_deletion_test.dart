@@ -32,7 +32,7 @@ import 'utils/test_app.dart';
 import 'utils/test_mocks.dart';
 
 /// 라우터 기반 테스트에서 반복되는 overrides 헬퍼.
-List<Override> _deletionRouterOverrides() => [
+List<dynamic> _deletionRouterOverrides() => [
   accountDeletionControllerProvider.overrideWith(_FakeDeletionController.new),
   accountRepositoryProvider.overrideWithValue(_FakeAccountRepository()),
 ];
