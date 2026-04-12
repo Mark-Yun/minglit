@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:minglit_kit/src/theme/minglit_theme.dart';
 import 'package:minglit_kit/src/ui/widgets/bug_reporter_wrapper.dart';
 
 void main() {
@@ -167,6 +168,38 @@ void main() {
 
       // Verify FAB is rendered when enabled
       expect(find.byType(FloatingActionButton), findsOneWidget);
+    });
+
+    // Regression test for #1262: FAB must be anchored at top, not bottom,
+    // to avoid overlapping BottomNavigationBar touch targets.
+    testWidgets('FAB is positioned at top-right, not bottom-right', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        const ProviderScope(
+          child: MaterialApp(
+            home: Scaffold(
+              body: BugReporterWrapper(
+                child: Text('content'),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      final positioned = tester.widget<Positioned>(
+        find
+            .ancestor(
+              of: find.byType(FloatingActionButton),
+              matching: find.byType(Positioned),
+            )
+            .first,
+      );
+
+      // Must use top anchor, not bottom — bottom anchor overlaps BottomNav.
+      expect(positioned.top, MinglitSpacing.medium);
+      expect(positioned.right, MinglitSpacing.medium);
+      expect(positioned.bottom, isNull);
     });
   });
 }
