@@ -213,7 +213,10 @@ void main() {
         final event = makeEvent('ev-scan', title: '새해맞이 파티');
 
         await tester.pumpWidget(
-          buildScannerWithState(event, const CheckinState(result: CheckinResult.idle)),
+          buildScannerWithState(
+            event,
+            const CheckinState(result: CheckinResult.idle),
+          ),
         );
         await tester.pump();
 
@@ -277,7 +280,10 @@ void main() {
           final event = makeEvent('ev-idle');
 
           await tester.pumpWidget(
-            buildScannerWithState(event, const CheckinState(result: CheckinResult.idle)),
+            buildScannerWithState(
+              event,
+              const CheckinState(result: CheckinResult.idle),
+            ),
           );
           await tester.pump();
 
