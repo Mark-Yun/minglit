@@ -130,6 +130,16 @@ Party (템플릿)
 
 상세: [backend.md §2.1](./backend.md#21-table-inventory)
 
+### 3.3 반복 이벤트 (Recurring Events)
+
+파티에 반복 규칙(`recurrence_rules`)을 설정하면, `recurrence-cron` Edge Function이 매일 UTC 00:00에 향후 30일분의 이벤트를 자동 생성한다.
+
+- 지원 패턴: `weekly`, `biweekly`, `monthly`
+- 규칙 상태: `active` / `paused` / `cancelled`
+- 규칙 관리: `recurrence-rules` Edge Function (CRUD, 파트너 전용)
+
+상세: [backend.md §3.1](./backend.md#31-function-inventory)
+
 ---
 
 ## 4. 신뢰 및 검증 (Trust & Verification)
