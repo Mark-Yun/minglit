@@ -107,14 +107,18 @@ Deno.test("simCreateParties - creates 4 distinct start_time zones", async () => 
   assertEquals(hasTwelveHours, true);
 });
 
-Deno.test("simDiscoverAndApply - creates applications with 80/20 split", async () => {
-  const paidApps: string[] = [];
-  const pendingApps: string[] = [];
+// sanitizeResources/sanitizeOps disabled: @supabase/auth-js internally calls setInterval for
+// token auto-refresh even when persistSession=false. The interval leaks within the test but is
+// harmless — suppressing the leak check is correct here rather than patching the library.
+Deno.test({
+  name: "simDiscoverAndApply - creates applications with 80/20 split",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
   let appCounter = 0;
 
   const mock = createMockSupabaseClient({
     tables: {
-      events: { select: () => ({ data: [], error: null }) },
       user_profiles: {
         select: () => ({
           data: Array.from({ length: 10 }, (_, i) => ({
@@ -143,17 +147,6 @@ Deno.test("simDiscoverAndApply - creates applications with 80/20 split", async (
       },
       event_applications: {
         select: () => ({ data: [], error: null }),
-        insert: ({ values }) => {
-          appCounter++;
-          const id = `app-${appCounter}`;
-          const v = values as { status: string };
-          if (v.status === "paid") paidApps.push(id);
-          else pendingApps.push(id);
-          return { data: { id }, error: null };
-        },
-      },
-      event_participants: {
-        insert: () => ({ data: null, error: null }),
       },
     },
   });
@@ -163,15 +156,42 @@ Deno.test("simDiscoverAndApply - creates applications with 80/20 split", async (
     error_rate: 0.0,
     apps_per_event: 5,
   };
-  const result = await simDiscoverAndApply(
-    mock as unknown as SupabaseClient,
-    config,
-    noop,
-    ["event-1", "event-2"],
-  );
 
-  assertEquals(result.applicationIds.length > 0, true);
-  assertEquals(result.paidApplicationIds.length > 0, true);
+  Deno.env.set("SIM_USER_PASSWORD", "test-password");
+  try {
+    const result = await withMockFetch((url) => {
+      if (url.includes("auth/v1/token")) {
+        return new Response(
+          JSON.stringify({ access_token: "mock-user-token", token_type: "bearer", expires_in: 3600, refresh_token: "r", user: {} }),
+          { status: 200 },
+        );
+      }
+      if (url.includes("functions/v1/user-event-feed")) {
+        // Return empty feed — only newEventIds should be processed
+        return new Response(JSON.stringify({ events: [] }), { status: 200 });
+      }
+      if (url.includes("rest/v1/rpc/apply_event")) {
+        appCounter++;
+        return new Response(JSON.stringify(`app-${appCounter}`), { status: 200 });
+      }
+      return new Response(JSON.stringify({}), { status: 404 });
+    }, () =>
+      simDiscoverAndApply(
+        mock as unknown as SupabaseClient,
+        config,
+        noop,
+        ["event-1", "event-2"],
+        "https://mock.supabase.co",
+        "anon-key",
+      )
+    );
+
+    assertEquals(result.applicationIds.length > 0, true);
+    assertEquals(result.paidApplicationIds.length > 0, true);
+  } finally {
+    Deno.env.delete("SIM_USER_PASSWORD");
+  }
+  },
 });
 
 Deno.test("simDiscoverAndApply - prevents duplicate applications", async () => {
@@ -463,13 +483,19 @@ Deno.test("simCreateParties - direct DB path when supabaseUrl/anonKey not provid
   assertEquals(createdEvents.length, 2);
 });
 
-Deno.test("simDiscoverAndApply - processes multiple events concurrently", async () => {
+// sanitizeResources/sanitizeOps disabled: @supabase/auth-js internally calls setInterval for
+// token auto-refresh even when persistSession=false. The interval leaks within the test but is
+// harmless — suppressing the leak check is correct here rather than patching the library.
+Deno.test({
+  name: "simDiscoverAndApply - processes multiple events concurrently",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
   const processedEventIds: string[] = [];
   let appCounter = 0;
 
   const mock = createMockSupabaseClient({
     tables: {
-      events: { select: () => ({ data: [], error: null }) },
       user_profiles: {
         select: () => ({
           data: Array.from({ length: 10 }, (_, i) => ({
@@ -497,16 +523,7 @@ Deno.test("simDiscoverAndApply - processes multiple events concurrently", async 
         }),
       },
       event_applications: {
-        select: (_opts: unknown) => ({ data: [], error: null }),
-        insert: ({ values }) => {
-          appCounter++;
-          const v = values as { event_id: string };
-          processedEventIds.push(v.event_id);
-          return { data: { id: `app-${appCounter}` }, error: null };
-        },
-      },
-      event_participants: {
-        insert: () => ({ data: null, error: null }),
+        select: () => ({ data: [], error: null }),
       },
     },
   });
@@ -514,15 +531,321 @@ Deno.test("simDiscoverAndApply - processes multiple events concurrently", async 
   // Fix #705: 6 events to test that batched concurrency processes all of them
   const eventIds = ["ev-1", "ev-2", "ev-3", "ev-4", "ev-5", "ev-6"];
   const config: SimConfig = { ...DEFAULT_CONFIG, error_rate: 0.0, apps_per_event: 2 };
+
+  Deno.env.set("SIM_USER_PASSWORD", "test-password");
+  try {
+    const result = await withMockFetch((url, init) => {
+      if (url.includes("auth/v1/token")) {
+        return new Response(
+          JSON.stringify({ access_token: "mock-user-token", token_type: "bearer", expires_in: 3600, refresh_token: "r", user: {} }),
+          { status: 200 },
+        );
+      }
+      if (url.includes("functions/v1/user-event-feed")) {
+        return new Response(JSON.stringify({ events: [] }), { status: 200 });
+      }
+      if (url.includes("rest/v1/rpc/apply_event")) {
+        appCounter++;
+        try {
+          const body = JSON.parse((init.body as string) ?? "{}");
+          if (body.p_event_id) processedEventIds.push(body.p_event_id);
+        } catch {
+          // intentionally empty
+        }
+        return new Response(JSON.stringify(`app-${appCounter}`), { status: 200 });
+      }
+      return new Response(JSON.stringify({}), { status: 404 });
+    }, () =>
+      simDiscoverAndApply(
+        mock as unknown as SupabaseClient,
+        config,
+        noop,
+        eventIds,
+        "https://mock.supabase.co",
+        "anon-key",
+      )
+    );
+
+    // All 6 events should have been processed
+    const uniqueEvents = new Set(processedEventIds);
+    assertEquals(uniqueEvents.size, 6);
+    assertEquals(result.applicationIds.length > 0, true);
+  } finally {
+    Deno.env.delete("SIM_USER_PASSWORD");
+  }
+  },
+});
+
+// ── RPC-only path tests (Fix #1279) ──────────────────────────────────────────
+
+// sanitizeResources/sanitizeOps disabled: @supabase/auth-js internally calls setInterval for
+// token auto-refresh even when persistSession=false. The interval leaks within the test but is
+// harmless — suppressing the leak check is correct here rather than patching the library.
+Deno.test({
+  name: "simDiscoverAndApply - uses user-event-feed EF for event discovery",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+  const efCalls: string[] = [];
+
+  const mock = createMockSupabaseClient({
+    tables: {
+      user_profiles: {
+        // First call: maybeSingle() for feed token acquisition → single object.
+        // Second call: full user list for application loop → array.
+        select: (() => {
+          let callCount = 0;
+          return () => {
+            callCount++;
+            if (callCount === 1) {
+              return { data: { username: "user1" }, error: null };
+            }
+            return { data: [{ id: "user-1", gender: "male", birth_date: "1998-01-01", username: "user1" }], error: null };
+          };
+        })(),
+      },
+      entry_groups: {
+        select: () => ({
+          data: [{ id: "group-1", gender: "male", birth_year_min: 1990, birth_year_max: 2005 }],
+          error: null,
+        }),
+      },
+      tickets: {
+        select: () => ({ data: [{ id: "ticket-1", price: 20000, status: "on_sale" }], error: null }),
+      },
+      event_applications: {
+        select: () => ({ data: [], error: null }),
+      },
+    },
+  });
+
+  Deno.env.set("SIM_USER_PASSWORD", "test-password");
+  try {
+    await withMockFetch((url) => {
+      if (url.includes("auth/v1/token")) {
+        return new Response(
+          JSON.stringify({ access_token: "mock-user-token", token_type: "bearer", expires_in: 3600, refresh_token: "r", user: {} }),
+          { status: 200 },
+        );
+      }
+      if (url.includes("functions/v1/user-event-feed")) {
+        efCalls.push(url);
+        // Return one extra event via EF (non-E2E)
+        return new Response(
+          JSON.stringify({ events: [{ id: "discovered-event-1", party: { title: "일반 파티" } }] }),
+          { status: 200 },
+        );
+      }
+      if (url.includes("rest/v1/rpc/apply_event")) {
+        return new Response(JSON.stringify("rpc-app-1"), { status: 200 });
+      }
+      return new Response(JSON.stringify({}), { status: 404 });
+    }, async () => {
+      const result = await simDiscoverAndApply(
+        mock as unknown as SupabaseClient,
+        DEFAULT_CONFIG,
+        noop,
+        [],
+        "https://mock.supabase.co",
+        "anon-key",
+      );
+
+      // EF was called for event discovery
+      assertEquals(efCalls.some((u) => u.includes("user-event-feed")), true);
+      // The discovered event was processed (application created)
+      assertEquals(result.applicationIds.length > 0, true);
+    });
+  } finally {
+    Deno.env.delete("SIM_USER_PASSWORD");
+  }
+  },
+});
+
+Deno.test({
+  name: "simDiscoverAndApply - throws when strict=true and user-event-feed EF fails",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+  const mock = createMockSupabaseClient({
+    tables: {
+      user_profiles: {
+        // First call is maybeSingle() for feed token → return single object with username
+        select: (() => {
+          let callCount = 0;
+          return () => {
+            callCount++;
+            if (callCount === 1) return { data: { username: "user1" }, error: null };
+            return { data: [{ id: "user-1", gender: "male", birth_date: "1998-01-01", username: "user1" }], error: null };
+          };
+        })(),
+      },
+    },
+  });
+
+  Deno.env.set("SIM_USER_PASSWORD", "test-password");
+  try {
+    await withMockFetch((url) => {
+      if (url.includes("auth/v1/token")) {
+        return new Response(
+          JSON.stringify({ access_token: "mock-user-token", token_type: "bearer", expires_in: 3600, refresh_token: "r", user: {} }),
+          { status: 200 },
+        );
+      }
+      if (url.includes("functions/v1/user-event-feed")) {
+        return new Response(JSON.stringify({ error: "internal" }), { status: 500 });
+      }
+      return new Response(JSON.stringify({}), { status: 404 });
+    }, async () => {
+      await assertRejects(
+        () =>
+          simDiscoverAndApply(
+            mock as unknown as SupabaseClient,
+            DEFAULT_CONFIG,
+            noop,
+            [],
+            "https://mock.supabase.co",
+            "anon-key",
+            true, // strict=true → should throw on EF failure
+          ),
+        Error,
+        "user-event-feed EF returned status=500",
+      );
+    });
+  } finally {
+    Deno.env.delete("SIM_USER_PASSWORD");
+  }
+  },
+});
+
+Deno.test("simDiscoverAndApply - skips when credentials not available", async () => {
+  const warnings: string[] = [];
+  const warnLog = (entry: { level: string; message: string }) => {
+    if (entry.level === "error" || entry.level === "warn") warnings.push(entry.message);
+  };
+
+  const mock = createMockSupabaseClient({
+    tables: {
+      user_profiles: {
+        select: () => ({
+          data: [{ id: "user-1", gender: "male", birth_date: "1998-01-01", username: "user1" }],
+          error: null,
+        }),
+      },
+      entry_groups: {
+        select: () => ({
+          data: [{ id: "group-1", gender: "male", birth_year_min: 1990, birth_year_max: 2005 }],
+          error: null,
+        }),
+      },
+      tickets: {
+        select: () => ({ data: [{ id: "ticket-1", price: 20000, status: "on_sale" }], error: null }),
+      },
+      event_applications: {
+        select: () => ({ data: [], error: null }),
+      },
+    },
+  });
+
+  // No SIM_USER_PASSWORD set, no supabaseUrl/anonKey — credentials unavailable
   const result = await simDiscoverAndApply(
     mock as unknown as SupabaseClient,
-    config,
-    noop,
-    eventIds,
+    DEFAULT_CONFIG,
+    warnLog as Parameters<typeof simDiscoverAndApply>[2],
+    ["event-1"],
+    // supabaseUrl and anonKey intentionally omitted
   );
 
-  // All 6 events should have been processed
-  const uniqueEvents = new Set(processedEventIds);
-  assertEquals(uniqueEvents.size, 6);
-  assertEquals(result.applicationIds.length > 0, true);
+  // No applications created because credentials are missing
+  assertEquals(result.applicationIds.length, 0);
+  // A warning/error about missing credentials was logged
+  assertEquals(warnings.some((w) => w.includes("SIM_USER_PASSWORD") || w.includes("supabaseUrl") || w.includes("cannot")), true);
+});
+
+// sanitizeResources/sanitizeOps disabled: @supabase/auth-js internally calls setInterval for
+// token auto-refresh even when persistSession=false. The interval leaks within the test but is
+// harmless — suppressing the leak check is correct here rather than patching the library.
+Deno.test({
+  name: "simDiscoverAndApply - applies via RPC with correct parameters",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+  const rpcBodies: Record<string, unknown>[] = [];
+
+  const mock = createMockSupabaseClient({
+    tables: {
+      user_profiles: {
+        select: () => ({
+          data: [{ id: "user-42", gender: "male", birth_date: "1998-01-01", username: "user42" }],
+          error: null,
+        }),
+      },
+      entry_groups: {
+        select: () => ({
+          data: [{ id: "group-male", gender: "male", birth_year_min: 1990, birth_year_max: 2005 }],
+          error: null,
+        }),
+      },
+      tickets: {
+        select: () => ({ data: [{ id: "ticket-99", price: 30000, status: "on_sale" }], error: null }),
+      },
+      event_applications: {
+        select: () => ({ data: [], error: null }),
+      },
+    },
+  });
+
+  Deno.env.set("SIM_USER_PASSWORD", "test-password");
+  try {
+    await withMockFetch((url, init) => {
+      if (url.includes("auth/v1/token")) {
+        return new Response(
+          JSON.stringify({ access_token: "mock-user-token", token_type: "bearer", expires_in: 3600, refresh_token: "r", user: {} }),
+          { status: 200 },
+        );
+      }
+      if (url.includes("functions/v1/user-event-feed")) {
+        return new Response(JSON.stringify({ events: [] }), { status: 200 });
+      }
+      if (url.includes("rest/v1/rpc/apply_event")) {
+        try {
+          rpcBodies.push(JSON.parse((init.body as string) ?? "{}") as Record<string, unknown>);
+        } catch {
+          // intentionally empty
+        }
+        return new Response(JSON.stringify("rpc-app-42"), { status: 200 });
+      }
+      return new Response(JSON.stringify({}), { status: 404 });
+    }, async () => {
+      const config: SimConfig = { ...DEFAULT_CONFIG, error_rate: 0.0, apps_per_event: 1 };
+      const result = await simDiscoverAndApply(
+        mock as unknown as SupabaseClient,
+        config,
+        noop,
+        ["target-event-1"],
+        "https://mock.supabase.co",
+        "anon-key",
+      );
+
+      // RPC was called exactly once (1 user × 1 event × apps_per_event=1)
+      assertEquals(rpcBodies.length, 1);
+
+      // RPC body contains required parameters
+      const body = rpcBodies[0];
+      assertEquals(body.p_event_id, "target-event-1");
+      assertEquals(body.p_ticket_id, "ticket-99");
+      assertEquals(body.p_user_id, "user-42");
+      // Happy path (error_rate=0.0): p_payment_id and p_payment_amount should be set
+      assertEquals(typeof body.p_payment_id, "string");
+      assertEquals(body.p_payment_amount, 30000);
+      // Happy path: p_verification_data should be null
+      assertEquals(body.p_verification_data, null);
+
+      // Result includes the RPC-returned app ID
+      assertEquals(result.applicationIds, ["rpc-app-42"]);
+      assertEquals(result.paidApplicationIds, ["rpc-app-42"]);
+    });
+  } finally {
+    Deno.env.delete("SIM_USER_PASSWORD");
+  }
+  },
 });
