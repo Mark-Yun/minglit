@@ -30,7 +30,7 @@ void main() {
             rules: rules,
           ),
         ).thenAnswer((_) async {
-          return null;
+          return;
         });
 
         final container = createContainer(
