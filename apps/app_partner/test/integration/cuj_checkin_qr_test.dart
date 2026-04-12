@@ -15,7 +15,6 @@
 // - QRScannerScreen 기본 렌더링은 checkin_smoke_test.dart에서 커버됨.
 // - 이 테스트는 Controller↔UI 연동, 오버레이 텍스트 내용, CUJ 진입 흐름을 검증한다.
 //
-// ignore_for_file: lines_longer_than_80_chars
 // MobileScanner async dispose → pumpAndSettle 사용 시 flaky (ref #1009).
 // QRScannerScreen을 포함한 테스트는 pump()만 사용한다.
 import 'dart:async';
@@ -48,7 +47,8 @@ Future<void> _runProcessQR(
     final sub = container.listen(
       checkinControllerProvider,
       (_, next) {
-        final isTerminal = next.result != CheckinResult.idle &&
+        final isTerminal =
+            next.result != CheckinResult.idle &&
             next.result != CheckinResult.processing;
         if (isTerminal && !completer.isCompleted) completer.complete();
       },
