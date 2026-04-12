@@ -203,7 +203,7 @@ Deno.test({
   },
 });
 
-Deno.test("simCheckin - empty participants returns empty", async () => {
+Deno.test({ name: "simCheckin - empty participants returns empty", sanitizeOps: false, sanitizeResources: false, fn: async () => {
   const mock = createMockSupabaseClient({
     tables: {
       events: {
@@ -225,7 +225,7 @@ Deno.test("simCheckin - empty participants returns empty", async () => {
   assertEquals(result.checkedInParticipantIds, []);
   assertEquals(result.noShowParticipantIds, []);
   assertEquals(result.assertions, []);
-});
+}});
 
 // sanitizeResources/sanitizeOps disabled: supabase-js auth client leaks setInterval
 Deno.test({
