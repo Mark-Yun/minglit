@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:minglit_kit/src/theme/minglit_theme.dart';
 import 'package:minglit_kit/src/ui/widgets/bug_reporter_wrapper.dart';
 
 void main() {
@@ -196,7 +197,8 @@ void main() {
       );
 
       // Must use top anchor, not bottom — bottom anchor overlaps BottomNav.
-      expect(positioned.top, isNotNull);
+      expect(positioned.top, MinglitSpacing.medium);
+      expect(positioned.right, MinglitSpacing.medium);
       expect(positioned.bottom, isNull);
     });
   });
