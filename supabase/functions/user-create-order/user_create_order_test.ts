@@ -83,6 +83,7 @@ function rpcRoute(rpcName: string, response: unknown) {
 
 // ---------- Happy Path: Paid Event ----------
 
+// Fix #1292: sanitizer 복원 — captureServeHandler가 Deno.serve/setInterval을 스텁하므로 플래그 불필요
 Deno.test({ name: "user-create-order - happy path: paid event creates order", fn: async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));

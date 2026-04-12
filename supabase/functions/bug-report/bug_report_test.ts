@@ -43,8 +43,7 @@ function authedTextRequest(url: string, body: string): Request {
 
 // ---------------------------------------------------------------------------
 // Tests
-// sanitizeResources/sanitizeOps disabled because supabase-js creates background
-// intervals for auth token management when createClient() is called.
+// Fix #1292: sanitizer 복원 — captureServeHandler가 Deno.serve/setInterval을 스텁하므로 플래그 불필요
 // ---------------------------------------------------------------------------
 
 Deno.test({

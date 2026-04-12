@@ -81,9 +81,7 @@ function makeMatchFetchHandler(opts: { efStatus?: number; pairs?: Array<{ user1:
 // simCheckin tests
 // ─────────────────────────────────────────────────────────
 
-// sanitizeResources/sanitizeOps disabled: @supabase/auth-js internally calls setInterval for
-// token auto-refresh even when persistSession=false. The interval leaks within the test but is
-// harmless — suppressing the leak check is correct here rather than patching the library.
+// Fix #1292: sanitizer 복원 — autoRefreshToken: false로 supabase-js interval 누수 해결
 Deno.test({
   name: "simCheckin - 70% checked_in via EF, 30% no_show via direct DB",
   fn: async () => {
@@ -227,7 +225,6 @@ Deno.test({ name: "simCheckin - empty participants returns empty", fn: async () 
   assertEquals(result.assertions, []);
 }});
 
-// sanitizeResources/sanitizeOps disabled: supabase-js auth client leaks setInterval
 Deno.test({
   name: "simCheckin - EF failure is logged as error (not silently skipped)",
   fn: async () => {

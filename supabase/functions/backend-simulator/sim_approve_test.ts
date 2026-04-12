@@ -69,9 +69,7 @@ Deno.test("simApproveVerifications - empty list returns empty result", async () 
   assertEquals(result.assertions, []);
 });
 
-// sanitizeResources/sanitizeOps disabled: @supabase/auth-js internally calls setInterval for
-// token auto-refresh even when persistSession=false. The interval leaks within the test but is
-// harmless — suppressing the leak check is correct here rather than patching the library.
+// Fix #1292: sanitizer 복원 — autoRefreshToken: false로 supabase-js interval 누수 해결
 Deno.test({
   name: "simApproveVerifications - 5 apps with approveRate=0.8 → 4 approved, 1 rejected",
   fn: async () => {

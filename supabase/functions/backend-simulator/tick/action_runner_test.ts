@@ -97,7 +97,7 @@ function makeEFFetchHandler(opts: {
 // Tests
 // ─────────────────────────────────────────────────────────
 
-// sanitizeResources/sanitizeOps disabled: fetch mock interacts with Deno's resource tracking
+// Fix #1292: sanitizer 복원 — captureServeHandler/withMockedFetch로 리소스 추적 호환
 Deno.test({
   name: "ActionRunner.execute - calls EF, validates response, checks DB state",
   fn: async () => {

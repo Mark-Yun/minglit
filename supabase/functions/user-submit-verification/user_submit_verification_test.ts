@@ -50,6 +50,7 @@ const dbUpdateSubmissionRoute = {
 
 // ===== submit action =====
 
+// Fix #1292: sanitizer 복원 — captureServeHandler가 Deno.serve/setInterval을 스텁하므로 플래그 불필요
 Deno.test("submit — 첫 제출 → submission 생성, snapshot_data 배열 1개 항목", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 

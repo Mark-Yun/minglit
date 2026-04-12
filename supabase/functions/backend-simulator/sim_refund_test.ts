@@ -414,6 +414,7 @@ Deno.test({
 // Tests: error cases — EF failure throws (no direct DB fallback)
 // ============================================================
 
+// Fix #1292: sanitizer 복원 — autoRefreshToken: false로 supabase-js interval 누수 해결
 Deno.test({ name: "simRefundRequests - missing supabaseUrl → error logged, no refunds", fn: async () => {
   const paymentAmount = 10000;
   const startTime = daysFromNow(30);
