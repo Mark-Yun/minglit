@@ -129,6 +129,9 @@ class _IdentityVerificationScreenState
 
   @override
   Widget build(BuildContext context) {
+    // Fix #1271: consentControllerProvider가 isAutoDispose=true이므로 비동기 작업 중
+    // disposed되지 않도록 watch로 생명주기를 화면에 고정한다.
+    ref.watch(consentControllerProvider);
     final theme = Theme.of(context);
 
     return Scaffold(
