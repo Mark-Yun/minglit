@@ -247,7 +247,39 @@ P0 CUJ 중 네이티브 SDK 연동이 필요한 2건은 E2E로만 검증 가능�
 
 ---
 
-## 7. 갭 정량 요약
+## 7. Runtime QA (실물 디바이스 자동화)
+
+Runtime QA 워커는 실물 Android 디바이스에 APK를 설치하고, ADB를 통해 화면 네비게이션과 시각적 검증을 수행한다.
+
+### 역할
+
+- **Smoke 검증**: `docs/qa/test-cases/app-user-smoke.md`, `app-partner-smoke.md` 시나리오를 실물 디바이스에서 실행
+- **CUJ 검증**: `cuj-user.md`, `cuj-partner.md`의 핵심 여정을 실물 디바이스에서 재현
+- **시각적 회귀 탐지**: 스크린샷 기반으로 UI 렌더링 이상 확인
+
+### 알려진 제약: Flutter + UIautomator 비호환
+
+Flutter 앱은 Skia/Impeller 엔진으로 단일 `FlutterSurfaceView` 위에 렌더링한다. Android UIautomator는 네이티브 View hierarchy를 탐색하므로, **Flutter 위젯의 개별 bounds를 추출할 수 없다** (`bounds="[0,0][0,0]"` 반환). 이는 모든 Flutter 앱 + 모든 Android 디바이스에서 동일하게 발생하는 구조적 제약이다.
+
+**결론**: UIautomator 기반 좌표 추출은 Flutter 앱에서 사용 불가.
+
+### 네비게이션 방법별 비교
+
+| 방법 | Flutter 호환 | 장점 | 단점 | 상태 |
+|------|-------------|------|------|------|
+| Vision 기반 (Gemini 등) | ✅ | 프레임워크 무관. 실제 화면 기반. | Vision 모델 필요. API 비용. | 운영 중 |
+| `adb shell dumpsys accessibility` | ⚠️ 검증 필요 | 네이티브 API. | Flutter semantics 활성화 필요. 좌표 정확도 미검증. | PoC 필요 |
+| Flutter Integration Test Driver | ✅ | 가장 안정적. Flutter 네이티브. | 별도 test harness. 워커 아키텍처 변경. | 장기 목표 |
+| UIautomator dump | ❌ | — | Flutter에서 bounds 추출 불가. | **사용 불가** |
+| 고정 좌표 매핑 | ✅ | 구현 간단. | 해상도/레이아웃 변경 시 깨짐. | 비권장 |
+
+### 관련 이슈
+
+- #1274 — UIautomator dump bounds=[0,0][0,0] 문제 분석 및 전략 결정
+
+---
+
+## 8. 갭 정량 요약
 
 ### 테스트 피라미드 현황 vs 목표
 
@@ -276,7 +308,7 @@ P0 CUJ 중 네이티브 SDK 연동이 필요한 2건은 E2E로만 검증 가능�
 
 ---
 
-## 8. 실행 순서 요약
+## 9. 실행 순서 요약
 
 | 단계 | 내용 | 예상 테스트 수 | 우선순위 |
 |------|------|-------------|---------|
@@ -288,7 +320,7 @@ P0 CUJ 중 네이티브 SDK 연동이 필요한 2건은 E2E로만 검증 가능�
 
 ---
 
-## 9. automation-test-guide.md 업데이트 계획
+## 10. automation-test-guide.md 업데이트 계획
 
 Phase 3 (SWE 구현) 시 아래 섹션을 업데이트한다:
 
