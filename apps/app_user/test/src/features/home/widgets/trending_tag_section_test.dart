@@ -35,7 +35,7 @@ void main() {
   });
 
   group('TrendingTagSection', () {
-    // Fix #1286 regression: recentCount가 0인 태그는 핫 태그 섹션에서 숨겨야 한다.
+    // Fix #1286: recentCount가 0인 태그는 핫 태그 섹션에서 숨겨야 함을 회귀 테스트로 보장
     testWidgets(
       'hides section entirely when all tags have recentCount == 0',
       (tester) async {
