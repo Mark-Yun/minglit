@@ -564,7 +564,7 @@ void main() {
     );
 
     test(
-      'error message contains exception text on applyEvent failure',
+      'errorMessage is generic user-friendly message when applyEvent throws unknown exception',
       () async {
         when(
           () => mockEventRepo.applyEvent(
@@ -591,7 +591,11 @@ void main() {
           eventApplicationControllerProvider(testEvent),
         );
         expect(state.status, EventApplicationStatus.error);
-        expect(state.errorMessage, contains('Insufficient funds'));
+        expect(state.errorMessage, isNotNull);
+        // Fix #1287: MinglitException.from() wraps unknown exceptions as
+        // MinglitSystemException, whose userMessage is the generic Korean
+        // user-facing string — not the raw exception text.
+        expect(state.errorMessage, contains('일시적인 오류가 발생했습니다'));
       },
     );
 
