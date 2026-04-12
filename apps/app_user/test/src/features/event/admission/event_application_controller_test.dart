@@ -531,10 +531,10 @@ void main() {
   // Fix #1287: EventApplicationController 에러 경로 테스트
   group('EventApplicationController — error paths (Fix #1287)', () {
     test(
-      'submitApplication sets error state with message when repo throws generic Exception',
+      'submitApplication sets error state with message when applyEvent throws',
       () async {
         when(
-          () => mockEventRepo.createOrderViaEF(
+          () => mockEventRepo.applyEvent(
             eventId: any(named: 'eventId'),
             ticketId: any(named: 'ticketId'),
             verificationData: any(named: 'verificationData'),
@@ -552,7 +552,7 @@ void main() {
           eventApplicationControllerProvider(testEvent).notifier,
         );
         notifier.selectTicket(freeTicket);
-        await notifier.submitApplication();
+        await notifier.submitApplication(mockContext);
 
         final state = container.read(
           eventApplicationControllerProvider(testEvent),
@@ -564,10 +564,10 @@ void main() {
     );
 
     test(
-      'error message contains exception text on createOrderViaEF failure',
+      'error message contains exception text on applyEvent failure',
       () async {
         when(
-          () => mockEventRepo.createOrderViaEF(
+          () => mockEventRepo.applyEvent(
             eventId: any(named: 'eventId'),
             ticketId: any(named: 'ticketId'),
             verificationData: any(named: 'verificationData'),
@@ -585,7 +585,7 @@ void main() {
           eventApplicationControllerProvider(testEvent).notifier,
         );
         notifier.selectTicket(freeTicket);
-        await notifier.submitApplication();
+        await notifier.submitApplication(mockContext);
 
         final state = container.read(
           eventApplicationControllerProvider(testEvent),
@@ -599,7 +599,7 @@ void main() {
       'error state at payment step is preserved after failure',
       () async {
         when(
-          () => mockEventRepo.createOrderViaEF(
+          () => mockEventRepo.applyEvent(
             eventId: any(named: 'eventId'),
             ticketId: any(named: 'ticketId'),
             verificationData: any(named: 'verificationData'),
@@ -618,7 +618,7 @@ void main() {
         );
         notifier.selectTicket(freeTicket);
         notifier.nextStep();
-        await notifier.submitApplication();
+        await notifier.submitApplication(mockContext);
 
         final state = container.read(
           eventApplicationControllerProvider(testEvent),
@@ -630,10 +630,10 @@ void main() {
     );
 
     test(
-      'submitApplication fails gracefully when createOrderViaEF throws StateError',
+      'submitApplication fails gracefully when applyEvent throws StateError',
       () async {
         when(
-          () => mockEventRepo.createOrderViaEF(
+          () => mockEventRepo.applyEvent(
             eventId: any(named: 'eventId'),
             ticketId: any(named: 'ticketId'),
             verificationData: any(named: 'verificationData'),
@@ -651,7 +651,7 @@ void main() {
           eventApplicationControllerProvider(testEvent).notifier,
         );
         notifier.selectTicket(freeTicket);
-        await notifier.submitApplication();
+        await notifier.submitApplication(mockContext);
 
         final state = container.read(
           eventApplicationControllerProvider(testEvent),
@@ -664,7 +664,7 @@ void main() {
       'resetStatus clears error after failed submitApplication',
       () async {
         when(
-          () => mockEventRepo.createOrderViaEF(
+          () => mockEventRepo.applyEvent(
             eventId: any(named: 'eventId'),
             ticketId: any(named: 'ticketId'),
             verificationData: any(named: 'verificationData'),
@@ -682,7 +682,7 @@ void main() {
           eventApplicationControllerProvider(testEvent).notifier,
         );
         notifier.selectTicket(freeTicket);
-        await notifier.submitApplication();
+        await notifier.submitApplication(mockContext);
 
         var state = container.read(
           eventApplicationControllerProvider(testEvent),
