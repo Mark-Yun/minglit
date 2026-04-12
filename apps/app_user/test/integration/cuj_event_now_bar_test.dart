@@ -302,8 +302,6 @@ void main() {
         await openSheet(
           tester,
           EventNowBarState.matching,
-          voteCount: 1,
-          maxVoteCount: 3,
         );
 
         expect(find.byType(EventNowBottomSheet), findsOneWidget);
