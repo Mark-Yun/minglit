@@ -20,11 +20,10 @@ import 'package:minglit_kit/src/utils/log.dart';
 // Fix #1285: FAB 제거 후 앱바 액션 버튼 지원 — callback을 Provider로 노출
 final bugReporterCallbackProvider =
     NotifierProvider<_BugReporterCallbackNotifier, Future<void> Function()?>(
-  _BugReporterCallbackNotifier.new,
-);
+      _BugReporterCallbackNotifier.new,
+    );
 
-class _BugReporterCallbackNotifier
-    extends Notifier<Future<void> Function()?> {
+class _BugReporterCallbackNotifier extends Notifier<Future<void> Function()?> {
   @override
   Future<void> Function()? build() => null;
 

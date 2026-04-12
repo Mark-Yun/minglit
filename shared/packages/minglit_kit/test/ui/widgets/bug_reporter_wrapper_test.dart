@@ -3,8 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/src/ui/widgets/bug_reporter_wrapper.dart';
 
-// ignore_for_file: avoid_dynamic_calls
-
 void main() {
   group('BugReporterWrapper Widget Tests', () {
     testWidgets('renders child widget correctly', (tester) async {
@@ -153,8 +151,9 @@ void main() {
 
     // Fix #1285: FAB has been removed. BugReporterWrapper now registers
     // _showReportDialog via bugReporterCallbackProvider instead of rendering a FAB.
-    testWidgets('no FAB rendered when enabled (FAB removed in #1285)',
-        (tester) async {
+    testWidgets('no FAB rendered when enabled (FAB removed in #1285)', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         const ProviderScope(
           child: MaterialApp(
@@ -175,31 +174,34 @@ void main() {
     });
 
     // Regression test for #1285: callback is registered in provider after mount.
-    testWidgets('bugReporterCallbackProvider is set when BugReporterWrapper is mounted', (
-      tester,
-    ) async {
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
+    testWidgets(
+      'bugReporterCallbackProvider is set when BugReporterWrapper is mounted',
+      (
+        tester,
+      ) async {
+        final container = ProviderContainer();
+        addTearDown(container.dispose);
 
-      await tester.pumpWidget(
-        UncontrolledProviderScope(
-          container: container,
-          child: const MaterialApp(
-            home: Scaffold(
-              body: BugReporterWrapper(
-                child: Text('content'),
+        await tester.pumpWidget(
+          UncontrolledProviderScope(
+            container: container,
+            child: const MaterialApp(
+              home: Scaffold(
+                body: BugReporterWrapper(
+                  child: Text('content'),
+                ),
               ),
             ),
           ),
-        ),
-      );
+        );
 
-      // postFrameCallback fires after first pump
-      await tester.pump();
+        // postFrameCallback fires after first pump
+        await tester.pump();
 
-      // Callback should now be registered
-      expect(container.read(bugReporterCallbackProvider), isNotNull);
-    });
+        // Callback should now be registered
+        expect(container.read(bugReporterCallbackProvider), isNotNull);
+      },
+    );
 
     // Regression test for #1285: BugReporterWrapper disposes cleanly even
     // when a callback is registered. The provider is not explicitly cleared on
