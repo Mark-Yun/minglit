@@ -1,7 +1,7 @@
 // Ref #1335: TagEventListPage widget 테스트
 //
 // 검증 포인트:
-// 1. 로딩 상태 → CircularProgressIndicator 렌더링
+// 1. 로딩 상태 → MinglitCircularProgressIndicator 렌더링
 // 2. 빈 상태 → "아직 이 태그의 이벤트가 없어요" 메시지
 // 3. 이벤트 목록 상태 → 이벤트 제목 렌더링
 // 4. 에러 상태 → "이벤트를 불러오지 못했습니다" + "다시 시도"
@@ -72,7 +72,7 @@ void main() {
         await tester.pumpWidget(buildSubject());
         await tester.pump();
 
-        expect(find.byType(CircularProgressIndicator), findsOneWidget);
+        expect(find.byType(MinglitCircularProgressIndicator), findsOneWidget);
       },
     );
 
