@@ -35,6 +35,11 @@ final _fakePublicKey = SimplePublicKey(
   type: KeyPairType.ed25519,
 );
 
+/// A fake TicketToken for mocktail fallback registration.
+final _fakeTicketToken = TicketToken.fromJson(
+  jsonDecode(_makeQrPayload()) as Map<String, dynamic>,
+);
+
 void main() {
   group('CheckinController', () {
     // ── data class tests (existing) ──────────────────────────────────────
@@ -110,12 +115,18 @@ void main() {
     group('processQR', () {
       late MockCheckinRepository mockRepo;
 
+      // Fix #1288: TicketToken 및 SimplePublicKey에 대한 mocktail fallback 등록.
+      // setUpAll에 등록해야 any(named: 'token') matcher가 올바르게 동작한다.
+      setUpAll(() {
+        registerFallbackValue(_fakePublicKey);
+        registerFallbackValue(_fakeTicketToken);
+      });
+
       setUp(() {
         mockRepo = MockCheckinRepository();
         when(
           () => mockRepo.fetchServerPublicKey(),
         ).thenAnswer((_) async => _fakePublicKey);
-        registerFallbackValue(_fakePublicKey);
       });
 
       ProviderContainer makeContainer() => createContainer(
@@ -317,6 +328,111 @@ void main() {
           expect(invalidState.message, '티켓 데이터를 읽을 수 없습니다.');
         },
         timeout: const Timeout(Duration(seconds: 10)),
+      );
+
+      // Fix #1288: verifyAndCheckin 예외 경로 — 런타임 에러 시 invalid 상태 검증
+      test(
+        'verifyAndCheckin 예외 — 네트워크 에러 시 invalid 상태 전환',
+        () async {
+          when(
+            () => mockRepo.verifyAndCheckin(
+              token: any(named: 'token'),
+              serverPublicKey: any(named: 'serverPublicKey'),
+            ),
+          ).thenThrow(Exception('Network timeout'));
+
+          final container = makeContainer();
+          final capturedStates = <CheckinState>[];
+          container.listen(
+            checkinControllerProvider,
+            (_, s) => capturedStates.add(s),
+            fireImmediately: false,
+          );
+
+          await container
+              .read(checkinControllerProvider.notifier)
+              .processQR(_makeQrPayload());
+
+          final results = capturedStates.map((s) => s.result).toList();
+          expect(
+            results,
+            containsAllInOrder([
+              CheckinResult.processing,
+              CheckinResult.invalid,
+            ]),
+          );
+
+          final invalidState = capturedStates.firstWhere(
+            (s) => s.result == CheckinResult.invalid,
+          );
+          expect(invalidState.message, '티켓 데이터를 읽을 수 없습니다.');
+        },
+        timeout: const Timeout(Duration(seconds: 10)),
+      );
+
+      // Fix #1288: 상태 리셋 — processQR 완료 후 idle로 자동 복귀 검증
+      test(
+        '상태 리셋 — processQR 완료 후 idle 복귀, userName/message 초기화',
+        () async {
+          when(
+            () => mockRepo.verifyAndCheckin(
+              token: any(named: 'token'),
+              serverPublicKey: any(named: 'serverPublicKey'),
+            ),
+          ).thenAnswer((_) async => true);
+
+          final container = makeContainer();
+          await container
+              .read(checkinControllerProvider.notifier)
+              .processQR(_makeQrPayload(userId: 'user-test99'));
+
+          // processQR 완료 후 최종 상태는 idle이며 필드가 초기화되어야 함
+          final finalState = container.read(checkinControllerProvider);
+          expect(finalState.result, CheckinResult.idle);
+          expect(finalState.userName, isNull);
+          expect(finalState.message, isNull);
+        },
+        timeout: const Timeout(Duration(seconds: 10)),
+      );
+
+      // Fix #1288: 연속 체크인 — 첫 번째 완료 후 두 번째 사용자 체크인 성공 검증
+      test(
+        '연속 체크인 — 첫 번째 완료 후 두 번째 사용자 QR 처리 성공',
+        () async {
+          when(
+            () => mockRepo.verifyAndCheckin(
+              token: any(named: 'token'),
+              serverPublicKey: any(named: 'serverPublicKey'),
+            ),
+          ).thenAnswer((_) async => true);
+
+          final container = makeContainer();
+          final notifier = container.read(checkinControllerProvider.notifier);
+
+          // 첫 번째 사용자 체크인 완료
+          await notifier.processQR(_makeQrPayload(userId: 'user-aaaa11'));
+          expect(
+            container.read(checkinControllerProvider).result,
+            CheckinResult.idle,
+          );
+
+          // 두 번째 사용자 체크인 — 상태 덮어쓰기 검증
+          final capturedStates = <CheckinState>[];
+          container.listen(
+            checkinControllerProvider,
+            (_, s) => capturedStates.add(s),
+            fireImmediately: false,
+          );
+
+          await notifier.processQR(_makeQrPayload(userId: 'user-bbbb22'));
+
+          final successState = capturedStates.firstWhere(
+            (s) => s.result == CheckinResult.success,
+          );
+          // 두 번째 사용자의 userName이 반영됨
+          expect(successState.userName, 'User user');
+        },
+        timeout: const Timeout(Duration(seconds: 20)),
       );
     });
   });
