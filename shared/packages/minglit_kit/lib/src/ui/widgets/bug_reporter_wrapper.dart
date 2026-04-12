@@ -76,11 +76,19 @@ class _BugReporterWrapperState extends ConsumerState<BugReporterWrapper> {
   @override
   void initState() {
     super.initState();
+    // Fix #1295: QaBugReportChannel 초기화 — ADB 인텐트 기반 버그 리포트 수신
     if (widget.enabled) {
       QaBugReportChannel.initialize(
         BugReportCollector(boundaryKey: _boundaryKey),
       );
     }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref
+            .read(bugReporterCallbackProvider.notifier)
+            .update(_showReportDialog);
+      }
+    });
   }
 
   /// Returns a [BuildContext] that has a [Navigator] ancestor.
@@ -90,18 +98,6 @@ class _BugReporterWrapperState extends ConsumerState<BugReporterWrapper> {
   /// where the FAB already has a valid context.
   BuildContext? get _dialogContext =>
       widget.navigatorKey?.currentState?.overlay?.context ?? context;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        ref
-            .read(bugReporterCallbackProvider.notifier)
-            .update(_showReportDialog);
-      }
-    });
-  }
 
   @override
   void dispose() {
