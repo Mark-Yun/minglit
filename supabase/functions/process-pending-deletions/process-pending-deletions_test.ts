@@ -10,7 +10,6 @@ import {
   withNoIntervals,
 } from "../_test_utils/mock_http.ts";
 
-const TEST_OPTS = { sanitizeOps: false, sanitizeResources: false };
 
 const ENV = {
   SUPABASE_URL: "https://supabase.test",
@@ -143,7 +142,7 @@ const userConsentsRoute = {
     ]),
 };
 
-Deno.test("unauthorized request returns 401", TEST_OPTS, async () => {
+Deno.test("unauthorized request returns 401", async () => {
   const handler = await captureServeHandler(
     new URL("./index.ts", import.meta.url),
   );
@@ -163,7 +162,6 @@ Deno.test("unauthorized request returns 401", TEST_OPTS, async () => {
 
 Deno.test(
   "successful run archives records, blocks DI, and deletes auth user",
-  TEST_OPTS,
   async () => {
     const handler = await captureServeHandler(
       new URL("./index.ts", import.meta.url),
@@ -249,7 +247,7 @@ Deno.test(
   },
 );
 
-Deno.test("no eligible users returns zero summary", TEST_OPTS, async () => {
+Deno.test("no eligible users returns zero summary", async () => {
   const handler = await captureServeHandler(
     new URL("./index.ts", import.meta.url),
   );

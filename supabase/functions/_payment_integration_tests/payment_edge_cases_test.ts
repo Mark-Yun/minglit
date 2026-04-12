@@ -16,7 +16,6 @@ import {
 import { authRoute } from "../_test_utils/fixtures.ts";
 
 // Statsig uses node:timers setInterval internally, which withNoIntervals cannot patch.
-const TEST_OPTS = { sanitizeOps: false, sanitizeResources: false };
 
 const ENV_CREATE_ORDER = {
   SUPABASE_URL: "https://supabase.test",
@@ -69,7 +68,6 @@ const MOCK_USER_PROFILE = {
 // ---
 Deno.test(
   "payment-integration - Test 4: free event bypasses PG, approved directly",
-  TEST_OPTS,
   async () => {
     await withEnv(ENV_CREATE_ORDER, async () => {
       const handler = await captureServeHandler(

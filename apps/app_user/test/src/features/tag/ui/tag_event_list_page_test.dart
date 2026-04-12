@@ -21,14 +21,14 @@ import 'package:mocktail/mocktail.dart';
 import '../../../../utils/mocks.dart';
 
 Event makeEvent(int index) => Event(
-      id: 'event-$index',
-      partyId: 'party-$index',
-      title: 'Test Event $index',
-      startTime: DateTime(2026, 5, index + 1),
-      endTime: DateTime(2026, 5, index + 1, 2),
-      createdAt: DateTime(2026),
-      updatedAt: DateTime(2026),
-    );
+  id: 'event-$index',
+  partyId: 'party-$index',
+  title: 'Test Event $index',
+  startTime: DateTime(2026, 5, index + 1),
+  endTime: DateTime(2026, 5, index + 1, 2),
+  createdAt: DateTime(2026),
+  updatedAt: DateTime(2026),
+);
 
 void main() {
   setUpAll(() async {

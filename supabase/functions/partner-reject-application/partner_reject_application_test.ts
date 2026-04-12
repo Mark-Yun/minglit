@@ -101,8 +101,6 @@ function updateRoute(updated = [{ id: TEST_APP_ID }]): FetchRoute {
 // ─── OPTIONS: CORS preflight ───
 Deno.test({
   name: "OPTIONS returns CORS",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([]);
@@ -119,8 +117,6 @@ Deno.test({
 // ─── GET: 405 ───
 Deno.test({
   name: "GET returns 405",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([]);
@@ -137,8 +133,6 @@ Deno.test({
 // ─── 400: missing application_id ───
 Deno.test({
   name: "Missing application_id returns 400",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
@@ -159,8 +153,6 @@ Deno.test({
 // ─── 400: missing reason ───
 Deno.test({
   name: "Missing reason returns 400",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
@@ -181,8 +173,6 @@ Deno.test({
 // ─── 200: reject success ───
 Deno.test({
   name: "Reject success returns 200 with rejected count",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -211,8 +201,6 @@ Deno.test({
 // ─── 404: application not found ───
 Deno.test({
   name: "Application not found returns 404",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -239,8 +227,6 @@ Deno.test({
 // ─── 400: already rejected status ───
 Deno.test({
   name: "Already rejected status returns 400",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -268,8 +254,6 @@ Deno.test({
 // ─── 401: unauthorized ───
 Deno.test({
   name: "Unauthorized returns 401",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authFailRoute()]);
@@ -291,8 +275,6 @@ Deno.test({
 // ─── 403: forbidden (insufficient permissions) ───
 Deno.test({
   name: "Forbidden (insufficient permissions) returns 403",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -320,8 +302,6 @@ Deno.test({
 // ─── 200: owner role bypasses permissions ───
 Deno.test({
   name: "Owner role bypasses permissions check",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -353,8 +333,6 @@ Deno.test({
 // ─── 409: already processed (compare-and-set empty) ───
 Deno.test({
   name: "Already processed (compare-and-set returns empty) returns 409",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([

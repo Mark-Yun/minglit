@@ -469,12 +469,15 @@ Deno.test("apply-event - payment_failed 후 유료 재신청 성공 (UPDATE 경�
   });
 });
 
-Deno.test("apply-event - 취소 후 무료 재신청 성공 (UPDATE 경로, RPC 미호출)", async () => {
+// Fix #1342 Bug1: apply_event RPC 미호출 검증 (unique constraint 충돌 방지)
+// Fix #1345: check_party_balance 호출 검증 추가
+Deno.test("apply-event - 취소 후 무료 재신청 성공 (UPDATE 경로, apply_event RPC 미호출)", async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
     let patchCalled = false;
-    let rpcCalled = false;
+    let applyEventRpcCalled = false;
+    let checkBalanceRpcCalled = false;
 
     const { fetchMock } = createFetchMock([
       authRoute(),
@@ -493,6 +496,17 @@ Deno.test("apply-event - 취소 후 무료 재신청 성공 (UPDATE 경로, RPC 
         handler: () => jsonResponse({ id: "existing-cancelled-free-id", status: "cancelled" }),
       },
       {
+        // Fix #1345: check_party_balance RPC — 허용 반환
+        matcher: (req) => {
+          if (req.url.includes("/rest/v1/rpc/check_party_balance")) {
+            checkBalanceRpcCalled = true;
+            return true;
+          }
+          return false;
+        },
+        handler: () => jsonResponse({ allowed: true, reason: null }),
+      },
+      {
         matcher: (req) => {
           if (req.url.includes("/rest/v1/event_applications") && req.method === "PATCH") {
             patchCalled = true;
@@ -505,7 +519,7 @@ Deno.test("apply-event - 취소 후 무료 재신청 성공 (UPDATE 경로, RPC 
       {
         matcher: (req) => {
           if (req.url.includes("/rest/v1/rpc/apply_event")) {
-            rpcCalled = true;
+            applyEventRpcCalled = true;
             return true;
           }
           return false;
@@ -527,8 +541,67 @@ Deno.test("apply-event - 취소 후 무료 재신청 성공 (UPDATE 경로, RPC 
         assertEquals(response.status, 200);
         assertEquals(payload.type, "free");
         assertEquals(payload.application_id, "existing-cancelled-free-id");
+        assertEquals(checkBalanceRpcCalled, true, "check_party_balance RPC가 호출되어야 함 — Fix #1345");
         assertEquals(patchCalled, true, "PATCH(UPDATE)가 호출되어야 함 — INSERT 금지");
-        assertEquals(rpcCalled, false, "RPC는 호출되면 안 됨 — plain INSERT로 충돌 발생");
+        assertEquals(applyEventRpcCalled, false, "apply_event RPC는 호출되면 안 됨 — plain INSERT로 충돌 발생");
+      });
+    });
+  });
+});
+
+// Fix #1345: check_party_balance 거부 시 409 반환 — UPDATE 미호출 검증
+Deno.test("apply-event - 취소 후 무료 재신청 — check_party_balance 거부 시 409 반환", async () => {
+  await withEnv(ENV, async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+
+    let patchCalled = false;
+
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      {
+        matcher: (req) => req.url.includes("/rest/v1/events") && req.method === "GET",
+        handler: () => jsonResponse(FREE_EVENT),
+      },
+      {
+        matcher: (req) => req.url.includes("/rest/v1/tickets") && req.method === "GET",
+        handler: () => jsonResponse(FREE_TICKET),
+      },
+      {
+        // 중복 신청 확인 — cancelled 상태로 존재
+        matcher: (req) =>
+          req.url.includes("/rest/v1/event_applications") && req.method === "GET",
+        handler: () => jsonResponse({ id: "existing-cancelled-free-id", status: "cancelled" }),
+      },
+      {
+        // check_party_balance — 성비 불균형으로 거부
+        matcher: (req) => req.url.includes("/rest/v1/rpc/check_party_balance"),
+        handler: () => jsonResponse({ allowed: false, reason: "남성 참가자 수가 초과되었습니다" }),
+      },
+      {
+        matcher: (req) => {
+          if (req.url.includes("/rest/v1/event_applications") && req.method === "PATCH") {
+            patchCalled = true;
+            return true;
+          }
+          return false;
+        },
+        handler: () => jsonResponse([]),
+      },
+    ]);
+
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const request = jsonRequest(
+          "http://localhost",
+          { event_id: "event-free-1", ticket_id: "ticket-free-1" },
+          { headers: { Authorization: "Bearer test-token" } },
+        );
+        const response = await handler(request);
+        const payload = await readJson(response);
+
+        assertEquals(response.status, 409);
+        assertEquals(payload.error, "남성 참가자 수가 초과되었습니다");
+        assertEquals(patchCalled, false, "balance 거부 시 UPDATE가 호출되면 안 됨");
       });
     });
   });

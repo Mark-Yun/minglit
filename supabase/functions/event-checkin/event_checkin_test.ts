@@ -18,8 +18,6 @@ const BASE_URL = "http://localhost";
 
 Deno.test({
   name: "event-checkin - returns 200 and checks in participant",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
@@ -73,8 +71,6 @@ Deno.test({
 
 Deno.test({
   name: "event-checkin - returns 400 when missing parameters",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
@@ -101,8 +97,6 @@ Deno.test({
 
 Deno.test({
   name: "event-checkin - returns 404 when participant not found",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
@@ -136,8 +130,6 @@ Deno.test({
 
 Deno.test({
   name: "event-checkin - returns 403 when caller is not the participant",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
@@ -177,8 +169,6 @@ Deno.test({
 
 Deno.test({
   name: "event-checkin - returns 409 when already checked in",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
@@ -223,8 +213,6 @@ Deno.test({
 
 Deno.test({
   name: "event-checkin - returns 400 when status is not ticket_issued",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
@@ -269,8 +257,6 @@ Deno.test({
 
 Deno.test({
   name: "event-checkin - returns 401 without auth token",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
@@ -293,8 +279,6 @@ Deno.test({
 
 Deno.test({
   name: "event-checkin - OPTIONS returns CORS response",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 

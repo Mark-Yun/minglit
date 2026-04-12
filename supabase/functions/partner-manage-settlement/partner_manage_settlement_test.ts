@@ -71,8 +71,6 @@ function upsertErrorRoute(): FetchRoute {
 // ─── CORS preflight ───
 Deno.test({
   name: "handles OPTIONS preflight request",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([]);
@@ -91,8 +89,6 @@ Deno.test({
 // ─── 401: no auth ───
 Deno.test({
   name: "returns 401 without authorization",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authFailRoute()]);
@@ -114,8 +110,6 @@ Deno.test({
 // ─── 400: missing action ───
 Deno.test({
   name: "returns 400 for missing action",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
@@ -136,8 +130,6 @@ Deno.test({
 // ─── 400: unknown action ───
 Deno.test({
   name: "returns 400 for unknown action",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
@@ -158,8 +150,6 @@ Deno.test({
 // ─── UPSERT: success ───
 Deno.test({
   name: "upsert_bank_account: upserts bank account successfully",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -190,8 +180,6 @@ Deno.test({
 // ─── UPSERT: verify payload sent to DB ───
 Deno.test({
   name: "upsert_bank_account: sends correct payload to DB",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     let upsertBody: string | null = null;
@@ -235,8 +223,6 @@ Deno.test({
 // ─── UPSERT: extra fields ignored ───
 Deno.test({
   name: "upsert_bank_account: ignores non-whitelisted fields",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     let upsertBody: string | null = null;
@@ -282,8 +268,6 @@ Deno.test({
 // ─── UPSERT: missing partner_id → 400 ───
 Deno.test({
   name: "upsert_bank_account: returns 400 for missing partner_id",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
@@ -309,8 +293,6 @@ Deno.test({
 // ─── UPSERT: missing bank_name → 400 ───
 Deno.test({
   name: "upsert_bank_account: returns 400 for missing bank_name",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
@@ -336,8 +318,6 @@ Deno.test({
 // ─── UPSERT: missing account_holder → 400 ───
 Deno.test({
   name: "upsert_bank_account: returns 400 for missing account_holder",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
@@ -363,8 +343,6 @@ Deno.test({
 // ─── UPSERT: missing account_number → 400 ───
 Deno.test({
   name: "upsert_bank_account: returns 400 for missing account_number",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
@@ -390,8 +368,6 @@ Deno.test({
 // ─── UPSERT: 403 no permission ───
 Deno.test({
   name: "upsert_bank_account: returns 403 when user lacks SETTLEMENT_EDIT permission",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -419,8 +395,6 @@ Deno.test({
 // ─── UPSERT: 500 permission DB error ───
 Deno.test({
   name: "upsert_bank_account: returns 500 when permission query fails",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -450,8 +424,6 @@ Deno.test({
 // ─── UPSERT: whitespace-only bank_name → 400 ───
 Deno.test({
   name: "upsert_bank_account: returns 400 for whitespace-only bank_name",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
@@ -478,8 +450,6 @@ Deno.test({
 // ─── UPSERT: invalid account_number format → 400 ───
 Deno.test({
   name: "upsert_bank_account: returns 400 for invalid account_number format",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
@@ -506,8 +476,6 @@ Deno.test({
 // ─── UPSERT: account_number with hyphens → normalized ───
 Deno.test({
   name: "upsert_bank_account: normalizes account_number by stripping hyphens",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     let upsertBody: string | null = null;
@@ -547,8 +515,6 @@ Deno.test({
 // ─── UPSERT: 500 upsert error ───
 Deno.test({
   name: "upsert_bank_account: returns 500 when upsert fails",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([

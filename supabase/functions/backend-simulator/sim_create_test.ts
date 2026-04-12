@@ -34,13 +34,8 @@ function withMockFetch<T>(
   });
 }
 
-// sanitizeResources/sanitizeOps disabled: @supabase/auth-js internally calls setInterval for
-// token auto-refresh even when persistSession=false. The interval leaks within the test but is
-// harmless — suppressing the leak check is correct here rather than patching the library.
 Deno.test({
   name: "simCreateParties - creates parties and events via EF and returns IDs",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
   const efCalls: { url: string; body: unknown }[] = [];
 
@@ -93,13 +88,8 @@ Deno.test({
   },
 });
 
-// sanitizeResources/sanitizeOps disabled: @supabase/auth-js internally calls setInterval for
-// token auto-refresh even when persistSession=false. The interval leaks within the test but is
-// harmless — suppressing the leak check is correct here rather than patching the library.
 Deno.test({
   name: "simCreateParties - event EF body includes min_confirmed_count and metadata",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
   const eventEfBodies: Record<string, unknown>[] = [];
 
@@ -152,13 +142,8 @@ Deno.test({
   },
 });
 
-// sanitizeResources/sanitizeOps disabled: @supabase/auth-js internally calls setInterval for
-// token auto-refresh even when persistSession=false. The interval leaks within the test but is
-// harmless — suppressing the leak check is correct here rather than patching the library.
 Deno.test({
   name: "simCreateParties - throws when EF fails",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
   const mock = createMockSupabaseClient({
     tables: {
@@ -200,8 +185,6 @@ Deno.test({
 
 Deno.test({
   name: "simCreateParties - throws when SIM_USER_PASSWORD not set",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
   const mock = createMockSupabaseClient({
     tables: {
@@ -227,13 +210,8 @@ Deno.test({
   },
 });
 
-// sanitizeResources/sanitizeOps disabled: @supabase/auth-js internally calls setInterval for
-// token auto-refresh even when persistSession=false. The interval leaks within the test but is
-// harmless — suppressing the leak check is correct here rather than patching the library.
 Deno.test({
   name: "simCreateParties - creates 4 distinct start_time zones via EF",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
   const eventStartTimes: string[] = [];
 
@@ -296,13 +274,8 @@ Deno.test({
   },
 });
 
-// sanitizeResources/sanitizeOps disabled: @supabase/auth-js internally calls setInterval for
-// token auto-refresh even when persistSession=false. The interval leaks within the test but is
-// harmless — suppressing the leak check is correct here rather than patching the library.
 Deno.test({
   name: "simCreateDisplayEvents - creates display parties and events via EF",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
   const efCalls: { url: string; body: unknown }[] = [];
   let partyCallCount = 0;
@@ -364,13 +337,8 @@ Deno.test({
   },
 });
 
-// sanitizeResources/sanitizeOps disabled: @supabase/auth-js internally calls setInterval for
-// token auto-refresh even when persistSession=false. The interval leaks within the test but is
-// harmless — suppressing the leak check is correct here rather than patching the library.
 Deno.test({
   name: "simCreateDisplayEvents - skips when display parties already exist",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
   let efCallCount = 0;
 
@@ -410,13 +378,8 @@ Deno.test({
   },
 });
 
-// sanitizeResources/sanitizeOps disabled: @supabase/auth-js internally calls setInterval for
-// token auto-refresh even when persistSession=false. The interval leaks within the test but is
-// harmless — suppressing the leak check is correct here rather than patching the library.
 Deno.test({
   name: "simCreateDisplayEvents - throws when display party EF fails",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
   const mock = createMockSupabaseClient({
     tables: {
@@ -456,13 +419,8 @@ Deno.test({
 
 // ── simDiscoverAndApply — user-centric loop tests (Fix #1323) ────────────────
 
-// sanitizeResources/sanitizeOps disabled: @supabase/auth-js internally calls setInterval for
-// token auto-refresh even when persistSession=false. The interval leaks within the test but is
-// harmless — suppressing the leak check is correct here rather than patching the library.
 Deno.test({
   name: "simDiscoverAndApply - basic user-centric flow: users discover and apply via own feed",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
   let appCounter = 0;
   const feedCallUserTokens: string[] = [];
@@ -533,13 +491,8 @@ Deno.test({
   },
 });
 
-// sanitizeResources/sanitizeOps disabled: @supabase/auth-js internally calls setInterval for
-// token auto-refresh even when persistSession=false. The interval leaks within the test but is
-// harmless — suppressing the leak check is correct here rather than patching the library.
 Deno.test({
   name: "simDiscoverAndApply - max_apps_per_user limit is respected",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
   let appCounter = 0;
 
@@ -603,13 +556,8 @@ Deno.test({
   },
 });
 
-// sanitizeResources/sanitizeOps disabled: @supabase/auth-js internally calls setInterval for
-// token auto-refresh even when persistSession=false. The interval leaks within the test but is
-// harmless — suppressing the leak check is correct here rather than patching the library.
 Deno.test({
   name: "simDiscoverAndApply - EF rejection handled gracefully (non-200 response)",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
   const warnings: string[] = [];
   const warnLog = (entry: { level: string; message: string }) => {
@@ -672,13 +620,8 @@ Deno.test({
   },
 });
 
-// sanitizeResources/sanitizeOps disabled: @supabase/auth-js internally calls setInterval for
-// token auto-refresh even when persistSession=false. The interval leaks within the test but is
-// harmless — suppressing the leak check is correct here rather than patching the library.
 Deno.test({
   name: "simDiscoverAndApply - empty feed for a user produces no applications",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
   let applyCallCount = 0;
 
@@ -744,13 +687,8 @@ Deno.test({
   },
 });
 
-// sanitizeResources/sanitizeOps disabled: @supabase/auth-js internally calls setInterval for
-// token auto-refresh even when persistSession=false. The interval leaks within the test but is
-// harmless — suppressing the leak check is correct here rather than patching the library.
 Deno.test({
   name: "simDiscoverAndApply - user_batch_size controls concurrent user processing",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
   let appCounter = 0;
 
@@ -817,8 +755,7 @@ Deno.test({
 });
 
 // Fix #1283: credentials 누락 시 즉시 throw (strict 제거 후 유일한 동작)
-// sanitizeOps disabled: preceding test (@supabase/auth-js setInterval leak) completes timers here
-Deno.test({ name: "simDiscoverAndApply - throws when credentials not available", sanitizeOps: false, sanitizeResources: false, fn: async () => {
+Deno.test({ name: "simDiscoverAndApply - throws when credentials not available", fn: async () => {
   const mock = createMockSupabaseClient({});
 
   // No SIM_USER_PASSWORD set — throws immediately
@@ -834,15 +771,10 @@ Deno.test({ name: "simDiscoverAndApply - throws when credentials not available",
   );
 }});
 
-// sanitizeResources/sanitizeOps disabled: @supabase/auth-js internally calls setInterval for
-// token auto-refresh even when persistSession=false. The interval leaks within the test but is
-// harmless — suppressing the leak check is correct here rather than patching the library.
 // ── apply-event EF path tests (Fix #1323, #1324) ─────────────────────────────
 
 Deno.test({
   name: "simDiscoverAndApply - applies via apply-event EF with correct parameters",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
   const efBodies: Record<string, unknown>[] = [];
 
@@ -922,13 +854,8 @@ Deno.test({
   },
 });
 
-// sanitizeResources/sanitizeOps disabled: @supabase/auth-js internally calls setInterval for
-// token auto-refresh even when persistSession=false. The interval leaks within the test but is
-// harmless — suppressing the leak check is correct here rather than patching the library.
 Deno.test({
   name: "simDiscoverAndApply - classifies free applications from apply-event EF response",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
   const mock = createMockSupabaseClient({
     tables: {

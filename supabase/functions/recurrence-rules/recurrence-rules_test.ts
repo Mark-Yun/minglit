@@ -188,8 +188,6 @@ function insertTicketsRoute(): FetchRoute {
 
 Deno.test({
   name: "OPTIONS returns CORS preflight",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const req = new Request("http://localhost", { method: "OPTIONS" });
@@ -200,8 +198,6 @@ Deno.test({
 
 Deno.test({
   name: "GET returns 405",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const req = new Request("http://localhost", { method: "GET" });
@@ -212,8 +208,6 @@ Deno.test({
 
 Deno.test({
   name: "Missing auth returns 401",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authFailRoute()]);
@@ -230,8 +224,6 @@ Deno.test({
 
 Deno.test({
   name: "Unknown action returns 400",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
@@ -252,8 +244,6 @@ Deno.test({
 
 Deno.test({
   name: "create: happy path returns rule_id and events_created",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -294,8 +284,6 @@ Deno.test({
 
 Deno.test({
   name: "create: missing party_id returns 400",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
@@ -320,8 +308,6 @@ Deno.test({
 
 Deno.test({
   name: "create: invalid pattern returns 400",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
@@ -347,8 +333,6 @@ Deno.test({
 
 Deno.test({
   name: "create: missing start_time returns 400",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
@@ -373,8 +357,6 @@ Deno.test({
 
 Deno.test({
   name: "create: permission denied returns 403",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -402,8 +384,6 @@ Deno.test({
 
 Deno.test({
   name: "create: monthly without month_day returns 400",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
@@ -429,8 +409,6 @@ Deno.test({
 
 Deno.test({
   name: "create: party not found returns 404",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -461,8 +439,6 @@ Deno.test({
 
 Deno.test({
   name: "update: happy path returns success",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -491,8 +467,6 @@ Deno.test({
 
 Deno.test({
   name: "update: missing rule_id returns 400",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
@@ -514,8 +488,6 @@ Deno.test({
 
 Deno.test({
   name: "update: cancelled rule returns 400",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -541,8 +513,6 @@ Deno.test({
 
 Deno.test({
   name: "update: rule not found returns 404",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -568,8 +538,6 @@ Deno.test({
 
 Deno.test({
   name: "pause: happy path returns success",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -596,8 +564,6 @@ Deno.test({
 
 Deno.test({
   name: "pause: already paused rule returns 400",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -622,8 +588,6 @@ Deno.test({
 
 Deno.test({
   name: "pause: cancelled rule returns 400",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -648,8 +612,6 @@ Deno.test({
 
 Deno.test({
   name: "resume: happy path returns success and events_created",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -681,8 +643,6 @@ Deno.test({
 
 Deno.test({
   name: "resume: active rule returns 400",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -709,8 +669,6 @@ Deno.test({
 
 Deno.test({
   name: "cancel: happy path returns success",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -737,8 +695,6 @@ Deno.test({
 
 Deno.test({
   name: "cancel: already cancelled rule returns 400",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -763,8 +719,6 @@ Deno.test({
 
 Deno.test({
   name: "cancel: rule not found returns 404",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -787,8 +741,6 @@ Deno.test({
 
 Deno.test({
   name: "cancel: permission denied returns 403",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([

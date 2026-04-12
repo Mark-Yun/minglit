@@ -77,8 +77,6 @@ function rpcRoute(success = true): FetchRoute {
 // ─── 401: no auth ───
 Deno.test({
   name: "returns 401 without authorization",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -105,8 +103,6 @@ Deno.test({
 // ─── 400: missing action ───
 Deno.test({
   name: "returns 400 for missing action",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
@@ -127,8 +123,6 @@ Deno.test({
 // ─── 400: missing event_id ───
 Deno.test({
   name: "returns 400 for missing event_id",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
@@ -149,8 +143,6 @@ Deno.test({
 // ─── 500: event DB error ───
 Deno.test({
   name: "returns 500 when event query fails",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -181,8 +173,6 @@ Deno.test({
 // ─── 403: no partner permission ───
 Deno.test({
   name: "returns 403 when user lacks PARTY_MANAGE permission",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -209,8 +199,6 @@ Deno.test({
 // ─── 500: permission DB error ───
 Deno.test({
   name: "returns 500 when permission query fails",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -242,8 +230,6 @@ Deno.test({
 // ─── 400: completed event ───
 Deno.test({
   name: "returns 400 for completed event",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -272,8 +258,6 @@ Deno.test({
 // ─── set_rules: 2 rules with vote_count (via RPC) ───
 Deno.test({
   name: "set_rules: inserts 2 rules with vote_count via RPC",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -308,8 +292,6 @@ Deno.test({
 // ─── set_rules: empty array clears all rules ───
 Deno.test({
   name: "set_rules: empty array clears all rules via RPC",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -340,8 +322,6 @@ Deno.test({
 // ─── set_rules: verifies RPC is called with correct payload ───
 Deno.test({
   name: "set_rules: sends correct payload to replace_match_rules RPC",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     let rpcBody: string | null = null;
@@ -385,8 +365,6 @@ Deno.test({
 // ─── set_rules: invalid group_id → 400 ───
 Deno.test({
   name: "set_rules: returns 400 for non-existent group_id",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -418,8 +396,6 @@ Deno.test({
 // ─── set_rules: source === target → 400 ───
 Deno.test({
   name: "set_rules: returns 400 when source equals target group",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -450,8 +426,6 @@ Deno.test({
 // ─── set_rules: vote_count = 0 → 400 ───
 Deno.test({
   name: "set_rules: returns 400 for vote_count = 0",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -482,8 +456,6 @@ Deno.test({
 // ─── clear_rules ───
 Deno.test({
   name: "clear_rules: clears all rules via RPC",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -512,8 +484,6 @@ Deno.test({
 // ─── unknown action → 400 ───
 Deno.test({
   name: "returns 400 for unknown action",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -541,8 +511,6 @@ Deno.test({
 // ─── CORS preflight ───
 Deno.test({
   name: "handles OPTIONS preflight request",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([]);

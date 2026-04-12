@@ -20,8 +20,6 @@ function embedding(value: number, size = 3) {
 
 Deno.test({
   name: "vector-worker - processes party message",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
@@ -79,8 +77,6 @@ Deno.test({
 
 Deno.test({
   name: "vector-worker - processes interaction message",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
@@ -146,8 +142,6 @@ Deno.test({
 
 Deno.test({
   name: "vector-worker - empty queue returns processed 0",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
@@ -197,8 +191,6 @@ Deno.test({
 
 Deno.test({
   name: "vector-worker - missing env returns 500",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
   const { fetchMock } = createFetchMock([]);
@@ -226,8 +218,6 @@ Deno.test({
 
 Deno.test({
   name: "vector-worker - openai error returns processed 0",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 

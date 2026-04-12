@@ -36,8 +36,6 @@ async function withFastTimers(fn: () => Promise<void>) {
 
 Deno.test({
   name: "notification-worker - processes one message and returns done",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
@@ -104,8 +102,6 @@ Deno.test({
 
 Deno.test({
   name: "notification-worker - FCM invalid token triggers cleanup",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
@@ -180,8 +176,6 @@ Deno.test({
 
 Deno.test({
   name: "notification-worker - missing env returns 500",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
   const { fetchMock } = createFetchMock([]);

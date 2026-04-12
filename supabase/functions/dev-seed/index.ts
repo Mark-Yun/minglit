@@ -17,6 +17,10 @@ interface UserPersona {
     birth_date: string;
     phone_number: string;
     is_verified: boolean;
+    // Simulator location fields — only set for regional personas (#1334)
+    sim_region?: string;
+    sim_lat?: number;
+    sim_lng?: number;
   };
 }
 
@@ -73,7 +77,7 @@ const SCENARIOS: {
   summary: string;
   minConfirmed: number;
   maxParticipants: number;
-  verificationCategory: "career" | "academic" | "asset" | null;
+  verificationCategories: ("career" | "academic" | "asset")[];
   entryGroups: {
     label: string;
     gender: "male" | "female";
@@ -88,7 +92,7 @@ const SCENARIOS: {
     summary: "같은 또래 대학생들이 모여 자연스럽게 네트워킹하는 자리",
     minConfirmed: 4,
     maxParticipants: 10,
-    verificationCategory: "academic",
+    verificationCategories: ["academic"],
     entryGroups: [
       { label: "남성", gender: "male", birthYearMin: 2001, birthYearMax: 2005 },
       {
@@ -109,7 +113,7 @@ const SCENARIOS: {
     summary: "퇴근 후 가볍게 즐기는 직장인 소셜 파티",
     minConfirmed: 6,
     maxParticipants: 16,
-    verificationCategory: "career",
+    verificationCategories: ["career"],
     entryGroups: [
       { label: "남성", gender: "male", birthYearMin: 1995, birthYearMax: 2002 },
       {
@@ -130,7 +134,7 @@ const SCENARIOS: {
     summary: "검증된 멤버들만 참여하는 프리미엄 소셜 모임",
     minConfirmed: 4,
     maxParticipants: 8,
-    verificationCategory: "asset",
+    verificationCategories: ["asset"],
     entryGroups: [
       { label: "남성", gender: "male", birthYearMin: 1990, birthYearMax: 2000 },
       {
@@ -151,7 +155,7 @@ const SCENARIOS: {
     summary: "보드게임으로 시작하는 가벼운 동네 모임",
     minConfirmed: 4,
     maxParticipants: 8,
-    verificationCategory: null,
+    verificationCategories: [],
     entryGroups: [
       {
         label: "참가자",
@@ -176,7 +180,7 @@ const SCENARIOS: {
     summary: "다양한 배경의 사람들이 만나는 복합 네트워킹",
     minConfirmed: 6,
     maxParticipants: 12,
-    verificationCategory: "career",
+    verificationCategories: ["career"],
     entryGroups: [
       {
         label: "남성 (20대)",
@@ -214,7 +218,7 @@ const SCENARIOS: {
     summary: "누구나 참여 가능한 오픈 소셜 네트워킹",
     minConfirmed: 4,
     maxParticipants: 12,
-    verificationCategory: null,
+    verificationCategories: [],
     entryGroups: [
       { label: "남성", gender: "male", birthYearMin: 1990, birthYearMax: 2005 },
       {
@@ -232,7 +236,7 @@ const SCENARIOS: {
     summary: "직장인 인증 필수 — 오후의 여유로운 네트워킹",
     minConfirmed: 4,
     maxParticipants: 10,
-    verificationCategory: "career",
+    verificationCategories: ["career"],
     entryGroups: [
       { label: "남성", gender: "male", birthYearMin: 1988, birthYearMax: 2000 },
       {
@@ -250,7 +254,7 @@ const SCENARIOS: {
     summary: "파트너 자체 인증 필수 — 엄선된 VIP 멤버십 파티",
     minConfirmed: 4,
     maxParticipants: 8,
-    verificationCategory: "asset",
+    verificationCategories: ["asset"],
     entryGroups: [
       {
         label: "남성 VIP",
@@ -266,6 +270,120 @@ const SCENARIOS: {
       },
     ],
     tickets: [{ name: "VIP 멤버십", price: 60000, quantity: 8 }],
+    metadata: { show_participant_list: false, visibility: "private" },
+  },
+  // Edge Case 1: 최소 정원 이벤트 (정원 2명) — 매칭/정산의 최소 케이스
+  {
+    title: "[E2E] 1:1 프리미엄 디너",
+    summary: "소수 정예 1:1 매칭 디너",
+    minConfirmed: 2,
+    maxParticipants: 2,
+    verificationCategories: ["asset"],
+    entryGroups: [
+      { label: "남성", gender: "male", birthYearMin: 1985, birthYearMax: 2000 },
+      { label: "여성", gender: "female", birthYearMin: 1985, birthYearMax: 2000 },
+    ],
+    tickets: [{ name: "디너 티켓", price: 100000, quantity: 2 }],
+    metadata: { show_participant_list: false, visibility: "private" },
+  },
+  // Edge Case 2: 대규모 이벤트 (정원 50명) — 대용량 처리 검증
+  {
+    title: "[E2E] 대규모 네트워킹 파티",
+    summary: "50명 규모의 대형 소셜 네트워킹",
+    minConfirmed: 10,
+    maxParticipants: 50,
+    verificationCategories: [],
+    entryGroups: [
+      { label: "남성", gender: "male", birthYearMin: 1990, birthYearMax: 2005 },
+      { label: "여성", gender: "female", birthYearMin: 1990, birthYearMax: 2005 },
+    ],
+    tickets: [
+      { name: "일반", price: 15000, quantity: 25 },
+      { name: "VIP", price: 30000, quantity: 25 },
+    ],
+    metadata: { show_participant_list: true, visibility: "public" },
+  },
+  // Edge Case 3: 무료 이벤트 (price: 0) — 0원 결제/환불/정산 처리 검증
+  {
+    title: "[E2E] 무료 동네 산책 모임",
+    summary: "참가비 없는 가벼운 동네 산책",
+    minConfirmed: 4,
+    maxParticipants: 12,
+    verificationCategories: [],
+    entryGroups: [
+      { label: "남성", gender: "male", birthYearMin: 1990, birthYearMax: 2005 },
+      { label: "여성", gender: "female", birthYearMin: 1990, birthYearMax: 2005 },
+    ],
+    tickets: [{ name: "무료 참가", price: 0, quantity: 12 }],
+    metadata: { show_participant_list: true, visibility: "public" },
+  },
+  // Edge Case 4: 여성 전용 이벤트 (단일 entryGroup) — 단일 그룹 매칭 graceful skip 검증
+  {
+    title: "[E2E] 여성 전용 와인 클래스",
+    summary: "여성만 참가 가능한 와인 테이스팅",
+    minConfirmed: 4,
+    maxParticipants: 8,
+    verificationCategories: [],
+    entryGroups: [
+      { label: "여성", gender: "female", birthYearMin: 1990, birthYearMax: 2005 },
+    ],
+    tickets: [{ name: "와인 클래스", price: 35000, quantity: 8 }],
+    metadata: { show_participant_list: true, visibility: "public" },
+  },
+  // Edge Case 5: 연령 제한 극단 (40대 전용) — seed 유저 연령 불일치, 빈 이벤트 graceful 처리
+  {
+    title: "[E2E] 40대 소셜 디너",
+    summary: "40대만 참가 가능한 프리미엄 디너",
+    minConfirmed: 4,
+    maxParticipants: 8,
+    verificationCategories: ["career"],
+    entryGroups: [
+      { label: "남성", gender: "male", birthYearMin: 1980, birthYearMax: 1989 },
+      { label: "여성", gender: "female", birthYearMin: 1980, birthYearMax: 1989 },
+    ],
+    tickets: [{ name: "디너 티켓", price: 45000, quantity: 8 }],
+    metadata: { show_participant_list: false, visibility: "private" },
+  },
+  // Edge Case 6: 복수 인증 요구 (career + asset 동시) — 다중 인증 승인 플로우 검증
+  {
+    title: "[E2E] 엘리트 멤버십 라운지",
+    summary: "직장인 + 자산 인증 동시 필요",
+    minConfirmed: 4,
+    maxParticipants: 6,
+    verificationCategories: ["career", "asset"],
+    entryGroups: [
+      { label: "남성", gender: "male", birthYearMin: 1988, birthYearMax: 1998 },
+      { label: "여성", gender: "female", birthYearMin: 1988, birthYearMax: 1998 },
+    ],
+    tickets: [{ name: "멤버십", price: 80000, quantity: 6 }],
+    metadata: { show_participant_list: false, visibility: "private" },
+  },
+  // Edge Case 7: 정원 = 신청 수 (capacity guard 검증, #1219)
+  {
+    title: "[E2E] 마감 임박 소규모 모임",
+    summary: "정원과 신청 수가 동일한 소규모 이벤트",
+    minConfirmed: 4,
+    maxParticipants: 6,
+    verificationCategories: [],
+    entryGroups: [
+      { label: "남성", gender: "male", birthYearMin: 1995, birthYearMax: 2005 },
+      { label: "여성", gender: "female", birthYearMin: 1995, birthYearMax: 2005 },
+    ],
+    tickets: [{ name: "참가비", price: 20000, quantity: 6 }],
+    metadata: { show_participant_list: true, visibility: "public" },
+  },
+  // Edge Case 8: 고가 티켓 (200,000원) — 환불/정산 금액 정확성 검증
+  {
+    title: "[E2E] 럭셔리 요트 파티",
+    summary: "프리미엄 요트 위 네트워킹 파티",
+    minConfirmed: 4,
+    maxParticipants: 8,
+    verificationCategories: ["asset"],
+    entryGroups: [
+      { label: "남성 VIP", gender: "male", birthYearMin: 1985, birthYearMax: 1998 },
+      { label: "여성 VIP", gender: "female", birthYearMin: 1985, birthYearMax: 1998 },
+    ],
+    tickets: [{ name: "요트 파티", price: 200000, quantity: 8 }],
     metadata: { show_participant_list: false, visibility: "private" },
   },
 ];
@@ -387,6 +505,68 @@ function generateDescription(
 
 const SEED_PASSWORD = "password1234!";
 
+// ─── Regional Persona Generation (#1334) ───────────────────────────────────
+
+// 10 major regions with simulator GPS coordinates.
+const REGIONS = [
+  { name: "강남", lat: 37.4979, lng: 127.0276 },
+  { name: "홍대", lat: 37.5575, lng: 126.9245 },
+  { name: "성수", lat: 37.5445, lng: 127.0559 },
+  { name: "이태원", lat: 37.5340, lng: 126.9948 },
+  { name: "잠실", lat: 37.5133, lng: 127.1001 },
+  { name: "판교", lat: 37.3948, lng: 127.1112 },
+  { name: "부산_해운대", lat: 35.1631, lng: 129.1635 },
+  { name: "부산_서면", lat: 35.1578, lng: 129.0596 },
+  { name: "대구_동성로", lat: 35.8690, lng: 128.5941 },
+  { name: "제주", lat: 33.4996, lng: 126.5312 },
+] as const;
+
+// 25 ages(18-42) × 2 genders × 10 regions = 500 regional personas.
+// All regional users are is_verified: true for simulation.
+// Phone scheme: 010-5{regionIdx:1}{age-18:2}-{gender:1}000
+//   → 5000+regionIdx*100+(age-18), last4=1000(male)/2000(female)
+//   Max prefix = 5000+9*100+24 = 5924 (4 digits, no overflow).
+function generateRegionalPersonas(): UserPersona[] {
+  const currentYear = Temporal.Now.plainDateISO().year;
+  const personas: UserPersona[] = [];
+
+  for (let age = 18; age <= 42; age++) {
+    const birthYear = currentYear - age + 1;
+    const birthDate = `${birthYear}-01-01`;
+
+    for (const gender of ["male", "female"] as const) {
+      const genderShort = gender === "male" ? "m" : "f";
+      const last4 = gender === "male" ? "1000" : "2000";
+
+      for (let ri = 0; ri < REGIONS.length; ri++) {
+        const region = REGIONS[ri];
+        const prefix = 5000 + ri * 100 + (age - 18);
+        const username = `user_${age}_${genderShort}_${region.name}`;
+
+        personas.push({
+          email: `${username}@test.com`,
+          password: SEED_PASSWORD,
+          metadata: {
+            name: `${age}${gender === "male" ? "남" : "여"}_${region.name}`,
+            username,
+            gender,
+            birth_date: birthDate,
+            phone_number: `010-${prefix}-${last4}`,
+            is_verified: true,
+            sim_region: region.name,
+            sim_lat: region.lat,
+            sim_lng: region.lng,
+          },
+        });
+      }
+    }
+  }
+
+  return personas;
+}
+
+// ─── Legacy Persona Generation ──────────────────────────────────────────────
+
 // Merged generatePersonas + generate30sPersonas: covers age 20-34 in a single loop.
 // Phone prefix: 20-24 → 1000+age (preserves original), 25-34 → 2000+age (preserves original).
 // Email pattern: user_{age}_{m|f}_{ok|no}@test.com — preserved for E2E test compat.
@@ -435,6 +615,10 @@ function generateAllPersonas(): UserPersona[] {
       });
     }
   }
+
+  // Fix #1334: include 500 regional personas (25 ages × 2 genders × 10 regions)
+  // after the 60 legacy personas. generateAllPersonas() = 60 + 500 = 560 total.
+  personas.push(...generateRegionalPersonas());
 
   return personas;
 }
@@ -761,8 +945,16 @@ async function ensureGlobalVerifications(
 // ─── Domain Seeding Functions ───────────────────────────────────────
 
 // Fix #1272: listUsers를 1회만 호출하고 Map으로 캐시 — 60회 반복 호출 제거
-async function seedAllUsers(supabase: SupabaseClient): Promise<number> {
-  const personas = generateAllPersonas();
+// Fix #1334: offset/limit 지원 — 560명을 100명씩 6 배치로 분할 처리
+async function seedAllUsers(
+  supabase: SupabaseClient,
+  offset = 0,
+  limit: number | null = null,
+): Promise<number> {
+  const allPersonas = generateAllPersonas();
+  const personas = limit !== null
+    ? allPersonas.slice(offset, offset + limit)
+    : allPersonas.slice(offset);
 
   // 1회만 조회하고 Map으로 캐시 (240회 → 최소 1회)
   const { data: listData } = await supabase.auth.admin.listUsers({ perPage: 1000 });
@@ -1089,9 +1281,9 @@ async function createFreshEvents(
     if (!location) continue;
 
     const scenario = SCENARIOS[pi % SCENARIOS.length];
-    const verifIds = scenario.verificationCategory
-      ? [globalVerifs[scenario.verificationCategory]].filter(Boolean)
-      : [];
+    const verifIds = scenario.verificationCategories
+      .map((cat) => globalVerifs[cat])
+      .filter(Boolean);
 
     // Fix #1272: 멱등성 — 이미 존재하는 파티는 skip
     const { data: existingParty } = await supabase
@@ -1144,11 +1336,17 @@ Deno.serve(async (req) => {
     );
   }
 
+  // Fix #1334: offset/limit for batched user seeding (560 total ÷ 100/batch = 6 calls)
+  const offsetParam = url.searchParams.get("offset");
+  const limitParam = url.searchParams.get("limit");
+  const offset = offsetParam !== null ? parseInt(offsetParam, 10) : 0;
+  const limit = limitParam !== null ? parseInt(limitParam, 10) : null;
+
   try {
     const supabase = createServiceClient();
 
     // static mode: idempotent seed of users, verifications, partners, roles, images
-    const createdUsers = await seedAllUsers(supabase);
+    const createdUsers = await seedAllUsers(supabase, offset, limit);
     const globalVerifs = await seedGlobalVerifications(supabase);
     const { processedPartners } = await seedAllPartners(supabase, globalVerifs);
     await seedPartnerRoles(supabase);
