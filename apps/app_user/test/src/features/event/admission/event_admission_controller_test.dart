@@ -713,8 +713,11 @@ void main() {
         );
         addTearDown(sub.close);
 
-        // Wait for the async build to complete
-        await Future<void>.delayed(const Duration(milliseconds: 100));
+        // Wait for the async build to complete deterministically
+        await container
+            .read(eventAdmissionControllerProvider(testEvent).future)
+            // ignore: avoid_catches_without_on_clauses
+            .catchError((_) {});
 
         final raw = container.read(eventAdmissionControllerProvider(testEvent));
         // Riverpod 3: error is available via .error on any AsyncValue state
@@ -751,7 +754,10 @@ void main() {
         );
         addTearDown(sub.close);
 
-        await Future<void>.delayed(const Duration(milliseconds: 100));
+        await container
+            .read(eventAdmissionControllerProvider(testEvent).future)
+            // ignore: avoid_catches_without_on_clauses
+            .catchError((_) {});
 
         final raw = container.read(eventAdmissionControllerProvider(testEvent));
         expect(raw.error, isA<Exception>());
@@ -797,7 +803,10 @@ void main() {
         );
         addTearDown(sub.close);
 
-        await Future<void>.delayed(const Duration(milliseconds: 100));
+        await container
+            .read(eventAdmissionControllerProvider(testEvent).future)
+            // ignore: avoid_catches_without_on_clauses
+            .catchError((_) {});
 
         final raw = container.read(eventAdmissionControllerProvider(testEvent));
         expect(raw.error, isA<Exception>());
@@ -845,7 +854,10 @@ void main() {
         );
         addTearDown(sub.close);
 
-        await Future<void>.delayed(const Duration(milliseconds: 100));
+        await container
+            .read(eventAdmissionControllerProvider(completedEvent).future)
+            // ignore: avoid_catches_without_on_clauses
+            .catchError((_) {});
 
         final raw = container.read(
           eventAdmissionControllerProvider(completedEvent),
@@ -880,7 +892,10 @@ void main() {
         );
         addTearDown(sub.close);
 
-        await Future<void>.delayed(const Duration(milliseconds: 100));
+        await container
+            .read(eventAdmissionControllerProvider(testEvent).future)
+            // ignore: avoid_catches_without_on_clauses
+            .catchError((_) {});
 
         final raw = container.read(eventAdmissionControllerProvider(testEvent));
         expect(raw.error, specificException);

@@ -239,7 +239,10 @@ void main() {
         );
         addTearDown(sub.close);
 
-        await Future<void>.delayed(const Duration(milliseconds: 100));
+        await container
+            .read(purchaseHistoryControllerProvider.future)
+            // ignore: avoid_catches_without_on_clauses
+            .catchError((_) {});
 
         final state = container.read(purchaseHistoryControllerProvider);
         expect(state.error, isA<Exception>());
@@ -272,7 +275,10 @@ void main() {
         );
         addTearDown(sub.close);
 
-        await Future<void>.delayed(const Duration(milliseconds: 100));
+        await container
+            .read(purchaseHistoryControllerProvider.future)
+            // ignore: avoid_catches_without_on_clauses
+            .catchError((_) {});
 
         final state = container.read(purchaseHistoryControllerProvider);
         expect(state.error, equals(specificException));
