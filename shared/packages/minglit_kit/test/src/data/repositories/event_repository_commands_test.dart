@@ -104,12 +104,14 @@ void main() {
 
       expect(result.applicationId, 'app_verif_1');
 
-      final captured = verify(
-        () => mockFunctions.invoke(
-          'apply-event',
-          body: captureAny(named: 'body'),
-        ),
-      ).captured.single as Map<String, dynamic>;
+      final captured =
+          verify(
+                () => mockFunctions.invoke(
+                  'apply-event',
+                  body: captureAny(named: 'body'),
+                ),
+              ).captured.single
+              as Map<String, dynamic>;
       expect(captured['verification_data'], verificationData);
     });
 
@@ -134,12 +136,14 @@ void main() {
         ticketId: 'ticket_1',
       );
 
-      final captured = verify(
-        () => mockFunctions.invoke(
-          'apply-event',
-          body: captureAny(named: 'body'),
-        ),
-      ).captured.single as Map<String, dynamic>;
+      final captured =
+          verify(
+                () => mockFunctions.invoke(
+                  'apply-event',
+                  body: captureAny(named: 'body'),
+                ),
+              ).captured.single
+              as Map<String, dynamic>;
       expect(captured.containsKey('verification_data'), isFalse);
     });
 
@@ -155,7 +159,7 @@ void main() {
         repository.applyEvent(
           eventId: 'event_1',
           ticketId: 'ticket_1',
-          ),
+        ),
         throwsA(anything),
       );
     });
@@ -209,7 +213,7 @@ void main() {
       await expectLater(
         repository.deleteApplication(
           eventId: 'event_1',
-          ),
+        ),
         completes,
       );
     });
@@ -224,7 +228,7 @@ void main() {
       await expectLater(
         repository.deleteApplication(
           eventId: 'event_1',
-          ),
+        ),
         throwsA(anything),
       );
     });

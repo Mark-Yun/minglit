@@ -115,8 +115,7 @@ mixin _EventRepositoryCommands
         body: {
           'event_id': eventId,
           'ticket_id': ticketId,
-          if (verificationData != null)
-            'verification_data': verificationData,
+          'verification_data': ?verificationData,
         },
       );
 
