@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:minglit_kit/src/theme/minglit_theme.dart';
 import 'package:minglit_kit/src/ui/widgets/bug_reporter_wrapper.dart';
+
+// ignore_for_file: avoid_dynamic_calls
 
 void main() {
   group('BugReporterWrapper Widget Tests', () {
@@ -14,7 +15,7 @@ void main() {
           child: MaterialApp(
             home: Scaffold(
               body: BugReporterWrapper(
-                enabled: false, // Disable FAB rendering
+                enabled: false,
                 child: testChild,
               ),
             ),
@@ -25,7 +26,7 @@ void main() {
       expect(find.text('Test Child Widget'), findsOneWidget);
     });
 
-    testWidgets('does not render FAB when disabled', (tester) async {
+    testWidgets('does not render FAB (FAB removed in #1285)', (tester) async {
       await tester.pumpWidget(
         const ProviderScope(
           child: MaterialApp(
@@ -39,7 +40,7 @@ void main() {
         ),
       );
 
-      // When disabled, no FAB should be rendered
+      // FAB has been removed in #1285 — no FAB should be present
       expect(find.byType(FloatingActionButton), findsNothing);
     });
 
@@ -62,7 +63,7 @@ void main() {
       expect(find.byType(BugReporterWrapper), findsOneWidget);
     });
 
-    testWidgets('renders Stack with child and optional FAB', (tester) async {
+    testWidgets('renders RepaintBoundary with child', (tester) async {
       await tester.pumpWidget(
         const ProviderScope(
           child: MaterialApp(
@@ -76,8 +77,8 @@ void main() {
         ),
       );
 
-      // Verify the BugReporterWrapper widget is used (which uses Stack
-      // internally)
+      // Verify the BugReporterWrapper widget is used (which uses RepaintBoundary
+      // internally after #1285 FAB removal)
       expect(find.byType(BugReporterWrapper), findsOneWidget);
       expect(find.text('Stack Child'), findsOneWidget);
     });
@@ -150,7 +151,10 @@ void main() {
       // No crash = state was properly cleaned up
     });
 
-    testWidgets('renders FAB when enabled', (tester) async {
+    // Fix #1285: FAB has been removed. BugReporterWrapper now registers
+    // _showReportDialog via bugReporterCallbackProvider instead of rendering a FAB.
+    testWidgets('no FAB rendered when enabled (FAB removed in #1285)',
+        (tester) async {
       await tester.pumpWidget(
         const ProviderScope(
           child: MaterialApp(
@@ -166,18 +170,21 @@ void main() {
       // Verify child is rendered
       expect(find.text('content'), findsOneWidget);
 
-      // Verify FAB is rendered when enabled
-      expect(find.byType(FloatingActionButton), findsOneWidget);
+      // FAB removed in #1285 — no FloatingActionButton should be in the tree
+      expect(find.byType(FloatingActionButton), findsNothing);
     });
 
-    // Regression test for #1262: FAB must be anchored at top, not bottom,
-    // to avoid overlapping BottomNavigationBar touch targets.
-    testWidgets('FAB is positioned at top-right, not bottom-right', (
+    // Regression test for #1285: callback is registered in provider after mount.
+    testWidgets('bugReporterCallbackProvider is set when BugReporterWrapper is mounted', (
       tester,
     ) async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
+        UncontrolledProviderScope(
+          container: container,
+          child: const MaterialApp(
             home: Scaffold(
               body: BugReporterWrapper(
                 child: Text('content'),
@@ -187,19 +194,49 @@ void main() {
         ),
       );
 
-      final positioned = tester.widget<Positioned>(
-        find
-            .ancestor(
-              of: find.byType(FloatingActionButton),
-              matching: find.byType(Positioned),
-            )
-            .first,
-      );
+      // postFrameCallback fires after first pump
+      await tester.pump();
 
-      // Must use top anchor, not bottom — bottom anchor overlaps BottomNav.
-      expect(positioned.top, MinglitSpacing.medium);
-      expect(positioned.right, MinglitSpacing.medium);
-      expect(positioned.bottom, isNull);
+      // Callback should now be registered
+      expect(container.read(bugReporterCallbackProvider), isNotNull);
+    });
+
+    // Regression test for #1285: BugReporterWrapper disposes cleanly even
+    // when a callback is registered. The provider is not explicitly cleared on
+    // dispose because Riverpod v3 forbids modifying providers during widget
+    // tree finalization; BugReporterWrapper lives for the app's lifetime, so
+    // a stale callback reference is not a concern in practice.
+    testWidgets('disposes cleanly with callback registered', (
+      tester,
+    ) async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const MaterialApp(
+            home: Scaffold(
+              body: BugReporterWrapper(
+                child: Text('content'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      // Verify callback is set
+      expect(container.read(bugReporterCallbackProvider), isNotNull);
+
+      // Dispose by replacing widget tree — must not throw
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const MaterialApp(home: SizedBox()),
+        ),
+      );
+      // No crash = dispose completed cleanly
     });
   });
 }
