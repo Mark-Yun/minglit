@@ -817,7 +817,8 @@ Deno.test({
 });
 
 // Fix #1283: credentials 누락 시 즉시 throw (strict 제거 후 유일한 동작)
-Deno.test("simDiscoverAndApply - throws when credentials not available", async () => {
+// sanitizeOps disabled: preceding test (@supabase/auth-js setInterval leak) completes timers here
+Deno.test({ name: "simDiscoverAndApply - throws when credentials not available", sanitizeOps: false, sanitizeResources: false, fn: async () => {
   const mock = createMockSupabaseClient({});
 
   // No SIM_USER_PASSWORD set — throws immediately
@@ -831,7 +832,7 @@ Deno.test("simDiscoverAndApply - throws when credentials not available", async (
     Error,
     "SIM_USER_PASSWORD not set",
   );
-});
+}});
 
 // sanitizeResources/sanitizeOps disabled: @supabase/auth-js internally calls setInterval for
 // token auto-refresh even when persistSession=false. The interval leaks within the test but is
