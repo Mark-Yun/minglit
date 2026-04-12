@@ -346,7 +346,6 @@ void main() {
           container.listen(
             checkinControllerProvider,
             (_, s) => capturedStates.add(s),
-            fireImmediately: false,
           );
 
           await container
@@ -421,7 +420,6 @@ void main() {
           container.listen(
             checkinControllerProvider,
             (_, s) => capturedStates.add(s),
-            fireImmediately: false,
           );
 
           await notifier.processQR(_makeQrPayload(userId: 'user-bbbb22'));
