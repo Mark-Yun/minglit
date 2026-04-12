@@ -23,7 +23,7 @@
 | # | 화면 | 경로 | Page 클래스 | GUEST | AUTH | VERIFIED | 비고 |
 |---|------|------|------------|-------|------|----------|------|
 | U-S01 | 홈 | `/` | `HomePage` | OK | OK | OK | 앱 진입점 |
-| U-S02 | 큐레이션 목록 | `/curation` | `PartyCurationPage` | OK | OK | OK | 홈 → 큐레이션 |
+| U-S02 | 큐레이션 목록 | `/curation` | `PartyCurationPage` | OK | OK | OK | ⚠️ BLOCKED — 홈에서 진입 UI 없음 (see #1293). 라우트는 존재하나 네비게이션 경로 orphaned |
 | U-S03 | 검색 | `/search` | `SearchPage` | OK | OK | OK | |
 | U-S04 | 이벤트 상세 | `/events/:eventId` | `EventDetailPage` | OK | OK | OK | 유효한 eventId 필요 |
 | U-S05 | 파트너 상세 | `/partners/:partnerId` | `PartnerDetailPage` | OK | OK | OK | 유효한 partnerId 필요 |
@@ -88,13 +88,15 @@
 
 ### 5.1 홈 (HomePage)
 
+> **참고**: app_user는 BottomNav를 사용하지 않음. 모든 네비게이션은 AppBar 아이콘 또는 콘텐츠 내 탭으로 수행.
+
 | 액션 | 기대 결과 | 에러 시나리오 |
 |------|-----------|-------------|
 | 이벤트 카드 탭 | `/events/:eventId`로 이동 | - |
-| 큐레이션 섹션 탭 | `/curation`으로 이동 | - |
-| 검색 아이콘 탭 | `/search`로 이동 | - |
-| 마이페이지 아이콘 탭 | `/my`로 이동 (GUEST → 로그인) | - |
-| 알림 아이콘 탭 | `/notifications`로 이동 | - |
+| 큐레이션 섹션 탭 | `/curation`으로 이동 | ⚠️ 진입점 미구현 (see #1293) |
+| AppBar 검색 아이콘 탭 | `/search`로 이동 | - |
+| AppBar 프로필 아이콘 탭 | `/my`로 이동 (GUEST → 로그인) | - |
+| AppBar 알림 아이콘 탭 | `/notifications`로 이동 | - |
 | 풀투리프레시 | 홈 데이터 갱신 | 네트워크 오류 → 에러 표시 |
 
 ### 5.2 검색 (SearchPage)
