@@ -15,7 +15,7 @@ import 'utils/test_app.dart';
 import 'utils/test_mocks.dart';
 
 // Fix #1321: DateTime.now() → 고정 시간으로 교체 (flaky test 방지)
-final _fixedNow = DateTime(2026, 4, 13, 12, 0, 0);
+final _fixedNow = DateTime(2026, 4, 13, 12);
 
 void main() {
   setUpAll(() async {
