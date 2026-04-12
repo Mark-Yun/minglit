@@ -18,9 +18,8 @@ String _makeQrPayload({
   String signature = 'sig',
   DateTime? expiresAt,
 }) {
-  final exp =
-      (expiresAt ?? DateTime.now().add(const Duration(days: 7)))
-          .toIso8601String();
+  final exp = (expiresAt ?? DateTime.now().add(const Duration(days: 7)))
+      .toIso8601String();
   return jsonEncode({
     'ticket_id': ticketId,
     'event_id': eventId,
@@ -141,7 +140,6 @@ void main() {
           container.listen(
             checkinControllerProvider,
             (_, s) => capturedStates.add(s),
-            fireImmediately: false,
           );
 
           await container
@@ -150,11 +148,14 @@ void main() {
 
           // 상태 시퀀스: processing → success → idle
           final results = capturedStates.map((s) => s.result).toList();
-          expect(results, containsAllInOrder([
-            CheckinResult.processing,
-            CheckinResult.success,
-            CheckinResult.idle,
-          ]));
+          expect(
+            results,
+            containsAllInOrder([
+              CheckinResult.processing,
+              CheckinResult.success,
+              CheckinResult.idle,
+            ]),
+          );
 
           // success 시점의 userName은 userId 앞 4자리로 구성됨
           final successState = capturedStates.firstWhere(
@@ -181,7 +182,6 @@ void main() {
           container.listen(
             checkinControllerProvider,
             (_, s) => capturedStates.add(s),
-            fireImmediately: false,
           );
 
           await container
@@ -189,10 +189,13 @@ void main() {
               .processQR(_makeQrPayload());
 
           final results = capturedStates.map((s) => s.result).toList();
-          expect(results, containsAllInOrder([
-            CheckinResult.processing,
-            CheckinResult.invalid,
-          ]));
+          expect(
+            results,
+            containsAllInOrder([
+              CheckinResult.processing,
+              CheckinResult.invalid,
+            ]),
+          );
 
           final invalidState = capturedStates.firstWhere(
             (s) => s.result == CheckinResult.invalid,
@@ -211,7 +214,6 @@ void main() {
           container.listen(
             checkinControllerProvider,
             (_, s) => capturedStates.add(s),
-            fireImmediately: false,
           );
 
           await container
@@ -219,10 +221,13 @@ void main() {
               .processQR('not-valid-json{{{{');
 
           final results = capturedStates.map((s) => s.result).toList();
-          expect(results, containsAllInOrder([
-            CheckinResult.processing,
-            CheckinResult.invalid,
-          ]));
+          expect(
+            results,
+            containsAllInOrder([
+              CheckinResult.processing,
+              CheckinResult.invalid,
+            ]),
+          );
 
           final invalidState = capturedStates.firstWhere(
             (s) => s.result == CheckinResult.invalid,
@@ -291,7 +296,6 @@ void main() {
           container.listen(
             checkinControllerProvider,
             (_, s) => capturedStates.add(s),
-            fireImmediately: false,
           );
 
           await container
@@ -299,10 +303,13 @@ void main() {
               .processQR(_makeQrPayload());
 
           final results = capturedStates.map((s) => s.result).toList();
-          expect(results, containsAllInOrder([
-            CheckinResult.processing,
-            CheckinResult.invalid,
-          ]));
+          expect(
+            results,
+            containsAllInOrder([
+              CheckinResult.processing,
+              CheckinResult.invalid,
+            ]),
+          );
 
           final invalidState = capturedStates.firstWhere(
             (s) => s.result == CheckinResult.invalid,
