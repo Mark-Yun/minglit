@@ -34,9 +34,9 @@ void main() {
       // Reset the channel handler after each test
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(
-        const MethodChannel('com.minglit.dev/qa_bug_report'),
-        null,
-      );
+            const MethodChannel('com.minglit.dev/qa_bug_report'),
+            null,
+          );
     });
 
     test(
@@ -46,24 +46,22 @@ void main() {
 
         // Simulate what the Android BroadcastReceiver sends to Flutter
         const channel = MethodChannel('com.minglit.dev/qa_bug_report');
-        await TestDefaultBinaryMessengerBinding
-            .instance
-            .defaultBinaryMessenger
+        await TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
             .handlePlatformMessage(
-          channel.name,
-          channel.codec.encodeMethodCall(
-            const MethodCall(
-              'triggerBugReport',
-              {
-                'title': 'U-S04 이벤트 상세 — CTA 버튼 잘림',
-                'description': '이벤트 상세 하단 신청하기 버튼이 SafeArea 밖으로 나감',
-                'scenario_id': 'U-S04',
-                'session_id': '20260412-173833',
-              },
-            ),
-          ),
-          (_) {},
-        );
+              channel.name,
+              channel.codec.encodeMethodCall(
+                const MethodCall(
+                  'triggerBugReport',
+                  {
+                    'title': 'U-S04 이벤트 상세 — CTA 버튼 잘림',
+                    'description': '이벤트 상세 하단 신청하기 버튼이 SafeArea 밖으로 나감',
+                    'scenario_id': 'U-S04',
+                    'session_id': '20260412-173833',
+                  },
+                ),
+              ),
+              (_) {},
+            );
 
         verify(
           () => mockCollector.submitReport(
@@ -80,16 +78,14 @@ void main() {
       QaBugReportChannel.initialize(mockCollector);
 
       const channel = MethodChannel('com.minglit.dev/qa_bug_report');
-      await TestDefaultBinaryMessengerBinding
-          .instance
-          .defaultBinaryMessenger
+      await TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .handlePlatformMessage(
-        channel.name,
-        channel.codec.encodeMethodCall(
-          const MethodCall('unknownMethod', {}),
-        ),
-        (_) {},
-      );
+            channel.name,
+            channel.codec.encodeMethodCall(
+              const MethodCall('unknownMethod', {}),
+            ),
+            (_) {},
+          );
 
       verifyNever(
         () => mockCollector.submitReport(
@@ -105,23 +101,19 @@ void main() {
       QaBugReportChannel.initialize(mockCollector);
 
       const channel = MethodChannel('com.minglit.dev/qa_bug_report');
-      await TestDefaultBinaryMessengerBinding
-          .instance
-          .defaultBinaryMessenger
+      await TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .handlePlatformMessage(
-        channel.name,
-        channel.codec.encodeMethodCall(
-          const MethodCall('triggerBugReport', <String, dynamic>{}),
-        ),
-        (_) {},
-      );
+            channel.name,
+            channel.codec.encodeMethodCall(
+              const MethodCall('triggerBugReport', <String, dynamic>{}),
+            ),
+            (_) {},
+          );
 
       verify(
         () => mockCollector.submitReport(
           title: 'QA Bug Report',
           description: '',
-          scenarioId: null,
-          sessionId: null,
         ),
       ).called(1);
     });

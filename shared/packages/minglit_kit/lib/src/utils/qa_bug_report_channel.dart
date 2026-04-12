@@ -1,6 +1,13 @@
+import 'package:flutter/cupertino.dart' show RepaintBoundary;
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart' show RepaintBoundary;
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart' show RepaintBoundary;
+import 'package:minglit_kit/minglit_kit.dart' show BugReporterWrapper;
+import 'package:minglit_kit/minglit_ui.dart' show BugReporterWrapper;
 import 'package:minglit_kit/src/data/services/bug_report_collector.dart';
+import 'package:minglit_kit/src/ui/widgets/bug_reporter_wrapper.dart'
+    show BugReporterWrapper;
 import 'package:minglit_kit/src/utils/log.dart';
 
 /// Listens on the native MethodChannel `com.minglit.dev/qa_bug_report` and
