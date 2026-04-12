@@ -26,6 +26,11 @@ class MoreCoordinator {
     unawaited(_router.push(const VerificationManageRoute().location));
   }
 
+  // Fix #1269: 더보기에서 파티 관리 메뉴가 누락되어 파티 목록으로 진입할 수 없었다.
+  void pushPartyList() {
+    unawaited(_router.push(const PartyListRoute().location));
+  }
+
   void pushAccountDeletion() {
     unawaited(_router.push(const DeletionReasonRoute().location));
   }

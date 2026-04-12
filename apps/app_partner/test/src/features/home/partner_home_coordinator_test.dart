@@ -18,9 +18,7 @@ void main() {
   group('PartnerHomeCoordinator', () {
     test('creates from provider', () {
       final container = createContainer(
-        overrides: [
-          goRouterProvider.overrideWithValue(mockRouter),
-        ],
+        overrides: [goRouterProvider.overrideWithValue(mockRouter)],
       );
 
       final coordinator = container.read(partnerHomeCoordinatorProvider);
@@ -29,9 +27,7 @@ void main() {
 
     test('pushNotificationCenter calls router.push', () {
       final container = createContainer(
-        overrides: [
-          goRouterProvider.overrideWithValue(mockRouter),
-        ],
+        overrides: [goRouterProvider.overrideWithValue(mockRouter)],
       );
 
       container.read(partnerHomeCoordinatorProvider).pushNotificationCenter();
@@ -41,9 +37,7 @@ void main() {
 
     test('pushApplicationList calls router.push', () {
       final container = createContainer(
-        overrides: [
-          goRouterProvider.overrideWithValue(mockRouter),
-        ],
+        overrides: [goRouterProvider.overrideWithValue(mockRouter)],
       );
 
       container.read(partnerHomeCoordinatorProvider).pushApplicationList();
@@ -51,11 +45,22 @@ void main() {
       verify(() => mockRouter.push(any())).called(1);
     });
 
+    test('pushLocationGuide calls router.push with location guide route', () {
+      // Fix #1269: 홈 장소 가이드 배너가 실제 P-S06 라우트로 이동하는지 검증한다.
+      final container = createContainer(
+        overrides: [goRouterProvider.overrideWithValue(mockRouter)],
+      );
+
+      container.read(partnerHomeCoordinatorProvider).pushLocationGuide();
+
+      verify(
+        () => mockRouter.push(any(that: equals('/guide/location'))),
+      ).called(1);
+    });
+
     test('goToSettlement calls router.go with settlement route', () {
       final container = createContainer(
-        overrides: [
-          goRouterProvider.overrideWithValue(mockRouter),
-        ],
+        overrides: [goRouterProvider.overrideWithValue(mockRouter)],
       );
 
       container.read(partnerHomeCoordinatorProvider).goToSettlement();
@@ -68,18 +73,14 @@ void main() {
       'pushNotificationCenter and pushApplicationList push different routes',
       () {
         final container = createContainer(
-          overrides: [
-            goRouterProvider.overrideWithValue(mockRouter),
-          ],
+          overrides: [goRouterProvider.overrideWithValue(mockRouter)],
         );
         final coordinator = container.read(partnerHomeCoordinatorProvider);
 
         coordinator.pushNotificationCenter();
         coordinator.pushApplicationList();
 
-        final captured = verify(
-          () => mockRouter.push(captureAny()),
-        ).captured;
+        final captured = verify(() => mockRouter.push(captureAny())).captured;
         expect(captured.length, 2);
         expect(captured[0], isNot(equals(captured[1])));
       },

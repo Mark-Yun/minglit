@@ -3,10 +3,7 @@ import 'package:minglit_kit/minglit_kit.dart';
 
 /// Banner card linking to location guide page.
 class LocationGuideBanner extends StatelessWidget {
-  const LocationGuideBanner({
-    required this.onTap,
-    super.key,
-  });
+  const LocationGuideBanner({required this.onTap, super.key});
 
   final VoidCallback onTap;
 
@@ -28,14 +25,12 @@ class LocationGuideBanner extends StatelessWidget {
           padding: const EdgeInsets.all(MinglitSpacing.large),
           child: Row(
             children: [
-              Icon(
-                Icons.location_on,
-                color: colorScheme.onTertiaryContainer,
-              ),
+              Icon(Icons.location_on, color: colorScheme.onTertiaryContainer),
               const SizedBox(width: MinglitSpacing.medium),
               Expanded(
                 child: Text(
-                  '장소선정 가이드',
+                  // Fix #1269: P-S06 smoke case expects the home banner label.
+                  '장소 가이드',
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w600,
                     color: colorScheme.onTertiaryContainer,
