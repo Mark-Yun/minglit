@@ -1,4 +1,4 @@
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { SimConfig, SimLogEntry } from "./sim_types.ts";
 import { callEdgeFunction, getPartnerEmail, getSimPartnerToken, getSimUserToken } from "./sim_auth.ts";
 
@@ -580,12 +580,9 @@ async function applyForEvent(
     );
     if (!eligible) continue;
 
-    const isHappyPath = Math.random() >= config.error_rate;
-    const mockPaymentId = `e2e_pay_${crypto.randomUUID().slice(0, 8)}`;
-
-    // Fix #1279: apply_event RPC is the ONLY path — direct DB insert bypasses EF validation
+    // Fix #1324: apply-event EF is the ONLY path — RPC bypassed server-side payment/validation logic
     if (!supabaseUrl || !anonKey || !simUserPassword || !user.username) {
-      log({ level: "error", phase: "apply", step: "rpc_apply_event", message: `Credentials not available for user ${user.id}, skipping application` });
+      log({ level: "error", phase: "apply", step: "ef_apply_event", message: `Credentials not available for user ${user.id}, skipping application` });
       continue;
     }
 
@@ -598,36 +595,34 @@ async function applyForEvent(
       continue;
     }
 
-    const userClient = createClient(supabaseUrl, anonKey, {
-      auth: { persistSession: false },
-      global: { headers: { Authorization: `Bearer ${userToken}` } },
-    });
+    // apply-event EF: server determines free vs paid based on ticket price
+    const efResult = await callEdgeFunction(supabaseUrl, "apply-event", {
+      event_id: eventId,
+      ticket_id: ticket.id,
+    }, userToken);
 
-    // apply_event RPC: pass verification_data=null for happy path (→ 'paid'), non-null for pending_review
-    const rpcParams = {
-      p_event_id: eventId,
-      p_ticket_id: ticket.id,
-      p_user_id: user.id,
-      p_payment_id: isHappyPath ? mockPaymentId : null,
-      p_payment_amount: isHappyPath ? ticket.price : null,
-      p_verification_data: isHappyPath ? null : { source: "e2e_sim" },
-    };
-
-    const { data: appId, error: rpcErr } = await userClient.rpc("apply_event", rpcParams);
-    if (rpcErr) {
-      log({ level: "warn", phase: "apply", step: "rpc_apply_event", message: `RPC failed for user ${userEmail} event ${eventId}: ${rpcErr.message}` });
+    if (efResult.status !== 200) {
+      log({ level: "warn", phase: "apply", step: "ef_apply_event", message: `apply-event EF returned status=${efResult.status} for user ${userEmail} event ${eventId}` });
       continue;
     }
 
-    const newAppId = appId as string;
+    const efData = efResult.data as { type: "free" | "paid"; application_id: string } | null;
+    if (!efData?.application_id) {
+      log({ level: "warn", phase: "apply", step: "ef_apply_event", message: `apply-event EF returned no application_id for user ${userEmail} event ${eventId}` });
+      continue;
+    }
+
+    const newAppId = efData.application_id;
     applicationIds.push(newAppId);
     appliedUserIds.add(user.id);
     appsCreated++;
 
-    if (isHappyPath) {
-      paidApplicationIds.push(newAppId);
-    } else {
+    // free = 파트너 승인 대기 (pendingReview), paid = 결제 완료 후 refund 시뮬레이션 대상
+    if (efData.type === "free") {
       pendingReviewApplicationIds.push(newAppId);
+    } else {
+      // paid = PG 결제 필요 — 시뮬레이터에서는 결제 시뮬레이션 후 paid로 전이
+      paidApplicationIds.push(newAppId);
     }
   }
 

@@ -306,10 +306,7 @@ class _FakeEventApplicationController extends EventApplicationController {
   void previousStep() {}
 
   @override
-  Future<void> processPayment(BuildContext context) async {}
-
-  @override
-  Future<void> submitApplication() async {}
+  Future<void> submitApplication(BuildContext context) async {}
 
   @override
   void resetStatus() {}

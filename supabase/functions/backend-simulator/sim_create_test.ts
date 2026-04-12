@@ -170,9 +170,9 @@ Deno.test({
         // Return empty feed — only newEventIds should be processed
         return new Response(JSON.stringify({ events: [] }), { status: 200 });
       }
-      if (url.includes("rest/v1/rpc/apply_event")) {
+      if (url.includes("functions/v1/apply-event")) {
         appCounter++;
-        return new Response(JSON.stringify(`app-${appCounter}`), { status: 200 });
+        return new Response(JSON.stringify({ type: "paid", application_id: `app-${appCounter}` }), { status: 200 });
       }
       return new Response(JSON.stringify({}), { status: 404 });
     }, () =>
@@ -202,8 +202,8 @@ Deno.test({
   sanitizeResources: false,
   sanitizeOps: false,
   fn: async () => {
-  // Track apply_event RPC calls to assert dedup skips the already-applied user
-  const rpcCalls: Record<string, unknown>[] = [];
+  // Track apply-event EF calls to assert dedup skips the already-applied user
+  const efCalls: Record<string, unknown>[] = [];
 
   const mock = createMockSupabaseClient({
     tables: {
@@ -244,13 +244,13 @@ Deno.test({
       if (url.includes("functions/v1/user-event-feed")) {
         return new Response(JSON.stringify({ events: [] }), { status: 200 });
       }
-      if (url.includes("rest/v1/rpc/apply_event")) {
+      if (url.includes("functions/v1/apply-event")) {
         try {
-          rpcCalls.push(JSON.parse((init.body as string) ?? "{}") as Record<string, unknown>);
+          efCalls.push(JSON.parse((init.body as string) ?? "{}") as Record<string, unknown>);
         } catch {
           // intentionally empty
         }
-        return new Response(JSON.stringify("app-new"), { status: 200 });
+        return new Response(JSON.stringify({ type: "paid", application_id: "app-new" }), { status: 200 });
       }
       return new Response(JSON.stringify({}), { status: 404 });
     }, () =>
@@ -264,8 +264,8 @@ Deno.test({
       )
     );
 
-    // apply_event RPC must NOT have been called for user-1 (already applied)
-    assertEquals(rpcCalls.length, 0);
+    // apply-event EF must NOT have been called for user-1 (already applied)
+    assertEquals(efCalls.length, 0);
   } finally {
     Deno.env.delete("SIM_USER_PASSWORD");
   }
@@ -588,15 +588,15 @@ Deno.test({
       if (url.includes("functions/v1/user-event-feed")) {
         return new Response(JSON.stringify({ events: [] }), { status: 200 });
       }
-      if (url.includes("rest/v1/rpc/apply_event")) {
+      if (url.includes("functions/v1/apply-event")) {
         appCounter++;
         try {
           const body = JSON.parse((init.body as string) ?? "{}");
-          if (body.p_event_id) processedEventIds.push(body.p_event_id);
+          if (body.event_id) processedEventIds.push(body.event_id);
         } catch {
           // intentionally empty
         }
-        return new Response(JSON.stringify(`app-${appCounter}`), { status: 200 });
+        return new Response(JSON.stringify({ type: "paid", application_id: `app-${appCounter}` }), { status: 200 });
       }
       return new Response(JSON.stringify({}), { status: 404 });
     }, () =>
@@ -680,8 +680,8 @@ Deno.test({
           { status: 200 },
         );
       }
-      if (url.includes("rest/v1/rpc/apply_event")) {
-        return new Response(JSON.stringify("rpc-app-1"), { status: 200 });
+      if (url.includes("functions/v1/apply-event")) {
+        return new Response(JSON.stringify({ type: "paid", application_id: "app-1" }), { status: 200 });
       }
       return new Response(JSON.stringify({}), { status: 404 });
     }, async () => {
@@ -816,12 +816,14 @@ Deno.test({
 // sanitizeResources/sanitizeOps disabled: @supabase/auth-js internally calls setInterval for
 // token auto-refresh even when persistSession=false. The interval leaks within the test but is
 // harmless — suppressing the leak check is correct here rather than patching the library.
+// ── apply-event EF path tests (Fix #1324) ────────────────────────────────────
+
 Deno.test({
-  name: "simDiscoverAndApply - applies via RPC with correct parameters",
+  name: "simDiscoverAndApply - applies via apply-event EF with correct parameters",
   sanitizeResources: false,
   sanitizeOps: false,
   fn: async () => {
-  const rpcBodies: Record<string, unknown>[] = [];
+  const efBodies: Record<string, unknown>[] = [];
 
   const mock = createMockSupabaseClient({
     tables: {
@@ -858,13 +860,13 @@ Deno.test({
       if (url.includes("functions/v1/user-event-feed")) {
         return new Response(JSON.stringify({ events: [] }), { status: 200 });
       }
-      if (url.includes("rest/v1/rpc/apply_event")) {
+      if (url.includes("functions/v1/apply-event")) {
         try {
-          rpcBodies.push(JSON.parse((init.body as string) ?? "{}") as Record<string, unknown>);
+          efBodies.push(JSON.parse((init.body as string) ?? "{}") as Record<string, unknown>);
         } catch {
           // intentionally empty
         }
-        return new Response(JSON.stringify("rpc-app-42"), { status: 200 });
+        return new Response(JSON.stringify({ type: "paid", application_id: "ef-app-42" }), { status: 200 });
       }
       return new Response(JSON.stringify({}), { status: 404 });
     }, async () => {
@@ -878,23 +880,95 @@ Deno.test({
         "anon-key",
       );
 
-      // RPC was called exactly once (1 user × 1 event × apps_per_event=1)
-      assertEquals(rpcBodies.length, 1);
+      // apply-event EF was called exactly once (1 user × 1 event × apps_per_event=1)
+      assertEquals(efBodies.length, 1);
 
-      // RPC body contains required parameters
-      const body = rpcBodies[0];
-      assertEquals(body.p_event_id, "target-event-1");
-      assertEquals(body.p_ticket_id, "ticket-99");
-      assertEquals(body.p_user_id, "user-42");
-      // Happy path (error_rate=0.0): p_payment_id and p_payment_amount should be set
-      assertEquals(typeof body.p_payment_id, "string");
-      assertEquals(body.p_payment_amount, 30000);
-      // Happy path: p_verification_data should be null
-      assertEquals(body.p_verification_data, null);
+      // EF body contains only event_id and ticket_id — server determines payment logic
+      const body = efBodies[0];
+      assertEquals(body.event_id, "target-event-1");
+      assertEquals(body.ticket_id, "ticket-99");
+      // EF body must NOT contain RPC-era parameters
+      assertEquals(body.p_event_id, undefined);
+      assertEquals(body.p_ticket_id, undefined);
+      assertEquals(body.p_user_id, undefined);
+      assertEquals(body.p_payment_id, undefined);
+      assertEquals(body.p_payment_amount, undefined);
+      assertEquals(body.p_verification_data, undefined);
 
-      // Result includes the RPC-returned app ID
-      assertEquals(result.applicationIds, ["rpc-app-42"]);
-      assertEquals(result.paidApplicationIds, ["rpc-app-42"]);
+      // Result includes the EF-returned application_id, classified as paid
+      assertEquals(result.applicationIds, ["ef-app-42"]);
+      assertEquals(result.paidApplicationIds, ["ef-app-42"]);
+    });
+  } finally {
+    Deno.env.delete("SIM_USER_PASSWORD");
+  }
+  },
+});
+
+// sanitizeResources/sanitizeOps disabled: @supabase/auth-js internally calls setInterval for
+// token auto-refresh even when persistSession=false. The interval leaks within the test but is
+// harmless — suppressing the leak check is correct here rather than patching the library.
+Deno.test({
+  name: "simDiscoverAndApply - classifies free applications from apply-event EF response",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+  const mock = createMockSupabaseClient({
+    tables: {
+      user_profiles: {
+        select: () => ({
+          data: [{ id: "user-free", gender: "male", birth_date: "1998-01-01", username: "userfree" }],
+          error: null,
+        }),
+      },
+      entry_groups: {
+        select: () => ({
+          data: [{ id: "group-male", gender: "male", birth_year_min: 1990, birth_year_max: 2005 }],
+          error: null,
+        }),
+      },
+      tickets: {
+        // price=0 free ticket
+        select: () => ({ data: [{ id: "ticket-free", price: 0, status: "on_sale" }], error: null }),
+      },
+      event_applications: {
+        select: () => ({ data: [], error: null }),
+      },
+    },
+  });
+
+  Deno.env.set("SIM_USER_PASSWORD", "test-password");
+  try {
+    await withMockFetch((url) => {
+      if (url.includes("auth/v1/token")) {
+        return new Response(
+          JSON.stringify({ access_token: "mock-user-token", token_type: "bearer", expires_in: 3600, refresh_token: "r", user: {} }),
+          { status: 200 },
+        );
+      }
+      if (url.includes("functions/v1/user-event-feed")) {
+        return new Response(JSON.stringify({ events: [] }), { status: 200 });
+      }
+      if (url.includes("functions/v1/apply-event")) {
+        // Server returns type=free for zero-price ticket
+        return new Response(JSON.stringify({ type: "free", application_id: "free-app-1" }), { status: 200 });
+      }
+      return new Response(JSON.stringify({}), { status: 404 });
+    }, async () => {
+      const config: SimConfig = { ...DEFAULT_CONFIG, apps_per_event: 1 };
+      const result = await simDiscoverAndApply(
+        mock as unknown as SupabaseClient,
+        config,
+        noop,
+        ["free-event-1"],
+        "https://mock.supabase.co",
+        "anon-key",
+      );
+
+      // Free application = partner approval pending, goes into pendingReviewApplicationIds
+      assertEquals(result.applicationIds, ["free-app-1"]);
+      assertEquals(result.paidApplicationIds, []);
+      assertEquals(result.pendingReviewApplicationIds, ["free-app-1"]);
     });
   } finally {
     Deno.env.delete("SIM_USER_PASSWORD");
