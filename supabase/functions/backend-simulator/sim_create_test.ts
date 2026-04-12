@@ -406,7 +406,6 @@ Deno.test({
         const authHeader = (init.headers as Record<string, string>)["Authorization"] ?? "";
         feedCallUserTokens.push(authHeader);
         // Each user's feed returns one non-E2E event with a ticket
-        appCounter;
         return new Response(
           JSON.stringify({
             events: [
