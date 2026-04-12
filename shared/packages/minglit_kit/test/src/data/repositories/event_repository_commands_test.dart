@@ -213,6 +213,7 @@ void main() {
       await expectLater(
         repository.deleteApplication(
           eventId: 'event_1',
+          userId: 'user_1',
         ),
         completes,
       );
@@ -228,6 +229,7 @@ void main() {
       await expectLater(
         repository.deleteApplication(
           eventId: 'event_1',
+          userId: 'user_1',
         ),
         throwsA(anything),
       );

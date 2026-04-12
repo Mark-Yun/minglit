@@ -963,10 +963,10 @@ Deno.test({
         "anon-key",
       );
 
-      // Free application goes into pendingReviewApplicationIds (not paidApplicationIds)
+      // Free application = already confirmed (DB status='paid'), goes into paidApplicationIds
       assertEquals(result.applicationIds, ["free-app-1"]);
-      assertEquals(result.paidApplicationIds, []);
-      assertEquals(result.pendingReviewApplicationIds, ["free-app-1"]);
+      assertEquals(result.paidApplicationIds, ["free-app-1"]);
+      assertEquals(result.pendingReviewApplicationIds, []);
     });
   } finally {
     Deno.env.delete("SIM_USER_PASSWORD");

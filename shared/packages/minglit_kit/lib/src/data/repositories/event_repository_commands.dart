@@ -50,6 +50,45 @@ mixin _EventRepositoryCommands
     }
   }
 
+  /// Fix #299: 주문 취소/환불을 user-cancel-order EF로 통합 호출.
+  /// 결제 전 취소, 무료 이벤트 취소, 유료 이벤트 환불을 모두 처리한다.
+  Future<CancelOrderResult> cancelOrder({
+    required String eventId,
+    String? reason,
+  }) async {
+    Log.d('cancelOrder called | event: $eventId');
+    try {
+      final response = await supabaseClient.functions.invoke(
+        'user-cancel-order',
+        body: {
+          'event_id': eventId,
+          'reason': reason,
+        },
+      );
+
+      if (response.status != 200) {
+        final data = response.data;
+        final errorMsg = data is Map
+            ? (data['error'] as String?) ?? '취소 요청에 실패했습니다.'
+            : '취소 요청에 실패했습니다.';
+        throw MinglitUserException(errorMsg);
+      }
+
+      final data = response.data as Map<String, dynamic>;
+      final type = data['type'] as String;
+      int? refundAmount;
+      if (type == 'refunded') {
+        final refundData = data['data'] as Map<String, dynamic>?;
+        refundAmount = refundData?['refund_amount'] as int?;
+      }
+
+      return CancelOrderResult(type: type, refundAmount: refundAmount);
+    } catch (e, st) {
+      Log.e('❌ [EventRepo] cancelOrder Error', e, st);
+      rethrow;
+    }
+  }
+
   /// Verifies the payment with the backend.
   Future<void> confirmPayment({
     required String impUid,
