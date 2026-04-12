@@ -53,9 +53,12 @@ Future<void> _runProcessQR(
         if (isTerminal && !completer.isCompleted) completer.complete();
       },
     );
-    unawaited(processQRCall());
-    await completer.future.timeout(const Duration(seconds: 10));
-    sub.close();
+    try {
+      unawaited(processQRCall());
+      await completer.future.timeout(const Duration(seconds: 10));
+    } finally {
+      sub.close();
+    }
   });
 }
 
