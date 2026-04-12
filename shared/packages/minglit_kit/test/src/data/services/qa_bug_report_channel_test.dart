@@ -82,7 +82,7 @@ void main() {
           .handlePlatformMessage(
             channel.name,
             channel.codec.encodeMethodCall(
-              const MethodCall('unknownMethod', {}),
+              const MethodCall('unknownMethod', <String, dynamic>{}),
             ),
             (_) {},
           );
