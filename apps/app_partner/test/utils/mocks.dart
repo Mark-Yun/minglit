@@ -8,6 +8,8 @@ class MockGoRouter extends Mock implements GoRouter {}
 class MockUser extends Mock implements User {}
 
 // --- Repository Mocks ---
+class MockCheckinRepository extends Mock implements CheckinRepository {}
+
 class MockEventRepository extends Mock implements EventRepository {}
 
 class MockPartnerRepository extends Mock implements PartnerRepository {}
