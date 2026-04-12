@@ -160,6 +160,11 @@ void main() {
       expect(find.text('투표 완료'), findsOneWidget);
       // '선택' 버튼은 없음
       expect(find.text('선택'), findsNothing);
+      // Fix #1312: 비활성화된 버튼이 실제로 동작하지 않는지 확인
+      // onPressed: null 이므로 탭해도 확인 다이얼로그가 열리지 않아야 함
+      await tester.tap(find.text('투표 완료'));
+      await tester.pump();
+      expect(find.text('투표하기'), findsNothing);
     });
 
     testWidgets('투표 버튼 탭 → 확인 다이얼로그 표시', (tester) async {
