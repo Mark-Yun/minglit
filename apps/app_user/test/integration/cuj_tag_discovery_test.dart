@@ -26,14 +26,14 @@ void main() {
   late MockTagRepository mockTagRepo;
 
   Event makeEvent(int i) => Event(
-        id: 'event-$i',
-        partyId: 'party-$i',
-        title: '태그 이벤트 $i',
-        startTime: DateTime(2026, 5, i + 1),
-        endTime: DateTime(2026, 5, i + 1, 2),
-        createdAt: DateTime(2026),
-        updatedAt: DateTime(2026),
-      );
+    id: 'event-$i',
+    partyId: 'party-$i',
+    title: '태그 이벤트 $i',
+    startTime: DateTime(2026, 5, i + 1),
+    endTime: DateTime(2026, 5, i + 1, 2),
+    createdAt: DateTime(2026),
+    updatedAt: DateTime(2026),
+  );
 
   setUp(() {
     mockTagRepo = MockTagRepository();

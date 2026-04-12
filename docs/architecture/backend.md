@@ -41,7 +41,7 @@ Minglit의 Supabase 기반 백엔드 인프라를 기술한다.
 
 ### 2.1 Table Inventory
 
-총 **53개 테이블(analytics 스키마 5개 포함)** + **4개 뷰** + **4개 PGMQ 인프라 테이블**.
+총 **54개 테이블(analytics 스키마 5개 포함)** + **4개 뷰** + **4개 PGMQ 인프라 테이블**.
 
 > **Note**: 아래 테이블 목록이 실제 migration과 일치하는지 정기적으로 검증합니다.
 
@@ -71,6 +71,7 @@ Minglit의 Supabase 기반 백엔드 인프라를 기술한다.
 | `entry_groups` | 입장 그룹 (이벤트) | event_id, gender, birth_year_min/max |
 | `ticket_templates` | 티켓 템플릿 (파티) | party_id, name, price, quantity |
 | `tickets` | 티켓 (이벤트) | event_id, name, price, quantity, sold_count, status |
+| `recurrence_rules` | 반복 이벤트 규칙 | party_id, pattern (weekly/biweekly/monthly), days_of_week[], month_day, start_time, end_time, end_date, status (active/paused/cancelled), last_generated_date |
 
 #### Commerce (신청/인증/참가)
 
@@ -170,6 +171,7 @@ partners
   │     ├── party_embeddings (1:1)
   │     ├── entry_group_templates (1:N)
   │     ├── ticket_templates (1:N)
+  │     ├── recurrence_rules (1:N)
   │     └── events (1:N)
   │           ├── entry_groups (1:N)
   │           ├── tickets (1:N)
@@ -217,7 +219,15 @@ Supabase Edge Functions는 Deno 런타임 기반이며, `supabase/functions/` �
 | `settlement-transfer` | Payment | 정산 주문 이체 |
 | `notification-worker` | Notification | FCM 푸시 알림 발송 (PGMQ consumer) |
 | `vector-worker` | Recommendation | 파티/유저 임베딩 생성 (PGMQ consumer) |
-| `profile-update` | User | 프로필 업데이트 + 임베딩 생성 |
+| `recurrence-rules` | Event | 반복 이벤트 규칙 CRUD (create, update, pause, resume, cancel) |
+| `recurrence-cron` | Event | 반복 이벤트 자동 생성 (매일 UTC 00:00, 최대 30일 선행 생성) |
+| `apply-event` | Event | 이벤트 신청 (성비 체크 → 주문 → 인증 제출, RPC 대체) |
+| `user-event-feed` | User | 이벤트 피드 조회 (개인화, 필터링) |
+| `user-get-ticket-token` | User | 티켓 QR 토큰 발급 (Ed25519 서명) |
+| `user-delete-account` | User | 계정 삭제 요청 (소프트 삭제 + 30일 유예) |
+| `user-cancel-deletion` | User | 계정 삭제 요청 취소 |
+| `cleanup-blocked-dis` | System | 만료된 DI 블록 정리 (크론) |
+| `process-pending-deletions` | System | 유예 기간 만료 계정 하드 삭제 (크론) |
 | `identity-verify` | Identity | 본인인증 (Portone V2/PASS) |
 | `partner-sync` | Partner | 플랫폼 파트너 동기화 |
 | `bug-report` | System | 버그 리포트 (파일 업로드 포함) |
@@ -424,6 +434,10 @@ protect_user_profile_fields() → trigger
 | `sync_github_stats` | 매일 05:30 KST (`30 20 * * *` UTC) | `github-stats-sync` Edge Function 호출 → GitHub 이슈/PR 통계 수집 |
 | `notify-match-results` | 매일 자정 (`0 0 * * *`) | 매칭 결과 알림 발송 (`notify_match_results()`) |
 | `cleanup-expired-match-votes` | 매일 18:00 UTC (`0 18 * * *`) | 만료된 매칭 투표 정리 (`cleanup_expired_match_votes()`) |
+| `activate-upcoming-events` | 매분 (`* * * * *`) | 시작 30분 전 이벤트 `scheduled` → `active` 전환 |
+| `start-active-events` | 매분 (`* * * * *`) | 시작 시각 도달 이벤트 `active` → `ongoing` 전환 |
+| `auto-complete-past-events` | 매 15분 (`*/15 * * * *`) | 종료 시각 경과 이벤트 `ongoing` → `completed` 전환 |
+| `recurrence-cron` | 매일 00:00 UTC (`0 0 * * *`) | `recurrence-cron` Edge Function 호출 (반복 이벤트 자동 생성) |
 
 ---
 

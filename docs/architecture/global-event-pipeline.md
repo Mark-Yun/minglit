@@ -148,7 +148,7 @@ Follow this checklist to integrate a new event into the pipeline:
 ## 10. Known Limitations
 
 *   **Cron Latency**: Some events depend on `pg_cron` (like `event_reminder`), which has a minimum resolution of one minute.
-*   **External Hooks**: The `portone-webhook` currently bypasses the global pipeline and interacts with the database directly for immediate processing requirements.
+*   **External Hooks**: The `payment-webhook` currently bypasses the global pipeline and interacts with the database directly for immediate processing requirements.
 *   **Batching**: The `vector-worker` processes events in batches of up to 50, which might introduce slight delays in recommendation updates.
 
 ## 11. Decision Log

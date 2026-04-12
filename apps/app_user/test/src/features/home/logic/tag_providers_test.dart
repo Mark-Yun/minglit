@@ -24,8 +24,7 @@ void main() {
       'TagRepository.getFeaturedTags() 결과를 반환한다',
       () async {
         final tags = [makeTag('클럽'), makeTag('독서')];
-        when(() => mockTagRepo.getFeaturedTags())
-            .thenAnswer((_) async => tags);
+        when(() => mockTagRepo.getFeaturedTags()).thenAnswer((_) async => tags);
 
         final container = createContainer(
           overrides: [
@@ -43,8 +42,7 @@ void main() {
     test(
       'TagRepository.getFeaturedTags() 빈 목록 — 빈 리스트 반환',
       () async {
-        when(() => mockTagRepo.getFeaturedTags())
-            .thenAnswer((_) async => []);
+        when(() => mockTagRepo.getFeaturedTags()).thenAnswer((_) async => []);
 
         final container = createContainer(
           overrides: [
@@ -66,8 +64,7 @@ void main() {
         final tags = [
           const Tag(id: 'tag-핫', name: '핫', recentCount: 42),
         ];
-        when(() => mockTagRepo.getTrendingTags())
-            .thenAnswer((_) async => tags);
+        when(() => mockTagRepo.getTrendingTags()).thenAnswer((_) async => tags);
 
         final container = createContainer(
           overrides: [
@@ -85,8 +82,7 @@ void main() {
     test(
       'TagRepository.getTrendingTags() 빈 목록 — 빈 리스트 반환',
       () async {
-        when(() => mockTagRepo.getTrendingTags())
-            .thenAnswer((_) async => []);
+        when(() => mockTagRepo.getTrendingTags()).thenAnswer((_) async => []);
 
         final container = createContainer(
           overrides: [

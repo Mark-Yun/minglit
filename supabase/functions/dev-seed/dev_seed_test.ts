@@ -118,9 +118,9 @@ Deno.test({
         assertEquals(response.status, 200);
         const body = await readJson(response);
 
-        // static mode (default): 60 users (age 20-34 × 4 variants) + 5 partner owners
-        // created_users counts only generateAllPersonas() results (60), not partner owners
-        assertEquals(body.created_users, 60);
+        // static mode (default): 60 legacy users + 500 regional users = 560 total (#1334)
+        // created_users counts generateAllPersonas() results, not partner owners
+        assertEquals(body.created_users, 560);
         assertEquals(body.created_partners, 5);
         // static mode does not create parties/events — those require ?mode=full
         assertEquals(body.created_parties, undefined);
@@ -330,7 +330,7 @@ Deno.test({
         const response = await handler(new Request("http://localhost"));
         assertEquals(response.status, 200);
         const body = await readJson(response);
-        assertEquals(body.created_users, 60);
+        assertEquals(body.created_users, 560);
         // listUsers called exactly once (not per-user)
         assertEquals(listUsersCallCount, 1);
         // No update calls needed (empty list → all created fresh)
@@ -422,8 +422,8 @@ Deno.test({
         // Overall response is 200 even with 1 individual failure
         assertEquals(response.status, 200);
         const body = await readJson(response);
-        // 59 succeed, 1 fails (but doesn't crash)
-        assertEquals(body.created_users, 59);
+        // 559 succeed, 1 fails (but doesn't crash) — 560 total (#1334)
+        assertEquals(body.created_users, 559);
       });
     });
   },
@@ -526,6 +526,102 @@ Deno.test({
         assertEquals(response.status, 200);
         // listUsers called exactly once (cached)
         assertEquals(listUsersCallCount, 1);
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "dev-seed - offset/limit seeds only the specified batch (#1334)",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+
+    let createUserCallCount = 0;
+
+    const { fetchMock } = createFetchMock([
+      {
+        matcher: (req) =>
+          req.url.includes("/auth/v1/admin/users") && req.method === "GET",
+        handler: () => jsonResponse({ users: [] }),
+      },
+      {
+        matcher: (req) =>
+          req.url.includes("/auth/v1/admin/users") && req.method === "POST",
+        handler: async (req) => {
+          createUserCallCount++;
+          const body = await req.json();
+          return jsonResponse({
+            user: {
+              id: `user-${createUserCallCount}`,
+              email: body.email,
+              user_metadata: body.user_metadata,
+            },
+          });
+        },
+      },
+      {
+        matcher: (req) => req.url.includes("/storage/v1/object/list-v2/"),
+        handler: () =>
+          jsonResponse({
+            objects: [
+              { name: "seed-images/party_cafe_warm.jpg" },
+              { name: "seed-images/party_lounge_bright.jpg" },
+              { name: "seed-images/party_premium_lounge.jpg" },
+            ],
+          }),
+      },
+      {
+        matcher: (req) =>
+          req.url.includes("/rest/v1/") && req.method === "POST",
+        handler: () =>
+          jsonResponse({ id: crypto.randomUUID() }, {
+            status: 201,
+            headers: { "Content-Profile": "public" },
+          }),
+      },
+      {
+        matcher: (req) =>
+          req.url.includes("/rest/v1/verifications") && req.method === "GET",
+        handler: () => jsonResponse(null, { status: 200 }),
+      },
+      {
+        matcher: (req) =>
+          req.url.includes("/rest/v1/partners") && req.method === "GET",
+        handler: () => jsonResponse([]),
+      },
+      {
+        matcher: (req) =>
+          req.url.includes("/rest/v1/parties") && req.method === "GET",
+        handler: () => jsonResponse([]),
+      },
+    ]);
+
+    await withEnv({
+      ENVIRONMENT: "development",
+      SUPABASE_URL: "http://localhost:54321",
+      SUPABASE_SERVICE_ROLE_KEY: "test-service-role-key",
+    }, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        // Batch 1: offset=0, limit=100 → seeds first 100 of 560 personas
+        const response = await handler(
+          new Request("http://localhost?mode=static&offset=0&limit=100"),
+        );
+        assertEquals(response.status, 200);
+        const body = await readJson(response);
+        assertEquals(body.created_users, 100);
+
+        // Batch 6: offset=500, limit=100 → seeds remaining 60 personas (500..559)
+        createUserCallCount = 0;
+        const response2 = await handler(
+          new Request("http://localhost?mode=static&offset=500&limit=100"),
+        );
+        assertEquals(response2.status, 200);
+        const body2 = await readJson(response2);
+        assertEquals(body2.created_users, 60);
       });
     });
   },
