@@ -13,7 +13,6 @@ const DEFAULT_CONFIG: SimConfig = {
   user_batch_size: 10,
   checkin_rate: 0.7,
   no_show_rate: 0.3,
-  strict: false,
 };
 
 const noop = () => {};
