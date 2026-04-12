@@ -220,6 +220,8 @@ Deno.test({ name: "simCheckin - empty participants returns empty", sanitizeOps: 
     ["event-empty"],
     noop,
     0.7,
+    "https://example.supabase.co",
+    "anon-key",
   );
 
   assertEquals(result.checkedInParticipantIds, []);
@@ -284,7 +286,7 @@ Deno.test({
   },
 });
 
-Deno.test("simCheckin - strict mode + no credentials throws immediately", async () => {
+Deno.test("simCheckin - no credentials throws immediately", async () => {
   const mock = createMockSupabaseClient({});
 
   await assertRejects(
@@ -293,76 +295,10 @@ Deno.test("simCheckin - strict mode + no credentials throws immediately", async 
       ["event-1"],
       noop,
       0.7,
-      undefined,
-      undefined,
-      true, // strict
     ),
     Error,
     "supabaseUrl and anonKey are required",
   );
-});
-
-Deno.test("simCheckin - no credentials + strict=false falls back to direct DB", async () => {
-  const participantStatuses: Record<string, string> = {};
-
-  const participants = [
-    { id: "p-1", user_id: "u-1", status: "ticket_issued" },
-    { id: "p-2", user_id: "u-2", status: "ticket_issued" },
-    { id: "p-3", user_id: "u-3", status: "ticket_issued" },
-    { id: "p-4", user_id: "u-4", status: "ticket_issued" },
-    { id: "p-5", user_id: "u-5", status: "ticket_issued" },
-    { id: "p-6", user_id: "u-6", status: "ticket_issued" },
-    { id: "p-7", user_id: "u-7", status: "ticket_issued" },
-    { id: "p-8", user_id: "u-8", status: "ticket_issued" },
-    { id: "p-9", user_id: "u-9", status: "ticket_issued" },
-    { id: "p-10", user_id: "u-10", status: "ticket_issued" },
-  ];
-
-  const mock = createMockSupabaseClient({
-    tables: {
-      events: {
-        update: () => ({ data: null, error: null }),
-      },
-      event_participants: {
-        select: ({ filters }) => {
-          if (filters["event_id"] && filters["status"] === "checked_in") {
-            const checkedIn = Object.entries(participantStatuses)
-              .filter(([, s]) => s === "checked_in").length;
-            return { data: new Array(checkedIn).fill({ id: "x", status: "checked_in" }), error: null };
-          }
-          if (filters["event_id"]) {
-            return {
-              data: participants.map((p) => ({
-                ...p,
-                status: participantStatuses[p.id] ?? p.status,
-              })),
-              error: null,
-            };
-          }
-          return { data: [], error: null };
-        },
-        update: ({ values, filters }) => {
-          const id = filters["id"] as string;
-          const v = values as { status: string };
-          participantStatuses[id] = v.status;
-          return { data: null, error: null };
-        },
-      },
-    },
-  });
-
-  const result = await simCheckin(
-    mock as unknown as SupabaseClient,
-    ["event-1"],
-    noop,
-    0.7,
-    // No supabaseUrl/anonKey — strict=false (default) → direct DB fallback
-  );
-
-  assertEquals(result.checkedInParticipantIds.length, 7);
-  assertEquals(result.noShowParticipantIds.length, 3);
-  assertEquals(result.assertions.length, 1);
-  assertEquals(result.assertions[0].passed, true);
 });
 
 // ─────────────────────────────────────────────────────────
@@ -446,7 +382,7 @@ Deno.test("simMatch - empty event list returns empty result", async () => {
   assertEquals(result.assertions, []);
 });
 
-Deno.test("simMatch - strict mode + no credentials throws immediately", async () => {
+Deno.test("simMatch - no credentials throws immediately", async () => {
   const mock = createMockSupabaseClient({});
 
   await assertRejects(
@@ -454,35 +390,10 @@ Deno.test("simMatch - strict mode + no credentials throws immediately", async ()
       mock as unknown as SupabaseClient,
       ["event-1"],
       noop,
-      undefined,
-      undefined,
-      true, // strict
     ),
     Error,
-    "supabaseUrl and serviceRoleKey are required",
+    "supabaseUrl and serviceRoleKey are required for event-matching EF",
   );
-});
-
-Deno.test("simMatch - no credentials + strict=false returns empty (no direct DB fallback)", async () => {
-  const mock = createMockSupabaseClient({});
-
-  const logs: string[] = [];
-  const collectLog = (entry: { level: string; message: string }) => {
-    logs.push(`${entry.level}: ${entry.message}`);
-  };
-
-  const result = await simMatch(
-    mock as unknown as SupabaseClient,
-    ["event-1"],
-    collectLog,
-    // No supabaseUrl/serviceRoleKey
-  );
-
-  assertEquals(result.matchPairs, []);
-  assertEquals(result.assertions, []);
-  // Should warn about missing credentials
-  const warnLogs = logs.filter((l) => l.startsWith("warn:"));
-  assertEquals(warnLogs.length >= 1, true);
 });
 
 Deno.test("simMatch - multiple events, multiple pairs via EF", async () => {

@@ -33,7 +33,6 @@ export async function simApproveVerifications(
   approveRate: number = 0.8,
   supabaseUrl?: string,
   anonKey?: string,
-  strict?: boolean,
 ): Promise<SimApproveResult> {
   const approvedApplicationIds: string[] = [];
   const rejectedApplicationIds: string[] = [];
@@ -174,8 +173,8 @@ export async function simApproveVerifications(
         }
       }
     } catch (e) {
-      if (strict) throw e;
       log({ level: "error", phase: "approve", step: "approve_loop", message: `Unexpected error for app ${appId}: ${String(e)}` });
+      throw e;
     }
   }
 
@@ -294,8 +293,8 @@ export async function simApproveVerifications(
         }
       }
     } catch (e) {
-      if (strict) throw e;
       log({ level: "error", phase: "approve", step: "reject_loop", message: `Unexpected error for app ${appId}: ${String(e)}` });
+      throw e;
     }
   }
 

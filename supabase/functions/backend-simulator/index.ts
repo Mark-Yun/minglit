@@ -46,7 +46,6 @@ const DEFAULT_CONFIG: SimConfig = {
   user_batch_size: 10,
   checkin_rate: 0.7,
   no_show_rate: 0.3,
-  strict: false,
 };
 
 // ─────────────────────────────────────────────────────────
@@ -119,7 +118,6 @@ Deno.serve(async (req: Request): Promise<Response> => {
       createResult.eventIds,
       supabaseUrl,
       anonKey,
-      config.strict,
     );
     return successResponse({
       success: true,
@@ -157,7 +155,6 @@ Deno.serve(async (req: Request): Promise<Response> => {
       undefined,
       supabaseUrl,
       anonKey,
-      config.strict,
     );
     return successResponse({
       success: true,
@@ -190,7 +187,6 @@ Deno.serve(async (req: Request): Promise<Response> => {
       config.refund_rate,
       supabaseUrl,
       anonKey,
-      config.strict,
     );
     return successResponse({
       success: true,
@@ -224,9 +220,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
       config.checkin_rate,
       supabaseUrl,
       anonKey,
-      config.strict,
     );
-    const matchResult = await simMatch(supabase, eventIds, logFn, supabaseUrl, serviceRoleKey, config.strict);
+    const matchResult = await simMatch(supabase, eventIds, logFn, supabaseUrl, serviceRoleKey);
     const completeResult = await simCompleteEvents(supabase, eventIds, logFn);
 
     const allAssertions: SimAssertionResult[] = [
@@ -357,7 +352,6 @@ Deno.serve(async (req: Request): Promise<Response> => {
     createResult.eventIds,
     supabaseUrl,
     anonKey,
-    config.strict,
   );
 
   // Phase 3: Approve verifications (80% approve, 20% reject)
@@ -368,7 +362,6 @@ Deno.serve(async (req: Request): Promise<Response> => {
     undefined,
     supabaseUrl,
     anonKey,
-    config.strict,
   );
 
   // Phase 4: Refund requests (refund_rate % of paid)
@@ -379,7 +372,6 @@ Deno.serve(async (req: Request): Promise<Response> => {
     config.refund_rate,
     supabaseUrl,
     anonKey,
-    config.strict,
   );
 
   // Phase 5: Check-in + Match + Complete
@@ -390,9 +382,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
     config.checkin_rate,
     supabaseUrl,
     anonKey,
-    config.strict,
   );
-  const matchResult = await simMatch(supabase, createResult.eventIds, logFn, supabaseUrl, serviceRoleKey, config.strict);
+  const matchResult = await simMatch(supabase, createResult.eventIds, logFn, supabaseUrl, serviceRoleKey);
   const completeResult = await simCompleteEvents(
     supabase,
     createResult.eventIds,
