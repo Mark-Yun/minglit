@@ -9,9 +9,6 @@ export interface SimConfig {
   user_batch_size: number;    // concurrent user processing batch size (default: 10)
   checkin_rate: number;       // 0-1, 70% = 0.7
   no_show_rate: number;       // 0-1, 30% = 0.3
-  // Controls EF failure behaviour: true = throw on EF failure (no fallback),
-  // false (default) = log warning and fall back to direct DB operations.
-  strict: boolean;
 }
 
 export interface SimPhaseResult {
