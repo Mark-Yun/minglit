@@ -344,10 +344,11 @@ class _BugReporterWrapperState extends ConsumerState<BugReporterWrapper> {
     return Stack(
       children: [
         RepaintBoundary(key: _boundaryKey, child: widget.child),
+        // Fix #1262: bottom → top 이동 — BottomNavigationBar 탭 터치 영역 침범 방지
         if (widget.enabled)
           Positioned(
             right: 16,
-            bottom: 16,
+            top: MediaQuery.of(context).padding.top + 16,
             child: Material(
               type: MaterialType.transparency,
               // Fix #147: show progress indicator while capturing
