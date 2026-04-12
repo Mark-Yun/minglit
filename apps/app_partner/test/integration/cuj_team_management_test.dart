@@ -219,7 +219,8 @@ void main() {
       // All 9 checkboxes should be checked after owner role sync
       final checkboxes = tester.widgetList<CheckboxListTile>(
         find.byType(CheckboxListTile),
-      );
+      ).toList();
+      expect(checkboxes, hasLength(9));
       expect(checkboxes.every((cb) => cb.value == true), isTrue);
     });
 
