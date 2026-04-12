@@ -109,6 +109,8 @@ class _HomePageState extends ConsumerState<HomePage> {
               ),
               // Fix #141: Equalize action button spacing and padding alignment
               actions: [
+                // Fix #1285: FAB 대체 — dev 전용 버그 리포트 액션 버튼
+                const BugReportAction(),
                 IconButton(
                   icon: const Icon(Icons.search),
                   onPressed: () => const SearchRoute().push<void>(context),
