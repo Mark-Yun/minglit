@@ -583,86 +583,51 @@ async function applyForEvent(
     const isHappyPath = Math.random() >= config.error_rate;
     const mockPaymentId = `e2e_pay_${crypto.randomUUID().slice(0, 8)}`;
 
-    // Attempt to use apply_event RPC with user-scoped client when auth credentials are available
-    if (supabaseUrl && anonKey && simUserPassword && user.username) {
-      const userEmail = `${user.username}@test.com`;
-      try {
-        const userToken = await getSimUserToken(supabaseUrl, anonKey, userEmail, simUserPassword);
-        const userClient = createClient(supabaseUrl, anonKey, {
-          auth: { persistSession: false },
-          global: { headers: { Authorization: `Bearer ${userToken}` } },
-        });
-
-        // apply_event RPC: pass verification_data=null for happy path (→ 'paid'), non-null for pending_review
-        const rpcParams = {
-          p_event_id: eventId,
-          p_ticket_id: ticket.id,
-          p_user_id: user.id,
-          p_payment_id: isHappyPath ? mockPaymentId : null,
-          p_payment_amount: isHappyPath ? ticket.price : null,
-          p_verification_data: isHappyPath ? null : { source: "e2e_sim" },
-        };
-
-        const { data: appId, error: rpcErr } = await userClient.rpc("apply_event", rpcParams);
-        if (rpcErr) {
-          log({ level: "warn", phase: "apply", step: "rpc_apply_event", message: `RPC failed for user ${userEmail} event ${eventId}: ${rpcErr.message}` });
-          continue;
-        }
-
-        const newAppId = appId as string;
-        applicationIds.push(newAppId);
-        appliedUserIds.add(user.id);
-        appsCreated++;
-
-        if (isHappyPath) {
-          paidApplicationIds.push(newAppId);
-        } else {
-          pendingReviewApplicationIds.push(newAppId);
-        }
-        continue;
-      } catch (authErr) {
-        // Fall through to service_role direct insert if auth fails (e.g. user not seeded)
-        log({ level: "warn", phase: "apply", step: "auth_fallback", message: `Auth failed for ${user.username}, using direct insert: ${String(authErr)}` });
-      }
-    }
-
-    // Fallback: service_role direct insert (used when auth credentials not available or auth fails)
-    const appId = crypto.randomUUID();
-    const { error: appErr } = await supabase.from("event_applications").insert({
-      id: appId,
-      event_id: eventId,
-      ticket_id: ticket.id,
-      user_id: user.id,
-      status: isHappyPath ? "paid" : "pending_review",
-      payment_amount: isHappyPath ? ticket.price : null,
-      payment_id: isHappyPath ? mockPaymentId : null,
-      message: "[E2E] 시뮬레이션 신청",
-    });
-    if (appErr) {
-      log({ level: "warn", phase: "apply", step: "create_application", message: `Failed: ${appErr.message}` });
+    // Fix #1279: apply_event RPC is the ONLY path — direct DB insert bypasses EF validation
+    if (!supabaseUrl || !anonKey || !simUserPassword || !user.username) {
+      log({ level: "error", phase: "apply", step: "rpc_apply_event", message: `Credentials not available for user ${user.id}, skipping application` });
       continue;
     }
 
-    applicationIds.push(appId);
+    const userEmail = `${user.username}@test.com`;
+    let userToken: string;
+    try {
+      userToken = await getSimUserToken(supabaseUrl, anonKey, userEmail, simUserPassword);
+    } catch (authErr) {
+      log({ level: "error", phase: "apply", step: "auth_token", message: `Auth failed for ${user.username}, skipping: ${String(authErr)}` });
+      continue;
+    }
+
+    const userClient = createClient(supabaseUrl, anonKey, {
+      auth: { persistSession: false },
+      global: { headers: { Authorization: `Bearer ${userToken}` } },
+    });
+
+    // apply_event RPC: pass verification_data=null for happy path (→ 'paid'), non-null for pending_review
+    const rpcParams = {
+      p_event_id: eventId,
+      p_ticket_id: ticket.id,
+      p_user_id: user.id,
+      p_payment_id: isHappyPath ? mockPaymentId : null,
+      p_payment_amount: isHappyPath ? ticket.price : null,
+      p_verification_data: isHappyPath ? null : { source: "e2e_sim" },
+    };
+
+    const { data: appId, error: rpcErr } = await userClient.rpc("apply_event", rpcParams);
+    if (rpcErr) {
+      log({ level: "warn", phase: "apply", step: "rpc_apply_event", message: `RPC failed for user ${userEmail} event ${eventId}: ${rpcErr.message}` });
+      continue;
+    }
+
+    const newAppId = appId as string;
+    applicationIds.push(newAppId);
     appliedUserIds.add(user.id);
     appsCreated++;
 
     if (isHappyPath) {
-      paidApplicationIds.push(appId);
-      const { error: participantErr } = await supabase.from("event_participants").insert({
-        id: crypto.randomUUID(),
-        event_id: eventId,
-        ticket_id: ticket.id,
-        user_id: user.id,
-        application_id: appId,
-        status: "ticket_issued",
-        birth_year: birthYear,
-      });
-      if (participantErr) {
-        log({ level: "warn", phase: "create", step: "create_participant", message: `Failed to create participant: ${participantErr.message}` });
-      }
+      paidApplicationIds.push(newAppId);
     } else {
-      pendingReviewApplicationIds.push(appId);
+      pendingReviewApplicationIds.push(newAppId);
     }
   }
 
@@ -683,31 +648,72 @@ export async function simDiscoverAndApply(
   newEventIds: string[],
   supabaseUrl?: string,
   anonKey?: string,
+  strict?: boolean,
 ): Promise<{ applicationIds: string[]; paidApplicationIds: string[]; pendingReviewApplicationIds: string[] }> {
   const applicationIds: string[] = [];
   const paidApplicationIds: string[] = [];
   const pendingReviewApplicationIds: string[] = [];
 
   const simUserPassword = Deno.env.get("SIM_USER_PASSWORD");
-  if (supabaseUrl && anonKey && !simUserPassword) {
-    log({ level: "warn", phase: "apply", step: "sim_user_password", message: "SIM_USER_PASSWORD not set; EF apply path disabled, using direct DB only" });
+  if (!simUserPassword) {
+    const errMsg = "SIM_USER_PASSWORD not set; cannot acquire user token for user-event-feed EF";
+    if (strict) throw new Error(errMsg);
+    log({ level: "warn", phase: "apply", step: "sim_user_password", message: errMsg });
   }
 
-  const { data: existingEventsRaw } = await supabase
-    .from("events")
-    .select("id, parties!inner(title)")
-    .eq("status", "scheduled");
+  // Fix #1279: Discover existing events via user-event-feed EF instead of direct DB query.
+  // The EF already handles scheduled+active status (post state machine extension) and excludes
+  // non-public events via its RLS-aware RPC — no direct DB access needed.
+  let existingEventIds: string[] = [];
+  if (supabaseUrl && anonKey && simUserPassword) {
+    // Acquire the first seed user's token to call the EF (optional auth: anonymous also works)
+    let feedToken: string | null = null;
+    try {
+      const { data: firstUser } = await supabase
+        .from("user_profiles")
+        .select("username")
+        .not("username", "like", "partner_%")
+        .limit(1)
+        .maybeSingle();
+      if (firstUser?.username) {
+        feedToken = await getSimUserToken(supabaseUrl, anonKey, `${(firstUser as { username: string }).username}@test.com`, simUserPassword);
+      }
+    } catch (tokenErr) {
+      log({ level: "warn", phase: "apply", step: "feed_token", message: `Failed to get user token for event feed: ${String(tokenErr)}` });
+    }
 
-  const existingEventIds = (existingEventsRaw ?? [])
-    // deno-lint-ignore no-explicit-any
-    .filter((e: any) => {
-      const p = e.parties;
-      const title: string = Array.isArray(p) ? (p[0]?.title ?? "") : (p?.title ?? "");
-      return !title.startsWith("[E2E]");
-    })
-    .slice(0, 20)
-    // deno-lint-ignore no-explicit-any
-    .map((e: any) => e.id as string);
+    if (feedToken) {
+      try {
+        const feedResult = await callEdgeFunction(supabaseUrl, "user-event-feed", { sort_by: "closing_soon", limit: 20 }, feedToken);
+        if (feedResult.status === 200) {
+          const feedData = feedResult.data as { events?: { id: string; title?: string; party?: { title?: string } }[] } | null;
+          existingEventIds = (feedData?.events ?? [])
+            .filter((e) => {
+              const partyTitle: string = e.party?.title ?? "";
+              return !partyTitle.startsWith("[E2E]");
+            })
+            .map((e) => e.id);
+          log({ level: "info", phase: "apply", step: "event_feed", message: `Discovered ${existingEventIds.length} events via user-event-feed EF` });
+        } else {
+          const errMsg = `user-event-feed EF returned status=${feedResult.status}`;
+          if (strict) throw new Error(errMsg);
+          log({ level: "warn", phase: "apply", step: "event_feed", message: `${errMsg}, proceeding with no discovered events` });
+        }
+      } catch (efErr) {
+        if (strict) throw efErr;
+        log({ level: "warn", phase: "apply", step: "event_feed", message: `user-event-feed EF threw: ${String(efErr)}, proceeding with no discovered events` });
+      }
+    } else {
+      const errMsg = "No user token available to call user-event-feed EF";
+      if (strict) throw new Error(errMsg);
+      log({ level: "warn", phase: "apply", step: "event_feed", message: `${errMsg}, proceeding with no discovered events` });
+    }
+  } else {
+    const errMsg = "supabaseUrl, anonKey, or SIM_USER_PASSWORD not available — cannot call user-event-feed EF";
+    if (strict) throw new Error(errMsg);
+    log({ level: "error", phase: "apply", step: "event_feed", message: errMsg });
+  }
+
   const allEventIds = [...newEventIds, ...existingEventIds];
 
   const { data: usersRaw } = await supabase
