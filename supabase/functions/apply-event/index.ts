@@ -116,27 +116,86 @@ Deno.serve(withHandler(async (req) => {
 
     if (price > 0) {
       // 유료: payment_pending 상태로 신청 레코드 생성 후 주문 정보 반환
-      // UUID를 미리 생성하여 INSERT 후 ID를 별도 조회 없이 사용
-      const applicationId = crypto.randomUUID();
+      let applicationId: string;
 
-      const { error: insertError } = await supabase
-        .from("event_applications")
-        .insert({
-          id: applicationId,
-          event_id,
-          ticket_id,
-          user_id: userId,
-          status: "payment_pending",
-          payment_amount: price,
-        });
+      if (existingApp) {
+        // Fix #1342 Bug1: 취소/결제실패 후 재신청 — unique constraint 충돌 방지를 위해 INSERT 대신 UPDATE
+        applicationId = existingApp.id;
+        const { error: updateError } = await supabase
+          .from("event_applications")
+          .update({
+            ticket_id,
+            status: "payment_pending",
+            payment_amount: price,
+            payment_id: null,
+            rejection_reason: null,
+          })
+          .eq("id", existingApp.id);
 
-      if (insertError) {
-        console.error("Failed to create paid application:", insertError.message);
-        // unique constraint violation (23505) → race condition으로 중복 신청 발생
-        if (insertError.code === "23505") {
-          return errorResponse("Already applied to this event", 409);
+        if (updateError) {
+          console.error("Failed to update paid application for re-application:", updateError.message);
+          return errorResponse("Failed to create application", 500);
         }
-        return errorResponse("Failed to create application", 500);
+      } else {
+        // UUID를 미리 생성하여 INSERT 후 ID를 별도 조회 없이 사용
+        applicationId = crypto.randomUUID();
+
+        const { error: insertError } = await supabase
+          .from("event_applications")
+          .insert({
+            id: applicationId,
+            event_id,
+            ticket_id,
+            user_id: userId,
+            status: "payment_pending",
+            payment_amount: price,
+          });
+
+        if (insertError) {
+          console.error("Failed to create paid application:", insertError.message);
+          // unique constraint violation (23505) → race condition으로 중복 신청 발생
+          if (insertError.code === "23505") {
+            return errorResponse("Already applied to this event", 409);
+          }
+          return errorResponse("Failed to create application", 500);
+        }
+      }
+
+      // Fix #1342 Bug2: 유료 경로에서 verification_data 처리 — RPC 미사용으로 인해 직접 삽입
+      if (verification_data) {
+        const verificationId = verification_data["verification_id"] as string | undefined;
+        const partnerId = verification_data["partner_id"] as string | undefined;
+        const data = verification_data["data"] ?? {};
+
+        if (verificationId && partnerId) {
+          const { error: uvError } = await supabase
+            .from("user_verifications")
+            .upsert(
+              { user_id: userId, verification_id: verificationId, data },
+              { onConflict: "user_id,verification_id" },
+            );
+
+          if (uvError) {
+            console.error("Failed to upsert user_verifications:", uvError.message);
+            return errorResponse("Failed to process verification data", 500);
+          }
+
+          const { error: vsError } = await supabase
+            .from("verification_submissions")
+            .insert({
+              partner_id: partnerId,
+              user_id: userId,
+              verification_id: verificationId,
+              application_id: applicationId,
+              status: "pending",
+              snapshot_data: data,
+            });
+
+          if (vsError) {
+            console.error("Failed to insert verification_submissions:", vsError.message);
+            return errorResponse("Failed to process verification data", 500);
+          }
+        }
       }
 
       return successResponse({
@@ -146,7 +205,70 @@ Deno.serve(withHandler(async (req) => {
         payment_amount: price,
       });
     } else {
-      // 무료: apply_event RPC 호출 — DB 레벨 balance 체크 + 신청 완료
+      // 무료 경로
+      if (existingApp) {
+        // Fix #1342 Bug1: 취소/결제실패 후 재신청 — apply_event RPC는 plain INSERT이므로 직접 UPDATE
+        const newStatus = verification_data ? "pending_review" : "paid";
+        const { error: updateError } = await supabase
+          .from("event_applications")
+          .update({
+            ticket_id,
+            status: newStatus,
+            payment_id: null,
+            payment_amount: 0,
+            rejection_reason: null,
+          })
+          .eq("id", existingApp.id);
+
+        if (updateError) {
+          console.error("Failed to update free application for re-application:", updateError.message);
+          return errorResponse("Failed to apply to event", 500);
+        }
+
+        // Fix #1342 Bug2: 무료 재신청 경로에서 verification_data 처리
+        if (verification_data) {
+          const verificationId = verification_data["verification_id"] as string | undefined;
+          const partnerId = verification_data["partner_id"] as string | undefined;
+          const data = verification_data["data"] ?? {};
+
+          if (verificationId && partnerId) {
+            const { error: uvError } = await supabase
+              .from("user_verifications")
+              .upsert(
+                { user_id: userId, verification_id: verificationId, data },
+                { onConflict: "user_id,verification_id" },
+              );
+
+            if (uvError) {
+              console.error("Failed to upsert user_verifications:", uvError.message);
+              return errorResponse("Failed to process verification data", 500);
+            }
+
+            const { error: vsError } = await supabase
+              .from("verification_submissions")
+              .insert({
+                partner_id: partnerId,
+                user_id: userId,
+                verification_id: verificationId,
+                application_id: existingApp.id,
+                status: "pending",
+                snapshot_data: data,
+              });
+
+            if (vsError) {
+              console.error("Failed to insert verification_submissions:", vsError.message);
+              return errorResponse("Failed to process verification data", 500);
+            }
+          }
+        }
+
+        return successResponse({
+          type: "free",
+          application_id: existingApp.id,
+        });
+      }
+
+      // 신규 무료 신청: apply_event RPC 호출 — DB 레벨 balance 체크 + 신청 완료
       const { data: applicationId, error: rpcError } = await supabase.rpc("apply_event", {
         p_event_id: event_id,
         p_ticket_id: ticket_id,

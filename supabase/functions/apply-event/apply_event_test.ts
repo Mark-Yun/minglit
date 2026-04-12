@@ -355,3 +355,346 @@ Deno.test("apply-event - 필수 파라미터 누락 시 400 반환", async () =>
     });
   });
 });
+
+// ──────────────────────────────────────────────
+// Bug #1342 Bug1: 취소 후 재신청 — unique constraint 충돌 없이 성공
+// ──────────────────────────────────────────────
+
+Deno.test("apply-event - 취소 후 유료 재신청 성공 (UPDATE 경로)", async () => {
+  await withEnv(ENV, async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+
+    let patchCalled = false;
+
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      {
+        matcher: (req) => req.url.includes("/rest/v1/events") && req.method === "GET",
+        handler: () => jsonResponse(PAID_EVENT),
+      },
+      {
+        matcher: (req) => req.url.includes("/rest/v1/tickets") && req.method === "GET",
+        handler: () => jsonResponse(PAID_TICKET),
+      },
+      {
+        // 중복 신청 확인 — cancelled 상태로 존재
+        matcher: (req) =>
+          req.url.includes("/rest/v1/event_applications") && req.method === "GET",
+        handler: () => jsonResponse({ id: "existing-cancelled-app-id", status: "cancelled" }),
+      },
+      {
+        // 재신청: PATCH (UPDATE)
+        matcher: (req) => {
+          if (req.url.includes("/rest/v1/event_applications") && req.method === "PATCH") {
+            patchCalled = true;
+            return true;
+          }
+          return false;
+        },
+        handler: () => jsonResponse([]),
+      },
+    ]);
+
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const request = jsonRequest(
+          "http://localhost",
+          { event_id: "event-paid-1", ticket_id: "ticket-paid-1" },
+          { headers: { Authorization: "Bearer test-token" } },
+        );
+        const response = await handler(request);
+        const payload = await readJson(response);
+
+        assertEquals(response.status, 200);
+        assertEquals(payload.type, "paid");
+        // 재신청이므로 기존 ID 재사용
+        assertEquals(payload.application_id, "existing-cancelled-app-id");
+        assertEquals(payload.payment_amount, 5000);
+        assertEquals(patchCalled, true, "PATCH(UPDATE)가 호출되어야 함 — INSERT 금지");
+      });
+    });
+  });
+});
+
+Deno.test("apply-event - payment_failed 후 유료 재신청 성공 (UPDATE 경로)", async () => {
+  await withEnv(ENV, async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+
+    let patchCalled = false;
+
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      {
+        matcher: (req) => req.url.includes("/rest/v1/events") && req.method === "GET",
+        handler: () => jsonResponse(PAID_EVENT),
+      },
+      {
+        matcher: (req) => req.url.includes("/rest/v1/tickets") && req.method === "GET",
+        handler: () => jsonResponse(PAID_TICKET),
+      },
+      {
+        // 중복 신청 확인 — payment_failed 상태로 존재
+        matcher: (req) =>
+          req.url.includes("/rest/v1/event_applications") && req.method === "GET",
+        handler: () => jsonResponse({ id: "existing-failed-app-id", status: "payment_failed" }),
+      },
+      {
+        matcher: (req) => {
+          if (req.url.includes("/rest/v1/event_applications") && req.method === "PATCH") {
+            patchCalled = true;
+            return true;
+          }
+          return false;
+        },
+        handler: () => jsonResponse([]),
+      },
+    ]);
+
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const request = jsonRequest(
+          "http://localhost",
+          { event_id: "event-paid-1", ticket_id: "ticket-paid-1" },
+          { headers: { Authorization: "Bearer test-token" } },
+        );
+        const response = await handler(request);
+        const payload = await readJson(response);
+
+        assertEquals(response.status, 200);
+        assertEquals(payload.type, "paid");
+        assertEquals(payload.application_id, "existing-failed-app-id");
+        assertEquals(patchCalled, true, "PATCH(UPDATE)가 호출되어야 함 — INSERT 금지");
+      });
+    });
+  });
+});
+
+Deno.test("apply-event - 취소 후 무료 재신청 성공 (UPDATE 경로, RPC 미호출)", async () => {
+  await withEnv(ENV, async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+
+    let patchCalled = false;
+    let rpcCalled = false;
+
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      {
+        matcher: (req) => req.url.includes("/rest/v1/events") && req.method === "GET",
+        handler: () => jsonResponse(FREE_EVENT),
+      },
+      {
+        matcher: (req) => req.url.includes("/rest/v1/tickets") && req.method === "GET",
+        handler: () => jsonResponse(FREE_TICKET),
+      },
+      {
+        // 중복 신청 확인 — cancelled 상태로 존재
+        matcher: (req) =>
+          req.url.includes("/rest/v1/event_applications") && req.method === "GET",
+        handler: () => jsonResponse({ id: "existing-cancelled-free-id", status: "cancelled" }),
+      },
+      {
+        matcher: (req) => {
+          if (req.url.includes("/rest/v1/event_applications") && req.method === "PATCH") {
+            patchCalled = true;
+            return true;
+          }
+          return false;
+        },
+        handler: () => jsonResponse([]),
+      },
+      {
+        matcher: (req) => {
+          if (req.url.includes("/rest/v1/rpc/apply_event")) {
+            rpcCalled = true;
+            return true;
+          }
+          return false;
+        },
+        handler: () => jsonResponse("should-not-be-called"),
+      },
+    ]);
+
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const request = jsonRequest(
+          "http://localhost",
+          { event_id: "event-free-1", ticket_id: "ticket-free-1" },
+          { headers: { Authorization: "Bearer test-token" } },
+        );
+        const response = await handler(request);
+        const payload = await readJson(response);
+
+        assertEquals(response.status, 200);
+        assertEquals(payload.type, "free");
+        assertEquals(payload.application_id, "existing-cancelled-free-id");
+        assertEquals(patchCalled, true, "PATCH(UPDATE)가 호출되어야 함 — INSERT 금지");
+        assertEquals(rpcCalled, false, "RPC는 호출되면 안 됨 — plain INSERT로 충돌 발생");
+      });
+    });
+  });
+});
+
+// ──────────────────────────────────────────────
+// Bug #1342 Bug2: 유료 경로에서 verification_data 저장 확인
+// ──────────────────────────────────────────────
+
+Deno.test("apply-event - 유료 신규 신청 시 verification_data 저장 확인", async () => {
+  await withEnv(ENV, async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+
+    let uvUpsertCalled = false;
+    let vsInsertCalled = false;
+
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      {
+        matcher: (req) => req.url.includes("/rest/v1/events") && req.method === "GET",
+        handler: () => jsonResponse(PAID_EVENT),
+      },
+      {
+        matcher: (req) => req.url.includes("/rest/v1/tickets") && req.method === "GET",
+        handler: () => jsonResponse(PAID_TICKET),
+      },
+      {
+        // 중복 신청 확인 — 없음
+        matcher: (req) =>
+          req.url.includes("/rest/v1/event_applications") && req.method === "GET",
+        handler: () => jsonResponse(null),
+      },
+      {
+        // 유료: payment_pending 레코드 INSERT
+        matcher: (req) =>
+          req.url.includes("/rest/v1/event_applications") && req.method === "POST",
+        handler: () => jsonResponse([]),
+      },
+      {
+        // user_verifications UPSERT
+        matcher: (req) => {
+          if (req.url.includes("/rest/v1/user_verifications") && req.method === "POST") {
+            uvUpsertCalled = true;
+            return true;
+          }
+          return false;
+        },
+        handler: () => jsonResponse([]),
+      },
+      {
+        // verification_submissions INSERT
+        matcher: (req) => {
+          if (req.url.includes("/rest/v1/verification_submissions") && req.method === "POST") {
+            vsInsertCalled = true;
+            return true;
+          }
+          return false;
+        },
+        handler: () => jsonResponse([]),
+      },
+    ]);
+
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const request = jsonRequest(
+          "http://localhost",
+          {
+            event_id: "event-paid-1",
+            ticket_id: "ticket-paid-1",
+            verification_data: {
+              verification_id: "verif-uuid-1",
+              partner_id: "partner-uuid-1",
+              data: { name: "홍길동", birth: "1990-01-01" },
+            },
+          },
+          { headers: { Authorization: "Bearer test-token" } },
+        );
+        const response = await handler(request);
+        const payload = await readJson(response);
+
+        assertEquals(response.status, 200);
+        assertEquals(payload.type, "paid");
+        assertEquals(uvUpsertCalled, true, "user_verifications UPSERT가 호출되어야 함");
+        assertEquals(vsInsertCalled, true, "verification_submissions INSERT가 호출되어야 함");
+      });
+    });
+  });
+});
+
+Deno.test("apply-event - 유료 재신청 시 verification_data 저장 확인", async () => {
+  await withEnv(ENV, async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+
+    let uvUpsertCalled = false;
+    let vsInsertCalled = false;
+
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      {
+        matcher: (req) => req.url.includes("/rest/v1/events") && req.method === "GET",
+        handler: () => jsonResponse(PAID_EVENT),
+      },
+      {
+        matcher: (req) => req.url.includes("/rest/v1/tickets") && req.method === "GET",
+        handler: () => jsonResponse(PAID_TICKET),
+      },
+      {
+        // 중복 신청 확인 — cancelled 상태로 존재
+        matcher: (req) =>
+          req.url.includes("/rest/v1/event_applications") && req.method === "GET",
+        handler: () => jsonResponse({ id: "existing-cancelled-paid-id", status: "cancelled" }),
+      },
+      {
+        // 재신청: PATCH (UPDATE)
+        matcher: (req) =>
+          req.url.includes("/rest/v1/event_applications") && req.method === "PATCH",
+        handler: () => jsonResponse([]),
+      },
+      {
+        // user_verifications UPSERT
+        matcher: (req) => {
+          if (req.url.includes("/rest/v1/user_verifications") && req.method === "POST") {
+            uvUpsertCalled = true;
+            return true;
+          }
+          return false;
+        },
+        handler: () => jsonResponse([]),
+      },
+      {
+        // verification_submissions INSERT
+        matcher: (req) => {
+          if (req.url.includes("/rest/v1/verification_submissions") && req.method === "POST") {
+            vsInsertCalled = true;
+            return true;
+          }
+          return false;
+        },
+        handler: () => jsonResponse([]),
+      },
+    ]);
+
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const request = jsonRequest(
+          "http://localhost",
+          {
+            event_id: "event-paid-1",
+            ticket_id: "ticket-paid-1",
+            verification_data: {
+              verification_id: "verif-uuid-1",
+              partner_id: "partner-uuid-1",
+              data: { name: "홍길동", birth: "1990-01-01" },
+            },
+          },
+          { headers: { Authorization: "Bearer test-token" } },
+        );
+        const response = await handler(request);
+        const payload = await readJson(response);
+
+        assertEquals(response.status, 200);
+        assertEquals(payload.type, "paid");
+        assertEquals(payload.application_id, "existing-cancelled-paid-id");
+        assertEquals(uvUpsertCalled, true, "user_verifications UPSERT가 호출되어야 함");
+        assertEquals(vsInsertCalled, true, "verification_submissions INSERT가 호출되어야 함");
+      });
+    });
+  });
+});
