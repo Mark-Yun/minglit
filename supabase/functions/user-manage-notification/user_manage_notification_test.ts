@@ -27,8 +27,6 @@ function mockGetUser() {
 
 Deno.test({
   name: "user-manage-notification - mark_read success",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     await withEnv(ENV, async () => {
       const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
@@ -61,8 +59,6 @@ Deno.test({
 
 Deno.test({
   name: "user-manage-notification - mark_read not found returns 404",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     await withEnv(ENV, async () => {
       const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
@@ -95,8 +91,6 @@ Deno.test({
 
 Deno.test({
   name: "user-manage-notification - mark_read missing notification_id returns 400",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     await withEnv(ENV, async () => {
       const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
@@ -122,8 +116,6 @@ Deno.test({
 
 Deno.test({
   name: "user-manage-notification - mark_all_read success",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     await withEnv(ENV, async () => {
       const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
@@ -157,8 +149,6 @@ Deno.test({
 
 Deno.test({
   name: "user-manage-notification - mark_all_read nothing to read returns count 0",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     await withEnv(ENV, async () => {
       const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
@@ -192,8 +182,6 @@ Deno.test({
 
 Deno.test({
   name: "user-manage-notification - delete success",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     await withEnv(ENV, async () => {
       const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
@@ -226,8 +214,6 @@ Deno.test({
 
 Deno.test({
   name: "user-manage-notification - delete not found returns 404",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     await withEnv(ENV, async () => {
       const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
@@ -260,8 +246,6 @@ Deno.test({
 
 Deno.test({
   name: "user-manage-notification - no auth returns 401",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     await withEnv(ENV, async () => {
       const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
@@ -286,8 +270,6 @@ Deno.test({
 
 Deno.test({
   name: "user-manage-notification - unknown action returns 400",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     await withEnv(ENV, async () => {
       const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
@@ -313,8 +295,6 @@ Deno.test({
 
 Deno.test({
   name: "user-manage-notification - OPTIONS returns CORS response",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     await withEnv(ENV, async () => {
       const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));

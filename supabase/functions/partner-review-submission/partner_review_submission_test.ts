@@ -112,8 +112,6 @@ function updateErrorRoute(): FetchRoute {
 // ─── CORS preflight ───
 Deno.test({
   name: "handles OPTIONS preflight request",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([]);
@@ -132,8 +130,6 @@ Deno.test({
 // ─── 401: no auth ───
 Deno.test({
   name: "returns 401 without authorization",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authFailRoute()]);
@@ -155,8 +151,6 @@ Deno.test({
 // ─── 400: missing action ───
 Deno.test({
   name: "returns 400 for missing action",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
@@ -177,8 +171,6 @@ Deno.test({
 // ─── 400: unknown action ───
 Deno.test({
   name: "returns 400 for unknown action",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
@@ -199,8 +191,6 @@ Deno.test({
 // ─── REVIEW: approved → status + snapshot_data updated ───
 Deno.test({
   name: "review: approved updates status and snapshot_data",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     let patchBody: string | null = null;
@@ -251,8 +241,6 @@ Deno.test({
 // ─── REVIEW: rejected + comment ───
 Deno.test({
   name: "review: rejected with comment includes comment in snapshot",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     let patchBody: string | null = null;
@@ -298,8 +286,6 @@ Deno.test({
 // ─── REVIEW: reviewed_at, reviewed_by columns updated ───
 Deno.test({
   name: "review: updates reviewed_at and reviewed_by columns",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     let patchBody: string | null = null;
@@ -340,8 +326,6 @@ Deno.test({
 // ─── COMMENT: append to snapshot_data ───
 Deno.test({
   name: "comment: appends comment to last snapshot entry",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     let patchBody: string | null = null;
@@ -390,8 +374,6 @@ Deno.test({
 // ─── REVIEW: other partner's submission → 403 ───
 Deno.test({
   name: "review: returns 403 for other partner's submission",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -418,8 +400,6 @@ Deno.test({
 // ─── REVIEW: invalid result → 400 ───
 Deno.test({
   name: "review: returns 400 for invalid result value",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
@@ -444,8 +424,6 @@ Deno.test({
 // ─── REVIEW: nonexistent submission → 404 ───
 Deno.test({
   name: "review: returns 404 for nonexistent submission",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -473,8 +451,6 @@ Deno.test({
 // ─── COMMENT: nonexistent submission → 404 ───
 Deno.test({
   name: "comment: returns 404 for nonexistent submission",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -502,8 +478,6 @@ Deno.test({
 // ─── REVIEW: missing submission_id → 400 ───
 Deno.test({
   name: "review: returns 400 for missing submission_id",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
@@ -527,8 +501,6 @@ Deno.test({
 // ─── COMMENT: missing text → 400 ───
 Deno.test({
   name: "comment: returns 400 for missing text",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
@@ -552,8 +524,6 @@ Deno.test({
 // ─── REVIEW: 500 permission DB error ───
 Deno.test({
   name: "review: returns 500 when permission query fails",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -582,8 +552,6 @@ Deno.test({
 // ─── REVIEW: 500 update error ───
 Deno.test({
   name: "review: returns 500 when update fails",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -611,8 +579,6 @@ Deno.test({
 // ─── COMMENT: 500 update error ───
 Deno.test({
   name: "comment: returns 500 when update fails",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -640,8 +606,6 @@ Deno.test({
 // ─── REVIEW: already reviewed submission → 409 ───
 Deno.test({
   name: "review: returns 409 for already reviewed submission",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([

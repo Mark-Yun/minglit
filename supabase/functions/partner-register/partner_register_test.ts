@@ -116,8 +116,6 @@ function storageListRoute(hasFiles = true): FetchRoute {
 // ─── CORS preflight ───
 Deno.test({
   name: "handles OPTIONS preflight request",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([]);
@@ -136,8 +134,6 @@ Deno.test({
 // ─── 401: no auth ───
 Deno.test({
   name: "returns 401 without authorization",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authFailRoute()]);
@@ -159,8 +155,6 @@ Deno.test({
 // ─── 400: missing action ───
 Deno.test({
   name: "returns 400 for missing action",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
@@ -181,8 +175,6 @@ Deno.test({
 // ─── 400: unknown action ───
 Deno.test({
   name: "returns 400 for unknown action",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
@@ -207,8 +199,6 @@ Deno.test({
 // ─── save_draft: new INSERT → returns application_id ───
 Deno.test({
   name: "save_draft: new insert returns application_id",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -236,8 +226,6 @@ Deno.test({
 // ─── save_draft: existing UPDATE ───
 Deno.test({
   name: "save_draft: existing update returns application_id",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -267,8 +255,6 @@ Deno.test({
 // ─── save_draft: current_step saved ───
 Deno.test({
   name: "save_draft: current_step is persisted",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     let insertBody: string | null = null;
@@ -305,8 +291,6 @@ Deno.test({
 // ─── save_draft: other user's draft → 403 ───
 Deno.test({
   name: "save_draft: returns 403 for other user's draft",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -332,8 +316,6 @@ Deno.test({
 // ─── save_draft: pending status → 400 ───
 Deno.test({
   name: "save_draft: returns 400 when application is pending",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -361,8 +343,6 @@ Deno.test({
 // ─── save_draft: insert error → 500 ───
 Deno.test({
   name: "save_draft: returns 500 when insert fails",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -391,8 +371,6 @@ Deno.test({
 // ─── submit: draft → pending with all fields valid ───
 Deno.test({
   name: "submit: draft → pending with valid data",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     // Use valid biz_number with correct checksum: 1208100083
@@ -423,8 +401,6 @@ Deno.test({
 // ─── submit: missing required fields → 400 + details ───
 Deno.test({
   name: "submit: returns 400 with validation details for missing fields",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const incompleteApp = {
@@ -477,8 +453,6 @@ Deno.test({
 // ─── submit: biz_number format error → 400 ───
 Deno.test({
   name: "submit: returns 400 for invalid biz_number format",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const badBizApp = { ...VALID_APP, biz_number: "123" };
@@ -509,8 +483,6 @@ Deno.test({
 // ─── submit: contact_email format error → 400 ───
 Deno.test({
   name: "submit: returns 400 for invalid email format",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const badEmailApp = { ...VALID_APP, biz_number: "1208100088", contact_email: "not-an-email" };
@@ -541,8 +513,6 @@ Deno.test({
 // ─── submit: biz_registration_path file not found → 400 ───
 Deno.test({
   name: "submit: returns 400 when storage file not found",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const validApp = { ...VALID_APP, biz_number: "1208100088" };
@@ -571,8 +541,6 @@ Deno.test({
 // ─── submit: other user's file path → 403 ───
 Deno.test({
   name: "submit: returns 403 for file path with other user's prefix",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const hackedApp = {
@@ -604,8 +572,6 @@ Deno.test({
 // ─── submit: storage error → 500 ───
 Deno.test({
   name: "submit: returns 500 when storage list fails",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const validApp = { ...VALID_APP, biz_number: "1208100088" };
@@ -637,8 +603,6 @@ Deno.test({
 // ─── submit: pending → re-submit → 400 ───
 Deno.test({
   name: "submit: returns 400 when already pending",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const pendingApp = { ...VALID_APP, status: "pending" };
@@ -666,8 +630,6 @@ Deno.test({
 // ─── submit: needs_correction → pending ───
 Deno.test({
   name: "submit: needs_correction → pending transition success",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const correctionApp = { ...VALID_APP, status: "needs_correction", biz_number: "1208100088" };
@@ -697,8 +659,6 @@ Deno.test({
 // ─── submit: missing application_id → 400 ───
 Deno.test({
   name: "submit: returns 400 for missing application_id",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
@@ -721,8 +681,6 @@ Deno.test({
 // ─── submit: other user's application → 403 ───
 Deno.test({
   name: "submit: returns 403 for other user's application",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const otherApp = { ...VALID_APP, user_id: OTHER_USER_ID };
@@ -752,8 +710,6 @@ Deno.test({
 // ─── update: draft → success ───
 Deno.test({
   name: "update: draft status allows update",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -783,8 +739,6 @@ Deno.test({
 // ─── update: needs_correction → success ───
 Deno.test({
   name: "update: needs_correction status allows update",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -813,8 +767,6 @@ Deno.test({
 // ─── update: pending → 400 ───
 Deno.test({
   name: "update: returns 400 when status is pending",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -842,8 +794,6 @@ Deno.test({
 // ─── update: other user → 403 ───
 Deno.test({
   name: "update: returns 403 for other user's application",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -869,8 +819,6 @@ Deno.test({
 // ─── update: missing application_id → 400 ───
 Deno.test({
   name: "update: returns 400 for missing application_id",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
@@ -894,8 +842,6 @@ Deno.test({
 // ─── update: no valid fields → 400 ───
 Deno.test({
   name: "update: returns 400 when no valid fields in data",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -923,8 +869,6 @@ Deno.test({
 // ─── update: whitelisted fields only — status/user_id ignored ───
 Deno.test({
   name: "update: only whitelisted fields are sent to DB",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     let patchBody: string | null = null;

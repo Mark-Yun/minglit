@@ -30,8 +30,6 @@ const BASE_URL = "http://localhost";
 
 Deno.test({
   name: "user-get-ticket-token - returns 200 with valid token",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
@@ -75,8 +73,6 @@ Deno.test({
 
 Deno.test({
   name: "user-get-ticket-token - returns 400 when ticket_id is missing",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
@@ -103,8 +99,6 @@ Deno.test({
 
 Deno.test({
   name: "user-get-ticket-token - returns 404 when application not found",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
@@ -136,8 +130,6 @@ Deno.test({
 
 Deno.test({
   name: "user-get-ticket-token - returns 500 when signing key not configured",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
@@ -175,8 +167,6 @@ Deno.test({
 
 Deno.test({
   name: "user-get-ticket-token - returns 401 without auth token",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
@@ -199,8 +189,6 @@ Deno.test({
 
 Deno.test({
   name: "user-get-ticket-token - OPTIONS returns CORS response",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 

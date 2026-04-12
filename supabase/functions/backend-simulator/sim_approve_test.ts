@@ -74,8 +74,6 @@ Deno.test("simApproveVerifications - empty list returns empty result", async () 
 // harmless — suppressing the leak check is correct here rather than patching the library.
 Deno.test({
   name: "simApproveVerifications - 5 apps with approveRate=0.8 → 4 approved, 1 rejected",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const appIds = ["app-1", "app-2", "app-3", "app-4", "app-5"];
     const appStatuses: Record<string, string> = {};
@@ -158,8 +156,6 @@ Deno.test({
 
 Deno.test({
   name: "simApproveVerifications - all approve when approveRate=1.0",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const appIds = ["app-a", "app-b", "app-c"];
     const appStatuses: Record<string, string> = {};
@@ -239,8 +235,6 @@ Deno.test({
 
 Deno.test({
   name: "simApproveVerifications - all reject when approveRate=0.0",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const appIds = ["app-x", "app-y"];
     const appStatuses: Record<string, string> = {};
@@ -341,8 +335,6 @@ Deno.test("simApproveVerifications - handles DB error gracefully (no throw)", as
 // Fix #1283: EF failure always throws (strict parameter removed).
 Deno.test({
   name: "simApproveVerifications - EF failure on verification flow throws error",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const mock = createMockSupabaseClient({
       ...makePartnerEmailMockOptions({
@@ -409,8 +401,6 @@ Deno.test({
 // Fix #1280: no-verification approve path uses partner-approve-application EF.
 Deno.test({
   name: "simApproveVerifications - no verification needed: approve uses EF, reject uses direct DB",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const appIds = ["app-direct-1", "app-direct-2"];
     const appStatuses: Record<string, string> = {};
@@ -500,8 +490,6 @@ Deno.test({
 // Fix #1328: no-verification reject path now uses partner-reject-application EF.
 Deno.test({
   name: "simApproveVerifications - no verification needed: reject uses partner-reject-application EF",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const appIds = ["app-rej-1", "app-rej-2"];
     const appStatuses: Record<string, string> = {};

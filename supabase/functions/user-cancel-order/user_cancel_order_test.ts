@@ -12,7 +12,6 @@ import {
 } from "../_test_utils/mock_http.ts";
 import { authRoute } from "../_test_utils/fixtures.ts";
 
-const TEST_OPTS = { sanitizeOps: false, sanitizeResources: false };
 
 const ENV = {
   PORTONE_API_KEY: "test-key",
@@ -106,7 +105,7 @@ const appNotFoundRoute = {
 
 // ===== Pre-payment cancellation tests =====
 
-Deno.test("pending 신청 → 취소 → event_applications 삭제", TEST_OPTS, async () => {
+Deno.test("pending 신청 → 취소 → event_applications 삭제", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock, calls } = createFetchMock([
@@ -142,7 +141,7 @@ Deno.test("pending 신청 → 취소 → event_applications 삭제", TEST_OPTS, 
   });
 });
 
-Deno.test("pending + verification_submissions → 함께 삭제", TEST_OPTS, async () => {
+Deno.test("pending + verification_submissions → 함께 삭제", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock, calls } = createFetchMock([
@@ -169,7 +168,7 @@ Deno.test("pending + verification_submissions → 함께 삭제", TEST_OPTS, asy
   });
 });
 
-Deno.test("payment_failed → 취소 → 삭제", TEST_OPTS, async () => {
+Deno.test("payment_failed → 취소 → 삭제", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock } = createFetchMock([
@@ -196,7 +195,7 @@ Deno.test("payment_failed → 취소 → 삭제", TEST_OPTS, async () => {
 
 // ===== Free event cancellation =====
 
-Deno.test("무료 이벤트 (payment_amount = 0) → 취소 → status = 'cancelled'", TEST_OPTS, async () => {
+Deno.test("무료 이벤트 (payment_amount = 0) → 취소 → status = 'cancelled'", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock, calls } = createFetchMock([
@@ -226,7 +225,7 @@ Deno.test("무료 이벤트 (payment_amount = 0) → 취소 → status = 'cancel
   });
 });
 
-Deno.test("무료 이벤트 (payment_amount = null) → 취소", TEST_OPTS, async () => {
+Deno.test("무료 이벤트 (payment_amount = null) → 취소", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock } = createFetchMock([
@@ -249,7 +248,7 @@ Deno.test("무료 이벤트 (payment_amount = null) → 취소", TEST_OPTS, asyn
   });
 });
 
-Deno.test("이미 cancelled → 400", TEST_OPTS, async () => {
+Deno.test("이미 cancelled → 400", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock } = createFetchMock([
@@ -273,7 +272,7 @@ Deno.test("이미 cancelled → 400", TEST_OPTS, async () => {
 
 // ===== Paid event refund tests =====
 
-Deno.test("paid → grace period 내 → 환불 성공 + refund_status = 'completed'", TEST_OPTS, async () => {
+Deno.test("paid → grace period 내 → 환불 성공 + refund_status = 'completed'", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock, calls } = createFetchMock([
@@ -309,7 +308,7 @@ Deno.test("paid → grace period 내 → 환불 성공 + refund_status = 'comple
   });
 });
 
-Deno.test("paid → grace period 초과 + cutoff 내 → 환불 성공", TEST_OPTS, async () => {
+Deno.test("paid → grace period 초과 + cutoff 내 → 환불 성공", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock } = createFetchMock([
@@ -337,7 +336,7 @@ Deno.test("paid → grace period 초과 + cutoff 내 → 환불 성공", TEST_OP
   });
 });
 
-Deno.test("paid → grace period 초과 + cutoff 초과 → 400 (refund_not_eligible)", TEST_OPTS, async () => {
+Deno.test("paid → grace period 초과 + cutoff 초과 → 400 (refund_not_eligible)", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock } = createFetchMock([
@@ -361,7 +360,7 @@ Deno.test("paid → grace period 초과 + cutoff 초과 → 400 (refund_not_elig
   });
 });
 
-Deno.test("이미 환불됨 (refund_status != 'none') → 400 (already_refunded)", TEST_OPTS, async () => {
+Deno.test("이미 환불됨 (refund_status != 'none') → 400 (already_refunded)", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock } = createFetchMock([
@@ -383,7 +382,7 @@ Deno.test("이미 환불됨 (refund_status != 'none') → 400 (already_refunded)
   });
 });
 
-Deno.test("pending_review → 환불 정상 처리", TEST_OPTS, async () => {
+Deno.test("pending_review → 환불 정상 처리", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock } = createFetchMock([
@@ -410,7 +409,7 @@ Deno.test("pending_review → 환불 정상 처리", TEST_OPTS, async () => {
   });
 });
 
-Deno.test("approved → 환불 정상 처리", TEST_OPTS, async () => {
+Deno.test("approved → 환불 정상 처리", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock } = createFetchMock([
@@ -437,7 +436,7 @@ Deno.test("approved → 환불 정상 처리", TEST_OPTS, async () => {
   });
 });
 
-Deno.test("reason 포함 → 정상 처리", TEST_OPTS, async () => {
+Deno.test("reason 포함 → 정상 처리", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock, calls } = createFetchMock([
@@ -472,7 +471,7 @@ Deno.test("reason 포함 → 정상 처리", TEST_OPTS, async () => {
 
 // ===== Auth & Edge cases =====
 
-Deno.test("존재하지 않는 event_id → 404", TEST_OPTS, async () => {
+Deno.test("존재하지 않는 event_id → 404", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock } = createFetchMock([
@@ -494,7 +493,7 @@ Deno.test("존재하지 않는 event_id → 404", TEST_OPTS, async () => {
   });
 });
 
-Deno.test("인증 없이 → 401", TEST_OPTS, async () => {
+Deno.test("인증 없이 → 401", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock } = createFetchMock([
@@ -516,7 +515,7 @@ Deno.test("인증 없이 → 401", TEST_OPTS, async () => {
   });
 });
 
-Deno.test("rejected 상태 → 400", TEST_OPTS, async () => {
+Deno.test("rejected 상태 → 400", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock } = createFetchMock([
@@ -538,7 +537,7 @@ Deno.test("rejected 상태 → 400", TEST_OPTS, async () => {
   });
 });
 
-Deno.test("신청 없는 event_id → 404", TEST_OPTS, async () => {
+Deno.test("신청 없는 event_id → 404", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock } = createFetchMock([
@@ -560,7 +559,7 @@ Deno.test("신청 없는 event_id → 404", TEST_OPTS, async () => {
   });
 });
 
-Deno.test("missing event_id → 400", TEST_OPTS, async () => {
+Deno.test("missing event_id → 400", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
   const { fetchMock } = createFetchMock([authRoute]);
 
@@ -578,7 +577,7 @@ Deno.test("missing event_id → 400", TEST_OPTS, async () => {
   });
 });
 
-Deno.test("malformed JSON → 400", TEST_OPTS, async () => {
+Deno.test("malformed JSON → 400", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
   const { fetchMock } = createFetchMock([authRoute]);
 
@@ -598,7 +597,7 @@ Deno.test("malformed JSON → 400", TEST_OPTS, async () => {
   });
 });
 
-Deno.test("token failure → 502", TEST_OPTS, async () => {
+Deno.test("token failure → 502", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock } = createFetchMock([
@@ -626,7 +625,7 @@ Deno.test("token failure → 502", TEST_OPTS, async () => {
   });
 });
 
-Deno.test("DB error is non-fatal for refund → 200", TEST_OPTS, async () => {
+Deno.test("DB error is non-fatal for refund → 200", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock } = createFetchMock([

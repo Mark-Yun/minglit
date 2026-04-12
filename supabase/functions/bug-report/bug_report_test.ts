@@ -49,8 +49,6 @@ function authedTextRequest(url: string, body: string): Request {
 
 Deno.test({
   name: "bug-report - happy path creates GitHub issue",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     // GITHUB_ACCESS_TOKEN is read at module load time, so we must set it
     // before captureServeHandler imports the module.
@@ -90,8 +88,6 @@ Deno.test({
 
 Deno.test({
   name: "bug-report - missing title returns 400",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     await withEnv(
       BASE_ENV,
@@ -118,8 +114,6 @@ Deno.test({
 
 Deno.test({
   name: "bug-report - missing description returns 400",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     await withEnv(
       BASE_ENV,
@@ -146,8 +140,6 @@ Deno.test({
 
 Deno.test({
   name: "bug-report - malformed JSON returns 400",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     await withEnv(
       BASE_ENV,
@@ -172,8 +164,6 @@ Deno.test({
 
 Deno.test({
   name: "bug-report - missing GITHUB_ACCESS_TOKEN returns 500",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     await withEnv(
       { ...BASE_ENV, GITHUB_ACCESS_TOKEN: undefined },
@@ -201,8 +191,6 @@ Deno.test({
 
 Deno.test({
   name: "bug-report - GitHub API failure returns 500",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     await withEnv(
       BASE_ENV,
@@ -236,8 +224,6 @@ Deno.test({
 
 Deno.test({
   name: "bug-report - backward compat: old payload has no undefined and no new sections",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     await withEnv(
       BASE_ENV,
@@ -276,8 +262,6 @@ Deno.test({
 
 Deno.test({
   name: "bug-report - screenshot and environment sections are included when provided",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     await withEnv(
       BASE_ENV,
@@ -318,8 +302,6 @@ Deno.test({
 
 Deno.test({
   name: "bug-report - null screenshotUrl and environment produce no undefined in body",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     await withEnv(
       BASE_ENV,

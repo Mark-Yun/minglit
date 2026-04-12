@@ -10,8 +10,6 @@ import {
 
 Deno.test({
   name: "health - returns 200 with healthy status when all checks pass",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
@@ -42,8 +40,6 @@ Deno.test({
 
 Deno.test({
   name: "health - returns 503 when database is down",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
@@ -73,8 +69,6 @@ Deno.test({
 
 Deno.test({
   name: "health - response contains required keys",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
@@ -106,8 +100,6 @@ Deno.test({
 
 Deno.test({
   name: "health - returns Content-Type application/json",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
@@ -132,8 +124,6 @@ Deno.test({
 
 Deno.test({
   name: "health - rejects non-GET with 405",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 

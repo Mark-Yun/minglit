@@ -13,7 +13,6 @@ import {
 import { authRoute } from "../_test_utils/fixtures.ts";
 
 // Statsig uses node:timers setInterval internally, which withNoIntervals cannot patch.
-const TEST_OPTS = { sanitizeOps: false, sanitizeResources: false };
 
 const ENV = {
   SUPABASE_URL: "https://supabase.test",
@@ -84,7 +83,7 @@ function rpcRoute(rpcName: string, response: unknown) {
 
 // ---------- Happy Path: Paid Event ----------
 
-Deno.test({ name: "user-create-order - happy path: paid event creates order", ...TEST_OPTS, fn: async () => {
+Deno.test({ name: "user-create-order - happy path: paid event creates order", fn: async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -121,7 +120,7 @@ Deno.test({ name: "user-create-order - happy path: paid event creates order", ..
 
 // ---------- Happy Path: Free Event ----------
 
-Deno.test({ name: "user-create-order - happy path: free event creates order with requires_payment=false", ...TEST_OPTS, fn: async () => {
+Deno.test({ name: "user-create-order - happy path: free event creates order with requires_payment=false", fn: async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -156,7 +155,7 @@ Deno.test({ name: "user-create-order - happy path: free event creates order with
 
 // ---------- Auth Errors ----------
 
-Deno.test({ name: "user-create-order - unauthenticated request returns 401", ...TEST_OPTS, fn: async () => {
+Deno.test({ name: "user-create-order - unauthenticated request returns 401", fn: async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -182,7 +181,7 @@ Deno.test({ name: "user-create-order - unauthenticated request returns 401", ...
 
 // ---------- Input Validation ----------
 
-Deno.test({ name: "user-create-order - missing event_id returns 400", ...TEST_OPTS, fn: async () => {
+Deno.test({ name: "user-create-order - missing event_id returns 400", fn: async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute]);
@@ -202,7 +201,7 @@ Deno.test({ name: "user-create-order - missing event_id returns 400", ...TEST_OP
   });
 }});
 
-Deno.test({ name: "user-create-order - missing ticket_id returns 400", ...TEST_OPTS, fn: async () => {
+Deno.test({ name: "user-create-order - missing ticket_id returns 400", fn: async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute]);
@@ -222,7 +221,7 @@ Deno.test({ name: "user-create-order - missing ticket_id returns 400", ...TEST_O
   });
 }});
 
-Deno.test({ name: "user-create-order - malformed JSON returns 400", ...TEST_OPTS, fn: async () => {
+Deno.test({ name: "user-create-order - malformed JSON returns 400", fn: async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute]);
@@ -244,7 +243,7 @@ Deno.test({ name: "user-create-order - malformed JSON returns 400", ...TEST_OPTS
 
 // ---------- Event Validation ----------
 
-Deno.test({ name: "user-create-order - nonexistent event returns 404", ...TEST_OPTS, fn: async () => {
+Deno.test({ name: "user-create-order - nonexistent event returns 404", fn: async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -271,7 +270,7 @@ Deno.test({ name: "user-create-order - nonexistent event returns 404", ...TEST_O
   });
 }});
 
-Deno.test({ name: "user-create-order - cancelled event returns EVENT_CLOSED", ...TEST_OPTS, fn: async () => {
+Deno.test({ name: "user-create-order - cancelled event returns EVENT_CLOSED", fn: async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -297,7 +296,7 @@ Deno.test({ name: "user-create-order - cancelled event returns EVENT_CLOSED", ..
   });
 }});
 
-Deno.test({ name: "user-create-order - past event returns EVENT_NOT_SCHEDULED", ...TEST_OPTS, fn: async () => {
+Deno.test({ name: "user-create-order - past event returns EVENT_NOT_SCHEDULED", fn: async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -326,7 +325,7 @@ Deno.test({ name: "user-create-order - past event returns EVENT_NOT_SCHEDULED", 
 
 // ---------- Ticket Validation ----------
 
-Deno.test({ name: "user-create-order - ticket not belonging to event returns 404", ...TEST_OPTS, fn: async () => {
+Deno.test({ name: "user-create-order - ticket not belonging to event returns 404", fn: async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -351,7 +350,7 @@ Deno.test({ name: "user-create-order - ticket not belonging to event returns 404
   });
 }});
 
-Deno.test({ name: "user-create-order - sold out ticket returns TICKET_SOLD_OUT", ...TEST_OPTS, fn: async () => {
+Deno.test({ name: "user-create-order - sold out ticket returns TICKET_SOLD_OUT", fn: async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -378,7 +377,7 @@ Deno.test({ name: "user-create-order - sold out ticket returns TICKET_SOLD_OUT",
 
 // ---------- Capacity ----------
 
-Deno.test({ name: "user-create-order - full event returns EVENT_FULL", ...TEST_OPTS, fn: async () => {
+Deno.test({ name: "user-create-order - full event returns EVENT_FULL", fn: async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -405,7 +404,7 @@ Deno.test({ name: "user-create-order - full event returns EVENT_FULL", ...TEST_O
 
 // ---------- Identity Verification ----------
 
-Deno.test({ name: "user-create-order - unverified user returns IDENTITY_REQUIRED", ...TEST_OPTS, fn: async () => {
+Deno.test({ name: "user-create-order - unverified user returns IDENTITY_REQUIRED", fn: async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -433,7 +432,7 @@ Deno.test({ name: "user-create-order - unverified user returns IDENTITY_REQUIRED
 
 // ---------- Gender Mismatch ----------
 
-Deno.test({ name: "user-create-order - gender mismatch returns GENDER_MISMATCH", ...TEST_OPTS, fn: async () => {
+Deno.test({ name: "user-create-order - gender mismatch returns GENDER_MISMATCH", fn: async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -462,7 +461,7 @@ Deno.test({ name: "user-create-order - gender mismatch returns GENDER_MISMATCH",
 
 // ---------- Age Mismatch ----------
 
-Deno.test({ name: "user-create-order - age mismatch returns AGE_MISMATCH", ...TEST_OPTS, fn: async () => {
+Deno.test({ name: "user-create-order - age mismatch returns AGE_MISMATCH", fn: async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -491,7 +490,7 @@ Deno.test({ name: "user-create-order - age mismatch returns AGE_MISMATCH", ...TE
 
 // ---------- Balance Limit ----------
 
-Deno.test({ name: "user-create-order - balance limit returns BALANCE_LIMIT", ...TEST_OPTS, fn: async () => {
+Deno.test({ name: "user-create-order - balance limit returns BALANCE_LIMIT", fn: async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -521,7 +520,7 @@ Deno.test({ name: "user-create-order - balance limit returns BALANCE_LIMIT", ...
 
 // ---------- Duplicate Application ----------
 
-Deno.test({ name: "user-create-order - duplicate application returns ALREADY_APPLIED", ...TEST_OPTS, fn: async () => {
+Deno.test({ name: "user-create-order - duplicate application returns ALREADY_APPLIED", fn: async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -552,7 +551,7 @@ Deno.test({ name: "user-create-order - duplicate application returns ALREADY_APP
 
 // ---------- Verification Required ----------
 
-Deno.test({ name: "user-create-order - missing verification data returns VERIFICATION_REQUIRED", ...TEST_OPTS, fn: async () => {
+Deno.test({ name: "user-create-order - missing verification data returns VERIFICATION_REQUIRED", fn: async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([

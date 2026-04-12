@@ -12,7 +12,6 @@ import {
 } from "../_test_utils/mock_http.ts";
 import { authRoute } from "../_test_utils/fixtures.ts";
 
-const TEST_OPTS = { sanitizeOps: false, sanitizeResources: false };
 
 const ENV = {
   SUPABASE_URL: "https://supabase.test",
@@ -76,7 +75,7 @@ const deleteFcmTokensRoute = {
   handler: () => jsonResponse({}),
 };
 
-Deno.test("unauthorized request returns 401", TEST_OPTS, async () => {
+Deno.test("unauthorized request returns 401", async () => {
   const handler = await captureServeHandler(
     new URL("./index.ts", import.meta.url),
   );
@@ -101,7 +100,6 @@ Deno.test("unauthorized request returns 401", TEST_OPTS, async () => {
 
 Deno.test(
   "successful deletion sets deleted_at, stores anonymous reason, and removes FCM tokens",
-  TEST_OPTS,
   async () => {
     const handler = await captureServeHandler(
       new URL("./index.ts", import.meta.url),
@@ -163,7 +161,7 @@ Deno.test(
   },
 );
 
-Deno.test("active future booking blocks deletion", TEST_OPTS, async () => {
+Deno.test("active future booking blocks deletion", async () => {
   const handler = await captureServeHandler(
     new URL("./index.ts", import.meta.url),
   );
@@ -200,9 +198,7 @@ Deno.test("active future booking blocks deletion", TEST_OPTS, async () => {
 });
 
 Deno.test(
-  "pending refund blocks deletion as unsettled balance",
-  TEST_OPTS,
-  async () => {
+  "pending refund blocks deletion as unsettled balance", async () => {
     const handler = await captureServeHandler(
       new URL("./index.ts", import.meta.url),
     );
@@ -239,7 +235,7 @@ Deno.test(
   },
 );
 
-Deno.test("already deleted user returns 409", TEST_OPTS, async () => {
+Deno.test("already deleted user returns 409", async () => {
   const handler = await captureServeHandler(
     new URL("./index.ts", import.meta.url),
   );
@@ -265,9 +261,7 @@ Deno.test("already deleted user returns 409", TEST_OPTS, async () => {
 });
 
 Deno.test(
-  "reason_text without reason_code falls back to other",
-  TEST_OPTS,
-  async () => {
+  "reason_text without reason_code falls back to other", async () => {
     const handler = await captureServeHandler(
       new URL("./index.ts", import.meta.url),
     );

@@ -12,7 +12,6 @@ import {
 } from "../_test_utils/mock_http.ts";
 import { authRoute } from "../_test_utils/fixtures.ts";
 
-const TEST_OPTS = { sanitizeOps: false, sanitizeResources: false };
 
 const ENV = {
   SUPABASE_URL: "https://supabase.test",
@@ -51,7 +50,7 @@ const dbUpdateSubmissionRoute = {
 
 // ===== submit action =====
 
-Deno.test("submit — 첫 제출 → submission 생성, snapshot_data 배열 1개 항목", TEST_OPTS, async () => {
+Deno.test("submit — 첫 제출 → submission 생성, snapshot_data 배열 1개 항목", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock, calls } = createFetchMock([
@@ -94,7 +93,7 @@ Deno.test("submit — 첫 제출 → submission 생성, snapshot_data 배열 1�
   });
 });
 
-Deno.test("submit — 재제출 → snapshot_data 배열에 append, status = 'pending'", TEST_OPTS, async () => {
+Deno.test("submit — 재제출 → snapshot_data 배열에 append, status = 'pending'", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const existingSnapshot = [
@@ -145,7 +144,7 @@ Deno.test("submit — 재제출 → snapshot_data 배열에 append, status = 'pe
   });
 });
 
-Deno.test("submit — user_verifications에 데이터 없이 제출 → 400", TEST_OPTS, async () => {
+Deno.test("submit — user_verifications에 데이터 없이 제출 → 400", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock } = createFetchMock([
@@ -171,7 +170,7 @@ Deno.test("submit — user_verifications에 데이터 없이 제출 → 400", TE
   });
 });
 
-Deno.test("submit — partner_id 누락 → 400", TEST_OPTS, async () => {
+Deno.test("submit — partner_id 누락 → 400", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock } = createFetchMock([authRoute]);
@@ -193,7 +192,7 @@ Deno.test("submit — partner_id 누락 → 400", TEST_OPTS, async () => {
   });
 });
 
-Deno.test("submit — verification_id 누락 → 400", TEST_OPTS, async () => {
+Deno.test("submit — verification_id 누락 → 400", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock } = createFetchMock([authRoute]);
@@ -215,7 +214,7 @@ Deno.test("submit — verification_id 누락 → 400", TEST_OPTS, async () => {
   });
 });
 
-Deno.test("submit — 인증 없이 → 401", TEST_OPTS, async () => {
+Deno.test("submit — 인증 없이 → 401", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock } = createFetchMock([
@@ -243,7 +242,7 @@ Deno.test("submit — 인증 없이 → 401", TEST_OPTS, async () => {
 
 // ===== comment action =====
 
-Deno.test("comment — 코멘트 추가 → 마지막 항목 comments 배열에 append", TEST_OPTS, async () => {
+Deno.test("comment — 코멘트 추가 → 마지막 항목 comments 배열에 append", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const existingSubmission = {
@@ -301,7 +300,7 @@ Deno.test("comment — 코멘트 추가 → 마지막 항목 comments 배열에 
   });
 });
 
-Deno.test("comment — 다른 유저 submission에 코멘트 → 403", TEST_OPTS, async () => {
+Deno.test("comment — 다른 유저 submission에 코멘트 → 403", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const otherUserSubmission = {
@@ -337,7 +336,7 @@ Deno.test("comment — 다른 유저 submission에 코멘트 → 403", TEST_OPTS
   });
 });
 
-Deno.test("comment — 존재하지 않는 submission → 404", TEST_OPTS, async () => {
+Deno.test("comment — 존재하지 않는 submission → 404", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock } = createFetchMock([
@@ -367,7 +366,7 @@ Deno.test("comment — 존재하지 않는 submission → 404", TEST_OPTS, async
   });
 });
 
-Deno.test("comment — submission_id 누락 → 400", TEST_OPTS, async () => {
+Deno.test("comment — submission_id 누락 → 400", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock } = createFetchMock([authRoute]);
@@ -389,7 +388,7 @@ Deno.test("comment — submission_id 누락 → 400", TEST_OPTS, async () => {
   });
 });
 
-Deno.test("comment — text 누락 → 400", TEST_OPTS, async () => {
+Deno.test("comment — text 누락 → 400", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock } = createFetchMock([authRoute]);
@@ -413,7 +412,7 @@ Deno.test("comment — text 누락 → 400", TEST_OPTS, async () => {
 
 // ===== Common edge cases =====
 
-Deno.test("action 누락 → 400", TEST_OPTS, async () => {
+Deno.test("action 누락 → 400", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock } = createFetchMock([authRoute]);
@@ -434,7 +433,7 @@ Deno.test("action 누락 → 400", TEST_OPTS, async () => {
   });
 });
 
-Deno.test("잘못된 action → 400", TEST_OPTS, async () => {
+Deno.test("잘못된 action → 400", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock } = createFetchMock([authRoute]);
@@ -455,7 +454,7 @@ Deno.test("잘못된 action → 400", TEST_OPTS, async () => {
   });
 });
 
-Deno.test("malformed JSON → 400", TEST_OPTS, async () => {
+Deno.test("malformed JSON → 400", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock } = createFetchMock([authRoute]);

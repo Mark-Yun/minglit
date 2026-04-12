@@ -113,8 +113,6 @@ function updateErrorRoute(): FetchRoute {
 // ─── CORS preflight ───
 Deno.test({
   name: "handles OPTIONS preflight request",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([]);
@@ -133,8 +131,6 @@ Deno.test({
 // ─── 401: no auth ───
 Deno.test({
   name: "returns 401 without authorization",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authFailRoute()]);
@@ -156,8 +152,6 @@ Deno.test({
 // ─── 400: missing action ───
 Deno.test({
   name: "returns 400 for missing action",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
@@ -178,8 +172,6 @@ Deno.test({
 // ─── 400: unknown action ───
 Deno.test({
   name: "returns 400 for unknown action",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
@@ -200,8 +192,6 @@ Deno.test({
 // ─── CREATE: success ───
 Deno.test({
   name: "create: inserts verification and returns id",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -236,8 +226,6 @@ Deno.test({
 // ─── CREATE: partner_id server-injected — verify POST body ───
 Deno.test({
   name: "create: sends partner_id in insert payload",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     let insertBody: string | null = null;
@@ -279,8 +267,6 @@ Deno.test({
 // ─── CREATE: missing partner_id → 400 ───
 Deno.test({
   name: "create: returns 400 for missing partner_id",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
@@ -306,8 +292,6 @@ Deno.test({
 // ─── CREATE: missing required fields → 400 ───
 Deno.test({
   name: "create: returns 400 for missing category",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
@@ -332,8 +316,6 @@ Deno.test({
 
 Deno.test({
   name: "create: returns 400 for invalid category",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
@@ -360,8 +342,6 @@ Deno.test({
 // ─── CREATE: 403 no permission ───
 Deno.test({
   name: "create: returns 403 when user lacks PARTY_MANAGE permission",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -389,8 +369,6 @@ Deno.test({
 // ─── CREATE: 500 permission DB error ───
 Deno.test({
   name: "create: returns 500 when permission query fails",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -420,8 +398,6 @@ Deno.test({
 // ─── CREATE: 500 insert error ───
 Deno.test({
   name: "create: returns 500 when insert fails",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -450,8 +426,6 @@ Deno.test({
 // ─── UPDATE: display_name ───
 Deno.test({
   name: "update: updates display_name successfully",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -481,8 +455,6 @@ Deno.test({
 // ─── UPDATE: is_active=false (soft delete) ───
 Deno.test({
   name: "update: is_active=false soft deletes",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     let patchBody: string | null = null;
@@ -521,8 +493,6 @@ Deno.test({
 // ─── UPDATE: is_active=true (restore) ───
 Deno.test({
   name: "update: is_active=true restores",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     let patchBody: string | null = null;
@@ -561,8 +531,6 @@ Deno.test({
 // ─── UPDATE: partial — only sent fields updated ───
 Deno.test({
   name: "update: partial update only sends provided fields",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     let patchBody: string | null = null;
@@ -603,8 +571,6 @@ Deno.test({
 // ─── UPDATE: other partner's verification → 403 ───
 Deno.test({
   name: "update: returns 403 for other partner's verification",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -631,8 +597,6 @@ Deno.test({
 // ─── UPDATE: partner_id change attempt ignored ───
 Deno.test({
   name: "update: partner_id in body is ignored (not in update fields)",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     let patchBody: string | null = null;
@@ -674,8 +638,6 @@ Deno.test({
 // ─── UPDATE: missing verification_id → 400 ───
 Deno.test({
   name: "update: returns 400 for missing verification_id",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
@@ -699,8 +661,6 @@ Deno.test({
 // ─── UPDATE: verification not found → 404 ───
 Deno.test({
   name: "update: returns 404 when verification not found",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -728,8 +688,6 @@ Deno.test({
 // ─── UPDATE: no fields to update → 400 ───
 Deno.test({
   name: "update: returns 400 when no valid fields provided",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -760,8 +718,6 @@ Deno.test({
 // ─── UPDATE: 500 update error ───
 Deno.test({
   name: "update: returns 500 when update fails",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([

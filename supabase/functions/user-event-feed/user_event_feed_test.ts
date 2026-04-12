@@ -49,8 +49,6 @@ function createFeedFetchMock(rpcResult: unknown, authUser?: { id: string } | nul
 
 Deno.test({
   name: "user-event-feed - valid request with recommended sort returns 200",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
@@ -85,8 +83,6 @@ Deno.test({
 
 Deno.test({
   name: "user-event-feed - anonymous request returns 200 with basic feed",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
@@ -116,8 +112,6 @@ Deno.test({
 
 Deno.test({
   name: "user-event-feed - invalid sort_by returns 400",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
@@ -135,8 +129,6 @@ Deno.test({
 
 Deno.test({
   name: "user-event-feed - invalid cursor returns 400",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
@@ -157,8 +149,6 @@ Deno.test({
 
 Deno.test({
   name: "user-event-feed - pagination with cursor returns next page",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
@@ -197,8 +187,6 @@ Deno.test({
 
 Deno.test({
   name: "user-event-feed - OPTIONS returns CORS response",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
@@ -209,8 +197,6 @@ Deno.test({
 
 Deno.test({
   name: "user-event-feed - GET method returns 405",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 

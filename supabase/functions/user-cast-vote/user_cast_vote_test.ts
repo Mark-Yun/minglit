@@ -142,8 +142,6 @@ function happyPathRoutes(): FetchRoute[] {
 // ─── CORS preflight ───
 Deno.test({
   name: "handles OPTIONS preflight request",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([]);
@@ -162,8 +160,6 @@ Deno.test({
 // ─── 401: no auth ───
 Deno.test({
   name: "returns 401 without authorization",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -190,8 +186,6 @@ Deno.test({
 // ─── 400: missing event_id ───
 Deno.test({
   name: "returns 400 for missing event_id",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
@@ -212,8 +206,6 @@ Deno.test({
 // ─── 400: missing candidate_id ───
 Deno.test({
   name: "returns 400 for missing candidate_id",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
@@ -234,8 +226,6 @@ Deno.test({
 // ─── 400: self vote ───
 Deno.test({
   name: "returns 400 for self-vote",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
@@ -259,8 +249,6 @@ Deno.test({
 // ─── 404: event not found ───
 Deno.test({
   name: "returns 404 for non-existent event",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -290,8 +278,6 @@ Deno.test({
 // ─── 400: vote_start_at is null (voting not enabled) ───
 Deno.test({
   name: "returns 400 when vote_start_at is null",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -318,8 +304,6 @@ Deno.test({
 // ─── 400: vote not yet started ───
 Deno.test({
   name: "returns 400 when vote has not started yet",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -346,8 +330,6 @@ Deno.test({
 // ─── 400: vote deadline passed ───
 Deno.test({
   name: "returns 400 when vote deadline has passed",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -377,8 +359,6 @@ Deno.test({
 // ─── 400: end_time fallback when vote_end_at is null ───
 Deno.test({
   name: "returns 400 when vote_end_at is null but end_time has passed",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -409,8 +389,6 @@ Deno.test({
 // ─── 400: voter not participant ───
 Deno.test({
   name: "returns 400 when voter is not a participant",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -442,8 +420,6 @@ Deno.test({
 // ─── 400: voter not checked_in (ticket_issued) ───
 Deno.test({
   name: "returns 400 when voter status is ticket_issued",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -471,8 +447,6 @@ Deno.test({
 // ─── 400: voter is no_show ───
 Deno.test({
   name: "returns 400 when voter status is no_show",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -500,8 +474,6 @@ Deno.test({
 // ─── 400: candidate not checked_in ───
 Deno.test({
   name: "returns 400 when candidate is not checked_in",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -530,8 +502,6 @@ Deno.test({
 // ─── 400: empty group IDs (fail-closed) ───
 Deno.test({
   name: "returns 400 when voter has no group IDs",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -562,8 +532,6 @@ Deno.test({
 // ─── 400: match_rules에 없는 그룹간 투표 ───
 Deno.test({
   name: "returns 400 when groups are not in match_rules",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -595,8 +563,6 @@ Deno.test({
 // ─── 400: vote count exceeded (via RPC) ───
 Deno.test({
   name: "returns 400 when vote count is exceeded",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -629,8 +595,6 @@ Deno.test({
 // ─── 200: happy path — successful vote ───
 Deno.test({
   name: "returns 200 for successful vote",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock(happyPathRoutes());
@@ -654,8 +618,6 @@ Deno.test({
 // ─── 400: duplicate vote (via RPC) ───
 Deno.test({
   name: "returns 400 for duplicate vote",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([

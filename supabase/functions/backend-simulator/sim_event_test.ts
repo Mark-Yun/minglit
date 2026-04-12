@@ -86,8 +86,6 @@ function makeMatchFetchHandler(opts: { efStatus?: number; pairs?: Array<{ user1:
 // harmless — suppressing the leak check is correct here rather than patching the library.
 Deno.test({
   name: "simCheckin - 70% checked_in via EF, 30% no_show via direct DB",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const noShowUpdated: string[] = [];
     // Track statuses for both EF (via fetch mock side-effect) and direct DB (via update mock)
@@ -203,7 +201,7 @@ Deno.test({
   },
 });
 
-Deno.test({ name: "simCheckin - empty participants returns empty", sanitizeOps: false, sanitizeResources: false, fn: async () => {
+Deno.test({ name: "simCheckin - empty participants returns empty", fn: async () => {
   const mock = createMockSupabaseClient({
     tables: {
       events: {
@@ -232,8 +230,6 @@ Deno.test({ name: "simCheckin - empty participants returns empty", sanitizeOps: 
 // sanitizeResources/sanitizeOps disabled: supabase-js auth client leaks setInterval
 Deno.test({
   name: "simCheckin - EF failure is logged as error (not silently skipped)",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const participants = [
       { id: "p-1", user_id: "u-1", status: "ticket_issued" },

@@ -10,8 +10,6 @@ import {
 
 Deno.test({
   name: "dev-seed - blocks in production (ENVIRONMENT=production)",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(
       new URL("./index.ts", import.meta.url),
@@ -28,8 +26,6 @@ Deno.test({
 
 Deno.test({
   name: "dev-seed - seeds users and partners in static mode (default)",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(
       new URL("./index.ts", import.meta.url),
@@ -137,8 +133,6 @@ Deno.test({
 
 Deno.test({
   name: "dev-seed - static mode assigns images to existing parties (Fix #1210)",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(
       new URL("./index.ts", import.meta.url),
@@ -245,8 +239,6 @@ Deno.test({
 
 Deno.test({
   name: "dev-seed - seedAllUsers caches listUsers and skips unchanged existing users",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(
       new URL("./index.ts", import.meta.url),
@@ -350,8 +342,6 @@ Deno.test({
 
 Deno.test({
   name: "dev-seed - seedAllUsers logs individual failures and continues",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(
       new URL("./index.ts", import.meta.url),
@@ -441,8 +431,6 @@ Deno.test({
 
 Deno.test({
   name: "dev-seed - mode=static is idempotent (re-run does not error)",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(
       new URL("./index.ts", import.meta.url),

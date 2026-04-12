@@ -7,8 +7,6 @@ import {
 
 Deno.test({
   name: "dev-mock-portone - blocks in production (ENVIRONMENT=production)",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
@@ -23,8 +21,6 @@ Deno.test({
 
 Deno.test({
   name: "dev-mock-portone - POST /users/getToken returns mock token",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
@@ -46,8 +42,6 @@ Deno.test({
 
 Deno.test({
   name: "dev-mock-portone - GET /payments/:imp_uid returns paid payment",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
@@ -71,8 +65,6 @@ Deno.test({
 
 Deno.test({
   name: "dev-mock-portone - GET /payments/imp_fail_xxx returns failed status",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
@@ -93,8 +85,6 @@ Deno.test({
 
 Deno.test({
   name: "dev-mock-portone - POST /payments/cancel returns cancelled response",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
@@ -121,8 +111,6 @@ Deno.test({
 
 Deno.test({
   name: "dev-mock-portone - unknown path returns 404",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 

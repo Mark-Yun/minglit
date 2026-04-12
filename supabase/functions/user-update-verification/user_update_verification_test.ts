@@ -12,7 +12,6 @@ import {
 } from "../_test_utils/mock_http.ts";
 import { authRoute } from "../_test_utils/fixtures.ts";
 
-const TEST_OPTS = { sanitizeOps: false, sanitizeResources: false };
 
 const ENV = {
   SUPABASE_URL: "https://supabase.test",
@@ -47,7 +46,7 @@ const dbUpsertErrorRoute = {
 
 // ===== 정상 저장 =====
 
-Deno.test("신규 저장 → user_verifications UPSERT 확인", TEST_OPTS, async () => {
+Deno.test("신규 저장 → user_verifications UPSERT 확인", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock, calls } = createFetchMock([
@@ -82,7 +81,7 @@ Deno.test("신규 저장 → user_verifications UPSERT 확인", TEST_OPTS, async
   });
 });
 
-Deno.test("기존 업데이트 → data 갱신 확인", TEST_OPTS, async () => {
+Deno.test("기존 업데이트 → data 갱신 확인", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock, calls } = createFetchMock([
@@ -117,7 +116,7 @@ Deno.test("기존 업데이트 → data 갱신 확인", TEST_OPTS, async () => {
 
 // ===== 인증 없이 → 401 =====
 
-Deno.test("인증 없이 → 401", TEST_OPTS, async () => {
+Deno.test("인증 없이 → 401", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock } = createFetchMock([
@@ -144,7 +143,7 @@ Deno.test("인증 없이 → 401", TEST_OPTS, async () => {
 
 // ===== verification_id 누락 → 400 =====
 
-Deno.test("verification_id 누락 → 400", TEST_OPTS, async () => {
+Deno.test("verification_id 누락 → 400", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock } = createFetchMock([authRoute]);
@@ -167,7 +166,7 @@ Deno.test("verification_id 누락 → 400", TEST_OPTS, async () => {
 
 // ===== data 누락 → 400 =====
 
-Deno.test("data 누락 → 400", TEST_OPTS, async () => {
+Deno.test("data 누락 → 400", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock } = createFetchMock([authRoute]);
@@ -190,7 +189,7 @@ Deno.test("data 누락 → 400", TEST_OPTS, async () => {
 
 // ===== 존재하지 않는 verification → 404 =====
 
-Deno.test("존재하지 않는 verification → 404", TEST_OPTS, async () => {
+Deno.test("존재하지 않는 verification → 404", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock } = createFetchMock([
@@ -217,7 +216,7 @@ Deno.test("존재하지 않는 verification → 404", TEST_OPTS, async () => {
 
 // ===== malformed JSON → 400 =====
 
-Deno.test("malformed JSON → 400", TEST_OPTS, async () => {
+Deno.test("malformed JSON → 400", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock } = createFetchMock([authRoute]);

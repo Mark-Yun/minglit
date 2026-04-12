@@ -100,8 +100,6 @@ function makeEFFetchHandler(opts: {
 // sanitizeResources/sanitizeOps disabled: fetch mock interacts with Deno's resource tracking
 Deno.test({
   name: "ActionRunner.execute - calls EF, validates response, checks DB state",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const mock = createMockSupabaseClient({});
     const { log, entries } = makeLogCollector();
@@ -137,8 +135,6 @@ Deno.test({
 
 Deno.test({
   name: "ActionRunner.execute - EF failure (non-2xx) does not throw; returns passed=false",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const mock = createMockSupabaseClient({});
     const { log, entries } = makeLogCollector();
@@ -173,8 +169,6 @@ Deno.test({
 
 Deno.test({
   name: "ActionRunner.execute - fetch throws; catches error and returns passed=false",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const mock = createMockSupabaseClient({});
     const { log, entries } = makeLogCollector();
@@ -211,8 +205,6 @@ Deno.test({
 
 Deno.test({
   name: "ActionRunner.execute - processes multiple actions in sequence",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const mock = createMockSupabaseClient({});
     const { log, entries } = makeLogCollector();
@@ -270,8 +262,6 @@ Deno.test({
 
 Deno.test({
   name: "ActionRunner.execute - DB assertion failure causes passed=false",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const mock = createMockSupabaseClient({});
     const { log, entries } = makeLogCollector();
