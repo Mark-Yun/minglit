@@ -276,14 +276,17 @@ class _ApplicationTab extends ConsumerWidget {
         reason: reason.trim(),
       );
       if (context.mounted) {
+        // Fix #1316: Capture container before scheduling — WidgetRef is unsafe
+        // after unmount, but ProviderContainer is lifecycle-independent.
+        final container = ProviderScope.containerOf(context, listen: false);
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('거절되었습니다')));
-        // Fix #1316: Defer invalidate by one frame so dialog close animation
-        // completes before the provider rebuild — avoids _FocusInheritedScope
+        // Defer invalidate by one frame so dialog close animation completes
+        // before the provider rebuild — avoids _FocusInheritedScope
         // build-scope conflict.
         WidgetsBinding.instance.addPostFrameCallback(
-          (_) => ref.invalidate(eventApplicationsGroupedProvider),
+          (_) => container.invalidate(eventApplicationsGroupedProvider),
         );
       }
     } on Exception catch (e) {
@@ -332,6 +335,9 @@ class _ApplicationTab extends ConsumerWidget {
       }
     }
     if (context.mounted) {
+      // Fix #1316: Capture container before scheduling — WidgetRef is unsafe
+      // after unmount, but ProviderContainer is lifecycle-independent.
+      final container = ProviderScope.containerOf(context, listen: false);
       if (failures.isEmpty) {
         ScaffoldMessenger.of(
           context,
@@ -343,11 +349,11 @@ class _ApplicationTab extends ConsumerWidget {
           ),
         );
       }
-      // Fix #1316: Defer invalidate by one frame so dialog close animation
-      // completes before the provider rebuild — avoids _FocusInheritedScope
+      // Defer invalidate by one frame so dialog close animation completes
+      // before the provider rebuild — avoids _FocusInheritedScope
       // build-scope conflict.
       WidgetsBinding.instance.addPostFrameCallback(
-        (_) => ref.invalidate(eventApplicationsGroupedProvider),
+        (_) => container.invalidate(eventApplicationsGroupedProvider),
       );
     }
   }
