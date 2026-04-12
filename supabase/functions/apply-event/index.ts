@@ -208,6 +208,20 @@ Deno.serve(withHandler(async (req) => {
       // 무료 경로
       if (existingApp) {
         // Fix #1342 Bug1: 취소/결제실패 후 재신청 — apply_event RPC는 plain INSERT이므로 직접 UPDATE
+        // Fix #1345: apply_event RPC 미사용으로 인해 check_party_balance 누락 — 명시적 호출
+        const { data: balanceResult, error: balanceError } = await supabase.rpc("check_party_balance", {
+          p_event_id: event_id,
+          p_ticket_id: ticket_id,
+        });
+        if (balanceError) {
+          console.error("check_party_balance error on free re-application:", balanceError.message);
+          return errorResponse("Failed to check balance", 500);
+        }
+        const balance = balanceResult as { allowed: boolean; reason: string | null } | null;
+        if (!balance?.allowed) {
+          return errorResponse(balance?.reason ?? "성비 균형 제한", 409);
+        }
+
         const newStatus = verification_data ? "pending_review" : "paid";
         const { error: updateError } = await supabase
           .from("event_applications")
