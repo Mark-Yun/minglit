@@ -54,6 +54,15 @@ class QaBugReportChannel {
     });
   }
 
+  /// Releases the MethodChannel handler.
+  ///
+  /// Call from `BugReporterWrapper.dispose` when `enabled` is true to prevent
+  /// stale handler references after the widget is removed from the tree.
+  static void dispose() {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return;
+    _channel.setMethodCallHandler(null);
+  }
+
   /// Returns [value] unchanged unless it is empty, in which case null is
   /// returned. Android broadcasts missing optional IDs as empty strings;
   /// normalising here keeps downstream consumers free of empty-string checks.

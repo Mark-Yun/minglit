@@ -4,18 +4,11 @@ import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
-import 'package:minglit_kit/minglit_dev.dart' show QaBugReportChannel;
-import 'package:minglit_kit/minglit_kit.dart' show BugReporterWrapper;
-import 'package:minglit_kit/minglit_ui.dart' show BugReporterWrapper;
 import 'package:minglit_kit/src/data/repositories/bug_report_repository.dart';
 import 'package:minglit_kit/src/data/repositories/storage_repository.dart';
-import 'package:minglit_kit/src/ui/widgets/bug_reporter_wrapper.dart'
-    show BugReporterWrapper;
 import 'package:minglit_kit/src/utils/environment_info.dart';
 import 'package:minglit_kit/src/utils/layout_dump.dart';
 import 'package:minglit_kit/src/utils/log.dart';
-import 'package:minglit_kit/src/utils/qa_bug_report_channel.dart'
-    show QaBugReportChannel;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Collects bug report data (screenshot, layout dump, environment info, logs)

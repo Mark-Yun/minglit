@@ -101,6 +101,10 @@ class _BugReporterWrapperState extends ConsumerState<BugReporterWrapper> {
 
   @override
   void dispose() {
+    // Fix #1295: QaBugReportChannel 핸들러 해제 — 위젯 트리에서 제거 시 stale handler 방지
+    if (widget.enabled) {
+      QaBugReportChannel.dispose();
+    }
     // Note: the callback intentionally holds a reference to this state's
     // _showReportDialog, which guards unmounted access at its top.
     // Clearing the provider here is unsafe in Riverpod v3 (modifying providers
