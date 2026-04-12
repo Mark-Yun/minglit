@@ -16,8 +16,8 @@ base class _ProviderInitObserver extends ProviderObserver {
 
 void main() {
   group('IdentityVerificationScreen', () {
-    // Fix #1271 regression: consentControllerProvider (isAutoDispose=true)이 build()에서
-    // watch되지 않으면 비동기 toggleConsent 호출 시 "Ref disposed" 에러 발생.
+    // Fix #1271: consentControllerProvider (isAutoDispose=true)이 build()에서
+    // watch되지 않으면 비동기 toggleConsent 호출 시 "Ref disposed" 에러 발생 (regression 방지).
     // build()에 ref.watch(consentControllerProvider)를 추가하여 화면 생명주기와 일치시킨다.
     testWidgets(
       'watches consentControllerProvider to prevent disposal during async flow',
