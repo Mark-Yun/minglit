@@ -28,8 +28,8 @@ void main() {
     testWidgets('shows location guide banner and forwards tap', (tester) async {
       // Fix #1269: P-S06 장소 가이드 배너가 홈에서 사라진 회귀를 막는다.
       final coordinator = _MockPartnerHomeCoordinator();
-      when(() => coordinator.pushNotificationCenter()).thenReturn(null);
-      when(() => coordinator.pushLocationGuide()).thenReturn(null);
+      when(coordinator.pushNotificationCenter).thenReturn(null);
+      when(coordinator.pushLocationGuide).thenReturn(null);
 
       await tester.pumpWidget(
         ProviderScope(
@@ -53,7 +53,7 @@ void main() {
       await tester.tap(find.text('장소 가이드'));
       await tester.pumpAndSettle();
 
-      verify(() => coordinator.pushLocationGuide()).called(1);
+      verify(coordinator.pushLocationGuide).called(1);
     });
   });
 }
