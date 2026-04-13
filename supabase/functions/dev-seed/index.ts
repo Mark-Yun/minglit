@@ -1022,7 +1022,7 @@ Deno.serve(async (req) => {
     );
     if (partnerRpcError) throw new Error(`dev_seed_bulk_partners: ${partnerRpcError.message}`);
 
-    const createdUsers = (userResult as { total: number })?.total ?? 0;
+    const createdUsers = (userResult as { created: number })?.created ?? 0;
     const processedPartners = (partnerResult as { partners_processed: number })?.partners_processed ?? 0;
 
     const imageUrls = await uploadSeedImages(supabase);

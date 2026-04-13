@@ -23,8 +23,8 @@ DECLARE
   start_ts timestamptz := clock_timestamp();
   existing_id uuid;
 BEGIN
-  -- Guard: dev only
-  IF current_setting('app.settings.environment', true) NOT IN ('local', 'development') THEN
+  -- Guard: dev only (COALESCE ensures fail-closed when setting is NULL)
+  IF COALESCE(current_setting('app.settings.environment', true), '') NOT IN ('local', 'development') THEN
     RAISE EXCEPTION 'dev_seed_bulk_users is blocked in production';
   END IF;
 
@@ -107,7 +107,7 @@ BEGIN
     'created', created_count,
     'updated', updated_count,
     'total', created_count + updated_count,
-    'elapsed_ms', EXTRACT(MILLISECOND FROM clock_timestamp() - start_ts)::int
+    'elapsed_ms', floor(extract(epoch from clock_timestamp() - start_ts) * 1000)::int
   );
 END;
 $$;
@@ -145,8 +145,8 @@ DECLARE
   first_partner_id uuid;
   staff_users uuid[];
 BEGIN
-  -- Guard: dev only
-  IF current_setting('app.settings.environment', true) NOT IN ('local', 'development') THEN
+  -- Guard: dev only (COALESCE ensures fail-closed when setting is NULL)
+  IF COALESCE(current_setting('app.settings.environment', true), '') NOT IN ('local', 'development') THEN
     RAISE EXCEPTION 'dev_seed_bulk_partners is blocked in production';
   END IF;
 
@@ -179,13 +179,13 @@ BEGIN
       INSERT INTO public.partners (name, introduction, biz_name, biz_number, contact_email)
       VALUES (p->>'name', p->>'introduction', p->>'biz_name', p->>'biz_number', p->>'contact_email')
       RETURNING id INTO new_partner_id;
-
-      -- Owner permission
-      INSERT INTO public.partner_member_permissions (partner_id, user_id, role)
-      VALUES (new_partner_id, owner_id, 'owner')
-      ON CONFLICT (partner_id, user_id) DO UPDATE SET role = 'owner';
     END IF;
     partner_count := partner_count + 1;
+
+    -- Owner permission: runs on every rerun to recover from permission drift
+    INSERT INTO public.partner_member_permissions (partner_id, user_id, role)
+    VALUES (new_partner_id, owner_id, 'owner')
+    ON CONFLICT (partner_id, user_id) DO UPDATE SET role = 'owner';
 
     -- Location upsert: use new_partner_id variable (not column name) in WHERE
     IF NOT EXISTS (
@@ -250,7 +250,7 @@ BEGIN
     'partners_processed', partner_count,
     'locations', loc_count,
     'verifications', verif_count,
-    'elapsed_ms', EXTRACT(MILLISECOND FROM clock_timestamp() - start_ts)::int
+    'elapsed_ms', floor(extract(epoch from clock_timestamp() - start_ts) * 1000)::int
   );
 END;
 $$;
