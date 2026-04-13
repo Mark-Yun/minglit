@@ -49,7 +49,7 @@ jobs:
           force-avd-creation: false
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
           disable-animations: true
-          script: cd apps/app_user && patrol test patrol_test/
+          script: cd apps/app_user && patrol test --flavor dev --dart-define-from-file=../../minglit_env/dev/flutter.env patrol_test/
 
       - name: Upload test results
         if: failure()
