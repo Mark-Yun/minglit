@@ -3,5 +3,6 @@
     "@std/assert": "jsr:@std/assert@^1.0.19",
     "@std/testing": "jsr:@std/testing@^1.0.17",
     "@supabase/supabase-js": "npm:@supabase/supabase-js@2"
-  }
+  },
+  "unstable": ["temporal"]
 }
