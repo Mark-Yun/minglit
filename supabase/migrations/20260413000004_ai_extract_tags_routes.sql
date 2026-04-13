@@ -27,19 +27,25 @@ ON CONFLICT (event_type, target_queue) DO UPDATE SET is_active = EXCLUDED.is_act
 -- 3. Cron: ai-extract-tags (every minute)
 -- ============================================================
 
-select cron.schedule(
+SELECT cron.schedule(
   'ai-extract-tags',
   '* * * * *',
   $$
-    select net.http_post(
-      url:='https://cnuahgrfzcqkmdyhunuk.supabase.co/functions/v1/ai-extract-tags',
-      headers:=(
+    SELECT net.http_post(
+      url := (
+        SELECT decrypted_secret FROM vault.decrypted_secrets
+        WHERE name = 'supabase_url' LIMIT 1
+      ) || '/functions/v1/ai-extract-tags',
+      headers := (
         jsonb_build_object(
           'Content-Type', 'application/json',
-          'Authorization', 'Bearer ' || (select decrypted_secret from vault.decrypted_secrets where name = 'service_role_key' limit 1)
+          'Authorization', 'Bearer ' || (
+            SELECT decrypted_secret FROM vault.decrypted_secrets
+            WHERE name = 'publishable_key' LIMIT 1
+          )
         )
       ),
-      body:='{}'::jsonb
+      body := '{}'::jsonb
     ) as request_id;
   $$
 );
