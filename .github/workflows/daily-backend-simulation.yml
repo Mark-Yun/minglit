@@ -15,14 +15,26 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      # Fix #1390: 560 admin.createUser() HTTP calls → 2 in-DB RPCs (~4초 total)
-      - name: Seed users/partners (bulk RPC — 560 users + partners in 1 call)
+      # Fix #1413: seed.dev.sql 직접 실행 — psql 1번으로 560명 시딩 (~3초)
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Seed users/partners (psql direct)
+        env:
+          DB_PASSWORD: ${{ secrets.SUPABASE_DEV_DB_PASSWORD }}
+          PROJECT_ID: ${{ secrets.SUPABASE_DEV_PROJECT_ID }}
+          POOLER_HOST: aws-0-ap-northeast-2.pooler.supabase.com
+        run: |
+          PGPASSWORD="${DB_PASSWORD}" psql \
+            "postgresql://postgres.${PROJECT_ID}:${DB_PASSWORD}@${POOLER_HOST}:5432/postgres?sslmode=require" \
+            -f supabase/seed.dev.sql
+
+      - name: Upload seed images
         run: |
           curl -sf -X POST \
-            "${{ secrets.SUPABASE_DEV_URL }}/functions/v1/dev-seed?mode=static" \
+            "${{ secrets.SUPABASE_DEV_URL }}/functions/v1/dev-seed?mode=images-only" \
             -H "Authorization: Bearer ${{ secrets.SUPABASE_DEV_SECRET_KEY }}" \
-            -H "Content-Type: application/json" \
-            --max-time 60
+            --max-time 30
 
       - name: Create parties and events
         run: |
