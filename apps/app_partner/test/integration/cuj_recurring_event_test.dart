@@ -57,6 +57,10 @@ Widget _buildApp(
 void main() {
   late _MockRecurrenceRuleRepository mockRepo;
 
+  setUpAll(() {
+    registerFallbackValue(RecurrencePattern.weekly);
+  });
+
   setUp(() {
     mockRepo = _MockRecurrenceRuleRepository();
   });

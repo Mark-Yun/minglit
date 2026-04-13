@@ -327,8 +327,8 @@ void main() {
         // 확인 다이얼로그 표시
         expect(find.text('정말 탈퇴할까요?'), findsOneWidget);
 
-        // 다이얼로그에서 "탈퇴 요청" 탭
-        await tester.tap(find.text('탈퇴 요청'));
+        // 다이얼로그에서 "탈퇴 요청" 탭 (페이지 버튼과 중복되므로 마지막 위젯 선택)
+        await tester.tap(find.text('탈퇴 요청').last);
         await tester.pumpAndSettle();
 
         // requestDeletion → deleteAccount 호출 검증
