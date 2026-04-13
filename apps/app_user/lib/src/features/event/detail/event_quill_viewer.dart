@@ -15,6 +15,12 @@ class _QuillViewer extends StatelessWidget {
       readOnly: true,
     );
 
-    return QuillEditor.basic(controller: controller);
+    // Fix #1380: 마지막 줄 descender 잘림 방지 — bottom padding 추가
+    return QuillEditor.basic(
+      controller: controller,
+      config: const QuillEditorConfig(
+        padding: EdgeInsets.only(bottom: MinglitSpacing.medium),
+      ),
+    );
   }
 }
