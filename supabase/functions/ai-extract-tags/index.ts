@@ -142,9 +142,7 @@ Deno.serve(withSentryHandler(async (req) => {
           // party_tags에 연결 (source='ai')
           const { error: linkError } = await supabase
             .from("party_tags")
-            .insert({ party_id: party.id, tag_id: existingTag.id, source: "ai" })
-            .select()
-            .maybeSingle();
+            .insert({ party_id: party.id, tag_id: existingTag.id, source: "ai" });
 
           if (linkError) {
             // 최대 5개 제한 트리거 등에 의한 실패 — 조용히 스킵
