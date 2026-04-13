@@ -1,3 +1,14 @@
+/** Typed subset of the Iamport V1 payment response used by callers. */
+export interface IamportPayment {
+  imp_uid: string;
+  merchant_uid: string;
+  status: string;
+  amount: number;
+  /** Unix epoch seconds; null when payment has not completed (e.g. ready/failed). */
+  paid_at: number | null;
+  [key: string]: unknown;
+}
+
 export class IamportClient {
   private apiKey: string;
   private apiSecret: string;
@@ -46,7 +57,7 @@ export class IamportClient {
     return data.response;
   }
 
-  async getPayment(impUid: string): Promise<Record<string, unknown>> {
+  async getPayment(impUid: string): Promise<IamportPayment> {
     // Fix #1422: e2e_pay_ prefix → dev-mock-portone (simulator), otherwise real PG
     const baseUrl = this.isE2EPayment(impUid) ? this.getMockBaseUrl() : this.baseUrl;
     const token = await this.getTokenFromBase(baseUrl);
