@@ -165,46 +165,52 @@ void main() {
     });
 
     // Fix #1409: 비-200 응답 시 response.data가 null → cast crash 재발 방지
-    test('throws MinglitUserException on non-200 response with null data', () async {
-      when(
-        () => mockFunctions.invoke(
-          'apply-event',
-          body: any(named: 'body'),
-        ),
-      ).thenAnswer(
-        (_) async => FunctionResponse(status: 409, data: null),
-      );
-
-      await expectLater(
-        repository.applyEvent(eventId: 'event_1', ticketId: 'ticket_1'),
-        throwsA(isA<MinglitUserException>()),
-      );
-    });
-
-    test('throws MinglitUserException on non-200 response with error message', () async {
-      when(
-        () => mockFunctions.invoke(
-          'apply-event',
-          body: any(named: 'body'),
-        ),
-      ).thenAnswer(
-        (_) async => FunctionResponse(
-          status: 409,
-          data: {'error': '이미 신청한 이벤트입니다.'},
-        ),
-      );
-
-      await expectLater(
-        repository.applyEvent(eventId: 'event_1', ticketId: 'ticket_1'),
-        throwsA(
-          isA<MinglitUserException>().having(
-            (e) => e.message,
-            'message',
-            '이미 신청한 이벤트입니다.',
+    test(
+      'throws MinglitUserException on non-200 response with null data',
+      () async {
+        when(
+          () => mockFunctions.invoke(
+            'apply-event',
+            body: any(named: 'body'),
           ),
-        ),
-      );
-    });
+        ).thenAnswer(
+          (_) async => FunctionResponse(status: 409),
+        );
+
+        await expectLater(
+          repository.applyEvent(eventId: 'event_1', ticketId: 'ticket_1'),
+          throwsA(isA<MinglitUserException>()),
+        );
+      },
+    );
+
+    test(
+      'throws MinglitUserException on non-200 response with error message',
+      () async {
+        when(
+          () => mockFunctions.invoke(
+            'apply-event',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 409,
+            data: {'error': '이미 신청한 이벤트입니다.'},
+          ),
+        );
+
+        await expectLater(
+          repository.applyEvent(eventId: 'event_1', ticketId: 'ticket_1'),
+          throwsA(
+            isA<MinglitUserException>().having(
+              (e) => e.message,
+              'message',
+              '이미 신청한 이벤트입니다.',
+            ),
+          ),
+        );
+      },
+    );
   });
 
   group('EventRepository.cancelPayment', () {
