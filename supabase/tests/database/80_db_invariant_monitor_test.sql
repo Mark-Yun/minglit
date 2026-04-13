@@ -1,7 +1,7 @@
 -- 80_db_invariant_monitor_test.sql — pgTAP tests for check_db_invariants() (#1427)
 
 BEGIN;
-SELECT plan(10);
+SELECT plan(11);
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Schema checks
