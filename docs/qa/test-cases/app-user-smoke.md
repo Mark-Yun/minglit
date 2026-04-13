@@ -44,7 +44,7 @@
 | U-S15 | 계정 관리 | `/my/account` | `AccountManagementPage` | → `/login` | OK | OK | PR #1213 — 계정 관리 통합. Shell 외부 라우트 |
 | U-S16 | 내 티켓 | `/tickets/my` | `MyTicketsPage` | → `/login` | OK | OK | 마이페이지에서 진입 |
 | U-S17 | 티켓 QR | `/tickets/:ticketId/qr` | `TicketQRScreen` | → `/login` | OK | OK | PR #1206 QR 토큰 발급. 유효한 ticketId 필요 |
-| U-S18 | 가입 동의 | `/signup/consent` | `SignupConsentPage` | OK | OK | OK | 신규 가입 필수 화면. `from` 파라미터로 복귀 경로 지정 |
+| U-S18 | 가입 동의 | `/signup/consent` | `SignupConsentPage` | → `/login` | OK | OK | 보호된 prefix. 신규 가입 필수 화면. `from` 파라미터로 복귀 경로 지정 |
 
 ### 2.3 보호된 화면 (로그인 + 추가 조건)
 
