@@ -102,13 +102,16 @@ void main() {
 
         // 동의 시트에서 취소 탭
         await tester.tap(find.text('취소'));
-        // Fix: pumpAndSettle() 대신 고정 pump 사용.
-        // CircularProgressIndicator(indeterminate)가 _isLoading=true 동안
-        // 계속 프레임을 스케줄링해 pumpAndSettle이 타임아웃된다.
-        await tester.pump(); // Navigator.pop(false) 처리
-        await tester.pump(); // showIdentityVerificationConsentSheet future 완료
-        await tester.pump(); // _ensureIdentityVerificationConsent returns false
-        await tester.pump(); // finally: _isLoading = false, setState 재빌드
+        // Fix: 시간을 진행시켜 바텀시트 퇴장 애니메이션을 완료시킨다.
+        // pump() without duration은 fake clock을 진행시키지 않으므로
+        // AnimationController 기반 퇴장 애니메이션이 완료되지 않고
+        // showModalBottomSheet의 Future가 resolve되지 않는다.
+        // 퇴장 후 finally 블록: _isLoading = false → 에러 메시지 표시.
+        await tester.pump(); // Navigator.pop(false) 시작
+        await tester.pump(
+          const Duration(milliseconds: 500),
+        ); // 퇴장 애니메이션 + async 체인 완료
+        await tester.pump(); // 최종 재빌드
 
         // 에러 안내 메시지 및 재시도 버튼 표시 확인
         expect(
