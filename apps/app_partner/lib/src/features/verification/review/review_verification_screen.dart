@@ -226,7 +226,7 @@ class _ReviewVerificationScreenState
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Chip(label: Text('VERIFICATION')),
+                const MinglitChip(label: 'VERIFICATION'),
                 Text(
                   (user['email'] as String?) ?? 'Unknown User',
                   style: theme.textTheme.labelSmall?.copyWith(
