@@ -714,6 +714,6 @@ entrypoint = "./functions/user-get-ticket-token/index.ts"
 
 [functions.ai-extract-tags]
 enabled = true
-verify_jwt = false  # cron worker — auth handled in function code (requireServiceRole)
+verify_jwt = true  # cron sends publishable_key (anon JWT); Supabase verifies at edge
 import_map = "./deno.json"
 entrypoint = "./functions/ai-extract-tags/index.ts"

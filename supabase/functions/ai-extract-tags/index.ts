@@ -2,7 +2,6 @@ import { createServiceClient } from "../_shared/supabase_client.ts";
 import { createLLMAdapter } from "../_shared/ai/factory.ts";
 import { WorkerUtils } from "../_shared/worker_utils.ts";
 import { initSentry, withHandler } from "../_shared/logger.ts";
-import { requireServiceRole } from "../_shared/auth_utils.ts";
 import {
   buildTagExtractionPrompt,
   extractDescriptionText,
@@ -30,9 +29,9 @@ initSentry();
 Deno.serve(withHandler(async (req) => {
   console.log(`[${FN}] triggered`);
 
-  // Caller verification: only cron (publishable_key) or service role may invoke this function
-  const authCheck = requireServiceRole(req);
-  if (authCheck instanceof Response) return authCheck;
+  // JWT verification is handled by Supabase edge runtime (verify_jwt=true in config.toml).
+  // The cron sends a valid anon JWT (publishable_key) which passes Supabase verification.
+  // Elevated DB access is handled internally via createServiceClient().
 
   try {
     const payload = await req.json().catch(() => ({}));

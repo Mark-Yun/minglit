@@ -3,7 +3,6 @@ import { stub } from "@std/testing/mock";
 import {
   captureServeHandler,
   createFetchMock,
-  jsonRequest,
   jsonResponse,
   readJson,
   withEnv,
@@ -19,14 +18,13 @@ const BASE_ENV = {
   OPENAI_API_KEY: "openai-key",
 };
 
-/** requireServiceRole을 통과하기 위한 인증 헤더 포함 요청 생성 */
-function authedRequest(body: unknown): Request {
+// JWT verification is handled by the Supabase edge runtime (verify_jwt=true).
+// In unit tests we bypass the runtime layer and call the handler directly,
+// so no Authorization header is needed here.
+function makeRequest(body: unknown): Request {
   return new Request("http://localhost", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${BASE_ENV.SUPABASE_SERVICE_ROLE_KEY}`,
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
 }
@@ -102,7 +100,7 @@ Deno.test({
       await withEnv(BASE_ENV, async () => {
         await withMockedFetch(fetchMock, async () => {
           await withNoIntervals(async () => {
-            const response = await handler(authedRequest({}));
+            const response = await handler(makeRequest({}));
             const payload = await readJson(response);
 
             assertEquals(response.status, 200);
@@ -144,7 +142,7 @@ Deno.test({
       await withEnv(BASE_ENV, async () => {
         await withMockedFetch(fetchMock, async () => {
           await withNoIntervals(async () => {
-            const response = await handler(authedRequest({}));
+            const response = await handler(makeRequest({}));
             const payload = await readJson(response);
 
             assertEquals(response.status, 200);
@@ -188,7 +186,7 @@ Deno.test({
       await withEnv(BASE_ENV, async () => {
         await withMockedFetch(fetchMock, async () => {
           await withNoIntervals(async () => {
-            const response = await handler(authedRequest({}));
+            const response = await handler(makeRequest({}));
             const payload = await readJson(response);
 
             // LLM 에러 시 해당 메시지는 processed에서 제외
@@ -203,64 +201,9 @@ Deno.test({
   },
 });
 
-Deno.test({
-  name: "ai-extract-tags - missing env returns 500",
-  sanitizeResources: false,
-  sanitizeOps: false,
-  fn: async () => {
-    const handler = await captureServeHandler(
-      new URL("./index.ts", import.meta.url),
-    );
-
-    const { fetchMock } = createFetchMock([]);
-
-    await withEnv(
-      {
-        SUPABASE_URL: undefined,
-        SUPABASE_SERVICE_ROLE_KEY: undefined,
-        OPENAI_API_KEY: undefined,
-      },
-      async () => {
-        await withMockedFetch(fetchMock, async () => {
-          await withNoIntervals(async () => {
-            // requireServiceRole은 SUPABASE_SERVICE_ROLE_KEY 미설정 시 500 반환
-            const response = await handler(new Request("http://localhost"));
-            const payload = await readJson(response);
-
-            assertEquals(response.status, 500);
-            assertEquals(typeof payload.error, "string");
-          });
-        });
-      },
-    );
-  },
-});
-
-Deno.test({
-  name: "ai-extract-tags - unauthorized request returns 401",
-  sanitizeResources: false,
-  sanitizeOps: false,
-  fn: async () => {
-    const handler = await captureServeHandler(
-      new URL("./index.ts", import.meta.url),
-    );
-
-    const { fetchMock } = createFetchMock([]);
-
-    await withEnv(BASE_ENV, async () => {
-      await withMockedFetch(fetchMock, async () => {
-        await withNoIntervals(async () => {
-          // Authorization 헤더 없는 요청 — requireServiceRole이 401 반환
-          const response = await handler(
-            jsonRequest("http://localhost", {}),
-          );
-
-          assertEquals(response.status, 401);
-        });
-      });
-    });
-  },
-});
+// Note: 401 (missing/invalid JWT) and auth-related 500 tests are intentionally omitted.
+// With verify_jwt=true, the Supabase edge runtime rejects unauthenticated requests
+// before the function handler runs — this cannot be unit-tested at the handler level.
 
 Deno.test({
   name: "ai-extract-tags - tags INSERT 23505 race condition: re-fetches and links party_tags",
@@ -346,7 +289,7 @@ Deno.test({
       await withEnv(BASE_ENV, async () => {
         await withMockedFetch(fetchMock, async () => {
           await withNoIntervals(async () => {
-            const response = await handler(authedRequest({}));
+            const response = await handler(makeRequest({}));
             const payload = await readJson(response);
 
             assertEquals(response.status, 200);
@@ -408,7 +351,7 @@ Deno.test({
       await withEnv(BASE_ENV, async () => {
         await withMockedFetch(fetchMock, async () => {
           await withNoIntervals(async () => {
-            const response = await handler(authedRequest({}));
+            const response = await handler(makeRequest({}));
             const payload = await readJson(response);
 
             // non-party_created 메시지는 처리 완료로 마킹되어 큐에서 삭제됨
