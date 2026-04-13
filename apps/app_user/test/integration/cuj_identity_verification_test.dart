@@ -10,7 +10,6 @@
 // 대신 동의 완료 후 로딩 상태 진입까지만 검증한다.
 
 import 'package:app_user/src/features/auth/login_page.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -165,8 +164,6 @@ void main() {
 
         await tester.pumpWidget(
           createTestApp(
-            isLoggedIn: false,
-            currentUser: null,
             initialLocation: '/certification',
           ),
         );
