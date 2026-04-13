@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:app_partner/src/features/onboarding/partner_apply_controller.dart';
 import 'package:app_partner/src/features/onboarding/partner_apply_page.dart';
 import 'package:app_partner/src/features/onboarding/partner_apply_status_page.dart';
@@ -76,13 +74,11 @@ void main() {
   // TC-P01-001: 5단계 위저드 전체 입력 → 제출
   // ---------------------------------------------------------------------------
   group('TC-P01-001: 5단계 위저드 전체 입력 → 제출', () {
-    test('submit()은 모든 필드 채운 뒤 repo.submitDraft를 1회 호출한다',
-        () async {
+    test('submit()은 모든 필드 채운 뒤 repo.submitDraft를 1회 호출한다', () async {
       // Arrange
       when(() => mockRepo.getMyApplication()).thenAnswer((_) async => null);
       when(() => mockRepo.saveDraft(any())).thenAnswer(
-        (_) async =>
-            const PartnerApplication(id: 'draft_1', userId: 'user_1'),
+        (_) async => const PartnerApplication(id: 'draft_1', userId: 'user_1'),
       );
       when(
         () => mockRepo.submitDraft(applicationId: any(named: 'applicationId')),
@@ -94,8 +90,7 @@ void main() {
         ],
       );
 
-      final notifier =
-          container.read(partnerApplyControllerProvider.notifier);
+      final notifier = container.read(partnerApplyControllerProvider.notifier);
 
       // Fill all required text fields
       _fillAllTextFields(notifier);
@@ -122,8 +117,9 @@ void main() {
         ],
       );
 
-      final notifier2 =
-          container2.read(partnerApplyControllerProvider.notifier);
+      final notifier2 = container2.read(
+        partnerApplyControllerProvider.notifier,
+      );
 
       expect(
         notifier2.validateAll(),
@@ -141,8 +137,7 @@ void main() {
     testWidgets(
       '"신청하기" 버튼이 Step 4(마지막 단계)에서 렌더링된다',
       (tester) async {
-        when(() => mockRepo.getMyApplication())
-            .thenAnswer((_) async => null);
+        when(() => mockRepo.getMyApplication()).thenAnswer((_) async => null);
         when(() => mockRepo.saveDraft(any())).thenAnswer(
           (_) async =>
               const PartnerApplication(id: 'draft_1', userId: 'user_1'),
@@ -152,9 +147,9 @@ void main() {
         await tester.pump();
 
         final element = tester.element(find.byType(PartnerApplyPage));
-        ProviderScope.containerOf(element)
-            .read(partnerApplyControllerProvider.notifier)
-            .setStep(4);
+        ProviderScope.containerOf(
+          element,
+        ).read(partnerApplyControllerProvider.notifier).setStep(4);
         await tester.pumpAndSettle();
 
         expect(find.text('신청하기'), findsOneWidget);
@@ -164,8 +159,7 @@ void main() {
     testWidgets(
       '"신청하기" 버튼은 필수 필드 미입력 시 비활성화(null onPressed)된다',
       (tester) async {
-        when(() => mockRepo.getMyApplication())
-            .thenAnswer((_) async => null);
+        when(() => mockRepo.getMyApplication()).thenAnswer((_) async => null);
         when(() => mockRepo.saveDraft(any())).thenAnswer(
           (_) async =>
               const PartnerApplication(id: 'draft_1', userId: 'user_1'),
@@ -176,9 +170,9 @@ void main() {
 
         // Go to last step without filling any fields
         final element = tester.element(find.byType(PartnerApplyPage));
-        ProviderScope.containerOf(element)
-            .read(partnerApplyControllerProvider.notifier)
-            .setStep(4);
+        ProviderScope.containerOf(
+          element,
+        ).read(partnerApplyControllerProvider.notifier).setStep(4);
         await tester.pumpAndSettle();
 
         final button = tester.widget<ElevatedButton>(
@@ -196,8 +190,7 @@ void main() {
     testWidgets(
       '"신청하기" 버튼은 모든 필드 입력 후 활성화된다',
       (tester) async {
-        when(() => mockRepo.getMyApplication())
-            .thenAnswer((_) async => null);
+        when(() => mockRepo.getMyApplication()).thenAnswer((_) async => null);
         when(() => mockRepo.saveDraft(any())).thenAnswer(
           (_) async =>
               const PartnerApplication(id: 'draft_1', userId: 'user_1'),
@@ -259,15 +252,16 @@ void main() {
         const savedDraft = PartnerApplication(
           id: 'draft_saved',
           userId: 'user_1',
-          status: 'draft',
           brandName: '저장된 브랜드',
           bizName: '저장된 사업자',
           currentStep: 1,
         );
-        when(() => mockRepo.getMyApplication())
-            .thenAnswer((_) async => savedDraft);
-        when(() => mockRepo.saveDraft(any()))
-            .thenAnswer((_) async => savedDraft);
+        when(
+          () => mockRepo.getMyApplication(),
+        ).thenAnswer((_) async => savedDraft);
+        when(
+          () => mockRepo.saveDraft(any()),
+        ).thenAnswer((_) async => savedDraft);
 
         await tester.pumpWidget(_buildApplyWidget(mockRepo));
         // initState posts loadDraft via addPostFrameCallback.
@@ -275,8 +269,9 @@ void main() {
         await tester.pump(); // frame 2: loadDraft future resolves
 
         final element = tester.element(find.byType(PartnerApplyPage));
-        final state = ProviderScope.containerOf(element)
-            .read(partnerApplyControllerProvider);
+        final state = ProviderScope.containerOf(
+          element,
+        ).read(partnerApplyControllerProvider);
 
         expect(
           state.brandName,
@@ -305,16 +300,18 @@ void main() {
           status: 'pending',
           brandName: '신청된 브랜드',
         );
-        when(() => mockRepo.getMyApplication())
-            .thenAnswer((_) async => pendingApp);
+        when(
+          () => mockRepo.getMyApplication(),
+        ).thenAnswer((_) async => pendingApp);
 
         await tester.pumpWidget(_buildApplyWidget(mockRepo));
         await tester.pump();
         await tester.pump();
 
         final element = tester.element(find.byType(PartnerApplyPage));
-        final state = ProviderScope.containerOf(element)
-            .read(partnerApplyControllerProvider);
+        final state = ProviderScope.containerOf(
+          element,
+        ).read(partnerApplyControllerProvider);
 
         // pending status → loadDraft returns early → state stays at defaults
         expect(
@@ -346,18 +343,21 @@ void main() {
           brandName: '수정 필요 브랜드',
           bizName: '수정 사업자',
         );
-        when(() => mockRepo.getMyApplication())
-            .thenAnswer((_) async => correctionApp);
-        when(() => mockRepo.saveDraft(any()))
-            .thenAnswer((_) async => correctionApp);
+        when(
+          () => mockRepo.getMyApplication(),
+        ).thenAnswer((_) async => correctionApp);
+        when(
+          () => mockRepo.saveDraft(any()),
+        ).thenAnswer((_) async => correctionApp);
 
         await tester.pumpWidget(_buildApplyWidget(mockRepo));
         await tester.pump();
         await tester.pump();
 
         final element = tester.element(find.byType(PartnerApplyPage));
-        final state = ProviderScope.containerOf(element)
-            .read(partnerApplyControllerProvider);
+        final state = ProviderScope.containerOf(
+          element,
+        ).read(partnerApplyControllerProvider);
 
         expect(
           state.brandName,
@@ -394,13 +394,11 @@ void main() {
             overrides: [
               partnerRepositoryProvider.overrideWith((ref) => mockRepo),
               onboardingStateProvider.overrideWith(
-                (ref) =>
-                    SynchronousFuture(OnboardingState.needsCorrection),
+                (ref) => SynchronousFuture(OnboardingState.needsCorrection),
               ),
             ],
             child: const MaterialApp(
-              localizationsDelegates:
-                  AppLocalizations.localizationsDelegates,
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
               locale: Locale('ko'),
               home: PartnerApplyStatusPage(),
@@ -435,13 +433,11 @@ void main() {
             overrides: [
               partnerRepositoryProvider.overrideWith((ref) => mockRepo),
               onboardingStateProvider.overrideWith(
-                (ref) =>
-                    SynchronousFuture(OnboardingState.needsCorrection),
+                (ref) => SynchronousFuture(OnboardingState.needsCorrection),
               ),
             ],
             child: const MaterialApp(
-              localizationsDelegates:
-                  AppLocalizations.localizationsDelegates,
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
               locale: Locale('ko'),
               home: PartnerApplyStatusPage(),
@@ -464,8 +460,7 @@ void main() {
     testWidgets(
       'Step 0: brandName 비워두면 canProceed()가 false를 반환한다',
       (tester) async {
-        when(() => mockRepo.getMyApplication())
-            .thenAnswer((_) async => null);
+        when(() => mockRepo.getMyApplication()).thenAnswer((_) async => null);
         when(() => mockRepo.saveDraft(any())).thenAnswer(
           (_) async =>
               const PartnerApplication(id: 'draft_1', userId: 'user_1'),
@@ -475,8 +470,9 @@ void main() {
         await tester.pump();
 
         final element = tester.element(find.byType(PartnerApplyPage));
-        final notifier = ProviderScope.containerOf(element)
-            .read(partnerApplyControllerProvider.notifier);
+        final notifier = ProviderScope.containerOf(
+          element,
+        ).read(partnerApplyControllerProvider.notifier);
 
         // brandName is empty by default
         expect(
@@ -491,8 +487,7 @@ void main() {
     testWidgets(
       'Step 0: brandName 입력 후 canProceed()가 true를 반환한다',
       (tester) async {
-        when(() => mockRepo.getMyApplication())
-            .thenAnswer((_) async => null);
+        when(() => mockRepo.getMyApplication()).thenAnswer((_) async => null);
         when(() => mockRepo.saveDraft(any())).thenAnswer(
           (_) async =>
               const PartnerApplication(id: 'draft_1', userId: 'user_1'),
@@ -502,8 +497,9 @@ void main() {
         await tester.pump();
 
         final element = tester.element(find.byType(PartnerApplyPage));
-        final notifier = ProviderScope.containerOf(element)
-            .read(partnerApplyControllerProvider.notifier);
+        final notifier = ProviderScope.containerOf(
+          element,
+        ).read(partnerApplyControllerProvider.notifier);
 
         notifier.updateField('brandName', '입력된 브랜드');
         await tester.pump();
@@ -519,8 +515,7 @@ void main() {
     testWidgets(
       'Step 1: biz 필드 누락 시 validateStep(1)이 false를 반환한다',
       (tester) async {
-        when(() => mockRepo.getMyApplication())
-            .thenAnswer((_) async => null);
+        when(() => mockRepo.getMyApplication()).thenAnswer((_) async => null);
         when(() => mockRepo.saveDraft(any())).thenAnswer(
           (_) async =>
               const PartnerApplication(id: 'draft_1', userId: 'user_1'),
@@ -530,8 +525,9 @@ void main() {
         await tester.pump();
 
         final element = tester.element(find.byType(PartnerApplyPage));
-        final notifier = ProviderScope.containerOf(element)
-            .read(partnerApplyControllerProvider.notifier);
+        final notifier = ProviderScope.containerOf(
+          element,
+        ).read(partnerApplyControllerProvider.notifier);
 
         notifier.setStep(1);
         await tester.pumpAndSettle();
@@ -548,8 +544,7 @@ void main() {
     testWidgets(
       'Step 4(review): 모든 필드 미입력 시 "신청하기" 버튼이 비활성화된다',
       (tester) async {
-        when(() => mockRepo.getMyApplication())
-            .thenAnswer((_) async => null);
+        when(() => mockRepo.getMyApplication()).thenAnswer((_) async => null);
         when(() => mockRepo.saveDraft(any())).thenAnswer(
           (_) async =>
               const PartnerApplication(id: 'draft_1', userId: 'user_1'),
@@ -559,9 +554,9 @@ void main() {
         await tester.pump();
 
         final element = tester.element(find.byType(PartnerApplyPage));
-        ProviderScope.containerOf(element)
-            .read(partnerApplyControllerProvider.notifier)
-            .setStep(4);
+        ProviderScope.containerOf(
+          element,
+        ).read(partnerApplyControllerProvider.notifier).setStep(4);
         await tester.pumpAndSettle();
 
         final button = tester.widget<ElevatedButton>(
