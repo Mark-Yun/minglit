@@ -41,19 +41,23 @@
 | U-S12 | 구매 내역 | `/purchase-history` | `PurchaseHistoryPage` | → `/login` | OK | OK | prefix `/purchase-history` 보호 |
 | U-S13 | 알림 센터 | `/notifications` | `NotificationListScreen` | → `/login` | OK | OK | |
 | U-S14 | 본인인증 | `/certification` | `IdentityVerificationScreen` | → `/login` | OK | OK | prefix `/certification` 보호 |
+| U-S15 | 계정 관리 | `/my/account` | `AccountManagementPage` | → `/login` | OK | OK | PR #1213 — 계정 관리 통합. Shell 외부 라우트 |
+| U-S16 | 내 티켓 | `/tickets/my` | `MyTicketsPage` | → `/login` | OK | OK | 마이페이지에서 진입 |
+| U-S17 | 티켓 QR | `/tickets/:ticketId/qr` | `TicketQRScreen` | → `/login` | OK | OK | PR #1206 QR 토큰 발급. 유효한 ticketId 필요 |
+| U-S18 | 가입 동의 | `/signup/consent` | `SignupConsentPage` | → `/login` | OK | OK | 보호된 prefix. 신규 가입 필수 화면. `from` 파라미터로 복귀 경로 지정 |
 
 ### 2.3 보호된 화면 (로그인 + 추가 조건)
 
 | # | 화면 | 경로 | Page 클래스 | GUEST | AUTH | VERIFIED | 비고 |
 |---|------|------|------------|-------|------|----------|------|
-| U-S15 | 이벤트 신청 위저드 | `/events/:eventId/apply` | `EventApplicationWizardPage` | → `/login` | OK | OK | suffix `/apply` 보호. 위저드 내부에서 본인인증 스텝 포함 |
+| U-S19 | 이벤트 신청 위저드 | `/events/:eventId/apply` | `EventApplicationWizardPage` | → `/login` | OK | OK | suffix `/apply` 보호. 위저드 내부에서 본인인증 스텝 포함 |
 
 ### 2.4 개발 전용 화면 (Dev Only)
 
 | # | 화면 | 경로 | Page 클래스 | GUEST | AUTH | VERIFIED | 비고 |
 |---|------|------|------------|-------|------|----------|------|
-| U-S16 | 개발 도구 | `/dev` | `UserDevMap` | OK | OK | OK | dev flavor만 접근 가능 |
-| U-S17 | 유저 전환 | `/dev/switch` | `DevUserSwitchScreen` | OK | OK | OK | dev flavor만 접근 가능 |
+| U-S20 | 개발 도구 | `/dev` | `UserDevMap` | OK | OK | OK | dev flavor만 접근 가능 |
+| U-S21 | 유저 전환 | `/dev/switch` | `DevUserSwitchScreen` | OK | OK | OK | dev flavor만 접근 가능 |
 
 ---
 
@@ -179,8 +183,8 @@
 
 | 구분 | 수량 |
 |------|------|
-| 화면 진입 Smoke | 17 |
+| 화면 진입 Smoke | 21 |
 | 리다이렉트 검증 | 5 |
 | 파라미터 엣지 케이스 | 7 |
 | 화면별 액션 | 37 |
-| **합계** | **66** |
+| **합계** | **70** |
