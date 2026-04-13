@@ -13,7 +13,7 @@ public class MainActivityTest {
     public static Object[] testCases() {
         PatrolJUnitRunner instrumentation =
                 (PatrolJUnitRunner) InstrumentationRegistry.getInstrumentation();
-        instrumentation.setUp(MainActivityTest.class);
+        instrumentation.setUp(MainActivity.class);
         instrumentation.waitForPatrolAppService();
         return instrumentation.listDartTests();
     }
