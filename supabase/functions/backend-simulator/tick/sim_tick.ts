@@ -54,11 +54,13 @@ export async function tick(
     message: `Found ${partnerIds.length} E2E partners`,
   });
 
-  // 2. Discover sim users (identified by username prefix 'sim_')
+  // 2. Discover seed users (username prefix 'user_', excluding partner_ owners)
+  // Fix #1415: was "sim_%" but seed users have "user_" prefix — sim_ prefix yielded 0 results
   const { data: e2eUsers } = await supabase
     .from("user_profiles")
     .select("id, username")
-    .like("username", "sim_%")
+    .like("username", "user_%")
+    .not("username", "like", "partner_%")
     .limit(60);
 
   const userRows = (e2eUsers ?? []) as { id: string; username: string }[];
