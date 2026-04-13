@@ -24,8 +24,12 @@ const clockProvider = ClockProvider._();
 /// `() => fixedNow` to make state transitions deterministic.
 
 final class ClockProvider
-    extends $FunctionalProvider<DateTime Function(), DateTime Function(),
-        DateTime Function()>
+    extends
+        $FunctionalProvider<
+          DateTime Function(),
+          DateTime Function(),
+          DateTime Function()
+        >
     with $Provider<DateTime Function()> {
   const ClockProvider._()
     : super(

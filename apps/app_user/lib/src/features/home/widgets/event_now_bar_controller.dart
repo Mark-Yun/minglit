@@ -36,7 +36,7 @@ enum EventNowBarState {
 /// timestamp instead of a cached value. Override in tests with
 /// `() => fixedNow` to make state transitions deterministic.
 @riverpod
-DateTime Function() clock(Ref ref) => () => DateTime.now();
+DateTime Function() clock(Ref ref) => DateTime.now;
 
 /// Fetches today's active events for the current user.
 ///
