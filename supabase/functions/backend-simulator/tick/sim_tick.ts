@@ -62,7 +62,7 @@ export async function tick(
     // Fix #1415: escape underscore so PostgreSQL LIKE treats it as literal '_'
     // without escaping, 'user_%' would match 'userX...' (any single char fills '_' position)
     .like("username", "user\\_%" )
-    .not("username", "like", "partner_%")
+    .not("username", "like", "partner\\_%")
     .limit(60);
 
   const userRows = (e2eUsers ?? []) as { id: string; username: string }[];
