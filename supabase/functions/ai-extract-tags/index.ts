@@ -1,7 +1,7 @@
-import { createClient } from "@supabase/supabase-js";
+import { createServiceClient } from "../_shared/supabase_client.ts";
 import { createLLMAdapter } from "../_shared/ai/factory.ts";
 import { WorkerUtils } from "../_shared/worker_utils.ts";
-import { initSentry, withSentryHandler } from "../_shared/sentry_utils.ts";
+import { initSentry, withHandler } from "../_shared/logger.ts";
 import {
   buildTagExtractionPrompt,
   extractDescriptionText,
@@ -13,20 +13,13 @@ const MAX_TAGS = 5;
 
 initSentry();
 
-Deno.serve(withSentryHandler(async (req) => {
+Deno.serve(withHandler(async (req) => {
   console.log(`[${FN}] triggered`);
   try {
     const payload = await req.json().catch(() => ({}));
     const batchSize = (payload as { batch_size?: number }).batch_size ?? 10;
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL") ??
-      Deno.env.get("SUPABASE_REST_URL");
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-
-    if (!supabaseUrl) throw new Error("Missing SUPABASE_URL");
-    if (!supabaseKey) throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY");
-
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabase = createServiceClient();
     // createLLMAdapter() throws if OPENAI_API_KEY is missing
     const llm = createLLMAdapter();
     const utils = new WorkerUtils(supabase, "q_tags");
