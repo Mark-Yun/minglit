@@ -552,6 +552,7 @@ class _EventCardSkeleton extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
+          // Fix #1382: 스켈레톤 카드 비율 16:9 → 2:1 통일
           const AspectRatio(
             aspectRatio: 2 / 1,
             child: MinglitSkeleton(borderRadius: BorderRadius.zero),
