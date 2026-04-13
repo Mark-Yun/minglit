@@ -261,7 +261,9 @@ void main() {
 /// Fake AuthController — no-op stub (Fix #1073 참고).
 class _FakeAuthController extends AuthController {
   @override
-  FutureOr<void> build() async {}
+  FutureOr<void> build() async {
+    return null;
+  }
 
   @override
   Future<void> signOut() async {}

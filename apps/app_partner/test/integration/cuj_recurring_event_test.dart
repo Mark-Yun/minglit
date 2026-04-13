@@ -13,8 +13,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
 
-import '../utils/mocks.dart';
-
 class _MockRecurrenceRuleRepository extends Mock
     implements RecurrenceRuleRepository {}
 
@@ -168,7 +166,7 @@ void main() {
     testWidgets('TC-P09-002: active 규칙 — 일시 정지 버튼 탭 → pause() 호출', (
       tester,
     ) async {
-      final activeRule = _makeRule(status: RecurrenceStatus.active);
+      final activeRule = _makeRule();
 
       when(() => mockRepo.pause(any())).thenAnswer((_) async {});
       when(
@@ -177,7 +175,7 @@ void main() {
 
       await tester.pumpWidget(
         _buildApp(
-          RecurrenceManagementScreen(partyId: _partyId),
+          const RecurrenceManagementScreen(partyId: _partyId),
           overrides: [
             recurrenceRuleRepositoryProvider.overrideWithValue(mockRepo),
             partyRecurrenceRuleProvider(_partyId).overrideWith(
@@ -205,7 +203,7 @@ void main() {
     testWidgets('TC-P09-003: active 규칙 — 규칙 취소 탭 → 다이얼로그 확인 → cancel() 호출', (
       tester,
     ) async {
-      final activeRule = _makeRule(status: RecurrenceStatus.active);
+      final activeRule = _makeRule();
 
       when(() => mockRepo.cancel(any())).thenAnswer((_) async {});
       when(
@@ -214,7 +212,7 @@ void main() {
 
       await tester.pumpWidget(
         _buildApp(
-          RecurrenceManagementScreen(partyId: _partyId),
+          const RecurrenceManagementScreen(partyId: _partyId),
           overrides: [
             recurrenceRuleRepositoryProvider.overrideWithValue(mockRepo),
             partyRecurrenceRuleProvider(_partyId).overrideWith(
@@ -244,7 +242,7 @@ void main() {
     testWidgets('TC-P09-003-V: 다이얼로그에서 "아니오" 탭 시 cancel() 호출되지 않음', (
       tester,
     ) async {
-      final activeRule = _makeRule(status: RecurrenceStatus.active);
+      final activeRule = _makeRule();
 
       when(
         () => mockRepo.getByPartyId(any()),
@@ -252,7 +250,7 @@ void main() {
 
       await tester.pumpWidget(
         _buildApp(
-          RecurrenceManagementScreen(partyId: _partyId),
+          const RecurrenceManagementScreen(partyId: _partyId),
           overrides: [
             recurrenceRuleRepositoryProvider.overrideWithValue(mockRepo),
             partyRecurrenceRuleProvider(_partyId).overrideWith(
@@ -289,7 +287,7 @@ void main() {
 
       await tester.pumpWidget(
         _buildApp(
-          RecurrenceManagementScreen(partyId: _partyId),
+          const RecurrenceManagementScreen(partyId: _partyId),
           overrides: [
             recurrenceRuleRepositoryProvider.overrideWithValue(mockRepo),
             partyRecurrenceRuleProvider(_partyId).overrideWith(
@@ -316,7 +314,7 @@ void main() {
 
       await tester.pumpWidget(
         _buildApp(
-          RecurrenceManagementScreen(partyId: _partyId),
+          const RecurrenceManagementScreen(partyId: _partyId),
           overrides: [
             recurrenceRuleRepositoryProvider.overrideWithValue(mockRepo),
             partyRecurrenceRuleProvider(_partyId).overrideWith(
