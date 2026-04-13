@@ -113,6 +113,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                       alignment: WrapAlignment.center,
                       children: suggestedKeywords
                           .map(
+                            // Fix #1381: ActionChip → MinglitChip 표준화 — 디자인 시스템 통일
                             (keyword) => MinglitChip(
                               label: keyword,
                               onTap: () {
