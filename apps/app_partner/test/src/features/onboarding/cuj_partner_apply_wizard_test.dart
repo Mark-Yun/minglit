@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:app_partner/src/features/onboarding/onboarding_coordinator.dart';
 import 'package:app_partner/src/features/onboarding/partner_apply_controller.dart';
 import 'package:app_partner/src/features/onboarding/partner_apply_page.dart';
 import 'package:app_partner/src/features/onboarding/partner_apply_status_page.dart';
@@ -6,6 +9,7 @@ import 'package:app_partner/src/logic/onboarding_state_provider.dart';
 import 'package:flutter/foundation.dart' show SynchronousFuture;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -20,10 +24,46 @@ import '../../../utils/test_utils.dart';
 /// TC-P01-004: 필수 입력 누락 시 다음 단계 차단
 
 // ---------------------------------------------------------------------------
+// Fake controller — overrideWith() 패턴 (smoke test와 동일)
+//
+// Fix #1337: overrideWithValue()는 _SyncValueProviderElement 타입 에러 발생.
+// overrideWith(() => _FakePartnerApplyController(state)) 패턴으로 대체.
+// ---------------------------------------------------------------------------
+
+/// 초기 상태를 주입할 수 있는 Fake 컨트롤러.
+/// loadDraft()를 no-op으로 재정의하여 네트워크 의존을 차단한다.
+class _FakePartnerApplyController extends PartnerApplyController {
+  _FakePartnerApplyController(this._initialState);
+  final PartnerApplyState _initialState;
+
+  @override
+  PartnerApplyState build() => _initialState;
+
+  @override
+  Future<void> loadDraft() async {}
+}
+
+/// GoRouter 없이 onboardingCoordinator 의존을 차단하는 Fake.
+class _FakeOnboardingCoordinator extends OnboardingCoordinator {
+  _FakeOnboardingCoordinator() : super(_FakeGoRouter());
+
+  @override
+  void goToApplyStatus() {}
+
+  @override
+  void goToApply() {}
+}
+
+class _FakeGoRouter implements GoRouter {
+  @override
+  dynamic noSuchMethod(Invocation invocation) {}
+}
+
+// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-/// All required fields for a complete application, except file paths.
+/// All required text fields for a complete application.
 void _fillAllTextFields(PartnerApplyController notifier) {
   notifier
     ..updateField('brandName', '테스트 브랜드')
@@ -38,7 +78,7 @@ void _fillAllTextFields(PartnerApplyController notifier) {
     ..updateField('accountHolder', '홍길동');
 }
 
-/// Builds [PartnerApplyPage] wrapped in [ProviderScope] + minimal [MaterialApp].
+/// Builds [PartnerApplyPage] with the given mock repo and optional overrides.
 Widget _buildApplyWidget(
   MockPartnerRepository mockRepo, {
   List<Override> extraOverrides = const [],
@@ -54,6 +94,20 @@ Widget _buildApplyWidget(
       locale: Locale('ko'),
       home: PartnerApplyPage(),
     ),
+  );
+}
+
+/// "신청하기" 버튼이 비활성화(null onPressed)되어 있는지 검증하는 헬퍼.
+/// TC-P01-001 및 TC-P01-004에서 공통 사용.
+void _expectSubmitButtonDisabled(WidgetTester tester) {
+  final button = tester.widget<ElevatedButton>(
+    find.widgetWithText(ElevatedButton, '신청하기'),
+  );
+  expect(
+    button.onPressed,
+    isNull,
+    reason:
+        '"신청하기" button must be disabled (null onPressed) when required fields are empty',
   );
 }
 
@@ -74,6 +128,104 @@ void main() {
   // TC-P01-001: 5단계 위저드 전체 입력 → 제출
   // ---------------------------------------------------------------------------
   group('TC-P01-001: 5단계 위저드 전체 입력 → 제출', () {
+    /// 실제 입력 통합 테스트:
+    /// PartnerApplyPage를 Step 0부터 렌더링하고, 각 단계에서 텍스트 필드를
+    /// 입력한 뒤 "다음" 버튼을 탭하여 Step 4까지 이동한다.
+    /// Step 4에서 "신청하기" 버튼을 탭하고 repo.submitDraft가 1회 호출됨을 검증한다.
+    ///
+    /// Step 3 (문서 업로드)은 XFile 플랫폼 의존으로 인해 초기 상태에
+    /// mock path를 주입하고, 나머지 단계는 실제 UI 입력으로 진행한다.
+    testWidgets(
+      'IT-P01-001: Step 0→4 실제 UI 입력 → 신청하기 탭 → submitDraft 1회 호출',
+      (tester) async {
+        // Arrange
+        when(() => mockRepo.getMyApplication()).thenAnswer((_) async => null);
+        when(() => mockRepo.saveDraft(any())).thenAnswer(
+          (_) async =>
+              const PartnerApplication(id: 'draft_1', userId: 'user_1'),
+        );
+        when(
+          () =>
+              mockRepo.submitDraft(applicationId: any(named: 'applicationId')),
+        ).thenAnswer(
+          (_) async =>
+              const PartnerApplication(id: 'draft_1', userId: 'user_1'),
+        );
+
+        // 문서 경로를 포함한 초기 상태로 Fake 컨트롤러 주입.
+        // Step 3 XFile picker는 플랫폼 의존 → mock path를 초기 상태에 주입.
+        // applicationId는 saveDraft mock에서 'draft_1'이 반환되므로
+        // nextStep() 후 자동으로 설정된다.
+        const initialState = PartnerApplyState(
+          bizRegistrationPath: 'mock://biz.pdf',
+          bankbookPath: 'mock://bankbook.pdf',
+        );
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              partnerRepositoryProvider.overrideWith((ref) => mockRepo),
+              partnerApplyControllerProvider.overrideWith(
+                () => _FakePartnerApplyController(initialState),
+              ),
+              onboardingCoordinatorProvider.overrideWith(
+                (_) => _FakeOnboardingCoordinator(),
+              ),
+            ],
+            child: const MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              locale: Locale('ko'),
+              home: PartnerApplyPage(),
+            ),
+          ),
+        );
+        await tester.pump();
+
+        // Step 0: brandName 입력 후 "다음" 탭
+        await tester.enterText(find.byType(TextFormField).first, '테스트 브랜드');
+        await tester.pump();
+        await tester.tap(find.text('다음'));
+        await tester.pumpAndSettle();
+
+        // Step 1: bizName, bizNumber, representativeName 입력 후 "다음" 탭
+        final step1Fields = find.byType(TextFormField);
+        await tester.enterText(step1Fields.at(0), '테스트 사업자');
+        await tester.enterText(step1Fields.at(1), '123-45-67890');
+        await tester.enterText(step1Fields.at(2), '홍길동');
+        await tester.pump();
+        await tester.tap(find.text('다음'));
+        await tester.pumpAndSettle();
+
+        // Step 2: contactPhone, contactEmail, bankName, accountNumber, accountHolder 입력 후 "다음" 탭
+        final step2Fields = find.byType(TextFormField);
+        await tester.enterText(step2Fields.at(0), '010-1234-5678');
+        await tester.enterText(step2Fields.at(1), 'test@test.com');
+        await tester.enterText(step2Fields.at(2), '신한은행');
+        await tester.enterText(step2Fields.at(3), '110-123-456789');
+        await tester.enterText(step2Fields.at(4), '홍길동');
+        await tester.pump();
+        await tester.tap(find.text('다음'));
+        await tester.pumpAndSettle();
+
+        // Step 3: 문서 업로드 — mock path가 이미 초기 상태에 주입됨
+        // "다음" 탭으로 Step 4(review)로 이동
+        await tester.tap(find.text('다음'));
+        await tester.pumpAndSettle();
+
+        // Step 4: "신청하기" 버튼 확인 후 탭
+        expect(find.text('신청하기'), findsOneWidget);
+        await tester.tap(find.text('신청하기'));
+        await tester.pumpAndSettle();
+
+        // submitDraft가 1회 호출됨을 검증
+        verify(
+          () =>
+              mockRepo.submitDraft(applicationId: any(named: 'applicationId')),
+        ).called(1);
+      },
+    );
+
     test('submit()은 모든 필드 채운 뒤 repo.submitDraft를 1회 호출한다', () async {
       // Arrange
       when(() => mockRepo.getMyApplication()).thenAnswer((_) async => null);
@@ -95,42 +247,23 @@ void main() {
 
       final notifier = container.read(partnerApplyControllerProvider.notifier);
 
-      // Fill all required text fields
+      // Fill all required text fields via controller
       _fillAllTextFields(notifier);
 
-      // Inject document paths and applicationId via overrideWithValue so we
-      // don't touch the protected state setter.
-      // overrideWithValue replaces the provider's state with a fixed value.
-      // We re-read the current state (after text fields are set) and then
-      // patch it with the extra fields using the override mechanism.
-      final patchedState = container
-          .read(partnerApplyControllerProvider)
-          .copyWith(
-            bizRegistrationPath: 'mock://biz.pdf',
-            bankbookPath: 'mock://bankbook.pdf',
-            applicationId: 'draft_1',
-          );
-
-      // Re-create container with the patched value override so validateAll()
-      // can see the document paths.
-      final container2 = createContainer(
-        overrides: [
-          partnerRepositoryProvider.overrideWith((ref) => mockRepo),
-          partnerApplyControllerProvider.overrideWithValue(patchedState),
-        ],
-      );
-
-      final notifier2 = container2.read(
-        partnerApplyControllerProvider.notifier,
+      // Inject document paths and applicationId via direct state mutation
+      notifier.state = notifier.state.copyWith(
+        bizRegistrationPath: 'mock://biz.pdf',
+        bankbookPath: 'mock://bankbook.pdf',
+        applicationId: 'draft_1',
       );
 
       expect(
-        notifier2.validateAll(),
+        notifier.validateAll(),
         isTrue,
         reason: 'validateAll must be true when all required fields are filled',
       );
 
-      await notifier2.submit();
+      await notifier.submit();
 
       verify(
         () => mockRepo.submitDraft(applicationId: 'draft_1'),
@@ -171,22 +304,13 @@ void main() {
         await tester.pumpWidget(_buildApplyWidget(mockRepo));
         await tester.pump();
 
-        // Go to last step without filling any fields
         final element = tester.element(find.byType(PartnerApplyPage));
         ProviderScope.containerOf(
           element,
         ).read(partnerApplyControllerProvider.notifier).setStep(4);
         await tester.pumpAndSettle();
 
-        final button = tester.widget<ElevatedButton>(
-          find.widgetWithText(ElevatedButton, '신청하기'),
-        );
-        expect(
-          button.onPressed,
-          isNull,
-          reason:
-              'Submit button must be disabled when required fields are empty',
-        );
+        _expectSubmitButtonDisabled(tester);
       },
     );
 
@@ -206,8 +330,8 @@ void main() {
               const PartnerApplication(id: 'draft_1', userId: 'user_1'),
         );
 
-        // Pre-seed state with all required fields so the last step shows
-        // the active "신청하기" button.
+        // Fix #1337: overrideWith() + Fake 패턴 사용
+        // overrideWithValue()는 _SyncValueProviderElement 타입 에러 발생
         const seededState = PartnerApplyState(
           currentStep: 4,
           applicationId: 'draft_1',
@@ -229,7 +353,9 @@ void main() {
           _buildApplyWidget(
             mockRepo,
             extraOverrides: [
-              partnerApplyControllerProvider.overrideWithValue(seededState),
+              partnerApplyControllerProvider.overrideWith(
+                () => _FakePartnerApplyController(seededState),
+              ),
             ],
           ),
         );
@@ -565,15 +691,7 @@ void main() {
         ).read(partnerApplyControllerProvider.notifier).setStep(4);
         await tester.pumpAndSettle();
 
-        final button = tester.widget<ElevatedButton>(
-          find.widgetWithText(ElevatedButton, '신청하기'),
-        );
-        expect(
-          button.onPressed,
-          isNull,
-          reason:
-              '"신청하기" button must be disabled (null onPressed) when required fields are empty',
-        );
+        _expectSubmitButtonDisabled(tester);
       },
     );
   });
