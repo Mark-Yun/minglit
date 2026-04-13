@@ -82,7 +82,10 @@ void main() {
       );
       when(
         () => mockRepo.submitDraft(applicationId: any(named: 'applicationId')),
-      ).thenAnswer((_) async {});
+      ).thenAnswer(
+        (_) async =>
+            const PartnerApplication(id: 'draft_1', userId: 'user_1'),
+      );
 
       final container = createContainer(
         overrides: [
@@ -198,7 +201,10 @@ void main() {
         when(
           () =>
               mockRepo.submitDraft(applicationId: any(named: 'applicationId')),
-        ).thenAnswer((_) async {});
+        ).thenAnswer(
+          (_) async =>
+              const PartnerApplication(id: 'draft_1', userId: 'user_1'),
+        );
 
         // Pre-seed state with all required fields so the last step shows
         // the active "신청하기" button.
