@@ -154,7 +154,9 @@ void main() {
     });
 
     // Fix #1374: Regression tests — buttons must use theme colorScheme, not hardcoded colors
-    testWidgets('primary button uses colorScheme.primary background', (tester) async {
+    testWidgets('primary button uses colorScheme.primary background', (
+      tester,
+    ) async {
       const lightPrimary = Color(0xFF9900FF);
       await tester.pumpWidget(
         MaterialApp(
@@ -173,7 +175,9 @@ void main() {
       expect(bg, lightPrimary);
     });
 
-    testWidgets('secondary button uses colorScheme.primary for border', (tester) async {
+    testWidgets('secondary button uses colorScheme.primary for border', (
+      tester,
+    ) async {
       const testPrimary = Color(0xFF1234AB);
       await tester.pumpWidget(
         MaterialApp(
@@ -191,7 +195,9 @@ void main() {
       expect(side?.color, testPrimary);
     });
 
-    testWidgets('dark mode: primary button adapts to dark theme color', (tester) async {
+    testWidgets('dark mode: primary button adapts to dark theme color', (
+      tester,
+    ) async {
       const darkPrimary = Color(0xFFAA33FF);
       await tester.pumpWidget(
         MaterialApp(
