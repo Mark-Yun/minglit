@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:app_partner/src/features/onboarding/onboarding_coordinator.dart';
 import 'package:app_partner/src/features/onboarding/partner_apply_controller.dart';
 import 'package:app_partner/src/features/onboarding/partner_apply_page.dart';
@@ -235,8 +233,7 @@ void main() {
       when(
         () => mockRepo.submitDraft(applicationId: any(named: 'applicationId')),
       ).thenAnswer(
-        (_) async =>
-            const PartnerApplication(id: 'draft_1', userId: 'user_1'),
+        (_) async => const PartnerApplication(id: 'draft_1', userId: 'user_1'),
       );
 
       final container = createContainer(
