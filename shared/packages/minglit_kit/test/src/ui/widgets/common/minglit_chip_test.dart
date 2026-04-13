@@ -115,7 +115,11 @@ void main() {
       final inkWellRect = tester.getRect(inkWell);
       final tapPoint = Offset(inkWellRect.center.dx, inkWellRect.top + 4);
       await tester.tapAt(tapPoint);
-      expect(tapped, isTrue, reason: 'tap on transparent area should fire onTap');
+      expect(
+        tapped,
+        isTrue,
+        reason: 'tap on transparent area should fire onTap',
+      );
     });
 
     // Dark mode 색상은 colorScheme 기반이므로 이미 적용됨
