@@ -98,10 +98,9 @@
 |----|-----|-----------|------|
 | IT-U04 | 검색→필터→신청 | `app_user/test/integration/cuj_search_to_apply_test.dart` | 5 |
 | IT-U05 | 계정 삭제 | `app_user/test/integration/cuj_account_deletion_test.dart` | 5 |
-| IT-U06 | 큐레이션→파트너→이벤트 | `app_user/test/integration/cuj_curation_browse_test.dart` | 5 |
 | IT-P05 | 파티/이벤트/티켓 편집 | `app_partner/test/integration/cuj_party_edit_test.dart` | 8 |
 
-**총 4건, 23 스텝**
+**총 3건, 18 스텝**
 
 #### Smoke Widget Tests (P1 화면)
 
@@ -134,7 +133,7 @@
 
 | 앱 | 대상 화면 수 | 예상 케이스 |
 |----|------------|-----------|
-| app_user | 7 (홈, 큐레이션, 이벤트상세, 파트너상세, 알림, 차단, 알림설정) | 25 |
+| app_user | 6 (홈, 이벤트상세, 파트너상세, 알림, 차단, 알림설정) | 22 |
 | app_partner | 13 (홈, 멤버, 권한, 인증, 알림, 이벤트상세, 티켓편집 등) | 40 |
 
 **총 65건**
@@ -341,8 +340,7 @@ Phase 3 (SWE 구현) 시 아래 섹션을 업데이트한다:
 | ID | 화면 | 계층 | 기존 테스트 여부 | 비고 |
 |----|------|------|----------------|------|
 | U-S01 | 홈 | Widget | ✅ (golden 있음) | smoke 추가 불필요 |
-| U-S02 | 큐레이션 | Widget | ❌ | 신규 |
-| U-S03 | 검색 | Widget | ✅ (golden 있음) | smoke 추가 불필요 |
+| U-S02 | 검색 | Widget | ✅ (golden 있음) | smoke 추가 불필요 |
 | U-S04 | 이벤트 상세 | Widget | ✅ (golden 있음) | smoke 추가 불필요 |
 | U-S05 | 파트너 상세 | Widget | ❌ | 신규 |
 | U-S06 | 파트너 이벤트 목록 | Widget | ❌ | 신규 |
@@ -359,7 +357,7 @@ Phase 3 (SWE 구현) 시 아래 섹션을 업데이트한다:
 | U-S17 | 개발 도구 | Widget | ❌ | P3 — dev only |
 | U-S18 | 유저 전환 | Widget | ❌ | P3 — dev only |
 
-**신규 Smoke 필요: 9건** (golden 기존 커버 제외, dev only 제외)
+**신규 Smoke 필요: 8건** (golden 기존 커버 제외, dev only 제외)
 
 ### app_partner Smoke (P-S01 ~ P-S30)
 
