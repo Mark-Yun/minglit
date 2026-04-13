@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
+import 'package:minglit_kit/src/ui/widgets/common/minglit_alert.dart';
 
 /// Shared account management page for app_user and app_partner.
 ///
@@ -53,7 +54,16 @@ class AccountManagementPage extends StatelessWidget {
                   ListTile(
                     leading: const Icon(Icons.logout),
                     title: const Text('로그아웃'),
-                    onTap: onLogout,
+                    // Fix #1378: 로그아웃 즉시 실행 방지 — 확인 다이얼로그 추가
+                    onTap: () async {
+                      final confirmed = await MinglitAlert.showConfirm(
+                        context: context,
+                        title: '로그아웃',
+                        content: '로그아웃 하시겠어요?',
+                        confirmText: '로그아웃',
+                      );
+                      if (confirmed) onLogout();
+                    },
                   ),
                   const Divider(height: 1),
                   ListTile(
