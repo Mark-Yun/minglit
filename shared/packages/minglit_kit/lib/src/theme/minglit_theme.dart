@@ -15,6 +15,7 @@ class MinglitTheme {
   ///
   /// Renders SVG logo, theme-aware: dark mode uses inverted variant.
   // Fix #1377: PNG → SVG 로고 교체 — 다크모드 자동 대응 (Builder로 context 접근)
+  // inverted SVG는 light SVG와 동일한 tight viewBox (2400×716)를 사용하며 배경 rect 없음
   static Widget appBarLogo({double height = 32}) {
     return Builder(
       builder: (context) {
