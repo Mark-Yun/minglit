@@ -15,7 +15,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
+      - uses: actions/checkout@v6
+
       # Fix #1413: seed.dev.sql 직접 실행 — psql 1번으로 560명 시딩 (~3초)
+      # checkout이 필요한 이유: psql -f supabase/seed.dev.sql은 로컬 파일을 참조
       - name: Install PostgreSQL client
         run: sudo apt-get update && sudo apt-get install -y postgresql-client
 
