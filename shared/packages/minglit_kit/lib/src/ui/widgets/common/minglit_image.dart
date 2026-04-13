@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_empty_state.dart';
 import 'package:shimmer/shimmer.dart';
 
 /// A smart image widget that shows a shimmer effect while loading.
@@ -35,15 +34,22 @@ class MinglitImage extends StatelessWidget {
       !path.contains('/');
   @override
   Widget build(BuildContext context) {
-    // Fix #1379: MinglitEmptyState 플레이스홀더로 교체 — 빈 경로 UI 통일
-    // Guard: empty or blank path → show placeholder immediately
+    // Fix #1379: 빈 경로일 때 컴팩트 아이콘 플레이스홀더 표시 — MinglitEmptyState.card는
+    // 32px 패딩+아이콘+텍스트로 60×80px 썸네일에서 overflow가 발생하므로 사용 불가
     if (path.trim().isEmpty) {
-      return SizedBox(
+      final theme = Theme.of(context);
+      return Container(
         height: height,
         width: width,
-        child: const MinglitEmptyState.card(
-          icon: Icons.image_outlined,
-          title: '이미지 준비 중',
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(MinglitRadius.small),
+        ),
+        child: Center(
+          child: Icon(
+            Icons.image_not_supported_outlined,
+            color: theme.colorScheme.outline,
+          ),
         ),
       );
     }
