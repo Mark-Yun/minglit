@@ -15,7 +15,6 @@ import 'package:app_user/src/features/home/my_page.dart';
 import 'package:app_user/src/features/my_tickets/ui/my_tickets_page.dart';
 import 'package:app_user/src/features/partner/detail/partner_detail_page.dart';
 import 'package:app_user/src/features/partner/detail/partner_events_page.dart';
-import 'package:app_user/src/features/party/party_curation_page.dart';
 import 'package:app_user/src/features/payment/ui/purchase_history_page.dart';
 import 'package:app_user/src/features/search/search_page.dart';
 import 'package:app_user/src/features/settings/blocked_partners_page.dart';
@@ -254,27 +253,12 @@ class AccountManagementRoute extends GoRouteData with $AccountManagementRoute {
 
 /// **Home Route**: Main Dashboard.
 /// Path: `/`
-@TypedGoRoute<HomeRoute>(
-  path: '/',
-  routes: [TypedGoRoute<EventCurationRoute>(path: 'curation')],
-)
+@TypedGoRoute<HomeRoute>(path: '/')
 class HomeRoute extends GoRouteData with $HomeRoute {
   const HomeRoute();
 
   @override
   Widget build(BuildContext context, GoRouterState state) => const HomePage();
-}
-
-/// **Event Curation Route**: Paginated curation list.
-/// Path: `/explore/curation`
-class EventCurationRoute extends GoRouteData with $EventCurationRoute {
-  const EventCurationRoute({this.type = EventFeedType.newArrivals});
-
-  final EventFeedType type;
-
-  @override
-  Widget build(BuildContext context, GoRouterState state) =>
-      PartyCurationPage(type: type);
 }
 
 /// **Search Route**: Full-page search screen.

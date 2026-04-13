@@ -43,22 +43,6 @@ void main() {
       ).called(1);
     });
 
-    test('pushEventCuration pushes curation route', () {
-      coordinator.pushEventCuration(EventFeedType.newArrivals);
-
-      verify(
-        () => mockRouter.push('/curation'),
-      ).called(1);
-    });
-
-    test('pushEventCuration with non-default type includes query param', () {
-      coordinator.pushEventCuration(EventFeedType.nearest);
-
-      verify(
-        () => mockRouter.push(any(that: contains('/curation'))),
-      ).called(1);
-    });
-
     test('goToApplicationWizard pushes apply route', () {
       coordinator.goToApplicationWizard('event-abc');
 
