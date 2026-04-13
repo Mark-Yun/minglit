@@ -113,9 +113,9 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                       alignment: WrapAlignment.center,
                       children: suggestedKeywords
                           .map(
-                            (keyword) => ActionChip(
-                              label: Text(keyword),
-                              onPressed: () {
+                            (keyword) => MinglitChip(
+                              label: keyword,
+                              onTap: () {
                                 _debounce?.cancel();
                                 _controller.text = keyword;
                                 _controller.selection = TextSelection.collapsed(
