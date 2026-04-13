@@ -642,3 +642,72 @@ enabled = true
 verify_jwt = false  # JWT verification handled in function code
 import_map = "./deno.json"
 entrypoint = "./functions/user-update-verification/index.ts"
+
+# Fix #1357: 신규 Edge Function 11개 섹션 추가 — Supabase 배포 실패 방지
+# 아래 함수들은 supabase/functions/ 에 존재하지만 config.toml 에 등록되지 않아
+# "failed to create the graph" 오류로 supabase functions deploy 가 실패했다.
+[functions.apply-event]
+enabled = true
+verify_jwt = false  # JWT verification handled in function code
+import_map = "./deno.json"
+entrypoint = "./functions/apply-event/index.ts"
+
+[functions.cleanup-blocked-dis]
+enabled = true
+verify_jwt = false
+import_map = "./deno.json"
+entrypoint = "./functions/cleanup-blocked-dis/index.ts"
+
+[functions.partner-approve-application]
+enabled = true
+verify_jwt = false  # JWT verification handled in function code
+import_map = "./deno.json"
+entrypoint = "./functions/partner-approve-application/index.ts"
+
+[functions.partner-reject-application]
+enabled = true
+verify_jwt = false  # JWT verification handled in function code
+import_map = "./deno.json"
+entrypoint = "./functions/partner-reject-application/index.ts"
+
+[functions.process-pending-deletions]
+enabled = true
+verify_jwt = false
+import_map = "./deno.json"
+entrypoint = "./functions/process-pending-deletions/index.ts"
+
+[functions.recurrence-cron]
+enabled = true
+verify_jwt = false
+import_map = "./deno.json"
+entrypoint = "./functions/recurrence-cron/index.ts"
+
+[functions.recurrence-rules]
+enabled = true
+verify_jwt = false
+import_map = "./deno.json"
+entrypoint = "./functions/recurrence-rules/index.ts"
+
+[functions.user-cancel-deletion]
+enabled = true
+verify_jwt = false  # JWT verification handled in function code
+import_map = "./deno.json"
+entrypoint = "./functions/user-cancel-deletion/index.ts"
+
+[functions.user-delete-account]
+enabled = true
+verify_jwt = false  # JWT verification handled in function code
+import_map = "./deno.json"
+entrypoint = "./functions/user-delete-account/index.ts"
+
+[functions.user-event-feed]
+enabled = true
+verify_jwt = false  # JWT verification handled in function code
+import_map = "./deno.json"
+entrypoint = "./functions/user-event-feed/index.ts"
+
+[functions.user-get-ticket-token]
+enabled = true
+verify_jwt = false  # JWT verification handled in function code
+import_map = "./deno.json"
+entrypoint = "./functions/user-get-ticket-token/index.ts"
