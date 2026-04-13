@@ -5,6 +5,8 @@ import 'dart:ui' as ui;
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+// KEEP IN SYNC WITH apps/app_partner/test/visual_qa/visual_qa_helper.dart
+
 /// VisualQA helper extension for [WidgetTester].
 ///
 /// Captures screenshots (PNG) and widget tree dumps (.txt) at key steps
@@ -17,6 +19,9 @@ extension VisualQaTester on WidgetTester {
   static final Map<String, int> _stepCounters = {};
 
   static final RegExp _labelPattern = RegExp(r'^[a-z0-9_]+$');
+
+  /// Clears all step counters. Call in `tearDown` if needed.
+  static void resetCounters() => _stepCounters.clear();
 
   /// Returns the base output directory for the current test.
   ///
@@ -37,15 +42,6 @@ extension VisualQaTester on WidgetTester {
     return current + 1;
   }
 
-  /// Validates that [label] matches `^[a-z0-9_]+$`.
-  void _validateLabel(String label) {
-    if (!_labelPattern.hasMatch(label)) {
-      throw ArgumentError(
-        'VisualQA label must match ^[a-z0-9_]+\$, got: "$label"',
-      );
-    }
-  }
-
   /// Captures a screenshot (PNG) and widget tree dump (.txt) of the current
   /// screen state.
   ///
@@ -53,11 +49,16 @@ extension VisualQaTester on WidgetTester {
   /// - `{captureDir}/{step}_{label}.png`
   /// - `{captureDir}/{step}_{label}.txt`
   ///
-  /// Capture failures are caught and printed — they never fail the test.
+  /// Capture failures (including invalid labels) are caught and printed —
+  /// they never fail the test.
   Future<void> capture(String label) async {
-    _validateLabel(label);
-    final step = _nextStep();
     try {
+      if (!_labelPattern.hasMatch(label)) {
+        // ignore: avoid_print
+        print('[VisualQA] invalid label "$label" — skipping capture');
+        return;
+      }
+      final step = _nextStep();
       // Widget tree dump is synchronous — do it before the async image capture.
       _captureWidgetTree(step, label);
       // Image capture uses real async I/O and GPU rendering; must use runAsync.
@@ -72,7 +73,6 @@ extension VisualQaTester on WidgetTester {
 
   /// Captures before, taps [finder], settles, then captures after.
   Future<void> tapAndCapture(Finder finder, String label) async {
-    _validateLabel(label);
     await capture('${label}_before');
     try {
       await tap(finder);
@@ -86,7 +86,6 @@ extension VisualQaTester on WidgetTester {
 
   /// Taps [finder], settles, then captures the resulting screen.
   Future<void> navigateAndCapture(Finder finder, String label) async {
-    _validateLabel(label);
     try {
       await tap(finder);
       await pumpAndSettle();

@@ -1,4 +1,4 @@
-// Unit / widget tests for VisualQaHelper extension.
+// Unit / widget tests for VisualQaTester extension.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -6,7 +6,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'visual_qa_helper.dart';
 
 void main() {
-  group('VisualQaHelper', () {
+  tearDown(VisualQaTester.resetCounters);
+
+  group('VisualQaTester', () {
     testWidgets('capture() saves PNG and TXT files', (tester) async {
       await tester.binding.setSurfaceSize(const Size(390, 844));
 
@@ -37,7 +39,7 @@ void main() {
       );
     });
 
-    testWidgets('capture() throws on invalid label', (tester) async {
+    testWidgets('capture() silently skips invalid label', (tester) async {
       await tester.binding.setSurfaceSize(const Size(390, 844));
 
       await tester.pumpWidget(
@@ -45,11 +47,11 @@ void main() {
       );
       await tester.pump();
 
-      // Label validation happens before capture, so it throws synchronously.
-      expect(
-        () => tester.capture('Invalid Label!'),
-        throwsA(isA<ArgumentError>()),
-      );
+      // Invalid label should NOT throw — it prints a warning and returns.
+      await tester.capture('Invalid Label!');
+
+      // Test still passes — capture failure does not propagate.
+      expect(find.text('label test'), findsOneWidget);
     });
 
     testWidgets('tapAndCapture() captures before and after tap', (
@@ -100,13 +102,6 @@ void main() {
       await tester.navigateAndCapture(find.text('Navigate'), 'after_navigate');
 
       expect(tapped, isTrue);
-    });
-
-    test('step counter increments per test description', () {
-      // Reset state from prior runs — each test gets its own WidgetTester so
-      // this validates the counter key isolation via testDescription.
-      // (Direct counter access is tested via the capture calls above.)
-      expect(true, isTrue); // placeholder — counter is covered by capture tests
     });
   });
 }
