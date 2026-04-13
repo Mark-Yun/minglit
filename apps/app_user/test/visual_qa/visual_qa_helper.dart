@@ -29,7 +29,7 @@ extension VisualQaTester on WidgetTester {
   String get _captureDir {
     final sanitized = testDescription
         .replaceAll(RegExp(r'[^a-zA-Z0-9_\-]'), '_')
-        .replaceAll(RegExp(r'_+'), '_')
+        .replaceAll(RegExp('_+'), '_')
         .toLowerCase();
     return 'test/visual_qa/captures/ci/$sanitized';
   }
