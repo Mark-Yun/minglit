@@ -70,8 +70,7 @@ ${VIOLATIONS}
           EXISTING=$(gh issue list \
             --repo "${{ github.repository }}" \
             --state open \
-            --label "bug" \
-            --search "DB Invariant Violation in:title" \
+            --label "invariant-monitor" \
             --json number \
             --jq '.[0].number // empty')
 
@@ -84,6 +83,6 @@ ${VIOLATIONS}
             gh issue create \
               --repo "${{ github.repository }}" \
               --title "DB Invariant Violation" \
-              --label "$LABEL" \
+              --label "${LABEL},invariant-monitor" \
               --body "$BODY"
           fi

@@ -1,7 +1,7 @@
 -- 80_db_invariant_monitor_test.sql — pgTAP tests for check_db_invariants() (#1427)
 
 BEGIN;
-SELECT plan(11);
+SELECT plan(12);
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Schema checks
@@ -90,6 +90,92 @@ SELECT ok(
     HAVING e.current_participants != count(p.id)
   ) sub),
   'INV-06: no current_participants counter drift in clean DB'
+);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- INV-04 regression: completed event WITH settlement_items(source_type='EVENT')
+-- must NOT trigger INV-04 violation.
+-- Pins the fix: INV-04 check uses source_type = 'EVENT' (uppercase), not 'event'.
+-- ─────────────────────────────────────────────────────────────────────────────
+
+DO $$
+DECLARE
+  v_partner_id uuid := gen_random_uuid();
+  v_party_id   uuid := gen_random_uuid();
+  v_event_id   uuid := gen_random_uuid();
+  v_checksum   char(64);
+BEGIN
+  -- Minimal partner
+  INSERT INTO public.partners (id, name)
+  VALUES (v_partner_id, 'Test Partner INV04');
+
+  -- Minimal party owned by the partner
+  INSERT INTO public.parties (id, partner_id, title, status)
+  VALUES (v_party_id, v_partner_id, 'Test Party INV04', 'active');
+
+  -- Completed event
+  INSERT INTO public.events (id, party_id, title, start_time, end_time, status)
+  VALUES (v_event_id, v_party_id, 'Test Event INV04',
+          now() - interval '2 hours', now() - interval '1 hour',
+          'completed');
+
+  -- Compute a valid checksum for the settlement_items row
+  v_checksum := public.calculate_settlement_checksum(
+    v_partner_id,
+    (now() - interval '1 hour')::date,
+    (now() - interval '1 hour')::date,
+    'KRW',
+    0::bigint,   -- gross_amount
+    5.00::decimal(5,2),
+    3.50::decimal(5,2),
+    10.00::decimal(5,2),
+    0::bigint,   -- platform_fee_amount
+    0::bigint,   -- pg_fee_amount
+    0::bigint,   -- vat_amount
+    0::bigint    -- net_amount
+  );
+
+  -- Settlement item with source_type = 'EVENT' (uppercase — the regression fix)
+  INSERT INTO public.settlement_items (
+    partner_id,
+    settlement_period_start,
+    settlement_period_end,
+    currency,
+    source_type,
+    source_id,
+    status,
+    gross_amount,
+    platform_fee_rate,
+    platform_fee_amount,
+    pg_fee_rate,
+    pg_fee_amount,
+    vat_rate,
+    vat_amount,
+    net_amount,
+    calc_checksum
+  ) VALUES (
+    v_partner_id,
+    (now() - interval '1 hour')::date,
+    (now() - interval '1 hour')::date,
+    'KRW',
+    'EVENT',
+    v_event_id::text,
+    'PENDING',
+    0, 5.00, 0, 3.50, 0, 10.00, 0, 0,
+    v_checksum
+  );
+END;
+$$;
+
+SELECT ok(
+  NOT EXISTS (
+    SELECT 1
+    FROM json_array_elements(
+      (check_db_invariants())::json->'violations'
+    ) v
+    WHERE v->>'id' = 'INV-04'
+  ),
+  'INV-04: completed event with settlement_items(source_type=''EVENT'') does not trigger INV-04'
 );
 
 SELECT * FROM finish();

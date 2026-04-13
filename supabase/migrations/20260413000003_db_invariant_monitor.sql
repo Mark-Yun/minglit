@@ -16,7 +16,6 @@ AS $$
 DECLARE
   v_violations JSONB := '[]'::JSONB;
   v_count      BIGINT;
-  v_rows       JSONB;
 BEGIN
   -- ────────────────────────────────────────────────────────
   -- INV-01: Approved/paid applications without participant
