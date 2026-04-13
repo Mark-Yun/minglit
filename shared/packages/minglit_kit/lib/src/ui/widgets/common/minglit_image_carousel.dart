@@ -59,7 +59,7 @@ class _MinglitImageCarouselState extends State<MinglitImageCarousel> {
     final theme = Theme.of(context);
     final useFixedHeight = widget.height != null;
 
-    // Fix #74, #1379: Show MinglitEmptyState placeholder when no images available
+    // Fix #1379: MinglitEmptyState 플레이스홀더로 교체 — 빈 이미지 목록 UI 통일
     if (widget.imageUrls.isEmpty) {
       const placeholder = MinglitEmptyState.card(
         icon: Icons.image_outlined,

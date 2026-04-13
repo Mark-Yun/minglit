@@ -35,6 +35,7 @@ class MinglitImage extends StatelessWidget {
       !path.contains('/');
   @override
   Widget build(BuildContext context) {
+    // Fix #1379: MinglitEmptyState 플레이스홀더로 교체 — 빈 경로 UI 통일
     // Guard: empty or blank path → show placeholder immediately
     if (path.trim().isEmpty) {
       return SizedBox(
