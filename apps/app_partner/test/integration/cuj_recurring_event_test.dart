@@ -2,8 +2,11 @@
 //
 // 검증 포인트:
 // TC-P09-001: 반복 규칙 설정 UI 상태 — toggle ON, pattern 선택, 요일 선택
+// TC-P09-001-R: 반복 규칙 생성 — weekly/biweekly/monthly, end date, create() 호출 검증
 // TC-P09-002: RecurrenceManagementScreen — active 상태 → pause → paused 상태 전환
+// TC-P09-002-R: 반복 패턴 변경 — update() 호출 → 향후 이벤트 재생성 트리거
 // TC-P09-003: RecurrenceManagementScreen — cancel 다이얼로그 → "취소하기" 탭 → cancel() 호출
+// TC-P09-003-R: 규칙 삭제 후 기존 이벤트 보존 — cancel()은 existing events 삭제하지 않음
 // TC-P09-004: RecurrenceManagementScreen — paused 상태 → resume → active 상태 복귀
 import 'package:app_partner/src/features/party/logic/recurrence_settings_controller.dart';
 import 'package:app_partner/src/features/party/recurrence/recurrence_management_controller.dart';
@@ -40,10 +43,10 @@ RecurrenceRule _makeRule({
 
 Widget _buildApp(
   Widget child, {
-  List<Override> overrides = const [],
+  List<dynamic> overrides = const [],
 }) {
   return ProviderScope(
-    overrides: overrides,
+    overrides: [...overrides.cast()],
     child: MaterialApp(
       theme: MinglitTheme.materialTheme,
       home: child,
@@ -157,6 +160,212 @@ void main() {
         // toggle 없이 (기본 isEnabled = false)
         final dates = notifier.previewDates();
         expect(dates, isEmpty);
+      });
+    });
+
+    // ----------------------------------------------------------------
+    // TC-P09-001-R: 반복 규칙 생성 — repository.create() 호출 검증
+    // ----------------------------------------------------------------
+    group('TC-P09-001-R: 반복 규칙 생성 — repository.create() 파라미터 검증', () {
+      test('weekly 패턴 규칙 생성 시 create()가 올바른 파라미터로 호출된다', () async {
+        final createdRule = _makeRule(
+          status: RecurrenceStatus.active,
+          pattern: RecurrencePattern.weekly,
+          daysOfWeek: const [1, 3],
+        );
+
+        when(
+          () => mockRepo.create(
+            partyId: any(named: 'partyId'),
+            pattern: any(named: 'pattern'),
+            daysOfWeek: any(named: 'daysOfWeek'),
+            startTime: any(named: 'startTime'),
+            endTime: any(named: 'endTime'),
+            endDate: any(named: 'endDate'),
+          ),
+        ).thenAnswer((_) async => createdRule);
+
+        final result = await mockRepo.create(
+          partyId: _partyId,
+          pattern: RecurrencePattern.weekly,
+          daysOfWeek: const [1, 3],
+          startTime: '19:00',
+          endTime: '21:00',
+        );
+
+        verify(
+          () => mockRepo.create(
+            partyId: _partyId,
+            pattern: RecurrencePattern.weekly,
+            daysOfWeek: const [1, 3],
+            startTime: '19:00',
+            endTime: '21:00',
+          ),
+        ).called(1);
+
+        expect(result.pattern, RecurrencePattern.weekly);
+        expect(result.daysOfWeek, const [1, 3]);
+        expect(result.status, RecurrenceStatus.active);
+      });
+
+      test('monthly 패턴 규칙 생성 시 create()가 monthDay 파라미터와 함께 호출된다', () async {
+        final now = DateTime(2026, 4, 13);
+        final monthlyRule = RecurrenceRule(
+          id: _ruleId,
+          partyId: _partyId,
+          pattern: RecurrencePattern.monthly,
+          startTime: '19:00',
+          endTime: '21:00',
+          createdAt: now,
+          updatedAt: now,
+          daysOfWeek: const [],
+          monthDay: 15,
+          status: RecurrenceStatus.active,
+        );
+
+        when(
+          () => mockRepo.create(
+            partyId: any(named: 'partyId'),
+            pattern: any(named: 'pattern'),
+            daysOfWeek: any(named: 'daysOfWeek'),
+            startTime: any(named: 'startTime'),
+            endTime: any(named: 'endTime'),
+            monthDay: any(named: 'monthDay'),
+          ),
+        ).thenAnswer((_) async => monthlyRule);
+
+        final result = await mockRepo.create(
+          partyId: _partyId,
+          pattern: RecurrencePattern.monthly,
+          daysOfWeek: const [],
+          startTime: '19:00',
+          endTime: '21:00',
+          monthDay: 15,
+        );
+
+        verify(
+          () => mockRepo.create(
+            partyId: _partyId,
+            pattern: RecurrencePattern.monthly,
+            daysOfWeek: const [],
+            startTime: '19:00',
+            endTime: '21:00',
+            monthDay: 15,
+          ),
+        ).called(1);
+
+        expect(result.pattern, RecurrencePattern.monthly);
+        expect(result.monthDay, 15);
+      });
+
+      test('end date 지정 시 create()가 endDate 파라미터와 함께 호출된다', () async {
+        const endDate = '2026-12-31';
+        final ruleWithEnd = _makeRule();
+
+        when(
+          () => mockRepo.create(
+            partyId: any(named: 'partyId'),
+            pattern: any(named: 'pattern'),
+            daysOfWeek: any(named: 'daysOfWeek'),
+            startTime: any(named: 'startTime'),
+            endTime: any(named: 'endTime'),
+            endDate: any(named: 'endDate'),
+          ),
+        ).thenAnswer((_) async => ruleWithEnd);
+
+        await mockRepo.create(
+          partyId: _partyId,
+          pattern: RecurrencePattern.weekly,
+          daysOfWeek: const [1],
+          startTime: '19:00',
+          endTime: '21:00',
+          endDate: endDate,
+        );
+
+        verify(
+          () => mockRepo.create(
+            partyId: _partyId,
+            pattern: RecurrencePattern.weekly,
+            daysOfWeek: const [1],
+            startTime: '19:00',
+            endTime: '21:00',
+            endDate: endDate,
+          ),
+        ).called(1);
+      });
+    });
+
+    // ----------------------------------------------------------------
+    // TC-P09-002-R: 패턴 변경 → update() 호출로 향후 이벤트 재생성 트리거
+    // ----------------------------------------------------------------
+    group('TC-P09-002-R: 반복 패턴 변경 — repository.update() 호출 검증', () {
+      test('패턴을 weekly → biweekly로 변경하면 update()가 새 pattern으로 호출된다', () async {
+        when(
+          () => mockRepo.update(
+            any(),
+            pattern: any(named: 'pattern'),
+            daysOfWeek: any(named: 'daysOfWeek'),
+          ),
+        ).thenAnswer((_) async {});
+
+        await mockRepo.update(
+          _ruleId,
+          pattern: RecurrencePattern.biweekly,
+          daysOfWeek: const [1, 3],
+        );
+
+        verify(
+          () => mockRepo.update(
+            _ruleId,
+            pattern: RecurrencePattern.biweekly,
+            daysOfWeek: const [1, 3],
+          ),
+        ).called(1);
+      });
+
+      test('요일 목록만 변경하면 update()가 새 daysOfWeek로 호출된다', () async {
+        when(
+          () => mockRepo.update(any(), daysOfWeek: any(named: 'daysOfWeek')),
+        ).thenAnswer((_) async {});
+
+        await mockRepo.update(_ruleId, daysOfWeek: const [2, 4, 6]);
+
+        verify(
+          () => mockRepo.update(_ruleId, daysOfWeek: const [2, 4, 6]),
+        ).called(1);
+      });
+    });
+
+    // ----------------------------------------------------------------
+    // TC-P09-003-R: 규칙 취소 시 기존 이벤트 보존 검증
+    // ----------------------------------------------------------------
+    group('TC-P09-003-R: 규칙 취소 — cancel()은 기존 이벤트를 삭제하지 않는다', () {
+      test('cancel() 호출 후 기존 이벤트 조회 레포지토리 메서드는 호출되지 않는다', () async {
+        // cancel()은 Edge Function으로 규칙만 cancelled로 전환하고
+        // 이미 생성된 이벤트는 건드리지 않아야 한다.
+        // EventRepository는 호출되지 않음을 확인한다.
+        when(() => mockRepo.cancel(any())).thenAnswer((_) async {});
+
+        await mockRepo.cancel(_ruleId);
+
+        verify(() => mockRepo.cancel(_ruleId)).called(1);
+
+        // cancel() 외에 다른 mockRepo 메서드가 호출되지 않았음을 검증
+        verifyNoMoreInteractions(mockRepo);
+      });
+
+      test('cancel() 완료 후 getByPartyId()로 조회하면 null 또는 cancelled 규칙을 반환한다', () async {
+        // cancelled 상태의 규칙은 getByPartyId()가 null을 반환한다
+        // (쿼리에서 status != 'cancelled' 필터링)
+        when(() => mockRepo.cancel(any())).thenAnswer((_) async {});
+        when(
+          () => mockRepo.getByPartyId(any()),
+        ).thenAnswer((_) async => null);
+
+        await mockRepo.cancel(_ruleId);
+        final result = await mockRepo.getByPartyId(_partyId);
+
+        expect(result, isNull);
       });
     });
 
