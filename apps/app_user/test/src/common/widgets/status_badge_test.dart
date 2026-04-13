@@ -83,4 +83,63 @@ void main() {
       expect(badge.color, isNot(MinglitColors.primary));
     });
   });
+
+  group('StatusBadge — dark mode', () {
+    Widget createDarkTestWidget(String status) {
+      return MaterialApp(
+        theme: MinglitTheme.materialThemeDark,
+        home: Scaffold(
+          body: StatusBadge(status: status),
+        ),
+      );
+    }
+
+    testWidgets('dark mode uses correct brightness', (tester) async {
+      await tester.pumpWidget(createDarkTestWidget('paid'));
+      final context = tester.element(find.byType(StatusBadge));
+      expect(Theme.of(context).brightness, Brightness.dark);
+    });
+
+    testWidgets('dark mode renders all statuses without error', (tester) async {
+      for (final status in [
+        'pending',
+        'pending_review',
+        'approved',
+        'paid',
+        'rejected',
+        'cancelled',
+      ]) {
+        await tester.pumpWidget(createDarkTestWidget(status));
+        expect(find.byType(MinglitBadge), findsOneWidget);
+      }
+    });
+  });
+
+  group('MinglitColorSet — semantic color tokens', () {
+    test('light set contains all semantic colors from MinglitColors', () {
+      expect(MinglitColorSet.light.success, MinglitColors.success);
+      expect(MinglitColorSet.light.info, MinglitColors.info);
+      expect(MinglitColorSet.light.warning, MinglitColors.warning);
+      expect(MinglitColorSet.light.error, MinglitColors.error);
+    });
+
+    test('dark set has distinct success/info/warning tokens', () {
+      expect(
+        MinglitColorSet.dark.success,
+        isNot(MinglitColorSet.light.success),
+      );
+      expect(
+        MinglitColorSet.dark.info,
+        isNot(MinglitColorSet.light.info),
+      );
+      expect(
+        MinglitColorSet.dark.warning,
+        isNot(MinglitColorSet.light.warning),
+      );
+    });
+
+    test('dark error matches light error (shared)', () {
+      expect(MinglitColorSet.dark.error, MinglitColors.error);
+    });
+  });
 }
