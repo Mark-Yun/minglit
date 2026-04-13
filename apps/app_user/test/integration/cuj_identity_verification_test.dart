@@ -112,11 +112,13 @@ void main() {
 
         // 동의 시트에서 취소 탭
         await tester.tap(find.text('취소'));
-        // Fix: showModalBottomSheet의 Future는 퇴장 애니메이션 완료 후 resolve된다.
-        // pumpAndSettle은 100ms씩 fake clock을 진행시키며 _isLoading=false로
-        // CircularProgressIndicator가 사라질 때까지 대기한다.
-        // 고정 duration(300ms)보다 안전: Flutter 버전별 퇴장 애니메이션 길이 무관.
-        await tester.pumpAndSettle();
+        // Fix: pumpAndSettle()은 CircularProgressIndicator(indeterminate)가
+        // 위젯 트리에 있으면 영원히 타임아웃된다 — ticker가 계속 프레임 요청.
+        // 퇴장 애니메이션(~250ms)을 pump(300ms)로 소진하고,
+        // 이후 pump()로 Future resolve + setState(_isLoading=false) 재빌드를 처리.
+        await tester.pump(const Duration(milliseconds: 300)); // 퇴장 애니메이션
+        await tester.pump(); // showModalBottomSheet Future resolve
+        await tester.pump(); // setState(_isLoading=false) 재빌드
 
         // 에러 안내 메시지 및 재시도 버튼 표시 확인
         expect(
