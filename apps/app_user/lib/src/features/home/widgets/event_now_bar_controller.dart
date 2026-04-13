@@ -30,6 +30,14 @@ enum EventNowBarState {
   ended,
 }
 
+/// Returns a clock function that produces the current [DateTime].
+///
+/// The provider returns `() => DateTime.now()` so each call site gets a fresh
+/// timestamp instead of a cached value. Override in tests with
+/// `() => fixedNow` to make state transitions deterministic.
+@riverpod
+DateTime Function() clock(Ref ref) => DateTime.now;
+
 /// Fetches today's active events for the current user.
 ///
 /// Returns events where the user is a participant and the event is within
@@ -59,8 +67,17 @@ class EventNowBarStateNotifier extends _$EventNowBarStateNotifier {
   FutureOr<EventNowBarState> build(TodayActiveEvent activeEvent) async {
     final event = activeEvent.event;
 
+    // Fix #1321: Read clock BEFORE any async gaps — ref.watch/read throws
+    // "Ref disposed" if called after an await when myMatchesProvider or
+    // matchCandidatesProvider resolution triggers a rebuild of this provider.
+    final now = ref.watch(clockProvider)();
+
     // Compute the raw state from current data.
-    final rawState = await _computeState(event, activeEvent.participantStatus);
+    final rawState = await _computeState(
+      event,
+      activeEvent.participantStatus,
+      now,
+    );
 
     // Enforce forward-only transitions.
     if (rawState.index > _highWaterMark.index) {
@@ -73,6 +90,7 @@ class EventNowBarStateNotifier extends _$EventNowBarStateNotifier {
   Future<EventNowBarState> _computeState(
     Event event,
     String participantStatus,
+    DateTime now,
   ) async {
     // ENDED: event is completed or cancelled.
     if (event.status == 'completed' || event.status == 'cancelled') {
@@ -108,7 +126,8 @@ class EventNowBarStateNotifier extends _$EventNowBarStateNotifier {
     }
 
     // CHECK_IN_READY: event start time has been reached.
-    final now = DateTime.now();
+    // Note: `now` is captured in build() before any awaits to avoid
+    // using ref after async gaps (see Fix #1321 comment in build()).
     if (!now.isBefore(event.startTime)) {
       return EventNowBarState.checkInReady;
     }
