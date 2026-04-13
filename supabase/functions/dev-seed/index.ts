@@ -469,6 +469,14 @@ const ALL_PARTNERS: PartnerDef[] = [
   },
 ];
 
+// Global verifications seeded via dev_seed_bulk_partners RPC.
+// Extracted from ensureGlobalVerifications() — single source of truth.
+const GLOBAL_VERIFICATIONS = [
+  { category: "career", internal_name: "global_career", display_name: "직장인 인증", description: "재직증명서 기반 직장인 인증", icon_key: "briefcase", form_schema: [{ type: "image", label: "재직증명서" }] },
+  { category: "academic", internal_name: "global_academic", display_name: "대학생 인증", description: "학생증 기반 대학생 인증", icon_key: "school", form_schema: [{ type: "image", label: "학생증" }] },
+  { category: "asset", internal_name: "global_asset", display_name: "자산 인증", description: "자산 보유 인증", icon_key: "diamond", form_schema: [{ type: "text", label: "자산 정보" }] },
+];
+
 function generateDescription(
   title: string,
   summary: string,
@@ -623,149 +631,7 @@ function generateAllPersonas(): UserPersona[] {
   return personas;
 }
 
-async function createAdminUser(
-  supabase: SupabaseClient,
-  persona: UserPersona,
-): Promise<string> {
-  const { data, error } = await supabase.auth.admin.createUser({
-    email: persona.email,
-    password: persona.password,
-    email_confirm: true,
-    app_metadata: { has_password: true },
-    user_metadata: persona.metadata,
-  });
-
-  if (error) {
-    if (
-      error.message?.includes("already registered") ||
-      (error as any).code === "email_exists"
-    ) {
-      // Fix #492: 기존 계정 재사용 시 비밀번호·metadata를 seed 값으로 보정 — uploadSeedImages의 signIn이 정상 동작하도록 보장
-      const { data: users } = await supabase.auth.admin.listUsers({
-        perPage: 1000,
-      });
-      const existing = users?.users?.find((u: any) =>
-        u.email === persona.email
-      );
-      if (existing) {
-        const { data: updatedUser, error: updateError } = await supabase.auth
-          .admin.updateUserById(existing.id, {
-            password: persona.password,
-            app_metadata: { has_password: true },
-            user_metadata: persona.metadata,
-          });
-        if (updateError) {
-          throw new Error(
-            `Failed to repair existing user ${persona.email} (${existing.id}): ${updateError.message}`,
-          );
-        }
-        if (!updatedUser?.user?.id) {
-          throw new Error(
-            `Failed to repair existing user ${persona.email} (${existing.id}): missing updated user payload`,
-          );
-        }
-        return existing.id;
-      }
-      throw new Error(
-        `User ${persona.email} reported as existing but not found in listUsers`,
-      );
-    }
-    throw error;
-  }
-
-  return data.user?.id ?? "";
-}
-
-async function createPartner(
-  sb: SupabaseClient,
-  ownerId: string,
-  partnerDef: {
-    name: string;
-    introduction: string;
-    biz_name: string;
-    biz_number: string;
-    contact_email: string;
-  },
-): Promise<string> {
-  const { data, error } = await sb.from("partners").insert({
-    name: partnerDef.name,
-    introduction: partnerDef.introduction,
-    biz_name: partnerDef.biz_name,
-    biz_number: partnerDef.biz_number,
-    contact_email: partnerDef.contact_email,
-  }).select("id").single();
-
-  if (error) {
-    throw new Error(
-      `Failed to create partner "${partnerDef.name}": ${error.message}`,
-    );
-  }
-
-  const { error: permError } = await sb.from("partner_member_permissions")
-    .insert({
-      partner_id: data.id,
-      user_id: ownerId,
-      role: "owner",
-    });
-  if (permError) {
-    throw new Error(`Failed to add owner permission: ${permError.message}`);
-  }
-
-  return data.id;
-}
-
-async function createLocation(
-  sb: SupabaseClient,
-  partnerId: string,
-  loc: typeof HOT_PLACES[number],
-): Promise<string> {
-  const { data, error } = await sb.from("locations").insert({
-    partner_id: partnerId,
-    name: loc.name,
-    address: loc.address,
-    region_1: loc.region_1,
-    region_2: loc.region_2,
-    region_3: loc.region_3,
-    geo_point: `POINT(${loc.lng} ${loc.lat})`,
-  }).select("id").single();
-
-  if (error) {
-    throw new Error(
-      `Failed to create location "${loc.name}": ${error.message}`,
-    );
-  }
-  return data.id;
-}
-
-async function createVerification(
-  sb: SupabaseClient,
-  partnerId: string | null,
-  verif: {
-    category: string;
-    internal_name: string;
-    display_name: string;
-    description: string;
-    icon_key: string;
-    form_schema: unknown[];
-  },
-): Promise<string> {
-  const { data, error } = await sb.from("verifications").insert({
-    partner_id: partnerId,
-    category: verif.category,
-    internal_name: verif.internal_name,
-    display_name: verif.display_name,
-    description: verif.description,
-    icon_key: verif.icon_key,
-    form_schema: verif.form_schema,
-  }).select("id").single();
-
-  if (error) {
-    throw new Error(
-      `Failed to create verification "${verif.internal_name}": ${error.message}`,
-    );
-  }
-  return data.id;
-}
+// ─── Helper: Party/Event Creation (used by createFreshEvents) ───────────────
 
 async function createPartyWithEvents(
   sb: SupabaseClient,
@@ -892,111 +758,6 @@ async function createPartyWithEvents(
   return { partyId, eventIds };
 }
 
-async function ensureGlobalVerifications(
-  sb: SupabaseClient,
-): Promise<Record<string, string>> {
-  const globals = [
-    {
-      category: "career",
-      internal_name: "global_career",
-      display_name: "직장인 인증",
-      description: "재직증명서 기반 직장인 인증",
-      icon_key: "briefcase",
-      form_schema: [{ type: "image", label: "재직증명서" }],
-    },
-    {
-      category: "academic",
-      internal_name: "global_academic",
-      display_name: "대학생 인증",
-      description: "학생증 기반 대학생 인증",
-      icon_key: "school",
-      form_schema: [{ type: "image", label: "학생증" }],
-    },
-    {
-      category: "asset",
-      internal_name: "global_asset",
-      display_name: "자산 인증",
-      description: "자산 보유 인증",
-      icon_key: "diamond",
-      form_schema: [{ type: "text", label: "자산 정보" }],
-    },
-  ];
-
-  const result: Record<string, string> = {};
-
-  for (const g of globals) {
-    const { data: existing } = await sb.from("verifications")
-      .select("id")
-      .is("partner_id", null)
-      .eq("internal_name", g.internal_name)
-      .maybeSingle();
-
-    if (existing) {
-      result[g.category] = existing.id;
-    } else {
-      const id = await createVerification(sb, null, g);
-      result[g.category] = id;
-    }
-  }
-
-  return result;
-}
-
-// ─── Domain Seeding Functions ───────────────────────────────────────
-
-// Fix #1272: listUsers를 1회만 호출하고 Map으로 캐시 — 60회 반복 호출 제거
-// Fix #1334: offset/limit 지원 — 560명을 100명씩 6 배치로 분할 처리
-async function seedAllUsers(
-  supabase: SupabaseClient,
-  offset = 0,
-  limit: number | null = null,
-): Promise<number> {
-  const allPersonas = generateAllPersonas();
-  const personas = limit !== null
-    ? allPersonas.slice(offset, offset + limit)
-    : allPersonas.slice(offset);
-
-  // 1회만 조회하고 Map으로 캐시 (240회 → 최소 1회)
-  const { data: listData } = await supabase.auth.admin.listUsers({ perPage: 1000 });
-  const existingByEmail = new Map<string, { id: string; user_metadata: Record<string, unknown> }>(
-    (listData?.users ?? []).map((u: any) => [u.email as string, { id: u.id, user_metadata: u.user_metadata ?? {} }]),
-  );
-
-  let createdUsers = 0;
-  for (const persona of personas) {
-    try {
-      const existing = existingByEmail.get(persona.email);
-      if (existing) {
-        // metadata 변경이 있을 때만 update
-        const metaChanged =
-          JSON.stringify(existing.user_metadata) !== JSON.stringify(persona.metadata);
-        if (metaChanged) {
-          const { error: updateError } = await supabase.auth.admin.updateUserById(existing.id, {
-            password: persona.password,
-            user_metadata: persona.metadata,
-          });
-          if (updateError) throw updateError;
-        }
-      } else {
-        const { error: createError } = await supabase.auth.admin.createUser({
-          email: persona.email,
-          password: persona.password,
-          email_confirm: true,
-          app_metadata: { has_password: true },
-          user_metadata: persona.metadata,
-        });
-        if (createError) throw createError;
-      }
-      createdUsers++;
-    } catch (err) {
-      // Fix #1272: 개별 실패는 로깅만 — 나머지 유저 계속 진행
-      console.error(`Failed to seed ${persona.email}:`, err);
-    }
-  }
-
-  return createdUsers;
-}
-
 async function uploadSeedImages(supabase: SupabaseClient): Promise<string[]> {
   const imageFiles = [
     "party_cafe_warm.jpg",
@@ -1112,134 +873,6 @@ async function updatePartyImages(
   }
 }
 
-async function seedGlobalVerifications(
-  supabase: SupabaseClient,
-): Promise<Record<string, string>> {
-  return await ensureGlobalVerifications(supabase);
-}
-
-// Merged seedDefinedPartners + seedHotPlacePartners into a single idempotent function.
-// Uses ALL_PARTNERS which combines SEED_PARTNERS (with local verifications) and hot-place partners.
-async function seedAllPartners(
-  supabase: SupabaseClient,
-  globalVerifs: Record<string, string>,
-): Promise<{ processedPartners: number; newPartners: number }> {
-  let processedPartners = 0;
-  let newPartners = 0;
-
-  for (let idx = 0; idx < ALL_PARTNERS.length; idx++) {
-    const pDef = ALL_PARTNERS[idx];
-    const ownerPersona: UserPersona = {
-      email: pDef.ownerEmail,
-      password: SEED_PASSWORD,
-      metadata: {
-        name: `${pDef.name} 대표`,
-        username: pDef.ownerEmail.replace("@test.com", ""),
-        gender: "male",
-        birth_date: idx < 2 ? "1990-01-01" : "1988-01-01",
-        phone_number: idx < 2
-          ? `010-0000-${String(idx).padStart(4, "0")}`
-          : `010-0001-${String(idx - 2).padStart(4, "0")}`,
-        is_verified: true,
-      },
-    };
-
-    let ownerId: string;
-    try {
-      ownerId = await createAdminUser(supabase, ownerPersona);
-    } catch (err) {
-      console.error(`Failed to create partner owner ${pDef.ownerEmail}:`, err);
-      continue;
-    }
-
-    // Idempotency: skip partner creation if already exists
-    const { data: existingPartner } = await supabase
-      .from("partners")
-      .select("id")
-      .eq("biz_number", pDef.biz_number)
-      .maybeSingle();
-
-    if (existingPartner) {
-      // 파트너는 있으나 location/verification이 누락됐을 수 있음 — 보수적으로 확인
-      const existingPartnerId = existingPartner.id;
-      const { data: existingLoc } = await supabase
-        .from("locations")
-        .select("id")
-        .eq("partner_id", existingPartnerId)
-        .maybeSingle();
-      if (!existingLoc) {
-        await createLocation(supabase, existingPartnerId, pDef.location);
-      }
-      for (const lv of pDef.localVerifications) {
-        const { data: existingVerif } = await supabase
-          .from("verifications")
-          .select("id")
-          .eq("partner_id", existingPartnerId)
-          .eq("internal_name", lv.internal_name)
-          .maybeSingle();
-        if (!existingVerif) {
-          const vid = await createVerification(supabase, existingPartnerId, lv);
-          globalVerifs[`${existingPartnerId}_${lv.category}`] = vid;
-        } else {
-          globalVerifs[`${existingPartnerId}_${lv.category}`] = existingVerif.id;
-        }
-      }
-      processedPartners++;
-      continue;
-    }
-
-    const partnerId = await createPartner(supabase, ownerId, pDef);
-    processedPartners++;
-    newPartners++;
-
-    await createLocation(supabase, partnerId, pDef.location);
-
-    for (const lv of pDef.localVerifications) {
-      const vid = await createVerification(supabase, partnerId, lv);
-      globalVerifs[`${partnerId}_${lv.category}`] = vid;
-    }
-  }
-
-  return { processedPartners, newPartners };
-}
-
-async function seedPartnerRoles(supabase: SupabaseClient): Promise<void> {
-  // Assign first 2 seed users as manager/staff to the first seed partner
-  // Fix #492: biz_number으로 시드 파트너를 정확히 조회 (order/limit 대신)
-  const { data: firstPartner } = await supabase
-    .from("partners")
-    .select("id")
-    .eq("biz_number", ALL_PARTNERS[0].biz_number)
-    .maybeSingle();
-
-  if (!firstPartner) return;
-
-  // Fix #492: 정확한 seed username 집합으로 조회 (LIKE 패턴 대신)
-  const seedUsernames = ["user_20_m_ok", "user_20_f_ok"];
-  const { data: seedUsers } = await supabase
-    .from("user_profiles")
-    .select("id")
-    .in("username", seedUsernames)
-    .order("username")
-    .limit(2);
-
-  if (!seedUsers || seedUsers.length < 2) return;
-
-  const roles = ["manager", "staff"] as const;
-  for (let i = 0; i < Math.min(seedUsers.length, roles.length); i++) {
-    // Fix #492: ignoreDuplicates 제거 — 재실행 시 role drift 방지를 위해 onConflict update 허용
-    const { error } = await supabase.from("partner_member_permissions").upsert({
-      partner_id: firstPartner.id,
-      user_id: seedUsers[i].id,
-      role: roles[i],
-    }, { onConflict: "partner_id,user_id" });
-
-    if (error) {
-      console.error(`Failed to assign ${roles[i]} role:`, error.message);
-    }
-  }
-}
-
 // createFreshEvents: for ?mode=full only. Queries existing partners/locations from DB
 // and creates new parties + events using SCENARIOS. Replaces seedDefinedPartners/seedHotPlacePartners
 // event creation for local development.
@@ -1336,20 +969,62 @@ Deno.serve(async (req) => {
     );
   }
 
-  // Fix #1334: offset/limit for batched user seeding (560 total ÷ 100/batch = 6 calls)
-  const offsetParam = url.searchParams.get("offset");
-  const limitParam = url.searchParams.get("limit");
-  const offset = offsetParam !== null ? parseInt(offsetParam, 10) : 0;
-  const limit = limitParam !== null ? parseInt(limitParam, 10) : null;
-
   try {
     const supabase = createServiceClient();
 
-    // static mode: idempotent seed of users, verifications, partners, roles, images
-    const createdUsers = await seedAllUsers(supabase, offset, limit);
-    const globalVerifs = await seedGlobalVerifications(supabase);
-    const { processedPartners } = await seedAllPartners(supabase, globalVerifs);
-    await seedPartnerRoles(supabase);
+    // Fix #1390: 560 admin.createUser() HTTP calls → 2 in-DB RPCs (~4초 total)
+
+    // RPC 1: 유저 560명 + 파트너 오너 (1 RPC, ~3초)
+    const allPersonas = generateAllPersonas();
+    const partnerOwnerUsers = ALL_PARTNERS.map((p, idx) => ({
+      email: p.ownerEmail,
+      name: `${p.name} 대표`,
+      username: p.ownerEmail.replace("@test.com", ""),
+      gender: "male",
+      birth_date: idx < 2 ? "1990-01-01" : "1988-01-01",
+      phone_number: idx < 2
+        ? `010-0000-${String(idx).padStart(4, "0")}`
+        : `010-0001-${String(idx - 2).padStart(4, "0")}`,
+      is_verified: true,
+    }));
+    const regularUsers = allPersonas.map((p) => ({
+      email: p.email,
+      name: p.metadata.name,
+      username: p.metadata.username,
+      gender: p.metadata.gender,
+      birth_date: p.metadata.birth_date,
+      phone_number: p.metadata.phone_number,
+      is_verified: p.metadata.is_verified,
+      sim_region: p.metadata.sim_region ?? null,
+      sim_lat: p.metadata.sim_lat ?? null,
+      sim_lng: p.metadata.sim_lng ?? null,
+    }));
+    const { data: userResult, error: userRpcError } = await supabase.rpc(
+      "dev_seed_bulk_users",
+      { p_users: [...regularUsers, ...partnerOwnerUsers], p_password: SEED_PASSWORD },
+    );
+    if (userRpcError) throw new Error(`dev_seed_bulk_users: ${userRpcError.message}`);
+
+    // RPC 2: 파트너 + 위치 + 인증 + 역할 (1 RPC, ~1초)
+    const partnersPayload = ALL_PARTNERS.map((p) => ({
+      name: p.name,
+      introduction: p.introduction,
+      biz_name: p.biz_name,
+      biz_number: p.biz_number,
+      contact_email: p.contact_email,
+      owner_email: p.ownerEmail,
+      location: p.location,
+      local_verifications: p.localVerifications,
+    }));
+    const { data: partnerResult, error: partnerRpcError } = await supabase.rpc(
+      "dev_seed_bulk_partners",
+      { p_partners: partnersPayload, p_global_verifications: GLOBAL_VERIFICATIONS },
+    );
+    if (partnerRpcError) throw new Error(`dev_seed_bulk_partners: ${partnerRpcError.message}`);
+
+    const createdUsers = (userResult as { total: number })?.total ?? 0;
+    const processedPartners = (partnerResult as { partners_processed: number })?.partners_processed ?? 0;
+
     const imageUrls = await uploadSeedImages(supabase);
 
     // Purge pgmq queues to avoid queue bloat after seeding
@@ -1380,7 +1055,7 @@ Deno.serve(async (req) => {
     return successResponse({
       mode,
       created_users: createdUsers,
-      created_partners: createdPartners,
+      created_partners: processedPartners,
       uploaded_images: imageUrls.length,
       created_parties: createdParties,
       created_events: createdEvents,
