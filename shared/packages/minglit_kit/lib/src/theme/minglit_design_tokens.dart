@@ -65,6 +65,12 @@ class MinglitColorsDark {
   static const tertiary = MinglitColors.tertiary;
   static const error = MinglitColors.error;
   // ignore: minglit_no_hardcoded_colors -- dark theme definition
+  static const success = Color(0xFF4ADE80);
+  // ignore: minglit_no_hardcoded_colors -- dark theme definition
+  static const info = Color(0xFF60A5FA);
+  // ignore: minglit_no_hardcoded_colors -- dark theme definition
+  static const warning = Color(0xFFFBBF24);
+  // ignore: minglit_no_hardcoded_colors -- dark theme definition
   static const divider = Color(0xFF3D3D3D);
 }
 
@@ -79,6 +85,10 @@ class MinglitColorSet {
     required this.textPrimary,
     required this.textSecondary,
     required this.divider,
+    required this.success,
+    required this.info,
+    required this.warning,
+    required this.error,
   });
 
   final Color background;
@@ -88,6 +98,10 @@ class MinglitColorSet {
   final Color textPrimary;
   final Color textSecondary;
   final Color divider;
+  final Color success;
+  final Color info;
+  final Color warning;
+  final Color error;
 
   static const light = MinglitColorSet(
     background: MinglitColors.background,
@@ -99,6 +113,10 @@ class MinglitColorSet {
     divider: Color(
       0xFFE5E7EB,
     ), // ignore: minglit_no_hardcoded_colors -- light divider token
+    success: MinglitColors.success,
+    info: MinglitColors.info,
+    warning: MinglitColors.warning,
+    error: MinglitColors.error,
   );
 
   static const dark = MinglitColorSet(
@@ -109,6 +127,10 @@ class MinglitColorSet {
     textPrimary: MinglitColorsDark.textPrimary,
     textSecondary: MinglitColorsDark.textSecondary,
     divider: MinglitColorsDark.divider,
+    success: MinglitColorsDark.success,
+    info: MinglitColorsDark.info,
+    warning: MinglitColorsDark.warning,
+    error: MinglitColorsDark.error,
   );
 }
 

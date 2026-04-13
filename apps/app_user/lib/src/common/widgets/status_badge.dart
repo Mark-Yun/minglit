@@ -14,6 +14,10 @@ class StatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    final colors = brightness == Brightness.dark
+        ? MinglitColorSet.dark
+        : MinglitColorSet.light;
     String label;
     Color color;
 
@@ -21,29 +25,29 @@ class StatusBadge extends StatelessWidget {
       case 'pending':
         label = '결제대기';
         // Fix #1236: info blue — 결제 완료를 기다리는 대기 상태
-        color = MinglitColors.info;
+        color = colors.info;
       case 'pending_review':
         label = '심사중';
         // Fix #1236: warning amber — 심사 진행 중 (결과 미확정)
-        color = MinglitColors.warning;
+        color = colors.warning;
       case 'approved':
         label = '승인됨';
         // Fix #1236: success green — 긍정 상태
-        color = MinglitColors.success;
+        color = colors.success;
       case 'paid':
         label = '결제완료';
         // Fix #1236: success green — 결제 완료된 긍정 상태
-        color = MinglitColors.success;
+        color = colors.success;
       case 'rejected':
         label = '반려됨';
-        color = MinglitColors.error;
+        color = colors.error;
       case 'cancelled':
         label = '취소됨';
         // Fix #1236: neutral grey — 취소는 오류가 아닌 종료 상태
-        color = MinglitColors.textSecondary;
+        color = colors.textSecondary;
       default:
         label = '알수없음';
-        color = MinglitColors.textSecondary;
+        color = colors.textSecondary;
     }
 
     // Fix #1236: MinglitChip(solid bg) → MinglitBadge(tinted bg + color text)
