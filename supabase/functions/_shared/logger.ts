@@ -128,6 +128,17 @@ export async function withSpan<T>(
   }
 }
 
+/**
+ * Capture an exception to Sentry. No-ops if Sentry is not initialized.
+ * Use in handlers that catch exceptions internally and return error responses
+ * (i.e., exceptions that never propagate to withHandler's catch block).
+ */
+export function captureException(error: unknown): void {
+  if (_enabled && _Sentry) {
+    _Sentry.captureException(error);
+  }
+}
+
 /** Reset internal state. For testing only. */
 export function _resetForTesting(): void {
   _initialized = false;

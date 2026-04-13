@@ -1,5 +1,6 @@
-import { assertEquals } from "@std/assert";
+import { assertEquals, assertThrows } from "@std/assert";
 import { stub } from "@std/testing/mock";
+import { HybridCalculator } from "./calculator.ts";
 import {
   captureServeHandler,
   createFetchMock,
@@ -217,7 +218,8 @@ Deno.test({
 });
 
 Deno.test({
-  name: "ai-embed - embedding error returns processed 0",
+  // Fix #1441: 파티 벡터화 에러는 더 이상 삼키지 않고 500으로 전파 — PGMQ retry 활용
+  name: "ai-embed - embedding error returns 500",
   fn: async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
@@ -255,6 +257,64 @@ Deno.test({
             const response = await handler(jsonRequest("http://localhost", {}));
             const payload = await readJson(response);
 
+            assertEquals(response.status, 500);
+            assertEquals(typeof payload.error, "string");
+          });
+        });
+      },
+    );
+  } finally {
+    stubs.forEach((s) => s.restore());
+  }
+  },
+});
+
+Deno.test({
+  // Fix #1441: user_embeddings DB 쿼리 에러 시 해당 task만 스킵하고 processed: 0 반환
+  name: "ai-embed - user_embeddings db error skips interaction task",
+  fn: async () => {
+  const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+
+  const stubs = [
+    stub(WorkerUtils.prototype, "isProcessed", async () => false),
+    stub(WorkerUtils.prototype, "markProcessed", async () => {}),
+    stub(WorkerUtils.prototype, "moveToDLQ", async () => {}),
+    stub(WorkerUtils.prototype, "logTimeLag", () => {}),
+    stub(OpenAIEmbedding.prototype, "generateEmbeddings", async () => []),
+  ];
+
+  const { fetchMock } = createFetchMock([
+    {
+      matcher: (req) => req.url.includes("/rest/v1/debug_logs") && req.method === "POST",
+      handler: () => jsonResponse({}),
+    },
+    {
+      matcher: (req) => req.url.includes("/rest/v1/rpc/pgmq_read"),
+      handler: () => jsonResponse([mockVectorInteractionMessage]),
+    },
+    {
+      matcher: (req) => req.url.includes("/rest/v1/user_embeddings") && req.method === "GET",
+      handler: () => jsonResponse({ message: "DB connection error" }, { status: 500 }),
+    },
+    {
+      matcher: (req) => req.url.includes("/rest/v1/party_embeddings") && req.method === "GET",
+      handler: () => jsonResponse({ embedding: embedding(0.2) }),
+    },
+  ]);
+
+  try {
+    await withEnv(
+      {
+        SUPABASE_URL: "https://supabase.test",
+        SUPABASE_SERVICE_ROLE_KEY: "service-key",
+        OPENAI_API_KEY: "openai-key",
+      },
+      async () => {
+        await withMockedFetch(fetchMock, async () => {
+          await withNoIntervals(async () => {
+            const response = await handler(jsonRequest("http://localhost", {}));
+            const payload = await readJson(response);
+
             assertEquals(response.status, 200);
             assertEquals(payload.processed, 0);
           });
@@ -264,5 +324,76 @@ Deno.test({
   } finally {
     stubs.forEach((s) => s.restore());
   }
+  },
+});
+
+Deno.test({
+  // Fix #1441: party_embeddings DB 쿼리 에러 시 해당 task만 스킵하고 processed: 0 반환
+  name: "ai-embed - party_embeddings db error skips interaction task",
+  fn: async () => {
+  const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+
+  const stubs = [
+    stub(WorkerUtils.prototype, "isProcessed", async () => false),
+    stub(WorkerUtils.prototype, "markProcessed", async () => {}),
+    stub(WorkerUtils.prototype, "moveToDLQ", async () => {}),
+    stub(WorkerUtils.prototype, "logTimeLag", () => {}),
+    stub(OpenAIEmbedding.prototype, "generateEmbeddings", async () => []),
+  ];
+
+  const { fetchMock } = createFetchMock([
+    {
+      matcher: (req) => req.url.includes("/rest/v1/debug_logs") && req.method === "POST",
+      handler: () => jsonResponse({}),
+    },
+    {
+      matcher: (req) => req.url.includes("/rest/v1/rpc/pgmq_read"),
+      handler: () => jsonResponse([mockVectorInteractionMessage]),
+    },
+    {
+      matcher: (req) => req.url.includes("/rest/v1/user_embeddings") && req.method === "GET",
+      handler: () => jsonResponse({ embedding: embedding(0) }),
+    },
+    {
+      matcher: (req) => req.url.includes("/rest/v1/party_embeddings") && req.method === "GET",
+      handler: () => jsonResponse({ message: "DB connection error" }, { status: 500 }),
+    },
+  ]);
+
+  try {
+    await withEnv(
+      {
+        SUPABASE_URL: "https://supabase.test",
+        SUPABASE_SERVICE_ROLE_KEY: "service-key",
+        OPENAI_API_KEY: "openai-key",
+      },
+      async () => {
+        await withMockedFetch(fetchMock, async () => {
+          await withNoIntervals(async () => {
+            const response = await handler(jsonRequest("http://localhost", {}));
+            const payload = await readJson(response);
+
+            assertEquals(response.status, 200);
+            assertEquals(payload.processed, 0);
+          });
+        });
+      },
+    );
+  } finally {
+    stubs.forEach((s) => s.restore());
+  }
+  },
+});
+
+Deno.test({
+  // Fix #1441: HybridCalculator 벡터 차원 불일치 시 에러 발생
+  name: "HybridCalculator - throws on vector dimension mismatch",
+  fn: () => {
+    const calculator = new HybridCalculator({ decayRate: 0.05 });
+    assertThrows(
+      () => calculator.calculate([0.1, 0.2, 0.3], [0.1, 0.2], 0.5),
+      Error,
+      "Vector dimension mismatch",
+    );
   },
 });
