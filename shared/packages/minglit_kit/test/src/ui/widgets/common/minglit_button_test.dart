@@ -152,5 +152,61 @@ void main() {
 
       expect(find.text('작은 버튼'), findsOneWidget);
     });
+
+    // Fix #1374: Regression tests — buttons must use theme colorScheme, not hardcoded colors
+    testWidgets('primary button uses colorScheme.primary background', (tester) async {
+      const lightPrimary = Color(0xFF9900FF);
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData(
+            colorScheme: const ColorScheme.light(primary: lightPrimary),
+          ),
+          home: Scaffold(
+            body: MinglitButton(label: '테마 테스트', onPressed: () {}),
+          ),
+        ),
+      );
+
+      final button = tester.widget<ElevatedButton>(find.byType(ElevatedButton));
+      final style = button.style!;
+      final bg = style.backgroundColor?.resolve({});
+      expect(bg, lightPrimary);
+    });
+
+    testWidgets('secondary button uses colorScheme.primary for border', (tester) async {
+      const testPrimary = Color(0xFF1234AB);
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData(
+            colorScheme: const ColorScheme.light(primary: testPrimary),
+          ),
+          home: Scaffold(
+            body: MinglitButton.secondary(label: '보더 테스트', onPressed: () {}),
+          ),
+        ),
+      );
+
+      final button = tester.widget<OutlinedButton>(find.byType(OutlinedButton));
+      final side = button.style!.side?.resolve({});
+      expect(side?.color, testPrimary);
+    });
+
+    testWidgets('dark mode: primary button adapts to dark theme color', (tester) async {
+      const darkPrimary = Color(0xFFAA33FF);
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData(
+            colorScheme: const ColorScheme.dark(primary: darkPrimary),
+          ),
+          home: Scaffold(
+            body: MinglitButton(label: '다크모드', onPressed: () {}),
+          ),
+        ),
+      );
+
+      final button = tester.widget<ElevatedButton>(find.byType(ElevatedButton));
+      final bg = button.style!.backgroundColor?.resolve({});
+      expect(bg, darkPrimary);
+    });
   });
 }
