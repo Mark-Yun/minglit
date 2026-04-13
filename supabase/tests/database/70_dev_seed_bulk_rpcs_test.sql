@@ -66,13 +66,16 @@ SELECT ok(
 );
 
 -- ─── 6. dev_seed_bulk_partners: owner role recovery on rerun ─────────────────
+-- Note: query public.user_profiles (created via on_auth_user_created trigger)
+-- instead of auth.users directly (no direct access in pgTAP context).
 DO $$
 DECLARE
   partner_payload jsonb;
-  seed_user_id uuid;
-  partner_id uuid;
+  v_seed_user_id  uuid;
+  v_partner_id    uuid;
 BEGIN
-  SELECT id INTO seed_user_id FROM auth.users WHERE email = 'seed_test_pgtap@test.com';
+  -- Retrieve user ID from public.user_profiles (populated by trigger after dev_seed_bulk_users)
+  SELECT id INTO v_seed_user_id FROM public.user_profiles WHERE username = 'seed_test_pgtap';
 
   partner_payload := jsonb_build_array(jsonb_build_object(
     'name', 'Seed Test Partner',
@@ -91,16 +94,17 @@ BEGIN
   -- First run: creates partner + owner permission
   PERFORM dev_seed_bulk_partners(partner_payload, '[]'::jsonb);
 
+  SELECT id INTO v_partner_id FROM public.partners WHERE biz_number = 'BIZ-PGTAP-001';
+
   -- Simulate permission drift: delete owner permission
-  SELECT id INTO partner_id FROM public.partners WHERE biz_number = 'BIZ-PGTAP-001';
   DELETE FROM public.partner_member_permissions
-  WHERE partner_id = partner_id AND user_id = seed_user_id;
+  WHERE partner_id = v_partner_id AND user_id = v_seed_user_id;
 
   -- Second run: should recover owner permission
   PERFORM dev_seed_bulk_partners(partner_payload, '[]'::jsonb);
 
-  PERFORM set_config('tests.owner_partner_id', partner_id::text, true);
-  PERFORM set_config('tests.owner_user_id', seed_user_id::text, true);
+  PERFORM set_config('tests.owner_partner_id', v_partner_id::text, true);
+  PERFORM set_config('tests.owner_user_id', v_seed_user_id::text, true);
 END;
 $$;
 
@@ -120,14 +124,12 @@ SELECT ok(
   'location not duplicated on second run'
 );
 
--- ─── 8. cleanup ──────────────────────────────────────────────────────────────
+-- ─── 8. cleanup (public tables only — auth.users cleaned up by ROLLBACK) ─────
 DELETE FROM public.partner_member_permissions
 WHERE partner_id = current_setting('tests.owner_partner_id')::uuid;
 DELETE FROM public.locations
 WHERE partner_id = current_setting('tests.owner_partner_id')::uuid;
 DELETE FROM public.partners WHERE biz_number = 'BIZ-PGTAP-001';
-DELETE FROM auth.identities WHERE provider_id = 'seed_test_pgtap@test.com';
-DELETE FROM auth.users WHERE email = 'seed_test_pgtap@test.com';
 
 SELECT pass('cleanup complete');
 
