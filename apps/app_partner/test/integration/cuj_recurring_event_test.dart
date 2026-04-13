@@ -168,11 +168,7 @@ void main() {
     // ----------------------------------------------------------------
     group('TC-P09-001-R: 반복 규칙 생성 — repository.create() 파라미터 검증', () {
       test('weekly 패턴 규칙 생성 시 create()가 올바른 파라미터로 호출된다', () async {
-        final createdRule = _makeRule(
-          status: RecurrenceStatus.active,
-          pattern: RecurrencePattern.weekly,
-          daysOfWeek: const [1, 3],
-        );
+        final createdRule = _makeRule();
 
         when(
           () => mockRepo.create(
@@ -218,9 +214,7 @@ void main() {
           endTime: '21:00',
           createdAt: now,
           updatedAt: now,
-          daysOfWeek: const [],
           monthDay: 15,
-          status: RecurrenceStatus.active,
         );
 
         when(
@@ -354,19 +348,22 @@ void main() {
         verifyNoMoreInteractions(mockRepo);
       });
 
-      test('cancel() 완료 후 getByPartyId()로 조회하면 null 또는 cancelled 규칙을 반환한다', () async {
-        // cancelled 상태의 규칙은 getByPartyId()가 null을 반환한다
-        // (쿼리에서 status != 'cancelled' 필터링)
-        when(() => mockRepo.cancel(any())).thenAnswer((_) async {});
-        when(
-          () => mockRepo.getByPartyId(any()),
-        ).thenAnswer((_) async => null);
+      test(
+        'cancel() 완료 후 getByPartyId()로 조회하면 null 또는 cancelled 규칙을 반환한다',
+        () async {
+          // cancelled 상태의 규칙은 getByPartyId()가 null을 반환한다
+          // (쿼리에서 status != 'cancelled' 필터링)
+          when(() => mockRepo.cancel(any())).thenAnswer((_) async {});
+          when(
+            () => mockRepo.getByPartyId(any()),
+          ).thenAnswer((_) async => null);
 
-        await mockRepo.cancel(_ruleId);
-        final result = await mockRepo.getByPartyId(_partyId);
+          await mockRepo.cancel(_ruleId);
+          final result = await mockRepo.getByPartyId(_partyId);
 
-        expect(result, isNull);
-      });
+          expect(result, isNull);
+        },
+      );
     });
 
     // ----------------------------------------------------------------

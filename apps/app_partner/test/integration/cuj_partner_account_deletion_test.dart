@@ -274,7 +274,9 @@ void main() {
           identities: const [],
         );
 
-        final pendingStatus = DeletionStatus.fromDeletedAt(DateTime(2026, 4, 13));
+        final pendingStatus = DeletionStatus.fromDeletedAt(
+          DateTime(2026, 4, 13),
+        );
 
         // reauthenticate: 소셜 유저이므로 null 비밀번호로 호출
         when(
