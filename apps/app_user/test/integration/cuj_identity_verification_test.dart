@@ -101,20 +101,25 @@ void main() {
           ),
         );
 
-        // 동의 시트 표시 대기
+        // 동의 시트 표시 대기 + 입장 애니메이션(250ms) 완료까지 시간 부여.
+        // _drainConsentFlow(4 pumps ≈ 67ms)만으로는 입장 애니메이션이 26%에서
+        // 중단되어, 취소 탭 후 역방향 퇴장 애니메이션 시간이 ~53ms로 짧아진다.
+        // 짧은 퇴장 애니메이션 후 async 체인이 완결되지 않는 경우가 있어
+        // 입장 애니메이션을 먼저 완전히 소진한 뒤 취소를 탭한다.
         await _drainConsentFlow(tester);
+        await tester.pump(const Duration(milliseconds: 300)); // 입장 애니메이션 완료
 
         // 동의 시트에서 취소 탭
         await tester.tap(find.text('취소'));
-        // Fix: 시간을 진행시켜 바텀시트 퇴장 애니메이션을 완료시킨다.
+        // Fix: 시간을 진행시켜 바텀시트 퇴장 애니메이션(200ms)을 완료시킨다.
         // pump() without duration은 fake clock을 진행시키지 않으므로
         // AnimationController 기반 퇴장 애니메이션이 완료되지 않고
         // showModalBottomSheet의 Future가 resolve되지 않는다.
         // 퇴장 후 finally 블록: _isLoading = false → 에러 메시지 표시.
         await tester.pump(); // Navigator.pop(false) 시작
         await tester.pump(
-          const Duration(milliseconds: 500),
-        ); // 퇴장 애니메이션 + async 체인 완료
+          const Duration(milliseconds: 300),
+        ); // 퇴장 애니메이션(200ms) + async 체인 완료 + setState 프레임
         await tester.pump(); // 최종 재빌드
 
         // 에러 안내 메시지 및 재시도 버튼 표시 확인
