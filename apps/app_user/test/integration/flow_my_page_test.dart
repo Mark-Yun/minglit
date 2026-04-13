@@ -166,10 +166,11 @@ void main() {
       expect(find.byType(PurchaseHistoryPage), findsOneWidget);
     });
 
-    testWidgets('로그아웃 tap → 홈으로 이동', (tester) async {
+    testWidgets('로그아웃 tap → 확인 다이얼로그 → 홈으로 이동', (tester) async {
       setKoreanLocale(tester);
       final user = createMockUserForTest();
       // Fix #1213: 로그아웃은 계정 관리 서브페이지(/my/account)로 이동
+      // Fix #1378: 로그아웃 확인 다이얼로그 추가로 인해 두 단계로 처리
       await tester.pumpWidget(
         createTestApp(
           isLoggedIn: true,
@@ -180,7 +181,21 @@ void main() {
       await tester.pump();
       await tester.pump();
 
+      // 1단계: 로그아웃 버튼 탭 → 확인 다이얼로그 열림
       await tester.tap(find.text('로그아웃'));
+      await tester.pumpAndSettle();
+
+      // 다이얼로그 확인: 취소/로그아웃(확인) 버튼이 모두 표시됨
+      expect(find.text('로그아웃 하시겠어요?'), findsOneWidget);
+      expect(find.text('취소'), findsOneWidget);
+
+      // 2단계: 다이얼로그에서 '로그아웃' 확인 버튼 탭
+      // 다이얼로그 내의 '로그아웃' 버튼 (TextButton) 탭
+      final confirmButton = find.ancestor(
+        of: find.text('로그아웃').last,
+        matching: find.byType(TextButton),
+      );
+      await tester.tap(confirmButton);
       // GoRouter.go('/') + Future.delayed(Duration.zero) + signOut
       await tester.pumpAndSettle();
 
