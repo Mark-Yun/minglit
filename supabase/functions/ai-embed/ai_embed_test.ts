@@ -11,7 +11,7 @@ import {
   withMockedFetch,
 } from "../_test_utils/mock_http.ts";
 import { mockVectorInteractionMessage, mockVectorPartyMessage } from "../_test_utils/fixtures.ts";
-import { OpenAIService } from "./openai_service.ts";
+import { OpenAIEmbedding } from "../_shared/ai/adapters/openai_embedding.ts";
 import { WorkerUtils } from "../_shared/worker_utils.ts";
 
 function embedding(value: number, size = 3) {
@@ -19,7 +19,7 @@ function embedding(value: number, size = 3) {
 }
 
 Deno.test({
-  name: "vector-worker - processes party message",
+  name: "ai-embed - processes party message",
   fn: async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
@@ -28,7 +28,7 @@ Deno.test({
     stub(WorkerUtils.prototype, "markProcessed", async () => {}),
     stub(WorkerUtils.prototype, "moveToDLQ", async () => {}),
     stub(WorkerUtils.prototype, "logTimeLag", () => {}),
-    stub(OpenAIService.prototype, "generateEmbeddings", async () => [embedding(0.1)]),
+    stub(OpenAIEmbedding.prototype, "generateEmbeddings", async () => [embedding(0.1)]),
   ];
 
   const { fetchMock } = createFetchMock([
@@ -76,7 +76,7 @@ Deno.test({
 });
 
 Deno.test({
-  name: "vector-worker - processes interaction message",
+  name: "ai-embed - processes interaction message",
   fn: async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
@@ -85,7 +85,7 @@ Deno.test({
     stub(WorkerUtils.prototype, "markProcessed", async () => {}),
     stub(WorkerUtils.prototype, "moveToDLQ", async () => {}),
     stub(WorkerUtils.prototype, "logTimeLag", () => {}),
-    stub(OpenAIService.prototype, "generateEmbeddings", async () => []),
+    stub(OpenAIEmbedding.prototype, "generateEmbeddings", async () => []),
   ];
 
   const { fetchMock } = createFetchMock([
@@ -141,7 +141,7 @@ Deno.test({
 });
 
 Deno.test({
-  name: "vector-worker - empty queue returns processed 0",
+  name: "ai-embed - empty queue returns processed 0",
   fn: async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
@@ -150,7 +150,7 @@ Deno.test({
     stub(WorkerUtils.prototype, "markProcessed", async () => {}),
     stub(WorkerUtils.prototype, "moveToDLQ", async () => {}),
     stub(WorkerUtils.prototype, "logTimeLag", () => {}),
-    stub(OpenAIService.prototype, "generateEmbeddings", async () => []),
+    stub(OpenAIEmbedding.prototype, "generateEmbeddings", async () => []),
   ];
 
   const { fetchMock } = createFetchMock([
@@ -190,7 +190,7 @@ Deno.test({
 });
 
 Deno.test({
-  name: "vector-worker - missing env returns 500",
+  name: "ai-embed - missing env returns 500",
   fn: async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
   const { fetchMock } = createFetchMock([]);
@@ -217,7 +217,7 @@ Deno.test({
 });
 
 Deno.test({
-  name: "vector-worker - openai error returns processed 0",
+  name: "ai-embed - embedding error returns processed 0",
   fn: async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
@@ -226,8 +226,8 @@ Deno.test({
     stub(WorkerUtils.prototype, "markProcessed", async () => {}),
     stub(WorkerUtils.prototype, "moveToDLQ", async () => {}),
     stub(WorkerUtils.prototype, "logTimeLag", () => {}),
-    stub(OpenAIService.prototype, "generateEmbeddings", async () => {
-      throw new Error("OpenAI failure");
+    stub(OpenAIEmbedding.prototype, "generateEmbeddings", async () => {
+      throw new Error("Embedding provider failure");
     }),
   ];
 

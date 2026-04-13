@@ -1,12 +1,12 @@
 import { createServiceClient } from '../_shared/supabase_client.ts'
 import { nowISO } from '../_shared/temporal_utils.ts'
-import { OpenAIService } from './openai_service.ts'
+import { createEmbeddingAdapter } from '../_shared/ai/factory.ts'
 import { serializeParty } from './party_serializer.ts'
 import { HybridCalculator } from './calculator.ts'
 import { WorkerUtils } from '../_shared/worker_utils.ts'
 import { initSentry, withHandler, log } from '../_shared/logger.ts'
 
-const FN = "vector-worker";
+const FN = "ai-embed";
 
 const WEIGHTS: Record<string, number> = {
   view: 0.1,
@@ -20,17 +20,13 @@ const calculator = new HybridCalculator({ decayRate: 0.05 });
 initSentry();
 
 Deno.serve(withHandler(async (req) => {
-  log({ function: FN, level: "info", message: "Vector Worker Triggered! Checking environment and auth..." });
+  log({ function: FN, level: "info", message: "AI Embed Worker Triggered! Checking environment and auth..." });
   try {
     const payload = await req.json().catch(() => ({}));
     const batchSize = payload.batch_size ?? 50;
 
-    const openAiKey = Deno.env.get('OPENAI_API_KEY');
-
-    if (!openAiKey) throw new Error("Missing OPENAI_API_KEY (Make sure .env is in function folder)");
-
     const supabase = createServiceClient();
-    const openAi = new OpenAIService(openAiKey);
+    const adapter = createEmbeddingAdapter();
     const utils = new WorkerUtils(supabase, 'q_vectors');
 
     // 1. Read Batch from PGMQ
@@ -92,7 +88,7 @@ Deno.serve(withHandler(async (req) => {
       }
     }
 
-    // 2. Process Party Vectorization (Efficient OpenAI Batching)
+    // 2. Process Party Vectorization (Efficient Batching via EmbeddingAdapter)
     if (partyTasks.length > 0) {
       try {
         // Separate public and private parties
@@ -110,8 +106,8 @@ Deno.serve(withHandler(async (req) => {
         // Process only public parties
         if (publicPartyTasks.length > 0) {
           const texts = publicPartyTasks.map(t => serializeParty(t.record));
-          log({ function: FN, level: "info", message: `Requesting ${texts.length} embeddings from OpenAI...` });
-          const embeddings = await openAi.generateEmbeddings(texts);
+          log({ function: FN, level: "info", message: `Requesting ${texts.length} embeddings...` });
+          const embeddings = await adapter.generateEmbeddings(texts);
           log({ function: FN, level: "info", message: `Received ${embeddings.length} embeddings.` });
 
           for (let i = 0; i < publicPartyTasks.length; i++) {
@@ -188,7 +184,7 @@ Deno.serve(withHandler(async (req) => {
 
   } catch (err: unknown) {
     const errorMessage = err instanceof Error ? err.message : String(err);
-    log({ function: FN, level: "error", message: `Vector Worker Error: ${errorMessage}` });
+    log({ function: FN, level: "error", message: `AI Embed Worker Error: ${errorMessage}` });
     return new Response(JSON.stringify({ error: errorMessage }), {
       status: 500,
       headers: { "Content-Type": "application/json" }
