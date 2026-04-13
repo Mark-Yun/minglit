@@ -11,12 +11,11 @@ import {
 import { requireAuth } from "../_shared/auth_utils.ts";
 import { initSentry, withHandler } from "../_shared/logger.ts";
 
-const FN = "partner-manage-event";
 
 initSentry();
 
 const VALID_EVENT_STATUSES = ["scheduled", "cancelled", "completed"];
-const VALID_GENDERS = ["male", "female"];
+const _VALID_GENDERS = ["male", "female"];
 
 // Fields allowed in event create/update
 const EVENT_FIELDS = [

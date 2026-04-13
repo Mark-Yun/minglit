@@ -10,7 +10,6 @@ import {
 import { requireAuth } from "../_shared/auth_utils.ts";
 import { initSentry, withHandler } from "../_shared/logger.ts";
 
-const FN = "partner-register";
 
 initSentry();
 import {
@@ -112,7 +111,7 @@ async function handleRequest(req: Request): Promise<Response> {
       }
 
       // Fix #311: 상태 조건을 UPDATE WHERE에 포함하여 원자적 검사
-      const { error: updateError, count } = await supabase
+      const { error: updateError, count: _count } = await supabase
         .from("partner_applications")
         .update(record)
         .eq("id", applicationId)

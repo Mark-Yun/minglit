@@ -11,7 +11,6 @@ import {
 import { requireAuth } from "../_shared/auth_utils.ts";
 import { initSentry, withHandler } from "../_shared/logger.ts";
 
-const FN = "recurrence-rules";
 
 initSentry();
 

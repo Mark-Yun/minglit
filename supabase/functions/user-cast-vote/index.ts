@@ -10,7 +10,6 @@ import {
 import { requireAuth } from "../_shared/auth_utils.ts";
 import { initSentry, withHandler } from "../_shared/logger.ts";
 
-const FN = "user-cast-vote";
 
 initSentry();
 
@@ -131,7 +130,7 @@ Deno.serve(withHandler(async (req: Request): Promise<Response> => {
   // 7. Atomic vote count check + insert via RPC (prevents race condition)
   const maxVoteCount = Math.max(...rules.map((r: { vote_count: number }) => r.vote_count));
 
-  const { data: rpcResult, error: rpcError } = await supabase.rpc("cast_match_vote", {
+  const { data: _rpcResult, error: rpcError } = await supabase.rpc("cast_match_vote", {
     p_event_id: eventId,
     p_voter_id: voterId,
     p_candidate_id: candidateId,

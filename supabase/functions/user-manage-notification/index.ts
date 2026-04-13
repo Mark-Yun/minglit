@@ -3,7 +3,6 @@ import { corsResponse, errorResponse, successResponse } from "../_shared/respons
 import { requireAuth } from "../_shared/auth_utils.ts";
 import { initSentry, withHandler } from "../_shared/logger.ts";
 
-const FN = "user-manage-notification";
 
 initSentry();
 

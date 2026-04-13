@@ -1,6 +1,5 @@
 import { initSentry, withHandler } from "../_shared/logger.ts";
 
-const FN = "dev-mock-portone";
 
 initSentry();
 

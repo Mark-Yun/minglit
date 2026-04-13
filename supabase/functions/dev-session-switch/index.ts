@@ -1,7 +1,6 @@
 import { createServiceClient } from '../_shared/supabase_client.ts'
 import { initSentry, withHandler } from '../_shared/logger.ts'
 
-const FN = "dev-session-switch";
 
 initSentry();
 
