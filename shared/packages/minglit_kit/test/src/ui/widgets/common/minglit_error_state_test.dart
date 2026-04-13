@@ -110,5 +110,93 @@ void main() {
       ).colorScheme;
       expect(icon.color, equals(colorScheme.error));
     });
+
+    // Fix #1383: card and inline variant tests
+    testWidgets('card variant renders with icon and no retry button', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrap(
+          const MinglitErrorState.card(
+            title: '카드 오류',
+            subtitle: '상세 내용',
+          ),
+        ),
+      );
+
+      expect(find.text('카드 오류'), findsOneWidget);
+      expect(find.text('상세 내용'), findsOneWidget);
+      expect(find.byIcon(Icons.error_outline), findsOneWidget);
+      expect(find.byType(FilledButton), findsNothing);
+    });
+
+    testWidgets('card variant has colored background container', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrap(const MinglitErrorState.card()),
+      );
+
+      // Card variant wraps content in a Container with colored background and radius
+      final containers = tester.widgetList<Container>(find.byType(Container));
+      final decorated = containers
+          .where(
+            (c) =>
+                c.decoration is BoxDecoration &&
+                (c.decoration! as BoxDecoration).color != null,
+          )
+          .toList();
+      expect(decorated, isNotEmpty);
+      final deco = decorated.first.decoration! as BoxDecoration;
+      expect(deco.color, isNotNull);
+      expect(deco.borderRadius, isNotNull);
+    });
+
+    testWidgets('inline variant renders with no icon', (tester) async {
+      await tester.pumpWidget(
+        wrap(const MinglitErrorState.inline(title: '인라인 오류')),
+      );
+
+      expect(find.text('인라인 오류'), findsOneWidget);
+      expect(find.byIcon(Icons.error_outline), findsNothing);
+      expect(find.byType(FilledButton), findsNothing);
+    });
+
+    testWidgets('inline variant has bordered background container', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrap(const MinglitErrorState.inline()),
+      );
+
+      // Inline variant wraps content in a Container with border decoration
+      final containers = tester.widgetList<Container>(find.byType(Container));
+      final bordered = containers
+          .where(
+            (c) =>
+                c.decoration is BoxDecoration &&
+                (c.decoration! as BoxDecoration).border != null,
+          )
+          .toList();
+      expect(bordered, isNotEmpty);
+      final deco = bordered.first.decoration! as BoxDecoration;
+      expect(deco.border, isNotNull);
+      expect(deco.borderRadius, isNotNull);
+    });
+
+    testWidgets('fullPage variant returns content without container', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrap(const MinglitErrorState()),
+      );
+
+      expect(find.byIcon(Icons.error_outline), findsOneWidget);
+      expect(find.text('오류가 발생했습니다.'), findsOneWidget);
+      // fullPage renders Center directly — no decorated Container wrapping the content
+      final containers = tester.widgetList<Container>(find.byType(Container));
+      final decorated = containers.where((c) => c.decoration != null).toList();
+      expect(decorated, isEmpty);
+    });
   });
 }

@@ -148,4 +148,19 @@ class _MinglitComponentThemes {
     thickness: 1,
     space: MinglitSpacing.medium,
   );
+
+  static SnackBarThemeData snackBar(MinglitColorSet c) => SnackBarThemeData(
+    backgroundColor: c.textPrimary,
+    contentTextStyle: TextStyle(
+      // Fix: use c.background so foreground contrasts with c.textPrimary in both light and dark
+      color: c.background,
+      fontSize: 14,
+      fontWeight: FontWeight.w500,
+    ),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(MinglitRadius.small),
+    ),
+    behavior: SnackBarBehavior.floating,
+    elevation: 2,
+  );
 }

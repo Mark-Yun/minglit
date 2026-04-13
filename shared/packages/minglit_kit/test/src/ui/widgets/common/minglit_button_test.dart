@@ -234,5 +234,117 @@ void main() {
       final bg = button.style!.backgroundColor?.resolve({});
       expect(bg, darkPrimary);
     });
+
+    // Fix #1383: destructive variant tests
+    testWidgets('destructive renders ElevatedButton', (tester) async {
+      await tester.pumpWidget(
+        buildApp(
+          MinglitButton.destructive(label: '삭제', onPressed: () {}),
+        ),
+      );
+
+      expect(find.byType(ElevatedButton), findsOneWidget);
+      expect(find.text('삭제'), findsOneWidget);
+    });
+
+    testWidgets('destructive uses colorScheme.error background', (
+      tester,
+    ) async {
+      // Use a custom color distinct from Flutter's default error color to
+      // verify the button reads from colorScheme.error, not a hardcoded value.
+      const testError = Color(0xFF990000);
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData(
+            colorScheme: const ColorScheme.light(error: testError),
+          ),
+          home: Scaffold(
+            body: MinglitButton.destructive(label: '탈퇴', onPressed: () {}),
+          ),
+        ),
+      );
+
+      final button = tester.widget<ElevatedButton>(find.byType(ElevatedButton));
+      final bg = button.style!.backgroundColor?.resolve({});
+      expect(bg, testError);
+    });
+
+    testWidgets('destructive is disabled when onPressed is null', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        buildApp(
+          const MinglitButton.destructive(label: '삭제'),
+        ),
+      );
+
+      final button = tester.widget<ElevatedButton>(find.byType(ElevatedButton));
+      expect(button.onPressed, isNull);
+    });
+
+    testWidgets('destructive calls onPressed when tapped', (tester) async {
+      var pressed = false;
+      await tester.pumpWidget(
+        buildApp(
+          MinglitButton.destructive(
+            label: '탈퇴하기',
+            onPressed: () => pressed = true,
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('탈퇴하기'));
+      expect(pressed, isTrue);
+    });
+
+    testWidgets('destructive shows loading indicator when isLoading', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        buildApp(
+          MinglitButton.destructive(
+            label: '삭제',
+            onPressed: () {},
+            isLoading: true,
+          ),
+        ),
+      );
+
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      final button = tester.widget<ElevatedButton>(find.byType(ElevatedButton));
+      expect(button.onPressed, isNull);
+    });
+
+    testWidgets(
+      'destructive loading spinner uses colorScheme.onError color',
+      (tester) async {
+        // Use custom colors distinct from Material defaults to verify the spinner
+        // reads colorScheme.onError (not hardcoded) and background reads colorScheme.error.
+        const testError = Color(0xFF990000);
+        const testOnError = Color(0xFFEEEEEE);
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: ThemeData(
+              colorScheme: const ColorScheme.light(
+                error: testError,
+                onError: testOnError,
+              ),
+            ),
+            home: Scaffold(
+              body: MinglitButton.destructive(
+                label: '삭제',
+                onPressed: () {},
+                isLoading: true,
+              ),
+            ),
+          ),
+        );
+
+        final indicator = tester.widget<CircularProgressIndicator>(
+          find.byType(CircularProgressIndicator),
+        );
+        expect(indicator.color, testOnError);
+      },
+    );
   });
 }

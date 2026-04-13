@@ -11,6 +11,9 @@ enum MinglitButtonVariant {
 
   /// Text-only button. Use for tertiary or inline actions.
   text,
+
+  /// Filled button with error color. Use for destructive actions (삭제, 탈퇴).
+  destructive,
 }
 
 /// Button size for [MinglitButton].
@@ -89,6 +92,19 @@ class MinglitButton extends StatelessWidget {
     super.key,
   }) : variant = MinglitButtonVariant.text;
 
+  /// Creates a destructive (filled error-color) button.
+  ///
+  /// Use for irreversible actions such as 삭제, 탈퇴, 취소.
+  const MinglitButton.destructive({
+    required this.label,
+    this.onPressed,
+    this.icon,
+    this.isLoading = false,
+    this.size = MinglitButtonSize.large,
+    this.expand = true,
+    super.key,
+  }) : variant = MinglitButtonVariant.destructive;
+
   /// Button label text.
   final String label;
 
@@ -137,6 +153,12 @@ class MinglitButton extends StatelessWidget {
           style: _textStyle(context),
           child: child,
         );
+      case MinglitButtonVariant.destructive:
+        button = ElevatedButton(
+          onPressed: effectiveOnPressed,
+          style: _destructiveStyle(context),
+          child: child,
+        );
     }
 
     if (expand) {
@@ -149,9 +171,12 @@ class MinglitButton extends StatelessWidget {
     final theme = Theme.of(context);
 
     if (isLoading) {
-      final color = variant == MinglitButtonVariant.primary
-          ? theme.colorScheme.onPrimary
-          : theme.colorScheme.primary;
+      final color = switch (variant) {
+        MinglitButtonVariant.primary => theme.colorScheme.onPrimary,
+        // Fix #1408: destructive uses error/onError contract, spinner must match
+        MinglitButtonVariant.destructive => theme.colorScheme.onError,
+        _ => theme.colorScheme.primary,
+      };
       return SizedBox(
         width: _iconSize,
         height: _iconSize,
@@ -251,6 +276,24 @@ class MinglitButton extends StatelessWidget {
     return TextButton.styleFrom(
       foregroundColor: Theme.of(context).colorScheme.primary,
       minimumSize: Size(0, _height),
+      textStyle: TextStyle(
+        // ignore: minglit_no_hardcoded_text_style -- button theme definition
+        fontSize: _fontSize,
+        fontWeight: FontWeight.bold,
+      ),
+    );
+  }
+
+  ButtonStyle _destructiveStyle(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return ElevatedButton.styleFrom(
+      backgroundColor: colorScheme.error,
+      foregroundColor: colorScheme.onError,
+      minimumSize: Size(0, _height),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(MinglitRadius.button),
+      ),
+      elevation: 0,
       textStyle: TextStyle(
         // ignore: minglit_no_hardcoded_text_style -- button theme definition
         fontSize: _fontSize,
