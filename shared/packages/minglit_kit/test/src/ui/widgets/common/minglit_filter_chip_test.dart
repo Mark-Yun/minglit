@@ -58,34 +58,37 @@ void main() {
     });
 
     // Fix #1376: 다크모드 — colorScheme 기반 색상 확인
-    testWidgets('selected uses colorScheme.onSurface background in light mode', (
-      tester,
-    ) async {
-      final lightTheme = MinglitTheme.materialTheme;
-      await tester.pumpWidget(
-        buildApp(
-          MinglitFilterChip(
-            label: '선택됨',
-            isSelected: true,
-            onTap: () {},
+    testWidgets(
+      'selected uses colorScheme.onSurface background in light mode',
+      (
+        tester,
+      ) async {
+        final lightTheme = MinglitTheme.materialTheme;
+        await tester.pumpWidget(
+          buildApp(
+            MinglitFilterChip(
+              label: '선택됨',
+              isSelected: true,
+              onTap: () {},
+            ),
+            theme: lightTheme,
           ),
-          theme: lightTheme,
-        ),
-      );
+        );
 
-      final container = tester.widget<Container>(
-        find.descendant(
-          of: find.byType(MinglitFilterChip),
-          matching: find.byType(Container),
-        ),
-      );
-      final decoration = container.decoration! as BoxDecoration;
-      expect(
-        decoration.color,
-        lightTheme.colorScheme.onSurface,
-        reason: 'selected chip background should use colorScheme.onSurface',
-      );
-    });
+        final container = tester.widget<Container>(
+          find.descendant(
+            of: find.byType(MinglitFilterChip),
+            matching: find.byType(Container),
+          ),
+        );
+        final decoration = container.decoration! as BoxDecoration;
+        expect(
+          decoration.color,
+          lightTheme.colorScheme.onSurface,
+          reason: 'selected chip background should use colorScheme.onSurface',
+        );
+      },
+    );
 
     testWidgets('dark mode selected bg equals colorScheme.onSurface', (
       tester,

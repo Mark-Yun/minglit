@@ -134,7 +134,7 @@ class MinglitChip extends StatelessWidget {
       return ConstrainedBox(
         constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
         child: Center(
-          widthFactor: 1.0,
+          widthFactor: 1,
           child: InkWell(
             onTap: onTap,
             borderRadius: BorderRadius.circular(MinglitRadius.small),

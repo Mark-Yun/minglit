@@ -96,7 +96,7 @@ class MinglitFilterChip extends StatelessWidget {
       child: ConstrainedBox(
         constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
         child: Center(
-          widthFactor: 1.0,
+          widthFactor: 1,
           child: Container(
             padding: padding,
             decoration: BoxDecoration(
