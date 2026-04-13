@@ -158,6 +158,16 @@ mixin _EventRepositoryCommands
         },
       );
 
+      // Fix #1409: 비-200 응답 시 response.data가 null이어서 캐스트 크래시 발생.
+      // cancelOrder와 동일한 패턴으로 status 먼저 확인 후 캐스트한다.
+      if (response.status != 200) {
+        final errData = response.data;
+        final errorMsg = errData is Map
+            ? (errData['error'] as String?) ?? '이벤트 신청에 실패했습니다.'
+            : '이벤트 신청에 실패했습니다.';
+        throw MinglitUserException(errorMsg);
+      }
+
       final data = response.data as Map<String, dynamic>;
       final type = data['type'] as String;
       final applicationId = data['application_id'] as String;
