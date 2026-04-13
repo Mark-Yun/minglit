@@ -81,13 +81,9 @@ function makeMatchFetchHandler(opts: { efStatus?: number; pairs?: Array<{ user1:
 // simCheckin tests
 // ─────────────────────────────────────────────────────────
 
-// sanitizeResources/sanitizeOps disabled: @supabase/auth-js internally calls setInterval for
-// token auto-refresh even when persistSession=false. The interval leaks within the test but is
-// harmless — suppressing the leak check is correct here rather than patching the library.
+// Fix #1292: sanitizer 복원 — autoRefreshToken: false로 supabase-js interval 누수 해결
 Deno.test({
   name: "simCheckin - 70% checked_in via EF, 30% no_show via direct DB",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const noShowUpdated: string[] = [];
     // Track statuses for both EF (via fetch mock side-effect) and direct DB (via update mock)
@@ -203,7 +199,7 @@ Deno.test({
   },
 });
 
-Deno.test({ name: "simCheckin - empty participants returns empty", sanitizeOps: false, sanitizeResources: false, fn: async () => {
+Deno.test({ name: "simCheckin - empty participants returns empty", fn: async () => {
   const mock = createMockSupabaseClient({
     tables: {
       events: {
@@ -229,11 +225,8 @@ Deno.test({ name: "simCheckin - empty participants returns empty", sanitizeOps: 
   assertEquals(result.assertions, []);
 }});
 
-// sanitizeResources/sanitizeOps disabled: supabase-js auth client leaks setInterval
 Deno.test({
   name: "simCheckin - EF failure is logged as error (not silently skipped)",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const participants = [
       { id: "p-1", user_id: "u-1", status: "ticket_issued" },

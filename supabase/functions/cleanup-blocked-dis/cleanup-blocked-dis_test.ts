@@ -10,7 +10,6 @@ import {
   withNoIntervals,
 } from "../_test_utils/mock_http.ts";
 
-const TEST_OPTS = { sanitizeOps: false, sanitizeResources: false };
 
 const ENV = {
   SUPABASE_URL: "https://supabase.test",
@@ -24,7 +23,7 @@ function serviceRoleRequest() {
   });
 }
 
-Deno.test("unauthorized request returns 401", TEST_OPTS, async () => {
+Deno.test("unauthorized request returns 401", async () => {
   const handler = await captureServeHandler(
     new URL("./index.ts", import.meta.url),
   );
@@ -42,7 +41,7 @@ Deno.test("unauthorized request returns 401", TEST_OPTS, async () => {
   });
 });
 
-Deno.test("expired blocked_dis rows are deleted", TEST_OPTS, async () => {
+Deno.test("expired blocked_dis rows are deleted", async () => {
   const handler = await captureServeHandler(
     new URL("./index.ts", import.meta.url),
   );

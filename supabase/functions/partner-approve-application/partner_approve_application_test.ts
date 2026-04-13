@@ -164,8 +164,6 @@ function bulkApproveRpcRoute(
 
 Deno.test({
   name: "OPTIONS returns CORS preflight",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const req = new Request(BASE_URL, { method: "OPTIONS" });
@@ -176,8 +174,6 @@ Deno.test({
 
 Deno.test({
   name: "GET returns 405",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const req = new Request(BASE_URL, { method: "GET" });
@@ -188,8 +184,6 @@ Deno.test({
 
 Deno.test({
   name: "Missing action returns 400",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
@@ -208,8 +202,6 @@ Deno.test({
 
 Deno.test({
   name: "approve: single approve success returns 200 with approved:1",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -236,8 +228,6 @@ Deno.test({
 
 Deno.test({
   name: "approve: application not found returns 404",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -260,8 +250,6 @@ Deno.test({
 
 Deno.test({
   name: "approve: already approved status returns 400",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -285,8 +273,6 @@ Deno.test({
 
 Deno.test({
   name: "approve: unauthorized (no auth) returns 401",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authFailRoute()]);
@@ -306,8 +292,6 @@ Deno.test({
 
 Deno.test({
   name: "approve: forbidden (insufficient permissions) returns 403",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -331,8 +315,6 @@ Deno.test({
 
 Deno.test({
   name: "approve: owner role bypasses permissions check returns 200",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -363,8 +345,6 @@ Deno.test({
 
 Deno.test({
   name: "approve: already processed (compare-and-set returns empty) returns 409",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -389,8 +369,6 @@ Deno.test({
 
 Deno.test({
   name: "approve: returns 409 when event is already full",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -417,8 +395,6 @@ Deno.test({
 
 Deno.test({
   name: "approve: returns 500 when capacity data is invalid",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -445,8 +421,6 @@ Deno.test({
 
 Deno.test({
   name: "bulk_approve: success returns 200 with approved count",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -473,8 +447,6 @@ Deno.test({
 
 Deno.test({
   name: "bulk_approve: only approves up to remaining capacity",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -507,8 +479,6 @@ Deno.test({
 
 Deno.test({
   name: "bulk_approve: returns 500 when capacity data is invalid",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
@@ -540,8 +510,6 @@ Deno.test({
 
 Deno.test({
   name: "bulk_approve: no pending apps returns 200 with approved:0",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([

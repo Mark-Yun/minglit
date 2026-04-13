@@ -27,8 +27,6 @@ function serviceRoleJsonRequest(url: string, body: unknown): Request {
 
 Deno.test({
   name: "event-matching - returns 401 for regular user JWT",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
@@ -44,8 +42,6 @@ Deno.test({
 
 Deno.test({
   name: "event-matching - returns 401 when Authorization header is missing",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
@@ -61,8 +57,6 @@ Deno.test({
 
 Deno.test({
   name: "event-matching - creates match pairs from two groups",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
@@ -121,8 +115,6 @@ Deno.test({
 
 Deno.test({
   name: "event-matching - returns existing pairs when already matched (idempotent)",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
@@ -162,8 +154,6 @@ Deno.test({
 
 Deno.test({
   name: "event-matching - returns 400 when missing event_id",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
@@ -181,8 +171,6 @@ Deno.test({
 
 Deno.test({
   name: "event-matching - returns 400 when less than 2 entry groups",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
@@ -213,8 +201,6 @@ Deno.test({
 
 Deno.test({
   name: "event-matching - returns 400 when a group has no checked-in participants",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
@@ -257,8 +243,6 @@ Deno.test({
 
 Deno.test({
   name: "event-matching - user_lower_id < user_higher_id ordering",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
@@ -319,8 +303,6 @@ Deno.test({
 
 Deno.test({
   name: "event-matching - OPTIONS returns CORS response",
-  sanitizeResources: false,
-  sanitizeOps: false,
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 

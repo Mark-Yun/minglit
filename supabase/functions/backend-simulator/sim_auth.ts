@@ -20,8 +20,10 @@ export async function getSimUserToken(
   const cached = _tokenCache.get(email);
   if (cached) return cached;
 
+  // Fix #1292: autoRefreshToken: false prevents supabase-js from registering a
+  // setInterval for token refresh, which would outlive the test scope.
   const supabase = createClient(supabaseUrl, anonKey, {
-    auth: { persistSession: false },
+    auth: { persistSession: false, autoRefreshToken: false },
   });
 
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -86,8 +88,10 @@ export async function getSimPartnerToken(
   const cached = _tokenCache.get(cacheKey);
   if (cached) return cached;
 
+  // Fix #1292: autoRefreshToken: false prevents supabase-js from registering a
+  // setInterval for token refresh, which would outlive the test scope.
   const supabase = createClient(supabaseUrl, anonKey, {
-    auth: { persistSession: false },
+    auth: { persistSession: false, autoRefreshToken: false },
   });
 
   const { data, error } = await supabase.auth.signInWithPassword({ email: partnerEmail, password });
