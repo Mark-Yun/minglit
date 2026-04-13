@@ -8,20 +8,25 @@ part of 'event_now_bar_controller.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// Returns the current [DateTime] used for time-state computations.
+/// Returns a clock function that produces the current [DateTime].
 ///
-/// Override in tests with a fixed time to make state transitions deterministic.
+/// The provider returns `() => DateTime.now()` so each call site gets a fresh
+/// timestamp instead of a cached value. Override in tests with
+/// `() => fixedNow` to make state transitions deterministic.
 
 @ProviderFor(clock)
 const clockProvider = ClockProvider._();
 
-/// Returns the current [DateTime] used for time-state computations.
+/// Returns a clock function that produces the current [DateTime].
 ///
-/// Override in tests with a fixed time to make state transitions deterministic.
+/// The provider returns `() => DateTime.now()` so each call site gets a fresh
+/// timestamp instead of a cached value. Override in tests with
+/// `() => fixedNow` to make state transitions deterministic.
 
 final class ClockProvider
-    extends $FunctionalProvider<DateTime, DateTime, DateTime>
-    with $Provider<DateTime> {
+    extends $FunctionalProvider<DateTime Function(), DateTime Function(),
+        DateTime Function()>
+    with $Provider<DateTime Function()> {
   const ClockProvider._()
     : super(
         from: null,
@@ -38,19 +43,20 @@ final class ClockProvider
 
   @$internal
   @override
-  $ProviderElement<DateTime> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
+  $ProviderElement<DateTime Function()> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
 
   @override
-  DateTime create(Ref ref) {
+  DateTime Function() create(Ref ref) {
     return clock(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(DateTime value) {
+  Override overrideWithValue(DateTime Function() value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<DateTime>(value),
+      providerOverride: $SyncValueProvider<DateTime Function()>(value),
     );
   }
 }

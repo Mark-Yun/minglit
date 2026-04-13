@@ -7,7 +7,7 @@ import '../../../../utils/mocks.dart';
 import '../../../../utils/test_utils.dart';
 
 // Fix #1321: DateTime.now() → 고정 시간으로 교체 (flaky test 방지)
-// clockProvider를 override하여 production code의 DateTime.now() 호출도 고정
+// clockProvider를 () => _fixedNow 함수로 override하여 호출 시점마다 고정 시간 반환
 final _fixedNow = DateTime(2026, 4, 13, 12);
 
 void main() {
@@ -46,7 +46,7 @@ void main() {
     List<MatchPair>? matches,
   }) {
     final overrides = <dynamic>[
-      clockProvider.overrideWithValue(_fixedNow),
+      clockProvider.overrideWithValue(() => _fixedNow),
       matchingRepositoryProvider.overrideWith((ref) => mockMatchingRepo),
     ];
 
