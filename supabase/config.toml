@@ -711,3 +711,9 @@ enabled = true
 verify_jwt = false  # JWT verification handled in function code
 import_map = "./deno.json"
 entrypoint = "./functions/user-get-ticket-token/index.ts"
+
+[functions.ai-extract-tags]
+enabled = true
+verify_jwt = false  # cron worker — auth handled in function code (requireServiceRole)
+import_map = "./deno.json"
+entrypoint = "./functions/ai-extract-tags/index.ts"
