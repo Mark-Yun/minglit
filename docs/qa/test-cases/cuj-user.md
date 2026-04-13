@@ -72,8 +72,8 @@
 | 1 | 구매 내역 (`/purchase-history`) | 해당 이벤트 항목 탭 | 이벤트 상세 또는 티켓 화면 | - |
 | 2 | 이벤트 상세 | 체크인 QR 표시 | QR 코드 생성 + 표시 | QR 생성 실패 → 에러 |
 | 3 | — (파트너가 QR 스캔) | 체크인 처리 | 체크인 완료 알림 수신 | - |
-| 4 | 홈 → `EventNowBar` → `MatchingVoteScreen` | 홈의 `EventNowBar` 탭 → 바텀시트에서 "매칭 투표" 탭 → `MatchingVoteScreen` 진입 (라우트 미등록 — `Navigator.push`로 진입, 딥링크 불가). 또는 이벤트 상세에서 직접 진입 | 참가자 프로필 카드 표시 | 참가자 0명 → "아직 참가자가 없습니다" |
-| 5 | 매칭 투표 | 참가자 프로필에 투표 (좋아요/패스) | 투표 결과 저장 | 네트워크 오류 → 재시도 |
+| 4 | 홈 → `EventNowBar` → `EventNowBottomSheet` | 홈의 `EventNowBar` 탭 → `showEventNowBottomSheet()` 호출. matching 페이즈에서 바텀시트 내부에 `MatchingContent` → `MatchingVoteContent(eventId)` 임베딩 표시 (별도 화면 이동 없음) | 참가자 프로필 카드 표시 | 참가자 0명 → "아직 참가자가 없습니다" |
+| 5 | `EventNowBottomSheet` (매칭 투표) | 참가자 프로필에 투표 (좋아요/패스) | 투표 결과 저장 | 네트워크 오류 → 재시도 |
 | 6 | 매칭 투표 | 모든 투표 완료 | "투표 완료" 안내 | - |
 | 7 | — (매칭 로직 실행 후) | 매칭 결과 알림 수신 | 알림 센터에 결과 표시 | - |
 | 8 | 알림 센터 (`/notifications`) | 매칭 결과 알림 탭 | 매칭 상대 정보 표시 | 매칭 실패 → "아쉽게도 매칭되지 않았습니다" |
