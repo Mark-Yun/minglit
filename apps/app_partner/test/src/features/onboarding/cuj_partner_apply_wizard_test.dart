@@ -79,12 +79,12 @@ void _fillAllTextFields(PartnerApplyController notifier) {
 /// Builds [PartnerApplyPage] with the given mock repo and optional overrides.
 Widget _buildApplyWidget(
   MockPartnerRepository mockRepo, {
-  List<Override> extraOverrides = const [],
+  List<Object> extraOverrides = const [],
 }) {
   return ProviderScope(
     overrides: [
       partnerRepositoryProvider.overrideWith((ref) => mockRepo),
-      ...extraOverrides,
+      ...extraOverrides.cast(),
     ],
     child: const MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
