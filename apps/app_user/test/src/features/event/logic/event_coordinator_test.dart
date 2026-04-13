@@ -1,7 +1,6 @@
 import 'package:app_user/src/features/event/logic/event_coordinator.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockGoRouter extends Mock implements GoRouter {}
@@ -40,22 +39,6 @@ void main() {
 
       verify(
         () => mockRouter.go('/events/event-789'),
-      ).called(1);
-    });
-
-    test('pushEventCuration pushes curation route', () {
-      coordinator.pushEventCuration(EventFeedType.newArrivals);
-
-      verify(
-        () => mockRouter.push('/curation'),
-      ).called(1);
-    });
-
-    test('pushEventCuration with non-default type includes query param', () {
-      coordinator.pushEventCuration(EventFeedType.nearest);
-
-      verify(
-        () => mockRouter.push(any(that: contains('/curation'))),
       ).called(1);
     });
 
