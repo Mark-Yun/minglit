@@ -87,6 +87,32 @@ jobs:
       - name: Install PostgreSQL client
         run: sudo apt-get update && sudo apt-get install -y postgresql-client
 
+      # Fix #1413: seed.dev.sql 직접 실행 — EF/RPC 없이 psql 1번으로 560명 시딩 (~3초)
+      - name: Seed dev data (psql)
+        if: ${{ steps.env.outputs.ENV == 'dev' }}
+        env:
+          DB_PASSWORD: ${{ steps.env.outputs.DB_PASSWORD }}
+          PROJECT_ID: ${{ steps.env.outputs.PROJECT_ID }}
+          POOLER_HOST: aws-0-ap-northeast-2.pooler.supabase.com
+        run: |
+          PGPASSWORD="${DB_PASSWORD}" psql \
+            "postgresql://postgres.${PROJECT_ID}@${POOLER_HOST}:5432/postgres?sslmode=require" \
+            -v ON_ERROR_STOP=1 \
+            -f supabase/seed.dev.sql
+          echo "Dev seed complete"
+
+      - name: Upload seed images
+        if: ${{ steps.env.outputs.ENV == 'dev' }}
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_DEV_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_DEV_SECRET_KEY }}
+        run: |
+          curl -sf -X POST \
+            "${SUPABASE_URL}/functions/v1/dev-seed?mode=images-only" \
+            -H "Authorization: Bearer ${SUPABASE_KEY}" \
+            --max-time 30
+          echo "Seed images uploaded"
+
       - name: Verify vault secrets
         env:
           DB_PASSWORD: ${{ steps.env.outputs.DB_PASSWORD }}
