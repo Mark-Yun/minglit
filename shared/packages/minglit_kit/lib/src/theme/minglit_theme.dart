@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:minglit_kit/src/theme/minglit_text_theme_extension.dart';
 
 part 'minglit_design_tokens.dart';
@@ -11,11 +12,20 @@ part 'minglit_quill_theme.dart';
 
 class MinglitTheme {
   /// App Bar Logo Widget
+  ///
+  /// Renders SVG logo, theme-aware: dark mode uses inverted variant.
   static Widget appBarLogo({double height = 32}) {
-    return Image.asset(
-      'packages/minglit_kit/assets/images/minglit_app_bar_logo.png',
-      height: height,
-      fit: BoxFit.contain,
+    return Builder(
+      builder: (context) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        return SvgPicture.asset(
+          isDark
+              ? 'packages/minglit_kit/assets/images/minglit_logo_inverted.svg'
+              : 'packages/minglit_kit/assets/images/minglit_logo_background_transparent.svg',
+          height: height,
+          fit: BoxFit.contain,
+        );
+      },
     );
   }
 

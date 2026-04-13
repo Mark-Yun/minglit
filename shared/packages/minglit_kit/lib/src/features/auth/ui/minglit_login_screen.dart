@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:minglit_kit/src/config/url_config.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_image.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// A common login screen for both User and Partner apps.
@@ -68,11 +67,7 @@ class MinglitLoginScreen extends ConsumerWidget {
               if (onDevTrigger != null)
                 _DevTriggerLogo(onTrigger: onDevTrigger!)
               else
-                const MinglitImage(
-                  path:
-                      'packages/minglit_kit/assets/images/minglit_app_bar_logo.png',
-                  height: 64,
-                ),
+                MinglitTheme.appBarLogo(height: 64),
               if (isPartner)
                 Text(
                   'PARTNER',
@@ -214,10 +209,7 @@ class _DevTriggerLogoState extends State<_DevTriggerLogo> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: _handleTap,
-      child: const MinglitImage(
-        path: 'packages/minglit_kit/assets/images/minglit_app_bar_logo.png',
-        height: 64,
-      ),
+      child: MinglitTheme.appBarLogo(height: 64),
     );
   }
 }
