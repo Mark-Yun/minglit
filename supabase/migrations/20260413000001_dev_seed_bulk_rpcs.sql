@@ -200,7 +200,7 @@ BEGIN
         p->'location'->>'region_1',
         p->'location'->>'region_2',
         p->'location'->>'region_3',
-        ST_SetSRID(ST_MakePoint(
+        public.ST_SetSRID(public.ST_MakePoint(
           (p->'location'->>'lng')::float,
           (p->'location'->>'lat')::float
         ), 4326)
