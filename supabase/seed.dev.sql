@@ -7,10 +7,14 @@
 --
 -- Safety:
 --   - Workflow guards with `if: ENV == 'dev'` — never runs on main/prod
---   - All inserts are idempotent (ON CONFLICT DO UPDATE / DO NOTHING)
+--   - All inserts are idempotent (SELECT/INSERT/UPDATE, NOT EXISTS checks)
 --   - Runs via session-mode pooler (port 5432) for DO block + ALTER DATABASE support
 
 -- ── Phase 1: 560 Users + 5 Partner Owners ────────────────────────────────────
+-- Uses SELECT + INSERT/UPDATE pattern (not ON CONFLICT) because:
+--   - auth.users has a partial unique index on email (WHERE is_sso_user = FALSE),
+--     not a plain unique constraint, making ON CONFLICT (email) invalid.
+--   - PL/pgSQL local variable `email_val` would shadow the column reference anyway.
 DO $$
 DECLARE
   pwd_hash     text;
@@ -30,20 +34,22 @@ DECLARE
     ARRAY['제주',      '33.4996', '126.5312']
   ];
 
-  age          int;
-  ri           int;
-  gender_val   text;
-  gender_short text;
-  last4        text;
-  prefix       int;
-  username     text;
-  email        text;
-  birth_year   int;
-  birth_date   text;
-  phone_number text;
-  phone_prefix int;
-  verified     boolean;
-  verif_short  text;
+  age           int;
+  ri            int;
+  gender_val    text;
+  gender_short  text;
+  last4         text;
+  prefix        int;
+  username_val  text;
+  email_val     text;
+  birth_year    int;
+  birth_date_val text;
+  phone_val     text;
+  phone_prefix  int;
+  verified_val  boolean;
+  verif_short   text;
+  existing_id   uuid;
+  meta          jsonb;
 BEGIN
   -- Schema check: fail fast if Supabase upgrades auth schema
   IF NOT EXISTS (
@@ -61,8 +67,8 @@ BEGIN
   -- Username: user_{age}_{m|f}_{region}
   -- Phone:    010-{5000+ri*100+(age-18)}-{1000 male | 2000 female}
   FOR age IN 18..42 LOOP
-    birth_year := current_year - age + 1;
-    birth_date := birth_year || '-01-01';
+    birth_year    := current_year - age + 1;
+    birth_date_val := birth_year || '-01-01';
 
     FOR ri IN 0..9 LOOP
       prefix := 5000 + ri * 100 + (age - 18);
@@ -70,36 +76,41 @@ BEGIN
       FOREACH gender_val IN ARRAY ARRAY['male', 'female'] LOOP
         gender_short := CASE gender_val WHEN 'male' THEN 'm' ELSE 'f' END;
         last4        := CASE gender_val WHEN 'male' THEN '1000' ELSE '2000' END;
-        username     := 'user_' || age || '_' || gender_short || '_' || regions[ri + 1][1];
-        email        := username || '@test.com';
-        phone_number := '010-' || prefix || '-' || last4;
+        username_val := 'user_' || age || '_' || gender_short || '_' || regions[ri + 1][1];
+        email_val    := username_val || '@test.com';
+        phone_val    := '010-' || prefix || '-' || last4;
+        meta         := jsonb_build_object(
+          'name',        age || CASE gender_val WHEN 'male' THEN '남' ELSE '여' END || '_' || regions[ri + 1][1],
+          'username',    username_val,
+          'gender',      gender_val,
+          'birth_date',  birth_date_val,
+          'phone_number',phone_val,
+          'is_verified', true,
+          'sim_region',  regions[ri + 1][1],
+          'sim_lat',     regions[ri + 1][2]::numeric,
+          'sim_lng',     regions[ri + 1][3]::numeric
+        );
 
-        INSERT INTO auth.users (
-          instance_id, id, aud, role, email, encrypted_password,
-          email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
-          created_at, updated_at, confirmation_token, recovery_token
-        ) VALUES (
-          '00000000-0000-0000-0000-000000000000',
-          gen_random_uuid(), 'authenticated', 'authenticated',
-          email, pwd_hash, now(),
-          '{"provider":"email","providers":["email"],"has_password":true}'::jsonb,
-          jsonb_build_object(
-            'name',        age || CASE gender_val WHEN 'male' THEN '남' ELSE '여' END || '_' || regions[ri + 1][1],
-            'username',    username,
-            'gender',      gender_val,
-            'birth_date',  birth_date,
-            'phone_number',phone_number,
-            'is_verified', true,
-            'sim_region',  regions[ri + 1][1],
-            'sim_lat',     regions[ri + 1][2]::numeric,
-            'sim_lng',     regions[ri + 1][3]::numeric
-          ),
-          now(), now(), '', ''
-        )
-        ON CONFLICT (email) DO UPDATE SET
-          encrypted_password = EXCLUDED.encrypted_password,
-          raw_user_meta_data = EXCLUDED.raw_user_meta_data,
-          updated_at         = now();
+        SELECT id INTO existing_id FROM auth.users WHERE email = email_val;
+        IF existing_id IS NULL THEN
+          INSERT INTO auth.users (
+            instance_id, id, aud, role, email, encrypted_password,
+            email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
+            created_at, updated_at, confirmation_token, recovery_token
+          ) VALUES (
+            '00000000-0000-0000-0000-000000000000',
+            gen_random_uuid(), 'authenticated', 'authenticated',
+            email_val, pwd_hash, now(),
+            '{"provider":"email","providers":["email"],"has_password":true}'::jsonb,
+            meta, now(), now(), '', ''
+          );
+        ELSE
+          UPDATE auth.users
+          SET encrypted_password = pwd_hash,
+              raw_user_meta_data = meta,
+              updated_at = now()
+          WHERE id = existing_id;
+        END IF;
       END LOOP;
     END LOOP;
   END LOOP;
@@ -109,45 +120,50 @@ BEGIN
   -- Phone prefix: age ≤ 24 → 1000+age, age ≥ 25 → 2000+age
   -- last4: {verified:1|0}{male:1|female:2}00
   FOR age IN 20..34 LOOP
-    birth_year   := current_year - age + 1;
-    birth_date   := birth_year || '-01-01';
-    phone_prefix := CASE WHEN age <= 24 THEN 1000 + age ELSE 2000 + age END;
+    birth_year    := current_year - age + 1;
+    birth_date_val := birth_year || '-01-01';
+    phone_prefix  := CASE WHEN age <= 24 THEN 1000 + age ELSE 2000 + age END;
 
     FOREACH gender_val IN ARRAY ARRAY['male', 'female'] LOOP
       gender_short := CASE gender_val WHEN 'male' THEN 'm' ELSE 'f' END;
 
-      FOREACH verified IN ARRAY ARRAY[true, false] LOOP
-        verif_short  := CASE WHEN verified THEN 'ok' ELSE 'no' END;
-        last4        := (CASE WHEN verified THEN '1' ELSE '0' END) ||
+      FOREACH verified_val IN ARRAY ARRAY[true, false] LOOP
+        verif_short  := CASE WHEN verified_val THEN 'ok' ELSE 'no' END;
+        last4        := (CASE WHEN verified_val THEN '1' ELSE '0' END) ||
                         (CASE WHEN gender_val = 'male' THEN '1' ELSE '2' END) || '00';
-        username     := 'user_' || age || '_' || gender_short || '_' || verif_short;
-        email        := username || '@test.com';
-        phone_number := '010-' || phone_prefix || '-' || last4;
+        username_val := 'user_' || age || '_' || gender_short || '_' || verif_short;
+        email_val    := username_val || '@test.com';
+        phone_val    := '010-' || phone_prefix || '-' || last4;
+        meta         := jsonb_build_object(
+          'name',        age || (CASE gender_val WHEN 'male' THEN '남' ELSE '여' END) ||
+                         '_' || (CASE WHEN verified_val THEN '인증O' ELSE '인증X' END),
+          'username',    username_val,
+          'gender',      gender_val,
+          'birth_date',  birth_date_val,
+          'phone_number',phone_val,
+          'is_verified', verified_val
+        );
 
-        INSERT INTO auth.users (
-          instance_id, id, aud, role, email, encrypted_password,
-          email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
-          created_at, updated_at, confirmation_token, recovery_token
-        ) VALUES (
-          '00000000-0000-0000-0000-000000000000',
-          gen_random_uuid(), 'authenticated', 'authenticated',
-          email, pwd_hash, now(),
-          '{"provider":"email","providers":["email"],"has_password":true}'::jsonb,
-          jsonb_build_object(
-            'name',        age || (CASE gender_val WHEN 'male' THEN '남' ELSE '여' END) ||
-                           '_' || (CASE WHEN verified THEN '인증O' ELSE '인증X' END),
-            'username',    username,
-            'gender',      gender_val,
-            'birth_date',  birth_date,
-            'phone_number',phone_number,
-            'is_verified', verified
-          ),
-          now(), now(), '', ''
-        )
-        ON CONFLICT (email) DO UPDATE SET
-          encrypted_password = EXCLUDED.encrypted_password,
-          raw_user_meta_data = EXCLUDED.raw_user_meta_data,
-          updated_at         = now();
+        SELECT id INTO existing_id FROM auth.users WHERE email = email_val;
+        IF existing_id IS NULL THEN
+          INSERT INTO auth.users (
+            instance_id, id, aud, role, email, encrypted_password,
+            email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
+            created_at, updated_at, confirmation_token, recovery_token
+          ) VALUES (
+            '00000000-0000-0000-0000-000000000000',
+            gen_random_uuid(), 'authenticated', 'authenticated',
+            email_val, pwd_hash, now(),
+            '{"provider":"email","providers":["email"],"has_password":true}'::jsonb,
+            meta, now(), now(), '', ''
+          );
+        ELSE
+          UPDATE auth.users
+          SET encrypted_password = pwd_hash,
+              raw_user_meta_data = meta,
+              updated_at = now()
+          WHERE id = existing_id;
+        END IF;
       END LOOP;
     END LOOP;
   END LOOP;
@@ -155,59 +171,52 @@ BEGIN
   -- ── 5 Partner Owners ─────────────────────────────────────────────────────────
   -- idx 0-1: birth 1990-01-01, phone 010-0000-{LPAD(idx, 4, '0')}
   -- idx 2-4: birth 1988-01-01, phone 010-0001-{LPAD(idx-2, 4, '0')}
+  FOREACH email_val IN ARRAY ARRAY[
+    'partner_owner_1@test.com',
+    'partner_owner_2@test.com',
+    'partner_hotplace_0@test.com',
+    'partner_hotplace_1@test.com',
+    'partner_hotplace_2@test.com'
+  ] LOOP
+    meta := CASE email_val
+      WHEN 'partner_owner_1@test.com' THEN
+        '{"name":"밍글 스튜디오 대표","username":"partner_owner_1","gender":"male","birth_date":"1990-01-01","phone_number":"010-0000-0000","is_verified":true}'::jsonb
+      WHEN 'partner_owner_2@test.com' THEN
+        '{"name":"파티룸 홍대 대표","username":"partner_owner_2","gender":"male","birth_date":"1990-01-01","phone_number":"010-0000-0001","is_verified":true}'::jsonb
+      WHEN 'partner_hotplace_0@test.com' THEN
+        '{"name":"서울 강남 소셜클럽 대표","username":"partner_hotplace_0","gender":"male","birth_date":"1988-01-01","phone_number":"010-0001-0000","is_verified":true}'::jsonb
+      WHEN 'partner_hotplace_1@test.com' THEN
+        '{"name":"서울 홍대 소셜클럽 대표","username":"partner_hotplace_1","gender":"male","birth_date":"1988-01-01","phone_number":"010-0001-0001","is_verified":true}'::jsonb
+      ELSE
+        '{"name":"서울 성수 소셜클럽 대표","username":"partner_hotplace_2","gender":"male","birth_date":"1988-01-01","phone_number":"010-0001-0002","is_verified":true}'::jsonb
+    END;
 
-  INSERT INTO auth.users (
-    instance_id, id, aud, role, email, encrypted_password,
-    email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
-    created_at, updated_at, confirmation_token, recovery_token
-  ) VALUES
-    (
-      '00000000-0000-0000-0000-000000000000',
-      gen_random_uuid(), 'authenticated', 'authenticated',
-      'partner_owner_1@test.com', pwd_hash, now(),
-      '{"provider":"email","providers":["email"],"has_password":true}'::jsonb,
-      '{"name":"밍글 스튜디오 대표","username":"partner_owner_1","gender":"male","birth_date":"1990-01-01","phone_number":"010-0000-0000","is_verified":true}'::jsonb,
-      now(), now(), '', ''
-    ),
-    (
-      '00000000-0000-0000-0000-000000000000',
-      gen_random_uuid(), 'authenticated', 'authenticated',
-      'partner_owner_2@test.com', pwd_hash, now(),
-      '{"provider":"email","providers":["email"],"has_password":true}'::jsonb,
-      '{"name":"파티룸 홍대 대표","username":"partner_owner_2","gender":"male","birth_date":"1990-01-01","phone_number":"010-0000-0001","is_verified":true}'::jsonb,
-      now(), now(), '', ''
-    ),
-    (
-      '00000000-0000-0000-0000-000000000000',
-      gen_random_uuid(), 'authenticated', 'authenticated',
-      'partner_hotplace_0@test.com', pwd_hash, now(),
-      '{"provider":"email","providers":["email"],"has_password":true}'::jsonb,
-      '{"name":"서울 강남 소셜클럽 대표","username":"partner_hotplace_0","gender":"male","birth_date":"1988-01-01","phone_number":"010-0001-0000","is_verified":true}'::jsonb,
-      now(), now(), '', ''
-    ),
-    (
-      '00000000-0000-0000-0000-000000000000',
-      gen_random_uuid(), 'authenticated', 'authenticated',
-      'partner_hotplace_1@test.com', pwd_hash, now(),
-      '{"provider":"email","providers":["email"],"has_password":true}'::jsonb,
-      '{"name":"서울 홍대 소셜클럽 대표","username":"partner_hotplace_1","gender":"male","birth_date":"1988-01-01","phone_number":"010-0001-0001","is_verified":true}'::jsonb,
-      now(), now(), '', ''
-    ),
-    (
-      '00000000-0000-0000-0000-000000000000',
-      gen_random_uuid(), 'authenticated', 'authenticated',
-      'partner_hotplace_2@test.com', pwd_hash, now(),
-      '{"provider":"email","providers":["email"],"has_password":true}'::jsonb,
-      '{"name":"서울 성수 소셜클럽 대표","username":"partner_hotplace_2","gender":"male","birth_date":"1988-01-01","phone_number":"010-0001-0002","is_verified":true}'::jsonb,
-      now(), now(), '', ''
-    )
-  ON CONFLICT (email) DO UPDATE SET
-    encrypted_password = EXCLUDED.encrypted_password,
-    raw_user_meta_data = EXCLUDED.raw_user_meta_data,
-    updated_at         = now();
+    SELECT id INTO existing_id FROM auth.users WHERE email = email_val;
+    IF existing_id IS NULL THEN
+      INSERT INTO auth.users (
+        instance_id, id, aud, role, email, encrypted_password,
+        email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
+        created_at, updated_at, confirmation_token, recovery_token
+      ) VALUES (
+        '00000000-0000-0000-0000-000000000000',
+        gen_random_uuid(), 'authenticated', 'authenticated',
+        email_val, pwd_hash, now(),
+        '{"provider":"email","providers":["email"],"has_password":true}'::jsonb,
+        meta, now(), now(), '', ''
+      );
+    ELSE
+      UPDATE auth.users
+      SET encrypted_password = pwd_hash,
+          raw_user_meta_data = meta,
+          updated_at = now()
+      WHERE id = existing_id;
+    END IF;
+  END LOOP;
 END $$;
 
 -- ── auth.identities backfill (idempotent) ─────────────────────────────────────
+-- auth.identities has a real unique constraint on (provider, provider_id), so
+-- ON CONFLICT is valid here.
 INSERT INTO auth.identities (
   id, user_id, identity_data, provider, provider_id,
   created_at, updated_at, last_sign_in_at
@@ -218,12 +227,22 @@ WHERE u.email LIKE '%@test.com'
 ON CONFLICT (provider, provider_id) DO NOTHING;
 
 -- ── Phase 2: 3 Global Verifications ──────────────────────────────────────────
-INSERT INTO public.verifications (partner_id, category, internal_name, display_name, description, icon_key, form_schema)
-VALUES
-  (NULL, 'career',   'global_career',   '직장인 인증', '재직증명서 기반 직장인 인증', 'briefcase', '[{"type":"image","label":"재직증명서"}]'::jsonb),
-  (NULL, 'academic', 'global_academic', '대학생 인증', '학생증 기반 대학생 인증',     'school',    '[{"type":"image","label":"학생증"}]'::jsonb),
-  (NULL, 'asset',    'global_asset',    '자산 인증',   '자산 보유 인증',              'diamond',   '[{"type":"text","label":"자산 정보"}]'::jsonb)
-ON CONFLICT (internal_name) WHERE partner_id IS NULL DO NOTHING;
+-- Uses NOT EXISTS because verifications has no unique index on internal_name.
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM public.verifications WHERE internal_name = 'global_career' AND partner_id IS NULL) THEN
+    INSERT INTO public.verifications (partner_id, category, internal_name, display_name, description, icon_key, form_schema)
+    VALUES (NULL, 'career', 'global_career', '직장인 인증', '재직증명서 기반 직장인 인증', 'briefcase', '[{"type":"image","label":"재직증명서"}]'::jsonb);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM public.verifications WHERE internal_name = 'global_academic' AND partner_id IS NULL) THEN
+    INSERT INTO public.verifications (partner_id, category, internal_name, display_name, description, icon_key, form_schema)
+    VALUES (NULL, 'academic', 'global_academic', '대학생 인증', '학생증 기반 대학생 인증', 'school', '[{"type":"image","label":"학생증"}]'::jsonb);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM public.verifications WHERE internal_name = 'global_asset' AND partner_id IS NULL) THEN
+    INSERT INTO public.verifications (partner_id, category, internal_name, display_name, description, icon_key, form_schema)
+    VALUES (NULL, 'asset', 'global_asset', '자산 인증', '자산 보유 인증', 'diamond', '[{"type":"text","label":"자산 정보"}]'::jsonb);
+  END IF;
+END $$;
 
 -- ── Phase 3: 5 Partners + Locations + Local Verifications + Owner Permissions ─
 DO $$
@@ -254,11 +273,14 @@ BEGIN
             public.ST_SetSRID(public.ST_MakePoint(127.0276, 37.4979), 4326));
   END IF;
 
-  INSERT INTO public.verifications (partner_id, category, internal_name, display_name, description, icon_key, form_schema)
-  VALUES
-    (new_partner_id, 'career',   'mingle_career',   '직장인 인증', '재직증명서 또는 명함 제출',      'briefcase', '[{"type":"image","label":"재직증명서"}]'::jsonb),
-    (new_partner_id, 'academic', 'mingle_academic', '대학생 인증', '학생증 또는 재학증명서 제출',    'school',    '[{"type":"image","label":"학생증"}]'::jsonb)
-  ON CONFLICT (internal_name) WHERE partner_id IS NOT NULL DO NOTHING;
+  IF NOT EXISTS (SELECT 1 FROM public.verifications WHERE internal_name = 'mingle_career' AND partner_id IS NOT NULL) THEN
+    INSERT INTO public.verifications (partner_id, category, internal_name, display_name, description, icon_key, form_schema)
+    VALUES (new_partner_id, 'career', 'mingle_career', '직장인 인증', '재직증명서 또는 명함 제출', 'briefcase', '[{"type":"image","label":"재직증명서"}]'::jsonb);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM public.verifications WHERE internal_name = 'mingle_academic' AND partner_id IS NOT NULL) THEN
+    INSERT INTO public.verifications (partner_id, category, internal_name, display_name, description, icon_key, form_schema)
+    VALUES (new_partner_id, 'academic', 'mingle_academic', '대학생 인증', '학생증 또는 재학증명서 제출', 'school', '[{"type":"image","label":"학생증"}]'::jsonb);
+  END IF;
 
   -- ── Partner 2: 파티룸 홍대 ──────────────────────────────────────────────────
   SELECT id INTO owner_id FROM auth.users WHERE email = 'partner_owner_2@test.com';
@@ -280,10 +302,10 @@ BEGIN
             public.ST_SetSRID(public.ST_MakePoint(126.9245, 37.5575), 4326));
   END IF;
 
-  INSERT INTO public.verifications (partner_id, category, internal_name, display_name, description, icon_key, form_schema)
-  VALUES
-    (new_partner_id, 'asset', 'hongdae_asset', '자산 인증', '프리미엄 파티 참가를 위한 자산 인증', 'diamond', '[{"type":"text","label":"자산 정보"}]'::jsonb)
-  ON CONFLICT (internal_name) WHERE partner_id IS NOT NULL DO NOTHING;
+  IF NOT EXISTS (SELECT 1 FROM public.verifications WHERE internal_name = 'hongdae_asset' AND partner_id IS NOT NULL) THEN
+    INSERT INTO public.verifications (partner_id, category, internal_name, display_name, description, icon_key, form_schema)
+    VALUES (new_partner_id, 'asset', 'hongdae_asset', '자산 인증', '프리미엄 파티 참가를 위한 자산 인증', 'diamond', '[{"type":"text","label":"자산 정보"}]'::jsonb);
+  END IF;
 
   -- ── Partner 3: 서울 강남 소셜클럽 ──────────────────────────────────────────
   SELECT id INTO owner_id FROM auth.users WHERE email = 'partner_hotplace_0@test.com';
