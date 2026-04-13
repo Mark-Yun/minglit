@@ -173,8 +173,7 @@ class MinglitButton extends StatelessWidget {
     if (isLoading) {
       final color = switch (variant) {
         MinglitButtonVariant.primary ||
-        MinglitButtonVariant.destructive =>
-          theme.colorScheme.onPrimary,
+        MinglitButtonVariant.destructive => theme.colorScheme.onPrimary,
         _ => theme.colorScheme.primary,
       };
       return SizedBox(
