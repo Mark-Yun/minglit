@@ -112,16 +112,11 @@ void main() {
 
         // 동의 시트에서 취소 탭
         await tester.tap(find.text('취소'));
-        // Fix: 시간을 진행시켜 바텀시트 퇴장 애니메이션(200ms)을 완료시킨다.
-        // pump() without duration은 fake clock을 진행시키지 않으므로
-        // AnimationController 기반 퇴장 애니메이션이 완료되지 않고
-        // showModalBottomSheet의 Future가 resolve되지 않는다.
-        // 퇴장 후 finally 블록: _isLoading = false → 에러 메시지 표시.
-        await tester.pump(); // Navigator.pop(false) 시작
-        await tester.pump(
-          const Duration(milliseconds: 300),
-        ); // 퇴장 애니메이션(200ms) + async 체인 완료 + setState 프레임
-        await tester.pump(); // 최종 재빌드
+        // Fix: showModalBottomSheet의 Future는 퇴장 애니메이션 완료 후 resolve된다.
+        // pumpAndSettle은 100ms씩 fake clock을 진행시키며 _isLoading=false로
+        // CircularProgressIndicator가 사라질 때까지 대기한다.
+        // 고정 duration(300ms)보다 안전: Flutter 버전별 퇴장 애니메이션 길이 무관.
+        await tester.pumpAndSettle();
 
         // 에러 안내 메시지 및 재시도 버튼 표시 확인
         expect(
