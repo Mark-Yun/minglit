@@ -250,11 +250,13 @@ void main() {
     testWidgets('destructive uses colorScheme.error background', (
       tester,
     ) async {
-      const testError = Color(0xFFB00020);
+      // Use a custom color distinct from Flutter's default error color to
+      // verify the button reads from colorScheme.error, not a hardcoded value.
+      const testError = Color(0xFF990000);
       await tester.pumpWidget(
         MaterialApp(
           theme: ThemeData(
-            colorScheme: const ColorScheme.light(),
+            colorScheme: ColorScheme.light(error: testError),
           ),
           home: Scaffold(
             body: MinglitButton.destructive(label: '탈퇴', onPressed: () {}),
@@ -316,11 +318,17 @@ void main() {
     testWidgets(
       'destructive loading spinner uses colorScheme.onError color',
       (tester) async {
-        const testOnError = Color(0xFFFFFFFF);
+        // Use custom colors distinct from Material defaults to verify the spinner
+        // reads colorScheme.onError (not hardcoded) and background reads colorScheme.error.
+        const testError = Color(0xFF990000);
+        const testOnError = Color(0xFFEEEEEE);
         await tester.pumpWidget(
           MaterialApp(
             theme: ThemeData(
-              colorScheme: const ColorScheme.light(),
+              colorScheme: ColorScheme.light(
+                error: testError,
+                onError: testOnError,
+              ),
             ),
             home: Scaffold(
               body: MinglitButton.destructive(
