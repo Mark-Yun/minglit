@@ -19,7 +19,9 @@ void main() {
     updatedAt: baseTime,
   );
 
-  testWidgets('Fix #1382: event card image uses 2:1 aspect ratio', (tester) async {
+  testWidgets('Fix #1382: event card image uses 2:1 aspect ratio', (
+    tester,
+  ) async {
     final event = Event(
       id: 'e-ratio',
       partyId: 'party-1',
@@ -45,8 +47,9 @@ void main() {
     await tester.pump();
 
     // Fix #1382: 이벤트 카드의 이미지 비율이 2:1이어야 한다
-    final ratioWidgets =
-        tester.widgetList<AspectRatio>(find.byType(AspectRatio)).toList();
+    final ratioWidgets = tester
+        .widgetList<AspectRatio>(find.byType(AspectRatio))
+        .toList();
     expect(
       ratioWidgets.any((w) => (w.aspectRatio - 2.0).abs() < 0.01),
       isTrue,
@@ -66,8 +69,9 @@ void main() {
     await tester.pump();
 
     // Fix #1382: 스켈레톤 카드도 2:1 비율이어야 한다
-    final ratioWidgets =
-        tester.widgetList<AspectRatio>(find.byType(AspectRatio)).toList();
+    final ratioWidgets = tester
+        .widgetList<AspectRatio>(find.byType(AspectRatio))
+        .toList();
     expect(
       ratioWidgets.any((w) => (w.aspectRatio - 2.0).abs() < 0.01),
       isTrue,
