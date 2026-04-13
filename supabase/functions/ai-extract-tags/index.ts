@@ -12,11 +12,17 @@ import {
 const FN = "ai-extract-tags";
 const MAX_TAGS = 5;
 
-// Known constraint violation codes — expected errors that should be skipped (not retried)
-const EXPECTED_CONSTRAINT_CODES = new Set([
+// Known constraint violation codes for party_tags — expected errors that should be skipped (not retried)
+const PARTY_TAGS_SKIP_CODES = new Set([
   "23514", // check_violation      — sensitivity filter, source check
-  "23505", // unique_violation     — duplicate tag link
+  "23505", // unique_violation     — duplicate tag link (race condition: another worker linked first)
   "P0001", // raise_exception      — max-limit trigger (PL/pgSQL RAISE)
+]);
+
+// Known constraint violation codes for tags table — non-23505 errors that should be skipped
+const TAGS_SKIP_CODES = new Set([
+  "23514", // check_violation      — sensitivity filter
+  "P0001", // raise_exception      — PL/pgSQL RAISE
 ]);
 
 initSentry();
@@ -142,17 +148,40 @@ Deno.serve(withHandler(async (req) => {
               .single();
 
             if (insertError) {
-              if (EXPECTED_CONSTRAINT_CODES.has(insertError.code)) {
+              if (insertError.code === "23505") {
+                // Fix #1420: Race condition — another worker inserted this tag first.
+                // Re-fetch to get the existing tag so we can still link party_tags.
+                console.warn(
+                  `[${traceId}] Tag "${tagName}" unique_violation (23505) — re-fetching`,
+                );
+                const { data: refetchedTag, error: refetchError } =
+                  await supabase
+                    .from("tags")
+                    .select("id")
+                    .eq("name", tagName)
+                    .maybeSingle();
+                if (refetchError || !refetchedTag) {
+                  // re-fetch 실패 시 이 태그는 스킵하지만 나머지 태그는 계속 처리
+                  console.error(
+                    `[${traceId}] Tag "${tagName}" re-fetch failed after 23505 — skipping this tag`,
+                    refetchError,
+                  );
+                  continue;
+                }
+                existingTag = refetchedTag;
+              } else if (TAGS_SKIP_CODES.has(insertError.code)) {
                 // check_tag_name_sensitivity 트리거 등 예상된 제약 위반 — 조용히 스킵
                 console.warn(
                   `[${traceId}] Tag "${tagName}" rejected by constraint (${insertError.code}) — skipping`,
                 );
                 continue;
+              } else {
+                // 예상치 못한 DB 에러 — 메시지를 큐에 남기기 위해 throw
+                throw insertError;
               }
-              // 예상치 못한 DB 에러 — 메시지를 큐에 남기기 위해 throw
-              throw insertError;
+            } else {
+              existingTag = newTag;
             }
-            existingTag = newTag;
           }
 
           // party_tags에 연결 (source='ai')
@@ -161,7 +190,7 @@ Deno.serve(withHandler(async (req) => {
             .insert({ party_id: party.id, tag_id: existingTag.id, source: "ai" });
 
           if (linkError) {
-            if (EXPECTED_CONSTRAINT_CODES.has(linkError.code)) {
+            if (PARTY_TAGS_SKIP_CODES.has(linkError.code)) {
               // unique_violation(중복) 또는 max-limit 트리거 — 조용히 스킵
               console.warn(
                 `[${traceId}] Tag link "${tagName}" → party "${party.id}" rejected (${linkError.code}) — skipping`,

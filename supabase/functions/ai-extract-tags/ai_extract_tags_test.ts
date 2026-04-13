@@ -263,6 +263,109 @@ Deno.test({
 });
 
 Deno.test({
+  name: "ai-extract-tags - tags INSERT 23505 race condition: re-fetches and links party_tags",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    // Fix #1420: When a concurrent worker inserts a tag first (23505 unique_violation),
+    // we must re-fetch the existing tag and still proceed to link party_tags.
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+
+    const stubs = [
+      stub(WorkerUtils.prototype, "isProcessed", () => Promise.resolve(false)),
+      stub(WorkerUtils.prototype, "markProcessed", () => Promise.resolve()),
+      stub(WorkerUtils.prototype, "moveToDLQ", () => Promise.resolve()),
+      stub(WorkerUtils.prototype, "logTimeLag", () => {}),
+      stub(
+        OpenAILLM.prototype,
+        "complete",
+        () => Promise.resolve('["네트워킹"]'),
+      ),
+    ];
+
+    let partyTagsInsertCalled = false;
+    let tagsSelectAfterConflictCalled = false;
+
+    // Track request order to distinguish first tags SELECT from re-fetch SELECT
+    let tagsGetCount = 0;
+
+    const { fetchMock } = createFetchMock([
+      {
+        // pgmq_read
+        matcher: (req) => req.url.includes("/rest/v1/rpc/pgmq_read"),
+        handler: () => jsonResponse([mockTagPartyMessage]),
+      },
+      {
+        // tags SELECT — first call returns null (tag not yet seen by this worker)
+        // second call (re-fetch after 23505) returns existing tag
+        matcher: (req) =>
+          req.url.includes("/rest/v1/tags") && req.method === "GET",
+        handler: () => {
+          tagsGetCount++;
+          if (tagsGetCount === 1) {
+            // First lookup: tag not found locally
+            return jsonResponse(null);
+          }
+          // Re-fetch after 23505: another worker already inserted it
+          tagsSelectAfterConflictCalled = true;
+          return jsonResponse({ id: "tag-uuid-race" });
+        },
+      },
+      {
+        // tags INSERT — returns 23505 unique_violation (concurrent insert)
+        matcher: (req) =>
+          req.url.includes("/rest/v1/tags") && req.method === "POST",
+        handler: () =>
+          new Response(
+            JSON.stringify({
+              code: "23505",
+              message: 'duplicate key value violates unique constraint "tags_name_key"',
+            }),
+            { status: 409, headers: { "Content-Type": "application/json" } },
+          ),
+      },
+      {
+        // party_tags INSERT — must still be called after re-fetch
+        matcher: (req) =>
+          req.url.includes("/rest/v1/party_tags") && req.method === "POST",
+        handler: () => {
+          partyTagsInsertCalled = true;
+          return jsonResponse({});
+        },
+      },
+      {
+        // pgmq_delete
+        matcher: (req) => req.url.includes("/rest/v1/rpc/pgmq_delete"),
+        handler: () => jsonResponse({}),
+      },
+    ]);
+
+    try {
+      await withEnv(BASE_ENV, async () => {
+        await withMockedFetch(fetchMock, async () => {
+          await withNoIntervals(async () => {
+            const response = await handler(authedRequest({}));
+            const payload = await readJson(response);
+
+            assertEquals(response.status, 200);
+            // Message should be processed successfully despite the race condition
+            assertEquals(payload.processed, 1);
+            // Re-fetch must have been called after 23505
+            assertEquals(tagsSelectAfterConflictCalled, true);
+            // party_tags link must have been created using the re-fetched tag
+            assertEquals(partyTagsInsertCalled, true);
+          });
+        });
+      });
+    } finally {
+      stubs.forEach((s) => s.restore());
+    }
+  },
+});
+
+Deno.test({
   name: "ai-extract-tags - non-party_created message is skipped gracefully",
   sanitizeResources: false,
   sanitizeOps: false,
