@@ -35,7 +35,7 @@ export class IamportClient {
     return this.getTokenFromBase(this.baseUrl);
   }
 
-  async getCertification(impUid: string): Promise<unknown> {
+  async getCertification(impUid: string): Promise<Record<string, unknown>> {
     const token = await this.getToken();
     const res = await fetch(`${this.baseUrl}/certifications/${impUid}`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -46,7 +46,7 @@ export class IamportClient {
     return data.response;
   }
 
-  async getPayment(impUid: string): Promise<unknown> {
+  async getPayment(impUid: string): Promise<Record<string, unknown>> {
     // Fix #1422: e2e_pay_ prefix → dev-mock-portone (simulator), otherwise real PG
     const baseUrl = this.isE2EPayment(impUid) ? this.getMockBaseUrl() : this.baseUrl;
     const token = await this.getTokenFromBase(baseUrl);
@@ -64,7 +64,7 @@ export class IamportClient {
     reason: string,
     amount?: number,
     checksum?: number,
-  ): Promise<unknown> {
+  ): Promise<Record<string, unknown>> {
     // Fix #1422: e2e_pay_ prefix → dev-mock-portone (simulator), otherwise real PG
     const baseUrl = this.isE2EPayment(impUid) ? this.getMockBaseUrl() : this.baseUrl;
     const token = await this.getTokenFromBase(baseUrl);
