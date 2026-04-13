@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
+import 'package:minglit_kit/src/ui/widgets/common/minglit_empty_state.dart';
 import 'package:shimmer/shimmer.dart';
 
 /// A smart image widget that shows a shimmer effect while loading.
@@ -36,15 +37,13 @@ class MinglitImage extends StatelessWidget {
   Widget build(BuildContext context) {
     // Guard: empty or blank path → show placeholder immediately
     if (path.trim().isEmpty) {
-      final theme = Theme.of(context);
-      return Container(
+      return SizedBox(
         height: height,
         width: width,
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(MinglitRadius.small),
+        child: const MinglitEmptyState.card(
+          icon: Icons.image_outlined,
+          title: '이미지 준비 중',
         ),
-        child: Icon(Icons.image, color: theme.colorScheme.outline),
       );
     }
 
