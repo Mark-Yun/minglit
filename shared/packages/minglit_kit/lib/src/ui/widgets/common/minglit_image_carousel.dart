@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
+import 'package:minglit_kit/src/ui/widgets/common/minglit_empty_state.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_image.dart';
 
 /// **Minglit Image Carousel**
@@ -58,19 +59,15 @@ class _MinglitImageCarouselState extends State<MinglitImageCarousel> {
     final theme = Theme.of(context);
     final useFixedHeight = widget.height != null;
 
-    // Fix #74: Show styled placeholder when no images available
+    // Fix #1379: Show MinglitEmptyState placeholder when no images available
     if (widget.imageUrls.isEmpty) {
-      final theme = Theme.of(context);
-      final placeholder = Container(
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(MinglitRadius.small),
-        ),
-        child: Icon(Icons.image, color: theme.colorScheme.outline),
+      const placeholder = MinglitEmptyState.card(
+        icon: Icons.image_outlined,
+        title: '이미지 준비 중',
       );
       return useFixedHeight
           ? SizedBox(height: widget.height, child: placeholder)
-          : AspectRatio(aspectRatio: 16 / 9, child: placeholder);
+          : const AspectRatio(aspectRatio: 16 / 9, child: placeholder);
     }
 
     Widget carousel = PageView.builder(
