@@ -137,8 +137,9 @@ void main() {
 
   // Fix #1377: PNG → SVG 로고 교체 — 다크모드 자동 대응 회귀 테스트
   group('MinglitTheme.appBarLogo', () {
-    testWidgets('light theme uses transparent background SVG asset',
-        (tester) async {
+    testWidgets('light theme uses transparent background SVG asset', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           theme: ThemeData(brightness: Brightness.light),
@@ -150,9 +151,9 @@ void main() {
         find.byWidgetPredicate(
           (widget) =>
               widget is SvgPicture &&
-              widget.bytesLoader
-                  .toString()
-                  .contains('minglit_logo_background_transparent.svg'),
+              widget.bytesLoader.toString().contains(
+                'minglit_logo_background_transparent.svg',
+              ),
         ),
         findsOneWidget,
         reason: 'Light theme should use the transparent background SVG asset',
@@ -171,9 +172,9 @@ void main() {
         find.byWidgetPredicate(
           (widget) =>
               widget is SvgPicture &&
-              widget.bytesLoader
-                  .toString()
-                  .contains('minglit_logo_inverted.svg'),
+              widget.bytesLoader.toString().contains(
+                'minglit_logo_inverted.svg',
+              ),
         ),
         findsOneWidget,
         reason: 'Dark theme should use the inverted SVG asset',
