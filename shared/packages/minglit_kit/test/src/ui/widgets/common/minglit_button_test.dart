@@ -256,7 +256,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           theme: ThemeData(
-            colorScheme: ColorScheme.light(error: testError),
+            colorScheme: const ColorScheme.light(error: testError),
           ),
           home: Scaffold(
             body: MinglitButton.destructive(label: '탈퇴', onPressed: () {}),
@@ -325,7 +325,7 @@ void main() {
         await tester.pumpWidget(
           MaterialApp(
             theme: ThemeData(
-              colorScheme: ColorScheme.light(
+              colorScheme: const ColorScheme.light(
                 error: testError,
                 onError: testOnError,
               ),
