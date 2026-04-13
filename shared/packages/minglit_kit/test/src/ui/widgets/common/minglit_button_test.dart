@@ -234,5 +234,83 @@ void main() {
       final bg = button.style!.backgroundColor?.resolve({});
       expect(bg, darkPrimary);
     });
+
+    // Fix #1383: destructive variant tests
+    testWidgets('destructive renders ElevatedButton', (tester) async {
+      await tester.pumpWidget(
+        buildApp(
+          MinglitButton.destructive(label: '삭제', onPressed: () {}),
+        ),
+      );
+
+      expect(find.byType(ElevatedButton), findsOneWidget);
+      expect(find.text('삭제'), findsOneWidget);
+    });
+
+    testWidgets('destructive uses colorScheme.error background', (
+      tester,
+    ) async {
+      const testError = Color(0xFFB00020);
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData(
+            colorScheme: const ColorScheme.light(error: testError),
+          ),
+          home: Scaffold(
+            body: MinglitButton.destructive(label: '탈퇴', onPressed: () {}),
+          ),
+        ),
+      );
+
+      final button = tester.widget<ElevatedButton>(find.byType(ElevatedButton));
+      final bg = button.style!.backgroundColor?.resolve({});
+      expect(bg, testError);
+    });
+
+    testWidgets('destructive is disabled when onPressed is null', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        buildApp(
+          const MinglitButton.destructive(label: '삭제'),
+        ),
+      );
+
+      final button = tester.widget<ElevatedButton>(find.byType(ElevatedButton));
+      expect(button.onPressed, isNull);
+    });
+
+    testWidgets('destructive calls onPressed when tapped', (tester) async {
+      var pressed = false;
+      await tester.pumpWidget(
+        buildApp(
+          MinglitButton.destructive(
+            label: '탈퇴하기',
+            onPressed: () => pressed = true,
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('탈퇴하기'));
+      expect(pressed, isTrue);
+    });
+
+    testWidgets('destructive shows loading indicator when isLoading', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        buildApp(
+          MinglitButton.destructive(
+            label: '삭제',
+            onPressed: () {},
+            isLoading: true,
+          ),
+        ),
+      );
+
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      final button = tester.widget<ElevatedButton>(find.byType(ElevatedButton));
+      expect(button.onPressed, isNull);
+    });
   });
 }

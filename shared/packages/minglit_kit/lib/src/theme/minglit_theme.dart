@@ -183,6 +183,7 @@ class MinglitTheme {
       checkboxTheme: _MinglitComponentThemes.checkbox(MinglitColorSet.light),
       tabBarTheme: _MinglitComponentThemes.tabBar(MinglitColorSet.light),
       dividerTheme: _MinglitComponentThemes.divider(MinglitColorSet.light),
+      snackBarTheme: _MinglitComponentThemes.snackBar(MinglitColorSet.light),
     );
   }
 
@@ -433,6 +434,7 @@ class MinglitTheme {
       checkboxTheme: _MinglitComponentThemes.checkbox(MinglitColorSet.dark),
       tabBarTheme: _MinglitComponentThemes.tabBar(MinglitColorSet.dark),
       dividerTheme: _MinglitComponentThemes.divider(MinglitColorSet.dark),
+      snackBarTheme: _MinglitComponentThemes.snackBar(MinglitColorSet.dark),
     );
   }
 }

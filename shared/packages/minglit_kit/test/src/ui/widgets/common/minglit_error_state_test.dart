@@ -110,5 +110,67 @@ void main() {
       ).colorScheme;
       expect(icon.color, equals(colorScheme.error));
     });
+
+    // Fix #1383: card and inline variant tests
+    testWidgets('card variant renders with icon and no retry button', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrap(
+          const MinglitErrorState.card(
+            title: '카드 오류',
+            subtitle: '상세 내용',
+          ),
+        ),
+      );
+
+      expect(find.text('카드 오류'), findsOneWidget);
+      expect(find.text('상세 내용'), findsOneWidget);
+      expect(find.byIcon(Icons.error_outline), findsOneWidget);
+      expect(find.byType(FilledButton), findsNothing);
+    });
+
+    testWidgets('card variant has colored background container', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrap(const MinglitErrorState.card()),
+      );
+
+      // Card variant wraps content in a Container with colored background
+      expect(find.byType(Container), findsWidgets);
+    });
+
+    testWidgets('inline variant renders with no icon', (tester) async {
+      await tester.pumpWidget(
+        wrap(const MinglitErrorState.inline(title: '인라인 오류')),
+      );
+
+      expect(find.text('인라인 오류'), findsOneWidget);
+      expect(find.byIcon(Icons.error_outline), findsNothing);
+      expect(find.byType(FilledButton), findsNothing);
+    });
+
+    testWidgets('inline variant has bordered background container', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrap(const MinglitErrorState.inline()),
+      );
+
+      // Inline variant wraps content in a Container with border decoration
+      expect(find.byType(Container), findsWidgets);
+    });
+
+    testWidgets('fullPage variant returns content without container', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrap(const MinglitErrorState()),
+      );
+
+      expect(find.byIcon(Icons.error_outline), findsOneWidget);
+      expect(find.text('오류가 발생했습니다.'), findsOneWidget);
+    });
   });
 }
