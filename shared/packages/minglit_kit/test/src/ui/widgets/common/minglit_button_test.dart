@@ -254,7 +254,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           theme: ThemeData(
-            colorScheme: const ColorScheme.light(),
+            colorScheme: const ColorScheme.light(error: testError),
           ),
           home: Scaffold(
             body: MinglitButton.destructive(label: '탈퇴', onPressed: () {}),
@@ -317,11 +317,13 @@ void main() {
       'destructive loading spinner uses colorScheme.onError color',
       (tester) async {
         const testOnError = Color(0xFFFFFFFF);
-        const testError = Color(0xFFB00020);
         await tester.pumpWidget(
           MaterialApp(
             theme: ThemeData(
-              colorScheme: const ColorScheme.light(),
+              colorScheme: const ColorScheme.light(
+                error: Color(0xFFB00020),
+                onError: testOnError,
+              ),
             ),
             home: Scaffold(
               body: MinglitButton.destructive(
