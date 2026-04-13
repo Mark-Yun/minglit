@@ -110,6 +110,12 @@ void main() {
         await _drainConsentFlow(tester);
         await tester.pump(const Duration(milliseconds: 300)); // 입장 애니메이션 완료
 
+        // Fix: isScrollControlled: true인 바텀시트에서 SingleChildScrollView
+        // 컨텐츠가 뷰포트 높이를 초과하면 '취소' 버튼이 화면 밖에 위치하여
+        // tester.tap()이 히트 테스트에서 실패한다. ensureVisible로 스크롤 후 탭한다.
+        await tester.ensureVisible(find.text('취소'));
+        await tester.pump();
+
         // 동의 시트에서 취소 탭
         await tester.tap(find.text('취소'));
         // Fix: pumpAndSettle()은 CircularProgressIndicator(indeterminate)가
