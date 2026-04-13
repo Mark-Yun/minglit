@@ -5,7 +5,6 @@
 //
 // Run: cd apps/app_user && patrol test patrol_test/kakao_login_test.dart
 
-import 'package:flutter_test/flutter_test.dart';
 import 'package:patrol/patrol.dart';
 
 void main() {

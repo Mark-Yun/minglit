@@ -5,7 +5,6 @@
 // These tests verify OS-level permission dialogs that cannot be tested
 // with Flutter's integration_test framework.
 
-import 'package:flutter_test/flutter_test.dart';
 import 'package:patrol/patrol.dart';
 
 void main() {

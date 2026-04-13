@@ -5,7 +5,6 @@
 //
 // Run: cd apps/app_user && patrol test patrol_test/payment_pg_test.dart
 
-import 'package:flutter_test/flutter_test.dart';
 import 'package:patrol/patrol.dart';
 
 void main() {
