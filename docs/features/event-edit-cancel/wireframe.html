@@ -3,23 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>이벤트 수정/취소 와이어프레임</title>
+<title>Minglit - Event Edit/Cancel Wireframe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    font-family: 'Noto Sans KR', -apple-system, sans-serif;
-    background: #E8E0FF;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 32px;
-    padding: 32px;
-    justify-content: center;
-  }
-
-  /* Design Tokens */
   :root {
-    --primary: #6C3CE1;
-    --primary-light: #8B5CF6;
+    --primary: #9900FF;
+    --primary-light: #AA33FF;
     --primary-surface: #F5F0FF;
     --primary-border: #E8E0FF;
     --secondary: #FF9900;
@@ -30,22 +21,61 @@
     --surface: #F9FAFB;
     --text-primary: #111827;
     --text-secondary: #4B5563;
-    --radius-card: 16px;
-    --radius-button: 12px;
-    --radius-input: 12px;
+    --text-tertiary: #9CA3AF;
+    --divider: #E5E7EB;
+    --scrim: rgba(0,0,0,0.5);
+    --partner-primary: #6C3CE1;
+    --partner-surface: #F5F0FF;
     --spacing-xs: 4px;
     --spacing-sm: 8px;
     --spacing-md: 16px;
     --spacing-lg: 24px;
     --spacing-xl: 32px;
+    --radius-small: 8px;
+    --radius-button: 12px;
+    --radius-card: 16px;
+    --radius-dialog: 28px;
+    --radius-chip: 100px;
   }
 
-  .screen-container {
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #E8E0FF;
+    padding: 40px 32px;
+    min-height: 100vh;
+  }
+
+  h1 {
+    text-align: center;
+    color: var(--text-primary);
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .subtitle {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin-bottom: 40px;
+  }
+
+  .screens {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 32px;
+    justify-content: center;
+  }
+
+  .screen-wrapper {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
   }
+
   .screen-label {
     font-size: 13px;
     font-weight: 700;
@@ -53,527 +83,682 @@
     text-align: center;
     max-width: 375px;
   }
+
   .phone {
     width: 375px;
     height: 812px;
-    background: var(--surface);
+    background: var(--bg);
     border-radius: 40px;
-    overflow: hidden;
     box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    overflow: hidden;
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .phone-content {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
-    position: relative;
   }
+
+  .phone-content::-webkit-scrollbar { display: none; }
 
   /* Status Bar */
   .status-bar {
     height: 44px;
-    background: var(--bg);
+    padding: 12px 24px 0;
     display: flex;
-    align-items: center;
     justify-content: space-between;
-    padding: 0 24px;
-    font-size: 14px;
+    align-items: center;
+    flex-shrink: 0;
+    background: var(--bg);
+  }
+
+  .status-bar .time {
+    font-size: 15px;
     font-weight: 600;
     color: var(--text-primary);
   }
-  .status-bar .time { font-weight: 700; }
-  .status-bar .icons { display: flex; gap: 4px; font-size: 12px; }
+
+  .status-bar .icons {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    font-size: 12px;
+    color: var(--text-primary);
+  }
+
+  .status-bar .icons span { font-size: 14px; }
 
   /* App Bar */
   .app-bar {
     height: 56px;
-    background: var(--bg);
+    padding: 0 16px;
     display: flex;
     align-items: center;
-    padding: 0 var(--spacing-md);
     gap: 12px;
-    border-bottom: 1px solid #F3F4F6;
+    flex-shrink: 0;
+    background: var(--bg);
   }
-  .app-bar .back { font-size: 20px; cursor: pointer; color: var(--text-primary); }
-  .app-bar .title {
-    flex: 1;
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--text-primary);
-  }
-  .app-bar .action {
-    font-size: 20px;
-    color: var(--text-secondary);
-    cursor: pointer;
+
+  .app-bar .back {
     width: 40px;
     height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 20px;
-  }
-  .app-bar .action:hover { background: var(--surface); }
-
-  /* Content */
-  .content {
-    flex: 1;
-    overflow-y: auto;
-    padding: var(--spacing-md);
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-md);
-  }
-
-  /* Cards */
-  .card {
-    background: var(--bg);
-    border-radius: var(--radius-card);
-    padding: var(--spacing-md);
-  }
-
-  /* Form Elements */
-  .form-group {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-xs);
-  }
-  .form-label {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--text-secondary);
-  }
-  .form-input {
-    height: 48px;
-    border: 1px solid #E5E7EB;
-    border-radius: var(--radius-input);
-    padding: 0 var(--spacing-md);
-    font-size: 16px;
+    font-size: 20px;
     color: var(--text-primary);
-    background: var(--bg);
-    display: flex;
-    align-items: center;
-  }
-  .form-input.changed {
-    border-color: var(--primary);
-    background: var(--primary-surface);
-  }
-  .form-textarea {
-    min-height: 100px;
-    border: 1px solid #E5E7EB;
-    border-radius: var(--radius-input);
-    padding: var(--spacing-md);
-    font-size: 14px;
-    color: var(--text-secondary);
-    line-height: 1.5;
+    cursor: pointer;
+    border-radius: 50%;
   }
 
-  /* Buttons */
-  .btn {
-    height: 48px;
-    border-radius: var(--radius-button);
-    font-size: 16px;
+  .app-bar .title {
+    flex: 1;
+    font-size: 18px;
     font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .app-bar .action {
+    width: 40px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
-    border: none;
-    width: 100%;
-  }
-  .btn-primary {
-    background: var(--primary);
-    color: white;
-  }
-  .btn-error {
-    background: var(--error);
-    color: white;
-  }
-  .btn-outline {
-    background: transparent;
-    border: 1px solid #E5E7EB;
-    color: var(--text-primary);
-  }
-  .btn-text {
-    background: transparent;
+    font-size: 18px;
     color: var(--text-secondary);
-    height: 40px;
-    font-size: 14px;
-    font-weight: 500;
+    cursor: pointer;
+    border-radius: 50%;
   }
-  .btn-text.error { color: var(--error); }
-  .btn-row {
-    display: flex;
-    gap: var(--spacing-sm);
+
+  /* Card */
+  .card {
+    background: var(--bg);
+    border-radius: var(--radius-card);
+    margin: 0 var(--spacing-md);
+    padding: var(--spacing-md);
+    border: 1px solid var(--divider);
   }
-  .btn-row .btn { flex: 1; }
 
   /* Badge */
   .badge {
     display: inline-flex;
     align-items: center;
-    padding: 4px 10px;
-    border-radius: 100px;
+    padding: 4px 12px;
+    border-radius: var(--radius-chip);
     font-size: 12px;
     font-weight: 600;
   }
-  .badge-scheduled { background: #EEF2FF; color: var(--primary); }
-  .badge-cancelled { background: #FEF2F2; color: var(--error); }
 
-  /* Divider */
-  .divider {
-    height: 1px;
-    background: #F3F4F6;
-    margin: var(--spacing-sm) 0;
+  .badge-primary {
+    background: var(--primary-surface);
+    color: var(--primary);
   }
 
-  /* Dialog Overlay */
-  .dialog-overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(0,0,0,0.5);
+  .badge-error {
+    background: #FEE2E2;
+    color: var(--error);
+  }
+
+  .badge-success {
+    background: #DCFCE7;
+    color: var(--success);
+  }
+
+  /* Buttons */
+  .btn {
+    height: 56px;
+    border-radius: var(--radius-button);
+    font-size: 16px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: var(--spacing-lg);
+    flex: 1;
+    font-family: inherit;
+  }
+
+  .btn-primary {
+    background: var(--primary);
+    color: #fff;
+  }
+
+  .btn-error {
+    background: var(--error);
+    color: #fff;
+  }
+
+  .btn-outline {
+    background: var(--bg);
+    color: var(--text-secondary);
+    border: 1px solid var(--divider);
+  }
+
+  .btn-row {
+    display: flex;
+    gap: var(--spacing-sm);
+    padding: 0 var(--spacing-md);
+  }
+
+  /* Info Box */
+  .info-box {
+    border-radius: var(--radius-small);
+    padding: 12px var(--spacing-md);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .info-box-primary {
+    background: var(--primary-surface);
+    border: 1px solid var(--primary-border);
+    color: var(--primary);
+  }
+
+  .info-box-error {
+    background: #FEF2F2;
+    border: 1px solid #FECACA;
+    color: var(--error);
+  }
+
+  /* Input */
+  .input-group {
+    margin-bottom: var(--spacing-md);
+  }
+
+  .input-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .change-tag {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--primary);
+    background: var(--primary-surface);
+    padding: 2px 8px;
+    border-radius: var(--radius-chip);
+  }
+
+  .input-field {
+    width: 100%;
+    height: 48px;
+    padding: 0 var(--spacing-md);
+    border: 1px solid var(--divider);
+    border-radius: var(--radius-small);
+    font-size: 15px;
+    color: var(--text-primary);
+    background: var(--bg);
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+  }
+
+  .input-field.changed {
+    border-color: var(--primary);
+    background: var(--primary-surface);
+  }
+
+  .textarea-field {
+    width: 100%;
+    height: 80px;
+    padding: 12px var(--spacing-md);
+    border: 1px solid var(--divider);
+    border-radius: var(--radius-small);
+    font-size: 14px;
+    color: var(--text-tertiary);
+    background: var(--bg);
+    resize: none;
+    font-family: inherit;
+    line-height: 1.5;
+  }
+
+  /* Dialog */
+  .dialog-overlay {
+    position: absolute;
+    inset: 0;
+    background: var(--scrim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
     z-index: 10;
   }
+
   .dialog {
     background: var(--bg);
-    border-radius: var(--radius-card);
+    border-radius: var(--radius-dialog);
+    width: 327px;
     padding: var(--spacing-lg);
-    width: 100%;
-    max-width: 327px;
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-md);
   }
+
   .dialog-title {
     font-size: 18px;
     font-weight: 700;
     color: var(--text-primary);
     text-align: center;
-  }
-  .dialog-body {
-    font-size: 14px;
-    color: var(--text-secondary);
-    line-height: 1.6;
+    margin-bottom: var(--spacing-md);
   }
 
   /* Bottom Sheet */
-  .bottom-sheet-overlay {
+  .sheet-overlay {
     position: absolute;
     inset: 0;
-    background: rgba(0,0,0,0.5);
+    background: var(--scrim);
     display: flex;
     align-items: flex-end;
     z-index: 10;
   }
-  .bottom-sheet {
+
+  .sheet {
     background: var(--bg);
-    border-radius: var(--radius-card) var(--radius-card) 0 0;
-    padding: var(--spacing-lg);
+    border-radius: 28px 28px 0 0;
     width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-md);
+    padding: 12px var(--spacing-lg) 0;
+    padding-bottom: 34px;
   }
-  .bottom-sheet .handle {
-    width: 40px;
+
+  .drag-handle {
+    width: 36px;
     height: 4px;
-    background: #D1D5DB;
+    background: var(--divider);
     border-radius: 2px;
-    align-self: center;
+    margin: 0 auto 16px;
   }
 
   /* Radio */
   .radio-group {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-sm);
+    gap: 4px;
   }
+
   .radio-item {
     display: flex;
     align-items: center;
-    gap: var(--spacing-sm);
-    padding: 12px var(--spacing-md);
-    border-radius: var(--radius-input);
-    cursor: pointer;
+    gap: 12px;
+    padding: 12px 0;
     font-size: 15px;
     color: var(--text-primary);
-  }
-  .radio-item:hover { background: var(--surface); }
-  .radio-circle {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    border: 2px solid #D1D5DB;
-  }
-  .radio-circle.selected {
-    border-color: var(--primary);
-    background: var(--primary);
-    box-shadow: inset 0 0 0 4px white;
+    cursor: pointer;
   }
 
-  /* Info Box */
-  .info-box {
-    background: var(--primary-surface);
-    border: 1px solid var(--primary-border);
-    border-radius: var(--radius-input);
+  .radio-circle {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid var(--divider);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .radio-circle.selected {
+    border-color: var(--primary);
+  }
+
+  .radio-circle.selected::after {
+    content: '';
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--primary);
+  }
+
+  /* Notification */
+  .notif-card {
+    background: var(--bg);
+    border-radius: var(--radius-card);
+    margin: 0 var(--spacing-md) var(--spacing-sm);
     padding: var(--spacing-md);
+    border: 1px solid var(--divider);
+  }
+
+  .notif-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .notif-header .label {
     font-size: 13px;
-    color: var(--primary);
-    line-height: 1.5;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 4px;
   }
-  .info-box.warning {
-    background: #FEF3C7;
-    border-color: #FDE68A;
-    color: #92400E;
+
+  .notif-header .time {
+    font-size: 12px;
+    color: var(--text-tertiary);
   }
-  .info-box.error {
-    background: #FEF2F2;
-    border-color: #FECACA;
-    color: #991B1B;
+
+  .notif-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+  }
+
+  .notif-body {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
   }
 
   /* Detail Row */
   .detail-row {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
+    gap: 10px;
     padding: 8px 0;
     font-size: 14px;
   }
-  .detail-row .label { color: var(--text-secondary); }
-  .detail-row .value { color: var(--text-primary); font-weight: 500; }
 
-  /* Change Diff */
-  .change-item {
+  .detail-row .icon {
+    width: 20px;
+    text-align: center;
+    color: var(--text-tertiary);
+    flex-shrink: 0;
     font-size: 14px;
-    color: var(--text-primary);
-    line-height: 1.6;
-    padding: 4px 0;
-  }
-  .change-item .old {
-    color: var(--text-secondary);
-    text-decoration: line-through;
-  }
-  .change-item .new {
-    color: var(--primary);
-    font-weight: 600;
   }
 
-  /* Menu Popup */
-  .menu-popup {
+  .detail-row .label {
+    color: var(--text-tertiary);
+    width: 48px;
+    flex-shrink: 0;
+    font-size: 13px;
+  }
+
+  .detail-row .value {
+    color: var(--text-primary);
+    font-size: 14px;
+  }
+
+  /* More Menu */
+  .more-menu {
     position: absolute;
-    top: 100px;
+    top: 92px;
     right: 16px;
     background: var(--bg);
-    border-radius: var(--radius-input);
+    border-radius: var(--radius-small);
     box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-    padding: 4px;
+    padding: 4px 0;
     z-index: 5;
     min-width: 160px;
   }
-  .menu-item {
+
+  .more-menu-item {
     padding: 12px 16px;
-    font-size: 15px;
-    color: var(--text-primary);
-    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
     cursor: pointer;
   }
-  .menu-item:hover { background: var(--surface); }
-  .menu-item.danger { color: var(--error); }
 
-  /* Event Image */
-  .event-image {
-    width: 100%;
-    height: 200px;
-    background: linear-gradient(135deg, var(--primary-surface) 0%, #E8E0FF 100%);
-    border-radius: var(--radius-card);
+  /* Stat row */
+  .stat-row {
     display: flex;
     align-items: center;
-    justify-content: center;
-    color: var(--primary);
-    font-size: 14px;
+    justify-content: space-between;
+    padding: 10px 0;
   }
 
-  /* Section */
-  h3 {
+  .stat-row .stat-label {
     font-size: 14px;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin-bottom: 4px;
-  }
-
-  /* Participant count */
-  .participant-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 13px;
     color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
-  .participant-badge .dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 3px;
-    background: var(--success);
+
+  .stat-row .stat-value {
+    font-size: 14px;
+    font-weight: 600;
   }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  /* Divider */
+  .divider {
+    height: 1px;
+    background: var(--divider);
+    margin: 4px 0;
+  }
+
+  .section-gap { height: 12px; }
 </style>
 </head>
 <body>
 
-<!-- ========== Screen 1: Event Detail (with edit/cancel entry points) ========== -->
-<div class="screen-container">
-  <div class="screen-label">1. 이벤트 상세 (수정/취소 진입점)</div>
+<h1>Minglit - 이벤트 수정/취소 와이어프레임</h1>
+<p class="subtitle">Partner App &amp; User App  |  8 Screens  |  Design System v2</p>
+
+<div class="screens">
+
+<!-- ============================================================ -->
+<!-- SCREEN 1: 이벤트 상세 (수정/취소 진입점) -->
+<!-- ============================================================ -->
+<div class="screen-wrapper">
+  <div class="screen-label">Screen 1: 이벤트 상세 (수정/취소 진입점)</div>
   <div class="phone">
-    <div class="status-bar">
-      <span class="time">9:41</span>
-      <span class="icons">&#9679; &#9679; &#9679;</span>
-    </div>
-    <div class="app-bar">
-      <span class="back">&larr;</span>
-      <span class="title">이벤트 상세</span>
-      <span class="action" title="수정">&#9998;</span>
-      <span class="action" title="더보기">&#8942;</span>
-    </div>
-
-    <!-- Menu popup (shown) -->
-    <div class="menu-popup">
-      <div class="menu-item">이벤트 복제</div>
-      <div class="menu-item danger">이벤트 취소</div>
-    </div>
-
-    <div class="content">
-      <div class="event-image">375 x 200 이벤트 이미지</div>
-
-      <div class="card">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-          <span class="badge badge-scheduled">예약됨</span>
-          <span class="participant-badge"><span class="dot"></span> 12/20명</span>
+    <div class="phone-content">
+      <!-- Status Bar -->
+      <div class="status-bar">
+        <span class="time">9:41</span>
+        <div class="icons">
+          <span>●●●●</span>
+          <span>WiFi</span>
+          <span>🔋</span>
         </div>
-        <h3 style="font-size:20px; margin-bottom:8px;">금요일 와인 모임</h3>
+      </div>
+      <!-- App Bar -->
+      <div class="app-bar">
+        <div class="back">←</div>
+        <div class="title">이벤트 상세</div>
+        <div class="action">✏️</div>
+        <div class="action" style="font-size: 22px;">⋮</div>
+      </div>
+
+      <!-- More Menu Popup -->
+      <div class="more-menu">
+        <div class="more-menu-item" style="color: var(--error);">이벤트 취소</div>
+      </div>
+
+      <!-- Event Image -->
+      <div style="width: 100%; height: 200px; background: linear-gradient(135deg, #C084FC, #7C3AED, #4F46E5); display: flex; align-items: center; justify-content: center;">
+        <span style="font-size: 48px; opacity: 0.3;">🖼</span>
+      </div>
+
+      <!-- Event Info Card -->
+      <div style="padding: 16px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+          <span class="badge badge-primary">예약됨</span>
+          <span style="font-size: 14px; color: var(--text-secondary); display: flex; align-items: center; gap: 6px;">
+            <span class="dot" style="background: var(--success);"></span>12/20명
+          </span>
+        </div>
+
+        <div style="font-size: 20px; font-weight: 700; color: var(--text-primary); margin-bottom: 16px;">금요일 와인 모임</div>
+
         <div class="detail-row">
+          <span class="icon">📅</span>
           <span class="label">일시</span>
           <span class="value">3/20(금) 19:00 ~ 22:00</span>
         </div>
         <div class="detail-row">
+          <span class="icon">📍</span>
           <span class="label">장소</span>
           <span class="value">청담 와인바</span>
         </div>
         <div class="detail-row">
+          <span class="icon">🎫</span>
           <span class="label">티켓</span>
           <span class="value">30,000원</span>
         </div>
       </div>
 
+      <div class="section-gap"></div>
+
+      <!-- Participation Card -->
       <div class="card">
-        <h3>참가 신청 현황</h3>
-        <div class="detail-row">
-          <span class="label">승인됨</span>
-          <span class="value" style="color:var(--success)">8명</span>
+        <div style="font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 12px;">참가 현황</div>
+        <div class="stat-row">
+          <span class="stat-label"><span class="dot" style="background: var(--success);"></span>승인됨</span>
+          <span class="stat-value" style="color: var(--success);">8명</span>
         </div>
-        <div class="detail-row">
-          <span class="label">대기중</span>
-          <span class="value" style="color:var(--warning)">4명</span>
+        <div class="divider"></div>
+        <div class="stat-row">
+          <span class="stat-label"><span class="dot" style="background: var(--warning);"></span>대기중</span>
+          <span class="stat-value" style="color: var(--warning);">4명</span>
         </div>
-        <div class="detail-row">
-          <span class="label">결제 완료</span>
-          <span class="value" style="color:var(--primary)">8명 (240,000원)</span>
+        <div class="divider"></div>
+        <div class="stat-row">
+          <span class="stat-label"><span class="dot" style="background: var(--primary);"></span>결제 완료</span>
+          <span class="stat-value" style="color: var(--primary);">8명 (240,000원)</span>
         </div>
       </div>
+
+      <div style="height: 34px;"></div>
     </div>
   </div>
 </div>
 
-<!-- ========== Screen 2: Event Edit Form ========== -->
-<div class="screen-container">
-  <div class="screen-label">2. 이벤트 수정 (변경 필드 하이라이트)</div>
+<!-- ============================================================ -->
+<!-- SCREEN 2: 이벤트 수정 (변경 필드 하이라이트) -->
+<!-- ============================================================ -->
+<div class="screen-wrapper">
+  <div class="screen-label">Screen 2: 이벤트 수정 (변경 필드 하이라이트)</div>
   <div class="phone">
-    <div class="status-bar">
-      <span class="time">9:41</span>
-      <span class="icons">&#9679; &#9679; &#9679;</span>
-    </div>
-    <div class="app-bar">
-      <span class="back">&larr;</span>
-      <span class="title">이벤트 수정</span>
-    </div>
-    <div class="content">
-      <div class="form-group">
-        <span class="form-label">이벤트 제목</span>
-        <div class="form-input">금요일 와인 모임</div>
+    <div class="phone-content">
+      <div class="status-bar">
+        <span class="time">9:41</span>
+        <div class="icons"><span>●●●●</span><span>WiFi</span><span>🔋</span></div>
+      </div>
+      <div class="app-bar">
+        <div class="back">←</div>
+        <div class="title">이벤트 수정</div>
       </div>
 
-      <div class="form-group">
-        <span class="form-label">시작 시간 <span style="color:var(--primary); font-weight:600;">변경됨</span></span>
-        <div class="form-input changed">3/20(금) 20:00</div>
+      <div style="padding: 0 16px 16px; flex: 1;">
+        <!-- 이벤트 제목 -->
+        <div class="input-group">
+          <div class="input-label">이벤트 제목</div>
+          <div class="input-field">금요일 와인 모임</div>
+        </div>
+
+        <!-- 시작 시간 - CHANGED -->
+        <div class="input-group">
+          <div class="input-label">시작 시간 <span class="change-tag">변경됨</span></div>
+          <div class="input-field changed">3/20(금) 20:00</div>
+        </div>
+
+        <!-- 종료 시간 - CHANGED -->
+        <div class="input-group">
+          <div class="input-label">종료 시간 <span class="change-tag">변경됨</span></div>
+          <div class="input-field changed">3/20(금) 23:00</div>
+        </div>
+
+        <!-- 장소 - CHANGED -->
+        <div class="input-group">
+          <div class="input-label">장소 <span class="change-tag">변경됨</span></div>
+          <div class="input-field changed">강남 와인바</div>
+        </div>
+
+        <!-- 최대 정원 -->
+        <div class="input-group">
+          <div class="input-label">최대 정원</div>
+          <div class="input-field">20명</div>
+        </div>
+
+        <!-- 설명 -->
+        <div class="input-group">
+          <div class="input-label">설명</div>
+          <textarea class="textarea-field" readonly>금요일 저녁 와인과 함께하는 네트워킹 모임입니다. 다양한 분야의 사람들과 즐거운 시간을 보내세요...</textarea>
+        </div>
+
+        <!-- Info Box -->
+        <div class="info-box info-box-primary" style="margin-bottom: 16px;">
+          핵심 정보(시간, 장소)가 변경되면 참가 확정자에게 알림이 발송돼요.
+        </div>
+
+        <!-- Save Button -->
+        <button class="btn btn-primary" style="width: 100%;">저장하기</button>
       </div>
 
-      <div class="form-group">
-        <span class="form-label">종료 시간 <span style="color:var(--primary); font-weight:600;">변경됨</span></span>
-        <div class="form-input changed">3/20(금) 23:00</div>
-      </div>
-
-      <div class="form-group">
-        <span class="form-label">장소 <span style="color:var(--primary); font-weight:600;">변경됨</span></span>
-        <div class="form-input changed">강남 와인바</div>
-      </div>
-
-      <div class="form-group">
-        <span class="form-label">최대 정원</span>
-        <div class="form-input">20명</div>
-      </div>
-
-      <div class="form-group">
-        <span class="form-label">설명</span>
-        <div class="form-textarea">매주 금요일 저녁, 소셜 와인 파티에 함께해요. 다양한 와인을 시음하고 새로운 사람들과...</div>
-      </div>
-
-      <div class="info-box">
-        핵심 정보(시간, 장소)가 변경되면 참가 확정자에게 알림이 발송돼요.
-      </div>
-
-      <div class="btn btn-primary">저장하기</div>
+      <div style="height: 34px; flex-shrink: 0;"></div>
     </div>
   </div>
 </div>
 
-<!-- ========== Screen 3: Edit Confirm Dialog ========== -->
-<div class="screen-container">
-  <div class="screen-label">3. 핵심 정보 변경 확인 다이얼로그</div>
+<!-- ============================================================ -->
+<!-- SCREEN 3: 핵심 정보 변경 확인 다이얼로그 -->
+<!-- ============================================================ -->
+<div class="screen-wrapper">
+  <div class="screen-label">Screen 3: 핵심 정보 변경 확인 다이얼로그</div>
   <div class="phone">
-    <div class="status-bar">
-      <span class="time">9:41</span>
-      <span class="icons">&#9679; &#9679; &#9679;</span>
-    </div>
-    <div class="app-bar">
-      <span class="back">&larr;</span>
-      <span class="title">이벤트 수정</span>
-    </div>
-    <div class="content" style="filter:blur(2px); pointer-events:none;">
-      <div class="form-group">
-        <span class="form-label">이벤트 제목</span>
-        <div class="form-input">금요일 와인 모임</div>
+    <div class="phone-content" style="filter: blur(2px); opacity: 0.5;">
+      <div class="status-bar">
+        <span class="time">9:41</span>
+        <div class="icons"><span>●●●●</span><span>WiFi</span><span>🔋</span></div>
+      </div>
+      <div class="app-bar">
+        <div class="back">←</div>
+        <div class="title">이벤트 수정</div>
+      </div>
+      <div style="padding: 16px;">
+        <div class="input-group">
+          <div class="input-label">이벤트 제목</div>
+          <div class="input-field">금요일 와인 모임</div>
+        </div>
+        <div class="input-group">
+          <div class="input-label">시작 시간 <span class="change-tag">변경됨</span></div>
+          <div class="input-field changed">3/20(금) 20:00</div>
+        </div>
       </div>
     </div>
 
+    <!-- Dialog Overlay -->
     <div class="dialog-overlay">
       <div class="dialog">
         <div class="dialog-title">참가자에게 알림이 발송돼요</div>
-        <div class="dialog-body">
-          <div style="margin-bottom:12px; font-weight:600; color:var(--text-primary);">변경 내용:</div>
-          <div class="change-item">
-            시작 시간: <span class="old">19:00</span> &rarr; <span class="new">20:00</span>
+
+        <div style="padding: 0 4px;">
+          <div style="font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 10px;">변경 내용:</div>
+
+          <div style="margin-bottom: 8px; font-size: 14px; color: var(--text-secondary);">
+            시작 시간: <span style="text-decoration: line-through; color: var(--text-tertiary);">19:00</span> → <span style="font-weight: 700; color: var(--primary);">20:00</span>
           </div>
-          <div class="change-item">
-            종료 시간: <span class="old">22:00</span> &rarr; <span class="new">23:00</span>
+          <div style="margin-bottom: 8px; font-size: 14px; color: var(--text-secondary);">
+            종료 시간: <span style="text-decoration: line-through; color: var(--text-tertiary);">22:00</span> → <span style="font-weight: 700; color: var(--primary);">23:00</span>
           </div>
-          <div class="change-item">
-            장소: <span class="old">청담 와인바</span> &rarr; <span class="new">강남 와인바</span>
+          <div style="margin-bottom: 12px; font-size: 14px; color: var(--text-secondary);">
+            장소: <span style="text-decoration: line-through; color: var(--text-tertiary);">청담 와인바</span> → <span style="font-weight: 700; color: var(--primary);">강남 와인바</span>
           </div>
-          <div class="divider"></div>
-          <div style="font-size:13px; color:var(--text-secondary);">
-            참가 확정자 <strong style="color:var(--text-primary);">12명</strong>에게 변경 알림이 발송됩니다.
+
+          <div class="divider" style="margin: 12px 0;"></div>
+
+          <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 20px;">
+            참가 확정자 <strong>12명</strong>에게 변경 알림이 발송됩니다.
           </div>
         </div>
-        <div class="btn-row">
-          <button class="btn btn-outline">취소</button>
+
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-outline">돌아가기</button>
           <button class="btn btn-primary">변경하기</button>
         </div>
       </div>
@@ -581,102 +766,114 @@
   </div>
 </div>
 
-<!-- ========== Screen 4: Cancel Step 1 - Reason Bottom Sheet ========== -->
-<div class="screen-container">
-  <div class="screen-label">4. 이벤트 취소 — Step 1: 사유 선택</div>
+<!-- ============================================================ -->
+<!-- SCREEN 4: 취소 Step 1 — 사유 선택 바텀시트 -->
+<!-- ============================================================ -->
+<div class="screen-wrapper">
+  <div class="screen-label">Screen 4: 취소 Step 1 — 사유 선택 바텀시트</div>
   <div class="phone">
-    <div class="status-bar">
-      <span class="time">9:41</span>
-      <span class="icons">&#9679; &#9679; &#9679;</span>
-    </div>
-    <div class="app-bar">
-      <span class="back">&larr;</span>
-      <span class="title">이벤트 상세</span>
-    </div>
-    <div class="content" style="filter:blur(2px); pointer-events:none;">
-      <div class="event-image">이벤트 이미지</div>
+    <div class="phone-content" style="filter: blur(2px); opacity: 0.5;">
+      <div class="status-bar">
+        <span class="time">9:41</span>
+        <div class="icons"><span>●●●●</span><span>WiFi</span><span>🔋</span></div>
+      </div>
+      <div class="app-bar">
+        <div class="back">←</div>
+        <div class="title">이벤트 상세</div>
+        <div class="action">✏️</div>
+        <div class="action" style="font-size: 22px;">⋮</div>
+      </div>
+      <div style="width: 100%; height: 200px; background: linear-gradient(135deg, #C084FC, #7C3AED, #4F46E5);"></div>
     </div>
 
-    <div class="bottom-sheet-overlay">
-      <div class="bottom-sheet">
-        <div class="handle"></div>
-        <div class="dialog-title" style="text-align:left;">이벤트를 취소할까요?</div>
-        <div class="info-box error">
+    <!-- Bottom Sheet Overlay -->
+    <div class="sheet-overlay">
+      <div class="sheet">
+        <div class="drag-handle"></div>
+
+        <div style="font-size: 18px; font-weight: 700; color: var(--text-primary); margin-bottom: 12px;">이벤트를 취소할까요?</div>
+
+        <div class="info-box info-box-error" style="margin-bottom: 16px;">
           취소하면 되돌릴 수 없어요.
         </div>
-        <div>
-          <div style="font-size:13px; font-weight:600; color:var(--text-secondary); margin-bottom:8px;">취소 사유 (선택)</div>
-          <div class="radio-group">
-            <div class="radio-item">
-              <div class="radio-circle selected"></div>
-              인원 미달
-            </div>
-            <div class="radio-item">
-              <div class="radio-circle"></div>
-              개인 사정
-            </div>
-            <div class="radio-item">
-              <div class="radio-circle"></div>
-              장소/시설 문제
-            </div>
-            <div class="radio-item">
-              <div class="radio-circle"></div>
-              기타
-            </div>
+
+        <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 8px;">취소 사유 (선택)</div>
+
+        <div class="radio-group" style="margin-bottom: 20px;">
+          <div class="radio-item">
+            <div class="radio-circle selected"></div>
+            <span>인원 미달</span>
+          </div>
+          <div class="radio-item">
+            <div class="radio-circle"></div>
+            <span>개인 사정</span>
+          </div>
+          <div class="radio-item">
+            <div class="radio-circle"></div>
+            <span>장소/시설 문제</span>
+          </div>
+          <div class="radio-item">
+            <div class="radio-circle"></div>
+            <span>기타</span>
           </div>
         </div>
-        <div class="btn-row">
+
+        <div style="display: flex; gap: 8px;">
           <button class="btn btn-outline">돌아가기</button>
-          <button class="btn btn-error">다음</button>
+          <button class="btn btn-primary">다음</button>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ========== Screen 5: Cancel Step 2 - Final Confirm (with participants) ========== -->
-<div class="screen-container">
-  <div class="screen-label">5. 이벤트 취소 — Step 2: 최종 확인 (참가자 있음)</div>
+<!-- ============================================================ -->
+<!-- SCREEN 5: 취소 Step 2 — 최종 확인 (참가자 있음) -->
+<!-- ============================================================ -->
+<div class="screen-wrapper">
+  <div class="screen-label">Screen 5: 취소 Step 2 — 최종 확인 (참가자 있음)</div>
   <div class="phone">
-    <div class="status-bar">
-      <span class="time">9:41</span>
-      <span class="icons">&#9679; &#9679; &#9679;</span>
-    </div>
-    <div class="app-bar">
-      <span class="back">&larr;</span>
-      <span class="title">이벤트 상세</span>
-    </div>
-    <div class="content" style="filter:blur(2px); pointer-events:none;">
-      <div class="event-image">이벤트 이미지</div>
+    <div class="phone-content" style="filter: blur(2px); opacity: 0.5;">
+      <div class="status-bar">
+        <span class="time">9:41</span>
+        <div class="icons"><span>●●●●</span><span>WiFi</span><span>🔋</span></div>
+      </div>
+      <div class="app-bar">
+        <div class="back">←</div>
+        <div class="title">이벤트 상세</div>
+      </div>
+      <div style="width: 100%; height: 200px; background: linear-gradient(135deg, #C084FC, #7C3AED, #4F46E5);"></div>
     </div>
 
+    <!-- Dialog Overlay -->
     <div class="dialog-overlay">
       <div class="dialog">
         <div class="dialog-title">정말 취소할까요?</div>
-        <div class="dialog-body">
-          <div class="info-box error" style="margin-bottom:16px;">
-            &#9888; 이 작업은 되돌릴 수 없어요.
-          </div>
-          <div style="display:flex; flex-direction:column; gap:8px;">
-            <div style="display:flex; align-items:flex-start; gap:8px;">
-              <span style="color:var(--text-secondary);">&#8226;</span>
-              <span>참가 확정자 <strong>12명</strong>에게 취소 알림이 발송됩니다.</span>
-            </div>
-            <div style="display:flex; align-items:flex-start; gap:8px;">
-              <span style="color:var(--text-secondary);">&#8226;</span>
-              <span>유료 참가자 <strong>8명</strong>에게 전액 환불이 자동 처리됩니다.</span>
-            </div>
-            <div style="display:flex; align-items:flex-start; gap:8px;">
-              <span style="color:var(--text-secondary);">&#8226;</span>
-              <span>환불 총액: <strong style="color:var(--error);">240,000원</strong></span>
-            </div>
-            <div style="display:flex; align-items:flex-start; gap:8px;">
-              <span style="color:var(--text-secondary);">&#8226;</span>
-              <span style="font-size:13px; color:var(--text-secondary);">환불 금액은 정산에서 차감됩니다.</span>
-            </div>
-          </div>
+
+        <div class="info-box info-box-error" style="margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+          <span>⚠️</span> 이 작업은 되돌릴 수 없어요.
         </div>
-        <div class="btn-row">
+
+        <ul style="padding: 0 4px 0 8px; margin: 0 0 20px; list-style: none;">
+          <li style="font-size: 14px; color: var(--text-secondary); line-height: 1.8; padding-left: 12px; position: relative;">
+            <span style="position: absolute; left: 0;">•</span>
+            참가 확정자 <strong>12명</strong>에게 취소 알림이 발송됩니다.
+          </li>
+          <li style="font-size: 14px; color: var(--text-secondary); line-height: 1.8; padding-left: 12px; position: relative;">
+            <span style="position: absolute; left: 0;">•</span>
+            유료 참가자 <strong>8명</strong>에게 전액 환불이 자동 처리됩니다.
+          </li>
+          <li style="font-size: 14px; line-height: 1.8; padding-left: 12px; position: relative;">
+            <span style="position: absolute; left: 0; color: var(--text-secondary);">•</span>
+            <span style="color: var(--error); font-weight: 700;">환불 총액: 240,000원</span>
+          </li>
+          <li style="font-size: 13px; color: var(--text-secondary); line-height: 1.8; padding-left: 12px; position: relative;">
+            <span style="position: absolute; left: 0;">•</span>
+            환불 금액은 정산에서 차감됩니다.
+          </li>
+        </ul>
+
+        <div style="display: flex; gap: 8px;">
           <button class="btn btn-outline">돌아가기</button>
           <button class="btn btn-error">이벤트 취소</button>
         </div>
@@ -685,34 +882,38 @@
   </div>
 </div>
 
-<!-- ========== Screen 6: Cancel Step 2 - Final Confirm (no participants) ========== -->
-<div class="screen-container">
-  <div class="screen-label">6. 이벤트 취소 — 참가자 없음</div>
+<!-- ============================================================ -->
+<!-- SCREEN 6: 취소 최종 확인 (참가자 없음) -->
+<!-- ============================================================ -->
+<div class="screen-wrapper">
+  <div class="screen-label">Screen 6: 취소 최종 확인 (참가자 없음)</div>
   <div class="phone">
-    <div class="status-bar">
-      <span class="time">9:41</span>
-      <span class="icons">&#9679; &#9679; &#9679;</span>
-    </div>
-    <div class="app-bar">
-      <span class="back">&larr;</span>
-      <span class="title">이벤트 상세</span>
-    </div>
-    <div class="content" style="filter:blur(2px); pointer-events:none;">
-      <div class="event-image">이벤트 이미지</div>
+    <div class="phone-content" style="filter: blur(2px); opacity: 0.5;">
+      <div class="status-bar">
+        <span class="time">9:41</span>
+        <div class="icons"><span>●●●●</span><span>WiFi</span><span>🔋</span></div>
+      </div>
+      <div class="app-bar">
+        <div class="back">←</div>
+        <div class="title">이벤트 상세</div>
+      </div>
+      <div style="width: 100%; height: 200px; background: linear-gradient(135deg, #C084FC, #7C3AED, #4F46E5);"></div>
     </div>
 
+    <!-- Dialog Overlay -->
     <div class="dialog-overlay">
       <div class="dialog">
         <div class="dialog-title">정말 취소할까요?</div>
-        <div class="dialog-body">
-          <div class="info-box error" style="margin-bottom:16px;">
-            &#9888; 이 작업은 되돌릴 수 없어요.
-          </div>
-          <p style="text-align:center; color:var(--text-secondary);">
-            참가 신청자가 없어 별도 환불/알림 없이 취소됩니다.
-          </p>
+
+        <div class="info-box info-box-error" style="margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+          <span>⚠️</span> 이 작업은 되돌릴 수 없어요.
         </div>
-        <div class="btn-row">
+
+        <div style="font-size: 14px; color: var(--text-secondary); text-align: center; line-height: 1.6; margin-bottom: 24px; padding: 8px 0;">
+          참가 신청자가 없어 별도 환불/알림 없이<br>취소됩니다.
+        </div>
+
+        <div style="display: flex; gap: 8px;">
           <button class="btn btn-outline">돌아가기</button>
           <button class="btn btn-error">이벤트 취소</button>
         </div>
@@ -721,115 +922,134 @@
   </div>
 </div>
 
-<!-- ========== Screen 7: Cancelled Event Detail ========== -->
-<div class="screen-container">
-  <div class="screen-label">7. 취소된 이벤트 상세</div>
+<!-- ============================================================ -->
+<!-- SCREEN 7: 취소된 이벤트 상세 -->
+<!-- ============================================================ -->
+<div class="screen-wrapper">
+  <div class="screen-label">Screen 7: 취소된 이벤트 상세</div>
   <div class="phone">
-    <div class="status-bar">
-      <span class="time">9:41</span>
-      <span class="icons">&#9679; &#9679; &#9679;</span>
-    </div>
-    <div class="app-bar">
-      <span class="back">&larr;</span>
-      <span class="title">이벤트 상세</span>
-    </div>
-    <div class="content">
-      <div class="event-image" style="opacity:0.5; position:relative;">
-        <div style="position:absolute; inset:0; background:rgba(0,0,0,0.3); border-radius:var(--radius-card); display:flex; align-items:center; justify-content:center;">
-          <span class="badge badge-cancelled" style="font-size:16px; padding:8px 20px;">취소됨</span>
-        </div>
-        375 x 200 이벤트 이미지
+    <div class="phone-content">
+      <div class="status-bar">
+        <span class="time">9:41</span>
+        <div class="icons"><span>●●●●</span><span>WiFi</span><span>🔋</span></div>
+      </div>
+      <div class="app-bar">
+        <div class="back">←</div>
+        <div class="title">이벤트 상세</div>
       </div>
 
-      <div class="card">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-          <span class="badge badge-cancelled">취소됨</span>
+      <!-- Event Image with Overlay -->
+      <div style="width: 100%; height: 200px; background: linear-gradient(135deg, #C084FC, #7C3AED, #4F46E5); position: relative;">
+        <div style="position: absolute; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center;">
+          <span class="badge badge-error" style="font-size: 18px; font-weight: 700; padding: 8px 24px;">취소됨</span>
         </div>
-        <h3 style="font-size:20px; margin-bottom:8px; color:var(--text-secondary); text-decoration:line-through;">금요일 와인 모임</h3>
+      </div>
+
+      <!-- Event Info -->
+      <div style="padding: 16px;">
+        <div style="font-size: 20px; font-weight: 700; color: var(--text-tertiary); text-decoration: line-through; margin-bottom: 16px;">금요일 와인 모임</div>
+
         <div class="detail-row">
+          <span class="icon">📅</span>
           <span class="label">일시</span>
-          <span class="value" style="color:var(--text-secondary);">3/20(금) 19:00 ~ 22:00</span>
+          <span class="value">3/20(금) 19:00 ~ 22:00</span>
         </div>
         <div class="detail-row">
+          <span class="icon">📍</span>
           <span class="label">장소</span>
-          <span class="value" style="color:var(--text-secondary);">청담 와인바</span>
+          <span class="value">청담 와인바</span>
         </div>
         <div class="detail-row">
-          <span class="label">취소 사유</span>
+          <span class="icon">❌</span>
+          <span class="label">사유</span>
           <span class="value">인원 미달</span>
         </div>
       </div>
 
+      <div class="section-gap"></div>
+
+      <!-- Refund Status Card -->
       <div class="card">
-        <h3>환불 처리 현황</h3>
-        <div class="detail-row">
-          <span class="label">환불 완료</span>
-          <span class="value" style="color:var(--success);">8명 (240,000원)</span>
+        <div style="font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 12px;">처리 현황</div>
+        <div class="stat-row">
+          <span class="stat-label"><span class="dot" style="background: var(--success);"></span>환불 완료</span>
+          <span class="stat-value" style="color: var(--success);">8명 (240,000원)</span>
         </div>
-        <div class="detail-row">
-          <span class="label">알림 발송</span>
-          <span class="value" style="color:var(--success);">12명 완료</span>
+        <div class="divider"></div>
+        <div class="stat-row">
+          <span class="stat-label"><span class="dot" style="background: var(--success);"></span>알림 발송</span>
+          <span class="stat-value" style="color: var(--success);">12명 완료</span>
         </div>
       </div>
 
-      <div class="info-box" style="text-align:center;">
-        이 이벤트는 취소되었으며 수정할 수 없어요.
+      <div class="section-gap"></div>
+
+      <!-- Info Box -->
+      <div style="padding: 0 16px;">
+        <div class="info-box" style="background: var(--surface); border: 1px solid var(--divider); color: var(--text-secondary); text-align: center;">
+          이 이벤트는 취소되었으며 수정할 수 없어요.
+        </div>
       </div>
+
+      <div style="height: 34px;"></div>
     </div>
   </div>
 </div>
 
-<!-- ========== Screen 8: User App - Cancelled Event Notification ========== -->
-<div class="screen-container">
-  <div class="screen-label">8. 유저앱 — 취소 알림 (푸시 수신)</div>
+<!-- ============================================================ -->
+<!-- SCREEN 8: 유저앱 — 알림 -->
+<!-- ============================================================ -->
+<div class="screen-wrapper">
+  <div class="screen-label">Screen 8: 유저앱 — 알림 (취소/변경/환불)</div>
   <div class="phone">
-    <div class="status-bar">
-      <span class="time">9:41</span>
-      <span class="icons">&#9679; &#9679; &#9679;</span>
-    </div>
-    <div class="app-bar">
-      <span class="back">&larr;</span>
-      <span class="title">알림</span>
-    </div>
-    <div class="content">
-      <!-- Cancellation notification -->
-      <div class="card" style="border-left: 3px solid var(--error);">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-          <span style="font-size:13px; font-weight:600; color:var(--error);">이벤트 취소</span>
-          <span style="font-size:12px; color:var(--text-secondary);">방금</span>
+    <div class="phone-content">
+      <div class="status-bar">
+        <span class="time">9:41</span>
+        <div class="icons"><span>●●●●</span><span>WiFi</span><span>🔋</span></div>
+      </div>
+      <div class="app-bar">
+        <div class="back">←</div>
+        <div class="title">알림</div>
+      </div>
+
+      <div style="padding-top: 8px; flex: 1;">
+        <!-- 취소 알림 -->
+        <div class="notif-card" style="border-left: 3px solid var(--error);">
+          <div class="notif-header">
+            <span class="label" style="color: var(--error);">🚫 이벤트 취소</span>
+            <span class="time">방금</span>
+          </div>
+          <div class="notif-title">금요일 와인 모임이 취소됐어요</div>
+          <div class="notif-body">파트너가 이벤트를 취소했어요. 결제하신 30,000원은 전액 환불되며, 영업일 기준 3일 내에 입금돼요.</div>
         </div>
-        <div style="font-size:15px; font-weight:600; color:var(--text-primary); margin-bottom:4px;">금요일 와인 모임이 취소됐어요</div>
-        <div style="font-size:13px; color:var(--text-secondary); line-height:1.5;">
-          파트너가 이벤트를 취소했어요. 결제하신 30,000원은 전액 환불되며, 영업일 기준 3일 내에 입금돼요.
+
+        <!-- 변경 알림 -->
+        <div class="notif-card" style="border-left: 3px solid var(--primary);">
+          <div class="notif-header">
+            <span class="label" style="color: var(--primary);">📝 이벤트 변경</span>
+            <span class="time">2시간 전</span>
+          </div>
+          <div class="notif-title">토요일 독서모임 일정이 변경됐어요</div>
+          <div class="notif-body">시작 시간이 14:00에서 15:00으로 변경됐어요. 참석이 어려우면 구매 내역에서 취소할 수 있어요.</div>
+        </div>
+
+        <!-- 환불 완료 -->
+        <div class="notif-card" style="border-left: 3px solid var(--success);">
+          <div class="notif-header">
+            <span class="label" style="color: var(--success);">✅ 환불 완료</span>
+            <span class="time">어제</span>
+          </div>
+          <div class="notif-title">환불이 완료됐어요</div>
+          <div class="notif-body">금요일 와인 모임 환불 30,000원이 처리됐어요. 영업일 기준 3일 내에 입금돼요.</div>
         </div>
       </div>
 
-      <!-- Change notification -->
-      <div class="card" style="border-left: 3px solid var(--primary);">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-          <span style="font-size:13px; font-weight:600; color:var(--primary);">이벤트 변경</span>
-          <span style="font-size:12px; color:var(--text-secondary);">2시간 전</span>
-        </div>
-        <div style="font-size:15px; font-weight:600; color:var(--text-primary); margin-bottom:4px;">토요일 독서모임 일정이 변경됐어요</div>
-        <div style="font-size:13px; color:var(--text-secondary); line-height:1.5;">
-          시작 시간이 14:00에서 15:00으로 변경됐어요. 참석이 어려우면 구매 내역에서 취소할 수 있어요.
-        </div>
-      </div>
-
-      <!-- Refund complete notification -->
-      <div class="card" style="border-left: 3px solid var(--success);">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-          <span style="font-size:13px; font-weight:600; color:var(--success);">환불 완료</span>
-          <span style="font-size:12px; color:var(--text-secondary);">어제</span>
-        </div>
-        <div style="font-size:15px; font-weight:600; color:var(--text-primary); margin-bottom:4px;">환불이 완료됐어요</div>
-        <div style="font-size:13px; color:var(--text-secondary); line-height:1.5;">
-          금요일 와인 모임 환불 30,000원이 처리됐어요. 영업일 기준 3일 내에 입금돼요.
-        </div>
-      </div>
+      <div style="height: 34px;"></div>
     </div>
   </div>
 </div>
+
+</div><!-- .screens -->
 
 </body>
 </html>
