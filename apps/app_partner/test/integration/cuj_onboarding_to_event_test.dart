@@ -12,8 +12,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../utils/mocks.dart';
+import '../visual_qa/visual_qa_helper.dart';
 import 'utils/test_app.dart';
 
 void main() {
@@ -23,6 +25,15 @@ void main() {
     when(() => testUser.id).thenReturn('partner-p01');
     when(() => testUser.email).thenReturn('partner@example.com');
     when(() => testUser.userMetadata).thenReturn({'full_name': '김파트너'});
+    // Fix #1424: /more/* 경로는 MorePage를 렌더링하며 PackageInfo.fromPlatform()을 호출함.
+    // 테스트 환경에서 플러그인 구현이 없으므로 mock 값을 제공해야 함.
+    PackageInfo.setMockInitialValues(
+      appName: 'Test App',
+      packageName: 'com.test.app',
+      version: '1.0.0',
+      buildNumber: '1',
+      buildSignature: '',
+    );
   });
 
   group('IT-P01: 파트너 가입 → 파티 → 이벤트', () {
@@ -32,6 +43,9 @@ void main() {
       );
       await tester.pump();
       await tester.pump();
+
+      // Capture: 비로그인 → 리다이렉트 화면
+      await tester.capture('unauthenticated_redirect');
 
       // /login으로 리다이렉트됨
       expect(find.byType(Scaffold), findsWidgets);
@@ -50,6 +64,9 @@ void main() {
       await tester.pump();
       await tester.pump();
 
+      // Capture: /welcome 화면
+      await tester.capture('needs_application_welcome');
+
       // /welcome 페이지가 렌더링됨
       expect(find.byType(Scaffold), findsWidgets);
     });
@@ -66,6 +83,9 @@ void main() {
       );
       await tester.pump();
       await tester.pump();
+
+      // Capture: /apply 위저드 화면
+      await tester.capture('draft_in_progress_apply');
 
       // /apply 위저드가 렌더링됨
       expect(find.byType(Scaffold), findsWidgets);
@@ -84,6 +104,9 @@ void main() {
       await tester.pump();
       await tester.pump();
 
+      // Capture: /apply/status 화면
+      await tester.capture('pending_review_status');
+
       // /apply/status 페이지가 렌더링됨
       expect(find.byType(Scaffold), findsWidgets);
     });
@@ -101,6 +124,9 @@ void main() {
       await tester.pump();
       await tester.pump();
 
+      // Capture: 심사 보완 요청 → apply/status 화면
+      await tester.capture('needs_correction_status');
+
       // 심사 보완 요청 → apply/status 페이지
       expect(find.byType(Scaffold), findsWidgets);
     });
@@ -114,6 +140,9 @@ void main() {
       );
       await tester.pump();
       await tester.pump();
+
+      // Capture: 파트너 홈 화면
+      await tester.capture('has_partner_home');
 
       // 파트너 홈 렌더링됨
       expect(find.byType(Scaffold), findsWidgets);
@@ -129,6 +158,9 @@ void main() {
       );
       await tester.pump();
       await tester.pump();
+
+      // Capture: 파티 목록 페이지
+      await tester.capture('has_partner_party_list');
 
       // 파티 목록 페이지 렌더링됨
       expect(find.byType(Scaffold), findsWidgets);
@@ -146,6 +178,9 @@ void main() {
       );
       await tester.pump();
       await tester.pump();
+
+      // Capture: /apply 접근 → / 리다이렉트 화면
+      await tester.capture('has_partner_apply_redirect');
 
       // hasPartner가 /apply 접근 → / 로 리다이렉트
       expect(find.byType(Scaffold), findsWidgets);

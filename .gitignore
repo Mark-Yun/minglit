@@ -87,6 +87,10 @@ apps/landing_partner/env-manifest.json
 # Golden test failure outputs
 **/test/**/failures/
 
+# Visual QA captures (runtime-generated)
+**/test/visual_qa/captures/ci/**/*.png
+**/test/visual_qa/captures/ci/**/*.txt
+
 # Misc
 tmp/
 .env*.local
