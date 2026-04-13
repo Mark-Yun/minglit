@@ -15,8 +15,9 @@ void main() {
         ),
       );
 
-      // Verify placeholder is rendered
-      expect(find.byIcon(Icons.image), findsOneWidget);
+      // Verify placeholder icon and label are rendered
+      expect(find.byIcon(Icons.image_outlined), findsOneWidget);
+      expect(find.text('이미지 준비 중'), findsOneWidget);
       // Verify carousel is NOT rendered
       expect(find.byType(PageView), findsNothing);
     });
@@ -35,7 +36,7 @@ void main() {
       // Verify carousel is rendered
       expect(find.byType(PageView), findsOneWidget);
       // Verify placeholder is NOT rendered
-      expect(find.byIcon(Icons.image), findsNothing);
+      expect(find.byIcon(Icons.image_outlined), findsNothing);
     });
 
     testWidgets(
@@ -53,8 +54,9 @@ void main() {
           ),
         );
 
-        // Verify placeholder is rendered with SizedBox
-        expect(find.byIcon(Icons.image), findsOneWidget);
+        // Verify placeholder icon and label are rendered with SizedBox
+        expect(find.byIcon(Icons.image_outlined), findsOneWidget);
+        expect(find.text('이미지 준비 중'), findsOneWidget);
         expect(find.byType(SizedBox), findsWidgets);
       },
     );
@@ -73,8 +75,9 @@ void main() {
           ),
         );
 
-        // Verify placeholder is rendered with AspectRatio
-        expect(find.byIcon(Icons.image), findsOneWidget);
+        // Verify placeholder icon and label are rendered with AspectRatio
+        expect(find.byIcon(Icons.image_outlined), findsOneWidget);
+        expect(find.text('이미지 준비 중'), findsOneWidget);
         expect(find.byType(AspectRatio), findsWidgets);
       },
     );
