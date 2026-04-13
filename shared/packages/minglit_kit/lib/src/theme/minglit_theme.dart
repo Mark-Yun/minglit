@@ -14,6 +14,7 @@ class MinglitTheme {
   /// App Bar Logo Widget
   ///
   /// Renders SVG logo, theme-aware: dark mode uses inverted variant.
+  // Fix #1377: PNG → SVG 로고 교체 — 다크모드 자동 대응 (Builder로 context 접근)
   static Widget appBarLogo({double height = 32}) {
     return Builder(
       builder: (context) {

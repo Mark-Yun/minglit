@@ -67,6 +67,7 @@ class MinglitLoginScreen extends ConsumerWidget {
               if (onDevTrigger != null)
                 _DevTriggerLogo(onTrigger: onDevTrigger!)
               else
+                // Fix #1377: PNG → SVG 로고 교체 — 다크모드 자동 대응
                 MinglitTheme.appBarLogo(height: 64),
               if (isPartner)
                 Text(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
 
@@ -131,6 +132,29 @@ void main() {
         equals(theme.scaffoldBackgroundColor),
         reason: 'Dark theme AppBar background should match scaffold background',
       );
+    });
+  });
+
+  // Fix #1377: PNG → SVG 로고 교체 — 다크모드 자동 대응 회귀 테스트
+  group('MinglitTheme.appBarLogo', () {
+    testWidgets('renders in light theme without error', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData(brightness: Brightness.light),
+          home: Scaffold(body: MinglitTheme.appBarLogo()),
+        ),
+      );
+      expect(find.byType(SvgPicture), findsOneWidget);
+    });
+
+    testWidgets('renders in dark theme without error', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData(brightness: Brightness.dark),
+          home: Scaffold(body: MinglitTheme.appBarLogo()),
+        ),
+      );
+      expect(find.byType(SvgPicture), findsOneWidget);
     });
   });
 
