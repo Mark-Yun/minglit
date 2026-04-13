@@ -77,14 +77,16 @@
 | P-S25 | 알림 설정 | `/more/notification-settings` | `NotificationSettingsScreen` | → `/login` | → `/welcome` | → `/apply/status` | OK | |
 | P-S26 | 멤버 목록 | `/more/partners/:partnerId/members` | `PartnerMemberListPage` | → `/login` | → `/welcome` | → `/apply/status` | OK | |
 | P-S27 | 멤버 권한 | `.../members/:targetUserId/permission` | `PartnerMemberPermissionPage` | → `/login` | → `/welcome` | → `/apply/status` | OK | |
+| P-S28 | 계정 관리 | `/more/account` | `AccountManagementPage` | → `/login` | → `/welcome` | → `/apply/status` | OK | PR #1213 — 계정 관리 통합. `/more` 하위 중첩 라우트 |
+| P-S29 | 반복 이벤트 관리 | `/more/parties/:partyId/recurrence` | `RecurrenceManagementScreen` | → `/login` | → `/welcome` | → `/apply/status` | OK | PR #1053 반복 이벤트. 유효한 partyId 필요 |
 
 ### 2.7 기타
 
 | # | 화면 | 경로 | Page 클래스 | GUEST | NEEDS_APP | PENDING | PARTNER | 비고 |
 |---|------|------|------------|-------|-----------|---------|---------|------|
-| P-S28 | 알림 센터 | `/notifications` | `NotificationListScreen` | → `/login` | → `/welcome` | → `/apply/status` | OK | |
-| P-S29 | 개발 도구 | `/dev` | `PartnerDevMap` | OK | OK | OK | OK | dev only |
-| P-S30 | 유저 전환 | `/dev/user-switch` | `DevUserSwitchScreen` | OK | OK | OK | OK | dev only |
+| P-S30 | 알림 센터 | `/notifications` | `NotificationListScreen` | → `/login` | → `/welcome` | → `/apply/status` | OK | |
+| P-S31 | 개발 도구 | `/dev` | `PartnerDevMap` | OK | OK | OK | OK | dev only |
+| P-S32 | 유저 전환 | `/dev/user-switch` | `DevUserSwitchScreen` | OK | OK | OK | OK | dev only |
 
 ---
 
@@ -238,8 +240,8 @@
 
 | 구분 | 수량 |
 |------|------|
-| 화면 진입 Smoke | 30 |
+| 화면 진입 Smoke | 32 |
 | 리다이렉트 검증 | 7 |
 | 파라미터 엣지 케이스 | 9 |
 | 화면별 액션 | 52 |
-| **합계** | **98** |
+| **합계** | **100** |
