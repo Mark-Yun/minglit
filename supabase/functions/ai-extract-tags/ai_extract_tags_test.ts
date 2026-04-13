@@ -201,6 +201,73 @@ Deno.test({
   },
 });
 
+// Fix #1417: malformed LLM output (parseTagResponse returns null) must NOT mark the
+// message as processed — it should stay in the queue for PGMQ retry / eventual DLQ.
+Deno.test({
+  name: "ai-extract-tags - malformed LLM output returns processed 0 and does not delete from queue",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+
+    let pgmqDeleteCalled = false;
+    let markProcessedCalled = false;
+
+    const stubs = [
+      stub(WorkerUtils.prototype, "isProcessed", () => Promise.resolve(false)),
+      stub(WorkerUtils.prototype, "markProcessed", () => {
+        markProcessedCalled = true;
+        return Promise.resolve();
+      }),
+      stub(WorkerUtils.prototype, "moveToDLQ", () => Promise.resolve()),
+      stub(WorkerUtils.prototype, "logTimeLag", () => {}),
+      // Return unparseable prose instead of a JSON array
+      stub(
+        OpenAILLM.prototype,
+        "complete",
+        () => Promise.resolve("Sorry, I cannot extract tags from this content."),
+      ),
+    ];
+
+    const { fetchMock } = createFetchMock([
+      {
+        matcher: (req) => req.url.includes("/rest/v1/rpc/pgmq_read"),
+        handler: () => jsonResponse([mockTagPartyMessage]),
+      },
+      {
+        matcher: (req) => req.url.includes("/rest/v1/rpc/pgmq_delete"),
+        handler: () => {
+          pgmqDeleteCalled = true;
+          return jsonResponse({});
+        },
+      },
+    ]);
+
+    try {
+      await withEnv(BASE_ENV, async () => {
+        await withMockedFetch(fetchMock, async () => {
+          await withNoIntervals(async () => {
+            const response = await handler(makeRequest({}));
+            const payload = await readJson(response);
+
+            assertEquals(response.status, 200);
+            // Message must NOT be counted as processed
+            assertEquals(payload.processed, 0);
+            // pgmq_delete must NOT have been called
+            assertEquals(pgmqDeleteCalled, false);
+            // markProcessed must NOT have been called
+            assertEquals(markProcessedCalled, false);
+          });
+        });
+      });
+    } finally {
+      stubs.forEach((s) => s.restore());
+    }
+  },
+});
+
 // Note: 401 (missing/invalid JWT) and auth-related 500 tests are intentionally omitted.
 // With verify_jwt=true, the Supabase edge runtime rejects unauthenticated requests
 // before the function handler runs — this cannot be unit-tested at the handler level.

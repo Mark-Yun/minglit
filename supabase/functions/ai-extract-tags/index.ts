@@ -118,14 +118,14 @@ Deno.serve(withHandler(async (req) => {
           temperature: 0.3,
         });
 
-        // 3. JSON 배열 파싱 — null이면 LLM이 유효한 응답을 반환하지 않은 것
+        // 3. JSON 배열 파싱 — null이면 LLM이 파싱 불가능한 응답을 반환한 것
+        // Fix #1417: null(파싱 실패)은 throw하여 PGMQ 재시도/DLQ로 보낸다.
+        // []( 유효한 빈 배열 = 태그 없음)은 정상 처리로 계속 진행한다.
         const tags = parseTagResponse(response);
         if (tags === null) {
-          console.warn(
-            `[${traceId}] LLM returned unparseable response — skipping tag extraction`,
+          throw new Error(
+            `LLM returned unparseable response — will retry via PGMQ`,
           );
-          processedMsgIds.push(msg.msg_id);
-          continue;
         }
         console.log(
           `[${traceId}] Extracted tags: ${JSON.stringify(tags)}`,
