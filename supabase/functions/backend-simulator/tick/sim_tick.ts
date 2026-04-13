@@ -59,7 +59,9 @@ export async function tick(
   const { data: e2eUsers } = await supabase
     .from("user_profiles")
     .select("id, username")
-    .like("username", "user_%")
+    // Fix #1415: escape underscore so PostgreSQL LIKE treats it as literal '_'
+    // without escaping, 'user_%' would match 'userX...' (any single char fills '_' position)
+    .like("username", "user\\_%" )
     .not("username", "like", "partner_%")
     .limit(60);
 

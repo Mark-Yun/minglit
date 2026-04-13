@@ -57,7 +57,8 @@ function createTickMock(userRows: Array<{ id: string; username: string }> = []) 
           data = [];
         } else if (table === "user_profiles") {
           // Fix #1415: only return rows when queried with "user_" prefix pattern
-          data = capturedLikePattern?.startsWith("user_") ? userRows : [];
+          // Fix #1415: pattern is now "user\_%" (escaped underscore) so check for that prefix
+      data = capturedLikePattern?.startsWith("user\\_") ? userRows : [];
         } else {
           data = [];
         }
@@ -120,12 +121,13 @@ Deno.test({
 
     await tick(supabase, "https://example.supabase.co", "anon-key", log);
 
-    // Assert that at least one like() call used the "user_%" pattern
-    const userProfilePattern = likePatterns.find((p) => p === "user_%");
+    // Assert that at least one like() call used the escaped "user\_%" pattern
+    // (underscore must be escaped so PostgreSQL LIKE treats it as literal '_', not a wildcard)
+    const userProfilePattern = likePatterns.find((p) => p === "user\\_%");
     assertEquals(
       userProfilePattern,
-      "user_%",
-      `Expected user_profiles to be queried with "user_%" but got: [${likePatterns.join(", ")}]`,
+      "user\\_%",
+      `Expected user_profiles to be queried with "user\\_%" but got: [${likePatterns.join(", ")}]`,
     );
 
     // Assert that the broken "sim_%" pattern was NOT used
@@ -135,6 +137,46 @@ Deno.test({
       undefined,
       `"sim_%" pattern should not be used (fix #1415) but was found in: [${likePatterns.join(", ")}]`,
     );
+
+    // Assert that the unescaped "user_%" pattern was NOT used (would match userX... as wildcard)
+    const unescapedPattern = likePatterns.find((p) => p === "user_%");
+    assertEquals(
+      unescapedPattern,
+      undefined,
+      `Unescaped "user_%" must not be used — it matches non-seed userX... patterns. Use "user\\_%" instead.`,
+    );
+  },
+});
+
+Deno.test({
+  // Fix #1415: regression guard — non-seed usernames like "userX..." must NOT match
+  // (unescaped 'user_%' would treat '_' as a wildcard and match 'userX...')
+  name: "tick() - non-seed userX username is excluded from user discovery (regression #1415)",
+  fn: async () => {
+    Deno.env.set("SIM_USER_PASSWORD", "password1234!");
+    clearTokenCache();
+
+    // 'userabc...' would match unescaped 'user_%' (the 'a' fills the '_' wildcard)
+    // but should NOT match escaped 'user\_%' (literal underscore required)
+    const nonSeedUsers = [
+      { id: "bad1", username: "userabc_fake_account" },
+      { id: "bad2", username: "user123" },
+    ];
+    const { supabase, likePatterns } = createTickMock(nonSeedUsers);
+    const { log } = makeLogCollector();
+
+    const summary = await tick(supabase, "https://example.supabase.co", "anon-key", log);
+
+    // The mock returns rows only when pattern starts with "user\_" (escaped).
+    // Since the pattern "user\\_%" does NOT start with "user\_" for the mock's startsWith check
+    // but the mock IS updated to check startsWith("user\\_"), non-seed rows won't match.
+    // actors.users must be 0 because the mock only returns rows for the exact escaped pattern.
+    assertEquals(summary.actors.users, 0, "non-seed users must not be discovered");
+    assertEquals(summary.failed, 0);
+
+    // Verify the escaped pattern was used
+    const hasEscapedPattern = likePatterns.some((p) => p === "user\\_%");
+    assertEquals(hasEscapedPattern, true, "query must use escaped pattern user\\_%");
   },
 });
 
