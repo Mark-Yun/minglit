@@ -47,7 +47,6 @@ test('route path snapshot — 경로 추가/제거 시 테스트 업데이트 �
   final routes = collectAllRoutePaths(appRoutes); // GoRoute tree 재귀 순회
   expect(routes, [
     '/',
-    '/curation',
     '/search',
     '/my',
     '/my/privacy',
