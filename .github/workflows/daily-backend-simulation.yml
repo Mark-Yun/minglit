@@ -15,17 +15,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      # Fix #1334: 560 users seeded in 6 batches × 100 (EF wall-time limit 150s)
-      - name: Seed users/partners (batched — 6 × 100 = 560 total)
+      # Fix #1390: 560 admin.createUser() HTTP calls → 2 in-DB RPCs (~4초 total)
+      - name: Seed users/partners (bulk RPC — 560 users + partners in 1 call)
         run: |
-          for offset in 0 100 200 300 400 500; do
-            curl -sf -X POST \
-              "${{ secrets.SUPABASE_DEV_URL }}/functions/v1/dev-seed?mode=static&offset=$offset&limit=100" \
-              -H "Authorization: Bearer ${{ secrets.SUPABASE_DEV_SECRET_KEY }}" \
-              -H "Content-Type: application/json" \
-              --max-time 180
-            echo "Batch offset=$offset done"
-          done
+          curl -sf -X POST \
+            "${{ secrets.SUPABASE_DEV_URL }}/functions/v1/dev-seed?mode=static" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_DEV_SECRET_KEY }}" \
+            -H "Content-Type: application/json" \
+            --max-time 60
 
       - name: Create parties and events
         run: |
