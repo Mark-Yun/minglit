@@ -20,6 +20,16 @@ import 'utils/test_mocks.dart';
 
 class _MockConsentRepository extends Mock implements ConsentRepository {}
 
+/// 동의 플로우의 4단계 비동기 프레임을 소진하는 헬퍼.
+///
+/// 순서: 초기 프레임 → postFrameCallback → getConsents 비동기 완료 → 후속 재빌드/애니메이션
+Future<void> _drainConsentFlow(WidgetTester tester) async {
+  await tester.pump(); // 초기 프레임
+  await tester.pump(); // postFrameCallback
+  await tester.pump(); // 비동기 getConsents 완료
+  await tester.pump(); // 후속 재빌드/애니메이션 반영
+}
+
 void main() {
   setUpAll(() async {
     await initializeDateFormatting('ko_KR');
@@ -61,10 +71,7 @@ void main() {
         );
 
         // 초기 렌더링 → postFrameCallback → 비동기 동의 확인 완료
-        await tester.pump(); // 초기 프레임
-        await tester.pump(); // postFrameCallback 실행
-        await tester.pump(); // getConsents 비동기 완료
-        await tester.pump(); // 바텀시트 애니메이션
+        await _drainConsentFlow(tester);
 
         // 동의 시트 텍스트 확인
         expect(find.text('본인확인정보 수집·이용 동의'), findsOneWidget);
@@ -95,10 +102,7 @@ void main() {
         );
 
         // 동의 시트 표시 대기
-        await tester.pump();
-        await tester.pump();
-        await tester.pump();
-        await tester.pump();
+        await _drainConsentFlow(tester);
 
         // 동의 시트에서 취소 탭
         await tester.tap(find.text('취소'));
@@ -156,10 +160,7 @@ void main() {
 
         // 초기 프레임 → postFrameCallback → getConsents() 비동기 완료 → _startVerification()
         // 순서로 진행되어야 한다. TC-U12-001과 동일하게 4 pump으로 비동기 플로우를 모두 소진한다.
-        await tester.pump(); // 초기 프레임
-        await tester.pump(); // postFrameCallback 실행
-        await tester.pump(); // getConsents() 비동기 완료 + _startVerification() 진입
-        await tester.pump(); // setState 재빌드
+        await _drainConsentFlow(tester);
 
         // Fix: ConsentController.build()도 getConsents()를 호출하므로 정확히 1회
         // 호출을 기대하면 실패한다. 동의 확인 경로가 실행되었는지는 UI 상태로만 검증.
