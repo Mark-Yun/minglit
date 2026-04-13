@@ -1,9 +1,7 @@
--- ai-extract-tags EF를 위한 DB 설정
+-- ai-extract-tags EF를 위한 DB 설정 (Part 1)
 -- - party_tags에 source 컬럼 추가 (manual/ai 구분)
--- - PGMQ q_tags 큐 생성
 -- - event_queue_name enum에 q_tags 추가
--- - event_routes에 party_created → q_tags 라우팅 추가
--- - ai-extract-tags cron 추가
+-- Note: enum ADD VALUE는 별도 트랜잭션이 필요하므로 event_routes INSERT는 다음 마이그레이션에서 수행
 
 set search_path to public, extensions;
 
@@ -33,6 +31,10 @@ END $$;
 -- ============================================================
 -- 2. event_queue_name enum에 q_tags 추가
 -- ============================================================
+-- ALTER TYPE ADD VALUE는 트랜잭션 블록 밖에서 실행해야 하지만,
+-- Supabase 마이그레이션은 각 파일을 하나의 트랜잭션으로 실행한다.
+-- 새 enum 값을 같은 트랜잭션에서 사용하면 PostgreSQL이 "unsafe use of new value" 에러를 발생시킨다.
+-- 따라서 enum 추가만 이 마이그레이션에서 수행하고, 새 값을 사용하는 INSERT는 다음 마이그레이션에서 수행한다.
 
 DO $$
 BEGIN
@@ -44,41 +46,3 @@ BEGIN
     ALTER TYPE public.event_queue_name ADD VALUE 'q_tags';
   END IF;
 END $$;
-
--- ============================================================
--- 3. PGMQ q_tags 큐 생성
--- ============================================================
-
--- pgmq.create는 큐가 이미 존재하면 에러를 발생시키지 않음 (idempotent)
-SELECT pgmq.create('q_tags');
-
--- ============================================================
--- 4. event_routes에 q_tags 라우팅 추가
--- ============================================================
-
--- party_created 이벤트를 q_tags에도 팬아웃하도록 설정.
--- ON CONFLICT는 20260301000008_08_cron_routes.sql에서 추가된 UNIQUE 제약 조건 활용.
-INSERT INTO public.event_routes (event_type, target_queue, is_active)
-VALUES ('party_created', 'q_tags', true)
-ON CONFLICT (event_type, target_queue) DO UPDATE SET is_active = EXCLUDED.is_active;
-
--- ============================================================
--- 5. Cron: ai-extract-tags (every minute)
--- ============================================================
-
-select cron.schedule(
-  'ai-extract-tags',
-  '* * * * *',
-  $$
-    select net.http_post(
-      url:='https://cnuahgrfzcqkmdyhunuk.supabase.co/functions/v1/ai-extract-tags',
-      headers:=(
-        jsonb_build_object(
-          'Content-Type', 'application/json',
-          'Authorization', 'Bearer ' || (select decrypted_secret from vault.decrypted_secrets where name = 'service_role_key' limit 1)
-        )
-      ),
-      body:='{}'::jsonb
-    ) as request_id;
-  $$
-);
