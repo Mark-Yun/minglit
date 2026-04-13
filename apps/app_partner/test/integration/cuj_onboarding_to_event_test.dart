@@ -12,6 +12,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../utils/mocks.dart';
 import '../visual_qa/visual_qa_helper.dart';
@@ -24,6 +25,15 @@ void main() {
     when(() => testUser.id).thenReturn('partner-p01');
     when(() => testUser.email).thenReturn('partner@example.com');
     when(() => testUser.userMetadata).thenReturn({'full_name': '김파트너'});
+    // Fix #1424: /more/* 경로는 MorePage를 렌더링하며 PackageInfo.fromPlatform()을 호출함.
+    // 테스트 환경에서 플러그인 구현이 없으므로 mock 값을 제공해야 함.
+    PackageInfo.setMockInitialValues(
+      appName: 'Test App',
+      packageName: 'com.test.app',
+      version: '1.0.0',
+      buildNumber: '1',
+      buildSignature: '',
+    );
   });
 
   group('IT-P01: 파트너 가입 → 파티 → 이벤트', () {
