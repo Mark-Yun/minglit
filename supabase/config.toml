@@ -393,18 +393,6 @@ s3_access_key = "env(S3_ACCESS_KEY)"
 # Configures AWS_SECRET_ACCESS_KEY for S3 bucket
 s3_secret_key = "env(S3_SECRET_KEY)"
 
-# [functions.vectorize-party]
-# Disabled: missing index.ts entrypoint (helper/test files only).
-# enabled = true
-# verify_jwt = true
-# import_map = "./deno.json"
-# Uncomment to specify a custom file path to the entrypoint.
-# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
-# entrypoint = "./functions/vectorize-party/index.ts"
-# Specifies static files to be bundled with the function. Supports glob patterns.
-# For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/vectorize-party/*.html" ]
-
 [functions.notification-worker]
 enabled = true
 verify_jwt = true
@@ -416,16 +404,16 @@ entrypoint = "./functions/notification-worker/index.ts"
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/notification-worker/*.html" ]
 
-[functions.vector-worker]
+[functions.ai-embed]
 enabled = true
 verify_jwt = true
 import_map = "./deno.json"
 # Uncomment to specify a custom file path to the entrypoint.
 # Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
-entrypoint = "./functions/vector-worker/index.ts"
+entrypoint = "./functions/ai-embed/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/vector-worker/*.html" ]
+# static_files = [ "./functions/ai-embed/*.html" ]
 
 [functions.health]
 enabled = true
