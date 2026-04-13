@@ -4,7 +4,7 @@ import { createEmbeddingAdapter } from '../_shared/ai/factory.ts'
 import { serializeParty } from './party_serializer.ts'
 import { HybridCalculator } from './calculator.ts'
 import { WorkerUtils } from '../_shared/worker_utils.ts'
-import { initSentry, withHandler, log } from '../_shared/logger.ts'
+import { initSentry, withHandler, log, captureException } from '../_shared/logger.ts'
 
 const FN = "ai-embed";
 
@@ -191,6 +191,8 @@ Deno.serve(withHandler(async (req) => {
   } catch (err: unknown) {
     const errorMessage = err instanceof Error ? err.message : String(err);
     log({ function: FN, level: "error", message: `AI Embed Worker Error: ${errorMessage}` });
+    // captureException: withHandler의 catch에 도달하지 않으므로 여기서 직접 Sentry에 캡처
+    captureException(err);
     return new Response(JSON.stringify({ error: errorMessage }), {
       status: 500,
       headers: { "Content-Type": "application/json" }
