@@ -5,6 +5,8 @@ function isProduction(): boolean {
   return env !== 'local' && env !== 'development'
 }
 
+const SEED_PASSWORD = 'password1234!'
+
 interface UserPersona {
   email: string
   password: string
@@ -282,94 +284,31 @@ function generate30sPersonas(): UserPersona[] {
   return personas
 }
 
-async function createAdminUser(
-  supabase: SupabaseClient,
-  persona: UserPersona,
-): Promise<string> {
-  const { data, error } = await supabase.auth.admin.createUser({
-    email: persona.email,
-    password: persona.password,
-    email_confirm: true,
-    user_metadata: persona.metadata,
-  })
-
-  if (error) {
-    if (error.message?.includes('already registered') || (error as any).code === 'email_exists') {
-      const { data: users } = await supabase.auth.admin.listUsers({ perPage: 1000 })
-      const existing = users?.users?.find((u: any) => u.email === persona.email)
-      if (existing) {
-        await supabase.auth.admin.deleteUser(existing.id)
-      }
-      return createAdminUser(supabase, persona)
-    }
-    throw error
-  }
-
-  return data.user?.id ?? ''
+function generateAllPersonas(): UserPersona[] {
+  return [...generatePersonas(), ...generate30sPersonas()]
 }
 
-async function createPartner(
-  sb: SupabaseClient,
-  ownerId: string,
-  partnerDef: { name: string; introduction: string; biz_name: string; biz_number: string; contact_email: string },
-): Promise<string> {
-  const { data, error } = await sb.from('partners').insert({
-    name: partnerDef.name,
-    introduction: partnerDef.introduction,
-    biz_name: partnerDef.biz_name,
-    biz_number: partnerDef.biz_number,
-    contact_email: partnerDef.contact_email,
-  }).select('id').single()
+const GLOBAL_VERIFICATIONS = [
+  { category: 'career', internal_name: 'global_career', display_name: '직장인 인증', description: '재직증명서 기반 직장인 인증', icon_key: 'briefcase', form_schema: [{ type: 'image', label: '재직증명서' }] },
+  { category: 'academic', internal_name: 'global_academic', display_name: '대학생 인증', description: '학생증 기반 대학생 인증', icon_key: 'school', form_schema: [{ type: 'image', label: '학생증' }] },
+  { category: 'asset', internal_name: 'global_asset', display_name: '자산 인증', description: '자산 보유 인증', icon_key: 'diamond', form_schema: [{ type: 'text', label: '자산 정보' }] },
+]
 
-  if (error) throw new Error(`Failed to create partner "${partnerDef.name}": ${error.message}`)
+// ALL_PARTNERS: SEED_PARTNERS + hot-place partners (merged for bulk RPC)
+const ALL_PARTNERS = [
+  ...SEED_PARTNERS,
+  ...HOT_PLACES.map((place, idx) => ({
+    name: `${place.name} 소셜클럽`,
+    introduction: `${place.name} 지역 대표 소셜 클럽`,
+    biz_name: `${place.name}클럽`,
+    biz_number: `000-00-${String(idx).padStart(5, '0')}`,
+    contact_email: `partner_hotplace_${idx}@test.com`,
+    ownerEmail: `partner_hotplace_${idx}@test.com`,
+    location: place,
+    localVerifications: [] as { category: 'career' | 'academic' | 'asset'; internal_name: string; display_name: string; description: string; icon_key: string; form_schema: { type: string; label: string }[] }[],
+  })),
+]
 
-  const { error: permError } = await sb.from('partner_member_permissions').insert({
-    partner_id: data.id,
-    user_id: ownerId,
-    role: 'owner',
-  })
-  if (permError) throw new Error(`Failed to add owner permission: ${permError.message}`)
-
-  return data.id
-}
-
-async function createLocation(
-  sb: SupabaseClient,
-  partnerId: string,
-  loc: typeof HOT_PLACES[number],
-): Promise<string> {
-  const { data, error } = await sb.from('locations').insert({
-    partner_id: partnerId,
-    name: loc.name,
-    address: loc.address,
-    region_1: loc.region_1,
-    region_2: loc.region_2,
-    region_3: loc.region_3,
-    geo_point: `POINT(${loc.lng} ${loc.lat})`,
-  }).select('id').single()
-
-  if (error) throw new Error(`Failed to create location "${loc.name}": ${error.message}`)
-  return data.id
-}
-
-async function createVerification(
-  sb: SupabaseClient,
-  partnerId: string | null,
-  verif: { category: string; internal_name: string; display_name: string; description: string; icon_key: string; form_schema: unknown[] },
-): Promise<string> {
-  const { data, error } = await sb.from('verifications').insert({
-    partner_id: partnerId,
-    category: verif.category,
-    internal_name: verif.internal_name,
-    display_name: verif.display_name,
-    description: verif.description,
-    icon_key: verif.icon_key,
-    form_schema: verif.form_schema,
-  }).select('id').single()
-
-  if (error) throw new Error(`Failed to create verification "${verif.internal_name}": ${error.message}`)
-  return data.id
-}
 
 async function createPartyWithEvents(
   sb: SupabaseClient,
@@ -474,66 +413,7 @@ async function createPartyWithEvents(
   return { partyId, eventIds }
 }
 
-async function ensureGlobalVerifications(sb: SupabaseClient): Promise<Record<string, string>> {
-   const globals = [
-     { category: 'career', internal_name: 'global_career', display_name: '직장인 인증', description: '재직증명서 기반 직장인 인증', icon_key: 'briefcase', form_schema: [{ type: 'image', label: '재직증명서' }] },
-     { category: 'academic', internal_name: 'global_academic', display_name: '대학생 인증', description: '학생증 기반 대학생 인증', icon_key: 'school', form_schema: [{ type: 'image', label: '학생증' }] },
-     { category: 'asset', internal_name: 'global_asset', display_name: '자산 인증', description: '자산 보유 인증', icon_key: 'diamond', form_schema: [{ type: 'text', label: '자산 정보' }] },
-   ]
-
-   const result: Record<string, string> = {}
-
-   for (const g of globals) {
-     const { data: existing } = await sb.from('verifications')
-       .select('id')
-       .is('partner_id', null)
-       .eq('internal_name', g.internal_name)
-       .maybeSingle()
-
-     if (existing) {
-       result[g.category] = existing.id
-     } else {
-       const id = await createVerification(sb, null, g)
-       result[g.category] = id
-     }
-   }
-
-   return result
- }
-
 // ─── Domain Seeding Functions ───────────────────────────────────────
-
-async function seedUsers(supabase: SupabaseClient): Promise<number> {
-   const personas = generatePersonas()
-   let createdUsers = 0
-
-   for (const persona of personas) {
-     try {
-       await createAdminUser(supabase, persona)
-       createdUsers++
-     } catch (err) {
-       console.error(`Failed to create ${persona.email}:`, err)
-     }
-   }
-
-   return createdUsers
- }
-
-async function seed30sUsers(supabase: SupabaseClient): Promise<number> {
-  const personas = generate30sPersonas()
-  let createdUsers = 0
-
-  for (const persona of personas) {
-    try {
-      await createAdminUser(supabase, persona)
-      createdUsers++
-    } catch (err) {
-      console.error(`Failed to create ${persona.email}:`, err)
-    }
-  }
-
-  return createdUsers
-}
 
 async function uploadSeedImages(supabase: SupabaseClient): Promise<string[]> {
   const imageFiles = ['party_cafe_warm.jpg', 'party_lounge_bright.jpg', 'party_premium_lounge.jpg']
@@ -610,120 +490,78 @@ async function updatePartyImages(supabase: SupabaseClient, imageUrls: string[]):
   }
 }
 
-async function seedGlobalVerifications(supabase: SupabaseClient): Promise<Record<string, string>> {
-   return await ensureGlobalVerifications(supabase)
- }
+async function seedPartiesAndEvents(
+  sb: SupabaseClient,
+): Promise<{ createdParties: number; createdEvents: number }> {
+  let createdParties = 0
+  let createdEvents = 0
 
-async function seedDefinedPartners(
-   supabase: SupabaseClient,
-   globalVerifs: Record<string, string>,
- ): Promise<{ createdPartners: number; createdParties: number; createdEvents: number }> {
-   let createdPartners = 0
-   let createdParties = 0
-   let createdEvents = 0
+  // Fetch verifications to resolve IDs by category/internal_name
+  const { data: verifications } = await sb.from('verifications').select('id, partner_id, category, internal_name')
+  const verifByInternal: Record<string, string> = {}
+  for (const v of verifications ?? []) {
+    verifByInternal[v.internal_name] = v.id
+  }
 
-   for (const pDef of SEED_PARTNERS) {
-     const ownerPersona: UserPersona = {
-       email: pDef.ownerEmail,
-       password: 'password1234!',
-       metadata: {
-         name: `${pDef.name} 대표`,
-         username: pDef.ownerEmail.replace('@test.com', ''),
-         gender: 'male',
-         birth_date: '1990-01-01',
-         phone_number: `010-0000-${String(SEED_PARTNERS.indexOf(pDef)).padStart(4, '0')}`,
-         is_verified: true,
-       },
-     }
+  // Seed defined partners: each gets 1 scenario
+  for (const pDef of SEED_PARTNERS) {
+    const { data: partner } = await sb.from('partners').select('id').eq('biz_number', pDef.biz_number).maybeSingle()
+    if (!partner) continue
 
-     let ownerId: string
-     try {
-       ownerId = await createAdminUser(supabase, ownerPersona)
-     } catch (err) {
-       console.error(`Failed to create partner owner ${pDef.ownerEmail}:`, err)
-       continue
-     }
+    const { data: location } = await sb.from('locations').select('id').eq('partner_id', partner.id).maybeSingle()
+    if (!location) continue
 
-     const partnerId = await createPartner(supabase, ownerId, pDef)
-     createdPartners++
+    // Skip if party already exists for this partner
+    const { data: existingParty } = await sb.from('parties').select('id').eq('partner_id', partner.id).maybeSingle()
+    if (existingParty) continue
 
-     const locationId = await createLocation(supabase, partnerId, pDef.location)
+    const scenarioIdx = SEED_PARTNERS.indexOf(pDef)
+    const scenario = SCENARIOS[scenarioIdx % SCENARIOS.length]
+    const verifIds = scenario.verificationCategory
+      ? [verifByInternal[`mingle_${scenario.verificationCategory}`] ?? verifByInternal[`global_${scenario.verificationCategory}`]].filter(Boolean)
+      : []
 
-     const localVerifIds: Record<string, string> = {}
-     for (const lv of pDef.localVerifications) {
-       const vid = await createVerification(supabase, partnerId, lv)
-       localVerifIds[lv.category] = vid
-     }
+    const { eventIds } = await createPartyWithEvents(sb, partner.id, location.id, scenario, verifIds)
+    createdParties++
+    createdEvents += eventIds.length
+  }
 
-     const scenarioIdx = SEED_PARTNERS.indexOf(pDef)
-     const scenario = SCENARIOS[scenarioIdx % SCENARIOS.length]
-     const verifIds = scenario.verificationCategory
-       ? [localVerifIds[scenario.verificationCategory] ?? globalVerifs[scenario.verificationCategory]].filter(Boolean)
-       : []
+  // Seed hot-place partners: each gets all scenarios
+  for (let idx = 0; idx < HOT_PLACES.length; idx++) {
+    const bizNumber = `000-00-${String(idx).padStart(5, '0')}`
+    const { data: partner } = await sb.from('partners').select('id').eq('biz_number', bizNumber).maybeSingle()
+    if (!partner) continue
 
-     const { eventIds } = await createPartyWithEvents(supabase, partnerId, locationId, scenario, verifIds)
-     createdParties++
-     createdEvents += eventIds.length
-   }
+    const { data: location } = await sb.from('locations').select('id').eq('partner_id', partner.id).maybeSingle()
+    if (!location) continue
 
-   return { createdPartners, createdParties, createdEvents }
- }
+    // Skip if parties already exist for this partner
+    const { data: existingParties } = await sb.from('parties').select('id').eq('partner_id', partner.id)
+    if (existingParties && existingParties.length > 0) continue
 
-async function seedHotPlacePartners(
-   supabase: SupabaseClient,
-   globalVerifs: Record<string, string>,
- ): Promise<{ createdPartners: number; createdParties: number; createdEvents: number }> {
-   let createdPartners = 0
-   let createdParties = 0
-   let createdEvents = 0
+    for (const scenario of SCENARIOS) {
+      const verifIds = scenario.verificationCategory
+        ? [verifByInternal[`global_${scenario.verificationCategory}`]].filter(Boolean)
+        : []
 
-   for (const place of HOT_PLACES) {
-     const ownerEmail = `partner_hotplace_${HOT_PLACES.indexOf(place)}@test.com`
-     const ownerPersona: UserPersona = {
-       email: ownerEmail,
-       password: 'password1234!',
-       metadata: {
-         name: `${place.name} 파트너`,
-         username: ownerEmail.replace('@test.com', ''),
-         gender: 'male',
-         birth_date: '1988-01-01',
-         phone_number: `010-0001-${String(HOT_PLACES.indexOf(place)).padStart(4, '0')}`,
-         is_verified: true,
-       },
-     }
+      const { eventIds } = await createPartyWithEvents(sb, partner.id, location.id, scenario, verifIds)
+      createdParties++
+      createdEvents += eventIds.length
+    }
+  }
 
-     let ownerId: string
-     try {
-       ownerId = await createAdminUser(supabase, ownerPersona)
-     } catch (err) {
-       console.error(`Failed to create hot-place partner owner ${ownerEmail}:`, err)
-       continue
-     }
+  return { createdParties, createdEvents }
+}
 
-     const partnerId = await createPartner(supabase, ownerId, {
-       name: `${place.name} 소셜클럽`,
-       introduction: `${place.name} 지역 대표 소셜 클럽`,
-       biz_name: `${place.name}클럽`,
-       biz_number: `000-00-${String(HOT_PLACES.indexOf(place)).padStart(5, '0')}`,
-       contact_email: ownerEmail,
-     })
-     createdPartners++
-
-     const locationId = await createLocation(supabase, partnerId, place)
-
-     for (const scenario of SCENARIOS) {
-       const verifIds = scenario.verificationCategory
-         ? [globalVerifs[scenario.verificationCategory]].filter(Boolean)
-         : []
-
-       const { eventIds } = await createPartyWithEvents(supabase, partnerId, locationId, scenario, verifIds)
-       createdParties++
-       createdEvents += eventIds.length
-     }
-   }
-
-   return { createdPartners, createdParties, createdEvents }
- }
+async function purgeQueues(supabase: SupabaseClient): Promise<void> {
+  for (const queue of ['q_global_events', 'q_notifications', 'q_vectors']) {
+    try {
+      await supabase.rpc('pgmq_purge', { queue_name: queue })
+    } catch {
+      // pgmq may not be available in all environments — ignore errors
+    }
+  }
+}
 
 async function seedUserActivity(sb: SupabaseClient): Promise<void> {
   // ── Step 0: Idempotency — clear previous activity data ──────────────
@@ -935,65 +773,111 @@ async function seedUserActivity(sb: SupabaseClient): Promise<void> {
 }
 
 Deno.serve(async (_req) => {
-   if (isProduction()) {
-     return new Response(
-       JSON.stringify({ error: 'Dev-only function. Blocked in production.' }),
-       { status: 403, headers: { 'Content-Type': 'application/json' } },
-     )
-   }
+  if (isProduction()) {
+    return new Response(
+      JSON.stringify({ error: 'Dev-only function. Blocked in production.' }),
+      { status: 403, headers: { 'Content-Type': 'application/json' } },
+    )
+  }
 
-   try {
-     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-     const supabase = createClient(supabaseUrl, serviceRoleKey)
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const supabase = createClient(supabaseUrl, serviceRoleKey)
 
-    // Seed users
-    const createdUsers = await seedUsers(supabase)
+    // 1. 유저 560명 + 파트너 오너 (1 RPC, ~3초)
+    // Partner owner personas (not part of generateAllPersonas)
+    const partnerOwnerPersonas: UserPersona[] = [
+      ...SEED_PARTNERS.map((pDef, idx) => ({
+        email: pDef.ownerEmail,
+        password: SEED_PASSWORD,
+        metadata: {
+          name: `${pDef.name} 대표`,
+          username: pDef.ownerEmail.replace('@test.com', ''),
+          gender: 'male' as const,
+          birth_date: '1990-01-01',
+          phone_number: `010-0000-${String(idx).padStart(4, '0')}`,
+          is_verified: true,
+        },
+      })),
+      ...HOT_PLACES.map((place, idx) => ({
+        email: `partner_hotplace_${idx}@test.com`,
+        password: SEED_PASSWORD,
+        metadata: {
+          name: `${place.name} 파트너`,
+          username: `partner_hotplace_${idx}`,
+          gender: 'male' as const,
+          birth_date: '1988-01-01',
+          phone_number: `010-0001-${String(idx).padStart(4, '0')}`,
+          is_verified: true,
+        },
+      })),
+    ]
+    const allPersonas = [...generateAllPersonas(), ...partnerOwnerPersonas]
+    const userResult = await supabase.rpc('dev_seed_bulk_users', {
+      p_users: JSON.stringify(allPersonas.map(p => ({
+        email: p.email,
+        name: p.metadata.name,
+        username: p.metadata.username,
+        gender: p.metadata.gender,
+        birth_date: p.metadata.birth_date,
+        phone_number: p.metadata.phone_number,
+        is_verified: p.metadata.is_verified,
+        sim_region: null,
+        sim_lat: null,
+        sim_lng: null,
+      }))),
+      p_password: SEED_PASSWORD,
+    })
+    if (userResult.error) throw new Error(`dev_seed_bulk_users: ${userResult.error.message}`)
+    console.log(`Users: ${userResult.data.created} created, ${userResult.data.updated} updated (${userResult.data.elapsed_ms}ms)`)
 
-    // Seed 30s users
-    const created30sUsers = await seed30sUsers(supabase)
+    // 2. 파트너 + 로케이션 + 인증 + 역할 (1 RPC, ~1초)
+    const partnerResult = await supabase.rpc('dev_seed_bulk_partners', {
+      p_partners: JSON.stringify(ALL_PARTNERS.map(p => ({
+        name: p.name,
+        introduction: p.introduction,
+        biz_name: p.biz_name,
+        biz_number: p.biz_number,
+        contact_email: p.contact_email,
+        owner_email: p.ownerEmail,
+        location: p.location,
+        local_verifications: p.localVerifications,
+      }))),
+      p_global_verifications: JSON.stringify(GLOBAL_VERIFICATIONS),
+    })
+    if (partnerResult.error) throw new Error(`dev_seed_bulk_partners: ${partnerResult.error.message}`)
+    console.log(`Partners: ${partnerResult.data.partners_processed} (${partnerResult.data.elapsed_ms}ms)`)
 
-     // Seed global verifications
-     const globalVerifs = await seedGlobalVerifications(supabase)
+    // 3. 파티 + 이벤트 (파트너별 시나리오 생성)
+    const { createdParties, createdEvents } = await seedPartiesAndEvents(supabase)
+    console.log(`Parties: ${createdParties}, Events: ${createdEvents}`)
 
-     // Seed defined partners with their locations, verifications, parties, and events
-     const definedPartnerStats = await seedDefinedPartners(supabase, globalVerifs)
-
-     // Seed hot-place partners with all scenarios
-     const hotPlaceStats = await seedHotPlacePartners(supabase, globalVerifs)
-
-    // Upload seed images and update party image_urls
+    // 4. 이미지 (Storage API, ~10초 — RPC 불가)
     const imageUrls = await uploadSeedImages(supabase)
     await updatePartyImages(supabase, imageUrls)
 
-    // Seed user activity (applications, verifications, participants)
+    // 5. 유저 활동 (신청, 인증, 참가자)
     await seedUserActivity(supabase)
 
-    // Purge pgmq queues to avoid queue bloat after seeding
-    for (const queue of ['q_global_events', 'q_notifications', 'q_vectors']) {
-      try {
-        await supabase.rpc('pgmq_purge', { queue_name: queue })
-      } catch {
-        // pgmq may not be available in all environments — ignore errors
-      }
-    }
+    // 6. pgmq 퍼지 (큐 블로트 방지)
+    await purgeQueues(supabase)
 
-     return new Response(
+    return new Response(
       JSON.stringify({
-        created_users: createdUsers + SEED_PARTNERS.length + HOT_PLACES.length,
-        created_30s_users: created30sUsers,
-        created_partners: definedPartnerStats.createdPartners + hotPlaceStats.createdPartners,
-        created_parties: definedPartnerStats.createdParties + hotPlaceStats.createdParties,
-        created_events: definedPartnerStats.createdEvents + hotPlaceStats.createdEvents,
+        users: userResult.data,
+        partners_processed: partnerResult.data.partners_processed,
+        created_parties: createdParties,
+        created_events: createdEvents,
         uploaded_images: imageUrls.length,
         seeded_activity: true,
       }),
       { status: 200, headers: { 'Content-Type': 'application/json' } },
     )
-   } catch (err) {
-     return new Response(
-       JSON.stringify({ error: (err as Error).message }),
-       { status: 500, headers: { 'Content-Type': 'application/json' } },
-     )
-   }
- })
+  } catch (err) {
+    return new Response(
+      JSON.stringify({ error: (err as Error).message }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } },
+    )
+  }
+})
