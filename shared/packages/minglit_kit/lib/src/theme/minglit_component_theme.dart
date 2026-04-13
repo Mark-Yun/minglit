@@ -151,9 +151,9 @@ class _MinglitComponentThemes {
 
   static SnackBarThemeData snackBar(MinglitColorSet c) => SnackBarThemeData(
     backgroundColor: c.textPrimary,
-    contentTextStyle: const TextStyle(
-      // ignore: minglit_no_hardcoded_text_style -- theme definition
-      color: Colors.white,
+    contentTextStyle: TextStyle(
+      // Fix: use c.background so foreground contrasts with c.textPrimary in both light and dark
+      color: c.background,
       fontSize: 14,
       fontWeight: FontWeight.w500,
     ),
