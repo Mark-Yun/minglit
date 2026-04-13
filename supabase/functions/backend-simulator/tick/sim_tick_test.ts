@@ -158,7 +158,7 @@ Deno.test({
       "https://example.supabase.co",
       "anon-key",
       log,
-      { usersPerTick: 2, maxAppsPerUser: 3, negativeRate: 0.1, checkinRate: 0.7 },
+      { usersPerTick: 2, maxAppsPerUser: 3, negativeRate: 0.1, checkinRate: 0.7, minScheduledEvents: 2 },
     );
 
     // actors.users should be 2 (sliced from 3)
