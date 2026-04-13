@@ -9,6 +9,11 @@ import {
   successResponse,
 } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
+import { initSentry, withHandler } from "../_shared/logger.ts";
+
+const FN = "recurrence-rules";
+
+initSentry();
 
 const VALID_PATTERNS = ["weekly", "biweekly", "monthly"] as const;
 type Pattern = typeof VALID_PATTERNS[number];
@@ -27,7 +32,7 @@ interface RecurrenceRule {
   created_at: string;
 }
 
-Deno.serve(async (req: Request): Promise<Response> => {
+Deno.serve(withHandler(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return corsResponse();
   if (req.method !== "POST") return errorResponse("Method not allowed", 405);
 
@@ -37,7 +42,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     const message = e instanceof Error ? e.message : String(e);
     return errorResponse(message, 500);
   }
-});
+}));
 
 async function handleRequest(req: Request): Promise<Response> {
   // Auth

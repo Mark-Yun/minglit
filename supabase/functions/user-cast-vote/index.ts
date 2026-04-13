@@ -8,8 +8,13 @@ import {
   successResponse,
 } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
+import { initSentry, withHandler } from "../_shared/logger.ts";
 
-Deno.serve(async (req: Request): Promise<Response> => {
+const FN = "user-cast-vote";
+
+initSentry();
+
+Deno.serve(withHandler(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return corsResponse();
 
   const auth = await requireAuth(req);
@@ -150,4 +155,4 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
 
   return successResponse({ success: true });
-});
+}));

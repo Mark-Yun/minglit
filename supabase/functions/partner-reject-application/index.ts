@@ -9,20 +9,25 @@ import {
   successResponse,
 } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
+import { initSentry, withHandler, log } from "../_shared/logger.ts";
+
+const FN = "partner-reject-application";
+
+initSentry();
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-Deno.serve(async (req: Request): Promise<Response> => {
+Deno.serve(withHandler(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return corsResponse();
   if (req.method !== "POST") return errorResponse("Method not allowed", 405);
 
   try {
     return await handleRequest(req);
   } catch (e) {
-    console.error("partner-reject-application error:", e);
+    log({ function: FN, level: "error", message: "partner-reject-application error", metadata: { detail: e instanceof Error ? e.message : String(e) } });
     return errorResponse("Internal server error", 500);
   }
-});
+}));
 
 async function handleRequest(req: Request): Promise<Response> {
   // 1. Auth

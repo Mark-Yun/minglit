@@ -8,6 +8,11 @@ import {
   successResponse,
 } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
+import { initSentry, withHandler } from "../_shared/logger.ts";
+
+const FN = "user-manage-social";
+
+initSentry();
 
 const VALID_INTERACTION_TYPES = ["like", "dislike", "subscribe", "bookmark"];
 const VALID_TARGET_TYPES = ["party", "partner", "review", "comment"];
@@ -19,7 +24,7 @@ const VALID_REPORT_REASONS = [
   "other",
 ];
 
-Deno.serve(async (req: Request): Promise<Response> => {
+Deno.serve(withHandler(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return corsResponse();
 
   const auth = await requireAuth(req);
@@ -177,4 +182,4 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
 
   return errorResponse(`Unknown action: ${action}`, 400);
-});
+}));

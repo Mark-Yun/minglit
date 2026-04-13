@@ -1,8 +1,13 @@
 import { createServiceClient } from "../_shared/supabase_client.ts";
 import { corsResponse, errorResponse, successResponse } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
+import { initSentry, withHandler } from "../_shared/logger.ts";
 
-Deno.serve(async (req) => {
+const FN = "user-manage-notification";
+
+initSentry();
+
+Deno.serve(withHandler(async (req) => {
   if (req.method === "OPTIONS") return corsResponse();
 
   const auth = await requireAuth(req);
@@ -89,4 +94,4 @@ Deno.serve(async (req) => {
   }
 
   return errorResponse(`Unknown action: ${action}`, 400);
-});
+}));

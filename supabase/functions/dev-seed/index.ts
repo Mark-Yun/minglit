@@ -3,6 +3,11 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { createServiceClient } from "../_shared/supabase_client.ts";
 import { errorResponse, successResponse } from "../_shared/response_utils.ts";
+import { initSentry, withHandler, log } from "../_shared/logger.ts";
+
+const FN = "dev-seed";
+
+initSentry();
 
 function isProduction(): boolean {
   const env = Deno.env.get("ENVIRONMENT");
@@ -48,7 +53,7 @@ async function uploadSeedImages(supabase: SupabaseClient): Promise<string[]> {
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
   if (!anonKey) {
-    console.error("SUPABASE_ANON_KEY not set — skipping authed image upload");
+    log({ function: FN, level: "error", message: "SUPABASE_ANON_KEY not set — skipping authed image upload" });
     return urls;
   }
   const { data: authData, error: authError } = await supabase.auth
@@ -57,10 +62,7 @@ async function uploadSeedImages(supabase: SupabaseClient): Promise<string[]> {
       password: SEED_IMAGE_PASSWORD,
     });
   if (authError || !authData.session) {
-    console.error(
-      "Failed to sign in as partner owner for image upload:",
-      authError?.message,
-    );
+    log({ function: FN, level: "error", message: "Failed to sign in as partner owner for image upload", metadata: { detail: authError?.message } });
     return urls;
   }
 
@@ -81,21 +83,21 @@ async function uploadSeedImages(supabase: SupabaseClient): Promise<string[]> {
         .upload(path, bytes, { contentType: "image/jpeg", upsert: true });
 
       if (error) {
-        console.error(`Failed to upload ${filename}:`, error.message);
+        log({ function: FN, level: "error", message: `Failed to upload ${filename}`, metadata: { detail: error.message } });
         continue;
       }
 
       const { data } = supabase.storage.from("party-assets").getPublicUrl(path);
       urls.push(data.publicUrl);
     } catch (err) {
-      console.error(`Error uploading ${filename}:`, err);
+      log({ function: FN, level: "error", message: `Error uploading ${filename}`, metadata: { detail: (err as Error).message } });
     }
   }
 
   return urls;
 }
 
-Deno.serve(async (req) => {
+Deno.serve(withHandler(async (req) => {
   // Handle CORS preflight before any auth/env checks
   if (req.method === "OPTIONS") {
     return new Response(null, {
@@ -130,4 +132,4 @@ Deno.serve(async (req) => {
   } catch (err) {
     return errorResponse((err as Error).message, 500);
   }
-});
+}));
