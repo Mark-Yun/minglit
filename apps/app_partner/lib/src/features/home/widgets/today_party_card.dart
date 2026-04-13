@@ -160,14 +160,10 @@ class _EventItem extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: MinglitSpacing.small),
-              Chip(
-                label: const Text('관리'),
-                visualDensity: VisualDensity.compact,
-                padding: EdgeInsets.zero,
-                backgroundColor: colorScheme.primaryContainer,
-                labelStyle: theme.textTheme.bodyMedium!.copyWith(
-                  color: colorScheme.onPrimaryContainer,
-                ),
+              MinglitChip(
+                label: '관리',
+                size: MinglitChipSize.small,
+                color: colorScheme.primaryContainer,
               ),
             ],
           ),

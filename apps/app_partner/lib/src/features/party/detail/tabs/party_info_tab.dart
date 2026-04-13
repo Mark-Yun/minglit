@@ -58,18 +58,10 @@ class PartyInfoTab extends ConsumerWidget {
                 if (party.isPrivate)
                   Padding(
                     padding: const EdgeInsets.only(top: MinglitSpacing.small),
-                    child: Chip(
-                      label: const Text('비공개'),
-                      avatar: const Icon(Icons.lock, size: 16),
-                      backgroundColor: Theme.of(
-                        context,
-                      ).colorScheme.errorContainer,
-                      labelStyle: Theme.of(context).textTheme.labelSmall!
-                          .copyWith(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onErrorContainer,
-                          ),
+                    child: MinglitTag(
+                      label: '비공개',
+                      icon: Icons.lock,
+                      color: Theme.of(context).colorScheme.error,
                     ),
                   ),
               ],
