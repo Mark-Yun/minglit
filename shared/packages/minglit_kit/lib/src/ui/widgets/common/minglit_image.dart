@@ -34,7 +34,8 @@ class MinglitImage extends StatelessWidget {
       !path.contains('/');
   @override
   Widget build(BuildContext context) {
-    // Guard: empty or blank path → show placeholder immediately
+    // Fix #1379: 빈 경로일 때 컴팩트 아이콘 플레이스홀더 표시 — MinglitEmptyState.card는
+    // 32px 패딩+아이콘+텍스트로 60×80px 썸네일에서 overflow가 발생하므로 사용 불가
     if (path.trim().isEmpty) {
       final theme = Theme.of(context);
       return Container(
@@ -44,7 +45,12 @@ class MinglitImage extends StatelessWidget {
           color: theme.colorScheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(MinglitRadius.small),
         ),
-        child: Icon(Icons.image, color: theme.colorScheme.outline),
+        child: Center(
+          child: Icon(
+            Icons.image_not_supported_outlined,
+            color: theme.colorScheme.outline,
+          ),
+        ),
       );
     }
 
