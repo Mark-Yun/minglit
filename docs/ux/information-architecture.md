@@ -17,7 +17,6 @@
 
 ```
 HomeRoute                  /                 → HomePage
-  └── EventCurationRoute   /curation          → PartyCurationPage
 SearchRoute                /search            → SearchPage
 MyPageRoute                /my                → MyPage
 PrivacyRoute               /my/privacy        → PrivacyPage
