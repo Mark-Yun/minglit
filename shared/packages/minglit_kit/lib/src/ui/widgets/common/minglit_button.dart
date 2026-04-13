@@ -210,10 +210,11 @@ class MinglitButton extends StatelessWidget {
   }
 
   ButtonStyle _primaryStyle(BuildContext context) {
+    // Fix #1374: Use theme colors instead of hardcoded values for dark mode / partner theme support
+    final colorScheme = Theme.of(context).colorScheme;
     return ElevatedButton.styleFrom(
-      backgroundColor: MinglitColors.primary,
-      // ignore: minglit_no_hardcoded_colors -- button theme definition
-      foregroundColor: Colors.white,
+      backgroundColor: colorScheme.primary,
+      foregroundColor: colorScheme.onPrimary,
       minimumSize: Size(0, _height),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(MinglitRadius.button),
@@ -228,13 +229,15 @@ class MinglitButton extends StatelessWidget {
   }
 
   ButtonStyle _secondaryStyle(BuildContext context) {
+    // Fix #1374: Use theme colors instead of hardcoded values for dark mode / partner theme support
+    final primary = Theme.of(context).colorScheme.primary;
     return OutlinedButton.styleFrom(
-      foregroundColor: MinglitColors.primary,
+      foregroundColor: primary,
       minimumSize: Size(0, _height),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(MinglitRadius.button),
       ),
-      side: const BorderSide(color: MinglitColors.primary),
+      side: BorderSide(color: primary),
       textStyle: TextStyle(
         // ignore: minglit_no_hardcoded_text_style -- button theme definition
         fontSize: _fontSize,
@@ -244,8 +247,9 @@ class MinglitButton extends StatelessWidget {
   }
 
   ButtonStyle _textStyle(BuildContext context) {
+    // Fix #1374: Use theme colors instead of hardcoded values for dark mode / partner theme support
     return TextButton.styleFrom(
-      foregroundColor: MinglitColors.primary,
+      foregroundColor: Theme.of(context).colorScheme.primary,
       minimumSize: Size(0, _height),
       textStyle: TextStyle(
         // ignore: minglit_no_hardcoded_text_style -- button theme definition

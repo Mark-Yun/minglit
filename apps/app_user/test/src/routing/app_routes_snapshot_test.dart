@@ -64,7 +64,6 @@ void main() {
             '/my/account',
             // Shell routes
             '/',
-            '/curation',
             '/search',
             '/my',
             '/my/privacy',

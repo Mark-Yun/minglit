@@ -1,11 +1,8 @@
 import 'package:app_user/src/features/partner/detail/partner_detail_page.dart';
 import 'package:app_user/src/features/partner/logic/partner_coordinator.dart';
-import 'package:app_user/src/features/party/logic/party_coordinator.dart';
-import 'package:app_user/src/features/party/party_curation_page.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
-import '../goldens/golden_test_helpers.dart'
-    show MockPartnerCoordinator, MockPartyCoordinator;
+import '../goldens/golden_test_helpers.dart' show MockPartnerCoordinator;
 import 'screenshot_scenario.dart';
 
 class PartyPartnerScenarios {
@@ -31,53 +28,6 @@ class PartyPartnerScenarios {
     contactEmail: 'host@minglit.com',
     contactPhone: '02-1234-5678',
   );
-
-  static List<Event> get _curationEvents => [
-    Event(
-      id: 'event-1',
-      partyId: 'party-1',
-      title: '신규 네트워킹 나이트',
-      startTime: _baseTime.add(const Duration(days: 7)),
-      endTime: _baseTime.add(const Duration(days: 7, hours: 3)),
-      createdAt: _baseTime,
-      updatedAt: _baseTime,
-      location: _location,
-      tickets: [
-        Ticket(
-          id: 'ticket-1',
-          eventId: 'event-1',
-          name: '얼리버드',
-          price: 35000,
-          quantity: 40,
-          soldCount: 18,
-          createdAt: _baseTime,
-          updatedAt: _baseTime,
-        ),
-      ],
-    ),
-    Event(
-      id: 'event-2',
-      partyId: 'party-2',
-      title: '성수 소셜 믹서',
-      startTime: _baseTime.add(const Duration(days: 10)),
-      endTime: _baseTime.add(const Duration(days: 10, hours: 4)),
-      createdAt: _baseTime,
-      updatedAt: _baseTime,
-      location: _location,
-      tickets: [
-        Ticket(
-          id: 'ticket-2',
-          eventId: 'event-2',
-          name: '일반 입장',
-          price: 42000,
-          quantity: 60,
-          soldCount: 24,
-          createdAt: _baseTime,
-          updatedAt: _baseTime,
-        ),
-      ],
-    ),
-  ];
 
   static List<Event> get _partnerEvents => [
     Event(
@@ -120,17 +70,6 @@ class PartyPartnerScenarios {
     return partnerId == 'partner-with-events' ? _partnerEvents : <Event>[];
   }
 
-  static List<Event> _curationByType(EventFeedType type) {
-    return type == EventFeedType.newArrivals ? _curationEvents : <Event>[];
-  }
-
-  static List<dynamic> _partyCurationOverrides(EventFeedType type) => [
-    partyCoordinatorProvider.overrideWithValue(MockPartyCoordinator()),
-    eventFeedProvider.overrideWith((ref, args) async {
-      return _curationByType(args.type);
-    }),
-  ];
-
   static List<dynamic> _partnerDetailOverrides(String partnerId) => [
     partnerCoordinatorProvider.overrideWithValue(MockPartnerCoordinator()),
     partnerDetailProvider.overrideWith((ref, id) async => _partnerById(id)),
@@ -140,16 +79,6 @@ class PartyPartnerScenarios {
   ];
 
   static List<ScreenshotScenario> get all => [
-    ScreenshotScenario(
-      name: 'party_curation_with_events',
-      page: const PartyCurationPage(type: EventFeedType.newArrivals),
-      overrides: _partyCurationOverrides(EventFeedType.newArrivals),
-    ),
-    ScreenshotScenario(
-      name: 'party_curation_empty_state',
-      page: const PartyCurationPage(type: EventFeedType.closingSoon),
-      overrides: _partyCurationOverrides(EventFeedType.closingSoon),
-    ),
     ScreenshotScenario(
       name: 'partner_detail_with_upcoming_event',
       page: const PartnerDetailPage(partnerId: 'partner-with-events'),

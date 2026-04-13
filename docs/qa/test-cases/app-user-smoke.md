@@ -23,38 +23,37 @@
 | # | 화면 | 경로 | Page 클래스 | GUEST | AUTH | VERIFIED | 비고 |
 |---|------|------|------------|-------|------|----------|------|
 | U-S01 | 홈 | `/` | `HomePage` | OK | OK | OK | 앱 진입점 |
-| U-S02 | 큐레이션 목록 | `/curation` | `PartyCurationPage` | OK | OK | OK | ⚠️ BLOCKED — 홈에서 진입 UI 없음 (see #1293). 라우트는 존재하나 네비게이션 경로 orphaned |
-| U-S03 | 검색 | `/search` | `SearchPage` | OK | OK | OK | |
-| U-S04 | 이벤트 상세 | `/events/:eventId` | `EventDetailPage` | OK | OK | OK | 유효한 eventId 필요 |
-| U-S05 | 파트너 상세 | `/partners/:partnerId` | `PartnerDetailPage` | OK | OK | OK | 진입: 이벤트 상세 → 파트너 프로필 행 탭. 사전조건: 파트너가 연결된 이벤트 필요 (`partner != null`) |
-| U-S06 | 파트너 이벤트 목록 | `/partners/:partnerId/events` | `PartnerEventsPage` | OK | OK | OK | 진입: 파트너 상세 → "더 보기" 탭. U-S05 선행 필요 |
-| U-S07 | 로그인 | `/login` | `LoginPage` | OK | → `/` | → `/` | 이미 로그인 시 홈으로 리다이렉트 |
-| U-S08 | OAuth 콜백 | `/auth/callback` | `AuthCallbackPage` | OK | OK | OK | OAuth 플로우 전용 |
+| U-S02 | 검색 | `/search` | `SearchPage` | OK | OK | OK | |
+| U-S03 | 이벤트 상세 | `/events/:eventId` | `EventDetailPage` | OK | OK | OK | 유효한 eventId 필요 |
+| U-S04 | 파트너 상세 | `/partners/:partnerId` | `PartnerDetailPage` | OK | OK | OK | 진입: 이벤트 상세 → 파트너 프로필 행 탭. 사전조건: 파트너가 연결된 이벤트 필요 (`partner != null`) |
+| U-S05 | 파트너 이벤트 목록 | `/partners/:partnerId/events` | `PartnerEventsPage` | OK | OK | OK | 진입: 파트너 상세 → "더 보기" 탭. U-S04 선행 필요 |
+| U-S06 | 로그인 | `/login` | `LoginPage` | OK | → `/` | → `/` | 이미 로그인 시 홈으로 리다이렉트 |
+| U-S07 | OAuth 콜백 | `/auth/callback` | `AuthCallbackPage` | OK | OK | OK | OAuth 플로우 전용 |
 
 ### 2.2 보호된 화면 (로그인 필수)
 
 | # | 화면 | 경로 | Page 클래스 | GUEST | AUTH | VERIFIED | 비고 |
 |---|------|------|------------|-------|------|----------|------|
-| U-S09 | 마이페이지 | `/my` | `MyPage` | → `/login` | OK | OK | prefix `/my` 보호 |
-| U-S10 | 개인정보 설정 | `/my/privacy` | `PrivacyPage` | → `/login` | OK | OK | |
-| U-S11 | 차단 파트너 관리 | `/my/blocked-partners` | `BlockedPartnersPage` | → `/login` | OK | OK | |
-| U-S12 | 알림 설정 | `/my/notification-settings` | `NotificationSettingsScreen` | → `/login` | OK | OK | |
-| U-S13 | 구매 내역 | `/purchase-history` | `PurchaseHistoryPage` | → `/login` | OK | OK | prefix `/purchase-history` 보호 |
-| U-S14 | 알림 센터 | `/notifications` | `NotificationListScreen` | → `/login` | OK | OK | |
-| U-S15 | 본인인증 | `/certification` | `IdentityVerificationScreen` | → `/login` | OK | OK | prefix `/certification` 보호 |
+| U-S08 | 마이페이지 | `/my` | `MyPage` | → `/login` | OK | OK | prefix `/my` 보호 |
+| U-S09 | 개인정보 설정 | `/my/privacy` | `PrivacyPage` | → `/login` | OK | OK | |
+| U-S10 | 차단 파트너 관리 | `/my/blocked-partners` | `BlockedPartnersPage` | → `/login` | OK | OK | |
+| U-S11 | 알림 설정 | `/my/notification-settings` | `NotificationSettingsScreen` | → `/login` | OK | OK | |
+| U-S12 | 구매 내역 | `/purchase-history` | `PurchaseHistoryPage` | → `/login` | OK | OK | prefix `/purchase-history` 보호 |
+| U-S13 | 알림 센터 | `/notifications` | `NotificationListScreen` | → `/login` | OK | OK | |
+| U-S14 | 본인인증 | `/certification` | `IdentityVerificationScreen` | → `/login` | OK | OK | prefix `/certification` 보호 |
 
 ### 2.3 보호된 화면 (로그인 + 추가 조건)
 
 | # | 화면 | 경로 | Page 클래스 | GUEST | AUTH | VERIFIED | 비고 |
 |---|------|------|------------|-------|------|----------|------|
-| U-S16 | 이벤트 신청 위저드 | `/events/:eventId/apply` | `EventApplicationWizardPage` | → `/login` | OK | OK | suffix `/apply` 보호. 위저드 내부에서 본인인증 스텝 포함 |
+| U-S15 | 이벤트 신청 위저드 | `/events/:eventId/apply` | `EventApplicationWizardPage` | → `/login` | OK | OK | suffix `/apply` 보호. 위저드 내부에서 본인인증 스텝 포함 |
 
 ### 2.4 개발 전용 화면 (Dev Only)
 
 | # | 화면 | 경로 | Page 클래스 | GUEST | AUTH | VERIFIED | 비고 |
 |---|------|------|------------|-------|------|----------|------|
-| U-S17 | 개발 도구 | `/dev` | `UserDevMap` | OK | OK | OK | dev flavor만 접근 가능 |
-| U-S18 | 유저 전환 | `/dev/switch` | `DevUserSwitchScreen` | OK | OK | OK | dev flavor만 접근 가능 |
+| U-S16 | 개발 도구 | `/dev` | `UserDevMap` | OK | OK | OK | dev flavor만 접근 가능 |
+| U-S17 | 유저 전환 | `/dev/switch` | `DevUserSwitchScreen` | OK | OK | OK | dev flavor만 접근 가능 |
 
 ---
 
@@ -93,7 +92,6 @@
 | 액션 | 기대 결과 | 에러 시나리오 |
 |------|-----------|-------------|
 | 이벤트 카드 탭 | `/events/:eventId`로 이동 | - |
-| 큐레이션 섹션 탭 | `/curation`으로 이동 | ⚠️ 진입점 미구현 (see #1293) |
 | AppBar 검색 아이콘 탭 | `/search`로 이동 | - |
 | AppBar 프로필 아이콘 탭 | `/my`로 이동 (GUEST → 로그인) | - |
 | AppBar 알림 아이콘 탭 | `/notifications`로 이동 | - |
@@ -181,8 +179,8 @@
 
 | 구분 | 수량 |
 |------|------|
-| 화면 진입 Smoke | 18 |
+| 화면 진입 Smoke | 17 |
 | 리다이렉트 검증 | 5 |
 | 파라미터 엣지 케이스 | 7 |
-| 화면별 액션 | 38 |
-| **합계** | **68** |
+| 화면별 액션 | 37 |
+| **합계** | **66** |

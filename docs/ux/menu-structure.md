@@ -23,8 +23,6 @@
 │
 ├── 홈 (/)
 │   └── HomePage                      apps/app_user/lib/src/features/home/home_page.dart
-│       └── 큐레이션 목록 (/curation)
-│           └── PartyCurationPage     apps/app_user/lib/src/features/party/party_curation_page.dart
 │
 ├── 검색 (/search)
 │   └── SearchPage                    apps/app_user/lib/src/features/search/search_page.dart
@@ -89,7 +87,6 @@ apps/app_user/lib/src/features/
 ├── explore/        탐색 필터, 상태 관리
 ├── home/           홈, 마이페이지
 ├── partner/        파트너 상세 (detail/)
-├── party/          파티 큐레이션 페이지
 ├── payment/        결제, 구매 내역
 │   ├── logic/      결제 코디네이터, 구매 내역 컨트롤러
 │   └── ui/         구매 내역 페이지, 결제 성공 화면

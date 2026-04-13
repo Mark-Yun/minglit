@@ -32,10 +32,6 @@ class EventCoordinator {
     _router.go(EventDetailRoute(eventId: eventId).location);
   }
 
-  void pushEventCuration(EventFeedType type) {
-    unawaited(_router.push(EventCurationRoute(type: type).location));
-  }
-
   void goToApplicationWizard(
     String eventId, {
     String? ticketId,

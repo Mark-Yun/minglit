@@ -8,6 +8,9 @@ import 'package:mocktail/mocktail.dart';
 import '../../../../utils/mocks.dart';
 import '../../../../utils/test_utils.dart';
 
+// Fix #1321: DateTime.now() → 고정 시간으로 교체 (flaky test 방지)
+final _fixedNow = DateTime(2026, 4, 13, 12);
+
 void main() {
   late MockEventRepository mockEventRepo;
 
@@ -15,10 +18,10 @@ void main() {
   final testEvent = Event(
     id: 'event_1',
     partyId: 'party_1',
-    startTime: DateTime.now(),
-    endTime: DateTime.now().add(const Duration(hours: 2)),
-    createdAt: DateTime.now(),
-    updatedAt: DateTime.now(),
+    startTime: _fixedNow,
+    endTime: _fixedNow.add(const Duration(hours: 2)),
+    createdAt: _fixedNow,
+    updatedAt: _fixedNow,
     title: 'Test Event',
   );
 

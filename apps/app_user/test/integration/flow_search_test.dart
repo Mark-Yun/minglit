@@ -1,5 +1,4 @@
 import 'package:app_user/src/features/event/detail/event_detail_page.dart';
-import 'package:app_user/src/features/party/party_curation_page.dart';
 import 'package:app_user/src/features/search/search_page.dart';
 import 'package:app_user/src/logic/feed_state_provider.dart';
 import 'package:flutter/material.dart';
@@ -179,97 +178,6 @@ void main() {
       await tester.pump();
 
       expect(find.byType(EventDetailPage), findsOneWidget);
-    });
-  });
-
-  // ────────────────────────────────────────────────────────────────────────
-  // PartyCurationPage
-  // ────────────────────────────────────────────────────────────────────────
-  group('PartyCurationPage', () {
-    testWidgets('큐레이션 페이지 렌더링 (newArrivals 타입)', (tester) async {
-      setKoreanLocale(tester);
-      final mockEvents = createMockEventsForTest(count: 3);
-
-      await tester.pumpWidget(
-        createTestApp(
-          initialLocation: '/curation',
-          feedEvents: mockEvents,
-        ),
-      );
-      await tester.pump();
-      await tester.pump();
-      await tester.pump();
-
-      expect(find.byType(PartyCurationPage), findsOneWidget);
-      expect(find.text(EventFeedType.newArrivals.title), findsOneWidget);
-      expect(find.byType(MinglitEventCard), findsWidgets);
-    });
-
-    testWidgets('큐레이션 페이지 렌더링 (closingSoon 타입)', (tester) async {
-      setKoreanLocale(tester);
-      final mockEvents = createMockEventsForTest(count: 3);
-
-      await tester.pumpWidget(
-        createTestApp(
-          initialLocation: '/curation?type=closing-soon',
-          feedEvents: mockEvents,
-        ),
-      );
-      await tester.pump();
-      await tester.pump();
-      await tester.pump();
-
-      expect(find.byType(PartyCurationPage), findsOneWidget);
-      expect(find.text(EventFeedType.closingSoon.title), findsOneWidget);
-    });
-
-    testWidgets('큐레이션 페이지 렌더링 (nearest 타입)', (tester) async {
-      setKoreanLocale(tester);
-      final mockEvents = createMockEventsForTest(count: 3);
-
-      await tester.pumpWidget(
-        createTestApp(
-          initialLocation: '/curation?type=nearest',
-          feedEvents: mockEvents,
-        ),
-      );
-      await tester.pump();
-      await tester.pump();
-      await tester.pump();
-
-      expect(find.byType(PartyCurationPage), findsOneWidget);
-      expect(find.text(EventFeedType.nearest.title), findsOneWidget);
-    });
-
-    testWidgets('큐레이션 페이지 렌더링 (earlyBird 타입)', (tester) async {
-      setKoreanLocale(tester);
-      final mockEvents = createMockEventsForTest(count: 3);
-
-      await tester.pumpWidget(
-        createTestApp(
-          initialLocation: '/curation?type=early-bird',
-          feedEvents: mockEvents,
-        ),
-      );
-      await tester.pump();
-      await tester.pump();
-      await tester.pump();
-
-      expect(find.byType(PartyCurationPage), findsOneWidget);
-      expect(find.text(EventFeedType.earlyBird.title), findsOneWidget);
-    });
-
-    testWidgets('빈 큐레이션 → "현재 표시할 파티가 없습니다."', (tester) async {
-      setKoreanLocale(tester);
-
-      await tester.pumpWidget(
-        createTestApp(initialLocation: '/curation'),
-      );
-      await tester.pump();
-      await tester.pump();
-      await tester.pump();
-
-      expect(find.text('현재 표시할 파티가 없습니다.'), findsOneWidget);
     });
   });
 }
