@@ -70,6 +70,17 @@ class MockQueryBuilder {
     return this;
   }
 
+  like(column: string, _pattern: string) {
+    // no-op filter for mock — select handler receives all data regardless
+    void column;
+    return this;
+  }
+
+  neq(column: string, _value: unknown) {
+    void column;
+    return this;
+  }
+
   not(column: string, _operator: string, _value: unknown) {
     // no-op filter for mock — select handler receives all data regardless
     void column;
