@@ -196,12 +196,15 @@ void main() {
         await tester.pumpAndSettle();
 
         // Step 2: contactPhone, contactEmail, bankName, accountNumber, accountHolder 입력 후 "다음" 탭
+        // Fix: step3_contact_settlement에는 address 필드(readOnly, disabled)가
+        // at(2)/at(3)에 있어 bankName은 at(4), accountNumber는 at(5), accountHolder는 at(6).
         final step2Fields = find.byType(TextFormField);
         await tester.enterText(step2Fields.at(0), '010-1234-5678');
         await tester.enterText(step2Fields.at(1), 'test@test.com');
-        await tester.enterText(step2Fields.at(2), '신한은행');
-        await tester.enterText(step2Fields.at(3), '110-123-456789');
-        await tester.enterText(step2Fields.at(4), '홍길동');
+        // at(2) = road address (readOnly), at(3) = detail address (disabled) — skip
+        await tester.enterText(step2Fields.at(4), '신한은행');
+        await tester.enterText(step2Fields.at(5), '110-123-456789');
+        await tester.enterText(step2Fields.at(6), '홍길동');
         await tester.pump();
         await tester.tap(find.text('다음'));
         await tester.pumpAndSettle();
