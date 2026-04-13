@@ -39,11 +39,11 @@ DECLARE
   result2 jsonb;
 BEGIN
   result1 := dev_seed_bulk_users(
-    '[{"email":"seed_test_pgtap@test.com","name":"Seed Test","username":"seed_test_pgtap","gender":"M","birth_date":"1990-01-01","phone_number":"01000000001","is_verified":false}]'::jsonb
+    '[{"email":"seed_test_pgtap@test.com","name":"Seed Test","username":"seed_test_pgtap","gender":"male","birth_date":"1990-01-01","phone_number":"01000000001","is_verified":false}]'::jsonb
   );
   -- Second run (same user) should update, not fail
   result2 := dev_seed_bulk_users(
-    '[{"email":"seed_test_pgtap@test.com","name":"Seed Test","username":"seed_test_pgtap","gender":"M","birth_date":"1990-01-01","phone_number":"01000000001","is_verified":false}]'::jsonb
+    '[{"email":"seed_test_pgtap@test.com","name":"Seed Test","username":"seed_test_pgtap","gender":"male","birth_date":"1990-01-01","phone_number":"01000000001","is_verified":false}]'::jsonb
   );
   PERFORM set_config('tests.seed_user_result1', result1::text, true);
   PERFORM set_config('tests.seed_user_result2', result2::text, true);
