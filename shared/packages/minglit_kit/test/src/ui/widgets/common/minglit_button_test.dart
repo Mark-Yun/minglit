@@ -195,6 +195,26 @@ void main() {
       expect(side?.color, testPrimary);
     });
 
+    testWidgets('text button uses colorScheme.primary foreground', (
+      tester,
+    ) async {
+      const testPrimary = Color(0xFF00A3FF);
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData(
+            colorScheme: const ColorScheme.light(primary: testPrimary),
+          ),
+          home: Scaffold(
+            body: MinglitButton.text(label: '텍스트 색상', onPressed: () {}),
+          ),
+        ),
+      );
+
+      final button = tester.widget<TextButton>(find.byType(TextButton));
+      final fg = button.style!.foregroundColor?.resolve({});
+      expect(fg, testPrimary);
+    });
+
     testWidgets('dark mode: primary button adapts to dark theme color', (
       tester,
     ) async {
