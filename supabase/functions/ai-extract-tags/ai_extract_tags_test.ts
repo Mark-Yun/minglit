@@ -19,6 +19,18 @@ const BASE_ENV = {
   OPENAI_API_KEY: "openai-key",
 };
 
+/** requireServiceRole을 통과하기 위한 인증 헤더 포함 요청 생성 */
+function authedRequest(body: unknown): Request {
+  return new Request("http://localhost", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${BASE_ENV.SUPABASE_SERVICE_ROLE_KEY}`,
+    },
+    body: JSON.stringify(body),
+  });
+}
+
 const mockTagPartyMessage = {
   msg_id: 20,
   read_ct: 0,
@@ -90,7 +102,7 @@ Deno.test({
       await withEnv(BASE_ENV, async () => {
         await withMockedFetch(fetchMock, async () => {
           await withNoIntervals(async () => {
-            const response = await handler(jsonRequest("http://localhost", {}));
+            const response = await handler(authedRequest({}));
             const payload = await readJson(response);
 
             assertEquals(response.status, 200);
@@ -132,7 +144,7 @@ Deno.test({
       await withEnv(BASE_ENV, async () => {
         await withMockedFetch(fetchMock, async () => {
           await withNoIntervals(async () => {
-            const response = await handler(jsonRequest("http://localhost", {}));
+            const response = await handler(authedRequest({}));
             const payload = await readJson(response);
 
             assertEquals(response.status, 200);
@@ -176,7 +188,7 @@ Deno.test({
       await withEnv(BASE_ENV, async () => {
         await withMockedFetch(fetchMock, async () => {
           await withNoIntervals(async () => {
-            const response = await handler(jsonRequest("http://localhost", {}));
+            const response = await handler(authedRequest({}));
             const payload = await readJson(response);
 
             // LLM 에러 시 해당 메시지는 processed에서 제외
@@ -211,6 +223,7 @@ Deno.test({
       async () => {
         await withMockedFetch(fetchMock, async () => {
           await withNoIntervals(async () => {
+            // requireServiceRole은 SUPABASE_SERVICE_ROLE_KEY 미설정 시 500 반환
             const response = await handler(new Request("http://localhost"));
             const payload = await readJson(response);
 
@@ -220,6 +233,32 @@ Deno.test({
         });
       },
     );
+  },
+});
+
+Deno.test({
+  name: "ai-extract-tags - unauthorized request returns 401",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+
+    const { fetchMock } = createFetchMock([]);
+
+    await withEnv(BASE_ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        await withNoIntervals(async () => {
+          // Authorization 헤더 없는 요청 — requireServiceRole이 401 반환
+          const response = await handler(
+            jsonRequest("http://localhost", {}),
+          );
+
+          assertEquals(response.status, 401);
+        });
+      });
+    });
   },
 });
 
@@ -266,7 +305,7 @@ Deno.test({
       await withEnv(BASE_ENV, async () => {
         await withMockedFetch(fetchMock, async () => {
           await withNoIntervals(async () => {
-            const response = await handler(jsonRequest("http://localhost", {}));
+            const response = await handler(authedRequest({}));
             const payload = await readJson(response);
 
             // non-party_created 메시지는 처리 완료로 마킹되어 큐에서 삭제됨

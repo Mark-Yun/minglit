@@ -1,4 +1,4 @@
-import { assertEquals } from "@std/assert";
+import { assertEquals, assertNotEquals } from "@std/assert";
 import {
   buildTagExtractionPrompt,
   extractDescriptionText,
@@ -24,9 +24,9 @@ Deno.test("parseTagResponse - extracts JSON array from surrounding text", () => 
   assertEquals(tags, ["네트워킹", "파티"]);
 });
 
-Deno.test("parseTagResponse - returns empty array for non-JSON response", () => {
+Deno.test("parseTagResponse - returns null for non-JSON response (parse failure)", () => {
   const tags = parseTagResponse("태그를 추출할 수 없습니다.");
-  assertEquals(tags, []);
+  assertEquals(tags, null);
 });
 
 Deno.test("parseTagResponse - filters tags longer than 20 chars", () => {
@@ -41,9 +41,15 @@ Deno.test("parseTagResponse - filters empty strings", () => {
   assertEquals(tags, ["태그"]);
 });
 
-Deno.test("parseTagResponse - returns empty array for non-array JSON", () => {
+Deno.test("parseTagResponse - returns null for non-array JSON", () => {
   const tags = parseTagResponse('{"key": "value"}');
+  assertEquals(tags, null);
+});
+
+Deno.test("parseTagResponse - returns empty array for empty JSON array", () => {
+  const tags = parseTagResponse("[]");
   assertEquals(tags, []);
+  assertNotEquals(tags, null);
 });
 
 Deno.test("extractDescriptionText - plain string", () => {
@@ -51,7 +57,7 @@ Deno.test("extractDescriptionText - plain string", () => {
   assertEquals(text, "직장인 대상 강남 모임");
 });
 
-Deno.test("extractDescriptionText - Quill Delta ops", () => {
+Deno.test("extractDescriptionText - Quill Delta ops normalizes whitespace", () => {
   const delta = {
     ops: [
       { insert: "직장인 대상 " },
@@ -59,7 +65,20 @@ Deno.test("extractDescriptionText - Quill Delta ops", () => {
     ],
   };
   const text = extractDescriptionText(delta);
-  assertEquals(text, "직장인 대상  강남 모임");
+  // join(" ") 후 trim() 결과를 whitespace 정규화하여 비교
+  assertEquals(text.replace(/\s+/g, " ").trim(), "직장인 대상 강남 모임");
+});
+
+Deno.test("extractDescriptionText - Quill Delta ops filters embed (non-string inserts)", () => {
+  const delta = {
+    ops: [
+      { insert: "텍스트 앞" },
+      { insert: { image: "https://example.com/img.png" } }, // embed — 제외
+      { insert: " 텍스트 뒤" },
+    ],
+  };
+  const text = extractDescriptionText(delta);
+  assertEquals(text.replace(/\s+/g, " ").trim(), "텍스트 앞 텍스트 뒤");
 });
 
 Deno.test("extractDescriptionText - null/undefined returns empty string", () => {

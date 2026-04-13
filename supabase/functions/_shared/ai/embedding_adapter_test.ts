@@ -41,8 +41,11 @@ Deno.test("OpenAIEmbedding - returns embeddings for text array", async () => {
 Deno.test("OpenAIEmbedding - returns empty array for empty input", async () => {
   const adapter = new OpenAIEmbedding("test-api-key");
 
-  // No fetch mock needed — empty input short-circuits before fetch
-  const result = await adapter.generateEmbeddings([]);
+  // Empty input short-circuits before fetch; mock ensures no accidental network call
+  const { fetchMock } = createFetchMock([]);
+  const result = await withMockedFetch(fetchMock, () =>
+    adapter.generateEmbeddings([])
+  );
   assertEquals(result, []);
 });
 

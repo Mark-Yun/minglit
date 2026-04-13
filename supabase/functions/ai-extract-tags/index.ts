@@ -2,6 +2,7 @@ import { createServiceClient } from "../_shared/supabase_client.ts";
 import { createLLMAdapter } from "../_shared/ai/factory.ts";
 import { WorkerUtils } from "../_shared/worker_utils.ts";
 import { initSentry, withHandler } from "../_shared/logger.ts";
+import { requireServiceRole } from "../_shared/auth_utils.ts";
 import {
   buildTagExtractionPrompt,
   extractDescriptionText,
@@ -11,10 +12,22 @@ import {
 const FN = "ai-extract-tags";
 const MAX_TAGS = 5;
 
+// Known constraint violation codes — expected errors that should be skipped (not retried)
+const EXPECTED_CONSTRAINT_CODES = new Set([
+  "23514", // check_violation      — sensitivity filter, source check
+  "23505", // unique_violation     — duplicate tag link
+  "P0001", // raise_exception      — max-limit trigger (PL/pgSQL RAISE)
+]);
+
 initSentry();
 
 Deno.serve(withHandler(async (req) => {
   console.log(`[${FN}] triggered`);
+
+  // Caller verification: only cron (publishable_key) or service role may invoke this function
+  const authCheck = requireServiceRole(req);
+  if (authCheck instanceof Response) return authCheck;
+
   try {
     const payload = await req.json().catch(() => ({}));
     const batchSize = (payload as { batch_size?: number }).batch_size ?? 10;
@@ -100,8 +113,15 @@ Deno.serve(withHandler(async (req) => {
           temperature: 0.3,
         });
 
-        // 3. JSON 배열 파싱
+        // 3. JSON 배열 파싱 — null이면 LLM이 유효한 응답을 반환하지 않은 것
         const tags = parseTagResponse(response);
+        if (tags === null) {
+          console.warn(
+            `[${traceId}] LLM returned unparseable response — skipping tag extraction`,
+          );
+          processedMsgIds.push(msg.msg_id);
+          continue;
+        }
         console.log(
           `[${traceId}] Extracted tags: ${JSON.stringify(tags)}`,
         );
@@ -122,12 +142,15 @@ Deno.serve(withHandler(async (req) => {
               .single();
 
             if (insertError) {
-              // check_tag_name_sensitivity 트리거 등에 의한 실패 — 조용히 스킵
-              console.warn(
-                `[${traceId}] Failed to create tag: ${tagName}`,
-                insertError,
-              );
-              continue;
+              if (EXPECTED_CONSTRAINT_CODES.has(insertError.code)) {
+                // check_tag_name_sensitivity 트리거 등 예상된 제약 위반 — 조용히 스킵
+                console.warn(
+                  `[${traceId}] Tag "${tagName}" rejected by constraint (${insertError.code}) — skipping`,
+                );
+                continue;
+              }
+              // 예상치 못한 DB 에러 — 메시지를 큐에 남기기 위해 throw
+              throw insertError;
             }
             existingTag = newTag;
           }
@@ -138,11 +161,15 @@ Deno.serve(withHandler(async (req) => {
             .insert({ party_id: party.id, tag_id: existingTag.id, source: "ai" });
 
           if (linkError) {
-            // 최대 5개 제한 트리거 등에 의한 실패 — 조용히 스킵
-            console.warn(
-              `[${traceId}] Failed to link tag ${tagName} to party ${party.id}`,
-              linkError,
-            );
+            if (EXPECTED_CONSTRAINT_CODES.has(linkError.code)) {
+              // unique_violation(중복) 또는 max-limit 트리거 — 조용히 스킵
+              console.warn(
+                `[${traceId}] Tag link "${tagName}" → party "${party.id}" rejected (${linkError.code}) — skipping`,
+              );
+              continue;
+            }
+            // 예상치 못한 DB 에러 — 메시지를 큐에 남기기 위해 throw
+            throw linkError;
           }
         }
 

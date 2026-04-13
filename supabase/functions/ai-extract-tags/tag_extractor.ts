@@ -18,19 +18,26 @@ export function buildTagExtractionPrompt(
 응답은 반드시 JSON 배열 형식으로만 해줘. 예: ["네트워킹", "직장인", "강남"]`;
 }
 
-export function parseTagResponse(response: string): string[] {
+/**
+ * Parse a JSON array of tag strings from an LLM response.
+ *
+ * Returns null when no valid JSON array is found (parse failure),
+ * so callers can distinguish "no tags" (empty array) from "bad response"
+ * and handle accordingly.
+ */
+export function parseTagResponse(response: string): string[] | null {
   const match = response.match(/\[[\s\S]*?\]/);
-  if (!match) return [];
+  if (!match) return null;
 
   try {
     const parsed = JSON.parse(match[0]);
-    if (!Array.isArray(parsed)) return [];
+    if (!Array.isArray(parsed)) return null;
     return parsed
       .filter((item: unknown): item is string => typeof item === "string")
       .map((tag: string) => tag.trim())
       .filter((tag: string) => tag.length > 0 && tag.length <= 20);
   } catch {
-    return [];
+    return null;
   }
 }
 
@@ -44,10 +51,12 @@ export function extractDescriptionText(
   if (!description) return "";
   if (typeof description === "string") return description;
 
-  const delta = description as { ops?: Array<{ insert?: string }> };
+  const delta = description as { ops?: Array<{ insert?: unknown }> };
   if (delta.ops && Array.isArray(delta.ops)) {
     return delta.ops
-      .map((op) => op.insert ?? "")
+      // Fix: embed ops (non-string inserts like images/videos) を除外
+      .filter((op) => typeof op.insert === "string")
+      .map((op) => op.insert as string)
       .join(" ")
       .trim();
   }

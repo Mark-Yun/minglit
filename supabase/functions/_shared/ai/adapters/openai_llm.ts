@@ -8,6 +8,8 @@ interface OpenAIChatResponse {
   }>;
 }
 
+const REQUEST_TIMEOUT_MS = 30_000;
+
 export class OpenAILLM implements LLMAdapter {
   readonly model = "gpt-4o-mini";
   readonly provider = "openai";
@@ -20,6 +22,9 @@ export class OpenAILLM implements LLMAdapter {
     prompt: string,
     options?: { maxTokens?: number; temperature?: number },
   ): Promise<string> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
     const response = await fetch(this.baseUrl, {
       method: "POST",
       headers: {
@@ -32,7 +37,8 @@ export class OpenAILLM implements LLMAdapter {
         max_tokens: options?.maxTokens ?? 256,
         temperature: options?.temperature ?? 0.7,
       }),
-    });
+      signal: controller.signal,
+    }).finally(() => clearTimeout(timeoutId));
 
     if (!response.ok) {
       throw new Error(`OpenAI API Error: ${response.status} ${response.statusText}`);
