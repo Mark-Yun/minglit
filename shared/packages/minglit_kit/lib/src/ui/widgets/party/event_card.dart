@@ -129,8 +129,9 @@ class MinglitEventCard extends StatelessWidget {
               Stack(
                 children: [
                   // Fix #478: grayscale ColorFiltered for ended state
+                  // Fix #1382: 2:1 비율로 변경 — 브라우징 효율 개선 (PM 채택)
                   AspectRatio(
-                    aspectRatio: 16 / 9,
+                    aspectRatio: 2 / 1,
                     child: ColorFiltered(
                       colorFilter: cardState == _EventCardState.ended
                           ? const ColorFilter.mode(
@@ -552,7 +553,7 @@ class _EventCardSkeleton extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           const AspectRatio(
-            aspectRatio: 16 / 9,
+            aspectRatio: 2 / 1,
             child: MinglitSkeleton(borderRadius: BorderRadius.zero),
           ),
           Padding(
