@@ -81,6 +81,43 @@ void main() {
       );
     });
 
+    // Fix #1376: InkWell이 48dp 전체 영역을 hit test 대상으로 가짐을 검증.
+    // 시각적 칩보다 작은 위치(하단 투명 영역)를 탭해도 콜백이 실행되어야 함.
+    testWidgets('tap on transparent area outside visual chip fires onTap', (
+      tester,
+    ) async {
+      var tapped = false;
+      await tester.pumpWidget(
+        buildApp(
+          SizedBox(
+            width: 200,
+            child: Align(
+              alignment: Alignment.topLeft,
+              child: MinglitChip(
+                label: '터치영역',
+                onTap: () => tapped = true,
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // InkWell의 실제 렌더링 크기가 minHeight 48dp 이상인지 확인
+      final inkWell = find.byType(InkWell);
+      final inkWellSize = tester.getSize(inkWell);
+      expect(
+        inkWellSize.height,
+        greaterThanOrEqualTo(48.0),
+        reason: 'InkWell rendered height must be at least 48dp',
+      );
+
+      // InkWell 상단 (시각적 칩 위) 투명 영역 탭
+      final inkWellRect = tester.getRect(inkWell);
+      final tapPoint = Offset(inkWellRect.center.dx, inkWellRect.top + 4);
+      await tester.tapAt(tapPoint);
+      expect(tapped, isTrue, reason: 'tap on transparent area should fire onTap');
+    });
+
     // Dark mode 색상은 colorScheme 기반이므로 이미 적용됨
     testWidgets('uses colorScheme.onSurfaceVariant text in default state', (
       tester,
