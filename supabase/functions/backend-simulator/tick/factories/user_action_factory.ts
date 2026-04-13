@@ -70,7 +70,9 @@ export class UserActionFactory {
 
     // 4. For existing applications, decide behavior based on DB state
     for (const app of (myApps ?? [])) {
-      const eventStatus = (app.events as Record<string, unknown>)?.status as string;
+      // Fix #1415: app.events is typed as { status: any }[] by PostgREST but the join returns
+      // a single object for a to-one FK. Use `unknown` intermediary to avoid TS2352.
+      const eventStatus = (app.events as unknown as { status: string } | null)?.status ?? "";
       const appId = app.id as string;
       const eventId = app.event_id as string;
 
