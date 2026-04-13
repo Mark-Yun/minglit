@@ -4,7 +4,7 @@ import { createEmbeddingAdapter } from '../_shared/ai/factory.ts'
 import { serializeParty } from './party_serializer.ts'
 import { HybridCalculator } from './calculator.ts'
 import { WorkerUtils } from '../_shared/worker_utils.ts'
-import { initSentry, withHandler, log } from '../_shared/logger.ts'
+import { initSentry, withHandler, log, captureException } from '../_shared/logger.ts'
 
 const FN = "ai-embed";
 
@@ -129,7 +129,9 @@ Deno.serve(withHandler(async (req) => {
           }
         }
       } catch (e) {
+        // Fix #1441: 에러를 삼키지 말고 throw — PGMQ retry 활용 (silent failure 방지)
         log({ function: FN, level: "error", message: "Party Vectorization Error", metadata: { error: e } });
+        throw e;
       }
     }
 
@@ -143,6 +145,10 @@ Deno.serve(withHandler(async (req) => {
           supabase.from('user_embeddings').select('embedding').eq('user_id', user_id).maybeSingle(),
           supabase.from('party_embeddings').select('embedding').eq('party_id', party_id).maybeSingle()
         ]);
+
+        // Fix #1441: DB 쿼리 에러 미검증 — 에러 시 throw로 PGMQ retry 활용
+        if (userRes.error) throw userRes.error;
+        if (partyRes.error) throw partyRes.error;
 
         if (partyRes.data && partyRes.data.embedding) {
           const oldVector = userRes.data?.embedding ?? new Array(1536).fill(0);
@@ -185,6 +191,8 @@ Deno.serve(withHandler(async (req) => {
   } catch (err: unknown) {
     const errorMessage = err instanceof Error ? err.message : String(err);
     log({ function: FN, level: "error", message: `AI Embed Worker Error: ${errorMessage}` });
+    // captureException: withHandler의 catch에 도달하지 않으므로 여기서 직접 Sentry에 캡처
+    captureException(err);
     return new Response(JSON.stringify({ error: errorMessage }), {
       status: 500,
       headers: { "Content-Type": "application/json" }
