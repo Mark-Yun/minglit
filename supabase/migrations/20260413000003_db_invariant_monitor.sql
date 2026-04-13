@@ -85,7 +85,7 @@ BEGIN
 
   -- ────────────────────────────────────────────────────────
   -- INV-04: Completed events without settlement item
-  -- Every completed event must have a settlement_items entry (source_type='event').
+  -- Every completed event must have a settlement_items entry (source_type='EVENT').
   -- Severity: P0
   -- ────────────────────────────────────────────────────────
   SELECT count(*)
@@ -94,7 +94,7 @@ BEGIN
   WHERE e.status = 'completed'
     AND NOT EXISTS (
       SELECT 1 FROM settlement_items s
-      WHERE s.source_type = 'event' AND s.source_id = e.id::text
+      WHERE s.source_type = 'EVENT' AND s.source_id = e.id::text
     );
 
   IF v_count > 0 THEN
