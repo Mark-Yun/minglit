@@ -3,7 +3,7 @@ import { LLMAdapter } from "../llm_adapter.ts";
 interface OpenAIChatResponse {
   choices: Array<{
     message: {
-      content: string;
+      content: string | null;
     };
   }>;
 }
@@ -39,6 +39,10 @@ export class OpenAILLM implements LLMAdapter {
     }
 
     const json: OpenAIChatResponse = await response.json();
-    return json.choices[0].message.content;
+    const content = json.choices[0]?.message?.content;
+    if (content == null) {
+      throw new Error("OpenAI returned empty content");
+    }
+    return content;
   }
 }
