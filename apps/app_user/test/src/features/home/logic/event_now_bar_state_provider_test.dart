@@ -6,6 +6,10 @@ import 'package:mocktail/mocktail.dart';
 import '../../../../utils/mocks.dart';
 import '../../../../utils/test_utils.dart';
 
+// Fix #1321: DateTime.now() → 고정 시간으로 교체 (flaky test 방지)
+// clockProvider를 () => _fixedNow 함수로 override하여 호출 시점마다 고정 시간 반환
+final _fixedNow = DateTime(2026, 4, 13, 12);
+
 void main() {
   late MockMatchingRepository mockMatchingRepo;
 
@@ -21,15 +25,14 @@ void main() {
     DateTime? startTime,
     DateTime? endTime,
   }) {
-    final now = DateTime.now();
     return TodayActiveEvent(
       event: Event(
         id: id,
         partyId: 'party_1',
-        startTime: startTime ?? now.subtract(const Duration(hours: 1)),
-        endTime: endTime ?? now.add(const Duration(hours: 2)),
-        createdAt: now,
-        updatedAt: now,
+        startTime: startTime ?? _fixedNow.subtract(const Duration(hours: 1)),
+        endTime: endTime ?? _fixedNow.add(const Duration(hours: 2)),
+        createdAt: _fixedNow,
+        updatedAt: _fixedNow,
         status: status,
       ),
       participantStatus: participantStatus,
@@ -43,6 +46,7 @@ void main() {
     List<MatchPair>? matches,
   }) {
     final overrides = <dynamic>[
+      clockProvider.overrideWithValue(() => _fixedNow),
       matchingRepositoryProvider.overrideWith((ref) => mockMatchingRepo),
     ];
 
@@ -74,8 +78,8 @@ void main() {
   group('eventNowBarStateProvider — 6-state 상태 머신', () {
     test('WAITING: 시작 3시간 전 ~ 시작 시간 전', () async {
       final activeEvent = makeActiveEvent(
-        startTime: DateTime.now().add(const Duration(hours: 2)),
-        endTime: DateTime.now().add(const Duration(hours: 5)),
+        startTime: _fixedNow.add(const Duration(hours: 2)),
+        endTime: _fixedNow.add(const Duration(hours: 5)),
       );
 
       final container = makeContainer(eventId: 'event_1');
@@ -91,7 +95,7 @@ void main() {
       'CHECK_IN_READY: 시작 시간 도달 + participant.status != checked_in',
       () async {
         final activeEvent = makeActiveEvent(
-          startTime: DateTime.now().subtract(const Duration(minutes: 30)),
+          startTime: _fixedNow.subtract(const Duration(minutes: 30)),
         );
 
         final container = makeContainer(eventId: 'event_1');
@@ -167,7 +171,7 @@ void main() {
             matchId: 'match_1',
             eventId: 'event_1',
             partnerId: 'user_2',
-            matchedAt: DateTime.now(),
+            matchedAt: _fixedNow,
           ),
         ],
       );
@@ -254,8 +258,8 @@ void main() {
 
       final waitingEvent = makeActiveEvent(
         id: 'event_2',
-        startTime: DateTime.now().add(const Duration(hours: 2)),
-        endTime: DateTime.now().add(const Duration(hours: 5)),
+        startTime: _fixedNow.add(const Duration(hours: 2)),
+        endTime: _fixedNow.add(const Duration(hours: 5)),
       );
 
       final result2 = await container.read(

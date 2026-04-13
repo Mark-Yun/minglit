@@ -14,6 +14,9 @@ import 'package:minglit_kit/minglit_kit.dart';
 import 'utils/test_app.dart';
 import 'utils/test_mocks.dart';
 
+// Fix #1321: DateTime.now() → 고정 시간으로 교체 (flaky test 방지)
+final _fixedNow = DateTime(2026, 4, 13, 12);
+
 void main() {
   setUpAll(() async {
     await initializeDateFormatting('ko_KR');
@@ -216,7 +219,7 @@ void main() {
     testWidgets('구매 목록 → 상태 배지 렌더링 (7종)', (tester) async {
       setKoreanLocale(tester);
       final user = createMockUserForTest();
-      final now = DateTime.now();
+      final now = _fixedNow;
       final applications = [
         _createApplication(status: 'pending', createdAt: now),
         _createApplication(status: 'pending_review', createdAt: now),
@@ -265,7 +268,7 @@ void main() {
     testWidgets('환불 가능 시 → "예매 취소" 버튼 표시', (tester) async {
       setKoreanLocale(tester);
       final user = createMockUserForTest();
-      final now = DateTime.now();
+      final now = _fixedNow;
       // canCancel:
       // paid + paymentId + paymentAmount + event.startTime +
       // refundStatus == 'none'
@@ -324,7 +327,7 @@ void main() {
     testWidgets('환불 불가 시 → "예매 취소" 버튼 미표시', (tester) async {
       setKoreanLocale(tester);
       final user = createMockUserForTest();
-      final now = DateTime.now();
+      final now = _fixedNow;
       // cancelled status → isActiveTicket returns false → canCancel false
       final nonRefundableApp = _createApplication(
         status: 'cancelled',
@@ -429,7 +432,7 @@ class _MockNotificationSettingsWithData extends NotificationSettingsController {
   @override
   FutureOr<UserSettings?> build() async => UserSettings(
     userId: 'test-user-id',
-    updatedAt: DateTime.now(),
+    updatedAt: _fixedNow,
   );
 }
 
@@ -448,32 +451,32 @@ class _MockConsentController extends ConsentController {
       userId: 'test-user-id',
       consentKey: ConsentType.termsOfService,
       consented: true,
-      consentedAt: DateTime.now(),
-      createdAt: DateTime.now(),
+      consentedAt: _fixedNow,
+      createdAt: _fixedNow,
     ),
     UserConsent(
       id: 'c2',
       userId: 'test-user-id',
       consentKey: ConsentType.privacyCollection,
       consented: true,
-      consentedAt: DateTime.now(),
-      createdAt: DateTime.now(),
+      consentedAt: _fixedNow,
+      createdAt: _fixedNow,
     ),
     UserConsent(
       id: 'c3',
       userId: 'test-user-id',
       consentKey: ConsentType.thirdPartyProvision,
       consented: false,
-      consentedAt: DateTime.now(),
-      createdAt: DateTime.now(),
+      consentedAt: _fixedNow,
+      createdAt: _fixedNow,
     ),
     UserConsent(
       id: 'c4',
       userId: 'test-user-id',
       consentKey: ConsentType.marketingConsent,
       consented: false,
-      consentedAt: DateTime.now(),
-      createdAt: DateTime.now(),
+      consentedAt: _fixedNow,
+      createdAt: _fixedNow,
     ),
   ];
 }
