@@ -130,10 +130,17 @@ class MinglitChip extends StatelessWidget {
     );
 
     if (onTap != null) {
-      return InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(MinglitRadius.small),
-        child: widget,
+      // Fix #1376: A11Y — 최소 터치 영역 48dp 보장 (WCAG / Material 가이드라인)
+      return ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
+        child: Center(
+          widthFactor: 1.0,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(MinglitRadius.small),
+            child: widget,
+          ),
+        ),
       );
     }
 

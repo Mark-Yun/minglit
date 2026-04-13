@@ -73,46 +73,54 @@ class MinglitFilterChip extends StatelessWidget {
       ),
     };
 
-    // YouTube-style color inversion:
-    // Unselected: light gray bg + dark text
-    // Selected: dark bg + white text
-    // YouTube-style color inversion (light mode):
-    // Unselected: rgba(0,0,0,0.05) bg + #0f0f0f text
-    // Selected: #0f0f0f bg + #fff text
+    // Fix #1376: 다크모드 대응 — 하드코딩 색상 → colorScheme 시맨틱 컬러
+    // YouTube-style color inversion (light/dark mode 공통):
+    // Unselected: tinted surface bg + secondary text
+    // Selected: onSurface bg + surface text
+    final colorScheme = theme.colorScheme;
     final bgColor = isSelected
-        ? MinglitColors.textPrimary
-        : MinglitColors.textPrimary.withValues(alpha: MinglitOpacity.tintFill);
+        ? colorScheme.onSurface
+        : colorScheme.onSurface.withValues(alpha: MinglitOpacity.tintFill);
 
     final fgColor = isSelected
-        ? MinglitColors.background
-        : MinglitColors.textSecondary;
+        ? colorScheme.surface
+        : colorScheme.onSurfaceVariant;
 
     final hasIcon = icon != null;
 
+    // Fix #1376: A11Y — 최소 터치 영역 48dp 보장 (WCAG / Material 가이드라인)
+    // 시각적 칩 크기는 유지하고 투명 영역으로 터치 타겟만 확장
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: onTap,
-      child: Container(
-        padding: padding,
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(MinglitRadius.small),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (hasIcon) ...[
-              Icon(icon, size: iconSize, color: fgColor),
-              const SizedBox(width: MinglitSpacing.xsmall),
-            ],
-            Text(
-              label,
-              style: labelStyle.copyWith(
-                height: 20 / (labelStyle.fontSize ?? 14),
-                color: fgColor,
-                fontWeight: FontWeight.w500,
-              ),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
+        child: Center(
+          widthFactor: 1.0,
+          child: Container(
+            padding: padding,
+            decoration: BoxDecoration(
+              color: bgColor,
+              borderRadius: BorderRadius.circular(MinglitRadius.small),
             ),
-          ],
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (hasIcon) ...[
+                  Icon(icon, size: iconSize, color: fgColor),
+                  const SizedBox(width: MinglitSpacing.xsmall),
+                ],
+                Text(
+                  label,
+                  style: labelStyle.copyWith(
+                    height: 20 / (labelStyle.fontSize ?? 14),
+                    color: fgColor,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
