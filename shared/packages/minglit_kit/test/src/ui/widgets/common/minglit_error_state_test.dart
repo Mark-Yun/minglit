@@ -143,7 +143,7 @@ void main() {
           .where(
             (c) =>
                 c.decoration is BoxDecoration &&
-                (c.decoration as BoxDecoration).color != null,
+                (c.decoration! as BoxDecoration).color != null,
           )
           .toList();
       expect(decorated, isNotEmpty);
@@ -175,7 +175,7 @@ void main() {
           .where(
             (c) =>
                 c.decoration is BoxDecoration &&
-                (c.decoration as BoxDecoration).border != null,
+                (c.decoration! as BoxDecoration).border != null,
           )
           .toList();
       expect(bordered, isNotEmpty);
@@ -195,10 +195,7 @@ void main() {
       expect(find.text('오류가 발생했습니다.'), findsOneWidget);
       // fullPage renders Center directly — no decorated Container wrapping the content
       final containers = tester.widgetList<Container>(find.byType(Container));
-      final decorated =
-          containers
-              .where((c) => c.decoration != null)
-              .toList();
+      final decorated = containers.where((c) => c.decoration != null).toList();
       expect(decorated, isEmpty);
     });
   });
