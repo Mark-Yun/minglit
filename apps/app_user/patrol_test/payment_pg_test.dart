@@ -8,12 +8,11 @@
 import 'package:patrol/patrol.dart';
 
 void main() {
+  // TODO(#1436): PG sandbox 설정 + 테스트 데이터 준비 후 skip 제거
   patrolTest(
     '이벤트 신청 → PG 결제 → 완료',
-    skip: 'TODO(#1436): PG sandbox 설정 + 테스트 데이터 준비 후 활성화',
+    skip: true,
     ($) async {
-      // TODO(#1436): PG sandbox 설정 + 테스트 데이터 준비 후 활성화
-      //
       // await $.pumpWidgetAndSettle(const App());
       //
       // 이벤트 상세 → 신청 → 결제 진입

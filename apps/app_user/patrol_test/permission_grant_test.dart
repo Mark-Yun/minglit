@@ -8,9 +8,10 @@
 import 'package:patrol/patrol.dart';
 
 void main() {
+  // TODO(#1436): App 초기화 + 테스트 계정 로그인 구현 후 skip 제거
   patrolTest(
     '카메라 권한 허용 → 카메라 프리뷰 표시',
-    skip: 'TODO(#1436): App 초기화 + 테스트 계정 로그인 구현 후 활성화',
+    skip: true,
     ($) async {
       // await $.pumpWidgetAndSettle(const App());
       //
@@ -23,9 +24,10 @@ void main() {
     },
   );
 
+  // TODO(#1436): App 초기화 + 테스트 계정 로그인 구현 후 skip 제거
   patrolTest(
     '위치 권한 허용 → 위치 기반 추천 활성화',
-    skip: 'TODO(#1436): App 초기화 + 테스트 계정 로그인 구현 후 활성화',
+    skip: true,
     ($) async {
       // await $.pumpWidgetAndSettle(const App());
       //
@@ -34,9 +36,10 @@ void main() {
     },
   );
 
+  // TODO(#1436): App 초기화 후 skip 제거
   patrolTest(
     '푸시 알림 권한 허용',
-    skip: 'TODO(#1436): App 초기화 후 활성화',
+    skip: true,
     ($) async {
       // await $.pumpWidgetAndSettle(const App());
       //

@@ -8,12 +8,11 @@
 import 'package:patrol/patrol.dart';
 
 void main() {
+  // TODO(#1436): 카카오 테스트 계정 준비 후 skip 제거
   patrolTest(
     '카카오 로그인 → 홈 화면 도달',
-    skip: 'TODO(#1436): 카카오 테스트 계정 준비 후 활성화',
+    skip: true,
     ($) async {
-      // TODO(#1436): 카카오 테스트 계정 준비 후 활성화
-      //
       // await $.pumpWidgetAndSettle(const App());
       //
       // 카카오 로그인 버튼 탭
