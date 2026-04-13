@@ -80,12 +80,7 @@ class _RecurrenceRuleContent extends ConsumerWidget {
       RecurrenceStatus.cancelled => ('취소됨', theme.colorScheme.error),
     };
 
-    return Chip(
-      label: Text(label),
-      backgroundColor: color.withOpacity(0.12),
-      labelStyle: TextStyle(color: color, fontWeight: FontWeight.w600),
-      side: BorderSide.none,
-    );
+    return MinglitTag(label: label, color: color);
   }
 
   Widget _buildInfoCard(BuildContext context, RecurrenceRule rule) {
