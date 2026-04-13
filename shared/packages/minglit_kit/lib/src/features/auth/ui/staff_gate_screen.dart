@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:minglit_kit/src/features/auth/logic/staff_guard_provider.dart';
 import 'package:minglit_kit/src/features/loading/global_loading_controller.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_image.dart';
 
 /// Displays the staff verification gate UI.
 class StaffGateScreen extends ConsumerStatefulWidget {
@@ -61,11 +60,7 @@ class _StaffGateScreenState extends ConsumerState<StaffGateScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 // 1. Logo Section
-                const MinglitImage(
-                  path:
-                      'packages/minglit_kit/assets/images/minglit_app_bar_logo.png',
-                  height: 48,
-                ),
+                MinglitTheme.appBarLogo(height: 48),
                 const SizedBox(height: MinglitSpacing.xlarge),
 
                 // 2. Header Text
