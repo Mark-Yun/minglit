@@ -72,30 +72,38 @@ extension VisualQaTester on WidgetTester {
   }
 
   /// Captures before, taps [finder], settles, then captures after.
+  ///
+  /// tap/settle exceptions propagate — only capture failures are swallowed.
   Future<void> tapAndCapture(Finder finder, String label) async {
     await capture('${label}_before');
+    Object? tapError;
+    StackTrace? tapStack;
     try {
       await tap(finder);
       await pumpAndSettle();
     } catch (e, st) {
-      // ignore: avoid_print
-      print('[VisualQA] tapAndCapture("$label") tap/settle failed: $e\n$st');
+      tapError = e;
+      tapStack = st;
     }
     await capture('${label}_after');
+    if (tapError != null) Error.throwWithStackTrace(tapError, tapStack!);
   }
 
   /// Taps [finder], settles, then captures the resulting screen.
+  ///
+  /// tap/settle exceptions propagate — only capture failures are swallowed.
   Future<void> navigateAndCapture(Finder finder, String label) async {
+    Object? tapError;
+    StackTrace? tapStack;
     try {
       await tap(finder);
       await pumpAndSettle();
     } catch (e, st) {
-      // ignore: avoid_print
-      print(
-        '[VisualQA] navigateAndCapture("$label") tap/settle failed: $e\n$st',
-      );
+      tapError = e;
+      tapStack = st;
     }
     await capture(label);
+    if (tapError != null) Error.throwWithStackTrace(tapError, tapStack!);
   }
 
   // ---------------------------------------------------------------------------
