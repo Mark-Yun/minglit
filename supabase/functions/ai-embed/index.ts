@@ -129,7 +129,9 @@ Deno.serve(withHandler(async (req) => {
           }
         }
       } catch (e) {
+        // Fix #1441: 에러를 삼키지 말고 throw — PGMQ retry 활용 (silent failure 방지)
         log({ function: FN, level: "error", message: "Party Vectorization Error", metadata: { error: e } });
+        throw e;
       }
     }
 
@@ -143,6 +145,10 @@ Deno.serve(withHandler(async (req) => {
           supabase.from('user_embeddings').select('embedding').eq('user_id', user_id).maybeSingle(),
           supabase.from('party_embeddings').select('embedding').eq('party_id', party_id).maybeSingle()
         ]);
+
+        // Fix #1441: DB 쿼리 에러 미검증 — 에러 시 throw로 PGMQ retry 활용
+        if (userRes.error) throw userRes.error;
+        if (partyRes.error) throw partyRes.error;
 
         if (partyRes.data && partyRes.data.embedding) {
           const oldVector = userRes.data?.embedding ?? new Array(1536).fill(0);
