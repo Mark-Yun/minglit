@@ -147,13 +147,19 @@ void main() {
           ),
         );
 
-        // 초기 프레임: 로딩 상태
-        await tester.pump();
+        // 초기 프레임 → postFrameCallback → getConsents() 비동기 완료 → _startVerification()
+        // 순서로 진행되어야 한다. TC-U12-001과 동일하게 4 pump으로 비동기 플로우를 모두 소진한다.
+        await tester.pump(); // 초기 프레임
+        await tester.pump(); // postFrameCallback 실행
+        await tester.pump(); // getConsents() 비동기 완료 + _startVerification() 진입
+        await tester.pump(); // setState 재빌드
 
-        // 동의 확인 완료 후에도 동의 시트는 표시되지 않아야 함
+        // getConsents()가 실제로 호출되었는지 검증 → 동의 확인 경로가 실행됐음을 보장
+        verify(() => mockConsentRepo.getConsents(user.id)).called(1);
+
+        // 동의가 이미 완료된 경우이므로 동의 시트는 표시되지 않아야 함
         expect(find.text('본인확인정보 수집·이용 동의'), findsNothing);
-        // 로딩 인디케이터 표시 (Iamport 호출 준비 중)
-        expect(find.byType(MinglitCircularProgressIndicator), findsAny);
+        expect(find.text('동의하고 인증'), findsNothing);
       },
     );
 
