@@ -96,7 +96,7 @@ jobs:
           POOLER_HOST: aws-0-ap-northeast-2.pooler.supabase.com
         run: |
           PGPASSWORD="${DB_PASSWORD}" psql \
-            "postgresql://postgres.${PROJECT_ID}:${DB_PASSWORD}@${POOLER_HOST}:5432/postgres?sslmode=require" \
+            "postgresql://postgres.${PROJECT_ID}@${POOLER_HOST}:5432/postgres?sslmode=require" \
             -v ON_ERROR_STOP=1 \
             -f supabase/seed.dev.sql
           echo "Dev seed complete"
