@@ -231,6 +231,11 @@ export default function PartnerPrivacyPage() {
             </tbody>
           </table>
         </div>
+        <div className="bg-gray-50 border-l-4 border-gray-300 p-4 rounded-r-xl mb-4">
+          <p className="text-sm text-gray-600">
+            <strong>Vercel Inc.</strong> (미국): 파트너 대시보드 프론트엔드 정적 호스팅 및 CDN 캐시 제공 목적으로만 사용하며, 개인정보를 Vercel에 전송하지 않습니다.
+          </p>
+        </div>
         <div className="bg-amber-50 border-l-4 border-amber-300 p-4 rounded-r-xl">
           <p className="text-sm font-bold text-amber-800">
             국외 이전에 대한 구체적인 사항은 국내 법령(개인정보보호법 제28조)을 준수하며, 이용자의 권리를 보장합니다.
@@ -298,7 +303,7 @@ export default function PartnerPrivacyPage() {
         <ul className="list-disc pl-5 space-y-2 text-sm text-gray-600">
           <li>이벤트 설명으로부터 관련 태그를 AI가 자동 추출합니다.</li>
           <li>이벤트 정보의 벡터 임베딩을 생성하여 이용자 추천에 활용합니다.</li>
-          <li>파트너는 자동화된 처리에 대해 설명을 요구하거나 거부할 수 있습니다 (support@minglit.com).</li>
+          <li>파트너는 자동화된 처리에 대해 설명을 요구하거나 거부할 수 있습니다 (contact@minglit.com).</li>
         </ul>
       </section>
 
