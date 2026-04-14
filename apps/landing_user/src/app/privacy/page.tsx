@@ -31,6 +31,8 @@ export default function PrivacyPage() {
               <li><strong>서비스 이용(선택):</strong> 관심 태그 (이벤트 추천 목적, 회원 탈퇴 시 즉시 파기)</li>
               {/* Fix #762: marketing_consent 수집 항목 추가 */}
               <li><strong>마케팅 수신 동의(선택):</strong> 마케팅 수신 동의 여부</li>
+              {/* Fix #1448: 위치정보 수집 항목 추가 (위치정보법 제24조의2) */}
+              <li><strong>서비스 이용(선택):</strong> 위치정보(GPS 좌표) — 주변 이벤트 검색 목적, 서버에 영구 저장하지 않으며 검색 시점에만 일시적으로 처리</li>
             </ul>
           </div>
 
@@ -41,6 +43,8 @@ export default function PrivacyPage() {
               <li><strong>모임 참여 자격 확인 및 파트너 승인 심사</strong></li>
               <li>서비스 이행(QR 체크인) 및 결제·정산 처리</li>
               <li>부정 이용 방지 및 비인가 사용 방지</li>
+              {/* Fix #1448: 위치정보 이용 목적 추가 */}
+              <li>주변 이벤트 검색 및 거리순 정렬</li>
             </ul>
           </div>
         </div>
@@ -169,7 +173,8 @@ export default function PrivacyPage() {
                 <td className="p-3 border border-gray-200 font-bold text-gray-900">Supabase Inc.</td>
                 <td className="p-3 border border-gray-200">미국</td>
                 <td className="p-3 border border-gray-200">서버 운영, DB 호스팅</td>
-                <td className="p-3 border border-gray-200">전체 개인정보</td>
+                {/* Fix #1448: 위치정보 포함 명시 */}
+                <td className="p-3 border border-gray-200">개인정보 전체(위치정보 포함)</td>
               </tr>
               <tr>
                 <td className="p-3 border border-gray-200 font-bold text-gray-900">Vercel Inc.</td>
@@ -206,11 +211,33 @@ export default function PrivacyPage() {
         </div>
       </section>
 
-      {/* 5. 파기 절차 및 방법 */}
+      {/* Fix #1448: 위치정보 전용 섹션 신설 (위치정보법 제24조의2) */}
+      {/* 5. 위치정보의 처리 */}
       <section className="mb-12">
         <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
           <span className="w-1 h-5 bg-gray-400 mr-3 rounded-full" />
-          5. 개인정보의 파기 절차 및 방법
+          5. 위치정보의 처리
+        </h2>
+        <p className="text-sm text-gray-600 mb-4">
+          회사는 위치정보법 제24조의2에 따라 다음과 같이 위치정보 처리 사실을 고지합니다.
+        </p>
+        <ul className="list-disc pl-5 space-y-2 text-sm text-gray-600">
+          <li><strong>처리 목적:</strong> 이용자의 현재 위치를 기반으로 주변 이벤트를 검색하고 거리순으로 정렬합니다.</li>
+          <li><strong>수집 항목:</strong> GPS 좌표(위도, 경도)</li>
+          <li><strong>처리 방식:</strong> 이용자가 주변 검색 기능을 사용할 때에만 일시적으로 수집하며, 서버에 영구 저장하지 않습니다.</li>
+          <li><strong>보유 기간:</strong> 검색 요청 처리 완료 즉시 파기 (서버 측 영구 저장 없음)</li>
+          <li><strong>수집·이용·제공 사실 확인 자료:</strong> 위치정보법 제24조에 따라 자동 기록된 확인 자료를 6개월간 보관합니다.</li>
+          <li><strong>파기 절차:</strong> 보유 기간 경과 시 지체 없이 전자적 방법으로 파기합니다.</li>
+          <li><strong>제3자 제공:</strong> 이용자의 위치정보를 제3자에게 제공하지 않습니다.</li>
+          <li><strong>8세 이하 아동 등의 보호의무자:</strong> 8세 이하 아동 등의 보호의무자는 해당 아동의 개인위치정보 수집·이용·제공에 대해 동의하거나 철회할 수 있으며, 개인위치정보의 이용·제공 내역을 열람할 수 있습니다.</li>
+        </ul>
+      </section>
+
+      {/* 6. 파기 절차 및 방법 */}
+      <section className="mb-12">
+        <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+          <span className="w-1 h-5 bg-gray-400 mr-3 rounded-full" />
+          6. 개인정보의 파기 절차 및 방법
         </h2>
         <ul className="list-disc pl-5 space-y-3 text-sm text-gray-600">
           <li><strong>파기 절차:</strong> 목적이 달성된 정보는 별도의 DB로 옮겨져 내부 방침 및 기타 관련 법령에 의한 정보보호 사유에 따라 일정 기간 저장된 후 파기됩니다.</li>
@@ -218,22 +245,22 @@ export default function PrivacyPage() {
         </ul>
       </section>
 
-      {/* 6. 이용자의 권리 */}
+      {/* 7. 이용자의 권리 */}
       <section className="mb-12">
         <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
           <span className="w-1 h-5 bg-gray-400 mr-3 rounded-full" />
-          6. 이용자의 권리와 행사 방법
+          7. 이용자의 권리와 행사 방법
         </h2>
         <p className="text-sm text-gray-600 leading-relaxed">
           이용자는 언제든지 자신의 개인정보를 조회하거나 수정할 수 있으며, 수집 및 이용에 대한 동의 철회(회원탈퇴)를 요청할 수 있습니다. 앱 내 [설정 &gt; 계정 관리] 메뉴 또는 고객센터를 통해 가능합니다.
         </p>
       </section>
 
-      {/* 7. 책임자 정보 */}
+      {/* 8. 책임자 정보 */}
       <section className="mb-12">
         <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
           <span className="w-1 h-5 bg-gray-400 mr-3 rounded-full" />
-          7. 개인정보 보호책임자 및 담당 부서
+          8. 개인정보 보호책임자 및 담당 부서
         </h2>
         <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100 text-sm text-gray-600">
           <ul className="space-y-2">
@@ -245,8 +272,8 @@ export default function PrivacyPage() {
       </section>
 
       <footer className="mt-20 pt-10 border-t border-gray-100 text-xs text-gray-400 space-y-1">
-        <p>공고일자: 2026년 3월 29일</p>
-        <p>시행일자: 2026년 4월 5일</p>
+        <p>공고일자: 2026년 4월 15일</p>
+        <p>시행일자: 2026년 4월 15일</p>
         <p className="mt-4">© 2026 Minglit. All rights reserved.</p>
       </footer>
     </div>
