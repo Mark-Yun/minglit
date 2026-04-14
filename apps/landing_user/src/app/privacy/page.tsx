@@ -200,11 +200,12 @@ export default function PrivacyPage() {
                 <td className="p-3 border border-gray-200">서비스 분석</td>
                 <td className="p-3 border border-gray-200">이용자 ID, 이벤트 데이터</td>
               </tr>
+              {/* Fix #1451: OpenAI 이전 항목/목적 오기재 수정 — 실제 처리 대상은 이벤트 정보, 프로필 아님 */}
               <tr>
                 <td className="p-3 border border-gray-200 font-bold text-gray-900">OpenAI Inc.</td>
                 <td className="p-3 border border-gray-200">미국</td>
-                <td className="p-3 border border-gray-200">프로필 임베딩 생성</td>
-                <td className="p-3 border border-gray-200">프로필 텍스트</td>
+                <td className="p-3 border border-gray-200">이벤트 추천을 위한 벡터 임베딩 생성 및 태그 자동 추출</td>
+                <td className="p-3 border border-gray-200">이벤트 정보(제목, 설명, 태그, 장소명)</td>
               </tr>
             </tbody>
           </table>
@@ -233,11 +234,27 @@ export default function PrivacyPage() {
         </ul>
       </section>
 
-      {/* 6. 파기 절차 및 방법 */}
+      {/* Fix #1451: 자동화된 의사결정 섹션 신설 (AI 기본법 제22조, 개인정보보호법 제37조의2) */}
+      {/* 6. 자동화된 의사결정 */}
       <section className="mb-12">
         <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
           <span className="w-1 h-5 bg-gray-400 mr-3 rounded-full" />
-          6. 개인정보의 파기 절차 및 방법
+          6. 자동화된 의사결정
+        </h2>
+        <ul className="list-disc pl-5 space-y-2 text-sm text-gray-600">
+          <li>회사는 이용자의 서비스 이용 기록(조회, 좋아요, 참여 이력)을 분석하여 맞춤형 이벤트를 추천합니다.</li>
+          <li>추천 알고리즘은 벡터 유사도 기반으로 작동하며, 이용자의 활동에 가중치(조회 0.1, 좋아요 0.5, 참여 1.0)를 부여하여 관심사를 분석합니다.</li>
+          <li>이벤트 등록 시 AI가 설명에서 관련 태그를 자동으로 추출합니다.</li>
+          <li>이용자는 자동화된 결정에 대해 설명을 요구하거나 거부할 수 있습니다 (contact@minglit.com).</li>
+          <li>임베딩 벡터 데이터는 회원 탈퇴 시 즉시 파기됩니다.</li>
+        </ul>
+      </section>
+
+      {/* 7. 파기 절차 및 방법 */}
+      <section className="mb-12">
+        <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+          <span className="w-1 h-5 bg-gray-400 mr-3 rounded-full" />
+          7. 개인정보의 파기 절차 및 방법
         </h2>
         <ul className="list-disc pl-5 space-y-3 text-sm text-gray-600">
           <li><strong>파기 절차:</strong> 목적이 달성된 정보는 별도의 DB로 옮겨져 내부 방침 및 기타 관련 법령에 의한 정보보호 사유에 따라 일정 기간 저장된 후 파기됩니다.</li>
@@ -245,22 +262,22 @@ export default function PrivacyPage() {
         </ul>
       </section>
 
-      {/* 7. 이용자의 권리 */}
+      {/* 8. 이용자의 권리 */}
       <section className="mb-12">
         <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
           <span className="w-1 h-5 bg-gray-400 mr-3 rounded-full" />
-          7. 이용자의 권리와 행사 방법
+          8. 이용자의 권리와 행사 방법
         </h2>
         <p className="text-sm text-gray-600 leading-relaxed">
           이용자는 언제든지 자신의 개인정보를 조회하거나 수정할 수 있으며, 수집 및 이용에 대한 동의 철회(회원탈퇴)를 요청할 수 있습니다. 앱 내 [설정 &gt; 계정 관리] 메뉴 또는 고객센터를 통해 가능합니다.
         </p>
       </section>
 
-      {/* 8. 책임자 정보 */}
+      {/* 9. 책임자 정보 */}
       <section className="mb-12">
         <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
           <span className="w-1 h-5 bg-gray-400 mr-3 rounded-full" />
-          8. 개인정보 보호책임자 및 담당 부서
+          9. 개인정보 보호책임자 및 담당 부서
         </h2>
         <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100 text-sm text-gray-600">
           <ul className="space-y-2">
