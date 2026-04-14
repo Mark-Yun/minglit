@@ -52,7 +52,8 @@ void main() {
   }
 
   // Fix #1141: 제3자 제공 동의 항목 추가(thirdPartyProvision) — 6개로 늘어난 항목 수 검증
-  testWidgets('초기 상태에서 6개 항목이 보이고 CTA는 비활성화된다', (tester) async {
+  // Fix #1449: 위치정보 이용 동의 항목 추가(locationConsent) — 7개로 늘어난 항목 수 검증
+  testWidgets('초기 상태에서 7개 항목이 보이고 CTA는 비활성화된다', (tester) async {
     await pumpPage(tester);
 
     expect(find.text('환영합니다!'), findsOneWidget);
@@ -61,6 +62,8 @@ void main() {
     expect(find.text('만 14세 이상 확인'), findsOneWidget);
     await tester.scrollUntilVisible(find.text('제3자 제공 동의'), 200);
     expect(find.text('제3자 제공 동의'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('위치정보 이용 동의'), 200);
+    expect(find.text('위치정보 이용 동의'), findsOneWidget);
     await tester.scrollUntilVisible(find.text('본인인증(CI/DI) 수집 동의'), 200);
     expect(find.text('본인인증(CI/DI) 수집 동의'), findsOneWidget);
     await tester.scrollUntilVisible(find.text('마케팅 정보 수신 동의'), 200);

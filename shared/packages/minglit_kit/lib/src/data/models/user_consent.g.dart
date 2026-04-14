@@ -37,6 +37,7 @@ const _$ConsentTypeEnumMap = {
   ConsentType.ageConfirmation: 'age_confirmation',
   ConsentType.thirdPartyProvision: 'third_party_provision',
   ConsentType.marketingConsent: 'marketing_consent',
+  ConsentType.locationConsent: 'location_consent',
   ConsentType.identityVerification: 'identity_verification',
 };
 
