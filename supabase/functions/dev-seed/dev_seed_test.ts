@@ -181,6 +181,13 @@ Deno.test({
         "string",
         "Expected error body to contain a string message",
       );
+      // createServiceClient() throws "Missing required environment variables: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY"
+      // Verify root-cause detail is propagated (not swallowed or replaced with a generic message)
+      assertEquals(
+        /SUPABASE_URL|SUPABASE_SERVICE_ROLE_KEY|missing|required/i.test(body.error),
+        true,
+        `Expected error body to include root-cause detail. Got: "${body.error}"`,
+      );
     });
   },
 });
