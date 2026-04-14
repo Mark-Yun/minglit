@@ -83,6 +83,11 @@ class _PrivacyPageState extends ConsumerState<PrivacyPage> {
                 value: consentMap[ConsentType.marketingConsent] ?? false,
                 onChanged: (v) => _toggle(ConsentType.marketingConsent, v),
               ),
+              SwitchListTile(
+                title: const Text('위치정보 이용 동의'),
+                value: consentMap[ConsentType.locationConsent] ?? false,
+                onChanged: (v) => _toggle(ConsentType.locationConsent, v),
+              ),
               _ReadOnlyConsentTile(
                 title: '본인인증 정보',
                 statusText:
@@ -115,6 +120,14 @@ class _PrivacyPageState extends ConsumerState<PrivacyPage> {
                 onTap: () => showConsentDetailSheet(
                   context,
                   content: _privacyPolicyContent,
+                ),
+              ),
+              ListTile(
+                title: const Text('위치정보 이용약관'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => showConsentDetailSheet(
+                  context,
+                  content: _locationConsentContent,
                 ),
               ),
 
@@ -353,6 +366,56 @@ const _privacyPolicyContent = ConsentDetailContent(
       items: [
         '선택 항목은 설정 > 개인정보에서 언제든 철회할 수 있습니다.',
         '필수 항목은 회원 탈퇴로만 철회할 수 있습니다.',
+      ],
+    ),
+  ],
+);
+
+const _locationConsentContent = ConsentDetailContent(
+  title: '위치정보 이용약관',
+  summary: '위치기반서비스 이용에 관한 약관입니다.',
+  sections: [
+    ConsentDetailSection(
+      title: '서비스 내용',
+      items: [
+        '밍릿은 이용자의 위치정보를 활용하여 가까운 이벤트 검색 및 추천 서비스를 제공합니다.',
+        '본 서비스는 무료로 제공됩니다.',
+      ],
+    ),
+    ConsentDetailSection(
+      title: '수집 방법 및 이용 범위',
+      items: [
+        'GPS, Wi-Fi, 기지국 정보를 통해 단말기의 위치를 수집합니다.',
+        '위치정보는 앱 사용 중에만 수집되며, 가까운 이벤트 검색 및 거리 정보 제공에 이용됩니다.',
+        '위치정보는 별도 저장하지 않으며, 서비스 제공 목적 달성 후 즉시 파기합니다.',
+      ],
+    ),
+    ConsentDetailSection(
+      title: '이용자의 권리',
+      items: [
+        '동의 철회: 설정 > 개인정보에서 언제든 동의를 철회할 수 있습니다.',
+        '열람·정정: 수집된 위치정보의 열람·정정을 요구할 수 있습니다.',
+        '일시중지: 위치정보 수집의 일시중지를 요구할 수 있습니다.',
+      ],
+    ),
+    ConsentDetailSection(
+      title: '약관 변경',
+      items: [
+        '약관 변경 시 시행 7일 전 앱 내 공지합니다.',
+        '이용자의 불이익이 발생하는 변경은 30일 전 개별 통지합니다.',
+      ],
+    ),
+    ConsentDetailSection(
+      title: '서비스 제한 및 중지',
+      items: [
+        '시스템 점검, 네트워크 장애, 천재지변 등으로 서비스가 제한되거나 중지될 수 있습니다.',
+        '제한·중지 시 사전에 앱 내 공지하며, 긴급한 경우 사후 공지할 수 있습니다.',
+      ],
+    ),
+    ConsentDetailSection(
+      title: '손해배상',
+      items: [
+        '회사의 고의 또는 과실로 인해 이용자에게 손해가 발생한 경우, 관련 법령에 따라 손해를 배상합니다.',
       ],
     ),
   ],
