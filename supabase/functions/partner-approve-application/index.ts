@@ -26,8 +26,11 @@ Deno.serve(withHandler(async (req: Request): Promise<Response> => {
   try {
     return await handleRequest(req);
   } catch (e) {
-    log({ function: FN, level: "error", message: "partner-approve-application error", metadata: { detail: e instanceof Error ? e.message : String(e) } });
-    return errorResponse("Internal server error", 500);
+    const detail = e instanceof Error ? e.message : String(e);
+    log({ function: FN, level: "error", message: "partner-approve-application error", metadata: { detail } });
+    const env = Deno.env.get("ENVIRONMENT");
+    const exposeDetail = env === "local" || env === "development";
+    return errorResponse(exposeDetail ? `${FN}: ${detail}` : "Internal server error", 500);
   }
 }));
 

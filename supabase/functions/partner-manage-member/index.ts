@@ -137,8 +137,11 @@ Deno.serve(withHandler(async (req: Request): Promise<Response> => {
 
     return errorResponse(`Unknown action: ${action}`, 400);
   } catch (error) {
-    log({ function: FN, level: "error", message: "partner-manage-member failed", metadata: { detail: error instanceof Error ? error.message : String(error) } });
-    return errorResponse("Internal server error", 500);
+    const detail = error instanceof Error ? error.message : String(error);
+    log({ function: FN, level: "error", message: "partner-manage-member failed", metadata: { detail } });
+    const env = Deno.env.get("ENVIRONMENT");
+    const exposeDetail = env === "local" || env === "development";
+    return errorResponse(exposeDetail ? `${FN}: ${detail}` : "Internal server error", 500);
   }
 }));
 
