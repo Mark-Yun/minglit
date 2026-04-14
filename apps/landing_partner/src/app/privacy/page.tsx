@@ -198,6 +198,39 @@ export default function PartnerPrivacyPage() {
             </tbody>
           </table>
         </div>
+        {/* Fix #1451: OpenAI 국외 이전 추가 — 이벤트 임베딩 및 태그 추출에 사용 */}
+        <div className="overflow-x-auto mb-4 mt-4">
+          <table className="w-full text-xs border-collapse">
+            <thead>
+              <tr className="bg-[#F5F0FF]">
+                <th className="text-left p-3 text-[#6C3CE1] font-bold border-b">항목</th>
+                <th className="text-left p-3 text-[#6C3CE1] font-bold border-b">내용</th>
+              </tr>
+            </thead>
+            <tbody className="text-gray-600">
+              <tr className="border-b border-gray-100">
+                <td className="p-3">수탁업체</td>
+                <td className="p-3">OpenAI Inc.</td>
+              </tr>
+              <tr className="border-b border-gray-100">
+                <td className="p-3">소재지</td>
+                <td className="p-3">미국 캘리포니아주</td>
+              </tr>
+              <tr className="border-b border-gray-100">
+                <td className="p-3">이전 항목</td>
+                <td className="p-3">파트너가 등록한 이벤트 정보(제목, 설명, 태그, 장소명)</td>
+              </tr>
+              <tr className="border-b border-gray-100">
+                <td className="p-3">이전 목적</td>
+                <td className="p-3">이벤트 추천 벡터 생성 및 태그 자동 추출</td>
+              </tr>
+              <tr>
+                <td className="p-3">보유 기간</td>
+                <td className="p-3">이벤트 삭제 또는 파트너 탈퇴 시 파기</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
         <div className="bg-amber-50 border-l-4 border-amber-300 p-4 rounded-r-xl">
           <p className="text-sm font-bold text-amber-800">
             국외 이전에 대한 구체적인 사항은 국내 법령(개인정보보호법 제28조)을 준수하며, 이용자의 권리를 보장합니다.
@@ -258,9 +291,15 @@ export default function PartnerPrivacyPage() {
           <span className="w-[3px] h-4 bg-[#6C3CE1] mr-3 rounded-full" />
           9. 자동화된 결정에 대한 거부·설명 요구권
         </h2>
-        <p className="text-sm text-gray-600">
-          현재 밍글릿은 자동화된 결정(프로파일링 등)을 적용하고 있지 않습니다. 향후 자동화된 결정을 도입할 경우 사전 고지하고 이용자의 거부권을 보장합니다.
+        {/* Fix #1451: 실제 AI 사용 반영 — 이벤트 임베딩 및 태그 추출 적용 중 */}
+        <p className="text-sm text-gray-600 mb-3">
+          밍글릿은 파트너가 등록한 이벤트 정보를 기반으로 다음과 같은 자동화된 처리를 수행합니다.
         </p>
+        <ul className="list-disc pl-5 space-y-2 text-sm text-gray-600">
+          <li>이벤트 설명으로부터 관련 태그를 AI가 자동 추출합니다.</li>
+          <li>이벤트 정보의 벡터 임베딩을 생성하여 이용자 추천에 활용합니다.</li>
+          <li>파트너는 자동화된 처리에 대해 설명을 요구하거나 거부할 수 있습니다 (support@minglit.com).</li>
+        </ul>
       </section>
 
       {/* Section 10: 보호책임자 */}
