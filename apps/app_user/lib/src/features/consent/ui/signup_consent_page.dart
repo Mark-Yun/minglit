@@ -520,6 +520,50 @@ final Map<ConsentType, _ConsentDefinition> _consentDefinitions = {
       ],
     ),
   ),
+  ConsentType.locationConsent: const _ConsentDefinition(
+    type: ConsentType.locationConsent,
+    title: '위치정보 이용 동의',
+    summary: '가까운 이벤트 추천을 위해 위치정보를 수집해요.',
+    required: false,
+    detail: ConsentDetailContent(
+      title: '위치정보 이용 동의',
+      summary: '위치기반서비스 이용을 위해 아래 내용을 안내합니다.',
+      sections: [
+        ConsentDetailSection(
+          title: '수집 방법',
+          emphasized: true,
+          items: [
+            'GPS, Wi-Fi, 기지국 정보를 통해 단말기의 위치를 수집합니다.',
+            '위치정보는 앱 사용 중(foreground)에만 수집됩니다.',
+          ],
+        ),
+        ConsentDetailSection(
+          title: '이용 범위',
+          emphasized: true,
+          items: [
+            '가까운 이벤트 검색 및 추천',
+            '이벤트 장소까지의 거리 정보 제공',
+          ],
+        ),
+        ConsentDetailSection(
+          title: '보유 기간',
+          emphasized: true,
+          items: [
+            '위치정보는 서비스 제공 목적 달성 후 즉시 파기합니다.',
+            '별도 저장하지 않으며, 일회성으로만 이용됩니다.',
+          ],
+        ),
+        ConsentDetailSection(
+          title: '동의 거부 시 안내',
+          emphasized: true,
+          items: [
+            '위치정보 동의를 거부해도 서비스 이용이 가능해요.',
+            '다만 가까운 이벤트 검색 등 위치 기반 기능이 제한될 수 있어요.',
+          ],
+        ),
+      ],
+    ),
+  ),
   ConsentType.identityVerification: const _ConsentDefinition(
     type: ConsentType.identityVerification,
     title: '본인인증(CI/DI) 수집 동의',

@@ -62,6 +62,14 @@ void main() {
       consentedAt: DateTime(2026),
       createdAt: DateTime(2026),
     ),
+    UserConsent(
+      id: '6',
+      userId: 'user_1',
+      consentKey: ConsentType.locationConsent,
+      consented: false,
+      consentedAt: DateTime(2026),
+      createdAt: DateTime(2026),
+    ),
   ];
 
   setUp(() {
@@ -167,7 +175,8 @@ void main() {
     final marketingSwitch = tester.widgetList<SwitchListTile>(
       find.byType(SwitchListTile),
     );
-    expect(marketingSwitch.length, 2); // thirdParty + marketing
+    // Fix #1449: 위치정보 이용 동의 추가 — thirdParty + marketing + location = 3개
+    expect(marketingSwitch.length, 3);
 
     // 마케팅 is ON
     final marketingTile = find.widgetWithText(SwitchListTile, '마케팅 정보 수신');
@@ -183,6 +192,12 @@ void main() {
     expect(thirdPartyTile, findsOneWidget);
     final thirdPartyWidget = tester.widget<SwitchListTile>(thirdPartyTile);
     expect(thirdPartyWidget.value, isFalse);
+
+    // 위치정보 is OFF
+    final locationTile = find.widgetWithText(SwitchListTile, '위치정보 이용 동의');
+    expect(locationTile, findsOneWidget);
+    final locationWidget = tester.widget<SwitchListTile>(locationTile);
+    expect(locationWidget.value, isFalse);
   });
 
   testWidgets('마케팅 토글 시 ConsentController.toggleConsent를 호출한다', (tester) async {
@@ -238,6 +253,8 @@ void main() {
 
     await tester.scrollUntilVisible(find.text('회원 탈퇴'), 200);
     expect(find.text('회원 탈퇴'), findsOneWidget);
+    // Fix #1449: 위치정보 이용약관 항목 추가로 ListView 높이 증가 → '회원 탈퇴 시작하기' 버튼까지 추가 스크롤 필요
+    await tester.scrollUntilVisible(find.text('회원 탈퇴 시작하기'), 200);
     expect(find.text('회원 탈퇴 시작하기'), findsOneWidget);
   });
 

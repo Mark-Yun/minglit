@@ -25,6 +25,10 @@ enum ConsentType {
   @JsonValue('marketing_consent')
   marketingConsent,
 
+  /// 위치정보 이용 동의 (선택)
+  @JsonValue('location_consent')
+  locationConsent,
+
   /// 본인인증(CI/DI) 수집 동의
   @JsonValue('identity_verification')
   identityVerification
