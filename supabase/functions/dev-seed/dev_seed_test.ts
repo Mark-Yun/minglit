@@ -155,3 +155,32 @@ Deno.test({
     });
   },
 });
+
+// Fix #1414: 내부 에러가 500으로 노출되는지 검증 — withHandler 적용 후 에러 삼킴 회귀 방지
+Deno.test({
+  name: "dev-seed - internal error returns 500 with error body (not swallowed)",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+
+    // SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY 미설정 → createServiceClient()가 throw
+    // catch 블록이 errorResponse(..., 500)을 반환해야 함 (에러를 삼키면 안 됨)
+    await withEnv({
+      ENVIRONMENT: "development",
+      SUPABASE_URL: undefined,
+      SUPABASE_SERVICE_ROLE_KEY: undefined,
+    }, async () => {
+      const response = await handler(
+        new Request("http://localhost?mode=images-only"),
+      );
+      assertEquals(response.status, 500);
+      const body = await readJson(response);
+      assertEquals(
+        typeof body.error,
+        "string",
+        "Expected error body to contain a string message",
+      );
+    });
+  },
+});
