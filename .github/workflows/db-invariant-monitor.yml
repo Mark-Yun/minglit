@@ -2,8 +2,8 @@ name: DB Invariant Monitor
 
 on:
   schedule:
-    - cron: '0 * * * *'  # Every hour
-  workflow_dispatch:       # Manual trigger
+    - cron: '5 * * * *'  # Every hour at :05 (avoid :00 congestion)
+  workflow_dispatch:
 
 concurrency:
   group: db-invariant-monitor
