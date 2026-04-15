@@ -24,7 +24,9 @@ void main() {
       expect(find.text('Test Child Widget'), findsOneWidget);
     });
 
-    testWidgets('does not render FAB (FAB removed in #1285)', (tester) async {
+    testWidgets('BugReporterWrapper does not render a FAB directly', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         const ProviderScope(
           child: MaterialApp(
@@ -38,7 +40,8 @@ void main() {
         ),
       );
 
-      // FAB has been removed in #1285 — no FAB should be present
+      // BugReporterWrapper itself does not render a FAB.
+      // FAB is in Scaffold.floatingActionButton (home_page), not here.
       expect(find.byType(FloatingActionButton), findsNothing);
     });
 
@@ -149,9 +152,9 @@ void main() {
       // No crash = state was properly cleaned up
     });
 
-    // Fix #1285: FAB has been removed. BugReporterWrapper now registers
-    // _showReportDialog via bugReporterCallbackProvider instead of rendering a FAB.
-    testWidgets('no FAB rendered when enabled (FAB removed in #1285)', (
+    // BugReporterWrapper registers _showReportDialog via bugReporterCallbackProvider.
+    // FAB (#1466) is in Scaffold.floatingActionButton, not inside BugReporterWrapper.
+    testWidgets('BugReporterWrapper does not render a FAB directly', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -166,10 +169,8 @@ void main() {
         ),
       );
 
-      // Verify child is rendered
       expect(find.text('content'), findsOneWidget);
-
-      // FAB removed in #1285 — no FloatingActionButton should be in the tree
+      // FAB lives in Scaffold.floatingActionButton (home_page), not here
       expect(find.byType(FloatingActionButton), findsNothing);
     });
 
@@ -241,4 +242,91 @@ void main() {
       // No crash = dispose completed cleanly
     });
   });
+
+  // Fix #1466: BugReportFab toggle behavior
+  group('BugReportFab', () {
+    testWidgets('hidden by default (bugReportFabVisibleProvider == false)', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        const ProviderScope(
+          child: MaterialApp(
+            home: Scaffold(
+              floatingActionButton: BugReportFab(),
+              body: Text('content'),
+            ),
+          ),
+        ),
+      );
+
+      // Default: FAB not visible
+      expect(find.byType(FloatingActionButton), findsNothing);
+    });
+
+    testWidgets('visible when provider is true and callback is set', (
+      tester,
+    ) async {
+      final container = ProviderContainer(
+        overrides: [
+          bugReportFabVisibleProvider.overrideWith((_) => true),
+          bugReporterCallbackProvider.overrideWith(
+            () => _TestCallbackNotifier(),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const MaterialApp(
+            home: Scaffold(
+              floatingActionButton: BugReportFab(),
+              body: Text('content'),
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byType(FloatingActionButton), findsOneWidget);
+    });
+
+    testWidgets('BugReportAction tap toggles bugReportFabVisibleProvider', (
+      tester,
+    ) async {
+      final container = ProviderContainer(
+        overrides: [
+          bugReporterCallbackProvider.overrideWith(
+            () => _TestCallbackNotifier(),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            home: Scaffold(
+              appBar: AppBar(actions: const [BugReportAction()]),
+              body: const Text('content'),
+            ),
+          ),
+        ),
+      );
+
+      expect(container.read(bugReportFabVisibleProvider), isFalse);
+
+      await tester.tap(find.byType(IconButton).first);
+      expect(container.read(bugReportFabVisibleProvider), isTrue);
+
+      await tester.tap(find.byType(IconButton).first);
+      expect(container.read(bugReportFabVisibleProvider), isFalse);
+    });
+  });
+}
+
+class _TestCallbackNotifier extends Notifier<Future<void> Function()?> {
+  @override
+  Future<void> Function()? build() => () async {};
 }

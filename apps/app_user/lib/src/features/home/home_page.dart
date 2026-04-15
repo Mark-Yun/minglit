@@ -71,6 +71,8 @@ class _HomePageState extends ConsumerState<HomePage> {
     });
 
     return Scaffold(
+      // Fix #1466: FAB 토글 — BugReportAction으로 표시/숨김 전환
+      floatingActionButton: const BugReportFab(),
       // Fix #667: Scaffold.bottomSheet does not preserve the parent bottom
       // inset here, so pad the bar manually above the home indicator.
       bottomSheet: reservesNowBarSpace
