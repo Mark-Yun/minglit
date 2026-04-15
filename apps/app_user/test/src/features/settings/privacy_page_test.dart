@@ -248,6 +248,34 @@ void main() {
     );
   });
 
+  // Fix #1452: 위치정보 이용약관 항목 추가 — 약관 보기 섹션에서 바텀시트 열림 검증
+  testWidgets('위치정보 이용약관 탭 시 바텀시트가 열린다', (tester) async {
+    await pumpPage(tester);
+
+    await tester.scrollUntilVisible(find.text('위치정보 이용약관'), 200);
+    await tester.tap(find.text('위치정보 이용약관'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('위치기반서비스 이용에 관한 약관입니다.'),
+      findsOneWidget,
+    );
+  });
+
+  // Fix #1452: 위치정보 이용 동의 토글 — saveConsents 호출 검증 (SMOKE-LEGAL-04)
+  testWidgets('위치정보 이용 동의 토글 시 ConsentController.toggleConsent를 호출한다',
+      (tester) async {
+    await pumpPage(tester);
+
+    // Toggle location ON (currently OFF in testConsents)
+    await tester.tap(find.widgetWithText(SwitchListTile, '위치정보 이용 동의'));
+    await tester.pumpAndSettle();
+
+    verify(
+      () => mockRepository.saveConsents('user_1', any()),
+    ).called(greaterThanOrEqualTo(1));
+  });
+
   testWidgets('계정 섹션에 회원 탈퇴가 표시된다', (tester) async {
     await pumpPage(tester);
 
