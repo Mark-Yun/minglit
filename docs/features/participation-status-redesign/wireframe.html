@@ -77,12 +77,14 @@
   }
   .progress-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
 
-  /* Grid */
+  /* Grid — horizontal scroll */
   .group-grid {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 16px 16px;
+    display: flex; gap: 12px; padding: 0 16px 12px;
+    overflow-x: auto; scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch; scrollbar-width: none;
   }
-  .group-grid.single-col { grid-template-columns: 1fr; }
-  .group-grid.three-plus { grid-template-columns: 1fr 1fr; }
+  .group-grid::-webkit-scrollbar { display: none; }
+  .group-grid .group-card { min-width: calc(50% - 6px); scroll-snap-align: start; flex-shrink: 0; }
 
   /* Group Card */
   .group-card {
@@ -96,12 +98,12 @@
   .group-card .big-count span { color: var(--on-surface-variant); font-weight: 400; font-size: 14px; }
   .group-card .conditions { font-size: 11px; color: var(--on-surface-variant); margin-bottom: 8px; }
 
-  /* Blur List Toggle */
+  /* Blur List Toggle — single button below all group cards */
   .blur-toggle {
     display: flex; align-items: center; justify-content: center; gap: 4px;
-    padding: 8px; margin-top: 4px; border-top: 1px solid var(--outline-variant);
-    font-size: 12px; color: var(--primary); font-weight: 500; cursor: pointer;
-    user-select: none;
+    padding: 10px 16px; margin: 0 16px 16px; border: 1px solid var(--outline-variant);
+    border-radius: 8px; font-size: 13px; color: var(--primary); font-weight: 500;
+    cursor: pointer; user-select: none;
   }
   .blur-toggle:hover { background: var(--primary-05); }
 
@@ -157,8 +159,8 @@
   .tag-before { background: #FEE2E2; color: #DC2626; }
   .tag-after { background: #DCFCE7; color: #16A34A; }
 
-  /* 4-group variant */
-  .group-grid.four-groups { grid-template-columns: 1fr 1fr; }
+  /* 4-group variant — narrower cards to hint scrollability */
+  .group-grid.four-groups .group-card { min-width: 45%; }
 
   /* K-anonymity notice */
   .k-notice {
@@ -251,9 +253,6 @@
                 <div class="progress-fill" style="width:30%; background:#60A5FA"></div>
               </div>
             </div>
-            <div class="blur-toggle" onclick="toggleBlur('male')">
-              참여자 정보 <span id="arrow-male">▾</span>
-            </div>
             <div class="blur-list" id="blur-male">
               <div class="blur-item">
                 <div class="blur-dot" style="background:#60A5FA"></div>
@@ -285,6 +284,10 @@
             <div class="k-notice">참여자가 3명 미만이면 정보가 표시되지 않아요</div>
           </div>
         </div>
+
+        <div class="blur-toggle" onclick="toggleBlurAll('2group')">
+          참여자 정보 <span id="arrow-2group">▾</span>
+        </div>
       </div>
 
       <!-- ═══ AFTER: 4 Groups ═══ -->
@@ -313,7 +316,6 @@
                 <div class="progress-fill" style="width:40%; background:#60A5FA"></div>
               </div>
             </div>
-            <div class="blur-toggle" onclick="toggleBlur('m20')">참여자 정보 <span id="arrow-m20">▾</span></div>
             <div class="blur-list" id="blur-m20">
               <div class="blur-item"><div class="blur-dot" style="background:#60A5FA"></div><span class="blur-info">20대 초반</span></div>
               <div class="blur-item"><div class="blur-dot" style="background:#60A5FA"></div><span class="blur-info">20대 중반</span><span class="blur-badge">대학생</span></div>
@@ -332,7 +334,6 @@
                 <div class="progress-fill" style="width:30%; background:#F472B6"></div>
               </div>
             </div>
-            <div class="blur-toggle" onclick="toggleBlur('f20')">참여자 정보 <span id="arrow-f20">▾</span></div>
             <div class="blur-list" id="blur-f20">
               <div class="blur-item"><div class="blur-dot" style="background:#F472B6"></div><span class="blur-info">20대 후반</span><span class="blur-badge">직장인</span></div>
               <div class="blur-item"><div class="blur-dot" style="background:#F472B6"></div><span class="blur-info">20대 중반</span></div>
@@ -350,7 +351,6 @@
                 <div class="progress-fill" style="width:30%; background:#60A5FA"></div>
               </div>
             </div>
-            <div class="blur-toggle" onclick="toggleBlur('m30')">참여자 정보 <span id="arrow-m30">▾</span></div>
             <div class="blur-list" id="blur-m30">
               <div class="blur-item"><div class="blur-dot" style="background:#60A5FA"></div><span class="blur-info">30대 초반</span><span class="blur-badge">직장인</span></div>
               <div class="blur-item"><div class="blur-dot" style="background:#60A5FA"></div><span class="blur-info">30대 중반</span></div>
@@ -370,6 +370,10 @@
             </div>
             <div class="k-notice">참여자가 3명 미만이면 정보가 표시되지 않아요</div>
           </div>
+        </div>
+
+        <div class="blur-toggle" onclick="toggleBlurAll('4group')">
+          참여자 정보 <span id="arrow-4group">▾</span>
         </div>
       </div>
 
@@ -488,16 +492,16 @@ function showVariant(id) {
   }
 }
 
-function toggleBlur(group) {
-  const list = document.getElementById('blur-' + group);
-  const arrow = document.getElementById('arrow-' + group);
-  if (list.classList.contains('open')) {
-    list.classList.remove('open');
-    arrow.textContent = '▾';
-  } else {
-    list.classList.add('open');
-    arrow.textContent = '▴';
-  }
+function toggleBlurAll(variant) {
+  const arrow = document.getElementById('arrow-' + variant);
+  const container = arrow.closest('[id^="variant-"]');
+  const lists = container.querySelectorAll('.blur-list');
+  const isOpen = arrow.textContent === '▴';
+  lists.forEach(list => {
+    if (isOpen) { list.classList.remove('open'); }
+    else { list.classList.add('open'); }
+  });
+  arrow.textContent = isOpen ? '▾' : '▴';
 }
 </script>
 
