@@ -263,15 +263,15 @@ void main() {
       expect(find.byType(FloatingActionButton), findsNothing);
     });
 
+    // Fix #1466: BugReportFab는 FAB visible + callback 모두 set 시에만 보임.
+    // _BugReporterCallbackNotifier는 private이므로 overrideWith 대신
+    // BugReporterWrapper를 마운트하여 실제 callback을 등록한다.
     testWidgets('visible when provider is true and callback is set', (
       tester,
     ) async {
       final container = ProviderContainer(
         overrides: [
           bugReportFabVisibleProvider.overrideWith((_) => true),
-          bugReporterCallbackProvider.overrideWith(
-            () => _TestCallbackNotifier(),
-          ),
         ],
       );
       addTearDown(container.dispose);
@@ -282,25 +282,23 @@ void main() {
           child: const MaterialApp(
             home: Scaffold(
               floatingActionButton: BugReportFab(),
-              body: Text('content'),
+              body: BugReporterWrapper(child: Text('content')),
             ),
           ),
         ),
       );
+      // postFrameCallback fires — BugReporterWrapper registers callback
+      await tester.pump();
 
       expect(find.byType(FloatingActionButton), findsOneWidget);
     });
 
+    // Fix #1466: BugReportAction은 callback이 등록되어 있을 때만 IconButton을 렌더링.
+    // BugReporterWrapper를 마운트하여 실제 callback을 등록한다.
     testWidgets('BugReportAction tap toggles bugReportFabVisibleProvider', (
       tester,
     ) async {
-      final container = ProviderContainer(
-        overrides: [
-          bugReporterCallbackProvider.overrideWith(
-            () => _TestCallbackNotifier(),
-          ),
-        ],
-      );
+      final container = ProviderContainer();
       addTearDown(container.dispose);
 
       await tester.pumpWidget(
@@ -309,24 +307,23 @@ void main() {
           child: MaterialApp(
             home: Scaffold(
               appBar: AppBar(actions: const [BugReportAction()]),
-              body: const Text('content'),
+              body: BugReporterWrapper(child: const Text('content')),
             ),
           ),
         ),
       );
+      // postFrameCallback fires — BugReporterWrapper registers callback
+      await tester.pump();
 
       expect(container.read<bool>(bugReportFabVisibleProvider), isFalse);
 
       await tester.tap(find.byType(IconButton).first);
+      await tester.pump();
       expect(container.read<bool>(bugReportFabVisibleProvider), isTrue);
 
       await tester.tap(find.byType(IconButton).first);
+      await tester.pump();
       expect(container.read<bool>(bugReportFabVisibleProvider), isFalse);
     });
   });
-}
-
-class _TestCallbackNotifier extends Notifier<Future<void> Function()?> {
-  @override
-  Future<void> Function()? build() => () async {};
 }
