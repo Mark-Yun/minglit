@@ -263,8 +263,9 @@ void main() {
   });
 
   // Fix #1452: 위치정보 이용 동의 토글 — saveConsents 호출 검증 (SMOKE-LEGAL-04)
-  testWidgets('위치정보 이용 동의 토글 시 ConsentController.toggleConsent를 호출한다',
-      (tester) async {
+  testWidgets('위치정보 이용 동의 토글 시 ConsentController.toggleConsent를 호출한다', (
+    tester,
+  ) async {
     await pumpPage(tester);
 
     // Toggle location ON (currently OFF in testConsents)
