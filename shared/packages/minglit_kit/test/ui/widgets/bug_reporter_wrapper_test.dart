@@ -307,7 +307,7 @@ void main() {
           child: MaterialApp(
             home: Scaffold(
               appBar: AppBar(actions: const [BugReportAction()]),
-              body: BugReporterWrapper(child: const Text('content')),
+              body: const BugReporterWrapper(child: Text('content')),
             ),
           ),
         ),
