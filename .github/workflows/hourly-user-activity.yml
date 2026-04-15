@@ -17,16 +17,12 @@ jobs:
     steps:
       - name: Run user activity simulation
         run: |
-          for phase in approve refund run settle; do
-            echo "▶ Running phase: $phase"
-            curl -sf -X POST \
-              "${{ secrets.SUPABASE_DEV_URL }}/functions/v1/backend-simulator" \
-              -H "Authorization: Bearer ${{ secrets.SUPABASE_DEV_SECRET_KEY }}" \
-              -H "Content-Type: application/json" \
-              -d "{\"phase\":\"$phase\",\"config\":{\"apps_per_event\":2}}" \
-              --max-time 120
-            echo "✅ Phase $phase complete"
-          done
+          curl -sf -X POST \
+            "${{ secrets.SUPABASE_DEV_URL }}/functions/v1/backend-simulator" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_DEV_SECRET_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{"mode":"tick"}' \
+            --max-time 120
 
   notify-failure:
     needs: [simulate]
