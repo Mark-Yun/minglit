@@ -307,7 +307,24 @@ Flutter 앱은 Skia/Impeller 엔진으로 단일 `FlutterSurfaceView` 위에 렌
 
 ---
 
-## 8.1 에러/환경/미등록라우트 테스트 케이스 (Phase 2.1 — #1421)
+## 8.1 CI/CD 배포 파이프라인 테스트 (Phase 2.1 — #1433, #1434)
+
+> 2026-04-15 배포 실패 인시던트(#1433 iOS, #1434 Android)로 추가.
+> Partner 앱 배포 시 `JUSO_CONFIRM_KEY` Secret 미설정으로 빌드 실패.
+
+| 문서 | 내용 | 케이스 수 |
+|------|------|-----------|
+| `ci-deploy-tests.md` | 배포 Secret 매트릭스, CI 자체 검증 스텝, 빌드 분기 검증 | 19 |
+
+### 핵심 포인트
+
+- **4개 배포 워크플로우** (Android/iOS × User/Partner)의 필수 Secret을 매트릭스로 정리
+- Partner 전용 Secret (`JUSO_CONFIRM_KEY`)의 `required: false` 선언 불일치 식별 → 개선 제안 포함
+- 배포 실패 알림(`notify-failure.yml`) 동작 검증 케이스 포함
+
+---
+
+## 8.2 에러/환경/미등록라우트 테스트 케이스 (Phase 2.1 — #1421)
 
 > 2026-04-13 갭 분석(#1421) 결과 추가된 테스트 케이스 문서.
 
