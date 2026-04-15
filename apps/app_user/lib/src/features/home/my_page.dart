@@ -14,7 +14,7 @@ class MyPage extends ConsumerWidget {
 
     if (user == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('마이페이지')),
+        appBar: MinglitTheme.simpleAppBar(title: '마이페이지', showBackButton: false),
         body: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -34,11 +34,11 @@ class MyPage extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: MinglitSpacing.xlarge),
-              FilledButton(
+              MinglitButton.primary(
+                text: '로그인',
                 onPressed: () {
                   ref.read(authCoordinatorProvider).pushLogin(from: '/my');
                 },
-                child: const Text('로그인'),
               ),
             ],
           ),
@@ -58,90 +58,138 @@ class MyPage extends ConsumerWidget {
         }
       },
       child: Scaffold(
-        appBar: AppBar(title: const Text('마이페이지')),
+        appBar: MinglitTheme.simpleAppBar(title: '마이페이지', showBackButton: false),
         body: ListView(
+          padding: const EdgeInsets.symmetric(vertical: MinglitSpacing.medium),
           children: [
-            Padding(
-              padding: const EdgeInsets.all(MinglitSpacing.large),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 32,
-                    backgroundImage: avatarUrl != null
-                        ? NetworkImage(avatarUrl)
-                        : null,
-                    child: avatarUrl == null
-                        ? const Icon(Icons.person, size: 32)
-                        : null,
-                  ),
-                  const SizedBox(width: MinglitSpacing.medium),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          displayName,
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          user.email ?? '',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
+            // Group 1: Profile
+            MinglitSettingsGroup(
+              children: [
+                _ProfileTile(
+                  displayName: displayName,
+                  email: user.email ?? '',
+                  avatarUrl: avatarUrl,
+                  onTap: homeCoordinator.pushAccountManagement,
+                ),
+              ],
+            ),
+            const SizedBox(height: MinglitSpacing.large),
+
+            // Group 2: Activity
+            MinglitSettingsGroup(
+              header: '활동',
+              children: [
+                MinglitSettingsTile(
+                  leading: Icons.receipt_long_outlined,
+                  title: '구매 내역',
+                  onTap: homeCoordinator.pushPurchaseHistory,
+                ),
+                MinglitSettingsTile(
+                  leading: Icons.confirmation_number_outlined,
+                  title: '내 티켓',
+                  onTap: homeCoordinator.pushMyTickets,
+                ),
+              ],
+            ),
+            const SizedBox(height: MinglitSpacing.large),
+
+            // Group 3: Settings
+            MinglitSettingsGroup(
+              header: '설정',
+              children: [
+                MinglitSettingsTile(
+                  leading: Icons.notifications_outlined,
+                  title: '알림 설정',
+                  onTap: homeCoordinator.pushNotificationSettings,
+                ),
+                const ThemeSettingsTile(),
+              ],
+            ),
+            const SizedBox(height: MinglitSpacing.large),
+
+            // Group 4: Privacy & Security
+            MinglitSettingsGroup(
+              header: '개인정보 및 보안',
+              children: [
+                MinglitSettingsTile(
+                  leading: Icons.lock_outline,
+                  title: '개인정보',
+                  onTap: homeCoordinator.pushPrivacy,
+                ),
+                MinglitSettingsTile(
+                  leading: Icons.admin_panel_settings_outlined,
+                  title: '권한 설정',
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (_) => const AppPermissionSettingsScreen(),
                     ),
                   ),
-                ],
-              ),
-            ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.receipt_long_outlined),
-              title: const Text('구매 내역'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: homeCoordinator.pushPurchaseHistory,
-            ),
-            ListTile(
-              leading: const Icon(Icons.confirmation_number_outlined),
-              title: const Text('내 티켓'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: homeCoordinator.pushMyTickets,
-            ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.notifications_outlined),
-              title: const Text('알림 설정'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: homeCoordinator.pushNotificationSettings,
-            ),
-            const ThemeSettingsTile(),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.lock_outline),
-              title: const Text('개인정보'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: homeCoordinator.pushPrivacy,
-            ),
-            ListTile(
-              leading: const Icon(Icons.admin_panel_settings_outlined),
-              title: const Text('권한 설정'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute<void>(
-                  builder: (_) => const AppPermissionSettingsScreen(),
                 ),
-              ),
+                MinglitSettingsTile(
+                  leading: Icons.block,
+                  title: '차단 목록',
+                  onTap: homeCoordinator.pushBlockedPartners,
+                ),
+              ],
             ),
-            ListTile(
-              leading: const Icon(Icons.block),
-              title: const Text('차단 목록'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: homeCoordinator.pushBlockedPartners,
+            const SizedBox(height: MinglitSpacing.large),
+
+            // Group 5: Terms & Info
+            MinglitSettingsGroup(
+              header: '약관 및 정보',
+              children: [
+                MinglitSettingsTile(
+                  leading: Icons.shield_outlined,
+                  title: '개인정보처리방침',
+                  onTap: homeCoordinator.pushPrivacy, // Reuse privacy for now
+                ),
+                MinglitSettingsTile(
+                  leading: Icons.description_outlined,
+                  title: '이용약관',
+                  onTap: () {}, // TODO
+                ),
+                const MinglitSettingsTile(
+                  leading: Icons.info_outline,
+                  title: '앱 버전',
+                  subtitle: '26.04.1455', // Hardcoded for wireframe parity
+                  trailing: SettingsTileTrailing.none,
+                ),
+              ],
             ),
+            const SizedBox(height: MinglitSpacing.large),
+
+            // Group 6: Account
+            MinglitSettingsGroup(
+              header: '계정',
+              children: [
+                MinglitSettingsTile(
+                  leading: Icons.manage_accounts_outlined,
+                  title: '계정 관리',
+                  onTap: homeCoordinator.pushAccountManagement,
+                ),
+                MinglitSettingsTile(
+                  leading: Icons.logout_outlined,
+                  title: '로그아웃',
+                  destructive: true,
+                  trailing: SettingsTileTrailing.none,
+                  onTap: () async {
+                    final confirmed = await MinglitAlert.showConfirm(
+                      context,
+                      title: '로그아웃',
+                      message: '정말 로그아웃 하시겠습니까?',
+                      confirmText: '로그아웃',
+                      isDestructive: true,
+                    );
+                    if (confirmed == true) {
+                      await ref.read(authCoordinatorProvider).signOut();
+                    }
+                  },
+                ),
+              ],
+            ),
+
+            // Dev Only
             if (const String.fromEnvironment(
                       'ENVIRONMENT',
                       defaultValue: 'production',
@@ -152,26 +200,91 @@ class MyPage extends ConsumerWidget {
                       defaultValue: 'production',
                     ) ==
                     'development') ...[
-              const Divider(),
-              ListTile(
-                leading: const Icon(Icons.palette_outlined),
-                title: const Text('Design Catalog'),
-                subtitle: const Text('Dev Only'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute<void>(
-                    builder: (_) => const DesignCatalogPage(),
+              const SizedBox(height: MinglitSpacing.large),
+              MinglitSettingsGroup(
+                header: '개발자 도구',
+                children: [
+                  MinglitSettingsTile(
+                    leading: Icons.palette_outlined,
+                    title: 'Design Catalog',
+                    subtitle: 'Dev Only',
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (_) => const DesignCatalogPage(),
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
             ],
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.manage_accounts_outlined),
-              title: const Text('계정 관리'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: homeCoordinator.pushAccountManagement,
+            
+            const SizedBox(height: MinglitSpacing.xxlarge),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ProfileTile extends StatelessWidget {
+  const _ProfileTile({
+    required this.displayName,
+    required this.email,
+    this.avatarUrl,
+    this.onTap,
+  });
+
+  final String displayName;
+  final String email;
+  final String? avatarUrl;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.all(MinglitSpacing.medium),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 24,
+              backgroundColor: colorScheme.primaryContainer,
+              backgroundImage: avatarUrl != null
+                  ? NetworkImage(avatarUrl!)
+                  : null,
+              child: avatarUrl == null
+                  ? Icon(Icons.person, color: colorScheme.primary)
+                  : null,
+            ),
+            const SizedBox(width: MinglitSpacing.medium),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    displayName,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    email,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right,
+              size: MinglitIconSize.small,
+              color: colorScheme.onSurfaceVariant,
             ),
           ],
         ),

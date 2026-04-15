@@ -41,6 +41,8 @@ export 'src/ui/widgets/common/minglit_list_tile.dart';
 export 'src/ui/widgets/common/minglit_participant_gauge.dart';
 export 'src/ui/widgets/common/minglit_section.dart';
 export 'src/ui/widgets/common/minglit_section_divider.dart';
+export 'src/ui/widgets/common/minglit_settings_group.dart';
+export 'src/ui/widgets/common/minglit_settings_tile.dart';
 export 'src/ui/widgets/common/minglit_skeleton.dart';
 export 'src/ui/widgets/common/minglit_tag.dart';
 export 'src/ui/widgets/common/minglit_text_field.dart';

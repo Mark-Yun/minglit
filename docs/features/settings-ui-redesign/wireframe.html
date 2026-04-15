@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minglit Settings UI Redesign Wireframe</title>
+    <style>
+        :root {
+            --primary: #9900FF;
+            --background-light: #F9FAFB;
+            --background-dark: #0F0F0F;
+            --surface-light: #FFFFFF;
+            --surface-dark: #212121;
+            --text-primary-light: #111827;
+            --text-primary-dark: #FFFFFF;
+            --text-secondary-light: #4B5563;
+            --text-secondary-dark: #AAAAAA;
+            --divider-light: #E5E7EB;
+            --divider-dark: #3D3D3D;
+            --radius-card: 16px;
+            --radius-small: 8px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            display: flex;
+            gap: 40px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .phone {
+            width: 360px;
+            height: 740px;
+            background-color: var(--background-light);
+            border: 12px solid #333;
+            border-radius: 36px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .phone.dark {
+            background-color: var(--background-dark);
+            color: white;
+        }
+
+        .status-bar {
+            height: 30px;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .app-bar {
+            height: 56px;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            font-size: 20px;
+            font-weight: bold;
+            border-bottom: 1px solid var(--divider-light);
+        }
+
+        .dark .app-bar {
+            border-bottom-color: var(--divider-dark);
+        }
+
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 40px;
+        }
+
+        /* Profile Section */
+        .profile-section {
+            padding: 24px 16px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .avatar {
+            width: 64px;
+            height: 64px;
+            background-color: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 32px;
+        }
+
+        .profile-info h2 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .profile-info p {
+            margin: 4px 0 0;
+            font-size: 14px;
+            color: var(--text-secondary-light);
+        }
+
+        .dark .profile-info p {
+            color: var(--text-secondary-dark);
+        }
+
+        /* Current Style (Loose) */
+        .list-tile-loose {
+            height: 56px;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            gap: 16px;
+        }
+
+        .list-tile-loose .icon {
+            font-size: 24px;
+            color: var(--text-secondary-light);
+        }
+
+        .dark .list-tile-loose .icon {
+            color: var(--text-secondary-dark);
+        }
+
+        .list-tile-loose .title {
+            font-size: 16px;
+            flex: 1;
+        }
+
+        .divider {
+            height: 1px;
+            background-color: var(--divider-light);
+            margin: 0;
+        }
+
+        .dark .divider {
+            background-color: var(--divider-dark);
+        }
+
+        /* Proposed Style (Compact Card Groups) */
+        .section-title {
+            padding: 16px 16px 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .dark .section-title {
+            color: var(--text-secondary-dark);
+        }
+
+        .settings-card {
+            background-color: var(--surface-light);
+            margin: 0 16px;
+            border-radius: var(--radius-card);
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .dark .settings-card {
+            background-color: var(--surface-dark);
+        }
+
+        .settings-tile {
+            height: 48px;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            gap: 12px;
+            cursor: pointer;
+        }
+
+        .settings-tile:active {
+            background-color: rgba(0,0,0,0.05);
+        }
+
+        .dark .settings-tile:active {
+            background-color: rgba(255,255,255,0.05);
+        }
+
+        .settings-tile .icon {
+            font-size: 20px;
+            color: var(--primary);
+            opacity: 0.8;
+            width: 24px;
+            text-align: center;
+        }
+
+        .settings-tile .title {
+            font-size: 14.5px;
+            flex: 1;
+        }
+
+        .settings-tile .value {
+            font-size: 14px;
+            color: var(--text-secondary-light);
+            margin-right: 4px;
+        }
+
+        .dark .settings-tile .value {
+            color: var(--text-secondary-dark);
+        }
+
+        .settings-tile .chevron {
+            font-size: 16px;
+            color: #ccc;
+        }
+
+        .settings-divider {
+            height: 1px;
+            background-color: var(--divider-light);
+            margin-left: 52px;
+        }
+
+        .dark .settings-divider {
+            background-color: var(--divider-dark);
+        }
+
+        /* UI Switch Toggle */
+        .switch {
+            width: 36px;
+            height: 20px;
+            background-color: #ccc;
+            border-radius: 10px;
+            position: relative;
+        }
+
+        .switch.on {
+            background-color: var(--primary);
+        }
+
+        .switch::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background-color: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: 0.2s;
+        }
+
+        .switch.on::after {
+            left: 18px;
+        }
+
+        /* Annotation */
+        .specs {
+            max-width: 800px;
+            margin-top: 40px;
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .tag {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .tag.changed { background: #E8F5E9; color: #2E7D32; }
+        .tag.new { background: #E3F2FD; color: #1565C0; }
+
+    </style>
+</head>
+<body>
+
+    <h1>Minglit Settings UI Redesign</h1>
+    <p>Claude 앱 스타일의 컴팩트한 레이아웃 정의 (P2-medium)</p>
+
+    <div class="container">
+        <!-- CURRENT: LOOSE STYLE -->
+        <div class="column">
+            <h3>Current: Loose Divider Style</h3>
+            <div class="phone">
+                <div class="status-bar">
+                    <span>9:41</span>
+                    <span>📶 🔋</span>
+                </div>
+                <div class="app-bar">마이페이지</div>
+                <div class="content">
+                    <div class="profile-section">
+                        <div class="avatar">👤</div>
+                        <div class="profile-info">
+                            <h2>홍길동</h2>
+                            <p>hong@example.com</p>
+                        </div>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="list-tile-loose">
+                        <span class="icon">📜</span>
+                        <span class="title">구매 내역</span>
+                        <span class="chevron">›</span>
+                    </div>
+                    <div class="list-tile-loose">
+                        <span class="icon">🎟️</span>
+                        <span class="title">내 티켓</span>
+                        <span class="chevron">›</span>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="list-tile-loose">
+                        <span class="icon">🔔</span>
+                        <span class="title">알림 설정</span>
+                        <span class="chevron">›</span>
+                    </div>
+                    <div class="list-tile-loose">
+                        <span class="icon">🎨</span>
+                        <span class="title">테마 설정</span>
+                        <span class="chevron">›</span>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="list-tile-loose">
+                        <span class="icon">🔒</span>
+                        <span class="title">개인정보</span>
+                        <span class="chevron">›</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PROPOSED: COMPACT CARD GROUPS (LIGHT) -->
+        <div class="column">
+            <h3>Proposed: Compact Card Groups</h3>
+            <div class="phone">
+                <div class="status-bar">
+                    <span>9:41</span>
+                    <span>📶 🔋</span>
+                </div>
+                <div class="app-bar">마이페이지</div>
+                <div class="content" style="background-color: var(--background-light);">
+                    <div class="profile-section">
+                        <div class="avatar" style="width: 56px; height: 56px;">👤</div>
+                        <div class="profile-info">
+                            <h2 style="font-size: 17px;">홍길동</h2>
+                            <p style="font-size: 13px;">hong@example.com</p>
+                        </div>
+                    </div>
+
+                    <div class="section-title">주문 관리</div>
+                    <div class="settings-card">
+                        <div class="settings-tile">
+                            <span class="icon">📜</span>
+                            <span class="title">구매 내역</span>
+                            <span class="chevron">›</span>
+                        </div>
+                        <div class="settings-divider"></div>
+                        <div class="settings-tile">
+                            <span class="icon">🎟️</span>
+                            <span class="title">내 티켓</span>
+                            <span class="chevron">›</span>
+                        </div>
+                    </div>
+
+                    <div class="section-title">앱 설정</div>
+                    <div class="settings-card">
+                        <div class="settings-tile">
+                            <span class="icon">🔔</span>
+                            <span class="title">알림 설정</span>
+                            <span class="value">켜짐</span>
+                            <span class="chevron">›</span>
+                        </div>
+                        <div class="settings-divider"></div>
+                        <div class="settings-tile">
+                            <span class="icon">🎨</span>
+                            <span class="title">테마 설정</span>
+                            <span class="value">시스템 설정</span>
+                            <span class="chevron">›</span>
+                        </div>
+                    </div>
+
+                    <div class="section-title">보안 및 약관</div>
+                    <div class="settings-card">
+                        <div class="settings-tile">
+                            <span class="icon">🔒</span>
+                            <span class="title">개인정보</span>
+                            <span class="chevron">›</span>
+                        </div>
+                        <div class="settings-divider"></div>
+                        <div class="settings-tile">
+                            <span class="icon">🛡️</span>
+                            <span class="title">권한 설정</span>
+                            <span class="chevron">›</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PROPOSED: COMPACT CARD GROUPS (DARK) -->
+        <div class="column">
+            <h3>Proposed (Dark Mode)</h3>
+            <div class="phone dark">
+                <div class="status-bar">
+                    <span>9:41</span>
+                    <span>📶 🔋</span>
+                </div>
+                <div class="app-bar">마이페이지</div>
+                <div class="content">
+                    <div class="profile-section">
+                        <div class="avatar" style="width: 56px; height: 56px;">👤</div>
+                        <div class="profile-info">
+                            <h2 style="font-size: 17px;">홍길동</h2>
+                            <p style="font-size: 13px;">hong@example.com</p>
+                        </div>
+                    </div>
+
+                    <div class="section-title">주문 관리</div>
+                    <div class="settings-card">
+                        <div class="settings-tile">
+                            <span class="icon">📜</span>
+                            <span class="title">구매 내역</span>
+                            <span class="chevron">›</span>
+                        </div>
+                        <div class="settings-divider"></div>
+                        <div class="settings-tile">
+                            <span class="icon">🎟️</span>
+                            <span class="title">내 티켓</span>
+                            <span class="chevron">›</span>
+                        </div>
+                    </div>
+
+                    <div class="section-title">앱 설정</div>
+                    <div class="settings-card">
+                        <div class="settings-tile">
+                            <span class="icon">🔔</span>
+                            <span class="title">알림 설정</span>
+                            <span class="value">켜짐</span>
+                            <span class="chevron">›</span>
+                        </div>
+                        <div class="settings-divider"></div>
+                        <div class="settings-tile">
+                            <span class="icon">🎨</span>
+                            <span class="title">테마 설정</span>
+                            <span class="value">다크 모드</span>
+                            <span class="chevron">›</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="specs">
+        <h2>디자인 가이드라인 (Claude Style)</h2>
+        <table>
+            <tr>
+                <th>항목</th>
+                <th>현재 (Minglit)</th>
+                <th>변경 (Compact)</th>
+                <th>비고</th>
+            </tr>
+            <tr>
+                <td>타일 높이</td>
+                <td>56px ~ 64px</td>
+                <td><span class="tag changed">48px</span></td>
+                <td>Fixed height for consistency</td>
+            </tr>
+            <tr>
+                <td>글자 크기 (Title)</td>
+                <td>16px (bodyLarge)</td>
+                <td><span class="tag changed">14.5px (bodyMedium)</span></td>
+                <td>정보 밀도 향상</td>
+            </tr>
+            <tr>
+                <td>아이콘 크기</td>
+                <td>24px</td>
+                <td><span class="tag changed">20px</span></td>
+                <td>MinglitIconSize.small</td>
+            </tr>
+            <tr>
+                <td>섹션 구분</td>
+                <td>전체 너비 Divider</td>
+                <td><span class="tag changed">카드 그룹핑 (Radius 16)</span></td>
+                <td>그룹별 시각적 분리 강화</td>
+            </tr>
+            <tr>
+                <td>섹션 제목</td>
+                <td>없음 (Divider만)</td>
+                <td><span class="tag new">상단 소제목 (13px Bold)</span></td>
+                <td>직관적인 카테고리 인지</td>
+            </tr>
+            <tr>
+                <td>설정값 표시</td>
+                <td>없음 (진입 후 확인)</td>
+                <td><span class="tag new">우측 텍스트 (Value)</span></td>
+                <td>뎁스 이동 없이 상태 확인</td>
+            </tr>
+        </table>
+
+        <h3>코드 구현 제안 (Widget Specs)</h3>
+        <pre>
+// 1. MinglitSettingsGroup
+MinglitSettingsGroup(
+  title: '앱 설정',
+  children: [
+    MinglitSettingsTile(...),
+    MinglitSettingsTile(...),
+  ],
+)
+
+// 2. MinglitSettingsTile
+MinglitSettingsTile(
+  leadingIcon: Icons.notifications,
+  title: '알림 설정',
+  value: '켜짐',
+  onTap: () => ...,
+)
+        </pre>
+    </div>
+
+</body>
+</html>
