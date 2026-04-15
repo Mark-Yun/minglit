@@ -42,11 +42,11 @@ void main() {
         wrap(const MinglitContentLayout(sections: [])),
       );
 
-      // SizedBox.shrink()는 width/height가 모두 null인 SizedBox.
-      // (width: 0, height: 0이 아님 — 실제 크기는 RenderBox가 0으로 constraint하는 방식)
+      // Fix #1464: SizedBox.shrink()는 width/height가 모두 0.0인 SizedBox.
+      // (null이 아님 — 생성자가 width: 0.0, height: 0.0으로 명시함)
       final shrinkFinder = find.byWidgetPredicate(
         (widget) =>
-            widget is SizedBox && widget.width == null && widget.height == null,
+            widget is SizedBox && widget.width == 0.0 && widget.height == 0.0,
       );
       expect(shrinkFinder, findsOneWidget);
 
