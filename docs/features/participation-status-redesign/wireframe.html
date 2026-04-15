@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>참여 현황 UI 재설계 — PM Wireframe</title>
+<style>
+  :root {
+    --primary: #9900FF;
+    --primary-10: rgba(153, 0, 255, 0.10);
+    --primary-05: rgba(153, 0, 255, 0.05);
+    --blue: #60A5FA;
+    --blue-10: rgba(96, 165, 250, 0.10);
+    --pink: #F472B6;
+    --pink-10: rgba(244, 114, 182, 0.10);
+    --background: #FFFFFF;
+    --surface: #F9FAFB;
+    --surface-lowest: #FFFFFF;
+    --text-primary: #111827;
+    --text-secondary: #4B5563;
+    --outline-variant: #E5E7EB;
+    --on-surface-variant: #6B7280;
+    --font: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  }
+  .dark {
+    --background: #0F0F0F;
+    --surface: #212121;
+    --surface-lowest: #1A1A1A;
+    --text-primary: #FFFFFF;
+    --text-secondary: #AAAAAA;
+    --primary: #AA33FF;
+    --primary-10: rgba(170, 51, 255, 0.10);
+    --primary-05: rgba(170, 51, 255, 0.05);
+    --outline-variant: #3D3D3D;
+    --on-surface-variant: #9CA3AF;
+    --blue: #60A5FA;
+    --blue-10: rgba(96, 165, 250, 0.10);
+    --pink: #F472B6;
+    --pink-10: rgba(244, 114, 182, 0.10);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: var(--font); background: #F0F0F0; -webkit-font-smoothing: antialiased; }
+
+  .page { max-width: 440px; margin: 0 auto; padding: 16px 0; }
+  .controls {
+    display: flex; gap: 8px; padding: 12px 16px; position: sticky; top: 0;
+    background: #F0F0F0; z-index: 100; flex-wrap: wrap; align-items: center;
+  }
+  .controls button {
+    padding: 6px 14px; border-radius: 100px; border: 1px solid #E5E7EB;
+    background: white; color: #111827; font-size: 13px; font-weight: 500; cursor: pointer;
+  }
+  .controls button.active { background: #9900FF; color: white; border-color: #9900FF; }
+  .controls .label { font-size: 11px; color: #6B7280; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .phone {
+    width: 375px; margin: 16px auto; background: var(--surface); border-radius: 24px;
+    overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.12); transition: background 0.3s;
+  }
+  .phone-content { background: var(--surface); padding: 0; transition: background 0.3s; }
+
+  .section-title {
+    font-size: 16px; font-weight: 700; color: var(--text-primary); padding: 16px 16px 12px;
+  }
+
+  /* Summary Bar */
+  .summary-bar {
+    margin: 0 16px 12px; padding: 12px 16px; background: var(--primary-05);
+    border-radius: 12px; display: flex; flex-direction: column; gap: 8px;
+  }
+  .summary-bar .top { display: flex; align-items: center; justify-content: space-between; }
+  .summary-bar .label { font-size: 13px; color: var(--on-surface-variant); font-weight: 500; }
+  .summary-bar .count { font-size: 16px; font-weight: 700; color: var(--text-primary); }
+  .summary-bar .count span { color: var(--on-surface-variant); font-weight: 400; }
+  .progress-track {
+    height: 6px; background: var(--outline-variant); border-radius: 3px; overflow: hidden;
+  }
+  .progress-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+
+  /* Grid */
+  .group-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 16px 16px;
+  }
+  .group-grid.single-col { grid-template-columns: 1fr; }
+  .group-grid.three-plus { grid-template-columns: 1fr 1fr; }
+
+  /* Group Card */
+  .group-card {
+    background: var(--surface-lowest); border: 1px solid var(--outline-variant);
+    border-radius: 12px; overflow: hidden; transition: background 0.3s;
+  }
+  .group-card .color-strip { height: 3px; }
+  .group-card .card-body { padding: 12px; }
+  .group-card .group-label { font-size: 13px; font-weight: 600; margin-bottom: 8px; }
+  .group-card .big-count { font-size: 20px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; }
+  .group-card .big-count span { color: var(--on-surface-variant); font-weight: 400; font-size: 14px; }
+  .group-card .conditions { font-size: 11px; color: var(--on-surface-variant); margin-bottom: 8px; }
+
+  /* Blur List Toggle */
+  .blur-toggle {
+    display: flex; align-items: center; justify-content: center; gap: 4px;
+    padding: 8px; margin-top: 4px; border-top: 1px solid var(--outline-variant);
+    font-size: 12px; color: var(--primary); font-weight: 500; cursor: pointer;
+    user-select: none;
+  }
+  .blur-toggle:hover { background: var(--primary-05); }
+
+  /* Blur List */
+  .blur-list { padding: 0 12px 12px; display: none; }
+  .blur-list.open { display: block; }
+  .blur-item {
+    display: flex; align-items: center; gap: 8px; padding: 6px 0;
+    border-bottom: 1px solid var(--outline-variant);
+  }
+  .blur-item:last-child { border-bottom: none; }
+  .blur-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .blur-info { font-size: 13px; color: var(--text-primary); }
+  .blur-badge {
+    font-size: 11px; padding: 2px 8px; border-radius: 100px; font-weight: 500;
+    background: var(--primary-10); color: var(--primary);
+  }
+
+  /* Login CTA */
+  .login-cta {
+    margin: 0 16px 16px; padding: 16px; background: var(--primary-05);
+    border-radius: 12px; text-align: center;
+  }
+  .login-cta .icon { font-size: 20px; margin-bottom: 4px; }
+  .login-cta .text { font-size: 13px; color: var(--text-secondary); margin-bottom: 8px; }
+  .login-cta .btn {
+    display: inline-block; padding: 8px 24px; background: var(--primary); color: white;
+    border-radius: 100px; font-size: 13px; font-weight: 600; text-decoration: none;
+  }
+
+  /* Before (current) */
+  .before-card {
+    margin: 0 16px 12px; padding: 8px; background: var(--surface-lowest);
+    border: 1px solid var(--outline-variant); border-radius: 8px; position: relative;
+  }
+  .before-card .label { font-size: 14px; font-weight: 700; color: var(--primary); margin-bottom: 4px; }
+  .before-card .conditions-row { font-size: 16px; color: var(--text-primary); display: flex; gap: 24px; }
+  .before-card .count-text { font-size: 11px; color: var(--on-surface-variant); margin-top: 4px; }
+  .before-gauge {
+    position: absolute; top: 8px; right: 8px; display: flex; align-items: center; gap: 4px;
+  }
+  .before-gauge .bars { display: flex; gap: 2px; }
+  .before-gauge .bar { width: 12px; height: 20px; border-radius: 2px; border: 1px solid var(--outline-variant); }
+  .before-gauge .bar.filled { border: none; }
+  .before-gauge .ratio { font-size: 11px; color: var(--on-surface-variant); }
+  .before-gauge .people { font-size: 14px; }
+
+  .comparison-label {
+    text-align: center; padding: 20px 16px 8px; font-size: 14px; font-weight: 700;
+    color: var(--text-secondary);
+  }
+  .tag { display: inline-block; padding: 2px 10px; border-radius: 100px; font-size: 11px; font-weight: 600; margin-left: 6px; }
+  .tag-before { background: #FEE2E2; color: #DC2626; }
+  .tag-after { background: #DCFCE7; color: #16A34A; }
+
+  /* 4-group variant */
+  .group-grid.four-groups { grid-template-columns: 1fr 1fr; }
+
+  /* K-anonymity notice */
+  .k-notice {
+    padding: 8px 12px; margin-top: 4px; font-size: 11px; color: var(--on-surface-variant);
+    text-align: center; font-style: italic;
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <div class="controls">
+    <span class="label">Theme</span>
+    <button class="active" onclick="setTheme('light')">Light</button>
+    <button onclick="setTheme('dark')">Dark</button>
+    <span class="label" style="margin-left:12px">Variant</span>
+    <button class="active" onclick="showVariant('before')">Before</button>
+    <button onclick="showVariant('after-2group')">After: 2그룹</button>
+    <button onclick="showVariant('after-4group')">After: 4그룹</button>
+    <button onclick="showVariant('after-nologin')">비로그인</button>
+    <button onclick="showVariant('after-empty')">빈 상태</button>
+  </div>
+
+  <!-- ═══ BEFORE ═══ -->
+  <div class="phone light" id="phone">
+    <div class="phone-content">
+
+      <div id="variant-before">
+        <div class="comparison-label">현재 디자인 <span class="tag tag-before">Before</span></div>
+        <div class="section-title">참여 현황</div>
+        <div class="before-card">
+          <div class="label">남성</div>
+          <div class="conditions-row">
+            <span>📅 1990~2005년생</span>
+            <span>👫 남성</span>
+          </div>
+          <div class="count-text">2명 참여</div>
+          <div class="before-gauge">
+            <div class="bars">
+              <div class="bar filled" style="background:#FF9900"></div>
+              <div class="bar"></div>
+              <div class="bar"></div>
+            </div>
+            <span class="ratio">2/10</span>
+            <span class="people">👥</span>
+          </div>
+        </div>
+        <div class="before-card">
+          <div class="label">여성</div>
+          <div class="conditions-row">
+            <span>📅 1990~2005년생</span>
+            <span>👫 여성</span>
+          </div>
+          <div class="count-text">2명 참여</div>
+          <div class="before-gauge">
+            <div class="bars">
+              <div class="bar filled" style="background:#FF9900"></div>
+              <div class="bar"></div>
+              <div class="bar"></div>
+            </div>
+            <span class="ratio">2/10</span>
+            <span class="people">👥</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ AFTER: 2 Groups ═══ -->
+      <div id="variant-after-2group" style="display:none">
+        <div class="comparison-label">개선 디자인 <span class="tag tag-after">After</span></div>
+        <div class="section-title">참여 현황</div>
+
+        <div class="summary-bar">
+          <div class="top">
+            <span class="label">👥 전체 참여</span>
+            <span class="count">4 <span>/ 20</span></span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" style="width:20%; background:var(--primary)"></div>
+          </div>
+        </div>
+
+        <div class="group-grid">
+          <div class="group-card" id="card-male">
+            <div class="color-strip" style="background:#60A5FA"></div>
+            <div class="card-body">
+              <div class="group-label" style="color:#60A5FA">남성</div>
+              <div class="big-count">3 <span>/ 10</span></div>
+              <div class="conditions">📅 1997~2006년생</div>
+              <div class="progress-track">
+                <div class="progress-fill" style="width:30%; background:#60A5FA"></div>
+              </div>
+            </div>
+            <div class="blur-toggle" onclick="toggleBlur('male')">
+              참여자 정보 <span id="arrow-male">▾</span>
+            </div>
+            <div class="blur-list" id="blur-male">
+              <div class="blur-item">
+                <div class="blur-dot" style="background:#60A5FA"></div>
+                <span class="blur-info">20대 후반</span>
+                <span class="blur-badge">직장인</span>
+              </div>
+              <div class="blur-item">
+                <div class="blur-dot" style="background:#60A5FA"></div>
+                <span class="blur-info">30대 초반</span>
+              </div>
+              <div class="blur-item">
+                <div class="blur-dot" style="background:#60A5FA"></div>
+                <span class="blur-info">20대 중반</span>
+                <span class="blur-badge">대학생</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="group-card" id="card-female">
+            <div class="color-strip" style="background:#F472B6"></div>
+            <div class="card-body">
+              <div class="group-label" style="color:#F472B6">여성</div>
+              <div class="big-count">1 <span>/ 10</span></div>
+              <div class="conditions">📅 1997~2006년생</div>
+              <div class="progress-track">
+                <div class="progress-fill" style="width:10%; background:#F472B6"></div>
+              </div>
+            </div>
+            <div class="k-notice">참여자가 3명 미만이면 정보가 표시되지 않아요</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ AFTER: 4 Groups ═══ -->
+      <div id="variant-after-4group" style="display:none">
+        <div class="comparison-label">4그룹 케이스 <span class="tag tag-after">After</span></div>
+        <div class="section-title">참여 현황</div>
+
+        <div class="summary-bar">
+          <div class="top">
+            <span class="label">👥 전체 참여</span>
+            <span class="count">12 <span>/ 40</span></span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" style="width:30%; background:var(--primary)"></div>
+          </div>
+        </div>
+
+        <div class="group-grid four-groups">
+          <div class="group-card">
+            <div class="color-strip" style="background:#60A5FA"></div>
+            <div class="card-body">
+              <div class="group-label" style="color:#60A5FA">남성 20대</div>
+              <div class="big-count">4 <span>/ 10</span></div>
+              <div class="conditions">📅 1997~2006 · 👫 남성</div>
+              <div class="progress-track">
+                <div class="progress-fill" style="width:40%; background:#60A5FA"></div>
+              </div>
+            </div>
+            <div class="blur-toggle" onclick="toggleBlur('m20')">참여자 정보 <span id="arrow-m20">▾</span></div>
+            <div class="blur-list" id="blur-m20">
+              <div class="blur-item"><div class="blur-dot" style="background:#60A5FA"></div><span class="blur-info">20대 초반</span></div>
+              <div class="blur-item"><div class="blur-dot" style="background:#60A5FA"></div><span class="blur-info">20대 중반</span><span class="blur-badge">대학생</span></div>
+              <div class="blur-item"><div class="blur-dot" style="background:#60A5FA"></div><span class="blur-info">20대 후반</span><span class="blur-badge">직장인</span></div>
+              <div class="blur-item"><div class="blur-dot" style="background:#60A5FA"></div><span class="blur-info">20대 초반</span></div>
+            </div>
+          </div>
+
+          <div class="group-card">
+            <div class="color-strip" style="background:#F472B6"></div>
+            <div class="card-body">
+              <div class="group-label" style="color:#F472B6">여성 20대</div>
+              <div class="big-count">3 <span>/ 10</span></div>
+              <div class="conditions">📅 1997~2006 · 👫 여성</div>
+              <div class="progress-track">
+                <div class="progress-fill" style="width:30%; background:#F472B6"></div>
+              </div>
+            </div>
+            <div class="blur-toggle" onclick="toggleBlur('f20')">참여자 정보 <span id="arrow-f20">▾</span></div>
+            <div class="blur-list" id="blur-f20">
+              <div class="blur-item"><div class="blur-dot" style="background:#F472B6"></div><span class="blur-info">20대 후반</span><span class="blur-badge">직장인</span></div>
+              <div class="blur-item"><div class="blur-dot" style="background:#F472B6"></div><span class="blur-info">20대 중반</span></div>
+              <div class="blur-item"><div class="blur-dot" style="background:#F472B6"></div><span class="blur-info">20대 초반</span></div>
+            </div>
+          </div>
+
+          <div class="group-card">
+            <div class="color-strip" style="background:#60A5FA"></div>
+            <div class="card-body">
+              <div class="group-label" style="color:#60A5FA">남성 30대</div>
+              <div class="big-count">3 <span>/ 10</span></div>
+              <div class="conditions">📅 1987~1996 · 👫 남성</div>
+              <div class="progress-track">
+                <div class="progress-fill" style="width:30%; background:#60A5FA"></div>
+              </div>
+            </div>
+            <div class="blur-toggle" onclick="toggleBlur('m30')">참여자 정보 <span id="arrow-m30">▾</span></div>
+            <div class="blur-list" id="blur-m30">
+              <div class="blur-item"><div class="blur-dot" style="background:#60A5FA"></div><span class="blur-info">30대 초반</span><span class="blur-badge">직장인</span></div>
+              <div class="blur-item"><div class="blur-dot" style="background:#60A5FA"></div><span class="blur-info">30대 중반</span></div>
+              <div class="blur-item"><div class="blur-dot" style="background:#60A5FA"></div><span class="blur-info">30대 초반</span><span class="blur-badge">직장인</span></div>
+            </div>
+          </div>
+
+          <div class="group-card">
+            <div class="color-strip" style="background:#F472B6"></div>
+            <div class="card-body">
+              <div class="group-label" style="color:#F472B6">여성 30대</div>
+              <div class="big-count">2 <span>/ 10</span></div>
+              <div class="conditions">📅 1987~1996 · 👫 여성</div>
+              <div class="progress-track">
+                <div class="progress-fill" style="width:20%; background:#F472B6"></div>
+              </div>
+            </div>
+            <div class="k-notice">참여자가 3명 미만이면 정보가 표시되지 않아요</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ AFTER: Not Logged In ═══ -->
+      <div id="variant-after-nologin" style="display:none">
+        <div class="comparison-label">비로그인 상태 <span class="tag tag-after">After</span></div>
+        <div class="section-title">참여 현황</div>
+
+        <div class="summary-bar">
+          <div class="top">
+            <span class="label">👥 전체 참여</span>
+            <span class="count">8 <span>/ 20</span></span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" style="width:40%; background:var(--primary)"></div>
+          </div>
+        </div>
+
+        <div class="group-grid">
+          <div class="group-card">
+            <div class="color-strip" style="background:#60A5FA"></div>
+            <div class="card-body">
+              <div class="group-label" style="color:#60A5FA">남성</div>
+              <div class="big-count">5 <span>/ 10</span></div>
+              <div class="conditions">📅 1997~2006년생</div>
+              <div class="progress-track">
+                <div class="progress-fill" style="width:50%; background:#60A5FA"></div>
+              </div>
+            </div>
+          </div>
+          <div class="group-card">
+            <div class="color-strip" style="background:#F472B6"></div>
+            <div class="card-body">
+              <div class="group-label" style="color:#F472B6">여성</div>
+              <div class="big-count">3 <span>/ 10</span></div>
+              <div class="conditions">📅 1997~2006년생</div>
+              <div class="progress-track">
+                <div class="progress-fill" style="width:30%; background:#F472B6"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="login-cta">
+          <div class="icon">🔒</div>
+          <div class="text">로그인하면 참여자 정보를 볼 수 있어요</div>
+          <a href="#" class="btn">로그인하기</a>
+        </div>
+      </div>
+
+      <!-- ═══ AFTER: Empty ═══ -->
+      <div id="variant-after-empty" style="display:none">
+        <div class="comparison-label">빈 상태 <span class="tag tag-after">After</span></div>
+        <div class="section-title">참여 현황</div>
+
+        <div class="summary-bar">
+          <div class="top">
+            <span class="label">👥 전체 참여</span>
+            <span class="count">0 <span>/ 20</span></span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" style="width:0%; background:var(--primary)"></div>
+          </div>
+        </div>
+
+        <div class="group-grid">
+          <div class="group-card">
+            <div class="color-strip" style="background:#60A5FA"></div>
+            <div class="card-body">
+              <div class="group-label" style="color:#60A5FA">남성</div>
+              <div class="big-count">0 <span>/ 10</span></div>
+              <div class="conditions">📅 1997~2006년생</div>
+              <div class="progress-track">
+                <div class="progress-fill" style="width:0%; background:#60A5FA"></div>
+              </div>
+            </div>
+          </div>
+          <div class="group-card">
+            <div class="color-strip" style="background:#F472B6"></div>
+            <div class="card-body">
+              <div class="group-label" style="color:#F472B6">여성</div>
+              <div class="big-count">0 <span>/ 10</span></div>
+              <div class="conditions">📅 1997~2006년생</div>
+              <div class="progress-track">
+                <div class="progress-fill" style="width:0%; background:#F472B6"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="text-align:center; padding: 16px; color: var(--on-surface-variant); font-size: 13px;">
+          아직 참여자가 없어요. 첫 번째 참여자가 되어보세요!
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+function setTheme(theme) {
+  const phone = document.getElementById('phone');
+  phone.className = 'phone ' + theme;
+  document.querySelectorAll('.controls button').forEach((btn, i) => {
+    if (i < 2) btn.classList.toggle('active', btn.textContent.toLowerCase() === theme);
+  });
+}
+
+function showVariant(id) {
+  document.querySelectorAll('[id^="variant-"]').forEach(el => el.style.display = 'none');
+  document.getElementById('variant-' + id).style.display = 'block';
+  const btns = document.querySelectorAll('.controls button');
+  for (let i = 2; i < btns.length; i++) {
+    const variantId = btns[i].getAttribute('onclick').match(/'(.+)'/)[1];
+    btns[i].classList.toggle('active', variantId === id);
+  }
+}
+
+function toggleBlur(group) {
+  const list = document.getElementById('blur-' + group);
+  const arrow = document.getElementById('arrow-' + group);
+  if (list.classList.contains('open')) {
+    list.classList.remove('open');
+    arrow.textContent = '▾';
+  } else {
+    list.classList.add('open');
+    arrow.textContent = '▴';
+  }
+}
+</script>
+
+</body>
+</html>
