@@ -3,7 +3,7 @@
 //   - Real device/emulator + patrol_cli
 //   - PG sandbox credentials (see docs/features/patrol-introduction/)
 //
-// Run: cd apps/app_user && patrol test patrol_test/payment_pg_test.dart
+// Run: cd apps/app_user && patrol test integration_test/payment_pg_test.dart
 
 import 'package:patrol/patrol.dart';
 
