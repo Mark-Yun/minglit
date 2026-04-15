@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>참여 현황 UI 재설계 — Wireframe</title>
+<style>
+  /* ─── Minglit Design Tokens ─── */
+  :root {
+    /* Colors — Light */
+    --primary: #9900FF;
+    --primary-10: rgba(153, 0, 255, 0.10);
+    --primary-05: rgba(153, 0, 255, 0.05);
+    --secondary: #FF9900;
+    --secondary-10: rgba(255, 153, 0, 0.10);
+    --tertiary: #48C9B0;
+    --tertiary-10: rgba(72, 201, 176, 0.10);
+    --background: #FFFFFF;
+    --surface: #F9FAFB;
+    --text-primary: #111827;
+    --text-secondary: #4B5563;
+    --outline-variant: #E5E7EB;
+    --on-surface-variant: #6B7280;
+    --error: #EF4444;
+    --success: #22C55E;
+
+    /* Spacing */
+    --sp-xxs: 2px;
+    --sp-xs: 4px;
+    --sp-xs2: 6px;
+    --sp-sm: 8px;
+    --sp-12: 12px;
+    --sp-md: 16px;
+    --sp-lg: 24px;
+    --sp-xl: 32px;
+    --sp-section: 40px;
+
+    /* Radius */
+    --r-small: 8px;
+    --r-button: 12px;
+    --r-card: 16px;
+    --r-chip: 100px;
+
+    /* Font */
+    --font: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  }
+
+  /* Dark mode tokens */
+  .dark {
+    --background: #0F0F0F;
+    --surface: #212121;
+    --text-primary: #FFFFFF;
+    --text-secondary: #AAAAAA;
+    --primary: #AA33FF;
+    --primary-10: rgba(170, 51, 255, 0.10);
+    --primary-05: rgba(170, 51, 255, 0.05);
+    --outline-variant: #3D3D3D;
+    --on-surface-variant: #9CA3AF;
+    --surface-container-lowest: #1A1A1A;
+    --surface-container-highest: #2D2D2D;
+  }
+
+  .light {
+    --surface-container-lowest: #FFFFFF;
+    --surface-container-highest: #F3F4F6;
+  }
+
+  /* ─── Base ─── */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: var(--font);
+    background: #F5F5F5;
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ─── Layout ─── */
+  .page {
+    max-width: 420px;
+    margin: 0 auto;
+    padding: 20px 0;
+  }
+  .controls {
+    display: flex;
+    gap: 8px;
+    padding: 12px 16px;
+    position: sticky;
+    top: 0;
+    background: #F5F5F5;
+    z-index: 100;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .controls button {
+    padding: 6px 14px;
+    border-radius: var(--r-chip);
+    border: 1px solid var(--outline-variant);
+    background: var(--background);
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .controls button.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+  }
+  .controls .label {
+    font-size: 11px;
+    color: var(--text-secondary);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* ─── Phone Frame ─── */
+  .phone {
+    width: 375px;
+    margin: 16px auto;
+    background: var(--surface);
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+    transition: background 0.3s;
+  }
+  .phone-content {
+    background: var(--surface);
+    transition: background 0.3s;
+  }
+
+  /* ─── Section Title ─── */
+  .section-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+    padding: var(--sp-md);
+    padding-bottom: var(--sp-12);
+  }
+
+  /* ─── Comparison Headers ─── */
+  .comparison-header {
+    text-align: center;
+    padding: 24px 16px 8px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    letter-spacing: -0.2px;
+  }
+  .comparison-header .tag {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: var(--r-chip);
+    font-size: 11px;
+    font-weight: 600;
+    margin-left: 6px;
+  }
+  .tag-before { background: #FEE2E2; color: #DC2626; }
+  .tag-after { background: #DCFCE7; color: #16A34A; }
+
+  /* ═══════════════════════════════════════════
+     BEFORE — Current Design
+     ═══════════════════════════════════════════ */
+  .before-card {
+    margin: 0 var(--sp-md) var(--sp-md);
+    padding: var(--sp-sm);
+    background: var(--surface-container-lowest);
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--r-small);
+    position: relative;
+  }
+  .before-card .group-label {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: var(--sp-xs);
+  }
+  .before-card .condition-row {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-lg);
+    font-size: 16px;
+    color: var(--text-primary);
+  }
+  .before-card .condition-row .icon {
+    color: var(--on-surface-variant);
+    font-size: 14px;
+    margin-right: var(--sp-xs2);
+  }
+  .before-card .count {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--on-surface-variant);
+    margin-top: var(--sp-xs);
+  }
+  .before-gauge {
+    position: absolute;
+    top: var(--sp-sm);
+    right: var(--sp-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--sp-xxs);
+    background: var(--surface-container-highest);
+    padding: 2px 6px;
+    border-radius: var(--r-chip);
+  }
+  .gauge-segment {
+    width: 10px;
+    height: 8px;
+    border-radius: 2px;
+    background: var(--outline-variant);
+  }
+  .gauge-segment.filled-low { background: var(--secondary); }
+  .gauge-segment.filled-mid { background: var(--tertiary); }
+  .gauge-segment.filled-high { background: var(--primary); }
+  .before-gauge .text {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-left: 2px;
+  }
+
+  /* ═══════════════════════════════════════════
+     AFTER — Redesigned
+     ═══════════════════════════════════════════ */
+
+  /* --- Option A: Horizontal Side-by-Side Cards --- */
+  .after-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--sp-12);
+    padding: 0 var(--sp-md);
+    margin-bottom: var(--sp-md);
+  }
+  .after-card {
+    background: var(--surface-container-lowest);
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--r-card);
+    padding: var(--sp-md);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.2s;
+  }
+  .after-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+  .after-card.male::before { background: #60A5FA; }
+  .after-card.female::before { background: #F472B6; }
+  .after-card.neutral::before { background: var(--primary); }
+
+  .after-card .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--sp-12);
+  }
+  .after-card .group-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  .after-card .group-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+  .after-card.male .group-icon { background: rgba(96, 165, 250, 0.12); }
+  .after-card.female .group-icon { background: rgba(244, 114, 182, 0.12); }
+  .after-card.neutral .group-icon { background: var(--primary-10); }
+
+  /* Progress bar */
+  .progress-wrap {
+    margin-bottom: var(--sp-sm);
+  }
+  .progress-bar {
+    height: 6px;
+    border-radius: 3px;
+    background: var(--outline-variant);
+    overflow: hidden;
+    margin-bottom: var(--sp-xs);
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .after-card.male .progress-fill { background: #60A5FA; }
+  .after-card.female .progress-fill { background: #F472B6; }
+  .after-card.neutral .progress-fill { background: var(--primary); }
+
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .progress-count {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
+    line-height: 1;
+  }
+  .progress-count span {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--on-surface-variant);
+  }
+  .progress-max {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--on-surface-variant);
+  }
+
+  /* Condition chips */
+  .condition-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-xs);
+    margin-top: var(--sp-sm);
+  }
+  .condition-chip {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--on-surface-variant);
+    background: var(--surface);
+    padding: 2px 8px;
+    border-radius: var(--r-chip);
+    white-space: nowrap;
+  }
+
+  /* --- Option B: Full-width stacked with prominent progress --- */
+  .after-stack {
+    padding: 0 var(--sp-md);
+  }
+  .stack-card {
+    background: var(--surface-container-lowest);
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--r-card);
+    padding: var(--sp-md);
+    margin-bottom: var(--sp-12);
+    position: relative;
+  }
+  .stack-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--sp-12);
+  }
+  .stack-header-left {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-sm);
+  }
+  .stack-badge {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--r-small);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    font-weight: 700;
+  }
+  .stack-badge.male { background: rgba(96, 165, 250, 0.12); color: #3B82F6; }
+  .stack-badge.female { background: rgba(244, 114, 182, 0.12); color: #EC4899; }
+  .stack-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  .stack-subtitle {
+    font-size: 12px;
+    color: var(--on-surface-variant);
+    margin-top: 1px;
+  }
+  .stack-count-large {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1;
+    letter-spacing: -0.5px;
+  }
+  .stack-count-large small {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--on-surface-variant);
+  }
+  .stack-progress {
+    height: 8px;
+    border-radius: 4px;
+    background: var(--outline-variant);
+    overflow: hidden;
+  }
+  .stack-progress .fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .stack-progress .fill.male { background: linear-gradient(90deg, #60A5FA, #3B82F6); }
+  .stack-progress .fill.female { background: linear-gradient(90deg, #F472B6, #EC4899); }
+
+  /* --- Collapsible Participant Blur List --- */
+  .participant-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--sp-12) 0 0;
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .participant-toggle .toggle-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--on-surface-variant);
+  }
+  .participant-toggle .toggle-arrow {
+    font-size: 16px;
+    color: var(--on-surface-variant);
+    transition: transform 0.25s ease;
+  }
+  .participant-toggle.open .toggle-arrow {
+    transform: rotate(180deg);
+  }
+
+  .participant-list {
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s;
+    opacity: 0;
+  }
+  .participant-list.open {
+    max-height: 500px;
+    opacity: 1;
+  }
+  .participant-item {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-12);
+    padding: var(--sp-sm) 0;
+    border-bottom: 1px solid var(--outline-variant);
+  }
+  .participant-item:last-child {
+    border-bottom: none;
+  }
+  .blur-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .blur-avatar::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle, transparent 30%, var(--surface) 100%);
+    backdrop-filter: blur(2px);
+  }
+  .participant-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .participant-age {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .participant-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--primary);
+    background: var(--primary-05);
+    padding: 1px 8px;
+    border-radius: var(--r-chip);
+    margin-top: 2px;
+  }
+  .participant-badge .badge-icon {
+    font-size: 10px;
+  }
+
+  /* --- CTA for non-logged-in --- */
+  .login-cta {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-sm);
+    padding: var(--sp-12) var(--sp-md);
+    margin-top: var(--sp-sm);
+    background: var(--primary-05);
+    border-radius: var(--r-button);
+    cursor: pointer;
+  }
+  .login-cta .cta-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--primary-10);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .login-cta .cta-text {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--primary);
+  }
+  .login-cta .cta-arrow {
+    margin-left: auto;
+    font-size: 14px;
+    color: var(--primary);
+  }
+
+  /* --- Summary bar (total count) --- */
+  .summary-bar {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-sm);
+    padding: var(--sp-12) var(--sp-md);
+    margin: 0 var(--sp-md) var(--sp-12);
+    background: var(--primary-05);
+    border-radius: var(--r-button);
+  }
+  .summary-bar .summary-icon {
+    font-size: 18px;
+  }
+  .summary-bar .summary-text {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .summary-bar .summary-count {
+    margin-left: auto;
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--primary);
+  }
+
+  /* ═══════════════════════════════════════════
+     Multi-group (4 groups)
+     ═══════════════════════════════════════════ */
+  .multi-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--sp-sm);
+    padding: 0 var(--sp-md);
+    margin-bottom: var(--sp-md);
+  }
+  .multi-card {
+    background: var(--surface-container-lowest);
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--r-button);
+    padding: var(--sp-12);
+    position: relative;
+    overflow: hidden;
+  }
+  .multi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+  .multi-card.m20::before { background: #60A5FA; }
+  .multi-card.f20::before { background: #F472B6; }
+  .multi-card.m30::before { background: #818CF8; }
+  .multi-card.f30::before { background: #FB923C; }
+  .multi-card .mc-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: var(--sp-xs);
+  }
+  .multi-card .mc-count {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1;
+  }
+  .multi-card .mc-count small {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--on-surface-variant);
+  }
+  .multi-card .mc-bar {
+    height: 4px;
+    border-radius: 2px;
+    background: var(--outline-variant);
+    margin-top: var(--sp-sm);
+    overflow: hidden;
+  }
+  .multi-card .mc-bar .mc-fill {
+    height: 100%;
+    border-radius: 2px;
+  }
+  .multi-card.m20 .mc-fill { background: #60A5FA; }
+  .multi-card.f20 .mc-fill { background: #F472B6; }
+  .multi-card.m30 .mc-fill { background: #818CF8; }
+  .multi-card.f30 .mc-fill { background: #FB923C; }
+  .multi-card .mc-detail {
+    font-size: 11px;
+    color: var(--on-surface-variant);
+    margin-top: var(--sp-xs);
+  }
+
+  /* ─── Hidden states ─── */
+  .variant { display: none; }
+  .variant.active { display: block; }
+
+  /* ─── Annotations ─── */
+  .annotation {
+    margin: 8px 16px;
+    padding: 10px 14px;
+    background: #FFF8E1;
+    border-left: 3px solid #FF9900;
+    border-radius: 0 8px 8px 0;
+    font-size: 12px;
+    line-height: 1.6;
+    color: #78350F;
+  }
+  .annotation strong { font-weight: 700; }
+
+  .dark .annotation {
+    background: #342A10;
+    color: #FCD34D;
+    border-color: #FF9900;
+  }
+
+  /* Separator */
+  .section-sep {
+    height: 8px;
+    background: var(--surface);
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <!-- ─── Controls ─── -->
+  <div class="controls">
+    <span class="label">Theme</span>
+    <button id="btn-light" class="active" onclick="setTheme('light')">Light</button>
+    <button id="btn-dark" onclick="setTheme('dark')">Dark</button>
+    <span class="label" style="margin-left:8px">Variant</span>
+    <button class="var-btn active" data-var="optionA" onclick="setVariant('optionA')">A: 2열 그리드</button>
+    <button class="var-btn" data-var="optionB" onclick="setVariant('optionB')">B: 풀와이드</button>
+    <button class="var-btn" data-var="multi" onclick="setVariant('multi')">C: 4그룹</button>
+    <button class="var-btn" data-var="loggedout" onclick="setVariant('loggedout')">D: 비로그인</button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       BEFORE (현재 디자인)
+       ═══════════════════════════════════════════ -->
+  <div class="comparison-header">현재 디자인 <span class="tag tag-before">Before</span></div>
+  <div class="phone light" id="phone-before">
+    <div class="phone-content">
+      <div class="section-title">참여 현황</div>
+
+      <div class="before-card">
+        <div class="group-label">남성</div>
+        <div class="condition-row">
+          <span><span class="icon">🎂</span> 1990~2005년생</span>
+          <span><span class="icon">👫</span> 남성</span>
+        </div>
+        <div class="count">2명 참여</div>
+        <div class="before-gauge">
+          <div class="gauge-segment filled-low"></div>
+          <div class="gauge-segment"></div>
+          <div class="gauge-segment"></div>
+          <span class="text">2/10 👥</span>
+        </div>
+      </div>
+
+      <div class="before-card">
+        <div class="group-label">여성</div>
+        <div class="condition-row">
+          <span><span class="icon">🎂</span> 1990~2005년생</span>
+          <span><span class="icon">👫</span> 여성</span>
+        </div>
+        <div class="count">2명 참여</div>
+        <div class="before-gauge">
+          <div class="gauge-segment filled-low"></div>
+          <div class="gauge-segment"></div>
+          <div class="gauge-segment"></div>
+          <span class="text">2/10 👥</span>
+        </div>
+      </div>
+
+      <div style="height: 16px"></div>
+    </div>
+  </div>
+
+  <div class="annotation">
+    <strong>문제점:</strong><br>
+    ① 세로 스택으로 공간 낭비 — 카드 높이 대비 정보 밀도 낮음<br>
+    ② 게이지가 작고(3칸 배터리) 직관적이지 않음<br>
+    ③ "2명 참여" 텍스트와 게이지 "2/10"이 중복 표시<br>
+    ④ 다크모드에서 밋밋한 카드 (테두리만 있고 배경이 비어보임)<br>
+    ⑤ 전체 참여 인원 합계를 한눈에 볼 수 없음
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       AFTER (재설계)
+       ═══════════════════════════════════════════ -->
+  <div class="comparison-header">재설계 <span class="tag tag-after">After</span></div>
+  <div class="phone light" id="phone-after">
+    <div class="phone-content">
+      <div class="section-title">참여 현황</div>
+
+      <!-- Summary bar -->
+      <div class="summary-bar">
+        <span class="summary-icon">👥</span>
+        <span class="summary-text">전체 참여</span>
+        <span class="summary-count">4 / 20</span>
+      </div>
+
+      <!-- ─── Option A: 2열 그리드 (추천) ─── -->
+      <div class="variant active" id="optionA">
+        <div class="after-grid">
+          <!-- 남성 카드 -->
+          <div class="after-card male">
+            <div class="card-header">
+              <span class="group-name">남성</span>
+              <div class="group-icon">♂</div>
+            </div>
+            <div class="progress-wrap">
+              <div class="progress-label">
+                <span class="progress-count">2 <span>/ 10</span></span>
+              </div>
+              <div style="height:6px"></div>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width:20%"></div>
+              </div>
+            </div>
+            <div class="condition-chips">
+              <span class="condition-chip">20~35세</span>
+              <span class="condition-chip">남성</span>
+            </div>
+            <!-- Collapsible participants -->
+            <div class="participant-toggle" onclick="toggleList(this)">
+              <span class="toggle-label">참여자 정보</span>
+              <span class="toggle-arrow">▾</span>
+            </div>
+            <div class="participant-list">
+              <div class="participant-item">
+                <div class="blur-avatar">🔵</div>
+                <div class="participant-info">
+                  <div class="participant-age">30대 초반</div>
+                  <div class="participant-badge"><span class="badge-icon">✓</span> 직장인</div>
+                </div>
+              </div>
+              <div class="participant-item">
+                <div class="blur-avatar">🔵</div>
+                <div class="participant-info">
+                  <div class="participant-age">20대 후반</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 여성 카드 -->
+          <div class="after-card female">
+            <div class="card-header">
+              <span class="group-name">여성</span>
+              <div class="group-icon">♀</div>
+            </div>
+            <div class="progress-wrap">
+              <div class="progress-label">
+                <span class="progress-count">2 <span>/ 10</span></span>
+              </div>
+              <div style="height:6px"></div>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width:20%"></div>
+              </div>
+            </div>
+            <div class="condition-chips">
+              <span class="condition-chip">20~35세</span>
+              <span class="condition-chip">여성</span>
+            </div>
+            <div class="participant-toggle" onclick="toggleList(this)">
+              <span class="toggle-label">참여자 정보</span>
+              <span class="toggle-arrow">▾</span>
+            </div>
+            <div class="participant-list">
+              <div class="participant-item">
+                <div class="blur-avatar">🟣</div>
+                <div class="participant-info">
+                  <div class="participant-age">20대 중반</div>
+                  <div class="participant-badge"><span class="badge-icon">✓</span> 대학생</div>
+                </div>
+              </div>
+              <div class="participant-item">
+                <div class="blur-avatar">🟣</div>
+                <div class="participant-info">
+                  <div class="participant-age">30대 초반</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── Option B: 풀와이드 스택 ─── -->
+      <div class="variant" id="optionB">
+        <div class="after-stack">
+          <div class="stack-card">
+            <div class="stack-header">
+              <div class="stack-header-left">
+                <div class="stack-badge male">♂</div>
+                <div>
+                  <div class="stack-title">남성</div>
+                  <div class="stack-subtitle">20~35세</div>
+                </div>
+              </div>
+              <div class="stack-count-large">2 <small>/ 10</small></div>
+            </div>
+            <div class="stack-progress">
+              <div class="fill male" style="width:20%"></div>
+            </div>
+            <div class="participant-toggle" onclick="toggleList(this)">
+              <span class="toggle-label">참여자 정보 보기</span>
+              <span class="toggle-arrow">▾</span>
+            </div>
+            <div class="participant-list">
+              <div class="participant-item">
+                <div class="blur-avatar">🔵</div>
+                <div class="participant-info">
+                  <div class="participant-age">30대 초반</div>
+                  <div class="participant-badge"><span class="badge-icon">✓</span> 직장인</div>
+                </div>
+              </div>
+              <div class="participant-item">
+                <div class="blur-avatar">🔵</div>
+                <div class="participant-info">
+                  <div class="participant-age">20대 후반</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="stack-card">
+            <div class="stack-header">
+              <div class="stack-header-left">
+                <div class="stack-badge female">♀</div>
+                <div>
+                  <div class="stack-title">여성</div>
+                  <div class="stack-subtitle">20~35세</div>
+                </div>
+              </div>
+              <div class="stack-count-large">2 <small>/ 10</small></div>
+            </div>
+            <div class="stack-progress">
+              <div class="fill female" style="width:20%"></div>
+            </div>
+            <div class="participant-toggle" onclick="toggleList(this)">
+              <span class="toggle-label">참여자 정보 보기</span>
+              <span class="toggle-arrow">▾</span>
+            </div>
+            <div class="participant-list">
+              <div class="participant-item">
+                <div class="blur-avatar">🟣</div>
+                <div class="participant-info">
+                  <div class="participant-age">20대 중반</div>
+                  <div class="participant-badge"><span class="badge-icon">✓</span> 대학생</div>
+                </div>
+              </div>
+              <div class="participant-item">
+                <div class="blur-avatar">🟣</div>
+                <div class="participant-info">
+                  <div class="participant-age">30대 초반</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── Option C: 4그룹 케이스 ─── -->
+      <div class="variant" id="multi">
+        <div class="multi-grid">
+          <div class="multi-card m20">
+            <div class="mc-label">남성 20대</div>
+            <div class="mc-count">3 <small>/ 8</small></div>
+            <div class="mc-bar"><div class="mc-fill" style="width:37.5%"></div></div>
+            <div class="mc-detail">1995~2005년생</div>
+          </div>
+          <div class="multi-card f20">
+            <div class="mc-label">여성 20대</div>
+            <div class="mc-count">5 <small>/ 8</small></div>
+            <div class="mc-bar"><div class="mc-fill" style="width:62.5%"></div></div>
+            <div class="mc-detail">1995~2005년생</div>
+          </div>
+          <div class="multi-card m30">
+            <div class="mc-label">남성 30대</div>
+            <div class="mc-count">2 <small>/ 6</small></div>
+            <div class="mc-bar"><div class="mc-fill" style="width:33.3%"></div></div>
+            <div class="mc-detail">1985~1995년생</div>
+          </div>
+          <div class="multi-card f30">
+            <div class="mc-label">여성 30대</div>
+            <div class="mc-count">4 <small>/ 6</small></div>
+            <div class="mc-bar"><div class="mc-fill" style="width:66.6%"></div></div>
+            <div class="mc-detail">1985~1995년생</div>
+          </div>
+        </div>
+        <div class="annotation">
+          <strong>4그룹 케이스:</strong> 2x2 그리드 유지. 5그룹 이상이면 2열 그리드가 자연스럽게 확장 (마지막 행 1칸).
+          그룹마다 고유 색상 strip으로 시각적 구분.
+        </div>
+      </div>
+
+      <!-- ─── Option D: 비로그인 상태 ─── -->
+      <div class="variant" id="loggedout">
+        <div class="after-grid">
+          <div class="after-card male">
+            <div class="card-header">
+              <span class="group-name">남성</span>
+              <div class="group-icon">♂</div>
+            </div>
+            <div class="progress-wrap">
+              <div class="progress-label">
+                <span class="progress-count">2 <span>/ 10</span></span>
+              </div>
+              <div style="height:6px"></div>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width:20%"></div>
+              </div>
+            </div>
+            <div class="condition-chips">
+              <span class="condition-chip">20~35세</span>
+              <span class="condition-chip">남성</span>
+            </div>
+          </div>
+          <div class="after-card female">
+            <div class="card-header">
+              <span class="group-name">여성</span>
+              <div class="group-icon">♀</div>
+            </div>
+            <div class="progress-wrap">
+              <div class="progress-label">
+                <span class="progress-count">2 <span>/ 10</span></span>
+              </div>
+              <div style="height:6px"></div>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width:20%"></div>
+              </div>
+            </div>
+            <div class="condition-chips">
+              <span class="condition-chip">20~35세</span>
+              <span class="condition-chip">여성</span>
+            </div>
+          </div>
+        </div>
+        <div style="padding: 0 16px;">
+          <div class="login-cta">
+            <div class="cta-icon">🔒</div>
+            <span class="cta-text">로그인하면 참여자 정보를 볼 수 있어요</span>
+            <span class="cta-arrow">→</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="height: 16px"></div>
+    </div>
+  </div>
+
+  <!-- ─── Design Decisions ─── -->
+  <div class="annotation">
+    <strong>디자인 결정 요약:</strong><br><br>
+    <strong>1. 레이아웃:</strong> 2열 그리드(Option A)를 추천. 공간 효율 2배, 한눈에 비교 가능. 그룹 3개 이상이면 자연스럽게 확장.<br><br>
+    <strong>2. 프로그레스 바:</strong> 3칸 배터리 게이지 → 연속 프로그레스 바로 변경. 정확한 비율을 직관적으로 전달. 그룹별 고유 색상(남=#60A5FA, 여=#F472B6)으로 구분.<br><br>
+    <strong>3. 숫자 강조:</strong> "2명 참여" 텍스트 + 게이지 중복 → 큰 숫자(20px bold) 하나로 통합. 정보 밀도↑, 시각적 위계 명확.<br><br>
+    <strong>4. 전체 합계:</strong> summary bar로 전체 참여 현황을 섹션 상단에 배치. 그룹별 합계와 전체 합계를 모두 볼 수 있음.<br><br>
+    <strong>5. 참여자 blur 리스트:</strong> 기본 접힌 상태. 탭으로 펼침. 나이대 범위(5세 단위X → 초반/중반/후반) + 인증뱃지만 표시. k-anonymity 고려.<br><br>
+    <strong>6. 비로그인:</strong> 참여자 리스트 토글 숨기고 CTA로 로그인 유도.<br><br>
+    <strong>7. 다크모드:</strong> 카드 배경 #1A1A1A, top color strip으로 밋밋함 해소.
+  </div>
+
+  <div class="annotation" style="border-color: var(--primary); background: #F3E8FF;">
+    <strong>PM에게 확인 필요:</strong><br>
+    ① 나이대 표시 범위: "20대 초반" (20~23), "20대 중반" (24~26), "20대 후반" (27~29) — 이 분류 기준으로 진행해도 되는지?<br>
+    ② <code>show_participant_list</code> 메타데이터가 false일 때 blur 리스트 전체를 숨길지, count만 보일지?<br>
+    ③ 인증뱃지 없는 참여자가 대다수일 때 — 나이대만으로 blur 리스트의 가치가 충분한지?<br>
+    ④ 그룹 색상: 남=#60A5FA(Blue), 여=#F472B6(Pink) 외 성별 무관 그룹은 primary(#9900FF) 사용 — 색상 정책 확인
+  </div>
+</div>
+
+<script>
+  function setTheme(theme) {
+    document.querySelectorAll('.phone').forEach(p => {
+      p.classList.remove('light', 'dark');
+      p.classList.add(theme);
+    });
+    document.querySelectorAll('.phone-content').forEach(c => {
+      c.style.background = theme === 'dark' ? '#0F0F0F' : '#F9FAFB';
+    });
+    document.getElementById('btn-light').classList.toggle('active', theme === 'light');
+    document.getElementById('btn-dark').classList.toggle('active', theme === 'dark');
+  }
+
+  function setVariant(id) {
+    document.querySelectorAll('.variant').forEach(v => v.classList.remove('active'));
+    document.getElementById(id)?.classList.add('active');
+    document.querySelectorAll('.var-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.var === id);
+    });
+  }
+
+  function toggleList(el) {
+    el.classList.toggle('open');
+    const list = el.nextElementSibling;
+    list.classList.toggle('open');
+  }
+</script>
+
+</body>
+</html>
