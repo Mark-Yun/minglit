@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Settings Redesign Wireframe — Minglit #1475</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: var(--font);
+    background: #f3f4f6;
+    color: #111827;
+    min-height: 100vh;
+  }
+
+  /* ── Controls bar ── */
+  .controls {
+    position: sticky; top: 0; z-index: 100;
+    background: #fff; border-bottom: 1px solid #e5e7eb;
+    padding: 12px 24px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap;
+  }
+  .controls h1 { font-size: 16px; font-weight: 700; margin-right: auto; }
+  .tab-group { display: flex; gap: 0; border: 1px solid #d1d5db; border-radius: 8px; overflow: hidden; }
+  .tab-group button {
+    font-family: var(--font); font-size: 13px; font-weight: 500;
+    padding: 6px 16px; border: none; cursor: pointer;
+    background: #fff; color: #4b5563; transition: all .15s;
+  }
+  .tab-group button.active { background: #9900FF; color: #fff; }
+  .tab-group button:not(:last-child) { border-right: 1px solid #d1d5db; }
+
+  /* ── Frame container ── */
+  .frames { display: flex; gap: 32px; justify-content: center; padding: 32px 24px; flex-wrap: wrap; }
+
+  /* ── Phone frame ── */
+  .phone {
+    width: 375px; min-height: 720px; border-radius: 32px;
+    overflow: hidden; position: relative;
+    box-shadow: 0 8px 32px rgba(0,0,0,.12), 0 2px 8px rgba(0,0,0,.08);
+    flex-shrink: 0;
+  }
+  .phone-label {
+    text-align: center; font-size: 13px; font-weight: 600; color: #6b7280;
+    margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+
+  /* ── Theme colors ── */
+  .phone.light {
+    --page-bg: #FFFFFF;
+    --card-bg: #F5F3F0;
+    --text-primary: #111827;
+    --text-secondary: #4B5563;
+    --divider: #E8E5E0;
+    --outline-variant: #E0DDD8;
+    --error: #EF4444;
+    --appbar-bg: #FFFFFF;
+    --switch-track: #9900FF;
+  }
+  .phone.dark {
+    --page-bg: #0F0F0F;
+    --card-bg: #2A2A2A;
+    --text-primary: #FFFFFF;
+    --text-secondary: #AAAAAA;
+    --divider: #3D3D3D;
+    --outline-variant: #404040;
+    --error: #EF4444;
+    --appbar-bg: #0F0F0F;
+    --switch-track: #AA33FF;
+  }
+
+  .phone-screen {
+    background: var(--page-bg);
+    min-height: 720px;
+    overflow-y: auto;
+  }
+
+  /* ── AppBar ── */
+  .appbar {
+    height: 56px; display: flex; align-items: center; padding: 0 16px;
+    background: var(--appbar-bg);
+    font-size: 18px; font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  /* ── Settings Group ── */
+  .settings-group {
+    margin: 0 16px; border-radius: 16px;
+    background: var(--card-bg);
+    overflow: hidden;
+  }
+  .settings-group + .section-header { margin-top: 24px; }
+  .settings-group:first-child { margin-top: 0; }
+
+  .section-header {
+    font-size: 12px; font-weight: 500; color: var(--text-secondary);
+    text-transform: uppercase; letter-spacing: 0.3px;
+    padding: 0 16px; margin-bottom: 8px;
+  }
+
+  .group-gap { height: 24px; }
+
+  /* ── Settings Tile (redesigned) ── */
+  .settings-tile {
+    display: flex; align-items: center;
+    height: 48px; padding: 0 16px;
+    cursor: pointer; position: relative;
+    transition: background .12s;
+  }
+  .settings-tile:hover { background: rgba(0,0,0,.04); }
+  .dark .settings-tile:hover { background: rgba(255,255,255,.06); }
+
+  .settings-tile .tile-icon {
+    width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;
+    color: var(--text-secondary); font-size: 20px; flex-shrink: 0;
+  }
+  .settings-tile .tile-content {
+    flex: 1; margin-left: 16px; min-width: 0;
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  .settings-tile .tile-title {
+    font-size: 16px; font-weight: 400; color: var(--text-primary);
+    line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .settings-tile .tile-subtitle {
+    font-size: 13px; font-weight: 400; color: var(--text-secondary);
+    line-height: 1.2; margin-top: 1px;
+  }
+  .settings-tile .tile-trailing {
+    color: var(--text-secondary); font-size: 20px; flex-shrink: 0; margin-left: 8px;
+    display: flex; align-items: center;
+  }
+  .settings-tile .tile-trailing .value-text {
+    font-size: 13px; font-weight: 400; color: var(--text-secondary);
+  }
+  .settings-tile.destructive .tile-icon,
+  .settings-tile.destructive .tile-title { color: var(--error); }
+  .settings-tile.no-tap { cursor: default; }
+  .settings-tile.no-tap:hover { background: transparent; }
+
+  .tile-divider {
+    height: 0.5px; background: var(--outline-variant);
+    margin-left: 52px;
+  }
+
+  /* ── Profile tile (redesigned) ── */
+  .profile-tile {
+    display: flex; align-items: center;
+    padding: 16px; cursor: pointer;
+    transition: background .12s;
+  }
+  .profile-tile:hover { background: rgba(0,0,0,.04); }
+  .dark .profile-tile:hover { background: rgba(255,255,255,.06); }
+
+  .profile-avatar {
+    width: 48px; height: 48px; border-radius: 50%;
+    background: linear-gradient(135deg, #9900FF 0%, #CC66FF 100%);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 22px; flex-shrink: 0;
+  }
+  .profile-info { flex: 1; margin-left: 16px; }
+  .profile-name { font-size: 16px; font-weight: 700; color: var(--text-primary); }
+  .profile-email { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+  .profile-chevron { color: var(--text-secondary); font-size: 20px; }
+
+  /* ── Old-style tiles (current) ── */
+  .old-tile {
+    display: flex; align-items: center;
+    min-height: 56px; padding: 8px 16px;
+    cursor: pointer;
+  }
+  .old-tile .old-icon {
+    width: 24px; height: 24px; color: var(--text-secondary);
+    font-size: 24px; display: flex; align-items: center; justify-content: center;
+  }
+  .old-tile .old-content { flex: 1; margin-left: 16px; }
+  .old-tile .old-title { font-size: 18px; color: var(--text-primary); }
+  .old-tile .old-trailing { color: var(--text-secondary); font-size: 24px; }
+  .old-tile.destructive .old-icon,
+  .old-tile.destructive .old-title { color: var(--error); }
+
+  .old-divider { height: 1px; background: var(--divider); margin: 0 16px; }
+  .old-full-divider { height: 1px; background: var(--divider); }
+
+  .old-profile {
+    display: flex; align-items: center; padding: 24px;
+  }
+  .old-avatar {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: linear-gradient(135deg, #9900FF 0%, #CC66FF 100%);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 28px; flex-shrink: 0;
+  }
+  .old-profile-info { margin-left: 16px; }
+  .old-profile-name { font-size: 20px; font-weight: 700; color: var(--text-primary); }
+  .old-profile-email { font-size: 16px; color: var(--text-secondary); margin-top: 4px; }
+
+  /* ── SVG Icons (inline) ── */
+  .icon { display: inline-flex; }
+
+  .content-area { padding: 16px 0; }
+
+  /* ── Hidden state ── */
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<div class="controls">
+  <h1>Settings Redesign #1475</h1>
+
+  <div class="tab-group" id="viewTabs">
+    <button class="active" data-view="compare">Current vs Redesigned</button>
+    <button data-view="redesigned">Redesigned Only</button>
+  </div>
+
+  <div class="tab-group" id="appTabs">
+    <button class="active" data-app="user">User App</button>
+    <button data-app="partner">Partner App</button>
+  </div>
+
+  <div class="tab-group" id="themeTabs">
+    <button class="active" data-theme="light">Light</button>
+    <button data-theme="dark">Dark</button>
+  </div>
+</div>
+
+<div class="frames" id="framesContainer">
+
+  <!-- ============================================ -->
+  <!-- CURRENT: USER APP                            -->
+  <!-- ============================================ -->
+  <div id="current-user" data-role="current" data-app="user">
+    <div class="phone-label">Current</div>
+    <div class="phone light">
+      <div class="phone-screen">
+        <div class="appbar">마이페이지</div>
+
+        <div class="old-profile">
+          <div class="old-avatar">
+            <span class="icon">&#x1F464;</span>
+          </div>
+          <div class="old-profile-info">
+            <div class="old-profile-name">홍길동</div>
+            <div class="old-profile-email">hong@email.com</div>
+          </div>
+        </div>
+        <div class="old-full-divider"></div>
+
+        <div class="old-tile"><div class="old-icon">&#x1F4CB;</div><div class="old-content"><div class="old-title">구매 내역</div></div><div class="old-trailing">&#x203A;</div></div>
+        <div class="old-tile"><div class="old-icon">&#x1F3AB;</div><div class="old-content"><div class="old-title">내 티켓</div></div><div class="old-trailing">&#x203A;</div></div>
+        <div class="old-full-divider"></div>
+
+        <div class="old-tile"><div class="old-icon">&#x1F514;</div><div class="old-content"><div class="old-title">알림 설정</div></div><div class="old-trailing">&#x203A;</div></div>
+        <div class="old-tile"><div class="old-icon">&#x2600;</div><div class="old-content"><div class="old-title">테마</div></div><div class="old-trailing">&#x203A;</div></div>
+        <div class="old-tile"><div class="old-icon">&#x1F6AB;</div><div class="old-content"><div class="old-title">차단 목록</div></div><div class="old-trailing">&#x203A;</div></div>
+        <div class="old-full-divider"></div>
+
+        <div class="old-tile"><div class="old-icon">&#x1F512;</div><div class="old-content"><div class="old-title">권한</div></div><div class="old-trailing">&#x203A;</div></div>
+        <div class="old-tile"><div class="old-icon">&#x1F6E1;</div><div class="old-content"><div class="old-title">개인정보처리방침</div></div><div class="old-trailing">&#x203A;</div></div>
+        <div class="old-tile"><div class="old-icon">&#x1F4C4;</div><div class="old-content"><div class="old-title">이용약관</div></div><div class="old-trailing">&#x203A;</div></div>
+        <div class="old-tile"><div class="old-icon">&#x2139;</div><div class="old-content"><div class="old-title">앱 버전</div></div><div class="old-trailing" style="font-size:14px;">26.04.1455</div></div>
+        <div class="old-full-divider"></div>
+
+        <div class="old-tile destructive"><div class="old-icon">&#x2190;</div><div class="old-content"><div class="old-title">로그아웃</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- REDESIGNED: USER APP                         -->
+  <!-- ============================================ -->
+  <div id="redesigned-user" data-role="redesigned" data-app="user">
+    <div class="phone-label">Redesigned</div>
+    <div class="phone light">
+      <div class="phone-screen">
+        <div class="appbar">마이페이지</div>
+        <div class="content-area">
+
+          <!-- Profile -->
+          <div class="settings-group">
+            <div class="profile-tile">
+              <div class="profile-avatar">&#x1F464;</div>
+              <div class="profile-info">
+                <div class="profile-name">홍길동</div>
+                <div class="profile-email">hong@email.com</div>
+              </div>
+              <div class="profile-chevron">&#x203A;</div>
+            </div>
+          </div>
+
+          <div class="group-gap"></div>
+          <div class="section-header">활동</div>
+          <div class="settings-group">
+            <div class="settings-tile"><div class="tile-icon">&#x1F4CB;</div><div class="tile-content"><div class="tile-title">구매 내역</div></div><div class="tile-trailing">&#x203A;</div></div>
+            <div class="tile-divider"></div>
+            <div class="settings-tile"><div class="tile-icon">&#x1F3AB;</div><div class="tile-content"><div class="tile-title">내 티켓</div></div><div class="tile-trailing">&#x203A;</div></div>
+          </div>
+
+          <div class="group-gap"></div>
+          <div class="section-header">설정</div>
+          <div class="settings-group">
+            <div class="settings-tile"><div class="tile-icon">&#x1F514;</div><div class="tile-content"><div class="tile-title">알림 설정</div></div><div class="tile-trailing">&#x203A;</div></div>
+            <div class="tile-divider"></div>
+            <div class="settings-tile"><div class="tile-icon">&#x2600;</div><div class="tile-content"><div class="tile-title">테마</div><div class="tile-subtitle">시스템 설정</div></div><div class="tile-trailing">&#x203A;</div></div>
+          </div>
+
+          <div class="group-gap"></div>
+          <div class="section-header">개인정보 및 보안</div>
+          <div class="settings-group">
+            <div class="settings-tile"><div class="tile-icon">&#x1F512;</div><div class="tile-content"><div class="tile-title">권한 설정</div></div><div class="tile-trailing">&#x203A;</div></div>
+            <div class="tile-divider"></div>
+            <div class="settings-tile"><div class="tile-icon">&#x1F6AB;</div><div class="tile-content"><div class="tile-title">차단 목록</div></div><div class="tile-trailing">&#x203A;</div></div>
+          </div>
+
+          <div class="group-gap"></div>
+          <div class="section-header">약관 및 정보</div>
+          <div class="settings-group">
+            <div class="settings-tile"><div class="tile-icon">&#x1F6E1;</div><div class="tile-content"><div class="tile-title">개인정보처리방침</div></div><div class="tile-trailing">&#x203A;</div></div>
+            <div class="tile-divider"></div>
+            <div class="settings-tile"><div class="tile-icon">&#x1F4C4;</div><div class="tile-content"><div class="tile-title">이용약관</div></div><div class="tile-trailing">&#x203A;</div></div>
+            <div class="tile-divider"></div>
+            <div class="settings-tile no-tap"><div class="tile-icon">&#x2139;</div><div class="tile-content"><div class="tile-title">앱 버전</div><div class="tile-subtitle">26.04.1455</div></div><div class="tile-trailing"><span class="value-text"></span></div></div>
+          </div>
+
+          <div class="group-gap"></div>
+          <div class="section-header">계정</div>
+          <div class="settings-group">
+            <div class="settings-tile destructive"><div class="tile-icon">&#x2190;</div><div class="tile-content"><div class="tile-title">로그아웃</div></div></div>
+          </div>
+
+          <div style="height:32px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- CURRENT: PARTNER APP                         -->
+  <!-- ============================================ -->
+  <div id="current-partner" class="hidden" data-role="current" data-app="partner">
+    <div class="phone-label">Current</div>
+    <div class="phone light">
+      <div class="phone-screen">
+        <div class="appbar">더보기</div>
+
+        <div class="old-profile">
+          <div class="old-avatar">&#x1F464;</div>
+          <div class="old-profile-info">
+            <div class="old-profile-name">밍글릿 파트너</div>
+            <div class="old-profile-email">partner@minglit.com</div>
+          </div>
+        </div>
+        <div class="old-full-divider"></div>
+
+        <div class="old-tile"><div class="old-icon">&#x1F465;</div><div class="old-content"><div class="old-title">멤버 관리</div></div><div class="old-trailing">&#x203A;</div></div>
+        <div class="old-tile"><div class="old-icon">&#x2714;</div><div class="old-content"><div class="old-title">본인인증 관리</div></div><div class="old-trailing">&#x203A;</div></div>
+        <div class="old-full-divider"></div>
+
+        <div class="old-tile"><div class="old-icon">&#x1F514;</div><div class="old-content"><div class="old-title">알림 설정</div></div><div class="old-trailing">&#x203A;</div></div>
+        <div class="old-tile"><div class="old-icon">&#x2600;</div><div class="old-content"><div class="old-title">테마</div></div><div class="old-trailing">&#x203A;</div></div>
+        <div class="old-full-divider"></div>
+
+        <div class="old-tile"><div class="old-icon">&#x1F512;</div><div class="old-content"><div class="old-title">권한</div></div><div class="old-trailing">&#x203A;</div></div>
+        <div class="old-tile"><div class="old-icon">&#x1F6E1;</div><div class="old-content"><div class="old-title">개인정보처리방침</div></div><div class="old-trailing">&#x203A;</div></div>
+        <div class="old-tile"><div class="old-icon">&#x1F4C4;</div><div class="old-content"><div class="old-title">이용약관</div></div><div class="old-trailing">&#x203A;</div></div>
+        <div class="old-tile"><div class="old-icon">&#x2139;</div><div class="old-content"><div class="old-title">앱 버전</div></div><div class="old-trailing" style="font-size:14px;">26.04.1455</div></div>
+        <div class="old-full-divider"></div>
+
+        <div class="old-tile destructive"><div class="old-icon">&#x2190;</div><div class="old-content"><div class="old-title">로그아웃</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- REDESIGNED: PARTNER APP                      -->
+  <!-- ============================================ -->
+  <div id="redesigned-partner" class="hidden" data-role="redesigned" data-app="partner">
+    <div class="phone-label">Redesigned</div>
+    <div class="phone light">
+      <div class="phone-screen">
+        <div class="appbar">더보기</div>
+        <div class="content-area">
+
+          <!-- Profile -->
+          <div class="settings-group">
+            <div class="profile-tile">
+              <div class="profile-avatar">&#x1F464;</div>
+              <div class="profile-info">
+                <div class="profile-name">밍글릿 파트너</div>
+                <div class="profile-email">partner@minglit.com</div>
+              </div>
+              <div class="profile-chevron">&#x203A;</div>
+            </div>
+          </div>
+
+          <div class="group-gap"></div>
+          <div class="section-header">비즈니스 관리</div>
+          <div class="settings-group">
+            <div class="settings-tile"><div class="tile-icon">&#x1F465;</div><div class="tile-content"><div class="tile-title">멤버 관리</div></div><div class="tile-trailing">&#x203A;</div></div>
+            <div class="tile-divider"></div>
+            <div class="settings-tile"><div class="tile-icon">&#x2714;</div><div class="tile-content"><div class="tile-title">본인인증 관리</div></div><div class="tile-trailing">&#x203A;</div></div>
+          </div>
+
+          <div class="group-gap"></div>
+          <div class="section-header">설정</div>
+          <div class="settings-group">
+            <div class="settings-tile"><div class="tile-icon">&#x1F514;</div><div class="tile-content"><div class="tile-title">알림 설정</div></div><div class="tile-trailing">&#x203A;</div></div>
+            <div class="tile-divider"></div>
+            <div class="settings-tile"><div class="tile-icon">&#x2600;</div><div class="tile-content"><div class="tile-title">테마</div><div class="tile-subtitle">시스템 설정</div></div><div class="tile-trailing">&#x203A;</div></div>
+          </div>
+
+          <div class="group-gap"></div>
+          <div class="section-header">약관 및 정보</div>
+          <div class="settings-group">
+            <div class="settings-tile"><div class="tile-icon">&#x1F512;</div><div class="tile-content"><div class="tile-title">권한</div></div><div class="tile-trailing">&#x203A;</div></div>
+            <div class="tile-divider"></div>
+            <div class="settings-tile"><div class="tile-icon">&#x1F6E1;</div><div class="tile-content"><div class="tile-title">개인정보처리방침</div></div><div class="tile-trailing">&#x203A;</div></div>
+            <div class="tile-divider"></div>
+            <div class="settings-tile"><div class="tile-icon">&#x1F4C4;</div><div class="tile-content"><div class="tile-title">이용약관</div></div><div class="tile-trailing">&#x203A;</div></div>
+            <div class="tile-divider"></div>
+            <div class="settings-tile no-tap"><div class="tile-icon">&#x2139;</div><div class="tile-content"><div class="tile-title">앱 버전</div><div class="tile-subtitle">26.04.1455</div></div><div class="tile-trailing"><span class="value-text"></span></div></div>
+          </div>
+
+          <div class="group-gap"></div>
+          <div class="section-header">계정</div>
+          <div class="settings-group">
+            <div class="settings-tile destructive"><div class="tile-icon">&#x2190;</div><div class="tile-content"><div class="tile-title">로그아웃</div></div></div>
+          </div>
+
+          <div style="height:32px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function() {
+  // State
+  let currentView = 'compare';   // compare | redesigned
+  let currentApp  = 'user';      // user | partner
+  let currentTheme = 'light';    // light | dark
+
+  // Theme palettes
+  const themes = {
+    light: {
+      pageBg: '#FFFFFF',
+      cardBg: '#F5F3F0',
+      textPrimary: '#111827',
+      textSecondary: '#4B5563',
+      divider: '#E8E5E0',
+      outlineVariant: '#E0DDD8',
+      error: '#EF4444',
+      appbarBg: '#FFFFFF',
+    },
+    dark: {
+      pageBg: '#0F0F0F',
+      cardBg: '#2A2A2A',
+      textPrimary: '#FFFFFF',
+      textSecondary: '#AAAAAA',
+      divider: '#3D3D3D',
+      outlineVariant: '#404040',
+      error: '#EF4444',
+      appbarBg: '#0F0F0F',
+    }
+  };
+
+  function applyTheme(phoneEl, themeName) {
+    phoneEl.classList.remove('light', 'dark');
+    phoneEl.classList.add(themeName);
+    const t = themes[themeName];
+    phoneEl.style.setProperty('--page-bg', t.pageBg);
+    phoneEl.style.setProperty('--card-bg', t.cardBg);
+    phoneEl.style.setProperty('--text-primary', t.textPrimary);
+    phoneEl.style.setProperty('--text-secondary', t.textSecondary);
+    phoneEl.style.setProperty('--divider', t.divider);
+    phoneEl.style.setProperty('--outline-variant', t.outlineVariant);
+    phoneEl.style.setProperty('--error', t.error);
+    phoneEl.style.setProperty('--appbar-bg', t.appbarBg);
+  }
+
+  function render() {
+    const allFrames = document.querySelectorAll('[data-role]');
+    allFrames.forEach(f => f.classList.add('hidden'));
+
+    // Show current frames based on state
+    if (currentView === 'compare') {
+      const cur = document.getElementById('current-' + currentApp);
+      const red = document.getElementById('redesigned-' + currentApp);
+      if (cur) cur.classList.remove('hidden');
+      if (red) red.classList.remove('hidden');
+    } else {
+      const red = document.getElementById('redesigned-' + currentApp);
+      if (red) red.classList.remove('hidden');
+    }
+
+    // Apply theme to all phones
+    document.querySelectorAll('.phone').forEach(p => applyTheme(p, currentTheme));
+  }
+
+  // Tab handlers
+  function setupTabs(containerId, callback) {
+    const container = document.getElementById(containerId);
+    container.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        container.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        callback(btn);
+      });
+    });
+  }
+
+  setupTabs('viewTabs', btn => { currentView = btn.dataset.view; render(); });
+  setupTabs('appTabs', btn => { currentApp = btn.dataset.app; render(); });
+  setupTabs('themeTabs', btn => { currentTheme = btn.dataset.theme; render(); });
+
+  // Initial render
+  render();
+})();
+</script>
+
+</body>
+</html>

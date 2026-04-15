@@ -540,6 +540,201 @@ MinglitSectionDivider.thin()
 
 ---
 
+## 14. Settings Layout
+
+> Feature reference: [`docs/features/settings-redesign/ui-ux-design.md`](../../features/settings-redesign/ui-ux-design.md)
+> Issue: #1475
+
+설정/마이페이지 화면을 위한 compact, information-dense 레이아웃 패턴.
+Claude 앱 수준의 밀도를 목표로 하며, 카드 기반 시맨틱 그룹핑을 적용한다.
+
+### 14.1 MinglitSettingsTile
+
+설정 항목 하나를 표현하는 compact 타일.
+
+#### Anatomy
+
+```text
+┌───────────────────────────────────────────────┐
+│ [icon]  Title                     [trailing]  │  48px
+│         Subtitle (optional)                   │
+└───────────────────────────────────────────────┘
+```
+
+#### Spec
+
+| 속성 | 값 | 토큰 |
+|------|-----|------|
+| Height | 48px | — |
+| Title style | 16px normal | `bodyMedium` |
+| Subtitle style | 13px, `onSurfaceVariant` | `bodySmall` |
+| Leading icon size | 20px | `MinglitIconSize.small` |
+| Icon color | `onSurfaceVariant` | — |
+| Horizontal padding | 16px | `MinglitSpacing.medium` |
+| Vertical padding | 4px | `MinglitSpacing.xsmall` |
+| Icon-to-title gap | 16px | `MinglitSpacing.medium` |
+| Touch target | 48dp minimum | WCAG compliance |
+
+#### Trailing Variants
+
+| Variant | Widget | 용도 |
+|---------|--------|------|
+| Navigation | chevron icon 20px, `onSurfaceVariant` | 페이지 이동 항목 |
+| Toggle | `Switch.adaptive()` | on/off 설정 |
+| Value | text `bodySmall`, `onSurfaceVariant` | 읽기 전용 표시 (앱 버전 등) |
+| None | — | trailing 불필요 (로그아웃 등) |
+
+#### Destructive Variant
+
+`destructive: true` 설정 시 title과 icon을 `colorScheme.error` 색상으로 표시한다.
+로그아웃, 계정 삭제 등에 사용.
+
+#### Usage
+
+```dart
+MinglitSettingsTile(
+  leading: Icons.notifications_outlined,
+  title: '알림 설정',
+  trailing: SettingsTileTrailing.navigation,
+  onTap: () => context.push('/settings/notifications'),
+)
+
+MinglitSettingsTile(
+  leading: Icons.brightness_auto,
+  title: '테마',
+  subtitle: '시스템 설정',  // 현재 값
+  trailing: SettingsTileTrailing.navigation,
+  onTap: () => showThemePicker(context),
+)
+
+MinglitSettingsTile(
+  leading: Icons.logout,
+  title: '로그아웃',
+  trailing: SettingsTileTrailing.none,
+  destructive: true,
+  onTap: () => showLogoutDialog(context),
+)
+```
+
+### 14.2 MinglitSettingsGroup
+
+관련 설정 항목을 카드 형태로 묶는 컨테이너.
+
+#### Anatomy
+
+```text
+          SECTION HEADER
+        ┌──────────────────────┐
+        │  Tile 1              │
+        │──────────────────────│  ← divider (52px left inset)
+        │  Tile 2              │
+        │──────────────────────│
+        │  Tile 3              │
+        └──────────────────────┘
+```
+
+#### Spec
+
+| 속성 | 값 | 토큰 |
+|------|-----|------|
+| Background (light) | `surfaceContainerLowest` | M3 auto |
+| Background (dark) | `surfaceContainerHigh` | M3 auto |
+| Border radius | 16px | `MinglitRadius.card` |
+| Horizontal margin | 16px | `MinglitSpacing.medium` |
+| Internal padding | 0px | tiles handle own padding |
+| Gap between groups | 24px | `MinglitSpacing.large` |
+| Elevation | 0 | flat design |
+| Clip | `Clip.antiAlias` | ripple containment |
+
+#### Section Header
+
+| 속성 | 값 | 토큰 |
+|------|-----|------|
+| Typography | 12px, w500 | `labelMedium` |
+| Color | `onSurfaceVariant` | — |
+| Left padding | 16px | `MinglitSpacing.medium` |
+| Bottom margin | 8px | `MinglitSpacing.small` |
+| Case | uppercase (영문만) | — |
+
+#### Internal Divider
+
+| 속성 | 값 |
+|------|-----|
+| Thickness | 0.5px |
+| Color | `outlineVariant` |
+| Left inset | 52px (16px pad + 20px icon + 16px gap) |
+| Right inset | 0px |
+
+#### Usage
+
+```dart
+MinglitSettingsGroup(
+  header: '설정',
+  children: [
+    MinglitSettingsTile(
+      leading: Icons.notifications_outlined,
+      title: '알림 설정',
+      trailing: SettingsTileTrailing.navigation,
+      onTap: onNotificationsTap,
+    ),
+    MinglitSettingsTile(
+      leading: Icons.brightness_auto,
+      title: '테마',
+      subtitle: currentThemeLabel,
+      trailing: SettingsTileTrailing.navigation,
+      onTap: onThemeTap,
+    ),
+  ],
+)
+```
+
+### 14.3 Compact Density Application
+
+Settings Layout은 기존 Compact density guide (section 12)를 따르되, 설정 화면에 맞게 특화한다.
+
+| 일반 화면 | Settings Layout |
+|-----------|-----------------|
+| screenEdge: 16px | 동일 |
+| item gap: 8px | group gap: 24px (그룹 간), 0px (그룹 내) |
+| item height: varies | 48px fixed |
+| item padding: 12px | horizontal 16px, vertical 4px |
+| section gap: 24px | group gap: 24px (동일) |
+
+#### Page Structure
+
+```dart
+Scaffold(
+  appBar: AppBar(title: Text('마이페이지')),
+  body: ListView(
+    padding: EdgeInsets.only(
+      top: MinglitSpacing.medium,     // 16px
+      bottom: safeAreaBottom + MinglitSpacing.large,
+    ),
+    children: [
+      MinglitSettingsGroup(children: [profileTile]),
+      SizedBox(height: MinglitSpacing.large),   // 24px
+      MinglitSettingsGroup(header: '활동', children: [...]),
+      SizedBox(height: MinglitSpacing.large),
+      MinglitSettingsGroup(header: '설정', children: [...]),
+      // ...
+    ],
+  ),
+)
+```
+
+### 14.4 Design Decisions
+
+| 결정 | 근거 |
+|------|------|
+| `bodyMedium` (16px) for title, not `bodyLarge` (18px) | compact density; 18px는 설정 목록에서 너무 크다 |
+| 48px tile height | Material minimum touch target 충족 + 10+ 항목을 스크롤 없이 표시 |
+| Card grouping (not flat dividers) | 시맨틱 구분 명확, iOS Settings / Claude 앱 벤치마크 |
+| `surfaceContainer` variants for card bg | M3 표준, 별도 하드코딩 없이 light/dark 자동 대응 |
+| 16px card radius | 기존 `MinglitRadius.card` 토큰 재사용 |
+| 52px divider left inset | 아이콘 이후 정렬 (16 + 20 + 16 = 52) |
+
+---
+
 ## 관련 문서
 
 - [01-foundation.md](01-foundation.md) -- 디자인 토큰
