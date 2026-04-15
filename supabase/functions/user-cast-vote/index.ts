@@ -8,8 +8,12 @@ import {
   successResponse,
 } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
+import { initSentry, withHandler } from "../_shared/logger.ts";
 
-Deno.serve(async (req: Request): Promise<Response> => {
+
+initSentry();
+
+Deno.serve(withHandler(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return corsResponse();
 
   const auth = await requireAuth(req);
@@ -126,7 +130,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   // 7. Atomic vote count check + insert via RPC (prevents race condition)
   const maxVoteCount = Math.max(...rules.map((r: { vote_count: number }) => r.vote_count));
 
-  const { data: rpcResult, error: rpcError } = await supabase.rpc("cast_match_vote", {
+  const { data: _rpcResult, error: rpcError } = await supabase.rpc("cast_match_vote", {
     p_event_id: eventId,
     p_voter_id: voterId,
     p_candidate_id: candidateId,
@@ -150,4 +154,4 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
 
   return successResponse({ success: true });
-});
+}));

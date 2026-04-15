@@ -1,4 +1,8 @@
 import { createServiceClient } from '../_shared/supabase_client.ts'
+import { initSentry, withHandler } from '../_shared/logger.ts'
+
+
+initSentry();
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -6,7 +10,7 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'GET, OPTIONS',
 }
 
-Deno.serve(async (req) => {
+Deno.serve(withHandler(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -45,4 +49,4 @@ Deno.serve(async (req) => {
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     )
   }
-})
+}));

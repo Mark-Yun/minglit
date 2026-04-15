@@ -1,3 +1,8 @@
+import { initSentry, withHandler } from "../_shared/logger.ts";
+
+
+initSentry();
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -11,7 +16,7 @@ function json(body: unknown, status = 200): Response {
   })
 }
 
-Deno.serve(async (req) => {
+Deno.serve(withHandler(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -75,4 +80,4 @@ Deno.serve(async (req) => {
   }
 
   return json({ error: 'Not found' }, 404)
-})
+}));

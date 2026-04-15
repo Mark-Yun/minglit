@@ -8,6 +8,11 @@ import {
   successResponse,
 } from "../_shared/response_utils.ts";
 import { requireServiceRole } from "../_shared/auth_utils.ts";
+import { initSentry, withHandler, log } from "../_shared/logger.ts";
+
+const FN = "github-stats-sync";
+
+initSentry();
 
 const REPO = "Mark-Yun/minglit";
 const GITHUB_API = "https://api.github.com";
@@ -20,7 +25,7 @@ interface GitHubItem {
   pull_request?: { merged_at: string | null };
 }
 
-Deno.serve(async (req: Request): Promise<Response> => {
+Deno.serve(withHandler(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return corsResponse();
 
   const githubToken = Deno.env.get("GITHUB_ACCESS_TOKEN");
@@ -111,7 +116,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
         p_count: row.count,
       });
       if (error) {
-        console.error(`Failed to upsert ${row.date}/${row.metric}: ${error.message}`);
+        log({ function: FN, level: "error", message: `Failed to upsert ${row.date}/${row.metric}`, metadata: { detail: error.message } });
       }
     }
 
@@ -125,4 +130,4 @@ Deno.serve(async (req: Request): Promise<Response> => {
   } catch (err) {
     return errorResponse(`Unexpected error: ${(err as Error).message}`, 500);
   }
-});
+}));

@@ -9,6 +9,11 @@ import {
   successResponse,
 } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
+import { initSentry, withHandler, log } from "../_shared/logger.ts";
+
+const FN = "partner-manage-settlement";
+
+initSentry();
 
 // Fields allowed in upsert_bank_account action
 const UPSERT_FIELDS = [
@@ -20,7 +25,7 @@ const UPSERT_FIELDS = [
 // Fix #312: 계좌번호 형식 검증 — 하이픈/공백 제거 후 숫자 6~20자리
 const ACCOUNT_NUMBER_RE = /^[0-9]{6,20}$/;
 
-Deno.serve(async (req: Request): Promise<Response> => {
+Deno.serve(withHandler(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return corsResponse();
   if (req.method !== "POST") return errorResponse("Method not allowed", 405);
 
@@ -102,10 +107,10 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
     return errorResponse(`Unknown action: ${action}`, 400);
   } catch (error) {
-    console.error("partner-manage-settlement failed", error);
+    log({ function: FN, level: "error", message: "partner-manage-settlement failed", metadata: { detail: error instanceof Error ? error.message : String(error) } });
     return errorResponse("Internal server error", 500);
   }
-});
+}));
 
 // ─── Helper: check partner permission ───
 async function checkPartnerPermission(

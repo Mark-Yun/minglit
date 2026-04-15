@@ -8,6 +8,10 @@ import {
   successResponse,
 } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
+import { initSentry, withHandler } from "../_shared/logger.ts";
+
+
+initSentry();
 
 interface RuleInput {
   source_group_id: string;
@@ -15,7 +19,7 @@ interface RuleInput {
   vote_count?: number;
 }
 
-Deno.serve(async (req: Request): Promise<Response> => {
+Deno.serve(withHandler(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return corsResponse();
   if (req.method !== "POST") return errorResponse("Method not allowed", 405);
 
@@ -171,4 +175,4 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
 
   return errorResponse(`Unknown action: ${action}`, 400);
-});
+}));

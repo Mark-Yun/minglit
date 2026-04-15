@@ -107,11 +107,23 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_DEV_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_DEV_SECRET_KEY }}
         run: |
-          curl -sf -X POST \
+          RESPONSE=$(curl -sS -w "\n%{http_code}" -X POST \
             "${SUPABASE_URL}/functions/v1/dev-seed?mode=images-only" \
             -H "Authorization: Bearer ${SUPABASE_KEY}" \
-            --max-time 30
-          echo "Seed images uploaded"
+            --max-time 30)
+          CURL_EXIT=$?
+          if [ "$CURL_EXIT" -ne 0 ]; then
+            echo "::error::dev-seed request failed before HTTP response (curl exit: $CURL_EXIT)"
+            exit 1
+          fi
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+          echo "$BODY"
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "::error::dev-seed failed: $BODY"
+            exit 1
+          fi
+          echo "Seed images uploaded successfully"
 
       - name: Verify vault secrets
         env:

@@ -9,6 +9,11 @@ import {
   successResponse,
 } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
+import { initSentry, withHandler, log } from "../_shared/logger.ts";
+
+const FN = "partner-manage-member";
+
+initSentry();
 
 // Fix #313: role 화이트리스트 — partner_role enum과 일치
 const VALID_ROLES = ["owner", "manager", "staff"] as const;
@@ -26,7 +31,7 @@ const VALID_PERMISSIONS = [
   "COMMENT_MANAGE",
 ] as const;
 
-Deno.serve(async (req: Request): Promise<Response> => {
+Deno.serve(withHandler(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return corsResponse();
   if (req.method !== "POST") return errorResponse("Method not allowed", 405);
 
@@ -132,10 +137,13 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
     return errorResponse(`Unknown action: ${action}`, 400);
   } catch (error) {
-    console.error("partner-manage-member failed", error);
-    return errorResponse("Internal server error", 500);
+    const detail = error instanceof Error ? error.message : String(error);
+    log({ function: FN, level: "error", message: "partner-manage-member failed", metadata: { detail } });
+    const env = Deno.env.get("ENVIRONMENT");
+    const exposeDetail = env === "local" || env === "development";
+    return errorResponse(exposeDetail ? `${FN}: ${detail}` : "Internal server error", 500);
   }
-});
+}));
 
 // ─── Helper: check partner MEMBER_MANAGE permission ───
 async function checkPartnerPermission(

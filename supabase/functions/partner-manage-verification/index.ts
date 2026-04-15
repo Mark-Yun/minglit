@@ -9,6 +9,10 @@ import {
   successResponse,
 } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
+import { initSentry, withHandler } from "../_shared/logger.ts";
+
+
+initSentry();
 
 const VALID_CATEGORIES = ["career", "asset", "marriage", "academic", "vehicle", "etc"];
 
@@ -33,7 +37,7 @@ const UPDATE_FIELDS = [
   "is_active",
 ] as const;
 
-Deno.serve(async (req: Request): Promise<Response> => {
+Deno.serve(withHandler(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return corsResponse();
   if (req.method !== "POST") return errorResponse("Method not allowed", 405);
 
@@ -167,7 +171,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
 
   return errorResponse(`Unknown action: ${action}`, 400);
-});
+}));
 
 // ─── Helper: check partner permission ───
 async function checkPartnerPermission(
