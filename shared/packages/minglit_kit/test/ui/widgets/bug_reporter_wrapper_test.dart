@@ -315,13 +315,13 @@ void main() {
         ),
       );
 
-      expect(container.read(bugReportFabVisibleProvider), isFalse);
+      expect(container.read<bool>(bugReportFabVisibleProvider), isFalse);
 
       await tester.tap(find.byType(IconButton).first);
-      expect(container.read(bugReportFabVisibleProvider), isTrue);
+      expect(container.read<bool>(bugReportFabVisibleProvider), isTrue);
 
       await tester.tap(find.byType(IconButton).first);
-      expect(container.read(bugReportFabVisibleProvider), isFalse);
+      expect(container.read<bool>(bugReportFabVisibleProvider), isFalse);
     });
   });
 }
