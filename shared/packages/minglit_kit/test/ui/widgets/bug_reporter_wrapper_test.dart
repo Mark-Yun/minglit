@@ -264,16 +264,13 @@ void main() {
     });
 
     // Fix #1466: BugReportFab는 FAB visible + callback 모두 set 시에만 보임.
-    // _BugReporterCallbackNotifier는 private이므로 overrideWith 대신
-    // BugReporterWrapper를 마운트하여 실제 callback을 등록한다.
+    // _BugReporterCallbackNotifier와 _BugReportFabVisibleNotifier 모두 private이므로
+    // BugReporterWrapper를 마운트하여 실제 callback을 등록하고,
+    // notifier.toggle()로 FAB visible 상태를 활성화한다.
     testWidgets('visible when provider is true and callback is set', (
       tester,
     ) async {
-      final container = ProviderContainer(
-        overrides: [
-          bugReportFabVisibleProvider.overrideWith((_) => true),
-        ],
-      );
+      final container = ProviderContainer();
       addTearDown(container.dispose);
 
       await tester.pumpWidget(
@@ -288,6 +285,10 @@ void main() {
         ),
       );
       // postFrameCallback fires — BugReporterWrapper registers callback
+      await tester.pump();
+
+      // Toggle FAB visible via notifier (StateProvider removed in Riverpod v3)
+      container.read(bugReportFabVisibleProvider.notifier).toggle();
       await tester.pump();
 
       expect(find.byType(FloatingActionButton), findsOneWidget);

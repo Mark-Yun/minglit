@@ -30,7 +30,19 @@ final bugReporterCallbackProvider =
 /// Toggled by [BugReportAction]. State persists across screen transitions
 /// but resets on app restart (in-memory only).
 // Fix #1466: FAB 토글 — 액션 버튼으로 FAB 표시/숨김 전환
-final bugReportFabVisibleProvider = StateProvider<bool>((_) => false);
+// StateProvider is removed in Riverpod v3; use Notifier instead.
+final bugReportFabVisibleProvider =
+    NotifierProvider<_BugReportFabVisibleNotifier, bool>(
+      _BugReportFabVisibleNotifier.new,
+    );
+
+class _BugReportFabVisibleNotifier extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  /// Toggles FAB visibility.
+  void toggle() => state = !state;
+}
 
 class _BugReporterCallbackNotifier extends Notifier<Future<void> Function()?> {
   @override
@@ -424,8 +436,7 @@ class BugReportAction extends ConsumerWidget {
       color: MinglitColors.error,
       tooltip: 'Bug Report',
       // Fix #1466: toggle FAB visibility instead of opening dialog directly
-      onPressed: () =>
-          ref.read(bugReportFabVisibleProvider.notifier).update((v) => !v),
+      onPressed: () => ref.read(bugReportFabVisibleProvider.notifier).toggle(),
     );
   }
 }
