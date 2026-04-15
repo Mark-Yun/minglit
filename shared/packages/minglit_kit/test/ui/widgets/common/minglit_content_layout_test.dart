@@ -75,40 +75,44 @@ void main() {
       expect(gapBox, isTrue);
     });
 
-    testWidgets('renders MinglitSectionDivider.thin when showDividers is true',
-        (tester) async {
-      await tester.pumpWidget(
-        wrap(
-          const MinglitContentLayout(
-            showDividers: true,
-            sections: [
-              Text('섹션 A'),
-              Text('섹션 B'),
-              Text('섹션 C'),
-            ],
+    testWidgets(
+      'renders MinglitSectionDivider.thin when showDividers is true',
+      (tester) async {
+        await tester.pumpWidget(
+          wrap(
+            const MinglitContentLayout(
+              showDividers: true,
+              sections: [
+                Text('섹션 A'),
+                Text('섹션 B'),
+                Text('섹션 C'),
+              ],
+            ),
           ),
-        ),
-      );
+        );
 
-      // 섹션이 3개이면 divider는 2개 (사이마다 하나)
-      expect(find.byType(MinglitSectionDivider), findsNWidgets(2));
-    });
+        // 섹션이 3개이면 divider는 2개 (사이마다 하나)
+        expect(find.byType(MinglitSectionDivider), findsNWidgets(2));
+      },
+    );
 
-    testWidgets('does not render MinglitSectionDivider when showDividers is false',
-        (tester) async {
-      await tester.pumpWidget(
-        wrap(
-          const MinglitContentLayout(
-            sections: [
-              Text('섹션 A'),
-              Text('섹션 B'),
-            ],
+    testWidgets(
+      'does not render MinglitSectionDivider when showDividers is false',
+      (tester) async {
+        await tester.pumpWidget(
+          wrap(
+            const MinglitContentLayout(
+              sections: [
+                Text('섹션 A'),
+                Text('섹션 B'),
+              ],
+            ),
           ),
-        ),
-      );
+        );
 
-      expect(find.byType(MinglitSectionDivider), findsNothing);
-    });
+        expect(find.byType(MinglitSectionDivider), findsNothing);
+      },
+    );
 
     testWidgets('applies custom topPadding and bottomPadding', (tester) async {
       const customTop = 8.0;
@@ -138,8 +142,9 @@ void main() {
       );
     });
 
-    testWidgets('uses default topPadding (large) and bottomPadding (xlarge)',
-        (tester) async {
+    testWidgets('uses default topPadding (large) and bottomPadding (xlarge)', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         wrap(
           const MinglitContentLayout(
@@ -178,9 +183,9 @@ void main() {
       expect(column.crossAxisAlignment, CrossAxisAlignment.start);
     });
 
-    testWidgets(
-        'showDividers uses half-gap spacing on each side of divider',
-        (tester) async {
+    testWidgets('showDividers uses half-gap spacing on each side of divider', (
+      tester,
+    ) async {
       const customGap = 40.0;
       const halfGap = customGap / 2;
 
@@ -199,8 +204,9 @@ void main() {
 
       // divider 전후로 halfGap 높이의 SizedBox가 존재해야 함
       final sizedBoxes = tester.widgetList<SizedBox>(find.byType(SizedBox));
-      final halfGapBoxes =
-          sizedBoxes.where((box) => box.height == halfGap).toList();
+      final halfGapBoxes = sizedBoxes
+          .where((box) => box.height == halfGap)
+          .toList();
       expect(halfGapBoxes.length, greaterThanOrEqualTo(2));
     });
   });

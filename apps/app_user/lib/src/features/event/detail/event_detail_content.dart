@@ -426,7 +426,9 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent>
               SliverToBoxAdapter(
                 child: Padding(
                   key: _section3Key,
-                  padding: const EdgeInsets.only(top: MinglitSpacing.sectionGap),
+                  padding: const EdgeInsets.only(
+                    top: MinglitSpacing.sectionGap,
+                  ),
                   child: _EntryConditionsSection(event: event),
                 ),
               ),
@@ -435,7 +437,9 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent>
               SliverToBoxAdapter(
                 child: Padding(
                   key: _section4Key,
-                  padding: const EdgeInsets.only(top: MinglitSpacing.sectionGap),
+                  padding: const EdgeInsets.only(
+                    top: MinglitSpacing.sectionGap,
+                  ),
                   child: _VerificationSection(event: event),
                 ),
               ),
@@ -444,7 +448,9 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent>
               SliverToBoxAdapter(
                 child: Padding(
                   key: _section5Key,
-                  padding: const EdgeInsets.only(top: MinglitSpacing.sectionGap),
+                  padding: const EdgeInsets.only(
+                    top: MinglitSpacing.sectionGap,
+                  ),
                   child: _RefundPolicySection(event: event),
                 ),
               ),

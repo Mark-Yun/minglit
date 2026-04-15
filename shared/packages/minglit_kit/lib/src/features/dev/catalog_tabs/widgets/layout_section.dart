@@ -161,19 +161,19 @@ class LayoutSection extends StatelessWidget {
         const SizedBox(height: MinglitSpacing.medium),
         Text('기본 (dividers 없음)', style: theme.textTheme.titleSmall),
         const SizedBox(height: MinglitSpacing.small),
-        MinglitContentLayout(
+        const MinglitContentLayout(
           topPadding: MinglitSpacing.small,
           bottomPadding: MinglitSpacing.small,
           sections: [
-            const MinglitSection(
+            MinglitSection(
               title: '기본 정보',
               child: Text('섹션 1 콘텐츠'),
             ),
-            const MinglitSection(
+            MinglitSection(
               title: '참여 현황',
               child: Text('섹션 2 콘텐츠'),
             ),
-            const MinglitSection(
+            MinglitSection(
               title: '위치',
               child: Text('섹션 3 콘텐츠'),
             ),
@@ -182,12 +182,12 @@ class LayoutSection extends StatelessWidget {
         const SizedBox(height: MinglitSpacing.medium),
         Text('showDividers=true', style: theme.textTheme.titleSmall),
         const SizedBox(height: MinglitSpacing.small),
-        MinglitContentLayout(
+        const MinglitContentLayout(
           topPadding: MinglitSpacing.small,
           bottomPadding: MinglitSpacing.small,
           showDividers: true,
           sections: [
-            const MinglitSection(
+            MinglitSection(
               title: '정산 요약',
               child: MinglitContentCard(
                 child: Column(
@@ -203,7 +203,7 @@ class LayoutSection extends StatelessWidget {
                 ),
               ),
             ),
-            const MinglitSection(
+            MinglitSection(
               title: '파트너 정보',
               child: Text('파트너 상세 내용'),
             ),
