@@ -14,7 +14,10 @@ class MyPage extends ConsumerWidget {
 
     if (user == null) {
       return Scaffold(
-        appBar: MinglitTheme.simpleAppBar(title: '마이페이지', showBackButton: false),
+        appBar: MinglitTheme.simpleAppBar(
+          title: '마이페이지',
+          showBackButton: false,
+        ),
         body: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -58,7 +61,10 @@ class MyPage extends ConsumerWidget {
         }
       },
       child: Scaffold(
-        appBar: MinglitTheme.simpleAppBar(title: '마이페이지', showBackButton: false),
+        appBar: MinglitTheme.simpleAppBar(
+          title: '마이페이지',
+          showBackButton: false,
+        ),
         body: ListView(
           padding: const EdgeInsets.symmetric(vertical: MinglitSpacing.medium),
           children: [
@@ -181,7 +187,7 @@ class MyPage extends ConsumerWidget {
                       confirmText: '로그아웃',
                       isDestructive: true,
                     );
-                    if (confirmed == true) {
+                    if (confirmed) {
                       await ref.read(authCoordinatorProvider).signOut();
                     }
                   },
@@ -218,7 +224,7 @@ class MyPage extends ConsumerWidget {
                 ],
               ),
             ],
-            
+
             const SizedBox(height: MinglitSpacing.xxlarge),
           ],
         ),

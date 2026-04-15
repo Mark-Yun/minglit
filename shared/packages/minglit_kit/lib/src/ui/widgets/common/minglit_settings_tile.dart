@@ -24,7 +24,7 @@ enum SettingsTileTrailing {
 /// Features:
 /// - Fixed height of 48px for compact layout.
 /// - Support for icon, title, and optional subtitle.
-/// - Built-in trailing variants: [SettingsTileTrailing.navigation], 
+/// - Built-in trailing variants: [SettingsTileTrailing.navigation],
 ///   [SettingsTileTrailing.toggle], [SettingsTileTrailing.value].
 /// - Destructive mode for logout or delete actions.
 class MinglitSettingsTile extends StatelessWidget {
@@ -81,7 +81,7 @@ class MinglitSettingsTile extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     final baseColor = destructive ? colorScheme.error : colorScheme.onSurface;
-    final secondaryColor = destructive 
+    final secondaryColor = destructive
         ? colorScheme.error.withValues(alpha: MinglitOpacity.highEmphasis)
         : colorScheme.onSurfaceVariant;
 
@@ -139,8 +139,8 @@ class MinglitSettingsTile extends StatelessWidget {
     }
 
     return InkWell(
-      onTap: (enabled && (trailing != SettingsTileTrailing.toggle)) 
-          ? onTap 
+      onTap: (enabled && (trailing != SettingsTileTrailing.toggle))
+          ? onTap
           : null,
       child: Container(
         height: 48,

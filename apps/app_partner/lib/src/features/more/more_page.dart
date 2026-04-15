@@ -130,9 +130,9 @@ class MorePage extends ConsumerWidget {
                     confirmText: '로그아웃',
                     isDestructive: true,
                   );
-                  if (confirmed == true) {
+                  if (confirmed) {
                     // Assuming there's a signOut in moreCoordinator or similar
-                    // For now, reuse account management's signout if available 
+                    // For now, reuse account management's signout if available
                     // or just a placeholder if not.
                     // Actually, app_partner should have its own auth logic.
                     // Let's check how logout is handled normally.
@@ -207,7 +207,7 @@ class MorePage extends ConsumerWidget {
               ],
             ),
           ],
-          
+
           const SizedBox(height: MinglitSpacing.xxlarge),
         ],
       ),

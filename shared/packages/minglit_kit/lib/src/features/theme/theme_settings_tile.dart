@@ -13,7 +13,7 @@ class ThemeSettingsTile extends ConsumerWidget {
     final currentMode = ref.watch(themeControllerProvider);
     // Fix #139: When system mode, show icon matching actual current brightness
     final systemBrightness = MediaQuery.platformBrightnessOf(context);
-    
+
     final icon = currentMode == ThemeMode.dark
         ? Icons.dark_mode_outlined
         : currentMode == ThemeMode.light
@@ -43,7 +43,7 @@ class ThemeSettingsTile extends ConsumerWidget {
     WidgetRef ref,
     ThemeMode current,
   ) async {
-    // Standard M3 SimpleDialog for now, 
+    // Standard M3 SimpleDialog for now,
     // but could be improved to MinglitBottomSheet or MinglitAlert.
     await showDialog<void>(
       context: context,

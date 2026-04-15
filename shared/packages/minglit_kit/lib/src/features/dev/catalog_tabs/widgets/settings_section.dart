@@ -19,7 +19,7 @@ class SettingsSection extends StatelessWidget {
           ),
         ),
         const SizedBox(height: MinglitSpacing.large),
-        
+
         MinglitSettingsGroup(
           header: 'General',
           children: [
@@ -43,7 +43,7 @@ class SettingsSection extends StatelessWidget {
           ],
         ),
         const SizedBox(height: MinglitSpacing.large),
-        
+
         MinglitSettingsGroup(
           header: 'Preferences',
           children: [
@@ -58,13 +58,12 @@ class SettingsSection extends StatelessWidget {
               leading: Icons.location_on_outlined,
               title: 'Location Access',
               trailing: SettingsTileTrailing.toggle,
-              toggleValue: false,
               onToggleChanged: (v) {},
             ),
           ],
         ),
         const SizedBox(height: MinglitSpacing.large),
-        
+
         MinglitSettingsGroup(
           header: 'Account',
           children: [
