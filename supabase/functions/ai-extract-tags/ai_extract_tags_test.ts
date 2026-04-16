@@ -18,13 +18,13 @@ const BASE_ENV = {
   OPENAI_API_KEY: "openai-key",
 };
 
-// JWT verification is handled by the Supabase edge runtime (verify_jwt=true).
-// In unit tests we bypass the runtime layer and call the handler directly,
-// so no Authorization header is needed here.
 function makeRequest(body: unknown): Request {
   return new Request("http://localhost", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer service-key",
+    },
     body: JSON.stringify(body),
   });
 }
@@ -268,9 +268,52 @@ Deno.test({
   },
 });
 
-// Note: 401 (missing/invalid JWT) and auth-related 500 tests are intentionally omitted.
-// With verify_jwt=true, the Supabase edge runtime rejects unauthenticated requests
-// before the function handler runs — this cannot be unit-tested at the handler level.
+// Fix #1489: requireServiceRole 가드 추가 — 401 회귀 테스트
+
+Deno.test({
+  name: "ai-extract-tags - unauthorized: no auth header returns 401",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const { fetchMock } = createFetchMock([]);
+
+    await withEnv(BASE_ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        await withNoIntervals(async () => {
+          const response = await handler(new Request("http://localhost", { method: "POST" }));
+          assertEquals(response.status, 401);
+        });
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "ai-extract-tags - unauthorized: wrong token returns 401",
+  sanitizeResources: false,
+  sanitizeOps: false,
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const { fetchMock } = createFetchMock([]);
+
+    await withEnv(BASE_ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        await withNoIntervals(async () => {
+          const response = await handler(new Request("http://localhost", {
+            method: "POST",
+            headers: { "Authorization": "Bearer bad-key" },
+          }));
+          assertEquals(response.status, 401);
+        });
+      });
+    });
+  },
+});
 
 Deno.test({
   name: "ai-extract-tags - tags INSERT 23505 race condition: re-fetches and links party_tags",
