@@ -1,8 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:minglit_kit/src/features/theme/theme_controller.dart';
+import 'package:minglit_kit/minglit_kit.dart';
 
 /// Tile widget for selecting app theme mode (system/light/dark).
 class ThemeSettingsTile extends ConsumerWidget {
@@ -14,23 +13,25 @@ class ThemeSettingsTile extends ConsumerWidget {
     final currentMode = ref.watch(themeControllerProvider);
     // Fix #139: When system mode, show icon matching actual current brightness
     final systemBrightness = MediaQuery.platformBrightnessOf(context);
+
     final icon = currentMode == ThemeMode.dark
-        ? Icons.dark_mode
+        ? Icons.dark_mode_outlined
         : currentMode == ThemeMode.light
-        ? Icons.light_mode
+        ? Icons.light_mode_outlined
         : systemBrightness == Brightness.dark
-        ? Icons.dark_mode
-        : Icons.light_mode;
-    return ListTile(
-      leading: Icon(icon),
-      title: const Text('테마'),
-      subtitle: Text(
-        currentMode == ThemeMode.dark
-            ? '다크 모드'
-            : currentMode == ThemeMode.light
-            ? '라이트 모드'
-            : '시스템 설정',
-      ),
+        ? Icons.dark_mode_outlined
+        : Icons.light_mode_outlined;
+
+    final subtitle = currentMode == ThemeMode.dark
+        ? '다크 모드'
+        : currentMode == ThemeMode.light
+        ? '라이트 모드'
+        : '시스템 설정';
+
+    return MinglitSettingsTile(
+      leading: icon,
+      title: '테마',
+      subtitle: subtitle,
       onTap: () {
         unawaited(_showThemePicker(context, ref, currentMode));
       },
@@ -42,12 +43,16 @@ class ThemeSettingsTile extends ConsumerWidget {
     WidgetRef ref,
     ThemeMode current,
   ) async {
+    // Standard M3 SimpleDialog for now,
+    // but could be improved to MinglitBottomSheet or MinglitAlert.
     await showDialog<void>(
       context: context,
       builder: (ctx) => SimpleDialog(
         title: const Text('테마 설정'),
         children: [
-          RadioGroup<ThemeMode>(
+          RadioListTile<ThemeMode>(
+            title: const Text('시스템 설정'),
+            value: ThemeMode.system,
             groupValue: current,
             onChanged: (v) {
               if (v != null) {
@@ -55,24 +60,34 @@ class ThemeSettingsTile extends ConsumerWidget {
                   ref.read(themeControllerProvider.notifier).setThemeMode(v),
                 );
               }
-              Navigator.pop(ctx);
+              if (ctx.mounted) Navigator.pop(ctx);
             },
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                for (final mode in ThemeMode.values)
-                  RadioListTile<ThemeMode>(
-                    title: Text(
-                      mode == ThemeMode.system
-                          ? '시스템 설정'
-                          : mode == ThemeMode.light
-                          ? '라이트 모드'
-                          : '다크 모드',
-                    ),
-                    value: mode,
-                  ),
-              ],
-            ),
+          ),
+          RadioListTile<ThemeMode>(
+            title: const Text('라이트 모드'),
+            value: ThemeMode.light,
+            groupValue: current,
+            onChanged: (v) {
+              if (v != null) {
+                unawaited(
+                  ref.read(themeControllerProvider.notifier).setThemeMode(v),
+                );
+              }
+              if (ctx.mounted) Navigator.pop(ctx);
+            },
+          ),
+          RadioListTile<ThemeMode>(
+            title: const Text('다크 모드'),
+            value: ThemeMode.dark,
+            groupValue: current,
+            onChanged: (v) {
+              if (v != null) {
+                unawaited(
+                  ref.read(themeControllerProvider.notifier).setThemeMode(v),
+                );
+              }
+              if (ctx.mounted) Navigator.pop(ctx);
+            },
           ),
         ],
       ),

@@ -5,7 +5,7 @@ import 'package:minglit_kit/src/features/dev/catalog_tabs/catalog_tabs.dart';
 ///
 /// Organized into three sections:
 /// - **Tokens** (6 tabs): design foundation values
-/// - **Widgets** (8 tabs): reusable Minglit components
+/// - **Widgets** (9 tabs): reusable Minglit components
 /// - **Patterns** (1 tab): composited design patterns
 ///
 /// Shared between user and partner apps. Only accessible when
@@ -17,8 +17,8 @@ class DesignCatalogPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      // Fix #621: 16탭 → 14탭 (토큰 6 + 위젯 8) 재구성; #713: +1 패턴 탭
-      length: 15,
+      // Fix #1475: +1 Settings tab
+      length: 16,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Design Catalog'),
@@ -33,7 +33,7 @@ class DesignCatalogPage extends StatelessWidget {
               Tab(text: 'Radius'),
               Tab(text: 'IconSize'),
               Tab(text: 'Animation'),
-              // Widgets (8)
+              // Widgets (9)
               Tab(text: 'Layout'),
               Tab(text: 'Buttons'),
               Tab(text: 'Inputs'),
@@ -42,6 +42,7 @@ class DesignCatalogPage extends StatelessWidget {
               Tab(text: 'Overlay'),
               Tab(text: 'Data'),
               Tab(text: 'Loading'),
+              Tab(text: 'Settings'),
               // Patterns (1)
               Tab(text: 'Patterns'),
             ],
@@ -56,7 +57,7 @@ class DesignCatalogPage extends StatelessWidget {
             RadiusSection(),
             IconSizeSection(),
             AnimationSection(),
-            // Widgets (8)
+            // Widgets (9)
             LayoutSection(),
             ButtonsSection(),
             InputsSection(),
@@ -65,6 +66,7 @@ class DesignCatalogPage extends StatelessWidget {
             OverlaySection(),
             DataSection(),
             LoadingSection(),
+            SettingsSection(),
             // Patterns (1)
             PatternListSection(),
           ],

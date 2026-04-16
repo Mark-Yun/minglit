@@ -16,3 +16,4 @@ export 'widgets/inputs_section.dart';
 export 'widgets/layout_section.dart';
 export 'widgets/loading_section.dart';
 export 'widgets/overlay_section.dart';
+export 'widgets/settings_section.dart';
