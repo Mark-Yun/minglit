@@ -117,7 +117,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await capture.after(tester, 4);
+      // Fix #1458: step numbers corrected to sequential execution order
+      await capture.after(tester, 3);
 
       expect(find.byType(Scaffold), findsOneWidget);
     });
@@ -139,7 +140,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await capture.after(tester, 3);
+      await capture.after(tester, 4);
 
       expect(find.text('구매 내역'), findsOneWidget);
     });

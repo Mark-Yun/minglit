@@ -56,14 +56,20 @@ class GoldenCapture {
       if (rootElement == null) return;
 
       final image = await captureImage(rootElement);
-      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-      image.dispose();
-      if (byteData == null) return;
-
-      final bytes = Uint8List.view(byteData.buffer);
+      // Fix #1458: ensure dispose is called even if toByteData throws
+      late final Uint8List bytes;
+      try {
+        final byteData =
+            await image.toByteData(format: ui.ImageByteFormat.png);
+        if (byteData == null) return;
+        bytes = Uint8List.view(byteData.buffer);
+      } finally {
+        image.dispose();
+      }
       final filename = '${testId}_step${step}_$phase.png';
-      final dir = Directory('test/integration/goldens');
-      if (!dir.existsSync()) dir.createSync(recursive: true);
+      // createSync(recursive: true) is idempotent — no existsSync needed
+      final dir = Directory('test/integration/goldens')
+        ..createSync(recursive: true);
       // 동기 I/O: runAsync 없이 쓰므로 사이드이펙트가 없다.
       File('${dir.path}/$filename').writeAsBytesSync(bytes);
     } catch (e, st) {

@@ -51,7 +51,8 @@ void main() {
   });
 
   group('IT-U12: 본인인증', () {
-    final capture = GoldenCapture('cuj_u08');
+    // Fix #1458: cuj_u08 → cuj_u12 to match IT-U12 scenario ID
+    final capture = GoldenCapture('cuj_u12');
 
     testWidgets(
       'TC-U12-001: 인증 동의 미완료 → 동의 시트 표시',

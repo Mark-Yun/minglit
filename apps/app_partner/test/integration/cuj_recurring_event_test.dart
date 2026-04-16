@@ -378,7 +378,7 @@ void main() {
     testWidgets('TC-P09-002: active 규칙 — 일시 정지 버튼 탭 → pause() 호출', (
       tester,
     ) async {
-      final capture = GoldenCapture('cuj_p08');
+      final capture = GoldenCapture('cuj_p09');
       final activeRule = _makeRule();
 
       when(() => mockRepo.pause(any())).thenAnswer((_) async {});
@@ -418,7 +418,7 @@ void main() {
     testWidgets('TC-P09-003: active 규칙 — 규칙 취소 탭 → 다이얼로그 확인 → cancel() 호출', (
       tester,
     ) async {
-      final capture = GoldenCapture('cuj_p08');
+      final capture = GoldenCapture('cuj_p09');
       final activeRule = _makeRule();
 
       when(() => mockRepo.cancel(any())).thenAnswer((_) async {});
@@ -496,7 +496,7 @@ void main() {
     testWidgets('TC-P09-004: paused 규칙 — resume 버튼 탭 → resume() 호출', (
       tester,
     ) async {
-      final capture = GoldenCapture('cuj_p08');
+      final capture = GoldenCapture('cuj_p09');
       final pausedRule = _makeRule(status: RecurrenceStatus.paused);
 
       when(() => mockRepo.resume(any())).thenAnswer((_) async {});

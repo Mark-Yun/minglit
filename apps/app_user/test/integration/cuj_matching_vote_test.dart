@@ -77,7 +77,8 @@ void main() {
   }
 
   group('IT-U05: 매칭 투표 → 결과 확인', () {
-    final capture = GoldenCapture('cuj_u07');
+    // Fix #1458: cuj_u07 → cuj_u05 to match IT-U05 scenario ID
+    final capture = GoldenCapture('cuj_u05');
 
     testWidgets('빈 후보자 목록 — 안내 문구 표시', (tester) async {
       await tester.pumpWidget(buildVoteContent());

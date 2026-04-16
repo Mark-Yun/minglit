@@ -55,7 +55,8 @@ void main() {
   });
 
   group('IT-U14 태그 탐색 CUJ', () {
-    final capture = GoldenCapture('cuj_u12');
+    // Fix #1458: cuj_u12 → cuj_u14 to match IT-U14 scenario ID
+    final capture = GoldenCapture('cuj_u14');
 
     // TC-U14-001: TagEventListRoute → TagEventListPage + 이벤트 렌더링
     testWidgets(
