@@ -59,6 +59,7 @@ jobs:
           SENTRY_DSN: ${{ secrets.SENTRY_DSN_EDGE_FUNCTIONS }}
           STATSIG_SERVER_KEY: ${{ secrets.STATSIG_SERVER_KEY }}
           AXIOM_API_TOKEN: ${{ secrets.AXIOM_API_TOKEN }}
+          SIM_USER_PASSWORD: ${{ secrets.SIM_USER_PASSWORD }}
         run: |
           supabase link --project-ref $SUPABASE_PROJECT_ID --password $SUPABASE_DB_PASSWORD
 
@@ -77,7 +78,12 @@ jobs:
             supabase secrets set STATSIG_SERVER_KEY=$STATSIG_SERVER_KEY
           fi
           supabase secrets set ENVIRONMENT=${{ steps.env.outputs.ENVIRONMENT_VALUE }}
-          supabase secrets set SIM_USER_PASSWORD=password1234!
+          # Fix #1508: GitHub Secret 경유로 주입 — 평문 하드코딩 제거 (dev 시뮬레이터 전용)
+          if [ -z "$SIM_USER_PASSWORD" ]; then
+            echo "SIM_USER_PASSWORD is not set. Skipping."
+          else
+            supabase secrets set SIM_USER_PASSWORD=$SIM_USER_PASSWORD
+          fi
 
           supabase db push --password $SUPABASE_DB_PASSWORD --include-all
 
@@ -89,6 +95,9 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y postgresql-client
 
       # Fix #1413: seed via CLI — psql/pooler 불필요, CLI가 자체 연결
+      # Note: --include-seed는 마이그레이션 push도 포함하지만 Supabase CLI가
+      # schema_migrations 테이블로 이미 적용된 마이그레이션을 추적·스킵하므로 이중 적용 없음.
+      # seed.dev.sql 사용을 위해 config.toml을 임시 수정 후 별도 스텝으로 실행.
       - name: Seed dev data (db push --include-seed)
         if: ${{ steps.env.outputs.ENV == 'dev' }}
         env:
