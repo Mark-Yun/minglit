@@ -15,8 +15,6 @@ class MorePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final partnerAsync = ref.watch(currentPartnerInfoProvider);
     final moreCoordinator = ref.read(moreCoordinatorProvider);
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
 
     return Scaffold(
       appBar: MinglitTheme.simpleAppBar(title: '더보기', showBackButton: false),
