@@ -2,6 +2,7 @@ import { createServiceClient } from "../_shared/supabase_client.ts";
 import { createLLMAdapter } from "../_shared/ai/factory.ts";
 import { WorkerUtils } from "../_shared/worker_utils.ts";
 import { initSentry, withHandler } from "../_shared/logger.ts";
+import { requireServiceRole } from "../_shared/auth_utils.ts";
 import {
   buildTagExtractionPrompt,
   extractDescriptionText,
@@ -27,15 +28,14 @@ const TAGS_SKIP_CODES = new Set([
 initSentry();
 
 Deno.serve(withHandler(async (req) => {
+  // Fix #1489: 시스템 전용 EF — service_role만 허용
+  const auth = requireServiceRole(req);
+  if (auth instanceof Response) return auth;
   console.log(`[${FN}] triggered`);
-
-  // JWT verification is handled by Supabase edge runtime (verify_jwt=true in config.toml).
-  // The cron sends a valid anon JWT (publishable_key) which passes Supabase verification.
-  // Elevated DB access is handled internally via createServiceClient().
 
   try {
     const payload = await req.json().catch(() => ({}));
-    const batchSize = (payload as { batch_size?: number }).batch_size ?? 10;
+    const batchSize = Math.min((payload as { batch_size?: number }).batch_size ?? 10, 50);
 
     const supabase = createServiceClient();
     // createLLMAdapter() throws if OPENAI_API_KEY is missing
