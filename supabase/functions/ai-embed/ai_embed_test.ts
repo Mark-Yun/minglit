@@ -4,7 +4,6 @@ import { HybridCalculator } from "./calculator.ts";
 import {
   captureServeHandler,
   createFetchMock,
-  jsonRequest,
   jsonResponse,
   readJson,
   withNoIntervals,
@@ -14,6 +13,17 @@ import {
 import { mockVectorInteractionMessage, mockVectorPartyMessage } from "../_test_utils/fixtures.ts";
 import { OpenAIEmbedding } from "../_shared/ai/adapters/openai_embedding.ts";
 import { WorkerUtils } from "../_shared/worker_utils.ts";
+
+function makeRequest(body: unknown): Request {
+  return new Request("http://localhost", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer service-key",
+    },
+    body: JSON.stringify(body),
+  });
+}
 
 function embedding(value: number, size = 3) {
   return new Array(size).fill(value);
@@ -61,7 +71,7 @@ Deno.test({
       async () => {
         await withMockedFetch(fetchMock, async () => {
           await withNoIntervals(async () => {
-            const response = await handler(jsonRequest("http://localhost", {}));
+            const response = await handler(makeRequest({}));
             const payload = await readJson(response);
 
             assertEquals(response.status, 200);
@@ -126,7 +136,7 @@ Deno.test({
       async () => {
         await withMockedFetch(fetchMock, async () => {
           await withNoIntervals(async () => {
-            const response = await handler(jsonRequest("http://localhost", {}));
+            const response = await handler(makeRequest({}));
             const payload = await readJson(response);
 
             assertEquals(response.status, 200);
@@ -175,7 +185,7 @@ Deno.test({
       async () => {
         await withMockedFetch(fetchMock, async () => {
           await withNoIntervals(async () => {
-            const response = await handler(jsonRequest("http://localhost", {}));
+            const response = await handler(makeRequest({}));
             const payload = await readJson(response);
 
             assertEquals(response.status, 200);
@@ -254,7 +264,7 @@ Deno.test({
       async () => {
         await withMockedFetch(fetchMock, async () => {
           await withNoIntervals(async () => {
-            const response = await handler(jsonRequest("http://localhost", {}));
+            const response = await handler(makeRequest({}));
             const payload = await readJson(response);
 
             assertEquals(response.status, 500);
@@ -312,7 +322,7 @@ Deno.test({
       async () => {
         await withMockedFetch(fetchMock, async () => {
           await withNoIntervals(async () => {
-            const response = await handler(jsonRequest("http://localhost", {}));
+            const response = await handler(makeRequest({}));
             const payload = await readJson(response);
 
             assertEquals(response.status, 200);
@@ -370,7 +380,7 @@ Deno.test({
       async () => {
         await withMockedFetch(fetchMock, async () => {
           await withNoIntervals(async () => {
-            const response = await handler(jsonRequest("http://localhost", {}));
+            const response = await handler(makeRequest({}));
             const payload = await readJson(response);
 
             assertEquals(response.status, 200);
@@ -382,6 +392,57 @@ Deno.test({
   } finally {
     stubs.forEach((s) => s.restore());
   }
+  },
+});
+
+Deno.test({
+  name: "ai-embed - unauthorized: no auth header returns 401",
+  fn: async () => {
+  const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+  const { fetchMock } = createFetchMock([]);
+
+  await withEnv(
+    {
+      SUPABASE_URL: "https://supabase.test",
+      SUPABASE_SERVICE_ROLE_KEY: "service-key",
+      OPENAI_API_KEY: "openai-key",
+    },
+    async () => {
+      await withMockedFetch(fetchMock, async () => {
+        await withNoIntervals(async () => {
+          const response = await handler(new Request("http://localhost", { method: "POST" }));
+          assertEquals(response.status, 401);
+        });
+      });
+    },
+  );
+  },
+});
+
+Deno.test({
+  name: "ai-embed - unauthorized: wrong token returns 401",
+  fn: async () => {
+  const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+  const { fetchMock } = createFetchMock([]);
+
+  await withEnv(
+    {
+      SUPABASE_URL: "https://supabase.test",
+      SUPABASE_SERVICE_ROLE_KEY: "service-key",
+      OPENAI_API_KEY: "openai-key",
+    },
+    async () => {
+      await withMockedFetch(fetchMock, async () => {
+        await withNoIntervals(async () => {
+          const response = await handler(new Request("http://localhost", {
+            method: "POST",
+            headers: { "Authorization": "Bearer bad-key" },
+          }));
+          assertEquals(response.status, 401);
+        });
+      });
+    },
+  );
   },
 });
 
