@@ -178,7 +178,7 @@ void main() {
         await tester.pump();
         await tester.pump();
 
-        await capture.setup(tester, 2);
+        await capture.setup(tester, 1);
 
         expect(find.text('오늘의 이벤트'), findsNothing);
         expect(find.text('곧 시작'), findsNothing);
@@ -197,7 +197,7 @@ void main() {
         await tester.pump(); // 바텀시트 show 시작
         await tester.pump(const Duration(milliseconds: 300)); // 슬라이드 애니메이션
 
-        await capture.after(tester, 1);
+        await capture.after(tester, 2);
 
         expect(find.byType(EventNowBottomSheet), findsOneWidget);
       },
@@ -277,6 +277,8 @@ void main() {
   });
 
   group('IT-U07-B EventNowBottomSheet phase 컨텐츠 검증', () {
+    final capture = GoldenCapture('cuj_u09');
+
     // TC-U07-010: CHECK_IN_READY → 이벤트 제목 + 시간 표시
     testWidgets(
       'TC-U07-010: CHECK_IN_READY 탭 → 바텀시트에 이벤트 제목과 시간이 표시된다',

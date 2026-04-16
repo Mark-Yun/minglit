@@ -121,6 +121,7 @@ void main() {
   // ─── Widget-level Interaction Tests ─────────────────────────────────────
 
   group('IT-U06: 탈퇴 사유 선택 페이지 인터랙션', () {
+    final capture = GoldenCapture('cuj_u06');
     Widget buildReasonPage({
       _SpyDeletionCoordinator? coordinator,
     }) {
@@ -203,6 +204,7 @@ void main() {
   });
 
   group('IT-U06: 탈퇴 본인 확인 페이지 인터랙션', () {
+    final capture = GoldenCapture('cuj_u06');
     Widget buildVerifyPage({
       required User user,
       _FakeDeletionController? controller,
