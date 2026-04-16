@@ -50,7 +50,7 @@ _Party _$PartyFromJson(Map<String, dynamic> json) => _Party(
   location: json['location'] == null
       ? null
       : Location.fromJson(json['location'] as Map<String, dynamic>),
-  description: json['description'] as Map<String, dynamic>?,
+  description: _descriptionFromJson(json['description']),
   imageUrls:
       (json['image_urls'] as List<dynamic>?)
           ?.map((e) => e as String)

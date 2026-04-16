@@ -15,7 +15,7 @@ _Event _$EventFromJson(Map<String, dynamic> json) => _Event(
   updatedAt: DateTime.parse(json['updated_at'] as String),
   locationId: json['location_id'] as String?,
   title: json['title'] as String?,
-  description: json['description'] as Map<String, dynamic>?,
+  description: _descriptionFromJson(json['description']),
   imageUrls: (json['image_urls'] as List<dynamic>?)
       ?.map((e) => e as String)
       .toList(),
