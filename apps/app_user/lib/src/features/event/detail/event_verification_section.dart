@@ -16,18 +16,11 @@ class _VerificationSection extends ConsumerWidget {
             .toList()
           ..sort();
 
-    return Padding(
-      padding: const EdgeInsets.all(MinglitSpacing.medium),
+    return MinglitSection(
+      title: '필요 인증',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '필요 인증',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: MinglitSpacing.medium),
           if (allIds.isEmpty)
             Text(
               '별도의 인증이 필요하지 않습니다.',
