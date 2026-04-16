@@ -172,6 +172,7 @@ Deno.test(
               payment_amount: 15000,
               status: "approved",
               payment_id: "imp_xxx",
+              user_id: "user-123",
             }),
         },
       ]);
@@ -233,6 +234,7 @@ Deno.test(
             jsonResponse({
               payment_amount: 15000,
               status: "pending",
+              user_id: "user-123",
             }),
         },
         {
