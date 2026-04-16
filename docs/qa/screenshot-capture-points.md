@@ -1,0 +1,454 @@
+# Integration 테스트 스텝별 스크린샷 캡처 포인트 정의
+
+> 관련: #1458 (Patrol 통합 + 스크린샷 내장)
+>
+> 목적: 기존 37개 integration 테스트 + 3개 patrol 테스트에 스텝별 스크린샷을 내장할 때,
+> 각 테스트의 어느 시점에 어떤 이름으로 캡처할지 정의한다.
+>
+> SWE는 이 문서를 보고 `takeScreenshot()` 호출을 삽입한다.
+
+---
+
+## 네이밍 규칙
+
+```
+{test_id}_step{N}_{phase}.png
+```
+
+| 요소 | 설명 | 예시 |
+|------|------|------|
+| `test_id` | 테스트 파일의 고유 ID (아래 매핑 참고) | `cuj_u01`, `flow_u_search` |
+| `N` | 스텝 번호 (0부터) | `0`, `1`, `2` |
+| `phase` | 캡처 시점 | `setup`, `before`, `after`, `error` |
+
+### phase 정의
+
+| phase | 언제 캡처하는가 | 용도 |
+|-------|---------------|------|
+| `setup` | 테스트 앱 pumpWidget 직후, 첫 액션 전 | 초기 상태 (로딩, 리다이렉트 결과) 확인 |
+| `before` | 사용자 액션(tap, input) 직전 | 액션 대상이 화면에 있는지 확인 |
+| `after` | 사용자 액션 후 pumpAndSettle 완료 | 액션 결과 확인 |
+| `error` | 에러 상태 유발 후 | 에러 UI가 정상 렌더링되는지 확인 |
+
+---
+
+## 캡처 포인트 밀도 기준
+
+모든 testWidgets에 무조건 캡처를 넣지 않는다. 아래 기준으로 선별:
+
+| 기준 | 캡처 여부 | 이유 |
+|------|----------|------|
+| 화면 전환이 있는 테스트 | **캡처** | 전환 전후 시각적 확인 |
+| 단순 리다이렉트 검증 (expect만) | **setup 1장** | 리다이렉트 목적지 확인 |
+| 위저드 스텝 진행 | **스텝마다 캡처** | 각 스텝의 UI 상태 |
+| 에러/엣지 케이스 | **error 1장** | 에러 UI 확인 |
+| 데이터 로드 후 목록 표시 | **after 1장** | 렌더링 결과 확인 |
+
+---
+
+## app_user CUJ 테스트 (12 files)
+
+### cuj_signup_to_apply_test.dart — `cuj_u01` (8 tests, ~8 captures)
+
+> 이미 `tester.capture()` 적용됨. Patrol 전환 시 네이밍만 통일.
+
+| testWidgets | 캡처 포인트 | phase |
+|-------------|-----------|-------|
+| 비로그인 → 리다이렉트 | `cuj_u01_step0_setup` | setup |
+| 로그인 페이지 (from 파라미터) | `cuj_u01_step1_setup` | setup |
+| 위저드 접근 | `cuj_u01_step2_after` | after |
+| 위저드 진행 바 | `cuj_u01_step3_after` | after |
+| 무료 이벤트 위저드 | `cuj_u01_step4_after` | after |
+| 에러 상태 | `cuj_u01_step5_error` | error |
+| 제출 중 상태 | `cuj_u01_step6_after` | after |
+| 성공 상태 | `cuj_u01_step7_after` | after |
+
+### cuj_checkin_matching_test.dart — `cuj_u02` (8 tests, ~5 captures)
+
+| testWidgets | 캡처 포인트 | phase |
+|-------------|-----------|-------|
+| 비로그인 → 티켓 목록 차단 | `cuj_u02_step0_setup` | setup |
+| 로그인 → 티켓 목록 접근 | `cuj_u02_step1_after` | after |
+| QR 화면 렌더링 | `cuj_u02_step2_after` | after |
+| 투표 화면 | `cuj_u02_step3_after` | after |
+| 매칭 결과 화면 | `cuj_u02_step4_after` | after |
+
+### cuj_refund_test.dart — `cuj_u03` (5 tests, ~4 captures)
+
+| testWidgets | 캡처 포인트 | phase |
+|-------------|-----------|-------|
+| 환불 신청 화면 | `cuj_u03_step0_setup` | setup |
+| 환불 정책 표시 | `cuj_u03_step1_after` | after |
+| 환불 확인 다이얼로그 | `cuj_u03_step2_before` | before |
+| 환불 완료 상태 | `cuj_u03_step3_after` | after |
+
+### cuj_event_application_test.dart — `cuj_u04` (1 test, ~1 capture)
+
+| testWidgets | 캡처 포인트 | phase |
+|-------------|-----------|-------|
+| 신청 위저드 전체 플로우 | `cuj_u04_step0_after` | after |
+
+### cuj_event_detail_test.dart — `cuj_u05` (1 test, ~1 capture)
+
+| testWidgets | 캡처 포인트 | phase |
+|-------------|-----------|-------|
+| 이벤트 상세 렌더링 | `cuj_u05_step0_setup` | setup |
+
+### cuj_account_deletion_test.dart — `cuj_u06` (12 tests, ~6 captures)
+
+| testWidgets | 캡처 포인트 | phase |
+|-------------|-----------|-------|
+| 삭제 확인 화면 | `cuj_u06_step0_setup` | setup |
+| 유예 기간 안내 | `cuj_u06_step1_after` | after |
+| 삭제 확인 다이얼로그 | `cuj_u06_step2_before` | before |
+| 삭제 처리 완료 | `cuj_u06_step3_after` | after |
+| 복구 다이얼로그 | `cuj_u06_step4_after` | after |
+| 에러 상태 | `cuj_u06_step5_error` | error |
+
+### cuj_matching_vote_test.dart — `cuj_u07` (9 tests, ~5 captures)
+
+| testWidgets | 캡처 포인트 | phase |
+|-------------|-----------|-------|
+| 투표 화면 렌더링 | `cuj_u07_step0_setup` | setup |
+| 투표 선택 UI | `cuj_u07_step1_before` | before |
+| 투표 제출 후 | `cuj_u07_step2_after` | after |
+| 결과 화면 | `cuj_u07_step3_after` | after |
+| 타임아웃 상태 | `cuj_u07_step4_error` | error |
+
+### cuj_identity_verification_test.dart — `cuj_u08` (4 tests, ~3 captures)
+
+| testWidgets | 캡처 포인트 | phase |
+|-------------|-----------|-------|
+| 인증 화면 | `cuj_u08_step0_setup` | setup |
+| 인증 진행 중 | `cuj_u08_step1_after` | after |
+| 인증 완료 | `cuj_u08_step2_after` | after |
+
+### cuj_event_now_bar_test.dart — `cuj_u09` (15 tests, ~4 captures)
+
+| testWidgets | 캡처 포인트 | phase |
+|-------------|-----------|-------|
+| 나우바 표시 (진행 중 이벤트) | `cuj_u09_step0_setup` | setup |
+| 나우바 탭 → 이벤트 상세 | `cuj_u09_step1_after` | after |
+| 나우바 미표시 (이벤트 없음) | `cuj_u09_step2_setup` | setup |
+| 나우바 카운트다운 | `cuj_u09_step3_after` | after |
+
+### cuj_ticket_qr_test.dart — `cuj_u10` (3 tests, ~2 captures)
+
+| testWidgets | 캡처 포인트 | phase |
+|-------------|-----------|-------|
+| QR 코드 렌더링 | `cuj_u10_step0_after` | after |
+| QR 새로고침 | `cuj_u10_step1_after` | after |
+
+### cuj_notification_test.dart — `cuj_u11` (1 test, ~1 capture)
+
+| testWidgets | 캡처 포인트 | phase |
+|-------------|-----------|-------|
+| 알림 목록 렌더링 | `cuj_u11_step0_setup` | setup |
+
+### cuj_tag_discovery_test.dart — `cuj_u12` (2 tests, ~2 captures)
+
+| testWidgets | 캡처 포인트 | phase |
+|-------------|-----------|-------|
+| 태그 검색 UI | `cuj_u12_step0_setup` | setup |
+| 태그 선택 결과 | `cuj_u12_step1_after` | after |
+
+---
+
+## app_user Flow 테스트 (7 files)
+
+### flow_event_browse_test.dart — `flow_u_browse` (10 tests, ~4 captures)
+
+| testWidgets | 캡처 포인트 | phase |
+|-------------|-----------|-------|
+| 홈 피드 렌더링 | `flow_u_browse_step0_setup` | setup |
+| 이벤트 카드 탭 → 상세 | `flow_u_browse_step1_after` | after |
+| 카테고리 필터 | `flow_u_browse_step2_after` | after |
+| 빈 상태 | `flow_u_browse_step3_setup` | setup |
+
+### flow_search_test.dart — `flow_u_search` (7 tests, ~3 captures)
+
+| testWidgets | 캡처 포인트 | phase |
+|-------------|-----------|-------|
+| 검색 화면 초기 | `flow_u_search_step0_setup` | setup |
+| 검색 결과 표시 | `flow_u_search_step1_after` | after |
+| 검색 결과 없음 | `flow_u_search_step2_after` | after |
+
+### flow_my_page_test.dart — `flow_u_mypage` (12 tests, ~4 captures)
+
+| testWidgets | 캡처 포인트 | phase |
+|-------------|-----------|-------|
+| 마이페이지 렌더링 | `flow_u_mypage_step0_setup` | setup |
+| 구매 내역 | `flow_u_mypage_step1_after` | after |
+| 개인정보 설정 | `flow_u_mypage_step2_after` | after |
+| 비로그인 상태 | `flow_u_mypage_step3_setup` | setup |
+
+### flow_ticket_application_test.dart — `flow_u_ticket` (10 tests, ~4 captures)
+
+| testWidgets | 캡처 포인트 | phase |
+|-------------|-----------|-------|
+| 신청 목록 | `flow_u_ticket_step0_setup` | setup |
+| 신청 상세 | `flow_u_ticket_step1_after` | after |
+| 결제 진행 | `flow_u_ticket_step2_after` | after |
+| 에러 상태 | `flow_u_ticket_step3_error` | error |
+
+### flow_admission_status_test.dart — `flow_u_admission` (13 tests, ~4 captures)
+
+| testWidgets | 캡처 포인트 | phase |
+|-------------|-----------|-------|
+| 입장 상태 화면 | `flow_u_admission_step0_setup` | setup |
+| 체크인 완료 상태 | `flow_u_admission_step1_after` | after |
+| 대기 상태 | `flow_u_admission_step2_after` | after |
+| 거절 상태 | `flow_u_admission_step3_after` | after |
+
+### flow_notification_routing_test.dart — `flow_u_noti` (10 tests, ~3 captures)
+
+| testWidgets | 캡처 포인트 | phase |
+|-------------|-----------|-------|
+| 알림 목록 | `flow_u_noti_step0_setup` | setup |
+| 알림 탭 → 딥링크 이동 | `flow_u_noti_step1_after` | after |
+| 빈 알림 상태 | `flow_u_noti_step2_setup` | setup |
+
+### flow_error_edge_cases_test.dart — `flow_u_error` (10 tests, ~3 captures)
+
+| testWidgets | 캡처 포인트 | phase |
+|-------------|-----------|-------|
+| 네트워크 에러 화면 | `flow_u_error_step0_error` | error |
+| 404 화면 | `flow_u_error_step1_error` | error |
+| 재시도 후 복구 | `flow_u_error_step2_after` | after |
+
+---
+
+## app_user 기타 테스트 (6 files)
+
+### auth_redirect_test.dart — `redirect_u_auth` (8 tests, ~3 captures)
+
+| testWidgets | 캡처 포인트 | phase |
+|-------------|-----------|-------|
+| GUEST → /login 리다이렉트 | `redirect_u_auth_step0_setup` | setup |
+| AUTH → 보호 페이지 접근 | `redirect_u_auth_step1_setup` | setup |
+| VERIFIED → 모든 페이지 접근 | `redirect_u_auth_step2_setup` | setup |
+
+### consent_redirect_test.dart — `redirect_u_consent` (8 tests, ~2 captures)
+
+| testWidgets | 캡처 포인트 | phase |
+|-------------|-----------|-------|
+| 약관 미동의 → 동의 화면 | `redirect_u_consent_step0_setup` | setup |
+| 약관 동의 완료 → 원래 페이지 | `redirect_u_consent_step1_after` | after |
+
+### home_navigation_test.dart — `nav_u_home` (5 tests, ~3 captures)
+
+| testWidgets | 캡처 포인트 | phase |
+|-------------|-----------|-------|
+| 홈 탭 초기 | `nav_u_home_step0_setup` | setup |
+| 탭 전환 | `nav_u_home_step1_after` | after |
+| 딥링크 → 탭 복귀 | `nav_u_home_step2_after` | after |
+
+### login_page_test.dart — `login_u` (3 tests, ~2 captures)
+
+| testWidgets | 캡처 포인트 | phase |
+|-------------|-----------|-------|
+| 로그인 페이지 렌더링 | `login_u_step0_setup` | setup |
+| 소셜 로그인 버튼 | `login_u_step1_before` | before |
+
+### my_page_test.dart — `my_u` (3 tests, ~2 captures)
+
+| testWidgets | 캡처 포인트 | phase |
+|-------------|-----------|-------|
+| 마이페이지 렌더링 | `my_u_step0_setup` | setup |
+| 메뉴 항목 표시 | `my_u_step1_after` | after |
+
+### smoke_test.dart / edge_cases_test.dart — 캡처 불필요
+
+> Smoke: 전 화면 크래시 없이 렌더링만 검증 → `scenario_screenshots_test.dart`로 이미 커버
+> Edge cases: 파라미터 검증 → 캡처 가치 낮음
+
+---
+
+## app_partner CUJ 테스트 (10 files)
+
+### cuj_onboarding_to_event_test.dart — `cuj_p01` (8 tests, ~8 captures)
+
+> 이미 `tester.capture()` 적용됨. Patrol 전환 시 네이밍 통일.
+
+| testWidgets | 캡처 포인트 | phase |
+|-------------|-----------|-------|
+| 비로그인 → 리다이렉트 | `cuj_p01_step0_setup` | setup |
+| needsApplication → /welcome | `cuj_p01_step1_setup` | setup |
+| draftInProgress → /apply | `cuj_p01_step2_setup` | setup |
+| pendingReview → /apply/status | `cuj_p01_step3_setup` | setup |
+| needsCorrection → /apply/status | `cuj_p01_step4_setup` | setup |
+| hasPartner → 홈 | `cuj_p01_step5_setup` | setup |
+| 파티 목록 접근 | `cuj_p01_step6_after` | after |
+| 등록 완료 → /apply 리다이렉트 | `cuj_p01_step7_setup` | setup |
+
+### cuj_application_review_test.dart — `cuj_p02` (6 tests, ~4 captures)
+
+| testWidgets | 캡처 포인트 | phase |
+|-------------|-----------|-------|
+| 신청 목록 화면 | `cuj_p02_step0_setup` | setup |
+| 신청 상세 | `cuj_p02_step1_after` | after |
+| 승인 처리 | `cuj_p02_step2_after` | after |
+| 거절 처리 | `cuj_p02_step3_after` | after |
+
+### cuj_application_action_test.dart — `cuj_p02a` (7 tests, ~4 captures)
+
+| testWidgets | 캡처 포인트 | phase |
+|-------------|-----------|-------|
+| 승인 버튼 탭 전 | `cuj_p02a_step0_before` | before |
+| 승인 완료 | `cuj_p02a_step1_after` | after |
+| 거절 확인 다이얼로그 | `cuj_p02a_step2_before` | before |
+| 거절 완료 | `cuj_p02a_step3_after` | after |
+
+### cuj_checkin_manage_test.dart — `cuj_p03` (4 tests, ~3 captures)
+
+| testWidgets | 캡처 포인트 | phase |
+|-------------|-----------|-------|
+| 체크인 화면 | `cuj_p03_step0_setup` | setup |
+| QR 스캔 결과 | `cuj_p03_step1_after` | after |
+| 중복 체크인 에러 | `cuj_p03_step2_error` | error |
+
+### cuj_checkin_qr_test.dart — `cuj_p03a` (9 tests, ~3 captures)
+
+| testWidgets | 캡처 포인트 | phase |
+|-------------|-----------|-------|
+| QR 스캐너 화면 | `cuj_p03a_step0_setup` | setup |
+| 스캔 성공 | `cuj_p03a_step1_after` | after |
+| 유효하지 않은 QR | `cuj_p03a_step2_error` | error |
+
+### cuj_settlement_test.dart — `cuj_p04` (6 tests, ~4 captures)
+
+| testWidgets | 캡처 포인트 | phase |
+|-------------|-----------|-------|
+| 정산 목록 | `cuj_p04_step0_setup` | setup |
+| 정산 상세 | `cuj_p04_step1_after` | after |
+| 계좌 등록 | `cuj_p04_step2_after` | after |
+| 계좌 수정 | `cuj_p04_step3_after` | after |
+
+### cuj_event_create_wizard_test.dart — `cuj_p05` (스텝 수 확인 필요, ~6 captures)
+
+| testWidgets | 캡처 포인트 | phase |
+|-------------|-----------|-------|
+| 위저드 Step 1: 기본정보 | `cuj_p05_step0_setup` | setup |
+| 위저드 Step 2: 날짜/시간 | `cuj_p05_step1_after` | after |
+| 위저드 Step 3: 티켓 | `cuj_p05_step2_after` | after |
+| 위저드 Step 4: 검토 | `cuj_p05_step3_after` | after |
+| 생성 완료 | `cuj_p05_step4_after` | after |
+| 유효성 검사 에러 | `cuj_p05_step5_error` | error |
+
+### cuj_team_management_test.dart — `cuj_p06` (8 tests, ~4 captures)
+
+| testWidgets | 캡처 포인트 | phase |
+|-------------|-----------|-------|
+| 멤버 목록 | `cuj_p06_step0_setup` | setup |
+| 멤버 초대 | `cuj_p06_step1_after` | after |
+| 권한 변경 | `cuj_p06_step2_after` | after |
+| 멤버 제거 | `cuj_p06_step3_after` | after |
+
+### cuj_partner_account_deletion_test.dart — `cuj_p07` (8 tests, ~4 captures)
+
+| testWidgets | 캡처 포인트 | phase |
+|-------------|-----------|-------|
+| 계정 삭제 화면 | `cuj_p07_step0_setup` | setup |
+| 삭제 확인 다이얼로그 | `cuj_p07_step1_before` | before |
+| 삭제 완료 | `cuj_p07_step2_after` | after |
+| 에러 상태 | `cuj_p07_step3_error` | error |
+
+### cuj_recurring_event_test.dart — `cuj_p08` (5 tests, ~3 captures)
+
+| testWidgets | 캡처 포인트 | phase |
+|-------------|-----------|-------|
+| 반복 설정 화면 | `cuj_p08_step0_setup` | setup |
+| 반복 규칙 저장 | `cuj_p08_step1_after` | after |
+| 반복 이벤트 목록 | `cuj_p08_step2_after` | after |
+
+---
+
+## app_partner 기타 테스트 (1 file)
+
+### partner_redirect_test.dart — `redirect_p` (10 tests, ~4 captures)
+
+| testWidgets | 캡처 포인트 | phase |
+|-------------|-----------|-------|
+| GUEST → /login | `redirect_p_step0_setup` | setup |
+| NEEDS_APP → /welcome | `redirect_p_step1_setup` | setup |
+| PENDING → /apply/status | `redirect_p_step2_setup` | setup |
+| PARTNER → 홈 | `redirect_p_step3_setup` | setup |
+
+---
+
+## Patrol 테스트 (3 files)
+
+### kakao_login_test.dart — `patrol_login`
+
+| 캡처 포인트 | phase | 설명 |
+|-----------|-------|------|
+| `patrol_login_step0_setup` | setup | 로그인 화면 |
+| `patrol_login_step1_before` | before | 카카오 로그인 버튼 탭 전 |
+| `patrol_login_step2_after` | after | 카카오 WebView (네이티브) |
+| `patrol_login_step3_after` | after | 로그인 완료 → 홈 |
+
+### payment_pg_test.dart — `patrol_payment`
+
+| 캡처 포인트 | phase | 설명 |
+|-----------|-------|------|
+| `patrol_payment_step0_setup` | setup | 결제 화면 |
+| `patrol_payment_step1_before` | before | PG 결제 시작 전 |
+| `patrol_payment_step2_after` | after | PG WebView (네이티브) |
+| `patrol_payment_step3_after` | after | 결제 완료 |
+
+### permission_grant_test.dart — `patrol_permission`
+
+| 캡처 포인트 | phase | 설명 |
+|-----------|-------|------|
+| `patrol_permission_step0_setup` | setup | 권한 요청 전 |
+| `patrol_permission_step1_after` | after | 시스템 권한 다이얼로그 (네이티브) |
+| `patrol_permission_step2_after` | after | 권한 허용 후 |
+
+---
+
+## 요약
+
+| 앱 | 테스트 유형 | 파일 수 | 예상 캡처 수 |
+|----|-----------|---------|------------|
+| app_user | CUJ | 12 | ~46 |
+| app_user | Flow | 7 | ~25 |
+| app_user | 기타 (redirect, nav, login) | 6 | ~12 |
+| app_partner | CUJ | 10 | ~43 |
+| app_partner | 기타 (redirect) | 1 | ~4 |
+| patrol | E2E (네이티브) | 3 | ~11 |
+| **합계** | | **39** | **~141** |
+
+> 이슈 예상치 ~120장 대비 약간 많음. 실제 구현 시 단순 리다이렉트 검증의 setup 캡처를 줄이면 120장 수준으로 조정 가능.
+
+---
+
+## SWE 구현 가이드
+
+### 1. takeScreenshot 호출 위치
+
+```dart
+// Widget test (test/integration/)에서는 Patrol의 PatrolTester 사용
+await $.takeScreenshot(name: 'cuj_u01_step0_setup');
+
+// Integration test (integration_test/)에서는 binding 사용
+await binding.takeScreenshot('cuj_u01_step0_setup');
+```
+
+### 2. 삽입 원칙
+
+- `pumpWidget()` 직후 → `setup` 캡처
+- `tap()` / `enterText()` 직전 → `before` 캡처 (위저드/다이얼로그만)
+- `pumpAndSettle()` 직후 → `after` 캡처
+- expect에서 에러 UI 검증하는 테스트 → `error` 캡처
+
+### 3. CI 아티팩트
+
+캡처된 스크린샷은 CI에서 아티팩트로 업로드:
+
+```yaml
+- name: Upload screenshots
+  uses: actions/upload-artifact@v7
+  with:
+    name: integration-screenshots-${{ matrix.app }}
+    path: '**/screenshots/*.png'
+```
