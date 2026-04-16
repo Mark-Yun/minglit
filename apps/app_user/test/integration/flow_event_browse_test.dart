@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
+import 'utils/golden_capture.dart';
 import 'utils/test_app.dart';
 import 'utils/test_mocks.dart';
 
@@ -55,6 +56,7 @@ void main() {
     // ── 홈 화면: AsyncData 빈 목록 ──
     testWidgets('홈 AsyncData 빈 목록 → 추천 이벤트가 없습니다', (tester) async {
       setKoreanLocale(tester);
+      final capture = GoldenCapture('flow_u_browse');
       await tester.pumpWidget(
         createTestApp(
           additionalOverrides: [
@@ -66,12 +68,15 @@ void main() {
       await tester.pump();
       await tester.pump();
 
+      await capture.setup(tester, 3); // 빈 상태
+
       expect(find.text('추천 이벤트가 없습니다'), findsOneWidget);
     });
 
     // ── 홈 화면: AsyncData 이벤트 카드 렌더링 ──
     testWidgets('홈 AsyncData → 이벤트 카드 리스트 렌더링', (tester) async {
       setKoreanLocale(tester);
+      final capture = GoldenCapture('flow_u_browse');
       final mockEvents = createMockEventsForTest(count: 3);
       await tester.pumpWidget(
         createTestApp(
@@ -85,6 +90,8 @@ void main() {
       await tester.pump();
       await tester.pump();
 
+      await capture.setup(tester, 0); // 홈 피드 렌더링
+
       // SliverList only renders visible items in the viewport
       expect(find.byType(MinglitEventCard), findsWidgets);
       expect(find.text('Test Event 0'), findsOneWidget);
@@ -93,6 +100,7 @@ void main() {
     // ── 이벤트 카드 tap → EventDetailPage 이동 (실제 탭 플로우) ──
     testWidgets('홈 이벤트 카드 tap → EventDetailPage 이동', (tester) async {
       setKoreanLocale(tester);
+      final capture = GoldenCapture('flow_u_browse');
       final mockEvents = createMockEventsForTest(count: 1);
       await tester.pumpWidget(
         createTestApp(
@@ -110,6 +118,8 @@ void main() {
       await tester.tap(find.byType(MinglitEventCard).first);
       await tester.pump();
       await tester.pump();
+
+      await capture.after(tester, 1); // 이벤트 카드 탭 → 상세
 
       expect(find.byType(EventDetailPage), findsOneWidget);
     });

@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
+import 'utils/golden_capture.dart';
 import 'utils/test_app.dart';
 import 'utils/test_mocks.dart';
 
@@ -45,6 +46,7 @@ void main() {
 
     testWidgets('빈 쿼리 → 검색 아이콘 + "검색어를 입력하세요"', (tester) async {
       setKoreanLocale(tester);
+      final capture = GoldenCapture('flow_u_search');
       await tester.pumpWidget(
         createTestApp(
           initialLocation: '/search',
@@ -53,6 +55,8 @@ void main() {
       );
       await tester.pump();
       await tester.pump();
+
+      await capture.setup(tester, 0); // 검색 화면 초기
 
       expect(find.byIcon(Icons.search), findsOneWidget);
       expect(find.text('검색어를 입력하세요'), findsOneWidget);
@@ -87,6 +91,7 @@ void main() {
 
     testWidgets('검색 결과 있음 → 이벤트 카드 리스트', (tester) async {
       setKoreanLocale(tester);
+      final capture = GoldenCapture('flow_u_search');
       final mockEvents = createMockEventsForTest(count: 3);
 
       await tester.pumpWidget(
@@ -102,12 +107,15 @@ void main() {
       await tester.pump(const Duration(milliseconds: 600));
       await tester.pump();
 
+      await capture.after(tester, 1); // 검색 결과 표시
+
       expect(find.byType(MinglitEventCard), findsWidgets);
       expect(find.text('Test Event 0'), findsOneWidget);
     });
 
     testWidgets('검색 결과 없음 → 결과 없음 메시지 표시', (tester) async {
       setKoreanLocale(tester);
+      final capture = GoldenCapture('flow_u_search');
 
       await tester.pumpWidget(
         createTestApp(
@@ -121,6 +129,8 @@ void main() {
       await tester.enterText(find.byType(TextField), '없는쿼리');
       await tester.pump(const Duration(milliseconds: 600));
       await tester.pump();
+
+      await capture.after(tester, 2); // 검색 결과 없음
 
       // Fix #997: empty state 개선 — 아이콘 + 범용 메시지로 변경
       expect(find.byIcon(Icons.search_off_outlined), findsOneWidget);

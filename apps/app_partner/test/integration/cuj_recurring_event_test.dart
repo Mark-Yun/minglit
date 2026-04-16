@@ -16,6 +16,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'utils/golden_capture.dart';
+
 class _MockRecurrenceRuleRepository extends Mock
     implements RecurrenceRuleRepository {}
 
@@ -376,6 +378,7 @@ void main() {
     testWidgets('TC-P09-002: active 규칙 — 일시 정지 버튼 탭 → pause() 호출', (
       tester,
     ) async {
+      final capture = GoldenCapture('cuj_p09');
       final activeRule = _makeRule();
 
       when(() => mockRepo.pause(any())).thenAnswer((_) async {});
@@ -396,6 +399,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
+      await capture.setup(tester, 0);
+
       // active 상태 chip 확인
       expect(find.text('활성'), findsOneWidget);
 
@@ -413,6 +418,7 @@ void main() {
     testWidgets('TC-P09-003: active 규칙 — 규칙 취소 탭 → 다이얼로그 확인 → cancel() 호출', (
       tester,
     ) async {
+      final capture = GoldenCapture('cuj_p09');
       final activeRule = _makeRule();
 
       when(() => mockRepo.cancel(any())).thenAnswer((_) async {});
@@ -445,6 +451,8 @@ void main() {
       // "취소하기" 버튼 탭
       await tester.tap(find.text('취소하기'));
       await tester.pumpAndSettle();
+
+      await capture.after(tester, 1);
 
       verify(() => mockRepo.cancel(_ruleId)).called(1);
     });
@@ -488,6 +496,7 @@ void main() {
     testWidgets('TC-P09-004: paused 규칙 — resume 버튼 탭 → resume() 호출', (
       tester,
     ) async {
+      final capture = GoldenCapture('cuj_p09');
       final pausedRule = _makeRule(status: RecurrenceStatus.paused);
 
       when(() => mockRepo.resume(any())).thenAnswer((_) async {});
@@ -515,6 +524,8 @@ void main() {
       expect(find.text('재개'), findsOneWidget);
       await tester.tap(find.text('재개'));
       await tester.pumpAndSettle();
+
+      await capture.after(tester, 2);
 
       verify(() => mockRepo.resume(_ruleId)).called(1);
     });

@@ -16,6 +16,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'utils/golden_capture.dart';
 import 'utils/test_app.dart';
 import 'utils/test_mocks.dart';
 
@@ -50,6 +51,9 @@ void main() {
   });
 
   group('IT-U12: 본인인증', () {
+    // Fix #1458: cuj_u08 → cuj_u12 to match IT-U12 scenario ID
+    final capture = GoldenCapture('cuj_u12');
+
     testWidgets(
       'TC-U12-001: 인증 동의 미완료 → 동의 시트 표시',
       (tester) async {
@@ -73,6 +77,8 @@ void main() {
 
         // 초기 렌더링 → postFrameCallback → 비동기 동의 확인 완료
         await _drainConsentFlow(tester);
+
+        await capture.setup(tester, 0);
 
         // 동의 시트 텍스트 확인
         expect(find.text('본인확인정보 수집·이용 동의'), findsOneWidget);
@@ -126,6 +132,8 @@ void main() {
         await tester.pump(); // showModalBottomSheet Future resolve
         await tester.pump(); // setState(_isLoading=false) 재빌드
 
+        await capture.after(tester, 2);
+
         // 에러 안내 메시지 및 재시도 버튼 표시 확인
         expect(
           find.text('본인확인정보 수집·이용 동의 후 인증을 진행할 수 있습니다.'),
@@ -176,6 +184,8 @@ void main() {
         // 목적: getConsents()가 호출되었는지와 동의 시트가 표시되지 않는지만 검증한다.
         await tester.pump(); // 초기 프레임
         await tester.pump(); // postFrameCallback + getConsents() 호출
+
+        await capture.after(tester, 1);
 
         // 동의 확인 경로가 실행되어 getConsents()가 호출되었는지 검증.
         // ConsentController.build()도 getConsents()를 호출하므로 greaterThanOrEqualTo(1) 사용.
