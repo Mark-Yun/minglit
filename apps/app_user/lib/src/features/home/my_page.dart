@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app_user/src/features/auth/logic/auth_coordinator.dart';
 import 'package:app_user/src/features/home/logic/home_coordinator.dart';
 import 'package:flutter/material.dart';
@@ -37,8 +39,8 @@ class MyPage extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: MinglitSpacing.xlarge),
-              MinglitButton.primary(
-                text: '로그인',
+              MinglitButton(
+                label: '로그인',
                 onPressed: () {
                   ref.read(authCoordinatorProvider).pushLogin(from: '/my');
                 },
@@ -181,14 +183,16 @@ class MyPage extends ConsumerWidget {
                   trailing: SettingsTileTrailing.none,
                   onTap: () async {
                     final confirmed = await MinglitAlert.showConfirm(
-                      context,
+                      context: context,
                       title: '로그아웃',
-                      message: '정말 로그아웃 하시겠습니까?',
+                      content: '정말 로그아웃 하시겠습니까?',
                       confirmText: '로그아웃',
                       isDestructive: true,
                     );
                     if (confirmed) {
-                      await ref.read(authCoordinatorProvider).signOut();
+                      unawaited(
+                        ref.read(authControllerProvider.notifier).signOut(),
+                      );
                     }
                   },
                 ),

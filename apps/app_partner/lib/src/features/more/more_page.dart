@@ -124,18 +124,16 @@ class MorePage extends ConsumerWidget {
                 trailing: SettingsTileTrailing.none,
                 onTap: () async {
                   final confirmed = await MinglitAlert.showConfirm(
-                    context,
+                    context: context,
                     title: '로그아웃',
-                    message: '정말 로그아웃 하시겠습니까?',
+                    content: '정말 로그아웃 하시겠습니까?',
                     confirmText: '로그아웃',
                     isDestructive: true,
                   );
                   if (confirmed) {
-                    // Assuming there's a signOut in moreCoordinator or similar
-                    // For now, reuse account management's signout if available
-                    // or just a placeholder if not.
-                    // Actually, app_partner should have its own auth logic.
-                    // Let's check how logout is handled normally.
+                    unawaited(
+                      ref.read(authControllerProvider.notifier).signOut(),
+                    );
                   }
                 },
               ),
