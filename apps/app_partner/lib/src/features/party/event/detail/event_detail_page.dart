@@ -89,120 +89,96 @@ class _EventInfoTab extends ConsumerWidget {
         0;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(MinglitSpacing.medium),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (event.title != null) ...[
-            Text(
-              event.title!,
-              style: theme.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: colorScheme.primary,
+      child: MinglitContentLayout(
+        sections: [
+          if (event.title != null)
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: MinglitSpacing.screenEdge,
               ),
-            ),
-            const SizedBox(height: MinglitSpacing.large),
-          ],
-          Container(
-            padding: const EdgeInsets.all(MinglitSpacing.medium),
-            decoration: BoxDecoration(
-              color: colorScheme.surface,
-              borderRadius: BorderRadius.circular(MinglitRadius.card),
-              border: Border.all(color: colorScheme.outlineVariant),
-            ),
-            child: Column(
-              children: [
-                _DetailRow(
-                  icon: Icons.calendar_today,
-                  label: context.l10n.eventDetail_label_dateTime,
-                  value: dateFormat.format(event.startTime),
-                ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(
-                    vertical: MinglitSpacing.small,
-                  ),
-                  child: Divider(height: 1),
-                ),
-                _DetailRow(
-                  icon: Icons.access_time,
-                  label: context.l10n.eventDetail_label_time,
-                  value:
-                      '${timeFormat.format(event.startTime)} ~ '
-                      '${timeFormat.format(event.endTime)}',
-                ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(
-                    vertical: MinglitSpacing.small,
-                  ),
-                  child: Divider(height: 1),
-                ),
-                _DetailRow(
-                  icon: Icons.people_outline,
-                  label: '참가 현황', // Changed label
-                  value:
-                      '확정 ${event.currentParticipants}명 / 신청 $appCount명 (대기 $pendingCount)',
-                ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(
-                    vertical: MinglitSpacing.small,
-                  ),
-                  child: Divider(height: 1),
-                ),
-                _DetailRow(
-                  icon: Icons.info_outline,
-                  label: context.l10n.eventDetail_label_status,
-                  value: _getStatusLabel(context, event.status),
-                  valueColor: _getStatusColor(event.status, colorScheme),
-                ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(
-                    vertical: MinglitSpacing.small,
-                  ),
-                  child: Divider(height: 1),
-                ),
-                _DetailRow(
-                  icon: Icons.visibility,
-                  label: '공개 설정',
-                  value: _getVisibilityLabel(event.visibility),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: MinglitSpacing.xlarge),
-
-          // Tickets Section
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                context.l10n.eventDetail_section_ticketManage,
-                style: theme.textTheme.titleMedium?.copyWith(
+              child: Text(
+                event.title!,
+                style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
+                  color: colorScheme.primary,
                 ),
               ),
-              TextButton.icon(
-                onPressed: () {
-                  unawaited(
-                    TicketCreateRoute(
-                      partyId: event.partyId,
-                      eventId: event.id,
-                    ).push<void>(context),
-                  );
-                },
-                icon: const Icon(Icons.add, size: MinglitIconSize.small),
-                label: Text(context.l10n.eventDetail_button_createTicket),
+            ),
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: MinglitSpacing.screenEdge,
+            ),
+            child: Container(
+              padding: const EdgeInsets.all(MinglitSpacing.medium),
+              decoration: BoxDecoration(
+                color: colorScheme.surface,
+                borderRadius: BorderRadius.circular(MinglitRadius.card),
+                border: Border.all(color: colorScheme.outlineVariant),
               ),
-            ],
+              child: Column(
+                children: [
+                  _DetailRow(
+                    icon: Icons.calendar_today,
+                    label: context.l10n.eventDetail_label_dateTime,
+                    value: dateFormat.format(event.startTime),
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(
+                      vertical: MinglitSpacing.small,
+                    ),
+                    child: Divider(height: 1),
+                  ),
+                  _DetailRow(
+                    icon: Icons.access_time,
+                    label: context.l10n.eventDetail_label_time,
+                    value:
+                        '${timeFormat.format(event.startTime)} ~ '
+                        '${timeFormat.format(event.endTime)}',
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(
+                      vertical: MinglitSpacing.small,
+                    ),
+                    child: Divider(height: 1),
+                  ),
+                  _DetailRow(
+                    icon: Icons.people_outline,
+                    label: '참가 현황', // Changed label
+                    value:
+                        '확정 ${event.currentParticipants}명 / 신청 $appCount명 (대기 $pendingCount)',
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(
+                      vertical: MinglitSpacing.small,
+                    ),
+                    child: Divider(height: 1),
+                  ),
+                  _DetailRow(
+                    icon: Icons.info_outline,
+                    label: context.l10n.eventDetail_label_status,
+                    value: _getStatusLabel(context, event.status),
+                    valueColor: _getStatusColor(event.status, colorScheme),
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(
+                      vertical: MinglitSpacing.small,
+                    ),
+                    child: Divider(height: 1),
+                  ),
+                  _DetailRow(
+                    icon: Icons.visibility,
+                    label: '공개 설정',
+                    value: _getVisibilityLabel(event.visibility),
+                  ),
+                ],
+              ),
+            ),
           ),
-          const SizedBox(height: MinglitSpacing.small),
-
-          MinglitAsyncValueWidget(
-            value: ticketsAsync,
-            data: (tickets) => TicketListView(
-              tickets: tickets,
-              entryGroups: entryGroups,
-              maxParticipants: event.maxParticipants,
-              onCreatePressed: () {
+          // Tickets Section
+          MinglitSection(
+            title: context.l10n.eventDetail_section_ticketManage,
+            trailing: TextButton.icon(
+              onPressed: () {
                 unawaited(
                   TicketCreateRoute(
                     partyId: event.partyId,
@@ -210,18 +186,37 @@ class _EventInfoTab extends ConsumerWidget {
                   ).push<void>(context),
                 );
               },
-              onTicketTap: (ticket) {
-                unawaited(
-                  TicketEditRoute(
-                    partyId: event.partyId,
-                    eventId: event.id,
-                    ticketId: ticket.id,
-                  ).push<void>(context),
-                );
-              },
+              icon: const Icon(Icons.add, size: MinglitIconSize.small),
+              label: Text(context.l10n.eventDetail_button_createTicket),
             ),
-            error: (e, s) => Text(
-              context.l10n.partyDetail_error_ticketLoad(e.toString()),
+            padding: EdgeInsets.zero,
+            child: MinglitAsyncValueWidget(
+              value: ticketsAsync,
+              data: (tickets) => TicketListView(
+                tickets: tickets,
+                entryGroups: entryGroups,
+                maxParticipants: event.maxParticipants,
+                onCreatePressed: () {
+                  unawaited(
+                    TicketCreateRoute(
+                      partyId: event.partyId,
+                      eventId: event.id,
+                    ).push<void>(context),
+                  );
+                },
+                onTicketTap: (ticket) {
+                  unawaited(
+                    TicketEditRoute(
+                      partyId: event.partyId,
+                      eventId: event.id,
+                      ticketId: ticket.id,
+                    ).push<void>(context),
+                  );
+                },
+              ),
+              error: (e, s) => Text(
+                context.l10n.partyDetail_error_ticketLoad(e.toString()),
+              ),
             ),
           ),
         ],

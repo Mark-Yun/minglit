@@ -100,18 +100,13 @@ class _DetailContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(MinglitSpacing.medium),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+      child: MinglitContentLayout(
+        sectionGap: MinglitSpacing.medium,
+        sections: [
           StatusMessageCard(status: detail.status),
-          const SizedBox(height: MinglitSpacing.medium),
           AmountBreakdown(detail: detail),
-          const SizedBox(height: MinglitSpacing.medium),
-          if (detail.histories.isNotEmpty) ...[
+          if (detail.histories.isNotEmpty)
             StatusTimeline(histories: detail.histories),
-            const SizedBox(height: MinglitSpacing.medium),
-          ],
           ActionButtons(detail: detail),
         ],
       ),
