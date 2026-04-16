@@ -7,6 +7,21 @@ import 'package:minglit_kit/src/data/models/ticket_template.dart';
 part 'party.freezed.dart';
 part 'party.g.dart';
 
+// Fix #1469: description은 Quill Delta JSON(Map)이어야 하지만
+// 레거시 데이터 또는 잘못된 시드로 String이 저장된 경우 방어적 변환.
+Map<String, dynamic>? _descriptionFromJson(dynamic value) {
+  if (value == null) return null;
+  if (value is Map<String, dynamic>) return value;
+  if (value is String && value.isNotEmpty) {
+    return {
+      'ops': <dynamic>[
+        <String, dynamic>{'insert': '$value\n'},
+      ],
+    };
+  }
+  return null;
+}
+
 /// **Location Model**
 ///
 /// Represents a physical venue managed by a partner.
@@ -63,6 +78,7 @@ abstract class Party with _$Party {
     @JsonKey(name: 'updated_at') required DateTime updatedAt,
     @JsonKey(name: 'location_id') String? locationId,
     @JsonKey(includeToJson: false) Location? location,
+    @JsonKey(fromJson: _descriptionFromJson)
     Map<String, dynamic>? description, // Quill Delta JSON
     @JsonKey(name: 'image_urls') @Default([]) List<String> imageUrls,
     @JsonKey(name: 'contact_options')

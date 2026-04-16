@@ -305,6 +305,47 @@ void main() {
       final event = Event.fromJson(eventJson());
       expect(event.isEffectivelyPrivate, isFalse);
     });
+
+    // Fix #1469: String description 방어 역직렬화
+    test('parses description when it is a Map (normal case)', () {
+      final event = Event.fromJson({
+        ...eventJson(),
+        'description': {
+          'ops': [
+            {'insert': 'Hello\n'},
+          ],
+        },
+      });
+      expect(event.description, isNotNull);
+      expect(event.description!['ops'], isA<List<dynamic>>());
+    });
+
+    test('parses description when it is a String (legacy data)', () {
+      final event = Event.fromJson({
+        ...eventJson(),
+        'description': '파티 설명입니다',
+      });
+      expect(event.description, isNotNull);
+      expect(event.description!['ops'], isA<List<dynamic>>());
+      final ops = event.description!['ops'] as List<dynamic>;
+      expect(ops.first['insert'], '파티 설명입니다\n');
+    });
+
+    test('returns null description when value is null', () {
+      final event = Event.fromJson({
+        ...eventJson(),
+        'description': null,
+      });
+      expect(event.description, isNull);
+    });
+
+    test('returns null description when value is empty string', () {
+      final event = Event.fromJson({
+        ...eventJson(),
+        'description': '',
+      });
+      expect(event.description, isNull);
+    });
   });
 
   group('Event conditionSummaries', () {
