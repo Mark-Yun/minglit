@@ -3,11 +3,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
 import '../utils/mocks.dart';
+import 'utils/golden_capture.dart';
 import 'utils/mock_data.dart';
 import 'utils/test_app.dart';
 
 void main() {
   group('Notification Center CUJ', () {
+    final capture = GoldenCapture('cuj_u11');
+
     testWidgets('알림 빈 상태', (tester) async {
       setKoreanLocale(tester);
       final fakeUser = createFakeUser();
@@ -27,6 +30,9 @@ void main() {
       await tester.pump();
       await tester.pump();
       await tester.pump();
+
+      await capture.setup(tester, 0);
+
       expect(find.text('알림이 없습니다.'), findsOneWidget);
     });
   });

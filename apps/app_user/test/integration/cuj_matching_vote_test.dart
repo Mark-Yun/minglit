@@ -19,6 +19,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
+import 'utils/golden_capture.dart';
+
 const _testEventId = 'test-event-u05';
 
 void main() {
@@ -75,9 +77,13 @@ void main() {
   }
 
   group('IT-U05: 매칭 투표 → 결과 확인', () {
+    final capture = GoldenCapture('cuj_u07');
+
     testWidgets('빈 후보자 목록 — 안내 문구 표시', (tester) async {
       await tester.pumpWidget(buildVoteContent());
       await tester.pumpAndSettle();
+
+      await capture.setup(tester, 0);
 
       expect(find.text('투표 가능한 상대가 없습니다.'), findsOneWidget);
     });
@@ -90,6 +96,8 @@ void main() {
 
       await tester.pumpWidget(buildVoteContent(candidates: candidates));
       await tester.pumpAndSettle();
+
+      await capture.before(tester, 1);
 
       expect(find.text('박민준'), findsOneWidget);
       expect(find.text('이서연'), findsOneWidget);
@@ -127,6 +135,8 @@ void main() {
       await tester.pumpWidget(buildVoteContent(matches: matches));
       await tester.pumpAndSettle();
 
+      await capture.after(tester, 3);
+
       expect(find.text('매칭 성공! (1명)'), findsOneWidget);
       expect(find.text('김지우'), findsOneWidget);
     });
@@ -141,6 +151,8 @@ void main() {
     testWidgets('투표 메타 에러 — 에러 안내 표시', (tester) async {
       await tester.pumpWidget(buildVoteContent(metaHasError: true));
       await tester.pumpAndSettle();
+
+      await capture.error(tester, 4);
 
       expect(find.text('투표 정보를 불러올 수 없습니다.'), findsOneWidget);
     });
@@ -192,6 +204,9 @@ void main() {
       // '투표하기' 탭 → vote() 실제 호출 검증
       await tester.tap(find.text('투표하기'));
       await tester.pumpAndSettle();
+
+      await capture.after(tester, 2);
+
       expect(spy.wasVoteCalled, isTrue);
       expect(spy.lastCandidateId, 'u1');
     });

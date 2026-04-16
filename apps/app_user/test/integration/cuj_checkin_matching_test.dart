@@ -13,6 +13,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
+import 'utils/golden_capture.dart';
 import 'utils/test_app.dart';
 import 'utils/test_mocks.dart';
 
@@ -24,6 +25,8 @@ void main() {
   final testUser = createMockUserForTest(id: 'user-u02', name: '김철수');
 
   group('IT-U02: 체크인 → 매칭투표 → 결과', () {
+    final capture = GoldenCapture('cuj_u02');
+
     testWidgets('비로그인 사용자는 티켓 목록에 접근할 수 없다', (tester) async {
       await tester.pumpWidget(
         createTestApp(
@@ -32,6 +35,8 @@ void main() {
       );
       await tester.pump();
       await tester.pump();
+
+      await capture.setup(tester, 0);
 
       // /tickets/my는 보호된 경로 → /login으로 리다이렉트됨
       expect(find.byType(LoginPage), findsOneWidget);
@@ -46,6 +51,8 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+
+      await capture.after(tester, 1);
 
       // 티켓 목록 페이지가 렌더링됨 (크래시 없이)
       expect(find.byType(Scaffold), findsOneWidget);
@@ -79,6 +86,8 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
 
+      await capture.after(tester, 2);
+
       // QR 티켓 페이지가 렌더링됨
       expect(find.byType(Scaffold), findsWidgets);
     });
@@ -108,6 +117,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
+      await capture.after(tester, 4);
+
       expect(find.byType(Scaffold), findsOneWidget);
     });
 
@@ -127,6 +138,8 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+
+      await capture.after(tester, 3);
 
       expect(find.text('구매 내역'), findsOneWidget);
     });

@@ -28,6 +28,7 @@ import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'utils/golden_capture.dart';
 import 'utils/test_app.dart';
 import 'utils/test_mocks.dart';
 
@@ -47,6 +48,8 @@ void main() {
   // ─── Router-based Tests ─────────────────────────────────────────────────
 
   group('IT-U06: 계정 삭제 wizard — 라우팅 및 렌더링', () {
+    final capture = GoldenCapture('cuj_u06');
+
     testWidgets('비로그인 사용자는 탈퇴 사유 페이지에 접근할 수 없다', (tester) async {
       await tester.pumpWidget(
         createTestApp(
@@ -71,6 +74,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
+      await capture.setup(tester, 0);
+
       expect(find.byType(DeletionReasonPage), findsOneWidget);
       expect(find.text('탈퇴 사유'), findsOneWidget);
     });
@@ -85,6 +90,8 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+
+      await capture.after(tester, 1);
 
       expect(find.byType(DeletionInfoPage), findsOneWidget);
       expect(find.text('삭제되는 정보'), findsOneWidget);
@@ -102,6 +109,8 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+
+      await capture.after(tester, 3);
 
       expect(find.byType(DeletionCompletePage), findsOneWidget);
       expect(find.text('탈퇴 요청이 완료됐어요'), findsOneWidget);
@@ -182,6 +191,8 @@ void main() {
       await tester.tap(find.widgetWithText(FilledButton, '다음'));
       await tester.pump();
 
+      await capture.after(tester, 4);
+
       expect(spy.pushInfoCalled, isTrue);
       expect(spy.lastPushInfoReason, isNotNull);
       expect(
@@ -239,6 +250,8 @@ void main() {
       await tester.tap(find.text('탈퇴 요청'));
       await tester.pump();
 
+      await capture.error(tester, 5);
+
       expect(find.text('비밀번호를 입력해주세요.'), findsOneWidget);
     });
 
@@ -261,6 +274,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('정말 탈퇴할까요?'), findsOneWidget);
+      await capture.before(tester, 2);
 
       // 다이얼로그 확인 버튼 탭 → goComplete() 호출
       await tester.tap(find.text('탈퇴 요청').last);

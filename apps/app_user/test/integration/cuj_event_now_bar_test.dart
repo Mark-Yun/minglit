@@ -34,6 +34,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
+import 'utils/golden_capture.dart';
+
 void main() {
   final testEvent = Event(
     id: 'event-u07',
@@ -149,6 +151,8 @@ void main() {
   }
 
   group('IT-U07 Event Now Bar 상태 전이 CUJ', () {
+    final capture = GoldenCapture('cuj_u09');
+
     // TC-U07-001: 이벤트 있을 때 나우바 표시
     testWidgets(
       'TC-U07-001: 오늘 active 이벤트가 있으면 EventNowBar가 표시된다',
@@ -156,6 +160,8 @@ void main() {
         await tester.pumpWidget(buildBar(EventNowBarState.waiting));
         await tester.pump(); // provider 시작
         await tester.pump(); // AsyncData → 리빌드
+
+        await capture.setup(tester, 0);
 
         expect(find.byType(EventNowBar), findsOneWidget);
         expect(find.text('오늘의 이벤트'), findsOneWidget);
@@ -171,6 +177,8 @@ void main() {
         );
         await tester.pump();
         await tester.pump();
+
+        await capture.setup(tester, 2);
 
         expect(find.text('오늘의 이벤트'), findsNothing);
         expect(find.text('곧 시작'), findsNothing);
@@ -188,6 +196,8 @@ void main() {
         await tester.tap(find.text('오늘의 이벤트'));
         await tester.pump(); // 바텀시트 show 시작
         await tester.pump(const Duration(milliseconds: 300)); // 슬라이드 애니메이션
+
+        await capture.after(tester, 1);
 
         expect(find.byType(EventNowBottomSheet), findsOneWidget);
       },
@@ -278,6 +288,8 @@ void main() {
         expect(find.text('오늘의 이벤트'), findsWidgets);
         // 날짜 포맷 "M월 d일 HH:mm" → "5월 1일 19:00"
         expect(find.textContaining('5월 1일'), findsOneWidget);
+
+        await capture.after(tester, 3);
       },
     );
 
