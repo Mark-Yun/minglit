@@ -12,6 +12,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'utils/golden_capture.dart';
 import 'utils/test_app.dart';
 import 'utils/test_mocks.dart';
 
@@ -50,6 +51,7 @@ void main() {
 
     testWidgets('로그인 상태: 미동의로 보호 경로 접근 시 동의 페이지로 리다이렉트', (tester) async {
       setKoreanLocale(tester);
+      final capture = GoldenCapture('redirect_u_consent');
       when(
         () => mockConsentRepository.hasRequiredConsents(),
       ).thenAnswer((_) async => false);
@@ -60,6 +62,8 @@ void main() {
         initialLocation: '/my',
         consentRepository: mockConsentRepository,
       );
+
+      await capture.setup(tester, 0); // 약관 미동의 → 동의 화면
 
       expect(find.byType(SignupConsentPage), findsOneWidget);
       expect(find.byType(MyPage), findsNothing);
@@ -147,6 +151,7 @@ void main() {
       tester,
     ) async {
       setKoreanLocale(tester);
+      final capture = GoldenCapture('redirect_u_consent');
       when(
         () => mockConsentRepository.hasRequiredConsents(),
       ).thenAnswer((_) async => true);
@@ -157,6 +162,8 @@ void main() {
         initialLocation: '/signup/consent?from=%2Fmy',
         consentRepository: mockConsentRepository,
       );
+
+      await capture.after(tester, 1); // 약관 동의 완료 → 원래 페이지
 
       expect(find.byType(MyPage), findsOneWidget);
       expect(find.byType(SignupConsentPage), findsNothing);

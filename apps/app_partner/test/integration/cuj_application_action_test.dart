@@ -16,6 +16,7 @@ import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../utils/mocks.dart';
+import 'utils/golden_capture.dart';
 import 'utils/test_app.dart';
 
 void main() {
@@ -109,6 +110,7 @@ void main() {
     testWidgets('승인 버튼 탭 → approveApplication() 호출 + SnackBar 표시', (
       tester,
     ) async {
+      final capture = GoldenCapture('cuj_p02a');
       final mockEventRepo = MockEventRepository();
       when(
         () => mockEventRepo.approveApplication(
@@ -140,9 +142,13 @@ void main() {
       );
       await tester.pumpAndSettle();
 
+      await capture.before(tester, 0);
+
       // 승인 버튼 탭
       await tester.tap(find.byIcon(Icons.check).first);
       await tester.pumpAndSettle();
+
+      await capture.after(tester, 1);
 
       verify(
         () => mockEventRepo.approveApplication(applicationId: 'approve-1'),
@@ -184,6 +190,7 @@ void main() {
     testWidgets('거부 버튼 탭 → 사유 다이얼로그 → rejectApplication() 호출 + SnackBar', (
       tester,
     ) async {
+      final capture = GoldenCapture('cuj_p02a');
       final mockEventRepo = MockEventRepository();
       when(
         () => mockEventRepo.rejectApplication(
@@ -205,6 +212,8 @@ void main() {
       await tester.tap(find.byIcon(Icons.close).first);
       await tester.pumpAndSettle();
 
+      await capture.before(tester, 2);
+
       expect(find.text('신청 거절'), findsOneWidget);
 
       // 거절 사유 입력
@@ -214,6 +223,8 @@ void main() {
       // 거절 버튼 탭
       await tester.tap(find.widgetWithText(FilledButton, '거절'));
       await tester.pumpAndSettle();
+
+      await capture.after(tester, 3);
 
       verify(
         () => mockEventRepo.rejectApplication(

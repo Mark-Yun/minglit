@@ -18,6 +18,7 @@ import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../utils/mocks.dart';
+import 'utils/golden_capture.dart';
 import 'utils/test_app.dart';
 
 void main() {
@@ -50,6 +51,7 @@ void main() {
     });
 
     testWidgets('신청 관리 페이지 — 3개 탭이 표시된다', (tester) async {
+      final capture = GoldenCapture('cuj_p02');
       await tester.pumpWidget(
         createPartnerTestApp(
           isLoggedIn: true,
@@ -67,6 +69,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
+      await capture.setup(tester, 0);
+
       expect(find.text('신청관리'), findsWidgets);
       expect(find.text('대기중'), findsOneWidget);
       expect(find.text('승인됨'), findsOneWidget);
@@ -76,6 +80,7 @@ void main() {
     testWidgets('P02-V2: 대기 중 신청이 있을 때 전체 승인 버튼이 노출된다', (
       tester,
     ) async {
+      final capture = GoldenCapture('cuj_p02');
       final testEvent = Event(
         id: 'event-review-1',
         partyId: 'party-1',
@@ -124,6 +129,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
+      await capture.after(tester, 1);
+
       expect(find.text('전체 승인 (2건)'), findsOneWidget);
     });
 
@@ -149,6 +156,7 @@ void main() {
     });
 
     testWidgets('승인/거절 버튼이 대기중 탭에 표시된다', (tester) async {
+      final capture = GoldenCapture('cuj_p02');
       final testEvent = Event(
         id: 'event-review-2',
         partyId: 'party-1',
@@ -196,11 +204,14 @@ void main() {
       );
       await tester.pumpAndSettle();
 
+      await capture.after(tester, 2);
+
       expect(find.byIcon(Icons.check), findsOneWidget);
       expect(find.byIcon(Icons.close), findsOneWidget);
     });
 
     testWidgets('승인됨 탭 — 파트너가 처리한 신청이 표시된다', (tester) async {
+      final capture = GoldenCapture('cuj_p02');
       final testEvent = Event(
         id: 'event-approved',
         partyId: 'party-1',
@@ -251,6 +262,8 @@ void main() {
       // 승인됨 탭으로 이동
       await tester.tap(find.text('승인됨'));
       await tester.pumpAndSettle();
+
+      await capture.after(tester, 3);
 
       expect(find.text('승인된 유저'), findsOneWidget);
     });

@@ -9,6 +9,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'utils/golden_capture.dart';
 import 'utils/test_app.dart';
 import 'utils/test_mocks.dart';
 
@@ -197,10 +198,13 @@ void main() {
     testWidgets('recommended ticket shows "추천" badge + other ticket list', (
       tester,
     ) async {
+      final capture = GoldenCapture('flow_u_ticket');
       await pumpEventDetailWithTickets(tester, event: testEventWithTickets);
       await openTicketSheet(tester);
       await tester.pump();
       await tester.pump();
+
+      await capture.setup(tester, 0); // 신청 목록
 
       // Recommended badge visible
       expect(find.text('추천'), findsOneWidget);
@@ -301,6 +305,7 @@ void main() {
     testWidgets(
       'Step 1 (verification) renders step indicator + form content',
       (tester) async {
+        final capture = GoldenCapture('flow_u_ticket');
         await pumpWizard(
           tester,
           event: testEventWithVerification,
@@ -310,6 +315,8 @@ void main() {
             selectedTicket: testTicketGeneral,
           ),
         );
+
+        await capture.after(tester, 1); // 신청 상세
 
         // Step indicator should show
         expect(find.text('인증'), findsOneWidget);
@@ -345,6 +352,7 @@ void main() {
     });
 
     testWidgets('Step 2 (payment) → renders payment details', (tester) async {
+      final capture = GoldenCapture('flow_u_ticket');
       await pumpWizard(
         tester,
         event: testEventWithVerification,
@@ -354,6 +362,8 @@ void main() {
           selectedTicket: testTicketGeneral,
         ),
       );
+
+      await capture.after(tester, 2); // 결제 진행
 
       // Payment step should show ticket name and price
       expect(find.text('결제 상세'), findsOneWidget);
@@ -369,6 +379,7 @@ void main() {
     testWidgets('payment submitting → buttons disabled + spinner', (
       tester,
     ) async {
+      final capture = GoldenCapture('flow_u_ticket');
       await pumpWizard(
         tester,
         event: testEventWithVerification,
@@ -378,6 +389,8 @@ void main() {
           selectedTicket: testTicketGeneral,
         ),
       );
+
+      await capture.after(tester, 3); // 제출 중 스피너 상태
 
       // All ElevatedButtons should be disabled during submission
       final elevatedButtons = tester

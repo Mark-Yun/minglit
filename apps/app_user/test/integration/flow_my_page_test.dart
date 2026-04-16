@@ -11,6 +11,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
+import 'utils/golden_capture.dart';
 import 'utils/test_app.dart';
 import 'utils/test_mocks.dart';
 
@@ -28,6 +29,7 @@ void main() {
   group('MyPage 메뉴 탭', () {
     testWidgets('알림 설정 tap → NotificationSettingsScreen', (tester) async {
       setKoreanLocale(tester);
+      final capture = GoldenCapture('flow_u_mypage');
       final user = createMockUserForTest();
       await tester.pumpWidget(
         createTestApp(
@@ -44,6 +46,8 @@ void main() {
       await tester.pump();
       await tester.pump();
 
+      await capture.setup(tester, 0); // 마이페이지 렌더링
+
       await tester.tap(find.text('알림 설정'));
       await tester.pump();
       await tester.pump();
@@ -53,6 +57,7 @@ void main() {
 
     testWidgets('개인정보 tap → PrivacyPage → 회원 탈퇴 시작', (tester) async {
       setKoreanLocale(tester);
+      final capture = GoldenCapture('flow_u_mypage');
       final user = createMockUserForTest();
       await tester.pumpWidget(
         createTestApp(
@@ -75,6 +80,8 @@ void main() {
       await tester.scrollUntilVisible(find.text('개인정보'), 100);
       await tester.tap(find.text('개인정보'));
       await tester.pumpAndSettle();
+
+      await capture.after(tester, 1); // 개인정보 설정
 
       expect(find.byType(PrivacyPage), findsOneWidget);
       expect(find.text('개인정보'), findsOneWidget);
@@ -142,6 +149,7 @@ void main() {
 
     testWidgets('구매 내역 tap → PurchaseHistoryPage', (tester) async {
       setKoreanLocale(tester);
+      final capture = GoldenCapture('flow_u_mypage');
       final user = createMockUserForTest();
       await tester.pumpWidget(
         createTestApp(
@@ -162,6 +170,8 @@ void main() {
       await tester.tap(find.text('구매 내역'));
       await tester.pump();
       await tester.pump();
+
+      await capture.after(tester, 2); // 구매 내역
 
       expect(find.byType(PurchaseHistoryPage), findsOneWidget);
     });

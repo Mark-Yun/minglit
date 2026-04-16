@@ -17,6 +17,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'utils/golden_capture.dart';
+
 class _MockAccountDeletionCoordinator extends Mock
     implements AccountDeletionCoordinator {}
 
@@ -117,6 +119,7 @@ void main() {
     testWidgets('TC-P10-001: 활성 이벤트 존재 시 차단 메시지 + 버튼 비활성화 + 이벤트 관리 링크 표시', (
       tester,
     ) async {
+      final capture = GoldenCapture('cuj_p07');
       await tester.pumpWidget(
         buildVerifyPage(
           guard: const PartnerAccountDeletionGuard(
@@ -125,6 +128,8 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+
+      await capture.error(tester, 0);
 
       // 차단 메시지 확인
       expect(find.text('활성 이벤트 2건'), findsOneWidget);
@@ -212,12 +217,15 @@ void main() {
     testWidgets('TC-P10-003: blockers 없을 때 "탈퇴 요청을 진행할 수 있어요" 메시지 + 버튼 활성화', (
       tester,
     ) async {
+      final capture = GoldenCapture('cuj_p07');
       await tester.pumpWidget(
         buildVerifyPage(
           guard: const PartnerAccountDeletionGuard(),
         ),
       );
       await tester.pumpAndSettle();
+
+      await capture.setup(tester, 1);
 
       // 녹색 카드 메시지 확인
       expect(find.text('탈퇴 요청을 진행할 수 있어요'), findsOneWidget);
@@ -259,6 +267,7 @@ void main() {
     testWidgets(
       'TC-P10-003-F: 탈퇴 요청 버튼 탭 → reauthenticate 호출 → 확인 → requestDeletion → goComplete',
       (tester) async {
+        final capture = GoldenCapture('cuj_p07');
         // 소셜 로그인 유저 — has_password: false (비밀번호 입력 불필요)
         final socialUser = User(
           id: 'user-p10-social',
@@ -327,6 +336,8 @@ void main() {
         // 확인 다이얼로그 표시
         expect(find.text('정말 탈퇴할까요?'), findsOneWidget);
 
+        await capture.before(tester, 2);
+
         // 다이얼로그에서 "탈퇴 요청" 탭 (페이지 버튼과 중복되므로 마지막 위젯 선택)
         await tester.tap(find.text('탈퇴 요청').last);
         await tester.pumpAndSettle();
@@ -345,6 +356,7 @@ void main() {
     testWidgets('TC-P10-004: DeletionCompletePage — 7일 유예 기간 복구 가능 메시지 표시', (
       tester,
     ) async {
+      final capture = GoldenCapture('cuj_p07');
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
@@ -360,6 +372,8 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+
+      await capture.after(tester, 3);
 
       // 탈퇴 완료 메시지 확인
       expect(find.text('탈퇴 요청이 완료됐어요'), findsOneWidget);

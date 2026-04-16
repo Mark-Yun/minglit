@@ -19,6 +19,7 @@ import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../utils/mocks.dart';
+import 'utils/golden_capture.dart';
 
 const _partnerId = 'partner-p08';
 const _targetUserId = 'user-target-p08';
@@ -43,6 +44,7 @@ void main() {
 
   group('IT-P08: 팀원 관리 → 역할 배정', () {
     testWidgets('팀원 관리 페이지 진입 — 직원 관리 타이틀 표시', (tester) async {
+      final capture = GoldenCapture('cuj_p06');
       await tester.pumpWidget(
         buildApp(
           const PartnerMemberListPage(partnerId: _partnerId),
@@ -54,6 +56,8 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+
+      await capture.setup(tester, 0);
 
       expect(find.text('직원 관리'), findsOneWidget);
     });
@@ -107,6 +111,7 @@ void main() {
     });
 
     testWidgets('초대 버튼 탭 — 준비 중 스낵바 표시', (tester) async {
+      final capture = GoldenCapture('cuj_p06');
       await tester.pumpWidget(
         buildApp(
           const PartnerMemberListPage(partnerId: _partnerId),
@@ -121,6 +126,8 @@ void main() {
 
       await tester.tap(find.text('직원 추가'));
       await tester.pumpAndSettle();
+
+      await capture.after(tester, 1);
 
       expect(find.text('준비 중입니다.'), findsOneWidget);
     });
@@ -187,6 +194,7 @@ void main() {
     });
 
     testWidgets('역할 변경 시 권한 자동 동기화 — owner 선택 시 모든 권한 활성화', (tester) async {
+      final capture = GoldenCapture('cuj_p06');
       final memberData = {
         'user_id': _targetUserId,
         'role': 'staff',
@@ -216,6 +224,8 @@ void main() {
       await tester.tap(find.text('Owner (모든 권한)').last);
       await tester.pumpAndSettle();
 
+      await capture.after(tester, 2);
+
       // All 9 checkboxes should be checked after owner role sync
       final checkboxes = tester
           .widgetList<CheckboxListTile>(
@@ -229,6 +239,7 @@ void main() {
     testWidgets('저장 버튼 탭 — updateMemberRole + updateMemberPermissions 호출', (
       tester,
     ) async {
+      final capture = GoldenCapture('cuj_p06');
       final mockRepo = MockPartnerRepository();
       when(
         () => mockRepo.updateMemberRole(
@@ -274,6 +285,8 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('변경 사항 저장'));
       await tester.pumpAndSettle();
+
+      await capture.after(tester, 3);
 
       verify(
         () => mockRepo.updateMemberRole(

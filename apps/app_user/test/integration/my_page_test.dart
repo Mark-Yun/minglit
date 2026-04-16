@@ -3,6 +3,7 @@ import 'package:app_user/src/features/home/my_page.dart';
 import 'package:app_user/src/features/payment/ui/purchase_history_page.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'utils/golden_capture.dart';
 import 'utils/test_app.dart';
 import 'utils/test_mocks.dart';
 
@@ -11,6 +12,7 @@ void main() {
     // Test 1: Authenticated MyPage content
     testWidgets('로그인 상태: MyPage에서 사용자 이름과 메뉴 표시', (tester) async {
       setKoreanLocale(tester);
+      final capture = GoldenCapture('my_u');
       final user = createMockUserForTest();
       await tester.pumpWidget(
         createTestApp(
@@ -21,6 +23,8 @@ void main() {
       );
       await tester.pump();
       await tester.pump();
+
+      await capture.setup(tester, 0); // 마이페이지 렌더링
 
       expect(find.byType(MyPage), findsOneWidget);
       expect(find.text('구매 내역'), findsOneWidget);
@@ -44,6 +48,7 @@ void main() {
     // Test 3: MyPage → 구매 내역 navigation
     testWidgets('로그인 상태: 구매 내역 탭 → PurchaseHistoryPage', (tester) async {
       setKoreanLocale(tester);
+      final capture = GoldenCapture('my_u');
       final user = createMockUserForTest();
       await tester.pumpWidget(
         createTestApp(
@@ -58,6 +63,8 @@ void main() {
       await tester.tap(find.text('구매 내역'));
       await tester.pump();
       await tester.pump();
+
+      await capture.after(tester, 1); // 메뉴 항목 표시
 
       expect(find.byType(PurchaseHistoryPage), findsOneWidget);
     });

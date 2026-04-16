@@ -43,3 +43,6 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Golden capture outputs (platform-dependent, generated via --update-goldens)
+test/integration/goldens/
