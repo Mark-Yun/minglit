@@ -84,7 +84,7 @@ Deno.test({
         await withMockedFetch(fetchMock, async () => {
           await withNoIntervals(async () => {
             await withFastTimers(async () => {
-              const response = await handler(new Request("http://localhost"));
+              const response = await handler(new Request("http://localhost", { headers: { "Authorization": "Bearer service-key" } }));
               const payload = await readJson(response);
 
               assertEquals(response.status, 200);
@@ -154,7 +154,7 @@ Deno.test({
         await withMockedFetch(fetchMock, async () => {
           await withNoIntervals(async () => {
             await withFastTimers(async () => {
-              const response = await handler(new Request("http://localhost"));
+              const response = await handler(new Request("http://localhost", { headers: { "Authorization": "Bearer service-key" } }));
               const payload = await readJson(response);
 
               assertEquals(response.status, 200);
@@ -171,6 +171,60 @@ Deno.test({
     assertEquals(Boolean(deleteCall), true);
     stubs.forEach((s) => s.restore());
   }
+  },
+});
+
+Deno.test({
+  name: "notification-worker - unauthorized: no auth returns 401",
+  fn: async () => {
+  const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+  const { fetchMock } = createFetchMock([]);
+
+  await withEnv(
+    {
+      SUPABASE_URL: "https://supabase.test",
+      SUPABASE_SERVICE_ROLE_KEY: "service-key",
+      FIREBASE_SERVICE_ACCOUNT: firebaseServiceAccountJson,
+    },
+    async () => {
+      await withMockedFetch(fetchMock, async () => {
+        await withNoIntervals(async () => {
+          await withFastTimers(async () => {
+            const response = await handler(new Request("http://localhost"));
+            assertEquals(response.status, 401);
+          });
+        });
+      });
+    },
+  );
+  },
+});
+
+Deno.test({
+  name: "notification-worker - unauthorized: wrong token returns 401",
+  fn: async () => {
+  const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+  const { fetchMock } = createFetchMock([]);
+
+  await withEnv(
+    {
+      SUPABASE_URL: "https://supabase.test",
+      SUPABASE_SERVICE_ROLE_KEY: "service-key",
+      FIREBASE_SERVICE_ACCOUNT: firebaseServiceAccountJson,
+    },
+    async () => {
+      await withMockedFetch(fetchMock, async () => {
+        await withNoIntervals(async () => {
+          await withFastTimers(async () => {
+            const response = await handler(new Request("http://localhost", {
+              headers: { "Authorization": "Bearer bad-key" },
+            }));
+            assertEquals(response.status, 401);
+          });
+        });
+      });
+    },
+  );
   },
 });
 
