@@ -133,6 +133,11 @@ Deno.test("apply-event - 유료 이벤트 신청 성공 (주문 생성 확인)",
         handler: () => jsonResponse(null),
       },
       {
+        // Fix #1492: 유료 경로 check_party_balance — 허용
+        matcher: (req) => req.url.includes("/rest/v1/rpc/check_party_balance"),
+        handler: () => jsonResponse({ allowed: true, reason: null }),
+      },
+      {
         // 유료: payment_pending 레코드 INSERT — id는 EF에서 미리 생성하므로 빈 배열 반환
         matcher: (req) =>
           req.url.includes("/rest/v1/event_applications") && req.method === "POST",
@@ -383,6 +388,11 @@ Deno.test("apply-event - 취소 후 유료 재신청 성공 (UPDATE 경로)", as
         handler: () => jsonResponse({ id: "existing-cancelled-app-id", status: "cancelled" }),
       },
       {
+        // Fix #1492: 유료 경로 check_party_balance — 허용
+        matcher: (req) => req.url.includes("/rest/v1/rpc/check_party_balance"),
+        handler: () => jsonResponse({ allowed: true, reason: null }),
+      },
+      {
         // 재신청: PATCH (UPDATE)
         matcher: (req) => {
           if (req.url.includes("/rest/v1/event_applications") && req.method === "PATCH") {
@@ -437,6 +447,11 @@ Deno.test("apply-event - payment_failed 후 유료 재신청 성공 (UPDATE 경�
         matcher: (req) =>
           req.url.includes("/rest/v1/event_applications") && req.method === "GET",
         handler: () => jsonResponse({ id: "existing-failed-app-id", status: "payment_failed" }),
+      },
+      {
+        // Fix #1492: 유료 경로 check_party_balance — 허용
+        matcher: (req) => req.url.includes("/rest/v1/rpc/check_party_balance"),
+        handler: () => jsonResponse({ allowed: true, reason: null }),
       },
       {
         matcher: (req) => {
@@ -635,6 +650,11 @@ Deno.test("apply-event - 유료 신규 신청 시 verification_data 저장 확�
         handler: () => jsonResponse(null),
       },
       {
+        // Fix #1492: 유료 경로 check_party_balance — 허용
+        matcher: (req) => req.url.includes("/rest/v1/rpc/check_party_balance"),
+        handler: () => jsonResponse({ allowed: true, reason: null }),
+      },
+      {
         // 유료: payment_pending 레코드 INSERT
         matcher: (req) =>
           req.url.includes("/rest/v1/event_applications") && req.method === "POST",
@@ -715,6 +735,11 @@ Deno.test("apply-event - 유료 재신청 시 verification_data 저장 확인", 
         handler: () => jsonResponse({ id: "existing-cancelled-paid-id", status: "cancelled" }),
       },
       {
+        // Fix #1492: 유료 경로 check_party_balance — 허용
+        matcher: (req) => req.url.includes("/rest/v1/rpc/check_party_balance"),
+        handler: () => jsonResponse({ allowed: true, reason: null }),
+      },
+      {
         // 재신청: PATCH (UPDATE)
         matcher: (req) =>
           req.url.includes("/rest/v1/event_applications") && req.method === "PATCH",
@@ -767,6 +792,64 @@ Deno.test("apply-event - 유료 재신청 시 verification_data 저장 확인", 
         assertEquals(payload.application_id, "existing-cancelled-paid-id");
         assertEquals(uvUpsertCalled, true, "user_verifications UPSERT가 호출되어야 함");
         assertEquals(vsInsertCalled, true, "verification_submissions INSERT가 호출되어야 함");
+      });
+    });
+  });
+});
+
+// Fix #1492: 유료 경로 check_party_balance 거부 시 409 반환 — INSERT 미호출 검증
+Deno.test("apply-event - 유료 신청 — check_party_balance 거부 시 409 반환", async () => {
+  await withEnv(ENV, async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+
+    let insertCalled = false;
+
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      {
+        matcher: (req) => req.url.includes("/rest/v1/events") && req.method === "GET",
+        handler: () => jsonResponse(PAID_EVENT),
+      },
+      {
+        matcher: (req) => req.url.includes("/rest/v1/tickets") && req.method === "GET",
+        handler: () => jsonResponse(PAID_TICKET),
+      },
+      {
+        // 중복 신청 확인 — 없음
+        matcher: (req) =>
+          req.url.includes("/rest/v1/event_applications") && req.method === "GET",
+        handler: () => jsonResponse(null),
+      },
+      {
+        // check_party_balance — 성비 불균형으로 거부
+        matcher: (req) => req.url.includes("/rest/v1/rpc/check_party_balance"),
+        handler: () => jsonResponse({ allowed: false, reason: "여성 참가자 수가 초과되었습니다" }),
+      },
+      {
+        matcher: (req) => {
+          if (req.url.includes("/rest/v1/event_applications") && req.method === "POST") {
+            insertCalled = true;
+            return true;
+          }
+          return false;
+        },
+        handler: () => jsonResponse([]),
+      },
+    ]);
+
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const request = jsonRequest(
+          "http://localhost",
+          { event_id: "event-paid-1", ticket_id: "ticket-paid-1" },
+          { headers: { Authorization: "Bearer test-token" } },
+        );
+        const response = await handler(request);
+        const payload = await readJson(response);
+
+        assertEquals(response.status, 409);
+        assertEquals(payload.error, "여성 참가자 수가 초과되었습니다");
+        assertEquals(insertCalled, false, "balance 거부 시 INSERT가 호출되면 안 됨");
       });
     });
   });
