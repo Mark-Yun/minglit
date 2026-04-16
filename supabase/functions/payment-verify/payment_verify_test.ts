@@ -10,7 +10,10 @@ import {
   withEnv,
   withMockedFetch,
 } from "../_test_utils/mock_http.ts";
-import { authRoute, mockOrder, mockPaidPayment, mockReadyPayment } from "../_test_utils/fixtures.ts";
+import { authRoute, mockOrder, mockPaidPayment, mockReadyPayment, mockUser } from "../_test_utils/fixtures.ts";
+
+// Fix #1490: ownership check — user_id must match authenticated user
+const mockOrderWithOwner = { ...mockOrder, user_id: mockUser.id };
 
 const ENV = {
   PORTONE_API_KEY: "test-key",
@@ -34,7 +37,7 @@ Deno.test("payment-verify - happy path approves order", async () => {
       },
       {
         matcher: (req) => req.url.includes("/rest/v1/event_applications") && req.method === "GET",
-        handler: () => jsonResponse(mockOrder),
+        handler: () => jsonResponse(mockOrderWithOwner),
       },
       {
         matcher: (req) => req.url.includes("/rest/v1/event_applications") && req.method === "PATCH",
@@ -92,7 +95,7 @@ Deno.test("payment-verify - payment not completed returns 400", async () => {
       },
       {
         matcher: (req) => req.url.includes("/rest/v1/event_applications") && req.method === "GET",
-        handler: () => jsonResponse(mockOrder),
+        handler: () => jsonResponse(mockOrderWithOwner),
       },
     ]);
 
@@ -127,7 +130,7 @@ Deno.test("payment-verify - amount mismatch returns 400", async () => {
       },
       {
         matcher: (req) => req.url.includes("/rest/v1/event_applications") && req.method === "GET",
-        handler: () => jsonResponse(mockOrder),
+        handler: () => jsonResponse(mockOrderWithOwner),
       },
     ]);
 
@@ -158,7 +161,7 @@ Deno.test("payment-verify - iamport failure returns 500", async () => {
       },
       {
         matcher: (req) => req.url.includes("/rest/v1/event_applications") && req.method === "GET",
-        handler: () => jsonResponse(mockOrder),
+        handler: () => jsonResponse(mockOrderWithOwner),
       },
     ]);
 
@@ -173,6 +176,34 @@ Deno.test("payment-verify - iamport failure returns 500", async () => {
 
         assertEquals(response.status, 500);
         assertEquals(typeof payload.error, "string");
+      });
+    });
+  });
+});
+
+// Fix #1490: 타인의 merchant_uid로 결제 승인 시도 → 403 반환 (IDOR 방어)
+Deno.test("payment-verify - other user's order returns 403", async () => {
+  await withEnv(ENV, async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const { fetchMock } = createFetchMock([
+      authRoute,
+      {
+        matcher: (req) => req.url.includes("/rest/v1/event_applications") && req.method === "GET",
+        handler: () => jsonResponse({ ...mockOrderWithOwner, user_id: "other-user-999" }),
+      },
+    ]);
+
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const request = authenticatedJsonRequest("http://localhost", {
+          imp_uid: "imp_123",
+          merchant_uid: "order-other",
+        });
+        const response = await handler(request);
+        const payload = await readJson(response);
+
+        assertEquals(response.status, 403);
+        assertEquals(payload.error, "Forbidden");
       });
     });
   });
