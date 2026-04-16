@@ -3,6 +3,8 @@ import { FetchRoute, jsonResponse } from "./mock_http.ts";
 export const mockOrder = {
   payment_amount: 15000,
   status: "pending",
+  // Fix #1490: user_id must match mockUser.id for ownership check in payment-verify
+  user_id: "user-123",
 };
 
 export const mockPaidPayment = {
