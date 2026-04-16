@@ -58,7 +58,7 @@
 
 **소스**: `minglit_theme.dart:62-106` (Light), `minglit_theme.dart:121-167` (Dark)
 
-기본 폰트 패밀리: `NotoSansKR` (`minglit_theme.dart:64`)
+기본 폰트 패밀리: `Pretendard` (`minglit_theme.dart:64`)
 
 | TextTheme 슬롯 | fontSize | fontWeight | height | 실제 line-height | color (Light) |
 | :--- | :--- | :--- | :--- | :--- | :--- |

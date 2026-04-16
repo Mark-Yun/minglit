@@ -49,7 +49,7 @@
 | backgroundColor | `#FFFFFF` | :6 |
 | elevation | 0 (플랫) | :7 |
 | centerTitle | true | :8 |
-| titleTextStyle | 18px / w600 / NotoSansKR | :10-16 |
+| titleTextStyle | 18px / w600 / Pretendard | :10-16 |
 
 ### AppBar 유틸리티
 
