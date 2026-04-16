@@ -5,6 +5,7 @@ import { serializeParty } from './party_serializer.ts'
 import { HybridCalculator } from './calculator.ts'
 import { WorkerUtils } from '../_shared/worker_utils.ts'
 import { initSentry, withHandler, log, captureException } from '../_shared/logger.ts'
+import { requireServiceRole } from '../_shared/auth_utils.ts'
 
 const FN = "ai-embed";
 
@@ -20,10 +21,14 @@ const calculator = new HybridCalculator({ decayRate: 0.05 });
 initSentry();
 
 Deno.serve(withHandler(async (req) => {
+  // Fix #1489: 시스템 전용 EF — service_role만 허용
+  const auth = requireServiceRole(req);
+  if (auth instanceof Response) return auth;
   log({ function: FN, level: "info", message: "AI Embed Worker Triggered! Checking environment and auth..." });
   try {
     const payload = await req.json().catch(() => ({}));
-    const batchSize = payload.batch_size ?? 50;
+    const rawBatch = Math.floor(Number(payload.batch_size));
+    const batchSize = Number.isFinite(rawBatch) && rawBatch >= 1 ? Math.min(rawBatch, 50) : 50;
 
     const supabase = createServiceClient();
     const adapter = createEmbeddingAdapter();

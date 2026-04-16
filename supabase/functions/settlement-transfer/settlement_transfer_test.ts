@@ -1,6 +1,5 @@
 import { assertEquals } from "@std/assert";
 import {
-  authenticatedJsonRequest,
   captureServeHandler,
   createFetchMock,
   jsonResponse,
@@ -9,7 +8,6 @@ import {
   withMockedFetch,
   withNoIntervals,
 } from "../_test_utils/mock_http.ts";
-import { authRoute } from "../_test_utils/fixtures.ts";
 
 const ENV = {
   PORTONE_V2_API_KEY: "test-v2-key",
@@ -17,12 +15,22 @@ const ENV = {
   SUPABASE_SERVICE_ROLE_KEY: "service-key",
 };
 
+function serviceRoleRequest(url: string, body: unknown): Request {
+  return new Request(url, {
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer service-key",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+}
+
 Deno.test("settlement-transfer - happy path creates transfer", async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
     const { fetchMock, calls } = createFetchMock([
-      authRoute,
       {
         matcher: (req) => req.url.includes("/rest/v1/partners") && req.method === "GET",
         handler: () => jsonResponse({ portone_partner_id: "portone-partner-123" }),
@@ -35,7 +43,7 @@ Deno.test("settlement-transfer - happy path creates transfer", async () => {
 
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const request = authenticatedJsonRequest("http://localhost", {
+        const request = serviceRoleRequest("http://localhost", {
           partner_id: "partner-uuid",
           payment_id: "imp_123",
           order_amount: 15000,
@@ -62,7 +70,6 @@ Deno.test("settlement-transfer - partner not synced returns 400", async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
     const { fetchMock } = createFetchMock([
-      authRoute,
       {
         matcher: (req) => req.url.includes("/rest/v1/partners") && req.method === "GET",
         handler: () => jsonResponse({ portone_partner_id: null }),
@@ -71,7 +78,7 @@ Deno.test("settlement-transfer - partner not synced returns 400", async () => {
 
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const request = authenticatedJsonRequest("http://localhost", {
+        const request = serviceRoleRequest("http://localhost", {
           partner_id: "partner-uuid",
           payment_id: "imp_123",
           order_amount: 15000,
@@ -91,7 +98,6 @@ Deno.test("settlement-transfer - partner not found returns 404", async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
     const { fetchMock } = createFetchMock([
-      authRoute,
       {
         matcher: (req) => req.url.includes("/rest/v1/partners") && req.method === "GET",
         handler: () => jsonResponse({ error: { message: "not found" } }, { status: 406 }),
@@ -100,7 +106,7 @@ Deno.test("settlement-transfer - partner not found returns 404", async () => {
 
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const request = authenticatedJsonRequest("http://localhost", {
+        const request = serviceRoleRequest("http://localhost", {
           partner_id: "nonexistent",
           payment_id: "imp_123",
           order_amount: 15000,
@@ -118,11 +124,11 @@ Deno.test("settlement-transfer - partner not found returns 404", async () => {
 Deno.test("settlement-transfer - missing required fields returns 400", async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-    const { fetchMock } = createFetchMock([authRoute]);
+    const { fetchMock } = createFetchMock([]);
 
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const request = authenticatedJsonRequest("http://localhost", { partner_id: "partner-uuid" });
+        const request = serviceRoleRequest("http://localhost", { partner_id: "partner-uuid" });
         const response = await handler(request);
         const payload = await readJson(response);
 
@@ -138,7 +144,6 @@ Deno.test("settlement-transfer - PortOne API error returns 502", async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
     const { fetchMock } = createFetchMock([
-      authRoute,
       {
         matcher: (req) => req.url.includes("/rest/v1/partners") && req.method === "GET",
         handler: () => jsonResponse({ portone_partner_id: "portone-partner-123" }),
@@ -151,7 +156,7 @@ Deno.test("settlement-transfer - PortOne API error returns 502", async () => {
 
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const request = authenticatedJsonRequest("http://localhost", {
+        const request = serviceRoleRequest("http://localhost", {
           partner_id: "partner-uuid",
           payment_id: "imp_123",
           order_amount: 15000,
@@ -161,6 +166,47 @@ Deno.test("settlement-transfer - PortOne API error returns 502", async () => {
 
         assertEquals(response.status, 502);
         assertEquals(payload.error, "Failed to create order transfer");
+      });
+    });
+  });
+});
+
+Deno.test("settlement-transfer - unauthorized: no auth returns 401", async () => {
+  await withEnv(ENV, async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const { fetchMock } = createFetchMock([]);
+
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const request = new Request("http://localhost", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ partner_id: "p", payment_id: "i", order_amount: 100 }),
+        });
+        const response = await handler(request);
+        assertEquals(response.status, 401);
+      });
+    });
+  });
+});
+
+Deno.test("settlement-transfer - unauthorized: wrong token returns 401", async () => {
+  await withEnv(ENV, async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const { fetchMock } = createFetchMock([]);
+
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const request = new Request("http://localhost", {
+          method: "POST",
+          headers: {
+            "Authorization": "Bearer bad-key",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ partner_id: "p", payment_id: "i", order_amount: 100 }),
+        });
+        const response = await handler(request);
+        assertEquals(response.status, 401);
       });
     });
   });
