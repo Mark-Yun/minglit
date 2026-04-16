@@ -1,5 +1,11 @@
-import 'package:flutter/material.dart';
+import 'dart:io';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+// KEEP IN SYNC WITH apps/app_partner/test/integration/utils/golden_capture.dart
 
 /// CUJ 스텝별 골든 캡처 헬퍼.
 ///
@@ -7,6 +13,9 @@ import 'package:flutter_test/flutter_test.dart';
 /// - testId: cuj_u01, flow_u_search 등
 /// - step: 0부터 순차 증가
 /// - phase: setup | before | after | error
+///
+/// 캡처 실패는 삼켜진다 — 테스트 실패로 이어지지 않는다.
+/// 파일은 `test/integration/goldens/` 디렉토리에 저장된다.
 ///
 /// 사용 예:
 /// ```dart
@@ -37,14 +46,36 @@ class GoldenCapture {
       _capture(tester, step, 'error');
 
   Future<void> _capture(WidgetTester tester, int step, String phase) async {
-    // autoUpdateGoldenFiles = true: 골든 파일을 생성/갱신 모드로 동작.
-    // 이 캡처의 목적은 회귀 비교가 아닌 시각 베이스라인 생성이므로,
-    // 골든 파일이 없어도 테스트가 실패하지 않는다.
-    autoUpdateGoldenFiles = true;
-    await expectLater(
-      find.byType(MaterialApp),
-      matchesGoldenFile('goldens/${testId}_step${step}_$phase.png'),
-    );
-    autoUpdateGoldenFiles = false;
+    // 캡처 실패는 삼켜진다 — 회귀 비교가 아닌 시각 베이스라인 생성이 목적이므로
+    // 테스트 실패로 이어져서는 안 된다.
+    try {
+      await tester.runAsync(() async {
+        final image = await _renderToImage(tester);
+        final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+        image.dispose();
+        if (byteData == null) return;
+        final bytes = Uint8List.view(byteData.buffer);
+        final filename = '${testId}_step${step}_$phase.png';
+        final dir = Directory('test/integration/goldens');
+        if (!dir.existsSync()) dir.createSync(recursive: true);
+        await File('${dir.path}/$filename').writeAsBytes(bytes, flush: true);
+      });
+    } catch (e, st) {
+      // ignore: avoid_print
+      print('[GoldenCapture] capture failed: $e\n$st');
+    }
+  }
+
+  Future<ui.Image> _renderToImage(WidgetTester tester) async {
+    final rootElement = tester.binding.rootElement;
+    if (rootElement != null) {
+      return captureImage(rootElement);
+    }
+    final renderView = tester.binding.renderViews.first;
+    final layer = renderView.debugLayer;
+    if (layer is OffsetLayer) {
+      return layer.toImage(renderView.paintBounds);
+    }
+    throw StateError('Could not find a paintable layer to capture.');
   }
 }
