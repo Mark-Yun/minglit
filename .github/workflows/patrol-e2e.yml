@@ -14,6 +14,11 @@ on:
     - cron: '0 6 * * 1'
   workflow_dispatch:
 
+# Fix #1457: schedule + manual 실행 겹침 시 병렬 실행 방지
+concurrency:
+  group: patrol-e2e
+  cancel-in-progress: false
+
 jobs:
   patrol-e2e-app-user:
     runs-on: ubuntu-latest
