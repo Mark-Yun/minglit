@@ -14,6 +14,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
+import 'utils/golden_capture.dart';
 import 'utils/test_app.dart';
 import 'utils/test_mocks.dart';
 
@@ -60,6 +61,8 @@ void main() {
   }
 
   group('IT-U03: 환불 신청', () {
+    final capture = GoldenCapture('cuj_u03');
+
     testWidgets('비로그인 사용자는 구매 내역에 접근할 수 없다', (tester) async {
       await tester.pumpWidget(
         createTestApp(
@@ -68,6 +71,8 @@ void main() {
       );
       await tester.pump();
       await tester.pump();
+
+      await capture.setup(tester, 0);
 
       // /purchase-history는 보호된 경로
       expect(find.byType(LoginPage), findsOneWidget);
@@ -90,6 +95,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
+      await capture.after(tester, 1);
+
       expect(find.text('구매 내역'), findsOneWidget);
       expect(find.text('소셜 다이닝'), findsOneWidget);
     });
@@ -111,6 +118,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
+      await capture.before(tester, 2);
+
       expect(find.text('구매 내역'), findsOneWidget);
     });
 
@@ -130,6 +139,8 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+
+      await capture.after(tester, 3);
 
       expect(find.text('구매 내역'), findsOneWidget);
     });

@@ -2,6 +2,7 @@ import 'package:app_user/src/features/auth/login_page.dart';
 import 'package:app_user/src/features/home/home_page.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'utils/golden_capture.dart';
 import 'utils/test_app.dart';
 import 'utils/test_mocks.dart';
 
@@ -9,9 +10,13 @@ void main() {
   group('Login Page', () {
     testWidgets('비로그인: /login 접근 시 LoginPage 렌더링', (tester) async {
       setKoreanLocale(tester);
+      final capture = GoldenCapture('login_u');
       await tester.pumpWidget(createTestApp(initialLocation: '/login'));
       await tester.pump();
       await tester.pump();
+
+      await capture.setup(tester, 0); // 로그인 페이지 렌더링
+
       expect(find.byType(LoginPage), findsOneWidget);
     });
 
@@ -33,11 +38,15 @@ void main() {
 
     testWidgets('from 파라미터: LoginPage 렌더링 (비로그인)', (tester) async {
       setKoreanLocale(tester);
+      final capture = GoldenCapture('login_u');
       await tester.pumpWidget(
         createTestApp(initialLocation: '/login?from=%2Fmy'),
       );
       await tester.pump();
       await tester.pump();
+
+      await capture.before(tester, 1); // 소셜 로그인 버튼
+
       expect(find.byType(LoginPage), findsOneWidget);
     });
   });

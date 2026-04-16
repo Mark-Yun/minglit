@@ -2,6 +2,7 @@ import 'package:app_user/src/features/auth/login_page.dart';
 import 'package:app_user/src/features/home/home_page.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'utils/golden_capture.dart';
 import 'utils/test_app.dart';
 import 'utils/test_mocks.dart';
 
@@ -10,11 +11,14 @@ void main() {
     // Test 1: Unauthenticated → /my (protected prefix) → LoginPage
     testWidgets('비로그인: /my 접근 시 LoginPage로 리다이렉트', (tester) async {
       setKoreanLocale(tester);
+      final capture = GoldenCapture('redirect_u_auth');
       await tester.pumpWidget(
         createTestApp(initialLocation: '/my'),
       );
       await tester.pump();
       await tester.pump();
+
+      await capture.setup(tester, 0); // GUEST → /login 리다이렉트
 
       expect(find.byType(LoginPage), findsOneWidget);
       expect(find.byType(HomePage), findsNothing);
@@ -51,6 +55,7 @@ void main() {
     // Test 4: Authenticated → /login → redirected to home
     testWidgets('로그인 상태: /login 접근 시 홈으로 리다이렉트', (tester) async {
       setKoreanLocale(tester);
+      final capture = GoldenCapture('redirect_u_auth');
       final user = createMockUserForTest();
       await tester.pumpWidget(
         createTestApp(
@@ -62,6 +67,8 @@ void main() {
       await tester.pump();
       await tester.pump();
 
+      await capture.setup(tester, 1); // AUTH → 보호 페이지 접근
+
       expect(find.byType(HomePage), findsOneWidget);
       expect(find.byType(LoginPage), findsNothing);
     });
@@ -69,9 +76,12 @@ void main() {
     // Test 5: Public route accessible without auth
     testWidgets('비로그인: public 라우트(/) 접근 시 리다이렉트 없음', (tester) async {
       setKoreanLocale(tester);
+      final capture = GoldenCapture('redirect_u_auth');
       await tester.pumpWidget(createTestApp());
       await tester.pump();
       await tester.pump();
+
+      await capture.setup(tester, 2); // VERIFIED → 모든 페이지 접근
 
       expect(find.byType(HomePage), findsOneWidget);
       expect(find.byType(LoginPage), findsNothing);

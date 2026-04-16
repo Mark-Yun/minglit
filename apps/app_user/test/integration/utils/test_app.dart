@@ -7,9 +7,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Integration test용 TestApp 헬퍼.
 /// 실제 Supabase/Firebase 없이 GoRouter 네비게이션을 테스트합니다.
+// Fix #1458: ThemeController가 SharedPreferences를 사용하므로 항상 mock 초기화
 Widget createTestApp({
   bool isLoggedIn = false,
   User? currentUser,
@@ -18,6 +20,10 @@ Widget createTestApp({
   List<Event>? events,
   List<Event>? feedEvents,
 }) {
+  // ThemeController calls SharedPreferences.getInstance during build.
+  // Mock it here so tests that render MyPage (or any ThemeSettingsTile) don't crash.
+  SharedPreferences.setMockInitialValues({});
+
   final testRouter = GoRouter(
     initialLocation: initialLocation,
     routes: $appRoutes,

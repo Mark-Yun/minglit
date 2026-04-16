@@ -15,6 +15,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'utils/golden_capture.dart';
 import 'utils/test_app.dart';
 import 'utils/test_mocks.dart';
 
@@ -54,6 +55,9 @@ void main() {
   });
 
   group('IT-U14 태그 탐색 CUJ', () {
+    // Fix #1458: cuj_u12 → cuj_u14 to match IT-U14 scenario ID
+    final capture = GoldenCapture('cuj_u14');
+
     // TC-U14-001: TagEventListRoute → TagEventListPage + 이벤트 렌더링
     testWidgets(
       'TC-U14-001: TagEventListRoute 진입 시 TagEventListPage가 렌더링되고 이벤트 목록이 표시된다',
@@ -81,6 +85,8 @@ void main() {
         await tester.pump(); // provider 시작
         await tester.pump(); // AsyncData 완료 → 리빌드
 
+        await capture.setup(tester, 0);
+
         expect(find.byType(TagEventListPage), findsOneWidget);
         expect(find.text('#클럽'), findsOneWidget); // AppBar title
         expect(find.text('태그 이벤트 0'), findsOneWidget);
@@ -105,6 +111,8 @@ void main() {
         );
         await tester.pump();
         await tester.pump();
+
+        await capture.after(tester, 1);
 
         expect(find.byType(TagEventListPage), findsOneWidget);
         expect(find.text('아직 이 태그의 이벤트가 없어요'), findsOneWidget);

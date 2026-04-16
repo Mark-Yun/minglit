@@ -16,6 +16,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 import '../visual_qa/visual_qa_helper.dart';
+import 'utils/golden_capture.dart';
 import 'utils/test_app.dart';
 import 'utils/test_mocks.dart';
 
@@ -69,6 +70,8 @@ void main() {
   );
 
   group('IT-U01: 회원가입→결제→신청', () {
+    final capture = GoldenCapture('cuj_u01');
+
     testWidgets('비로그인 사용자가 신청 페이지 접근 시 login으로 리다이렉트된다', (
       tester,
     ) async {
@@ -81,6 +84,7 @@ void main() {
       await tester.pump();
 
       await tester.capture('login_redirect');
+      await capture.setup(tester, 0);
 
       // login 페이지가 표시됨 (보호된 경로 → 리다이렉트)
       expect(find.byType(Scaffold), findsWidgets);
@@ -96,6 +100,7 @@ void main() {
       await tester.pump();
 
       await tester.capture('login_with_from_param');
+      await capture.setup(tester, 1);
 
       // /login?from=/events/event-paid/apply 로 리다이렉트됨
       // LoginPage가 표시됨을 검증 (GoRouter redirect 로직 정상 작동)
@@ -129,6 +134,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
 
       await tester.capture('wizard_access');
+      await capture.after(tester, 2);
 
       // 위저드 제목 표시
       expect(find.text('참여 신청'), findsOneWidget);
@@ -159,6 +165,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
 
       await tester.capture('wizard_progress_bar');
+      await capture.after(tester, 3);
 
       // 위저드가 렌더링됨 (크래시 없음)
       expect(find.text('참여 신청'), findsOneWidget);
@@ -190,6 +197,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
 
       await tester.capture('free_event_wizard');
+      await capture.after(tester, 4);
 
       expect(find.text('참여 신청'), findsOneWidget);
     });
@@ -216,6 +224,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
 
       await tester.capture('error_state');
+      await capture.error(tester, 5);
 
       // 에러 발생해도 크래시 없이 렌더링됨
       expect(find.byType(Scaffold), findsWidgets);
@@ -247,6 +256,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
 
       await tester.capture('submitting_state');
+      await capture.after(tester, 6);
 
       expect(find.byType(Scaffold), findsWidgets);
     });
@@ -277,6 +287,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
 
       await tester.capture('success_state');
+      await capture.after(tester, 7);
 
       // 성공 상태에서 PaymentSuccessScreen으로 이동하거나
       // 위저드가 성공 처리를 보여줌
