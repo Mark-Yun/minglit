@@ -25,6 +25,25 @@ final bugReporterCallbackProvider =
       _BugReporterCallbackNotifier.new,
     );
 
+/// Dev-only: controls whether [BugReportFab] is visible.
+///
+/// Toggled by [BugReportAction]. State persists across screen transitions
+/// but resets on app restart (in-memory only).
+// Fix #1466: FAB 토글 — 액션 버튼으로 FAB 표시/숨김 전환
+// StateProvider is removed in Riverpod v3; use Notifier instead.
+final bugReportFabVisibleProvider =
+    NotifierProvider<_BugReportFabVisibleNotifier, bool>(
+      _BugReportFabVisibleNotifier.new,
+    );
+
+class _BugReportFabVisibleNotifier extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  /// Toggles FAB visibility.
+  void toggle() => state = !state;
+}
+
 class _BugReporterCallbackNotifier extends Notifier<Future<void> Function()?> {
   @override
   Future<void> Function()? build() => null;
@@ -396,10 +415,12 @@ class _BugReporterWrapperState extends ConsumerState<BugReporterWrapper> {
   }
 }
 
-/// Action button for the app bar that triggers the bug reporter.
+/// Action button for the app bar that toggles [BugReportFab] visibility.
 ///
 /// Only renders in non-release mode when [BugReporterWrapper] is active.
-// Fix #1285: FAB 대체 — 앱바 액션 버튼 (dev only)
+/// Tapping toggles [bugReportFabVisibleProvider]; the FAB itself opens the
+/// bug report dialog.
+// Fix #1466: 액션 버튼이 다이얼로그를 직접 열지 않고 FAB 표시/숨김을 토글
 class BugReportAction extends ConsumerWidget {
   /// Creates a bug report action button.
   const BugReportAction({super.key});
@@ -407,13 +428,40 @@ class BugReportAction extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (kReleaseMode) return const SizedBox.shrink();
-    final showDialog = ref.watch(bugReporterCallbackProvider);
-    if (showDialog == null) return const SizedBox.shrink();
+    if (ref.watch(bugReporterCallbackProvider) == null) {
+      return const SizedBox.shrink();
+    }
     return IconButton(
       icon: const Icon(Icons.bug_report),
       color: MinglitColors.error,
       tooltip: 'Bug Report',
-      onPressed: showDialog,
+      // Fix #1466: toggle FAB visibility instead of opening dialog directly
+      onPressed: () => ref.read(bugReportFabVisibleProvider.notifier).toggle(),
+    );
+  }
+}
+
+/// Dev-only FAB that opens the bug report dialog.
+///
+/// Visibility is controlled by [bugReportFabVisibleProvider], which is
+/// toggled via [BugReportAction] in the app bar. Add this to your
+/// [Scaffold.floatingActionButton] on screens that show [BugReportAction].
+// Fix #1466: FAB 토글 — 기본 숨김, 액션 버튼으로 표시
+class BugReportFab extends ConsumerWidget {
+  /// Creates a bug report FAB.
+  const BugReportFab({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (kReleaseMode) return const SizedBox.shrink();
+    final isFabVisible = ref.watch(bugReportFabVisibleProvider);
+    final openDialog = ref.watch(bugReporterCallbackProvider);
+    if (!isFabVisible || openDialog == null) return const SizedBox.shrink();
+    return FloatingActionButton(
+      backgroundColor: MinglitColors.error,
+      tooltip: 'Bug Report',
+      onPressed: openDialog,
+      child: const Icon(Icons.bug_report),
     );
   }
 }
