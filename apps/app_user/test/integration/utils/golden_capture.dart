@@ -37,9 +37,14 @@ class GoldenCapture {
       _capture(tester, step, 'error');
 
   Future<void> _capture(WidgetTester tester, int step, String phase) async {
+    // autoUpdateGoldenFiles = true: 골든 파일을 생성/갱신 모드로 동작.
+    // 이 캡처의 목적은 회귀 비교가 아닌 시각 베이스라인 생성이므로,
+    // 골든 파일이 없어도 테스트가 실패하지 않는다.
+    autoUpdateGoldenFiles = true;
     await expectLater(
       find.byType(MaterialApp),
       matchesGoldenFile('goldens/${testId}_step${step}_$phase.png'),
     );
+    autoUpdateGoldenFiles = false;
   }
 }
