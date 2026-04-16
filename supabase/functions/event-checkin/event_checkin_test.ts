@@ -25,7 +25,7 @@ async function generateTestKeys() {
     { name: "Ed25519" },
     true,
     ["sign", "verify"],
-  );
+  ) as CryptoKeyPair;
   const publicKeyJwk = await crypto.subtle.exportKey("jwk", keyPair.publicKey);
   return { privateKey: keyPair.privateKey, publicKeyJwk };
 }
