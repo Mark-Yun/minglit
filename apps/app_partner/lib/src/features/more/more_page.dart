@@ -41,7 +41,7 @@ class MorePage extends ConsumerWidget {
                 return MinglitSettingsGroup(
                   children: [
                     _ProfileTile(
-                      displayName: '파트너 정보 없음',
+                      displayName: '파트너 정보를 불러올 수 없습니다',
                       email: '',
                       onTap: () {},
                     ),

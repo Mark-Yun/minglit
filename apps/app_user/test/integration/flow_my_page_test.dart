@@ -135,7 +135,11 @@ void main() {
 
       await tester.scrollUntilVisible(find.text('차단 목록'), 100);
       await tester.tap(find.text('차단 목록'));
-      await tester.pumpAndSettle();
+      // Fix #1485: BlockedPartnersPage uses unawaited(_load()) in initState which
+      // shows CircularProgressIndicator — pumpAndSettle() never settles. Use pump()
+      // to advance one frame (GoRouter push completes) instead.
+      await tester.pump();
+      await tester.pump();
 
       expect(find.byType(BlockedPartnersPage), findsOneWidget);
     });
