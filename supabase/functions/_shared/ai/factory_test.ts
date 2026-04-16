@@ -43,7 +43,8 @@ Deno.test("createEmbeddingAdapter - missing OPENAI_API_KEY throws", async () => 
     assertThrows(
       () => createEmbeddingAdapter(),
       Error,
-      "OPENAI_API_KEY is not set",
+      // Fix #1493: 에러 메시지에서 환경변수명 노출 제거 — 일반적인 설정 오류 문구로 변경
+      "AI provider configuration missing",
     );
   });
 });
@@ -53,7 +54,8 @@ Deno.test("createLLMAdapter - missing OPENAI_API_KEY throws", async () => {
     assertThrows(
       () => createLLMAdapter(),
       Error,
-      "OPENAI_API_KEY is not set",
+      // Fix #1493: 에러 메시지에서 환경변수명 노출 제거 — 일반적인 설정 오류 문구로 변경
+      "AI provider configuration missing",
     );
   });
 });
