@@ -33,7 +33,7 @@ class PartnerHomePage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: MinglitTheme.appBarLogo(height: 28),
+        title: MinglitTheme.appBarLogo(height: 36),
         centerTitle: false,
         surfaceTintColor: Colors.transparent,
         actions: [
