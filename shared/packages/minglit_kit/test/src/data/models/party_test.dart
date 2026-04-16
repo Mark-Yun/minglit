@@ -267,7 +267,7 @@ void main() {
         },
       });
       expect(party.description, isNotNull);
-      expect(party.description!['ops'], isA<List>());
+      expect(party.description!['ops'], isA<List<dynamic>>());
     });
 
     test('parses description when it is a String (legacy data)', () {
@@ -276,8 +276,8 @@ void main() {
         'description': '레거시 텍스트 설명',
       });
       expect(party.description, isNotNull);
-      expect(party.description!['ops'], isA<List>());
-      final ops = party.description!['ops'] as List;
+      expect(party.description!['ops'], isA<List<dynamic>>());
+      final ops = party.description!['ops'] as List<dynamic>;
       expect(ops.first['insert'], '레거시 텍스트 설명\n');
     });
 
