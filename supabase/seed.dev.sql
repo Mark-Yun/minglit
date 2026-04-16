@@ -1,3 +1,4 @@
+
 -- supabase/seed.dev.sql
 -- DEV ONLY: 560 users (60 legacy + 500 regional) + 5 partner owners + 5 partners
 --           + locations + verifications + roles + pgmq purge + env setting
@@ -96,19 +97,28 @@ BEGIN
           INSERT INTO auth.users (
             instance_id, id, aud, role, email, encrypted_password,
             email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
-            created_at, updated_at, confirmation_token, recovery_token
+            created_at, updated_at, confirmation_token, recovery_token,
+            is_sso_user, is_anonymous, phone,
+            email_change, email_change_token_new, email_change_token_current,
+            phone_change, phone_change_token, reauthentication_token,
+            email_change_confirm_status
           ) VALUES (
             '00000000-0000-0000-0000-000000000000',
             gen_random_uuid(), 'authenticated', 'authenticated',
             email_val, pwd_hash, now(),
             '{"provider":"email","providers":["email"],"has_password":true}'::jsonb,
-            meta, now(), now(), '', ''
+            meta, now(), now(), '', '',
+            false, false, phone_val,
+            '', '', '', '', '', '', 0
           );
         ELSE
           UPDATE auth.users
           SET encrypted_password = pwd_hash,
               raw_user_meta_data = meta,
-              updated_at = now()
+              updated_at = now(),
+              is_sso_user = COALESCE(is_sso_user, false),
+              is_anonymous = COALESCE(is_anonymous, false),
+              phone = COALESCE(phone, '')
           WHERE id = existing_id;
         END IF;
       END LOOP;
@@ -149,19 +159,28 @@ BEGIN
           INSERT INTO auth.users (
             instance_id, id, aud, role, email, encrypted_password,
             email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
-            created_at, updated_at, confirmation_token, recovery_token
+            created_at, updated_at, confirmation_token, recovery_token,
+            is_sso_user, is_anonymous, phone,
+            email_change, email_change_token_new, email_change_token_current,
+            phone_change, phone_change_token, reauthentication_token,
+            email_change_confirm_status
           ) VALUES (
             '00000000-0000-0000-0000-000000000000',
             gen_random_uuid(), 'authenticated', 'authenticated',
             email_val, pwd_hash, now(),
             '{"provider":"email","providers":["email"],"has_password":true}'::jsonb,
-            meta, now(), now(), '', ''
+            meta, now(), now(), '', '',
+            false, false, phone_val,
+            '', '', '', '', '', '', 0
           );
         ELSE
           UPDATE auth.users
           SET encrypted_password = pwd_hash,
               raw_user_meta_data = meta,
-              updated_at = now()
+              updated_at = now(),
+              is_sso_user = COALESCE(is_sso_user, false),
+              is_anonymous = COALESCE(is_anonymous, false),
+              phone = COALESCE(phone, '')
           WHERE id = existing_id;
         END IF;
       END LOOP;
@@ -196,35 +215,61 @@ BEGIN
       INSERT INTO auth.users (
         instance_id, id, aud, role, email, encrypted_password,
         email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
-        created_at, updated_at, confirmation_token, recovery_token
+        created_at, updated_at, confirmation_token, recovery_token,
+        is_sso_user, is_anonymous, phone,
+        email_change, email_change_token_new, email_change_token_current,
+        phone_change, phone_change_token, reauthentication_token,
+        email_change_confirm_status
       ) VALUES (
         '00000000-0000-0000-0000-000000000000',
         gen_random_uuid(), 'authenticated', 'authenticated',
         email_val, pwd_hash, now(),
         '{"provider":"email","providers":["email"],"has_password":true}'::jsonb,
-        meta, now(), now(), '', ''
+        meta, now(), now(), '', '',
+        false, false, meta->>'phone_number',
+        '', '', '', '', '', '', 0
       );
     ELSE
       UPDATE auth.users
       SET encrypted_password = pwd_hash,
           raw_user_meta_data = meta,
-          updated_at = now()
+          updated_at = now(),
+          is_sso_user = COALESCE(is_sso_user, false),
+          is_anonymous = COALESCE(is_anonymous, false),
+          phone = COALESCE(phone, '')
       WHERE id = existing_id;
     END IF;
   END LOOP;
 END $$;
 
--- ── auth.identities backfill (idempotent) ─────────────────────────────────────
--- auth.identities has a real unique constraint on (provider, provider_id), so
--- ON CONFLICT is valid here.
+-- ── auth.identities cleanup (remove duplicates from previous seed runs) ──────
+-- Previous seed used provider_id=email instead of provider_id=UUID, creating
+-- duplicate identity rows that break GoTrue admin.listUsers().
+DELETE FROM auth.identities
+WHERE provider = 'email'
+AND user_id IN (SELECT id FROM auth.users WHERE email LIKE '%@test.com')
+AND provider_id LIKE '%@test.com';
+
+-- ── auth.identities backfill (only for users without any identity) ────────────
+-- GoTrue creates identities with provider_id = user UUID, not email.
+-- Only backfill for users that have zero identity rows (newly created by this seed).
 INSERT INTO auth.identities (
   id, user_id, identity_data, provider, provider_id,
   created_at, updated_at, last_sign_in_at
 )
-SELECT u.id, u.id, u.raw_user_meta_data, 'email', u.email, now(), now(), now()
+SELECT u.id, u.id,
+  jsonb_build_object(
+    'sub', u.id::text,
+    'email', u.email,
+    'email_verified', false,
+    'phone_verified', false
+  ),
+  'email', u.id::text, now(), now(), now()
 FROM auth.users u
 WHERE u.email LIKE '%@test.com'
-ON CONFLICT (provider, provider_id) DO NOTHING;
+AND NOT EXISTS (
+  SELECT 1 FROM auth.identities i WHERE i.user_id = u.id
+);
 
 -- ── Phase 2: 3 Global Verifications ──────────────────────────────────────────
 -- Uses NOT EXISTS because verifications has no unique index on internal_name.
@@ -386,11 +431,17 @@ BEGIN
   END IF;
 END $$;
 
--- ── Phase 4: pgmq queue purge ─────────────────────────────────────────────────
-SELECT pgmq.purge('q_global_events');
-SELECT pgmq.purge('q_notifications');
-SELECT pgmq.purge('q_vectors');
+-- ── Phase 4: pgmq queue purge (best-effort — pgmq may not be available) ──────
+DO $$
+BEGIN
+  PERFORM pgmq.purge('q_global_events');
+  PERFORM pgmq.purge('q_notifications');
+  PERFORM pgmq.purge('q_vectors');
+EXCEPTION WHEN OTHERS THEN
+  RAISE NOTICE 'pgmq purge skipped: %', SQLERRM;
+END $$;
 
 -- ── Phase 5: dev environment setting ─────────────────────────────────────────
--- Ensures app.settings.environment is set for all DB connections in dev.
-ALTER DATABASE postgres SET app.settings.environment = 'development';
+-- Removed: ALTER DATABASE SET requires superuser privileges not available on
+-- hosted Supabase. The RPC guard that needed this setting is also being removed
+-- (#1413) — seed.dev.sql runs directly via CLI, not through the RPC.
