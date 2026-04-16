@@ -31,6 +31,7 @@ import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../utils/mocks.dart';
+import 'utils/golden_capture.dart';
 
 /// processQR 완료를 확정적으로 대기한다.
 ///
@@ -239,6 +240,7 @@ void main() {
 
     group('QRScannerScreen 렌더링', () {
       testWidgets('이벤트 제목이 AppBar에 표시된다', (tester) async {
+        final capture = GoldenCapture('cuj_p03a');
         final event = makeEvent('ev-scan', title: '새해맞이 파티');
 
         await tester.pumpWidget(
@@ -248,6 +250,8 @@ void main() {
           ),
         );
         await tester.pump();
+
+        await capture.setup(tester, 0);
 
         expect(find.text('티켓 스캔'), findsOneWidget);
         expect(find.text('새해맞이 파티'), findsOneWidget);
@@ -260,6 +264,7 @@ void main() {
       testWidgets(
         '체크인 성공 — "체크인 완료" 텍스트와 참가자 이름이 오버레이에 표시된다',
         (tester) async {
+          final capture = GoldenCapture('cuj_p03a');
           final event = makeEvent('ev-success');
 
           await tester.pumpWidget(
@@ -273,6 +278,8 @@ void main() {
           );
           await tester.pump();
 
+          await capture.after(tester, 1);
+
           expect(find.text('체크인 완료'), findsOneWidget);
           expect(find.text('User abcd'), findsOneWidget);
           // 성공 아이콘 표시
@@ -283,6 +290,7 @@ void main() {
       testWidgets(
         '체크인 실패 — "입장 제한" 텍스트와 에러 메시지가 오버레이에 표시된다',
         (tester) async {
+          final capture = GoldenCapture('cuj_p03a');
           final event = makeEvent('ev-fail');
 
           await tester.pumpWidget(
@@ -295,6 +303,8 @@ void main() {
             ),
           );
           await tester.pump();
+
+          await capture.error(tester, 2);
 
           expect(find.text('입장 제한'), findsOneWidget);
           expect(find.text('유효하지 않은 티켓입니다.'), findsOneWidget);

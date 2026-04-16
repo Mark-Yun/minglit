@@ -20,6 +20,7 @@ import 'package:mocktail/mocktail.dart';
 
 import '../utils/mocks.dart';
 import '../utils/test_utils.dart';
+import 'utils/golden_capture.dart';
 
 // ---------------------------------------------------------------------------
 // Local Mocks
@@ -299,6 +300,7 @@ void main() {
   // 3. QR 화면 위젯 — TicketQRScreen
   // -------------------------------------------------------------------------
   group('QR 티켓 화면', () {
+    final capture = GoldenCapture('cuj_u10');
     late MockTicketTokenService mockService;
 
     setUp(() {
@@ -327,6 +329,8 @@ void main() {
       await tester.pump(); // Future 완료
       await tester.pump(); // 위젯 렌더
 
+      await capture.setup(tester, 0);
+
       expect(find.text('내 티켓'), findsOneWidget);
       expect(find.text('입장 시 파트너에게 이 화면을 보여주세요'), findsOneWidget);
     });
@@ -340,6 +344,8 @@ void main() {
       await tester.pump();
       await tester.pump();
       await tester.pump();
+
+      await capture.after(tester, 1);
 
       expect(find.text('티켓 정보를 찾을 수 없습니다.'), findsOneWidget);
     });

@@ -3,6 +3,7 @@ import 'package:app_user/src/features/home/my_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'utils/golden_capture.dart';
 import 'utils/test_app.dart';
 import 'utils/test_mocks.dart';
 
@@ -10,9 +11,13 @@ void main() {
   group('Home Navigation Flow', () {
     testWidgets('비로그인 홈: person_outline 아이콘 표시', (tester) async {
       setKoreanLocale(tester);
+      final capture = GoldenCapture('nav_u_home');
       await tester.pumpWidget(createTestApp());
       await tester.pump();
       await tester.pump();
+
+      await capture.setup(tester, 0); // 홈 탭 초기
+
       expect(find.byIcon(Icons.person_outline), findsOneWidget);
       expect(find.byIcon(Icons.notifications_outlined), findsNothing);
     });
@@ -39,6 +44,7 @@ void main() {
 
     testWidgets('로그인 홈: /my 라우트 → MyPage', (tester) async {
       setKoreanLocale(tester);
+      final capture = GoldenCapture('nav_u_home');
       final user = createMockUserForTest();
       await tester.pumpWidget(
         createTestApp(
@@ -49,11 +55,15 @@ void main() {
       );
       await tester.pump();
       await tester.pump();
+
+      await capture.after(tester, 1); // 탭 전환
+
       expect(find.byType(MyPage), findsOneWidget);
     });
 
     testWidgets('루트 /my 에서 뒤로가면 홈으로 이동한다', (tester) async {
       setKoreanLocale(tester);
+      final capture = GoldenCapture('nav_u_home');
       final user = createMockUserForTest();
       await tester.pumpWidget(
         createTestApp(
@@ -69,6 +79,8 @@ void main() {
 
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
+
+      await capture.after(tester, 2); // 딥링크 → 탭 복귀
 
       expect(find.byType(MyPage), findsNothing);
       expect(find.byType(HomePage), findsOneWidget);

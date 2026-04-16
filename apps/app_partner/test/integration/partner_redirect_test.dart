@@ -16,6 +16,7 @@ import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../utils/mocks.dart';
+import 'utils/golden_capture.dart';
 
 // ---------------------------------------------------------------------------
 // Test app helper
@@ -140,11 +141,14 @@ void main() {
   group('Partner Redirect Flow', () {
     // Test 1: Not logged in → any non-/login route → PartnerLoginPage
     testWidgets('비로그인: / 접근 시 PartnerLoginPage로 리다이렉트', (tester) async {
+      final capture = GoldenCapture('redirect_p');
       await tester.pumpWidget(
         _createPartnerTestApp(),
       );
       await tester.pump();
       await tester.pump();
+
+      await capture.setup(tester, 0);
 
       expect(find.byType(PartnerLoginPage), findsOneWidget);
       expect(find.byType(PartnerHomePage), findsNothing);
@@ -192,6 +196,7 @@ void main() {
     testWidgets('needsApplication: / 접근 시 PartnerWelcomePage로 리다이렉트', (
       tester,
     ) async {
+      final capture = GoldenCapture('redirect_p');
       final user = User(
         id: 'partner-1',
         appMetadata: const {},
@@ -208,6 +213,8 @@ void main() {
       );
       await tester.pump();
       await tester.pump();
+
+      await capture.setup(tester, 1);
 
       expect(find.byType(PartnerWelcomePage), findsOneWidget);
       expect(find.byType(PartnerHomePage), findsNothing);
@@ -242,6 +249,7 @@ void main() {
     testWidgets('pendingReview: / 접근 시 PartnerApplyStatusPage로 리다이렉트', (
       tester,
     ) async {
+      final capture = GoldenCapture('redirect_p');
       final user = User(
         id: 'partner-1',
         appMetadata: const {},
@@ -258,6 +266,8 @@ void main() {
       );
       await tester.pump();
       await tester.pump();
+
+      await capture.setup(tester, 2);
 
       expect(find.byType(PartnerApplyStatusPage), findsOneWidget);
       expect(find.byType(PartnerHomePage), findsNothing);
@@ -329,6 +339,7 @@ void main() {
     testWidgets('hasPartner: / 접근 시 리다이렉트 없이 PartnerHomePage 표시', (
       tester,
     ) async {
+      final capture = GoldenCapture('redirect_p');
       final user = User(
         id: 'partner-1',
         appMetadata: const {},
@@ -344,6 +355,8 @@ void main() {
       );
       await tester.pump();
       await tester.pump();
+
+      await capture.setup(tester, 3);
 
       expect(find.byType(PartnerHomePage), findsOneWidget);
       expect(find.byType(PartnerLoginPage), findsNothing);

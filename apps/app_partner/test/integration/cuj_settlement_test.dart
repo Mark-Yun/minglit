@@ -16,6 +16,7 @@ import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../utils/mocks.dart';
+import 'utils/golden_capture.dart';
 import 'utils/test_app.dart';
 
 void main() {
@@ -59,6 +60,7 @@ void main() {
     });
 
     testWidgets('hasPartner 상태에서 정산 페이지에 접근할 수 있다', (tester) async {
+      final capture = GoldenCapture('cuj_p04');
       await tester.pumpWidget(
         createPartnerTestApp(
           isLoggedIn: true,
@@ -71,10 +73,13 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(seconds: 1));
 
+      await capture.setup(tester, 0);
+
       expect(find.text('정산'), findsWidgets);
     });
 
     testWidgets('대시보드/정산 내역 탭이 모두 표시된다', (tester) async {
+      final capture = GoldenCapture('cuj_p04');
       await tester.pumpWidget(
         createPartnerTestApp(
           isLoggedIn: true,
@@ -86,11 +91,14 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(seconds: 1));
 
+      await capture.after(tester, 1);
+
       expect(find.text('대시보드'), findsOneWidget);
       expect(find.text('정산 내역'), findsOneWidget);
     });
 
     testWidgets('정산 내역 탭 전환 시 크래시 없이 렌더링된다', (tester) async {
+      final capture = GoldenCapture('cuj_p04');
       await tester.pumpWidget(
         createPartnerTestApp(
           isLoggedIn: true,
@@ -106,10 +114,13 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
 
+      await capture.after(tester, 2);
+
       expect(find.byType(Scaffold), findsWidgets);
     });
 
     testWidgets('계좌 관리 페이지에 접근할 수 있다', (tester) async {
+      final capture = GoldenCapture('cuj_p04');
       await tester.pumpWidget(
         createPartnerTestApp(
           isLoggedIn: true,
@@ -120,6 +131,8 @@ void main() {
       );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
+
+      await capture.after(tester, 3);
 
       // 계좌 관리 페이지 렌더링됨
       expect(find.byType(Scaffold), findsWidgets);

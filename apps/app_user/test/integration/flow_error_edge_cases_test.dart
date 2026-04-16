@@ -15,6 +15,7 @@ import 'package:minglit_kit/src/features/social/logic/social_interaction_control
 import 'package:mocktail/mocktail.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'utils/golden_capture.dart';
 import 'utils/test_app.dart';
 import 'utils/test_mocks.dart';
 
@@ -61,6 +62,7 @@ void main() {
       'EventDetailPage 에러 → MinglitAsyncValueWidget 에러뷰 + 하단바 숨김',
       (tester) async {
         setKoreanLocale(tester);
+        final capture = GoldenCapture('flow_u_error');
         await tester.pumpWidget(
           ProviderScope(
             overrides: [
@@ -77,6 +79,8 @@ void main() {
         for (var i = 0; i < 5; i++) {
           await tester.pump();
         }
+
+        await capture.error(tester, 0); // 네트워크 에러 화면
 
         // MinglitAsyncValueWidget default error view
         expect(find.text('오류가 발생했습니다.'), findsOneWidget);
@@ -115,6 +119,7 @@ void main() {
       tester,
     ) async {
       setKoreanLocale(tester);
+      final capture = GoldenCapture('flow_u_error');
       await tester.pumpWidget(
         createTestApp(
           initialLocation: '/partners/nonexistent-partner',
@@ -128,6 +133,8 @@ void main() {
       await tester.pump();
       await tester.pump();
       await tester.pump();
+
+      await capture.error(tester, 1); // 404 화면
 
       expect(find.byType(PartnerDetailPage), findsOneWidget);
       expect(find.text('파트너를 찾을 수 없습니다.'), findsOneWidget);
@@ -225,6 +232,7 @@ void main() {
       tester,
     ) async {
       setKoreanLocale(tester);
+      final capture = GoldenCapture('flow_u_error');
       var refreshCount = 0;
       final testEvent = _createTestEventWithPartner();
 
@@ -263,6 +271,8 @@ void main() {
       await tester.pump(const Duration(seconds: 1));
       await tester.pump();
       await tester.pump();
+
+      await capture.after(tester, 2); // 재시도 후 복구
 
       expect(refreshCount, greaterThan(initialCount));
     });
