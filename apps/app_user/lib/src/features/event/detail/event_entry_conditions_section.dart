@@ -15,18 +15,11 @@ class _EntryConditionsSection extends ConsumerWidget {
     final counts = countsAsync.value ?? {};
 
     // Fix #172: 다른 섹션(Section 4, 5)과 동일하게 좌우 패딩 추가
-    return Padding(
-      padding: const EdgeInsets.all(MinglitSpacing.medium),
+    return MinglitSection(
+      title: '참여 현황',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '참여 현황',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: MinglitSpacing.medium),
           if (entryGroups.isEmpty)
             Text(
               '${event.currentParticipants}명 / ${event.maxParticipants}명',

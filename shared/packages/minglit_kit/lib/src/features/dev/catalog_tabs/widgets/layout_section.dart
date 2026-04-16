@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_content_card.dart';
+import 'package:minglit_kit/src/ui/widgets/common/minglit_content_layout.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_key_value_row.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_list_tile.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_section.dart';
@@ -151,6 +152,62 @@ class LayoutSection extends StatelessWidget {
           subtitle: 'enabled: false',
           leading: Icon(Icons.block),
           enabled: false,
+        ),
+
+        const Divider(height: MinglitSpacing.xxlarge),
+
+        // 6. MinglitContentLayout
+        Text('MinglitContentLayout', style: titleLarge),
+        const SizedBox(height: MinglitSpacing.medium),
+        Text('기본 (dividers 없음)', style: theme.textTheme.titleSmall),
+        const SizedBox(height: MinglitSpacing.small),
+        const MinglitContentLayout(
+          topPadding: MinglitSpacing.small,
+          bottomPadding: MinglitSpacing.small,
+          sections: [
+            MinglitSection(
+              title: '기본 정보',
+              child: Text('섹션 1 콘텐츠'),
+            ),
+            MinglitSection(
+              title: '참여 현황',
+              child: Text('섹션 2 콘텐츠'),
+            ),
+            MinglitSection(
+              title: '위치',
+              child: Text('섹션 3 콘텐츠'),
+            ),
+          ],
+        ),
+        const SizedBox(height: MinglitSpacing.medium),
+        Text('showDividers=true', style: theme.textTheme.titleSmall),
+        const SizedBox(height: MinglitSpacing.small),
+        const MinglitContentLayout(
+          topPadding: MinglitSpacing.small,
+          bottomPadding: MinglitSpacing.small,
+          showDividers: true,
+          sections: [
+            MinglitSection(
+              title: '정산 요약',
+              child: MinglitContentCard(
+                child: Column(
+                  children: [
+                    MinglitKeyValueRow(label: '총 매출', value: '₩420,000'),
+                    MinglitKeyValueRow(label: '수수료', value: '-₩42,000'),
+                    MinglitKeyValueRow(
+                      label: '정산금',
+                      value: '₩378,000',
+                      bold: true,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            MinglitSection(
+              title: '파트너 정보',
+              child: Text('파트너 상세 내용'),
+            ),
+          ],
         ),
       ],
     );
