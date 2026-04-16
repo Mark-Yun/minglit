@@ -5,6 +5,7 @@ import { WorkerUtils } from '../_shared/worker_utils.ts'
 import { isoToUnix } from '../_shared/temporal_utils.ts'
 import * as jose from 'jose'
 import { initSentry, withHandler, log } from '../_shared/logger.ts'
+import { requireServiceRole } from '../_shared/auth_utils.ts'
 
 const FN = "notification-worker";
 
@@ -240,7 +241,10 @@ async function sendToAllParticipants(
 
 initSentry();
 
-Deno.serve(withHandler(async (_req) => {
+Deno.serve(withHandler(async (req) => {
+  // Fix #1489: 시스템 전용 EF — service_role만 허용
+  const auth = requireServiceRole(req);
+  if (auth instanceof Response) return auth;
   // env-manifest: validate all required env vars for this function
   const envErr = requireEnv("notification-worker");
   if (envErr) return envErr;
