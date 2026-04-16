@@ -46,13 +46,18 @@ Deno.serve(withHandler(async (req) => {
       'db.query',
       async () => supabase
         .from("event_applications")
-        .select("payment_amount, status")
+        .select("payment_amount, status, user_id")
         .eq("id", merchant_uid)
         .single()
     );
 
     if (orderError || !order) {
       return errorResponse("Order not found", 404);
+    }
+
+    // Fix #1490: 호출자가 신청자 본인인지 검증 — service role은 RLS를 우회하므로 명시적 확인 필요
+    if (order.user_id !== auth) {
+      return errorResponse("Forbidden", 403);
     }
 
     // 이미 처리된 주문인지 확인

@@ -41,7 +41,7 @@ Deno.test("integration - paid event: verify succeeds → status approved, paymen
     );
 
     // payment_amount: 15000 인 pending 주문
-    const pendingOrder = { payment_amount: 15000, status: "pending" };
+    const pendingOrder = { payment_amount: 15000, status: "pending", user_id: "user-123" };
 
     // DB PATCH 호출을 캡처하기 위한 래퍼
     let patchedBody: Record<string, unknown> | null = null;
@@ -105,7 +105,7 @@ Deno.test("integration - failed payment: verify returns 400, order stays pending
       new URL("../payment-verify/index.ts", import.meta.url),
     );
 
-    const pendingOrder = { payment_amount: 15000, status: "pending" };
+    const pendingOrder = { payment_amount: 15000, status: "pending", user_id: "user-123" };
     let patchCalled = false;
 
     const { fetchMock } = createFetchMock([
