@@ -17,6 +17,7 @@ import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../utils/mocks.dart';
+import 'utils/golden_capture.dart';
 import 'utils/test_app.dart';
 
 void main() {
@@ -57,6 +58,7 @@ void main() {
     });
 
     testWidgets('오늘 이벤트 없을 때 빈 상태 메시지 표시', (tester) async {
+      final capture = GoldenCapture('cuj_p03');
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
@@ -72,10 +74,13 @@ void main() {
       );
       await tester.pumpAndSettle();
 
+      await capture.setup(tester, 0);
+
       expect(find.text('오늘 예정된 이벤트가 없습니다'), findsOneWidget);
     });
 
     testWidgets('오늘 이벤트 2개 이상 시 이벤트 선택 UI가 노출된다', (tester) async {
+      final capture = GoldenCapture('cuj_p03');
       final event1 = makeEvent('ev1', title: '소셜 이벤트 A');
       final event2 = makeEvent('ev2', title: '소셜 이벤트 B');
 
@@ -94,12 +99,15 @@ void main() {
       );
       await tester.pumpAndSettle();
 
+      await capture.after(tester, 1);
+
       expect(find.text('이벤트를 선택하세요'), findsOneWidget);
       expect(find.text('소셜 이벤트 A'), findsOneWidget);
       expect(find.text('소셜 이벤트 B'), findsOneWidget);
     });
 
     testWidgets('P03-V2: 이벤트 로드 실패 시 에러 메시지 표시', (tester) async {
+      final capture = GoldenCapture('cuj_p03');
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
@@ -114,6 +122,8 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+
+      await capture.error(tester, 2);
 
       expect(find.text('이벤트를 불러올 수 없습니다'), findsOneWidget);
     });

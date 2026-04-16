@@ -16,6 +16,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 
 import '../utils/mocks.dart';
 import '../visual_qa/visual_qa_helper.dart';
+import 'utils/golden_capture.dart';
 import 'utils/test_app.dart';
 
 void main() {
@@ -38,6 +39,7 @@ void main() {
 
   group('IT-P01: 파트너 가입 → 파티 → 이벤트', () {
     testWidgets('비로그인 사용자는 홈에 접근할 수 없다', (tester) async {
+      final capture = GoldenCapture('cuj_p01');
       await tester.pumpWidget(
         createPartnerTestApp(),
       );
@@ -46,6 +48,7 @@ void main() {
 
       // Capture: 비로그인 → 리다이렉트 화면
       await tester.capture('unauthenticated_redirect');
+      await capture.setup(tester, 0);
 
       // /login으로 리다이렉트됨
       expect(find.byType(Scaffold), findsWidgets);
@@ -54,6 +57,7 @@ void main() {
     testWidgets('needsApplication 상태 → /welcome으로 리다이렉트된다', (
       tester,
     ) async {
+      final capture = GoldenCapture('cuj_p01');
       await tester.pumpWidget(
         createPartnerTestApp(
           isLoggedIn: true,
@@ -66,6 +70,7 @@ void main() {
 
       // Capture: /welcome 화면
       await tester.capture('needs_application_welcome');
+      await capture.setup(tester, 1);
 
       // /welcome 페이지가 렌더링됨
       expect(find.byType(Scaffold), findsWidgets);
@@ -74,6 +79,7 @@ void main() {
     testWidgets('draftInProgress 상태 → /apply 위저드로 리다이렉트된다', (
       tester,
     ) async {
+      final capture = GoldenCapture('cuj_p01');
       await tester.pumpWidget(
         createPartnerTestApp(
           isLoggedIn: true,
@@ -86,6 +92,7 @@ void main() {
 
       // Capture: /apply 위저드 화면
       await tester.capture('draft_in_progress_apply');
+      await capture.setup(tester, 2);
 
       // /apply 위저드가 렌더링됨
       expect(find.byType(Scaffold), findsWidgets);
@@ -94,6 +101,7 @@ void main() {
     testWidgets('pendingReview 상태 → /apply/status로 리다이렉트된다', (
       tester,
     ) async {
+      final capture = GoldenCapture('cuj_p01');
       await tester.pumpWidget(
         createPartnerTestApp(
           isLoggedIn: true,
@@ -106,6 +114,7 @@ void main() {
 
       // Capture: /apply/status 화면
       await tester.capture('pending_review_status');
+      await capture.setup(tester, 3);
 
       // /apply/status 페이지가 렌더링됨
       expect(find.byType(Scaffold), findsWidgets);
@@ -114,6 +123,7 @@ void main() {
     testWidgets('P01-V1: needsCorrection 상태 → /apply/status로 리다이렉트된다', (
       tester,
     ) async {
+      final capture = GoldenCapture('cuj_p01');
       await tester.pumpWidget(
         createPartnerTestApp(
           isLoggedIn: true,
@@ -126,12 +136,14 @@ void main() {
 
       // Capture: 심사 보완 요청 → apply/status 화면
       await tester.capture('needs_correction_status');
+      await capture.setup(tester, 4);
 
       // 심사 보완 요청 → apply/status 페이지
       expect(find.byType(Scaffold), findsWidgets);
     });
 
     testWidgets('hasPartner 상태에서 홈에 접근할 수 있다', (tester) async {
+      final capture = GoldenCapture('cuj_p01');
       await tester.pumpWidget(
         createPartnerTestApp(
           isLoggedIn: true,
@@ -143,12 +155,14 @@ void main() {
 
       // Capture: 파트너 홈 화면
       await tester.capture('has_partner_home');
+      await capture.setup(tester, 5);
 
       // 파트너 홈 렌더링됨
       expect(find.byType(Scaffold), findsWidgets);
     });
 
     testWidgets('hasPartner 상태에서 파티 목록 페이지에 접근할 수 있다', (tester) async {
+      final capture = GoldenCapture('cuj_p01');
       await tester.pumpWidget(
         createPartnerTestApp(
           isLoggedIn: true,
@@ -161,6 +175,7 @@ void main() {
 
       // Capture: 파티 목록 페이지
       await tester.capture('has_partner_party_list');
+      await capture.after(tester, 6);
 
       // 파티 목록 페이지 렌더링됨
       expect(find.byType(Scaffold), findsWidgets);
@@ -169,6 +184,7 @@ void main() {
     testWidgets('hasPartner 상태에서 /apply에 접근 시 홈으로 리다이렉트된다', (
       tester,
     ) async {
+      final capture = GoldenCapture('cuj_p01');
       await tester.pumpWidget(
         createPartnerTestApp(
           isLoggedIn: true,
@@ -181,6 +197,7 @@ void main() {
 
       // Capture: /apply 접근 → / 리다이렉트 화면
       await tester.capture('has_partner_apply_redirect');
+      await capture.setup(tester, 7);
 
       // hasPartner가 /apply 접근 → / 로 리다이렉트
       expect(find.byType(Scaffold), findsWidgets);
