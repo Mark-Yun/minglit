@@ -9,6 +9,19 @@ const FN = "event-checkin";
 
 initSentry();
 
+// Fix #1491: base64url 디코딩 — Ed25519 서명 바이트 복원
+function base64UrlDecode(str: string): Uint8Array {
+  const padded = str.replace(/-/g, '+').replace(/_/g, '/');
+  const padding = (4 - (padded.length % 4)) % 4;
+  const base64 = padded + '='.repeat(padding);
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
+
 Deno.serve(withHandler(async (req) => {
   if (req.method === "OPTIONS") return corsResponse();
 
@@ -22,13 +35,26 @@ Deno.serve(withHandler(async (req) => {
     return errorResponse("Invalid JSON body", 400);
   }
 
-  const { event_id, participant_id } = reqBody as {
+  const { event_id, participant_id, signature, expires_at } = reqBody as {
     event_id?: string;
     participant_id?: string;
+    signature?: string;
+    expires_at?: string;
   };
 
   if (!event_id || !participant_id) {
     return errorResponse("Missing required parameters: event_id, participant_id", 400);
+  }
+
+  // Fix #1491: QR 서명 검증을 위한 파라미터 — signature/expires_at이 없으면 요청 거부
+  if (!signature || !expires_at) {
+    return errorResponse("Missing required parameters: signature, expires_at", 400);
+  }
+
+  // Fix #1491: expires_at 만료 확인
+  const expiresAtMs = new Date(expires_at).getTime();
+  if (isNaN(expiresAtMs) || expiresAtMs < Date.now()) {
+    return errorResponse("QR token expired", 400);
   }
 
   const supabase = createServiceClient();
@@ -36,7 +62,7 @@ Deno.serve(withHandler(async (req) => {
   // Fetch the participant row to validate ownership and current status
   const { data: participant, error: fetchErr } = await supabase
     .from("event_participants")
-    .select("id, event_id, user_id, status")
+    .select("id, event_id, user_id, ticket_id, status")
     .eq("id", participant_id)
     .eq("event_id", event_id)
     .maybeSingle();
@@ -53,6 +79,38 @@ Deno.serve(withHandler(async (req) => {
   // Validate caller is the participant's user
   if ((participant as { user_id: string }).user_id !== auth) {
     return errorResponse("Forbidden: caller is not the participant's user", 403);
+  }
+
+  // Fix #1491: 서버 측 Ed25519 QR 서명 검증 — 클라이언트 우회 방지
+  const publicKeyJwkStr = Deno.env.get("TICKET_SIGNING_PUBLIC_KEY_JWK");
+  if (!publicKeyJwkStr) {
+    log({ function: FN, level: "error", message: "TICKET_SIGNING_PUBLIC_KEY_JWK not configured" });
+    return errorResponse("Ticket verification key not configured", 500);
+  }
+
+  try {
+    const publicKey = await crypto.subtle.importKey(
+      "jwk",
+      JSON.parse(publicKeyJwkStr),
+      { name: "Ed25519" },
+      false,
+      ["verify"],
+    );
+
+    const ticketId = (participant as { ticket_id: string }).ticket_id;
+    const userId = (participant as { user_id: string }).user_id;
+    const payload = `${ticketId}|${event_id}|${userId}|${expires_at}`;
+    const message = new TextEncoder().encode(payload);
+    const sigBytes = base64UrlDecode(signature);
+
+    const valid = await crypto.subtle.verify("Ed25519", publicKey, sigBytes, message);
+    if (!valid) {
+      log({ function: FN, level: "warn", message: "QR signature verification failed", metadata: { participant_id, event_id } });
+      return errorResponse("Invalid QR signature", 403);
+    }
+  } catch (e) {
+    log({ function: FN, level: "error", message: "Signature verification error", metadata: { detail: String(e) } });
+    return errorResponse("Signature verification failed", 500);
   }
 
   // Fix #998: 이벤트 상태 머신 확장 — active/ongoing 상태에서만 체크인 허용
