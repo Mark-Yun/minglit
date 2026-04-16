@@ -160,26 +160,32 @@ void main() {
       );
     });
 
-    testWidgets('dark theme uses inverted SVG asset', (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: ThemeData(brightness: Brightness.dark),
-          home: Scaffold(body: MinglitTheme.appBarLogo()),
-        ),
-      );
-      expect(find.byType(SvgPicture), findsOneWidget);
-      expect(
-        find.byWidgetPredicate(
-          (widget) =>
-              widget is SvgPicture &&
-              widget.bytesLoader.toString().contains(
-                'minglit_logo_inverted.svg',
-              ),
-        ),
-        findsOneWidget,
-        reason: 'Dark theme should use the inverted SVG asset',
-      );
-    });
+    // Fix #1467: 다크 테마에서도 통일된 단일 로고 asset 사용 — inverted 제거 회귀 테스트
+    testWidgets(
+      'dark theme uses the same transparent background SVG asset',
+      (tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: ThemeData(brightness: Brightness.dark),
+            home: Scaffold(body: MinglitTheme.appBarLogo()),
+          ),
+        );
+        expect(find.byType(SvgPicture), findsOneWidget);
+        expect(
+          find.byWidgetPredicate(
+            (widget) =>
+                widget is SvgPicture &&
+                widget.bytesLoader.toString().contains(
+                  'minglit_logo_background_transparent.svg',
+                ),
+          ),
+          findsOneWidget,
+          reason:
+              'Dark theme should use the same unified transparent SVG asset, '
+              'not the removed inverted variant',
+        );
+      },
+    );
   });
 
   group('MinglitDesignTokens', () {
