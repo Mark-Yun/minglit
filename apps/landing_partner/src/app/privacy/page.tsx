@@ -231,10 +231,38 @@ export default function PartnerPrivacyPage() {
             </tbody>
           </table>
         </div>
-        <div className="bg-gray-50 border-l-4 border-gray-300 p-4 rounded-r-xl mb-4">
-          <p className="text-sm text-gray-600">
-            <strong>Vercel Inc.</strong> (미국): 파트너 대시보드 프론트엔드 정적 호스팅 및 CDN 캐시 제공 목적으로만 사용하며, 개인정보를 Vercel에 전송하지 않습니다.
-          </p>
+        {/* Fix #1457: Vercel 국외 이전 항목 테이블로 추가 — 위탁 목록(Supabase, Vercel)과 일관성 확보 */}
+        <div className="overflow-x-auto mb-4 mt-4">
+          <table className="w-full text-xs border-collapse">
+            <thead>
+              <tr className="bg-[#F5F0FF]">
+                <th className="text-left p-3 text-[#6C3CE1] font-bold border-b">항목</th>
+                <th className="text-left p-3 text-[#6C3CE1] font-bold border-b">내용</th>
+              </tr>
+            </thead>
+            <tbody className="text-gray-600">
+              <tr className="border-b border-gray-100">
+                <td className="p-3">수탁업체</td>
+                <td className="p-3">Vercel Inc.</td>
+              </tr>
+              <tr className="border-b border-gray-100">
+                <td className="p-3">소재지</td>
+                <td className="p-3">미국 캘리포니아주</td>
+              </tr>
+              <tr className="border-b border-gray-100">
+                <td className="p-3">이전 항목</td>
+                <td className="p-3">서비스 접속 IP, 요청 헤더 등 CDN 처리에 필요한 기술 정보 (콘텐츠 서빙 목적으로만 자동 처리, 저장 없음)</td>
+              </tr>
+              <tr className="border-b border-gray-100">
+                <td className="p-3">이전 목적</td>
+                <td className="p-3">파트너 대시보드 프론트엔드 정적 호스팅 및 CDN 캐시 제공</td>
+              </tr>
+              <tr>
+                <td className="p-3">보유 기간</td>
+                <td className="p-3">Vercel 서비스 이용 종료 시 파기 (개인정보 별도 보관 없음)</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
         <div className="bg-amber-50 border-l-4 border-amber-300 p-4 rounded-r-xl">
           <p className="text-sm font-bold text-amber-800">
