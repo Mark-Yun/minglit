@@ -52,6 +52,7 @@ dependencies:
   qr_flutter: ^4.1.0
   riverpod: ^3.0.3
   riverpod_annotation: ^3.0.3
+  package_info_plus: ^9.0.1  # iOS: CFBundleVersion (Info.plist)
   screen_brightness: ^2.1.7  # iOS: UIScreen brightness API
   sentry_flutter: ^9.0.0  # iOS: native crash reporting
   share_plus: ^12.0.1  # iOS: share sheet

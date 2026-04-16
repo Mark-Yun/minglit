@@ -60,7 +60,7 @@ class ThemeSettingsTile extends ConsumerWidget {
                   ref.read(themeControllerProvider.notifier).setThemeMode(v),
                 );
               }
-              if (context.mounted) Navigator.pop(ctx);
+              if (ctx.mounted) Navigator.pop(ctx);
             },
           ),
           RadioListTile<ThemeMode>(
@@ -73,7 +73,7 @@ class ThemeSettingsTile extends ConsumerWidget {
                   ref.read(themeControllerProvider.notifier).setThemeMode(v),
                 );
               }
-              if (context.mounted) Navigator.pop(ctx);
+              if (ctx.mounted) Navigator.pop(ctx);
             },
           ),
           RadioListTile<ThemeMode>(
@@ -86,7 +86,7 @@ class ThemeSettingsTile extends ConsumerWidget {
                   ref.read(themeControllerProvider.notifier).setThemeMode(v),
                 );
               }
-              if (context.mounted) Navigator.pop(ctx);
+              if (ctx.mounted) Navigator.pop(ctx);
             },
           ),
         ],

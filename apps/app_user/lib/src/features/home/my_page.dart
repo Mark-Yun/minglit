@@ -5,6 +5,8 @@ import 'package:app_user/src/features/home/logic/home_coordinator.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_dev.dart';
 import 'package:minglit_kit/minglit_kit.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class MyPage extends ConsumerWidget {
   const MyPage({super.key});
@@ -127,12 +129,8 @@ class MyPage extends ConsumerWidget {
                 MinglitSettingsTile(
                   leading: Icons.admin_panel_settings_outlined,
                   title: '권한 설정',
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute<void>(
-                      builder: (_) => const AppPermissionSettingsScreen(),
-                    ),
-                  ),
+                  onTap: () =>
+                      homeCoordinator.navigateToPermissionSettings(context),
                 ),
                 MinglitSettingsTile(
                   leading: Icons.block,
@@ -150,18 +148,28 @@ class MyPage extends ConsumerWidget {
                 MinglitSettingsTile(
                   leading: Icons.shield_outlined,
                   title: '개인정보처리방침',
-                  onTap: homeCoordinator.pushPrivacy, // Reuse privacy for now
+                  onTap: homeCoordinator.pushPrivacy,
                 ),
                 MinglitSettingsTile(
                   leading: Icons.description_outlined,
                   title: '이용약관',
-                  onTap: () {}, // TODO
+                  onTap: () {
+                    final url =
+                        ref.read(minglitUrlConfigProvider).termsUrl;
+                    unawaited(launchUrl(Uri.parse(url)));
+                  },
                 ),
-                const MinglitSettingsTile(
-                  leading: Icons.info_outline,
-                  title: '앱 버전',
-                  subtitle: '26.04.1455', // Hardcoded for wireframe parity
-                  trailing: SettingsTileTrailing.none,
+                FutureBuilder<PackageInfo>(
+                  future: PackageInfo.fromPlatform(),
+                  builder: (context, snapshot) {
+                    final version = snapshot.data?.version ?? '—';
+                    return MinglitSettingsTile(
+                      leading: Icons.info_outline,
+                      title: '앱 버전',
+                      subtitle: version,
+                      trailing: SettingsTileTrailing.none,
+                    );
+                  },
                 ),
               ],
             ),

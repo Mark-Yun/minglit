@@ -29,10 +29,10 @@ class MorePage extends ConsumerWidget {
             ),
             error: (error, stackTrace) => MinglitSettingsGroup(
               children: [
-                _ProfileTile(
+                // onTap: null — 에러 상태에서는 타일 비활성화
+                const _ProfileTile(
                   displayName: '정보를 불러올 수 없습니다',
                   email: '',
-                  onTap: () {},
                 ),
               ],
             ),
@@ -40,10 +40,10 @@ class MorePage extends ConsumerWidget {
               if (partner == null) {
                 return MinglitSettingsGroup(
                   children: [
-                    _ProfileTile(
+                    // onTap: null — 파트너 없음 상태에서는 타일 비활성화
+                    const _ProfileTile(
                       displayName: '파트너 정보를 불러올 수 없습니다',
                       email: '',
-                      onTap: () {},
                     ),
                   ],
                 );
@@ -256,20 +256,24 @@ class _ProfileTile extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  Text(
-                    email,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
+                  // email이 비어있는 에러/널 상태에서는 서브타이틀 숨김
+                  if (email.isNotEmpty)
+                    Text(
+                      email,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),
-            Icon(
-              Icons.chevron_right,
-              size: MinglitIconSize.small,
-              color: colorScheme.onSurfaceVariant,
-            ),
+            // 비활성 상태에서는 chevron 숨김
+            if (onTap != null)
+              Icon(
+                Icons.chevron_right,
+                size: MinglitIconSize.small,
+                color: colorScheme.onSurfaceVariant,
+              ),
           ],
         ),
       ),
