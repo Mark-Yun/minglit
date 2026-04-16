@@ -13,7 +13,11 @@ Map<String, dynamic>? _descriptionFromJson(dynamic value) {
   if (value == null) return null;
   if (value is Map<String, dynamic>) return value;
   if (value is String && value.isNotEmpty) {
-    return {'ops': <dynamic>[<String, dynamic>{'insert': '$value\n'}]};
+    return {
+      'ops': <dynamic>[
+        <String, dynamic>{'insert': '$value\n'},
+      ],
+    };
   }
   return null;
 }
