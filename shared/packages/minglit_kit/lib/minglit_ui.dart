@@ -29,6 +29,7 @@ export 'src/ui/widgets/common/minglit_button.dart';
 export 'src/ui/widgets/common/minglit_chip.dart';
 export 'src/ui/widgets/common/minglit_chip_group.dart';
 export 'src/ui/widgets/common/minglit_content_card.dart';
+export 'src/ui/widgets/common/minglit_content_layout.dart';
 export 'src/ui/widgets/common/minglit_dialog.dart';
 export 'src/ui/widgets/common/minglit_empty_state.dart';
 export 'src/ui/widgets/common/minglit_error_state.dart';
