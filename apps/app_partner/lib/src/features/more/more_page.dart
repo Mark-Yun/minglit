@@ -27,10 +27,10 @@ class MorePage extends ConsumerWidget {
               padding: EdgeInsets.all(MinglitSpacing.large),
               child: Center(child: CircularProgressIndicator()),
             ),
-            error: (error, stackTrace) => MinglitSettingsGroup(
+            error: (error, stackTrace) => const MinglitSettingsGroup(
               children: [
                 // onTap: null — 에러 상태에서는 타일 비활성화
-                const _ProfileTile(
+                _ProfileTile(
                   displayName: '정보를 불러올 수 없습니다',
                   email: '',
                 ),
@@ -38,10 +38,10 @@ class MorePage extends ConsumerWidget {
             ),
             data: (partner) {
               if (partner == null) {
-                return MinglitSettingsGroup(
+                return const MinglitSettingsGroup(
                   children: [
                     // onTap: null — 파트너 없음 상태에서는 타일 비활성화
-                    const _ProfileTile(
+                    _ProfileTile(
                       displayName: '파트너 정보를 불러올 수 없습니다',
                       email: '',
                     ),

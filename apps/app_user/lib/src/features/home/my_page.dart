@@ -154,8 +154,7 @@ class MyPage extends ConsumerWidget {
                   leading: Icons.description_outlined,
                   title: '이용약관',
                   onTap: () {
-                    final url =
-                        ref.read(minglitUrlConfigProvider).termsUrl;
+                    final url = ref.read(minglitUrlConfigProvider).termsUrl;
                     unawaited(launchUrl(Uri.parse(url)));
                   },
                 ),
