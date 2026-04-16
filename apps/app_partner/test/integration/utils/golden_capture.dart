@@ -2,7 +2,6 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
-import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 // KEEP IN SYNC WITH apps/app_user/test/integration/utils/golden_capture.dart
