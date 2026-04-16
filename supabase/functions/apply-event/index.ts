@@ -116,6 +116,20 @@ Deno.serve(withHandler(async (req) => {
 
     if (price > 0) {
       // 유료: payment_pending 상태로 신청 레코드 생성 후 주문 정보 반환
+      // Fix #1492: 유료 경로 성별 균형 검증 누락 — 무료 경로와 동일하게 check_party_balance 추가
+      const { data: balanceResult, error: balanceError } = await supabase.rpc("check_party_balance", {
+        p_event_id: event_id,
+        p_ticket_id: ticket_id,
+      });
+      if (balanceError) {
+        console.error("check_party_balance error on paid application:", balanceError.message);
+        return errorResponse("Failed to check balance", 500);
+      }
+      const balance = balanceResult as { allowed: boolean; reason: string | null } | null;
+      if (!balance?.allowed) {
+        return errorResponse(balance?.reason ?? "성비 균형 제한", 409);
+      }
+
       let applicationId: string;
 
       if (existingApp) {
