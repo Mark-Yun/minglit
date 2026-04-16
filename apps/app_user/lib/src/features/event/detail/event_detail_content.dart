@@ -293,7 +293,10 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent>
               SliverToBoxAdapter(
                 child: Padding(
                   key: _section1Key,
-                  padding: const EdgeInsets.all(MinglitSpacing.medium),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: MinglitSpacing.screenEdge,
+                    vertical: MinglitSpacing.medium,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -402,40 +405,52 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent>
               ),
 
               // Section 2: 상세 소개
+              // MinglitSection으로 래핑하지 않는 이유:
+              // QuillViewer가 자체적으로 콘텐츠(본문 + 이미지 등)를 렌더링하며,
+              // 별도의 섹션 타이틀이 없기 때문에 MinglitSection의 title/child 구조가 불필요하다.
               SliverToBoxAdapter(
                 child: Padding(
                   key: _section2Key,
-                  padding: const EdgeInsets.all(MinglitSpacing.medium),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _QuillViewer(description: party?.description ?? {}),
-                    ],
+                  padding: const EdgeInsets.fromLTRB(
+                    MinglitSpacing.screenEdge,
+                    MinglitSpacing.sectionGap,
+                    MinglitSpacing.screenEdge,
+                    0,
                   ),
+                  child: _QuillViewer(description: party?.description ?? {}),
                 ),
               ),
 
               // Section 3: 참가 현황
               // Fix #137: 상세정보에서 참가 현황 탭으로 _EntryConditionsSection 이동
               SliverToBoxAdapter(
-                child: SizedBox(
+                child: Padding(
                   key: _section3Key,
+                  padding: const EdgeInsets.only(
+                    top: MinglitSpacing.sectionGap,
+                  ),
                   child: _EntryConditionsSection(event: event),
                 ),
               ),
 
               // Section 4: 필요 인증
               SliverToBoxAdapter(
-                child: SizedBox(
+                child: Padding(
                   key: _section4Key,
+                  padding: const EdgeInsets.only(
+                    top: MinglitSpacing.sectionGap,
+                  ),
                   child: _VerificationSection(event: event),
                 ),
               ),
 
               // Section 5: 환불 정책
               SliverToBoxAdapter(
-                child: SizedBox(
+                child: Padding(
                   key: _section5Key,
+                  padding: const EdgeInsets.only(
+                    top: MinglitSpacing.sectionGap,
+                  ),
                   child: _RefundPolicySection(event: event),
                 ),
               ),

@@ -17,42 +17,25 @@ class _RefundPolicySection extends ConsumerWidget {
     final theme = Theme.of(context);
     final policyAsync = ref.watch(_refundPolicyProvider);
 
-    return Padding(
-      padding: const EdgeInsets.all(MinglitSpacing.medium),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Fix #190: 인포버튼을 타이틀 바로 옆에 배치
-          Row(
-            children: [
-              Text(
-                '환불 정책',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(width: MinglitSpacing.xxsmall),
-              IconButton(
-                icon: Icon(
-                  Icons.info_outline,
-                  color: theme.colorScheme.onSurfaceVariant,
-                  size: MinglitIconSize.small,
-                ),
-                tooltip: '환불 정책 상세',
-                onPressed: () => _showPolicyDetailSheet(context, policyAsync),
-                visualDensity: VisualDensity.compact,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-              ),
-            ],
-          ),
-          const SizedBox(height: MinglitSpacing.medium),
-          policyAsync.when(
-            data: (policy) => _buildSummary(context, ref, policy),
-            loading: () => _buildLoadingContent(context),
-            error: (e, st) => _buildSummary(context, ref, null),
-          ),
-        ],
+    // Fix #190: 인포버튼을 타이틀 바로 옆에 배치
+    return MinglitSection(
+      title: '환불 정책',
+      trailing: IconButton(
+        icon: Icon(
+          Icons.info_outline,
+          color: theme.colorScheme.onSurfaceVariant,
+          size: MinglitIconSize.small,
+        ),
+        tooltip: '환불 정책 상세',
+        onPressed: () => _showPolicyDetailSheet(context, policyAsync),
+        visualDensity: VisualDensity.compact,
+        padding: EdgeInsets.zero,
+        constraints: const BoxConstraints(),
+      ),
+      child: policyAsync.when(
+        data: (policy) => _buildSummary(context, ref, policy),
+        loading: () => _buildLoadingContent(context),
+        error: (e, st) => _buildSummary(context, ref, null),
       ),
     );
   }
