@@ -255,5 +255,46 @@ void main() {
       final dbJson = party.toDbJson();
       expect(dbJson['visibility'], 'private');
     });
+
+    // Fix #1469: String description 방어 역직렬화
+    test('parses description when it is a Map (normal case)', () {
+      final party = Party.fromJson({
+        ...partyJson(),
+        'description': {
+          'ops': [
+            {'insert': '파티 소개\n'},
+          ],
+        },
+      });
+      expect(party.description, isNotNull);
+      expect(party.description!['ops'], isA<List>());
+    });
+
+    test('parses description when it is a String (legacy data)', () {
+      final party = Party.fromJson({
+        ...partyJson(),
+        'description': '레거시 텍스트 설명',
+      });
+      expect(party.description, isNotNull);
+      expect(party.description!['ops'], isA<List>());
+      final ops = party.description!['ops'] as List;
+      expect(ops.first['insert'], '레거시 텍스트 설명\n');
+    });
+
+    test('returns null description when value is null', () {
+      final party = Party.fromJson({
+        ...partyJson(),
+        'description': null,
+      });
+      expect(party.description, isNull);
+    });
+
+    test('returns null description when value is empty string', () {
+      final party = Party.fromJson({
+        ...partyJson(),
+        'description': '',
+      });
+      expect(party.description, isNull);
+    });
   });
 }
