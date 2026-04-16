@@ -59,8 +59,7 @@ class GoldenCapture {
       // Fix #1458: ensure dispose is called even if toByteData throws
       late final Uint8List bytes;
       try {
-        final byteData =
-            await image.toByteData(format: ui.ImageByteFormat.png);
+        final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
         if (byteData == null) return;
         bytes = Uint8List.view(byteData.buffer);
       } finally {
