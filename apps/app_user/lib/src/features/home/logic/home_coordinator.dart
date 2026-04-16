@@ -2,8 +2,9 @@ import 'dart:async';
 
 import 'package:app_user/src/routing/app_router.dart';
 import 'package:app_user/src/routing/app_routes.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:minglit_kit/minglit_kit.dart';
 
 final homeCoordinatorProvider = Provider<HomeCoordinator>((ref) {
   return HomeCoordinator(ref.read(goRouterProvider));
@@ -80,5 +81,14 @@ class HomeCoordinator {
   // Fix #1213: 계정 관리 서브페이지 진입점
   void pushAccountManagement() {
     unawaited(_router.push(const AccountManagementRoute().location));
+  }
+
+  // AppPermissionSettingsScreen은 GoRouter 라우트가 없어 Navigator.push 사용.
+  // 위젯에서 직접 MaterialPageRoute를 생성하지 않도록 Coordinator로 위임.
+  void navigateToPermissionSettings(BuildContext context) {
+    Navigator.push<void>(
+      context,
+      MaterialPageRoute(builder: (_) => const AppPermissionSettingsScreen()),
+    );
   }
 }

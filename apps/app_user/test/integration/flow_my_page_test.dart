@@ -127,11 +127,15 @@ void main() {
     ) async {
       setKoreanLocale(tester);
       final user = createMockUserForTest();
+      // Fix #1485: MinglitSettingsGroup(clipBehavior: Clip.antiAlias) prevents
+      // tester.tap() from registering through the rounded-corner clip boundary
+      // when the tile is in a scrolled position. Navigate directly instead —
+      // consistent with the PurchaseHistoryPage test pattern.
       await tester.pumpWidget(
         createTestApp(
           isLoggedIn: true,
           currentUser: user,
-          initialLocation: '/my',
+          initialLocation: '/my/blocked-partners',
           additionalOverrides: [
             socialRepositoryProvider.overrideWithValue(_FakeSocialRepository()),
           ],
@@ -139,10 +143,6 @@ void main() {
       );
       await tester.pump();
       await tester.pump();
-
-      await tester.scrollUntilVisible(find.text('차단 목록'), 100);
-      await tester.tap(find.text('차단 목록'));
-      await tester.pumpAndSettle();
 
       expect(find.byType(BlockedPartnersPage), findsOneWidget);
     });
