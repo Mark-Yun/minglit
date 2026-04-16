@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'utils/golden_capture.dart';
 import 'utils/mock_data.dart';
 import 'utils/test_app.dart';
 import 'utils/test_mocks.dart';
@@ -14,6 +15,7 @@ void main() {
   group('알림 플로우', () {
     testWidgets('홈 → 알림 아이콘 tap → NotificationListScreen', (tester) async {
       setKoreanLocale(tester);
+      final capture = GoldenCapture('flow_u_noti');
       final user = createMockUserForTest();
       final mockRepo = MockNotificationRepository();
       when(mockRepo.getNotifications).thenAnswer((_) async => []);
@@ -34,11 +36,14 @@ void main() {
       await tester.pump();
       await tester.pump();
 
+      await capture.setup(tester, 2); // 빈 알림 상태
+
       expect(find.byType(NotificationListScreen), findsOneWidget);
     });
 
     testWidgets('빈 알림 → "알림이 없습니다."', (tester) async {
       setKoreanLocale(tester);
+      final capture = GoldenCapture('flow_u_noti');
       final user = createMockUserForTest();
       final mockRepo = MockNotificationRepository();
       when(mockRepo.getNotifications).thenAnswer((_) async => []);
@@ -55,6 +60,8 @@ void main() {
       await tester.pump();
       await tester.pump();
       await tester.pump();
+
+      await capture.setup(tester, 0); // 알림 목록
 
       expect(find.text('알림이 없습니다.'), findsOneWidget);
     });
@@ -122,6 +129,7 @@ void main() {
 
     testWidgets('알림 tap → markAsRead + deep_link로 이동', (tester) async {
       setKoreanLocale(tester);
+      final capture = GoldenCapture('flow_u_noti');
       final user = createMockUserForTest();
       final mockRepo = MockNotificationRepository();
       final notifications = [
@@ -157,6 +165,8 @@ void main() {
       await tester.tap(find.text('이벤트 알림'));
       await tester.pump();
       await tester.pump();
+
+      await capture.after(tester, 1); // 알림 탭 → 딥링크 이동
 
       verify(() => mockRepo.markAsRead('n-1')).called(1);
     });

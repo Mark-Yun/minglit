@@ -10,6 +10,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'utils/golden_capture.dart';
 import 'utils/test_app.dart';
 import 'utils/test_mocks.dart';
 
@@ -184,6 +185,7 @@ void main() {
     });
 
     testWidgets('eligible → "참가 신청하기" (enabled)', (tester) async {
+      final capture = GoldenCapture('flow_u_admission');
       await pumpEventDetailWithState(
         tester,
         admissionState: AdmissionState(
@@ -191,6 +193,8 @@ void main() {
         ),
         currentUser: testUser,
       );
+
+      await capture.setup(tester, 0); // 입장 상태 화면
 
       expect(find.text('참가 신청하기'), findsOneWidget);
       final button = tester.widget<ElevatedButton>(
@@ -200,6 +204,7 @@ void main() {
     });
 
     testWidgets('pendingPayment → "결제 계속하기" (enabled)', (tester) async {
+      final capture = GoldenCapture('flow_u_admission');
       await pumpEventDetailWithState(
         tester,
         admissionState: AdmissionState(
@@ -207,6 +212,8 @@ void main() {
         ),
         currentUser: testUser,
       );
+
+      await capture.after(tester, 2); // 대기 상태
 
       expect(find.text('결제 계속하기'), findsOneWidget);
       final button = tester.widget<ElevatedButton>(
@@ -234,6 +241,7 @@ void main() {
     testWidgets('rejected → "심사 반려 (사유 확인)" (destructive)', (
       tester,
     ) async {
+      final capture = GoldenCapture('flow_u_admission');
       await pumpEventDetailWithState(
         tester,
         admissionState: AdmissionState(
@@ -242,6 +250,8 @@ void main() {
         ),
         currentUser: testUser,
       );
+
+      await capture.after(tester, 3); // 거절 상태
 
       expect(find.text('심사 반려 (사유 확인)'), findsOneWidget);
       final button = tester.widget<ElevatedButton>(
@@ -309,6 +319,7 @@ void main() {
     });
 
     testWidgets('eligible 탭 → TicketSelectionSheet 바텀시트', (tester) async {
+      final capture = GoldenCapture('flow_u_admission');
       await pumpEventDetailWithState(
         tester,
         admissionState: AdmissionState(
@@ -320,6 +331,8 @@ void main() {
       await tester.tap(find.text('참가 신청하기'));
       await tester.pump();
       await tester.pump();
+
+      await capture.after(tester, 1); // 체크인 완료 상태
 
       expect(find.byType(TicketSelectionSheet), findsOneWidget);
     });
