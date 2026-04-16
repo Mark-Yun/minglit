@@ -229,20 +229,41 @@ Future<void> pumpApp(
 
 ---
 
-## 6. E2E 테스트 (실물 디바이스) 계획
+## 6. E2E 테스트 (Patrol 통합) 계획
 
-P0 CUJ 중 네이티브 SDK 연동이 필요한 2건은 E2E로만 검증 가능하다:
+> 2026-04-15 업데이트: #1458에서 Patrol 통합 + 스크린샷 내장 결정.
 
-| 시나리오 | 이유 |
-|----------|------|
-| 실제 PG 결제 (Iamport) | 네이티브 WebView + PG SDK 연동 |
-| QR 코드 스캔 (카메라) | 디바이스 카메라 API |
+### 6.1 Patrol 전환 배경
 
-**방향:**
-- 기존 `integration_test/` 디렉토리 활용 (Flutter integration_test driver)
-- Dev 환경 PG 테스트 모드 사용
-- CI에서는 실행하지 않음 (수동 디바이스 테스트)
-- 상세 계획은 Phase 3에서 SWE와 협의
+기존 `IntegrationTestWidgetsFlutterBinding` 기반 E2E는 네이티브 인터랙션(카카오 로그인 WebView, PG 결제, 시스템 권한)을 처리할 수 없었다. Patrol(`patrol_test/` 3개)이 이미 도입되어 있으므로, 전체 integration 테스트를 Patrol로 통합한다.
+
+### 6.2 스크린샷 내장 전략
+
+기존 `scenario_screenshots_test.dart`(정적 화면 캡처)를 제거하고, 각 integration 테스트에 스텝별 `takeScreenshot()`을 삽입한다.
+
+| 항목 | Before | After |
+|------|--------|-------|
+| 스크린샷 위치 | 별도 파일 (scenario_screenshots_test.dart) | 각 테스트 내부 |
+| 캡처 시점 | 정적 화면만 | setup/before/after/error |
+| 네이티브 인터랙션 | 불가 | Patrol로 가능 |
+| 예상 캡처 수 | ~40장 (골든 시나리오) | **~141장** (플로우 중간 상태 포함) |
+
+### 6.3 캡처 포인트 정의
+
+상세 포인트는 `docs/qa/screenshot-capture-points.md` 참고.
+
+| 앱 | 파일 수 | 예상 캡처 수 |
+|----|---------|------------|
+| app_user (CUJ + Flow + 기타) | 25 | ~83 |
+| app_partner (CUJ + 기타) | 11 | ~47 |
+| patrol (E2E 네이티브) | 3 | ~11 |
+| **합계** | **39** | **~141** |
+
+### 6.4 CI 연동
+
+- `patrol-e2e.yml`에 통합 (주 1회 또는 매일)
+- 스크린샷 아티팩트 업로드 → QA 워커가 베이스라인 비교에 활용
+- 네이티브 E2E (카카오 로그인, PG 결제, 권한)는 실물 디바이스에서만 실행
 
 ---
 
@@ -307,7 +328,24 @@ Flutter 앱은 Skia/Impeller 엔진으로 단일 `FlutterSurfaceView` 위에 렌
 
 ---
 
-## 8.1 에러/환경/미등록라우트 테스트 케이스 (Phase 2.1 — #1421)
+## 8.1 CI/CD 배포 파이프라인 테스트 (Phase 2.1 — #1433, #1434)
+
+> 2026-04-15 배포 실패 인시던트(#1433 iOS, #1434 Android)로 추가.
+> Partner 앱 배포 시 `JUSO_CONFIRM_KEY` Secret 미설정으로 빌드 실패.
+
+| 문서 | 내용 | 케이스 수 |
+|------|------|-----------|
+| `ci-deploy-tests.md` | 배포 Secret 매트릭스, CI 자체 검증 스텝, 빌드 분기 검증 | 19 |
+
+### 핵심 포인트
+
+- **4개 배포 워크플로우** (Android/iOS × User/Partner)의 필수 Secret을 매트릭스로 정리
+- Partner 전용 Secret (`JUSO_CONFIRM_KEY`)의 `required: false` 선언 불일치 식별 → 개선 제안 포함
+- 배포 실패 알림(`notify-failure.yml`) 동작 검증 케이스 포함
+
+---
+
+## 8.2 에러/환경/미등록라우트 테스트 케이스 (Phase 2.1 — #1421)
 
 > 2026-04-13 갭 분석(#1421) 결과 추가된 테스트 케이스 문서.
 
