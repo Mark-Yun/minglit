@@ -329,7 +329,7 @@ void main() {
       await tester.pump(); // Future 완료
       await tester.pump(); // 위젯 렌더
 
-      await capture.after(tester, 0);
+      await capture.setup(tester, 0);
 
       expect(find.text('내 티켓'), findsOneWidget);
       expect(find.text('입장 시 파트너에게 이 화면을 보여주세요'), findsOneWidget);

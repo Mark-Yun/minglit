@@ -114,7 +114,7 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
 
-      await capture.after(tester, 3);
+      await capture.after(tester, 2);
 
       expect(find.byType(Scaffold), findsWidgets);
     });
@@ -132,7 +132,7 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
 
-      await capture.after(tester, 2);
+      await capture.after(tester, 3);
 
       // 계좌 관리 페이지 렌더링됨
       expect(find.byType(Scaffold), findsWidgets);

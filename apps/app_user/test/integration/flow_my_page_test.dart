@@ -81,7 +81,7 @@ void main() {
       await tester.tap(find.text('개인정보'));
       await tester.pumpAndSettle();
 
-      await capture.after(tester, 2); // 개인정보 설정
+      await capture.after(tester, 1); // 개인정보 설정
 
       expect(find.byType(PrivacyPage), findsOneWidget);
       expect(find.text('개인정보'), findsOneWidget);
@@ -171,7 +171,7 @@ void main() {
       await tester.pump();
       await tester.pump();
 
-      await capture.after(tester, 1); // 구매 내역
+      await capture.after(tester, 2); // 구매 내역
 
       expect(find.byType(PurchaseHistoryPage), findsOneWidget);
     });

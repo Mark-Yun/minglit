@@ -213,7 +213,7 @@ void main() {
         currentUser: testUser,
       );
 
-      await capture.after(tester, 2); // 대기 상태
+      await capture.setup(tester, 1); // 결제 대기 상태
 
       expect(find.text('결제 계속하기'), findsOneWidget);
       final button = tester.widget<ElevatedButton>(
@@ -251,7 +251,7 @@ void main() {
         currentUser: testUser,
       );
 
-      await capture.after(tester, 3); // 거절 상태
+      await capture.after(tester, 2); // 거절 상태
 
       expect(find.text('심사 반려 (사유 확인)'), findsOneWidget);
       final button = tester.widget<ElevatedButton>(
@@ -332,7 +332,7 @@ void main() {
       await tester.pump();
       await tester.pump();
 
-      await capture.after(tester, 1); // 체크인 완료 상태
+      await capture.after(tester, 3); // TicketSelectionSheet 바텀시트
 
       expect(find.byType(TicketSelectionSheet), findsOneWidget);
     });

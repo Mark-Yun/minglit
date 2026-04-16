@@ -17,7 +17,7 @@ void main() {
       await tester.pump();
       await tester.pump();
 
-      await capture.after(tester, 0);
+      await capture.setup(tester, 0);
 
       expect(find.byType(EventApplicationWizardPage), findsNothing);
       expect(find.byType(LoginPage), findsOneWidget);

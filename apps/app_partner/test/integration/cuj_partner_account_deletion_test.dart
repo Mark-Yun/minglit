@@ -129,7 +129,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await capture.error(tester, 3);
+      await capture.error(tester, 0);
 
       // 차단 메시지 확인
       expect(find.text('활성 이벤트 2건'), findsOneWidget);
@@ -225,7 +225,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await capture.setup(tester, 0);
+      await capture.setup(tester, 1);
 
       // 녹색 카드 메시지 확인
       expect(find.text('탈퇴 요청을 진행할 수 있어요'), findsOneWidget);
@@ -336,7 +336,7 @@ void main() {
         // 확인 다이얼로그 표시
         expect(find.text('정말 탈퇴할까요?'), findsOneWidget);
 
-        await capture.before(tester, 1);
+        await capture.before(tester, 2);
 
         // 다이얼로그에서 "탈퇴 요청" 탭 (페이지 버튼과 중복되므로 마지막 위젯 선택)
         await tester.tap(find.text('탈퇴 요청').last);
@@ -373,7 +373,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await capture.after(tester, 2);
+      await capture.after(tester, 3);
 
       // 탈퇴 완료 메시지 확인
       expect(find.text('탈퇴 요청이 완료됐어요'), findsOneWidget);

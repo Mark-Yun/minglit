@@ -129,7 +129,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await capture.after(tester, 2);
+      await capture.after(tester, 1);
 
       expect(find.text('전체 승인 (2건)'), findsOneWidget);
     });
@@ -204,7 +204,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await capture.after(tester, 1);
+      await capture.after(tester, 2);
 
       expect(find.byIcon(Icons.check), findsOneWidget);
       expect(find.byIcon(Icons.close), findsOneWidget);

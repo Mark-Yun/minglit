@@ -110,7 +110,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await capture.after(tester, 3);
+      await capture.after(tester, 2);
 
       expect(find.byType(DeletionCompletePage), findsOneWidget);
       expect(find.text('탈퇴 요청이 완료됐어요'), findsOneWidget);
@@ -191,7 +191,7 @@ void main() {
       await tester.tap(find.widgetWithText(FilledButton, '다음'));
       await tester.pump();
 
-      await capture.after(tester, 4);
+      await capture.after(tester, 3);
 
       expect(spy.pushInfoCalled, isTrue);
       expect(spy.lastPushInfoReason, isNotNull);
@@ -250,7 +250,7 @@ void main() {
       await tester.tap(find.text('탈퇴 요청'));
       await tester.pump();
 
-      await capture.error(tester, 5);
+      await capture.error(tester, 4);
 
       expect(find.text('비밀번호를 입력해주세요.'), findsOneWidget);
     });
@@ -274,7 +274,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('정말 탈퇴할까요?'), findsOneWidget);
-      await capture.before(tester, 2);
+      await capture.before(tester, 5);
 
       // 다이얼로그 확인 버튼 탭 → goComplete() 호출
       await tester.tap(find.text('탈퇴 요청').last);

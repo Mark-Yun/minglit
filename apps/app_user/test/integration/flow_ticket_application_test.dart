@@ -390,7 +390,7 @@ void main() {
         ),
       );
 
-      await capture.error(tester, 3); // 에러 상태
+      await capture.after(tester, 3); // 제출 중 스피너 상태
 
       // All ElevatedButtons should be disabled during submission
       final elevatedButtons = tester

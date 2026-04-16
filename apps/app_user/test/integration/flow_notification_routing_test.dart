@@ -36,7 +36,7 @@ void main() {
       await tester.pump();
       await tester.pump();
 
-      await capture.setup(tester, 2); // 빈 알림 상태
+      await capture.after(tester, 0); // 알림 아이콘 탭 후 알림 화면
 
       expect(find.byType(NotificationListScreen), findsOneWidget);
     });
@@ -61,7 +61,7 @@ void main() {
       await tester.pump();
       await tester.pump();
 
-      await capture.setup(tester, 0); // 알림 목록
+      await capture.setup(tester, 1); // 빈 알림 목록
 
       expect(find.text('알림이 없습니다.'), findsOneWidget);
     });
@@ -166,7 +166,7 @@ void main() {
       await tester.pump();
       await tester.pump();
 
-      await capture.after(tester, 1); // 알림 탭 → 딥링크 이동
+      await capture.after(tester, 2); // 알림 탭 → 딥링크 이동
 
       verify(() => mockRepo.markAsRead('n-1')).called(1);
     });
