@@ -27,7 +27,8 @@ Deno.serve(withHandler(async (req) => {
   log({ function: FN, level: "info", message: "AI Embed Worker Triggered! Checking environment and auth..." });
   try {
     const payload = await req.json().catch(() => ({}));
-    const batchSize = Math.min(payload.batch_size ?? 50, 50);
+    const rawBatch = Math.floor(Number(payload.batch_size));
+    const batchSize = Number.isFinite(rawBatch) && rawBatch >= 1 ? Math.min(rawBatch, 50) : 50;
 
     const supabase = createServiceClient();
     const adapter = createEmbeddingAdapter();

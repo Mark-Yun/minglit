@@ -35,7 +35,8 @@ Deno.serve(withHandler(async (req) => {
 
   try {
     const payload = await req.json().catch(() => ({}));
-    const batchSize = Math.min((payload as { batch_size?: number }).batch_size ?? 10, 50);
+    const rawBatch = Math.floor(Number((payload as { batch_size?: number }).batch_size));
+    const batchSize = Number.isFinite(rawBatch) && rawBatch >= 1 ? Math.min(rawBatch, 50) : 10;
 
     const supabase = createServiceClient();
     // createLLMAdapter() throws if OPENAI_API_KEY is missing
