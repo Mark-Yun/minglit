@@ -22,7 +22,8 @@ export function serializeParty(party: any): string {
 
   if (party.location) {
       if (typeof party.location === 'object') {
-          parts.push(`Location: ${party.location.name || ''} ${party.location.address || ''}`.trim());
+          // Fix #1493: location.address PII 스크러빙 — 상세 주소 제외, 이름(시/구 수준)만 포함
+          parts.push(`Location: ${party.location.name || ''}`.trim());
       } else {
           parts.push(`Location: ${party.location}`);
       }

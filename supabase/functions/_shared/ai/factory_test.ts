@@ -43,7 +43,7 @@ Deno.test("createEmbeddingAdapter - missing OPENAI_API_KEY throws", async () => 
     assertThrows(
       () => createEmbeddingAdapter(),
       Error,
-      "OPENAI_API_KEY is not set",
+      "AI provider configuration missing",
     );
   });
 });
@@ -53,7 +53,7 @@ Deno.test("createLLMAdapter - missing OPENAI_API_KEY throws", async () => {
     assertThrows(
       () => createLLMAdapter(),
       Error,
-      "OPENAI_API_KEY is not set",
+      "AI provider configuration missing",
     );
   });
 });
