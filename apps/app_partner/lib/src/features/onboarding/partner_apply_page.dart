@@ -196,35 +196,22 @@ class _PartnerApplyPageState extends ConsumerState<PartnerApplyPage> {
     );
   }
 
-  void _showLogoutDialog(BuildContext context, WidgetRef ref) {
-    unawaited(
-      showDialog<void>(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: Text(context.l10n.home_button_logout),
-            content: const Text('로그아웃 하시겠습니까?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text(context.l10n.common_button_cancel),
-              ),
-              TextButton(
-                onPressed: () async {
-                  // Fix: dialog를 먼저 닫고 signOut — signOut이 GoRouter redirect를
-                  // 트리거하면 dialog context가 무효화되어 검은화면+freeze 발생
-                  final authRepo = ref.read(authRepositoryProvider);
-                  Navigator.of(context).pop();
-                  await Future<void>.delayed(Duration.zero);
-                  await authRepo.signOut();
-                },
-                child: Text(context.l10n.home_button_logout),
-              ),
-            ],
-          );
-        },
-      ),
+  Future<void> _showLogoutDialog(BuildContext context, WidgetRef ref) async {
+    final confirmed = await MinglitAlert.showConfirm(
+      context: context,
+      title: context.l10n.home_button_logout,
+      content: '로그아웃 하시겠습니까?',
+      confirmText: context.l10n.home_button_logout,
+      cancelText: context.l10n.common_button_cancel,
     );
+
+    if (confirmed) {
+      // Fix: dialog를 먼저 닫고 signOut — signOut이 GoRouter redirect를
+      // 트리거하면 dialog context가 무효화되어 검은화면+freeze 발생
+      // MinglitAlert.showConfirm awaits dialog closure, so it's safe.
+      final authRepo = ref.read(authRepositoryProvider);
+      await authRepo.signOut();
+    }
   }
 
   String _getStepTitle(BuildContext context, int step) {

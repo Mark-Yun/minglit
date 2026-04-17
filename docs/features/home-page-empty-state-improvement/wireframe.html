@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minglit Home Empty State Improvement Wireframe</title>
+    <style>
+        :root {
+            --primary: #9900FF;
+            --primary-light: #B84DFF;
+            --primary-soft: rgba(153, 0, 255, 0.05);
+            --primary-glow: rgba(153, 0, 255, 0.15);
+            --secondary: #FF9900;
+            --tertiary: #48C9B0;
+            --background: #FFFFFF;
+            --surface: #F9FAFB;
+            --text-primary: #111827;
+            --text-secondary: #4B5563;
+            --divider: #E5E7EB;
+            --radius-card: 16px;
+            --radius-chip: 100px;
+            --shadow-soft: 0 10px 25px rgba(153, 0, 255, 0.1);
+        }
+
+        body {
+            font-family: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+            margin: 0;
+            padding: 40px;
+            background-color: #F3F4F6;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--text-primary);
+        }
+
+        .container {
+            display: flex;
+            gap: 40px;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .phone {
+            width: 360px;
+            height: 740px;
+            background-color: var(--background);
+            border: 12px solid #1F2937;
+            border-radius: 40px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.12);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .status-bar {
+            height: 34px;
+            padding: 0 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .app-bar {
+            height: 56px;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            gap: 12px;
+        }
+
+        .logo {
+            height: 24px;
+            color: var(--primary);
+            font-weight: 900;
+            font-size: 20px;
+            letter-spacing: -0.5px;
+        }
+
+        .filter-bar {
+            padding: 8px 16px;
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+        }
+
+        .chip {
+            padding: 6px 14px;
+            background-color: var(--surface);
+            border: 1px solid var(--divider);
+            border-radius: var(--radius-chip);
+            font-size: 13px;
+            white-space: nowrap;
+            color: var(--text-secondary);
+        }
+
+        .chip.active {
+            background-color: var(--primary-soft);
+            border-color: var(--primary);
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--background);
+        }
+
+        /* Current State */
+        .empty-current {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-secondary);
+            font-size: 15px;
+        }
+
+        /* Proposed State */
+        .empty-proposed {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 32px;
+            text-align: center;
+        }
+
+        .illustration-container {
+            position: relative;
+            width: 140px;
+            height: 140px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .glow {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background: var(--primary);
+            filter: blur(40px);
+            opacity: 0.15;
+            border-radius: 50%;
+            animation: pulse 4s infinite ease-in-out;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.15; }
+            50% { transform: scale(1.3); opacity: 0.25; }
+            100% { transform: scale(1); opacity: 0.15; }
+        }
+
+        .icon-circle {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary-soft), transparent);
+            border-radius: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 40px;
+            position: relative;
+            z-index: 1;
+            border: 1px solid rgba(153, 0, 255, 0.1);
+        }
+
+        .empty-proposed h2 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .empty-proposed p {
+            margin: 8px 0 0;
+            font-size: 14px;
+            line-height: 1.5;
+            color: var(--text-secondary);
+        }
+
+        .cta-button {
+            margin-top: 28px;
+            padding: 12px 24px;
+            background-color: var(--primary);
+            color: white;
+            border-radius: var(--radius-chip);
+            font-weight: 600;
+            font-size: 14px;
+            border: none;
+            box-shadow: 0 4px 12px rgba(153, 0, 255, 0.3);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .cta-button:active {
+            transform: scale(0.96);
+        }
+
+        .secondary-action {
+            margin-top: 16px;
+            font-size: 14px;
+            color: var(--primary);
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .tag-cloud {
+            margin-top: 32px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            max-width: 240px;
+        }
+
+        .tag-item {
+            font-size: 12px;
+            padding: 4px 10px;
+            background: var(--surface);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            border: 1px solid var(--divider);
+        }
+
+        /* Annotation */
+        .specs {
+            margin-top: 60px;
+            background: white;
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+            max-width: 900px;
+            width: 100%;
+        }
+
+        .specs h2 { margin-top: 0; border-bottom: 2px solid var(--primary); padding-bottom: 10px; display: inline-block; }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .spec-item h4 { margin: 0 0 8px; color: var(--primary); }
+        .spec-item p { margin: 0; font-size: 14px; color: var(--text-secondary); }
+
+    </style>
+</head>
+<body>
+
+    <h1 style="margin-bottom: 8px;">Home Page Empty State Improvement</h1>
+    <p style="margin-bottom: 40px; color: #6B7280;">시각적 밀도 강화 및 탐색 유도 (P3-low)</p>
+
+    <div class="container">
+        <!-- CURRENT -->
+        <div class="column">
+            <h3 style="text-align: center; margin-bottom: 20px;">Current</h3>
+            <div class="phone">
+                <div class="status-bar">
+                    <span>9:41</span>
+                    <span>📶 🔋</span>
+                </div>
+                <div class="app-bar">
+                    <div class="logo">minglit</div>
+                </div>
+                <div class="filter-bar">
+                    <div class="chip active">전체</div>
+                    <div class="chip">파티</div>
+                    <div class="chip">액티비티</div>
+                    <div class="chip">네트워킹</div>
+                </div>
+                <div class="content">
+                    <div class="empty-current">
+                        추천 이벤트가 없습니다
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PROPOSED -->
+        <div class="column">
+            <h3 style="text-align: center; margin-bottom: 20px;">Proposed</h3>
+            <div class="phone">
+                <div class="status-bar">
+                    <span>9:41</span>
+                    <span>📶 🔋</span>
+                </div>
+                <div class="app-bar">
+                    <div class="logo">minglit</div>
+                </div>
+                <div class="filter-bar">
+                    <div class="chip active">전체</div>
+                    <div class="chip">파티</div>
+                    <div class="chip">액티비티</div>
+                    <div class="chip">네트워킹</div>
+                </div>
+                <div class="content">
+                    <div class="empty-proposed">
+                        <div class="illustration-container">
+                            <div class="glow"></div>
+                            <div class="icon-circle">✨</div>
+                        </div>
+                        <h2>아직 추천할 이벤트가 없어요</h2>
+                        <p>주변 지역을 탐색하거나<br>다른 필터를 적용해 보는 건 어떨까요?</p>
+                        
+                        <button class="cta-button">필터 초기화하기</button>
+                        
+                        <div class="tag-cloud">
+                            <div class="tag-item">#강남</div>
+                            <div class="tag-item">#와인파티</div>
+                            <div class="tag-item">#러닝크루</div>
+                            <div class="tag-item">#홍대</div>
+                            <div class="tag-item">#보드게임</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="specs">
+        <h2>디자인 전략 및 명세</h2>
+        <div class="grid">
+            <div class="spec-item">
+                <h4>1. 시각적 계층 (Visual Hierarchy)</h4>
+                <p>단순 텍스트 대신 'Glow' 효과가 적용된 일러스트레이션 영역을 추가하여 시선이 자연스럽게 머물도록 유도합니다. 브랜드 컬러(Purple)를 활용하여 서비스 아이덴티티를 강화합니다.</p>
+            </div>
+            <div class="spec-item">
+                <h4>2. 탐색 유도 (Call to Action)</h4>
+                <p>현재 상태를 해결할 수 있는 '필터 초기화' 버튼을 메인 CTA로 배치합니다. 유저가 무엇을 해야 할지 고민하지 않게 합니다.</p>
+            </div>
+            <div class="spec-item">
+                <h4>3. 추천 태그 (Contextual Suggestions)</h4>
+                <p>하단에 인기 있는 카테고리나 지역 태그를 노출하여, 직접 검색어를 입력하지 않아도 탐색을 시작할 수 있는 트리거를 제공합니다.</p>
+            </div>
+            <div class="spec-item">
+                <h4>4. 문구 개선 (Microcopy)</h4>
+                <p>'없습니다'의 딱딱한 종결 어미 대신 '~없어요', '~어떨까요?' 등의 친근한 어조를 사용하여 서비스의 소셜한 성격을 반영합니다.</p>
+            </div>
+        </div>
+
+        <h3 style="margin-top: 40px;">개발 가이드 (Component Sync)</h3>
+        <p style="font-size: 14px; color: var(--text-secondary);">`MinglitEmptyState` 위젯에 `illustration` 또는 `customWidget` 파라미터를 추가하여 확장성 있게 구현할 것을 권장합니다.</p>
+        <pre style="background: #f8f9fa; padding: 16px; border-radius: 12px; font-size: 13px; border: 1px solid #eee;">
+// 제안하는 위젯 사용 예시
+MinglitEmptyState(
+  title: '아직 추천할 이벤트가 없어요',
+  subtitle: '주변 지역을 탐색하거나\n다른 필터를 적용해 보는 건 어떨까요?',
+  icon: Icons.auto_awesome_outlined, // 또는 별도 일러스트
+  actionLabel: '필터 초기화하기',
+  onAction: () => _resetFilters(),
+  bottomWidget: PopularTagCloud(), // 추가 제안
+)
+        </pre>
+    </div>
+
+</body>
+</html>

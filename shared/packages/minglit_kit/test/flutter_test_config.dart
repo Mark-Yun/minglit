@@ -7,7 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 /// Global test configuration — runs once before all tests in this package.
 ///
-/// 1. Loads NotoSansKR font for Korean text rendering (Fix #449)
+/// 1. Loads Pretendard font for Korean text rendering (Fix #1521)
 /// 2. Configures Alchemist for CI/platform golden separation (Fix #572)
 Future<void> testExecutable(FutureOr<void> Function() testMain) async {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -16,9 +16,9 @@ Future<void> testExecutable(FutureOr<void> Function() testMain) async {
       const bool.fromEnvironment('CI') || Platform.environment['CI'] == 'true';
 
   // CI: Ahem 폰트만 사용 (플랫폼 차이 없음, Alchemist CI 골든용)
-  // Local: NotoSansKR 로드 (한글 렌더링, platform 골든용)
+  // Local: Pretendard 로드 (한글 렌더링, platform 골든용)
   if (!isCI) {
-    await _loadNotoSansKR();
+    await _loadPretendard();
   }
   return AlchemistConfig.runWithConfig(
     config: AlchemistConfig(
@@ -30,11 +30,15 @@ Future<void> testExecutable(FutureOr<void> Function() testMain) async {
   );
 }
 
-Future<void> _loadNotoSansKR() async {
-  final fontLoader = FontLoader('NotoSansKR');
+Future<void> _loadPretendard() async {
+  final fontLoader = FontLoader('Pretendard');
   final fontFile = File(
-    'assets/fonts/Noto_Sans_KR/NotoSansKR-VariableFont_wght.ttf',
+    'assets/fonts/Pretendard/PretendardVariable.ttf',
   );
+  if (!await fontFile.exists()) {
+    // Fallback for different execution contexts
+    return;
+  }
   final bytes = await fontFile.readAsBytes();
   fontLoader.addFont(Future.value(ByteData.view(bytes.buffer)));
   await fontLoader.load();

@@ -106,44 +106,18 @@ extension _TicketSelectionWidgets on _TicketSelectionSheetState {
   }
 
   Widget _buildBalanceBadge(ThemeData theme) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: MinglitSpacing.small,
-        vertical: MinglitSpacing.xsmall,
-      ),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(MinglitRadius.small),
-        border: Border.all(color: theme.colorScheme.outlineVariant),
-      ),
-      child: Text(
-        '성비 조절 중',
-        style: theme.textTheme.labelSmall?.copyWith(
-          color: theme.colorScheme.onSurfaceVariant,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
+    return MinglitBadge(
+      label: '성비 조절 중',
+      color: theme.colorScheme.secondary,
+      compact: true,
     );
   }
 
   Widget _buildRecommendedBadge(ThemeData theme) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: MinglitSpacing.small,
-        vertical: MinglitSpacing.xsmall,
-      ),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.primaryContainer,
-        borderRadius: BorderRadius.circular(MinglitRadius.small),
-        border: Border.all(color: theme.colorScheme.primary),
-      ),
-      child: Text(
-        '추천',
-        style: theme.textTheme.labelSmall?.copyWith(
-          color: theme.colorScheme.onPrimaryContainer,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
+    return MinglitBadge(
+      label: '추천',
+      color: theme.colorScheme.primary,
+      compact: true,
     );
   }
 
@@ -198,9 +172,10 @@ extension _TicketSelectionWidgets on _TicketSelectionSheetState {
   }
 
   Widget buildEmptyState(ThemeData theme) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: MinglitSpacing.large),
-      child: Text('현재 구매 가능한 티켓이 없습니다.', style: theme.textTheme.bodyMedium),
+    return const MinglitEmptyState(
+      variant: MinglitEmptyStateVariant.card,
+      icon: Icons.confirmation_number_outlined,
+      title: '현재 구매 가능한 티켓이 없습니다.',
     );
   }
 
@@ -210,9 +185,10 @@ extension _TicketSelectionWidgets on _TicketSelectionSheetState {
     Map<String, String> ineligibleReasons,
   ) {
     return [
-      Padding(
-        padding: const EdgeInsets.symmetric(vertical: MinglitSpacing.medium),
-        child: Text('현재 구매 가능한 티켓이 없습니다.', style: theme.textTheme.bodyMedium),
+      const MinglitEmptyState(
+        variant: MinglitEmptyStateVariant.card,
+        icon: Icons.confirmation_number_outlined,
+        title: '현재 구매 가능한 티켓이 없습니다.',
       ),
       ...tickets.map(
         (ticket) => buildTicketOption(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
+import 'package:minglit_kit/src/ui/widgets/common/minglit_button.dart';
 
 /// A standardized dialog widget for Minglit applications.
 /// Use [show] or [showConfirm] for easier usage.
@@ -8,6 +9,7 @@ class MinglitAlert extends StatelessWidget {
   const MinglitAlert({
     required this.title,
     this.content,
+    this.contentWidget,
     this.actions,
     this.type = MinglitAlertType.info,
     super.key,
@@ -18,6 +20,10 @@ class MinglitAlert extends StatelessWidget {
 
   /// Optional dialog body text.
   final String? content;
+
+  /// Optional custom widget for the dialog content.
+  /// If provided, [content] text is ignored.
+  final Widget? contentWidget;
 
   /// Optional action buttons for the dialog.
   final List<Widget>? actions;
@@ -30,6 +36,7 @@ class MinglitAlert extends StatelessWidget {
     required BuildContext context,
     required String title,
     String? content,
+    Widget? contentWidget,
     List<Widget>? actions,
     MinglitAlertType type = MinglitAlertType.info,
   }) {
@@ -38,6 +45,7 @@ class MinglitAlert extends StatelessWidget {
       builder: (context) => MinglitAlert(
         title: title,
         content: content,
+        contentWidget: contentWidget,
         actions: actions,
         type: type,
       ),
@@ -50,6 +58,7 @@ class MinglitAlert extends StatelessWidget {
     required BuildContext context,
     required String title,
     String? content,
+    Widget? contentWidget,
     String confirmText = '확인',
     String cancelText = '취소',
     bool isDestructive = false,
@@ -59,29 +68,31 @@ class MinglitAlert extends StatelessWidget {
       builder: (context) => MinglitAlert(
         title: title,
         content: content,
+        contentWidget: contentWidget,
         type: isDestructive
             ? MinglitAlertType.destructive
             : MinglitAlertType.info,
         actions: [
-          TextButton(
+          MinglitButton.text(
+            label: cancelText,
             onPressed: () => Navigator.pop(context, false),
-            style: TextButton.styleFrom(
-              foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-            child: Text(cancelText),
+            // Use secondary color for cancel to avoid visual clutter
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(
-              foregroundColor: isDestructive
-                  ? Theme.of(context).colorScheme.error
-                  : Theme.of(context).colorScheme.primary,
-              textStyle: Theme.of(
-                context,
-              ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold),
+          const SizedBox(width: MinglitSpacing.small),
+          if (isDestructive)
+            MinglitButton.destructive(
+              label: confirmText,
+              onPressed: () => Navigator.pop(context, true),
+              expand: false,
+              size: MinglitButtonSize.medium,
+            )
+          else
+            MinglitButton(
+              label: confirmText,
+              onPressed: () => Navigator.pop(context, true),
+              expand: false,
+              size: MinglitButtonSize.medium,
             ),
-            child: Text(confirmText),
-          ),
         ],
       ),
     );
@@ -95,9 +106,12 @@ class MinglitAlert extends StatelessWidget {
 
     return AlertDialog(
       backgroundColor: colorScheme.surface,
-      surfaceTintColor: colorScheme.surface.withValues(
-        alpha: MinglitOpacity.none,
-      ), // Remove standardized tint
+      surfaceTintColor: Colors.transparent,
+      // Fix #1518: Add soft shadow for premium "lifted" feel
+      elevation: 8,
+      shadowColor: colorScheme.shadow.withValues(
+        alpha: MinglitOpacity.shadowSm,
+      ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(MinglitRadius.card),
       ),
@@ -112,10 +126,11 @@ class MinglitAlert extends StatelessWidget {
         right: MinglitSpacing.large,
         bottom: MinglitSpacing.large,
       ),
-      actionsPadding: const EdgeInsets.only(
-        left: MinglitSpacing.medium,
-        right: MinglitSpacing.medium,
-        bottom: MinglitSpacing.medium,
+      actionsPadding: const EdgeInsets.fromLTRB(
+        MinglitSpacing.medium,
+        MinglitSpacing.zero,
+        MinglitSpacing.medium,
+        MinglitSpacing.medium,
       ),
 
       title: Row(
@@ -134,18 +149,20 @@ class MinglitAlert extends StatelessWidget {
           ),
         ],
       ),
-      content: content != null
-          ? Text(
-              content!,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
-            )
-          : null,
+      content: contentWidget ??
+          (content != null
+              ? Text(
+                  content!,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                )
+              : null),
       actions: actions,
     );
   }
 }
+
 
 /// Visual variants for [MinglitAlert].
 enum MinglitAlertType {

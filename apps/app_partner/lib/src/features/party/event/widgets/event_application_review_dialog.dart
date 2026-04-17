@@ -48,9 +48,9 @@ class _EventApplicationReviewDialogState
     final user = widget.application.user;
     final submission = widget.application.submission;
 
-    return AlertDialog(
-      title: const Text('참가 신청 심사'),
-      content: SingleChildScrollView(
+    return MinglitAlert(
+      title: '참가 신청 심사',
+      contentWidget: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
@@ -190,22 +190,24 @@ class _EventApplicationReviewDialogState
         ),
       ),
       actions: [
-        TextButton(
+        MinglitButton.text(
+          label: '취소',
           onPressed: () => Navigator.pop(context),
-          child: const Text('취소'),
         ),
-        ElevatedButton(
+        const SizedBox(width: MinglitSpacing.small),
+        MinglitButton.destructive(
+          label: '거절',
           onPressed: () => _handleReview(context, 'rejected'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: theme.colorScheme.errorContainer,
-            foregroundColor: theme.colorScheme.onErrorContainer,
-          ),
-          child: const Text('거절'),
+          expand: false,
+          size: MinglitButtonSize.medium,
         ),
+        const SizedBox(width: MinglitSpacing.small),
         Consumer(
-          builder: (context, ref, _) => ElevatedButton(
+          builder: (context, ref, _) => MinglitButton(
+            label: '승인',
             onPressed: () => _handleReview(context, 'approved'),
-            child: const Text('승인'),
+            expand: false,
+            size: MinglitButtonSize.medium,
           ),
         ),
       ],

@@ -4,7 +4,6 @@ import 'package:app_partner/src/logic/current_partner_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
-import 'package:riverpod/src/providers/future_provider.dart';
 
 /// Event application management page — grouped by event with inline approve/reject.
 class EventApplicationManagePage extends ConsumerStatefulWidget {
@@ -304,25 +303,14 @@ class _ApplicationTab extends ConsumerWidget {
     Map<Event, List<EventApplication>> grouped,
   ) async {
     final total = grouped.values.fold<int>(0, (s, apps) => s + apps.length);
-    final confirmed = await showDialog<bool>(
+    final confirmed = await MinglitAlert.showConfirm(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('전체 승인'),
-        content: Text('대기 중인 $total건을 모두 승인하시겠습니까?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('취소'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('전체 승인'),
-          ),
-        ],
-      ),
+      title: '전체 승인',
+      content: '대기 중인 $total건을 모두 승인하시겠습니까?',
+      confirmText: '전체 승인',
     );
 
-    if (confirmed != true) return;
+    if (!confirmed) return;
 
     // Fix #653: Supabase 직접 접근 → EventRepository 분리
     final eventRepo = ref.read(eventRepositoryProvider);
@@ -380,21 +368,24 @@ class _RejectDialogState extends State<_RejectDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('신청 거절'),
-      content: TextField(
+    return MinglitAlert(
+      title: '신청 거절',
+      contentWidget: TextField(
         controller: _controller,
         decoration: const InputDecoration(hintText: '거절 사유를 입력하세요'),
         maxLines: 3,
       ),
       actions: [
-        TextButton(
+        MinglitButton.text(
+          label: '취소',
           onPressed: () => Navigator.pop(context),
-          child: const Text('취소'),
         ),
-        FilledButton(
+        const SizedBox(width: MinglitSpacing.small),
+        MinglitButton(
+          label: '거절',
           onPressed: () => Navigator.pop(context, _controller.text),
-          child: const Text('거절'),
+          expand: false,
+          size: MinglitButtonSize.medium,
         ),
       ],
     );

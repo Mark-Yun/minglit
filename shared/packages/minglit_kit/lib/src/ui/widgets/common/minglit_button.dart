@@ -59,8 +59,20 @@ enum MinglitButtonSize {
 /// ```
 /// {@end-tool}
 class MinglitButton extends StatelessWidget {
-  /// Creates a primary (filled) button.
+  /// Creates a button with a specific [variant].
   const MinglitButton({
+    required this.label,
+    this.onPressed,
+    this.icon,
+    this.isLoading = false,
+    this.size = MinglitButtonSize.large,
+    this.expand = true,
+    this.variant = MinglitButtonVariant.primary,
+    super.key,
+  });
+
+  /// Creates a primary (filled) button.
+  const MinglitButton.primary({
     required this.label,
     this.onPressed,
     this.icon,
