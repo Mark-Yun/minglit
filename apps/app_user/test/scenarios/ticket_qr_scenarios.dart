@@ -11,7 +11,9 @@ class _MockTicketWalletRepository extends Mock
     implements TicketWalletRepository {}
 
 class TicketQRScenarios {
-  static final _now = DateTime(2026, 4, 1, 12);
+  // Fix #1526: 실행 시점 기준으로 계산 — 고정 날짜 사용 시 날짜가 지나면
+  // USED로 렌더링되어 시나리오 의도와 어긋남
+  static final _now = DateTime.now();
 
   static TicketToken get _token => TicketToken(
     ticketId: 'ticket-1',
