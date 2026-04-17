@@ -6,23 +6,53 @@
 BEGIN;
 SELECT plan(6);
 
-SELECT has_enum('public', 'partner_application_status',
+SELECT has_type('public', 'partner_application_status',
   'enum partner_application_status should exist');
 
-SELECT enum_has_label('public', 'partner_application_status', 'draft',
-  'partner_application_status must include draft (regression: #1511)');
+SELECT ok(
+  EXISTS(
+    SELECT 1 FROM pg_enum
+    WHERE enumlabel = 'draft'
+      AND enumtypid = 'public.partner_application_status'::regtype
+  ),
+  'partner_application_status must include draft (regression: #1511)'
+);
 
-SELECT enum_has_label('public', 'partner_application_status', 'pending',
-  'partner_application_status must include pending');
+SELECT ok(
+  EXISTS(
+    SELECT 1 FROM pg_enum
+    WHERE enumlabel = 'pending'
+      AND enumtypid = 'public.partner_application_status'::regtype
+  ),
+  'partner_application_status must include pending'
+);
 
-SELECT enum_has_label('public', 'partner_application_status', 'approved',
-  'partner_application_status must include approved');
+SELECT ok(
+  EXISTS(
+    SELECT 1 FROM pg_enum
+    WHERE enumlabel = 'approved'
+      AND enumtypid = 'public.partner_application_status'::regtype
+  ),
+  'partner_application_status must include approved'
+);
 
-SELECT enum_has_label('public', 'partner_application_status', 'rejected',
-  'partner_application_status must include rejected');
+SELECT ok(
+  EXISTS(
+    SELECT 1 FROM pg_enum
+    WHERE enumlabel = 'rejected'
+      AND enumtypid = 'public.partner_application_status'::regtype
+  ),
+  'partner_application_status must include rejected'
+);
 
-SELECT enum_has_label('public', 'partner_application_status', 'needs_correction',
-  'partner_application_status must include needs_correction');
+SELECT ok(
+  EXISTS(
+    SELECT 1 FROM pg_enum
+    WHERE enumlabel = 'needs_correction'
+      AND enumtypid = 'public.partner_application_status'::regtype
+  ),
+  'partner_application_status must include needs_correction'
+);
 
 SELECT * FROM finish();
 ROLLBACK;
