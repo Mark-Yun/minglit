@@ -4,7 +4,7 @@
 -- silently failed inside a transaction in the original migration (20260307000001).
 
 BEGIN;
-SELECT plan(5);
+SELECT plan(6);
 
 SELECT has_enum('public', 'partner_application_status',
   'enum partner_application_status should exist');
@@ -20,6 +20,9 @@ SELECT enum_has_label('public', 'partner_application_status', 'approved',
 
 SELECT enum_has_label('public', 'partner_application_status', 'rejected',
   'partner_application_status must include rejected');
+
+SELECT enum_has_label('public', 'partner_application_status', 'needs_correction',
+  'partner_application_status must include needs_correction');
 
 SELECT * FROM finish();
 ROLLBACK;
