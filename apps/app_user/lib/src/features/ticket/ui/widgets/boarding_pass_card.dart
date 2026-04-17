@@ -63,6 +63,17 @@ class _BoardingPassCardState extends State<BoardingPassCard>
     super.dispose();
   }
 
+  @override
+  void didUpdateWidget(covariant BoardingPassCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final shouldPulse = _computeStatus() == BoardingPassStatus.boarding;
+    if (shouldPulse && !_pulseController.isAnimating) {
+      unawaited(_pulseController.repeat(reverse: true));
+    } else if (!shouldPulse && _pulseController.isAnimating) {
+      _pulseController.stop();
+    }
+  }
+
   BoardingPassStatus _computeStatus() {
     final meta = widget.eventMeta;
     if (meta == null) return BoardingPassStatus.confirmed;
@@ -92,9 +103,9 @@ class _BoardingPassCardState extends State<BoardingPassCard>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _HeaderStrip(),
+              const _HeaderStrip(),
               _EventInfoSection(eventMeta: widget.eventMeta),
-              _PerforationLine(),
+              const _PerforationLine(),
               _QRStubSection(
                 token: widget.token,
                 status: status,
@@ -116,6 +127,8 @@ class _BoardingPassCardState extends State<BoardingPassCard>
 /// Brand header strip — omagio of airline top bar.
 /// Gradient background, Minglit logo (white) on left, "BOARDING PASS" on right.
 class _HeaderStrip extends StatelessWidget {
+  const _HeaderStrip();
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -338,6 +351,8 @@ class _FieldLabel extends StatelessWidget {
 /// Renders a dashed line with semicircle notches at the card left/right edges.
 // Fix #1526: PerforationPainter — "진짜 티켓" 느낌의 핵심 디테일
 class _PerforationLine extends StatelessWidget {
+  const _PerforationLine();
+
   static const double _notchDiameter = 28;
   static const double _notchRadius = _notchDiameter / 2;
 
@@ -486,6 +501,7 @@ class _QRStubSection extends StatelessWidget {
                   // Scanning line (disabled for USED)
                   if (!isUsed)
                     AnimatedBuilder(
+                      key: const ValueKey('scanning-line'),
                       animation: scanningAnimation,
                       builder: (context, _) {
                         return Positioned(

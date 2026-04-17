@@ -95,9 +95,10 @@ class MyTicketsPage extends ConsumerWidget {
     EventApplication? application,
   }) {
     final event = application?.event;
-    final meta = event != null
+    final title = event?.title ?? event?.party?.title;
+    final meta = (event != null && title != null)
         ? TicketEventMeta(
-            eventTitle: event.title ?? event.party?.title ?? '',
+            eventTitle: title,
             eventDateTime: event.startTime,
             eventVenue: event.location?.name ?? event.party?.location?.name,
             ticketName: application?.ticket?.name,

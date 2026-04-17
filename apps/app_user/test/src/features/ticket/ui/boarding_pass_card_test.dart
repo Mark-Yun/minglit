@@ -170,12 +170,13 @@ void main() {
     // -----------------------------------------------------------------------
 
     testWidgets('BOARDING 상태: "BOARDING" 텍스트 (오늘 이벤트)', (tester) async {
-      // _now is today's date, so boardingPassStatus(_now) → boarding
-      // When the test runs, DateTime.now() will be today, so we use a date
-      // explicitly set to today by relying on the meta being equal to _now.
-      // Since boardingPassStatus uses DateTime.now() internally, use
-      // today's date for the test:
-      final todayMeta = _makeMeta(dateTime: DateTime.now());
+      // Use midday (12:00) to avoid midnight boundary flakiness.
+      // boardingPassStatus uses DateTime.now() internally, so both sides
+      // must agree on "today" — a fixed midday timestamp is safe.
+      final today = DateTime.now();
+      final todayMeta = _makeMeta(
+        dateTime: DateTime(today.year, today.month, today.day, 12),
+      );
 
       await tester.pumpWidget(
         _wrap(token: _makeToken(), eventMeta: todayMeta),
@@ -266,9 +267,9 @@ void main() {
       );
       await tester.pump();
 
-      // USED status observable contract —
-      // status text confirms scanning disabled
       expect(find.text('USED'), findsOneWidget);
+      // Scanning line widget must be absent for USED status
+      expect(find.byKey(const ValueKey('scanning-line')), findsNothing);
     });
 
     // -----------------------------------------------------------------------

@@ -259,7 +259,12 @@ void main() {
       await tester.tap(find.text('입장 QR'));
       await tester.pump();
 
-      verify(() => mockHomeCoordinator.pushTicketQR('ticket_1')).called(1);
+      verify(
+        () => mockHomeCoordinator.pushTicketQR(
+          'ticket_1',
+          eventMeta: any(named: 'eventMeta'),
+        ),
+      ).called(1);
     });
 
     // Fix #642: P2 — banner not shown when no todayEvent
