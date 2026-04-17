@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>티켓 QR — Boarding Pass 와이어프레임</title>
+<style>
+  /* ─── Design Tokens (minglit_design_tokens.dart) ─── */
+  :root {
+    --primary: #9900FF;
+    --primary-dark: #7B2FBE;
+    --secondary: #FF9900;
+    --tertiary: #48C9B0;
+    --background: #FFFFFF;
+    --surface: #F9FAFB;
+    --text-primary: #111827;
+    --text-secondary: #4B5563;
+    --success: #22C55E;
+    --error: #EF4444;
+    --gray-200: #E5E7EB;
+    --gray-300: #D1D5DB;
+
+    --spacing-xsmall: 4px;
+    --spacing-small: 8px;
+    --spacing-sm: 12px;
+    --spacing-medium: 16px;
+    --spacing-large: 24px;
+    --spacing-xlarge: 32px;
+
+    --radius-small: 8px;
+    --radius-button: 12px;
+    --radius-card: 16px;
+
+    --font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font-family);
+    background: #1a1a2e;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 40px;
+    padding: 40px 20px;
+  }
+
+  /* ─── Phone Frame ─── */
+  .phone-frame {
+    width: 375px;
+    height: 812px;
+    background: var(--surface);
+    border-radius: 44px;
+    overflow: hidden;
+    box-shadow: 0 25px 80px rgba(0,0,0,0.4);
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .phone-frame::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 150px;
+    height: 30px;
+    background: #000;
+    border-radius: 0 0 20px 20px;
+    z-index: 10;
+  }
+
+  .screen {
+    height: 100%;
+    overflow-y: auto;
+    padding-top: 54px;
+  }
+
+  .screen-label {
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 12px;
+    font-family: var(--font-family);
+    letter-spacing: 0.5px;
+  }
+
+  .screen-sublabel {
+    color: rgba(255,255,255,0.5);
+    font-size: 11px;
+    text-align: center;
+    margin-top: -8px;
+    margin-bottom: 12px;
+    font-family: var(--font-family);
+  }
+
+  /* ─── AppBar ─── */
+  .appbar {
+    height: 56px;
+    display: flex;
+    align-items: center;
+    padding: 0 var(--spacing-medium);
+    background: var(--surface);
+  }
+
+  .appbar-back {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-primary);
+    font-size: 20px;
+  }
+
+  .appbar-title {
+    flex: 1;
+    text-align: center;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-right: 24px;
+  }
+
+  /* ─── Boarding Pass Card ─── */
+  .boarding-pass-container {
+    padding: var(--spacing-medium);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+  }
+
+  .boarding-pass {
+    width: 100%;
+    max-width: 343px;
+    background: var(--background);
+    border-radius: var(--radius-card);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04);
+    overflow: visible;
+    position: relative;
+  }
+
+  /* ─── 1. Header Strip ─── */
+  .bp-header {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    padding: var(--spacing-medium) var(--spacing-large);
+    border-radius: var(--radius-card) var(--radius-card) 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 64px;
+  }
+
+  .bp-header-logo {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-small);
+  }
+
+  .bp-header-logo svg {
+    height: 22px;
+    width: auto;
+  }
+
+  .bp-header-right {
+    text-align: right;
+  }
+
+  .bp-header-pass-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: rgba(255,255,255,1);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .bp-header-pass-label-ko {
+    font-size: 10px;
+    color: rgba(255,255,255,0.7);
+    margin-top: 2px;
+  }
+
+  /* ─── 2. Event Info Section ─── */
+  .bp-info {
+    padding: var(--spacing-large);
+  }
+
+  .bp-flight-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--spacing-medium);
+  }
+
+  .bp-flight-col {
+    flex: 1;
+  }
+
+  .bp-flight-col.right {
+    text-align: right;
+  }
+
+  .bp-label {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: var(--spacing-xsmall);
+  }
+
+  .bp-date {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.3;
+  }
+
+  .bp-time {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--primary);
+    line-height: 1.2;
+    margin-top: 2px;
+  }
+
+  .bp-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-top: 24px;
+    color: var(--gray-300);
+    font-size: 20px;
+  }
+
+  .bp-venue {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.4;
+  }
+
+  .bp-venue-detail {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+  }
+
+  /* Event title area */
+  .bp-event-title-area {
+    margin-top: var(--spacing-medium);
+    padding-top: var(--spacing-medium);
+    border-top: 1px solid var(--gray-200);
+    text-align: center;
+  }
+
+  .bp-event-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.4;
+    margin-bottom: var(--spacing-xsmall);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .bp-ticket-type {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    letter-spacing: 0.5px;
+  }
+
+  /* ─── 3. Perforation Line ─── */
+  .bp-perforation {
+    position: relative;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    overflow: visible;
+  }
+
+  .bp-perforation::before,
+  .bp-perforation::after {
+    content: '';
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    background: var(--surface);
+    border-radius: 50%;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+  }
+
+  .bp-perforation::before { left: -12px; }
+  .bp-perforation::after { right: -12px; }
+
+  .bp-perforation-line {
+    width: 100%;
+    height: 0;
+    border-top: 2px dashed var(--gray-200);
+    margin: 0 20px;
+  }
+
+  /* ─── 4. QR Stub ─── */
+  .bp-stub {
+    padding: var(--spacing-large);
+    text-align: center;
+    border-radius: 0 0 var(--radius-card) var(--radius-card);
+  }
+
+  .bp-qr-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: var(--spacing-medium);
+    position: relative;
+  }
+
+  .bp-qr {
+    width: 200px;
+    height: 200px;
+    background: var(--background);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-small);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* QR placeholder pattern */
+  .bp-qr-pattern {
+    width: 180px;
+    height: 180px;
+    background:
+      repeating-conic-gradient(var(--text-primary) 0% 25%, transparent 0% 50%) 0 0 / 12px 12px,
+      repeating-conic-gradient(var(--text-primary) 0% 25%, transparent 0% 50%) 6px 6px / 12px 12px;
+    opacity: 0.15;
+    border-radius: 4px;
+  }
+
+  .bp-qr-logo {
+    position: absolute;
+    width: 36px;
+    height: 36px;
+    background: var(--background);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+  }
+
+  .bp-qr-logo-icon {
+    font-size: 18px;
+    color: var(--primary);
+    font-weight: 700;
+  }
+
+  /* Scanning animation */
+  .bp-scan-line {
+    position: absolute;
+    width: 180px;
+    height: 2px;
+    background: var(--primary);
+    box-shadow: 0 0 8px rgba(153, 0, 255, 0.5);
+    animation: scan 2s ease-in-out infinite alternate;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 1px;
+  }
+
+  @keyframes scan {
+    0% { top: 10px; }
+    100% { top: 190px; }
+  }
+
+  /* Ticket meta row */
+  .bp-meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 0 var(--spacing-small);
+  }
+
+  .bp-meta-item {
+    text-align: left;
+  }
+
+  .bp-meta-item.right {
+    text-align: right;
+  }
+
+  .bp-meta-label {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+
+  .bp-meta-value {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  /* Status badges */
+  .bp-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 0;
+  }
+
+  .bp-status.boarding {
+    color: var(--success);
+  }
+
+  .bp-status.boarding .bp-status-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--success);
+    border-radius: 50%;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .bp-status.confirmed {
+    color: var(--primary);
+  }
+
+  .bp-status.used {
+    color: var(--text-secondary);
+  }
+
+  /* ─── 5. Instruction text ─── */
+  .bp-instruction {
+    text-align: center;
+    padding: var(--spacing-large) var(--spacing-medium) var(--spacing-small);
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  .bp-warning {
+    text-align: center;
+    padding: var(--spacing-small) var(--spacing-medium);
+    font-size: 11px;
+    color: var(--text-secondary);
+    opacity: 0.5;
+  }
+
+  /* ─── State: Past event (used) ─── */
+  .boarding-pass.used {
+    opacity: 0.55;
+  }
+
+  .boarding-pass.used .bp-scan-line {
+    display: none;
+  }
+
+  .boarding-pass.used .bp-qr::after {
+    content: '사용됨';
+    position: absolute;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    transform: rotate(-15deg);
+    letter-spacing: 4px;
+    opacity: 0.5;
+    z-index: 1;
+  }
+
+  /* ─── State: Loading skeleton ─── */
+  .skeleton {
+    background: linear-gradient(90deg, var(--gray-200) 25%, #f0f0f0 50%, var(--gray-200) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+    border-radius: 4px;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* ─── State: Error ─── */
+  .error-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px var(--spacing-medium);
+    gap: var(--spacing-medium);
+  }
+
+  .error-icon {
+    font-size: 48px;
+    color: var(--error);
+  }
+
+  .error-text {
+    font-size: 16px;
+    color: var(--text-primary);
+  }
+
+  /* ─── Comparison: Current (AS-IS) ─── */
+  .current-qr {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    padding: 40px var(--spacing-medium);
+  }
+
+  .current-qr-card {
+    width: 272px;
+    height: 272px;
+    background: var(--background);
+    border-radius: var(--radius-card);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-medium);
+  }
+
+  .current-qr-placeholder {
+    width: 240px;
+    height: 240px;
+    background:
+      repeating-conic-gradient(var(--text-primary) 0% 25%, transparent 0% 50%) 0 0 / 10px 10px,
+      repeating-conic-gradient(var(--text-primary) 0% 25%, transparent 0% 50%) 5px 5px / 10px 10px;
+    opacity: 0.15;
+    border-radius: 4px;
+  }
+
+  .current-instruction {
+    margin-top: var(--spacing-large);
+    font-size: 16px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════ -->
+<!-- Screen 1: Current (AS-IS)                      -->
+<!-- ════════════════════════════════════════════════ -->
+<div>
+  <div class="screen-label">AS-IS (현재)</div>
+  <div class="screen-sublabel">흰 배경 + QR만 표시</div>
+  <div class="phone-frame">
+    <div class="screen">
+      <div class="appbar">
+        <div class="appbar-back">←</div>
+        <div class="appbar-title">내 티켓</div>
+      </div>
+      <div class="current-qr">
+        <div class="current-qr-card">
+          <div class="current-qr-placeholder"></div>
+        </div>
+        <div class="current-instruction">입장 시 파트너에게 이 화면을 보여주세요</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════ -->
+<!-- Screen 2: TO-BE — Today (BOARDING)             -->
+<!-- ════════════════════════════════════════════════ -->
+<div>
+  <div class="screen-label">TO-BE: 오늘 이벤트 (BOARDING)</div>
+  <div class="screen-sublabel">D-Day — 입장 가능 상태</div>
+  <div class="phone-frame">
+    <div class="screen">
+      <div class="appbar">
+        <div class="appbar-back">←</div>
+        <div class="appbar-title">내 티켓</div>
+      </div>
+      <div class="boarding-pass-container">
+        <div class="boarding-pass">
+          <!-- 1. Header Strip -->
+          <div class="bp-header">
+            <div class="bp-header-logo">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="79 97.8 182 54.3" height="22">
+                <g fill="#FFFFFF" transform="translate(80.8,99.6)">
+                  <g transform="scale(1)">
+                    <g stroke="none">
+                      <path d="M45.28-33.05L38.2 0 26.65 0 31.44-22.48 19.1 0 12.02 0 9.68-23.27 4.68 0 0 0 7.03-33.05 20.3-33.05 21.91-14.42 31.91-33.05 45.28-33.05ZM58.81-22.38L53.97 0 43.41 0 48.14-22.38 58.81-22.38ZM60.17-29.2Q60.17-28 59.67-27.12 59.18-26.23 58.37-25.61 57.57-24.98 56.52-24.67 55.48-24.36 54.39-24.36 52.31-24.36 50.9-25.35 49.5-26.34 49.5-28.47 49.5-29.62 49.97-30.53 50.43-31.44 51.24-32.04 52.05-32.63 53.11-32.95 54.18-33.26 55.33-33.26 57.36-33.26 58.76-32.27 60.17-31.28 60.17-29.2ZM72.82-19.05L73.13-19.05Q74.22-20.09 75.57-20.98 76.77-21.7 78.38-22.33 80-22.95 81.98-22.95 84.68-22.95 86.45-21.57 88.22-20.19 88.22-17.8 88.22-17.12 88.07-16.16 87.91-15.2 87.7-14.16 87.49-13.12 87.26-12.05 87.02-10.98 86.87-10.15L84.68 0 74.12 0 76.98-13.58Q77.08-14.26 77.24-14.96 77.4-15.67 77.4-16.24 77.4-17.02 77-17.51 76.61-18.01 75.83-18.01 74.9-18.01 74.04-17.33 73.18-16.66 72.71-16.19L69.28 0 58.66 0 63.39-22.38 71.88-22.38 72.82-19.05ZM108.57-19L110.91-22.38 119.35-22.38 115.08-2.13Q114.61 0.21 113.52 2.19 112.42 4.16 110.47 5.62 108.52 7.08 105.58 7.91 102.64 8.74 98.42 8.74 97.64 8.74 96.55 8.72 95.46 8.69 94.31 8.67 93.17 8.64 92.12 8.59 91.08 8.54 90.46 8.48L91.45 4.74Q93.11 5 94.86 5.02 96.6 5.05 97.85 5.05 99.41 5.05 100.48 4.76 101.55 4.48 102.25 3.85 102.95 3.23 103.39 2.19 103.84 1.15 104.1-0.36L104.72-3.75 104.36-3.75Q104.04-3.28 103.45-2.63 102.85-1.98 101.91-1.38 100.97-0.78 99.7-0.39 98.42 0 96.81 0 94.99 0 93.71-0.55 92.44-1.09 91.66-2.06 90.88-3.02 90.51-4.35 90.15-5.67 90.15-7.23 90.15-7.91 90.25-9.32 90.36-10.72 90.75-12.49 91.14-14.26 91.89-16.11 92.65-17.96 93.92-19.47 95.2-20.98 97.1-21.96 99-22.95 101.7-22.95 102.53-22.95 103.52-22.8 104.51-22.64 105.45-22.22 106.39-21.81 107.11-21.03 107.84-20.25 108.26-19L108.57-19ZM105.08-17.85Q103.84-17.85 103-16.53 102.17-15.2 101.65-13.43 101.13-11.66 100.89-9.92 100.66-8.17 100.66-7.34 100.66-6.3 101-5.6 101.34-4.89 102.22-4.89 102.74-4.89 103.24-5.15 103.73-5.41 104.17-5.75 104.62-6.09 104.95-6.45 105.29-6.82 105.45-7.03L107.37-16.13Q106.96-16.71 106.41-17.28 105.87-17.85 105.08-17.85ZM137.3-34.98L129.86 0 119.24 0 126.63-34.98 137.3-34.98ZM149.9-22.38L145.06 0 134.49 0 139.23-22.38 149.9-22.38ZM151.25-29.2Q151.25-28 150.76-27.12 150.26-26.23 149.46-25.61 148.65-24.98 147.61-24.67 146.57-24.36 145.47-24.36 143.39-24.36 141.99-25.35 140.58-26.34 140.58-28.47 140.58-29.62 141.05-30.53 141.52-31.44 142.33-32.04 143.13-32.63 144.2-32.95 145.27-33.26 146.41-33.26 148.44-33.26 149.85-32.27 151.25-31.28 151.25-29.2ZM151.93-18.89L152.66-22.38Q154.58-22.8 156.04-23.32 157.5-23.84 158.72-24.62 159.94-25.4 161.06-26.54 162.18-27.69 163.48-29.36L168.84-29.36 167.33-22.38 171.39-22.38 170.72-18.89 166.61-18.89 164.47-8.74Q164.21-7.55 164.06-6.61 163.9-5.67 163.9-5.15 163.9-4.11 164.65-3.85 165.41-3.59 167.49-3.59L166.71 0Q166.35 0.1 165.59 0.16 164.84 0.21 163.93 0.29 163.01 0.36 162.05 0.39 161.09 0.42 160.36 0.42 159.06 0.42 157.81 0.23 156.56 0.05 155.57-0.49 154.58-1.04 153.98-2.08 153.39-3.12 153.39-4.89 153.39-5.52 153.46-6.45 153.54-7.39 153.8-8.54L155.99-18.89 151.93-18.89Z" transform="translate(0, 34.98)"/>
+                    </g>
+                  </g>
+                </g>
+              </svg>
+            </div>
+            <div class="bp-header-right">
+              <div class="bp-header-pass-label">BOARDING PASS</div>
+              <div class="bp-header-pass-label-ko">입장권</div>
+            </div>
+          </div>
+
+          <!-- 2. Event Info -->
+          <div class="bp-info">
+            <div class="bp-flight-row">
+              <div class="bp-flight-col">
+                <div class="bp-label">DATE</div>
+                <div class="bp-date">4월 25일 (금)</div>
+                <div class="bp-time">19:00</div>
+              </div>
+              <div class="bp-arrow">
+                <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+              </div>
+              <div class="bp-flight-col right">
+                <div class="bp-label">VENUE</div>
+                <div class="bp-venue">강남 라운지바</div>
+                <div class="bp-venue-detail">서울 강남구</div>
+              </div>
+            </div>
+
+            <div class="bp-event-title-area">
+              <div class="bp-event-title">금요일 밤 와인 테이스팅</div>
+              <div class="bp-ticket-type">TICKET · 일반 입장권</div>
+            </div>
+          </div>
+
+          <!-- 3. Perforation -->
+          <div class="bp-perforation">
+            <div class="bp-perforation-line"></div>
+          </div>
+
+          <!-- 4. QR Stub -->
+          <div class="bp-stub">
+            <div class="bp-qr-container">
+              <div class="bp-qr">
+                <div class="bp-qr-pattern"></div>
+                <div class="bp-qr-logo">
+                  <span class="bp-qr-logo-icon">M</span>
+                </div>
+                <div class="bp-scan-line"></div>
+              </div>
+            </div>
+            <div class="bp-meta-row">
+              <div class="bp-meta-item">
+                <div class="bp-meta-label">TICKET NO.</div>
+                <div class="bp-meta-value">#TK-2026-0425</div>
+              </div>
+              <div class="bp-meta-item right">
+                <div class="bp-meta-label">STATUS</div>
+                <div class="bp-status boarding">
+                  <span class="bp-status-dot"></span>
+                  BOARDING
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. Instruction -->
+        <div class="bp-instruction">입장 시 파트너에게 이 화면을 보여주세요</div>
+        <div class="bp-warning">스크린샷은 입장에 사용할 수 없습니다</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════ -->
+<!-- Screen 3: TO-BE — Future (CONFIRMED)           -->
+<!-- ════════════════════════════════════════════════ -->
+<div>
+  <div class="screen-label">TO-BE: 미래 이벤트 (CONFIRMED)</div>
+  <div class="screen-sublabel">D-3 — 예약 확인 상태</div>
+  <div class="phone-frame">
+    <div class="screen">
+      <div class="appbar">
+        <div class="appbar-back">←</div>
+        <div class="appbar-title">내 티켓</div>
+      </div>
+      <div class="boarding-pass-container">
+        <div class="boarding-pass">
+          <div class="bp-header">
+            <div class="bp-header-logo">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="79 97.8 182 54.3" height="22">
+                <g fill="#FFFFFF" transform="translate(80.8,99.6)">
+                  <g transform="scale(1)">
+                    <g stroke="none">
+                      <path d="M45.28-33.05L38.2 0 26.65 0 31.44-22.48 19.1 0 12.02 0 9.68-23.27 4.68 0 0 0 7.03-33.05 20.3-33.05 21.91-14.42 31.91-33.05 45.28-33.05ZM58.81-22.38L53.97 0 43.41 0 48.14-22.38 58.81-22.38ZM60.17-29.2Q60.17-28 59.67-27.12 59.18-26.23 58.37-25.61 57.57-24.98 56.52-24.67 55.48-24.36 54.39-24.36 52.31-24.36 50.9-25.35 49.5-26.34 49.5-28.47 49.5-29.62 49.97-30.53 50.43-31.44 51.24-32.04 52.05-32.63 53.11-32.95 54.18-33.26 55.33-33.26 57.36-33.26 58.76-32.27 60.17-31.28 60.17-29.2ZM72.82-19.05L73.13-19.05Q74.22-20.09 75.57-20.98 76.77-21.7 78.38-22.33 80-22.95 81.98-22.95 84.68-22.95 86.45-21.57 88.22-20.19 88.22-17.8 88.22-17.12 88.07-16.16 87.91-15.2 87.7-14.16 87.49-13.12 87.26-12.05 87.02-10.98 86.87-10.15L84.68 0 74.12 0 76.98-13.58Q77.08-14.26 77.24-14.96 77.4-15.67 77.4-16.24 77.4-17.02 77-17.51 76.61-18.01 75.83-18.01 74.9-18.01 74.04-17.33 73.18-16.66 72.71-16.19L69.28 0 58.66 0 63.39-22.38 71.88-22.38 72.82-19.05ZM108.57-19L110.91-22.38 119.35-22.38 115.08-2.13Q114.61 0.21 113.52 2.19 112.42 4.16 110.47 5.62 108.52 7.08 105.58 7.91 102.64 8.74 98.42 8.74 97.64 8.74 96.55 8.72 95.46 8.69 94.31 8.67 93.17 8.64 92.12 8.59 91.08 8.54 90.46 8.48L91.45 4.74Q93.11 5 94.86 5.02 96.6 5.05 97.85 5.05 99.41 5.05 100.48 4.76 101.55 4.48 102.25 3.85 102.95 3.23 103.39 2.19 103.84 1.15 104.1-0.36L104.72-3.75 104.36-3.75Q104.04-3.28 103.45-2.63 102.85-1.98 101.91-1.38 100.97-0.78 99.7-0.39 98.42 0 96.81 0 94.99 0 93.71-0.55 92.44-1.09 91.66-2.06 90.88-3.02 90.51-4.35 90.15-5.67 90.15-7.23 90.15-7.91 90.25-9.32 90.36-10.72 90.75-12.49 91.14-14.26 91.89-16.11 92.65-17.96 93.92-19.47 95.2-20.98 97.1-21.96 99-22.95 101.7-22.95 102.53-22.95 103.52-22.8 104.51-22.64 105.45-22.22 106.39-21.81 107.11-21.03 107.84-20.25 108.26-19L108.57-19ZM105.08-17.85Q103.84-17.85 103-16.53 102.17-15.2 101.65-13.43 101.13-11.66 100.89-9.92 100.66-8.17 100.66-7.34 100.66-6.3 101-5.6 101.34-4.89 102.22-4.89 102.74-4.89 103.24-5.15 103.73-5.41 104.17-5.75 104.62-6.09 104.95-6.45 105.29-6.82 105.45-7.03L107.37-16.13Q106.96-16.71 106.41-17.28 105.87-17.85 105.08-17.85ZM137.3-34.98L129.86 0 119.24 0 126.63-34.98 137.3-34.98ZM149.9-22.38L145.06 0 134.49 0 139.23-22.38 149.9-22.38ZM151.25-29.2Q151.25-28 150.76-27.12 150.26-26.23 149.46-25.61 148.65-24.98 147.61-24.67 146.57-24.36 145.47-24.36 143.39-24.36 141.99-25.35 140.58-26.34 140.58-28.47 140.58-29.62 141.05-30.53 141.52-31.44 142.33-32.04 143.13-32.63 144.2-32.95 145.27-33.26 146.41-33.26 148.44-33.26 149.85-32.27 151.25-31.28 151.25-29.2ZM151.93-18.89L152.66-22.38Q154.58-22.8 156.04-23.32 157.5-23.84 158.72-24.62 159.94-25.4 161.06-26.54 162.18-27.69 163.48-29.36L168.84-29.36 167.33-22.38 171.39-22.38 170.72-18.89 166.61-18.89 164.47-8.74Q164.21-7.55 164.06-6.61 163.9-5.67 163.9-5.15 163.9-4.11 164.65-3.85 165.41-3.59 167.49-3.59L166.71 0Q166.35 0.1 165.59 0.16 164.84 0.21 163.93 0.29 163.01 0.36 162.05 0.39 161.09 0.42 160.36 0.42 159.06 0.42 157.81 0.23 156.56 0.05 155.57-0.49 154.58-1.04 153.98-2.08 153.39-3.12 153.39-4.89 153.39-5.52 153.46-6.45 153.54-7.39 153.8-8.54L155.99-18.89 151.93-18.89Z" transform="translate(0, 34.98)"/>
+                    </g>
+                  </g>
+                </g>
+              </svg>
+            </div>
+            <div class="bp-header-right">
+              <div class="bp-header-pass-label">BOARDING PASS</div>
+              <div class="bp-header-pass-label-ko">입장권</div>
+            </div>
+          </div>
+
+          <div class="bp-info">
+            <div class="bp-flight-row">
+              <div class="bp-flight-col">
+                <div class="bp-label">DATE</div>
+                <div class="bp-date">4월 28일 (월)</div>
+                <div class="bp-time">20:00</div>
+              </div>
+              <div class="bp-arrow">
+                <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+              </div>
+              <div class="bp-flight-col right">
+                <div class="bp-label">VENUE</div>
+                <div class="bp-venue">홍대 루프탑바</div>
+                <div class="bp-venue-detail">서울 마포구</div>
+              </div>
+            </div>
+            <div class="bp-event-title-area">
+              <div class="bp-event-title">월요일 밤 네트워킹 파티</div>
+              <div class="bp-ticket-type">TICKET · VIP 입장권</div>
+            </div>
+          </div>
+
+          <div class="bp-perforation">
+            <div class="bp-perforation-line"></div>
+          </div>
+
+          <div class="bp-stub">
+            <div class="bp-qr-container">
+              <div class="bp-qr">
+                <div class="bp-qr-pattern"></div>
+                <div class="bp-qr-logo">
+                  <span class="bp-qr-logo-icon">M</span>
+                </div>
+                <div class="bp-scan-line"></div>
+              </div>
+            </div>
+            <div class="bp-meta-row">
+              <div class="bp-meta-item">
+                <div class="bp-meta-label">TICKET NO.</div>
+                <div class="bp-meta-value">#TK-2026-0428</div>
+              </div>
+              <div class="bp-meta-item right">
+                <div class="bp-meta-label">STATUS</div>
+                <div class="bp-status confirmed">CONFIRMED</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bp-instruction">입장 시 파트너에게 이 화면을 보여주세요</div>
+        <div class="bp-warning">스크린샷은 입장에 사용할 수 없습니다</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════ -->
+<!-- Screen 4: TO-BE — Past event (USED)            -->
+<!-- ════════════════════════════════════════════════ -->
+<div>
+  <div class="screen-label">TO-BE: 지난 이벤트 (USED)</div>
+  <div class="screen-sublabel">종료 — 사용 완료 상태</div>
+  <div class="phone-frame">
+    <div class="screen">
+      <div class="appbar">
+        <div class="appbar-back">←</div>
+        <div class="appbar-title">내 티켓</div>
+      </div>
+      <div class="boarding-pass-container">
+        <div class="boarding-pass used">
+          <div class="bp-header">
+            <div class="bp-header-logo">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="79 97.8 182 54.3" height="22">
+                <g fill="#FFFFFF" transform="translate(80.8,99.6)">
+                  <g transform="scale(1)">
+                    <g stroke="none">
+                      <path d="M45.28-33.05L38.2 0 26.65 0 31.44-22.48 19.1 0 12.02 0 9.68-23.27 4.68 0 0 0 7.03-33.05 20.3-33.05 21.91-14.42 31.91-33.05 45.28-33.05ZM58.81-22.38L53.97 0 43.41 0 48.14-22.38 58.81-22.38ZM60.17-29.2Q60.17-28 59.67-27.12 59.18-26.23 58.37-25.61 57.57-24.98 56.52-24.67 55.48-24.36 54.39-24.36 52.31-24.36 50.9-25.35 49.5-26.34 49.5-28.47 49.5-29.62 49.97-30.53 50.43-31.44 51.24-32.04 52.05-32.63 53.11-32.95 54.18-33.26 55.33-33.26 57.36-33.26 58.76-32.27 60.17-31.28 60.17-29.2ZM72.82-19.05L73.13-19.05Q74.22-20.09 75.57-20.98 76.77-21.7 78.38-22.33 80-22.95 81.98-22.95 84.68-22.95 86.45-21.57 88.22-20.19 88.22-17.8 88.22-17.12 88.07-16.16 87.91-15.2 87.7-14.16 87.49-13.12 87.26-12.05 87.02-10.98 86.87-10.15L84.68 0 74.12 0 76.98-13.58Q77.08-14.26 77.24-14.96 77.4-15.67 77.4-16.24 77.4-17.02 77-17.51 76.61-18.01 75.83-18.01 74.9-18.01 74.04-17.33 73.18-16.66 72.71-16.19L69.28 0 58.66 0 63.39-22.38 71.88-22.38 72.82-19.05ZM108.57-19L110.91-22.38 119.35-22.38 115.08-2.13Q114.61 0.21 113.52 2.19 112.42 4.16 110.47 5.62 108.52 7.08 105.58 7.91 102.64 8.74 98.42 8.74 97.64 8.74 96.55 8.72 95.46 8.69 94.31 8.67 93.17 8.64 92.12 8.59 91.08 8.54 90.46 8.48L91.45 4.74Q93.11 5 94.86 5.02 96.6 5.05 97.85 5.05 99.41 5.05 100.48 4.76 101.55 4.48 102.25 3.85 102.95 3.23 103.39 2.19 103.84 1.15 104.1-0.36L104.72-3.75 104.36-3.75Q104.04-3.28 103.45-2.63 102.85-1.98 101.91-1.38 100.97-0.78 99.7-0.39 98.42 0 96.81 0 94.99 0 93.71-0.55 92.44-1.09 91.66-2.06 90.88-3.02 90.51-4.35 90.15-5.67 90.15-7.23 90.15-7.91 90.25-9.32 90.36-10.72 90.75-12.49 91.14-14.26 91.89-16.11 92.65-17.96 93.92-19.47 95.2-20.98 97.1-21.96 99-22.95 101.7-22.95 102.53-22.95 103.52-22.8 104.51-22.64 105.45-22.22 106.39-21.81 107.11-21.03 107.84-20.25 108.26-19L108.57-19ZM105.08-17.85Q103.84-17.85 103-16.53 102.17-15.2 101.65-13.43 101.13-11.66 100.89-9.92 100.66-8.17 100.66-7.34 100.66-6.3 101-5.6 101.34-4.89 102.22-4.89 102.74-4.89 103.24-5.15 103.73-5.41 104.17-5.75 104.62-6.09 104.95-6.45 105.29-6.82 105.45-7.03L107.37-16.13Q106.96-16.71 106.41-17.28 105.87-17.85 105.08-17.85ZM137.3-34.98L129.86 0 119.24 0 126.63-34.98 137.3-34.98ZM149.9-22.38L145.06 0 134.49 0 139.23-22.38 149.9-22.38ZM151.25-29.2Q151.25-28 150.76-27.12 150.26-26.23 149.46-25.61 148.65-24.98 147.61-24.67 146.57-24.36 145.47-24.36 143.39-24.36 141.99-25.35 140.58-26.34 140.58-28.47 140.58-29.62 141.05-30.53 141.52-31.44 142.33-32.04 143.13-32.63 144.2-32.95 145.27-33.26 146.41-33.26 148.44-33.26 149.85-32.27 151.25-31.28 151.25-29.2ZM151.93-18.89L152.66-22.38Q154.58-22.8 156.04-23.32 157.5-23.84 158.72-24.62 159.94-25.4 161.06-26.54 162.18-27.69 163.48-29.36L168.84-29.36 167.33-22.38 171.39-22.38 170.72-18.89 166.61-18.89 164.47-8.74Q164.21-7.55 164.06-6.61 163.9-5.67 163.9-5.15 163.9-4.11 164.65-3.85 165.41-3.59 167.49-3.59L166.71 0Q166.35 0.1 165.59 0.16 164.84 0.21 163.93 0.29 163.01 0.36 162.05 0.39 161.09 0.42 160.36 0.42 159.06 0.42 157.81 0.23 156.56 0.05 155.57-0.49 154.58-1.04 153.98-2.08 153.39-3.12 153.39-4.89 153.39-5.52 153.46-6.45 153.54-7.39 153.8-8.54L155.99-18.89 151.93-18.89Z" transform="translate(0, 34.98)"/>
+                    </g>
+                  </g>
+                </g>
+              </svg>
+            </div>
+            <div class="bp-header-right">
+              <div class="bp-header-pass-label">BOARDING PASS</div>
+              <div class="bp-header-pass-label-ko">입장권</div>
+            </div>
+          </div>
+
+          <div class="bp-info">
+            <div class="bp-flight-row">
+              <div class="bp-flight-col">
+                <div class="bp-label">DATE</div>
+                <div class="bp-date">4월 15일 (화)</div>
+                <div class="bp-time">18:30</div>
+              </div>
+              <div class="bp-arrow">
+                <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+              </div>
+              <div class="bp-flight-col right">
+                <div class="bp-label">VENUE</div>
+                <div class="bp-venue">이태원 카페바</div>
+                <div class="bp-venue-detail">서울 용산구</div>
+              </div>
+            </div>
+            <div class="bp-event-title-area">
+              <div class="bp-event-title">화요일 저녁 독서 모임</div>
+              <div class="bp-ticket-type">TICKET · 일반 입장권</div>
+            </div>
+          </div>
+
+          <div class="bp-perforation">
+            <div class="bp-perforation-line"></div>
+          </div>
+
+          <div class="bp-stub">
+            <div class="bp-qr-container">
+              <div class="bp-qr">
+                <div class="bp-qr-pattern"></div>
+                <div class="bp-qr-logo">
+                  <span class="bp-qr-logo-icon">M</span>
+                </div>
+              </div>
+            </div>
+            <div class="bp-meta-row">
+              <div class="bp-meta-item">
+                <div class="bp-meta-label">TICKET NO.</div>
+                <div class="bp-meta-value">#TK-2026-0415</div>
+              </div>
+              <div class="bp-meta-item right">
+                <div class="bp-meta-label">STATUS</div>
+                <div class="bp-status used">USED</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bp-instruction">이 티켓은 이미 사용되었습니다</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════ -->
+<!-- Screen 5: Loading Skeleton                     -->
+<!-- ════════════════════════════════════════════════ -->
+<div>
+  <div class="screen-label">로딩 상태 (Skeleton)</div>
+  <div class="screen-sublabel">티켓 토큰 로딩 중</div>
+  <div class="phone-frame">
+    <div class="screen">
+      <div class="appbar">
+        <div class="appbar-back">←</div>
+        <div class="appbar-title">내 티켓</div>
+      </div>
+      <div class="boarding-pass-container">
+        <div class="boarding-pass">
+          <div class="bp-header">
+            <div class="bp-header-logo">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="79 97.8 182 54.3" height="22">
+                <g fill="#FFFFFF" transform="translate(80.8,99.6)">
+                  <g transform="scale(1)">
+                    <g stroke="none">
+                      <path d="M45.28-33.05L38.2 0 26.65 0 31.44-22.48 19.1 0 12.02 0 9.68-23.27 4.68 0 0 0 7.03-33.05 20.3-33.05 21.91-14.42 31.91-33.05 45.28-33.05ZM58.81-22.38L53.97 0 43.41 0 48.14-22.38 58.81-22.38ZM60.17-29.2Q60.17-28 59.67-27.12 59.18-26.23 58.37-25.61 57.57-24.98 56.52-24.67 55.48-24.36 54.39-24.36 52.31-24.36 50.9-25.35 49.5-26.34 49.5-28.47 49.5-29.62 49.97-30.53 50.43-31.44 51.24-32.04 52.05-32.63 53.11-32.95 54.18-33.26 55.33-33.26 57.36-33.26 58.76-32.27 60.17-31.28 60.17-29.2ZM72.82-19.05L73.13-19.05Q74.22-20.09 75.57-20.98 76.77-21.7 78.38-22.33 80-22.95 81.98-22.95 84.68-22.95 86.45-21.57 88.22-20.19 88.22-17.8 88.22-17.12 88.07-16.16 87.91-15.2 87.7-14.16 87.49-13.12 87.26-12.05 87.02-10.98 86.87-10.15L84.68 0 74.12 0 76.98-13.58Q77.08-14.26 77.24-14.96 77.4-15.67 77.4-16.24 77.4-17.02 77-17.51 76.61-18.01 75.83-18.01 74.9-18.01 74.04-17.33 73.18-16.66 72.71-16.19L69.28 0 58.66 0 63.39-22.38 71.88-22.38 72.82-19.05ZM108.57-19L110.91-22.38 119.35-22.38 115.08-2.13Q114.61 0.21 113.52 2.19 112.42 4.16 110.47 5.62 108.52 7.08 105.58 7.91 102.64 8.74 98.42 8.74 97.64 8.74 96.55 8.72 95.46 8.69 94.31 8.67 93.17 8.64 92.12 8.59 91.08 8.54 90.46 8.48L91.45 4.74Q93.11 5 94.86 5.02 96.6 5.05 97.85 5.05 99.41 5.05 100.48 4.76 101.55 4.48 102.25 3.85 102.95 3.23 103.39 2.19 103.84 1.15 104.1-0.36L104.72-3.75 104.36-3.75Q104.04-3.28 103.45-2.63 102.85-1.98 101.91-1.38 100.97-0.78 99.7-0.39 98.42 0 96.81 0 94.99 0 93.71-0.55 92.44-1.09 91.66-2.06 90.88-3.02 90.51-4.35 90.15-5.67 90.15-7.23 90.15-7.91 90.25-9.32 90.36-10.72 90.75-12.49 91.14-14.26 91.89-16.11 92.65-17.96 93.92-19.47 95.2-20.98 97.1-21.96 99-22.95 101.7-22.95 102.53-22.95 103.52-22.8 104.51-22.64 105.45-22.22 106.39-21.81 107.11-21.03 107.84-20.25 108.26-19L108.57-19ZM105.08-17.85Q103.84-17.85 103-16.53 102.17-15.2 101.65-13.43 101.13-11.66 100.89-9.92 100.66-8.17 100.66-7.34 100.66-6.3 101-5.6 101.34-4.89 102.22-4.89 102.74-4.89 103.24-5.15 103.73-5.41 104.17-5.75 104.62-6.09 104.95-6.45 105.29-6.82 105.45-7.03L107.37-16.13Q106.96-16.71 106.41-17.28 105.87-17.85 105.08-17.85ZM137.3-34.98L129.86 0 119.24 0 126.63-34.98 137.3-34.98ZM149.9-22.38L145.06 0 134.49 0 139.23-22.38 149.9-22.38ZM151.25-29.2Q151.25-28 150.76-27.12 150.26-26.23 149.46-25.61 148.65-24.98 147.61-24.67 146.57-24.36 145.47-24.36 143.39-24.36 141.99-25.35 140.58-26.34 140.58-28.47 140.58-29.62 141.05-30.53 141.52-31.44 142.33-32.04 143.13-32.63 144.2-32.95 145.27-33.26 146.41-33.26 148.44-33.26 149.85-32.27 151.25-31.28 151.25-29.2ZM151.93-18.89L152.66-22.38Q154.58-22.8 156.04-23.32 157.5-23.84 158.72-24.62 159.94-25.4 161.06-26.54 162.18-27.69 163.48-29.36L168.84-29.36 167.33-22.38 171.39-22.38 170.72-18.89 166.61-18.89 164.47-8.74Q164.21-7.55 164.06-6.61 163.9-5.67 163.9-5.15 163.9-4.11 164.65-3.85 165.41-3.59 167.49-3.59L166.71 0Q166.35 0.1 165.59 0.16 164.84 0.21 163.93 0.29 163.01 0.36 162.05 0.39 161.09 0.42 160.36 0.42 159.06 0.42 157.81 0.23 156.56 0.05 155.57-0.49 154.58-1.04 153.98-2.08 153.39-3.12 153.39-4.89 153.39-5.52 153.46-6.45 153.54-7.39 153.8-8.54L155.99-18.89 151.93-18.89Z" transform="translate(0, 34.98)"/>
+                    </g>
+                  </g>
+                </g>
+              </svg>
+            </div>
+            <div class="bp-header-right">
+              <div class="bp-header-pass-label">BOARDING PASS</div>
+              <div class="bp-header-pass-label-ko">입장권</div>
+            </div>
+          </div>
+
+          <div class="bp-info">
+            <div class="bp-flight-row">
+              <div class="bp-flight-col">
+                <div class="bp-label">DATE</div>
+                <div class="skeleton" style="width: 100px; height: 20px; margin-bottom: 4px;"></div>
+                <div class="skeleton" style="width: 70px; height: 32px;"></div>
+              </div>
+              <div class="bp-arrow" style="visibility: hidden;">
+                <svg width="24" height="24"><path/></svg>
+              </div>
+              <div class="bp-flight-col right">
+                <div class="bp-label">VENUE</div>
+                <div class="skeleton" style="width: 100px; height: 20px; margin-left: auto; margin-bottom: 4px;"></div>
+                <div class="skeleton" style="width: 70px; height: 16px; margin-left: auto;"></div>
+              </div>
+            </div>
+            <div class="bp-event-title-area">
+              <div class="skeleton" style="width: 200px; height: 24px; margin: 0 auto 8px;"></div>
+              <div class="skeleton" style="width: 120px; height: 16px; margin: 0 auto;"></div>
+            </div>
+          </div>
+
+          <div class="bp-perforation">
+            <div class="bp-perforation-line"></div>
+          </div>
+
+          <div class="bp-stub">
+            <div class="bp-qr-container">
+              <div class="bp-qr" style="border: none;">
+                <div class="skeleton" style="width: 200px; height: 200px; border-radius: 8px;"></div>
+              </div>
+            </div>
+            <div class="bp-meta-row">
+              <div class="bp-meta-item">
+                <div class="bp-meta-label">TICKET NO.</div>
+                <div class="skeleton" style="width: 100px; height: 14px; margin-top: 4px;"></div>
+              </div>
+              <div class="bp-meta-item right">
+                <div class="bp-meta-label">STATUS</div>
+                <div class="skeleton" style="width: 80px; height: 14px; margin-top: 4px; margin-left: auto;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
