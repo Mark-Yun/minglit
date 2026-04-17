@@ -132,7 +132,8 @@
     "optional": {
       "STATSIG_SERVER_KEY": { "desc": "Statsig server" },
       "AXIOM_API_TOKEN": { "desc": "Axiom logging" },
-      "CODECOV_TOKEN": { "desc": "Codecov upload" }
+      "CODECOV_TOKEN": { "desc": "Codecov upload" },
+      "SIM_USER_PASSWORD": { "desc": "Dev simulator user password (backend-simulator EF 전용)" }
     }
   },
 
