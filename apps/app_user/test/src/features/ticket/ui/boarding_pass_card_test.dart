@@ -143,7 +143,10 @@ void main() {
     testWidgets('긴 이벤트명 (50자+) — 크래시 없고 말줄임 적용', (tester) async {
       final longTitle = 'A' * 55;
       await tester.pumpWidget(
-        _wrap(token: _makeToken(), eventMeta: _makeMeta(title: longTitle)),
+        _wrap(
+          token: _makeToken(),
+          eventMeta: _makeMeta(title: longTitle),
+        ),
       );
       await tester.pump();
 
@@ -152,7 +155,10 @@ void main() {
 
     testWidgets('긴 장소명 — 크래시 없고 말줄임 적용', (tester) async {
       await tester.pumpWidget(
-        _wrap(token: _makeToken(), eventMeta: _makeMeta(venue: 'B' * 40)),
+        _wrap(
+          token: _makeToken(),
+          eventMeta: _makeMeta(venue: 'B' * 40),
+        ),
       );
       await tester.pump();
 
@@ -234,9 +240,7 @@ void main() {
         // more reliable in headless test environments.
         expect(
           find.byWidgetPredicate(
-            (w) =>
-                w is Semantics &&
-                w.properties.label == '이벤트 입장 QR 코드',
+            (w) => w is Semantics && w.properties.label == '이벤트 입장 QR 코드',
           ),
           findsOneWidget,
         );
