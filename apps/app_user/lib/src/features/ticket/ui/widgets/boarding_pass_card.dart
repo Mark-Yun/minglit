@@ -92,7 +92,7 @@ class _BoardingPassCardState extends State<BoardingPassCard>
           borderRadius: BorderRadius.circular(MinglitRadius.card),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.12),
+              color: Colors.black.withValues(alpha: MinglitOpacity.shadowMd),
               blurRadius: 20,
               offset: const Offset(0, 6),
             ),
@@ -146,7 +146,7 @@ class _HeaderStrip extends StatelessWidget {
           // White logo — ColorFiltered wraps the themed SVG
           ColorFiltered(
             colorFilter: const ColorFilter.mode(
-              Colors.white,
+              MinglitColors.background,
               BlendMode.srcIn,
             ),
             child: MinglitTheme.appBarLogo(height: 24),
@@ -159,7 +159,7 @@ class _HeaderStrip extends StatelessWidget {
               const Text(
                 'BOARDING PASS',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: MinglitColors.background,
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 2,
@@ -168,7 +168,9 @@ class _HeaderStrip extends StatelessWidget {
               Text(
                 '입장권',
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.7),
+                  color: MinglitColors.background.withValues(
+                    alpha: MinglitOpacity.scrimDark,
+                  ),
                   fontSize: 10,
                   fontWeight: FontWeight.w500,
                 ),
@@ -369,7 +371,7 @@ class _PerforationLine extends StatelessWidget {
             child: CustomPaint(
               painter: _DashLinePainter(
                 notchRadius: _notchRadius,
-                dashColor: Color(0xFFE5E7EB),
+                dashColor: MinglitColors.divider,
               ),
             ),
           ),

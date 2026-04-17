@@ -40,6 +40,11 @@ class MinglitColors {
   /// Fully transparent color.
   static const transparent = Color(0x00000000);
 
+  /// Light theme border/divider separator color.
+  static const divider = Color(
+    0xFFE5E7EB,
+  ); // ignore: minglit_no_hardcoded_colors -- light divider token
+
   /// Semi-transparent black scrim for overlays.
   static const scrim = Color(0x80000000);
 
@@ -110,9 +115,7 @@ class MinglitColorSet {
     secondary: MinglitColors.secondary,
     textPrimary: MinglitColors.textPrimary,
     textSecondary: MinglitColors.textSecondary,
-    divider: Color(
-      0xFFE5E7EB,
-    ), // ignore: minglit_no_hardcoded_colors -- light divider token
+    divider: MinglitColors.divider,
     success: MinglitColors.success,
     info: MinglitColors.info,
     warning: MinglitColors.warning,
@@ -283,6 +286,9 @@ class MinglitOpacity {
 
   /// 3% opacity — soft elevated shadow.
   static const double shadowSm = 0.03;
+
+  /// 12% opacity — medium-depth card shadow.
+  static const double shadowMd = 0.12;
 
   /// 4% opacity — shimmer highlight.
   static const double shimmerHighlight = 0.04;

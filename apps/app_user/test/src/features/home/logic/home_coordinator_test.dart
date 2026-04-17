@@ -146,11 +146,14 @@ void main() {
       test('eventMeta 없이 호출하면 extra=null로 전달한다', () {
         HomeCoordinator(mockRouter).pushTicketQR('ticket-456');
 
-        verify(
+        final captured = verify(
           () => mockRouter.push(
             any(that: contains('ticket-456')),
+            extra: captureAny(named: 'extra'),
           ),
-        ).called(1);
+        ).captured;
+
+        expect(captured.single, isNull);
       });
     });
   });
