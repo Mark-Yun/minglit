@@ -149,7 +149,6 @@ void main() {
         verify(
           () => mockRouter.push(
             any(that: contains('ticket-456')),
-            extra: null,
           ),
         ).called(1);
       });
