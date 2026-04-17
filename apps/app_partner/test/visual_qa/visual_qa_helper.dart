@@ -139,5 +139,4 @@ extension VisualQaTester on WidgetTester {
     if (!dir.existsSync()) dir.createSync(recursive: true);
     return File('${dir.path}/$filename');
   }
-
 }
