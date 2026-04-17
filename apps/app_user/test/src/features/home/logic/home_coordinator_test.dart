@@ -1,4 +1,5 @@
 import 'package:app_user/src/features/home/logic/home_coordinator.dart';
+import 'package:app_user/src/features/ticket/ui/model/ticket_event_meta.dart';
 import 'package:app_user/src/routing/app_router.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -111,6 +112,49 @@ void main() {
       verify(
         () => mockRouter.push(any(that: contains('p_1'))),
       ).called(1);
+    });
+
+    // Fix #1526: pushTicketQR는 eventMeta를 GoRouter.push의 extra로 전달해야 한다.
+    // app_routes.g.dart의 _fromState가 state.extra를 드롭하면 이 테스트가 실패한다.
+    group('pushTicketQR', () {
+      setUp(() {
+        when(
+          () => mockRouter.push(any(), extra: any(named: 'extra')),
+        ).thenAnswer((_) async => null);
+      });
+
+      test('eventMeta를 GoRouter extra로 전달한다', () {
+        final meta = TicketEventMeta(
+          eventTitle: '테스트 이벤트',
+          eventDateTime: DateTime(2026, 5, 1, 18),
+          eventVenue: '강남 라운지',
+          ticketName: '일반 입장권',
+        );
+
+        HomeCoordinator(mockRouter).pushTicketQR('ticket-123', eventMeta: meta);
+
+        final captured = verify(
+          () => mockRouter.push(
+            any(that: contains('ticket-123')),
+            extra: captureAny(named: 'extra'),
+          ),
+        ).captured;
+
+        expect(captured.single, same(meta));
+      });
+
+      test('eventMeta 없이 호출하면 extra=null로 전달한다', () {
+        HomeCoordinator(mockRouter).pushTicketQR('ticket-456');
+
+        final captured = verify(
+          () => mockRouter.push(
+            any(that: contains('ticket-456')),
+            extra: captureAny(named: 'extra'),
+          ),
+        ).captured;
+
+        expect(captured.single, isNull);
+      });
     });
   });
 }

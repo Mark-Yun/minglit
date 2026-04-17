@@ -331,8 +331,10 @@ RouteBase get $ticketQRRoute => GoRouteData.$route(
 );
 
 mixin $TicketQRRoute on GoRouteData {
-  static TicketQRRoute _fromState(GoRouterState state) =>
-      TicketQRRoute(ticketId: state.pathParameters['ticketId']!);
+  static TicketQRRoute _fromState(GoRouterState state) => TicketQRRoute(
+    ticketId: state.pathParameters['ticketId']!,
+    $extra: state.extra as TicketEventMeta?,
+  );
 
   TicketQRRoute get _self => this as TicketQRRoute;
 
@@ -342,17 +344,19 @@ mixin $TicketQRRoute on GoRouteData {
   );
 
   @override
-  void go(BuildContext context) => context.go(location);
+  void go(BuildContext context) => context.go(location, extra: _self.$extra);
 
   @override
-  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+  Future<T?> push<T>(BuildContext context) =>
+      context.push<T>(location, extra: _self.$extra);
 
   @override
   void pushReplacement(BuildContext context) =>
-      context.pushReplacement(location);
+      context.pushReplacement(location, extra: _self.$extra);
 
   @override
-  void replace(BuildContext context) => context.replace(location);
+  void replace(BuildContext context) =>
+      context.replace(location, extra: _self.$extra);
 }
 
 RouteBase get $purchaseHistoryRoute => GoRouteData.$route(
