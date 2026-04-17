@@ -185,9 +185,11 @@ Deno.serve(withHandler(async (req) => {
         throw e;
       }
 
-      // Update DB: refund_status + refund_amount
+      // Update DB: status=cancelled + refund_status + refund_amount
+      // Fix #1515: Set status='cancelled' so on_application_cancel trigger removes event_participants
       const refundAmount = paymentAmount ?? (cancelResponse.amount as number | undefined);
       const updatePayload: Record<string, unknown> = {
+        status: "cancelled",
         refund_status: "completed",
         updated_at: new Date().toISOString(),
       };

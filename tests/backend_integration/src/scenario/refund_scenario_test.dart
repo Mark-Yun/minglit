@@ -496,5 +496,67 @@ void main() {
       expect(app['refund_status'], equals('none'),
           reason: 'refund_status must not change after ineligible refund attempt');
     });
+
+    test(
+        'S05-007: 취소 시 event_participants 삭제 — on_application_cancel 트리거 검증 (Fix #1515)',
+        () async {
+      // Regression test for #1515:
+      // INV-03: When event_applications.status → 'cancelled',
+      // on_application_cancel trigger must DELETE the event_participants row.
+
+      final ctx = await _createEvent(
+        fromNow: const Duration(days: 10),
+        price: 0,
+      );
+
+      // 1. Create application with status='approved' (triggers issue_ticket_on_approval → inserts participant)
+      final appRes = await adminClient
+          .from('event_applications')
+          .insert({
+            'event_id': ctx.eventId,
+            'ticket_id': ctx.ticketId,
+            'user_id': testUserId,
+            'status': 'approved',
+            'payment_amount': 0,
+            'refund_status': 'none',
+          })
+          .select()
+          .single();
+      final appId = appRes['id'] as String;
+
+      // 2. Wait for trigger: issue_ticket_on_approval inserts event_participants on status='approved'
+      final participantsBefore = await adminClient
+          .from('event_participants')
+          .select('id')
+          .eq('event_id', ctx.eventId)
+          .eq('user_id', testUserId);
+      expect(participantsBefore, isNotEmpty,
+          reason:
+              'Pre-condition: issue_ticket_on_approval should have inserted event_participants on approved');
+
+      // 3. Cancel the application (simulates what user-cancel-order EF does for free events)
+      await adminClient
+          .from('event_applications')
+          .update({'status': 'cancelled'}).eq('id', appId);
+
+      // 4. Verify: on_application_cancel trigger deleted the event_participants row
+      final participantsAfter = await adminClient
+          .from('event_participants')
+          .select('id')
+          .eq('event_id', ctx.eventId)
+          .eq('user_id', testUserId);
+      expect(participantsAfter, isEmpty,
+          reason:
+              'event_participants row must be deleted when application is cancelled (on_application_cancel trigger)');
+
+      // 5. Verify: application status is cancelled
+      final cancelledApp = await adminClient
+          .from('event_applications')
+          .select('status')
+          .eq('id', appId)
+          .single();
+      expect(cancelledApp['status'], equals('cancelled'),
+          reason: 'application status must be cancelled');
+    });
   });
 }
