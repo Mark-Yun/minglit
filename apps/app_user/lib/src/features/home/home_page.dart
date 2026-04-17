@@ -180,7 +180,13 @@ class _HomePageState extends ConsumerState<HomePage> {
               data: (state) {
                 if (state.events.isEmpty && !state.hasMore) {
                   return const SliverFillRemaining(
-                    child: Center(child: Text('추천 이벤트가 없습니다')),
+                    child: Center(
+                      child: MinglitEmptyState(
+                        icon: Icons.explore_outlined,
+                        title: '추천 이벤트가 없습니다',
+                        subtitle: '주변 지역이나 다른 카테고리를 탐색해 보세요',
+                      ),
+                    ),
                   );
                 }
                 // First page fully filtered client-side: show loading while
