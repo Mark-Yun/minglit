@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:app_user/src/features/ticket/ui/model/ticket_event_meta.dart';
 import 'package:app_user/src/routing/app_router.dart';
 import 'package:app_user/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
@@ -56,8 +57,14 @@ class HomeCoordinator {
 
   // Fix #852: Navigate to ticket QR via coordinator
   // — removes cross-feature import
-  void pushTicketQR(String ticketId) {
-    unawaited(_router.push(TicketQRRoute(ticketId: ticketId).location));
+  // Fix #1526: eventMeta 추가 — 보딩패스 이벤트 정보 표시
+  void pushTicketQR(String ticketId, {TicketEventMeta? eventMeta}) {
+    unawaited(
+      _router.push(
+        TicketQRRoute(ticketId: ticketId).location,
+        extra: eventMeta,
+      ),
+    );
   }
 
   void pushEventDetail(String eventId) {

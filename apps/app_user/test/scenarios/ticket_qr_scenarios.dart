@@ -1,4 +1,5 @@
 import 'package:app_user/src/features/ticket/data/ticket_wallet_repository.dart';
+import 'package:app_user/src/features/ticket/ui/model/ticket_event_meta.dart';
 import 'package:app_user/src/features/ticket/ui/ticket_qr_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -10,7 +11,9 @@ class _MockTicketWalletRepository extends Mock
     implements TicketWalletRepository {}
 
 class TicketQRScenarios {
-  static final _now = DateTime(2026, 4, 1, 12);
+  // Fix #1526: 실행 시점 기준으로 계산 — 고정 날짜 사용 시 날짜가 지나면
+  // USED로 렌더링되어 시나리오 의도와 어긋남
+  static final _now = DateTime.now();
 
   static TicketToken get _token => TicketToken(
     ticketId: 'ticket-1',
@@ -18,6 +21,15 @@ class TicketQRScenarios {
     userId: 'user-1',
     signature: 'signed-token',
     expiresAt: _now.add(const Duration(hours: 3)),
+  );
+
+  // Fix #1526: TicketEventMeta 추가 — 보딩패스 이벤트 정보 표시
+  static TicketEventMeta get _eventMeta => TicketEventMeta(
+    eventTitle: '봄밤 와인 테이스팅',
+    // Future event → CONFIRMED badge
+    eventDateTime: _now.add(const Duration(days: 5)),
+    eventVenue: '강남 라운지바',
+    ticketName: '일반 입장권',
   );
 
   static List<dynamic> _validOverrides() {
@@ -37,7 +49,7 @@ class TicketQRScenarios {
   static List<ScreenshotScenario> get all => [
     ScreenshotScenario(
       name: 'ticket_qr_screen_valid',
-      page: const TicketQRScreen(ticketId: 'ticket-1'),
+      page: TicketQRScreen(ticketId: 'ticket-1', eventMeta: _eventMeta),
       overrides: _validOverrides(),
     ),
     ScreenshotScenario(
