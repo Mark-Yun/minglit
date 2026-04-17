@@ -75,7 +75,19 @@ BEGIN
   FROM public.event_participants
   WHERE event_id = v_event_id AND user_id = v_user_id;
 
-  -- Second cancel: WHEN (OLD.status IS DISTINCT FROM 'cancelled') prevents re-fire
+  -- Manually re-insert participant to verify the WHEN guard actually
+  -- prevents the trigger function from firing on cancelled → cancelled.
+  -- Without this sentinel row, count=0 would be trivially true even if
+  -- the trigger fired (nothing to delete), making the idempotency check meaningless.
+  INSERT INTO public.event_participants (
+    event_id, ticket_id, user_id, application_id, status, ticket_code
+  ) VALUES (
+    v_event_id, v_ticket_id, v_user_id, v_app_id, 'ticket_issued', 'IDMP0001'
+  );
+
+  -- Second cancel: WHEN (OLD.status IS DISTINCT FROM 'cancelled') prevents re-fire.
+  -- If the trigger fired, it would delete the sentinel row (count → 0).
+  -- If the WHEN guard works correctly, count stays 1.
   UPDATE public.event_applications SET status = 'cancelled' WHERE id = v_app_id;
 
   INSERT INTO cancel_trigger_results (test_case, participant_count)
@@ -98,11 +110,11 @@ SELECT is(
   'approved → cancelled: event_participants row deleted by on_application_cancel trigger'
 );
 
--- Idempotency: cancelled → cancelled is no-op
+-- Idempotency: cancelled → cancelled does not re-fire trigger (sentinel row survives)
 SELECT is(
   (SELECT participant_count FROM cancel_trigger_results WHERE test_case = 'after_second_cancel'),
-  0,
-  'cancelled → cancelled: WHEN clause prevents re-fire, no error, count stays 0'
+  1,
+  'cancelled → cancelled: WHEN clause prevents trigger re-fire, sentinel row preserved (count=1)'
 );
 
 -- ============================================================
