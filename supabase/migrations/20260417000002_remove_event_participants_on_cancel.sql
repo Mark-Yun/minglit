@@ -20,18 +20,20 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
-  -- Only fire when status transitions TO 'cancelled'
-  IF NEW.status = 'cancelled' AND (OLD.status IS DISTINCT FROM 'cancelled') THEN
-    DELETE FROM public.event_participants
-    WHERE event_id = NEW.event_id
-      AND user_id = NEW.user_id;
-  END IF;
+  DELETE FROM public.event_participants
+  WHERE event_id = NEW.event_id
+    AND user_id = NEW.user_id;
   RETURN NEW;
 END;
 $$;
 
 DROP TRIGGER IF EXISTS on_application_cancel ON public.event_applications;
 
+-- WHEN clause filters at the trigger level so remove_participant_on_cancel()
+-- is never invoked unless the row is actually transitioning to 'cancelled'.
+-- This avoids a function call on every event_applications UPDATE.
 CREATE TRIGGER on_application_cancel
   AFTER UPDATE ON public.event_applications
-  FOR EACH ROW EXECUTE FUNCTION public.remove_participant_on_cancel();
+  FOR EACH ROW
+  WHEN (NEW.status = 'cancelled' AND OLD.status IS DISTINCT FROM 'cancelled')
+  EXECUTE FUNCTION public.remove_participant_on_cancel();
