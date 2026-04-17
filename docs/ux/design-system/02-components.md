@@ -18,7 +18,7 @@
 | iconTheme.color | `#111827` (`MinglitColors.textPrimary`) | `#FFFFFF` (`MinglitColorsDark.textPrimary`) | :9 |
 | titleTextStyle.fontSize | 18 | 18 | :12 |
 | titleTextStyle.fontWeight | w600 | w600 | :13 |
-| titleTextStyle.fontFamily | NotoSansKR | NotoSansKR | :14 |
+| titleTextStyle.fontFamily | Pretendard | Pretendard | :14 |
 | titleTextStyle.color | `#111827` | `#FFFFFF` | :11 |
 
 Dark Mode 소스: `minglit_theme.dart:395-407`
@@ -66,11 +66,27 @@ Dark Mode 소스: `minglit_theme.dart:395-407`
 | textStyle.fontSize | 14 | :58 |
 | textStyle.fontWeight | bold | :59 |
 
-<!-- TODO: Destructive 버튼 (error 색상) 테마 정의 필요 -->
+---
+
+## 5. Button — Destructive (MinglitButton.destructive)
+
+**소스**: `minglit_kit/lib/src/ui/widgets/common/minglit_button.dart`
+
+| 속성 | 값 |
+| :--- | :--- |
+| backgroundColor | `colorScheme.error` (#EF4444) |
+| foregroundColor | `colorScheme.onError` (white) |
+| minimumSize | `infinity x 56` |
+| borderRadius | 12 (`MinglitRadius.button`) |
+| elevation | 0 |
+| textStyle.fontSize | 16 |
+| textStyle.fontWeight | bold |
+
+삭제, 탈퇴, 취소 등 비가역적 액션에 사용한다.
 
 ---
 
-## 5. Card
+## 6. Card
 
 **소스**: `minglit_component_theme.dart:64-71`
 
@@ -85,7 +101,7 @@ Dark Mode 소스: `minglit_theme.dart:411-418`
 
 ---
 
-## 6. Input Field — InputDecoration
+## 7. Input Field — InputDecoration
 
 **소스**: `minglit_component_theme.dart:73-94`
 
@@ -106,7 +122,7 @@ Dark Mode 소스: `minglit_theme.dart:419-443`
 
 ---
 
-## 7. Chip
+## 8. Chip
 
 **소스**: `minglit_component_theme.dart:96-106`
 
@@ -122,7 +138,7 @@ Dark Mode 소스: `minglit_theme.dart:444-454`
 
 ---
 
-## 8. Checkbox
+## 9. Checkbox
 
 **소스**: `minglit_component_theme.dart:108-122`
 
@@ -136,7 +152,7 @@ Dark Mode 소스: `minglit_theme.dart:444-454`
 
 ---
 
-## 9. TabBar
+## 10. TabBar
 
 **소스**: `minglit_component_theme.dart:124-142`
 
@@ -147,12 +163,12 @@ Dark Mode 소스: `minglit_theme.dart:444-454`
 | indicatorColor | `#9900FF` (`MinglitColors.primary`) | :127 |
 | indicatorSize | tab | :128 |
 | dividerColor | transparent | :129 |
-| labelStyle | 14px / bold / NotoSansKR | :130-134 |
-| unselectedLabelStyle | 14px / w500 / NotoSansKR | :136-140 |
+| labelStyle | 14px / bold / Pretendard | :130-134 |
+| unselectedLabelStyle | 14px / w500 / Pretendard | :136-140 |
 
 ---
 
-## 10. Divider
+## 11. Divider
 
 **소스**: `minglit_component_theme.dart:144-151`
 
@@ -166,7 +182,7 @@ Dark Mode 소스: `minglit_theme.dart:457-461`
 
 ---
 
-## 11. Dialog / Alert
+## 12. Dialog / Alert
 
 **소스**: `minglit_kit/lib/src/ui/widgets/common/minglit_alert.dart`, `minglit_dialog.dart`
 
@@ -190,7 +206,7 @@ Dark Mode 소스: `minglit_theme.dart:457-461`
 
 ---
 
-## 12. BottomSheet
+## 13. BottomSheet
 
 **기본 스타일**: `BottomSheetThemeData` 별도 설정 없음 — Flutter 기본 `showModalBottomSheet` 스타일 적용.
 
@@ -204,7 +220,7 @@ Dark Mode 소스: `minglit_theme.dart:457-461`
 
 ---
 
-## 13. Badge / Tag
+## 14. Badge / Tag
 
 <!-- TODO: 커스텀 Badge/Tag 컴포넌트 테마 정의 필요. 현재는 Chip 기반으로 사용 중. -->
 
@@ -212,11 +228,21 @@ Dark Mode 소스: `minglit_theme.dart:457-461`
 
 ---
 
-## 14. Toast / Snackbar
+## 15. Toast / Snackbar
 
-<!-- TODO: SnackBarTheme 정의가 minglit_component_theme.dart에 없음. 별도 SnackBar 테마 추가 필요. -->
+**소스**: `minglit_component_theme.dart:152-165`
 
-현재 코드에 `SnackBarTheme` 설정이 없습니다. Flutter 기본 SnackBar 스타일이 적용됩니다.
+| 속성 | Light Mode | Dark Mode |
+| :--- | :--- | :--- |
+| backgroundColor | `#111827` (`c.textPrimary`) | `#FFFFFF` (`c.textPrimary`) |
+| contentTextStyle.color | `#FFFFFF` (`c.background`) | `#0F0F0F` (`c.background`) |
+| contentTextStyle.fontSize | 14 | 14 |
+| contentTextStyle.fontWeight | w500 | w500 |
+| shape.borderRadius | 8 (`MinglitRadius.small`) | 8 |
+| behavior | floating | floating |
+| elevation | 2 | 2 |
+
+배경색에 `textPrimary`, 텍스트에 `background`를 사용하여 라이트/다크 모드 모두에서 높은 대비를 보장한다.
 
 ---
 
