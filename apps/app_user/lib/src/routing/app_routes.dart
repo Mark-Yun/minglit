@@ -20,6 +20,7 @@ import 'package:app_user/src/features/search/search_page.dart';
 import 'package:app_user/src/features/settings/blocked_partners_page.dart';
 import 'package:app_user/src/features/settings/privacy_page.dart';
 import 'package:app_user/src/features/tag/ui/tag_event_list_page.dart';
+import 'package:app_user/src/features/ticket/ui/model/ticket_event_meta.dart';
 import 'package:app_user/src/features/ticket/ui/ticket_qr_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -168,15 +169,24 @@ class MyTicketsRoute extends GoRouteData with $MyTicketsRoute {
 
 /// **Ticket QR Route**: QR code screen for a specific ticket.
 /// Path: `/tickets/:ticketId/qr`
+///
+/// [TicketEventMeta] is passed via [GoRouterState.extra] — not in the URL —
+/// so that complex event metadata can be forwarded from callers that already
+/// hold the data (e.g. MyTicketsPage) without a round-trip query.
+// Fix #1526: $extra 활용해 TicketEventMeta 전달 — URL에 포함 불가한 complex object
 @TypedGoRoute<TicketQRRoute>(path: '/tickets/:ticketId/qr')
 class TicketQRRoute extends GoRouteData with $TicketQRRoute {
-  const TicketQRRoute({required this.ticketId});
+  const TicketQRRoute({required this.ticketId, this.$extra});
 
   final String ticketId;
 
+  /// Optional event metadata forwarded from the calling screen.
+  /// Accessed via [GoRouterState.extra] — not serialized in the URL.
+  final TicketEventMeta? $extra;
+
   @override
   Widget build(BuildContext context, GoRouterState state) =>
-      TicketQRScreen(ticketId: ticketId);
+      TicketQRScreen(ticketId: ticketId, eventMeta: $extra);
 }
 
 /// **Purchase History Route**

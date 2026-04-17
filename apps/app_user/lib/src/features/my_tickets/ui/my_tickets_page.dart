@@ -1,6 +1,7 @@
 import 'package:app_user/src/features/home/logic/home_coordinator.dart';
 import 'package:app_user/src/features/my_tickets/logic/my_tickets_controller.dart';
 import 'package:app_user/src/features/my_tickets/ui/my_ticket_card.dart';
+import 'package:app_user/src/features/ticket/ui/model/ticket_event_meta.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -34,10 +35,14 @@ class MyTicketsPage extends ConsumerWidget {
           return ListView(
             children: [
               // Today event banner
-              if (state.todayEvent != null)
+              if (state.todayEvent case final todayEvent?)
                 _TodayBanner(
-                  application: state.todayEvent!,
-                  onQRTap: () => _onQRTap(ref, state.todayEvent!.ticketId),
+                  application: todayEvent,
+                  onQRTap: () => _onQRTap(
+                    ref,
+                    todayEvent.ticketId,
+                    application: todayEvent,
+                  ),
                 ),
 
               // Upcoming section
@@ -48,7 +53,11 @@ class MyTicketsPage extends ConsumerWidget {
                     application: app,
                     isPast: false,
                     onTap: () => _onCardTap(ref, app),
-                    onQRTap: () => _onQRTap(ref, app.ticketId),
+                    onQRTap: () => _onQRTap(
+                      ref,
+                      app.ticketId,
+                      application: app,
+                    ),
                   ),
                 ),
               ],
@@ -79,8 +88,22 @@ class MyTicketsPage extends ConsumerWidget {
 
   // Fix #852: Navigate to ticket QR via coordinator
   // — removes cross-feature import
-  void _onQRTap(WidgetRef ref, String ticketId) {
-    ref.read(homeCoordinatorProvider).pushTicketQR(ticketId);
+  // Fix #1526: EventApplication 전달 → TicketEventMeta 생성 → 보딩패스에 표시
+  void _onQRTap(
+    WidgetRef ref,
+    String ticketId, {
+    EventApplication? application,
+  }) {
+    final event = application?.event;
+    final meta = event != null
+        ? TicketEventMeta(
+            eventTitle: event.title ?? event.party?.title ?? '',
+            eventDateTime: event.startTime,
+            eventVenue: event.location?.name ?? event.party?.location?.name,
+            ticketName: application?.ticket?.name,
+          )
+        : null;
+    ref.read(homeCoordinatorProvider).pushTicketQR(ticketId, eventMeta: meta);
   }
 }
 
