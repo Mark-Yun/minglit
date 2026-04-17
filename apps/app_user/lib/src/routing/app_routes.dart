@@ -182,6 +182,11 @@ class TicketQRRoute extends GoRouteData with $TicketQRRoute {
 
   /// Optional event metadata forwarded from the calling screen.
   /// Accessed via [GoRouterState.extra] — not serialized in the URL.
+  ///
+  // Directive: go_router_builder 4.x does not auto-generate state.extra
+  // forwarding. After running build_runner, manually re-apply:
+  //   `$extra: state.extra as TicketEventMeta?`
+  // in app_routes.g.dart _fromState. See PR #1532.
   final TicketEventMeta? $extra;
 
   @override

@@ -42,12 +42,14 @@ class BoardingPassCard extends StatefulWidget {
 }
 
 class _BoardingPassCardState extends State<BoardingPassCard>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late AnimationController _pulseController;
+  Timer? _midnightTimer;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 900),
@@ -55,23 +57,54 @@ class _BoardingPassCardState extends State<BoardingPassCard>
     if (_computeStatus() == BoardingPassStatus.boarding) {
       unawaited(_pulseController.repeat(reverse: true));
     }
+    _scheduleMidnightRefresh();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _midnightTimer?.cancel();
     _pulseController.dispose();
     super.dispose();
   }
 
+  /// Schedules a one-shot timer that fires at the next local midnight,
+  /// triggering a status re-evaluation so BOARDING→USED transition is shown
+  /// without the user needing to leave and re-enter the screen.
+  void _scheduleMidnightRefresh() {
+    _midnightTimer?.cancel();
+    final now = DateTime.now();
+    final tomorrow = DateTime(now.year, now.month, now.day + 1);
+    final durationUntilMidnight = tomorrow.difference(now);
+    _midnightTimer = Timer(durationUntilMidnight, _onMidnight);
+  }
+
+  void _onMidnight() {
+    if (!mounted) return;
+    setState(_updatePulse);
+    _scheduleMidnightRefresh();
+  }
+
   @override
-  void didUpdateWidget(covariant BoardingPassCard oldWidget) {
-    super.didUpdateWidget(oldWidget);
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      setState(_updatePulse);
+    }
+  }
+
+  void _updatePulse() {
     final shouldPulse = _computeStatus() == BoardingPassStatus.boarding;
     if (shouldPulse && !_pulseController.isAnimating) {
       unawaited(_pulseController.repeat(reverse: true));
     } else if (!shouldPulse && _pulseController.isAnimating) {
       _pulseController.stop();
     }
+  }
+
+  @override
+  void didUpdateWidget(covariant BoardingPassCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _updatePulse();
   }
 
   BoardingPassStatus _computeStatus() {

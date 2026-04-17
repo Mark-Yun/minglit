@@ -138,6 +138,8 @@ void main() {
 
       // Must not throw; header still renders
       expect(find.text('BOARDING PASS'), findsOneWidget);
+      // Fix #1532: null-meta graceful degradation — all info fields show "—"
+      expect(find.text('—'), findsWidgets);
     });
 
     testWidgets('긴 이벤트명 (50자+) — 크래시 없고 말줄임 적용', (tester) async {
