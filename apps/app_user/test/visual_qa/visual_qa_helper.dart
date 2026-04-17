@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
@@ -62,9 +63,14 @@ extension VisualQaTester on WidgetTester {
       // Widget tree dump is synchronous — do it before the async image capture.
       _captureWidgetTree(step, label);
       // Image capture uses real async I/O and GPU rendering; must use runAsync.
+      // Fix #1536: runAsync can hang in headless CI (GPU unavailable). Timeout
+      // after 30 s and swallow — capture failure must never block the test.
       await runAsync(() async {
         await _captureScreenshot(step, label);
-      });
+      }).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () => null,
+      );
     } catch (e, st) {
       // ignore: avoid_print
       print('[VisualQA] capture("$label") failed: $e\n$st');
