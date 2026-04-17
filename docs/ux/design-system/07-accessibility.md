@@ -97,9 +97,11 @@
 
 ```dart
 // 콘텐츠 이미지 — 의미를 전달하는 이미지
-MinglitImage(
-  imageUrl: url,
-  semanticLabel: '파티 대표 이미지',  // 내용을 설명하는 라벨
+// MinglitImage는 현재 semanticLabel 파라미터를 미지원 → Semantics 래핑으로 대체
+Semantics(
+  label: '파티 대표 이미지',
+  image: true,
+  child: MinglitImage(path: url),
 )
 
 // 장식용 이미지 — 정보 전달 목적이 아닌 이미지
