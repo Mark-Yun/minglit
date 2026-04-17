@@ -47,6 +47,10 @@ class GoldenCapture {
       _capture(tester, step, 'error');
 
   Future<void> _capture(WidgetTester tester, int step, String phase) async {
+    // Fix #1539: captureImage() hangs indefinitely in headless CI (no GPU).
+    // Skip captures in CI — they are visual baselines for local debugging only.
+    if (Platform.environment['CI'] == 'true') return;
+
     // 캡처 실패는 삼켜진다 — 회귀 비교가 아닌 시각 베이스라인 생성이 목적이므로
     // 테스트 실패로 이어져서는 안 된다.
     // runAsync를 사용하지 않아 미완료된 Future가 의도치 않게 resolve되는
@@ -55,16 +59,11 @@ class GoldenCapture {
       final rootElement = tester.binding.rootElement;
       if (rootElement == null) return;
 
-      // Fix #1536: 30s timeout to prevent CI hang in headless (GPU-less) environment
-      final image = await captureImage(
-        rootElement,
-      ).timeout(const Duration(seconds: 30));
+      final image = await captureImage(rootElement);
       // Fix #1458: ensure dispose is called even if toByteData throws
       late final Uint8List bytes;
       try {
-        final byteData = await image
-            .toByteData(format: ui.ImageByteFormat.png)
-            .timeout(const Duration(seconds: 30));
+        final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
         if (byteData == null) return;
         bytes = Uint8List.view(byteData.buffer);
       } finally {
