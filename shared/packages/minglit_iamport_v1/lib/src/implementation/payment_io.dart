@@ -18,7 +18,14 @@ class PaymentServiceImpl implements PaymentService {
         builder: (context) => IamportPayment(
           appBar: AppBar(title: const Text('결제')),
           userCode: userCode,
-          data: PaymentData.fromJson(data),
+          // Fix #1503: iamport_flutter-0.10.21 generated code does
+          // `json['display'] as Map<String, dynamic>` without null guard —
+          // crashes when caller omits the 'display' key.  Provide an empty
+          // map so the cast succeeds and cardQuota defaults to [].
+          data: PaymentData.fromJson({
+            'display': <String, dynamic>{},
+            ...data,
+          }),
           callback: (Map<String, String> result) {
             if (result['success'] == 'true' ||
                 result['imp_success'] == 'true') {
