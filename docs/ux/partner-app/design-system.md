@@ -18,7 +18,7 @@
 
 | Layer | 역할 | 파일 |
 | :--- | :--- | :--- |
-| Layer 1 | 폰트·텍스트 통일 (NotoSansKR) | `minglit_theme.dart` |
+| Layer 1 | 폰트·텍스트 통일 (Pretendard) | `minglit_theme.dart` |
 | Layer 2 | Material 컴포넌트 커스터마이징 | `minglit_component_theme.dart` |
 | Layer 3 | 브랜드 상수 (색상·간격·곡률 등) | `minglit_design_tokens.dart` |
 
@@ -164,7 +164,7 @@ Material 3 기반 컴포넌트들을 밍릿 스타일로 커스터마이징한 �
 
 | 컴포넌트 | 주요 설정값 |
 | :--- | :--- |
-| **AppBar** | `elevation: 0`, `centerTitle: true`, `bg: #FFFFFF`, `titleTextStyle: 18px/w600/NotoSansKR` |
+| **AppBar** | `elevation: 0`, `centerTitle: true`, `bg: #FFFFFF`, `titleTextStyle: 18px/w600/Pretendard` |
 | **ElevatedButton** | `minSize: ∞×56`, `radius: 12`, `bg: primary(#9900FF)`, `fg: white`, `text: 16px/bold`, `elevation: 0` |
 | **OutlinedButton** | `minSize: ∞×56`, `radius: 12`, `border: primary`, `fg: primary`, `text: 16px/bold` |
 | **TextButton** | `fg: primary`, `text: 14px/bold` |
