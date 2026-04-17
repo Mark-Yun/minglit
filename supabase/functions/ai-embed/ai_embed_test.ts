@@ -500,6 +500,9 @@ Deno.test({
             // DB error thrown → 500 returned, message NOT deleted from queue → PGMQ retry
             assertEquals(response.status, 500);
             assertEquals(typeof payload.error, "string");
+            // markProcessed and moveToDLQ must NOT be called — message stays in queue for retry
+            assertEquals(stubs[1].calls.length, 0, "markProcessed must not be called on DB error");
+            assertEquals(stubs[2].calls.length, 0, "moveToDLQ must not be called on DB read error");
           });
         });
       },
@@ -626,8 +629,10 @@ Deno.test({
     );
 
     // Structured log: console.error is called as log("[ai-embed]", message, metadata)
-    const hasStructuredErrorLog = errorLogs.some((entry) => entry.includes("[ai-embed]"));
-    assertEquals(hasStructuredErrorLog, true);
+    // Verify prefix format AND that a non-empty message follows
+    const structuredErrorLog = errorLogs.find((entry) => entry.startsWith("[ai-embed] "));
+    assertEquals(typeof structuredErrorLog, "string", "Expected structured error log with [ai-embed] prefix");
+    assertEquals(structuredErrorLog!.length > "[ai-embed] ".length, true, "Log message must be non-empty");
   } finally {
     consoleErrorStub.restore();
     stubs.forEach((s) => s.restore());
