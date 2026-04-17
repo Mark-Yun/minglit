@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
@@ -57,11 +56,15 @@ class GoldenCapture {
       if (rootElement == null) return;
 
       // Fix #1536: 30s timeout to prevent CI hang in headless (GPU-less) environment
-      final image = await captureImage(rootElement).timeout(const Duration(seconds: 30));
+      final image = await captureImage(
+        rootElement,
+      ).timeout(const Duration(seconds: 30));
       // Fix #1458: ensure dispose is called even if toByteData throws
       late final Uint8List bytes;
       try {
-        final byteData = await image.toByteData(format: ui.ImageByteFormat.png).timeout(const Duration(seconds: 30));
+        final byteData = await image
+            .toByteData(format: ui.ImageByteFormat.png)
+            .timeout(const Duration(seconds: 30));
         if (byteData == null) return;
         bytes = Uint8List.view(byteData.buffer);
       } finally {
