@@ -4,7 +4,6 @@ import { HybridCalculator } from "./calculator.ts";
 import {
   captureServeHandler,
   createFetchMock,
-  jsonRequest,
   jsonResponse,
   readJson,
   withNoIntervals,
@@ -495,7 +494,7 @@ Deno.test({
       async () => {
         await withMockedFetch(fetchMock, async () => {
           await withNoIntervals(async () => {
-            const response = await handler(jsonRequest("http://localhost", {}));
+            const response = await handler(makeRequest({}));
             const payload = await readJson(response);
 
             // DB error thrown → 500 returned, message NOT deleted from queue → PGMQ retry
@@ -549,7 +548,7 @@ Deno.test({
       async () => {
         await withMockedFetch(fetchMock, async () => {
           await withNoIntervals(async () => {
-            const response = await handler(jsonRequest("http://localhost", {}));
+            const response = await handler(makeRequest({}));
             const payload = await readJson(response);
 
             // Message moved to DLQ — not counted as processed, not deleted from main queue
@@ -619,7 +618,7 @@ Deno.test({
       async () => {
         await withMockedFetch(fetchMock, async () => {
           await withNoIntervals(async () => {
-            const response = await handler(jsonRequest("http://localhost", {}));
+            const response = await handler(makeRequest({}));
             assertEquals(response.status, 500);
           });
         });
