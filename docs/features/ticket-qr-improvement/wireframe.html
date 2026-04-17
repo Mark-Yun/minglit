@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minglit Ticket QR Improvement Wireframe</title>
+    <style>
+        :root {
+            --primary: #9900FF;
+            --primary-light: #B84DFF;
+            --secondary: #FF9900;
+            --background: #FFFFFF;
+            --surface: #F9FAFB;
+            --text-primary: #111827;
+            --text-secondary: #4B5563;
+            --divider: #E5E7EB;
+            --radius-card: 24px;
+            --shadow-soft: 0 10px 30px rgba(0,0,0,0.08);
+        }
+
+        body {
+            font-family: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+            margin: 0;
+            padding: 40px;
+            background-color: #F3F4F6;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--text-primary);
+        }
+
+        .container {
+            display: flex;
+            gap: 40px;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .phone {
+            width: 360px;
+            height: 740px;
+            background-color: var(--background);
+            border: 12px solid #1F2937;
+            border-radius: 40px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.12);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .app-bar {
+            height: 56px;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            gap: 12px;
+            font-weight: 600;
+        }
+
+        .content {
+            flex: 1;
+            padding: 20px;
+            background-color: #F9FAFB;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Current State */
+        .qr-current {
+            margin-top: 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .qr-box-plain {
+            width: 240px;
+            height: 240px;
+            background: white;
+            border: 1px solid #ddd;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 140px;
+        }
+
+        /* Proposed State: Boarding Pass Look */
+        .ticket-card {
+            width: 320px;
+            background: white;
+            border-radius: var(--radius-card);
+            overflow: hidden;
+            box-shadow: var(--shadow-soft);
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .ticket-header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            padding: 24px;
+            color: white;
+        }
+
+        .event-type {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.9;
+            margin-bottom: 4px;
+        }
+
+        .event-title {
+            font-size: 20px;
+            font-weight: 800;
+            line-height: 1.3;
+        }
+
+        .ticket-body {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Perforated edge effect */
+        .perforation {
+            height: 2px;
+            background-image: linear-gradient(to right, #ddd 50%, transparent 50%);
+            background-size: 8px 2px;
+            background-repeat: repeat-x;
+            width: 100%;
+            position: relative;
+        }
+
+        .perforation::before, .perforation::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: #F9FAFB;
+            border-radius: 50%;
+            top: -10px;
+        }
+        .perforation::before { left: -10px; }
+        .perforation::after { right: -10px; }
+
+        .qr-container {
+            padding: 16px;
+            background: white;
+            border-radius: 16px;
+            border: 1px solid var(--divider);
+            margin: 24px 0;
+            position: relative;
+        }
+
+        .qr-placeholder {
+            width: 200px;
+            height: 200px;
+            background: #000;
+            display: flex;
+            flex-wrap: wrap;
+            padding: 4px;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .info-item label {
+            display: block;
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .info-item span {
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .status-badge {
+            margin-top: 24px;
+            padding: 6px 12px;
+            background: #ECFDF5;
+            color: #059669;
+            border-radius: 100px;
+            font-size: 12px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Specs */
+        .specs {
+            margin-top: 60px;
+            background: white;
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+            max-width: 900px;
+            width: 100%;
+        }
+
+        .specs h2 { margin-top: 0; border-bottom: 2px solid var(--primary); padding-bottom: 10px; display: inline-block; }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .spec-item h4 { margin: 0 0 8px; color: var(--primary); }
+        .spec-item p { margin: 0; font-size: 14px; color: var(--text-secondary); }
+
+    </style>
+</head>
+<body>
+
+    <h1 style="margin-bottom: 8px;">Ticket QR Screen Improvement</h1>
+    <p style="margin-bottom: 40px; color: #6B7280;">티켓 입장 경험의 밀도 및 브랜드 아이덴티티 강화 (P2)</p>
+
+    <div class="container">
+        <!-- CURRENT -->
+        <div class="column">
+            <h3 style="text-align: center; margin-bottom: 20px;">Current</h3>
+            <div class="phone">
+                <div class="app-bar">
+                    <span>이벤트 입장</span>
+                </div>
+                <div class="content" style="background: white;">
+                    <div class="qr-current">
+                        <div class="qr-box-plain">QR</div>
+                        <div style="font-weight: 600;">입장 확인을 위해 스캔해주세요</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PROPOSED -->
+        <div class="column">
+            <h3 style="text-align: center; margin-bottom: 20px;">Proposed</h3>
+            <div class="phone">
+                <div class="app-bar">
+                    <span>내 티켓</span>
+                </div>
+                <div class="content">
+                    <div class="ticket-card">
+                        <div class="ticket-header">
+                            <div class="event-type">Party & Networking</div>
+                            <div class="event-title">성수동 와인 커뮤니티: 금요일 밤의 밍글링</div>
+                        </div>
+                        
+                        <div class="perforation"></div>
+
+                        <div class="ticket-body">
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <label>Date</label>
+                                    <span>2026.04.24 (Fri)</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>Time</label>
+                                    <span>19:30 - 22:30</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>Location</label>
+                                    <span>성수 밍글릿 라운지</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>Guest</label>
+                                    <span>김밍글</span>
+                                </div>
+                            </div>
+
+                            <div class="qr-container">
+                                <div class="qr-placeholder" style="background: repeating-conic-gradient(#000 0% 25%, #fff 0% 50%) 0 / 20px 20px;"></div>
+                            </div>
+
+                            <div style="font-size: 13px; color: var(--text-secondary); font-weight: 500;">
+                                스탭에게 QR 코드를 보여주세요
+                            </div>
+
+                            <div class="status-badge">
+                                <span>●</span> 사용 가능
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <p style="margin-top: 24px; font-size: 12px; color: #9CA3AF; text-align: center;">
+                        캡처한 화면으로는 입장이 불가할 수 있습니다.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="specs">
+        <h2>디자인 전략 및 명세</h2>
+        <div class="grid">
+            <div class="spec-item">
+                <h4>1. 티켓 메타포 (Boarding Pass Metaphor)</h4>
+                <p>단순한 QR 스캔 화면이 아닌, 실제 '티켓'을 소지하고 있다는 느낌을 주기 위해 항공권/입장권 형태의 카드 디자인을 채택합니다. 절취선(Perforation) 효과로 시각적 재미를 더합니다.</p>
+            </div>
+            <div class="spec-item">
+                <h4>2. 맥락 정보 제공 (Contextual Info)</h4>
+                <p>입장 직전 유저가 다시 한번 확인할 수 있도록 이벤트 제목, 일시, 장소 정보를 상단에 요약하여 배치합니다. 다른 화면으로 이동할 필요를 줄여줍니다.</p>
+            </div>
+            <div class="spec-item">
+                <h4>3. 브랜드 컬러 활용 (Brand Alignment)</h4>
+                <p>상단 헤더에 브랜드 Primary Gradient를 적용하여 서비스의 일관된 톤앤매너를 유지하고, 티켓의 중요도를 강조합니다.</p>
+            </div>
+            <div class="spec-item">
+                <h4>4. 심리적 안정감 (Reassurance)</h4>
+                <p>'사용 가능' 상태 배지와 주의 사항 문구를 추가하여 유저가 입장 직전 느낄 수 있는 불안감을 해소합니다.</p>
+            </div>
+        </div>
+
+        <h3 style="margin-top: 40px;">개발 가이드 (Implementation)</h3>
+        <p style="font-size: 14px; color: var(--text-secondary);">`TicketQrScreen`을 `Stack`과 `CustomPaint` 등을 활용하여 카드 형태로 재구성합니다. 배경에 `MinglitTheme.appBarLogo`를 연하게 배치하여 위조 방지 느낌을 낼 수도 있습니다.</p>
+    </div>
+
+</body>
+</html>
