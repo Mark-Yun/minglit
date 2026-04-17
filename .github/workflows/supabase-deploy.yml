@@ -79,9 +79,11 @@ jobs:
           fi
           supabase secrets set ENVIRONMENT=${{ steps.env.outputs.ENVIRONMENT_VALUE }}
           # Fix #1508: GitHub Secret 경유로 주입 — 평문 하드코딩 제거 (dev 시뮬레이터 전용)
-          if [ -z "$SIM_USER_PASSWORD" ]; then
-            echo "SIM_USER_PASSWORD is not set. Skipping."
-          else
+          if [ "${{ steps.env.outputs.ENV }}" = "dev" ]; then
+            if [ -z "$SIM_USER_PASSWORD" ]; then
+              echo "::error::SIM_USER_PASSWORD is required for dev backend-simulator deploys"
+              exit 1
+            fi
             supabase secrets set SIM_USER_PASSWORD=$SIM_USER_PASSWORD
           fi
 
@@ -104,6 +106,10 @@ jobs:
           SUPABASE_DB_PASSWORD: ${{ steps.env.outputs.DB_PASSWORD }}
         run: |
           sed -i 's|sql_paths = \["./seed.sql"\]|sql_paths = ["./seed.dev.sql"]|' supabase/config.toml
+          grep -q 'sql_paths = \["./seed.dev.sql"\]' supabase/config.toml || {
+            echo "::error::failed to switch db.seed.sql_paths to seed.dev.sql"
+            exit 1
+          }
           yes | supabase db push --include-seed --password $SUPABASE_DB_PASSWORD
           echo "Dev seed complete"
 
