@@ -90,7 +90,6 @@ class _BottomTicketBar extends ConsumerWidget {
     WidgetRef ref,
     AdmissionState state,
   ) {
-    final theme = Theme.of(context);
     final controller = ref.read(
       eventAdmissionControllerProvider(event).notifier,
     );
