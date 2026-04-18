@@ -105,6 +105,15 @@ jobs:
           profile: pixel_6
           script: bash .github/scripts/run-client-cuj.sh
 
+      - name: Upload CUJ screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: client-cuj-screenshots-${{ github.run_id }}
+          path: apps/app_user/test/integration/goldens/
+          if-no-files-found: ignore
+          retention-days: 14
+
   partner-cuj-test:
     needs: seed-and-simulate
     runs-on: ubuntu-latest
@@ -145,6 +154,15 @@ jobs:
           arch: x86_64
           profile: pixel_6
           script: bash .github/scripts/run-partner-cuj.sh
+
+      - name: Upload CUJ screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: partner-cuj-screenshots-${{ github.run_id }}
+          path: apps/app_partner/test/integration/goldens/
+          if-no-files-found: ignore
+          retention-days: 14
 
   notify-failure:
     needs: [seed-and-simulate, client-cuj-test, partner-cuj-test]
