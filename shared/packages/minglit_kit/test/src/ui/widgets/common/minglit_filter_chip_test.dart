@@ -150,33 +150,36 @@ void main() {
     });
 
     group('Semantics', () {
-      testWidgets('unselected chip wraps with Semantics(button, selected=false)', (
-        tester,
-      ) async {
-        await tester.pumpWidget(
-          buildApp(
-            MinglitFilterChip(
-              label: '최신순',
-              isSelected: false,
-              onTap: () {},
+      testWidgets(
+        'unselected chip wraps with Semantics(button, selected=false)',
+        (
+          tester,
+        ) async {
+          await tester.pumpWidget(
+            buildApp(
+              MinglitFilterChip(
+                label: '최신순',
+                isSelected: false,
+                onTap: () {},
+              ),
             ),
-          ),
-        );
+          );
 
-        expect(
-          find.byWidgetPredicate(
-            (w) =>
-                w is Semantics &&
-                w.properties.label == '최신순' &&
-                w.properties.button == true &&
-                w.properties.selected == false,
-          ),
-          findsOneWidget,
-          reason:
-              'unselected filter chip must wrap with '
-              'Semantics(label, button: true, selected: false)',
-        );
-      });
+          expect(
+            find.byWidgetPredicate(
+              (w) =>
+                  w is Semantics &&
+                  w.properties.label == '최신순' &&
+                  w.properties.button == true &&
+                  w.properties.selected == false,
+            ),
+            findsOneWidget,
+            reason:
+                'unselected filter chip must wrap with '
+                'Semantics(label, button: true, selected: false)',
+          );
+        },
+      );
 
       testWidgets('selected chip wraps with Semantics(button, selected=true)', (
         tester,

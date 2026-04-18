@@ -228,55 +228,58 @@ void main() {
   // Fix #996: 카드 전체를 하나의 시맨틱 노드로 병합하여 스크린 리더가
   // 파편화된 정보를 읽지 않도록 함. 회귀 방지용 Semantics 테스트.
   group('EventCard Semantics', () {
-    testWidgets('tappable card wraps with Semantics(button, descriptive label)', (
-      tester,
-    ) async {
-      final event = Event(
-        id: 'e-semantics',
-        partyId: 'party-1',
-        startTime: baseTime,
-        endTime: baseTime.add(const Duration(hours: 3)),
-        createdAt: baseTime,
-        updatedAt: baseTime,
-        currentParticipants: 8,
-        party: party,
-        title: '금요일 네트워킹',
-      );
+    testWidgets(
+      'tappable card wraps with Semantics(button, descriptive label)',
+      (
+        tester,
+      ) async {
+        final event = Event(
+          id: 'e-semantics',
+          partyId: 'party-1',
+          startTime: baseTime,
+          endTime: baseTime.add(const Duration(hours: 3)),
+          createdAt: baseTime,
+          updatedAt: baseTime,
+          currentParticipants: 8,
+          party: party,
+          title: '금요일 네트워킹',
+        );
 
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: MinglitTheme.materialTheme,
-          home: Scaffold(
-            body: MinglitEventCard(
-              event: event,
-              currentTime: fiveDaysBefore,
-              onTap: () {},
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: MinglitTheme.materialTheme,
+            home: Scaffold(
+              body: MinglitEventCard(
+                event: event,
+                currentTime: fiveDaysBefore,
+                onTap: () {},
+              ),
             ),
           ),
-        ),
-      );
-      await tester.pump();
+        );
+        await tester.pump();
 
-      final matches = find
-          .byWidgetPredicate(
-            (w) =>
-                w is Semantics &&
-                (w.properties.label ?? '').startsWith('이벤트: 금요일 네트워킹') &&
-                w.properties.button == true &&
-                w.excludeSemantics == true,
-          )
-          .evaluate();
+        final matches = find
+            .byWidgetPredicate(
+              (w) =>
+                  w is Semantics &&
+                  (w.properties.label ?? '').startsWith('이벤트: 금요일 네트워킹') &&
+                  w.properties.button == true &&
+                  w.excludeSemantics,
+            )
+            .evaluate();
 
-      expect(
-        matches,
-        isNotEmpty,
-        reason:
-            'tappable card must wrap with Semantics('
-            'label: "이벤트: ...", button: true, excludeSemantics: true)',
-      );
-      final wrapper = matches.first.widget as Semantics;
-      expect(wrapper.properties.label, contains('참가자 8/20명'));
-    });
+        expect(
+          matches,
+          isNotEmpty,
+          reason:
+              'tappable card must wrap with Semantics('
+              'label: "이벤트: ...", button: true, excludeSemantics: true)',
+        );
+        final wrapper = matches.first.widget as Semantics;
+        expect(wrapper.properties.label, contains('참가자 8/20명'));
+      },
+    );
 
     testWidgets('non-tappable card omits button role', (tester) async {
       final readonlyParty = Party(
