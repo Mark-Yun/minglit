@@ -1,66 +1,57 @@
 # Automation Test Guide
 
-Claude가 새 피쳐를 구현할 때 반드시 따라야 하는 자동화 테스트 가이드.
+새 피쳐를 구현할 때 따라야 하는 자동화 테스트 가이드.
+
+> 📖 Taxonomy SSOT: [`test-strategy.md`](test-strategy.md) — Layer 정의 / 책임 / 커버리지 수치
+>
+> 이 문서는 각 Layer 의 **작성 규칙 + 샘플 코드 + 체크리스트** 를 다룬다.
 
 ---
 
-## 1. 현재 테스트 커버리지 현황
+## 1. Layer 선택 결정 트리
 
-### 요약 통계 (2026-04-05 기준)
+구현 전 반드시 본 트리로 어느 Layer 에 테스트를 추가할지 결정한다.
 
-| 계층 | 테스트 파일 수 | 커버리지 상태 |
-|------|-------------|-------------|
-| minglit_kit (공유 로직) | 80 | 양호 — 핵심 repository 대부분 커버 |
-| app_user (사용자 앱) | 85 | 양호 (P0 Integration +3건, Smoke +2건) |
-| app_partner (파트너 앱) | 73 | 개선됨 (Integration +4건, Smoke +5건) |
-| Supabase DB (pgTAP) | 54 | 양호 |
-| Edge Functions (Deno) | 61 | 양호 |
-| Client CUJ (E2E) | 6 | 핵심 경로만 |
+```
+새 테스트 추가 필요?
+│
+├── DB 스키마 / RLS / RPC 계약 변경?         → Layer 4 (pgTAP)
+├── 신규 Edge Function 로직?                 → Layer 5 (Deno EF)
+├── 네이티브 surface 필요?
+│   (카카오 로그인, PG SDK, 시스템 권한)      → Layer 3 (Patrol emulator)
+├── 다화면 플로우 / GoRouter guard / redirect? → Layer 2a (widget flow)
+├── 디자인 토큰 / 시각 회귀 감지?             → Layer 2b (Alchemist golden)
+├── repository / controller / util / model?   → Layer 1 (unit)
+├── 매시간 실 DB 데이터 이상 감시?            → Layer 6 (DB monitor RPC)
+└── 파이프라인 연쇄 동작 (tick) 감시?         → Layer 7 (backend-simulator)
+```
 
-### 커버리지 갭
+**복수 Layer 필요 사례**:
 
-#### 🟡 SEVERE — 40% 미만
-| 영역 | 소스 파일 | 테스트 파일 | 상태 |
-|------|----------|-----------|---------|
-| app_partner/party | 70 | 12 | 개선됨 (1.4% → 17%) |
-| app_partner/ticket | 12 | 1 | 심각 — 미결 |
-| app_partner/settlement | 14 | 6 | 개선됨 (21% → 43%) |
-| app_partner/verification | 6 | 4 | 개선됨 (17% → 67%) |
-| app_user/event | 31 | 19 | 개선됨 (24% → 61%) |
-
-#### 해소된 갭 (2026-04 기준)
-- `app_user/settings`: 2 테스트 추가 ✅
-- `app_user/search`: 2 테스트 추가 ✅
-- `app_user/payment`: 6 테스트 (완전 커버) ✅
-- `app_partner/checkin`: 2 테스트 추가 ✅
-- `minglit_kit/iamport`: 3 테스트 추가 ✅
-
-#### 미테스트 Repository (minglit_kit)
-- `party_event_repository.dart`
-- `party_matching_repository.dart`
-
-#### 해소된 Repository 갭
-- `auth_repository.dart` ✅
-- `event_repository_commands.dart` / `event_repository_queries.dart` ✅
-- `kakao_location_repository.dart` ✅
-- `policy_repository.dart` ✅
-- `staff_repository.dart` ✅
-- `user_repository.dart` ✅
-- `verification_repository.dart` ✅
+- 신규 EF + 소비하는 controller → Layer 5 + Layer 1
+- 신규 테이블 + RLS + 읽는 repository → Layer 4 + Layer 1
+- 신규 화면 + 디자인 신규 컴포넌트 → Layer 2b (골든) + Layer 1 (controller) + Layer 2a (flow)
+- 신규 CUJ + 네이티브 결제 → Layer 3 (Patrol) **필수**, Layer 2a 는 생략 가능
 
 ---
 
-## 2. 테스트 계층별 작성 규칙
+## 2. Layer 별 작성 규칙
 
-### Layer 1: Repository 테스트 (minglit_kit)
+### 📱 Layer 1 — Unit test
 
-**위치:** `shared/packages/minglit_kit/test/src/data/repositories/`
-**우선순위:** 가장 높음 — 모든 비즈니스 로직의 기반
+**위치**:
+- `shared/packages/minglit_kit/test/src/`
+- `apps/app_user/test/src/features/{feature}/`
+- `apps/app_partner/test/src/features/{feature}/`
+
+**파일 명**: `{name}_test.dart` (controller 는 `{name}_controller_test.dart`)
+
+**프레임워크**: `flutter_test` (headless), `mocktail`
+
+**샘플 (repository)**:
 
 ```dart
-// 파일명: {feature}_repository_test.dart
 import 'package:flutter_test/flutter_test.dart';
-import 'package:minglit_kit/src/data/repositories/event_repository.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../helpers/mocks.dart';
@@ -75,101 +66,63 @@ void main() {
     repository = EventRepository(supabase: mockClient);
   });
 
-  group('EventRepository', () {
-    group('getEventById', () {
-      test('returns event when found', () async {
-        mockTable(mockClient, 'events', singleData: {
-          'id': 'event_1',
-          'title': 'Test Event',
-          'status': 'scheduled',
-          // ... 필수 필드
-        });
-
-        final result = await repository.getEventById('event_1');
-        expect(result.id, 'event_1');
+  group('EventRepository.getEventById', () {
+    test('returns event when found', () async {
+      mockTable(mockClient, 'events', singleData: {
+        'id': 'event_1', 'title': 'Test', 'status': 'scheduled',
       });
 
-      test('throws MingleException when not found', () async {
-        mockTable(mockClient, 'events',
-          shouldThrow: PostgrestException(message: 'not found'),
-        );
+      final result = await repository.getEventById('event_1');
+      expect(result.id, 'event_1');
+    });
 
-        expect(
-          () => repository.getEventById('nonexistent'),
-          throwsA(isA<MingleException>()),
-        );
-      });
+    test('throws MingleException when not found', () async {
+      mockTable(mockClient, 'events',
+        shouldThrow: PostgrestException(message: 'not found'));
+      expect(() => repository.getEventById('x'), throwsA(isA<MingleException>()));
     });
   });
 }
 ```
 
-**핵심 패턴:**
-- `createMockSupabase()` — Supabase 클라이언트 Mock 생성
-- `mockTable()` — 테이블 쿼리 결과 Fake 설정
-- Mock은 `mocktail` 사용 (mockito 아님)
-- JSON mock 데이터는 실제 DB 스키마와 일치해야 함
-
-### Layer 2: Controller/Provider 테스트 (앱별)
-
-**위치:** `apps/app_user/test/src/features/{feature}/logic/`
-**우선순위:** 높음 — UI와 데이터를 연결하는 상태 관리
+**샘플 (controller / provider)**:
 
 ```dart
-// 파일명: {feature}_controller_test.dart
-import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mocktail/mocktail.dart';
+test('loads event data on init', () async {
+  when(() => mockRepo.getEventById(any())).thenAnswer((_) async => testEvent);
 
-import '../../../../utils/mocks.dart';
-import '../../../../utils/test_utils.dart';
+  final container = createContainer(overrides: [
+    eventRepositoryProvider.overrideWithValue(mockRepo),
+  ]);
 
-void main() {
-  late MockEventRepository mockRepo;
+  final state = await container.read(
+    eventDetailControllerProvider('event_1').future,
+  );
 
-  setUp(() {
-    mockRepo = MockEventRepository();
-  });
-
-  group('EventDetailController', () {
-    test('loads event data on init', () async {
-      when(() => mockRepo.getEventById(any()))
-          .thenAnswer((_) async => testEvent);
-
-      final container = createContainer(
-        overrides: [
-          eventRepositoryProvider.overrideWithValue(mockRepo),
-        ],
-      );
-
-      final state = await container.read(
-        eventDetailControllerProvider('event_1').future,
-      );
-
-      expect(state.event.id, 'event_1');
-      verify(() => mockRepo.getEventById('event_1')).called(1);
-    });
-  });
-}
+  expect(state.event.id, 'event_1');
+  verify(() => mockRepo.getEventById('event_1')).called(1);
+});
 ```
 
-**핵심 패턴:**
-- `createContainer()` — Riverpod 테스트용 컨테이너 (`test_utils.dart`)
-- Repository를 Mock으로 override
-- `when()`으로 Mock 행동 정의 → 테스트 → `verify()`로 호출 검증
+**핵심 패턴**:
+- `createMockSupabase()` — Supabase 클라이언트 Mock (`minglit_kit/test/helpers/supabase_mock_helpers.dart`)
+- `mockTable()` — 테이블 쿼리 Fake 결과
+- `createContainer()` — Riverpod 테스트 컨테이너 (`apps/{app}/test/utils/test_utils.dart`)
+- `mocktail` 사용 (mockito 아님)
 
-### Layer 2.5: Integration 테스트 (CUJ 기반)
+---
 
-**위치:**
-- `apps/app_user/test/integration/cuj_*.dart` — app_user CUJ
-- `apps/app_partner/test/integration/cuj_*.dart` — app_partner CUJ
+### 📱 Layer 2a — Widget flow test
 
-**공통 헬퍼:**
-- `apps/app_user/test/integration/utils/test_app.dart` — `createTestApp()`
-- `apps/app_partner/test/integration/utils/test_app.dart` — `createPartnerTestApp()`
+**위치**: `apps/app_*/test/integration/` (향후 `test/flows/` rename 검토)
+
+**파일 명**: `{scenario}_test.dart` 또는 `cuj_*_test.dart`
+
+**프레임워크**: `flutter_test` (headless) + `createTestApp()` 헬퍼
+
+**샘플**:
 
 ```dart
-// app_user CUJ 테스트 패턴
 void main() {
   testWidgets('비로그인 사용자 → 보호 경로 리다이렉트', (tester) async {
     await tester.pumpWidget(
@@ -184,94 +137,30 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.byType(Scaffold), findsOneWidget);
-  });
-}
-
-// app_partner CUJ 테스트 패턴
-void main() {
-  testWidgets('needsApplication → /welcome 리다이렉트', (tester) async {
-    await tester.pumpWidget(
-      createPartnerTestApp(
-        isLoggedIn: true,
-        currentUser: testUser,
-        onboardingState: OnboardingState.needsApplication,
-        initialLocation: '/',
-      ),
-    );
-    await tester.pumpAndSettle();
-    expect(find.byType(Scaffold), findsOneWidget);
+    expect(find.text('로그인'), findsOneWidget);
   });
 }
 ```
 
-**핵심 패턴:**
+**핵심 패턴**:
 - `createTestApp()` / `createPartnerTestApp()` — 라우터 + Provider 설정 (Supabase 불필요)
-- `overrideWith()` — AsyncNotifier/Notifier를 Fake 구현으로 교체
-- `overrideWithValue()` — NotifierProvider를 특정 상태 값으로 교체
-- `AsyncData/AsyncLoading/AsyncError` — 비동기 상태 시뮬레이션
+- `overrideWith()` — AsyncNotifier/Notifier 를 Fake 구현으로 교체
+- `overrideWithValue()` — NotifierProvider 를 특정 상태 값으로 교체
+- 실 네트워크 / 실 DB 호출 **금지** (→ Layer 3 에서 처리)
 
-### Layer 3: Widget/UI 테스트
+---
 
-**위치:** `apps/app_user/test/integration/` 또는 `apps/app_user/test/src/features/{feature}/ui/`
-**우선순위:** 중간 — 렌더링과 사용자 인터랙션
+### 📱 Layer 2b — Golden image test (Alchemist)
 
-```dart
-// 파일명: {widget_name}_test.dart
-import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+**위치**: `apps/app_*/test/goldens/` (향후 `test/alchemist/` rename — PR #1582)
 
-void main() {
-  testWidgets('PurchaseHistoryScreen shows empty state', (tester) async {
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          purchaseHistoryProvider.overrideWith(
-            (_) => AsyncData([]),
-          ),
-        ],
-        child: const MaterialApp(
-          home: PurchaseHistoryScreen(),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
+**파일 명**: `{widget_name}_golden_test.dart`
 
-    expect(find.text('구매 내역이 없습니다'), findsOneWidget);
-  });
+**프레임워크**: [alchemist](https://pub.dev/packages/alchemist)
 
-  testWidgets('shows list when data exists', (tester) async {
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          purchaseHistoryProvider.overrideWith(
-            (_) => AsyncData([testPurchase]),
-          ),
-        ],
-        child: const MaterialApp(
-          home: PurchaseHistoryScreen(),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    expect(find.byType(PurchaseHistoryCard), findsOneWidget);
-  });
-}
-```
-
-### Layer 3.5: Golden (Snapshot) 테스트 — Alchemist
-
-**위치:** `apps/{app}/test/goldens/`, `shared/packages/minglit_kit/test/goldens/`
-**우선순위:** 디자인 토큰 변경, 레이아웃 회귀 방지
-**패키지:** [alchemist](https://pub.dev/packages/alchemist) (VGV + Betterment)
-
-Golden Test는 위젯 렌더링 결과를 이미지로 저장해두고 이후 픽셀 비교로 시각적 회귀를 감지한다.
-Alchemist를 사용하여 CI(Ahem 폰트) / 로컬(플랫폼 폰트) 골든을 분리 관리한다.
+**샘플**:
 
 ```dart
-// 파일명: {widget_name}_golden_test.dart
 @Tags(['golden'])
 library;
 
@@ -300,37 +189,84 @@ void main() {
 }
 ```
 
-**CI 비교 모드 동작:**
-- **CI** (`flutter test --dart-define=CI=true --tags golden`): Ahem 폰트 기반 CI 골든과 비교 → 다르면 FAIL + `failures/` diff 이미지 아티팩트 업로드
-- **로컬**: 플랫폼별 골든(macOS/Linux)으로 비교 — `.gitignore`로 커밋 제외
+**CI 비교 모드**:
+- CI (`flutter test --dart-define=CI=true --tags golden`) — Ahem 폰트 기반 CI 골든 비교 → 다르면 FAIL + `failures/` diff artifact
+- 로컬 — 플랫폼별 골든(`macos/`, `linux/`). `.gitignore` 로 제외
 
-**의도된 UI 변경 시 워크플로우:**
+**의도된 UI 변경 시**:
 1. 로컬에서 `flutter test --update-goldens --tags golden --dart-define=CI=true`
 2. 새 CI 골든 PNG 커밋 → push
 3. CI 재실행 → PASS
 
-**핵심 규칙:**
-- `@Tags(['golden'])`으로 태깅하여 일반 테스트와 분리 실행
-- `flutter_test_config.dart`에서 `AlchemistConfig`로 CI/플랫폼 모드 자동 전환
-- CI 골든은 Ahem 폰트 → OS 무관 일관성 보장
-- 플랫폼 골든(`test/**/goldens/macos/`, `linux/`)은 `.gitignore`로 제외
-- CI에서 golden 불일치 시 diff 이미지가 `golden-failures-{app}` artifact로 업로드됨
+**핵심 규칙**:
+- `@Tags(['golden'])` 태깅 — 일반 테스트와 분리 실행
+- `flutter_test_config.dart` 의 `AlchemistConfig` 가 CI/플랫폼 모드 자동 전환
+- CI 골든 = Ahem 폰트 (OS 무관)
 
-### Layer 4: Database 테스트 (pgTAP)
+---
 
-**위치:** `supabase/tests/database/`
-**우선순위:** DB 스키마나 RLS 변경 시 필수
+### 📱 Layer 3 — Emulator test (Patrol)
+
+**위치**: `apps/app_*/integration_test/` (향후 `emulator_test/` rename — PR #1582)
+
+**파일 명**: `cuj_{scenario}_test.dart` (CUJ) 또는 `{feature}_native_test.dart` (native surface)
+
+**프레임워크**: [Patrol](https://patrol.leancode.co/) + 실 dev Supabase
+
+**샘플** (CUJ):
+
+```dart
+import 'package:patrol/patrol.dart';
+
+import 'helpers/e2e_init.dart';
+
+void main() {
+  patrolTest('U01 — 유저가 이벤트 신청한다', ($) async {
+    await initializeE2E();
+    await signInAsTestUser($, email: $testEmail);
+
+    await $.pumpWidgetAndSettle(const MinglitApp());
+    await $.native.screenshot(name: 'u01_step1_home');
+
+    await $('신청하기').tap();
+    await $.native.screenshot(name: 'u01_step2_apply_sheet');
+
+    await $('결제').waitUntilVisible();
+    await $.native.screenshot(name: 'u01_step3_payment');
+  });
+}
+```
+
+**핵심 패턴**:
+- `find.text` → `$('text')`
+- `pumpAndSettle` → `waitUntilVisible` / `waitUntilExists`
+- 스텝별 `$.native.screenshot(name: ...)` 삽입 → Tier B ("시나리오 스크린샷") 생성
+- `SUPABASE_DEV_*` secret 만 사용 (main 도달 구조적 불가)
+
+**상태 (2026-04-18)**: CUJ 이관률 **0%**. 이관 계획은 #1586 Phase D-2 참고.
+
+**네이티브 surface 전용 기존 파일** (유지):
+- `apple_sign_in_test.dart`, `kakao_login_test.dart`, `payment_pg_test.dart`, `permission_grant_test.dart`
+
+---
+
+### 🗄️ Layer 4 — pgTAP test
+
+**위치**: `supabase/tests/database/`
+
+**파일 명**: `{번호}_{feature}_test.sql`
+
+**번호 규칙**: `ls supabase/tests/database/` 로 기존 번호 확인 후 다음 번호 사용.
+
+**샘플**:
 
 ```sql
--- 파일명: {번호}_{feature}_test.sql
 BEGIN;
 SELECT plan(3);
 
--- 스키마 검증
-SELECT has_table('public', 'new_feature_table', 'new_feature_table exists');
+SELECT has_table('public', 'new_feature_table', 'table exists');
 SELECT has_column('public', 'new_feature_table', 'name', 'has name column');
 
--- RLS 검증
 SET LOCAL role = 'authenticated';
 SET LOCAL request.jwt.claims = '{"sub": "user_1"}';
 
@@ -344,23 +280,26 @@ SELECT * FROM finish();
 ROLLBACK;
 ```
 
-### Layer 5: Edge Function 테스트 (Deno)
+**핵심 규칙**:
+- 파일 시작 `BEGIN;` + 끝 `ROLLBACK;` — 테스트 격리
+- `SET LOCAL role` + `SET LOCAL request.jwt.claims` — RLS 시뮬
+- 새 migration 과 **반드시 동반** (테이블/컬럼/RLS 추가 시)
 
-**위치:** `supabase/functions/{function_name}/{function_name}_test.ts`
-**우선순위:** 새 Edge Function 추가 시 필수
+---
+
+### 🗄️ Layer 5 — Deno EF test
+
+**위치**: `supabase/functions/{function_name}/{function_name}_test.ts`
+
+**프레임워크**: `deno test`
+
+**샘플**:
 
 ```typescript
-// 파일명: {function_name}_test.ts
 import { assertEquals } from "@std/assert";
 import {
-  authenticatedJsonRequest,
-  captureServeHandler,
-  createFetchMock,
-  jsonResponse,
-  readJson,
-  withEnv,
-  withMockedFetch,
-  withNoIntervals,
+  authenticatedJsonRequest, captureServeHandler, createFetchMock,
+  withEnv, withMockedFetch, withNoIntervals,
 } from "../_test_utils/mock_http.ts";
 
 const ENV = {
@@ -370,195 +309,253 @@ const ENV = {
 
 Deno.test("function-name - happy path", async () => {
   await withEnv(ENV, async () => {
-    const handler = await captureServeHandler(
-      new URL("./index.ts", import.meta.url),
-    );
-    const { fetchMock } = createFetchMock([/* mock routes */]);
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const { fetchMock } = createFetchMock([/* routes */]);
 
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const request = authenticatedJsonRequest("http://localhost", {
-          /* payload */
-        });
+        const request = authenticatedJsonRequest("http://localhost", { /* body */ });
         const response = await handler(request);
-
         assertEquals(response.status, 200);
       });
     });
   });
 });
-
-Deno.test("function-name - missing params returns 400", async () => {
-  // 에러 케이스 테스트
-});
 ```
 
-**핵심 패턴:**
-- `captureServeHandler()` — Edge Function의 handler 캡처
-- `createFetchMock()` — 외부 API 호출 Mock (Iamport, Supabase 등)
-- `withEnv()` — 환경변수 설정
-- `withMockedFetch()` — fetch 함수 대체
-- `withNoIntervals()` — setInterval 비활성화 (타이머 기반 로직)
+**핵심 패턴**:
+- `captureServeHandler()` — handler 캡처
+- `createFetchMock()` — 외부 API 모킹 (Iamport, Supabase REST 등)
+- `withEnv()` — 환경변수 주입
+- `withMockedFetch()` — `fetch` 대체
+- `withNoIntervals()` — `setInterval` 비활성화 (타이머 기반 로직)
+- 외부 API 호출은 **반드시 mock**
 
 ---
 
-## 3. 새 피쳐 구현 시 테스트 체크리스트
+### 🗄️ Layer 6 — DB monitor
 
-Claude가 새 피쳐를 구현할 때 아래 체크리스트를 따른다:
+**위치**: `supabase/migrations/` 내부 `check_db_invariants()` RPC + `.github/workflows/db-invariants.yml`
 
-### 필수 (MUST)
+**샘플 (migration)**:
 
-- [ ] **Repository 테스트** — 새로운 Repository 메서드마다 happy path + error case
-- [ ] **Controller 테스트** — 새로운 Controller/Provider의 상태 변환 검증
-- [ ] **DB Migration 테스트** — 새 테이블/컬럼 추가 시 pgTAP 스키마 테스트
-- [ ] **RLS 테스트** — 새 테이블 또는 RLS 정책 변경 시 pgTAP RLS 테스트
-- [ ] **Edge Function 테스트** — 새 Edge Function 추가 시 Deno 테스트
+```sql
+CREATE OR REPLACE FUNCTION public.check_db_invariants()
+RETURNS TABLE(invariant_name text, violation_count int, details text) AS $$
+BEGIN
+  -- 고아 party_application (event 삭제됨)
+  RETURN QUERY
+    SELECT 'orphan_party_applications'::text,
+           COUNT(*)::int,
+           'party_applications with deleted event'::text
+    FROM party_applications pa
+    LEFT JOIN events e ON e.id = pa.event_id
+    WHERE e.id IS NULL;
 
-### 권장 (SHOULD)
+  -- 추가 invariant ...
+END;
+$$ LANGUAGE plpgsql;
+```
 
-- [ ] **Golden 테스트** — 디자인 토큰이나 레이아웃에 영향을 주는 UI 변경 시 (`@Tags(['golden'])`)
-- [ ] **Widget 테스트** — 복잡한 상태 분기가 있는 UI 위젯
-- [ ] **Coordinator 테스트** — 네비게이션 로직이 있는 Coordinator
-- [ ] **에러 핸들링** — 네트워크 오류, 인증 만료 등 에러 시나리오
-- [ ] **엣지 케이스** — 빈 목록, null 값, 경계값 등
+**워크플로우**: 매시간 cron — 위반 수 > 0 이면 alert.
 
-### 필수 (MUST) — 추가 항목
-
-- [ ] **Smoke 테스트** — 새 화면 추가 시 `test/src/features/{feature}/ui/{page}_smoke_test.dart` 작성
-  - P0 화면: `event_application_wizard`, `purchase_history`, `settlement`, `checkin`, `partner_apply`, `party_create_wizard`, `application_manage`
-  - 최소 1개: 정상 렌더링 + 로딩 상태
-- [ ] **Integration 테스트** — 여러 화면을 걸치는 CUJ 플로우
-  - 신규 CUJ 추가 시 `test/integration/cuj_*.dart` 작성 필수
+**핵심 규칙**:
+- **계약 회귀가 아닌 runtime 이상 감시** (계약은 Layer 4)
+- RPC 는 read-only — 데이터 수정 금지
+- 신규 invariant 추가 시 `db-invariants.yml` 도 업데이트
 
 ---
 
-## 4. 테스트 파일 네이밍 & 위치 규칙
+### 🗄️ Layer 7 — Tick simulator
+
+**위치**: `supabase/functions/backend-simulator/` EF + 워크플로우:
+- `daily-backend-simulation.yml` — 매일 실행 (시간 전진 시뮬)
+- `hourly-user-activity.yml` — 매시간 user 활동 시뮬
+
+**성격**: 기능 테스트가 아니라 **파이프라인 관통 시뮬**. 매칭/결제/정산/알림 파이프라인이 엔드투엔드로 동작하는지 감시.
+
+**작성 대상 아님** (신규 EF 단위 테스트는 Layer 5). Layer 7 은 시뮬 시나리오 확장 시에만 수정.
+
+---
+
+## 3. 파일 네이밍 & 위치 규칙
 
 ```
-# Repository 테스트 (minglit_kit)
+# Layer 1 — Unit
 shared/packages/minglit_kit/test/src/data/repositories/{name}_repository_test.dart
-
-# Model 테스트 (minglit_kit)
 shared/packages/minglit_kit/test/src/data/models/{name}_test.dart
-
-# Controller 테스트 (앱별)
 apps/{app}/test/src/features/{feature}/logic/{name}_controller_test.dart
-
-# Coordinator 테스트 (앱별)
 apps/{app}/test/src/features/{feature}/logic/{name}_coordinator_test.dart
+apps/{app}/test/src/features/{feature}/ui/{widget}_test.dart
 
-# Widget 테스트 (앱별)
-apps/{app}/test/src/features/{feature}/ui/{widget_name}_test.dart
+# Layer 2a — Widget flow
+apps/{app}/test/integration/{scenario}_test.dart
+apps/{app}/test/integration/cuj_{scenario}_test.dart
 
-# Golden 테스트 (앱별)
-apps/{app}/test/goldens/{widget_name}_golden_test.dart
+# Layer 2b — Golden (Alchemist)
+apps/{app}/test/goldens/{widget}_golden_test.dart
+shared/packages/minglit_kit/test/goldens/{widget}_golden_test.dart
 
-# Integration 테스트 (앱별)
-apps/{app}/test/integration/{scenario_name}_test.dart
+# Layer 3 — Emulator (Patrol)
+apps/{app}/integration_test/cuj_{scenario}_test.dart
+apps/{app}/integration_test/{feature}_native_test.dart
 
-# DB 테스트 (pgTAP)
+# Layer 4 — pgTAP
 supabase/tests/database/{번호}_{feature}_test.sql
 
-# Edge Function 테스트
+# Layer 5 — Deno EF
 supabase/functions/{function_name}/{function_name}_test.ts
 ```
 
-**번호 규칙 (pgTAP):** `ls supabase/tests/database/`로 기존 번호 확인 후 다음 번호 사용.
+---
+
+## 4. 새 피쳐 구현 시 체크리스트
+
+### MUST
+
+- [ ] **Layer 1 unit** — 새 repository 메서드 / controller 마다 happy path + error case
+- [ ] **Layer 4 pgTAP** — 새 테이블 / 컬럼 / RLS 정책 추가 시
+- [ ] **Layer 5 Deno EF** — 새 Edge Function 추가 시
+- [ ] **Layer 2a widget flow** — 신규 CUJ 또는 신규 화면 플로우 추가 시 `test/integration/cuj_*_test.dart`
+- [ ] **Layer 2b golden** — 신규 컴포넌트 / 디자인 토큰 변경 시 (`@Tags(['golden'])`)
+
+### SHOULD
+
+- [ ] **Layer 3 Patrol** — 네이티브 surface 또는 실 DB 경로 검증이 핵심인 CUJ
+- [ ] **Layer 1 widget** — 복잡한 상태 분기가 있는 UI 위젯
+- [ ] **에러 핸들링** — 네트워크 오류, 인증 만료, 엣지 케이스
+
+### MAY
+
+- [ ] **Layer 6 invariant** — 새 테이블이 "절대 N 초과하면 안 된다" 같은 런타임 제약을 가질 때
+- [ ] **Layer 7 tick** — 새 파이프라인 단계가 시간 기반 trigger 에 의존할 때
 
 ---
 
-## 5. Mock 유틸리티 참조
+## 5. 현재 커버리지 현황 (2026-04-18)
 
-### Dart (minglit_kit)
+> 전체 수치 / 갭 상세는 [`test-strategy.md §4`](test-strategy.md#4-현재-커버리지-수치-2026-04-18) 참고.
 
-| 유틸 | 위치 | 용도 |
-|------|------|------|
-| `createMockSupabase()` | `minglit_kit/test/helpers/supabase_mock_helpers.dart` | Supabase 클라이언트 Mock |
-| `mockTable()` | 동일 파일 | 테이블 쿼리 Fake 결과 설정 |
-| `MockSupabaseClient` | `minglit_kit/test/helpers/mocks.dart` | 기본 Supabase Mock 클래스들 |
-| `createContainer()` | `apps/{app}/test/utils/test_utils.dart` | Riverpod 테스트 컨테이너 |
-| Repository Mocks | `apps/{app}/test/utils/mocks.dart` | `MockEventRepository` 등 |
+| Layer | 위치 | 파일 수 |
+|-------|------|--------|
+| 1 (unit) | minglit_kit / app_user / app_partner `test/src/` | 99 / 65 / 71 |
+| 2a (widget flow) | app_user / app_partner `test/integration/` | 26 / 11 |
+| 2b (golden) | app_user / app_partner `test/goldens/**_golden_test.dart` | 14 / 15 |
+| 3 (Patrol) | app_user / app_partner `integration_test/` | 5 / 1 (native surface 전용) |
+| 4 (pgTAP) | `supabase/tests/database/*.sql` | 80 |
+| 5 (Deno EF) | `supabase/functions/**/*_test.ts` | 75 |
+| 6 (DB monitor) | `check_db_invariants()` RPC | 1 RPC (매시간) |
+| 7 (tick simulator) | `backend-simulator` EF + 2 workflows | 매시간 + 매일 |
 
-### Deno (Edge Functions)
-
-| 유틸 | 위치 | 용도 |
-|------|------|------|
-| `captureServeHandler()` | `supabase/functions/_test_utils/mock_http.ts` | Edge Function handler 캡처 |
-| `createFetchMock()` | 동일 파일 | HTTP fetch Mock |
-| `authenticatedJsonRequest()` | 동일 파일 | 인증된 JSON 요청 생성 |
-| `withEnv()` | 동일 파일 | 환경변수 설정 |
-| `withMockedFetch()` | 동일 파일 | fetch 대체 |
-| fixtures | `supabase/functions/_test_utils/fixtures.ts` | Mock 데이터 (mockOrder, mockPaidPayment 등) |
+**핵심 갭**:
+- 🔴 **Layer 3 CUJ 이관 0%** — 37 widget flow 를 Patrol 로 전환 필요 (#1586 Phase D-2)
+- 🟡 **Layer 2a 일부 feature 부족** — app_partner integration 11 vs 요구 20+
 
 ---
 
-## 6. 테스트 실행 명령어
+## 6. 실행 명령어
 
 ```bash
-# Flutter 단위/위젯 테스트 (앱별)
+# Layer 1 + 2a + 2b — Flutter 앱별
 cd apps/app_user && flutter test
 cd apps/app_partner && flutter test
 cd shared/packages/minglit_kit && flutter test
 
-# Flutter 특정 파일만
+# 특정 파일만
 flutter test test/src/features/event/logic/event_detail_controller_test.dart
 
-# Flutter 통합 테스트 (Mock 기반) — app_user
+# Layer 2a 만 (widget flow)
 cd apps/app_user && flutter test test/integration/
-
-# Flutter 통합 테스트 (Mock 기반) — app_partner
 cd apps/app_partner && flutter test test/integration/
 
-# 태그로 분리 실행
-cd apps/app_user && flutter test --tags integration
+# Layer 2b 만 (golden)
+cd apps/app_user && flutter test --tags golden --dart-define=CI=true
+# Golden 갱신
+cd apps/app_user && flutter test --update-goldens --tags golden --dart-define=CI=true
 
-# pgTAP DB 테스트
+# Layer 2a 특정 CUJ (flutter_test / WidgetTester)
+cd apps/app_user && flutter test test/integration/cuj_signup_to_apply_test.dart
+
+# Layer 3 (Patrol) — 로컬 emulator 필요
+cd apps/app_user && patrol test integration_test/permission_grant_test.dart
+# CI 에서는 patrol-e2e.yml 워크플로우
+
+# Layer 4 pgTAP
 supabase test db
 
-# Edge Function 테스트
+# Layer 5 Deno EF
 deno test --allow-all supabase/functions/
-
-# 특정 Edge Function만
 deno test --allow-all supabase/functions/payment-verify/
 
-# CI 전체 재현
-flutter analyze && flutter test  # Flutter
-supabase test db                 # DB
-deno test --allow-all functions/ # Edge Functions
+# Layer 6 — 수동 실행
+psql -c "SELECT * FROM check_db_invariants();"
+
+# Layer 7 — workflow_dispatch 로 수동 trigger
+gh workflow run daily-backend-simulation.yml --ref dev
 ```
 
 ---
 
-## 7. 테스트 작성 시 주의사항
+## 7. 주의사항
 
 ### DO
 
-- Mock 데이터는 실제 DB 스키마 (`supabase/migrations/`)의 컬럼명과 일치시킨다
-- `group()`으로 테스트를 논리적으로 묶는다 (클래스명 → 메서드명)
-- Happy path와 Error case를 모두 작성한다
-- `setUp()`에서 Mock을 초기화한다 (테스트 간 격리)
-- Edge Function 테스트에서는 외부 API를 반드시 Mock한다
+- Mock 데이터는 실제 DB 스키마(`supabase/migrations/`) 컬럼명과 일치
+- `group()` 으로 논리 묶음 (클래스 → 메서드)
+- Happy path + Error case 둘 다 작성
+- `setUp()` 에서 Mock 초기화 — 테스트 격리
+- Layer 5 EF 테스트에서 외부 API 는 **반드시 mock**
 
 ### DON'T
 
-- 테스트에서 실제 네트워크 호출을 하지 않는다 (CUJ 통합 테스트 제외)
-- 테스트 간 상태를 공유하지 않는다
-- Mock의 반환값을 하드코딩하지 않는다 — 변수로 선언하여 재사용한다
-- `sleep()`이나 `Future.delayed()`로 비동기를 기다리지 않는다
-- generated 파일 (`*.g.dart`, `*.freezed.dart`)은 테스트 대상에서 제외한다
+- Layer 1 / 2a / 2b 에서 실제 네트워크 호출 금지 (실 호출은 Layer 3 만)
+- 테스트 간 상태 공유 금지
+- Mock 반환값 하드코딩 금지 — 변수로 재사용
+- `sleep()` / `Future.delayed()` 로 비동기 대기 금지
+- generated 파일 (`*.g.dart`, `*.freezed.dart`) 테스트 대상 제외
 
 ---
 
 ## 8. CI 파이프라인 연동
 
-테스트는 `.github/workflows/ci.yml`에서 자동 실행된다:
+`.github/workflows/ci.yml` 이 PR 마다 Layer 1 / 2a / 2b / 4 / 5 를 실행.
 
-| 변경 영역 | 실행되는 테스트 |
-|----------|-------------|
-| `apps/app_user/**` | Flutter analyze + test + **integration test** (app_user) |
-| `apps/app_partner/**` | Flutter analyze + test + **integration test** (app_partner) |
-| `shared/packages/minglit_kit/**` | Flutter analyze + test (모든 앱) |
-| `supabase/**` | pgTAP + Edge Function 테스트 |
+| 변경 영역 | 실행 Layer |
+|----------|-----------|
+| `apps/app_user/**`, `apps/app_partner/**` | 1 + 2a + 2b (해당 앱) |
+| `shared/packages/minglit_kit/**` | 1 (모든 앱) |
+| `supabase/migrations/**`, `supabase/tests/**` | 4 |
+| `supabase/functions/**` | 5 |
 | `apps/landing_*/**` | npm lint + build |
 
-커버리지는 Codecov에 업로드된다. `minglit_kit`은 60% patch 커버리지 목표.
+추가 워크플로우:
+- `patrol-e2e.yml` — Layer 3 (주 1회 예정, 현재 런 0건)
+- `db-invariants.yml` — Layer 6 (매시간)
+- `daily-backend-simulation.yml` / `hourly-user-activity.yml` — Layer 7
+
+---
+
+## 9. Mock 유틸 참조
+
+### Dart
+
+| 유틸 | 위치 | 용도 |
+|------|------|------|
+| `createMockSupabase()` | `minglit_kit/test/helpers/supabase_mock_helpers.dart` | Supabase 클라이언트 Mock |
+| `mockTable()` | 동일 | 테이블 쿼리 Fake |
+| `MockSupabaseClient` | `minglit_kit/test/helpers/mocks.dart` | 기본 Mock 클래스 |
+| `createContainer()` | `apps/{app}/test/utils/test_utils.dart` | Riverpod 컨테이너 |
+| Repository Mocks | `apps/{app}/test/utils/mocks.dart` | `MockEventRepository` 등 |
+| `createTestApp()` | `apps/app_user/test/integration/utils/test_app.dart` | Layer 2a 라우터 + Provider |
+| `createPartnerTestApp()` | `apps/app_partner/test/integration/utils/test_app.dart` | 동일 (partner) |
+
+### Deno (Edge Functions)
+
+| 유틸 | 위치 | 용도 |
+|------|------|------|
+| `captureServeHandler()` | `supabase/functions/_test_utils/mock_http.ts` | EF handler 캡처 |
+| `createFetchMock()` | 동일 | HTTP fetch Mock |
+| `authenticatedJsonRequest()` | 동일 | 인증 JSON 요청 |
+| `withEnv()` | 동일 | env 주입 |
+| `withMockedFetch()` | 동일 | fetch 대체 |
+| fixtures | `supabase/functions/_test_utils/fixtures.ts` | Mock 데이터 |
