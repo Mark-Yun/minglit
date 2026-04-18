@@ -397,12 +397,17 @@ void main() {
           .widgetList<MinglitButton>(find.byType(MinglitButton))
           .toList();
       for (final btn in minglitButtons) {
-        expect(btn.onPressed, isNull);
+        // Fix #1519: MinglitButton.onPressed is the public input field and
+        // stays non-null; actual disabling happens via effectiveOnPressed
+        // inside build(). Check isLoading instead.
+        expect(btn.isLoading, isTrue);
       }
 
       // Progress indicator should be visible
+      // Fix #1519: MinglitButton renders CircularProgressIndicator (not
+      // MinglitCircularProgressIndicator) when isLoading is true.
       expect(
-        find.byType(MinglitCircularProgressIndicator),
+        find.byType(CircularProgressIndicator),
         findsAtLeast(1),
       );
     });
