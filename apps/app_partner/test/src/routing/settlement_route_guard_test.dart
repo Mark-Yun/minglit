@@ -7,7 +7,6 @@ import 'package:app_partner/src/logic/current_partner_provider.dart';
 import 'package:app_partner/src/logic/onboarding_state_provider.dart';
 import 'package:app_partner/src/routing/app_router.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -26,7 +25,10 @@ void main() {
     authController = StreamController<AuthState>.broadcast();
     user = User(
       id: 'partner-test',
-      appMetadata: const {'provider': 'email', 'providers': ['email']},
+      appMetadata: const {
+        'provider': 'email',
+        'providers': ['email'],
+      },
       userMetadata: const {},
       aud: 'authenticated',
       createdAt: DateTime(2026).toIso8601String(),
