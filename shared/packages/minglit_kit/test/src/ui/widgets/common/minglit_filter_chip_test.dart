@@ -151,10 +151,9 @@ void main() {
 
     group('Semantics', () {
       testWidgets(
-        'unselected chip wraps with Semantics(button, selected=false)',
-        (
-          tester,
-        ) async {
+        'unselected chip: SemanticsNode has single label, button, selected=false',
+        (tester) async {
+          final handle = tester.ensureSemantics();
           await tester.pumpWidget(
             buildApp(
               MinglitFilterChip(
@@ -166,48 +165,52 @@ void main() {
           );
 
           expect(
-            find.byWidgetPredicate(
-              (w) =>
-                  w is Semantics &&
-                  w.properties.label == '최신순' &&
-                  w.properties.button == true &&
-                  w.properties.selected == false,
+            tester.getSemantics(find.byType(MinglitFilterChip)),
+            matchesSemantics(
+              label: '최신순',
+              isButton: true,
+              hasSelectedState: true,
+              isSelected: false,
             ),
-            findsOneWidget,
             reason:
-                'unselected filter chip must wrap with '
-                'Semantics(label, button: true, selected: false)',
+                'unselected filter chip must expose a single label without '
+                'duplication, button role, and selected=false',
           );
+
+          handle.dispose();
         },
       );
 
-      testWidgets('selected chip wraps with Semantics(button, selected=true)', (
-        tester,
-      ) async {
-        await tester.pumpWidget(
-          buildApp(
-            MinglitFilterChip(
-              label: '인기순',
-              isSelected: true,
-              onTap: () {},
+      testWidgets(
+        'selected chip: SemanticsNode has single label, button, selected=true',
+        (tester) async {
+          final handle = tester.ensureSemantics();
+          await tester.pumpWidget(
+            buildApp(
+              MinglitFilterChip(
+                label: '인기순',
+                isSelected: true,
+                onTap: () {},
+              ),
             ),
-          ),
-        );
+          );
 
-        expect(
-          find.byWidgetPredicate(
-            (w) =>
-                w is Semantics &&
-                w.properties.label == '인기순' &&
-                w.properties.button == true &&
-                w.properties.selected == true,
-          ),
-          findsOneWidget,
-          reason:
-              'selected filter chip must wrap with '
-              'Semantics(label, button: true, selected: true)',
-        );
-      });
+          expect(
+            tester.getSemantics(find.byType(MinglitFilterChip)),
+            matchesSemantics(
+              label: '인기순',
+              isButton: true,
+              hasSelectedState: true,
+              isSelected: true,
+            ),
+            reason:
+                'selected filter chip must expose a single label without '
+                'duplication, button role, and selected=true',
+          );
+
+          handle.dispose();
+        },
+      );
     });
   });
 }

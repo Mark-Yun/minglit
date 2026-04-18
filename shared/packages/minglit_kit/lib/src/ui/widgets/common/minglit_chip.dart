@@ -136,6 +136,7 @@ class MinglitChip extends StatelessWidget {
       return Semantics(
         label: label,
         button: true,
+        excludeSemantics: true,
         child: ConstrainedBox(
           constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
           child: InkWell(
@@ -152,6 +153,7 @@ class MinglitChip extends StatelessWidget {
 
     return Semantics(
       label: label,
+      excludeSemantics: true,
       child: chip,
     );
   }

@@ -143,48 +143,43 @@ void main() {
     });
 
     group('Semantics', () {
-      testWidgets('interactive chip wraps with Semantics(button: true)', (
-        tester,
-      ) async {
-        await tester.pumpWidget(
-          buildApp(
-            MinglitChip(label: '인터랙티브 칩', onTap: () {}),
-          ),
-        );
+      testWidgets(
+        'interactive chip: SemanticsNode has single label and button flag',
+        (tester) async {
+          final handle = tester.ensureSemantics();
+          await tester.pumpWidget(
+            buildApp(MinglitChip(label: '인터랙티브 칩', onTap: () {})),
+          );
 
-        expect(
-          find.byWidgetPredicate(
-            (w) =>
-                w is Semantics &&
-                w.properties.label == '인터랙티브 칩' &&
-                w.properties.button == true,
-          ),
-          findsOneWidget,
-          reason:
-              'interactive chip must wrap with Semantics(label, button: true) '
-              'for screen reader',
-        );
-      });
+          expect(
+            tester.getSemantics(find.byType(MinglitChip)),
+            matchesSemantics(label: '인터랙티브 칩', isButton: true),
+            reason:
+                'interactive chip must expose a single label without '
+                'duplication and declare button role',
+          );
+
+          handle.dispose();
+        },
+      );
 
       testWidgets(
-        'non-interactive chip wraps with Semantics(label) without button role',
+        'non-interactive chip: SemanticsNode has single label, no button flag',
         (tester) async {
+          final handle = tester.ensureSemantics();
           await tester.pumpWidget(
             buildApp(const MinglitChip(label: '읽기 전용 칩')),
           );
 
           expect(
-            find.byWidgetPredicate(
-              (w) =>
-                  w is Semantics &&
-                  w.properties.label == '읽기 전용 칩' &&
-                  w.properties.button != true,
-            ),
-            findsOneWidget,
+            tester.getSemantics(find.byType(MinglitChip)),
+            matchesSemantics(label: '읽기 전용 칩', isButton: false),
             reason:
-                'static chip must wrap with Semantics(label) but not announce '
-                'button role',
+                'static chip must expose a single label without duplication '
+                'and must not declare button role',
           );
+
+          handle.dispose();
         },
       );
     });
