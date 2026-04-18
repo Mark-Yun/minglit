@@ -22,56 +22,63 @@
 | 3. CUJ 테스트 실행 경로 | `apps/app_user/test/integration/` 순회 | `.github/scripts/run-client-cuj.sh`는 `apps/app_user/integration_test/*_test.dart`를 탐색 → **경로 mismatch로 실행 0건** | run-client-cuj.sh / run-partner-cuj.sh 경로 상수가 Patrol 전환 이전 형태 유지 |
 | 4. 상위 파이프라인 (`client-cuj-test`, `partner-cuj-test` job) | 매일 실행 | **skip 지속** | `needs: seed-and-simulate` 의존 — #1553 (Supabase pooler `aws-0 → aws-1`) 미해결로 upstream job 실패 |
 | 5. Patrol E2E (`patrol-e2e.yml`) | weekly cron | **run 이력 0건** | 한 번도 trigger되지 않음. 수동 실행도 없음 |
-| 6. 아티팩트 업로드 | 생성된 png 보존 | `patrol-e2e.yml:66`은 `if: failure()` + build outputs만 업로드 (스크린샷 아님). `ci.yml`은 golden 실패 / coverage / allure만 업로드 | Layer 2 용 retention 경로 미구축 |
+| 6. 아티팩트 업로드 | 생성된 png 보존 | `patrol-e2e.yml:66`은 `if: failure()` + build outputs만 업로드 (스크린샷 아님). `ci.yml`은 golden 실패 / coverage / allure만 업로드 | Tier B 용 retention 경로 미구축 |
 
-### 3-Layer 스크린샷 아키텍처
+### 3-Tier 스크린샷 아키텍처
 
-본 문서가 속한 **Layer 2**의 위치를 명확히 한다. 전체 전략은 `docs/qa/test-strategy.md`의 "스크린샷 3-layer 파이프라인" 섹션이 SSOT.
+본 문서가 속한 **Tier B** (시나리오 스크린샷) 의 위치를 명확히 한다. 전체 전략은 `docs/qa/test-strategy.md` 의 "스크린샷 3-Tier 아키텍처" 섹션이 SSOT.
+
+> **용어 주의**: 아래 "Tier" 는 7-layer taxonomy 의 "Layer" 와 다른 차원이다.
+> - **Tier**: 스크린샷 자산의 성격 구분 (A=픽셀비교 / B=증거사진 / C=AI리뷰)
+> - **Layer**: 테스트 계층 taxonomy (1-7) — `docs/qa/test-strategy.md §2`
+>
+> 연결: Tier A = 7-layer Layer 2b (Alchemist golden), Tier B = 7-layer Layer 3 (Patrol emulator) 내부 자산, Tier C = Layer 3 output 을 소비하는 후속 AI pipeline.
 
 ```
-[Layer 1] 골든 스크린샷 테스트 (기존, 유지)
-  - Alchemist 기반 widget 단위 golden (app_user 40 / app_partner 91)
+[Tier A] 골든 스크린샷 테스트 (7-layer Layer 2b, 기존 유지)
+  - Alchemist 기반 widget 단위 golden (app_user 14 / app_partner 15 — 2026-04-18)
   - 픽셀 레벨 회귀 차단
-  - 경로: apps/*/test/**/*_golden_test.dart + goldens/ (또는 equivalent)
+  - 경로: apps/*/test/goldens/**/*_golden_test.dart (향후 test/alchemist/)
 
          ▲
          │
-[Layer 2] 시나리오 스크린샷 (본 문서 = 캡처 포인트 매핑)
-  - CUJ integration test의 스텝별 실제 플로우 스냅샷
+[Tier B] 시나리오 스크린샷 (7-layer Layer 3 내부, 본 문서 = 캡처 포인트 매핑)
+  - Patrol CUJ 테스트의 스텝별 실제 플로우 스냅샷
   - 목적: "현재 실제 화면"의 시각적 로그 (픽셀 비교 아님)
-  - 대상 경로: apps/app_user/test/integration/ + apps/app_partner/test/integration/
-  - 저장: artifact retention 14d 이상 (Layer 3 agent가 pull할 수 있어야 함)
+  - 대상 경로: apps/app_*/integration_test/ (향후 emulator_test/)
+  - 저장: artifact retention 14d 이상 (Tier C agent 가 pull 할 수 있어야 함)
 
          ▲
          │
-[Layer 3] AI agent 스크린샷 점검 (후속 구현)
-  - 매일 저장된 Layer 2 스크린샷을 agent가 전수 리뷰
+[Tier C] AI agent 스크린샷 리뷰 (후속 구현)
+  - 매일 저장된 Tier B 스크린샷을 agent 가 전수 리뷰
   - 감지 대상: 깨진 이미지, 누락된 라벨, 레이아웃 오류, 품질 저하
   - 출력: bug-report 이슈 자동 생성
 ```
 
-### Layer 2의 의미 재정의 (2026-04-18, 이슈 #1557 기반)
+### Tier B 의 의미 재정의 (2026-04-18, 이슈 #1557 기반)
 
-- **캡처는 "비교"가 아니라 "증거 사진"** — Layer 3 AI agent의 semantic 리뷰 입력용.
-- 따라서 아티팩트 저장 요구사항이 기존 Layer 1(골든 픽셀 비교)과 다름:
+- **캡처는 "비교"가 아니라 "증거 사진"** — Tier C AI agent 의 semantic 리뷰 입력용.
+- 따라서 아티팩트 저장 요구사항이 Tier A (골든 픽셀 비교) 와 다름:
   - ❌ PR 실패 시에만 업로드 (현재 `patrol-e2e.yml:66` 패턴)
-  - ✅ **매일 성공 run에서도 전량 저장**, retention 14일 이상, Layer 3 agent가 접근 가능한 경로
+  - ✅ **매일 성공 run 에서도 전량 저장**, retention 14 일 이상, Tier C agent 가 접근 가능한 경로
 - 따라서 이 문서의 매핑은 "픽셀 고정"이 아니라 **"뭘 촬영할지"** 를 정의하는 쇼트 리스트로 해석.
 
 ### 시나리오 스크린샷이 죽어있는 동안 놓친 버그 (샘플)
 
-- #1538 — CUJ-P01 파티 생성 위저드 FlutterQuill localization 에러. `cuj_event_create_wizard_test.dart`가 동작했으면 Layer 2에서 포착 가능.
+- #1538 — CUJ-P01 파티 생성 위저드 FlutterQuill localization 에러. `cuj_event_create_wizard_test.dart` 가 동작했으면 Tier B 에서 포착 가능.
 - #1540 — Home/EventDetail broken image. `cuj_event_detail_test.dart` / flow 테스트 범위.
 
 ### 경로 구분 (혼동 방지)
 
-| 경로 | 역할 | Layer |
-|------|------|-------|
-| `apps/app_user/test/integration/` | Flutter 위젯 통합 + CUJ 시나리오 테스트 | **Layer 2 대상** |
-| `apps/app_partner/test/integration/` | 동일 | **Layer 2 대상** |
-| `tests/client_cuj_integration/` | 백엔드 통합 테스트 (별도 패키지, 20개 파일) | **Layer 2 아님** — Layer 2로 혼동 금지 |
-| `goldens/` 또는 Alchemist 골든 경로 | 픽셀 레벨 widget 골든 | Layer 1 |
-| (미정) `scenario_screenshots/` | Layer 2 artifact 저장 경로 후보 | Layer 2 — 저장 전략은 이슈 #1557에서 결정 대기 |
+| 경로 | 역할 | Tier | 7-layer |
+|------|------|------|---------|
+| `apps/app_user/test/integration/` | Flutter 위젯 플로우 (mock 기반) — 향후 Patrol 이관 대상 (#1586 Phase D-2) | **Tier B 이관 대상** | Layer 2a |
+| `apps/app_partner/test/integration/` | 동일 | **Tier B 이관 대상** | Layer 2a |
+| `apps/app_*/integration_test/` (향후 `emulator_test/`) | Patrol 네이티브 테스트 — 현재 native surface 특수 테스트만 존재 | **Tier B 생성 위치** | Layer 3 |
+| `apps/*/test/goldens/` | 픽셀 레벨 widget 골든 | Tier A | Layer 2b |
+| `tests/client_cuj_integration/` | 삭제됨 (#1564) | — | — |
+| (미정) `apps/app_*/emulator_test/screenshots/` | Tier B artifact 저장 경로 후보 | Tier B 저장 | Layer 3 output |
 
 ### 재가동 선결 의존성
 

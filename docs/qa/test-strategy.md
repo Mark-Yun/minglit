@@ -1,510 +1,306 @@
-# 통합 테스트 전면 보강 — 테스트 전략 (Phase 2)
+# 테스트 전략 — 7-Layer Taxonomy (SSOT)
 
-> Phase 1 산출물 (PM): `docs/qa/test-cases/app-user-smoke.md`, `app-partner-smoke.md`, `cuj-user.md`, `cuj-partner.md`
->
-> 이 문서는 PM이 설계한 테스트 케이스를 **어떤 계층으로, 어떤 순서로 구현할지** 매핑한다.
+> 이 문서는 Minglit 모노레포의 테스트 계층 정의 **Single Source of Truth**.
+> 관련 이슈: #1586 (Phase A — 본 문서 재작성)
+> 최근 업데이트: 2026-04-18 (taxonomy 확정, 용어 통일)
 
 ---
 
-## 1. 현재 상태 vs 목표
+## 1. 왜 7-layer 인가
 
-### 현재 (2026-04-05)
+테스트 코드/워크플로우/문서가 여러 위치에 흩어져 있어 **이름 충돌**과 **용도 불명** 이 혼재했다.
 
-| 계층 | app_user | app_partner | 비고 |
-|------|----------|-------------|------|
-| Unit/Widget 테스트 | 78 파일 | 59 파일 | 개별 화면/로직 단위 |
-| Golden 테스트 | 40 파일 | 91 파일 | Alchemist 기반 시각적 회귀 |
-| Integration 테스트 (Mock) | 2 파일 | 0 파일 | `apple_sign_in`, `party_browse` |
-| E2E 테스트 (실물 디바이스) | 0 | 0 | 없음 |
+| 혼동 예 | 기존 상황 | 원인 |
+|--------|----------|------|
+| "integration" 4중 의미 | `apps/*/test/integration/` (위젯 플로우) + `apps/*/integration_test/` (Patrol) + `tests/backend_integration/` (DB — 이미 이관) + `tests/client_cuj_integration/` (삭제) | 계층 이름에 `integration` 범람 |
+| "Golden" 스크린샷 vs "시나리오" 스크린샷 | 동일 단어 "스크린샷"이 Alchemist 픽셀 비교 / CUJ 증거 사진 / AI agent 리뷰 3가지를 지칭 | Layer 정의 부재 |
+| "E2E" 의미 불명 | "Patrol e2e" + "client-cuj-test" + "backend-simulator" 모두 E2E 로 불림 | 범위가 서로 다름 |
 
-### PM 케이스 총량
+**해결**: 테스트 대상/프레임워크/주기 기준으로 7-layer 로 정규화. 이하 모든 문서/워크플로우/폴더명은 이 이름을 따른다.
 
-| 구분 | app_user | app_partner | 합계 |
-|------|----------|-------------|------|
-| Smoke (화면 진입) | 18 화면 / 68 케이스 | 30 화면 / 98 케이스 | 166 |
-| CUJ (핵심 여정) | 8 여정 / 42 스텝 / 10 변형 | 7 여정 / 51 스텝 / 9 변형 | 93 스텝 + 19 변형 |
+---
 
-### 목표 (Phase 3 구현 후)
+## 2. 7-Layer Taxonomy
 
-| 계층 | 목표 | 근거 |
+### 📱 App Level (`apps/app_*/`)
+
+| # | Layer | 대상 | 위치 (현재 — 2026-04-18) | 프레임워크 | 주기 |
+|---|-------|------|---------------------------|-----------|------|
+| 1 | **Unit test** | Feature/logic 순수 단위 (repository, controller, util) | `apps/app_*/test/src/`, `shared/packages/minglit_kit/test/src/` | `flutter_test` (headless) | PR 마다 |
+| 2a | **Widget flow test** | 다화면 위젯 인터랙션 (mock 기반) | `apps/app_*/test/integration/` *(향후 `test/flows/` rename 검토 — #1586 Phase C)* | `flutter_test` (headless) | PR 마다 |
+| 2b | **Golden image test** | 시각 회귀 감지 (픽셀 비교) | `apps/app_*/test/goldens/` *(향후 `test/alchemist/` rename — #1586 Phase C, PR #1582)* | Alchemist | PR 마다 |
+| 3 | **Emulator test** | Patrol 기반 네이티브 surface + 실 DB CUJ + 시나리오 스크린샷 | `apps/app_*/integration_test/` *(향후 `emulator_test/` rename — #1582)* | Patrol | 주 1회 + 수동 |
+
+### 🗄️ Backend Level (`supabase/` + EF)
+
+| # | Layer | 대상 | 위치 | 프레임워크 | 주기 |
+|---|-------|------|------|-----------|------|
+| 4 | **pgTAP** | DB 스키마 / 트리거 / RPC / RLS 계약 | `supabase/tests/database/` | pgTAP | PR 마다 |
+| 5 | **Deno EF test** | Edge Function TypeScript 로직 단위 | `supabase/functions/**/*_test.ts` | `deno test` | PR 마다 |
+| 6 | **DB monitor** | Runtime invariant 감시 | `check_db_invariants()` RPC + `.github/workflows/db-invariants.yml` | SQL | 매시간 cron |
+| 7 | **Tick simulator** | 서버 pipeline 관통 시뮬 (시간 전진 + 파이프라인 부하) | `backend-simulator` EF + `.github/workflows/daily-backend-simulation.yml` + `hourly-user-activity.yml` | EF + HTTP | 매시간 + 매일 |
+
+### 보조 (taxonomy 밖, 유지)
+
+| 항목 | 위치 | 성격 |
 |------|------|------|
-| Smoke (Widget) | 전 화면 48건 (18 + 30) | 크래시 없이 렌더링 보장 |
-| CUJ Integration (Mock) | P0 7건 + P1 5건 = 12건 | 핵심 비즈니스 플로우 회귀 방지 |
-| 리다이렉트/가드 | 12건 (5 user + 7 partner) | 인증 상태별 라우팅 정확성 |
-| E2E (실물 디바이스) | 2~3건 | 결제/체크인 등 네이티브 연동 |
+| Secret scan | `.github/workflows/secret-scan.yml` | 보안 |
+| Migration version check | `ci.yml` job | Pre-test gate |
+| Env manifest sync | `ci.yml` job | 환경변수 정합성 |
+| Landing lint/build | `ci.yml` job | Next.js 빌드 |
+| Allure report | `allure-report.yml` | 결과 집계 |
+| Update goldens | `update-goldens.yml` | Layer 2b 유지보수 |
 
 ---
 
-## 2. 테스트 계층 매핑
+## 3. Layer 별 책임 / 비책임
 
-### 매핑 원칙
+**원칙**: 각 layer 는 본인 책임 범위에만 집중한다. 다른 layer 가 담당하는 것을 테스트하면 **중복** 이 생기고, 실패 분석과 유지보수 비용이 증가한다.
 
-| PM 케이스 유형 | 테스트 계층 | 이유 |
-|---------------|-----------|------|
-| 화면 진입 Smoke | **Widget Test** | Mock Provider로 화면 렌더링만 검증. 빠르고 안정적 |
-| 리다이렉트 검증 | **Widget Test** (Router) | GoRouter 설정 + Guard 로직을 단위 테스트로 검증 |
-| 파라미터 엣지 케이스 | **Widget Test** | 에러 화면/빈 상태 렌더링 검증 |
-| 화면별 액션 매트릭스 | **Widget Test** (대부분) / **Integration** (다화면 연동) | 단일 화면 내 액션은 Widget, 화면 전환은 Integration |
-| CUJ P0 (결제/매칭/정산) | **Integration Test** (Mock) | 다화면 플로우. Mock으로 전체 여정 시뮬레이션 |
-| CUJ P0 (결제 실제 PG) | **E2E Test** (실물 디바이스) | PG SDK 네이티브 연동은 Mock 불가 |
-| CUJ P1 (검색/계정삭제) | **Integration Test** (Mock) | 다화면 플로우 |
-| CUJ P2 (알림/차단) | **Widget Test** | 단순 CRUD, Integration 불필요 |
+### Layer 1 — Unit
 
----
+| ✅ 책임 | ❌ 비책임 |
+|--------|----------|
+| repository 메서드 happy path + error case | UI 렌더링 (→ 2a/2b) |
+| controller/provider 상태 전이 | 외부 서비스 호출 (→ 5/7) |
+| util/formatter 순수 함수 | 네이티브 surface (→ 3) |
+| minglit_kit 공유 로직 | DB 스키마 검증 (→ 4) |
 
-## 3. 우선순위별 구현 계획
+### Layer 2a — Widget flow
 
-### 🔴 P0 — 핵심 수익/비즈니스 경로 (1단계)
+| ✅ 책임 | ❌ 비책임 |
+|--------|----------|
+| GoRouter guard / redirect 로직 | 실 네트워크 / 실 DB (→ 3) |
+| 다화면 위젯 조합 (mock provider override) | 픽셀 레벨 시각 검증 (→ 2b) |
+| 로그인 상태별 분기 렌더링 | PG/WebView 등 네이티브 브릿지 (→ 3) |
+| 딥링크 파라미터 처리 | |
 
-실패 시 서비스 가치 없음. **반드시 먼저 구현.**
+### Layer 2b — Golden image
 
-#### Integration Tests (Mock 기반)
+| ✅ 책임 | ❌ 비책임 |
+|--------|----------|
+| 디자인 토큰 / 컴포넌트 시각 회귀 차단 | 상태 변화 / 인터랙션 (→ 2a) |
+| Ahem 폰트 기반 CI golden (OS 무관) | 실 DB 데이터 렌더링 (→ 3) |
+| `@Tags(['golden'])` 로 분리 실행 | 스텝별 플로우 스냅샷 (→ 3, "시나리오 스크린샷") |
 
-| ID | CUJ | 테스트 파일 | 스텝 | 검증 포인트 |
-|----|-----|-----------|------|------------|
-| IT-U01 | 회원가입→결제→신청 | `app_user/test/integration/cuj_signup_to_apply_test.dart` | 8 | 로그인 리다이렉트 복귀, 위저드 스텝 진행, Mock PG 결과 처리 |
-| IT-U02 | 체크인→매칭투표→결과 | `app_user/test/integration/cuj_checkin_matching_test.dart` | 8 | QR 표시, 투표 UI 인터랙션, 매칭 결과 화면 |
-| IT-U03 | 환불 신청 | `app_user/test/integration/cuj_refund_test.dart` | 5 | 환불 정책 검증, 상태 변경 |
-| IT-P01 | 파트너가입→파티→이벤트 | `app_partner/test/integration/cuj_onboarding_to_event_test.dart` | 20 | 온보딩 위저드 전체 플로우, 파티 생성, 이벤트+티켓 |
-| IT-P02 | 신청 심사 (승인/거절) | `app_partner/test/integration/cuj_application_review_test.dart` | 6 | 승인/거절 상태 전환, 동시 처리 방지 |
-| IT-P03 | 체크인 관리 | `app_partner/test/integration/cuj_checkin_manage_test.dart` | 4 | QR 스캔 결과 처리, 중복 체크인 |
-| IT-P04 | 정산 확인+계좌 | `app_partner/test/integration/cuj_settlement_test.dart` | 6 | 정산 내역, 계좌 CRUD |
+### Layer 3 — Emulator
 
-**총 7건, 57 스텝**
+| ✅ 책임 | ❌ 비책임 |
+|--------|----------|
+| 실 Android emulator 에서 Patrol 실행 | 단위 로직 회귀 감지 (→ 1) |
+| 네이티브 surface (카카오 WebView, PG SDK, 시스템 권한) | 픽셀 비교 (→ 2b) |
+| 실 dev Supabase 연동 CUJ (auth/RLS 실경로) | DB 스키마 계약 (→ 4) |
+| 스텝별 "시나리오 스크린샷" 생성 (Layer 3 agent 리뷰 input) | |
 
-#### Smoke Widget Tests (P0 화면)
+### Layer 4 — pgTAP
 
-| 화면 | 테스트 파일 | 케이스 수 |
-|------|-----------|----------|
-| 이벤트 신청 위저드 | `app_user/test/src/features/event/ui/event_application_wizard_smoke_test.dart` | 6 |
-| 구매 내역 | `app_user/test/src/features/purchase/ui/purchase_history_smoke_test.dart` | 3 |
-| 파트너 신청 위저드 | `app_partner/test/src/features/onboarding/ui/partner_apply_smoke_test.dart` | 5 |
-| 파티 생성 위저드 | `app_partner/test/src/features/party/ui/party_create_wizard_smoke_test.dart` | 8 |
-| 신청 관리 | `app_partner/test/src/features/application/ui/application_manage_smoke_test.dart` | 3 |
-| 정산 | `app_partner/test/src/features/settlement/ui/settlement_smoke_test.dart` | 4 |
-| 체크인 | `app_partner/test/src/features/checkin/ui/checkin_smoke_test.dart` | 2 |
+| ✅ 책임 | ❌ 비책임 |
+|--------|----------|
+| 테이블 / 컬럼 존재 검증 | EF 로직 (→ 5) |
+| RLS 정책 / 트리거 동작 | 앱 렌더링 (→ 1-3) |
+| RPC 함수 시그니처 | runtime invariant 감시 (→ 6) |
 
-**총 31건**
+### Layer 5 — Deno EF
 
----
+| ✅ 책임 | ❌ 비책임 |
+|--------|----------|
+| EF handler TypeScript 로직 | DB 스키마 (→ 4) |
+| 외부 API mock (Iamport, FCM) | 실 DB 데이터 (→ 7) |
+| 입력 검증 / 에러 분기 | 다중 EF 파이프라인 관통 (→ 7) |
 
-### 🟡 P1 — 필수 사용자 경험 (2단계)
+### Layer 6 — DB monitor
 
-실패 시 유저 이탈. P0 완료 후 구현.
+| ✅ 책임 | ❌ 비책임 |
+|--------|----------|
+| 매시간 invariant 감시 (고아 row, 정원 초과 등) | 계약 회귀 감지 (→ 4) |
+| 실 dev DB 데이터에 대한 실시간 검증 | 기능 테스트 (→ 1-5) |
+| alert 발송 | |
 
-#### Integration Tests
+### Layer 7 — Tick simulator
 
-| ID | CUJ | 테스트 파일 | 스텝 |
-|----|-----|-----------|------|
-| IT-U04 | 검색→필터→신청 | `app_user/test/integration/cuj_search_to_apply_test.dart` | 5 |
-| IT-U05 | 계정 삭제 | `app_user/test/integration/cuj_account_deletion_test.dart` | 5 |
-| IT-P05 | 파티/이벤트/티켓 편집 | `app_partner/test/integration/cuj_party_edit_test.dart` | 8 |
-
-**총 3건, 18 스텝**
-
-#### Smoke Widget Tests (P1 화면)
-
-| 화면 | 테스트 파일 | 케이스 수 |
-|------|-----------|----------|
-| 검색 | `app_user/test/src/features/search/ui/search_page_smoke_test.dart` | 4 |
-| 마이페이지 | `app_user/test/src/features/my/ui/my_page_smoke_test.dart` | 5 |
-| 개인정보 설정 | `app_user/test/src/features/settings/ui/privacy_page_smoke_test.dart` | 2 |
-| 파티 상세 | `app_partner/test/src/features/party/ui/party_detail_smoke_test.dart` | 5 |
-| 이벤트 생성 | `app_partner/test/src/features/event/ui/event_create_smoke_test.dart` | 2 |
-
-**총 18건**
-
-#### 리다이렉트/가드 테스트
-
-| 앱 | 테스트 파일 | 케이스 수 |
-|----|-----------|----------|
-| app_user | `app_user/test/src/routing/auth_guard_test.dart` | 5 (U-R01~R05) |
-| app_partner | `app_partner/test/src/routing/onboarding_guard_test.dart` | 7 (P-R01~R07) |
-
-**총 12건**
+| ✅ 책임 | ❌ 비책임 |
+|--------|----------|
+| 시간 전진 (시뮬레이션 tick) → 이벤트 생명주기 관통 | 단일 EF 단위 테스트 (→ 5) |
+| 매칭 / 결제 / 정산 파이프라인 연쇄 검증 | 앱 UI (→ 1-3) |
+| 매시간 user activity 시뮬 | 스키마 검증 (→ 4) |
 
 ---
 
-### 🟢 P2 — 전체 커버리지 확보 (3단계)
+## 4. 현재 커버리지 수치 (2026-04-18)
 
-서비스 운영에 불편하지만 가능. P1 완료 후 점진적 구현.
+실측 기반. Issue #1586 Phase D-1 측정 결과.
 
-#### Smoke Widget Tests (나머지 화면)
+### Layer 1 — Unit
 
-| 앱 | 대상 화면 수 | 예상 케이스 |
-|----|------------|-----------|
-| app_user | 6 (홈, 이벤트상세, 파트너상세, 알림, 차단, 알림설정) | 22 |
-| app_partner | 13 (홈, 멤버, 권한, 인증, 알림, 이벤트상세, 티켓편집 등) | 40 |
+| 앱 | 위치 | 파일 수 |
+|----|------|--------|
+| minglit_kit | `shared/packages/minglit_kit/test/` | 99 |
+| app_user | `apps/app_user/test/src/` | 65 |
+| app_partner | `apps/app_partner/test/src/` | 71 |
 
-**총 65건**
+### Layer 2a — Widget flow
 
-#### CUJ P2 (Widget Test로 충분)
+| 앱 | 위치 | 파일 수 |
+|----|------|--------|
+| app_user | `apps/app_user/test/integration/` | 26 |
+| app_partner | `apps/app_partner/test/integration/` | 11 |
 
-| ID | CUJ | 테스트 파일 |
-|----|-----|-----------|
-| WT-U07 | 알림 기반 재방문 | `app_user/test/src/features/notification/ui/notification_deeplink_test.dart` |
-| WT-U08 | 파트너 차단/해제 | `app_user/test/src/features/block/ui/block_partner_test.dart` |
-| WT-P06 | 멤버 관리+권한 | `app_partner/test/src/features/member/ui/member_permission_test.dart` |
-| WT-P07 | 인증 관리 | `app_partner/test/src/features/verification/ui/verification_manage_test.dart` |
+### Layer 2b — Golden image
 
-**총 4건**
+| 앱 | 위치 | `*_golden_test.dart` |
+|----|------|---------------------|
+| app_user | `apps/app_user/test/goldens/` | 14 |
+| app_partner | `apps/app_partner/test/goldens/` | 15 |
 
-#### 엣지 케이스 (파라미터 검증)
+### Layer 3 — Emulator (Patrol)
 
-| 앱 | 케이스 수 | 범위 |
-|----|----------|------|
-| app_user | 7 (U-E01~E07) | 존재하지 않는 ID, 빈 목록 등 |
-| app_partner | 9 (P-E01~E09) | 존재하지 않는 ID, 빈 상태 등 |
+| 앱 | 위치 | 파일 수 | 성격 |
+|----|------|--------|------|
+| app_user | `apps/app_user/integration_test/` | 5 | `apple_sign_in`, `kakao_login`, `payment_pg`, `permission_grant`, `scenario_screenshots` — **native surface 특수 테스트만**. CUJ 이관 0% |
+| app_partner | `apps/app_partner/integration_test/` | 1 | `scenario_screenshots` 만 |
 
-기존 Widget Test에 추가 케이스로 통합. 별도 파일 불필요.
+**Layer 3 런타임 상태**: `patrol-e2e.yml` 실행 이력 0건. `scenario_screenshots_test.dart` 내부 캡처 호출 0건. **사실상 죽은 상태.** 재가동 계획은 §6 로드맵 및 #1586 Phase D-2 참고.
 
----
+### Layer 4 — pgTAP
 
-## 4. 변형 시나리오 처리
+- `supabase/tests/database/` : 80 파일 (*.sql)
+- `tests/backend_integration/` → 2026-04-18 Deno/pgTAP 흡수 완료 (#1574)
 
-PM이 정의한 변형 시나리오(19건)는 해당 CUJ Integration Test 내 `group()`으로 포함한다.
+### Layer 5 — Deno EF
 
-| CUJ | 변형 | 처리 방식 |
-|-----|------|----------|
-| U01-V1: 기존 유저 재구매 | IT-U01 내 별도 test | 스텝 자동 스킵 검증 |
-| U01-V2: 결제 중 앱 종료 | **P3 (선택)** — 앱 생명주기 테스트는 E2E에서만 가능 |
-| U01-V3: 무료 이벤트 | IT-U01 내 별도 test | 결제 스킵 검증 |
-| U02-V1: 투표 시간 초과 | IT-U02 내 별도 test | 타이머 Mock |
-| U02-V2: 체크인 없이 매칭 | IT-U02 내 별도 test | 접근 차단 검증 |
-| U03-V1~V3: 환불 변형 | IT-U03 내 group | 부분환불, 당일환불, 무료취소 |
-| P01-V1: 심사 보완 | IT-P01 내 별도 test | `needsCorrection` 상태 |
-| P01-V2: 무료 이벤트 | IT-P01 내 별도 test | |
-| P01-V3: 위저드 이탈 | **P3** — 앱 종료 시나리오 |
-| P02-V1~V2: 심사 변형 | IT-P02 내 group | 정원 초과, 일괄 승인 |
-| P03-V1~V2: 체크인 변형 | IT-P03 내 group | 카메라 거부, 오프라인 |
-| P05-V1~V2: 편집 변형 | IT-P05 내 group | 진행중 이벤트, 티켓 템플릿 |
+- `supabase/functions/**/*_test.ts` : 75 파일
 
----
+### Layer 6 — DB monitor
 
-## 5. 테스트 인프라 보강
+- RPC: `check_db_invariants()` (supabase/migrations 에서 정의)
+- 워크플로우: `.github/workflows/db-invariants.yml` — 매시간 cron
+- 상태: **구현 존재. 2026-04-15 이슈 #1549 로 재등록 확인.**
 
-### 5.1 Integration Test 헬퍼 (신규)
+### Layer 7 — Tick simulator
 
-현재 Integration Test 인프라가 거의 없다 (app_user 2개, app_partner 0개). 공통 헬퍼가 필요하다.
-
-**필요한 유틸리티:**
-
-| 파일 | 용도 |
-|------|------|
-| `apps/{app}/test/integration/utils/pump_app.dart` | 테스트용 앱 빌드 (ProviderScope + GoRouter + 필요한 Override) |
-| `apps/{app}/test/integration/utils/cuj_helpers.dart` | 로그인/온보딩 등 반복 스텝 헬퍼 |
-| `apps/{app}/test/integration/utils/mock_providers.dart` | CUJ별 Mock Provider 설정 |
-
-**`pumpApp()` 설계:**
-```dart
-Future<void> pumpApp(
-  WidgetTester tester, {
-  required String initialRoute,
-  required List<Override> overrides,
-  AuthState authState = AuthState.guest,
-}) async {
-  await tester.pumpWidget(
-    ProviderScope(
-      overrides: [
-        authStateProvider.overrideWithValue(authState),
-        ...overrides,
-      ],
-      child: MaterialApp.router(
-        routerConfig: createTestRouter(initialRoute: initialRoute),
-      ),
-    ),
-  );
-  await tester.pumpAndSettle();
-}
-```
-
-### 5.2 CI 변경 사항
-
-현재 CI(`ci.yml`)는 app_user의 `test/integration/`만 실행한다. 변경 필요:
-
-| 변경 | 내용 |
-|------|------|
-| app_partner integration | `flutter test test/integration/` 추가 (app_partner에도) |
-| 테스트 태그 | Integration Test에 `@Tags(['integration'])` 적용 — 필요시 분리 실행 |
+- EF: `supabase/functions/backend-simulator/`
+- 워크플로우:
+  - `daily-backend-simulation.yml` — 매일 (PR #1584 로 pg_cron 에서 GH Actions 로 이관)
+  - `hourly-user-activity.yml` — 매시간
+- 상태: **정상 동작.**
 
 ---
 
-## 6. E2E 테스트 (Patrol 통합) 계획
+## 5. 스크린샷 3-Tier 아키텍처 (Layer 2b + 3 + Layer 3-agent 의 관계)
 
-> 2026-04-15 업데이트: #1458에서 Patrol 통합 + 스크린샷 내장 결정.
-> 2026-04-18 업데이트: #1557에서 스크린샷 3-layer 아키텍처 명문화. 용어 혼동 방지 섹션(§6.0) 추가.
+"스크린샷" 이라는 단어가 세 가지 독립 자산을 가리키므로 용어를 분리한다. 본 섹션이 팀 전체의 SSOT.
 
-### 6.0 스크린샷 3-layer 파이프라인 (SSOT)
-
-이 프로젝트에서 "스크린샷"이라는 단어는 3개의 독립 계층을 가리키며, 용어를 섞어 쓰지 않는다. 본 섹션이 팀 전체의 Single Source of Truth.
+> 주의: 아래 **Tier** 는 7-layer taxonomy 의 **Layer** 와 별개 차원이다. 혼동 방지 위해 "Tier" 용어 사용.
 
 ```
-[Layer 1] 골든 스크린샷 테스트 (Alchemist, 기존)
-  - 픽셀 레벨 widget 회귀 차단 — 디자인 토큰/컴포넌트 일관성
-  - 실패 시 PR 차단 (diff 비교)
-  - 대상: apps/*/test/**/*_golden_test.dart
-  - 수량: app_user 40 / app_partner 91
+[Tier A] 골든 스크린샷 (7-layer 의 Layer 2b)
+  - Alchemist 픽셀 비교
+  - 디자인 토큰 / 컴포넌트 회귀 차단
+  - 실패 시 PR 차단
 
-[Layer 2] "시나리오 스크린샷" (CUJ integration 내장 캡처)
-  - CUJ integration test의 스텝별 실제 플로우 스냅샷
-  - 비교 목적 아님 — "지금 실제 화면이 이렇더라"의 증거 사진
-  - 대상: apps/app_user/test/integration/ + apps/app_partner/test/integration/
-  - 캡처 포인트 매핑: docs/qa/screenshot-capture-points.md
-  - 현재 상태(2026-04-18): 머지됐지만 실행 0건 — #1557에서 재가동 추적 중
+[Tier B] 시나리오 스크린샷 (7-layer 의 Layer 3 내부)
+  - Patrol CUJ 테스트 내 스텝별 `$.native.screenshot(name: ...)`
+  - "지금 실제 화면" 증거 사진 — 픽셀 비교 아님
+  - 출력: artifact retention 14d 이상 (Tier C agent 접근용)
 
-[Layer 3] AI agent 스크린샷 점검 (후속 구현)
-  - Layer 2 아티팩트를 agent가 전수 리뷰
-  - 감지 대상: 깨진 이미지, 누락 라벨, 레이아웃 오류, 품질 저하
-  - 출력: bug-report 이슈 자동 생성 (현재 QA agent 파이프라인과 유사 경로)
+[Tier C] AI agent 스크린샷 리뷰 (후속 구현)
+  - Tier B 아티팩트를 agent 가 전수 semantic 리뷰
+  - 감지: 깨진 이미지, 누락 라벨, 레이아웃 오류
+  - 출력: bug-report 이슈 자동 생성
 ```
 
 **용어 규칙**:
 
-| 표현 | 정의 | 사용 예 |
-|------|------|--------|
-| "골든 스크린샷" / "golden" | Layer 1만 지칭. 픽셀 비교 | "이 위젯 golden 깨졌어" |
-| **"시나리오 스크린샷"** | Layer 2만 지칭. CUJ 플로우 캡처 | "시나리오 스크린샷이 안 찍힌다" |
-| "스크린샷 리뷰" / "agent 리뷰" | Layer 3만 지칭 | "agent 리뷰에서 잡혔다" |
-| "스크린샷" (단독) | 혼동 유발 — 반드시 Layer 명시해서 사용 |
-
-**경로 구분 (Layer 1 vs Layer 2)**:
-
-- `goldens/` (또는 Alchemist 지정 경로) — Layer 1 전용. Layer 2 아티팩트를 여기 저장 금지.
-- Layer 2 저장 경로는 아직 미정 (후보: `scenario_screenshots/` 하위, GitHub Artifacts 14d retention, 외부 버킷). 결정은 이슈 #1557에서 `report-exec` 라벨로 Mark 판단 대기.
-
-**경로 구분 (Layer 2 대상 vs 비대상)**:
-
-- `apps/app_user/test/integration/` + `apps/app_partner/test/integration/` → Layer 2 대상
-- `tests/client_cuj_integration/` (백엔드 통합 테스트, 별도 패키지, 20개 파일) → **Layer 2 아님.** Layer 2 캡처 호출 삽입 금지.
-
-### 6.1 Patrol 전환 배경
-
-기존 `IntegrationTestWidgetsFlutterBinding` 기반 E2E는 네이티브 인터랙션(카카오 로그인 WebView, PG 결제, 시스템 권한)을 처리할 수 없었다. Patrol(`patrol_test/` 3개)이 이미 도입되어 있으므로, 전체 integration 테스트를 Patrol로 통합한다.
-
-### 6.2 스크린샷 내장 전략
-
-기존 `scenario_screenshots_test.dart`(정적 화면 캡처)를 제거하고, 각 integration 테스트에 스텝별 `takeScreenshot()`을 삽입한다.
-
-| 항목 | Before | After |
-|------|--------|-------|
-| 스크린샷 위치 | 별도 파일 (scenario_screenshots_test.dart) | 각 테스트 내부 |
-| 캡처 시점 | 정적 화면만 | setup/before/after/error |
-| 네이티브 인터랙션 | 불가 | Patrol로 가능 |
-| 예상 캡처 수 | ~40장 (골든 시나리오) | **~141장** (플로우 중간 상태 포함) |
-
-### 6.3 캡처 포인트 정의
-
-상세 포인트는 `docs/qa/screenshot-capture-points.md` 참고.
-
-| 앱 | 파일 수 | 예상 캡처 수 |
-|----|---------|------------|
-| app_user (CUJ + Flow + 기타) | 25 | ~83 |
-| app_partner (CUJ + 기타) | 11 | ~47 |
-| patrol (E2E 네이티브) | 3 | ~11 |
-| **합계** | **39** | **~141** |
-
-### 6.4 CI 연동
-
-- `patrol-e2e.yml`에 통합 (주 1회 또는 매일)
-- 스크린샷 아티팩트 업로드 → Layer 3 agent의 semantic 리뷰 입력으로 활용 (픽셀 비교 아님 — §6.0 참고)
-- 네이티브 E2E (카카오 로그인, PG 결제, 권한)는 실물 디바이스에서만 실행
-
-### 6.5 Layer 2 재가동 현황 (2026-04-18)
-
-이 섹션의 계획(§6.2~§6.4)은 머지됐지만 **실제 CI 실행 0건**. 전수 점검 및 복구 작업은 이슈 #1557에서 추적한다. 상세 갭 분석은 `docs/qa/screenshot-capture-points.md` 첫머리 "현재 상태" 블록 참고.
-
-**재가동 선결 의존성**:
-
-- #1553 / PR #1556 — Supabase pooler `aws-0 → aws-1` fix 머지. `seed-and-simulate` 복구 없이는 `client-cuj-test` / `partner-cuj-test` 실행 불가.
-- #1539 — `GoldenCapture` CI headless hang 회피 skip을 재활성화 가능한 형태로 대체.
-- `.github/scripts/run-client-cuj.sh` / `run-partner-cuj.sh` — 탐색 경로를 `apps/*/test/integration/`로 교정 (현재 `apps/*/integration_test/` 순회 중).
-
----
-
-## 7. Runtime QA (실물 디바이스 자동화)
-
-Runtime QA 워커는 실물 Android 디바이스에 APK를 설치하고, ADB를 통해 화면 네비게이션과 시각적 검증을 수행한다.
-
-### 역할
-
-- **Smoke 검증**: `docs/qa/test-cases/app-user-smoke.md`, `app-partner-smoke.md` 시나리오를 실물 디바이스에서 실행
-- **CUJ 검증**: `cuj-user.md`, `cuj-partner.md`의 핵심 여정을 실물 디바이스에서 재현
-- **시각적 회귀 탐지**: 스크린샷 기반으로 UI 렌더링 이상 확인
-
-### 알려진 제약: Flutter + UIautomator 비호환
-
-Flutter 앱은 Skia/Impeller 엔진으로 단일 `FlutterSurfaceView` 위에 렌더링한다. Android UIautomator는 네이티브 View hierarchy를 탐색하므로, **Flutter 위젯의 개별 bounds를 추출할 수 없다** (`bounds="[0,0][0,0]"` 반환). 이는 모든 Flutter 앱 + 모든 Android 디바이스에서 동일하게 발생하는 구조적 제약이다.
-
-**결론**: UIautomator 기반 좌표 추출은 Flutter 앱에서 사용 불가.
-
-### 네비게이션 방법별 비교
-
-| 방법 | Flutter 호환 | 장점 | 단점 | 상태 |
-|------|-------------|------|------|------|
-| Vision 기반 (Gemini 등) | ✅ | 프레임워크 무관. 실제 화면 기반. | Vision 모델 필요. API 비용. | 운영 중 |
-| `adb shell dumpsys accessibility` | ⚠️ 검증 필요 | 네이티브 API. | Flutter semantics 활성화 필요. 좌표 정확도 미검증. | PoC 필요 |
-| Flutter Integration Test Driver | ✅ | 가장 안정적. Flutter 네이티브. | 별도 test harness. 워커 아키텍처 변경. | 장기 목표 |
-| UIautomator dump | ❌ | — | Flutter에서 bounds 추출 불가. | **사용 불가** |
-| 고정 좌표 매핑 | ✅ | 구현 간단. | 해상도/레이아웃 변경 시 깨짐. | 비권장 |
-
-### 관련 이슈
-
-- #1274 — UIautomator dump bounds=[0,0][0,0] 문제 분석 및 전략 결정
-
----
-
-## 8. 갭 정량 요약
-
-### 테스트 피라미드 현황 vs 목표
-
-```
-                     현재              목표 (Phase 3 후)
-                   ┌──────┐           ┌──────┐
-  E2E (디바이스)   │  0건  │           │  2건  │
-                   ├──────┤           ├──────┤
-  Integration      │  2건  │           │ 13건  │  ← 가장 큰 갭
-  (Mock CUJ)       ├──────┤           ├──────┤
-  Smoke/Widget     │137건  │           │251건  │  ← +114건 (48 smoke + 66 기타)
-                   ├──────┤           ├──────┤
-  Unit (기존)      │343건  │           │343건+ │  ← 유지 + α
-                   └──────┘           └──────┘
-```
-
-### 핵심 갭
-
-| 갭 | 현재 | 목표 | 위험도 |
-|----|------|------|--------|
-| **CUJ Integration (app_user)** | 2 | 9 | 🔴 결제/매칭/환불 플로우 미검증 |
-| **CUJ Integration (app_partner)** | 0 | 4 | 🔴 파트너 운영 플로우 전무 |
-| **Smoke (app_user)** | 부분적 | 18 화면 전체 | 🟡 일부 화면 크래시 미탐지 |
-| **Smoke (app_partner)** | 부분적 | 30 화면 전체 | 🟡 신규 화면 추가 시 누락 |
-| **라우팅 가드** | 0 (전용) | 12 | 🟡 #970, #965 같은 회귀 |
-
----
-
-## 8.1 CI/CD 배포 파이프라인 테스트 (Phase 2.1 — #1433, #1434)
-
-> 2026-04-15 배포 실패 인시던트(#1433 iOS, #1434 Android)로 추가.
-> Partner 앱 배포 시 `JUSO_CONFIRM_KEY` Secret 미설정으로 빌드 실패.
-
-| 문서 | 내용 | 케이스 수 |
-|------|------|-----------|
-| `ci-deploy-tests.md` | 배포 Secret 매트릭스, CI 자체 검증 스텝, 빌드 분기 검증 | 19 |
-
-### 핵심 포인트
-
-- **4개 배포 워크플로우** (Android/iOS × User/Partner)의 필수 Secret을 매트릭스로 정리
-- Partner 전용 Secret (`JUSO_CONFIRM_KEY`)의 `required: false` 선언 불일치 식별 → 개선 제안 포함
-- 배포 실패 알림(`notify-failure.yml`) 동작 검증 케이스 포함
-
----
-
-## 8.2 에러/환경/미등록라우트 테스트 케이스 (Phase 2.1 — #1421)
-
-> 2026-04-13 갭 분석(#1421) 결과 추가된 테스트 케이스 문서.
-
-| 문서 | 내용 | 케이스 수 |
-|------|------|-----------|
-| `error-scenarios.md` | P1 에러 3건 (QR 토큰, 카메라 권한, 보완 재제출) + P2 에러 6건 | 35 |
-| `environment-tests.md` | P1 딥링크 cold start, 세션 만료 + P2 warm start, 오프라인 복구 | 25 |
-| `unregistered-route-tests.md` | GoRouter 미등록 화면 6개 위젯/통합 테스트 정의 | 30 |
-
-### 구현 우선순위
-
-| 순서 | 대상 | 근거 |
+| 표현 | 정의 | 예시 |
 |------|------|------|
-| 1 | ERR-01~03 (P1 에러) | 체크인/인증 현장 실패 — 유저/파트너 이탈 직결 |
-| 2 | ENV-01~03 (P1 환경) | 딥링크/세션 실패 — 앱 진입 불가 |
-| 3 | URT-01~02 (P0 미등록 라우트) | 매칭/체크인 핵심 화면 — 위젯 테스트 필수 |
-| 4 | ERR-04~09, ENV-04~05, URT-03~05 (P2) | 보조 기능 — 점진적 구현 |
+| "golden" / "골든" | Tier A 만 지칭 (7-layer Layer 2b) | "이 위젯 golden 깨졌어" |
+| **"시나리오 스크린샷"** | Tier B 만 지칭 (7-layer Layer 3) | "시나리오 스크린샷이 안 찍힌다" |
+| "스크린샷 리뷰" / "agent 리뷰" | Tier C 만 지칭 | "agent 리뷰에서 잡혔다" |
+| "스크린샷" (단독) | **혼동 유발 — Tier 명시 필수** | |
+
+**경로 구분**:
+
+| 경로 | Tier | Layer |
+|------|------|-------|
+| `apps/*/test/goldens/` (향후 `test/alchemist/`) | Tier A | Layer 2b |
+| `apps/*/integration_test/` (향후 `emulator_test/`) — Patrol | Tier B 생성 위치 | Layer 3 |
+| `apps/*/*/screenshots/` (Patrol 출력 — 향후 경로) | Tier B 저장 | Layer 3 |
+
+상세 캡처 포인트 매핑: `docs/qa/screenshot-capture-points.md`.
 
 ---
 
-## 9. 실행 순서 요약
+## 6. 로드맵
 
-| 단계 | 내용 | 예상 테스트 수 | 우선순위 |
-|------|------|-------------|---------|
-| **1단계** | P0 CUJ Integration (7건) + P0 Smoke (31건) + 인프라 헬퍼 | 38 | 🔴 필수 |
-| **2단계** | P1 CUJ Integration (4건) + P1 Smoke (18건) + 가드 (12건) | 34 | 🟡 권장 |
-| **3단계** | P2 Smoke (65건) + P2 Widget (4건) + 엣지케이스 (16건) | 85 | 🟢 선택 |
-| **E2E** | 실물 디바이스 결제/체크인 (2~3건) | 3 | Phase 3 협의 |
-| **합계** | | **160건** | |
+### 🔴 최우선 — Layer 3 재가동 (Issue #1586 Phase D-2)
+
+현재 Patrol 이관률 0%. 37 CUJ/flow 파일 (`apps/app_user/test/integration/` 26 + `apps/app_partner/test/integration/` 11) 을 Patrol + 실 dev Supabase 로 전환.
+
+- D-2 PoC: 2-3 CUJ Patrol 변환 + CI 돌아감 + 스크린샷 생성 (2026-04)
+- D-2 전량: CUJ 5-10 개 단위로 쪼갠 PR 병합 (15-23일 FTE 예상)
+- D-3-a: `patrol-e2e.yml` 수동 trigger 성공 1회 확인
+- D-3-b: matrix shard 6-8 → wall-clock < 20min 달성
+- D-4: 스크린샷 git commit 파이프라인 (또는 auto-PR) 가동
+
+### 🟡 중기 — 폴더 / 워크플로우 정합 (Issue #1586 Phase B / C)
+
+- Phase B: 워크플로우 이름 layer 명시 (`Weekly: Emulator Test (Patrol)` 등)
+- Phase C: `test/visual_qa/` 삭제, `test/scenarios/` 흡수, `test/integration/` → `test/flows/` rename 검토
+
+### 🟢 상시 — Layer 1-2 보강
+
+- CUJ P0 범위 widget flow 보강 (체크인, 매칭, 정산)
+- 신규 화면 추가 시 Layer 1 unit + Layer 2a flow 동반 필수
+
+### ✅ 최근 완료
+
+| 완료 | 내용 | PR / Issue |
+|------|------|-----------|
+| Layer 4 통합 | `tests/backend_integration/` → pgTAP 이관 | #1574 |
+| Layer 7 복구 | backend-simulation pg_cron → GH Actions | #1584 |
+| 스크린샷 3-tier 아키텍처 명문화 | `screenshot-capture-points.md` | #1559 |
+| Layer 3 artifact upload wiring | `run-client/partner-cuj.sh` 경로 수정 | #1577 |
 
 ---
 
-## 10. automation-test-guide.md 업데이트 계획
+## 7. Layer 선택 결정 트리 (구현 전 참고)
 
-Phase 3 (SWE 구현) 시 아래 섹션을 업데이트한다:
+```
+새 테스트 추가 필요?
+├── DB 스키마 / RLS / RPC 계약 변경?  → Layer 4 (pgTAP)
+├── 신규 Edge Function 로직?          → Layer 5 (Deno EF)
+├── 네이티브 surface 필요?
+│   (카카오 로그인, PG SDK, 시스템 권한) → Layer 3 (Patrol emulator)
+├── 다화면 플로우 / GoRouter 분기?     → Layer 2a (widget flow)
+├── 디자인 토큰 / 시각 회귀 감지?      → Layer 2b (Alchemist golden)
+├── repository / controller / util?    → Layer 1 (unit)
+├── 매시간 실 DB 데이터 이상 감시?     → Layer 6 (DB monitor RPC)
+└── 파이프라인 연쇄 동작 (tick)?       → Layer 7 (backend-simulator)
+```
 
-| 섹션 | 변경 내용 |
-|------|----------|
-| §1 커버리지 현황 | Integration 수 업데이트, Smoke 수 추가 |
-| §2 계층별 규칙 | Integration Test 패턴 추가 (`pumpApp`, CUJ 헬퍼) |
-| §3 체크리스트 | Smoke Test를 "권장"에서 "필수"로 격상 (새 화면 추가 시) |
-| §6 실행 명령어 | `flutter test test/integration/ --tags integration` 추가 |
-| §8 CI 연동 | app_partner integration 실행 추가 |
+상세 작성 규칙 / 샘플 코드: `docs/qa/automation-test-guide.md`.
 
 ---
 
-## 부록: PM 케이스 → 테스트 계층 전수 매핑
+## 8. 관련 문서
 
-### app_user Smoke (U-S01 ~ U-S18)
+| 문서 | 역할 |
+|------|------|
+| [automation-test-guide.md](automation-test-guide.md) | Layer 별 작성 규칙 + 샘플 코드 + 체크리스트 |
+| [screenshot-capture-points.md](screenshot-capture-points.md) | Tier B (시나리오 스크린샷) 캡처 포인트 매핑 |
+| [routing-test-plan.md](routing-test-plan.md) | Layer 2a 라우팅 테스트 상세 계획 |
+| [test-cases/](test-cases/) | runtime-qa 워커가 실행하는 실물 디바이스 시나리오 카탈로그 |
+| [dev-deeplink-guide.md](dev-deeplink-guide.md) | 딥링크 수동 테스트 가이드 |
 
-| ID | 화면 | 계층 | 기존 테스트 여부 | 비고 |
-|----|------|------|----------------|------|
-| U-S01 | 홈 | Widget | ✅ (golden 있음) | smoke 추가 불필요 |
-| U-S02 | 검색 | Widget | ✅ (golden 있음) | smoke 추가 불필요 |
-| U-S04 | 이벤트 상세 | Widget | ✅ (golden 있음) | smoke 추가 불필요 |
-| U-S05 | 파트너 상세 | Widget | ❌ | 신규 |
-| U-S06 | 파트너 이벤트 목록 | Widget | ❌ | 신규 |
-| U-S07 | 로그인 | Widget | ✅ (golden 있음) | smoke 추가 불필요 |
-| U-S08 | OAuth 콜백 | Widget | ❌ | 신규 |
-| U-S09 | 마이페이지 | Widget | ✅ (golden 있음) | smoke 추가 불필요 |
-| U-S10 | 개인정보 설정 | Widget | ❌ | 신규 |
-| U-S11 | 차단 파트너 관리 | Widget | ✅ (golden 있음) | smoke 추가 불필요 |
-| U-S12 | 알림 설정 | Widget | ❌ | 신규 |
-| U-S13 | 구매 내역 | Widget | ❌ | 신규 — P0 |
-| U-S14 | 알림 센터 | Widget | ❌ | 신규 |
-| U-S15 | 본인인증 | Widget | ❌ | 신규 |
-| U-S16 | 신청 위저드 | Widget | ✅ (golden 있음) | smoke 추가 불필요 |
-| U-S17 | 개발 도구 | Widget | ❌ | P3 — dev only |
-| U-S18 | 유저 전환 | Widget | ❌ | P3 — dev only |
+---
 
-**신규 Smoke 필요: 8건** (golden 기존 커버 제외, dev only 제외)
+## 9. 변경 이력
 
-### app_partner Smoke (P-S01 ~ P-S30)
-
-| ID | 화면 | 계층 | 기존 테스트 여부 | 비고 |
-|----|------|------|----------------|------|
-| P-S01 | 로그인 | Widget | ✅ (golden) | smoke 불필요 |
-| P-S02 | 웰컴 | Widget | ❌ | 신규 |
-| P-S03 | 파트너 신청 | Widget | ✅ (golden) | smoke 불필요 |
-| P-S04 | 신청 상태 | Widget | ✅ (golden) | smoke 불필요 |
-| P-S05 | 홈 | Widget | ✅ (golden) | smoke 불필요 |
-| P-S06 | 장소 가이드 | Widget | ❌ | 신규 |
-| P-S07 | 신청 관리 | Widget | ❌ | 신규 — P0 |
-| P-S08 | 신청 상세 | Widget | ❌ | 신규 — P0 |
-| P-S09 | 체크인 | Widget | ❌ | 신규 — P0 |
-| P-S10 | 정산 | Widget | ✅ (golden) | smoke 불필요 |
-| P-S11 | 계좌 관리 | Widget | ❌ | 신규 — P0 |
-| P-S12 | 정산 상세 | Widget | ❌ | 신규 |
-| P-S13 | 더보기 | Widget | ✅ (golden) | smoke 불필요 |
-| P-S14 | 파티 목록 | Widget | ✅ (golden) | smoke 불필요 |
-| P-S15 | 파티 생성 | Widget | ✅ (golden) | smoke 불필요 |
-| P-S16 | 파티 상세 | Widget | ❌ | 신규 |
-| P-S17 | 파티 편집 | Widget | ❌ | 신규 |
-| P-S18 | 파티 티켓 편집 | Widget | ❌ | 신규 |
-| P-S19 | 이벤트 생성 | Widget | ❌ | 신규 |
-| P-S20 | 이벤트 상세 | Widget | ✅ (golden) | smoke 불필요 |
-| P-S21 | 티켓 생성 | Widget | ❌ | 신규 |
-| P-S22 | 티켓 편집 | Widget | ❌ | 신규 |
-| P-S23 | 인증 관리 | Widget | ✅ (golden) | smoke 불필요 |
-| P-S24 | 인증 생성 | Widget | ✅ (golden) | smoke 불필요 |
-| P-S25 | 알림 설정 | Widget | ❌ | 신규 |
-| P-S26 | 멤버 목록 | Widget | ❌ | 신규 |
-| P-S27 | 멤버 권한 | Widget | ❌ | 신규 |
-| P-S28 | 알림 센터 | Widget | ❌ | 신규 |
-| P-S29 | 개발 도구 | Widget | ❌ | P3 — dev only |
-| P-S30 | 유저 전환 | Widget | ❌ | P3 — dev only |
-
-**신규 Smoke 필요: 18건** (golden 기존 커버 제외, dev only 제외)
+| 날짜 | 변경 | 이슈 |
+|------|------|------|
+| 2026-04-18 | 7-layer taxonomy 정식 도입. Phase 2 초안 전면 재작성 | #1586 Phase A |
+| 2026-04-18 | 스크린샷 3-tier 용어 통일 ("Layer" → "Tier" 로 분리) | #1586 Phase A |
+| 2026-04-18 | `tests/backend_integration/` → pgTAP 흡수 반영 | #1574 |
+| 2026-04-15 | 스크린샷 3-layer 아키텍처 초안 | #1557 |
+| 2026-04-15 | Patrol 전환 + 스크린샷 내장 결정 | #1458 |
+| 2026-04-05 | Phase 2 초안 (Widget / Integration / E2E 3 계층) | — |
