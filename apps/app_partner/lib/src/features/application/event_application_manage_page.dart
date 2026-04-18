@@ -304,25 +304,14 @@ class _ApplicationTab extends ConsumerWidget {
     Map<Event, List<EventApplication>> grouped,
   ) async {
     final total = grouped.values.fold<int>(0, (s, apps) => s + apps.length);
-    final confirmed = await showDialog<bool>(
+    final confirmed = await MinglitAlert.showConfirm(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('전체 승인'),
-        content: Text('대기 중인 $total건을 모두 승인하시겠습니까?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('취소'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('전체 승인'),
-          ),
-        ],
-      ),
+      title: '전체 승인',
+      content: '대기 중인 $total건을 모두 승인하시겠습니까?',
+      confirmText: '전체 승인',
     );
 
-    if (confirmed != true) return;
+    if (!confirmed) return;
 
     // Fix #653: Supabase 직접 접근 → EventRepository 분리
     final eventRepo = ref.read(eventRepositoryProvider);

@@ -224,27 +224,15 @@ class _RecurrenceRuleContent extends ConsumerWidget {
     WidgetRef ref,
     String ruleId,
   ) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await MinglitAlert.showConfirm(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('반복 규칙 취소'),
-        content: const Text('반복 규칙을 취소하면 되돌릴 수 없습니다. 계속하시겠습니까?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('아니오'),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(dialogContext).colorScheme.error,
-            ),
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('취소하기'),
-          ),
-        ],
-      ),
+      title: '반복 규칙 취소',
+      content: '반복 규칙을 취소하면 되돌릴 수 없습니다. 계속하시겠습니까?',
+      confirmText: '취소하기',
+      cancelText: '아니오',
+      isDestructive: true,
     );
-    if (confirmed != true) return;
+    if (!confirmed) return;
     if (!context.mounted) return;
 
     await ref
