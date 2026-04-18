@@ -159,48 +159,55 @@ void main() {
       // Regression guard: verify that the repository selects and orders by
       // 'event_at', not 'created_at'. If someone reverts the column name the
       // assertions below will fail before the real DB does.
-      test('Fix #1566: selects/orders by event_at and parses history rows', () async {
-        mockTable(mockClient, 'settlement_items', maybeSingleData: _settlementItemJson());
-        final historiesBuilder = mockTable(
-          mockClient,
-          'settlement_histories',
-          selectData: [
-            {
-              'event_type': 'STATUS_CHANGED',
-              'from_status': 'PENDING',
-              'to_status': 'READY',
-              'event_at': '2026-01-15T10:00:00.000Z',
-            },
-          ],
-        );
-        mockTable(mockClient, 'adjustment_items', selectData: []);
+      test(
+        'Fix #1566: selects/orders by event_at and parses history rows',
+        () async {
+          mockTable(
+            mockClient,
+            'settlement_items',
+            maybeSingleData: _settlementItemJson(),
+          );
+          final historiesBuilder = mockTable(
+            mockClient,
+            'settlement_histories',
+            selectData: [
+              {
+                'event_type': 'STATUS_CHANGED',
+                'from_status': 'PENDING',
+                'to_status': 'READY',
+                'event_at': '2026-01-15T10:00:00.000Z',
+              },
+            ],
+          );
+          mockTable(mockClient, 'adjustment_items', selectData: []);
 
-        final result = await repository.getSettlementItemDetail('item_1');
+          final result = await repository.getSettlementItemDetail('item_1');
 
-        expect(result, isNotNull);
-        expect(result!.histories, hasLength(1));
-        expect(result.histories.first.eventType, 'STATUS_CHANGED');
-        expect(result.histories.first.fromStatus, 'PENDING');
-        expect(result.histories.first.toStatus, 'READY');
-        expect(result.histories.first.createdAt.year, 2026);
+          expect(result, isNotNull);
+          expect(result!.histories, hasLength(1));
+          expect(result.histories.first.eventType, 'STATUS_CHANGED');
+          expect(result.histories.first.fromStatus, 'PENDING');
+          expect(result.histories.first.toStatus, 'READY');
+          expect(result.histories.first.createdAt.year, 2026);
 
-        // Fix #1566: regression guard — repository must query 'event_at' not 'created_at'
-        expect(
-          historiesBuilder.lastSelectColumns,
-          contains('event_at'),
-          reason: 'select() must include event_at (not created_at)',
-        );
-        expect(
-          historiesBuilder.lastSelectColumns,
-          isNot(contains('created_at')),
-          reason: 'select() must not include the old created_at column',
-        );
-        expect(
-          historiesBuilder.recordedOrderColumns,
-          contains('event_at'),
-          reason: 'order() must use event_at (not created_at)',
-        );
-      });
+          // Fix #1566: regression guard — repository must query 'event_at' not 'created_at'
+          expect(
+            historiesBuilder.lastSelectColumns,
+            contains('event_at'),
+            reason: 'select() must include event_at (not created_at)',
+          );
+          expect(
+            historiesBuilder.lastSelectColumns,
+            isNot(contains('created_at')),
+            reason: 'select() must not include the old created_at column',
+          );
+          expect(
+            historiesBuilder.recordedOrderColumns,
+            contains('event_at'),
+            reason: 'order() must use event_at (not created_at)',
+          );
+        },
+      );
 
       test('fetches payout info when payout_id is present', () async {
         final itemJsonWithPayout = {
