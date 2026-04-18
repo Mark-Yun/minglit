@@ -8,7 +8,6 @@ workspace:
   - apps/app_user
   - shared/packages/minglit_kit
   - shared/packages/minglit_lints
-  - tests/client_cuj_integration
   - tests/partner_cuj_integration
 
 dependency_overrides:
