@@ -2,6 +2,20 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { SimConfig, SimLogEntry } from "./sim_types.ts";
 import { callEdgeFunction, getPartnerEmail, getSimPartnerToken, getSimUserToken } from "./sim_auth.ts";
 
+// Fix #1540: dev-seed에서 업로드한 시드 이미지를 party 생성 시 사용해 홈/이벤트 화면
+// 이미지 깨짐 방지. party-assets/seed-images/에 사전 업로드된 3장의 이미지를 순환 사용.
+const SEED_IMAGE_FILENAMES = [
+  "party_cafe_warm.jpg",
+  "party_lounge_bright.jpg",
+  "party_premium_lounge.jpg",
+];
+
+function getSeedImageUrls(supabaseUrl: string): string[] {
+  return SEED_IMAGE_FILENAMES.map(
+    (f) => `${supabaseUrl}/storage/v1/object/public/party-assets/seed-images/${f}`,
+  );
+}
+
 export interface SimCreatedData {
   partyIds: string[];
   eventIds: string[];
@@ -74,7 +88,7 @@ export async function simCreateParties(
       party: {
         title: scenario.title,
         description: { ops: [{ insert: "[E2E] 시뮬레이션 테스트 파티입니다.\n" }] },
-        image_urls: [],
+        image_urls: getSeedImageUrls(supabaseUrl), // Fix #1540: 시드 이미지 사용
         required_verification_ids: [],
         min_confirmed_count: 4,
         max_participants: 20,
@@ -225,7 +239,7 @@ export async function simCreateDisplayEvents(
       party: {
         title: scenario.title,
         description: { ops: [{ insert: `${scenario.description}\n` }] },
-        image_urls: [],
+        image_urls: getSeedImageUrls(supabaseUrl), // Fix #1540: 시드 이미지 사용
         required_verification_ids: [],
         min_confirmed_count: 4,
         max_participants: 30,
