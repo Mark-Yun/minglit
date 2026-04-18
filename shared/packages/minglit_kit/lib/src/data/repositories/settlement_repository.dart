@@ -109,10 +109,11 @@ class SettlementRepository {
           await _supabase
                   .from('settlement_histories')
                   .select(
-                    'event_type, from_status, to_status, details, created_at',
+                    // Fix #1566: settlement_histories has event_at, not created_at
+                    'event_type, from_status, to_status, details, event_at',
                   )
                   .eq('settlement_item_id', itemId)
-                  .order('created_at', ascending: false)
+                  .order('event_at', ascending: false)
               as List;
 
       final historiesData = historiesRaw
