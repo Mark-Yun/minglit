@@ -1,4 +1,4 @@
-name: CI: Unit + Widget + Golden + pgTAP + Deno EF + Landing Lint
+name: "CI: Unit + Widget + Golden + pgTAP + Deno EF + Landing Lint"
 
 on:
   push:

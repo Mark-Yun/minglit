@@ -1,4 +1,4 @@
-name: Daily: Tick Simulator Pipeline + Emulator CUJ
+name: "Daily: Tick Simulator Pipeline + Emulator CUJ"
 
 on:
   schedule:

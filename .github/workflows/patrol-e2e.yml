@@ -7,7 +7,7 @@
 # IntegrationTestWidgetsFlutterBinding (incompatible with PatrolBinding)
 # and are excluded from this workflow — run them via `flutter test integration_test/`.
 
-name: Weekly: Emulator Test (Patrol native surface)
+name: "Weekly: Emulator Test (Patrol native surface)"
 
 on:
   schedule:

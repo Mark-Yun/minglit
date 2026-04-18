@@ -1,4 +1,4 @@
-name: Hourly: DB Invariant Monitor
+name: "Hourly: DB Invariant Monitor"
 
 on:
   schedule:

@@ -1,4 +1,4 @@
-name: Hourly: Tick Simulator (user activity mode)
+name: "Hourly: Tick Simulator (user activity mode)"
 
 on:
   schedule:
