@@ -121,7 +121,9 @@ class PartnerScaffold extends ConsumerWidget {
           ? NavigationBar(
               // Fix #1533: settlement 탭이 숨겨져 selectedDisplayIndex == -1이면
               // 홈(0)으로 폴백.
-              selectedIndex: selectedDisplayIndex < 0 ? 0 : selectedDisplayIndex,
+              selectedIndex: selectedDisplayIndex < 0
+                  ? 0
+                  : selectedDisplayIndex,
               onDestinationSelected: (displayIndex) =>
                   coordinator.onItemTapped(tabs[displayIndex].branchIndex),
               indicatorColor: MinglitColors.transparent,

@@ -159,8 +159,7 @@ void main() {
       expect(find.text('더보기'), findsOneWidget);
     });
 
-    testWidgets(
-        'selectedIndex 4 (더보기 branch) maps to display index 3 when '
+    testWidgets('selectedIndex 4 (더보기 branch) maps to display index 3 when '
         'settlement is hidden', (tester) async {
       await tester.pumpWidget(
         buildSubject(currentIndex: 4, hasSettlementAccess: false),
@@ -173,16 +172,18 @@ void main() {
     });
 
     testWidgets(
-        'selectedIndex falls back to 0 when on settlement branch without '
-        'access', (tester) async {
-      // branch 3 = settlement, but hasSettlementAccess is false
-      await tester.pumpWidget(
-        buildSubject(currentIndex: 3, hasSettlementAccess: false),
-      );
-      await tester.pumpAndSettle();
+      'selectedIndex falls back to 0 when on settlement branch without '
+      'access',
+      (tester) async {
+        // branch 3 = settlement, but hasSettlementAccess is false
+        await tester.pumpWidget(
+          buildSubject(currentIndex: 3, hasSettlementAccess: false),
+        );
+        await tester.pumpAndSettle();
 
-      final navBar = tester.widget<NavigationBar>(find.byType(NavigationBar));
-      expect(navBar.selectedIndex, 0);
-    });
+        final navBar = tester.widget<NavigationBar>(find.byType(NavigationBar));
+        expect(navBar.selectedIndex, 0);
+      },
+    );
   });
 }
