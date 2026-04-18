@@ -171,7 +171,6 @@ void main() {
               isButton: true,
               hasTapAction: true,
               hasSelectedState: true,
-              isSelected: false,
             ),
             reason:
                 'unselected filter chip must expose label, button role, '

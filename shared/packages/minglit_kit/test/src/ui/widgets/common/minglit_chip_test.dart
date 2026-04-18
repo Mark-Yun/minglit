@@ -179,8 +179,6 @@ void main() {
             tester.getSemantics(find.byType(MinglitChip)),
             matchesSemantics(
               label: '읽기 전용 칩',
-              isButton: false,
-              hasTapAction: false,
             ),
             reason:
                 'static chip must expose label but not announce '
