@@ -7,13 +7,12 @@ SELECT plan(5);
 
 SELECT tests.authenticate_as_service_role();
 
--- Setup: partner, party, event, two entry groups, two users, two participants
+-- Setup: partner, party, event, two users
+-- trigger only reads match_votes — event_participants not required
 CREATE TEMP TABLE matching_setup (
   partner_id uuid,
   party_id    uuid,
   event_id    uuid,
-  group_a_id  uuid,
-  group_b_id  uuid,
   user_a_id   uuid,
   user_b_id   uuid
 );
@@ -23,8 +22,6 @@ DECLARE
   v_partner_id uuid;
   v_party_id   uuid;
   v_event_id   uuid;
-  v_group_a    uuid;
-  v_group_b    uuid;
   v_user_a     uuid;
   v_user_b     uuid;
 BEGIN
@@ -43,23 +40,8 @@ BEGIN
   VALUES (v_party_id, now() - interval '3 hours', now() + interval '1 hour', 0, 20)
   RETURNING id INTO v_event_id;
 
-  INSERT INTO public.entry_groups (event_id, gender)
-  VALUES (v_event_id, 'male')
-  RETURNING id INTO v_group_a;
-
-  INSERT INTO public.entry_groups (event_id, gender)
-  VALUES (v_event_id, 'female')
-  RETURNING id INTO v_group_b;
-
-  -- Both participants checked_in (required for voting eligibility at EF layer;
-  -- trigger itself does not check check-in status, but we mirror real usage)
-  INSERT INTO public.event_participants (event_id, user_id, entry_group_id, status)
-  VALUES
-    (v_event_id, v_user_a, v_group_a, 'checked_in'),
-    (v_event_id, v_user_b, v_group_b, 'checked_in');
-
-  INSERT INTO matching_setup (partner_id, party_id, event_id, group_a_id, group_b_id, user_a_id, user_b_id)
-  VALUES (v_partner_id, v_party_id, v_event_id, v_group_a, v_group_b, v_user_a, v_user_b);
+  INSERT INTO matching_setup (partner_id, party_id, event_id, user_a_id, user_b_id)
+  VALUES (v_partner_id, v_party_id, v_event_id, v_user_a, v_user_b);
 END $$;
 
 -- TC-S04-2a: First vote (A → B) alone must NOT create a match_pair
@@ -123,13 +105,9 @@ DO $$
 DECLARE
   v_event_id uuid := (SELECT event_id FROM matching_setup);
   v_user_a   uuid := (SELECT user_a_id FROM matching_setup);
-  v_group_b  uuid := (SELECT group_b_id FROM matching_setup);
   v_user_c   uuid;
 BEGIN
   v_user_c := tests.create_supabase_user('match_trigger_user_c');
-
-  INSERT INTO public.event_participants (event_id, user_id, entry_group_id, status)
-  VALUES (v_event_id, v_user_c, v_group_b, 'checked_in');
 
   -- Only A → C; no reverse vote
   INSERT INTO public.match_votes (event_id, voter_id, candidate_id)
