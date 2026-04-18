@@ -31,6 +31,11 @@ class MoreCoordinator {
     unawaited(_router.push(const PartyListRoute().location));
   }
 
+  // Fix #1568: 정산 계좌 관리 진입점
+  void pushBankAccountManagement() {
+    unawaited(_router.push(const BankAccountRoute().location));
+  }
+
   void pushAccountDeletion() {
     unawaited(_router.push(const DeletionReasonRoute().location));
   }

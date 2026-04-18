@@ -53,7 +53,7 @@ class _SettlementPageState extends ConsumerState<SettlementPage>
           if (canEditSettlement)
             IconButton(
               key: const Key('bankAccountButton'),
-              icon: const Icon(Icons.account_balance_outlined),
+              icon: const Icon(Icons.account_balance_wallet_outlined),
               tooltip: '계좌 관리',
               onPressed: () => ref
                   .read(settlementCoordinatorProvider.notifier)
