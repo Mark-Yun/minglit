@@ -111,7 +111,8 @@ GoRouter goRouter(Ref ref) {
             .read(hasSettlementAccessProvider)
             .maybeWhen(
               data: (v) => v,
-              orElse: () => true, // loading/error: don't block; re-evaluated when resolved
+              orElse: () =>
+                  true, // loading/error: don't block; re-evaluated when resolved
             );
         if (!hasAccess) return '/';
       }

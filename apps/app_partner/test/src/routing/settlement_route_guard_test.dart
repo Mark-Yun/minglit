@@ -56,8 +56,8 @@ MockPartnerRepository _mockPartnerRepository() {
 /// [refreshListenable]. This mirrors the pattern used in partner_redirect_test.dart.
 Widget _createSettlementTestApp({
   required bool isLoggedIn,
-  User? currentUser,
   required ValueNotifier<bool?> settlementAccess,
+  User? currentUser,
   String initialLocation = '/settlement',
 }) {
   final router = GoRouter(
@@ -191,7 +191,8 @@ void main() {
         expect(
           find.byType(PartnerHomePage),
           findsNothing,
-          reason: 'provider 로딩 중에는 홈으로 리다이렉트해서는 안 된다 (refreshListenable가 resolve 후 재평가)',
+          reason:
+              'provider 로딩 중에는 홈으로 리다이렉트해서는 안 된다 (refreshListenable가 resolve 후 재평가)',
         );
       },
     );
