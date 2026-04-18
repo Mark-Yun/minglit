@@ -178,12 +178,9 @@ class _TicketSelectionSheetState extends ConsumerState<TicketSelectionSheet> {
             ),
           const SizedBox(height: MinglitSpacing.large),
           if (_selectedTicketId != null) ...buildQuantitySection(theme),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _selectedTicketId == null ? null : _onNext,
-              child: const Text('다음'),
-            ),
+          MinglitButton(
+            label: '다음',
+            onPressed: _selectedTicketId == null ? null : _onNext,
           ),
           SizedBox(height: MediaQuery.of(context).viewPadding.bottom),
         ],

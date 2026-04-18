@@ -245,8 +245,8 @@ void main() {
 
       // After loading, recommended ticket (General) auto-selected
       // → button should be enabled
-      final nextFinder = find.widgetWithText(ElevatedButton, '다음');
-      final button = tester.widget<ElevatedButton>(nextFinder);
+      final nextFinder = find.widgetWithText(MinglitButton, '다음');
+      final button = tester.widget<MinglitButton>(nextFinder);
       expect(button.onPressed, isNotNull);
 
       // Tap VIP ticket to change selection (in bottom sheet overlay)
@@ -254,7 +254,7 @@ void main() {
       await tester.pump();
 
       // Button should still be enabled after selection change
-      final updatedButton = tester.widget<ElevatedButton>(nextFinder);
+      final updatedButton = tester.widget<MinglitButton>(nextFinder);
       expect(updatedButton.onPressed, isNotNull);
 
       // Quantity section should show updated total
@@ -392,19 +392,11 @@ void main() {
 
       await capture.after(tester, 3); // 제출 중 스피너 상태
 
-      // All ElevatedButtons should be disabled during submission
-      final elevatedButtons = tester
-          .widgetList<ElevatedButton>(find.byType(ElevatedButton))
+      // All MinglitButtons should be disabled during submission
+      final minglitButtons = tester
+          .widgetList<MinglitButton>(find.byType(MinglitButton))
           .toList();
-      for (final btn in elevatedButtons) {
-        expect(btn.onPressed, isNull);
-      }
-
-      // "이전" OutlinedButton should also be disabled
-      final outlinedButtons = tester
-          .widgetList<OutlinedButton>(find.byType(OutlinedButton))
-          .toList();
-      for (final btn in outlinedButtons) {
+      for (final btn in minglitButtons) {
         expect(btn.onPressed, isNull);
       }
 

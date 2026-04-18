@@ -103,22 +103,16 @@ class _BottomTicketBar extends ConsumerWidget {
             showTicketSelection: () => _showTicketSelection(context, ref),
           )
         : null;
-    Color? backgroundColor;
-    switch (config.style) {
-      case AdmissionButtonStyle.normal:
-        backgroundColor = null;
-      case AdmissionButtonStyle.disabled:
-        backgroundColor = theme.colorScheme.outline;
-      case AdmissionButtonStyle.destructive:
-        backgroundColor = theme.colorScheme.error;
+    if (config.style == AdmissionButtonStyle.destructive) {
+      return MinglitButton.destructive(
+        label: config.label,
+        onPressed: onPressed,
+      );
     }
 
-    return ElevatedButton(
+    return MinglitButton(
+      label: config.label,
       onPressed: onPressed,
-      style: backgroundColor != null
-          ? ElevatedButton.styleFrom(backgroundColor: backgroundColor)
-          : null,
-      child: Text(config.label),
     );
   }
 }
