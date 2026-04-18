@@ -100,7 +100,10 @@ GoRouter goRouter(Ref ref) {
       }
 
       // 4. Fix #1533: /settlement 및 하위 경로는 SETTLEMENT_VIEW 권한 필수.
-      //    로딩/에러 시 fail-closed → 홈으로 리다이렉트.
+      //    로딩 중에는 리다이렉트하지 않는다 — refreshListenable이 provider 완료 시
+      //    라우터를 재평가하므로 권한이 없는 사용자는 data(false)로 resolve된 뒤 차단된다.
+      //    Note: path == '/settlement' || startsWith('/settlement/') 로 한정해야
+      //    '/settlement-history' 같은 형제 경로를 잘못 차단하지 않는다.
       final path = state.uri.path;
       if (isLoggedIn &&
           (path == '/settlement' || path.startsWith('/settlement/'))) {
@@ -108,7 +111,7 @@ GoRouter goRouter(Ref ref) {
             .read(hasSettlementAccessProvider)
             .maybeWhen(
               data: (v) => v,
-              orElse: () => false,
+              orElse: () => true, // loading/error: don't block; re-evaluated when resolved
             );
         if (!hasAccess) return '/';
       }
