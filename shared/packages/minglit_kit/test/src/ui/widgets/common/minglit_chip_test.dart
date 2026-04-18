@@ -173,7 +173,7 @@ void main() {
 
           expect(
             tester.getSemantics(find.byType(MinglitChip)),
-            matchesSemantics(label: '읽기 전용 칩', isButton: false),
+            matchesSemantics(label: '읽기 전용 칩'),
             reason:
                 'static chip must expose a single label without duplication '
                 'and must not declare button role',

@@ -170,7 +170,6 @@ void main() {
               label: '최신순',
               isButton: true,
               hasSelectedState: true,
-              isSelected: false,
             ),
             reason:
                 'unselected filter chip must expose a single label without '
