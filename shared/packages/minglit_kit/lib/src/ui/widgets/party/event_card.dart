@@ -110,178 +110,189 @@ class MinglitEventCard extends StatelessWidget {
 
     final partner = party?.partner;
 
-    // Fix #478: amber border for today state
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          border: cardState == _EventCardState.today
-              ? Border.all(color: MinglitColors.secondary, width: 2)
-              : null,
-        ),
-        child: ColoredBox(
-          color: theme.colorScheme.surface,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Image with overlays
-              Stack(
-                children: [
-                  // Fix #478: grayscale ColorFiltered for ended state
-                  // Fix #1382: 2:1 비율로 변경 — 브라우징 효율 개선 (PM 채택)
-                  AspectRatio(
-                    aspectRatio: 2 / 1,
-                    child: ColorFiltered(
-                      colorFilter: cardState == _EventCardState.ended
-                          ? const ColorFilter.mode(
-                              Colors.grey,
-                              BlendMode.saturation,
-                            )
-                          : const ColorFilter.mode(
-                              Colors.transparent,
-                              BlendMode.dst,
-                            ),
-                      child: MinglitImage(
-                        path: party?.imageUrl ?? '',
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                  // Gradient fade at bottom
-                  Positioned.fill(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            MinglitColors.transparent,
-                            MinglitColors.textPrimary.withValues(
-                              alpha: MinglitOpacity.gradient,
-                            ),
-                          ],
-                          stops: const [0.45, 1.0],
+    final title = party?.title ?? event!.title ?? '제목 없음';
+    final locationName = location?.name ?? '장소 미정';
+
+    // Fix #996: 카드 전체를 하나의 시맨틱 노드로 병합하여 정보 전달
+    return Semantics(
+      label:
+          '이벤트: $title, $dateLabel, $locationName, $priceLabel, '
+          '$dDayLabel, 참가자 ${event!.currentParticipants}/${event!.maxParticipants}명',
+      button: onTap != null,
+      excludeSemantics: true,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          decoration: BoxDecoration(
+            border: cardState == _EventCardState.today
+                ? Border.all(color: MinglitColors.secondary, width: 2)
+                : null,
+          ),
+          child: ColoredBox(
+            color: theme.colorScheme.surface,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Image with overlays
+                Stack(
+                  children: [
+                    // Fix #478: grayscale ColorFiltered for ended state
+                    // Fix #1382: 2:1 비율로 변경 — 브라우징 효율 개선 (PM 채택)
+                    AspectRatio(
+                      aspectRatio: 2 / 1,
+                      child: ColorFiltered(
+                        colorFilter: cardState == _EventCardState.ended
+                            ? const ColorFilter.mode(
+                                Colors.grey,
+                                BlendMode.saturation,
+                              )
+                            : const ColorFilter.mode(
+                                Colors.transparent,
+                                BlendMode.dst,
+                              ),
+                        child: MinglitImage(
+                          path: party?.imageUrl ?? '',
+                          fit: BoxFit.cover,
+                          excludeFromSemantics: true,
                         ),
                       ),
                     ),
-                  ),
-                  // Fix #478: soldOut scrim + "마감" badge overlay
-                  if (cardState == _EventCardState.soldOut)
+                    // Gradient fade at bottom
                     Positioned.fill(
                       child: DecoratedBox(
                         decoration: BoxDecoration(
-                          color: Colors.black.withValues(
-                            alpha: MinglitOpacity.strong,
-                          ),
-                        ),
-                        child: Center(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: MinglitSpacing.medium,
-                              vertical: MinglitSpacing.small,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withValues(
-                                alpha: MinglitOpacity.separator,
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              MinglitColors.transparent,
+                              MinglitColors.textPrimary.withValues(
+                                alpha: MinglitOpacity.gradient,
                               ),
-                              borderRadius: BorderRadius.circular(
-                                MinglitRadius.small,
-                              ),
-                            ),
-                            child: Text(
-                              '마감',
-                              style: Theme.of(context).textTheme.titleMedium
-                                  ?.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                            ),
+                            ],
+                            stops: const [0.45, 1.0],
                           ),
                         ),
                       ),
                     ),
-                  // Fix #1214: 파트너 상세 컨텍스트에서는 중복 파트너 뱃지를 숨긴다.
-                  if (showPartnerOverlay && partner != null)
+                    // Fix #478: soldOut scrim + "마감" badge overlay
+                    if (cardState == _EventCardState.soldOut)
+                      Positioned.fill(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(
+                              alpha: MinglitOpacity.strong,
+                            ),
+                          ),
+                          child: Center(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: MinglitSpacing.medium,
+                                vertical: MinglitSpacing.small,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(
+                                  alpha: MinglitOpacity.separator,
+                                ),
+                                borderRadius: BorderRadius.circular(
+                                  MinglitRadius.small,
+                                ),
+                              ),
+                              child: Text(
+                                '마감',
+                                style: Theme.of(context).textTheme.titleMedium
+                                    ?.copyWith(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    // Fix #1214: 파트너 상세 컨텍스트에서는 중복 파트너 뱃지를 숨긴다.
+                    if (showPartnerOverlay && partner != null)
+                      Positioned(
+                        top: MinglitSpacing.small,
+                        left: MinglitSpacing.small,
+                        child: _PartnerOverlay(partner: partner),
+                      ),
+                    // D-Day + Participant overlay (top-right)
                     Positioned(
                       top: MinglitSpacing.small,
-                      left: MinglitSpacing.small,
-                      child: _PartnerOverlay(partner: partner),
-                    ),
-                  // D-Day + Participant overlay (top-right)
-                  Positioned(
-                    top: MinglitSpacing.small,
-                    right: MinglitSpacing.small,
-                    child: _ParticipantDDayOverlay(
-                      current: event!.currentParticipants,
-                      max: event!.maxParticipants,
-                      dDayLabel: dDayLabel,
-                      cardState: cardState,
-                    ),
-                  ),
-                ],
-              ),
-
-              // Content area
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: MinglitSpacing.medium,
-                  vertical: MinglitSpacing.small,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Title
-                    Text(
-                      party?.title ?? event!.title ?? '제목 없음',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
+                      right: MinglitSpacing.small,
+                      child: _ParticipantDDayOverlay(
+                        current: event!.currentParticipants,
+                        max: event!.maxParticipants,
+                        dDayLabel: dDayLabel,
+                        cardState: cardState,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: MinglitSpacing.xxsmall),
-
-                    // Location & Date Row
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.location_on_outlined,
-                          size: 13,
-                          color: theme.colorScheme.primary,
-                        ),
-                        const SizedBox(width: 3),
-                        Expanded(
-                          child: Text(
-                            '${location?.name ?? "장소 미정"} · $dateLabel',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        Text(
-                          priceLabel,
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            color: theme.colorScheme.secondary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    // Tag chips — prefer party-level tags, fall back to
-                    // event-level tags (Tag Discovery #1094-1096).
-                    // Displays at most 3 tags + "+N" overflow badge.
-                    if (party?.tags ?? event!.tags case final tags?
-                        when tags.isNotEmpty) ...[
-                      const SizedBox(height: MinglitSpacing.xsmall),
-                      _TagChipRow(tags: tags),
-                    ],
                   ],
                 ),
-              ),
-            ],
+
+                // Content area
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: MinglitSpacing.medium,
+                    vertical: MinglitSpacing.small,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Title
+                      Text(
+                        title,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: MinglitSpacing.xxsmall),
+
+                      // Location & Date Row
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.location_on_outlined,
+                            size: 13,
+                            color: theme.colorScheme.primary,
+                          ),
+                          const SizedBox(width: 3),
+                          Expanded(
+                            child: Text(
+                              '$locationName · $dateLabel',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          Text(
+                            priceLabel,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              color: theme.colorScheme.secondary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      // Tag chips — prefer party-level tags, fall back to
+                      // event-level tags (Tag Discovery #1094-1096).
+                      // Displays at most 3 tags + "+N" overflow badge.
+                      if (party?.tags ?? event!.tags case final tags?
+                          when tags.isNotEmpty) ...[
+                        const SizedBox(height: MinglitSpacing.xsmall),
+                        _TagChipRow(tags: tags),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -483,7 +494,8 @@ class _PartnerOverlay extends StatelessWidget {
 
 /// Displays up to 3 tag chips with an overflow "+N" badge.
 ///
-/// Used in [MinglitEventCard] to surface tag metadata (Tag Discovery #1094-1096).
+/// Used in [MinglitEventCard] to surface tag metadata
+/// (Tag Discovery #1094-1096).
 class _TagChipRow extends StatelessWidget {
   const _TagChipRow({required this.tags});
 

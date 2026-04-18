@@ -88,7 +88,7 @@ class MinglitChip extends StatelessWidget {
               : theme.colorScheme.onSurface)
         : colorScheme.onSurfaceVariant;
 
-    final widget = Container(
+    final chip = Container(
       padding: padding,
       decoration: BoxDecoration(
         color: bgColor,
@@ -133,19 +133,26 @@ class MinglitChip extends StatelessWidget {
       // Fix #1376: A11Y — 최소 터치 영역 48dp 보장 (WCAG / Material 가이드라인)
       // InkWell이 ConstrainedBox 밖에서 전체 48dp 영역을 차지해야 hit test 통과.
       // ConstrainedBox -> InkWell -> Center 순서: InkWell이 48dp 영역을 가득 채움.
-      return ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(MinglitRadius.small),
-          child: Center(
-            widthFactor: 1,
-            child: widget,
+      return Semantics(
+        label: label,
+        button: true,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(MinglitRadius.small),
+            child: Center(
+              widthFactor: 1,
+              child: chip,
+            ),
           ),
         ),
       );
     }
 
-    return widget;
+    return Semantics(
+      label: label,
+      child: chip,
+    );
   }
 }

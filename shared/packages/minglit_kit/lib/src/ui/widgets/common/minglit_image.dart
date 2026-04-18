@@ -13,6 +13,8 @@ class MinglitImage extends StatelessWidget {
     this.height,
     this.width,
     this.fit = BoxFit.contain,
+    this.semanticLabel,
+    this.excludeFromSemantics = false,
   });
 
   /// Image source path or URL.
@@ -26,6 +28,12 @@ class MinglitImage extends StatelessWidget {
 
   /// How the image should be inscribed into the space.
   final BoxFit fit;
+
+  /// Semantic label for the image.
+  final String? semanticLabel;
+
+  /// Whether to exclude this image from semantics.
+  final bool excludeFromSemantics;
 
   bool get _isNetwork => path.startsWith('http');
   bool get _isAsset =>
@@ -72,6 +80,8 @@ class MinglitImage extends StatelessWidget {
       height: height,
       width: width,
       fit: fit,
+      semanticLabel: semanticLabel,
+      excludeFromSemantics: excludeFromSemantics,
       frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
         if (wasSynchronouslyLoaded || frame != null) {
           return child;
