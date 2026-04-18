@@ -163,4 +163,33 @@ class _MinglitComponentThemes {
     behavior: SnackBarBehavior.floating,
     elevation: 2,
   );
+
+  static DialogThemeData dialog(MinglitColorSet c) => DialogThemeData(
+    backgroundColor: c.background,
+    surfaceTintColor: Colors.transparent,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(MinglitRadius.dialog),
+    ),
+    elevation: 0,
+    titleTextStyle: TextStyle(
+      // ignore: minglit_no_hardcoded_text_style -- theme definition
+      color: c.textPrimary,
+      fontSize: 18,
+      fontWeight: FontWeight.bold,
+      fontFamily: 'Pretendard',
+    ),
+    contentTextStyle: TextStyle(
+      // ignore: minglit_no_hardcoded_text_style -- theme definition
+      color: c.textSecondary,
+      fontSize: 16,
+      height: 1.5,
+      fontFamily: 'Pretendard',
+    ),
+    actionsPadding: const EdgeInsets.fromLTRB(
+      MinglitSpacing.sm,
+      MinglitSpacing.zero,
+      MinglitSpacing.large,
+      MinglitSpacing.large,
+    ),
+  );
 }
