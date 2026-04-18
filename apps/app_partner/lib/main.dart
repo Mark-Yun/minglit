@@ -6,6 +6,7 @@ import 'package:app_partner/src/routing/app_router.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:kakao_map_plugin/kakao_map_plugin.dart' as kakao;
@@ -169,6 +170,8 @@ class _AppView extends ConsumerWidget {
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
+        // Fix #1538: FlutterQuill localization delegate 누락으로 파티 생성 Step 1에서 UnimplementedError 발생
+        quill.FlutterQuillLocalizations.delegate,
       ],
       supportedLocales: AppLocalizations.supportedLocales,
       builder: (context, child) {
