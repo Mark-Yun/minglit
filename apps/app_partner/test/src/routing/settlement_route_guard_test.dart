@@ -103,8 +103,11 @@ void main() {
         isLoggedIn: true,
         hasSettlementAccess: false,
       );
-      expect(result, isNull,
-          reason: 'startsWith check must not match /settlement-history sibling');
+      expect(
+        result,
+        isNull,
+        reason: 'startsWith check must not match /settlement-history sibling',
+      );
     });
 
     test('/more → null (not affected by settlement guard)', () {
