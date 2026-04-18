@@ -5,7 +5,6 @@
 // T2: SETTLEMENT_VIEW만 있는 유저 → 계좌 관리 버튼 미표시
 // T3: 버튼 탭 → goToBankAccount() 호출
 
-import 'package:app_partner/src/features/settlement/settlement_coordinator.dart';
 import 'package:app_partner/src/features/settlement/settlement_dashboard_controller.dart';
 import 'package:app_partner/src/features/settlement/settlement_list_controller.dart';
 import 'package:app_partner/src/features/settlement/settlement_page.dart';
@@ -63,8 +62,7 @@ void main() {
         expect(
           find.byKey(const Key('bankAccountButton')),
           findsOneWidget,
-          reason:
-              'SETTLEMENT_EDIT 권한이 있으면 AppBar에 계좌 관리 버튼이 표시돼야 한다',
+          reason: 'SETTLEMENT_EDIT 권한이 있으면 AppBar에 계좌 관리 버튼이 표시돼야 한다',
         );
       },
     );
@@ -80,8 +78,7 @@ void main() {
         expect(
           find.byKey(const Key('bankAccountButton')),
           findsNothing,
-          reason:
-              'SETTLEMENT_EDIT 권한이 없으면 계좌 관리 버튼이 표시되면 안 된다',
+          reason: 'SETTLEMENT_EDIT 권한이 없으면 계좌 관리 버튼이 표시되면 안 된다',
         );
       },
     );
