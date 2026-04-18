@@ -2,7 +2,6 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
-import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 // KEEP IN SYNC WITH apps/app_user/test/visual_qa/visual_qa_helper.dart
@@ -61,10 +60,11 @@ extension VisualQaTester on WidgetTester {
       final step = _nextStep();
       // Widget tree dump is synchronous — do it before the async image capture.
       _captureWidgetTree(step, label);
-      // Image capture uses real async I/O and GPU rendering; must use runAsync.
-      await runAsync(() async {
-        await _captureScreenshot(step, label);
-      });
+      // Fix #1536: Do NOT use runAsync — captureImage() hangs permanently in
+      // headless CI (no GPU) and .timeout() does not cancel the internal Future,
+      // leaving a leaked async operation that blocks subsequent tests.
+      // GoldenCapture uses the same direct-await pattern and works correctly.
+      await _captureScreenshot(step, label);
     } catch (e, st) {
       // ignore: avoid_print
       print('[VisualQA] capture("$label") failed: $e\n$st');
@@ -111,15 +111,19 @@ extension VisualQaTester on WidgetTester {
   // ---------------------------------------------------------------------------
 
   Future<void> _captureScreenshot(int step, String label) async {
-    final image = await _renderToImage();
-    final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-    image.dispose();
-    if (byteData == null) {
-      throw StateError('toByteData returned null for step $step "$label"');
+    final rootElement = binding.rootElement;
+    if (rootElement == null) return;
+    final image = await captureImage(rootElement);
+    late final Uint8List bytes;
+    try {
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      if (byteData == null) return;
+      bytes = Uint8List.view(byteData.buffer);
+    } finally {
+      image.dispose();
     }
-    final bytes = Uint8List.view(byteData.buffer);
-    final file = _ensureFile('${step}_$label.png');
-    await file.writeAsBytes(bytes, flush: true);
+    // Synchronous I/O — avoids runAsync and the associated async leak risk.
+    _ensureFile('${step}_$label.png').writeAsBytesSync(bytes);
   }
 
   void _captureWidgetTree(int step, String label) {
@@ -134,27 +138,5 @@ extension VisualQaTester on WidgetTester {
     final dir = Directory(_captureDir);
     if (!dir.existsSync()) dir.createSync(recursive: true);
     return File('${dir.path}/$filename');
-  }
-
-  /// Renders the root render view to a [ui.Image].
-  ///
-  /// Uses [captureImage] from flutter_test when a root element is available.
-  /// Falls back to the render view's layer tree otherwise.
-  Future<ui.Image> _renderToImage() async {
-    // Try flutter_test's built-in captureImage using the root element.
-    final rootElement = binding.rootElement;
-    if (rootElement != null) {
-      // captureImage walks up to the nearest repaint boundary automatically.
-      return captureImage(rootElement);
-    }
-
-    // Fallback: use the render view layer directly.
-    final renderView = binding.renderViews.first;
-    final layer = renderView.debugLayer;
-    if (layer is OffsetLayer) {
-      return layer.toImage(renderView.paintBounds);
-    }
-
-    throw StateError('Could not find a paintable layer to capture.');
   }
 }
