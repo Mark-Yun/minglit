@@ -224,4 +224,44 @@ void main() {
       expect(find.text(partner.name), findsOneWidget);
     });
   });
+
+  // Fix #1540: MinglitEventCard must use event.imageUrl (effectiveImageUrls)
+  // rather than party?.imageUrl to handle: (1) event-specific images,
+  // (2) events where party is null.
+  group('EventCard image source', () {
+    testWidgets('uses event-level imageUrls when party has none', (
+      tester,
+    ) async {
+      final partyNoImage = Party(
+        id: 'party-no-img',
+        partnerId: 'partner-1',
+        title: '이미지 없는 파티',
+        createdAt: baseTime,
+        updatedAt: baseTime,
+      );
+      final eventWithImage = Event(
+        id: 'e-own-image',
+        partyId: partyNoImage.id,
+        startTime: baseTime,
+        endTime: baseTime.add(const Duration(hours: 2)),
+        createdAt: baseTime,
+        updatedAt: baseTime,
+        currentParticipants: 3,
+        party: partyNoImage,
+        // Event has its own image; party has none
+        imageUrls: const ['https://example.com/event.jpg'],
+      );
+
+      // event.imageUrl should return 'https://example.com/event.jpg'
+      expect(eventWithImage.imageUrl, 'https://example.com/event.jpg');
+
+      await tester.pumpWidget(
+        buildCard(eventWithImage, currentTime: fiveDaysBefore),
+      );
+      await tester.pump();
+
+      // Card renders without crashing — regression for Fix #1540
+      expect(find.byType(MinglitEventCard), findsOneWidget);
+    });
+  });
 }
