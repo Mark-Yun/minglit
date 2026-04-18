@@ -68,7 +68,7 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
         'search_events_pgroonga',
         params: {'query': query},
       );
-      final ids = (rpcResult)
+      final ids = rpcResult
           .map((item) => (item as Map<String, dynamic>)['id'] as String)
           .toList();
 
