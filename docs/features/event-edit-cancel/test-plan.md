@@ -4,8 +4,10 @@
 **스펙**: `docs/features/event-edit-cancel/spec.md`
 **와이어프레임**: `docs/features/event-edit-cancel/wireframe.html`
 
-이 문서는 이벤트 수정/취소 피처의 7-Layer 테스트 매핑이다.
+이 문서는 이벤트 수정/취소 피처의 계층별 테스트 매핑이다.
 구현 SWE는 각 구현 이슈 PR에 본 문서의 P1 케이스 중 해당 영역을 테스트로 추가해야 한다.
+
+> 본 문서의 Layer 1~7 은 피처 범위에서 커버해야 할 테스트 레이어이고, 마지막 "회귀 검증" 섹션은 별도 레이어가 아닌 기존 테스트의 회귀 통과 체크리스트다. `docs/qa/test-strategy.md` 의 7-layer taxonomy SSOT 와 번호가 1:1 일치하지는 않으며, 본 문서는 피처 구현 이슈 분할 관점의 분류를 우선한다.
 
 ---
 
@@ -71,7 +73,8 @@
 | | 다른 파티 이벤트 cancel 시도 → 403 | P1 |
 | | event_applications 전체 → status `cancelled`로 일괄 업데이트 (rejected와 구분) | P1 |
 | | 동시에 동일 이벤트 cancel 2건 요청 (race) → 한쪽만 환불 처리, 다른쪽은 409 또는 no-op | P1 |
-| | 신규 event_application INSERT → 취소된 이벤트는 RLS 또는 EF에서 차단 | P1 |
+| | 신규 신청 EF (`apply-event` 등): 취소된 이벤트(status=cancelled)에 신청 요청 → 400/409 (EF 가 service_role 경로에서 사전 차단) | P1 |
+| | 취소된 이벤트에 대한 신청 차단은 EF 에서 수행 (유저 클라이언트는 읽기 전용 RLS 이므로 INSERT 경로 자체가 닫혀 있음) | P1 |
 
 #### 1-3. 환불 retry 큐 (별도 worker EF — 스펙 §4 환불 실패 시 자동 재시도)
 
@@ -91,12 +94,15 @@
 | `supabase/tests/database/74_event_edit_cancel_schema_test.sql` (신규) | `events.metadata` JSONB 컬럼 존재 (기존 컬럼 재활용) | P1 |
 | | `event_applications.status` CHECK 제약조건에 `cancelled` 값 포함 | P1 |
 | | `event_applications.status = 'cancelled'`과 `'rejected'` 구분 가능 | P1 |
-| `supabase/tests/database/75_event_edit_cancel_rls_test.sql` (신규) | 파트너: 자기 파티 이벤트만 update 가능 | P1 |
-| | 파트너: 다른 파티 이벤트 update → RLS deny | P1 |
-| | 파트너: 자기 파티 이벤트 update_status → cancelled 가능 | P1 |
-| | 일반 유저: events UPDATE 불가 | P1 |
-| | 일반 유저: 취소된 이벤트(status=cancelled)에 event_applications INSERT → 차단 | P1 |
-| | 일반 유저: 활성(scheduled) 이벤트에 신청 INSERT → 정상 | P1 |
+| `supabase/tests/database/75_event_edit_cancel_rls_test.sql` (신규) | authenticated 파트너 클라이언트: `events` UPDATE 직접 시도 → RLS deny (`throws_ok` / 0 row affected) | P1 |
+| | authenticated 파트너 클라이언트: `events.status` 를 `cancelled` 로 직접 UPDATE 시도 → RLS deny | P1 |
+| | authenticated 파트너 클라이언트: `event_applications` 를 `cancelled` 로 직접 UPDATE 시도 → RLS deny | P1 |
+| | authenticated 유저 클라이언트: `events` UPDATE 직접 시도 → RLS deny | P1 |
+| | authenticated 유저 클라이언트: `event_applications` INSERT 직접 시도 → RLS deny (모든 쓰기는 service_role EF 경유) | P1 |
+| | authenticated 유저 클라이언트: 자기 `event_applications` SELECT → 허용 (읽기 전용 정책 유지) | P1 |
+| | authenticated 파트너 클라이언트: 자기 파티 `events` SELECT → 허용 (읽기 전용 org scope 유지) | P1 |
+
+> **설계 원칙**: 유저/파트너 클라이언트는 전 테이블 읽기 전용 RLS이고, 모든 INSERT/UPDATE/DELETE 는 service_role Edge Function 을 경유한다. 본 섹션은 "authenticated client 는 쓸 수 없음" 이라는 경계를 **부정형(deny) 어설션**으로만 검증한다. write-path 의 positive 검증(파트너의 자기 이벤트 update 성공, org scope 차단, 취소된 이벤트에 신청 INSERT 차단 등)은 Layer 1 EF 테스트에 귀속한다. 만약 신규 테스트가 authenticated 쓰기를 `ok` 로 어설션한다면 RLS 정책이 느슨해진 증거이므로 즉시 리뷰어 이스컬레이션.
 | `supabase/tests/database/76_event_cancel_cascade_test.sql` (신규) | 이벤트 status=cancelled 시 트리거로 event_applications 일괄 cancelled (구현 방식이 EF가 아닌 트리거인 경우) | P2 |
 | | 트리거가 아니라 EF에서 처리하는 경우 — 본 테스트 파일 생략 | - |
 | `supabase/tests/database/77_event_capacity_guard_test.sql` (신규 또는 기존 #68에 추가) | events.max_participants UPDATE 시 current_participants보다 작으면 트리거/CHECK로 거부 (DB 레벨 가드) | P1 |
@@ -271,7 +277,6 @@
 |-----------|---------|-----------|------|---------|
 | IT-P05a | 이벤트 핵심정보 수정 → 알림 발행 검증 | `apps/app_partner/test/integration/cuj_event_edit_test.dart` (신규) | EventDetailPage → 수정 버튼 → EventCreatePage(편집) → 시간 변경 → 저장 → 확인 다이얼로그 → 변경하기 → EventDetailPage 복귀 + Mock PGMQ에 event_modified 메시지 1건 검증 | P1 |
 | IT-P05b | 이벤트 부수정보 수정 → 알림 미발행 | 동일 | 제목 변경 → 저장 → 다이얼로그 미표시 → Mock PGMQ 0건 | P1 |
-| IT-P05c | 이벤트 정원 축소 거부 | 동일 | 정원 입력 < current_participants → 인라인 에러 노출 → 저장 차단 | P1 |
 | IT-P06a | 참가자 0명 이벤트 취소 (간단 플로우) | `apps/app_partner/test/integration/cuj_event_cancel_test.dart` (신규) | EventDetailPage → 더보기 → 이벤트 취소 → 사유 바텀시트(돌아가기 가능) → 다음 → 확인 다이얼로그(환불/알림 안내 없음) → 이벤트 취소 → Mock EF 호출 + 상태 cancelled | P1 |
 | IT-P06b | 유료 참가자 N명 이벤트 취소 (전액 환불) | 동일 | 사유=`insufficient_attendees` → 확인 다이얼로그(환불 총액 표시) → 이벤트 취소 → Mock 환불 N건 트리거 + Mock 알림 N건 발행 + 상태 cancelled + 정산 차감 1건 | P1 |
 | IT-P06c | 환불 1건 실패 시 retry 큐 등록 | 동일 | Mock PG에서 1건 실패 → 이벤트는 cancelled로 전환 + 실패 1건 retry 큐 등록 + SnackBar "일부 환불 지연" 노출 | P1 |
@@ -286,7 +291,7 @@
 
 ---
 
-### Layer 8: 회귀 검증 (기존 테스트 영향)
+### 회귀 검증 (기존 테스트 영향 — 별도 레이어 아님)
 
 | 기존 테스트 | 검증 포인트 |
 |-----------|-----------|
@@ -322,13 +327,13 @@
 
 ## 실행 순서 및 카운트
 
-**P1 (필수): 95건**
-- Layer 1 EF (update + update_status + retry): 35건
-- Layer 2 pgTAP (schema/RLS): 8건
+**P1 (필수): 97건**
+- Layer 1 EF (update + update_status + retry): 36건 (취소 이벤트 신청 차단 케이스 세분화 +1)
+- Layer 2 pgTAP (schema/RLS-deny): 10건 (authenticated 쓰기 전면 deny 케이스 +2)
 - Layer 3 Repository (updateEvent/cancelEvent/diff): 12건
 - Layer 4 Controller/Coordinator: 17건
-- Layer 5 Widget: 18건
-- Layer 7 Integration: 5건
+- Layer 5 Widget: 18건 (정원 축소 거부 포함)
+- Layer 7 Integration: 4건 (IT-P05c는 Widget 5-1로 이관)
 
 **P2 (권장): 30건**
 - Layer 1 EF 추가 케이스: 4건
@@ -344,7 +349,7 @@
 - Layer 6 Golden 추가 변형: 5건
 - 마이티켓 환불완료 라벨: 2건
 
-**총 133건**
+**총 135건**
 
 ---
 
@@ -354,20 +359,20 @@
 
 | 구현 이슈 | 필수 테스트 (P1) | 비고 |
 |----------|----------------|------|
-| 1. EF: update_status 취소 + 환불 + 알림 | Layer 1 §1-2 (17건) + Layer 2 §RLS (4건) | 환불 retry 큐는 별도 worker로 분리 가능 |
+| 1. EF: update_status 취소 + 환불 + 알림 | Layer 1 §1-2 (18건) + Layer 2 §RLS-deny (7건) | 환불 retry 큐는 별도 worker로 분리 가능. RLS 쪽은 authenticated 쓰기 deny 만 검증. |
 | 2. EF: update 시 핵심 정보 변경 알림 | Layer 1 §1-1 (16건) + Layer 2 §schema (3건) | |
 | 3. Flutter: EventEditRoute + EventCreatePage 편집 모드 | Layer 4 §4-1 (8건) + Layer 4 §4-3 (2건) + Layer 5 §5-1 (12건) | |
 | 4. Flutter: EventDetailPage 수정/취소 진입점 + 취소 UI | Layer 4 §4-2 (6건) + Layer 4 §4-4 (3건) + Layer 5 §5-2 (5건) + Layer 5 §5-3 (12건) | |
 | 5. Flutter: EventRepository updateEvent/cancelEvent | Layer 3 (12건) | |
 | 6. Flutter: 유저앱 취소 이벤트 "취소됨" 표시 | Layer 5 §5-4 (5건) | |
-| 7. 테스트: 이벤트 수정/취소 통합 테스트 (#1338 재활성화) | Layer 7 (5건) + Layer 8 회귀 (전체) | 다른 6개 이슈 머지 후 마지막에 진행 |
+| 7. 테스트: 이벤트 수정/취소 통합 테스트 (#1338 재활성화) | Layer 7 (4건) + 회귀 검증 (전체) | 다른 6개 이슈 머지 후 마지막에 진행 |
 
 ---
 
 ## SWE 체크리스트 (PR 리뷰 시 확인)
 
 - [ ] 본인 구현 이슈에 매핑된 P1 테스트가 모두 추가되었는가?
-- [ ] 회귀 검증 (Layer 8) — 기존 테스트가 모두 통과하는가?
+- [ ] 회귀 검증 섹션 — 기존 테스트가 모두 통과하는가?
 - [ ] 환불/정산 관련 변경 시: 멱등성 + race 케이스 자동화 테스트 포함했는가?
 - [ ] 핵심정보 변경 알림 PGMQ 발행: 단위 테스트 + IT 양쪽에서 검증했는가?
 - [ ] 권한 (EVENT_MANAGE) 검증: EF + UI 양쪽에 테스트 있는가?
@@ -378,7 +383,7 @@
 ## QA 게이트 (머지 전 확인)
 
 - **#1338 재활성화 PR (구현 이슈 7번)** 머지 시:
-  - IT-P05a/b/c, IT-P06a/b/c, IT-U06a 모두 통과 필수
+  - IT-P05a/b, IT-P06a/b/c, IT-U06a 모두 통과 필수 (정원 축소 거부는 Widget 레이어 5-1 케이스로 커버)
   - 환불 부분 실패 시나리오 (IT-P06c) 결정적 동작 보장
   - 기존 IT-P01 (파트너 온보딩→이벤트 생성) 회귀 통과
 - 본 피처 머지 후 `docs/qa/test-cases/cuj-partner.md` 에 "이벤트 수정/취소" CUJ 추가 (별도 작업)
