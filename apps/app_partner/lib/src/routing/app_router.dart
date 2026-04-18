@@ -1,3 +1,4 @@
+import 'package:app_partner/src/logic/current_partner_provider.dart';
 import 'package:app_partner/src/logic/onboarding_state_provider.dart';
 import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +17,8 @@ GoRouter goRouter(Ref ref) {
   // Listen to auth state changes to trigger router refresh.
   final authState = ValueNotifier<AuthState?>(null);
   final onboardingRefresh = ValueNotifier<int>(0);
+  // Fix #1533: settlement 권한 변경 시 라우터를 강제 재평가한다.
+  final settlementRefresh = ValueNotifier<int>(0);
 
   ref
     ..listen(authStateChangesProvider, (_, next) {
@@ -25,12 +28,19 @@ GoRouter goRouter(Ref ref) {
     })
     ..listen(onboardingStateProvider, (_, _) {
       onboardingRefresh.value++;
+    })
+    ..listen(hasSettlementAccessProvider, (_, _) {
+      settlementRefresh.value++;
     });
 
   return GoRouter(
     navigatorKey: rootNavigatorKey,
     initialLocation: '/',
-    refreshListenable: Listenable.merge([authState, onboardingRefresh]),
+    refreshListenable: Listenable.merge([
+      authState,
+      onboardingRefresh,
+      settlementRefresh,
+    ]),
     redirect: (context, state) {
       // Access global auth state
       final isLoggedIn = ref.read(currentUserProvider) != null;
@@ -87,6 +97,16 @@ GoRouter goRouter(Ref ref) {
             return '/';
           }
         }
+      }
+
+      // 4. Fix #1533: /settlement 및 하위 경로는 SETTLEMENT_VIEW 권한 필수.
+      //    로딩/에러 시 fail-closed → 홈으로 리다이렉트.
+      if (isLoggedIn && state.uri.path.startsWith('/settlement')) {
+        final hasAccess = ref.read(hasSettlementAccessProvider).maybeWhen(
+          data: (v) => v,
+          orElse: () => false,
+        );
+        if (!hasAccess) return '/';
       }
 
       // No redirect needed
