@@ -9,7 +9,7 @@ import 'package:app_user/src/features/home/logic/home_coordinator.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
-import '../goldens/golden_test_helpers.dart'
+import '../alchemist/golden_test_helpers.dart'
     show MockAccountDeletionCoordinator, MockHomeCoordinator;
 import 'screenshot_scenario.dart';
 

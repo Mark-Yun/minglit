@@ -275,7 +275,7 @@ Future<void> pumpApp(
 **경로 구분 (Layer 2 대상 vs 비대상)**:
 
 - `apps/app_user/test/integration/` + `apps/app_partner/test/integration/` → Layer 2 대상
-- `tests/client_cuj_integration/` (백엔드 통합 테스트, 별도 패키지, 20개 파일) → **Layer 2 아님.** Layer 2 캡처 호출 삽입 금지.
+- `tests/client_cuj_integration/` — 삭제됨 (stale 인프라 제거). Layer 2 대상 아님.
 
 ### 6.1 Patrol 전환 배경
 
@@ -283,11 +283,11 @@ Future<void> pumpApp(
 
 ### 6.2 스크린샷 내장 전략
 
-기존 `scenario_screenshots_test.dart`(정적 화면 캡처)를 제거하고, 각 integration 테스트에 스텝별 `takeScreenshot()`을 삽입한다.
+기존 `scenario_screenshots_test.dart`(정적 화면 캡처)는 삭제됐으며, 각 integration 테스트에 스텝별 `takeScreenshot()`을 삽입한다.
 
 | 항목 | Before | After |
 |------|--------|-------|
-| 스크린샷 위치 | 별도 파일 (scenario_screenshots_test.dart) | 각 테스트 내부 |
+| 스크린샷 위치 | 별도 파일 (삭제됨) | 각 테스트 내부 |
 | 캡처 시점 | 정적 화면만 | setup/before/after/error |
 | 네이티브 인터랙션 | 불가 | Patrol로 가능 |
 | 예상 캡처 수 | ~40장 (골든 시나리오) | **~141장** (플로우 중간 상태 포함) |

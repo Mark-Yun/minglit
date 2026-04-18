@@ -2,7 +2,7 @@ import 'package:app_user/src/features/partner/detail/partner_detail_page.dart';
 import 'package:app_user/src/features/partner/logic/partner_coordinator.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
-import '../goldens/golden_test_helpers.dart' show MockPartnerCoordinator;
+import '../alchemist/golden_test_helpers.dart' show MockPartnerCoordinator;
 import 'screenshot_scenario.dart';
 
 class PartyPartnerScenarios {

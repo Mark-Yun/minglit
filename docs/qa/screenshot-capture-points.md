@@ -69,8 +69,8 @@
 |------|------|-------|
 | `apps/app_user/test/integration/` | Flutter 위젯 통합 + CUJ 시나리오 테스트 | **Layer 2 대상** |
 | `apps/app_partner/test/integration/` | 동일 | **Layer 2 대상** |
-| `tests/client_cuj_integration/` | 백엔드 통합 테스트 (별도 패키지, 20개 파일) | **Layer 2 아님** — Layer 2로 혼동 금지 |
-| `goldens/` 또는 Alchemist 골든 경로 | 픽셀 레벨 widget 골든 | Layer 1 |
+| `apps/app_user/test/alchemist/` | 픽셀 레벨 widget 골든 (Alchemist) | Layer 1 |
+| `apps/app_partner/test/alchemist/` | 동일 | Layer 1 |
 | (미정) `scenario_screenshots/` | Layer 2 artifact 저장 경로 후보 | Layer 2 — 저장 전략은 이슈 #1557에서 결정 대기 |
 
 ### 재가동 선결 의존성
@@ -331,7 +331,7 @@
 
 ### smoke_test.dart / edge_cases_test.dart — 캡처 불필요
 
-> Smoke: 전 화면 크래시 없이 렌더링만 검증 → `scenario_screenshots_test.dart`로 이미 커버
+> Smoke: 전 화면 크래시 없이 렌더링만 검증 → 각 integration 테스트 내 스텝별 스크린샷으로 커버
 > Edge cases: 파라미터 검증 → 캡처 가치 낮음
 
 ---
