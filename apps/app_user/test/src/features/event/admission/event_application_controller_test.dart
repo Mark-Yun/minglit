@@ -18,8 +18,7 @@ class _FakeIamportControllerCancelled extends IamportController {
     required BuildContext context,
     required String userCode,
     required Map<String, dynamic> data,
-  }) async =>
-      null; // 뒤로가기로 이탈 시 PaymentServiceImpl이 null을 반환함을 모사
+  }) async => null; // 뒤로가기로 이탈 시 PaymentServiceImpl이 null을 반환함을 모사
 }
 
 void main() {
@@ -747,7 +746,7 @@ void main() {
             currentUserProvider.overrideWith((ref) => mockUser),
             eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
             iamportControllerProvider.overrideWith(
-              () => _FakeIamportControllerCancelled(),
+              _FakeIamportControllerCancelled.new,
             ),
           ],
         );
@@ -789,7 +788,7 @@ void main() {
             currentUserProvider.overrideWith((ref) => mockUser),
             eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
             iamportControllerProvider.overrideWith(
-              () => _FakeIamportControllerCancelled(),
+              _FakeIamportControllerCancelled.new,
             ),
           ],
         );
