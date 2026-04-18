@@ -1,4 +1,4 @@
-name: CI
+name: CI: Unit + Widget + Golden + pgTAP + Deno EF + Landing Lint
 
 on:
   push:
@@ -71,6 +71,7 @@ jobs:
 
   # App CI (User + Partner)
   test-flutter-apps:
+    name: test-app-unit-widget-golden
     needs: changes
     if: ${{ needs.changes.outputs.app_user == 'true' || needs.changes.outputs.app_partner == 'true' }}
     runs-on: ubuntu-latest
@@ -237,6 +238,7 @@ jobs:
 
   # Landing User CI
   lint-landing-user:
+    name: lint-and-build-landing-user
     needs: changes
     if: ${{ needs.changes.outputs.landing_user == 'true' }}
     runs-on: ubuntu-latest
@@ -258,6 +260,7 @@ jobs:
 
   # Landing Partner CI
   lint-landing-partner:
+    name: lint-and-build-landing-partner
     needs: changes
     if: ${{ needs.changes.outputs.landing_partner == 'true' }}
     runs-on: ubuntu-latest
@@ -279,6 +282,7 @@ jobs:
 
   # Supabase 통합 테스트 (pgTAP + backend-integration + e2e-scenarios)
   test-supabase:
+    name: test-pgtap
     needs: changes
     if: ${{ needs.changes.outputs.supabase == 'true' }}
     runs-on: ubuntu-latest
@@ -307,6 +311,7 @@ jobs:
 
   # Deno Edge Function 테스트 (supabase 불필요)
   test-edge-functions:
+    name: test-deno-ef
     needs: changes
     if: ${{ needs.changes.outputs.supabase == 'true' }}
     runs-on: ubuntu-latest

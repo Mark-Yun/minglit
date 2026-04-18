@@ -1,4 +1,4 @@
-name: Hourly User Activity Simulation
+name: Hourly: Tick Simulator (user activity mode)
 
 on:
   schedule:
@@ -32,5 +32,5 @@ jobs:
     uses: ./.github/workflows/notify-failure.yml
     with:
       success: ${{ !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
-      workflow_name: 'Hourly User Activity'
+      workflow_name: 'Hourly Tick Simulator (user activity mode)'
     secrets: inherit

@@ -1,4 +1,4 @@
-name: Allure Report
+name: Daily: Allure Test Report Aggregation
 
 on:
   schedule:

@@ -2,11 +2,11 @@ name: Hourly Backend Simulation
 
 on:
   schedule:
-    - cron: '0 * * * *'  # Every hour at :00 (hourly-user-activity.yml runs at :30)
+    - cron: '0 * * * *'  # Every hour at :00 (hourly-tick-simulator.yml runs at :30)
   workflow_dispatch:
 
 concurrency:
-  group: supabase-dev-simulation  # Same group as hourly-user-activity to prevent concurrent EF calls
+  group: supabase-dev-simulation  # Same group as hourly-tick-simulator to prevent concurrent EF calls
   cancel-in-progress: false
 
 jobs:

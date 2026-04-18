@@ -1,4 +1,4 @@
-name: Daily Backend Simulation + CUJ Tests
+name: Daily: Tick Simulator Pipeline + Emulator CUJ
 
 on:
   schedule:
