@@ -172,5 +172,5 @@ jobs:
     uses: ./.github/workflows/notify-failure.yml
     with:
       success: ${{ !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
-      workflow_name: 'Daily Backend Simulation'
+      workflow_name: 'Daily: Tick Simulator Pipeline + Emulator CUJ'
     secrets: inherit
