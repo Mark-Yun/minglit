@@ -1115,71 +1115,75 @@ void main() {
         },
       );
 
-      test('returns events with party, location, and ticket relations',
-          () async {
-        when(
-          () => mockClient.rpc<List<dynamic>>(
-            'search_events_pgroonga',
-            params: any(named: 'params'),
-          ),
-        ).thenAnswer(
-          (_) => FakeRpcBuilder<List<dynamic>>([
-            {'id': 'event_1'},
-          ]),
-        );
-        unawaited(
-          mockTable(
-            mockClient,
-            'events',
-            selectData: [eventWithRelationsJson],
-          ),
-        );
+      test(
+        'returns events with party, location, and ticket relations',
+        () async {
+          when(
+            () => mockClient.rpc<List<dynamic>>(
+              'search_events_pgroonga',
+              params: any(named: 'params'),
+            ),
+          ).thenAnswer(
+            (_) => FakeRpcBuilder<List<dynamic>>([
+              {'id': 'event_1'},
+            ]),
+          );
+          unawaited(
+            mockTable(
+              mockClient,
+              'events',
+              selectData: [eventWithRelationsJson],
+            ),
+          );
 
-        final result = await repository.searchEvents('강남');
+          final result = await repository.searchEvents('강남');
 
-        expect(result, hasLength(1));
-        expect(result.first.id, 'event_1');
-        expect(result.first.party, isNotNull);
-        expect(result.first.party!.title, '강남 파티');
-        expect(result.first.party!.location, isNotNull);
-        expect(result.first.party!.location!.name, '강남역');
-        expect(result.first.tickets, isNotNull);
-        expect(result.first.tickets, hasLength(1));
-        expect(result.first.tickets!.first.id, 'ticket_1');
-        expect(result.first.tickets!.first.price, 30000);
-      });
+          expect(result, hasLength(1));
+          expect(result.first.id, 'event_1');
+          expect(result.first.party, isNotNull);
+          expect(result.first.party!.title, '강남 파티');
+          expect(result.first.party!.location, isNotNull);
+          expect(result.first.party!.location!.name, '강남역');
+          expect(result.first.tickets, isNotNull);
+          expect(result.first.tickets, hasLength(1));
+          expect(result.first.tickets!.first.id, 'ticket_1');
+          expect(result.first.tickets!.first.price, 30000);
+        },
+      );
 
-      test('preserves PGroonga relevance order, not DB insertion order',
-          () async {
-        // RPC says event_2 is more relevant than event_1
-        when(
-          () => mockClient.rpc<List<dynamic>>(
-            'search_events_pgroonga',
-            params: any(named: 'params'),
-          ),
-        ).thenAnswer(
-          (_) => FakeRpcBuilder<List<dynamic>>([
-            {'id': 'event_2'},
-            {'id': 'event_1'},
-          ]),
-        );
-        // DB returns them in the opposite order
-        final event2Json = {...eventJson, 'id': 'event_2', 'title': '홍대 이벤트'};
-        unawaited(
-          mockTable(
-            mockClient,
-            'events',
-            selectData: [eventJson, event2Json],
-          ),
-        );
+      test(
+        'preserves PGroonga relevance order, not DB insertion order',
+        () async {
+          // RPC says event_2 is more relevant than event_1
+          when(
+            () => mockClient.rpc<List<dynamic>>(
+              'search_events_pgroonga',
+              params: any(named: 'params'),
+            ),
+          ).thenAnswer(
+            (_) => FakeRpcBuilder<List<dynamic>>([
+              {'id': 'event_2'},
+              {'id': 'event_1'},
+            ]),
+          );
+          // DB returns them in the opposite order
+          final event2Json = {...eventJson, 'id': 'event_2', 'title': '홍대 이벤트'};
+          unawaited(
+            mockTable(
+              mockClient,
+              'events',
+              selectData: [eventJson, event2Json],
+            ),
+          );
 
-        final result = await repository.searchEvents('이벤트');
+          final result = await repository.searchEvents('이벤트');
 
-        expect(result, hasLength(2));
-        // PGroonga order must be restored
-        expect(result[0].id, 'event_2');
-        expect(result[1].id, 'event_1');
-      });
+          expect(result, hasLength(2));
+          // PGroonga order must be restored
+          expect(result[0].id, 'event_2');
+          expect(result[1].id, 'event_1');
+        },
+      );
 
       test('throws on RPC error', () async {
         when(
