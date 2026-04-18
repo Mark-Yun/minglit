@@ -17,12 +17,14 @@ jobs:
     steps:
       - name: Trigger backend-simulator EF
         run: |
-          curl -sf -X POST \
+          response=$(curl -sf -X POST \
             "${{ secrets.SUPABASE_DEV_URL }}/functions/v1/backend-simulator" \
             -H "Authorization: Bearer ${{ secrets.SUPABASE_DEV_SECRET_KEY }}" \
             -H "Content-Type: application/json" \
             -d '{}' \
-            --max-time 600
+            --max-time 600)
+          echo "$response"
+          echo "$response" | jq -e '.success == true'
 
   notify-failure:
     needs: [simulate]
