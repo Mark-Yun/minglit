@@ -1049,5 +1049,151 @@ void main() {
         );
       });
     });
+
+    // Regression tests for #1534: searchEvents must return fully hydrated Event
+    // models (party/tickets/location) — bare RPC rows caused '제목 없음'/'가격 미정'.
+    group('searchEvents', () {
+      final partyJson = {
+        'id': 'party_1',
+        'partner_id': 'partner_1',
+        'title': '강남 파티',
+        'status': 'active',
+        'created_at': now.toIso8601String(),
+        'updated_at': now.toIso8601String(),
+        'location': {
+          'id': 'loc_1',
+          'partner_id': 'partner_1',
+          'name': '강남역',
+          'address': '서울 강남구',
+          'created_at': now.toIso8601String(),
+          'updated_at': now.toIso8601String(),
+        },
+      };
+
+      final ticketJson = {
+        'id': 'ticket_1',
+        'event_id': 'event_1',
+        'name': '일반 티켓',
+        'price': 30000,
+        'created_at': now.toIso8601String(),
+        'updated_at': now.toIso8601String(),
+      };
+
+      final eventWithRelationsJson = {
+        ...eventJson,
+        'party': partyJson,
+        'entryGroups': <Map<String, dynamic>>[],
+        'tickets': [ticketJson],
+      };
+
+      test('returns empty list for empty query without calling RPC', () async {
+        final result = await repository.searchEvents('');
+
+        expect(result, isEmpty);
+        verifyNever(
+          () => mockClient.rpc<List<dynamic>>(
+            'search_events_pgroonga',
+            params: any(named: 'params'),
+          ),
+        );
+      });
+
+      test(
+        'returns empty list and skips events query when RPC returns no IDs',
+        () async {
+          when(
+            () => mockClient.rpc<List<dynamic>>(
+              'search_events_pgroonga',
+              params: any(named: 'params'),
+            ),
+          ).thenAnswer((_) => FakeRpcBuilder<List<dynamic>>([]));
+
+          final result = await repository.searchEvents('밍글릿');
+
+          expect(result, isEmpty);
+          verifyNever(() => mockClient.from('events'));
+        },
+      );
+
+      test('returns events with party, location, and ticket relations',
+          () async {
+        when(
+          () => mockClient.rpc<List<dynamic>>(
+            'search_events_pgroonga',
+            params: any(named: 'params'),
+          ),
+        ).thenAnswer(
+          (_) => FakeRpcBuilder<List<dynamic>>([
+            {'id': 'event_1'},
+          ]),
+        );
+        unawaited(
+          mockTable(
+            mockClient,
+            'events',
+            selectData: [eventWithRelationsJson],
+          ),
+        );
+
+        final result = await repository.searchEvents('강남');
+
+        expect(result, hasLength(1));
+        expect(result.first.id, 'event_1');
+        expect(result.first.party, isNotNull);
+        expect(result.first.party!.title, '강남 파티');
+        expect(result.first.party!.location, isNotNull);
+        expect(result.first.party!.location!.name, '강남역');
+        expect(result.first.tickets, isNotNull);
+        expect(result.first.tickets, hasLength(1));
+        expect(result.first.tickets!.first.id, 'ticket_1');
+        expect(result.first.tickets!.first.price, 30000);
+      });
+
+      test('preserves PGroonga relevance order, not DB insertion order',
+          () async {
+        // RPC says event_2 is more relevant than event_1
+        when(
+          () => mockClient.rpc<List<dynamic>>(
+            'search_events_pgroonga',
+            params: any(named: 'params'),
+          ),
+        ).thenAnswer(
+          (_) => FakeRpcBuilder<List<dynamic>>([
+            {'id': 'event_2'},
+            {'id': 'event_1'},
+          ]),
+        );
+        // DB returns them in the opposite order
+        final event2Json = {...eventJson, 'id': 'event_2', 'title': '홍대 이벤트'};
+        unawaited(
+          mockTable(
+            mockClient,
+            'events',
+            selectData: [eventJson, event2Json],
+          ),
+        );
+
+        final result = await repository.searchEvents('이벤트');
+
+        expect(result, hasLength(2));
+        // PGroonga order must be restored
+        expect(result[0].id, 'event_2');
+        expect(result[1].id, 'event_1');
+      });
+
+      test('throws on RPC error', () async {
+        when(
+          () => mockClient.rpc<List<dynamic>>(
+            'search_events_pgroonga',
+            params: any(named: 'params'),
+          ),
+        ).thenThrow(Exception('RPC error'));
+
+        await expectLater(
+          repository.searchEvents('밍글릿'),
+          throwsA(anything),
+        );
+      });
+    });
   });
 }
