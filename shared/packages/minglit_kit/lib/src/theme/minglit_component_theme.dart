@@ -164,8 +164,11 @@ class _MinglitComponentThemes {
     elevation: 2,
   );
 
-  static DialogThemeData dialog(MinglitColorSet c) => DialogThemeData(
-    backgroundColor: c.background,
+  static DialogThemeData dialog(
+    MinglitColorSet c, {
+    Color? backgroundColor,
+  }) => DialogThemeData(
+    backgroundColor: backgroundColor ?? c.background,
     surfaceTintColor: Colors.transparent,
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(MinglitRadius.dialog),

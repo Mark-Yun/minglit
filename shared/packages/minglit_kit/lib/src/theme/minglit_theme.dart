@@ -441,7 +441,11 @@ class MinglitTheme {
       tabBarTheme: _MinglitComponentThemes.tabBar(MinglitColorSet.dark),
       dividerTheme: _MinglitComponentThemes.divider(MinglitColorSet.dark),
       snackBarTheme: _MinglitComponentThemes.snackBar(MinglitColorSet.dark),
-      dialogTheme: _MinglitComponentThemes.dialog(MinglitColorSet.dark),
+      // Fix #1591: dark dialogs need surface layering above the app background.
+      dialogTheme: _MinglitComponentThemes.dialog(
+        MinglitColorSet.dark,
+        backgroundColor: MinglitColorsDark.surface,
+      ),
     );
   }
 }
