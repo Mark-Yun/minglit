@@ -26,7 +26,8 @@ jobs:
         env:
           DB_PASSWORD: ${{ secrets.SUPABASE_DEV_DB_PASSWORD }}
           PROJECT_ID: ${{ secrets.SUPABASE_DEV_PROJECT_ID }}
-          POOLER_HOST: aws-0-ap-northeast-2.pooler.supabase.com
+          # Fix #1553: Supabase 인프라 이전 — aws-0 → aws-1
+          POOLER_HOST: aws-1-ap-northeast-2.pooler.supabase.com
         run: |
           PGPASSWORD="${DB_PASSWORD}" psql \
             "postgresql://postgres.${PROJECT_ID}:${DB_PASSWORD}@${POOLER_HOST}:5432/postgres?sslmode=require" \
