@@ -269,17 +269,23 @@ void main() {
             )
             .evaluate();
 
-        expect(
-          matches,
-          isNotEmpty,
-          reason:
-              'tappable card must wrap with Semantics('
-              'label: "이벤트: ...", button: true, excludeSemantics: true)',
-        );
-        final wrapper = matches.first.widget as Semantics;
-        expect(wrapper.properties.label, contains('참가자 8/20명'));
-      },
-    );
+      expect(
+        matches,
+        isNotEmpty,
+        reason:
+            'tappable card must wrap with Semantics('
+            'label: "이벤트: ...", button: true, excludeSemantics: true)',
+      );
+      final wrapper = matches.first.widget as Semantics;
+      expect(wrapper.properties.label, contains('참가자 8/20명'));
+      expect(
+        wrapper.properties.onTap,
+        isNotNull,
+        reason:
+            'tappable card Semantics must expose onTap so screen reader '
+            'users can activate the card',
+      );
+    });
 
     testWidgets('non-tappable card omits button role', (tester) async {
       final readonlyParty = Party(

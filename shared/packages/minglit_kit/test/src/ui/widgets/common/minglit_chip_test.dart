@@ -143,28 +143,32 @@ void main() {
     });
 
     group('Semantics', () {
+      testWidgets('interactive chip exposes label, button role, and tap action', (
+        tester,
+      ) async {
+        final handle = tester.ensureSemantics();
+        await tester.pumpWidget(
+          buildApp(
+            MinglitChip(label: '인터랙티브 칩', onTap: () {}),
+          ),
+        );
+
+        expect(
+          tester.getSemantics(find.byType(MinglitChip)),
+          matchesSemantics(
+            label: '인터랙티브 칩',
+            isButton: true,
+            hasTapAction: true,
+          ),
+          reason:
+              'interactive chip must expose label, button role, and tap action '
+              'so screen reader users can activate it',
+        );
+        handle.dispose();
+      });
+
       testWidgets(
-        'interactive chip: SemanticsNode has single label and button flag',
-        (tester) async {
-          final handle = tester.ensureSemantics();
-          await tester.pumpWidget(
-            buildApp(MinglitChip(label: '인터랙티브 칩', onTap: () {})),
-          );
-
-          expect(
-            tester.getSemantics(find.byType(MinglitChip)),
-            matchesSemantics(label: '인터랙티브 칩', isButton: true),
-            reason:
-                'interactive chip must expose a single label without '
-                'duplication and declare button role',
-          );
-
-          handle.dispose();
-        },
-      );
-
-      testWidgets(
-        'non-interactive chip: SemanticsNode has single label, no button flag',
+        'non-interactive chip exposes label without button role or tap action',
         (tester) async {
           final handle = tester.ensureSemantics();
           await tester.pumpWidget(
@@ -173,12 +177,15 @@ void main() {
 
           expect(
             tester.getSemantics(find.byType(MinglitChip)),
-            matchesSemantics(label: '읽기 전용 칩'),
+            matchesSemantics(
+              label: '읽기 전용 칩',
+              isButton: false,
+              hasTapAction: false,
+            ),
             reason:
-                'static chip must expose a single label without duplication '
-                'and must not declare button role',
+                'static chip must expose label but not announce '
+                'button role or tap action',
           );
-
           handle.dispose();
         },
       );

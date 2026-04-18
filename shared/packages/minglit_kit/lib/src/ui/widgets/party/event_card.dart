@@ -119,6 +119,7 @@ class MinglitEventCard extends StatelessWidget {
           '이벤트: $title, $dateLabel, $locationName, $priceLabel, '
           '$dDayLabel, 참가자 ${event!.currentParticipants}/${event!.maxParticipants}명',
       button: onTap != null,
+      onTap: onTap,
       excludeSemantics: true,
       child: GestureDetector(
         onTap: onTap,

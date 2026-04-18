@@ -136,6 +136,7 @@ class MinglitChip extends StatelessWidget {
       return Semantics(
         label: label,
         button: true,
+        onTap: onTap,
         excludeSemantics: true,
         child: ConstrainedBox(
           constraints: const BoxConstraints(minHeight: 48, minWidth: 48),

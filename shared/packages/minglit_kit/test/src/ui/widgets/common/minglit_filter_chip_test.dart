@@ -151,7 +151,7 @@ void main() {
 
     group('Semantics', () {
       testWidgets(
-        'unselected chip: SemanticsNode has single label, button, selected=false',
+        'unselected chip exposes label, button role, tap action, and selected=false',
         (tester) async {
           final handle = tester.ensureSemantics();
           await tester.pumpWidget(
@@ -169,19 +169,20 @@ void main() {
             matchesSemantics(
               label: '최신순',
               isButton: true,
+              hasTapAction: true,
               hasSelectedState: true,
+              isSelected: false,
             ),
             reason:
-                'unselected filter chip must expose a single label without '
-                'duplication, button role, and selected=false',
+                'unselected filter chip must expose label, button role, '
+                'tap action, and selected=false for screen readers',
           );
-
           handle.dispose();
         },
       );
 
       testWidgets(
-        'selected chip: SemanticsNode has single label, button, selected=true',
+        'selected chip exposes label, button role, tap action, and selected=true',
         (tester) async {
           final handle = tester.ensureSemantics();
           await tester.pumpWidget(
@@ -199,14 +200,14 @@ void main() {
             matchesSemantics(
               label: '인기순',
               isButton: true,
+              hasTapAction: true,
               hasSelectedState: true,
               isSelected: true,
             ),
             reason:
-                'selected filter chip must expose a single label without '
-                'duplication, button role, and selected=true',
+                'selected filter chip must expose label, button role, '
+                'tap action, and selected=true for screen readers',
           );
-
           handle.dispose();
         },
       );

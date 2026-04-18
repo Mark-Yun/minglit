@@ -94,6 +94,7 @@ class MinglitFilterChip extends StatelessWidget {
       label: label,
       selected: isSelected,
       button: true,
+      onTap: onTap,
       excludeSemantics: true,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
