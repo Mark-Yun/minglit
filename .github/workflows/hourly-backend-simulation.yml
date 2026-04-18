@@ -1,0 +1,36 @@
+name: Hourly Backend Simulation
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # Every hour at :00 (hourly-user-activity.yml runs at :30)
+  workflow_dispatch:
+
+concurrency:
+  group: supabase-dev-simulation  # Same group as hourly-user-activity to prevent concurrent EF calls
+  cancel-in-progress: false
+
+jobs:
+  simulate:
+    name: Run backend-simulator (full phase)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Trigger backend-simulator EF
+        run: |
+          curl -sf -X POST \
+            "${{ secrets.SUPABASE_DEV_URL }}/functions/v1/backend-simulator" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_DEV_SECRET_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{}' \
+            --max-time 600
+
+  notify-failure:
+    needs: [simulate]
+    if: always()
+    permissions:
+      issues: write
+    uses: ./.github/workflows/notify-failure.yml
+    with:
+      success: ${{ !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
+      workflow_name: 'Hourly Backend Simulation'
+    secrets: inherit
