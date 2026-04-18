@@ -1,11 +1,83 @@
 # Integration 테스트 스텝별 스크린샷 캡처 포인트 정의
 
-> 관련: #1458 (Patrol 통합 + 스크린샷 내장)
+> 관련: #1458 (Patrol 통합 + 스크린샷 내장), #1557 (인프라 재가동 전면 점검)
 >
 > 목적: 기존 37개 integration 테스트 + 3개 patrol 테스트에 스텝별 스크린샷을 내장할 때,
 > 각 테스트의 어느 시점에 어떤 이름으로 캡처할지 정의한다.
 >
 > SWE는 이 문서를 보고 `takeScreenshot()` 호출을 삽입한다.
+
+---
+
+## 현재 상태 (2026-04-18 기준) — 실제 구현 vs 계획 갭
+
+> 이 문서(캡처 포인트 매핑)는 머지됐지만 **실제 CI 실행 0건**. 아래는 전수 조사 결과이며, 재가동 작업은 이슈 #1557에서 추적한다.
+
+### 파이프라인 단절 지점
+
+| 단계 | 계획 | 실제 상태 (2026-04-18) | 차단 원인 |
+|------|------|---------------------|----------|
+| 1. 테스트 코드 내 캡처 호출 | 각 CUJ 테스트에 `takeScreenshot()` / `matchesGoldenFile()` 삽입 | **0건** — `apps/app_user/test/integration/` 및 `apps/app_partner/test/integration/` 전체에서 호출 미발견 | PR #1496에서 추가됐던 호출이 후속 변경 과정에서 유실 |
+| 2. `GoldenCapture` 유틸 실행 | CI headless 환경에서 동작 | **런타임 skip** (PR #1539) | headless hang 방지를 위한 임시 조치 — 대체 구현 미완 |
+| 3. CUJ 테스트 실행 경로 | `apps/app_user/test/integration/` 순회 | `.github/scripts/run-client-cuj.sh`는 `apps/app_user/integration_test/*_test.dart`를 탐색 → **경로 mismatch로 실행 0건** | run-client-cuj.sh / run-partner-cuj.sh 경로 상수가 Patrol 전환 이전 형태 유지 |
+| 4. 상위 파이프라인 (`client-cuj-test`, `partner-cuj-test` job) | 매일 실행 | **skip 지속** | `needs: seed-and-simulate` 의존 — #1553 (Supabase pooler `aws-0 → aws-1`) 미해결로 upstream job 실패 |
+| 5. Patrol E2E (`patrol-e2e.yml`) | weekly cron | **run 이력 0건** | 한 번도 trigger되지 않음. 수동 실행도 없음 |
+| 6. 아티팩트 업로드 | 생성된 png 보존 | `patrol-e2e.yml:66`은 `if: failure()` + build outputs만 업로드 (스크린샷 아님). `ci.yml`은 golden 실패 / coverage / allure만 업로드 | Layer 2 용 retention 경로 미구축 |
+
+### 3-Layer 스크린샷 아키텍처
+
+본 문서가 속한 **Layer 2**의 위치를 명확히 한다. 전체 전략은 `docs/qa/test-strategy.md`의 "스크린샷 3-layer 파이프라인" 섹션이 SSOT.
+
+```
+[Layer 1] 골든 스크린샷 테스트 (기존, 유지)
+  - Alchemist 기반 widget 단위 golden (app_user 40 / app_partner 91)
+  - 픽셀 레벨 회귀 차단
+  - 경로: apps/*/test/**/*_golden_test.dart + goldens/ (또는 equivalent)
+
+         ▲
+         │
+[Layer 2] 시나리오 스크린샷 (본 문서 = 캡처 포인트 매핑)
+  - CUJ integration test의 스텝별 실제 플로우 스냅샷
+  - 목적: "현재 실제 화면"의 시각적 로그 (픽셀 비교 아님)
+  - 대상 경로: apps/app_user/test/integration/ + apps/app_partner/test/integration/
+  - 저장: artifact retention 14d 이상 (Layer 3 agent가 pull할 수 있어야 함)
+
+         ▲
+         │
+[Layer 3] AI agent 스크린샷 점검 (후속 구현)
+  - 매일 저장된 Layer 2 스크린샷을 agent가 전수 리뷰
+  - 감지 대상: 깨진 이미지, 누락된 라벨, 레이아웃 오류, 품질 저하
+  - 출력: bug-report 이슈 자동 생성
+```
+
+### Layer 2의 의미 재정의 (2026-04-18, 이슈 #1557 기반)
+
+- **캡처는 "비교"가 아니라 "증거 사진"** — Layer 3 AI agent의 semantic 리뷰 입력용.
+- 따라서 아티팩트 저장 요구사항이 기존 Layer 1(골든 픽셀 비교)과 다름:
+  - ❌ PR 실패 시에만 업로드 (현재 `patrol-e2e.yml:66` 패턴)
+  - ✅ **매일 성공 run에서도 전량 저장**, retention 14일 이상, Layer 3 agent가 접근 가능한 경로
+- 따라서 이 문서의 매핑은 "픽셀 고정"이 아니라 **"뭘 촬영할지"** 를 정의하는 쇼트 리스트로 해석.
+
+### 시나리오 스크린샷이 죽어있는 동안 놓친 버그 (샘플)
+
+- #1538 — CUJ-P01 파티 생성 위저드 FlutterQuill localization 에러. `cuj_event_create_wizard_test.dart`가 동작했으면 Layer 2에서 포착 가능.
+- #1540 — Home/EventDetail broken image. `cuj_event_detail_test.dart` / flow 테스트 범위.
+
+### 경로 구분 (혼동 방지)
+
+| 경로 | 역할 | Layer |
+|------|------|-------|
+| `apps/app_user/test/integration/` | Flutter 위젯 통합 + CUJ 시나리오 테스트 | **Layer 2 대상** |
+| `apps/app_partner/test/integration/` | 동일 | **Layer 2 대상** |
+| `tests/client_cuj_integration/` | 백엔드 통합 테스트 (별도 패키지, 20개 파일) | **Layer 2 아님** — Layer 2로 혼동 금지 |
+| `goldens/` 또는 Alchemist 골든 경로 | 픽셀 레벨 widget 골든 | Layer 1 |
+| (미정) `scenario_screenshots/` | Layer 2 artifact 저장 경로 후보 | Layer 2 — 저장 전략은 이슈 #1557에서 결정 대기 |
+
+### 재가동 선결 의존성
+
+- **#1553 (needs-swe)** — Supabase pooler `aws-0 → aws-1` fix. 머지되어야 `seed-and-simulate` 성공 → `client-cuj-test` / `partner-cuj-test` 실행 가능.
+- **PR #1556 (open)** — #1553의 실제 fix PR. 머지 대기.
+- 선결 해제 후에만 이 문서 기반 캡처 포인트 삽입 실효성을 검증할 수 있다.
 
 ---
 
