@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd apps/app_partner
+# Fix #1557: CUJ tests live in test/integration/, not integration_test/
 found=0
-for f in integration_test/*_test.dart; do
+for f in test/integration/*_test.dart; do
   [ -f "$f" ] || break
   found=1
   echo "▶ Running: $f"
