@@ -17,6 +17,8 @@ export class PartnerActionFactory {
     private partnerId: string,
     private token: string,
     private config: TickConfig,
+    // Fix #1540: 시드 이미지 URL 생성용
+    private supabaseUrl: string,
   ) {}
 
   async generate(supabase: SupabaseClient): Promise<SimAction[]> {
@@ -35,7 +37,7 @@ export class PartnerActionFactory {
 
     if (partyIds.length === 0) {
       // No parties yet — create one immediately
-      actions.push(new PartnerActionCreateEvent(this.partnerId, this.token));
+      actions.push(new PartnerActionCreateEvent(this.partnerId, this.token, this.supabaseUrl));
       return actions;
     }
 
@@ -80,7 +82,7 @@ export class PartnerActionFactory {
     if (scheduledError) throw new Error(`Failed to fetch scheduled events: ${scheduledError.message}`);
 
     if ((scheduled ?? []).length < this.config.minScheduledEvents) {
-      actions.push(new PartnerActionCreateEvent(this.partnerId, this.token));
+      actions.push(new PartnerActionCreateEvent(this.partnerId, this.token, this.supabaseUrl));
     }
 
     return actions;

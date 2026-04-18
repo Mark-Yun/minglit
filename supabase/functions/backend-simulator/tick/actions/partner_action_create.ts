@@ -4,6 +4,13 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { AssertionResult, EFResponse } from "../tick_types.ts";
 import { SimAction } from "../sim_action.ts";
 
+// Fix #1540: 시드 이미지 파일명 (dev-seed EF가 party-assets/seed-images/에 업로드)
+const SEED_IMAGE_FILENAMES = [
+  "party_cafe_warm.jpg",
+  "party_lounge_bright.jpg",
+  "party_premium_lounge.jpg",
+];
+
 /**
  * Partner creates a new party + event when they have too few scheduled events.
  * EF: partner-manage-party (action=create)
@@ -14,25 +21,32 @@ export class PartnerActionCreateEvent extends SimAction {
   readonly ef = "partner-manage-party";
   readonly actorId: string;
   readonly description: string;
+  // Fix #1540: 시드 이미지 URL 생성에 필요한 Supabase URL
+  private readonly supabaseUrl: string;
 
   // Captured from EF response for DB assertion
   private createdPartyId: string | null = null;
 
-  constructor(actorId: string, token: string) {
+  constructor(actorId: string, token: string, supabaseUrl: string) {
     super(token);
     this.actorId = actorId;
+    this.supabaseUrl = supabaseUrl;
     this.description = `partner[${actorId}] creates new party+event`;
   }
 
   buildParams(): Record<string, unknown> {
     const now = Date.now();
+    // Fix #1540: 빈 배열 대신 시드 이미지 URL 사용 — 홈/이벤트 화면 이미지 깨짐 방지
+    const imageUrls = SEED_IMAGE_FILENAMES.map(
+      (f) => `${this.supabaseUrl}/storage/v1/object/public/party-assets/seed-images/${f}`,
+    );
     return {
       action: "create",
       partner_id: this.actorId,
       party: {
         title: `[E2E] Tick Party ${now}`,
         description: { ops: [{ insert: "Auto-generated tick simulation party\n" }] },
-        image_urls: [],
+        image_urls: imageUrls,
         required_verification_ids: [],
         min_confirmed_count: 4,
         max_participants: 20,
