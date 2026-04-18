@@ -44,9 +44,10 @@ class MinglitImage extends StatelessWidget {
   Widget build(BuildContext context) {
     // Fix #1379: 빈 경로일 때 컴팩트 아이콘 플레이스홀더 표시 — MinglitEmptyState.card는
     // 32px 패딩+아이콘+텍스트로 60×80px 썸네일에서 overflow가 발생하므로 사용 불가
+    // Fix #1558: 빈 경로 플레이스홀더에도 semantics 정책 적용
     if (path.trim().isEmpty) {
       final theme = Theme.of(context);
-      return Container(
+      final placeholder = Container(
         height: height,
         width: width,
         decoration: BoxDecoration(
@@ -60,6 +61,13 @@ class MinglitImage extends StatelessWidget {
           ),
         ),
       );
+      if (excludeFromSemantics) {
+        return ExcludeSemantics(child: placeholder);
+      }
+      if (semanticLabel != null) {
+        return Semantics(label: semanticLabel, child: placeholder);
+      }
+      return placeholder;
     }
 
     ImageProvider provider;
@@ -100,9 +108,10 @@ class MinglitImage extends StatelessWidget {
           ),
         );
       },
+      // Fix #1558: errorBuilder에도 semantics 정책 적용
       errorBuilder: (context, error, stackTrace) {
         final theme = Theme.of(context);
-        return Container(
+        final fallback = Container(
           height: height,
           width: width,
           decoration: BoxDecoration(
@@ -111,6 +120,11 @@ class MinglitImage extends StatelessWidget {
           ),
           child: Icon(Icons.broken_image, color: theme.colorScheme.outline),
         );
+        if (excludeFromSemantics) return ExcludeSemantics(child: fallback);
+        if (semanticLabel != null) {
+          return Semantics(label: semanticLabel, child: fallback);
+        }
+        return fallback;
       },
     );
   }

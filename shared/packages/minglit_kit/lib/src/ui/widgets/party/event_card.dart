@@ -114,10 +114,17 @@ class MinglitEventCard extends StatelessWidget {
     final locationName = location?.name ?? '장소 미정';
 
     // Fix #996: 카드 전체를 하나의 시맨틱 노드로 병합하여 정보 전달
+    // Fix #1558: sold-out/ended 상태를 label에 포함 — 스크린 리더가 상태를 인식할 수 있도록
+    final stateLabel = switch (cardState) {
+      _EventCardState.soldOut => ', 마감',
+      _EventCardState.ended => ', 종료',
+      _ => '',
+    };
     return Semantics(
       label:
           '이벤트: $title, $dateLabel, $locationName, $priceLabel, '
-          '$dDayLabel, 참가자 ${event!.currentParticipants}/${event!.maxParticipants}명',
+          '$dDayLabel, 참가자 ${event!.currentParticipants}/${event!.maxParticipants}명'
+          '$stateLabel',
       button: onTap != null,
       onTap: onTap,
       excludeSemantics: true,

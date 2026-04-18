@@ -66,6 +66,20 @@ void main() {
 
       // Fix #478: "마감" overlay badge must be visible when sold out
       expect(find.text('마감'), findsWidgets);
+
+      // Fix #1558: Semantics label must include "마감" so screen readers convey sold-out state
+      final soldOutSemantics = tester
+          .widgetList<Semantics>(find.byType(Semantics))
+          .where(
+            (w) =>
+                (w.properties.label ?? '').contains('마감') &&
+                (w.properties.label ?? '').contains('이벤트:'),
+          );
+      expect(
+        soldOutSemantics,
+        isNotEmpty,
+        reason: 'sold-out card Semantics label must contain "마감"',
+      );
     });
 
     testWidgets('ended state applies grayscale ColorFiltered', (tester) async {
