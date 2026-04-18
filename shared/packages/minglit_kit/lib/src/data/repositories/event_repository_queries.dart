@@ -54,13 +54,9 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
 
   /// Searches events using PGroonga full-text search, returning fully hydrated
   /// Event models with party, location, and ticket relations.
-  ///
-  /// Fix #1534: 기존 searchResults 프로바이더는 search_events_pgroonga RPC를 직접
-  /// 호출하여 events 행만 반환받았다. party.title과 tickets가 없어 카드에
-  /// '제목 없음', '가격 미정'이 표시되던 문제를 해결하기 위해, RPC로 ID 목록을 얻은 뒤
-  /// PostgREST로 relations을 포함한 전체 데이터를 다시 조회한다.
+  // Fix #1534: search_events_pgroonga 직접 호출은 events 행만 반환해 party.title/tickets 누락 — ID 목록 조회 후 relations 포함 재조회
   Future<List<Event>> searchEvents(String query) async {
-    Log.d('searchEvents called | query: $query');
+    Log.d('searchEvents called | queryLength: ${query.length}');
     if (query.isEmpty) return [];
     try {
       // Step 1: PGroonga RPC — ordered event IDs with block/visibility filters applied
