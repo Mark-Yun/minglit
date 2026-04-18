@@ -1,4 +1,4 @@
-name: Update CI Goldens
+name: "Maintenance: Update Alchemist Goldens"
 
 on:
   workflow_dispatch:
