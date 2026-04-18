@@ -112,7 +112,7 @@ void main() {
             ),
           ),
         );
-        
+
         // Let the image fail and trigger errorBuilder
         await tester.pump();
 
