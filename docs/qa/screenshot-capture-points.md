@@ -5,7 +5,7 @@
 > 목적: 기존 37개 integration 테스트 + 3개 patrol 테스트에 스텝별 스크린샷을 내장할 때,
 > 각 테스트의 어느 시점에 어떤 이름으로 캡처할지 정의한다.
 >
-> SWE는 이 문서를 보고 `takeScreenshot()` 호출을 삽입한다.
+> SWE는 이 문서를 보고 `GoldenCapture` 또는 Patrol `$.native.screenshot()` 호출을 삽입한다.
 
 ---
 
@@ -503,14 +503,18 @@
 
 ## SWE 구현 가이드
 
-### 1. takeScreenshot 호출 위치
+### 1. 스크린샷 캡처 호출 위치
 
 ```dart
-// Widget test (test/integration/)에서는 Patrol의 PatrolTester 사용
-await $.takeScreenshot(name: 'cuj_u01_step0_setup');
+// apps/*/test/integration/ — flutter_test 기반 WidgetTester 테스트
+final capture = GoldenCapture('cuj_u01');
+await capture.setup(tester, 0);  // cuj_u01_step0_setup.png
+await capture.before(tester, 1); // cuj_u01_step1_before.png
+await capture.after(tester, 2);  // cuj_u01_step2_after.png
+await capture.error(tester, 3);  // cuj_u01_step3_error.png
 
-// Integration test (integration_test/)에서는 binding 사용
-await binding.takeScreenshot('cuj_u01_step0_setup');
+// apps/*/integration_test/ — Patrol 기반 네이티브/E2E 테스트
+await $.native.screenshot(name: 'permission_step1_after');
 ```
 
 ### 2. 삽입 원칙

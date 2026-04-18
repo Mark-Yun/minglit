@@ -473,8 +473,11 @@ cd apps/app_user && flutter test --tags golden --dart-define=CI=true
 # Golden 갱신
 cd apps/app_user && flutter test --update-goldens --tags golden --dart-define=CI=true
 
+# Layer 2a 특정 CUJ (flutter_test / WidgetTester)
+cd apps/app_user && flutter test test/integration/cuj_signup_to_apply_test.dart
+
 # Layer 3 (Patrol) — 로컬 emulator 필요
-cd apps/app_user && patrol test --target integration_test/cuj_signup_to_apply_test.dart
+cd apps/app_user && patrol test integration_test/permission_grant_test.dart
 # CI 에서는 patrol-e2e.yml 워크플로우
 
 # Layer 4 pgTAP
