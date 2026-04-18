@@ -72,7 +72,23 @@ jobs:
           git add -A
           git diff --cached --quiet && { echo "No version changes to commit."; exit 0; }
           git commit -m "chore: bump version to v${NEW_VERSION} [skip ci]"
-          git push origin HEAD:${BRANCH}
+          # Fix #1554: push race — dev가 다른 경로로 전진할 수 있어 pull --rebase + retry
+          MAX_ATTEMPTS=5
+          ATTEMPT=0
+          until git push origin HEAD:${BRANCH}; do
+            ATTEMPT=$((ATTEMPT+1))
+            if [ $ATTEMPT -ge $MAX_ATTEMPTS ]; then
+              echo "::error::push failed after $MAX_ATTEMPTS attempts"
+              exit 1
+            fi
+            echo "::warning::push rejected (attempt $ATTEMPT/$MAX_ATTEMPTS), rebasing on origin/${BRANCH} and retrying..."
+            git fetch origin ${BRANCH}
+            git rebase origin/${BRANCH} || {
+              echo "::error::rebase failed — manual resolution required"
+              exit 1
+            }
+            sleep $((2 * ATTEMPT))
+          done
 
       - name: Create GitHub release (main only)
         if: github.base_ref == 'main'
