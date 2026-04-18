@@ -78,11 +78,7 @@ void main() {
         (_) async => [event],
       );
 
-      final container = createContainer(
-        overrides: [
-          eventRepositoryProvider.overrideWithValue(mockEventRepository),
-        ],
-      );
+      final container = createContainer();
 
       container.read(searchQueryProvider.notifier).update('파티');
       final result = await container.read(searchResultsProvider.future);
@@ -96,11 +92,7 @@ void main() {
     });
 
     test('빈 쿼리는 searchEvents를 호출하지 않고 빈 목록을 반환한다', () async {
-      final container = createContainer(
-        overrides: [
-          eventRepositoryProvider.overrideWithValue(mockEventRepository),
-        ],
-      );
+      final container = createContainer();
 
       // searchQueryProvider defaults to empty string
       final result = await container.read(searchResultsProvider.future);
