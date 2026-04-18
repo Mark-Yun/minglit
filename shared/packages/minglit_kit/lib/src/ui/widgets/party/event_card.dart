@@ -123,6 +123,7 @@ class MinglitEventCard extends StatelessWidget {
       _ => '',
     };
     return Semantics(
+      container: true,
       label:
           '이벤트: $title, $dateLabel, $locationName, $priceLabel, '
           '$dDayLabel, 참가자 ${event!.currentParticipants}/${event!.maxParticipants}명'
