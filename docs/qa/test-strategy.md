@@ -263,26 +263,7 @@
 
 ---
 
-## 7. Layer 선택 결정 트리 (구현 전 참고)
-
-```
-새 테스트 추가 필요?
-├── DB 스키마 / RLS / RPC 계약 변경?  → Layer 4 (pgTAP)
-├── 신규 Edge Function 로직?          → Layer 5 (Deno EF)
-├── 네이티브 surface 필요?
-│   (카카오 로그인, PG SDK, 시스템 권한) → Layer 3 (Patrol emulator)
-├── 다화면 플로우 / GoRouter 분기?     → Layer 2a (widget flow)
-├── 디자인 토큰 / 시각 회귀 감지?      → Layer 2b (Alchemist golden)
-├── repository / controller / util?    → Layer 1 (unit)
-├── 매시간 실 DB 데이터 이상 감시?     → Layer 6 (DB monitor RPC)
-└── 파이프라인 연쇄 동작 (tick)?       → Layer 7 (backend-simulator)
-```
-
-상세 작성 규칙 / 샘플 코드: `docs/qa/automation-test-guide.md`.
-
----
-
-## 8. 관련 문서
+## 7. 관련 문서
 
 | 문서 | 역할 |
 |------|------|
@@ -294,7 +275,7 @@
 
 ---
 
-## 9. 변경 이력
+## 8. 변경 이력
 
 | 날짜 | 변경 | 이슈 |
 |------|------|------|

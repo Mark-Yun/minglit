@@ -17,10 +17,10 @@
 
 | 단계 | 계획 | 실제 상태 (2026-04-18) | 차단 원인 |
 |------|------|---------------------|----------|
-| 1. 테스트 코드 내 캡처 호출 | 각 CUJ 테스트에 `takeScreenshot()` / `matchesGoldenFile()` 삽입 | **0건** — `apps/app_user/test/integration/` 및 `apps/app_partner/test/integration/` 전체에서 호출 미발견 | PR #1496에서 추가됐던 호출이 후속 변경 과정에서 유실 |
+| 1. 테스트 코드 내 캡처 호출 | 각 CUJ 테스트에 `takeScreenshot()` / `matchesGoldenFile()` 삽입 | `tester.capture()` / `GoldenCapture` 호출 존재 (app_user 62건 이상) — 포인트 매핑 기준 부분 구현 | 전 CUJ/flow 파일에 고르게 분포하지 않음. 본 문서 기준 완전 삽입은 Phase D 작업 |
 | 2. `GoldenCapture` 유틸 실행 | CI headless 환경에서 동작 | **런타임 skip** (PR #1539) | headless hang 방지를 위한 임시 조치 — 대체 구현 미완 |
-| 3. CUJ 테스트 실행 경로 | `apps/app_user/test/integration/` 순회 | `.github/scripts/run-client-cuj.sh`는 `apps/app_user/integration_test/*_test.dart`를 탐색 → **경로 mismatch로 실행 0건** | run-client-cuj.sh / run-partner-cuj.sh 경로 상수가 Patrol 전환 이전 형태 유지 |
-| 4. 상위 파이프라인 (`client-cuj-test`, `partner-cuj-test` job) | 매일 실행 | **skip 지속** | `needs: seed-and-simulate` 의존 — #1553 (Supabase pooler `aws-0 → aws-1`) 미해결로 upstream job 실패 |
+| 3. CUJ 테스트 실행 경로 | `apps/app_user/test/integration/` 순회 | `run-client-cuj.sh` / `run-partner-cuj.sh` 모두 `test/integration/*_test.dart` 순회 — **경로 수정 완료** (#1557) | 차단 없음 |
+| 4. 상위 파이프라인 (`client-cuj-test`, `partner-cuj-test` job) | 매일 실행 | **skip 지속** | `needs: seed-and-simulate` 의존 — #1553 (CLOSED) / PR #1556 (MERGED 2026-04-18) 으로 선결 해소. 재가동 확인 필요 |
 | 5. Patrol E2E (`patrol-e2e.yml`) | weekly cron | **run 이력 0건** | 한 번도 trigger되지 않음. 수동 실행도 없음 |
 | 6. 아티팩트 업로드 | 생성된 png 보존 | `patrol-e2e.yml:66`은 `if: failure()` + build outputs만 업로드 (스크린샷 아님). `ci.yml`은 golden 실패 / coverage / allure만 업로드 | Tier B 용 retention 경로 미구축 |
 
@@ -82,9 +82,9 @@
 
 ### 재가동 선결 의존성
 
-- **#1553 (needs-swe)** — Supabase pooler `aws-0 → aws-1` fix. 머지되어야 `seed-and-simulate` 성공 → `client-cuj-test` / `partner-cuj-test` 실행 가능.
-- **PR #1556 (open)** — #1553의 실제 fix PR. 머지 대기.
-- 선결 해제 후에만 이 문서 기반 캡처 포인트 삽입 실효성을 검증할 수 있다.
+- **#1553** — CLOSED (2026-04-18).
+- **PR #1556** — MERGED (2026-04-18 04:44:53Z). Supabase pooler `aws-0 → aws-1` fix 완료.
+- 선결 차단 해소됨. `seed-and-simulate` 재가동 확인 후 이 문서 기반 캡처 포인트 삽입 검증 가능.
 
 ---
 
