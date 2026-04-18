@@ -98,15 +98,24 @@ source scripts/load-env.sh dev     # 데브 환경변수 export
 
 ## Testing
 
+테스트 전략 / Layer taxonomy / 작성 규칙은 `docs/qa/` 하위 문서가 SSOT.
+
+- [`docs/qa/test-strategy.md`](docs/qa/test-strategy.md) — 7-layer taxonomy (SSOT). Layer 책임 / 커버리지 / 로드맵.
+- [`docs/qa/automation-test-guide.md`](docs/qa/automation-test-guide.md) — Layer 별 작성 규칙 + 샘플 코드 + 체크리스트.
+- [`docs/qa/screenshot-capture-points.md`](docs/qa/screenshot-capture-points.md) — 시나리오 스크린샷 (Tier B) 캡처 포인트 매핑.
+
 ```bash
-# Flutter
+# Flutter (Layer 1 + 2a + 2b)
 cd shared/packages/minglit_kit && flutter test
 cd apps/app_user && flutter test
 cd apps/app_partner && flutter test
 
-# Edge Functions (Deno)
+# Edge Functions (Layer 5)
 cd supabase/functions/dev-session-switch && deno test --allow-env --allow-net
 cd supabase/functions/dev-seed && deno test --allow-env --allow-net
+
+# pgTAP (Layer 4)
+supabase test db
 
 # Lint
 flutter analyze
