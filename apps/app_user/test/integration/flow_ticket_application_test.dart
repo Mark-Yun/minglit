@@ -402,7 +402,7 @@ void main() {
 
       // Progress indicator should be visible
       expect(
-        find.byType(CircularProgressIndicator),
+        find.byType(MinglitCircularProgressIndicator),
         findsAtLeast(1),
       );
     });
