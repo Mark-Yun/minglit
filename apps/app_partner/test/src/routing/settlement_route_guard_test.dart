@@ -8,10 +8,12 @@ import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_quill/flutter_quill.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show User;
 
 import '../../utils/mocks.dart';
 
@@ -46,17 +48,17 @@ MockPartnerRepository _mockPartnerRepository() {
 
 /// Creates a test router that mirrors the settlement guard from [app_router.dart].
 ///
-/// [settlementAccess] is a [ValueNotifier<bool?>] where:
-/// - `null`  = provider is loading (no redirect — refreshListenable will re-eval)
-/// - `true`  = data(true)  → access granted
-/// - `false` = data(false) → redirect to '/'
+/// [settlementAccess] is a [ValueNotifier<AsyncValue<bool>?>] where:
+/// - `null`                   = provider loading (no redirect — refreshListenable re-evals)
+/// - `AsyncValue.data(true)`  = access granted → no redirect
+/// - `AsyncValue.data(false)` = access denied  → redirect to '/'
+/// - `AsyncValue.error(...)`  = provider error → redirect to '/' (security-first)
 ///
-/// Passing a [ValueNotifier] (instead of a plain bool) lets tests simulate
-/// the async loading-then-resolve scenario that the actual router handles via
-/// [refreshListenable]. This mirrors the pattern used in partner_redirect_test.dart.
+/// Mirrors the production `maybeWhen(data: v, loading: true, orElse: false)` logic
+/// and allows tests to simulate error state explicitly.
 Widget _createSettlementTestApp({
   required bool isLoggedIn,
-  required ValueNotifier<bool?> settlementAccess,
+  required ValueNotifier<AsyncValue<bool>?> settlementAccess,
   User? currentUser,
   String initialLocation = '/settlement',
 }) {
@@ -71,15 +73,19 @@ Widget _createSettlementTestApp({
       if (isLoggedIn && path == '/login') return '/';
 
       // Mirror redirect branch 4 from app_router.dart.
-      // Precise path check (== '/settlement' || startsWith('/settlement/')) avoids
-      // incorrectly catching sibling paths like '/settlement-history'.
       // loading (null) → no redirect: refreshListenable fires when resolved.
+      // error          → deny (security-first, matches production orElse: false).
       // data(false)    → redirect to '/'.
       // data(true)     → no redirect.
       if (isLoggedIn &&
           (path == '/settlement' || path.startsWith('/settlement/'))) {
-        final access = settlementAccess.value;
-        if (access != null && !access) return '/';
+        final asyncVal = settlementAccess.value;
+        if (asyncVal == null) return null; // loading: wait
+        final hasAccess = asyncVal.maybeWhen(
+          data: (v) => v,
+          orElse: () => false, // error → deny
+        );
+        if (!hasAccess) return '/';
       }
 
       return null;
@@ -125,7 +131,7 @@ void main() {
     testWidgets(
       'SETTLEMENT_VIEW 권한 있음: /settlement 접근 허용',
       (tester) async {
-        final access = ValueNotifier<bool?>(true);
+        final access = ValueNotifier<AsyncValue<bool>?>(const AsyncData(true));
         addTearDown(access.dispose);
 
         await tester.pumpWidget(
@@ -149,7 +155,7 @@ void main() {
     testWidgets(
       'SETTLEMENT_VIEW 권한 없음: /settlement → / 리다이렉트',
       (tester) async {
-        final access = ValueNotifier<bool?>(false);
+        final access = ValueNotifier<AsyncValue<bool>?>(const AsyncData(false));
         addTearDown(access.dispose);
 
         await tester.pumpWidget(
@@ -171,10 +177,38 @@ void main() {
     );
 
     testWidgets(
+      '권한 조회 오류(error): /settlement → / 리다이렉트 (security-first)',
+      (tester) async {
+        // error state → orElse: false → redirect to / (security-first).
+        // 네트워크/DB 오류로 권한 조회에 실패하면 허용하지 않고 홈으로 차단한다.
+        final access = ValueNotifier<AsyncValue<bool>?>(
+          AsyncError('network error', StackTrace.empty),
+        );
+        addTearDown(access.dispose);
+
+        await tester.pumpWidget(
+          _createSettlementTestApp(
+            isLoggedIn: true,
+            currentUser: _makeUser(),
+            settlementAccess: access,
+          ),
+        );
+        await tester.pump();
+        await tester.pump();
+
+        expect(
+          find.byType(PartnerHomePage),
+          findsOneWidget,
+          reason: '권한 조회 오류 시 홈으로 리다이렉트되어야 한다 (허용이 아니라 차단)',
+        );
+      },
+    );
+
+    testWidgets(
       '권한 로딩 중: /settlement 접근 시 차단하지 않고 대기',
       (tester) async {
         // null = loading state
-        final access = ValueNotifier<bool?>(null);
+        final access = ValueNotifier<AsyncValue<bool>?>(null);
         addTearDown(access.dispose);
 
         await tester.pumpWidget(
@@ -200,7 +234,7 @@ void main() {
     testWidgets(
       '권한 로딩 → true로 resolve: /settlement 유지',
       (tester) async {
-        final access = ValueNotifier<bool?>(null);
+        final access = ValueNotifier<AsyncValue<bool>?>(null);
         addTearDown(access.dispose);
 
         await tester.pumpWidget(
@@ -214,7 +248,7 @@ void main() {
         await tester.pump();
 
         // Resolve with access granted
-        access.value = true;
+        access.value = const AsyncData(true);
         await tester.pump();
         await tester.pump();
 
@@ -229,7 +263,7 @@ void main() {
     testWidgets(
       '권한 로딩 → false로 resolve: / 리다이렉트',
       (tester) async {
-        final access = ValueNotifier<bool?>(null);
+        final access = ValueNotifier<AsyncValue<bool>?>(null);
         addTearDown(access.dispose);
 
         await tester.pumpWidget(
@@ -246,7 +280,7 @@ void main() {
         expect(find.byType(PartnerHomePage), findsNothing);
 
         // Resolve with access denied → refreshListenable fires → redirect to /
-        access.value = false;
+        access.value = const AsyncData(false);
         await tester.pump();
         await tester.pump();
 
@@ -261,7 +295,7 @@ void main() {
     testWidgets(
       '/settlement-history 형제 경로: settlement guard 개입 없음',
       (tester) async {
-        final access = ValueNotifier<bool?>(false);
+        final access = ValueNotifier<AsyncValue<bool>?>(const AsyncData(false));
         addTearDown(access.dispose);
 
         await tester.pumpWidget(
@@ -287,7 +321,7 @@ void main() {
     testWidgets(
       '비로그인: /settlement 접근 시 auth guard가 처리 (settlement guard 개입 안 함)',
       (tester) async {
-        final access = ValueNotifier<bool?>(false);
+        final access = ValueNotifier<AsyncValue<bool>?>(const AsyncData(false));
         addTearDown(access.dispose);
 
         await tester.pumpWidget(
