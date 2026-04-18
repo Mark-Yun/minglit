@@ -131,6 +131,9 @@ class MinglitEventCard extends StatelessWidget {
       onTap: onTap,
       excludeSemantics: true,
       child: GestureDetector(
+        // Fix #1558: 부모 Semantics가 onTap을 직접 노출하므로 자식의 자동 시맨틱 탭 액션을 제거해
+        // 트리에 중복 액션이 등록되지 않도록 한다.
+        excludeFromSemantics: true,
         onTap: onTap,
         child: Container(
           decoration: BoxDecoration(
