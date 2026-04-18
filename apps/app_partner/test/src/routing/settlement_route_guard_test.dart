@@ -8,12 +8,10 @@ import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_quill/flutter_quill.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' show User;
 
 import '../../utils/mocks.dart';
 
@@ -182,7 +180,7 @@ void main() {
         // error state → orElse: false → redirect to / (security-first).
         // 네트워크/DB 오류로 권한 조회에 실패하면 허용하지 않고 홈으로 차단한다.
         final access = ValueNotifier<AsyncValue<bool>?>(
-          AsyncError('network error', StackTrace.empty),
+          const AsyncError('network error', StackTrace.empty),
         );
         addTearDown(access.dispose);
 
