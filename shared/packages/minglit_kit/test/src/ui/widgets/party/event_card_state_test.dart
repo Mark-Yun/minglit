@@ -262,6 +262,16 @@ void main() {
 
       // Card renders without crashing — regression for Fix #1540
       expect(find.byType(MinglitEventCard), findsOneWidget);
+
+      // Fix #1540: MinglitImage.path must be the event image URL, not party?.imageUrl
+      // If MinglitEventCard regresses to party?.imageUrl the party has no images
+      // so path would be '' — this assertion catches that regression.
+      final image = tester.widget<MinglitImage>(find.byType(MinglitImage).first);
+      expect(
+        image.path,
+        'https://example.com/event.jpg',
+        reason: 'MinglitEventCard must pass event.imageUrl to MinglitImage.path',
+      );
     });
   });
 }
