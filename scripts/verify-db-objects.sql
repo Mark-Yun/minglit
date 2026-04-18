@@ -137,9 +137,6 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM cron.job WHERE jobname='process-notifications') THEN
     missing := missing || 'cron:process-notifications';
   END IF;
-  IF NOT EXISTS (SELECT 1 FROM cron.job WHERE jobname='backend-simulation') THEN
-    missing := missing || 'cron:backend-simulation';
-  END IF;
   IF NOT EXISTS (SELECT 1 FROM cron.job WHERE jobname='send-event-reminders') THEN
     missing := missing || 'cron:send-event-reminders';
   END IF;

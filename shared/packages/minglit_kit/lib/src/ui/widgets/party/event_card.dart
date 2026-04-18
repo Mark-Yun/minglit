@@ -165,7 +165,10 @@ class MinglitEventCard extends StatelessWidget {
                                 BlendMode.dst,
                               ),
                         child: MinglitImage(
-                          path: party?.imageUrl ?? '',
+                          // Fix #1540: event.imageUrl uses effectiveImageUrls
+                          // which falls back to party.imageUrls — avoids broken
+                          // image when event has its own image or party is null
+                          path: event!.imageUrl ?? '',
                           fit: BoxFit.cover,
                           excludeFromSemantics: true,
                         ),
