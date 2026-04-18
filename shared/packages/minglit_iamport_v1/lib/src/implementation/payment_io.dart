@@ -39,6 +39,13 @@ class PaymentServiceImpl implements PaymentService {
       ),
     );
 
+    // Fix #1535: 사용자가 네이티브 뒤로가기 버튼으로 결제 웹뷰를 이탈하면
+    // callback이 호출되지 않아 Completer가 영구히 pending 상태로 남는다.
+    // Navigator.push()가 반환된 후에도 미완료 상태면 null로 완료해 취소 처리.
+    if (!completer.isCompleted) {
+      completer.complete(null);
+    }
+
     return completer.future;
   }
 }
