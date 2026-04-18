@@ -157,31 +157,38 @@ void main() {
 
       // Fix #1566: settlement_histories.created_at → event_at column rename.
       // Verify that history rows with event_at are parsed without error.
-      test('Fix #1566: parses settlement_histories rows with event_at column', () async {
-        mockTable(mockClient, 'settlement_items', maybeSingleData: _settlementItemJson());
-        mockTable(
-          mockClient,
-          'settlement_histories',
-          selectData: [
-            {
-              'event_type': 'STATUS_CHANGED',
-              'from_status': 'PENDING',
-              'to_status': 'READY',
-              'event_at': '2026-01-15T10:00:00.000Z',
-            },
-          ],
-        );
-        mockTable(mockClient, 'adjustment_items', selectData: []);
+      test(
+        'Fix #1566: parses settlement_histories rows with event_at column',
+        () async {
+          mockTable(
+            mockClient,
+            'settlement_items',
+            maybeSingleData: _settlementItemJson(),
+          );
+          mockTable(
+            mockClient,
+            'settlement_histories',
+            selectData: [
+              {
+                'event_type': 'STATUS_CHANGED',
+                'from_status': 'PENDING',
+                'to_status': 'READY',
+                'event_at': '2026-01-15T10:00:00.000Z',
+              },
+            ],
+          );
+          mockTable(mockClient, 'adjustment_items', selectData: []);
 
-        final result = await repository.getSettlementItemDetail('item_1');
+          final result = await repository.getSettlementItemDetail('item_1');
 
-        expect(result, isNotNull);
-        expect(result!.histories, hasLength(1));
-        expect(result.histories.first.eventType, 'STATUS_CHANGED');
-        expect(result.histories.first.fromStatus, 'PENDING');
-        expect(result.histories.first.toStatus, 'READY');
-        expect(result.histories.first.createdAt.year, 2026);
-      });
+          expect(result, isNotNull);
+          expect(result!.histories, hasLength(1));
+          expect(result.histories.first.eventType, 'STATUS_CHANGED');
+          expect(result.histories.first.fromStatus, 'PENDING');
+          expect(result.histories.first.toStatus, 'READY');
+          expect(result.histories.first.createdAt.year, 2026);
+        },
+      );
 
       test('fetches payout info when payout_id is present', () async {
         final itemJsonWithPayout = {
