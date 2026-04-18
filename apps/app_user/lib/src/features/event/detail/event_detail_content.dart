@@ -210,7 +210,8 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent>
                             final confirmed = await MinglitAlert.showConfirm(
                               context: context,
                               title: '차단하기',
-                              content: '이 파트너를 차단하시겠습니까?\n'
+                              content:
+                                  '이 파트너를 차단하시겠습니까?\n'
                                   '이 파트너의 이벤트가 더 이상 표시되지 않습니다.',
                               confirmText: '차단',
                               isDestructive: true,
