@@ -97,7 +97,7 @@ export async function tick(
         partnerEmail,
         simUserPassword,
       );
-      const factory = new PartnerActionFactory(partnerId, token, config);
+      const factory = new PartnerActionFactory(partnerId, token, config, supabaseUrl); // Fix #1540
       const actions = await factory.generate(supabase);
       allActions.push(...actions);
     } catch (e) {
