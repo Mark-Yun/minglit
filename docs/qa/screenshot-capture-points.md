@@ -19,7 +19,7 @@
 |------|------|---------------------|----------|
 | 1. 테스트 코드 내 캡처 호출 | 각 CUJ 테스트에 `takeScreenshot()` / `matchesGoldenFile()` 삽입 | **0건** — `apps/app_user/test/integration/` 및 `apps/app_partner/test/integration/` 전체에서 호출 미발견 | PR #1496에서 추가됐던 호출이 후속 변경 과정에서 유실 |
 | 2. `GoldenCapture` 유틸 실행 | CI headless 환경에서 동작 | **런타임 skip** (PR #1539) | headless hang 방지를 위한 임시 조치 — 대체 구현 미완 |
-| 3. CUJ 테스트 실행 경로 | `apps/app_user/test/integration/` 순회 | `.github/scripts/run-client-cuj.sh`는 `apps/app_user/integration_test/*_test.dart`를 탐색 → **경로 mismatch로 실행 0건** | run-client-cuj.sh / run-partner-cuj.sh 경로 상수가 Patrol 전환 이전 형태 유지 |
+| 3. CUJ 테스트 실행 경로 | `apps/app_user/test/integration/` 순회 | `.github/scripts/run-client-cuj.sh`는 `apps/app_user/emulator_test/*_test.dart`를 탐색 → **경로 mismatch로 실행 0건** | run-client-cuj.sh / run-partner-cuj.sh 경로 상수가 Patrol 전환 이전 형태 유지 |
 | 4. 상위 파이프라인 (`client-cuj-test`, `partner-cuj-test` job) | 매일 실행 | **skip 지속** | `needs: seed-and-simulate` 의존 — #1553 (Supabase pooler `aws-0 → aws-1`) 미해결로 upstream job 실패 |
 | 5. Patrol E2E (`patrol-e2e.yml`) | weekly cron | **run 이력 0건** | 한 번도 trigger되지 않음. 수동 실행도 없음 |
 | 6. 아티팩트 업로드 | 생성된 png 보존 | `patrol-e2e.yml:66`은 `if: failure()` + build outputs만 업로드 (스크린샷 아님). `ci.yml`은 golden 실패 / coverage / allure만 업로드 | Layer 2 용 retention 경로 미구축 |

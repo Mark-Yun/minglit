@@ -2,10 +2,10 @@
 # This workflow is NOT part of ci-result and does NOT block PR merges.
 # Failures here are informational only; investigation happens separately.
 #
-# Runs only Patrol-native tests (patrolTest) in integration_test/.
+# Runs only Patrol-native tests (patrolTest) in emulator_test/.
 # scenario_screenshots_test.dart and apple_sign_in_test.dart use
 # IntegrationTestWidgetsFlutterBinding (incompatible with PatrolBinding)
-# and are excluded from this workflow — run them via `flutter test integration_test/`.
+# and are excluded from this workflow — run them via `flutter test emulator_test/`.
 
 name: Patrol E2E
 
@@ -59,7 +59,7 @@ jobs:
           force-avd-creation: false
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
           disable-animations: true
-          script: cd apps/app_user && patrol test --flavor dev --dart-define-from-file=../../minglit_env/dev/flutter.env integration_test/kakao_login_test.dart integration_test/payment_pg_test.dart integration_test/permission_grant_test.dart
+          script: cd apps/app_user && patrol test --flavor dev --dart-define-from-file=../../minglit_env/dev/flutter.env emulator_test/kakao_login_test.dart emulator_test/payment_pg_test.dart emulator_test/permission_grant_test.dart
 
       - name: Upload test results
         if: failure()

@@ -232,24 +232,24 @@
 
 | 화면 | 변형 | 테스트 파일 | 우선순위 |
 |------|------|-----------|---------|
-| 인기 태그 칩바 | 5개 태그 미선택 (light/dark) | `apps/app_user/test/goldens/featured_tag_chip_bar_golden_test.dart` | P2 |
+| 인기 태그 칩바 | 5개 태그 미선택 (light/dark) | `apps/app_user/test/alchemist/featured_tag_chip_bar_golden_test.dart` | P2 |
 | | 2개 태그 선택 (light/dark) | 동일 | P2 |
 | | shimmer 로딩 (light/dark) | 동일 | P3 |
-| 핫 태그 섹션 | 카드 3개 (light/dark) | `apps/app_user/test/goldens/hot_tags_section_golden_test.dart` | P2 |
+| 핫 태그 섹션 | 카드 3개 (light/dark) | `apps/app_user/test/alchemist/hot_tags_section_golden_test.dart` | P2 |
 | | shimmer 로딩 (light/dark) | 동일 | P3 |
-| TagEventListPage | 이벤트 3건 (light/dark) | `apps/app_user/test/goldens/tag_event_list_page_golden_test.dart` | P2 |
+| TagEventListPage | 이벤트 3건 (light/dark) | `apps/app_user/test/alchemist/tag_event_list_page_golden_test.dart` | P2 |
 | | 빈 상태 (light/dark) | 동일 | P3 |
-| 이벤트 카드 태그 뱃지 | 태그 3개 (light/dark) | `apps/app_user/test/goldens/event_card_tag_badges_golden_test.dart` | P2 |
+| 이벤트 카드 태그 뱃지 | 태그 3개 (light/dark) | `apps/app_user/test/alchemist/event_card_tag_badges_golden_test.dart` | P2 |
 | | 태그 5개 + "+2" (light/dark) | 동일 | P3 |
-| 온보딩 관심 태그 | 태그 25개 그리드 미선택 (light/dark) | `apps/app_user/test/goldens/interest_selection_page_golden_test.dart` | P2 |
+| 온보딩 관심 태그 | 태그 25개 그리드 미선택 (light/dark) | `apps/app_user/test/alchemist/interest_selection_page_golden_test.dart` | P2 |
 | | 4개 태그 선택 (light/dark) | 동일 | P2 |
-| 관심사 추천 섹션 | 추천 카드 2건 (light/dark) | `apps/app_user/test/goldens/tag_recommendation_section_golden_test.dart` | P3 |
+| 관심사 추천 섹션 | 추천 카드 2건 (light/dark) | `apps/app_user/test/alchemist/tag_recommendation_section_golden_test.dart` | P3 |
 
 #### 6.2 파트너 앱 (app_partner)
 
 | 화면 | 변형 | 테스트 파일 | 우선순위 |
 |------|------|-----------|---------|
-| 태그 선택 UI | 미선택 + 인기 태그 표시 (light/dark) | `apps/app_partner/test/goldens/party_tag_selection_golden_test.dart` | P2 |
+| 태그 선택 UI | 미선택 + 인기 태그 표시 (light/dark) | `apps/app_partner/test/alchemist/party_tag_selection_golden_test.dart` | P2 |
 | | 3개 선택 + 자동완성 드롭다운 (light/dark) | 동일 | P3 |
 
 ## 실행 순서

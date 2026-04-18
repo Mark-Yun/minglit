@@ -263,7 +263,7 @@ void main() {
 
 ### Layer 3.5: Golden (Snapshot) 테스트 — Alchemist
 
-**위치:** `apps/{app}/test/goldens/`, `shared/packages/minglit_kit/test/goldens/`
+**위치:** `apps/{app}/test/alchemist/`, `shared/packages/minglit_kit/test/goldens/`
 **우선순위:** 디자인 토큰 변경, 레이아웃 회귀 방지
 **패키지:** [alchemist](https://pub.dev/packages/alchemist) (VGV + Betterment)
 
@@ -451,7 +451,7 @@ apps/{app}/test/src/features/{feature}/logic/{name}_coordinator_test.dart
 apps/{app}/test/src/features/{feature}/ui/{widget_name}_test.dart
 
 # Golden 테스트 (앱별)
-apps/{app}/test/goldens/{widget_name}_golden_test.dart
+apps/{app}/test/alchemist/{widget_name}_golden_test.dart
 
 # Integration 테스트 (앱별)
 apps/{app}/test/integration/{scenario_name}_test.dart

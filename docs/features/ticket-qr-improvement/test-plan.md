@@ -97,7 +97,7 @@
 
 | 화면 | 변형 | 파일 | 우선순위 |
 |------|------|------|---------|
-| BoardingPassCard | BOARDING (오늘) | `apps/app_user/test/goldens/boarding_pass_card_golden_test.dart` | P1 |
+| BoardingPassCard | BOARDING (오늘) | `apps/app_user/test/alchemist/boarding_pass_card_golden_test.dart` | P1 |
 | BoardingPassCard | CONFIRMED (미래) | 동일 | P1 |
 | BoardingPassCard | USED (종료) | 동일 | P2 |
 | BoardingPassCard | 로딩 skeleton | 동일 | P2 |
@@ -141,7 +141,7 @@ goldenTest(
 `TicketQRScreen` 리팩터링 시 기존 테스트가 깨지지 않도록:
 
 1. **`test/integration/cuj_ticket_qr_test.dart`**: QR 토큰 로딩 + 렌더링 CUJ — `BoardingPassCard` 도입 후에도 QR 데이터 인코딩 계약 유지 확인
-2. **`test/goldens/ticket_qr_screen_golden_test.dart`**: 기존 golden 파일 업데이트 필요 (UI가 완전히 변경되므로 새 golden으로 교체)
+2. **`test/alchemist/ticket_qr_screen_golden_test.dart`**: 기존 golden 파일 업데이트 필요 (UI가 완전히 변경되므로 새 golden으로 교체)
 3. **`test/src/features/ticket/data/ticket_wallet_repository_test.dart`**: 변경 없음 — 데이터 레이어 미변경
 4. **`test/src/features/ticket/data/ticket_token_service_test.dart`**: 변경 없음
 5. **`test/scenarios/ticket_qr_scenarios.dart`**: mock override 업데이트 필요 (이벤트 메타 파라미터 추가 시)
@@ -223,4 +223,4 @@ goldenTest(
 **총 39 test cases** (P1: 24건, P2: 12건, P3: 3건)
 
 > 모든 파일 경로는 `apps/app_user/test/src/features/` 기준 상대 경로.
-> Golden 테스트는 `apps/app_user/test/goldens/` 기준.
+> Golden 테스트는 `apps/app_user/test/alchemist/` 기준.

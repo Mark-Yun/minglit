@@ -66,7 +66,7 @@
 ---
 
 ## 4. 컴포넌트별 평가 (Component Scorecard)
-*감사 대상 화면/컴포넌트별로 점수를 매깁니다. 골든 이미지(`apps/*/test/goldens/`, `shared/packages/minglit_kit/test/goldens/`)를 참조하여 시각적으로 검증합니다.*
+*감사 대상 화면/컴포넌트별로 점수를 매깁니다. 골든 이미지(`apps/*/test/alchemist/`, `shared/packages/minglit_kit/test/goldens/`)를 참조하여 시각적으로 검증합니다.*
 
 | 컴포넌트 | 평점(1-5) | 비고 |
 |----------|:---------:|------|
@@ -120,5 +120,5 @@
 1. **Jakob Nielsen (NN/g):** "10 Usability Heuristics for User Interface Design".
 2. **W3C:** "Web Content Accessibility Guidelines (WCAG) 2.1".
 3. **Minglit UX Docs:** `docs/ux/design-system/`
-4. **골든 이미지:** `apps/app_user/test/goldens/`, `apps/app_partner/test/goldens/`, `shared/packages/minglit_kit/test/goldens/`
+4. **골든 이미지:** `apps/app_user/test/alchemist/`, `apps/app_partner/test/alchemist/`, `shared/packages/minglit_kit/test/goldens/`
 5. **Layout Dump:** 버그 리포트 첨부 파일 또는 `bug-report-attachments/layout-dumps/`
