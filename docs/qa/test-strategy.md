@@ -232,6 +232,50 @@ Future<void> pumpApp(
 ## 6. E2E 테스트 (Patrol 통합) 계획
 
 > 2026-04-15 업데이트: #1458에서 Patrol 통합 + 스크린샷 내장 결정.
+> 2026-04-18 업데이트: #1557에서 스크린샷 3-layer 아키텍처 명문화. 용어 혼동 방지 섹션(§6.0) 추가.
+
+### 6.0 스크린샷 3-layer 파이프라인 (SSOT)
+
+이 프로젝트에서 "스크린샷"이라는 단어는 3개의 독립 계층을 가리키며, 용어를 섞어 쓰지 않는다. 본 섹션이 팀 전체의 Single Source of Truth.
+
+```
+[Layer 1] 골든 스크린샷 테스트 (Alchemist, 기존)
+  - 픽셀 레벨 widget 회귀 차단 — 디자인 토큰/컴포넌트 일관성
+  - 실패 시 PR 차단 (diff 비교)
+  - 대상: apps/*/test/**/*_golden_test.dart
+  - 수량: app_user 40 / app_partner 91
+
+[Layer 2] "시나리오 스크린샷" (CUJ integration 내장 캡처)
+  - CUJ integration test의 스텝별 실제 플로우 스냅샷
+  - 비교 목적 아님 — "지금 실제 화면이 이렇더라"의 증거 사진
+  - 대상: apps/app_user/test/integration/ + apps/app_partner/test/integration/
+  - 캡처 포인트 매핑: docs/qa/screenshot-capture-points.md
+  - 현재 상태(2026-04-18): 머지됐지만 실행 0건 — #1557에서 재가동 추적 중
+
+[Layer 3] AI agent 스크린샷 점검 (후속 구현)
+  - Layer 2 아티팩트를 agent가 전수 리뷰
+  - 감지 대상: 깨진 이미지, 누락 라벨, 레이아웃 오류, 품질 저하
+  - 출력: bug-report 이슈 자동 생성 (현재 QA agent 파이프라인과 유사 경로)
+```
+
+**용어 규칙**:
+
+| 표현 | 정의 | 사용 예 |
+|------|------|--------|
+| "골든 스크린샷" / "golden" | Layer 1만 지칭. 픽셀 비교 | "이 위젯 golden 깨졌어" |
+| **"시나리오 스크린샷"** | Layer 2만 지칭. CUJ 플로우 캡처 | "시나리오 스크린샷이 안 찍힌다" |
+| "스크린샷 리뷰" / "agent 리뷰" | Layer 3만 지칭 | "agent 리뷰에서 잡혔다" |
+| "스크린샷" (단독) | 혼동 유발 — 반드시 Layer 명시해서 사용 |
+
+**경로 구분 (Layer 1 vs Layer 2)**:
+
+- `goldens/` (또는 Alchemist 지정 경로) — Layer 1 전용. Layer 2 아티팩트를 여기 저장 금지.
+- Layer 2 저장 경로는 아직 미정 (후보: `scenario_screenshots/` 하위, GitHub Artifacts 14d retention, 외부 버킷). 결정은 이슈 #1557에서 `report-exec` 라벨로 Mark 판단 대기.
+
+**경로 구분 (Layer 2 대상 vs 비대상)**:
+
+- `apps/app_user/test/integration/` + `apps/app_partner/test/integration/` → Layer 2 대상
+- `tests/client_cuj_integration/` (백엔드 통합 테스트, 별도 패키지, 20개 파일) → **Layer 2 아님.** Layer 2 캡처 호출 삽입 금지.
 
 ### 6.1 Patrol 전환 배경
 
@@ -262,8 +306,18 @@ Future<void> pumpApp(
 ### 6.4 CI 연동
 
 - `patrol-e2e.yml`에 통합 (주 1회 또는 매일)
-- 스크린샷 아티팩트 업로드 → QA 워커가 베이스라인 비교에 활용
+- 스크린샷 아티팩트 업로드 → Layer 3 agent의 semantic 리뷰 입력으로 활용 (픽셀 비교 아님 — §6.0 참고)
 - 네이티브 E2E (카카오 로그인, PG 결제, 권한)는 실물 디바이스에서만 실행
+
+### 6.5 Layer 2 재가동 현황 (2026-04-18)
+
+이 섹션의 계획(§6.2~§6.4)은 머지됐지만 **실제 CI 실행 0건**. 전수 점검 및 복구 작업은 이슈 #1557에서 추적한다. 상세 갭 분석은 `docs/qa/screenshot-capture-points.md` 첫머리 "현재 상태" 블록 참고.
+
+**재가동 선결 의존성**:
+
+- #1553 / PR #1556 — Supabase pooler `aws-0 → aws-1` fix 머지. `seed-and-simulate` 복구 없이는 `client-cuj-test` / `partner-cuj-test` 실행 불가.
+- #1539 — `GoldenCapture` CI headless hang 회피 skip을 재활성화 가능한 형태로 대체.
+- `.github/scripts/run-client-cuj.sh` / `run-partner-cuj.sh` — 탐색 경로를 `apps/*/test/integration/`로 교정 (현재 `apps/*/integration_test/` 순회 중).
 
 ---
 
