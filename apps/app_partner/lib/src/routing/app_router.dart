@@ -101,7 +101,9 @@ GoRouter goRouter(Ref ref) {
 
       // 4. Fix #1533: /settlement 및 하위 경로는 SETTLEMENT_VIEW 권한 필수.
       //    로딩/에러 시 fail-closed → 홈으로 리다이렉트.
-      if (isLoggedIn && state.uri.path.startsWith('/settlement')) {
+      final path = state.uri.path;
+      if (isLoggedIn &&
+          (path == '/settlement' || path.startsWith('/settlement/'))) {
         final hasAccess = ref
             .read(hasSettlementAccessProvider)
             .maybeWhen(

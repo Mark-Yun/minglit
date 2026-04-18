@@ -20,7 +20,7 @@ String? _redirectSettlement({
   required bool hasSettlementAccess,
 }) {
   if (!isLoggedIn) return null; // auth guard handles this before settlement
-  if (!path.startsWith('/settlement')) return null;
+  if (path != '/settlement' && !path.startsWith('/settlement/')) return null;
   if (!hasSettlementAccess) return '/';
   return null;
 }
@@ -96,6 +96,16 @@ void main() {
     });
 
     // --- guard does not affect non-settlement routes ---
+
+    test('/settlement-history → null (sibling path not affected)', () {
+      final result = _redirectSettlement(
+        path: '/settlement-history',
+        isLoggedIn: true,
+        hasSettlementAccess: false,
+      );
+      expect(result, isNull,
+          reason: 'startsWith check must not match /settlement-history sibling');
+    });
 
     test('/more → null (not affected by settlement guard)', () {
       final result = _redirectSettlement(
