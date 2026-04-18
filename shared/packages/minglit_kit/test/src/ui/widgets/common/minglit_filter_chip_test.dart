@@ -148,5 +148,63 @@ void main() {
         reason: 'touch target must be at least 48dp wide (WCAG)',
       );
     });
+
+    group('Semantics', () {
+      testWidgets('unselected chip wraps with Semantics(button, selected=false)', (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          buildApp(
+            MinglitFilterChip(
+              label: '최신순',
+              isSelected: false,
+              onTap: () {},
+            ),
+          ),
+        );
+
+        expect(
+          find.byWidgetPredicate(
+            (w) =>
+                w is Semantics &&
+                w.properties.label == '최신순' &&
+                w.properties.button == true &&
+                w.properties.selected == false,
+          ),
+          findsOneWidget,
+          reason:
+              'unselected filter chip must wrap with '
+              'Semantics(label, button: true, selected: false)',
+        );
+      });
+
+      testWidgets('selected chip wraps with Semantics(button, selected=true)', (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          buildApp(
+            MinglitFilterChip(
+              label: '인기순',
+              isSelected: true,
+              onTap: () {},
+            ),
+          ),
+        );
+
+        expect(
+          find.byWidgetPredicate(
+            (w) =>
+                w is Semantics &&
+                w.properties.label == '인기순' &&
+                w.properties.button == true &&
+                w.properties.selected == true,
+          ),
+          findsOneWidget,
+          reason:
+              'selected filter chip must wrap with '
+              'Semantics(label, button: true, selected: true)',
+        );
+      });
+    });
   });
 }

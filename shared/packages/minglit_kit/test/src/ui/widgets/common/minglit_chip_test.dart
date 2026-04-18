@@ -141,5 +141,52 @@ void main() {
         reason: 'default chip text should use colorScheme.onSurfaceVariant',
       );
     });
+
+    group('Semantics', () {
+      testWidgets('interactive chip wraps with Semantics(button: true)', (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          buildApp(
+            MinglitChip(label: '인터랙티브 칩', onTap: () {}),
+          ),
+        );
+
+        expect(
+          find.byWidgetPredicate(
+            (w) =>
+                w is Semantics &&
+                w.properties.label == '인터랙티브 칩' &&
+                w.properties.button == true,
+          ),
+          findsOneWidget,
+          reason:
+              'interactive chip must wrap with Semantics(label, button: true) '
+              'for screen reader',
+        );
+      });
+
+      testWidgets(
+        'non-interactive chip wraps with Semantics(label) without button role',
+        (tester) async {
+          await tester.pumpWidget(
+            buildApp(const MinglitChip(label: '읽기 전용 칩')),
+          );
+
+          expect(
+            find.byWidgetPredicate(
+              (w) =>
+                  w is Semantics &&
+                  w.properties.label == '읽기 전용 칩' &&
+                  w.properties.button != true,
+            ),
+            findsOneWidget,
+            reason:
+                'static chip must wrap with Semantics(label) but not announce '
+                'button role',
+          );
+        },
+      );
+    });
   });
 }
