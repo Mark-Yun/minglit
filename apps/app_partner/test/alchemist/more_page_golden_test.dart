@@ -7,7 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../scenarios/more_page_scenarios.dart';
+import 'scenarios/more_page_scenarios.dart';
 import '../utils/golden_test_helpers.dart';
 
 void main() {

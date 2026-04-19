@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
 
-import '../utils/mocks.dart';
+import '../../utils/mocks.dart';
 import 'partner_screenshot_scenario.dart';
 
 class PartnerEventDetailScenarios {

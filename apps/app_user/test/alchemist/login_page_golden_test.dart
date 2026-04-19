@@ -5,7 +5,7 @@ import 'package:alchemist/alchemist.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import '../scenarios/login_scenarios.dart';
+import 'scenarios/login_scenarios.dart';
 import 'golden_test_helpers.dart';
 
 void main() {

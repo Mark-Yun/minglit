@@ -3,7 +3,7 @@ import 'package:app_user/src/features/auth/login_page.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:minglit_kit/src/features/auth/testing/fake_auth_controller.dart';
 
-import '../alchemist/golden_test_helpers.dart' show MockAuthCoordinator;
+import '../golden_test_helpers.dart' show MockAuthCoordinator;
 import 'screenshot_scenario.dart';
 
 class LoginScenarios {

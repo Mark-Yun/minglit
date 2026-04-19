@@ -3,7 +3,7 @@ import 'package:alchemist/alchemist.dart'
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
-import '../scenarios/partner_screenshot_scenario.dart';
+import '../alchemist/scenarios/partner_screenshot_scenario.dart';
 import 'partner_golden_test_helpers.dart' show PartnerGoldenPageWrapper;
 
 /// Fixed surface size for golden tests (consistency across environments).
