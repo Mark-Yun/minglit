@@ -1,10 +1,25 @@
 import 'package:app_user/src/features/event/admission/event_application_controller.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../utils/mocks.dart';
 import '../../../../utils/test_utils.dart';
+
+// Fix #1535: IamportController 가짜 구현 — startPayment가 null을 반환해
+// 사용자가 뒤로가기로 결제 웹뷰를 이탈하는 상황을 시뮬레이션한다.
+class _FakeIamportControllerCancelled extends IamportController {
+  @override
+  AsyncValue<IamportResultModel?> build() => const AsyncData(null);
+
+  @override
+  Future<String?> startPayment({
+    required BuildContext context,
+    required String userCode,
+    required Map<String, dynamic> data,
+  }) async => null; // 뒤로가기로 이탈 시 PaymentServiceImpl이 null을 반환함을 모사
+}
 
 void main() {
   late MockEventRepository mockEventRepo;
@@ -701,6 +716,96 @@ void main() {
         );
         expect(state.status, EventApplicationStatus.initial);
         expect(state.errorMessage, isNull);
+      },
+    );
+  });
+
+  // Fix #1535: 결제 취소 시 무한 로딩 발생 — 회귀 방지 테스트.
+  // 근본 원인: PaymentServiceImpl에서 Completer가 Navigator.push() 반환 후에도
+  // 완료되지 않아 submitApplication이 영구 blocking 상태로 남았음.
+  group('paid ticket — user cancels payment (Fix #1535)', () {
+    test(
+      'sets error state with cancellation message when startPayment returns null',
+      () async {
+        when(
+          () => mockEventRepo.applyEvent(
+            eventId: any(named: 'eventId'),
+            ticketId: any(named: 'ticketId'),
+            verificationData: any(named: 'verificationData'),
+          ),
+        ).thenAnswer(
+          (_) async => const PaidApplyEventResult(
+            applicationId: 'app_pay',
+            orderId: 'order_pay',
+            paymentAmount: 10000,
+          ),
+        );
+
+        final container = createContainer(
+          overrides: [
+            currentUserProvider.overrideWith((ref) => mockUser),
+            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
+            iamportControllerProvider.overrideWith(
+              _FakeIamportControllerCancelled.new,
+            ),
+          ],
+        );
+
+        final notifier = container.read(
+          eventApplicationControllerProvider(testEvent).notifier,
+        );
+        notifier.selectTicket(testEvent.tickets!.first);
+
+        await notifier.submitApplication(mockContext);
+
+        final state = container.read(
+          eventApplicationControllerProvider(testEvent),
+        );
+        expect(state.status, EventApplicationStatus.error);
+        expect(state.errorMessage, contains('취소'));
+      },
+    );
+
+    test(
+      'does not reach confirmPayment when payment is cancelled',
+      () async {
+        when(
+          () => mockEventRepo.applyEvent(
+            eventId: any(named: 'eventId'),
+            ticketId: any(named: 'ticketId'),
+            verificationData: any(named: 'verificationData'),
+          ),
+        ).thenAnswer(
+          (_) async => const PaidApplyEventResult(
+            applicationId: 'app_pay2',
+            orderId: 'order_pay2',
+            paymentAmount: 5000,
+          ),
+        );
+
+        final container = createContainer(
+          overrides: [
+            currentUserProvider.overrideWith((ref) => mockUser),
+            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
+            iamportControllerProvider.overrideWith(
+              _FakeIamportControllerCancelled.new,
+            ),
+          ],
+        );
+
+        final notifier = container.read(
+          eventApplicationControllerProvider(testEvent).notifier,
+        );
+        notifier.selectTicket(testEvent.tickets!.first);
+        await notifier.submitApplication(mockContext);
+
+        // confirmPayment should never be called when payment returns null
+        verifyNever(
+          () => mockEventRepo.confirmPayment(
+            impUid: any(named: 'impUid'),
+            merchantUid: any(named: 'merchantUid'),
+          ),
+        );
       },
     );
   });
