@@ -19,7 +19,7 @@ part 'main.g.dart';
 
 // Fix #1538: 테스트에서 production delegate 목록을 참조할 수 있도록 상수로 추출.
 // 이 상수가 변경되면 party_description_input_test.dart도 자동으로 반영된다.
-const kPartnerLocalizationsDelegates = [
+const List<LocalizationsDelegate<Object>> kPartnerLocalizationsDelegates = [
   AppLocalizations.delegate,
   GlobalMaterialLocalizations.delegate,
   GlobalWidgetsLocalizations.delegate,
