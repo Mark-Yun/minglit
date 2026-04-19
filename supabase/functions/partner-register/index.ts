@@ -84,11 +84,15 @@ async function handleRequest(req: Request): Promise<Response> {
   if (action === "save_draft") {
     const applicationId = body.application_id as string | undefined;
 
-    // Build record — only allow whitelisted fields
+    // Build record — only allow whitelisted fields; skip null to avoid NOT NULL violations.
+    // Fix #1599: null means "not filled yet" — omit rather than insert null.
     const record: Record<string, unknown> = {};
     for (const field of DRAFT_FIELDS) {
-      if (body.data && typeof body.data === "object" && (body.data as Record<string, unknown>)[field] !== undefined) {
-        record[field] = (body.data as Record<string, unknown>)[field];
+      if (body.data && typeof body.data === "object") {
+        const val = (body.data as Record<string, unknown>)[field];
+        if (val !== undefined && val !== null) {
+          record[field] = val;
+        }
       }
     }
     record.status = "draft";
@@ -284,11 +288,14 @@ async function handleRequest(req: Request): Promise<Response> {
       return errorResponse("Application cannot be updated in current status", 400);
     }
 
-    // Build update record — only allow whitelisted fields
+    // Build update record — only allow whitelisted fields; skip null (same as save_draft).
     const updates: Record<string, unknown> = {};
     for (const field of DRAFT_FIELDS) {
-      if (body.data && typeof body.data === "object" && (body.data as Record<string, unknown>)[field] !== undefined) {
-        updates[field] = (body.data as Record<string, unknown>)[field];
+      if (body.data && typeof body.data === "object") {
+        const val = (body.data as Record<string, unknown>)[field];
+        if (val !== undefined && val !== null) {
+          updates[field] = val;
+        }
       }
     }
 

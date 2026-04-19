@@ -44,6 +44,20 @@ mixin _PartnerApplyValidation on _$PartnerApplyController {
       'representativeName' => state.copyWith(representativeName: value),
       'contactPhone' => state.copyWith(contactPhone: value),
       'contactEmail' => state.copyWith(contactEmail: value),
+      // Fix #1599: updating roadAddress resets detail and recomputes combined address.
+      'roadAddress' => state.copyWith(
+        roadAddress: value,
+        detailAddress: '',
+        address: value,
+      ),
+      'detailAddress' => state.copyWith(
+        detailAddress: value,
+        address: state.roadAddress.isEmpty
+            ? ''
+            : value.isEmpty
+                ? state.roadAddress
+                : '${state.roadAddress} $value',
+      ),
       'address' => state.copyWith(address: value),
       'bankName' => state.copyWith(bankName: value),
       'accountNumber' => state.copyWith(accountNumber: value),

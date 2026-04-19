@@ -25,19 +25,13 @@ class _Step3ContactSettlementState
     super.dispose();
   }
 
-  void _initFromState(String savedAddress) {
+  // Fix #1599: init from state.roadAddress and state.detailAddress separately so
+  // that going back to step 3 after filling in the detail doesn't double-append.
+  void _initFromState(String roadAddress, String detailAddress) {
     if (_initialized) return;
     _initialized = true;
-    // On first load, treat the entire saved address as the road address.
-    _roadAddressController.text = savedAddress;
-  }
-
-  String get _combinedAddress {
-    final road = _roadAddressController.text.trim();
-    final detail = _detailAddressController.text.trim();
-    if (road.isEmpty) return '';
-    if (detail.isEmpty) return road;
-    return '$road $detail';
+    _roadAddressController.text = roadAddress;
+    _detailAddressController.text = detailAddress;
   }
 
   Future<void> _openAddressSearch(
@@ -53,8 +47,10 @@ class _Step3ContactSettlementState
     if (selected == null || !mounted) return;
     setState(() {
       _roadAddressController.text = selected;
+      _detailAddressController.text = '';
     });
-    notifier.updateField('address', _combinedAddress);
+    // Fix #1599: update roadAddress (which also resets detailAddress + address).
+    notifier.updateField('roadAddress', selected);
   }
 
   @override
@@ -63,7 +59,7 @@ class _Step3ContactSettlementState
     final notifier = ref.read(partnerApplyControllerProvider.notifier);
     final theme = Theme.of(context);
 
-    _initFromState(state.address);
+    _initFromState(state.roadAddress, state.detailAddress);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(MinglitSpacing.large),
@@ -141,7 +137,8 @@ class _Step3ContactSettlementState
                 borderRadius: BorderRadius.circular(MinglitRadius.input),
               ),
             ),
-            onChanged: (_) => notifier.updateField('address', _combinedAddress),
+            // Fix #1599: update detailAddress (recomputes combined address via updateField).
+            onChanged: (val) => notifier.updateField('detailAddress', val),
           ),
           const SizedBox(height: MinglitSpacing.small),
           Text(
