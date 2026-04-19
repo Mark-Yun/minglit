@@ -95,11 +95,17 @@
 |-----|-------------|----------|
 | `PORTONE_V2_API_KEY` | PortOne V2 API key | Yes |
 
-### vector-worker
+### ai-embed
 
 | Key | Description | Required |
 |-----|-------------|----------|
 | `OPENAI_API_KEY` | OpenAI embedding API | Yes |
+
+### ai-extract-tags
+
+| Key | Description | Required |
+|-----|-------------|----------|
+| `OPENAI_API_KEY` | OpenAI tag extraction API | Yes |
 
 ### bug-report
 

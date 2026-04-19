@@ -20,7 +20,7 @@ Minglit의 검색과 추천 시스템을 기술한다.
 │  └──────────────────┘    └────────────────────────────┘ │
 │          ↑                          ↑                    │
 │     사용자 입력              PGMQ q_vectors              │
-│                           + 온디맨드 API                 │
+│                             (ai-embed 소비)              │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -208,7 +208,7 @@ $$;
 
 ## 4. Vector Pipeline
 
-임베딩은 두 가지 경로로 생성된다:
+임베딩은 Event-Driven 경로로 생성된다:
 
 ### 4.1 Event-Driven (PGMQ)
 
@@ -221,35 +221,23 @@ parties INSERT → produce_event('party_created')
                        ↓
                  q_vectors
                        ↓
-              vector-worker (Edge Function)
+              ai-embed (Edge Function)
                        ↓
               OpenAI API → party_embeddings
 ```
 
-`vector-worker`는 PGMQ `q_vectors` 큐를 polling하며:
+`ai-embed`는 PGMQ `q_vectors` 큐를 polling하며:
 - 파티 생성 → 파티 임베딩 생성
 - 유저 인터랙션 → 유저 임베딩 업데이트
 
 자세한 파이프라인 구조는 [Global Event Pipeline](./global-event-pipeline.md) 참고.
 
-### 4.2 On-Demand (Edge Function)
-
-| Function | Trigger | Target |
-|----------|---------|--------|
-| `profile-update` | 프로필 업데이트 | 유저 임베딩 (재)생성 |
-
-> **Note**: `vectorize-party/`는 비활성 디렉토리이다 (index.ts 없음, config.toml에서 disabled). `vector-worker`가 자체 `openai_service.ts`, `party_serializer.ts`를 갖고 있어 `vectorize-party/`를 import하지 않는다.
-
-### 4.3 Processing Flow
+### 4.2 Processing Flow
 
 ```mermaid
 flowchart LR
-    A[PGMQ q_vectors] --> B[vector-worker]
-    E[Profile Update] --> F[profile-update]
-
+    A[PGMQ q_vectors] --> B[ai-embed]
     B --> G[OpenAI API]
-    F --> G
-    
     G --> H[party_embeddings]
     G --> I[user_embeddings]
 ```
@@ -258,10 +246,10 @@ flowchart LR
 
 ## 5. Edge Function Inventory
 
-| Function | LOC | Domain | Purpose |
-|----------|-----|--------|---------|
-| `vector-worker` | ~578 | Recommendation | PGMQ consumer, 배치 벡터화 (최대 50건). 자체 openai_service, party_serializer 포함 |
-| `profile-update` | ~334 | User | 프로필 업데이트 + 유저 임베딩 생성 |
+| Function | Domain | Purpose |
+|----------|--------|---------|
+| `ai-embed` | Recommendation | PGMQ `q_vectors` consumer, 배치 벡터화 (최대 50건). OpenAI Embedding adapter 포함 |
+| `ai-extract-tags` | Recommendation | PGMQ `q_tags` consumer, 파티 설명 → 태그 자동 추출 → `party_tags` 삽입 (`source = 'ai'`) |
 
 ---
 
@@ -271,7 +259,7 @@ flowchart LR
 |-------|------|
 | **검색 대상 제한** | PGroonga는 `title` 필드만 인덱싱. `description` (jsonb) 미포함 |
 | **검색 결과 제한** | LIMIT 20 하드코딩, 페이지네이션 미구현 |
-| **배치 지연** | `vector-worker`는 최대 50건씩 배치 처리, 추천 갱신에 약간의 지연 |
+| **배치 지연** | `ai-embed`는 최대 50건씩 배치 처리, 추천 갱신에 약간의 지연 |
 | **크론 해상도** | 알림 크론이 매분 실행, 벡터 워커도 동일 — 최대 1분 지연 |
 | **임베딩 모델** | OpenAI 의존성 — API 장애 시 임베딩 생성 불가 |
 | **HNSW 리빌드** | 대량 데이터 추가 시 인덱스 성능 저하 가능 |
