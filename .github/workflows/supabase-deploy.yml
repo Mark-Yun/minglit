@@ -37,7 +37,7 @@ jobs:
             echo "DB_PASSWORD=${{ secrets.SUPABASE_DEV_DB_PASSWORD }}" >> "$GITHUB_OUTPUT"
             echo "PUBLISHABLE_KEY=${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }}" >> "$GITHUB_OUTPUT"
             echo "SERVICE_ROLE_KEY=${{ secrets.SUPABASE_DEV_SECRET_KEY }}" >> "$GITHUB_OUTPUT"
-            echo "ENVIRONMENT_VALUE=development" >> "$GITHUB_OUTPUT"
+            echo "ENVIRONMENT_VALUE=dev" >> "$GITHUB_OUTPUT"
           else
             echo "ENV=main" >> "$GITHUB_OUTPUT"
             echo "PROJECT_ID=${{ secrets.SUPABASE_MAIN_PROJECT_ID }}" >> "$GITHUB_OUTPUT"
