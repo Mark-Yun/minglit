@@ -98,8 +98,9 @@ void main() {
       });
 
       // Fix #1633: GUEST 프로필 탭 시 from=/my 전달 (기존 from=/ 버그 회귀 방지)
-      testWidgets('tapping profile icon navigates to login with from=/my',
-          (tester) async {
+      testWidgets('tapping profile icon navigates to login with from=/my', (
+        tester,
+      ) async {
         final mockRouter = MockGoRouter();
         when(
           () => mockRouter.go(any(), extra: any(named: 'extra')),
