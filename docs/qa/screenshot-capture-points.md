@@ -38,14 +38,14 @@
 [Tier A] 골든 스크린샷 테스트 (7-layer Layer 2b, 기존 유지)
   - Alchemist 기반 widget 단위 golden (app_user 14 / app_partner 15 — 2026-04-18)
   - 픽셀 레벨 회귀 차단
-  - 경로: apps/*/test/goldens/**/*_golden_test.dart (향후 test/alchemist/)
+  - 경로: apps/*/test/alchemist/**/*_golden_test.dart (`minglit_kit`: test/goldens/)
 
          ▲
          │
 [Tier B] 시나리오 스크린샷 (7-layer Layer 3 내부, 본 문서 = 캡처 포인트 매핑)
   - Patrol CUJ 테스트의 스텝별 실제 플로우 스냅샷
   - 목적: "현재 실제 화면"의 시각적 로그 (픽셀 비교 아님)
-  - 대상 경로: apps/app_*/integration_test/ (향후 emulator_test/)
+  - 대상 경로: apps/app_*/emulator_test/
   - 저장: artifact retention 14d 이상 (Tier C agent 가 pull 할 수 있어야 함)
 
          ▲
@@ -75,8 +75,8 @@
 |------|------|------|---------|
 | `apps/app_user/test/integration/` | Flutter 위젯 플로우 (mock 기반) — 향후 Patrol 이관 대상 (#1586 Phase D-2) | **Tier B 이관 대상** | Layer 2a |
 | `apps/app_partner/test/integration/` | 동일 | **Tier B 이관 대상** | Layer 2a |
-| `apps/app_*/integration_test/` (향후 `emulator_test/`) | Patrol 네이티브 테스트 — 현재 native surface 특수 테스트만 존재 | **Tier B 생성 위치** | Layer 3 |
-| `apps/*/test/goldens/` | 픽셀 레벨 widget 골든 | Tier A | Layer 2b |
+| `apps/app_*/emulator_test/` | Patrol 네이티브 테스트 — native surface 특수 테스트 | **Tier B 생성 위치** | Layer 3 |
+| `apps/*/test/alchemist/` (`minglit_kit`: `test/goldens/`) | 픽셀 레벨 widget 골든 | Tier A | Layer 2b |
 | `tests/client_cuj_integration/` | 삭제됨 (#1564) | — | — |
 | (미정) `apps/app_*/emulator_test/screenshots/` | Tier B artifact 저장 경로 후보 | Tier B 저장 | Layer 3 output |
 
@@ -513,7 +513,7 @@ await capture.before(tester, 1); // cuj_u01_step1_before.png
 await capture.after(tester, 2);  // cuj_u01_step2_after.png
 await capture.error(tester, 3);  // cuj_u01_step3_error.png
 
-// apps/*/integration_test/ — Patrol 기반 네이티브/E2E 테스트
+// apps/*/emulator_test/ — Patrol 기반 네이티브/E2E 테스트
 await $.native.screenshot(name: 'permission_step1_after');
 ```
 

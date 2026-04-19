@@ -28,8 +28,8 @@
 |---|-------|------|---------------------------|-----------|------|
 | 1 | **Unit test** | Feature/logic 순수 단위 (repository, controller, util) | `apps/app_*/test/src/`, `shared/packages/minglit_kit/test/src/` | `flutter_test` (headless) | PR 마다 |
 | 2a | **Widget flow test** | 다화면 위젯 인터랙션 (mock 기반) | `apps/app_*/test/integration/` *(향후 `test/flows/` rename 검토 — #1586 Phase C)* | `flutter_test` (headless) | PR 마다 |
-| 2b | **Golden image test** | 시각 회귀 감지 (픽셀 비교) | `apps/app_*/test/goldens/` *(향후 `test/alchemist/` rename — #1586 Phase C, PR #1582)* | Alchemist | PR 마다 |
-| 3 | **Emulator test** | Patrol 기반 네이티브 surface + 실 DB CUJ + 시나리오 스크린샷 | `apps/app_*/integration_test/` *(향후 `emulator_test/` rename — #1582)* | Patrol | 주 1회 + 수동 |
+| 2b | **Golden image test** | 시각 회귀 감지 (픽셀 비교) | `apps/app_*/test/alchemist/`, `shared/packages/minglit_kit/test/goldens/` | Alchemist | PR 마다 |
+| 3 | **Emulator test** | Patrol 기반 네이티브 surface + 실 DB CUJ | `apps/app_*/emulator_test/` | Patrol | 주 1회 + 수동 |
 
 ### 🗄️ Backend Level (`supabase/` + EF)
 
@@ -149,17 +149,17 @@
 
 | 앱 | 위치 | `*_golden_test.dart` |
 |----|------|---------------------|
-| app_user | `apps/app_user/test/goldens/` | 14 |
-| app_partner | `apps/app_partner/test/goldens/` | 15 |
+| app_user | `apps/app_user/test/alchemist/` | 14 |
+| app_partner | `apps/app_partner/test/alchemist/` | 15 |
 
 ### Layer 3 — Emulator (Patrol)
 
 | 앱 | 위치 | 파일 수 | 성격 |
 |----|------|--------|------|
-| app_user | `apps/app_user/integration_test/` | 5 | `apple_sign_in`, `kakao_login`, `payment_pg`, `permission_grant`, `scenario_screenshots` — **native surface 특수 테스트만**. CUJ 이관 0% |
-| app_partner | `apps/app_partner/integration_test/` | 1 | `scenario_screenshots` 만 |
+| app_user | `apps/app_user/emulator_test/` | 4 | `apple_sign_in`, `kakao_login`, `payment_pg`, `permission_grant` — **native surface 특수 테스트만**. CUJ 이관 0% |
+| app_partner | `apps/app_partner/emulator_test/` | 0 | — |
 
-**Layer 3 런타임 상태**: `patrol-e2e.yml` 실행 이력 0건. `scenario_screenshots_test.dart` 내부 캡처 호출 0건. **사실상 죽은 상태.** 재가동 계획은 §6 로드맵 및 #1586 Phase D-2 참고.
+**Layer 3 런타임 상태**: `patrol-e2e.yml` 실행 이력 0건. **사실상 죽은 상태.** 재가동 계획은 §6 로드맵 및 #1586 Phase D-2 참고.
 
 ### Layer 4 — pgTAP
 

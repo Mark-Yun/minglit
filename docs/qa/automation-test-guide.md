@@ -152,7 +152,7 @@ void main() {
 
 ### 📱 Layer 2b — Golden image test (Alchemist)
 
-**위치**: `apps/app_*/test/goldens/` (향후 `test/alchemist/` rename — PR #1582)
+**위치**: `apps/app_*/test/alchemist/` (`shared/packages/minglit_kit/test/goldens/` 예외)
 
 **파일 명**: `{widget_name}_golden_test.dart`
 
@@ -218,8 +218,7 @@ Alchemist를 사용하여 CI(Ahem 폰트) / 로컬(플랫폼 폰트) 골든을 �
 // 파일명: {widget_name}_golden_test.dart
 
 # Layer 3 — Emulator (Patrol)
-apps/{app}/integration_test/cuj_{scenario}_test.dart
-apps/{app}/integration_test/{feature}_native_test.dart
+apps/{app}/emulator_test/{feature}_native_test.dart
 
 # Layer 4 — pgTAP
 supabase/tests/database/{번호}_{feature}_test.sql
@@ -298,7 +297,7 @@ cd apps/app_user && flutter test --update-goldens --tags golden --dart-define=CI
 cd apps/app_user && flutter test test/integration/cuj_signup_to_apply_test.dart
 
 # Layer 3 (Patrol) — 로컬 emulator 필요
-cd apps/app_user && patrol test integration_test/permission_grant_test.dart
+cd apps/app_user && patrol test emulator_test/permission_grant_test.dart
 # CI 에서는 patrol-e2e.yml 워크플로우
 
 # Layer 4 pgTAP
