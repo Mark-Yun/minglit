@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
 
-import '../alchemist/golden_test_helpers.dart' show MockSocialRepository;
+import '../golden_test_helpers.dart' show MockSocialRepository;
 import 'screenshot_scenario.dart';
 
 class BlockedPartnersScenarios {

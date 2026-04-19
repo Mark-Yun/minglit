@@ -5,7 +5,7 @@ import 'package:app_partner/src/logic/current_partner_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
-import '../utils/partner_golden_test_helpers.dart'
+import '../../utils/partner_golden_test_helpers.dart'
     show MockPartnerHomeCoordinator;
 import 'partner_screenshot_scenario.dart';
 

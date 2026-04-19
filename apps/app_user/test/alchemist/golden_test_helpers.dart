@@ -13,7 +13,7 @@ import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../scenarios/screenshot_scenario.dart';
+import 'scenarios/screenshot_scenario.dart';
 
 // ---------------------------------------------------------------------------
 // Alchemist page-wrapper for app_user golden tests.

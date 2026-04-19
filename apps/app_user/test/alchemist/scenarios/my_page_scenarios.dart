@@ -6,7 +6,7 @@ import 'package:app_user/src/features/home/my_page.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
-import '../alchemist/golden_test_helpers.dart'
+import '../golden_test_helpers.dart'
     show MockAuthCoordinator, MockHomeCoordinator;
 import 'screenshot_scenario.dart';
 

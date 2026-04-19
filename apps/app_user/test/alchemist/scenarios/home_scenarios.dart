@@ -4,7 +4,7 @@ import 'package:app_user/src/logic/feed_state_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
-import '../alchemist/golden_test_helpers.dart'
+import '../golden_test_helpers.dart'
     show MockHomeCoordinator, NoFiltersNotifier;
 import 'screenshot_scenario.dart';
 
