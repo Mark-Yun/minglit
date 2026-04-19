@@ -26,6 +26,64 @@ Deno.test({
   },
 });
 
+// Fix #1614: regression — unset ENVIRONMENT must be blocked (fail-safe)
+Deno.test({
+  name: "dev-seed - blocks when ENVIRONMENT is unset (fail-safe production guard)",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+
+    await withEnv({ ENVIRONMENT: undefined }, async () => {
+      const response = await handler(new Request("http://localhost"));
+      assertEquals(response.status, 403);
+    });
+  },
+});
+
+// Fix #1614: regression — ENVIRONMENT=dev (Supabase dev project secret) must be allowed
+Deno.test({
+  name: "dev-seed - allows ENVIRONMENT=dev (deployed dev project)",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+
+    const { fetchMock } = createFetchMock([
+      {
+        matcher: (req) => req.url.includes("/storage/v1/object/list-v2/"),
+        handler: () =>
+          jsonResponse({
+            objects: [
+              { name: "seed-images/party_cafe_warm.jpg" },
+              { name: "seed-images/party_lounge_bright.jpg" },
+              { name: "seed-images/party_premium_lounge.jpg" },
+            ],
+          }),
+      },
+      {
+        matcher: (req) => req.url.includes("/storage/v1/object/public/"),
+        handler: (req) => jsonResponse({ publicUrl: req.url }),
+      },
+    ]);
+
+    await withEnv({
+      ENVIRONMENT: "dev",
+      SUPABASE_URL: "http://localhost:54321",
+      SUPABASE_SERVICE_ROLE_KEY: "test-service-role-key",
+    }, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const response = await handler(
+          new Request("http://localhost?mode=images-only"),
+        );
+        assertEquals(response.status, 200);
+        const body = await readJson(response);
+        assertEquals(body.mode, "images-only");
+      });
+    });
+  },
+});
+
 Deno.test({
   name: "dev-seed - images-only mode returns 200 with image_urls (images already in storage)",
   fn: async () => {
