@@ -1,12 +1,16 @@
 import 'package:app_user/src/features/home/home_page.dart';
 import 'package:app_user/src/logic/feed_state_provider.dart';
+import 'package:app_user/src/routing/app_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../utils/mocks.dart';
+
+class MockGoRouter extends Mock implements GoRouter {}
 
 void main() {
   setUpAll(() async {
@@ -91,6 +95,45 @@ void main() {
         await tester.pump();
 
         expect(find.byType(CircleAvatar), findsNothing);
+      });
+
+      // Fix #1633: GUEST 프로필 탭 시 from=/my 전달 (기존 from=/ 버그 회귀 방지)
+      testWidgets('tapping profile icon navigates to login with from=/my',
+          (tester) async {
+        final mockRouter = MockGoRouter();
+        when(
+          () => mockRouter.go(any(), extra: any(named: 'extra')),
+        ).thenReturn(null);
+
+        await tester.pumpWidget(
+          createTestWidget(
+            overrides: [
+              currentUserProvider.overrideWith((_) => null),
+              goRouterProvider.overrideWithValue(mockRouter),
+            ],
+          ),
+        );
+        await tester.pump();
+
+        await tester.tap(find.byIcon(Icons.person_outline));
+        await tester.pump();
+
+        // Must include '/my' so login redirects back to MyPage after sign-in.
+        // LoginRoute(from: '/my').location = '/login?from=%2Fmy'
+        final captured = verify(
+          () => mockRouter.go(
+            captureAny(that: isA<String>()),
+            extra: any(named: 'extra'),
+          ),
+        ).captured;
+
+        expect(
+          captured.single,
+          predicate<String>(
+            (s) => s.contains('%2Fmy') || s.contains('/my'),
+            'must contain /my (URL-encoded or plain)',
+          ),
+        );
       });
     });
 
