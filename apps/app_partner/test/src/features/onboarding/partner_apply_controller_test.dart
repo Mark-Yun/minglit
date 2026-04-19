@@ -193,5 +193,146 @@ void main() {
       );
       verifyNever(() => mockRepo.saveDraft(any()));
     });
+
+    // Regression tests for #1599 ──────────────────────────────────────────
+
+    group('Regression #1599: saveDraft failure leaves applicationId null and surfaces error', () {
+      test('saveDraft failure sets status to AsyncValue.error and keeps applicationId null', () async {
+        when(() => mockRepo.saveDraft(any())).thenThrow(
+          Exception('null value in column "biz_name" violates not-null constraint'),
+        );
+        final container = buildContainer();
+        final notifier = container.read(partnerApplyControllerProvider.notifier);
+
+        await notifier.saveDraft();
+
+        final state = container.read(partnerApplyControllerProvider);
+        expect(state.applicationId, isNull);
+        expect(state.status, isA<AsyncError>());
+      });
+
+      test('submit() with null applicationId sets status to AsyncValue.error instead of silently returning', () async {
+        // saveDraft throws so applicationId stays null
+        when(() => mockRepo.saveDraft(any())).thenThrow(
+          Exception('DB error'),
+        );
+        final container = buildContainer();
+        final notifier = container.read(partnerApplyControllerProvider.notifier);
+
+        // Populate all fields required by validateAll()
+        notifier
+          ..updateField('brandName', 'Brand')
+          ..updateField('bizName', 'Biz')
+          ..updateField('bizNumber', '1234567890')
+          ..updateField('representativeName', 'Rep')
+          ..updateField('contactPhone', '01012345678')
+          ..updateField('contactEmail', 'a@b.com')
+          ..updateField('bankName', 'Kakao')
+          ..updateField('accountNumber', '1234')
+          ..updateField('accountHolder', 'Holder');
+        // bizRegistrationPath and bankbookPath via state injection workaround:
+        // inject via internal state to satisfy validateAll without file I/O
+        container.read(partnerApplyControllerProvider.notifier).state =
+            container.read(partnerApplyControllerProvider).copyWith(
+              bizRegistrationPath: 'reg.pdf',
+              bankbookPath: 'bank.pdf',
+            );
+
+        await notifier.submit();
+
+        final state = container.read(partnerApplyControllerProvider);
+        expect(state.applicationId, isNull);
+        expect(state.status, isA<AsyncError>());
+      });
+    });
+
+    group('Regression #1599: roadAddress/detailAddress handling prevents double-append', () {
+      test('updateField roadAddress resets detailAddress and sets address = roadAddress', () {
+        final container = buildContainer();
+        final notifier = container.read(partnerApplyControllerProvider.notifier);
+
+        notifier.updateField('roadAddress', '서울시 강남구 테헤란로 1');
+
+        final state = container.read(partnerApplyControllerProvider);
+        expect(state.roadAddress, '서울시 강남구 테헤란로 1');
+        expect(state.detailAddress, '');
+        expect(state.address, '서울시 강남구 테헤란로 1');
+      });
+
+      test('updateField detailAddress appends to roadAddress in combined address', () {
+        final container = buildContainer();
+        final notifier = container.read(partnerApplyControllerProvider.notifier);
+
+        notifier
+          ..updateField('roadAddress', '서울시 강남구 테헤란로 1')
+          ..updateField('detailAddress', '101호');
+
+        final state = container.read(partnerApplyControllerProvider);
+        expect(state.address, '서울시 강남구 테헤란로 1 101호');
+      });
+
+      test('changing roadAddress after detailAddress was set resets detailAddress', () {
+        final container = buildContainer();
+        final notifier = container.read(partnerApplyControllerProvider.notifier);
+
+        notifier
+          ..updateField('roadAddress', '서울시 강남구 테헤란로 1')
+          ..updateField('detailAddress', '101호')
+          ..updateField('roadAddress', '서울시 서초구 서초대로 2');
+
+        final state = container.read(partnerApplyControllerProvider);
+        expect(state.roadAddress, '서울시 서초구 서초대로 2');
+        expect(state.detailAddress, '');
+        expect(state.address, '서울시 서초구 서초대로 2');
+      });
+
+      test('loadDraft restores roadAddress=savedAddress and detailAddress="" preventing step3 double-append', () async {
+        const savedAddress = '서울시 강남구 테헤란로 100';
+        when(() => mockRepo.getMyApplication()).thenAnswer(
+          (_) async => const PartnerApplication(
+            id: 'app_1',
+            userId: 'user_1',
+            status: 'draft',
+            address: savedAddress,
+          ),
+        );
+        final container = buildContainer();
+        final notifier = container.read(partnerApplyControllerProvider.notifier);
+
+        await notifier.loadDraft();
+
+        final afterLoad = container.read(partnerApplyControllerProvider);
+        expect(afterLoad.roadAddress, savedAddress);
+        expect(afterLoad.detailAddress, '');
+        expect(afterLoad.address, savedAddress);
+
+        // Simulate user entering detail address on step3 revisit — should NOT double-append
+        notifier.updateField('detailAddress', '5층');
+        final afterDetail = container.read(partnerApplyControllerProvider);
+        expect(afterDetail.address, '$savedAddress 5층');
+      });
+    });
+
+    group('Regression #1599: saveDraft omits null (empty-string) fields before insert/update', () {
+      test('saveDraft passes null for empty string fields to repository', () async {
+        final container = buildContainer();
+        final notifier = container.read(partnerApplyControllerProvider.notifier);
+        // Only brandName is set; all other string fields remain ''
+        notifier.updateField('brandName', 'Brand X');
+
+        await notifier.saveDraft();
+
+        final captured = verify(
+          () => mockRepo.saveDraft(captureAny()),
+        ).captured.single as PartnerApplication;
+
+        expect(captured.brandName, 'Brand X');
+        expect(captured.bizName, isNull, reason: 'empty string must be sent as null');
+        expect(captured.bizNumber, isNull, reason: 'empty string must be sent as null');
+        expect(captured.bankName, isNull, reason: 'empty string must be sent as null');
+        expect(captured.contactPhone, isNull, reason: 'empty string must be sent as null');
+        expect(captured.contactEmail, isNull, reason: 'empty string must be sent as null');
+      });
+    });
   });
 }
