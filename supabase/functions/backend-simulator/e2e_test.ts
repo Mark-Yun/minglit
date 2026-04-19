@@ -268,6 +268,32 @@ Deno.test({
   },
 });
 
+// Fix #1596: fail-safe regression tests — any non-"dev" value must block.
+Deno.test({
+  name: "backend-simulator - blocks when ENVIRONMENT is unset",
+  fn: async () => {
+    const h = await getHandler();
+
+    // undefined → withEnv deletes the key, simulating an unset secret
+    await withEnv({ ENVIRONMENT: undefined }, async () => {
+      const response = await h(new Request("http://localhost", { method: "POST" }));
+      assertEquals(response.status, 403);
+    });
+  },
+});
+
+Deno.test({
+  name: "backend-simulator - blocks when ENVIRONMENT is unknown value",
+  fn: async () => {
+    const h = await getHandler();
+
+    await withEnv({ ENVIRONMENT: "staging" }, async () => {
+      const response = await h(new Request("http://localhost", { method: "POST" }));
+      assertEquals(response.status, 403);
+    });
+  },
+});
+
 Deno.test({
   name: "backend-simulator - full run returns success structure",
   fn: async () => {
@@ -276,7 +302,7 @@ Deno.test({
 
     await withEnv(
       {
-        ENVIRONMENT: "development",
+        ENVIRONMENT: "dev",
         SUPABASE_URL: "http://localhost:54321",
         SUPABASE_SERVICE_ROLE_KEY: "test-service-role-key",
         SUPABASE_ANON_KEY: "test-anon-key",
@@ -314,7 +340,7 @@ Deno.test({
 
     await withEnv(
       {
-        ENVIRONMENT: "development",
+        ENVIRONMENT: "dev",
         SUPABASE_URL: "http://localhost:54321",
         SUPABASE_SERVICE_ROLE_KEY: "test-service-role-key",
         SUPABASE_ANON_KEY: "test-anon-key",
@@ -346,7 +372,7 @@ Deno.test({
 
     await withEnv(
       {
-        ENVIRONMENT: "development",
+        ENVIRONMENT: "dev",
         SUPABASE_URL: "http://localhost:54321",
         SUPABASE_SERVICE_ROLE_KEY: "test-service-role-key",
         SUPABASE_ANON_KEY: "test-anon-key",
@@ -378,7 +404,7 @@ Deno.test({
 
     await withEnv(
       {
-        ENVIRONMENT: "development",
+        ENVIRONMENT: "dev",
         SUPABASE_URL: "http://localhost:54321",
         SUPABASE_SERVICE_ROLE_KEY: "test-service-role-key",
         SUPABASE_ANON_KEY: "test-anon-key",
@@ -484,7 +510,7 @@ Deno.test({
 
     await withEnv(
       {
-        ENVIRONMENT: "development",
+        ENVIRONMENT: "dev",
         SUPABASE_URL: "http://localhost:54321",
         SUPABASE_SERVICE_ROLE_KEY: "test-service-role-key",
         SUPABASE_ANON_KEY: "test-anon-key",
@@ -592,7 +618,7 @@ Deno.test({
 
     await withEnv(
       {
-        ENVIRONMENT: "development",
+        ENVIRONMENT: "dev",
         SUPABASE_URL: "http://localhost:54321",
         SUPABASE_SERVICE_ROLE_KEY: "test-service-role-key",
         SUPABASE_ANON_KEY: "test-anon-key",
