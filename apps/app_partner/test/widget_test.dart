@@ -175,7 +175,7 @@ void main() {
   testWidgets(
     'production env: no onDevTrigger — triggered stays false after 5 taps',
     (tester) async {
-      final triggered = false; // never mutated: onDevTrigger=null
+      const triggered = false; // never mutated: onDevTrigger=null
       await tester.pumpWidget(
         const ProviderScope(
           child: MaterialApp(home: MinglitLoginScreen(isPartner: true)),
