@@ -173,9 +173,8 @@ void main() {
   );
 
   testWidgets(
-    'production env: no onDevTrigger — triggered stays false after 5 taps',
+    'production env: no onDevTrigger — _DevTriggerLogo not rendered',
     (tester) async {
-      const triggered = false; // never mutated: onDevTrigger=null
       await tester.pumpWidget(
         const ProviderScope(
           child: MaterialApp(home: MinglitLoginScreen(isPartner: true)),
@@ -183,12 +182,8 @@ void main() {
       );
       await tester.pump();
 
-      final logo = find.byType(GestureDetector).first;
-      for (var i = 0; i < 5; i++) {
-        await tester.tap(logo);
-        await tester.pump();
-      }
-      expect(triggered, isFalse);
+      // onDevTrigger=null → _DevTriggerLogo not rendered → no GestureDetector
+      expect(find.byType(GestureDetector), findsNothing);
     },
   );
 }
