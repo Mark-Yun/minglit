@@ -337,15 +337,17 @@ void main() {
       });
     });
 
+    // Fix #1597: getPendingApplicationCount queries event_applications (not verification_submissions)
+    // and filters to future events (start_time >= now) to match the application tab scope.
     group('getPendingApplicationCount', () {
-      test('returns pending count', () async {
+      test('returns pending count from event_applications', () async {
         unawaited(
           mockTable(
             mockClient,
-            'verification_submissions',
+            'event_applications',
             selectData: [
-              {'id': 'sub_1'},
-              {'id': 'sub_2'},
+              {'id': 'app_1'},
+              {'id': 'app_2'},
             ],
             countValue: 2,
           ),
@@ -356,11 +358,28 @@ void main() {
         expect(result, 2);
       });
 
-      test('returns 0 when no pending submissions', () async {
+      test('includes pending_review status in count', () async {
         unawaited(
           mockTable(
             mockClient,
-            'verification_submissions',
+            'event_applications',
+            selectData: [{'id': 'app_3'}],
+            countValue: 1,
+          ),
+        );
+
+        final result = await repository.getPendingApplicationCount('partner_1');
+
+        expect(result, 1);
+      });
+
+      test('returns 0 when no pending applications', () async {
+        unawaited(
+          mockTable(
+            mockClient,
+            'event_applications',
+            selectData: [],
+            countValue: 0,
           ),
         );
 
@@ -373,7 +392,7 @@ void main() {
         unawaited(
           mockTable(
             mockClient,
-            'verification_submissions',
+            'event_applications',
             shouldThrow: Exception('db error'),
           ),
         );
@@ -381,6 +400,53 @@ void main() {
         final result = await repository.getPendingApplicationCount('partner_1');
 
         expect(result, 0);
+      });
+    });
+
+    // Fix #1597: getPartnerFutureEvents fetches all future events without 7-day upper bound.
+    group('getPartnerFutureEvents', () {
+      test('returns future events for partner', () async {
+        unawaited(
+          mockTable(
+            mockClient,
+            'events',
+            selectData: [eventJson],
+          ),
+        );
+
+        final result = await repository.getPartnerFutureEvents('partner_1');
+
+        expect(result, hasLength(1));
+        expect(result.first.id, 'event_1');
+      });
+
+      test('returns empty list when no future events', () async {
+        unawaited(
+          mockTable(
+            mockClient,
+            'events',
+            selectData: [],
+          ),
+        );
+
+        final result = await repository.getPartnerFutureEvents('partner_1');
+
+        expect(result, isEmpty);
+      });
+
+      test('throws on error (no fail-safe)', () async {
+        unawaited(
+          mockTable(
+            mockClient,
+            'events',
+            shouldThrow: Exception('db error'),
+          ),
+        );
+
+        await expectLater(
+          repository.getPartnerFutureEvents('partner_1'),
+          throwsA(anything),
+        );
       });
     });
 

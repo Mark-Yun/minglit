@@ -303,12 +303,15 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
     try {
       // Fix #1597: verification_submissions는 신청(event_applications)과 다른 개념.
       // 신청관리 탭과 동일한 소스(event_applications)에서 카운트해 불일치 방지.
+      // 탭과 동일하게 미래 이벤트(start_time >= now)만 집계해 과거 pending 이중 집계 방지.
+      final nowStr = DateTime.now().toIso8601String();
       final res = await supabaseClient
           .from('event_applications')
           .select(
-            'id, event:events!inner(id, party:parties!inner(partner_id))',
+            'id, event:events!inner(id, start_time, party:parties!inner(partner_id))',
           )
           .eq('event.party.partner_id', partnerId)
+          .gte('event.start_time', nowStr)
           .inFilter('status', ['pending', 'pending_review'])
           .count(CountOption.exact);
 
