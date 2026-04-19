@@ -24,7 +24,8 @@ Deno.serve(withHandler(async (req) => {
 
   // Dev-only guard
   const env = Deno.env.get('ENVIRONMENT')
-  if (env !== 'local' && env !== 'development') {
+  // Fix #1614: "dev" = Supabase dev project (set by supabase-deploy.yml secrets)
+  if (env !== 'local' && env !== 'development' && env !== 'dev') {
     return json({ error: 'Dev-only function. Blocked in production.' }, 403)
   }
 
