@@ -216,7 +216,7 @@ void main() {
 
             final state = container.read(partnerApplyControllerProvider);
             expect(state.applicationId, isNull);
-            expect(state.status, isA<AsyncError>());
+            expect(state.status, isA<AsyncError<Object>>());
           },
         );
 
@@ -258,7 +258,7 @@ void main() {
 
             final state = container.read(partnerApplyControllerProvider);
             expect(state.applicationId, isNull);
-            expect(state.status, isA<AsyncError>());
+            expect(state.status, isA<AsyncError<Object>>());
           },
         );
       },
