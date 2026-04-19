@@ -363,7 +363,9 @@ void main() {
           mockTable(
             mockClient,
             'event_applications',
-            selectData: [{'id': 'app_3'}],
+            selectData: [
+              {'id': 'app_3'},
+            ],
             countValue: 1,
           ),
         );
@@ -379,7 +381,6 @@ void main() {
             mockClient,
             'event_applications',
             selectData: [],
-            countValue: 0,
           ),
         );
 
@@ -388,35 +389,37 @@ void main() {
         expect(result, 0);
       });
 
-      test('applies future-event filter and pending_review status filter', () async {
-        final appsTable = mockTable(
-          mockClient,
-          'event_applications',
-          countValue: 0,
-        );
+      test(
+        'applies future-event filter and pending_review status filter',
+        () async {
+          final appsTable = mockTable(
+            mockClient,
+            'event_applications',
+          );
 
-        await repository.getPendingApplicationCount('partner_1');
+          await repository.getPendingApplicationCount('partner_1');
 
-        expect(
-          appsTable.recordedFilters,
-          contains(
-            predicate<RecordedFilterOperation>(
-              (f) => f.method == 'gte' && f.column == 'event.start_time',
+          expect(
+            appsTable.recordedFilters,
+            contains(
+              predicate<RecordedFilterOperation>(
+                (f) => f.method == 'gte' && f.column == 'event.start_time',
+              ),
             ),
-          ),
-        );
-        expect(
-          appsTable.recordedFilters,
-          contains(
-            predicate<RecordedFilterOperation>(
-              (f) =>
-                  f.method == 'inFilter' &&
-                  f.column == 'status' &&
-                  (f.value as List).contains('pending_review'),
+          );
+          expect(
+            appsTable.recordedFilters,
+            contains(
+              predicate<RecordedFilterOperation>(
+                (f) =>
+                    f.method == 'inFilter' &&
+                    f.column == 'status' &&
+                    (f.value! as List).contains('pending_review'),
+              ),
             ),
-          ),
-        );
-      });
+          );
+        },
+      );
 
       test('returns 0 on error (fail-safe)', () async {
         unawaited(
