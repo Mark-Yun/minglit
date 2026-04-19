@@ -296,14 +296,15 @@ void main() {
     });
 
     group('getPendingApplicationCount', () {
-      test('returns pending count', () async {
+      // Fix #1597: implementation was changed to query event_applications (not verification_submissions)
+      test('returns pending count from event_applications', () async {
         unawaited(
           mockTable(
             mockClient,
-            'verification_submissions',
+            'event_applications',
             selectData: [
-              {'id': 'sub_1'},
-              {'id': 'sub_2'},
+              {'id': 'app_1'},
+              {'id': 'app_2'},
             ],
             countValue: 2,
           ),
