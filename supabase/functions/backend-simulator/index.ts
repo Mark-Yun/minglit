@@ -33,10 +33,10 @@ import type {
 
 function isProduction(): boolean {
   const env = Deno.env.get("ENVIRONMENT");
-  // Fix #1596: only block when ENVIRONMENT is explicitly "production".
-  // Unset ENVIRONMENT (e.g. newly provisioned secrets or GitHub Actions invocation)
-  // must NOT cause a 403 — default-allow is safer than default-deny for dev EFs.
-  return env === "production";
+  // Fix #1596: fail-safe guard — only allow explicit "dev". Any other value
+  // (unset, "staging", "production", typo) blocks access, protecting the
+  // service_role client from running outside dev.
+  return env !== "dev";
 }
 
 // ─────────────────────────────────────────────────────────
