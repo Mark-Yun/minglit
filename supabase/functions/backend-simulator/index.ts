@@ -33,7 +33,10 @@ import type {
 
 function isProduction(): boolean {
   const env = Deno.env.get("ENVIRONMENT");
-  return env !== "local" && env !== "development";
+  // Fix #1596: fail-safe guard — only allow explicit "dev". Any other value
+  // (unset, "staging", "production", typo) blocks access, protecting the
+  // service_role client from running outside dev.
+  return env !== "dev";
 }
 
 // ─────────────────────────────────────────────────────────
