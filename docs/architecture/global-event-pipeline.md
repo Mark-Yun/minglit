@@ -24,24 +24,25 @@ The diagram below illustrates the flow of an event from the database trigger to 
                                         v
                             +-----------+-----------+
                             |   fan_out_event()     | (Dispatcher)
-                            +-----+-----------+-----+
-                                  |           |
-               +------------------+           +------------------+
-               |                                                 |
-               v                                                 v
-    +----------+----------+                           +----------+----------+
-    |   q_notifications   | (Tier 2)                  |     q_vectors       | (Tier 2)
-    +----------+----------+                           +----------+----------+
-               |                                                 |
-               v                                                 v
-    +----------+----------+                           +----------+----------+
-    | notification-worker | (Edge Function)           |    vector-worker    | (Edge Function)
-    +----------+----------+                           +----------+----------+
-               |                                                 |
-               v                                                 v
-    +----------+----------+                           +----------+----------+
-    |     FCM / Push      |                           |     pgvector        |
-    +---------------------+                           +---------------------+
+                            +--+-----------+-----+--+
+                               |           |     |
+       +-----------------------+           |     +-----------------------+
+       |                                   |                             |
+       v                                   v                             v
++------+-------------+       +-------------+-------+           +---------+----------+
+|  q_notifications   | (T2)  |      q_vectors      | (T2)      |       q_tags       | (T2)
++------+-------------+       +-------------+-------+           +---------+----------+
+       |                                   |                             |
+       v                                   v                             v
++------+-------------+       +-------------+-------+           +---------+----------+
+| notification-worker|       |      ai-embed       |           |  ai-extract-tags   |
+|   (Edge Function)  |       |   (Edge Function)   |           |   (Edge Function)  |
++------+-------------+       +-------------+-------+           +---------+----------+
+       |                                   |                             |
+       v                                   v                             v
++------+-------------+       +-------------+-------+           +---------+----------+
+|     FCM / Push     |       |      pgvector       |           |    party_tags      |
++--------------------+       +---------------------+           +--------------------+
 ```
 
 ## 3. Event Types
@@ -50,7 +51,7 @@ Minglit tracks ten primary event types. Each type has a specific producer and ta
 
 | Event Type | Producer (Trigger/Cron) | Target Queues | Description |
 | :--- | :--- | :--- | :--- |
-| `party_created` | `parties` INSERT | `q_notifications`, `q_vectors` | Triggered when a new social party is created. |
+| `party_created` | `parties` INSERT | `q_notifications`, `q_vectors`, `q_tags` | Triggered when a new social party is created. |
 | `user_interaction` | `user_actions` INSERT | `q_notifications`, `q_vectors` | Tracks user likes, views, or dislikes for personalization. |
 | `application_approved` | `event_applications` UPDATE | `q_notifications` | Sent when a user's request to join an event is accepted. |
 | `application_rejected` | `event_applications` UPDATE | `q_notifications` | Sent when a user's request to join an event is declined. |
@@ -67,20 +68,20 @@ The `event_routes` table governs how events move from the global queue to specia
 
 ### Route Matrix
 
-| event_type | q_notifications | q_vectors |
-| :--- | :---: | :---: |
-| `party_created` | ✅ | ✅ |
-| `user_interaction` | ✅ | ✅ |
-| `application_approved` | ✅ | — |
-| `application_rejected` | ✅ | — |
-| `event_updated` | ✅ | — |
-| `event_cancelled` | ✅ | — |
-| `new_application` | ✅ | — |
-| `verification_result` | ✅ | — |
-| `event_reminder` | ✅ | — |
-| `match_result` | ✅ | — |
+| event_type | q_notifications | q_vectors | q_tags |
+| :--- | :---: | :---: | :---: |
+| `party_created` | ✅ | ✅ | ✅ |
+| `user_interaction` | ✅ | ✅ | — |
+| `application_approved` | ✅ | — | — |
+| `application_rejected` | ✅ | — | — |
+| `event_updated` | ✅ | — | — |
+| `event_cancelled` | ✅ | — | — |
+| `new_application` | ✅ | — | — |
+| `verification_result` | ✅ | — | — |
+| `event_reminder` | ✅ | — | — |
+| `match_result` | ✅ | — | — |
 
-Total: 12 active routes (q_notifications: 10, q_vectors: 2)
+Total: 13 active routes (q_notifications: 10, q_vectors: 2, q_tags: 1)
 
 ## 5. Payload Schema
 
@@ -110,7 +111,8 @@ The `produce_event()` function generates a standardized JSONB payload. This ensu
 
 *   **`q_global_events`**: The central hub. It accepts raw event data from database triggers. Its primary role is to serve as the source for the fan-out process.
 *   **`q_notifications`**: Dedicated to user-facing alerts. Messages here are consumed by the `notification-worker` to send push notifications and update in-app notification history.
-*   **`q_vectors`**: Used for background analytical tasks. The `vector-worker` consumes these to update user and party embeddings in `pgvector` for the recommendation engine.
+*   **`q_vectors`**: Used for background analytical tasks. The `ai-embed` worker consumes these to update user and party embeddings in `pgvector` for the recommendation engine.
+*   **`q_tags`**: AI tag extraction queue. The `ai-extract-tags` worker consumes `party_created` events to derive tags from party descriptions and insert them into `party_tags` (with `source = 'ai'`).
 
 ## 7. Notification Template System
 
@@ -149,7 +151,7 @@ Follow this checklist to integrate a new event into the pipeline:
 
 *   **Cron Latency**: Some events depend on `pg_cron` (like `event_reminder`), which has a minimum resolution of one minute.
 *   **External Hooks**: The `payment-webhook` currently bypasses the global pipeline and interacts with the database directly for immediate processing requirements.
-*   **Batching**: The `vector-worker` processes events in batches of up to 50, which might introduce slight delays in recommendation updates.
+*   **Batching**: The `ai-embed` worker processes events in batches of up to 50, which might introduce slight delays in recommendation updates.
 
 ## 11. Decision Log
 
@@ -164,6 +166,6 @@ Using database triggers ensures that events are captured even if the application
 ## Related Documents
 
 - [Backend Architecture](./backend.md) — 전체 백엔드 인프라
-- [Search & Recommendation](./search-and-recommendation.md) — q_vectors 큐 consumer (vector-worker)
+- [Search & Recommendation](./search-and-recommendation.md) — q_vectors 큐 consumer (ai-embed), q_tags consumer (ai-extract-tags)
 - [Trust & Verification](./trust-and-verification.md) — verification_result 이벤트 처리
 - [Payment Pipeline](./payment-pipeline.md) — 결제/정산 파이프라인
