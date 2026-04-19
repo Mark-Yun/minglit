@@ -445,3 +445,53 @@ END $$;
 -- Removed: ALTER DATABASE SET requires superuser privileges not available on
 -- hosted Supabase. The RPC guard that needed this setting is also being removed
 -- (#1413) — seed.dev.sql runs directly via CLI, not through the RPC.
+
+-- ── Phase 6: QA Test Events (Fix #1602) ──────────────────────────────────────
+-- U-S19 이벤트 신청 위저드 테스트용 오픈 이벤트 생성.
+-- 연령/성별 제한 없음(entry_group 미설정) → 모든 시드 유저 신청 가능.
+-- 멱등: 미래 QA 이벤트가 이미 존재하면 생성 건너뜀.
+DO $$
+DECLARE
+  test_partner_id  uuid;
+  test_location_id uuid;
+  test_party_id    uuid;
+  test_event_id    uuid;
+BEGIN
+  SELECT id INTO test_partner_id FROM public.partners WHERE biz_number = '123-45-67890';
+  IF test_partner_id IS NULL THEN
+    RAISE NOTICE 'QA seed (phase 6): 밍글 스튜디오 없음, 스킵.';
+    RETURN;
+  END IF;
+
+  SELECT id INTO test_location_id FROM public.locations
+  WHERE partner_id = test_partner_id AND name = '서울 강남' LIMIT 1;
+
+  SELECT id INTO test_party_id FROM public.parties
+  WHERE partner_id = test_partner_id AND title = '[QA] 오픈 소셜 파티 (연령/성별 무관)';
+  IF test_party_id IS NULL THEN
+    INSERT INTO public.parties (partner_id, location_id, title, max_participants, status)
+    VALUES (test_partner_id, test_location_id, '[QA] 오픈 소셜 파티 (연령/성별 무관)', 50, 'active')
+    RETURNING id INTO test_party_id;
+  END IF;
+
+  -- Fix #1602: entry_group 미설정 이벤트 → 연령/성별 무관, 모든 유저 신청 가능
+  IF NOT EXISTS (
+    SELECT 1 FROM public.events
+    WHERE party_id = test_party_id
+      AND title = '[QA] U-S19 신청 테스트 이벤트'
+      AND start_time > now()
+  ) THEN
+    INSERT INTO public.events (party_id, location_id, title, start_time, end_time, max_participants, status)
+    VALUES (
+      test_party_id, test_location_id,
+      '[QA] U-S19 신청 테스트 이벤트',
+      now() + interval '30 days',
+      now() + interval '30 days' + interval '3 hours',
+      50, 'scheduled'
+    )
+    RETURNING id INTO test_event_id;
+
+    INSERT INTO public.tickets (event_id, name, price, quantity, status)
+    VALUES (test_event_id, '일반 참가권', 0, 50, 'on_sale');
+  END IF;
+END $$;
