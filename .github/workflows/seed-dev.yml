@@ -9,6 +9,10 @@ on:
     branches:
       - dev
 
+concurrency:
+  group: seed-dev
+  cancel-in-progress: false
+
 jobs:
   seed:
     name: Run Seeder
@@ -29,8 +33,13 @@ jobs:
           MAIN_PROJECT_ID: ${{ secrets.SUPABASE_MAIN_PROJECT_ID }}
         run: |
           if [ -z "$TARGET_PROJECT_ID" ]; then
-             echo "❌ Error: SUPABASE_DEV_PROJECT_ID secret is missing."
-             exit 1
+            echo "❌ Error: SUPABASE_DEV_PROJECT_ID secret is missing."
+            exit 1
+          fi
+
+          if [ -z "$MAIN_PROJECT_ID" ]; then
+            echo "❌ Error: SUPABASE_MAIN_PROJECT_ID secret is missing — cannot verify target is not main."
+            exit 1
           fi
 
           if [ "$TARGET_PROJECT_ID" == "$MAIN_PROJECT_ID" ]; then
