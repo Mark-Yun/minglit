@@ -72,18 +72,24 @@ void main() {
     testWidgets('파트너 이름 탭 시 PartnerDetailPage로 이동한다', (tester) async {
       setKoreanLocale(tester);
       final mockPartnerRepo = _MockPartnerRepository();
-      when(() => mockPartnerRepo.getPartnerById(partnerId))
-          .thenAnswer((_) async => const Partner(id: partnerId, name: partnerName));
+      when(() => mockPartnerRepo.getPartnerById(partnerId)).thenAnswer(
+        (_) async => const Partner(id: partnerId, name: partnerName),
+      );
 
       await tester.pumpWidget(
         createTestApp(
           initialLocation: '/events/test-event-id',
           additionalOverrides: [
-            eventDetailControllerProvider('test-event-id')
-                .overrideWith(() => _DataEventDetailController(testEvent)),
-            eventAdmissionControllerProvider(testEvent)
-                .overrideWith(_GuestAdmissionController.new),
-            eventDetailNowProvider.overrideWith((_) => () => now),
+            eventDetailControllerProvider(
+              'test-event-id',
+            ).overrideWith(() => _DataEventDetailController(testEvent)),
+            eventAdmissionControllerProvider(
+              testEvent,
+            ).overrideWith(_GuestAdmissionController.new),
+            eventDetailNowProvider.overrideWith(
+              (_) =>
+                  () => now,
+            ),
             partnerRepositoryProvider.overrideWithValue(mockPartnerRepo),
           ],
         ),
