@@ -6,8 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kakao_map_plugin/kakao_map_plugin.dart' as kakao;
 
-import 'scenarios/party_create_wizard_scenarios.dart';
 import '../utils/golden_test_helpers.dart';
+import 'scenarios/party_create_wizard_scenarios.dart';
 
 void main() {
   setUpAll(() {

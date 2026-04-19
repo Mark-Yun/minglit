@@ -5,8 +5,8 @@ import 'package:alchemist/alchemist.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'scenarios/ticket_qr_scenarios.dart';
 import 'golden_test_helpers.dart';
+import 'scenarios/ticket_qr_scenarios.dart';
 
 void main() {
   setUpAll(() async {

@@ -5,8 +5,8 @@ import 'package:alchemist/alchemist.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'scenarios/payment_scenarios.dart';
 import 'golden_test_helpers.dart';
+import 'scenarios/payment_scenarios.dart';
 
 void main() {
   // Fix #574: 골든 시나리오 간 repository stub이 섞이지 않도록 매번 새 mock을 사용한다.
