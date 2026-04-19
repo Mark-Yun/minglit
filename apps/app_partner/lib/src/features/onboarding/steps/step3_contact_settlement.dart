@@ -16,7 +16,6 @@ class _Step3ContactSettlementState
     extends ConsumerState<Step3ContactSettlement> {
   final _roadAddressController = TextEditingController();
   final _detailAddressController = TextEditingController();
-  bool _initialized = false;
 
   @override
   void dispose() {
@@ -25,13 +24,15 @@ class _Step3ContactSettlementState
     super.dispose();
   }
 
-  // Fix #1599: init from state.roadAddress and state.detailAddress separately so
-  // that going back to step 3 after filling in the detail doesn't double-append.
-  void _initFromState(String roadAddress, String detailAddress) {
-    if (_initialized) return;
-    _initialized = true;
-    _roadAddressController.text = roadAddress;
-    _detailAddressController.text = detailAddress;
+  // Fix #1599: sync controllers whenever state differs — covers both initial build
+  // and async loadDraft() completion. No double-append: only writes when value changes.
+  void _syncControllers(String roadAddress, String detailAddress) {
+    if (_roadAddressController.text != roadAddress) {
+      _roadAddressController.text = roadAddress;
+    }
+    if (_detailAddressController.text != detailAddress) {
+      _detailAddressController.text = detailAddress;
+    }
   }
 
   Future<void> _openAddressSearch(
@@ -59,7 +60,7 @@ class _Step3ContactSettlementState
     final notifier = ref.read(partnerApplyControllerProvider.notifier);
     final theme = Theme.of(context);
 
-    _initFromState(state.roadAddress, state.detailAddress);
+    _syncControllers(state.roadAddress, state.detailAddress);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(MinglitSpacing.large),

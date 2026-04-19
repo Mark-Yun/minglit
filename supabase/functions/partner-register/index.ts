@@ -42,6 +42,14 @@ const DRAFT_FIELDS = [
   "current_step",
 ] as const;
 
+// Fields that are nullable in partner_applications and can be explicitly cleared
+// (setting to null removes a previously stored value).
+const CLEARABLE_FIELDS: ReadonlySet<string> = new Set([
+  "introduction",
+  "tax_email",
+  "profile_image_path",
+]);
+
 Deno.serve(withHandler(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return corsResponse();
   if (req.method !== "POST") return errorResponse("Method not allowed", 405);
@@ -86,11 +94,12 @@ async function handleRequest(req: Request): Promise<Response> {
 
     // Build record — only allow whitelisted fields; skip null to avoid NOT NULL violations.
     // Fix #1599: null means "not filled yet" — omit rather than insert null.
+    // Exception: CLEARABLE_FIELDS are nullable in the DB and can be explicitly cleared.
     const record: Record<string, unknown> = {};
     for (const field of DRAFT_FIELDS) {
       if (body.data && typeof body.data === "object") {
         const val = (body.data as Record<string, unknown>)[field];
-        if (val !== undefined && val !== null) {
+        if (val !== undefined && (val !== null || CLEARABLE_FIELDS.has(field))) {
           record[field] = val;
         }
       }
