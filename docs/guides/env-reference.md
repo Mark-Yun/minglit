@@ -9,7 +9,7 @@
 |-----|-------------|----------|
 | `SUPABASE_URL` | Supabase project URL | Yes |
 | `SUPABASE_PUBLISHABLE_KEY` | Supabase publishable key | Yes |
-| `ENVIRONMENT` | development / production | Yes |
+| `ENVIRONMENT` | local / development / production | Yes |
 | `SENTRY_DSN` | Sentry error tracking | No |
 | `STATSIG_CLIENT_KEY` | Statsig feature flags | No |
 | `GOOGLE_WEB_CLIENT_ID` | Google OAuth client ID | No |
@@ -95,12 +95,6 @@
 |-----|-------------|----------|
 | `PORTONE_V2_API_KEY` | PortOne V2 API key | Yes |
 
-### vector-worker
-
-| Key | Description | Required |
-|-----|-------------|----------|
-| `OPENAI_API_KEY` | OpenAI embedding API | Yes |
-
 ### bug-report
 
 | Key | Description | Required |
@@ -124,6 +118,18 @@
 | Key | Description | Required |
 |-----|-------------|----------|
 | `ENVIRONMENT` | Dev guard (must be development) | Yes |
+
+### ai-embed
+
+| Key | Description | Required |
+|-----|-------------|----------|
+| `OPENAI_API_KEY` | OpenAI embedding API | Yes |
+
+### ai-extract-tags
+
+| Key | Description | Required |
+|-----|-------------|----------|
+| `OPENAI_API_KEY` | OpenAI API key for tag extraction | Yes |
 
 ## Next.js (landing_user)
 
@@ -159,6 +165,7 @@
 | `STATSIG_SERVER_KEY` | Statsig server | No |
 | `AXIOM_API_TOKEN` | Axiom logging | No |
 | `CODECOV_TOKEN` | Codecov upload | No |
+| `SIM_USER_PASSWORD` | Dev simulator user password (backend-simulator EF 전용) | No |
 
 ## Vault
 
