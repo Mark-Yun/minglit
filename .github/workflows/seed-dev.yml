@@ -42,16 +42,18 @@ jobs:
           echo "✅ Safety Check Passed: Target Project ($TARGET_PROJECT_ID) is NOT Main DB."
 
       # Fix #1600: Dart seeder (tests/test_data_seeder) was removed in #1413.
-      # seed.dev.sql is now the source of truth — run via psql direct connection.
+      # seed.dev.sql is now the source of truth — run via psql session-mode pooler.
       - name: Run seed.dev.sql
         env:
           PGPASSWORD: ${{ secrets.SUPABASE_DEV_DB_PASSWORD }}
           SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_DEV_PROJECT_ID }}
+          POOLER_HOST: aws-1-ap-northeast-2.pooler.supabase.com
         run: |
-          # PGPASSWORD env is read by psql automatically — omit password from URI
-          # so special characters in the secret never need percent-encoding.
+          # Use session-mode pooler: seed.dev.sql contains DO blocks that require
+          # a real session connection. Direct DB host is IPv6-only and can fail.
           psql \
-            "postgresql://postgres@db.${SUPABASE_PROJECT_ID}.supabase.co:5432/postgres?sslmode=require" \
+            -v ON_ERROR_STOP=1 \
+            "postgresql://postgres.${SUPABASE_PROJECT_ID}:${PGPASSWORD}@${POOLER_HOST}:5432/postgres?sslmode=require" \
             -f supabase/seed.dev.sql
 
 
