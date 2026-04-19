@@ -388,6 +388,36 @@ void main() {
         expect(result, 0);
       });
 
+      test('applies future-event filter and pending_review status filter', () async {
+        final appsTable = mockTable(
+          mockClient,
+          'event_applications',
+          countValue: 0,
+        );
+
+        await repository.getPendingApplicationCount('partner_1');
+
+        expect(
+          appsTable.recordedFilters,
+          contains(
+            predicate<RecordedFilterOperation>(
+              (f) => f.method == 'gte' && f.column == 'event.start_time',
+            ),
+          ),
+        );
+        expect(
+          appsTable.recordedFilters,
+          contains(
+            predicate<RecordedFilterOperation>(
+              (f) =>
+                  f.method == 'inFilter' &&
+                  f.column == 'status' &&
+                  (f.value as List).contains('pending_review'),
+            ),
+          ),
+        );
+      });
+
       test('returns 0 on error (fail-safe)', () async {
         unawaited(
           mockTable(
@@ -432,6 +462,30 @@ void main() {
         final result = await repository.getPartnerFutureEvents('partner_1');
 
         expect(result, isEmpty);
+      });
+
+      test('filters to start_time >= now with no upper-date bound', () async {
+        final eventsTable = mockTable(
+          mockClient,
+          'events',
+          selectData: [],
+        );
+
+        await repository.getPartnerFutureEvents('partner_1');
+
+        expect(
+          eventsTable.recordedFilters,
+          contains(
+            predicate<RecordedFilterOperation>(
+              (f) => f.method == 'gte' && f.column == 'start_time',
+            ),
+          ),
+        );
+        // No upper-bound filter — ensures events beyond 7 days are included.
+        expect(
+          eventsTable.recordedFilters.where((f) => f.method == 'lte'),
+          isEmpty,
+        );
       });
 
       test('throws on error (no fail-safe)', () async {
