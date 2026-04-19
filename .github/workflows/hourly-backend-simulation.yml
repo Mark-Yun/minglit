@@ -17,14 +17,20 @@ jobs:
     steps:
       - name: Trigger backend-simulator EF
         run: |
-          response=$(curl -sf -X POST \
+          # Fix #1596: use -s (not -sf) so error response body is printed before failing.
+          # HTTP status is checked manually so curl does not swallow the body on 4xx/5xx.
+          http_code=$(curl -s -o /tmp/sim_response.json -w "%{http_code}" -X POST \
             "${{ secrets.SUPABASE_DEV_URL }}/functions/v1/backend-simulator" \
             -H "Authorization: Bearer ${{ secrets.SUPABASE_DEV_SECRET_KEY }}" \
             -H "Content-Type: application/json" \
             -d '{}' \
             --max-time 600)
-          echo "$response"
-          echo "$response" | jq -e '.success == true'
+          cat /tmp/sim_response.json
+          if [ "$http_code" -lt 200 ] || [ "$http_code" -ge 300 ]; then
+            echo "HTTP $http_code — backend-simulator returned an error"
+            exit 1
+          fi
+          jq -e '.success == true' /tmp/sim_response.json
 
   notify-failure:
     needs: [simulate]
