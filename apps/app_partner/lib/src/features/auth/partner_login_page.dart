@@ -14,7 +14,11 @@ class PartnerLoginPage extends ConsumerWidget {
       'ENVIRONMENT',
       defaultValue: 'production',
     );
-    const isDevEnv = environment == 'local' || environment == 'development';
+    // Fix #1624: 'dev' 추가 — Supabase dev 프로젝트의 ENVIRONMENT=dev와 정합성 유지
+    const isDevEnv =
+        environment == 'local' ||
+        environment == 'development' ||
+        environment == 'dev';
     ref.listen(authControllerProvider, (previous, next) {
       if (next is AsyncError) {
         handleMinglitError(context, next.error, next.stackTrace);
