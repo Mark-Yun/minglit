@@ -55,8 +55,8 @@ mixin _PartnerApplyValidation on _$PartnerApplyController {
         address: state.roadAddress.isEmpty
             ? ''
             : value.isEmpty
-                ? state.roadAddress
-                : '${state.roadAddress} $value',
+            ? state.roadAddress
+            : '${state.roadAddress} $value',
       ),
       'address' => state.copyWith(address: value),
       'bankName' => state.copyWith(bankName: value),
