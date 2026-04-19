@@ -297,12 +297,13 @@ async function handleRequest(req: Request): Promise<Response> {
       return errorResponse("Application cannot be updated in current status", 400);
     }
 
-    // Build update record — only allow whitelisted fields; skip null (same as save_draft).
+    // Build update record — only allow whitelisted fields; skip null for non-clearable fields.
+    // Fix #1599: CLEARABLE_FIELDS can be explicitly set to null to clear existing DB values.
     const updates: Record<string, unknown> = {};
     for (const field of DRAFT_FIELDS) {
       if (body.data && typeof body.data === "object") {
         const val = (body.data as Record<string, unknown>)[field];
-        if (val !== undefined && val !== null) {
+        if (val !== undefined && (val !== null || CLEARABLE_FIELDS.has(field))) {
           updates[field] = val;
         }
       }
