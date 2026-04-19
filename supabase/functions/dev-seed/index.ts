@@ -11,7 +11,8 @@ initSentry();
 
 function isProduction(): boolean {
   const env = Deno.env.get("ENVIRONMENT");
-  return env !== "local" && env !== "development";
+  // Fix #1614: "dev" = Supabase dev project (set by supabase-deploy.yml secrets)
+  return env !== "local" && env !== "development" && env !== "dev";
 }
 
 // Partner owner that already exists via seed.dev.sql (used for authed storage upload)
