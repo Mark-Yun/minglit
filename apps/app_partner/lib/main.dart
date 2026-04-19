@@ -17,6 +17,16 @@ import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
 
 part 'main.g.dart';
 
+// Fix #1538: 테스트에서 production delegate 목록을 참조할 수 있도록 상수로 추출.
+// 이 상수가 변경되면 party_description_input_test.dart도 자동으로 반영된다.
+const kPartnerLocalizationsDelegates = [
+  AppLocalizations.delegate,
+  GlobalMaterialLocalizations.delegate,
+  GlobalWidgetsLocalizations.delegate,
+  GlobalCupertinoLocalizations.delegate,
+  quill.FlutterQuillLocalizations.delegate,
+];
+
 Future<void> main() async {
   final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
@@ -165,14 +175,7 @@ class _AppView extends ConsumerWidget {
       darkTheme: MinglitTheme.partnerThemeDark,
       themeMode: ref.watch(themeControllerProvider),
       routerConfig: goRouter,
-      localizationsDelegates: const [
-        AppLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-        // Fix #1538: FlutterQuill localization delegate 누락으로 파티 생성 Step 1에서 UnimplementedError 발생
-        quill.FlutterQuillLocalizations.delegate,
-      ],
+      localizationsDelegates: kPartnerLocalizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       builder: (context, child) {
         return MinglitAsyncValueWidget(
