@@ -210,6 +210,62 @@ void main() {
       expect(find.byIcon(Icons.close), findsOneWidget);
     });
 
+    // Fix #1597: getUpcomingEvents(7일 제한) → getPartnerFutureEvents(제한 없음)
+    // 7일 이후 이벤트의 pending 신청도 신청관리 탭에 표시되어야 함
+    testWidgets('Fix #1597: 7일 이후 이벤트의 pending 신청도 표시된다', (tester) async {
+      final farFutureEvent = Event(
+        id: 'event-far-future',
+        partyId: 'party-1',
+        title: '30일 후 이벤트',
+        // 7일 이후 이벤트 — getUpcomingEvents라면 이 이벤트는 누락됨
+        startTime: now.add(const Duration(days: 30)),
+        endTime: now.add(const Duration(days: 30, hours: 3)),
+        createdAt: now,
+        updatedAt: now,
+      );
+      final mockEventRepo = MockEventRepository();
+      when(
+        () => mockEventRepo.getPartnerFutureEvents(any()),
+      ).thenAnswer((_) async => [farFutureEvent]);
+      when(
+        () => mockEventRepo.getApplicationsByEventId(any()),
+      ).thenAnswer(
+        (_) async => [
+          EventApplication(
+            id: 'app-far-1',
+            eventId: farFutureEvent.id,
+            ticketId: 'ticket-1',
+            userId: 'applicant-far',
+            status: 'pending',
+            createdAt: now,
+            updatedAt: now,
+            user: const UserProfile(
+              id: 'applicant-far',
+              name: '30일후신청자',
+              username: 'faruser',
+            ),
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        createPartnerTestApp(
+          isLoggedIn: true,
+          currentUser: testUser,
+          initialLocation: '/applications',
+          additionalOverrides: [
+            currentPartnerInfoProvider.overrideWith(
+              (ref) async => testPartner,
+            ),
+            eventRepositoryProvider.overrideWithValue(mockEventRepo),
+          ],
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('30일후신청자'), findsOneWidget);
+    });
+
     testWidgets('승인됨 탭 — 파트너가 처리한 신청이 표시된다', (tester) async {
       final capture = GoldenCapture('cuj_p02');
       final testEvent = Event(

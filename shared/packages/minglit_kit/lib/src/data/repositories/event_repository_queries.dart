@@ -301,13 +301,15 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
   /// Counts pending review applications for a specific partner.
   Future<int> getPendingApplicationCount(String partnerId) async {
     try {
-      // Query verification_submissions joined with applications -> events
-      // But RLS might restrict access. Assuming Partner has permission.
+      // Fix #1597: verification_submissions는 신청(event_applications)과 다른 개념.
+      // 신청관리 탭과 동일한 소스(event_applications)에서 카운트해 불일치 방지.
       final res = await supabaseClient
-          .from('verification_submissions')
-          .select('id')
-          .eq('partner_id', partnerId)
-          .eq('status', 'pending')
+          .from('event_applications')
+          .select(
+            'id, event:events!inner(id, party:parties!inner(partner_id))',
+          )
+          .eq('event.party.partner_id', partnerId)
+          .inFilter('status', ['pending', 'pending_review'])
           .count(CountOption.exact);
 
       return res.count;
@@ -524,6 +526,28 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
       }).toList();
     } catch (e, st) {
       Log.e('❌ [EventRepo] getTodayEvents Error', e, st);
+      rethrow;
+    }
+  }
+
+  /// [Application Management]
+  /// Fetches all future events for a partner (no upper date bound).
+  /// Used in the application management tab to show all events with pending
+  /// applications, regardless of how far in the future they are.
+  // Fix #1597: 신청관리 탭의 getUpcomingEvents(7일) 제한으로 미래 이벤트 누락 방지
+  Future<List<Event>> getPartnerFutureEvents(String partnerId) async {
+    try {
+      final nowStr = DateTime.now().toIso8601String();
+
+      final data = await supabaseClient
+          .from('events')
+          .select('*, party:parties!inner(*)')
+          .eq('party.partner_id', partnerId)
+          .gte('start_time', nowStr)
+          .order('start_time');
+      return data.map((json) => Event.fromJson(json)).toList();
+    } catch (e, st) {
+      Log.e('❌ [EventRepo] getPartnerFutureEvents Error', e, st);
       rethrow;
     }
   }

@@ -94,8 +94,9 @@ eventApplicationsGroupedProvider = FutureProvider.family
     >((ref, params) async {
       final eventRepo = ref.read(eventRepositoryProvider);
 
-      // Get all upcoming events for this partner
-      final events = await eventRepo.getUpcomingEvents(params.partnerId);
+      // Fix #1597: getUpcomingEvents는 7일 제한 → getPartnerFutureEvents 사용
+      // 신청관리는 모든 미래 이벤트의 pending 신청을 표시해야 함
+      final events = await eventRepo.getPartnerFutureEvents(params.partnerId);
 
       final grouped = <Event, List<EventApplication>>{};
 
