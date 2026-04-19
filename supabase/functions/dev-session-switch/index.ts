@@ -17,7 +17,8 @@ Deno.serve(withHandler(async (req) => {
   }
 
   const env = Deno.env.get('ENVIRONMENT')
-  if (env !== 'local' && env !== 'development') {
+  // Fix #1614: "dev" = Supabase dev project (set by supabase-deploy.yml secrets)
+  if (env !== 'local' && env !== 'development' && env !== 'dev') {
     return new Response(
       JSON.stringify({ error: 'Dev-only function. Blocked in production.' }),
       { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
