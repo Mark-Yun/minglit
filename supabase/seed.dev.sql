@@ -495,3 +495,57 @@ BEGIN
     VALUES (test_event_id, '일반 참가권', 0, 50, 'on_sale');
   END IF;
 END $$;
+
+-- Fix #1617: CUJ-U04 검색 키워드('클래스', '스포츠', '아트') 매칭 파티 추가.
+-- search_events_pgroonga는 parties.title을 검색하므로 제안 키워드가 포함된 파티가 필요.
+-- 멱등: 이미 존재하면 생성 건너뜀.
+DO $$
+DECLARE
+  qa_partner_id  uuid;
+  qa_location_id uuid;
+  party_id_      uuid;
+  event_id_      uuid;
+  rec            RECORD;
+BEGIN
+  SELECT id INTO qa_partner_id FROM public.partners WHERE biz_number = '123-45-67890';
+  IF qa_partner_id IS NULL THEN
+    RAISE NOTICE 'QA seed (phase 7): 밍글 스튜디오 없음, 스킵.';
+    RETURN;
+  END IF;
+
+  SELECT id INTO qa_location_id FROM public.locations
+  WHERE partner_id = qa_partner_id AND name = '서울 강남' LIMIT 1;
+
+  FOR rec IN SELECT * FROM (VALUES
+    ('[QA] 소셜 클래스',          '[QA] 소셜 클래스 이벤트'),
+    ('[QA] 스포츠 소셜 모임',     '[QA] 스포츠 소셜 이벤트'),
+    ('[QA] 아트 & 문화 이벤트',   '[QA] 아트 문화 이벤트')
+  ) AS t(party_title, event_title)
+  LOOP
+    SELECT id INTO party_id_ FROM public.parties
+    WHERE partner_id = qa_partner_id AND title = rec.party_title;
+    IF party_id_ IS NULL THEN
+      INSERT INTO public.parties (partner_id, location_id, title, max_participants, status)
+      VALUES (qa_partner_id, qa_location_id, rec.party_title, 30, 'active')
+      RETURNING id INTO party_id_;
+    END IF;
+
+    IF NOT EXISTS (
+      SELECT 1 FROM public.events
+      WHERE party_id = party_id_ AND title = rec.event_title AND start_time > now()
+    ) THEN
+      INSERT INTO public.events (party_id, location_id, title, start_time, end_time, max_participants, status)
+      VALUES (
+        party_id_, qa_location_id,
+        rec.event_title,
+        now() + interval '30 days',
+        now() + interval '30 days' + interval '3 hours',
+        30, 'scheduled'
+      )
+      RETURNING id INTO event_id_;
+
+      INSERT INTO public.tickets (event_id, name, price, quantity, status)
+      VALUES (event_id_, '일반 참가권', 0, 30, 'on_sale');
+    END IF;
+  END LOOP;
+END $$;
