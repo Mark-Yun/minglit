@@ -345,8 +345,31 @@ jobs:
         run: deno test --allow-all functions/
         working-directory: supabase
 
+  # Workflow YAML 파싱 검증 (항상 실행 — db-invariants #1593 회귀 방지)
+  check-workflow-yaml:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Validate all workflow YAML files
+        run: |
+          FAILED=0
+          for f in .github/workflows/*.yml; do
+            if python3 -c "import yaml, sys; yaml.safe_load(open(sys.argv[1]))" "$f" 2>/dev/null; then
+              echo "✅ $f"
+            else
+              echo "❌ YAML parse error: $f"
+              FAILED=1
+            fi
+          done
+          if [ "$FAILED" = "1" ]; then
+            echo ""
+            echo "One or more workflow files failed YAML parsing."
+            exit 1
+          fi
+          echo "✅ All workflow YAML files are valid"
+
   ci-result:
-    needs: [check-migration-versions, check-env-manifest-sync, test-flutter-apps, lint-landing-user, lint-landing-partner, test-supabase, test-edge-functions]
+    needs: [check-migration-versions, check-env-manifest-sync, check-workflow-yaml, test-flutter-apps, lint-landing-user, lint-landing-partner, test-supabase, test-edge-functions]
     if: always()
     runs-on: ubuntu-latest
     steps:
