@@ -52,48 +52,6 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
     }
   }
 
-  /// Searches events using PGroonga full-text search, returning fully hydrated
-  /// Event models with party, location, and ticket relations.
-  // Fix #1534: search_events_pgroonga 직접 호출은 events 행만 반환해 party.title/tickets 누락 — ID 목록 조회 후 relations 포함 재조회
-  Future<List<Event>> searchEvents(String query) async {
-    Log.d('searchEvents called | queryLength: ${query.length}');
-    if (query.isEmpty) return [];
-    try {
-      // Step 1: PGroonga RPC — ordered event IDs with block/visibility filters applied
-      final rpcResult = await supabaseClient.rpc<List<dynamic>>(
-        'search_events_pgroonga',
-        params: {'query': query},
-      );
-      final ids = rpcResult
-          .map((item) => (item as Map<String, dynamic>)['id'] as String)
-          .toList();
-
-      if (ids.isEmpty) return [];
-
-      // Step 2: PostgREST with full relations — preserves RPC ordering via inFilter
-      final data = await supabaseClient
-          .from('events')
-          .select(
-            '*, party:parties(*, location:locations(*), partner:partners(*)), '
-            'entryGroups:entry_groups(*), tickets(*)',
-          )
-          .inFilter('id', ids);
-
-      final byId = {
-        for (final json in data as List)
-          (json as Map<String, dynamic>)['id'] as String: Event.fromJson(json),
-      };
-      // Restore PGroonga relevance order
-      final result = ids.map((id) => byId[id]).whereType<Event>().toList();
-
-      Log.d('searchEvents success | count: ${result.length}');
-      return result;
-    } catch (e, st) {
-      Log.e('❌ [EventRepo] searchEvents Error', e, st);
-      rethrow;
-    }
-  }
-
   /// Fetches events based on a specific curation type.
   Future<List<Event>> getEventsByType({
     required EventFeedType type,

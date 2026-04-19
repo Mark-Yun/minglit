@@ -114,9 +114,14 @@ Future<List<Event>> searchResults(Ref ref) async {
   ref.onDispose(timer.cancel);
 
   final repository = ref.watch(eventRepositoryProvider);
-  // Fix #1534: 기존 RPC 직접 호출은 events 행만 반환하여 party.title/tickets 누락 —
-  // 카드에 '제목 없음', '가격 미정' 표시. searchEvents()로 교체하여 완전한 relation 포함.
-  return repository.searchEvents(query);
+  final response = await repository.supabaseClient.rpc<List<dynamic>>(
+    'search_events_pgroonga',
+    params: {'query': query},
+  );
+
+  return response
+      .map((item) => Event.fromJson(item as Map<String, dynamic>))
+      .toList();
 }
 
 /// Fetches bulk eligibility data (user profile + verified status).
