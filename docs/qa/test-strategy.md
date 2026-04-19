@@ -213,20 +213,20 @@
 
 | 표현 | 정의 | 사용 예 |
 |------|------|--------|
-| "골든 스크린샷" / "golden" | Layer 1만 지칭. 픽셀 비교 | "이 위젯 golden 깨졌어" |
-| **"시나리오 스크린샷"** | Layer 2만 지칭. CUJ 플로우 캡처 | "시나리오 스크린샷이 안 찍힌다" |
-| "스크린샷 리뷰" / "agent 리뷰" | Layer 3만 지칭 | "agent 리뷰에서 잡혔다" |
-| "스크린샷" (단독) | 혼동 유발 — 반드시 Layer 명시해서 사용 |
+| "골든 스크린샷" / "golden" | Tier A만 지칭 (7-layer Layer 2b). 픽셀 비교 | "이 위젯 golden 깨졌어" |
+| **"시나리오 스크린샷"** | Tier B만 지칭 (7-layer Layer 3). CUJ 플로우 캡처 | "시나리오 스크린샷이 안 찍힌다" |
+| "스크린샷 리뷰" / "agent 리뷰" | Tier C만 지칭 | "agent 리뷰에서 잡혔다" |
+| "스크린샷" (단독) | **혼동 유발 — Tier 명시 필수** | |
 
-**경로 구분 (Layer 1 vs Layer 2)**:
+**경로 구분 (Tier A vs Tier B)**:
 
-- `goldens/` (또는 Alchemist 지정 경로) — Layer 1 전용. Layer 2 아티팩트를 여기 저장 금지.
-- Layer 2 저장 경로는 아직 미정 (후보: `scenario_screenshots/` 하위, GitHub Artifacts 14d retention, 외부 버킷). 결정은 이슈 #1557에서 `report-exec` 라벨로 Mark 판단 대기.
+- `apps/*/test/alchemist/` — Tier A 전용. Tier B 아티팩트를 여기 저장 금지.
+- Tier B 저장 경로는 아직 미정 (후보: `scenario_screenshots/` 하위, GitHub Artifacts 14d retention, 외부 버킷). 결정은 이슈 #1557에서 `report-exec` 라벨로 Mark 판단 대기.
 
-**경로 구분 (Layer 2 대상 vs 비대상)**:
+**경로 구분 (Tier B 대상 vs 비대상)**:
 
-- `apps/app_user/test/integration/` + `apps/app_partner/test/integration/` → Layer 2 대상
-- `tests/client_cuj_integration/` — 삭제됨 (stale 인프라 제거). Layer 2 대상 아님.
+- `apps/app_user/emulator_test/` + `apps/app_partner/emulator_test/` → Tier B 대상 (Patrol CUJ)
+- `tests/client_cuj_integration/` — 삭제됨 (stale 인프라 제거). Tier B 대상 아님.
 
 ### 6.1 Patrol 전환 배경
 
@@ -373,8 +373,8 @@ Flutter 앱은 Skia/Impeller 엔진으로 단일 `FlutterSurfaceView` 위에 렌
 
 | 경로 | Tier | Layer |
 |------|------|-------|
-| `apps/*/test/goldens/` (향후 `test/alchemist/`) | Tier A | Layer 2b |
-| `apps/*/integration_test/` (향후 `emulator_test/`) — Patrol | Tier B 생성 위치 | Layer 3 |
+| `apps/*/test/alchemist/` | Tier A | Layer 2b |
+| `apps/*/emulator_test/` — Patrol | Tier B 생성 위치 | Layer 3 |
 | `apps/*/*/screenshots/` (Patrol 출력 — 향후 경로) | Tier B 저장 | Layer 3 |
 
 상세 캡처 포인트 매핑: `docs/qa/screenshot-capture-points.md`.

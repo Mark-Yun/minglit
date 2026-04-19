@@ -156,75 +156,37 @@ void main() {
 
 **파일 명**: `{widget_name}_golden_test.dart`
 
-**프레임워크**: [alchemist](https://pub.dev/packages/alchemist)
-
-**샘플**:
-
-```dart
-// 파일명: {widget_name}_test.dart
-import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-void main() {
-  testWidgets('PurchaseHistoryScreen shows empty state', (tester) async {
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          purchaseHistoryProvider.overrideWith(
-            (_) => AsyncData([]),
-          ),
-        ],
-        child: const MaterialApp(
-          home: PurchaseHistoryScreen(),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    expect(find.text('구매 내역이 없습니다'), findsOneWidget);
-  });
-
-  testWidgets('shows list when data exists', (tester) async {
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          purchaseHistoryProvider.overrideWith(
-            (_) => AsyncData([testPurchase]),
-          ),
-        ],
-        child: const MaterialApp(
-          home: PurchaseHistoryScreen(),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    expect(find.byType(PurchaseHistoryCard), findsOneWidget);
-  });
-}
-```
-
-### Layer 3.5: Golden (Snapshot) 테스트 — Alchemist
-
-**위치:** `apps/{app}/test/alchemist/`, `shared/packages/minglit_kit/test/goldens/`
-**우선순위:** 디자인 토큰 변경, 레이아웃 회귀 방지
-**패키지:** [alchemist](https://pub.dev/packages/alchemist) (VGV + Betterment)
+**프레임워크**: [alchemist](https://pub.dev/packages/alchemist) (VGV + Betterment)
 
 Golden Test는 위젯 렌더링 결과를 이미지로 저장해두고 이후 픽셀 비교로 시각적 회귀를 감지한다.
 Alchemist를 사용하여 CI(Ahem 폰트) / 로컬(플랫폼 폰트) 골든을 분리 관리한다.
 
+**샘플**:
+
 ```dart
-// 파일명: {widget_name}_golden_test.dart
+// 파일명: status_badge_golden_test.dart
+import 'package:alchemist/alchemist.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
 
-# Layer 3 — Emulator (Patrol)
-apps/{app}/emulator_test/{feature}_native_test.dart
-
-# Layer 4 — pgTAP
-supabase/tests/database/{번호}_{feature}_test.sql
-
-# Layer 5 — Deno EF
-supabase/functions/{function_name}/{function_name}_test.ts
+void main() {
+  goldenTest(
+    'StatusBadge renders correctly for all states',
+    fileName: 'status_badge',
+    builder: () => GoldenTestGroup(
+      children: [
+        GoldenTestScenario(
+          name: 'active',
+          child: const StatusBadge(status: 'active'),
+        ),
+        GoldenTestScenario(
+          name: 'closed',
+          child: const StatusBadge(status: 'closed'),
+        ),
+      ],
+    ),
+  );
+}
 ```
 
 ---
@@ -260,8 +222,8 @@ supabase/functions/{function_name}/{function_name}_test.ts
 |-------|------|--------|
 | 1 (unit) | minglit_kit / app_user / app_partner `test/src/` | 99 / 65 / 71 |
 | 2a (widget flow) | app_user / app_partner `test/integration/` | 26 / 11 |
-| 2b (golden) | app_user / app_partner `test/goldens/**_golden_test.dart` | 14 / 15 |
-| 3 (Patrol) | app_user / app_partner `integration_test/` | 5 / 1 (native surface 전용) |
+| 2b (golden) | app_user / app_partner `test/alchemist/**_golden_test.dart` | 14 / 15 |
+| 3 (Patrol) | app_user / app_partner `emulator_test/` | 5 / 1 (native surface 전용) |
 | 4 (pgTAP) | `supabase/tests/database/*.sql` | 80 |
 | 5 (Deno EF) | `supabase/functions/**/*_test.ts` | 75 |
 | 6 (DB monitor) | `check_db_invariants()` RPC | 1 RPC (매시간) |
