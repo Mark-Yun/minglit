@@ -52,8 +52,6 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
     }
   }
 
-  /// Searches events using PGroonga full-text search, returning fully hydrated
-  /// Event models with party, location, and ticket relations.
   // Fix #1534: search_events_pgroonga 직접 호출은 events 행만 반환해 party.title/tickets 누락 — ID 목록 조회 후 relations 포함 재조회
   Future<List<Event>> searchEvents(String query) async {
     Log.d('searchEvents called | queryLength: ${query.length}');
