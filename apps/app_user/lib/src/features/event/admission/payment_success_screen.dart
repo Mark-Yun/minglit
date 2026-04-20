@@ -29,12 +29,18 @@ class PaymentSuccessScreen extends StatelessWidget {
     ).format(event.startTime);
     final location = event.location ?? event.party?.location;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('결제 완료'),
-        leading: const CloseButton(),
-      ),
-      body: SingleChildScrollView(
+    // Fix #1656: Navigator.pushReplacement + GoRouter 혼용 시 Android 뒤로가기로
+    // 앱이 홈 화면으로 이탈하는 문제 방지 — CloseButton과 Android 뒤로가기 모두
+    // GoRouter 기반의 onBackToEvent로 위임하여 route 상태 일관성 보장.
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (_, __) => onBackToEvent(),
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('결제 완료'),
+          leading: CloseButton(onPressed: onBackToEvent),
+        ),
+        body: SingleChildScrollView(
         padding: const EdgeInsets.all(MinglitSpacing.large),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -136,7 +142,8 @@ class PaymentSuccessScreen extends StatelessWidget {
           ],
         ),
       ),
-    );
+    ),
+  );
   }
 
   Ticket? _findTicket() {
