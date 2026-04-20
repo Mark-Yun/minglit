@@ -518,6 +518,11 @@ Deno.serve(async (req: Request): Promise<Response> => {
     log({ function: FN, level: "error", message: "unhandled exception", metadata: { runId, error: message } });
     return errorResponse(`Unhandled exception: ${message}`, 500);
   } finally {
-    await flush();
+    // Wrap flush so a log-flush failure cannot replace the JSON error response.
+    try {
+      await flush();
+    } catch (flushErr) {
+      console.error("[backend-simulator] failed to flush logs", flushErr);
+    }
   }
 });
