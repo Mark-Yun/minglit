@@ -15,11 +15,11 @@ class WeeklyStatsRow extends StatelessWidget {
     super.key,
   });
 
-  /// Null means data is not yet available — UI shows '-' placeholder.
+  /// Null means data is not yet available — UI shows zero value.
   final int? totalRevenue;
   final int totalApplications;
 
-  /// Null means data is not yet available — UI shows '-' placeholder.
+  /// Null means data is not yet available — UI shows zero value.
   final double? checkinRate;
   final double? revenueChange;
   final double? applicationChange;
@@ -38,9 +38,8 @@ class WeeklyStatsRow extends StatelessWidget {
       child: Row(
         children: [
           _StatItem(
-            value: totalRevenue != null
-                ? '₩${_formatCompact(totalRevenue!)}'
-                : '-',
+            // Fix #1611: null → '₩0' (no-data week looks dead with '-')
+            value: '₩${_formatCompact(totalRevenue ?? 0)}',
             label: '매출',
             change: revenueChange,
             isFirst: true,
@@ -53,7 +52,8 @@ class WeeklyStatsRow extends StatelessWidget {
             theme: theme,
           ),
           _StatItem(
-            value: checkinRate != null ? '${checkinRate!.round()}%' : '-',
+            // Fix #1611: null → '0%' (no-data week looks dead with '-')
+            value: '${(checkinRate ?? 0).round()}%',
             label: '체크인율',
             change: checkinRateChange,
             isLast: true,
