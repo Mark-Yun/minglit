@@ -1,6 +1,7 @@
 
 -- supabase/seed.dev.sql
 -- DEV ONLY: 560 users (60 legacy + 500 regional) + 5 partner owners + 5 partners
+--           + 3 partner applicant users (needsApplication/draft/pending)
 --           + locations + verifications + roles + pgmq purge + env setting
 --
 -- Executed by GitHub Actions (dev branch only) via:
@@ -242,6 +243,66 @@ BEGIN
   END LOOP;
 END $$;
 
+-- ── Phase 1.5: 3 Partner Applicant Users (P-S02/03/04 QA 시나리오용) ──────────
+-- Fix #1645: DevUserSwitchScreen에서 NEEDS_APP/DRAFT/PENDING 상태 유저 접근 가능하게.
+-- needsApplication: partner_apply_needs   — partner_applications 없음
+-- draftInProgress:  partner_apply_draft   — status='draft'
+-- pendingReview:    partner_apply_pending — status='pending'
+DO $$
+DECLARE
+  pwd_hash    text;
+  email_val   text;
+  meta        jsonb;
+  existing_id uuid;
+BEGIN
+  pwd_hash := extensions.crypt('password1234!', extensions.gen_salt('bf'));
+
+  FOREACH email_val IN ARRAY ARRAY[
+    'partner_apply_needs@test.com',
+    'partner_apply_draft@test.com',
+    'partner_apply_pending@test.com'
+  ] LOOP
+    meta := CASE email_val
+      WHEN 'partner_apply_needs@test.com' THEN
+        '{"name":"신청 미진행 파트너","username":"partner_apply_needs","gender":"male","birth_date":"1992-01-01","phone_number":"010-0002-0000","is_verified":true}'::jsonb
+      WHEN 'partner_apply_draft@test.com' THEN
+        '{"name":"초안 작성 중 파트너","username":"partner_apply_draft","gender":"male","birth_date":"1992-01-01","phone_number":"010-0002-0001","is_verified":true}'::jsonb
+      ELSE
+        '{"name":"심사 대기 파트너","username":"partner_apply_pending","gender":"male","birth_date":"1992-01-01","phone_number":"010-0002-0002","is_verified":true}'::jsonb
+    END;
+
+    SELECT id INTO existing_id FROM auth.users WHERE email = email_val;
+    IF existing_id IS NULL THEN
+      INSERT INTO auth.users (
+        instance_id, id, aud, role, email, encrypted_password,
+        email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
+        created_at, updated_at, confirmation_token, recovery_token,
+        is_sso_user, is_anonymous, phone,
+        email_change, email_change_token_new, email_change_token_current,
+        phone_change, phone_change_token, reauthentication_token,
+        email_change_confirm_status
+      ) VALUES (
+        '00000000-0000-0000-0000-000000000000',
+        gen_random_uuid(), 'authenticated', 'authenticated',
+        email_val, pwd_hash, now(),
+        '{"provider":"email","providers":["email"],"has_password":true}'::jsonb,
+        meta, now(), now(), '', '',
+        false, false, meta->>'phone_number',
+        '', '', '', '', '', '', 0
+      );
+    ELSE
+      UPDATE auth.users
+      SET encrypted_password = pwd_hash,
+          raw_user_meta_data = meta,
+          updated_at = now(),
+          is_sso_user = COALESCE(is_sso_user, false),
+          is_anonymous = COALESCE(is_anonymous, false),
+          phone = COALESCE(phone, '')
+      WHERE id = existing_id;
+    END IF;
+  END LOOP;
+END $$;
+
 -- ── auth.identities cleanup (remove duplicates from previous seed runs) ──────
 -- Previous seed used provider_id=email instead of provider_id=UUID, creating
 -- duplicate identity rows that break GoTrue admin.listUsers().
@@ -428,6 +489,40 @@ BEGIN
     INSERT INTO public.partner_member_permissions (partner_id, user_id, role)
     VALUES (first_partner_id, staff_users[2], 'staff')
     ON CONFLICT (partner_id, user_id) DO UPDATE SET role = 'staff';
+  END IF;
+END $$;
+
+-- ── Phase 3.5: Partner Applicant Applications ────────────────────────────────
+-- Fix #1645: partner_apply_draft → draft 상태, partner_apply_pending → pending 상태.
+-- partner_apply_needs는 applications 없음 → needsApplication 상태.
+DO $$
+DECLARE
+  apply_user_id uuid;
+BEGIN
+  -- draftInProgress: partner_apply_draft
+  SELECT id INTO apply_user_id FROM auth.users WHERE email = 'partner_apply_draft@test.com';
+  IF apply_user_id IS NOT NULL THEN
+    INSERT INTO public.partner_applications (user_id, status)
+    SELECT apply_user_id, 'draft'
+    WHERE NOT EXISTS (
+      SELECT 1 FROM public.partner_applications WHERE user_id = apply_user_id
+    );
+  END IF;
+
+  -- pendingReview: partner_apply_pending
+  SELECT id INTO apply_user_id FROM auth.users WHERE email = 'partner_apply_pending@test.com';
+  IF apply_user_id IS NOT NULL THEN
+    INSERT INTO public.partner_applications (
+      user_id, status, brand_name, biz_type, biz_name, biz_number,
+      representative_name, bank_name, account_number, account_holder,
+      biz_registration_path, bankbook_path
+    )
+    SELECT apply_user_id, 'pending', '심사 대기 브랜드', 'individual', '심사 대기 사업자',
+           '888-88-88888', '심사 대기 대표', '신한은행', '110-888-888880', '심사 대기 대표',
+           'seed/biz_registration.png', 'seed/bankbook.png'
+    WHERE NOT EXISTS (
+      SELECT 1 FROM public.partner_applications WHERE user_id = apply_user_id
+    );
   END IF;
 END $$;
 
