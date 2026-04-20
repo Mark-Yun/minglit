@@ -94,30 +94,24 @@ class MinglitAlert extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return AlertDialog(
-      backgroundColor: colorScheme.surface,
-      surfaceTintColor: colorScheme.surface.withValues(
-        alpha: MinglitOpacity.none,
-      ), // Remove standardized tint
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(MinglitRadius.card),
-      ),
       titlePadding: const EdgeInsets.fromLTRB(
         MinglitSpacing.large,
         MinglitSpacing.large,
         MinglitSpacing.large,
-        MinglitSpacing.medium,
+        MinglitSpacing.small,
       ),
-      contentPadding: const EdgeInsets.only(
-        left: MinglitSpacing.large,
-        right: MinglitSpacing.large,
-        bottom: MinglitSpacing.large,
+      contentPadding: const EdgeInsets.fromLTRB(
+        MinglitSpacing.large,
+        MinglitSpacing.zero,
+        MinglitSpacing.large,
+        MinglitSpacing.xsmall,
       ),
-      actionsPadding: const EdgeInsets.only(
-        left: MinglitSpacing.medium,
-        right: MinglitSpacing.medium,
-        bottom: MinglitSpacing.medium,
+      actionsPadding: const EdgeInsets.fromLTRB(
+        MinglitSpacing.sm,
+        MinglitSpacing.zero,
+        MinglitSpacing.large,
+        MinglitSpacing.large,
       ),
-
       title: Row(
         children: [
           if (type == MinglitAlertType.destructive) ...[
@@ -129,19 +123,15 @@ class MinglitAlert extends StatelessWidget {
               title,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
+                color: type == MinglitAlertType.destructive
+                    ? colorScheme.error
+                    : null,
               ),
             ),
           ),
         ],
       ),
-      content: content != null
-          ? Text(
-              content!,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
-            )
-          : null,
+      content: content != null ? Text(content!) : null,
       actions: actions,
     );
   }

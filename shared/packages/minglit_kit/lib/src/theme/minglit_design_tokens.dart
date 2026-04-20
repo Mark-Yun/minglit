@@ -201,6 +201,9 @@ class MinglitRadius {
   /// 16px card border radius.
   static const double card = 16;
 
+  /// 28px dialog border radius.
+  static const double dialog = 28;
+
   /// 12px input border radius.
   static const double input = 12;
 
