@@ -174,7 +174,7 @@ class MorePage extends ConsumerWidget {
             ],
           ),
 
-          // Dev Only
+          // Dev Only — Fix #1624: 'dev' 추가 (Supabase dev 프로젝트와 정합성)
           if (const String.fromEnvironment(
                     'ENVIRONMENT',
                     defaultValue: 'production',
@@ -184,7 +184,12 @@ class MorePage extends ConsumerWidget {
                     'ENVIRONMENT',
                     defaultValue: 'production',
                   ) ==
-                  'development') ...[
+                  'development' ||
+              const String.fromEnvironment(
+                    'ENVIRONMENT',
+                    defaultValue: 'production',
+                  ) ==
+                  'dev') ...[
             const SizedBox(height: MinglitSpacing.large),
             MinglitSettingsGroup(
               header: '개발자 도구',

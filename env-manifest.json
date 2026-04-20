@@ -9,7 +9,7 @@
         "desc": "Supabase publishable key"
       },
       "ENVIRONMENT": {
-        "desc": "local / development / production"
+        "desc": "local / development / dev / production"
       }
     },
     "optional": {
@@ -174,7 +174,7 @@
       "backend-simulator": {
         "required": {
           "ENVIRONMENT": {
-            "desc": "Dev guard (must be development)"
+            "desc": "Dev guard (dev)"
           }
         }
       },
