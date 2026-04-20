@@ -220,11 +220,15 @@ Dark Mode 소스: `minglit_theme.dart:457-461`
 
 ---
 
-## 14. Badge / Tag
+## 14. Badge & Tag
 
-<!-- TODO: 커스텀 Badge/Tag 컴포넌트 테마 정의 필요. 현재는 Chip 기반으로 사용 중. -->
+### MinglitBadge
+상태 표시용 배지. 배경색은 틴트 처리되고 텍스트는 원본 색상을 사용하여 가독성 확보.
+`shared/packages/minglit_kit/lib/src/ui/widgets/common/minglit_badge.dart`
 
-현재 뱃지/태그는 `MinglitChip` (`minglit_kit/lib/src/ui/widgets/common/minglit_chip.dart`) 및 `MinglitFilterChip` (`minglit_kit/lib/src/ui/widgets/common/minglit_filter_chip.dart`)으로 대체 사용합니다.
+### MinglitTag
+카테고리나 메타데이터 표시용 태그. 아이콘 지원.
+`shared/packages/minglit_kit/lib/src/ui/widgets/common/minglit_tag.dart`
 
 ---
 
