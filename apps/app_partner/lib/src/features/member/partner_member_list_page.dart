@@ -98,7 +98,6 @@ class PartnerMemberListPage extends ConsumerWidget {
     final theme = Theme.of(context);
     final user = member['user'] as Map<String, dynamic>? ?? {};
     final userName = user['name'] as String? ?? 'Unknown';
-    final userEmail = user['email'] as String? ?? '';
     final role = member['role'] as String? ?? 'staff';
 
     return Card(
@@ -107,14 +106,29 @@ class PartnerMemberListPage extends ConsumerWidget {
         leading: const CircleAvatar(child: Icon(Icons.person)),
         title: Text(
           userName,
+          // Fix #1662: 긴 이름 줄바꿈으로 trailing 배지 정렬 흔들림 방지
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: theme.textTheme.bodyLarge?.copyWith(
             fontWeight: FontWeight.bold,
           ),
         ),
-        subtitle: Text(
-          context.l10n.memberList_label_roleAndEmail(role, userEmail),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            MinglitBadge(
+              label: _roleLabel(context, role),
+              color: _roleColor(theme, role),
+              compact: true,
+            ),
+            const SizedBox(width: MinglitSpacing.small),
+            Icon(
+              Icons.chevron_right,
+              size: MinglitIconSize.small,
+              color: theme.colorScheme.outline,
+            ),
+          ],
         ),
-        trailing: const Icon(Icons.settings, size: MinglitIconSize.small),
         onTap: () {
           // Fix #270: dynamic map에서 안전 캐스팅 — null이면 무시
           final targetUserId = member['user_id'] as String?;
@@ -125,6 +139,33 @@ class PartnerMemberListPage extends ConsumerWidget {
         },
       ),
     );
+  }
+
+  // Fix #1662: role 문자열을 사용자 친화 Korean 라벨로 변환 (owner/manager/staff)
+  String _roleLabel(BuildContext context, String role) {
+    switch (role) {
+      case 'owner':
+        return context.l10n.memberList_role_owner;
+      case 'manager':
+        return context.l10n.memberList_role_manager;
+      case 'staff':
+      default:
+        return context.l10n.memberList_role_staff;
+    }
+  }
+
+  // Fix #1662: role별 시맨틱 컬러
+  // owner(primary 강조), manager(tertiary), staff(outline)
+  Color _roleColor(ThemeData theme, String role) {
+    switch (role) {
+      case 'owner':
+        return theme.colorScheme.primary;
+      case 'manager':
+        return theme.colorScheme.tertiary;
+      case 'staff':
+      default:
+        return theme.colorScheme.outline;
+    }
   }
 
   Widget _buildErrorView(BuildContext context, WidgetRef ref, Object error) {
