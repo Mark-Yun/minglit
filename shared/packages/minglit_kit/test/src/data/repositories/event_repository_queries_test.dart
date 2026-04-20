@@ -337,15 +337,28 @@ void main() {
       });
     });
 
+    // Fix #1597: getPendingApplicationCount uses 2-step query.
+    // Step 1: events filtered by partner (1-level join, reliable).
+    // Step 2: count event_applications by event_id + status.
     group('getPendingApplicationCount', () {
-      test('returns pending count', () async {
+      test('returns pending count from event_applications', () async {
         unawaited(
           mockTable(
             mockClient,
-            'verification_submissions',
+            'events',
             selectData: [
-              {'id': 'sub_1'},
-              {'id': 'sub_2'},
+              {'id': 'event_1', 'party': <String, dynamic>{}},
+              {'id': 'event_2', 'party': <String, dynamic>{}},
+            ],
+          ),
+        );
+        unawaited(
+          mockTable(
+            mockClient,
+            'event_applications',
+            selectData: [
+              {'id': 'app_1'},
+              {'id': 'app_2'},
             ],
             countValue: 2,
           ),
@@ -356,11 +369,132 @@ void main() {
         expect(result, 2);
       });
 
-      test('returns 0 when no pending submissions', () async {
+      test('includes pending_review status in count', () async {
         unawaited(
           mockTable(
             mockClient,
-            'verification_submissions',
+            'events',
+            selectData: [
+              {'id': 'event_1', 'party': <String, dynamic>{}},
+            ],
+          ),
+        );
+        unawaited(
+          mockTable(
+            mockClient,
+            'event_applications',
+            selectData: [
+              {'id': 'app_3'},
+            ],
+            countValue: 1,
+          ),
+        );
+
+        final result = await repository.getPendingApplicationCount('partner_1');
+
+        expect(result, 1);
+      });
+
+      test('returns 0 when no future events', () async {
+        unawaited(
+          mockTable(mockClient, 'events', selectData: []),
+        );
+
+        final result = await repository.getPendingApplicationCount('partner_1');
+
+        expect(result, 0);
+      });
+
+      test('returns 0 when no pending applications', () async {
+        unawaited(
+          mockTable(
+            mockClient,
+            'events',
+            selectData: [
+              {'id': 'event_1', 'party': <String, dynamic>{}},
+            ],
+          ),
+        );
+        unawaited(
+          mockTable(mockClient, 'event_applications', selectData: []),
+        );
+
+        final result = await repository.getPendingApplicationCount('partner_1');
+
+        expect(result, 0);
+      });
+
+      test(
+        'step-1 filters by partner_id, start_time, and applies limit(500) matching getPartnerFutureEvents scope; step-2 filters by event_id and status',
+        () async {
+          // Note: .limit(500) and .order('start_time') are applied in step-1 to guarantee
+          // count and tab (getPartnerFutureEvents) share identical event scope.
+          // The mock does not capture limit/order calls, so those are verified by
+          // code review and integration tests only.
+          final eventsTable = mockTable(
+            mockClient,
+            'events',
+            selectData: [
+              {'id': 'event_1', 'party': <String, dynamic>{}},
+            ],
+          );
+          final appsTable = mockTable(mockClient, 'event_applications');
+
+          await repository.getPendingApplicationCount('partner_1');
+
+          // Step 1: events table must filter partner and start_time
+          expect(
+            eventsTable.recordedFilters,
+            contains(
+              predicate<RecordedFilterOperation>(
+                (f) =>
+                    f.method == 'eq' &&
+                    f.column == 'party.partner_id' &&
+                    f.value == 'partner_1',
+              ),
+            ),
+          );
+          expect(
+            eventsTable.recordedFilters,
+            contains(
+              predicate<RecordedFilterOperation>(
+                (f) => f.method == 'gte' && f.column == 'start_time',
+              ),
+            ),
+          );
+
+          // Step 2: applications table must filter by event_id and status
+          expect(
+            appsTable.recordedFilters,
+            contains(
+              predicate<RecordedFilterOperation>(
+                (f) =>
+                    f.method == 'inFilter' &&
+                    f.column == 'event_id' &&
+                    (f.value! as List).contains('event_1'),
+              ),
+            ),
+          );
+          expect(
+            appsTable.recordedFilters,
+            contains(
+              predicate<RecordedFilterOperation>(
+                (f) =>
+                    f.method == 'inFilter' &&
+                    f.column == 'status' &&
+                    (f.value! as List).contains('pending_review'),
+              ),
+            ),
+          );
+        },
+      );
+
+      test('returns 0 on error in step-1 (fail-safe)', () async {
+        unawaited(
+          mockTable(
+            mockClient,
+            'events',
+            shouldThrow: Exception('db error'),
           ),
         );
 
@@ -369,11 +503,20 @@ void main() {
         expect(result, 0);
       });
 
-      test('returns 0 on error (fail-safe)', () async {
+      test('returns 0 on error in step-2 (fail-safe)', () async {
         unawaited(
           mockTable(
             mockClient,
-            'verification_submissions',
+            'events',
+            selectData: [
+              {'id': 'event_1', 'party': <String, dynamic>{}},
+            ],
+          ),
+        );
+        unawaited(
+          mockTable(
+            mockClient,
+            'event_applications',
             shouldThrow: Exception('db error'),
           ),
         );
@@ -381,6 +524,79 @@ void main() {
         final result = await repository.getPendingApplicationCount('partner_1');
 
         expect(result, 0);
+      });
+    });
+
+    // Fix #1597: getPartnerFutureEvents fetches all future events without 7-day upper bound.
+    group('getPartnerFutureEvents', () {
+      test('returns future events for partner', () async {
+        unawaited(
+          mockTable(
+            mockClient,
+            'events',
+            selectData: [eventJson],
+          ),
+        );
+
+        final result = await repository.getPartnerFutureEvents('partner_1');
+
+        expect(result, hasLength(1));
+        expect(result.first.id, 'event_1');
+      });
+
+      test('returns empty list when no future events', () async {
+        unawaited(
+          mockTable(
+            mockClient,
+            'events',
+            selectData: [],
+          ),
+        );
+
+        final result = await repository.getPartnerFutureEvents('partner_1');
+
+        expect(result, isEmpty);
+      });
+
+      test('filters to start_time >= now with no upper-date bound', () async {
+        final eventsTable = mockTable(
+          mockClient,
+          'events',
+          selectData: [],
+        );
+
+        await repository.getPartnerFutureEvents('partner_1');
+
+        expect(
+          eventsTable.recordedFilters,
+          contains(
+            predicate<RecordedFilterOperation>(
+              (f) => f.method == 'gte' && f.column == 'start_time',
+            ),
+          ),
+        );
+        // No upper-date filter — events beyond 7 days are included (row limit handles safety).
+        expect(
+          eventsTable.recordedFilters.where(
+            (f) => f.method == 'lte' && f.column == 'start_time',
+          ),
+          isEmpty,
+        );
+      });
+
+      test('throws on error (no fail-safe)', () async {
+        unawaited(
+          mockTable(
+            mockClient,
+            'events',
+            shouldThrow: Exception('db error'),
+          ),
+        );
+
+        await expectLater(
+          repository.getPartnerFutureEvents('partner_1'),
+          throwsA(anything),
+        );
       });
     });
 
