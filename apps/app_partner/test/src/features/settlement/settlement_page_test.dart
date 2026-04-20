@@ -4,6 +4,7 @@
 // T1: SETTLEMENT_EDIT 권한 있는 유저 → 계좌 관리 버튼 표시
 // T2: SETTLEMENT_VIEW만 있는 유저 → 계좌 관리 버튼 미표시
 // T3: 버튼 탭 → goToBankAccount() 호출
+// T4: owner fallback (getMyMemberRole → null) → SETTLEMENT_EDIT 포함
 
 import 'package:app_partner/src/features/settlement/settlement_dashboard_controller.dart';
 import 'package:app_partner/src/features/settlement/settlement_list_controller.dart';
@@ -17,20 +18,6 @@ import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../utils/mocks.dart';
-
-// Fix #1568: @riverpod class-based Notifier는 overrideWithValue 불가 — overrideWith 사용
-class _FakeSettlementDashboardController extends SettlementDashboardController {
-  @override
-  SettlementDashboardState build() => SettlementDashboardState(
-        selectedMonth: DateTime(2026, 4),
-        status: const AsyncValue.data(null),
-      );
-}
-
-class _FakeSettlementListController extends SettlementListController {
-  @override
-  SettlementListState build() => const SettlementListState();
-}
 
 Widget _buildApp({
   required List<String> permissions,
@@ -47,11 +34,14 @@ Widget _buildApp({
       currentPartnerInfoProvider.overrideWith(
         (ref) async => const Partner(id: 'partner-1', name: 'Test'),
       ),
-      settlementDashboardControllerProvider.overrideWith(
-        _FakeSettlementDashboardController.new,
+      settlementDashboardControllerProvider.overrideWithValue(
+        SettlementDashboardState(
+          selectedMonth: DateTime(2026, 4),
+          status: const AsyncValue.data(null),
+        ),
       ),
-      settlementListControllerProvider.overrideWith(
-        _FakeSettlementListController.new,
+      settlementListControllerProvider.overrideWithValue(
+        const SettlementListState(),
       ),
       goRouterProvider.overrideWithValue(router),
     ],
@@ -125,6 +115,36 @@ void main() {
         verify(
           () => mockRouter.push(const BankAccountRoute().location),
         ).called(1);
+      },
+    );
+
+    test(
+      'T4: owner fallback — getMyMemberRole null → SETTLEMENT_EDIT 포함',
+      () async {
+        // Fix #1568: partner_member_permissions 미등록 owner는 repository에서
+        // null을 반환. currentMemberPermissionsProvider가 빈 목록을 반환하면
+        // AppBar 계좌 관리 버튼이 사라지는 회귀 발생(#1533/#1217 전제 위반).
+        final mockRepo = MockPartnerRepository();
+        when(
+          () => mockRepo.getMyMemberRole('p1'),
+        ).thenAnswer((_) async => null);
+
+        final container = ProviderContainer(
+          overrides: [
+            currentPartnerInfoProvider.overrideWith(
+              (ref) async => const Partner(id: 'p1', name: 'Test'),
+            ),
+            partnerRepositoryProvider.overrideWithValue(mockRepo),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        final permissions = await container.read(
+          currentMemberPermissionsProvider.future,
+        );
+
+        expect(permissions, contains('SETTLEMENT_EDIT'));
+        expect(permissions, contains('SETTLEMENT_VIEW'));
       },
     );
   });

@@ -24,7 +24,10 @@ Future<List<String>> currentMemberPermissions(Ref ref) async {
 
   final repo = ref.watch(partnerRepositoryProvider);
   final memberRole = await repo.getMyMemberRole(partner.id);
-  if (memberRole == null) return [];
+
+  // Fix #1568: Fix #1533/#1217 전제와 일치 — partner_member_permissions 엔트리가
+  // 없으면 승인된 신청서 폴백으로 접근한 owner이므로 전체 권한 부여.
+  if (memberRole == null) return ['SETTLEMENT_VIEW', 'SETTLEMENT_EDIT'];
 
   return List<String>.from(
     memberRole['permissions'] as Iterable<dynamic>? ?? [],
