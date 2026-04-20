@@ -209,7 +209,8 @@ void main() {
           expect(
             historiesBuilder.recordedOrderColumns,
             isNot(contains('created_at')),
-            reason: 'order() must not include old created_at column — Fix #1566',
+            reason:
+                'order() must not include old created_at column — Fix #1566',
           );
         },
       );
