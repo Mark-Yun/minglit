@@ -78,7 +78,8 @@ Widget _createSettlementTestApp({
       if (isLoggedIn &&
           (path == '/settlement' || path.startsWith('/settlement/'))) {
         final asyncVal = settlementAccess.value;
-        final hasAccess = asyncVal?.maybeWhen(
+        final hasAccess =
+            asyncVal?.maybeWhen(
               data: (v) => v,
               orElse: () => false, // error → deny
             ) ??
@@ -257,7 +258,8 @@ void main() {
         expect(
           find.byType(PartnerHomePage),
           findsOneWidget,
-          reason: 'resolve 후 현재 경로(/)에 대해 guard가 재평가되므로 홈에 머무른다 — /settlement 재진입은 유저 탭 선택으로',
+          reason:
+              'resolve 후 현재 경로(/)에 대해 guard가 재평가되므로 홈에 머무른다 — /settlement 재진입은 유저 탭 선택으로',
         );
       },
     );
