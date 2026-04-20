@@ -14,7 +14,7 @@ Minglit의 Supabase 기반 백엔드 인프라를 기술한다.
 | **PostGIS** | public | 위치 기반 검색 (`geography(Point, 4326)`, `ST_DWithin`) |
 | **pgvector** | extensions | 1536차원 임베딩, HNSW 코사인 유사도 — [상세](./search-and-recommendation.md) |
 | **PGroonga** | public | 한글 전문 검색 (`&@~`, `&@`) — [상세](./search-and-recommendation.md) |
-| **PGMQ** | pgmq | 메시지 큐 (3개 큐) — [상세](./global-event-pipeline.md) |
+| **PGMQ** | pgmq | 메시지 큐 (4개 큐) — [상세](./global-event-pipeline.md) |
 | **pg_cron** | cron | 스케줄링 (알림, 리마인더, 정산 상태 전환) |
 | **pg_net** | net | HTTP 요청 (Edge Function 호출, 환불 트리거) |
 | **moddatetime** | extensions | `updated_at` 자동 갱신 트리거 |
@@ -196,7 +196,7 @@ partners
 | `verification_category` | career, asset, marriage, academic, vehicle, etc |
 | `partner_application_status` | pending, approved, rejected, needs_correction |
 | `user_action_type` | view, like, dislike, purchase |
-| `event_queue_name` | q_global_events, q_notifications, q_vectors |
+| `event_queue_name` | q_global_events, q_notifications, q_vectors, q_tags |
 | `event_type_name` | party_created, user_interaction, application_approved, application_rejected, event_updated, event_cancelled, new_application, verification_result, event_reminder, match_result |
 | `social_target_type` | party, partner, review, comment |
 | `social_interaction_type` | like, subscribe, bookmark, block, report |
@@ -218,7 +218,8 @@ Supabase Edge Functions는 Deno 런타임 기반이며, `supabase/functions/` �
 | `settlement-query` | Payment | 정산 조회 |
 | `settlement-transfer` | Payment | 정산 주문 이체 |
 | `notification-worker` | Notification | FCM 푸시 알림 발송 (PGMQ consumer) |
-| `vector-worker` | Recommendation | 파티/유저 임베딩 생성 (PGMQ consumer) |
+| `ai-embed` | Recommendation | 파티/유저 임베딩 생성 (PGMQ `q_vectors` consumer) |
+| `ai-extract-tags` | Recommendation | 파티 설명에서 태그 자동 추출 (PGMQ `q_tags` consumer) |
 | `recurrence-rules` | Event | 반복 이벤트 규칙 CRUD (create, update, pause, resume, cancel) |
 | `recurrence-cron` | Event | 반복 이벤트 자동 생성 (매일 UTC 00:00, 최대 30일 선행 생성) |
 | `apply-event` | Event | 이벤트 신청 (성비 체크 → 주문 → 인증 제출, RPC 대체) |
@@ -261,13 +262,7 @@ Supabase Edge Functions는 Deno 런타임 기반이며, `supabase/functions/` �
 | `user-manage-social` | User | 소셜 상호작용 (좋아요, 차단, 신고) 관리 |
 | `user-submit-verification` | User | 인증 제출물 제출 |
 | `user-update-verification` | User | 유저 인증 데이터(`user_verifications`) 업데이트 |
-### 3.2 Internal Modules (non-deployable)
-
-| Module | Directory | Purpose |
-|--------|-----------|---------|
-| `vectorize-party` | `supabase/functions/vectorize-party/` | 파티 벡터화 라이브러리 (OpenAI 임베딩 생성). `vector-worker`가 import하여 사용. `index.ts` 없음 — 단독 배포 불가. |
-
-### 3.3 Shared Modules (`_shared/`)
+### 3.2 Shared Modules (`_shared/`)
 
 | Module | LOC | Purpose |
 |--------|-----|---------|
@@ -285,7 +280,7 @@ Supabase Edge Functions는 Deno 런타임 기반이며, `supabase/functions/` �
 | `pii_masker.ts` | 158 | 개인정보 마스킹 (`maskPII()` — CI/DI, 전화번호, 생년월일 등 로그 내 PII 자동 치환) |
 | `env_keystore.ts` | 63 | 환경변수 검증 (`env-manifest.json` 기반 per-function/project 단위 키 체크) |
 
-### 3.4 Dev Guard
+### 3.3 Dev Guard
 
 `dev-seed`, `dev-session-switch`은 프로덕션 배포 시 `DENO_DEPLOYMENT_ID` 환경변수를 체크하여 403을 반환한다.
 
