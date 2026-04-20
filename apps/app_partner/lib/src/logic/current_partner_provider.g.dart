@@ -44,8 +44,14 @@ final class CurrentPartnerInfoProvider
 String _$currentPartnerInfoHash() =>
     r'c0296f7da2cb82e41e8b5b524d60f45e9808a3aa';
 
+/// Returns the current user's permission list for the active partner.
+/// Empty list when partner or auth state is unavailable.
+
 @ProviderFor(currentMemberPermissions)
 const currentMemberPermissionsProvider = CurrentMemberPermissionsProvider._();
+
+/// Returns the current user's permission list for the active partner.
+/// Empty list when partner or auth state is unavailable.
 
 final class CurrentMemberPermissionsProvider
     extends
@@ -55,6 +61,8 @@ final class CurrentMemberPermissionsProvider
           FutureOr<List<String>>
         >
     with $FutureModifier<List<String>>, $FutureProvider<List<String>> {
+  /// Returns the current user's permission list for the active partner.
+  /// Empty list when partner or auth state is unavailable.
   const CurrentMemberPermissionsProvider._()
     : super(
         from: null,
@@ -82,4 +90,4 @@ final class CurrentMemberPermissionsProvider
 }
 
 String _$currentMemberPermissionsHash() =>
-    r'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0';
+    r'81f60b3087c80c9c2a5878beeb76e5f203596eb6';

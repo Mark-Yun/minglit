@@ -10,6 +10,7 @@ import 'package:app_partner/src/features/settlement/settlement_list_controller.d
 import 'package:app_partner/src/features/settlement/settlement_page.dart';
 import 'package:app_partner/src/logic/current_partner_provider.dart';
 import 'package:app_partner/src/routing/app_router.dart';
+import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -110,7 +111,9 @@ void main() {
         await tester.tap(find.byKey(const Key('bankAccountButton')));
         await tester.pump();
 
-        verify(() => mockRouter.push(any())).called(1);
+        verify(
+          () => mockRouter.push(const BankAccountRoute().location),
+        ).called(1);
       },
     );
   });
