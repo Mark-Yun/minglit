@@ -18,6 +18,20 @@ import 'package:mocktail/mocktail.dart';
 
 import '../../../utils/mocks.dart';
 
+// Fix #1568: @riverpod class-based Notifier는 overrideWithValue 불가 — overrideWith 사용
+class _FakeSettlementDashboardController extends SettlementDashboardController {
+  @override
+  SettlementDashboardState build() => SettlementDashboardState(
+        selectedMonth: DateTime(2026, 4),
+        status: const AsyncValue.data(null),
+      );
+}
+
+class _FakeSettlementListController extends SettlementListController {
+  @override
+  SettlementListState build() => const SettlementListState();
+}
+
 Widget _buildApp({
   required List<String> permissions,
   MockGoRouter? mockRouter,
@@ -33,14 +47,11 @@ Widget _buildApp({
       currentPartnerInfoProvider.overrideWith(
         (ref) async => const Partner(id: 'partner-1', name: 'Test'),
       ),
-      settlementDashboardControllerProvider.overrideWithValue(
-        SettlementDashboardState(
-          selectedMonth: DateTime(2026, 4),
-          status: const AsyncValue.data(null),
-        ),
+      settlementDashboardControllerProvider.overrideWith(
+        _FakeSettlementDashboardController.new,
       ),
-      settlementListControllerProvider.overrideWithValue(
-        const SettlementListState(),
+      settlementListControllerProvider.overrideWith(
+        _FakeSettlementListController.new,
       ),
       goRouterProvider.overrideWithValue(router),
     ],
