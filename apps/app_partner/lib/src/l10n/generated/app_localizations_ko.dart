@@ -388,6 +388,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get memberList_empty => '등록된 직원이 없습니다.';
 
   @override
+  String get memberList_role_owner => '소유자';
+
+  @override
+  String get memberList_role_manager => '매니저';
+
+  @override
+  String get memberList_role_staff => '스태프';
+
+  @override
   String memberList_label_roleAndEmail(String role, String email) {
     return '역할: $role ($email)';
   }

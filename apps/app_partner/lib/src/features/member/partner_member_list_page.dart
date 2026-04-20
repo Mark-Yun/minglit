@@ -101,30 +101,76 @@ class PartnerMemberListPage extends ConsumerWidget {
     final userEmail = user['email'] as String? ?? '';
     final role = member['role'] as String? ?? 'staff';
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: MinglitSpacing.small),
-      child: ListTile(
-        leading: const CircleAvatar(child: Icon(Icons.person)),
-        title: Text(
-          userName,
-          style: theme.textTheme.bodyLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+    final roleName = _getRoleName(context, role);
+    final roleInfo = userEmail.isNotEmpty ? '$roleName ($userEmail)' : roleName;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: MinglitSpacing.cardGap),
+      child: MinglitContentCard(
+        padding: const EdgeInsets.symmetric(
+          horizontal: MinglitSpacing.medium,
+          vertical: MinglitSpacing.sm,
         ),
-        subtitle: Text(
-          context.l10n.memberList_label_roleAndEmail(role, userEmail),
-        ),
-        trailing: const Icon(Icons.settings, size: MinglitIconSize.small),
         onTap: () {
-          // Fix #270: dynamic map에서 안전 캐스팅 — null이면 무시
           final targetUserId = member['user_id'] as String?;
           if (targetUserId == null) return;
           ref
               .read(memberCoordinatorProvider.notifier)
               .goToMemberPermission(partnerId, targetUserId);
         },
+        child: Row(
+          children: [
+            CircleAvatar(
+              backgroundColor: theme.colorScheme.primaryContainer,
+              child: Icon(
+                Icons.person,
+                color: theme.colorScheme.onPrimaryContainer,
+              ),
+            ),
+            const SizedBox(width: MinglitSpacing.medium),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    userName,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: MinglitSpacing.xxsmall),
+                  Text(
+                    roleInfo,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.outline,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.settings,
+              size: MinglitIconSize.small,
+              color: theme.colorScheme.outline,
+            ),
+          ],
+        ),
       ),
     );
+  }
+
+  String _getRoleName(BuildContext context, String role) {
+    switch (role) {
+      case 'owner':
+        return context.l10n.memberList_role_owner;
+      case 'manager':
+        return context.l10n.memberList_role_manager;
+      case 'staff':
+        return context.l10n.memberList_role_staff;
+      default:
+        return role;
+    }
   }
 
   Widget _buildErrorView(BuildContext context, WidgetRef ref, Object error) {

@@ -165,6 +165,9 @@
   "memberList_title": "직원 관리",
   "memberList_button_add": "직원 추가",
   "memberList_empty": "등록된 직원이 없습니다.",
+  "memberList_role_owner": "소유자",
+  "memberList_role_manager": "매니저",
+  "memberList_role_staff": "스태프",
   "memberList_label_roleAndEmail": "역할: {role} ({email})",
   "@memberList_label_roleAndEmail": {
     "placeholders": {
