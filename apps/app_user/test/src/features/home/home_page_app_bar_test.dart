@@ -119,8 +119,8 @@ void main() {
         await tester.tap(find.byIcon(Icons.person_outline));
         await tester.pump();
 
-        // Must include '/my' so login redirects back to MyPage after sign-in.
-        // LoginRoute(from: '/my').location = '/login?from=%2Fmy'
+        // Verify login route with from=/my: LoginRoute(from: '/my').location
+        // generates '/login?from=%2Fmy'. Parse the URL to assert path + param.
         final captured = verify(
           () => mockRouter.go(
             captureAny(that: isA<String>()),
@@ -128,13 +128,9 @@ void main() {
           ),
         ).captured;
 
-        expect(
-          captured.single,
-          predicate<String>(
-            (s) => s.contains('%2Fmy') || s.contains('/my'),
-            'must contain /my (URL-encoded or plain)',
-          ),
-        );
+        final uri = Uri.parse(captured.single as String);
+        expect(uri.path, '/login');
+        expect(uri.queryParameters['from'], '/my');
       });
     });
 
