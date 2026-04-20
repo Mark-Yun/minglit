@@ -296,8 +296,9 @@ void main() {
           _,
         ) async {
           concurrentCalls++;
-          if (concurrentCalls > maxConcurrentCalls)
+          if (concurrentCalls > maxConcurrentCalls) {
             maxConcurrentCalls = concurrentCalls;
+          }
           // Simulate async work so concurrent calls can actually overlap
           await Future<void>.delayed(const Duration(milliseconds: 1));
           concurrentCalls--;
