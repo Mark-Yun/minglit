@@ -802,11 +802,23 @@ abstract class AppLocalizations {
   /// **'등록된 직원이 없습니다.'**
   String get memberList_empty;
 
-  /// No description provided for @memberList_label_roleAndEmail.
+  /// No description provided for @memberList_role_owner.
   ///
   /// In ko, this message translates to:
-  /// **'역할: {role} ({email})'**
-  String memberList_label_roleAndEmail(String role, String email);
+  /// **'소유자'**
+  String get memberList_role_owner;
+
+  /// No description provided for @memberList_role_manager.
+  ///
+  /// In ko, this message translates to:
+  /// **'매니저'**
+  String get memberList_role_manager;
+
+  /// No description provided for @memberList_role_staff.
+  ///
+  /// In ko, this message translates to:
+  /// **'직원'**
+  String get memberList_role_staff;
 
   /// No description provided for @memberList_error_load.
   ///
