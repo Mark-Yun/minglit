@@ -100,10 +100,18 @@ eventApplicationsGroupedProvider = FutureProvider.family
 
       final grouped = <Event, List<EventApplication>>{};
 
-      // Fix #1597: parallelize per-event fetches to avoid O(n) sequential latency.
-      final allApps = await Future.wait(
-        events.map((e) => eventRepo.getApplicationsByEventId(e.id)),
-      );
+      // Fix #1597: chunk per-event fetches to ≤10 concurrent RPC calls.
+      // getPartnerFutureEvents can return up to 500 events; firing all at once
+      // saturates the PostgREST connection pool and triggers rate-limit errors.
+      const chunkSize = 10;
+      final allApps = <List<EventApplication>>[];
+      for (var i = 0; i < events.length; i += chunkSize) {
+        final end = (i + chunkSize).clamp(0, events.length);
+        final chunkApps = await Future.wait(
+          events.sublist(i, end).map((e) => eventRepo.getApplicationsByEventId(e.id)),
+        );
+        allApps.addAll(chunkApps);
+      }
       for (var i = 0; i < events.length; i++) {
         final filtered = allApps[i]
             .where((a) => params.statusFilter.contains(a.status))
