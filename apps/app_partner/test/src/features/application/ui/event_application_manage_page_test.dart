@@ -265,51 +265,64 @@ void main() {
 
   // Fix #1597: verify concurrent RPC calls are bounded to ≤10 per chunk.
   group('eventApplicationsGroupedProvider chunk concurrency', () {
-    test('does not fire more than 10 concurrent getApplicationsByEventId calls', () async {
-      final mockRepo = _MockEventRepository();
-      final now = DateTime(2026, 3, 29, 14);
+    test(
+      'does not fire more than 10 concurrent getApplicationsByEventId calls',
+      () async {
+        final mockRepo = _MockEventRepository();
+        final now = DateTime(2026, 3, 29, 14);
 
-      // 25 events → 3 chunks (10, 10, 5) — verifies chunking actually limits concurrency
-      const eventCount = 25;
-      final events = List.generate(eventCount, (i) => Event(
-        id: 'event_$i',
-        partyId: 'party_1',
-        title: 'Event $i',
-        startTime: now.add(Duration(days: i + 1)),
-        endTime: now.add(Duration(days: i + 1, hours: 2)),
-        createdAt: now,
-        updatedAt: now,
-      ));
+        // 25 events → 3 chunks (10, 10, 5) — verifies chunking actually limits concurrency
+        const eventCount = 25;
+        final events = List.generate(
+          eventCount,
+          (i) => Event(
+            id: 'event_$i',
+            partyId: 'party_1',
+            title: 'Event $i',
+            startTime: now.add(Duration(days: i + 1)),
+            endTime: now.add(Duration(days: i + 1, hours: 2)),
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
 
-      var concurrentCalls = 0;
-      var maxConcurrentCalls = 0;
+        var concurrentCalls = 0;
+        var maxConcurrentCalls = 0;
 
-      when(() => mockRepo.getPartnerFutureEvents(any())).thenAnswer((_) async => events);
-      when(() => mockRepo.getApplicationsByEventId(any())).thenAnswer((_) async {
-        concurrentCalls++;
-        if (concurrentCalls > maxConcurrentCalls) maxConcurrentCalls = concurrentCalls;
-        // Simulate async work so concurrent calls can actually overlap
-        await Future<void>.delayed(const Duration(milliseconds: 1));
-        concurrentCalls--;
-        return [];
-      });
+        when(
+          () => mockRepo.getPartnerFutureEvents(any()),
+        ).thenAnswer((_) async => events);
+        when(() => mockRepo.getApplicationsByEventId(any())).thenAnswer((
+          _,
+        ) async {
+          concurrentCalls++;
+          if (concurrentCalls > maxConcurrentCalls)
+            maxConcurrentCalls = concurrentCalls;
+          // Simulate async work so concurrent calls can actually overlap
+          await Future<void>.delayed(const Duration(milliseconds: 1));
+          concurrentCalls--;
+          return [];
+        });
 
-      final container = ProviderContainer(
-        overrides: [eventRepositoryProvider.overrideWithValue(mockRepo)],
-      );
-      addTearDown(container.dispose);
+        final container = ProviderContainer(
+          overrides: [eventRepositoryProvider.overrideWithValue(mockRepo)],
+        );
+        addTearDown(container.dispose);
 
-      await container.read(
-        eventApplicationsGroupedProvider((
-          partnerId: 'partner_1',
-          statusFilter: const ['pending'],
-        )).future,
-      );
+        await container.read(
+          eventApplicationsGroupedProvider((
+            partnerId: 'partner_1',
+            statusFilter: const ['pending'],
+          )).future,
+        );
 
-      // Fix #1597: concurrent calls must be ≤10 (chunkSize) at any point
-      expect(maxConcurrentCalls, lessThanOrEqualTo(10));
-      // All 25 events were queried
-      verify(() => mockRepo.getApplicationsByEventId(any())).called(eventCount);
-    });
+        // Fix #1597: concurrent calls must be ≤10 (chunkSize) at any point
+        expect(maxConcurrentCalls, lessThanOrEqualTo(10));
+        // All 25 events were queried
+        verify(
+          () => mockRepo.getApplicationsByEventId(any()),
+        ).called(eventCount);
+      },
+    );
   });
 }

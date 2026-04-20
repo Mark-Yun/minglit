@@ -108,7 +108,9 @@ eventApplicationsGroupedProvider = FutureProvider.family
       for (var i = 0; i < events.length; i += chunkSize) {
         final end = (i + chunkSize).clamp(0, events.length);
         final chunkApps = await Future.wait(
-          events.sublist(i, end).map((e) => eventRepo.getApplicationsByEventId(e.id)),
+          events
+              .sublist(i, end)
+              .map((e) => eventRepo.getApplicationsByEventId(e.id)),
         );
         allApps.addAll(chunkApps);
       }
