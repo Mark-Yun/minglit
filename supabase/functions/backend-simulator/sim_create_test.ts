@@ -914,3 +914,60 @@ Deno.test({
   }
   },
 });
+
+Deno.test({
+  name: "simCreateParties - skips partner with no email instead of throwing (#1664)",
+  fn: async () => {
+  const efCalls: string[] = [];
+
+  // First partner has no email, second has email — simulation should skip first and succeed with second.
+  let callCount = 0;
+  const mock = createMockSupabaseClient({
+    tables: {
+      partners: { select: () => ({ data: [{ id: "no-email-partner" }, { id: "partner-2" }], error: null }) },
+      locations: { select: () => ({ data: { id: "loc-1" }, error: null }) },
+      partner_members: { select: () => ({ data: [{ user_id: "user-1" }], error: null }) },
+      ticket_templates: { select: () => ({ data: [{ id: "tmpl-1", name: "일반" }], error: null }) },
+    },
+    authAdminGetUserById: (_userId: string) => {
+      callCount++;
+      // First call (no-email-partner) returns null email, second returns valid email
+      if (callCount === 1) return { data: { user: { email: null } }, error: null };
+      return { data: { user: { email: "partner2@test.com" } }, error: null };
+    },
+  });
+
+  const config: SimConfig = { ...DEFAULT_CONFIG, party_count: 2, events_per_party: 1 };
+
+  Deno.env.set("SIM_USER_PASSWORD", "test-password");
+  try {
+    await withMockFetch((url) => {
+      if (url.includes("auth/v1/token")) {
+        return new Response(JSON.stringify({ access_token: "mock-token", token_type: "bearer", expires_in: 3600, refresh_token: "r", user: {} }), { status: 200 });
+      }
+      if (url.includes("partner-manage-party")) {
+        efCalls.push(url);
+        return new Response(JSON.stringify({ success: true, party_id: "ef-party-2" }), { status: 200 });
+      }
+      if (url.includes("partner-manage-event")) {
+        efCalls.push(url);
+        return new Response(JSON.stringify({ success: true, event_id: "ef-event-2" }), { status: 200 });
+      }
+      return new Response(JSON.stringify({}), { status: 404 });
+    }, async () => {
+      // Should not throw — partner with no email is skipped
+      const result = await simCreateParties(
+        mock as unknown as SupabaseClient,
+        config,
+        noop,
+        "https://mock.supabase.co",
+        "anon-key",
+      );
+      // Second partner succeeded, so at least one party was created
+      assertEquals(result.partyIds.length >= 1, true);
+    });
+  } finally {
+    Deno.env.delete("SIM_USER_PASSWORD");
+  }
+  },
+});
