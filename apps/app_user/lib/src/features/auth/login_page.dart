@@ -35,7 +35,11 @@ class LoginPage extends ConsumerWidget {
       'ENVIRONMENT',
       defaultValue: 'production',
     );
-    const isDevEnv = environment == 'local' || environment == 'development';
+    // Fix #1633: 'dev' 추가 — Supabase dev 프로젝트는 ENVIRONMENT=dev 사용
+    const isDevEnv =
+        environment == 'local' ||
+        environment == 'development' ||
+        environment == 'dev';
 
     // When redirected from a protected route (from != null),
     // back key should return to home instead of closing the app.
