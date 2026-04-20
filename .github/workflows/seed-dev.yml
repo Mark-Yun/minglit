@@ -47,11 +47,14 @@ jobs:
         env:
           PGPASSWORD: ${{ secrets.SUPABASE_DEV_DB_PASSWORD }}
           SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_DEV_PROJECT_ID }}
+          # Fix #1621: db.{ref}.supabase.co → pooler endpoint (IPv4).
+          # GitHub runners cannot reach IPv6-only endpoints.
+          # Fix #1553: aws-0 → aws-1 (Supabase infra migration)
+          POOLER_HOST: aws-1-ap-northeast-2.pooler.supabase.com
         run: |
-          # PGPASSWORD env is read by psql automatically — omit password from URI
-          # so special characters in the secret never need percent-encoding.
+          # Pooler requires tenant-qualified username: postgres.{project_ref}
           psql \
-            "postgresql://postgres@db.${SUPABASE_PROJECT_ID}.supabase.co:5432/postgres?sslmode=require" \
+            "postgresql://postgres.${SUPABASE_PROJECT_ID}@${POOLER_HOST}:5432/postgres?sslmode=require" \
             -f supabase/seed.dev.sql
 
 
