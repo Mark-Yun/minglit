@@ -254,77 +254,89 @@ void main() {
       expect(result, isEmpty);
     });
 
-    test('filters out events when user birth year is below entry group minimum', () {
-      // Fix #1634: age restriction — user born 1980 cannot enter group requiring birthYearMin 1990
-      final events = [
-        makeEvent(
-          tickets: [makeTicket(targetEntryGroupIds: ['g1'])],
-          entryGroups: [
-            const EntryGroup(
-              id: 'g1',
-              eventId: 'e1',
-              gender: 'male',
-              birthYearMin: 1990,
-              birthYearMax: 2005,
-            ),
-          ],
-        ),
-      ];
-      final data = BulkEligibilityData.fromJson({
-        'user_profile': {
-          'gender': 'male',
-          'birth_year': 1980,
-          'is_verified': true,
-        },
-        'approved_verifications': <dynamic>[],
-      });
+    test(
+      'filters out events when user birth year is below entry group minimum',
+      () {
+        // Fix #1634: age restriction — user born 1980 cannot enter group requiring birthYearMin 1990
+        final events = [
+          makeEvent(
+            tickets: [
+              makeTicket(targetEntryGroupIds: ['g1']),
+            ],
+            entryGroups: [
+              const EntryGroup(
+                id: 'g1',
+                eventId: 'e1',
+                gender: 'male',
+                birthYearMin: 1990,
+                birthYearMax: 2005,
+              ),
+            ],
+          ),
+        ];
+        final data = BulkEligibilityData.fromJson({
+          'user_profile': {
+            'gender': 'male',
+            'birth_year': 1980,
+            'is_verified': true,
+          },
+          'approved_verifications': <dynamic>[],
+        });
 
-      final result = EligibilityFilter.filter(
-        events: events,
-        eligibilityData: data,
-      );
+        final result = EligibilityFilter.filter(
+          events: events,
+          eligibilityData: data,
+        );
 
-      expect(result, isEmpty);
-    });
+        expect(result, isEmpty);
+      },
+    );
 
-    test('filters out events when user birth year exceeds entry group maximum', () {
-      // Fix #1634: age restriction — user born 2010 cannot enter group with birthYearMax 2005
-      final events = [
-        makeEvent(
-          tickets: [makeTicket(targetEntryGroupIds: ['g1'])],
-          entryGroups: [
-            const EntryGroup(
-              id: 'g1',
-              eventId: 'e1',
-              gender: 'male',
-              birthYearMin: 1990,
-              birthYearMax: 2005,
-            ),
-          ],
-        ),
-      ];
-      final data = BulkEligibilityData.fromJson({
-        'user_profile': {
-          'gender': 'male',
-          'birth_year': 2010,
-          'is_verified': true,
-        },
-        'approved_verifications': <dynamic>[],
-      });
+    test(
+      'filters out events when user birth year exceeds entry group maximum',
+      () {
+        // Fix #1634: age restriction — user born 2010 cannot enter group with birthYearMax 2005
+        final events = [
+          makeEvent(
+            tickets: [
+              makeTicket(targetEntryGroupIds: ['g1']),
+            ],
+            entryGroups: [
+              const EntryGroup(
+                id: 'g1',
+                eventId: 'e1',
+                gender: 'male',
+                birthYearMin: 1990,
+                birthYearMax: 2005,
+              ),
+            ],
+          ),
+        ];
+        final data = BulkEligibilityData.fromJson({
+          'user_profile': {
+            'gender': 'male',
+            'birth_year': 2010,
+            'is_verified': true,
+          },
+          'approved_verifications': <dynamic>[],
+        });
 
-      final result = EligibilityFilter.filter(
-        events: events,
-        eligibilityData: data,
-      );
+        final result = EligibilityFilter.filter(
+          events: events,
+          eligibilityData: data,
+        );
 
-      expect(result, isEmpty);
-    });
+        expect(result, isEmpty);
+      },
+    );
 
     test('filters out events requiring verification when user lacks it', () {
       // Fix #1634: verification requirement — event requires career verification
       final events = [
         makeEvent(
-          tickets: [makeTicket(requiredVerificationIds: ['verif_career'])],
+          tickets: [
+            makeTicket(requiredVerificationIds: ['verif_career']),
+          ],
         ),
       ];
       final data = BulkEligibilityData.fromJson({
@@ -348,7 +360,9 @@ void main() {
       // Fix #1634: verification — user with approved career verification is eligible
       final events = [
         makeEvent(
-          tickets: [makeTicket(requiredVerificationIds: ['verif_career'])],
+          tickets: [
+            makeTicket(requiredVerificationIds: ['verif_career']),
+          ],
         ),
       ];
       final data = BulkEligibilityData.fromJson({
@@ -400,87 +414,143 @@ void main() {
 
     // Male-only, no age restriction.
     Event maleOnlyEvent() => makeEvent(
-          id: 'male_only',
-          tickets: [makeTicket(id: 'tm', targetEntryGroupIds: ['gm'])],
-          entryGroups: [const EntryGroup(id: 'gm', eventId: 'male_only', gender: 'male')],
-        );
+      id: 'male_only',
+      tickets: [
+        makeTicket(id: 'tm', targetEntryGroupIds: ['gm']),
+      ],
+      entryGroups: [
+        const EntryGroup(id: 'gm', eventId: 'male_only', gender: 'male'),
+      ],
+    );
 
     // Male-only with age range 25–40. birthYearMin = currentYear-40, birthYearMax = currentYear-25.
     Event maleAgeRestrictedEvent() => makeEvent(
-          id: 'age_restricted',
-          tickets: [makeTicket(id: 'ta', targetEntryGroupIds: ['ga'])],
-          entryGroups: [
-            EntryGroup(
-              id: 'ga',
-              eventId: 'age_restricted',
-              gender: 'male',
-              birthYearMin: currentYear - 40,
-              birthYearMax: currentYear - 25,
-            ),
-          ],
-        );
+      id: 'age_restricted',
+      tickets: [
+        makeTicket(id: 'ta', targetEntryGroupIds: ['ga']),
+      ],
+      entryGroups: [
+        EntryGroup(
+          id: 'ga',
+          eventId: 'age_restricted',
+          gender: 'male',
+          birthYearMin: currentYear - 40,
+          birthYearMax: currentYear - 25,
+        ),
+      ],
+    );
 
     // Requires career verification.
     Event verificationEvent() => makeEvent(
-          id: 'verif',
-          tickets: [makeTicket(id: 'tv', requiredVerificationIds: ['verif_career'])],
-        );
+      id: 'verif',
+      tickets: [
+        makeTicket(id: 'tv', requiredVerificationIds: ['verif_career']),
+      ],
+    );
 
     test('18F — eligible only for open event', () {
       final profile = makeProfile(gender: 'female', age: 18);
-      final events = [openEvent(), maleOnlyEvent(), maleAgeRestrictedEvent(), verificationEvent()];
+      final events = [
+        openEvent(),
+        maleOnlyEvent(),
+        maleAgeRestrictedEvent(),
+        verificationEvent(),
+      ];
 
-      final result = EligibilityFilter.filter(events: events, eligibilityData: profile);
+      final result = EligibilityFilter.filter(
+        events: events,
+        eligibilityData: profile,
+      );
 
       expect(result.map((e) => e.id).toList(), equals(['open']));
     });
 
-    test('25F — eligible for open event only (gender mismatch on male-only)', () {
-      final profile = makeProfile(gender: 'female', age: 25);
-      final events = [openEvent(), maleOnlyEvent(), maleAgeRestrictedEvent(), verificationEvent()];
+    test(
+      '25F — eligible for open event only (gender mismatch on male-only)',
+      () {
+        final profile = makeProfile(gender: 'female', age: 25);
+        final events = [
+          openEvent(),
+          maleOnlyEvent(),
+          maleAgeRestrictedEvent(),
+          verificationEvent(),
+        ];
 
-      final result = EligibilityFilter.filter(events: events, eligibilityData: profile);
+        final result = EligibilityFilter.filter(
+          events: events,
+          eligibilityData: profile,
+        );
 
-      expect(result.map((e) => e.id).toList(), equals(['open']));
-    });
+        expect(result.map((e) => e.id).toList(), equals(['open']));
+      },
+    );
 
     test('35M — eligible for open, male-only, and age-restricted events', () {
       final profile = makeProfile(gender: 'male', age: 35);
-      final events = [openEvent(), maleOnlyEvent(), maleAgeRestrictedEvent(), verificationEvent()];
-
-      final result = EligibilityFilter.filter(events: events, eligibilityData: profile);
-
-      expect(result.map((e) => e.id), containsAll(['open', 'male_only', 'age_restricted']));
-      expect(result.any((e) => e.id == 'verif'), isFalse);
-    });
-
-    test('42M — eligible for open and male-only events, not age-restricted (too old)', () {
-      final profile = makeProfile(gender: 'male', age: 42);
-      final events = [openEvent(), maleOnlyEvent(), maleAgeRestrictedEvent(), verificationEvent()];
-
-      final result = EligibilityFilter.filter(events: events, eligibilityData: profile);
-
-      expect(result.map((e) => e.id), containsAll(['open', 'male_only']));
-      expect(result.any((e) => e.id == 'age_restricted'), isFalse);
-      expect(result.any((e) => e.id == 'verif'), isFalse);
-    });
-
-    test('all personas — eligible for open event (seed data regression guard)', () {
-      // Fix #1634: this is the core regression — all verified users must see open events.
-      final personas = [
-        makeProfile(gender: 'female', age: 18),
-        makeProfile(gender: 'female', age: 25),
-        makeProfile(gender: 'male', age: 35),
-        makeProfile(gender: 'male', age: 42),
+      final events = [
+        openEvent(),
+        maleOnlyEvent(),
+        maleAgeRestrictedEvent(),
+        verificationEvent(),
       ];
 
-      for (final profile in personas) {
+      final result = EligibilityFilter.filter(
+        events: events,
+        eligibilityData: profile,
+      );
+
+      expect(
+        result.map((e) => e.id),
+        containsAll(['open', 'male_only', 'age_restricted']),
+      );
+      expect(result.any((e) => e.id == 'verif'), isFalse);
+    });
+
+    test(
+      '42M — eligible for open and male-only events, not age-restricted (too old)',
+      () {
+        final profile = makeProfile(gender: 'male', age: 42);
+        final events = [
+          openEvent(),
+          maleOnlyEvent(),
+          maleAgeRestrictedEvent(),
+          verificationEvent(),
+        ];
+
         final result = EligibilityFilter.filter(
-          events: [openEvent()],
+          events: events,
           eligibilityData: profile,
         );
-        expect(result, hasLength(1), reason: 'All personas should see open events');
-      }
-    });
+
+        expect(result.map((e) => e.id), containsAll(['open', 'male_only']));
+        expect(result.any((e) => e.id == 'age_restricted'), isFalse);
+        expect(result.any((e) => e.id == 'verif'), isFalse);
+      },
+    );
+
+    test(
+      'all personas — eligible for open event (seed data regression guard)',
+      () {
+        // Fix #1634: this is the core regression — all verified users must see open events.
+        final personas = [
+          makeProfile(gender: 'female', age: 18),
+          makeProfile(gender: 'female', age: 25),
+          makeProfile(gender: 'male', age: 35),
+          makeProfile(gender: 'male', age: 42),
+        ];
+
+        for (final profile in personas) {
+          final result = EligibilityFilter.filter(
+            events: [openEvent()],
+            eligibilityData: profile,
+          );
+          expect(
+            result,
+            hasLength(1),
+            reason: 'All personas should see open events',
+          );
+        }
+      },
+    );
   });
 }
