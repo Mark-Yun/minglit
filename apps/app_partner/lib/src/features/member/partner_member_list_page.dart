@@ -106,6 +106,9 @@ class PartnerMemberListPage extends ConsumerWidget {
         leading: const CircleAvatar(child: Icon(Icons.person)),
         title: Text(
           userName,
+          // Fix #1662: 긴 이름 줄바꿈으로 trailing 배지 정렬 흔들림 방지
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: theme.textTheme.bodyLarge?.copyWith(
             fontWeight: FontWeight.bold,
           ),

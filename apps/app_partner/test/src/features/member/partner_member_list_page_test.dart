@@ -96,5 +96,30 @@ void main() {
         expect(find.text('직원'), findsOneWidget);
       },
     );
+
+    testWidgets(
+      '긴 이름은 한 줄로 ellipsis 처리되어 배지 정렬이 흔들리지 않는다',
+      (tester) async {
+        // Fix #1662: maxLines/overflow 없으면 긴 이름이 줄바꿈되어
+        // trailing MinglitBadge + chevron_right 정렬이 깨졌던 케이스
+        const longName = '김매우길고길고길고길고길고길고긴이름테스트';
+        final members = [
+          {
+            'user_id': 'u1',
+            'role': 'owner',
+            'user': {'name': longName, 'email': ''},
+          },
+        ];
+
+        await tester.pumpWidget(
+          buildTestWidget(partnerId: 'p1', members: members),
+        );
+        await tester.pumpAndSettle();
+
+        final titleText = tester.widget<Text>(find.text(longName));
+        expect(titleText.maxLines, 1);
+        expect(titleText.overflow, TextOverflow.ellipsis);
+      },
+    );
   });
 }
