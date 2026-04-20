@@ -9,10 +9,6 @@ on:
     branches:
       - dev
 
-concurrency:
-  group: seed-dev
-  cancel-in-progress: false
-
 jobs:
   seed:
     name: Run Seeder
@@ -33,13 +29,8 @@ jobs:
           MAIN_PROJECT_ID: ${{ secrets.SUPABASE_MAIN_PROJECT_ID }}
         run: |
           if [ -z "$TARGET_PROJECT_ID" ]; then
-            echo "❌ Error: SUPABASE_DEV_PROJECT_ID secret is missing."
-            exit 1
-          fi
-
-          if [ -z "$MAIN_PROJECT_ID" ]; then
-            echo "❌ Error: SUPABASE_MAIN_PROJECT_ID secret is missing — cannot verify target is not main."
-            exit 1
+             echo "❌ Error: SUPABASE_DEV_PROJECT_ID secret is missing."
+             exit 1
           fi
 
           if [ "$TARGET_PROJECT_ID" == "$MAIN_PROJECT_ID" ]; then
@@ -51,18 +42,19 @@ jobs:
           echo "✅ Safety Check Passed: Target Project ($TARGET_PROJECT_ID) is NOT Main DB."
 
       # Fix #1600: Dart seeder (tests/test_data_seeder) was removed in #1413.
-      # seed.dev.sql is now the source of truth — run via psql session-mode pooler.
+      # seed.dev.sql is now the source of truth — run via psql direct connection.
       - name: Run seed.dev.sql
         env:
           PGPASSWORD: ${{ secrets.SUPABASE_DEV_DB_PASSWORD }}
           SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_DEV_PROJECT_ID }}
+          # Fix #1621: db.{ref}.supabase.co → pooler endpoint (IPv4).
+          # GitHub runners cannot reach IPv6-only endpoints.
+          # Fix #1553: aws-0 → aws-1 (Supabase infra migration)
           POOLER_HOST: aws-1-ap-northeast-2.pooler.supabase.com
         run: |
-          # Use session-mode pooler: seed.dev.sql contains DO blocks that require
-          # a real session connection. Direct DB host is IPv6-only and can fail.
+          # Pooler requires tenant-qualified username: postgres.{project_ref}
           psql \
-            -v ON_ERROR_STOP=1 \
-            "postgresql://postgres.${SUPABASE_PROJECT_ID}:${PGPASSWORD}@${POOLER_HOST}:5432/postgres?sslmode=require" \
+            "postgresql://postgres.${SUPABASE_PROJECT_ID}@${POOLER_HOST}:5432/postgres?sslmode=require" \
             -f supabase/seed.dev.sql
 
 

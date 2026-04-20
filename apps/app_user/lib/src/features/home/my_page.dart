@@ -207,6 +207,7 @@ class MyPage extends ConsumerWidget {
             ),
 
             // Dev Only
+            // Fix #1633: 'dev' 추가 — Supabase dev 프로젝트는 ENVIRONMENT=dev 사용
             if (const String.fromEnvironment(
                       'ENVIRONMENT',
                       defaultValue: 'production',
@@ -216,7 +217,12 @@ class MyPage extends ConsumerWidget {
                       'ENVIRONMENT',
                       defaultValue: 'production',
                     ) ==
-                    'development') ...[
+                    'development' ||
+                const String.fromEnvironment(
+                      'ENVIRONMENT',
+                      defaultValue: 'production',
+                    ) ==
+                    'dev') ...[
               const SizedBox(height: MinglitSpacing.large),
               MinglitSettingsGroup(
                 header: '개발자 도구',
