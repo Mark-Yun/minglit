@@ -39,9 +39,9 @@
 
 ## 2. List Item
 
-표준 리스트 아이템 레이아웃입니다.
+표준 리스트 아이템 레이아웃입니다. 공용 위젯 `MinglitListTile`을 사용합니다.
 
-<!-- TODO: 공용 ListItem 위젯/패턴 코드 정의 필요. 현재는 각 피처에서 개별 구현. -->
+**소스**: `minglit_kit/lib/src/ui/widgets/common/minglit_list_tile.dart`
 
 ### 현재 사용 사례
 
@@ -201,9 +201,9 @@ MinglitEmptyState.inline(
 
 ## 6. Error State
 
-에러 발생 시 표시하는 패턴입니다.
+에러 발생 시 표시하는 패턴입니다. 공용 위젯 `MinglitErrorState`를 사용합니다.
 
-<!-- TODO: 공용 ErrorState 위젯 코드 정의 필요. -->
+**소스**: `minglit_kit/lib/src/ui/widgets/common/minglit_error_state.dart`
 
 ### 권장 구조
 
@@ -226,9 +226,7 @@ MinglitEmptyState.inline(
 
 ## 7. Pull to Refresh
 
-새로고침 패턴입니다.
-
-<!-- TODO: 공용 Pull to Refresh 패턴 표준화 필요. -->
+새로고침 패턴입니다. Flutter 기본 `RefreshIndicator`를 사용하되 브랜딩 컬러를 적용합니다.
 
 ### 권장 구현
 

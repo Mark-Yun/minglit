@@ -8,12 +8,21 @@ part of 'tag_selection_controller.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// 파티 생성/수정 위저드에서 태그 선택 상태를 관리한다.
+///
+/// 최대 5개 태그 제한을 강제하며, 위저드 컨트롤러에 변경 사항을 전파한다.
 
 @ProviderFor(TagSelectionController)
 const tagSelectionControllerProvider = TagSelectionControllerProvider._();
 
+/// 파티 생성/수정 위저드에서 태그 선택 상태를 관리한다.
+///
+/// 최대 5개 태그 제한을 강제하며, 위저드 컨트롤러에 변경 사항을 전파한다.
 final class TagSelectionControllerProvider
     extends $NotifierProvider<TagSelectionController, List<Tag>> {
+  /// 파티 생성/수정 위저드에서 태그 선택 상태를 관리한다.
+  ///
+  /// 최대 5개 태그 제한을 강제하며, 위저드 컨트롤러에 변경 사항을 전파한다.
   const TagSelectionControllerProvider._()
     : super(
         from: null,
@@ -42,7 +51,11 @@ final class TagSelectionControllerProvider
 }
 
 String _$tagSelectionControllerHash() =>
-    r'f1e2d3c4b5a6f7e8d9c0b1a2f3e4d5c6b7a8f9e0';
+    r'4352ee98ced9a835e82c2ac5dbacda379cf3877e';
+
+/// 파티 생성/수정 위저드에서 태그 선택 상태를 관리한다.
+///
+/// 최대 5개 태그 제한을 강제하며, 위저드 컨트롤러에 변경 사항을 전파한다.
 
 abstract class _$TagSelectionController extends $Notifier<List<Tag>> {
   List<Tag> build();
