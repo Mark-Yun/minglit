@@ -106,7 +106,9 @@ eventApplicationsGroupedProvider = FutureProvider.family
       const chunkSize = 10;
       final allApps = <List<EventApplication>>[];
       for (var i = 0; i < events.length; i += chunkSize) {
-        final end = i + chunkSize > events.length ? events.length : i + chunkSize;
+        final end = i + chunkSize > events.length
+            ? events.length
+            : i + chunkSize;
         final chunkApps = await Future.wait(
           events
               .sublist(i, end)
