@@ -931,8 +931,8 @@ Deno.test({
     },
     authAdminGetUserById: (_userId: string) => {
       callCount++;
-      // First call (no-email-partner) returns null email, second returns valid email
-      if (callCount === 1) return { data: { user: { email: null } }, error: null };
+      // First call (no-email-partner) simulates missing email via null user
+      if (callCount === 1) return { data: { user: null }, error: null };
       return { data: { user: { email: "partner2@test.com" } }, error: null };
     },
   });
@@ -965,6 +965,75 @@ Deno.test({
       );
       // Second partner succeeded, so at least one party was created
       assertEquals(result.partyIds.length >= 1, true);
+    });
+  } finally {
+    Deno.env.delete("SIM_USER_PASSWORD");
+  }
+  },
+});
+
+Deno.test({
+  name: "simCreateDisplayEvents - skips partner with no email instead of throwing (#1664)",
+  fn: async () => {
+  const efCalls: string[] = [];
+
+  // Two partners: first has no email, second has email.
+  // DISPLAY_SCENARIOS (5 items) cycle: [no-email, with-email, no-email, with-email, no-email]
+  // → 2 display parties created, 3 skipped — must not throw.
+  const mock = createMockSupabaseClient({
+    tables: {
+      parties: { select: () => ({ data: [], error: null }) },
+      partners: {
+        select: () => ({
+          data: [{ id: "no-email-partner" }, { id: "partner-with-email" }],
+          error: null,
+        }),
+      },
+      partner_members: {
+        select: ({ filters }: { filters: Record<string, unknown> }) => ({
+          data: [{ user_id: filters["partner_id"] === "no-email-partner" ? "user-no-email" : "user-with-email" }],
+          error: null,
+        }),
+      },
+      locations: { select: () => ({ data: null, error: null }) },
+      ticket_templates: { select: () => ({ data: [{ id: "tmpl-1", name: "일반 티켓" }], error: null }) },
+    },
+    authAdminGetUserById: (userId: string) => {
+      if (userId === "user-no-email") return { data: { user: null }, error: null };
+      return { data: { user: { email: "partner-email@test.com" } }, error: null };
+    },
+  });
+
+  Deno.env.set("SIM_USER_PASSWORD", "test-password");
+  let partyCallCount = 0;
+  let eventCallCount = 0;
+  try {
+    await withMockFetch((url) => {
+      if (url.includes("auth/v1/token")) {
+        return new Response(JSON.stringify({ access_token: "mock-token", token_type: "bearer", expires_in: 3600, refresh_token: "r", user: {} }), { status: 200 });
+      }
+      if (url.includes("partner-manage-party")) {
+        partyCallCount++;
+        efCalls.push(url);
+        return new Response(JSON.stringify({ success: true, party_id: `ef-display-party-${partyCallCount}` }), { status: 200 });
+      }
+      if (url.includes("partner-manage-event")) {
+        eventCallCount++;
+        efCalls.push(url);
+        return new Response(JSON.stringify({ success: true, event_id: `ef-display-event-${eventCallCount}` }), { status: 200 });
+      }
+      return new Response(JSON.stringify({}), { status: 404 });
+    }, async () => {
+      // Must not throw — no-email partners are skipped gracefully
+      const result = await simCreateDisplayEvents(
+        mock as unknown as SupabaseClient,
+        noop,
+        "https://mock.supabase.co",
+        "anon-key",
+      );
+      // partner-with-email handles 2 of 5 scenarios → 2 display parties created
+      assertEquals(result.displayPartyIds.length, 2);
+      assertEquals(result.displayEventIds.length, 4);
     });
   } finally {
     Deno.env.delete("SIM_USER_PASSWORD");
