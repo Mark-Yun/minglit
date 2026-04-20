@@ -36,31 +36,49 @@ jobs:
 
       - name: Upload seed images
         run: |
-          curl -sf -X POST \
+          # Fix #1635: use -s (not -sf) so error response body is printed before failing
+          http_code=$(curl -s -o /tmp/seed_response.json -w "%{http_code}" -X POST \
             "${{ secrets.SUPABASE_DEV_URL }}/functions/v1/dev-seed?mode=images-only" \
             -H "Authorization: Bearer ${{ secrets.SUPABASE_DEV_SECRET_KEY }}" \
-            --max-time 30
+            --max-time 30)
+          cat /tmp/seed_response.json
+          if [ "$http_code" -lt 200 ] || [ "$http_code" -ge 300 ]; then
+            echo "HTTP $http_code — dev-seed images-only returned an error"
+            exit 1
+          fi
 
       - name: Create parties and events
         run: |
           # Fix #705: backend-simulator create phase needs more time (cold start + data growth)
-          curl -sf -X POST \
+          # Fix #1635: use -s (not -sf) so error response body is printed before failing
+          http_code=$(curl -s -o /tmp/sim_response.json -w "%{http_code}" -X POST \
             "${{ secrets.SUPABASE_DEV_URL }}/functions/v1/backend-simulator" \
             -H "Authorization: Bearer ${{ secrets.SUPABASE_DEV_SECRET_KEY }}" \
             -H "Content-Type: application/json" \
             -d '{"phase":"create"}' \
-            --max-time 300
+            --max-time 300)
+          cat /tmp/sim_response.json
+          if [ "$http_code" -lt 200 ] || [ "$http_code" -ge 300 ]; then
+            echo "HTTP $http_code — backend-simulator phase=create returned an error"
+            exit 1
+          fi
 
       - name: Run full simulation (approve → refund → run → settle)
         run: |
+          # Fix #1635: use -s (not -sf) so error response body is printed before failing
           for phase in approve refund run settle; do
             echo "▶ Running phase: $phase"
-            curl -sf -X POST \
+            http_code=$(curl -s -o /tmp/sim_response.json -w "%{http_code}" -X POST \
               "${{ secrets.SUPABASE_DEV_URL }}/functions/v1/backend-simulator" \
               -H "Authorization: Bearer ${{ secrets.SUPABASE_DEV_SECRET_KEY }}" \
               -H "Content-Type: application/json" \
               -d "{\"phase\":\"$phase\"}" \
-              --max-time 120
+              --max-time 120)
+            cat /tmp/sim_response.json
+            if [ "$http_code" -lt 200 ] || [ "$http_code" -ge 300 ]; then
+              echo "HTTP $http_code — backend-simulator phase=$phase returned an error"
+              exit 1
+            fi
             echo "✅ Phase $phase complete"
           done
 
