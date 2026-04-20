@@ -141,5 +141,52 @@ void main() {
         reason: 'default chip text should use colorScheme.onSurfaceVariant',
       );
     });
+
+    group('Semantics', () {
+      testWidgets('interactive chip exposes label, button role, and tap action', (
+        tester,
+      ) async {
+        final handle = tester.ensureSemantics();
+        await tester.pumpWidget(
+          buildApp(
+            MinglitChip(label: '인터랙티브 칩', onTap: () {}),
+          ),
+        );
+
+        expect(
+          tester.getSemantics(find.byType(MinglitChip)),
+          matchesSemantics(
+            label: '인터랙티브 칩',
+            isButton: true,
+            hasTapAction: true,
+          ),
+          reason:
+              'interactive chip must expose label, button role, and tap action '
+              'so screen reader users can activate it',
+        );
+        handle.dispose();
+      });
+
+      testWidgets(
+        'non-interactive chip exposes label without button role or tap action',
+        (tester) async {
+          final handle = tester.ensureSemantics();
+          await tester.pumpWidget(
+            buildApp(const MinglitChip(label: '읽기 전용 칩')),
+          );
+
+          expect(
+            tester.getSemantics(find.byType(MinglitChip)),
+            matchesSemantics(
+              label: '읽기 전용 칩',
+            ),
+            reason:
+                'static chip must expose label but not announce '
+                'button role or tap action',
+          );
+          handle.dispose();
+        },
+      );
+    });
   });
 }

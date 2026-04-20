@@ -31,6 +31,9 @@ abstract class PartnerApplyState with _$PartnerApplyState {
     // Step 3: Contact & Settlement
     @Default('') String contactPhone,
     @Default('') String contactEmail,
+    // Fix #1599: store road/detail separately so review always shows correct combined address.
+    @Default('') String roadAddress,
+    @Default('') String detailAddress,
     @Default('') String address,
     @Default('') String bankName,
     @Default('') String accountNumber,

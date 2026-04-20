@@ -46,12 +46,12 @@
 | `textSecondary` | `#4B5563` | 7.1:1 | 4.5:1 | O |
 | `primary` | `#9900FF` | 4.6:1 | 3:1 (대형 텍스트/UI) | O |
 | `error` | `#EF4444` | 3.9:1 | 3:1 (대형 텍스트/UI) | O |
-| `success` | `#22C55E` | 2.8:1 | 3:1 | **X** |
-| `warning` | `#F59E0B` | 2.1:1 | 3:1 | **X** |
+| `success` | `#16A34A` | 3.3:1 | 3:1 | O |
+| `warning` | `#D97706` | 3.2:1 | 3:1 | O |
 
 #### success / warning 색상 대비 가이드
 
-`success`(2.8:1)와 `warning`(2.1:1)은 흰색 배경 위에서 단독 텍스트로 사용하면 WCAG AA 미충족이다. 현재 코드에서 이 색상들은 주로 배지, 아이콘, 상태 표시에 사용되며 다음 규칙을 적용한다:
+`success`(3.3:1)와 `warning`(3.2:1)은 UI 컴포넌트 및 대형 텍스트 기준(3:1)을 충족하도록 개선되었습니다. 다만 일반 텍스트(4.5:1) 기준은 여전히 미달이므로 다음 규칙을 유지합니다:
 
 | 사용 방식 | 허용 여부 | 보완 방법 |
 | :--- | :--- | :--- |
@@ -171,15 +171,15 @@ Semantics(
 
 | 위젯 | Semantics 적용 | 비고 |
 | :--- | :--- | :--- |
-| `MinglitImage` | X — 미적용 | `semanticLabel` 파라미터 추가 필요 |
-| `MinglitImageCarousel` | X — 미적용 | 페이지 위치 시맨틱스 필요 |
-| `MinglitChip` | X — 미적용 | 선택 상태 시맨틱스 필요 |
+| `MinglitImage` | **O** | `semanticLabel` 파라미터 지원 |
+| `MinglitImageCarousel` | **O** | 페이지 위치 시맨틱스 적용 |
+| `MinglitChip` | **O** | 선택 상태 및 버튼 시맨틱스 적용 |
 | `MinglitAlert` | △ — Material 기본 | `AlertDialog` 기반으로 title/content는 자동 읽힘 |
 | `MinglitDialog` | △ — Material 기본 | `AlertDialog` 기반으로 기본 시맨틱스 제공 |
-| `EventCard` | X — 미적용 | 카드 전체를 하나의 시맨틱 노드로 병합 필요 |
+| `EventCard` | **O** | 카드 전체를 하나의 시맨틱 노드로 병합 |
 | `MinglitTextField` | **O** | `Semantics(textField: true, label: label)` 적용 |
 | `MinglitListTile` | **O** | `Semantics(button: onTap != null, enabled: enabled)` 적용 |
-| `MinglitEventCard` | **O** (부분) | `_ParticipantDDayOverlay`에 참가 현황 시맨틱스 적용 |
+| `MinglitEventCard` | **O** | `_ParticipantDDayOverlay` 및 카드 전체 시맨틱스 적용 |
 
 > 미적용 위젯(X)은 각 위젯에 `Semantics` 래핑 추가가 필요하다. 위의 유형별 가이드를 참고하여 구현한다.
 
@@ -265,8 +265,8 @@ FocusScope(
 | :--- | :--- | :--- |
 | 최소 터치 영역 48x48dp | WCAG 2.5.8 | **충족** — 기본 컴포넌트 + MinglitChip, MinglitFilterChip 모두 48dp 이상 |
 | 색상 대비 (일반 텍스트) | WCAG AA 4.5:1 | **충족** — textPrimary(16.8:1), textSecondary(7.1:1) |
-| 색상 대비 (대형 텍스트/UI) | WCAG AA 3:1 | **부분 충족** — success(2.8:1), warning(2.1:1) 미충족. 사용 규칙으로 보완 (§2 참고) |
-| Semantics 라벨 | 모든 인터랙티브 요소 | **부분 적용** — MinglitTextField, MinglitListTile 적용 완료. 6개 위젯 미적용 (§3 참고) |
+| 색상 대비 (대형 텍스트/UI) | WCAG AA 3:1 | **충족** — 전 색상 3:1 이상 확보 (success/warning 개선 완료) |
+| Semantics 라벨 | 모든 인터랙티브 요소 | **충족** — 핵심 위젯 6종 래핑 및 파라미터 지원 완료 |
 | 포커스 순서 | 시각적 순서와 일치 | **기본 충족** — Material 위젯 기반으로 자동 보장. 커스텀 오버레이 검증 필요 |
 | 텍스트 크기 조절 | 1.0x ~ 2.0x 대응 | **기본 대응** — MinglitTypo 상대적 크기 사용. 2.0x 실기기 검증 필요 |
 | 다크 모드 | 전체 화면 대응 | **색상 대비 충족** — 시맨틱 색상 전체 WCAG AA 통과. 골든 테스트 확충 필요 |

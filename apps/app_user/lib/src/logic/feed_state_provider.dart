@@ -60,11 +60,17 @@ class SearchQuery extends _$SearchQuery {
   void clear() => state = '';
 }
 
+// Fix #1634: dev 환경에서는 eligibility 필터 기본 비활성화 —
+// 시드 유저의 age/gender가 이벤트 entry_group과 충돌해 홈 피드가 비어 보이는 문제 방지.
+const _isProductionEnv =
+    String.fromEnvironment('ENVIRONMENT', defaultValue: 'production') ==
+    'production';
+
 @riverpod
 class ActiveFilters extends _$ActiveFilters {
   @override
   ExploreFilters build() => const ExploreFilters(
-    eligibilityEnabled: true,
+    eligibilityEnabled: _isProductionEnv,
     nearbyEnabled: true,
   );
 
@@ -114,14 +120,9 @@ Future<List<Event>> searchResults(Ref ref) async {
   ref.onDispose(timer.cancel);
 
   final repository = ref.watch(eventRepositoryProvider);
-  final response = await repository.supabaseClient.rpc<List<dynamic>>(
-    'search_events_pgroonga',
-    params: {'query': query},
-  );
-
-  return response
-      .map((item) => Event.fromJson(item as Map<String, dynamic>))
-      .toList();
+  // Fix #1534: 기존 RPC 직접 호출은 events 행만 반환하여 party.title/tickets 누락 —
+  // 카드에 '제목 없음', '가격 미정' 표시. searchEvents()로 교체하여 완전한 relation 포함.
+  return repository.searchEvents(query);
 }
 
 /// Fetches bulk eligibility data (user profile + verified status).

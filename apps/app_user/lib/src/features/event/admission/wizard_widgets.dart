@@ -108,24 +108,20 @@ class _Footer extends StatelessWidget {
           children: [
             if (!isFirstStep) ...[
               Expanded(
-                child: OutlinedButton(
-                  onPressed: isSubmitting ? null : onPrev,
-                  child: const Text('이전'),
+                child: MinglitButton.secondary(
+                  label: '이전',
+                  onPressed: onPrev,
+                  isLoading: isSubmitting,
                 ),
               ),
               const SizedBox(width: MinglitSpacing.medium),
             ],
             Expanded(
               flex: 2,
-              child: ElevatedButton(
-                onPressed: isSubmitting
-                    ? null
-                    : (isFirstStep ? onNext : onSubmit),
-                child: isSubmitting
-                    ? const MinglitCircularProgressIndicator(
-                        size: 20,
-                      )
-                    : Text(isFirstStep ? '다음' : '결제하기'),
+              child: MinglitButton(
+                label: isFirstStep ? '다음' : '결제하기',
+                onPressed: isFirstStep ? onNext : onSubmit,
+                isLoading: isSubmitting,
               ),
             ),
           ],

@@ -292,6 +292,8 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent>
                       // Partner Row
                       if (partner != null) ...[
                         GestureDetector(
+                          // Fix #1601: behavior.opaque 없으면 Row 내 여백 영역 탭이 히트 테스트 실패
+                          behavior: HitTestBehavior.opaque,
                           onTap: () => ref
                               .read(eventCoordinatorProvider)
                               .pushPartnerDetail(partner.id),

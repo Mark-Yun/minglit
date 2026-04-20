@@ -90,7 +90,6 @@ class _BottomTicketBar extends ConsumerWidget {
     WidgetRef ref,
     AdmissionState state,
   ) {
-    final theme = Theme.of(context);
     final controller = ref.read(
       eventAdmissionControllerProvider(event).notifier,
     );
@@ -103,22 +102,19 @@ class _BottomTicketBar extends ConsumerWidget {
             showTicketSelection: () => _showTicketSelection(context, ref),
           )
         : null;
-    Color? backgroundColor;
-    switch (config.style) {
-      case AdmissionButtonStyle.normal:
-        backgroundColor = null;
-      case AdmissionButtonStyle.disabled:
-        backgroundColor = theme.colorScheme.outline;
-      case AdmissionButtonStyle.destructive:
-        backgroundColor = theme.colorScheme.error;
+    if (config.style == AdmissionButtonStyle.destructive) {
+      return MinglitButton.destructive(
+        label: config.label,
+        onPressed: onPressed,
+      );
     }
 
-    return ElevatedButton(
+    // AdmissionButtonStyle.disabled always has config.enabled == false,
+    // so onPressed == null here. MinglitButton renders its standard disabled
+    // appearance, which is the design-system-defined disabled state.
+    return MinglitButton(
+      label: config.label,
       onPressed: onPressed,
-      style: backgroundColor != null
-          ? ElevatedButton.styleFrom(backgroundColor: backgroundColor)
-          : null,
-      child: Text(config.label),
     );
   }
 }
