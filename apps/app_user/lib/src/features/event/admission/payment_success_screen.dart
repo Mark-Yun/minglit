@@ -34,116 +34,116 @@ class PaymentSuccessScreen extends StatelessWidget {
     // GoRouter 기반의 onBackToEvent로 위임하여 route 상태 일관성 보장.
     return PopScope(
       canPop: false,
-      onPopInvokedWithResult: (_, __) => onBackToEvent(),
+      onPopInvokedWithResult: (_, _) => onBackToEvent(),
       child: Scaffold(
         appBar: AppBar(
           title: const Text('결제 완료'),
           leading: CloseButton(onPressed: onBackToEvent),
         ),
         body: SingleChildScrollView(
-        padding: const EdgeInsets.all(MinglitSpacing.large),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(MinglitSpacing.large),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(MinglitRadius.card),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.check_circle,
-                    color: theme.colorScheme.primary,
-                    size: 36,
-                  ),
-                  const SizedBox(width: MinglitSpacing.medium),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '결제가 완료되었습니다! ',
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: MinglitSpacing.xxsmall),
-                        Text(
-                          '내 티켓에서 확인하실 수 있어요.',
-                          style: theme.textTheme.bodySmall,
-                        ),
-                      ],
+          padding: const EdgeInsets.all(MinglitSpacing.large),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(MinglitSpacing.large),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(MinglitRadius.card),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.check_circle,
+                      color: theme.colorScheme.primary,
+                      size: 36,
                     ),
-                  ),
-                ],
+                    const SizedBox(width: MinglitSpacing.medium),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '결제가 완료되었습니다! ',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: MinglitSpacing.xxsmall),
+                          Text(
+                            '내 티켓에서 확인하실 수 있어요.',
+                            style: theme.textTheme.bodySmall,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: MinglitSpacing.xlarge),
-            Text(
-              '티켓 요약',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
+              const SizedBox(height: MinglitSpacing.xlarge),
+              Text(
+                '티켓 요약',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            const SizedBox(height: MinglitSpacing.medium),
-            Container(
-              padding: const EdgeInsets.all(MinglitSpacing.medium),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surface,
-                borderRadius: BorderRadius.circular(MinglitRadius.card),
-                border: Border.all(color: theme.colorScheme.outlineVariant),
+              const SizedBox(height: MinglitSpacing.medium),
+              Container(
+                padding: const EdgeInsets.all(MinglitSpacing.medium),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface,
+                  borderRadius: BorderRadius.circular(MinglitRadius.card),
+                  border: Border.all(color: theme.colorScheme.outlineVariant),
+                ),
+                child: Column(
+                  children: [
+                    _SummaryRow(
+                      label: '이벤트',
+                      value: event.title ?? '이벤트 정보 없음',
+                    ),
+                    _SummaryRow(
+                      label: '일시',
+                      value: dateLabel,
+                    ),
+                    _SummaryRow(
+                      label: '장소',
+                      value: location?.name ?? '장소 정보 없음',
+                    ),
+                    _SummaryRow(
+                      label: '티켓',
+                      value: ticket?.name ?? '티켓 정보 없음',
+                    ),
+                    _SummaryRow(
+                      label: '결제 금액',
+                      value: ticket == null
+                          ? '-'
+                          : '${formatter.format(ticket.price)}원',
+                      isLast: true,
+                    ),
+                  ],
+                ),
               ),
-              child: Column(
-                children: [
-                  _SummaryRow(
-                    label: '이벤트',
-                    value: event.title ?? '이벤트 정보 없음',
-                  ),
-                  _SummaryRow(
-                    label: '일시',
-                    value: dateLabel,
-                  ),
-                  _SummaryRow(
-                    label: '장소',
-                    value: location?.name ?? '장소 정보 없음',
-                  ),
-                  _SummaryRow(
-                    label: '티켓',
-                    value: ticket?.name ?? '티켓 정보 없음',
-                  ),
-                  _SummaryRow(
-                    label: '결제 금액',
-                    value: ticket == null
-                        ? '-'
-                        : '${formatter.format(ticket.price)}원',
-                    isLast: true,
-                  ),
-                ],
+              const SizedBox(height: MinglitSpacing.xlarge),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: onViewTickets,
+                  child: const Text('내 티켓 보기'),
+                ),
               ),
-            ),
-            const SizedBox(height: MinglitSpacing.xlarge),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: onViewTickets,
-                child: const Text('내 티켓 보기'),
+              const SizedBox(height: MinglitSpacing.small),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: onBackToEvent,
+                  child: const Text('이벤트로 돌아가기'),
+                ),
               ),
-            ),
-            const SizedBox(height: MinglitSpacing.small),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton(
-                onPressed: onBackToEvent,
-                child: const Text('이벤트로 돌아가기'),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    ),
-  );
+    );
   }
 
   Ticket? _findTicket() {

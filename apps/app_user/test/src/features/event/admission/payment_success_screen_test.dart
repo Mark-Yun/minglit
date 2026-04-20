@@ -19,7 +19,6 @@ void main() {
   final testTicket = Ticket(
     id: 'ticket-1',
     name: '일반 티켓',
-    price: 0,
     createdAt: now,
     updatedAt: now,
   );
@@ -57,17 +56,18 @@ void main() {
       await tester.pumpAndSettle();
 
       // Simulate Android back button
-      final dynamic widgetsAppState =
-          tester.state(find.byType(WidgetsApp).first);
-      // ignore: avoid_dynamic_calls
+      final dynamic widgetsAppState = tester.state(
+        find.byType(WidgetsApp).first,
+      );
       await (widgetsAppState as dynamic).didPopRoute();
       await tester.pumpAndSettle();
 
       expect(backCount, 1);
     });
 
-    testWidgets('CloseButton이 onBackToEvent 콜백을 사용한다 (Navigator.pop 금지)',
-        (tester) async {
+    testWidgets('CloseButton이 onBackToEvent 콜백을 사용한다 (Navigator.pop 금지)', (
+      tester,
+    ) async {
       var closeCount = 0;
       await tester.pumpWidget(buildWidget(onBackToEvent: () => closeCount++));
       await tester.pumpAndSettle();
