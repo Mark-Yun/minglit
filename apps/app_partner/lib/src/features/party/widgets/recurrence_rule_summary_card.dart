@@ -89,7 +89,7 @@ class _RecurrenceRuleCard extends ConsumerWidget {
         child: Card(
           child: InkWell(
             onTap: () => coordinator.goToRecurrenceManagement(partyId),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(MinglitRadius.button),
             child: Padding(
               padding: const EdgeInsets.symmetric(
                 horizontal: MinglitSpacing.medium,
