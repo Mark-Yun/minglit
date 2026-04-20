@@ -3,7 +3,7 @@
 //   - Real device/emulator + patrol_cli
 //   - Kakao test OAuth account credentials (see docs/features/patrol-introduction/)
 //
-// Run: cd apps/app_user && patrol test integration_test/kakao_login_test.dart
+// Run: cd apps/app_user && patrol test patrol_test/kakao_login_test.dart
 
 import 'package:patrol/patrol.dart';
 

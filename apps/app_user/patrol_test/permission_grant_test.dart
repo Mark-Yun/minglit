@@ -1,6 +1,6 @@
 // Phase 2: Native permission tests
 // Requires real device/emulator + patrol_cli to run:
-//   cd apps/app_user && patrol test integration_test/permission_grant_test.dart
+//   cd apps/app_user && patrol test patrol_test/permission_grant_test.dart
 //
 // These tests verify OS-level permission dialogs that cannot be tested
 // with Flutter's integration_test framework.
