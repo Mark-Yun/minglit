@@ -34,24 +34,27 @@ SELECT ok(
   'public SELECT 정책이 storage.objects에 존재해야 함'
 );
 
--- anon 사용자는 bug-report-attachments에 INSERT 불가 (RLS exception 발생)
+-- anon 사용자는 bug-report-attachments에 INSERT 불가 (RLS 42501 exception 발생)
 SELECT tests.clear_authentication();
 SELECT throws_ok(
-  $$INSERT INTO storage.objects (id, bucket_id, name, owner_id)
-    VALUES (gen_random_uuid(), 'bug-report-attachments', 'screenshots/anon-test.png', NULL)$$,
+  $$INSERT INTO storage.objects (id, bucket_id, name, owner, owner_id)
+    VALUES (gen_random_uuid(), 'bug-report-attachments', 'screenshots/anon-test.png', NULL, NULL)$$,
   '42501',
+  'new row violates row-level security policy for table "objects"',
   'anon 사용자는 bug-report-attachments에 업로드할 수 없음'
 );
 
 -- authenticated 사용자는 bug-report-attachments에 INSERT 가능
+-- owner: handle_storage_object_created trigger가 new.owner → minglit_files.owner_id에 씀
 SELECT tests.create_supabase_user('qa_bug_report_tester');
 SELECT tests.authenticate_as('qa_bug_report_tester');
 SELECT lives_ok(
-  $$INSERT INTO storage.objects (id, bucket_id, name, owner_id)
+  $$INSERT INTO storage.objects (id, bucket_id, name, owner, owner_id)
     VALUES (
       gen_random_uuid(),
       'bug-report-attachments',
       'screenshots/auth-test.png',
+      tests.get_supabase_uid('qa_bug_report_tester'),
       tests.get_supabase_uid('qa_bug_report_tester')
     )$$,
   'authenticated 사용자는 bug-report-attachments에 업로드 가능'
