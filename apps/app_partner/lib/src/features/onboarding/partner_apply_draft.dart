@@ -10,6 +10,8 @@ mixin _PartnerApplyDraft on _$PartnerApplyController {
       return;
     }
 
+    // Fix #1599: restore roadAddress from saved address so step3 doesn't double-append.
+    final savedAddress = application.address ?? '';
     state = state.copyWith(
       applicationId: application.id,
       currentStep: application.currentStep,
@@ -22,7 +24,9 @@ mixin _PartnerApplyDraft on _$PartnerApplyController {
       representativeName: application.representativeName ?? '',
       contactPhone: application.contactPhone ?? '',
       contactEmail: application.contactEmail ?? '',
-      address: application.address ?? '',
+      roadAddress: savedAddress,
+      detailAddress: '',
+      address: savedAddress,
       bankName: application.bankName ?? '',
       accountNumber: application.accountNumber ?? '',
       accountHolder: application.accountHolder ?? '',
@@ -62,7 +66,8 @@ mixin _PartnerApplyDraft on _$PartnerApplyController {
       final result = await repo.saveDraft(application);
       state = state.copyWith(applicationId: result.id, isSaving: false);
     } on Exception catch (e, st) {
-      state = state.copyWith(isSaving: false);
+      // Fix #1599: surface save failures so UI can show an error instead of silently blocking submit.
+      state = state.copyWith(isSaving: false, status: AsyncValue.error(e, st));
       Log.e('saveDraft error', e, st);
     }
   }
@@ -79,6 +84,8 @@ mixin _PartnerApplyDraft on _$PartnerApplyController {
       state = state.copyWith(profileImagePath: path, profileImageFile: file);
       await saveDraft();
     } on Exception catch (e, st) {
+      // Fix #1599: surface upload failures so user knows to retry.
+      state = state.copyWith(status: AsyncValue.error(e, st));
       Log.e('uploadProfileImage error', e, st);
     }
   }
@@ -98,6 +105,8 @@ mixin _PartnerApplyDraft on _$PartnerApplyController {
       );
       await saveDraft();
     } on Exception catch (e, st) {
+      // Fix #1599: surface upload failures so user knows to retry.
+      state = state.copyWith(status: AsyncValue.error(e, st));
       Log.e('uploadBizRegistration error', e, st);
     }
   }
@@ -114,6 +123,8 @@ mixin _PartnerApplyDraft on _$PartnerApplyController {
       state = state.copyWith(bankbookPath: path, bankbookFile: file);
       await saveDraft();
     } on Exception catch (e, st) {
+      // Fix #1599: surface upload failures so user knows to retry.
+      state = state.copyWith(status: AsyncValue.error(e, st));
       Log.e('uploadBankbook error', e, st);
     }
   }

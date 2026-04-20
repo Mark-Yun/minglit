@@ -1,3 +1,4 @@
+// ignore_for_file: must_be_immutable
 import 'dart:async';
 
 import 'package:mocktail/mocktail.dart';
@@ -82,18 +83,25 @@ class FakeTableBuilder extends Fake implements SupabaseQueryBuilder {
   final int countValue;
   final Exception? shouldThrow;
   final List<RecordedFilterOperation> recordedFilters = [];
+  // Tracks the columns string passed to .select() — used in regression tests
+  // to assert that specific columns (e.g. 'event_at') are queried.
+  String? lastSelectColumns;
+  // Tracks column names passed to .order() — used in regression tests.
+  final List<String> recordedOrderColumns = [];
 
   @override
   PostgrestFilterBuilder<List<Map<String, dynamic>>> select([
     String columns = '*',
   ]) {
     if (shouldThrow != null) throw shouldThrow!;
+    lastSelectColumns = columns;
     return _FakeFilterBuilder(
       selectData: selectData,
       singleData: singleData,
       maybeSingleData: maybeSingleData,
       countValue: countValue,
       recordedFilters: recordedFilters,
+      recordedOrderColumns: recordedOrderColumns,
     );
   }
 
@@ -109,6 +117,7 @@ class FakeTableBuilder extends Fake implements SupabaseQueryBuilder {
       maybeSingleData: insertReturnData ?? maybeSingleData,
       countValue: countValue,
       recordedFilters: recordedFilters,
+      recordedOrderColumns: recordedOrderColumns,
     );
   }
 
@@ -124,6 +133,7 @@ class FakeTableBuilder extends Fake implements SupabaseQueryBuilder {
       maybeSingleData: maybeSingleData,
       countValue: countValue,
       recordedFilters: recordedFilters,
+      recordedOrderColumns: recordedOrderColumns,
     );
   }
 
@@ -136,6 +146,7 @@ class FakeTableBuilder extends Fake implements SupabaseQueryBuilder {
       maybeSingleData: maybeSingleData,
       countValue: countValue,
       recordedFilters: recordedFilters,
+      recordedOrderColumns: recordedOrderColumns,
     );
   }
 
@@ -154,6 +165,7 @@ class FakeTableBuilder extends Fake implements SupabaseQueryBuilder {
       maybeSingleData: maybeSingleData,
       countValue: countValue,
       recordedFilters: recordedFilters,
+      recordedOrderColumns: recordedOrderColumns,
     );
   }
 }
@@ -165,6 +177,7 @@ class _FakeFilterBuilder extends Fake
     required this.selectData,
     required this.singleData,
     required this.recordedFilters,
+    required this.recordedOrderColumns,
     this.maybeSingleData,
     this.countValue = 0,
   });
@@ -174,6 +187,7 @@ class _FakeFilterBuilder extends Fake
   final Map<String, dynamic>? maybeSingleData;
   final int countValue;
   final List<RecordedFilterOperation> recordedFilters;
+  final List<String> recordedOrderColumns;
 
   // --- Chaining methods (all return this) ---
 
@@ -265,7 +279,10 @@ class _FakeFilterBuilder extends Fake
     bool ascending = false,
     bool nullsFirst = false,
     String? referencedTable,
-  }) => this;
+  }) {
+    recordedOrderColumns.add(column);
+    return this;
+  }
 
   @override
   PostgrestTransformBuilder<List<Map<String, dynamic>>> limit(
@@ -283,7 +300,9 @@ class _FakeFilterBuilder extends Fake
   @override
   PostgrestFilterBuilder<List<Map<String, dynamic>>> select([
     String columns = '*',
-  ]) => this;
+  ]) {
+    return this;
+  }
 
   // --- Terminal operations ---
 

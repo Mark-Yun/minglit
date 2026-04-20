@@ -37,8 +37,16 @@ class PurchaseHistoryController extends _$PurchaseHistoryController {
     final eventStartTime = application.event?.startTime;
     final eventNotStarted =
         eventStartTime != null && DateTime.now().isBefore(eventStartTime);
+    // Fix #1652: 무료 티켓(paymentAmount=0, paymentId=null)도 취소 가능
+    // apply_event RPC가 무료 신청 시 paymentId=null로 저장 → isRefundReady 실패
+    // user-cancel-order EF는 paymentAmount=0 케이스를 별도 처리
+    final isFree =
+        application.paymentAmount == 0 && application.paymentId == null;
+    final isReady = isFree
+        ? eventStartTime != null
+        : isRefundReady(application);
     return isActiveTicket(application) &&
-        isRefundReady(application) &&
+        isReady &&
         application.refundStatus == 'none' &&
         eventNotStarted;
   }
@@ -74,8 +82,36 @@ class PurchaseHistoryController extends _$PurchaseHistoryController {
     required Future<bool> Function(String message) showError,
     required Future<void> Function() onSuccess,
   }) async {
-    if (paymentId == null || paymentAmount == null || eventStartTime == null) {
+    // Fix #1652: 무료 티켓(paymentAmount=0, paymentId=null)은 환불 계산 건너뜀
+    // user-cancel-order EF가 paymentAmount=0 케이스를 직접 처리
+    final isFree = paymentAmount == 0 && paymentId == null;
+
+    if (!isFree &&
+        (paymentId == null ||
+            paymentAmount == null ||
+            eventStartTime == null)) {
       await showMissingInfo();
+      return;
+    }
+
+    if (isFree) {
+      if (eventStartTime == null) {
+        await showMissingInfo();
+        return;
+      }
+      final confirmed = await confirmRefund(
+        const RefundCalculation(
+          refundPercentage: 100,
+          refundAmount: 0,
+          feeAmount: 0,
+        ),
+      );
+      if (!confirmed) return;
+      await _requestRefund(
+        eventId: eventId,
+        showError: showError,
+        onSuccess: onSuccess,
+      );
       return;
     }
 
@@ -92,8 +128,8 @@ class PurchaseHistoryController extends _$PurchaseHistoryController {
     }
 
     final calculation = calculateRefund(
-      eventStartTime: eventStartTime,
-      paymentAmount: paymentAmount,
+      eventStartTime: eventStartTime!,
+      paymentAmount: paymentAmount!,
       paidAt: paidAt,
       gracePeriodHours: gracePeriodHours,
       cutoffDays: cutoffDays,

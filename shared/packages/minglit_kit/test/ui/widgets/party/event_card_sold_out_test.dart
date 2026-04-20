@@ -89,14 +89,15 @@ void main() {
     // Fix #996: 만석 텍스트가 렌더링되어 있는지 확인
     expect(find.text('만석'), findsOneWidget);
 
-    // Fix #996: 스크린 리더 라벨 값 자체를 검증
-    // excludeSemantics: true 구조에서 bySemanticsLabel 대신 getSemantics로 ancestor Semantics 노드를 직접 검증
+    // Fix #996 / #1558: 스크린 리더 라벨에 "만석, 참여 불가"가 포함되어야 한다.
+    // 카드 전체 Semantics(excludeSemantics: true)가 child 노드를 병합/대체하므로,
+    // 내부 badge Semantics 대신 카드 전체 노드에서 sold-out announcement가 읽혀야 함.
     final semanticsData = tester.getSemantics(
       find
           .ancestor(of: find.text('만석'), matching: find.byType(Semantics))
           .first,
     );
-    expect(semanticsData.label, '이벤트 만석, 참여 불가');
+    expect(semanticsData.label, contains('만석, 참여 불가'));
 
     semanticsHandle.dispose();
   });

@@ -148,5 +148,68 @@ void main() {
         reason: 'touch target must be at least 48dp wide (WCAG)',
       );
     });
+
+    group('Semantics', () {
+      testWidgets(
+        'unselected chip exposes label, button role, tap action, and selected=false',
+        (tester) async {
+          final handle = tester.ensureSemantics();
+          await tester.pumpWidget(
+            buildApp(
+              MinglitFilterChip(
+                label: '최신순',
+                isSelected: false,
+                onTap: () {},
+              ),
+            ),
+          );
+
+          expect(
+            tester.getSemantics(find.byType(MinglitFilterChip)),
+            matchesSemantics(
+              label: '최신순',
+              isButton: true,
+              hasTapAction: true,
+              hasSelectedState: true,
+            ),
+            reason:
+                'unselected filter chip must expose label, button role, '
+                'tap action, and selected=false for screen readers',
+          );
+          handle.dispose();
+        },
+      );
+
+      testWidgets(
+        'selected chip exposes label, button role, tap action, and selected=true',
+        (tester) async {
+          final handle = tester.ensureSemantics();
+          await tester.pumpWidget(
+            buildApp(
+              MinglitFilterChip(
+                label: '인기순',
+                isSelected: true,
+                onTap: () {},
+              ),
+            ),
+          );
+
+          expect(
+            tester.getSemantics(find.byType(MinglitFilterChip)),
+            matchesSemantics(
+              label: '인기순',
+              isButton: true,
+              hasTapAction: true,
+              hasSelectedState: true,
+              isSelected: true,
+            ),
+            reason:
+                'selected filter chip must expose label, button role, '
+                'tap action, and selected=true for screen readers',
+          );
+          handle.dispose();
+        },
+      );
+    });
   });
 }

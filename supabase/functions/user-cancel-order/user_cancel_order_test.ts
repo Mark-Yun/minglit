@@ -201,6 +201,7 @@ Deno.test("무료 이벤트 (payment_amount = 0) → 취소 → status = 'cancel
   const { fetchMock, calls } = createFetchMock([
     authRoute,
     appRoute({ status: "paid", payment_amount: 0, paid_at: eligiblePaidAt }),
+    eventRoute(farFutureEvent),
     dbUpdateRoute,
   ]);
 
@@ -225,13 +226,35 @@ Deno.test("무료 이벤트 (payment_amount = 0) → 취소 → status = 'cancel
   });
 });
 
-Deno.test("무료 이벤트 (payment_amount = null) → 취소", async () => {
+Deno.test("무료 이벤트 (payment_amount = null) → 400 (손상 데이터)", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock } = createFetchMock([
     authRoute,
     appRoute({ status: "paid", payment_amount: null, paid_at: eligiblePaidAt }),
-    dbUpdateRoute,
+  ]);
+
+  await withEnv(ENV, async () => {
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const request = authenticatedJsonRequest("http://localhost", { event_id: "event-123" });
+        const response = await handler(request);
+
+        assertEquals(response.status, 400);
+      });
+    });
+  });
+});
+
+Deno.test("무료 이벤트 + 이벤트 시작 후 → 400 (refund_not_eligible)", async () => {
+  const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+
+  const pastEvent = new Date(nowMs - 1 * 60 * 60 * 1000).toISOString(); // 1시간 전
+
+  const { fetchMock } = createFetchMock([
+    authRoute,
+    appRoute({ status: "paid", payment_amount: 0, paid_at: eligiblePaidAt }),
+    eventRoute(pastEvent),
   ]);
 
   await withEnv(ENV, async () => {
@@ -241,8 +264,8 @@ Deno.test("무료 이벤트 (payment_amount = null) → 취소", async () => {
         const response = await handler(request);
         const payload = await readJson(response);
 
-        assertEquals(response.status, 200);
-        assertEquals(payload.type, "cancelled");
+        assertEquals(response.status, 400);
+        assertEquals(payload.error, "refund_not_eligible");
       });
     });
   });

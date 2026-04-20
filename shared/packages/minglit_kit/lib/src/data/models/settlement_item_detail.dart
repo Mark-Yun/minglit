@@ -70,7 +70,8 @@ class SettlementHistoryEntry {
       eventType: json['event_type'] as String,
       fromStatus: json['from_status'] as String,
       toStatus: json['to_status'] as String,
-      createdAt: DateTime.parse(json['created_at'] as String),
+      // Fix #1566: settlement_histories uses event_at, not created_at
+      createdAt: DateTime.parse(json['event_at'] as String),
       details: json['details'] as Map<String, dynamic>?,
     );
   }
@@ -95,7 +96,8 @@ class SettlementHistoryEntry {
     'event_type': eventType,
     'from_status': fromStatus,
     'to_status': toStatus,
-    'created_at': createdAt.toIso8601String(),
+    // Fix #1566: use event_at to match settlement_histories DB column name
+    'event_at': createdAt.toIso8601String(),
     'details': details,
   };
 }
