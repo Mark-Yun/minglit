@@ -3,7 +3,7 @@ import 'package:app_user/src/features/payment/ui/purchase_history_page.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
 
-import '../utils/mocks.dart';
+import '../../utils/mocks.dart';
 import 'screenshot_scenario.dart';
 
 class PaymentScenarios {

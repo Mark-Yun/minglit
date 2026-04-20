@@ -5,7 +5,7 @@ import 'package:app_user/src/features/event/admission/event_application_wizard_p
 import 'package:app_user/src/features/event/logic/event_detail_controller.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
-import '../integration/utils/test_mocks.dart';
+import '../../integration/utils/test_mocks.dart';
 import 'screenshot_scenario.dart';
 
 const _eventId = 'event-application-golden';
