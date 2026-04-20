@@ -123,6 +123,56 @@ void main() {
   });
 }
 
+// Fix #1634: regression group — verifies dev-env eligibility behavior.
+// _isProductionEnv is compile-time (String.fromEnvironment), so we cannot
+// override it at runtime. Instead, we simulate the dev-env state by overriding
+// activeFiltersProvider with a notifier that sets eligibilityEnabled: false.
+group('ActiveFilters dev-env regression (Fix #1634)', () {
+  test('ExploreFilters default has eligibilityEnabled false', () {
+    // In dev env _isProductionEnv == false → eligibilityEnabled starts false.
+    // ExploreFilters() mirrors that default — this guards against accidental
+    // change to the constructor's default value.
+    const filters = ExploreFilters();
+    expect(filters.eligibilityEnabled, isFalse,
+        reason: 'Default ExploreFilters must not enable eligibility filter');
+  });
+
+  test('feed loads events without eligibility filtering in dev-like env',
+      () async {
+    final mockRepo = MockEventRepository();
+    when(
+      () => mockRepo.getEventsByType(
+        type: any(named: 'type'),
+        offset: any(named: 'offset'),
+        latitude: any(named: 'latitude'),
+        longitude: any(named: 'longitude'),
+        limit: any(named: 'limit'),
+        blockedPartnerIds: any(named: 'blockedPartnerIds'),
+      ),
+    ).thenAnswer(
+      (_) async => List.generate(5, (i) => _createMinimalEvent(id: 'e_$i')),
+    );
+
+    final container = ProviderContainer(
+      overrides: [
+        eventRepositoryProvider.overrideWithValue(mockRepo),
+        activeFiltersProvider.overrideWith(_DevEnvFiltersNotifier.new),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    final state = await container.read(recommendationFeedProvider.future);
+    // Dev env: eligibility not applied → all 5 events should be visible.
+    expect(state.events, hasLength(5));
+  });
+});
+
+/// Simulates dev-env ActiveFilters state: eligibility disabled, nearby disabled.
+class _DevEnvFiltersNotifier extends ActiveFilters {
+  @override
+  ExploreFilters build() => const ExploreFilters(eligibilityEnabled: false);
+}
+
 /// Notifier that starts with all filters disabled to avoid triggering
 /// location services or eligibility checks.
 class _NoFiltersNotifier extends ActiveFilters {
