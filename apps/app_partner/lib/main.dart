@@ -7,6 +7,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:kakao_map_plugin/kakao_map_plugin.dart' as kakao;
 import 'package:minglit_kit/minglit_kit.dart';
@@ -15,6 +16,16 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
 
 part 'main.g.dart';
+
+// Fix #1538: 테스트에서 production delegate 목록을 참조할 수 있도록 상수로 추출.
+// 이 상수가 변경되면 party_description_input_test.dart도 자동으로 반영된다.
+const List<LocalizationsDelegate<Object>> kPartnerLocalizationsDelegates = [
+  AppLocalizations.delegate,
+  GlobalMaterialLocalizations.delegate,
+  GlobalWidgetsLocalizations.delegate,
+  GlobalCupertinoLocalizations.delegate,
+  quill.FlutterQuillLocalizations.delegate,
+];
 
 Future<void> main() async {
   final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
@@ -164,12 +175,7 @@ class _AppView extends ConsumerWidget {
       darkTheme: MinglitTheme.partnerThemeDark,
       themeMode: ref.watch(themeControllerProvider),
       routerConfig: goRouter,
-      localizationsDelegates: const [
-        AppLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
+      localizationsDelegates: kPartnerLocalizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       builder: (context, child) {
         return MinglitAsyncValueWidget(
