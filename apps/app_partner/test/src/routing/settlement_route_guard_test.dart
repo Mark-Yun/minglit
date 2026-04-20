@@ -47,12 +47,12 @@ MockPartnerRepository _mockPartnerRepository() {
 /// Creates a test router that mirrors the settlement guard from [app_router.dart].
 ///
 /// [settlementAccess] is a [ValueNotifier<AsyncValue<bool>?>] where:
-/// - `null`                   = provider loading (no redirect — refreshListenable re-evals)
+/// - `null`                   = provider loading (redirect to '/' — fail-closed)
 /// - `AsyncValue.data(true)`  = access granted → no redirect
 /// - `AsyncValue.data(false)` = access denied  → redirect to '/'
 /// - `AsyncValue.error(...)`  = provider error → redirect to '/' (security-first)
 ///
-/// Mirrors the production `maybeWhen(data: v, loading: true, orElse: false)` logic
+/// Mirrors the production `maybeWhen(data: v, loading: false, orElse: false)` logic
 /// and allows tests to simulate error state explicitly.
 Widget _createSettlementTestApp({
   required bool isLoggedIn,
@@ -71,18 +71,18 @@ Widget _createSettlementTestApp({
       if (isLoggedIn && path == '/login') return '/';
 
       // Mirror redirect branch 4 from app_router.dart.
-      // loading (null) → no redirect: refreshListenable fires when resolved.
+      // loading (null) → deny (fail-closed): refreshListenable fires when resolved.
       // error          → deny (security-first, matches production orElse: false).
       // data(false)    → redirect to '/'.
       // data(true)     → no redirect.
       if (isLoggedIn &&
           (path == '/settlement' || path.startsWith('/settlement/'))) {
         final asyncVal = settlementAccess.value;
-        if (asyncVal == null) return null; // loading: wait
-        final hasAccess = asyncVal.maybeWhen(
-          data: (v) => v,
-          orElse: () => false, // error → deny
-        );
+        final hasAccess = asyncVal?.maybeWhen(
+              data: (v) => v,
+              orElse: () => false, // error → deny
+            ) ??
+            false; // loading → deny (fail-closed)
         if (!hasAccess) return '/';
       }
 
@@ -203,7 +203,7 @@ void main() {
     );
 
     testWidgets(
-      '권한 로딩 중: /settlement 접근 시 차단하지 않고 대기',
+      '권한 로딩 중: /settlement 접근 시 홈으로 리다이렉트 (fail-closed)',
       (tester) async {
         // null = loading state
         final access = ValueNotifier<AsyncValue<bool>?>(null);
@@ -219,18 +219,18 @@ void main() {
         await tester.pump();
         await tester.pump();
 
-        // Must NOT redirect to home while loading
+        // Must redirect to home while loading (fail-closed, not fail-open)
         expect(
           find.byType(PartnerHomePage),
-          findsNothing,
+          findsOneWidget,
           reason:
-              'provider 로딩 중에는 홈으로 리다이렉트해서는 안 된다 (refreshListenable가 resolve 후 재평가)',
+              'provider 로딩 중 fail-closed: /settlement 미인가 flash-of-content 방지를 위해 홈으로 리다이렉트',
         );
       },
     );
 
     testWidgets(
-      '권한 로딩 → true로 resolve: /settlement 유지',
+      '권한 로딩 → true로 resolve: refreshListenable 재평가 (홈에서 /settlement 재진입은 유저 액션 필요)',
       (tester) async {
         final access = ValueNotifier<AsyncValue<bool>?>(null);
         addTearDown(access.dispose);
@@ -245,21 +245,25 @@ void main() {
         await tester.pump();
         await tester.pump();
 
-        // Resolve with access granted
+        // Loading: fail-closed → redirected to home
+        expect(find.byType(PartnerHomePage), findsOneWidget);
+
+        // Resolve with access granted → refreshListenable fires → re-eval current route (/)
+        // Since current path is '/', not '/settlement', guard is not triggered → stays on home.
         access.value = const AsyncData(true);
         await tester.pump();
         await tester.pump();
 
         expect(
           find.byType(PartnerHomePage),
-          findsNothing,
-          reason: 'true로 resolve된 권한 있는 유저는 /settlement에 남아야 한다',
+          findsOneWidget,
+          reason: 'resolve 후 현재 경로(/)에 대해 guard가 재평가되므로 홈에 머무른다 — /settlement 재진입은 유저 탭 선택으로',
         );
       },
     );
 
     testWidgets(
-      '권한 로딩 → false로 resolve: / 리다이렉트',
+      '권한 로딩 → false로 resolve: 홈으로 리다이렉트 유지',
       (tester) async {
         final access = ValueNotifier<AsyncValue<bool>?>(null);
         addTearDown(access.dispose);
@@ -274,10 +278,10 @@ void main() {
         await tester.pump();
         await tester.pump();
 
-        // Loading: no redirect
-        expect(find.byType(PartnerHomePage), findsNothing);
+        // Loading: fail-closed → already on home
+        expect(find.byType(PartnerHomePage), findsOneWidget);
 
-        // Resolve with access denied → refreshListenable fires → redirect to /
+        // Resolve with access denied → refreshListenable fires → re-eval current route (/)
         access.value = const AsyncData(false);
         await tester.pump();
         await tester.pump();
@@ -285,7 +289,7 @@ void main() {
         expect(
           find.byType(PartnerHomePage),
           findsOneWidget,
-          reason: 'false로 resolve된 권한 없는 유저는 홈으로 리다이렉트되어야 한다',
+          reason: '권한 없는 유저는 로딩 중부터 홈에 있으며, resolve 후에도 홈에 머무른다',
         );
       },
     );

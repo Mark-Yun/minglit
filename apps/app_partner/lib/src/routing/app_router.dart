@@ -111,8 +111,8 @@ GoRouter goRouter(Ref ref) {
             .read(hasSettlementAccessProvider)
             .maybeWhen(
               data: (v) => v,
-              loading: () =>
-                  true, // loading: wait for refreshListenable re-eval
+              // Fix #1544: fail-closed — refreshListenable re-evals after resolve
+              loading: () => false,
               orElse: () => false, // error: deny access (security-first)
             );
         if (!hasAccess) return '/';
