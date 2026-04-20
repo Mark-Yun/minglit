@@ -469,9 +469,14 @@ BEGIN
   SELECT id INTO test_party_id FROM public.parties
   WHERE partner_id = test_partner_id AND title = '[QA] 오픈 소셜 파티 (연령/성별 무관)';
   IF test_party_id IS NULL THEN
-    INSERT INTO public.parties (partner_id, location_id, title, max_participants, status)
-    VALUES (test_partner_id, test_location_id, '[QA] 오픈 소셜 파티 (연령/성별 무관)', 50, 'active')
+    INSERT INTO public.parties (partner_id, location_id, title, max_participants, status, image_urls)
+    VALUES (test_partner_id, test_location_id, '[QA] 오픈 소셜 파티 (연령/성별 무관)', 50, 'active',
+            ARRAY['https://picsum.photos/seed/minglit-qa-open/800/600'])
     RETURNING id INTO test_party_id;
+  ELSE
+    -- Fix #1631: 기존 파티에 이미지 없으면 채움 (idempotent)
+    UPDATE public.parties SET image_urls = ARRAY['https://picsum.photos/seed/minglit-qa-open/800/600']
+    WHERE id = test_party_id AND (image_urls IS NULL OR array_length(image_urls, 1) IS NULL);
   END IF;
 
   -- Fix #1602: entry_group 미설정 이벤트 → 연령/성별 무관, 모든 유저 신청 가능
@@ -525,9 +530,16 @@ BEGIN
     SELECT id INTO party_id_ FROM public.parties
     WHERE partner_id = qa_partner_id AND title = rec.party_title;
     IF party_id_ IS NULL THEN
-      INSERT INTO public.parties (partner_id, location_id, title, max_participants, status)
-      VALUES (qa_partner_id, qa_location_id, rec.party_title, 30, 'active')
+      -- Fix #1631: image_urls 포함하여 QA 이미지 카드 테스트(U-S01) 통과
+      INSERT INTO public.parties (partner_id, location_id, title, max_participants, status, image_urls)
+      VALUES (qa_partner_id, qa_location_id, rec.party_title, 30, 'active',
+              ARRAY['https://picsum.photos/seed/minglit-qa-' || lower(replace(rec.party_title, ' ', '-')) || '/800/600'])
       RETURNING id INTO party_id_;
+    ELSE
+      -- Fix #1631: 기존 파티에 이미지 없으면 채움 (idempotent)
+      UPDATE public.parties
+      SET image_urls = ARRAY['https://picsum.photos/seed/minglit-qa-' || lower(replace(rec.party_title, ' ', '-')) || '/800/600']
+      WHERE id = party_id_ AND (image_urls IS NULL OR array_length(image_urls, 1) IS NULL);
     END IF;
 
     IF NOT EXISTS (
