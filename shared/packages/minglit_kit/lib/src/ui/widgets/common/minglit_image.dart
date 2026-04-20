@@ -109,6 +109,7 @@ class MinglitImage extends StatelessWidget {
         );
       },
       // Fix #1558: errorBuilder에도 semantics 정책 적용
+      // Fix #1655: 로드 실패 시 broken_image 대신 placeholder — 네트워크 오류/404 엑박 방지
       errorBuilder: (context, error, stackTrace) {
         final theme = Theme.of(context);
         final fallback = Container(
@@ -118,7 +119,12 @@ class MinglitImage extends StatelessWidget {
             color: theme.colorScheme.surfaceContainerLow,
             borderRadius: BorderRadius.circular(MinglitRadius.small),
           ),
-          child: Icon(Icons.broken_image, color: theme.colorScheme.outline),
+          child: Center(
+            child: Icon(
+              Icons.image_not_supported_outlined,
+              color: theme.colorScheme.outline,
+            ),
+          ),
         );
         if (excludeFromSemantics) return ExcludeSemantics(child: fallback);
         if (semanticLabel != null) {
