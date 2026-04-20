@@ -207,27 +207,16 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent>
                       onSelected: (value) async {
                         switch (value) {
                           case 'block':
-                            final confirmed = await showDialog<bool>(
+                            final confirmed = await MinglitAlert.showConfirm(
                               context: context,
-                              builder: (ctx) => AlertDialog(
-                                title: const Text('차단하기'),
-                                content: const Text(
+                              title: '차단하기',
+                              content:
                                   '이 파트너를 차단하시겠습니까?\n'
                                   '이 파트너의 이벤트가 더 이상 표시되지 않습니다.',
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(ctx, false),
-                                    child: const Text('취소'),
-                                  ),
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(ctx, true),
-                                    child: const Text('차단'),
-                                  ),
-                                ],
-                              ),
+                              confirmText: '차단',
+                              isDestructive: true,
                             );
-                            if ((confirmed ?? false) && context.mounted) {
+                            if (confirmed && context.mounted) {
                               await ref
                                   .read(socialRepositoryProvider)
                                   .blockPartner(partner.id);

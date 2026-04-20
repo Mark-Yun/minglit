@@ -46,24 +46,13 @@ class _BlockedPartnersPageState extends ConsumerState<BlockedPartnersPage> {
   }
 
   Future<void> _unblock(String partnerId) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await MinglitAlert.showConfirm(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('차단 해제'),
-        content: const Text('이 파트너의 차단을 해제하시겠습니까?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('취소'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('해제'),
-          ),
-        ],
-      ),
+      title: '차단 해제',
+      content: '이 파트너의 차단을 해제하시겠습니까?',
+      confirmText: '해제',
     );
-    if (confirmed != true) return;
+    if (!confirmed) return;
 
     await ref.read(socialRepositoryProvider).unblockPartner(partnerId);
     if (mounted) {
