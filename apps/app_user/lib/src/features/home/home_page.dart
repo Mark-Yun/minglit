@@ -148,7 +148,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                     // Fix #102: use go (not push) so GoRouter redirect
                     // fires after login
                     // Fix #634: auth_coordinator 직접 참조 → home_coordinator.goToLogin 전환
-                    onPressed: () => homeCoordinator.goToLogin(from: '/'),
+                    // Fix #1633: from='/my' — 로그인 후 MyPage로 복귀
+                    onPressed: () => homeCoordinator.goToLogin(from: '/my'),
                   ),
                 const SizedBox(width: MinglitSpacing.small),
               ],
