@@ -29,6 +29,28 @@ void main() {
       },
     );
 
+    // Fix #1611: null values show zero, not '-'
+    testWidgets(
+      'shows ₩0 and 0% when revenue and checkinRate are null',
+      (tester) async {
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: Scaffold(
+              body: WeeklyStatsRow(
+                totalRevenue: null,
+                totalApplications: 0,
+                checkinRate: null,
+              ),
+            ),
+          ),
+        );
+
+        expect(find.text('₩0'), findsOneWidget);
+        expect(find.text('0%'), findsOneWidget);
+        expect(find.text('-'), findsNothing);
+      },
+    );
+
     testWidgets(
       'shows green positive change text when change is greater than zero',
       (tester) async {

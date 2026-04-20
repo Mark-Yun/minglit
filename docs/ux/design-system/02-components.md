@@ -184,25 +184,25 @@ Dark Mode 소스: `minglit_theme.dart:457-461`
 
 ## 12. Dialog / Alert
 
-**소스**: `minglit_kit/lib/src/ui/widgets/common/minglit_alert.dart`, `minglit_dialog.dart`
+**소스**: `minglit_kit/lib/src/ui/widgets/common/minglit_alert.dart`, `minglit_dialog.dart`, `minglit_component_theme.dart:167-195`
 
-**현재 상태**: `DialogTheme` 미정의 — 개별 위젯에서 하드코딩. 개선 계획은 [wireframe](../../features/dialog-improvement/wireframe.html) 참조.
+**현재 상태**: `DialogTheme` 전역 적용 완료. Material 3 기반의 정제된 디자인 시스템을 따름.
 
 **위젯**:
 - `MinglitAlert` — 텍스트 기반 알림 (info / destructive)
 - `MinglitDialog` — 커스텀 컨텐츠 다이얼로그
 
-| 속성 | 현재 값 | 개선 목표 | 비고 |
-| :--- | :--- | :--- | :--- |
-| borderRadius | 16 (`MinglitRadius.card`) | **28** (`MinglitRadius.dialog`) | 신규 토큰 |
-| backgroundColor (light) | `colorScheme.surface` | `MinglitColors.background` (#FFFFFF) | scaffold 대비 구분 |
-| backgroundColor (dark) | `colorScheme.surface` | `MinglitColorsDark.surface` (#212121) | 유지 |
-| surfaceTintColor | transparent | transparent | M3 틴트 제거 |
-| titlePadding | 24/24/24/16 | 24/24/24/8 | title-content 간격 축소 |
-| contentPadding | 24/24/0/24 | 20/24/0/24 | 수평 여백 미세 조정 |
-| actionsPadding | 16/16/0/16 | 12/20/0/20 | content 정렬 |
+| 속성 | 값 | 비고 |
+| :--- | :--- | :--- |
+| borderRadius | 28 (`MinglitRadius.dialog`) | 신규 토큰 |
+| backgroundColor (light) | `MinglitColors.background` (#FFFFFF) | scaffold 대비 구분 |
+| backgroundColor (dark) | `MinglitColorsDark.surface` (#212121) | 레이어 유지 |
+| surfaceTintColor | transparent | M3 틴트 제거 |
+| titlePadding | 24/24/24/8 | title-content 간격 축소 |
+| contentPadding | 24/0/24/4 | 수직 여백 미세 조정 |
+| actionsPadding | 12/0/24/24 | content 및 우측 정렬 최적화 |
 
-**Selection Dialog**: `SimpleDialog` → `showModalBottomSheet` 전환 예정 (터치 타겟 56px 보장)
+**Selection Dialog**: `SimpleDialog` 대신 `showModalBottomSheet` 사용 권장 (터치 타겟 56px 보장)
 
 ---
 
@@ -220,11 +220,15 @@ Dark Mode 소스: `minglit_theme.dart:457-461`
 
 ---
 
-## 14. Badge / Tag
+## 14. Badge & Tag
 
-<!-- TODO: 커스텀 Badge/Tag 컴포넌트 테마 정의 필요. 현재는 Chip 기반으로 사용 중. -->
+### MinglitBadge
+상태 표시용 배지. 배경색은 틴트 처리되고 텍스트는 원본 색상을 사용하여 가독성 확보.
+`shared/packages/minglit_kit/lib/src/ui/widgets/common/minglit_badge.dart`
 
-현재 뱃지/태그는 `MinglitChip` (`minglit_kit/lib/src/ui/widgets/common/minglit_chip.dart`) 및 `MinglitFilterChip` (`minglit_kit/lib/src/ui/widgets/common/minglit_filter_chip.dart`)으로 대체 사용합니다.
+### MinglitTag
+카테고리나 메타데이터 표시용 태그. 아이콘 지원.
+`shared/packages/minglit_kit/lib/src/ui/widgets/common/minglit_tag.dart`
 
 ---
 

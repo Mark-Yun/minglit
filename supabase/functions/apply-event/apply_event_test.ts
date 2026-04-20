@@ -493,6 +493,8 @@ Deno.test("apply-event - 취소 후 무료 재신청 성공 (UPDATE 경로, appl
     let patchCalled = false;
     let applyEventRpcCalled = false;
     let checkBalanceRpcCalled = false;
+    // Fix #1660: capture PATCH body to assert status='approved'
+    let patchBody: Record<string, unknown> = {};
 
     const { fetchMock } = createFetchMock([
       authRoute(),
@@ -525,6 +527,10 @@ Deno.test("apply-event - 취소 후 무료 재신청 성공 (UPDATE 경로, appl
         matcher: (req) => {
           if (req.url.includes("/rest/v1/event_applications") && req.method === "PATCH") {
             patchCalled = true;
+            // Fix #1660: capture body to assert status='approved' (not 'paid')
+            req.json().then((body: Record<string, unknown>) => {
+              patchBody = body;
+            });
             return true;
           }
           return false;
@@ -559,6 +565,8 @@ Deno.test("apply-event - 취소 후 무료 재신청 성공 (UPDATE 경로, appl
         assertEquals(checkBalanceRpcCalled, true, "check_party_balance RPC가 호출되어야 함 — Fix #1345");
         assertEquals(patchCalled, true, "PATCH(UPDATE)가 호출되어야 함 — INSERT 금지");
         assertEquals(applyEventRpcCalled, false, "apply_event RPC는 호출되면 안 됨 — plain INSERT로 충돌 발생");
+        // Fix #1660: free re-application must use 'approved' status, not 'paid'
+        assertEquals(patchBody?.status, "approved", "Fix #1660: 무료 재신청 PATCH status='approved' (not 'paid')");
       });
     });
   });

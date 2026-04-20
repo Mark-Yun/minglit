@@ -38,31 +38,25 @@ class MinglitDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
 
     return AlertDialog(
-      backgroundColor: colorScheme.surface,
-      surfaceTintColor: colorScheme.surface.withValues(
-        alpha: MinglitOpacity.none,
-      ),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(MinglitRadius.card),
-      ),
       titlePadding: const EdgeInsets.fromLTRB(
         MinglitSpacing.large,
         MinglitSpacing.large,
         MinglitSpacing.large,
-        MinglitSpacing.medium,
+        MinglitSpacing.small,
       ),
-      contentPadding: const EdgeInsets.only(
-        left: MinglitSpacing.large,
-        right: MinglitSpacing.large,
-        bottom: MinglitSpacing.large,
+      contentPadding: const EdgeInsets.fromLTRB(
+        MinglitSpacing.large,
+        MinglitSpacing.zero,
+        MinglitSpacing.large,
+        MinglitSpacing.xsmall,
       ),
-      actionsPadding: const EdgeInsets.only(
-        left: MinglitSpacing.medium,
-        right: MinglitSpacing.medium,
-        bottom: MinglitSpacing.medium,
+      actionsPadding: const EdgeInsets.fromLTRB(
+        MinglitSpacing.sm,
+        MinglitSpacing.zero,
+        MinglitSpacing.large,
+        MinglitSpacing.large,
       ),
       title: Text(
         title,

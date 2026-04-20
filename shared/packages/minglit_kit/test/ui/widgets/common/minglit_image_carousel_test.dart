@@ -118,5 +118,39 @@ void main() {
       // Verify indicator is NOT rendered for single image
       expect(find.byType(Text), findsNothing);
     });
+
+    group('Semantics', () {
+      testWidgets(
+        'wraps carousel with Semantics(label: "이미지 N / M", image: true)',
+        (tester) async {
+          await tester.pumpWidget(
+            const MaterialApp(
+              home: Scaffold(
+                body: MinglitImageCarousel(
+                  imageUrls: [
+                    'https://example.com/1.jpg',
+                    'https://example.com/2.jpg',
+                    'https://example.com/3.jpg',
+                  ],
+                ),
+              ),
+            ),
+          );
+
+          expect(
+            find.byWidgetPredicate(
+              (w) =>
+                  w is Semantics &&
+                  w.properties.label == '이미지 1 / 3' &&
+                  w.properties.image == true,
+            ),
+            findsOneWidget,
+            reason:
+                'carousel must wrap PageView with '
+                'Semantics(label: "이미지 N / M", image: true)',
+          );
+        },
+      );
+    });
   });
 }
