@@ -341,13 +341,30 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
   /// Counts pending review applications for a specific partner.
   Future<int> getPendingApplicationCount(String partnerId) async {
     try {
-      // Query verification_submissions joined with applications -> events
-      // But RLS might restrict access. Assuming Partner has permission.
+      // Fix #1597: 2-step query to guarantee partner scoping.
+      // Single-level join filter (party.partner_id) is unambiguous in PostgREST;
+      // 2-level nesting (event.party.partner_id) can be silently ignored on some versions.
+      final nowStr = DateTime.now().toIso8601String();
+
+      // Step 1: get future event IDs for this partner (same limit as getPartnerFutureEvents
+      // to guarantee count and tab share identical event scope).
+      final eventsData = await supabaseClient
+          .from('events')
+          .select('id, party:parties!inner(partner_id)')
+          .eq('party.partner_id', partnerId)
+          .gte('start_time', nowStr)
+          .order('start_time')
+          .limit(500);
+
+      final eventIds = eventsData.map((e) => e['id'] as String).toList();
+      if (eventIds.isEmpty) return 0;
+
+      // Step 2: count pending/pending_review applications for those events.
       final res = await supabaseClient
-          .from('verification_submissions')
+          .from('event_applications')
           .select('id')
-          .eq('partner_id', partnerId)
-          .eq('status', 'pending')
+          .inFilter('event_id', eventIds)
+          .inFilter('status', ['pending', 'pending_review'])
           .count(CountOption.exact);
 
       return res.count;
@@ -564,6 +581,31 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
       }).toList();
     } catch (e, st) {
       Log.e('❌ [EventRepo] getTodayEvents Error', e, st);
+      rethrow;
+    }
+  }
+
+  /// [Application Management]
+  /// Fetches all future events for a partner (no upper date bound).
+  /// Used in the application management tab to show all events with pending
+  /// applications, regardless of how far in the future they are.
+  // Fix #1597: 신청관리 탭의 getUpcomingEvents(7일) 제한으로 미래 이벤트 누락 방지
+  Future<List<Event>> getPartnerFutureEvents(String partnerId) async {
+    try {
+      final nowStr = DateTime.now().toIso8601String();
+
+      final data = await supabaseClient
+          .from('events')
+          .select('*, party:parties!inner(*)')
+          .eq('party.partner_id', partnerId)
+          .gte('start_time', nowStr)
+          .order('start_time')
+          .limit(
+            500,
+          ); // Safety cap: prevents unbounded queries for prolific partners
+      return data.map(Event.fromJson).toList();
+    } catch (e, st) {
+      Log.e('❌ [EventRepo] getPartnerFutureEvents Error', e, st);
       rethrow;
     }
   }

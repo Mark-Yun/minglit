@@ -94,18 +94,34 @@ eventApplicationsGroupedProvider = FutureProvider.family
     >((ref, params) async {
       final eventRepo = ref.read(eventRepositoryProvider);
 
-      // Get all upcoming events for this partner
-      final events = await eventRepo.getUpcomingEvents(params.partnerId);
+      // Fix #1597: getUpcomingEvents는 7일 제한 → getPartnerFutureEvents 사용
+      // 신청관리는 모든 미래 이벤트의 pending 신청을 표시해야 함
+      final events = await eventRepo.getPartnerFutureEvents(params.partnerId);
 
       final grouped = <Event, List<EventApplication>>{};
 
-      for (final event in events) {
-        final apps = await eventRepo.getApplicationsByEventId(event.id);
-        final filtered = apps
+      // Fix #1597: chunk per-event fetches to ≤10 concurrent RPC calls.
+      // getPartnerFutureEvents can return up to 500 events; firing all at once
+      // saturates the PostgREST connection pool and triggers rate-limit errors.
+      const chunkSize = 10;
+      final allApps = <List<EventApplication>>[];
+      for (var i = 0; i < events.length; i += chunkSize) {
+        final end = i + chunkSize > events.length
+            ? events.length
+            : i + chunkSize;
+        final chunkApps = await Future.wait(
+          events
+              .sublist(i, end)
+              .map((e) => eventRepo.getApplicationsByEventId(e.id)),
+        );
+        allApps.addAll(chunkApps);
+      }
+      for (var i = 0; i < events.length; i++) {
+        final filtered = allApps[i]
             .where((a) => params.statusFilter.contains(a.status))
             .toList();
         if (filtered.isNotEmpty) {
-          grouped[event] = filtered;
+          grouped[events[i]] = filtered;
         }
       }
 

@@ -13,5 +13,13 @@ class PartnerLoginScenarios {
         authControllerProvider.overrideWith(FakeAuthController.new),
       ],
     ),
+    // Fix #1624: dev env 회귀 — ENVIRONMENT=dev 시 dev trigger logo 노출 검증
+    PartnerScreenshotScenario(
+      name: 'partner_login_page_dev_env',
+      page: const PartnerLoginPage(isDevEnvOverride: true),
+      overrides: [
+        authControllerProvider.overrideWith(FakeAuthController.new),
+      ],
+    ),
   ];
 }

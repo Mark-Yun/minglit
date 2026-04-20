@@ -2,19 +2,59 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/src/ui/widgets/common/minglit_image.dart';
 
+Widget _wrap(Widget child) => MaterialApp(home: Scaffold(body: child));
+
 void main() {
   group('MinglitImage', () {
-    testWidgets('empty path renders placeholder icon', (tester) async {
+    testWidgets('빈 경로 → image_not_supported_outlined 표시, broken_image 없음', (
+      tester,
+    ) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: MinglitImage(path: '', height: 80, width: 80),
-          ),
+        _wrap(
+          const MinglitImage(path: '', height: 100, width: 100),
         ),
       );
+      expect(find.byIcon(Icons.image_not_supported_outlined), findsOneWidget);
+      expect(find.byIcon(Icons.broken_image), findsNothing);
+    });
 
+    testWidgets('공백만 있는 경로 → image_not_supported_outlined 표시', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          const MinglitImage(path: '   ', height: 100, width: 100),
+        ),
+      );
       expect(find.byIcon(Icons.image_not_supported_outlined), findsOneWidget);
     });
+
+    // Fix #1655: 로드 실패 시 broken_image 대신 image_not_supported_outlined를 표시해야 함
+    testWidgets(
+      '네트워크 로드 실패 → image_not_supported_outlined 표시, broken_image 없음',
+      (tester) async {
+        final errors = <FlutterErrorDetails>[];
+        final previousOnError = FlutterError.onError;
+        FlutterError.onError = errors.add;
+        addTearDown(() => FlutterError.onError = previousOnError);
+
+        await tester.runAsync(() async {
+          await tester.pumpWidget(
+            _wrap(
+              const MinglitImage(
+                // 존재하지 않는 호스트 — 테스트 환경에서 즉시 실패
+                path: 'http://localhost:0/nonexistent.jpg',
+                height: 100,
+                width: 100,
+              ),
+            ),
+          );
+          await Future<void>.delayed(const Duration(milliseconds: 500));
+        });
+        await tester.pump();
+
+        expect(find.byIcon(Icons.image_not_supported_outlined), findsOneWidget);
+        expect(find.byIcon(Icons.broken_image), findsNothing);
+      },
+    );
 
     group('Semantics', () {
       testWidgets('semanticLabel is forwarded to underlying Image', (

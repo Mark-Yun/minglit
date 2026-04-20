@@ -35,7 +35,7 @@ class LoginPage extends ConsumerWidget {
       'ENVIRONMENT',
       defaultValue: 'production',
     );
-    // Fix #1633: 'dev' 추가 — Supabase dev 프로젝트는 ENVIRONMENT=dev 사용
+    // Fix #1624: 'dev' 추가 — Supabase dev 프로젝트의 ENVIRONMENT=dev와 정합성 유지
     const isDevEnv =
         environment == 'local' ||
         environment == 'development' ||

@@ -5,6 +5,7 @@
 // gestures. You can also use WidgetTester to find child widgets in the widget
 // tree, read text, and verify that the values of widget properties are correct.
 
+import 'package:app_partner/src/features/auth/partner_login_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -129,4 +130,60 @@ void main() {
 
     expect(find.text('Apple로 시작하기'), findsNothing);
   });
+
+  // Fix #1624: ENVIRONMENT=dev 회귀 테스트 — onDevTrigger 5-tap 동작 검증
+  testWidgets('dev env: 5 taps trigger onDevTrigger callback', (tester) async {
+    var triggered = false;
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          home: MinglitLoginScreen(
+            isPartner: true,
+            onDevTrigger: () => triggered = true,
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final logo = find.byType(GestureDetector).first;
+    for (var i = 0; i < 5; i++) {
+      await tester.tap(logo);
+      await tester.pump();
+    }
+
+    expect(triggered, isTrue);
+  });
+
+  testWidgets(
+    'dev env: PartnerLoginPage isDevEnvOverride=true shows dev trigger logo',
+    (tester) async {
+      await tester.pumpWidget(
+        const ProviderScope(
+          child: MaterialApp(
+            home: PartnerLoginPage(isDevEnvOverride: true),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      // _DevTriggerLogo wraps logo in GestureDetector — present only in dev env
+      expect(find.byType(GestureDetector), findsWidgets);
+    },
+  );
+
+  testWidgets(
+    'production env: no onDevTrigger — _DevTriggerLogo not rendered',
+    (tester) async {
+      await tester.pumpWidget(
+        const ProviderScope(
+          child: MaterialApp(home: MinglitLoginScreen(isPartner: true)),
+        ),
+      );
+      await tester.pump();
+
+      // onDevTrigger=null → _DevTriggerLogo not rendered → no GestureDetector
+      expect(find.byType(GestureDetector), findsNothing);
+    },
+  );
 }

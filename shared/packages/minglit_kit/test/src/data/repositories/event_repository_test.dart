@@ -296,14 +296,25 @@ void main() {
     });
 
     group('getPendingApplicationCount', () {
-      test('returns pending count', () async {
+      // Fix #1597: 2-step query — events first (partner-scoped), then count applications.
+      test('returns pending count from event_applications', () async {
         unawaited(
           mockTable(
             mockClient,
-            'verification_submissions',
+            'events',
             selectData: [
-              {'id': 'sub_1'},
-              {'id': 'sub_2'},
+              {'id': 'event_1', 'party': <String, dynamic>{}},
+              {'id': 'event_2', 'party': <String, dynamic>{}},
+            ],
+          ),
+        );
+        unawaited(
+          mockTable(
+            mockClient,
+            'event_applications',
+            selectData: [
+              {'id': 'app_1'},
+              {'id': 'app_2'},
             ],
             countValue: 2,
           ),
