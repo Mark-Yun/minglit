@@ -419,8 +419,6 @@ void main() {
           ticketId: 'ticket_free',
           userId: 'user_free',
           status: 'paid',
-          paymentId: null,
-          paymentAmount: null,
           createdAt: now,
           updatedAt: now,
           // event intentionally omitted
@@ -446,8 +444,6 @@ void main() {
           ticketId: 'ticket_damaged',
           userId: 'user_damaged',
           status: 'paid',
-          paymentId: null,
-          paymentAmount: null,
           createdAt: now,
           updatedAt: now,
           event: futureEvent,

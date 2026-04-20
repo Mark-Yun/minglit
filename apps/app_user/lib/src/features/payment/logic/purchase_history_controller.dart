@@ -42,8 +42,9 @@ class PurchaseHistoryController extends _$PurchaseHistoryController {
     // user-cancel-order EF는 paymentAmount=0 케이스를 별도 처리
     final isFree =
         application.paymentAmount == 0 && application.paymentId == null;
-    final isReady =
-        isFree ? eventStartTime != null : isRefundReady(application);
+    final isReady = isFree
+        ? eventStartTime != null
+        : isRefundReady(application);
     return isActiveTicket(application) &&
         isReady &&
         application.refundStatus == 'none' &&
@@ -86,7 +87,9 @@ class PurchaseHistoryController extends _$PurchaseHistoryController {
     final isFree = paymentAmount == 0 && paymentId == null;
 
     if (!isFree &&
-        (paymentId == null || paymentAmount == null || eventStartTime == null)) {
+        (paymentId == null ||
+            paymentAmount == null ||
+            eventStartTime == null)) {
       await showMissingInfo();
       return;
     }
