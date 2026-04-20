@@ -296,8 +296,18 @@ void main() {
     });
 
     group('getPendingApplicationCount', () {
-      // Fix #1597: implementation was changed to query event_applications (not verification_submissions)
+      // Fix #1597: 2-step query — events first (partner-scoped), then count applications.
       test('returns pending count from event_applications', () async {
+        unawaited(
+          mockTable(
+            mockClient,
+            'events',
+            selectData: [
+              {'id': 'event_1', 'party': <String, dynamic>{}},
+              {'id': 'event_2', 'party': <String, dynamic>{}},
+            ],
+          ),
+        );
         unawaited(
           mockTable(
             mockClient,

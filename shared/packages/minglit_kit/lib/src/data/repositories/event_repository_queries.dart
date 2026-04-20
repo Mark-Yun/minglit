@@ -301,17 +301,26 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
   /// Counts pending review applications for a specific partner.
   Future<int> getPendingApplicationCount(String partnerId) async {
     try {
-      // Fix #1597: verification_submissions는 신청(event_applications)과 다른 개념.
-      // 신청관리 탭과 동일한 소스(event_applications)에서 카운트해 불일치 방지.
-      // 탭과 동일하게 미래 이벤트(start_time >= now)만 집계해 과거 pending 이중 집계 방지.
+      // Fix #1597: 2-step query to guarantee partner scoping.
+      // Single-level join filter (party.partner_id) is unambiguous in PostgREST;
+      // 2-level nesting (event.party.partner_id) can be silently ignored on some versions.
       final nowStr = DateTime.now().toIso8601String();
+
+      // Step 1: get future event IDs for this partner.
+      final eventsData = await supabaseClient
+          .from('events')
+          .select('id, party:parties!inner(partner_id)')
+          .eq('party.partner_id', partnerId)
+          .gte('start_time', nowStr);
+
+      final eventIds = eventsData.map((e) => e['id'] as String).toList();
+      if (eventIds.isEmpty) return 0;
+
+      // Step 2: count pending/pending_review applications for those events.
       final res = await supabaseClient
           .from('event_applications')
-          .select(
-            'id, event:events!inner(id, start_time, party:parties!inner(partner_id))',
-          )
-          .eq('event.party.partner_id', partnerId)
-          .gte('event.start_time', nowStr)
+          .select('id')
+          .inFilter('event_id', eventIds)
           .inFilter('status', ['pending', 'pending_review'])
           .count(CountOption.exact);
 
@@ -547,7 +556,8 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
           .select('*, party:parties!inner(*)')
           .eq('party.partner_id', partnerId)
           .gte('start_time', nowStr)
-          .order('start_time');
+          .order('start_time')
+          .limit(500); // Safety cap: prevents unbounded queries for prolific partners
       return data.map(Event.fromJson).toList();
     } catch (e, st) {
       Log.e('❌ [EventRepo] getPartnerFutureEvents Error', e, st);
