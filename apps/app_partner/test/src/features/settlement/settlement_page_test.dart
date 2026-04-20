@@ -22,9 +22,9 @@ import '../../../utils/mocks.dart';
 class _FakeSettlementDashboardController extends SettlementDashboardController {
   @override
   SettlementDashboardState build() => SettlementDashboardState(
-        selectedMonth: DateTime(2026, 4),
-        status: const AsyncValue.data(null),
-      );
+    selectedMonth: DateTime(2026, 4),
+    status: const AsyncValue.data(null),
+  );
 }
 
 class _FakeSettlementListController extends SettlementListController {
