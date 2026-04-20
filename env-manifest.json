@@ -191,6 +191,20 @@
             "desc": "OpenAI API key for tag extraction"
           }
         }
+      },
+      "user-get-ticket-token": {
+        "required": {
+          "TICKET_SIGNING_PRIVATE_KEY_JWK": {
+            "desc": "Ed25519 private key (OKP JWK) for signing ticket QR tokens"
+          }
+        }
+      },
+      "event-checkin": {
+        "required": {
+          "TICKET_SIGNING_PUBLIC_KEY_JWK": {
+            "desc": "Ed25519 public key (OKP JWK) for verifying QR token signatures"
+          }
+        }
       }
     }
   },
