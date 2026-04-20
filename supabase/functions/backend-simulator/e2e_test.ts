@@ -661,5 +661,42 @@ Deno.test({
   },
 });
 
+// Fix #1620: uncaught exception in dev → JSON error response (not bare 500)
+Deno.test({
+  name: "backend-simulator - unhandled exception returns JSON error (not bare 500)",
+  fn: async () => {
+    const h = await getHandler();
+
+    // SIM_USER_PASSWORD missing causes simCreateParties to throw.
+    // Before the catch block fix, Deno returned a bare "Internal Server Error"
+    // text body. After the fix, the response is JSON with the error message.
+    await withEnv(
+      {
+        ENVIRONMENT: "dev",
+        SUPABASE_URL: "http://localhost:54321",
+        SUPABASE_SERVICE_ROLE_KEY: "test-service-role-key",
+        SUPABASE_ANON_KEY: "test-anon-key",
+        SIM_USER_PASSWORD: undefined, // intentionally missing to trigger throw
+      },
+      async () => {
+        const { fetchMock } = createFetchMock([
+          {
+            matcher: (req) => req.url.includes("/rest/v1/partners"),
+            handler: (req) => jsonResponse(wrapSingle(req, [{ id: "partner-1" }])),
+          },
+        ]);
+        await withMockedFetch(fetchMock, async () => {
+          const response = await h(jsonRequest("http://localhost", {}));
+          assertEquals(response.status, 500);
+          const contentType = response.headers.get("content-type") ?? "";
+          assertStringIncludes(contentType, "application/json");
+          const body = await readJson(response);
+          assertStringIncludes(body.error ?? "", "SIM_USER_PASSWORD");
+        });
+      },
+    );
+  },
+});
+
 // Note: auto-complete cron job registration and SQL condition (end_time < now())
 // are tested at the database level in supabase/tests/database/59_auto_complete_cron_test.sql.

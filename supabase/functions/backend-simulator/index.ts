@@ -510,6 +510,13 @@ Deno.serve(async (req: Request): Promise<Response> => {
     github_issue_url: githubIssueUrl,
   });
 
+  } catch (err) {
+    // Fix #1620: Unhandled exceptions caused Deno to return a bare "Internal
+    // Server Error" with no body, making the root cause invisible in CI logs.
+    // Catch here to return a JSON error response with the message.
+    const message = err instanceof Error ? err.message : String(err);
+    log({ function: FN, level: "error", message: "unhandled exception", metadata: { runId, error: message } });
+    return errorResponse(`Unhandled exception: ${message}`, 500);
   } finally {
     await flush();
   }
