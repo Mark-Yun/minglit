@@ -34,12 +34,12 @@ SELECT ok(
   'public SELECT 정책이 storage.objects에 존재해야 함'
 );
 
--- anon 사용자는 bug-report-attachments에 INSERT 불가
+-- anon 사용자는 bug-report-attachments에 INSERT 불가 (RLS exception 발생)
 SELECT tests.clear_authentication();
-SELECT is_empty(
+SELECT throws_ok(
   $$INSERT INTO storage.objects (id, bucket_id, name, owner_id)
-    VALUES (gen_random_uuid(), 'bug-report-attachments', 'screenshots/anon-test.png', NULL)
-    RETURNING id$$,
+    VALUES (gen_random_uuid(), 'bug-report-attachments', 'screenshots/anon-test.png', NULL)$$,
+  '42501',
   'anon 사용자는 bug-report-attachments에 업로드할 수 없음'
 );
 
