@@ -431,6 +431,33 @@ void main() {
     );
 
     test(
+      'canCancel returns false for damaged data (paymentAmount=null) even with valid future event',
+      () {
+        // Fix #1652: paymentAmount=null is damaged data, not a free ticket.
+        // isFree requires paymentAmount == 0 explicitly to prevent treating
+        // missing data as free and bypassing payment gateway in user-cancel-order.
+        final futureEvent = _makeEvent(
+          startTime: DateTime.now().add(const Duration(hours: 24)),
+        );
+        final now = DateTime.now();
+        final application = EventApplication(
+          id: 'app_damaged',
+          eventId: 'event_damaged',
+          ticketId: 'ticket_damaged',
+          userId: 'user_damaged',
+          status: 'paid',
+          paymentId: null,
+          paymentAmount: null,
+          createdAt: now,
+          updatedAt: now,
+          event: futureEvent,
+        );
+
+        expect(getController().canCancel(application), isFalse);
+      },
+    );
+
+    test(
       'canCancel returns false for paid ticket with null paymentId (amount mismatch)',
       () {
         final futureEvent = _makeEvent(

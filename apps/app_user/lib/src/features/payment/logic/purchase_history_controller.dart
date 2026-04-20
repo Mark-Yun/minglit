@@ -41,7 +41,7 @@ class PurchaseHistoryController extends _$PurchaseHistoryController {
     // apply_event RPC가 무료 신청 시 paymentId=null로 저장 → isRefundReady 실패
     // user-cancel-order EF는 paymentAmount=0 케이스를 별도 처리
     final isFree =
-        (application.paymentAmount ?? 0) == 0 && application.paymentId == null;
+        application.paymentAmount == 0 && application.paymentId == null;
     final isReady =
         isFree ? eventStartTime != null : isRefundReady(application);
     return isActiveTicket(application) &&
@@ -83,7 +83,7 @@ class PurchaseHistoryController extends _$PurchaseHistoryController {
   }) async {
     // Fix #1652: 무료 티켓(paymentAmount=0, paymentId=null)은 환불 계산 건너뜀
     // user-cancel-order EF가 paymentAmount=0 케이스를 직접 처리
-    final isFree = (paymentAmount ?? 0) == 0 && paymentId == null;
+    final isFree = paymentAmount == 0 && paymentId == null;
 
     if (!isFree &&
         (paymentId == null || paymentAmount == null || eventStartTime == null)) {
