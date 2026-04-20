@@ -109,6 +109,9 @@ class _BottomTicketBar extends ConsumerWidget {
       );
     }
 
+    // AdmissionButtonStyle.disabled always has config.enabled == false,
+    // so onPressed == null here. MinglitButton renders its standard disabled
+    // appearance, which is the design-system-defined disabled state.
     return MinglitButton(
       label: config.label,
       onPressed: onPressed,
