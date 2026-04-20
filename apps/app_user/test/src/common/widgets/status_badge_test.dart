@@ -50,6 +50,29 @@ void main() {
       expect(find.text('알수없음'), findsOneWidget);
     });
 
+    // Fix #1541: payment_failed / payment_pending 누락 케이스 회귀 방지
+    testWidgets('renders 결제중 for payment_pending status', (tester) async {
+      await tester.pumpWidget(createTestWidget('payment_pending'));
+      expect(find.text('결제중'), findsOneWidget);
+    });
+
+    testWidgets('renders 결제실패 for payment_failed status', (tester) async {
+      await tester.pumpWidget(createTestWidget('payment_failed'));
+      expect(find.text('결제실패'), findsOneWidget);
+    });
+
+    testWidgets('payment_failed uses error color', (tester) async {
+      await tester.pumpWidget(createTestWidget('payment_failed'));
+      final badge = tester.widget<MinglitBadge>(find.byType(MinglitBadge));
+      expect(badge.color, MinglitColors.error);
+    });
+
+    testWidgets('payment_pending uses info color', (tester) async {
+      await tester.pumpWidget(createTestWidget('payment_pending'));
+      final badge = tester.widget<MinglitBadge>(find.byType(MinglitBadge));
+      expect(badge.color, MinglitColors.info);
+    });
+
     // Fix #1236: 성공 상태(paid/approved)에 success 색상, 오류 상태에 error 색상
     testWidgets('paid and approved use success color (not primary purple)', (
       tester,
@@ -108,6 +131,9 @@ void main() {
         'paid',
         'rejected',
         'cancelled',
+        // Fix #1541: 누락됐던 두 상태도 다크 모드에서 렌더링 검증
+        'payment_pending',
+        'payment_failed',
       ]) {
         await tester.pumpWidget(createDarkTestWidget(status));
         expect(find.byType(MinglitBadge), findsOneWidget);

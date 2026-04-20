@@ -66,6 +66,21 @@ void main() {
 
       // Fix #478: "마감" overlay badge must be visible when sold out
       expect(find.text('마감'), findsWidgets);
+
+      // Fix #1558: Semantics label must include "만석, 참여 불가" so screen readers convey sold-out state
+      // (시각 배지는 "마감", 스크린리더 announce는 #996 원래 용어인 "만석, 참여 불가")
+      final soldOutSemantics = tester
+          .widgetList<Semantics>(find.byType(Semantics))
+          .where(
+            (w) =>
+                (w.properties.label ?? '').contains('만석, 참여 불가') &&
+                (w.properties.label ?? '').contains('이벤트:'),
+          );
+      expect(
+        soldOutSemantics,
+        isNotEmpty,
+        reason: 'sold-out card Semantics label must contain "만석, 참여 불가"',
+      );
     });
 
     testWidgets('ended state applies grayscale ColorFiltered', (tester) async {
@@ -222,6 +237,115 @@ void main() {
       await tester.pump();
 
       expect(find.text(partner.name), findsOneWidget);
+    });
+  });
+
+  // Fix #996: 카드 전체를 하나의 시맨틱 노드로 병합하여 스크린 리더가
+  // 파편화된 정보를 읽지 않도록 함. 회귀 방지용 Semantics 테스트.
+  group('EventCard Semantics', () {
+    testWidgets(
+      'tappable card wraps with Semantics(button, descriptive label)',
+      (
+        tester,
+      ) async {
+        final event = Event(
+          id: 'e-semantics',
+          partyId: 'party-1',
+          startTime: baseTime,
+          endTime: baseTime.add(const Duration(hours: 3)),
+          createdAt: baseTime,
+          updatedAt: baseTime,
+          currentParticipants: 8,
+          party: party,
+          title: '금요일 네트워킹',
+        );
+
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: MinglitTheme.materialTheme,
+            home: Scaffold(
+              body: MinglitEventCard(
+                event: event,
+                currentTime: fiveDaysBefore,
+                onTap: () {},
+              ),
+            ),
+          ),
+        );
+        await tester.pump();
+
+        final matches = find
+            .byWidgetPredicate(
+              (w) =>
+                  w is Semantics &&
+                  (w.properties.label ?? '').startsWith('이벤트: 금요일 네트워킹') &&
+                  w.properties.button == true &&
+                  w.excludeSemantics,
+            )
+            .evaluate();
+
+        expect(
+          matches,
+          isNotEmpty,
+          reason:
+              'tappable card must wrap with Semantics('
+              'label: "이벤트: ...", button: true, excludeSemantics: true)',
+        );
+        final wrapper = matches.first.widget as Semantics;
+        expect(wrapper.properties.label, contains('참가자 8/20명'));
+        expect(
+          wrapper.properties.onTap,
+          isNotNull,
+          reason:
+              'tappable card Semantics must expose onTap so screen reader '
+              'users can activate the card',
+        );
+      },
+    );
+
+    testWidgets('non-tappable card omits button role', (tester) async {
+      final readonlyParty = Party(
+        id: 'party-readonly',
+        partnerId: 'partner-1',
+        title: '읽기 전용 카드',
+        createdAt: baseTime,
+        updatedAt: baseTime,
+        partner: partner,
+      );
+      final event = Event(
+        id: 'e-semantics-readonly',
+        partyId: readonlyParty.id,
+        startTime: baseTime,
+        endTime: baseTime.add(const Duration(hours: 3)),
+        createdAt: baseTime,
+        updatedAt: baseTime,
+        currentParticipants: 5,
+        party: readonlyParty,
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: MinglitTheme.materialTheme,
+          home: Scaffold(
+            body: MinglitEventCard(
+              event: event,
+              currentTime: fiveDaysBefore,
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(
+        find.byWidgetPredicate(
+          (w) =>
+              w is Semantics &&
+              (w.properties.label ?? '').startsWith('이벤트: 읽기 전용 카드') &&
+              w.properties.button != true,
+        ),
+        findsOneWidget,
+        reason: 'non-tappable card must not announce button role',
+      );
     });
   });
 

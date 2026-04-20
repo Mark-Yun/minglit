@@ -77,7 +77,9 @@ export async function simCreateParties(
     // ── Step 1: Acquire partner JWT ───────────────────────────────────────────
     const partnerEmail = await getPartnerEmail(supabase, partner.id);
     if (!partnerEmail) {
-      throw new Error(`No email for partner ${partner.id}`);
+      // Fix #1664: skip partner with no email instead of crashing the simulation
+      log({ level: "warn", phase: "create", step: "get_partner_email", message: `No email for partner ${partner.id} — skipping` });
+      continue;
     }
     const partnerToken = await getSimPartnerToken(supabaseUrl, anonKey, partnerEmail, simUserPassword);
 
@@ -218,7 +220,9 @@ export async function simCreateDisplayEvents(
     // Acquire partner JWT for EF calls
     const partnerEmail = await getPartnerEmail(supabase, partner.id);
     if (!partnerEmail) {
-      throw new Error(`No email for partner ${partner.id}`);
+      // Fix #1664: skip partner with no email instead of crashing the simulation
+      log({ level: "warn", phase: "create", step: "get_display_partner_email", message: `No email for partner ${partner.id} — skipping` });
+      continue;
     }
     const partnerToken = await getSimPartnerToken(supabaseUrl, anonKey, partnerEmail, simUserPassword);
 

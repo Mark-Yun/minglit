@@ -70,21 +70,25 @@ class _MinglitImageCarouselState extends State<MinglitImageCarousel> {
           : const AspectRatio(aspectRatio: 16 / 9, child: placeholder);
     }
 
-    Widget carousel = PageView.builder(
-      controller: _pageController,
-      itemCount: widget.imageUrls.length,
-      onPageChanged: (index) => setState(() => _currentIndex = index),
-      itemBuilder: (context, index) {
-        return GestureDetector(
-          onTap: () => widget.onImageTap?.call(index),
-          child: MinglitImage(
-            path: widget.imageUrls[index],
-            fit: widget.fit,
-            width: double.infinity,
-            height: widget.height,
-          ),
-        );
-      },
+    Widget carousel = Semantics(
+      label: '이미지 ${_currentIndex + 1} / ${widget.imageUrls.length}',
+      image: true,
+      child: PageView.builder(
+        controller: _pageController,
+        itemCount: widget.imageUrls.length,
+        onPageChanged: (index) => setState(() => _currentIndex = index),
+        itemBuilder: (context, index) {
+          return GestureDetector(
+            onTap: () => widget.onImageTap?.call(index),
+            child: MinglitImage(
+              path: widget.imageUrls[index],
+              fit: widget.fit,
+              width: double.infinity,
+              height: widget.height,
+            ),
+          );
+        },
+      ),
     );
 
     carousel = useFixedHeight

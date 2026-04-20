@@ -19,7 +19,7 @@ mixin _$PartyCreateWizardState {
  Location? get selectedLocation; String get addressDetail; String get directionsGuide;// Step 3: Capacity & Contact
  int get minConfirmedCount; int get maxParticipants; String get contactPhone; String get contactEmail; String? get contactKakao; Set<String> get enabledContactMethods; bool get balanceEnabled; int get balanceTolerance;// Step 4: Entry Rules (Entry Groups)
  List<EntryGroupTemplate> get entryGroups;// Step 5: Ticket Templates
- List<TicketTemplate> get tickets; String get visibility;// Tag Selection (Step 1)
+ List<TicketTemplate> get tickets; String get visibility;// Tag Selection (Step 1 — tag_ids for EF)
  List<String> get tagIds;// Global Status
  AsyncValue<void> get status;
 /// Create a copy of PartyCreateWizardState
@@ -32,16 +32,16 @@ $PartyCreateWizardStateCopyWith<PartyCreateWizardState> get copyWith => _$PartyC
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PartyCreateWizardState&&(identical(other.currentStep, currentStep) || other.currentStep == currentStep)&&(identical(other.isPrefilled, isPrefilled) || other.isPrefilled == isPrefilled)&&(identical(other.editingPartyId, editingPartyId) || other.editingPartyId == editingPartyId)&&(identical(other.title, title) || other.title == title)&&const DeepCollectionEquality().equals(other.description, description)&&const DeepCollectionEquality().equals(other.imageUrls, imageUrls)&&const DeepCollectionEquality().equals(other.imageFiles, imageFiles)&&(identical(other.selectedLocation, selectedLocation) || other.selectedLocation == selectedLocation)&&(identical(other.addressDetail, addressDetail) || other.addressDetail == addressDetail)&&(identical(other.directionsGuide, directionsGuide) || other.directionsGuide == directionsGuide)&&(identical(other.minConfirmedCount, minConfirmedCount) || other.minConfirmedCount == minConfirmedCount)&&(identical(other.maxParticipants, maxParticipants) || other.maxParticipants == maxParticipants)&&(identical(other.contactPhone, contactPhone) || other.contactPhone == contactPhone)&&(identical(other.contactEmail, contactEmail) || other.contactEmail == contactEmail)&&(identical(other.contactKakao, contactKakao) || other.contactKakao == contactKakao)&&const DeepCollectionEquality().equals(other.enabledContactMethods, enabledContactMethods)&&(identical(other.balanceEnabled, balanceEnabled) || other.balanceEnabled == balanceEnabled)&&(identical(other.balanceTolerance, balanceTolerance) || other.balanceTolerance == balanceTolerance)&&const DeepCollectionEquality().equals(other.entryGroups, entryGroups)&&const DeepCollectionEquality().equals(other.tickets, tickets)&&(identical(other.visibility, visibility) || other.visibility == visibility)&&(identical(other.status, status) || other.status == status));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PartyCreateWizardState&&(identical(other.currentStep, currentStep) || other.currentStep == currentStep)&&(identical(other.isPrefilled, isPrefilled) || other.isPrefilled == isPrefilled)&&(identical(other.editingPartyId, editingPartyId) || other.editingPartyId == editingPartyId)&&(identical(other.title, title) || other.title == title)&&const DeepCollectionEquality().equals(other.description, description)&&const DeepCollectionEquality().equals(other.imageUrls, imageUrls)&&const DeepCollectionEquality().equals(other.imageFiles, imageFiles)&&(identical(other.selectedLocation, selectedLocation) || other.selectedLocation == selectedLocation)&&(identical(other.addressDetail, addressDetail) || other.addressDetail == addressDetail)&&(identical(other.directionsGuide, directionsGuide) || other.directionsGuide == directionsGuide)&&(identical(other.minConfirmedCount, minConfirmedCount) || other.minConfirmedCount == minConfirmedCount)&&(identical(other.maxParticipants, maxParticipants) || other.maxParticipants == maxParticipants)&&(identical(other.contactPhone, contactPhone) || other.contactPhone == contactPhone)&&(identical(other.contactEmail, contactEmail) || other.contactEmail == contactEmail)&&(identical(other.contactKakao, contactKakao) || other.contactKakao == contactKakao)&&const DeepCollectionEquality().equals(other.enabledContactMethods, enabledContactMethods)&&(identical(other.balanceEnabled, balanceEnabled) || other.balanceEnabled == balanceEnabled)&&(identical(other.balanceTolerance, balanceTolerance) || other.balanceTolerance == balanceTolerance)&&const DeepCollectionEquality().equals(other.entryGroups, entryGroups)&&const DeepCollectionEquality().equals(other.tickets, tickets)&&(identical(other.visibility, visibility) || other.visibility == visibility)&&const DeepCollectionEquality().equals(other.tagIds, tagIds)&&(identical(other.status, status) || other.status == status));
 }
 
 
 @override
-int get hashCode => Object.hashAll([runtimeType,currentStep,isPrefilled,editingPartyId,title,const DeepCollectionEquality().hash(description),const DeepCollectionEquality().hash(imageUrls),const DeepCollectionEquality().hash(imageFiles),selectedLocation,addressDetail,directionsGuide,minConfirmedCount,maxParticipants,contactPhone,contactEmail,contactKakao,const DeepCollectionEquality().hash(enabledContactMethods),balanceEnabled,balanceTolerance,const DeepCollectionEquality().hash(entryGroups),const DeepCollectionEquality().hash(tickets),visibility,status]);
+int get hashCode => Object.hashAll([runtimeType,currentStep,isPrefilled,editingPartyId,title,const DeepCollectionEquality().hash(description),const DeepCollectionEquality().hash(imageUrls),const DeepCollectionEquality().hash(imageFiles),selectedLocation,addressDetail,directionsGuide,minConfirmedCount,maxParticipants,contactPhone,contactEmail,contactKakao,const DeepCollectionEquality().hash(enabledContactMethods),balanceEnabled,balanceTolerance,const DeepCollectionEquality().hash(entryGroups),const DeepCollectionEquality().hash(tickets),visibility,const DeepCollectionEquality().hash(tagIds),status]);
 
 @override
 String toString() {
-  return 'PartyCreateWizardState(currentStep: $currentStep, isPrefilled: $isPrefilled, editingPartyId: $editingPartyId, title: $title, description: $description, imageUrls: $imageUrls, imageFiles: $imageFiles, selectedLocation: $selectedLocation, addressDetail: $addressDetail, directionsGuide: $directionsGuide, minConfirmedCount: $minConfirmedCount, maxParticipants: $maxParticipants, contactPhone: $contactPhone, contactEmail: $contactEmail, contactKakao: $contactKakao, enabledContactMethods: $enabledContactMethods, balanceEnabled: $balanceEnabled, balanceTolerance: $balanceTolerance, entryGroups: $entryGroups, tickets: $tickets, visibility: $visibility, status: $status)';
+  return 'PartyCreateWizardState(currentStep: $currentStep, isPrefilled: $isPrefilled, editingPartyId: $editingPartyId, title: $title, description: $description, imageUrls: $imageUrls, imageFiles: $imageFiles, selectedLocation: $selectedLocation, addressDetail: $addressDetail, directionsGuide: $directionsGuide, minConfirmedCount: $minConfirmedCount, maxParticipants: $maxParticipants, contactPhone: $contactPhone, contactEmail: $contactEmail, contactKakao: $contactKakao, enabledContactMethods: $enabledContactMethods, balanceEnabled: $balanceEnabled, balanceTolerance: $balanceTolerance, entryGroups: $entryGroups, tickets: $tickets, visibility: $visibility, tagIds: $tagIds, status: $status)';
 }
 
 
@@ -314,9 +314,9 @@ class _PartyCreateWizardState implements PartyCreateWizardState {
 }
 
 @override@JsonKey() final  String visibility;
-// Tag Selection (Step 1)
+// Tag Selection (Step 1 — tag_ids for EF)
  final  List<String> _tagIds;
-// Tag Selection (Step 1)
+// Tag Selection (Step 1 — tag_ids for EF)
 @override@JsonKey() List<String> get tagIds {
   if (_tagIds is EqualUnmodifiableListView) return _tagIds;
   // ignore: implicit_dynamic_type
