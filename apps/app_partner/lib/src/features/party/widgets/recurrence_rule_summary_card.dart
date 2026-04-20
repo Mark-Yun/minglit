@@ -1,4 +1,5 @@
 import 'package:app_partner/src/features/party/detail/party_detail_coordinator.dart';
+import 'package:app_partner/src/features/party/recurrence/recurrence_management_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
