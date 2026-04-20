@@ -112,10 +112,9 @@ jobs:
         with:
           ref: ${{ github.head_ref || github.ref }}
           fetch-depth: 0
-          # Checkout with PAT so the golden auto-commit push triggers CI normally;
-          # GITHUB_TOKEN pushes get blocked by GitHub's anti-loop policy
-          # (runs created with conclusion=action_required and never execute).
-          token: ${{ secrets.GH_PAT_VERSION_BUMP }}
+          # persist-credentials: false keeps the PAT out of git config during pub get,
+          # analyze, and test steps; the PAT is injected only in the push step below.
+          persist-credentials: false
       - uses: subosito/flutter-action@v2
         if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
         with:
@@ -184,6 +183,8 @@ jobs:
         if: ${{ needs.changes.outputs[matrix.change_key] == 'true' && github.event_name == 'pull_request' }}
         env:
           PR_BRANCH: ${{ github.head_ref }}
+          # PAT injected only here, not during pub get/analyze/test above.
+          GH_PAT: ${{ secrets.GH_PAT_VERSION_BUMP }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -192,12 +193,14 @@ jobs:
             echo "No golden changes to commit"
           else
             git commit -m "chore(golden): update CI goldens on Linux runner [skip ci]"
+            git remote set-url origin "https://x-access-token:${GH_PAT}@github.com/${GITHUB_REPOSITORY}.git"
             for i in 1 2 3; do
               git pull --rebase origin "${PR_BRANCH}" 2>/dev/null || true
               git push origin "HEAD:${PR_BRANCH}" && break
               echo "Push attempt $i failed, retrying in 5s..."
               sleep 5
             done
+            git remote set-url origin "https://github.com/${GITHUB_REPOSITORY}.git"
           fi
       - name: Fail if golden comparison detected mismatch
         if: ${{ steps.golden_compare.outcome == 'failure' }}
