@@ -7,6 +7,9 @@ import 'package:minglit_kit/minglit_kit.dart';
 /// Fix #1236: 모든 상태에 brand purple 사용 → 의미론적 상태 색상으로 교정
 /// paid/approved → success(초록), pending_review → warning(노랑),
 /// pending → info(파랑), cancelled → neutral(회색), rejected → error(빨강)
+///
+/// Fix #1541: payment_failed/payment_pending 누락 케이스 추가
+/// DB check constraint의 8개 상태 전체를 커버하도록 보완.
 class StatusBadge extends StatelessWidget {
   const StatusBadge({required this.status, super.key});
 
@@ -45,6 +48,13 @@ class StatusBadge extends StatelessWidget {
         label = '취소됨';
         // Fix #1236: neutral grey — 취소는 오류가 아닌 종료 상태
         color = colors.textSecondary;
+      // Fix #1541: DB check constraint의 나머지 두 상태 처리
+      case 'payment_pending':
+        label = '결제중';
+        color = colors.info;
+      case 'payment_failed':
+        label = '결제실패';
+        color = colors.error;
       default:
         label = '알수없음';
         color = colors.textSecondary;

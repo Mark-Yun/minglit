@@ -94,8 +94,34 @@ Deno.serve(withHandler(async (req) => {
     if (isPaid) {
       const paymentAmount = application.payment_amount as number | null;
 
-      // Free event (payment_amount = 0 or null): just update status
-      if (!paymentAmount || paymentAmount === 0) {
+      // Fix #1652: payment_amount=null means damaged data — reject, do not treat as free.
+      if (paymentAmount === null) {
+        log({ function: FN, level: "error", message: "Damaged data: payment_amount=null on paid application", metadata: { application_id: application.id } });
+        return errorResponse("결제 정보가 손상된 신청입니다", 400);
+      }
+
+      // Free event (payment_amount === 0): verify event hasn't started, then cancel.
+      if (paymentAmount === 0) {
+        const { data: eventData, error: eventError } = await withSpan(
+          "db.query.events.free_cancel", "db.query",
+          () => supabase
+            .from("events")
+            .select("start_time")
+            .eq("id", event_id)
+            .single(),
+        );
+
+        if (eventError || !eventData) {
+          log({ function: FN, level: "error", message: "Failed to fetch event for free cancel", metadata: { detail: eventError } });
+          return errorResponse("이벤트 정보를 가져올 수 없습니다", 500);
+        }
+
+        if (new Date(eventData.start_time) <= new Date()) {
+          return errorResponse("refund_not_eligible", 400, {
+            reason: "event_already_started",
+          });
+        }
+
         const { error: updateError } = await withSpan(
           "db.update.event_applications.cancel", "db.update",
           () => supabase

@@ -84,12 +84,26 @@ void main() {
   // SettlementHistoryEntry
   // ---------------------------------------------------------------------------
   group('SettlementHistoryEntry.fromJson', () {
+    // Fix #1566: settlement_histories uses event_at, not created_at.
+    // Regression guard: fromJson must read event_at or it throws at runtime.
+    test('Fix #1566: reads event_at from DB (not created_at)', () {
+      final result = SettlementHistoryEntry.fromJson({
+        'event_type': 'STATUS_CHANGED',
+        'from_status': 'PENDING',
+        'to_status': 'READY',
+        'event_at': '2026-01-15T10:00:00.000Z',
+      });
+      expect(result.createdAt.year, 2026);
+      expect(result.createdAt.month, 1);
+      expect(result.createdAt.day, 15);
+    });
+
     test('parses all fields', () {
       final result = SettlementHistoryEntry.fromJson({
         'event_type': 'STATUS_CHANGED',
         'from_status': 'PENDING',
         'to_status': 'READY',
-        'created_at': '2026-01-15T10:00:00.000Z',
+        'event_at': '2026-01-15T10:00:00.000Z',
         'details': {'reason': 'auto-confirmed'},
       });
       expect(result.eventType, 'STATUS_CHANGED');
@@ -106,19 +120,29 @@ void main() {
         'event_type': 'STATUS_CHANGED',
         'from_status': 'PENDING',
         'to_status': 'READY',
-        'created_at': '2026-01-15T10:00:00.000Z',
+        'event_at': '2026-01-15T10:00:00.000Z',
       });
       expect(result.details, isNull);
     });
 
-    test('round-trip toJson/fromJson', () {
+    test('round-trip toJson/fromJson preserves event_at key', () {
       final original = SettlementHistoryEntry.fromJson({
         'event_type': 'STATUS_CHANGED',
         'from_status': 'PENDING',
         'to_status': 'COMPLETED',
-        'created_at': '2026-01-15T10:00:00.000Z',
+        'event_at': '2026-01-15T10:00:00.000Z',
       });
       final json = original.toJson();
+      expect(
+        json.containsKey('event_at'),
+        isTrue,
+        reason: 'toJson must use event_at key to match DB column name',
+      );
+      expect(
+        json.containsKey('created_at'),
+        isFalse,
+        reason: 'toJson must not use created_at — that column does not exist',
+      );
       final restored = SettlementHistoryEntry.fromJson(json);
       expect(restored.eventType, original.eventType);
       expect(restored.fromStatus, original.fromStatus);
@@ -256,13 +280,13 @@ void main() {
             'event_type': 'STATUS_CHANGED',
             'from_status': 'PENDING',
             'to_status': 'READY',
-            'created_at': '2026-01-15T10:00:00.000Z',
+            'event_at': '2026-01-15T10:00:00.000Z',
           },
           {
             'event_type': 'STATUS_CHANGED',
             'from_status': 'READY',
             'to_status': 'COMPLETED',
-            'created_at': '2026-01-20T09:05:00.000Z',
+            'event_at': '2026-01-20T09:05:00.000Z',
           },
         ],
       );

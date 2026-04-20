@@ -27,15 +27,15 @@ class MinglitColors {
   /// Secondary text color (dark gray).
   static const textSecondary = Color(0xFF4B5563);
 
-  /// Success green color.
-  static const success = Color(0xFF22C55E);
+  /// Success green color (green-600 for better contrast vs white).
+  static const success = Color(0xFF16A34A);
 
   /// Info blue color — neutral informational state (e.g. pending payment).
   // Fix #1236: 상태 배지 의미론적 색상 — 결제대기 등 중립 정보 상태
   static const info = Color(0xFF3B82F6);
 
-  /// Warning amber color.
-  static const warning = Color(0xFFF59E0B);
+  /// Warning amber color (amber-600 for better contrast vs white).
+  static const warning = Color(0xFFD97706);
 
   /// Fully transparent color.
   static const transparent = Color(0x00000000);
@@ -200,6 +200,9 @@ class MinglitRadius {
 
   /// 16px card border radius.
   static const double card = 16;
+
+  /// 28px dialog border radius.
+  static const double dialog = 28;
 
   /// 12px input border radius.
   static const double input = 12;

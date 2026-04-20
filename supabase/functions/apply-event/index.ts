@@ -236,7 +236,8 @@ Deno.serve(withHandler(async (req) => {
           return errorResponse(balance?.reason ?? "성비 균형 제한", 409);
         }
 
-        const newStatus = verification_data ? "pending_review" : "paid";
+        // Fix #1660: free re-applications use 'approved' (not 'paid') — payment_id is null for free events
+        const newStatus = verification_data ? "pending_review" : "approved";
         const { error: updateError } = await supabase
           .from("event_applications")
           .update({
