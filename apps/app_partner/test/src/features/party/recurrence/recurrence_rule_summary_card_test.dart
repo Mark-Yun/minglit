@@ -1,4 +1,5 @@
 // Fix #1644: RecurrenceRuleSummaryCard 위젯 렌더링 테스트
+import 'package:app_partner/src/features/party/recurrence/recurrence_management_controller.dart';
 import 'package:app_partner/src/features/party/widgets/recurrence_rule_summary_card.dart';
 import 'package:app_partner/src/routing/app_router.dart';
 import 'package:flutter/material.dart';
