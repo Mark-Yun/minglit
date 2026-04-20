@@ -383,7 +383,9 @@ void main() {
           mockTable(
             mockClient,
             'event_applications',
-            selectData: [{'id': 'app_3'}],
+            selectData: [
+              {'id': 'app_3'},
+            ],
             countValue: 1,
           ),
         );

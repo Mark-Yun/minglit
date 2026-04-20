@@ -557,7 +557,9 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
           .eq('party.partner_id', partnerId)
           .gte('start_time', nowStr)
           .order('start_time')
-          .limit(500); // Safety cap: prevents unbounded queries for prolific partners
+          .limit(
+            500,
+          ); // Safety cap: prevents unbounded queries for prolific partners
       return data.map(Event.fromJson).toList();
     } catch (e, st) {
       Log.e('❌ [EventRepo] getPartnerFutureEvents Error', e, st);
