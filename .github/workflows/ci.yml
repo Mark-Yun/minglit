@@ -112,6 +112,10 @@ jobs:
         with:
           ref: ${{ github.head_ref || github.ref }}
           fetch-depth: 0
+          # Checkout with PAT so the golden auto-commit push triggers CI normally;
+          # GITHUB_TOKEN pushes get blocked by GitHub's anti-loop policy
+          # (runs created with conclusion=action_required and never execute).
+          token: ${{ secrets.GH_PAT_VERSION_BUMP }}
       - uses: subosito/flutter-action@v2
         if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
         with:

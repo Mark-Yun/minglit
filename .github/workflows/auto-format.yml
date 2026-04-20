@@ -20,6 +20,10 @@ jobs:
       - uses: actions/checkout@v6
         with:
           ref: ${{ github.head_ref }}
+          # Checkout with PAT so that the subsequent auto-format commit is pushed
+          # with real-user auth, bypassing GitHub's anti-loop policy (GITHUB_TOKEN
+          # pushes do not trigger further workflow runs).
+          token: ${{ secrets.GH_PAT_VERSION_BUMP }}
 
       - uses: subosito/flutter-action@v2
         with:
