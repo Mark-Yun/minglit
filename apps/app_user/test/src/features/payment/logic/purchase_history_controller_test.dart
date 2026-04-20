@@ -337,6 +337,7 @@ void main() {
         final futureEvent = _makeEvent(
           startTime: DateTime.now().add(const Duration(hours: 24)),
         );
+        // paymentId=null but paymentAmount=10000 (paid ticket without ID → invalid)
         final application = _makeApplication(
           event: futureEvent,
           paymentId: null,
@@ -354,6 +355,95 @@ void main() {
           purchaseHistoryControllerProvider.notifier,
         );
         expect(ctrl.canCancel(application), isFalse);
+      },
+    );
+  });
+
+  // Fix #1652: 무료 티켓(paymentAmount=0, paymentId=null) 취소 버튼 표시
+  group('PurchaseHistoryController.canCancel — Fix #1652 free ticket', () {
+    late ProviderContainer container;
+
+    setUp(() {
+      container = ProviderContainer(
+        overrides: [
+          currentUserProvider.overrideWith((ref) => null),
+          eventRepositoryProvider.overrideWithValue(mockEventRepository),
+        ],
+      );
+    });
+
+    tearDown(() => container.dispose());
+
+    PurchaseHistoryController getController() =>
+        container.read(purchaseHistoryControllerProvider.notifier);
+
+    test(
+      'canCancel returns true for free ticket (paymentAmount=0, paymentId=null) before event',
+      () {
+        final futureEvent = _makeEvent(
+          startTime: DateTime.now().add(const Duration(hours: 24)),
+        );
+        final application = _makeApplication(
+          event: futureEvent,
+          paymentId: null,
+          paymentAmount: 0,
+        );
+
+        expect(getController().canCancel(application), isTrue);
+      },
+    );
+
+    test(
+      'canCancel returns false for free ticket after event has started',
+      () {
+        final pastEvent = _makeEvent(
+          startTime: DateTime.now().subtract(const Duration(minutes: 1)),
+        );
+        final application = _makeApplication(
+          event: pastEvent,
+          paymentId: null,
+          paymentAmount: 0,
+        );
+
+        expect(getController().canCancel(application), isFalse);
+      },
+    );
+
+    test(
+      'canCancel returns false for free ticket with paymentAmount=null when event null',
+      () {
+        final now = DateTime.now();
+        final application = EventApplication(
+          id: 'app_free',
+          eventId: 'event_free',
+          ticketId: 'ticket_free',
+          userId: 'user_free',
+          status: 'paid',
+          paymentId: null,
+          paymentAmount: null,
+          createdAt: now,
+          updatedAt: now,
+          // event intentionally omitted
+        );
+
+        expect(getController().canCancel(application), isFalse);
+      },
+    );
+
+    test(
+      'canCancel returns false for paid ticket with null paymentId (amount mismatch)',
+      () {
+        final futureEvent = _makeEvent(
+          startTime: DateTime.now().add(const Duration(hours: 24)),
+        );
+        // paymentId=null but amount=5000 — paid ticket missing ID is not free
+        final application = _makeApplication(
+          event: futureEvent,
+          paymentId: null,
+          paymentAmount: 5000,
+        );
+
+        expect(getController().canCancel(application), isFalse);
       },
     );
   });
