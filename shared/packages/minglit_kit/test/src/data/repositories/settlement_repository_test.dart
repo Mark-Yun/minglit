@@ -206,6 +206,11 @@ void main() {
             contains('event_at'),
             reason: 'order() must use event_at (not created_at)',
           );
+          expect(
+            historiesBuilder.recordedOrderColumns,
+            isNot(contains('created_at')),
+            reason: 'order() must not include old created_at column — Fix #1566',
+          );
         },
       );
 

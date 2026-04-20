@@ -113,6 +113,7 @@ class SettlementRepository {
                     'event_type, from_status, to_status, details, event_at',
                   )
                   .eq('settlement_item_id', itemId)
+                  // Fix #1566: order by event_at (not created_at — that column doesn't exist)
                   .order('event_at', ascending: false)
               as List;
 
