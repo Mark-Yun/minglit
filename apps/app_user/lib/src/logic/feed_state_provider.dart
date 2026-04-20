@@ -60,11 +60,17 @@ class SearchQuery extends _$SearchQuery {
   void clear() => state = '';
 }
 
+// Fix #1634: dev 환경에서는 eligibility 필터 기본 비활성화 —
+// 시드 유저의 age/gender가 이벤트 entry_group과 충돌해 홈 피드가 비어 보이는 문제 방지.
+const _isProductionEnv =
+    String.fromEnvironment('ENVIRONMENT', defaultValue: 'production') ==
+    'production';
+
 @riverpod
 class ActiveFilters extends _$ActiveFilters {
   @override
   ExploreFilters build() => const ExploreFilters(
-    eligibilityEnabled: true,
+    eligibilityEnabled: _isProductionEnv,
     nearbyEnabled: true,
   );
 
