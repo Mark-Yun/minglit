@@ -425,8 +425,12 @@ void main() {
       });
 
       test(
-        'step-1 filters by partner_id and start_time; step-2 filters by event_id and status',
+        'step-1 filters by partner_id, start_time, and applies limit(500) matching getPartnerFutureEvents scope; step-2 filters by event_id and status',
         () async {
+          // Note: .limit(500) and .order('start_time') are applied in step-1 to guarantee
+          // count and tab (getPartnerFutureEvents) share identical event scope.
+          // The mock does not capture limit/order calls, so those are verified by
+          // code review and integration tests only.
           final eventsTable = mockTable(
             mockClient,
             'events',

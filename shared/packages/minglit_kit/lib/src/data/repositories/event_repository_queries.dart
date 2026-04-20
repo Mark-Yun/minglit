@@ -306,12 +306,15 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
       // 2-level nesting (event.party.partner_id) can be silently ignored on some versions.
       final nowStr = DateTime.now().toIso8601String();
 
-      // Step 1: get future event IDs for this partner.
+      // Step 1: get future event IDs for this partner (same limit as getPartnerFutureEvents
+      // to guarantee count and tab share identical event scope).
       final eventsData = await supabaseClient
           .from('events')
           .select('id, party:parties!inner(partner_id)')
           .eq('party.partner_id', partnerId)
-          .gte('start_time', nowStr);
+          .gte('start_time', nowStr)
+          .order('start_time')
+          .limit(500);
 
       final eventIds = eventsData.map((e) => e['id'] as String).toList();
       if (eventIds.isEmpty) return 0;

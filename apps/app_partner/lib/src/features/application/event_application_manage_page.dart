@@ -100,13 +100,16 @@ eventApplicationsGroupedProvider = FutureProvider.family
 
       final grouped = <Event, List<EventApplication>>{};
 
-      for (final event in events) {
-        final apps = await eventRepo.getApplicationsByEventId(event.id);
-        final filtered = apps
+      // Fix #1597: parallelize per-event fetches to avoid O(n) sequential latency.
+      final allApps = await Future.wait(
+        events.map((e) => eventRepo.getApplicationsByEventId(e.id)),
+      );
+      for (var i = 0; i < events.length; i++) {
+        final filtered = allApps[i]
             .where((a) => params.statusFilter.contains(a.status))
             .toList();
         if (filtered.isNotEmpty) {
-          grouped[event] = filtered;
+          grouped[events[i]] = filtered;
         }
       }
 
