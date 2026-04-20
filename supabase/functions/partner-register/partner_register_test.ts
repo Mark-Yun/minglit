@@ -866,6 +866,99 @@ Deno.test({
   },
 });
 
+// ─── save_draft: non-clearable null omitted, clearable null preserved ───
+Deno.test({
+  name: "save_draft: non-clearable null is omitted, clearable null is preserved in payload",
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    let insertBody: string | null = null;
+
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      {
+        matcher: (req) =>
+          req.url.includes("/rest/v1/partner_applications") && req.method === "POST",
+        handler: async (req) => {
+          insertBody = await req.clone().text();
+          return jsonResponse({ id: "new-id" });
+        },
+      },
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const res = await handler(
+          authenticatedJsonRequest("http://localhost", {
+            action: "save_draft",
+            data: {
+              brand_name: null,         // non-clearable → omit
+              biz_type: null,           // non-clearable → omit
+              introduction: null,       // clearable → preserve as null
+              tax_email: null,          // clearable → preserve as null
+              profile_image_path: null, // clearable → preserve as null
+              current_step: 1,
+            },
+          }),
+        );
+        assertEquals(res.status, 200);
+        const parsed = JSON.parse(insertBody!);
+        assertEquals("brand_name" in parsed, false);
+        assertEquals("biz_type" in parsed, false);
+        assertEquals(parsed.introduction, null);
+        assertEquals(parsed.tax_email, null);
+        assertEquals(parsed.profile_image_path, null);
+      });
+    });
+  },
+});
+
+// ─── update: non-clearable null omitted, clearable null preserved ───
+Deno.test({
+  name: "update: non-clearable null is omitted, clearable null is preserved in payload",
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    let patchBody: string | null = null;
+
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      selectAppRoute({ id: TEST_APP_ID, user_id: TEST_USER_ID, status: "needs_correction" }),
+      {
+        matcher: (req) =>
+          req.url.includes("/rest/v1/partner_applications") && req.method === "PATCH",
+        handler: async (req) => {
+          patchBody = await req.clone().text();
+          return new Response(null, { status: 200 });
+        },
+      },
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const res = await handler(
+          authenticatedJsonRequest("http://localhost", {
+            action: "update",
+            application_id: TEST_APP_ID,
+            data: {
+              brand_name: null,         // non-clearable → omit
+              biz_type: null,           // non-clearable → omit
+              introduction: null,       // clearable → preserve as null
+              tax_email: null,          // clearable → preserve as null
+              profile_image_path: null, // clearable → preserve as null
+            },
+          }),
+        );
+        assertEquals(res.status, 200);
+        const parsed = JSON.parse(patchBody!);
+        assertEquals("brand_name" in parsed, false);
+        assertEquals("biz_type" in parsed, false);
+        assertEquals(parsed.introduction, null);
+        assertEquals(parsed.tax_email, null);
+        assertEquals(parsed.profile_image_path, null);
+      });
+    });
+  },
+});
+
 // ─── update: whitelisted fields only — status/user_id ignored ───
 Deno.test({
   name: "update: only whitelisted fields are sent to DB",

@@ -1,5 +1,6 @@
 import 'package:app_partner/src/features/party/detail/party_detail_coordinator.dart';
 import 'package:app_partner/src/features/party/widgets/party_event_list_summary.dart';
+import 'package:app_partner/src/features/party/widgets/recurrence_rule_summary_card.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -20,6 +21,7 @@ class PartyEventManagementTab extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          RecurrenceRuleSummaryCard(partyId: party.id),
           // Events Section
           Text(
             context.l10n.partyDetail_section_events,

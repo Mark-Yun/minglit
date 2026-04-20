@@ -245,4 +245,12 @@ class PartyDetailCoordinator {
           .push(TicketCreateRoute(partyId: partyId, eventId: eventId).location),
     );
   }
+
+  void goToRecurrenceManagement(String partyId) {
+    unawaited(
+      _ref
+          .read(goRouterProvider)
+          .push(RecurrenceManagementRoute(partyId: partyId).location),
+    );
+  }
 }

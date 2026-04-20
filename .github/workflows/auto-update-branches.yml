@@ -18,7 +18,12 @@ jobs:
     steps:
       - name: Update auto-merge PRs that are behind
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Use PAT instead of GITHUB_TOKEN: update-branch called with GITHUB_TOKEN
+          # produces merge commits attributed to github-actions[bot], which GitHub's
+          # anti-loop policy blocks from triggering further workflow runs (runs are
+          # created with conclusion=action_required and never execute). PAT-authed
+          # pushes count as real-user events and trigger downstream CI normally.
+          GH_TOKEN: ${{ secrets.GH_PAT_VERSION_BUMP }}
         run: |
           REPO="${{ github.repository }}"
           echo "Checking open PRs with auto-merge enabled..."

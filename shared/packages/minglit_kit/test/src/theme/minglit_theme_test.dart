@@ -62,6 +62,75 @@ void main() {
 
       expect(theme.scaffoldBackgroundColor, equals(MinglitColors.surface));
     });
+
+    group('dialog background', () {
+      testWidgets('light theme uses the light dialog background color', (
+        tester,
+      ) async {
+        Color? actualBackgroundColor;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: MinglitTheme.materialTheme,
+            home: Builder(
+              builder: (context) {
+                final theme = Theme.of(context);
+                actualBackgroundColor = theme.dialogTheme.backgroundColor;
+                return const SizedBox.shrink();
+              },
+            ),
+          ),
+        );
+
+        final theme = MinglitTheme.materialTheme;
+
+        expect(actualBackgroundColor, MinglitColors.background);
+        expect(theme.dialogTheme.backgroundColor, MinglitColors.background);
+        expect(
+          theme.dialogTheme.backgroundColor,
+          theme.colorScheme.surface,
+          reason:
+              'Light dialog background should stay aligned with the light '
+              'surface/background token.',
+        );
+      });
+
+      testWidgets('dark theme uses surface #212121 instead of background', (
+        tester,
+      ) async {
+        Color? actualBackgroundColor;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: MinglitTheme.materialThemeDark,
+            home: Builder(
+              builder: (context) {
+                final theme = Theme.of(context);
+                actualBackgroundColor = theme.dialogTheme.backgroundColor;
+                return const SizedBox.shrink();
+              },
+            ),
+          ),
+        );
+
+        final theme = MinglitTheme.materialThemeDark;
+
+        expect(actualBackgroundColor, const Color(0xFF212121));
+        expect(theme.dialogTheme.backgroundColor, const Color(0xFF212121));
+        expect(theme.dialogTheme.backgroundColor, MinglitColorsDark.surface);
+        expect(
+          theme.dialogTheme.backgroundColor,
+          isNot(const Color(0xFF0F0F0F)),
+          reason:
+              'Dark dialog background must not collapse into the app '
+              'background layer.',
+        );
+        expect(
+          theme.dialogTheme.backgroundColor,
+          isNot(MinglitColorsDark.background),
+        );
+      });
+    });
   });
 
   group('partnerTheme', () {
