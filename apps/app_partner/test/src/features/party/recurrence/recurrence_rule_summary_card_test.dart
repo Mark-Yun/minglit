@@ -71,7 +71,6 @@ void main() {
       await tester.pumpWidget(
         _buildTestWidget(
           rule: _makeRule(
-            status: RecurrenceStatus.active,
             daysOfWeek: [6, 0],
           ),
         ),

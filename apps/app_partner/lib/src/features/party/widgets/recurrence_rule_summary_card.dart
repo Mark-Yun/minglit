@@ -14,7 +14,7 @@ class RecurrenceRuleSummaryCard extends ConsumerWidget {
 
     return ruleAsync.when(
       loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
       data: (rule) {
         if (rule == null || rule.status == RecurrenceStatus.cancelled) {
           return const SizedBox.shrink();
@@ -59,7 +59,7 @@ class _RecurrenceRuleCard extends ConsumerWidget {
       }(),
       RecurrencePattern.monthly => () {
         final day = rule.monthDay;
-        return day != null ? '$patternLabel ${day}일' : patternLabel;
+        return day != null ? '$patternLabel $day일' : patternLabel;
       }(),
     };
 
@@ -84,8 +84,7 @@ class _RecurrenceRuleCard extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: MinglitSpacing.large),
       child: Semantics(
-        label:
-            '반복 규칙 요약, ${_buildSummaryText()}, 상태 $statusLabel, 관리 화면으로 이동',
+        label: '반복 규칙 요약, ${_buildSummaryText()}, 상태 $statusLabel, 관리 화면으로 이동',
         child: Card(
           child: InkWell(
             onTap: () => coordinator.goToRecurrenceManagement(partyId),
