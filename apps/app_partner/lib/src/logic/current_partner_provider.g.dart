@@ -43,3 +43,51 @@ final class CurrentPartnerInfoProvider
 
 String _$currentPartnerInfoHash() =>
     r'c0296f7da2cb82e41e8b5b524d60f45e9808a3aa';
+
+/// Returns the current user's permission list for the active partner.
+/// Empty list when partner or auth state is unavailable.
+
+@ProviderFor(currentMemberPermissions)
+const currentMemberPermissionsProvider = CurrentMemberPermissionsProvider._();
+
+/// Returns the current user's permission list for the active partner.
+/// Empty list when partner or auth state is unavailable.
+
+final class CurrentMemberPermissionsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<String>>,
+          List<String>,
+          FutureOr<List<String>>
+        >
+    with $FutureModifier<List<String>>, $FutureProvider<List<String>> {
+  /// Returns the current user's permission list for the active partner.
+  /// Empty list when partner or auth state is unavailable.
+  const CurrentMemberPermissionsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'currentMemberPermissionsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$currentMemberPermissionsHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<List<String>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<String>> create(Ref ref) {
+    return currentMemberPermissions(ref);
+  }
+}
+
+String _$currentMemberPermissionsHash() =>
+    r'81f60b3087c80c9c2a5878beeb76e5f203596eb6';
