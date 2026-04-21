@@ -198,32 +198,20 @@ class _PartnerApplyPageState extends ConsumerState<PartnerApplyPage> {
 
   void _showLogoutDialog(BuildContext context, WidgetRef ref) {
     unawaited(
-      showDialog<void>(
+      MinglitAlert.showConfirm(
         context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: Text(context.l10n.home_button_logout),
-            content: const Text('로그아웃 하시겠습니까?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text(context.l10n.common_button_cancel),
-              ),
-              TextButton(
-                onPressed: () async {
-                  // Fix: dialog를 먼저 닫고 signOut — signOut이 GoRouter redirect를
-                  // 트리거하면 dialog context가 무효화되어 검은화면+freeze 발생
-                  final authRepo = ref.read(authRepositoryProvider);
-                  Navigator.of(context).pop();
-                  await Future<void>.delayed(Duration.zero);
-                  await authRepo.signOut();
-                },
-                child: Text(context.l10n.home_button_logout),
-              ),
-            ],
-          );
-        },
-      ),
+        title: context.l10n.home_button_logout,
+        content: '로그아웃 하시겠습니까?',
+        confirmText: context.l10n.home_button_logout,
+        cancelText: context.l10n.common_button_cancel,
+      ).then((confirmed) async {
+        if (!confirmed) return;
+        // Fix: showConfirm closes dialog before resolving, so signOut's
+        // GoRouter redirect won't hit an invalidated context.
+        final authRepo = ref.read(authRepositoryProvider);
+        await Future<void>.delayed(Duration.zero);
+        await authRepo.signOut();
+      }),
     );
   }
 
