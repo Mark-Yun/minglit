@@ -1,6 +1,7 @@
 import { createServiceClient } from "../_shared/supabase_client.ts";
 import { successResponse, errorResponse } from "../_shared/response_utils.ts";
 import { initSentry, withHandler, captureException } from "../_shared/logger.ts";
+import { requireServiceRole } from "../_shared/auth_utils.ts";
 
 initSentry();
 
@@ -155,14 +156,8 @@ Deno.serve(withHandler(async (req) => {
     return errorResponse("Method not allowed", 405);
   }
 
-  const expectedSecret = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  if (!expectedSecret) {
-    return errorResponse("Service role key not configured", 500);
-  }
-  const token = req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "");
-  if (token !== expectedSecret) {
-    return errorResponse("Unauthorized", 401);
-  }
+  const auth = requireServiceRole(req);
+  if (auth instanceof Response) return auth;
 
   const supabase = createServiceClient();
   const totalStart = Date.now();
