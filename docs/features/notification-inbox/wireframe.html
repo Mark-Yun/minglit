@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>알림 인박스 — 와이어프레임</title>
+<style>
+  :root {
+    --primary: #9900FF;
+    --primary-dark: #7B2FBE;
+    --primary-tint: rgba(153, 0, 255, 0.08);
+    --secondary: #FF9900;
+    --tertiary: #48C9B0;
+    --background: #FFFFFF;
+    --surface: #F9FAFB;
+    --text-primary: #111827;
+    --text-secondary: #4B5563;
+    --text-tertiary: #9CA3AF;
+    --success: #22C55E;
+    --error: #EF4444;
+    --gray-100: #F3F4F6;
+    --gray-200: #E5E7EB;
+    --gray-300: #D1D5DB;
+
+    --spacing-xsmall: 4px;
+    --spacing-small: 8px;
+    --spacing-sm: 12px;
+    --spacing-medium: 16px;
+    --spacing-large: 24px;
+    --spacing-xlarge: 32px;
+
+    --radius-small: 8px;
+    --radius-button: 12px;
+    --radius-card: 16px;
+    --radius-chip: 16px;
+
+    --font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font-family);
+    background: #1a1a2e;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 40px;
+    padding: 40px 20px;
+  }
+
+  .phone-frame {
+    width: 375px;
+    height: 812px;
+    background: var(--surface);
+    border-radius: 44px;
+    overflow: hidden;
+    box-shadow: 0 25px 80px rgba(0,0,0,0.4);
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .phone-frame::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 150px;
+    height: 30px;
+    background: #000;
+    border-radius: 0 0 20px 20px;
+    z-index: 10;
+  }
+
+  .screen {
+    height: 100%;
+    overflow-y: auto;
+    padding-top: 54px;
+    background: var(--background);
+  }
+
+  .screen-label {
+    color: #fff;
+    font-size: 13px;
+    text-align: center;
+    margin-top: 12px;
+    font-weight: 600;
+    opacity: 0.85;
+  }
+
+  .column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* ─── AppBar ─── */
+  .appbar {
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-sm) var(--spacing-medium);
+    background: var(--background);
+    border-bottom: 1px solid var(--gray-100);
+    height: 56px;
+    gap: var(--spacing-small);
+  }
+
+  .appbar .back {
+    font-size: 20px;
+    color: var(--text-primary);
+    cursor: pointer;
+    width: 32px;
+  }
+
+  .appbar .title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    flex: 1;
+  }
+
+  .appbar .action {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    cursor: pointer;
+  }
+
+  /* ─── Home AppBar (for bell badge demo) ─── */
+  .home-appbar {
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-sm) var(--spacing-medium);
+    background: var(--background);
+    border-bottom: 1px solid var(--gray-100);
+    height: 56px;
+  }
+
+  .home-appbar .logo {
+    flex: 1;
+    font-weight: 800;
+    font-size: 20px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .home-appbar .actions {
+    display: flex;
+    gap: var(--spacing-small);
+    align-items: center;
+  }
+
+  .icon-btn {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    cursor: pointer;
+    position: relative;
+    border-radius: 50%;
+  }
+
+  .icon-btn .emoji {
+    font-size: 20px;
+  }
+
+  .badge {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    background: var(--error);
+    color: #fff;
+    border: 2px solid var(--background);
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--gray-200);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    font-size: 16px;
+  }
+
+  /* ─── Filter Chips ─── */
+  .filter-bar {
+    display: flex;
+    gap: var(--spacing-small);
+    padding: var(--spacing-sm) var(--spacing-medium);
+    background: var(--background);
+    border-bottom: 1px solid var(--gray-100);
+    overflow-x: auto;
+  }
+
+  .chip {
+    padding: 6px 14px;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-chip);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xsmall);
+  }
+
+  .chip.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: var(--background);
+  }
+
+  .chip .count {
+    font-size: 11px;
+    font-weight: 700;
+    opacity: 0.9;
+  }
+
+  /* ─── Notification Card ─── */
+  .notif {
+    display: flex;
+    padding: var(--spacing-medium);
+    gap: var(--spacing-sm);
+    border-bottom: 1px solid var(--gray-100);
+    background: var(--background);
+    position: relative;
+    cursor: pointer;
+  }
+
+  .notif.unread {
+    background: var(--primary-tint);
+  }
+
+  .notif.unread::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--primary);
+  }
+
+  .notif .icon-wrap {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--gray-100);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .notif .icon-wrap.event { background: #FFE4CC; }
+  .notif .icon-wrap.matching { background: #FFD6E8; }
+  .notif .icon-wrap.ticket { background: #D6F0FF; }
+  .notif .icon-wrap.payment { background: #D1FAE5; }
+  .notif .icon-wrap.service { background: var(--gray-100); }
+
+  .notif .body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .notif .title-line {
+    font-size: 14px;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+  }
+
+  .notif.unread .title-line {
+    font-weight: 700;
+  }
+
+  .notif .desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    margin-bottom: 6px;
+  }
+
+  .notif .meta {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .notif .meta .dot {
+    width: 2px;
+    height: 2px;
+    background: var(--text-tertiary);
+    border-radius: 50%;
+  }
+
+  /* ─── Swipe Reveal ─── */
+  .notif.swiped {
+    transform: translateX(-72px);
+    transition: transform 0.2s;
+  }
+
+  .swipe-bg {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 72px;
+    background: var(--error);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 20px;
+  }
+
+  .swipe-row {
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* ─── Empty State ─── */
+  .empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 32px 32px;
+    text-align: center;
+    gap: var(--spacing-medium);
+  }
+
+  .empty .illust {
+    font-size: 64px;
+    opacity: 0.7;
+  }
+
+  .empty .ttl {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .empty .sub {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  .empty .cta {
+    margin-top: var(--spacing-sm);
+    padding: 12px 24px;
+    border-radius: var(--radius-button);
+    background: var(--primary);
+    color: var(--background);
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+  }
+
+  /* ─── Loading More ─── */
+  .loading-more {
+    padding: 20px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-tertiary);
+  }
+
+  .loading-more::before {
+    content: '⟳';
+    display: inline-block;
+    animation: spin 1s linear infinite;
+    margin-right: 6px;
+    font-size: 14px;
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  /* ─── Dialog ─── */
+  .dialog-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+    backdrop-filter: blur(3px);
+    z-index: 5;
+  }
+
+  .dialog {
+    width: 100%;
+    background: var(--background);
+    border-radius: var(--radius-card);
+    padding: var(--spacing-large);
+  }
+
+  .dialog .d-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-small);
+  }
+
+  .dialog .d-body {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-bottom: var(--spacing-medium);
+  }
+
+  .dialog .d-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--spacing-small);
+  }
+
+  .dialog button {
+    padding: 8px 16px;
+    border: none;
+    background: transparent;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: var(--radius-small);
+    cursor: pointer;
+  }
+
+  .dialog button.cancel {
+    color: var(--text-secondary);
+  }
+
+  .dialog button.danger {
+    color: var(--error);
+  }
+
+  /* ─── Error State ─── */
+  .error-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 80px 32px 32px;
+    gap: var(--spacing-medium);
+    text-align: center;
+  }
+
+  .error-state .eicon {
+    font-size: 48px;
+    opacity: 0.5;
+  }
+
+  .error-state .etitle {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .error-state .esub {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  .error-state .retry {
+    padding: 10px 20px;
+    border: 1px solid var(--primary);
+    color: var(--primary);
+    background: transparent;
+    border-radius: var(--radius-button);
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  /* ─── Snackbar ─── */
+  .snackbar {
+    position: absolute;
+    left: var(--spacing-medium);
+    right: var(--spacing-medium);
+    bottom: 24px;
+    background: var(--text-primary);
+    color: var(--background);
+    padding: var(--spacing-sm) var(--spacing-medium);
+    border-radius: var(--radius-small);
+    font-size: 13px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    z-index: 4;
+  }
+
+  .snackbar .undo {
+    color: var(--secondary);
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  h1.page-title {
+    width: 100%;
+    text-align: center;
+    color: #fff;
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 12px;
+  }
+
+  h2.section-title {
+    width: 100%;
+    text-align: center;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    opacity: 0.7;
+    margin-top: 28px;
+  }
+</style>
+</head>
+<body>
+
+  <h1 class="page-title">알림 인박스 — 와이어프레임</h1>
+  <h2 class="section-title">Issue #1688 · app_user / app_partner 공용</h2>
+
+  <!-- ───────────────────────────────────────── -->
+  <!-- Screen 1: 홈 벨 배지 (app_user) -->
+  <div class="column">
+    <div class="phone-frame">
+      <div class="screen">
+        <div class="home-appbar">
+          <div class="logo">minglit</div>
+          <div class="actions">
+            <div class="icon-btn"><span class="emoji">🔍</span></div>
+            <div class="icon-btn">
+              <span class="emoji">🔔</span>
+              <div class="badge">3</div>
+            </div>
+            <div class="avatar">👤</div>
+          </div>
+        </div>
+        <div style="padding: 32px 20px; color: var(--text-tertiary); font-size: 13px; line-height: 1.6; text-align: center;">
+          <p>[홈 콘텐츠 — 생략]</p>
+          <br>
+          <p style="background: var(--primary-tint); padding: 12px; border-radius: 12px; color: var(--primary); font-weight: 600;">
+            ✨ G1: app_user 벨 아이콘에<br>
+            unreadCount 배지 추가<br>
+            (현재 app_partner에만 있음)
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="screen-label">S1. 홈 — 벨 배지 (신규)</div>
+  </div>
+
+  <!-- ───────────────────────────────────────── -->
+  <!-- Screen 2: 알림 인박스 (기본, 알림 있음) -->
+  <div class="column">
+    <div class="phone-frame">
+      <div class="screen">
+        <div class="appbar">
+          <span class="back">←</span>
+          <span class="title">알림 센터</span>
+          <span class="action">🎚</span>
+          <span class="action">✓</span>
+        </div>
+        <div class="filter-bar">
+          <div class="chip active">모두</div>
+          <div class="chip">안 읽음 <span class="count">3</span></div>
+          <div class="chip">이벤트</div>
+          <div class="chip">매칭</div>
+          <div class="chip">티켓</div>
+        </div>
+
+        <div class="swipe-row">
+          <div class="swipe-bg">🗑</div>
+          <div class="notif unread">
+            <div class="icon-wrap event">🎫</div>
+            <div class="body">
+              <div class="title-line">이벤트 승인 완료</div>
+              <div class="desc">"한남 재즈 나이트" 신청이 승인됐어요. 입장 가이드를 확인해보세요.</div>
+              <div class="meta">3시간 전<span class="dot"></span>이벤트</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="notif unread">
+          <div class="icon-wrap matching">💘</div>
+          <div class="body">
+            <div class="title-line">새 매칭 투표가 도착했어요</div>
+            <div class="desc">"성수 와인파티" 매칭이 시작됐어요. 취향을 골라주세요.</div>
+            <div class="meta">5시간 전<span class="dot"></span>매칭</div>
+          </div>
+        </div>
+
+        <div class="notif unread">
+          <div class="icon-wrap payment">💸</div>
+          <div class="body">
+            <div class="title-line">환불 완료</div>
+            <div class="desc">"연남 스탠딩" 취소건 환불이 완료됐어요. (12,000원)</div>
+            <div class="meta">1일 전<span class="dot"></span>결제</div>
+          </div>
+        </div>
+
+        <div class="notif">
+          <div class="icon-wrap ticket">🎟</div>
+          <div class="body">
+            <div class="title-line">티켓 QR이 발급됐어요</div>
+            <div class="desc">입장 시 "내 티켓 → QR" 화면을 보여주세요.</div>
+            <div class="meta">3일 전<span class="dot"></span>티켓</div>
+          </div>
+        </div>
+
+        <div class="notif">
+          <div class="icon-wrap service">📢</div>
+          <div class="body">
+            <div class="title-line">이용약관 변경 안내</div>
+            <div class="desc">2026-05-01부터 개정된 이용약관이 적용돼요.</div>
+            <div class="meta">5일 전<span class="dot"></span>공지</div>
+          </div>
+        </div>
+
+        <div class="notif">
+          <div class="icon-wrap event">🎫</div>
+          <div class="body">
+            <div class="title-line">이벤트 마감 임박</div>
+            <div class="desc">찜한 "망원 북토크"가 6시간 후 신청 마감돼요.</div>
+            <div class="meta">2026-04-14<span class="dot"></span>이벤트</div>
+          </div>
+        </div>
+
+        <div class="loading-more">불러오는 중…</div>
+      </div>
+    </div>
+    <div class="screen-label">S2. 인박스 — 기본 (무한스크롤 로딩)</div>
+  </div>
+
+  <!-- ───────────────────────────────────────── -->
+  <!-- Screen 3: 안 읽음 필터 -->
+  <div class="column">
+    <div class="phone-frame">
+      <div class="screen">
+        <div class="appbar">
+          <span class="back">←</span>
+          <span class="title">알림 센터</span>
+          <span class="action">🎚</span>
+          <span class="action">✓</span>
+        </div>
+        <div class="filter-bar">
+          <div class="chip">모두</div>
+          <div class="chip active">안 읽음 <span class="count">3</span></div>
+          <div class="chip">이벤트</div>
+          <div class="chip">매칭</div>
+          <div class="chip">티켓</div>
+        </div>
+
+        <div class="notif unread">
+          <div class="icon-wrap event">🎫</div>
+          <div class="body">
+            <div class="title-line">이벤트 승인 완료</div>
+            <div class="desc">"한남 재즈 나이트" 신청이 승인됐어요.</div>
+            <div class="meta">3시간 전<span class="dot"></span>이벤트</div>
+          </div>
+        </div>
+
+        <div class="notif unread">
+          <div class="icon-wrap matching">💘</div>
+          <div class="body">
+            <div class="title-line">새 매칭 투표가 도착했어요</div>
+            <div class="desc">"성수 와인파티" 매칭이 시작됐어요.</div>
+            <div class="meta">5시간 전<span class="dot"></span>매칭</div>
+          </div>
+        </div>
+
+        <div class="notif unread">
+          <div class="icon-wrap payment">💸</div>
+          <div class="body">
+            <div class="title-line">환불 완료</div>
+            <div class="desc">"연남 스탠딩" 취소건 환불이 완료됐어요.</div>
+            <div class="meta">1일 전<span class="dot"></span>결제</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-label">S3. 인박스 — 안 읽음 필터 (v2)</div>
+  </div>
+
+  <!-- ───────────────────────────────────────── -->
+  <!-- Screen 4: 빈 상태 -->
+  <div class="column">
+    <div class="phone-frame">
+      <div class="screen">
+        <div class="appbar">
+          <span class="back">←</span>
+          <span class="title">알림 센터</span>
+          <span class="action" style="opacity: 0.3;">🎚</span>
+          <span class="action" style="opacity: 0.3;">✓</span>
+        </div>
+        <div class="empty">
+          <div class="illust">📭</div>
+          <div class="ttl">아직 알림이 없어요</div>
+          <div class="sub">첫 이벤트를 찾아 신청해보세요.<br>신청·매칭·결제 알림을 여기서 확인할 수 있어요.</div>
+          <button class="cta">이벤트 둘러보기 →</button>
+        </div>
+      </div>
+    </div>
+    <div class="screen-label">S4. 인박스 — 빈 상태 (G6)</div>
+  </div>
+
+  <!-- ───────────────────────────────────────── -->
+  <!-- Screen 5: 삭제 확인 다이얼로그 -->
+  <div class="column">
+    <div class="phone-frame">
+      <div class="screen" style="background: var(--background);">
+        <div class="appbar">
+          <span class="back">←</span>
+          <span class="title">알림 센터</span>
+          <span class="action">🎚</span>
+          <span class="action">✓</span>
+        </div>
+        <div class="filter-bar">
+          <div class="chip active">모두</div>
+          <div class="chip">안 읽음 <span class="count">3</span></div>
+          <div class="chip">이벤트</div>
+        </div>
+        <div class="swipe-row">
+          <div class="swipe-bg">🗑</div>
+          <div class="notif unread swiped">
+            <div class="icon-wrap event">🎫</div>
+            <div class="body">
+              <div class="title-line">이벤트 승인 완료</div>
+              <div class="desc">"한남 재즈 나이트" 신청이 승인됐어요.</div>
+              <div class="meta">3시간 전<span class="dot"></span>이벤트</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dialog-backdrop">
+          <div class="dialog">
+            <div class="d-title">알림을 삭제할까요?</div>
+            <div class="d-body">삭제된 알림은 복구할 수 없어요.</div>
+            <div class="d-actions">
+              <button class="cancel">취소</button>
+              <button class="danger">삭제</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-label">S5. 스와이프 + 삭제 확인 (G7)</div>
+  </div>
+
+  <!-- ───────────────────────────────────────── -->
+  <!-- Screen 6: 에러 상태 + 실패 스낵바 -->
+  <div class="column">
+    <div class="phone-frame">
+      <div class="screen">
+        <div class="appbar">
+          <span class="back">←</span>
+          <span class="title">알림 센터</span>
+          <span class="action" style="opacity: 0.3;">🎚</span>
+          <span class="action" style="opacity: 0.3;">✓</span>
+        </div>
+        <div class="error-state">
+          <div class="eicon">☁️</div>
+          <div class="etitle">알림을 불러올 수 없어요</div>
+          <div class="esub">잠시 후 다시 시도해주세요.</div>
+          <button class="retry">다시 시도</button>
+        </div>
+        <div class="snackbar">
+          <span>읽음 처리에 실패했어요</span>
+          <span class="undo">다시 시도</span>
+        </div>
+      </div>
+    </div>
+    <div class="screen-label">S6. 에러 상태 + 실패 SnackBar (rollback)</div>
+  </div>
+
+</body>
+</html>
