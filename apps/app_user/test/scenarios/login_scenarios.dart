@@ -1,5 +1,6 @@
 import 'package:app_user/src/features/auth/logic/auth_coordinator.dart';
 import 'package:app_user/src/features/auth/login_page.dart';
+import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:minglit_kit/src/features/auth/testing/fake_auth_controller.dart';
 
@@ -11,6 +12,16 @@ class LoginScenarios {
     ScreenshotScenario(
       name: 'login_page_default',
       page: const LoginPage(),
+      overrides: [
+        authControllerProvider.overrideWith(FakeAuthController.new),
+        authCoordinatorProvider.overrideWithValue(MockAuthCoordinator()),
+      ],
+    ),
+    // Fix #1542: 다크모드 로그인 화면 회귀 방지
+    ScreenshotScenario(
+      name: 'login_page_default_dark',
+      page: const LoginPage(),
+      brightness: Brightness.dark,
       overrides: [
         authControllerProvider.overrideWith(FakeAuthController.new),
         authCoordinatorProvider.overrideWithValue(MockAuthCoordinator()),
