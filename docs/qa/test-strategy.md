@@ -228,6 +228,8 @@
 - `apps/app_user/emulator_test/` + `apps/app_partner/emulator_test/` → Tier B 대상 (Patrol CUJ)
 - `tests/client_cuj_integration/` — 삭제됨 (stale 인프라 제거). Tier B 대상 아님.
 
+## 6. Patrol 통합 전략 (Layer 3 / Tier B)
+
 ### 6.1 Patrol 전환 배경
 
 기존 `IntegrationTestWidgetsFlutterBinding` 기반 E2E는 네이티브 인터랙션(카카오 로그인 WebView, PG 결제, 시스템 권한)을 처리할 수 없었다. Patrol(`patrol_test/` 3개)이 이미 도입되어 있으므로, 전체 integration 테스트를 Patrol로 통합한다.
@@ -333,7 +335,7 @@ Flutter 앱은 Skia/Impeller 엔진으로 단일 `FlutterSurfaceView` 위에 렌
 
 ---
 
-## 8.1 CI/CD 배포 파이프라인 테스트 (Phase 2.1 — #1433, #1434)
+### 8.1 CI/CD 배포 파이프라인 테스트 (Phase 2.1 — #1433, #1434)
 
 > 2026-04-15 배포 실패 인시던트(#1433 iOS, #1434 Android)로 추가.
 > Partner 앱 배포 시 `JUSO_CONFIRM_KEY` Secret 미설정으로 빌드 실패.
@@ -342,7 +344,7 @@ Flutter 앱은 Skia/Impeller 엔진으로 단일 `FlutterSurfaceView` 위에 렌
 |------|------|-----------|
 | `ci-deploy-tests.md` | 배포 Secret 매트릭스, CI 자체 검증 스텝, 빌드 분기 검증 | 19 |
 
-### 핵심 포인트
+#### 핵심 포인트
 
 - **4개 배포 워크플로우** (Android/iOS × User/Partner)의 필수 Secret을 매트릭스로 정리
 - Partner 전용 Secret (`JUSO_CONFIRM_KEY`)의 `required: false` 선언 불일치 식별 → 개선 제안 포함
@@ -350,7 +352,7 @@ Flutter 앱은 Skia/Impeller 엔진으로 단일 `FlutterSurfaceView` 위에 렌
 
 ---
 
-## 8.2 에러/환경/미등록라우트 테스트 케이스 (Phase 2.1 — #1421)
+### 8.2 에러/환경/미등록라우트 테스트 케이스 (Phase 2.1 — #1421)
 
 > 2026-04-13 갭 분석(#1421) 결과 추가된 테스트 케이스 문서.
 
