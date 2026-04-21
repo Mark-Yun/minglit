@@ -1,7 +1,7 @@
 -- pgTAP tests for location_access_log (feat #1697, 위치정보법 §16)
 BEGIN;
 
-SELECT plan(10);
+SELECT plan(11);
 
 -- 1. 테이블 존재
 SELECT has_table('public', 'location_access_log', 'location_access_log table exists');
@@ -30,14 +30,14 @@ SELECT ok(
   'location_access_log retention policy registered with legal_min_days=180'
 );
 
--- 5. CHECK 제약: retention_days < legal_min_days 거절
+-- 5. CHECK 제약: retention_days < legal_min_days 거절 (SQLSTATE 23514)
 SELECT throws_ok(
   $$
     UPDATE admin.retention_policies
     SET retention_days = 30
     WHERE id = 'location_access_log'
   $$,
-  'retention_above_legal_min',
+  '23514',
   'CHECK constraint rejects retention_days < legal_min_days'
 );
 
