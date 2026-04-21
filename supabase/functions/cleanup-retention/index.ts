@@ -1,6 +1,6 @@
 import { createServiceClient } from "../_shared/supabase_client.ts";
 import { successResponse, errorResponse } from "../_shared/response_utils.ts";
-import { initSentry, withHandler } from "../_shared/logger.ts";
+import { initSentry, withHandler, captureException } from "../_shared/logger.ts";
 
 initSentry();
 
@@ -44,15 +44,16 @@ async function runStorageBucketCleanup(
   const cutoff = new Date(Date.now() - policy.retention_days * 86400 * 1000);
 
   let deleted = 0;
-  let offset = 0;
   const BATCH = 1000;
 
+  // Always list from offset=0 to avoid skipping files shifted by prior deletes.
+  // Stop when no stale files found in a batch (oldest files are listed first).
   while (true) {
     const { data: files, error: listError } = await supabase.storage
       .from(bucket_id)
       .list(path_prefix || undefined, {
         limit: BATCH,
-        offset,
+        offset: 0,
         sortBy: { column: "created_at", order: "asc" },
       });
     if (listError) throw new Error(listError.message);
@@ -62,16 +63,13 @@ async function runStorageBucketCleanup(
       .filter((f) => f.created_at && new Date(f.created_at) < cutoff)
       .map((f) => (path_prefix ? `${path_prefix}/${f.name}` : f.name));
 
-    if (stale.length > 0) {
-      const { error: removeError } = await supabase.storage
-        .from(bucket_id)
-        .remove(stale);
-      if (removeError) throw new Error(removeError.message);
-      deleted += stale.length;
-    }
+    if (stale.length === 0) break;
 
-    if (files.length < BATCH) break;
-    offset += BATCH;
+    const { error: removeError } = await supabase.storage
+      .from(bucket_id)
+      .remove(stale);
+    if (removeError) throw new Error(removeError.message);
+    deleted += stale.length;
   }
 
   return { rows_deleted: deleted };
@@ -124,7 +122,7 @@ async function updatePolicyRunResult(
 ): Promise<void> {
   const now = new Date().toISOString();
 
-  await supabase
+  const { error: updateError } = await supabase
     .schema("admin")
     .from("retention_policies")
     .update({
@@ -136,7 +134,9 @@ async function updatePolicyRunResult(
     })
     .eq("id", result.id);
 
-  await supabase
+  if (updateError) captureException(new Error(`retention_policies update failed [${result.id}]: ${updateError.message}`));
+
+  const { error: auditError } = await supabase
     .schema("admin")
     .from("retention_policy_audit")
     .insert({
@@ -146,6 +146,8 @@ async function updatePolicyRunResult(
       duration_ms: result.duration_ms,
       error: result.error ?? null,
     });
+
+  if (auditError) captureException(new Error(`retention_policy_audit insert failed [${result.id}]: ${auditError.message}`));
 }
 
 Deno.serve(withHandler(async (req) => {

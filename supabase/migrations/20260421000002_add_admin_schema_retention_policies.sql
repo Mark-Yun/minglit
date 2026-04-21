@@ -122,16 +122,18 @@ CREATE OR REPLACE FUNCTION admin.archive_old_pgmq_messages(
 ) RETURNS bigint LANGUAGE plpgsql SECURITY DEFINER AS $$
 DECLARE
   archived_count bigint := 0;
-  msg_rec record;
+  batch_ids      bigint[];
 BEGIN
-  FOR msg_rec IN
-    EXECUTE format(
-      'SELECT msg_id FROM pgmq.q_%I WHERE enqueued_at < now() - $1 * interval ''1 day'' LIMIT 10000',
-      p_queue_name
-    ) USING p_cutoff_days
   LOOP
-    PERFORM pgmq.archive(p_queue_name, msg_rec.msg_id);
-    archived_count := archived_count + 1;
+    EXECUTE format(
+      'SELECT array_agg(msg_id) FROM (SELECT msg_id FROM pgmq.q_%I WHERE enqueued_at < now() - $1 * interval ''1 day'' LIMIT 500) t',
+      p_queue_name
+    ) USING p_cutoff_days INTO batch_ids;
+
+    EXIT WHEN batch_ids IS NULL OR array_length(batch_ids, 1) = 0;
+
+    PERFORM pgmq.archive(p_queue_name, batch_ids);
+    archived_count := archived_count + array_length(batch_ids, 1);
   END LOOP;
   RETURN archived_count;
 END;

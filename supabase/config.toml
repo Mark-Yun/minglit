@@ -10,7 +10,7 @@ enabled = true
 port = 54321
 # Schemas to expose in your API. Tables, views and stored procedures in this schema will get API
 # endpoints. `public` and `graphql_public` schemas are included by default.
-schemas = ["public", "graphql_public"]
+schemas = ["public", "graphql_public", "admin"]
 # Extra schemas to add to the search_path of every request.
 extra_search_path = ["public", "extensions", "pgmq"]
 # The maximum number of rows returns from a view, table, or stored procedure. Limits payload size
@@ -699,6 +699,12 @@ enabled = true
 verify_jwt = false  # JWT verification handled in function code
 import_map = "./deno.json"
 entrypoint = "./functions/user-get-ticket-token/index.ts"
+
+[functions.cleanup-retention]
+enabled = true
+verify_jwt = false  # cron sends service_role_key; auth handled inside EF
+import_map = "./deno.json"
+entrypoint = "./functions/cleanup-retention/index.ts"
 
 [functions.ai-extract-tags]
 enabled = true
