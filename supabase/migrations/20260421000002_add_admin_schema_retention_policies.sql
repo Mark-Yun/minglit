@@ -139,22 +139,16 @@ $$;
 
 GRANT EXECUTE ON FUNCTION admin.archive_old_pgmq_messages(text, int) TO service_role;
 
--- 8. RLS 정책
+-- 8. RLS 정책 (super_admin 만 CRUD)
 ALTER TABLE admin.retention_policies ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY retention_admin_all ON admin.retention_policies
-  USING (EXISTS (
-    SELECT 1 FROM public.user_roles
-    WHERE user_id = auth.uid() AND role = 'admin'
-  ));
+  USING (public.is_super_admin());
 
 ALTER TABLE admin.retention_policy_audit ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY retention_audit_admin_read ON admin.retention_policy_audit
-  FOR SELECT USING (EXISTS (
-    SELECT 1 FROM public.user_roles
-    WHERE user_id = auth.uid() AND role = 'admin'
-  ));
+  FOR SELECT USING (public.is_super_admin());
 
 -- 9. 초기 seed 데이터 (6개 기본 정책)
 INSERT INTO admin.retention_policies (id, kind, retention_days, target, description)
