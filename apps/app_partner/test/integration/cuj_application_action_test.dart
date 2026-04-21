@@ -146,7 +146,15 @@ void main() {
 
       // 승인 버튼 탭
       await tester.tap(find.byIcon(Icons.check).first);
-      await tester.pumpAndSettle();
+      // Fix #1677: pumpAndSettle() hangs here because approveApplication()
+      // calls ref.invalidate(eventApplicationsGroupedProvider), which puts
+      // the provider into loading state (CircularProgressIndicator with
+      // repeat() animation), preventing pumpAndSettle() from ever settling.
+      // Use bounded pump sequence: dispatch tap → resolve mock → settle UI.
+      await tester.pump(); // dispatch tap, _approve() starts and suspends
+      await tester.pump(); // approveApplication mock resolves → showSnackBar + ref.invalidate()
+      await tester.pump(); // providers rebuild to loading state, SnackBar enters tree
+      await tester.pump(const Duration(milliseconds: 300)); // mocks resolve → data state
 
       await capture.after(tester, 1);
 
@@ -222,7 +230,12 @@ void main() {
 
       // 거절 버튼 탭
       await tester.tap(find.widgetWithText(FilledButton, '거절'));
-      await tester.pumpAndSettle();
+      // Fix #1677: same pumpAndSettle() hang — rejectApplication() causes
+      // deferred ref.invalidate() via addPostFrameCallback → CircularProgressIndicator
+      await tester.pump(); // dispatch tap, rejectApplication() starts
+      await tester.pump(); // mock resolves → showSnackBar + schedules deferred invalidate
+      await tester.pump(); // deferred invalidate fires → providers loading
+      await tester.pump(const Duration(milliseconds: 300)); // mocks resolve → data state
 
       await capture.after(tester, 3);
 
@@ -313,7 +326,12 @@ void main() {
 
       // 전체 승인 확인
       await tester.tap(find.widgetWithText(FilledButton, '전체 승인'));
-      await tester.pumpAndSettle();
+      // Fix #1677: same pumpAndSettle() hang — bulkApproveApplications() causes
+      // deferred ref.invalidate() via addPostFrameCallback → CircularProgressIndicator
+      await tester.pump(); // dispatch tap, bulkApproveApplications() starts
+      await tester.pump(); // mock resolves → showSnackBar + schedules deferred invalidate
+      await tester.pump(); // deferred invalidate fires → providers loading
+      await tester.pump(const Duration(milliseconds: 300)); // mocks resolve → data state
 
       verify(
         () => mockEventRepo.bulkApproveApplications(eventId: testEvent.id),
