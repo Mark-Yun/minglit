@@ -71,8 +71,8 @@ VALUES
 | 7 | 파트너 제공 참여자 정보 — 이벤트 종료 후 30일 | PIPA §21 목적 달성 후 파기 | `public.event_participants` (또는 파생 뷰) | ❌ 자동 파기 없음 | 없음 | **GAP** |
 | 8 | 자격 인증 증빙 1년 | 내부 정책 | `verification-proofs` 버킷 (Storage) + `public.verification_submissions` (메타/이력) | ❌ 자동 파기 없음 — Storage 버킷 만료 정책 미설정, DB 레코드 삭제 job 없음 | 없음 | **GAP** |
 | 9 | 부정 이용 기록 1년 | 내부 정책 | `public.blocked_dis` (`blocked_until` TTL 30일), 기타 | 부분 — `blocked_dis`는 30일 TTL, "1년 보존" 대상 테이블 식별 필요 | 없음 | **TBD** |
-| 10 | 관심 태그, 이용 기록, 기기 정보 — 탈퇴 시 즉시 파기 | PIPA §21 | `public.user_interest_tags` 등 | `process-pending-deletions` 경로에서 삭제되는지 검증 필요 | — | **VERIFY** |
-| 11 | 임베딩 벡터 — 탈퇴 시 즉시 파기 | PIPA §21 | `public.embeddings` 류 | 검증 필요 | — | **VERIFY** |
+| 10 | 관심 태그, 이용 기록, 기기 정보 — 탈퇴 시 즉시 파기 | PIPA §21 | `public.user_interest_tags` (관심 태그) · `public.fcm_tokens` (기기 토큰) | `process-pending-deletions` EF에서 각 테이블이 삭제되는지 검증 필요 | — | **VERIFY** |
+| 11 | 임베딩 벡터 — 탈퇴 시 즉시 파기 | PIPA §21 | `public.user_embeddings` · `public.party_embeddings` | `process-pending-deletions` EF에서 삭제되는지 검증 필요 | — | **VERIFY** |
 | 12 | GPS 좌표 — 검색 요청 처리 완료 즉시 파기 (서버 영구 저장 없음) | 위치정보법 §16 | 서버 미저장 원칙 | Edge Function 내 메모리 처리 가정 — 코드 주석 + 테스트로 증명 필요 | — | **VERIFY** |
 
 ### `admin.retention_policies` seed 예정 (PR #1693 머지 후 반영 — 2026-04-22 기준 미머지)
@@ -172,10 +172,14 @@ VALUES
 
 #### F7. 탈퇴 시 즉시 파기 약속 검증 (pgTAP)
 
-**대상**: 관심 태그 / 이용 기록 / 기기 정보 / 임베딩 벡터.
+**대상 테이블 (실제 DB 객체)**:
+- `public.user_interest_tags` — 관심 태그
+- `public.fcm_tokens` — 기기 토큰 (`supabase/migrations/20260301000005_05_schema_system.sql:30`)
+- `public.user_embeddings` — 사용자 임베딩 (`supabase/migrations/20260301000002_02_schema_core.sql:24`)
+- `public.party_embeddings` — 파티 임베딩 (`supabase/migrations/20260301000003_03_schema_events.sql:30`)
 
 **필요 조치**:
-1. `process-pending-deletions` EF가 해당 테이블들을 실제로 비우는지 pgTAP 테스트 추가.
+1. `process-pending-deletions` EF가 위 4개 테이블을 실제로 비우는지 각각 pgTAP 테스트 추가.
 2. 누락된 테이블 있으면 EF 로직 보강.
 
 #### F8. GPS 좌표 "서버 미저장" 증명
