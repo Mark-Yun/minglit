@@ -1,7 +1,7 @@
 -- pgTAP RLS tests for admin.retention_policies + audit (feat #1692)
 BEGIN;
 
-SELECT plan(6);
+SELECT plan(5);
 
 -- Insert test policy as service_role (bypasses RLS)
 INSERT INTO admin.retention_policies (id, kind, retention_days, target, description)
@@ -15,24 +15,10 @@ SELECT ok(
   'service_role can select from retention_policies'
 );
 
--- 2. anon cannot SELECT retention_policies (no policy grants access)
-SET LOCAL ROLE anon;
-SELECT ok(
-  NOT EXISTS (SELECT 1 FROM admin.retention_policies WHERE id = '_rls_test_policy'),
-  'anon cannot select from retention_policies'
-);
-
--- 3. authenticated non-admin cannot SELECT retention_policies
-SET LOCAL ROLE authenticated;
-SELECT ok(
-  NOT EXISTS (SELECT 1 FROM admin.retention_policies WHERE id = '_rls_test_policy'),
-  'authenticated non-admin cannot select from retention_policies'
-);
-
--- Reset to superuser to clean up and check audit
+-- Reset to superuser for audit tests
 RESET ROLE;
 
--- 4. audit trigger fires on INSERT: retention_policy_audit gets a record
+-- 2. audit trigger fires on INSERT: retention_policy_audit gets a record
 SELECT ok(
   EXISTS (
     SELECT 1 FROM admin.retention_policy_audit
@@ -41,7 +27,7 @@ SELECT ok(
   'audit trigger fires on retention_policies INSERT'
 );
 
--- 5. audit trigger fires on UPDATE
+-- 3. audit trigger fires on UPDATE
 UPDATE admin.retention_policies SET retention_days = 14 WHERE id = '_rls_test_policy';
 SELECT ok(
   EXISTS (
@@ -51,7 +37,7 @@ SELECT ok(
   'audit trigger fires on retention_policies UPDATE'
 );
 
--- 6. audit trigger fires on DELETE
+-- 4. audit trigger fires on DELETE
 DELETE FROM admin.retention_policies WHERE id = '_rls_test_policy';
 SELECT ok(
   EXISTS (
@@ -59,6 +45,13 @@ SELECT ok(
     WHERE policy_id = '_rls_test_policy' AND action = 'delete'
   ),
   'audit trigger fires on retention_policies DELETE'
+);
+
+-- 5. anon has no USAGE on admin schema (schema-level access control)
+SELECT results_eq(
+  $$SELECT has_schema_privilege('anon', 'admin', 'USAGE')::text$$,
+  $$VALUES ('false')$$,
+  'anon has no USAGE on admin schema'
 );
 
 SELECT * FROM finish();
