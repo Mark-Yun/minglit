@@ -4,6 +4,11 @@
 **개정**: 2026-04-22 (초판)
 **관련 PR/이슈**: #1695 (audit) · #1693 (retention_policies 인프라) · #1692
 
+> **⚠️ 의존성 경고**: 이 문서의 "구현" 경로 중 `admin.retention_policies` 를 경유하는 항목은
+> **PR #1693이 `dev`에 머지되어야 실제 집행 가능**하다. PR #1693은 2026-04-22 기준 아직 OPEN 상태이다.
+> 해당 항목의 상태가 **GAP** 또는 **TBD**로 표시된 이유는 인프라 미머지도 포함한다.
+> PR #1693 머지 후 이 문서의 "현재 구현" 컬럼을 재검토하라.
+
 ---
 
 ## 이 문서의 목적
@@ -64,13 +69,13 @@ VALUES
 | 5 | 마케팅 동의 기록 2년 | PIPA §22-2, 내부 정책 | `public.archived_records` (record_type='consent') | 동상 | 없음(내부) | **GAP** (자동 파기 없음) |
 | 6 | 위치 확인자료 6개월 | 위치정보법 §16 | **테이블 미존재** | ❌ 미구현 | 필요 (180) | **CRITICAL GAP — 허위 고지** |
 | 7 | 파트너 제공 참여자 정보 — 이벤트 종료 후 30일 | PIPA §21 목적 달성 후 파기 | `public.event_participants` (또는 파생 뷰) | ❌ 자동 파기 없음 | 없음 | **GAP** |
-| 8 | 자격 인증 증빙 1년 | 내부 정책 | `public.verification_documents` 류 | 확인 필요 | 없음 | **TBD** |
+| 8 | 자격 인증 증빙 1년 | 내부 정책 | `verification-proofs` 버킷 (Storage) + `public.verification_submissions` (메타/이력) | ❌ 자동 파기 없음 — Storage 버킷 만료 정책 미설정, DB 레코드 삭제 job 없음 | 없음 | **GAP** |
 | 9 | 부정 이용 기록 1년 | 내부 정책 | `public.blocked_dis` (`blocked_until` TTL 30일), 기타 | 부분 — `blocked_dis`는 30일 TTL, "1년 보존" 대상 테이블 식별 필요 | 없음 | **TBD** |
 | 10 | 관심 태그, 이용 기록, 기기 정보 — 탈퇴 시 즉시 파기 | PIPA §21 | `public.user_interest_tags` 등 | `process-pending-deletions` 경로에서 삭제되는지 검증 필요 | — | **VERIFY** |
 | 11 | 임베딩 벡터 — 탈퇴 시 즉시 파기 | PIPA §21 | `public.embeddings` 류 | 검증 필요 | — | **VERIFY** |
 | 12 | GPS 좌표 — 검색 요청 처리 완료 즉시 파기 (서버 영구 저장 없음) | 위치정보법 §16 | 서버 미저장 원칙 | Edge Function 내 메모리 처리 가정 — 코드 주석 + 테스트로 증명 필요 | — | **VERIFY** |
 
-### 현재 `admin.retention_policies` seed (PR #1693 시점)
+### `admin.retention_policies` seed 예정 (PR #1693 머지 후 반영 — 2026-04-22 기준 미머지)
 
 | id | kind | retention_days | legal_min_days | 비고 |
 |----|------|----------------|-----------------|------|
@@ -156,7 +161,12 @@ VALUES
 
 #### F6. 자격 인증 증빙 1년 정책 명문화
 
-**현재**: 자격 인증 서류 저장 위치(Storage 버킷 / DB 컬럼) 식별 후 정책 등록.
+**현재**: 자격 인증 서류는 `verification-proofs` 버킷(private)에 저장되고, 메타데이터·이력은 `public.verification_submissions`에 기록된다 (`apps/app_user/lib/src/features/event/admission/wizard_verification_step.dart:113` 참조). 두 곳 모두 1년 후 자동 파기 정책 없음.
+
+**필요 조치**:
+1. Storage: `verification-proofs` 버킷에 Supabase Storage TTL 또는 `admin.retention_policies` `storage_bucket` kind 정책 등록.
+2. DB: `public.verification_submissions`에 대해 `created_at` 기준 1년 삭제 정책 등록. 단, 심사 이력(법적 분쟁 근거)이므로 파기 전 `archived_records`로 이관하는 방식이 바람직한지 architect 검토 필요.
+3. `public.user_verifications` (사용자 인증 캐시 레코드)도 동일 기간 정책 적용 여부 검토.
 
 ### P2 — 약속 이행 검증
 
