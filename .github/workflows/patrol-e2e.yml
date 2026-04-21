@@ -28,6 +28,24 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      # Fix: CI checkout does not include the private minglit_env submodule.
+      # Rebuild the dev Flutter env file from Actions secrets before running Patrol.
+      # Same pattern as daily-backend-simulation.yml (Fix #1169).
+      - name: Create dev Flutter env file
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_DEV_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }}
+          ENVIRONMENT: development
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN_FLUTTER }}
+          STATSIG_CLIENT_KEY: ${{ secrets.STATSIG_CLIENT_KEY }}
+          GOOGLE_WEB_CLIENT_ID: ${{ secrets.GOOGLE_DEV_WEB_CLIENT_ID }}
+          KAKAO_LOCAL_REST_API_KEY: ${{ secrets.KAKAO_LOCAL_REST_API_KEY }}
+          KAKAO_MAP_JAVASCRIPT_KEY: ${{ secrets.KAKAO_MAP_JAVASCRIPT_KEY }}
+          JUSO_CONFIRM_KEY: ${{ secrets.JUSO_CONFIRM_KEY }}
+          IAMPORT_USER_CODE: ${{ secrets.IAMPORT_USER_CODE }}
+          MOBILE_REDIRECT_SCHEME: ${{ secrets.MOBILE_REDIRECT_SCHEME }}
+        run: bash .github/scripts/create-dev-flutter-env.sh
+
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
