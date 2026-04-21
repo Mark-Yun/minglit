@@ -1,7 +1,7 @@
 -- pgTAP tests for admin schema + retention_policies (feat #1692)
 BEGIN;
 
-SELECT plan(24);
+SELECT plan(23);
 
 -- 1. admin schema exists
 SELECT has_schema('admin', 'admin schema exists');
@@ -26,8 +26,6 @@ SELECT has_column('admin', 'retention_policy_audit', 'action', 'audit has action
 SELECT has_column('admin', 'retention_policy_audit', 'rows_deleted', 'audit has rows_deleted column');
 
 -- 5. RLS is enabled
-SELECT tablename FROM pg_tables
-  WHERE schemaname = 'admin' AND tablename = 'retention_policies' AND rowsecurity = true;
 SELECT ok(
   (SELECT rowsecurity FROM pg_tables WHERE schemaname = 'admin' AND tablename = 'retention_policies'),
   'RLS enabled on retention_policies'
