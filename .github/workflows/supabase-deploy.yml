@@ -60,6 +60,15 @@ jobs:
           STATSIG_SERVER_KEY: ${{ secrets.STATSIG_SERVER_KEY }}
           AXIOM_API_TOKEN: ${{ secrets.AXIOM_API_TOKEN }}
           SIM_USER_PASSWORD: ${{ secrets.SIM_USER_PASSWORD }}
+          # Fix #1683: PortOne secrets — dev/main 환경별 분기
+          PORTONE_API_KEY_DEV: ${{ secrets.PORTONE_DEV_API_KEY }}
+          PORTONE_API_SECRET_DEV: ${{ secrets.PORTONE_DEV_API_SECRET }}
+          PORTONE_V2_API_KEY_DEV: ${{ secrets.PORTONE_DEV_V2_API_KEY }}
+          PORTONE_V2_WEBHOOK_SECRET_DEV: ${{ secrets.PORTONE_DEV_V2_WEBHOOK_SECRET }}
+          PORTONE_API_KEY_MAIN: ${{ secrets.PORTONE_MAIN_API_KEY }}
+          PORTONE_API_SECRET_MAIN: ${{ secrets.PORTONE_MAIN_API_SECRET }}
+          PORTONE_V2_API_KEY_MAIN: ${{ secrets.PORTONE_MAIN_V2_API_KEY }}
+          PORTONE_V2_WEBHOOK_SECRET_MAIN: ${{ secrets.PORTONE_MAIN_V2_WEBHOOK_SECRET }}
         run: |
           supabase link --project-ref $SUPABASE_PROJECT_ID --password $SUPABASE_DB_PASSWORD
 
@@ -85,6 +94,35 @@ jobs:
               exit 1
             fi
             supabase secrets set SIM_USER_PASSWORD=$SIM_USER_PASSWORD
+          fi
+
+          # Fix #1683: PortOne secrets 환경별 선택 후 주입 — dev/main 분기
+          if [ "${{ steps.env.outputs.ENV }}" = "dev" ]; then
+            PK=$PORTONE_API_KEY_DEV
+            PS=$PORTONE_API_SECRET_DEV
+            PV2=$PORTONE_V2_API_KEY_DEV
+            PWH=$PORTONE_V2_WEBHOOK_SECRET_DEV
+          else
+            PK=$PORTONE_API_KEY_MAIN
+            PS=$PORTONE_API_SECRET_MAIN
+            PV2=$PORTONE_V2_API_KEY_MAIN
+            PWH=$PORTONE_V2_WEBHOOK_SECRET_MAIN
+          fi
+          if [ -n "$PK" ]; then
+            supabase secrets set PORTONE_API_KEY=$PK
+            supabase secrets set PORTONE_API_SECRET=$PS
+          else
+            echo "PORTONE_API_KEY not set — skipping V1 secrets injection"
+          fi
+          if [ -n "$PV2" ]; then
+            supabase secrets set PORTONE_V2_API_KEY=$PV2
+          else
+            echo "PORTONE_V2_API_KEY not set — skipping V2 API key injection"
+          fi
+          if [ -n "$PWH" ]; then
+            supabase secrets set PORTONE_V2_WEBHOOK_SECRET=$PWH
+          else
+            echo "PORTONE_V2_WEBHOOK_SECRET not set — skipping webhook secret injection"
           fi
 
           supabase db push --password $SUPABASE_DB_PASSWORD --include-all
