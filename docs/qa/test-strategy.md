@@ -360,28 +360,9 @@ Flutter 앱은 Skia/Impeller 엔진으로 단일 `FlutterSurfaceView` 위에 렌
 | `environment-tests.md` | P1 딥링크 cold start, 세션 만료 + P2 warm start, 오프라인 복구 | 25 |
 | `unregistered-route-tests.md` | GoRouter 미등록 화면 6개 위젯/통합 테스트 정의 | 30 |
 
-### 구현 우선순위
-
-| 순서 | 대상 | 근거 |
-|------|------|------|
-| "golden" / "골든" | Tier A 만 지칭 (7-layer Layer 2b) | "이 위젯 golden 깨졌어" |
-| **"시나리오 스크린샷"** | Tier B 만 지칭 (7-layer Layer 3) | "시나리오 스크린샷이 안 찍힌다" |
-| "스크린샷 리뷰" / "agent 리뷰" | Tier C 만 지칭 | "agent 리뷰에서 잡혔다" |
-| "스크린샷" (단독) | **혼동 유발 — Tier 명시 필수** | |
-
-**경로 구분**:
-
-| 경로 | Tier | Layer |
-|------|------|-------|
-| `apps/*/test/alchemist/` | Tier A | Layer 2b |
-| `apps/*/emulator_test/` — Patrol | Tier B 생성 위치 | Layer 3 |
-| `apps/*/*/screenshots/` (Patrol 출력 — 향후 경로) | Tier B 저장 | Layer 3 |
-
-상세 캡처 포인트 매핑: `docs/qa/screenshot-capture-points.md`.
-
 ---
 
-## 6. 로드맵
+## 9. 로드맵
 
 ### 🔴 최우선 — Layer 3 재가동 (Issue #1586 Phase D-2)
 
@@ -414,7 +395,7 @@ Flutter 앱은 Skia/Impeller 엔진으로 단일 `FlutterSurfaceView` 위에 렌
 
 ---
 
-## 7. 관련 문서
+## 10. 관련 문서
 
 | 문서 | 역할 |
 |------|------|
@@ -426,7 +407,7 @@ Flutter 앱은 Skia/Impeller 엔진으로 단일 `FlutterSurfaceView` 위에 렌
 
 ---
 
-## 8. 변경 이력
+## 11. 변경 이력
 
 | 날짜 | 변경 | 이슈 |
 |------|------|------|
