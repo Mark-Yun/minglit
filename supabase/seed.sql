@@ -42,3 +42,22 @@ values
     '[{"key": "asset_type", "type": "text", "label": "자산 종류", "required": true}, {"key": "proof", "type": "file", "label": "증빙 서류", "required": true}]'::jsonb,
     null
   );
+
+-- 2. Dev override: retention_policies — dev 환경에서 더 짧은 보관 기간 적용
+UPDATE admin.retention_policies
+SET retention_days = CASE id
+  WHEN 'cron_job_run_details'          THEN 7
+  WHEN 'net_http_response'             THEN 1
+  WHEN 'pgmq_global_events_archive'    THEN 3
+  WHEN 'pgmq_vectors_archive'          THEN 3
+  WHEN 'pgmq_notifications_archive'    THEN 3
+  WHEN 'storage_bug_reports'           THEN 14
+END
+WHERE id IN (
+  'cron_job_run_details',
+  'net_http_response',
+  'pgmq_global_events_archive',
+  'pgmq_vectors_archive',
+  'pgmq_notifications_archive',
+  'storage_bug_reports'
+);
