@@ -105,6 +105,13 @@ Deno.serve(withHandler(async (req) => {
     },
   });
 
+  // 위치정보법 §16: 주변 검색 요청 1건 = 1 row 기록 (GPS 좌표 저장 금지)
+  if (nearby !== null) {
+    await supabase
+      .from("location_access_log")
+      .insert({ user_id: userId, purpose: "nearby_search" });
+  }
+
   const { data, error } = await supabase.rpc("user_event_feed", rpcParams);
 
   if (error) {
