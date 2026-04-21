@@ -30,23 +30,19 @@ SELECT ok(
   'location_access_log retention policy registered with legal_min_days=180'
 );
 
--- 5. CHECK 제약: retention_days < legal_min_days 거절 (SQLSTATE 23514)
+-- 5. CHECK 제약: retention_days < legal_min_days 거절 (4-arg form: errcode, errmsg, description)
 SELECT throws_ok(
-  $$
-    UPDATE admin.retention_policies
-    SET retention_days = 30
-    WHERE id = 'location_access_log'
-  $$,
+  $$UPDATE admin.retention_policies SET retention_days = 30 WHERE id = 'location_access_log'$$,
   '23514',
+  NULL,
   'CHECK constraint rejects retention_days < legal_min_days'
 );
 
 -- 6. purpose CHECK 제약: 유효하지 않은 목적 거절
 SELECT throws_ok(
-  $$
-    INSERT INTO public.location_access_log (purpose) VALUES ('invalid_purpose')
-  $$,
+  $$INSERT INTO public.location_access_log (purpose) VALUES ('invalid_purpose')$$,
   '23514',
+  NULL,
   'purpose CHECK constraint rejects invalid value'
 );
 
