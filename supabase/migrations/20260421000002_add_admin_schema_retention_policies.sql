@@ -48,6 +48,8 @@ CREATE INDEX retention_policies_enabled_idx
   ON admin.retention_policies(enabled) WHERE enabled;
 CREATE INDEX retention_policies_kind_idx
   ON admin.retention_policies(kind);
+CREATE INDEX retention_policies_updated_by_idx
+  ON admin.retention_policies(updated_by) WHERE updated_by IS NOT NULL;
 
 -- 4. 감사 로그 테이블
 CREATE TABLE admin.retention_policy_audit (
@@ -68,7 +70,11 @@ CREATE INDEX retention_audit_policy_idx
 
 -- 5. 감사 트리거 함수 + 트리거
 CREATE OR REPLACE FUNCTION admin.log_retention_policy_change()
-RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER AS $$
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = pg_catalog, admin, auth
+AS $$
 BEGIN
   INSERT INTO admin.retention_policy_audit (
     policy_id, action, before_state, after_state, actor
@@ -97,7 +103,12 @@ CREATE OR REPLACE FUNCTION admin.delete_old_rows(
   p_table       text,
   p_ts_col      text,
   p_cutoff_days int
-) RETURNS bigint LANGUAGE plpgsql SECURITY DEFINER AS $$
+)
+RETURNS bigint
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = pg_catalog, admin, cron, net, auth, public, pgmq
+AS $$
 DECLARE
   deleted_count bigint;
 BEGIN
@@ -113,13 +124,19 @@ BEGIN
 END;
 $$;
 
+REVOKE ALL ON FUNCTION admin.delete_old_rows(text, text, text, int) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION admin.delete_old_rows(text, text, text, int) TO service_role;
 
 -- 7. 도우미 함수: pgmq archive
 CREATE OR REPLACE FUNCTION admin.archive_old_pgmq_messages(
   p_queue_name  text,
   p_cutoff_days int
-) RETURNS bigint LANGUAGE plpgsql SECURITY DEFINER AS $$
+)
+RETURNS bigint
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = pg_catalog, admin, pgmq
+AS $$
 DECLARE
   archived_count bigint := 0;
   batch_ids      bigint[];
@@ -139,6 +156,7 @@ BEGIN
 END;
 $$;
 
+REVOKE ALL ON FUNCTION admin.archive_old_pgmq_messages(text, int) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION admin.archive_old_pgmq_messages(text, int) TO service_role;
 
 -- 8. RLS 정책 (super_admin 만 CRUD)
@@ -173,21 +191,21 @@ VALUES
     'pgmq_global_events_archive',
     'pgmq_archive',
     14,
-    '{"queue_name":"q_global_events"}',
+    '{"queue_name":"global_events"}',
     'global_events 큐 archive'
   ),
   (
     'pgmq_vectors_archive',
     'pgmq_archive',
     14,
-    '{"queue_name":"q_vectors"}',
+    '{"queue_name":"vectors"}',
     'vectors 큐 archive (pgvector 비동기)'
   ),
   (
     'pgmq_notifications_archive',
     'pgmq_archive',
     7,
-    '{"queue_name":"q_notifications"}',
+    '{"queue_name":"notifications"}',
     'notifications 큐 archive'
   ),
   (
