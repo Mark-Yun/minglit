@@ -254,6 +254,36 @@ Deno.test({
 });
 
 Deno.test({
+  name: "user-event-feed - location_access_log INSERT failure returns 500",
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+
+    const { fetchMock } = createFetchMock([
+      {
+        matcher: (req: Request) => req.url.includes("/auth/v1/user"),
+        handler: () => jsonResponse({ id: "user-123" }),
+      },
+      {
+        matcher: (req: Request) => req.url.includes("/rest/v1/location_access_log"),
+        handler: () => jsonResponse({ message: "DB error" }, { status: 500 }),
+      },
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const response = await handler(
+          authenticatedJsonRequest(BASE_URL, {
+            sort_by: "nearest_date",
+            filters: { nearby: { lat: 37.5, lng: 127.0, radius_km: 5 } },
+          }),
+        );
+        assertEquals(response.status, 500, "location_access_log INSERT failure returns 500");
+      });
+    });
+  },
+});
+
+Deno.test({
   name: "user-event-feed - OPTIONS returns CORS response",
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
