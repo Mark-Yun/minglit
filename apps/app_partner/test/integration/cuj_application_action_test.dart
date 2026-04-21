@@ -151,11 +151,13 @@ void main() {
       // the provider into loading state (CircularProgressIndicator with
       // repeat() animation), preventing pumpAndSettle() from ever settling.
       // Use bounded pump sequence: dispatch tap → resolve mock → settle UI.
+      // Note: unlike TC3/TC4 (_showRejectDialog uses addPostFrameCallback),
+      // _approve() calls showSnackBar + ref.invalidate() synchronously after
+      // the async approveApplication() call, so both effects happen in the
+      // same frame when the mock resolves.
       await tester.pump(); // dispatch tap, _approve() starts and suspends
-      await tester
-          .pump(); // approveApplication mock resolves → showSnackBar + ref.invalidate()
-      await tester
-          .pump(); // providers rebuild to loading state, SnackBar enters tree
+      await tester.pump(); // mock resolves → showSnackBar + ref.invalidate() (synchronous, same frame)
+      await tester.pump(); // SnackBar enters tree, providers switch to loading state
       await tester.pump(
         const Duration(milliseconds: 300),
       ); // mocks resolve → data state
