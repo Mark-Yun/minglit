@@ -125,7 +125,7 @@ jobs:
 
       - name: Upload CUJ screenshots
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: client-cuj-screenshots-${{ github.run_id }}
           path: apps/app_user/test/integration/goldens/
@@ -175,7 +175,7 @@ jobs:
 
       - name: Upload CUJ screenshots
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: partner-cuj-screenshots-${{ github.run_id }}
           path: apps/app_partner/test/integration/goldens/
