@@ -67,6 +67,18 @@ class HomeCoordinator {
     );
   }
 
+  // Fix #1630: context.push() in AppBar 콜백은 내부 Navigator context를 사용해
+  // 무음 실패(silent failure)가 발생함 — goRouterProvider로 주입된 root GoRouter
+  // 인스턴스를 통해 push해야 올바르게 동작함 (PR #1724 패턴과 동일).
+  void pushSearch() {
+    unawaited(_router.push(const SearchRoute().location));
+  }
+
+  // Fix #1630: AppBar context.push() → GoRouter 주입 패턴
+  void pushMyPage() {
+    unawaited(_router.push(const MyPageRoute().location));
+  }
+
   void pushEventDetail(String eventId) {
     unawaited(_router.push(EventDetailRoute(eventId: eventId).location));
   }

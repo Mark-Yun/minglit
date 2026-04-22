@@ -66,9 +66,9 @@ VALUES
 | 7 | 파트너 제공 참여자 정보 — 이벤트 종료 후 30일 | PIPA §21 목적 달성 후 파기 | `public.event_participants` (또는 파생 뷰) | ❌ 자동 파기 없음 | 없음 | **GAP** |
 | 8 | 자격 인증 증빙 1년 | 내부 정책 | `verification-proofs` 버킷 (Storage) + `public.verification_submissions` (메타/이력) | ❌ 자동 파기 없음 — Storage 버킷 만료 정책 미설정, DB 레코드 삭제 job 없음 | 없음 | **GAP** |
 | 9 | 부정 이용 기록 1년 | 내부 정책 | `public.blocked_dis` (`blocked_until` TTL 30일), 기타 | 부분 — `blocked_dis`는 30일 TTL, "1년 보존" 대상 테이블 식별 필요 | 없음 | **TBD** |
-| 10 | 관심 태그, 이용 기록, 기기 정보 — 탈퇴 시 즉시 파기 | PIPA §21 | `public.user_interest_tags` (관심 태그) · `public.fcm_tokens` (기기 토큰) | `process-pending-deletions` EF에서 각 테이블이 삭제되는지 검증 필요 | — | **VERIFY** |
-| 11 | 임베딩 벡터 — 탈퇴 시 즉시 파기 | PIPA §21 | `public.user_embeddings` · `public.party_embeddings` | `process-pending-deletions` EF에서 삭제되는지 검증 필요 | — | **VERIFY** |
-| 12 | GPS 좌표 — 검색 요청 처리 완료 즉시 파기 (서버 영구 저장 없음) | 위치정보법 §16 | 서버 미저장 원칙 | Edge Function 내 메모리 처리 가정 — 코드 주석 + 테스트로 증명 필요 | — | **VERIFY** |
+| 10 | 관심 태그, 이용 기록, 기기 정보 — 탈퇴 시 즉시 파기 | PIPA §21 | `public.user_interest_tags` (관심 태그) · `public.fcm_tokens` (기기 토큰) | ✅ PR #1728: CASCADE DELETE 확인 (`user_interest_tags`, `fcm_tokens` → `auth.users ON DELETE CASCADE`). pgTAP `89_account_deletion_immediate_purge_test.sql` | — | **구현 완료** |
+| 11 | 임베딩 벡터 — 탈퇴 시 즉시 파기 | PIPA §21 | `public.user_embeddings` (사용자 임베딩) | ✅ PR #1728: `user_embeddings` → `user_profiles` → `auth.users` CASCADE 체인 검증. `party_embeddings`는 `parties` 소유(파트너 귀속)로 유저 삭제 범위 외 — 별도 판단 불필요. pgTAP `89_account_deletion_immediate_purge_test.sql` | — | **구현 완료** |
+| 12 | GPS 좌표 — 검색 요청 처리 완료 즉시 파기 (서버 영구 저장 없음) | 위치정보법 §16 | 서버 미저장 원칙 | ✅ PR #1728: `location_access_log` 스키마에 lat/lng/geography 컬럼 없음 (정적 증명). `user-event-feed` EF: INSERT `{user_id, purpose}`만 기록. RPC `user_event_feed`: st_makepoint()로 필터만 사용, INSERT 없음. pgTAP `90_gps_no_server_storage_test.sql` | — | **구현 완료** |
 
 ### `admin.retention_policies` 초기 seed (PR #1693에서 배포 완료 — 2026-04-21)
 
@@ -155,21 +155,24 @@ VALUES
 
 ### P2 — 약속 이행 검증
 
-#### F7. 탈퇴 시 즉시 파기 약속 검증 (pgTAP)
+#### F7. 탈퇴 시 즉시 파기 약속 검증 (pgTAP) — ✅ 완료 (PR #1728)
 
-**대상 테이블 (실제 DB 객체)**:
-- `public.user_interest_tags` — 관심 태그
-- `public.fcm_tokens` — 기기 토큰 (`supabase/migrations/20260301000005_05_schema_system.sql:30`)
-- `public.user_embeddings` — 사용자 임베딩 (`supabase/migrations/20260301000002_02_schema_core.sql:24`)
-- `public.party_embeddings` — 파티 임베딩 (`supabase/migrations/20260301000003_03_schema_events.sql:30`)
+**CASCADE 체인 확인 결과**:
+- `public.user_interest_tags` — `REFERENCES auth.users(id) ON DELETE CASCADE` → EF deleteAuthUser()로 자동 삭제 ✅
+- `public.fcm_tokens` — `REFERENCES auth.users(id) ON DELETE CASCADE` → EF deleteAuthUser()로 자동 삭제 ✅
+- `public.user_embeddings` — `REFERENCES user_profiles(id) ON DELETE CASCADE` + `user_profiles REFERENCES auth.users ON DELETE CASCADE` → 체인 삭제 ✅
+- `public.party_embeddings` — `REFERENCES parties(id) ON DELETE CASCADE`. **parties는 auth.users와 직접 연결되지 않음 (partner 소유)**. 유저 탈퇴로 파티가 삭제되지 않으므로 이 테이블은 유저 귀속 개인정보 아님 — 별도 법적 조치 불필요.
 
-**필요 조치**:
-1. `process-pending-deletions` EF가 위 4개 테이블을 실제로 비우는지 각각 pgTAP 테스트 추가.
-2. 누락된 테이블 있으면 EF 로직 보강.
+**검증 파일**: `supabase/tests/database/89_account_deletion_immediate_purge_test.sql` (8 assertions)
 
-#### F8. GPS 좌표 "서버 미저장" 증명
+#### F8. GPS 좌표 "서버 미저장" 증명 — ✅ 완료 (PR #1728)
 
-**필요 조치**: 주변 검색 EF / 쿼리 경로에 GPS 좌표가 **어디에도 INSERT되지 않음**을 단위 테스트 또는 정적 분석(코드 리뷰 체크리스트)으로 증명.
+**정적 증명 결과**:
+- `user-event-feed/index.ts`: `location_access_log`에 `{user_id, purpose}`만 INSERT. lat/lng 저장 없음.
+- `user_event_feed` RPC: `p_lat`/`p_lng` → `st_makepoint()` 필터만 사용 (WHERE 절). INSERT 경로 없음.
+- `location_access_log` 스키마: `id, user_id, accessed_at, purpose, country_code` — GPS 컬럼 없음.
+
+**검증 파일**: `supabase/tests/database/90_gps_no_server_storage_test.sql` (6 assertions)
 
 ---
 
