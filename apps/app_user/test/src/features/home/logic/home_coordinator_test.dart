@@ -114,6 +114,24 @@ void main() {
       ).called(1);
     });
 
+    // Fix #1630: AppBar 검색·프로필 아이콘이 GoRouter 주입 coordinator를 통해 네비게이션하는지 검증.
+    // context.push() / GoRouteData.push(context) 로 되돌리면 이 테스트가 실패한다.
+    test('pushSearch calls router.push with /search', () {
+      HomeCoordinator(mockRouter).pushSearch();
+
+      verify(
+        () => mockRouter.push(any(that: contains('/search'))),
+      ).called(1);
+    });
+
+    test('pushMyPage calls router.push with /my', () {
+      HomeCoordinator(mockRouter).pushMyPage();
+
+      verify(
+        () => mockRouter.push(any(that: contains('/my'))),
+      ).called(1);
+    });
+
     // Fix #1526: pushTicketQR는 eventMeta를 GoRouter.push의 extra로 전달해야 한다.
     // app_routes.g.dart의 _fromState가 state.extra를 드롭하면 이 테스트가 실패한다.
     group('pushTicketQR', () {

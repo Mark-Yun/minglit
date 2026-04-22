@@ -6,7 +6,6 @@ import 'package:app_user/src/features/home/widgets/event_now_bar_controller.dart
 import 'package:app_user/src/features/home/widgets/featured_tag_chip_bar.dart';
 import 'package:app_user/src/features/home/widgets/trending_tag_section.dart';
 import 'package:app_user/src/logic/feed_state_provider.dart';
-import 'package:app_user/src/routing/app_routes.dart';
 import 'package:app_user/src/widgets/explore_filter_chip_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -115,7 +114,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                 const BugReportAction(),
                 IconButton(
                   icon: const Icon(Icons.search),
-                  onPressed: () => const SearchRoute().push<void>(context),
+                  // Fix #1630: AppBar context.push() → GoRouter 주입 패턴
+                  onPressed: homeCoordinator.pushSearch,
                 ),
                 if (user != null) ...[
                   IconButton(
@@ -124,8 +124,9 @@ class _HomePageState extends ConsumerState<HomePage> {
                   ),
                   // Fix #141: Use IconButton for consistent touch target (48x48)
                   // and ripple effect with other app bar actions
+                  // Fix #1630: AppBar context.push() → GoRouter 주입 패턴
                   IconButton(
-                    onPressed: () => const MyPageRoute().push<void>(context),
+                    onPressed: homeCoordinator.pushMyPage,
                     icon: CircleAvatar(
                       radius: 14,
                       backgroundImage: user.userMetadata?['avatar_url'] != null
