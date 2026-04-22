@@ -75,6 +75,7 @@ void main() {
     when(() => mockUser.userMetadata).thenReturn({'name': 'Test User'});
     when(() => mockUser.phone).thenReturn('01012345678');
     when(() => mockUser.email).thenReturn('test@test.com');
+    when(() => mockContext.mounted).thenReturn(true);
     when(() => mockEventRepo.getEventById(any())).thenAnswer(
       (_) async => testEvent,
     );

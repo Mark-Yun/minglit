@@ -178,10 +178,10 @@ void main() {
         find.widgetWithText(ElevatedButton, '나이 조건이 맞지 않습니다.'),
       );
       expect(button.onPressed, isNull);
-      // Disabled style: backgroundColor = theme.colorScheme.outline
+      // Fix #1374: MinglitButton._primaryStyle sets backgroundColor = colorScheme.primary for all states
       final theme = Theme.of(tester.element(find.byType(ElevatedButton).last));
       final bg = button.style?.backgroundColor?.resolve({});
-      expect(bg, theme.colorScheme.outline);
+      expect(bg, theme.colorScheme.primary);
     });
 
     testWidgets('eligible → "참가 신청하기" (enabled)', (tester) async {
@@ -278,8 +278,14 @@ void main() {
       final button = tester.widget<ElevatedButton>(
         find.widgetWithText(ElevatedButton, '참가 신청하기'),
       );
-      // Normal style: no custom backgroundColor override
-      expect(button.style?.backgroundColor, isNull);
+      // Fix #1374: MinglitButton._primaryStyle sets backgroundColor = colorScheme.primary
+      final theme = Theme.of(
+        tester.element(find.widgetWithText(ElevatedButton, '참가 신청하기')),
+      );
+      expect(
+        button.style?.backgroundColor?.resolve({}),
+        theme.colorScheme.primary,
+      );
     });
   });
 
