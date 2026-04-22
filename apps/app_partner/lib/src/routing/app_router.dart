@@ -111,7 +111,7 @@ GoRouter goRouter(Ref ref) {
             .read(hasSettlementAccessProvider)
             .maybeWhen(
               data: (v) => v,
-              // Fix #1544: fail-closed — refreshListenable re-evals after resolve
+              // Fix #1544: fail-closed; refreshListenable re-evals on resolve
               loading: () => false,
               orElse: () => false, // error: deny access (security-first)
             );
@@ -125,12 +125,14 @@ GoRouter goRouter(Ref ref) {
     observers: [MinglitNavigationObserver()],
     // Fix #1699 #1700: unhandled GoException previously caused crash or
     // exposed raw technical error message to users.
-    errorBuilder: (context, state) => const _RouteNotFoundPage(),
+    errorBuilder: (context, state) => const RouteNotFoundPage(),
   );
 }
 
-class _RouteNotFoundPage extends StatelessWidget {
-  const _RouteNotFoundPage();
+/// Shown by GoRouter's errorBuilder when a route cannot be matched.
+/// Exported for regression tests in route_not_found_error_handler_test.dart.
+class RouteNotFoundPage extends StatelessWidget {
+  const RouteNotFoundPage({super.key});
 
   @override
   Widget build(BuildContext context) {
