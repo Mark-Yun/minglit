@@ -92,6 +92,10 @@ void main() {
                   () => now,
             ),
             partnerRepositoryProvider.overrideWithValue(mockPartnerRepo),
+            // Fix: prevent real Supabase call in test environment
+            entryGroupParticipantCountsProvider(
+              'test-event-id',
+            ).overrideWith((_) async => <String, int>{}),
           ],
         ),
       );
@@ -135,12 +139,11 @@ void main() {
 
       await tester.tapAt(gapCenter);
 
-      // GoRouter navigation needs multiple frames; EventDetailPage has periodic
-      // timers so pumpAndSettle() hangs. Multiple small-duration pumps advance
-      // fake time past the SharedAxisTransition (300ms) AND provide enough frames.
-      for (var i = 0; i < 5; i++) {
-        await tester.pump(const Duration(milliseconds: 100));
-      }
+      // Use pump() without duration — same pattern as other navigation tests.
+      // pumpAndSettle() hangs because EventDetailPage has ongoing animations.
+      await tester.pump();
+      await tester.pump();
+      await tester.pump();
 
       expect(find.byType(PartnerDetailPage), findsOneWidget);
     });
@@ -152,12 +155,11 @@ void main() {
 
       await tester.tap(find.text(partnerName));
 
-      // GoRouter navigation needs multiple frames; EventDetailPage has periodic
-      // timers so pumpAndSettle() hangs. Multiple small-duration pumps advance
-      // fake time past the SharedAxisTransition (300ms) AND provide enough frames.
-      for (var i = 0; i < 5; i++) {
-        await tester.pump(const Duration(milliseconds: 100));
-      }
+      // Use pump() without duration — same pattern as other navigation tests.
+      // pumpAndSettle() hangs because EventDetailPage has ongoing animations.
+      await tester.pump();
+      await tester.pump();
+      await tester.pump();
 
       expect(find.byType(PartnerDetailPage), findsOneWidget);
     });
