@@ -3,8 +3,10 @@
 // - #1700: unknown route exposed raw GoException message to user
 //
 // Tests use the PRODUCTION $appRoutes + RouteNotFoundPage so that:
-// - Removing errorBuilder from app_router.dart breaks test 1 (crash).
 // - Changing RouteNotFoundPage content breaks text assertions.
+// NOTE: These tests verify RouteNotFoundPage renders correctly when
+//       errorBuilder fires. They do NOT verify app_router.dart wires
+//       errorBuilder — that wiring is visible in the production diff.
 // SYNC REQUIREMENT: update assertions if RouteNotFoundPage content changes.
 
 import 'package:app_user/src/routing/app_router.dart';
