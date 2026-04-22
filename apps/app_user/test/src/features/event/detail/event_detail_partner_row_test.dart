@@ -92,9 +92,6 @@ void main() {
                   () => now,
             ),
             partnerRepositoryProvider.overrideWithValue(mockPartnerRepo),
-            entryGroupParticipantCountsProvider(
-              testEvent.id,
-            ).overrideWith((ref) async => <String, int>{}),
           ],
         ),
       );
