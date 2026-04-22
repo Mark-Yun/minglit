@@ -33,7 +33,9 @@ BEGIN
       admin_comment  = NULL,
       reviewed_by    = NULL
   WHERE created_at < now() - p_cutoff_days * INTERVAL '1 day'
-    AND snapshot_data != '{}'::jsonb;  -- idempotent: 이미 익명화된 행 스킵
+    AND (snapshot_data != '{}'::jsonb
+         OR admin_comment IS NOT NULL
+         OR reviewed_by IS NOT NULL);  -- idempotent: 세 PII 컬럼 모두 기준
 
   GET DIAGNOSTICS v_updated = ROW_COUNT;
   RETURN v_updated;

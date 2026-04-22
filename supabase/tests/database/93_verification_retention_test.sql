@@ -8,7 +8,7 @@
 --   5. verification-proofs Storage 정책 등록
 BEGIN;
 
-SELECT plan(17);
+SELECT plan(19);
 
 SELECT tests.authenticate_as_service_role();
 
@@ -193,6 +193,55 @@ SELECT is(
   (SELECT retention_days FROM admin.retention_policies WHERE id = 'verification_proofs_storage'),
   365,
   '#1707: verification_proofs retention_days = 365 (1년)'
+);
+
+-- ── 5. idempotent 조건: snapshot_data={} 이지만 admin_comment가 남은 케이스 ──────
+
+-- snapshot_data는 이미 {} 이지만 admin_comment/reviewed_by에 PII가 남아 있는 행.
+-- 이전 idempotent 조건(snapshot_data != {} 만 체크)에서는 이 행을 건너뛰어 PII가 영구 잔존.
+DO $$
+DECLARE
+  v_user_id2    uuid;
+  v_submission2 uuid;
+BEGIN
+  v_user_id2 := tests.create_supabase_user(
+    'vs_retention_1707_b',
+    'vs_retention_1707_b@pgtap.local'
+  );
+
+  INSERT INTO public.verification_submissions (
+    partner_id, user_id, verification_id, status,
+    snapshot_data, admin_comment, reviewed_by,
+    created_at, updated_at
+  ) VALUES (
+    current_setting('vs_test.partner_id')::uuid,
+    v_user_id2,
+    current_setting('vs_test.verif_id')::uuid,
+    'approved',
+    '{}'::jsonb,                -- snapshot_data 이미 비어 있음
+    'Residual admin note',      -- admin_comment PII 잔존
+    v_user_id2,                 -- reviewed_by PII 잔존
+    now() - INTERVAL '366 days',
+    now() - INTERVAL '366 days'
+  ) RETURNING id INTO v_submission2;
+
+  PERFORM set_config('vs_test.submission_id2', v_submission2::text, true);
+END $$;
+
+SELECT admin.anonymize_old_verification_submissions(365);
+
+-- 18. snapshot_data={} 이지만 admin_comment → NULL (idempotent 조건 버그 회귀 방지)
+SELECT ok(
+  (SELECT admin_comment IS NULL FROM public.verification_submissions
+    WHERE id = current_setting('vs_test.submission_id2')::uuid),
+  '#1707 idempotent-fix: admin_comment NULLed even when snapshot_data was already {}'
+);
+
+-- 19. reviewed_by → NULL (동일 케이스)
+SELECT ok(
+  (SELECT reviewed_by IS NULL FROM public.verification_submissions
+    WHERE id = current_setting('vs_test.submission_id2')::uuid),
+  '#1707 idempotent-fix: reviewed_by NULLed even when snapshot_data was already {}'
 );
 
 SELECT * FROM finish();
