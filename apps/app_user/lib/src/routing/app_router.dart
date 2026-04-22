@@ -39,8 +39,9 @@ GoRouter goRouter(Ref ref) {
       // Redirect /explore deep links to home (backward compat)
       // Fix #1701: minglit://explore/... comes in as host='explore', path='/*'
       // so also check state.uri.host to catch both path and scheme forms.
-      if (path.startsWith('/explore') || state.uri.host == 'explore')
+      if (path.startsWith('/explore') || state.uri.host == 'explore') {
         return '/';
+      }
 
       // Allow dev pages without authentication
       if (path.startsWith('/dev')) return null;

@@ -32,8 +32,9 @@ Widget createTestApp({
 
       // /explore → / (backward compat)
       // Fix #1701: minglit://explore/... arrives as host='explore', path='/*'
-      if (path.startsWith('/explore') || state.uri.host == 'explore')
+      if (path.startsWith('/explore') || state.uri.host == 'explore') {
         return '/';
+      }
 
       // /dev → bypass auth
       if (path.startsWith('/dev')) return null;
