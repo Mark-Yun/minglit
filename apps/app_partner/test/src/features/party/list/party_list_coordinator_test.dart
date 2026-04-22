@@ -45,7 +45,7 @@ void main() {
 
       expect(
         fakeRouter.pushed,
-        [PartyDetailRoute(partyId: partyId).location],
+        [const PartyDetailRoute(partyId: partyId).location],
       );
     });
   });
