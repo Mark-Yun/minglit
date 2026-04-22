@@ -44,4 +44,10 @@ class PartnerHomeCoordinator {
   void pushEventCreate(String partyId) {
     unawaited(_router.push(EventCreateRoute(partyId: partyId).location));
   }
+
+  // Fix #1680: context.push() from HomeBranch fails for MoreBranch routes —
+  // use root GoRouter instance to cross shell-branch boundaries correctly.
+  void pushPartyCreate() {
+    unawaited(_router.push(const PartyCreateRoute().location));
+  }
 }

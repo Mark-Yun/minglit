@@ -31,6 +31,14 @@ class SettlementCoordinator extends _$SettlementCoordinator {
     );
   }
 
+  // Fix #1680: use root GoRouter to avoid silent failure when crossing shell
+  // branch boundaries (SettlementBranch → MoreBranch).
+  void goToPartyCreate() {
+    unawaited(
+      ref.read(goRouterProvider).push(const PartyCreateRoute().location),
+    );
+  }
+
   Future<void> retryPayout(
     BuildContext context, {
     required String payoutId,
