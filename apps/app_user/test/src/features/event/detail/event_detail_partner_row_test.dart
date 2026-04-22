@@ -135,10 +135,12 @@ void main() {
 
       await tester.tapAt(gapCenter);
 
-      // PartnerDetailRoute uses SharedAxisTransition (300ms).
-      // pump(Duration) advances fake time past the animation without looping on
-      // EventDetailPage's internal timers (unlike pumpAndSettle which hangs).
-      await tester.pump(const Duration(milliseconds: 500));
+      // GoRouter navigation needs multiple frames; EventDetailPage has periodic
+      // timers so pumpAndSettle() hangs. Multiple small-duration pumps advance
+      // fake time past the SharedAxisTransition (300ms) AND provide enough frames.
+      for (var i = 0; i < 5; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
 
       expect(find.byType(PartnerDetailPage), findsOneWidget);
     });
@@ -150,10 +152,12 @@ void main() {
 
       await tester.tap(find.text(partnerName));
 
-      // PartnerDetailRoute uses SharedAxisTransition (300ms).
-      // pump(Duration) advances fake time past the animation without looping on
-      // EventDetailPage's internal timers (unlike pumpAndSettle which hangs).
-      await tester.pump(const Duration(milliseconds: 500));
+      // GoRouter navigation needs multiple frames; EventDetailPage has periodic
+      // timers so pumpAndSettle() hangs. Multiple small-duration pumps advance
+      // fake time past the SharedAxisTransition (300ms) AND provide enough frames.
+      for (var i = 0; i < 5; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
 
       expect(find.byType(PartnerDetailPage), findsOneWidget);
     });
