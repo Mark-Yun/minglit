@@ -3,12 +3,8 @@
 //   - Real device/emulator + patrol_cli
 //   - Kakao test OAuth account credentials (see docs/features/patrol-introduction/)
 //
-<<<<<<<< HEAD:apps/app_user/emulator_test/kakao_login_test.dart
-// Run: cd apps/app_user && patrol test emulator_test/kakao_login_test.dart
-========
 // Fix #1673: patrol_cli 4.x 문법으로 특정 테스트 실행
 // Run: cd apps/app_user && patrol test --target patrol_test/kakao_login_test.dart
->>>>>>>> origin/dev:apps/app_user/patrol_test/kakao_login_test.dart
 
 import 'package:patrol/patrol.dart';
 
