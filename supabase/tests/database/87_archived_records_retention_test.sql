@@ -53,10 +53,11 @@ SELECT throws_ok(
 SAVEPOINT before_functional_test;
 
 -- 만료된 레코드 삽입 (retention_until = 어제)
-INSERT INTO public.archived_records (user_id, record_type, data, retention_until)
+-- archived_records schema: user_id_hash text, record_data jsonb, record_type IN ('contract','payment','dispute','login')
+INSERT INTO public.archived_records (user_id_hash, record_type, record_data, retention_until)
 VALUES (
-  gen_random_uuid(),
-  'account',
+  'test-hash-expired',
+  'payment',
   '{"test": "expired"}'::jsonb,
   now() - interval '1 day'
 );
@@ -71,10 +72,10 @@ ROLLBACK TO SAVEPOINT before_functional_test;
 -- 8. 기능 테스트: 미만료 레코드 보존
 SAVEPOINT before_live_test;
 
-INSERT INTO public.archived_records (user_id, record_type, data, retention_until)
+INSERT INTO public.archived_records (user_id_hash, record_type, record_data, retention_until)
 VALUES (
-  gen_random_uuid(),
-  'account',
+  'test-hash-live',
+  'payment',
   '{"test": "live"}'::jsonb,
   now() + interval '1 day'
 );
