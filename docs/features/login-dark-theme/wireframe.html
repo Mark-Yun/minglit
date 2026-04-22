@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0" />
+<title>Login 다크 테마 일관성 — #1542</title>
+<style>
+  :root {
+    --bg: #f4f4f6;
+    --ink: #111827;
+    --muted: #6b7280;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 32px 16px 64px;
+    font-family: -apple-system, 'Pretendard', 'Apple SD Gothic Neo', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+  }
+  h1 {
+    max-width: 960px;
+    margin: 0 auto 8px;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+  p.lead {
+    max-width: 960px;
+    margin: 0 auto 28px;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .row {
+    max-width: 960px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 24px;
+  }
+  .tile {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .tile h2 {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .tile h2 .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    margin-left: 6px;
+    font-size: 11px;
+    border-radius: 999px;
+    vertical-align: middle;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+  .tag.before { background: #fee2e2; color: #b91c1c; }
+  .tag.after  { background: #dcfce7; color: #166534; }
+  .frame {
+    width: 100%;
+    aspect-ratio: 390 / 844;
+    border-radius: 32px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 12px 32px rgba(17, 24, 39, 0.12);
+    overflow: hidden;
+    position: relative;
+  }
+  .frame.light {
+    background: #f9fafb;
+    color: #111827;
+  }
+  .frame.dark {
+    background: #0f0f0f;
+    color: #ffffff;
+  }
+  .hero { margin-top: 16%; text-align: center; }
+  .logo {
+    font-family: 'Georgia', serif;
+    font-weight: 900;
+    font-style: italic;
+    font-size: 44px;
+    line-height: 1;
+    background: linear-gradient(120deg, #9900ff 40%, #21fffe 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    letter-spacing: -0.02em;
+    filter: drop-shadow(2px 2px 0 rgba(255, 153, 0, 0.6));
+  }
+  .slogan {
+    margin-top: 14px;
+    font-size: 13px;
+    color: currentColor;
+    opacity: 0.7;
+  }
+  .buttons {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  .btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    height: 48px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    border: 1px solid transparent;
+  }
+  .btn .dot {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    background: currentColor;
+    opacity: 0.85;
+  }
+  /* Light mode buttons (shared between before/after) */
+  .light .btn.google {
+    background: #ffffff;
+    color: #111827;
+    border-color: #e5e7eb;
+  }
+  .light .btn.apple {
+    background: #111827;
+    color: #ffffff;
+  }
+  .light .btn.kakao {
+    background: #f59e0b;
+    color: #111827;
+  }
+  /* BEFORE dark — login kept light scaffold & light buttons */
+  .dark.before { background: #ffffff; color: #111827; }
+  .dark.before .slogan { color: #6b7280; }
+  .dark.before .btn.google {
+    background: #ffffff;
+    color: #111827;
+    border-color: #e5e7eb;
+  }
+  .dark.before .btn.apple {
+    background: #111827;
+    color: #ffffff;
+  }
+  .dark.before .btn.kakao {
+    background: #f59e0b;
+    color: #111827;
+  }
+  /* AFTER dark — login follows dark theme */
+  .dark.after .btn.google {
+    background: #212121;
+    color: #ffffff;
+    border-color: #3d3d3d;
+  }
+  .dark.after .btn.apple {
+    background: #ffffff;
+    color: #111827;
+  }
+  .dark.after .btn.kakao {
+    background: #fbbf24;
+    color: #111827;
+  }
+  .terms {
+    font-size: 11px;
+    opacity: 0.6;
+    text-align: center;
+  }
+  .terms u { text-underline-offset: 2px; }
+  .callouts {
+    max-width: 960px;
+    margin: 40px auto 0;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 20px 24px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #374151;
+  }
+  .callouts h3 {
+    margin: 0 0 8px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #111827;
+  }
+  .callouts ul {
+    margin: 0;
+    padding-left: 20px;
+  }
+  .callouts li + li { margin-top: 4px; }
+  .kbd {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px;
+  }
+  hr.sep {
+    max-width: 960px;
+    margin: 36px auto;
+    border: none;
+    border-top: 1px solid #e5e7eb;
+  }
+</style>
+</head>
+<body>
+  <h1>Login 다크 테마 일관성 (#1542)</h1>
+  <p class="lead">
+    보호 경로에서 로그인으로 리다이렉트될 때, 홈은 다크(#0F0F0F)인데 로그인만 화이트(#FFFFFF)로 떨어져 시각적으로 깜빡이는 느낌이 든다.
+    Scaffold 배경과 Google·Apple 버튼 색상을 테마에 연동해 전환 이질감을 제거한다. Kakao는 브랜드 고정(노랑)을 유지한다.
+  </p>
+
+  <div class="row">
+    <div class="tile">
+      <h2>Before — Light <span class="tag after">현행 OK</span></h2>
+      <div class="frame light">
+        <div class="hero">
+          <div class="logo">Minglit</div>
+          <div class="slogan">Verified Vibe, Spark Your Moment</div>
+        </div>
+        <div class="buttons">
+          <div class="btn google"><span class="dot" style="background:#4285f4"></span>Google로 시작하기</div>
+          <div class="btn apple"><span class="dot" style="background:#ffffff"></span>Apple로 시작하기</div>
+          <div class="btn kakao"><span class="dot" style="background:#111827"></span>Kakao로 시작하기</div>
+          <div class="terms">로그인 시 <u>이용약관</u> 및 <u>개인정보처리방침</u>에 동의하게 됩니다.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tile">
+      <h2>Before — Dark <span class="tag before">불일치 (버그)</span></h2>
+      <div class="frame dark before">
+        <div class="hero">
+          <div class="logo">Minglit</div>
+          <div class="slogan">Verified Vibe, Spark Your Moment</div>
+        </div>
+        <div class="buttons">
+          <div class="btn google"><span class="dot" style="background:#4285f4"></span>Google로 시작하기</div>
+          <div class="btn apple"><span class="dot" style="background:#ffffff"></span>Apple로 시작하기</div>
+          <div class="btn kakao"><span class="dot" style="background:#111827"></span>Kakao로 시작하기</div>
+          <div class="terms">로그인 시 <u>이용약관</u> 및 <u>개인정보처리방침</u>에 동의하게 됩니다.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tile">
+      <h2>After — Dark <span class="tag after">수정안</span></h2>
+      <div class="frame dark after">
+        <div class="hero">
+          <div class="logo">Minglit</div>
+          <div class="slogan">Verified Vibe, Spark Your Moment</div>
+        </div>
+        <div class="buttons">
+          <div class="btn google"><span class="dot" style="background:#4285f4"></span>Google로 시작하기</div>
+          <div class="btn apple"><span class="dot" style="background:#111827"></span>Apple로 시작하기</div>
+          <div class="btn kakao"><span class="dot" style="background:#111827"></span>Kakao로 시작하기</div>
+          <div class="terms">로그인 시 <u>이용약관</u> 및 <u>개인정보처리방침</u>에 동의하게 됩니다.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="sep" />
+
+  <div class="callouts">
+    <h3>설계 의사결정</h3>
+    <ul>
+      <li><strong>Scaffold 배경</strong> — 하드코딩된 <span class="kbd">MinglitColors.background</span> 제거. Scaffold가 <span class="kbd">theme.scaffoldBackgroundColor</span>를 상속하도록 비움. 라이트=<span class="kbd">#F9FAFB</span>(홈과 동일한 surface), 다크=<span class="kbd">#0F0F0F</span>(홈과 동일한 배경).</li>
+      <li><strong>Google 버튼</strong> — 브랜드 가이드가 라이트/다크 변형을 모두 허용. 라이트=흰 바탕+near-black 글자, 다크=<span class="kbd">#212121</span>(surface dark)+흰 글자. 보더는 <span class="kbd">outlineVariant</span>로 테마 연동.</li>
+      <li><strong>Apple 버튼</strong> — Apple Sign-In HIG를 따름. 라이트=검정 바탕+흰 글자, 다크=흰 바탕+검정 글자(Apple 가이드의 "white on dark" 변형).</li>
+      <li><strong>Kakao 버튼</strong> — 테마와 무관하게 노랑 고정(Kakao 브랜드). 글자는 near-black 유지.</li>
+      <li><strong>슬로건·약관 텍스트</strong> — 이미 <span class="kbd">theme.colorScheme.outline</span> / <span class="kbd">theme.textTheme</span>을 사용하므로 변경 없음.</li>
+      <li><strong>회귀 방지</strong> — <span class="kbd">login_scenarios.dart</span>에 <span class="kbd">Brightness.dark</span> 시나리오 추가 → 다크 골든 <span class="kbd">login_page_default_dark.png</span> 생성.</li>
+    </ul>
+  </div>
+</body>
+</html>

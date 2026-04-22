@@ -45,6 +45,7 @@ class MinglitLoginScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // Theme colors (User: Navy / Partner: Orange)
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final slogan = isPartner
         ? 'Verified Vibe, Spark Your Business'
         : 'Verified Vibe, Spark Your Moment';
@@ -59,8 +60,8 @@ class MinglitLoginScreen extends ConsumerWidget {
 
     final urlConfig = ref.watch(minglitUrlConfigProvider);
 
+    // Fix #1542: 로그인 스캐폴드 배경을 테마에 맞춰 자동 전환 (다크모드 일관성)
     return Scaffold(
-      backgroundColor: MinglitColors.background,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: MinglitSpacing.large),
@@ -94,12 +95,18 @@ class MinglitLoginScreen extends ConsumerWidget {
               const Spacer(),
 
               // 2. Login Buttons
+              // Fix #1542: 라이트/다크 모드별 브랜드 표준에 맞춰 버튼 색상 전환
+              // - Google: 라이트=흰 바탕/어두운 글자, 다크=어두운 바탕/흰 글자
+              // - Apple: 라이트=검정 바탕/흰 글자, 다크=흰 바탕/검정 글자
+              // - Kakao: 브랜드 고정 (노랑 바탕/검정 글자) — 테마 무관
               _LoginButton(
                 onPressed: onGoogleSignIn,
                 icon: Icons.g_mobiledata,
                 label: 'Google로 시작하기',
-                backgroundColor: MinglitColors.background,
-                foregroundColor: MinglitColors.textPrimary.withValues(
+                backgroundColor: isDark
+                    ? MinglitColorsDark.surface
+                    : MinglitColors.background,
+                foregroundColor: theme.colorScheme.onSurface.withValues(
                   alpha: MinglitOpacity.highEmphasis,
                 ),
                 borderColor: theme.colorScheme.outlineVariant,
@@ -110,8 +117,12 @@ class MinglitLoginScreen extends ConsumerWidget {
                   onPressed: onAppleSignIn,
                   icon: Icons.apple,
                   label: 'Apple로 시작하기',
-                  backgroundColor: MinglitColors.textPrimary,
-                  foregroundColor: MinglitColors.background,
+                  backgroundColor: isDark
+                      ? MinglitColors.background
+                      : MinglitColors.textPrimary,
+                  foregroundColor: isDark
+                      ? MinglitColors.textPrimary
+                      : MinglitColors.background,
                 ),
               ],
               const SizedBox(height: MinglitSpacing.sm),

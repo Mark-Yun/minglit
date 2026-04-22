@@ -2,10 +2,12 @@
 # This workflow is NOT part of ci-result and does NOT block PR merges.
 # Failures here are informational only; investigation happens separately.
 #
-# Runs only Patrol-native tests (patrolTest) in integration_test/.
+# Runs only Patrol-native tests (patrolTest) in patrol_test/.
 # scenario_screenshots_test.dart and apple_sign_in_test.dart use
 # IntegrationTestWidgetsFlutterBinding (incompatible with PatrolBinding)
 # and are excluded from this workflow — run them via `flutter test integration_test/`.
+#
+# Fix #1673: patrol_cli 4.x requires patrol_test/ directory — moved tests from integration_test/
 
 name: "Weekly: Emulator Test (Patrol native surface)"
 
@@ -25,6 +27,24 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v6
+
+      # Fix: CI checkout does not include the private minglit_env submodule.
+      # Rebuild the dev Flutter env file from Actions secrets before running Patrol.
+      # Same pattern as daily-backend-simulation.yml (Fix #1169).
+      - name: Create dev Flutter env file
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_DEV_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }}
+          ENVIRONMENT: development
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN_FLUTTER }}
+          STATSIG_CLIENT_KEY: ${{ secrets.STATSIG_CLIENT_KEY }}
+          GOOGLE_WEB_CLIENT_ID: ${{ secrets.GOOGLE_DEV_WEB_CLIENT_ID }}
+          KAKAO_LOCAL_REST_API_KEY: ${{ secrets.KAKAO_LOCAL_REST_API_KEY }}
+          KAKAO_MAP_JAVASCRIPT_KEY: ${{ secrets.KAKAO_MAP_JAVASCRIPT_KEY }}
+          JUSO_CONFIRM_KEY: ${{ secrets.JUSO_CONFIRM_KEY }}
+          IAMPORT_USER_CODE: ${{ secrets.IAMPORT_USER_CODE }}
+          MOBILE_REDIRECT_SCHEME: ${{ secrets.MOBILE_REDIRECT_SCHEME }}
+        run: bash .github/scripts/create-dev-flutter-env.sh
 
       - name: Set up Java
         uses: actions/setup-java@v4
@@ -59,7 +79,14 @@ jobs:
           force-avd-creation: false
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
           disable-animations: true
-          script: cd apps/app_user && patrol test --flavor dev --dart-define-from-file=../../minglit_env/dev/flutter.env integration_test/kakao_login_test.dart integration_test/payment_pg_test.dart integration_test/permission_grant_test.dart
+          script: >
+            cd apps/app_user &&
+            patrol test
+            --flavor dev
+            --dart-define-from-file=../../minglit_env/dev/flutter.env
+            --target patrol_test/kakao_login_test.dart
+            --target patrol_test/payment_pg_test.dart
+            --target patrol_test/permission_grant_test.dart
 
       - name: Upload test results
         if: failure()

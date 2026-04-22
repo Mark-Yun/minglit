@@ -39,12 +39,14 @@ SELECT set_config('tests.ret_tag_id', id::text, true) FROM t;
 -- 5-b. 2년 초과 데이터 삽입 (예: 800일 전 ~ 750일 전, 여러 날짜)
 DO $$
 BEGIN
-  FOR i IN 750..760 LOOP
+  -- 770..780: date_trunc 경계(약 750일)보다 충분히 오래된 날짜 사용
+  -- 750일 범위는 현재 날짜에 따라 partial month cutoff와 충돌할 수 있어 flaky
+  FOR i IN 770..780 LOOP
     INSERT INTO tag_usage_daily (tag_id, date, daily_count)
     VALUES (
       current_setting('tests.ret_tag_id')::uuid,
       CURRENT_DATE - (i || ' days')::interval,
-      i - 749  -- 1, 2, 3, ..., 11
+      i - 769  -- 1, 2, 3, ..., 11
     );
   END LOOP;
 END $$;
