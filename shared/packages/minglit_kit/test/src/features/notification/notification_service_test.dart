@@ -1,5 +1,3 @@
-// ignore_for_file: invalid_use_of_visible_for_testing_member
-
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,7 +5,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/src/data/repositories/notification_repository.dart';
 import 'package:minglit_kit/src/features/notification/notification_service.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:permission_handler_platform_interface/permission_handler_platform_interface.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
@@ -104,45 +101,61 @@ void main() {
   }
 
   group('_ensureNotificationPermission (#1687)', () {
-    test('returns false immediately when permission is permanently denied', () async {
-      // Regression: permanently denied must not reach Firebase — infinite dialog prevention
-      when(
-        () => mockPermissionHandler.checkPermissionStatus(Permission.notification),
-      ).thenAnswer((_) async => PermissionStatus.permanentlyDenied);
+    test(
+      'returns false immediately when permission is permanently denied',
+      () async {
+        // Regression: permanently denied must not reach Firebase — infinite dialog prevention
+        when(
+          () => mockPermissionHandler.checkPermissionStatus(
+            Permission.notification,
+          ),
+        ).thenAnswer((_) async => PermissionStatus.permanentlyDenied);
 
-      final service = buildService(createServiceContainer());
-      final result = await service.ensureNotificationPermissionForTest();
+        final service = buildService(createServiceContainer());
+        final result = await service.ensureNotificationPermissionForTest();
 
-      expect(result, false);
-      verifyNever(() => mockFcm.requestPermission());
-    });
+        expect(result, false);
+        verifyNever(() => mockFcm.requestPermission());
+      },
+    );
 
-    test('requests permission when status is denied, then checks Firebase', () async {
-      when(
-        () => mockPermissionHandler.checkPermissionStatus(Permission.notification),
-      ).thenAnswer((_) async => PermissionStatus.denied);
-      when(
-        () => mockPermissionHandler.requestPermissions([Permission.notification]),
-      ).thenAnswer(
-        (_) async => {Permission.notification: PermissionStatus.granted},
-      );
-      when(() => mockFcm.requestPermission()).thenAnswer(
-        (_) async => _authorizedSettings,
-      );
+    test(
+      'requests permission when status is denied, then checks Firebase',
+      () async {
+        when(
+          () => mockPermissionHandler.checkPermissionStatus(
+            Permission.notification,
+          ),
+        ).thenAnswer((_) async => PermissionStatus.denied);
+        when(
+          () => mockPermissionHandler.requestPermissions([
+            Permission.notification,
+          ]),
+        ).thenAnswer(
+          (_) async => {Permission.notification: PermissionStatus.granted},
+        );
+        when(() => mockFcm.requestPermission()).thenAnswer(
+          (_) async => _authorizedSettings,
+        );
 
-      final service = buildService(createServiceContainer());
-      final result = await service.ensureNotificationPermissionForTest();
+        final service = buildService(createServiceContainer());
+        final result = await service.ensureNotificationPermissionForTest();
 
-      expect(result, true);
-      verify(
-        () => mockPermissionHandler.requestPermissions([Permission.notification]),
-      ).called(1);
-      verify(() => mockFcm.requestPermission()).called(1);
-    });
+        expect(result, true);
+        verify(
+          () => mockPermissionHandler.requestPermissions([
+            Permission.notification,
+          ]),
+        ).called(1);
+        verify(() => mockFcm.requestPermission()).called(1);
+      },
+    );
 
     test('skips permission request dialog when already granted', () async {
       when(
-        () => mockPermissionHandler.checkPermissionStatus(Permission.notification),
+        () => mockPermissionHandler.checkPermissionStatus(
+          Permission.notification,
+        ),
       ).thenAnswer((_) async => PermissionStatus.granted);
       when(() => mockFcm.requestPermission()).thenAnswer(
         (_) async => _authorizedSettings,
@@ -152,13 +165,16 @@ void main() {
       await service.ensureNotificationPermissionForTest();
 
       verifyNever(
-        () => mockPermissionHandler.requestPermissions([Permission.notification]),
+        () =>
+            mockPermissionHandler.requestPermissions([Permission.notification]),
       );
     });
 
     test('returns true for provisional Firebase authorization', () async {
       when(
-        () => mockPermissionHandler.checkPermissionStatus(Permission.notification),
+        () => mockPermissionHandler.checkPermissionStatus(
+          Permission.notification,
+        ),
       ).thenAnswer((_) async => PermissionStatus.granted);
       when(() => mockFcm.requestPermission()).thenAnswer(
         (_) async => _provisionalSettings,
@@ -172,7 +188,9 @@ void main() {
 
     test('returns false when Firebase authorization is denied', () async {
       when(
-        () => mockPermissionHandler.checkPermissionStatus(Permission.notification),
+        () => mockPermissionHandler.checkPermissionStatus(
+          Permission.notification,
+        ),
       ).thenAnswer((_) async => PermissionStatus.granted);
       when(() => mockFcm.requestPermission()).thenAnswer(
         (_) async => _deniedSettings,
