@@ -6,7 +6,7 @@
 -- Self-contained: creates its own fixtures — does NOT rely on dev seed data.
 BEGIN;
 
-SELECT plan(5);
+SELECT plan(4);
 
 SELECT tests.authenticate_as_service_role();
 
