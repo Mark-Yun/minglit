@@ -8,7 +8,7 @@
 --   5. verification-proofs Storage 정책 등록
 BEGIN;
 
-SELECT plan(19);
+SELECT plan(17);
 
 SELECT tests.authenticate_as_service_role();
 
@@ -90,14 +90,14 @@ BEGIN
   RETURNING id INTO v_verif_id;
 
   -- Create a submission older than 365 days with PII in snapshot_data
+  -- (admin_comment was dropped in 20260322000006_verification_schema_simplify)
   INSERT INTO public.verification_submissions (
-    partner_id, user_id, verification_id, status, snapshot_data, admin_comment,
+    partner_id, user_id, verification_id, status, snapshot_data,
     reviewed_by, created_at, updated_at
   ) VALUES (
     v_partner_id, v_user_id, v_verif_id,
     'approved',
     '{"id_number_last4": "1234", "name": "홍길동"}'::jsonb,
-    'Admin note 1707',
     v_user_id,
     now() - INTERVAL '366 days',
     now() - INTERVAL '366 days'
@@ -134,14 +134,7 @@ SELECT is(
   '#1707 PIPA §21: snapshot_data anonymized to {} after 365 days'
 );
 
--- 10. admin_comment → NULL
-SELECT ok(
-  (SELECT admin_comment IS NULL FROM public.verification_submissions
-    WHERE id = current_setting('vs_test.submission_id')::uuid),
-  '#1707 PIPA §21: admin_comment NULLed after anonymization'
-);
-
--- 11. reviewed_by → NULL
+-- 10. reviewed_by → NULL
 SELECT ok(
   (SELECT reviewed_by IS NULL FROM public.verification_submissions
     WHERE id = current_setting('vs_test.submission_id')::uuid),
@@ -195,10 +188,11 @@ SELECT is(
   '#1707: verification_proofs retention_days = 365 (1년)'
 );
 
--- ── 5. idempotent 조건: snapshot_data={} 이지만 admin_comment가 남은 케이스 ──────
+-- ── 5. idempotent 조건: snapshot_data={} 이지만 reviewed_by가 남은 케이스 ──────
 
--- snapshot_data는 이미 {} 이지만 admin_comment/reviewed_by에 PII가 남아 있는 행.
+-- snapshot_data는 이미 {} 이지만 reviewed_by에 PII가 남아 있는 행.
 -- 이전 idempotent 조건(snapshot_data != {} 만 체크)에서는 이 행을 건너뛰어 PII가 영구 잔존.
+-- (admin_comment는 20260322000006에서 삭제되어 대상 아님)
 DO $$
 DECLARE
   v_user_id2    uuid;
@@ -211,16 +205,15 @@ BEGIN
 
   INSERT INTO public.verification_submissions (
     partner_id, user_id, verification_id, status,
-    snapshot_data, admin_comment, reviewed_by,
+    snapshot_data, reviewed_by,
     created_at, updated_at
   ) VALUES (
     current_setting('vs_test.partner_id')::uuid,
     v_user_id2,
     current_setting('vs_test.verif_id')::uuid,
     'approved',
-    '{}'::jsonb,                -- snapshot_data 이미 비어 있음
-    'Residual admin note',      -- admin_comment PII 잔존
-    v_user_id2,                 -- reviewed_by PII 잔존
+    '{}'::jsonb,  -- snapshot_data 이미 비어 있음
+    v_user_id2,   -- reviewed_by PII 잔존
     now() - INTERVAL '366 days',
     now() - INTERVAL '366 days'
   ) RETURNING id INTO v_submission2;
@@ -230,14 +223,7 @@ END $$;
 
 SELECT admin.anonymize_old_verification_submissions(365);
 
--- 18. snapshot_data={} 이지만 admin_comment → NULL (idempotent 조건 버그 회귀 방지)
-SELECT ok(
-  (SELECT admin_comment IS NULL FROM public.verification_submissions
-    WHERE id = current_setting('vs_test.submission_id2')::uuid),
-  '#1707 idempotent-fix: admin_comment NULLed even when snapshot_data was already {}'
-);
-
--- 19. reviewed_by → NULL (동일 케이스)
+-- 17. reviewed_by → NULL (snapshot_data={} 이어도 reviewed_by 익명화 — idempotent 조건 회귀 방지)
 SELECT ok(
   (SELECT reviewed_by IS NULL FROM public.verification_submissions
     WHERE id = current_setting('vs_test.submission_id2')::uuid),

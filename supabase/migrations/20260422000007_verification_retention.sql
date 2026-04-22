@@ -10,11 +10,12 @@
 --   DB 기록 — 하드 DELETE 불가.
 --     verification_submissions(id) ← partner_verified_users(submission_id) ON DELETE CASCADE
 --     하드 DELETE 시 현재 유효한 파트너 인증 상태(partner_verified_users)가 연쇄 삭제됨.
---     대신 PII 컬럼(snapshot_data, admin_comment, reviewed_by)만 익명화.
+--     대신 PII 컬럼(snapshot_data, reviewed_by)만 익명화.
+--     (admin_comment는 20260322000006_verification_schema_simplify 에서 삭제됨)
 --   Storage 파일 — 원본 이미지/PDF는 하드 삭제 (PIPA §21 파기 의무 핵심).
 
 -- ── 1. PII 익명화 함수 ────────────────────────────────────────────────────────
--- snapshot_data(증빙 원본 JSON), admin_comment, reviewed_by 를 익명화.
+-- snapshot_data(증빙 원본 JSON), reviewed_by 를 익명화.
 -- user_id(NOT NULL), partner_id, verification_id, status, reviewed_at 는 보존
 -- (트레이서빌리티 + partner_verified_users FK 무결성 유지).
 CREATE OR REPLACE FUNCTION admin.anonymize_old_verification_submissions(
@@ -30,12 +31,10 @@ DECLARE
 BEGIN
   UPDATE public.verification_submissions
   SET snapshot_data  = '{}'::jsonb,
-      admin_comment  = NULL,
       reviewed_by    = NULL
   WHERE created_at < now() - p_cutoff_days * INTERVAL '1 day'
     AND (snapshot_data != '{}'::jsonb
-         OR admin_comment IS NOT NULL
-         OR reviewed_by IS NOT NULL);  -- idempotent: 세 PII 컬럼 모두 기준
+         OR reviewed_by IS NOT NULL);  -- idempotent: 두 PII 컬럼 모두 기준
 
   GET DIAGNOSTICS v_updated = ROW_COUNT;
   RETURN v_updated;
@@ -65,7 +64,7 @@ INSERT INTO admin.retention_policies (
   jsonb_build_object('fn', 'admin.anonymize_old_verification_submissions'),
   true,
   '개인정보처리방침 §F6: 자격 인증 제출 기록 PII 1년 후 익명화 '
-  '(snapshot_data→{}, admin_comment/reviewed_by→NULL)',
+  '(snapshot_data→{}, reviewed_by→NULL)',
   jsonb_build_object(
     'approach', 'anonymize',
     'reason',   'partner_verified_users.submission_id ON DELETE CASCADE — '
