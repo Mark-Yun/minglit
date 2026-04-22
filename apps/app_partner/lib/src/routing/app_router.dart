@@ -125,14 +125,12 @@ GoRouter goRouter(Ref ref) {
     observers: [MinglitNavigationObserver()],
     // Fix #1699 #1700: unhandled GoException previously caused crash or
     // exposed raw technical error message to users.
-    errorBuilder: (context, state) => _RouteNotFoundPage(state: state),
+    errorBuilder: (context, state) => const _RouteNotFoundPage(),
   );
 }
 
 class _RouteNotFoundPage extends StatelessWidget {
-  const _RouteNotFoundPage({required this.state});
-
-  final GoRouterState state;
+  const _RouteNotFoundPage();
 
   @override
   Widget build(BuildContext context) {

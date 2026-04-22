@@ -119,7 +119,7 @@ GoRouter goRouter(Ref ref) {
     observers: [MinglitNavigationObserver()],
     // Fix #1699 #1700: unhandled GoException (unknown route) previously caused
     // either a crash (→ Android launcher) or exposed raw technical error message.
-    errorBuilder: (context, state) => _RouteNotFoundPage(state: state),
+    errorBuilder: (context, state) => const _RouteNotFoundPage(),
   );
 
   ref.onDispose(() {
@@ -131,9 +131,7 @@ GoRouter goRouter(Ref ref) {
 }
 
 class _RouteNotFoundPage extends StatelessWidget {
-  const _RouteNotFoundPage({required this.state});
-
-  final GoRouterState state;
+  const _RouteNotFoundPage();
 
   @override
   Widget build(BuildContext context) {
