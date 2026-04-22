@@ -111,7 +111,7 @@ GoRouter goRouter(Ref ref) {
             .read(hasSettlementAccessProvider)
             .maybeWhen(
               data: (v) => v,
-              // Fix #1544: fail-closed — refreshListenable re-evals after resolve
+              // Fix #1544: fail-closed; refreshListenable re-evals on resolve
               loading: () => false,
               orElse: () => false, // error: deny access (security-first)
             );
@@ -123,5 +123,27 @@ GoRouter goRouter(Ref ref) {
     },
     routes: $appRoutes, // Generated routes from app_routes.dart
     observers: [MinglitNavigationObserver()],
+    // Fix #1699 #1700: unhandled GoException previously caused crash or
+    // exposed raw technical error message to users.
+    errorBuilder: (context, state) => const RouteNotFoundPage(),
   );
+}
+
+/// Shown by GoRouter's errorBuilder when a route cannot be matched.
+/// Exported for regression tests in route_not_found_error_handler_test.dart.
+class RouteNotFoundPage extends StatelessWidget {
+  const RouteNotFoundPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: MinglitErrorState(
+        icon: Icons.search_off_rounded,
+        title: '페이지를 찾을 수 없습니다.',
+        subtitle: '요청하신 페이지가 존재하지 않거나 이동되었습니다.',
+        retryLabel: '홈으로',
+        onRetry: () => context.go('/'),
+      ),
+    );
+  }
 }

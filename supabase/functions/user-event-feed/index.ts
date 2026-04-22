@@ -105,6 +105,18 @@ Deno.serve(withHandler(async (req) => {
     },
   });
 
+  // 위치정보법 §16: 주변 검색 요청 1건 = 1 row 기록 (GPS 좌표 저장 금지)
+  // INSERT 실패 시 요청 거부 — 기록 없이 위치 검색을 허용하면 법적 의무 미이행
+  if (nearby !== null) {
+    const { error: logError } = await supabase
+      .from("location_access_log")
+      .insert({ user_id: userId, purpose: "nearby_search" });
+    if (logError) {
+      log({ function: FN, level: "error", message: "location_access_log INSERT failed", metadata: { detail: logError.message } });
+      return errorResponse("Failed to record location access log", 500, logError.message);
+    }
+  }
+
   const { data, error } = await supabase.rpc("user_event_feed", rpcParams);
 
   if (error) {

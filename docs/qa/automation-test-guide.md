@@ -259,7 +259,8 @@ cd apps/app_user && flutter test --update-goldens --tags golden --dart-define=CI
 cd apps/app_user && flutter test test/integration/cuj_signup_to_apply_test.dart
 
 # Layer 3 (Patrol) — 로컬 emulator 필요
-cd apps/app_user && patrol test emulator_test/permission_grant_test.dart
+cd apps/app_user && patrol test --target patrol_test/permission_grant_test.dart
+# 여러 파일: --target 반복 또는 --targets 콤마 구분
 # CI 에서는 patrol-e2e.yml 워크플로우
 
 # Layer 4 pgTAP

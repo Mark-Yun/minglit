@@ -16,6 +16,10 @@ class MorePage extends ConsumerWidget {
     final partnerAsync = ref.watch(currentPartnerInfoProvider);
     final moreCoordinator = ref.read(moreCoordinatorProvider);
 
+    final permissions =
+        ref.watch(currentMemberPermissionsProvider).asData?.value ?? [];
+    final canEditSettlement = permissions.contains('SETTLEMENT_EDIT');
+
     return Scaffold(
       appBar: MinglitTheme.simpleAppBar(title: '더보기', showBackButton: false),
       body: ListView(
@@ -76,6 +80,12 @@ class MorePage extends ConsumerWidget {
                 title: '인증 심사 관리',
                 onTap: moreCoordinator.pushVerificationManage,
               ),
+              if (canEditSettlement)
+                MinglitSettingsTile(
+                  leading: Icons.account_balance_wallet_outlined,
+                  title: '정산 계좌 관리',
+                  onTap: moreCoordinator.pushBankAccountManagement,
+                ),
               MinglitSettingsTile(
                 leading: Icons.people_outline,
                 title: '멤버 관리',

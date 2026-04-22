@@ -4,7 +4,7 @@ import 'package:app_partner/src/features/settlement/settlement_list_controller.d
 import 'package:app_partner/src/features/settlement/widgets/settlement_card.dart';
 import 'package:app_partner/src/features/settlement/widgets/settlement_status_badge.dart';
 import 'package:app_partner/src/features/settlement/widgets/status_filter_chips.dart';
-import 'package:app_partner/src/routing/app_routes.dart';
+import 'package:app_partner/src/logic/current_partner_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -40,9 +40,25 @@ class _SettlementPageState extends ConsumerState<SettlementPage>
 
   @override
   Widget build(BuildContext context) {
+    // Fix #1568: gate bank-account entry on SETTLEMENT_EDIT permission
+    final permissions =
+        ref.watch(currentMemberPermissionsProvider).asData?.value ?? [];
+    final canEditSettlement = permissions.contains('SETTLEMENT_EDIT');
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('정산'),
+        actions: [
+          if (canEditSettlement)
+            IconButton(
+              key: const Key('bankAccountButton'),
+              icon: const Icon(Icons.account_balance_wallet_outlined),
+              tooltip: '계좌 관리',
+              onPressed: () => ref
+                  .read(settlementCoordinatorProvider.notifier)
+                  .goToBankAccount(),
+            ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
@@ -433,8 +449,13 @@ class _ListTabState extends ConsumerState<_ListTab> {
                   actionLabel: listState.selectedStatus == null
                       ? '첫 이벤트 만들기'
                       : null,
+                  // Fix #1680: 동일 패턴 — StatefulShellBranch cross-branch push 방지
+                  // SettlementBranch → MoreBranch 경계에서 context.push()가 무음 실패하므로
+                  // root GoRouter를 사용하는 coordinator에 위임한다.
                   onAction: listState.selectedStatus == null
-                      ? () => const PartyCreateRoute().push<void>(context)
+                      ? () => ref
+                            .read(settlementCoordinatorProvider.notifier)
+                            .goToPartyCreate()
                       : null,
                 )
               : RefreshIndicator(

@@ -156,10 +156,11 @@
 
 | 앱 | 위치 | 파일 수 | 성격 |
 |----|------|--------|------|
-| app_user | `apps/app_user/emulator_test/` | 4 | `apple_sign_in`, `kakao_login`, `payment_pg`, `permission_grant` — **native surface 특수 테스트만**. CUJ 이관 0% |
-| app_partner | `apps/app_partner/emulator_test/` | 0 | — |
+| app_user | `apps/app_user/patrol_test/` | 3 | `kakao_login`, `payment_pg`, `permission_grant` — PatrolBinding, patrol_cli 4.x (`--target`) |
+| app_user | `apps/app_user/integration_test/` | 2 | `apple_sign_in`, `scenario_screenshots` — IntegrationTestWidgetsFlutterBinding |
+| app_partner | `apps/app_partner/integration_test/` | 1 | `scenario_screenshots` 만 |
 
-**Layer 3 런타임 상태**: `patrol-e2e.yml` 실행 이력 0건. **사실상 죽은 상태.** 재가동 계획은 §6 로드맵 및 #1586 Phase D-2 참고.
+**Layer 3 런타임 상태**: `patrol-e2e.yml` 복구 완료 (#1673). `scenario_screenshots_test.dart` 내부 캡처 호출 0건. 재가동 계획은 §6 로드맵 및 #1586 Phase D-2 참고.
 
 ### Layer 4 — pgTAP
 
