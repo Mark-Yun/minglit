@@ -5,13 +5,13 @@ import { requireServiceRole } from "../_shared/auth_utils.ts";
 
 initSentry();
 
-type RetentionKind = "db_table" | "storage_bucket" | "pgmq_archive";
+type RetentionKind = "db_table" | "storage_bucket" | "pgmq_archive" | "db_custom_fn";
 
 interface RetentionPolicy {
   id: string;
   kind: RetentionKind;
   retention_days: number;
-  target: Record<string, string> & { use_absolute_ts?: boolean };
+  target: Record<string, string> & { use_absolute_ts?: boolean; fn?: string };
 }
 
 interface PolicyResult {
@@ -98,6 +98,23 @@ async function runPgmqArchiveCleanup(
   return { rows_deleted: Number(data ?? 0) };
 }
 
+// db_custom_fn: JOIN-based or complex operations that cannot be expressed as a simple ts_col comparison.
+// target.fn must be a fully-qualified admin-schema function name (e.g. "admin.anonymize_old_event_participants")
+// that accepts a single p_cutoff_days int parameter and returns bigint (rows affected).
+async function runDbCustomFnCleanup(
+  supabase: ReturnType<typeof createServiceClient>,
+  policy: RetentionPolicy,
+): Promise<{ rows_deleted: number }> {
+  const { fn } = policy.target;
+  if (!fn) throw new Error(`db_custom_fn policy '${policy.id}' missing target.fn`);
+  const fnName = fn.includes(".") ? fn.split(".").pop()! : fn;
+  const { data, error } = await supabase.schema("admin").rpc(fnName, {
+    p_cutoff_days: policy.retention_days,
+  });
+  if (error) throw new Error(error.message);
+  return { rows_deleted: Number(data ?? 0) };
+}
+
 async function runPolicy(
   supabase: ReturnType<typeof createServiceClient>,
   policy: RetentionPolicy,
@@ -109,6 +126,8 @@ async function runPolicy(
       result = await runDbTableCleanup(supabase, policy);
     } else if (policy.kind === "storage_bucket") {
       result = await runStorageBucketCleanup(supabase, policy);
+    } else if (policy.kind === "db_custom_fn") {
+      result = await runDbCustomFnCleanup(supabase, policy);
     } else {
       result = await runPgmqArchiveCleanup(supabase, policy);
     }

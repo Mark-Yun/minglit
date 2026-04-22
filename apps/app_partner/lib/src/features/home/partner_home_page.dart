@@ -108,9 +108,8 @@ class PartnerHomePage extends ConsumerWidget {
                       partyName: hasParties
                           ? state.activeParties.first.title
                           : null,
-                      onCreateParty: () {
-                        unawaited(const PartyCreateRoute().push<void>(context));
-                      },
+                      // Fix #1680: use coordinator to cross shell-branch boundary
+                      onCreateParty: coordinator.pushPartyCreate,
                       onCreateEvent: () async {
                         final parties = state.activeParties;
                         if (parties.length == 1) {
@@ -240,9 +239,8 @@ class PartnerHomePage extends ConsumerWidget {
             );
           }
         },
-        onCreateParty: () {
-          unawaited(const PartyCreateRoute().push<void>(context));
-        },
+        // Fix #1680: use coordinator to cross shell-branch boundary
+        onCreateParty: ref.read(partnerHomeCoordinatorProvider).pushPartyCreate,
       );
     }
 

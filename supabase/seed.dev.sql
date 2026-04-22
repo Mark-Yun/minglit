@@ -510,6 +510,10 @@ BEGIN
   END IF;
 
   -- pendingReview: partner_apply_pending
+  -- Fix #1679: INSERT if no application exists, then always UPDATE the most
+  -- recent row to status='pending'. Re-running seed now resets status even
+  -- when admin tests changed it to 'approved', preventing the account from
+  -- routing to / instead of /apply/status in QA smoke tests.
   SELECT id INTO apply_user_id FROM auth.users WHERE email = 'partner_apply_pending@test.com';
   IF apply_user_id IS NOT NULL THEN
     INSERT INTO public.partner_applications (
@@ -522,6 +526,15 @@ BEGIN
            'seed/biz_registration.png', 'seed/bankbook.png'
     WHERE NOT EXISTS (
       SELECT 1 FROM public.partner_applications WHERE user_id = apply_user_id
+    );
+    -- Reset to pending regardless (handles manually-changed status)
+    UPDATE public.partner_applications
+    SET status = 'pending'
+    WHERE id = (
+      SELECT id FROM public.partner_applications
+      WHERE user_id = apply_user_id
+      ORDER BY created_at DESC
+      LIMIT 1
     );
   END IF;
 END $$;

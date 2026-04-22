@@ -152,7 +152,8 @@ SELECT col_is_fk('event_participants', 'ticket_id');
 SELECT col_not_null('event_participants', 'ticket_id');
 SELECT col_type_is('event_participants', 'user_id', 'uuid');
 SELECT col_is_fk('event_participants', 'user_id');
-SELECT col_not_null('event_participants', 'user_id');
+-- Fix #1705: user_id NOT NULL dropped — anonymization nulls this column after 30 days
+SELECT col_is_null('event_participants', 'user_id');
 SELECT col_type_is('event_participants', 'application_id', 'uuid');
 SELECT col_is_fk('event_participants', 'application_id');
 SELECT col_not_null('event_participants', 'status');
