@@ -335,8 +335,8 @@ void main() {
       // 확인 다이얼로그 표시
       expect(find.textContaining('2건을 모두 승인'), findsOneWidget);
 
-      // 전체 승인 확인
-      await tester.tap(find.widgetWithText(FilledButton, '전체 승인'));
+      // 전체 승인 확인 — MinglitAlert.showConfirm renders TextButton (not FilledButton)
+      await tester.tap(find.widgetWithText(TextButton, '전체 승인'));
       // Fix #1677: same pumpAndSettle() hang — bulkApproveApplications() causes
       // deferred ref.invalidate() via addPostFrameCallback → CircularProgressIndicator
       await tester.pump(); // dispatch tap, bulkApproveApplications() starts
