@@ -11,7 +11,7 @@ interface RetentionPolicy {
   id: string;
   kind: RetentionKind;
   retention_days: number;
-  target: Record<string, string>;
+  target: Record<string, string> & { use_absolute_ts?: boolean };
 }
 
 interface PolicyResult {
@@ -26,7 +26,16 @@ async function runDbTableCleanup(
   supabase: ReturnType<typeof createServiceClient>,
   policy: RetentionPolicy,
 ): Promise<{ rows_deleted: number }> {
-  const { schema, table, ts_col } = policy.target;
+  const { schema, table, ts_col, use_absolute_ts } = policy.target as { schema: string; table: string; ts_col: string; use_absolute_ts?: boolean };
+  if (use_absolute_ts) {
+    const { data, error } = await supabase.schema("admin").rpc("delete_expired_rows", {
+      p_schema: schema,
+      p_table: table,
+      p_ts_col: ts_col,
+    });
+    if (error) throw new Error(error.message);
+    return { rows_deleted: Number(data ?? 0) };
+  }
   const { data, error } = await supabase.schema("admin").rpc("delete_old_rows", {
     p_schema: schema,
     p_table: table,
