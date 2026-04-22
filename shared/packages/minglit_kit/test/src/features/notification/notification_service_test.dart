@@ -118,8 +118,8 @@ void main() {
           ),
         ).thenAnswer((_) async {});
 
-        final message = RemoteMessage(
-          notification: const RemoteNotification(
+        const message = RemoteMessage(
+          notification: RemoteNotification(
             title: 'Test',
             body: 'iOS foreground test',
           ),
