@@ -37,7 +37,8 @@ String? _redirect({
   final queryParameters = uri.queryParameters;
 
   // Redirect /explore deep links to home (backward compat)
-  if (path.startsWith('/explore')) return '/';
+  // Fix #1701: minglit://explore/... comes in as host='explore', path='/*'
+  if (path.startsWith('/explore') || uri.host == 'explore') return '/';
 
   // Allow dev pages without authentication
   if (path.startsWith('/dev')) return null;
@@ -127,6 +128,24 @@ void main() {
     test('/explore/something redirects to /', () {
       final result = _redirect(
         location: '/explore/something',
+        isLoggedIn: false,
+      );
+      expect(result, '/');
+    });
+
+    // Fix #1701: Android intent delivers minglit://explore/events as a URI
+    // where host='explore' and path='/events', bypassing the path check above.
+    test('minglit://explore/events (scheme URL) redirects to /', () {
+      final result = _redirect(
+        location: 'minglit://explore/events',
+        isLoggedIn: false,
+      );
+      expect(result, '/');
+    });
+
+    test('minglit://explore/curation (scheme URL) redirects to /', () {
+      final result = _redirect(
+        location: 'minglit://explore/curation',
         isLoggedIn: false,
       );
       expect(result, '/');
