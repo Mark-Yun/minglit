@@ -123,5 +123,27 @@ GoRouter goRouter(Ref ref) {
     },
     routes: $appRoutes, // Generated routes from app_routes.dart
     observers: [MinglitNavigationObserver()],
+    // Fix #1699 #1700: unhandled GoException previously caused crash or
+    // exposed raw technical error message to users.
+    errorBuilder: (context, state) => _RouteNotFoundPage(state: state),
   );
+}
+
+class _RouteNotFoundPage extends StatelessWidget {
+  const _RouteNotFoundPage({required this.state});
+
+  final GoRouterState state;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: MinglitErrorState(
+        icon: Icons.search_off_rounded,
+        title: '페이지를 찾을 수 없습니다.',
+        subtitle: '요청하신 페이지가 존재하지 않거나 이동되었습니다.',
+        retryLabel: '홈으로',
+        onRetry: () => context.go('/'),
+      ),
+    );
+  }
 }
