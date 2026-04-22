@@ -100,6 +100,48 @@ void main() {
     );
   }
 
+  group('_showLocalNotification (#1686)', () {
+    test(
+      'displays notification when message has no android payload — iOS foreground regression',
+      () async {
+        // Regression #1686: old code gated on `android != null`, skipping iOS.
+        // On non-Android platforms (Linux CI / iOS), Platform.isAndroid = false
+        // so the new guard `if (Platform.isAndroid && android == null)` does NOT
+        // skip the call. Re-introducing the old guard causes this test to fail.
+        when(
+          () => mockLocalNotifications.show(
+            any(),
+            any(),
+            any(),
+            any(),
+            payload: any(named: 'payload'),
+          ),
+        ).thenAnswer((_) async {});
+
+        final message = RemoteMessage(
+          notification: const RemoteNotification(
+            title: 'Test',
+            body: 'iOS foreground test',
+          ),
+          // no AndroidNotification — simulates iOS message
+        );
+
+        final service = buildService(createServiceContainer());
+        await service.showLocalNotificationForTest(message);
+
+        verify(
+          () => mockLocalNotifications.show(
+            any(),
+            'Test',
+            'iOS foreground test',
+            any(),
+            payload: any(named: 'payload'),
+          ),
+        ).called(1);
+      },
+    );
+  });
+
   group('_ensureNotificationPermission (#1687)', () {
     test(
       'returns false immediately when permission is permanently denied',

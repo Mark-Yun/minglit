@@ -140,6 +140,11 @@ class NotificationService {
   Future<bool> ensureNotificationPermissionForTest() =>
       _ensureNotificationPermission();
 
+  /// Exposed for unit testing only.
+  @visibleForTesting
+  Future<void> showLocalNotificationForTest(RemoteMessage message) =>
+      _showLocalNotification(message);
+
   Future<void> _registerToken(String token) async {
     final user = _ref.read(currentUserProvider);
     if (user == null) return;
