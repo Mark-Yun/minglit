@@ -5,7 +5,6 @@ import 'package:app_partner/src/features/settlement/widgets/settlement_card.dart
 import 'package:app_partner/src/features/settlement/widgets/settlement_status_badge.dart';
 import 'package:app_partner/src/features/settlement/widgets/status_filter_chips.dart';
 import 'package:app_partner/src/logic/current_partner_provider.dart';
-import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -451,7 +450,9 @@ class _ListTabState extends ConsumerState<_ListTab> {
                       ? '첫 이벤트 만들기'
                       : null,
                   onAction: listState.selectedStatus == null
-                      ? () => const PartyCreateRoute().push<void>(context)
+                      ? () => ref
+                            .read(settlementCoordinatorProvider.notifier)
+                            .goToPartyCreate()
                       : null,
                 )
               : RefreshIndicator(
