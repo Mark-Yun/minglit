@@ -98,9 +98,12 @@ BEGIN
   INSERT INTO public.tickets (event_id, name, price, quantity)
   VALUES (v_event_new, 'New Event Ticket', 0, 10) RETURNING id INTO v_ticket_new;
 
-  -- event_application for old participant (provides application_id FK)
+  -- event_application for old participant (provides application_id FK).
+  -- status='pending' — 'approved' would fire on_application_approval trigger
+  -- which auto-INSERTs into event_participants, then our manual INSERT below
+  -- would violate UNIQUE(event_id, user_id).
   INSERT INTO public.event_applications (event_id, ticket_id, user_id, status)
-  VALUES (v_event_old, v_ticket_old, v_user_id, 'approved')
+  VALUES (v_event_old, v_ticket_old, v_user_id, 'pending')
   RETURNING id INTO v_app_id;
 
   -- participants with PII + direct identifiers
