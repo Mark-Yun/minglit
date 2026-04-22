@@ -1,40 +1,28 @@
 import 'dart:async';
 
-import 'package:app_partner/src/features/party/create/party_create_wizard_page.dart';
-import 'package:app_partner/src/features/party/detail/party_detail_page.dart';
+import 'package:app_partner/src/routing/app_router.dart';
 import 'package:app_partner/src/routing/app_routes.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+// Fix #1680: inject GoRouter from provider so push() uses the root router
+// instance, not the shell-branch's nested navigator. context.push() from
+// within a StatefulShellBranch can fail silently when crossing branch
+// boundaries (e.g., HomeBranch → MoreBranch).
+final partyListCoordinatorProvider = Provider<PartyListCoordinator>((ref) {
+  return PartyListCoordinator(ref.read(goRouterProvider));
+});
 
 class PartyListCoordinator {
-  const PartyListCoordinator(this.context);
+  const PartyListCoordinator(this._router);
 
-  final BuildContext context;
+  final GoRouter _router;
 
   void goToCreate() {
-    try {
-      unawaited(const PartyCreateRoute().push<void>(context));
-    } on Object {
-      unawaited(
-        Navigator.of(context).push(
-          MaterialPageRoute<void>(
-            builder: (_) => const PartyCreateWizardPage(),
-          ),
-        ),
-      );
-    }
+    unawaited(_router.push(const PartyCreateRoute().location));
   }
 
   void goToDetail(String partyId) {
-    try {
-      unawaited(PartyDetailRoute(partyId: partyId).push<void>(context));
-    } on Object {
-      unawaited(
-        Navigator.of(context).push(
-          MaterialPageRoute<void>(
-            builder: (_) => PartyDetailPage(partyId: partyId),
-          ),
-        ),
-      );
-    }
+    unawaited(_router.push(PartyDetailRoute(partyId: partyId).location));
   }
 }
