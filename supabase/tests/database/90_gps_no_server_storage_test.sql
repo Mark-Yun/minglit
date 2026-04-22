@@ -25,12 +25,27 @@ SELECT has_table(
 );
 
 -- 2. location_access_log에 위도 컬럼 없음
-SELECT col_hasnt_table('public', 'location_access_log', 'lat',
-  'location_access_log: no lat column — GPS latitude not stored server-side');
+-- (col_hasnt_table은 pgTAP에 존재하지 않으므로 information_schema 패턴 사용)
+SELECT ok(
+  NOT EXISTS(
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'location_access_log'
+      AND column_name = 'lat'
+  ),
+  'location_access_log: no lat column — GPS latitude not stored server-side'
+);
 
 -- 3. location_access_log에 경도 컬럼 없음
-SELECT col_hasnt_table('public', 'location_access_log', 'lng',
-  'location_access_log: no lng column — GPS longitude not stored server-side');
+SELECT ok(
+  NOT EXISTS(
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'location_access_log'
+      AND column_name = 'lng'
+  ),
+  'location_access_log: no lng column — GPS longitude not stored server-side'
+);
 
 -- 4. location_access_log에 geography/geometry 컬럼 없음
 SELECT ok(
