@@ -1,40 +1,27 @@
 import 'dart:async';
 
-import 'package:app_partner/src/features/party/create/party_create_wizard_page.dart';
-import 'package:app_partner/src/features/party/detail/party_detail_page.dart';
+import 'package:app_partner/src/routing/app_router.dart';
 import 'package:app_partner/src/routing/app_routes.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+final partyListCoordinatorProvider = Provider<PartyListCoordinator>((ref) {
+  return PartyListCoordinator(ref.read(goRouterProvider));
+});
 
 class PartyListCoordinator {
-  const PartyListCoordinator(this.context);
+  const PartyListCoordinator(this._router);
 
-  final BuildContext context;
+  final GoRouter _router;
 
+  // Fix #1680: context.push() fails silently when called from a page pushed via
+  // _router.push() — unawaited() drops async errors so the catch block is never
+  // reached. Use GoRouter instance directly, matching MoreCoordinator pattern.
   void goToCreate() {
-    try {
-      unawaited(const PartyCreateRoute().push<void>(context));
-    } on Object {
-      unawaited(
-        Navigator.of(context).push(
-          MaterialPageRoute<void>(
-            builder: (_) => const PartyCreateWizardPage(),
-          ),
-        ),
-      );
-    }
+    unawaited(_router.push(const PartyCreateRoute().location));
   }
 
   void goToDetail(String partyId) {
-    try {
-      unawaited(PartyDetailRoute(partyId: partyId).push<void>(context));
-    } on Object {
-      unawaited(
-        Navigator.of(context).push(
-          MaterialPageRoute<void>(
-            builder: (_) => PartyDetailPage(partyId: partyId),
-          ),
-        ),
-      );
-    }
+    unawaited(_router.push(PartyDetailRoute(partyId: partyId).location));
   }
 }

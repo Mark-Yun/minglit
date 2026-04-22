@@ -11,13 +11,13 @@ class PartyListPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final partiesAsync = ref.watch(partyListProvider);
-    final coordinator = PartyListCoordinator(context);
+    final coordinator = ref.read(partyListCoordinatorProvider);
 
     return Scaffold(
       appBar: MinglitTheme.simpleAppBar(
         title: '파티 기획 관리',
         actions: [
-          // Fix #540: route-based navigation to checkin — removes qr→checkin cross-feature import
+          // Fix #540: route-based nav to checkin
           IconButton(
             icon: const Icon(Icons.qr_code_scanner),
             tooltip: 'QR 스캔',
