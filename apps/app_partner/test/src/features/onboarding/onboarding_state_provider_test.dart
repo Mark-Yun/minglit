@@ -11,7 +11,10 @@ import '../../../../utils/test_utils.dart';
 User _makeUser() {
   return User(
     id: 'user-1',
-    appMetadata: const {'provider': 'email', 'providers': ['email']},
+    appMetadata: const {
+      'provider': 'email',
+      'providers': ['email'],
+    },
     userMetadata: const {},
     aud: 'authenticated',
     createdAt: DateTime(2026).toIso8601String(),
