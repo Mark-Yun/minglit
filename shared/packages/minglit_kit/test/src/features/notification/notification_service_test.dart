@@ -243,5 +243,31 @@ void main() {
 
       expect(result, false);
     });
+
+    // Regression: before fix, request() result was discarded — user denying
+    // the runtime dialog was not detected, and Firebase was called anyway.
+    test(
+      'returns false and skips Firebase when user denies runtime dialog',
+      () async {
+        when(
+          () => mockPermissionHandler.checkPermissionStatus(
+            Permission.notification,
+          ),
+        ).thenAnswer((_) async => PermissionStatus.denied);
+        when(
+          () => mockPermissionHandler.requestPermissions([
+            Permission.notification,
+          ]),
+        ).thenAnswer(
+          (_) async => {Permission.notification: PermissionStatus.denied},
+        );
+
+        final service = buildService(createServiceContainer());
+        final result = await service.ensureNotificationPermissionForTest();
+
+        expect(result, false);
+        verifyNever(() => mockFcm.requestPermission());
+      },
+    );
   });
 }

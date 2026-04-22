@@ -123,10 +123,12 @@ class NotificationService {
   // Fix #1687: permission_handler bridges Android 13+ runtime permission gap.
   // Returns false if permanently denied — guide users to openAppSettings.
   Future<bool> _ensureNotificationPermission() async {
-    final status = await Permission.notification.status;
+    var status = await Permission.notification.status;
     if (status.isPermanentlyDenied) return false;
     if (!status.isGranted) {
-      await Permission.notification.request();
+      status = await Permission.notification.request();
+      // User denied in the runtime dialog (or permanently denied on this call).
+      if (status.isDenied || status.isPermanentlyDenied) return false;
     }
 
     // Firebase-level check needed for iOS APNs authorization settings
