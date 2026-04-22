@@ -139,11 +139,13 @@ void main() {
 
       await tester.tapAt(gapCenter);
 
-      // Use pump() without duration — same pattern as other navigation tests.
-      // pumpAndSettle() hangs because EventDetailPage has ongoing animations.
-      await tester.pump();
-      await tester.pump();
-      await tester.pump();
+      // GoRouter navigation needs multiple frames AND fake-time advancement.
+      // pumpAndSettle() hangs because EventDetailPage has ongoing animations
+      // (MinglitSkeleton.repeat). Multiple 100ms pumps advance the clock past
+      // the SharedAxisTransition (300ms) while providing enough frame boundaries.
+      for (var i = 0; i < 5; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
 
       expect(find.byType(PartnerDetailPage), findsOneWidget);
     });
@@ -155,11 +157,13 @@ void main() {
 
       await tester.tap(find.text(partnerName));
 
-      // Use pump() without duration — same pattern as other navigation tests.
-      // pumpAndSettle() hangs because EventDetailPage has ongoing animations.
-      await tester.pump();
-      await tester.pump();
-      await tester.pump();
+      // GoRouter navigation needs multiple frames AND fake-time advancement.
+      // pumpAndSettle() hangs because EventDetailPage has ongoing animations
+      // (MinglitSkeleton.repeat). Multiple 100ms pumps advance the clock past
+      // the SharedAxisTransition (300ms) while providing enough frame boundaries.
+      for (var i = 0; i < 5; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
 
       expect(find.byType(PartnerDetailPage), findsOneWidget);
     });
