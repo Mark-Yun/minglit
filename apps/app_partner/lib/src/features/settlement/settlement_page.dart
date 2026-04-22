@@ -449,6 +449,9 @@ class _ListTabState extends ConsumerState<_ListTab> {
                   actionLabel: listState.selectedStatus == null
                       ? '첫 이벤트 만들기'
                       : null,
+                  // Fix #1680: 동일 패턴 — StatefulShellBranch cross-branch push 방지
+                  // SettlementBranch → MoreBranch 경계에서 context.push()가 무음 실패하므로
+                  // root GoRouter를 사용하는 coordinator에 위임한다.
                   onAction: listState.selectedStatus == null
                       ? () => ref
                             .read(settlementCoordinatorProvider.notifier)
