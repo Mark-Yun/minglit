@@ -11,7 +11,7 @@ class PartyListPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final partiesAsync = ref.watch(partyListProvider);
-    final coordinator = PartyListCoordinator(context);
+    final coordinator = ref.read(partyListCoordinatorProvider);
 
     return Scaffold(
       appBar: MinglitTheme.simpleAppBar(
