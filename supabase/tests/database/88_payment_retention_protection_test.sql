@@ -78,7 +78,7 @@ SELECT throws_ok(
       false
     )
   $$,
-  'P0001',
+  '23514',
   NULL,
   'retention_above_legal_min CHECK rejects retention_days < legal_min_days'
 );
