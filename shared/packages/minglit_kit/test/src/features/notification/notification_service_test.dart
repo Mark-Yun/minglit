@@ -110,10 +110,10 @@ void main() {
         // skip the call. Re-introducing the old guard causes this test to fail.
         when(
           () => mockLocalNotifications.show(
-            any(),
-            any(),
-            any(),
-            any(),
+            id: any(named: 'id'),
+            title: any(named: 'title'),
+            body: any(named: 'body'),
+            notificationDetails: any(named: 'notificationDetails'),
             payload: any(named: 'payload'),
           ),
         ).thenAnswer((_) async {});
@@ -131,10 +131,10 @@ void main() {
 
         verify(
           () => mockLocalNotifications.show(
-            any(),
-            'Test',
-            'iOS foreground test',
-            any(),
+            id: any(named: 'id'),
+            title: 'Test',
+            body: 'iOS foreground test',
+            notificationDetails: any(named: 'notificationDetails'),
             payload: any(named: 'payload'),
           ),
         ).called(1);
