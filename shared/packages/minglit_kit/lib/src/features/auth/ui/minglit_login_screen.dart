@@ -36,6 +36,7 @@ class MinglitLoginScreen extends ConsumerWidget {
   /// Callback for hidden dev trigger (5-tap logo). Null in production.
   final VoidCallback? onDevTrigger;
 
+  // Fix #1677: key added so tests can find _DevTriggerLogo by key instead of GestureDetector count
   /// Key for the dev-trigger GestureDetector — used in tests to assert
   /// presence/absence of _DevTriggerLogo without relying on GestureDetector count.
   @visibleForTesting

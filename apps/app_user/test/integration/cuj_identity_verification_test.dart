@@ -184,9 +184,9 @@ void main() {
         // 목적: getConsents()가 호출되었는지와 동의 시트가 표시되지 않는지만 검증한다.
         await tester.pump(); // 초기 프레임
         await tester.pump(); // postFrameCallback + getConsents() 호출
-        // No capture here: capture.after() uses runAsync() which resolves getConsents(),
+        // Fix #1677: capture.after() uses runAsync() which resolves getConsents(),
         // triggering _startVerification() → getCertificationService().verify() →
-        // MissingPluginException in CI. Test verifies call count + UI state, not visuals.
+        // MissingPluginException in CI. Skip capture; verify call count + UI state only.
 
         // 동의 확인 경로가 실행되어 getConsents()가 호출되었는지 검증.
         // ConsentController.build()도 getConsents()를 호출하므로 greaterThanOrEqualTo(1) 사용.
