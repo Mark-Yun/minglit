@@ -7,6 +7,11 @@
 // 테스트 전략: GoRouter.push() 타이밍 불확실성을 피하기 위해 EventCoordinator를 mock으로
 // 교체해 pushPartnerDetail() 호출 여부를 직접 검증한다.
 // Navigator 스택 변화 대신 coordinator 호출을 어설션하는 방식이 더 결정론적이다.
+//
+// 뷰포트 설정: EventDetailPage의 SliverAppBar는 expandedHeight = screenWidth * 9/16.
+// 기본 테스트 너비 800px이면 expandedHeight=450 + 탭바(47) + 패딩(16) = 513px로,
+// BottomTicketBar(~76px)를 빼면 뷰포트가 524px밖에 안 되어 파트너 행 중심(y≈525)이
+// 뷰포트 밖으로 밀려난다. 너비 400px로 설정하면 expandedHeight=225로 충분한 여백 확보.
 import 'dart:async';
 
 import 'package:app_user/src/features/event/admission/event_admission_controller.dart';
@@ -84,6 +89,13 @@ void main() {
     Future<void> pumpEventDetailPage(WidgetTester tester) async {
       setKoreanLocale(tester);
 
+      // Fix #1677: 너비를 400px로 제한해 SliverAppBar expandedHeight(=400*9/16=225)가
+      // 파트너 행을 뷰포트 안에 유지하도록 한다. 기본 800px이면 파트너 행 중심이 뷰포트 밖.
+      tester.view.physicalSize = const Size(400, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
       await tester.pumpWidget(
         createTestApp(
           initialLocation: '/events/test-event-id',
@@ -98,6 +110,9 @@ void main() {
               (_) =>
                   () => now,
             ),
+            entryGroupParticipantCountsProvider(
+              'test-event-id',
+            ).overrideWith((_) async => <String, int>{}),
             // Fix #1677: EventCoordinator 모킹으로 GoRouter.push() 타이밍 의존성 제거
             eventCoordinatorProvider.overrideWithValue(mockCoordinator),
           ],
