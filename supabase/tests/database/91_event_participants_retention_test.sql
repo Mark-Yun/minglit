@@ -2,13 +2,15 @@
 --
 -- 검증 항목:
 --   1. retention_policies 등록 확인 (kind, retention_days, enabled)
---   2. anonymize_old_event_participants 함수 시그니처
---   3. 익명화 로직: events.end_time 기준 30일 이후 행의 PII(display_name/birth_year)만 NULL
+--   2. anonymize_old_event_participants 함수 존재
+--   3. 익명화 로직: events.end_time 기준 30일 이후 행의 직접 식별자+PII 모두 NULL
+--      (user_id, application_id, ticket_code, display_name, birth_year)
 --   4. 아직 30일 미경과 행은 PII 보존
 --   5. 참가 레코드 자체는 삭제되지 않음 (집계 무결성 보호)
+--   6. idempotent: 재실행 시 0 rows
 BEGIN;
 
-SELECT plan(11);
+SELECT plan(16);
 
 SELECT tests.authenticate_as_service_role();
 
@@ -71,6 +73,7 @@ DECLARE
   v_event_new  uuid;  -- 종료 후 20일 (보존 대상)
   v_ticket_old uuid;
   v_ticket_new uuid;
+  v_app_id     uuid;
 BEGIN
   v_user_id := tests.create_supabase_user(
     'ep_retention_test_1705',
@@ -95,9 +98,17 @@ BEGIN
   INSERT INTO public.tickets (event_id, name, price, quantity)
   VALUES (v_event_new, 'New Event Ticket', 0, 10) RETURNING id INTO v_ticket_new;
 
-  -- participants with PII
-  INSERT INTO public.event_participants (event_id, ticket_id, user_id, display_name, birth_year)
-  VALUES (v_event_old, v_ticket_old, v_user_id, 'OldParticipant', 1990);
+  -- event_application for old participant (provides application_id FK)
+  INSERT INTO public.event_applications (event_id, ticket_id, user_id, status)
+  VALUES (v_event_old, v_ticket_old, v_user_id, 'approved')
+  RETURNING id INTO v_app_id;
+
+  -- participants with PII + direct identifiers
+  INSERT INTO public.event_participants (
+    event_id, ticket_id, user_id, application_id, ticket_code, display_name, birth_year
+  ) VALUES (
+    v_event_old, v_ticket_old, v_user_id, v_app_id, 'TICKET-OLD-1705', 'OldParticipant', 1990
+  );
   INSERT INTO public.event_participants (event_id, ticket_id, user_id, display_name, birth_year)
   VALUES (v_event_new, v_ticket_new, v_user_id, 'NewParticipant', 1991);
 
@@ -115,21 +126,42 @@ SELECT ok(
 -- run the anonymization function (30-day cutoff)
 SELECT admin.anonymize_old_event_participants(30);
 
--- 8. old event participant PII is anonymized (display_name = NULL)
+-- 8. display_name → NULL
 SELECT ok(
   (SELECT display_name FROM public.event_participants
     WHERE event_id = current_setting('ep_test.event_old')::uuid) IS NULL,
   '#1705 PIPA §21: display_name anonymized for event ended 31 days ago'
 );
 
--- 9. old event participant birth_year is anonymized (NULL)
+-- 9. birth_year → NULL
 SELECT ok(
   (SELECT birth_year FROM public.event_participants
     WHERE event_id = current_setting('ep_test.event_old')::uuid) IS NULL,
   '#1705 PIPA §21: birth_year anonymized for event ended 31 days ago'
 );
 
--- 10. participation record still exists (no row deletion — preserves aggregate counts)
+-- 10. user_id → NULL (직접 식별자 파기)
+SELECT ok(
+  (SELECT user_id FROM public.event_participants
+    WHERE event_id = current_setting('ep_test.event_old')::uuid) IS NULL,
+  '#1705 PIPA §21: user_id anonymized — direct identifier removed'
+);
+
+-- 11. application_id → NULL (직접 식별자 파기)
+SELECT ok(
+  (SELECT application_id FROM public.event_participants
+    WHERE event_id = current_setting('ep_test.event_old')::uuid) IS NULL,
+  '#1705 PIPA §21: application_id anonymized — direct identifier removed'
+);
+
+-- 12. ticket_code → NULL (직접 식별자 파기)
+SELECT ok(
+  (SELECT ticket_code FROM public.event_participants
+    WHERE event_id = current_setting('ep_test.event_old')::uuid) IS NULL,
+  '#1705 PIPA §21: ticket_code anonymized — direct identifier removed'
+);
+
+-- 13. participation record still exists (no row deletion — preserves aggregate counts)
 SELECT ok(
   EXISTS(
     SELECT 1 FROM public.event_participants
@@ -138,11 +170,25 @@ SELECT ok(
   '#1705: participation row preserved (only PII columns NULLed, aggregate counts intact)'
 );
 
--- 11. new event participant PII is preserved (ended 20 days ago)
+-- 14. new event participant PII is preserved (ended 20 days ago)
 SELECT ok(
   (SELECT display_name FROM public.event_participants
     WHERE event_id = current_setting('ep_test.event_new')::uuid) = 'NewParticipant',
   '#1705 PIPA §21: display_name preserved for event ended 20 days ago (within 30-day window)'
+);
+
+-- 15. new event participant user_id preserved (not yet due for anonymization)
+SELECT ok(
+  (SELECT user_id FROM public.event_participants
+    WHERE event_id = current_setting('ep_test.event_new')::uuid) IS NOT NULL,
+  '#1705: user_id preserved for event ended 20 days ago (within 30-day window)'
+);
+
+-- 16. idempotent: 재실행 시 0 rows updated
+SELECT is(
+  admin.anonymize_old_event_participants(30),
+  0::bigint,
+  '#1705: anonymize function is idempotent (0 rows updated on re-run)'
 );
 
 SELECT * FROM finish();
