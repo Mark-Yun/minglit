@@ -10,7 +10,7 @@
 --   6. idempotent: 재실행 시 0 rows
 BEGIN;
 
-SELECT plan(16);
+SELECT plan(19);
 
 SELECT tests.authenticate_as_service_role();
 
@@ -192,6 +192,80 @@ SELECT is(
   admin.anonymize_old_event_participants(30),
   0::bigint,
   '#1705: anonymize function is idempotent (0 rows updated on re-run)'
+);
+
+-- ── INV-01 regression guard ───────────────────────────────────────────────────
+
+-- INV-01 regression guard fixture
+DO $$
+DECLARE
+  v_user_id_b uuid;
+  v_app_id_b  uuid;
+BEGIN
+  v_user_id_b := tests.create_supabase_user(
+    'ep_retention_inv01_b_1705',
+    'ep_retention_inv01_b_1705@pgtap.local'
+  );
+  PERFORM set_config('ep_test.user_b', v_user_id_b::text, true);
+
+  INSERT INTO public.event_applications (event_id, ticket_id, user_id, status)
+  VALUES (
+    current_setting('ep_test.event_old')::uuid,
+    (SELECT id FROM public.tickets WHERE event_id = current_setting('ep_test.event_old')::uuid LIMIT 1),
+    v_user_id_b,
+    'pending'
+  ) RETURNING id INTO v_app_id_b;
+
+  INSERT INTO public.event_participants (event_id, ticket_id, user_id, display_name, birth_year)
+  VALUES (
+    current_setting('ep_test.event_old')::uuid,
+    (SELECT id FROM public.tickets WHERE event_id = current_setting('ep_test.event_old')::uuid LIMIT 1),
+    v_user_id_b, 'InvGuardParticipant', 1988
+  );
+
+  -- Update to approved (trigger may auto-insert another participant, that's ok)
+  UPDATE public.event_applications SET status = 'approved'
+  WHERE id = v_app_id_b;
+END $$;
+
+-- Re-run anonymization (anonymizes user_id_b participant since event ended 31 days ago)
+SELECT admin.anonymize_old_event_participants(30);
+
+-- 17. Old INV-01 logic (no event filter) would fire false positive
+SELECT ok(
+  (
+    SELECT count(*)::int
+    FROM public.event_applications a
+    LEFT JOIN public.event_participants p
+      ON a.event_id = p.event_id AND a.user_id = p.user_id
+    WHERE a.event_id = current_setting('ep_test.event_old')::uuid
+      AND a.status IN ('approved', 'paid')
+      AND p.id IS NULL
+  ) >= 1,
+  'INV-01 regression: old query fires false positive for anonymized participants (demonstrates problem)'
+);
+
+-- 18. New INV-01 logic (with 30-day event filter) returns 0
+SELECT is(
+  (
+    SELECT count(*)::int
+    FROM public.event_applications a
+    LEFT JOIN public.event_participants p
+      ON a.event_id = p.event_id AND a.user_id = p.user_id
+    JOIN public.events e ON a.event_id = e.id
+    WHERE a.event_id = current_setting('ep_test.event_old')::uuid
+      AND a.status IN ('approved', 'paid')
+      AND p.id IS NULL
+      AND (e.end_time IS NULL OR e.end_time >= NOW() - INTERVAL '30 days')
+  ),
+  0,
+  'INV-01 fix: no false positive for events past 30-day retention window'
+);
+
+-- 19. check_db_invariants() reports no INV-01 violation after anonymization
+SELECT ok(
+  NOT (public.check_db_invariants()::jsonb->'violations') @> '[{"id": "INV-01"}]'::jsonb,
+  'check_db_invariants(): no INV-01 violation after event_participants anonymization'
 );
 
 SELECT * FROM finish();
