@@ -44,7 +44,10 @@ Future<OnboardingState> onboardingState(Ref ref) async {
     'draft' => OnboardingState.draftInProgress,
     'pending' => OnboardingState.pendingReview,
     'needs_correction' => OnboardingState.needsCorrection,
-    'approved' => OnboardingState.hasPartner,
+    // Fix #1679: 'approved' without a partner record means the partner setup
+    // trigger hasn't completed yet. Keep the user on /apply/status rather
+    // than home, where they have no partner data to display.
+    'approved' => OnboardingState.pendingReview,
     _ => OnboardingState.needsApplication, // rejected or unknown
   };
 }
