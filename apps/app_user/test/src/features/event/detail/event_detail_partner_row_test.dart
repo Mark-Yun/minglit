@@ -137,8 +137,12 @@ void main() {
       );
 
       await tester.tapAt(gapCenter);
-      // PartnerDetailRoute uses CustomTransitionPage (SharedAxisTransition 300ms)
-      await tester.pumpAndSettle();
+
+      // EventDetailPage has internal timers — pumpAndSettle() hangs indefinitely.
+      // 3 pumps advances enough frames for SharedAxisTransition (300ms) to land.
+      for (var i = 0; i < 3; i++) {
+        await tester.pump();
+      }
 
       expect(find.byType(PartnerDetailPage), findsOneWidget);
     });
@@ -149,8 +153,11 @@ void main() {
       expect(find.text(partnerName), findsOneWidget);
 
       await tester.tap(find.text(partnerName));
-      // PartnerDetailRoute uses CustomTransitionPage (SharedAxisTransition 300ms)
-      await tester.pumpAndSettle();
+
+      // EventDetailPage has internal timers — pumpAndSettle() hangs indefinitely.
+      for (var i = 0; i < 3; i++) {
+        await tester.pump();
+      }
 
       expect(find.byType(PartnerDetailPage), findsOneWidget);
     });
