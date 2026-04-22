@@ -146,7 +146,7 @@ void main() {
     );
     await tester.pump();
 
-    final logo = find.byType(GestureDetector).first;
+    final logo = find.byKey(MinglitLoginScreen.devTriggerKey);
     for (var i = 0; i < 5; i++) {
       await tester.tap(logo);
       await tester.pump();
@@ -182,8 +182,8 @@ void main() {
       );
       await tester.pump();
 
-      // onDevTrigger=null → _DevTriggerLogo not rendered → no GestureDetector
-      expect(find.byType(GestureDetector), findsNothing);
+      // onDevTrigger=null → _DevTriggerLogo not rendered → devTriggerKey absent
+      expect(find.byKey(MinglitLoginScreen.devTriggerKey), findsNothing);
     },
   );
 }

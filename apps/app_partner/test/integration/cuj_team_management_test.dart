@@ -90,8 +90,9 @@ void main() {
 
       expect(find.text('김철수'), findsOneWidget);
       expect(find.text('이영희'), findsOneWidget);
-      expect(find.textContaining('manager'), findsOneWidget);
-      expect(find.textContaining('staff'), findsOneWidget);
+      // Fix #1677: role strings are localized — 'manager'/'staff' → '매니저'/'직원'
+      expect(find.textContaining('매니저'), findsOneWidget);
+      expect(find.text('직원'), findsOneWidget);
     });
 
     testWidgets('팀원 없을 때 빈 상태 메시지 표시', (tester) async {

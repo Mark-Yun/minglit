@@ -60,10 +60,8 @@ extension VisualQaTester on WidgetTester {
       final step = _nextStep();
       // Widget tree dump is synchronous — do it before the async image capture.
       _captureWidgetTree(step, label);
-      // Fix #1536: Do NOT use runAsync — captureImage() hangs permanently in
-      // headless CI (no GPU) and .timeout() does not cancel the internal Future,
-      // leaving a leaked async operation that blocks subsequent tests.
-      // GoldenCapture uses the same direct-await pattern and works correctly.
+      // Fix #1677: runAsync for captureImage() — same pattern as GoldenCapture.
+      // Fake-async zone blocks real timers so .timeout() never fires without it.
       await _captureScreenshot(step, label);
     } catch (e, st) {
       // ignore: avoid_print
@@ -113,16 +111,23 @@ extension VisualQaTester on WidgetTester {
   Future<void> _captureScreenshot(int step, String label) async {
     final rootElement = binding.rootElement;
     if (rootElement == null) return;
-    final image = await captureImage(rootElement);
+    // Fix #1677: runAsync so real timers fire inside fake-async zone.
+    final image = await runAsync(
+      () => captureImage(rootElement).timeout(const Duration(seconds: 30)),
+    );
+    if (image == null) return;
     late final Uint8List bytes;
     try {
-      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      final byteData = await runAsync(
+        () => image
+            .toByteData(format: ui.ImageByteFormat.png)
+            .timeout(const Duration(seconds: 30)),
+      );
       if (byteData == null) return;
       bytes = Uint8List.view(byteData.buffer);
     } finally {
       image.dispose();
     }
-    // Synchronous I/O — avoids runAsync and the associated async leak risk.
     _ensureFile('${step}_$label.png').writeAsBytesSync(bytes);
   }
 
