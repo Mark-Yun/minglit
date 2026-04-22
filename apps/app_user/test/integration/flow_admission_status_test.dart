@@ -282,7 +282,10 @@ void main() {
       final theme = Theme.of(
         tester.element(find.widgetWithText(ElevatedButton, '참가 신청하기')),
       );
-      expect(button.style?.backgroundColor?.resolve({}), theme.colorScheme.primary);
+      expect(
+        button.style?.backgroundColor?.resolve({}),
+        theme.colorScheme.primary,
+      );
     });
   });
 
