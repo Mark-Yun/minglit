@@ -68,13 +68,17 @@ BEGIN
   -- INV-03: Cancelled applications with remaining participant
   -- When an application is cancelled, the participant record should be removed.
   -- Severity: P0
+  -- event_participants PII는 이벤트 종료 30일 후 익명화됨 (#1705).
+  -- user_id가 NULL화되면 JOIN이 실패 → 30일 지난 이벤트는 체크 불가하므로 제외.
   -- ────────────────────────────────────────────────────────
   SELECT count(*)
   INTO v_count
   FROM event_applications a
   JOIN event_participants p
     ON a.event_id = p.event_id AND a.user_id = p.user_id
-  WHERE a.status = 'cancelled';
+  JOIN events e ON a.event_id = e.id
+  WHERE a.status = 'cancelled'
+    AND (e.end_time IS NULL OR e.end_time >= NOW() - INTERVAL '30 days');
 
   IF v_count > 0 THEN
     v_violations := v_violations || jsonb_build_object(

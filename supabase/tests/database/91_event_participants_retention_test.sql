@@ -10,7 +10,7 @@
 --   6. idempotent: 재실행 시 0 rows
 BEGIN;
 
-SELECT plan(19);
+SELECT plan(20);
 
 SELECT tests.authenticate_as_service_role();
 
@@ -266,6 +266,46 @@ SELECT is(
 SELECT ok(
   NOT (public.check_db_invariants()::jsonb->'violations') @> '[{"id": "INV-01"}]'::jsonb,
   'check_db_invariants(): no INV-01 violation after event_participants anonymization'
+);
+
+-- ── INV-03 blind spot guard ───────────────────────────────────────────────────
+-- 30일 지난 이벤트에서 cancelled application + participant(익명화 후 user_id=NULL) 조합이
+-- INV-03 false negative(탐지 불가)를 발생시키지 않는지 검증.
+-- 신규 INV-03 로직(30일 필터)은 이런 이벤트를 명시적으로 체크 범위에서 제외한다.
+
+DO $$
+DECLARE
+  v_user_c uuid;
+BEGIN
+  v_user_c := tests.create_supabase_user(
+    'ep_retention_inv03_c_1705',
+    'ep_retention_inv03_c_1705@pgtap.local'
+  );
+
+  -- 30일 지난 이벤트에 cancelled 신청 + 참가자 삽입 (orphaned participant 시나리오)
+  INSERT INTO public.event_applications (event_id, ticket_id, user_id, status)
+  VALUES (
+    current_setting('ep_test.event_old')::uuid,
+    (SELECT id FROM public.tickets WHERE event_id = current_setting('ep_test.event_old')::uuid LIMIT 1),
+    v_user_c,
+    'cancelled'
+  );
+
+  INSERT INTO public.event_participants (event_id, ticket_id, user_id, display_name, birth_year)
+  VALUES (
+    current_setting('ep_test.event_old')::uuid,
+    (SELECT id FROM public.tickets WHERE event_id = current_setting('ep_test.event_old')::uuid LIMIT 1),
+    v_user_c, 'OrphanedParticipantC', 1992
+  );
+END $$;
+
+-- anonymize → participant.user_id = NULL (30일 이상 경과)
+SELECT admin.anonymize_old_event_participants(30);
+
+-- 20. INV-03: 30일 지난 이벤트는 체크 범위 제외 → 위반 없음
+SELECT ok(
+  NOT (public.check_db_invariants()::jsonb->'violations') @> '[{"id": "INV-03"}]'::jsonb,
+  'check_db_invariants(): no INV-03 false positive — events past 30-day retention excluded'
 );
 
 SELECT * FROM finish();
