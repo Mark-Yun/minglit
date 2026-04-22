@@ -135,11 +135,10 @@ void main() {
 
       await tester.tapAt(gapCenter);
 
-      // EventDetailPage has internal timers — pumpAndSettle() hangs indefinitely.
-      // 3 pumps advances enough frames for SharedAxisTransition (300ms) to land.
-      for (var i = 0; i < 3; i++) {
-        await tester.pump();
-      }
+      // PartnerDetailRoute uses SharedAxisTransition (300ms).
+      // pump(Duration) advances fake time past the animation without looping on
+      // EventDetailPage's internal timers (unlike pumpAndSettle which hangs).
+      await tester.pump(const Duration(milliseconds: 500));
 
       expect(find.byType(PartnerDetailPage), findsOneWidget);
     });
@@ -151,10 +150,10 @@ void main() {
 
       await tester.tap(find.text(partnerName));
 
-      // EventDetailPage has internal timers — pumpAndSettle() hangs indefinitely.
-      for (var i = 0; i < 3; i++) {
-        await tester.pump();
-      }
+      // PartnerDetailRoute uses SharedAxisTransition (300ms).
+      // pump(Duration) advances fake time past the animation without looping on
+      // EventDetailPage's internal timers (unlike pumpAndSettle which hangs).
+      await tester.pump(const Duration(milliseconds: 500));
 
       expect(find.byType(PartnerDetailPage), findsOneWidget);
     });
