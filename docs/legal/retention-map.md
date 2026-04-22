@@ -4,11 +4,6 @@
 **개정**: 2026-04-22 (초판)
 **관련 PR/이슈**: #1695 (audit) · #1693 (retention_policies 인프라) · #1692
 
-> **⚠️ 의존성 경고**: 이 문서의 "구현" 경로 중 `admin.retention_policies` 를 경유하는 항목은
-> **PR #1693이 `dev`에 머지되어야 실제 집행 가능**하다. PR #1693은 2026-04-22 기준 아직 OPEN 상태이다.
-> 해당 항목의 상태가 **GAP** 또는 **TBD**로 표시된 이유는 인프라 미머지도 포함한다.
-> PR #1693 머지 후 이 문서의 "현재 구현" 컬럼을 재검토하라.
-
 ---
 
 ## 이 문서의 목적
@@ -67,7 +62,7 @@ VALUES
 | 3 | 소비자 불만/분쟁 처리 3년 | 전자상거래법 §6 | `public.archived_records` (record_type='dispute') | 동상 | 필요 (1095) | **GAP** |
 | 4 | 접속 기록 3개월 | 통신비밀보호법 §15-2 | `public.archived_records` (record_type='login') / `auth.audit_log_entries` | 동상 + `auth.audit_log_entries`는 Supabase 관리 | 필요 (90) | **GAP** |
 | 5 | 마케팅 동의 기록 2년 | PIPA §22-2, 내부 정책 | `public.archived_records` (record_type='consent') | 동상 | 없음(내부) | **GAP** (자동 파기 없음) |
-| 6 | 위치 확인자료 6개월 | 위치정보법 §16 | **테이블 미존재** | ❌ 미구현 | 필요 (180) | **CRITICAL GAP — 허위 고지** |
+| 6 | 위치 확인자료 6개월 | 위치정보법 §16 | `public.location_access_log` | ✅ PR #1698: 테이블 생성 + `admin.retention_policies` 등록 (retention_days=180, legal_min_days=180), `user-event-feed` EF에서 INSERT | 180 | **구현 완료** |
 | 7 | 파트너 제공 참여자 정보 — 이벤트 종료 후 30일 | PIPA §21 목적 달성 후 파기 | `public.event_participants` (또는 파생 뷰) | ❌ 자동 파기 없음 | 없음 | **GAP** |
 | 8 | 자격 인증 증빙 1년 | 내부 정책 | `verification-proofs` 버킷 (Storage) + `public.verification_submissions` (메타/이력) | ❌ 자동 파기 없음 — Storage 버킷 만료 정책 미설정, DB 레코드 삭제 job 없음 | 없음 | **GAP** |
 | 9 | 부정 이용 기록 1년 | 내부 정책 | `public.blocked_dis` (`blocked_until` TTL 30일), 기타 | 부분 — `blocked_dis`는 30일 TTL, "1년 보존" 대상 테이블 식별 필요 | 없음 | **TBD** |
@@ -75,7 +70,7 @@ VALUES
 | 11 | 임베딩 벡터 — 탈퇴 시 즉시 파기 | PIPA §21 | `public.user_embeddings` · `public.party_embeddings` | `process-pending-deletions` EF에서 삭제되는지 검증 필요 | — | **VERIFY** |
 | 12 | GPS 좌표 — 검색 요청 처리 완료 즉시 파기 (서버 영구 저장 없음) | 위치정보법 §16 | 서버 미저장 원칙 | Edge Function 내 메모리 처리 가정 — 코드 주석 + 테스트로 증명 필요 | — | **VERIFY** |
 
-### `admin.retention_policies` seed 예정 (PR #1693 머지 후 반영 — 2026-04-22 기준 미머지)
+### `admin.retention_policies` 초기 seed (PR #1693에서 배포 완료 — 2026-04-21)
 
 | id | kind | retention_days | legal_min_days | 비고 |
 |----|------|----------------|-----------------|------|
@@ -94,25 +89,15 @@ VALUES
 
 아래는 `needs-arch` / `needs-swe`로 넘길 작업 단위다. 순서는 법적 리스크 기준.
 
-### P1-URGENT — "허위 고지" 상태
+### ~~P1-URGENT — "허위 고지" 상태~~ (해소 완료)
 
-#### F1. 위치 확인자료 6개월 보관 로그 (위치정보법 §16)
+#### ~~F1. 위치 확인자료 6개월 보관 로그 (위치정보법 §16)~~ — **PR #1698에서 구현 완료**
 
-**현재**: 방침에 "위치정보법에 따른 자동 기록 확인자료(이용 일시·처리 사실)는 6개월간 보관하며, GPS 좌표 원문은 보관하지 않습니다"라고 선언. 대응 테이블 없음.
-
-**필요 조치**:
-1. `public.location_access_log` 신설 — 컬럼: `user_id`, `accessed_at`, `purpose`('nearby_search' 등), `country_code`(선택). **GPS 좌표 자체는 저장 금지**.
-2. 주변 검색 Edge Function / API에서 access 발생 시 INSERT.
-3. `admin.retention_policies`에 등록:
-   ```sql
-   INSERT INTO admin.retention_policies
-     (id, kind, retention_days, legal_min_days, target, description)
-   VALUES
-     ('location_access_log', 'db_table', 180, 180,
-      '{"schema":"public","table":"location_access_log","ts_col":"accessed_at"}',
-      '위치정보법 §16 — 위치정보 이용·제공 확인자료 6개월');
-   ```
-4. pgTAP 테스트: retention_policies에서 정책이 조회되고 legal_min_days=180인지 확인.
+**구현 내용** (2026-04-21 배포):
+- `public.location_access_log` 생성 — `user_id`, `accessed_at`, `purpose`, `country_code`. GPS 좌표 미저장.
+- `user-event-feed` EF에서 주변 검색 시 INSERT.
+- `admin.retention_policies`에 `('location_access_log', 'db_table', 180, 180, ...)` 등록.
+- pgTAP 85_location_access_log_test.sql — retention_policies 정책 + legal_min_days=180 검증 포함.
 
 ### P1 — 전자상거래법 증빙 가능 상태 확보
 
@@ -219,7 +204,8 @@ VALUES
 ## 5) 참조
 
 - `apps/landing_user/src/app/privacy/page.tsx` — 사용자 선언 원문
-- `supabase/migrations/20260421000002_add_admin_schema_retention_policies.sql` — PR #1693
+- `supabase/migrations/20260421000002_add_admin_schema_retention_policies.sql` — PR #1693 (admin 스키마 + retention_policies 인프라)
+- `supabase/migrations/20260422000001_location_access_log.sql` — PR #1698 (위치정보법 §16 구현)
 - `supabase/migrations/20260330000005_account_deletion.sql` — archived_records 스키마
 - `supabase/functions/process-pending-deletions/index.ts` — 탈퇴 시 아카이브 로직
 - 법령: 개인정보보호법(PIPA), 전자상거래법, 통신비밀보호법, 위치정보의 보호 및 이용 등에 관한 법률
