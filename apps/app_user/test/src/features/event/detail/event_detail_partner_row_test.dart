@@ -92,6 +92,9 @@ void main() {
                   () => now,
             ),
             partnerRepositoryProvider.overrideWithValue(mockPartnerRepo),
+            entryGroupParticipantCountsProvider(
+              testEvent.id,
+            ).overrideWith((ref) async => <String, int>{}),
           ],
         ),
       );
@@ -134,10 +137,8 @@ void main() {
       );
 
       await tester.tapAt(gapCenter);
-
-      for (var i = 0; i < 3; i++) {
-        await tester.pump();
-      }
+      // PartnerDetailRoute uses CustomTransitionPage (SharedAxisTransition 300ms)
+      await tester.pumpAndSettle();
 
       expect(find.byType(PartnerDetailPage), findsOneWidget);
     });
@@ -148,10 +149,8 @@ void main() {
       expect(find.text(partnerName), findsOneWidget);
 
       await tester.tap(find.text(partnerName));
-
-      for (var i = 0; i < 3; i++) {
-        await tester.pump();
-      }
+      // PartnerDetailRoute uses CustomTransitionPage (SharedAxisTransition 300ms)
+      await tester.pumpAndSettle();
 
       expect(find.byType(PartnerDetailPage), findsOneWidget);
     });
