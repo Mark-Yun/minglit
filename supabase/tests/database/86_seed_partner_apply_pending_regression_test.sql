@@ -34,7 +34,8 @@ BEGIN
 END $$;
 
 -- ── helper: mirrors seed.dev.sql Fix #1679 reset logic ───────────────────────
-CREATE OR REPLACE FUNCTION _regression_reset_apply_pending()
+-- pg_temp schema: session always has CREATE privilege (no public schema ownership needed)
+CREATE OR REPLACE FUNCTION pg_temp._regression_reset_apply_pending()
 RETURNS void AS $$
 DECLARE
   apply_user_id uuid;
@@ -113,7 +114,7 @@ SELECT ok(
 );
 
 -- 4. Re-run seed reset (reproduces what seed.dev.sql does on next run)
-SELECT _regression_reset_apply_pending();
+SELECT pg_temp._regression_reset_apply_pending();
 
 -- 5. After re-seed: status is back to 'pending'
 SELECT ok(
