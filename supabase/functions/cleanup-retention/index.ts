@@ -98,8 +98,9 @@ async function runPgmqArchiveCleanup(
   return { rows_deleted: Number(data ?? 0) };
 }
 
-// db_custom_fn: JOIN-based or complex deletion that cannot be expressed as a simple ts_col comparison.
-// target.fn must be a fully-qualified admin-schema function name accepting p_cutoff_days int.
+// db_custom_fn: JOIN-based or complex operations that cannot be expressed as a simple ts_col comparison.
+// target.fn must be a fully-qualified admin-schema function name (e.g. "admin.anonymize_old_event_participants")
+// that accepts a single p_cutoff_days int parameter and returns bigint (rows affected).
 async function runDbCustomFnCleanup(
   supabase: ReturnType<typeof createServiceClient>,
   policy: RetentionPolicy,

@@ -288,3 +288,132 @@ Deno.test({
     });
   },
 });
+
+Deno.test({
+  name: "cleanup-retention - db_custom_fn calls named RPC and returns rows_deleted",
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+
+    const { fetchMock } = createFetchMock([
+      {
+        matcher: POLICIES_URL,
+        handler: () =>
+          jsonResponse([
+            {
+              id: "event_participants_post_event",
+              kind: "db_custom_fn",
+              retention_days: 30,
+              target: { fn: "admin.anonymize_old_event_participants" },
+            },
+          ]),
+      },
+      {
+        matcher: "/rest/v1/rpc/anonymize_old_event_participants",
+        handler: () => jsonResponse(5),
+      },
+      {
+        matcher: POLICIES_URL,
+        handler: () => jsonResponse({}),
+      },
+      {
+        matcher: AUDIT_URL,
+        handler: () => jsonResponse({}),
+      },
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const response = await handler(postRequest());
+        assertEquals(response.status, 200);
+        const body = await readJson(response);
+        assertEquals(body.results[0].id, "event_participants_post_event");
+        assertEquals(body.results[0].status, "success");
+        assertEquals(body.results[0].rows_deleted, 5);
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "cleanup-retention - db_custom_fn errors when target.fn is missing",
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+
+    const { fetchMock } = createFetchMock([
+      {
+        matcher: POLICIES_URL,
+        handler: () =>
+          jsonResponse([
+            {
+              id: "bad_custom_fn_policy",
+              kind: "db_custom_fn",
+              retention_days: 30,
+              target: {},
+            },
+          ]),
+      },
+      {
+        matcher: POLICIES_URL,
+        handler: () => jsonResponse({}),
+      },
+      {
+        matcher: AUDIT_URL,
+        handler: () => jsonResponse({}),
+      },
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const response = await handler(postRequest());
+        assertEquals(response.status, 200);
+        const body = await readJson(response);
+        assertEquals(body.results[0].status, "error");
+        assertEquals(typeof body.results[0].error, "string");
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "cleanup-retention - db_custom_fn marks error on RPC failure",
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+
+    const { fetchMock } = createFetchMock([
+      {
+        matcher: POLICIES_URL,
+        handler: () =>
+          jsonResponse([
+            {
+              id: "event_participants_post_event",
+              kind: "db_custom_fn",
+              retention_days: 30,
+              target: { fn: "admin.anonymize_old_event_participants" },
+            },
+          ]),
+      },
+      {
+        matcher: "/rest/v1/rpc/anonymize_old_event_participants",
+        handler: () => jsonResponse({ message: "permission denied" }, { status: 403 }),
+      },
+      {
+        matcher: POLICIES_URL,
+        handler: () => jsonResponse({}),
+      },
+      {
+        matcher: AUDIT_URL,
+        handler: () => jsonResponse({}),
+      },
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const response = await handler(postRequest());
+        assertEquals(response.status, 200);
+        const body = await readJson(response);
+        assertEquals(body.results[0].status, "error");
+        assertEquals(typeof body.results[0].error, "string");
+      });
+    });
+  },
+});
