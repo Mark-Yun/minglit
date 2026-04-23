@@ -9,11 +9,14 @@ BEGIN;
 SELECT plan(3);
 
 -- ── 헬퍼: cron.job에서 EF 이름과 Authorization vault key 추출
+-- regexp_match (scalar, Pg10+) 사용 — regexp_matches with 'g' is set-returning and
+-- produces extra NULL-ef_name rows when combined with another SRF in SELECT.
+-- vault_key는 Authorization 헤더에 사용되는 두 번째 vault lookup을 특정.
 CREATE TEMP TABLE _cron_ef_calls AS
 SELECT
   jobname,
-  (regexp_matches(command, E'/functions/v1/([a-z][a-z0-9-]+)'))[1]      AS ef_name,
-  (regexp_matches(command, E'WHERE name\\s*=\\s*''([a-z_]+)''\\s+LIMIT', 'g'))[1] AS vault_key
+  (regexp_match(command, '/functions/v1/([a-z][a-z0-9-]+)'))[1]      AS ef_name,
+  (regexp_match(command, 'Authorization.+WHERE name\s*=\s*''([a-z_]+)''\s+LIMIT', 's'))[1] AS vault_key
 FROM cron.job
 WHERE command LIKE '%net.http_post%'
   AND command LIKE '%/functions/v1/%';
