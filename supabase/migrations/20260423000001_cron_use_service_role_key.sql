@@ -23,10 +23,10 @@ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM vault.decrypted_secrets WHERE name = 'service_role_key'
   ) THEN
-    RAISE WARNING
-      'vault secret "service_role_key" not found — cron jobs will be rescheduled '
-      'but will return NULL JWT until the secret is added to Vault. '
-      'Add it via Dashboard → Database → Vault before applying this migration.';
+    RAISE EXCEPTION
+      'vault secret "service_role_key" not found. '
+      'Add it via Dashboard → Database → Vault before applying this migration, '
+      'otherwise cron jobs will be rescheduled with a NULL JWT and continue to return 401.';
   END IF;
 END $$;
 
