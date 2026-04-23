@@ -1,8 +1,10 @@
 // Fix #1733: regression tests for entry group add/update/remove in PartyDetailCoordinator
 import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
 import 'package:app_partner/src/features/party/detail/party_detail_coordinator.dart';
+import 'package:app_partner/src/l10n/generated/app_localizations.dart';
 import 'package:app_partner/src/routing/app_router.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
@@ -67,6 +69,10 @@ void main() {
     mockPartyRepo = MockPartyRepository();
     mockRouter = MockGoRouter();
     registerFallbackValue(_makeParty());
+    // Fix #1733: Route fallback required by Mocktail any() in verify()
+    registerFallbackValue(MaterialPageRoute<dynamic>(
+      builder: (_) => const SizedBox.shrink(),
+    ));
   });
 
   group('PartyDetailCoordinator.addPartyEntryGroup', () {
@@ -164,6 +170,12 @@ void main() {
           ],
           child: MaterialApp(
             navigatorObservers: [mockObserver],
+            locale: const Locale('ko'),
+            localizationsDelegates: [
+              AppLocalizations.delegate,
+              ...GlobalMaterialLocalizations.delegates,
+            ],
+            supportedLocales: AppLocalizations.supportedLocales,
             home: Builder(
               builder: (context) {
                 final coordinator = ProviderScope.containerOf(
