@@ -60,8 +60,7 @@ class _FakeMobileScannerPlatform extends MobileScannerPlatform {
   Future<BarcodeCapture?> analyzeImage(
     String path, {
     List<BarcodeFormat> formats = const <BarcodeFormat>[],
-  }) async =>
-      null;
+  }) async => null;
 }
 
 Widget _wrap(Widget child) {
@@ -130,7 +129,9 @@ void main() {
       expect(find.text('홍길동'), findsOneWidget);
     });
 
-    testWidgets('idle → success (userName 없음) — "체크인 완료" 배너 표시', (tester) async {
+    testWidgets('idle → success (userName 없음) — "체크인 완료" 배너 표시', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _wrap(
           CheckinScannerOverlay(
