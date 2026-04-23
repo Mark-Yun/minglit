@@ -9,11 +9,10 @@ class TypographySection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    // Fix #1717: only show slots defined in MinglitTheme (omit M3-default displayMedium/headlineLarge)
     final styles = <String, TextStyle?>{
       'displayLarge': textTheme.displayLarge,
-      'displayMedium': textTheme.displayMedium,
       'displaySmall': textTheme.displaySmall,
-      'headlineLarge': textTheme.headlineLarge,
       'headlineMedium': textTheme.headlineMedium,
       'headlineSmall': textTheme.headlineSmall,
       'titleLarge': textTheme.titleLarge,
