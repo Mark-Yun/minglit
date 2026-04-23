@@ -2,13 +2,13 @@
 // Issue #316: RLS write strategy 전환
 
 import { createServiceClient } from "../_shared/supabase_client.ts";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   corsResponse,
   errorResponse,
   successResponse,
 } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
+import { requirePartnerPermission } from "../_shared/partner_permissions.ts";
 import { initSentry, withHandler } from "../_shared/logger.ts";
 
 initSentry();
@@ -108,8 +108,8 @@ async function handleRequest(req: Request): Promise<Response> {
     }
 
     // Check partner permission
-    const permCheck = await checkPartnerPermission(supabase, partnerId, userId);
-    if (permCheck instanceof Response) return permCheck;
+    const permCheck = await requirePartnerPermission(supabase, partnerId, userId, ["PARTY_MANAGE"]);
+    if (permCheck) return permCheck;
 
     // ── Pre-validate all payloads before any DB writes ──
 
@@ -344,12 +344,13 @@ async function handleRequest(req: Request): Promise<Response> {
     if (!existingParty) return errorResponse("Party not found", 404);
 
     // Check partner permission
-    const permCheck = await checkPartnerPermission(
+    const permCheck = await requirePartnerPermission(
       supabase,
       existingParty.partner_id,
       userId,
+      ["PARTY_MANAGE"],
     );
-    if (permCheck instanceof Response) return permCheck;
+    if (permCheck) return permCheck;
 
     // ── Pre-validate all payloads before any DB writes ──
 
@@ -704,12 +705,13 @@ async function handleRequest(req: Request): Promise<Response> {
     if (!existingParty) return errorResponse("Party not found", 404);
 
     // Check partner permission
-    const permCheck = await checkPartnerPermission(
+    const permCheck = await requirePartnerPermission(
       supabase,
       existingParty.partner_id,
       userId,
+      ["PARTY_MANAGE"],
     );
-    if (permCheck instanceof Response) return permCheck;
+    if (permCheck) return permCheck;
 
     const { error: updateError } = await supabase
       .from("parties")
@@ -727,31 +729,6 @@ async function handleRequest(req: Request): Promise<Response> {
   }
 
   return errorResponse(`Unknown action: ${action}`, 400);
-}
-
-// ─── Helpers ───
-
-async function checkPartnerPermission(
-  supabase: SupabaseClient,
-  partnerId: string,
-  userId: string,
-): Promise<void | Response> {
-  const { data: perm, error: permError } = await supabase
-    .from("partner_member_permissions")
-    .select("permissions")
-    .eq("partner_id", partnerId)
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  if (permError) {
-    return errorResponse("Failed to verify partner permissions", 500);
-  }
-
-  const hasPermission =
-    (perm?.permissions as string[] | null)?.includes("PARTY_MANAGE") ?? false;
-  if (!hasPermission) {
-    return errorResponse("Forbidden: insufficient partner permissions", 403);
-  }
 }
 
 function validateEntryGroupTemplates(templates: unknown[]): Response | null {

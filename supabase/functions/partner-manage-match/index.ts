@@ -8,6 +8,7 @@ import {
   successResponse,
 } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
+import { requirePartnerPermission } from "../_shared/partner_permissions.ts";
 import { initSentry, withHandler } from "../_shared/logger.ts";
 
 
@@ -68,22 +69,9 @@ Deno.serve(withHandler(async (req: Request): Promise<Response> => {
     return errorResponse("Event has no associated party", 404);
   }
 
-  // Check partner permission (service_role bypasses RLS, query directly)
-  const { data: perm, error: permError } = await supabase
-    .from("partner_member_permissions")
-    .select("permissions")
-    .eq("partner_id", party.partner_id)
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  if (permError) {
-    return errorResponse("Failed to verify partner permissions", 500);
-  }
-
-  const hasPermission = (perm?.permissions as string[] | null)?.includes("PARTY_MANAGE") ?? false;
-  if (!hasPermission) {
-    return errorResponse("Forbidden: insufficient partner permissions", 403);
-  }
+  // Fix #1783: partner permission check — owner bypass 포함
+  const permCheck = await requirePartnerPermission(supabase, party.partner_id, userId, ["PARTY_MANAGE"]);
+  if (permCheck) return permCheck;
 
   // Check event status — only 'scheduled' events can have rules modified
   if (event.status !== "scheduled") {

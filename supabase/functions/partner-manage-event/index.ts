@@ -9,6 +9,7 @@ import {
   successResponse,
 } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
+import { requirePartnerPermission } from "../_shared/partner_permissions.ts";
 import { initSentry, withHandler } from "../_shared/logger.ts";
 
 
@@ -149,8 +150,8 @@ async function handleCreate(
   if (!party) return errorResponse("Party not found", 404);
 
   // Check partner permission
-  const permCheck = await checkPartnerPermission(supabase, party.partner_id, userId);
-  if (permCheck instanceof Response) return permCheck;
+  const permCheck = await requirePartnerPermission(supabase, party.partner_id, userId, ["PARTY_MANAGE", "EVENT_MANAGE"]);
+  if (permCheck) return permCheck;
 
   // ── Pre-validate ticket template references ──
   const ticketInputs = body.tickets;
@@ -322,8 +323,8 @@ async function handleUpdate(
   const partnerId = (event.parties as Record<string, unknown>).partner_id as string;
 
   // Check partner permission
-  const permCheck = await checkPartnerPermission(supabase, partnerId, userId);
-  if (permCheck instanceof Response) return permCheck;
+  const permCheck = await requirePartnerPermission(supabase, partnerId, userId, ["PARTY_MANAGE", "EVENT_MANAGE"]);
+  if (permCheck) return permCheck;
 
   // Build update fields
   const eventData = body.event;
@@ -413,8 +414,8 @@ async function handleUpdateStatus(
   const partnerId = (event.parties as Record<string, unknown>).partner_id as string;
 
   // Check partner permission
-  const permCheck = await checkPartnerPermission(supabase, partnerId, userId);
-  if (permCheck instanceof Response) return permCheck;
+  const permCheck = await requirePartnerPermission(supabase, partnerId, userId, ["PARTY_MANAGE", "EVENT_MANAGE"]);
+  if (permCheck) return permCheck;
 
   const { error: updateError } = await supabase
     .from("events")
@@ -473,8 +474,8 @@ async function handleUpdateTickets(
   const partnerId = (event.parties as Record<string, unknown>).partner_id as string;
 
   // Check partner permission
-  const permCheck = await checkPartnerPermission(supabase, partnerId, userId);
-  if (permCheck instanceof Response) return permCheck;
+  const permCheck = await requirePartnerPermission(supabase, partnerId, userId, ["PARTY_MANAGE", "EVENT_MANAGE"]);
+  if (permCheck) return permCheck;
 
   // Fetch existing tickets to validate sold_count
   const ticketIds = ticketUpdates.map((t: Record<string, unknown>) => t.ticket_id as string);
@@ -538,26 +539,3 @@ async function handleUpdateTickets(
 }
 
 // ─── Helpers ───
-
-async function checkPartnerPermission(
-  supabase: SupabaseClient,
-  partnerId: string,
-  userId: string,
-): Promise<void | Response> {
-  const { data: perm, error: permError } = await supabase
-    .from("partner_member_permissions")
-    .select("permissions")
-    .eq("partner_id", partnerId)
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  if (permError) {
-    return errorResponse("Failed to verify partner permissions", 500);
-  }
-
-  const permissions = (perm?.permissions as string[] | null) ?? [];
-  const hasPermission = permissions.includes("PARTY_MANAGE") || permissions.includes("EVENT_MANAGE");
-  if (!hasPermission) {
-    return errorResponse("Forbidden: insufficient partner permissions", 403);
-  }
-}
