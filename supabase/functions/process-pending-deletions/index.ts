@@ -8,25 +8,30 @@ import { initSentry, log, withHandler, withSpan } from "../_shared/logger.ts";
 
 const FN = "process-pending-deletions";
 
+type RetentionCalendarSpec = {
+  value: number;
+  unit: "year" | "month" | "day";
+};
+
 type RetentionConfig = {
   deletionGraceDays: number;
   blockedDiDays: number;
-  contractDays: number;
-  paymentDays: number;
-  disputeDays: number;
-  loginDays: number;
-  consentDays: number;
+  contract: RetentionCalendarSpec;
+  payment: RetentionCalendarSpec;
+  dispute: RetentionCalendarSpec;
+  login: RetentionCalendarSpec;
+  consent: RetentionCalendarSpec;
 };
 
-// Fix #1789: fallback — DB 조회 실패 시 법적 최소값 보장
+// Fix #1789: fallback — DB 조회 실패 시 법적 최소값 보장 (달력 기준)
 const DEFAULT_RETENTION: RetentionConfig = {
   deletionGraceDays: 7,
   blockedDiDays: 30,
-  contractDays: 1825,
-  paymentDays: 1825,
-  disputeDays: 1095,
-  loginDays: 90,
-  consentDays: 730,
+  contract: { value: 5, unit: "year" },
+  payment: { value: 5, unit: "year" },
+  dispute: { value: 3, unit: "year" },
+  login: { value: 3, unit: "month" },
+  consent: { value: 2, unit: "year" },
 };
 
 type PendingDeletionUser = {
@@ -92,6 +97,65 @@ function addDays(date: Date, days: number): string {
   return new Date(date.getTime() + days * 24 * 60 * 60 * 1000).toISOString();
 }
 
+function addYears(date: Date, years: number): string {
+  return new Date(
+    Date.UTC(
+      date.getUTCFullYear() + years,
+      date.getUTCMonth(),
+      date.getUTCDate(),
+      date.getUTCHours(),
+      date.getUTCMinutes(),
+      date.getUTCSeconds(),
+      date.getUTCMilliseconds(),
+    ),
+  ).toISOString();
+}
+
+function addMonths(date: Date, months: number): string {
+  return new Date(
+    Date.UTC(
+      date.getUTCFullYear(),
+      date.getUTCMonth() + months,
+      date.getUTCDate(),
+      date.getUTCHours(),
+      date.getUTCMinutes(),
+      date.getUTCSeconds(),
+      date.getUTCMilliseconds(),
+    ),
+  ).toISOString();
+}
+
+function applyRetentionSpec(date: Date, spec: RetentionCalendarSpec): string {
+  switch (spec.unit) {
+    case "year": return addYears(date, spec.value);
+    case "month": return addMonths(date, spec.value);
+    case "day": return addDays(date, spec.value);
+  }
+}
+
+type RetentionPolicyRow = {
+  id: string;
+  retention_days: number;
+  retention_calendar_value: number | null;
+  retention_calendar_unit: string | null;
+};
+
+function specFromRow(
+  row: RetentionPolicyRow | undefined,
+  fallback: RetentionCalendarSpec,
+): RetentionCalendarSpec {
+  if (
+    row?.retention_calendar_value != null &&
+    row?.retention_calendar_unit != null
+  ) {
+    return {
+      value: row.retention_calendar_value,
+      unit: row.retention_calendar_unit as RetentionCalendarSpec["unit"],
+    };
+  }
+  return fallback;
+}
+
 async function loadRetentionConfig(): Promise<RetentionConfig> {
   const supabase = createServiceClient();
   const { data, error } = await withSpan(
@@ -101,7 +165,7 @@ async function loadRetentionConfig(): Promise<RetentionConfig> {
       supabase
         .schema("admin")
         .from("retention_policies")
-        .select("id, retention_days")
+        .select("id, retention_days, retention_calendar_value, retention_calendar_unit")
         .in("id", [
           "deletion_grace",
           "blocked_di_records",
@@ -124,23 +188,20 @@ async function loadRetentionConfig(): Promise<RetentionConfig> {
   }
 
   const byId = Object.fromEntries(
-    data.map((row: { id: string; retention_days: number }) => [
-      row.id,
-      row.retention_days,
-    ]),
+    (data as RetentionPolicyRow[]).map((row) => [row.id, row]),
   );
   return {
     deletionGraceDays:
-      byId["deletion_grace"] ?? DEFAULT_RETENTION.deletionGraceDays,
+      byId["deletion_grace"]?.retention_days ??
+      DEFAULT_RETENTION.deletionGraceDays,
     blockedDiDays:
-      byId["blocked_di_records"] ?? DEFAULT_RETENTION.blockedDiDays,
-    contractDays:
-      byId["contract_retention"] ?? DEFAULT_RETENTION.contractDays,
-    paymentDays: byId["payment_retention"] ?? DEFAULT_RETENTION.paymentDays,
-    disputeDays: byId["dispute_retention"] ?? DEFAULT_RETENTION.disputeDays,
-    loginDays:
-      byId["login_history_retention"] ?? DEFAULT_RETENTION.loginDays,
-    consentDays: byId["consent_retention"] ?? DEFAULT_RETENTION.consentDays,
+      byId["blocked_di_records"]?.retention_days ??
+      DEFAULT_RETENTION.blockedDiDays,
+    contract: specFromRow(byId["contract_retention"], DEFAULT_RETENTION.contract),
+    payment: specFromRow(byId["payment_retention"], DEFAULT_RETENTION.payment),
+    dispute: specFromRow(byId["dispute_retention"], DEFAULT_RETENTION.dispute),
+    login: specFromRow(byId["login_history_retention"], DEFAULT_RETENTION.login),
+    consent: specFromRow(byId["consent_retention"], DEFAULT_RETENTION.consent),
   };
 }
 
@@ -273,11 +334,11 @@ async function buildArchivedRecords(
   }
 
   const archivedRecords: ArchivedRecordInsert[] = [];
-  const contractRetention = addDays(now, retention.contractDays);
-  const paymentRetention = addDays(now, retention.paymentDays);
-  const disputeRetention = addDays(now, retention.disputeDays);
-  const loginRetention = addDays(now, retention.loginDays);
-  const consentRetention = addDays(now, retention.consentDays);
+  const contractRetention = applyRetentionSpec(now, retention.contract);
+  const paymentRetention = applyRetentionSpec(now, retention.payment);
+  const disputeRetention = applyRetentionSpec(now, retention.dispute);
+  const loginRetention = applyRetentionSpec(now, retention.login);
+  const consentRetention = applyRetentionSpec(now, retention.consent);
 
   for (const application of eventApplications) {
     archivedRecords.push({
