@@ -7,6 +7,40 @@
 --   cleanup-retention이 skip_cleanup 플래그를 검사하여 실행하지 않는다.
 --   archived_records의 실제 파기는 'archived_records_expired' 정책(migration 20260422000002)이 담당한다.
 
+-- validate_retention_policy_legal_min 트리거 수정 (fix #1789):
+-- enabled=false config 행은 cleanup 실행 대상이 아니므로 whitelist legal_min_days 검증 생략.
+-- dispute(1095d), login(90d), consent(730d) config 행이 archived_records(legal_min=1825)를
+-- 대상으로 지정 시 트리거 차단을 우회하기 위함.
+-- enabled=true 행은 기존대로 검증이 적용된다.
+CREATE OR REPLACE FUNCTION admin.validate_retention_policy_legal_min()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  min_days int;
+BEGIN
+  -- enabled=false 행은 cleanup 대상이 아니므로 whitelist 검증 생략
+  IF NEW.enabled = false THEN
+    RETURN NEW;
+  END IF;
+
+  IF NEW.kind = 'db_table' THEN
+    SELECT legal_min_days INTO min_days
+      FROM admin.retention_allowed_targets
+      WHERE schema_name = NEW.target->>'schema'
+        AND table_name  = NEW.target->>'table';
+    IF min_days IS NOT NULL AND NEW.retention_days < min_days THEN
+      RAISE EXCEPTION
+        'retention_days (%) below table legal_min_days (%) for %.%',
+        NEW.retention_days, min_days,
+        NEW.target->>'schema', NEW.target->>'table'
+        USING ERRCODE = 'check_violation';
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
 INSERT INTO admin.retention_policies
   (id, kind, retention_days, legal_min_days, target, description, enabled, metadata)
 VALUES
