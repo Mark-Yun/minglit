@@ -669,3 +669,54 @@ BEGIN
     END IF;
   END LOOP;
 END $$;
+
+-- Fix #1743: CUJ-P05 수정 위저드 테스트용 — entry_group_templates + ticket_templates 포함 파티.
+-- partner_hotplace_0 소속. 수정 위저드 진입 시 Step4/Step5에 기존 데이터가 로드되는지 확인.
+-- 멱등: 이미 존재하면 생성 건너뜀.
+DO $$
+DECLARE
+  partner_id_  uuid;
+  location_id_ uuid;
+  party_id_    uuid;
+  group_m_id   uuid;
+  group_f_id   uuid;
+BEGIN
+  SELECT id INTO partner_id_ FROM public.partners WHERE biz_number = '000-00-00000';
+  IF partner_id_ IS NULL THEN
+    RAISE NOTICE 'Fix #1743 seed: partner_hotplace_0 없음, 스킵.';
+    RETURN;
+  END IF;
+
+  SELECT id INTO location_id_ FROM public.locations
+  WHERE partner_id = partner_id_ AND name = '서울 강남' LIMIT 1;
+
+  -- CUJ-P05 전용 파티 (입장그룹 + 티켓 템플릿 포함)
+  SELECT id INTO party_id_ FROM public.parties
+  WHERE partner_id = partner_id_ AND title = '[QA] CUJ-P05 파티 수정 위저드 테스트';
+  IF party_id_ IS NULL THEN
+    INSERT INTO public.parties
+      (partner_id, location_id, title, max_participants, status, image_urls)
+    VALUES (
+      partner_id_, location_id_,
+      '[QA] CUJ-P05 파티 수정 위저드 테스트',
+      40, 'active',
+      ARRAY['https://picsum.photos/seed/minglit-qa-cuj-p05/800/600']
+    )
+    RETURNING id INTO party_id_;
+  END IF;
+
+  -- entry_group_templates: 남성 20-29, 여성 20-29
+  IF NOT EXISTS (SELECT 1 FROM public.entry_group_templates WHERE party_id = party_id_) THEN
+    INSERT INTO public.entry_group_templates (party_id, label, gender, birth_year_min, birth_year_max)
+    VALUES
+      (party_id_, '남성 그룹', 'male',   1995, 2004),
+      (party_id_, '여성 그룹', 'female', 1995, 2004)
+    RETURNING id INTO group_m_id;
+  END IF;
+
+  -- ticket_templates: 일반 참가권 (무료, 20인)
+  IF NOT EXISTS (SELECT 1 FROM public.ticket_templates WHERE party_id = party_id_) THEN
+    INSERT INTO public.ticket_templates (party_id, name, price, quantity)
+    VALUES (party_id_, '일반 참가권', 0, 20);
+  END IF;
+END $$;

@@ -30,4 +30,6 @@ class MockLocationRepository extends Mock implements LocationRepository {}
 
 class MockMatchingRepository extends Mock implements MatchingRepository {}
 
+class MockTagRepository extends Mock implements TagRepository {}
+
 class MockNavigatorObserver extends Mock implements NavigatorObserver {}
