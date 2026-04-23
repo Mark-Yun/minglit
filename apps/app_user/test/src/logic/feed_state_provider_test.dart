@@ -8,6 +8,10 @@ import '../../utils/mocks.dart';
 void main() {
   late MockEventRepository mockEventRepository;
 
+  setUpAll(() {
+    registerFallbackValue(EventFeedType.nearest);
+  });
+
   setUp(() {
     Log.clear();
     mockEventRepository = MockEventRepository();

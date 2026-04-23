@@ -36,6 +36,12 @@ class MinglitLoginScreen extends ConsumerWidget {
   /// Callback for hidden dev trigger (5-tap logo). Null in production.
   final VoidCallback? onDevTrigger;
 
+  // Fix #1677: key added so tests can find _DevTriggerLogo by key instead of GestureDetector count
+  /// Key for the dev-trigger GestureDetector — used in tests to assert
+  /// presence/absence of _DevTriggerLogo without relying on GestureDetector count.
+  @visibleForTesting
+  static const devTriggerKey = ValueKey<String>('minglit_dev_trigger_logo');
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Theme colors (User: Navy / Partner: Orange)
@@ -220,6 +226,7 @@ class _DevTriggerLogoState extends State<_DevTriggerLogo> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
+      key: MinglitLoginScreen.devTriggerKey,
       onTap: _handleTap,
       child: MinglitTheme.appBarLogo(height: 64),
     );

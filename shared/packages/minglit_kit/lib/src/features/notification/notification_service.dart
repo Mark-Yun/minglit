@@ -1,12 +1,14 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logger/logger.dart';
 import 'package:minglit_kit/src/data/repositories/auth_repository.dart';
 import 'package:minglit_kit/src/data/repositories/notification_repository.dart';
 import 'package:minglit_kit/src/logic/providers/supabase_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 /// Provides the notification repository instance.
 final notificationRepositoryProvider = Provider<NotificationRepository>((ref) {
@@ -33,24 +35,28 @@ final notificationServiceProvider = Provider<NotificationService>((ref) {
 /// Manages FCM registration, local notifications, and deep links.
 class NotificationService {
   /// Creates a notification service bound to [NotificationRepository].
-  NotificationService(this._repository, this._ref);
+  NotificationService(
+    this._repository,
+    this._ref, {
+    @visibleForTesting FirebaseMessaging? fcm,
+    @visibleForTesting FlutterLocalNotificationsPlugin? localNotifications,
+  }) : _fcm = fcm ?? FirebaseMessaging.instance,
+       _localNotifications =
+           localNotifications ?? FlutterLocalNotificationsPlugin();
 
   final NotificationRepository _repository;
   final Ref _ref;
-  final FirebaseMessaging _fcm = FirebaseMessaging.instance;
-  final FlutterLocalNotificationsPlugin _localNotifications =
-      FlutterLocalNotificationsPlugin();
+  final FirebaseMessaging _fcm;
+  final FlutterLocalNotificationsPlugin _localNotifications;
   final Logger _logger = Logger();
 
   /// Initializes permissions, token registration, and handlers.
   Future<void> initialize() async {
     // 1. Request Permission
-    final settings = await _fcm.requestPermission();
-
-    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-      _logger.i('User granted permission');
-    } else {
-      _logger.w('User declined or has not accepted permission');
+    // Fix #1687: use _ensureNotificationPermission for Android 13+ reliability
+    final granted = await _ensureNotificationPermission();
+    if (!granted) {
+      _logger.w('User declined or has not accepted notification permission');
       return;
     }
 
@@ -59,9 +65,18 @@ class NotificationService {
       '@mipmap/ic_launcher',
     );
 
-    // TODO(Notification): Add iOS settings
+    // Fix #1686: DarwinInitializationSettings required for iOS foreground
+    // notifications. Permission suppressed — handled by
+    // _ensureNotificationPermission.
+    const initializationSettingsIOS = DarwinInitializationSettings(
+      requestAlertPermission: false,
+      requestBadgePermission: false,
+      requestSoundPermission: false,
+    );
+
     const initializationSettings = InitializationSettings(
       android: initializationSettingsAndroid,
+      iOS: initializationSettingsIOS,
     );
 
     await _localNotifications.initialize(
@@ -105,6 +120,33 @@ class NotificationService {
     }
   }
 
+  // Fix #1687: permission_handler bridges Android 13+ runtime permission gap.
+  // Returns false if permanently denied — guide users to openAppSettings.
+  Future<bool> _ensureNotificationPermission() async {
+    var status = await Permission.notification.status;
+    if (status.isPermanentlyDenied) return false;
+    if (!status.isGranted) {
+      status = await Permission.notification.request();
+      // User denied in the runtime dialog (or permanently denied on this call).
+      if (status.isDenied || status.isPermanentlyDenied) return false;
+    }
+
+    // Firebase-level check needed for iOS APNs authorization settings
+    final settings = await _fcm.requestPermission();
+    return settings.authorizationStatus == AuthorizationStatus.authorized ||
+        settings.authorizationStatus == AuthorizationStatus.provisional;
+  }
+
+  /// Exposed for unit testing only.
+  @visibleForTesting
+  Future<bool> ensureNotificationPermissionForTest() =>
+      _ensureNotificationPermission();
+
+  /// Exposed for unit testing only.
+  @visibleForTesting
+  Future<void> showLocalNotificationForTest(RemoteMessage message) =>
+      _showLocalNotification(message);
+
   Future<void> _registerToken(String token) async {
     final user = _ref.read(currentUserProvider);
     if (user == null) return;
@@ -125,26 +167,27 @@ class NotificationService {
 
   Future<void> _showLocalNotification(RemoteMessage message) async {
     final notification = message.notification;
-    final android = message.notification?.android;
+    if (notification == null) return;
+    // Fix #1686: previously `android != null` gated all platforms — iOS skipped
+    if (Platform.isAndroid && message.notification?.android == null) return;
 
-    if (notification != null && android != null) {
-      await _localNotifications.show(
-        id: notification.hashCode,
-        title: notification.title,
-        body: notification.body,
-        notificationDetails: const NotificationDetails(
-          android: AndroidNotificationDetails(
-            'minglit_channel_default',
-            '기본 알림',
-            channelDescription: '중요한 알림을 받습니다.',
-            importance: Importance.max,
-            priority: Priority.high,
-            icon: '@mipmap/ic_launcher',
-          ),
+    await _localNotifications.show(
+      id: notification.hashCode,
+      title: notification.title,
+      body: notification.body,
+      notificationDetails: const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'minglit_channel_default',
+          '기본 알림',
+          channelDescription: '중요한 알림을 받습니다.',
+          importance: Importance.max,
+          priority: Priority.high,
+          icon: '@mipmap/ic_launcher',
         ),
-        payload: message.data['deep_link'] as String?,
-      );
-    }
+        iOS: DarwinNotificationDetails(),
+      ),
+      payload: message.data['deep_link'] as String?,
+    );
   }
 
   void _handleDeepLink(String? link) {
