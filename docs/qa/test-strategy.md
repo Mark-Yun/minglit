@@ -157,10 +157,10 @@
 | 앱 | 위치 | 파일 수 | 성격 |
 |----|------|--------|------|
 | app_user | `apps/app_user/patrol_test/` | 3 | `kakao_login`, `payment_pg`, `permission_grant` — PatrolBinding, patrol_cli 4.x (`--target`) |
-| app_user | `apps/app_user/integration_test/` | 2 | `apple_sign_in`, `scenario_screenshots` — IntegrationTestWidgetsFlutterBinding |
-| app_partner | `apps/app_partner/integration_test/` | 1 | `scenario_screenshots` 만 |
+| app_user | `apps/app_user/emulator_test/` | 1 | `apple_sign_in` — IntegrationTestWidgetsFlutterBinding |
+| app_partner | — | 0 | Layer 3 테스트 없음. `scenario_screenshots_test.dart` 이 PR에서 삭제됨. |
 
-**Layer 3 런타임 상태**: `patrol-e2e.yml` 복구 완료 (#1673). `scenario_screenshots_test.dart` 내부 캡처 호출 0건. 재가동 계획은 §6 로드맵 및 #1586 Phase D-2 참고.
+**Layer 3 런타임 상태**: `patrol-e2e.yml` 복구 완료 (#1673). `app_partner` Layer 3 테스트 0건. 재가동 계획은 §6 로드맵 및 #1586 Phase D-2 참고.
 
 ### Layer 4 — pgTAP
 
@@ -226,7 +226,7 @@
 
 **경로 구분 (Tier B 대상 vs 비대상)**:
 
-- `apps/app_user/emulator_test/` + `apps/app_partner/emulator_test/` → Tier B 대상 (Patrol CUJ)
+- `apps/app_user/emulator_test/` → Tier B 대상 (`apple_sign_in` 1건). `app_partner` Layer 3 테스트는 미구현 (#1586 Phase D-2)
 - `tests/client_cuj_integration/` — 삭제됨 (stale 인프라 제거). Tier B 대상 아님.
 
 ## 6. Patrol 통합 전략 (Layer 3 / Tier B)

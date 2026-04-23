@@ -223,7 +223,7 @@ void main() {
 | 1 (unit) | minglit_kit / app_user / app_partner `test/src/` | 99 / 65 / 71 |
 | 2a (widget flow) | app_user / app_partner `test/integration/` | 26 / 11 |
 | 2b (golden) | app_user / app_partner `test/alchemist/**_golden_test.dart` | 14 / 15 |
-| 3 (Patrol) | app_user / app_partner `emulator_test/` | 5 / 1 (native surface 전용) |
+| 3 (Patrol) | app_user `patrol_test/` (3) + `emulator_test/` (1) / app_partner (0) | 4 / 0 (native surface 전용) |
 | 4 (pgTAP) | `supabase/tests/database/*.sql` | 80 |
 | 5 (Deno EF) | `supabase/functions/**/*_test.ts` | 75 |
 | 6 (DB monitor) | `check_db_invariants()` RPC | 1 RPC (매시간) |
