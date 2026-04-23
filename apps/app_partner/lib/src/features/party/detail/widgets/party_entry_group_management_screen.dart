@@ -112,9 +112,11 @@ class PartyEntryGroupManagementScreen extends ConsumerWidget {
                                           await MinglitAlert.showConfirm(
                                             context: context,
                                             title: context
-                                                .l10n.entryGroup_delete_title,
+                                                .l10n
+                                                .entryGroup_delete_title,
                                             content: context
-                                                .l10n.entryGroup_delete_message,
+                                                .l10n
+                                                .entryGroup_delete_message,
                                             confirmText:
                                                 context.l10n.common_delete,
                                             cancelText:
