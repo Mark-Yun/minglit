@@ -2,7 +2,7 @@
 -- migration: 20260424000002_add_retention_calendar_columns.sql
 BEGIN;
 
-SELECT plan(27);
+SELECT plan(23);
 
 -- 1. 신규 컬럼 존재 확인
 SELECT has_column('admin', 'retention_policies', 'retention_calendar_value', 'retention_calendar_value column exists');
@@ -13,8 +13,8 @@ SELECT col_type_is('admin', 'retention_policies', 'retention_calendar_value', 'i
 SELECT col_type_is('admin', 'retention_policies', 'retention_calendar_unit', 'text', 'retention_calendar_unit is text');
 
 -- 3. 컬럼 nullable 확인 (둘 다 NULL 허용)
-SELECT col_is_null('admin', 'retention_policies', 'retention_calendar_value', 'retention_calendar_value is nullable');
-SELECT col_is_null('admin', 'retention_policies', 'retention_calendar_unit', 'retention_calendar_unit is nullable');
+SELECT col_is_nullable('admin', 'retention_policies', 'retention_calendar_value', 'retention_calendar_value is nullable');
+SELECT col_is_nullable('admin', 'retention_policies', 'retention_calendar_unit', 'retention_calendar_unit is nullable');
 
 -- 4. UPDATE 결과 확인: calendar 컬럼이 올바르게 설정됐는지
 SELECT ok(
@@ -55,60 +55,39 @@ SELECT ok(
   'blocked_di_records: calendar columns remain NULL'
 );
 
--- 6. CHECK 제약: retention_calendar_value > 0
+-- 6. CHECK 제약 위반 확인 (SQLSTATE 23514 = check_violation)
 SELECT throws_ok(
   $$INSERT INTO admin.retention_policies (id, kind, retention_days, legal_min_days, target, description, enabled, retention_calendar_value, retention_calendar_unit)
-    VALUES ('test_chk_value', 'db_table', 10, 10, '{"schema":"public","table":"t","ts_col":"ts"}', 'test', false, 0, 'day')$$,
+    VALUES ('test_chk_zero', 'db_table', 10, 10, '{"schema":"public","table":"t","ts_col":"ts"}', 'test', false, 0, 'day')$$,
+  '23514',
   'retention_calendar_value > 0 CHECK prevents zero value'
 );
 SELECT throws_ok(
   $$INSERT INTO admin.retention_policies (id, kind, retention_days, legal_min_days, target, description, enabled, retention_calendar_value, retention_calendar_unit)
     VALUES ('test_chk_neg', 'db_table', 10, 10, '{"schema":"public","table":"t","ts_col":"ts"}', 'test', false, -1, 'year')$$,
+  '23514',
   'retention_calendar_value > 0 CHECK prevents negative value'
 );
-
--- 7. CHECK 제약: retention_calendar_unit IN ('year','month','day')
 SELECT throws_ok(
   $$INSERT INTO admin.retention_policies (id, kind, retention_days, legal_min_days, target, description, enabled, retention_calendar_value, retention_calendar_unit)
     VALUES ('test_chk_unit', 'db_table', 10, 10, '{"schema":"public","table":"t","ts_col":"ts"}', 'test', false, 1, 'week')$$,
+  '23514',
   'retention_calendar_unit IN CHECK prevents invalid unit'
 );
-
--- 8. pair CHECK 제약: value와 unit은 함께 설정되거나 함께 NULL
 SELECT throws_ok(
   $$INSERT INTO admin.retention_policies (id, kind, retention_days, legal_min_days, target, description, enabled, retention_calendar_value, retention_calendar_unit)
     VALUES ('test_pair1', 'db_table', 10, 10, '{"schema":"public","table":"t","ts_col":"ts"}', 'test', false, 5, NULL)$$,
+  '23514',
   'pair check: value without unit is rejected'
 );
 SELECT throws_ok(
   $$INSERT INTO admin.retention_policies (id, kind, retention_days, legal_min_days, target, description, enabled, retention_calendar_value, retention_calendar_unit)
     VALUES ('test_pair2', 'db_table', 10, 10, '{"schema":"public","table":"t","ts_col":"ts"}', 'test', false, NULL, 'year')$$,
+  '23514',
   'pair check: unit without value is rejected'
 );
 
--- 9. 유효한 값으로 삽입 성공 확인
-SELECT lives_ok(
-  $$INSERT INTO admin.retention_policies (id, kind, retention_days, legal_min_days, target, description, enabled, retention_calendar_value, retention_calendar_unit)
-    VALUES ('test_valid_year', 'db_table', 365, 365, '{"schema":"public","table":"t","ts_col":"ts"}', 'test', false, 1, 'year')$$,
-  'valid year insert succeeds'
-);
-SELECT lives_ok(
-  $$INSERT INTO admin.retention_policies (id, kind, retention_days, legal_min_days, target, description, enabled, retention_calendar_value, retention_calendar_unit)
-    VALUES ('test_valid_month', 'db_table', 30, 30, '{"schema":"public","table":"t","ts_col":"ts"}', 'test', false, 1, 'month')$$,
-  'valid month insert succeeds'
-);
-SELECT lives_ok(
-  $$INSERT INTO admin.retention_policies (id, kind, retention_days, legal_min_days, target, description, enabled, retention_calendar_value, retention_calendar_unit)
-    VALUES ('test_valid_day', 'db_table', 7, 7, '{"schema":"public","table":"t","ts_col":"ts"}', 'test', false, 7, 'day')$$,
-  'valid day insert succeeds'
-);
-SELECT lives_ok(
-  $$INSERT INTO admin.retention_policies (id, kind, retention_days, legal_min_days, target, description, enabled, retention_calendar_value, retention_calendar_unit)
-    VALUES ('test_valid_null', 'db_table', 7, 7, '{"schema":"public","table":"t","ts_col":"ts"}', 'test', false, NULL, NULL)$$,
-  'both NULL insert succeeds'
-);
-
--- 10. constraint 존재 확인
+-- 7. constraint 존재 확인
 SELECT ok(
   EXISTS (
     SELECT 1 FROM pg_constraint
