@@ -22,7 +22,7 @@ class PartyEntryGroupManagementScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: MinglitTheme.simpleAppBar(
-        title: context.l10n.partyDetail_section_entranceCondition,
+        title: context.l10n.partyDetail_title_entryGroupManagement,
       ),
       body: MinglitAsyncValueWidget(
         value: partyAsync,
@@ -33,9 +33,27 @@ class PartyEntryGroupManagementScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                if (groups.isNotEmpty) ...[
+                  AddActionCard(
+                    title: context.l10n.partyCreate_button_addEntryGroup,
+                    subtitle: context.l10n.partyCreate_subtitle_addEntryGroup,
+                    onTap: () => _openGroupEditor(
+                      context,
+                      ref,
+                      coordinator: coordinator,
+                    ),
+                  ),
+                  const SizedBox(height: MinglitSpacing.medium),
+                ],
                 if (groups.isEmpty)
-                  MinglitEmptyState.inline(
+                  MinglitEmptyState(
                     title: context.l10n.partyCreate_empty_entryGroups,
+                    actionLabel: context.l10n.partyCreate_button_addEntryGroup,
+                    onAction: () => _openGroupEditor(
+                      context,
+                      ref,
+                      coordinator: coordinator,
+                    ),
                   )
                 else
                   ListView.separated(
@@ -84,13 +102,33 @@ class PartyEntryGroupManagementScreen extends ConsumerWidget {
                                     ),
                                   ),
                                   IconButton(
-                                    icon: const Icon(Icons.close, size: 18),
-                                    onPressed: () =>
+                                    icon: const Icon(
+                                      Icons.delete_outline,
+                                      size: 18,
+                                    ),
+                                    tooltip: context.l10n.common_delete,
+                                    onPressed: () async {
+                                      final confirmed =
+                                          await MinglitAlert.showConfirm(
+                                            context: context,
+                                            title: context
+                                                .l10n.entryGroup_delete_title,
+                                            content: context
+                                                .l10n.entryGroup_delete_message,
+                                            confirmText:
+                                                context.l10n.common_delete,
+                                            cancelText:
+                                                context.l10n.common_cancel,
+                                            isDestructive: true,
+                                          );
+                                      if (confirmed) {
                                         coordinator.removePartyEntryGroup(
                                           partyId,
                                           group.id,
                                           context,
-                                        ),
+                                        );
+                                      }
+                                    },
                                     color: colorScheme.onSurfaceVariant,
                                     visualDensity: VisualDensity.compact,
                                   ),
@@ -121,16 +159,6 @@ class PartyEntryGroupManagementScreen extends ConsumerWidget {
                       );
                     },
                   ),
-                const SizedBox(height: MinglitSpacing.xlarge),
-                AddActionCard(
-                  title: context.l10n.partyCreate_button_addEntryGroup,
-                  subtitle: context.l10n.partyCreate_subtitle_addEntryGroup,
-                  onTap: () => _openGroupEditor(
-                    context,
-                    ref,
-                    coordinator: coordinator,
-                  ),
-                ),
               ],
             ),
           );
