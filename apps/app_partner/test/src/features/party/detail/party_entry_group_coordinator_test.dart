@@ -3,7 +3,6 @@ import 'package:app_partner/src/features/party/detail/party_detail_controller.da
 import 'package:app_partner/src/features/party/detail/party_detail_coordinator.dart';
 import 'package:app_partner/src/routing/app_router.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
@@ -27,7 +26,6 @@ PartyEntryGroup _makeGroup(String id) {
   return PartyEntryGroup(
     id: id,
     partyId: 'party-1',
-    requiredVerificationIds: const [],
     createdAt: now,
     updatedAt: now,
   );
@@ -72,16 +70,18 @@ void main() {
   });
 
   group('PartyDetailCoordinator.addPartyEntryGroup', () {
-    testWidgets('appends new group to party and calls updateParty',
-        (tester) async {
+    testWidgets('appends new group to party and calls updateParty', (
+      tester,
+    ) async {
       final existing = _makeGroup('g-1');
       final newGroup = _makeGroup('g-2');
 
       when(() => mockPartyRepo.getPartyById('party-1')).thenAnswer(
         (_) async => _makeParty(entryGroups: [existing]),
       );
-      when(() => mockPartyRepo.updateParty(any()))
-          .thenAnswer((_) async => _makeParty());
+      when(
+        () => mockPartyRepo.updateParty(any()),
+      ).thenAnswer((_) async => _makeParty());
 
       final (:container, :ctx) = await _buildScope(
         tester,
@@ -110,16 +110,18 @@ void main() {
   });
 
   group('PartyDetailCoordinator.removePartyEntryGroup', () {
-    testWidgets('removes the specified group and calls updateParty',
-        (tester) async {
+    testWidgets('removes the specified group and calls updateParty', (
+      tester,
+    ) async {
       final groupA = _makeGroup('g-A');
       final groupB = _makeGroup('g-B');
 
       when(() => mockPartyRepo.getPartyById('party-1')).thenAnswer(
         (_) async => _makeParty(entryGroups: [groupA, groupB]),
       );
-      when(() => mockPartyRepo.updateParty(any()))
-          .thenAnswer((_) async => _makeParty());
+      when(
+        () => mockPartyRepo.updateParty(any()),
+      ).thenAnswer((_) async => _makeParty());
 
       final (:container, :ctx) = await _buildScope(
         tester,
@@ -144,14 +146,13 @@ void main() {
   });
 
   group('PartyDetailCoordinator.updatePartyEntryGroup', () {
-    testWidgets('replaces the matching group and calls updateParty',
-        (tester) async {
+    testWidgets('replaces the matching group and calls updateParty', (
+      tester,
+    ) async {
       final now = DateTime.now();
       final original = PartyEntryGroup(
         id: 'g-1',
         partyId: 'party-1',
-        gender: null,
-        requiredVerificationIds: const [],
         createdAt: now,
         updatedAt: now,
       );
@@ -160,8 +161,9 @@ void main() {
       when(() => mockPartyRepo.getPartyById('party-1')).thenAnswer(
         (_) async => _makeParty(entryGroups: [original]),
       );
-      when(() => mockPartyRepo.updateParty(any()))
-          .thenAnswer((_) async => _makeParty());
+      when(
+        () => mockPartyRepo.updateParty(any()),
+      ).thenAnswer((_) async => _makeParty());
 
       final (:container, :ctx) = await _buildScope(
         tester,

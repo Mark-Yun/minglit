@@ -42,7 +42,7 @@ class PartyEntryGroupManagementScreen extends ConsumerWidget {
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: groups.length,
-                    separatorBuilder: (_, __) =>
+                    separatorBuilder: (_, _) =>
                         const SizedBox(height: MinglitSpacing.medium),
                     itemBuilder: (context, index) {
                       final group = groups[index];
@@ -50,8 +50,9 @@ class PartyEntryGroupManagementScreen extends ConsumerWidget {
                         elevation: 0,
                         clipBehavior: Clip.antiAlias,
                         shape: RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.circular(MinglitRadius.card),
+                          borderRadius: BorderRadius.circular(
+                            MinglitRadius.card,
+                          ),
                           side: BorderSide(
                             color: colorScheme.outlineVariant.withValues(
                               alpha: MinglitOpacity.strong,
@@ -65,29 +66,31 @@ class PartyEntryGroupManagementScreen extends ConsumerWidget {
                                 horizontal: MinglitSpacing.medium,
                                 vertical: MinglitSpacing.small,
                               ),
-                              color:
-                                  colorScheme.surfaceContainerHighest.withValues(
-                                alpha: MinglitOpacity.muted,
-                              ),
+                              color: colorScheme.surfaceContainerHighest
+                                  .withValues(
+                                    alpha: MinglitOpacity.muted,
+                                  ),
                               child: Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
-                                    context.l10n.partyCreate_label_entryGroupHeader(
-                                      index + 1,
-                                    ),
+                                    context.l10n
+                                        .partyCreate_label_entryGroupHeader(
+                                          index + 1,
+                                        ),
                                     style: theme.textTheme.bodyMedium?.copyWith(
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                   IconButton(
                                     icon: const Icon(Icons.close, size: 18),
-                                    onPressed: () => coordinator.removePartyEntryGroup(
-                                      partyId,
-                                      group.id,
-                                      context,
-                                    ),
+                                    onPressed: () =>
+                                        coordinator.removePartyEntryGroup(
+                                          partyId,
+                                          group.id,
+                                          context,
+                                        ),
                                     color: colorScheme.onSurfaceVariant,
                                     visualDensity: VisualDensity.compact,
                                   ),
@@ -102,12 +105,12 @@ class PartyEntryGroupManagementScreen extends ConsumerWidget {
                                 initialGroup: group,
                               ),
                               child: Padding(
-                                padding:
-                                    const EdgeInsets.all(MinglitSpacing.medium),
+                                padding: const EdgeInsets.all(
+                                  MinglitSpacing.medium,
+                                ),
                                 child: EntryGroupDetail(
                                   group: group,
-                                  anyLabel:
-                                      context.l10n.entryGroup_option_any,
+                                  anyLabel: context.l10n.entryGroup_option_any,
                                   anyYearLabel:
                                       context.l10n.entryGroup_option_anyYear,
                                 ),

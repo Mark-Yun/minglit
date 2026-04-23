@@ -78,10 +78,12 @@ void main() {
     when(() => mockPartyRepo.getPartyById(any())).thenAnswer(
       (_) async => _makeParty(),
     );
-    when(() => mockTicketRepo.getTicketTemplatesByPartyId(any()))
-        .thenAnswer((_) async => []);
-    when(() => mockLocationRepo.getLocationById(any()))
-        .thenAnswer((_) async => null);
+    when(
+      () => mockTicketRepo.getTicketTemplatesByPartyId(any()),
+    ).thenAnswer((_) async => []);
+    when(
+      () => mockLocationRepo.getLocationById(any()),
+    ).thenAnswer((_) async => null);
   });
 
   group('PartyRuleManagementTab entry-condition tap (Fix #1733)', () {

@@ -167,7 +167,9 @@ class PartyDetailCoordinator {
         ...(party.entryGroups ?? const <EntryGroupTemplate>[]),
         group.copyWith(partyId: partyId),
       ];
-      await _ref.read(partyRepositoryProvider).updateParty(
+      await _ref
+          .read(partyRepositoryProvider)
+          .updateParty(
             party.copyWith(entryGroups: updatedGroups),
           );
       _ref.invalidate(partyDetailProvider(partyId));
@@ -223,11 +225,12 @@ class PartyDetailCoordinator {
     final loading = _ref.read(globalLoadingControllerProvider.notifier)..show();
     try {
       final party = await _ref.read(partyDetailProvider(partyId).future);
-      final updatedGroups =
-          (party.entryGroups ?? const <EntryGroupTemplate>[])
-              .where((g) => g.id != groupId)
-              .toList();
-      await _ref.read(partyRepositoryProvider).updateParty(
+      final updatedGroups = (party.entryGroups ?? const <EntryGroupTemplate>[])
+          .where((g) => g.id != groupId)
+          .toList();
+      await _ref
+          .read(partyRepositoryProvider)
+          .updateParty(
             party.copyWith(entryGroups: updatedGroups),
           );
       _ref.invalidate(partyDetailProvider(partyId));
