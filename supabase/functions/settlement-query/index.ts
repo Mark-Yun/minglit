@@ -1,15 +1,10 @@
-import { PortoneV2Client } from "../_shared/portone_client.ts";
+import { getPortoneClient } from "../_shared/portone_client.ts";
 import { successResponse, errorResponse, corsResponse } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
 import { initSentry, withHandler, log } from "../_shared/logger.ts";
 
 const FN = "settlement-query";
 
-const PORTONE_V2_API_KEY = Deno.env.get("PORTONE_V2_API_KEY");
-
-if (!PORTONE_V2_API_KEY) {
-  throw new Error("Missing required environment variable: PORTONE_V2_API_KEY");
-}
 
 initSentry();
 
@@ -37,7 +32,7 @@ Deno.serve(withHandler(async (req) => {
       return errorResponse("Missing or invalid type: must be 'settlements' or 'payouts'", 400);
     }
 
-    const portone = new PortoneV2Client(PORTONE_V2_API_KEY);
+    const portone = getPortoneClient();
 
     if (type === "settlements") {
       let result: Record<string, unknown>;
