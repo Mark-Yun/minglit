@@ -1,7 +1,7 @@
 part of 'event_detail_page.dart';
 
 class _EventDetailContent extends ConsumerStatefulWidget {
-  const _EventDetailContent({required this.event});
+  const _EventDetailContent({required this.event, super.key});
 
   final Event event;
 

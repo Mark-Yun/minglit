@@ -43,17 +43,33 @@ class EventDetailPage extends ConsumerWidget {
       }
     });
 
+    // Fix #1746: AnimatedSwitcher uses Stack during cross-fade transitions,
+    // so Expanded cannot be a direct descendant — keep Column/Expanded outside.
     return Scaffold(
       body: Column(
         children: [
           Expanded(
-            child: MinglitAsyncValueWidget(
-              value: eventAsync,
-              data: (event) => _EventDetailContent(event: event),
-              loading: () => const _EventDetailContentSkeleton(),
+            child: AnimatedSwitcher(
+              duration: MinglitAnimation.medium,
+              child: eventAsync.when(
+                data: (event) => _EventDetailContent(
+                  key: const ValueKey('event_detail_data'),
+                  event: event,
+                ),
+                loading: () => const _EventDetailContentSkeleton(
+                  key: ValueKey('event_detail_loading'),
+                ),
+                error: (e, st) => Center(
+                  key: const ValueKey('event_detail_error'),
+                  child: MinglitErrorState(
+                    title: '이벤트를 불러올 수 없습니다',
+                    onRetry: () =>
+                        ref.invalidate(eventDetailControllerProvider(eventId)),
+                  ),
+                ),
+              ),
             ),
           ),
-          // ignore: use_minglit_async_value_widget, returns skeleton/shrink for bottom bar
           eventAsync.when(
             data: (event) => _BottomTicketBar(event: event),
             loading: () => const _BottomTicketBarSkeleton(),
