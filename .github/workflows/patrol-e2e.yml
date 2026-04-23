@@ -84,11 +84,22 @@ jobs:
             patrol test
             --flavor dev
             --dart-define-from-file=../../minglit_env/dev/flutter.env
+            --target patrol_test/smoke_test.dart
+            --target patrol_test/flow_search_test.dart
             --target patrol_test/kakao_login_test.dart
             --target patrol_test/payment_pg_test.dart
             --target patrol_test/permission_grant_test.dart
 
-      - name: Upload test results
+      # Ref #1778: 성공/실패 모두 스크린샷 수집 (시나리오 스크린샷 파이프라인)
+      - name: Upload scenario screenshots
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: scenario-screenshots-${{ github.run_id }}
+          path: apps/app_user/build/app/outputs/connected_android_test_additional_output/
+          retention-days: 14
+
+      - name: Upload test results on failure
         if: failure()
         uses: actions/upload-artifact@v7
         with:
