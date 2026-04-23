@@ -15,7 +15,8 @@ Widget _scrollableRow({required int count, required double viewWidth}) {
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: count,
-        itemBuilder: (_, i) => SizedBox(key: ValueKey(i), width: 100, height: 40),
+        itemBuilder: (_, i) =>
+            SizedBox(key: ValueKey(i), width: 100, height: 40),
       ),
     ),
   );
@@ -68,7 +69,9 @@ void main() {
       expect(find.byIcon(Icons.chevron_right), findsOneWidget);
     });
 
-    testWidgets('MinglitChipGroup(scrollable)에 scroll affordance 적용', (tester) async {
+    testWidgets('MinglitChipGroup(scrollable)에 scroll affordance 적용', (
+      tester,
+    ) async {
       // MinglitHorizontalScrollGroup이 MinglitChipGroup 내부에 삽입되었는지 확인
       final chips = List.generate(
         20,

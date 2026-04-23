@@ -40,9 +40,7 @@ class _MinglitHorizontalScrollGroupState
   @override
   Widget build(BuildContext context) {
     final surfaceColor = Theme.of(context).colorScheme.surface;
-    final chevronColor = Theme.of(context)
-        .colorScheme
-        .onSurfaceVariant
+    final chevronColor = Theme.of(context).colorScheme.onSurfaceVariant
         // ignore: deprecated_member_use
         .withOpacity(0.4);
 
@@ -69,8 +67,6 @@ class _MinglitHorizontalScrollGroupState
                     width: _fadeWidth,
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
                         colors: [
                           surfaceColor,
                           // ignore: deprecated_member_use
