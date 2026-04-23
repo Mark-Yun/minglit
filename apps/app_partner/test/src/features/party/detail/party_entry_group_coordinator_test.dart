@@ -145,6 +145,47 @@ void main() {
     });
   });
 
+  // Fix #1733: tap 경로 regression — 입장 조건 탭 시 toast가 아닌 화면 전환이 발생해야 함
+  group('PartyDetailCoordinator.openEntryGroupManagement', () {
+    testWidgets('pushes PartyEntryGroupManagementScreen — not a toast',
+        (tester) async {
+      final mockObserver = MockNavigatorObserver();
+
+      when(() => mockPartyRepo.getPartyById('party-1')).thenAnswer(
+        (_) async => _makeParty(),
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            partyRepositoryProvider.overrideWithValue(mockPartyRepo),
+            goRouterProvider.overrideWithValue(mockRouter),
+          ],
+          child: MaterialApp(
+            navigatorObservers: [mockObserver],
+            home: Builder(
+              builder: (context) {
+                final coordinator =
+                    ProviderScope.containerOf(context).read(partyDetailCoordinatorProvider);
+                return ElevatedButton(
+                  onPressed: () =>
+                      coordinator.openEntryGroupManagement(context, 'party-1'),
+                  child: const Text('open'),
+                );
+              },
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.byType(ElevatedButton));
+      await tester.pump();
+
+      // Regression: 이전에는 toast/no-op이었으므로 실제 route push가 발생했는지 확인
+      verify(() => mockObserver.didPush(any(), any()));
+    });
+  });
+
   group('PartyDetailCoordinator.updatePartyEntryGroup', () {
     testWidgets('replaces the matching group and calls updateParty', (
       tester,

@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
-import 'package:app_partner/src/features/party/detail/widgets/party_entry_group_management_screen.dart';
+import 'package:app_partner/src/features/party/detail/party_detail_coordinator.dart';
 import 'package:app_partner/src/features/party/ticket/ticket_template_create_page.dart';
 import 'package:app_partner/src/features/party/ticket/widgets/party_tickets_summary.dart';
 import 'package:app_partner/src/features/party/widgets/party_entrance_condition_summary.dart';
@@ -74,19 +74,15 @@ class PartyRuleManagementTab extends ConsumerWidget {
     );
   }
 
-  // Fix #1733: navigate to entry group management screen instead of "under preparation" toast
+  // Fix #1733: Coordinator를 통해 입장 조건 편집 화면 진입 (위젯 직접 Navigator 호출 제거)
   void _showEntranceConditionsEdit(
     BuildContext context,
     WidgetRef ref,
     Party party,
   ) {
-    unawaited(
-      Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (_) => PartyEntryGroupManagementScreen(partyId: party.id),
-        ),
-      ),
-    );
+    ref
+        .read(partyDetailCoordinatorProvider)
+        .openEntryGroupManagement(context, party.id);
   }
 
   Future<void> _handleCreateTicket(BuildContext context, WidgetRef ref) async {

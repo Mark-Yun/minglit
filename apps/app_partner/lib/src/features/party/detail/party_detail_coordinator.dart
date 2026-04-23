@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
+import 'package:app_partner/src/features/party/detail/widgets/party_entry_group_management_screen.dart';
 import 'package:app_partner/src/features/party/widgets/party_basic_info_edit_screen.dart';
 import 'package:app_partner/src/features/party/widgets/party_capacity_contact_edit_screen.dart';
 import 'package:app_partner/src/features/party/widgets/party_location_edit_screen.dart';
@@ -153,6 +154,17 @@ class PartyDetailCoordinator {
     } finally {
       loading.hide();
     }
+  }
+
+  // Fix #1733: 입장 조건 편집 화면 진입 — Coordinator 경유로 중앙화 (위젯 직접 Navigator 호출 제거)
+  void openEntryGroupManagement(BuildContext context, String partyId) {
+    unawaited(
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => PartyEntryGroupManagementScreen(partyId: partyId),
+        ),
+      ),
+    );
   }
 
   Future<void> addPartyEntryGroup(

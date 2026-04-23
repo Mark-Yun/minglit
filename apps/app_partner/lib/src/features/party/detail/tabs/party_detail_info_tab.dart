@@ -1,6 +1,5 @@
 import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
 import 'package:app_partner/src/features/party/detail/party_detail_coordinator.dart';
-import 'package:app_partner/src/features/party/detail/widgets/party_entry_group_management_screen.dart';
 import 'package:app_partner/src/features/party/widgets/party_basic_info_summary.dart';
 import 'package:app_partner/src/features/party/widgets/party_capacity_summary.dart';
 import 'package:app_partner/src/features/party/widgets/party_contact_summary.dart';
@@ -140,17 +139,15 @@ class PartyDetailInfoTab extends ConsumerWidget {
     );
   }
 
-  // Fix #1733: navigate to entry group management screen
+  // Fix #1733: Coordinator를 통해 입장 조건 편집 화면 진입 (위젯 직접 Navigator 호출 제거)
   void _showEntranceConditionsEdit(
     BuildContext context,
     WidgetRef ref,
     Party party,
   ) {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => PartyEntryGroupManagementScreen(partyId: party.id),
-      ),
-    );
+    ref
+        .read(partyDetailCoordinatorProvider)
+        .openEntryGroupManagement(context, party.id);
   }
 
   Future<void> _handleUpdateLocation(
