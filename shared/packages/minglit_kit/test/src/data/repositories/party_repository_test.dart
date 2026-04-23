@@ -725,8 +725,11 @@ void main() {
 
   group('PartyRepository (matching)', () {
     group('replaceEntryGroupTemplates', () {
+      // Fix #1740: entry_groups(Event Level)에는 party_id 컬럼 없음 —
+      // entry_group_templates(Party Level) 테이블 사용으로 수정.
+
       test('completes with empty templates (delete only)', () async {
-        unawaited(mockTable(mockClient, 'entry_groups'));
+        unawaited(mockTable(mockClient, 'entry_group_templates'));
 
         await expectLater(
           repository.replaceEntryGroupTemplates('party_1', []),
@@ -735,7 +738,7 @@ void main() {
       });
 
       test('completes with templates (delete + insert)', () async {
-        unawaited(mockTable(mockClient, 'entry_groups'));
+        unawaited(mockTable(mockClient, 'entry_group_templates'));
 
         final templates = [
           const EntryGroupTemplate(
@@ -758,7 +761,7 @@ void main() {
         unawaited(
           mockTable(
             mockClient,
-            'entry_groups',
+            'entry_group_templates',
             shouldThrow: Exception('error'),
           ),
         );
@@ -768,6 +771,29 @@ void main() {
           throwsA(anything),
         );
       });
+
+      test(
+        'Fix #1740: uses entry_group_templates table (not entry_groups)',
+        () async {
+          final templatesBuilder = mockTable(
+            mockClient,
+            'entry_group_templates',
+          );
+
+          await repository.replaceEntryGroupTemplates('party_1', []);
+
+          final eqFilters = templatesBuilder.recordedFilters
+              .where((f) => f.method == 'eq')
+              .toList();
+          expect(
+            eqFilters.any((f) => f.column == 'party_id'),
+            isTrue,
+            reason: 'entry_group_templates must be filtered by party_id',
+          );
+          // entry_groups 테이블 호출 없음 확인
+          verifyNever(() => mockClient.from('entry_groups'));
+        },
+      );
     });
   });
 }

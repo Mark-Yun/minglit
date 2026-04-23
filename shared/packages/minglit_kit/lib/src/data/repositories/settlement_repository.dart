@@ -128,7 +128,8 @@ class SettlementRepository {
                   .select(
                     'id, adjustment_type, amount_signed, reason_code, status',
                   )
-                  .eq('settlement_item_id', itemId)
+                  // Fix #1739: adjustment_items FK 컬럼명은 related_settlement_item_id
+                  .eq('related_settlement_item_id', itemId)
               as List;
 
       final adjustmentsData = adjustmentsRaw
