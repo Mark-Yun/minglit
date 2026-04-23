@@ -4,7 +4,6 @@ import 'package:app_partner/src/features/party/widgets/party_verification_input.
 import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
-import 'package:uuid/uuid.dart';
 
 class EntryGroupEditorScreen extends ConsumerStatefulWidget {
   const EntryGroupEditorScreen({
@@ -45,8 +44,9 @@ class _EntryGroupEditorScreenState
   }
 
   void _submit() {
+    // Fix #1733: 새 그룹은 빈 id로 EF에 전송 → DB가 UUID 생성 (기존 그룹은 id 유지)
     final group = PartyEntryGroup(
-      id: widget.initialGroup?.id ?? const Uuid().v4(),
+      id: widget.initialGroup?.id ?? '',
       partyId: '', // Will be set by controller/repo
       gender: _gender,
       birthYearMin: _minYear,

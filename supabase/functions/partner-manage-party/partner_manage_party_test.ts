@@ -3,12 +3,12 @@ import {
   authenticatedJsonRequest,
   captureServeHandler,
   createFetchMock,
+  type FetchRoute,
   jsonRequest,
   jsonResponse,
   readJson,
   withEnv,
   withMockedFetch,
-  type FetchRoute,
 } from "../_test_utils/mock_http.ts";
 
 const TEST_USER_ID = "user-partner-owner";
@@ -44,7 +44,10 @@ function permRoute(hasPermission = true): FetchRoute {
     handler: () =>
       jsonResponse(
         hasPermission
-          ? { partner_id: TEST_PARTNER_ID, permissions: ["PARTNER_EDIT", "PARTY_MANAGE"] }
+          ? {
+            partner_id: TEST_PARTNER_ID,
+            permissions: ["PARTNER_EDIT", "PARTY_MANAGE"],
+          }
           : null,
       ),
   };
@@ -55,7 +58,10 @@ function permNoPartyManageRoute(): FetchRoute {
     matcher: (req) =>
       req.url.includes("partner_member_permissions") && req.method === "GET",
     handler: () =>
-      jsonResponse({ partner_id: TEST_PARTNER_ID, permissions: ["PARTNER_EDIT"] }),
+      jsonResponse({
+        partner_id: TEST_PARTNER_ID,
+        permissions: ["PARTNER_EDIT"],
+      }),
   };
 }
 
@@ -74,7 +80,8 @@ function selectLocationRoute(partnerId = TEST_PARTNER_ID): FetchRoute {
       req.url.includes("/rest/v1/locations") &&
       req.url.includes("select=") &&
       req.method === "GET",
-    handler: () => jsonResponse({ id: TEST_LOCATION_ID, partner_id: partnerId }),
+    handler: () =>
+      jsonResponse({ id: TEST_LOCATION_ID, partner_id: partnerId }),
   };
 }
 
@@ -98,7 +105,8 @@ function updateLocationRoute(): FetchRoute {
 function insertPartyErrorRoute(): FetchRoute {
   return {
     matcher: (req) =>
-      req.url.includes("/rest/v1/rpc/create_party_with_tags") && req.method === "POST",
+      req.url.includes("/rest/v1/rpc/create_party_with_tags") &&
+      req.method === "POST",
     handler: () => jsonResponse({ message: "insert error" }, { status: 500 }),
   };
 }
@@ -113,7 +121,11 @@ function selectPartyRoute(
       req.url.includes("select=") &&
       req.method === "GET",
     handler: () =>
-      jsonResponse({ id: TEST_PARTY_ID, partner_id: partnerId, location_id: locationId }),
+      jsonResponse({
+        id: TEST_PARTY_ID,
+        partner_id: partnerId,
+        location_id: locationId,
+      }),
   };
 }
 
@@ -148,7 +160,8 @@ function updatePartyErrorRoute(): FetchRoute {
 function rpcCreatePartyRoute(id = TEST_PARTY_ID): FetchRoute {
   return {
     matcher: (req) =>
-      req.url.includes("/rest/v1/rpc/create_party_with_tags") && req.method === "POST",
+      req.url.includes("/rest/v1/rpc/create_party_with_tags") &&
+      req.method === "POST",
     handler: () => jsonResponse(id),
   };
 }
@@ -156,15 +169,15 @@ function rpcCreatePartyRoute(id = TEST_PARTY_ID): FetchRoute {
 function rpcUpdatePartyTagsRoute(): FetchRoute {
   return {
     matcher: (req) =>
-      req.url.includes("/rest/v1/rpc/update_party_tags") && req.method === "POST",
+      req.url.includes("/rest/v1/rpc/update_party_tags") &&
+      req.method === "POST",
     handler: () => jsonResponse(null),
   };
 }
 
 function selectTagsRoute(tagIds: string[]): FetchRoute {
   return {
-    matcher: (req) =>
-      req.url.includes("/rest/v1/tags") && req.method === "GET",
+    matcher: (req) => req.url.includes("/rest/v1/tags") && req.method === "GET",
     handler: () => jsonResponse(tagIds.map((id) => ({ id }))),
   };
 }
@@ -173,8 +186,57 @@ function selectTagsRoute(tagIds: string[]): FetchRoute {
 function insertEntryGroupTemplatesRoute(): FetchRoute {
   return {
     matcher: (req) =>
-      req.url.includes("/rest/v1/entry_group_templates") && req.method === "POST",
+      req.url.includes("/rest/v1/entry_group_templates") &&
+      req.method === "POST",
     handler: () => jsonResponse([]),
+  };
+}
+
+function selectEntryGroupTemplatesRoute(ids: string[]): FetchRoute {
+  return {
+    matcher: (req) =>
+      req.url.includes("/rest/v1/entry_group_templates") &&
+      req.url.includes("select=id") &&
+      req.method === "GET",
+    handler: () => jsonResponse(ids.map((id) => ({ id }))),
+  };
+}
+
+function updateEntryGroupTemplateRoute(): FetchRoute {
+  return {
+    matcher: (req) =>
+      req.url.includes("/rest/v1/entry_group_templates") &&
+      req.method === "PATCH",
+    handler: () => new Response(null, { status: 200 }),
+  };
+}
+
+function deleteEntryGroupTemplatesRoute(): FetchRoute {
+  return {
+    matcher: (req) =>
+      req.url.includes("/rest/v1/entry_group_templates") &&
+      req.method === "DELETE",
+    handler: () => new Response(null, { status: 200 }),
+  };
+}
+
+function selectTicketTemplatesRoute(
+  tickets: Array<{ id: string; target_entry_group_ids: string[] }>,
+): FetchRoute {
+  return {
+    matcher: (req) =>
+      req.url.includes("/rest/v1/ticket_templates") &&
+      req.url.includes("target_entry_group_ids") &&
+      req.method === "GET",
+    handler: () => jsonResponse(tickets),
+  };
+}
+
+function updateTicketTemplateRoute(): FetchRoute {
+  return {
+    matcher: (req) =>
+      req.url.includes("/rest/v1/ticket_templates") && req.method === "PATCH",
+    handler: () => new Response(null, { status: 200 }),
   };
 }
 
@@ -191,7 +253,9 @@ function insertTicketTemplatesRoute(): FetchRoute {
 Deno.test({
   name: "OPTIONS returns CORS preflight",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const req = new Request("http://localhost", { method: "OPTIONS" });
     const res = await handler(req);
     assertEquals(res.status, 200);
@@ -201,7 +265,9 @@ Deno.test({
 Deno.test({
   name: "GET returns 405",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const req = new Request("http://localhost", { method: "GET" });
     const res = await handler(req);
     assertEquals(res.status, 405);
@@ -211,7 +277,9 @@ Deno.test({
 Deno.test({
   name: "Missing auth returns 401",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([authFailRoute()]);
 
     await withEnv(ENV, async () => {
@@ -227,7 +295,9 @@ Deno.test({
 Deno.test({
   name: "Invalid JSON body returns 400",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([authRoute()]);
 
     await withEnv(ENV, async () => {
@@ -250,7 +320,9 @@ Deno.test({
 Deno.test({
   name: "Missing action returns 400",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([authRoute()]);
 
     await withEnv(ENV, async () => {
@@ -268,12 +340,16 @@ Deno.test({
 Deno.test({
   name: "Unknown action returns 400",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([authRoute()]);
 
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
-        const req = authenticatedJsonRequest("http://localhost", { action: "delete" });
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "delete",
+        });
         const res = await handler(req);
         assertEquals(res.status, 400);
         const body = await readJson(res);
@@ -288,7 +364,9 @@ Deno.test({
 Deno.test({
   name: "create: party + location + templates — full atomic creation",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([
       authRoute(),
       permRoute(),
@@ -303,11 +381,30 @@ Deno.test({
         const req = authenticatedJsonRequest("http://localhost", {
           action: "create",
           partner_id: TEST_PARTNER_ID,
-          party: { title: "대학생 밍글", description: {}, max_participants: 20 },
-          location: { name: "강남 라운지", address: "서울 강남구", region_1: "서울", region_2: "강남구" },
+          party: {
+            title: "대학생 밍글",
+            description: {},
+            max_participants: 20,
+          },
+          location: {
+            name: "강남 라운지",
+            address: "서울 강남구",
+            region_1: "서울",
+            region_2: "강남구",
+          },
           entry_group_templates: [
-            { label: "남성", gender: "male", birth_year_min: 2000, birth_year_max: 2005 },
-            { label: "여성", gender: "female", birth_year_min: 2000, birth_year_max: 2005 },
+            {
+              label: "남성",
+              gender: "male",
+              birth_year_min: 2000,
+              birth_year_max: 2005,
+            },
+            {
+              label: "여성",
+              gender: "female",
+              birth_year_min: 2000,
+              birth_year_max: 2005,
+            },
           ],
           ticket_templates: [
             { name: "남성 티켓", price: 30000, quantity: 10 },
@@ -327,7 +424,9 @@ Deno.test({
 Deno.test({
   name: "create: with existing location_id",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([
       authRoute(),
       permRoute(),
@@ -356,7 +455,9 @@ Deno.test({
 Deno.test({
   name: "create: missing party title returns 400",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([authRoute(), permRoute()]);
 
     await withEnv(ENV, async () => {
@@ -378,7 +479,9 @@ Deno.test({
 Deno.test({
   name: "create: missing partner_id returns 400",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([authRoute()]);
 
     await withEnv(ENV, async () => {
@@ -399,7 +502,9 @@ Deno.test({
 Deno.test({
   name: "create: missing party object returns 400",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([authRoute()]);
 
     await withEnv(ENV, async () => {
@@ -418,7 +523,9 @@ Deno.test({
 Deno.test({
   name: "create: no partner membership returns 403",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([
       authRoute(),
       permRoute(false),
@@ -441,7 +548,9 @@ Deno.test({
 Deno.test({
   name: "create: no PARTY_MANAGE permission returns 403",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([
       authRoute(),
       permNoPartyManageRoute(),
@@ -464,7 +573,9 @@ Deno.test({
 Deno.test({
   name: "create: invalid gender in entry_group_templates returns 400",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([
       authRoute(),
       permRoute(),
@@ -491,7 +602,9 @@ Deno.test({
 Deno.test({
   name: "create: negative ticket price returns 400",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([
       authRoute(),
       permRoute(),
@@ -518,7 +631,9 @@ Deno.test({
 Deno.test({
   name: "create: location belonging to other partner returns 403",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([
       authRoute(),
       permRoute(),
@@ -536,7 +651,10 @@ Deno.test({
         const res = await handler(req);
         assertEquals(res.status, 403);
         const body = await readJson(res);
-        assertEquals(body.error, "Forbidden: location belongs to another partner");
+        assertEquals(
+          body.error,
+          "Forbidden: location belongs to another partner",
+        );
       });
     });
   },
@@ -547,7 +665,9 @@ Deno.test({
 Deno.test({
   name: "update: party title change",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([
       authRoute(),
       selectPartyRoute(),
@@ -574,7 +694,9 @@ Deno.test({
 Deno.test({
   name: "update: location change",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([
       authRoute(),
       selectPartyRoute(),
@@ -601,7 +723,9 @@ Deno.test({
 Deno.test({
   name: "update: missing party_id returns 400",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([authRoute()]);
 
     await withEnv(ENV, async () => {
@@ -622,7 +746,9 @@ Deno.test({
 Deno.test({
   name: "update: party not found returns 404",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([
       authRoute(),
       selectPartyNotFoundRoute(),
@@ -645,7 +771,9 @@ Deno.test({
 Deno.test({
   name: "update: other partner's party returns 403",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([
       authRoute(),
       selectPartyRoute("other-partner"),
@@ -669,7 +797,9 @@ Deno.test({
 Deno.test({
   name: "update: no fields to update returns 400",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([
       authRoute(),
       selectPartyRoute(),
@@ -691,36 +821,21 @@ Deno.test({
   },
 });
 
-// Fix #1733: update action with entry_group_templates — DELETE-then-INSERT persistence
 Deno.test({
-  name: "update: entry_group_templates are deleted and re-inserted",
+  name:
+    "update: entry_group_templates with id updates existing row and preserves id",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-
-    let deleteEntryGroupsCalled = false;
-    let insertEntryGroupsCalled = false;
-
-    const { fetchMock } = createFetchMock([
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const { fetchMock, calls } = createFetchMock([
       authRoute(),
       selectPartyRoute(),
       permRoute(),
       updatePartyRoute(),
-      {
-        matcher: (req: Request) =>
-          req.url.includes("/rest/v1/entry_group_templates") && req.method === "DELETE",
-        handler: () => {
-          deleteEntryGroupsCalled = true;
-          return new Response(null, { status: 200 });
-        },
-      },
-      {
-        matcher: (req: Request) =>
-          req.url.includes("/rest/v1/entry_group_templates") && req.method === "POST",
-        handler: () => {
-          insertEntryGroupsCalled = true;
-          return jsonResponse([]);
-        },
-      },
+      // Fix #1733: 기존 그룹 id 유지 시 DELETE/INSERT 대신 UPDATE 경로를 타야 함
+      selectEntryGroupTemplatesRoute(["egt_1"]),
+      updateEntryGroupTemplateRoute(),
     ]);
 
     await withEnv(ENV, async () => {
@@ -748,40 +863,186 @@ Deno.test({
       });
     });
 
-    assertEquals(deleteEntryGroupsCalled, true, "DELETE entry_group_templates was called");
-    assertEquals(insertEntryGroupsCalled, true, "INSERT entry_group_templates was called");
+    const entryGroupUpdates = calls.filter(
+      (c) =>
+        c.url.includes("/rest/v1/entry_group_templates") &&
+        c.method === "PATCH",
+    );
+    const entryGroupDeletes = calls.filter(
+      (c) =>
+        c.url.includes("/rest/v1/entry_group_templates") &&
+        c.method === "DELETE",
+    );
+    const entryGroupInserts = calls.filter(
+      (c) =>
+        c.url.includes("/rest/v1/entry_group_templates") && c.method === "POST",
+    );
+
+    assertEquals(entryGroupUpdates.length, 1);
+    assertEquals(entryGroupDeletes.length, 0);
+    assertEquals(entryGroupInserts.length, 0);
+    assertEquals(
+      JSON.parse(entryGroupUpdates[0].body ?? "{}"),
+      {
+        label: "남성 그룹",
+        gender: "male",
+        birth_year_min: 1990,
+        birth_year_max: 2000,
+        required_verification_ids: [],
+      },
+    );
+  },
+});
+
+Deno.test({
+  name: "update: entry_group_templates without id inserts new row",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const { fetchMock, calls } = createFetchMock([
+      authRoute(),
+      selectPartyRoute(),
+      permRoute(),
+      updatePartyRoute(),
+      // Fix #1733: 빈 id는 신규 그룹으로 간주되어 INSERT 경로를 타야 함
+      selectEntryGroupTemplatesRoute([]),
+      insertEntryGroupTemplatesRoute(),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "update",
+          party_id: TEST_PARTY_ID,
+          party: { title: "수정된 제목" },
+          entry_group_templates: [
+            {
+              id: "",
+              label: "신규 그룹",
+              gender: "female",
+              birth_year_min: 1995,
+              birth_year_max: 2005,
+              required_verification_ids: [],
+            },
+          ],
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 200);
+        const body = await readJson(res);
+        assertEquals(body.success, true);
+      });
+    });
+
+    const entryGroupInserts = calls.filter(
+      (c) =>
+        c.url.includes("/rest/v1/entry_group_templates") && c.method === "POST",
+    );
+    const entryGroupUpdates = calls.filter(
+      (c) =>
+        c.url.includes("/rest/v1/entry_group_templates") &&
+        c.method === "PATCH",
+    );
+
+    assertEquals(entryGroupInserts.length, 1);
+    assertEquals(entryGroupUpdates.length, 0);
+    assertEquals(
+      JSON.parse(entryGroupInserts[0].body ?? "[]"),
+      [
+        {
+          party_id: TEST_PARTY_ID,
+          label: "신규 그룹",
+          gender: "female",
+          birth_year_min: 1995,
+          birth_year_max: 2005,
+          required_verification_ids: [],
+        },
+      ],
+    );
+  },
+});
+
+Deno.test({
+  name:
+    "update: deleted entry group is removed from ticket_template target_entry_group_ids",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const { fetchMock, calls } = createFetchMock([
+      authRoute(),
+      selectPartyRoute(),
+      permRoute(),
+      updatePartyRoute(),
+      // Fix #1733: 삭제 대상 그룹을 ticket_templates에서 먼저 제거해 orphan 참조를 방지
+      selectEntryGroupTemplatesRoute(["egt_keep", "egt_delete"]),
+      selectTicketTemplatesRoute([
+        { id: "ticket_1", target_entry_group_ids: ["egt_keep", "egt_delete"] },
+        { id: "ticket_2", target_entry_group_ids: ["egt_keep"] },
+      ]),
+      updateTicketTemplateRoute(),
+      deleteEntryGroupTemplatesRoute(),
+      updateEntryGroupTemplateRoute(),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "update",
+          party_id: TEST_PARTY_ID,
+          entry_group_templates: [
+            {
+              id: "egt_keep",
+              label: "유지 그룹",
+              gender: "male",
+              birth_year_min: 1990,
+              birth_year_max: 2000,
+              required_verification_ids: [],
+            },
+          ],
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 200);
+        const body = await readJson(res);
+        assertEquals(body.success, true);
+      });
+    });
+
+    const ticketUpdates = calls.filter(
+      (c) =>
+        c.url.includes("/rest/v1/ticket_templates") && c.method === "PATCH",
+    );
+    const entryGroupDeletes = calls.filter(
+      (c) =>
+        c.url.includes("/rest/v1/entry_group_templates") &&
+        c.method === "DELETE",
+    );
+
+    assertEquals(ticketUpdates.length, 1);
+    assertEquals(JSON.parse(ticketUpdates[0].body ?? "{}"), {
+      target_entry_group_ids: ["egt_keep"],
+    });
+    assertEquals(entryGroupDeletes.length, 1);
   },
 });
 
 Deno.test({
   name: "update: empty entry_group_templates clears existing groups",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-
-    let deleteEntryGroupsCalled = false;
-    let insertEntryGroupsCalled = false;
-
-    const { fetchMock } = createFetchMock([
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const { fetchMock, calls } = createFetchMock([
       authRoute(),
       selectPartyRoute(),
       permRoute(),
       updatePartyRoute(),
-      {
-        matcher: (req: Request) =>
-          req.url.includes("/rest/v1/entry_group_templates") && req.method === "DELETE",
-        handler: () => {
-          deleteEntryGroupsCalled = true;
-          return new Response(null, { status: 200 });
-        },
-      },
-      {
-        matcher: (req: Request) =>
-          req.url.includes("/rest/v1/entry_group_templates") && req.method === "POST",
-        handler: () => {
-          insertEntryGroupsCalled = true;
-          return jsonResponse([]);
-        },
-      },
+      selectEntryGroupTemplatesRoute(["egt_1"]),
+      selectTicketTemplatesRoute([
+        { id: "ticket_1", target_entry_group_ids: ["egt_1"] },
+      ]),
+      updateTicketTemplateRoute(),
+      deleteEntryGroupTemplatesRoute(),
     ]);
 
     await withEnv(ENV, async () => {
@@ -799,8 +1060,18 @@ Deno.test({
       });
     });
 
-    assertEquals(deleteEntryGroupsCalled, true, "DELETE entry_group_templates was called on empty array");
-    assertEquals(insertEntryGroupsCalled, false, "INSERT entry_group_templates was NOT called for empty array");
+    const entryGroupDeletes = calls.filter(
+      (c) =>
+        c.url.includes("/rest/v1/entry_group_templates") &&
+        c.method === "DELETE",
+    );
+    const entryGroupInserts = calls.filter(
+      (c) =>
+        c.url.includes("/rest/v1/entry_group_templates") && c.method === "POST",
+    );
+
+    assertEquals(entryGroupDeletes.length, 1);
+    assertEquals(entryGroupInserts.length, 0);
   },
 });
 
@@ -809,7 +1080,9 @@ Deno.test({
 Deno.test({
   name: "update_status: active → closed",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([
       authRoute(),
       selectPartyRoute(),
@@ -836,7 +1109,9 @@ Deno.test({
 Deno.test({
   name: "update_status: invalid status returns 400",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([authRoute()]);
 
     await withEnv(ENV, async () => {
@@ -858,7 +1133,9 @@ Deno.test({
 Deno.test({
   name: "update_status: missing party_id returns 400",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([authRoute()]);
 
     await withEnv(ENV, async () => {
@@ -877,7 +1154,9 @@ Deno.test({
 Deno.test({
   name: "update_status: party not found returns 404",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([
       authRoute(),
       selectPartyNotFoundRoute(),
@@ -900,7 +1179,9 @@ Deno.test({
 Deno.test({
   name: "update_status: other partner's party returns 403",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([
       authRoute(),
       selectPartyRoute("other-partner"),
@@ -926,7 +1207,9 @@ Deno.test({
 Deno.test({
   name: "create: with tag_ids 3 tags — party_tags inserted",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const tagIds = [
       "00000000-0000-0000-0000-000000000001",
       "00000000-0000-0000-0000-000000000002",
@@ -961,7 +1244,9 @@ Deno.test({
 Deno.test({
   name: "create: without tag_ids — party created without tags",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     // party_tags INSERT route 없이도 성공해야 함
     const { fetchMock } = createFetchMock([
       authRoute(),
@@ -988,7 +1273,9 @@ Deno.test({
 Deno.test({
   name: "create: tag_ids with 6 items returns 400",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     // tag_ids validation now runs before any DB write — no rpcCreatePartyRoute needed
     const { fetchMock } = createFetchMock([
       authRoute(),
@@ -1020,10 +1307,13 @@ Deno.test({
 });
 
 Deno.test({
-  name: "create: tag_ids with nonexistent IDs returns 400 — no party INSERT attempted",
+  name:
+    "create: tag_ids with nonexistent IDs returns 400 — no party INSERT attempted",
   fn: async () => {
     // Fix #1136: DB existence check on create path — orphaned party prevented
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const requestedIds = [
       "00000000-0000-0000-0000-000000000001",
       "00000000-0000-0000-0000-000000000099", // nonexistent
@@ -1049,7 +1339,9 @@ Deno.test({
         assertEquals(body.error, "One or more tag_ids do not exist");
         // Verify no create_party_with_tags RPC was called — orphan prevention confirmed
         const partyInserts = calls.filter(
-          (c) => c.url.includes("/rest/v1/rpc/create_party_with_tags") && c.method === "POST",
+          (c) =>
+            c.url.includes("/rest/v1/rpc/create_party_with_tags") &&
+            c.method === "POST",
         );
         assertEquals(partyInserts.length, 0);
       });
@@ -1062,7 +1354,9 @@ Deno.test({
 Deno.test({
   name: "update: tag_ids provided — existing tags replaced",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     // INSERT new tags first, then DELETE old ones not in new set (safe order)
     const tagIds = [
       "00000000-0000-0000-0000-000000000010",
@@ -1096,7 +1390,9 @@ Deno.test({
 Deno.test({
   name: "update: tag_ids empty array — all tags removed",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     // Fix #1223: update_party_tags RPC handles empty array (clears all tags) atomically
     const { fetchMock } = createFetchMock([
       authRoute(),
@@ -1124,7 +1420,9 @@ Deno.test({
 Deno.test({
   name: "update: tag_ids undefined — tags not changed",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     // tag_ids 없으면 party_tags route 불필요
     const { fetchMock } = createFetchMock([
       authRoute(),
@@ -1152,7 +1450,9 @@ Deno.test({
 Deno.test({
   name: "update: tag_ids with 6 items returns 400",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([
       authRoute(),
       selectPartyRoute(),
@@ -1187,7 +1487,9 @@ Deno.test({
 Deno.test({
   name: "create: tag_ids not array returns 400 — no party INSERT attempted",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     // No rpcCreatePartyRoute — if create_party_with_tags RPC were called it would throw "Unhandled fetch"
     const { fetchMock, calls } = createFetchMock([
       authRoute(),
@@ -1207,7 +1509,10 @@ Deno.test({
         const body = await readJson(res);
         assertEquals(body.error, "tag_ids must be an array");
         // Verify no create_party_with_tags RPC was called
-        const partyInserts = calls.filter((c) => c.url.includes("/rest/v1/rpc/create_party_with_tags") && c.method === "POST");
+        const partyInserts = calls.filter((c) =>
+          c.url.includes("/rest/v1/rpc/create_party_with_tags") &&
+          c.method === "POST"
+        );
         assertEquals(partyInserts.length, 0);
       });
     });
@@ -1217,7 +1522,9 @@ Deno.test({
 Deno.test({
   name: "update: tag_ids not array returns 400 — no party PATCH attempted",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     // No updatePartyRoute — if party PATCH were attempted it would throw "Unhandled fetch"
     const { fetchMock, calls } = createFetchMock([
       authRoute(),
@@ -1238,7 +1545,9 @@ Deno.test({
         const body = await readJson(res);
         assertEquals(body.error, "tag_ids must be an array");
         // Verify no party PATCH was attempted
-        const partyPatches = calls.filter((c) => c.url.includes("/rest/v1/parties") && c.method === "PATCH");
+        const partyPatches = calls.filter((c) =>
+          c.url.includes("/rest/v1/parties") && c.method === "PATCH"
+        );
         assertEquals(partyPatches.length, 0);
       });
     });
@@ -1250,7 +1559,9 @@ Deno.test({
 Deno.test({
   name: "create: tag_ids with invalid UUID format returns 400",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock, calls } = createFetchMock([
       authRoute(),
       permRoute(),
@@ -1270,7 +1581,9 @@ Deno.test({
         assertEquals(body.error, "tag_ids[0] must be a valid UUID");
         // Verify no create_party_with_tags RPC was called
         const partyInserts = calls.filter(
-          (c) => c.url.includes("/rest/v1/rpc/create_party_with_tags") && c.method === "POST",
+          (c) =>
+            c.url.includes("/rest/v1/rpc/create_party_with_tags") &&
+            c.method === "POST",
         );
         assertEquals(partyInserts.length, 0);
       });
@@ -1281,7 +1594,9 @@ Deno.test({
 Deno.test({
   name: "create: duplicate tag_ids are deduplicated",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const uniqueId = "00000000-0000-0000-0000-000000000001";
     // Fix #1223: create_party_with_tags RPC handles both party + deduped tags atomically
     const { fetchMock } = createFetchMock([
@@ -1311,7 +1626,9 @@ Deno.test({
 Deno.test({
   name: "update: tag_ids with invalid UUID format returns 400",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock, calls } = createFetchMock([
       authRoute(),
       selectPartyRoute(),
