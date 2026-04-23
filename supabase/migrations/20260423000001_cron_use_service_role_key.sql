@@ -10,7 +10,7 @@
 -- 대상 (publishable_key → service_role_key):
 --   backend-simulation, process-notifications, settlement-reconciliation-daily,
 --   settlement-register-transfers, settlement-payout-sync, settlement-alarm-check,
---   ai-extract-tags
+--   sync_github_stats, ai-extract-tags
 --
 -- 제외 (이미 service_role_key 사용 중):
 --   cleanup-retention (20260421000003), cleanup-blocked-dis / process-pending-deletions (20260330000006)
@@ -229,7 +229,40 @@ SELECT cron.schedule(
 );
 
 -- ============================================================
--- 7. ai-extract-tags  (매분)
+-- 7. sync_github_stats  (매일 20:30 UTC)
+-- ============================================================
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'sync_github_stats') THEN
+    PERFORM cron.unschedule('sync_github_stats');
+  END IF;
+END $$;
+
+SELECT cron.schedule(
+  'sync_github_stats',
+  '30 20 * * *',
+  $$
+    SELECT net.http_post(
+      url := (
+        SELECT decrypted_secret FROM vault.decrypted_secrets
+        WHERE name = 'supabase_url' LIMIT 1
+      ) || '/functions/v1/github-stats-sync',
+      headers := (
+        jsonb_build_object(
+          'Content-Type', 'application/json',
+          'Authorization', 'Bearer ' || (
+            SELECT decrypted_secret FROM vault.decrypted_secrets
+            WHERE name = 'service_role_key' LIMIT 1
+          )
+        )
+      ),
+      body := '{}'::jsonb
+    ) AS request_id;
+  $$
+);
+
+-- ============================================================
+-- 8. ai-extract-tags  (매분)
 -- ============================================================
 DO $$
 BEGIN

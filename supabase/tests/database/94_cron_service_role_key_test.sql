@@ -2,7 +2,7 @@
 -- publishable_key(anon JWT) 사용 시 requireServiceRole() 가드에서 401 반환
 
 BEGIN;
-SELECT plan(7);
+SELECT plan(8);
 
 -- Helper: 특정 cron job의 Authorization 헤더가 service_role_key를 참조하는지 확인
 CREATE OR REPLACE FUNCTION _check_cron_uses_service_role(p_jobname text)
@@ -59,6 +59,12 @@ SELECT ok(
 SELECT ok(
   _check_cron_uses_service_role('ai-extract-tags'),
   'ai-extract-tags cron uses service_role_key (not publishable_key)'
+);
+
+-- 8. sync_github_stats: service_role_key 사용
+SELECT ok(
+  _check_cron_uses_service_role('sync_github_stats'),
+  'sync_github_stats cron uses service_role_key (not publishable_key)'
 );
 
 SELECT * FROM finish();
