@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/src/theme/minglit_theme.dart';
+import 'package:minglit_kit/src/ui/widgets/common/minglit_horizontal_scroll_group.dart';
 
 /// 가로 스크롤 또는 줄바꿈 칩 그룹 레이아웃 위젯.
 ///
@@ -51,12 +52,14 @@ class MinglitChipGroup extends StatelessWidget {
 
     return SizedBox(
       height: height,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: padding,
-        itemCount: children.length,
-        separatorBuilder: (context, index) => SizedBox(width: spacing),
-        itemBuilder: (_, i) => children[i],
+      child: MinglitHorizontalScrollGroup(
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          padding: padding,
+          itemCount: children.length,
+          separatorBuilder: (context, index) => SizedBox(width: spacing),
+          itemBuilder: (_, i) => children[i],
+        ),
       ),
     );
   }
