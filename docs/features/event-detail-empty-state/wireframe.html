@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>이벤트 상세 — 상세 소개 빈 상태 (#1757)</title>
+<style>
+  :root {
+    --bg: #f7f7fa;
+    --surface: #ffffff;
+    --surface-container-lowest: #fafafa;
+    --on-surface: #1a1c1e;
+    --on-surface-variant: #6b7280;
+    --outline-variant: #d8dadf;
+    --primary: #5E4AE3;
+    --radius-card: 16px;
+    --radius-lg: 12px;
+    --screen-edge: 16px;
+    --section-gap: 40px;
+    --xlarge: 32px;
+    --medium: 12px;
+    --small: 8px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Apple SD Gothic Neo", sans-serif;
+    background: #eceef2;
+    color: var(--on-surface);
+    padding: 32px 16px 64px;
+  }
+  h1 {
+    text-align: center;
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0 0 4px;
+  }
+  .subtitle {
+    text-align: center;
+    color: var(--on-surface-variant);
+    font-size: 13px;
+    margin: 0 0 32px;
+  }
+  .comparison {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .phone-col {
+    flex: 0 0 auto;
+  }
+  .phone-label {
+    text-align: center;
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 12px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    display: inline-block;
+  }
+  .phone-label.as-is {
+    background: #fee;
+    color: #a03a3a;
+  }
+  .phone-label.to-be {
+    background: #e8f5ec;
+    color: #2e7d4a;
+  }
+  .phone {
+    width: 360px;
+    height: 720px;
+    background: var(--surface);
+    border-radius: 32px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #d8dadf;
+  }
+  .status-bar {
+    height: 28px;
+    background: var(--surface);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0 16px;
+    font-size: 11px;
+    color: var(--on-surface-variant);
+  }
+  .app-bar {
+    height: 48px;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    gap: 8px;
+    border-bottom: 1px solid var(--outline-variant);
+  }
+  .app-bar .icon {
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--on-surface);
+  }
+  .app-bar .title {
+    flex: 1;
+    font-weight: 600;
+    font-size: 15px;
+  }
+  .scroll-area {
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: 32px;
+  }
+  /* Section 1 — hero */
+  .hero {
+    width: 100%;
+    height: 160px;
+    background: linear-gradient(135deg, #8a7bff 0%, #5E4AE3 100%);
+    position: relative;
+  }
+  .hero::after {
+    content: "이벤트 이미지";
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255,255,255,0.8);
+    font-size: 12px;
+  }
+  .hero-meta {
+    padding: 16px var(--screen-edge) 0;
+  }
+  .hero-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .hero-sub {
+    font-size: 12px;
+    color: var(--on-surface-variant);
+  }
+  /* Section separators */
+  .section {
+    padding: 0 var(--screen-edge);
+    margin-top: var(--section-gap);
+  }
+  .section-title-row {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--on-surface-variant);
+    margin-bottom: 12px;
+  }
+  /* AS-IS plain text */
+  .as-is-empty {
+    padding: 0 var(--screen-edge);
+    margin-top: var(--section-gap);
+    font-size: 14px;
+    color: var(--on-surface);
+  }
+  /* TO-BE empty state card */
+  .empty-card {
+    background: var(--surface-container-lowest);
+    border-radius: var(--radius-card);
+    padding: var(--xlarge);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .empty-card .ic {
+    width: 32px;
+    height: 32px;
+    color: var(--outline-variant);
+    margin-bottom: var(--medium);
+  }
+  .empty-card .ic svg {
+    width: 100%; height: 100%;
+  }
+  .empty-card .t {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--on-surface);
+    margin-bottom: var(--small);
+  }
+  .empty-card .s {
+    font-size: 14px;
+    color: var(--on-surface-variant);
+    line-height: 1.5;
+  }
+  /* next section preview */
+  .next-section {
+    padding: 20px var(--screen-edge);
+    margin-top: var(--section-gap);
+    border-top: 1px dashed var(--outline-variant);
+    color: var(--on-surface-variant);
+    font-size: 12px;
+    text-align: center;
+  }
+  .annotations {
+    max-width: 820px;
+    margin: 48px auto 0;
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 24px 28px;
+    border: 1px solid var(--outline-variant);
+  }
+  .annotations h2 {
+    font-size: 16px;
+    margin: 0 0 12px;
+  }
+  .annotations ul {
+    margin: 0;
+    padding-left: 20px;
+    color: #333;
+    font-size: 14px;
+    line-height: 1.8;
+  }
+  .annotations code {
+    background: #f1f1f4;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+  }
+  .tokens {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 24px;
+    margin-top: 12px;
+  }
+  .tokens div {
+    font-size: 13px;
+    color: #444;
+  }
+  .tokens strong {
+    color: #000;
+  }
+</style>
+</head>
+<body>
+  <h1>이벤트 상세 — "상세 소개" 빈 상태</h1>
+  <p class="subtitle">Issue #1757 · 소유: needs-uiux-claude-1 · AS-IS vs TO-BE</p>
+
+  <div class="comparison">
+    <!-- AS-IS -->
+    <div class="phone-col">
+      <div style="text-align:center;">
+        <span class="phone-label as-is">AS-IS (현재)</span>
+      </div>
+      <div class="phone">
+        <div class="status-bar">9:41</div>
+        <div class="app-bar">
+          <div class="icon">←</div>
+          <div class="title">이벤트 상세</div>
+          <div class="icon">⋮</div>
+        </div>
+        <div class="scroll-area">
+          <div class="hero"></div>
+          <div class="hero-meta">
+            <div class="hero-title">[QA] 아트 & 문화 이벤트</div>
+            <div class="hero-sub">서울 강남 · 5월 19일 22:27 · 무료</div>
+          </div>
+          <div class="as-is-empty">상세 소개 정보가 없습니다.</div>
+          <div class="next-section">— 참가 현황 섹션 —</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TO-BE -->
+    <div class="phone-col">
+      <div style="text-align:center;">
+        <span class="phone-label to-be">TO-BE (개선)</span>
+      </div>
+      <div class="phone">
+        <div class="status-bar">9:41</div>
+        <div class="app-bar">
+          <div class="icon">←</div>
+          <div class="title">이벤트 상세</div>
+          <div class="icon">⋮</div>
+        </div>
+        <div class="scroll-area">
+          <div class="hero"></div>
+          <div class="hero-meta">
+            <div class="hero-title">[QA] 아트 & 문화 이벤트</div>
+            <div class="hero-sub">서울 강남 · 5월 19일 22:27 · 무료</div>
+          </div>
+          <div class="section">
+            <div class="empty-card">
+              <div class="ic">
+                <!-- Icons.description_outlined equivalent -->
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+                  <path d="M14 3v6h6"/>
+                  <path d="M8 13h8"/>
+                  <path d="M8 17h6"/>
+                </svg>
+              </div>
+              <div class="t">아직 상세 소개가 없어요</div>
+              <div class="s">궁금한 점은 호스트에게<br/>문의해 보세요.</div>
+            </div>
+          </div>
+          <div class="next-section">— 참가 현황 섹션 —</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="annotations">
+    <h2>디자인 결정 요약</h2>
+    <ul>
+      <li><strong>컴포넌트</strong> — <code>MinglitEmptyState.card</code> (이미 디자인 시스템에 존재, 재사용).</li>
+      <li><strong>아이콘</strong> — <code>Icons.description_outlined</code>. 섹션 성격(본문/설명)을 중립적으로 암시.</li>
+      <li><strong>카피</strong> — 현재 "없습니다"(선언형) → "아직 … 없어요"(진행형 + 대화적). 호스트를 탓하지 않으면서도 미래 가능성을 열어둔다.</li>
+      <li><strong>서브카피</strong> — "궁금한 점은 호스트에게 문의해 보세요." 로 유저에게 <em>다음 액션</em>을 제시 (디자인 시 데드엔드 방지).</li>
+      <li><strong>여백</strong> — 기존 섹션 간격(<code>sectionGap 40px</code>, <code>screenEdge 16px</code>)을 그대로 유지. 카드 내부 패딩은 <code>xlarge 32px</code>.</li>
+      <li><strong>배경/라운드</strong> — <code>surfaceContainerLowest</code> + <code>MinglitRadius.card(16px)</code>. 다크모드 자동 대응.</li>
+    </ul>
+
+    <h2 style="margin-top:20px;">토큰 (참고)</h2>
+    <div class="tokens">
+      <div><strong>Icon size</strong> · MinglitIconSize.xlarge (32px)</div>
+      <div><strong>Icon color</strong> · colorScheme.outlineVariant</div>
+      <div><strong>Title</strong> · textTheme.titleMedium</div>
+      <div><strong>Subtitle</strong> · textTheme.bodyMedium · onSurfaceVariant</div>
+      <div><strong>Card bg</strong> · colorScheme.surfaceContainerLowest</div>
+      <div><strong>Card radius</strong> · MinglitRadius.card (16px)</div>
+      <div><strong>Card inner padding</strong> · MinglitSpacing.xlarge (32px)</div>
+      <div><strong>Title→Subtitle gap</strong> · MinglitSpacing.small (8px)</div>
+    </div>
+  </div>
+</body>
+</html>
