@@ -719,3 +719,27 @@ BEGIN
     VALUES (party_id_, '일반 참가권', 0, 20);
   END IF;
 END $$;
+
+-- ── Phase 9: Backfill image_urls for imageless hotplace partner parties ───────
+-- Fix #1745: partner_hotplace_* 파트너 소속 파티 중 image_urls 미설정 파티에
+-- picsum placeholder 이미지 채움. E2E 자동화가 생성한 파티(예: [E2E] 네트워킹_edit)
+-- 에도 적용돼 홈 화면 이벤트 카드 broken placeholder 제거.
+-- 멱등: 이미 image_urls가 설정된 파티는 건드리지 않음.
+DO $$
+DECLARE
+  hp_partner_id uuid;
+  hp_biz_number text;
+BEGIN
+  FOREACH hp_biz_number IN ARRAY ARRAY['000-00-00000', '000-00-00001', '000-00-00002']
+  LOOP
+    SELECT id INTO hp_partner_id FROM public.partners WHERE biz_number = hp_biz_number;
+    IF hp_partner_id IS NULL THEN CONTINUE; END IF;
+
+    UPDATE public.parties
+    SET image_urls = ARRAY[
+      'https://picsum.photos/seed/minglit-hotplace-' || replace(hp_biz_number, '-', '') || '/800/600'
+    ]
+    WHERE partner_id = hp_partner_id
+      AND (image_urls IS NULL OR array_length(image_urls, 1) IS NULL);
+  END LOOP;
+END $$;
