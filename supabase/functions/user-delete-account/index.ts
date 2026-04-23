@@ -5,6 +5,7 @@ import {
   successResponse,
 } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
+import { parseJsonBody } from "../_shared/request_utils.ts";
 import { initSentry, log, withHandler, withSpan } from "../_shared/logger.ts";
 
 const FN = "user-delete-account";
@@ -32,11 +33,15 @@ async function parseRequestBody(
     return {};
   }
 
-  try {
-    return JSON.parse(raw) as DeleteAccountRequest;
-  } catch {
-    return errorResponse("Invalid JSON body", 400);
-  }
+  const body = await parseJsonBody(
+    new Request(req.url, {
+      method: req.method,
+      headers: req.headers,
+      body: raw,
+    }),
+  );
+  if (body instanceof Response) return body;
+  return body as DeleteAccountRequest;
 }
 
 Deno.serve(withHandler(async (req) => {

@@ -3,7 +3,8 @@ import { createServiceClient } from "../_shared/supabase_client.ts";
 import { getPortoneClient } from "../_shared/portone_client.ts";
 import { successResponse, errorResponse, corsResponse } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
-import { initSentry, withHandler, log } from "../_shared/logger.ts";
+import { parseJsonBody } from "../_shared/request_utils.ts";
+import { initSentry, log, withHandler } from "../_shared/logger.ts";
 
 const FN = "partner-sync";
 
@@ -16,14 +17,10 @@ Deno.serve(withHandler(async (req) => {
   const auth = await requireAuth(req);
   if (auth instanceof Response) return auth;
   try {
-    let reqBody: Record<string, unknown>;
-    try {
-      reqBody = await req.json();
-    } catch {
-      return errorResponse("Invalid JSON body", 400);
-    }
+    const body = await parseJsonBody(req);
+    if (body instanceof Response) return body;
 
-    const { partner_id } = reqBody as { partner_id?: string };
+    const { partner_id } = body as { partner_id?: string };
     if (!partner_id) {
       return errorResponse("Missing partner_id", 400);
     }
@@ -41,7 +38,11 @@ Deno.serve(withHandler(async (req) => {
     }
 
     if (partner.portone_partner_id) {
-      return successResponse({ success: true, portone_partner_id: partner.portone_partner_id, skipped: true });
+      return successResponse({
+        success: true,
+        portone_partner_id: partner.portone_partner_id,
+        skipped: true,
+      });
     }
 
     const portone = getPortoneClient();
@@ -53,7 +54,12 @@ Deno.serve(withHandler(async (req) => {
       });
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e);
-      log({ function: FN, level: "error", message: "PortOne createPartner error", metadata: { detail: message } });
+      log({
+        function: FN,
+        level: "error",
+        message: "PortOne createPartner error",
+        metadata: { detail: message },
+      });
       return errorResponse("Failed to create PortOne partner", 502);
     }
 
@@ -63,15 +69,27 @@ Deno.serve(withHandler(async (req) => {
       .eq("id", partner_id);
 
     if (updateError) {
-      log({ function: FN, level: "error", message: "DB Update Error", metadata: { detail: updateError } });
+      log({
+        function: FN,
+        level: "error",
+        message: "DB Update Error",
+        metadata: { detail: updateError },
+      });
       return errorResponse("Failed to save portone_partner_id", 500);
     }
 
-    return successResponse({ success: true, portone_partner_id: portonePartner.id });
-
+    return successResponse({
+      success: true,
+      portone_partner_id: portonePartner.id,
+    });
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
-    log({ function: FN, level: "error", message: "Error in partner-sync", metadata: { detail: message } });
+    log({
+      function: FN,
+      level: "error",
+      message: "Error in partner-sync",
+      metadata: { detail: message },
+    });
     return errorResponse(message, 500);
   }
 }));

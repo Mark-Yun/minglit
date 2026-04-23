@@ -1,9 +1,18 @@
 import { createServiceClient } from "../_shared/supabase_client.ts";
-import { successResponse, errorResponse, corsResponse } from "../_shared/response_utils.ts";
+import {
+  corsResponse,
+  errorResponse,
+  successResponse,
+} from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
-import { initSentry, withHandler, withSpan, log } from "../_shared/logger.ts";
+import { parseJsonBody } from "../_shared/request_utils.ts";
+import { initSentry, log, withHandler, withSpan } from "../_shared/logger.ts";
 import { initStatsig, logStatsigEvent } from "../_shared/statsig_utils.ts";
-import { verifyRefundEligibility, executeRefund, RefundError } from "../_shared/refund_utils.ts";
+import {
+  executeRefund,
+  RefundError,
+  verifyRefundEligibility,
+} from "../_shared/refund_utils.ts";
 
 const FN = "user-cancel-order";
 
@@ -19,14 +28,10 @@ Deno.serve(withHandler(async (req) => {
 
   try {
     // 1. Parse Request
-    let reqBody: Record<string, unknown>;
-    try {
-      reqBody = await req.json();
-    } catch {
-      return errorResponse("Invalid JSON body", 400);
-    }
+    const body = await parseJsonBody(req);
+    if (body instanceof Response) return body;
 
-    const { event_id, reason } = reqBody as {
+    const { event_id, reason } = body as {
       event_id?: string;
       reason?: string;
     };
@@ -40,13 +45,17 @@ Deno.serve(withHandler(async (req) => {
 
     // 3. Fetch application by (event_id, user_id)
     const { data: application, error: appError } = await withSpan(
-      "db.query.event_applications", "db.query",
-      () => supabase
-        .from("event_applications")
-        .select("id, status, payment_id, payment_amount, paid_at, refund_status, event_id, user_id")
-        .eq("event_id", event_id)
-        .eq("user_id", userId)
-        .single(),
+      "db.query.event_applications",
+      "db.query",
+      () =>
+        supabase
+          .from("event_applications")
+          .select(
+            "id, status, payment_id, payment_amount, paid_at, refund_status, event_id, user_id",
+          )
+          .eq("event_id", event_id)
+          .eq("user_id", userId)
+          .single(),
     );
 
     if (appError || !application) {
@@ -60,26 +69,31 @@ Deno.serve(withHandler(async (req) => {
     }
 
     // 5. Branch: pre-payment vs post-payment
-    const isPaid = status === "paid" || status === "pending_review" || status === "approved";
+    const isPaid = status === "paid" || status === "pending_review" ||
+      status === "approved";
     const isPrePayment = status === "pending" || status === "payment_failed";
 
     if (isPrePayment) {
       // Pre-payment cancellation: delete verification_submissions + delete application
       await withSpan(
-        "db.delete.verification_submissions", "db.delete",
-        () => supabase
-          .from("verification_submissions")
-          .delete()
-          .eq("application_id", application.id)
-          .eq("status", "pending"),
+        "db.delete.verification_submissions",
+        "db.delete",
+        () =>
+          supabase
+            .from("verification_submissions")
+            .delete()
+            .eq("application_id", application.id)
+            .eq("status", "pending"),
       );
 
       await withSpan(
-        "db.delete.event_applications", "db.delete",
-        () => supabase
-          .from("event_applications")
-          .delete()
-          .eq("id", application.id),
+        "db.delete.event_applications",
+        "db.delete",
+        () =>
+          supabase
+            .from("event_applications")
+            .delete()
+            .eq("id", application.id),
       );
 
       logStatsigEvent(userId, "order_cancelled", undefined, {
@@ -96,23 +110,35 @@ Deno.serve(withHandler(async (req) => {
 
       // Fix #1652: payment_amount=null means damaged data — reject, do not treat as free.
       if (paymentAmount === null) {
-        log({ function: FN, level: "error", message: "Damaged data: payment_amount=null on paid application", metadata: { application_id: application.id } });
+        log({
+          function: FN,
+          level: "error",
+          message: "Damaged data: payment_amount=null on paid application",
+          metadata: { application_id: application.id },
+        });
         return errorResponse("결제 정보가 손상된 신청입니다", 400);
       }
 
       // Free event (payment_amount === 0): verify event hasn't started, then cancel.
       if (paymentAmount === 0) {
         const { data: eventData, error: eventError } = await withSpan(
-          "db.query.events.free_cancel", "db.query",
-          () => supabase
-            .from("events")
-            .select("start_time")
-            .eq("id", event_id)
-            .single(),
+          "db.query.events.free_cancel",
+          "db.query",
+          () =>
+            supabase
+              .from("events")
+              .select("start_time")
+              .eq("id", event_id)
+              .single(),
         );
 
         if (eventError || !eventData) {
-          log({ function: FN, level: "error", message: "Failed to fetch event for free cancel", metadata: { detail: eventError } });
+          log({
+            function: FN,
+            level: "error",
+            message: "Failed to fetch event for free cancel",
+            metadata: { detail: eventError },
+          });
           return errorResponse("이벤트 정보를 가져올 수 없습니다", 500);
         }
 
@@ -123,18 +149,25 @@ Deno.serve(withHandler(async (req) => {
         }
 
         const { error: updateError } = await withSpan(
-          "db.update.event_applications.cancel", "db.update",
-          () => supabase
-            .from("event_applications")
-            .update({
-              status: "cancelled",
-              updated_at: new Date().toISOString(),
-            })
-            .eq("id", application.id),
+          "db.update.event_applications.cancel",
+          "db.update",
+          () =>
+            supabase
+              .from("event_applications")
+              .update({
+                status: "cancelled",
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", application.id),
         );
 
         if (updateError) {
-          log({ function: FN, level: "error", message: "DB Update Error (free cancel)", metadata: { detail: updateError } });
+          log({
+            function: FN,
+            level: "error",
+            message: "DB Update Error (free cancel)",
+            metadata: { detail: updateError },
+          });
         }
 
         logStatsigEvent(userId, "order_cancelled", undefined, {
@@ -160,20 +193,31 @@ Deno.serve(withHandler(async (req) => {
             .from("events")
             .select("start_time")
             .eq("id", event_id)
-            .single(),
-        ),
-        withSpan("db.rpc.get_current_policy", "db.rpc", () =>
-          supabase.rpc("get_current_policy", { p_key: "refund" }),
+            .single()),
+        withSpan(
+          "db.rpc.get_current_policy",
+          "db.rpc",
+          () => supabase.rpc("get_current_policy", { p_key: "refund" }),
         ),
       ]);
 
       if (eventResult.error || !eventResult.data) {
-        log({ function: FN, level: "error", message: "Failed to fetch event", metadata: { detail: eventResult.error } });
+        log({
+          function: FN,
+          level: "error",
+          message: "Failed to fetch event",
+          metadata: { detail: eventResult.error },
+        });
         return errorResponse("Failed to verify refund eligibility", 500);
       }
 
       if (policyResult.error || !policyResult.data) {
-        log({ function: FN, level: "error", message: "Failed to fetch policy", metadata: { detail: policyResult.error } });
+        log({
+          function: FN,
+          level: "error",
+          message: "Failed to fetch policy",
+          metadata: { detail: policyResult.error },
+        });
         return errorResponse("Failed to verify refund eligibility", 500);
       }
 
@@ -213,7 +257,8 @@ Deno.serve(withHandler(async (req) => {
 
       // Update DB: status=cancelled + refund_status + refund_amount
       // Fix #1515: Set status='cancelled' so on_application_cancel trigger removes event_participants
-      const refundAmount = paymentAmount ?? (cancelResponse.amount as number | undefined);
+      const refundAmount = paymentAmount ??
+        (cancelResponse.amount as number | undefined);
       const updatePayload: Record<string, unknown> = {
         status: "cancelled",
         refund_status: "completed",
@@ -224,15 +269,22 @@ Deno.serve(withHandler(async (req) => {
       }
 
       const { error: dbError } = await withSpan(
-        "db.update.event_applications.refund", "db.update",
-        () => supabase
-          .from("event_applications")
-          .update(updatePayload)
-          .eq("id", application.id),
+        "db.update.event_applications.refund",
+        "db.update",
+        () =>
+          supabase
+            .from("event_applications")
+            .update(updatePayload)
+            .eq("id", application.id),
       );
 
       if (dbError) {
-        log({ function: FN, level: "error", message: "DB Update Error", metadata: { detail: dbError } });
+        log({
+          function: FN,
+          level: "error",
+          message: "DB Update Error",
+          metadata: { detail: dbError },
+        });
         // Non-fatal: payment was already refunded
       }
 
@@ -250,12 +302,20 @@ Deno.serve(withHandler(async (req) => {
     }
 
     // Unhandled status
-    log({ function: FN, level: "error", message: `Unhandled status: ${status}`, metadata: { application_id: application.id } });
+    log({
+      function: FN,
+      level: "error",
+      message: `Unhandled status: ${status}`,
+      metadata: { application_id: application.id },
+    });
     return errorResponse("지원하지 않는 신청 상태입니다", 400);
-
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
-    log({ function: FN, level: "error", message: `Error in user-cancel-order: ${message}` });
+    log({
+      function: FN,
+      level: "error",
+      message: `Error in user-cancel-order: ${message}`,
+    });
     return errorResponse(message, 500);
   }
 }));

@@ -9,6 +9,7 @@ import {
 } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
 import { requirePartnerPermission } from "../_shared/partner_permissions.ts";
+import { parseAction } from "../_shared/request_utils.ts";
 import { initSentry, withHandler } from "../_shared/logger.ts";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -73,21 +74,10 @@ async function handleRequest(req: Request): Promise<Response> {
   if (auth instanceof Response) return auth;
   const userId = auth;
 
-  let body: Record<string, unknown>;
-  try {
-    const parsed = await req.json();
-    if (
-      typeof parsed !== "object" || parsed === null || Array.isArray(parsed)
-    ) {
-      return errorResponse("Request body must be a JSON object", 400);
-    }
-    body = parsed as Record<string, unknown>;
-  } catch {
-    return errorResponse("Invalid JSON body", 400);
-  }
-
-  const action = body.action as string | undefined;
-  if (typeof action !== "string" || !action) {
+  const result = await parseAction(req);
+  if (result instanceof Response) return result;
+  const { action, body } = result;
+  if (!action) {
     return errorResponse("Missing action", 400);
   }
 

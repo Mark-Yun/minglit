@@ -3,7 +3,8 @@ import { createServiceClient } from "../_shared/supabase_client.ts";
 import { getPortoneClient } from "../_shared/portone_client.ts";
 import { successResponse, errorResponse, corsResponse } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
-import { initSentry, withHandler, log } from "../_shared/logger.ts";
+import { parseJsonBody } from "../_shared/request_utils.ts";
+import { initSentry, log, withHandler } from "../_shared/logger.ts";
 // Fix #763: Portone 에러 응답에 PII 포함 가능 — JSON 문자열 내 PII 마스킹
 import { maskJsonString } from "../_shared/pii_masker.ts";
 
@@ -19,7 +20,11 @@ Deno.serve(withHandler(async (req) => {
   if (auth instanceof Response) return auth;
   const userId = auth;
   try {
-    const { identity_verification_id } = await req.json();
+    const body = await parseJsonBody(req);
+    if (body instanceof Response) return body;
+    const { identity_verification_id } = body as {
+      identity_verification_id?: string;
+    };
 
     if (!identity_verification_id) {
       return errorResponse("Missing identity_verification_id", 400);
@@ -29,21 +34,34 @@ Deno.serve(withHandler(async (req) => {
     const portone = getPortoneClient();
     let verification: Record<string, unknown>;
     try {
-      verification = await portone.getIdentityVerification(identity_verification_id);
+      verification = await portone.getIdentityVerification(
+        identity_verification_id,
+      );
     } catch (fetchError) {
       // Fix #763: Portone 에러에 이름/전화번호 등 PII 포함 가능.
       // JSON 파싱 시도하여 필드 단위 마스킹, 실패 시 상세 내용 로깅하지 않음.
-      const rawMsg = fetchError instanceof Error ? fetchError.message : String(fetchError);
+      const rawMsg = fetchError instanceof Error
+        ? fetchError.message
+        : String(fetchError);
       const maskedMsg = maskJsonString(rawMsg);
-      log({ function: FN, level: "error", message: "Portone V2 API Error", metadata: { detail: maskedMsg } });
+      log({
+        function: FN,
+        level: "error",
+        message: "Portone V2 API Error",
+        metadata: { detail: maskedMsg },
+      });
       return errorResponse("Failed to fetch verification info", 502, maskedMsg);
     }
 
     if (verification.status !== "VERIFIED") {
-      return errorResponse("Identity not verified", 400, { status: verification.status });
+      return errorResponse("Identity not verified", 400, {
+        status: verification.status,
+      });
     }
 
-    const customer = verification.verifiedCustomer as Record<string, unknown> | undefined;
+    const customer = verification.verifiedCustomer as
+      | Record<string, unknown>
+      | undefined;
     if (!customer) {
       return errorResponse("Verified customer data missing", 500);
     }
@@ -52,7 +70,9 @@ Deno.serve(withHandler(async (req) => {
     // Fix #809: ci/di 평문 컬럼 제거 후 ci_encrypted/di_encrypted/di_hash로 전환
     const supabase = createServiceClient();
 
-    const gender = typeof customer.gender === "string" ? customer.gender.toLowerCase() : undefined;
+    const gender = typeof customer.gender === "string"
+      ? customer.gender.toLowerCase()
+      : undefined;
 
     const { error: updateError } = await supabase.rpc("update_user_identity", {
       p_user_id: userId,
@@ -65,15 +85,24 @@ Deno.serve(withHandler(async (req) => {
     });
 
     if (updateError) {
-      log({ function: FN, level: "error", message: "DB Update Error", metadata: { detail: updateError } });
+      log({
+        function: FN,
+        level: "error",
+        message: "DB Update Error",
+        metadata: { detail: updateError },
+      });
       return errorResponse("Failed to update user profile", 500);
     }
 
     return successResponse({ success: true, user: userId });
-
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
-    log({ function: FN, level: "error", message: "Error in verify-identity", metadata: { detail: message } });
+    log({
+      function: FN,
+      level: "error",
+      message: "Error in verify-identity",
+      metadata: { detail: message },
+    });
     return errorResponse(message, 500);
   }
 }));

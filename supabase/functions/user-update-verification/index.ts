@@ -1,7 +1,12 @@
 import { createServiceClient } from "../_shared/supabase_client.ts";
-import { successResponse, errorResponse, corsResponse } from "../_shared/response_utils.ts";
+import {
+  corsResponse,
+  errorResponse,
+  successResponse,
+} from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
-import { initSentry, withHandler, withSpan, log } from "../_shared/logger.ts";
+import { parseJsonBody } from "../_shared/request_utils.ts";
+import { initSentry, log, withHandler, withSpan } from "../_shared/logger.ts";
 import { initStatsig, logStatsigEvent } from "../_shared/statsig_utils.ts";
 
 const FN = "user-update-verification";
@@ -17,14 +22,10 @@ Deno.serve(withHandler(async (req) => {
   const userId = auth;
 
   try {
-    let reqBody: Record<string, unknown>;
-    try {
-      reqBody = await req.json();
-    } catch {
-      return errorResponse("Invalid JSON body", 400);
-    }
+    const body = await parseJsonBody(req);
+    if (body instanceof Response) return body;
 
-    const { verification_id, data } = reqBody as {
+    const { verification_id, data } = body as {
       verification_id?: string;
       data?: Record<string, unknown>;
     };
@@ -40,17 +41,24 @@ Deno.serve(withHandler(async (req) => {
 
     // Verify that the verification definition exists
     const { data: verification, error: verificationError } = await withSpan(
-      "db.select.verifications", "db.select",
-      () => supabase
-        .from("verifications")
-        .select("id")
-        .eq("id", verification_id)
-        .eq("is_active", true)
-        .maybeSingle(),
+      "db.select.verifications",
+      "db.select",
+      () =>
+        supabase
+          .from("verifications")
+          .select("id")
+          .eq("id", verification_id)
+          .eq("is_active", true)
+          .maybeSingle(),
     );
 
     if (verificationError) {
-      log({ function: FN, level: "error", message: "Failed to check verification", metadata: { detail: verificationError } });
+      log({
+        function: FN,
+        level: "error",
+        message: "Failed to check verification",
+        metadata: { detail: verificationError },
+      });
       return errorResponse("Failed to check verification", 500);
     }
     if (!verification) {
@@ -59,22 +67,29 @@ Deno.serve(withHandler(async (req) => {
 
     // Upsert user_verifications (user_id + verification_id unique constraint)
     const { error } = await withSpan(
-      "db.upsert.user_verifications", "db.upsert",
-      () => supabase
-        .from("user_verifications")
-        .upsert(
-          {
-            user_id: userId,
-            verification_id,
-            data,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "user_id,verification_id" },
-        ),
+      "db.upsert.user_verifications",
+      "db.upsert",
+      () =>
+        supabase
+          .from("user_verifications")
+          .upsert(
+            {
+              user_id: userId,
+              verification_id,
+              data,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "user_id,verification_id" },
+          ),
     );
 
     if (error) {
-      log({ function: FN, level: "error", message: "Failed to upsert user verification", metadata: { detail: error } });
+      log({
+        function: FN,
+        level: "error",
+        message: "Failed to upsert user verification",
+        metadata: { detail: error },
+      });
       return errorResponse("Failed to save verification data", 500);
     }
 
@@ -85,7 +100,11 @@ Deno.serve(withHandler(async (req) => {
     return successResponse({ success: true });
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
-    log({ function: FN, level: "error", message: `Error in ${FN}: ${message}` });
+    log({
+      function: FN,
+      level: "error",
+      message: `Error in ${FN}: ${message}`,
+    });
     return errorResponse(message, 500);
   }
 }));

@@ -1,4 +1,9 @@
-import { successResponse, errorResponse, corsResponse } from "../_shared/response_utils.ts";
+import {
+  corsResponse,
+  errorResponse,
+  successResponse,
+} from "../_shared/response_utils.ts";
+import { parseJsonBody } from "../_shared/request_utils.ts";
 import { initSentry, withHandler } from "../_shared/logger.ts";
 
 const GITHUB_TOKEN = Deno.env.get("GITHUB_ACCESS_TOKEN");
@@ -25,12 +30,8 @@ Deno.serve(withHandler(async (req) => {
     return errorResponse("Unauthorized", 401);
   }
 
-  let body: Record<string, unknown>;
-  try {
-    body = await req.json();
-  } catch {
-    return errorResponse("Invalid JSON body", 400);
-  }
+  const body = await parseJsonBody(req);
+  if (body instanceof Response) return body;
 
   const { type, title, body: alertBody } = body as {
     type?: string;
@@ -48,9 +49,11 @@ Deno.serve(withHandler(async (req) => {
 
   const labels = ALERT_LABELS[type] ?? ["metrics-alert", "auto-generated"];
 
-  const searchUrl = `https://api.github.com/search/issues?q=${encodeURIComponent(
-    `repo:${GITHUB_REPO} is:issue is:open label:metrics-alert "${title}" in:title`,
-  )}`;
+  const searchUrl = `https://api.github.com/search/issues?q=${
+    encodeURIComponent(
+      `repo:${GITHUB_REPO} is:issue is:open label:metrics-alert "${title}" in:title`,
+    )
+  }`;
 
   const searchRes = await fetch(searchUrl, {
     headers: {
@@ -87,19 +90,25 @@ Deno.serve(withHandler(async (req) => {
       return errorResponse(`GitHub API comment failed: ${errorText}`, 502);
     }
     await commentRes.body?.cancel();
-    return successResponse({ action: "commented", issue_number: existingIssue.number });
+    return successResponse({
+      action: "commented",
+      issue_number: existingIssue.number,
+    });
   }
 
-  const createRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/issues`, {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${GITHUB_TOKEN}`,
-      "Accept": "application/vnd.github.v3+json",
-      "Content-Type": "application/json",
-      "X-GitHub-Api-Version": "2022-11-28",
+  const createRes = await fetch(
+    `https://api.github.com/repos/${GITHUB_REPO}/issues`,
+    {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${GITHUB_TOKEN}`,
+        "Accept": "application/vnd.github.v3+json",
+        "Content-Type": "application/json",
+        "X-GitHub-Api-Version": "2022-11-28",
+      },
+      body: JSON.stringify({ title, body: alertBody, labels }),
     },
-    body: JSON.stringify({ title, body: alertBody, labels }),
-  });
+  );
 
   if (!createRes.ok) {
     const errorText = await createRes.text();
@@ -107,5 +116,9 @@ Deno.serve(withHandler(async (req) => {
   }
 
   const issue = await createRes.json();
-  return successResponse({ action: "created", issue_number: issue.number, url: issue.html_url });
+  return successResponse({
+    action: "created",
+    issue_number: issue.number,
+    url: issue.html_url,
+  });
 }));

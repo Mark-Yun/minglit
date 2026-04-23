@@ -8,8 +8,8 @@ import {
   successResponse,
 } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
+import { parseAction } from "../_shared/request_utils.ts";
 import { initSentry, withHandler } from "../_shared/logger.ts";
-
 
 initSentry();
 
@@ -32,14 +32,9 @@ Deno.serve(withHandler(async (req: Request): Promise<Response> => {
 
   const supabase = createServiceClient();
 
-  let body: Record<string, unknown>;
-  try {
-    body = await req.json();
-  } catch {
-    return errorResponse("Invalid JSON body", 400);
-  }
-
-  const action = body.action as string | undefined;
+  const result = await parseAction(req);
+  if (result instanceof Response) return result;
+  const { action, body } = result;
   if (!action) return errorResponse("Missing action", 400);
 
   // ─────────────────────────────────────────
@@ -51,7 +46,10 @@ Deno.serve(withHandler(async (req: Request): Promise<Response> => {
     const interactionType = body.interaction_type as string | undefined;
 
     if (!targetId || !targetType || !interactionType) {
-      return errorResponse("Missing target_id, target_type, or interaction_type", 400);
+      return errorResponse(
+        "Missing target_id, target_type, or interaction_type",
+        400,
+      );
     }
     if (!VALID_TARGET_TYPES.includes(targetType)) {
       return errorResponse(`Invalid target_type: ${targetType}`, 400);
@@ -149,7 +147,9 @@ Deno.serve(withHandler(async (req: Request): Promise<Response> => {
     if (!VALID_REPORT_REASONS.includes(reason)) {
       return errorResponse(`Invalid reason: ${reason}`, 400);
     }
-    if (targetId === userId) return errorResponse("Cannot report yourself", 400);
+    if (targetId === userId) {
+      return errorResponse("Cannot report yourself", 400);
+    }
 
     // 1. Block
     await supabase.from("social_interactions").upsert({

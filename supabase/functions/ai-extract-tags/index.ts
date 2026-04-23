@@ -3,6 +3,7 @@ import { createLLMAdapter } from "../_shared/ai/factory.ts";
 import { WorkerUtils } from "../_shared/worker_utils.ts";
 import { initSentry, withHandler } from "../_shared/logger.ts";
 import { requireServiceRole } from "../_shared/auth_utils.ts";
+import { parseJsonBody } from "../_shared/request_utils.ts";
 import {
   buildTagExtractionPrompt,
   extractDescriptionText,
@@ -34,9 +35,14 @@ Deno.serve(withHandler(async (req) => {
   console.log(`[${FN}] triggered`);
 
   try {
-    const payload = await req.json().catch(() => ({}));
-    const rawBatch = Math.floor(Number((payload as { batch_size?: number }).batch_size));
-    const batchSize = Number.isFinite(rawBatch) && rawBatch >= 1 ? Math.min(rawBatch, 50) : 10;
+    const body = await parseJsonBody(req);
+    const payload = body instanceof Response ? {} : body;
+    const rawBatch = Math.floor(
+      Number((payload as { batch_size?: number }).batch_size),
+    );
+    const batchSize = Number.isFinite(rawBatch) && rawBatch >= 1
+      ? Math.min(rawBatch, 50)
+      : 10;
 
     const supabase = createServiceClient();
     // createLLMAdapter() throws if OPENAI_API_KEY is missing
@@ -187,7 +193,11 @@ Deno.serve(withHandler(async (req) => {
           // party_tags에 연결 (source='ai')
           const { error: linkError } = await supabase
             .from("party_tags")
-            .insert({ party_id: party.id, tag_id: existingTag.id, source: "ai" });
+            .insert({
+              party_id: party.id,
+              tag_id: existingTag.id,
+              source: "ai",
+            });
 
           if (linkError) {
             if (PARTY_TAGS_SKIP_CODES.has(linkError.code)) {

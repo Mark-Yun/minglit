@@ -9,6 +9,7 @@ import {
 } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
 import { requirePartnerPermission } from "../_shared/partner_permissions.ts";
+import { parseAction } from "../_shared/request_utils.ts";
 import { initSentry, withHandler, log } from "../_shared/logger.ts";
 
 const FN = "partner-manage-member";
@@ -42,29 +43,24 @@ Deno.serve(withHandler(async (req: Request): Promise<Response> => {
     const userId = auth;
 
     // 2. Parse body
-    let body: Record<string, unknown>;
-    try {
-      const parsed = await req.json();
-      if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
-        return errorResponse("Request body must be a JSON object", 400);
-      }
-      body = parsed as Record<string, unknown>;
-    } catch {
-      return errorResponse("Invalid JSON body", 400);
-    }
-
-    const action = body.action as string | undefined;
-    if (typeof action !== "string" || !action) return errorResponse("Missing action", 400);
+    const result = await parseAction(req);
+    if (result instanceof Response) return result;
+    const { action, body } = result;
+    if (!action) return errorResponse("Missing action", 400);
 
     // 3. Supabase client (service role)
     const supabase = createServiceClient();
 
     // ─── update_role ───
     if (action === "update_role") {
-      const partnerId = typeof body.partner_id === "string" ? body.partner_id.trim() : "";
+      const partnerId = typeof body.partner_id === "string"
+        ? body.partner_id.trim()
+        : "";
       if (!partnerId) return errorResponse("Missing partner_id", 400);
 
-      const targetUserId = typeof body.user_id === "string" ? body.user_id.trim() : "";
+      const targetUserId = typeof body.user_id === "string"
+        ? body.user_id.trim()
+        : "";
       if (!targetUserId) return errorResponse("Missing user_id", 400);
 
       const role = typeof body.role === "string" ? body.role.trim() : "";
@@ -91,7 +87,10 @@ Deno.serve(withHandler(async (req: Request): Promise<Response> => {
         .eq("user_id", targetUserId);
 
       if (updateError) {
-        return errorResponse(`Failed to update role: ${updateError.message}`, 500);
+        return errorResponse(
+          `Failed to update role: ${updateError.message}`,
+          500,
+        );
       }
 
       return successResponse({ success: true });
@@ -99,10 +98,14 @@ Deno.serve(withHandler(async (req: Request): Promise<Response> => {
 
     // ─── update_permissions ───
     if (action === "update_permissions") {
-      const partnerId = typeof body.partner_id === "string" ? body.partner_id.trim() : "";
+      const partnerId = typeof body.partner_id === "string"
+        ? body.partner_id.trim()
+        : "";
       if (!partnerId) return errorResponse("Missing partner_id", 400);
 
-      const targetUserId = typeof body.user_id === "string" ? body.user_id.trim() : "";
+      const targetUserId = typeof body.user_id === "string"
+        ? body.user_id.trim()
+        : "";
       if (!targetUserId) return errorResponse("Missing user_id", 400);
 
       if (!Array.isArray(body.permissions)) {
@@ -113,7 +116,10 @@ Deno.serve(withHandler(async (req: Request): Promise<Response> => {
 
       // Fix #313: permissions 화이트리스트 검증
       for (const perm of permissions) {
-        if (typeof perm !== "string" || !VALID_PERMISSIONS.includes(perm as typeof VALID_PERMISSIONS[number])) {
+        if (
+          typeof perm !== "string" ||
+          !VALID_PERMISSIONS.includes(perm as typeof VALID_PERMISSIONS[number])
+        ) {
           return errorResponse(`Invalid permission: ${perm}`, 400);
         }
       }
@@ -129,7 +135,10 @@ Deno.serve(withHandler(async (req: Request): Promise<Response> => {
         .eq("user_id", targetUserId);
 
       if (updateError) {
-        return errorResponse(`Failed to update permissions: ${updateError.message}`, 500);
+        return errorResponse(
+          `Failed to update permissions: ${updateError.message}`,
+          500,
+        );
       }
 
       return successResponse({ success: true });
@@ -138,9 +147,17 @@ Deno.serve(withHandler(async (req: Request): Promise<Response> => {
     return errorResponse(`Unknown action: ${action}`, 400);
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
-    log({ function: FN, level: "error", message: "partner-manage-member failed", metadata: { detail } });
+    log({
+      function: FN,
+      level: "error",
+      message: "partner-manage-member failed",
+      metadata: { detail },
+    });
     const env = Deno.env.get("ENVIRONMENT");
     const exposeDetail = env === "local" || env === "development";
-    return errorResponse(exposeDetail ? `${FN}: ${detail}` : "Internal server error", 500);
+    return errorResponse(
+      exposeDetail ? `${FN}: ${detail}` : "Internal server error",
+      500,
+    );
   }
 }));

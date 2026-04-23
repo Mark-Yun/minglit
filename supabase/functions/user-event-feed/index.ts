@@ -1,9 +1,14 @@
 // user-event-feed/index.ts — Server-side event feed with sorting, filtering & cursor pagination (#614)
 
 import { createServiceClient } from "../_shared/supabase_client.ts";
-import { corsResponse, errorResponse, successResponse } from "../_shared/response_utils.ts";
+import {
+  corsResponse,
+  errorResponse,
+  successResponse,
+} from "../_shared/response_utils.ts";
 import { optionalAuth, requireAuth } from "../_shared/auth_utils.ts";
-import { initSentry, withHandler, log } from "../_shared/logger.ts";
+import { parseJsonBody } from "../_shared/request_utils.ts";
+import { initSentry, log, withHandler } from "../_shared/logger.ts";
 
 const FN = "user-event-feed";
 
@@ -22,19 +27,15 @@ Deno.serve(withHandler(async (req) => {
     return errorResponse("Method not allowed", 405);
   }
 
-  let reqBody: Record<string, unknown>;
-  try {
-    reqBody = await req.json();
-  } catch {
-    return errorResponse("Invalid JSON body", 400);
-  }
+  const body = await parseJsonBody(req);
+  if (body instanceof Response) return body;
 
   const {
     sort_by = "recommended",
     filters = {},
     limit: rawLimit = 20,
     cursor = null,
-  } = reqBody as {
+  } = body as {
     sort_by?: string;
     filters?: Record<string, unknown>;
     limit?: number;
@@ -67,7 +68,9 @@ Deno.serve(withHandler(async (req) => {
   // Validate sort_by
   if (!VALID_SORT_BY.includes(sort_by as SortBy)) {
     return errorResponse(
-      `Invalid sort_by: "${sort_by}". Must be one of: ${VALID_SORT_BY.join(", ")}`,
+      `Invalid sort_by: "${sort_by}". Must be one of: ${
+        VALID_SORT_BY.join(", ")
+      }`,
       400,
     );
   }
@@ -82,17 +85,23 @@ Deno.serve(withHandler(async (req) => {
       typeof cursor.sort_key !== "string" ||
       typeof cursor.id !== "string"
     ) {
-      return errorResponse("Invalid cursor: must be {sort_key: string, id: string}", 400);
+      return errorResponse(
+        "Invalid cursor: must be {sort_key: string, id: string}",
+        400,
+      );
     }
   }
 
   // Fix #1748: validate nearby shape before any DB access
-  let nearbyTyped: { lat: number; lng: number; radius_km: number } | null = null;
+  let nearbyTyped: { lat: number; lng: number; radius_km: number } | null =
+    null;
   if (nearby !== null) {
     const { lat, lng, radius_km } = nearby as Record<string, unknown>;
     if (
-      typeof lat !== "number" || !Number.isFinite(lat) || lat < -90 || lat > 90 ||
-      typeof lng !== "number" || !Number.isFinite(lng) || lng < -180 || lng > 180 ||
+      typeof lat !== "number" || !Number.isFinite(lat) || lat < -90 ||
+      lat > 90 ||
+      typeof lng !== "number" || !Number.isFinite(lng) || lng < -180 ||
+      lng > 180 ||
       typeof radius_km !== "number" || !Number.isFinite(radius_km) ||
       radius_km <= 0 || radius_km > 50
     ) {
@@ -168,15 +177,29 @@ Deno.serve(withHandler(async (req) => {
       .from("location_access_log")
       .insert({ user_id: userId, purpose: "nearby_search" });
     if (logError) {
-      log({ function: FN, level: "error", message: "location_access_log INSERT failed", metadata: { detail: logError.message } });
-      return errorResponse("Failed to record location access log", 500, logError.message);
+      log({
+        function: FN,
+        level: "error",
+        message: "location_access_log INSERT failed",
+        metadata: { detail: logError.message },
+      });
+      return errorResponse(
+        "Failed to record location access log",
+        500,
+        logError.message,
+      );
     }
   }
 
   const { data, error } = await supabase.rpc("user_event_feed", rpcParams);
 
   if (error) {
-    log({ function: FN, level: "error", message: "RPC error", metadata: { detail: error.message } });
+    log({
+      function: FN,
+      level: "error",
+      message: "RPC error",
+      metadata: { detail: error.message },
+    });
     return errorResponse("Failed to fetch event feed", 500, error.message);
   }
 

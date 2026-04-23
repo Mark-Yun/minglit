@@ -1,8 +1,12 @@
 import { createServiceClient } from "../_shared/supabase_client.ts";
-import { corsResponse, errorResponse, successResponse } from "../_shared/response_utils.ts";
+import {
+  corsResponse,
+  errorResponse,
+  successResponse,
+} from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
+import { parseAction } from "../_shared/request_utils.ts";
 import { initSentry, withHandler } from "../_shared/logger.ts";
-
 
 initSentry();
 
@@ -13,18 +17,12 @@ Deno.serve(withHandler(async (req) => {
   if (auth instanceof Response) return auth;
   const userId = auth;
 
-  let body: Record<string, unknown>;
-  try {
-    body = await req.json();
-  } catch {
-    return errorResponse("Invalid JSON body", 400);
-  }
-
-  const { action, notification_id } = body as {
-    action?: string;
+  const result = await parseAction(req);
+  if (result instanceof Response) return result;
+  const { action, body } = result;
+  const { notification_id } = body as {
     notification_id?: string;
   };
-
   if (!action) {
     return errorResponse("Missing required parameter: action", 400);
   }
