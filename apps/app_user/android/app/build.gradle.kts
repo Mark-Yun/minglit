@@ -77,7 +77,8 @@ android {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
-    androidTestImplementation("androidx.test:runner:1.6.2")
+    // Fix #1780: runner 1.6.2 vs orchestrator 1.5.1 버전 충돌 — 같은 1.5.x 계열로 정렬
+    androidTestImplementation("androidx.test:runner:1.5.1")
     androidTestUtil("androidx.test:orchestrator:1.5.1")
 }
 
