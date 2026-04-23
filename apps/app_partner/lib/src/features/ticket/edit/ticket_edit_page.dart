@@ -21,6 +21,9 @@ class TicketEditPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isTemplate = eventId.isEmpty;
+    // Fix #1741: ticketControllerProvider는 autoDispose — watch로 리스너 유지,
+    // 없으면 await 중 dispose되어 line 95의 ref.read가 stale state를 반환함
+    ref.watch(ticketControllerProvider);
     final entryGroupsAsync = ref.watch(ticketEntryGroupsProvider(partyId));
 
     // Dynamic AsyncValue based on mode
