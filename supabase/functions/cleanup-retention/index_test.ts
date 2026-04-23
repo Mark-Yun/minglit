@@ -550,3 +550,57 @@ Deno.test({
     assertEquals(deleteExpiredRowsCalled, false, "delete_expired_rows RPC must NOT be called for use_absolute_ts=false");
   },
 });
+
+Deno.test({
+  name: "cleanup-retention - skips policy with metadata.skip_cleanup=true without calling any RPC",
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+
+    let rpcCalled = false;
+
+    const { fetchMock } = createFetchMock([
+      {
+        matcher: POLICIES_URL,
+        handler: () =>
+          jsonResponse([
+            {
+              id: "contract_retention",
+              kind: "db_table",
+              retention_days: 1825,
+              target: { schema: "public", table: "archived_records", ts_col: "retention_until", record_type: "contract", use_absolute_ts: true },
+              metadata: { skip_cleanup: true },
+            },
+          ]),
+      },
+      {
+        matcher: "/rest/v1/rpc/",
+        handler: () => {
+          rpcCalled = true;
+          return jsonResponse(0);
+        },
+      },
+      {
+        matcher: POLICIES_URL,
+        handler: () => jsonResponse({}),
+      },
+      {
+        matcher: AUDIT_URL,
+        handler: () => jsonResponse({}),
+      },
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const response = await handler(postRequest());
+        assertEquals(response.status, 200);
+        const body = await readJson(response);
+        assertEquals(body.results.length, 1);
+        assertEquals(body.results[0].id, "contract_retention");
+        assertEquals(body.results[0].status, "skipped");
+        assertEquals(body.results[0].rows_deleted, 0);
+      });
+    });
+
+    assertEquals(rpcCalled, false, "No RPC must be called for skip_cleanup=true policy");
+  },
+});
