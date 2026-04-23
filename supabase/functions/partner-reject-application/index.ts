@@ -2,13 +2,13 @@
 // Issue #517: 파트너 대시보드 리디자인 — 신청 거절 API
 
 import { createServiceClient } from "../_shared/supabase_client.ts";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   corsResponse,
   errorResponse,
   successResponse,
 } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
+import { requirePartnerPermission } from "../_shared/partner_permissions.ts";
 import { initSentry, withHandler, log } from "../_shared/logger.ts";
 
 const FN = "partner-reject-application";
@@ -85,8 +85,8 @@ async function handleRequest(req: Request): Promise<Response> {
   const party = event.parties as Record<string, unknown>;
   const partnerId = party.partner_id as string;
 
-  const permCheck = await checkPartnerPermission(supabase, partnerId, userId);
-  if (permCheck instanceof Response) return permCheck;
+  const permCheck = await requirePartnerPermission(supabase, partnerId, userId, ["EVENT_MANAGE", "APPLICATION_MANAGE"]);
+  if (permCheck) return permCheck;
 
   // Compare-and-set: only update if status is still pending/pending_review
   const { data: updated, error: updateError } = await supabase
@@ -109,33 +109,4 @@ async function handleRequest(req: Request): Promise<Response> {
     rejected: 1,
     application_id: applicationId,
   });
-}
-
-// ── Permission check ──
-async function checkPartnerPermission(
-  supabase: SupabaseClient,
-  partnerId: string,
-  userId: string,
-): Promise<void | Response> {
-  const { data: perm, error: permError } = await supabase
-    .from("partner_member_permissions")
-    .select("permissions, role")
-    .eq("partner_id", partnerId)
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  if (permError) {
-    return errorResponse("Failed to verify partner permissions", 500);
-  }
-
-  // Owner bypass — defense-in-depth even if DB trigger grants all permissions
-  if (perm?.role === "owner") return;
-
-  const permissions = (perm?.permissions as string[] | null) ?? [];
-  const hasPermission =
-    permissions.includes("EVENT_MANAGE") ||
-    permissions.includes("APPLICATION_MANAGE");
-  if (!hasPermission) {
-    return errorResponse("Forbidden: insufficient partner permissions", 403);
-  }
 }

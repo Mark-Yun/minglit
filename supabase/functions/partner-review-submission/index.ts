@@ -2,13 +2,13 @@
 // Issue #309: RLS write strategy 전환
 
 import { createServiceClient } from "../_shared/supabase_client.ts";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   corsResponse,
   errorResponse,
   successResponse,
 } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
+import { requirePartnerPermission } from "../_shared/partner_permissions.ts";
 import { initSentry, withHandler } from "../_shared/logger.ts";
 
 
@@ -86,8 +86,8 @@ async function handleRequest(req: Request): Promise<Response> {
     }
 
     // Check partner permission
-    const permCheck = await checkPartnerPermission(supabase, submission.partner_id, userId);
-    if (permCheck instanceof Response) return permCheck;
+    const permCheck = await requirePartnerPermission(supabase, submission.partner_id, userId, ["VERIFY_REVIEW"]);
+    if (permCheck) return permCheck;
 
     // Update snapshot_data last entry with review result
     const snapshotArray = Array.isArray(submission.snapshot_data)
@@ -162,8 +162,8 @@ async function handleRequest(req: Request): Promise<Response> {
     }
 
     // Check partner permission
-    const permCheck = await checkPartnerPermission(supabase, submission.partner_id, userId);
-    if (permCheck instanceof Response) return permCheck;
+    const permCheck = await requirePartnerPermission(supabase, submission.partner_id, userId, ["VERIFY_REVIEW"]);
+    if (permCheck) return permCheck;
 
     // Append comment to last snapshot entry
     const snapshotArray = Array.isArray(submission.snapshot_data)
@@ -197,27 +197,4 @@ async function handleRequest(req: Request): Promise<Response> {
   }
 
   return errorResponse(`Unknown action: ${action}`, 400);
-}
-
-// ─── Helper: check partner permission ───
-async function checkPartnerPermission(
-  supabase: SupabaseClient,
-  partnerId: string,
-  userId: string,
-): Promise<void | Response> {
-  const { data: perm, error: permError } = await supabase
-    .from("partner_member_permissions")
-    .select("permissions")
-    .eq("partner_id", partnerId)
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  if (permError) {
-    return errorResponse("Failed to verify partner permissions", 500);
-  }
-
-  const hasPermission = (perm?.permissions as string[] | null)?.includes("VERIFY_REVIEW") ?? false;
-  if (!hasPermission) {
-    return errorResponse("Forbidden: insufficient partner permissions", 403);
-  }
 }
