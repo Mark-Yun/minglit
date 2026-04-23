@@ -12,9 +12,19 @@ SELECT has_column('admin', 'retention_policies', 'retention_calendar_unit', 'ret
 SELECT col_type_is('admin', 'retention_policies', 'retention_calendar_value', 'integer', 'retention_calendar_value is integer');
 SELECT col_type_is('admin', 'retention_policies', 'retention_calendar_unit', 'text', 'retention_calendar_unit is text');
 
--- 3. 컬럼 nullable 확인 (둘 다 NULL 허용)
-SELECT col_is_nullable('admin', 'retention_policies', 'retention_calendar_value', 'retention_calendar_value is nullable');
-SELECT col_is_nullable('admin', 'retention_policies', 'retention_calendar_unit', 'retention_calendar_unit is nullable');
+-- 3. 컬럼 nullable 확인 (둘 다 NULL 허용, information_schema 사용)
+SELECT ok(
+  (SELECT is_nullable = 'YES' FROM information_schema.columns
+   WHERE table_schema = 'admin' AND table_name = 'retention_policies'
+   AND column_name = 'retention_calendar_value'),
+  'retention_calendar_value is nullable'
+);
+SELECT ok(
+  (SELECT is_nullable = 'YES' FROM information_schema.columns
+   WHERE table_schema = 'admin' AND table_name = 'retention_policies'
+   AND column_name = 'retention_calendar_unit'),
+  'retention_calendar_unit is nullable'
+);
 
 -- 4. UPDATE 결과 확인: calendar 컬럼이 올바르게 설정됐는지
 SELECT ok(

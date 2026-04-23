@@ -2,7 +2,7 @@
 -- migration: 20260424000001_process_pending_deletions_retention_seed.sql
 BEGIN;
 
-SELECT plan(38);
+SELECT plan(35);
 
 -- 1. 7개 행이 모두 존재하는지 확인
 SELECT ok(
