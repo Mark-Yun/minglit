@@ -18,6 +18,8 @@ class TicketCreatePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Fix #1741: ticketControllerProvider는 autoDispose — watch로 리스너 유지
+    ref.watch(ticketControllerProvider);
     final entryGroupsAsync = ref.watch(ticketEntryGroupsProvider(partyId));
 
     Future<void> handleSave({
