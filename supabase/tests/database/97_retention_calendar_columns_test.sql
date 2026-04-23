@@ -2,7 +2,7 @@
 -- migration: 20260424000002_add_retention_calendar_columns.sql
 BEGIN;
 
-SELECT plan(23);
+SELECT plan(19);
 
 -- 1. 신규 컬럼 존재 확인
 SELECT has_column('admin', 'retention_policies', 'retention_calendar_value', 'retention_calendar_value column exists');
