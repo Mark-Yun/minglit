@@ -136,10 +136,12 @@ function specFromRow(
     row?.retention_calendar_value != null &&
     row?.retention_calendar_unit != null
   ) {
-    return {
-      value: row.retention_calendar_value,
-      unit: row.retention_calendar_unit as RetentionCalendarSpec["unit"],
-    };
+    const unit = row.retention_calendar_unit;
+    // Fix #1789: DB CHECK 제약 완화/우회 시 applyRetentionSpec switch가 undefined를 반환해 retention_until이 null이 되는 것을 방지
+    if (unit !== "year" && unit !== "month" && unit !== "day") {
+      return fallback;
+    }
+    return { value: row.retention_calendar_value, unit };
   }
   return fallback;
 }

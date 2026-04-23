@@ -1,4 +1,5 @@
-import { assertEquals, assertExists } from "@std/assert";
+import { assertEquals, assertExists, assertNotEquals } from "@std/assert";
+import { FakeTime } from "@std/testing/time";
 import {
   captureServeHandler,
   createFetchMock,
@@ -265,126 +266,111 @@ Deno.test(
 
 // 회귀 방지: addDays 평탄화 시 윤년·월말 경계에서 법정 보존기간이 짧아지는 버그 (fix #1789)
 Deno.test("retention_until uses calendar arithmetic — leap year 2024-02-29 + 5 years", async () => {
-  // 윤년 2024-02-29에 탈퇴한 유저의 계약 보존 만료일은 2029-03-01이어야 한다
-  // addDays(now, 1825) 방식은 2029-02-27이 되어 3일 짧다
-  const handler = await captureServeHandler(
-    new URL("./index.ts", import.meta.url),
-  );
-  const { fetchMock, calls } = createFetchMock([
-    retentionPoliciesRoute,
-    pendingUsersRoute([{
-      id: USER_ID,
-      deleted_at: "2024-02-22T00:00:00Z",
-      di_hash: "di-leap-hash",
-    }]),
-    eventApplicationsRoute,
-    reportDetailsRoute,
-    userConsentsRoute,
-    authAdminGetUserRoute,
-    blockedDisCheckRoute,
-    archiveInsertRoute,
-    blockedDisUpsertRoute,
-    authDeleteRoute,
-  ]);
+  // now = 2024-02-29 고정: addYears(5) = Date.UTC(2029, 1, 29) → 2월 29일 없음 → 2029-03-01
+  // addDays(1825) 방식은 2029-02-27 (윤년 2024, 2028 포함하면 1827일 필요) — 3일 짧다
+  const fakeTime = new FakeTime("2024-02-29T00:00:00Z");
+  try {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const { fetchMock, calls } = createFetchMock([
+      retentionPoliciesRoute,
+      pendingUsersRoute([{
+        id: USER_ID,
+        deleted_at: "2024-02-22T00:00:00Z",
+        di_hash: "di-leap-hash",
+      }]),
+      eventApplicationsRoute,
+      reportDetailsRoute,
+      userConsentsRoute,
+      authAdminGetUserRoute,
+      blockedDisCheckRoute,
+      archiveInsertRoute,
+      blockedDisUpsertRoute,
+      authDeleteRoute,
+    ]);
 
-  await withEnv(ENV, async () => {
-    await withMockedFetch(fetchMock, async () => {
-      await withNoIntervals(async () => {
-        // 현재 시각을 윤년 2024-02-29로 고정: fake Date 없이 archived body에서 검증
-        const response = await handler(serviceRoleRequest());
-        assertEquals(response.status, 200);
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        await withNoIntervals(async () => {
+          const response = await handler(serviceRoleRequest());
+          assertEquals(response.status, 200);
 
-        const archiveCall = calls.find((c) =>
-          c.url.includes("/rest/v1/archived_records") && c.method === "POST"
-        );
-        assertExists(archiveCall);
-        const archivedBody = JSON.parse(archiveCall!.body ?? "[]");
+          const archiveCall = calls.find((c) =>
+            c.url.includes("/rest/v1/archived_records") && c.method === "POST"
+          );
+          assertExists(archiveCall);
+          const archivedBody = JSON.parse(archiveCall!.body ?? "[]");
 
-        const contractRecord = archivedBody.find(
-          (r: { record_type: string }) => r.record_type === "contract",
-        );
-        assertExists(contractRecord);
+          const contractRecord = archivedBody.find(
+            (r: { record_type: string }) => r.record_type === "contract",
+          );
+          assertExists(contractRecord);
 
-        // retention_until이 고정 일수(addDays)가 아닌 달력 기준 연도 단위로 계산됐는지 확인:
-        // 날짜 문자열에서 월·일만 추출해 year 단위 계산 여부를 검증한다.
-        // 현재 시각 기준 +5년이 결과이므로, 월/일이 지금 시각 기준 ±1일 이내여야 한다.
-        // (윤년 경계: 2/29 → 다음 해는 2/28 or 3/1로 처리, 절대 +1825d 보다 짧지 않음)
-        const retentionUntil = new Date(contractRecord.retention_until);
-        const now = new Date();
-        const expectedYear = now.getUTCFullYear() + 5;
-        assertEquals(retentionUntil.getUTCFullYear(), expectedYear);
+          // 정확한 기대값: addYears(2024-02-29, 5) → Date.UTC(2029,1,29) overflow → 2029-03-01
+          assertEquals(contractRecord.retention_until, "2029-03-01T00:00:00.000Z");
+          // addDays(1825) 회귀 방지: 1825일 고정이면 2029-02-27 (3일 짧음)
+          assertNotEquals(contractRecord.retention_until, "2029-02-27T00:00:00.000Z");
+        });
       });
     });
-  });
+  } finally {
+    fakeTime.restore();
+  }
 });
 
-Deno.test("retention_until uses calendar arithmetic — month-end Jan-31 + 3 months", async () => {
-  // addDays(now, 90) 방식은 월말 경계에서 실제 달력 3개월보다 짧아질 수 있다.
-  // 예: 1/31 + 90d = 5/1이지만 1/31 + 3months = 4/30 or 5/1 (JS Date 처리에 따름)
-  // 여기서는 login retention이 month 단위를 쓰는지만 검증한다.
-  const handler = await captureServeHandler(
-    new URL("./index.ts", import.meta.url),
-  );
-  const { fetchMock, calls } = createFetchMock([
-    retentionPoliciesRoute,
-    pendingUsersRoute([{
-      id: USER_ID,
-      deleted_at: "2026-01-24T00:00:00Z",
-      di_hash: "di-monthend-hash",
-    }]),
-    eventApplicationsRoute,
-    reportDetailsRoute,
-    userConsentsRoute,
-    authAdminGetUserRoute,
-    blockedDisCheckRoute,
-    archiveInsertRoute,
-    blockedDisUpsertRoute,
-    authDeleteRoute,
-  ]);
+Deno.test("retention_until uses calendar arithmetic — month-end Nov-30 + 3 months", async () => {
+  // now = 2026-11-30 고정: addMonths(3) = Date.UTC(2027,1,30) overflow → 2027-03-02
+  // addDays(90) 방식은 2027-02-28 (Feb 28일까지만 있음) — 2일 짧다
+  const fakeTime = new FakeTime("2026-11-30T00:00:00Z");
+  try {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const { fetchMock, calls } = createFetchMock([
+      retentionPoliciesRoute,
+      pendingUsersRoute([{
+        id: USER_ID,
+        deleted_at: "2026-11-25T00:00:00Z",
+        di_hash: "di-monthend-hash",
+      }]),
+      eventApplicationsRoute,
+      reportDetailsRoute,
+      userConsentsRoute,
+      authAdminGetUserRoute,
+      blockedDisCheckRoute,
+      archiveInsertRoute,
+      blockedDisUpsertRoute,
+      authDeleteRoute,
+    ]);
 
-  await withEnv(ENV, async () => {
-    await withMockedFetch(fetchMock, async () => {
-      await withNoIntervals(async () => {
-        const response = await handler(serviceRoleRequest());
-        assertEquals(response.status, 200);
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        await withNoIntervals(async () => {
+          const response = await handler(serviceRoleRequest());
+          assertEquals(response.status, 200);
 
-        const archiveCall = calls.find((c) =>
-          c.url.includes("/rest/v1/archived_records") && c.method === "POST"
-        );
-        assertExists(archiveCall);
-        const archivedBody = JSON.parse(archiveCall!.body ?? "[]");
+          const archiveCall = calls.find((c) =>
+            c.url.includes("/rest/v1/archived_records") && c.method === "POST"
+          );
+          assertExists(archiveCall);
+          const archivedBody = JSON.parse(archiveCall!.body ?? "[]");
 
-        const loginRecord = archivedBody.find(
-          (r: { record_type: string }) => r.record_type === "login",
-        );
-        assertExists(loginRecord);
+          const loginRecord = archivedBody.find(
+            (r: { record_type: string }) => r.record_type === "login",
+          );
+          assertExists(loginRecord);
 
-        // login retention은 month 단위여야 하므로, now + 3개월과 now + 90일 중
-        // retention_until이 now + 3개월 쪽과 가깝고 90일(7776000000ms)보다 크거나 같아야 한다
-        const retentionUntil = new Date(loginRecord.retention_until);
-        const now = new Date();
-        const threeMonthsLater = new Date(Date.UTC(
-          now.getUTCFullYear(),
-          now.getUTCMonth() + 3,
-          now.getUTCDate(),
-        ));
-        const ninetyDaysLater = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
-
-        // month 단위 계산은 90일 고정보다 결과가 같거나 더 커야 한다 (법정 최소 보장)
-        // 오차 1일(86400000ms) 허용 — 테스트 실행 시각 차이 보정
-        assertEquals(
-          retentionUntil.getTime() >= ninetyDaysLater.getTime() - 86_400_000,
-          true,
-        );
-        // 결과가 month 기준과 1일 오차 내에 있어야 한다
-        assertEquals(
-          Math.abs(retentionUntil.getTime() - threeMonthsLater.getTime()) <=
-            86_400_000,
-          true,
-        );
+          // 정확한 기대값: addMonths(2026-11-30, 3) → Date.UTC(2027,1,30) overflow → 2027-03-02
+          assertEquals(loginRecord.retention_until, "2027-03-02T00:00:00.000Z");
+          // addDays(90) 회귀 방지: Nov 30 + 90d = 2027-02-28 (Feb 28까지만 있음)
+          assertNotEquals(loginRecord.retention_until, "2027-02-28T00:00:00.000Z");
+        });
       });
     });
-  });
+  } finally {
+    fakeTime.restore();
+  }
 });
 
 Deno.test("no eligible users returns zero summary", async () => {
