@@ -4,6 +4,9 @@
 // - 태그 선택/해제 동작 검증
 // - 5개 초과 선택 비활성화 검증
 // - 검색 필드 렌더링 검증
+// Fix #1800: 로딩 상태에서 MinglitSkeleton 표시 회귀 검증
+import 'dart:async';
+
 import 'package:app_partner/src/features/party/create/logic/tag_selection_controller.dart';
 import 'package:app_partner/src/features/party/create/party_create_wizard_controller.dart';
 import 'package:app_partner/src/features/party/create/widgets/tag_selection_section.dart';
@@ -174,6 +177,48 @@ void main() {
       );
       expect(controller.isMaxReached, isTrue);
       expect(container.read(tagSelectionControllerProvider).length, 5);
+    });
+
+    // Fix #1800: 로딩 중에 MinglitSkeleton이 표시되어야 함 (CircularProgressIndicator 금지)
+    testWidgets('로딩 중에 MinglitSkeleton이 표시되고 CircularProgressIndicator는 없다', (tester) async {
+      final featuredCompleter = Completer<List<Tag>>();
+      final repo = _MockTagRepository();
+      // _buildWidget과 별도로 직접 mock 설정 — 완료되지 않는 Future로 로딩 상태 유지
+      when(repo.getFeaturedTags).thenAnswer((_) => featuredCompleter.future);
+      when(() => repo.getTagsByIds(any())).thenAnswer((_) async => []);
+      when(() => repo.getTagsByPartyId(any())).thenAnswer((_) async => []);
+      when(() => repo.searchTags(any())).thenAnswer((_) async => []);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            tagRepositoryProvider.overrideWithValue(repo),
+            partyCreateWizardControllerProvider.overrideWith(
+              () => _FakeWizardController(tagIds: []),
+            ),
+          ],
+          child: const MaterialApp(
+            home: Scaffold(
+              body: SingleChildScrollView(
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: TagSelectionSection(),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      // pumpAndSettle 대신 pump — 비동기 완료 전 로딩 상태 확인
+      await tester.pump();
+
+      expect(find.byType(MinglitSkeleton), findsWidgets);
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+
+      // 완료 후 스켈레톤이 사라지는지 확인
+      featuredCompleter.complete(_featuredTags);
+      await tester.pumpAndSettle();
+      expect(find.text('인기 태그'), findsOneWidget);
     });
 
     testWidgets('태그 없이도 크래시 없이 렌더링된다', (tester) async {

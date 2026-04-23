@@ -221,6 +221,7 @@ class _TagSearchResults extends ConsumerWidget {
     final searchAsync = ref.watch(tagSearchProvider(query));
 
     return searchAsync.when(
+      // Fix #1800: CircularProgressIndicator caused teardown failures on image load errors — replaced with MinglitSkeleton
       loading: () => const MinglitSkeleton(
         width: 64,
         height: 36,
@@ -269,6 +270,7 @@ class _FeaturedTagsQuickSelect extends ConsumerWidget {
     final controller = ref.read(tagSelectionControllerProvider.notifier);
 
     return featuredAsync.when(
+      // Fix #1800: CircularProgressIndicator caused teardown failures on image load errors — replaced with MinglitSkeleton
       loading: () => const MinglitSkeleton(
         width: 64,
         height: 36,
