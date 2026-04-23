@@ -8,6 +8,7 @@
 //   --dart-define-from-file=../../minglit_env/dev/flutter.env \
 //   --target patrol_test/flow_search_test.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:patrol/patrol.dart';
 
 import 'utils/patrol_test_app.dart';
@@ -18,20 +19,14 @@ void main() {
     ($) async {
       await $.pumpWidgetAndSettle(createPatrolTestApp());
 
-      await $.native.screenshot(name: 'flow_search_00_home');
-
       // 홈 화면 검색 아이콘 탭 → SearchPage 이동
       await $(Icons.search).tap();
       await $.pumpAndSettle();
-
-      await $.native.screenshot(name: 'flow_search_01_search_page');
 
       // 검색어 입력 → 결과 또는 빈 상태
       await $(find.byType(TextField)).enterText('파티');
       await $.pump(const Duration(milliseconds: 600)); // 500ms 디바운스 대기
       await $.pumpAndSettle();
-
-      await $.native.screenshot(name: 'flow_search_02_search_results');
     },
   );
 }
