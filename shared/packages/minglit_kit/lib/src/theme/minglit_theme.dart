@@ -87,6 +87,14 @@ class MinglitTheme {
           height: 1.25,
           color: MinglitColors.textPrimary,
         ),
+        // Fix #1717: define displaySmall so hierarchy displayLarge(32)>displaySmall(26) holds
+        displaySmall: TextStyle(
+          // ignore: minglit_no_hardcoded_text_style -- theme definition
+          fontSize: 26,
+          fontWeight: FontWeight.bold,
+          height: 1.3,
+          color: MinglitColors.textPrimary,
+        ),
         headlineSmall: TextStyle(
           // ignore: minglit_no_hardcoded_text_style -- theme definition
           fontSize: 24,
@@ -345,6 +353,14 @@ class MinglitTheme {
           fontSize: 32,
           fontWeight: FontWeight.bold,
           height: 1.25,
+          color: MinglitColorsDark.textPrimary,
+        ),
+        // Fix #1717: define displaySmall so hierarchy displayLarge(32)>displaySmall(26) holds
+        displaySmall: TextStyle(
+          // ignore: minglit_no_hardcoded_text_style -- theme definition
+          fontSize: 26,
+          fontWeight: FontWeight.bold,
+          height: 1.3,
           color: MinglitColorsDark.textPrimary,
         ),
         headlineSmall: TextStyle(
