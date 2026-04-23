@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
+import 'package:app_partner/src/features/party/detail/widgets/party_entry_group_management_screen.dart';
 import 'package:app_partner/src/features/party/ticket/ticket_template_create_page.dart';
 import 'package:app_partner/src/features/party/ticket/widgets/party_tickets_summary.dart';
 import 'package:app_partner/src/features/party/widgets/party_entrance_condition_summary.dart';
@@ -73,14 +74,18 @@ class PartyRuleManagementTab extends ConsumerWidget {
     );
   }
 
+  // Fix #1733: navigate to entry group management screen instead of "under preparation" toast
   void _showEntranceConditionsEdit(
     BuildContext context,
     WidgetRef ref,
     Party party,
   ) {
-    // Placeholder for future implementation of Entry Group editing
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('입장 조건 수정 기능은 준비 중입니다.')),
+    unawaited(
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => PartyEntryGroupManagementScreen(partyId: party.id),
+        ),
+      ),
     );
   }
 

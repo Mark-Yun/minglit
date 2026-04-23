@@ -155,6 +155,32 @@ class PartyDetailCoordinator {
     }
   }
 
+  Future<void> addPartyEntryGroup(
+    String partyId,
+    PartyEntryGroup group,
+    BuildContext context,
+  ) async {
+    final loading = _ref.read(globalLoadingControllerProvider.notifier)..show();
+    try {
+      final party = await _ref.read(partyDetailProvider(partyId).future);
+      final updatedGroups = [
+        ...(party.entryGroups ?? []),
+        group.copyWith(partyId: partyId),
+      ];
+      await _ref.read(partyRepositoryProvider).updateParty(
+            party.copyWith(entryGroups: updatedGroups),
+          );
+      _ref.invalidate(partyDetailProvider(partyId));
+      if (context.mounted) {
+        context.showMinglitSuccess('입장 그룹이 추가되었습니다.');
+      }
+    } on Object catch (e, st) {
+      if (context.mounted) handleMinglitError(context, e, st);
+    } finally {
+      loading.hide();
+    }
+  }
+
   Future<void> updatePartyEntryGroup(
     String partyId,
     PartyEntryGroup updatedGroup,
@@ -163,9 +189,8 @@ class PartyDetailCoordinator {
     final loading = _ref.read(globalLoadingControllerProvider.notifier)..show();
     try {
       final party = await _ref.read(partyDetailProvider(partyId).future);
-      final currentGroups = party.entryGroups;
 
-      final updatedGroups = (currentGroups ?? [])
+      final updatedGroups = (party.entryGroups ?? [])
           .map((g) => g.id == updatedGroup.id ? updatedGroup : g)
           .toList();
 
@@ -185,6 +210,30 @@ class PartyDetailCoordinator {
       if (context.mounted) {
         handleMinglitError(context, e, st);
       }
+    } finally {
+      loading.hide();
+    }
+  }
+
+  Future<void> removePartyEntryGroup(
+    String partyId,
+    String groupId,
+    BuildContext context,
+  ) async {
+    final loading = _ref.read(globalLoadingControllerProvider.notifier)..show();
+    try {
+      final party = await _ref.read(partyDetailProvider(partyId).future);
+      final updatedGroups =
+          (party.entryGroups ?? []).where((g) => g.id != groupId).toList();
+      await _ref.read(partyRepositoryProvider).updateParty(
+            party.copyWith(entryGroups: updatedGroups),
+          );
+      _ref.invalidate(partyDetailProvider(partyId));
+      if (context.mounted) {
+        context.showMinglitSuccess('입장 그룹이 삭제되었습니다.');
+      }
+    } on Object catch (e, st) {
+      if (context.mounted) handleMinglitError(context, e, st);
     } finally {
       loading.hide();
     }

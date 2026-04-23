@@ -1,5 +1,6 @@
 import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
 import 'package:app_partner/src/features/party/detail/party_detail_coordinator.dart';
+import 'package:app_partner/src/features/party/detail/widgets/party_entry_group_management_screen.dart';
 import 'package:app_partner/src/features/party/widgets/party_basic_info_summary.dart';
 import 'package:app_partner/src/features/party/widgets/party_capacity_summary.dart';
 import 'package:app_partner/src/features/party/widgets/party_contact_summary.dart';
@@ -139,15 +140,17 @@ class PartyDetailInfoTab extends ConsumerWidget {
     );
   }
 
+  // Fix #1733: navigate to entry group management screen
   void _showEntranceConditionsEdit(
     BuildContext context,
     WidgetRef ref,
     Party party,
   ) {
-    // Current UI doesn't have a specific group to edit,
-    // so we navigate to a screen or logic that handles groups.
-    // For now, keep the logic of tapping a group if needed,
-    // but the section itself is now clickable.
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => PartyEntryGroupManagementScreen(partyId: party.id),
+      ),
+    );
   }
 
   Future<void> _handleUpdateLocation(
