@@ -11,8 +11,9 @@ mixin _PartyMatchingRepository on _SupabasePartyContext {
       'count: ${templates.length}',
     );
     try {
+      // Fix #1740: entry_groups(Event Level)은 party_id 컬럼 없음 — entry_group_templates(Party Level) 사용
       await supabaseClient
-          .from('entry_groups')
+          .from('entry_group_templates')
           .delete()
           .eq('party_id', partyId);
 
@@ -26,7 +27,7 @@ mixin _PartyMatchingRepository on _SupabasePartyContext {
           )
           .toList();
 
-      await supabaseClient.from('entry_groups').insert(groupsJson);
+      await supabaseClient.from('entry_group_templates').insert(groupsJson);
       Log.d('replaceEntryGroupTemplates success');
     } catch (e, st) {
       Log.e('❌ [PartyRepo] replaceEntryGroupTemplates Error', e, st);
