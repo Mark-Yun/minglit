@@ -5,3 +5,14 @@
 UPDATE admin.retention_policies
 SET retention_days = 14
 WHERE id = 'net_http_response';
+
+-- Fix #1759: migration-time assertion — seed.sql은 이 값을 7로 덮어쓰므로
+-- pgTAP에서 14를 검증할 수 없음. migration 자체에서 즉시 단언.
+DO $$
+BEGIN
+  ASSERT (
+    SELECT retention_days FROM admin.retention_policies WHERE id = 'net_http_response'
+  ) = 14,
+    'net_http_response retention_days must be 14 after Fix #1759 migration';
+END;
+$$;
