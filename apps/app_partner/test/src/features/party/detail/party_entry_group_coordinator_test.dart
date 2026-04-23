@@ -147,8 +147,9 @@ void main() {
 
   // Fix #1733: tap 경로 regression — 입장 조건 탭 시 toast가 아닌 화면 전환이 발생해야 함
   group('PartyDetailCoordinator.openEntryGroupManagement', () {
-    testWidgets('pushes PartyEntryGroupManagementScreen — not a toast',
-        (tester) async {
+    testWidgets('pushes PartyEntryGroupManagementScreen — not a toast', (
+      tester,
+    ) async {
       final mockObserver = MockNavigatorObserver();
 
       when(() => mockPartyRepo.getPartyById('party-1')).thenAnswer(
@@ -165,8 +166,9 @@ void main() {
             navigatorObservers: [mockObserver],
             home: Builder(
               builder: (context) {
-                final coordinator =
-                    ProviderScope.containerOf(context).read(partyDetailCoordinatorProvider);
+                final coordinator = ProviderScope.containerOf(
+                  context,
+                ).read(partyDetailCoordinatorProvider);
                 return ElevatedButton(
                   onPressed: () =>
                       coordinator.openEntryGroupManagement(context, 'party-1'),
