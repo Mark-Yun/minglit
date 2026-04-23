@@ -9,7 +9,7 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <!-- Fix #1776: minglit-partner-dev:// custom scheme (dev flavor only) -->
                 <!-- Mirrors app_user's minglit-dev:// — enables CUJ automation without coordinate tapping -->
-                <!-- adb: am start -a VIEW -d "minglit-partner-dev://dev/user-switch" com.minglit.app_partner.dev -->
+                <!-- adb: am start -a VIEW -d "minglit-partner-dev:///dev/user-switch" com.minglit.app_partner.dev -->
                 <data android:scheme="minglit-partner-dev" />
             </intent-filter>
         </activity>
