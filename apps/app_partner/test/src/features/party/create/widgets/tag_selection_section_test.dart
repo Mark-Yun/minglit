@@ -180,7 +180,9 @@ void main() {
     });
 
     // Fix #1800: 로딩 중에 MinglitSkeleton이 표시되어야 함 (CircularProgressIndicator 금지)
-    testWidgets('로딩 중에 MinglitSkeleton이 표시되고 CircularProgressIndicator는 없다', (tester) async {
+    testWidgets('로딩 중에 MinglitSkeleton이 표시되고 CircularProgressIndicator는 없다', (
+      tester,
+    ) async {
       final featuredCompleter = Completer<List<Tag>>();
       final repo = _MockTagRepository();
       // _buildWidget과 별도로 직접 mock 설정 — 완료되지 않는 Future로 로딩 상태 유지
