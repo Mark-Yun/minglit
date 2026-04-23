@@ -43,34 +43,40 @@ class EventDetailPage extends ConsumerWidget {
       }
     });
 
+    // Fix #1746: AnimatedSwitcher uses Stack during cross-fade transitions,
+    // so Expanded cannot be a direct descendant — keep Column/Expanded outside.
     return Scaffold(
-      body: AnimatedSwitcher(
-        duration: MinglitAnimation.medium,
-        child: eventAsync.when(
-          data: (event) => Column(
-            key: const ValueKey('event_detail_data'),
-            children: [
-              Expanded(child: _EventDetailContent(event: event)),
-              _BottomTicketBar(event: event),
-            ],
-          ),
-          loading: () => const Column(
-            key: ValueKey('event_detail_loading'),
-            children: [
-              Expanded(child: _EventDetailContentSkeleton()),
-              _BottomTicketBarSkeleton(),
-            ],
-          ),
-          error: (e, st) => Center(
-            key: const ValueKey('event_detail_error'),
-            child: MinglitErrorState(
-              title: '이벤트를 불러올 수 없습니다',
-              subtitle: e.toString(),
-              onRetry: () =>
-                  ref.invalidate(eventDetailControllerProvider(eventId)),
+      body: Column(
+        children: [
+          Expanded(
+            child: AnimatedSwitcher(
+              duration: MinglitAnimation.medium,
+              child: eventAsync.when(
+                data: (event) => _EventDetailContent(
+                  key: const ValueKey('event_detail_data'),
+                  event: event,
+                ),
+                loading: () => const _EventDetailContentSkeleton(
+                  key: ValueKey('event_detail_loading'),
+                ),
+                error: (e, st) => Center(
+                  key: const ValueKey('event_detail_error'),
+                  child: MinglitErrorState(
+                    title: '이벤트를 불러올 수 없습니다',
+                    subtitle: e.toString(),
+                    onRetry: () =>
+                        ref.invalidate(eventDetailControllerProvider(eventId)),
+                  ),
+                ),
+              ),
             ),
           ),
-        ),
+          eventAsync.when(
+            data: (event) => _BottomTicketBar(event: event),
+            loading: () => const _BottomTicketBarSkeleton(),
+            error: (_, _) => const SizedBox.shrink(),
+          ),
+        ],
       ),
     );
   }

@@ -50,7 +50,7 @@ class _SkeletonTabBarDelegate extends SliverPersistentHeaderDelegate {
 }
 
 class _EventDetailContentSkeleton extends StatelessWidget {
-  const _EventDetailContentSkeleton();
+  const _EventDetailContentSkeleton({super.key});
 
   @override
   Widget build(BuildContext context) {
