@@ -2,7 +2,7 @@
 -- migration: 20260424000001_process_pending_deletions_retention_seed.sql
 BEGIN;
 
-SELECT plan(42);
+SELECT plan(50);
 
 -- 1. 7개 행이 모두 존재하는지 확인
 SELECT ok(
@@ -50,6 +50,18 @@ SELECT ok(
 SELECT ok(
   (SELECT kind = 'db_table' AND enabled = false FROM admin.retention_policies WHERE id = 'login_history_retention'),
   'login_history_retention: kind=db_table, enabled=false'
+);
+SELECT ok(
+  (SELECT kind = 'db_table' AND enabled = false FROM admin.retention_policies WHERE id = 'payment_retention'),
+  'payment_retention: kind=db_table, enabled=false'
+);
+SELECT ok(
+  (SELECT kind = 'db_table' AND enabled = false FROM admin.retention_policies WHERE id = 'dispute_retention'),
+  'dispute_retention: kind=db_table, enabled=false'
+);
+SELECT ok(
+  (SELECT kind = 'db_table' AND enabled = false FROM admin.retention_policies WHERE id = 'consent_retention'),
+  'consent_retention: kind=db_table, enabled=false'
 );
 
 -- 3. metadata.skip_cleanup=true — 이 행들은 cleanup-retention 엔진이 실행하지 않는다
@@ -148,7 +160,7 @@ SELECT ok(
   'consent_retention: target=archived_records, has record_type'
 );
 
--- 7. record_type 값 정확성 확인
+-- 7. record_type 값 정확성 확인 (archive 타입 5개 + deletion_grace target 검증)
 SELECT ok(
   (SELECT target->>'schema' = 'public' AND target->>'table' = 'user_profiles' FROM admin.retention_policies WHERE id = 'deletion_grace'),
   'deletion_grace: target schema=public, table=user_profiles'
@@ -162,8 +174,16 @@ SELECT ok(
   'payment_retention: record_type=payment'
 );
 SELECT ok(
+  (SELECT target->>'record_type' = 'dispute' FROM admin.retention_policies WHERE id = 'dispute_retention'),
+  'dispute_retention: record_type=dispute'
+);
+SELECT ok(
   (SELECT target->>'record_type' = 'login' FROM admin.retention_policies WHERE id = 'login_history_retention'),
   'login_history_retention: record_type=login'
+);
+SELECT ok(
+  (SELECT target->>'record_type' = 'consent' FROM admin.retention_policies WHERE id = 'consent_retention'),
+  'consent_retention: record_type=consent'
 );
 
 -- 8. ON CONFLICT DO NOTHING 확인: 재실행 시 기존 행 덮어쓰지 않음
@@ -200,8 +220,20 @@ SELECT ok(
   'contract_retention: retention_days=1825'
 );
 SELECT ok(
+  (SELECT retention_days = 1825 FROM admin.retention_policies WHERE id = 'payment_retention'),
+  'payment_retention: retention_days=1825'
+);
+SELECT ok(
+  (SELECT retention_days = 1095 FROM admin.retention_policies WHERE id = 'dispute_retention'),
+  'dispute_retention: retention_days=1095'
+);
+SELECT ok(
   (SELECT retention_days = 90 FROM admin.retention_policies WHERE id = 'login_history_retention'),
   'login_history_retention: retention_days=90'
+);
+SELECT ok(
+  (SELECT retention_days = 730 FROM admin.retention_policies WHERE id = 'consent_retention'),
+  'consent_retention: retention_days=730'
 );
 
 SELECT * FROM finish();
