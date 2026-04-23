@@ -7,13 +7,27 @@ import {
 import { initSentry, log, withHandler, withSpan } from "../_shared/logger.ts";
 
 const FN = "process-pending-deletions";
-const DELETION_GRACE_DAYS = 7;
-const BLOCKED_DI_DAYS = 30;
-const CONTRACT_RETENTION_YEARS = 5;
-const PAYMENT_RETENTION_YEARS = 5;
-const DISPUTE_RETENTION_YEARS = 3;
-const LOGIN_RETENTION_MONTHS = 3;
-const CONSENT_RETENTION_YEARS = 2;
+
+type RetentionConfig = {
+  deletionGraceDays: number;
+  blockedDiDays: number;
+  contractDays: number;
+  paymentDays: number;
+  disputeDays: number;
+  loginDays: number;
+  consentDays: number;
+};
+
+// Fix #1789: fallback — DB 조회 실패 시 법적 최소값 보장
+const DEFAULT_RETENTION: RetentionConfig = {
+  deletionGraceDays: 7,
+  blockedDiDays: 30,
+  contractDays: 1825,
+  paymentDays: 1825,
+  disputeDays: 1095,
+  loginDays: 90,
+  consentDays: 730,
+};
 
 type PendingDeletionUser = {
   id: string;
@@ -78,32 +92,56 @@ function addDays(date: Date, days: number): string {
   return new Date(date.getTime() + days * 24 * 60 * 60 * 1000).toISOString();
 }
 
-function addYears(date: Date, years: number): string {
-  return new Date(
-    Date.UTC(
-      date.getUTCFullYear() + years,
-      date.getUTCMonth(),
-      date.getUTCDate(),
-      date.getUTCHours(),
-      date.getUTCMinutes(),
-      date.getUTCSeconds(),
-      date.getUTCMilliseconds(),
-    ),
-  ).toISOString();
-}
+async function loadRetentionConfig(): Promise<RetentionConfig> {
+  const supabase = createServiceClient();
+  const { data, error } = await withSpan(
+    "db.query.retention_config",
+    "db.query",
+    () =>
+      supabase
+        .schema("admin")
+        .from("retention_policies")
+        .select("id, retention_days")
+        .in("id", [
+          "deletion_grace",
+          "blocked_di_records",
+          "contract_retention",
+          "payment_retention",
+          "dispute_retention",
+          "login_history_retention",
+          "consent_retention",
+        ]),
+  );
 
-function addMonths(date: Date, months: number): string {
-  return new Date(
-    Date.UTC(
-      date.getUTCFullYear(),
-      date.getUTCMonth() + months,
-      date.getUTCDate(),
-      date.getUTCHours(),
-      date.getUTCMinutes(),
-      date.getUTCSeconds(),
-      date.getUTCMilliseconds(),
-    ),
-  ).toISOString();
+  if (error || !data) {
+    log({
+      function: FN,
+      level: "warn",
+      message: "Failed to load retention config from DB, using defaults",
+      metadata: { detail: error },
+    });
+    return DEFAULT_RETENTION;
+  }
+
+  const byId = Object.fromEntries(
+    data.map((row: { id: string; retention_days: number }) => [
+      row.id,
+      row.retention_days,
+    ]),
+  );
+  return {
+    deletionGraceDays:
+      byId["deletion_grace"] ?? DEFAULT_RETENTION.deletionGraceDays,
+    blockedDiDays:
+      byId["blocked_di_records"] ?? DEFAULT_RETENTION.blockedDiDays,
+    contractDays:
+      byId["contract_retention"] ?? DEFAULT_RETENTION.contractDays,
+    paymentDays: byId["payment_retention"] ?? DEFAULT_RETENTION.paymentDays,
+    disputeDays: byId["dispute_retention"] ?? DEFAULT_RETENTION.disputeDays,
+    loginDays:
+      byId["login_history_retention"] ?? DEFAULT_RETENTION.loginDays,
+    consentDays: byId["consent_retention"] ?? DEFAULT_RETENTION.consentDays,
+  };
 }
 
 async function sha256Hex(value: string): Promise<string> {
@@ -217,6 +255,7 @@ async function buildArchivedRecords(
   user: PendingDeletionUser,
   archivedRunId: string,
   now: Date,
+  retention: RetentionConfig,
 ): Promise<ArchivedRecordInsert[]> {
   const userIdHash = await sha256Hex(user.id);
   const eventApplications = await loadEventApplications(user.id);
@@ -234,11 +273,11 @@ async function buildArchivedRecords(
   }
 
   const archivedRecords: ArchivedRecordInsert[] = [];
-  const contractRetention = addYears(now, CONTRACT_RETENTION_YEARS);
-  const paymentRetention = addYears(now, PAYMENT_RETENTION_YEARS);
-  const disputeRetention = addYears(now, DISPUTE_RETENTION_YEARS);
-  const loginRetention = addMonths(now, LOGIN_RETENTION_MONTHS);
-  const consentRetention = addYears(now, CONSENT_RETENTION_YEARS);
+  const contractRetention = addDays(now, retention.contractDays);
+  const paymentRetention = addDays(now, retention.paymentDays);
+  const disputeRetention = addDays(now, retention.disputeDays);
+  const loginRetention = addDays(now, retention.loginDays);
+  const consentRetention = addDays(now, retention.consentDays);
 
   for (const application of eventApplications) {
     archivedRecords.push({
@@ -472,11 +511,12 @@ Deno.serve(withHandler(async (req) => {
   }
 
   const now = new Date();
-  const cutoffIso = addDays(now, -DELETION_GRACE_DAYS);
-  const blockedUntil = addDays(now, BLOCKED_DI_DAYS);
   const archivedRunId = crypto.randomUUID();
 
   try {
+    const retention = await loadRetentionConfig();
+    const cutoffIso = addDays(now, -retention.deletionGraceDays);
+    const blockedUntil = addDays(now, retention.blockedDiDays);
     const users = await loadPendingUsers(cutoffIso);
     const results: UserResult[] = [];
     let archivedRecordCount = 0;
@@ -492,7 +532,7 @@ Deno.serve(withHandler(async (req) => {
           throw new Error("Missing di_hash for deleted user");
         }
 
-        const records = await buildArchivedRecords(user, archivedRunId, now);
+        const records = await buildArchivedRecords(user, archivedRunId, now, retention);
         const archivedRecords = await insertArchivedRecords(records);
         const blockedAlreadyExisted = await blockedDiExists(user.di_hash);
 

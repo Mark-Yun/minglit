@@ -107,6 +107,21 @@ const authDeleteRoute = {
   handler: () => jsonResponse({ user: { id: USER_ID } }),
 };
 
+const retentionPoliciesRoute = {
+  matcher: (req: Request) =>
+    req.url.includes("/rest/v1/retention_policies") && req.method === "GET",
+  handler: () =>
+    jsonResponse([
+      { id: "deletion_grace", retention_days: 7 },
+      { id: "blocked_di_records", retention_days: 30 },
+      { id: "contract_retention", retention_days: 1825 },
+      { id: "payment_retention", retention_days: 1825 },
+      { id: "dispute_retention", retention_days: 1095 },
+      { id: "login_history_retention", retention_days: 90 },
+      { id: "consent_retention", retention_days: 730 },
+    ]),
+};
+
 const userConsentsRoute = {
   matcher: (req: Request) =>
     req.url.includes("/rest/v1/user_consents") && req.method === "GET",
@@ -167,6 +182,7 @@ Deno.test(
       new URL("./index.ts", import.meta.url),
     );
     const { fetchMock, calls } = createFetchMock([
+      retentionPoliciesRoute,
       pendingUsersRoute([{
         id: USER_ID,
         deleted_at: "2026-03-21T00:00:00Z",
@@ -252,6 +268,7 @@ Deno.test("no eligible users returns zero summary", async () => {
     new URL("./index.ts", import.meta.url),
   );
   const { fetchMock, calls } = createFetchMock([
+    retentionPoliciesRoute,
     pendingUsersRoute([]),
   ]);
 
@@ -265,7 +282,7 @@ Deno.test("no eligible users returns zero summary", async () => {
         assertEquals(payload.processed_count, 0);
         assertEquals(payload.deleted_count, 0);
         assertEquals(payload.failed_count, 0);
-        assertEquals(calls.length, 1);
+        assertEquals(calls.length, 2); // retention_policies + user_profiles
       });
     });
   });
