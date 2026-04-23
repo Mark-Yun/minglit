@@ -47,7 +47,7 @@ values
 UPDATE admin.retention_policies
 SET retention_days = CASE id
   WHEN 'cron_job_run_details'          THEN 7
-  WHEN 'net_http_response'             THEN 1
+  WHEN 'net_http_response'             THEN 7
   WHEN 'pgmq_global_events_archive'    THEN 3
   WHEN 'pgmq_vectors_archive'          THEN 3
   WHEN 'pgmq_notifications_archive'    THEN 3

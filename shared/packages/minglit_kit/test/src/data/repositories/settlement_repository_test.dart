@@ -155,6 +155,44 @@ void main() {
         );
       });
 
+      // Fix #1739: adjustment_items.settlement_item_id → related_settlement_item_id
+      // Regression guard: if someone reverts the column name the assertion below
+      // will fail before the real DB does.
+      test(
+        'Fix #1739: queries adjustment_items by related_settlement_item_id',
+        () async {
+          mockTable(
+            mockClient,
+            'settlement_items',
+            maybeSingleData: _settlementItemJson(),
+          );
+          mockTable(mockClient, 'settlement_histories', selectData: []);
+          final adjustmentsBuilder = mockTable(
+            mockClient,
+            'adjustment_items',
+            selectData: [],
+          );
+
+          await repository.getSettlementItemDetail('item_1');
+
+          final eqFilters = adjustmentsBuilder.recordedFilters
+              .where((f) => f.method == 'eq')
+              .toList();
+          expect(
+            eqFilters.any((f) => f.column == 'related_settlement_item_id'),
+            isTrue,
+            reason:
+                'adjustment_items must be filtered by related_settlement_item_id (not settlement_item_id)',
+          );
+          expect(
+            eqFilters.any((f) => f.column == 'settlement_item_id'),
+            isFalse,
+            reason:
+                'adjustment_items has no settlement_item_id column — Fix #1739',
+          );
+        },
+      );
+
       // Fix #1566: settlement_histories.created_at → event_at column rename.
       // Regression guard: verify that the repository selects and orders by
       // 'event_at', not 'created_at'. If someone reverts the column name the

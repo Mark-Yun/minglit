@@ -139,15 +139,15 @@ class PartyDetailInfoTab extends ConsumerWidget {
     );
   }
 
+  // Fix #1733: Coordinator를 통해 입장 조건 편집 화면 진입 (위젯 직접 Navigator 호출 제거)
   void _showEntranceConditionsEdit(
     BuildContext context,
     WidgetRef ref,
     Party party,
   ) {
-    // Current UI doesn't have a specific group to edit,
-    // so we navigate to a screen or logic that handles groups.
-    // For now, keep the logic of tapping a group if needed,
-    // but the section itself is now clickable.
+    ref
+        .read(partyDetailCoordinatorProvider)
+        .openEntryGroupManagement(context, party.id);
   }
 
   Future<void> _handleUpdateLocation(

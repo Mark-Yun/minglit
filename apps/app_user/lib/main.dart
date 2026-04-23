@@ -88,22 +88,24 @@ Future<void> appStartup(Ref ref) async {
     );
   }
 
-  try {
-    await Future.wait([
-      initializeDateFormatting('ko_KR'),
-      Supabase.initialize(url: supabaseUrl, anonKey: supabasePublishableKey),
-      Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform),
-    ]);
-  } on Exception catch (e) {
-    Log.e('App startup warning', e);
-  }
-
   const statsigClientKey = String.fromEnvironment('STATSIG_CLIENT_KEY');
   const environment = String.fromEnvironment(
     'ENVIRONMENT',
     defaultValue: 'local',
   );
-  await StatsigAnalytics.initialize(statsigClientKey, tier: environment);
+
+  // Fix #1746: parallelize Statsig with Supabase/Firebase to reduce cold-start
+  // splash duration. Statsig has no dependency on Firebase or Supabase.
+  try {
+    await Future.wait([
+      initializeDateFormatting('ko_KR'),
+      Supabase.initialize(url: supabaseUrl, anonKey: supabasePublishableKey),
+      Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform),
+      StatsigAnalytics.initialize(statsigClientKey, tier: environment),
+    ]);
+  } on Exception catch (e) {
+    Log.e('App startup warning', e);
+  }
   StatsigAnalytics.logEvent(MingLitEvent.appOpened);
 
   // Sync Statsig user context with auth state changes
@@ -140,10 +142,17 @@ class _AppView extends ConsumerWidget {
     // Activate notification initializer to listen for sign-in events
     ref
       ..watch(notificationInitializerProvider)
-      // Remove native splash when startup completes (or fails).
+      // Fix #1746: guard with ref.watch to handle the case where startup
+      // already completed before this listener was registered (listener only
+      // fires on transitions, not on the current state).
       ..listen(appStartupProvider, (prev, next) {
         if (next is! AsyncLoading) FlutterNativeSplash.remove();
       });
+
+    // Eagerly remove splash if startup is already done (covers fast-init path).
+    if (startupState is! AsyncLoading) {
+      FlutterNativeSplash.remove();
+    }
 
     // ignore: use_minglit_async_value_widget - This is the app entry point, MaterialApp is not yet available.
     return MaterialApp.router(

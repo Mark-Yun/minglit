@@ -41,12 +41,13 @@ SELECT ok(
   'archived_records_expired target.use_absolute_ts = true'
 );
 
--- 6. CHECK 제약: retention_days < legal_min_days 거절
+-- 6. 트리거: retention_days < legal_min_days 거절
+-- Fix #1749: validate_retention_policy_legal_min trigger uses ERRCODE = check_violation (23514)
 SELECT throws_ok(
   $$UPDATE admin.retention_policies SET retention_days = 100 WHERE id = 'archived_records_expired'$$,
   '23514',
   NULL,
-  'CHECK constraint rejects retention_days < legal_min_days for archived_records_expired'
+  'trigger blocks retention_days < legal_min_days for archived_records_expired'
 );
 
 -- 7. 기능 테스트: 만료 레코드 삭제 (BEGIN..ROLLBACK 내부)

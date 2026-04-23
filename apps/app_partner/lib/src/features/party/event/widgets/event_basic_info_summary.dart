@@ -18,7 +18,8 @@ class EventBasicInfoSummary extends StatelessWidget {
   Widget build(BuildContext context) {
     // Aggregation: Use PartyBasicInfoSummary internally
     return PartyBasicInfoSummary(
-      title: event.title ?? event.party?.title ?? '',
+      // Fix #1742: event.title은 nullable — party.title로 폴백 (다른 화면과 일관성 유지)
+      title: event.party?.title ?? event.title ?? '',
       description: event.description ?? event.party?.description ?? {},
       imageUrls: event.imageUrls ?? event.party?.imageUrls ?? [],
       showTitle: showTitle,

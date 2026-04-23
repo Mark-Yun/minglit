@@ -446,7 +446,8 @@ class _EventGroupSection extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '${event.title ?? ''} · ${dateFmt.format(event.startTime)} ${timeFmt.format(event.startTime)}',
+                      // Fix #1742: event.title은 nullable — party.title로 폴백
+                      '${event.party?.title ?? event.title ?? ''} · ${dateFmt.format(event.startTime)} ${timeFmt.format(event.startTime)}',
                       style: theme.textTheme.labelLarge?.copyWith(
                         fontWeight: FontWeight.w800,
                       ),

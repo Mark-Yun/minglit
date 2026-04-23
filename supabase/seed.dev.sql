@@ -669,3 +669,77 @@ BEGIN
     END IF;
   END LOOP;
 END $$;
+
+-- Fix #1743: CUJ-P05 수정 위저드 테스트용 — entry_group_templates + ticket_templates 포함 파티.
+-- partner_hotplace_0 소속. 수정 위저드 진입 시 Step4/Step5에 기존 데이터가 로드되는지 확인.
+-- 멱등: 이미 존재하면 생성 건너뜀.
+DO $$
+DECLARE
+  partner_id_  uuid;
+  location_id_ uuid;
+  party_id_    uuid;
+BEGIN
+  SELECT id INTO partner_id_ FROM public.partners WHERE biz_number = '000-00-00000';
+  IF partner_id_ IS NULL THEN
+    RAISE NOTICE 'Fix #1743 seed: partner_hotplace_0 없음, 스킵.';
+    RETURN;
+  END IF;
+
+  SELECT id INTO location_id_ FROM public.locations
+  WHERE partner_id = partner_id_ AND name = '서울 강남' LIMIT 1;
+
+  -- CUJ-P05 전용 파티 (입장그룹 + 티켓 템플릿 포함)
+  SELECT id INTO party_id_ FROM public.parties
+  WHERE partner_id = partner_id_ AND title = '[QA] CUJ-P05 파티 수정 위저드 테스트';
+  IF party_id_ IS NULL THEN
+    INSERT INTO public.parties
+      (partner_id, location_id, title, max_participants, status, image_urls)
+    VALUES (
+      partner_id_, location_id_,
+      '[QA] CUJ-P05 파티 수정 위저드 테스트',
+      40, 'active',
+      ARRAY['https://picsum.photos/seed/minglit-qa-cuj-p05/800/600']
+    )
+    RETURNING id INTO party_id_;
+  END IF;
+
+  -- entry_group_templates: 남성 20-29, 여성 20-29
+  IF NOT EXISTS (SELECT 1 FROM public.entry_group_templates WHERE party_id = party_id_) THEN
+    -- Fix #1772-review: 두 행 INSERT에 RETURNING INTO 하나 → "query returned more than one row" 에러.
+    -- group_m_id/group_f_id 는 이후에 쓰이지 않으므로 RETURNING 절 제거.
+    INSERT INTO public.entry_group_templates (party_id, label, gender, birth_year_min, birth_year_max)
+    VALUES
+      (party_id_, '남성 그룹', 'male',   1995, 2004),
+      (party_id_, '여성 그룹', 'female', 1995, 2004);
+  END IF;
+
+  -- ticket_templates: 일반 참가권 (무료, 20인)
+  IF NOT EXISTS (SELECT 1 FROM public.ticket_templates WHERE party_id = party_id_) THEN
+    INSERT INTO public.ticket_templates (party_id, name, price, quantity)
+    VALUES (party_id_, '일반 참가권', 0, 20);
+  END IF;
+END $$;
+
+-- ── Phase 9: Backfill image_urls for imageless hotplace partner parties ───────
+-- Fix #1745: partner_hotplace_* 파트너 소속 파티 중 image_urls 미설정 파티에
+-- picsum placeholder 이미지 채움. E2E 자동화가 생성한 파티(예: [E2E] 네트워킹_edit)
+-- 에도 적용돼 홈 화면 이벤트 카드 broken placeholder 제거.
+-- 멱등: 이미 image_urls가 설정된 파티는 건드리지 않음.
+DO $$
+DECLARE
+  hp_partner_id uuid;
+  hp_biz_number text;
+BEGIN
+  FOREACH hp_biz_number IN ARRAY ARRAY['000-00-00000', '000-00-00001', '000-00-00002']
+  LOOP
+    SELECT id INTO hp_partner_id FROM public.partners WHERE biz_number = hp_biz_number;
+    IF hp_partner_id IS NULL THEN CONTINUE; END IF;
+
+    UPDATE public.parties
+    SET image_urls = ARRAY[
+      'https://picsum.photos/seed/minglit-hotplace-' || replace(hp_biz_number, '-', '') || '/800/600'
+    ]
+    WHERE partner_id = hp_partner_id
+      AND (image_urls IS NULL OR array_length(image_urls, 1) IS NULL);
+  END LOOP;
+END $$;

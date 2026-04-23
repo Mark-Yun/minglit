@@ -340,6 +340,36 @@ abstract class AppLocalizations {
   /// **'파티 정보'**
   String get partyDetail_tab_info;
 
+  /// No description provided for @partyDetail_title_entryGroupManagement.
+  ///
+  /// In ko, this message translates to:
+  /// **'입장 조건 관리'**
+  String get partyDetail_title_entryGroupManagement;
+
+  /// No description provided for @entryGroup_delete_title.
+  ///
+  /// In ko, this message translates to:
+  /// **'입장 조건 삭제'**
+  String get entryGroup_delete_title;
+
+  /// No description provided for @entryGroup_delete_message.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 입장 조건을 삭제하시겠습니까? 연결된 티켓의 입장 조건 설정이 변경될 수 있습니다.'**
+  String get entryGroup_delete_message;
+
+  /// No description provided for @common_delete.
+  ///
+  /// In ko, this message translates to:
+  /// **'삭제'**
+  String get common_delete;
+
+  /// No description provided for @common_cancel.
+  ///
+  /// In ko, this message translates to:
+  /// **'취소'**
+  String get common_cancel;
+
   /// No description provided for @partyList_badge_active.
   ///
   /// In ko, this message translates to:

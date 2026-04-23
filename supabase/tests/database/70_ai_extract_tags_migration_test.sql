@@ -92,10 +92,11 @@ SELECT ok(
   'ai-extract-tags cron uses vault supabase_url (not hardcoded URL)'
 );
 
--- cron SQL이 publishable_key Vault 시크릿을 참조하는지 확인
+-- Fix #1758: cron SQL이 service_role_key Vault 시크릿을 참조하는지 확인
+-- (이전: publishable_key — requireServiceRole() 가드 추가 후 401 발생, 교체됨)
 SELECT ok(
-  (SELECT command FROM cron.job WHERE jobname = 'ai-extract-tags') LIKE '%publishable_key%',
-  'ai-extract-tags cron uses vault publishable_key (not service_role_key)'
+  (SELECT command FROM cron.job WHERE jobname = 'ai-extract-tags') LIKE '%service_role_key%',
+  'ai-extract-tags cron uses vault service_role_key (not publishable_key)'
 );
 
 RESET ROLE;

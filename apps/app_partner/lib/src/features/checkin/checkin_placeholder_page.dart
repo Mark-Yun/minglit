@@ -208,7 +208,8 @@ class _CheckinSelectionPage extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    event.title ?? '',
+                                    // Fix #1742: event.title은 nullable — party.title로 폴백
+                                    event.party?.title ?? event.title ?? '',
                                     style: theme.textTheme.titleSmall,
                                   ),
                                   Text(

@@ -12,8 +12,9 @@ class RadiusSection extends StatelessWidget {
     const radii = <String, double>{
       'small (8)': MinglitRadius.small,
       'input (12)': MinglitRadius.input,
-      'button (16)': MinglitRadius.button,
-      'card (24)': MinglitRadius.card,
+      // Fix #1718: labels corrected to match actual constant values
+      'button (12)': MinglitRadius.button,
+      'card (16)': MinglitRadius.card,
     };
 
     return ListView.builder(

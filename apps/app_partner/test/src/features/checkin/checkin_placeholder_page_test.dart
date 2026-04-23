@@ -232,6 +232,56 @@ void main() {
       expect(find.text('Second Event'), findsOneWidget);
     });
 
+    // Fix #1742: event.title이 null일 때 party.title을 표시하는 회귀 테스트
+    testWidgets(
+      'Fix #1742: shows party title when event.title is null',
+      (tester) async {
+        final party = Party(
+          id: 'party-1',
+          partnerId: 'partner-1',
+          title: '파티 이름',
+          createdAt: now,
+          updatedAt: now,
+        );
+        final eventNullTitle = Event(
+          id: 'event-null',
+          partyId: 'party-1',
+          startTime: now.subtract(const Duration(hours: 1)),
+          endTime: now.add(const Duration(hours: 2)),
+          createdAt: now,
+          updatedAt: now,
+          party: party,
+        );
+        final event2 = Event(
+          id: 'event-2',
+          partyId: 'party-1',
+          startTime: now.add(const Duration(hours: 1)),
+          endTime: now.add(const Duration(hours: 3)),
+          createdAt: now,
+          updatedAt: now,
+          title: 'Second Event',
+        );
+
+        await tester.pumpWidget(
+          buildWidget(
+            overrides: [
+              currentPartnerInfoProvider.overrideWith(
+                (ref) async => testPartner,
+              ),
+              todayEventsProvider.overrideWith(
+                (ref, partnerId) async => [eventNullTitle, event2],
+              ),
+            ],
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // Party title shown instead of empty string
+        expect(find.text('파티 이름'), findsOneWidget);
+        expect(find.text('Second Event'), findsOneWidget);
+      },
+    );
+
     testWidgets('shows loading indicator when events are loading', (
       tester,
     ) async {

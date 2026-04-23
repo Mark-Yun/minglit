@@ -336,6 +336,208 @@ void main() {
 
         expect(captured.containsKey('tag_ids'), isFalse);
       });
+
+      // Fix #1733: updateParty with entryGroups sends entry_group_templates in EF body
+      test(
+        'includes entry_group_templates in body when entryGroups provided',
+        () async {
+          when(
+            () => mockFunctions.invoke(
+              'partner-manage-party',
+              body: any(named: 'body'),
+            ),
+          ).thenAnswer(
+            (_) async => FunctionResponse(
+              status: 200,
+              data: {'success': true},
+            ),
+          );
+          unawaited(
+            mockTable(
+              mockClient,
+              'parties',
+              maybeSingleData: partyJson,
+            ),
+          );
+
+          final partyWithGroups = Party.fromJson({
+            ...partyJson,
+            'entry_group_templates': [
+              {
+                'id': 'egt_1',
+                'party_id': 'party_1',
+                'label': '남성 그룹',
+                'gender': 'male',
+                'birth_year_min': 1990,
+                'birth_year_max': 2000,
+                'required_verification_ids': <String>[],
+              },
+            ],
+          });
+          await repository.updateParty(partyWithGroups);
+
+          final captured =
+              verify(
+                    () => mockFunctions.invoke(
+                      'partner-manage-party',
+                      body: captureAny(named: 'body'),
+                    ),
+                  ).captured.single
+                  as Map<String, dynamic>;
+
+          expect(captured.containsKey('entry_group_templates'), isTrue);
+          final groups = captured['entry_group_templates'] as List;
+          expect(groups.length, 1);
+          expect((groups.first as Map)['gender'], 'male');
+        },
+      );
+
+      test(
+        'preserves existing entry group id in entry_group_templates body',
+        () async {
+          when(
+            () => mockFunctions.invoke(
+              'partner-manage-party',
+              body: any(named: 'body'),
+            ),
+          ).thenAnswer(
+            (_) async => FunctionResponse(
+              status: 200,
+              data: {'success': true},
+            ),
+          );
+          unawaited(
+            mockTable(
+              mockClient,
+              'parties',
+              maybeSingleData: partyJson,
+            ),
+          );
+
+          // Fix #1733: 기존 그룹 id는 EF update payload에 유지되어야 기존 row를 UPDATE할 수 있음
+          final partyWithExistingGroup = Party.fromJson({
+            ...partyJson,
+            'entry_group_templates': [
+              {
+                'id': 'existing-group-id',
+                'party_id': 'party_1',
+                'label': '기존 그룹',
+                'gender': 'male',
+                'birth_year_min': 1990,
+                'birth_year_max': 2000,
+                'required_verification_ids': <String>[],
+              },
+            ],
+          });
+
+          await repository.updateParty(partyWithExistingGroup);
+
+          final captured =
+              verify(
+                    () => mockFunctions.invoke(
+                      'partner-manage-party',
+                      body: captureAny(named: 'body'),
+                    ),
+                  ).captured.single
+                  as Map<String, dynamic>;
+
+          final groups = captured['entry_group_templates'] as List;
+          expect((groups.first as Map)['id'], 'existing-group-id');
+        },
+      );
+
+      test(
+        'sends empty string id for new entry group in entry_group_templates body',
+        () async {
+          when(
+            () => mockFunctions.invoke(
+              'partner-manage-party',
+              body: any(named: 'body'),
+            ),
+          ).thenAnswer(
+            (_) async => FunctionResponse(
+              status: 200,
+              data: {'success': true},
+            ),
+          );
+          unawaited(
+            mockTable(
+              mockClient,
+              'parties',
+              maybeSingleData: partyJson,
+            ),
+          );
+
+          // Fix #1733: 새 그룹은 빈 id로 전송해 EF가 INSERT 경로로 분기하도록 보장
+          final partyWithNewGroup = Party.fromJson({
+            ...partyJson,
+            'entry_group_templates': [
+              {
+                'id': '',
+                'party_id': 'party_1',
+                'label': '신규 그룹',
+                'gender': 'female',
+                'birth_year_min': 1992,
+                'birth_year_max': 2002,
+                'required_verification_ids': <String>[],
+              },
+            ],
+          });
+
+          await repository.updateParty(partyWithNewGroup);
+
+          final captured =
+              verify(
+                    () => mockFunctions.invoke(
+                      'partner-manage-party',
+                      body: captureAny(named: 'body'),
+                    ),
+                  ).captured.single
+                  as Map<String, dynamic>;
+
+          final groups = captured['entry_group_templates'] as List;
+          expect((groups.first as Map)['id'], '');
+        },
+      );
+
+      // Fix #1733: updateParty with null entryGroups omits entry_group_templates key
+      test(
+        'omits entry_group_templates key when entryGroups is null',
+        () async {
+          when(
+            () => mockFunctions.invoke(
+              'partner-manage-party',
+              body: any(named: 'body'),
+            ),
+          ).thenAnswer(
+            (_) async => FunctionResponse(
+              status: 200,
+              data: {'success': true},
+            ),
+          );
+          unawaited(
+            mockTable(
+              mockClient,
+              'parties',
+              maybeSingleData: partyJson,
+            ),
+          );
+
+          final party = Party.fromJson(partyJson);
+          await repository.updateParty(party);
+
+          final captured =
+              verify(
+                    () => mockFunctions.invoke(
+                      'partner-manage-party',
+                      body: captureAny(named: 'body'),
+                    ),
+                  ).captured.single
+                  as Map<String, dynamic>;
+
+          expect(captured.containsKey('entry_group_templates'), isFalse);
+        },
+      );
     });
 
     // Fix #316: updatePartyStatus now uses EF invoke
@@ -523,8 +725,11 @@ void main() {
 
   group('PartyRepository (matching)', () {
     group('replaceEntryGroupTemplates', () {
+      // Fix #1740: entry_groups(Event Level)에는 party_id 컬럼 없음 —
+      // entry_group_templates(Party Level) 테이블 사용으로 수정.
+
       test('completes with empty templates (delete only)', () async {
-        unawaited(mockTable(mockClient, 'entry_groups'));
+        unawaited(mockTable(mockClient, 'entry_group_templates'));
 
         await expectLater(
           repository.replaceEntryGroupTemplates('party_1', []),
@@ -533,7 +738,7 @@ void main() {
       });
 
       test('completes with templates (delete + insert)', () async {
-        unawaited(mockTable(mockClient, 'entry_groups'));
+        unawaited(mockTable(mockClient, 'entry_group_templates'));
 
         final templates = [
           const EntryGroupTemplate(
@@ -556,7 +761,7 @@ void main() {
         unawaited(
           mockTable(
             mockClient,
-            'entry_groups',
+            'entry_group_templates',
             shouldThrow: Exception('error'),
           ),
         );
@@ -566,6 +771,29 @@ void main() {
           throwsA(anything),
         );
       });
+
+      test(
+        'Fix #1740: uses entry_group_templates table (not entry_groups)',
+        () async {
+          final templatesBuilder = mockTable(
+            mockClient,
+            'entry_group_templates',
+          );
+
+          await repository.replaceEntryGroupTemplates('party_1', []);
+
+          final eqFilters = templatesBuilder.recordedFilters
+              .where((f) => f.method == 'eq')
+              .toList();
+          expect(
+            eqFilters.any((f) => f.column == 'party_id'),
+            isTrue,
+            reason: 'entry_group_templates must be filtered by party_id',
+          );
+          // entry_groups 테이블 호출 없음 확인
+          verifyNever(() => mockClient.from('entry_groups'));
+        },
+      );
     });
   });
 }
