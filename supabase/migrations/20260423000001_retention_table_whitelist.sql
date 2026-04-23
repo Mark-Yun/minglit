@@ -119,7 +119,8 @@ BEGIN
       RAISE EXCEPTION
         'retention_days (%) below table legal_min_days (%) for %.%',
         NEW.retention_days, min_days,
-        NEW.target->>'schema', NEW.target->>'table';
+        NEW.target->>'schema', NEW.target->>'table'
+        USING ERRCODE = 'check_violation';
     END IF;
   END IF;
   RETURN NEW;
