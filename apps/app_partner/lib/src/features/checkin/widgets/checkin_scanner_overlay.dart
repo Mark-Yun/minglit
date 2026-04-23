@@ -103,7 +103,7 @@ class _CheckinScannerOverlayState extends State<CheckinScannerOverlay>
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
-    final cutOut = math.min(220.0, size.shortestSide * 0.48);
+    final cutOut = math.min(220, size.shortestSide * 0.48);
 
     return Stack(
       children: [
@@ -165,7 +165,7 @@ class _CheckinScannerOverlayState extends State<CheckinScannerOverlay>
             right: 0,
             child: AnimatedBuilder(
               animation: _bannerController,
-              builder: (_, __) => Opacity(
+              builder: (_, _) => Opacity(
                 // Fix #1817: _bannerFade goes 1→0 over [0.75,1], so opacity=value gives full visibility during display
                 opacity: _bannerFade.value,
                 child: SlideTransition(
