@@ -42,9 +42,10 @@ SELECT ok(
 );
 
 -- 6. 트리거: retention_days < legal_min_days 거절
+-- Fix #1749: validate_retention_policy_legal_min trigger uses ERRCODE = check_violation (23514)
 SELECT throws_ok(
   $$UPDATE admin.retention_policies SET retention_days = 100 WHERE id = 'archived_records_expired'$$,
-  'P0001',
+  '23514',
   NULL,
   'trigger blocks retention_days < legal_min_days for archived_records_expired'
 );
