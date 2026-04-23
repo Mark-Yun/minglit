@@ -59,7 +59,7 @@ void main() {
   // ──────────────────────────────────────────────────────────────────
   group('AsyncError 상태', () {
     testWidgets(
-      'EventDetailPage 에러 → MinglitAsyncValueWidget 에러뷰 + 하단바 숨김',
+      'EventDetailPage 에러 → MinglitErrorState 에러뷰 + 하단바 숨김',
       (tester) async {
         setKoreanLocale(tester);
         final capture = GoldenCapture('flow_u_error');
@@ -82,11 +82,11 @@ void main() {
 
         await capture.error(tester, 0); // 네트워크 에러 화면
 
-        // MinglitAsyncValueWidget default error view
-        expect(find.text('오류가 발생했습니다.'), findsOneWidget);
+        // Fix #1746: EventDetailPage now uses MinglitErrorState with custom title
+        expect(find.text('이벤트를 불러올 수 없습니다'), findsOneWidget);
         expect(find.byIcon(Icons.error_outline), findsOneWidget);
 
-        // Bottom bar should be SizedBox.shrink (hidden on error)
+        // Bottom bar should be hidden on error (AnimatedSwitcher replaces entire column)
         expect(find.text('최저가'), findsNothing);
         expect(find.text('오류 발생'), findsNothing);
       },
