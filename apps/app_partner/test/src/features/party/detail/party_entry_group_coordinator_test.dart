@@ -70,9 +70,11 @@ void main() {
     mockRouter = MockGoRouter();
     registerFallbackValue(_makeParty());
     // Fix #1733: Route fallback required by Mocktail any() in verify()
-    registerFallbackValue(MaterialPageRoute<dynamic>(
-      builder: (_) => const SizedBox.shrink(),
-    ));
+    registerFallbackValue(
+      MaterialPageRoute<dynamic>(
+        builder: (_) => const SizedBox.shrink(),
+      ),
+    );
   });
 
   group('PartyDetailCoordinator.addPartyEntryGroup', () {
@@ -171,7 +173,7 @@ void main() {
           child: MaterialApp(
             navigatorObservers: [mockObserver],
             locale: const Locale('ko'),
-            localizationsDelegates: [
+            localizationsDelegates: const [
               AppLocalizations.delegate,
               ...GlobalMaterialLocalizations.delegates,
             ],
