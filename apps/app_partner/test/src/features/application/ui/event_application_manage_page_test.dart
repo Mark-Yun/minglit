@@ -239,6 +239,45 @@ void main() {
       expect(find.text('파트너 정보를 불러올 수 없습니다'), findsOneWidget);
     });
 
+    // Fix #1742: event.title이 null일 때 event.party.title을 표시하는 회귀 테스트
+    testWidgets(
+      'Fix #1742: shows party title when event.title is null',
+      (tester) async {
+        final now = DateTime(2026, 3, 29, 14);
+        final party = Party(
+          id: 'party_1',
+          partnerId: 'partner_1',
+          title: '파티 이름',
+          createdAt: now,
+          updatedAt: now,
+        );
+        final eventWithNullTitle = Event(
+          id: 'event_null_title',
+          partyId: 'party_1',
+          startTime: now.add(const Duration(hours: 2)),
+          endTime: now.add(const Duration(hours: 5)),
+          createdAt: now,
+          updatedAt: now,
+          currentParticipants: 3,
+          party: party,
+        );
+
+        await tester.pumpWidget(
+          createTestWidget(
+            pendingGrouped: {
+              eventWithNullTitle: [
+                makeApp(id: 'app_1', status: 'pending', userName: '홍길동'),
+              ],
+            },
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.textContaining('파티 이름'), findsOneWidget);
+        expect(find.textContaining('1건 ·'), findsOneWidget);
+      },
+    );
+
     testWidgets('shows user info with age and gender', (tester) async {
       await tester.pumpWidget(
         createTestWidget(
