@@ -9,13 +9,32 @@ import { initSentry, log, withHandler, withSpan } from "../_shared/logger.ts";
 import { requireServiceRole } from "../_shared/auth_utils.ts";
 
 const FN = "process-pending-deletions";
-const DELETION_GRACE_DAYS = 7;
-const BLOCKED_DI_DAYS = 30;
-const CONTRACT_RETENTION_YEARS = 5;
-const PAYMENT_RETENTION_YEARS = 5;
-const DISPUTE_RETENTION_YEARS = 3;
-const LOGIN_RETENTION_MONTHS = 3;
-const CONSENT_RETENTION_YEARS = 2;
+
+type RetentionCalendarSpec = {
+  value: number;
+  unit: "year" | "month" | "day";
+};
+
+type RetentionConfig = {
+  deletionGraceDays: number;
+  blockedDiDays: number;
+  contract: RetentionCalendarSpec;
+  payment: RetentionCalendarSpec;
+  dispute: RetentionCalendarSpec;
+  login: RetentionCalendarSpec;
+  consent: RetentionCalendarSpec;
+};
+
+// Fix #1789: fallback — DB 조회 실패 시 법적 최소값 보장 (달력 기준)
+const DEFAULT_RETENTION: RetentionConfig = {
+  deletionGraceDays: 7,
+  blockedDiDays: 30,
+  contract: { value: 5, unit: "year" },
+  payment: { value: 5, unit: "year" },
+  dispute: { value: 3, unit: "year" },
+  login: { value: 3, unit: "month" },
+  consent: { value: 2, unit: "year" },
+};
 
 type PendingDeletionUser = {
   id: string;
@@ -92,6 +111,88 @@ function addMonths(date: Date, months: number): string {
       date.getUTCMilliseconds(),
     ),
   ).toISOString();
+}
+
+function applyRetentionSpec(date: Date, spec: RetentionCalendarSpec): string {
+  switch (spec.unit) {
+    case "year": return addYears(date, spec.value);
+    case "month": return addMonths(date, spec.value);
+    case "day": return addDays(date, spec.value);
+  }
+}
+
+type RetentionPolicyRow = {
+  id: string;
+  retention_days: number;
+  retention_calendar_value: number | null;
+  retention_calendar_unit: string | null;
+};
+
+function specFromRow(
+  row: RetentionPolicyRow | undefined,
+  fallback: RetentionCalendarSpec,
+): RetentionCalendarSpec {
+  if (
+    row?.retention_calendar_value != null &&
+    row?.retention_calendar_unit != null
+  ) {
+    const unit = row.retention_calendar_unit;
+    // Fix #1789: DB CHECK 제약 완화/우회 시 applyRetentionSpec switch가 undefined를 반환해 retention_until이 null이 되는 것을 방지
+    if (unit !== "year" && unit !== "month" && unit !== "day") {
+      return fallback;
+    }
+    return { value: row.retention_calendar_value, unit };
+  }
+  return fallback;
+}
+
+async function loadRetentionConfig(): Promise<RetentionConfig> {
+  const supabase = createServiceClient();
+  const { data, error } = await withSpan(
+    "db.query.retention_config",
+    "db.query",
+    () =>
+      supabase
+        .schema("admin")
+        .from("retention_policies")
+        .select("id, retention_days, retention_calendar_value, retention_calendar_unit")
+        .in("id", [
+          "deletion_grace",
+          "blocked_di_records",
+          "contract_retention",
+          "payment_retention",
+          "dispute_retention",
+          "login_history_retention",
+          "consent_retention",
+        ]),
+  );
+
+  if (error || !data) {
+    log({
+      function: FN,
+      level: "warn",
+      message: "Failed to load retention config from DB, using defaults",
+      metadata: { detail: error },
+    });
+    return DEFAULT_RETENTION;
+  }
+
+  const byId = Object.fromEntries(
+    (data as RetentionPolicyRow[]).map((row) => [row.id, row]),
+  );
+  return {
+    deletionGraceDays:
+      byId["deletion_grace"]?.retention_days ??
+      DEFAULT_RETENTION.deletionGraceDays,
+    blockedDiDays:
+      byId["blocked_di_records"]?.retention_days ??
+      DEFAULT_RETENTION.blockedDiDays,
+    contract: specFromRow(byId["contract_retention"], DEFAULT_RETENTION.contract),
+    payment: specFromRow(byId["payment_retention"], DEFAULT_RETENTION.payment),
+    dispute: specFromRow(byId["dispute_retention"], DEFAULT_RETENTION.dispute),
+    login: specFromRow(byId["login_history_retention"], DEFAULT_RETENTION.login),
+    consent: specFromRow(byId["consent_retention"], DEFAULT_RETENTION.consent),
+  };
 }
 
 async function sha256Hex(value: string): Promise<string> {
@@ -205,6 +306,7 @@ async function buildArchivedRecords(
   user: PendingDeletionUser,
   archivedRunId: string,
   now: Date,
+  retention: RetentionConfig,
 ): Promise<ArchivedRecordInsert[]> {
   const userIdHash = await sha256Hex(user.id);
   const eventApplications = await loadEventApplications(user.id);
@@ -222,11 +324,11 @@ async function buildArchivedRecords(
   }
 
   const archivedRecords: ArchivedRecordInsert[] = [];
-  const contractRetention = addYears(now, CONTRACT_RETENTION_YEARS);
-  const paymentRetention = addYears(now, PAYMENT_RETENTION_YEARS);
-  const disputeRetention = addYears(now, DISPUTE_RETENTION_YEARS);
-  const loginRetention = addMonths(now, LOGIN_RETENTION_MONTHS);
-  const consentRetention = addYears(now, CONSENT_RETENTION_YEARS);
+  const contractRetention = applyRetentionSpec(now, retention.contract);
+  const paymentRetention = applyRetentionSpec(now, retention.payment);
+  const disputeRetention = applyRetentionSpec(now, retention.dispute);
+  const loginRetention = applyRetentionSpec(now, retention.login);
+  const consentRetention = applyRetentionSpec(now, retention.consent);
 
   for (const application of eventApplications) {
     archivedRecords.push({
@@ -460,11 +562,12 @@ Deno.serve(withHandler(async (req) => {
   }
 
   const now = new Date();
-  const cutoffIso = addDays(now, -DELETION_GRACE_DAYS);
-  const blockedUntil = addDays(now, BLOCKED_DI_DAYS);
   const archivedRunId = crypto.randomUUID();
 
   try {
+    const retention = await loadRetentionConfig();
+    const cutoffIso = addDays(now, -retention.deletionGraceDays);
+    const blockedUntil = addDays(now, retention.blockedDiDays);
     const users = await loadPendingUsers(cutoffIso);
     const results: UserResult[] = [];
     let archivedRecordCount = 0;
@@ -480,7 +583,7 @@ Deno.serve(withHandler(async (req) => {
           throw new Error("Missing di_hash for deleted user");
         }
 
-        const records = await buildArchivedRecords(user, archivedRunId, now);
+        const records = await buildArchivedRecords(user, archivedRunId, now, retention);
         const archivedRecords = await insertArchivedRecords(records);
         const blockedAlreadyExisted = await blockedDiExists(user.di_hash);
 

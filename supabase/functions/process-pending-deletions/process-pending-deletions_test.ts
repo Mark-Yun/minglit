@@ -1,4 +1,5 @@
-import { assertEquals, assertExists } from "@std/assert";
+import { assertEquals, assertExists, assertNotEquals } from "@std/assert";
+import { FakeTime } from "@std/testing/time";
 import {
   captureServeHandler,
   createFetchMock,
@@ -107,6 +108,21 @@ const authDeleteRoute = {
   handler: () => jsonResponse({ user: { id: USER_ID } }),
 };
 
+const retentionPoliciesRoute = {
+  matcher: (req: Request) =>
+    req.url.includes("/rest/v1/retention_policies") && req.method === "GET",
+  handler: () =>
+    jsonResponse([
+      { id: "deletion_grace", retention_days: 7, retention_calendar_value: null, retention_calendar_unit: null },
+      { id: "blocked_di_records", retention_days: 30, retention_calendar_value: null, retention_calendar_unit: null },
+      { id: "contract_retention", retention_days: 1825, retention_calendar_value: 5, retention_calendar_unit: "year" },
+      { id: "payment_retention", retention_days: 1825, retention_calendar_value: 5, retention_calendar_unit: "year" },
+      { id: "dispute_retention", retention_days: 1095, retention_calendar_value: 3, retention_calendar_unit: "year" },
+      { id: "login_history_retention", retention_days: 90, retention_calendar_value: 3, retention_calendar_unit: "month" },
+      { id: "consent_retention", retention_days: 730, retention_calendar_value: 2, retention_calendar_unit: "year" },
+    ]),
+};
+
 const userConsentsRoute = {
   matcher: (req: Request) =>
     req.url.includes("/rest/v1/user_consents") && req.method === "GET",
@@ -167,6 +183,7 @@ Deno.test(
       new URL("./index.ts", import.meta.url),
     );
     const { fetchMock, calls } = createFetchMock([
+      retentionPoliciesRoute,
       pendingUsersRoute([{
         id: USER_ID,
         deleted_at: "2026-03-21T00:00:00Z",
@@ -247,11 +264,121 @@ Deno.test(
   },
 );
 
+// 회귀 방지: addDays 평탄화 시 윤년·월말 경계에서 법정 보존기간이 짧아지는 버그 (fix #1789)
+Deno.test("retention_until uses calendar arithmetic — leap year 2024-02-29 + 5 years", async () => {
+  // now = 2024-02-29 고정: addYears(5) = Date.UTC(2029, 1, 29) → 2월 29일 없음 → 2029-03-01
+  // addDays(1825) 방식은 2029-02-27 (윤년 2024, 2028 포함하면 1827일 필요) — 3일 짧다
+  const fakeTime = new FakeTime("2024-02-29T00:00:00Z");
+  try {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const { fetchMock, calls } = createFetchMock([
+      retentionPoliciesRoute,
+      pendingUsersRoute([{
+        id: USER_ID,
+        deleted_at: "2024-02-22T00:00:00Z",
+        di_hash: "di-leap-hash",
+      }]),
+      eventApplicationsRoute,
+      reportDetailsRoute,
+      userConsentsRoute,
+      authAdminGetUserRoute,
+      blockedDisCheckRoute,
+      archiveInsertRoute,
+      blockedDisUpsertRoute,
+      authDeleteRoute,
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        await withNoIntervals(async () => {
+          const response = await handler(serviceRoleRequest());
+          assertEquals(response.status, 200);
+
+          const archiveCall = calls.find((c) =>
+            c.url.includes("/rest/v1/archived_records") && c.method === "POST"
+          );
+          assertExists(archiveCall);
+          const archivedBody = JSON.parse(archiveCall!.body ?? "[]");
+
+          const contractRecord = archivedBody.find(
+            (r: { record_type: string }) => r.record_type === "contract",
+          );
+          assertExists(contractRecord);
+
+          // 정확한 기대값: addYears(2024-02-29, 5) → Date.UTC(2029,1,29) overflow → 2029-03-01
+          assertEquals(contractRecord.retention_until, "2029-03-01T00:00:00.000Z");
+          // addDays(1825) 회귀 방지: 1825일 고정이면 2029-02-27 (3일 짧음)
+          assertNotEquals(contractRecord.retention_until, "2029-02-27T00:00:00.000Z");
+        });
+      });
+    });
+  } finally {
+    fakeTime.restore();
+  }
+});
+
+Deno.test("retention_until uses calendar arithmetic — month-end Nov-30 + 3 months", async () => {
+  // now = 2026-11-30 고정: addMonths(3) = Date.UTC(2027,1,30) overflow → 2027-03-02
+  // addDays(90) 방식은 2027-02-28 (Feb 28일까지만 있음) — 2일 짧다
+  const fakeTime = new FakeTime("2026-11-30T00:00:00Z");
+  try {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const { fetchMock, calls } = createFetchMock([
+      retentionPoliciesRoute,
+      pendingUsersRoute([{
+        id: USER_ID,
+        deleted_at: "2026-11-25T00:00:00Z",
+        di_hash: "di-monthend-hash",
+      }]),
+      eventApplicationsRoute,
+      reportDetailsRoute,
+      userConsentsRoute,
+      authAdminGetUserRoute,
+      blockedDisCheckRoute,
+      archiveInsertRoute,
+      blockedDisUpsertRoute,
+      authDeleteRoute,
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        await withNoIntervals(async () => {
+          const response = await handler(serviceRoleRequest());
+          assertEquals(response.status, 200);
+
+          const archiveCall = calls.find((c) =>
+            c.url.includes("/rest/v1/archived_records") && c.method === "POST"
+          );
+          assertExists(archiveCall);
+          const archivedBody = JSON.parse(archiveCall!.body ?? "[]");
+
+          const loginRecord = archivedBody.find(
+            (r: { record_type: string }) => r.record_type === "login",
+          );
+          assertExists(loginRecord);
+
+          // 정확한 기대값: addMonths(2026-11-30, 3) → Date.UTC(2027,1,30) overflow → 2027-03-02
+          assertEquals(loginRecord.retention_until, "2027-03-02T00:00:00.000Z");
+          // addDays(90) 회귀 방지: Nov 30 + 90d = 2027-02-28 (Feb 28까지만 있음)
+          assertNotEquals(loginRecord.retention_until, "2027-02-28T00:00:00.000Z");
+        });
+      });
+    });
+  } finally {
+    fakeTime.restore();
+  }
+});
+
 Deno.test("no eligible users returns zero summary", async () => {
   const handler = await captureServeHandler(
     new URL("./index.ts", import.meta.url),
   );
   const { fetchMock, calls } = createFetchMock([
+    retentionPoliciesRoute,
     pendingUsersRoute([]),
   ]);
 
@@ -265,7 +392,7 @@ Deno.test("no eligible users returns zero summary", async () => {
         assertEquals(payload.processed_count, 0);
         assertEquals(payload.deleted_count, 0);
         assertEquals(payload.failed_count, 0);
-        assertEquals(calls.length, 1);
+        assertEquals(calls.length, 2); // retention_policies + user_profiles
       });
     });
   });

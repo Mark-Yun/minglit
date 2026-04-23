@@ -12,6 +12,7 @@ interface RetentionPolicy {
   kind: RetentionKind;
   retention_days: number;
   target: Record<string, string> & { use_absolute_ts?: boolean; fn?: string };
+  metadata: Record<string, unknown>;
 }
 
 interface PolicyResult {
@@ -120,6 +121,9 @@ async function runPolicy(
   policy: RetentionPolicy,
 ): Promise<PolicyResult> {
   const start = Date.now();
+  if (policy.metadata?.skip_cleanup === true) {
+    return { id: policy.id, status: "skipped", rows_deleted: 0, duration_ms: 0 };
+  }
   try {
     let result: { rows_deleted: number };
     if (policy.kind === "db_table") {
@@ -193,7 +197,7 @@ Deno.serve(withHandler(async (req) => {
   const { data: policies, error: fetchError } = await supabase
     .schema("admin")
     .from("retention_policies")
-    .select("id, kind, retention_days, target")
+    .select("id, kind, retention_days, target, metadata")
     .eq("enabled", true);
 
   if (fetchError) {
