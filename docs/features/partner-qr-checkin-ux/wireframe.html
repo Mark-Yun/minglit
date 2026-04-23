@@ -5,18 +5,29 @@
 <title>파트너 QR 체크인 UX 강화 — 와이어프레임</title>
 <style>
   :root {
-    --primary: #6C3CE1;
+    /* Tokens — aligned with minglit_kit (MinglitColors / MinglitPartnerColors) */
+    --primary: #6C3CE1;          /* MinglitPartnerColors.primary */
     --primary-dark: #4B1FA8;
-    --success: #22C55E;
-    --warning: #F59E0B;
-    --error: #EF4444;
-    --bg: #F9FAFB;
-    --surface: #FFFFFF;
-    --text-primary: #111827;
-    --text-secondary: #4B5563;
+    --primary-surface: #F5F0FF;  /* MinglitPartnerColors.primarySurface */
+    --success: #16A34A;          /* MinglitColors.success (green-600, AA on white) */
+    --warning: #D97706;          /* MinglitColors.warning (amber-600, AA on white) */
+    --error: #EF4444;            /* MinglitColors.error */
+    --bg: #F9FAFB;               /* MinglitColors.surface */
+    --surface: #FFFFFF;          /* MinglitColors.background */
+    --text-primary: #111827;     /* MinglitColors.textPrimary */
+    --text-secondary: #4B5563;   /* MinglitColors.textSecondary */
     --text-muted: #9CA3AF;
-    --border: #E5E7EB;
+    --border: #E5E7EB;           /* MinglitColors.divider */
     --camera-bg: #0A0A0F;
+    /* Dark tokens */
+    --dark-surface: #212121;     /* MinglitColorsDark.surface */
+    --dark-bg: #0F0F0F;          /* MinglitColorsDark.background */
+    --dark-text-primary: #FFFFFF;
+    --dark-text-secondary: #AAAAAA;
+    --dark-divider: #3D3D3D;
+    --dark-primary: #9B7BEC;     /* MinglitPartnerColorsDark.primary */
+    --dark-success: #4ADE80;     /* MinglitColorsDark.success */
+    --dark-warning: #FBBF24;     /* MinglitColorsDark.warning */
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -741,11 +752,216 @@
 
 <div class="section-title">디자인 토큰 요약</div>
 <div style="max-width: 900px; font-size: 13px; line-height: 1.7; color: var(--text-secondary); background: white; padding: 20px 24px; border-radius: 12px;">
-  <strong>Color</strong> — primary <code>#6C3CE1</code> (파트너 브랜드) · success <code>#22C55E</code> · warning <code>#F59E0B</code> · error <code>#EF4444</code> · bg <code>#F9FAFB</code> · surface <code>#FFFFFF</code><br>
-  <strong>Spacing</strong> — 8 / 12 / 16 / 24 / 32 (screenEdge: 16, card gap: 12)<br>
-  <strong>Radius</strong> — card 16 · button/input 12 · sheet 20 (top corners)<br>
-  <strong>Typography</strong> — Pretendard · title 24 (w700) · body 14 (w500) · meta 12 (w500)<br>
-  <strong>Progress 단계별 색상</strong> — 0–50% primary · 50–90% warning · 90%+ error (그룹 쿼터 도달 임박 시각화)
+  <strong>Color (minglit_kit 토큰)</strong> —
+    <code>MinglitPartnerColors.primary</code> #6C3CE1 ·
+    <code>MinglitColors.success</code> #16A34A (green-600, AA) ·
+    <code>MinglitColors.warning</code> #D97706 (amber-600, AA) ·
+    <code>MinglitColors.error</code> #EF4444 ·
+    <code>surface</code> #F9FAFB ·
+    <code>background</code> #FFFFFF<br>
+  <strong>Spacing</strong> — <code>MinglitSpacing</code>: small 8 / sm 12 / medium 16 / large 24 / xlarge 32 · semantic: screenEdge 16, cardGap 12<br>
+  <strong>Radius</strong> — <code>MinglitRadius</code>: card 16 · button/input 12 · 시트 상단 20<br>
+  <strong>Typography</strong> — Pretendard · <code>headlineMedium</code> 28/700 (큰 숫자) · <code>titleMedium</code> 16/600 · <code>bodyMedium</code> 14/500 · <code>bodySmall</code> 12/500<br>
+  <strong>Progress 단계별 색상</strong> — &lt;50% primary · 50–90% warning · ≥90% error (3중 시그널: 색 + 숫자 + 폭)<br>
+  <strong>Haptic</strong> — 성공 <code>mediumImpact</code> · 중복 <code>lightImpact</code> · 실패 <code>heavyImpact</code> · 선택 <code>selectionClick</code>
+</div>
+
+<div class="section-title">3. 디자인 시스템 보정안 — needs-uiux-claude-1</div>
+<p class="subtitle" style="margin-bottom: 20px;">
+  스펙(#1782) 대비 UX Designer 보정: ① 성공 피드백을 전체 화면 오버레이 → 상단 슬라이드 배너로 변경 (다음 스캔 차단 방지), ② FAB 2종(플래시/수동)을 카메라 우상단에 배치 (엄지 호 접근성), ③ 다크모드 프레임 추가 (클럽/야간 운영). 자세한 근거는 <code>ui-ux-design.md</code> 참조.
+</p>
+<div class="row">
+
+  <!-- Frame G: Compact success banner (improved over Frame C) -->
+  <div class="frame-wrap">
+    <div class="frame">
+      <div class="status-bar">
+        <span>9:41</span>
+        <span>●●● 100%</span>
+      </div>
+      <div class="appbar">
+        <div class="back">←</div>
+        <div class="title">금요일 저녁 와인 모임</div>
+        <div class="action">↻</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-top">
+          <div class="summary-count">24<span class="max">/50</span></div>
+          <div class="summary-percent">48%</div>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: 48%"></div>
+        </div>
+        <div class="summary-meta">
+          <span class="live-dot"></span>
+          <span>방금 업데이트됨</span>
+        </div>
+      </div>
+      <!-- Scanner still visible, banner slides down from top -->
+      <div class="scanner-wrap" style="position: relative;">
+        <!-- Top slide-down success banner (NOT full-screen) -->
+        <div style="position: absolute; top: 12px; left: 16px; right: 16px; background: var(--success); border-radius: 12px; padding: 12px 14px; display: flex; align-items: center; gap: 10px; box-shadow: 0 6px 16px rgba(22,163,74,0.3); z-index: 30;">
+          <div style="width: 28px; height: 28px; border-radius: 50%; background: white; color: var(--success); display: flex; align-items: center; justify-content: center; font-weight: 700;">✓</div>
+          <div style="color: white; flex: 1;">
+            <div style="font-size: 14px; font-weight: 700; line-height: 1.2;">홍길동 · 남 20대 초반</div>
+            <div style="font-size: 12px; opacity: 0.9; margin-top: 2px;">24번째 입장 · 9:47 PM</div>
+          </div>
+        </div>
+
+        <!-- FAB column top-right -->
+        <div style="position: absolute; top: 68px; right: 16px; display: flex; flex-direction: column; gap: 12px; z-index: 30;">
+          <button style="width: 44px; height: 44px; border-radius: 12px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.18); color: white; font-size: 18px;">⚡</button>
+          <button style="width: 44px; height: 44px; border-radius: 12px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.18); color: white; font-size: 18px;">🔍</button>
+        </div>
+
+        <!-- Scanner remains active -->
+        <div class="camera-hint" style="margin-top: 70px;">스캔 계속 가능</div>
+        <div class="qr-frame">
+          <div class="corner tl"></div>
+          <div class="corner tr"></div>
+          <div class="corner bl"></div>
+          <div class="corner br"></div>
+          <div class="qr-placeholder"></div>
+          <div class="scan-line"></div>
+        </div>
+
+        <!-- Central bounce checkmark (0.2s) -->
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 96px; height: 96px; border-radius: 50%; background: rgba(22,163,74,0.95); color: white; display: flex; align-items: center; justify-content: center; font-size: 52px; box-shadow: 0 0 0 8px rgba(22,163,74,0.2); z-index: 20;">✓</div>
+      </div>
+      <div class="groups-sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title-row">
+          <div class="sheet-title">엔트리 그룹별 현황</div>
+          <div class="sheet-chev">▲</div>
+        </div>
+        <div class="sheet-subtitle">남 20대 초반 <strong style="color:var(--error)">14/14 마감</strong></div>
+      </div>
+    </div>
+    <div class="frame-label">
+      <strong>G. 성공 피드백 (보정안)</strong><br>
+      상단 슬라이드 배너(200ms) + 중앙 체크 bounce(200ms). 스캐너 계속 활성 — 혼잡 시 연속 스캔 가능.
+    </div>
+  </div>
+
+  <!-- Frame H: FAB controls detail -->
+  <div class="frame-wrap">
+    <div class="frame">
+      <div class="status-bar">
+        <span>9:41</span>
+        <span>●●● 100%</span>
+      </div>
+      <div class="appbar">
+        <div class="back">←</div>
+        <div class="title">금요일 저녁 와인 모임</div>
+        <div class="action">↻</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-top">
+          <div class="summary-count">23<span class="max">/50</span></div>
+          <div class="summary-percent">46%</div>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: 46%"></div>
+        </div>
+        <div class="summary-meta">
+          <span class="live-dot"></span>
+          <span>진행중</span>
+          <span class="dot">·</span>
+          <span>남은 27명</span>
+        </div>
+      </div>
+      <div class="scanner-wrap" style="position: relative;">
+        <!-- FAB column -->
+        <div style="position: absolute; top: 16px; right: 16px; display: flex; flex-direction: column; gap: 12px; z-index: 30;">
+          <button style="width: 44px; height: 44px; border-radius: 12px; background: var(--primary); border: 1px solid rgba(255,255,255,0.18); color: white; font-size: 18px; box-shadow: 0 4px 12px rgba(108,60,225,0.4);">⚡</button>
+          <div style="font-size: 10px; color: rgba(255,255,255,0.7); text-align: center; margin-top: -4px;">ON</div>
+          <button style="width: 44px; height: 44px; border-radius: 12px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.18); color: white; font-size: 18px;">🔍</button>
+          <div style="font-size: 10px; color: rgba(255,255,255,0.7); text-align: center; margin-top: -4px;">수동</div>
+        </div>
+        <div class="camera-hint">플래시 ON 상태 — 어두운 현장 가독성 확보</div>
+        <div class="qr-frame">
+          <div class="corner tl" style="border-color: var(--primary)"></div>
+          <div class="corner tr" style="border-color: var(--primary)"></div>
+          <div class="corner bl" style="border-color: var(--primary)"></div>
+          <div class="corner br" style="border-color: var(--primary)"></div>
+          <div class="qr-placeholder" style="opacity: 0.15;"></div>
+          <div class="scan-line"></div>
+        </div>
+      </div>
+      <div class="groups-sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title-row">
+          <div class="sheet-title">엔트리 그룹별 현황</div>
+          <div class="sheet-chev">위로 올려 펼치기 ▲</div>
+        </div>
+        <div class="sheet-subtitle">총 4개 그룹 · 남 15/28 · 여 8/22</div>
+      </div>
+    </div>
+    <div class="frame-label">
+      <strong>H. FAB 컨트롤 (우상단)</strong><br>
+      플래시/수동 체크인 44×44 — 엄지 호 진입 유지. 활성 시 primary 배경 + shadow.
+    </div>
+  </div>
+
+  <!-- Frame I: Dark mode -->
+  <div class="frame-wrap">
+    <div class="frame" style="background: var(--dark-bg);">
+      <div class="status-bar" style="color: var(--dark-text-primary);">
+        <span>9:41</span>
+        <span>●●● 100%</span>
+      </div>
+      <div class="appbar" style="background: var(--dark-bg); border-bottom-color: var(--dark-divider);">
+        <div class="back" style="color: var(--dark-text-primary);">←</div>
+        <div class="title" style="color: var(--dark-text-primary);">금요일 저녁 와인 모임</div>
+        <div class="action" style="color: var(--dark-primary);">↻</div>
+      </div>
+      <div class="summary-card" style="background: var(--dark-surface); border-color: var(--dark-divider);">
+        <div class="summary-top">
+          <div class="summary-count" style="color: var(--dark-text-primary);">23<span class="max" style="color: var(--dark-text-secondary);">/50</span></div>
+          <div class="summary-percent" style="color: var(--dark-primary);">46%</div>
+        </div>
+        <div class="progress-bar" style="background: var(--dark-divider);">
+          <div class="progress-fill" style="width: 46%; background: var(--dark-primary);"></div>
+        </div>
+        <div class="summary-meta" style="color: var(--dark-text-secondary);">
+          <span class="live-dot" style="background: var(--dark-success);"></span>
+          <span>진행중</span>
+          <span class="dot">·</span>
+          <span>남은 27명</span>
+          <span class="dot">·</span>
+          <span>8분 전 업데이트</span>
+        </div>
+      </div>
+      <div class="scanner-wrap" style="position: relative;">
+        <div style="position: absolute; top: 16px; right: 16px; display: flex; flex-direction: column; gap: 12px; z-index: 30;">
+          <button style="width: 44px; height: 44px; border-radius: 12px; background: rgba(255,255,255,0.16); border: 1px solid rgba(255,255,255,0.22); color: white; font-size: 18px;">⚡</button>
+          <button style="width: 44px; height: 44px; border-radius: 12px; background: rgba(255,255,255,0.16); border: 1px solid rgba(255,255,255,0.22); color: white; font-size: 18px;">🔍</button>
+        </div>
+        <div class="camera-hint">클럽/야간 현장 — 자동 다크모드</div>
+        <div class="qr-frame">
+          <div class="corner tl" style="border-color: var(--dark-primary)"></div>
+          <div class="corner tr" style="border-color: var(--dark-primary)"></div>
+          <div class="corner bl" style="border-color: var(--dark-primary)"></div>
+          <div class="corner br" style="border-color: var(--dark-primary)"></div>
+          <div class="qr-placeholder"></div>
+          <div class="scan-line" style="background: var(--dark-primary); box-shadow: 0 0 12px var(--dark-primary);"></div>
+        </div>
+      </div>
+      <div class="groups-sheet" style="background: var(--dark-surface); box-shadow: 0 -4px 16px rgba(0,0,0,0.4);">
+        <div class="sheet-handle" style="background: var(--dark-divider);"></div>
+        <div class="sheet-title-row">
+          <div class="sheet-title" style="color: var(--dark-text-primary);">엔트리 그룹별 현황</div>
+          <div class="sheet-chev" style="color: var(--dark-text-secondary);">위로 올려 펼치기 ▲</div>
+        </div>
+        <div class="sheet-subtitle" style="color: var(--dark-text-secondary);">총 4개 그룹 · 남 15/28 · 여 8/22</div>
+      </div>
+    </div>
+    <div class="frame-label">
+      <strong>I. 다크모드 (partnerThemeDark)</strong><br>
+      <code>MinglitPartnerColorsDark.primary</code> #9B7BEC · <code>MinglitColorsDark.success</code> #4ADE80 · 자동 system theme 감지.
+    </div>
+  </div>
+
 </div>
 
 </body>
