@@ -9,4 +9,5 @@ for f in test/integration/*_test.dart; do
   echo "▶ Running: $f"
   flutter test "$f" --flavor dev --dart-define-from-file=../../minglit_env/dev/flutter.env
 done
-[ "$found" -eq 0 ] && echo "⏭ No integration tests found, skipping."
+# Fix #1755: [ ... ] && echo 패턴은 found=1 일 때 마지막 명령이 exit 1 → 스크립트 종료 코드 1
+if [ "$found" -eq 0 ]; then echo "⏭ No integration tests found, skipping."; fi
