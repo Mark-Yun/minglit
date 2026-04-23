@@ -417,3 +417,136 @@ Deno.test({
     });
   },
 });
+
+// Fix #1749: use_absolute_ts=true 경로는 delete_old_rows 대신 delete_expired_rows를 호출해야 함
+Deno.test({
+  name: "cleanup-retention - db_table with use_absolute_ts dispatches delete_expired_rows RPC",
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+
+    let deleteExpiredRowsCalled = false;
+    let deleteOldRowsCalled = false;
+
+    const { fetchMock } = createFetchMock([
+      {
+        matcher: POLICIES_URL,
+        handler: () =>
+          jsonResponse([
+            {
+              id: "archived_records_expired",
+              kind: "db_table",
+              retention_days: 1825,
+              target: {
+                schema: "public",
+                table: "archived_records",
+                ts_col: "archived_at",
+                use_absolute_ts: true,
+              },
+            },
+          ]),
+      },
+      {
+        matcher: "/rest/v1/rpc/delete_expired_rows",
+        handler: () => {
+          deleteExpiredRowsCalled = true;
+          return jsonResponse(5);
+        },
+      },
+      {
+        matcher: "/rest/v1/rpc/delete_old_rows",
+        handler: () => {
+          deleteOldRowsCalled = true;
+          return jsonResponse(0);
+        },
+      },
+      {
+        matcher: POLICIES_URL,
+        handler: () => jsonResponse({}),
+      },
+      {
+        matcher: AUDIT_URL,
+        handler: () => jsonResponse({}),
+      },
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const response = await handler(postRequest());
+        assertEquals(response.status, 200);
+        const body = await readJson(response);
+        assertEquals(body.results.length, 1);
+        assertEquals(body.results[0].id, "archived_records_expired");
+        assertEquals(body.results[0].status, "success");
+        assertEquals(body.results[0].rows_deleted, 5);
+      });
+    });
+
+    assertEquals(deleteExpiredRowsCalled, true, "delete_expired_rows RPC must be called for use_absolute_ts=true");
+    assertEquals(deleteOldRowsCalled, false, "delete_old_rows RPC must NOT be called for use_absolute_ts=true");
+  },
+});
+
+Deno.test({
+  name: "cleanup-retention - db_table without use_absolute_ts still dispatches delete_old_rows RPC",
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+
+    let deleteExpiredRowsCalled = false;
+    let deleteOldRowsCalled = false;
+
+    const { fetchMock } = createFetchMock([
+      {
+        matcher: POLICIES_URL,
+        handler: () =>
+          jsonResponse([
+            {
+              id: "cron_job_run_details_no_abs",
+              kind: "db_table",
+              retention_days: 30,
+              target: {
+                schema: "cron",
+                table: "job_run_details",
+                ts_col: "end_time",
+                use_absolute_ts: false,
+              },
+            },
+          ]),
+      },
+      {
+        matcher: "/rest/v1/rpc/delete_expired_rows",
+        handler: () => {
+          deleteExpiredRowsCalled = true;
+          return jsonResponse(0);
+        },
+      },
+      {
+        matcher: "/rest/v1/rpc/delete_old_rows",
+        handler: () => {
+          deleteOldRowsCalled = true;
+          return jsonResponse(3);
+        },
+      },
+      {
+        matcher: POLICIES_URL,
+        handler: () => jsonResponse({}),
+      },
+      {
+        matcher: AUDIT_URL,
+        handler: () => jsonResponse({}),
+      },
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const response = await handler(postRequest());
+        assertEquals(response.status, 200);
+        const body = await readJson(response);
+        assertEquals(body.results[0].status, "success");
+        assertEquals(body.results[0].rows_deleted, 3);
+      });
+    });
+
+    assertEquals(deleteOldRowsCalled, true, "delete_old_rows RPC must be called for use_absolute_ts=false");
+    assertEquals(deleteExpiredRowsCalled, false, "delete_expired_rows RPC must NOT be called for use_absolute_ts=false");
+  },
+});
