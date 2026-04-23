@@ -85,8 +85,8 @@ class _EventDetailContentSkeleton extends StatelessWidget {
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          MinglitColors.textPrimary.withValues(
-                            alpha: MinglitOpacity.lowEmphasis,
+                          theme.colorScheme.onSurface.withValues(
+                            alpha: MinglitOpacity.gradient,
                           ),
                           MinglitColors.transparent,
                         ],

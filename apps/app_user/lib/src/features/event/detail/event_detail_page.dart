@@ -44,22 +44,33 @@ class EventDetailPage extends ConsumerWidget {
     });
 
     return Scaffold(
-      body: Column(
-        children: [
-          Expanded(
-            child: MinglitAsyncValueWidget(
-              value: eventAsync,
-              data: (event) => _EventDetailContent(event: event),
-              loading: () => const _EventDetailContentSkeleton(),
+      body: AnimatedSwitcher(
+        duration: MinglitAnimation.medium,
+        child: eventAsync.when(
+          data: (event) => Column(
+            key: const ValueKey('event_detail_data'),
+            children: [
+              Expanded(child: _EventDetailContent(event: event)),
+              _BottomTicketBar(event: event),
+            ],
+          ),
+          loading: () => const Column(
+            key: ValueKey('event_detail_loading'),
+            children: [
+              Expanded(child: _EventDetailContentSkeleton()),
+              _BottomTicketBarSkeleton(),
+            ],
+          ),
+          error: (e, st) => Center(
+            key: const ValueKey('event_detail_error'),
+            child: MinglitErrorState(
+              title: '이벤트를 불러올 수 없습니다',
+              subtitle: e.toString(),
+              onRetry: () =>
+                  ref.invalidate(eventDetailControllerProvider(eventId)),
             ),
           ),
-          // ignore: use_minglit_async_value_widget, returns skeleton/shrink for bottom bar
-          eventAsync.when(
-            data: (event) => _BottomTicketBar(event: event),
-            loading: () => const _BottomTicketBarSkeleton(),
-            error: (_, _) => const SizedBox.shrink(),
-          ),
-        ],
+        ),
       ),
     );
   }
