@@ -2,7 +2,6 @@
 // used in main.dart. Keeps test setup consistent with production app launch.
 import 'package:app_user/main.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 Widget createPatrolTestApp() {
