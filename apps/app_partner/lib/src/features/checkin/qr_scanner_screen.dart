@@ -1,13 +1,20 @@
 import 'dart:async';
+
 import 'package:app_partner/src/features/checkin/checkin_controller.dart';
+import 'package:app_partner/src/features/checkin/widgets/checkin_scanner_overlay.dart';
+import 'package:app_partner/src/features/checkin/widgets/checkin_summary_card.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
-/// **QR Scanner Screen**
+/// QR 스캐너 화면.
 ///
-/// Full-screen camera view to scan user tickets.
-/// Provides immediate visual feedback (Green/Red) based on result.
+/// - 전체 화면 카메라 뷰 + AppBar 투명화
+/// - 상단 요약 카드 (Phase 2에서 실시간 연동)
+/// - 반응형 cutout (220 또는 화면 짧은 축 48% 미만)
+/// - 플래시 / 수동 체크인 FAB
+/// - 스캔 결과 배너 (기존 전체 화면 오버레이 대체)
+// Fix #1809: QR 스캐너 화면 Phase 1 개편 — 요약 카드 + 반응형 cutout + 배너 피드백
 class QRScannerScreen extends ConsumerStatefulWidget {
   // Fix #523: event 파라미터 추가 — 어떤 이벤트에 체크인하는지 사용자에게 표시
   const QRScannerScreen({required this.event, super.key});
@@ -34,35 +41,24 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
     final state = ref.watch(checkinControllerProvider);
     final theme = Theme.of(context);
 
-    Color? overlayColor;
-    if (state.result == CheckinResult.success) {
-      overlayColor = MinglitColors.success.withValues(
-        alpha: MinglitOpacity.scrimLight,
-      );
-    } else if (state.result != CheckinResult.idle) {
-      overlayColor = theme.colorScheme.error.withValues(
-        alpha: MinglitOpacity.scrimLight,
-      );
-    }
-
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: theme.colorScheme.surface,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         leading: const CloseButton(color: MinglitColors.background),
         title: Column(
           children: [
             Text(
               '티켓 스캔',
-              style: theme.textTheme.bodyMedium!.copyWith(
+              style: theme.textTheme.bodyMedium?.copyWith(
                 color: MinglitColors.background,
               ),
             ),
             if (widget.event.title != null)
               Text(
                 widget.event.title!,
-                style: theme.textTheme.labelSmall!.copyWith(
+                style: theme.textTheme.labelSmall?.copyWith(
                   color: MinglitColors.background.withValues(
                     alpha: MinglitOpacity.scrimDark,
                   ),
@@ -73,12 +69,11 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
       ),
       body: Stack(
         children: [
-          // 1. Scanner View
+          // 1. Full-screen camera
           MobileScanner(
             controller: _scannerController,
             onDetect: (capture) {
-              final barcodes = capture.barcodes;
-              for (final barcode in barcodes) {
+              for (final barcode in capture.barcodes) {
                 // Fix #382: 강제 언래핑 제거 — local variable로 null 안전성 확보
                 final rawValue = barcode.rawValue;
                 if (rawValue != null) {
@@ -92,169 +87,39 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
             },
           ),
 
-          // 2. Scan Window Overlay (Standard Scanner look)
-          _buildScanWindow(context),
-
-          // 3. Result Overlay (Success/Fail)
-          if (overlayColor != null)
-            _ResultFeedbackOverlay(color: overlayColor, state: state),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildScanWindow(BuildContext context) {
-    return Container(
-      decoration: const ShapeDecoration(
-        shape: QrScannerOverlayShape(
-          borderRadius: 10,
-          borderLength: 30,
-          borderWidth: 10,
-        ),
-      ),
-    );
-  }
-}
-
-class _ResultFeedbackOverlay extends StatelessWidget {
-  const _ResultFeedbackOverlay({required this.color, required this.state});
-
-  final Color color;
-  final CheckinState state;
-
-  @override
-  Widget build(BuildContext context) {
-    final icon = state.result == CheckinResult.success
-        ? Icons.check_circle
-        : Icons.error;
-    final title = state.result == CheckinResult.success ? '체크인 완료' : '입장 제한';
-    final subTitle = state.userName ?? state.message ?? '';
-
-    return Container(
-      color: color,
-      width: double.infinity,
-      height: double.infinity,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 100, color: MinglitColors.background),
-          const SizedBox(height: MinglitSpacing.large),
-          Text(
-            title,
-            style: Theme.of(
-              context,
-            ).textTheme.displayLarge!.copyWith(color: MinglitColors.background),
+          // 2. Scrim + cutout + FABs + result banner
+          CheckinScannerOverlay(
+            scannerController: _scannerController,
+            onManualCheckin: () => _showManualCheckinSheet(context),
+            state: state,
           ),
-          if (subTitle.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: MinglitSpacing.medium),
-              child: Text(
-                subTitle,
-                style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                  color: MinglitColors.background,
-                ),
-              ),
+
+          // 3. Summary card — positioned below AppBar
+          //    Phase 2: replace checkedIn/total with checkinStatsControllerProvider
+          SafeArea(
+            bottom: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: kToolbarHeight),
+                CheckinSummaryCard(checkedIn: 0, total: 0),
+              ],
             ),
+          ),
         ],
       ),
     );
   }
-}
 
-// Helper class for QR Overlay shape
-class QrScannerOverlayShape extends ShapeBorder {
-  const QrScannerOverlayShape({
-    this.borderColor = MinglitColors.background,
-    this.borderWidth = 3.0,
-    this.overlayColor = MinglitColors.scrim,
-    this.borderRadius = 0,
-    this.borderLength = 40,
-    this.cutOutSize = 250,
-  });
-
-  final Color borderColor;
-  final double borderWidth;
-  final Color overlayColor;
-  final double borderRadius;
-  final double borderLength;
-  final double cutOutSize;
-
-  @override
-  EdgeInsetsGeometry get dimensions =>
-      const EdgeInsets.all(MinglitSpacing.small);
-
-  @override
-  Path getInnerPath(Rect rect, {TextDirection? textDirection}) => Path();
-
-  @override
-  Path getOuterPath(Rect rect, {TextDirection? textDirection}) =>
-      Path()..addRect(rect);
-
-  @override
-  void paint(Canvas canvas, Rect rect, {TextDirection? textDirection}) {
-    final width = rect.width;
-    final height = rect.height;
-
-    final backgroundPath = Path()
-      ..fillType = PathFillType.evenOdd
-      ..addRect(rect)
-      ..addRect(
-        Rect.fromCenter(
-          center: Offset(width / 2, height / 2),
-          width: cutOutSize,
-          height: cutOutSize,
-        ),
-      );
-
-    canvas.drawPath(
-      backgroundPath,
-      Paint()
-        ..color = overlayColor
-        ..style = PaintingStyle.fill,
+  void _showManualCheckinSheet(BuildContext context) {
+    // Phase 4: ManualCheckinSheet
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => const SizedBox(
+        height: 200,
+        child: Center(child: Text('수동 체크인 — Phase 4에서 구현 예정')),
+      ),
     );
-
-    final paint = Paint()
-      ..color = borderColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = borderWidth;
-
-    final center = Offset(width / 2, height / 2);
-    final cutOutRect = Rect.fromCenter(
-      center: center,
-      width: cutOutSize,
-      height: cutOutSize,
-    );
-
-    // Draw borders (corners)
-    final path1 = Path()
-      ..moveTo(cutOutRect.left, cutOutRect.top + borderLength)
-      ..lineTo(cutOutRect.left, cutOutRect.top)
-      ..lineTo(cutOutRect.left + borderLength, cutOutRect.top);
-    canvas.drawPath(path1, paint);
-
-    final path2 = Path()
-      ..moveTo(cutOutRect.right - borderLength, cutOutRect.top)
-      ..lineTo(cutOutRect.right, cutOutRect.top)
-      ..lineTo(cutOutRect.right, cutOutRect.top + borderLength);
-    canvas.drawPath(path2, paint);
-
-    final path3 = Path()
-      ..moveTo(cutOutRect.right, cutOutRect.bottom - borderLength)
-      ..lineTo(cutOutRect.right, cutOutRect.bottom)
-      ..lineTo(cutOutRect.right - borderLength, cutOutRect.bottom);
-    canvas.drawPath(path3, paint);
-
-    final path4 = Path()
-      ..moveTo(cutOutRect.left + borderLength, cutOutRect.bottom)
-      ..lineTo(cutOutRect.left, cutOutRect.bottom)
-      ..lineTo(cutOutRect.left, cutOutRect.bottom - borderLength);
-    canvas.drawPath(path4, paint);
   }
-
-  @override
-  ShapeBorder scale(double t) => QrScannerOverlayShape(
-    borderColor: borderColor,
-    borderWidth: borderWidth,
-    overlayColor: overlayColor,
-  );
 }
