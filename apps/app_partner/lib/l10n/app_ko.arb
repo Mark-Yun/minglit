@@ -69,6 +69,11 @@
   },
   "partyDetail_tab_operation": "회차 및 티켓",
   "partyDetail_tab_info": "파티 정보",
+  "partyDetail_title_entryGroupManagement": "입장 조건 관리",
+  "entryGroup_delete_title": "입장 조건 삭제",
+  "entryGroup_delete_message": "이 입장 조건을 삭제하시겠습니까? 연결된 티켓의 입장 조건 설정이 변경될 수 있습니다.",
+  "common_delete": "삭제",
+  "common_cancel": "취소",
 
   "partyList_badge_active": "운영중",
   "partyList_badge_closed": "종료됨",

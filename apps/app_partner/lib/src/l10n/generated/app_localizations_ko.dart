@@ -144,6 +144,22 @@ class AppLocalizationsKo extends AppLocalizations {
   String get partyDetail_tab_info => '파티 정보';
 
   @override
+  String get partyDetail_title_entryGroupManagement => '입장 조건 관리';
+
+  @override
+  String get entryGroup_delete_title => '입장 조건 삭제';
+
+  @override
+  String get entryGroup_delete_message =>
+      '이 입장 조건을 삭제하시겠습니까? 연결된 티켓의 입장 조건 설정이 변경될 수 있습니다.';
+
+  @override
+  String get common_delete => '삭제';
+
+  @override
+  String get common_cancel => '취소';
+
+  @override
   String get partyList_badge_active => '운영중';
 
   @override

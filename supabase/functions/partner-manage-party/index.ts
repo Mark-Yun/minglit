@@ -11,7 +11,6 @@ import {
 import { requireAuth } from "../_shared/auth_utils.ts";
 import { initSentry, withHandler } from "../_shared/logger.ts";
 
-
 initSentry();
 
 const VALID_STATUSES = ["draft", "active", "closed"];
@@ -68,7 +67,9 @@ async function handleRequest(req: Request): Promise<Response> {
   let body: Record<string, unknown>;
   try {
     const parsed = await req.json();
-    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+    if (
+      typeof parsed !== "object" || parsed === null || Array.isArray(parsed)
+    ) {
       return errorResponse("Request body must be a JSON object", 400);
     }
     body = parsed as Record<string, unknown>;
@@ -77,7 +78,9 @@ async function handleRequest(req: Request): Promise<Response> {
   }
 
   const action = body.action as string | undefined;
-  if (typeof action !== "string" || !action) return errorResponse("Missing action", 400);
+  if (typeof action !== "string" || !action) {
+    return errorResponse("Missing action", 400);
+  }
 
   // 4. Supabase client (service role)
   const supabase = createServiceClient();
@@ -92,7 +95,10 @@ async function handleRequest(req: Request): Promise<Response> {
 
     // Validate party fields
     const partyData = body.party;
-    if (typeof partyData !== "object" || partyData === null || Array.isArray(partyData)) {
+    if (
+      typeof partyData !== "object" || partyData === null ||
+      Array.isArray(partyData)
+    ) {
       return errorResponse("Missing or invalid party object", 400);
     }
     const party = partyData as Record<string, unknown>;
@@ -109,20 +115,35 @@ async function handleRequest(req: Request): Promise<Response> {
 
     // Validate status if provided
     if (party.status !== undefined) {
-      if (typeof party.status !== "string" || !VALID_STATUSES.includes(party.status)) {
-        return errorResponse(`Invalid status. Must be one of: ${VALID_STATUSES.join(", ")}`, 400);
+      if (
+        typeof party.status !== "string" ||
+        !VALID_STATUSES.includes(party.status)
+      ) {
+        return errorResponse(
+          `Invalid status. Must be one of: ${VALID_STATUSES.join(", ")}`,
+          400,
+        );
       }
     }
 
     // Validate location input if new location
     let newLocationInput: Record<string, unknown> | null = null;
     const existingLocationId = body.location_id;
-    if (body.location && typeof body.location === "object" && !Array.isArray(body.location)) {
+    if (
+      body.location && typeof body.location === "object" &&
+      !Array.isArray(body.location)
+    ) {
       newLocationInput = body.location as Record<string, unknown>;
-      if (typeof newLocationInput.name !== "string" || !newLocationInput.name.trim()) {
+      if (
+        typeof newLocationInput.name !== "string" ||
+        !newLocationInput.name.trim()
+      ) {
         return errorResponse("Missing location name", 400);
       }
-      if (typeof newLocationInput.address !== "string" || !newLocationInput.address.trim()) {
+      if (
+        typeof newLocationInput.address !== "string" ||
+        !newLocationInput.address.trim()
+      ) {
         return errorResponse("Missing location address", 400);
       }
     }
@@ -142,7 +163,8 @@ async function handleRequest(req: Request): Promise<Response> {
         return errorResponse("tag_ids must contain at most 5 tags", 400);
       }
       // Fix #1182: UUID format validation (#12)
-      const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      const UUID_RE =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       for (let i = 0; i < tagIds.length; i++) {
         if (!UUID_RE.test(tagIds[i])) {
           return errorResponse(`tag_ids[${i}] must be a valid UUID`, 400);
@@ -155,9 +177,14 @@ async function handleRequest(req: Request): Promise<Response> {
           .from("tags")
           .select("id")
           .in("id", tagIds as string[]);
-        if (tagCheckError) return errorResponse("Failed to validate tag IDs", 500);
-        if (!existingTags || existingTags.length !== (tagIds as string[]).length)
+        if (tagCheckError) {
+          return errorResponse("Failed to validate tag IDs", 500);
+        }
+        if (
+          !existingTags || existingTags.length !== (tagIds as string[]).length
+        ) {
           return errorResponse("One or more tag_ids do not exist", 400);
+        }
       }
     }
 
@@ -190,7 +217,10 @@ async function handleRequest(req: Request): Promise<Response> {
       if (locError) return errorResponse("Failed to verify location", 500);
       if (!loc) return errorResponse("Location not found", 404);
       if (loc.partner_id !== partnerId) {
-        return errorResponse("Forbidden: location belongs to another partner", 403);
+        return errorResponse(
+          "Forbidden: location belongs to another partner",
+          403,
+        );
       }
       locationId = existingLocationId;
     } else if (newLocationInput) {
@@ -208,7 +238,10 @@ async function handleRequest(req: Request): Promise<Response> {
         .single();
 
       if (locInsertError) {
-        return errorResponse(`Failed to create location: ${locInsertError.message}`, 500);
+        return errorResponse(
+          `Failed to create location: ${locInsertError.message}`,
+          500,
+        );
       }
       locationId = newLoc.id;
     }
@@ -259,7 +292,10 @@ async function handleRequest(req: Request): Promise<Response> {
         .insert(egt);
 
       if (egtError) {
-        return errorResponse(`Failed to create entry group templates: ${egtError.message}`, 500);
+        return errorResponse(
+          `Failed to create entry group templates: ${egtError.message}`,
+          500,
+        );
       }
     }
 
@@ -280,7 +316,10 @@ async function handleRequest(req: Request): Promise<Response> {
         .insert(tt);
 
       if (ttError) {
-        return errorResponse(`Failed to create ticket templates: ${ttError.message}`, 500);
+        return errorResponse(
+          `Failed to create ticket templates: ${ttError.message}`,
+          500,
+        );
       }
     }
 
@@ -305,7 +344,11 @@ async function handleRequest(req: Request): Promise<Response> {
     if (!existingParty) return errorResponse("Party not found", 404);
 
     // Check partner permission
-    const permCheck = await checkPartnerPermission(supabase, existingParty.partner_id, userId);
+    const permCheck = await checkPartnerPermission(
+      supabase,
+      existingParty.partner_id,
+      userId,
+    );
     if (permCheck instanceof Response) return permCheck;
 
     // ── Pre-validate all payloads before any DB writes ──
@@ -313,7 +356,10 @@ async function handleRequest(req: Request): Promise<Response> {
     // Build party updates
     const partyData = body.party;
     const partyUpdates: Record<string, unknown> = {};
-    if (typeof partyData === "object" && partyData !== null && !Array.isArray(partyData)) {
+    if (
+      typeof partyData === "object" && partyData !== null &&
+      !Array.isArray(partyData)
+    ) {
       const party = partyData as Record<string, unknown>;
       for (const field of PARTY_FIELDS) {
         if (party[field] !== undefined) {
@@ -323,8 +369,14 @@ async function handleRequest(req: Request): Promise<Response> {
 
       // Validate status if provided
       if (partyUpdates.status !== undefined) {
-        if (typeof partyUpdates.status !== "string" || !VALID_STATUSES.includes(partyUpdates.status)) {
-          return errorResponse(`Invalid status. Must be one of: ${VALID_STATUSES.join(", ")}`, 400);
+        if (
+          typeof partyUpdates.status !== "string" ||
+          !VALID_STATUSES.includes(partyUpdates.status)
+        ) {
+          return errorResponse(
+            `Invalid status. Must be one of: ${VALID_STATUSES.join(", ")}`,
+            400,
+          );
         }
       }
     }
@@ -333,9 +385,10 @@ async function handleRequest(req: Request): Promise<Response> {
     // Fix #1136: tag_ids 검증을 모든 write 전으로 이동 — 부분 업데이트 방지
     const rawUpdateTagIds = body.tag_ids;
     // Fix #1182: deduplicate tag_ids before validation (#13)
-    const updateTagIds = rawUpdateTagIds !== undefined && Array.isArray(rawUpdateTagIds)
-      ? [...new Set(rawUpdateTagIds as string[])]
-      : rawUpdateTagIds;
+    const updateTagIds =
+      rawUpdateTagIds !== undefined && Array.isArray(rawUpdateTagIds)
+        ? [...new Set(rawUpdateTagIds as string[])]
+        : rawUpdateTagIds;
     if (updateTagIds !== undefined) {
       if (!Array.isArray(updateTagIds)) {
         return errorResponse("tag_ids must be an array", 400);
@@ -344,7 +397,8 @@ async function handleRequest(req: Request): Promise<Response> {
         return errorResponse("tag_ids must contain at most 5 tags", 400);
       }
       // Fix #1182: UUID format validation (#12)
-      const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      const UUID_RE =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       for (let i = 0; i < updateTagIds.length; i++) {
         if (!UUID_RE.test(updateTagIds[i])) {
           return errorResponse(`tag_ids[${i}] must be a valid UUID`, 400);
@@ -360,17 +414,33 @@ async function handleRequest(req: Request): Promise<Response> {
         if (tagCheckError) {
           return errorResponse("Failed to validate tag IDs", 500);
         }
-        if (!existingTags || existingTags.length !== (updateTagIds as string[]).length) {
+        if (
+          !existingTags ||
+          existingTags.length !== (updateTagIds as string[]).length
+        ) {
           return errorResponse("One or more tag_ids do not exist", 400);
         }
       }
+    }
+
+    // Fix #1733: entry_group_templates 업데이트 검증 (write 전 사전 검증)
+    const updateEntryGroupTemplates = body.entry_group_templates;
+    if (updateEntryGroupTemplates !== undefined) {
+      if (!Array.isArray(updateEntryGroupTemplates)) {
+        return errorResponse("entry_group_templates must be an array", 400);
+      }
+      const egtValidationError = validateEntryGroupTemplates(
+        updateEntryGroupTemplates,
+      );
+      if (egtValidationError) return egtValidationError;
     }
 
     if (
       Object.keys(partyUpdates).length === 0 &&
       !body.location &&
       body.location_id === undefined &&
-      updateTagIds === undefined
+      updateTagIds === undefined &&
+      updateEntryGroupTemplates === undefined
     ) {
       return errorResponse("No fields to update", 400);
     }
@@ -385,13 +455,19 @@ async function handleRequest(req: Request): Promise<Response> {
         .eq("id", partyId);
 
       if (updateError) {
-        return errorResponse(`Failed to update party: ${updateError.message}`, 500);
+        return errorResponse(
+          `Failed to update party: ${updateError.message}`,
+          500,
+        );
       }
     }
 
     // Update location if provided
     const locationData = body.location;
-    if (typeof locationData === "object" && locationData !== null && !Array.isArray(locationData)) {
+    if (
+      typeof locationData === "object" && locationData !== null &&
+      !Array.isArray(locationData)
+    ) {
       const locInput = locationData as Record<string, unknown>;
 
       // Check if party has a location_id to update
@@ -401,7 +477,9 @@ async function handleRequest(req: Request): Promise<Response> {
         .eq("id", partyId)
         .single();
 
-      if (locFetchError) return errorResponse("Failed to fetch party location", 500);
+      if (locFetchError) {
+        return errorResponse("Failed to fetch party location", 500);
+      }
 
       if (partyWithLoc.location_id) {
         // Update existing location
@@ -419,7 +497,10 @@ async function handleRequest(req: Request): Promise<Response> {
             .eq("id", partyWithLoc.location_id);
 
           if (locUpdateError) {
-            return errorResponse(`Failed to update location: ${locUpdateError.message}`, 500);
+            return errorResponse(
+              `Failed to update location: ${locUpdateError.message}`,
+              500,
+            );
           }
         }
       }
@@ -439,7 +520,10 @@ async function handleRequest(req: Request): Promise<Response> {
         if (locError) return errorResponse("Failed to verify location", 500);
         if (!loc) return errorResponse("Location not found", 404);
         if (loc.partner_id !== existingParty.partner_id) {
-          return errorResponse("Forbidden: location belongs to another partner", 403);
+          return errorResponse(
+            "Forbidden: location belongs to another partner",
+            403,
+          );
         }
       }
 
@@ -449,7 +533,10 @@ async function handleRequest(req: Request): Promise<Response> {
         .eq("id", partyId);
 
       if (locIdError) {
-        return errorResponse(`Failed to update party location: ${locIdError.message}`, 500);
+        return errorResponse(
+          `Failed to update party location: ${locIdError.message}`,
+          500,
+        );
       }
     }
 
@@ -464,7 +551,127 @@ async function handleRequest(req: Request): Promise<Response> {
           p_tag_ids: updateTagIds as string[],
         });
       if (ptRpcError) {
-        return errorResponse(`Failed to update party tags: ${ptRpcError.message}`, 500);
+        return errorResponse(
+          `Failed to update party tags: ${ptRpcError.message}`,
+          500,
+        );
+      }
+    }
+
+    // Fix #1733: UPSERT + selective DELETE — 기존 ID 보존으로 ticket_templates 링크 유지
+    if (updateEntryGroupTemplates !== undefined) {
+      const templates = updateEntryGroupTemplates as Record<string, unknown>[];
+
+      const { data: existing, error: fetchExistingError } = await supabase
+        .from("entry_group_templates")
+        .select("id")
+        .eq("party_id", partyId);
+      if (fetchExistingError) {
+        return errorResponse(
+          `Failed to fetch existing entry group templates: ${fetchExistingError.message}`,
+          500,
+        );
+      }
+
+      const existingIds = (existing ?? []).map((r: { id: string }) =>
+        r.id as string
+      );
+      const incomingWithId = templates.filter((t) =>
+        typeof t.id === "string" && (t.id as string).length > 0
+      );
+      const incomingWithoutId = templates.filter((t) =>
+        !t.id || (t.id as string).length === 0
+      );
+      const keptIds = incomingWithId.map((t) => t.id as string);
+      const toDeleteIds = existingIds.filter((id: string) =>
+        !keptIds.includes(id)
+      );
+
+      if (toDeleteIds.length > 0) {
+        const { data: affectedTickets, error: fetchTicketsError } =
+          await supabase
+            .from("ticket_templates")
+            .select("id, target_entry_group_ids")
+            .eq("party_id", partyId);
+        if (fetchTicketsError) {
+          return errorResponse(
+            `Failed to fetch ticket templates: ${fetchTicketsError.message}`,
+            500,
+          );
+        }
+
+        for (const ticket of (affectedTickets ?? [])) {
+          const tt = ticket as { id: string; target_entry_group_ids: string[] };
+          const hadAny = toDeleteIds.some((d) =>
+            tt.target_entry_group_ids?.includes(d)
+          );
+          if (hadAny) {
+            const updatedIds = (tt.target_entry_group_ids ?? []).filter((
+              id: string,
+            ) => !toDeleteIds.includes(id));
+            const { error: ttUpdateError } = await supabase
+              .from("ticket_templates")
+              .update({ target_entry_group_ids: updatedIds })
+              .eq("id", tt.id);
+            if (ttUpdateError) {
+              return errorResponse(
+                `Failed to update ticket template references: ${ttUpdateError.message}`,
+                500,
+              );
+            }
+          }
+        }
+
+        const { error: deleteEgtError } = await supabase
+          .from("entry_group_templates")
+          .delete()
+          .in("id", toDeleteIds);
+        if (deleteEgtError) {
+          return errorResponse(
+            `Failed to delete entry group templates: ${deleteEgtError.message}`,
+            500,
+          );
+        }
+      }
+
+      for (const t of incomingWithId) {
+        const { error: updateEgtError } = await supabase
+          .from("entry_group_templates")
+          .update({
+            label: t.label ?? null,
+            gender: t.gender ?? null,
+            birth_year_min: t.birth_year_min ?? null,
+            birth_year_max: t.birth_year_max ?? null,
+            required_verification_ids: t.required_verification_ids ?? [],
+          })
+          .eq("id", t.id as string)
+          .eq("party_id", partyId);
+        if (updateEgtError) {
+          return errorResponse(
+            `Failed to update entry group template: ${updateEgtError.message}`,
+            500,
+          );
+        }
+      }
+
+      if (incomingWithoutId.length > 0) {
+        const newTemplates = incomingWithoutId.map((t) => ({
+          party_id: partyId,
+          label: t.label ?? null,
+          gender: t.gender ?? null,
+          birth_year_min: t.birth_year_min ?? null,
+          birth_year_max: t.birth_year_max ?? null,
+          required_verification_ids: t.required_verification_ids ?? [],
+        }));
+        const { error: insertEgtError } = await supabase
+          .from("entry_group_templates")
+          .insert(newTemplates);
+        if (insertEgtError) {
+          return errorResponse(
+            `Failed to insert new entry group templates: ${insertEgtError.message}`,
+            500,
+          );
+        }
       }
     }
 
@@ -480,7 +687,10 @@ async function handleRequest(req: Request): Promise<Response> {
 
     const status = body.status;
     if (typeof status !== "string" || !VALID_STATUSES.includes(status)) {
-      return errorResponse(`Invalid status. Must be one of: ${VALID_STATUSES.join(", ")}`, 400);
+      return errorResponse(
+        `Invalid status. Must be one of: ${VALID_STATUSES.join(", ")}`,
+        400,
+      );
     }
 
     // Fetch party to verify ownership
@@ -494,7 +704,11 @@ async function handleRequest(req: Request): Promise<Response> {
     if (!existingParty) return errorResponse("Party not found", 404);
 
     // Check partner permission
-    const permCheck = await checkPartnerPermission(supabase, existingParty.partner_id, userId);
+    const permCheck = await checkPartnerPermission(
+      supabase,
+      existingParty.partner_id,
+      userId,
+    );
     if (permCheck instanceof Response) return permCheck;
 
     const { error: updateError } = await supabase
@@ -503,7 +717,10 @@ async function handleRequest(req: Request): Promise<Response> {
       .eq("id", partyId);
 
     if (updateError) {
-      return errorResponse(`Failed to update party status: ${updateError.message}`, 500);
+      return errorResponse(
+        `Failed to update party status: ${updateError.message}`,
+        500,
+      );
     }
 
     return successResponse({ success: true });
@@ -530,7 +747,8 @@ async function checkPartnerPermission(
     return errorResponse("Failed to verify partner permissions", 500);
   }
 
-  const hasPermission = (perm?.permissions as string[] | null)?.includes("PARTY_MANAGE") ?? false;
+  const hasPermission =
+    (perm?.permissions as string[] | null)?.includes("PARTY_MANAGE") ?? false;
   if (!hasPermission) {
     return errorResponse("Forbidden: insufficient partner permissions", 403);
   }
@@ -540,27 +758,59 @@ function validateEntryGroupTemplates(templates: unknown[]): Response | null {
   for (let i = 0; i < templates.length; i++) {
     const t = templates[i] as Record<string, unknown>;
     if (typeof t !== "object" || t === null || Array.isArray(t)) {
-      return errorResponse(`entry_group_templates[${i}] must be an object`, 400);
+      return errorResponse(
+        `entry_group_templates[${i}] must be an object`,
+        400,
+      );
+    }
+    // Fix #1733: 새 그룹은 빈 id 또는 미전송 허용 — 기존 그룹만 id 유지
+    if (t.id !== undefined && typeof t.id !== "string") {
+      return errorResponse(
+        `entry_group_templates[${i}].id must be a string when provided`,
+        400,
+      );
     }
     if (t.gender !== undefined && t.gender !== null) {
       if (typeof t.gender !== "string" || !VALID_GENDERS.includes(t.gender)) {
-        return errorResponse(`entry_group_templates[${i}].gender must be one of: ${VALID_GENDERS.join(", ")}`, 400);
+        return errorResponse(
+          `entry_group_templates[${i}].gender must be one of: ${
+            VALID_GENDERS.join(", ")
+          }`,
+          400,
+        );
       }
     }
     if (t.birth_year_min !== undefined && t.birth_year_min !== null) {
-      if (typeof t.birth_year_min !== "number" || t.birth_year_min < 1900 || t.birth_year_min > 2100) {
-        return errorResponse(`entry_group_templates[${i}].birth_year_min must be a valid year`, 400);
+      if (
+        typeof t.birth_year_min !== "number" || t.birth_year_min < 1900 ||
+        t.birth_year_min > 2100
+      ) {
+        return errorResponse(
+          `entry_group_templates[${i}].birth_year_min must be a valid year`,
+          400,
+        );
       }
     }
     if (t.birth_year_max !== undefined && t.birth_year_max !== null) {
-      if (typeof t.birth_year_max !== "number" || t.birth_year_max < 1900 || t.birth_year_max > 2100) {
-        return errorResponse(`entry_group_templates[${i}].birth_year_max must be a valid year`, 400);
+      if (
+        typeof t.birth_year_max !== "number" || t.birth_year_max < 1900 ||
+        t.birth_year_max > 2100
+      ) {
+        return errorResponse(
+          `entry_group_templates[${i}].birth_year_max must be a valid year`,
+          400,
+        );
       }
     }
-    if (t.birth_year_min !== undefined && t.birth_year_max !== undefined &&
-        t.birth_year_min !== null && t.birth_year_max !== null) {
+    if (
+      t.birth_year_min !== undefined && t.birth_year_max !== undefined &&
+      t.birth_year_min !== null && t.birth_year_max !== null
+    ) {
       if ((t.birth_year_min as number) > (t.birth_year_max as number)) {
-        return errorResponse(`entry_group_templates[${i}].birth_year_min cannot exceed birth_year_max`, 400);
+        return errorResponse(
+          `entry_group_templates[${i}].birth_year_min cannot exceed birth_year_max`,
+          400,
+        );
       }
     }
   }
@@ -577,7 +827,10 @@ function validateTicketTemplates(templates: unknown[]): Response | null {
       return errorResponse(`ticket_templates[${i}].name is required`, 400);
     }
     if (typeof t.quantity !== "number" || t.quantity < 0) {
-      return errorResponse(`ticket_templates[${i}].quantity must be a non-negative number`, 400);
+      return errorResponse(
+        `ticket_templates[${i}].quantity must be a non-negative number`,
+        400,
+      );
     }
     if (t.price !== undefined && t.price !== null) {
       if (typeof t.price !== "number" || t.price < 0) {
