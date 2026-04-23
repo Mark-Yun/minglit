@@ -45,12 +45,14 @@ void main() {
   late MockPartnerRepository mockPartnerRepo;
   late MockTicketRepository mockTicketRepo;
   late MockLocationRepository mockLocationRepo;
+  late MockTagRepository mockTagRepo;
 
   setUp(() {
     mockPartyRepo = MockPartyRepository();
     mockPartnerRepo = MockPartnerRepository();
     mockTicketRepo = MockTicketRepository();
     mockLocationRepo = MockLocationRepository();
+    mockTagRepo = MockTagRepository();
   });
 
   ProviderContainer makeContainer() {
@@ -60,6 +62,7 @@ void main() {
         partnerRepositoryProvider.overrideWithValue(mockPartnerRepo),
         ticketRepositoryProvider.overrideWithValue(mockTicketRepo),
         locationRepositoryProvider.overrideWithValue(mockLocationRepo),
+        tagRepositoryProvider.overrideWithValue(mockTagRepo),
       ],
     );
   }
@@ -371,6 +374,125 @@ void main() {
             .entryGroups;
         expect(groups.first.gender, 'female');
       });
+    });
+
+    // Fix #1743: loadForEdit이 entry_group_templates와 ticket_templates를 올바르게 로드하는지 검증.
+    // 수정 위저드 진입 시 Step4(입장규칙)/Step5(티켓)에 기존 데이터가 pre-fill 되어야 함.
+    group('loadForEdit', () {
+      test(
+        'pre-fills entryGroups and tickets from existing party data',
+        () async {
+          final now = DateTime.now();
+          const partyId = 'party-edit-1';
+
+          final entryGroups = [
+            EntryGroupTemplate(
+              id: 'eg-1',
+              partyId: partyId,
+              gender: 'male',
+              birthYearMin: 1995,
+              birthYearMax: 2004,
+              createdAt: now,
+              updatedAt: now,
+            ),
+            EntryGroupTemplate(
+              id: 'eg-2',
+              partyId: partyId,
+              gender: 'female',
+              birthYearMin: 1995,
+              birthYearMax: 2004,
+              createdAt: now,
+              updatedAt: now,
+            ),
+          ];
+
+          final ticketTemplates = [
+            TicketTemplate(
+              id: 'tt-1',
+              partyId: partyId,
+              name: '일반 참가권',
+              quantity: 20,
+              createdAt: now,
+              updatedAt: now,
+            ),
+          ];
+
+          final party = Party(
+            id: partyId,
+            partnerId: 'partner-1',
+            title: '테스트 파티',
+            maxParticipants: 40,
+            entryGroups: entryGroups,
+            createdAt: now,
+            updatedAt: now,
+          );
+
+          when(
+            () => mockPartyRepo.getPartyById(partyId),
+          ).thenAnswer((_) async => party);
+          when(
+            () => mockTicketRepo.getTicketTemplatesByPartyId(partyId),
+          ).thenAnswer((_) async => ticketTemplates);
+          when(
+            () => mockTagRepo.getTagsByPartyId(partyId),
+          ).thenAnswer((_) async => []);
+
+          final container = makeContainer();
+          final notifier = container.read(
+            partyCreateWizardControllerProvider.notifier,
+          );
+
+          await notifier.loadForEdit(partyId);
+
+          final state = container.read(partyCreateWizardControllerProvider);
+          // Fix #1743: Step4 — 기존 입장 그룹이 로드되어야 함
+          expect(state.entryGroups, hasLength(2));
+          expect(state.entryGroups.first.id, 'eg-1');
+          expect(state.entryGroups.last.id, 'eg-2');
+          // Fix #1743: Step5 — 기존 티켓 템플릿이 로드되어야 함
+          expect(state.tickets, hasLength(1));
+          expect(state.tickets.first.id, 'tt-1');
+          expect(state.isPrefilled, isTrue);
+        },
+      );
+
+      test(
+        'pre-fills empty lists when party has no entry groups or tickets',
+        () async {
+          final now = DateTime.now();
+          const partyId = 'party-empty-1';
+
+          final party = Party(
+            id: partyId,
+            partnerId: 'partner-1',
+            title: '빈 파티',
+            createdAt: now,
+            updatedAt: now,
+          );
+
+          when(
+            () => mockPartyRepo.getPartyById(partyId),
+          ).thenAnswer((_) async => party);
+          when(
+            () => mockTicketRepo.getTicketTemplatesByPartyId(partyId),
+          ).thenAnswer((_) async => []);
+          when(
+            () => mockTagRepo.getTagsByPartyId(partyId),
+          ).thenAnswer((_) async => []);
+
+          final container = makeContainer();
+          final notifier = container.read(
+            partyCreateWizardControllerProvider.notifier,
+          );
+
+          await notifier.loadForEdit(partyId);
+
+          final state = container.read(partyCreateWizardControllerProvider);
+          expect(state.entryGroups, isEmpty);
+          expect(state.tickets, isEmpty);
+          expect(state.isPrefilled, isTrue);
+        },
+      );
     });
 
     group('submit', () {
