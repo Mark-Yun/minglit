@@ -42,15 +42,16 @@ class _CheckinScannerOverlayState extends State<CheckinScannerOverlay>
       vsync: this,
       duration: const Duration(milliseconds: 800),
     );
-    _bannerSlide = Tween<Offset>(
-      begin: const Offset(0, -1),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _bannerController,
-        curve: const Interval(0, 0.25, curve: Curves.easeOutBack),
-      ),
-    );
+    _bannerSlide =
+        Tween<Offset>(
+          begin: const Offset(0, -1),
+          end: Offset.zero,
+        ).animate(
+          CurvedAnimation(
+            parent: _bannerController,
+            curve: const Interval(0, 0.25, curve: Curves.easeOutBack),
+          ),
+        );
     _bannerFade = Tween<double>(begin: 1, end: 0).animate(
       CurvedAnimation(
         parent: _bannerController,
@@ -102,7 +103,7 @@ class _CheckinScannerOverlayState extends State<CheckinScannerOverlay>
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
-    final cutOut = math.min(220.0, size.shortestSide * 0.48);
+    final cutOut = math.min(220, size.shortestSide * 0.48);
 
     return Stack(
       children: [
@@ -164,7 +165,7 @@ class _CheckinScannerOverlayState extends State<CheckinScannerOverlay>
             right: 0,
             child: AnimatedBuilder(
               animation: _bannerController,
-              builder: (_, __) => Opacity(
+              builder: (_, _) => Opacity(
                 opacity: 1 - _bannerFade.value,
                 child: SlideTransition(
                   position: _bannerSlide,

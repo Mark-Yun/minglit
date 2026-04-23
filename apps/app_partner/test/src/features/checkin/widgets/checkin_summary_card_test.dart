@@ -72,9 +72,11 @@ void main() {
       final progressBar = tester.widget<LinearProgressIndicator>(
         find.byType(LinearProgressIndicator),
       );
-      final scheme = Theme.of(tester.element(find.byType(LinearProgressIndicator))).colorScheme;
+      final scheme = Theme.of(
+        tester.element(find.byType(LinearProgressIndicator)),
+      ).colorScheme;
       expect(
-        (progressBar.valueColor as AlwaysStoppedAnimation<Color?>).value,
+        (progressBar.valueColor! as AlwaysStoppedAnimation<Color?>).value,
         scheme.error,
       );
     });
@@ -86,7 +88,7 @@ void main() {
       await tester.pump(const Duration(seconds: 1));
 
       expect(
-        find.bySemanticsLabel(RegExp(r'전체 체크인 23명 중 50명')),
+        find.bySemanticsLabel(RegExp('전체 체크인 23명 중 50명')),
         findsOneWidget,
       );
     });
