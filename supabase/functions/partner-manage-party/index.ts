@@ -366,11 +366,22 @@ async function handleRequest(req: Request): Promise<Response> {
       }
     }
 
+    // Fix #1733: entry_group_templates 업데이트 검증 (write 전 사전 검증)
+    const updateEntryGroupTemplates = body.entry_group_templates;
+    if (updateEntryGroupTemplates !== undefined) {
+      if (!Array.isArray(updateEntryGroupTemplates)) {
+        return errorResponse("entry_group_templates must be an array", 400);
+      }
+      const egtValidationError = validateEntryGroupTemplates(updateEntryGroupTemplates);
+      if (egtValidationError) return egtValidationError;
+    }
+
     if (
       Object.keys(partyUpdates).length === 0 &&
       !body.location &&
       body.location_id === undefined &&
-      updateTagIds === undefined
+      updateTagIds === undefined &&
+      updateEntryGroupTemplates === undefined
     ) {
       return errorResponse("No fields to update", 400);
     }
@@ -465,6 +476,35 @@ async function handleRequest(req: Request): Promise<Response> {
         });
       if (ptRpcError) {
         return errorResponse(`Failed to update party tags: ${ptRpcError.message}`, 500);
+      }
+    }
+
+    // Fix #1733: entry_group_templates 업데이트 — DELETE-then-INSERT (undefined = no change, [] = clear all)
+    if (updateEntryGroupTemplates !== undefined) {
+      const { error: deleteEgtError } = await supabase
+        .from("entry_group_templates")
+        .delete()
+        .eq("party_id", partyId);
+      if (deleteEgtError) {
+        return errorResponse(`Failed to delete entry group templates: ${deleteEgtError.message}`, 500);
+      }
+
+      if ((updateEntryGroupTemplates as unknown[]).length > 0) {
+        const egt = (updateEntryGroupTemplates as Record<string, unknown>[]).map((t) => ({
+          party_id: partyId,
+          label: t.label ?? null,
+          gender: t.gender ?? null,
+          birth_year_min: t.birth_year_min ?? null,
+          birth_year_max: t.birth_year_max ?? null,
+          required_verification_ids: t.required_verification_ids ?? [],
+        }));
+
+        const { error: insertEgtError } = await supabase
+          .from("entry_group_templates")
+          .insert(egt);
+        if (insertEgtError) {
+          return errorResponse(`Failed to insert entry group templates: ${insertEgtError.message}`, 500);
+        }
       }
     }
 

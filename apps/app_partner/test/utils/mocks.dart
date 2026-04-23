@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
@@ -28,3 +29,5 @@ class MockTicketRepository extends Mock implements TicketRepository {}
 class MockLocationRepository extends Mock implements LocationRepository {}
 
 class MockMatchingRepository extends Mock implements MatchingRepository {}
+
+class MockNavigatorObserver extends Mock implements NavigatorObserver {}

@@ -691,6 +691,119 @@ Deno.test({
   },
 });
 
+// Fix #1733: update action with entry_group_templates — DELETE-then-INSERT persistence
+Deno.test({
+  name: "update: entry_group_templates are deleted and re-inserted",
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+
+    let deleteEntryGroupsCalled = false;
+    let insertEntryGroupsCalled = false;
+
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      selectPartyRoute(),
+      permRoute(),
+      updatePartyRoute(),
+      {
+        matcher: (req: Request) =>
+          req.url.includes("/rest/v1/entry_group_templates") && req.method === "DELETE",
+        handler: () => {
+          deleteEntryGroupsCalled = true;
+          return new Response(null, { status: 200 });
+        },
+      },
+      {
+        matcher: (req: Request) =>
+          req.url.includes("/rest/v1/entry_group_templates") && req.method === "POST",
+        handler: () => {
+          insertEntryGroupsCalled = true;
+          return jsonResponse([]);
+        },
+      },
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "update",
+          party_id: TEST_PARTY_ID,
+          party: { title: "수정된 제목" },
+          entry_group_templates: [
+            {
+              id: "egt_1",
+              party_id: TEST_PARTY_ID,
+              label: "남성 그룹",
+              gender: "male",
+              birth_year_min: 1990,
+              birth_year_max: 2000,
+              required_verification_ids: [],
+            },
+          ],
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 200);
+        const body = await readJson(res);
+        assertEquals(body.success, true);
+      });
+    });
+
+    assertEquals(deleteEntryGroupsCalled, true, "DELETE entry_group_templates was called");
+    assertEquals(insertEntryGroupsCalled, true, "INSERT entry_group_templates was called");
+  },
+});
+
+Deno.test({
+  name: "update: empty entry_group_templates clears existing groups",
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+
+    let deleteEntryGroupsCalled = false;
+    let insertEntryGroupsCalled = false;
+
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      selectPartyRoute(),
+      permRoute(),
+      updatePartyRoute(),
+      {
+        matcher: (req: Request) =>
+          req.url.includes("/rest/v1/entry_group_templates") && req.method === "DELETE",
+        handler: () => {
+          deleteEntryGroupsCalled = true;
+          return new Response(null, { status: 200 });
+        },
+      },
+      {
+        matcher: (req: Request) =>
+          req.url.includes("/rest/v1/entry_group_templates") && req.method === "POST",
+        handler: () => {
+          insertEntryGroupsCalled = true;
+          return jsonResponse([]);
+        },
+      },
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "update",
+          party_id: TEST_PARTY_ID,
+          party: { title: "수정된 제목" },
+          entry_group_templates: [],
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 200);
+        const body = await readJson(res);
+        assertEquals(body.success, true);
+      });
+    });
+
+    assertEquals(deleteEntryGroupsCalled, true, "DELETE entry_group_templates was called on empty array");
+    assertEquals(insertEntryGroupsCalled, false, "INSERT entry_group_templates was NOT called for empty array");
+  },
+});
+
 // ─── update_status action ───
 
 Deno.test({

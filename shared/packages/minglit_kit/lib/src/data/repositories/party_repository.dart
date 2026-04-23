@@ -225,12 +225,24 @@ abstract class _SupabasePartyContextBase implements _SupabasePartyContext {
       partyJson.remove('location');
       partyJson.remove('location_id');
 
+      // Fix #1733: entry_group_templates는 @JsonKey(includeToJson: false)로 toDbJson에서 제외 —
+      // update 요청에도 명시적으로 포함해야 EF가 entry_group_templates를 교체할 수 있음
+      final entryGroups = party.entryGroups;
+
       final body = <String, dynamic>{
         'action': 'update',
         'party_id': party.id,
         'party': partyJson,
         // Fix #1136: tag_ids는 null일 때 키 자체를 제외 — undefined와 null 구분을 위해
         'tag_ids': ?tagIds,
+        if (entryGroups != null)
+          'entry_group_templates': entryGroups
+              .map(
+                (g) => g.toJson()
+                  ..remove('created_at')
+                  ..remove('updated_at'),
+              )
+              .toList(),
       };
 
       final response = await supabaseClient.functions.invoke(

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
+import 'package:app_partner/src/features/party/detail/widgets/party_entry_group_management_screen.dart';
 import 'package:app_partner/src/features/party/widgets/party_basic_info_edit_screen.dart';
 import 'package:app_partner/src/features/party/widgets/party_capacity_contact_edit_screen.dart';
 import 'package:app_partner/src/features/party/widgets/party_location_edit_screen.dart';
@@ -155,6 +156,46 @@ class PartyDetailCoordinator {
     }
   }
 
+  // Fix #1733: 입장 조건 편집 화면 진입 — Coordinator 경유로 중앙화 (위젯 직접 Navigator 호출 제거)
+  void openEntryGroupManagement(BuildContext context, String partyId) {
+    unawaited(
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => PartyEntryGroupManagementScreen(partyId: partyId),
+        ),
+      ),
+    );
+  }
+
+  // Fix #1733: persist entry-group changes via entry_group_templates in EF body
+  Future<void> addPartyEntryGroup(
+    String partyId,
+    PartyEntryGroup group,
+    BuildContext context,
+  ) async {
+    final loading = _ref.read(globalLoadingControllerProvider.notifier)..show();
+    try {
+      final party = await _ref.read(partyDetailProvider(partyId).future);
+      final updatedGroups = <EntryGroupTemplate>[
+        ...(party.entryGroups ?? const <EntryGroupTemplate>[]),
+        group.copyWith(partyId: partyId),
+      ];
+      await _ref
+          .read(partyRepositoryProvider)
+          .updateParty(
+            party.copyWith(entryGroups: updatedGroups),
+          );
+      _ref.invalidate(partyDetailProvider(partyId));
+      if (context.mounted) {
+        context.showMinglitSuccess('입장 그룹이 추가되었습니다.');
+      }
+    } on Object catch (e, st) {
+      if (context.mounted) handleMinglitError(context, e, st);
+    } finally {
+      loading.hide();
+    }
+  }
+
   Future<void> updatePartyEntryGroup(
     String partyId,
     PartyEntryGroup updatedGroup,
@@ -163,9 +204,8 @@ class PartyDetailCoordinator {
     final loading = _ref.read(globalLoadingControllerProvider.notifier)..show();
     try {
       final party = await _ref.read(partyDetailProvider(partyId).future);
-      final currentGroups = party.entryGroups;
 
-      final updatedGroups = (currentGroups ?? [])
+      final updatedGroups = (party.entryGroups ?? const <EntryGroupTemplate>[])
           .map((g) => g.id == updatedGroup.id ? updatedGroup : g)
           .toList();
 
@@ -185,6 +225,33 @@ class PartyDetailCoordinator {
       if (context.mounted) {
         handleMinglitError(context, e, st);
       }
+    } finally {
+      loading.hide();
+    }
+  }
+
+  Future<void> removePartyEntryGroup(
+    String partyId,
+    String groupId,
+    BuildContext context,
+  ) async {
+    final loading = _ref.read(globalLoadingControllerProvider.notifier)..show();
+    try {
+      final party = await _ref.read(partyDetailProvider(partyId).future);
+      final updatedGroups = (party.entryGroups ?? const <EntryGroupTemplate>[])
+          .where((g) => g.id != groupId)
+          .toList();
+      await _ref
+          .read(partyRepositoryProvider)
+          .updateParty(
+            party.copyWith(entryGroups: updatedGroups),
+          );
+      _ref.invalidate(partyDetailProvider(partyId));
+      if (context.mounted) {
+        context.showMinglitSuccess('입장 그룹이 삭제되었습니다.');
+      }
+    } on Object catch (e, st) {
+      if (context.mounted) handleMinglitError(context, e, st);
     } finally {
       loading.hide();
     }
