@@ -275,7 +275,7 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.textContaining('파티 이름'), findsOneWidget);
-        expect(find.textContaining('· 1건'), isNot(findsNothing));
+        expect(find.textContaining('1건 ·'), findsOneWidget);
       },
     );
 
