@@ -82,8 +82,7 @@ class CheckinSummaryCard extends StatelessWidget {
                       key: ValueKey(percent),
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
-                        color:
-                            ratio >= 0.9 ? scheme.error : scheme.primary,
+                        color: ratio >= 0.9 ? scheme.error : scheme.primary,
                       ),
                     ),
                   ),
@@ -94,14 +93,13 @@ class CheckinSummaryCard extends StatelessWidget {
               tween: Tween(begin: 0, end: ratio),
               duration: MinglitAnimation.medium,
               curve: Curves.easeOut,
-              builder: (_, value, __) => ClipRRect(
+              builder: (_, value, _) => ClipRRect(
                 borderRadius: BorderRadius.circular(4),
                 child: LinearProgressIndicator(
                   value: value,
                   minHeight: 8,
                   backgroundColor: scheme.outlineVariant,
-                  valueColor:
-                      AlwaysStoppedAnimation(_progressColor(scheme)),
+                  valueColor: AlwaysStoppedAnimation(_progressColor(scheme)),
                 ),
               ),
             ),
@@ -114,7 +112,7 @@ class CheckinSummaryCard extends StatelessWidget {
                   child: Text(
                     total == 0
                         ? '아직 발급된 티켓이 없습니다'
-                        : '남은 ${remaining}명 · ${_updateText()}',
+                        : '남은 $remaining명 · ${_updateText()}',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: scheme.onSurfaceVariant,
                       fontWeight: FontWeight.w500,
@@ -252,7 +250,7 @@ class _LiveDotState extends State<_LiveDot>
       vsync: this,
       duration: const Duration(milliseconds: 1500),
     )..repeat(reverse: true);
-    _opacity = Tween<double>(begin: 1.0, end: 0.3).animate(
+    _opacity = Tween<double>(begin: 1, end: 0.3).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
   }
@@ -265,7 +263,9 @@ class _LiveDotState extends State<_LiveDot>
 
   @override
   Widget build(BuildContext context) {
-    final color = widget.isOffline ? MinglitColors.warning : MinglitColors.success;
+    final color = widget.isOffline
+        ? MinglitColors.warning
+        : MinglitColors.success;
     if (widget.isOffline) {
       return Container(
         width: 6,

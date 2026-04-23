@@ -96,12 +96,12 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
 
           // 3. Summary card — positioned below AppBar
           //    Phase 2: replace checkedIn/total with checkinStatsControllerProvider
-          SafeArea(
+          const SafeArea(
             bottom: false,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const SizedBox(height: kToolbarHeight),
+                SizedBox(height: kToolbarHeight),
                 CheckinSummaryCard(checkedIn: 0, total: 0),
               ],
             ),
