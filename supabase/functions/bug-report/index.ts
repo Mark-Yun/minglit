@@ -79,7 +79,7 @@ Deno.serve(withHandler(async (req) => {
       throw new Error("GITHUB_ACCESS_TOKEN is not set");
     }
 
-    const body = `
+    const issueBody = `
 ### 🐞 Bug Report
 
 **Description:**
@@ -110,7 +110,7 @@ ${screenshotSection}${environmentSection}${layoutDumpSection}`;
         },
         body: JSON.stringify({
           title: `[Bug Report] ${title}`,
-          body: body,
+          body: issueBody,
           labels: ["bug-report", "from-app"],
         }),
       },

@@ -194,7 +194,7 @@ Deno.test({
         const res = await handler(req);
         assertEquals(res.status, 400);
         const json = await readJson(res);
-        assertEquals(json.error, "Missing action");
+        assertEquals(json.error, "Missing or invalid \"action\" field");
       });
     });
   },

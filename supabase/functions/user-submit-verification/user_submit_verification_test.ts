@@ -428,7 +428,7 @@ Deno.test("action 누락 → 400", async () => {
         const payload = await readJson(response);
 
         assertEquals(response.status, 400);
-        assertEquals(payload.error, "Missing required field: action");
+        assertEquals(payload.error, "Missing or invalid \"action\" field");
       });
     });
   });

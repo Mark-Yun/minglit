@@ -163,7 +163,7 @@ Deno.test({
         );
         assertEquals(res.status, 400);
         const body = await readJson(res);
-        assertEquals(body.error, "Missing action");
+        assertEquals(body.error, "Missing or invalid \"action\" field");
       });
     });
   },
