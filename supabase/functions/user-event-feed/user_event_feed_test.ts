@@ -27,6 +27,12 @@ function rpcFeedResponse(events: unknown[] = [], hasMore = false) {
   };
 }
 
+// Fix #1748: rate limit count HEAD response — PostgREST Content-Range format
+function rateLimitCountResponse(count: number): Response {
+  const contentRange = count === 0 ? "*/0" : `0-${count - 1}/${count}`;
+  return new Response(null, { status: 200, headers: { "Content-Range": contentRange } });
+}
+
 function createFeedFetchMock(rpcResult: unknown, authUser?: { id: string } | null) {
   return createFetchMock([
     // Auth endpoint — for optionalAuth
@@ -195,8 +201,16 @@ Deno.test({
         matcher: (req: Request) => req.url.includes("/auth/v1/user"),
         handler: () => jsonResponse({ id: "user-123" }),
       },
+      // Fix #1748: HEAD = rate limit count check (0 entries → under limit)
       {
-        matcher: (req: Request) => req.url.includes("/rest/v1/location_access_log"),
+        matcher: (req: Request) =>
+          req.url.includes("/rest/v1/location_access_log") && req.method === "HEAD",
+        handler: () => rateLimitCountResponse(0),
+      },
+      // POST = actual INSERT of access log row
+      {
+        matcher: (req: Request) =>
+          req.url.includes("/rest/v1/location_access_log") && req.method === "POST",
         handler: () => jsonResponse([], { status: 201 }),
       },
       {
@@ -215,7 +229,10 @@ Deno.test({
         );
         assertEquals(response.status, 200);
 
-        const logCall = calls.find((c) => c.url.includes("/rest/v1/location_access_log"));
+        // Fix #1748: match POST (INSERT), not HEAD (rate limit check)
+        const logCall = calls.find((c) =>
+          c.url.includes("/rest/v1/location_access_log") && c.method === "POST"
+        );
         assertEquals(logCall !== undefined, true, "location_access_log INSERT was called");
 
         const body = JSON.parse(logCall!.body!);
@@ -263,8 +280,16 @@ Deno.test({
         matcher: (req: Request) => req.url.includes("/auth/v1/user"),
         handler: () => jsonResponse({ id: "user-123" }),
       },
+      // Fix #1748: HEAD rate limit check fails → fails-open (warn + proceed)
       {
-        matcher: (req: Request) => req.url.includes("/rest/v1/location_access_log"),
+        matcher: (req: Request) =>
+          req.url.includes("/rest/v1/location_access_log") && req.method === "HEAD",
+        handler: () => new Response(null, { status: 500 }),
+      },
+      // POST INSERT fails → 500 returned to caller (§16 legal obligation)
+      {
+        matcher: (req: Request) =>
+          req.url.includes("/rest/v1/location_access_log") && req.method === "POST",
         handler: () => jsonResponse({ message: "DB error" }, { status: 500 }),
       },
     ]);
@@ -278,6 +303,126 @@ Deno.test({
           }),
         );
         assertEquals(response.status, 500, "location_access_log INSERT failure returns 500");
+      });
+    });
+  },
+});
+
+// ── Fix #1748: new security tests ────────────────────────────────────
+
+Deno.test({
+  name: "user-event-feed - anonymous nearby request returns 401",
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+
+    const { fetchMock } = createFetchMock([
+      {
+        matcher: (req: Request) => req.url.includes("/auth/v1/user"),
+        handler: () => jsonResponse({ error: "not authenticated" }, { status: 401 }),
+      },
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        // No Authorization header — requireAuth should reject
+        const response = await handler(
+          jsonRequest(BASE_URL, {
+            sort_by: "nearest_date",
+            filters: { nearby: { lat: 37.5, lng: 127.0, radius_km: 5 } },
+          }),
+        );
+        assertEquals(response.status, 401, "unauthenticated nearby returns 401");
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "user-event-feed - nearby with invalid shape returns 400",
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+
+    const { fetchMock } = createFetchMock([
+      {
+        matcher: (req: Request) => req.url.includes("/auth/v1/user"),
+        handler: () => jsonResponse({ id: "user-123" }),
+      },
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        // lat out of [-90, 90] range
+        const response = await handler(
+          authenticatedJsonRequest(BASE_URL, {
+            sort_by: "nearest_date",
+            filters: { nearby: { lat: 999, lng: 127.0, radius_km: 5 } },
+          }),
+        );
+        assertEquals(response.status, 400, "invalid lat returns 400");
+        const body = await readJson(response);
+        assertEquals(body.error.includes("Invalid nearby filter"), true);
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "user-event-feed - nearby with radius_km > 50 returns 400",
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+
+    const { fetchMock } = createFetchMock([
+      {
+        matcher: (req: Request) => req.url.includes("/auth/v1/user"),
+        handler: () => jsonResponse({ id: "user-123" }),
+      },
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const response = await handler(
+          authenticatedJsonRequest(BASE_URL, {
+            sort_by: "nearest_date",
+            filters: { nearby: { lat: 37.5, lng: 127.0, radius_km: 100 } },
+          }),
+        );
+        assertEquals(response.status, 400, "radius_km > 50 returns 400");
+        const body = await readJson(response);
+        assertEquals(body.error.includes("Invalid nearby filter"), true);
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "user-event-feed - rate limit exceeded returns 429",
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+
+    const { fetchMock } = createFetchMock([
+      {
+        matcher: (req: Request) => req.url.includes("/auth/v1/user"),
+        handler: () => jsonResponse({ id: "user-123" }),
+      },
+      // Fix #1748: HEAD returns count=30 (at limit) → 429
+      {
+        matcher: (req: Request) =>
+          req.url.includes("/rest/v1/location_access_log") && req.method === "HEAD",
+        handler: () => rateLimitCountResponse(30),
+      },
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const response = await handler(
+          authenticatedJsonRequest(BASE_URL, {
+            sort_by: "nearest_date",
+            filters: { nearby: { lat: 37.5, lng: 127.0, radius_km: 5 } },
+          }),
+        );
+        assertEquals(response.status, 429, "rate limit exceeded returns 429");
+        const body = await readJson(response);
+        assertEquals(body.error.includes("Rate limit exceeded"), true);
       });
     });
   },
