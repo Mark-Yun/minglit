@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Dev flavor only: deep link + QA bug report receiver -->
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <application>
         <activity android:name=".MainActivity">
             <intent-filter>
@@ -12,6 +13,12 @@
                 <!-- adb: am start -a VIEW -d "minglit-partner-dev:///dev/user-switch" com.minglit.app_partner.dev -->
                 <data android:scheme="minglit-partner-dev" />
             </intent-filter>
+            <!-- Fix #1776: main manifest의 flutter_deeplinking_enabled=false를 dev에서 override -->
+            <!-- tools:replace 없이는 Gradle merge 시 main의 false가 우선됨 -->
+            <meta-data
+                android:name="flutter_deeplinking_enabled"
+                android:value="true"
+                tools:replace="android:value" />
         </activity>
         <!-- Dev-only: ADB intent receiver for QA automated bug reporting -->
         <receiver
