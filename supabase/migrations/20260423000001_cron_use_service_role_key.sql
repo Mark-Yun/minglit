@@ -23,10 +23,13 @@ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM vault.decrypted_secrets WHERE name = 'service_role_key'
   ) THEN
-    RAISE EXCEPTION
-      'vault secret "service_role_key" not found. '
-      'Add it via Dashboard → Database → Vault before applying this migration, '
-      'otherwise cron jobs will be rescheduled with a NULL JWT and continue to return 401.';
+    -- Intentional WARNING (not EXCEPTION): CI/dev vaults don't have this secret.
+    -- In production, add service_role_key to Vault BEFORE applying this migration.
+    -- Pattern consistent with 20260330000006_account_deletion_crons.sql.
+    RAISE WARNING
+      'vault secret "service_role_key" not found — cron jobs will be rescheduled '
+      'but will return NULL JWT until the secret is added to Vault. '
+      'Add it via Dashboard → Database → Vault before applying this migration.';
   END IF;
 END $$;
 
