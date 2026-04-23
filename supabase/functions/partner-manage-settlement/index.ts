@@ -2,13 +2,13 @@
 // Issue #312: RLS write strategy 전환
 
 import { createServiceClient } from "../_shared/supabase_client.ts";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   corsResponse,
   errorResponse,
   successResponse,
 } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
+import { requirePartnerPermission } from "../_shared/partner_permissions.ts";
 import { initSentry, withHandler, log } from "../_shared/logger.ts";
 
 const FN = "partner-manage-settlement";
@@ -83,8 +83,8 @@ Deno.serve(withHandler(async (req: Request): Promise<Response> => {
       }
 
       // Check partner permission
-      const permCheck = await checkPartnerPermission(supabase, partnerId, userId);
-      if (permCheck instanceof Response) return permCheck;
+      const permCheck = await requirePartnerPermission(supabase, partnerId, userId, ["SETTLEMENT_EDIT"]);
+      if (permCheck) return permCheck;
 
       // Build upsert record — only allow whitelisted fields, use validated values
       const record: Record<string, unknown> = {
@@ -111,27 +111,3 @@ Deno.serve(withHandler(async (req: Request): Promise<Response> => {
     return errorResponse("Internal server error", 500);
   }
 }));
-
-// ─── Helper: check partner permission ───
-async function checkPartnerPermission(
-  supabase: SupabaseClient,
-  partnerId: string,
-  userId: string,
-): Promise<void | Response> {
-  const { data: perm, error: permError } = await supabase
-    .from("partner_member_permissions")
-    .select("permissions")
-    .eq("partner_id", partnerId)
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  if (permError) {
-    return errorResponse("Failed to verify partner permissions", 500);
-  }
-
-  // Fix #312: SETTLEMENT_EDIT 권한 또는 owner 권한 확인
-  const hasPermission = (perm?.permissions as string[] | null)?.includes("SETTLEMENT_EDIT") ?? false;
-  if (!hasPermission) {
-    return errorResponse("Forbidden: insufficient partner permissions", 403);
-  }
-}

@@ -5,6 +5,8 @@ import {
   successResponse,
 } from "../_shared/response_utils.ts";
 import { initSentry, log, withHandler, withSpan } from "../_shared/logger.ts";
+// Fix #1784: 로컬 requireServiceRole 복사본 제거 → 공식 _shared/auth_utils.ts 사용
+import { requireServiceRole } from "../_shared/auth_utils.ts";
 
 const FN = "process-pending-deletions";
 const DELETION_GRACE_DAYS = 7;
@@ -59,20 +61,6 @@ type UserResult = {
 };
 
 await initSentry();
-
-function requireServiceRole(req: Request): Response | null {
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-  const authHeader = req.headers.get("Authorization") ?? "";
-
-  if (!serviceRoleKey) {
-    return errorResponse("SUPABASE_SERVICE_ROLE_KEY not configured", 500);
-  }
-  if (authHeader !== `Bearer ${serviceRoleKey}`) {
-    return errorResponse("Unauthorized", 401);
-  }
-
-  return null;
-}
 
 function addDays(date: Date, days: number): string {
   return new Date(date.getTime() + days * 24 * 60 * 60 * 1000).toISOString();
@@ -466,9 +454,9 @@ Deno.serve(withHandler(async (req) => {
     return errorResponse("Method Not Allowed", 405);
   }
 
-  const authError = requireServiceRole(req);
-  if (authError) {
-    return authError;
+  const auth = requireServiceRole(req);
+  if (auth instanceof Response) {
+    return auth;
   }
 
   const now = new Date();

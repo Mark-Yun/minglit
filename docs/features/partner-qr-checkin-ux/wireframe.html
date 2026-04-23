@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>파트너 QR 체크인 UX 강화 — 와이어프레임</title>
+<style>
+  :root {
+    /* Tokens — aligned with minglit_kit (MinglitColors / MinglitPartnerColors) */
+    --primary: #6C3CE1;          /* MinglitPartnerColors.primary */
+    --primary-dark: #4B1FA8;
+    --primary-surface: #F5F0FF;  /* MinglitPartnerColors.primarySurface */
+    --success: #16A34A;          /* MinglitColors.success (green-600, AA on white) */
+    --warning: #D97706;          /* MinglitColors.warning (amber-600, AA on white) */
+    --error: #EF4444;            /* MinglitColors.error */
+    --bg: #F9FAFB;               /* MinglitColors.surface */
+    --surface: #FFFFFF;          /* MinglitColors.background */
+    --text-primary: #111827;     /* MinglitColors.textPrimary */
+    --text-secondary: #4B5563;   /* MinglitColors.textSecondary */
+    --text-muted: #9CA3AF;
+    --border: #E5E7EB;           /* MinglitColors.divider */
+    --camera-bg: #0A0A0F;
+    /* Dark tokens */
+    --dark-surface: #212121;     /* MinglitColorsDark.surface */
+    --dark-bg: #0F0F0F;          /* MinglitColorsDark.background */
+    --dark-text-primary: #FFFFFF;
+    --dark-text-secondary: #AAAAAA;
+    --dark-divider: #3D3D3D;
+    --dark-primary: #9B7BEC;     /* MinglitPartnerColorsDark.primary */
+    --dark-success: #4ADE80;     /* MinglitColorsDark.success */
+    --dark-warning: #FBBF24;     /* MinglitColorsDark.warning */
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #E5E7EB;
+    padding: 40px 20px;
+    color: var(--text-primary);
+  }
+  h1 { font-size: 22px; margin-bottom: 8px; }
+  .subtitle { color: var(--text-secondary); margin-bottom: 32px; font-size: 14px; }
+  .row { display: flex; gap: 24px; flex-wrap: wrap; align-items: flex-start; }
+  .frame-wrap { display: flex; flex-direction: column; align-items: center; }
+  .frame-label {
+    margin-top: 12px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    text-align: center;
+    max-width: 375px;
+  }
+  .frame {
+    width: 375px;
+    height: 812px;
+    background: var(--bg);
+    border-radius: 40px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+    border: 4px solid #1a1a1a;
+    display: flex;
+    flex-direction: column;
+  }
+  .status-bar {
+    height: 44px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 24px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    flex-shrink: 0;
+  }
+  .appbar {
+    height: 56px;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .appbar .back { font-size: 22px; width: 32px; }
+  .appbar .title {
+    flex: 1;
+    font-size: 16px;
+    font-weight: 600;
+  }
+  .appbar .action {
+    font-size: 20px;
+    color: var(--primary);
+    width: 32px;
+    text-align: right;
+  }
+  .summary-card {
+    margin: 12px 16px 0;
+    padding: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .summary-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .summary-count {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+  .summary-count .max { color: var(--text-muted); font-weight: 500; }
+  .summary-percent {
+    font-size: 14px;
+    color: var(--success);
+    font-weight: 600;
+  }
+  .progress-bar {
+    height: 8px;
+    background: var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--success);
+    border-radius: 4px;
+  }
+  .summary-meta {
+    font-size: 12px;
+    color: var(--text-secondary);
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .dot { color: var(--text-muted); }
+  .live-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--success);
+    animation: pulse 1.5s infinite;
+    display: inline-block;
+  }
+  @keyframes pulse { 0%,100% { opacity: 1 } 50% { opacity: 0.3 } }
+
+  .scanner-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 20px 0;
+    background: var(--camera-bg);
+    position: relative;
+    margin-top: 12px;
+  }
+  .camera-hint {
+    font-size: 13px;
+    color: rgba(255,255,255,0.75);
+    text-align: center;
+    padding: 0 24px;
+  }
+  .qr-frame {
+    width: 220px;
+    height: 220px;
+    position: relative;
+  }
+  .qr-frame .corner {
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    border: 3px solid var(--primary);
+  }
+  .qr-frame .corner.tl { top: 0; left: 0; border-right: none; border-bottom: none; border-top-left-radius: 4px; }
+  .qr-frame .corner.tr { top: 0; right: 0; border-left: none; border-bottom: none; border-top-right-radius: 4px; }
+  .qr-frame .corner.bl { bottom: 0; left: 0; border-right: none; border-top: none; border-bottom-left-radius: 4px; }
+  .qr-frame .corner.br { bottom: 0; right: 0; border-left: none; border-top: none; border-bottom-right-radius: 4px; }
+  .qr-frame .scan-line {
+    position: absolute;
+    left: 10%;
+    right: 10%;
+    top: 50%;
+    height: 2px;
+    background: var(--primary);
+    box-shadow: 0 0 12px var(--primary);
+  }
+  .qr-placeholder {
+    position: absolute;
+    inset: 20px;
+    opacity: 0.08;
+    background:
+      linear-gradient(90deg, white 0 5%, transparent 5% 10%, white 10% 18%, transparent 18% 22%, white 22% 30%, transparent 30%),
+      linear-gradient(0deg, white 0 5%, transparent 5% 10%, white 10% 18%, transparent 18% 22%, white 22% 30%, transparent 30%);
+    background-blend-mode: multiply;
+  }
+
+  .controls-row {
+    display: flex;
+    gap: 12px;
+    padding: 0 16px;
+  }
+  .ctrl-btn {
+    flex: 1;
+    height: 48px;
+    background: rgba(255,255,255,0.10);
+    border: 1px solid rgba(255,255,255,0.20);
+    border-radius: 12px;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .ctrl-btn .icn { font-size: 18px; }
+
+  .groups-sheet {
+    background: var(--surface);
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    padding: 12px 16px 20px;
+    box-shadow: 0 -4px 16px rgba(0,0,0,0.08);
+    flex-shrink: 0;
+  }
+  .sheet-handle {
+    width: 36px;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 0 auto 12px;
+  }
+  .sheet-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+  }
+  .sheet-title {
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .sheet-chev {
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+  .sheet-subtitle {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+  }
+  .group-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .group-row:last-child { border-bottom: none; }
+  .group-top { display: flex; justify-content: space-between; align-items: baseline; }
+  .group-label { font-size: 14px; font-weight: 600; }
+  .group-count { font-size: 14px; color: var(--text-secondary); font-weight: 500; }
+  .group-count .checked { color: var(--text-primary); font-weight: 700; }
+  .group-bar {
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .group-bar .fill { height: 100%; border-radius: 3px; }
+  .fill-low { background: var(--primary); }
+  .fill-mid { background: var(--warning); }
+  .fill-high { background: var(--error); }
+
+  .manual-sheet {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    top: 120px;
+    background: var(--surface);
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    padding: 12px 16px 20px;
+    box-shadow: 0 -4px 16px rgba(0,0,0,0.2);
+    display: flex;
+    flex-direction: column;
+  }
+  .search-input {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    height: 48px;
+    padding: 0 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin-bottom: 12px;
+  }
+  .participant-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .avatar {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #9b7bec, #6C3CE1);
+    color: white;
+    font-weight: 700;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .p-main { flex: 1; min-width: 0; }
+  .p-name { font-size: 15px; font-weight: 600; }
+  .p-meta { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+  .check-btn {
+    background: var(--primary);
+    color: white;
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .check-btn.done {
+    background: var(--surface);
+    color: var(--success);
+    border: 1px solid var(--success);
+  }
+
+  .success-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(34, 197, 94, 0.92);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    color: white;
+    z-index: 10;
+  }
+  .success-icon {
+    width: 96px; height: 96px;
+    border-radius: 50%;
+    background: white;
+    color: var(--success);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 56px;
+    font-weight: 700;
+  }
+  .success-name { font-size: 22px; font-weight: 700; }
+  .success-meta { font-size: 14px; opacity: 0.92; }
+  .success-order {
+    margin-top: 8px;
+    background: rgba(0,0,0,0.25);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .section-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 24px 0 12px;
+  }
+  .brand-logo {
+    height: 20px;
+    margin-right: auto;
+  }
+  .brand-mark {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--primary);
+    letter-spacing: -0.3px;
+  }
+  .brand-mark .accent { color: var(--warning); }
+</style>
+</head>
+<body>
+
+<h1>파트너 QR 체크인 UX 강화 — 와이어프레임</h1>
+<p class="subtitle">
+  Issue #1779 · 밍글릿 파트너 앱 · 375×812pt (iPhone 13 mini 기준)
+</p>
+
+<div class="section-title">1. 기본 화면 — 스캐너 + 실시간 현황</div>
+<div class="row">
+
+  <!-- Frame A: Default with entry groups collapsed -->
+  <div class="frame-wrap">
+    <div class="frame">
+      <div class="status-bar">
+        <span>9:41</span>
+        <span>●●● 100%</span>
+      </div>
+      <div class="appbar">
+        <div class="back">←</div>
+        <div class="title">금요일 저녁 와인 모임</div>
+        <div class="action">↻</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-top">
+          <div class="summary-count">23<span class="max">/50</span></div>
+          <div class="summary-percent">46%</div>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: 46%"></div>
+        </div>
+        <div class="summary-meta">
+          <span class="live-dot"></span>
+          <span>진행중</span>
+          <span class="dot">·</span>
+          <span>남은 인원 27명</span>
+          <span class="dot">·</span>
+          <span>8분 전 업데이트</span>
+        </div>
+      </div>
+      <div class="scanner-wrap">
+        <div class="camera-hint">참가자의 QR 코드를 프레임 안에 비추세요</div>
+        <div class="qr-frame">
+          <div class="corner tl"></div>
+          <div class="corner tr"></div>
+          <div class="corner bl"></div>
+          <div class="corner br"></div>
+          <div class="qr-placeholder"></div>
+          <div class="scan-line"></div>
+        </div>
+        <div class="controls-row">
+          <button class="ctrl-btn"><span class="icn">⚡</span>플래시</button>
+          <button class="ctrl-btn"><span class="icn">🔍</span>수동 체크인</button>
+        </div>
+      </div>
+      <div class="groups-sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title-row">
+          <div class="sheet-title">엔트리 그룹별 현황</div>
+          <div class="sheet-chev">위로 올려 펼치기 ▲</div>
+        </div>
+        <div class="sheet-subtitle">총 4개 그룹 · 남 15/28 · 여 8/22</div>
+      </div>
+    </div>
+    <div class="frame-label">
+      <strong>A. 기본 화면</strong><br>
+      상단 요약 카드 + 카메라 뷰 + 하단 그룹 시트 (축소)
+    </div>
+  </div>
+
+  <!-- Frame B: Groups sheet expanded -->
+  <div class="frame-wrap">
+    <div class="frame">
+      <div class="status-bar">
+        <span>9:41</span>
+        <span>●●● 100%</span>
+      </div>
+      <div class="appbar">
+        <div class="back">←</div>
+        <div class="title">금요일 저녁 와인 모임</div>
+        <div class="action">↻</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-top">
+          <div class="summary-count">23<span class="max">/50</span></div>
+          <div class="summary-percent">46%</div>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: 46%"></div>
+        </div>
+        <div class="summary-meta">
+          <span class="live-dot"></span>
+          <span>진행중</span>
+          <span class="dot">·</span>
+          <span>남은 인원 27명</span>
+        </div>
+      </div>
+      <div style="height: 140px; background: var(--camera-bg); margin-top: 12px; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.4); font-size: 12px;">
+        — 카메라 뷰 (축소) —
+      </div>
+      <div class="groups-sheet" style="flex: 1; overflow-y: auto;">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title-row">
+          <div class="sheet-title">엔트리 그룹별 현황</div>
+          <div class="sheet-chev">아래로 내리기 ▼</div>
+        </div>
+        <div class="sheet-subtitle">총 4개 그룹 · 실시간 업데이트</div>
+
+        <div class="group-row">
+          <div class="group-top">
+            <div class="group-label">남 20대 초반</div>
+            <div class="group-count"><span class="checked">13</span>/14</div>
+          </div>
+          <div class="group-bar"><div class="fill fill-high" style="width: 92%"></div></div>
+        </div>
+
+        <div class="group-row">
+          <div class="group-top">
+            <div class="group-label">여 20대 초반</div>
+            <div class="group-count"><span class="checked">5</span>/14</div>
+          </div>
+          <div class="group-bar"><div class="fill fill-low" style="width: 35%"></div></div>
+        </div>
+
+        <div class="group-row">
+          <div class="group-top">
+            <div class="group-label">남 30대</div>
+            <div class="group-count"><span class="checked">2</span>/14</div>
+          </div>
+          <div class="group-bar"><div class="fill fill-low" style="width: 14%"></div></div>
+        </div>
+
+        <div class="group-row">
+          <div class="group-top">
+            <div class="group-label">여 30대</div>
+            <div class="group-count"><span class="checked">3</span>/8</div>
+          </div>
+          <div class="group-bar"><div class="fill fill-mid" style="width: 37%"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="frame-label">
+      <strong>B. 그룹 시트 확장</strong><br>
+      남 20대 초반 거의 마감 (빨강) · 여 30대 중반 진입 (주황)
+    </div>
+  </div>
+
+  <!-- Frame C: Success overlay -->
+  <div class="frame-wrap">
+    <div class="frame">
+      <div class="status-bar">
+        <span>9:41</span>
+        <span>●●● 100%</span>
+      </div>
+      <div class="appbar">
+        <div class="back">←</div>
+        <div class="title">금요일 저녁 와인 모임</div>
+        <div class="action">↻</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-top">
+          <div class="summary-count">24<span class="max">/50</span></div>
+          <div class="summary-percent">48%</div>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: 48%"></div>
+        </div>
+        <div class="summary-meta">
+          <span class="live-dot"></span>
+          <span>방금 업데이트됨</span>
+        </div>
+      </div>
+      <div class="scanner-wrap" style="position: relative;">
+        <div class="success-overlay">
+          <div class="success-icon">✓</div>
+          <div class="success-name">홍길동</div>
+          <div class="success-meta">남 20대 초반 · 24번째 입장</div>
+          <div class="success-order">9:47 PM 체크인</div>
+        </div>
+      </div>
+      <div class="groups-sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title-row">
+          <div class="sheet-title">엔트리 그룹별 현황</div>
+          <div class="sheet-chev">▲</div>
+        </div>
+        <div class="sheet-subtitle">남 20대 초반 <strong style="color:var(--error)">14/14 마감</strong></div>
+      </div>
+    </div>
+    <div class="frame-label">
+      <strong>C. 스캔 성공</strong><br>
+      유저명 + 엔트리 그룹 + N번째 입장 + 시각 (0.8초 표시)
+    </div>
+  </div>
+
+</div>
+
+<div class="section-title">2. 보조 플로우 — 수동 체크인 & 엣지 케이스</div>
+<div class="row">
+
+  <!-- Frame D: Manual check-in sheet -->
+  <div class="frame-wrap">
+    <div class="frame">
+      <div class="status-bar">
+        <span>9:41</span>
+        <span>●●● 100%</span>
+      </div>
+      <div class="appbar">
+        <div class="back">←</div>
+        <div class="title">수동 체크인</div>
+        <div class="action"></div>
+      </div>
+      <div style="padding: 12px 16px; background: #FEF3C7; border-bottom: 1px solid #FDE68A; font-size: 13px; color: #92400E;">
+        QR 인식이 어려울 때 이름으로 체크인 처리
+      </div>
+      <div style="padding: 16px; flex: 1; overflow-y: auto;">
+        <div class="search-input">
+          <span>🔍</span>
+          <span>이름 또는 전화 뒷자리로 검색</span>
+        </div>
+
+        <div style="font-size: 12px; color: var(--text-muted); margin: 8px 0 4px;">미체크인 (27명)</div>
+
+        <div class="participant-row">
+          <div class="avatar">김</div>
+          <div class="p-main">
+            <div class="p-name">김민지</div>
+            <div class="p-meta">여 20대 초반 · 010-****-1234</div>
+          </div>
+          <button class="check-btn">체크인</button>
+        </div>
+
+        <div class="participant-row">
+          <div class="avatar">박</div>
+          <div class="p-main">
+            <div class="p-name">박재훈</div>
+            <div class="p-meta">남 20대 초반 · 010-****-5678</div>
+          </div>
+          <button class="check-btn">체크인</button>
+        </div>
+
+        <div class="participant-row">
+          <div class="avatar">이</div>
+          <div class="p-main">
+            <div class="p-name">이예린</div>
+            <div class="p-meta">여 30대 · 010-****-9012</div>
+          </div>
+          <button class="check-btn">체크인</button>
+        </div>
+
+        <div style="font-size: 12px; color: var(--text-muted); margin: 16px 0 4px;">체크인 완료 (23명)</div>
+
+        <div class="participant-row">
+          <div class="avatar">홍</div>
+          <div class="p-main">
+            <div class="p-name">홍길동</div>
+            <div class="p-meta">남 20대 초반 · 9:47 PM 체크인</div>
+          </div>
+          <button class="check-btn done">✓ 완료</button>
+        </div>
+      </div>
+    </div>
+    <div class="frame-label">
+      <strong>D. 수동 체크인 바텀시트</strong><br>
+      이름/전화 뒷자리 검색 · 미체크인 먼저, 완료된 참가자는 아래
+    </div>
+  </div>
+
+  <!-- Frame E: Network error / offline -->
+  <div class="frame-wrap">
+    <div class="frame">
+      <div class="status-bar">
+        <span>9:41</span>
+        <span>● 오프라인</span>
+      </div>
+      <div class="appbar">
+        <div class="back">←</div>
+        <div class="title">금요일 저녁 와인 모임</div>
+        <div class="action">↻</div>
+      </div>
+      <div class="summary-card" style="border-color: #FDE68A; background: #FFFBEB;">
+        <div class="summary-top">
+          <div class="summary-count">23<span class="max">/50</span></div>
+          <div class="summary-percent" style="color: var(--warning);">캐시됨</div>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: 46%; background: var(--warning);"></div>
+        </div>
+        <div class="summary-meta">
+          <span style="color: var(--warning); font-weight: 600;">⚠ 오프라인</span>
+          <span class="dot">·</span>
+          <span>마지막 업데이트 15분 전</span>
+        </div>
+      </div>
+      <div class="scanner-wrap">
+        <div class="camera-hint" style="color: rgba(255,255,255,0.5);">네트워크 연결을 확인해주세요</div>
+        <div class="qr-frame" style="opacity: 0.4;">
+          <div class="corner tl"></div>
+          <div class="corner tr"></div>
+          <div class="corner bl"></div>
+          <div class="corner br"></div>
+        </div>
+        <div style="color: white; text-align: center; padding: 0 24px;">
+          <div style="font-size: 16px; font-weight: 600; margin-bottom: 4px;">체크인 일시 중단</div>
+          <div style="font-size: 13px; color: rgba(255,255,255,0.7);">연결이 복구되면 자동 재개됩니다 (v2 — 오프라인 큐)</div>
+        </div>
+        <button class="ctrl-btn" style="max-width: 200px;">다시 시도</button>
+      </div>
+      <div class="groups-sheet" style="background: #F3F4F6;">
+        <div class="sheet-handle"></div>
+        <div class="sheet-subtitle" style="text-align: center;">오프라인 · 그룹별 현황 불러올 수 없음</div>
+      </div>
+    </div>
+    <div class="frame-label">
+      <strong>E. 오프라인 상태</strong><br>
+      캐시된 카운트 + 스캐너 비활성 · v2에서 오프라인 큐 지원
+    </div>
+  </div>
+
+  <!-- Frame F: Empty state -->
+  <div class="frame-wrap">
+    <div class="frame">
+      <div class="status-bar">
+        <span>9:41</span>
+        <span>●●● 100%</span>
+      </div>
+      <div class="appbar">
+        <div class="back">←</div>
+        <div class="title">일요일 브런치 팝업</div>
+        <div class="action">↻</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-top">
+          <div class="summary-count">0<span class="max">/0</span></div>
+          <div class="summary-percent" style="color: var(--text-muted)">—</div>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: 0%"></div>
+        </div>
+        <div class="summary-meta">
+          <span>아직 발급된 티켓이 없습니다</span>
+        </div>
+      </div>
+      <div class="scanner-wrap">
+        <div style="color: white; text-align: center; padding: 0 32px;">
+          <div style="font-size: 48px; margin-bottom: 16px;">🎟️</div>
+          <div style="font-size: 17px; font-weight: 600; margin-bottom: 8px;">참가자가 없습니다</div>
+          <div style="font-size: 13px; color: rgba(255,255,255,0.7); line-height: 1.5;">
+            이 이벤트의 티켓이 발급되면<br>QR 체크인이 가능해집니다
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="frame-label">
+      <strong>F. 빈 상태</strong><br>
+      티켓 발급 0건 — 스캐너 비활성 + 안내 메시지
+    </div>
+  </div>
+
+</div>
+
+<div class="section-title">디자인 토큰 요약</div>
+<div style="max-width: 900px; font-size: 13px; line-height: 1.7; color: var(--text-secondary); background: white; padding: 20px 24px; border-radius: 12px;">
+  <strong>Color (minglit_kit 토큰)</strong> —
+    <code>MinglitPartnerColors.primary</code> #6C3CE1 ·
+    <code>MinglitColors.success</code> #16A34A (green-600, AA) ·
+    <code>MinglitColors.warning</code> #D97706 (amber-600, AA) ·
+    <code>MinglitColors.error</code> #EF4444 ·
+    <code>surface</code> #F9FAFB ·
+    <code>background</code> #FFFFFF<br>
+  <strong>Spacing</strong> — <code>MinglitSpacing</code>: small 8 / sm 12 / medium 16 / large 24 / xlarge 32 · semantic: screenEdge 16, cardGap 12<br>
+  <strong>Radius</strong> — <code>MinglitRadius</code>: card 16 · button/input 12 · 시트 상단 20<br>
+  <strong>Typography</strong> — Pretendard · <code>headlineMedium</code> 28/700 (큰 숫자) · <code>titleMedium</code> 16/600 · <code>bodyMedium</code> 14/500 · <code>bodySmall</code> 12/500<br>
+  <strong>Progress 단계별 색상</strong> — &lt;50% primary · 50–90% warning · ≥90% error (3중 시그널: 색 + 숫자 + 폭)<br>
+  <strong>Haptic</strong> — 성공 <code>mediumImpact</code> · 중복 <code>lightImpact</code> · 실패 <code>heavyImpact</code> · 선택 <code>selectionClick</code>
+</div>
+
+<div class="section-title">3. 디자인 시스템 보정안 — needs-uiux-claude-1</div>
+<p class="subtitle" style="margin-bottom: 20px;">
+  스펙(#1782) 대비 UX Designer 보정: ① 성공 피드백을 전체 화면 오버레이 → 상단 슬라이드 배너로 변경 (다음 스캔 차단 방지), ② FAB 2종(플래시/수동)을 카메라 우상단에 배치 (엄지 호 접근성), ③ 다크모드 프레임 추가 (클럽/야간 운영). 자세한 근거는 <code>ui-ux-design.md</code> 참조.
+</p>
+<div class="row">
+
+  <!-- Frame G: Compact success banner (improved over Frame C) -->
+  <div class="frame-wrap">
+    <div class="frame">
+      <div class="status-bar">
+        <span>9:41</span>
+        <span>●●● 100%</span>
+      </div>
+      <div class="appbar">
+        <div class="back">←</div>
+        <div class="title">금요일 저녁 와인 모임</div>
+        <div class="action">↻</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-top">
+          <div class="summary-count">24<span class="max">/50</span></div>
+          <div class="summary-percent">48%</div>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: 48%"></div>
+        </div>
+        <div class="summary-meta">
+          <span class="live-dot"></span>
+          <span>방금 업데이트됨</span>
+        </div>
+      </div>
+      <!-- Scanner still visible, banner slides down from top -->
+      <div class="scanner-wrap" style="position: relative;">
+        <!-- Top slide-down success banner (NOT full-screen) -->
+        <div style="position: absolute; top: 12px; left: 16px; right: 16px; background: var(--success); border-radius: 12px; padding: 12px 14px; display: flex; align-items: center; gap: 10px; box-shadow: 0 6px 16px rgba(22,163,74,0.3); z-index: 30;">
+          <div style="width: 28px; height: 28px; border-radius: 50%; background: white; color: var(--success); display: flex; align-items: center; justify-content: center; font-weight: 700;">✓</div>
+          <div style="color: white; flex: 1;">
+            <div style="font-size: 14px; font-weight: 700; line-height: 1.2;">홍길동 · 남 20대 초반</div>
+            <div style="font-size: 12px; opacity: 0.9; margin-top: 2px;">24번째 입장 · 9:47 PM</div>
+          </div>
+        </div>
+
+        <!-- FAB column top-right -->
+        <div style="position: absolute; top: 68px; right: 16px; display: flex; flex-direction: column; gap: 12px; z-index: 30;">
+          <button style="width: 44px; height: 44px; border-radius: 12px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.18); color: white; font-size: 18px;">⚡</button>
+          <button style="width: 44px; height: 44px; border-radius: 12px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.18); color: white; font-size: 18px;">🔍</button>
+        </div>
+
+        <!-- Scanner remains active -->
+        <div class="camera-hint" style="margin-top: 70px;">스캔 계속 가능</div>
+        <div class="qr-frame">
+          <div class="corner tl"></div>
+          <div class="corner tr"></div>
+          <div class="corner bl"></div>
+          <div class="corner br"></div>
+          <div class="qr-placeholder"></div>
+          <div class="scan-line"></div>
+        </div>
+
+        <!-- Central bounce checkmark (0.2s) -->
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 96px; height: 96px; border-radius: 50%; background: rgba(22,163,74,0.95); color: white; display: flex; align-items: center; justify-content: center; font-size: 52px; box-shadow: 0 0 0 8px rgba(22,163,74,0.2); z-index: 20;">✓</div>
+      </div>
+      <div class="groups-sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title-row">
+          <div class="sheet-title">엔트리 그룹별 현황</div>
+          <div class="sheet-chev">▲</div>
+        </div>
+        <div class="sheet-subtitle">남 20대 초반 <strong style="color:var(--error)">14/14 마감</strong></div>
+      </div>
+    </div>
+    <div class="frame-label">
+      <strong>G. 성공 피드백 (보정안)</strong><br>
+      상단 슬라이드 배너(200ms) + 중앙 체크 bounce(200ms). 스캐너 계속 활성 — 혼잡 시 연속 스캔 가능.
+    </div>
+  </div>
+
+  <!-- Frame H: FAB controls detail -->
+  <div class="frame-wrap">
+    <div class="frame">
+      <div class="status-bar">
+        <span>9:41</span>
+        <span>●●● 100%</span>
+      </div>
+      <div class="appbar">
+        <div class="back">←</div>
+        <div class="title">금요일 저녁 와인 모임</div>
+        <div class="action">↻</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-top">
+          <div class="summary-count">23<span class="max">/50</span></div>
+          <div class="summary-percent">46%</div>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: 46%"></div>
+        </div>
+        <div class="summary-meta">
+          <span class="live-dot"></span>
+          <span>진행중</span>
+          <span class="dot">·</span>
+          <span>남은 27명</span>
+        </div>
+      </div>
+      <div class="scanner-wrap" style="position: relative;">
+        <!-- FAB column -->
+        <div style="position: absolute; top: 16px; right: 16px; display: flex; flex-direction: column; gap: 12px; z-index: 30;">
+          <button style="width: 44px; height: 44px; border-radius: 12px; background: var(--primary); border: 1px solid rgba(255,255,255,0.18); color: white; font-size: 18px; box-shadow: 0 4px 12px rgba(108,60,225,0.4);">⚡</button>
+          <div style="font-size: 10px; color: rgba(255,255,255,0.7); text-align: center; margin-top: -4px;">ON</div>
+          <button style="width: 44px; height: 44px; border-radius: 12px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.18); color: white; font-size: 18px;">🔍</button>
+          <div style="font-size: 10px; color: rgba(255,255,255,0.7); text-align: center; margin-top: -4px;">수동</div>
+        </div>
+        <div class="camera-hint">플래시 ON 상태 — 어두운 현장 가독성 확보</div>
+        <div class="qr-frame">
+          <div class="corner tl" style="border-color: var(--primary)"></div>
+          <div class="corner tr" style="border-color: var(--primary)"></div>
+          <div class="corner bl" style="border-color: var(--primary)"></div>
+          <div class="corner br" style="border-color: var(--primary)"></div>
+          <div class="qr-placeholder" style="opacity: 0.15;"></div>
+          <div class="scan-line"></div>
+        </div>
+      </div>
+      <div class="groups-sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title-row">
+          <div class="sheet-title">엔트리 그룹별 현황</div>
+          <div class="sheet-chev">위로 올려 펼치기 ▲</div>
+        </div>
+        <div class="sheet-subtitle">총 4개 그룹 · 남 15/28 · 여 8/22</div>
+      </div>
+    </div>
+    <div class="frame-label">
+      <strong>H. FAB 컨트롤 (우상단)</strong><br>
+      플래시/수동 체크인 44×44 — 엄지 호 진입 유지. 활성 시 primary 배경 + shadow.
+    </div>
+  </div>
+
+  <!-- Frame I: Dark mode -->
+  <div class="frame-wrap">
+    <div class="frame" style="background: var(--dark-bg);">
+      <div class="status-bar" style="color: var(--dark-text-primary);">
+        <span>9:41</span>
+        <span>●●● 100%</span>
+      </div>
+      <div class="appbar" style="background: var(--dark-bg); border-bottom-color: var(--dark-divider);">
+        <div class="back" style="color: var(--dark-text-primary);">←</div>
+        <div class="title" style="color: var(--dark-text-primary);">금요일 저녁 와인 모임</div>
+        <div class="action" style="color: var(--dark-primary);">↻</div>
+      </div>
+      <div class="summary-card" style="background: var(--dark-surface); border-color: var(--dark-divider);">
+        <div class="summary-top">
+          <div class="summary-count" style="color: var(--dark-text-primary);">23<span class="max" style="color: var(--dark-text-secondary);">/50</span></div>
+          <div class="summary-percent" style="color: var(--dark-primary);">46%</div>
+        </div>
+        <div class="progress-bar" style="background: var(--dark-divider);">
+          <div class="progress-fill" style="width: 46%; background: var(--dark-primary);"></div>
+        </div>
+        <div class="summary-meta" style="color: var(--dark-text-secondary);">
+          <span class="live-dot" style="background: var(--dark-success);"></span>
+          <span>진행중</span>
+          <span class="dot">·</span>
+          <span>남은 27명</span>
+          <span class="dot">·</span>
+          <span>8분 전 업데이트</span>
+        </div>
+      </div>
+      <div class="scanner-wrap" style="position: relative;">
+        <div style="position: absolute; top: 16px; right: 16px; display: flex; flex-direction: column; gap: 12px; z-index: 30;">
+          <button style="width: 44px; height: 44px; border-radius: 12px; background: rgba(255,255,255,0.16); border: 1px solid rgba(255,255,255,0.22); color: white; font-size: 18px;">⚡</button>
+          <button style="width: 44px; height: 44px; border-radius: 12px; background: rgba(255,255,255,0.16); border: 1px solid rgba(255,255,255,0.22); color: white; font-size: 18px;">🔍</button>
+        </div>
+        <div class="camera-hint">클럽/야간 현장 — 자동 다크모드</div>
+        <div class="qr-frame">
+          <div class="corner tl" style="border-color: var(--dark-primary)"></div>
+          <div class="corner tr" style="border-color: var(--dark-primary)"></div>
+          <div class="corner bl" style="border-color: var(--dark-primary)"></div>
+          <div class="corner br" style="border-color: var(--dark-primary)"></div>
+          <div class="qr-placeholder"></div>
+          <div class="scan-line" style="background: var(--dark-primary); box-shadow: 0 0 12px var(--dark-primary);"></div>
+        </div>
+      </div>
+      <div class="groups-sheet" style="background: var(--dark-surface); box-shadow: 0 -4px 16px rgba(0,0,0,0.4);">
+        <div class="sheet-handle" style="background: var(--dark-divider);"></div>
+        <div class="sheet-title-row">
+          <div class="sheet-title" style="color: var(--dark-text-primary);">엔트리 그룹별 현황</div>
+          <div class="sheet-chev" style="color: var(--dark-text-secondary);">위로 올려 펼치기 ▲</div>
+        </div>
+        <div class="sheet-subtitle" style="color: var(--dark-text-secondary);">총 4개 그룹 · 남 15/28 · 여 8/22</div>
+      </div>
+    </div>
+    <div class="frame-label">
+      <strong>I. 다크모드 (partnerThemeDark)</strong><br>
+      <code>MinglitPartnerColorsDark.primary</code> #9B7BEC · <code>MinglitColorsDark.success</code> #4ADE80 · 자동 system theme 감지.
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

@@ -1,17 +1,12 @@
 // Fix #179: esm.sh 직접 URL → deno.json import map 기반으로 통일
 import { createServiceClient } from "../_shared/supabase_client.ts";
-import { PortoneV2Client } from "../_shared/portone_client.ts";
+import { getPortoneClient } from "../_shared/portone_client.ts";
 import { successResponse, errorResponse, corsResponse } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
 import { initSentry, withHandler, log } from "../_shared/logger.ts";
 
 const FN = "partner-sync";
 
-const PORTONE_V2_API_KEY = Deno.env.get("PORTONE_V2_API_KEY");
-
-if (!PORTONE_V2_API_KEY) {
-  throw new Error("Missing required environment variable: PORTONE_V2_API_KEY");
-}
 
 initSentry();
 
@@ -49,7 +44,7 @@ Deno.serve(withHandler(async (req) => {
       return successResponse({ success: true, portone_partner_id: partner.portone_partner_id, skipped: true });
     }
 
-    const portone = new PortoneV2Client(PORTONE_V2_API_KEY);
+    const portone = getPortoneClient();
     let portonePartner: { id: string };
     try {
       portonePartner = await portone.createPartner({

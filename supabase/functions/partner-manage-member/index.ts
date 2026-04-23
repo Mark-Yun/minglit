@@ -2,13 +2,13 @@
 // Issue #313: RLS write strategy 전환
 
 import { createServiceClient } from "../_shared/supabase_client.ts";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   corsResponse,
   errorResponse,
   successResponse,
 } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
+import { requirePartnerPermission } from "../_shared/partner_permissions.ts";
 import { initSentry, withHandler, log } from "../_shared/logger.ts";
 
 const FN = "partner-manage-member";
@@ -81,8 +81,8 @@ Deno.serve(withHandler(async (req: Request): Promise<Response> => {
       }
 
       // Check MEMBER_MANAGE permission
-      const permCheck = await checkPartnerPermission(supabase, partnerId, userId);
-      if (permCheck instanceof Response) return permCheck;
+      const permCheck = await requirePartnerPermission(supabase, partnerId, userId, ["MEMBER_MANAGE"]);
+      if (permCheck) return permCheck;
 
       const { error: updateError } = await supabase
         .from("partner_member_permissions")
@@ -119,8 +119,8 @@ Deno.serve(withHandler(async (req: Request): Promise<Response> => {
       }
 
       // Check MEMBER_MANAGE permission
-      const permCheck = await checkPartnerPermission(supabase, partnerId, userId);
-      if (permCheck instanceof Response) return permCheck;
+      const permCheck = await requirePartnerPermission(supabase, partnerId, userId, ["MEMBER_MANAGE"]);
+      if (permCheck) return permCheck;
 
       const { error: updateError } = await supabase
         .from("partner_member_permissions")
@@ -144,28 +144,3 @@ Deno.serve(withHandler(async (req: Request): Promise<Response> => {
     return errorResponse(exposeDetail ? `${FN}: ${detail}` : "Internal server error", 500);
   }
 }));
-
-// ─── Helper: check partner MEMBER_MANAGE permission ───
-async function checkPartnerPermission(
-  supabase: SupabaseClient,
-  partnerId: string,
-  userId: string,
-): Promise<void | Response> {
-  const { data: perm, error: permError } = await supabase
-    .from("partner_member_permissions")
-    .select("role, permissions")
-    .eq("partner_id", partnerId)
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  if (permError) {
-    return errorResponse("Failed to verify partner permissions", 500);
-  }
-
-  // Fix #313: owner role 또는 MEMBER_MANAGE 권한 확인 (defense-in-depth)
-  const hasPermission = perm?.role === "owner" ||
-    ((perm?.permissions as string[] | null)?.includes("MEMBER_MANAGE") ?? false);
-  if (!hasPermission) {
-    return errorResponse("Forbidden: insufficient partner permissions", 403);
-  }
-}

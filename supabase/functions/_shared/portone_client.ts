@@ -291,3 +291,28 @@ export class PortoneV2Client {
     return await response.json();
   }
 }
+
+// Fix #1786: 7 EF에 복붙된 PortOne V2 client 생성 패턴 통합
+// 모듈 레벨 singleton — Edge Function isolate 내에서 재사용
+let _portoneClientInstance: PortoneV2Client | null = null;
+
+export function getPortoneClient(): PortoneV2Client {
+  if (_portoneClientInstance) return _portoneClientInstance;
+  const key = Deno.env.get("PORTONE_V2_API_KEY");
+  if (!key) throw new Error("Missing required environment variable: PORTONE_V2_API_KEY");
+  _portoneClientInstance = new PortoneV2Client(key);
+  return _portoneClientInstance;
+}
+
+// Fix #1786: 4 EF에 복붙된 partners.portone_partner_id fetch 패턴 통합
+// deno-lint-ignore no-explicit-any
+export async function fetchPartnerPortoneId(supabase: any, partnerId: string): Promise<string> {
+  const { data, error } = await supabase
+    .from("partners")
+    .select("portone_partner_id")
+    .eq("id", partnerId)
+    .single();
+  if (error) throw new Error(`Failed to fetch partner ${partnerId}: ${error.message}`);
+  if (!data?.portone_partner_id) throw new Error(`Partner ${partnerId} has no PortOne link`);
+  return data.portone_partner_id;
+}

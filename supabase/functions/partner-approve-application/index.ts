@@ -9,6 +9,7 @@ import {
   successResponse,
 } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
+import { requirePartnerPermission } from "../_shared/partner_permissions.ts";
 import { initSentry, withHandler, log } from "../_shared/logger.ts";
 
 const FN = "partner-approve-application";
@@ -103,8 +104,8 @@ async function handleApprove(
   const party = event.parties as Record<string, unknown>;
   const partnerId = party.partner_id as string;
 
-  const permCheck = await checkPartnerPermission(supabase, partnerId, userId);
-  if (permCheck instanceof Response) return permCheck;
+  const permCheck = await requirePartnerPermission(supabase, partnerId, userId, ["EVENT_MANAGE", "APPLICATION_MANAGE"]);
+  if (permCheck) return permCheck;
 
   // Verify status is approvable (after permission check)
   if (!APPROVABLE_STATUSES.includes(app.status as typeof APPROVABLE_STATUSES[number])) {
@@ -173,8 +174,8 @@ async function handleBulkApprove(
   const party = event.parties as Record<string, unknown>;
   const partnerId = party.partner_id as string;
 
-  const permCheck = await checkPartnerPermission(supabase, partnerId, userId);
-  if (permCheck instanceof Response) return permCheck;
+  const permCheck = await requirePartnerPermission(supabase, partnerId, userId, ["EVENT_MANAGE", "APPLICATION_MANAGE"]);
+  if (permCheck) return permCheck;
 
   // Fix #1219: route bulk approval through the DB capacity guard so oldest rows are approved under one event lock.
   const { data: bulkApprovalResult, error: bulkApprovalError } = await supabase
@@ -214,33 +215,4 @@ async function handleBulkApprove(
     skipped_due_to_capacity: skippedDueToCapacity,
     remaining_slots_before_approval: remainingSlotsBeforeApproval,
   });
-}
-
-// ── Permission check ──
-async function checkPartnerPermission(
-  supabase: SupabaseClient,
-  partnerId: string,
-  userId: string,
-): Promise<void | Response> {
-  const { data: perm, error: permError } = await supabase
-    .from("partner_member_permissions")
-    .select("permissions, role")
-    .eq("partner_id", partnerId)
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  if (permError) {
-    return errorResponse("Failed to verify partner permissions", 500);
-  }
-
-  // Owner bypass — defense-in-depth even if DB trigger grants all permissions
-  if (perm?.role === "owner") return;
-
-  const permissions = (perm?.permissions as string[] | null) ?? [];
-  const hasPermission =
-    permissions.includes("EVENT_MANAGE") ||
-    permissions.includes("APPLICATION_MANAGE");
-  if (!hasPermission) {
-    return errorResponse("Forbidden: insufficient partner permissions", 403);
-  }
 }

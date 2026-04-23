@@ -9,6 +9,7 @@ import {
   successResponse,
 } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
+import { requirePartnerPermission } from "../_shared/partner_permissions.ts";
 import { initSentry, withHandler } from "../_shared/logger.ts";
 
 
@@ -141,8 +142,8 @@ async function handleCreate(
   if (!party) return errorResponse("Party not found", 404);
 
   // Check permission
-  const permCheck = await checkPartnerPermission(supabase, party.partner_id, userId);
-  if (permCheck instanceof Response) return permCheck;
+  const permCheck = await requirePartnerPermission(supabase, party.partner_id, userId, ["PARTY_MANAGE"]);
+  if (permCheck) return permCheck;
 
   // Insert recurrence rule
   const { data: rule, error: insertError } = await supabase
@@ -199,8 +200,8 @@ async function handleUpdate(
   }
 
   const partnerId = (rule.parties as Record<string, unknown>).partner_id as string;
-  const permCheck = await checkPartnerPermission(supabase, partnerId, userId);
-  if (permCheck instanceof Response) return permCheck;
+  const permCheck = await requirePartnerPermission(supabase, partnerId, userId, ["PARTY_MANAGE"]);
+  if (permCheck) return permCheck;
 
   // Build update object from optional fields
   const updates: Record<string, unknown> = {};
@@ -286,8 +287,8 @@ async function handlePause(
   }
 
   const partnerId = (rule.parties as Record<string, unknown>).partner_id as string;
-  const permCheck = await checkPartnerPermission(supabase, partnerId, userId);
-  if (permCheck instanceof Response) return permCheck;
+  const permCheck = await requirePartnerPermission(supabase, partnerId, userId, ["PARTY_MANAGE"]);
+  if (permCheck) return permCheck;
 
   const { error: updateError } = await supabase
     .from("recurrence_rules")
@@ -325,8 +326,8 @@ async function handleResume(
   }
 
   const partnerId = (rule.parties as Record<string, unknown>).partner_id as string;
-  const permCheck = await checkPartnerPermission(supabase, partnerId, userId);
-  if (permCheck instanceof Response) return permCheck;
+  const permCheck = await requirePartnerPermission(supabase, partnerId, userId, ["PARTY_MANAGE"]);
+  if (permCheck) return permCheck;
 
   // Activate first
   const { error: updateError } = await supabase
@@ -399,8 +400,8 @@ async function handleCancel(
   }
 
   const partnerId = (rule.parties as Record<string, unknown>).partner_id as string;
-  const permCheck = await checkPartnerPermission(supabase, partnerId, userId);
-  if (permCheck instanceof Response) return permCheck;
+  const permCheck = await requirePartnerPermission(supabase, partnerId, userId, ["PARTY_MANAGE"]);
+  if (permCheck) return permCheck;
 
   const { error: updateError } = await supabase
     .from("recurrence_rules")
@@ -595,29 +596,3 @@ function calculateDates(
 }
 
 // ─── Helpers ───
-
-async function checkPartnerPermission(
-  supabase: SupabaseClient,
-  partnerId: string,
-  userId: string,
-): Promise<void | Response> {
-  const { data: perm, error: permError } = await supabase
-    .from("partner_member_permissions")
-    .select("role, permissions")
-    .eq("partner_id", partnerId)
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  if (permError) {
-    return errorResponse("Failed to verify partner permissions", 500);
-  }
-
-  // Owner always has full access (codebase convention)
-  if ((perm?.role as string | null) === "owner") return;
-
-  const permissions = (perm?.permissions as string[] | null) ?? [];
-  const hasPermission = permissions.includes("PARTY_MANAGE");
-  if (!hasPermission) {
-    return errorResponse("Forbidden: insufficient partner permissions", 403);
-  }
-}
