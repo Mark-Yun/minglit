@@ -65,35 +65,40 @@ SELECT ok(
   'blocked_di_records: calendar columns remain NULL'
 );
 
--- 6. CHECK 제약 위반 확인 (SQLSTATE 23514 = check_violation)
+-- 6. CHECK 제약 위반 확인 (4인수 형식: throws_ok(sql, errcode, errmsg, description))
 SELECT throws_ok(
   $$INSERT INTO admin.retention_policies (id, kind, retention_days, legal_min_days, target, description, enabled, retention_calendar_value, retention_calendar_unit)
     VALUES ('test_chk_zero', 'db_table', 10, 10, '{"schema":"public","table":"t","ts_col":"ts"}', 'test', false, 0, 'day')$$,
   '23514',
+  NULL,
   'retention_calendar_value > 0 CHECK prevents zero value'
 );
 SELECT throws_ok(
   $$INSERT INTO admin.retention_policies (id, kind, retention_days, legal_min_days, target, description, enabled, retention_calendar_value, retention_calendar_unit)
     VALUES ('test_chk_neg', 'db_table', 10, 10, '{"schema":"public","table":"t","ts_col":"ts"}', 'test', false, -1, 'year')$$,
   '23514',
+  NULL,
   'retention_calendar_value > 0 CHECK prevents negative value'
 );
 SELECT throws_ok(
   $$INSERT INTO admin.retention_policies (id, kind, retention_days, legal_min_days, target, description, enabled, retention_calendar_value, retention_calendar_unit)
     VALUES ('test_chk_unit', 'db_table', 10, 10, '{"schema":"public","table":"t","ts_col":"ts"}', 'test', false, 1, 'week')$$,
   '23514',
+  NULL,
   'retention_calendar_unit IN CHECK prevents invalid unit'
 );
 SELECT throws_ok(
   $$INSERT INTO admin.retention_policies (id, kind, retention_days, legal_min_days, target, description, enabled, retention_calendar_value, retention_calendar_unit)
     VALUES ('test_pair1', 'db_table', 10, 10, '{"schema":"public","table":"t","ts_col":"ts"}', 'test', false, 5, NULL)$$,
   '23514',
+  NULL,
   'pair check: value without unit is rejected'
 );
 SELECT throws_ok(
   $$INSERT INTO admin.retention_policies (id, kind, retention_days, legal_min_days, target, description, enabled, retention_calendar_value, retention_calendar_unit)
     VALUES ('test_pair2', 'db_table', 10, 10, '{"schema":"public","table":"t","ts_col":"ts"}', 'test', false, NULL, 'year')$$,
   '23514',
+  NULL,
   'pair check: unit without value is rejected'
 );
 
