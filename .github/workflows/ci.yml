@@ -375,8 +375,35 @@ jobs:
           fi
           echo "✅ All workflow YAML files are valid"
 
+  # Fix #1780: androidx.test runner/orchestrator 버전 정합성 검증
+  # runner와 orchestrator는 동일 major.minor 계열이어야 함 (1.5.x↔1.5.x, 1.6.x↔1.6.x)
+  # Gradle consistent resolution이 혼용 시 빌드 실패를 발생시키므로 PR 단계에서 사전 차단.
+  check-android-test-deps:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Verify androidx.test runner/orchestrator version alignment
+        run: |
+          GRADLE_FILE="apps/app_user/android/app/build.gradle.kts"
+          RUNNER=$(grep 'androidx\.test:runner:' "$GRADLE_FILE" | grep -oP '\d+\.\d+\.\d+' | head -1)
+          ORCHESTRATOR=$(grep 'androidx\.test:orchestrator:' "$GRADLE_FILE" | grep -oP '\d+\.\d+\.\d+' | head -1)
+          echo "runner: $RUNNER"
+          echo "orchestrator: $ORCHESTRATOR"
+          if [ -z "$RUNNER" ] || [ -z "$ORCHESTRATOR" ]; then
+            echo "❌ Could not parse runner or orchestrator version from $GRADLE_FILE"
+            exit 1
+          fi
+          RUNNER_MINOR=$(echo "$RUNNER" | cut -d. -f1,2)
+          ORCHESTRATOR_MINOR=$(echo "$ORCHESTRATOR" | cut -d. -f1,2)
+          if [ "$RUNNER_MINOR" != "$ORCHESTRATOR_MINOR" ]; then
+            echo "❌ Version mismatch: runner $RUNNER vs orchestrator $ORCHESTRATOR"
+            echo "Both must share the same major.minor series (e.g., both 1.5.x or both 1.6.x)"
+            exit 1
+          fi
+          echo "✅ runner $RUNNER and orchestrator $ORCHESTRATOR are compatible ($RUNNER_MINOR series)"
+
   ci-result:
-    needs: [check-migration-versions, check-env-manifest-sync, check-workflow-yaml, test-flutter-apps, lint-landing-user, lint-landing-partner, test-supabase, test-edge-functions]
+    needs: [check-migration-versions, check-env-manifest-sync, check-workflow-yaml, check-android-test-deps, test-flutter-apps, lint-landing-user, lint-landing-partner, test-supabase, test-edge-functions]
     if: always()
     runs-on: ubuntu-latest
     steps:
