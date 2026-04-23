@@ -50,10 +50,10 @@
 
 | 화면 | 변형 | 테스트 파일 | 우선순위 |
 |------|------|-----------|---------|
-| `MyTicketsPage` | 빈 상태 (light/dark) | `apps/app_user/test/goldens/my_tickets_page_golden_test.dart` | P2 |
+| `MyTicketsPage` | 빈 상태 (light/dark) | `apps/app_user/test/alchemist/my_tickets_page_golden_test.dart` | P2 |
 | | upcoming 2건 + past 1건 (light/dark) | 동일 | P2 |
 | | 오늘 이벤트 배너 포함 (light/dark) | 동일 | P3 |
-| `MyTicketCard` | upcoming 카드 (D-3) | `apps/app_user/test/goldens/my_ticket_card_golden_test.dart` | P2 |
+| `MyTicketCard` | upcoming 카드 (D-3) | `apps/app_user/test/alchemist/my_ticket_card_golden_test.dart` | P2 |
 | | past 카드 (종료, muted) | 동일 | P3 |
 | | D-Day 카드 (강조) | 동일 | P3 |
 

@@ -157,16 +157,16 @@
 
 | 화면 | 변형 | 테스트 파일 | 우선순위 |
 |------|------|-----------|---------|
-| `DeletionReasonPage` | 사유 미선택 (light/dark) | `apps/app_user/test/goldens/deletion_reason_page_golden_test.dart` | P2 |
+| `DeletionReasonPage` | 사유 미선택 (light/dark) | `apps/app_user/test/alchemist/deletion_reason_page_golden_test.dart` | P2 |
 | | "기타" 선택 + 텍스트 입력 (light/dark) | 동일 | P3 |
-| `DeletionInfoPage` | 기본 상태 (light/dark) | `apps/app_user/test/goldens/deletion_info_page_golden_test.dart` | P2 |
-| `DeletionVerifyPage` | 이메일 유저 (light/dark) | `apps/app_user/test/goldens/deletion_verify_page_golden_test.dart` | P2 |
+| `DeletionInfoPage` | 기본 상태 (light/dark) | `apps/app_user/test/alchemist/deletion_info_page_golden_test.dart` | P2 |
+| `DeletionVerifyPage` | 이메일 유저 (light/dark) | `apps/app_user/test/alchemist/deletion_verify_page_golden_test.dart` | P2 |
 | | 소셜 유저 (light/dark) | 동일 | P3 |
 | | 비밀번호 에러 상태 | 동일 | P3 |
-| `DeletionCompletePage` | 기본 상태 (light/dark) | `apps/app_user/test/goldens/deletion_complete_page_golden_test.dart` | P2 |
-| 최종 확인 다이얼로그 | 기본 상태 (light/dark) | `apps/app_user/test/goldens/deletion_confirm_dialog_golden_test.dart` | P2 |
-| 복구 다이얼로그 | 유예 기간 재로그인 (light/dark) | `apps/app_user/test/goldens/deletion_recovery_dialog_golden_test.dart` | P3 |
-| 파트너 탈퇴 차단 화면 | 차단 조건 목록 (light/dark) | `apps/app_partner/test/goldens/deletion_blocked_page_golden_test.dart` | P3 |
+| `DeletionCompletePage` | 기본 상태 (light/dark) | `apps/app_user/test/alchemist/deletion_complete_page_golden_test.dart` | P2 |
+| 최종 확인 다이얼로그 | 기본 상태 (light/dark) | `apps/app_user/test/alchemist/deletion_confirm_dialog_golden_test.dart` | P2 |
+| 복구 다이얼로그 | 유예 기간 재로그인 (light/dark) | `apps/app_user/test/alchemist/deletion_recovery_dialog_golden_test.dart` | P3 |
+| 파트너 탈퇴 차단 화면 | 차단 조건 목록 (light/dark) | `apps/app_partner/test/alchemist/deletion_blocked_page_golden_test.dart` | P3 |
 
 ### Layer 7: Model 테스트 (minglit_kit)
 

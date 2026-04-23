@@ -28,8 +28,8 @@
 |---|-------|------|---------------------------|-----------|------|
 | 1 | **Unit test** | Feature/logic 순수 단위 (repository, controller, util) | `apps/app_*/test/src/`, `shared/packages/minglit_kit/test/src/` | `flutter_test` (headless) | PR 마다 |
 | 2a | **Widget flow test** | 다화면 위젯 인터랙션 (mock 기반) | `apps/app_*/test/integration/` *(향후 `test/flows/` rename 검토 — #1586 Phase C)* | `flutter_test` (headless) | PR 마다 |
-| 2b | **Golden image test** | 시각 회귀 감지 (픽셀 비교) | `apps/app_*/test/goldens/` *(향후 `test/alchemist/` rename — #1586 Phase C, PR #1582)* | Alchemist | PR 마다 |
-| 3 | **Emulator test** | Patrol 기반 네이티브 surface + 실 DB CUJ + 시나리오 스크린샷 | `apps/app_*/integration_test/` *(향후 `emulator_test/` rename — #1582)* | Patrol | 주 1회 + 수동 |
+| 2b | **Golden image test** | 시각 회귀 감지 (픽셀 비교) | `apps/app_*/test/alchemist/`, `shared/packages/minglit_kit/test/goldens/` | Alchemist | PR 마다 |
+| 3 | **Emulator test** | Patrol 기반 네이티브 surface + 실 DB CUJ | `apps/app_*/emulator_test/` | Patrol | 주 1회 + 수동 |
 
 ### 🗄️ Backend Level (`supabase/` + EF)
 
@@ -149,18 +149,18 @@
 
 | 앱 | 위치 | `*_golden_test.dart` |
 |----|------|---------------------|
-| app_user | `apps/app_user/test/goldens/` | 14 |
-| app_partner | `apps/app_partner/test/goldens/` | 15 |
+| app_user | `apps/app_user/test/alchemist/` | 14 |
+| app_partner | `apps/app_partner/test/alchemist/` | 15 |
 
 ### Layer 3 — Emulator (Patrol)
 
 | 앱 | 위치 | 파일 수 | 성격 |
 |----|------|--------|------|
 | app_user | `apps/app_user/patrol_test/` | 3 | `kakao_login`, `payment_pg`, `permission_grant` — PatrolBinding, patrol_cli 4.x (`--target`) |
-| app_user | `apps/app_user/integration_test/` | 2 | `apple_sign_in`, `scenario_screenshots` — IntegrationTestWidgetsFlutterBinding |
-| app_partner | `apps/app_partner/integration_test/` | 1 | `scenario_screenshots` 만 |
+| app_user | `apps/app_user/emulator_test/` | 1 | `apple_sign_in` — IntegrationTestWidgetsFlutterBinding |
+| app_partner | — | 0 | Layer 3 테스트 없음. `scenario_screenshots_test.dart` 이 PR에서 삭제됨. |
 
-**Layer 3 런타임 상태**: `patrol-e2e.yml` 복구 완료 (#1673). `scenario_screenshots_test.dart` 내부 캡처 호출 0건. 재가동 계획은 §6 로드맵 및 #1586 Phase D-2 참고.
+**Layer 3 런타임 상태**: `patrol-e2e.yml` 복구 완료 (#1673). `app_partner` Layer 3 테스트 0건. 재가동 계획은 §6 로드맵 및 #1586 Phase D-2 참고.
 
 ### Layer 4 — pgTAP
 
@@ -212,26 +212,160 @@
 
 **용어 규칙**:
 
-| 표현 | 정의 | 예시 |
-|------|------|------|
-| "golden" / "골든" | Tier A 만 지칭 (7-layer Layer 2b) | "이 위젯 golden 깨졌어" |
-| **"시나리오 스크린샷"** | Tier B 만 지칭 (7-layer Layer 3) | "시나리오 스크린샷이 안 찍힌다" |
-| "스크린샷 리뷰" / "agent 리뷰" | Tier C 만 지칭 | "agent 리뷰에서 잡혔다" |
+| 표현 | 정의 | 사용 예 |
+|------|------|--------|
+| "골든 스크린샷" / "golden" | Tier A만 지칭 (7-layer Layer 2b). 픽셀 비교 | "이 위젯 golden 깨졌어" |
+| **"시나리오 스크린샷"** | Tier B만 지칭 (7-layer Layer 3). CUJ 플로우 캡처 | "시나리오 스크린샷이 안 찍힌다" |
+| "스크린샷 리뷰" / "agent 리뷰" | Tier C만 지칭 | "agent 리뷰에서 잡혔다" |
 | "스크린샷" (단독) | **혼동 유발 — Tier 명시 필수** | |
 
-**경로 구분**:
+**경로 구분 (Tier A vs Tier B)**:
 
-| 경로 | Tier | Layer |
-|------|------|-------|
-| `apps/*/test/goldens/` (향후 `test/alchemist/`) | Tier A | Layer 2b |
-| `apps/*/integration_test/` (향후 `emulator_test/`) — Patrol | Tier B 생성 위치 | Layer 3 |
-| `apps/*/*/screenshots/` (Patrol 출력 — 향후 경로) | Tier B 저장 | Layer 3 |
+- `apps/*/test/alchemist/` — Tier A 전용. Tier B 아티팩트를 여기 저장 금지.
+- Tier B 저장 경로는 아직 미정 (후보: `scenario_screenshots/` 하위, GitHub Artifacts 14d retention, 외부 버킷). 결정은 이슈 #1557에서 `report-exec` 라벨로 Mark 판단 대기.
 
-상세 캡처 포인트 매핑: `docs/qa/screenshot-capture-points.md`.
+**경로 구분 (Tier B 대상 vs 비대상)**:
+
+- `apps/app_user/emulator_test/` → Tier B 대상 (`apple_sign_in` 1건). `app_partner` Layer 3 테스트는 미구현 (#1586 Phase D-2)
+- `tests/client_cuj_integration/` — 삭제됨 (stale 인프라 제거). Tier B 대상 아님.
+
+## 6. Patrol 통합 전략 (Layer 3 / Tier B)
+
+### 6.1 Patrol 전환 배경
+
+기존 `IntegrationTestWidgetsFlutterBinding` 기반 E2E는 네이티브 인터랙션(카카오 로그인 WebView, PG 결제, 시스템 권한)을 처리할 수 없었다. Patrol(`patrol_test/` 3개)이 이미 도입되어 있으므로, 전체 integration 테스트를 Patrol로 통합한다.
+
+### 6.2 스크린샷 내장 전략
+
+기존 `scenario_screenshots_test.dart`(정적 화면 캡처)는 삭제됐으며, 각 integration 테스트에 스텝별 `takeScreenshot()`을 삽입한다.
+
+| 항목 | Before | After |
+|------|--------|-------|
+| 스크린샷 위치 | 별도 파일 (삭제됨) | 각 테스트 내부 |
+| 캡처 시점 | 정적 화면만 | setup/before/after/error |
+| 네이티브 인터랙션 | 불가 | Patrol로 가능 |
+| 예상 캡처 수 | ~40장 (골든 시나리오) | **~141장** (플로우 중간 상태 포함) |
+
+### 6.3 캡처 포인트 정의
+
+상세 포인트는 `docs/qa/screenshot-capture-points.md` 참고.
+
+| 앱 | 파일 수 | 예상 캡처 수 |
+|----|---------|------------|
+| app_user (CUJ + Flow + 기타) | 25 | ~83 |
+| app_partner (CUJ + 기타) | 11 | ~47 |
+| patrol (E2E 네이티브) | 3 | ~11 |
+| **합계** | **39** | **~141** |
+
+### 6.4 CI 연동
+
+- `patrol-e2e.yml`에 통합 (주 1회 또는 매일)
+- 스크린샷 아티팩트 업로드 → Layer 3 agent의 semantic 리뷰 입력으로 활용 (픽셀 비교 아님 — §6.0 참고)
+- 네이티브 E2E (카카오 로그인, PG 결제, 권한)는 실물 디바이스에서만 실행
+
+### 6.5 Layer 2 재가동 현황 (2026-04-18)
+
+이 섹션의 계획(§6.2~§6.4)은 머지됐지만 **실제 CI 실행 0건**. 전수 점검 및 복구 작업은 이슈 #1557에서 추적한다. 상세 갭 분석은 `docs/qa/screenshot-capture-points.md` 첫머리 "현재 상태" 블록 참고.
+
+**재가동 선결 의존성**:
+
+- #1553 / PR #1556 — Supabase pooler `aws-0 → aws-1` fix 머지. `seed-and-simulate` 복구 없이는 `client-cuj-test` / `partner-cuj-test` 실행 불가.
+- #1539 — `GoldenCapture` CI headless hang 회피 skip을 재활성화 가능한 형태로 대체.
+- `.github/scripts/run-client-cuj.sh` / `run-partner-cuj.sh` — 탐색 경로를 `apps/*/test/integration/`로 교정 (현재 `apps/*/integration_test/` 순회 중).
 
 ---
 
-## 6. 로드맵
+## 7. Runtime QA (실물 디바이스 자동화)
+
+Runtime QA 워커는 실물 Android 디바이스에 APK를 설치하고, ADB를 통해 화면 네비게이션과 시각적 검증을 수행한다.
+
+### 역할
+
+- **Smoke 검증**: `docs/qa/test-cases/app-user-smoke.md`, `app-partner-smoke.md` 시나리오를 실물 디바이스에서 실행
+- **CUJ 검증**: `cuj-user.md`, `cuj-partner.md`의 핵심 여정을 실물 디바이스에서 재현
+- **시각적 회귀 탐지**: 스크린샷 기반으로 UI 렌더링 이상 확인
+
+### 알려진 제약: Flutter + UIautomator 비호환
+
+Flutter 앱은 Skia/Impeller 엔진으로 단일 `FlutterSurfaceView` 위에 렌더링한다. Android UIautomator는 네이티브 View hierarchy를 탐색하므로, **Flutter 위젯의 개별 bounds를 추출할 수 없다** (`bounds="[0,0][0,0]"` 반환). 이는 모든 Flutter 앱 + 모든 Android 디바이스에서 동일하게 발생하는 구조적 제약이다.
+
+**결론**: UIautomator 기반 좌표 추출은 Flutter 앱에서 사용 불가.
+
+### 네비게이션 방법별 비교
+
+| 방법 | Flutter 호환 | 장점 | 단점 | 상태 |
+|------|-------------|------|------|------|
+| Vision 기반 (Gemini 등) | ✅ | 프레임워크 무관. 실제 화면 기반. | Vision 모델 필요. API 비용. | 운영 중 |
+| `adb shell dumpsys accessibility` | ⚠️ 검증 필요 | 네이티브 API. | Flutter semantics 활성화 필요. 좌표 정확도 미검증. | PoC 필요 |
+| Flutter Integration Test Driver | ✅ | 가장 안정적. Flutter 네이티브. | 별도 test harness. 워커 아키텍처 변경. | 장기 목표 |
+| UIautomator dump | ❌ | — | Flutter에서 bounds 추출 불가. | **사용 불가** |
+| 고정 좌표 매핑 | ✅ | 구현 간단. | 해상도/레이아웃 변경 시 깨짐. | 비권장 |
+
+### 관련 이슈
+
+- #1274 — UIautomator dump bounds=[0,0][0,0] 문제 분석 및 전략 결정
+
+---
+
+## 8. 갭 정량 요약
+
+### 테스트 피라미드 현황 vs 목표
+
+```
+                     현재              목표 (Phase 3 후)
+                   ┌──────┐           ┌──────┐
+  E2E (디바이스)   │  0건  │           │  2건  │
+                   ├──────┤           ├──────┤
+  Integration      │  2건  │           │ 13건  │  ← 가장 큰 갭
+  (Mock CUJ)       ├──────┤           ├──────┤
+  Smoke/Widget     │137건  │           │251건  │  ← +114건 (48 smoke + 66 기타)
+                   ├──────┤           ├──────┤
+  Unit (기존)      │343건  │           │343건+ │  ← 유지 + α
+                   └──────┘           └──────┘
+```
+
+### 핵심 갭
+
+| 갭 | 현재 | 목표 | 위험도 |
+|----|------|------|--------|
+| **CUJ Integration (app_user)** | 2 | 9 | 🔴 결제/매칭/환불 플로우 미검증 |
+| **CUJ Integration (app_partner)** | 0 | 4 | 🔴 파트너 운영 플로우 전무 |
+| **Smoke (app_user)** | 부분적 | 18 화면 전체 | 🟡 일부 화면 크래시 미탐지 |
+| **Smoke (app_partner)** | 부분적 | 30 화면 전체 | 🟡 신규 화면 추가 시 누락 |
+| **라우팅 가드** | 0 (전용) | 12 | 🟡 #970, #965 같은 회귀 |
+
+---
+
+### 8.1 CI/CD 배포 파이프라인 테스트 (Phase 2.1 — #1433, #1434)
+
+> 2026-04-15 배포 실패 인시던트(#1433 iOS, #1434 Android)로 추가.
+> Partner 앱 배포 시 `JUSO_CONFIRM_KEY` Secret 미설정으로 빌드 실패.
+
+| 문서 | 내용 | 케이스 수 |
+|------|------|-----------|
+| `ci-deploy-tests.md` | 배포 Secret 매트릭스, CI 자체 검증 스텝, 빌드 분기 검증 | 19 |
+
+#### 핵심 포인트
+
+- **4개 배포 워크플로우** (Android/iOS × User/Partner)의 필수 Secret을 매트릭스로 정리
+- Partner 전용 Secret (`JUSO_CONFIRM_KEY`)의 `required: false` 선언 불일치 식별 → 개선 제안 포함
+- 배포 실패 알림(`notify-failure.yml`) 동작 검증 케이스 포함
+
+---
+
+### 8.2 에러/환경/미등록라우트 테스트 케이스 (Phase 2.1 — #1421)
+
+> 2026-04-13 갭 분석(#1421) 결과 추가된 테스트 케이스 문서.
+
+| 문서 | 내용 | 케이스 수 |
+|------|------|-----------|
+| `error-scenarios.md` | P1 에러 3건 (QR 토큰, 카메라 권한, 보완 재제출) + P2 에러 6건 | 35 |
+| `environment-tests.md` | P1 딥링크 cold start, 세션 만료 + P2 warm start, 오프라인 복구 | 25 |
+| `unregistered-route-tests.md` | GoRouter 미등록 화면 6개 위젯/통합 테스트 정의 | 30 |
+
+---
+
+## 9. 로드맵
 
 ### 🔴 최우선 — Layer 3 재가동 (Issue #1586 Phase D-2)
 
@@ -264,7 +398,7 @@
 
 ---
 
-## 7. 관련 문서
+## 10. 관련 문서
 
 | 문서 | 역할 |
 |------|------|
@@ -276,7 +410,7 @@
 
 ---
 
-## 8. 변경 이력
+## 11. 변경 이력
 
 | 날짜 | 변경 | 이슈 |
 |------|------|------|

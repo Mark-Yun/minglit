@@ -280,7 +280,7 @@ testWidgets('redirects to consent when required consents missing', (tester) asyn
 
 ### Layer 6: Golden 테스트
 
-**파일**: `apps/app_user/test/goldens/signup_consent_golden_test.dart`
+**파일**: `apps/app_user/test/alchemist/signup_consent_golden_test.dart`
 
 | # | 테스트 케이스 | 우선순위 |
 |---|-------------|---------|
@@ -373,7 +373,7 @@ cd apps/app_user && flutter test test/src/features/settings/privacy_page_test.da
 cd apps/app_user && flutter test test/integration/consent_redirect_test.dart
 
 # Golden 테스트
-cd apps/app_user && flutter test --tags golden test/goldens/signup_consent_golden_test.dart
+cd apps/app_user && flutter test --tags golden test/alchemist/signup_consent_golden_test.dart
 
 # pgTAP 테스트
 supabase test db

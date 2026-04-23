@@ -108,10 +108,10 @@
 
 | 화면 | 변형 | 테스트 파일 | 우선순위 |
 |------|------|-----------|---------|
-| 반복 설정 섹션 | 토글 OFF (light/dark) | `apps/app_partner/test/goldens/recurrence_settings_section_golden_test.dart` | P2 |
+| 반복 설정 섹션 | 토글 OFF (light/dark) | `apps/app_partner/test/alchemist/recurrence_settings_section_golden_test.dart` | P2 |
 | | 토글 ON — 매주 + 금요일 선택 (light/dark) | 동일 | P2 |
 | | 미리보기 리스트 4건 표시 (light/dark) | 동일 | P3 |
-| 반복 관리 화면 | active 상태 (light/dark) | `apps/app_partner/test/goldens/recurrence_management_screen_golden_test.dart` | P2 |
+| 반복 관리 화면 | active 상태 (light/dark) | `apps/app_partner/test/alchemist/recurrence_management_screen_golden_test.dart` | P2 |
 | | paused 상태 (light/dark) | 동일 | P3 |
 | | cancelled 상태 (light/dark) | 동일 | P3 |
 

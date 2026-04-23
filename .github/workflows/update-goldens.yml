@@ -19,12 +19,15 @@ jobs:
           - package: app_user
             flutter_app: app_user
             working_directory: apps/app_user
+            ci_golden_path: test/alchemist/goldens/ci
           - package: app_partner
             flutter_app: app_partner
             working_directory: apps/app_partner
+            ci_golden_path: test/alchemist/goldens/ci
           - package: minglit_kit
             flutter_app: app_user
             working_directory: shared/packages/minglit_kit
+            ci_golden_path: test/goldens/goldens/ci
     steps:
       - uses: actions/checkout@v6
         with:
@@ -59,7 +62,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add "test/goldens/goldens/ci/" "test/goldens/goldens/ci/**"
+          git add "${{ matrix.ci_golden_path }}/" "${{ matrix.ci_golden_path }}/**"
           if git diff --cached --quiet; then
             echo "No golden changes for ${{ matrix.package }}"
           else

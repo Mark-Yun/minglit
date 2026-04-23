@@ -166,11 +166,11 @@ Phase 5 (이벤트 종료):
 
 | 화면 | 변형 | 파일 | 우선순위 |
 |------|------|------|---------|
-| EventNowBar | 6개 상태 × 각각 | `apps/app_user/test/goldens/event_now_bar_golden_test.dart` | P2 |
+| EventNowBar | 6개 상태 × 각각 | `apps/app_user/test/alchemist/event_now_bar_golden_test.dart` | P2 |
 | EventNowBar | 오프라인 상태 | 동일 | P3 |
-| EventNowBottomSheet | Phase 1~5 각각 | `apps/app_user/test/goldens/event_now_bottom_sheet_golden_test.dart` | P2 |
+| EventNowBottomSheet | Phase 1~5 각각 | `apps/app_user/test/alchemist/event_now_bottom_sheet_golden_test.dart` | P2 |
 | EventNowBottomSheet | Phase 4 빈 매칭 | 동일 | P3 |
-| EventNowMultiStack | 1건 / 2건+ | `apps/app_user/test/goldens/event_now_multi_stack_golden_test.dart` | P3 |
+| EventNowMultiStack | 1건 / 2건+ | `apps/app_user/test/alchemist/event_now_multi_stack_golden_test.dart` | P3 |
 
 ```dart
 // Golden 테스트 예시
@@ -334,4 +334,4 @@ test('Realtime closed → 30초 폴링 fallback', () async {
 **총 83 test cases** (P1: 50건, P2: 27건, P3: 6건)
 
 > 모든 파일 경로는 `apps/app_user/test/src/features/` 기준 상대 경로.
-> Golden 테스트는 `apps/app_user/test/goldens/` 기준.
+> Golden 테스트는 `apps/app_user/test/alchemist/` 기준.
