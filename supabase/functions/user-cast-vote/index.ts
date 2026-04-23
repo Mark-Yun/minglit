@@ -8,8 +8,8 @@ import {
   successResponse,
 } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
+import { parseJsonBody } from "../_shared/request_utils.ts";
 import { initSentry, withHandler } from "../_shared/logger.ts";
-
 
 initSentry();
 
@@ -22,19 +22,17 @@ Deno.serve(withHandler(async (req: Request): Promise<Response> => {
 
   const supabase = createServiceClient();
 
-  let body: Record<string, unknown>;
-  try {
-    body = await req.json();
-  } catch {
-    return errorResponse("Invalid JSON body", 400);
-  }
+  const body = await parseJsonBody(req);
+  if (body instanceof Response) return body;
 
   const eventId = body.event_id as string | undefined;
   const candidateId = body.candidate_id as string | undefined;
 
   if (!eventId) return errorResponse("Missing event_id", 400);
   if (!candidateId) return errorResponse("Missing candidate_id", 400);
-  if (candidateId === voterId) return errorResponse("자기 자신에게 투표할 수 없습니다", 400);
+  if (candidateId === voterId) {
+    return errorResponse("자기 자신에게 투표할 수 없습니다", 400);
+  }
 
   // 1. Fetch event with vote period + end_time fallback
   const { data: event, error: eventError } = await supabase
@@ -84,7 +82,9 @@ Deno.serve(withHandler(async (req: Request): Promise<Response> => {
     .maybeSingle();
 
   if (candidateError) return errorResponse("Failed to verify candidate", 500);
-  if (!candidateParticipant) return errorResponse("후보자가 이벤트 참가자가 아닙니다", 400);
+  if (!candidateParticipant) {
+    return errorResponse("후보자가 이벤트 참가자가 아닙니다", 400);
+  }
   if (candidateParticipant.status !== "checked_in") {
     return errorResponse("후보자가 체크인하지 않았습니다", 400);
   }
@@ -96,7 +96,9 @@ Deno.serve(withHandler(async (req: Request): Promise<Response> => {
     .eq("id", voterParticipant.ticket_id)
     .maybeSingle();
 
-  if (voterTicketError) return errorResponse("Failed to load voter ticket", 500);
+  if (voterTicketError) {
+    return errorResponse("Failed to load voter ticket", 500);
+  }
 
   const { data: candidateTicket, error: candidateTicketError } = await supabase
     .from("tickets")
@@ -104,10 +106,13 @@ Deno.serve(withHandler(async (req: Request): Promise<Response> => {
     .eq("id", candidateParticipant.ticket_id)
     .maybeSingle();
 
-  if (candidateTicketError) return errorResponse("Failed to load candidate ticket", 500);
+  if (candidateTicketError) {
+    return errorResponse("Failed to load candidate ticket", 500);
+  }
 
   const voterGroupIds: string[] = voterTicket?.target_entry_group_ids ?? [];
-  const candidateGroupIds: string[] = candidateTicket?.target_entry_group_ids ?? [];
+  const candidateGroupIds: string[] = candidateTicket?.target_entry_group_ids ??
+    [];
 
   // Fix #306: 그룹 정보가 없으면 거부 (fail-closed)
   if (voterGroupIds.length === 0 || candidateGroupIds.length === 0) {
@@ -128,14 +133,19 @@ Deno.serve(withHandler(async (req: Request): Promise<Response> => {
   }
 
   // 7. Atomic vote count check + insert via RPC (prevents race condition)
-  const maxVoteCount = Math.max(...rules.map((r: { vote_count: number }) => r.vote_count));
+  const maxVoteCount = Math.max(
+    ...rules.map((r: { vote_count: number }) => r.vote_count),
+  );
 
-  const { data: _rpcResult, error: rpcError } = await supabase.rpc("cast_match_vote", {
-    p_event_id: eventId,
-    p_voter_id: voterId,
-    p_candidate_id: candidateId,
-    p_max_vote_count: maxVoteCount,
-  });
+  const { data: _rpcResult, error: rpcError } = await supabase.rpc(
+    "cast_match_vote",
+    {
+      p_event_id: eventId,
+      p_voter_id: voterId,
+      p_candidate_id: candidateId,
+      p_max_vote_count: maxVoteCount,
+    },
+  );
 
   if (rpcError) {
     if (rpcError.message?.includes("투표 수를 초과했습니다")) {

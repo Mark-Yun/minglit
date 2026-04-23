@@ -10,8 +10,8 @@ import {
 } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
 import { requirePartnerPermission } from "../_shared/partner_permissions.ts";
+import { parseAction } from "../_shared/request_utils.ts";
 import { initSentry, withHandler } from "../_shared/logger.ts";
-
 
 initSentry();
 
@@ -61,19 +61,10 @@ async function handleRequest(req: Request): Promise<Response> {
   const userId = auth;
 
   // 3. Parse body
-  let body: Record<string, unknown>;
-  try {
-    const parsed = await req.json();
-    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
-      return errorResponse("Request body must be a JSON object", 400);
-    }
-    body = parsed as Record<string, unknown>;
-  } catch {
-    return errorResponse("Invalid JSON body", 400);
-  }
-
-  const action = body.action as string | undefined;
-  if (typeof action !== "string" || !action) return errorResponse("Missing action", 400);
+  const result = await parseAction(req);
+  if (result instanceof Response) return result;
+  const { action, body } = result;
+  if (!action) return errorResponse("Missing action", 400);
 
   // 4. Supabase client (service role)
   const supabase = createServiceClient();
@@ -114,7 +105,10 @@ async function handleCreate(
   }
 
   const eventData = body.event;
-  if (typeof eventData !== "object" || eventData === null || Array.isArray(eventData)) {
+  if (
+    typeof eventData !== "object" || eventData === null ||
+    Array.isArray(eventData)
+  ) {
     return errorResponse("Missing or invalid event object", 400);
   }
   const event = eventData as Record<string, unknown>;
@@ -168,7 +162,10 @@ async function handleCreate(
         return errorResponse(`tickets[${i}].template_id is required`, 400);
       }
       if (typeof t.quantity !== "number" || t.quantity < 0) {
-        return errorResponse(`tickets[${i}].quantity must be a non-negative number`, 400);
+        return errorResponse(
+          `tickets[${i}].quantity must be a non-negative number`,
+          400,
+        );
       }
     }
   }
@@ -194,7 +191,10 @@ async function handleCreate(
     .single();
 
   if (eventInsertError) {
-    return errorResponse(`Failed to create event: ${eventInsertError.message}`, 500);
+    return errorResponse(
+      `Failed to create event: ${eventInsertError.message}`,
+      500,
+    );
   }
 
   const eventId = newEvent.id as string;
@@ -203,11 +203,16 @@ async function handleCreate(
   // Fix #317: ID를 포함해서 조회하여 target_entry_group_ids 재매핑에 사용
   const { data: templates, error: tplError } = await supabase
     .from("entry_group_templates")
-    .select("id, label, gender, birth_year_min, birth_year_max, required_verification_ids")
+    .select(
+      "id, label, gender, birth_year_min, birth_year_max, required_verification_ids",
+    )
     .eq("party_id", partyId);
 
   if (tplError) {
-    return errorResponse(`Failed to fetch entry group templates: ${tplError.message}`, 500);
+    return errorResponse(
+      `Failed to fetch entry group templates: ${tplError.message}`,
+      500,
+    );
   }
 
   // Map: template ID → new entry_group ID (for target_entry_group_ids remapping)
@@ -229,7 +234,10 @@ async function handleCreate(
       .select("id");
 
     if (egError) {
-      return errorResponse(`Failed to create entry groups: ${egError.message}`, 500);
+      return errorResponse(
+        `Failed to create entry groups: ${egError.message}`,
+        500,
+      );
     }
 
     // Build mapping from template ID to new entry_group ID (same order)
@@ -246,15 +254,22 @@ async function handleCreate(
   // Create tickets from ticket_templates
   if (Array.isArray(ticketInputs) && ticketInputs.length > 0) {
     // Fetch referenced ticket templates
-    const templateIds = ticketInputs.map((t: Record<string, unknown>) => t.template_id as string);
+    const templateIds = ticketInputs.map((t: Record<string, unknown>) =>
+      t.template_id as string
+    );
     const { data: ticketTemplates, error: ttError } = await supabase
       .from("ticket_templates")
-      .select("id, name, description, price, target_entry_group_ids, required_verification_ids")
+      .select(
+        "id, name, description, price, target_entry_group_ids, required_verification_ids",
+      )
       .eq("party_id", partyId)
       .in("id", templateIds);
 
     if (ttError) {
-      return errorResponse(`Failed to fetch ticket templates: ${ttError.message}`, 500);
+      return errorResponse(
+        `Failed to fetch ticket templates: ${ttError.message}`,
+        500,
+      );
     }
 
     const templateMap = new Map(
@@ -265,7 +280,10 @@ async function handleCreate(
     for (let i = 0; i < ticketInputs.length; i++) {
       const input = ticketInputs[i] as Record<string, unknown>;
       if (!templateMap.has(input.template_id)) {
-        return errorResponse(`tickets[${i}].template_id not found in party templates`, 400);
+        return errorResponse(
+          `tickets[${i}].template_id not found in party templates`,
+          400,
+        );
       }
     }
 
@@ -293,7 +311,10 @@ async function handleCreate(
       .insert(tickets);
 
     if (ticketInsertError) {
-      return errorResponse(`Failed to create tickets: ${ticketInsertError.message}`, 500);
+      return errorResponse(
+        `Failed to create tickets: ${ticketInsertError.message}`,
+        500,
+      );
     }
   }
 
@@ -320,7 +341,8 @@ async function handleUpdate(
   if (fetchError) return errorResponse("Failed to load event", 500);
   if (!event) return errorResponse("Event not found", 404);
 
-  const partnerId = (event.parties as Record<string, unknown>).partner_id as string;
+  const partnerId = (event.parties as Record<string, unknown>)
+    .partner_id as string;
 
   // Check partner permission
   const permCheck = await requirePartnerPermission(supabase, partnerId, userId, ["PARTY_MANAGE", "EVENT_MANAGE"]);
@@ -328,7 +350,10 @@ async function handleUpdate(
 
   // Build update fields
   const eventData = body.event;
-  if (typeof eventData !== "object" || eventData === null || Array.isArray(eventData)) {
+  if (
+    typeof eventData !== "object" || eventData === null ||
+    Array.isArray(eventData)
+  ) {
     return errorResponse("Missing or invalid event object", 400);
   }
   const input = eventData as Record<string, unknown>;
@@ -346,7 +371,9 @@ async function handleUpdate(
 
   // Validate time fields if provided
   if (updates.start_time !== undefined || updates.end_time !== undefined) {
-    const st = updates.start_time ? new Date(updates.start_time as string) : null;
+    const st = updates.start_time
+      ? new Date(updates.start_time as string)
+      : null;
     const et = updates.end_time ? new Date(updates.end_time as string) : null;
     if (st && isNaN(st.getTime())) {
       return errorResponse("Invalid start_time format", 400);
@@ -393,7 +420,10 @@ async function handleUpdateStatus(
   }
 
   if (!VALID_EVENT_STATUSES.includes(status)) {
-    return errorResponse(`Invalid status. Must be one of: ${VALID_EVENT_STATUSES.join(", ")}`, 400);
+    return errorResponse(
+      `Invalid status. Must be one of: ${VALID_EVENT_STATUSES.join(", ")}`,
+      400,
+    );
   }
 
   // Fetch event → party → partner
@@ -408,10 +438,14 @@ async function handleUpdateStatus(
 
   // Only scheduled → cancelled is allowed
   if (event.status !== "scheduled") {
-    return errorResponse(`Cannot change status from ${event.status} to ${status}`, 400);
+    return errorResponse(
+      `Cannot change status from ${event.status} to ${status}`,
+      400,
+    );
   }
 
-  const partnerId = (event.parties as Record<string, unknown>).partner_id as string;
+  const partnerId = (event.parties as Record<string, unknown>)
+    .partner_id as string;
 
   // Check partner permission
   const permCheck = await requirePartnerPermission(supabase, partnerId, userId, ["PARTY_MANAGE", "EVENT_MANAGE"]);
@@ -423,7 +457,10 @@ async function handleUpdateStatus(
     .eq("id", eventId);
 
   if (updateError) {
-    return errorResponse(`Failed to update event status: ${updateError.message}`, 500);
+    return errorResponse(
+      `Failed to update event status: ${updateError.message}`,
+      500,
+    );
   }
 
   return successResponse({ success: true });
@@ -456,8 +493,14 @@ async function handleUpdateTickets(
     if (t.price !== undefined && (typeof t.price !== "number" || t.price < 0)) {
       return errorResponse(`tickets[${i}].price must be >= 0`, 400);
     }
-    if (t.quantity !== undefined && (typeof t.quantity !== "number" || t.quantity < 0)) {
-      return errorResponse(`tickets[${i}].quantity must be a non-negative number`, 400);
+    if (
+      t.quantity !== undefined &&
+      (typeof t.quantity !== "number" || t.quantity < 0)
+    ) {
+      return errorResponse(
+        `tickets[${i}].quantity must be a non-negative number`,
+        400,
+      );
     }
   }
 
@@ -471,14 +514,17 @@ async function handleUpdateTickets(
   if (fetchError) return errorResponse("Failed to load event", 500);
   if (!event) return errorResponse("Event not found", 404);
 
-  const partnerId = (event.parties as Record<string, unknown>).partner_id as string;
+  const partnerId = (event.parties as Record<string, unknown>)
+    .partner_id as string;
 
   // Check partner permission
   const permCheck = await requirePartnerPermission(supabase, partnerId, userId, ["PARTY_MANAGE", "EVENT_MANAGE"]);
   if (permCheck) return permCheck;
 
   // Fetch existing tickets to validate sold_count
-  const ticketIds = ticketUpdates.map((t: Record<string, unknown>) => t.ticket_id as string);
+  const ticketIds = ticketUpdates.map((t: Record<string, unknown>) =>
+    t.ticket_id as string
+  );
   const { data: existingTickets, error: ticketFetchError } = await supabase
     .from("tickets")
     .select("id, sold_count, event_id")
@@ -498,11 +544,15 @@ async function handleUpdateTickets(
     const input = ticketUpdates[i] as Record<string, unknown>;
     const existing = ticketMap.get(input.ticket_id);
     if (!existing) {
-      return errorResponse(`tickets[${i}].ticket_id not found in this event`, 400);
+      return errorResponse(
+        `tickets[${i}].ticket_id not found in this event`,
+        400,
+      );
     }
     // Validate quantity >= sold_count
     if (input.quantity !== undefined) {
-      const soldCount = (existing as Record<string, unknown>).sold_count as number;
+      const soldCount = (existing as Record<string, unknown>)
+        .sold_count as number;
       if ((input.quantity as number) < soldCount) {
         return errorResponse(
           `tickets[${i}].quantity (${input.quantity}) cannot be less than sold_count (${soldCount})`,
@@ -531,7 +581,10 @@ async function handleUpdateTickets(
       .eq("event_id", eventId);
 
     if (updateError) {
-      return errorResponse(`Failed to update ticket: ${updateError.message}`, 500);
+      return errorResponse(
+        `Failed to update ticket: ${updateError.message}`,
+        500,
+      );
     }
   }
 

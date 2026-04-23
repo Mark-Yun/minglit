@@ -8,8 +8,8 @@ import {
   successResponse,
 } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
+import { parseAction } from "../_shared/request_utils.ts";
 import { initSentry, withHandler } from "../_shared/logger.ts";
-
 
 initSentry();
 import {
@@ -71,19 +71,10 @@ async function handleRequest(req: Request): Promise<Response> {
   const userId = auth;
 
   // 3. Parse body
-  let body: Record<string, unknown>;
-  try {
-    const parsed = await req.json();
-    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
-      return errorResponse("Request body must be a JSON object", 400);
-    }
-    body = parsed as Record<string, unknown>;
-  } catch {
-    return errorResponse("Invalid JSON body", 400);
-  }
-
-  const action = body.action as string | undefined;
-  if (typeof action !== "string" || !action) return errorResponse("Missing action", 400);
+  const result = await parseAction(req);
+  if (result instanceof Response) return result;
+  const { action, body } = result;
+  if (!action) return errorResponse("Missing action", 400);
 
   // 4. Supabase client (service role)
   const supabase = createServiceClient();
@@ -99,7 +90,9 @@ async function handleRequest(req: Request): Promise<Response> {
     for (const field of DRAFT_FIELDS) {
       if (body.data && typeof body.data === "object") {
         const val = (body.data as Record<string, unknown>)[field];
-        if (val !== undefined && (val !== null || CLEARABLE_FIELDS.has(field))) {
+        if (
+          val !== undefined && (val !== null || CLEARABLE_FIELDS.has(field))
+        ) {
           record[field] = val;
         }
       }
@@ -120,7 +113,10 @@ async function handleRequest(req: Request): Promise<Response> {
       }
       // Fix #311: pending/approved 신청서는 save_draft로 되돌릴 수 없음
       if (app.status !== "draft" && app.status !== "needs_correction") {
-        return errorResponse("Application cannot be updated in current status", 400);
+        return errorResponse(
+          "Application cannot be updated in current status",
+          400,
+        );
       }
 
       // Fix #311: 상태 조건을 UPDATE WHERE에 포함하여 원자적 검사
@@ -132,7 +128,10 @@ async function handleRequest(req: Request): Promise<Response> {
         .in("status", ["draft", "needs_correction"]);
 
       if (updateError) {
-        return errorResponse(`Failed to update draft: ${updateError.message}`, 500);
+        return errorResponse(
+          `Failed to update draft: ${updateError.message}`,
+          500,
+        );
       }
 
       return successResponse({ success: true, application_id: applicationId });
@@ -147,7 +146,10 @@ async function handleRequest(req: Request): Promise<Response> {
         .single();
 
       if (insertError) {
-        return errorResponse(`Failed to create draft: ${insertError.message}`, 500);
+        return errorResponse(
+          `Failed to create draft: ${insertError.message}`,
+          500,
+        );
       }
 
       return successResponse({ success: true, application_id: data.id });
@@ -182,7 +184,10 @@ async function handleRequest(req: Request): Promise<Response> {
 
     // Fix #311: draft/needs_correction 상태만 제출 가능
     if (app.status !== "draft" && app.status !== "needs_correction") {
-      return errorResponse("Application cannot be submitted in current status", 400);
+      return errorResponse(
+        "Application cannot be submitted in current status",
+        400,
+      );
     }
 
     // Server-side validation
@@ -216,8 +221,16 @@ async function handleRequest(req: Request): Promise<Response> {
 
     // Storage file existence checks
     const fileChecks: Array<[unknown, string, string]> = [
-      [app.biz_registration_path, "biz_registration_path", "사업자등록증 파일이 업로드되지 않았습니다"],
-      [app.bankbook_path, "bankbook_path", "통장사본 파일이 업로드되지 않았습니다"],
+      [
+        app.biz_registration_path,
+        "biz_registration_path",
+        "사업자등록증 파일이 업로드되지 않았습니다",
+      ],
+      [
+        app.bankbook_path,
+        "bankbook_path",
+        "통장사본 파일이 업로드되지 않았습니다",
+      ],
     ];
 
     for (const [path, field, message] of fileChecks) {
@@ -260,7 +273,10 @@ async function handleRequest(req: Request): Promise<Response> {
       .in("status", ["draft", "needs_correction"]);
 
     if (updateError) {
-      return errorResponse(`Failed to submit application: ${updateError.message}`, 500);
+      return errorResponse(
+        `Failed to submit application: ${updateError.message}`,
+        500,
+      );
     }
 
     return successResponse({ success: true });
@@ -294,7 +310,10 @@ async function handleRequest(req: Request): Promise<Response> {
 
     // Fix #311: draft/needs_correction 상태만 수정 가능
     if (app.status !== "draft" && app.status !== "needs_correction") {
-      return errorResponse("Application cannot be updated in current status", 400);
+      return errorResponse(
+        "Application cannot be updated in current status",
+        400,
+      );
     }
 
     // Build update record — only allow whitelisted fields; skip null for non-clearable fields.
@@ -303,7 +322,9 @@ async function handleRequest(req: Request): Promise<Response> {
     for (const field of DRAFT_FIELDS) {
       if (body.data && typeof body.data === "object") {
         const val = (body.data as Record<string, unknown>)[field];
-        if (val !== undefined && (val !== null || CLEARABLE_FIELDS.has(field))) {
+        if (
+          val !== undefined && (val !== null || CLEARABLE_FIELDS.has(field))
+        ) {
           updates[field] = val;
         }
       }
@@ -322,7 +343,10 @@ async function handleRequest(req: Request): Promise<Response> {
       .in("status", ["draft", "needs_correction"]);
 
     if (updateError) {
-      return errorResponse(`Failed to update application: ${updateError.message}`, 500);
+      return errorResponse(
+        `Failed to update application: ${updateError.message}`,
+        500,
+      );
     }
 
     return successResponse({ success: true, application_id: applicationId });
@@ -330,4 +354,3 @@ async function handleRequest(req: Request): Promise<Response> {
 
   return errorResponse(`Unknown action: ${action}`, 400);
 }
-

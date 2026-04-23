@@ -1,11 +1,20 @@
 // Fix #179: esm.sh 직접 URL → deno.json import map 기반으로 통일
 import { createServiceClient } from "../_shared/supabase_client.ts";
 import { nowISO } from "../_shared/temporal_utils.ts";
-import { successResponse, errorResponse, corsResponse } from "../_shared/response_utils.ts";
+import {
+  corsResponse,
+  errorResponse,
+  successResponse,
+} from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
-import { initSentry, withHandler, log } from "../_shared/logger.ts";
+import { parseJsonBody } from "../_shared/request_utils.ts";
+import { initSentry, log, withHandler } from "../_shared/logger.ts";
 // Fix #299: 환불 로직을 shared 모듈로 추출 — user-cancel-order와 공유
-import { verifyRefundEligibility, executeRefund, RefundError } from "../_shared/refund_utils.ts";
+import {
+  executeRefund,
+  RefundError,
+  verifyRefundEligibility,
+} from "../_shared/refund_utils.ts";
 
 const FN = "payment-cancel";
 
@@ -18,13 +27,9 @@ Deno.serve(withHandler(async (req) => {
   if (auth instanceof Response) return auth;
   try {
     // 1. Parse Request
-    let reqBody: Record<string, unknown>;
-    try {
-      reqBody = await req.json();
-    } catch {
-      return errorResponse("Invalid JSON body", 400);
-    }
-    const { payment_id, reason, amount, checksum } = reqBody as {
+    const body = await parseJsonBody(req);
+    if (body instanceof Response) return body;
+    const { payment_id, reason, amount, checksum } = body as {
       payment_id?: string;
       reason?: string;
       amount?: number;
@@ -73,12 +78,22 @@ Deno.serve(withHandler(async (req) => {
 
     // Fix #133: 이벤트/정책 조회 실패 시 적격성 검사를 건너뛰지 않고 명시적으로 에러 반환
     if (eventResult.error || !eventResult.data) {
-      log({ function: FN, level: "error", message: "Failed to fetch event", metadata: { detail: eventResult.error } });
+      log({
+        function: FN,
+        level: "error",
+        message: "Failed to fetch event",
+        metadata: { detail: eventResult.error },
+      });
       return errorResponse("Failed to verify refund eligibility", 500);
     }
 
     if (policyResult.error || !policyResult.data) {
-      log({ function: FN, level: "error", message: "Failed to fetch policy", metadata: { detail: policyResult.error } });
+      log({
+        function: FN,
+        level: "error",
+        message: "Failed to fetch policy",
+        metadata: { detail: policyResult.error },
+      });
       return errorResponse("Failed to verify refund eligibility", 500);
     }
 
@@ -120,7 +135,8 @@ Deno.serve(withHandler(async (req) => {
     }
 
     // 4. Update DB: refund_status + refund_amount
-    const refundAmount = amount ?? (cancelResponse.amount as number | undefined);
+    const refundAmount = amount ??
+      (cancelResponse.amount as number | undefined);
     const updatePayload: Record<string, unknown> = {
       refund_status: "completed",
       updated_at: nowISO(),
@@ -134,16 +150,24 @@ Deno.serve(withHandler(async (req) => {
       .eq("payment_id", payment_id);
 
     if (dbError) {
-      log({ function: FN, level: "error", message: "DB Update Error", metadata: { detail: dbError } });
+      log({
+        function: FN,
+        level: "error",
+        message: "DB Update Error",
+        metadata: { detail: dbError },
+      });
       // Non-fatal: payment was cancelled, just log the DB error
     }
 
     // 5. Success
     return successResponse({ success: true, data: cancelResponse });
-
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
-    log({ function: FN, level: "error", message: `Error in payment-cancel: ${message}` });
+    log({
+      function: FN,
+      level: "error",
+      message: `Error in payment-cancel: ${message}`,
+    });
     return errorResponse(message, 500);
   }
 }));

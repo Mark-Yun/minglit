@@ -1,9 +1,14 @@
 // event-checkin/index.ts — Check-in a participant for an event
 
 import { createServiceClient } from "../_shared/supabase_client.ts";
-import { corsResponse, errorResponse, successResponse } from "../_shared/response_utils.ts";
+import {
+  corsResponse,
+  errorResponse,
+  successResponse,
+} from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
-import { initSentry, withHandler, log } from "../_shared/logger.ts";
+import { parseJsonBody } from "../_shared/request_utils.ts";
+import { initSentry, log, withHandler } from "../_shared/logger.ts";
 
 const FN = "event-checkin";
 
@@ -11,9 +16,9 @@ initSentry();
 
 // Fix #1491: base64url 디코딩 — Ed25519 서명 바이트 복원
 function base64UrlDecode(str: string): Uint8Array {
-  const padded = str.replace(/-/g, '+').replace(/_/g, '/');
+  const padded = str.replace(/-/g, "+").replace(/_/g, "/");
   const padding = (4 - (padded.length % 4)) % 4;
-  const base64 = padded + '='.repeat(padding);
+  const base64 = padded + "=".repeat(padding);
   const binary = atob(base64);
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) {
@@ -28,14 +33,10 @@ Deno.serve(withHandler(async (req) => {
   const auth = await requireAuth(req);
   if (auth instanceof Response) return auth;
 
-  let reqBody: Record<string, unknown>;
-  try {
-    reqBody = await req.json();
-  } catch {
-    return errorResponse("Invalid JSON body", 400);
-  }
+  const body = await parseJsonBody(req);
+  if (body instanceof Response) return body;
 
-  const { event_id, participant_id, signature, expires_at } = reqBody as {
+  const { event_id, participant_id, signature, expires_at } = body as {
     event_id?: string;
     participant_id?: string;
     signature?: string;
@@ -43,12 +44,18 @@ Deno.serve(withHandler(async (req) => {
   };
 
   if (!event_id || !participant_id) {
-    return errorResponse("Missing required parameters: event_id, participant_id", 400);
+    return errorResponse(
+      "Missing required parameters: event_id, participant_id",
+      400,
+    );
   }
 
   // Fix #1491: QR 서명 검증을 위한 파라미터 — signature/expires_at이 없으면 요청 거부
   if (!signature || !expires_at) {
-    return errorResponse("Missing required parameters: signature, expires_at", 400);
+    return errorResponse(
+      "Missing required parameters: signature, expires_at",
+      400,
+    );
   }
 
   // Fix #1491: expires_at 만료 확인
@@ -68,7 +75,12 @@ Deno.serve(withHandler(async (req) => {
     .maybeSingle();
 
   if (fetchErr) {
-    log({ function: FN, level: "error", message: "Failed to fetch participant", metadata: { detail: fetchErr.message } });
+    log({
+      function: FN,
+      level: "error",
+      message: "Failed to fetch participant",
+      metadata: { detail: fetchErr.message },
+    });
     return errorResponse("Failed to fetch participant", 500);
   }
 
@@ -78,13 +90,20 @@ Deno.serve(withHandler(async (req) => {
 
   // Validate caller is the participant's user
   if ((participant as { user_id: string }).user_id !== auth) {
-    return errorResponse("Forbidden: caller is not the participant's user", 403);
+    return errorResponse(
+      "Forbidden: caller is not the participant's user",
+      403,
+    );
   }
 
   // Fix #1491: 서버 측 Ed25519 QR 서명 검증 — 클라이언트 우회 방지
   const publicKeyJwkStr = Deno.env.get("TICKET_SIGNING_PUBLIC_KEY_JWK");
   if (!publicKeyJwkStr) {
-    log({ function: FN, level: "error", message: "TICKET_SIGNING_PUBLIC_KEY_JWK not configured" });
+    log({
+      function: FN,
+      level: "error",
+      message: "TICKET_SIGNING_PUBLIC_KEY_JWK not configured",
+    });
     return errorResponse("Ticket verification key not configured", 500);
   }
 
@@ -103,13 +122,28 @@ Deno.serve(withHandler(async (req) => {
     const message = new TextEncoder().encode(payload);
     const sigBytes = base64UrlDecode(signature);
 
-    const valid = await crypto.subtle.verify("Ed25519", publicKey, sigBytes, message);
+    const valid = await crypto.subtle.verify(
+      "Ed25519",
+      publicKey,
+      sigBytes,
+      message,
+    );
     if (!valid) {
-      log({ function: FN, level: "warn", message: "QR signature verification failed", metadata: { participant_id, event_id } });
+      log({
+        function: FN,
+        level: "warn",
+        message: "QR signature verification failed",
+        metadata: { participant_id, event_id },
+      });
       return errorResponse("Invalid QR signature", 403);
     }
   } catch (e) {
-    log({ function: FN, level: "error", message: "Signature verification error", metadata: { detail: String(e) } });
+    log({
+      function: FN,
+      level: "error",
+      message: "Signature verification error",
+      metadata: { detail: String(e) },
+    });
     return errorResponse("Signature verification failed", 500);
   }
 
@@ -121,7 +155,12 @@ Deno.serve(withHandler(async (req) => {
     .maybeSingle();
 
   if (eventFetchErr) {
-    log({ function: FN, level: "error", message: "Failed to fetch event", metadata: { detail: eventFetchErr.message } });
+    log({
+      function: FN,
+      level: "error",
+      message: "Failed to fetch event",
+      metadata: { detail: eventFetchErr.message },
+    });
     return errorResponse("Failed to fetch event", 500);
   }
 
@@ -131,7 +170,10 @@ Deno.serve(withHandler(async (req) => {
 
   const eventStatus = (event as { status: string }).status;
   if (eventStatus !== "active" && eventStatus !== "ongoing") {
-    return errorResponse("체크인은 active 또는 ongoing 상태의 이벤트에서만 가능합니다", 400);
+    return errorResponse(
+      "체크인은 active 또는 ongoing 상태의 이벤트에서만 가능합니다",
+      400,
+    );
   }
 
   const currentStatus = (participant as { status: string }).status;
@@ -141,7 +183,10 @@ Deno.serve(withHandler(async (req) => {
   }
 
   if (currentStatus !== "ticket_issued") {
-    return errorResponse(`Cannot check in participant with status '${currentStatus}'`, 400);
+    return errorResponse(
+      `Cannot check in participant with status '${currentStatus}'`,
+      400,
+    );
   }
 
   // Transition status: ticket_issued → checked_in
@@ -152,15 +197,28 @@ Deno.serve(withHandler(async (req) => {
     .eq("status", "ticket_issued");
 
   if (updateErr) {
-    log({ function: FN, level: "error", message: "Failed to update participant status", metadata: { detail: updateErr.message } });
+    log({
+      function: FN,
+      level: "error",
+      message: "Failed to update participant status",
+      metadata: { detail: updateErr.message },
+    });
     return errorResponse("Failed to check in participant", 500);
   }
 
   if ((count ?? 0) === 0) {
-    return errorResponse("Participant status changed concurrently, please retry", 409);
+    return errorResponse(
+      "Participant status changed concurrently, please retry",
+      409,
+    );
   }
 
-  log({ function: FN, level: "info", message: "Participant checked in", metadata: { participant_id, event_id } });
+  log({
+    function: FN,
+    level: "info",
+    message: "Participant checked in",
+    metadata: { participant_id, event_id },
+  });
 
   return successResponse({
     success: true,

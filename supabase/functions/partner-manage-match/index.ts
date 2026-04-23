@@ -9,8 +9,8 @@ import {
 } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
 import { requirePartnerPermission } from "../_shared/partner_permissions.ts";
+import { parseAction } from "../_shared/request_utils.ts";
 import { initSentry, withHandler } from "../_shared/logger.ts";
-
 
 initSentry();
 
@@ -30,22 +30,15 @@ Deno.serve(withHandler(async (req: Request): Promise<Response> => {
   const userId = auth;
 
   // 3. Parse body
-  let body: Record<string, unknown>;
-  try {
-    const parsed = await req.json();
-    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
-      return errorResponse("Request body must be a JSON object", 400);
-    }
-    body = parsed as Record<string, unknown>;
-  } catch {
-    return errorResponse("Invalid JSON body", 400);
-  }
-
-  const action = body.action as string | undefined;
-  if (typeof action !== "string" || !action) return errorResponse("Missing action", 400);
+  const result = await parseAction(req);
+  if (result instanceof Response) return result;
+  const { action, body } = result;
+  if (!action) return errorResponse("Missing action", 400);
 
   const eventId = body.event_id;
-  if (typeof eventId !== "string" || !eventId) return errorResponse("Missing event_id", 400);
+  if (typeof eventId !== "string" || !eventId) {
+    return errorResponse("Missing event_id", 400);
+  }
 
   // 4. Supabase client (service role)
   const supabase = createServiceClient();
@@ -91,10 +84,16 @@ Deno.serve(withHandler(async (req: Request): Promise<Response> => {
     // Validate each rule
     for (const rule of rules) {
       if (!rule.source_group_id || !rule.target_group_id) {
-        return errorResponse("Each rule must have source_group_id and target_group_id", 400);
+        return errorResponse(
+          "Each rule must have source_group_id and target_group_id",
+          400,
+        );
       }
       if (rule.source_group_id === rule.target_group_id) {
-        return errorResponse("source_group_id and target_group_id must be different", 400);
+        return errorResponse(
+          "source_group_id and target_group_id must be different",
+          400,
+        );
       }
       const voteCount = rule.vote_count ?? 1;
       if (!Number.isInteger(voteCount) || voteCount < 1) {
@@ -105,7 +104,9 @@ Deno.serve(withHandler(async (req: Request): Promise<Response> => {
     // Validate all group IDs belong to this event
     if (rules.length > 0) {
       const allGroupIds = [
-        ...new Set(rules.flatMap((r) => [r.source_group_id, r.target_group_id])),
+        ...new Set(
+          rules.flatMap((r) => [r.source_group_id, r.target_group_id]),
+        ),
       ];
 
       const { data: groups, error: groupsError } = await supabase
@@ -118,7 +119,9 @@ Deno.serve(withHandler(async (req: Request): Promise<Response> => {
         return errorResponse("Failed to verify entry groups", 500);
       }
 
-      const validGroupIds = new Set((groups ?? []).map((g: { id: string }) => g.id));
+      const validGroupIds = new Set(
+        (groups ?? []).map((g: { id: string }) => g.id),
+      );
       const invalidIds = allGroupIds.filter((id) => !validGroupIds.has(id));
       if (invalidIds.length > 0) {
         return errorResponse(
@@ -141,7 +144,10 @@ Deno.serve(withHandler(async (req: Request): Promise<Response> => {
     });
 
     if (replaceError) {
-      return errorResponse(`Failed to replace rules: ${replaceError.message}`, 500);
+      return errorResponse(
+        `Failed to replace rules: ${replaceError.message}`,
+        500,
+      );
     }
 
     return successResponse({ success: true, count: rules.length });

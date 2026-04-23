@@ -9,6 +9,7 @@ import {
 } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
 import { requirePartnerPermission } from "../_shared/partner_permissions.ts";
+import { parseAction } from "../_shared/request_utils.ts";
 import { initSentry, withHandler, log } from "../_shared/logger.ts";
 
 const FN = "partner-manage-settlement";
@@ -36,42 +37,41 @@ Deno.serve(withHandler(async (req: Request): Promise<Response> => {
     const userId = auth;
 
     // 2. Parse body
-    let body: Record<string, unknown>;
-    try {
-      const parsed = await req.json();
-      if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
-        return errorResponse("Request body must be a JSON object", 400);
-      }
-      body = parsed as Record<string, unknown>;
-    } catch {
-      return errorResponse("Invalid JSON body", 400);
-    }
-
-    const action = body.action as string | undefined;
-    if (typeof action !== "string" || !action) return errorResponse("Missing action", 400);
+    const result = await parseAction(req);
+    if (result instanceof Response) return result;
+    const { action, body } = result;
+    if (!action) return errorResponse("Missing action", 400);
 
     // 3. Supabase client (service role)
     const supabase = createServiceClient();
 
     // ─── upsert_bank_account ───
     if (action === "upsert_bank_account") {
-      const partnerId = typeof body.partner_id === "string" ? body.partner_id.trim() : "";
+      const partnerId = typeof body.partner_id === "string"
+        ? body.partner_id.trim()
+        : "";
       if (!partnerId) {
         return errorResponse("Missing partner_id", 400);
       }
 
       // Validate required fields with trim
-      const bankName = typeof body.bank_name === "string" ? body.bank_name.trim() : "";
+      const bankName = typeof body.bank_name === "string"
+        ? body.bank_name.trim()
+        : "";
       if (!bankName) {
         return errorResponse("Missing bank_name", 400);
       }
 
-      const accountHolder = typeof body.account_holder === "string" ? body.account_holder.trim() : "";
+      const accountHolder = typeof body.account_holder === "string"
+        ? body.account_holder.trim()
+        : "";
       if (!accountHolder) {
         return errorResponse("Missing account_holder", 400);
       }
 
-      const rawAccountNumber = typeof body.account_number === "string" ? body.account_number.trim() : "";
+      const rawAccountNumber = typeof body.account_number === "string"
+        ? body.account_number.trim()
+        : "";
       if (!rawAccountNumber) {
         return errorResponse("Missing account_number", 400);
       }
@@ -99,7 +99,10 @@ Deno.serve(withHandler(async (req: Request): Promise<Response> => {
         .upsert(record, { onConflict: "partner_id" });
 
       if (upsertError) {
-        return errorResponse(`Failed to upsert bank account: ${upsertError.message}`, 500);
+        return errorResponse(
+          `Failed to upsert bank account: ${upsertError.message}`,
+          500,
+        );
       }
 
       return successResponse({ success: true });
@@ -107,7 +110,14 @@ Deno.serve(withHandler(async (req: Request): Promise<Response> => {
 
     return errorResponse(`Unknown action: ${action}`, 400);
   } catch (error) {
-    log({ function: FN, level: "error", message: "partner-manage-settlement failed", metadata: { detail: error instanceof Error ? error.message : String(error) } });
+    log({
+      function: FN,
+      level: "error",
+      message: "partner-manage-settlement failed",
+      metadata: {
+        detail: error instanceof Error ? error.message : String(error),
+      },
+    });
     return errorResponse("Internal server error", 500);
   }
 }));

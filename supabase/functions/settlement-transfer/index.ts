@@ -3,7 +3,8 @@ import { createServiceClient } from "../_shared/supabase_client.ts";
 import { getPortoneClient } from "../_shared/portone_client.ts";
 import { successResponse, errorResponse, corsResponse } from "../_shared/response_utils.ts";
 import { requireServiceRole } from "../_shared/auth_utils.ts";
-import { initSentry, withHandler, log } from "../_shared/logger.ts";
+import { parseJsonBody } from "../_shared/request_utils.ts";
+import { initSentry, log, withHandler } from "../_shared/logger.ts";
 
 const FN = "settlement-transfer";
 
@@ -17,14 +18,10 @@ Deno.serve(withHandler(async (req) => {
   const auth = requireServiceRole(req);
   if (auth instanceof Response) return auth;
   try {
-    let reqBody: Record<string, unknown>;
-    try {
-      reqBody = await req.json();
-    } catch {
-      return errorResponse("Invalid JSON body", 400);
-    }
+    const body = await parseJsonBody(req);
+    if (body instanceof Response) return body;
 
-    const { partner_id, payment_id, order_amount, settlement_date } = reqBody as {
+    const { partner_id, payment_id, order_amount, settlement_date } = body as {
       partner_id?: string;
       payment_id?: string;
       order_amount?: number;
@@ -32,7 +29,10 @@ Deno.serve(withHandler(async (req) => {
     };
 
     if (!partner_id || !payment_id || order_amount === undefined) {
-      return errorResponse("Missing required fields: partner_id, payment_id, order_amount", 400);
+      return errorResponse(
+        "Missing required fields: partner_id, payment_id, order_amount",
+        400,
+      );
     }
 
     const supabase = createServiceClient();
@@ -63,18 +63,29 @@ Deno.serve(withHandler(async (req) => {
 
     let transfer: Record<string, unknown>;
     try {
-      transfer = await portone.createOrderTransfer(transferBody as Parameters<typeof portone.createOrderTransfer>[0]);
+      transfer = await portone.createOrderTransfer(
+        transferBody as Parameters<typeof portone.createOrderTransfer>[0],
+      );
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e);
-      log({ function: FN, level: "error", message: "PortOne createOrderTransfer error", metadata: { detail: message } });
+      log({
+        function: FN,
+        level: "error",
+        message: "PortOne createOrderTransfer error",
+        metadata: { detail: message },
+      });
       return errorResponse("Failed to create order transfer", 502);
     }
 
     return successResponse({ success: true, transfer });
-
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
-    log({ function: FN, level: "error", message: "Error in settlement-transfer", metadata: { detail: message } });
+    log({
+      function: FN,
+      level: "error",
+      message: "Error in settlement-transfer",
+      metadata: { detail: message },
+    });
     return errorResponse(message, 500);
   }
 }));

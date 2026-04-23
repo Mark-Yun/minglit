@@ -9,12 +9,19 @@ import {
 } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
 import { requirePartnerPermission } from "../_shared/partner_permissions.ts";
+import { parseAction } from "../_shared/request_utils.ts";
 import { initSentry, withHandler } from "../_shared/logger.ts";
-
 
 initSentry();
 
-const VALID_CATEGORIES = ["career", "asset", "marriage", "academic", "vehicle", "etc"];
+const VALID_CATEGORIES = [
+  "career",
+  "asset",
+  "marriage",
+  "academic",
+  "vehicle",
+  "etc",
+];
 
 // Fields allowed in create action
 const CREATE_FIELDS = [
@@ -49,19 +56,10 @@ Deno.serve(withHandler(async (req: Request): Promise<Response> => {
   const userId = auth;
 
   // 3. Parse body
-  let body: Record<string, unknown>;
-  try {
-    const parsed = await req.json();
-    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
-      return errorResponse("Request body must be a JSON object", 400);
-    }
-    body = parsed as Record<string, unknown>;
-  } catch {
-    return errorResponse("Invalid JSON body", 400);
-  }
-
-  const action = body.action as string | undefined;
-  if (typeof action !== "string" || !action) return errorResponse("Missing action", 400);
+  const result = await parseAction(req);
+  if (result instanceof Response) return result;
+  const { action, body } = result;
+  if (!action) return errorResponse("Missing action", 400);
 
   // 4. Supabase client (service role)
   const supabase = createServiceClient();
@@ -108,7 +106,10 @@ Deno.serve(withHandler(async (req: Request): Promise<Response> => {
       .single();
 
     if (insertError) {
-      return errorResponse(`Failed to create verification: ${insertError.message}`, 500);
+      return errorResponse(
+        `Failed to create verification: ${insertError.message}`,
+        500,
+      );
     }
 
     return successResponse({ success: true, id: data.id });
@@ -123,7 +124,10 @@ Deno.serve(withHandler(async (req: Request): Promise<Response> => {
 
     // Validate category if provided
     if (body.category !== undefined) {
-      if (typeof body.category !== "string" || !VALID_CATEGORIES.includes(body.category)) {
+      if (
+        typeof body.category !== "string" ||
+        !VALID_CATEGORIES.includes(body.category)
+      ) {
         return errorResponse("Invalid category", 400);
       }
     }
@@ -164,7 +168,10 @@ Deno.serve(withHandler(async (req: Request): Promise<Response> => {
       .eq("id", verificationId);
 
     if (updateError) {
-      return errorResponse(`Failed to update verification: ${updateError.message}`, 500);
+      return errorResponse(
+        `Failed to update verification: ${updateError.message}`,
+        500,
+      );
     }
 
     return successResponse({ success: true });

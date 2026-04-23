@@ -150,7 +150,7 @@ Deno.test("identity-verify - unauthorized returns 401", async () => {
   );
 });
 
-Deno.test("identity-verify - malformed JSON returns 500", async () => {
+Deno.test("identity-verify - malformed JSON returns 400", async () => {
   await withEnv(
     {
       PORTONE_V2_API_KEY: "test-key",
@@ -167,8 +167,8 @@ Deno.test("identity-verify - malformed JSON returns 500", async () => {
           const response = await handler(request);
           const payload = await readJson(response);
 
-          assertEquals(response.status, 500);
-          assertEquals(typeof payload.error, "string");
+          assertEquals(response.status, 400);
+          assertEquals(payload.error, "Invalid JSON body");
         });
       });
     },

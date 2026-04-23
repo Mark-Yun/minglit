@@ -10,8 +10,8 @@ import {
 } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
 import { requirePartnerPermission } from "../_shared/partner_permissions.ts";
+import { parseAction } from "../_shared/request_utils.ts";
 import { initSentry, withHandler } from "../_shared/logger.ts";
-
 
 initSentry();
 
@@ -51,19 +51,10 @@ async function handleRequest(req: Request): Promise<Response> {
   const userId = auth;
 
   // Parse body
-  let body: Record<string, unknown>;
-  try {
-    const parsed = await req.json();
-    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
-      return errorResponse("Request body must be a JSON object", 400);
-    }
-    body = parsed as Record<string, unknown>;
-  } catch {
-    return errorResponse("Invalid JSON body", 400);
-  }
-
-  const action = body.action as string | undefined;
-  if (typeof action !== "string" || !action) return errorResponse("Missing action", 400);
+  const result = await parseAction(req);
+  if (result instanceof Response) return result;
+  const { action, body } = result;
+  if (!action) return errorResponse("Missing action", 400);
 
   const supabase = createServiceClient();
 
@@ -89,8 +80,13 @@ async function handleCreate(
   }
 
   const pattern = body.pattern;
-  if (typeof pattern !== "string" || !VALID_PATTERNS.includes(pattern as Pattern)) {
-    return errorResponse(`Invalid pattern. Must be one of: ${VALID_PATTERNS.join(", ")}`, 400);
+  if (
+    typeof pattern !== "string" || !VALID_PATTERNS.includes(pattern as Pattern)
+  ) {
+    return errorResponse(
+      `Invalid pattern. Must be one of: ${VALID_PATTERNS.join(", ")}`,
+      400,
+    );
   }
 
   const daysOfWeek = body.days_of_week;
@@ -104,7 +100,10 @@ async function handleCreate(
   }
 
   const monthDay = body.month_day ?? null;
-  if (monthDay !== null && (typeof monthDay !== "number" || monthDay < 1 || monthDay > 31)) {
+  if (
+    monthDay !== null &&
+    (typeof monthDay !== "number" || monthDay < 1 || monthDay > 31)
+  ) {
     return errorResponse("month_day must be between 1 and 31", 400);
   }
 
@@ -127,8 +126,13 @@ async function handleCreate(
   if (pattern === "monthly" && monthDay === null) {
     return errorResponse("month_day is required for monthly pattern", 400);
   }
-  if ((pattern === "weekly" || pattern === "biweekly") && daysOfWeek.length === 0) {
-    return errorResponse("days_of_week is required for weekly/biweekly pattern", 400);
+  if (
+    (pattern === "weekly" || pattern === "biweekly") && daysOfWeek.length === 0
+  ) {
+    return errorResponse(
+      "days_of_week is required for weekly/biweekly pattern",
+      400,
+    );
   }
 
   // Fetch party to verify it exists and get partner_id
@@ -157,11 +161,16 @@ async function handleCreate(
       end_time: endTime,
       end_date: endDate,
     })
-    .select("id, party_id, pattern, days_of_week, month_day, start_time, end_time, end_date, status, last_generated_date, created_at")
+    .select(
+      "id, party_id, pattern, days_of_week, month_day, start_time, end_time, end_date, status, last_generated_date, created_at",
+    )
     .single();
 
   if (insertError) {
-    return errorResponse(`Failed to create recurrence rule: ${insertError.message}`, 500);
+    return errorResponse(
+      `Failed to create recurrence rule: ${insertError.message}`,
+      500,
+    );
   }
 
   // Generate events for today → today+30 days
@@ -170,9 +179,18 @@ async function handleCreate(
   const toDate = new Date(today);
   toDate.setUTCDate(toDate.getUTCDate() + 30);
 
-  const eventsCreated = await generateEvents(supabase, rule as RecurrenceRule, today, toDate);
+  const eventsCreated = await generateEvents(
+    supabase,
+    rule as RecurrenceRule,
+    today,
+    toDate,
+  );
 
-  return successResponse({ success: true, rule_id: rule.id, events_created: eventsCreated });
+  return successResponse({
+    success: true,
+    rule_id: rule.id,
+    events_created: eventsCreated,
+  });
 }
 
 async function handleUpdate(
@@ -208,7 +226,10 @@ async function handleUpdate(
 
   if (body.pattern !== undefined) {
     if (!VALID_PATTERNS.includes(body.pattern as Pattern)) {
-      return errorResponse(`Invalid pattern. Must be one of: ${VALID_PATTERNS.join(", ")}`, 400);
+      return errorResponse(
+        `Invalid pattern. Must be one of: ${VALID_PATTERNS.join(", ")}`,
+        400,
+      );
     }
     updates.pattern = body.pattern;
   }
@@ -225,14 +246,19 @@ async function handleUpdate(
   }
 
   if (body.start_time !== undefined) {
-    if (typeof body.start_time !== "string" || !/^\d{2}:\d{2}$/.test(body.start_time)) {
+    if (
+      typeof body.start_time !== "string" ||
+      !/^\d{2}:\d{2}$/.test(body.start_time)
+    ) {
       return errorResponse("start_time must be in HH:MM format", 400);
     }
     updates.start_time = body.start_time;
   }
 
   if (body.end_time !== undefined) {
-    if (typeof body.end_time !== "string" || !/^\d{2}:\d{2}$/.test(body.end_time)) {
+    if (
+      typeof body.end_time !== "string" || !/^\d{2}:\d{2}$/.test(body.end_time)
+    ) {
       return errorResponse("end_time must be in HH:MM format", 400);
     }
     updates.end_time = body.end_time;
@@ -257,7 +283,10 @@ async function handleUpdate(
     .eq("id", ruleId);
 
   if (updateError) {
-    return errorResponse(`Failed to update recurrence rule: ${updateError.message}`, 500);
+    return errorResponse(
+      `Failed to update recurrence rule: ${updateError.message}`,
+      500,
+    );
   }
 
   return successResponse({ success: true });
@@ -283,7 +312,10 @@ async function handlePause(
   if (!rule) return errorResponse("Recurrence rule not found", 404);
 
   if (rule.status !== "active") {
-    return errorResponse(`Cannot pause a rule with status: ${rule.status}`, 400);
+    return errorResponse(
+      `Cannot pause a rule with status: ${rule.status}`,
+      400,
+    );
   }
 
   const partnerId = (rule.parties as Record<string, unknown>).partner_id as string;
@@ -314,7 +346,9 @@ async function handleResume(
 
   const { data: rule, error: fetchError } = await supabase
     .from("recurrence_rules")
-    .select("id, party_id, pattern, days_of_week, month_day, start_time, end_time, end_date, status, last_generated_date, created_at, parties!inner(partner_id)")
+    .select(
+      "id, party_id, pattern, days_of_week, month_day, start_time, end_time, end_date, status, last_generated_date, created_at, parties!inner(partner_id)",
+    )
     .eq("id", ruleId)
     .maybeSingle();
 
@@ -322,7 +356,10 @@ async function handleResume(
   if (!rule) return errorResponse("Recurrence rule not found", 404);
 
   if (rule.status !== "paused") {
-    return errorResponse(`Cannot resume a rule with status: ${rule.status}`, 400);
+    return errorResponse(
+      `Cannot resume a rule with status: ${rule.status}`,
+      400,
+    );
   }
 
   const partnerId = (rule.parties as Record<string, unknown>).partner_id as string;
@@ -371,7 +408,12 @@ async function handleResume(
     created_at: rule.created_at,
   };
 
-  const eventsCreated = await generateEvents(supabase, ruleData, fromDate, toDate);
+  const eventsCreated = await generateEvents(
+    supabase,
+    ruleData,
+    fromDate,
+    toDate,
+  );
 
   return successResponse({ success: true, events_created: eventsCreated });
 }
@@ -429,17 +471,27 @@ async function generateEvents(
   // Fetch templates for this party
   const { data: entryGroupTemplates, error: egtError } = await supabase
     .from("entry_group_templates")
-    .select("id, label, gender, birth_year_min, birth_year_max, required_verification_ids")
+    .select(
+      "id, label, gender, birth_year_min, birth_year_max, required_verification_ids",
+    )
     .eq("party_id", rule.party_id);
 
-  if (egtError) throw new Error(`Failed to fetch entry group templates: ${egtError.message}`);
+  if (egtError) {
+    throw new Error(
+      `Failed to fetch entry group templates: ${egtError.message}`,
+    );
+  }
 
   const { data: ticketTemplates, error: ttError } = await supabase
     .from("ticket_templates")
-    .select("id, name, description, price, quantity, target_entry_group_ids, required_verification_ids")
+    .select(
+      "id, name, description, price, quantity, target_entry_group_ids, required_verification_ids",
+    )
     .eq("party_id", rule.party_id);
 
-  if (ttError) throw new Error(`Failed to fetch ticket templates: ${ttError.message}`);
+  if (ttError) {
+    throw new Error(`Failed to fetch ticket templates: ${ttError.message}`);
+  }
 
   let eventsInserted = 0;
 
@@ -466,7 +518,9 @@ async function generateEvents(
     if (eventError) {
       // Unique constraint violation — skip (duplicate)
       if (eventError.code === "23505") continue;
-      throw new Error(`Failed to insert event for ${dateStr}: ${eventError.message}`);
+      throw new Error(
+        `Failed to insert event for ${dateStr}: ${eventError.message}`,
+      );
     }
 
     if (!newEvent) {
@@ -481,7 +535,9 @@ async function generateEvents(
     const templateToGroupMap = new Map<string, string>();
 
     if (entryGroupTemplates && entryGroupTemplates.length > 0) {
-      const entryGroups = entryGroupTemplates.map((t: Record<string, unknown>) => ({
+      const entryGroups = entryGroupTemplates.map((
+        t: Record<string, unknown>,
+      ) => ({
         event_id: eventId,
         label: t.label ?? null,
         gender: t.gender ?? null,
@@ -495,7 +551,9 @@ async function generateEvents(
         .insert(entryGroups)
         .select("id");
 
-      if (egError) throw new Error(`Failed to create entry groups: ${egError.message}`);
+      if (egError) {
+        throw new Error(`Failed to create entry groups: ${egError.message}`);
+      }
 
       if (insertedGroups) {
         for (let i = 0; i < entryGroupTemplates.length; i++) {
@@ -510,7 +568,8 @@ async function generateEvents(
     // Copy ticket_templates → tickets
     if (ticketTemplates && ticketTemplates.length > 0) {
       const tickets = ticketTemplates.map((tpl: Record<string, unknown>) => {
-        const originalTargetIds = (tpl.target_entry_group_ids as string[]) ?? [];
+        const originalTargetIds = (tpl.target_entry_group_ids as string[]) ??
+          [];
         const remappedTargetIds = originalTargetIds
           .map((id: string) => templateToGroupMap.get(id))
           .filter((id): id is string => id !== undefined);
@@ -530,7 +589,9 @@ async function generateEvents(
         .from("tickets")
         .insert(tickets);
 
-      if (ticketError) throw new Error(`Failed to create tickets: ${ticketError.message}`);
+      if (ticketError) {
+        throw new Error(`Failed to create tickets: ${ticketError.message}`);
+      }
     }
   }
 

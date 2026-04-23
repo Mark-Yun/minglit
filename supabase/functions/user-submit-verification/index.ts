@@ -1,7 +1,12 @@
 import { createServiceClient } from "../_shared/supabase_client.ts";
-import { successResponse, errorResponse, corsResponse } from "../_shared/response_utils.ts";
+import {
+  corsResponse,
+  errorResponse,
+  successResponse,
+} from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
-import { initSentry, withHandler, withSpan, log } from "../_shared/logger.ts";
+import { parseAction } from "../_shared/request_utils.ts";
+import { initSentry, log, withHandler, withSpan } from "../_shared/logger.ts";
 import { initStatsig, logStatsigEvent } from "../_shared/statsig_utils.ts";
 
 const FN = "user-submit-verification";
@@ -17,14 +22,9 @@ Deno.serve(withHandler(async (req) => {
   const userId = auth;
 
   try {
-    let reqBody: Record<string, unknown>;
-    try {
-      reqBody = await req.json();
-    } catch {
-      return errorResponse("Invalid JSON body", 400);
-    }
-
-    const { action } = reqBody as { action?: string };
+    const result = await parseAction(req);
+    if (result instanceof Response) return result;
+    const { action, body } = result;
     if (!action) {
       return errorResponse("Missing required field: action", 400);
     }
@@ -33,7 +33,7 @@ Deno.serve(withHandler(async (req) => {
 
     switch (action) {
       case "submit": {
-        const { partner_id, verification_id, application_id } = reqBody as {
+        const { partner_id, verification_id, application_id } = body as {
           partner_id?: string;
           verification_id?: string;
           application_id?: string;
@@ -48,21 +48,31 @@ Deno.serve(withHandler(async (req) => {
 
         // 1. Fetch user's verification data (snapshot source)
         const { data: userVerification, error: uvError } = await withSpan(
-          "db.select.user_verifications", "db.select",
-          () => supabase
-            .from("user_verifications")
-            .select("data")
-            .eq("user_id", userId)
-            .eq("verification_id", verification_id)
-            .maybeSingle(),
+          "db.select.user_verifications",
+          "db.select",
+          () =>
+            supabase
+              .from("user_verifications")
+              .select("data")
+              .eq("user_id", userId)
+              .eq("verification_id", verification_id)
+              .maybeSingle(),
         );
 
         if (uvError) {
-          log({ function: FN, level: "error", message: "Failed to fetch user verification", metadata: { detail: uvError } });
+          log({
+            function: FN,
+            level: "error",
+            message: "Failed to fetch user verification",
+            metadata: { detail: uvError },
+          });
           return errorResponse("Failed to fetch user verification data", 500);
         }
         if (!userVerification) {
-          return errorResponse("No verification data found. Save your data first.", 400);
+          return errorResponse(
+            "No verification data found. Save your data first.",
+            400,
+          );
         }
 
         const now = new Date().toISOString();
@@ -77,18 +87,25 @@ Deno.serve(withHandler(async (req) => {
 
         // 2. Check for existing submission
         const { data: existing, error: existError } = await withSpan(
-          "db.select.verification_submissions", "db.select",
-          () => supabase
-            .from("verification_submissions")
-            .select("id, snapshot_data")
-            .eq("user_id", userId)
-            .eq("partner_id", partner_id)
-            .eq("verification_id", verification_id)
-            .maybeSingle(),
+          "db.select.verification_submissions",
+          "db.select",
+          () =>
+            supabase
+              .from("verification_submissions")
+              .select("id, snapshot_data")
+              .eq("user_id", userId)
+              .eq("partner_id", partner_id)
+              .eq("verification_id", verification_id)
+              .maybeSingle(),
         );
 
         if (existError) {
-          log({ function: FN, level: "error", message: "Failed to check existing submission", metadata: { detail: existError } });
+          log({
+            function: FN,
+            level: "error",
+            message: "Failed to check existing submission",
+            metadata: { detail: existError },
+          });
           return errorResponse("Failed to check existing submission", 500);
         }
 
@@ -101,20 +118,27 @@ Deno.serve(withHandler(async (req) => {
             : [snapshotEntry];
 
           const { error: updateError } = await withSpan(
-            "db.update.verification_submissions", "db.update",
-            () => supabase
-              .from("verification_submissions")
-              .update({
-                snapshot_data: snapshotArray,
-                status: "pending",
-                reviewed_at: null,
-                reviewed_by: null,
-              })
-              .eq("id", existing.id),
+            "db.update.verification_submissions",
+            "db.update",
+            () =>
+              supabase
+                .from("verification_submissions")
+                .update({
+                  snapshot_data: snapshotArray,
+                  status: "pending",
+                  reviewed_at: null,
+                  reviewed_by: null,
+                })
+                .eq("id", existing.id),
           );
 
           if (updateError) {
-            log({ function: FN, level: "error", message: "Failed to update submission", metadata: { detail: updateError } });
+            log({
+              function: FN,
+              level: "error",
+              message: "Failed to update submission",
+              metadata: { detail: updateError },
+            });
             return errorResponse("Failed to update submission", 500);
           }
           submissionId = existing.id;
@@ -132,16 +156,23 @@ Deno.serve(withHandler(async (req) => {
           }
 
           const { data: inserted, error: insertError } = await withSpan(
-            "db.insert.verification_submissions", "db.insert",
-            () => supabase
-              .from("verification_submissions")
-              .insert(insertData)
-              .select("id")
-              .single(),
+            "db.insert.verification_submissions",
+            "db.insert",
+            () =>
+              supabase
+                .from("verification_submissions")
+                .insert(insertData)
+                .select("id")
+                .single(),
           );
 
           if (insertError) {
-            log({ function: FN, level: "error", message: "Failed to create submission", metadata: { detail: insertError } });
+            log({
+              function: FN,
+              level: "error",
+              message: "Failed to create submission",
+              metadata: { detail: insertError },
+            });
             return errorResponse("Failed to create submission", 500);
           }
           submissionId = inserted.id;
@@ -157,7 +188,7 @@ Deno.serve(withHandler(async (req) => {
       }
 
       case "comment": {
-        const { submission_id, text } = reqBody as {
+        const { submission_id, text } = body as {
           submission_id?: string;
           text?: string;
         };
@@ -171,16 +202,23 @@ Deno.serve(withHandler(async (req) => {
 
         // Fetch submission and verify ownership
         const { data: submission, error: fetchError } = await withSpan(
-          "db.select.verification_submissions", "db.select",
-          () => supabase
-            .from("verification_submissions")
-            .select("id, user_id, snapshot_data")
-            .eq("id", submission_id)
-            .maybeSingle(),
+          "db.select.verification_submissions",
+          "db.select",
+          () =>
+            supabase
+              .from("verification_submissions")
+              .select("id, user_id, snapshot_data")
+              .eq("id", submission_id)
+              .maybeSingle(),
         );
 
         if (fetchError) {
-          log({ function: FN, level: "error", message: "Failed to fetch submission", metadata: { detail: fetchError } });
+          log({
+            function: FN,
+            level: "error",
+            message: "Failed to fetch submission",
+            metadata: { detail: fetchError },
+          });
           return errorResponse("Failed to fetch submission", 500);
         }
         if (!submission) {
@@ -200,7 +238,9 @@ Deno.serve(withHandler(async (req) => {
         }
 
         const lastEntry = { ...snapshotArray[snapshotArray.length - 1] };
-        const comments = Array.isArray(lastEntry.comments) ? [...lastEntry.comments] : [];
+        const comments = Array.isArray(lastEntry.comments)
+          ? [...lastEntry.comments]
+          : [];
         comments.push({
           author: userId,
           at: new Date().toISOString(),
@@ -210,15 +250,22 @@ Deno.serve(withHandler(async (req) => {
         snapshotArray[snapshotArray.length - 1] = lastEntry;
 
         const { error: updateError } = await withSpan(
-          "db.update.verification_submissions", "db.update",
-          () => supabase
-            .from("verification_submissions")
-            .update({ snapshot_data: snapshotArray })
-            .eq("id", submission_id),
+          "db.update.verification_submissions",
+          "db.update",
+          () =>
+            supabase
+              .from("verification_submissions")
+              .update({ snapshot_data: snapshotArray })
+              .eq("id", submission_id),
         );
 
         if (updateError) {
-          log({ function: FN, level: "error", message: "Failed to add comment", metadata: { detail: updateError } });
+          log({
+            function: FN,
+            level: "error",
+            message: "Failed to add comment",
+            metadata: { detail: updateError },
+          });
           return errorResponse("Failed to add comment", 500);
         }
 
@@ -234,7 +281,11 @@ Deno.serve(withHandler(async (req) => {
     }
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
-    log({ function: FN, level: "error", message: `Error in ${FN}: ${message}` });
+    log({
+      function: FN,
+      level: "error",
+      message: `Error in ${FN}: ${message}`,
+    });
     return errorResponse(message, 500);
   }
 }));

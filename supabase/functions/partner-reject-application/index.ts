@@ -9,13 +9,15 @@ import {
 } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
 import { requirePartnerPermission } from "../_shared/partner_permissions.ts";
+import { parseJsonBody } from "../_shared/request_utils.ts";
 import { initSentry, withHandler, log } from "../_shared/logger.ts";
 
 const FN = "partner-reject-application";
 
 initSentry();
 
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 Deno.serve(withHandler(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return corsResponse();
@@ -24,7 +26,12 @@ Deno.serve(withHandler(async (req: Request): Promise<Response> => {
   try {
     return await handleRequest(req);
   } catch (e) {
-    log({ function: FN, level: "error", message: "partner-reject-application error", metadata: { detail: e instanceof Error ? e.message : String(e) } });
+    log({
+      function: FN,
+      level: "error",
+      message: "partner-reject-application error",
+      metadata: { detail: e instanceof Error ? e.message : String(e) },
+    });
     return errorResponse("Internal server error", 500);
   }
 }));
@@ -36,16 +43,8 @@ async function handleRequest(req: Request): Promise<Response> {
   const userId = auth;
 
   // 2. Parse body
-  let body: Record<string, unknown>;
-  try {
-    const parsed = await req.json();
-    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
-      return errorResponse("Request body must be a JSON object", 400);
-    }
-    body = parsed as Record<string, unknown>;
-  } catch {
-    return errorResponse("Invalid JSON body", 400);
-  }
+  const body = await parseJsonBody(req);
+  if (body instanceof Response) return body;
 
   const supabase = createServiceClient();
 
@@ -65,7 +64,9 @@ async function handleRequest(req: Request): Promise<Response> {
   // Fetch application with event → party → partner chain
   const { data: app, error: fetchError } = await supabase
     .from("event_applications")
-    .select("id, status, event_id, events!inner(party_id, parties!inner(partner_id))")
+    .select(
+      "id, status, event_id, events!inner(party_id, parties!inner(partner_id))",
+    )
     .eq("id", applicationId)
     .maybeSingle();
 

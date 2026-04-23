@@ -1,7 +1,8 @@
 import { getPortoneClient } from "../_shared/portone_client.ts";
 import { successResponse, errorResponse, corsResponse } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
-import { initSentry, withHandler, log } from "../_shared/logger.ts";
+import { parseJsonBody } from "../_shared/request_utils.ts";
+import { initSentry, log, withHandler } from "../_shared/logger.ts";
 
 const FN = "settlement-query";
 
@@ -14,14 +15,10 @@ Deno.serve(withHandler(async (req) => {
   const auth = await requireAuth(req);
   if (auth instanceof Response) return auth;
   try {
-    let reqBody: Record<string, unknown>;
-    try {
-      reqBody = await req.json();
-    } catch {
-      return errorResponse("Invalid JSON body", 400);
-    }
+    const body = await parseJsonBody(req);
+    if (body instanceof Response) return body;
 
-    const { partner_id, from_date, to_date, type } = reqBody as {
+    const { partner_id, from_date, to_date, type } = body as {
       partner_id?: string;
       from_date?: string;
       to_date?: string;
@@ -29,7 +26,10 @@ Deno.serve(withHandler(async (req) => {
     };
 
     if (!type || (type !== "settlements" && type !== "payouts")) {
-      return errorResponse("Missing or invalid type: must be 'settlements' or 'payouts'", 400);
+      return errorResponse(
+        "Missing or invalid type: must be 'settlements' or 'payouts'",
+        400,
+      );
     }
 
     const portone = getPortoneClient();
@@ -39,11 +39,18 @@ Deno.serve(withHandler(async (req) => {
       try {
         result = await portone.getPartnerSettlements({
           partnerId: partner_id,
-          dateRange: from_date || to_date ? { from: from_date, until: to_date } : undefined,
+          dateRange: from_date || to_date
+            ? { from: from_date, until: to_date }
+            : undefined,
         });
       } catch (e) {
         const message = e instanceof Error ? e.message : String(e);
-        log({ function: FN, level: "error", message: "PortOne getPartnerSettlements error", metadata: { detail: message } });
+        log({
+          function: FN,
+          level: "error",
+          message: "PortOne getPartnerSettlements error",
+          metadata: { detail: message },
+        });
         return errorResponse("Failed to fetch settlements", 502);
       }
       return successResponse({ success: true, ...result });
@@ -56,14 +63,23 @@ Deno.serve(withHandler(async (req) => {
       });
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e);
-      log({ function: FN, level: "error", message: "PortOne getPayouts error", metadata: { detail: message } });
+      log({
+        function: FN,
+        level: "error",
+        message: "PortOne getPayouts error",
+        metadata: { detail: message },
+      });
       return errorResponse("Failed to fetch payouts", 502);
     }
     return successResponse({ success: true, ...result });
-
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
-    log({ function: FN, level: "error", message: "Error in settlement-query", metadata: { detail: message } });
+    log({
+      function: FN,
+      level: "error",
+      message: "Error in settlement-query",
+      metadata: { detail: message },
+    });
     return errorResponse(message, 500);
   }
 }));

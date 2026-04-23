@@ -10,13 +10,15 @@ import {
 } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
 import { requirePartnerPermission } from "../_shared/partner_permissions.ts";
+import { parseAction } from "../_shared/request_utils.ts";
 import { initSentry, withHandler, log } from "../_shared/logger.ts";
 
 const FN = "partner-approve-application";
 
 initSentry();
 
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 // Fix #1219: keep approval status filtering aligned with the capacity guard paths.
 const APPROVABLE_STATUSES = ["pending", "pending_review"] as const;
 
@@ -28,10 +30,18 @@ Deno.serve(withHandler(async (req: Request): Promise<Response> => {
     return await handleRequest(req);
   } catch (e) {
     const detail = e instanceof Error ? e.message : String(e);
-    log({ function: FN, level: "error", message: "partner-approve-application error", metadata: { detail } });
+    log({
+      function: FN,
+      level: "error",
+      message: "partner-approve-application error",
+      metadata: { detail },
+    });
     const env = Deno.env.get("ENVIRONMENT");
     const exposeDetail = env === "local" || env === "development";
-    return errorResponse(exposeDetail ? `${FN}: ${detail}` : "Internal server error", 500);
+    return errorResponse(
+      exposeDetail ? `${FN}: ${detail}` : "Internal server error",
+      500,
+    );
   }
 }));
 
@@ -42,19 +52,10 @@ async function handleRequest(req: Request): Promise<Response> {
   const userId = auth;
 
   // 2. Parse body
-  let body: Record<string, unknown>;
-  try {
-    const parsed = await req.json();
-    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
-      return errorResponse("Request body must be a JSON object", 400);
-    }
-    body = parsed as Record<string, unknown>;
-  } catch {
-    return errorResponse("Invalid JSON body", 400);
-  }
-
-  const action = body.action as string | undefined;
-  if (typeof action !== "string" || !action) {
+  const result = await parseAction(req);
+  if (result instanceof Response) return result;
+  const { action, body } = result;
+  if (!action) {
     return errorResponse("Missing action", 400);
   }
 
@@ -108,7 +109,11 @@ async function handleApprove(
   if (permCheck) return permCheck;
 
   // Verify status is approvable (after permission check)
-  if (!APPROVABLE_STATUSES.includes(app.status as typeof APPROVABLE_STATUSES[number])) {
+  if (
+    !APPROVABLE_STATUSES.includes(
+      app.status as typeof APPROVABLE_STATUSES[number],
+    )
+  ) {
     return errorResponse(
       `Cannot approve application with status '${app.status}'`,
       400,
@@ -123,7 +128,9 @@ async function handleApprove(
 
   if (approvalError) return errorResponse("Failed to approve application", 500);
 
-  const result = Array.isArray(approvalResult) ? approvalResult[0] : approvalResult;
+  const result = Array.isArray(approvalResult)
+    ? approvalResult[0]
+    : approvalResult;
   const resultStatus = result?.result_status as string | undefined;
 
   if (resultStatus === "approved") {
@@ -185,7 +192,9 @@ async function handleBulkApprove(
 
   if (bulkApprovalError) return errorResponse("Failed to bulk approve", 500);
 
-  const result = Array.isArray(bulkApprovalResult) ? bulkApprovalResult[0] : bulkApprovalResult;
+  const result = Array.isArray(bulkApprovalResult)
+    ? bulkApprovalResult[0]
+    : bulkApprovalResult;
   const resultStatus = result?.result_status as string | undefined;
 
   if (resultStatus === "invalid_capacity") {
@@ -198,8 +207,9 @@ async function handleBulkApprove(
     return errorResponse("Event not found", 404);
   }
 
-  const approvedCount =
-    typeof result?.approved_count === "number" ? result.approved_count : 0;
+  const approvedCount = typeof result?.approved_count === "number"
+    ? result.approved_count
+    : 0;
   const skippedDueToCapacity =
     typeof result?.skipped_due_to_capacity === "number"
       ? result.skipped_due_to_capacity

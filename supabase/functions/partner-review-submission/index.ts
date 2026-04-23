@@ -9,8 +9,8 @@ import {
 } from "../_shared/response_utils.ts";
 import { requireAuth } from "../_shared/auth_utils.ts";
 import { requirePartnerPermission } from "../_shared/partner_permissions.ts";
+import { parseAction } from "../_shared/request_utils.ts";
 import { initSentry, withHandler } from "../_shared/logger.ts";
-
 
 initSentry();
 
@@ -37,19 +37,10 @@ async function handleRequest(req: Request): Promise<Response> {
   const userId = auth;
 
   // 3. Parse body
-  let body: Record<string, unknown>;
-  try {
-    const parsed = await req.json();
-    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
-      return errorResponse("Request body must be a JSON object", 400);
-    }
-    body = parsed as Record<string, unknown>;
-  } catch {
-    return errorResponse("Invalid JSON body", 400);
-  }
-
-  const action = body.action as string | undefined;
-  if (typeof action !== "string" || !action) return errorResponse("Missing action", 400);
+  const result = await parseAction(req);
+  if (result instanceof Response) return result;
+  const { action, body } = result;
+  if (!action) return errorResponse("Missing action", 400);
 
   // 4. Supabase client (service role)
   const supabase = createServiceClient();
@@ -63,7 +54,10 @@ async function handleRequest(req: Request): Promise<Response> {
 
     const result = body.result;
     if (typeof result !== "string" || !VALID_RESULTS.includes(result)) {
-      return errorResponse("Invalid result. Must be 'approved' or 'rejected'", 400);
+      return errorResponse(
+        "Invalid result. Must be 'approved' or 'rejected'",
+        400,
+      );
     }
 
     // Fetch submission
@@ -107,7 +101,9 @@ async function handleRequest(req: Request): Promise<Response> {
     // Fix #309: review action에 comment가 있으면 함께 기록
     const comment = body.comment;
     if (typeof comment === "string" && comment.trim().length > 0) {
-      const comments = Array.isArray(lastEntry.comments) ? [...lastEntry.comments] : [];
+      const comments = Array.isArray(lastEntry.comments)
+        ? [...lastEntry.comments]
+        : [];
       comments.push({
         author: userId,
         at: now,
@@ -129,7 +125,10 @@ async function handleRequest(req: Request): Promise<Response> {
       .eq("id", submissionId);
 
     if (updateError) {
-      return errorResponse(`Failed to update submission: ${updateError.message}`, 500);
+      return errorResponse(
+        `Failed to update submission: ${updateError.message}`,
+        500,
+      );
     }
 
     return successResponse({ success: true });
@@ -175,7 +174,9 @@ async function handleRequest(req: Request): Promise<Response> {
     }
 
     const lastEntry = { ...snapshotArray[snapshotArray.length - 1] };
-    const comments = Array.isArray(lastEntry.comments) ? [...lastEntry.comments] : [];
+    const comments = Array.isArray(lastEntry.comments)
+      ? [...lastEntry.comments]
+      : [];
     comments.push({
       author: userId,
       at: new Date().toISOString(),
@@ -190,7 +191,10 @@ async function handleRequest(req: Request): Promise<Response> {
       .eq("id", submissionId);
 
     if (updateError) {
-      return errorResponse(`Failed to add comment: ${updateError.message}`, 500);
+      return errorResponse(
+        `Failed to add comment: ${updateError.message}`,
+        500,
+      );
     }
 
     return successResponse({ success: true });
