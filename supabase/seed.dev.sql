@@ -678,8 +678,6 @@ DECLARE
   partner_id_  uuid;
   location_id_ uuid;
   party_id_    uuid;
-  group_m_id   uuid;
-  group_f_id   uuid;
 BEGIN
   SELECT id INTO partner_id_ FROM public.partners WHERE biz_number = '000-00-00000';
   IF partner_id_ IS NULL THEN
@@ -707,11 +705,12 @@ BEGIN
 
   -- entry_group_templates: 남성 20-29, 여성 20-29
   IF NOT EXISTS (SELECT 1 FROM public.entry_group_templates WHERE party_id = party_id_) THEN
+    -- Fix #1772-review: 두 행 INSERT에 RETURNING INTO 하나 → "query returned more than one row" 에러.
+    -- group_m_id/group_f_id 는 이후에 쓰이지 않으므로 RETURNING 절 제거.
     INSERT INTO public.entry_group_templates (party_id, label, gender, birth_year_min, birth_year_max)
     VALUES
       (party_id_, '남성 그룹', 'male',   1995, 2004),
-      (party_id_, '여성 그룹', 'female', 1995, 2004)
-    RETURNING id INTO group_m_id;
+      (party_id_, '여성 그룹', 'female', 1995, 2004);
   END IF;
 
   -- ticket_templates: 일반 참가권 (무료, 20인)
