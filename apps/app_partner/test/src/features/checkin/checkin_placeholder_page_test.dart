@@ -250,7 +250,6 @@ void main() {
           endTime: now.add(const Duration(hours: 2)),
           createdAt: now,
           updatedAt: now,
-          title: null, // null — should show party.title
           party: party,
         );
         final event2 = Event(

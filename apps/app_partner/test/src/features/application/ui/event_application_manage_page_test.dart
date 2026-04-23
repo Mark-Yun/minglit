@@ -254,7 +254,6 @@ void main() {
         final eventWithNullTitle = Event(
           id: 'event_null_title',
           partyId: 'party_1',
-          title: null, // null title — should fall back to party.title
           startTime: now.add(const Duration(hours: 2)),
           endTime: now.add(const Duration(hours: 5)),
           createdAt: now,
