@@ -1,16 +1,11 @@
 // Fix #179: esm.sh 직접 URL → deno.json import map 기반으로 통일
 import { createServiceClient } from "../_shared/supabase_client.ts";
-import { PortoneV2Client, PortoneSettlement } from "../_shared/portone_client.ts";
+import { getPortoneClient, PortoneSettlement } from "../_shared/portone_client.ts";
 import { initSentry, withHandler } from "../_shared/logger.ts";
 import { requireServiceRole } from "../_shared/auth_utils.ts";
 
 await initSentry();
 
-const PORTONE_V2_API_KEY = Deno.env.get("PORTONE_V2_API_KEY") ?? "";
-
-if (!PORTONE_V2_API_KEY) {
-  throw new Error("Missing required environment variable: PORTONE_V2_API_KEY");
-}
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -129,7 +124,7 @@ Deno.serve(withHandler(async (req) => {
 
     if (ledgerError) throw new Error(`Ledger query failed: ${ledgerError.message}`);
 
-    const portoneClient = new PortoneV2Client(PORTONE_V2_API_KEY);
+    const portoneClient = getPortoneClient();
     let portoneSettlements: PortoneSettlement[] = [];
 
     try {
