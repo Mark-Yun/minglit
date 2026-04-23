@@ -1,12 +1,13 @@
 -- Fix #1760: pg_cron ↔ ef_auth_manifest 일관성 검증
--- 목적: cron.job의 Authorization vault key가 manifest의 required_auth와 일치하는지 검증.
---       service_role EF는 service_role_key, 그 외 EF는 pg_cron에서 호출하면 안 됨.
+--
+-- 범위: pg_cron에서 net.http_post로 호출하는 EF만 검증 (cron-targeted EF 전용).
+--   ef_auth_manifest는 cron 대상 EF만 포함하므로 사용자 요청 EF는 검증 범위 밖.
 --
 -- 재발 방지: PR #1494에서 requireServiceRole() 추가 후 pg_cron Authorization이 누락되어
 --            6일간 401 무음 실패. 이 테스트가 PR 차단으로 즉시 감지한다.
 
 BEGIN;
-SELECT plan(3);
+SELECT plan(2);
 
 -- ── 헬퍼: cron.job에서 EF 이름과 Authorization vault key 추출
 -- regexp_match (scalar, Pg10+) 사용 — regexp_matches with 'g' is set-returning and
@@ -21,35 +22,21 @@ FROM cron.job
 WHERE command LIKE '%net.http_post%'
   AND command LIKE '%/functions/v1/%';
 
--- ── 1. service_role EF는 반드시 service_role_key vault secret 사용
+-- ── 1. manifest에 등록된 EF는 반드시 service_role_key vault secret 사용
 --    (publishable_key 또는 다른 key → 401 발생)
 SELECT is(
   (
     SELECT count(*)::int
     FROM _cron_ef_calls c
     JOIN public.ef_auth_manifest m ON m.ef_name = c.ef_name
-    WHERE m.required_auth = 'service_role'
-      AND (c.vault_key IS NULL OR c.vault_key != 'service_role_key')
+    WHERE (c.vault_key IS NULL OR c.vault_key != 'service_role_key')
   ),
   0,
-  'All service_role EFs in pg_cron must use service_role_key vault secret'
+  'All pg_cron EFs in manifest must use service_role_key vault secret'
 );
 
--- ── 2. authenticated/public EF는 pg_cron에서 호출하면 안 됨
---    (pg_cron은 사용자 세션이 없으므로 JWT에 user 정보가 없음)
-SELECT is(
-  (
-    SELECT count(*)::int
-    FROM _cron_ef_calls c
-    JOIN public.ef_auth_manifest m ON m.ef_name = c.ef_name
-    WHERE m.required_auth IN ('authenticated', 'public')
-  ),
-  0,
-  'authenticated/public EFs must not be called from pg_cron'
-);
-
--- ── 3. pg_cron에서 호출하는 EF는 manifest에 등록되어 있어야 함
---    (신규 EF 추가 시 manifest 업데이트 강제)
+-- ── 2. pg_cron에서 HTTP 호출하는 EF는 반드시 manifest에 등록되어 있어야 함
+--    (신규 EF를 pg_cron에 추가할 때 manifest 업데이트를 강제)
 SELECT is(
   (
     SELECT count(*)::int
@@ -58,7 +45,7 @@ SELECT is(
     WHERE m.ef_name IS NULL
   ),
   0,
-  'All EFs called by pg_cron must be declared in ef_auth_manifest'
+  'All EFs called by pg_cron via HTTP must be declared in ef_auth_manifest'
 );
 
 SELECT * FROM finish();
