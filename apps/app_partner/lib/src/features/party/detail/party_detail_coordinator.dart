@@ -167,6 +167,7 @@ class PartyDetailCoordinator {
     );
   }
 
+  // Fix #1733: persist entry-group changes via entry_group_templates in EF body
   Future<void> addPartyEntryGroup(
     String partyId,
     PartyEntryGroup group,
