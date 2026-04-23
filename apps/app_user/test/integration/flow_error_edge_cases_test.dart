@@ -258,6 +258,9 @@ void main() {
       for (var i = 0; i < 5; i++) {
         await tester.pump();
       }
+      // Wait for AnimatedSwitcher 350ms cross-fade to complete so only one
+      // CustomScrollView is in the tree before fling gesture.
+      await tester.pump(const Duration(milliseconds: 400));
 
       final initialCount = refreshCount;
 
@@ -392,6 +395,9 @@ void main() {
       for (var i = 0; i < 5; i++) {
         await tester.pump();
       }
+      // Wait for AnimatedSwitcher 350ms cross-fade to complete so only one
+      // CustomScrollView is in the tree before drag gesture.
+      await tester.pump(const Duration(milliseconds: 400));
 
       // Scroll down to find the refund policy info button
       await tester.dragUntilVisible(

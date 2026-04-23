@@ -63,7 +63,6 @@ class EventDetailPage extends ConsumerWidget {
                   key: const ValueKey('event_detail_error'),
                   child: MinglitErrorState(
                     title: '이벤트를 불러올 수 없습니다',
-                    subtitle: e.toString(),
                     onRetry: () =>
                         ref.invalidate(eventDetailControllerProvider(eventId)),
                   ),
