@@ -58,6 +58,14 @@ class _CheckinScannerOverlayState extends State<CheckinScannerOverlay>
         curve: const Interval(0.75, 1, curve: Curves.easeIn),
       ),
     );
+    // Fix #1817: if widget starts with a terminal result (e.g. in tests),
+    // show the banner immediately without waiting for didUpdateWidget.
+    final initialResult = widget.state.result;
+    if (initialResult != CheckinResult.idle &&
+        initialResult != CheckinResult.processing) {
+      _lastResult = initialResult;
+      _bannerController.forward();
+    }
   }
 
   @override
