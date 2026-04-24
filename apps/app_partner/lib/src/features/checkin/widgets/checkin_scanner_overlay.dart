@@ -103,7 +103,7 @@ class _CheckinScannerOverlayState extends State<CheckinScannerOverlay>
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
-    final cutOut = math.min(220.0, size.shortestSide * 0.48);
+    final cutOut = math.min(220, size.shortestSide * 0.48);
 
     return Stack(
       children: [
