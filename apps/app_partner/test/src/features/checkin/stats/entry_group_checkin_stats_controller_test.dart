@@ -57,7 +57,7 @@ void main() {
       ),
     ).thenReturn(mockChannel);
 
-    when(() => mockChannel.subscribe(any())).thenReturn(mockChannel);
+    when(() => mockChannel.subscribe()).thenReturn(mockChannel);
     when(() => mockChannel.unsubscribe()).thenAnswer((_) async => 'ok');
   });
 
