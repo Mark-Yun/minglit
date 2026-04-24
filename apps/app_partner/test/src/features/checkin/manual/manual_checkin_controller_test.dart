@@ -116,7 +116,7 @@ void main() {
       expect(participant.isCheckedIn, isTrue);
     });
 
-    test('checkin — already_checked_in: 상태 복구', () async {
+    test('checkin — already_checked_in: optimistic 상태 유지 (서버도 checked_in)', () async {
       stubFetch([
         {
           'id': 'ep-1',
@@ -140,9 +140,10 @@ void main() {
 
       expect(result, 'already_checked_in');
 
-      // 실패 시 원래 상태로 복구
+      // Fix #1812: already_checked_in은 서버 실제 상태도 checked_in이므로
+      // optimistic 상태(checked_in)를 유지해야 한다.
       final state = container.read(manualCheckinControllerProvider('event-1'));
-      expect(state.value!.first.isCheckedIn, isFalse);
+      expect(state.value!.first.isCheckedIn, isTrue);
     });
   });
 }

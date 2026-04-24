@@ -52,8 +52,9 @@ class ManualCheckinController extends _$ManualCheckinController {
         params: {'p_ticket_id': ticketId, 'p_event_id': eventId},
       ) as String;
 
-      if (result != 'success') {
-        // 실패 시 원래 상태 복구
+      // Fix #1812: already_checked_in은 서버 실제 상태도 checked_in이므로
+      // optimistic 상태를 유지한다. not_found만 이전 상태로 복구.
+      if (result == 'not_found') {
         state = previous;
       }
       return result;
