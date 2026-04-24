@@ -39,10 +39,12 @@ void main() {
 
   void stubRpc(List<dynamic> response) {
     when(
-      () => mockClient.rpc<dynamic>(
-            'get_event_checkin_stats_by_group',
-            params: any(named: 'params'),
-          ) as Future<dynamic>,
+      () =>
+          mockClient.rpc<dynamic>(
+                'get_event_checkin_stats_by_group',
+                params: any(named: 'params'),
+              )
+              as Future<dynamic>,
     ).thenAnswer((_) async => response);
   }
 

@@ -24,7 +24,9 @@ Widget _wrapData(
         () => _DataController(groups),
       ),
     ],
-    child: MaterialApp(home: Scaffold(body: Stack(children: [child]))),
+    child: MaterialApp(
+      home: Scaffold(body: Stack(children: [child])),
+    ),
   );
 }
 
@@ -130,7 +132,10 @@ void main() {
           .read(
             entryGroupCheckinStatsControllerProvider('event-err').notifier,
           )
-          .state = AsyncError(Exception('network error'), StackTrace.empty);
+          .state = AsyncError(
+        Exception('network error'),
+        StackTrace.empty,
+      );
 
       await tester.pumpWidget(
         UncontrolledProviderScope(

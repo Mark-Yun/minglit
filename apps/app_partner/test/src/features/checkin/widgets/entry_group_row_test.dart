@@ -125,7 +125,7 @@ void main() {
         _wrap(const EntryGroupRow(stats: _groupFull, showDivider: false)),
       );
 
-      expect(find.bySemanticsLabel(RegExp(r'남 20대 초반')), findsOneWidget);
+      expect(find.bySemanticsLabel(RegExp('남 20대 초반')), findsOneWidget);
     });
   });
 }
