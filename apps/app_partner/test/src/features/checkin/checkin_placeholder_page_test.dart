@@ -3,10 +3,7 @@ import 'dart:async';
 import 'package:app_partner/src/features/checkin/checkin_placeholder_page.dart';
 import 'package:app_partner/src/features/checkin/qr_scanner_screen.dart';
 import 'package:app_partner/src/features/checkin/stats/checkin_stats_controller.dart'
-    show
-    CheckinStats,
-    CheckinStatsController,
-    checkinStatsControllerProvider;
+    show CheckinStats, CheckinStatsController, checkinStatsControllerProvider;
 import 'package:app_partner/src/logic/current_partner_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';

@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/src/logic/providers/supabase_provider.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:postgrest/postgrest.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 // ---------------------------------------------------------------------------
@@ -26,8 +25,7 @@ class _FakeRpcBuilder<T> implements PostgrestFilterBuilder<T> {
   Future<U> then<U>(
     FutureOr<U> Function(T) onValue, {
     Function? onError,
-  }) =>
-      Future<T>.value(_data).then(onValue, onError: onError);
+  }) => Future<T>.value(_data).then(onValue, onError: onError);
 
   @override
   dynamic noSuchMethod(Invocation invocation) => this;
