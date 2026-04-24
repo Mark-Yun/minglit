@@ -293,8 +293,8 @@ class _ScanResultBanner extends StatelessWidget {
         return (
           MinglitColors.success,
           Icons.check_circle,
-          state.userName ?? '체크인 완료',
-          state.message ?? '',
+          '체크인 완료',
+          state.userName ?? '',
         );
       case CheckinResult.alreadyCheckedIn:
         return (

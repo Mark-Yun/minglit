@@ -5,7 +5,7 @@
 // 2. 복수 이벤트 — 이벤트 선택 목록에 참가자 카운트 표시
 // 3. QRScannerScreen AppBar에 이벤트 제목 표시
 // 4. 체크인 성공 오버레이 — "체크인 완료" 텍스트 + 참가자 이름
-// 5. 체크인 실패 오버레이 — "입장 제한" 텍스트 + 에러 메시지
+// 5. 체크인 실패 오버레이 — "입장 불가" 텍스트 + 에러 메시지
 // 6. Controller-UI 연동 — processQR 성공 → 성공 오버레이 렌더링
 // 7. Controller-UI 연동 — processQR 실패 → 실패 오버레이 렌더링
 // 8. Controller-UI 연동 — malformed QR → 실패 오버레이 렌더링
@@ -288,7 +288,7 @@ void main() {
       );
 
       testWidgets(
-        '체크인 실패 — "입장 제한" 텍스트와 에러 메시지가 오버레이에 표시된다',
+        '체크인 실패 — "입장 불가" 텍스트와 에러 메시지가 오버레이에 표시된다',
         (tester) async {
           final capture = GoldenCapture('cuj_p03a');
           final event = makeEvent('ev-fail');
@@ -306,7 +306,7 @@ void main() {
 
           await capture.error(tester, 2);
 
-          expect(find.text('입장 제한'), findsOneWidget);
+          expect(find.text('입장 불가'), findsOneWidget);
           expect(find.text('유효하지 않은 티켓입니다.'), findsOneWidget);
           // 에러 아이콘 표시
           expect(find.byIcon(Icons.error), findsOneWidget);
@@ -327,7 +327,7 @@ void main() {
           await tester.pump();
 
           expect(find.text('체크인 완료'), findsNothing);
-          expect(find.text('입장 제한'), findsNothing);
+          expect(find.text('입장 불가'), findsNothing);
         },
       );
     });
@@ -372,7 +372,7 @@ void main() {
       );
 
       testWidgets(
-        'processQR 실패 — 실패 오버레이("입장 제한" + 메시지)가 렌더링된다',
+        'processQR 실패 — 실패 오버레이("입장 불가" + 메시지)가 렌더링된다',
         (tester) async {
           when(
             () => mockRepo.verifyAndCheckin(
@@ -398,14 +398,14 @@ void main() {
           );
           await tester.pump();
 
-          expect(find.text('입장 제한'), findsOneWidget);
+          expect(find.text('입장 불가'), findsOneWidget);
           expect(find.text('유효하지 않은 티켓입니다.'), findsOneWidget);
         },
         timeout: const Timeout(Duration(seconds: 15)),
       );
 
       testWidgets(
-        'malformed QR — 파싱 실패 시 실패 오버레이("입장 제한")가 렌더링된다',
+        'malformed QR — 파싱 실패 시 실패 오버레이("입장 불가")가 렌더링된다',
         (tester) async {
           final event = makeEvent('ev-e2e-malformed');
           await tester.pumpWidget(buildScannerWithRepo(event));
@@ -424,7 +424,7 @@ void main() {
           );
           await tester.pump();
 
-          expect(find.text('입장 제한'), findsOneWidget);
+          expect(find.text('입장 불가'), findsOneWidget);
           expect(find.text('티켓 데이터를 읽을 수 없습니다.'), findsOneWidget);
 
           // Fix #1317: malformed QR는 repo를 호출하지 않아야 한다.
