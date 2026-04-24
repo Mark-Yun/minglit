@@ -221,15 +221,11 @@ class _TagSearchResults extends ConsumerWidget {
     final searchAsync = ref.watch(tagSearchProvider(query));
 
     return searchAsync.when(
-      loading: () => const SizedBox(
+      // Fix #1800: CircularProgressIndicator caused teardown failures on image load errors — replaced with MinglitSkeleton
+      loading: () => const MinglitSkeleton(
+        width: 64,
         height: 36,
-        child: Center(
-          child: SizedBox(
-            width: 20,
-            height: 20,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
-        ),
+        borderRadius: BorderRadius.all(Radius.circular(MinglitRadius.chip)),
       ),
       error: (_, _) => const SizedBox.shrink(),
       data: (tags) {
@@ -274,15 +270,11 @@ class _FeaturedTagsQuickSelect extends ConsumerWidget {
     final controller = ref.read(tagSelectionControllerProvider.notifier);
 
     return featuredAsync.when(
-      loading: () => const SizedBox(
+      // Fix #1800: CircularProgressIndicator caused teardown failures on image load errors — replaced with MinglitSkeleton
+      loading: () => const MinglitSkeleton(
+        width: 64,
         height: 36,
-        child: Center(
-          child: SizedBox(
-            width: 20,
-            height: 20,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
-        ),
+        borderRadius: BorderRadius.all(Radius.circular(MinglitRadius.chip)),
       ),
       error: (_, _) => const SizedBox.shrink(),
       data: (tags) {
