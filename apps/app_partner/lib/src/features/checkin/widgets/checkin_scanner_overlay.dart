@@ -120,8 +120,7 @@ class _CheckinScannerOverlayState extends State<CheckinScannerOverlay>
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               fontWeight: FontWeight.w500,
-              // ignore: deprecated_member_use
-              color: Colors.white.withOpacity(0.75),
+              color: Colors.white.withValues(alpha: 0.75),
             ),
           ),
         ),
@@ -219,13 +218,10 @@ class _ScanFab extends StatelessWidget {
         height: 44,
         decoration: BoxDecoration(
           color: isActive
-              // ignore: deprecated_member_use
-              ? MinglitPartnerColors.primary.withOpacity(0.85)
-              // ignore: deprecated_member_use
-              : Colors.white.withOpacity(0.12),
+              ? MinglitPartnerColors.primary.withValues(alpha: 0.85)
+              : Colors.white.withValues(alpha: 0.12),
           border: Border.all(
-            // ignore: deprecated_member_use
-            color: Colors.white.withOpacity(0.18),
+            color: Colors.white.withValues(alpha: 0.18),
           ),
           borderRadius: BorderRadius.circular(MinglitRadius.button),
         ),
@@ -254,8 +250,7 @@ class _ScanResultBanner extends StatelessWidget {
         borderRadius: BorderRadius.circular(MinglitRadius.card),
         boxShadow: [
           BoxShadow(
-            // ignore: deprecated_member_use
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
