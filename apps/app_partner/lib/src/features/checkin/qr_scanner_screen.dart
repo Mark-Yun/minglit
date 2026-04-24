@@ -4,6 +4,7 @@ import 'package:app_partner/src/features/checkin/checkin_controller.dart';
 import 'package:app_partner/src/features/checkin/stats/checkin_stats_controller.dart';
 import 'package:app_partner/src/features/checkin/widgets/checkin_scanner_overlay.dart';
 import 'package:app_partner/src/features/checkin/widgets/checkin_summary_card.dart';
+import 'package:app_partner/src/features/checkin/widgets/entry_group_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -107,6 +108,10 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
               ],
             ),
           ),
+
+          // 4. Entry group bottom sheet — 엔트리 그룹별 체크인 현황
+          // Fix #1811: Phase 3 — DraggableScrollableSheet + 그룹 정렬 + 진행률 색상
+          EntryGroupBottomSheet(eventId: widget.event.id),
         ],
       ),
     );
