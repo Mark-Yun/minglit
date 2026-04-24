@@ -120,6 +120,11 @@ BEGIN
     RETURN 'already_checked_in';
   END IF;
 
+  -- 4b. ticket_issued 상태만 체크인 허용 (no_show 등 비정상 상태 차단)
+  IF v_current_status != 'ticket_issued' THEN
+    RETURN 'not_found';
+  END IF;
+
   -- 5. 체크인 처리
   UPDATE public.event_participants
      SET status = 'checked_in',

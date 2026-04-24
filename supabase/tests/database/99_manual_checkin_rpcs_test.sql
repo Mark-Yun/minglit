@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(9);
+SELECT plan(10);
 
 -- ============================================================
 -- Setup: service role로 파트너/이벤트/티켓/참가자 데이터 구성
@@ -11,6 +11,7 @@ SELECT tests.create_supabase_user('mc_staff');
 SELECT tests.create_supabase_user('mc_no_perm');
 SELECT tests.create_supabase_user('mc_user_a');
 SELECT tests.create_supabase_user('mc_user_b');
+SELECT tests.create_supabase_user('mc_user_c');
 
 DO $$
 DECLARE
@@ -19,6 +20,7 @@ DECLARE
   v_event_id    uuid;
   v_ticket_id   uuid;
   v_ticket_b_id uuid;
+  v_ticket_c_id uuid;
 BEGIN
   INSERT INTO public.partners (name) VALUES ('Manual Checkin Test Partner')
   RETURNING id INTO v_partner_id;
@@ -44,13 +46,21 @@ BEGIN
   INSERT INTO public.event_participants (event_id, ticket_id, user_id, status, ticket_code, display_name)
   VALUES (v_event_id, v_ticket_id, tests.get_supabase_uid('mc_user_a'), 'ticket_issued', 'MC0001', 'User A');
 
+  INSERT INTO public.tickets (event_id, name, quantity, price)
+  VALUES (v_event_id, 'Ticket C', 10, 0) RETURNING id INTO v_ticket_c_id;
+
   -- mc_user_b: already checked_in
   INSERT INTO public.event_participants (event_id, ticket_id, user_id, status, ticket_code, display_name, checked_in_at)
   VALUES (v_event_id, v_ticket_b_id, tests.get_supabase_uid('mc_user_b'), 'checked_in', 'MC0002', 'User B', now());
 
+  -- mc_user_c: no_show (체크인 불가 상태)
+  INSERT INTO public.event_participants (event_id, ticket_id, user_id, status, ticket_code, display_name)
+  VALUES (v_event_id, v_ticket_c_id, tests.get_supabase_uid('mc_user_c'), 'no_show', 'MC0003', 'User C');
+
   PERFORM set_config('tests.mc_event_id',    v_event_id::text,    true);
   PERFORM set_config('tests.mc_ticket_id',   v_ticket_id::text,   true);
   PERFORM set_config('tests.mc_ticket_b_id', v_ticket_b_id::text, true);
+  PERFORM set_config('tests.mc_ticket_c_id', v_ticket_c_id::text, true);
 END $$;
 
 -- ============================================================
@@ -173,6 +183,19 @@ SELECT is(
      AND event_id  = current_setting('tests.mc_event_id')::uuid),
   'checked_in',
   'process_manual_checkin: 체크인 후 status = checked_in'
+);
+
+-- ============================================================
+-- Test 10: no_show 참가자 → not_found (ticket_issued 외 상태 차단)
+-- ============================================================
+
+SELECT is(
+  public.process_manual_checkin(
+    current_setting('tests.mc_ticket_c_id')::uuid,
+    current_setting('tests.mc_event_id')::uuid
+  ),
+  'not_found',
+  'process_manual_checkin: no_show 참가자 → not_found (상태 전이 차단)'
 );
 
 SELECT * FROM finish();
