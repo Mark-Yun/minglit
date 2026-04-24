@@ -4,6 +4,7 @@ import 'package:app_partner/src/features/checkin/checkin_controller.dart';
 import 'package:app_partner/src/features/checkin/stats/checkin_stats_controller.dart';
 import 'package:app_partner/src/features/checkin/widgets/checkin_scanner_overlay.dart';
 import 'package:app_partner/src/features/checkin/widgets/checkin_summary_card.dart';
+import 'package:app_partner/src/features/checkin/manual/manual_checkin_sheet.dart';
 import 'package:app_partner/src/features/checkin/widgets/entry_group_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -135,14 +136,12 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
   }
 
   void _showManualCheckinSheet(BuildContext context) {
-    // Phase 4: ManualCheckinSheet
+    // Fix #1812: Phase 4 — ManualCheckinSheet 실제 구현
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      builder: (_) => const SizedBox(
-        height: 200,
-        child: Center(child: Text('수동 체크인 — Phase 4에서 구현 예정')),
-      ),
+      useSafeArea: true,
+      builder: (_) => ManualCheckinSheet(eventId: widget.event.id),
     );
   }
 }
