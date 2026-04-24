@@ -2,6 +2,11 @@ import 'dart:async';
 
 import 'package:app_partner/src/features/checkin/checkin_placeholder_page.dart';
 import 'package:app_partner/src/features/checkin/qr_scanner_screen.dart';
+import 'package:app_partner/src/features/checkin/stats/checkin_stats_controller.dart'
+    show
+    CheckinStats,
+    CheckinStatsController,
+    checkinStatsControllerProvider;
 import 'package:app_partner/src/logic/current_partner_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -68,6 +73,15 @@ class _FakeMobileScannerPlatform extends MobileScannerPlatform {
     String path, {
     List<BarcodeFormat> formats = const <BarcodeFormat>[],
   }) async => null;
+}
+
+/// Fake CheckinStatsController that returns empty stats without network calls.
+// Fix #1817: pumpAndSettle 타임아웃 방지 — QRScannerScreen이 stats를 로드할 때
+// 실제 Supabase 연결을 시도하지 않도록 한다.
+class _FakeCheckinStatsController extends CheckinStatsController {
+  @override
+  Future<CheckinStats> build(String eventId) async =>
+      const CheckinStats(total: 0, checkedIn: 0);
 }
 
 void main() {
@@ -191,10 +205,19 @@ void main() {
             todayEventsProvider.overrideWith(
               (ref, partnerId) async => [testEvent],
             ),
+            // Fix #1817: checkinStatsControllerProvider를 모킹해
+            // pumpAndSettle이 네트워크 요청을 기다리지 않도록 한다.
+            checkinStatsControllerProvider.overrideWith(
+              _FakeCheckinStatsController.new,
+            ),
           ],
         ),
       );
-      await tester.pumpAndSettle();
+      // Fix #1817: MobileScanner 내부 비동기 초기화로 pumpAndSettle이 타임아웃됨.
+      // (smoke test 참고: #1009). provider가 완료될 시간을 주고 렌더링만 검증한다.
+      await tester.pump();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
 
       expect(find.byType(QRScannerScreen), findsOneWidget);
     });
