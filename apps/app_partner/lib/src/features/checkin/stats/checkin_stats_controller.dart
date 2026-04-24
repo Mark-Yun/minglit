@@ -54,11 +54,11 @@ class CheckinStatsController extends _$CheckinStatsController {
     SupabaseClient supabase,
     String eventId,
   ) async {
-    final data = await supabase.rpc<Map<String, dynamic>>(
+    final data = await supabase.rpc<dynamic>(
       'get_event_checkin_stats',
       params: {'p_event_id': eventId},
     );
-    return CheckinStats.fromJson(data);
+    return CheckinStats.fromJson(data as Map<String, dynamic>);
   }
 
   void _subscribeToRealtime(SupabaseClient supabase, String eventId) {
