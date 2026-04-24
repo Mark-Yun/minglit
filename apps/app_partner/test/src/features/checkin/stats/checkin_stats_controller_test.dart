@@ -44,10 +44,10 @@ void main() {
     required Map<String, dynamic> statsResponse,
   }) {
     when(
-      () => mockClient.rpc<Map<String, dynamic>>(
-        'get_event_checkin_stats',
-        params: any(named: 'params'),
-      ),
+      () => mockClient.rpc<dynamic>(
+            'get_event_checkin_stats',
+            params: any(named: 'params'),
+          ) as Future<dynamic>,
     ).thenAnswer((_) async => statsResponse);
 
     return ProviderContainer(
@@ -71,7 +71,7 @@ void main() {
       expect(asyncValue.total, 50);
       expect(asyncValue.checkedIn, 23);
       verify(
-        () => mockClient.rpc<Map<String, dynamic>>(
+        () => mockClient.rpc<dynamic>(
           'get_event_checkin_stats',
           params: {'p_event_id': 'event-1'},
         ),
