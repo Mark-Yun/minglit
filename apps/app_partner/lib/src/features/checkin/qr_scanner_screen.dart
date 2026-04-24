@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app_partner/src/features/checkin/checkin_controller.dart';
+import 'package:app_partner/src/features/checkin/stats/checkin_stats_controller.dart';
 import 'package:app_partner/src/features/checkin/widgets/checkin_scanner_overlay.dart';
 import 'package:app_partner/src/features/checkin/widgets/checkin_summary_card.dart';
 import 'package:flutter/material.dart';
@@ -10,7 +11,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 /// QR 스캐너 화면.
 ///
 /// - 전체 화면 카메라 뷰 + AppBar 투명화
-/// - 상단 요약 카드 (Phase 2에서 실시간 연동)
+/// - 상단 요약 카드 (CheckinStatsController 실시간 데이터 연동)
 /// - 반응형 cutout (220 또는 화면 짧은 축 48% 미만)
 /// - 플래시 / 수동 체크인 FAB
 /// - 스캔 결과 배너 (기존 전체 화면 오버레이 대체)
@@ -94,19 +95,34 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
             state: state,
           ),
 
-          // 3. Summary card — positioned below AppBar
-          //    Phase 2: replace checkedIn/total with checkinStatsControllerProvider
-          const SafeArea(
+          // 3. Summary card — CheckinStatsController 실시간 데이터 연동
+          // Fix #1810: Phase 2 — get_event_checkin_stats + Realtime 구독
+          SafeArea(
             bottom: false,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                SizedBox(height: kToolbarHeight),
-                CheckinSummaryCard(checkedIn: 0, total: 0),
+                const SizedBox(height: kToolbarHeight),
+                _buildSummaryCard(),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSummaryCard() {
+    final statsAsync = ref.watch(
+      checkinStatsControllerProvider(widget.event.id),
+    );
+
+    return statsAsync.when(
+      loading: () => const CheckinSummaryCard(checkedIn: 0, total: 0, isLoading: true),
+      error: (_, __) => const CheckinSummaryCard(checkedIn: 0, total: 0),
+      data: (stats) => CheckinSummaryCard(
+        checkedIn: stats.checkedIn,
+        total: stats.total,
       ),
     );
   }

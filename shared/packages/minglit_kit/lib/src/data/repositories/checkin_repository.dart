@@ -97,8 +97,17 @@ class CheckinRepository {
     // 3. Check expiration
     if (token.expiresAt.isBefore(DateTime.now())) return false;
 
-    // 4. Update DB (Simulated)
-    // TODO(Checkin): Call server-side check-in endpoint when ready.
+    // 4. Atomic DB check-in via process_qr_checkin RPC
+    // Fix #1810: Phase 2 — 서명 검증 통과 후 DB 체크인 처리
+    final result = await _supabase.rpc<String>('process_qr_checkin', params: {
+      'p_ticket_id': token.ticketId,
+      'p_event_id': token.eventId,
+      'p_user_id': token.userId,
+    });
+    if (result == 'already_checked_in') return false;
+    if (result != 'success') {
+      throw StateError('Check-in failed: $result');
+    }
     return true;
   }
 }
