@@ -29,6 +29,13 @@ class _FakeRpcBuilder<T> implements PostgrestFilterBuilder<T> {
 void main() {
   setUpAll(() {
     registerFallbackValue(PostgresChangeEvent.all);
+    registerFallbackValue(
+      PostgresChangeFilter(
+        type: PostgresChangeFilterType.eq,
+        column: 'event_id',
+        value: 'fallback',
+      ),
+    );
   });
 
   late _MockSupabaseClient mockClient;

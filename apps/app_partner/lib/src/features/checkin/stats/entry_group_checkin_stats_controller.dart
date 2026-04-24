@@ -82,7 +82,15 @@ class EntryGroupCheckinStatsController
             column: 'event_id',
             value: eventId,
           ),
-          callback: (_) => ref.invalidateSelf(),
+          // Fix #1817: invalidateSelf() 대신 직접 fetch → 채널 teardown/rebuild 방지
+          callback: (_) async {
+            try {
+              final newGroups = await _fetchGroupStats(supabase, eventId);
+              state = AsyncData(newGroups);
+            } on Object catch (e, st) {
+              Log.e('Realtime 엔트리 그룹 통계 갱신 실패', e, st);
+            }
+          },
         )
         .subscribe();
   }

@@ -48,7 +48,7 @@ BEGIN
   INSERT INTO public.tickets (event_id, name, quantity, price, target_entry_group_ids)
   VALUES (v_event_id, 'Ticket B', 10, 0, ARRAY[v_group_b_id]) RETURNING id INTO v_ticket_b_id;
 
-  -- Group A: 2명 ticket_issued, 1명 checked_in → total=3, checked_in=1
+  -- Group A: 1명 ticket_issued, 1명 checked_in → total=2, checked_in=1
   INSERT INTO public.event_participants (event_id, ticket_id, user_id, status, ticket_code, display_name)
   VALUES
     (v_event_id, v_ticket_a_id, tests.get_supabase_uid('grp_user_a'), 'ticket_issued', 'GA0001', 'User A'),

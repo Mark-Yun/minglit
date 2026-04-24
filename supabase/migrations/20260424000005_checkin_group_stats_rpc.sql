@@ -36,10 +36,12 @@ BEGIN
   END IF;
 
   -- 3. 엔트리 그룹별 체크인 집계
+  --    CTE 내부 ORDER BY는 outer jsonb_agg 순서를 보장하지 않으므로 집계 함수 안에 ORDER BY 추가.
   WITH group_stats AS (
     SELECT
       eg.id,
       eg.label,
+      eg.created_at,
       COUNT(DISTINCT ep.id) AS total,
       COUNT(DISTINCT ep.id) FILTER (WHERE ep.status = 'checked_in') AS checked_in
     FROM entry_groups eg
@@ -51,7 +53,6 @@ BEGIN
       AND ep.event_id = p_event_id
     WHERE eg.event_id = p_event_id
     GROUP BY eg.id, eg.label, eg.created_at
-    ORDER BY eg.created_at
   )
   SELECT COALESCE(
     jsonb_agg(
@@ -61,6 +62,7 @@ BEGIN
         'total',      total,
         'checked_in', checked_in
       )
+      ORDER BY created_at
     ),
     '[]'::jsonb
   )
