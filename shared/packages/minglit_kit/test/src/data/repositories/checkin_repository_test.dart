@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/src/data/repositories/checkin_repository.dart';
 import 'package:minglit_kit/src/utils/ticket_crypto.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../helpers/mocks.dart';
 
