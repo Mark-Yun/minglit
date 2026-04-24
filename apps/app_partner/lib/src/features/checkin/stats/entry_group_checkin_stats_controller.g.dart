@@ -14,8 +14,11 @@ const entryGroupCheckinStatsControllerProvider =
     EntryGroupCheckinStatsControllerFamily._();
 
 final class EntryGroupCheckinStatsControllerProvider
-    extends $AsyncNotifierProvider<EntryGroupCheckinStatsController,
-        List<EntryGroupCheckinStats>> {
+    extends
+        $AsyncNotifierProvider<
+          EntryGroupCheckinStatsController,
+          List<EntryGroupCheckinStats>
+        > {
   const EntryGroupCheckinStatsControllerProvider._({
     required EntryGroupCheckinStatsControllerFamily super.from,
     required String super.argument,
@@ -28,8 +31,7 @@ final class EntryGroupCheckinStatsControllerProvider
        );
 
   @override
-  String debugGetCreateSourceHash() =>
-      _$entryGroupCheckinStatsControllerHash();
+  String debugGetCreateSourceHash() => _$entryGroupCheckinStatsControllerHash();
 
   @override
   String toString() {
@@ -96,13 +98,19 @@ abstract class _$EntryGroupCheckinStatsController
   @override
   void runBuild() {
     final created = build(_$args);
-    final ref = this.ref as $Ref<AsyncValue<List<EntryGroupCheckinStats>>,
-        List<EntryGroupCheckinStats>>;
+    final ref =
+        this.ref
+            as $Ref<
+              AsyncValue<List<EntryGroupCheckinStats>>,
+              List<EntryGroupCheckinStats>
+            >;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<AsyncValue<List<EntryGroupCheckinStats>>,
-                  List<EntryGroupCheckinStats>>,
+              AnyNotifier<
+                AsyncValue<List<EntryGroupCheckinStats>>,
+                List<EntryGroupCheckinStats>
+              >,
               AsyncValue<List<EntryGroupCheckinStats>>,
               Object?,
               Object?
