@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app_partner/src/features/checkin/stats/entry_group_checkin_stats_controller.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -8,6 +10,22 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class _MockSupabaseClient extends Mock implements SupabaseClient {}
 
 class _MockRealtimeChannel extends Mock implements RealtimeChannel {}
+
+/// Fix #1817: rpc()는 PostgrestFilterBuilder<T>를 반환하므로 Future로 직접 stub 불가.
+class _FakeRpcBuilder<T> implements PostgrestFilterBuilder<T> {
+  _FakeRpcBuilder(this._data);
+  final T _data;
+
+  @override
+  Future<U> then<U>(
+    FutureOr<U> Function(T) onValue, {
+    Function? onError,
+  }) =>
+      Future<T>.value(_data).then(onValue, onError: onError);
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => this;
+}
 
 void main() {
   setUpAll(() {
@@ -39,13 +57,11 @@ void main() {
 
   void stubRpc(List<dynamic> response) {
     when(
-      () =>
-          mockClient.rpc<dynamic>(
-                'get_event_checkin_stats_by_group',
-                params: any(named: 'params'),
-              )
-              as Future<dynamic>,
-    ).thenAnswer((_) async => response);
+      () => mockClient.rpc<dynamic>(
+        'get_event_checkin_stats_by_group',
+        params: any(named: 'params'),
+      ),
+    ).thenAnswer((_) => _FakeRpcBuilder(response));
   }
 
   ProviderContainer makeContainer({required List<dynamic> groupsResponse}) {
