@@ -5,6 +5,7 @@ import 'package:minglit_kit/src/utils/ticket_crypto.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../helpers/mocks.dart';
+import '../../../helpers/supabase_mock_helpers.dart';
 
 void main() {
   late CheckinRepository repository;
@@ -137,7 +138,7 @@ void main() {
                 'p_user_id': token.userId,
               },
             ),
-          ).thenAnswer((_) async => 'success');
+          ).thenAnswer((_) => FakeRpcBuilder('success'));
 
           final result = await repository.verifyAndCheckin(
             token: token,
@@ -171,7 +172,7 @@ void main() {
             'process_qr_checkin',
             params: any(named: 'params'),
           ),
-        ).thenAnswer((_) async => 'already_checked_in');
+        ).thenAnswer((_) => FakeRpcBuilder('already_checked_in'));
 
         final result = await repository.verifyAndCheckin(
           token: token,
@@ -194,7 +195,7 @@ void main() {
             'process_qr_checkin',
             params: any(named: 'params'),
           ),
-        ).thenAnswer((_) async => 'not_found');
+        ).thenAnswer((_) => FakeRpcBuilder('not_found'));
 
         await expectLater(
           () => repository.verifyAndCheckin(
