@@ -73,20 +73,32 @@ class CheckinStatsController extends _$CheckinStatsController {
             column: 'event_id',
             value: eventId,
           ),
-          callback: (_) => ref.invalidateSelf(),
+          // Fix #1817: invalidateSelf() 대신 직접 fetch → 채널 teardown/rebuild 방지
+          callback: (_) async {
+            final newStats = await _fetchStats(supabase, eventId);
+            state = AsyncData(newStats);
+          },
         )
         .subscribe((status, [error]) {
-          if (status == RealtimeSubscribeStatus.closed) {
-            _startPollingFallback(eventId);
+          // Fix #1817: subscribed 상태 복귀 시 폴링 취소
+          if (status == RealtimeSubscribeStatus.subscribed) {
+            _pollingTimer?.cancel();
+            _pollingTimer = null;
+          } else if (status == RealtimeSubscribeStatus.closed) {
+            _startPollingFallback(supabase, eventId);
           }
         });
   }
 
-  void _startPollingFallback(String eventId) {
+  void _startPollingFallback(SupabaseClient supabase, String eventId) {
     _pollingTimer?.cancel();
     _pollingTimer = Timer.periodic(
       const Duration(seconds: 30),
-      (_) => ref.invalidateSelf(),
+      // Fix #1817: invalidateSelf() 대신 직접 fetch → 채널 teardown/rebuild 방지
+      (_) async {
+        final newStats = await _fetchStats(supabase, eventId);
+        state = AsyncData(newStats);
+      },
     );
   }
 }
