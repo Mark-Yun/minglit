@@ -219,7 +219,11 @@ class MorePage extends ConsumerWidget {
             ),
           ],
 
-          const SizedBox(height: MinglitSpacing.xxlarge),
+          // Fix #1803: SafeArea prevents last item overlap with gesture nav bar
+          const SafeArea(
+            top: false,
+            child: SizedBox(height: MinglitSpacing.xxlarge),
+          ),
         ],
       ),
     );
