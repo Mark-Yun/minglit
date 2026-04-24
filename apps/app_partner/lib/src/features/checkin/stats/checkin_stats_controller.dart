@@ -75,8 +75,12 @@ class CheckinStatsController extends _$CheckinStatsController {
           ),
           // Fix #1817: invalidateSelf() 대신 직접 fetch → 채널 teardown/rebuild 방지
           callback: (_) async {
-            final newStats = await _fetchStats(supabase, eventId);
-            state = AsyncData(newStats);
+            try {
+              final newStats = await _fetchStats(supabase, eventId);
+              state = AsyncData(newStats);
+            } on Object catch (e, st) {
+              Log.e('Realtime 체크인 통계 갱신 실패', e, st);
+            }
           },
         )
         .subscribe((status, [error]) {
@@ -96,8 +100,12 @@ class CheckinStatsController extends _$CheckinStatsController {
       const Duration(seconds: 30),
       // Fix #1817: invalidateSelf() 대신 직접 fetch → 채널 teardown/rebuild 방지
       (_) async {
-        final newStats = await _fetchStats(supabase, eventId);
-        state = AsyncData(newStats);
+        try {
+          final newStats = await _fetchStats(supabase, eventId);
+          state = AsyncData(newStats);
+        } on Object catch (e, st) {
+          Log.e('폴링 체크인 통계 갱신 실패', e, st);
+        }
       },
     );
   }
