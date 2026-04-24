@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:app_partner/src/features/checkin/stats/checkin_stats_controller.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -42,7 +40,7 @@ void main() {
     when(() => mockChannel.unsubscribe()).thenAnswer((_) async => 'ok');
   });
 
-  ProviderContainer _makeContainer({
+  ProviderContainer makeContainer({
     required Map<String, dynamic> statsResponse,
   }) {
     when(
@@ -61,7 +59,7 @@ void main() {
 
   group('CheckinStatsController', () {
     test('초기 stats RPC 호출 후 데이터 반환', () async {
-      final container = _makeContainer(
+      final container = makeContainer(
         statsResponse: {'total': 50, 'checked_in': 23},
       );
       addTearDown(container.dispose);
@@ -81,7 +79,7 @@ void main() {
     });
 
     test('total=0 이벤트 — 0/0 반환', () async {
-      final container = _makeContainer(
+      final container = makeContainer(
         statsResponse: {'total': 0, 'checked_in': 0},
       );
       addTearDown(container.dispose);
@@ -95,7 +93,7 @@ void main() {
     });
 
     test('Realtime 구독 시 event_participants 채널 생성', () async {
-      final container = _makeContainer(
+      final container = makeContainer(
         statsResponse: {'total': 10, 'checked_in': 5},
       );
       addTearDown(container.dispose);
@@ -117,7 +115,7 @@ void main() {
     });
 
     test('dispose 시 채널 unsubscribe', () async {
-      final container = _makeContainer(
+      final container = makeContainer(
         statsResponse: {'total': 5, 'checked_in': 2},
       );
 

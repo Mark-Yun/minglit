@@ -118,8 +118,9 @@ class _QRScannerScreenState extends ConsumerState<QRScannerScreen> {
     );
 
     return statsAsync.when(
-      loading: () => const CheckinSummaryCard(checkedIn: 0, total: 0, isLoading: true),
-      error: (_, __) => const CheckinSummaryCard(checkedIn: 0, total: 0),
+      loading: () =>
+          const CheckinSummaryCard(checkedIn: 0, total: 0, isLoading: true),
+      error: (_, _) => const CheckinSummaryCard(checkedIn: 0, total: 0),
       data: (stats) => CheckinSummaryCard(
         checkedIn: stats.checkedIn,
         total: stats.total,

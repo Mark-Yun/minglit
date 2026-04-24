@@ -10,15 +10,15 @@ part 'checkin_stats_controller.g.dart';
 class CheckinStats {
   const CheckinStats({required this.total, required this.checkedIn});
 
-  final int total;
-  final int checkedIn;
-
   factory CheckinStats.fromJson(Map<String, dynamic> json) {
     return CheckinStats(
       total: (json['total'] as num?)?.toInt() ?? 0,
       checkedIn: (json['checked_in'] as num?)?.toInt() ?? 0,
     );
   }
+
+  final int total;
+  final int checkedIn;
 
   static const empty = CheckinStats(total: 0, checkedIn: 0);
 }
@@ -50,7 +50,10 @@ class CheckinStatsController extends _$CheckinStatsController {
     return stats;
   }
 
-  Future<CheckinStats> _fetchStats(SupabaseClient supabase, String eventId) async {
+  Future<CheckinStats> _fetchStats(
+    SupabaseClient supabase,
+    String eventId,
+  ) async {
     final data = await supabase.rpc<Map<String, dynamic>>(
       'get_event_checkin_stats',
       params: {'p_event_id': eventId},
