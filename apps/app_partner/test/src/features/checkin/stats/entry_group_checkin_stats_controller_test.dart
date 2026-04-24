@@ -20,8 +20,7 @@ class _FakeRpcBuilder<T> implements PostgrestFilterBuilder<T> {
   Future<U> then<U>(
     FutureOr<U> Function(T) onValue, {
     Function? onError,
-  }) =>
-      Future<T>.value(_data).then(onValue, onError: onError);
+  }) => Future<T>.value(_data).then(onValue, onError: onError);
 
   @override
   dynamic noSuchMethod(Invocation invocation) => this;
