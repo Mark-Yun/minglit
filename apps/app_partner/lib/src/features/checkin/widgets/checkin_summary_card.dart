@@ -50,8 +50,7 @@ class CheckinSummaryCard extends StatelessWidget {
         padding: const EdgeInsets.all(MinglitSpacing.medium),
         decoration: BoxDecoration(
           color: isOffline
-              // ignore: deprecated_member_use
-              ? MinglitColors.warning.withOpacity(0.08)
+              ? MinglitColors.warning.withValues(alpha: 0.08)
               : scheme.surface,
           border: Border.all(
             color: isOffline ? MinglitColors.warning : scheme.outlineVariant,
@@ -215,8 +214,7 @@ class _OfflineBadge extends StatelessWidget {
         vertical: 2,
       ),
       decoration: BoxDecoration(
-        // ignore: deprecated_member_use
-        color: MinglitColors.warning.withOpacity(0.15),
+        color: MinglitColors.warning.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(MinglitRadius.button),
       ),
       child: Text(
