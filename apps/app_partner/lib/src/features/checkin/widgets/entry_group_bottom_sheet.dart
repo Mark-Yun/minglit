@@ -21,13 +21,12 @@ class EntryGroupBottomSheet extends ConsumerWidget {
     );
 
     return groupsAsync.when(
-      loading: () => const _CollapsedShell(subtitle: '불러오는 중...', groups: []),
+      loading: () => const _CollapsedShell(subtitle: '불러오는 중...'),
       error: (e, _) => _CollapsedShell(
         subtitle: '불러오기 실패 · 다시 시도',
         onTap: () => ref.invalidate(
           entryGroupCheckinStatsControllerProvider(eventId),
         ),
-        groups: const [],
       ),
       data: (groups) {
         if (groups.isEmpty) return const SizedBox.shrink();
@@ -188,12 +187,10 @@ class _SheetContent extends StatelessWidget {
 class _CollapsedShell extends StatelessWidget {
   const _CollapsedShell({
     required this.subtitle,
-    required this.groups,
     this.onTap,
   });
 
   final String subtitle;
-  final List<EntryGroupCheckinStats> groups;
   final VoidCallback? onTap;
 
   @override
