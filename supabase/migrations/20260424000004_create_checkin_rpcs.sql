@@ -70,7 +70,9 @@ BEGIN
 END;
 $$;
 
--- authenticated 유저가 호출 가능 (실제 권한은 함수 내부에서 has_partner_permission으로 검사)
+-- Fix #1817: anon이 호출하면 내부 permission check 응답 차이로 이벤트 존재 여부가
+-- side-channel로 노출된다. PUBLIC 권한을 먼저 제거 후 authenticated만 허용한다.
+REVOKE EXECUTE ON FUNCTION public.process_qr_checkin(uuid, uuid, uuid) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.process_qr_checkin(uuid, uuid, uuid) TO authenticated;
 
 -- ============================================================

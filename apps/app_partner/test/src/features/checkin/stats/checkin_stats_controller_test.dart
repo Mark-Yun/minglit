@@ -1,26 +1,63 @@
+import 'dart:async';
+
 import 'package:app_partner/src/features/checkin/stats/checkin_stats_controller.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/src/logic/providers/supabase_provider.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:postgrest/postgrest.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+// ---------------------------------------------------------------------------
+// Fakes & Mocks
+// ---------------------------------------------------------------------------
 
 class _MockSupabaseClient extends Mock implements SupabaseClient {}
 
 class _MockRealtimeChannel extends Mock implements RealtimeChannel {}
 
+/// Minimal [PostgrestFilterBuilder] fake for RPC stubs.
+/// Does not extend [Fake] to avoid polluting mocktail's internal state.
+class _FakeRpcBuilder<T> implements PostgrestFilterBuilder<T> {
+  _FakeRpcBuilder(this._data);
+  final T _data;
+
+  @override
+  Future<U> then<U>(
+    FutureOr<U> Function(T) onValue, {
+    Function? onError,
+  }) =>
+      Future<T>.value(_data).then(onValue, onError: onError);
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => this;
+}
+
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
+
 void main() {
   late _MockSupabaseClient mockClient;
   late _MockRealtimeChannel mockChannel;
+
+  setUpAll(() {
+    registerFallbackValue(PostgresChangeEvent.all);
+    registerFallbackValue(
+      PostgresChangeFilter(
+        type: PostgresChangeFilterType.eq,
+        column: 'event_id',
+        value: 'fallback',
+      ),
+    );
+  });
 
   setUp(() {
     mockClient = _MockSupabaseClient();
     mockChannel = _MockRealtimeChannel();
 
-    // channel() 호출 시 mock 채널 반환
     when(() => mockClient.channel(any())).thenReturn(mockChannel);
 
-    // Realtime chain stub — subscribe callback으로 즉시 subscribed 반환
     when(
       () => mockChannel.onPostgresChanges(
         event: any(named: 'event'),
@@ -31,11 +68,7 @@ void main() {
       ),
     ).thenReturn(mockChannel);
 
-    when(
-      () => mockChannel.subscribe(
-        any(),
-      ),
-    ).thenReturn(mockChannel);
+    when(() => mockChannel.subscribe(any())).thenReturn(mockChannel);
 
     when(() => mockChannel.unsubscribe()).thenAnswer((_) async => 'ok');
   });
@@ -44,18 +77,14 @@ void main() {
     required Map<String, dynamic> statsResponse,
   }) {
     when(
-      () =>
-          mockClient.rpc<dynamic>(
-                'get_event_checkin_stats',
-                params: any(named: 'params'),
-              )
-              as Future<dynamic>,
-    ).thenAnswer((_) async => statsResponse);
+      () => mockClient.rpc<dynamic>(
+        'get_event_checkin_stats',
+        params: any(named: 'params'),
+      ),
+    ).thenAnswer((_) => _FakeRpcBuilder(statsResponse));
 
     return ProviderContainer(
-      overrides: [
-        supabaseClientProvider.overrideWithValue(mockClient),
-      ],
+      overrides: [supabaseClientProvider.overrideWithValue(mockClient)],
     );
   }
 
