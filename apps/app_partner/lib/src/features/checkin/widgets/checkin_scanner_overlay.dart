@@ -179,7 +179,7 @@ class _CheckinScannerOverlayState extends State<CheckinScannerOverlay>
                   position: _bannerSlide,
                   child: SafeArea(
                     bottom: false,
-                    child: _ScanResultBanner(state: widget.state),
+                    child: CheckinResultBanner(state: widget.state),
                   ),
                 ),
               ),
@@ -239,58 +239,68 @@ class _ScanFab extends StatelessWidget {
   }
 }
 
-class _ScanResultBanner extends StatelessWidget {
-  const _ScanResultBanner({required this.state});
+/// 스캔 결과 배너 위젯.
+///
+/// VoiceOver/TalkBack liveRegion으로 마크업되어 결과 변경 시 자동으로 읽힌다.
+// Fix #1813: A11y — public 추출로 골든 테스트 가능하게 하고 liveRegion Semantics 추가
+class CheckinResultBanner extends StatelessWidget {
+  const CheckinResultBanner({required this.state, super.key});
   final CheckinState state;
 
   @override
   Widget build(BuildContext context) {
     final (color, icon, title, subtitle) = _bannerContent(state);
+    final semanticLabel = subtitle.isNotEmpty ? '$title. $subtitle' : title;
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: MinglitSpacing.screenEdge),
-      padding: const EdgeInsets.symmetric(
-        horizontal: MinglitSpacing.medium,
-        vertical: MinglitSpacing.sm,
-      ),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(MinglitRadius.card),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.white, size: 24),
-          const SizedBox(width: MinglitSpacing.sm),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                if (subtitle.isNotEmpty)
+    return Semantics(
+      liveRegion: true,
+      label: semanticLabel.isEmpty ? null : semanticLabel,
+      child: Container(
+        margin:
+            const EdgeInsets.symmetric(horizontal: MinglitSpacing.screenEdge),
+        padding: const EdgeInsets.symmetric(
+          horizontal: MinglitSpacing.medium,
+          vertical: MinglitSpacing.sm,
+        ),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(MinglitRadius.card),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.2),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: Colors.white, size: 24),
+            const SizedBox(width: MinglitSpacing.sm),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
                   Text(
-                    subtitle,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    title,
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       color: Colors.white,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
-              ],
+                  if (subtitle.isNotEmpty)
+                    Text(
+                      subtitle,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.white,
+                      ),
+                    ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
