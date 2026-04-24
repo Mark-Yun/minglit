@@ -44,10 +44,12 @@ void main() {
     required Map<String, dynamic> statsResponse,
   }) {
     when(
-      () => mockClient.rpc<dynamic>(
-            'get_event_checkin_stats',
-            params: any(named: 'params'),
-          ) as Future<dynamic>,
+      () =>
+          mockClient.rpc<dynamic>(
+                'get_event_checkin_stats',
+                params: any(named: 'params'),
+              )
+              as Future<dynamic>,
     ).thenAnswer((_) async => statsResponse);
 
     return ProviderContainer(
