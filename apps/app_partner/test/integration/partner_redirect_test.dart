@@ -6,6 +6,7 @@ import 'package:app_partner/src/features/onboarding/partner_apply_page.dart';
 import 'package:app_partner/src/features/onboarding/partner_apply_status_page.dart';
 import 'package:app_partner/src/features/onboarding/partner_welcome_page.dart';
 import 'package:app_partner/src/l10n/generated/app_localizations.dart';
+import 'package:minglit_kit/minglit_dev.dart';
 import 'package:app_partner/src/logic/onboarding_state_provider.dart';
 import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
@@ -42,7 +43,9 @@ Widget _createPartnerTestApp({
       final isApplyPage = path.startsWith('/apply');
       final isWelcomePage = path == '/welcome';
 
-      // Allow dev pages without authentication
+      // Allow dev pages without authentication.
+      // Fix #1825: /dev 단독 경로는 /dev/user-switch로 리디렉트.
+      if (path == '/dev') return '/dev/user-switch';
       if (path.startsWith('/dev')) return null;
 
       // 1. Not logged in and not on login page → /login
@@ -333,6 +336,19 @@ void main() {
 
       // Should NOT redirect to login
       expect(find.byType(PartnerLoginPage), findsNothing);
+    });
+
+    // Test 9-b: Fix #1825 — /dev (no trailing path) → redirected to /dev/user-switch
+    testWidgets('비로그인: /dev 접근 시 /dev/user-switch로 리디렉트', (tester) async {
+      await tester.pumpWidget(
+        _createPartnerTestApp(initialLocation: '/dev'),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      // Should land on DevUserSwitchScreen, not PartnerLoginPage
+      expect(find.byType(PartnerLoginPage), findsNothing);
+      expect(find.byType(DevUserSwitchScreen), findsOneWidget);
     });
 
     // Test 10: hasPartner → home accessible without redirect

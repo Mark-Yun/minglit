@@ -48,7 +48,9 @@ GoRouter goRouter(Ref ref) {
       final isApplyPage = state.uri.path.startsWith('/apply');
       final isWelcomePage = state.uri.path == '/welcome';
 
-      // Allow dev pages without authentication
+      // Allow dev pages without authentication.
+      // Fix #1825: /dev 단독 경로는 /dev/user-switch로 리디렉트.
+      if (state.uri.path == '/dev') return '/dev/user-switch';
       if (state.uri.path.startsWith('/dev')) return null;
 
       // 1. If not logged in and not on login page -> Redirect to Login
