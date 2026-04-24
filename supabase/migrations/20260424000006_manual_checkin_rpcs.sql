@@ -40,6 +40,7 @@ BEGIN
   END IF;
 
   -- 3. 참가자 목록 조회 (미체크인 → 완료 순, 이름 오름차순)
+  --    ticket_issued / checked_in 상태만 포함. no_show 등 비정상 상태는 UI에서 dead-end를 유발하므로 제외.
   SELECT COALESCE(
     jsonb_agg(
       jsonb_build_object(
@@ -59,7 +60,8 @@ BEGIN
     INTO v_result
     FROM public.event_participants ep
     JOIN public.user_profiles up ON up.id = ep.user_id
-   WHERE ep.event_id = p_event_id;
+   WHERE ep.event_id = p_event_id
+     AND ep.status IN ('ticket_issued', 'checked_in');
 
   RETURN v_result;
 END;
@@ -84,17 +86,23 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 DECLARE
-  v_partner_id    uuid;
+  v_partner_id     uuid;
+  v_event_status   text;
   v_current_status text;
 BEGIN
-  -- 1. 이벤트 → 파트너 조회
-  SELECT pa.partner_id
-    INTO v_partner_id
+  -- 1. 이벤트 → 파트너 조회 (이벤트 상태도 함께)
+  SELECT pa.partner_id, e.status
+    INTO v_partner_id, v_event_status
     FROM public.events e
     JOIN public.parties pa ON pa.id = e.party_id
    WHERE e.id = p_event_id;
 
   IF v_partner_id IS NULL THEN
+    RETURN 'not_found';
+  END IF;
+
+  -- 1b. 이벤트 상태 게이트 — cancelled/completed 이벤트는 체크인 불가
+  IF v_event_status IN ('cancelled', 'completed') THEN
     RETURN 'not_found';
   END IF;
 

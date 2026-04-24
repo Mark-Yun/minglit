@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(10);
+SELECT plan(11);
 
 -- ============================================================
 -- Setup: service role로 파트너/이벤트/티켓/참가자 데이터 구성
@@ -15,12 +15,14 @@ SELECT tests.create_supabase_user('mc_user_c');
 
 DO $$
 DECLARE
-  v_partner_id  uuid;
-  v_party_id    uuid;
-  v_event_id    uuid;
-  v_ticket_id   uuid;
-  v_ticket_b_id uuid;
-  v_ticket_c_id uuid;
+  v_partner_id       uuid;
+  v_party_id         uuid;
+  v_event_id         uuid;
+  v_ticket_id        uuid;
+  v_ticket_b_id      uuid;
+  v_ticket_c_id      uuid;
+  v_cancelled_evt_id uuid;
+  v_ticket_d_id      uuid;
 BEGIN
   INSERT INTO public.partners (name) VALUES ('Manual Checkin Test Partner')
   RETURNING id INTO v_partner_id;
@@ -57,10 +59,23 @@ BEGIN
   INSERT INTO public.event_participants (event_id, ticket_id, user_id, status, ticket_code, display_name)
   VALUES (v_event_id, v_ticket_c_id, tests.get_supabase_uid('mc_user_c'), 'no_show', 'MC0003', 'User C');
 
-  PERFORM set_config('tests.mc_event_id',    v_event_id::text,    true);
-  PERFORM set_config('tests.mc_ticket_id',   v_ticket_id::text,   true);
-  PERFORM set_config('tests.mc_ticket_b_id', v_ticket_b_id::text, true);
-  PERFORM set_config('tests.mc_ticket_c_id', v_ticket_c_id::text, true);
+  -- cancelled 이벤트 (이벤트 상태 게이트 테스트용)
+  INSERT INTO public.events (party_id, start_time, end_time, min_confirmed_count, max_participants, status)
+  VALUES (v_party_id, now() - interval '3 hours', now() - interval '1 hour', 0, 20, 'cancelled')
+  RETURNING id INTO v_cancelled_evt_id;
+
+  INSERT INTO public.tickets (event_id, name, quantity, price)
+  VALUES (v_cancelled_evt_id, 'Ticket D', 10, 0) RETURNING id INTO v_ticket_d_id;
+
+  INSERT INTO public.event_participants (event_id, ticket_id, user_id, status, ticket_code, display_name)
+  VALUES (v_cancelled_evt_id, v_ticket_d_id, tests.get_supabase_uid('mc_user_a'), 'ticket_issued', 'MC0004', 'User A Cancelled');
+
+  PERFORM set_config('tests.mc_event_id',         v_event_id::text,         true);
+  PERFORM set_config('tests.mc_ticket_id',         v_ticket_id::text,        true);
+  PERFORM set_config('tests.mc_ticket_b_id',       v_ticket_b_id::text,      true);
+  PERFORM set_config('tests.mc_ticket_c_id',       v_ticket_c_id::text,      true);
+  PERFORM set_config('tests.mc_cancelled_evt_id',  v_cancelled_evt_id::text, true);
+  PERFORM set_config('tests.mc_ticket_d_id',       v_ticket_d_id::text,      true);
 END $$;
 
 -- ============================================================
@@ -91,7 +106,7 @@ SELECT throws_like(
 );
 
 -- ============================================================
--- Test 3: 정상 조회 — 참가자 수 일치
+-- Test 3: 정상 조회 — ticket_issued + checked_in만 반환 (no_show 제외)
 -- ============================================================
 
 SELECT is(
@@ -101,7 +116,7 @@ SELECT is(
     )
   )),
   2,
-  'get_event_participants_for_checkin: 참가자 2명 반환'
+  'get_event_participants_for_checkin: 참가자 2명 반환 (no_show 제외)'
 );
 
 -- ============================================================
@@ -196,6 +211,19 @@ SELECT is(
   ),
   'not_found',
   'process_manual_checkin: no_show 참가자 → not_found (상태 전이 차단)'
+);
+
+-- ============================================================
+-- Test 11: cancelled 이벤트 → not_found (이벤트 상태 게이트)
+-- ============================================================
+
+SELECT is(
+  public.process_manual_checkin(
+    current_setting('tests.mc_ticket_d_id')::uuid,
+    current_setting('tests.mc_cancelled_evt_id')::uuid
+  ),
+  'not_found',
+  'process_manual_checkin: cancelled 이벤트 → not_found (이벤트 상태 게이트)'
 );
 
 SELECT * FROM finish();
