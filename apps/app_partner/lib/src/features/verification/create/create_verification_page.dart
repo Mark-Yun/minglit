@@ -103,9 +103,15 @@ class _CreateVerificationPageState
         const SizedBox(height: MinglitSpacing.medium),
         TextFormField(
           controller: _displayNameController,
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             labelText: '인증 이름 (유저에게 표시)',
             hintText: '예: 골프 핸디캡 인증',
+            // Fix #1801: hint contrast — onSurfaceVariant at 60% opacity
+            hintStyle: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant.withValues(
+                alpha: MinglitOpacity.separator,
+              ),
+            ),
           ),
           onChanged: controller.updateDisplayName,
           validator: (value) =>
@@ -114,9 +120,15 @@ class _CreateVerificationPageState
         const SizedBox(height: MinglitSpacing.medium),
         TextFormField(
           controller: _internalNameController,
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             labelText: '관리용 이름 (내부 식별용)',
             hintText: '예: Golf Handicap 2024',
+            // Fix #1801: hint contrast — onSurfaceVariant at 60% opacity
+            hintStyle: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant.withValues(
+                alpha: MinglitOpacity.separator,
+              ),
+            ),
           ),
           onChanged: controller.updateInternalName,
           validator: (value) =>
@@ -125,9 +137,15 @@ class _CreateVerificationPageState
         const SizedBox(height: MinglitSpacing.medium),
         TextFormField(
           controller: _descriptionController,
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             labelText: '설명',
             hintText: '유저가 인증할 때 참고할 설명을 적어주세요.',
+            // Fix #1801: hint contrast — onSurfaceVariant at 60% opacity
+            hintStyle: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant.withValues(
+                alpha: MinglitOpacity.separator,
+              ),
+            ),
           ),
           onChanged: controller.updateDescription,
           maxLines: 2,
@@ -302,11 +320,18 @@ class _FieldEditorCardState extends State<_FieldEditorCard> {
                   icon: Icon(Icons.delete, color: colorScheme.onSurfaceVariant),
                   onPressed: widget.onDelete,
                 ),
+                // Fix #1801: 44x44 touch target for drag handle
                 ReorderableDragStartListener(
                   index: widget.index,
-                  child: Icon(
-                    Icons.drag_handle,
-                    color: colorScheme.onSurfaceVariant,
+                  child: SizedBox(
+                    width: 44,
+                    height: 44,
+                    child: Center(
+                      child: Icon(
+                        Icons.drag_handle,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
                   ),
                 ),
               ],
