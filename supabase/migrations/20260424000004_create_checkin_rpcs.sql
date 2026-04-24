@@ -82,17 +82,43 @@ CREATE OR REPLACE FUNCTION public.get_event_checkin_stats(
   p_event_id uuid
 )
 RETURNS jsonb
-LANGUAGE sql
+LANGUAGE plpgsql
 STABLE
 SECURITY DEFINER
 SET search_path = public
 AS $$
+DECLARE
+  v_partner_id uuid;
+  v_result     jsonb;
+BEGIN
+  -- 1. 이벤트의 파트너 ID 조회 (권한 확인용)
+  SELECT pa.partner_id
+    INTO v_partner_id
+    FROM public.events e
+    JOIN public.parties pa ON pa.id = e.party_id
+   WHERE e.id = p_event_id;
+
+  IF v_partner_id IS NULL THEN
+    RAISE EXCEPTION 'event not found';
+  END IF;
+
+  -- 2. 호출자가 해당 파트너의 PARTY_MANAGE 권한 보유 여부 확인
+  IF NOT public.has_partner_permission(v_partner_id, 'PARTY_MANAGE') THEN
+    RAISE EXCEPTION 'permission denied: PARTY_MANAGE required';
+  END IF;
+
+  -- 3. 체크인 현황 집계
   SELECT jsonb_build_object(
     'total',      COUNT(*),
     'checked_in', COUNT(*) FILTER (WHERE status = 'checked_in')
   )
-  FROM public.event_participants
-  WHERE event_id = p_event_id;
+    INTO v_result
+    FROM public.event_participants
+   WHERE event_id = p_event_id;
+
+  RETURN v_result;
+END;
 $$;
 
+REVOKE EXECUTE ON FUNCTION public.get_event_checkin_stats(uuid) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.get_event_checkin_stats(uuid) TO authenticated;

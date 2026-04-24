@@ -5,7 +5,7 @@ import 'package:minglit_kit/src/utils/ticket_crypto.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../../../helpers/mocks.dart';
+import '../../../helpers/mocks.dart';
 
 void main() {
   late CheckinRepository repository;
@@ -197,7 +197,7 @@ void main() {
           ),
         ).thenAnswer((_) async => 'not_found');
 
-        expect(
+        await expectLater(
           () => repository.verifyAndCheckin(
             token: token,
             serverPublicKey: publicKey,
