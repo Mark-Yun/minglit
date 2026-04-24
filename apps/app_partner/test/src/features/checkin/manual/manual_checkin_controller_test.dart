@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app_partner/src/features/checkin/manual/checkin_participant.dart';
 import 'package:app_partner/src/features/checkin/manual/manual_checkin_controller.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +9,23 @@ import 'package:mocktail/mocktail.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class _MockSupabaseClient extends Mock implements SupabaseClient {}
+
+/// PostgrestFilterBuilder를 구현하는 fake. rpc() 스텁 반환값으로 사용.
+class _FakeRpcBuilder<T> implements PostgrestFilterBuilder<T> {
+  _FakeRpcBuilder(this._data);
+  final T _data;
+
+  @override
+  Future<U> then<U>(
+    FutureOr<U> Function(T) onValue, {
+    Function? onError,
+  }) {
+    return Future<T>.value(_data).then(onValue, onError: onError);
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => this;
+}
 
 void main() {
   late _MockSupabaseClient mockClient;
@@ -18,19 +37,19 @@ void main() {
   void stubFetch(List<dynamic> response) {
     when(
       () => mockClient.rpc<dynamic>(
-            'get_event_participants_for_checkin',
-            params: any(named: 'params'),
-          ) as Future<dynamic>,
-    ).thenAnswer((_) async => response);
+        'get_event_participants_for_checkin',
+        params: any(named: 'params'),
+      ),
+    ).thenAnswer((_) => _FakeRpcBuilder<dynamic>(response));
   }
 
   void stubCheckin(String result) {
     when(
       () => mockClient.rpc<dynamic>(
-            'process_manual_checkin',
-            params: any(named: 'params'),
-          ) as Future<dynamic>,
-    ).thenAnswer((_) async => result);
+        'process_manual_checkin',
+        params: any(named: 'params'),
+      ),
+    ).thenAnswer((_) => _FakeRpcBuilder<dynamic>(result));
   }
 
   ProviderContainer makeContainer() {
@@ -114,6 +133,35 @@ void main() {
       final updated = container.read(manualCheckinControllerProvider('event-1'));
       final participant = updated.value!.first;
       expect(participant.isCheckedIn, isTrue);
+    });
+
+    test('checkin — not_found: optimistic 업데이트 롤백', () async {
+      stubFetch([
+        {
+          'id': 'ep-1',
+          'ticket_id': 'tk-1',
+          'name': '김민지',
+          'phone_last4': '1234',
+          'status': 'ticket_issued',
+          'checked_in_at': null,
+        },
+      ]);
+      stubCheckin('not_found');
+
+      final container = makeContainer();
+      addTearDown(container.dispose);
+
+      await container.read(manualCheckinControllerProvider('event-1').future);
+
+      final result = await container
+          .read(manualCheckinControllerProvider('event-1').notifier)
+          .checkin('tk-1');
+
+      expect(result, 'not_found');
+
+      // Fix #1812: not_found이면 티켓이 존재하지 않으므로 optimistic 상태를 이전으로 복구
+      final state = container.read(manualCheckinControllerProvider('event-1'));
+      expect(state.value!.first.isCheckedIn, isFalse);
     });
 
     test('checkin — already_checked_in: optimistic 상태 유지 (서버도 checked_in)', () async {
