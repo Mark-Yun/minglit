@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(5);
+SELECT plan(7);
 
 -- ============================================================
 -- Setup: service role로 파트너/이벤트/엔트리그룹/티켓/참가자 데이터 구성
@@ -126,7 +126,7 @@ SELECT is(
 );
 
 -- ============================================================
--- Test 4+5: 정상 케이스 — 그룹별 집계 검증
+-- Test 4-7: 정상 케이스 — 그룹별 집계 검증
 -- (Group A: total=2, checked_in=1 / Group B: total=1, checked_in=0)
 -- ============================================================
 
@@ -152,6 +152,30 @@ SELECT is(
    WHERE elem ->> 'id' = current_setting('tests.grp_group_a_id')),
   1,
   'get_event_checkin_stats_by_group: Group A checked_in=1'
+);
+
+SELECT is(
+  (SELECT (elem ->> 'total')::int
+   FROM jsonb_array_elements(
+     public.get_event_checkin_stats_by_group(
+       current_setting('tests.grp_event_id')::uuid
+     )
+   ) AS elem
+   WHERE elem ->> 'id' = current_setting('tests.grp_group_b_id')),
+  1,
+  'get_event_checkin_stats_by_group: Group B total=1'
+);
+
+SELECT is(
+  (SELECT (elem ->> 'checked_in')::int
+   FROM jsonb_array_elements(
+     public.get_event_checkin_stats_by_group(
+       current_setting('tests.grp_event_id')::uuid
+     )
+   ) AS elem
+   WHERE elem ->> 'id' = current_setting('tests.grp_group_b_id')),
+  0,
+  'get_event_checkin_stats_by_group: Group B checked_in=0'
 );
 
 SELECT * FROM finish();
