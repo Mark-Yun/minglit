@@ -41,7 +41,8 @@ final class CheckinStatsControllerProvider
 
   @override
   bool operator ==(Object other) {
-    return other is CheckinStatsControllerProvider && other.argument == argument;
+    return other is CheckinStatsControllerProvider &&
+        other.argument == argument;
   }
 
   @override

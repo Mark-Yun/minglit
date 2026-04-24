@@ -92,7 +92,9 @@ void main() {
         );
 
         expect(result, isFalse);
-        verifyNever(() => mockClient.rpc<dynamic>(any(), params: any(named: 'params')));
+        verifyNever(
+          () => mockClient.rpc<dynamic>(any(), params: any(named: 'params')),
+        );
       });
 
       test('returns false for wrong public key (before RPC call)', () async {
@@ -112,45 +114,50 @@ void main() {
         );
 
         expect(result, isFalse);
-        verifyNever(() => mockClient.rpc<dynamic>(any(), params: any(named: 'params')));
+        verifyNever(
+          () => mockClient.rpc<dynamic>(any(), params: any(named: 'params')),
+        );
       });
 
-      test('calls process_qr_checkin RPC and returns true on success', () async {
-        final token = await repository.mintTicket(
-          ticketId: 'ticket-uuid-1',
-          eventId: 'event-uuid-1',
-          userId: 'user-uuid-1',
-          serverPrivateKey: keyPair,
-        );
+      test(
+        'calls process_qr_checkin RPC and returns true on success',
+        () async {
+          final token = await repository.mintTicket(
+            ticketId: 'ticket-uuid-1',
+            eventId: 'event-uuid-1',
+            userId: 'user-uuid-1',
+            serverPrivateKey: keyPair,
+          );
 
-        when(
-          () => mockClient.rpc<String>(
-            'process_qr_checkin',
-            params: {
-              'p_ticket_id': token.ticketId,
-              'p_event_id': token.eventId,
-              'p_user_id': token.userId,
-            },
-          ),
-        ).thenAnswer((_) async => 'success');
+          when(
+            () => mockClient.rpc<String>(
+              'process_qr_checkin',
+              params: {
+                'p_ticket_id': token.ticketId,
+                'p_event_id': token.eventId,
+                'p_user_id': token.userId,
+              },
+            ),
+          ).thenAnswer((_) async => 'success');
 
-        final result = await repository.verifyAndCheckin(
-          token: token,
-          serverPublicKey: publicKey,
-        );
+          final result = await repository.verifyAndCheckin(
+            token: token,
+            serverPublicKey: publicKey,
+          );
 
-        expect(result, isTrue);
-        verify(
-          () => mockClient.rpc<String>(
-            'process_qr_checkin',
-            params: {
-              'p_ticket_id': token.ticketId,
-              'p_event_id': token.eventId,
-              'p_user_id': token.userId,
-            },
-          ),
-        ).called(1);
-      });
+          expect(result, isTrue);
+          verify(
+            () => mockClient.rpc<String>(
+              'process_qr_checkin',
+              params: {
+                'p_ticket_id': token.ticketId,
+                'p_event_id': token.eventId,
+                'p_user_id': token.userId,
+              },
+            ),
+          ).called(1);
+        },
+      );
 
       test('returns false when RPC returns already_checked_in', () async {
         final token = await repository.mintTicket(
@@ -191,7 +198,10 @@ void main() {
         ).thenAnswer((_) async => 'not_found');
 
         expect(
-          () => repository.verifyAndCheckin(token: token, serverPublicKey: publicKey),
+          () => repository.verifyAndCheckin(
+            token: token,
+            serverPublicKey: publicKey,
+          ),
           throwsA(isA<StateError>()),
         );
       });
