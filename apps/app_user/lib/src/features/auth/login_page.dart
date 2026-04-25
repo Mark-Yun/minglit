@@ -129,8 +129,10 @@ class LoginPage extends ConsumerWidget {
         },
         // Fix #188: 데브맵 제거 — 5클릭 시 세션 스위처로 직접 이동
         // Fix #404: Use coordinator instead of direct route push
+        // Fix #1829: pass `from` so DevUserSwitch redirects to intended page after login
         onDevTrigger: isDevEnv
-            ? () => ref.read(authCoordinatorProvider).pushDevUserSwitch()
+            ? () =>
+                ref.read(authCoordinatorProvider).pushDevUserSwitch(from: from)
             : null,
       ),
     );

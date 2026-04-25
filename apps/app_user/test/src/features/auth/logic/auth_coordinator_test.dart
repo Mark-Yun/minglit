@@ -60,5 +60,26 @@ void main() {
 
       verify(() => mockRouter.go(location)).called(1);
     });
+
+    // Fix #1829: DevUserSwitch must forward `from` so post-login redirect works
+    test('pushDevUserSwitch without from calls router.push with /dev/switch', () {
+      AuthCoordinator(mockRouter).pushDevUserSwitch();
+
+      verify(
+        () => mockRouter.push(any(that: contains('/dev/switch'))),
+      ).called(1);
+    });
+
+    test('pushDevUserSwitch with from includes from in path', () {
+      AuthCoordinator(mockRouter).pushDevUserSwitch(
+        from: '/events/abc',
+      );
+
+      verify(
+        () => mockRouter.push(
+          any(that: contains('/dev/switch') & contains('from=')),
+        ),
+      ).called(1);
+    });
   });
 }
