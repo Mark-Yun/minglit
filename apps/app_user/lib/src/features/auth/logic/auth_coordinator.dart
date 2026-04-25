@@ -34,7 +34,8 @@ class AuthCoordinator {
     _router.go('/');
   }
 
-  void pushDevUserSwitch() {
-    unawaited(_router.push(const DevUserSwitchRoute().location));
+  // Fix #1829: pass `from` so DevUserSwitch can redirect after login
+  void pushDevUserSwitch({String? from}) {
+    unawaited(_router.push(DevUserSwitchRoute(from: from).location));
   }
 }

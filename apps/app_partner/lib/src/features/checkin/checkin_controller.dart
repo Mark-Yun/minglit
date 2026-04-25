@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/semantics.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -65,22 +66,34 @@ class CheckinController extends _$CheckinController {
       );
 
       if (success) {
+        final userName = 'User ${token.userId.substring(0, 4)}';
         state = state.copyWith(
           result: CheckinResult.success,
-          userName: 'User ${token.userId.substring(0, 4)}', // Simulated name
+          userName: userName,
+        );
+        // Fix #1813: A11y — 스캔 성공 TalkBack/VoiceOver 알림
+        SemanticsService.announce(
+          '체크인 성공. $userName',
+          TextDirection.ltr,
         );
       } else {
+        const message = '유효하지 않은 티켓입니다.';
         state = state.copyWith(
           result: CheckinResult.invalid,
-          message: '유효하지 않은 티켓입니다.',
+          message: message,
         );
+        // Fix #1813: A11y — 스캔 실패 TalkBack/VoiceOver 알림
+        SemanticsService.announce('입장 불가. $message', TextDirection.ltr);
       }
     } on Object catch (e) {
       Log.e('Check-in processing failed', e);
+      const message = '티켓 데이터를 읽을 수 없습니다.';
       state = state.copyWith(
         result: CheckinResult.invalid,
-        message: '티켓 데이터를 읽을 수 없습니다.',
+        message: message,
       );
+      // Fix #1813: A11y — 스캔 오류 TalkBack/VoiceOver 알림
+      SemanticsService.announce('입장 불가. $message', TextDirection.ltr);
     }
 
     // Reset to idle after a delay to allow for feedback UI
