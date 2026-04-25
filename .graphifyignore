@@ -1,0 +1,63 @@
+# Flutter tooling caches
+.dart_tool/
+.fvm/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Platform native dirs — non-Dart, not relevant to app architecture graph
+**/ios/
+**/macos/
+**/android/
+**/web/
+**/windows/
+**/linux/
+
+# Golden test snapshots (UI regression baselines — exclude images, keep test code)
+# Match both direct children and nested subdirs (gitignore-style needs both forms)
+**/test/alchemist/*.png
+**/test/alchemist/*.jpg
+**/test/alchemist/*.jpeg
+**/test/alchemist/**/*.png
+**/test/alchemist/**/*.jpg
+**/test/alchemist/**/*.jpeg
+**/test/goldens/*.png
+**/test/goldens/*.jpg
+**/test/goldens/**/*.png
+**/test/goldens/**/*.jpg
+**/goldens/*.png
+**/goldens/*.jpg
+**/goldens/**/*.png
+**/goldens/**/*.jpg
+
+# Landing page web assets (favicons / og images, no architectural value)
+**/landing_*/public/
+
+# Test coverage
+coverage/
+
+# Generated Dart files (build_runner, freezed, etc.)
+**/*.g.dart
+**/*.freezed.dart
+**/*.gen.dart
+**/*.mocks.dart
+**/*.config.dart
+
+# Supabase CLI internals
+supabase/.branches/
+supabase/.temp/
+
+# Web build artifacts
+**/build/
+**/.next/
+**/.turbo/
+
+# Lock / generated package files
+**/pubspec.lock
+**/package-lock.json
+**/pnpm-lock.yaml
+**/yarn.lock
+**/deno.lock
+
+# Misc
+.DS_Store
+*.log
