@@ -98,10 +98,14 @@ class _PartyImageEditorState extends State<PartyImageEditor> {
         if (_currentUrls.isNotEmpty || _newFiles.isNotEmpty)
           SizedBox(
             height: 120,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              children: [
-                ..._currentUrls.asMap().entries.map(
+            child: MinglitHorizontalScrollGroup(
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: MinglitSpacing.medium,
+                ),
+                children: [
+                  ..._currentUrls.asMap().entries.map(
                   (e) => _buildPreviewItem(
                     context,
                     index: e.key,
@@ -122,6 +126,7 @@ class _PartyImageEditorState extends State<PartyImageEditor> {
               ],
             ),
           ),
+        ),
       ],
     );
   }

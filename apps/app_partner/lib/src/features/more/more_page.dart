@@ -22,13 +22,13 @@ class MorePage extends ConsumerWidget {
 
     return Scaffold(
       appBar: MinglitTheme.simpleAppBar(title: '더보기', showBackButton: false),
-      body: ListView(
-        // Fix #1824: add bottom safe-area so last item clears the home bar
-        padding: EdgeInsets.only(
-          top: MinglitSpacing.medium,
-          bottom: MinglitSpacing.medium + MediaQuery.paddingOf(context).bottom,
-        ),
-        children: [
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.only(
+            top: MinglitSpacing.medium,
+            bottom: MinglitSpacing.xxxlarge,
+          ),
+          children: [
           // Group 1: Profile
           partnerAsync.when(
             loading: () => const Padding(
@@ -222,12 +222,6 @@ class MorePage extends ConsumerWidget {
               ],
             ),
           ],
-
-          // Fix #1803: SafeArea prevents last item overlap with gesture nav bar
-          const SafeArea(
-            top: false,
-            child: SizedBox(height: MinglitSpacing.xxlarge),
-          ),
         ],
       ),
     );
