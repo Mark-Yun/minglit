@@ -256,8 +256,9 @@ class CheckinResultBanner extends StatelessWidget {
       liveRegion: true,
       label: semanticLabel.isEmpty ? null : semanticLabel,
       child: Container(
-        margin:
-            const EdgeInsets.symmetric(horizontal: MinglitSpacing.screenEdge),
+        margin: const EdgeInsets.symmetric(
+          horizontal: MinglitSpacing.screenEdge,
+        ),
         padding: const EdgeInsets.symmetric(
           horizontal: MinglitSpacing.medium,
           vertical: MinglitSpacing.sm,

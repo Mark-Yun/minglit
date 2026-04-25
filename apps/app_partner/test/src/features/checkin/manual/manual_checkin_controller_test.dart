@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:app_partner/src/features/checkin/manual/checkin_participant.dart';
 import 'package:app_partner/src/features/checkin/manual/manual_checkin_controller.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -130,7 +129,9 @@ void main() {
 
       expect(result, 'success');
 
-      final updated = container.read(manualCheckinControllerProvider('event-1'));
+      final updated = container.read(
+        manualCheckinControllerProvider('event-1'),
+      );
       final participant = updated.value!.first;
       expect(participant.isCheckedIn, isTrue);
     });
@@ -164,34 +165,39 @@ void main() {
       expect(state.value!.first.isCheckedIn, isFalse);
     });
 
-    test('checkin — already_checked_in: optimistic 상태 유지 (서버도 checked_in)', () async {
-      stubFetch([
-        {
-          'id': 'ep-1',
-          'ticket_id': 'tk-1',
-          'name': '김민지',
-          'phone_last4': '1234',
-          'status': 'ticket_issued',
-          'checked_in_at': null,
-        },
-      ]);
-      stubCheckin('already_checked_in');
+    test(
+      'checkin — already_checked_in: optimistic 상태 유지 (서버도 checked_in)',
+      () async {
+        stubFetch([
+          {
+            'id': 'ep-1',
+            'ticket_id': 'tk-1',
+            'name': '김민지',
+            'phone_last4': '1234',
+            'status': 'ticket_issued',
+            'checked_in_at': null,
+          },
+        ]);
+        stubCheckin('already_checked_in');
 
-      final container = makeContainer();
-      addTearDown(container.dispose);
+        final container = makeContainer();
+        addTearDown(container.dispose);
 
-      await container.read(manualCheckinControllerProvider('event-1').future);
+        await container.read(manualCheckinControllerProvider('event-1').future);
 
-      final result = await container
-          .read(manualCheckinControllerProvider('event-1').notifier)
-          .checkin('tk-1');
+        final result = await container
+            .read(manualCheckinControllerProvider('event-1').notifier)
+            .checkin('tk-1');
 
-      expect(result, 'already_checked_in');
+        expect(result, 'already_checked_in');
 
-      // Fix #1812: already_checked_in은 서버 실제 상태도 checked_in이므로
-      // optimistic 상태(checked_in)를 유지해야 한다.
-      final state = container.read(manualCheckinControllerProvider('event-1'));
-      expect(state.value!.first.isCheckedIn, isTrue);
-    });
+        // Fix #1812: already_checked_in은 서버 실제 상태도 checked_in이므로
+        // optimistic 상태(checked_in)를 유지해야 한다.
+        final state = container.read(
+          manualCheckinControllerProvider('event-1'),
+        );
+        expect(state.value!.first.isCheckedIn, isTrue);
+      },
+    );
   });
 }

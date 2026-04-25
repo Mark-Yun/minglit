@@ -5,7 +5,6 @@ import 'package:app_partner/src/features/checkin/manual/manual_checkin_sheet.dar
 import 'package:app_partner/src/features/checkin/stats/entry_group_checkin_stats_controller.dart';
 import 'package:app_partner/src/features/checkin/widgets/checkin_scanner_overlay.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 import 'partner_screenshot_scenario.dart';
@@ -57,21 +56,21 @@ const _participantB = CheckinParticipant(
   status: 'checked_in',
 );
 
-final _groupLow = EntryGroupCheckinStats(
+const _groupLow = EntryGroupCheckinStats(
   id: 'g-1',
   label: 'A구역',
   total: 100,
   checkedIn: 30,
 );
 
-final _groupHigh = EntryGroupCheckinStats(
+const _groupHigh = EntryGroupCheckinStats(
   id: 'g-2',
   label: 'B구역',
   total: 100,
   checkedIn: 95,
 );
 
-final _groupMid = EntryGroupCheckinStats(
+const _groupMid = EntryGroupCheckinStats(
   id: 'g-3',
   label: 'C구역',
   total: 80,
@@ -136,7 +135,8 @@ class _GroupListCard extends StatelessWidget {
             children: [
               for (int i = 0; i < groups.length; i++)
                 Semantics(
-                  label: '${groups[i].label}, ${groups[i].checkedIn}명 체크인, '
+                  label:
+                      '${groups[i].label}, ${groups[i].checkedIn}명 체크인, '
                       '총 ${groups[i].total}명 중, '
                       '${(groups[i].ratio * 100).toStringAsFixed(0)}퍼센트',
                   child: EntryGroupRow(
@@ -172,7 +172,7 @@ class _ManualSheetGolden extends StatelessWidget {
         theme: brightness == Brightness.dark
             ? MinglitTheme.materialThemeDark
             : MinglitTheme.materialTheme,
-        home: Scaffold(
+        home: const Scaffold(
           body: ManualCheckinSheet(eventId: _kEventId),
         ),
       ),
@@ -187,10 +187,10 @@ class _ManualSheetGolden extends StatelessWidget {
 class QrCheckinScenarios {
   static List<PartnerScreenshotScenario> get all => [
     // 1. 스캔 성공 배너 (light / dark)
-    PartnerScreenshotScenario(
+    const PartnerScreenshotScenario(
       name: 'qr_checkin_success_banner',
       page: _BannerCard(
-        state: const CheckinState(
+        state: CheckinState(
           result: CheckinResult.success,
           userName: '홍길동',
         ),
@@ -198,10 +198,10 @@ class QrCheckinScenarios {
       ),
       isComponent: true,
     ),
-    PartnerScreenshotScenario(
+    const PartnerScreenshotScenario(
       name: 'qr_checkin_success_banner_dark',
       page: _BannerCard(
-        state: const CheckinState(
+        state: CheckinState(
           result: CheckinResult.success,
           userName: '홍길동',
         ),
@@ -211,10 +211,10 @@ class QrCheckinScenarios {
     ),
 
     // 2. 스캔 오류 배너 (light / dark)
-    PartnerScreenshotScenario(
+    const PartnerScreenshotScenario(
       name: 'qr_checkin_error_banner',
       page: _BannerCard(
-        state: const CheckinState(
+        state: CheckinState(
           result: CheckinResult.invalid,
           message: '유효하지 않은 티켓입니다.',
         ),
@@ -222,10 +222,10 @@ class QrCheckinScenarios {
       ),
       isComponent: true,
     ),
-    PartnerScreenshotScenario(
+    const PartnerScreenshotScenario(
       name: 'qr_checkin_error_banner_dark',
       page: _BannerCard(
-        state: const CheckinState(
+        state: CheckinState(
           result: CheckinResult.invalid,
           message: '유효하지 않은 티켓입니다.',
         ),
@@ -235,7 +235,7 @@ class QrCheckinScenarios {
     ),
 
     // 3. 엔트리 그룹 확장 (light / dark)
-    PartnerScreenshotScenario(
+    const PartnerScreenshotScenario(
       name: 'qr_checkin_group',
       page: _GroupListCard(
         groups: [_groupHigh, _groupMid, _groupLow],
@@ -243,7 +243,7 @@ class QrCheckinScenarios {
       ),
       isComponent: true,
     ),
-    PartnerScreenshotScenario(
+    const PartnerScreenshotScenario(
       name: 'qr_checkin_group_dark',
       page: _GroupListCard(
         groups: [_groupHigh, _groupMid, _groupLow],
@@ -291,7 +291,7 @@ class QrCheckinScenarios {
     ),
 
     // 6. 수동 체크인 — 오프라인/오류 (light / dark)
-    PartnerScreenshotScenario(
+    const PartnerScreenshotScenario(
       name: 'qr_checkin_manual_offline',
       page: _ManualSheetGolden(
         controller: _ErrorManualCheckinController.new,
@@ -299,7 +299,7 @@ class QrCheckinScenarios {
       ),
       isComponent: true,
     ),
-    PartnerScreenshotScenario(
+    const PartnerScreenshotScenario(
       name: 'qr_checkin_manual_offline_dark',
       page: _ManualSheetGolden(
         controller: _ErrorManualCheckinController.new,

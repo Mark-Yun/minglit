@@ -13,8 +13,11 @@ part of 'manual_checkin_controller.dart';
 const manualCheckinControllerProvider = ManualCheckinControllerFamily._();
 
 final class ManualCheckinControllerProvider
-    extends $AsyncNotifierProvider<ManualCheckinController,
-        List<CheckinParticipant>> {
+    extends
+        $AsyncNotifierProvider<
+          ManualCheckinController,
+          List<CheckinParticipant>
+        > {
   const ManualCheckinControllerProvider._({
     required ManualCheckinControllerFamily super.from,
     required String super.argument,
@@ -93,13 +96,19 @@ abstract class _$ManualCheckinController
   @override
   void runBuild() {
     final created = build(_$args);
-    final ref = this.ref as $Ref<AsyncValue<List<CheckinParticipant>>,
-        List<CheckinParticipant>>;
+    final ref =
+        this.ref
+            as $Ref<
+              AsyncValue<List<CheckinParticipant>>,
+              List<CheckinParticipant>
+            >;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<AsyncValue<List<CheckinParticipant>>,
-                  List<CheckinParticipant>>,
+              AnyNotifier<
+                AsyncValue<List<CheckinParticipant>>,
+                List<CheckinParticipant>
+              >,
               AsyncValue<List<CheckinParticipant>>,
               Object?,
               Object?

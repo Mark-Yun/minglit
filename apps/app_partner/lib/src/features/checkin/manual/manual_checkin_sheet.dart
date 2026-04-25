@@ -4,7 +4,6 @@ import 'package:app_partner/src/features/checkin/manual/checkin_participant.dart
 import 'package:app_partner/src/features/checkin/manual/manual_checkin_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 /// 수동 체크인 바텀시트.
@@ -123,8 +122,9 @@ class _ManualCheckinSheetState extends ConsumerState<ManualCheckinSheet> {
                       hintText: '이름 또는 전화 뒷자리 4자리',
                       prefixIcon: const Icon(Icons.search),
                       border: OutlineInputBorder(
-                        borderRadius:
-                            BorderRadius.circular(MinglitRadius.input),
+                        borderRadius: BorderRadius.circular(
+                          MinglitRadius.input,
+                        ),
                       ),
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 12,
@@ -176,17 +176,17 @@ class _ManualCheckinSheetState extends ConsumerState<ManualCheckinSheet> {
                     ),
                     data: (all) {
                       final filtered = _filter(all);
-                      final unchecked =
-                          filtered.where((p) => !p.isCheckedIn).toList();
-                      final checked =
-                          filtered.where((p) => p.isCheckedIn).toList();
+                      final unchecked = filtered
+                          .where((p) => !p.isCheckedIn)
+                          .toList();
+                      final checked = filtered
+                          .where((p) => p.isCheckedIn)
+                          .toList();
 
                       if (filtered.isEmpty) {
                         return Center(
                           child: Text(
-                            _query.isEmpty
-                                ? '참가자가 없습니다'
-                                : '검색 결과가 없습니다',
+                            _query.isEmpty ? '참가자가 없습니다' : '검색 결과가 없습니다',
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: scheme.onSurfaceVariant,
                             ),
@@ -303,11 +303,11 @@ class _ParticipantRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final initial =
-        participant.name.isNotEmpty ? participant.name[0] : '?';
+    final initial = participant.name.isNotEmpty ? participant.name[0] : '?';
 
     return Semantics(
-      label: '${participant.name}, '
+      label:
+          '${participant.name}, '
           '전화 뒷자리 ${participant.phoneLast4}, '
           '${participant.isCheckedIn ? "체크인 완료" : "미체크인"}',
       child: Padding(
@@ -364,8 +364,9 @@ class _ParticipantRow extends StatelessWidget {
                       minimumSize: const Size(72, 36),
                       padding: const EdgeInsets.symmetric(horizontal: 14),
                       shape: RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(MinglitRadius.button),
+                        borderRadius: BorderRadius.circular(
+                          MinglitRadius.button,
+                        ),
                       ),
                     ),
                     child: const Text('체크인'),
@@ -382,7 +383,7 @@ class _ParticipantRow extends StatelessWidget {
                     borderRadius: BorderRadius.circular(MinglitRadius.button),
                   ),
                   foregroundColor: MinglitColors.success,
-                  side: BorderSide(color: MinglitColors.success),
+                  side: const BorderSide(color: MinglitColors.success),
                 ),
                 child: const Text('완료'),
               ),
