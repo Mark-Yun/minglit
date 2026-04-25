@@ -103,3 +103,8 @@ supabase/**/.env.local
 supabase/**/.env.dev
 .sourcekit-lsp/
 devtools_options.yaml
+
+# Graphify outputs — commit only GRAPH_REPORT.md + graph.json; cache/html/temp stay local
+graphify-out/*
+!graphify-out/GRAPH_REPORT.md
+!graphify-out/graph.json

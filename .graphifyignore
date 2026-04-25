@@ -1,0 +1,46 @@
+# Flutter tooling caches
+.dart_tool/
+.fvm/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Platform native dirs — non-Dart, not relevant to app architecture graph
+**/ios/
+**/macos/
+**/android/
+**/web/
+**/windows/
+**/linux/
+
+# Alchemist golden snapshots (UI regression baselines, not code knowledge)
+**/test/alchemist/goldens/
+
+# Test coverage
+coverage/
+
+# Generated Dart files (build_runner, freezed, etc.)
+**/*.g.dart
+**/*.freezed.dart
+**/*.gen.dart
+**/*.mocks.dart
+**/*.config.dart
+
+# Supabase CLI internals
+supabase/.branches/
+supabase/.temp/
+
+# Web build artifacts
+**/build/
+**/.next/
+**/.turbo/
+
+# Lock / generated package files
+**/pubspec.lock
+**/package-lock.json
+**/pnpm-lock.yaml
+**/yarn.lock
+**/deno.lock
+
+# Misc
+.DS_Store
+*.log
