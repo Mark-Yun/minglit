@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -31,10 +32,25 @@ class TicketWalletRepository {
     await _storage.write(key: key, value: value);
   }
 
+  // Fix #1819: SecureStorage read can hang on Android when KeyStore is locked.
+  // Timeout after 5s and return null so the caller falls through to network.
+  static const _readTimeout = Duration(seconds: 5);
+
   /// Retrieves a [TicketToken] by ID.
   Future<TicketToken?> getTicket(String ticketId) async {
     final key = '$_keyPrefix$ticketId';
-    final value = await _storage.read(key: key);
+    final String? value;
+    try {
+      value = await _storage.read(key: key).timeout(_readTimeout);
+    } on TimeoutException {
+      Log.w(
+        'SecureStorage read timed out for ticket $ticketId — skipping cache',
+      );
+      return null;
+    } on Object catch (e) {
+      Log.e('SecureStorage read failed for ticket $ticketId', e);
+      return null;
+    }
     if (value == null) return null;
 
     try {
