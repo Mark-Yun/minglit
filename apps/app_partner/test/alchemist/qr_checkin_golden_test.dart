@@ -2,6 +2,7 @@
 library;
 
 import 'package:alchemist/alchemist.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../utils/golden_test_helpers.dart';

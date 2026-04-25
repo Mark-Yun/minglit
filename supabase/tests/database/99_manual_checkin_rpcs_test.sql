@@ -192,6 +192,9 @@ SELECT is(
   'process_manual_checkin: 정상 체크인 → success'
 );
 
+-- event_participants RLS는 본인(user_id) 기준이므로 service_role로 status 확인
+SELECT tests.authenticate_as_service_role();
+
 SELECT is(
   (SELECT status FROM public.event_participants
    WHERE ticket_id = current_setting('tests.mc_ticket_id')::uuid
@@ -199,8 +202,6 @@ SELECT is(
   'checked_in',
   'process_manual_checkin: 체크인 후 status = checked_in'
 );
-
-SELECT tests.authenticate_as_service_role();
 
 -- ============================================================
 -- Test 10: no_show 참가자 → not_found (ticket_issued 외 상태 차단)
