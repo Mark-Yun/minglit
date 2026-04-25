@@ -186,4 +186,96 @@ void main() {
       },
     );
   });
+
+  // Fix #1835: Ghost navigation regression — PageTransitionSwitcher renders
+  // both outgoing and incoming pages simultaneously. Without IgnorePointer,
+  // opacity-0 buttons on the outgoing page remain hit-testable and race with
+  // buttons on the incoming page at the same coordinates.
+  group('PartnerScaffold — ghost navigation prevention (Fix #1835)', () {
+    Widget buildAnimationSubject({
+      required ValueNotifier<int> shellIndexNotifier,
+      bool hasSettlementAccess = true,
+    }) {
+      final router = GoRouter(
+        initialLocation: '/',
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (context, state) => ValueListenableBuilder<int>(
+              valueListenable: shellIndexNotifier,
+              builder: (context, idx, _) => PartnerScaffold(
+                navigationShell: _FakeNavigationShell(currentIdx: idx),
+              ),
+            ),
+          ),
+        ],
+      );
+
+      return ProviderScope(
+        overrides: [
+          hasSettlementAccessProvider.overrideWith(
+            (ref) => Future.value(hasSettlementAccess),
+          ),
+        ],
+        child: MaterialApp.router(routerConfig: router),
+      );
+    }
+
+    testWidgets(
+      'outgoing child has IgnorePointer(ignoring: true) during tab-switch '
+      'animation',
+      (tester) async {
+        final shellIndex = ValueNotifier<int>(0);
+
+        await tester.pumpWidget(
+          buildAnimationSubject(shellIndexNotifier: shellIndex),
+        );
+        await tester.pumpAndSettle();
+
+        // Trigger tab switch — KeyedSubtree key changes, starting animation.
+        shellIndex.value = 4;
+        await tester.pump(); // start animation frame
+        await tester.pump(const Duration(milliseconds: 50)); // mid-animation
+
+        // The outgoing page must have ignoring=true so opacity-0 buttons
+        // cannot steal taps from the incoming page.
+        final ignorePointers = tester.widgetList<IgnorePointer>(
+          find.byType(IgnorePointer),
+        );
+        expect(
+          ignorePointers.any((ip) => ip.ignoring),
+          isTrue,
+          reason:
+              'Outgoing page must be wrapped in IgnorePointer(ignoring: true) '
+              'during FadeThroughTransition to block ghost taps',
+        );
+      },
+    );
+
+    testWidgets(
+      'no IgnorePointer blocks interaction after animation completes',
+      (tester) async {
+        final shellIndex = ValueNotifier<int>(0);
+
+        await tester.pumpWidget(
+          buildAnimationSubject(shellIndexNotifier: shellIndex),
+        );
+        await tester.pumpAndSettle();
+
+        shellIndex.value = 4;
+        await tester.pumpAndSettle(); // let animation finish
+
+        // After the transition, the incoming page must be fully interactive.
+        final ignorePointers = tester.widgetList<IgnorePointer>(
+          find.byType(IgnorePointer),
+        );
+        expect(
+          ignorePointers.every((ip) => !ip.ignoring),
+          isTrue,
+          reason:
+              'No IgnorePointer should be ignoring after animation completes',
+        );
+      },
+    );
+  });
 }
