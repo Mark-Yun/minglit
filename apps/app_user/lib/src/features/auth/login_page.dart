@@ -131,8 +131,9 @@ class LoginPage extends ConsumerWidget {
         // Fix #404: Use coordinator instead of direct route push
         // Fix #1829: pass `from` so DevUserSwitch redirects to intended page after login
         onDevTrigger: isDevEnv
-            ? () =>
-                ref.read(authCoordinatorProvider).pushDevUserSwitch(from: from)
+            ? () => ref
+                  .read(authCoordinatorProvider)
+                  .pushDevUserSwitch(from: from)
             : null,
       ),
     );
