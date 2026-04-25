@@ -98,28 +98,33 @@ class _PartyImageEditorState extends State<PartyImageEditor> {
         if (_currentUrls.isNotEmpty || _newFiles.isNotEmpty)
           SizedBox(
             height: 120,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              children: [
-                ..._currentUrls.asMap().entries.map(
-                  (e) => _buildPreviewItem(
-                    context,
-                    index: e.key,
-                    url: e.value,
-                    onDelete: () => _removeUrl(e.key),
-                    isRepresentative: e.key == 0,
-                  ),
+            child: MinglitHorizontalScrollGroup(
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: MinglitSpacing.medium,
                 ),
-                ..._newFiles.asMap().entries.map(
-                  (e) => _buildPreviewItem(
-                    context,
-                    index: e.key,
-                    file: e.value,
-                    onDelete: () => _removeNewFile(e.key),
-                    isRepresentative: _currentUrls.isEmpty && e.key == 0,
+                children: [
+                  ..._currentUrls.asMap().entries.map(
+                    (e) => _buildPreviewItem(
+                      context,
+                      index: e.key,
+                      url: e.value,
+                      onDelete: () => _removeUrl(e.key),
+                      isRepresentative: e.key == 0,
+                    ),
                   ),
-                ),
-              ],
+                  ..._newFiles.asMap().entries.map(
+                    (e) => _buildPreviewItem(
+                      context,
+                      index: e.key,
+                      file: e.value,
+                      onDelete: () => _removeNewFile(e.key),
+                      isRepresentative: _currentUrls.isEmpty && e.key == 0,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
       ],

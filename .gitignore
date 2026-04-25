@@ -47,6 +47,9 @@ allure-report/
 # macOS
 **/macos/Flutter/GeneratedPluginRegistrant.swift
 
+# Android
+**/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
+
 # Web
 **/web/index.html.tmp
 
