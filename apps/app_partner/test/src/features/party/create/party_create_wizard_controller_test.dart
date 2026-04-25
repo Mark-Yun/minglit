@@ -597,5 +597,92 @@ void main() {
         ).called(1);
       });
     });
+
+    // Fix #1836: per-step validation regression tests
+    group('currentStepValidationErrors', () {
+      test('Step 1 — title 비어있으면 오류 반환', () {
+        final container = makeContainer();
+        final notifier = container.read(
+          partyCreateWizardControllerProvider.notifier,
+        );
+        // 기본 상태는 title = ''
+        final errors = notifier.currentStepValidationErrors;
+        expect(errors, contains('파티 제목을 입력해주세요.'));
+      });
+
+      test('Step 2 — location null이면 오류 반환', () {
+        final container = makeContainer();
+        final notifier = container.read(
+          partyCreateWizardControllerProvider.notifier,
+        );
+        notifier.nextStep(); // → location
+        final errors = notifier.currentStepValidationErrors;
+        expect(errors, contains('파티 장소를 선택해주세요.'));
+      });
+
+      test('Step 3 — 연락처 미선택이면 오류 반환', () {
+        final container = makeContainer();
+        final notifier = container.read(
+          partyCreateWizardControllerProvider.notifier,
+        );
+        notifier
+          ..nextStep()
+          ..nextStep(); // → capacityAndContact
+        final errors = notifier.currentStepValidationErrors;
+        expect(errors, contains('최소 한 개의 문의 연락처를 활성화해야 합니다.'));
+      });
+
+      test('Step 3 — 연락처 선택하면 오류 없음', () {
+        final container = makeContainer();
+        final notifier = container.read(
+          partyCreateWizardControllerProvider.notifier,
+        );
+        notifier
+          ..nextStep()
+          ..nextStep() // → capacityAndContact
+          ..toggleContactMethod('phone');
+        final errors = notifier.currentStepValidationErrors;
+        expect(errors, isNot(contains('최소 한 개의 문의 연락처를 활성화해야 합니다.')));
+      });
+
+      test('Step 4 — 입장 그룹 없으면 오류 반환', () {
+        final container = makeContainer();
+        final notifier = container.read(
+          partyCreateWizardControllerProvider.notifier,
+        );
+        notifier
+          ..nextStep()
+          ..nextStep()
+          ..nextStep(); // → entryRules
+        final errors = notifier.currentStepValidationErrors;
+        expect(errors, contains('최소 한 개의 입장 그룹을 생성해야 합니다.'));
+      });
+
+      test('Step 5 — 티켓 없으면 오류 반환', () {
+        final container = makeContainer();
+        final notifier = container.read(
+          partyCreateWizardControllerProvider.notifier,
+        );
+        notifier
+          ..nextStep()
+          ..nextStep()
+          ..nextStep()
+          ..nextStep(); // → tickets
+        final errors = notifier.currentStepValidationErrors;
+        expect(errors, contains('최소 한 개의 티켓을 생성해야 합니다.'));
+      });
+
+      test('Step 6(review) — currentStepValidationErrors 항상 비어있음', () {
+        final container = makeContainer();
+        final notifier = container.read(
+          partyCreateWizardControllerProvider.notifier,
+        );
+        for (var i = 0; i < 5; i++) {
+          notifier.nextStep();
+        } // → review
+        final errors = notifier.currentStepValidationErrors;
+        expect(errors, isEmpty);
+      });
+    });
   });
 }

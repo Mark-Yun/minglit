@@ -1,3 +1,4 @@
+import 'package:animations/animations.dart';
 import 'package:app_partner/src/logic/current_partner_provider.dart';
 import 'package:app_partner/src/ui/shell/partner_scaffold.dart';
 import 'package:flutter/material.dart';
@@ -183,6 +184,107 @@ void main() {
 
         final navBar = tester.widget<NavigationBar>(find.byType(NavigationBar));
         expect(navBar.selectedIndex, 0);
+      },
+    );
+  });
+
+  // Fix #1835: Ghost navigation regression — PageTransitionSwitcher renders
+  // both outgoing and incoming pages simultaneously. Without IgnorePointer,
+  // opacity-0 buttons on the outgoing page remain hit-testable and race with
+  // buttons on the incoming page at the same coordinates.
+  group('PartnerScaffold — ghost navigation prevention (Fix #1835)', () {
+    Widget buildAnimationSubject({
+      required ValueNotifier<int> shellIndexNotifier,
+      bool hasSettlementAccess = true,
+    }) {
+      final router = GoRouter(
+        initialLocation: '/',
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (context, state) => ValueListenableBuilder<int>(
+              valueListenable: shellIndexNotifier,
+              builder: (context, idx, _) => PartnerScaffold(
+                navigationShell: _FakeNavigationShell(currentIdx: idx),
+              ),
+            ),
+          ),
+        ],
+      );
+
+      return ProviderScope(
+        overrides: [
+          hasSettlementAccessProvider.overrideWith(
+            (ref) => Future.value(hasSettlementAccess),
+          ),
+        ],
+        child: MaterialApp.router(routerConfig: router),
+      );
+    }
+
+    testWidgets(
+      'outgoing child has IgnorePointer(ignoring: true) on FIRST frame of '
+      'tab-switch animation',
+      (tester) async {
+        final shellIndex = ValueNotifier<int>(0);
+        addTearDown(shellIndex.dispose);
+
+        await tester.pumpWidget(
+          buildAnimationSubject(shellIndexNotifier: shellIndex),
+        );
+        await tester.pumpAndSettle();
+
+        // Trigger tab switch — KeyedSubtree key changes, starting animation.
+        shellIndex.value = 4;
+        // Single pump: value is still 0.0 but status is already forward.
+        // Fix #1835 uses status != dismissed, so this frame must already block.
+        await tester.pump();
+
+        // IgnorePointer wraps FadeThroughTransition (ancestor, not descendant),
+        // so use find.ancestor to scope to only our own IgnorePointers.
+        final ignorePointers = tester.widgetList<IgnorePointer>(
+          find.ancestor(
+            of: find.byType(FadeThroughTransition),
+            matching: find.byType(IgnorePointer),
+          ),
+        );
+        expect(
+          ignorePointers.any((ip) => ip.ignoring),
+          isTrue,
+          reason:
+              'Outgoing page must be wrapped in IgnorePointer(ignoring: true) '
+              'on the very first animation frame to block ghost taps',
+        );
+      },
+    );
+
+    testWidgets(
+      'no IgnorePointer blocks interaction after animation completes',
+      (tester) async {
+        final shellIndex = ValueNotifier<int>(0);
+        addTearDown(shellIndex.dispose);
+
+        await tester.pumpWidget(
+          buildAnimationSubject(shellIndexNotifier: shellIndex),
+        );
+        await tester.pumpAndSettle();
+
+        shellIndex.value = 4;
+        await tester.pumpAndSettle(); // let animation finish
+
+        // After the transition, the incoming page must be fully interactive.
+        final ignorePointers = tester.widgetList<IgnorePointer>(
+          find.ancestor(
+            of: find.byType(FadeThroughTransition),
+            matching: find.byType(IgnorePointer),
+          ),
+        );
+        expect(
+          ignorePointers.every((ip) => !ip.ignoring),
+          isTrue,
+          reason:
+              'No IgnorePointer should be ignoring after animation completes',
+        );
       },
     );
   });

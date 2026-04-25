@@ -926,6 +926,20 @@ void main() {
         expect(result.first.id, 'event_1');
       });
 
+      // Fix #1823: events transition to 'active' 30 min before start_time.
+      // getUpcomingEvents must NOT exclude active events — they are legitimate
+      // upcoming events that callers (checkin, dashboard) need to see.
+      test('includes active-status events in results', () async {
+        final activeEvent = Map<String, Object?>.from(eventJson)
+          ..['status'] = 'active';
+        unawaited(mockTable(mockClient, 'events', selectData: [activeEvent]));
+
+        final result = await repository.getUpcomingEvents('partner_1');
+
+        expect(result, hasLength(1));
+        expect(result.first.status, 'active');
+      });
+
       test('returns empty list when no upcoming events', () async {
         unawaited(mockTable(mockClient, 'events', selectData: []));
 
