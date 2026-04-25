@@ -268,7 +268,8 @@ class _ReviewVerificationScreenState
                           right: MinglitSpacing.small,
                         ),
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.surfaceContainer,
+                        // Fix: match surface so MinglitHorizontalScrollGroup fade gradient blends correctly
+                        color: theme.colorScheme.surface,
                         borderRadius: BorderRadius.circular(
                           MinglitRadius.small,
                         ),
