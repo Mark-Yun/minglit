@@ -22,7 +22,13 @@ class PartyInfoTab extends ConsumerWidget {
 
     // Fix #142: Add padding to match PartyRuleManagementTab
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(MinglitSpacing.medium),
+      // Fix #1830: add bottom safe-area so last section clears the home bar
+      padding: EdgeInsets.only(
+        left: MinglitSpacing.medium,
+        right: MinglitSpacing.medium,
+        top: MinglitSpacing.medium,
+        bottom: MinglitSpacing.medium + MediaQuery.paddingOf(context).bottom,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
