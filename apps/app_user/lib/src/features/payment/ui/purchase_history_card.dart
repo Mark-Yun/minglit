@@ -136,33 +136,33 @@ class PurchaseHistoryCard extends ConsumerWidget {
           // 나머지 버튼은 flex:1로 유지하여 1줄 표시 보장.
           // Fix #1236: 보조 버튼(영수증/문의하기)을 OutlinedButton → TextButton으로
           // 낮춤 — 브랜드 보라 아웃라인 제거, 정보 위계 명확화
+          // Fix #1820: crossAxisAlignment.stretch로 ElevatedButton/TextButton 높이 통일
           Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Expanded(
-                child: TextButton(
-                  onPressed: () async {
-                    if (paymentId == null || paymentId.isEmpty) {
-                      context.showMinglitWarning('영수증 정보를 확인할 수 없습니다.');
-                      return;
-                    }
+              // Fix #1820: 무료 티켓(paymentId 없음)에서 영수증 버튼 노출 금지
+              if (paymentId != null && paymentId.isNotEmpty) ...[
+                Expanded(
+                  child: TextButton(
+                    onPressed: () async {
+                      final receiptUrl = Uri.parse(
+                        'https://service.iamport.kr/payments/detail/$paymentId',
+                      );
 
-                    final receiptUrl = Uri.parse(
-                      'https://service.iamport.kr/payments/detail/$paymentId',
-                    );
+                      final launched = await launchUrl(
+                        receiptUrl,
+                        mode: LaunchMode.externalApplication,
+                      );
 
-                    final launched = await launchUrl(
-                      receiptUrl,
-                      mode: LaunchMode.externalApplication,
-                    );
-
-                    if (!launched && context.mounted) {
-                      context.showMinglitWarning('영수증 페이지를 열 수 없습니다.');
-                    }
-                  },
-                  child: const Text('영수증'),
+                      if (!launched && context.mounted) {
+                        context.showMinglitWarning('영수증 페이지를 열 수 없습니다.');
+                      }
+                    },
+                    child: const Text('영수증'),
+                  ),
                 ),
-              ),
-              const SizedBox(width: MinglitSpacing.small),
+                const SizedBox(width: MinglitSpacing.small),
+              ],
               Expanded(
                 child: TextButton(
                   onPressed: () async {
