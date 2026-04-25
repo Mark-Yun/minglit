@@ -25,6 +25,8 @@ class PartyCreateWizardPage extends ConsumerStatefulWidget {
 class _PartyCreateWizardPageState extends ConsumerState<PartyCreateWizardPage> {
   late final PageController _pageController;
   bool _didRequestPrefill = false;
+  // Fix #1836: guard against double-tap advancing multiple steps
+  bool _isNextingStep = false;
 
   @override
   void initState() {
@@ -56,6 +58,22 @@ class _PartyCreateWizardPageState extends ConsumerState<PartyCreateWizardPage> {
         curve: Curves.easeInOut,
       ),
     );
+  }
+
+  // Fix #1836: validate current step before advancing; guard against double-tap
+  void _handleNextStep() {
+    if (_isNextingStep) return;
+    _isNextingStep = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _isNextingStep = false;
+    });
+    final notifier = ref.read(partyCreateWizardControllerProvider.notifier);
+    final errors = notifier.currentStepValidationErrors;
+    if (errors.isNotEmpty) {
+      context.showMinglitWarning(errors.first);
+      return;
+    }
+    notifier.nextStep();
   }
 
   Future<void> _handleSubmit() async {
@@ -172,7 +190,7 @@ class _PartyCreateWizardPageState extends ConsumerState<PartyCreateWizardPage> {
                             ? (notifier.validationErrors.isEmpty
                                   ? _handleSubmit
                                   : null)
-                            : notifier.nextStep),
+                            : _handleNextStep),
                   child: Text(
                     state.currentStep == PartyCreateStep.review
                         ? (isEditing
