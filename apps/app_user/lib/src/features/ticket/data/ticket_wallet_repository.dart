@@ -43,7 +43,9 @@ class TicketWalletRepository {
     try {
       value = await _storage.read(key: key).timeout(_readTimeout);
     } on TimeoutException {
-      Log.w('SecureStorage read timed out for ticket $ticketId — skipping cache');
+      Log.w(
+        'SecureStorage read timed out for ticket $ticketId — skipping cache',
+      );
       return null;
     } on Object catch (e) {
       Log.e('SecureStorage read failed for ticket $ticketId', e);

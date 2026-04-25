@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:convert';
 import 'package:app_user/src/features/ticket/data/ticket_wallet_repository.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
