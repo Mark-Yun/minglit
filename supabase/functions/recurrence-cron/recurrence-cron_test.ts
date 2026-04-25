@@ -574,12 +574,12 @@ Deno.test(
         // start_time and end_time must carry KST offset, not Z
         assertExists(capturedBody, "POST /events must have been called");
         assertEquals(
-          capturedBody.start_time,
+          capturedBody!.start_time,
           "2026-04-15T19:00:00+09:00",
           "start_time must use KST offset +09:00",
         );
         assertEquals(
-          capturedBody.end_time,
+          capturedBody!.end_time,
           "2026-04-15T22:00:00+09:00",
           "end_time must use KST offset +09:00",
         );
@@ -636,12 +636,12 @@ Deno.test(
 
         assertExists(capturedBody, "POST /events must have been called");
         assertEquals(
-          capturedBody.start_time,
+          capturedBody!.start_time,
           "2026-04-15T23:30:00+09:00",
           "start_time must be Apr 15",
         );
         assertEquals(
-          capturedBody.end_time,
+          capturedBody!.end_time,
           "2026-04-16T00:30:00+09:00",
           "end_time must roll to Apr 16 for cross-midnight rule",
         );
