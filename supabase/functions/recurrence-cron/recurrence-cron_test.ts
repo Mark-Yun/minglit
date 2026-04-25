@@ -1,4 +1,4 @@
-import { assertEquals } from "@std/assert";
+import { assertEquals, assertExists } from "@std/assert";
 import { FakeTime } from "@std/testing/time";
 import {
   captureServeHandler,
@@ -572,13 +572,14 @@ Deno.test(
         });
 
         // start_time and end_time must carry KST offset, not Z
+        assertExists(capturedBody, "POST /events must have been called");
         assertEquals(
-          capturedBody?.start_time,
+          capturedBody.start_time,
           "2026-04-15T19:00:00+09:00",
           "start_time must use KST offset +09:00",
         );
         assertEquals(
-          capturedBody?.end_time,
+          capturedBody.end_time,
           "2026-04-15T22:00:00+09:00",
           "end_time must use KST offset +09:00",
         );
