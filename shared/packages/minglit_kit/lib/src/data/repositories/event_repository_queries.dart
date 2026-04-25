@@ -618,10 +618,13 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
       final nowStr = now.toIso8601String();
       final sevenDaysLater = now.add(const Duration(days: 7)).toIso8601String();
 
+      // Fix #1823: filter to 'scheduled' only — completed events (e.g. from cron
+      // timezone bug) must not appear in partner operational views.
       final data = await supabaseClient
           .from('events')
           .select('*, party:parties!inner(*)')
           .eq('party.partner_id', partnerId)
+          .eq('status', 'scheduled')
           .gte('start_time', nowStr)
           .lte('start_time', sevenDaysLater)
           .order('start_time');

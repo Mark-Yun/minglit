@@ -162,8 +162,11 @@ async function processRule(
     if (!shouldGenerate(rule, targetDate)) continue;
 
     const dateStr = toDateStr(targetDate);
-    const startTimestamp = `${dateStr}T${rule.start_time}Z`;
-    const endTimestamp = `${dateStr}T${rule.end_time}Z`;
+    // Fix #1823: rule.start_time/end_time are entered in KST (UTC+9).
+    // Using Z (UTC) caused stored times to be 9h ahead of intent, making events
+    // appear on the wrong KST date and complete 9h late.
+    const startTimestamp = `${dateStr}T${rule.start_time}+09:00`;
+    const endTimestamp = `${dateStr}T${rule.end_time}+09:00`;
 
     // Insert the event (ON CONFLICT DO NOTHING via maybeSingle + error code check)
     const { data: event, error: eventError } = await supabase

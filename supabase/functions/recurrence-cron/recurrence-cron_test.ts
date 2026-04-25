@@ -527,6 +527,68 @@ Deno.test(
   },
 );
 
+// ─── Fix #1823: generated timestamps must use KST (+09:00), not UTC (Z) ──────
+
+Deno.test(
+  "recurrence-cron - generated event timestamps use KST offset (+09:00), not UTC (Z)",
+  async () => {
+    // Freeze clock: window [2026-04-05, 2026-05-05], month_day=15 → Apr 15 event
+    const fakeTime = new FakeTime("2026-04-05T00:00:00Z");
+    try {
+      await withEnv(ENV, async () => {
+        const handler = await captureServeHandler(
+          new URL("./index.ts", import.meta.url),
+        );
+
+        const rule = makeRule({
+          pattern: "monthly",
+          days_of_week: [],
+          month_day: 15,
+          start_time: "19:00:00",
+          end_time: "22:00:00",
+        });
+
+        let capturedBody: Record<string, unknown> | null = null;
+        const { fetchMock } = createFetchMock([
+          rulesRoute([rule]),
+          entryGroupTemplatesEmpty,
+          ticketTemplatesEmpty,
+          {
+            matcher: (req: Request) =>
+              req.url.includes("/rest/v1/events") && req.method === "POST",
+            handler: async (req: Request) => {
+              capturedBody = await req.json() as Record<string, unknown>;
+              return jsonResponse({ id: EVENT_ID });
+            },
+          },
+          rulesUpdateRoute,
+        ]);
+
+        await withMockedFetch(fetchMock, async () => {
+          await withNoIntervals(async () => {
+            const res = await handler(serviceRoleRequest());
+            assertEquals(res.status, 200);
+          });
+        });
+
+        // start_time and end_time must carry KST offset, not Z
+        assertEquals(
+          capturedBody?.start_time,
+          "2026-04-15T19:00:00+09:00",
+          "start_time must use KST offset +09:00",
+        );
+        assertEquals(
+          capturedBody?.end_time,
+          "2026-04-15T22:00:00+09:00",
+          "end_time must use KST offset +09:00",
+        );
+      });
+    } finally {
+      fakeTime.restore();
+    }
+  },
+);
+
 // ─── No active rules → processed=0 ───────────────────────────────────────────
 
 Deno.test(
