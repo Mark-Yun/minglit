@@ -224,6 +224,7 @@ class MorePage extends ConsumerWidget {
             ),
           ],
         ],
+        ),
       ),
     );
   }

@@ -301,7 +301,6 @@ class _FieldEditorCardState extends State<_FieldEditorCard> {
         child: Column(
           children: [
             Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Icon(
                   typeIcon,
