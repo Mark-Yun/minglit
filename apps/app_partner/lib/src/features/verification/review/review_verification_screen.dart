@@ -267,19 +267,19 @@ class _ReviewVerificationScreenState
                         margin: const EdgeInsets.only(
                           right: MinglitSpacing.small,
                         ),
-                      decoration: BoxDecoration(
-                        // Fix: match surface so MinglitHorizontalScrollGroup fade gradient blends correctly
-                        color: theme.colorScheme.surface,
-                        borderRadius: BorderRadius.circular(
-                          MinglitRadius.small,
+                        decoration: BoxDecoration(
+                          // Fix: match surface so MinglitHorizontalScrollGroup fade gradient blends correctly
+                          color: theme.colorScheme.surface,
+                          borderRadius: BorderRadius.circular(
+                            MinglitRadius.small,
+                          ),
                         ),
+                        child: const Icon(Icons.image),
                       ),
-                      child: const Icon(Icons.image),
                     ),
                   ),
                 ),
               ),
-            ),
             const SizedBox(height: MinglitSpacing.large),
             Row(
               children: [
