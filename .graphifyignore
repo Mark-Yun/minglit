@@ -12,8 +12,25 @@
 **/windows/
 **/linux/
 
-# Alchemist golden snapshots (UI regression baselines, not code knowledge)
-**/test/alchemist/goldens/
+# Golden test snapshots (UI regression baselines — exclude images, keep test code)
+# Match both direct children and nested subdirs (gitignore-style needs both forms)
+**/test/alchemist/*.png
+**/test/alchemist/*.jpg
+**/test/alchemist/*.jpeg
+**/test/alchemist/**/*.png
+**/test/alchemist/**/*.jpg
+**/test/alchemist/**/*.jpeg
+**/test/goldens/*.png
+**/test/goldens/*.jpg
+**/test/goldens/**/*.png
+**/test/goldens/**/*.jpg
+**/goldens/*.png
+**/goldens/*.jpg
+**/goldens/**/*.png
+**/goldens/**/*.jpg
+
+# Landing page web assets (favicons / og images, no architectural value)
+**/landing_*/public/
 
 # Test coverage
 coverage/
