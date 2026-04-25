@@ -110,14 +110,17 @@ class PartnerScaffold extends ConsumerWidget {
         // secondaryController.forward() (secondaryAnimation: 0→1), while the
         // INCOMING entry's primaryAnimation goes 0→1. Opacity-0 widgets remain
         // hit-testable in Flutter, so wrap each entry in IgnorePointer and block
-        // pointer events while secondaryAnimation.value > 0 (i.e. this entry is
-        // fading out). Listen on secondaryAnimation so AnimatedBuilder rebuilds
-        // on each tick of the fade-out.
+        // pointer events as soon as the outgoing animation starts. Use
+        // `status != dismissed` instead of `value > 0` so the very first frame
+        // (value still 0.0, status already forward/completed) is also blocked.
         transitionBuilder: (child, animation, secondaryAnimation) =>
             AnimatedBuilder(
               animation: secondaryAnimation,
               builder: (context, widget) => IgnorePointer(
-                ignoring: secondaryAnimation.value > 0.0,
+                // Fix #1835: block on status, not value — value is 0.0 on
+                // the first frame even after forward() is called.
+                ignoring:
+                    secondaryAnimation.status != AnimationStatus.dismissed,
                 child: widget,
               ),
               child: FadeThroughTransition(

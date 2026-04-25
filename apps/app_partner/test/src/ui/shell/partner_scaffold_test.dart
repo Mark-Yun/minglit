@@ -1,3 +1,4 @@
+import 'package:animations/animations.dart';
 import 'package:app_partner/src/logic/current_partner_provider.dart';
 import 'package:app_partner/src/ui/shell/partner_scaffold.dart';
 import 'package:flutter/material.dart';
@@ -222,10 +223,11 @@ void main() {
     }
 
     testWidgets(
-      'outgoing child has IgnorePointer(ignoring: true) during tab-switch '
-      'animation',
+      'outgoing child has IgnorePointer(ignoring: true) on FIRST frame of '
+      'tab-switch animation',
       (tester) async {
         final shellIndex = ValueNotifier<int>(0);
+        addTearDown(shellIndex.dispose);
 
         await tester.pumpWidget(
           buildAnimationSubject(shellIndexNotifier: shellIndex),
@@ -234,20 +236,24 @@ void main() {
 
         // Trigger tab switch — KeyedSubtree key changes, starting animation.
         shellIndex.value = 4;
-        await tester.pump(); // start animation frame
-        await tester.pump(const Duration(milliseconds: 50)); // mid-animation
+        // Single pump: value is still 0.0 but status is already forward.
+        // Fix #1835 uses status != dismissed, so this frame must already block.
+        await tester.pump();
 
-        // The outgoing page must have ignoring=true so opacity-0 buttons
-        // cannot steal taps from the incoming page.
+        // IgnorePointer wraps FadeThroughTransition (ancestor, not descendant),
+        // so use find.ancestor to scope to only our own IgnorePointers.
         final ignorePointers = tester.widgetList<IgnorePointer>(
-          find.byType(IgnorePointer),
+          find.ancestor(
+            of: find.byType(FadeThroughTransition),
+            matching: find.byType(IgnorePointer),
+          ),
         );
         expect(
           ignorePointers.any((ip) => ip.ignoring),
           isTrue,
           reason:
               'Outgoing page must be wrapped in IgnorePointer(ignoring: true) '
-              'during FadeThroughTransition to block ghost taps',
+              'on the very first animation frame to block ghost taps',
         );
       },
     );
@@ -256,6 +262,7 @@ void main() {
       'no IgnorePointer blocks interaction after animation completes',
       (tester) async {
         final shellIndex = ValueNotifier<int>(0);
+        addTearDown(shellIndex.dispose);
 
         await tester.pumpWidget(
           buildAnimationSubject(shellIndexNotifier: shellIndex),
@@ -267,7 +274,10 @@ void main() {
 
         // After the transition, the incoming page must be fully interactive.
         final ignorePointers = tester.widgetList<IgnorePointer>(
-          find.byType(IgnorePointer),
+          find.ancestor(
+            of: find.byType(FadeThroughTransition),
+            matching: find.byType(IgnorePointer),
+          ),
         );
         expect(
           ignorePointers.every((ip) => !ip.ignoring),
