@@ -166,7 +166,11 @@ async function processRule(
     // Using Z (UTC) caused stored times to be 9h ahead of intent, making events
     // appear on the wrong KST date and complete 9h late.
     const startTimestamp = `${dateStr}T${rule.start_time}+09:00`;
-    const endTimestamp = `${dateStr}T${rule.end_time}+09:00`;
+    // If end_time <= start_time the event crosses KST midnight — roll end to next day.
+    const endDateStr = rule.end_time <= rule.start_time
+      ? toDateStr(addDays(targetDate, 1))
+      : dateStr;
+    const endTimestamp = `${endDateStr}T${rule.end_time}+09:00`;
 
     // Insert the event (ON CONFLICT DO NOTHING via maybeSingle + error code check)
     const { data: event, error: eventError } = await supabase

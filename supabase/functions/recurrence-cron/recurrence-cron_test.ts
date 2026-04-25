@@ -590,6 +590,68 @@ Deno.test(
   },
 );
 
+// ─── Fix #1823: cross-midnight KST rule → end_time rolls to next day ─────────
+
+Deno.test(
+  "recurrence-cron - cross-midnight KST rule: end_time rolls to next calendar day",
+  async () => {
+    // Freeze clock: window [2026-04-05, 2026-05-05], month_day=15 → Apr 15 event
+    const fakeTime = new FakeTime("2026-04-05T00:00:00Z");
+    try {
+      await withEnv(ENV, async () => {
+        const handler = await captureServeHandler(
+          new URL("./index.ts", import.meta.url),
+        );
+
+        const rule = makeRule({
+          pattern: "monthly",
+          days_of_week: [],
+          month_day: 15,
+          start_time: "23:30:00",
+          end_time: "00:30:00",
+        });
+
+        let capturedBody: Record<string, unknown> | null = null;
+        const { fetchMock } = createFetchMock([
+          rulesRoute([rule]),
+          entryGroupTemplatesEmpty,
+          ticketTemplatesEmpty,
+          {
+            matcher: (req: Request) =>
+              req.url.includes("/rest/v1/events") && req.method === "POST",
+            handler: async (req: Request) => {
+              capturedBody = await req.json() as Record<string, unknown>;
+              return jsonResponse({ id: EVENT_ID });
+            },
+          },
+          rulesUpdateRoute,
+        ]);
+
+        await withMockedFetch(fetchMock, async () => {
+          await withNoIntervals(async () => {
+            const res = await handler(serviceRoleRequest());
+            assertEquals(res.status, 200);
+          });
+        });
+
+        assertExists(capturedBody, "POST /events must have been called");
+        assertEquals(
+          capturedBody.start_time,
+          "2026-04-15T23:30:00+09:00",
+          "start_time must be Apr 15",
+        );
+        assertEquals(
+          capturedBody.end_time,
+          "2026-04-16T00:30:00+09:00",
+          "end_time must roll to Apr 16 for cross-midnight rule",
+        );
+      });
+    } finally {
+      fakeTime.restore();
+    }
+  },
+);
+
 // ─── No active rules → processed=0 ───────────────────────────────────────────
 
 Deno.test(
