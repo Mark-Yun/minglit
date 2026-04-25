@@ -26,8 +26,7 @@ class MorePage extends ConsumerWidget {
         // Fix #1824: add bottom safe-area so last item clears the home bar
         padding: EdgeInsets.only(
           top: MinglitSpacing.medium,
-          bottom:
-              MinglitSpacing.medium + MediaQuery.paddingOf(context).bottom,
+          bottom: MinglitSpacing.medium + MediaQuery.paddingOf(context).bottom,
         ),
         children: [
           // Group 1: Profile
