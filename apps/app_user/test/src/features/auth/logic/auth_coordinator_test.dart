@@ -80,7 +80,7 @@ void main() {
 
       verify(
         () => mockRouter.push(
-          any(that: contains('/dev/switch') & contains('from=')),
+          any(that: allOf(contains('/dev/switch'), contains('from='))),
         ),
       ).called(1);
     });
