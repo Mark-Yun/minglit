@@ -22,6 +22,7 @@ class MorePage extends ConsumerWidget {
 
     return Scaffold(
       appBar: MinglitTheme.simpleAppBar(title: '더보기', showBackButton: false),
+      // Fix #1824, #1803: SafeArea wraps body to handle system safe area insets (home bar overlap)
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.only(
