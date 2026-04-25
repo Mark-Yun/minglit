@@ -214,6 +214,22 @@ class _FakeFilterBuilder extends Fake
   }
 
   @override
+  PostgrestFilterBuilder<List<Map<String, dynamic>>> not(
+    String column,
+    String operator,
+    Object? value,
+  ) {
+    recordedFilters.add(
+      RecordedFilterOperation(
+        method: 'not',
+        column: column,
+        value: '$operator:$value',
+      ),
+    );
+    return this;
+  }
+
+  @override
   PostgrestFilterBuilder<List<Map<String, dynamic>>> match(
     Map<String, Object> query,
   ) {
