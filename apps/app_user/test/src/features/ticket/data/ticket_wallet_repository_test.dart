@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:app_user/src/features/ticket/data/ticket_wallet_repository.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -61,6 +62,32 @@ void main() {
       ).thenAnswer((_) async => null);
 
       final result = await repository.getTicket('non_existent');
+
+      expect(result, isNull);
+    });
+
+    // Fix #1819: SecureStorage can hang on Android (KeyStore locked) — must timeout
+    test('getTicket returns null when storage read hangs (timeout)', () async {
+      when(
+        () => mockStorage.read(key: any(named: 'key')),
+      ).thenAnswer((_) async {
+        await Future<void>.delayed(const Duration(seconds: 10));
+        return 'should_not_reach';
+      });
+
+      final result = await repository
+          .getTicket('hanging_ticket')
+          .timeout(const Duration(seconds: 7));
+
+      expect(result, isNull);
+    });
+
+    test('getTicket returns null when storage throws', () async {
+      when(
+        () => mockStorage.read(key: any(named: 'key')),
+      ).thenThrow(Exception('KeyStore error'));
+
+      final result = await repository.getTicket('ticket_1');
 
       expect(result, isNull);
     });
