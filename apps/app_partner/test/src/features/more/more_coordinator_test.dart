@@ -12,6 +12,7 @@ void main() {
   setUp(() {
     mockRouter = MockGoRouter();
     when(() => mockRouter.push(any())).thenAnswer((_) async => null);
+    when(() => mockRouter.go(any())).thenReturn(null);
   });
 
   group('MoreCoordinator', () {
@@ -66,6 +67,21 @@ void main() {
 
       verify(
         () => mockRouter.push(any(that: equals('/more/parties'))),
+      ).called(1);
+    });
+
+    // Fix #1834: push() cross-branch (more → settlement) fails in StatefulShellRoute.
+    // Must use go() — not push() — so this test guards against regression.
+    test('pushBankAccountManagement calls router.go with /settlement/bank-account', () {
+      final container = createContainer(
+        overrides: [goRouterProvider.overrideWithValue(mockRouter)],
+      );
+
+      container.read(moreCoordinatorProvider).pushBankAccountManagement();
+
+      verifyNever(() => mockRouter.push(any()));
+      verify(
+        () => mockRouter.go(any(that: equals('/settlement/bank-account'))),
       ).called(1);
     });
 

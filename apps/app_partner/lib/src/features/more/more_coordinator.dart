@@ -32,8 +32,11 @@ class MoreCoordinator {
   }
 
   // Fix #1568: 정산 계좌 관리 진입점
+  // Fix #1834: push() cross-branch (/more → /settlement) fails silently in
+  // StatefulShellRoute (same class of bug as #1680). Use go() to switch branch
+  // directly — matching the pattern of goToSettlement() in SettlementCoordinator.
   void pushBankAccountManagement() {
-    unawaited(_router.push(const BankAccountRoute().location));
+    _router.go(const BankAccountRoute().location);
   }
 
   void pushAccountDeletion() {
