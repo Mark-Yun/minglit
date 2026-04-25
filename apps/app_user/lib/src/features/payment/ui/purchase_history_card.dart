@@ -136,8 +136,12 @@ class PurchaseHistoryCard extends ConsumerWidget {
           // 나머지 버튼은 flex:1로 유지하여 1줄 표시 보장.
           // Fix #1236: 보조 버튼(영수증/문의하기)을 OutlinedButton → TextButton으로
           // 낮춤 — 브랜드 보라 아웃라인 제거, 정보 위계 명확화
-          // Fix #1820: crossAxisAlignment.stretch로 ElevatedButton/TextButton 높이 통일
-          Row(
+          // Fix #1820: IntrinsicHeight + stretch로 ElevatedButton/TextButton 높이 통일
+          // IntrinsicHeight is required because the Row lives inside an
+          // unbounded-height Column (ListView item), and CrossAxisAlignment.stretch
+          // would propagate infinite height constraints to children without it.
+          IntrinsicHeight(
+            child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Fix #1820: 무료 티켓(paymentId 없음)에서 영수증 버튼 노출 금지
@@ -225,6 +229,7 @@ class PurchaseHistoryCard extends ConsumerWidget {
                 ),
               ],
             ],
+          ),
           ),
         ],
       ),
