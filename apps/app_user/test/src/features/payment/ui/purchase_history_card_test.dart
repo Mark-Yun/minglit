@@ -197,6 +197,7 @@ void main() {
           ticketId: 'ticket1',
           userId: 'user1',
           status: 'paid',
+          paymentId: 'pay_abc123',
           createdAt: DateTime(2026, 4),
           updatedAt: DateTime(2026, 4),
           event: Event(
@@ -236,6 +237,105 @@ void main() {
       expect(find.text('영수증'), findsOneWidget);
       expect(find.text('문의하기'), findsOneWidget);
       expect(find.byType(OutlinedButton), findsNothing);
+    });
+  });
+
+  group('PurchaseHistoryCard — Fix #1820 영수증 버튼/버튼 정렬 회귀 테스트', () {
+    testWidgets('paymentId가 null이면 영수증 버튼이 표시되지 않는다', (tester) async {
+      final mockHistory = [
+        EventApplication(
+          id: 'app1',
+          eventId: 'event1',
+          ticketId: 'ticket1',
+          userId: 'user1',
+          status: 'paid',
+          createdAt: DateTime(2026, 4),
+          updatedAt: DateTime(2026, 4),
+          event: Event(
+            id: 'event1',
+            partyId: 'party1',
+            startTime: DateTime(2026, 5, 1, 19),
+            endTime: DateTime(2026, 5, 1, 21),
+            createdAt: DateTime(2026, 4),
+            updatedAt: DateTime(2026, 4),
+            title: 'Free Event',
+          ),
+          ticket: Ticket(
+            id: 'ticket1',
+            name: 'Free Ticket',
+            createdAt: DateTime(2026, 4),
+            updatedAt: DateTime(2026, 4),
+          ),
+        ),
+      ];
+
+      when(
+        () => mockEventRepository.getMyPurchaseHistory('user1'),
+      ).thenAnswer((_) async => mockHistory);
+
+      await tester.pumpWidget(
+        createTestWidget([
+          currentUserProvider.overrideWith((ref) => mockUser),
+          eventRepositoryProvider.overrideWithValue(mockEventRepository),
+        ]),
+      );
+
+      await tester.pump();
+      await tester.pump();
+      await tester.pump();
+
+      // Fix #1820: 무료 티켓(paymentId 없음)에서 영수증 버튼 노출 금지
+      expect(find.text('영수증'), findsNothing);
+      expect(find.text('문의하기'), findsOneWidget);
+    });
+
+    testWidgets('paymentId가 있으면 영수증 버튼이 표시된다', (tester) async {
+      final mockHistory = [
+        EventApplication(
+          id: 'app1',
+          eventId: 'event1',
+          ticketId: 'ticket1',
+          userId: 'user1',
+          status: 'paid',
+          paymentId: 'imp_1234567890',
+          createdAt: DateTime(2026, 4),
+          updatedAt: DateTime(2026, 4),
+          event: Event(
+            id: 'event1',
+            partyId: 'party1',
+            startTime: DateTime(2026, 5, 1, 19),
+            endTime: DateTime(2026, 5, 1, 21),
+            createdAt: DateTime(2026, 4),
+            updatedAt: DateTime(2026, 4),
+            title: 'Paid Event',
+          ),
+          ticket: Ticket(
+            id: 'ticket1',
+            name: 'Paid Ticket',
+            createdAt: DateTime(2026, 4),
+            updatedAt: DateTime(2026, 4),
+          ),
+        ),
+      ];
+
+      when(
+        () => mockEventRepository.getMyPurchaseHistory('user1'),
+      ).thenAnswer((_) async => mockHistory);
+
+      await tester.pumpWidget(
+        createTestWidget([
+          currentUserProvider.overrideWith((ref) => mockUser),
+          eventRepositoryProvider.overrideWithValue(mockEventRepository),
+        ]),
+      );
+
+      await tester.pump();
+      await tester.pump();
+      await tester.pump();
+
+      // Fix #1820: paymentId 있으면 영수증 버튼 표시
+      expect(find.text('영수증'), findsOneWidget);
+      expect(find.text('문의하기'), findsOneWidget);
     });
   });
 }
