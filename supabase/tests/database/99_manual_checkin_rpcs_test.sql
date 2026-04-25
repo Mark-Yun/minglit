@@ -200,9 +200,13 @@ SELECT is(
   'process_manual_checkin: 체크인 후 status = checked_in'
 );
 
+SELECT tests.authenticate_as_service_role();
+
 -- ============================================================
 -- Test 10: no_show 참가자 → not_found (ticket_issued 외 상태 차단)
 -- ============================================================
+
+SELECT tests.authenticate_as('mc_staff');
 
 SELECT is(
   public.process_manual_checkin(

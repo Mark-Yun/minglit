@@ -4,6 +4,7 @@ import 'package:app_partner/src/features/checkin/manual/manual_checkin_controlle
 import 'package:app_partner/src/features/checkin/manual/manual_checkin_sheet.dart';
 import 'package:app_partner/src/features/checkin/stats/entry_group_checkin_stats_controller.dart';
 import 'package:app_partner/src/features/checkin/widgets/checkin_scanner_overlay.dart';
+import 'package:app_partner/src/features/checkin/widgets/entry_group_row.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
