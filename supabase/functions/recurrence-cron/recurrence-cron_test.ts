@@ -1,4 +1,4 @@
-import { assertEquals } from "@std/assert";
+import { assertEquals, assertExists } from "@std/assert";
 import { FakeTime } from "@std/testing/time";
 import {
   captureServeHandler,
@@ -521,6 +521,136 @@ Deno.test(
         });
       });
     });
+    } finally {
+      fakeTime.restore();
+    }
+  },
+);
+
+// ─── Fix #1823: generated timestamps must use KST (+09:00), not UTC (Z) ──────
+
+Deno.test(
+  "recurrence-cron - generated event timestamps use KST offset (+09:00), not UTC (Z)",
+  async () => {
+    // Freeze clock: window [2026-04-05, 2026-05-05], month_day=15 → Apr 15 event
+    const fakeTime = new FakeTime("2026-04-05T00:00:00Z");
+    try {
+      await withEnv(ENV, async () => {
+        const handler = await captureServeHandler(
+          new URL("./index.ts", import.meta.url),
+        );
+
+        const rule = makeRule({
+          pattern: "monthly",
+          days_of_week: [],
+          month_day: 15,
+          start_time: "19:00:00",
+          end_time: "22:00:00",
+        });
+
+        let capturedBody: Record<string, unknown> | null = null;
+        const { fetchMock } = createFetchMock([
+          rulesRoute([rule]),
+          entryGroupTemplatesEmpty,
+          ticketTemplatesEmpty,
+          {
+            matcher: (req: Request) =>
+              req.url.includes("/rest/v1/events") && req.method === "POST",
+            handler: async (req: Request) => {
+              capturedBody = await req.json() as Record<string, unknown>;
+              return jsonResponse({ id: EVENT_ID });
+            },
+          },
+          rulesUpdateRoute,
+        ]);
+
+        await withMockedFetch(fetchMock, async () => {
+          await withNoIntervals(async () => {
+            const res = await handler(serviceRoleRequest());
+            assertEquals(res.status, 200);
+          });
+        });
+
+        // start_time and end_time must carry KST offset, not Z
+        assertExists(capturedBody, "POST /events must have been called");
+        // TS narrows capturedBody to never via assertExists<null> (async closure
+        // means the assignment may not be visible to the type checker here).
+        const kstBody = capturedBody as unknown as Record<string, unknown>;
+        assertEquals(
+          kstBody.start_time,
+          "2026-04-15T19:00:00+09:00",
+          "start_time must use KST offset +09:00",
+        );
+        assertEquals(
+          kstBody.end_time,
+          "2026-04-15T22:00:00+09:00",
+          "end_time must use KST offset +09:00",
+        );
+      });
+    } finally {
+      fakeTime.restore();
+    }
+  },
+);
+
+// ─── Fix #1823: cross-midnight KST rule → end_time rolls to next day ─────────
+
+Deno.test(
+  "recurrence-cron - cross-midnight KST rule: end_time rolls to next calendar day",
+  async () => {
+    // Freeze clock: window [2026-04-05, 2026-05-05], month_day=15 → Apr 15 event
+    const fakeTime = new FakeTime("2026-04-05T00:00:00Z");
+    try {
+      await withEnv(ENV, async () => {
+        const handler = await captureServeHandler(
+          new URL("./index.ts", import.meta.url),
+        );
+
+        const rule = makeRule({
+          pattern: "monthly",
+          days_of_week: [],
+          month_day: 15,
+          start_time: "23:30:00",
+          end_time: "00:30:00",
+        });
+
+        let capturedBody: Record<string, unknown> | null = null;
+        const { fetchMock } = createFetchMock([
+          rulesRoute([rule]),
+          entryGroupTemplatesEmpty,
+          ticketTemplatesEmpty,
+          {
+            matcher: (req: Request) =>
+              req.url.includes("/rest/v1/events") && req.method === "POST",
+            handler: async (req: Request) => {
+              capturedBody = await req.json() as Record<string, unknown>;
+              return jsonResponse({ id: EVENT_ID });
+            },
+          },
+          rulesUpdateRoute,
+        ]);
+
+        await withMockedFetch(fetchMock, async () => {
+          await withNoIntervals(async () => {
+            const res = await handler(serviceRoleRequest());
+            assertEquals(res.status, 200);
+          });
+        });
+
+        assertExists(capturedBody, "POST /events must have been called");
+        // Same TS closure-narrowing workaround as the KST offset test above.
+        const midnightBody = capturedBody as unknown as Record<string, unknown>;
+        assertEquals(
+          midnightBody.start_time,
+          "2026-04-15T23:30:00+09:00",
+          "start_time must be Apr 15",
+        );
+        assertEquals(
+          midnightBody.end_time,
+          "2026-04-16T00:30:00+09:00",
+          "end_time must roll to Apr 16 for cross-midnight rule",
+        );
+      });
     } finally {
       fakeTime.restore();
     }

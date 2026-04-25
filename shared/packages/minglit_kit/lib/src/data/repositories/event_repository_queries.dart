@@ -618,10 +618,15 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
       final nowStr = now.toIso8601String();
       final sevenDaysLater = now.add(const Duration(days: 7)).toIso8601String();
 
+      // Fix #1823: exclude completed/cancelled events — events transition to
+      // 'active' 30 min before start_time, so filtering to 'scheduled' only
+      // would hide legitimate active events that haven't started yet.
+      // Only hard-exclude terminal statuses (completed, cancelled).
       final data = await supabaseClient
           .from('events')
           .select('*, party:parties!inner(*)')
           .eq('party.partner_id', partnerId)
+          .not('status', 'in', '(completed,cancelled)')
           .gte('start_time', nowStr)
           .lte('start_time', sevenDaysLater)
           .order('start_time');
