@@ -37,11 +37,14 @@ part 'app_routes.g.dart';
 /// Path: `/dev/switch`
 @TypedGoRoute<DevUserSwitchRoute>(path: '/dev/switch')
 class DevUserSwitchRoute extends GoRouteData with $DevUserSwitchRoute {
-  const DevUserSwitchRoute();
+  // Fix #1829: propagate `from` so post-login redirect returns to intended page
+  const DevUserSwitchRoute({this.from});
+
+  final String? from;
 
   @override
   Widget build(BuildContext context, GoRouterState state) =>
-      const DevUserSwitchScreen();
+      DevUserSwitchScreen(from: from);
 }
 
 /// **Auth Route**: Login Screen.

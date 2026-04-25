@@ -41,10 +41,15 @@ RouteBase get $devUserSwitchRoute => GoRouteData.$route(
 
 mixin $DevUserSwitchRoute on GoRouteData {
   static DevUserSwitchRoute _fromState(GoRouterState state) =>
-      const DevUserSwitchRoute();
+      DevUserSwitchRoute(from: state.uri.queryParameters['from']);
+
+  DevUserSwitchRoute get _self => this as DevUserSwitchRoute;
 
   @override
-  String get location => GoRouteData.$location('/dev/switch');
+  String get location => GoRouteData.$location(
+    '/dev/switch',
+    queryParams: {if (_self.from != null) 'from': _self.from},
+  );
 
   @override
   void go(BuildContext context) => context.go(location);

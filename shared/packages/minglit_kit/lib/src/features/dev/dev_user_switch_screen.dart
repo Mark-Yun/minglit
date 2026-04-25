@@ -23,7 +23,10 @@ part 'dev_user_switch_screen.g.dart';
 /// `flutter test shared/packages/minglit_seeder` CLI commands instead.
 class DevUserSwitchScreen extends ConsumerStatefulWidget {
   /// Creates a dev-only user switch screen.
-  const DevUserSwitchScreen({super.key});
+  // Fix #1829: accept `from` to redirect after login instead of defaulting to '/'
+  const DevUserSwitchScreen({super.key, this.from});
+
+  final String? from;
 
   /// Creates the state for the dev user switch screen.
   @override
@@ -44,7 +47,8 @@ class _DevUserSwitchScreenState extends ConsumerState<DevUserSwitchScreen> {
 
       if (mounted) {
         ref.invalidate(currentUserProfileProvider);
-        GoRouter.of(context).go('/');
+        // Fix #1829: redirect to `from` if provided, else home
+        GoRouter.of(context).go(widget.from ?? '/');
       }
     } on Exception catch (e, st) {
       Log.e('❌ Failed to switch user to $email', e, st);
