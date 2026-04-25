@@ -8,7 +8,8 @@
 
 # AI agent workspace
 .sisyphus/
-.claude/
+.claude/*
+!.claude/settings.json
 .omc/
 
 # Local scripts
