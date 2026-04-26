@@ -411,7 +411,20 @@ class _BugReporterWrapperState extends ConsumerState<BugReporterWrapper> {
 
   @override
   Widget build(BuildContext context) {
-    return RepaintBoundary(key: _boundaryKey, child: widget.child);
+    // Fix #1858: global overlay — FAB visible on all screens, not just home
+    return RepaintBoundary(
+      key: _boundaryKey,
+      child: Stack(
+        children: [
+          widget.child,
+          const Positioned(
+            right: MinglitSpacing.medium,
+            bottom: MinglitSpacing.medium,
+            child: SafeArea(child: BugReportFab()),
+          ),
+        ],
+      ),
+    );
   }
 }
 
