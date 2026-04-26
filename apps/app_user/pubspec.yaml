@@ -31,6 +31,7 @@ environment:
 dependencies:
   cupertino_icons: ^1.0.8
   file_picker: ^10.3.8  # iOS: native file picker
+  flutter_displaymode: ^0.6.0  # Android: request 120Hz/ProMotion high refresh rate
   firebase_core: ^4.3.0
   flutter:
     sdk: flutter

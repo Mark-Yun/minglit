@@ -5,6 +5,7 @@ export 'src/utils/age_util.dart';
 export 'src/utils/error_ui_handler.dart';
 export 'src/utils/exceptions.dart';
 export 'src/utils/image_utils.dart';
+export 'src/utils/supabase_image_url.dart';
 export 'src/utils/log.dart';
 export 'src/utils/navigation_observer.dart';
 export 'src/utils/refund_calculator.dart';

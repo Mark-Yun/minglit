@@ -1,10 +1,13 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:app_user/firebase_options.dart';
 import 'package:app_user/src/l10n/generated/app_localizations.dart';
 import 'package:app_user/src/routing/app_router.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -18,6 +21,16 @@ part 'main.g.dart';
 Future<void> main() async {
   final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+
+  // perf: Request high refresh rate (120Hz/ProMotion) on Android.
+  // No-op on iOS (handled by the OS) and web (not applicable).
+  if (!kIsWeb && Platform.isAndroid) {
+    try {
+      await FlutterDisplayMode.setHighRefreshRate();
+    } catch (_) {
+      // Some devices don't support configurable display modes; fail silently.
+    }
+  }
 
   EnvKeyStore.validate();
 

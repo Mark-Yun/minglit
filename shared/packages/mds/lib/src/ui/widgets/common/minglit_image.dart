@@ -72,6 +72,21 @@ class MinglitImage extends StatelessWidget {
 
     ImageProvider provider;
 
+    // Derive pixel-aligned cache dimensions from logical size × DPR to avoid
+    // decoding full-resolution images for small thumbnails during scroll.
+    // Only applied when a finite, positive logical dimension is provided.
+    // Guard against double.infinity (e.g. callers that pass width: double.infinity
+    // for fill-parent semantics) — infinity × DPR cannot be converted to int.
+    // perf: cacheWidth/cacheHeight reduce memory and decode cost on scroll.
+    // Directive: cacheW must always be paired with a finite explicit width param.
+    final double dpr = MediaQuery.devicePixelRatioOf(context);
+    final int? cacheW = (width != null && width!.isFinite && width! > 0)
+        ? (width! * dpr).round()
+        : null;
+    final int? cacheH = (height != null && height!.isFinite && height! > 0)
+        ? (height! * dpr).round()
+        : null;
+
     if (_isNetwork) {
       provider = NetworkImage(path);
     } else if (kIsWeb && path.startsWith('blob:')) {
@@ -83,8 +98,17 @@ class MinglitImage extends StatelessWidget {
       // Assuming it's a file path for native or other types of paths
       provider = AssetImage(path);
     }
+
+    // Wrap with ResizeImage so the engine decodes at physical-pixel size
+    // rather than full resolution. The base Image() constructor does not
+    // expose cacheWidth/cacheHeight directly; ResizeImage is the public API.
+    // perf: Directive: cacheW must always be paired with the explicit width
+    // param on MinglitImage so the logical layout size is preserved.
+    final ImageProvider resolvedProvider =
+        ResizeImage.resizeIfNeeded(cacheW, cacheH, provider);
+
     return Image(
-      image: provider,
+      image: resolvedProvider,
       height: height,
       width: width,
       fit: fit,
