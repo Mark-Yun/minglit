@@ -399,8 +399,7 @@ mixin $EventApplicationDetailRoute on GoRouteData {
         applicationId: state.pathParameters['applicationId']!,
       );
 
-  EventApplicationDetailRoute get _self =>
-      this as EventApplicationDetailRoute;
+  EventApplicationDetailRoute get _self => this as EventApplicationDetailRoute;
 
   @override
   String get location => GoRouteData.$location(
