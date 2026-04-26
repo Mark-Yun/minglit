@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:minglit_kit/src/theme/minglit_theme.dart';
-import 'package:minglit_kit/src/ui/widgets/common/loading_indicator.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_skeleton.dart';
+import 'package:mds/src/theme/minglit_theme.dart';
+import 'package:mds/src/ui/widgets/common/loading_indicator.dart';
+import 'package:mds/src/ui/widgets/common/minglit_skeleton.dart';
 
 /// Design catalog tab displaying loading indicator widgets.
 class LoadingSection extends StatelessWidget {

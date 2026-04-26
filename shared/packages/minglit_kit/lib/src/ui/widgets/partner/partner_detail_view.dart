@@ -5,10 +5,10 @@ import 'package:minglit_kit/src/data/models/partner.dart';
 import 'package:minglit_kit/src/data/models/social_interaction.dart';
 import 'package:minglit_kit/src/features/social/ui/minglit_social_button.dart';
 import 'package:minglit_kit/src/logic/providers/event_feed_provider.dart';
-import 'package:minglit_kit/src/theme/minglit_theme.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_async_value_widget.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_content_layout.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_section.dart';
+import 'package:mds/src/theme/minglit_theme.dart';
+import 'package:mds/src/ui/widgets/common/minglit_async_value_widget.dart';
+import 'package:mds/src/ui/widgets/common/minglit_content_layout.dart';
+import 'package:mds/src/ui/widgets/common/minglit_section.dart';
 import 'package:minglit_kit/src/ui/widgets/party/event_card.dart';
 
 /// A detailed view of a Partner profile.

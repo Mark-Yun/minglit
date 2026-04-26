@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:minglit_kit/src/features/auth/logic/staff_guard_provider.dart';
 import 'package:minglit_kit/src/features/loading/global_loading_controller.dart';
-import 'package:minglit_kit/src/theme/minglit_theme.dart';
+import 'package:mds/src/theme/minglit_theme.dart';
 
 /// Displays the staff verification gate UI.
 class StaffGateScreen extends ConsumerStatefulWidget {

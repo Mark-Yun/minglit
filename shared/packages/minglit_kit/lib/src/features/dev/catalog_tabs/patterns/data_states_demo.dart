@@ -1,8 +1,8 @@
 // feat #715: P6 빈/에러/로딩 상태 패턴 데모
 import 'package:flutter/material.dart';
-import 'package:minglit_kit/src/theme/minglit_theme.dart';
-import 'package:minglit_kit/src/ui/widgets/common/loading_indicator.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_skeleton.dart';
+import 'package:mds/src/theme/minglit_theme.dart';
+import 'package:mds/src/ui/widgets/common/loading_indicator.dart';
+import 'package:mds/src/ui/widgets/common/minglit_skeleton.dart';
 
 /// The four demo states for [DataStatesDemoPage].
 enum DemoState {

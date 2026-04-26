@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:minglit_kit/src/features/notification/logic/notification_settings_controller.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_async_value_widget.dart';
+import 'package:mds/src/ui/widgets/common/minglit_async_value_widget.dart';
 
 /// Displays notification settings and toggles.
 class NotificationSettingsScreen extends ConsumerWidget {

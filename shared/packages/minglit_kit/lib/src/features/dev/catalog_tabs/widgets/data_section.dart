@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:minglit_kit/src/theme/minglit_theme.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_content_card.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_image.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_key_value_row.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_participant_gauge.dart';
+import 'package:mds/src/theme/minglit_theme.dart';
+import 'package:mds/src/ui/widgets/common/minglit_content_card.dart';
+import 'package:mds/src/ui/widgets/common/minglit_image.dart';
+import 'package:mds/src/ui/widgets/common/minglit_key_value_row.dart';
+import 'package:mds/src/ui/widgets/common/minglit_participant_gauge.dart';
 
 /// Design catalog tab displaying data display widgets.
 class DataSection extends StatelessWidget {

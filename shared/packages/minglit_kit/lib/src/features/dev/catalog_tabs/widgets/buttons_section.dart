@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:minglit_kit/src/theme/minglit_theme.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_chip.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_filter_chip.dart';
+import 'package:mds/src/theme/minglit_theme.dart';
+import 'package:mds/src/ui/widgets/common/minglit_chip.dart';
+import 'package:mds/src/ui/widgets/common/minglit_filter_chip.dart';
 
 /// Design catalog tab displaying button widgets.
 class ButtonsSection extends StatefulWidget {

@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:minglit_kit/src/data/models/party.dart';
-import 'package:minglit_kit/src/theme/minglit_theme.dart';
+import 'package:mds/src/theme/minglit_theme.dart';
 // Fix #108: Use conditional import to load the correct platform implementation
 // instead of always loading the stub placeholder.
 import 'package:minglit_kit/src/ui/widgets/map/location_map.dart'

@@ -11,8 +11,8 @@ import 'package:minglit_kit/src/data/repositories/consent_repository.dart';
 import 'package:minglit_kit/src/features/consent/logic/consent_controller.dart';
 import 'package:minglit_kit/src/features/iamport/data/repository/iamport_repository.dart';
 import 'package:minglit_kit/src/features/verification/ui/identity_verification_consent_sheet.dart';
-import 'package:minglit_kit/src/theme/minglit_theme.dart';
-import 'package:minglit_kit/src/ui/widgets/common/loading_indicator.dart';
+import 'package:mds/src/theme/minglit_theme.dart';
+import 'package:mds/src/ui/widgets/common/loading_indicator.dart';
 import 'package:minglit_kit/src/utils/error_ui_handler.dart';
 
 /// **Identity Verification Screen**

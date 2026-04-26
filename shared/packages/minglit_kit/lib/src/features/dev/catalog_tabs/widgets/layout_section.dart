@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:minglit_kit/src/theme/minglit_theme.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_content_card.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_content_layout.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_key_value_row.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_list_tile.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_section.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_section_divider.dart';
+import 'package:mds/src/theme/minglit_theme.dart';
+import 'package:mds/src/ui/widgets/common/minglit_content_card.dart';
+import 'package:mds/src/ui/widgets/common/minglit_content_layout.dart';
+import 'package:mds/src/ui/widgets/common/minglit_key_value_row.dart';
+import 'package:mds/src/ui/widgets/common/minglit_list_tile.dart';
+import 'package:mds/src/ui/widgets/common/minglit_section.dart';
+import 'package:mds/src/ui/widgets/common/minglit_section_divider.dart';
 
 /// Design catalog tab displaying layout widgets.
 class LayoutSection extends StatelessWidget {

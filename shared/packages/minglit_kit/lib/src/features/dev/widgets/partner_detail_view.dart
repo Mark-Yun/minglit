@@ -8,8 +8,8 @@ import 'package:minglit_kit/src/data/models/social_interaction.dart';
 import 'package:minglit_kit/src/data/repositories/party_repository.dart';
 import 'package:minglit_kit/src/features/dev/widgets/party_detail_view.dart';
 import 'package:minglit_kit/src/features/social/ui/minglit_social_button.dart';
-import 'package:minglit_kit/src/theme/minglit_theme.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_async_value_widget.dart';
+import 'package:mds/src/theme/minglit_theme.dart';
+import 'package:mds/src/ui/widgets/common/minglit_async_value_widget.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'partner_detail_view.g.dart';
