@@ -8,8 +8,8 @@
 // Widget tests are required because both methods call context.showMinglitSuccess
 // and handleMinglitError, which need a Material/Scaffold ancestor.
 
-import 'package:app_partner/src/features/party/detail/party_detail_coordinator.dart';
 import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
+import 'package:app_partner/src/features/party/detail/party_detail_coordinator.dart';
 import 'package:app_partner/src/l10n/generated/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';

@@ -9,8 +9,8 @@
 // updatePartyCapacityAndContact feeds into capacity limits for event tickets
 // and contact routing; a regression breaks partner communications.
 
-import 'package:app_partner/src/features/party/detail/party_detail_coordinator.dart';
 import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
+import 'package:app_partner/src/features/party/detail/party_detail_coordinator.dart';
 import 'package:app_partner/src/l10n/generated/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -143,8 +143,9 @@ void main() {
         await tester.tap(find.text('add'));
         await tester.pumpAndSettle();
 
-        final captured =
-            verify(() => mockPartyRepo.updateParty(captureAny())).captured;
+        final captured = verify(
+          () => mockPartyRepo.updateParty(captureAny()),
+        ).captured;
         expect(captured, hasLength(1));
         final updatedParty = captured.first as Party;
         expect(updatedParty.entryGroups, hasLength(2));
@@ -164,7 +165,7 @@ void main() {
       (tester) async {
         // The group passed in may have an empty partyId from the editor;
         // addPartyEntryGroup must copyWith(partyId: partyId).
-        final group = const EntryGroupTemplate(id: 'eg-1', partyId: '');
+        const group = EntryGroupTemplate(id: 'eg-1', partyId: '');
         final party = _makeParty('party-1');
 
         await tester.pumpWidget(
@@ -183,8 +184,9 @@ void main() {
         await tester.tap(find.text('add'));
         await tester.pumpAndSettle();
 
-        final captured =
-            verify(() => mockPartyRepo.updateParty(captureAny())).captured;
+        final captured = verify(
+          () => mockPartyRepo.updateParty(captureAny()),
+        ).captured;
         final updatedParty = captured.first as Party;
         final savedGroup = updatedParty.entryGroups!.first;
         // partyId must be filled in — not the empty string from the editor
@@ -230,12 +232,11 @@ void main() {
     testWidgets(
       'replaces the matching group and preserves all other groups',
       (tester) async {
-        final g1 = _makeGroup('eg-1', gender: 'male');
+        final g1 = _makeGroup('eg-1');
         final g2 = _makeGroup('eg-2', gender: 'female');
         final party = _makeParty('party-1', entryGroups: [g1, g2]);
 
-        final updatedG1 =
-            g1.copyWith(gender: 'mixed', birthYearMin: 1990);
+        final updatedG1 = g1.copyWith(gender: 'mixed', birthYearMin: 1990);
 
         await tester.pumpWidget(
           _buildTestApp(
@@ -256,8 +257,9 @@ void main() {
         await tester.tap(find.text('update'));
         await tester.pumpAndSettle();
 
-        final captured =
-            verify(() => mockPartyRepo.updateParty(captureAny())).captured;
+        final captured = verify(
+          () => mockPartyRepo.updateParty(captureAny()),
+        ).captured;
         final updatedParty = captured.first as Party;
         expect(updatedParty.entryGroups, hasLength(2));
 
@@ -303,8 +305,9 @@ void main() {
         await tester.tap(find.text('update'));
         await tester.pumpAndSettle();
 
-        final captured =
-            verify(() => mockPartyRepo.updateParty(captureAny())).captured;
+        final captured = verify(
+          () => mockPartyRepo.updateParty(captureAny()),
+        ).captured;
         final updatedParty = captured.first as Party;
         // Length unchanged — phantom group was not appended
         expect(updatedParty.entryGroups, hasLength(1));
@@ -342,8 +345,9 @@ void main() {
         await tester.tap(find.text('remove'));
         await tester.pumpAndSettle();
 
-        final captured =
-            verify(() => mockPartyRepo.updateParty(captureAny())).captured;
+        final captured = verify(
+          () => mockPartyRepo.updateParty(captureAny()),
+        ).captured;
         final updatedParty = captured.first as Party;
         expect(updatedParty.entryGroups, hasLength(1));
         expect(updatedParty.entryGroups!.first.id, 'eg-2');
@@ -375,8 +379,9 @@ void main() {
         await tester.tap(find.text('remove'));
         await tester.pumpAndSettle();
 
-        final captured =
-            verify(() => mockPartyRepo.updateParty(captureAny())).captured;
+        final captured = verify(
+          () => mockPartyRepo.updateParty(captureAny()),
+        ).captured;
         final updatedParty = captured.first as Party;
         expect(updatedParty.entryGroups, isEmpty);
       },
@@ -392,8 +397,6 @@ void main() {
       (tester) async {
         final party = _makeParty(
           'party-1',
-          minConfirmedCount: 5,
-          maxParticipants: 20,
           contactOptions: {'phone': '010-0000-0000'},
         );
 
@@ -418,8 +421,9 @@ void main() {
         await tester.tap(find.text('save'));
         await tester.pumpAndSettle();
 
-        final captured =
-            verify(() => mockPartyRepo.updateParty(captureAny())).captured;
+        final captured = verify(
+          () => mockPartyRepo.updateParty(captureAny()),
+        ).captured;
         expect(captured, hasLength(1));
         final updated = captured.first as Party;
         expect(updated.minConfirmedCount, 10);

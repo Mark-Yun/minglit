@@ -46,7 +46,6 @@ Party _makeParty({
         {'insert': 'Original\n'},
       ],
     },
-    maxParticipants: 20,
     minConfirmedCount: 5,
     locationId: locationId,
     entryGroups: entryGroups ?? defaultGroups,
@@ -64,7 +63,7 @@ Location _makeLocation({String id = 'loc-1'}) {
     name: 'Test Venue',
     address: '서울시 강남구',
     latitude: 37.5,
-    longitude: 127.0,
+    longitude: 127,
     createdAt: _now,
     updatedAt: _now,
   );
@@ -139,7 +138,7 @@ void main() {
       'calls updateParty, replaceEntryGroupTemplates, invalidates providers',
       () async {
         const partyId = 'party-edit-1';
-        final party = _makeParty(id: partyId);
+        final party = _makeParty();
         final existingTemplate = _makeTemplate(id: 'tt-existing');
 
         when(
@@ -229,7 +228,7 @@ void main() {
         const partyId = 'party-edit-2';
         // locationId: 'loc-1' ensures selectedLocation is loaded so validation passes.
         // _submitEdit will call getLocationById + updateLocationDetails (isSameSpot).
-        final party = _makeParty(id: partyId, locationId: 'loc-1');
+        final party = _makeParty(id: partyId);
         // Existing has 2 templates; incoming (wizard state) has only 1
         final keep = _makeTemplate(id: 'tt-keep', partyId: partyId);
         final toDelete = _makeTemplate(id: 'tt-delete', partyId: partyId);
@@ -287,8 +286,9 @@ void main() {
 
         // Remove the 'tt-delete' template from the wizard's ticket list,
         // keeping only 'tt-keep'
-        final stateAfterLoad =
-            container.read(partyCreateWizardControllerProvider);
+        final stateAfterLoad = container.read(
+          partyCreateWizardControllerProvider,
+        );
         final filteredTickets = stateAfterLoad.tickets
             .where((t) => t.id != 'tt-delete')
             .toList();
@@ -317,7 +317,7 @@ void main() {
       () async {
         const partyId = 'party-edit-3';
         // locationId: 'loc-1' ensures selectedLocation is loaded so validation passes.
-        final party = _makeParty(id: partyId, locationId: 'loc-1');
+        final party = _makeParty(id: partyId);
         // Existing: no templates
         final newTemplate = TicketTemplate(
           id: '', // empty id → create path
@@ -378,8 +378,9 @@ void main() {
         await notifier.loadForEdit(partyId);
 
         // Add a new (id-less) ticket to the wizard state
-        final stateAfterLoad =
-            container.read(partyCreateWizardControllerProvider);
+        final stateAfterLoad = container.read(
+          partyCreateWizardControllerProvider,
+        );
         notifier.state = stateAfterLoad.copyWith(
           tickets: [newTemplate],
         );
@@ -551,7 +552,7 @@ void main() {
         await notifier.submit();
 
         // Edit path must NOT call getMyManagedPartners (that is the create path)
-        verifyNever(() => mockPartnerRepo.getMyManagedPartners());
+        verifyNever(mockPartnerRepo.getMyManagedPartners);
       },
     );
   });

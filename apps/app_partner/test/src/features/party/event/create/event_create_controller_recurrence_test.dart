@@ -189,7 +189,7 @@ void main() {
         final now = DateTime.now();
         // Fix specific times so we can assert the exact formatted strings
         final startTime = DateTime(now.year, now.month, now.day + 7, 19, 30);
-        final endTime = DateTime(now.year, now.month, now.day + 7, 22, 0);
+        final endTime = DateTime(now.year, now.month, now.day + 7, 22);
 
         when(() => mockPartyRepo.createEvent(any())).thenAnswer(
           (_) async => _makeEvent(),
@@ -258,7 +258,7 @@ void main() {
         final captured = createCall.captured;
         // The captured values for named params come in the order they appear in verify()
         final capturedStartTime = captured[3] as String; // 'startTime' index
-        final capturedEndTime = captured[4] as String;   // 'endTime' index
+        final capturedEndTime = captured[4] as String; // 'endTime' index
 
         // HH:MM format — must be zero-padded
         expect(capturedStartTime, '19:30');
