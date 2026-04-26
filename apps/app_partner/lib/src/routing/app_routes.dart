@@ -4,6 +4,7 @@ import 'package:app_partner/src/features/account_deletion/ui/deletion_complete_p
 import 'package:app_partner/src/features/account_deletion/ui/deletion_info_page.dart';
 import 'package:app_partner/src/features/account_deletion/ui/deletion_reason_page.dart';
 import 'package:app_partner/src/features/account_deletion/ui/deletion_verify_page.dart';
+import 'package:app_partner/src/features/admin/partner_application_detail_page.dart';
 import 'package:app_partner/src/features/application/event_application_detail_page.dart';
 import 'package:app_partner/src/features/application/event_application_manage_page.dart';
 import 'package:app_partner/src/features/auth/partner_login_page.dart';
@@ -117,6 +118,9 @@ class NotificationCenterRoute extends GoRouteData
         TypedGoRoute<ApplicationListRoute>(
           path: '/applications',
           routes: [
+            TypedGoRoute<EventApplicationDetailRoute>(
+              path: 'event/:applicationId',
+            ),
             TypedGoRoute<ApplicationDetailRoute>(path: ':applicationId'),
           ],
         ),
@@ -251,7 +255,19 @@ class ApplicationListRoute extends GoRouteData with $ApplicationListRoute {
       const EventApplicationManagePage();
 }
 
-// Fix #1860: ApplicationDetailRoute는 이벤트 신청 상세 페이지로 이동
+// Fix #1860: 이벤트 신청 상세 (승인됨/거절됨 탭에서 진입)
+class EventApplicationDetailRoute extends GoRouteData
+    with $EventApplicationDetailRoute {
+  const EventApplicationDetailRoute({required this.applicationId});
+  final String applicationId;
+  @override
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      MinglitPageTransitions.sharedAxisScaled(
+        key: state.pageKey,
+        child: EventApplicationDetailPage(applicationId: applicationId),
+      );
+}
+
 class ApplicationDetailRoute extends GoRouteData with $ApplicationDetailRoute {
   const ApplicationDetailRoute({required this.applicationId});
   final String applicationId;
@@ -259,7 +275,7 @@ class ApplicationDetailRoute extends GoRouteData with $ApplicationDetailRoute {
   Page<void> buildPage(BuildContext context, GoRouterState state) =>
       MinglitPageTransitions.sharedAxisScaled(
         key: state.pageKey,
-        child: EventApplicationDetailPage(applicationId: applicationId),
+        child: PartnerApplicationDetailPage(applicationId: applicationId),
       );
 }
 

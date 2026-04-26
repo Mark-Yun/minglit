@@ -518,9 +518,8 @@ class _ApplicationItem extends StatelessWidget {
     return InkWell(
       onTap: showActions
           ? null
-          : () => ApplicationDetailRoute(
-              applicationId: application.id,
-            ).push<void>(context),
+          : () => EventApplicationDetailRoute(applicationId: application.id)
+                .push<void>(context),
       child: Container(
         padding: const EdgeInsets.symmetric(
           horizontal: MinglitSpacing.medium,
