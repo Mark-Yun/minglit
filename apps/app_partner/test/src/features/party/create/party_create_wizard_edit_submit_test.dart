@@ -423,19 +423,47 @@ void main() {
         partyCreateWizardControllerProvider.notifier,
       );
 
-      // Force editingPartyId without going through loadForEdit (which would throw)
-      notifier.state = const PartyCreateWizardState(
+      // Seed state with all validation-passing fields so _submitEdit() is
+      // actually reached. Without these, validationErrors returns non-empty
+      // and submit() short-circuits before calling getPartyById.
+      notifier.state = PartyCreateWizardState(
         editingPartyId: partyId,
         title: 'Title',
+        description: const {
+          'ops': [
+            {'insert': 'Description\n'},
+          ],
+        },
+        selectedLocation: _makeLocation(),
+        enabledContactMethods: const {'phone'},
+        contactPhone: '010-1234-5678',
+        entryGroups: [
+          EntryGroupTemplate(
+            id: 'eg-1',
+            partyId: partyId,
+            gender: 'male',
+            createdAt: _now,
+            updatedAt: _now,
+          ),
+        ],
+        tickets: [_makeTemplate(partyId: partyId)],
+        minConfirmedCount: 1,
+        maxParticipants: 10,
       );
 
       await notifier.submit();
 
       final state = container.read(partyCreateWizardControllerProvider);
-      // Validation will fail first (empty title triggers before _submitEdit calls getPartyById),
-      // OR if validation passes and getPartyById returns null, we get MinglitSystemException.
-      // Either way, status must not be AsyncData.
-      expect(state.status, isNot(isA<AsyncData<void>>()));
+      // Fix #1878: assert the null-guard branch is exercised — _submitEdit()
+      // fetches the party, gets null, and throws MinglitSystemException.
+      expect(
+        state.status,
+        isA<AsyncError<void>>().having(
+          (e) => e.error,
+          'error',
+          isA<MinglitSystemException>(),
+        ),
+      );
     });
 
     test(
