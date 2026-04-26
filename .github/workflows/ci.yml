@@ -47,8 +47,6 @@ jobs:
       app_partner: ${{ steps.filter.outputs.app_partner }}
       minglit_kit: ${{ steps.filter.outputs.minglit_kit }}
       mds: ${{ steps.filter.outputs.mds }}
-      mds_tokens: ${{ steps.filter.outputs.mds_tokens }}
-      mds_storybook: ${{ steps.filter.outputs.mds_storybook }}
       app_user_or_kit: ${{ steps.filter.outputs.app_user == 'true' || steps.filter.outputs.minglit_kit == 'true' || steps.filter.outputs.mds == 'true' }}
       app_partner_or_kit: ${{ steps.filter.outputs.app_partner == 'true' || steps.filter.outputs.minglit_kit == 'true' || steps.filter.outputs.mds == 'true' }}
       kit_or_mds: ${{ steps.filter.outputs.minglit_kit == 'true' || steps.filter.outputs.mds == 'true' }}
@@ -69,10 +67,6 @@ jobs:
             - 'shared/packages/minglit_kit/**'
           mds:
             - 'shared/packages/mds/**'
-          mds_tokens:
-            - 'shared/packages/mds_tokens/**'
-          mds_storybook:
-            - 'apps/mds_storybook/**'
           landing_user:
             - 'apps/landing_user/**'
             - 'shared/web/**'
