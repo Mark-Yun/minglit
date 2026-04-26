@@ -22,8 +22,7 @@ void main() {
     test(
       'public-object URL + width → render/image 엔드포인트로 재작성 + width/quality 추가',
       () {
-        const url =
-            '$base/storage/v1/object/public/avatars/user123.jpg';
+        const url = '$base/storage/v1/object/public/avatars/user123.jpg';
         final result = supabaseImageUrl(url, width: 400);
 
         expect(

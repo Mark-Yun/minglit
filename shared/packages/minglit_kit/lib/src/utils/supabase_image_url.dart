@@ -18,8 +18,8 @@ String supabaseImageUrl(String url, {int? width, int quality = 70}) {
   const renderPath = '/storage/v1/render/image/public/';
   const renderCheck = '/storage/v1/render/image/';
 
-  final bool isObjectUrl = url.contains(objectPath);
-  final bool isRenderUrl = url.contains(renderCheck);
+  final isObjectUrl = url.contains(objectPath);
+  final isRenderUrl = url.contains(renderCheck);
 
   if (!isObjectUrl && !isRenderUrl) {
     // Not a Supabase Storage URL — return as-is.
@@ -27,7 +27,7 @@ String supabaseImageUrl(String url, {int? width, int quality = 70}) {
   }
 
   // Rewrite public-object URLs to the render/image transform endpoint.
-  String base = isObjectUrl ? url.replaceFirst(objectPath, renderPath) : url;
+  final base = isObjectUrl ? url.replaceFirst(objectPath, renderPath) : url;
 
   if (width == null) {
     // No sizing requested — return (possibly rewritten) URL without query.
