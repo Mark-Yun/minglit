@@ -260,15 +260,14 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   // Fix #1856: skeleton list to replace progress indicator during initial feed load
   static Widget _eventFeedSkeleton() => SliverPadding(
-        padding: const EdgeInsets.only(
-          top: MinglitSpacing.small,
-          bottom: MinglitSpacing.medium,
-        ),
-        sliver: SliverList.separated(
-          itemCount: 5,
-          separatorBuilder: (_, _) =>
-              const SizedBox(height: MinglitSpacing.small),
-          itemBuilder: (_, _) => const MinglitEventCard.loading(),
-        ),
-      );
+    padding: const EdgeInsets.only(
+      top: MinglitSpacing.small,
+      bottom: MinglitSpacing.medium,
+    ),
+    sliver: SliverList.separated(
+      itemCount: 5,
+      separatorBuilder: (_, _) => const SizedBox(height: MinglitSpacing.small),
+      itemBuilder: (_, _) => const MinglitEventCard.loading(),
+    ),
+  );
 }
