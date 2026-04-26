@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:minglit_kit/src/theme/minglit_theme.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_badge.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_content_card.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_tag.dart';
+import 'package:mds/src/theme/minglit_theme.dart';
+import 'package:mds/src/ui/widgets/common/minglit_badge.dart';
+import 'package:mds/src/ui/widgets/common/minglit_content_card.dart';
+import 'package:mds/src/ui/widgets/common/minglit_tag.dart';
 
 /// Design catalog tab displaying card and badge widgets.
 class CardsSection extends StatelessWidget {

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:mds/src/theme/minglit_theme.dart';
+import 'package:mds/src/ui/widgets/common/minglit_content_card.dart';
+import 'package:mds/src/ui/widgets/common/minglit_empty_state.dart';
+import 'package:mds/src/ui/widgets/common/minglit_error_state.dart';
+import 'package:mds/src/ui/widgets/common/minglit_key_value_row.dart';
+import 'package:mds/src/ui/widgets/common/minglit_skeleton.dart';
 import 'package:minglit_kit/src/features/dev/catalog_tabs/patterns/detail_page_demo.dart';
-import 'package:minglit_kit/src/theme/minglit_theme.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_content_card.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_empty_state.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_error_state.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_key_value_row.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_skeleton.dart';
 
 /// P4 — Card Layouts Demo.
 ///

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_image_carousel.dart';
+import 'package:mds/src/ui/widgets/common/minglit_image_carousel.dart';
 
 void main() {
   group('MinglitImageCarousel Widget Tests', () {

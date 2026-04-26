@@ -1,0 +1,20 @@
+{
+  "spacing": {
+    "zero": { "$value": 0, "$type": "dimension", "$description": "0px zero spacing" },
+    "xxsmall": { "$value": 2, "$type": "dimension", "$description": "2px extra-extra-small" },
+    "xsmall": { "$value": 4, "$type": "dimension", "$description": "4px extra-small" },
+    "xsmall2": { "$value": 6, "$type": "dimension", "$description": "6px extra-small-2" },
+    "small": { "$value": 8, "$type": "dimension", "$description": "8px small" },
+    "sm": { "$value": 12, "$type": "dimension", "$description": "12px small-medium" },
+    "medium": { "$value": 16, "$type": "dimension", "$description": "16px medium" },
+    "large": { "$value": 24, "$type": "dimension", "$description": "24px large" },
+    "xlarge": { "$value": 32, "$type": "dimension", "$description": "32px extra-large" },
+    "xxlarge": { "$value": 48, "$type": "dimension", "$description": "48px extra-extra-large" },
+    "xxxlarge": { "$value": 64, "$type": "dimension", "$description": "64px extra-extra-extra-large" },
+    "screenEdge": { "$value": 16, "$type": "dimension", "$description": "16px screen edge padding" },
+    "cardGap": { "$value": 12, "$type": "dimension", "$description": "12px gap between cards" },
+    "cardContentV": { "$value": 16, "$type": "dimension", "$description": "16px card internal vertical padding" },
+    "titleToBody": { "$value": 4, "$type": "dimension", "$description": "4px title-to-body spacing" },
+    "sectionGap": { "$value": 40, "$type": "dimension", "$description": "40px section gap" }
+  }
+}

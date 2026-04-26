@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:minglit_kit/src/theme/minglit_theme.dart';
+import 'package:mds/src/theme/minglit_theme.dart';
 
 /// Payment flow simulation states.
 enum PaymentFlowState {

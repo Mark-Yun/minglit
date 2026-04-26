@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:minglit_kit/src/theme/minglit_theme.dart';
+import 'package:mds/src/theme/minglit_theme.dart';
 
 /// Reusable Minglit text logo with Racing Sans One + glitch shadows.
 class MinglitTextLogo extends StatelessWidget {

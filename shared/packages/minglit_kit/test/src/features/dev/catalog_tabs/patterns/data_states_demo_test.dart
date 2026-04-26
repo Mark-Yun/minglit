@@ -1,9 +1,9 @@
 // Tests for DataStatesDemoPage — P6 data states pattern demo (#715)
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mds/src/theme/minglit_theme.dart';
+import 'package:mds/src/ui/widgets/common/minglit_skeleton.dart';
 import 'package:minglit_kit/src/features/dev/catalog_tabs/patterns/data_states_demo.dart';
-import 'package:minglit_kit/src/theme/minglit_theme.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_skeleton.dart';
 
 Widget _wrap(Widget child) => MaterialApp(home: child);
 

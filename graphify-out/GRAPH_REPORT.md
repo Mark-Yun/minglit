@@ -1,265 +1,257 @@
-# Graph Report - minglit (full corpus: app_user + app_partner + minglit_kit + supabase + docs + landing)  (2026-04-25)
+# Graph Report - /Users/mark/workspace/minglit/.claude/worktrees/mds-extraction  (2026-04-27)
 
 ## Corpus Check
-- 1428 files · ~1,122,333 words
+- 1095 files · ~1,338,806 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 8643 nodes · 13886 edges · 226 communities detected
-- Extraction: 93% EXTRACTED · 7% INFERRED · 0% AMBIGUOUS · INFERRED: 999 edges (avg confidence: 0.8)
+- 2987 nodes · 4446 edges · 218 communities detected
+- Extraction: 88% EXTRACTED · 12% INFERRED · 0% AMBIGUOUS · INFERRED: 522 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Community Hubs (Navigation)
-- [[_COMMUNITY_Partner Check-in Stats & Tests|Partner Check-in Stats & Tests]]
-- [[_COMMUNITY_Partner Golden Test Scenarios|Partner Golden Test Scenarios]]
-- [[_COMMUNITY_Partner UI Golden Test Helpers|Partner UI Golden Test Helpers]]
-- [[_COMMUNITY_Account Deletion Flow (Partner)|Account Deletion Flow (Partner)]]
-- [[_COMMUNITY_Partner App Feature Controllers|Partner App Feature Controllers]]
-- [[_COMMUNITY_Backend Simulator Action Runner|Backend Simulator Action Runner]]
-- [[_COMMUNITY_App Router & Route Definitions|App Router & Route Definitions]]
-- [[_COMMUNITY_Partner Coordinator Layer|Partner Coordinator Layer]]
-- [[_COMMUNITY_minglit_kit UI Widget Catalog|minglit_kit UI Widget Catalog]]
-- [[_COMMUNITY_Partner Onboarding Apply Wizard|Partner Onboarding Apply Wizard]]
-- [[_COMMUNITY_Admin Dashboard & AI Embed Spec|Admin Dashboard & AI Embed Spec]]
-- [[_COMMUNITY_Edge Function HTTP Utilities|Edge Function HTTP Utilities]]
-- [[_COMMUNITY_Partner Event & Member Pages|Partner Event & Member Pages]]
-- [[_COMMUNITY_App Localizations & Auth Pages|App Localizations & Auth Pages]]
-- [[_COMMUNITY_Partner Event Management Pages|Partner Event Management Pages]]
-- [[_COMMUNITY_Account Deletion Coordinator (Partner)|Account Deletion Coordinator (Partner)]]
-- [[_COMMUNITY_Party Detail & Golden Capture Helpers|Party Detail & Golden Capture Helpers]]
-- [[_COMMUNITY_QR & Manual Check-in UI|QR & Manual Check-in UI]]
-- [[_COMMUNITY_Party Create Wizard Scenarios|Party Create Wizard Scenarios]]
-- [[_COMMUNITY_User Ticket QR & Boarding Pass|User Ticket QR & Boarding Pass]]
-- [[_COMMUNITY_QA Smoke Test Cases & Docs|QA Smoke Test Cases & Docs]]
-- [[_COMMUNITY_Event State Machine Feature|Event State Machine Feature]]
-- [[_COMMUNITY_Partner Application Detail & More Page|Partner Application Detail & More Page]]
-- [[_COMMUNITY_Recurring Event & Entry Group Feature|Recurring Event & Entry Group Feature]]
-- [[_COMMUNITY_Partner Settlement Pages|Partner Settlement Pages]]
-- [[_COMMUNITY_User Account Deletion & Consent UI|User Account Deletion & Consent UI]]
-- [[_COMMUNITY_PM Feature Docs & Compliance|PM Feature Docs & Compliance]]
-- [[_COMMUNITY_User Event Detail Page & Tests|User Event Detail Page & Tests]]
-- [[_COMMUNITY_Check-in Controller & Participant|Check-in Controller & Participant]]
-- [[_COMMUNITY_Event Now Bar Widget|Event Now Bar Widget]]
-- [[_COMMUNITY_User Home Page & Tag Chips|User Home Page & Tag Chips]]
-- [[_COMMUNITY_minglit_kit Common UI Widgets|minglit_kit Common UI Widgets]]
-- [[_COMMUNITY_Tag Discovery & Featured Tags|Tag Discovery & Featured Tags]]
-- [[_COMMUNITY_Security & Engineering Standards Docs|Security & Engineering Standards Docs]]
-- [[_COMMUNITY_Architecture Audit Reports|Architecture Audit Reports]]
-- [[_COMMUNITY_Party Create Wizard Steps State|Party Create Wizard Steps State]]
-- [[_COMMUNITY_Core Domain Models & Config|Core Domain Models & Config]]
-- [[_COMMUNITY_Create Verification Page (Partner)|Create Verification Page (Partner)]]
-- [[_COMMUNITY_Payment & Identity Verify Edge Functions|Payment & Identity Verify Edge Functions]]
-- [[_COMMUNITY_Event Detail Content Widget|Event Detail Content Widget]]
-- [[_COMMUNITY_Event Refund Policy Section|Event Refund Policy Section]]
-- [[_COMMUNITY_Matching Settings Screen|Matching Settings Screen]]
-- [[_COMMUNITY_Design Pattern Catalog Docs|Design Pattern Catalog Docs]]
-- [[_COMMUNITY_User App Golden Test Scenarios|User App Golden Test Scenarios]]
-- [[_COMMUNITY_Ticket Selection Widgets|Ticket Selection Widgets]]
-- [[_COMMUNITY_Web Platform Utils & Map Widget|Web Platform Utils & Map Widget]]
-- [[_COMMUNITY_minglit_kit Component Theme|minglit_kit Component Theme]]
-- [[_COMMUNITY_Ops Backend Simulation Alerts|Ops Backend Simulation Alerts]]
-- [[_COMMUNITY_Supabase Platform Standards & Templates|Supabase Platform Standards & Templates]]
-- [[_COMMUNITY_User Patrol UI Tests|User Patrol UI Tests]]
-- [[_COMMUNITY_Event Admission Wizard Verification Step|Event Admission Wizard Verification Step]]
-- [[_COMMUNITY_Event Detail Content Skeleton|Event Detail Content Skeleton]]
-- [[_COMMUNITY_minglit_kit Design Utilities|minglit_kit Design Utilities]]
-- [[_COMMUNITY_Architecture Documentation Nodes|Architecture Documentation Nodes]]
-- [[_COMMUNITY_UIUX Audit Reports|UI/UX Audit Reports]]
-- [[_COMMUNITY_Allure Test Reporter (Partner)|Allure Test Reporter (Partner)]]
-- [[_COMMUNITY_Event Bottom Ticket Bar|Event Bottom Ticket Bar]]
-- [[_COMMUNITY_Partner Settlement Models|Partner Settlement Models]]
-- [[_COMMUNITY_Event Admission Wizard Widgets|Event Admission Wizard Widgets]]
-- [[_COMMUNITY_Auto-Label Allure Reporter Utility|Auto-Label Allure Reporter Utility]]
-- [[_COMMUNITY_Quill Rich Text Editor Theme|Quill Rich Text Editor Theme]]
-- [[_COMMUNITY_Dev Environment isDevEnv Bug Reports|Dev Environment isDevEnv Bug Reports]]
-- [[_COMMUNITY_CI & TPM Failure Reports|CI & TPM Failure Reports]]
-- [[_COMMUNITY_Purchase History Card Widget|Purchase History Card Widget]]
-- [[_COMMUNITY_Event Repository Commands|Event Repository Commands]]
-- [[_COMMUNITY_Admin Coordinator & Application List|Admin Coordinator & Application List]]
-- [[_COMMUNITY_User App Navigation Bug Reports|User App Navigation Bug Reports]]
-- [[_COMMUNITY_CI Review-Presence & Seed Dev Reports|CI Review-Presence & Seed Dev Reports]]
-- [[_COMMUNITY_Event Admission Payment Step|Event Admission Payment Step]]
-- [[_COMMUNITY_Event Entry Conditions Section|Event Entry Conditions Section]]
-- [[_COMMUNITY_Party Create Wizard Tickets State|Party Create Wizard Tickets State]]
-- [[_COMMUNITY_Partner Apply Steps State|Partner Apply Steps State]]
-- [[_COMMUNITY_Partner Application Repository|Partner Application Repository]]
-- [[_COMMUNITY_Env Key Store & Landing Env Validator|Env Key Store & Landing Env Validator]]
-- [[_COMMUNITY_CICD Environment Variable Docs|CI/CD Environment Variable Docs]]
-- [[_COMMUNITY_Issue Worker Ops Incidents|Issue Worker Ops Incidents]]
-- [[_COMMUNITY_Flutter SDK & Env Submodule Incidents|Flutter SDK & Env Submodule Incidents]]
-- [[_COMMUNITY_iOSAndroid Deploy Failure Alerts|iOS/Android Deploy Failure Alerts]]
-- [[_COMMUNITY_iOS Deploy TPM Reports|iOS Deploy TPM Reports]]
-- [[_COMMUNITY_Event Info Tile Widget|Event Info Tile Widget]]
-- [[_COMMUNITY_Event Verification Section Widget|Event Verification Section Widget]]
-- [[_COMMUNITY_Party Create Wizard Submit Logic|Party Create Wizard Submit Logic]]
-- [[_COMMUNITY_Partner Apply Validation|Partner Apply Validation]]
-- [[_COMMUNITY_Verification Command Repository|Verification Command Repository]]
-- [[_COMMUNITY_Settlement Item Detail Model|Settlement Item Detail Model]]
-- [[_COMMUNITY_ADB Emulator CI Failure Alerts|ADB Emulator CI Failure Alerts]]
-- [[_COMMUNITY_Allure Reporter & Exception Utilities|Allure Reporter & Exception Utilities]]
-- [[_COMMUNITY_Purchase History Refund Row Widget|Purchase History Refund Row Widget]]
-- [[_COMMUNITY_Event Admission State|Event Admission State]]
-- [[_COMMUNITY_Statsig Analytics Provider (Landing)|Statsig Analytics Provider (Landing)]]
-- [[_COMMUNITY_Iamport Helper Stub (Web)|Iamport Helper Stub (Web)]]
-- [[_COMMUNITY_Korean Age Utility|Korean Age Utility]]
-- [[_COMMUNITY_Refund Calculator|Refund Calculator]]
-- [[_COMMUNITY_Event Repository Queries|Event Repository Queries]]
-- [[_COMMUNITY_Partner App Entry Point|Partner App Entry Point]]
-- [[_COMMUNITY_Event Matching Controller|Event Matching Controller]]
-- [[_COMMUNITY_Settlement Card & Status Badge Tests|Settlement Card & Status Badge Tests]]
-- [[_COMMUNITY_Landing Pages Statsig Providers|Landing Pages Statsig Providers]]
-- [[_COMMUNITY_Trust Badge System Spec|Trust Badge System Spec]]
-- [[_COMMUNITY_AI Embed & Payment QA Audit Reports|AI Embed & Payment QA Audit Reports]]
-- [[_COMMUNITY_User Repository & Verified Users DB|User Repository & Verified Users DB]]
-- [[_COMMUNITY_Admission Action Handler|Admission Action Handler]]
-- [[_COMMUNITY_Event Quill Viewer Widget|Event Quill Viewer Widget]]
-- [[_COMMUNITY_HTML Stub for Web Platform|HTML Stub for Web Platform]]
-- [[_COMMUNITY_Party Create Wizard Load Logic|Party Create Wizard Load Logic]]
-- [[_COMMUNITY_Checkin Participant Data Model|Checkin Participant Data Model]]
-- [[_COMMUNITY_Partner Apply Draft State|Partner Apply Draft State]]
-- [[_COMMUNITY_Landing Partner Env Validator (TS)|Landing Partner Env Validator (TS)]]
-- [[_COMMUNITY_Partner Member Repository|Partner Member Repository]]
-- [[_COMMUNITY_Consent Coordinator Unit Tests|Consent Coordinator Unit Tests]]
-- [[_COMMUNITY_Privacy Protection UIUX Docs|Privacy Protection UI/UX Docs]]
-- [[_COMMUNITY_Runtime QA Scheduler Incidents|Runtime QA Scheduler Incidents]]
-- [[_COMMUNITY_PartyCurationPage Missing Route Reports|PartyCurationPage Missing Route Reports]]
-- [[_COMMUNITY_Settlement DB Column Bug Reports|Settlement DB Column Bug Reports]]
-- [[_COMMUNITY_Ticket Signing Key Missing Reports|Ticket Signing Key Missing Reports]]
-- [[_COMMUNITY_Tag Discovery Security Audit|Tag Discovery Security Audit]]
-- [[_COMMUNITY_review-presence Workflow TPM Reports|review-presence Workflow TPM Reports]]
-- [[_COMMUNITY_Refund Policy Terms Mismatch Report|Refund Policy Terms Mismatch Report]]
-- [[_COMMUNITY_Global Loading Controller|Global Loading Controller]]
-- [[_COMMUNITY_Platform Utils Conditional Export|Platform Utils Conditional Export]]
-- [[_COMMUNITY_Axiom Logger & PII Masker|Axiom Logger & PII Masker]]
-- [[_COMMUNITY_Edge Function Auth & Service Utilities|Edge Function Auth & Service Utilities]]
-- [[_COMMUNITY_Integration Test Driver|Integration Test Driver]]
-- [[_COMMUNITY_Ticket Event Meta Model|Ticket Event Meta Model]]
-- [[_COMMUNITY_Boarding Pass Status Logic|Boarding Pass Status Logic]]
-- [[_COMMUNITY_Party Create Wizard Validation|Party Create Wizard Validation]]
-- [[_COMMUNITY_Partner Apply Submit Logic|Partner Apply Submit Logic]]
-- [[_COMMUNITY_Dev Catalog Mock Event Data|Dev Catalog Mock Event Data]]
-- [[_COMMUNITY_Tag Repository Commands|Tag Repository Commands]]
-- [[_COMMUNITY_Party Event Repository|Party Event Repository]]
-- [[_COMMUNITY_Tag Repository Queries|Tag Repository Queries]]
-- [[_COMMUNITY_Verification Query Repository|Verification Query Repository]]
-- [[_COMMUNITY_Party Matching Repository|Party Matching Repository]]
-- [[_COMMUNITY_Event Feed Type Enum|Event Feed Type Enum]]
-- [[_COMMUNITY_Condition Key Enum|Condition Key Enum]]
-- [[_COMMUNITY_Partner Party List Item & Page|Partner Party List Item & Page]]
-- [[_COMMUNITY_Partner Ticket Manage Screen|Partner Ticket Manage Screen]]
-- [[_COMMUNITY_Settlement Status Filter Chips Tests|Settlement Status Filter Chips Tests]]
-- [[_COMMUNITY_Landing User Env Validator|Landing User Env Validator]]
-- [[_COMMUNITY_Landing User Brand Page|Landing User Brand Page]]
-- [[_COMMUNITY_Pretendard Font Migration Docs|Pretendard Font Migration Docs]]
-- [[_COMMUNITY_Refund Policy v2 Wireframes|Refund Policy v2 Wireframes]]
-- [[_COMMUNITY_Backend Simulator Timeout Alert|Backend Simulator Timeout Alert]]
-- [[_COMMUNITY_Version Bump Race Condition Alert|Version Bump Race Condition Alert]]
-- [[_COMMUNITY_MainActivity Redeclaration Incident|MainActivity Redeclaration Incident]]
-- [[_COMMUNITY_UIautomator Flutter Compat Bug Report|UIautomator Flutter Compat Bug Report]]
-- [[_COMMUNITY_Partner Event Edit Missing Feature Report|Partner Event Edit Missing Feature Report]]
-- [[_COMMUNITY_TPM Backlog Surge & Duplicate Issues|TPM Backlog Surge & Duplicate Issues]]
-- [[_COMMUNITY_Vercel Deploy Cascading Failure Report|Vercel Deploy Cascading Failure Report]]
-- [[_COMMUNITY_Refund Button Missing Bug Report|Refund Button Missing Bug Report]]
-- [[_COMMUNITY_BugReport FAB Touch Block Report|BugReport FAB Touch Block Report]]
-- [[_COMMUNITY_Hot Tags 0-Event Bug Report|Hot Tags 0-Event Bug Report]]
-- [[_COMMUNITY_Theme Controller|Theme Controller]]
-- [[_COMMUNITY_Age Util & Unit Test|Age Util & Unit Test]]
-- [[_COMMUNITY_Location Service & Test|Location Service & Test]]
-- [[_COMMUNITY_MinglitButton Widget & Test|MinglitButton Widget & Test]]
-- [[_COMMUNITY_Image Utils EXIF Strip|Image Utils EXIF Strip]]
-- [[_COMMUNITY_MinglitFilePicker Widget & Test|MinglitFilePicker Widget & Test]]
-- [[_COMMUNITY_MinglitHorizontalScrollGroup Widget|MinglitHorizontalScrollGroup Widget]]
-- [[_COMMUNITY_MinglitImageCarousel Widget & Test|MinglitImageCarousel Widget & Test]]
-- [[_COMMUNITY_MinglitBottomCTA Widget & Test|MinglitBottomCTA Widget & Test]]
-- [[_COMMUNITY_RefundRow Widget (singleton)|RefundRow Widget (singleton)]]
-- [[_COMMUNITY_Partner Today Party Card|Partner Today Party Card]]
-- [[_COMMUNITY_Partner Event Card Widget|Partner Event Card Widget]]
-- [[_COMMUNITY_Party Image Editor Widget|Party Image Editor Widget]]
-- [[_COMMUNITY_Party Status Edit Sheet|Party Status Edit Sheet]]
-- [[_COMMUNITY_Party Verification Input Widget|Party Verification Input Widget]]
-- [[_COMMUNITY_MinglitEditableSection Widget|MinglitEditableSection Widget]]
-- [[_COMMUNITY_Account Deletion Flow Unit Test|Account Deletion Flow Unit Test]]
-- [[_COMMUNITY_Review Verification Screen Test|Review Verification Screen Test]]
-- [[_COMMUNITY_AppUser README|AppUser README]]
-- [[_COMMUNITY_Kakao Login Patrol Test (skipped)|Kakao Login Patrol Test (skipped)]]
-- [[_COMMUNITY_Payment PG Patrol Test (skipped)|Payment PG Patrol Test (skipped)]]
-- [[_COMMUNITY_Permission Grant Patrol Test (skipped)|Permission Grant Patrol Test (skipped)]]
-- [[_COMMUNITY_User App Allure Reporter|User App Allure Reporter]]
-- [[_COMMUNITY_Alchemist Golden Test Package|Alchemist Golden Test Package]]
-- [[_COMMUNITY_StatusBadge Widget Test|StatusBadge Widget Test]]
-- [[_COMMUNITY_DeletionCompletePage Test|DeletionCompletePage Test]]
-- [[_COMMUNITY_AuthCoordinator Unit Test|AuthCoordinator Unit Test]]
-- [[_COMMUNITY_Integration Test Driver (User)|Integration Test Driver (User)]]
-- [[_COMMUNITY_Landing Partner README|Landing Partner README]]
-- [[_COMMUNITY_Landing Partner ESLint Config (dup)|Landing Partner ESLint Config (dup)]]
-- [[_COMMUNITY_Landing Partner PostCSS Config (dup)|Landing Partner PostCSS Config (dup)]]
-- [[_COMMUNITY_Landing Partner Home Page (dup)|Landing Partner Home Page (dup)]]
-- [[_COMMUNITY_Landing User README|Landing User README]]
-- [[_COMMUNITY_Landing User ESLint Config (dup)|Landing User ESLint Config (dup)]]
-- [[_COMMUNITY_Landing User Home Page Component|Landing User Home Page Component]]
-- [[_COMMUNITY_Partner Settlement Admin UIUX Docs|Partner Settlement Admin UI/UX Docs]]
-- [[_COMMUNITY_Dependabot CI Actions Alert|Dependabot CI Actions Alert]]
-- [[_COMMUNITY_Login Dark Theme QA Report|Login Dark Theme QA Report]]
-- [[_COMMUNITY_Build Server Disk Full Report|Build Server Disk Full Report]]
-- [[_COMMUNITY_Refund Button Label Mismatch Report|Refund Button Label Mismatch Report]]
-- [[_COMMUNITY_Pixel 7a ADB Disconnect Report|Pixel 7a ADB Disconnect Report]]
-- [[_COMMUNITY_minglit_kit CHANGELOG|minglit_kit CHANGELOG]]
-- [[_COMMUNITY_Pretendard Font OFL License|Pretendard Font OFL License]]
-- [[_COMMUNITY_minglit_kit Dev Barrel (singleton)|minglit_kit Dev Barrel (singleton)]]
-- [[_COMMUNITY_CreateOrderResult (Event Repository)|CreateOrderResult (Event Repository)]]
-- [[_COMMUNITY_ConditionKey Enum (singleton)|ConditionKey Enum (singleton)]]
-- [[_COMMUNITY_MinglitLinearProgressIndicator|MinglitLinearProgressIndicator]]
-- [[_COMMUNITY_MinglitSplashTransition Utility|MinglitSplashTransition Utility]]
-- [[_COMMUNITY_minglit_kit Allure Reporter|minglit_kit Allure Reporter]]
-- [[_COMMUNITY_Matching Repository Provider Test|Matching Repository Provider Test]]
-- [[_COMMUNITY_Iamport Payment Client (EF)|Iamport Payment Client (EF)]]
-- [[_COMMUNITY_Partner Permission Enum (EF)|Partner Permission Enum (EF)]]
-- [[_COMMUNITY_Embedding Adapter (AI EF)|Embedding Adapter (AI EF)]]
-- [[_COMMUNITY_Mock Supabase Client (EF Tests)|Mock Supabase Client (EF Tests)]]
-- [[_COMMUNITY_Schema Validator (EF Tests)|Schema Validator (EF Tests)]]
-- [[_COMMUNITY_Cast Match Vote Edge Function|Cast Match Vote Edge Function]]
-- [[_COMMUNITY_App User Icon Asset|App User Icon Asset]]
-- [[_COMMUNITY_App User Splash Icon Asset|App User Splash Icon Asset]]
-- [[_COMMUNITY_App User Android 12 Splash Icon|App User Android 12 Splash Icon]]
-- [[_COMMUNITY_App User Icon Foreground Asset|App User Icon Foreground Asset]]
-- [[_COMMUNITY_App Partner Icon Background Asset|App Partner Icon Background Asset]]
-- [[_COMMUNITY_Minglit Inverted Logo SVG|Minglit Inverted Logo SVG]]
-- [[_COMMUNITY_Minglit Transparent Logo SVG|Minglit Transparent Logo SVG]]
-- [[_COMMUNITY_Minglit App Bar Logo Asset|Minglit App Bar Logo Asset]]
-- [[_COMMUNITY_Dev Seed Party Premium Lounge Image|Dev Seed Party Premium Lounge Image]]
-- [[_COMMUNITY_Dev Seed Party Lounge Bright Image|Dev Seed Party Lounge Bright Image]]
-- [[_COMMUNITY_Dev Seed Party Cafe Warm Image|Dev Seed Party Cafe Warm Image]]
-- [[_COMMUNITY_Participation Status Redesign Screenshots|Participation Status Redesign Screenshots]]
-- [[_COMMUNITY_Participation Status Dark Theme Screenshot|Participation Status Dark Theme Screenshot]]
-- [[_COMMUNITY_Participation Status 4-Group Screenshot|Participation Status 4-Group Screenshot]]
-- [[_COMMUNITY_Participation Status Empty State Screenshot|Participation Status Empty State Screenshot]]
-- [[_COMMUNITY_Participation Status 2-Group After Screenshot|Participation Status 2-Group After Screenshot]]
-- [[_COMMUNITY_Participation Status 2-Group Expanded Screenshot|Participation Status 2-Group Expanded Screenshot]]
-- [[_COMMUNITY_Participation Status Before Screenshot|Participation Status Before Screenshot]]
+- [[_COMMUNITY_Community 0|Community 0]]
+- [[_COMMUNITY_Community 1|Community 1]]
+- [[_COMMUNITY_Community 2|Community 2]]
+- [[_COMMUNITY_Community 3|Community 3]]
+- [[_COMMUNITY_Community 4|Community 4]]
+- [[_COMMUNITY_Community 5|Community 5]]
+- [[_COMMUNITY_Community 6|Community 6]]
+- [[_COMMUNITY_Community 7|Community 7]]
+- [[_COMMUNITY_Community 8|Community 8]]
+- [[_COMMUNITY_Community 9|Community 9]]
+- [[_COMMUNITY_Community 10|Community 10]]
+- [[_COMMUNITY_Community 11|Community 11]]
+- [[_COMMUNITY_Community 12|Community 12]]
+- [[_COMMUNITY_Community 13|Community 13]]
+- [[_COMMUNITY_Community 14|Community 14]]
+- [[_COMMUNITY_Community 15|Community 15]]
+- [[_COMMUNITY_Community 16|Community 16]]
+- [[_COMMUNITY_Community 17|Community 17]]
+- [[_COMMUNITY_Community 18|Community 18]]
+- [[_COMMUNITY_Community 19|Community 19]]
+- [[_COMMUNITY_Community 20|Community 20]]
+- [[_COMMUNITY_Community 21|Community 21]]
+- [[_COMMUNITY_Community 22|Community 22]]
+- [[_COMMUNITY_Community 23|Community 23]]
+- [[_COMMUNITY_Community 24|Community 24]]
+- [[_COMMUNITY_Community 25|Community 25]]
+- [[_COMMUNITY_Community 26|Community 26]]
+- [[_COMMUNITY_Community 27|Community 27]]
+- [[_COMMUNITY_Community 28|Community 28]]
+- [[_COMMUNITY_Community 29|Community 29]]
+- [[_COMMUNITY_Community 30|Community 30]]
+- [[_COMMUNITY_Community 31|Community 31]]
+- [[_COMMUNITY_Community 32|Community 32]]
+- [[_COMMUNITY_Community 33|Community 33]]
+- [[_COMMUNITY_Community 34|Community 34]]
+- [[_COMMUNITY_Community 35|Community 35]]
+- [[_COMMUNITY_Community 36|Community 36]]
+- [[_COMMUNITY_Community 37|Community 37]]
+- [[_COMMUNITY_Community 38|Community 38]]
+- [[_COMMUNITY_Community 39|Community 39]]
+- [[_COMMUNITY_Community 40|Community 40]]
+- [[_COMMUNITY_Community 41|Community 41]]
+- [[_COMMUNITY_Community 42|Community 42]]
+- [[_COMMUNITY_Community 43|Community 43]]
+- [[_COMMUNITY_Community 44|Community 44]]
+- [[_COMMUNITY_Community 45|Community 45]]
+- [[_COMMUNITY_Community 46|Community 46]]
+- [[_COMMUNITY_Community 47|Community 47]]
+- [[_COMMUNITY_Community 48|Community 48]]
+- [[_COMMUNITY_Community 49|Community 49]]
+- [[_COMMUNITY_Community 50|Community 50]]
+- [[_COMMUNITY_Community 51|Community 51]]
+- [[_COMMUNITY_Community 52|Community 52]]
+- [[_COMMUNITY_Community 53|Community 53]]
+- [[_COMMUNITY_Community 54|Community 54]]
+- [[_COMMUNITY_Community 55|Community 55]]
+- [[_COMMUNITY_Community 56|Community 56]]
+- [[_COMMUNITY_Community 57|Community 57]]
+- [[_COMMUNITY_Community 58|Community 58]]
+- [[_COMMUNITY_Community 59|Community 59]]
+- [[_COMMUNITY_Community 60|Community 60]]
+- [[_COMMUNITY_Community 61|Community 61]]
+- [[_COMMUNITY_Community 62|Community 62]]
+- [[_COMMUNITY_Community 63|Community 63]]
+- [[_COMMUNITY_Community 64|Community 64]]
+- [[_COMMUNITY_Community 65|Community 65]]
+- [[_COMMUNITY_Community 66|Community 66]]
+- [[_COMMUNITY_Community 67|Community 67]]
+- [[_COMMUNITY_Community 68|Community 68]]
+- [[_COMMUNITY_Community 69|Community 69]]
+- [[_COMMUNITY_Community 70|Community 70]]
+- [[_COMMUNITY_Community 71|Community 71]]
+- [[_COMMUNITY_Community 72|Community 72]]
+- [[_COMMUNITY_Community 73|Community 73]]
+- [[_COMMUNITY_Community 74|Community 74]]
+- [[_COMMUNITY_Community 75|Community 75]]
+- [[_COMMUNITY_Community 76|Community 76]]
+- [[_COMMUNITY_Community 77|Community 77]]
+- [[_COMMUNITY_Community 78|Community 78]]
+- [[_COMMUNITY_Community 79|Community 79]]
+- [[_COMMUNITY_Community 80|Community 80]]
+- [[_COMMUNITY_Community 81|Community 81]]
+- [[_COMMUNITY_Community 82|Community 82]]
+- [[_COMMUNITY_Community 83|Community 83]]
+- [[_COMMUNITY_Community 84|Community 84]]
+- [[_COMMUNITY_Community 85|Community 85]]
+- [[_COMMUNITY_Community 86|Community 86]]
+- [[_COMMUNITY_Community 87|Community 87]]
+- [[_COMMUNITY_Community 88|Community 88]]
+- [[_COMMUNITY_Community 89|Community 89]]
+- [[_COMMUNITY_Community 90|Community 90]]
+- [[_COMMUNITY_Community 91|Community 91]]
+- [[_COMMUNITY_Community 92|Community 92]]
+- [[_COMMUNITY_Community 93|Community 93]]
+- [[_COMMUNITY_Community 94|Community 94]]
+- [[_COMMUNITY_Community 95|Community 95]]
+- [[_COMMUNITY_Community 96|Community 96]]
+- [[_COMMUNITY_Community 97|Community 97]]
+- [[_COMMUNITY_Community 98|Community 98]]
+- [[_COMMUNITY_Community 99|Community 99]]
+- [[_COMMUNITY_Community 100|Community 100]]
+- [[_COMMUNITY_Community 101|Community 101]]
+- [[_COMMUNITY_Community 102|Community 102]]
+- [[_COMMUNITY_Community 103|Community 103]]
+- [[_COMMUNITY_Community 104|Community 104]]
+- [[_COMMUNITY_Community 105|Community 105]]
+- [[_COMMUNITY_Community 106|Community 106]]
+- [[_COMMUNITY_Community 107|Community 107]]
+- [[_COMMUNITY_Community 108|Community 108]]
+- [[_COMMUNITY_Community 109|Community 109]]
+- [[_COMMUNITY_Community 110|Community 110]]
+- [[_COMMUNITY_Community 111|Community 111]]
+- [[_COMMUNITY_Community 112|Community 112]]
+- [[_COMMUNITY_Community 113|Community 113]]
+- [[_COMMUNITY_Community 114|Community 114]]
+- [[_COMMUNITY_Community 115|Community 115]]
+- [[_COMMUNITY_Community 116|Community 116]]
+- [[_COMMUNITY_Community 117|Community 117]]
+- [[_COMMUNITY_Community 118|Community 118]]
+- [[_COMMUNITY_Community 119|Community 119]]
+- [[_COMMUNITY_Community 120|Community 120]]
+- [[_COMMUNITY_Community 121|Community 121]]
+- [[_COMMUNITY_Community 122|Community 122]]
+- [[_COMMUNITY_Community 123|Community 123]]
+- [[_COMMUNITY_Community 124|Community 124]]
+- [[_COMMUNITY_Community 125|Community 125]]
+- [[_COMMUNITY_Community 126|Community 126]]
+- [[_COMMUNITY_Community 127|Community 127]]
+- [[_COMMUNITY_Community 128|Community 128]]
+- [[_COMMUNITY_Community 129|Community 129]]
+- [[_COMMUNITY_Community 130|Community 130]]
+- [[_COMMUNITY_Community 131|Community 131]]
+- [[_COMMUNITY_Community 132|Community 132]]
+- [[_COMMUNITY_Community 133|Community 133]]
+- [[_COMMUNITY_Community 134|Community 134]]
+- [[_COMMUNITY_Community 135|Community 135]]
+- [[_COMMUNITY_Community 136|Community 136]]
+- [[_COMMUNITY_Community 137|Community 137]]
+- [[_COMMUNITY_Community 138|Community 138]]
+- [[_COMMUNITY_Community 139|Community 139]]
+- [[_COMMUNITY_Community 140|Community 140]]
+- [[_COMMUNITY_Community 141|Community 141]]
+- [[_COMMUNITY_Community 142|Community 142]]
+- [[_COMMUNITY_Community 143|Community 143]]
+- [[_COMMUNITY_Community 144|Community 144]]
+- [[_COMMUNITY_Community 145|Community 145]]
+- [[_COMMUNITY_Community 146|Community 146]]
+- [[_COMMUNITY_Community 147|Community 147]]
+- [[_COMMUNITY_Community 148|Community 148]]
+- [[_COMMUNITY_Community 149|Community 149]]
+- [[_COMMUNITY_Community 150|Community 150]]
+- [[_COMMUNITY_Community 151|Community 151]]
+- [[_COMMUNITY_Community 152|Community 152]]
+- [[_COMMUNITY_Community 153|Community 153]]
+- [[_COMMUNITY_Community 154|Community 154]]
+- [[_COMMUNITY_Community 155|Community 155]]
+- [[_COMMUNITY_Community 156|Community 156]]
+- [[_COMMUNITY_Community 157|Community 157]]
+- [[_COMMUNITY_Community 158|Community 158]]
+- [[_COMMUNITY_Community 159|Community 159]]
+- [[_COMMUNITY_Community 160|Community 160]]
+- [[_COMMUNITY_Community 161|Community 161]]
+- [[_COMMUNITY_Community 162|Community 162]]
+- [[_COMMUNITY_Community 163|Community 163]]
+- [[_COMMUNITY_Community 164|Community 164]]
+- [[_COMMUNITY_Community 165|Community 165]]
+- [[_COMMUNITY_Community 166|Community 166]]
+- [[_COMMUNITY_Community 167|Community 167]]
+- [[_COMMUNITY_Community 168|Community 168]]
+- [[_COMMUNITY_Community 169|Community 169]]
+- [[_COMMUNITY_Community 170|Community 170]]
+- [[_COMMUNITY_Community 171|Community 171]]
+- [[_COMMUNITY_Community 172|Community 172]]
+- [[_COMMUNITY_Community 173|Community 173]]
+- [[_COMMUNITY_Community 174|Community 174]]
+- [[_COMMUNITY_Community 175|Community 175]]
+- [[_COMMUNITY_Community 176|Community 176]]
+- [[_COMMUNITY_Community 177|Community 177]]
+- [[_COMMUNITY_Community 178|Community 178]]
+- [[_COMMUNITY_Community 179|Community 179]]
+- [[_COMMUNITY_Community 180|Community 180]]
+- [[_COMMUNITY_Community 181|Community 181]]
+- [[_COMMUNITY_Community 182|Community 182]]
+- [[_COMMUNITY_Community 183|Community 183]]
+- [[_COMMUNITY_Community 184|Community 184]]
+- [[_COMMUNITY_Community 185|Community 185]]
+- [[_COMMUNITY_Community 186|Community 186]]
+- [[_COMMUNITY_Community 187|Community 187]]
+- [[_COMMUNITY_Community 188|Community 188]]
+- [[_COMMUNITY_Community 189|Community 189]]
+- [[_COMMUNITY_Community 190|Community 190]]
+- [[_COMMUNITY_Community 191|Community 191]]
+- [[_COMMUNITY_Community 192|Community 192]]
+- [[_COMMUNITY_Community 193|Community 193]]
+- [[_COMMUNITY_Community 194|Community 194]]
+- [[_COMMUNITY_Community 195|Community 195]]
+- [[_COMMUNITY_Community 196|Community 196]]
+- [[_COMMUNITY_Community 197|Community 197]]
+- [[_COMMUNITY_Community 198|Community 198]]
+- [[_COMMUNITY_Community 199|Community 199]]
+- [[_COMMUNITY_Community 200|Community 200]]
+- [[_COMMUNITY_Community 201|Community 201]]
+- [[_COMMUNITY_Community 202|Community 202]]
+- [[_COMMUNITY_Community 203|Community 203]]
+- [[_COMMUNITY_Community 204|Community 204]]
+- [[_COMMUNITY_Community 205|Community 205]]
+- [[_COMMUNITY_Community 206|Community 206]]
+- [[_COMMUNITY_Community 207|Community 207]]
+- [[_COMMUNITY_Community 208|Community 208]]
+- [[_COMMUNITY_Community 209|Community 209]]
+- [[_COMMUNITY_Community 210|Community 210]]
+- [[_COMMUNITY_Community 211|Community 211]]
+- [[_COMMUNITY_Community 212|Community 212]]
+- [[_COMMUNITY_Community 213|Community 213]]
+- [[_COMMUNITY_Community 214|Community 214]]
+- [[_COMMUNITY_Community 215|Community 215]]
+- [[_COMMUNITY_Community 216|Community 216]]
+- [[_COMMUNITY_Community 217|Community 217]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `package:flutter/material.dart` - 480 edges
-2. `package:minglit_kit/minglit_kit.dart` - 407 edges
-3. `package:flutter_test/flutter_test.dart` - 340 edges
-4. `dart:async` - 186 edges
-5. `package:mocktail/mocktail.dart` - 177 edges
-6. `package:riverpod_annotation/riverpod_annotation.dart` - 102 edges
-7. `../../utils/mocks.dart` - 89 edges
-8. `package:minglit_kit/src/theme/minglit_theme.dart` - 85 edges
-9. `package:supabase_flutter/supabase_flutter.dart` - 78 edges
-10. `MinglitTheme` - 67 edges
+1. `package:flutter/material.dart` - 118 edges
+2. `package:mds/src/theme/minglit_theme.dart` - 79 edges
+3. `_shared/logger` - 48 edges
+4. `_shared/response_utils` - 43 edges
+5. `_shared/supabase_client` - 43 edges
+6. `_shared/auth_utils` - 41 edges
+7. `AppRouter / goRouterProvider` - 41 edges
+8. `EventRepository` - 40 edges
+9. `_test_utils/mock_http` - 37 edges
+10. `_shared/request_utils` - 34 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `NotificationListController` --semantically_similar_to--> `NotificationSettingsController`  [INFERRED] [semantically similar]
-  /Users/mark/workspace/minglit-graphify-init/docs/features/notification-inbox/spec.md → /Users/mark/workspace/minglit-graphify-init/apps/app_user/test/src/features/notification/logic/notification_settings_controller_test.dart
-- `MinglitParticipantGauge` --semantically_similar_to--> `MinglitEventCard Widget`  [INFERRED] [semantically similar]
-  /Users/mark/workspace/minglit-graphify-init/shared/packages/minglit_kit/lib/src/ui/widgets/common/minglit_participant_gauge.dart → /Users/mark/workspace/minglit-graphify-init/docs/features/partner-detail-event-card/wireframe.html
-- `MinglitSettingsTile Widget` --semantically_similar_to--> `MinglitListTile`  [INFERRED] [semantically similar]
-  /Users/mark/workspace/minglit-graphify-init/docs/features/notification-settings/ui-ux-design.md → /Users/mark/workspace/minglit-graphify-init/shared/packages/minglit_kit/lib/src/ui/widgets/common/minglit_list_tile.dart
-- `CheckinStatsController` --calls--> `Supabase Realtime 체크인 구독`  [INFERRED]
-  /Users/mark/workspace/minglit-graphify-init/apps/app_partner/lib/src/features/checkin/stats/checkin_stats_controller.dart → /Users/mark/workspace/minglit-graphify-init/docs/features/partner-qr-checkin-ux/spec.md
-- `CheckinStatsController` --calls--> `get_event_checkin_stats RPC`  [INFERRED]
-  /Users/mark/workspace/minglit-graphify-init/apps/app_partner/lib/src/features/checkin/stats/checkin_stats_controller.dart → /Users/mark/workspace/minglit-graphify-init/docs/features/partner-qr-checkin-ux/spec.md
+- `minglit_kit Package` --references--> `Flutter & Riverpod 3.0 Standard`  [INFERRED]
+  /Users/mark/workspace/minglit-graphify-init/apps/app_user/test/alchemist/scenarios/screenshot_scenario.dart → /Users/mark/workspace/minglit-graphify-init/docs/standards/flutter-riverpod-3.0.md
+- `PartyDetailController` --semantically_similar_to--> `PartyListController`  [INFERRED] [semantically similar]
+  /Users/mark/workspace/minglit-graphify-init/apps/app_partner/lib/src/features/party/detail/party_detail_controller.dart → /Users/mark/workspace/minglit-graphify-init/apps/app_partner/lib/src/features/party/list/party_list_controller.dart
+- `EventApplicationReviewController` --semantically_similar_to--> `EventCreateController`  [INFERRED] [semantically similar]
+  /Users/mark/workspace/minglit-graphify-init/apps/app_partner/lib/src/features/party/event/detail/event_application_controller.dart → /Users/mark/workspace/minglit-graphify-init/apps/app_partner/lib/src/features/party/event/create/event_create_controller.dart
+- `authControllerProvider` --semantically_similar_to--> `auth_provider_utils`  [INFERRED] [semantically similar]
+  /Users/mark/workspace/minglit-graphify-init/shared/packages/minglit_kit/lib/src/features/auth/logic/auth_controller.dart → /Users/mark/workspace/minglit-graphify-init/shared/packages/minglit_kit/lib/src/utils/auth_provider_utils.dart
+- `NotificationSettingsController` --semantically_similar_to--> `NotificationList (controller)`  [INFERRED] [semantically similar]
+  /Users/mark/workspace/minglit-graphify-init/apps/app_user/test/src/features/notification/logic/notification_settings_controller_test.dart → /Users/mark/workspace/minglit-graphify-init/shared/packages/minglit_kit/lib/src/features/notification/notification_list_controller.dart
 
 ## Hyperedges (group relationships)
 - **Account Deletion Wizard Flow** — deletion_reason_page, deletion_info_page, deletion_verify_page, deletion_complete_page [INFERRED 0.95]
@@ -446,1146 +438,1164 @@
 
 ## Communities
 
-### Community 0 - "Partner Check-in Stats & Tests"
-Cohesion: 0.0
-Nodes (652): dart:async, dart:convert, dart:js, ../../../helpers/mocks.dart, ../../../helpers/supabase_mock_helpers.dart, ../../../helpers/test_utils.dart, mocks.dart, package:app_partner/src/features/checkin/stats/checkin_stats_controller.dart (+644 more)
-
-### Community 1 - "Partner Golden Test Scenarios"
-Cohesion: 0.0
-Nodes (647): ../../integration/utils/test_mocks.dart, package:app_partner/src/features/admin/admin_coordinator.dart, package:app_partner/src/features/application/event_application_manage_page.dart, package:app_partner/src/features/auth/partner_login_page.dart, package:app_partner/src/features/checkin/checkin_placeholder_page.dart, package:app_partner/src/features/home/partner_home_coordinator.dart, package:app_partner/src/features/member/member_coordinator.dart, package:app_partner/src/features/more/more_coordinator.dart (+639 more)
-
-### Community 2 - "Partner UI Golden Test Helpers"
-Cohesion: 0.0
-Nodes (630): ../alchemist/scenarios/partner_screenshot_scenario.dart, ../golden_test_helpers.dart, package:alchemist/alchemist.dart, package:app_partner/src/features/home/widgets/active_party_summary_scroll.dart, package:app_partner/src/features/home/widgets/pending_applicants_badge_card.dart, package:app_user/main.dart, package:app_user/src/common/widgets/matching_vote_content.dart, package:app_user/src/features/event/matching/widgets/matching_vote_content.dart (+622 more)
-
-### Community 3 - "Account Deletion Flow (Partner)"
+### Community 0 - "Community 0"
 Cohesion: 0.01
-Nodes (531): AccountDeletionController, AccountDeletionControllerTest, AccountDeletionCoordinator, accountDeletionCoordinatorProvider, AccountDeletionCoordinator Unit Test, account_deletion_golden_test, Account Deletion Technical Design Plan, AccountDeletionReasonOption (+523 more)
+Nodes (384): dart:async, dart:io, dart:js_interop, dart:js_interop_unsafe, dart:math, dart:typed_data, minglit_file_picker_image_preview.dart, minglit_file_picker_upload_button.dart (+376 more)
 
-### Community 4 - "Partner App Feature Controllers"
-Cohesion: 0.0
-Nodes (447): package:app_partner/src/features/home/partner_dashboard_controller.dart, package:app_partner/src/features/home/partner_home_page.dart, package:app_partner/src/features/home/widgets/event_action_card.dart, package:app_partner/src/features/home/widgets/location_guide_banner.dart, package:app_partner/src/features/home/widgets/onboarding_step_guide.dart, package:app_partner/src/features/home/widgets/todo_summary_chips.dart, package:app_partner/src/features/home/widgets/weekly_stats_row.dart, package:app_partner/src/features/more/more_page.dart (+439 more)
-
-### Community 5 - "Backend Simulator Action Runner"
-Cohesion: 0.01
-Nodes (191): ActionRunner, TestAction, optionalAuth(), requireAuth(), requireServiceRole(), flush(), log(), _restoreBuffer() (+183 more)
-
-### Community 6 - "App Router & Route Definitions"
-Cohesion: 0.01
-Nodes (344): AccountManagementPage, AccountManagementPageTest, AddActionCard, AnimationSection, app_partner AppRouter (app_router.dart), app_partner AppRoutes (app_routes.dart), AppRoutesTest (partner), app_user AppRouter (app_router.dart) (+336 more)
-
-### Community 7 - "Partner Coordinator Layer"
-Cohesion: 0.01
-Nodes (239): package:animations/animations.dart, package:app_partner/src/routing/app_routes.dart, package:app_partner/src/ui/shell/partner_scaffold.dart, package:app_user/src/features/auth/logic/auth_coordinator.dart, package:app_user/src/features/partner/logic/partner_coordinator.dart, package:app_user/src/features/party/logic/party_coordinator.dart, package:app_user/src/features/payment/logic/payment_coordinator.dart, package:app_user/src/features/search/logic/search_coordinator.dart (+231 more)
-
-### Community 8 - "minglit_kit UI Widget Catalog"
-Cohesion: 0.01
-Nodes (243): package:minglit_kit/src/features/dev/catalog_tabs/patterns/card_layouts_demo.dart, package:minglit_kit/src/features/dev/catalog_tabs/patterns/data_states_demo.dart, package:minglit_kit/src/features/dev/catalog_tabs/patterns/detail_page_demo.dart, package:minglit_kit/src/features/dev/catalog_tabs/patterns/mock_data.dart, package:minglit_kit/src/features/social/ui/minglit_social_button.dart, package:minglit_kit/src/ui/widgets/common/minglit_alert.dart, package:minglit_kit/src/ui/widgets/common/minglit_badge.dart, package:minglit_kit/src/ui/widgets/common/minglit_content_card.dart (+235 more)
-
-### Community 9 - "Partner Onboarding Apply Wizard"
-Cohesion: 0.01
-Nodes (238): package:app_partner/firebase_options.dart, package:app_partner/main.dart, package:app_partner/src/features/member/partner_member_list_page.dart, package:app_partner/src/features/member/partner_member_permission_page.dart, package:app_partner/src/features/onboarding/onboarding_coordinator.dart, package:app_partner/src/features/onboarding/partner_apply_controller.dart, package:app_partner/src/features/onboarding/partner_apply_page.dart, package:app_partner/src/features/onboarding/partner_apply_status_page.dart (+230 more)
-
-### Community 10 - "Admin Dashboard & AI Embed Spec"
+### Community 1 - "Community 1"
 Cohesion: 0.02
-Nodes (264): ActionRunner, Admin Dashboard Spec, Admin Dashboard Wireframe, RPC: admin.delete_old_rows / admin.delete_expired_rows, HybridCalculator, AI Embed Edge Function, Party Serializer, Party Serializer Test (+256 more)
+Nodes (202): HybridCalculator, AI Embed Edge Function, Party Serializer, Party Serializer Test, AI Embed Integration Test, Tag Extractor Helpers, Tag Extractor Unit Test, AI Extract Tags Edge Function (+194 more)
 
-### Community 11 - "Edge Function HTTP Utilities"
-Cohesion: 0.01
-Nodes (31): authedJsonRequest(), authedTextRequest(), HybridCalculator, serviceRoleRequest(), createBroadMock(), getHandler(), isSingleQuery(), wrapSingle() (+23 more)
-
-### Community 12 - "Partner Event & Member Pages"
-Cohesion: 0.01
-Nodes (210): package:app_partner/src/features/party/create/party_create_coordinator.dart, package:app_partner/src/features/party/event/detail/event_application_controller.dart, package:app_partner/src/features/party/event/widgets/event_application_list_view.dart, package:app_partner/src/features/party/event/widgets/event_application_review_dialog.dart, package:app_partner/src/features/party/event/widgets/ticket_list_item.dart, package:app_partner/src/features/party/party_providers.dart, package:app_partner/src/features/party/ticket/entry_group_editor_screen.dart, package:app_partner/src/features/party/widgets/party_capacity_input.dart (+202 more)
-
-### Community 13 - "App Localizations & Auth Pages"
-Cohesion: 0.01
-Nodes (191): app_localizations_ko.dart, dart:collection, minglit_file_picker_image_preview.dart, minglit_file_picker_upload_button.dart, minglit_image_source_sheet.dart, package:app_user/src/l10n/generated/app_localizations.dart, package:battery_plus/battery_plus.dart, package:connectivity_plus/connectivity_plus.dart (+183 more)
-
-### Community 14 - "Partner Event Management Pages"
-Cohesion: 0.01
-Nodes (190): app_localizations.dart, package:app_partner/src/features/checkin/qr_scanner_screen.dart, package:app_user/src/common/widgets/status_badge.dart, package:app_user/src/features/ticket/logic/ticket_recommendation_util.dart, package:intl/intl.dart, package:riverpod/src/providers/future_provider.dart, AlertDialog, _ApplicationItem (+182 more)
-
-### Community 15 - "Account Deletion Coordinator (Partner)"
-Cohesion: 0.01
-Nodes (171): package:app_partner/src/features/account_deletion/account_deletion_coordinator.dart, package:app_partner/src/features/account_deletion/logic/account_deletion_flow.dart, package:app_partner/src/features/account_deletion/partner_account_deletion_guard.dart, package:app_partner/src/features/account_deletion/ui/deletion_complete_page.dart, package:app_partner/src/features/account_deletion/ui/deletion_info_page.dart, package:app_partner/src/features/account_deletion/ui/deletion_reason_page.dart, package:app_partner/src/features/account_deletion/ui/deletion_verify_page.dart, package:app_partner/src/features/admin/partner_application_detail_page.dart (+163 more)
-
-### Community 16 - "Party Detail & Golden Capture Helpers"
-Cohesion: 0.01
-Nodes (146): dart:io, dart:typed_data, dart:ui, package:app_partner/src/features/party/ticket/ui/ticket_template_manage_screen.dart, package:app_partner/src/features/party/widgets/party_basic_info_edit_screen.dart, package:app_partner/src/features/party/widgets/party_capacity_contact_edit_screen.dart, package:app_partner/src/features/party/widgets/party_location_edit_screen.dart, package:app_settings/app_settings.dart (+138 more)
-
-### Community 17 - "QR & Manual Check-in UI"
+### Community 2 - "Community 2"
 Cohesion: 0.02
-Nodes (130): package:app_partner/src/features/checkin/checkin_controller.dart, package:app_partner/src/features/checkin/manual/checkin_participant.dart, package:app_partner/src/features/checkin/manual/manual_checkin_controller.dart, package:app_partner/src/features/checkin/manual/manual_checkin_sheet.dart, package:app_partner/src/features/checkin/stats/entry_group_checkin_stats_controller.dart, package:app_partner/src/features/checkin/widgets/checkin_scanner_overlay.dart, package:app_partner/src/features/checkin/widgets/checkin_summary_card.dart, package:app_partner/src/features/checkin/widgets/entry_group_bottom_sheet.dart (+122 more)
+Nodes (202): AccountManagementRoute (/my/account), ActivePartySummaryScroll Test, AddressSearchDialog, AddressSearchDialog Test, AdjustmentItemModel, AppLocalizations, AppLocalizationsKo, AppRouter / goRouterProvider (+194 more)
 
-### Community 18 - "Party Create Wizard Scenarios"
+### Community 3 - "Community 3"
+Cohesion: 0.01
+Nodes (180): dart:convert, dart:ui, package:flutter/rendering.dart, package:flutter_riverpod/flutter_riverpod.dart, package:go_router/go_router.dart, package:mds/src/ui/widgets/common/loading_indicator.dart, package:mds/src/ui/widgets/common/minglit_async_value_widget.dart, package:minglit_iamport_v1/minglit_iamport_v1.dart (+172 more)
+
+### Community 4 - "Community 4"
 Cohesion: 0.02
-Nodes (109): closing_soon_scenarios.dart, create_verification_scenarios.dart, event_card_scenarios.dart, more_page_scenarios.dart, package:app_partner/src/features/home/widgets/closing_soon_events_card.dart, package:app_partner/src/features/home/widgets/upcoming_events_card.dart, package:app_partner/src/features/party/create/logic/tag_selection_controller.dart, package:app_partner/src/features/party/create/party_create_wizard_controller.dart (+101 more)
+Nodes (183): AccountDeletionCoordinator, accountDeletionCoordinatorProvider, AccountDeletionCoordinator Unit Test, account_deletion_golden_test, AccountDeletionReasonOption, AccountDeletionScenarios, activeFiltersProvider (ExploreFilters state), AdmissionActionHandler (extension) (+175 more)
 
-### Community 19 - "User Ticket QR & Boarding Pass"
+### Community 5 - "Community 5"
+Cohesion: 0.01
+Nodes (149): package:flutter_test/flutter_test.dart, package:mds/src/ui/widgets/common/minglit_badge.dart, package:mds/src/ui/widgets/common/minglit_bottom_cta.dart, package:mds/src/ui/widgets/common/minglit_button.dart, package:mds/src/ui/widgets/common/minglit_chip_group.dart, package:mds/src/ui/widgets/common/minglit_content_card.dart, package:mds/src/ui/widgets/common/minglit_empty_state.dart, package:mds/src/ui/widgets/common/minglit_error_state.dart (+141 more)
+
+### Community 6 - "Community 6"
 Cohesion: 0.02
-Nodes (103): dart:math, package:app_user/src/features/ticket/data/ticket_token_service.dart, package:app_user/src/features/ticket/logic/boarding_pass_status.dart, package:app_user/src/features/ticket/ui/widgets/boarding_pass_card.dart, package:qr_flutter/qr_flutter.dart, package:screen_brightness/screen_brightness.dart, build, Column (+95 more)
+Nodes (120): package:flutter/gestures.dart, package:flutter/services.dart, package:intl/intl.dart, package:mds/src/ui/widgets/common/minglit_content_layout.dart, package:mds/src/ui/widgets/common/minglit_section.dart, package:mds/src/ui/widgets/common/minglit_section_divider.dart, package:minglit_kit/src/config/url_config.dart, package:minglit_kit/src/data/models/event.dart (+112 more)
 
-### Community 20 - "QA Smoke Test Cases & Docs"
+### Community 7 - "Community 7"
 Cohesion: 0.03
-Nodes (89): app_partner AndroidManifest dev flavor, Partner App Smoke Test Cases, User App Smoke Test Cases, 25 Cross-Feature Import Violations (issue #452), Cross-Feature Coupling Violations (issue #436), Automation Test Guide (7-Layer), Partner CUJ Test Scenarios, CUJ-P01: Partner Onboarding → Event Creation (+81 more)
+Nodes (102): BlockedPartnersPage, BlockedPartnersPage Widget Test, minglitUrlConfigProvider, CreateVerificationController, CreateVerificationController Test, DB Table: entry_group_templates, DB Table: events, DB Table: parties (+94 more)
 
-### Community 21 - "Event State Machine Feature"
+### Community 8 - "Community 8"
+Cohesion: 0.03
+Nodes (101): AccountDeletionController, AccountDeletionControllerTest, AccountRepository, AccountRepository Test, AppPermissionSettingsScreen, AppPermissionSettingsScreenTest, AppRouterTest (partner), DefaultFirebaseOptions (app_user) (+93 more)
+
+### Community 9 - "Community 9"
 Cohesion: 0.04
-Nodes (85): activate-upcoming-events Cron, BoardingPassCard, BoardingPassCard Widget Test, BoardingPassStatus enum + boardingPassStatus(), BoardingPassStatus Test, CheckInReadyContent, CheckedInContent, clockProvider (+77 more)
+Nodes (94): ActionRunner, Admin Dashboard Spec, Admin Dashboard Wireframe, ApplyEventResult, backend-simulator E2E Tests, backend-simulator Edge Function (main handler), CancelOrderResult, DB Table: partner_verified_users (+86 more)
 
-### Community 22 - "Partner Application Detail & More Page"
+### Community 10 - "Community 10"
 Cohesion: 0.03
-Nodes (71): package:app_user/src/features/event/detail/html_stub.dart, package:flutter/gestures.dart, package:minglit_kit/src/config/url_config.dart, package:package_info_plus/package_info_plus.dart, package:url_launcher/url_launcher.dart, scenarios/more_page_scenarios.dart, build, _buildFileLink (+63 more)
+Nodes (90): Partner App Smoke Test Cases, User App Smoke Test Cases, 25 Cross-Feature Import Violations (issue #452), Cross-Feature Coupling Violations (issue #436), Automation Test Guide (7-Layer), Partner CUJ Test Scenarios, CUJ-P01: Partner Onboarding → Event Creation, CUJ-P02: Application Review (Approve/Reject) (+82 more)
 
-### Community 23 - "Recurring Event & Entry Group Feature"
+### Community 11 - "Community 11"
 Cohesion: 0.04
-Nodes (76): CUJ Recurring Event Integration Test (IT-P09), DB Table: recurrence_rules, Edge Function: recurrence-rules, EntryGroupEditorScreen, EventBasicInfoSummary, EventCapacitySummary, EventContactSummary, EventCreateController (+68 more)
+Nodes (70): CUJ Recurring Event Integration Test (IT-P09), DB Table: recurrence_rules, Edge Function: recurrence-rules, EntryGroupEditorScreen, EventBasicInfoSummary, EventCapacitySummary, EventContactSummary, EventCreateController (+62 more)
 
-### Community 24 - "Partner Settlement Pages"
-Cohesion: 0.03
-Nodes (63): package:app_partner/src/features/settlement/widgets/download_bottom_sheet.dart, package:app_partner/src/features/settlement/widgets/settlement_card.dart, package:app_partner/src/features/settlement/widgets/settlement_status_badge.dart, package:app_partner/src/features/settlement/widgets/status_filter_chips.dart, ActionButtons, AmountBreakdown, build, Card (+55 more)
+### Community 12 - "Community 12"
+Cohesion: 0.04
+Nodes (50): Alchemist goldenTest, ClosingSoonEventsCard, ClosingSoonEventsCard Test, CujEventCreateWizardTest (IT-P15), currentPartnerInfoProvider, EventCardScenarios, EventCard widget, EventDetailPage widget (+42 more)
 
-### Community 25 - "User Account Deletion & Consent UI"
-Cohesion: 0.03
-Nodes (60): package:app_user/src/features/account_deletion/account_deletion_flow.dart, package:app_user/src/features/consent/logic/consent_coordinator.dart, package:app_user/src/features/consent/ui/consent_detail_sheet.dart, package:app_user/src/features/consent/ui/signup_consent_page.dart, build, Card, DeletionInfoPage, _InfoSection (+52 more)
-
-### Community 26 - "PM Feature Docs & Compliance"
+### Community 13 - "Community 13"
 Cohesion: 0.05
 Nodes (64): Admin Dashboard Feature (PRD + Wireframe), Dark Pattern Regulation Compliance, Event Now Bar Feature, Feature Maturity Matrix (PM 추적 도구), Flutter + UIautomator 비호환 (bounds=[0,0][0,0]), JUSO_CONFIRM_KEY 환경변수 누락 패턴, Legal Compliance (F1~F8 retention policies), MVP Feature Maturity Tracking (+56 more)
 
-### Community 27 - "User Event Detail Page & Tests"
-Cohesion: 0.04
-Nodes (46): ../../../../integration/utils/test_app.dart, package:app_user/src/features/event/detail/event_detail_now_provider.dart, package:app_user/src/features/event/detail/open_in_app_dialog.dart, package:app_user/src/features/event/detail/report_bottom_sheet.dart, package:app_user/src/features/event/logic/event_coordinator.dart, package:app_user/src/utils/share_utils.dart, build, EventDetailPage (+38 more)
+### Community 14 - "Community 14"
+Cohesion: 0.03
+Nodes (55): package:mds/src/ui/widgets/common/minglit_skeleton.dart, package:minglit_kit/src/features/dev/catalog_tabs/patterns/data_states_demo.dart, AsyncWrapperDemoPage, _AsyncWrapperDemoPageState, build, _buildSkeleton, Center, _CodeSnippet (+47 more)
 
-### Community 28 - "Check-in Controller & Participant"
+### Community 15 - "Community 15"
 Cohesion: 0.06
-Nodes (52): CheckinController, CheckinParticipant, CheckinParticipant Data Class Unit Test, CheckinPlaceholderPage, CheckinPlaceholderPage Widget Test, checkinRepositoryProvider, CheckinResultBanner, CheckinResultBanner widget (+44 more)
+Nodes (55): CheckInReadyContent, CheckedInContent, clockProvider, CujEventNowBarTest, CujMatchingVoteTest, CujTicketQrTest, DB Table: match_rules, DB View: my_matches_view (+47 more)
 
-### Community 29 - "Event Now Bar Widget"
-Cohesion: 0.04
-Nodes (44): AnimatedBuilder, _barDecoration, BoxDecoration, build, _buildBar, _buildDot, _buildOfflineBar, _buildTrailing (+36 more)
-
-### Community 30 - "User Home Page & Tag Chips"
-Cohesion: 0.05
-Nodes (35): package:app_user/src/features/home/widgets/featured_tag_chip_bar.dart, package:app_user/src/features/tag/logic/tag_coordinator.dart, package:app_user/src/widgets/explore_filter_chip_bar.dart, BugReportAction, build, dispose, HomePage, _HomePageState (+27 more)
-
-### Community 31 - "minglit_kit Common UI Widgets"
+### Community 16 - "Community 16"
 Cohesion: 0.08
-Nodes (34): MinglitCircularProgressIndicator, MinglitAlert, MinglitAlertType, MinglitAsyncValueWidget, MinglitBadge, _BottomCTAVariant, MinglitBottomCTA, MinglitBottomSheet (+26 more)
+Nodes (40): CheckinController, CheckinParticipant, CheckinParticipant Data Class Unit Test, CheckinPlaceholderPage, CheckinPlaceholderPage Widget Test, checkinRepositoryProvider, CheckinResultBanner, CheckinResultBanner widget (+32 more)
 
-### Community 32 - "Tag Discovery & Featured Tags"
-Cohesion: 0.12
-Nodes (30): FeaturedTagChipBar, FeaturedTagChipBar Widget Test, partner-manage-party Edge Function, party_tags DB Table, RPC: get_featured_tags, RPC: get_parties_by_tag, RPC: get_trending_tags, RPC: search_tags (+22 more)
+### Community 17 - "Community 17"
+Cohesion: 0.07
+Nodes (26): package:analyzer/dart/ast/ast.dart, package:analyzer/error/listener.dart, package:custom_lint_builder/custom_lint_builder.dart, package:minglit_lints/src/no_hardcoded_colors_rule.dart, package:minglit_lints/src/no_hardcoded_padding_rule.dart, package:minglit_lints/src/no_hardcoded_text_style_rule.dart, package:minglit_lints/src/use_minglit_async_value_widget_rule.dart, package:minglit_lints/src/use_minglit_progress_indicator_rule.dart (+18 more)
 
-### Community 33 - "Security & Engineering Standards Docs"
+### Community 18 - "Community 18"
+Cohesion: 0.09
+Nodes (30): CheckinResult State Machine, Domain Probe (Observability Interface), Design System 07 — Accessibility Guide, Design System 02 — Component Themes, Design System 01 — Foundation Tokens, Design System 05 — Motion Guide, Design System 04 — Navigation Guide, Design System 03 — UI Patterns (+22 more)
+
+### Community 19 - "Community 19"
+Cohesion: 0.07
+Nodes (27): build, CircularProgressIndicator, Container, _DemoCard, Divider, Icon, _OrderSummaryRow, _PaymentConfirmPanel (+19 more)
+
+### Community 20 - "Community 20"
 Cohesion: 0.12
 Nodes (28): Breach Notification Runbook, Breach Response Process, Dark Mode Contrast / Accessibility Issue, Minglit Design Token System, Golden Test Coverage Tracking, notification-worker Edge Function, sensitive_access_log Audit Table, Deno 2.0 & Edge Functions Standard (+20 more)
 
-### Community 34 - "Architecture Audit Reports"
+### Community 21 - "Community 21"
 Cohesion: 0.18
 Nodes (25): Architecture Audit #1003 — 2026-04-04, Architecture Audit #1092 — 2026-04-06, Architecture Audit #536 — 2026-03-28, Code Quality Audit #541 — 2026-03-28, Architecture Audit #601 — 2026-03-28 (cross-import), Architecture Audit #648 — 2026-03-28, Architecture Audit #678 — 2026-03-29, Architecture Audit #686 — 2026-03-29 (+17 more)
 
-### Community 35 - "Party Create Wizard Steps State"
-Cohesion: 0.09
-Nodes (22): addEntryGroup, nextStep, _PartyCreateWizardSteps, previousStep, removeEntryGroup, setStep, setVisibility, toggleBalance (+14 more)
-
-### Community 36 - "Core Domain Models & Config"
-Cohesion: 0.19
-Nodes (20): DeletionStatus model (account deletion grace period), EnvKeyStore (compile-time env var validation), EventApplication model (user join application), Event model (party instance with scheduling/capacity), EventFeedType enum (nearest, newArrivals, closingSoon, earlyBird, aiRecommended), EventParticipant model (confirmed attendance record), IamportConfig / iamportConfigProvider (PortOne payment config), MatchRule / MatchVote / MatchPair models (+12 more)
-
-### Community 37 - "Create Verification Page (Partner)"
-Cohesion: 0.11
-Nodes (18): build, _buildBasicInfoSection, _buildFormBuilderSection, Card, Column, CreateVerificationPage, _CreateVerificationPageState, didUpdateWidget (+10 more)
-
-### Community 38 - "Payment & Identity Verify Edge Functions"
-Cohesion: 0.15
-Nodes (19): contract_test, Test Fixtures (fixtures.ts), identity-verify Edge Function, minglit_kit_test, Test Utils: mock_http.ts, payment-cancel Edge Function, Payment Edge Cases Integration Tests, Payment Integration Happy-Path Tests (+11 more)
-
-### Community 39 - "Event Detail Content Widget"
-Cohesion: 0.11
-Nodes (17): build, ColoredBox, dispose, Divider, _EventDetailContent, _EventDetailContentState, Function, initState (+9 more)
-
-### Community 40 - "Event Refund Policy Section"
-Cohesion: 0.12
-Nodes (15): build, _buildCutoffBanner, _buildGracePeriodBanner, _buildLoadingContent, _buildPolicyRow, _buildSummary, Column, Container (+7 more)
-
-### Community 41 - "Matching Settings Screen"
+### Community 22 - "Community 22"
 Cohesion: 0.13
-Nodes (14): build, _buildBottomBar, _buildContent, _buildGroupRuleCard, Card, Center, FilterChip, _initializeRules (+6 more)
+Nodes (22): FeaturedTagChipBar, FeaturedTagChipBar Widget Test, Tag model, RPC: get_featured_tags, RPC: get_parties_by_tag, RPC: get_trending_tags, RPC: search_tags, RPC: upsert_user_interest_tags (+14 more)
 
-### Community 42 - "Design Pattern Catalog Docs"
+### Community 23 - "Community 23"
 Cohesion: 0.2
-Nodes (15): Design Catalog Revamp Spec, Design Pattern Catalog Technical Plan, Design Pattern Catalog Spec, Design Pattern Catalog Test Plan, Design Pattern Catalog Wireframe, Design Pattern P1: Detail Page, Design Pattern P6: Data States (Empty/Error/Loading), Design Pattern P7: Async Wrapper (+7 more)
+Nodes (19): DeletionStatus model (account deletion grace period), EnvKeyStore (compile-time env var validation), EventApplication model (user join application), Event model (party instance with scheduling/capacity), EventFeedType enum (nearest, newArrivals, closingSoon, earlyBird, aiRecommended), EventParticipant model (confirmed attendance record), IamportConfig / iamportConfigProvider (PortOne payment config), MatchRule / MatchVote / MatchPair models (+11 more)
 
-### Community 43 - "User App Golden Test Scenarios"
+### Community 24 - "Community 24"
+Cohesion: 0.11
+Nodes (18): Event Now Bar Spec, Event Now Bar Test Plan, Event Now Bar Wireframe, Event State Machine Extension Plan, Golden Test Coverage Plan, Location Consent Plan, My Tickets Plan, My Tickets Spec (+10 more)
+
+### Community 25 - "Community 25"
 Cohesion: 0.14
-Nodes (13): account_deletion_scenarios.dart, blocked_partners_scenarios.dart, event_application_scenarios.dart, event_detail_scenarios.dart, home_scenarios.dart, login_scenarios.dart, matching_vote_scenarios.dart, my_page_scenarios.dart (+5 more)
+Nodes (17): IamportClient, IamportClientTest, initSentry, LoggerTest, withHandler, EXCLUDED_KEYS, maskJsonString, maskMetadata (+9 more)
 
-### Community 44 - "Ticket Selection Widgets"
-Cohesion: 0.14
-Nodes (13): _buildBalanceBadge, buildEmptyState, buildLoadingState, buildQuantityStepper, _buildRecommendedBadge, buildTicketOption, calculateTotal, Container (+5 more)
-
-### Community 45 - "Web Platform Utils & Map Widget"
-Cohesion: 0.14
-Nodes (12): dart:js_interop, dart:js_interop_unsafe, dart:ui_web, package:web/web.dart, build, didUpdateWidget, HtmlElementView, _initMap (+4 more)
-
-### Community 46 - "minglit_kit Component Theme"
+### Community 26 - "Community 26"
 Cohesion: 0.14
 Nodes (13): appBar, card, checkbox, chip, dialog, divider, elevatedButton, inputDecoration (+5 more)
 
-### Community 47 - "Ops Backend Simulation Alerts"
+### Community 27 - "Community 27"
 Cohesion: 0.2
 Nodes (14): Alert #1261: Daily Backend Simulation Failed, Alert #1412: Daily Backend Simulation Failed, Alert #1444: Seed Dev Failed, Alert #1486: Hourly User Activity Failed, Alert #1488: Daily Backend Simulation Failed, Alert #1499: Deploy Supabase Migrations Failed, Alert #1516: Hourly User Activity Failed, Alert #1517: Daily Backend Simulation Failed (+6 more)
 
-### Community 48 - "Supabase Platform Standards & Templates"
-Cohesion: 0.16
-Nodes (14): Domain Probe (Observability Interface), RLS Policy (Row Level Security), Saga Pattern (Distributed Transactions), Cold Start Mitigation (Rule 2.2), Memory-Aware Edge Function Execution (Rule 2.1), Supabase Platform & Infrastructure Standard, ID-based Row-Level Isolation (Rule 3.1), Transactional Outbox Pattern (Rule 1.1) (+6 more)
-
-### Community 49 - "User Patrol UI Tests"
-Cohesion: 0.18
-Nodes (7): package:patrol/patrol.dart, main, main, main, main, main, utils/patrol_test_app.dart
-
-### Community 50 - "Event Admission Wizard Verification Step"
+### Community 28 - "Community 28"
 Cohesion: 0.17
-Nodes (11): build, _buildFormField, Center, Column, MinglitAsyncValueWidget, MinglitFilePicker, Padding, SizedBox (+3 more)
+Nodes (10): package:mds/src/ui/widgets/common/minglit_horizontal_scroll_group.dart, build, MinglitChipGroup, Padding, SizedBox, main, MaterialApp, _scrollableRow (+2 more)
 
-### Community 51 - "Event Detail Content Skeleton"
-Cohesion: 0.17
-Nodes (11): build, ColoredBox, CustomScrollView, Divider, _EventDetailContentSkeleton, MinglitSkeleton, Row, shouldRebuild (+3 more)
-
-### Community 52 - "minglit_kit Design Utilities"
+### Community 29 - "Community 29"
 Cohesion: 0.17
 Nodes (11): BoxDecoration, card, infoText, MinglitBorders, MinglitDecorations, MinglitShadows, MinglitTextStyles, selectableCard (+3 more)
 
-### Community 53 - "Architecture Documentation Nodes"
+### Community 30 - "Community 30"
 Cohesion: 0.39
 Nodes (12): Backend Architecture Doc, Client Architecture Doc, Global Event Pipeline Doc, Architecture Overview Doc, Payment Pipeline Doc, Search & Recommendation Doc, Trust & Verification Doc, Edge Functions Debugging Doc (+4 more)
 
-### Community 54 - "UI/UX Audit Reports"
+### Community 31 - "Community 31"
+Cohesion: 0.17
+Nodes (12): Design Catalog Revamp Spec, Design Pattern Catalog Technical Plan, Design Pattern Catalog Spec, Design Pattern Catalog Test Plan, Design Pattern Catalog Wireframe, Design Pattern P1: Detail Page, Design Pattern P6: Data States (Empty/Error/Loading), Design Pattern P7: Async Wrapper (+4 more)
+
+### Community 32 - "Community 32"
 Cohesion: 0.41
 Nodes (12): Design Token Violations: Hardcoded Colors/Fonts/Spacing across Flutter codebase, Golden Test Coverage Gap (5-9/49-51 pages, ~10-17%), UI/UX Audit #440 — 2026-03-26: Design Token Violations + Golden Test Gaps, UI/UX Audit #443 — 2026-03-26: Token Violations, Golden Coverage 10.4%, UI/UX Audit #586 — 2026-03-28: Hardcoded Colors, Golden Coverage 17.6%, UI/UX Audit #603 — 2026-03-28: Token Violations, Empty State CTA, Settlement Spacing, UI/UX Audit #649 — 2026-03-28: 14 Hardcoded Colors, 59 Non-standard Buttons, WCAG AA, UI/UX Audit #683 — 2026-03-29: Hardcoded Colors, Golden Test Gaps, Doc-Code Sync (+4 more)
 
-### Community 55 - "Allure Test Reporter (Partner)"
+### Community 33 - "Community 33"
 Cohesion: 0.22
-Nodes (8): package:test_reporter/test_reporter.dart, AutoLabelAllureReporter, create, AutoLabelAllureReporter, create, AutoLabelAllureReporter, create, utils/auto_label_allure_reporter.dart
+Nodes (1): TestAction
 
-### Community 56 - "Event Bottom Ticket Bar"
-Cohesion: 0.2
-Nodes (9): _BottomTicketBar, _BottomTicketBarSkeleton, build, _buildActionButton, Column, Container, MinglitButton, _showTicketSelection (+1 more)
+### Community 34 - "Community 34"
+Cohesion: 0.29
+Nodes (8): AsyncWrapperDemoPage, AsyncWrapperDemoTest, CardLayoutsDemo, CardLayoutsDemoTest, CatalogTabs Barrel, DesignCatalogPage, TransactionFlowDemoPage, TransactionFlowDemoTest
 
-### Community 57 - "Partner Settlement Models"
-Cohesion: 0.2
-Nodes (9): PartnerMonthlyRevenue, PartnerRevenueSummary, PartnerSettlement, SettlementItem, SettlementItemStatus, _toDate, _toDateTime, _toDouble (+1 more)
-
-### Community 58 - "Event Admission Wizard Widgets"
-Cohesion: 0.22
-Nodes (8): build, _buildCircle, Column, Container, _Footer, Padding, SizedBox, _StepIndicator
-
-### Community 59 - "Auto-Label Allure Reporter Utility"
-Cohesion: 0.32
-Nodes (5): package:allure_report/allure_report.dart, package:allure_report/src/test_report.dart, AutoLabelAllureReporter, AutoLabelAllureReporter, AutoLabelAllureReporter
-
-### Community 60 - "Quill Rich Text Editor Theme"
+### Community 35 - "Community 35"
 Cohesion: 0.25
 Nodes (7): BoxDecoration, editorConfig, editorDecoration, MinglitQuillTheme, QuillEditorConfig, QuillSimpleToolbarConfig, toolbarConfig
 
-### Community 61 - "Dev Environment isDevEnv Bug Reports"
+### Community 36 - "Community 36"
+Cohesion: 0.32
+Nodes (8): requirePartnerPermission, PartnerPermissionsTest, parseAction, parseJsonBody, RequestUtilsTest, errorResponse, successResponse, ResponseUtilsTest
+
+### Community 37 - "Community 37"
 Cohesion: 0.29
 Nodes (8): getBulkEligibilityData 후 홈 피드 0건 — dev 환경 eligibility 필터 과잉 적용, isDevEnv 환경 판별 오류 — 'dev' 값 미허용으로 dev EF/앱 기능 차단, Issue #1616: Dev Session Switcher 403 Blocked in production (dev-session-switch EF), Issue #1617: 검색 키워드 탭 시 결과 없음 — seed 데이터 부족 (CUJ-U04), Issue #1624: CUJ-P01 — Dev User Switch 파트너 앱 미동작 (isDevEnv 'dev' 미인식), Issue #1632: U-S01 — 로그인 유저 홈 이벤트 0건 (duplicate #1634), Issue #1634: U-S03 — Dev 환경 eligibility 필터로 EventDetailPage 진입 불가, Issue #1645: DevUserSwitchScreen NEEDS_APP/PENDING 상태 파트너 계정 없음
 
-### Community 62 - "CI & TPM Failure Reports"
+### Community 38 - "Community 38"
 Cohesion: 0.36
 Nodes (8): CI Issue: CUJ Tests ADB Emulator Connection Failure (10+ consecutive days), CI Issue: db-invariant-monitor Workflow Registration Stale / Ghost Runs, CI Issue: Supabase Migrations IPv6 Connection Failure, TPM Report #1019: Deploy Supabase Migrations IPv6 100% Failure, TPM Report #1174: CUJ 5-Day Failure + report-exec 13 Cycles Unaddressed, TPM Report #1373: Supabase Deploy 10-Consecutive Failure + Dependabot PRs, TPM Report #1443: P0 CI Failure 3 Unrouted + db-invariant-monitor Workflow Error, TPM Report #1543: db-invariant-monitor 100% Failure + 7 report-exec Backlog + P1 QA Bugs
 
-### Community 63 - "Purchase History Card Widget"
+### Community 39 - "Community 39"
 Cohesion: 0.29
-Nodes (6): build, Container, Divider, PurchaseHistoryCard, _showRefundErrorDialog, SizedBox
+Nodes (0): 
 
-### Community 64 - "Event Repository Commands"
-Cohesion: 0.29
-Nodes (6): ApplyEventResult, CancelOrderResult, _EventRepositoryCommands, FreeApplyEventResult, MinglitUserException, PaidApplyEventResult
-
-### Community 65 - "Admin Coordinator & Application List"
-Cohesion: 0.38
-Nodes (7): AdminCoordinator, AdminCoordinator Unit Test, App Partner README, PartnerApplicationDetailPage, PartnerApplicationListPage, partnerApplicationProvider, partnerApplicationsProvider
-
-### Community 66 - "User App Navigation Bug Reports"
+### Community 40 - "Community 40"
 Cohesion: 0.29
 Nodes (7): app_user는 BottomNav 없이 top-level 독립 라우트 사용 (설계 의도), GoRouteData.push(context) StatefulShellBranch 경계에서 silent 실패 패턴, Issue #1290: BottomNav 미노출 — app_user 네비게이션 설계 의문, Issue #1297: PartnerDetailPage 진입 경로 미발견 (U-S05/U-S06), Issue #1630: U-S02/U-S09/U-S12 Navigation Major Regression (AppBar 아이콘 무반응), Issue #1631: U-S01 — 이벤트 카드/상세 이미지 깨짐 (Broken Event Images), Issue #1633: U-R01 — GUEST 프로필 탭 시 from=/ 전달 (기대: from=/my)
 
-### Community 67 - "CI Review-Presence & Seed Dev Reports"
+### Community 41 - "Community 41"
 Cohesion: 0.29
 Nodes (7): CI Issue: review-presence Structural Defect Blocking Approved PRs, CI Issue: Seed Dev Workflow False Positive P0 Issue Generation, TPM Report #1046: Seed Dev Auto-Issue Repeat Creation (15 issues), TPM Report #1768: review-presence Required Check Recurrence, Approved PR Merge Block, TPM Report #962: P0 CI Issues Triage + Epic Cleanup + Refund Policy, TPM Report #974: Duplicate PR Pattern — Worker Claim Mechanism, Worker Concurrency Race: Multiple SWE workers claiming same issue simultaneously
 
-### Community 68 - "Event Admission Payment Step"
+### Community 42 - "Community 42"
 Cohesion: 0.33
-Nodes (5): build, Column, Divider, _PaymentStep, SizedBox
+Nodes (0): 
 
-### Community 69 - "Event Entry Conditions Section"
+### Community 43 - "Community 43"
 Cohesion: 0.33
-Nodes (5): build, _EntryConditionsSection, MinglitSection, SizedBox, Stack
+Nodes (0): 
 
-### Community 70 - "Party Create Wizard Tickets State"
-Cohesion: 0.33
-Nodes (5): addTicket, _PartyCreateWizardTickets, removeTicket, _updateMaxParticipants, updateTicket
+### Community 44 - "Community 44"
+Cohesion: 0.4
+Nodes (6): AdminCoordinator, AdminCoordinator Unit Test, PartnerApplicationDetailPage, PartnerApplicationListPage, partnerApplicationProvider, partnerApplicationsProvider
 
-### Community 71 - "Partner Apply Steps State"
-Cohesion: 0.33
-Nodes (5): canProceed, _PartnerApplySteps, previousStep, saveDraft, setStep
-
-### Community 72 - "Partner Application Repository"
-Cohesion: 0.33
-Nodes (5): _cleanupFiles, _efError, MinglitUserException, _PartnerApplicationRepository, _uploadFile
-
-### Community 73 - "Env Key Store & Landing Env Validator"
-Cohesion: 0.33
-Nodes (5): EnvKeyStore, EnvKeyStore Test, Landing Partner Env Validator, Landing Partner Next.js Config, Landing Partner Privacy Policy Page
-
-### Community 74 - "CI/CD Environment Variable Docs"
+### Community 45 - "Community 45"
 Cohesion: 0.4
 Nodes (6): CI/CD Deploy Pipeline Test Cases, Edge Function Environment Variables, Flutter Environment Variables, GitHub Secrets Configuration, Environment Variable Reference, JUSO_CONFIRM_KEY Required/Optional Mismatch Issue
 
-### Community 75 - "Issue Worker Ops Incidents"
-Cohesion: 0.4
-Nodes (6): Audit Worker SESSION_TIMEOUT Unbound Variable Crash, Issue Worker needs-dev Label Gate Bug, Incident #672: Issue Worker Activity Check, Incident #675: Issue Worker Restart Required, Incident #679: Worker Reschedule After Dev Pull-Rebase, Incident #681: Issue Worker Scheduling Only
-
-### Community 76 - "Flutter SDK & Env Submodule Incidents"
-Cohesion: 0.33
-Nodes (6): Flutter SDK Availability in Runtime QA Environment, minglit_env Git Submodule (flutter.env), PortOne API Key Env Vars Missing from Edge Functions, Incident #1575: Missing EF Env Vars After Deploy, Incident #1606: Hard Block — Missing minglit_env/dev/flutter.env, Incident #1713: Hard Block — Flutter SDK Missing in Runtime Environment
-
-### Community 77 - "iOS/Android Deploy Failure Alerts"
+### Community 46 - "Community 46"
 Cohesion: 0.53
 Nodes (6): Alert #1433: iOS Deploy Partner Failed, Alert #1434: Android Deploy Partner Failed, Alert #1484: iOS Deploy User Failed, Alert #1509: iOS Deploy Partner Failed, App Store Connect Agreement Expiry (FORBIDDEN.REQUIRED_AGREEMENTS_MISSING_OR_EXPIRED), JUSO_CONFIRM_KEY GitHub Actions Secret
 
-### Community 78 - "iOS Deploy TPM Reports"
-Cohesion: 0.6
-Nodes (6): GitHub Actions: ios-deploy-reusable.yml, TPM Report — CI Failure 40 Issues/Week, Deploy Workflow Stability, TPM Report — iOS Deploy 100% Failure + Issue Digest Rate Drop, TPM Report — iOS Deploy Continued Failure + CI Failure 45 Issues/Week, TPM Report — iOS Deploy Failure Recurrence Week 3, TPM Report — iOS Deploy Workflow Failure 8/7 Days
-
-### Community 79 - "Event Info Tile Widget"
+### Community 47 - "Community 47"
 Cohesion: 0.4
-Nodes (4): build, _InfoTile, Row, SizedBox
+Nodes (6): Audit Worker SESSION_TIMEOUT Unbound Variable Crash, Issue Worker needs-dev Label Gate Bug, Incident #672: Issue Worker Activity Check, Incident #675: Issue Worker Restart Required, Incident #679: Worker Reschedule After Dev Pull-Rebase, Incident #681: Issue Worker Scheduling Only
 
-### Community 80 - "Event Verification Section Widget"
-Cohesion: 0.4
-Nodes (4): build, MinglitSection, MinglitSkeleton, _VerificationSection
+### Community 48 - "Community 48"
+Cohesion: 0.33
+Nodes (6): Flutter SDK Availability in Runtime QA Environment, minglit_env Git Submodule (flutter.env), PortOne API Key Env Vars Missing from Edge Functions, Incident #1575: Missing EF Env Vars After Deploy, Incident #1606: Hard Block — Missing minglit_env/dev/flutter.env, Incident #1713: Hard Block — Flutter SDK Missing in Runtime Environment
 
-### Community 81 - "Party Create Wizard Submit Logic"
-Cohesion: 0.4
-Nodes (4): MinglitSystemException, MinglitUserException, _PartyCreateWizardSubmit, _submitEdit
-
-### Community 82 - "Partner Apply Validation"
-Cohesion: 0.4
-Nodes (4): _PartnerApplyValidation, updateField, validateAll, validateStep
-
-### Community 83 - "Verification Command Repository"
-Cohesion: 0.4
-Nodes (4): MinglitUserException, saveUserVerificationData, submitVerificationToPartner, _VerificationCommandRepository
-
-### Community 84 - "Settlement Item Detail Model"
-Cohesion: 0.4
-Nodes (4): AdjustmentItemModel, PayoutSummary, SettlementHistoryEntry, SettlementItemDetail
-
-### Community 85 - "ADB Emulator CI Failure Alerts"
-Cohesion: 0.5
-Nodes (5): android-emulator-runner Shell Compatibility Issue, Ops Alert #1128 — Daily Backend Simulation Failed (2026-04-06), Ops Alert #1238 — Deploy Supabase Migrations Failed (2026-04-10), Ops Alert #916 — Daily Backend Simulation Failed (2026-03-30), Ops Alert #950 — Daily CUJ Test 5-day ADB Failure
-
-### Community 86 - "Allure Reporter & Exception Utilities"
+### Community 49 - "Community 49"
 Cohesion: 0.4
 Nodes (4): allure_report Dart Package, AutoLabelAllureReporter, MinglitException Test Suite, MinglitException (exceptions.dart)
 
-### Community 87 - "Purchase History Refund Row Widget"
+### Community 50 - "Community 50"
+Cohesion: 0.4
+Nodes (5): Account Deletion Technical Design Plan, Account Deletion Feature Spec, Account Deletion Test Plan, Account Deletion Wireframe, Account Management Sub-page Wireframe
+
+### Community 51 - "Community 51"
 Cohesion: 0.5
-Nodes (3): build, Padding, _RefundRow
+Nodes (5): Patrol 도입 기술 설계, 반복 이벤트 기술 설계, 반복 이벤트 스펙, 반복 이벤트 테스트 계획, 반복 이벤트 와이어프레임
 
-### Community 88 - "Event Admission State"
+### Community 52 - "Community 52"
+Cohesion: 0.6
+Nodes (5): Signup Consent Technical Design Plan, Signup Consent Feature Spec, Signup Consent Test Plan, Signup Consent Wireframe (Original), Signup Consent Wireframe v2 (Redesign)
+
+### Community 53 - "Community 53"
+Cohesion: 0.4
+Nodes (5): Tag Discovery Technical Design Plan, Tag Discovery Feature Spec, Tag Discovery Test Plan, Tag Discovery Wireframe, Tag Stats Usage Policy
+
+### Community 54 - "Community 54"
 Cohesion: 0.5
-Nodes (3): AdmissionButtonConfig, AdmissionState, _checkEligibility
+Nodes (5): android-emulator-runner Shell Compatibility Issue, Ops Alert #1128 — Daily Backend Simulation Failed (2026-04-06), Ops Alert #1238 — Deploy Supabase Migrations Failed (2026-04-10), Ops Alert #916 — Daily Backend Simulation Failed (2026-03-30), Ops Alert #950 — Daily CUJ Test 5-day ADB Failure
 
-### Community 89 - "Statsig Analytics Provider (Landing)"
-Cohesion: 0.67
-Nodes (2): getOrCreateStableId(), StatsigAnalyticsProvider()
-
-### Community 90 - "Iamport Helper Stub (Web)"
+### Community 55 - "Community 55"
 Cohesion: 0.5
-Nodes (3): Function, requestCertificationWeb, UnsupportedError
+Nodes (5): TPM Report — CI Failure 40 Issues/Week, Deploy Workflow Stability, TPM Report — iOS Deploy 100% Failure + Issue Digest Rate Drop, TPM Report — iOS Deploy Continued Failure + CI Failure 45 Issues/Week, TPM Report — iOS Deploy Failure Recurrence Week 3, TPM Report — iOS Deploy Workflow Failure 8/7 Days
 
-### Community 91 - "Korean Age Utility"
-Cohesion: 0.5
-Nodes (3): AgeUtil, calculateKoreanAge, calculateManAge
-
-### Community 92 - "Refund Calculator"
-Cohesion: 0.5
-Nodes (3): calculate, RefundCalculation, RefundCalculator
-
-### Community 93 - "Event Repository Queries"
-Cohesion: 0.5
-Nodes (3): _EventRepositoryQueries, Exception, FormatException
-
-### Community 94 - "Partner App Entry Point"
-Cohesion: 0.67
-Nodes (4): app_partner main.dart, appStartupProvider, DefaultFirebaseOptions, MinglitPartnerApp
-
-### Community 95 - "Event Matching Controller"
-Cohesion: 0.67
-Nodes (4): eventMatchRulesProvider, MatchingController, MatchingController Test, MatchingSettingsScreen
-
-### Community 96 - "Settlement Card & Status Badge Tests"
-Cohesion: 0.5
-Nodes (4): SettlementCard Widget Test, SettlementCard Widget, SettlementStatusBadge Test, SettlementStatusBadge / SettlementStatus
-
-### Community 97 - "Landing Pages Statsig Providers"
-Cohesion: 0.67
-Nodes (4): StatsigAnalyticsProvider (Partner), RootLayout (landing_user), StatsigAnalyticsProvider (User), @statsig/react-bindings StatsigProvider
-
-### Community 98 - "Trust Badge System Spec"
-Cohesion: 0.5
-Nodes (4): Trust Badge System Spec, Trust Badge UI/UX Design, TrustLevel Enum, UserTrustInfo Model
-
-### Community 99 - "AI Embed & Payment QA Audit Reports"
-Cohesion: 0.67
-Nodes (4): ai-embed EF 에러 핸들링 갭 — DB 쿼리 에러 미검증, vectorization 에러 삼킴, 결제 full-cycle 통합 테스트 부재 — create-order→webhook→apply→cancel→refund 경로 미커버, Issue #1409: 결제하기 진입 시 Type Cast Error (applyEvent null cast), Issue #1440: QA Audit Report — ai-embed 에러 핸들링 갭 + 결제 통합 테스트 전략
-
-### Community 100 - "User Repository & Verified Users DB"
+### Community 56 - "Community 56"
 Cohesion: 0.5
 Nodes (4): DB Table: partner_verified_users, DB Table: user_profiles, SupabaseUserRepository, SupabaseUserRepository Test
 
-### Community 101 - "Admission Action Handler"
-Cohesion: 0.67
-Nodes (2): AdmissionButtonConfig, buttonConfig
+### Community 57 - "Community 57"
+Cohesion: 0.5
+Nodes (0): 
 
-### Community 102 - "Event Quill Viewer Widget"
-Cohesion: 0.67
-Nodes (2): build, _QuillViewer
+### Community 58 - "Community 58"
+Cohesion: 0.5
+Nodes (4): checkStatsigGate, initStatsig, logStatsigEvent, StatsigUtilsTest
 
-### Community 103 - "HTML Stub for Web Platform"
+### Community 59 - "Community 59"
 Cohesion: 0.67
-Nodes (2): Navigator, Window
+Nodes (4): StatsigAnalyticsProvider (Partner), RootLayout (landing_user), StatsigAnalyticsProvider (User), @statsig/react-bindings StatsigProvider
 
-### Community 104 - "Party Create Wizard Load Logic"
+### Community 60 - "Community 60"
 Cohesion: 0.67
-Nodes (2): MinglitSystemException, _PartyCreateWizardLoad
+Nodes (4): app_partner main.dart, appStartupProvider, DefaultFirebaseOptions, MinglitPartnerApp
 
-### Community 105 - "Checkin Participant Data Model"
+### Community 61 - "Community 61"
+Cohesion: 0.5
+Nodes (4): SettlementCard Widget Test, SettlementCard Widget, SettlementStatusBadge Test, SettlementStatusBadge / SettlementStatus
+
+### Community 62 - "Community 62"
 Cohesion: 0.67
-Nodes (2): CheckinParticipant, copyWith
+Nodes (4): eventMatchRulesProvider, MatchingController, MatchingController Test, MatchingSettingsScreen
 
-### Community 106 - "Partner Apply Draft State"
+### Community 63 - "Community 63"
+Cohesion: 0.83
+Nodes (4): 파트너 QR 체크인 UX 강화 스펙, 파트너 QR 체크인 UX 강화 테스트 계획, 파트너 QR 체크인 UI/UX 디자인, 파트너 QR 체크인 와이어프레임
+
+### Community 64 - "Community 64"
 Cohesion: 0.67
-Nodes (2): _PartnerApplyDraft, saveDraft
+Nodes (4): ai-embed EF 에러 핸들링 갭 — DB 쿼리 에러 미검증, vectorization 에러 삼킴, 결제 full-cycle 통합 테스트 부재 — create-order→webhook→apply→cancel→refund 경로 미커버, Issue #1409: 결제하기 진입 시 Type Cast Error (applyEvent null cast), Issue #1440: QA Audit Report — ai-embed 에러 핸들링 갭 + 결제 통합 테스트 전략
 
-### Community 107 - "Landing Partner Env Validator (TS)"
-Cohesion: 0.67
-Nodes (1): validateBuildEnv()
-
-### Community 109 - "Partner Member Repository"
-Cohesion: 0.67
-Nodes (2): MinglitUserException, _PartnerMemberRepository
-
-### Community 110 - "Consent Coordinator Unit Tests"
-Cohesion: 0.67
-Nodes (3): ConsentCoordinator Unit Test, IdentityVerificationConsentSheet Test, SignupConsentPage Test
-
-### Community 111 - "Privacy Protection UI/UX Docs"
-Cohesion: 0.67
-Nodes (3): partner_verified_users 테이블, 개인정보 보호 인증 열람 권한 관리 UI/UX, 개인정보 보호 와이어프레임
-
-### Community 112 - "Runtime QA Scheduler Incidents"
+### Community 65 - "Community 65"
 Cohesion: 1.0
-Nodes (3): Runtime QA Scheduler System, Incident #1765: Flutter SDK Missing in Runtime Environment, Incident #1850: Testing Device Disconnected - Pixel 7a
+Nodes (3): ConsentControllerProvider, IdentityVerificationScreen, IdentityVerificationScreenTest
 
-### Community 113 - "PartyCurationPage Missing Route Reports"
-Cohesion: 0.67
-Nodes (3): PartyCurationPage 고아 코드 — UI 진입점 없이 라우트/코디네이터만 존재 (6주 방치), Issue #1293: PartyCurationPage 진입 경로 부재 (U-S02), Issue #1296: PartyCurationPage 진입 경로 미발견 (중복 #1293)
-
-### Community 114 - "Settlement DB Column Bug Reports"
-Cohesion: 0.67
-Nodes (3): settlement_histories.created_at 컬럼 없음 — 올바른 컬럼은 event_at, Issue #1566: P-S12 정산 상세 PostgrestException — settlement_histories.created_at 없음, Issue #1568: P-S11 계좌 관리 진입 경로 미발견 (settlement/bank-account)
-
-### Community 115 - "Ticket Signing Key Missing Reports"
+### Community 66 - "Community 66"
 Cohesion: 1.0
-Nodes (3): TICKET_SIGNING_PRIVATE_KEY_JWK 미설정 — dev 환경 QR/티켓 토큰 생성 불가, Issue #1653: CUJ-U02 QR 생성 실패 — Ticket signing key not configured (500), Issue #1657: 티켓 조회 500 에러 — TICKET_SIGNING_PRIVATE_KEY_JWK 미설정
+Nodes (3): MinglitIamportCertification (mobile), MinglitIamportCertification (stub), MinglitIamportCertification (conditional export)
 
-### Community 116 - "Tag Discovery Security Audit"
-Cohesion: 0.67
-Nodes (3): Security Audit Report — Tag Discovery Phase 1, Migration: tag_discovery (20260407000003), Migration: tag_sensitive_keyword_filter (20260408000001)
-
-### Community 117 - "review-presence Workflow TPM Reports"
-Cohesion: 0.67
-Nodes (3): GitHub Actions: review-presence workflow, TPM Report — dev Branch Protection Change Blocks All PR Merges, TPM Report — review-presence Workflow Defect Blocking P0 PR #903
-
-### Community 118 - "Refund Policy Terms Mismatch Report"
+### Community 67 - "Community 67"
 Cohesion: 1.0
-Nodes (3): Refund Policy: user-cancel-order / refund_utils.ts, Refund Policy: Terms of Service Page, TPM Report — Refund Policy Terms-Code Mismatch
+Nodes (3): IamportHelper (conditional export), IamportHelperStub, IamportHelperWeb (dart:js interop)
 
-### Community 119 - "Global Loading Controller"
-Cohesion: 0.67
-Nodes (3): GlobalLoadingController, GlobalLoadingState, MinglitGlobalLoadingOverlay
-
-### Community 120 - "Platform Utils Conditional Export"
+### Community 68 - "Community 68"
 Cohesion: 0.67
 Nodes (3): platform_utils (conditional export), isLocalhost (IO), isLocalhost (Web)
 
-### Community 121 - "Axiom Logger & PII Masker"
+### Community 69 - "Community 69"
 Cohesion: 0.67
 Nodes (3): Axiom Structured Logger, Axiom Logger Test Suite, PII Masker (maskMetadata)
 
-### Community 122 - "Edge Function Auth & Service Utilities"
+### Community 70 - "Community 70"
 Cohesion: 0.67
 Nodes (3): Auth Utils (requireAuth / optionalAuth / requireServiceRole), Response Utils (errorResponse), Supabase Service Client (createServiceClient)
 
-### Community 123 - "Integration Test Driver"
-Cohesion: 1.0
-Nodes (1): package:integration_test/integration_test_driver.dart
+### Community 71 - "Community 71"
+Cohesion: 0.67
+Nodes (3): ConsentCoordinator Unit Test, IdentityVerificationConsentSheet Test, SignupConsentPage Test
 
-### Community 124 - "Ticket Event Meta Model"
-Cohesion: 1.0
-Nodes (1): TicketEventMeta
+### Community 72 - "Community 72"
+Cohesion: 0.67
+Nodes (3): Landing Partner Root Layout, StatsigAnalyticsProvider, SupabaseProvider
 
-### Community 125 - "Boarding Pass Status Logic"
-Cohesion: 1.0
-Nodes (1): boardingPassStatus
+### Community 73 - "Community 73"
+Cohesion: 0.67
+Nodes (3): Event Edit and Cancel Spec, Event Edit and Cancel Test Plan, Event Edit and Cancel Wireframe
 
-### Community 126 - "Party Create Wizard Validation"
-Cohesion: 1.0
-Nodes (1): _PartyCreateWizardValidation
+### Community 74 - "Community 74"
+Cohesion: 0.67
+Nodes (3): Ticket QR Boarding Pass Redesign Spec, Ticket QR Boarding Pass Test Plan, Ticket QR Boarding Pass Wireframe
 
-### Community 127 - "Partner Apply Submit Logic"
+### Community 75 - "Community 75"
 Cohesion: 1.0
-Nodes (1): _PartnerApplySubmit
+Nodes (3): Runtime QA Scheduler System, Incident #1765: Flutter SDK Missing in Runtime Environment, Incident #1850: Testing Device Disconnected - Pixel 7a
 
-### Community 133 - "Dev Catalog Mock Event Data"
+### Community 76 - "Community 76"
+Cohesion: 0.67
+Nodes (3): PartyCurationPage 고아 코드 — UI 진입점 없이 라우트/코디네이터만 존재 (6주 방치), Issue #1293: PartyCurationPage 진입 경로 부재 (U-S02), Issue #1296: PartyCurationPage 진입 경로 미발견 (중복 #1293)
+
+### Community 77 - "Community 77"
 Cohesion: 1.0
-Nodes (1): MockEventData
+Nodes (3): TICKET_SIGNING_PRIVATE_KEY_JWK 미설정 — dev 환경 QR/티켓 토큰 생성 불가, Issue #1653: CUJ-U02 QR 생성 실패 — Ticket signing key not configured (500), Issue #1657: 티켓 조회 500 에러 — TICKET_SIGNING_PRIVATE_KEY_JWK 미설정
 
-### Community 134 - "Tag Repository Commands"
-Cohesion: 1.0
-Nodes (1): _TagRepositoryCommands
+### Community 78 - "Community 78"
+Cohesion: 0.67
+Nodes (3): settlement_histories.created_at 컬럼 없음 — 올바른 컬럼은 event_at, Issue #1566: P-S12 정산 상세 PostgrestException — settlement_histories.created_at 없음, Issue #1568: P-S11 계좌 관리 진입 경로 미발견 (settlement/bank-account)
 
-### Community 135 - "Party Event Repository"
-Cohesion: 1.0
-Nodes (1): _PartyEventRepository
-
-### Community 136 - "Tag Repository Queries"
-Cohesion: 1.0
-Nodes (1): _TagRepositoryQueries
-
-### Community 137 - "Verification Query Repository"
-Cohesion: 1.0
-Nodes (1): _VerificationQueryRepository
-
-### Community 138 - "Party Matching Repository"
-Cohesion: 1.0
-Nodes (1): _PartyMatchingRepository
-
-### Community 139 - "Event Feed Type Enum"
-Cohesion: 1.0
-Nodes (1): EventFeedType
-
-### Community 140 - "Condition Key Enum"
-Cohesion: 1.0
-Nodes (1): package:json_annotation/json_annotation.dart
-
-### Community 141 - "Partner Party List Item & Page"
-Cohesion: 1.0
-Nodes (2): PartyListItem, PartyListPage
-
-### Community 142 - "Partner Ticket Manage Screen"
-Cohesion: 1.0
-Nodes (2): partyTicketsProvider, TicketManageScreen
-
-### Community 143 - "Settlement Status Filter Chips Tests"
-Cohesion: 1.0
-Nodes (2): StatusFilterChips Widget Test, StatusFilterChips Widget
-
-### Community 144 - "Landing User Env Validator"
-Cohesion: 1.0
-Nodes (2): validateBuildEnv, landing_user Next.js Config
-
-### Community 145 - "Landing User Brand Page"
-Cohesion: 1.0
-Nodes (2): BrandPage, MingleSymbol SVG Component
-
-### Community 146 - "Pretendard Font Migration Docs"
-Cohesion: 1.0
-Nodes (2): Pretendard Font Migration Typography Review, Login Dark Theme Wireframe
-
-### Community 147 - "Refund Policy v2 Wireframes"
-Cohesion: 1.0
-Nodes (2): Refund Policy v2 Wireframe (Original), Refund Policy v2 Wireframe (UX Review)
-
-### Community 148 - "Backend Simulator Timeout Alert"
-Cohesion: 1.0
-Nodes (2): Backend Simulator Edge Function Timeout Issue, Ops Alert #703 — Daily Backend Simulation Failed (2026-03-28)
-
-### Community 149 - "Version Bump Race Condition Alert"
-Cohesion: 1.0
-Nodes (2): Alert #1506: Version Bump Failed, Version Bump Push Race Condition
-
-### Community 150 - "MainActivity Redeclaration Incident"
-Cohesion: 1.0
-Nodes (2): Duplicate MainActivity in Android Source Sets (src/main + src/dev), Incident #1322: Hard Block — MainActivity Redeclaration on Dev Branch
-
-### Community 151 - "UIautomator Flutter Compat Bug Report"
-Cohesion: 1.0
-Nodes (2): UIautomator × Flutter 호환성 한계 — 단일 FlutterSurfaceView로 좌표 탭 부정확, Issue #1291: 이벤트 상세 파트너명 탭 시 파트너 상세 이동 안 됨 (U-S05)
-
-### Community 152 - "Partner Event Edit Missing Feature Report"
-Cohesion: 1.0
-Nodes (2): 이벤트 수정/취소 기능 미구현 — EventEditRoute/cancelEvent 없음, Issue #1338: app_partner 이벤트 수정/취소 통합 테스트 추가 (blocked)
-
-### Community 153 - "TPM Backlog Surge & Duplicate Issues"
-Cohesion: 1.0
-Nodes (2): TPM Report — needs-dev Backlog Surge 30 Issues, 10% Digest Rate, TPM Report — Duplicate Issue Creation Pattern
-
-### Community 154 - "Vercel Deploy Cascading Failure Report"
-Cohesion: 1.0
-Nodes (2): CI Issue: Vercel Deploy Cascading Cancel (cron + concurrency), TPM Report #1091: Vercel Deploy 20h+ Cascading Failure — Cron Concurrency
-
-### Community 155 - "Refund Button Missing Bug Report"
-Cohesion: 1.0
-Nodes (2): Bug: Refund button not shown for free ticket (paymentId null canCancel logic), Runtime QA Bug #1652: CUJ-U03 Refund Button Not Shown in Purchase History
-
-### Community 156 - "BugReport FAB Touch Block Report"
-Cohesion: 1.0
-Nodes (2): Bug: BugReport FAB overlaps MyPage navigation button (PR #1268 regression), Runtime QA Bug #1285: BugReport FAB Blocks MyPage Button Touch Area
-
-### Community 157 - "Hot Tags 0-Event Bug Report"
-Cohesion: 1.0
-Nodes (2): Bug: Hot Tags section shows 0-event tags — conceptual contradiction, Runtime QA Bug #1286: Hot Tags Section Shows 0-Event Tags
-
-### Community 158 - "Theme Controller"
-Cohesion: 1.0
-Nodes (2): ThemeController, ThemeSettingsTile
-
-### Community 159 - "Age Util & Unit Test"
-Cohesion: 1.0
-Nodes (2): AgeUtil, AgeUtilTest
-
-### Community 160 - "Location Service & Test"
+### Community 79 - "Community 79"
 Cohesion: 1.0
 Nodes (2): LocationService, LocationService Test
 
-### Community 161 - "MinglitButton Widget & Test"
+### Community 80 - "Community 80"
 Cohesion: 1.0
-Nodes (2): MinglitButton, MinglitButtonTest
+Nodes (2): AccountManagementPage, AccountManagementPageTest
 
-### Community 162 - "Image Utils EXIF Strip"
+### Community 81 - "Community 81"
+Cohesion: 1.0
+Nodes (2): Env Keystore (validateEnv / requireEnv), EnvKeyStore Test
+
+### Community 82 - "Community 82"
+Cohesion: 1.0
+Nodes (2): DetailPageDemo, DetailPageDemoTest
+
+### Community 83 - "Community 83"
 Cohesion: 1.0
 Nodes (2): ImageUtils (stripExifAndReencode), stripExifAndReencode Test Suite
 
-### Community 163 - "MinglitFilePicker Widget & Test"
+### Community 84 - "Community 84"
 Cohesion: 1.0
-Nodes (2): MinglitFilePicker Widget, MinglitFilePicker Widget Test Suite
+Nodes (2): AgeUtil, AgeUtilTest
 
-### Community 164 - "MinglitHorizontalScrollGroup Widget"
+### Community 85 - "Community 85"
 Cohesion: 1.0
-Nodes (2): MinglitHorizontalScrollGroup Widget, MinglitHorizontalScrollGroup Widget Test Suite
+Nodes (2): GlobalLoadingController, GlobalLoadingState
 
-### Community 165 - "MinglitImageCarousel Widget & Test"
+### Community 86 - "Community 86"
 Cohesion: 1.0
-Nodes (2): MinglitImageCarousel Widget, MinglitImageCarousel Widget Test Suite
+Nodes (2): ThemeController, ThemeSettingsTile
 
-### Community 166 - "MinglitBottomCTA Widget & Test"
+### Community 87 - "Community 87"
 Cohesion: 1.0
-Nodes (2): MinglitBottomCTA Widget, MinglitBottomCTA Widget Test Suite
+Nodes (2): mock_data (catalog pattern fixtures), MockEventData
 
-### Community 167 - "RefundRow Widget (singleton)"
+### Community 88 - "Community 88"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 89 - "Community 89"
+Cohesion: 1.0
+Nodes (2): nowUnix, WorkerUtils
+
+### Community 90 - "Community 90"
+Cohesion: 1.0
+Nodes (2): validateBuildEnv, landing_user Next.js Config
+
+### Community 91 - "Community 91"
+Cohesion: 1.0
+Nodes (2): BrandPage, MingleSymbol SVG Component
+
+### Community 92 - "Community 92"
+Cohesion: 1.0
+Nodes (2): StatusFilterChips Widget Test, StatusFilterChips Widget
+
+### Community 93 - "Community 93"
+Cohesion: 1.0
+Nodes (2): PartyListItem, PartyListPage
+
+### Community 94 - "Community 94"
+Cohesion: 1.0
+Nodes (2): partyTicketsProvider, TicketManageScreen
+
+### Community 95 - "Community 95"
+Cohesion: 1.0
+Nodes (2): Landing Partner Env Validator, Landing Partner Next.js Config
+
+### Community 96 - "Community 96"
+Cohesion: 1.0
+Nodes (2): Pretendard Font Migration Typography Review, Login Dark Theme Wireframe
+
+### Community 97 - "Community 97"
+Cohesion: 1.0
+Nodes (2): 개인정보 보호 인증 열람 권한 관리 UI/UX, 개인정보 보호 와이어프레임
+
+### Community 98 - "Community 98"
+Cohesion: 1.0
+Nodes (2): Refund Policy v2 Wireframe (Original), Refund Policy v2 Wireframe (UX Review)
+
+### Community 99 - "Community 99"
+Cohesion: 1.0
+Nodes (2): Settings UI Redesign UX Design, Settings UI Redesign Wireframe
+
+### Community 100 - "Community 100"
+Cohesion: 1.0
+Nodes (2): Simulator Edge Function Migration Plan, Simulator Lifecycle Fix Plan
+
+### Community 101 - "Community 101"
+Cohesion: 1.0
+Nodes (2): Metabase BI Dashboard, Statistics & Analytics Tools Spec
+
+### Community 102 - "Community 102"
+Cohesion: 1.0
+Nodes (2): Trust Badge System Spec, Trust Badge UI/UX Design
+
+### Community 103 - "Community 103"
+Cohesion: 1.0
+Nodes (2): Backend Simulator Edge Function Timeout Issue, Ops Alert #703 — Daily Backend Simulation Failed (2026-03-28)
+
+### Community 104 - "Community 104"
+Cohesion: 1.0
+Nodes (2): Duplicate MainActivity in Android Source Sets (src/main + src/dev), Incident #1322: Hard Block — MainActivity Redeclaration on Dev Branch
+
+### Community 105 - "Community 105"
+Cohesion: 1.0
+Nodes (2): Alert #1506: Version Bump Failed, Version Bump Push Race Condition
+
+### Community 106 - "Community 106"
+Cohesion: 1.0
+Nodes (2): UIautomator × Flutter 호환성 한계 — 단일 FlutterSurfaceView로 좌표 탭 부정확, Issue #1291: 이벤트 상세 파트너명 탭 시 파트너 상세 이동 안 됨 (U-S05)
+
+### Community 107 - "Community 107"
+Cohesion: 1.0
+Nodes (2): 이벤트 수정/취소 기능 미구현 — EventEditRoute/cancelEvent 없음, Issue #1338: app_partner 이벤트 수정/취소 통합 테스트 추가 (blocked)
+
+### Community 108 - "Community 108"
+Cohesion: 1.0
+Nodes (2): Bug Report — CUJ-P03 QR Scanner Summary Card and Entry Group Stats Missing, Bug Report — CUJ-P01 Party Create Wizard Step 3 Next Uncertain
+
+### Community 109 - "Community 109"
+Cohesion: 1.0
+Nodes (2): TPM Report — needs-dev Backlog Surge 30 Issues, 10% Digest Rate, TPM Report — Duplicate Issue Creation Pattern
+
+### Community 110 - "Community 110"
+Cohesion: 1.0
+Nodes (2): Refund Policy: Terms of Service Page, TPM Report — Refund Policy Terms-Code Mismatch
+
+### Community 111 - "Community 111"
+Cohesion: 1.0
+Nodes (2): TPM Report — dev Branch Protection Change Blocks All PR Merges, TPM Report — review-presence Workflow Defect Blocking P0 PR #903
+
+### Community 112 - "Community 112"
+Cohesion: 1.0
+Nodes (2): CI Issue: Vercel Deploy Cascading Cancel (cron + concurrency), TPM Report #1091: Vercel Deploy 20h+ Cascading Failure — Cron Concurrency
+
+### Community 113 - "Community 113"
+Cohesion: 1.0
+Nodes (2): Bug: BugReport FAB overlaps MyPage navigation button (PR #1268 regression), Runtime QA Bug #1285: BugReport FAB Blocks MyPage Button Touch Area
+
+### Community 114 - "Community 114"
+Cohesion: 1.0
+Nodes (2): Bug: Hot Tags section shows 0-event tags — conceptual contradiction, Runtime QA Bug #1286: Hot Tags Section Shows 0-Event Tags
+
+### Community 115 - "Community 115"
+Cohesion: 1.0
+Nodes (2): Bug: Refund button not shown for free ticket (paymentId null canCancel logic), Runtime QA Bug #1652: CUJ-U03 Refund Button Not Shown in Purchase History
+
+### Community 116 - "Community 116"
 Cohesion: 1.0
 Nodes (1): _RefundRow Widget
 
-### Community 189 - "Partner Today Party Card"
-Cohesion: 1.0
-Nodes (1): TodayPartyCard
-
-### Community 190 - "Partner Event Card Widget"
-Cohesion: 1.0
-Nodes (1): EventCard
-
-### Community 191 - "Party Image Editor Widget"
-Cohesion: 1.0
-Nodes (1): PartyImageEditor
-
-### Community 192 - "Party Status Edit Sheet"
-Cohesion: 1.0
-Nodes (1): PartyStatusEditSheet
-
-### Community 193 - "Party Verification Input Widget"
-Cohesion: 1.0
-Nodes (1): PartyVerificationInput
-
-### Community 194 - "MinglitEditableSection Widget"
-Cohesion: 1.0
-Nodes (1): MinglitEditableSection
-
-### Community 195 - "Account Deletion Flow Unit Test"
-Cohesion: 1.0
-Nodes (1): AccountDeletion Flow Logic Unit Test
-
-### Community 196 - "Review Verification Screen Test"
-Cohesion: 1.0
-Nodes (1): ReviewVerificationScreen snapshot_data Type Guard Test
-
-### Community 197 - "AppUser README"
-Cohesion: 1.0
-Nodes (1): AppUser README
-
-### Community 198 - "Kakao Login Patrol Test (skipped)"
-Cohesion: 1.0
-Nodes (1): kakao_login_test (patrol, skipped)
-
-### Community 199 - "Payment PG Patrol Test (skipped)"
-Cohesion: 1.0
-Nodes (1): payment_pg_test (patrol, skipped)
-
-### Community 200 - "Permission Grant Patrol Test (skipped)"
-Cohesion: 1.0
-Nodes (1): permission_grant_test (patrol, skipped)
-
-### Community 201 - "User App Allure Reporter"
-Cohesion: 1.0
-Nodes (1): reporter.dart (AutoLabelAllureReporter)
-
-### Community 202 - "Alchemist Golden Test Package"
-Cohesion: 1.0
-Nodes (1): Alchemist Package
-
-### Community 203 - "StatusBadge Widget Test"
-Cohesion: 1.0
-Nodes (1): StatusBadge Widget Test
-
-### Community 204 - "DeletionCompletePage Test"
-Cohesion: 1.0
-Nodes (1): DeletionCompletePage Test
-
-### Community 205 - "AuthCoordinator Unit Test"
-Cohesion: 1.0
-Nodes (1): AuthCoordinator Unit Test
-
-### Community 206 - "Integration Test Driver (User)"
-Cohesion: 1.0
-Nodes (1): Integration Test Driver
-
-### Community 207 - "Landing Partner README"
-Cohesion: 1.0
-Nodes (1): Landing Partner README
-
-### Community 208 - "Landing Partner ESLint Config (dup)"
-Cohesion: 1.0
-Nodes (1): Landing Partner ESLint Config
-
-### Community 209 - "Landing Partner PostCSS Config (dup)"
-Cohesion: 1.0
-Nodes (1): Landing Partner PostCSS Config
-
-### Community 210 - "Landing Partner Home Page (dup)"
-Cohesion: 1.0
-Nodes (1): Landing Partner Home Page
-
-### Community 211 - "Landing User README"
-Cohesion: 1.0
-Nodes (1): landing_user README
-
-### Community 212 - "Landing User ESLint Config (dup)"
-Cohesion: 1.0
-Nodes (1): landing_user ESLint Config
-
-### Community 213 - "Landing User Home Page Component"
-Cohesion: 1.0
-Nodes (1): LandingUserPage
-
-### Community 214 - "Partner Settlement Admin UI/UX Docs"
-Cohesion: 1.0
-Nodes (1): 파트너 정산 어드민 UI/UX 설계
-
-### Community 215 - "Dependabot CI Actions Alert"
-Cohesion: 1.0
-Nodes (1): Ops Alert #990 — Dependabot CI Actions Update (actions/checkout v4->v6)
-
-### Community 216 - "Login Dark Theme QA Report"
-Cohesion: 1.0
-Nodes (1): Issue #1542: Login 페이지 다크 테마 일관성 (P3-low)
-
-### Community 217 - "Build Server Disk Full Report"
-Cohesion: 1.0
-Nodes (1): Runtime QA Bug — Build Server Disk Full (98%)
-
-### Community 218 - "Refund Button Label Mismatch Report"
-Cohesion: 1.0
-Nodes (1): Runtime QA — CUJ-U03 Refund Button Label Mismatch
-
-### Community 219 - "Pixel 7a ADB Disconnect Report"
-Cohesion: 1.0
-Nodes (1): Runtime QA Bug — Pixel 7a ADB Wireless Session Disconnect
-
-### Community 220 - "minglit_kit CHANGELOG"
-Cohesion: 1.0
-Nodes (1): minglit_kit CHANGELOG
-
-### Community 221 - "Pretendard Font OFL License"
-Cohesion: 1.0
-Nodes (1): Pretendard Font OFL License
-
-### Community 222 - "minglit_kit Dev Barrel (singleton)"
-Cohesion: 1.0
-Nodes (1): minglit_dev.dart (barrel: dev/debug tools)
-
-### Community 223 - "CreateOrderResult (Event Repository)"
-Cohesion: 1.0
-Nodes (1): CreateOrderResult
-
-### Community 224 - "ConditionKey Enum (singleton)"
-Cohesion: 1.0
-Nodes (1): ConditionKey Enum
-
-### Community 225 - "MinglitLinearProgressIndicator"
-Cohesion: 1.0
-Nodes (1): MinglitLinearProgressIndicator
-
-### Community 226 - "MinglitSplashTransition Utility"
-Cohesion: 1.0
-Nodes (1): MinglitSplashTransition
-
-### Community 227 - "minglit_kit Allure Reporter"
+### Community 117 - "Community 117"
 Cohesion: 1.0
 Nodes (1): reporter (AutoLabelAllureReporter)
 
-### Community 228 - "Matching Repository Provider Test"
+### Community 118 - "Community 118"
+Cohesion: 1.0
+Nodes (1): BugReporterWrapper Widget Test Suite
+
+### Community 119 - "Community 119"
+Cohesion: 1.0
+Nodes (1): MinglitFilePicker Widget Test Suite
+
+### Community 120 - "Community 120"
 Cohesion: 1.0
 Nodes (1): matchingRepositoryProvider (Riverpod)
 
-### Community 229 - "Iamport Payment Client (EF)"
+### Community 121 - "Community 121"
 Cohesion: 1.0
-Nodes (1): IamportPayment
+Nodes (1): minglit_dev.dart (barrel: dev/debug tools)
 
-### Community 230 - "Partner Permission Enum (EF)"
+### Community 122 - "Community 122"
 Cohesion: 1.0
-Nodes (1): PartnerPermission
+Nodes (0): 
 
-### Community 231 - "Embedding Adapter (AI EF)"
+### Community 123 - "Community 123"
 Cohesion: 1.0
-Nodes (1): EmbeddingAdapter
+Nodes (1): IamportConfig
 
-### Community 232 - "Mock Supabase Client (EF Tests)"
+### Community 124 - "Community 124"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 125 - "Community 125"
+Cohesion: 1.0
+Nodes (1): DevConfig
+
+### Community 126 - "Community 126"
+Cohesion: 1.0
+Nodes (1): SettingsSection
+
+### Community 127 - "Community 127"
+Cohesion: 1.0
+Nodes (1): StorageRepository
+
+### Community 128 - "Community 128"
+Cohesion: 1.0
+Nodes (1): CreateOrderResult
+
+### Community 129 - "Community 129"
+Cohesion: 1.0
+Nodes (1): PartyEntryGroup
+
+### Community 130 - "Community 130"
+Cohesion: 1.0
+Nodes (1): Partner model
+
+### Community 131 - "Community 131"
+Cohesion: 1.0
+Nodes (1): ConditionKey Enum
+
+### Community 132 - "Community 132"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 133 - "Community 133"
 Cohesion: 1.0
 Nodes (1): Mock Supabase Client
 
-### Community 233 - "Schema Validator (EF Tests)"
+### Community 134 - "Community 134"
 Cohesion: 1.0
 Nodes (1): Schema Validator
 
-### Community 234 - "Cast Match Vote Edge Function"
+### Community 135 - "Community 135"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 136 - "Community 136"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 137 - "Community 137"
 Cohesion: 1.0
 Nodes (1): DB: match_votes (via RPC cast_match_vote)
 
-### Community 235 - "App User Icon Asset"
+### Community 138 - "Community 138"
+Cohesion: 1.0
+Nodes (1): corsResponse
+
+### Community 139 - "Community 139"
+Cohesion: 1.0
+Nodes (1): createServiceClient
+
+### Community 140 - "Community 140"
+Cohesion: 1.0
+Nodes (1): nowISO
+
+### Community 141 - "Community 141"
+Cohesion: 1.0
+Nodes (1): isoToUnix
+
+### Community 142 - "Community 142"
+Cohesion: 1.0
+Nodes (1): fetchPartnerPortoneId
+
+### Community 143 - "Community 143"
+Cohesion: 1.0
+Nodes (1): requireNonEmpty
+
+### Community 144 - "Community 144"
+Cohesion: 1.0
+Nodes (1): validateBizType
+
+### Community 145 - "Community 145"
+Cohesion: 1.0
+Nodes (1): validateBizNumber
+
+### Community 146 - "Community 146"
+Cohesion: 1.0
+Nodes (1): validatePhone
+
+### Community 147 - "Community 147"
+Cohesion: 1.0
+Nodes (1): validateEmail
+
+### Community 148 - "Community 148"
+Cohesion: 1.0
+Nodes (1): withSpan
+
+### Community 149 - "Community 149"
+Cohesion: 1.0
+Nodes (1): captureException
+
+### Community 150 - "Community 150"
+Cohesion: 1.0
+Nodes (1): IamportPayment
+
+### Community 151 - "Community 151"
+Cohesion: 1.0
+Nodes (1): PartnerPermission
+
+### Community 152 - "Community 152"
+Cohesion: 1.0
+Nodes (1): EmbeddingAdapter
+
+### Community 153 - "Community 153"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 154 - "Community 154"
+Cohesion: 1.0
+Nodes (1): landing_user ESLint Config
+
+### Community 155 - "Community 155"
+Cohesion: 1.0
+Nodes (1): LandingUserPage
+
+### Community 156 - "Community 156"
+Cohesion: 1.0
+Nodes (1): Integration Test Driver
+
+### Community 157 - "Community 157"
+Cohesion: 1.0
+Nodes (1): reporter.dart (AutoLabelAllureReporter)
+
+### Community 158 - "Community 158"
+Cohesion: 1.0
+Nodes (1): Alchemist Package
+
+### Community 159 - "Community 159"
+Cohesion: 1.0
+Nodes (1): AuthCoordinator Unit Test
+
+### Community 160 - "Community 160"
+Cohesion: 1.0
+Nodes (1): DeletionCompletePage Test
+
+### Community 161 - "Community 161"
+Cohesion: 1.0
+Nodes (1): StatusBadge Widget Test
+
+### Community 162 - "Community 162"
+Cohesion: 1.0
+Nodes (1): permission_grant_test (patrol, skipped)
+
+### Community 163 - "Community 163"
+Cohesion: 1.0
+Nodes (1): payment_pg_test (patrol, skipped)
+
+### Community 164 - "Community 164"
+Cohesion: 1.0
+Nodes (1): kakao_login_test (patrol, skipped)
+
+### Community 165 - "Community 165"
+Cohesion: 1.0
+Nodes (1): app_user AppRoutes (app_routes.dart)
+
+### Community 166 - "Community 166"
+Cohesion: 1.0
+Nodes (1): app_user AppRouter (app_router.dart)
+
+### Community 167 - "Community 167"
+Cohesion: 1.0
+Nodes (1): ReviewVerificationScreen snapshot_data Type Guard Test
+
+### Community 168 - "Community 168"
+Cohesion: 1.0
+Nodes (1): AccountDeletion Flow Logic Unit Test
+
+### Community 169 - "Community 169"
+Cohesion: 1.0
+Nodes (1): MinglitEditableSection
+
+### Community 170 - "Community 170"
+Cohesion: 1.0
+Nodes (1): TodayPartyCard
+
+### Community 171 - "Community 171"
+Cohesion: 1.0
+Nodes (1): EventCard
+
+### Community 172 - "Community 172"
+Cohesion: 1.0
+Nodes (1): PartyStatusEditSheet
+
+### Community 173 - "Community 173"
+Cohesion: 1.0
+Nodes (1): PartyVerificationInput
+
+### Community 174 - "Community 174"
+Cohesion: 1.0
+Nodes (1): app_partner AppRoutes (app_routes.dart)
+
+### Community 175 - "Community 175"
+Cohesion: 1.0
+Nodes (1): app_partner AppRouter (app_router.dart)
+
+### Community 176 - "Community 176"
+Cohesion: 1.0
+Nodes (1): Landing Partner PostCSS Config
+
+### Community 177 - "Community 177"
+Cohesion: 1.0
+Nodes (1): Landing Partner ESLint Config
+
+### Community 178 - "Community 178"
+Cohesion: 1.0
+Nodes (1): Landing Partner Home Page
+
+### Community 179 - "Community 179"
+Cohesion: 1.0
+Nodes (1): Landing Partner Privacy Policy Page
+
+### Community 180 - "Community 180"
+Cohesion: 1.0
+Nodes (1): App Partner README
+
+### Community 181 - "Community 181"
+Cohesion: 1.0
+Nodes (1): AppUser README
+
+### Community 182 - "Community 182"
+Cohesion: 1.0
+Nodes (1): Landing Partner README
+
+### Community 183 - "Community 183"
+Cohesion: 1.0
+Nodes (1): landing_user README
+
+### Community 184 - "Community 184"
+Cohesion: 1.0
+Nodes (1): MinglitEmptyState Variants Wireframe
+
+### Community 185 - "Community 185"
+Cohesion: 1.0
+Nodes (1): Event Now Bar Technical Plan
+
+### Community 186 - "Community 186"
+Cohesion: 1.0
+Nodes (1): My Tickets Test Plan
+
+### Community 187 - "Community 187"
+Cohesion: 1.0
+Nodes (1): Partner Detail Event Card Wireframe
+
+### Community 188 - "Community 188"
+Cohesion: 1.0
+Nodes (1): 파트너 정산 어드민 UI/UX 설계
+
+### Community 189 - "Community 189"
+Cohesion: 1.0
+Nodes (1): 구매 내역 색상 위계 리디자인 와이어프레임
+
+### Community 190 - "Community 190"
+Cohesion: 1.0
+Nodes (1): Ops Alert #990 — Dependabot CI Actions Update (actions/checkout v4->v6)
+
+### Community 191 - "Community 191"
+Cohesion: 1.0
+Nodes (1): Issue #1542: Login 페이지 다크 테마 일관성 (P3-low)
+
+### Community 192 - "Community 192"
+Cohesion: 1.0
+Nodes (1): Runtime QA Bug — Build Server Disk Full (98%)
+
+### Community 193 - "Community 193"
+Cohesion: 1.0
+Nodes (1): Runtime QA — CUJ-U03 Refund Button Label Mismatch
+
+### Community 194 - "Community 194"
+Cohesion: 1.0
+Nodes (1): Bug Report — P-S31 /dev Deeplink 404
+
+### Community 195 - "Community 195"
+Cohesion: 1.0
+Nodes (1): Runtime QA Bug — Pixel 7a ADB Wireless Session Disconnect
+
+### Community 196 - "Community 196"
+Cohesion: 1.0
+Nodes (1): Security Audit Report — Tag Discovery Phase 1
+
+### Community 197 - "Community 197"
+Cohesion: 1.0
+Nodes (1): minglit_kit CHANGELOG
+
+### Community 198 - "Community 198"
+Cohesion: 1.0
+Nodes (1): minglit_kit README
+
+### Community 199 - "Community 199"
+Cohesion: 1.0
+Nodes (1): Pretendard Font OFL License
+
+### Community 200 - "Community 200"
 Cohesion: 1.0
 Nodes (1): App logo: purple gradient speech bubble with white 'm', orange sparkle accent
 
-### Community 236 - "App User Splash Icon Asset"
+### Community 201 - "Community 201"
 Cohesion: 1.0
 Nodes (1): App splash icon: purple gradient chat bubble with white 'm' and orange sparkle
 
-### Community 237 - "App User Android 12 Splash Icon"
+### Community 202 - "Community 202"
 Cohesion: 1.0
 Nodes (1): Minglit app splash icon: purple chat bubble with white 'm' and orange sparkle
 
-### Community 238 - "App User Icon Foreground Asset"
+### Community 203 - "Community 203"
 Cohesion: 1.0
 Nodes (1): App icon foreground: purple chat bubble with white 'm' and orange sparkle
 
-### Community 239 - "App Partner Icon Background Asset"
+### Community 204 - "Community 204"
 Cohesion: 1.0
 Nodes (1): Purple-blue gradient background image for app_partner icon
 
-### Community 240 - "Minglit Inverted Logo SVG"
+### Community 205 - "Community 205"
 Cohesion: 1.0
 Nodes (1): Minglit inverted logo: white wordmark with cyan and orange shadow layers on transparent background
 
-### Community 241 - "Minglit Transparent Logo SVG"
+### Community 206 - "Community 206"
 Cohesion: 1.0
 Nodes (1): Minglit wordmark logo SVG with transparent background, cyan/orange layered text
 
-### Community 242 - "Minglit App Bar Logo Asset"
+### Community 207 - "Community 207"
 Cohesion: 1.0
 Nodes (1): Minglit app bar logo — bold italic 'Minglit' text in purple with cyan and orange shadow layers
 
-### Community 243 - "Dev Seed Party Premium Lounge Image"
+### Community 208 - "Community 208"
 Cohesion: 1.0
 Nodes (1): Upscale lounge/restaurant interior with bar, green velvet chairs, Asian art, warm lighting
 
-### Community 244 - "Dev Seed Party Lounge Bright Image"
+### Community 209 - "Community 209"
 Cohesion: 1.0
 Nodes (1): Bright minimalist Korean cafe interior with numbered wooden tables, plants, string lights, and coffee bar
 
-### Community 245 - "Dev Seed Party Cafe Warm Image"
+### Community 210 - "Community 210"
 Cohesion: 1.0
 Nodes (1): Warm sunlit cafe interior with wood furniture, plants, string lights, and menu board
 
-### Community 246 - "Participation Status Redesign Screenshots"
+### Community 211 - "Community 211"
 Cohesion: 1.0
 Nodes (1): Participation status redesign (after) — not-logged-in state with counts and login prompt
 
-### Community 247 - "Participation Status Dark Theme Screenshot"
+### Community 212 - "Community 212"
 Cohesion: 1.0
 Nodes (1): Dark theme participation status redesign, 2-group male/female layout with progress bars
 
-### Community 248 - "Participation Status 4-Group Screenshot"
+### Community 213 - "Community 213"
 Cohesion: 1.0
 Nodes (1): Participation status redesign after-state with 4 groups showing 12/40 total and per-group cards
 
-### Community 249 - "Participation Status Empty State Screenshot"
+### Community 214 - "Community 214"
 Cohesion: 1.0
 Nodes (1): Empty participation status UI: 0/20 total, 0/10 male/female, empty state message
 
-### Community 250 - "Participation Status 2-Group After Screenshot"
+### Community 215 - "Community 215"
 Cohesion: 1.0
 Nodes (1): Participation status redesign after variant: 2-group (male/female) split with progress bars
 
-### Community 251 - "Participation Status 2-Group Expanded Screenshot"
+### Community 216 - "Community 216"
 Cohesion: 1.0
 Nodes (1): Participation status redesign: 2-group (male/female) expanded view with counts and age breakdowns
 
-### Community 252 - "Participation Status Before Screenshot"
+### Community 217 - "Community 217"
 Cohesion: 1.0
 Nodes (1): Before state: participation status UI with male/female groups, 2/10 capacity each
 
 ## Ambiguous Edges - Review These
 - `PolicyRepository` → `Log utility`  [AMBIGUOUS]
   /Users/mark/workspace/minglit-graphify-init/shared/packages/minglit_kit/lib/src/data/repositories/policy_repository.dart · relation: calls
-- `Landing Partner Privacy Policy Page` → `env-manifest.json`  [AMBIGUOUS]
-  /Users/mark/workspace/minglit-graphify-init/apps/landing_partner/src/app/privacy/page.tsx · relation: semantically_similar_to
 - `Architecture Audit #1092 — 2026-04-06` → `AI Basic Law Compliance (Korea 2026)`  [AMBIGUOUS]
   /Users/mark/workspace/minglit-graphify-init/docs/reports/architecture/2026-04-05-issue1092-architect-audit-report-architecture-audit.md · relation: conceptually_related_to
 
 ## Knowledge Gaps
-- **5250 isolated node(s):** `package:integration_test/integration_test_driver.dart`, `_loadNotoSansKR`, `_NoFiltersNotifier`, `main`, `build` (+5245 more)
+- **1520 isolated node(s):** `reporter (AutoLabelAllureReporter)`, `BugReporterWrapper Widget Test Suite`, `main`, `wrap`, `MaterialApp` (+1515 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **Thin community `Statsig Analytics Provider (Landing)`** (4 nodes): `statsig-provider.tsx`, `statsig-provider.tsx`, `getOrCreateStableId()`, `StatsigAnalyticsProvider()`
+- **Thin community `Community 79`** (2 nodes): `LocationService`, `LocationService Test`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Admission Action Handler`** (3 nodes): `admission_action_handler.dart`, `AdmissionButtonConfig`, `buttonConfig`
+- **Thin community `Community 80`** (2 nodes): `AccountManagementPage`, `AccountManagementPageTest`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Event Quill Viewer Widget`** (3 nodes): `event_quill_viewer.dart`, `build`, `_QuillViewer`
+- **Thin community `Community 81`** (2 nodes): `Env Keystore (validateEnv / requireEnv)`, `EnvKeyStore Test`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `HTML Stub for Web Platform`** (3 nodes): `html_stub.dart`, `Navigator`, `Window`
+- **Thin community `Community 82`** (2 nodes): `DetailPageDemo`, `DetailPageDemoTest`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Party Create Wizard Load Logic`** (3 nodes): `party_create_wizard_load.dart`, `MinglitSystemException`, `_PartyCreateWizardLoad`
+- **Thin community `Community 83`** (2 nodes): `ImageUtils (stripExifAndReencode)`, `stripExifAndReencode Test Suite`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Checkin Participant Data Model`** (3 nodes): `checkin_participant.dart`, `CheckinParticipant`, `copyWith`
+- **Thin community `Community 84`** (2 nodes): `AgeUtil`, `AgeUtilTest`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Partner Apply Draft State`** (3 nodes): `partner_apply_draft.dart`, `_PartnerApplyDraft`, `saveDraft`
+- **Thin community `Community 85`** (2 nodes): `GlobalLoadingController`, `GlobalLoadingState`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Landing Partner Env Validator (TS)`** (3 nodes): `env.ts`, `env.ts`, `validateBuildEnv()`
+- **Thin community `Community 86`** (2 nodes): `ThemeController`, `ThemeSettingsTile`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Partner Member Repository`** (3 nodes): `partner_member_repository.dart`, `MinglitUserException`, `_PartnerMemberRepository`
+- **Thin community `Community 87`** (2 nodes): `mock_data (catalog pattern fixtures)`, `MockEventData`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Integration Test Driver`** (2 nodes): `integration_test.dart`, `package:integration_test/integration_test_driver.dart`
+- **Thin community `Community 88`** (2 nodes): `noop()`, `sim_settle_test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Ticket Event Meta Model`** (2 nodes): `ticket_event_meta.dart`, `TicketEventMeta`
+- **Thin community `Community 89`** (2 nodes): `nowUnix`, `WorkerUtils`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Boarding Pass Status Logic`** (2 nodes): `boarding_pass_status.dart`, `boardingPassStatus`
+- **Thin community `Community 90`** (2 nodes): `validateBuildEnv`, `landing_user Next.js Config`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Party Create Wizard Validation`** (2 nodes): `party_create_wizard_validation.dart`, `_PartyCreateWizardValidation`
+- **Thin community `Community 91`** (2 nodes): `BrandPage`, `MingleSymbol SVG Component`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Partner Apply Submit Logic`** (2 nodes): `partner_apply_submit.dart`, `_PartnerApplySubmit`
+- **Thin community `Community 92`** (2 nodes): `StatusFilterChips Widget Test`, `StatusFilterChips Widget`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Dev Catalog Mock Event Data`** (2 nodes): `mock_data.dart`, `MockEventData`
+- **Thin community `Community 93`** (2 nodes): `PartyListItem`, `PartyListPage`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Tag Repository Commands`** (2 nodes): `tag_repository_commands.dart`, `_TagRepositoryCommands`
+- **Thin community `Community 94`** (2 nodes): `partyTicketsProvider`, `TicketManageScreen`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Party Event Repository`** (2 nodes): `party_event_repository.dart`, `_PartyEventRepository`
+- **Thin community `Community 95`** (2 nodes): `Landing Partner Env Validator`, `Landing Partner Next.js Config`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Tag Repository Queries`** (2 nodes): `tag_repository_queries.dart`, `_TagRepositoryQueries`
+- **Thin community `Community 96`** (2 nodes): `Pretendard Font Migration Typography Review`, `Login Dark Theme Wireframe`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Verification Query Repository`** (2 nodes): `verification_query_repository.dart`, `_VerificationQueryRepository`
+- **Thin community `Community 97`** (2 nodes): `개인정보 보호 인증 열람 권한 관리 UI/UX`, `개인정보 보호 와이어프레임`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Party Matching Repository`** (2 nodes): `party_matching_repository.dart`, `_PartyMatchingRepository`
+- **Thin community `Community 98`** (2 nodes): `Refund Policy v2 Wireframe (Original)`, `Refund Policy v2 Wireframe (UX Review)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Event Feed Type Enum`** (2 nodes): `event_feed_type.dart`, `EventFeedType`
+- **Thin community `Community 99`** (2 nodes): `Settings UI Redesign UX Design`, `Settings UI Redesign Wireframe`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Condition Key Enum`** (2 nodes): `package:json_annotation/json_annotation.dart`, `condition_key.dart`
+- **Thin community `Community 100`** (2 nodes): `Simulator Edge Function Migration Plan`, `Simulator Lifecycle Fix Plan`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Partner Party List Item & Page`** (2 nodes): `PartyListItem`, `PartyListPage`
+- **Thin community `Community 101`** (2 nodes): `Metabase BI Dashboard`, `Statistics & Analytics Tools Spec`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Partner Ticket Manage Screen`** (2 nodes): `partyTicketsProvider`, `TicketManageScreen`
+- **Thin community `Community 102`** (2 nodes): `Trust Badge System Spec`, `Trust Badge UI/UX Design`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Settlement Status Filter Chips Tests`** (2 nodes): `StatusFilterChips Widget Test`, `StatusFilterChips Widget`
+- **Thin community `Community 103`** (2 nodes): `Backend Simulator Edge Function Timeout Issue`, `Ops Alert #703 — Daily Backend Simulation Failed (2026-03-28)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Landing User Env Validator`** (2 nodes): `validateBuildEnv`, `landing_user Next.js Config`
+- **Thin community `Community 104`** (2 nodes): `Duplicate MainActivity in Android Source Sets (src/main + src/dev)`, `Incident #1322: Hard Block — MainActivity Redeclaration on Dev Branch`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Landing User Brand Page`** (2 nodes): `BrandPage`, `MingleSymbol SVG Component`
+- **Thin community `Community 105`** (2 nodes): `Alert #1506: Version Bump Failed`, `Version Bump Push Race Condition`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Pretendard Font Migration Docs`** (2 nodes): `Pretendard Font Migration Typography Review`, `Login Dark Theme Wireframe`
+- **Thin community `Community 106`** (2 nodes): `UIautomator × Flutter 호환성 한계 — 단일 FlutterSurfaceView로 좌표 탭 부정확`, `Issue #1291: 이벤트 상세 파트너명 탭 시 파트너 상세 이동 안 됨 (U-S05)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Refund Policy v2 Wireframes`** (2 nodes): `Refund Policy v2 Wireframe (Original)`, `Refund Policy v2 Wireframe (UX Review)`
+- **Thin community `Community 107`** (2 nodes): `이벤트 수정/취소 기능 미구현 — EventEditRoute/cancelEvent 없음`, `Issue #1338: app_partner 이벤트 수정/취소 통합 테스트 추가 (blocked)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Backend Simulator Timeout Alert`** (2 nodes): `Backend Simulator Edge Function Timeout Issue`, `Ops Alert #703 — Daily Backend Simulation Failed (2026-03-28)`
+- **Thin community `Community 108`** (2 nodes): `Bug Report — CUJ-P03 QR Scanner Summary Card and Entry Group Stats Missing`, `Bug Report — CUJ-P01 Party Create Wizard Step 3 Next Uncertain`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Version Bump Race Condition Alert`** (2 nodes): `Alert #1506: Version Bump Failed`, `Version Bump Push Race Condition`
+- **Thin community `Community 109`** (2 nodes): `TPM Report — needs-dev Backlog Surge 30 Issues, 10% Digest Rate`, `TPM Report — Duplicate Issue Creation Pattern`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `MainActivity Redeclaration Incident`** (2 nodes): `Duplicate MainActivity in Android Source Sets (src/main + src/dev)`, `Incident #1322: Hard Block — MainActivity Redeclaration on Dev Branch`
+- **Thin community `Community 110`** (2 nodes): `Refund Policy: Terms of Service Page`, `TPM Report — Refund Policy Terms-Code Mismatch`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `UIautomator Flutter Compat Bug Report`** (2 nodes): `UIautomator × Flutter 호환성 한계 — 단일 FlutterSurfaceView로 좌표 탭 부정확`, `Issue #1291: 이벤트 상세 파트너명 탭 시 파트너 상세 이동 안 됨 (U-S05)`
+- **Thin community `Community 111`** (2 nodes): `TPM Report — dev Branch Protection Change Blocks All PR Merges`, `TPM Report — review-presence Workflow Defect Blocking P0 PR #903`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Partner Event Edit Missing Feature Report`** (2 nodes): `이벤트 수정/취소 기능 미구현 — EventEditRoute/cancelEvent 없음`, `Issue #1338: app_partner 이벤트 수정/취소 통합 테스트 추가 (blocked)`
+- **Thin community `Community 112`** (2 nodes): `CI Issue: Vercel Deploy Cascading Cancel (cron + concurrency)`, `TPM Report #1091: Vercel Deploy 20h+ Cascading Failure — Cron Concurrency`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `TPM Backlog Surge & Duplicate Issues`** (2 nodes): `TPM Report — needs-dev Backlog Surge 30 Issues, 10% Digest Rate`, `TPM Report — Duplicate Issue Creation Pattern`
+- **Thin community `Community 113`** (2 nodes): `Bug: BugReport FAB overlaps MyPage navigation button (PR #1268 regression)`, `Runtime QA Bug #1285: BugReport FAB Blocks MyPage Button Touch Area`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Vercel Deploy Cascading Failure Report`** (2 nodes): `CI Issue: Vercel Deploy Cascading Cancel (cron + concurrency)`, `TPM Report #1091: Vercel Deploy 20h+ Cascading Failure — Cron Concurrency`
+- **Thin community `Community 114`** (2 nodes): `Bug: Hot Tags section shows 0-event tags — conceptual contradiction`, `Runtime QA Bug #1286: Hot Tags Section Shows 0-Event Tags`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Refund Button Missing Bug Report`** (2 nodes): `Bug: Refund button not shown for free ticket (paymentId null canCancel logic)`, `Runtime QA Bug #1652: CUJ-U03 Refund Button Not Shown in Purchase History`
+- **Thin community `Community 115`** (2 nodes): `Bug: Refund button not shown for free ticket (paymentId null canCancel logic)`, `Runtime QA Bug #1652: CUJ-U03 Refund Button Not Shown in Purchase History`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `BugReport FAB Touch Block Report`** (2 nodes): `Bug: BugReport FAB overlaps MyPage navigation button (PR #1268 regression)`, `Runtime QA Bug #1285: BugReport FAB Blocks MyPage Button Touch Area`
+- **Thin community `Community 116`** (1 nodes): `_RefundRow Widget`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Hot Tags 0-Event Bug Report`** (2 nodes): `Bug: Hot Tags section shows 0-event tags — conceptual contradiction`, `Runtime QA Bug #1286: Hot Tags Section Shows 0-Event Tags`
+- **Thin community `Community 117`** (1 nodes): `reporter (AutoLabelAllureReporter)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Theme Controller`** (2 nodes): `ThemeController`, `ThemeSettingsTile`
+- **Thin community `Community 118`** (1 nodes): `BugReporterWrapper Widget Test Suite`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Age Util & Unit Test`** (2 nodes): `AgeUtil`, `AgeUtilTest`
+- **Thin community `Community 119`** (1 nodes): `MinglitFilePicker Widget Test Suite`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Location Service & Test`** (2 nodes): `LocationService`, `LocationService Test`
+- **Thin community `Community 120`** (1 nodes): `matchingRepositoryProvider (Riverpod)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `MinglitButton Widget & Test`** (2 nodes): `MinglitButton`, `MinglitButtonTest`
+- **Thin community `Community 121`** (1 nodes): `minglit_dev.dart (barrel: dev/debug tools)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Image Utils EXIF Strip`** (2 nodes): `ImageUtils (stripExifAndReencode)`, `stripExifAndReencode Test Suite`
+- **Thin community `Community 122`** (1 nodes): `minglit_ui.dart`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `MinglitFilePicker Widget & Test`** (2 nodes): `MinglitFilePicker Widget`, `MinglitFilePicker Widget Test Suite`
+- **Thin community `Community 123`** (1 nodes): `IamportConfig`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `MinglitHorizontalScrollGroup Widget`** (2 nodes): `MinglitHorizontalScrollGroup Widget`, `MinglitHorizontalScrollGroup Widget Test Suite`
+- **Thin community `Community 124`** (1 nodes): `iamport.dart`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `MinglitImageCarousel Widget & Test`** (2 nodes): `MinglitImageCarousel Widget`, `MinglitImageCarousel Widget Test Suite`
+- **Thin community `Community 125`** (1 nodes): `DevConfig`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `MinglitBottomCTA Widget & Test`** (2 nodes): `MinglitBottomCTA Widget`, `MinglitBottomCTA Widget Test Suite`
+- **Thin community `Community 126`** (1 nodes): `SettingsSection`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `RefundRow Widget (singleton)`** (1 nodes): `_RefundRow Widget`
+- **Thin community `Community 127`** (1 nodes): `StorageRepository`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Partner Today Party Card`** (1 nodes): `TodayPartyCard`
+- **Thin community `Community 128`** (1 nodes): `CreateOrderResult`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Partner Event Card Widget`** (1 nodes): `EventCard`
+- **Thin community `Community 129`** (1 nodes): `PartyEntryGroup`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Party Image Editor Widget`** (1 nodes): `PartyImageEditor`
+- **Thin community `Community 130`** (1 nodes): `Partner model`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Party Status Edit Sheet`** (1 nodes): `PartyStatusEditSheet`
+- **Thin community `Community 131`** (1 nodes): `ConditionKey Enum`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Party Verification Input Widget`** (1 nodes): `PartyVerificationInput`
+- **Thin community `Community 132`** (1 nodes): `mds.dart`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `MinglitEditableSection Widget`** (1 nodes): `MinglitEditableSection`
+- **Thin community `Community 133`** (1 nodes): `Mock Supabase Client`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Account Deletion Flow Unit Test`** (1 nodes): `AccountDeletion Flow Logic Unit Test`
+- **Thin community `Community 134`** (1 nodes): `Schema Validator`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Review Verification Screen Test`** (1 nodes): `ReviewVerificationScreen snapshot_data Type Guard Test`
+- **Thin community `Community 135`** (1 nodes): `sim_assertions_test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `AppUser README`** (1 nodes): `AppUser README`
+- **Thin community `Community 136`** (1 nodes): `sim_reporter_test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Kakao Login Patrol Test (skipped)`** (1 nodes): `kakao_login_test (patrol, skipped)`
+- **Thin community `Community 137`** (1 nodes): `DB: match_votes (via RPC cast_match_vote)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Payment PG Patrol Test (skipped)`** (1 nodes): `payment_pg_test (patrol, skipped)`
+- **Thin community `Community 138`** (1 nodes): `corsResponse`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Permission Grant Patrol Test (skipped)`** (1 nodes): `permission_grant_test (patrol, skipped)`
+- **Thin community `Community 139`** (1 nodes): `createServiceClient`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `User App Allure Reporter`** (1 nodes): `reporter.dart (AutoLabelAllureReporter)`
+- **Thin community `Community 140`** (1 nodes): `nowISO`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Alchemist Golden Test Package`** (1 nodes): `Alchemist Package`
+- **Thin community `Community 141`** (1 nodes): `isoToUnix`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `StatusBadge Widget Test`** (1 nodes): `StatusBadge Widget Test`
+- **Thin community `Community 142`** (1 nodes): `fetchPartnerPortoneId`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `DeletionCompletePage Test`** (1 nodes): `DeletionCompletePage Test`
+- **Thin community `Community 143`** (1 nodes): `requireNonEmpty`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `AuthCoordinator Unit Test`** (1 nodes): `AuthCoordinator Unit Test`
+- **Thin community `Community 144`** (1 nodes): `validateBizType`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Integration Test Driver (User)`** (1 nodes): `Integration Test Driver`
+- **Thin community `Community 145`** (1 nodes): `validateBizNumber`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Landing Partner README`** (1 nodes): `Landing Partner README`
+- **Thin community `Community 146`** (1 nodes): `validatePhone`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Landing Partner ESLint Config (dup)`** (1 nodes): `Landing Partner ESLint Config`
+- **Thin community `Community 147`** (1 nodes): `validateEmail`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Landing Partner PostCSS Config (dup)`** (1 nodes): `Landing Partner PostCSS Config`
+- **Thin community `Community 148`** (1 nodes): `withSpan`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Landing Partner Home Page (dup)`** (1 nodes): `Landing Partner Home Page`
+- **Thin community `Community 149`** (1 nodes): `captureException`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Landing User README`** (1 nodes): `landing_user README`
+- **Thin community `Community 150`** (1 nodes): `IamportPayment`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Landing User ESLint Config (dup)`** (1 nodes): `landing_user ESLint Config`
+- **Thin community `Community 151`** (1 nodes): `PartnerPermission`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Landing User Home Page Component`** (1 nodes): `LandingUserPage`
+- **Thin community `Community 152`** (1 nodes): `EmbeddingAdapter`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Partner Settlement Admin UI/UX Docs`** (1 nodes): `파트너 정산 어드민 UI/UX 설계`
+- **Thin community `Community 153`** (1 nodes): `postcss.config.mjs`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Dependabot CI Actions Alert`** (1 nodes): `Ops Alert #990 — Dependabot CI Actions Update (actions/checkout v4->v6)`
+- **Thin community `Community 154`** (1 nodes): `landing_user ESLint Config`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Login Dark Theme QA Report`** (1 nodes): `Issue #1542: Login 페이지 다크 테마 일관성 (P3-low)`
+- **Thin community `Community 155`** (1 nodes): `LandingUserPage`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Build Server Disk Full Report`** (1 nodes): `Runtime QA Bug — Build Server Disk Full (98%)`
+- **Thin community `Community 156`** (1 nodes): `Integration Test Driver`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Refund Button Label Mismatch Report`** (1 nodes): `Runtime QA — CUJ-U03 Refund Button Label Mismatch`
+- **Thin community `Community 157`** (1 nodes): `reporter.dart (AutoLabelAllureReporter)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Pixel 7a ADB Disconnect Report`** (1 nodes): `Runtime QA Bug — Pixel 7a ADB Wireless Session Disconnect`
+- **Thin community `Community 158`** (1 nodes): `Alchemist Package`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `minglit_kit CHANGELOG`** (1 nodes): `minglit_kit CHANGELOG`
+- **Thin community `Community 159`** (1 nodes): `AuthCoordinator Unit Test`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Pretendard Font OFL License`** (1 nodes): `Pretendard Font OFL License`
+- **Thin community `Community 160`** (1 nodes): `DeletionCompletePage Test`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `minglit_kit Dev Barrel (singleton)`** (1 nodes): `minglit_dev.dart (barrel: dev/debug tools)`
+- **Thin community `Community 161`** (1 nodes): `StatusBadge Widget Test`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `CreateOrderResult (Event Repository)`** (1 nodes): `CreateOrderResult`
+- **Thin community `Community 162`** (1 nodes): `permission_grant_test (patrol, skipped)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `ConditionKey Enum (singleton)`** (1 nodes): `ConditionKey Enum`
+- **Thin community `Community 163`** (1 nodes): `payment_pg_test (patrol, skipped)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `MinglitLinearProgressIndicator`** (1 nodes): `MinglitLinearProgressIndicator`
+- **Thin community `Community 164`** (1 nodes): `kakao_login_test (patrol, skipped)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `MinglitSplashTransition Utility`** (1 nodes): `MinglitSplashTransition`
+- **Thin community `Community 165`** (1 nodes): `app_user AppRoutes (app_routes.dart)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `minglit_kit Allure Reporter`** (1 nodes): `reporter (AutoLabelAllureReporter)`
+- **Thin community `Community 166`** (1 nodes): `app_user AppRouter (app_router.dart)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Matching Repository Provider Test`** (1 nodes): `matchingRepositoryProvider (Riverpod)`
+- **Thin community `Community 167`** (1 nodes): `ReviewVerificationScreen snapshot_data Type Guard Test`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Iamport Payment Client (EF)`** (1 nodes): `IamportPayment`
+- **Thin community `Community 168`** (1 nodes): `AccountDeletion Flow Logic Unit Test`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Partner Permission Enum (EF)`** (1 nodes): `PartnerPermission`
+- **Thin community `Community 169`** (1 nodes): `MinglitEditableSection`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Embedding Adapter (AI EF)`** (1 nodes): `EmbeddingAdapter`
+- **Thin community `Community 170`** (1 nodes): `TodayPartyCard`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Mock Supabase Client (EF Tests)`** (1 nodes): `Mock Supabase Client`
+- **Thin community `Community 171`** (1 nodes): `EventCard`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Schema Validator (EF Tests)`** (1 nodes): `Schema Validator`
+- **Thin community `Community 172`** (1 nodes): `PartyStatusEditSheet`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Cast Match Vote Edge Function`** (1 nodes): `DB: match_votes (via RPC cast_match_vote)`
+- **Thin community `Community 173`** (1 nodes): `PartyVerificationInput`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `App User Icon Asset`** (1 nodes): `App logo: purple gradient speech bubble with white 'm', orange sparkle accent`
+- **Thin community `Community 174`** (1 nodes): `app_partner AppRoutes (app_routes.dart)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `App User Splash Icon Asset`** (1 nodes): `App splash icon: purple gradient chat bubble with white 'm' and orange sparkle`
+- **Thin community `Community 175`** (1 nodes): `app_partner AppRouter (app_router.dart)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `App User Android 12 Splash Icon`** (1 nodes): `Minglit app splash icon: purple chat bubble with white 'm' and orange sparkle`
+- **Thin community `Community 176`** (1 nodes): `Landing Partner PostCSS Config`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `App User Icon Foreground Asset`** (1 nodes): `App icon foreground: purple chat bubble with white 'm' and orange sparkle`
+- **Thin community `Community 177`** (1 nodes): `Landing Partner ESLint Config`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `App Partner Icon Background Asset`** (1 nodes): `Purple-blue gradient background image for app_partner icon`
+- **Thin community `Community 178`** (1 nodes): `Landing Partner Home Page`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Minglit Inverted Logo SVG`** (1 nodes): `Minglit inverted logo: white wordmark with cyan and orange shadow layers on transparent background`
+- **Thin community `Community 179`** (1 nodes): `Landing Partner Privacy Policy Page`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Minglit Transparent Logo SVG`** (1 nodes): `Minglit wordmark logo SVG with transparent background, cyan/orange layered text`
+- **Thin community `Community 180`** (1 nodes): `App Partner README`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Minglit App Bar Logo Asset`** (1 nodes): `Minglit app bar logo — bold italic 'Minglit' text in purple with cyan and orange shadow layers`
+- **Thin community `Community 181`** (1 nodes): `AppUser README`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Dev Seed Party Premium Lounge Image`** (1 nodes): `Upscale lounge/restaurant interior with bar, green velvet chairs, Asian art, warm lighting`
+- **Thin community `Community 182`** (1 nodes): `Landing Partner README`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Dev Seed Party Lounge Bright Image`** (1 nodes): `Bright minimalist Korean cafe interior with numbered wooden tables, plants, string lights, and coffee bar`
+- **Thin community `Community 183`** (1 nodes): `landing_user README`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Dev Seed Party Cafe Warm Image`** (1 nodes): `Warm sunlit cafe interior with wood furniture, plants, string lights, and menu board`
+- **Thin community `Community 184`** (1 nodes): `MinglitEmptyState Variants Wireframe`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Participation Status Redesign Screenshots`** (1 nodes): `Participation status redesign (after) — not-logged-in state with counts and login prompt`
+- **Thin community `Community 185`** (1 nodes): `Event Now Bar Technical Plan`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Participation Status Dark Theme Screenshot`** (1 nodes): `Dark theme participation status redesign, 2-group male/female layout with progress bars`
+- **Thin community `Community 186`** (1 nodes): `My Tickets Test Plan`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Participation Status 4-Group Screenshot`** (1 nodes): `Participation status redesign after-state with 4 groups showing 12/40 total and per-group cards`
+- **Thin community `Community 187`** (1 nodes): `Partner Detail Event Card Wireframe`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Participation Status Empty State Screenshot`** (1 nodes): `Empty participation status UI: 0/20 total, 0/10 male/female, empty state message`
+- **Thin community `Community 188`** (1 nodes): `파트너 정산 어드민 UI/UX 설계`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Participation Status 2-Group After Screenshot`** (1 nodes): `Participation status redesign after variant: 2-group (male/female) split with progress bars`
+- **Thin community `Community 189`** (1 nodes): `구매 내역 색상 위계 리디자인 와이어프레임`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Participation Status 2-Group Expanded Screenshot`** (1 nodes): `Participation status redesign: 2-group (male/female) expanded view with counts and age breakdowns`
+- **Thin community `Community 190`** (1 nodes): `Ops Alert #990 — Dependabot CI Actions Update (actions/checkout v4->v6)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Participation Status Before Screenshot`** (1 nodes): `Before state: participation status UI with male/female groups, 2/10 capacity each`
+- **Thin community `Community 191`** (1 nodes): `Issue #1542: Login 페이지 다크 테마 일관성 (P3-low)`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 192`** (1 nodes): `Runtime QA Bug — Build Server Disk Full (98%)`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 193`** (1 nodes): `Runtime QA — CUJ-U03 Refund Button Label Mismatch`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 194`** (1 nodes): `Bug Report — P-S31 /dev Deeplink 404`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 195`** (1 nodes): `Runtime QA Bug — Pixel 7a ADB Wireless Session Disconnect`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 196`** (1 nodes): `Security Audit Report — Tag Discovery Phase 1`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 197`** (1 nodes): `minglit_kit CHANGELOG`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 198`** (1 nodes): `minglit_kit README`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 199`** (1 nodes): `Pretendard Font OFL License`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 200`** (1 nodes): `App logo: purple gradient speech bubble with white 'm', orange sparkle accent`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 201`** (1 nodes): `App splash icon: purple gradient chat bubble with white 'm' and orange sparkle`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 202`** (1 nodes): `Minglit app splash icon: purple chat bubble with white 'm' and orange sparkle`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 203`** (1 nodes): `App icon foreground: purple chat bubble with white 'm' and orange sparkle`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 204`** (1 nodes): `Purple-blue gradient background image for app_partner icon`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 205`** (1 nodes): `Minglit inverted logo: white wordmark with cyan and orange shadow layers on transparent background`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 206`** (1 nodes): `Minglit wordmark logo SVG with transparent background, cyan/orange layered text`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 207`** (1 nodes): `Minglit app bar logo — bold italic 'Minglit' text in purple with cyan and orange shadow layers`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 208`** (1 nodes): `Upscale lounge/restaurant interior with bar, green velvet chairs, Asian art, warm lighting`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 209`** (1 nodes): `Bright minimalist Korean cafe interior with numbered wooden tables, plants, string lights, and coffee bar`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 210`** (1 nodes): `Warm sunlit cafe interior with wood furniture, plants, string lights, and menu board`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 211`** (1 nodes): `Participation status redesign (after) — not-logged-in state with counts and login prompt`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 212`** (1 nodes): `Dark theme participation status redesign, 2-group male/female layout with progress bars`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 213`** (1 nodes): `Participation status redesign after-state with 4 groups showing 12/40 total and per-group cards`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 214`** (1 nodes): `Empty participation status UI: 0/20 total, 0/10 male/female, empty state message`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 215`** (1 nodes): `Participation status redesign after variant: 2-group (male/female) split with progress bars`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 216`** (1 nodes): `Participation status redesign: 2-group (male/female) expanded view with counts and age breakdowns`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 217`** (1 nodes): `Before state: participation status UI with male/female groups, 2/10 capacity each`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 
 ## Suggested Questions
@@ -1593,15 +1603,15 @@ _Questions this graph is uniquely positioned to answer:_
 
 - **What is the exact relationship between `PolicyRepository` and `Log utility`?**
   _Edge tagged AMBIGUOUS (relation: calls) - confidence is low._
-- **What is the exact relationship between `Landing Partner Privacy Policy Page` and `env-manifest.json`?**
-  _Edge tagged AMBIGUOUS (relation: semantically_similar_to) - confidence is low._
 - **What is the exact relationship between `Architecture Audit #1092 — 2026-04-06` and `AI Basic Law Compliance (Korea 2026)`?**
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
-- **Why does `package:flutter/material.dart` connect `Partner UI Golden Test Helpers` to `Partner Check-in Stats & Tests`, `Partner Golden Test Scenarios`, `Partner App Feature Controllers`, `Partner Coordinator Layer`, `minglit_kit UI Widget Catalog`, `Partner Onboarding Apply Wizard`, `Partner Event & Member Pages`, `App Localizations & Auth Pages`, `Partner Event Management Pages`, `Account Deletion Coordinator (Partner)`, `Party Detail & Golden Capture Helpers`, `QR & Manual Check-in UI`, `Party Create Wizard Scenarios`, `User Ticket QR & Boarding Pass`, `Partner Application Detail & More Page`, `Partner Settlement Pages`, `User Account Deletion & Consent UI`, `User Event Detail Page & Tests`, `Event Now Bar Widget`, `User Home Page & Tag Chips`, `Create Verification Page (Partner)`, `Matching Settings Screen`, `Web Platform Utils & Map Widget`, `User Patrol UI Tests`?**
-  _High betweenness centrality (0.220) - this node is a cross-community bridge._
-- **Why does `package:minglit_kit/minglit_kit.dart` connect `Partner App Feature Controllers` to `Partner Check-in Stats & Tests`, `Partner Golden Test Scenarios`, `Partner UI Golden Test Helpers`, `Partner Coordinator Layer`, `Partner Onboarding Apply Wizard`, `Partner Event & Member Pages`, `App Localizations & Auth Pages`, `Partner Event Management Pages`, `Account Deletion Coordinator (Partner)`, `Party Detail & Golden Capture Helpers`, `QR & Manual Check-in UI`, `Party Create Wizard Scenarios`, `User Ticket QR & Boarding Pass`, `Partner Application Detail & More Page`, `Partner Settlement Pages`, `User Account Deletion & Consent UI`, `User Event Detail Page & Tests`, `Event Now Bar Widget`, `User Home Page & Tag Chips`, `Create Verification Page (Partner)`, `Matching Settings Screen`?**
-  _High betweenness centrality (0.154) - this node is a cross-community bridge._
-- **Why does `dart:async` connect `Partner Check-in Stats & Tests` to `Partner Golden Test Scenarios`, `Partner UI Golden Test Helpers`, `Partner App Feature Controllers`, `Partner Coordinator Layer`, `minglit_kit UI Widget Catalog`, `Partner Onboarding Apply Wizard`, `Partner Event & Member Pages`, `App Localizations & Auth Pages`, `Partner Event Management Pages`, `Account Deletion Coordinator (Partner)`, `Party Detail & Golden Capture Helpers`, `QR & Manual Check-in UI`, `Party Create Wizard Scenarios`, `User Ticket QR & Boarding Pass`, `Partner Application Detail & More Page`, `Partner Settlement Pages`, `User Account Deletion & Consent UI`, `User Event Detail Page & Tests`, `Event Now Bar Widget`, `User Home Page & Tag Chips`?**
-  _High betweenness centrality (0.146) - this node is a cross-community bridge._
-- **What connects `package:integration_test/integration_test_driver.dart`, `_loadNotoSansKR`, `_NoFiltersNotifier` to the rest of the system?**
-  _5250 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Why does `package:flutter/material.dart` connect `Community 0` to `Community 3`, `Community 5`, `Community 6`, `Community 14`, `Community 19`, `Community 28`?**
+  _High betweenness centrality (0.077) - this node is a cross-community bridge._
+- **Why does `package:mds/src/theme/minglit_theme.dart` connect `Community 0` to `Community 3`, `Community 5`, `Community 6`, `Community 14`, `Community 19`, `Community 28`?**
+  _High betweenness centrality (0.030) - this node is a cross-community bridge._
+- **Why does `EventRepository` connect `Community 9` to `Community 15`, `Community 4`, `Community 7`?**
+  _High betweenness centrality (0.024) - this node is a cross-community bridge._
+- **What connects `reporter (AutoLabelAllureReporter)`, `BugReporterWrapper Widget Test Suite`, `main` to the rest of the system?**
+  _1520 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Should `Community 0` be split into smaller, more focused modules?**
+  _Cohesion score 0.01 - nodes in this community are weakly interconnected._

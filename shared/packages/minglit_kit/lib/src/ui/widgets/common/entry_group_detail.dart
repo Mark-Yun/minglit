@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mds/src/theme/minglit_theme.dart';
+import 'package:mds/src/ui/widgets/common/minglit_async_value_widget.dart';
+import 'package:mds/src/ui/widgets/common/minglit_chip.dart';
+import 'package:mds/src/ui/widgets/common/minglit_skeleton.dart';
 import 'package:minglit_kit/src/data/models/party_entry_group.dart';
 import 'package:minglit_kit/src/data/repositories/verification_repository.dart';
-import 'package:minglit_kit/src/theme/minglit_theme.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_async_value_widget.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_chip.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_skeleton.dart';
 
 /// **Entry Group Detail**
 ///

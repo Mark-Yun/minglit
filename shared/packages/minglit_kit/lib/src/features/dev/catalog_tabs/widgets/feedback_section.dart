@@ -1,12 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:minglit_kit/src/theme/minglit_theme.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_alert.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_content_card.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_dialog.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_empty_state.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_error_state.dart';
+import 'package:mds/src/theme/minglit_theme.dart';
+import 'package:mds/src/ui/widgets/common/minglit_alert.dart';
+import 'package:mds/src/ui/widgets/common/minglit_content_card.dart';
+import 'package:mds/src/ui/widgets/common/minglit_dialog.dart';
+import 'package:mds/src/ui/widgets/common/minglit_empty_state.dart';
+import 'package:mds/src/ui/widgets/common/minglit_error_state.dart';
 
 /// Design catalog tab displaying feedback widgets.
 class FeedbackSection extends StatelessWidget {

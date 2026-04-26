@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:minglit_kit/src/theme/minglit_theme.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_bottom_sheet.dart';
+import 'package:mds/src/theme/minglit_theme.dart';
+import 'package:mds/src/ui/widgets/common/minglit_bottom_sheet.dart';
 
 /// Returns whether the user agreed to collect identity verification data.
 Future<bool> showIdentityVerificationConsentSheet(BuildContext context) async {

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:minglit_kit/src/theme/minglit_theme.dart';
+import 'package:mds/src/theme/minglit_theme.dart';
 
 /// Design catalog tab displaying all color tokens.
 class ColorsSection extends StatelessWidget {

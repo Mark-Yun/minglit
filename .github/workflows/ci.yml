@@ -46,8 +46,10 @@ jobs:
       app_user: ${{ steps.filter.outputs.app_user }}
       app_partner: ${{ steps.filter.outputs.app_partner }}
       minglit_kit: ${{ steps.filter.outputs.minglit_kit }}
-      app_user_or_kit: ${{ steps.filter.outputs.app_user == 'true' || steps.filter.outputs.minglit_kit == 'true' }}
-      app_partner_or_kit: ${{ steps.filter.outputs.app_partner == 'true' || steps.filter.outputs.minglit_kit == 'true' }}
+      mds: ${{ steps.filter.outputs.mds }}
+      app_user_or_kit: ${{ steps.filter.outputs.app_user == 'true' || steps.filter.outputs.minglit_kit == 'true' || steps.filter.outputs.mds == 'true' }}
+      app_partner_or_kit: ${{ steps.filter.outputs.app_partner == 'true' || steps.filter.outputs.minglit_kit == 'true' || steps.filter.outputs.mds == 'true' }}
+      kit_or_mds: ${{ steps.filter.outputs.minglit_kit == 'true' || steps.filter.outputs.mds == 'true' }}
       landing_user: ${{ steps.filter.outputs.landing_user }}
       landing_partner: ${{ steps.filter.outputs.landing_partner }}
       supabase: ${{ steps.filter.outputs.supabase }}
@@ -63,6 +65,8 @@ jobs:
             - 'apps/app_partner/**'
           minglit_kit:
             - 'shared/packages/minglit_kit/**'
+          mds:
+            - 'shared/packages/mds/**'
           landing_user:
             - 'apps/landing_user/**'
             - 'shared/web/**'
@@ -76,7 +80,7 @@ jobs:
   test-flutter-apps:
     name: test-app-unit-widget-golden
     needs: changes
-    if: ${{ needs.changes.outputs.app_user == 'true' || needs.changes.outputs.app_partner == 'true' || needs.changes.outputs.minglit_kit == 'true' }}
+    if: ${{ needs.changes.outputs.app_user == 'true' || needs.changes.outputs.app_partner == 'true' || needs.changes.outputs.minglit_kit == 'true' || needs.changes.outputs.mds == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
