@@ -65,7 +65,8 @@ class _EventApplicationDetailPageState
           return _ApplicationDetailBody(
             application: application,
             onApprove: () => _review(application.id, 'approved'),
-            onReject: (reason) => _review(application.id, 'rejected', reason: reason),
+            onReject: (reason) =>
+                _review(application.id, 'rejected', reason: reason),
           );
         },
       ),
@@ -152,7 +153,7 @@ class _ApplicationDetailBody extends StatelessWidget {
                           Text(
                             [
                               if (age != null) '$age세',
-                              if (gender != null) gender,
+                              ?gender,
                             ].join(' · '),
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
@@ -314,7 +315,9 @@ class _StatusBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: color.withValues(alpha: MinglitOpacity.highlight),
         borderRadius: BorderRadius.circular(MinglitRadius.small),
-        border: Border.all(color: color.withValues(alpha: MinglitOpacity.strong)),
+        border: Border.all(
+          color: color.withValues(alpha: MinglitOpacity.strong),
+        ),
       ),
       child: Text(
         label,

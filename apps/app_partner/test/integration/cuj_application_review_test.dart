@@ -349,7 +349,7 @@ void main() {
         status: 'approved',
         createdAt: DateTime(2026, 4, 25),
         updatedAt: DateTime(2026, 4, 25),
-        user: UserProfile(
+        user: const UserProfile(
           id: approvedUserId,
           name: '승인된유저',
           username: 'navuser',
