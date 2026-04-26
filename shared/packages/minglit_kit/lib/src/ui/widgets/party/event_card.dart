@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:minglit_kit/src/data/models/event.dart';
-import 'package:minglit_kit/src/data/models/partner.dart';
-import 'package:minglit_kit/src/data/models/tag.dart';
 import 'package:mds/src/theme/minglit_text_theme_extension.dart';
 import 'package:mds/src/theme/minglit_theme.dart';
 import 'package:mds/src/ui/widgets/common/minglit_image.dart';
 import 'package:mds/src/ui/widgets/common/minglit_skeleton.dart';
+import 'package:minglit_kit/src/data/models/event.dart';
+import 'package:minglit_kit/src/data/models/partner.dart';
+import 'package:minglit_kit/src/data/models/tag.dart';
 
 /// Internal enum representing the visual state of the event card.
 ///

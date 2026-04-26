@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:minglit_kit/src/data/models/verification.dart';
 import 'package:mds/src/theme/minglit_theme.dart';
+import 'package:minglit_kit/src/data/models/verification.dart';
 import 'package:minglit_kit/src/ui/widgets/common/verification_card.dart';
 
 /// A wrapper around [VerificationCard] that adds selection logic (checkbox).

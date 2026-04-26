@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:minglit_kit/src/features/dev/catalog_tabs/patterns/mock_data.dart';
 import 'package:mds/src/theme/minglit_theme.dart';
 import 'package:mds/src/ui/widgets/common/minglit_content_card.dart';
 import 'package:mds/src/ui/widgets/common/minglit_empty_state.dart';
@@ -9,6 +8,7 @@ import 'package:mds/src/ui/widgets/common/minglit_error_state.dart';
 import 'package:mds/src/ui/widgets/common/minglit_section.dart';
 import 'package:mds/src/ui/widgets/common/minglit_skeleton.dart';
 import 'package:mds/src/ui/widgets/common/minglit_tag.dart';
+import 'package:minglit_kit/src/features/dev/catalog_tabs/patterns/mock_data.dart';
 
 /// Demo states for pattern preview.
 enum DemoState { data, loading, error, empty }

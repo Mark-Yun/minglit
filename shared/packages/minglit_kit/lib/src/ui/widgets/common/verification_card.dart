@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:minglit_kit/src/data/models/verification.dart';
 import 'package:mds/src/theme/minglit_theme.dart';
+import 'package:minglit_kit/src/data/models/verification.dart';
 
 /// A pure display component for Verification info.
 /// Can be composed into SelectCard, ManageCard, etc.

@@ -3,10 +3,10 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:minglit_kit/src/data/repositories/auth_repository.dart';
-import 'package:minglit_kit/src/features/auth/logic/auth_controller.dart';
 import 'package:mds/src/theme/minglit_text_theme_extension.dart';
 import 'package:mds/src/theme/minglit_theme.dart';
+import 'package:minglit_kit/src/data/repositories/auth_repository.dart';
+import 'package:minglit_kit/src/features/auth/logic/auth_controller.dart';
 
 /// A widget that displays the current user's session information.
 /// Useful for debugging and development screens.

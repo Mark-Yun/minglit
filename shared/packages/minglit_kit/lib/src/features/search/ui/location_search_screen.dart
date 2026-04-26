@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:minglit_kit/src/features/search/logic/location_search_controller.dart';
 import 'package:mds/src/theme/minglit_theme.dart';
 import 'package:mds/src/ui/widgets/common/loading_indicator.dart';
 import 'package:mds/src/ui/widgets/common/minglit_async_value_widget.dart';
+import 'package:minglit_kit/src/features/search/logic/location_search_controller.dart';
 
 /// Screen for searching and selecting a location.
 class LocationSearchScreen extends ConsumerStatefulWidget {

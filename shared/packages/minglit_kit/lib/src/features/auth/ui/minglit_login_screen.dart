@@ -1,8 +1,8 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:minglit_kit/src/config/url_config.dart';
 import 'package:mds/src/theme/minglit_theme.dart';
+import 'package:minglit_kit/src/config/url_config.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// A common login screen for both User and Partner apps.
