@@ -193,10 +193,9 @@ class _HomePageState extends ConsumerState<HomePage> {
                 }
                 // First page fully filtered client-side: show loading while
                 // auto-fetch (triggered by ref.listen above) loads next page.
+                // Fix #1856: shimmer skeleton instead of progress indicator
                 if (state.events.isEmpty) {
-                  return const SliverFillRemaining(
-                    child: Center(child: MinglitCircularProgressIndicator()),
-                  );
+                  return _eventFeedSkeleton();
                 }
                 return SliverPadding(
                   padding: const EdgeInsets.only(
@@ -218,9 +217,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                   ),
                 );
               },
-              loading: () => const SliverFillRemaining(
-                child: Center(child: MinglitCircularProgressIndicator()),
-              ),
+              // Fix #1856: shimmer skeleton instead of progress indicator
+              loading: _eventFeedSkeleton,
               // Fix #192: 피드 로드 실패 시 에러 메시지와 재시도 버튼 표시
               error: (_, _) => SliverFillRemaining(
                 child: Center(
@@ -259,4 +257,18 @@ class _HomePageState extends ConsumerState<HomePage> {
       ),
     );
   }
+
+  // Fix #1856: skeleton list to replace progress indicator during initial feed load
+  static Widget _eventFeedSkeleton() => SliverPadding(
+        padding: const EdgeInsets.only(
+          top: MinglitSpacing.small,
+          bottom: MinglitSpacing.medium,
+        ),
+        sliver: SliverList.separated(
+          itemCount: 5,
+          separatorBuilder: (_, _) =>
+              const SizedBox(height: MinglitSpacing.small),
+          itemBuilder: (_, _) => const MinglitEventCard.loading(),
+        ),
+      );
 }
