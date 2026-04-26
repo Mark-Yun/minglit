@@ -18,48 +18,53 @@ class TrendingTagSection extends ConsumerWidget {
         // Fix #1286: recentCount가 0인 태그는 '핫 태그'가 아님 — 필터링 후 빈 목록이면 숨김
         final activeTags = tags.where((tag) => tag.recentCount > 0).toList();
         if (activeTags.isEmpty) return const SizedBox.shrink();
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: MinglitSpacing.medium,
-              ),
-              child: Text(
-                '🔥 핫 태그',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            const SizedBox(height: MinglitSpacing.small),
-            SizedBox(
-              height: 72,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
+        return Padding(
+          padding: const EdgeInsets.only(top: MinglitSpacing.small),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: MinglitSpacing.medium,
                 ),
-                itemCount: activeTags.length,
-                separatorBuilder: (_, _) =>
-                    const SizedBox(width: MinglitSpacing.small),
-                itemBuilder: (context, index) {
-                  final tag = activeTags[index];
-                  // Fix #1224: use recentCount (7-day sum) for the trending
-                  // metric instead of usageCount (cumulative total).
-                  return _TrendingTagCard(
-                    tagId: tag.id,
-                    tagName: tag.name,
-                    // Fix #1224: recentCount(최근 7일 증가량)로 트렌딩 의도 반영
-                    recentCount: tag.recentCount,
-                    onTap: () => ref
-                        .read(tagCoordinatorProvider)
-                        .goToTagEventList(tag.id, tag.name),
-                  );
-                },
+                child: Text(
+                  '🔥 핫 태그',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: MinglitSpacing.small),
+              SizedBox(
+                height: 72,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: MinglitSpacing.medium,
+                  ),
+                  itemCount: activeTags.length,
+                  separatorBuilder: (_, _) =>
+                      const SizedBox(width: MinglitSpacing.small),
+                  itemBuilder: (context, index) {
+                    final tag = activeTags[index];
+                    // Fix #1224: use recentCount (7-day sum) for the trending
+                    // metric instead of usageCount (cumulative total).
+                    return Center(
+                      child: _TrendingTagCard(
+                        tagId: tag.id,
+                        tagName: tag.name,
+                        // Fix #1224: recentCount(최근 7일 증가량)로 트렌딩 의도 반영
+                        recentCount: tag.recentCount,
+                        onTap: () => ref
+                            .read(tagCoordinatorProvider)
+                            .goToTagEventList(tag.id, tag.name),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
         );
       },
       loading: () => const SizedBox.shrink(),
