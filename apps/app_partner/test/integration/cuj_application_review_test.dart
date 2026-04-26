@@ -5,9 +5,11 @@
 // 2. 대기중/승인됨/거절됨 탭 렌더링
 // 3. 승인/거절 버튼 노출
 // 4. 빈 상태 메시지 표시
+// 5. Fix #1860: 승인됨/거절됨 탭 항목 탭 → 상세 페이지 이동
 // 변형:
 // - P02-V1: 정원 초과 → 승인 시 경고
 // - P02-V2: 일괄 승인 버튼 노출
+import 'package:app_partner/src/features/application/event_application_detail_page.dart';
 import 'package:app_partner/src/features/application/event_application_manage_page.dart';
 import 'package:app_partner/src/features/auth/partner_login_page.dart';
 import 'package:app_partner/src/logic/current_partner_provider.dart';
@@ -322,6 +324,78 @@ void main() {
       await capture.after(tester, 3);
 
       expect(find.text('승인된 유저'), findsOneWidget);
+    });
+
+    // Fix #1860: 승인됨 탭 항목 클릭 → 상세 화면 이동 회귀 방지
+    testWidgets('Fix #1860: 승인됨 탭 항목 탭 → 신청 상세 페이지로 이동한다', (
+      tester,
+    ) async {
+      const approvedAppId = 'app-approved-nav-test';
+      const approvedUserId = 'approved-nav-user';
+      final testEvent = Event(
+        id: 'event-approved-nav',
+        partyId: 'party-1',
+        title: '네비게이션 테스트 이벤트',
+        startTime: now.add(const Duration(hours: 1)),
+        endTime: now.add(const Duration(hours: 3)),
+        createdAt: now,
+        updatedAt: now,
+      );
+      final approvedApp = EventApplication(
+        id: approvedAppId,
+        eventId: 'event-approved-nav',
+        ticketId: 'ticket-1',
+        userId: approvedUserId,
+        status: 'approved',
+        createdAt: DateTime(2026, 4, 25),
+        updatedAt: DateTime(2026, 4, 25),
+        user: UserProfile(
+          id: approvedUserId,
+          name: '승인된유저',
+          username: 'navuser',
+          gender: 'male',
+          birthYear: 1995,
+        ),
+      );
+
+      await tester.pumpWidget(
+        createPartnerTestApp(
+          isLoggedIn: true,
+          currentUser: testUser,
+          initialLocation: '/applications',
+          additionalOverrides: [
+            currentPartnerInfoProvider.overrideWith(
+              (ref) async => testPartner,
+            ),
+            eventApplicationsGroupedProvider.overrideWith((ref, params) async {
+              if (params.statusFilter.contains('approved')) {
+                return {
+                  testEvent: [approvedApp],
+                };
+              }
+              return <Event, List<EventApplication>>{};
+            }),
+            // Fix #1860: 상세 페이지에서 사용하는 provider 오버라이드
+            eventApplicationDetailProvider(approvedAppId).overrideWith(
+              (_) async => approvedApp,
+            ),
+          ],
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // 승인됨 탭으로 이동
+      await tester.tap(find.text('승인됨'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('승인된유저'), findsOneWidget);
+
+      // 항목 탭 → 상세 페이지로 이동해야 함 (회귀: 이전에는 아무 일도 없었음)
+      await tester.tap(find.text('승인된유저'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(EventApplicationDetailPage), findsOneWidget);
+      expect(find.text('신청 상세'), findsOneWidget);
     });
   });
 }

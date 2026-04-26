@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app_partner/src/logic/current_partner_provider.dart';
+import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -513,7 +514,13 @@ class _ApplicationItem extends StatelessWidget {
       timeAgo,
     ].join(' · ');
 
-    return Container(
+    // Fix #1860: 승인됨/거절됨 탭 항목 클릭 시 상세 화면으로 이동
+    return InkWell(
+      onTap: showActions
+          ? null
+          : () => ApplicationDetailRoute(applicationId: application.id)
+                .push<void>(context),
+      child: Container(
       padding: const EdgeInsets.symmetric(
         horizontal: MinglitSpacing.medium,
         vertical: MinglitSpacing.sm,
@@ -591,6 +598,7 @@ class _ApplicationItem extends StatelessWidget {
           ] else
             _StatusBadge(status: application.status),
         ],
+      ),
       ),
     );
   }
