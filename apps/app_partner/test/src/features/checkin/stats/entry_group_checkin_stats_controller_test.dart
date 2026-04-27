@@ -67,7 +67,7 @@ void main() {
         'get_event_checkin_stats_by_group',
         params: any(named: 'params'),
       ),
-    ).thenAnswer((_) => _FakeRpcBuilder(response));
+    ).thenAnswer((_) => _FakeRpcBuilder<dynamic>(response));
   }
 
   ProviderContainer makeContainer({required List<dynamic> groupsResponse}) {
