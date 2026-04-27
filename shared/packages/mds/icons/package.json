@@ -1,0 +1,12 @@
+{
+  "name": "@minglit/mds-icons",
+  "private": true,
+  "version": "26.04.1922-dev",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs"
+  },
+  "devDependencies": {
+    "svgo": "^3.0.0"
+  }
+}
