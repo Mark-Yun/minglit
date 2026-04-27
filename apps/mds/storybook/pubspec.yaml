@@ -1,5 +1,5 @@
 name: mds_storybook
-description: "Widgetbook app for Minglit Design System (MDS) component exploration."
+description: "[DEPRECATED — removal scheduled 2026-06] Widgetbook app for Minglit Design System (MDS). Use apps/mds/docs as the canonical catalog instead."
 publish_to: 'none'
 
 # Version follows YY.MM.PR# CalVer (CLAUDE.md). PR# = 1865 (bootstrap PR).
