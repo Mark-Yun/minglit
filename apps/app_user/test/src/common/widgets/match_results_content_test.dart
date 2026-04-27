@@ -26,7 +26,7 @@ void main() {
     return ProviderScope(
       overrides: [
         myMatchesProvider(testEvent.id).overrideWith(
-          (ref, eventId) async => matches,
+          (ref) async => matches,
         ),
       ],
       child: MaterialApp(
