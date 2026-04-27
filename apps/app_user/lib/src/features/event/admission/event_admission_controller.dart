@@ -1,15 +1,15 @@
 import 'dart:async';
 
-import 'package:app_user/src/features/auth/logic/auth_coordinator.dart';
 // Fix #1934: use common location to avoid cross-feature import from event→home
 import 'package:app_user/src/common/widgets/match_results_content.dart';
+import 'package:app_user/src/features/auth/logic/auth_coordinator.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-part 'event_admission_controller.g.dart';
 part 'admission_action_handler.dart';
+part 'event_admission_controller.g.dart';
 part 'event_admission_state.dart';
 
 @riverpod
