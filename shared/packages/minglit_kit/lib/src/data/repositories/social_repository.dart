@@ -19,66 +19,47 @@ class SocialRepository {
 
   final SupabaseClient _supabase;
 
-  /// Toggles an interaction for the current user.
-  /// If it exists, it will be deleted. If not, it will be created.
-  Future<bool> toggleInteraction({
+  /// Sets the interaction state for the current user with explicit intent.
+  ///
+  /// When [active] is true, the interaction is created (INSERT ON CONFLICT DO
+  /// NOTHING — idempotent, never throws 23505).
+  /// When [active] is false, the interaction is deleted (idempotent).
+  ///
+  /// Fix #1957: explicit intent eliminates TOCTOU races — callers pass the
+  /// desired final state, so concurrent calls with the same intent are safe.
+  /// Sets the interaction state for the current user with explicit intent.
+  ///
+  /// Delegates to the `set_social_interaction` Postgres function, which runs
+  /// in a single transaction with an advisory lock — eliminating TOCTOU races
+  /// and concurrent like/dislike cross-intent races.
+  ///
+  /// Fix #1957: explicit intent + atomic server-side operation.
+  Future<void> setInteraction({
     required String targetId,
     required SocialTargetType targetType,
     required SocialInteractionType interactionType,
+    required bool active,
   }) async {
     final userId = _supabase.auth.currentUser?.id;
     if (userId == null) throw Exception('User not authenticated');
 
-    Log.d('toggleInteraction | targetId: $targetId');
-    Log.d('toggleInteraction | type: $interactionType');
+    Log.d('setInteraction | targetId: $targetId, active: $active');
+    Log.d('setInteraction | type: $interactionType');
 
     try {
-      // 0. Like/dislike mutual exclusivity — remove opposite before toggling
-      if (interactionType == SocialInteractionType.like ||
-          interactionType == SocialInteractionType.dislike) {
-        final opposite = interactionType == SocialInteractionType.like
-            ? SocialInteractionType.dislike
-            : SocialInteractionType.like;
-        await _supabase
-            .from('social_interactions')
-            .delete()
-            .eq('user_id', userId)
-            .eq('target_id', targetId)
-            .eq('interaction_type', opposite.name);
-      }
-
-      // 1. Check if interaction already exists
-      final existing = await _supabase
-          .from('social_interactions')
-          .select()
-          .eq('user_id', userId)
-          .eq('target_id', targetId)
-          .eq('interaction_type', interactionType.name)
-          .maybeSingle();
-
-      if (existing != null) {
-        // 2. Delete if exists
-        await _supabase
-            .from('social_interactions')
-            .delete()
-            .eq('user_id', userId)
-            .eq('target_id', targetId)
-            .eq('interaction_type', interactionType.name);
-        Log.d('toggleInteraction: removed');
-        return false; // Now inactive
-      } else {
-        // 3. Insert if not exists
-        await _supabase.from('social_interactions').insert({
-          'user_id': userId,
-          'target_id': targetId,
-          'target_type': targetType.name,
-          'interaction_type': interactionType.name,
-        });
-        Log.d('toggleInteraction: added');
-        return true; // Now active
-      }
+      // Fix #1957: single RPC call — atomic transaction + advisory lock prevents
+      // concurrent cross-intent (like vs dislike) races from both landing.
+      await _supabase.rpc<dynamic>(
+        'set_social_interaction',
+        params: {
+          'p_target_id': targetId,
+          'p_target_type': targetType.name,
+          'p_interaction_type': interactionType.name,
+          'p_active': active,
+        },
+      );
     } on Object catch (e, st) {
-      Log.e('❌ [SocialRepo] toggleInteraction Error', e, st);
+      Log.e('❌ [SocialRepo] setInteraction Error', e, st);
       rethrow;
     }
   }
