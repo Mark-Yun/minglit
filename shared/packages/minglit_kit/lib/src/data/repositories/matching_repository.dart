@@ -1,5 +1,6 @@
 import 'package:minglit_kit/src/data/models/matching.dart';
 import 'package:minglit_kit/src/data/models/user_profile.dart';
+import 'package:minglit_kit/src/utils/exceptions.dart';
 import 'package:minglit_kit/src/utils/log.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -81,7 +82,8 @@ class MatchingRepository {
     required List<Map<String, dynamic>> rules,
   }) async {
     try {
-      await _supabase.functions.invoke(
+      // Fix #1945: functions.invoke() never throws on 4xx/5xx — check status.
+      final response = await _supabase.functions.invoke(
         'partner-manage-match',
         body: {
           'action': 'set_rules',
@@ -98,6 +100,13 @@ class MatchingRepository {
           }).toList(),
         },
       );
+      if (response.status != 200) {
+        final data = response.data;
+        final msg = data is Map
+            ? (data['error'] as String?) ?? '매칭 규칙 설정에 실패했습니다.'
+            : '매칭 규칙 설정에 실패했습니다.';
+        throw MinglitUserException(msg);
+      }
       Log.d('updateMatchRules success | count: ${rules.length}');
     } catch (e, st) {
       Log.e('❌ [MatchingRepo] updateMatchRules Error', e, st);
@@ -109,13 +118,21 @@ class MatchingRepository {
   // Fix #305: RLS write → EF 전환
   Future<void> clearMatchRules({required String eventId}) async {
     try {
-      await _supabase.functions.invoke(
+      // Fix #1945: functions.invoke() never throws on 4xx/5xx — check status.
+      final response = await _supabase.functions.invoke(
         'partner-manage-match',
         body: {
           'action': 'clear_rules',
           'event_id': eventId,
         },
       );
+      if (response.status != 200) {
+        final data = response.data;
+        final msg = data is Map
+            ? (data['error'] as String?) ?? '매칭 규칙 초기화에 실패했습니다.'
+            : '매칭 규칙 초기화에 실패했습니다.';
+        throw MinglitUserException(msg);
+      }
       Log.d('clearMatchRules success | eventId: $eventId');
     } catch (e, st) {
       Log.e('❌ [MatchingRepo] clearMatchRules Error', e, st);
@@ -130,13 +147,21 @@ class MatchingRepository {
     required String candidateId,
   }) async {
     try {
-      await _supabase.functions.invoke(
+      // Fix #1945: functions.invoke() never throws on 4xx/5xx — check status.
+      final response = await _supabase.functions.invoke(
         'user-cast-vote',
         body: {
           'event_id': eventId,
           'candidate_id': candidateId,
         },
       );
+      if (response.status != 200) {
+        final data = response.data;
+        final msg = data is Map
+            ? (data['error'] as String?) ?? '투표 요청에 실패했습니다.'
+            : '투표 요청에 실패했습니다.';
+        throw MinglitUserException(msg);
+      }
       Log.d('castVote success | candidate: $candidateId');
     } catch (e, st) {
       Log.e('❌ [MatchingRepo] castVote Error', e, st);
