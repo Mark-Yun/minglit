@@ -48,6 +48,7 @@ jobs:
       minglit_kit: ${{ steps.filter.outputs.minglit_kit }}
       mds: ${{ steps.filter.outputs.mds }}
       mds_storybook: ${{ steps.filter.outputs.mds_storybook }}
+      mds_storybook_or_mds: ${{ steps.filter.outputs.mds_storybook == 'true' || steps.filter.outputs.mds == 'true' }}
       app_user_or_kit: ${{ steps.filter.outputs.app_user == 'true' || steps.filter.outputs.minglit_kit == 'true' || steps.filter.outputs.mds == 'true' }}
       app_partner_or_kit: ${{ steps.filter.outputs.app_partner == 'true' || steps.filter.outputs.minglit_kit == 'true' || steps.filter.outputs.mds == 'true' }}
       kit_or_mds: ${{ steps.filter.outputs.minglit_kit == 'true' || steps.filter.outputs.mds == 'true' }}
@@ -114,7 +115,7 @@ jobs:
             coverage_flag: minglit-kit
             coverage_flag_logic: ''
           - app: mds_storybook
-            change_key: mds_storybook
+            change_key: mds_storybook_or_mds
             directory: apps/mds_storybook
             report_name: 'MDS Storybook Tests'
             artifact_name: mds-storybook-coverage
