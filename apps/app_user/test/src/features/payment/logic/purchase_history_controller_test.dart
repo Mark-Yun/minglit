@@ -470,4 +470,407 @@ void main() {
       },
     );
   });
+
+  // Fix #1951: runRefundFlow unit tests — refund calculation edge cases
+  group('PurchaseHistoryController.runRefundFlow', () {
+    late MockEventRepository mockEventRepo;
+
+    setUp(() {
+      mockEventRepo = MockEventRepository();
+    });
+
+    ProviderContainer _makeContainer({PolicyRepository? policyRepo}) {
+      return ProviderContainer(
+        overrides: [
+          currentUserProvider.overrideWith((ref) => null),
+          eventRepositoryProvider.overrideWithValue(mockEventRepo),
+          if (policyRepo != null)
+            policyRepositoryProvider.overrideWithValue(policyRepo),
+        ],
+      );
+    }
+
+    PurchaseHistoryController _getCtrl(ProviderContainer c) =>
+        c.read(purchaseHistoryControllerProvider.notifier);
+
+    test('policy fetch failure uses fallback gracePeriodHours=2 cutoffDays=7 — flow continues', () async {
+      final container = _makeContainer(
+        policyRepo: _ThrowingPolicyRepository(),
+      );
+      addTearDown(container.dispose);
+
+      var confirmCalled = false;
+      RefundCalculation? received;
+
+      // paidAt 1h ago: clearly within 2h grace period fallback
+      // event 8d away: clearly within 7d cutoff fallback
+      await _getCtrl(container).runRefundFlow(
+        eventId: 'evt1',
+        paymentId: 'pay_123',
+        paymentAmount: 10000,
+        eventStartTime: DateTime.now().add(const Duration(days: 8)),
+        paidAt: DateTime.now().subtract(const Duration(hours: 1)),
+        showMissingInfo: () async {},
+        showNotEligible: () async { fail('should not call showNotEligible'); },
+        confirmRefund: (calc) async {
+          confirmCalled = true;
+          received = calc;
+          return false; // cancel at confirmation — no need to mock cancelOrder
+        },
+        showError: (msg) async => false,
+        onSuccess: () async {},
+      );
+
+      expect(confirmCalled, isTrue);
+      expect(received?.refundPercentage, equals(100));
+    });
+
+    test('policy fetch failure uses fallback — outside grace and cutoff calls showNotEligible', () async {
+      final container = _makeContainer(
+        policyRepo: _ThrowingPolicyRepository(),
+      );
+      addTearDown(container.dispose);
+
+      var notEligibleCalled = false;
+
+      // paidAt 3d ago: outside 2h grace period fallback
+      // event 2d away: outside 7d cutoff fallback
+      await _getCtrl(container).runRefundFlow(
+        eventId: 'evt1',
+        paymentId: 'pay_123',
+        paymentAmount: 10000,
+        eventStartTime: DateTime.now().add(const Duration(days: 2)),
+        paidAt: DateTime.now().subtract(const Duration(days: 3)),
+        showMissingInfo: () async {},
+        showNotEligible: () async { notEligibleCalled = true; },
+        confirmRefund: (calc) async => false,
+        showError: (msg) async => false,
+        onSuccess: () async {},
+      );
+
+      expect(notEligibleCalled, isTrue);
+    });
+
+    test('free ticket (paymentAmount=0, paymentId=null) skips refund calculation', () async {
+      when(
+        () => mockEventRepo.cancelOrder(
+          eventId: any(named: 'eventId'),
+          reason: any(named: 'reason'),
+        ),
+      ).thenAnswer((_) async => const CancelOrderResult(type: 'cancelled'));
+
+      final container = _makeContainer();
+      addTearDown(container.dispose);
+
+      var confirmCalled = false;
+      RefundCalculation? receivedCalc;
+      var onSuccessCalled = false;
+
+      await _getCtrl(container).runRefundFlow(
+        eventId: 'evt_free',
+        paymentId: null,
+        paymentAmount: 0,
+        eventStartTime: DateTime.now().add(const Duration(days: 1)),
+        paidAt: null,
+        showMissingInfo: () async { fail('should not call showMissingInfo'); },
+        showNotEligible: () async { fail('should not call showNotEligible'); },
+        confirmRefund: (calc) async {
+          confirmCalled = true;
+          receivedCalc = calc;
+          return true;
+        },
+        showError: (msg) async => false,
+        onSuccess: () async { onSuccessCalled = true; },
+      );
+
+      expect(confirmCalled, isTrue);
+      expect(receivedCalc?.refundPercentage, equals(100));
+      expect(receivedCalc?.refundAmount, equals(0));
+      expect(receivedCalc?.feeAmount, equals(0));
+      expect(onSuccessCalled, isTrue);
+    });
+
+    test('free ticket without eventStartTime calls showMissingInfo', () async {
+      final container = _makeContainer();
+      addTearDown(container.dispose);
+
+      var missingInfoCalled = false;
+
+      await _getCtrl(container).runRefundFlow(
+        eventId: 'evt_free',
+        paymentId: null,
+        paymentAmount: 0,
+        eventStartTime: null, // missing
+        paidAt: null,
+        showMissingInfo: () async { missingInfoCalled = true; },
+        showNotEligible: () async {},
+        confirmRefund: (calc) async => false,
+        showError: (msg) async => false,
+        onSuccess: () async {},
+      );
+
+      expect(missingInfoCalled, isTrue);
+    });
+
+    test('paid ticket with null paymentId calls showMissingInfo', () async {
+      final container = _makeContainer();
+      addTearDown(container.dispose);
+
+      var missingInfoCalled = false;
+
+      await _getCtrl(container).runRefundFlow(
+        eventId: 'evt1',
+        paymentId: null, // missing paymentId for paid ticket
+        paymentAmount: 10000,
+        eventStartTime: DateTime.now().add(const Duration(days: 8)),
+        paidAt: DateTime.now().subtract(const Duration(hours: 1)),
+        showMissingInfo: () async { missingInfoCalled = true; },
+        showNotEligible: () async {},
+        confirmRefund: (calc) async => false,
+        showError: (msg) async => false,
+        onSuccess: () async {},
+      );
+
+      expect(missingInfoCalled, isTrue);
+    });
+
+    test('user cancels at confirmation does not call cancelOrder', () async {
+      final container = _makeContainer(
+        policyRepo: _StaticPolicyRepository(gracePeriodHours: 2, cutoffDays: 7),
+      );
+      addTearDown(container.dispose);
+
+      await _getCtrl(container).runRefundFlow(
+        eventId: 'evt1',
+        paymentId: 'pay_123',
+        paymentAmount: 10000,
+        eventStartTime: DateTime.now().add(const Duration(days: 8)),
+        paidAt: DateTime.now().subtract(const Duration(hours: 1)),
+        showMissingInfo: () async {},
+        showNotEligible: () async {},
+        confirmRefund: (calc) async => false, // user cancels
+        showError: (msg) async => false,
+        onSuccess: () async {},
+      );
+
+      verifyNever(
+        () => mockEventRepo.cancelOrder(
+          eventId: any(named: 'eventId'),
+          reason: any(named: 'reason'),
+        ),
+      );
+    });
+
+    test('successful refund calls cancelOrder and onSuccess', () async {
+      when(
+        () => mockEventRepo.cancelOrder(
+          eventId: 'evt1',
+          reason: '사용자 예매 취소',
+        ),
+      ).thenAnswer((_) async => const CancelOrderResult(type: 'refunded', refundAmount: 10000));
+
+      final container = _makeContainer(
+        policyRepo: _StaticPolicyRepository(gracePeriodHours: 2, cutoffDays: 7),
+      );
+      addTearDown(container.dispose);
+
+      var onSuccessCalled = false;
+
+      await _getCtrl(container).runRefundFlow(
+        eventId: 'evt1',
+        paymentId: 'pay_123',
+        paymentAmount: 10000,
+        eventStartTime: DateTime.now().add(const Duration(days: 8)),
+        paidAt: DateTime.now().subtract(const Duration(hours: 1)),
+        showMissingInfo: () async {},
+        showNotEligible: () async {},
+        confirmRefund: (calc) async => true,
+        showError: (msg) async => false,
+        onSuccess: () async { onSuccessCalled = true; },
+      );
+
+      verify(
+        () => mockEventRepo.cancelOrder(eventId: 'evt1', reason: '사용자 예매 취소'),
+      ).called(1);
+      expect(onSuccessCalled, isTrue);
+    });
+
+    test('cancelOrder failure shows error and does not call onSuccess on no-retry', () async {
+      when(
+        () => mockEventRepo.cancelOrder(
+          eventId: any(named: 'eventId'),
+          reason: any(named: 'reason'),
+        ),
+      ).thenThrow(Exception('Network error'));
+
+      final container = _makeContainer(
+        policyRepo: _StaticPolicyRepository(gracePeriodHours: 2, cutoffDays: 7),
+      );
+      addTearDown(container.dispose);
+
+      var showErrorCalled = false;
+      var onSuccessCalled = false;
+
+      await _getCtrl(container).runRefundFlow(
+        eventId: 'evt1',
+        paymentId: 'pay_123',
+        paymentAmount: 10000,
+        eventStartTime: DateTime.now().add(const Duration(days: 8)),
+        paidAt: DateTime.now().subtract(const Duration(hours: 1)),
+        showMissingInfo: () async {},
+        showNotEligible: () async {},
+        confirmRefund: (calc) async => true,
+        showError: (msg) async {
+          showErrorCalled = true;
+          return false; // do not retry
+        },
+        onSuccess: () async { onSuccessCalled = true; },
+      );
+
+      expect(showErrorCalled, isTrue);
+      expect(onSuccessCalled, isFalse);
+    });
+  });
+
+  // Fix #1951: calculateRefund boundary tests with explicit 'now' control
+  group('PurchaseHistoryController.calculateRefund — boundary cases', () {
+    late ProviderContainer container;
+
+    setUp(() {
+      container = ProviderContainer(
+        overrides: [
+          currentUserProvider.overrideWith((ref) => null),
+          eventRepositoryProvider.overrideWithValue(MockEventRepository()),
+        ],
+      );
+    });
+
+    tearDown(() => container.dispose());
+
+    PurchaseHistoryController get ctrl =>
+        container.read(purchaseHistoryControllerProvider.notifier);
+
+    const amount = 10000;
+    const grace = 2;
+    const cutoff = 7;
+
+    test('grace period: paidAt exactly at boundary (2h ago) → refundable', () {
+      final now = DateTime(2026, 1, 15, 12, 0, 0);
+      final paidAt = now.subtract(const Duration(hours: grace));
+      final eventStart = now.add(const Duration(days: cutoff + 1));
+
+      final result = ctrl.calculateRefund(
+        eventStartTime: eventStart,
+        paymentAmount: amount,
+        paidAt: paidAt,
+        gracePeriodHours: grace,
+        cutoffDays: cutoff,
+        now: now,
+      );
+
+      expect(result.refundPercentage, equals(100));
+    });
+
+    test('grace period: paidAt 1 second past boundary (2h+1s ago) → not refundable (cutoff also missed)', () {
+      final now = DateTime(2026, 1, 15, 12, 0, 0);
+      final paidAt = now.subtract(const Duration(hours: grace, seconds: 1));
+      // Event 2 days away — outside 7-day cutoff — no fallback refund
+      final eventStart = now.add(const Duration(days: 2));
+
+      final result = ctrl.calculateRefund(
+        eventStartTime: eventStart,
+        paymentAmount: amount,
+        paidAt: paidAt,
+        gracePeriodHours: grace,
+        cutoffDays: cutoff,
+        now: now,
+      );
+
+      expect(result.refundPercentage, equals(0));
+    });
+
+    test('cutoff: eventStartTime exactly at boundary (7d away) → refundable', () {
+      final now = DateTime(2026, 1, 15, 12, 0, 0);
+      final eventStart = now.add(const Duration(days: cutoff));
+      // paidAt far past grace period — only cutoff path applies
+      final paidAt = now.subtract(const Duration(days: 1));
+
+      final result = ctrl.calculateRefund(
+        eventStartTime: eventStart,
+        paymentAmount: amount,
+        paidAt: paidAt,
+        gracePeriodHours: grace,
+        cutoffDays: cutoff,
+        now: now,
+      );
+
+      expect(result.refundPercentage, equals(100));
+    });
+
+    test('cutoff: eventStartTime 1 second before boundary (7d-1s away) → not refundable (grace also missed)', () {
+      final now = DateTime(2026, 1, 15, 12, 0, 0);
+      final eventStart = now.add(const Duration(days: cutoff)).subtract(const Duration(seconds: 1));
+      // paidAt far past grace period
+      final paidAt = now.subtract(const Duration(days: 1));
+
+      final result = ctrl.calculateRefund(
+        eventStartTime: eventStart,
+        paymentAmount: amount,
+        paidAt: paidAt,
+        gracePeriodHours: grace,
+        cutoffDays: cutoff,
+        now: now,
+      );
+
+      expect(result.refundPercentage, equals(0));
+    });
+
+    test('within grace period overrides missed cutoff → refundable', () {
+      final now = DateTime(2026, 1, 15, 12, 0, 0);
+      // paidAt 30min ago: within 2h grace
+      final paidAt = now.subtract(const Duration(minutes: 30));
+      // event 2d away: outside 7d cutoff
+      final eventStart = now.add(const Duration(days: 2));
+
+      final result = ctrl.calculateRefund(
+        eventStartTime: eventStart,
+        paymentAmount: amount,
+        paidAt: paidAt,
+        gracePeriodHours: grace,
+        cutoffDays: cutoff,
+        now: now,
+      );
+
+      expect(result.refundPercentage, equals(100));
+    });
+  });
+}
+
+// Fix #1951: Fake PolicyRepository implementations for runRefundFlow tests
+
+class _ThrowingPolicyRepository implements PolicyRepository {
+  const _ThrowingPolicyRepository();
+
+  @override
+  Future<Map<String, dynamic>?> getRefundPolicy() async {
+    throw Exception('Network error — test fallback scenario');
+  }
+}
+
+class _StaticPolicyRepository implements PolicyRepository {
+  const _StaticPolicyRepository({
+    required this.gracePeriodHours,
+    required this.cutoffDays,
+  });
+
+  final int gracePeriodHours;
+  final int cutoffDays;
+
+  @override
+  Future<Map<String, dynamic>?> getRefundPolicy() async {
+    return {
+      'grace_period_hours': gracePeriodHours,
+      'cutoff_days': cutoffDays,
+    };
+  }
 }
