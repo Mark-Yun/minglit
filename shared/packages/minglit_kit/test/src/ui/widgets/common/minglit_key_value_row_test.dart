@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_key_value_row.dart';
+import 'package:mds/src/ui/widgets/common/minglit_key_value_row.dart';
 
 void main() {
   Widget wrap(Widget child) {

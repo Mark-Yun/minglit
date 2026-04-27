@@ -1,0 +1,356 @@
+# External Services Inventory
+
+> **목적**: 코드·문서·env-reference에서 추출한 외부 벤더 기술 정보(WHAT). 비즈니스 결정(WHY)은 `<TODO:>` 플레이스홀더로 표시.
+> **정렬**: 카테고리별 그룹화.
+
+---
+
+## 벤더 선택 원칙 (전체 인터뷰 종합)
+
+위 19개 벤더 선택의 공통 원칙:
+1. **무료 한도 우선** — PoC + 초기 운영 단계에서 비용 ↓ 우선. 유료 전환 임계치는 트래픽 증가 시 재평가.
+2. **vendor lock-in 회피** — PortOne (multi-PG 통합), AI 어댑터 패턴 (LLM swap 가능), 표준 protocol 우선.
+3. **한국 시장 최적화** — Kakao (Login + Map), JUSO API, PortOne PASS 등 한국 고유 인프라 우선 활용.
+4. **App Store / Play Store 의무 준수** — Apple Sign-In, Google Sign-In 의무 사항.
+5. **개발 마찰 최소화** — Vercel 쉬움, GitHub Actions 표준, gh CLI 워커 자동화 등.
+
+❌ **회피 패턴**:
+- 단일 vendor lock-in (어댑터 패턴, multi-PG 통합으로 분산)
+- 고비용 도구 production 사용 (Anthropic Claude는 dev only, OpenAI도 어댑터 위에서 swap 가능)
+- 한국 외 vendor 단일 의존 (Kakao Map vs Google Maps)
+
+---
+
+## 카테고리 목차
+
+1. [Backend Infrastructure](#1-backend-infrastructure)
+2. [Authentication](#2-authentication)
+3. [Payment](#3-payment)
+4. [AI / ML](#4-ai--ml)
+5. [Observability](#5-observability)
+6. [Deployment](#6-deployment)
+7. [Tooling](#7-tooling)
+
+---
+
+## 1. Backend Infrastructure
+
+### Supabase
+
+| 항목 | 내용 |
+|------|------|
+| **벤더 / 제품** | Supabase (Database + Auth + Storage + Edge Functions + Realtime) |
+| **역할** | 플랫폼 전체의 백엔드 인프라. PostgreSQL DB, 인증(JWT 발급·OAuth), 파일 스토리지(3개 버킷), Deno 기반 Edge Functions(40+ 함수), Realtime(체크인 통계 실시간 구독)을 단일 플랫폼으로 제공. |
+| **코드 위치** | `supabase/`, `shared/packages/minglit_kit/lib/src/data/repositories/`, `supabase/functions/_shared/supabase_client.ts` |
+| **환경변수** | `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` (Flutter/Next.js), `SUPABASE_SERVICE_ROLE_KEY` (Edge Functions, auto-injected), `SUPABASE_ACCESS_TOKEN` (CI), `SUPABASE_DEV_PROJECT_ID`, `SUPABASE_MAIN_PROJECT_ID` |
+| **왜 이 벤더?** | - Edge Function + Flutter SDK 지원 빵빵 (PostgREST + Realtime + Auth + Storage 통합)<br>- 무료 한도 넉넉 (PoC + 초기 운영 충분)<br>- Postgres 강력 (PGroonga, pgvector, PGMQ, RLS 등 확장)<br>- **선택 안 한 대안**: Firebase (Postgres 없음), AWS Amplify (러닝커브 ↑), 자체 백엔드 (인프라 부담) |
+| **계약 / tier / 비용** | `<TODO: 현재 plan tier, 월 비용, row limit, storage limit>` |
+| **핵심 한계** | `<TODO: connection pool 한계, Edge Function 실행 timeout, Realtime 동시 구독 수 제한>` |
+| **다운 시 영향** | `<TODO: Supabase 전면 장애 시 서비스 불가 범위 — 읽기·쓰기·인증·알림 모두 영향>` |
+| **대안 검토** | `<TODO: Firebase, PlanetScale, Neon 등 대안 검토 여부>` |
+
+---
+
+### Firebase (FCM)
+
+| 항목 | 내용 |
+|------|------|
+| **벤더 / 제품** | Google Firebase Cloud Messaging (FCM) |
+| **역할** | iOS/Android 유저 대상 푸시 알림 발송. `notification-worker` Edge Function이 PGMQ `q_notifications` 큐를 polling하며 FCM Admin SDK로 토큰별 푸시를 발송. `fcm_tokens` 테이블에 device_type(android/ios/web)별 토큰 저장. |
+| **코드 위치** | `supabase/functions/notification-worker/`, `fcm_tokens` 테이블 |
+| **환경변수** | `FIREBASE_SERVICE_ACCOUNT` (notification-worker 전용, Required) |
+| **왜 이 벤더?** | - iOS/Android 푸시를 **단일 SDK**로 통합 처리 (APNs 직접 연동 시 iOS/Android 이중 관리 필요)<br>- 무료 (메시지 수 무제한)<br>- Supabase Edge Function에서 Firebase Admin SDK(Deno 호환)로 직접 연동 가능<br>- **선택 안 한 대안**: APNs 직접 (iOS 전용, Android 별도 FCM 필요), OneSignal (유료 tier로 빠르게 전환), Expo Push (Flutter 비친화적) |
+| **계약 / tier / 비용** | `<TODO: FCM은 무료 tier 사용 중? 메시지 수 제한?>` |
+| **핵심 한계** | `<TODO: FCM 메시지 전달 보장 없음(best-effort), 토큰 만료 처리>` |
+| **다운 시 영향** | `<TODO: FCM 장애 시 푸시 알림 미발송 — 인앱 알림(user_notifications)은 별도 유지>` |
+| **대안 검토** | `<TODO: OneSignal, Expo Push 등 대안 검토 여부>` |
+
+---
+
+## 2. Authentication
+
+### Kakao Login
+
+| 항목 | 내용 |
+|------|------|
+| **벤더 / 제품** | Kakao OAuth 2.0 (카카오 로그인) |
+| **역할** | 유저 소셜 로그인. Supabase Auth의 OAuth provider로 통합. Flutter 앱에서 Kakao SDK를 통해 인가 코드를 받아 Supabase Auth에 전달. 지도 기능에 Kakao Local REST API와 Kakao Map JS도 별도 사용. |
+| **코드 위치** | `shared/packages/minglit_kit/lib/src/features/auth/`, Supabase Auth OAuth 설정 |
+| **환경변수** | `KAKAO_LOCAL_REST_API_KEY` (Flutter), `KAKAO_MAP_JAVASCRIPT_KEY` (Flutter/Web) |
+| **왜 이 벤더?** | 한국 사용자 필수 소셜 인증. 가장 보편적인 한국 OAuth provider. 미가입 시 한국 사용자 진입 마찰 ↑. |
+| **계약 / tier / 비용** | `<TODO: 카카오 API 비용 구조 — 호출 수 제한, Kakao Map 사용량>` |
+| **핵심 한계** | `<TODO: 카카오 API 정책 변경 리스크, 해외 유저 미지원>` |
+| **다운 시 영향** | `<TODO: 카카오 로그인 불가 시 Apple/Google 대체 여부>` |
+| **대안 검토** | `<TODO: 네이버 로그인, 전화번호 OTP 대안 검토>` |
+
+---
+
+### Apple Sign-In
+
+| 항목 | 내용 |
+|------|------|
+| **벤더 / 제품** | Apple Sign-In (Apple OAuth) |
+| **역할** | iOS 유저 소셜 로그인. App Store 배포 앱에서 소셜 로그인을 제공하는 경우 Apple Sign-In 지원이 Apple 정책상 필수. Supabase Auth OAuth provider로 통합. `MOBILE_REDIRECT_SCHEME`으로 딥링크 처리. |
+| **코드 위치** | `shared/packages/minglit_kit/lib/src/features/auth/`, Supabase Auth OAuth 설정 |
+| **환경변수** | `MOBILE_REDIRECT_SCHEME` (Flutter OAuth redirect) |
+| **왜 이 벤더?** | iPhone 사용자를 위해. App Store 정책상 소셜 로그인 제공 시 Apple Sign-In 의무 (Guideline 4.8). |
+| **계약 / tier / 비용** | `<TODO: Apple Developer 계정 비용 — $99/year>` |
+| **핵심 한계** | `<TODO: Apple이 이메일을 숨길 수 있어 이메일 의존 로직 주의 필요>` |
+| **다운 시 영향** | `<TODO: Apple 인증 서버 장애 시 iOS 유저 로그인 불가>` |
+| **대안 검토** | `<TODO: 전화번호 OTP fallback 여부>` |
+
+---
+
+### Google Sign-In
+
+| 항목 | 내용 |
+|------|------|
+| **벤더 / 제품** | Google OAuth 2.0 |
+| **역할** | 유저 소셜 로그인. Supabase Auth OAuth provider로 통합. `GOOGLE_WEB_CLIENT_ID`로 Web/Flutter 모두 커버. |
+| **코드 위치** | `shared/packages/minglit_kit/lib/src/features/auth/`, Supabase Auth OAuth 설정 |
+| **환경변수** | `GOOGLE_WEB_CLIENT_ID` (Flutter) |
+| **왜 이 벤더?** | Android 사용자를 위해. 안드로이드 ecosystem의 표준 OAuth. |
+| **계약 / tier / 비용** | `<TODO: Google OAuth는 무료, GCP 프로젝트 비용 여부>` |
+| **핵심 한계** | `<TODO: Google Play 정책 변경 리스크>` |
+| **다운 시 영향** | `<TODO: Google 장애 시 Android 유저 로그인 영향>` |
+| **대안 검토** | `<TODO: 전화번호 OTP fallback 여부>` |
+
+---
+
+### PortOne / Iamport (본인인증)
+
+> 결제 역할은 §3 Payment 참고. 여기서는 신원인증(identity-verify) 역할만 기술.
+
+| 항목 | 내용 |
+|------|------|
+| **벤더 / 제품** | PortOne V2 PASS/SMS (본인인증) |
+| **역할** | Layer 1 Identity Verification. `identity-verify` Edge Function이 PortOne V2 API의 `getIdentityVerification()`을 호출해 PASS 또는 SMS 본인인증 결과를 검증. 이름, 생년월일, 성별, 전화번호, CI/DI 추출 후 `user_profiles` 업데이트. |
+| **코드 위치** | `supabase/functions/identity-verify/`, `supabase/functions/_shared/portone_client.ts` |
+| **환경변수** | `PORTONE_V2_API_KEY` (identity-verify 전용) |
+| **왜 이 벤더?** | PortOne 통합 SDK 일부로 같이 사용. 본인인증(PASS)도 PortOne API로 처리 → 별도 NICE 평가정보 / KCB / 통신사 직접 계약 불필요. |
+| **계약 / tier / 비용** | `<TODO: 본인인증 건당 비용>` |
+| **핵심 한계** | `<TODO: PASS 앱 미설치 유저, 외국인 처리 방식>` |
+| **다운 시 영향** | `<TODO: 본인인증 불가 시 신규 가입 차단 영향>` |
+| **대안 검토** | `<TODO: KCB, NICE 등 타 본인인증 기관 검토 여부>` |
+
+---
+
+### JUSO API (도로명 주소)
+
+| 항목 | 내용 |
+|------|------|
+| **벤더 / 제품** | 행정안전부 도로명 주소 API (juso.go.kr) |
+| **역할** | 파트너 장소(Location) 등록 시 주소 검색. Flutter 앱에서 `JUSO_CONFIRM_KEY`를 이용해 API를 호출하고 표준화된 도로명 주소를 입력받음. |
+| **코드 위치** | `shared/packages/minglit_kit/lib/src/ui/` (주소 검색 UI), `apps/app_partner/lib/src/features/party/` (파티 장소 편집) |
+| **환경변수** | `JUSO_CONFIRM_KEY` (Flutter, Optional) |
+| **왜 이 벤더?** | Partner 가입 시 사업장 주소 검증. 한국 정부 무료 공식 API. 대안 (네이버 / 다음 주소 API) 대비 신뢰성·유지보수 부담 ↓. |
+| **계약 / tier / 비용** | `<TODO: 무료 공공 API이나 일일 호출 수 제한 확인 필요>` |
+| **핵심 한계** | `<TODO: 해외 주소 미지원, API 안정성(공공 인프라)>` |
+| **다운 시 영향** | `<TODO: 주소 검색 불가 — 수동 입력 fallback 여부>` |
+| **대안 검토** | `<TODO: Kakao 주소 검색 API 대안>` |
+
+---
+
+## 3. Payment
+
+### PortOne / Iamport V1 (결제)
+
+| 항목 | 내용 |
+|------|------|
+| **벤더 / 제품** | PortOne (구 Iamport) — Iamport V1 REST API |
+| **역할** | 이벤트 티켓 결제 처리. Flutter 앱에서 Iamport SDK로 결제 요청 → `payment-verify` EF에서 API 재검증 + 금액 위변조 체크 → `payment-webhook` EF에서 PG 웹훅 수신(IP Whitelist 방어). 부분 환불 지원(`payment-cancel` EF). |
+| **코드 위치** | `supabase/functions/payment-verify/`, `supabase/functions/payment-webhook/`, `supabase/functions/payment-cancel/`, `supabase/functions/_shared/iamport_client.ts`, `shared/packages/minglit_iamport_v1/` |
+| **환경변수** | `PORTONE_API_KEY`, `PORTONE_API_SECRET` (payment-verify, payment-cancel, payment-webhook, user-cancel-order 모두 사용) |
+| **왜 이 벤더?** | - **쉬운 API** (단일 SDK로 카드/계좌/PASS 등 다 처리)<br>- **저렴한 수수료** (수수료가 가장 큰 결정 요인 — 한국 PG 시장에서 가장 경쟁력)<br>- 한국 PG 통합 단일 게이트웨이 (토스페이먼츠 / KCP 등 별도 계약 X)<br>- **선택 안 한 대안**: 토스페이먼츠 (수수료 ↑), KCP (UX ↓), NicePay (레거시 SDK) |
+| **계약 / tier / 비용** | `<TODO: PG 수수료 구조 — 현재 코드에 3.5% 하드코딩됨>` |
+| **핵심 한계** | Iamport V1은 웹훅 HMAC 서명 미지원 → IP Whitelist(`52.78.100.19`, `52.78.48.223`, `52.78.17.128`) 의존. 부분 환불 이력 다건 미관리. |
+| **다운 시 영향** | `<TODO: PG 장애 시 결제 불가 — 이벤트 신청 차단 영향>` |
+| **대안 검토** | `<TODO: 토스페이먼츠, NicePay 등 대안 PG 검토 여부>` |
+
+---
+
+### PortOne V2 (정산)
+
+| 항목 | 내용 |
+|------|------|
+| **벤더 / 제품** | PortOne V2 REST API (정산·이체) |
+| **역할** | 파트너 정산 이체 처리. `settlement-register-transfers`, `payout-sync`, `partner-sync`, `reconciliation-daily` Edge Functions에서 V2 API 사용. `portone_client.ts`(209 LOC)가 V2 API를 래핑. |
+| **코드 위치** | `supabase/functions/_shared/portone_client.ts`, `supabase/functions/settlement-register-transfers/`, `supabase/functions/payout-sync/`, `supabase/functions/reconciliation-daily/` |
+| **환경변수** | `PORTONE_V2_API_KEY` (settlement-register-transfers, payout-sync, partner-sync, identity-verify, reconciliation-daily) |
+| **왜 이 벤더?** | V1과 동일 — 어떤 PG와 계약할지 미정. 신규 PG는 V2 위주라 둘 다 유지. 마이그레이션 의도 X. **PortOne의 핵심 가치 = 단일 API로 여러 PG 통합** (KCP, 토스페이먼츠, 이니시스 등). 미래 PG 변경 시에도 PortOne API 그대로 사용 가능 → vendor lock-in 분산. |
+| **계약 / tier / 비용** | `<TODO: 플랫폼 수수료 5% 하드코딩 — 실제 PortOne 정산 수수료와의 관계>` |
+| **핵심 한계** | `<TODO: PortOne V2 정산 API SLA, 이체 처리 시간>` |
+| **다운 시 영향** | `<TODO: 정산 이체 실패 시 FAILED/HOLD 상태 — 관리자 수동 개입 필요>` |
+| **대안 검토** | `<TODO: 직접 은행 API 연동 대안 검토>` |
+
+---
+
+## 4. AI / ML
+
+### OpenAI
+
+| 항목 | 내용 |
+|------|------|
+| **벤더 / 제품** | OpenAI API (Embeddings + Chat Completions) |
+| **역할** | 두 가지 용도: 1) `ai-embed` EF — text-embedding-ada-002 (또는 compatible) 모델로 파티/유저 1536차원 벡터 생성 → `party_embeddings`/`user_embeddings`에 저장 → 개인화 추천에 사용. 2) `ai-extract-tags` EF — 파티 설명에서 태그 자동 추출. |
+| **코드 위치** | `supabase/functions/ai-embed/`, `supabase/functions/ai-extract-tags/` |
+| **환경변수** | `OPENAI_API_KEY` (ai-embed, ai-extract-tags, GitHub Secrets) |
+| **왜 이 벤더?** | 비용 vs 품질 균형. 텍스트 임베딩 (text-embedding-3-small/large) + 태그 추출 모두 안정적. **최근 어댑터 패턴 적용** (`shared/_shared/ai-adapter`) → 향후 다른 LLM provider (Anthropic, Gemini, 한국 LLM) 로 swap 가능. 단일 vendor lock-in 회피. |
+| **계약 / tier / 비용** | `<TODO: 임베딩 API 비용 — $0.0001/1K tokens, 월 예상 사용량>` |
+| **핵심 한계** | OpenAI API 장애 시 임베딩 생성 불가(추천 갱신 중단). 배치 최대 50건. 모델 버전 변경 시 기존 벡터와 차원 불일치 리스크. |
+| **다운 시 영향** | `<TODO: 신규 파티 추천 갱신 중단 — 기존 벡터로 서비스 지속 가능 여부>` |
+| **대안 검토** | `<TODO: Cohere Embed, Voyage AI, 자체 임베딩 서버 검토>` |
+
+---
+
+### Anthropic
+
+| 항목 | 내용 |
+|------|------|
+| **벤더 / 제품** | Anthropic (Claude API) |
+| **역할** | 코드에서 직접적인 운영 사용 확인 불가. `env-reference.md`나 Edge Function 환경변수에 Anthropic 관련 키 없음. OMC(oh-my-claudecode) 개발 도구로는 사용 중이나 프로덕션 백엔드 통합은 미확인. |
+| **코드 위치** | 확인된 코드 위치 없음 |
+| **환경변수** | 확인된 환경변수 없음 |
+| **왜 이 벤더?** | Production 사용 X — Claude는 비싸서 minglit 백엔드 통합 안 함. dev tooling (oh-my-claudecode) 통해서만 사용. 향후 어댑터 패턴 위에서 일부 고가치 use case에 추가 검토 가능. |
+| **계약 / tier / 비용** | `<TODO: 미사용이라면 N/A>` |
+| **핵심 한계** | `<TODO: N/A>` |
+| **다운 시 영향** | `<TODO: N/A>` |
+| **대안 검토** | `<TODO: N/A>` |
+
+---
+
+## 5. Observability
+
+### Sentry
+
+| 항목 | 내용 |
+|------|------|
+| **벤더 / 제품** | Sentry (Error Monitoring) |
+| **역할** | Edge Function과 Flutter 앱의 에러 트래킹. Edge Function: `logger.ts`의 `initSentry()` + `withHandler()` 래퍼로 통합 (`tracesSampleRate: 0.2`). Flutter: `SENTRY_DSN` 환경변수로 초기화(Optional). |
+| **코드 위치** | `supabase/functions/_shared/logger.ts`, Flutter: `shared/packages/minglit_kit/` (sentry 초기화) |
+| **환경변수** | `SENTRY_DSN` (Flutter, Optional), `SENTRY_DSN_EDGE_FUNCTIONS` (GitHub Secrets, Edge Functions용, Required) |
+| **왜 이 벤더?** | - **범용성** — Flutter + Edge Function (Deno) 양쪽 다 공식 지원<br>- 시장 표준 (대안 비교 학습 비용 ↓)<br>- 무료 한도 충분 (초기)<br>- **선택 안 한 대안**: Datadog (가격 ↑), Bugsnag (Flutter SDK 약함), Rollbar (마켓 점유율 ↓) |
+| **계약 / tier / 비용** | `<TODO: 현재 plan, 이벤트 수 제한, 월 비용>` |
+| **핵심 한계** | `<TODO: Sentry 샘플링 20% — 트레이스 누락 가능성, 민감정보 마스킹 처리(pii_masker.ts)>` |
+| **다운 시 영향** | `<TODO: Sentry 장애 시 에러 모니터링 미작동 — 서비스 운영에는 직접 영향 없음>` |
+| **대안 검토** | `<TODO: Datadog, Grafana Faro 등 대안>` |
+
+---
+
+### Axiom
+
+| 항목 | 내용 |
+|------|------|
+| **벤더 / 제품** | Axiom (Structured Log Management) |
+| **역할** | Edge Function의 구조화 로그 저장 및 쿼리. `axiom_logger.ts`(130 LOC)가 로그를 Axiom으로 전송. `logger.ts`의 `log.info()`, `log.error()` 등이 내부적으로 Axiom과 연동. PII 마스킹 후 전송(`pii_masker.ts`). |
+| **코드 위치** | `supabase/functions/_shared/axiom_logger.ts`, `supabase/functions/_shared/logger.ts` |
+| **환경변수** | `AXIOM_API_TOKEN` (Edge Functions, Optional), `AXIOM_DATASET` (Edge Functions, Optional), `AXIOM_API_TOKEN` (GitHub Secrets, Optional) |
+| **왜 이 벤더?** | - **넉넉한 무료 한도** (500GB ingest/month free)<br>- **에이전트를 위한 CLI 강력 지원** (Claude Code 등 AI 에이전트가 로그 분석 시 즉시 활용)<br>- APL 쿼리 (SQL-like, 학습 빠름)<br>- Edge Function 로그 정합성 좋음 (Sentry는 error 위주, Axiom은 structured logs 위주)<br>- **선택 안 한 대안**: Datadog (가격 ↑), CloudWatch (AWS 종속 + UX 약함), Loki (자체 호스팅 부담) |
+| **계약 / tier / 비용** | `<TODO: Axiom free tier 사용 중? 데이터 보존 기간>` |
+| **핵심 한계** | `<TODO: 로그 보존 기간, 쿼리 속도 제한>` |
+| **다운 시 영향** | `<TODO: Axiom 장애 시 로그 유실 — 서비스 운영에는 직접 영향 없음>` |
+| **대안 검토** | `<TODO: Datadog Logs, Grafana Loki 등 대안>` |
+
+---
+
+### Statsig
+
+| 항목 | 내용 |
+|------|------|
+| **벤더 / 제품** | Statsig (Feature Flags + Analytics) |
+| **역할** | 피처 플래그 제어와 이벤트 로깅. Edge Function: `statsig_utils.ts`(115 LOC)의 `initStatsig()`, `logStatsigEvent()`. Flutter: `STATSIG_CLIENT_KEY`. Next.js 랜딩페이지: `NEXT_PUBLIC_STATSIG_CLIENT_KEY`. |
+| **코드 위치** | `supabase/functions/_shared/statsig_utils.ts`, Flutter 앱 초기화, `apps/landing_user/`, `apps/landing_partner/` |
+| **환경변수** | `STATSIG_CLIENT_KEY` (Flutter, Optional), `STATSIG_SERVER_KEY` (Edge Functions, Optional; GitHub Secrets Optional) |
+| **왜 이 벤더?** | - **넉넉한 무료 한도** (1M events/month free)<br>- **A/B 테스트 전문성** (단순 feature flag 이상의 실험 분석 도구)<br>- 자체 SDK + Flutter 지원<br>- **선택 안 한 대안**: LaunchDarkly (가격 ↑), Optimizely (엔터프라이즈 위주), 자체 구축 (운영 부담) |
+| **계약 / tier / 비용** | `<TODO: 현재 plan, MAU 기준 비용>` |
+| **핵심 한계** | `<TODO: 피처 플래그 조회 지연이 초기 렌더링에 영향 여부>` |
+| **다운 시 영향** | `<TODO: Statsig 장애 시 기본값(default) 동작 — 핵심 기능에는 영향 없어야 함>` |
+| **대안 검토** | `<TODO: LaunchDarkly, GrowthBook, Supabase Edge Config 대안>` |
+
+---
+
+### Codecov
+
+| 항목 | 내용 |
+|------|------|
+| **벤더 / 제품** | Codecov (Test Coverage) |
+| **역할** | CI 파이프라인에서 Flutter 테스트 커버리지 리포트를 수집·시각화. GitHub Actions에서 `CODECOV_TOKEN`으로 업로드. |
+| **코드 위치** | `.github/workflows/` (CI 설정) |
+| **환경변수** | `CODECOV_TOKEN` (GitHub Secrets, Optional) |
+| **왜 이 벤더?** | 코드 커버리지 시각화 + PR 코멘트. 의무 없음 — PR gate 아님. 단순 모니터링 용도. 무료 한도로 충분. |
+| **계약 / tier / 비용** | `<TODO: 오픈소스 무료 plan 여부>` |
+| **핵심 한계** | `<TODO: N/A — CI 도구>` |
+| **다운 시 영향** | `<TODO: 커버리지 리포트 미업로드 — CI 차단 없음>` |
+| **대안 검토** | `<TODO: Coveralls, SonarCloud 대안>` |
+
+---
+
+## 6. Deployment
+
+### Vercel
+
+| 항목 | 내용 |
+|------|------|
+| **벤더 / 제품** | Vercel (Next.js Hosting + Deploy) |
+| **역할** | `landing_user`와 `landing_partner` 두 Next.js 랜딩페이지 호스팅. PR/push 시 자동 배포는 `ignoreCommand`로 차단. cron(2시간마다) 또는 `workflow_dispatch`(수동)로만 배포. 4개 앱 모두 매 cron마다 deploy. |
+| **코드 위치** | `apps/landing_user/`, `apps/landing_partner/`, `.github/workflows/` (deploy workflow) |
+| **환경변수** | Vercel project 내 설정 (코드 레벨 env var 없음, Next.js `NEXT_PUBLIC_SUPABASE_URL` 등은 Vercel 프로젝트 설정에서 관리) |
+| **왜 이 벤더?** | 쉽고 싸고 편함. landing_user / landing_partner Next.js 앱 호스팅. preview deploys + GitHub 연동 자동화. 대안 (Netlify, Cloudflare Pages, AWS Amplify) 대비 setup 마찰 ↓. |
+| **계약 / tier / 비용** | `<TODO: Vercel plan, 4개 프로젝트 비용>` |
+| **핵심 한계** | `<TODO: Vercel 함수 실행 시간 제한, 빌드 분당 제한>` |
+| **다운 시 영향** | `<TODO: 랜딩페이지 접속 불가 — 앱 서비스에는 직접 영향 없음>` |
+| **대안 검토** | `<TODO: Netlify, Cloudflare Pages 대안>` |
+
+---
+
+## 7. Tooling
+
+### GitHub Actions (CI)
+
+| 항목 | 내용 |
+|------|------|
+| **벤더 / 제품** | GitHub Actions (CI/CD) |
+| **역할** | 모노레포 전체 CI 파이프라인. `ci-result` summary job이 게이트. 주요 job: `check-migration-versions`, `test-flutter-apps`(matrix: app_user, app_partner), `lint-landing-user`, `lint-landing-partner`, `test-supabase`(pgTAP), `test-edge-functions`(Deno). Auto Format PR(dart fix + format). Secret Scanning(Gitleaks). |
+| **코드 위치** | `.github/workflows/` |
+| **환경변수** | `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DEV_DB_PASSWORD`, `SUPABASE_DEV_PROJECT_ID`, `OPENAI_API_KEY`, `GH_PAT_FOR_BUG_REPORT`, `SENTRY_DSN_EDGE_FUNCTIONS`, `STATSIG_SERVER_KEY`, `AXIOM_API_TOKEN`, `CODECOV_TOKEN`, `SIM_USER_PASSWORD` (GitHub Secrets) |
+| **왜 이 벤더?** | 표준 CI + GitHub repo 연동 자연스러움 + 무료 한도 넉넉 (private repo 2,000분/월). 별도 CI 도구 도입 진입장벽 ↑. |
+| **계약 / tier / 비용** | `<TODO: GitHub Actions 분 사용량, 비용>` |
+| **핵심 한계** | `<TODO: 동시 실행 제한, macOS runner 비용(iOS 빌드)>` |
+| **다운 시 영향** | `<TODO: CI 불가 시 머지 차단 — PR 프로세스 중단>` |
+| **대안 검토** | `<TODO: N/A — GitHub 저장소 사용 중 자연스러운 선택>` |
+
+---
+
+### CodeRabbit
+
+| 항목 | 내용 |
+|------|------|
+| **벤더 / 제품** | CodeRabbit (AI Code Review) |
+| **역할** | PR 생성 시 AI 자동 코드 리뷰. `ci-result` job 내에서 최대 30분 대기. 미해결 CodeRabbit 코멘트는 `required_conversation_resolution` 정책에 의해 머지를 차단. |
+| **코드 위치** | `.github/workflows/` (ci-result job), `.coderabbit.yml` (있을 경우) |
+| **환경변수** | 별도 GitHub Secrets 불필요 (GitHub App 통합) |
+| **왜 이 벤더?** | 무료 한도 넉넉, 빠른 셋업. 특별한 이유 없음 — AI PR 리뷰 도구 중 가장 마찰 적은 옵션. 대안 (Codacy, SonarCloud) 검토 가능. |
+| **계약 / tier / 비용** | `<TODO: 현재 plan — OSS 무료 또는 유료 tier>` |
+| **핵심 한계** | `<TODO: AI 리뷰 오탐(false positive) 처리 방식, 30분 타임아웃 CI 지연>` |
+| **다운 시 영향** | `<TODO: CodeRabbit 미작동 시 ci-result 타임아웃 → 수동 재실행 필요>` |
+| **대안 검토** | `<TODO: Reviewpad, Sourcery 대안>` |
+
+---
+
+### GitHub (Bug Report / Stats API)
+
+| 항목 | 내용 |
+|------|------|
+| **벤더 / 제품** | GitHub REST API |
+| **역할** | 두 가지 용도: 1) `bug-report`, `metrics-alert` Edge Functions에서 GitHub Issues 자동 생성. 2) `github-stats-sync` Edge Function에서 이슈/PR 통계 수집 → `analytics.github_daily_stats` 저장(매일 05:30 KST). |
+| **코드 위치** | `supabase/functions/bug-report/`, `supabase/functions/metrics-alert/`, `supabase/functions/github-stats-sync/` |
+| **환경변수** | `GITHUB_ACCESS_TOKEN` (bug-report, metrics-alert: Required; github-stats-sync: Optional), `GH_PAT_FOR_BUG_REPORT` (GitHub Secrets) |
+| **왜 이 벤더?** | 이슈/PR 자동화 표준. minglit-worker-runtime의 모든 워커가 gh CLI 또는 REST API 호출. 더 좋은 자동화 도구 발견 시 변경 가능 (현재 lock-in 약함). |
+| **계약 / tier / 비용** | `<TODO: GitHub API rate limit — 인증 시 5000 req/h>` |
+| **핵심 한계** | `<TODO: rate limit 초과 시 이슈 생성 실패>` |
+| **다운 시 영향** | `<TODO: GitHub API 장애 시 버그 리포트·알람 미생성 — 서비스 운영에는 직접 영향 없음>` |
+| **대안 검토** | `<TODO: Jira, Linear 등 이슈 트래커 대안>` |
+
+---
+
+*생성 기준: 2026-04-25 / 소스: docs/guides/env-reference.md, docs/architecture/*.md, supabase/functions/_shared/*

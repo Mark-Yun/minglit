@@ -5,6 +5,7 @@ import 'package:app_partner/src/features/account_deletion/ui/deletion_info_page.
 import 'package:app_partner/src/features/account_deletion/ui/deletion_reason_page.dart';
 import 'package:app_partner/src/features/account_deletion/ui/deletion_verify_page.dart';
 import 'package:app_partner/src/features/admin/partner_application_detail_page.dart';
+import 'package:app_partner/src/features/application/event_application_detail_page.dart';
 import 'package:app_partner/src/features/application/event_application_manage_page.dart';
 import 'package:app_partner/src/features/auth/partner_login_page.dart';
 import 'package:app_partner/src/features/checkin/checkin_placeholder_page.dart';
@@ -117,6 +118,9 @@ class NotificationCenterRoute extends GoRouteData
         TypedGoRoute<ApplicationListRoute>(
           path: '/applications',
           routes: [
+            TypedGoRoute<EventApplicationDetailRoute>(
+              path: 'event/:applicationId',
+            ),
             TypedGoRoute<ApplicationDetailRoute>(path: ':applicationId'),
           ],
         ),
@@ -249,6 +253,19 @@ class ApplicationListRoute extends GoRouteData with $ApplicationListRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       const EventApplicationManagePage();
+}
+
+// Fix #1860: 이벤트 신청 상세 (승인됨/거절됨 탭에서 진입)
+class EventApplicationDetailRoute extends GoRouteData
+    with $EventApplicationDetailRoute {
+  const EventApplicationDetailRoute({required this.applicationId});
+  final String applicationId;
+  @override
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      MinglitPageTransitions.sharedAxisScaled(
+        key: state.pageKey,
+        child: EventApplicationDetailPage(applicationId: applicationId),
+      );
 }
 
 class ApplicationDetailRoute extends GoRouteData with $ApplicationDetailRoute {

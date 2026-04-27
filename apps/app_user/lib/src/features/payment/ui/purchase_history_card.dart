@@ -136,95 +136,100 @@ class PurchaseHistoryCard extends ConsumerWidget {
           // 나머지 버튼은 flex:1로 유지하여 1줄 표시 보장.
           // Fix #1236: 보조 버튼(영수증/문의하기)을 OutlinedButton → TextButton으로
           // 낮춤 — 브랜드 보라 아웃라인 제거, 정보 위계 명확화
-          Row(
-            children: [
-              Expanded(
-                child: TextButton(
-                  onPressed: () async {
-                    if (paymentId == null || paymentId.isEmpty) {
-                      context.showMinglitWarning('영수증 정보를 확인할 수 없습니다.');
-                      return;
-                    }
+          // Fix #1820: IntrinsicHeight + stretch로 ElevatedButton/TextButton 높이 통일
+          // IntrinsicHeight is required because the Row lives inside an
+          // unbounded-height Column (ListView item), and CrossAxisAlignment.stretch
+          // would propagate infinite height constraints to children without it.
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Fix #1820: 무료 티켓(paymentId 없음)에서 영수증 버튼 노출 금지
+                if (paymentId != null && paymentId.isNotEmpty) ...[
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () async {
+                        final receiptUrl = Uri.parse(
+                          'https://service.iamport.kr/payments/detail/$paymentId',
+                        );
 
-                    final receiptUrl = Uri.parse(
-                      'https://service.iamport.kr/payments/detail/$paymentId',
-                    );
+                        final launched = await launchUrl(
+                          receiptUrl,
+                          mode: LaunchMode.externalApplication,
+                        );
 
-                    final launched = await launchUrl(
-                      receiptUrl,
-                      mode: LaunchMode.externalApplication,
-                    );
-
-                    if (!launched && context.mounted) {
-                      context.showMinglitWarning('영수증 페이지를 열 수 없습니다.');
-                    }
-                  },
-                  child: const Text('영수증'),
-                ),
-              ),
-              const SizedBox(width: MinglitSpacing.small),
-              Expanded(
-                child: TextButton(
-                  onPressed: () async {
-                    final phone =
-                        _resolveContactValue(contactOptions, 'phone') ??
-                        party?.partner?.contactPhone;
-                    final email =
-                        _resolveContactValue(contactOptions, 'email') ??
-                        party?.partner?.contactEmail;
-
-                    Uri? uri;
-                    if (phone != null && phone.isNotEmpty) {
-                      uri = Uri.parse('tel:$phone');
-                    } else if (email != null && email.isNotEmpty) {
-                      uri = Uri.parse('mailto:$email');
-                    }
-
-                    if (uri == null) {
-                      context.showMinglitWarning('연락처 정보가 없습니다.');
-                      return;
-                    }
-
-                    final launched = await launchUrl(
-                      uri,
-                      mode: LaunchMode.externalApplication,
-                    );
-
-                    if (!launched && context.mounted) {
-                      context.showMinglitWarning('연락처를 열 수 없습니다.');
-                    }
-                  },
-                  child: const Text('문의하기'),
-                ),
-              ),
-              if (canCancel) ...[
-                const SizedBox(width: MinglitSpacing.small),
-                Expanded(
-                  flex: 2,
-                  child: ElevatedButton(
-                    onPressed: () => _onCancelPressed(
-                      context: context,
-                      ref: ref,
-                      eventName: eventName,
-                      eventId: application.eventId,
-                      paymentId: paymentId,
-                      paymentAmount: paymentAmount,
-                      eventStartTime: eventStartTime,
-                      paidAt: application.paidAt,
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: theme.colorScheme.errorContainer,
-                      foregroundColor: theme.colorScheme.onErrorContainer,
-                    ),
-                    child: const Text(
-                      '예매 취소',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                        if (!launched && context.mounted) {
+                          context.showMinglitWarning('영수증 페이지를 열 수 없습니다.');
+                        }
+                      },
+                      child: const Text('영수증'),
                     ),
                   ),
+                  const SizedBox(width: MinglitSpacing.small),
+                ],
+                Expanded(
+                  child: TextButton(
+                    onPressed: () async {
+                      final phone =
+                          _resolveContactValue(contactOptions, 'phone') ??
+                          party?.partner?.contactPhone;
+                      final email =
+                          _resolveContactValue(contactOptions, 'email') ??
+                          party?.partner?.contactEmail;
+
+                      Uri? uri;
+                      if (phone != null && phone.isNotEmpty) {
+                        uri = Uri.parse('tel:$phone');
+                      } else if (email != null && email.isNotEmpty) {
+                        uri = Uri.parse('mailto:$email');
+                      }
+
+                      if (uri == null) {
+                        context.showMinglitWarning('연락처 정보가 없습니다.');
+                        return;
+                      }
+
+                      final launched = await launchUrl(
+                        uri,
+                        mode: LaunchMode.externalApplication,
+                      );
+
+                      if (!launched && context.mounted) {
+                        context.showMinglitWarning('연락처를 열 수 없습니다.');
+                      }
+                    },
+                    child: const Text('문의하기'),
+                  ),
                 ),
+                if (canCancel) ...[
+                  const SizedBox(width: MinglitSpacing.small),
+                  Expanded(
+                    flex: 2,
+                    child: ElevatedButton(
+                      onPressed: () => _onCancelPressed(
+                        context: context,
+                        ref: ref,
+                        eventName: eventName,
+                        eventId: application.eventId,
+                        paymentId: paymentId,
+                        paymentAmount: paymentAmount,
+                        eventStartTime: eventStartTime,
+                        paidAt: application.paidAt,
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: theme.colorScheme.errorContainer,
+                        foregroundColor: theme.colorScheme.onErrorContainer,
+                      ),
+                      child: const Text(
+                        '예매 취소',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ],
       ),

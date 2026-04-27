@@ -106,11 +106,28 @@ class PartnerScaffold extends ConsumerWidget {
 
     return Scaffold(
       body: PageTransitionSwitcher(
+        // Fix #1835: PageTransitionSwitcher drives the OUTGOING entry by calling
+        // secondaryController.forward() (secondaryAnimation: 0→1), while the
+        // INCOMING entry's primaryAnimation goes 0→1. Opacity-0 widgets remain
+        // hit-testable in Flutter, so wrap each entry in IgnorePointer and block
+        // pointer events as soon as the outgoing animation starts. Use
+        // `status != dismissed` instead of `value > 0` so the very first frame
+        // (value still 0.0, status already forward/completed) is also blocked.
         transitionBuilder: (child, animation, secondaryAnimation) =>
-            FadeThroughTransition(
-              animation: animation,
-              secondaryAnimation: secondaryAnimation,
-              child: child,
+            AnimatedBuilder(
+              animation: secondaryAnimation,
+              builder: (context, widget) => IgnorePointer(
+                // Fix #1835: block on status, not value — value is 0.0 on
+                // the first frame even after forward() is called.
+                ignoring:
+                    secondaryAnimation.status != AnimationStatus.dismissed,
+                child: widget,
+              ),
+              child: FadeThroughTransition(
+                animation: animation,
+                secondaryAnimation: secondaryAnimation,
+                child: child,
+              ),
             ),
         child: KeyedSubtree(
           key: ValueKey<int>(navigationShell.currentIndex),

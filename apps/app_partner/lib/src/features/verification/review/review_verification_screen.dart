@@ -253,23 +253,29 @@ class _ReviewVerificationScreenState
             if (images.isNotEmpty)
               SizedBox(
                 height: 80,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: images.length,
-                  itemBuilder: (context, i) => GestureDetector(
-                    onTap: () => unawaited(_showImageDialog(images[i])),
-                    child: Container(
-                      width: 80,
-                      margin: const EdgeInsets.only(
-                        right: MinglitSpacing.small,
-                      ),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.surfaceContainer,
-                        borderRadius: BorderRadius.circular(
-                          MinglitRadius.small,
+                child: MinglitHorizontalScrollGroup(
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: MinglitSpacing.medium,
+                    ),
+                    itemCount: images.length,
+                    itemBuilder: (context, i) => GestureDetector(
+                      onTap: () => unawaited(_showImageDialog(images[i])),
+                      child: Container(
+                        width: 80,
+                        margin: const EdgeInsets.only(
+                          right: MinglitSpacing.small,
                         ),
+                        decoration: BoxDecoration(
+                          // Fix: match surface so MinglitHorizontalScrollGroup fade gradient blends correctly
+                          color: theme.colorScheme.surface,
+                          borderRadius: BorderRadius.circular(
+                            MinglitRadius.small,
+                          ),
+                        ),
+                        child: const Icon(Icons.image),
                       ),
-                      child: const Icon(Icons.image),
                     ),
                   ),
                 ),

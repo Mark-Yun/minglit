@@ -15,29 +15,34 @@ class FeaturedTagChipBar extends ConsumerWidget {
     return tagsAsync.when(
       data: (tags) {
         if (tags.isEmpty) return const SizedBox.shrink();
-        return SizedBox(
-          height: 36,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(
-              horizontal: MinglitSpacing.medium,
+        return Padding(
+          padding: const EdgeInsets.only(top: MinglitSpacing.small),
+          child: SizedBox(
+            height: 36,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(
+                horizontal: MinglitSpacing.medium,
+              ),
+              itemCount: tags.length,
+              separatorBuilder: (_, _) =>
+                  const SizedBox(width: MinglitSpacing.small),
+              itemBuilder: (context, index) {
+                final tag = tags[index];
+                return Center(
+                  child: _TagChip(
+                    label: tag.name,
+                    onTap: () => ref
+                        .read(tagCoordinatorProvider)
+                        .goToTagEventList(tag.id, tag.name),
+                  ),
+                );
+              },
             ),
-            itemCount: tags.length,
-            separatorBuilder: (_, _) =>
-                const SizedBox(width: MinglitSpacing.small),
-            itemBuilder: (context, index) {
-              final tag = tags[index];
-              return _TagChip(
-                label: tag.name,
-                onTap: () => ref
-                    .read(tagCoordinatorProvider)
-                    .goToTagEventList(tag.id, tag.name),
-              );
-            },
           ),
         );
       },
-      loading: () => const SizedBox(height: 36),
+      loading: () => const SizedBox.shrink(),
       error: (_, _) => const SizedBox.shrink(),
     );
   }

@@ -46,6 +46,8 @@ class TicketStatusHeader extends StatelessWidget {
             ),
           ),
           const SizedBox(width: MinglitSpacing.small),
+          // Fix #1831: maxLines:1 prevents single trailing char (e.g. '명')
+          // from wrapping onto its own line
           Flexible(
             child: Text(
               context.l10n.ticketList_header_summary(
@@ -56,7 +58,7 @@ class TicketStatusHeader extends StatelessWidget {
               style: theme.textTheme.bodySmall?.copyWith(
                 color: colorScheme.onSurfaceVariant,
               ),
-              maxLines: 2,
+              maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
           ),

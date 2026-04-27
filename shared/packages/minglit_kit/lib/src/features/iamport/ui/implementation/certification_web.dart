@@ -2,11 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mds/src/theme/minglit_theme.dart';
+import 'package:mds/src/ui/widgets/common/loading_indicator.dart';
 import 'package:minglit_kit/src/config/iamport_config.dart';
 import 'package:minglit_kit/src/features/iamport/logic/iamport_controller.dart';
 import 'package:minglit_kit/src/features/iamport/logic/iamport_helper_web.dart';
-import 'package:minglit_kit/src/theme/minglit_theme.dart';
-import 'package:minglit_kit/src/ui/widgets/common/loading_indicator.dart';
 
 /// Web implementation of Iamport certification.
 class MinglitIamportCertification extends ConsumerStatefulWidget {

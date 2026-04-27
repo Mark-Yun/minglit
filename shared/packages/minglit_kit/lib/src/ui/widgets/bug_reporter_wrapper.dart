@@ -6,12 +6,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mds/src/theme/minglit_theme.dart';
+import 'package:mds/src/ui/widgets/common/loading_indicator.dart';
 import 'package:minglit_kit/src/data/repositories/bug_report_repository.dart';
 import 'package:minglit_kit/src/data/repositories/storage_repository.dart';
 import 'package:minglit_kit/src/data/services/bug_report_collector.dart';
 import 'package:minglit_kit/src/logic/providers/supabase_provider.dart';
-import 'package:minglit_kit/src/theme/minglit_theme.dart';
-import 'package:minglit_kit/src/ui/widgets/common/loading_indicator.dart';
 import 'package:minglit_kit/src/utils/environment_info.dart';
 import 'package:minglit_kit/src/utils/layout_dump.dart';
 import 'package:minglit_kit/src/utils/log.dart';
@@ -411,7 +411,21 @@ class _BugReporterWrapperState extends ConsumerState<BugReporterWrapper> {
 
   @override
   Widget build(BuildContext context) {
-    return RepaintBoundary(key: _boundaryKey, child: widget.child);
+    return RepaintBoundary(
+      key: _boundaryKey,
+      child: Stack(
+        children: [
+          widget.child,
+          // Fix #1858: BugReportFab을 글로벌 오버레이로 승격 — 모든 화면에서 토글 가능
+          if (widget.enabled)
+            const Positioned(
+              right: MinglitSpacing.medium,
+              bottom: MinglitSpacing.medium,
+              child: SafeArea(child: BugReportFab()),
+            ),
+        ],
+      ),
+    );
   }
 }
 

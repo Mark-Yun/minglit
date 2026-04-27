@@ -1,0 +1,16 @@
+{
+  "typography": {
+    "fontFamily": {
+      "brand": { "$value": "Pretendard", "$type": "fontFamily", "$description": "Primary brand font" }
+    },
+    "fontSize": {
+      "captionTiny": { "$value": 10, "$type": "dimension", "$description": "10px caption tiny" },
+      "chipLabel": { "$value": 13, "$type": "dimension", "$description": "13px chip label" },
+      "appBarTitle": { "$value": 18, "$type": "dimension", "$description": "18px app bar title" }
+    },
+    "fontWeight": {
+      "medium": { "$value": 500, "$type": "fontWeight", "$description": "500 medium weight" },
+      "semiBold": { "$value": 600, "$type": "fontWeight", "$description": "600 semi-bold weight" }
+    }
+  }
+}

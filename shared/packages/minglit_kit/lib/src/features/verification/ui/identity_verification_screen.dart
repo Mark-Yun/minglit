@@ -2,7 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
+import 'package:mds/src/theme/minglit_theme.dart';
+import 'package:mds/src/ui/widgets/common/loading_indicator.dart';
 import 'package:minglit_iamport_v1/minglit_iamport_v1.dart';
 import 'package:minglit_kit/src/config/iamport_config.dart';
 import 'package:minglit_kit/src/data/models/user_consent.dart';
@@ -11,8 +12,6 @@ import 'package:minglit_kit/src/data/repositories/consent_repository.dart';
 import 'package:minglit_kit/src/features/consent/logic/consent_controller.dart';
 import 'package:minglit_kit/src/features/iamport/data/repository/iamport_repository.dart';
 import 'package:minglit_kit/src/features/verification/ui/identity_verification_consent_sheet.dart';
-import 'package:minglit_kit/src/theme/minglit_theme.dart';
-import 'package:minglit_kit/src/ui/widgets/common/loading_indicator.dart';
 import 'package:minglit_kit/src/utils/error_ui_handler.dart';
 
 /// **Identity Verification Screen**

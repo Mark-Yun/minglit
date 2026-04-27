@@ -9,6 +9,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'event_repository.g.dart';
 part 'event_repository_queries.dart';
+part 'event_repository_application_queries.dart';
+part 'event_repository_partner_queries.dart';
+part 'event_repository_feed_queries.dart';
 part 'event_repository_commands.dart';
 
 /// Provider for EventRepository.
@@ -19,7 +22,12 @@ EventRepository eventRepository(Ref ref) {
 
 /// Repository for Event-related data operations.
 class EventRepository extends _SupabaseEventContextBase
-    with _EventRepositoryQueries, _EventRepositoryCommands {
+    with
+        _EventRepositoryQueries,
+        _EventRepositoryApplicationQueries,
+        _EventRepositoryPartnerQueries,
+        _EventRepositoryFeedQueries,
+        _EventRepositoryCommands {
   /// Creates an [EventRepository] with a Supabase client.
   EventRepository({SupabaseClient? supabase})
     : super(supabase ?? Supabase.instance.client);

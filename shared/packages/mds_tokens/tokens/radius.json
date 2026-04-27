@@ -1,0 +1,11 @@
+{
+  "radius": {
+    "small": { "$value": 8, "$type": "dimension", "$description": "8px small border radius" },
+    "button": { "$value": 12, "$type": "dimension", "$description": "12px button border radius" },
+    "card": { "$value": 16, "$type": "dimension", "$description": "16px card border radius" },
+    "dialog": { "$value": 28, "$type": "dimension", "$description": "28px dialog border radius" },
+    "input": { "$value": 12, "$type": "dimension", "$description": "12px input border radius" },
+    "badge": { "$value": 4, "$type": "dimension", "$description": "4px badge border radius" },
+    "chip": { "$value": 100, "$type": "dimension", "$description": "100px chip border radius (fully rounded)" }
+  }
+}
