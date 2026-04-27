@@ -3,8 +3,6 @@
   "version": "26.04.1982-dev",
   "private": true,
   "workspaces": [
-    "apps/app_user",
-    "apps/app_partner",
     "apps/landing_user",
     "apps/landing_partner",
     "apps/mds/docs"
