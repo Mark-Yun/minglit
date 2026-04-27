@@ -370,8 +370,8 @@ void main() {
               ),
             )
             .data!;
-        expect(snackbarText, contains(testEvent.title!));
-        expect(snackbarText, contains(event2.title!));
+        expect(snackbarText, contains(testEvent.title));
+        expect(snackbarText, contains(event2.title));
       },
     );
   });
