@@ -39,7 +39,7 @@ dependencies:
   kakao_map_plugin: ^0.4.0
   logger: ^2.6.2
   mds:
-    path: ../mds
+    path: ../mds/core
   # Payment & Identification (Iamport V1)
   minglit_iamport_v1:
     path: ../minglit_iamport_v1

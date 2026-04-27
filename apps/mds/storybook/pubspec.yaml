@@ -1,0 +1,29 @@
+name: mds_storybook
+description: "Widgetbook app for Minglit Design System (MDS) component exploration."
+publish_to: 'none'
+
+# Version follows YY.MM.PR# CalVer (CLAUDE.md). PR# = 1865 (bootstrap PR).
+# versionCode = 2604 * 10000 + 1865 = 26041865
+version: 26.04.1865-dev+26041865
+resolution: workspace
+
+environment:
+  sdk: ^3.10.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+  mds:
+    path: ../../../shared/packages/mds/core
+  widgetbook: ^3.22.0
+  widgetbook_annotation: ^3.11.0
+
+dev_dependencies:
+  build_runner: ^2.10.4
+  flutter_lints: ^6.0.0
+  flutter_test:
+    sdk: flutter
+  widgetbook_generator: ^3.22.0
+
+flutter:
+  uses-material-design: true

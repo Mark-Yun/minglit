@@ -46,12 +46,12 @@ jobs:
       app_user: ${{ steps.filter.outputs.app_user }}
       app_partner: ${{ steps.filter.outputs.app_partner }}
       minglit_kit: ${{ steps.filter.outputs.minglit_kit }}
-      mds: ${{ steps.filter.outputs.mds }}
+      mds_core: ${{ steps.filter.outputs.mds_core }}
       mds_storybook: ${{ steps.filter.outputs.mds_storybook }}
-      mds_storybook_or_mds: ${{ steps.filter.outputs.mds_storybook == 'true' || steps.filter.outputs.mds == 'true' }}
-      app_user_or_kit: ${{ steps.filter.outputs.app_user == 'true' || steps.filter.outputs.minglit_kit == 'true' || steps.filter.outputs.mds == 'true' }}
-      app_partner_or_kit: ${{ steps.filter.outputs.app_partner == 'true' || steps.filter.outputs.minglit_kit == 'true' || steps.filter.outputs.mds == 'true' }}
-      kit_or_mds: ${{ steps.filter.outputs.minglit_kit == 'true' || steps.filter.outputs.mds == 'true' }}
+      mds_storybook_or_mds: ${{ steps.filter.outputs.mds_storybook == 'true' || steps.filter.outputs.mds_core == 'true' }}
+      app_user_or_kit: ${{ steps.filter.outputs.app_user == 'true' || steps.filter.outputs.minglit_kit == 'true' || steps.filter.outputs.mds_core == 'true' }}
+      app_partner_or_kit: ${{ steps.filter.outputs.app_partner == 'true' || steps.filter.outputs.minglit_kit == 'true' || steps.filter.outputs.mds_core == 'true' }}
+      kit_or_mds: ${{ steps.filter.outputs.minglit_kit == 'true' || steps.filter.outputs.mds_core == 'true' }}
       landing_user: ${{ steps.filter.outputs.landing_user }}
       landing_partner: ${{ steps.filter.outputs.landing_partner }}
       mds_docs: ${{ steps.filter.outputs.mds_docs }}
@@ -69,10 +69,10 @@ jobs:
             - 'apps/app_partner/**'
           minglit_kit:
             - 'shared/packages/minglit_kit/**'
-          mds:
-            - 'shared/packages/mds/**'
+          mds_core:
+            - 'shared/packages/mds/core/**'
           mds_storybook:
-            - 'apps/mds_storybook/**'
+            - 'apps/mds/storybook/**'
           landing_user:
             - 'apps/landing_user/**'
             - 'shared/web/**'
@@ -80,9 +80,9 @@ jobs:
             - 'apps/landing_partner/**'
             - 'shared/web/**'
           mds_docs:
-            - 'apps/mds_docs/**'
+            - 'apps/mds/docs/**'
           mds_tokens:
-            - 'shared/packages/mds_tokens/**'
+            - 'shared/packages/mds/tokens/**'
           supabase:
             - 'supabase/**'
 
@@ -90,7 +90,7 @@ jobs:
   test-flutter-apps:
     name: test-app-unit-widget-golden
     needs: changes
-    if: ${{ needs.changes.outputs.app_user == 'true' || needs.changes.outputs.app_partner == 'true' || needs.changes.outputs.minglit_kit == 'true' || needs.changes.outputs.mds == 'true' || needs.changes.outputs.mds_storybook == 'true' }}
+    if: ${{ needs.changes.outputs.app_user == 'true' || needs.changes.outputs.app_partner == 'true' || needs.changes.outputs.minglit_kit == 'true' || needs.changes.outputs.mds_core == 'true' || needs.changes.outputs.mds_storybook == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -122,7 +122,7 @@ jobs:
             coverage_flag_logic: ''
           - app: mds_storybook
             change_key: mds_storybook_or_mds
-            directory: apps/mds_storybook
+            directory: apps/mds/storybook
             report_name: 'MDS Storybook Tests'
             artifact_name: mds-storybook-coverage
             coverage_flag: mds-storybook
@@ -319,14 +319,14 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./apps/mds_docs
+        working-directory: ./apps/mds/docs
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: ./apps/mds_docs/package-lock.json
+          cache-dependency-path: ./apps/mds/docs/package-lock.json
       - run: npm ci
       - run: npm audit --audit-level=high
         continue-on-error: true

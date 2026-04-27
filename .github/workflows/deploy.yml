@@ -120,7 +120,7 @@ jobs:
           STATSIG_CLIENT_KEY: ${{ secrets.STATSIG_CLIENT_KEY }}
 
   # TODO(Mark): Before this job will succeed, you must:
-  # 1. Create a Vercel project for mds_docs (root dir: apps/mds_docs)
+  # 1. Create a Vercel project for mds_docs (root dir: apps/mds/docs)
   # 2. Copy the Project ID from Vercel → Settings → General
   # 3. Add GitHub Actions secret: VERCEL_MDS_DOCS_PROJECT_ID = <project-id>
   # The VERCEL_TOKEN and VERCEL_ORG_ID secrets are already shared.
@@ -137,7 +137,7 @@ jobs:
         id: deploy
         uses: ./.github/actions/deploy-nextjs-app
         with:
-          working-directory: ./apps/mds_docs
+          working-directory: ./apps/mds/docs
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_MDS_DOCS_PROJECT_ID }}
