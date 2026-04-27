@@ -1,0 +1,23 @@
+# Cross-feature import baseline — Fix #1872
+# Each line is a grandfathered violation in the format:
+#   <relative-path-from-features>: <src_feature> -> <tgt_feature>
+# Remove a line here once the corresponding import is cleaned up.
+# DO NOT add new entries — fix the import instead.
+
+# app_user (13 violations as of 2026-04-27)
+account_deletion/ui/deletion_complete_page.dart: account_deletion -> home
+event/admission/event_admission_controller.dart: event -> auth
+event/admission/event_admission_controller.dart: event -> home
+event/logic/event_coordinator.dart: event -> ticket
+home/logic/home_coordinator.dart: home -> ticket
+home/my_page.dart: home -> auth
+home/widgets/featured_tag_chip_bar.dart: home -> tag
+home/widgets/trending_tag_section.dart: home -> tag
+my_tickets/ui/my_tickets_page.dart: my_tickets -> home
+my_tickets/ui/my_tickets_page.dart: my_tickets -> ticket
+settings/privacy_page.dart: settings -> account_deletion
+settings/privacy_page.dart: settings -> consent
+tag/ui/tag_event_list_page.dart: tag -> event
+
+# app_partner (1 violation as of 2026-04-27)
+party/event/create/event_create_controller.dart: party -> home

@@ -406,8 +406,16 @@ jobs:
           fi
           echo "✅ runner $RUNNER and orchestrator $ORCHESTRATOR are compatible ($RUNNER_MINOR series)"
 
+  # Fix #1872: block new cross-feature imports; existing violations are grandfathered in baseline
+  check-cross-feature-imports:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Check cross-feature imports
+        run: bash scripts/check-cross-feature-imports.sh
+
   ci-result:
-    needs: [check-migration-versions, check-env-manifest-sync, check-workflow-yaml, check-android-test-deps, test-flutter-apps, lint-landing-user, lint-landing-partner, test-supabase, test-edge-functions]
+    needs: [check-migration-versions, check-env-manifest-sync, check-workflow-yaml, check-android-test-deps, check-cross-feature-imports, test-flutter-apps, lint-landing-user, lint-landing-partner, test-supabase, test-edge-functions]
     if: always()
     runs-on: ubuntu-latest
     steps:
