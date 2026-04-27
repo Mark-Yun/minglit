@@ -169,73 +169,73 @@ class _ApplicationItem extends StatelessWidget {
           ),
         ),
         child: Row(
-        children: [
-          // Avatar
-          CircleAvatar(
-            radius: 20,
-            backgroundColor: theme.colorScheme.primary.withValues(
-              alpha: MinglitOpacity.highlight,
-            ),
-            child: Text(
-              name.isNotEmpty ? name[0] : '?',
-              style: theme.textTheme.titleSmall?.copyWith(
-                color: theme.colorScheme.primary,
-                fontWeight: FontWeight.w700,
+          children: [
+            // Avatar
+            CircleAvatar(
+              radius: 20,
+              backgroundColor: theme.colorScheme.primary.withValues(
+                alpha: MinglitOpacity.highlight,
+              ),
+              child: Text(
+                name.isNotEmpty ? name[0] : '?',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: MinglitSpacing.sm),
-          // Info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
+            const SizedBox(width: MinglitSpacing.sm),
+            // Info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
+                  Text(subtitle, style: theme.textTheme.labelSmall),
+                ],
+              ),
+            ),
+            // Actions or status
+            if (showActions) ...[
+              IconButton(
+                icon: const Icon(
+                  Icons.close,
+                  color: MinglitColors.error,
+                  size: MinglitIconSize.small,
                 ),
-                Text(subtitle, style: theme.textTheme.labelSmall),
-              ],
-            ),
-          ),
-          // Actions or status
-          if (showActions) ...[
-            IconButton(
-              icon: const Icon(
-                Icons.close,
-                color: MinglitColors.error,
-                size: MinglitIconSize.small,
-              ),
-              onPressed: onReject,
-              tooltip: '거절',
-              style: IconButton.styleFrom(
-                shape: CircleBorder(
-                  side: BorderSide(color: theme.dividerColor),
+                onPressed: onReject,
+                tooltip: '거절',
+                style: IconButton.styleFrom(
+                  shape: CircleBorder(
+                    side: BorderSide(color: theme.dividerColor),
+                  ),
+                  minimumSize: const Size(36, 36),
                 ),
-                minimumSize: const Size(36, 36),
               ),
-            ),
-            const SizedBox(width: MinglitSpacing.xsmall),
-            IconButton(
-              icon: Icon(
-                Icons.check,
-                color: theme.colorScheme.onPrimary,
-                size: MinglitIconSize.small,
+              const SizedBox(width: MinglitSpacing.xsmall),
+              IconButton(
+                icon: Icon(
+                  Icons.check,
+                  color: theme.colorScheme.onPrimary,
+                  size: MinglitIconSize.small,
+                ),
+                onPressed: onApprove,
+                tooltip: '승인',
+                style: IconButton.styleFrom(
+                  backgroundColor: theme.colorScheme.primary,
+                  minimumSize: const Size(36, 36),
+                ),
               ),
-              onPressed: onApprove,
-              tooltip: '승인',
-              style: IconButton.styleFrom(
-                backgroundColor: theme.colorScheme.primary,
-                minimumSize: const Size(36, 36),
-              ),
-            ),
-          ] else
-            _StatusBadge(status: application.status),
-        ],
+            ] else
+              _StatusBadge(status: application.status),
+          ],
+        ),
       ),
-    ),
     );
   }
 
