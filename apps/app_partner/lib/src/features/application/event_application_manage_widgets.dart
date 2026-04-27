@@ -149,19 +149,26 @@ class _ApplicationItem extends StatelessWidget {
       timeAgo,
     ].join(' · ');
 
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: MinglitSpacing.medium,
-        vertical: MinglitSpacing.sm,
-      ),
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: theme.dividerColor.withValues(alpha: MinglitOpacity.muted),
+    // Fix #1860: 승인됨/거절됨 탭 항목 클릭 시 상세 화면으로 이동 (regression from refactor #1914)
+    return InkWell(
+      onTap: showActions
+          ? null
+          : () => EventApplicationDetailRoute(
+              applicationId: application.id,
+            ).push<void>(context),
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: MinglitSpacing.medium,
+          vertical: MinglitSpacing.sm,
+        ),
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              color: theme.dividerColor.withValues(alpha: MinglitOpacity.muted),
+            ),
           ),
         ),
-      ),
-      child: Row(
+        child: Row(
         children: [
           // Avatar
           CircleAvatar(
@@ -228,6 +235,7 @@ class _ApplicationItem extends StatelessWidget {
             _StatusBadge(status: application.status),
         ],
       ),
+    ),
     );
   }
 
