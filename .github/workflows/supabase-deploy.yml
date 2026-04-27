@@ -210,12 +210,13 @@ jobs:
       - name: Verify Edge Function env vars
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ANON_KEY: ${{ steps.env.outputs.PUBLISHABLE_KEY }}
+          # Fix #1944: ?env=true now requires service_role — anon key would return 401.
+          SERVICE_ROLE_KEY: ${{ steps.env.outputs.SERVICE_ROLE_KEY }}
           PROJECT_ID: ${{ steps.env.outputs.PROJECT_ID }}
           ENV_NAME: ${{ steps.env.outputs.ENV }}
         run: |
           RESPONSE=$(curl -sf "https://${PROJECT_ID}.supabase.co/functions/v1/health?env=true" \
-            -H "Authorization: Bearer ${ANON_KEY}" --max-time 15) || {
+            -H "Authorization: Bearer ${SERVICE_ROLE_KEY}" --max-time 15) || {
             echo "::warning::Health endpoint unreachable — skipping EF env check"
             exit 0
           }
