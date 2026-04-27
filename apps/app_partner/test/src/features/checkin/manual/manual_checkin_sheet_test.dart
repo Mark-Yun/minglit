@@ -186,12 +186,13 @@ void main() {
         ProviderScope(
           overrides: [
             manualCheckinControllerProvider('event-1').overrideWith(() {
-              controller = _SlowController([_participantA], completer);
-              return controller;
+              return controller = _SlowController([_participantA], completer);
             }),
           ],
-          child: const MaterialApp(
-            home: Scaffold(body: ManualCheckinSheet(eventId: 'event-1')),
+          child: MaterialApp(
+            home: Scaffold(
+              body: ManualCheckinSheet(eventId: 'event-1'),
+            ),
           ),
         ),
       );
