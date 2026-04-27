@@ -29,7 +29,8 @@ class AgeUtil {
   static int calculateManAgeFromDate(DateTime birthDate) {
     final now = DateTime.now();
     final age = now.year - birthDate.year;
-    final birthdayPassedThisYear = (now.month > birthDate.month) ||
+    final birthdayPassedThisYear =
+        (now.month > birthDate.month) ||
         (now.month == birthDate.month && now.day >= birthDate.day);
     return birthdayPassedThisYear ? age : age - 1;
   }
