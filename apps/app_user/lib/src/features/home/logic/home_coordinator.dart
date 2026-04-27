@@ -109,22 +109,6 @@ class HomeCoordinator {
     unawaited(_router.push(const AccountManagementRoute().location));
   }
 
-  // Fix #1526: HomeCoordinator public API 유지 — 테스트/화면 호출부는 그대로 두고
-  // 내부 네비게이션만 AppCoordinator로 위임해 cross-feature import 제거.
-  void pushTicketQR(String ticketId, {TicketEventMeta? eventMeta}) {
-    final app = _app;
-    if (app != null) {
-      app.pushTicketQR(ticketId, eventMeta: eventMeta);
-      return;
-    }
-    unawaited(
-      _router.push(
-        TicketQRRoute(ticketId: ticketId).location,
-        extra: eventMeta,
-      ),
-    );
-  }
-
   // AppPermissionSettingsScreen은 GoRouter 라우트가 없어 Navigator.push 사용.
   // 위젯에서 직접 MaterialPageRoute를 생성하지 않도록 Coordinator로 위임.
   void navigateToPermissionSettings(BuildContext context) {
