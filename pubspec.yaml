@@ -6,9 +6,9 @@ environment:
 workspace:
   - apps/app_partner
   - apps/app_user
-  - apps/mds_storybook
-  - shared/packages/mds
-  - shared/packages/mds_tokens
+  - apps/mds/storybook
+  - shared/packages/mds/core
+  - shared/packages/mds/tokens
   - shared/packages/minglit_kit
   - shared/packages/minglit_lints
 

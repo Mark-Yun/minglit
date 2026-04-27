@@ -3,7 +3,11 @@
   "version": "26.04.1904-dev",
   "private": true,
   "workspaces": [
-    "apps/*"
+    "apps/app_user",
+    "apps/app_partner",
+    "apps/landing_user",
+    "apps/landing_partner",
+    "apps/mds/docs"
   ],
   "scripts": {
     "dev:user": "npm run dev --workspace=landing_user",
