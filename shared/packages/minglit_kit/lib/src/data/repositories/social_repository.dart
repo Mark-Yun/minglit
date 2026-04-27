@@ -19,67 +19,61 @@ class SocialRepository {
 
   final SupabaseClient _supabase;
 
-  /// Toggles an interaction for the current user.
-  /// If it exists, it will be deleted. If not, it will be created.
-  Future<bool> toggleInteraction({
+  /// Sets the interaction state for the current user with explicit intent.
+  ///
+  /// When [active] is true, the interaction is created (INSERT ON CONFLICT DO
+  /// NOTHING — idempotent, never throws 23505).
+  /// When [active] is false, the interaction is deleted (idempotent).
+  ///
+  /// Fix #1957: explicit intent eliminates TOCTOU races — callers pass the
+  /// desired final state, so concurrent calls with the same intent are safe.
+  Future<void> setInteraction({
     required String targetId,
     required SocialTargetType targetType,
     required SocialInteractionType interactionType,
+    required bool active,
   }) async {
     final userId = _supabase.auth.currentUser?.id;
     if (userId == null) throw Exception('User not authenticated');
 
-    Log.d('toggleInteraction | targetId: $targetId');
-    Log.d('toggleInteraction | type: $interactionType');
+    Log.d('setInteraction | targetId: $targetId, active: $active');
+    Log.d('setInteraction | type: $interactionType');
 
     try {
-      // 0. Like/dislike mutual exclusivity — remove opposite before toggling
-      if (interactionType == SocialInteractionType.like ||
-          interactionType == SocialInteractionType.dislike) {
-        final opposite = interactionType == SocialInteractionType.like
-            ? SocialInteractionType.dislike
-            : SocialInteractionType.like;
-        await _supabase
-            .from('social_interactions')
-            .delete()
-            .eq('user_id', userId)
-            .eq('target_id', targetId)
-            .eq('interaction_type', opposite.name);
-      }
-
-      // Fix #1957: replace TOCTOU read-check-write with atomic upsert.
-      // ON CONFLICT DO NOTHING returns the inserted row only when an actual
-      // insert happened — empty list means the row already existed (toggle off).
-      final inserted = await _supabase
-          .from('social_interactions')
-          .upsert(
-            {
-              'user_id': userId,
-              'target_id': targetId,
-              'target_type': targetType.name,
-              'interaction_type': interactionType.name,
-            },
-            onConflict: 'user_id,target_id,interaction_type',
-            ignoreDuplicates: true,
-          )
-          .select();
-
-      if (inserted.isNotEmpty) {
-        Log.d('toggleInteraction: added');
-        return true; // Insert succeeded — now active
+      if (active) {
+        // Like/dislike mutual exclusivity — remove opposite before inserting.
+        if (interactionType == SocialInteractionType.like ||
+            interactionType == SocialInteractionType.dislike) {
+          final opposite = interactionType == SocialInteractionType.like
+              ? SocialInteractionType.dislike
+              : SocialInteractionType.like;
+          await _supabase
+              .from('social_interactions')
+              .delete()
+              .eq('user_id', userId)
+              .eq('target_id', targetId)
+              .eq('interaction_type', opposite.name);
+        }
+        await _supabase.from('social_interactions').upsert(
+          {
+            'user_id': userId,
+            'target_id': targetId,
+            'target_type': targetType.name,
+            'interaction_type': interactionType.name,
+          },
+          onConflict: 'user_id,target_id,interaction_type',
+          ignoreDuplicates: true,
+        );
       } else {
-        // Conflict was ignored — row existed, delete to toggle off.
         await _supabase
             .from('social_interactions')
             .delete()
             .eq('user_id', userId)
             .eq('target_id', targetId)
             .eq('interaction_type', interactionType.name);
-        Log.d('toggleInteraction: removed');
-        return false; // Now inactive
       }
     } on Object catch (e, st) {
-      Log.e('❌ [SocialRepo] toggleInteraction Error', e, st);
+      Log.e('❌ [SocialRepo] setInteraction Error', e, st);
       rethrow;
     }
   }

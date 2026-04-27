@@ -20,68 +20,87 @@ void main() {
   });
 
   group('SocialRepository', () {
-    group('toggleInteraction', () {
-      // Fix #1957: upsert with ignoreDuplicates=true returns inserted row only
-      // when insert succeeded — empty means conflict (row existed → toggle off).
-      test(
-        'creates new interaction when upsert inserts (returns true)',
-        () async {
-          const inserted = {
-            'user_id': 'user_1',
-            'target_id': 'party_1',
-            'target_type': 'party',
-            'interaction_type': 'like',
-          };
-          unawaited(
-            mockTable(
-              mockClient,
-              'social_interactions',
-              upsertReturnData: [inserted],
-            ),
-          );
+    group('setInteraction', () {
+      test('activates interaction without error', () async {
+        unawaited(mockTable(mockClient, 'social_interactions'));
 
-          final result = await repository.toggleInteraction(
+        await expectLater(
+          repository.setInteraction(
             targetId: 'party_1',
             targetType: SocialTargetType.party,
             interactionType: SocialInteractionType.like,
-          );
+            active: true,
+          ),
+          completes,
+        );
+      });
 
-          expect(result, isTrue);
-        },
-      );
+      test('deactivates interaction without error', () async {
+        unawaited(mockTable(mockClient, 'social_interactions'));
 
-      test(
-        'removes existing interaction when upsert is ignored (returns false)',
-        () async {
-          // upsert ON CONFLICT DO NOTHING returns empty → row existed → delete
-          unawaited(
-            mockTable(
-              mockClient,
-              'social_interactions',
-              upsertReturnData: [],
-            ),
-          );
-
-          final result = await repository.toggleInteraction(
+        await expectLater(
+          repository.setInteraction(
             targetId: 'party_1',
             targetType: SocialTargetType.party,
             interactionType: SocialInteractionType.like,
-          );
+            active: false,
+          ),
+          completes,
+        );
+      });
 
-          expect(result, isFalse);
-        },
-      );
+      test('activating like removes dislike first (mutual exclusivity)',
+          () async {
+        final builder = mockTable(mockClient, 'social_interactions');
+
+        await repository.setInteraction(
+          targetId: 'party_1',
+          targetType: SocialTargetType.party,
+          interactionType: SocialInteractionType.like,
+          active: true,
+        );
+
+        // Fix #1957: verify dislike was removed before inserting like.
+        expect(
+          builder.recordedFilters.any(
+            (f) => f.column == 'interaction_type' && f.value == 'dislike',
+          ),
+          isTrue,
+        );
+      });
+
+      test('activating non-like/dislike skips mutual exclusivity delete',
+          () async {
+        final builder = mockTable(mockClient, 'social_interactions');
+
+        await repository.setInteraction(
+          targetId: 'party_1',
+          targetType: SocialTargetType.party,
+          interactionType: SocialInteractionType.bookmark,
+          active: true,
+        );
+
+        // No delete filter for opposite types expected.
+        expect(
+          builder.recordedFilters.any(
+            (f) =>
+                f.column == 'interaction_type' &&
+                (f.value == 'like' || f.value == 'dislike'),
+          ),
+          isFalse,
+        );
+      });
 
       test('throws when user not authenticated', () async {
-        // Recreate without user
         mockClient = createMockSupabase();
         repository = SocialRepository(supabase: mockClient);
 
         expect(
-          () => repository.toggleInteraction(
+          () => repository.setInteraction(
             targetId: 'party_1',
             targetType: SocialTargetType.party,
             interactionType: SocialInteractionType.like,
+            active: true,
           ),
           throwsA(isA<Exception>()),
         );
