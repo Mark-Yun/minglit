@@ -34,12 +34,14 @@ class _SlowController extends ManualCheckinController {
   _SlowController(this._participants, this._completer);
   final List<CheckinParticipant> _participants;
   final Completer<void> _completer;
+  int checkinCallCount = 0;
 
   @override
   Future<List<CheckinParticipant>> build(String eventId) async => _participants;
 
   @override
   Future<String> checkin(String ticketId) async {
+    checkinCallCount++;
     await _completer.future;
     state = state.whenData(
       (list) => list
@@ -179,12 +181,14 @@ void main() {
     // Fix #1947: rapid taps must not fire duplicate process_manual_checkin RPC
     testWidgets('체크인 버튼 탭 중 스피너 표시 — 중복 탭 차단', (tester) async {
       final completer = Completer<void>();
+      late _SlowController controller;
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            manualCheckinControllerProvider('event-1').overrideWith(
-              () => _SlowController([_participantA], completer),
-            ),
+            manualCheckinControllerProvider('event-1').overrideWith(() {
+              controller = _SlowController([_participantA], completer);
+              return controller;
+            }),
           ],
           child: const MaterialApp(
             home: Scaffold(body: ManualCheckinSheet(eventId: 'event-1')),
@@ -203,14 +207,26 @@ void main() {
         findsOneWidget,
         reason: 'expected loading spinner while checkin RPC is in-flight',
       );
-      // 체크인 button is gone (replaced by spinner).
+      // 체크인 button is gone (replaced by spinner), so a second tap is blocked.
       expect(find.text('체크인'), findsNothing);
+
+      // Simulate a second tap while the RPC is still in-flight.
+      // The button widget is gone, so tryTap falls through — but even if the
+      // callback were somehow invoked, the synchronous guard in _checkin()
+      // must prevent a second RPC call.
+      await tester.tap(find.text('체크인'), warnIfMissed: false);
+      await tester.pump();
 
       // Complete the RPC.
       completer.complete();
       await tester.pumpAndSettle();
 
-      // Participant moves to checked-in section.
+      // checkin() was called exactly once — no duplicate RPC.
+      expect(
+        controller.checkinCallCount,
+        1,
+        reason: 'duplicate tap must not fire a second checkin() RPC',
+      );
       expect(find.byType(CircularProgressIndicator), findsNothing);
       expect(find.text('체크인 완료 (1명)'), findsOneWidget);
     });

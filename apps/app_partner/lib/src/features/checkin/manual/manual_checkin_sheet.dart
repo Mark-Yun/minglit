@@ -248,8 +248,11 @@ class _ManualCheckinSheetState extends ConsumerState<ManualCheckinSheet> {
   }
 
   Future<void> _checkin(CheckinParticipant participant) async {
-    // Fix #1947: mark in-flight before any async gap to block duplicate taps.
-    setState(() => _inFlightTicketIds.add(participant.ticketId));
+    // Fix #1947: synchronous guard — blocks duplicate RPCs that arrive before
+    // the next setState rebuild schedules a frame.
+    if (_inFlightTicketIds.contains(participant.ticketId)) return;
+    _inFlightTicketIds.add(participant.ticketId);
+    setState(() {});
     HapticFeedback.selectionClick();
     try {
       final result = await ref
