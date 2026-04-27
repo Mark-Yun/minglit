@@ -260,7 +260,7 @@ class AccountManagementRoute extends GoRouteData with $AccountManagementRoute {
             ref.read(accountDeletionCoordinatorProvider).start();
           },
           // Fix #1861: 계정 관리에서 본인인증 직접 진입 가능하도록
-          onCertification: () => context.push('/certification'),
+          onCertification: () => const CertificationRoute().push(context),
           isVerified:
               ref.watch(currentUserProfileProvider).asData?.value?.isVerified ??
               false,
