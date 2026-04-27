@@ -846,39 +846,42 @@ void main() {
       expect(spy.capturedData?['buyer_tel'], '01012345678');
     });
 
-    test('user without phone → buyer_tel is empty string, not stub number', () async {
-      when(() => mockUser.phone).thenReturn(null);
-      when(
-        () => mockEventRepo.applyEvent(
-          eventId: any(named: 'eventId'),
-          ticketId: any(named: 'ticketId'),
-          verificationData: any(named: 'verificationData'),
-        ),
-      ).thenAnswer(
-        (_) async => const PaidApplyEventResult(
-          applicationId: 'app_tel2',
-          orderId: 'order_tel2',
-          paymentAmount: 10000,
-        ),
-      );
+    test(
+      'user without phone → buyer_tel is empty string, not stub number',
+      () async {
+        when(() => mockUser.phone).thenReturn(null);
+        when(
+          () => mockEventRepo.applyEvent(
+            eventId: any(named: 'eventId'),
+            ticketId: any(named: 'ticketId'),
+            verificationData: any(named: 'verificationData'),
+          ),
+        ).thenAnswer(
+          (_) async => const PaidApplyEventResult(
+            applicationId: 'app_tel2',
+            orderId: 'order_tel2',
+            paymentAmount: 10000,
+          ),
+        );
 
-      final spy = _SpyIamportController();
-      final container = createContainer(
-        overrides: [
-          currentUserProvider.overrideWith((ref) => mockUser),
-          eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
-          iamportControllerProvider.overrideWith(() => spy),
-        ],
-      );
-      final notifier = container.read(
-        eventApplicationControllerProvider(testEvent).notifier,
-      );
-      notifier.selectTicket(testEvent.tickets!.first);
-      await notifier.submitApplication(mockContext);
+        final spy = _SpyIamportController();
+        final container = createContainer(
+          overrides: [
+            currentUserProvider.overrideWith((ref) => mockUser),
+            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
+            iamportControllerProvider.overrideWith(() => spy),
+          ],
+        );
+        final notifier = container.read(
+          eventApplicationControllerProvider(testEvent).notifier,
+        );
+        notifier.selectTicket(testEvent.tickets!.first);
+        await notifier.submitApplication(mockContext);
 
-      expect(spy.capturedData?['buyer_tel'], '');
-      expect(spy.capturedData?['buyer_tel'], isNot('01000000000'));
-    });
+        expect(spy.capturedData?['buyer_tel'], '');
+        expect(spy.capturedData?['buyer_tel'], isNot('01000000000'));
+      },
+    );
   });
 
   group('EventApplicationState.copyWith', () {
