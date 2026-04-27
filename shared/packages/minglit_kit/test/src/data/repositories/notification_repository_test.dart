@@ -151,6 +151,23 @@ void main() {
       });
     });
 
+    group('getNotifications', () {
+      test('rethrows on error', () async {
+        unawaited(
+          mockTable(
+            mockClient,
+            'user_notifications',
+            shouldThrow: Exception('network error'),
+          ),
+        );
+
+        expect(
+          () => repository.getNotifications(),
+          throwsA(isA<Exception>()),
+        );
+      });
+    });
+
     group('markAsRead', () {
       test('completes without error', () async {
         unawaited(mockTable(mockClient, 'user_notifications'));
@@ -159,6 +176,19 @@ void main() {
           repository.markAsRead('notif_1'),
           completes,
         );
+      });
+
+      // Fix #1955: swallows error so read-state mutations don't crash the UI.
+      test('swallows error — does not throw on failure', () async {
+        unawaited(
+          mockTable(
+            mockClient,
+            'user_notifications',
+            shouldThrow: Exception('db error'),
+          ),
+        );
+
+        await expectLater(repository.markAsRead('notif_1'), completes);
       });
     });
 
@@ -171,11 +201,40 @@ void main() {
           completes,
         );
       });
+
+      // Fix #1955: swallows error so read-state mutations don't crash the UI.
+      test('swallows error — does not throw on failure', () async {
+        unawaited(
+          mockTable(
+            mockClient,
+            'user_notifications',
+            shouldThrow: Exception('db error'),
+          ),
+        );
+
+        await expectLater(repository.markAllAsRead('user_1'), completes);
+      });
     });
 
     group('deleteNotification', () {
       test('completes without error', () async {
         unawaited(mockTable(mockClient, 'user_notifications'));
+
+        await expectLater(
+          repository.deleteNotification('notif_1'),
+          completes,
+        );
+      });
+
+      // Fix #1955: swallows error so delete failures don't crash the UI.
+      test('swallows error — does not throw on failure', () async {
+        unawaited(
+          mockTable(
+            mockClient,
+            'user_notifications',
+            shouldThrow: Exception('db error'),
+          ),
+        );
 
         await expectLater(
           repository.deleteNotification('notif_1'),
@@ -211,6 +270,22 @@ void main() {
 
         final result = await repository.getSettings('user_unknown');
         expect(result, isNull);
+      });
+
+      // Fix #1955: read operations rethrow.
+      test('rethrows on error', () async {
+        unawaited(
+          mockTable(
+            mockClient,
+            'user_settings',
+            shouldThrow: Exception('network error'),
+          ),
+        );
+
+        expect(
+          () => repository.getSettings('user_1'),
+          throwsA(isA<Exception>()),
+        );
       });
     });
 
