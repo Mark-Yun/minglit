@@ -5,7 +5,7 @@ import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
-import 'package:riverpod/src/providers/future_provider.dart';
+import 'package:riverpod/misc.dart';
 
 part 'event_application_manage_tab.dart';
 part 'event_application_manage_widgets.dart';
