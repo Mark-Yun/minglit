@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/src/data/models/matching.dart';
 import 'package:minglit_kit/src/data/models/user_profile.dart';
 import 'package:minglit_kit/src/data/repositories/matching_repository.dart';
+import 'package:minglit_kit/src/utils/exceptions.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -110,6 +111,31 @@ void main() {
         );
       });
 
+      // Fix #1945: non-200 must throw MinglitUserException
+      test('throws MinglitUserException on non-200 response', () async {
+        when(
+          () => mockFunctions.invoke(
+            'partner-manage-match',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 403,
+            data: {'error': '권한이 없습니다.'},
+          ),
+        );
+
+        await expectLater(
+          repository.updateMatchRules(
+            eventId: 'event_1',
+            rules: [
+              {'source_group_id': 'g1', 'target_group_id': 'g2'},
+            ],
+          ),
+          throwsA(isA<MinglitUserException>()),
+        );
+      });
+
       test('handles empty rules list via EF', () async {
         when(
           () => mockFunctions.invoke(
@@ -163,6 +189,26 @@ void main() {
           completes,
         );
       });
+
+      // Fix #1945: non-200 must throw MinglitUserException
+      test('throws MinglitUserException on non-200 response', () async {
+        when(
+          () => mockFunctions.invoke(
+            'partner-manage-match',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 500,
+            data: {'error': '서버 오류'},
+          ),
+        );
+
+        await expectLater(
+          repository.clearMatchRules(eventId: 'event_1'),
+          throwsA(isA<MinglitUserException>()),
+        );
+      });
     });
 
     // Fix #306: castVote → EF 전환 후 테스트 업데이트
@@ -193,6 +239,30 @@ void main() {
         expect(
           () => repository.castVote(eventId: 'event_1', candidateId: 'user_2'),
           throwsA(isA<Exception>()),
+        );
+      });
+
+      // Fix #1945: non-200 must throw MinglitUserException
+      test('throws MinglitUserException on non-200 response', () async {
+        when(
+          () =>
+              mockFunctions.invoke('user-cast-vote', body: any(named: 'body')),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 409,
+            data: {'error': '이미 투표했습니다.'},
+          ),
+        );
+
+        await expectLater(
+          repository.castVote(eventId: 'event_1', candidateId: 'user_2'),
+          throwsA(
+            isA<MinglitUserException>().having(
+              (e) => e.message,
+              'message',
+              '이미 투표했습니다.',
+            ),
+          ),
         );
       });
     });
