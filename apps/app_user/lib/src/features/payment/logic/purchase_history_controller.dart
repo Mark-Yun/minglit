@@ -165,8 +165,10 @@ class PurchaseHistoryController extends _$PurchaseHistoryController {
             reason: '사용자 예매 취소',
           );
 
-      ref.invalidate(purchaseHistoryControllerProvider);
       await onSuccess();
+      // Fix #1951: invalidate after onSuccess — Riverpod 3.x throws StateError
+      // when self-invalidating mid-action before onSuccess() can run.
+      ref.invalidate(purchaseHistoryControllerProvider);
     } on Object catch (e, st) {
       final exception = MinglitException.from(e, st);
       final message = exception is MinglitSystemException
