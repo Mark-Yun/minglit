@@ -25,7 +25,7 @@ void main() {
 
   group('PartyStatusEditSheet — Fix #72 regression', () {
     testWidgets('기본값(public) visibility로 크래시 없이 렌더', (tester) async {
-      await tester.pumpWidget(wrap(currentStatus: 'active'));
+      await tester.pumpWidget(wrap());
       await tester.pump();
 
       expect(find.text('운영 상태 변경'), findsOneWidget);
@@ -34,7 +34,7 @@ void main() {
 
     testWidgets('visibility=public → 비공개 스위치 OFF', (tester) async {
       await tester.pumpWidget(
-        wrap(currentStatus: 'active', currentVisibility: 'public'),
+        wrap(),
       );
       await tester.pump();
 
@@ -46,7 +46,7 @@ void main() {
 
     testWidgets('visibility=private → 비공개 스위치 ON', (tester) async {
       await tester.pumpWidget(
-        wrap(currentStatus: 'active', currentVisibility: 'private'),
+        wrap(currentVisibility: 'private'),
       );
       await tester.pump();
 
@@ -77,7 +77,6 @@ void main() {
       String? selected;
       await tester.pumpWidget(
         wrap(
-          currentStatus: 'active',
           onStatusSelected: (v) => selected = v,
         ),
       );
@@ -93,7 +92,6 @@ void main() {
       String? selected;
       await tester.pumpWidget(
         wrap(
-          currentStatus: 'active',
           onStatusSelected: (v) => selected = v,
         ),
       );
@@ -111,8 +109,6 @@ void main() {
       String? changedTo;
       await tester.pumpWidget(
         wrap(
-          currentStatus: 'active',
-          currentVisibility: 'public',
           onVisibilityChanged: (v) => changedTo = v,
         ),
       );
@@ -128,7 +124,6 @@ void main() {
       String? changedTo;
       await tester.pumpWidget(
         wrap(
-          currentStatus: 'active',
           currentVisibility: 'private',
           onVisibilityChanged: (v) => changedTo = v,
         ),
