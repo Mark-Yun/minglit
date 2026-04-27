@@ -411,7 +411,21 @@ class _BugReporterWrapperState extends ConsumerState<BugReporterWrapper> {
 
   @override
   Widget build(BuildContext context) {
-    return RepaintBoundary(key: _boundaryKey, child: widget.child);
+    return RepaintBoundary(
+      key: _boundaryKey,
+      child: Stack(
+        children: [
+          widget.child,
+          // Fix #1858: BugReportFab을 글로벌 오버레이로 승격 — 모든 화면에서 토글 가능
+          if (widget.enabled)
+            const Positioned(
+              right: MinglitSpacing.medium,
+              bottom: MinglitSpacing.medium,
+              child: SafeArea(child: BugReportFab()),
+            ),
+        ],
+      ),
+    );
   }
 }
 
