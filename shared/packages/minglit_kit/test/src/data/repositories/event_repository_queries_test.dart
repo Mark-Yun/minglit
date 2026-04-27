@@ -867,16 +867,25 @@ void main() {
         },
       );
 
+      // Fix #1941 v2: ongoing events have start_time in the PAST — the original
+      // gte('start_time', now) filter excluded them. Verify the query uses
+      // gt('end_time') instead, which correctly includes ongoing events.
       test(
-        'returns ongoing-status event in feed (regression for #1941)',
+        'returns ongoing-status event with past start_time in feed (regression for #1941)',
         () async {
           final ongoingEventJson = {
             ...eventJson,
             'id': 'event_ongoing',
             'status': 'ongoing',
+            // Ongoing events have already started — start_time is in the past
+            'start_time':
+                now.subtract(const Duration(hours: 1)).toIso8601String(),
+            'end_time': now.add(const Duration(hours: 2)).toIso8601String(),
           };
-          unawaited(
-            mockTable(mockClient, 'events', selectData: [ongoingEventJson]),
+          final builder = mockTable(
+            mockClient,
+            'events',
+            selectData: [ongoingEventJson],
           );
 
           final result = await repository.getEventsByType(
@@ -885,6 +894,24 @@ void main() {
 
           expect(result, hasLength(1));
           expect(result.first.status, 'ongoing');
+          // Filter must use gt('end_time'), NOT gte('start_time') —
+          // ongoing events have start_time <= now, so gte('start_time') would
+          // incorrectly exclude them from the feed.
+          expect(
+            builder.recordedFilters.any(
+              (f) => f.method == 'gt' && f.column == 'end_time',
+            ),
+            isTrue,
+            reason: 'expected gt(end_time) filter to include ongoing events',
+          );
+          expect(
+            builder.recordedFilters.any(
+              (f) => f.method == 'gte' && f.column == 'start_time',
+            ),
+            isFalse,
+            reason:
+                'gte(start_time) must not be used — it excludes ongoing events',
+          );
         },
       );
     });
@@ -942,21 +969,44 @@ void main() {
         expect(result.first.status, 'active');
       });
 
-      // Fix #1941: ongoing events must appear in partner detail list
-      test('returns ongoing-status event (regression for #1941)', () async {
+      // Fix #1941 v2: ongoing events have start_time in the PAST — verify
+      // gt('end_time') is used so they are not excluded from the partner list.
+      test('returns ongoing-status event with past start_time (regression for #1941)',
+          () async {
         final ongoingEventJson = {
           ...eventJson,
           'id': 'event_ongoing',
           'status': 'ongoing',
+          // Ongoing events have already started — start_time is in the past
+          'start_time': now.subtract(const Duration(hours: 1)).toIso8601String(),
+          'end_time': now.add(const Duration(hours: 2)).toIso8601String(),
         };
-        unawaited(
-          mockTable(mockClient, 'events', selectData: [ongoingEventJson]),
+        final builder = mockTable(
+          mockClient,
+          'events',
+          selectData: [ongoingEventJson],
         );
 
         final result = await repository.getEventsByPartnerId('partner_1');
 
         expect(result, hasLength(1));
         expect(result.first.status, 'ongoing');
+        // Filter must use gt('end_time') so ongoing events (start_time <= now)
+        // are not excluded.
+        expect(
+          builder.recordedFilters.any(
+            (f) => f.method == 'gt' && f.column == 'end_time',
+          ),
+          isTrue,
+          reason: 'expected gt(end_time) filter to include ongoing events',
+        );
+        expect(
+          builder.recordedFilters.any(
+            (f) => f.method == 'gte' && f.column == 'start_time',
+          ),
+          isFalse,
+          reason: 'gte(start_time) must not be used — it excludes ongoing events',
+        );
       });
     });
 

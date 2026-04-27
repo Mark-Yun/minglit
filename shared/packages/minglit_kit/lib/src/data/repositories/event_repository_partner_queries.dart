@@ -70,9 +70,11 @@ mixin _EventRepositoryPartnerQueries on _SupabaseEventContext {
             'entryGroups:entry_groups(*), tickets(*)',
           )
           .eq('party.partner_id', partnerId)
-          // Fix #1941: include active/ongoing so in-flight events stay visible
+          // Fix #1941: include active/ongoing so in-flight events stay visible.
+          // Fix #1941 v2: use gt('end_time') — ongoing events have start_time <= now
+          // so gte('start_time') incorrectly excludes them (end_time NOT NULL per schema).
           .inFilter('status', ['scheduled', 'active', 'ongoing'])
-          .gte('start_time', DateTime.now().toIso8601String())
+          .gt('end_time', DateTime.now().toIso8601String())
           .order('start_time');
       final result = data.map(Event.fromJson).toList();
 
