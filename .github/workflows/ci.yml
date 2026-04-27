@@ -288,7 +288,6 @@ jobs:
           cache-dependency-path: ./apps/landing_user/package-lock.json
       - run: npm ci
       - run: npm audit --audit-level=high
-        continue-on-error: true
       - run: npm run lint
       - run: npm run build
 
@@ -310,7 +309,6 @@ jobs:
           cache-dependency-path: ./apps/landing_partner/package-lock.json
       - run: npm ci
       - run: npm audit --audit-level=high
-        continue-on-error: true
       - run: npm run lint
       - run: npm run build
 
