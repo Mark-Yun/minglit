@@ -96,10 +96,18 @@ mixin _EventRepositoryCommands
   }) async {
     Log.d('confirmPayment called | impUid: $impUid');
     try {
-      await supabaseClient.functions.invoke(
+      // Fix #1945: functions.invoke() never throws on 4xx/5xx — check status.
+      final response = await supabaseClient.functions.invoke(
         'payment-verify',
         body: {'imp_uid': impUid, 'merchant_uid': merchantUid},
       );
+      if (response.status != 200) {
+        final data = response.data;
+        final msg = data is Map
+            ? (data['error'] as String?) ?? '결제 검증에 실패했습니다.'
+            : '결제 검증에 실패했습니다.';
+        throw MinglitUserException(msg);
+      }
       Log.i('✅ [EventRepo] Payment verified.');
     } catch (e, st) {
       Log.e('❌ [EventRepo] confirmPayment Error', e, st);
@@ -197,10 +205,18 @@ mixin _EventRepositoryCommands
   Future<void> approveApplication({required String applicationId}) async {
     Log.d('approveApplication called | applicationId: $applicationId');
     try {
-      await supabaseClient.functions.invoke(
+      // Fix #1945: functions.invoke() never throws on 4xx/5xx — check status.
+      final response = await supabaseClient.functions.invoke(
         'partner-approve-application',
         body: {'action': 'approve', 'application_id': applicationId},
       );
+      if (response.status != 200) {
+        final data = response.data;
+        final msg = data is Map
+            ? (data['error'] as String?) ?? '승인 요청에 실패했습니다.'
+            : '승인 요청에 실패했습니다.';
+        throw MinglitUserException(msg);
+      }
       Log.i('✅ [EventRepo] Application approved: $applicationId');
     } catch (e, st) {
       Log.e('❌ [EventRepo] approveApplication Error', e, st);
@@ -215,10 +231,18 @@ mixin _EventRepositoryCommands
   }) async {
     Log.d('rejectApplication called | applicationId: $applicationId');
     try {
-      await supabaseClient.functions.invoke(
+      // Fix #1945: functions.invoke() never throws on 4xx/5xx — check status.
+      final response = await supabaseClient.functions.invoke(
         'partner-reject-application',
         body: {'application_id': applicationId, 'reason': reason},
       );
+      if (response.status != 200) {
+        final data = response.data;
+        final msg = data is Map
+            ? (data['error'] as String?) ?? '거절 요청에 실패했습니다.'
+            : '거절 요청에 실패했습니다.';
+        throw MinglitUserException(msg);
+      }
       Log.i('✅ [EventRepo] Application rejected: $applicationId');
     } catch (e, st) {
       Log.e('❌ [EventRepo] rejectApplication Error', e, st);
@@ -230,10 +254,18 @@ mixin _EventRepositoryCommands
   Future<void> bulkApproveApplications({required String eventId}) async {
     Log.d('bulkApproveApplications called | eventId: $eventId');
     try {
-      await supabaseClient.functions.invoke(
+      // Fix #1945: functions.invoke() never throws on 4xx/5xx — check status.
+      final response = await supabaseClient.functions.invoke(
         'partner-approve-application',
         body: {'action': 'bulk_approve', 'event_id': eventId},
       );
+      if (response.status != 200) {
+        final data = response.data;
+        final msg = data is Map
+            ? (data['error'] as String?) ?? '일괄 승인에 실패했습니다.'
+            : '일괄 승인에 실패했습니다.';
+        throw MinglitUserException(msg);
+      }
       Log.i('✅ [EventRepo] Bulk approve completed for event: $eventId');
     } catch (e, st) {
       Log.e('❌ [EventRepo] bulkApproveApplications Error', e, st);

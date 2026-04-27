@@ -302,6 +302,80 @@ void main() {
     });
   });
 
+  // Fix #1953: bulk-approve partial failure must show ALL failed event titles.
+  group('bulk approve failure message', () {
+    testWidgets(
+      'shows all failed event titles on partial failure (not just first)',
+      (tester) async {
+        final mockEventRepo = _MockEventRepository();
+
+        final event2 = Event(
+          id: 'event_2',
+          partyId: 'party_1',
+          title: '이벤트 B',
+          startTime: now.add(const Duration(hours: 3)),
+          endTime: now.add(const Duration(hours: 6)),
+          createdAt: now,
+          updatedAt: now,
+          currentParticipants: 2,
+        );
+
+        when(
+          () => mockEventRepo.bulkApproveApplications(
+            eventId: any(named: 'eventId'),
+          ),
+        ).thenThrow(Exception('서버 오류'));
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              currentPartnerInfoProvider.overrideWith(
+                (ref) async => testPartner,
+              ),
+              eventApplicationsGroupedProvider.overrideWith(
+                (ref, params) async => params.statusFilter.contains('pending')
+                    ? {
+                        testEvent: [
+                          makeApp(id: 'app_1', status: 'pending'),
+                        ],
+                        event2: [
+                          makeApp(id: 'app_2', status: 'pending'),
+                        ],
+                      }
+                    : {},
+              ),
+              eventRepositoryProvider.overrideWithValue(mockEventRepo),
+            ].cast(),
+            child: const MaterialApp(home: EventApplicationManagePage()),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // Tap bulk approve button
+        await tester.tap(find.textContaining('전체 승인 (2건)'));
+        await tester.pumpAndSettle();
+
+        // Confirm the dialog
+        await tester.tap(
+          find.widgetWithText(TextButton, '전체 승인').last,
+        );
+        await tester.pumpAndSettle();
+
+        // Fix #1953: snackbar must contain both event titles.
+        final snackbarText = tester
+            .widget<Text>(
+              find.descendant(
+                of: find.byType(SnackBar),
+                matching: find.byType(Text),
+              ),
+            )
+            .data!;
+        expect(snackbarText, contains(testEvent.title));
+        expect(snackbarText, contains(event2.title));
+      },
+    );
+  });
+
   // Fix #1597: verify concurrent RPC calls are bounded to ≤10 per chunk.
   group('eventApplicationsGroupedProvider chunk concurrency', () {
     test(
