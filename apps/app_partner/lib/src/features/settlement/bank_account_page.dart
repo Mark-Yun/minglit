@@ -3,6 +3,7 @@ import 'dart:async' show unawaited;
 import 'package:app_partner/src/features/settlement/settlement_coordinator.dart';
 import 'package:app_partner/src/logic/current_partner_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 class BankAccountPage extends ConsumerStatefulWidget {
@@ -234,8 +235,15 @@ class _AccountEditFormState extends ConsumerState<AccountEditForm> {
                 controller: _numberCtrl,
                 decoration: const InputDecoration(labelText: '계좌번호'),
                 keyboardType: TextInputType.number,
-                validator: (v) =>
-                    (v == null || v.isEmpty) ? '계좌번호를 입력해 주세요.' : null,
+                // Fix #1938: reject non-digit keystrokes; regex validates 10–16 digit range
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                validator: (v) {
+                  if (v == null || v.isEmpty) return '계좌번호를 입력해 주세요.';
+                  if (!RegExp(r'^\d{10,16}$').hasMatch(v)) {
+                    return '계좌번호는 10~16자리 숫자여야 합니다.';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: MinglitSpacing.medium),
               FilledButton(
