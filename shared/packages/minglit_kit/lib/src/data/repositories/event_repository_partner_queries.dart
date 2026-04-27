@@ -70,7 +70,8 @@ mixin _EventRepositoryPartnerQueries on _SupabaseEventContext {
             'entryGroups:entry_groups(*), tickets(*)',
           )
           .eq('party.partner_id', partnerId)
-          .eq('status', 'scheduled')
+          // Fix #1941: include active/ongoing so in-flight events stay visible
+          .inFilter('status', ['scheduled', 'active', 'ongoing'])
           .gte('start_time', DateTime.now().toIso8601String())
           .order('start_time');
       final result = data.map(Event.fromJson).toList();

@@ -1,6 +1,7 @@
 import 'dart:async' show unawaited;
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:minglit_kit/src/data/models/event_feed_type.dart';
 import 'package:minglit_kit/src/data/repositories/event_repository.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -842,6 +843,48 @@ void main() {
       });
     });
 
+    // Fix #1941: active/ongoing events must appear in the user event feed
+    group('getEventsByType', () {
+      test('returns active-status event in feed (regression for #1941)',
+          () async {
+        final activeEventJson = {
+          ...eventJson,
+          'id': 'event_active',
+          'status': 'active',
+        };
+        unawaited(
+          mockTable(mockClient, 'events', selectData: [activeEventJson]),
+        );
+
+        final result = await repository.getEventsByType(
+          type: EventFeedType.newArrivals,
+        );
+
+        expect(result, hasLength(1));
+        expect(result.first.id, 'event_active');
+        expect(result.first.status, 'active');
+      });
+
+      test('returns ongoing-status event in feed (regression for #1941)',
+          () async {
+        final ongoingEventJson = {
+          ...eventJson,
+          'id': 'event_ongoing',
+          'status': 'ongoing',
+        };
+        unawaited(
+          mockTable(mockClient, 'events', selectData: [ongoingEventJson]),
+        );
+
+        final result = await repository.getEventsByType(
+          type: EventFeedType.closingSoon,
+        );
+
+        expect(result, hasLength(1));
+        expect(result.first.status, 'ongoing');
+      });
+    });
+
     group('getEventsByPartnerId', () {
       test('returns events for partner', () async {
         unawaited(
@@ -875,6 +918,41 @@ void main() {
           repository.getEventsByPartnerId('partner_1'),
           throwsA(anything),
         );
+      });
+
+      // Fix #1941: active/ongoing events must appear in partner detail list
+      test('returns active-status event (regression for #1941)', () async {
+        final activeEventJson = {
+          ...eventJson,
+          'id': 'event_active',
+          'status': 'active',
+        };
+        unawaited(
+          mockTable(mockClient, 'events', selectData: [activeEventJson]),
+        );
+
+        final result = await repository.getEventsByPartnerId('partner_1');
+
+        expect(result, hasLength(1));
+        expect(result.first.id, 'event_active');
+        expect(result.first.status, 'active');
+      });
+
+      // Fix #1941: ongoing events must appear in partner detail list
+      test('returns ongoing-status event (regression for #1941)', () async {
+        final ongoingEventJson = {
+          ...eventJson,
+          'id': 'event_ongoing',
+          'status': 'ongoing',
+        };
+        unawaited(
+          mockTable(mockClient, 'events', selectData: [ongoingEventJson]),
+        );
+
+        final result = await repository.getEventsByPartnerId('partner_1');
+
+        expect(result, hasLength(1));
+        expect(result.first.status, 'ongoing');
       });
     });
 

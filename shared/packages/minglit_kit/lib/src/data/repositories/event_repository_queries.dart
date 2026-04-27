@@ -69,8 +69,11 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
       dynamic query = supabaseClient.from('events').select(selectQuery);
 
       // 2. Common Filters
+      // Fix #1941: include active/ongoing so events within 30-min pre-checkin
+      // window stay visible in the feed (status machine added in migration
+      // 20260405000001).
       // ignore: avoid_dynamic_calls, Reason: Supabase builder chaining
-      query = query.eq('status', 'scheduled');
+      query = query.inFilter('status', ['scheduled', 'active', 'ongoing']);
       // ignore: avoid_dynamic_calls, Reason: Supabase builder chaining
       query = query.gte('start_time', DateTime.now().toIso8601String());
       // ignore: avoid_dynamic_calls, Reason: Supabase builder chaining
