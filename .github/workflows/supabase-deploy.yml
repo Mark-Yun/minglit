@@ -70,7 +70,9 @@ jobs:
           PORTONE_V2_API_KEY_MAIN: ${{ secrets.PORTONE_MAIN_V2_API_KEY }}
           PORTONE_V2_WEBHOOK_SECRET_MAIN: ${{ secrets.PORTONE_MAIN_V2_WEBHOOK_SECRET }}
         run: |
-          supabase link --project-ref $SUPABASE_PROJECT_ID --password $SUPABASE_DB_PASSWORD
+          # Fix #1971: SUPABASE_DB_PASSWORD env var is set above — drop --password to avoid
+          # process-list exposure (/proc/pid/cmdline) on shared runners.
+          supabase link --project-ref $SUPABASE_PROJECT_ID
 
           supabase secrets set OPENAI_API_KEY=$OPENAI_API_KEY
           supabase secrets set GITHUB_ACCESS_TOKEN=$GITHUB_ACCESS_TOKEN
@@ -125,7 +127,7 @@ jobs:
             echo "PORTONE_V2_WEBHOOK_SECRET not set — skipping webhook secret injection"
           fi
 
-          supabase db push --password $SUPABASE_DB_PASSWORD --include-all
+          supabase db push --include-all
 
           supabase functions deploy
 
@@ -148,7 +150,7 @@ jobs:
             echo "::error::failed to switch db.seed.sql_paths to seed.dev.sql"
             exit 1
           }
-          yes | supabase db push --include-seed --password $SUPABASE_DB_PASSWORD
+          yes | supabase db push --include-seed
           echo "Dev seed complete"
 
       - name: Upload seed images
@@ -187,7 +189,9 @@ jobs:
         run: |
           # Fix #1228: pooler 사용으로 DNS fallback chain 불필요 — 삭제.
           # Pooler는 tenant-qualified username(postgres.{project_ref}) 사용, session mode(5432).
-          CONN_URL="postgresql://postgres.${PROJECT_ID}:${DB_PASSWORD}@${POOLER_HOST}:5432/postgres?sslmode=require"
+          # Fix #1971: remove password from URL — PGPASSWORD env var handles auth,
+          # embedding in URL exposes it via /proc/pid/cmdline when psql is invoked.
+          CONN_URL="postgresql://postgres.${PROJECT_ID}@${POOLER_HOST}:5432/postgres?sslmode=require"
 
           REQUIRED=$(jq -r '.vault.required | keys[]' env-manifest.json)
           VAULT_MISSING=""
