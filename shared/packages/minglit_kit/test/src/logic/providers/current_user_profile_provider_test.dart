@@ -45,30 +45,34 @@ void main() {
       verifyNever(() => mockRepo.getUserProfile(any()));
     });
 
-    test('returns profile from UserRepository when user is logged in',
-        () async {
-      when(() => mockRepo.getUserProfile('user_1'))
-          .thenAnswer((_) async => testProfile);
+    test(
+      'returns profile from UserRepository when user is logged in',
+      () async {
+        when(
+          () => mockRepo.getUserProfile('user_1'),
+        ).thenAnswer((_) async => testProfile);
 
-      final container = createContainer(
-        overrides: [
-          currentUserProvider.overrideWith((ref) => mockUser),
-          userRepositoryProvider.overrideWithValue(mockRepo),
-        ],
-      );
+        final container = createContainer(
+          overrides: [
+            currentUserProvider.overrideWith((ref) => mockUser),
+            userRepositoryProvider.overrideWithValue(mockRepo),
+          ],
+        );
 
-      final result = await container.read(currentUserProfileProvider.future);
+        final result = await container.read(currentUserProfileProvider.future);
 
-      expect(result, isNotNull);
-      expect(result!.id, 'user_1');
-      expect(result.name, '홍길동');
-      verify(() => mockRepo.getUserProfile('user_1')).called(1);
-    });
+        expect(result, isNotNull);
+        expect(result!.id, 'user_1');
+        expect(result.name, '홍길동');
+        verify(() => mockRepo.getUserProfile('user_1')).called(1);
+      },
+    );
 
     // Fix #1948: PGRST116 (no rows) should return null, not crash
     test('returns null when UserRepository returns null (PGRST116)', () async {
-      when(() => mockRepo.getUserProfile('user_1'))
-          .thenAnswer((_) async => null);
+      when(
+        () => mockRepo.getUserProfile('user_1'),
+      ).thenAnswer((_) async => null);
 
       final container = createContainer(
         overrides: [
@@ -87,8 +91,9 @@ void main() {
     // logic, so we trigger build, pump the event queue (first attempt), then
     // read the AsyncValue state directly.
     test('propagates error when UserRepository throws', () async {
-      when(() => mockRepo.getUserProfile('user_1'))
-          .thenAnswer((_) async => throw Exception('network error'));
+      when(
+        () => mockRepo.getUserProfile('user_1'),
+      ).thenAnswer((_) async => throw Exception('network error'));
 
       final container = createContainer(
         overrides: [
