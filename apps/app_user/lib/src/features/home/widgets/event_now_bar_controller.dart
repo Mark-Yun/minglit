@@ -108,7 +108,11 @@ class EventNowBarStateNotifier extends _$EventNowBarStateNotifier {
         return EventNowBarState.results;
       }
     } on Exception catch (e, st) {
-      Log.e('⚠️ [EventNowBar] myMatches unavailable, degrading to lower state', e, st);
+      Log.e(
+        '⚠️ [EventNowBar] myMatches unavailable, degrading to lower state',
+        e,
+        st,
+      );
     }
 
     // MATCHING: matchCandidatesProvider returns non-empty list.
@@ -120,7 +124,11 @@ class EventNowBarStateNotifier extends _$EventNowBarStateNotifier {
         return EventNowBarState.matching;
       }
     } on Exception catch (e, st) {
-      Log.e('⚠️ [EventNowBar] matchCandidates unavailable, degrading to lower state', e, st);
+      Log.e(
+        '⚠️ [EventNowBar] matchCandidates unavailable, degrading to lower state',
+        e,
+        st,
+      );
     }
 
     // CHECKED_IN: participant has checked in.
