@@ -1,0 +1,14 @@
+name: mds_icons
+description: "Minglit Design System icons — SVG-based, theme-aware via currentColor."
+version: 26.04.1922-dev
+resolution: workspace
+publish_to: none
+environment:
+  sdk: ">=3.7.0 <4.0.0"
+  flutter: ">=3.41.0"
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_svg: ^2.0.0
+dev_dependencies:
+  flutter_lints: ^6.0.0
