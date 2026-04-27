@@ -2,6 +2,9 @@ import 'package:app_user/src/features/auth/login_page.dart';
 import 'package:app_user/src/features/home/my_page.dart';
 import 'package:app_user/src/features/payment/ui/purchase_history_page.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:minglit_kit/minglit_kit.dart';
+import 'package:plugin_platform_interface/plugin_platform_interface.dart';
+import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
 
 import 'utils/golden_capture.dart';
 import 'utils/test_app.dart';
@@ -68,5 +71,60 @@ void main() {
 
       expect(find.byType(PurchaseHistoryPage), findsOneWidget);
     });
+
+    // Fix #1939: '개인정보처리방침' 탭은 외부 URL로 이동해야 함 (pushPrivacy 금지)
+    testWidgets('개인정보처리방침 탭 → 외부 privacyUrl 런치, 내부 네비게이션 없음', (tester) async {
+      setKoreanLocale(tester);
+      final launchedUrls = <String>[];
+      final fakeLauncher = _FakeUrlLauncher(launchedUrls);
+      UrlLauncherPlatform.instance = fakeLauncher;
+
+      final user = createMockUserForTest();
+      await tester.pumpWidget(
+        createTestApp(
+          isLoggedIn: true,
+          currentUser: user,
+          initialLocation: '/my',
+          additionalOverrides: [
+            minglitDomainsProvider.overrideWithValue(
+              const MinglitDomains(
+                userWeb: 'https://test.minglit.com',
+                partnerWeb: 'https://test-partner.minglit.com',
+                userApp: 'https://test-app.minglit.com',
+                partnerApp: 'https://test-app-partner.minglit.com',
+              ),
+            ),
+          ],
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      await tester.scrollUntilVisible(find.text('개인정보처리방침'), 100);
+      await tester.tap(find.text('개인정보처리방침'));
+      await tester.pump();
+
+      expect(launchedUrls, ['https://test.minglit.com/privacy']);
+      expect(find.byType(MyPage), findsOneWidget);
+    });
   });
+}
+
+class _FakeUrlLauncher extends Fake
+    with MockPlatformInterfaceMixin
+    implements UrlLauncherPlatform {
+  _FakeUrlLauncher(this.launchedUrls);
+  final List<String> launchedUrls;
+
+  @override
+  LinkDelegate? get linkDelegate => null;
+
+  @override
+  Future<bool> canLaunch(String url) async => true;
+
+  @override
+  Future<bool> launchUrl(String url, LaunchOptions options) async {
+    launchedUrls.add(url);
+    return true;
+  }
 }

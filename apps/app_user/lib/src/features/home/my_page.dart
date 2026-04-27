@@ -147,7 +147,11 @@ class MyPage extends ConsumerWidget {
                 MinglitSettingsTile(
                   leading: Icons.shield_outlined,
                   title: '개인정보처리방침',
-                  onTap: homeCoordinator.pushPrivacy,
+                  onTap: () {
+                    // Fix #1939: '개인정보처리방침'은 동의 화면이 아닌 외부 개인정보처리방침 URL로 이동해야 함
+                    final url = ref.read(minglitUrlConfigProvider).privacyUrl;
+                    unawaited(launchUrl(Uri.parse(url)));
+                  },
                 ),
                 MinglitSettingsTile(
                   leading: Icons.description_outlined,
