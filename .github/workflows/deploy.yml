@@ -119,8 +119,33 @@ jobs:
           SENTRY_DSN_FLUTTER: ${{ secrets.SENTRY_DSN_FLUTTER }}
           STATSIG_CLIENT_KEY: ${{ secrets.STATSIG_CLIENT_KEY }}
 
+  # TODO(Mark): Before this job will succeed, you must:
+  # 1. Create a Vercel project for mds_docs (root dir: apps/mds_docs)
+  # 2. Copy the Project ID from Vercel → Settings → General
+  # 3. Add GitHub Actions secret: VERCEL_MDS_DOCS_PROJECT_ID = <project-id>
+  # The VERCEL_TOKEN and VERCEL_ORG_ID secrets are already shared.
+  deploy-mds_docs:
+    runs-on: ubuntu-latest
+    environment: ${{ ((github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name) == 'main' && 'production' || 'preview' }}
+    outputs:
+      accessible-url: ${{ steps.deploy.outputs.accessible-url }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
+      - name: Deploy MDS Docs
+        id: deploy
+        uses: ./.github/actions/deploy-nextjs-app
+        with:
+          working-directory: ./apps/mds_docs
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_MDS_DOCS_PROJECT_ID }}
+          dev-domain-alias: dev.design.minglit.com
+          deploy-branch: ${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
+
   smoke-test:
-    needs: [deploy-app_user, deploy-landing_user, deploy-landing_partner, deploy-app_partner]
+    needs: [deploy-app_user, deploy-landing_user, deploy-landing_partner, deploy-app_partner, deploy-mds_docs]
     if: success()
     runs-on: ubuntu-latest
     env:
@@ -193,7 +218,7 @@ jobs:
           fi
 
   notify-failure:
-    needs: [deploy-app_user, deploy-landing_user, deploy-landing_partner, deploy-app_partner, smoke-test]
+    needs: [deploy-app_user, deploy-landing_user, deploy-landing_partner, deploy-app_partner, deploy-mds_docs, smoke-test]
     if: always()
     permissions:
       issues: write

@@ -146,5 +146,16 @@ export default {
         },
       ],
     },
+    css: {
+      transformGroup: 'css',
+      buildPath: 'lib/generated/',
+      files: [
+        {
+          destination: 'tokens.css',
+          format: 'css/variables',
+          options: { selector: ':root' },
+        },
+      ],
+    },
   },
 };

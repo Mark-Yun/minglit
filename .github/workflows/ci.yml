@@ -54,6 +54,8 @@ jobs:
       kit_or_mds: ${{ steps.filter.outputs.minglit_kit == 'true' || steps.filter.outputs.mds == 'true' }}
       landing_user: ${{ steps.filter.outputs.landing_user }}
       landing_partner: ${{ steps.filter.outputs.landing_partner }}
+      mds_docs: ${{ steps.filter.outputs.mds_docs }}
+      mds_tokens: ${{ steps.filter.outputs.mds_tokens }}
       supabase: ${{ steps.filter.outputs.supabase }}
     steps:
     - uses: actions/checkout@v6
@@ -77,6 +79,10 @@ jobs:
           landing_partner:
             - 'apps/landing_partner/**'
             - 'shared/web/**'
+          mds_docs:
+            - 'apps/mds_docs/**'
+          mds_tokens:
+            - 'shared/packages/mds_tokens/**'
           supabase:
             - 'supabase/**'
 
@@ -305,6 +311,28 @@ jobs:
       - run: npm run lint
       - run: npm run build
 
+  # MDS Docs CI
+  lint-mds-docs:
+    name: lint-and-build-mds-docs
+    needs: changes
+    if: ${{ needs.changes.outputs.mds_docs == 'true' || needs.changes.outputs.mds_tokens == 'true' }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./apps/mds_docs
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: ./apps/mds_docs/package-lock.json
+      - run: npm ci
+      - run: npm audit --audit-level=high
+        continue-on-error: true
+      - run: npm run lint
+      - run: npm run build
+
   # Supabase 통합 테스트 (pgTAP + backend-integration + e2e-scenarios)
   test-supabase:
     name: test-pgtap
@@ -426,7 +454,7 @@ jobs:
         run: bash scripts/check-cross-feature-imports.sh
 
   ci-result:
-    needs: [check-migration-versions, check-env-manifest-sync, check-workflow-yaml, check-android-test-deps, check-cross-feature-imports, test-flutter-apps, lint-landing-user, lint-landing-partner, test-supabase, test-edge-functions]
+    needs: [check-migration-versions, check-env-manifest-sync, check-workflow-yaml, check-android-test-deps, check-cross-feature-imports, test-flutter-apps, lint-landing-user, lint-landing-partner, lint-mds-docs, test-supabase, test-edge-functions]
     if: always()
     runs-on: ubuntu-latest
     steps:
