@@ -55,7 +55,14 @@ void main() {
     });
 
     testWidgets('기본 정보 섹션 탭 시 currentStep이 basicInfo로 변경됨', (tester) async {
-      await tester.pumpWidget(_buildStep6());
+      // Fix: start from a non-basicInfo step so the tap actually causes a state transition
+      await tester.pumpWidget(
+        _buildStep6(
+          state: const PartyCreateWizardState(
+            currentStep: PartyCreateStep.review,
+          ),
+        ),
+      );
       await tester.pump();
 
       await tester.tap(find.text('기본 정보'));
