@@ -1,4 +1,4 @@
-// TODO: verify_jwt=false 설정 후, 포트원 서버 호출자 검증 강화 필요
+// TODO(#1892): verify_jwt=false 설정 후, 포트원 서버 호출자 검증 강화 필요
 // 현재: IP whitelist만 사용 (ALLOWED_IPS)
 // 추가 필요: 포트원 V1 webhook signature 검증 또는 HMAC 검증
 // 참고: V1은 HMAC 미지원이므로 IP whitelist가 1차 보안. 추가 보안 레이어 검토 필요.
@@ -125,7 +125,7 @@ Deno.serve(withHandler(async (req) => {
 
       if (application) {
         logStatsigEvent(application.user_id, 'payment_completed', payment.amount, { imp_uid, merchant_uid }).catch(() => {});
-        // TODO: Migrate to produce_event() pattern via q_global_events
+        // TODO(#1892): Migrate to produce_event() pattern via q_global_events
         // Currently sends directly to q_notifications, bypassing 2-tier architecture
         // See: docs/architecture/global-event-pipeline.md
         await supabase.rpc("pgmq_send", {
