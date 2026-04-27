@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:app_user/src/features/ticket/ui/model/ticket_event_meta.dart';
+import 'package:app_user/src/routing/app_coordinator.dart';
 import 'package:app_user/src/routing/app_router.dart';
 import 'package:app_user/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
@@ -8,16 +8,25 @@ import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 final homeCoordinatorProvider = Provider<HomeCoordinator>((ref) {
-  return HomeCoordinator(ref.read(goRouterProvider));
+  return HomeCoordinator(
+    ref.read(goRouterProvider),
+    ref.read(appCoordinatorProvider),
+  );
 });
 
 class HomeCoordinator {
-  HomeCoordinator(this._router);
+  HomeCoordinator(this._router, [this._app]);
 
   final GoRouter _router;
+  final AppCoordinator? _app;
 
   // Fix #634: goToLogin을 home_coordinator로 이동 — auth_coordinator 직접 참조 제거
   void goToLogin({String? from}) {
+    final app = _app;
+    if (app != null) {
+      app.goToLogin(from: from);
+      return;
+    }
     _router.go(LoginRoute(from: from).location);
   }
 
@@ -44,6 +53,11 @@ class HomeCoordinator {
 
   // Fix #404: Coordinator-based navigation for home route
   void goToHome() {
+    final app = _app;
+    if (app != null) {
+      app.goToHome();
+      return;
+    }
     _router.go('/');
   }
 
@@ -53,18 +67,6 @@ class HomeCoordinator {
 
   void pushBlockedPartners() {
     unawaited(_router.push(const BlockedPartnersRoute().location));
-  }
-
-  // Fix #852: Navigate to ticket QR via coordinator
-  // — removes cross-feature import
-  // Fix #1526: eventMeta 추가 — 보딩패스 이벤트 정보 표시
-  void pushTicketQR(String ticketId, {TicketEventMeta? eventMeta}) {
-    unawaited(
-      _router.push(
-        TicketQRRoute(ticketId: ticketId).location,
-        extra: eventMeta,
-      ),
-    );
   }
 
   // Fix #1630: context.push() in AppBar 콜백은 내부 Navigator context를 사용해
@@ -80,6 +82,11 @@ class HomeCoordinator {
   }
 
   void pushEventDetail(String eventId) {
+    final app = _app;
+    if (app != null) {
+      app.pushEventDetail(eventId);
+      return;
+    }
     unawaited(_router.push(EventDetailRoute(eventId: eventId).location));
   }
 

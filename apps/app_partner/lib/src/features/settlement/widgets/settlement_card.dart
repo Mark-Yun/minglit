@@ -46,7 +46,8 @@ class SettlementCard extends StatelessWidget {
                   ),
                   const SizedBox(height: MinglitSpacing.xsmall),
                   Text(
-                    '₩${_formatAmount(netAmount)}',
+                    // Fix #1932: minus sign before ₩, not after it
+                    '${netAmount < 0 ? '-' : ''}₩${_formatAmount(netAmount)}',
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                 ],
@@ -68,6 +69,6 @@ class SettlementCard extends StatelessWidget {
       if (i > 0 && (str.length - i) % 3 == 0) buffer.write(',');
       buffer.write(str[i]);
     }
-    return amount < 0 ? '-$buffer' : buffer.toString();
+    return buffer.toString();
   }
 }
