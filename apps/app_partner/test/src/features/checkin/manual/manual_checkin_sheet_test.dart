@@ -198,8 +198,11 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Tap 체크인 — RPC call starts but doesn't finish yet.
-      await tester.tap(find.text('체크인'));
+      // Rapid double tap before next frame — exercises the synchronous
+      // _inFlightTicketIds guard in _checkin() directly.
+      final checkinButton = find.text('체크인');
+      await tester.tap(checkinButton);
+      await tester.tap(checkinButton);
       await tester.pump();
 
       // Spinner is shown while in-flight.
@@ -208,11 +211,8 @@ void main() {
         findsOneWidget,
         reason: 'expected loading spinner while checkin RPC is in-flight',
       );
-      // 체크인 button is gone (replaced by spinner), so a second tap is blocked.
+      // 체크인 button is gone (replaced by spinner).
       expect(find.text('체크인'), findsNothing);
-
-      // Button is gone — a second UI tap is physically impossible.
-      // The checkinCallCount assertion below confirms the guard held.
 
       // Complete the RPC.
       completer.complete();
