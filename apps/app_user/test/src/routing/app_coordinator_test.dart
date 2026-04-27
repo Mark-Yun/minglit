@@ -59,7 +59,7 @@ void main() {
       AppCoordinator(mockRouter, mockDeletion).goToLogin(from: '/my');
 
       verify(
-        () => mockRouter.go(LoginRoute(from: '/my').location),
+        () => mockRouter.go(const LoginRoute(from: '/my').location),
       ).called(1);
     });
 
