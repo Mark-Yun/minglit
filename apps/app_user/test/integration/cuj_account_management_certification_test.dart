@@ -29,7 +29,6 @@ void main() {
       id: 'test-user-id',
       name: 'Test User',
       username: 'test_user',
-      isVerified: false,
       gender: 'male',
       birthYear: 1995,
       createdAt: DateTime(2024),
