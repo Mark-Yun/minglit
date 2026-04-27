@@ -362,7 +362,7 @@ void main() {
         final eventJson = {
           'id': 'event_1',
           'title': '테스트 이벤트',
-          'date': '2026-03-01',
+          'start_time': '2026-03-01T10:00:00.000Z',
           'parties': {'name': '테스트 파티'},
         };
         mockTable(mockClient, 'events', maybeSingleData: eventJson);
@@ -372,6 +372,7 @@ void main() {
         expect(result, isNotNull);
         expect(result!['id'], 'event_1');
         expect(result['title'], '테스트 이벤트');
+        expect(result['start_time'], isNotNull);
       });
 
       test('returns null when event not found', () async {
