@@ -1,4 +1,4 @@
-import 'package:app_user/src/features/home/logic/home_coordinator.dart';
+import 'package:app_user/src/routing/app_coordinator.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
@@ -52,7 +52,7 @@ class DeletionCompletePage extends ConsumerWidget {
   }
 
   Future<void> _finish(BuildContext context, WidgetRef ref) async {
-    ref.read(homeCoordinatorProvider).goToHome();
+    ref.read(appCoordinatorProvider).goToHome();
     await Future<void>.delayed(Duration.zero);
     await ref.read(authControllerProvider.notifier).signOut();
     if (!context.mounted) return;

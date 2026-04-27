@@ -1,6 +1,7 @@
-import 'package:app_user/src/features/home/logic/home_coordinator.dart';
 import 'package:app_user/src/features/my_tickets/ui/my_ticket_card.dart';
 import 'package:app_user/src/features/my_tickets/ui/my_tickets_page.dart';
+import 'package:app_user/src/features/ticket/ui/model/ticket_event_meta.dart';
+import 'package:app_user/src/routing/app_coordinator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -9,7 +10,7 @@ import 'package:mocktail/mocktail.dart';
 
 import '../../../../utils/mocks.dart';
 
-class MockHomeCoordinator extends Mock implements HomeCoordinator {}
+class MockAppCoordinator extends Mock implements AppCoordinator {}
 
 void main() {
   setUpAll(() async {
@@ -18,13 +19,21 @@ void main() {
 
   late MockEventRepository mockEventRepository;
   late MockUser mockUser;
-  late MockHomeCoordinator mockHomeCoordinator;
+  late MockAppCoordinator mockAppCoordinator;
 
   setUp(() {
     mockEventRepository = MockEventRepository();
     mockUser = MockUser();
-    mockHomeCoordinator = MockHomeCoordinator();
+    mockAppCoordinator = MockAppCoordinator();
     when(() => mockUser.id).thenReturn('user1');
+    when(() => mockAppCoordinator.goToHome()).thenReturn(null);
+    when(() => mockAppCoordinator.pushEventDetail(any())).thenReturn(null);
+    when(
+      () => mockAppCoordinator.pushTicketQR(
+        any(),
+        eventMeta: any(named: 'eventMeta'),
+      ),
+    ).thenReturn(null);
   });
 
   Widget createTestWidget({
@@ -35,7 +44,7 @@ void main() {
       overrides: [
         currentUserProvider.overrideWith((ref) => mockUser),
         eventRepositoryProvider.overrideWithValue(mockEventRepository),
-        homeCoordinatorProvider.overrideWithValue(mockHomeCoordinator),
+        appCoordinatorProvider.overrideWithValue(mockAppCoordinator),
         ...extraOverrides,
       ].cast(),
       child: MaterialApp(theme: theme, home: const MyTicketsPage()),
@@ -113,7 +122,7 @@ void main() {
       await pumpAndSettle(tester);
 
       await tester.tap(find.text('이벤트 둘러보기'));
-      verify(() => mockHomeCoordinator.goToHome()).called(1);
+      verify(() => mockAppCoordinator.goToHome()).called(1);
     });
 
     testWidgets('empty state uses MinglitEmptyState widget', (tester) async {
@@ -238,7 +247,7 @@ void main() {
       await pumpAndSettle(tester);
 
       await tester.tap(find.text('탭 테스트 이벤트'));
-      verify(() => mockHomeCoordinator.pushEventDetail('event_1')).called(1);
+      verify(() => mockAppCoordinator.pushEventDetail('event_1')).called(1);
     });
 
     testWidgets('tapping QR button calls pushTicketQR', (tester) async {
@@ -260,9 +269,9 @@ void main() {
       await tester.pump();
 
       verify(
-        () => mockHomeCoordinator.pushTicketQR(
+        () => mockAppCoordinator.pushTicketQR(
           'ticket_1',
-          eventMeta: any(named: 'eventMeta'),
+          eventMeta: any<TicketEventMeta?>(named: 'eventMeta'),
         ),
       ).called(1);
     });

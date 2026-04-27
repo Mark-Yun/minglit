@@ -1,5 +1,5 @@
 import 'package:app_user/src/features/home/logic/home_coordinator.dart';
-import 'package:app_user/src/features/ticket/ui/model/ticket_event_meta.dart';
+import 'package:app_user/src/routing/app_coordinator.dart';
 import 'package:app_user/src/routing/app_router.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -9,13 +9,21 @@ import '../../../../utils/test_utils.dart';
 
 class MockGoRouter extends Mock implements GoRouter {}
 
+class MockAppCoordinator extends Mock implements AppCoordinator {}
+
 void main() {
   late MockGoRouter mockRouter;
+  late MockAppCoordinator mockApp;
 
   setUp(() {
     mockRouter = MockGoRouter();
+    mockApp = MockAppCoordinator();
     when(() => mockRouter.push(any())).thenAnswer((_) async => null);
     when(() => mockRouter.go(any())).thenReturn(null);
+    when(() => mockApp.goToHome()).thenReturn(null);
+    when(() => mockApp.goToLogin()).thenReturn(null);
+    when(() => mockApp.goToLogin(from: any(named: 'from'))).thenReturn(null);
+    when(() => mockApp.pushEventDetail(any())).thenReturn(null);
   });
 
   group('HomeCoordinator', () {
@@ -23,6 +31,7 @@ void main() {
       final container = createContainer(
         overrides: [
           goRouterProvider.overrideWithValue(mockRouter),
+          appCoordinatorProvider.overrideWithValue(mockApp),
         ],
       );
 
@@ -32,7 +41,7 @@ void main() {
     });
 
     test('pushNotificationCenter calls router.push', () {
-      HomeCoordinator(mockRouter).pushNotificationCenter();
+      HomeCoordinator(mockRouter, mockApp).pushNotificationCenter();
 
       verify(
         () => mockRouter.push(any(that: contains('/notifications'))),
@@ -40,7 +49,7 @@ void main() {
     });
 
     test('pushPurchaseHistory calls router.push', () {
-      HomeCoordinator(mockRouter).pushPurchaseHistory();
+      HomeCoordinator(mockRouter, mockApp).pushPurchaseHistory();
 
       verify(
         () => mockRouter.push(any(that: contains('purchase-history'))),
@@ -48,7 +57,7 @@ void main() {
     });
 
     test('goToPurchaseHistory calls router.go', () {
-      HomeCoordinator(mockRouter).goToPurchaseHistory();
+      HomeCoordinator(mockRouter, mockApp).goToPurchaseHistory();
 
       verify(
         () => mockRouter.go(any(that: contains('purchase-history'))),
@@ -56,22 +65,23 @@ void main() {
     });
 
     test('pushNotificationSettings calls router.push', () {
-      HomeCoordinator(mockRouter).pushNotificationSettings();
+      HomeCoordinator(mockRouter, mockApp).pushNotificationSettings();
 
       verify(
         () => mockRouter.push(any(that: contains('notification-settings'))),
       ).called(1);
     });
 
-    // Fix #404: Tests for new coordinator methods
-    test('goToHome calls router.go("/")', () {
-      HomeCoordinator(mockRouter).goToHome();
+    // Fix #404: goToHome delegates to AppCoordinator — refactored in #1956
+    test('goToHome delegates to AppCoordinator', () {
+      HomeCoordinator(mockRouter, mockApp).goToHome();
 
-      verify(() => mockRouter.go('/')).called(1);
+      verify(() => mockApp.goToHome()).called(1);
+      verifyNever(() => mockRouter.go(any()));
     });
 
     test('pushPrivacy calls router.push', () {
-      HomeCoordinator(mockRouter).pushPrivacy();
+      HomeCoordinator(mockRouter, mockApp).pushPrivacy();
 
       verify(
         () => mockRouter.push(any(that: contains('privacy'))),
@@ -79,24 +89,24 @@ void main() {
     });
 
     test('pushBlockedPartners calls router.push', () {
-      HomeCoordinator(mockRouter).pushBlockedPartners();
+      HomeCoordinator(mockRouter, mockApp).pushBlockedPartners();
 
       verify(
         () => mockRouter.push(any(that: contains('blocked-partners'))),
       ).called(1);
     });
 
-    test('pushEventDetail calls router.push with eventId', () {
-      HomeCoordinator(mockRouter).pushEventDetail('evt_123');
+    // pushEventDetail delegates to AppCoordinator — refactored in #1956
+    test('pushEventDetail delegates to AppCoordinator', () {
+      HomeCoordinator(mockRouter, mockApp).pushEventDetail('evt_123');
 
-      verify(
-        () => mockRouter.push(any(that: contains('evt_123'))),
-      ).called(1);
+      verify(() => mockApp.pushEventDetail('evt_123')).called(1);
+      verifyNever(() => mockRouter.push(any()));
     });
 
     // Fix #641: pushMyTickets navigates to /tickets/my
     test('pushMyTickets calls router.push with /tickets/my', () {
-      HomeCoordinator(mockRouter).pushMyTickets();
+      HomeCoordinator(mockRouter, mockApp).pushMyTickets();
 
       verify(
         () => mockRouter.push(any(that: contains('/tickets/my'))),
@@ -104,7 +114,7 @@ void main() {
     });
 
     test('pushPartnerEvents calls router.push with partnerId', () {
-      HomeCoordinator(mockRouter).pushPartnerEvents(
+      HomeCoordinator(mockRouter, mockApp).pushPartnerEvents(
         partnerId: 'p_1',
         partnerName: 'Test Partner',
       );
@@ -117,7 +127,7 @@ void main() {
     // Fix #1630: AppBar 검색·프로필 아이콘이 GoRouter 주입 coordinator를 통해 네비게이션하는지 검증.
     // context.push() / GoRouteData.push(context) 로 되돌리면 이 테스트가 실패한다.
     test('pushSearch calls router.push with /search', () {
-      HomeCoordinator(mockRouter).pushSearch();
+      HomeCoordinator(mockRouter, mockApp).pushSearch();
 
       verify(
         () => mockRouter.push(any(that: contains('/search'))),
@@ -125,54 +135,11 @@ void main() {
     });
 
     test('pushMyPage calls router.push with /my', () {
-      HomeCoordinator(mockRouter).pushMyPage();
+      HomeCoordinator(mockRouter, mockApp).pushMyPage();
 
       verify(
         () => mockRouter.push(any(that: contains('/my'))),
       ).called(1);
-    });
-
-    // Fix #1526: pushTicketQR는 eventMeta를 GoRouter.push의 extra로 전달해야 한다.
-    // app_routes.g.dart의 _fromState가 state.extra를 드롭하면 이 테스트가 실패한다.
-    group('pushTicketQR', () {
-      setUp(() {
-        when(
-          () => mockRouter.push(any(), extra: any(named: 'extra')),
-        ).thenAnswer((_) async => null);
-      });
-
-      test('eventMeta를 GoRouter extra로 전달한다', () {
-        final meta = TicketEventMeta(
-          eventTitle: '테스트 이벤트',
-          eventDateTime: DateTime(2026, 5, 1, 18),
-          eventVenue: '강남 라운지',
-          ticketName: '일반 입장권',
-        );
-
-        HomeCoordinator(mockRouter).pushTicketQR('ticket-123', eventMeta: meta);
-
-        final captured = verify(
-          () => mockRouter.push(
-            any(that: contains('ticket-123')),
-            extra: captureAny(named: 'extra'),
-          ),
-        ).captured;
-
-        expect(captured.single, same(meta));
-      });
-
-      test('eventMeta 없이 호출하면 extra=null로 전달한다', () {
-        HomeCoordinator(mockRouter).pushTicketQR('ticket-456');
-
-        final captured = verify(
-          () => mockRouter.push(
-            any(that: contains('ticket-456')),
-            extra: captureAny(named: 'extra'),
-          ),
-        ).captured;
-
-        expect(captured.single, isNull);
-      });
     });
   });
 }
