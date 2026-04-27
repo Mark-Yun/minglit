@@ -107,6 +107,8 @@ class EventNowBarStateNotifier extends _$EventNowBarStateNotifier {
       if (matches.isNotEmpty) {
         return EventNowBarState.results;
       }
+    } on StateError {
+      // Fix #1942: Riverpod disposes the provider during navigation — degrade silently.
     } on Exception catch (e, st) {
       Log.e(
         '⚠️ [EventNowBar] myMatches unavailable, degrading to lower state',
@@ -123,6 +125,8 @@ class EventNowBarStateNotifier extends _$EventNowBarStateNotifier {
       if (candidates.isNotEmpty) {
         return EventNowBarState.matching;
       }
+    } on StateError {
+      // Fix #1942: Riverpod disposes the provider during navigation — degrade silently.
     } on Exception catch (e, st) {
       Log.e(
         '⚠️ [EventNowBar] matchCandidates unavailable, degrading to lower state',
