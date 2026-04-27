@@ -52,6 +52,24 @@ mixin _EventRepositoryQueries on _SupabaseEventContext {
     }
   }
 
+  /// Fetches a single event application by its ID, including the applicant's
+  /// full user profile. Used by the application detail page.
+  Future<EventApplication?> getApplicationById(String applicationId) async {
+    Log.d('getApplicationById called | id: $applicationId');
+    try {
+      final response = await supabaseClient
+          .from('event_applications')
+          .select('*, user:user_profiles(*)')
+          .eq('id', applicationId)
+          .maybeSingle();
+      if (response == null) return null;
+      return EventApplication.fromJson(response);
+    } catch (e, st) {
+      Log.e('❌ [EventRepo] getApplicationById Error', e, st);
+      rethrow;
+    }
+  }
+
   // Fix #1534: search_events_pgroonga 직접 호출은 events 행만 반환해 party.title/tickets 누락 — ID 목록 조회 후 relations 포함 재조회
   Future<List<Event>> searchEvents(String query) async {
     Log.d('searchEvents called | queryLength: ${query.length}');
