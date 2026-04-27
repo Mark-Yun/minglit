@@ -189,7 +189,7 @@ void main() {
               return controller = _SlowController([_participantA], completer);
             }),
           ],
-          child: MaterialApp(
+          child: const MaterialApp(
             home: Scaffold(
               body: ManualCheckinSheet(eventId: 'event-1'),
             ),
