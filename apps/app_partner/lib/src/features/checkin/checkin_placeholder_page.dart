@@ -3,7 +3,6 @@ import 'package:app_partner/src/logic/current_partner_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
-import 'package:riverpod/src/providers/future_provider.dart';
 
 /// Check-in tab entry page.
 ///
@@ -68,8 +67,7 @@ class _CheckinEntryPage extends ConsumerWidget {
 
 /// Provider that fetches today's events for check-in.
 /// "Today" = events starting within 3 hours before ~ 1 hour after end.
-final FutureProviderFamily<List<Event>, String> todayEventsProvider =
-    FutureProvider.family.autoDispose<List<Event>, String>((
+final todayEventsProvider = FutureProvider.family.autoDispose<List<Event>, String>((
       ref,
       partnerId,
     ) async {
