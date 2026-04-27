@@ -747,7 +747,7 @@ void main() {
 
     tearDown(() => container.dispose());
 
-    PurchaseHistoryController get ctrl =>
+    PurchaseHistoryController ctrl() =>
         container.read(purchaseHistoryControllerProvider.notifier);
 
     const amount = 10000;
@@ -759,7 +759,7 @@ void main() {
       final paidAt = now.subtract(const Duration(hours: grace));
       final eventStart = now.add(const Duration(days: cutoff + 1));
 
-      final result = ctrl.calculateRefund(
+      final result = ctrl().calculateRefund(
         eventStartTime: eventStart,
         paymentAmount: amount,
         paidAt: paidAt,
@@ -777,7 +777,7 @@ void main() {
       // Event 2 days away — outside 7-day cutoff — no fallback refund
       final eventStart = now.add(const Duration(days: 2));
 
-      final result = ctrl.calculateRefund(
+      final result = ctrl().calculateRefund(
         eventStartTime: eventStart,
         paymentAmount: amount,
         paidAt: paidAt,
@@ -795,7 +795,7 @@ void main() {
       // paidAt far past grace period — only cutoff path applies
       final paidAt = now.subtract(const Duration(days: 1));
 
-      final result = ctrl.calculateRefund(
+      final result = ctrl().calculateRefund(
         eventStartTime: eventStart,
         paymentAmount: amount,
         paidAt: paidAt,
@@ -813,7 +813,7 @@ void main() {
       // paidAt far past grace period
       final paidAt = now.subtract(const Duration(days: 1));
 
-      final result = ctrl.calculateRefund(
+      final result = ctrl().calculateRefund(
         eventStartTime: eventStart,
         paymentAmount: amount,
         paidAt: paidAt,
@@ -832,7 +832,7 @@ void main() {
       // event 2d away: outside 7d cutoff
       final eventStart = now.add(const Duration(days: 2));
 
-      final result = ctrl.calculateRefund(
+      final result = ctrl().calculateRefund(
         eventStartTime: eventStart,
         paymentAmount: amount,
         paidAt: paidAt,
