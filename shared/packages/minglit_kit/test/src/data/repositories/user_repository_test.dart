@@ -58,7 +58,7 @@ void main() {
           mockTable(
             mockClient,
             'user_profiles',
-            shouldThrow: PostgrestException(
+            shouldThrow: const PostgrestException(
               message: 'no rows found',
               code: 'PGRST116',
             ),
@@ -75,7 +75,7 @@ void main() {
           mockTable(
             mockClient,
             'user_profiles',
-            shouldThrow: PostgrestException(
+            shouldThrow: const PostgrestException(
               message: 'server error',
               code: '500',
             ),
