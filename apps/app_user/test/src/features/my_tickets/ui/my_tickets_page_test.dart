@@ -262,7 +262,7 @@ void main() {
       verify(
         () => mockHomeCoordinator.pushTicketQR(
           'ticket_1',
-          eventMeta: any(named: 'eventMeta'),
+          eventMeta: any<TicketEventMeta?>(named: 'eventMeta'),
         ),
       ).called(1);
     });

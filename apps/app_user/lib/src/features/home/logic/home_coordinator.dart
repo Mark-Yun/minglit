@@ -15,13 +15,20 @@ final homeCoordinatorProvider = Provider<HomeCoordinator>((ref) {
 });
 
 class HomeCoordinator {
-  HomeCoordinator(this._router, this._app);
+  HomeCoordinator(this._router, [this._app]);
 
   final GoRouter _router;
-  final AppCoordinator _app;
+  final AppCoordinator? _app;
 
   // Fix #634: goToLogin을 home_coordinator로 이동 — auth_coordinator 직접 참조 제거
-  void goToLogin({String? from}) => _app.goToLogin(from: from);
+  void goToLogin({String? from}) {
+    final app = _app;
+    if (app != null) {
+      app.goToLogin(from: from);
+      return;
+    }
+    _router.go(LoginRoute(from: from).location);
+  }
 
   void pushNotificationCenter() {
     unawaited(_router.push(const NotificationCenterRoute().location));
@@ -45,7 +52,14 @@ class HomeCoordinator {
   }
 
   // Fix #404: Coordinator-based navigation for home route
-  void goToHome() => _app.goToHome();
+  void goToHome() {
+    final app = _app;
+    if (app != null) {
+      app.goToHome();
+      return;
+    }
+    _router.go('/');
+  }
 
   void pushPrivacy() {
     unawaited(_router.push(const PrivacyRoute().location));
@@ -67,7 +81,14 @@ class HomeCoordinator {
     unawaited(_router.push(const MyPageRoute().location));
   }
 
-  void pushEventDetail(String eventId) => _app.pushEventDetail(eventId);
+  void pushEventDetail(String eventId) {
+    final app = _app;
+    if (app != null) {
+      app.pushEventDetail(eventId);
+      return;
+    }
+    unawaited(_router.push(EventDetailRoute(eventId: eventId).location));
+  }
 
   void pushPartnerEvents({
     required String partnerId,
@@ -86,6 +107,22 @@ class HomeCoordinator {
   // Fix #1213: 계정 관리 서브페이지 진입점
   void pushAccountManagement() {
     unawaited(_router.push(const AccountManagementRoute().location));
+  }
+
+  // Fix #1526: HomeCoordinator public API 유지 — 테스트/화면 호출부는 그대로 두고
+  // 내부 네비게이션만 AppCoordinator로 위임해 cross-feature import 제거.
+  void pushTicketQR(String ticketId, {TicketEventMeta? eventMeta}) {
+    final app = _app;
+    if (app != null) {
+      app.pushTicketQR(ticketId, eventMeta: eventMeta);
+      return;
+    }
+    unawaited(
+      _router.push(
+        TicketQRRoute(ticketId: ticketId).location,
+        extra: eventMeta,
+      ),
+    );
   }
 
   // AppPermissionSettingsScreen은 GoRouter 라우트가 없어 Navigator.push 사용.
