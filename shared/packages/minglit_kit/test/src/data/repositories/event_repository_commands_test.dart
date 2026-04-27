@@ -254,6 +254,205 @@ void main() {
     });
   });
 
+  // Fix #1945: confirmPayment must throw on non-200 (functions.invoke never throws for HTTP errors)
+  group('EventRepository.confirmPayment', () {
+    test('completes without error on 200 response', () async {
+      when(
+        () => mockFunctions.invoke(
+          'payment-verify',
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer(
+        (_) async => FunctionResponse(status: 200, data: {'verified': true}),
+      );
+
+      await expectLater(
+        repository.confirmPayment(
+          impUid: 'imp_123',
+          merchantUid: 'merchant_123',
+        ),
+        completes,
+      );
+    });
+
+    test('throws MinglitUserException on non-200 with error message', () async {
+      when(
+        () => mockFunctions.invoke(
+          'payment-verify',
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer(
+        (_) async => FunctionResponse(
+          status: 400,
+          data: {'error': '결제 정보가 일치하지 않습니다.'},
+        ),
+      );
+
+      await expectLater(
+        repository.confirmPayment(
+          impUid: 'imp_bad',
+          merchantUid: 'merchant_bad',
+        ),
+        throwsA(
+          isA<MinglitUserException>().having(
+            (e) => e.message,
+            'message',
+            '결제 정보가 일치하지 않습니다.',
+          ),
+        ),
+      );
+    });
+
+    test('throws MinglitUserException on 500 with fallback message', () async {
+      when(
+        () => mockFunctions.invoke(
+          'payment-verify',
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer((_) async => FunctionResponse(status: 500));
+
+      await expectLater(
+        repository.confirmPayment(
+          impUid: 'imp_err',
+          merchantUid: 'merchant_err',
+        ),
+        throwsA(isA<MinglitUserException>()),
+      );
+    });
+  });
+
+  // Fix #1945: approveApplication must throw on non-200
+  group('EventRepository.approveApplication', () {
+    test('completes without error on 200 response', () async {
+      when(
+        () => mockFunctions.invoke(
+          'partner-approve-application',
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer(
+        (_) async => FunctionResponse(status: 200, data: {'approved': true}),
+      );
+
+      await expectLater(
+        repository.approveApplication(applicationId: 'app_1'),
+        completes,
+      );
+    });
+
+    test('throws MinglitUserException on non-200', () async {
+      when(
+        () => mockFunctions.invoke(
+          'partner-approve-application',
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer(
+        (_) async => FunctionResponse(
+          status: 409,
+          data: {'error': '이미 처리된 신청입니다.'},
+        ),
+      );
+
+      await expectLater(
+        repository.approveApplication(applicationId: 'app_1'),
+        throwsA(
+          isA<MinglitUserException>().having(
+            (e) => e.message,
+            'message',
+            '이미 처리된 신청입니다.',
+          ),
+        ),
+      );
+    });
+  });
+
+  // Fix #1945: rejectApplication must throw on non-200
+  group('EventRepository.rejectApplication', () {
+    test('completes without error on 200 response', () async {
+      when(
+        () => mockFunctions.invoke(
+          'partner-reject-application',
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer(
+        (_) async => FunctionResponse(status: 200, data: {'rejected': true}),
+      );
+
+      await expectLater(
+        repository.rejectApplication(
+          applicationId: 'app_1',
+          reason: '조건 불충족',
+        ),
+        completes,
+      );
+    });
+
+    test('throws MinglitUserException on non-200', () async {
+      when(
+        () => mockFunctions.invoke(
+          'partner-reject-application',
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer(
+        (_) async => FunctionResponse(
+          status: 500,
+          data: {'error': '서버 오류'},
+        ),
+      );
+
+      await expectLater(
+        repository.rejectApplication(
+          applicationId: 'app_1',
+          reason: '조건 불충족',
+        ),
+        throwsA(isA<MinglitUserException>()),
+      );
+    });
+  });
+
+  // Fix #1945: bulkApproveApplications must throw on non-200
+  group('EventRepository.bulkApproveApplications', () {
+    test('completes without error on 200 response', () async {
+      when(
+        () => mockFunctions.invoke(
+          'partner-approve-application',
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer(
+        (_) async => FunctionResponse(status: 200, data: {'approved': 5}),
+      );
+
+      await expectLater(
+        repository.bulkApproveApplications(eventId: 'event_1'),
+        completes,
+      );
+    });
+
+    test('throws MinglitUserException on non-200', () async {
+      when(
+        () => mockFunctions.invoke(
+          'partner-approve-application',
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer(
+        (_) async => FunctionResponse(
+          status: 500,
+          data: {'error': '일괄 승인 실패'},
+        ),
+      );
+
+      await expectLater(
+        repository.bulkApproveApplications(eventId: 'event_1'),
+        throwsA(
+          isA<MinglitUserException>().having(
+            (e) => e.message,
+            'message',
+            '일괄 승인 실패',
+          ),
+        ),
+      );
+    });
+  });
+
   group('EventRepository.deleteApplication', () {
     test('completes without error', () async {
       mockTable(mockClient, 'event_applications');
