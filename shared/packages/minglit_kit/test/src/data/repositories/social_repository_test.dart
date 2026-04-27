@@ -21,36 +21,21 @@ void main() {
 
   group('SocialRepository', () {
     group('toggleInteraction', () {
-      test('removes existing interaction and returns false', () async {
-        // existing record found
+      // Fix #1957: upsert with ignoreDuplicates=true returns inserted row only
+      // when insert succeeded — empty means conflict (row existed → toggle off).
+      test('creates new interaction when upsert inserts (returns true)',
+          () async {
+        const inserted = {
+          'user_id': 'user_1',
+          'target_id': 'party_1',
+          'target_type': 'party',
+          'interaction_type': 'like',
+        };
         unawaited(
           mockTable(
             mockClient,
             'social_interactions',
-            maybeSingleData: {
-              'id': 'interaction_1',
-              'user_id': 'user_1',
-              'target_id': 'party_1',
-              'interaction_type': 'like',
-            },
-          ),
-        );
-
-        final result = await repository.toggleInteraction(
-          targetId: 'party_1',
-          targetType: SocialTargetType.party,
-          interactionType: SocialInteractionType.like,
-        );
-
-        expect(result, isFalse);
-      });
-
-      test('creates new interaction and returns true', () async {
-        // no existing record
-        unawaited(
-          mockTable(
-            mockClient,
-            'social_interactions',
+            upsertReturnData: [inserted],
           ),
         );
 
@@ -61,6 +46,27 @@ void main() {
         );
 
         expect(result, isTrue);
+      });
+
+      test(
+          'removes existing interaction when upsert is ignored (returns false)',
+          () async {
+        // upsert ON CONFLICT DO NOTHING returns empty → row existed → delete
+        unawaited(
+          mockTable(
+            mockClient,
+            'social_interactions',
+            upsertReturnData: [],
+          ),
+        );
+
+        final result = await repository.toggleInteraction(
+          targetId: 'party_1',
+          targetType: SocialTargetType.party,
+          interactionType: SocialInteractionType.like,
+        );
+
+        expect(result, isFalse);
       });
 
       test('throws when user not authenticated', () async {

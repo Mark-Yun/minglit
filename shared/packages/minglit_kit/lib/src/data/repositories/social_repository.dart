@@ -47,17 +47,28 @@ class SocialRepository {
             .eq('interaction_type', opposite.name);
       }
 
-      // 1. Check if interaction already exists
-      final existing = await _supabase
+      // Fix #1957: replace TOCTOU read-check-write with atomic upsert.
+      // ON CONFLICT DO NOTHING returns the inserted row only when an actual
+      // insert happened — empty list means the row already existed (toggle off).
+      final inserted = await _supabase
           .from('social_interactions')
-          .select()
-          .eq('user_id', userId)
-          .eq('target_id', targetId)
-          .eq('interaction_type', interactionType.name)
-          .maybeSingle();
+          .upsert(
+            {
+              'user_id': userId,
+              'target_id': targetId,
+              'target_type': targetType.name,
+              'interaction_type': interactionType.name,
+            },
+            onConflict: 'user_id,target_id,interaction_type',
+            ignoreDuplicates: true,
+          )
+          .select();
 
-      if (existing != null) {
-        // 2. Delete if exists
+      if (inserted.isNotEmpty) {
+        Log.d('toggleInteraction: added');
+        return true; // Insert succeeded — now active
+      } else {
+        // Conflict was ignored — row existed, delete to toggle off.
         await _supabase
             .from('social_interactions')
             .delete()
@@ -66,16 +77,6 @@ class SocialRepository {
             .eq('interaction_type', interactionType.name);
         Log.d('toggleInteraction: removed');
         return false; // Now inactive
-      } else {
-        // 3. Insert if not exists
-        await _supabase.from('social_interactions').insert({
-          'user_id': userId,
-          'target_id': targetId,
-          'target_type': targetType.name,
-          'interaction_type': interactionType.name,
-        });
-        Log.d('toggleInteraction: added');
-        return true; // Now active
       }
     } on Object catch (e, st) {
       Log.e('❌ [SocialRepo] toggleInteraction Error', e, st);
