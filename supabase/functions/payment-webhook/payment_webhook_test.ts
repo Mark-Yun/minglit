@@ -26,6 +26,15 @@ Deno.test("payment-webhook - happy path updates status", async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
+      // Fix #1949: idempotency SELECT (not found → null) and INSERT (success)
+      {
+        matcher: (req) => req.url.includes("/rest/v1/webhook_imp_uid_log") && req.method === "GET",
+        handler: () => new Response("null", { status: 200, headers: { "Content-Type": "application/json" } }),
+      },
+      {
+        matcher: (req) => req.url.includes("/rest/v1/webhook_imp_uid_log") && req.method === "POST",
+        handler: () => jsonResponse({}),
+      },
       {
         matcher: "https://api.iamport.kr/users/getToken",
         handler: () => jsonResponse({ code: 0, response: { access_token: "token" } }),
@@ -102,6 +111,14 @@ Deno.test("payment-webhook - localhost IP allowed in dev env", async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
       {
+        matcher: (req) => req.url.includes("/rest/v1/webhook_imp_uid_log") && req.method === "GET",
+        handler: () => new Response("null", { status: 200, headers: { "Content-Type": "application/json" } }),
+      },
+      {
+        matcher: (req) => req.url.includes("/rest/v1/webhook_imp_uid_log") && req.method === "POST",
+        handler: () => jsonResponse({}),
+      },
+      {
         matcher: "https://api.iamport.kr/users/getToken",
         handler: () => jsonResponse({ code: 0, response: { access_token: "token" } }),
       },
@@ -158,6 +175,14 @@ Deno.test("payment-webhook - cf-connecting-ip accepted when x-real-ip absent", a
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
       {
+        matcher: (req) => req.url.includes("/rest/v1/webhook_imp_uid_log") && req.method === "GET",
+        handler: () => new Response("null", { status: 200, headers: { "Content-Type": "application/json" } }),
+      },
+      {
+        matcher: (req) => req.url.includes("/rest/v1/webhook_imp_uid_log") && req.method === "POST",
+        handler: () => jsonResponse({}),
+      },
+      {
         matcher: "https://api.iamport.kr/users/getToken",
         handler: () => jsonResponse({ code: 0, response: { access_token: "token" } }),
       },
@@ -191,6 +216,14 @@ Deno.test("payment-webhook - x-real-ip takes precedence over XFF", async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
+      {
+        matcher: (req) => req.url.includes("/rest/v1/webhook_imp_uid_log") && req.method === "GET",
+        handler: () => new Response("null", { status: 200, headers: { "Content-Type": "application/json" } }),
+      },
+      {
+        matcher: (req) => req.url.includes("/rest/v1/webhook_imp_uid_log") && req.method === "POST",
+        handler: () => jsonResponse({}),
+      },
       {
         matcher: "https://api.iamport.kr/users/getToken",
         handler: () => jsonResponse({ code: 0, response: { access_token: "token" } }),
@@ -245,6 +278,10 @@ Deno.test("payment-webhook - merchant UID mismatch returns 400", async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
       {
+        matcher: (req) => req.url.includes("/rest/v1/webhook_imp_uid_log") && req.method === "GET",
+        handler: () => new Response("null", { status: 200, headers: { "Content-Type": "application/json" } }),
+      },
+      {
         matcher: "https://api.iamport.kr/users/getToken",
         handler: () => jsonResponse({ code: 0, response: { access_token: "token" } }),
       },
@@ -273,6 +310,10 @@ Deno.test("payment-webhook - iamport error returns 500", async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
+      {
+        matcher: (req) => req.url.includes("/rest/v1/webhook_imp_uid_log") && req.method === "GET",
+        handler: () => new Response("null", { status: 200, headers: { "Content-Type": "application/json" } }),
+      },
       {
         matcher: "https://api.iamport.kr/users/getToken",
         handler: () => new Response("error", { status: 500 }),
@@ -317,6 +358,14 @@ Deno.test("payment-webhook - cancelled status sets refund_status completed", asy
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock, calls } = createFetchMock([
       {
+        matcher: (req) => req.url.includes("/rest/v1/webhook_imp_uid_log") && req.method === "GET",
+        handler: () => new Response("null", { status: 200, headers: { "Content-Type": "application/json" } }),
+      },
+      {
+        matcher: (req) => req.url.includes("/rest/v1/webhook_imp_uid_log") && req.method === "POST",
+        handler: () => jsonResponse({}),
+      },
+      {
         matcher: "https://api.iamport.kr/users/getToken",
         handler: () => jsonResponse({ code: 0, response: { access_token: "token" } }),
       },
@@ -354,6 +403,14 @@ Deno.test("payment-webhook - paid status does not set refund_status", async () =
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock, calls } = createFetchMock([
       {
+        matcher: (req) => req.url.includes("/rest/v1/webhook_imp_uid_log") && req.method === "GET",
+        handler: () => new Response("null", { status: 200, headers: { "Content-Type": "application/json" } }),
+      },
+      {
+        matcher: (req) => req.url.includes("/rest/v1/webhook_imp_uid_log") && req.method === "POST",
+        handler: () => jsonResponse({}),
+      },
+      {
         matcher: "https://api.iamport.kr/users/getToken",
         handler: () => jsonResponse({ code: 0, response: { access_token: "token" } }),
       },
@@ -381,6 +438,41 @@ Deno.test("payment-webhook - paid status does not set refund_status", async () =
         const dbBody = JSON.parse(dbCall!.body!);
         assertEquals(dbBody.status, "approved");
         assertEquals(dbBody.refund_status, undefined);
+      });
+    });
+  });
+});
+
+// Fix #1949: replayed webhook with same imp_uid must be rejected without side-effects
+Deno.test("payment-webhook - duplicate imp_uid returns 200 without DB update or PortOne call", async () => {
+  await withEnv(ENV, async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const { fetchMock, calls } = createFetchMock([
+      {
+        // Idempotency SELECT returns existing record — already processed
+        matcher: (req) => req.url.includes("/rest/v1/webhook_imp_uid_log") && req.method === "GET",
+        handler: () => jsonResponse({ imp_uid: "imp_dup", merchant_uid: "order-dup" }),
+      },
+    ]);
+
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const request = jsonRequest(
+          "http://localhost",
+          { imp_uid: "imp_dup", merchant_uid: "order-dup", status: "paid" },
+          { headers: { "x-real-ip": PORTONE_IP } },
+        );
+        const response = await handler(request);
+        assertEquals(response.status, 200);
+        assertEquals(await response.text(), "OK");
+
+        // No PortOne API call should have been made
+        const portoneCall = calls.find((c) => c.url.includes("api.iamport.kr"));
+        assertEquals(portoneCall, undefined);
+
+        // No DB update should have been made
+        const dbPatch = calls.find((c) => c.url.includes("/rest/v1/event_applications") && c.method === "PATCH");
+        assertEquals(dbPatch, undefined);
       });
     });
   });

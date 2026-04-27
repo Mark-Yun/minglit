@@ -62,6 +62,20 @@ Deno.serve(withHandler(async (req) => {
       return new Response("Missing parameters", { status: 400 });
     }
 
+    // Fix #1949: Idempotency check — reject replayed webhooks before hitting PortOne API.
+    // SELECT-first is intentional: INSERT-first would consume the key on transient failures,
+    // blocking PortOne retries. We insert only after a successful DB update below.
+    const supabase = createServiceClient();
+    const { data: existingLog } = await supabase
+      .from("webhook_imp_uid_log")
+      .select("imp_uid")
+      .eq("imp_uid", imp_uid)
+      .maybeSingle();
+    if (existingLog) {
+      log({ function: FN, level: "info", message: `Duplicate webhook rejected (already processed): ${imp_uid}` });
+      return new Response("OK", { status: 200 });
+    }
+
     // 2. Verify with Portone API (Cross-Check)
     const client = new IamportClient(IMP_KEY, IMP_SECRET);
     const payment = await client.getPayment(imp_uid);
@@ -73,7 +87,6 @@ Deno.serve(withHandler(async (req) => {
     }
 
     // 4. Update DB (idempotent)
-    const supabase = createServiceClient();
 
     let dbStatus = "pending";
     // Map Iamport status to Minglit status
@@ -118,6 +131,11 @@ Deno.serve(withHandler(async (req) => {
       log({ function: FN, level: "error", message: "DB Update Error", metadata: { detail: error } });
       return new Response("DB Error", { status: 500 });
     }
+
+    // Fix #1949: Record successful processing so retries/replays are blocked above.
+    await supabase
+      .from("webhook_imp_uid_log")
+      .insert({ imp_uid, merchant_uid });
 
     log({ function: FN, level: "info", message: `Updated order ${merchant_uid} to status ${dbStatus}` });
 
