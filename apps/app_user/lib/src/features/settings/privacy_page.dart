@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:app_user/src/features/account_deletion/logic/account_deletion_coordinator.dart';
-import 'package:app_user/src/features/consent/ui/consent_detail_sheet.dart';
+import 'package:app_user/src/common/widgets/consent_detail_sheet.dart';
+import 'package:app_user/src/routing/app_coordinator.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
@@ -159,7 +159,7 @@ class _PrivacyPageState extends ConsumerState<PrivacyPage> {
                 width: double.infinity,
                 child: TextButton(
                   onPressed: () {
-                    ref.read(accountDeletionCoordinatorProvider).start();
+                    ref.read(appCoordinatorProvider).startAccountDeletion();
                   },
                   child: Text(isPending ? '탈퇴 진행 상태 보기' : '회원 탈퇴 시작하기'),
                 ),

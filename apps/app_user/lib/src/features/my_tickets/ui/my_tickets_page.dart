@@ -1,7 +1,7 @@
-import 'package:app_user/src/features/home/logic/home_coordinator.dart';
 import 'package:app_user/src/features/my_tickets/logic/my_tickets_controller.dart';
 import 'package:app_user/src/features/my_tickets/ui/my_ticket_card.dart';
 import 'package:app_user/src/features/ticket/ui/model/ticket_event_meta.dart';
+import 'package:app_user/src/routing/app_coordinator.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -27,7 +27,7 @@ class MyTicketsPage extends ConsumerWidget {
               subtitle: '관심 있는 이벤트를 찾아보세요',
               actionLabel: '이벤트 둘러보기',
               onAction: () {
-                ref.read(homeCoordinatorProvider).goToHome();
+                ref.read(appCoordinatorProvider).goToHome();
               },
             );
           }
@@ -83,7 +83,7 @@ class MyTicketsPage extends ConsumerWidget {
   }
 
   void _onCardTap(WidgetRef ref, EventApplication application) {
-    ref.read(homeCoordinatorProvider).pushEventDetail(application.eventId);
+    ref.read(appCoordinatorProvider).pushEventDetail(application.eventId);
   }
 
   // Fix #852: Navigate to ticket QR via coordinator
@@ -104,7 +104,7 @@ class MyTicketsPage extends ConsumerWidget {
             ticketName: application?.ticket?.name,
           )
         : null;
-    ref.read(homeCoordinatorProvider).pushTicketQR(ticketId, eventMeta: meta);
+    ref.read(appCoordinatorProvider).pushTicketQR(ticketId, eventMeta: meta);
   }
 }
 
