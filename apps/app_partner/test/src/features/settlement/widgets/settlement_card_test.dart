@@ -121,7 +121,8 @@ void main() {
       expect(find.text('-'), findsOneWidget);
     });
 
-    testWidgets('renders negative net_amount with minus prefix', (
+    // Fix #1932: minus sign should precede ₩, not follow it
+    testWidgets('renders negative net_amount as -₩ not ₩-', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -131,7 +132,8 @@ void main() {
           'created_at': '2026-01-15T10:00:00.000Z',
         }),
       );
-      expect(find.text('₩-5,000'), findsOneWidget);
+      expect(find.text('-₩5,000'), findsOneWidget);
+      expect(find.text('₩-5,000'), findsNothing);
     });
   });
 }
