@@ -1429,5 +1429,46 @@ void main() {
         );
       });
     });
+
+    group('getApplicationById', () {
+      test('returns EventApplication when found', () async {
+        unawaited(
+          mockTable(
+            mockClient,
+            'event_applications',
+            maybeSingleData: applicationJson,
+          ),
+        );
+
+        final result = await repository.getApplicationById('app_1');
+
+        expect(result, isNotNull);
+        expect(result!.id, 'app_1');
+        expect(result.status, 'confirmed');
+      });
+
+      test('returns null when not found', () async {
+        unawaited(mockTable(mockClient, 'event_applications'));
+
+        final result = await repository.getApplicationById('app_unknown');
+
+        expect(result, isNull);
+      });
+
+      test('throws on error', () async {
+        unawaited(
+          mockTable(
+            mockClient,
+            'event_applications',
+            shouldThrow: Exception('DB error'),
+          ),
+        );
+
+        await expectLater(
+          repository.getApplicationById('app_1'),
+          throwsA(anything),
+        );
+      });
+    });
   });
 }
