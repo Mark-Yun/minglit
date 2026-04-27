@@ -160,22 +160,13 @@ class _HomePageState extends ConsumerState<HomePage> {
               surfaceTintColor: MinglitColors.transparent,
             ),
             const SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.only(top: MinglitSpacing.small),
-                child: ExploreFilterChipBar(),
-              ),
+              child: ExploreFilterChipBar(),
             ),
             const SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.only(top: MinglitSpacing.small),
-                child: FeaturedTagChipBar(),
-              ),
+              child: FeaturedTagChipBar(),
             ),
             const SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.only(top: MinglitSpacing.small),
-                child: TrendingTagSection(),
-              ),
+              child: TrendingTagSection(),
             ),
             // ignore: use_minglit_async_value_widget, returns Sliver which is incompatible with Widget-based MinglitAsyncValueWidget
             recommendationState.when(
