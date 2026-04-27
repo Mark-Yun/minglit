@@ -11,18 +11,16 @@ class MdsStorybookApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themes = [
+      WidgetbookTheme(name: 'Light', data: MinglitTheme.materialTheme),
+      WidgetbookTheme(name: 'Dark', data: MinglitTheme.materialThemeDark),
+    ];
     return Widgetbook.material(
       // Apply Minglit theme so all stories render with the correct tokens.
       addons: [
         MaterialThemeAddon(
-          themes: [
-            WidgetbookTheme(name: 'Light', data: MinglitTheme.materialTheme),
-            WidgetbookTheme(name: 'Dark', data: MinglitTheme.materialThemeDark),
-          ],
-          initialTheme: WidgetbookTheme(
-            name: 'Light',
-            data: MinglitTheme.materialTheme,
-          ),
+          themes: themes,
+          initialTheme: themes.first,
         ),
       ],
       directories: [
