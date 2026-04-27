@@ -8,6 +8,7 @@ workspace:
   - apps/app_user
   - apps/mds_storybook
   - shared/packages/mds
+  - shared/packages/mds_tokens
   - shared/packages/minglit_kit
   - shared/packages/minglit_lints
 
