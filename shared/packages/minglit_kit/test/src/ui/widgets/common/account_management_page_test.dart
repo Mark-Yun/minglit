@@ -74,7 +74,7 @@ void main() {
   group('AccountManagementPage certification tile', () {
     testWidgets('onCertification null이면 본인인증 타일 숨김', (tester) async {
       await tester.pumpWidget(
-        wrap(onLogout: () {}, onCertification: null),
+        wrap(onLogout: () {}),
       );
 
       expect(find.text('본인인증'), findsNothing);
@@ -90,7 +90,7 @@ void main() {
 
     testWidgets('isVerified false이면 "인증하기" 텍스트 표시', (tester) async {
       await tester.pumpWidget(
-        wrap(onLogout: () {}, onCertification: () {}, isVerified: false),
+        wrap(onLogout: () {}, onCertification: () {}),
       );
 
       expect(find.text('인증하기'), findsOneWidget);
