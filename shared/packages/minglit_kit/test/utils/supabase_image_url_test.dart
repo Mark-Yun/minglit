@@ -44,17 +44,21 @@ void main() {
       expect(result, contains('quality=85'));
     });
 
-    test('public-object URL, width 없음 → render/image로 재작성되지만 쿼리 없음', () {
+    test('public-object URL, width 없음 → 원본 URL 그대로 반환 (render path 미변환)', () {
       const url = '$base/storage/v1/object/public/images/foo.jpg';
       final result = supabaseImageUrl(url);
 
-      // URL is rewritten to render path even without width (no-op but harmless).
-      expect(
-        result,
-        contains('/storage/v1/render/image/public/images/foo.jpg'),
-      );
-      expect(result, isNot(contains('width=')));
-      expect(result, isNot(contains('quality=')));
+      // Fix #1918: render path requires Image Transformations to be enabled.
+      // Without width, no transform is needed — return original object URL.
+      expect(result, url);
+      expect(result, isNot(contains('/storage/v1/render/image/')));
+    });
+
+    test('render URL, width 없음 → 원본 URL 그대로 반환', () {
+      const url = '$base/storage/v1/render/image/public/avatars/user.jpg';
+      final result = supabaseImageUrl(url);
+
+      expect(result, url);
     });
 
     test('이미-render URL + width → 쿼리 병합', () {

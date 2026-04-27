@@ -72,13 +72,7 @@ class MinglitImage extends StatelessWidget {
 
     ImageProvider provider;
 
-    // Derive pixel-aligned cache dimensions from logical size × DPR to avoid
-    // decoding full-resolution images for small thumbnails during scroll.
-    // Only applied when a finite, positive logical dimension is provided.
-    // Guard against double.infinity (e.g. callers that pass width: double.infinity
-    // for fill-parent semantics) — infinity × DPR cannot be converted to int.
-    // perf: cacheWidth/cacheHeight reduce memory and decode cost on scroll.
-    // Directive: cacheW must always be paired with a finite explicit width param.
+    // perf: decode at physical pixel size to avoid full-res decode on scroll.
     final dpr = MediaQuery.devicePixelRatioOf(context);
     final cacheW = (width != null && width!.isFinite && width! > 0)
         ? (width! * dpr).round()

@@ -220,9 +220,11 @@ class _ApplicationTab extends ConsumerWidget {
           context,
         ).showSnackBar(SnackBar(content: Text('$total건 승인 완료')));
       } else {
+        // Fix #1953: show all failed event titles, not just the first.
+        final failureList = failures.join('\n');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('일부 승인 실패 (${failures.length}건): ${failures.first}'),
+            content: Text('일부 승인 실패 (${failures.length}건):\n$failureList'),
           ),
         );
       }

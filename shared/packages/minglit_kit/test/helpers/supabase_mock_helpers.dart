@@ -277,6 +277,39 @@ class _FakeFilterBuilder extends Fake
   }
 
   @override
+  PostgrestFilterBuilder<List<Map<String, dynamic>>> gt(
+    String column,
+    Object value,
+  ) {
+    recordedFilters.add(
+      RecordedFilterOperation(method: 'gt', column: column, value: value),
+    );
+    return this;
+  }
+
+  @override
+  PostgrestFilterBuilder<List<Map<String, dynamic>>> lt(
+    String column,
+    Object value,
+  ) {
+    recordedFilters.add(
+      RecordedFilterOperation(method: 'lt', column: column, value: value),
+    );
+    return this;
+  }
+
+  @override
+  PostgrestFilterBuilder<List<Map<String, dynamic>>> or(
+    String filters, {
+    String? referencedTable,
+  }) {
+    recordedFilters.add(
+      RecordedFilterOperation(method: 'or', column: '*', value: filters),
+    );
+    return this;
+  }
+
+  @override
   PostgrestFilterBuilder<List<Map<String, dynamic>>> ilike(
     String column,
     String pattern,

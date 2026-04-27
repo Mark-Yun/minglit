@@ -26,13 +26,14 @@ String supabaseImageUrl(String url, {int? width, int quality = 70}) {
     return url;
   }
 
+  // Fix #1918: render path requires Image Transformations to be enabled in
+  // Supabase settings; skip the rewrite entirely when no transform is needed.
+  if (width == null) {
+    return url;
+  }
+
   // Rewrite public-object URLs to the render/image transform endpoint.
   final base = isObjectUrl ? url.replaceFirst(objectPath, renderPath) : url;
-
-  if (width == null) {
-    // No sizing requested — return (possibly rewritten) URL without query.
-    return base;
-  }
 
   // Merge width + quality into the existing query string.
   final uri = Uri.parse(base);
