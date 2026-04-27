@@ -165,7 +165,9 @@ class _MatchResultCard extends StatelessWidget {
                 if (match.partnerContact != null) ...[
                   const SizedBox(height: MinglitSpacing.xxsmall),
                   Text(
-                    match.partnerContact!,
+                    // Fix #1925: mask phone number to prevent PII exposure in UI
+                    // (개인정보보호법 §24 — phone numbers are sensitive PII)
+                    _maskPhone(match.partnerContact!),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: MinglitColors.textSecondary,
                     ),
@@ -183,6 +185,24 @@ class _MatchResultCard extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Fix #1925: masks middle digits of a Korean phone number to protect PII.
+/// Handles both raw (+821012345678) and local (01012345678) formats.
+/// Result: 010-****-5678
+String _maskPhone(String phone) {
+  final digits = phone.replaceAll(RegExp(r'\D'), '');
+  // Normalize country code: +82XX... → 0XX...
+  final local =
+      digits.startsWith('82') && digits.length > 10 ? '0${digits.substring(2)}' : digits;
+  if (local.length == 11) {
+    return '${local.substring(0, 3)}-****-${local.substring(7)}';
+  }
+  if (local.length == 10) {
+    return '${local.substring(0, 3)}-***-${local.substring(6)}';
+  }
+  // Fallback: mask all but last 4
+  return '***-****-${local.length >= 4 ? local.substring(local.length - 4) : '****'}';
 }
 
 class _DragHandle extends StatelessWidget {
