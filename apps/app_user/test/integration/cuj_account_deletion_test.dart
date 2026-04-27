@@ -15,12 +15,12 @@
 import 'dart:async';
 
 import 'package:app_user/src/features/account_deletion/logic/account_deletion_coordinator.dart';
-import 'package:app_user/src/routing/app_coordinator.dart';
 import 'package:app_user/src/features/account_deletion/ui/deletion_complete_page.dart';
 import 'package:app_user/src/features/account_deletion/ui/deletion_info_page.dart';
 import 'package:app_user/src/features/account_deletion/ui/deletion_reason_page.dart';
 import 'package:app_user/src/features/account_deletion/ui/deletion_verify_page.dart';
 import 'package:app_user/src/features/auth/login_page.dart';
+import 'package:app_user/src/routing/app_coordinator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -129,7 +129,9 @@ void main() {
         ProviderScope(
           overrides: [
             currentUserProvider.overrideWith((_) => testUser),
-            authControllerProvider.overrideWith(_FakeDeletionAuthController.new),
+            authControllerProvider.overrideWith(
+              _FakeDeletionAuthController.new,
+            ),
             appCoordinatorProvider.overrideWith(
               (ref) => _NoopAppCoordinator(),
             ),
@@ -410,17 +412,17 @@ class _SpyDeletionCoordinator extends AccountDeletionCoordinator {
 /// No-op AppCoordinator for Fix #1923 test — prevents actual router.go('/') call.
 class _NoopAppCoordinator extends AppCoordinator {
   _NoopAppCoordinator()
-      : super(
-          GoRouter(
-            routes: [
-              GoRoute(
-                path: '/',
-                builder: (_, _) => const SizedBox.shrink(),
-              ),
-            ],
-          ),
-          _NoopDeletionCoordinator(),
-        );
+    : super(
+        GoRouter(
+          routes: [
+            GoRoute(
+              path: '/',
+              builder: (_, _) => const SizedBox.shrink(),
+            ),
+          ],
+        ),
+        _NoopDeletionCoordinator(),
+      );
 
   @override
   void goToHome() {}
@@ -428,16 +430,16 @@ class _NoopAppCoordinator extends AppCoordinator {
 
 class _NoopDeletionCoordinator extends AccountDeletionCoordinator {
   _NoopDeletionCoordinator()
-      : super(
-          GoRouter(
-            routes: [
-              GoRoute(
-                path: '/',
-                builder: (_, _) => const SizedBox.shrink(),
-              ),
-            ],
-          ),
-        );
+    : super(
+        GoRouter(
+          routes: [
+            GoRoute(
+              path: '/',
+              builder: (_, _) => const SizedBox.shrink(),
+            ),
+          ],
+        ),
+      );
 
   @override
   void start() {}
