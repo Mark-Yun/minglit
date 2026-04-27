@@ -79,7 +79,7 @@ void main() {
         'get_event_checkin_stats',
         params: any(named: 'params'),
       ),
-    ).thenAnswer((_) => _FakeRpcBuilder(statsResponse));
+    ).thenAnswer((_) => _FakeRpcBuilder<dynamic>(statsResponse));
 
     return ProviderContainer(
       overrides: [supabaseClientProvider.overrideWithValue(mockClient)],

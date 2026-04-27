@@ -99,13 +99,22 @@ class EventNowBarStateNotifier extends _$EventNowBarStateNotifier {
 
     // RESULTS: myMatchesProvider has results (including empty list means
     // matching round completed).
+    // Fix #1942: was `on Object catch (_)` — swallows Error subclasses and hides
+    // network/auth failures silently. Use `on Exception` so programming Errors
+    // propagate, and log so production failures are visible in Axiom.
     try {
       final matches = await ref.watch(myMatchesProvider(event.id).future);
       if (matches.isNotEmpty) {
         return EventNowBarState.results;
       }
-    } on Object catch (_) {
-      // myMatches not available yet — continue to check lower states.
+    } on StateError {
+      // Fix #1942: Riverpod disposes the provider during navigation — degrade silently.
+    } on Exception catch (e, st) {
+      Log.e(
+        '⚠️ [EventNowBar] myMatches unavailable, degrading to lower state',
+        e,
+        st,
+      );
     }
 
     // MATCHING: matchCandidatesProvider returns non-empty list.
@@ -116,8 +125,14 @@ class EventNowBarStateNotifier extends _$EventNowBarStateNotifier {
       if (candidates.isNotEmpty) {
         return EventNowBarState.matching;
       }
-    } on Object catch (_) {
-      // matchCandidates not available yet — continue to check lower states.
+    } on StateError {
+      // Fix #1942: Riverpod disposes the provider during navigation — degrade silently.
+    } on Exception catch (e, st) {
+      Log.e(
+        '⚠️ [EventNowBar] matchCandidates unavailable, degrading to lower state',
+        e,
+        st,
+      );
     }
 
     // CHECKED_IN: participant has checked in.

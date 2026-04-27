@@ -45,6 +45,24 @@ void main() {
         expect(token.expiresAt.isAfter(DateTime.now()), isTrue);
       });
 
+      // Fix #1961: mintTicket must emit UTC expiresAt so toIso8601String()
+      // produces a 'Z' suffix — prevents sign/verify mismatch on non-UTC
+      // devices where local DateTime would produce a '+HH:MM' offset instead.
+      test('Fix #1961: expiresAt is UTC', () async {
+        final token = await repository.mintTicket(
+          ticketId: 'ticket_1',
+          eventId: 'event_1',
+          userId: 'user_1',
+          serverPrivateKey: keyPair,
+        );
+
+        expect(
+          token.expiresAt.isUtc,
+          isTrue,
+          reason: 'expiresAt must be UTC to avoid ISO8601 offset mismatch',
+        );
+      });
+
       test('generates different signatures for different payloads', () async {
         final token1 = await repository.mintTicket(
           ticketId: 'ticket_1',
@@ -205,6 +223,54 @@ void main() {
           throwsA(isA<StateError>()),
         );
       });
+
+      // Fix #1961: mintTicket must use UTC so that JSON round-trip preserves
+      // the exact ISO8601 string used during signing. Before the fix,
+      // DateTime.now() (local, no 'Z') produced a different toIso8601String()
+      // than DateTime.now().toUtc() (UTC, 'Z' suffix) — causing signature
+      // mismatch after JSON serialization on any timezone.
+      test(
+        'Fix #1961: sign-verify round-trip after JSON serialization',
+        () async {
+          final token = await repository.mintTicket(
+            ticketId: 'ticket-utc-1',
+            eventId: 'event-utc-1',
+            userId: 'user-utc-1',
+            serverPrivateKey: keyPair,
+          );
+
+          // Serialize expiresAt as ISO8601, then re-parse without calling .toUtc().
+          // With the fix: toIso8601String() emits 'Z' suffix → Dart parses it
+          // back as UTC (isUtc=true) and toIso8601String() still emits 'Z' —
+          // signed and verification payloads are identical.
+          // Without the fix: toIso8601String() emits no 'Z' → Dart parses it
+          // as local (isUtc=false) — passes on local machine but breaks when the
+          // token is issued by mintTicket (local) and verified against a UTC
+          // round-tripped copy from the wallet.
+          final expiresAtStr = token.expiresAt.toIso8601String();
+          final reparsedToken = token.copyWith(
+            expiresAt: DateTime.parse(expiresAtStr),
+          );
+
+          // After round-trip through JSON, expiresAt must still be UTC.
+          // Without the fix this fails on every machine (isUtc=false).
+          expect(reparsedToken.expiresAt.isUtc, isTrue);
+
+          when(
+            () => mockClient.rpc<String>(
+              'process_qr_checkin',
+              params: any(named: 'params'),
+            ),
+          ).thenAnswer((_) => FakeRpcBuilder('success'));
+
+          final result = await repository.verifyAndCheckin(
+            token: reparsedToken,
+            serverPublicKey: publicKey,
+          );
+
+          expect(result, isTrue);
+        },
+      );
     });
   });
 }

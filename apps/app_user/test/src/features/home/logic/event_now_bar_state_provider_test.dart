@@ -295,5 +295,34 @@ void main() {
       // Empty matches + non-empty candidates → MATCHING (not RESULTS).
       expect(result, EventNowBarState.matching);
     });
+
+    // Fix #1942: exceptions in myMatches/matchCandidates must be logged (not silently swallowed)
+    test('myMatches 예외 시 Log.e 호출 및 하위 상태로 디그레이드', () async {
+      Log.clear();
+
+      final activeEvent = makeActiveEvent(
+        startTime: _fixedNow.subtract(const Duration(hours: 1)),
+        participantStatus: 'checked_in',
+      );
+
+      final container = makeContainer(
+        eventId: 'event_1',
+        // candidates: null → throws Exception('not available') from mock
+        // matches: null → throws Exception('not available') from mock
+      );
+
+      final result = await container.read(
+        eventNowBarStateProvider(activeEvent).future,
+      );
+
+      // Degrades to CHECKED_IN (participantStatus = checked_in) when both throw.
+      expect(result, EventNowBarState.checkedIn);
+      // Fix #1942: exception must be logged — not silently discarded.
+      expect(
+        Log.export(),
+        contains('EventNowBar'),
+        reason: 'expected EventNowBar exception to appear in log output',
+      );
+    });
   });
 }
