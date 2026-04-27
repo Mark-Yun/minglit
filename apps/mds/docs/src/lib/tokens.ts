@@ -95,7 +95,7 @@ function flattenTokens(
 // ---------------------------------------------------------------------------
 const TOKEN_DIR = path.resolve(
   process.cwd(),
-  '../../../shared/packages/mds/tokens/tokens'
+  '../../../shared/packages/mds/tokens/tokens',
 );
 
 function readTokenFile(filename: string): TokenGroup {
