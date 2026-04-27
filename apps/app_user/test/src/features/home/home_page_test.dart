@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app_user/src/features/home/home_page.dart';
 import 'package:app_user/src/features/home/widgets/event_now_bar.dart';
 import 'package:app_user/src/features/home/widgets/event_now_bar_controller.dart';
@@ -138,9 +140,32 @@ void main() {
       expect(find.text('Test Party Event'), findsOneWidget);
     });
 
+    // Fix #1856: initial feed loading shows skeleton cards, not progress indicator
+    testWidgets('Fix #1856: shows skeleton cards during initial feed loading', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        createTestWidget(
+          overrides: [
+            recommendationFeedProvider.overrideWith(
+              _MockLoadingSkeletonNotifier.new,
+            ),
+          ],
+        ),
+      );
+      await tester.pump();
+
+      expect(find.byType(MinglitEventCard), findsWidgets);
+      expect(find.byType(MinglitCircularProgressIndicator), findsNothing);
+    });
+
     testWidgets('shows loading indicator when isLoadingMore is true', (
       tester,
     ) async {
+      // Use a tall viewport so the event card + progress indicator both fit
+      await tester.binding.setSurfaceSize(const Size(800, 2000));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
       await tester.pumpWidget(
         createTestWidget(
           overrides: [
@@ -153,6 +178,7 @@ void main() {
       await tester.pump();
 
       // Fix #113: SliverFillRemaining fills viewport, SliverToBoxAdapter skips
+      // isLoadingMore shows progress indicator below the existing event list
       expect(find.byType(MinglitCircularProgressIndicator), findsOneWidget);
     });
 
@@ -398,13 +424,24 @@ class _NoFiltersNotifier extends ActiveFilters {
   ExploreFilters build() => const ExploreFilters();
 }
 
-/// A notifier that returns isLoadingMore=true to test the loading indicator.
+/// Fix #1856: notifier that stays in AsyncLoading (build never resolves) to
+/// verify the loading: branch shows skeleton cards, not a progress indicator.
+class _MockLoadingSkeletonNotifier extends RecommendationFeedNotifier {
+  @override
+  Future<RecommendationFeedState> build() {
+    // Never completes — keeps provider in AsyncLoading so we enter loading: branch
+    return Completer<RecommendationFeedState>().future;
+  }
+}
+
+/// A notifier that returns isLoadingMore=true with existing events to test
+/// the pagination loading indicator (realistic: loading more after initial load).
 class _MockLoadingMoreNotifier extends RecommendationFeedNotifier {
   @override
   Future<RecommendationFeedState> build() async {
-    return const RecommendationFeedState(
-      events: [],
-      serverOffset: 0,
+    return RecommendationFeedState(
+      events: [_makeFeedEvent(0)],
+      serverOffset: 1,
       hasMore: true,
       isLoadingMore: true,
     );
