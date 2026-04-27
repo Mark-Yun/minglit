@@ -27,14 +27,14 @@ minglit_kit/lib/src/features/
 ├── auth/           # 로그인, 회원가입, OAuth
 ├── consent/        # 이용약관/개인정보 동의 관리 (동의 화면, 동의 이력 추적)
 ├── dev/            # 개발 유틸리티 (세션 스위처, 미리보기)
-├── iamport/        # 결제 연동 (Iamport SDK 래퍼)
+├── iamport/        # 결제 연동 + 본인인증 UI 진입점 (Iamport V1 SDK 래퍼 — 결제·본인인증 양쪽 사용)
 ├── loading/        # 글로벌 로딩 오버레이
 ├── notification/   # 푸시 알림, FCM, 알림 목록/설정
 ├── search/         # 전문 검색 (PGroonga)
 ├── social/         # 소셜 기능 (좋아요, 구독, 차단)
 ├── permission/     # 앱 권한 설정 (카메라, 위치 등 시스템 권한 관리 화면)
 ├── theme/          # 테마 모드 컨트롤러 (라이트/다크/시스템)
-└── verification/   # 본인인증 (Identity Verification) — Iamport V2 기반 실명 인증 화면
+└── verification/   # 본인인증 (Identity Verification) — 클라이언트: minglit_iamport_v1(V1 SDK), 백엔드 검증: Edge Function identity-verify(Portone V2)
 ```
 
 #### app_user Features
@@ -144,7 +144,7 @@ Minglit은 **"신뢰(Trust)"**를 가장 중요한 자산으로 취급하며, �
 ### 5.1 Layer 1: Identity (신원)
 *   **정의**: "이 사람은 실존하며, 주장하는 나이/성별이 맞는가?"
 *   **데이터**: `user_profiles` 테이블 (`birth_date`, `gender`, `is_verified`).
-*   **검증 주체**: 플랫폼 (Iamport 본인인증 API).
+*   **검증 주체**: 플랫폼 — 클라이언트 SDK: `minglit_iamport_v1`(Iamport V1), 백엔드 검증: Edge Function `identity-verify`(Portone V2 API). V1 SDK + V2 백엔드 병행 구조.
 *   **특징**: 모든 유저가 갖춰야 할 **기본 자격(Base Layer)**. 파트너 승인이 불필요하며, 즉시 필터링(나이 제한 등)에 사용됩니다.
 
 ### 5.2 Layer 2: Qualification (자격)
