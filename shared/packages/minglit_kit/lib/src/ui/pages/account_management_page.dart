@@ -14,6 +14,9 @@ class AccountManagementPage extends StatelessWidget {
     required this.onDeleteAccount,
     super.key,
     this.onPartnerProfile, // app_partner only — null hides the tile
+    // Fix #1861: 본인인증 진입점 — null이면 타일 숨김 (app_partner)
+    this.onCertification,
+    this.isVerified = false,
   });
 
   final VoidCallback onLogout;
@@ -22,6 +25,14 @@ class AccountManagementPage extends StatelessWidget {
   /// Optional partner profile callback. When non-null, shows a partner profile
   /// tile at the top of the page (app_partner only).
   final VoidCallback? onPartnerProfile;
+
+  /// Optional certification callback. When non-null, shows an identity
+  /// verification tile (app_user only). Null hides the tile.
+  final VoidCallback? onCertification;
+
+  /// Whether the user has completed identity verification.
+  /// Only meaningful when [onCertification] is non-null.
+  final bool isVerified;
 
   @override
   Widget build(BuildContext context) {
@@ -35,6 +46,27 @@ class AccountManagementPage extends StatelessWidget {
               title: const Text('파트너 프로필'),
               trailing: const Icon(Icons.chevron_right),
               onTap: onPartnerProfile,
+            ),
+            const Divider(),
+          ],
+          // Fix #1861: 본인인증 진입점 — 계정에 귀속된 신원 속성
+          if (onCertification != null) ...[
+            ListTile(
+              leading: Icon(
+                isVerified ? Icons.verified_user : Icons.shield_outlined,
+                color: isVerified ? MinglitColors.success : null,
+              ),
+              title: const Text('본인인증'),
+              subtitle: Text(
+                isVerified ? '인증 완료' : '인증하기',
+                style: TextStyle(
+                  color: isVerified
+                      ? MinglitColors.success
+                      : MinglitColors.textSecondary,
+                ),
+              ),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: onCertification,
             ),
             const Divider(),
           ],
