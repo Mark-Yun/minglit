@@ -73,6 +73,47 @@ StyleDictionary.registerTransformGroup({
 });
 
 // ---------------------------------------------------------------------------
+// Custom CSS dimension transform — emit raw px instead of rem.
+// Default `size/rem` transform appends 'rem' without dividing by 16, producing
+// huge values (e.g. 16 → '16rem' = 256px). For a design system, fixed px
+// matches the Dart side and is what the docs site needs.
+// ---------------------------------------------------------------------------
+StyleDictionary.registerTransform({
+  name: 'size/css/px',
+  type: 'value',
+  filter: (token) => {
+    const type = token.$type ?? token.type ?? '';
+    return type === 'dimension' || type === 'size';
+  },
+  transform: (token) => {
+    const raw = token.$value ?? token.value;
+    const num = Number(raw);
+    if (Number.isNaN(num) || num === 0) return '0';
+    return `${num}px`;
+  },
+});
+
+StyleDictionary.registerTransformGroup({
+  name: 'css-px',
+  transforms: [
+    'attribute/cti',
+    'name/kebab',
+    'time/seconds',
+    'html/icon',
+    'size/css/px',
+    'color/css',
+    'asset/url',
+    'fontFamily/css',
+    'cubicBezier/css',
+    'strokeStyle/css/shorthand',
+    'border/css/shorthand',
+    'typography/css/shorthand',
+    'transition/css/shorthand',
+    'shadow/css/shorthand',
+  ],
+});
+
+// ---------------------------------------------------------------------------
 // Custom Dart format
 // ---------------------------------------------------------------------------
 StyleDictionary.registerFormat({
@@ -147,7 +188,7 @@ export default {
       ],
     },
     css: {
-      transformGroup: 'css',
+      transformGroup: 'css-px',
       buildPath: 'lib/generated/',
       files: [
         {
