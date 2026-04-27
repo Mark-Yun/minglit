@@ -1,5 +1,6 @@
 /* All @import statements must precede other rules */
 @import url('https://fonts.googleapis.com/css2?family=Racing+Sans+One&display=swap');
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.css');
 @import "tailwindcss";
 
 /* mds_tokens CSS variables — dogfoods the design system on this site.
@@ -72,14 +73,6 @@
   --typography-font-size-app-bar-title: 18px;
   --typography-font-weight-medium: 500;
   --typography-font-weight-semi-bold: 600;
-}
-
-@font-face {
-  font-family: 'Pretendard';
-  src: url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.css');
-  font-weight: 100 900;
-  font-style: normal;
-  font-display: swap;
 }
 
 @layer base {
