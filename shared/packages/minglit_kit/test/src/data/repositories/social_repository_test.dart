@@ -23,51 +23,54 @@ void main() {
     group('toggleInteraction', () {
       // Fix #1957: upsert with ignoreDuplicates=true returns inserted row only
       // when insert succeeded — empty means conflict (row existed → toggle off).
-      test('creates new interaction when upsert inserts (returns true)',
-          () async {
-        const inserted = {
-          'user_id': 'user_1',
-          'target_id': 'party_1',
-          'target_type': 'party',
-          'interaction_type': 'like',
-        };
-        unawaited(
-          mockTable(
-            mockClient,
-            'social_interactions',
-            upsertReturnData: [inserted],
-          ),
-        );
+      test(
+        'creates new interaction when upsert inserts (returns true)',
+        () async {
+          const inserted = {
+            'user_id': 'user_1',
+            'target_id': 'party_1',
+            'target_type': 'party',
+            'interaction_type': 'like',
+          };
+          unawaited(
+            mockTable(
+              mockClient,
+              'social_interactions',
+              upsertReturnData: [inserted],
+            ),
+          );
 
-        final result = await repository.toggleInteraction(
-          targetId: 'party_1',
-          targetType: SocialTargetType.party,
-          interactionType: SocialInteractionType.like,
-        );
+          final result = await repository.toggleInteraction(
+            targetId: 'party_1',
+            targetType: SocialTargetType.party,
+            interactionType: SocialInteractionType.like,
+          );
 
-        expect(result, isTrue);
-      });
+          expect(result, isTrue);
+        },
+      );
 
       test(
-          'removes existing interaction when upsert is ignored (returns false)',
-          () async {
-        // upsert ON CONFLICT DO NOTHING returns empty → row existed → delete
-        unawaited(
-          mockTable(
-            mockClient,
-            'social_interactions',
-            upsertReturnData: [],
-          ),
-        );
+        'removes existing interaction when upsert is ignored (returns false)',
+        () async {
+          // upsert ON CONFLICT DO NOTHING returns empty → row existed → delete
+          unawaited(
+            mockTable(
+              mockClient,
+              'social_interactions',
+              upsertReturnData: [],
+            ),
+          );
 
-        final result = await repository.toggleInteraction(
-          targetId: 'party_1',
-          targetType: SocialTargetType.party,
-          interactionType: SocialInteractionType.like,
-        );
+          final result = await repository.toggleInteraction(
+            targetId: 'party_1',
+            targetType: SocialTargetType.party,
+            interactionType: SocialInteractionType.like,
+          );
 
-        expect(result, isFalse);
-      });
+          expect(result, isFalse);
+        },
+      );
 
       test('throws when user not authenticated', () async {
         // Recreate without user
