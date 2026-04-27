@@ -492,7 +492,7 @@ void main() {
       // on itself. Without a listener the AutoDispose provider is immediately
       // disposed, causing the try-block to throw before onSuccess() runs.
       // A listener keeps the provider alive so invalidate triggers a rebuild.
-      c.listen(purchaseHistoryControllerProvider, (_, __) {});
+      c.listen(purchaseHistoryControllerProvider, (_, _) {});
       return c;
     }
 
