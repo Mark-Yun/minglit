@@ -19,15 +19,26 @@ class MdsIcons {
       '<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></svg>';
 
   /// add icon (Lucide SVG, currentColor).
-  static SvgPicture add({double? size, Color? color}) =>
-      SvgPicture.string(
-        _addSvg,
-        width: size,
-        height: size,
-        colorFilter: color != null
-            ? ColorFilter.mode(color, BlendMode.srcIn)
-            : null,
-      );
+  ///
+  /// Inherits [IconTheme] for color and size when not overridden,
+  /// matching the behavior of Material's [Icon] widget.
+  static Widget add({double? size, Color? color}) {
+    return Builder(
+      builder: (context) {
+        final iconTheme = IconTheme.of(context);
+        final effectiveSize = size ?? iconTheme.size ?? 24.0;
+        final effectiveColor =
+            color ?? iconTheme.color ?? const Color(0xFF000000);
+        return SvgPicture.string(
+          _addSvg,
+          width: effectiveSize,
+          height: effectiveSize,
+          colorFilter:
+              ColorFilter.mode(effectiveColor, BlendMode.srcIn),
+        );
+      },
+    );
+  }
 
   // ---------------------------------------------------------------------------
   // check
@@ -37,15 +48,26 @@ class MdsIcons {
       '<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>';
 
   /// check icon (Lucide SVG, currentColor).
-  static SvgPicture check({double? size, Color? color}) =>
-      SvgPicture.string(
-        _checkSvg,
-        width: size,
-        height: size,
-        colorFilter: color != null
-            ? ColorFilter.mode(color, BlendMode.srcIn)
-            : null,
-      );
+  ///
+  /// Inherits [IconTheme] for color and size when not overridden,
+  /// matching the behavior of Material's [Icon] widget.
+  static Widget check({double? size, Color? color}) {
+    return Builder(
+      builder: (context) {
+        final iconTheme = IconTheme.of(context);
+        final effectiveSize = size ?? iconTheme.size ?? 24.0;
+        final effectiveColor =
+            color ?? iconTheme.color ?? const Color(0xFF000000);
+        return SvgPicture.string(
+          _checkSvg,
+          width: effectiveSize,
+          height: effectiveSize,
+          colorFilter:
+              ColorFilter.mode(effectiveColor, BlendMode.srcIn),
+        );
+      },
+    );
+  }
 
   // ---------------------------------------------------------------------------
   // chevron_right
@@ -55,15 +77,26 @@ class MdsIcons {
       '<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>';
 
   /// chevron_right icon (Lucide SVG, currentColor).
-  static SvgPicture chevronRight({double? size, Color? color}) =>
-      SvgPicture.string(
-        _chevronRightSvg,
-        width: size,
-        height: size,
-        colorFilter: color != null
-            ? ColorFilter.mode(color, BlendMode.srcIn)
-            : null,
-      );
+  ///
+  /// Inherits [IconTheme] for color and size when not overridden,
+  /// matching the behavior of Material's [Icon] widget.
+  static Widget chevronRight({double? size, Color? color}) {
+    return Builder(
+      builder: (context) {
+        final iconTheme = IconTheme.of(context);
+        final effectiveSize = size ?? iconTheme.size ?? 24.0;
+        final effectiveColor =
+            color ?? iconTheme.color ?? const Color(0xFF000000);
+        return SvgPicture.string(
+          _chevronRightSvg,
+          width: effectiveSize,
+          height: effectiveSize,
+          colorFilter:
+              ColorFilter.mode(effectiveColor, BlendMode.srcIn),
+        );
+      },
+    );
+  }
 
   // ---------------------------------------------------------------------------
   // close
@@ -73,15 +106,26 @@ class MdsIcons {
       '<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>';
 
   /// close icon (Lucide SVG, currentColor).
-  static SvgPicture close({double? size, Color? color}) =>
-      SvgPicture.string(
-        _closeSvg,
-        width: size,
-        height: size,
-        colorFilter: color != null
-            ? ColorFilter.mode(color, BlendMode.srcIn)
-            : null,
-      );
+  ///
+  /// Inherits [IconTheme] for color and size when not overridden,
+  /// matching the behavior of Material's [Icon] widget.
+  static Widget close({double? size, Color? color}) {
+    return Builder(
+      builder: (context) {
+        final iconTheme = IconTheme.of(context);
+        final effectiveSize = size ?? iconTheme.size ?? 24.0;
+        final effectiveColor =
+            color ?? iconTheme.color ?? const Color(0xFF000000);
+        return SvgPicture.string(
+          _closeSvg,
+          width: effectiveSize,
+          height: effectiveSize,
+          colorFilter:
+              ColorFilter.mode(effectiveColor, BlendMode.srcIn),
+        );
+      },
+    );
+  }
 
   // ---------------------------------------------------------------------------
   // more_vert
@@ -91,15 +135,26 @@ class MdsIcons {
       '<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>';
 
   /// more_vert icon (Lucide SVG, currentColor).
-  static SvgPicture moreVert({double? size, Color? color}) =>
-      SvgPicture.string(
-        _moreVertSvg,
-        width: size,
-        height: size,
-        colorFilter: color != null
-            ? ColorFilter.mode(color, BlendMode.srcIn)
-            : null,
-      );
+  ///
+  /// Inherits [IconTheme] for color and size when not overridden,
+  /// matching the behavior of Material's [Icon] widget.
+  static Widget moreVert({double? size, Color? color}) {
+    return Builder(
+      builder: (context) {
+        final iconTheme = IconTheme.of(context);
+        final effectiveSize = size ?? iconTheme.size ?? 24.0;
+        final effectiveColor =
+            color ?? iconTheme.color ?? const Color(0xFF000000);
+        return SvgPicture.string(
+          _moreVertSvg,
+          width: effectiveSize,
+          height: effectiveSize,
+          colorFilter:
+              ColorFilter.mode(effectiveColor, BlendMode.srcIn),
+        );
+      },
+    );
+  }
 
   // ---------------------------------------------------------------------------
   // notifications
@@ -109,15 +164,26 @@ class MdsIcons {
       '<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"><path d="M10.268 21a2 2 0 0 0 3.464 0M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg>';
 
   /// notifications icon (Lucide SVG, currentColor).
-  static SvgPicture notifications({double? size, Color? color}) =>
-      SvgPicture.string(
-        _notificationsSvg,
-        width: size,
-        height: size,
-        colorFilter: color != null
-            ? ColorFilter.mode(color, BlendMode.srcIn)
-            : null,
-      );
+  ///
+  /// Inherits [IconTheme] for color and size when not overridden,
+  /// matching the behavior of Material's [Icon] widget.
+  static Widget notifications({double? size, Color? color}) {
+    return Builder(
+      builder: (context) {
+        final iconTheme = IconTheme.of(context);
+        final effectiveSize = size ?? iconTheme.size ?? 24.0;
+        final effectiveColor =
+            color ?? iconTheme.color ?? const Color(0xFF000000);
+        return SvgPicture.string(
+          _notificationsSvg,
+          width: effectiveSize,
+          height: effectiveSize,
+          colorFilter:
+              ColorFilter.mode(effectiveColor, BlendMode.srcIn),
+        );
+      },
+    );
+  }
 
   // ---------------------------------------------------------------------------
   // person
@@ -127,15 +193,26 @@ class MdsIcons {
       '<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
 
   /// person icon (Lucide SVG, currentColor).
-  static SvgPicture person({double? size, Color? color}) =>
-      SvgPicture.string(
-        _personSvg,
-        width: size,
-        height: size,
-        colorFilter: color != null
-            ? ColorFilter.mode(color, BlendMode.srcIn)
-            : null,
-      );
+  ///
+  /// Inherits [IconTheme] for color and size when not overridden,
+  /// matching the behavior of Material's [Icon] widget.
+  static Widget person({double? size, Color? color}) {
+    return Builder(
+      builder: (context) {
+        final iconTheme = IconTheme.of(context);
+        final effectiveSize = size ?? iconTheme.size ?? 24.0;
+        final effectiveColor =
+            color ?? iconTheme.color ?? const Color(0xFF000000);
+        return SvgPicture.string(
+          _personSvg,
+          width: effectiveSize,
+          height: effectiveSize,
+          colorFilter:
+              ColorFilter.mode(effectiveColor, BlendMode.srcIn),
+        );
+      },
+    );
+  }
 
   // ---------------------------------------------------------------------------
   // search
@@ -145,14 +222,25 @@ class MdsIcons {
       '<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>';
 
   /// search icon (Lucide SVG, currentColor).
-  static SvgPicture search({double? size, Color? color}) =>
-      SvgPicture.string(
-        _searchSvg,
-        width: size,
-        height: size,
-        colorFilter: color != null
-            ? ColorFilter.mode(color, BlendMode.srcIn)
-            : null,
-      );
+  ///
+  /// Inherits [IconTheme] for color and size when not overridden,
+  /// matching the behavior of Material's [Icon] widget.
+  static Widget search({double? size, Color? color}) {
+    return Builder(
+      builder: (context) {
+        final iconTheme = IconTheme.of(context);
+        final effectiveSize = size ?? iconTheme.size ?? 24.0;
+        final effectiveColor =
+            color ?? iconTheme.color ?? const Color(0xFF000000);
+        return SvgPicture.string(
+          _searchSvg,
+          width: effectiveSize,
+          height: effectiveSize,
+          colorFilter:
+              ColorFilter.mode(effectiveColor, BlendMode.srcIn),
+        );
+      },
+    );
+  }
 
 }

@@ -336,6 +336,38 @@ jobs:
       - run: npm run lint
       - run: npm run build
 
+  # MDS Icons CI — flutter analyze + npm build (codegen)
+  lint-mds-icons:
+    name: lint-mds-icons
+    needs: changes
+    if: ${{ needs.changes.outputs.mds_icons == 'true' }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./shared/packages/mds/icons
+    steps:
+      - uses: actions/checkout@v6
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+      - run: npm ci
+      - run: npm run build
+        # Verify codegen runs cleanly and produces no diff against committed
+        # icons.g.dart / manifest.json (drift detection).
+      - name: Check codegen drift
+        run: |
+          if ! git diff --quiet lib/generated/icons.g.dart manifest.json; then
+            echo "❌ Codegen drift detected. Run 'npm run build' and commit."
+            git diff lib/generated/icons.g.dart manifest.json
+            exit 1
+          fi
+      - run: flutter pub get
+      - run: flutter analyze --no-fatal-infos
+
   # Supabase 통합 테스트 (pgTAP + backend-integration + e2e-scenarios)
   test-supabase:
     name: test-pgtap
@@ -457,7 +489,7 @@ jobs:
         run: bash scripts/check-cross-feature-imports.sh
 
   ci-result:
-    needs: [check-migration-versions, check-env-manifest-sync, check-workflow-yaml, check-android-test-deps, check-cross-feature-imports, test-flutter-apps, lint-landing-user, lint-landing-partner, lint-mds-docs, test-supabase, test-edge-functions]
+    needs: [check-migration-versions, check-env-manifest-sync, check-workflow-yaml, check-android-test-deps, check-cross-feature-imports, test-flutter-apps, lint-landing-user, lint-landing-partner, lint-mds-docs, lint-mds-icons, test-supabase, test-edge-functions]
     if: always()
     runs-on: ubuntu-latest
     steps:

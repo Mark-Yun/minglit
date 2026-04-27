@@ -111,17 +111,44 @@ for (const file of files) {
   dartLines.push(`      '${escaped}';`);
   dartLines.push('');
   dartLines.push(`  /// ${name} icon (Lucide SVG, currentColor).`);
+  dartLines.push(`  ///`);
   dartLines.push(
-    `  static SvgPicture ${camel}({double? size, Color? color}) =>`,
+    `  /// Inherits [IconTheme] for color and size when not overridden,`,
   );
-  dartLines.push(`      SvgPicture.string(`);
-  dartLines.push(`        _${camel}Svg,`);
-  dartLines.push(`        width: size,`);
-  dartLines.push(`        height: size,`);
-  dartLines.push(`        colorFilter: color != null`);
-  dartLines.push(`            ? ColorFilter.mode(color, BlendMode.srcIn)`);
-  dartLines.push(`            : null,`);
-  dartLines.push(`      );`);
+  dartLines.push(
+    `  /// matching the behavior of Material's [Icon] widget.`,
+  );
+  dartLines.push(
+    `  static Widget ${camel}({double? size, Color? color}) {`,
+  );
+  dartLines.push(`    return Builder(`);
+  dartLines.push(`      builder: (context) {`);
+  dartLines.push(
+    `        final iconTheme = IconTheme.of(context);`,
+  );
+  dartLines.push(
+    `        final effectiveSize = size ?? iconTheme.size ?? 24.0;`,
+  );
+  dartLines.push(
+    `        final effectiveColor =`,
+  );
+  dartLines.push(
+    `            color ?? iconTheme.color ?? const Color(0xFF000000);`,
+  );
+  dartLines.push(`        return SvgPicture.string(`);
+  dartLines.push(`          _${camel}Svg,`);
+  dartLines.push(`          width: effectiveSize,`);
+  dartLines.push(`          height: effectiveSize,`);
+  dartLines.push(
+    `          colorFilter:`,
+  );
+  dartLines.push(
+    `              ColorFilter.mode(effectiveColor, BlendMode.srcIn),`,
+  );
+  dartLines.push(`        );`);
+  dartLines.push(`      },`);
+  dartLines.push(`    );`);
+  dartLines.push(`  }`);
   dartLines.push('');
 }
 
