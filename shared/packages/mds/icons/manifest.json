@@ -1,0 +1,42 @@
+[
+  {
+    "name": "add",
+    "camel": "add",
+    "viewBox": "0 0 24 24"
+  },
+  {
+    "name": "check",
+    "camel": "check",
+    "viewBox": "0 0 24 24"
+  },
+  {
+    "name": "chevron_right",
+    "camel": "chevronRight",
+    "viewBox": "0 0 24 24"
+  },
+  {
+    "name": "close",
+    "camel": "close",
+    "viewBox": "0 0 24 24"
+  },
+  {
+    "name": "more_vert",
+    "camel": "moreVert",
+    "viewBox": "0 0 24 24"
+  },
+  {
+    "name": "notifications",
+    "camel": "notifications",
+    "viewBox": "0 0 24 24"
+  },
+  {
+    "name": "person",
+    "camel": "person",
+    "viewBox": "0 0 24 24"
+  },
+  {
+    "name": "search",
+    "camel": "search",
+    "viewBox": "0 0 24 24"
+  }
+]

@@ -1,7 +1,7 @@
-# Graph Report - /Users/mark/workspace/minglit/.claude/worktrees/mds-nesting  (2026-04-27)
+# Graph Report - /Users/mark/workspace/minglit/.claude/worktrees/mds-icons  (2026-04-27)
 
 ## Corpus Check
-- 1115 files · ~1,391,572 words
+- 1115 files · ~1,392,281 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -1770,11 +1770,11 @@ _Questions this graph is uniquely positioned to answer:_
 - **What is the exact relationship between `Architecture Audit #1092 — 2026-04-06` and `AI Basic Law Compliance (Korea 2026)`?**
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
 - **Why does `package:flutter/material.dart` connect `Community 0` to `Community 1`, `Community 4`, `Community 6`, `Community 7`, `Community 8`, `Community 13`, `Community 19`, `Community 21`, `Community 24`, `Community 31`?**
-  _High betweenness centrality (0.143) - this node is a cross-community bridge._
+  _High betweenness centrality (0.132) - this node is a cross-community bridge._
 - **Why does `dart:async` connect `Community 1` to `Community 0`, `Community 4`, `Community 6`, `Community 7`, `Community 8`, `Community 13`, `Community 24`?**
   _High betweenness centrality (0.022) - this node is a cross-community bridge._
-- **Why does `package:minglit_kit/minglit_kit.dart` connect `Community 6` to `Community 1`, `Community 4`, `Community 7`, `Community 8`, `Community 13`?**
-  _High betweenness centrality (0.015) - this node is a cross-community bridge._
+- **Why does `package:mds/src/theme/minglit_theme.dart` connect `Community 0` to `Community 1`, `Community 8`, `Community 13`, `Community 21`, `Community 31`?**
+  _High betweenness centrality (0.020) - this node is a cross-community bridge._
 - **What connects `reporter (AutoLabelAllureReporter)`, `main`, `ProviderScope` to the rest of the system?**
   _1816 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**

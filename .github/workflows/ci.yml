@@ -56,6 +56,7 @@ jobs:
       landing_partner: ${{ steps.filter.outputs.landing_partner }}
       mds_docs: ${{ steps.filter.outputs.mds_docs }}
       mds_tokens: ${{ steps.filter.outputs.mds_tokens }}
+      mds_icons: ${{ steps.filter.outputs.mds_icons }}
       supabase: ${{ steps.filter.outputs.supabase }}
     steps:
     - uses: actions/checkout@v6
@@ -83,6 +84,8 @@ jobs:
             - 'apps/mds/docs/**'
           mds_tokens:
             - 'shared/packages/mds/tokens/**'
+          mds_icons:
+            - 'shared/packages/mds/icons/**'
           supabase:
             - 'supabase/**'
 
@@ -315,7 +318,7 @@ jobs:
   lint-mds-docs:
     name: lint-and-build-mds-docs
     needs: changes
-    if: ${{ needs.changes.outputs.mds_docs == 'true' || needs.changes.outputs.mds_tokens == 'true' }}
+    if: ${{ needs.changes.outputs.mds_docs == 'true' || needs.changes.outputs.mds_tokens == 'true' || needs.changes.outputs.mds_icons == 'true' }}
     runs-on: ubuntu-latest
     defaults:
       run:
