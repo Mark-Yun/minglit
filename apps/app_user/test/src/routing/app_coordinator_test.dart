@@ -2,6 +2,7 @@ import 'package:app_user/src/features/account_deletion/logic/account_deletion_co
 import 'package:app_user/src/features/ticket/ui/model/ticket_event_meta.dart';
 import 'package:app_user/src/routing/app_coordinator.dart';
 import 'package:app_user/src/routing/app_router.dart';
+import 'package:app_user/src/routing/app_routes.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
@@ -58,7 +59,7 @@ void main() {
       AppCoordinator(mockRouter, mockDeletion).goToLogin(from: '/my');
 
       verify(
-        () => mockRouter.go(any(that: contains('/login'))),
+        () => mockRouter.go(LoginRoute(from: '/my').location),
       ).called(1);
     });
 
