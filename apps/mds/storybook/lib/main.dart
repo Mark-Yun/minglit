@@ -1,3 +1,8 @@
+// DEPRECATED — removal scheduled 2026-06.
+// Use apps/mds/docs (mds_docs) as the canonical Minglit Design System
+// catalog. Do NOT add new stories here.
+// See apps/mds/storybook/README.md for migration path.
+
 import 'package:flutter/material.dart';
 import 'package:mds/mds.dart';
 import 'package:widgetbook/widgetbook.dart';
