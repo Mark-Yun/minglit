@@ -1,0 +1,66 @@
+/**
+ * Do not edit directly, this file was auto-generated.
+ */
+
+:root {
+  --color-background: #ffffff; /** White background color */
+  --color-primary: #9900ff; /** Primary brand purple */
+  --color-secondary: #ff9900; /** Secondary amber accent */
+  --color-tertiary: #48c9b0; /** Tertiary mint accent */
+  --color-surface: #f9fafb; /** Light surface background */
+  --color-error: #ef4444; /** Error red color */
+  --color-text-primary: #111827; /** Primary text color (near-black) */
+  --color-text-secondary: #4b5563; /** Secondary text color (dark gray) */
+  --color-success: #16a34a; /** Success green color */
+  --color-info: #3b82f6; /** Info blue color */
+  --color-warning: #d97706; /** Warning amber color */
+  --color-divider: #e5e7eb; /** Light theme border/divider */
+  --color-scrim: rgba(0, 0, 0, 0.5); /** Semi-transparent black scrim */
+  --color-glitch-cyan: #21fffe; /** Glitch effect cyan — splash */
+  --color-primary-dark: #7b2fbe; /** Darker primary variant */
+  --color-dark-background: #0f0f0f; /** Dark background */
+  --color-dark-surface: #212121; /** Dark surface */
+  --color-dark-text-primary: #ffffff; /** Dark primary text */
+  --color-dark-text-secondary: #aaaaaa; /** Dark secondary text */
+  --color-dark-primary: #aa33ff; /** Dark primary brand */
+  --color-dark-success: #4ade80; /** Dark success green */
+  --color-dark-info: #60a5fa; /** Dark info blue */
+  --color-dark-warning: #fbbf24; /** Dark warning amber */
+  --color-dark-divider: #3d3d3d; /** Dark divider */
+  --color-partner-primary: #6c3ce1; /** Partner primary indigo */
+  --color-partner-primary-light: #8b5cf6; /** Partner lighter variant */
+  --color-partner-primary-surface: #f5f0ff; /** Partner surface tint */
+  --color-partner-primary-border: #e8e0ff; /** Partner border color */
+  --color-partner-primary-container: #f0edff; /** Partner container fill */
+  --color-partner-dark-primary: #9b7bec; /** Partner dark primary */
+  --color-partner-dark-primary-light: #b39dff; /** Partner dark primary light */
+  --radius-small: 8px; /** 8px small border radius */
+  --radius-button: 12px; /** 12px button border radius */
+  --radius-card: 16px; /** 16px card border radius */
+  --radius-dialog: 28px; /** 28px dialog border radius */
+  --radius-input: 12px; /** 12px input border radius */
+  --radius-badge: 4px; /** 4px badge border radius */
+  --radius-chip: 100px; /** 100px chip border radius (fully rounded) */
+  --spacing-zero: 0; /** 0px zero spacing */
+  --spacing-xxsmall: 2px; /** 2px extra-extra-small */
+  --spacing-xsmall: 4px; /** 4px extra-small */
+  --spacing-xsmall2: 6px; /** 6px extra-small-2 */
+  --spacing-small: 8px; /** 8px small */
+  --spacing-sm: 12px; /** 12px small-medium */
+  --spacing-medium: 16px; /** 16px medium */
+  --spacing-large: 24px; /** 24px large */
+  --spacing-xlarge: 32px; /** 32px extra-large */
+  --spacing-xxlarge: 48px; /** 48px extra-extra-large */
+  --spacing-xxxlarge: 64px; /** 64px extra-extra-extra-large */
+  --spacing-screen-edge: 16px; /** 16px screen edge padding */
+  --spacing-card-gap: 12px; /** 12px gap between cards */
+  --spacing-card-content-v: 16px; /** 16px card internal vertical padding */
+  --spacing-title-to-body: 4px; /** 4px title-to-body spacing */
+  --spacing-section-gap: 40px; /** 40px section gap */
+  --typography-font-family-brand: Pretendard; /** Primary brand font */
+  --typography-font-size-caption-tiny: 10px; /** 10px caption tiny */
+  --typography-font-size-chip-label: 13px; /** 13px chip label */
+  --typography-font-size-app-bar-title: 18px; /** 18px app bar title */
+  --typography-font-weight-medium: 500; /** 500 medium weight */
+  --typography-font-weight-semi-bold: 600; /** 600 semi-bold weight */
+}

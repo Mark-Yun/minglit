@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Spec — Profile Home (PoC)</title>
+<style>
+/* ============================================================
+   1. TOKENS — would normally come from mds_tokens/tokens.css
+   ============================================================ */
+:root {
+  /* Color tokens (from MdsTokens) */
+  --color-primary: #9900FF;
+  --color-background: #FFFFFF;
+  --color-surface: #F9FAFB;
+  --color-text-primary: #111827;
+  --color-text-secondary: #4B5563;
+  --color-divider: #E5E7EB;
+  --color-success: #16A34A;
+  --color-warning: #D97706;
+
+  /* Spacing scale */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-screen: 20px;
+
+  /* Radius */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+
+  /* Typography */
+  --font-display-lg: 600 22px/1.3 Pretendard;
+  --font-title-md: 600 16px/1.4 Pretendard;
+  --font-body-md: 400 14px/1.5 Pretendard;
+  --font-body-sm: 400 12px/1.4 Pretendard;
+  --font-label-sm: 500 12px/1.2 Pretendard;
+}
+
+/* ============================================================
+   2. RESET + BASE
+   ============================================================ */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #e5e5e5;
+  font-family: Pretendard, -apple-system, sans-serif;
+  padding: 32px;
+  min-height: 100vh;
+}
+.viewport {
+  width: 375px;
+  margin: 0 auto;
+  background: var(--color-background);
+  position: relative;
+  border: 1px solid #ccc;
+}
+
+/* ============================================================
+   3. CONTENT — a profile home screen
+   ============================================================ */
+.app-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--spacing-screen);
+  height: 56px;
+  border-bottom: 1px solid var(--color-divider);
+}
+.app-bar h1 { font: var(--font-display-lg); color: var(--color-text-primary); }
+.icon-btn {
+  width: 40px; height: 40px;
+  display: grid; place-items: center;
+  border-radius: 999px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+.icon-btn:active { background: var(--color-divider); }
+
+.profile-card {
+  margin: var(--spacing-md) var(--spacing-screen);
+  padding: var(--spacing-lg);
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+.avatar {
+  width: 56px; height: 56px;
+  border-radius: 999px;
+  background: var(--color-primary);
+}
+.profile-card .name { font: var(--font-title-md); color: var(--color-text-primary); }
+.profile-card .meta { font: var(--font-body-sm); color: var(--color-text-secondary); margin-top: var(--spacing-xs); }
+
+.section-title {
+  font: var(--font-label-sm);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  margin: var(--spacing-lg) var(--spacing-screen) var(--spacing-sm);
+  letter-spacing: 0.5px;
+}
+
+.menu-list {
+  background: var(--color-background);
+  border-top: 1px solid var(--color-divider);
+}
+.menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-md) var(--spacing-screen);
+  border-bottom: 1px solid var(--color-divider);
+  font: var(--font-body-md);
+  color: var(--color-text-primary);
+}
+.menu-item .right { display: flex; align-items: center; gap: var(--spacing-sm); color: var(--color-text-secondary); }
+.menu-item .badge {
+  font: var(--font-label-sm);
+  color: var(--color-warning);
+  background: rgba(217, 118, 6, 0.1);
+  padding: 2px var(--spacing-sm);
+  border-radius: var(--radius-sm);
+}
+
+.cta {
+  margin: var(--spacing-xl) var(--spacing-screen);
+  display: block;
+  width: calc(100% - 2 * var(--spacing-screen));
+  padding: var(--spacing-md);
+  background: var(--color-primary);
+  color: white;
+  font: var(--font-title-md);
+  border: 0;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+/* ============================================================
+   4. SPEC-MODE — togglable annotation layer
+   ============================================================ */
+body.spec-mode .viewport,
+body.spec-mode [data-spec] {
+  outline: 1px dashed rgba(204, 0, 102, 0.4);
+  position: relative;
+}
+
+/* Margin annotations */
+body.spec-mode [data-mt]::before,
+body.spec-mode [data-mb]::after,
+body.spec-mode [data-mx]::before,
+body.spec-mode [data-my]::before {
+  position: absolute;
+  font: 10px/1 'JetBrains Mono', monospace;
+  color: #c06;
+  background: rgba(255, 240, 245, 0.95);
+  border: 1px solid #c06;
+  padding: 1px 4px;
+  border-radius: 3px;
+  pointer-events: none;
+  z-index: 100;
+  white-space: nowrap;
+}
+body.spec-mode [data-mt]::before {
+  content: '↑ mt=' attr(data-mt);
+  top: -16px; left: 8px;
+}
+body.spec-mode [data-mb]::after {
+  content: '↓ mb=' attr(data-mb);
+  bottom: -16px; left: 8px;
+}
+body.spec-mode [data-mx]::before {
+  content: '↔ mx=' attr(data-mx);
+  top: 50%; left: -8px; transform: translate(-100%, -50%);
+}
+
+/* Padding annotation - corner chip */
+body.spec-mode [data-p]::before,
+body.spec-mode [data-px]::before,
+body.spec-mode [data-py]::before {
+  content: 'p=' attr(data-p);
+  position: absolute;
+  top: 4px; right: 4px;
+  font: 10px/1 'JetBrains Mono', monospace;
+  color: #069;
+  background: rgba(230, 245, 255, 0.95);
+  border: 1px solid #069;
+  padding: 1px 4px;
+  border-radius: 3px;
+  z-index: 99;
+  pointer-events: none;
+}
+body.spec-mode [data-px]::before { content: 'px=' attr(data-px); }
+body.spec-mode [data-py]::before { content: 'py=' attr(data-py); }
+
+/* Size / dimension annotation */
+body.spec-mode [data-h]::after {
+  content: 'h=' attr(data-h);
+  position: absolute;
+  top: 4px; left: 4px;
+  font: 10px/1 'JetBrains Mono', monospace;
+  color: #060;
+  background: rgba(240, 255, 240, 0.95);
+  border: 1px solid #060;
+  padding: 1px 4px;
+  border-radius: 3px;
+  z-index: 99;
+  pointer-events: none;
+}
+
+/* Token reference labels (color/font) */
+body.spec-mode [data-token]::after {
+  content: '🎨 ' attr(data-token);
+  position: absolute;
+  top: -8px; right: 8px;
+  font: 10px/1 'JetBrains Mono', monospace;
+  color: #555;
+  background: #fff;
+  border: 1px solid #aaa;
+  padding: 1px 4px;
+  border-radius: 3px;
+  z-index: 99;
+  pointer-events: none;
+}
+
+/* Section delimiters */
+body.spec-mode [data-section]::before {
+  content: '§ ' attr(data-section);
+  position: absolute;
+  top: -22px; left: 0;
+  font: bold 11px/1 sans-serif;
+  color: #c06;
+  background: #fff;
+  padding: 2px 8px;
+  border: 1px solid #c06;
+  border-radius: 3px;
+  z-index: 100;
+}
+
+/* Spacer guide for elements with margin */
+body.spec-mode .viewport { padding-top: 4px; padding-bottom: 4px; }
+
+/* ============================================================
+   5. CONTROLS
+   ============================================================ */
+.controls {
+  position: fixed;
+  top: 16px; right: 16px;
+  background: white;
+  border: 1px solid #aaa;
+  border-radius: 8px;
+  padding: 8px;
+  font: 13px sans-serif;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.controls label { cursor: pointer; user-select: none; }
+.legend {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #eee;
+  font-size: 11px;
+  color: #666;
+  display: none;
+}
+body.spec-mode .legend { display: block; }
+.legend-item {
+  display: inline-block;
+  margin-right: 12px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.legend-item::before {
+  content: '';
+  display: inline-block;
+  width: 10px; height: 10px;
+  margin-right: 4px;
+  border: 1px solid;
+  vertical-align: middle;
+}
+.legend-margin::before { background: rgba(255,240,245,0.95); border-color: #c06; }
+.legend-padding::before { background: rgba(230,245,255,0.95); border-color: #069; }
+.legend-size::before { background: rgba(240,255,240,0.95); border-color: #060; }
+.legend-token::before { background: #fff; border-color: #aaa; }
+</style>
+</head>
+<body>
+
+<div class="controls">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode</label>
+  <div class="legend">
+    <div class="legend-item legend-margin">margin</div>
+    <div class="legend-item legend-padding">padding</div>
+    <div class="legend-item legend-size">size</div>
+    <div class="legend-item legend-token">token ref</div>
+  </div>
+</div>
+
+<!-- =========================================================
+     SCREEN SPEC: Profile Home
+     ========================================================= -->
+<div class="viewport" data-spec data-section="Profile Home">
+
+  <!-- Section: AppBar -->
+  <header class="app-bar" data-spec data-section="AppBar" data-h="appbar" data-px="screen">
+    <button class="icon-btn" data-spec data-h="touch-target" aria-label="back">←</button>
+    <h1 data-token="font-display-lg, color-text-primary">프로필</h1>
+    <button class="icon-btn" data-spec data-h="touch-target" aria-label="settings">⚙</button>
+  </header>
+
+  <!-- Section: Profile Card -->
+  <section class="profile-card" data-spec data-section="ProfileCard"
+           data-mx="screen" data-mt="md" data-p="lg"
+           data-token="bg=surface, radius=md">
+    <div class="avatar" data-spec data-h="avatar-md" data-token="bg=primary, radius=full"></div>
+    <div>
+      <div class="name" data-token="font-title-md, color-text-primary">홍길동</div>
+      <div class="meta" data-token="font-body-sm, color-text-secondary">@gildong · 가입 3개월</div>
+    </div>
+  </section>
+
+  <!-- Section: Account Group -->
+  <div class="section-title" data-spec data-section="Section/Account"
+       data-mt="lg" data-mb="sm" data-mx="screen"
+       data-token="font-label-sm, color-text-secondary">
+    계정
+  </div>
+  <ul class="menu-list" data-spec>
+    <li class="menu-item" data-spec data-py="md" data-px="screen">
+      <span data-token="font-body-md">알림 설정</span>
+      <span class="right" data-token="font-body-sm">›</span>
+    </li>
+    <li class="menu-item" data-spec data-py="md" data-px="screen">
+      <span data-token="font-body-md">결제 수단</span>
+      <span class="right">
+        <span class="badge" data-token="bg=warning-bg, color=warning, radius=sm">미등록</span>
+        ›
+      </span>
+    </li>
+    <li class="menu-item" data-spec data-py="md" data-px="screen">
+      <span data-token="font-body-md">개인정보 관리</span>
+      <span class="right">›</span>
+    </li>
+  </ul>
+
+  <!-- Section: Activity Group -->
+  <div class="section-title" data-spec data-section="Section/Activity"
+       data-mt="lg" data-mb="sm" data-mx="screen">
+    활동
+  </div>
+  <ul class="menu-list" data-spec>
+    <li class="menu-item" data-spec data-py="md" data-px="screen">
+      <span data-token="font-body-md">참여한 모임</span>
+      <span class="right">12 ›</span>
+    </li>
+    <li class="menu-item" data-spec data-py="md" data-px="screen">
+      <span data-token="font-body-md">관심 파트너</span>
+      <span class="right">5 ›</span>
+    </li>
+  </ul>
+
+  <!-- Section: CTA -->
+  <button class="cta" data-spec data-section="CTA"
+          data-mx="screen" data-mt="xl" data-p="md"
+          data-token="bg=primary, color=on-primary, font-title-md, radius=md">
+    프로필 편집
+  </button>
+
+  <!-- bottom spacing -->
+  <div style="height: 32px"></div>
+</div>
+
+<!--
+  ============================================================
+  SPEC NOTES (free-form: ambiguity / decisions / token gaps)
+  ============================================================
+  Tokens referenced but NOT YET in tokens.json (spec is also a
+  shopping list for tokens that need to exist):
+
+  - spacing-screen     screen-edge horizontal padding
+  - size-appbar        app bar height
+  - size-touch-target  minimum touch target (40 or 44 per platform)
+  - size-avatar-md     standard avatar size
+  - color-warning-bg   tinted background for warning badge
+  - color-on-primary   foreground color on primary surface
+
+  Decisions encoded by token names (not pixels):
+  - Menu items use py=md (not a hardcoded height) - implementation
+    should let content determine height.
+  - Cards and CTAs share radius=md - intentional consistency.
+  - Profile card uses bg=surface (not background) - meant to feel
+    elevated against the app background.
+
+  When implementing, query tokens.g.dart - never hardcode pixel
+  values from this spec.
+-->
+
+<script>
+  document.getElementById('spec-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('spec-mode', e.target.checked);
+  });
+</script>
+
+</body>
+</html>
