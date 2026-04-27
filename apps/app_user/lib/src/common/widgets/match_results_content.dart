@@ -193,8 +193,9 @@ class _MatchResultCard extends StatelessWidget {
 String _maskPhone(String phone) {
   final digits = phone.replaceAll(RegExp(r'\D'), '');
   // Normalize country code: +82XX... → 0XX...
-  final local =
-      digits.startsWith('82') && digits.length > 10 ? '0${digits.substring(2)}' : digits;
+  final local = digits.startsWith('82') && digits.length > 10
+      ? '0${digits.substring(2)}'
+      : digits;
   if (local.length == 11) {
     return '${local.substring(0, 3)}-****-${local.substring(7)}';
   }

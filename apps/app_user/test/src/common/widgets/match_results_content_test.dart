@@ -55,8 +55,11 @@ void main() {
       await tester.pumpAndSettle();
 
       // Raw phone must not appear
-      expect(find.text(rawPhone), findsNothing,
-          reason: 'Raw phone number must not be displayed (PII)');
+      expect(
+        find.text(rawPhone),
+        findsNothing,
+        reason: 'Raw phone number must not be displayed (PII)',
+      );
 
       // Masked version must appear
       expect(find.text('010-****-5678'), findsOneWidget);
