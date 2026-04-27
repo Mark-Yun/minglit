@@ -27,7 +27,7 @@
 | **역할** | 플랫폼 전체의 백엔드 인프라. PostgreSQL DB, 인증(JWT 발급·OAuth), 파일 스토리지(3개 버킷), Deno 기반 Edge Functions(40+ 함수), Realtime(체크인 통계 실시간 구독)을 단일 플랫폼으로 제공. |
 | **코드 위치** | `supabase/`, `shared/packages/minglit_kit/lib/src/data/repositories/`, `supabase/functions/_shared/supabase_client.ts` |
 | **환경변수** | `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` (Flutter/Next.js), `SUPABASE_SERVICE_ROLE_KEY` (Edge Functions, auto-injected), `SUPABASE_ACCESS_TOKEN` (CI), `SUPABASE_DEV_PROJECT_ID`, `SUPABASE_MAIN_PROJECT_ID` |
-| **왜 이 벤더?** | `<TODO: Supabase를 선택한 이유 — Firebase 대비 장단점, 비용, PostgreSQL 필요성>` |
+| **왜 이 벤더?** | - Edge Function + Flutter SDK 지원 빵빵 (PostgREST + Realtime + Auth + Storage 통합)<br>- 무료 한도 넉넉 (PoC + 초기 운영 충분)<br>- Postgres 강력 (PGroonga, pgvector, PGMQ, RLS 등 확장)<br>- **선택 안 한 대안**: Firebase (Postgres 없음), AWS Amplify (러닝커브 ↑), 자체 백엔드 (인프라 부담) |
 | **계약 / tier / 비용** | `<TODO: 현재 plan tier, 월 비용, row limit, storage limit>` |
 | **핵심 한계** | `<TODO: connection pool 한계, Edge Function 실행 timeout, Realtime 동시 구독 수 제한>` |
 | **다운 시 영향** | `<TODO: Supabase 전면 장애 시 서비스 불가 범위 — 읽기·쓰기·인증·알림 모두 영향>` |
@@ -43,7 +43,7 @@
 | **역할** | iOS/Android 유저 대상 푸시 알림 발송. `notification-worker` Edge Function이 PGMQ `q_notifications` 큐를 polling하며 FCM Admin SDK로 토큰별 푸시를 발송. `fcm_tokens` 테이블에 device_type(android/ios/web)별 토큰 저장. |
 | **코드 위치** | `supabase/functions/notification-worker/`, `fcm_tokens` 테이블 |
 | **환경변수** | `FIREBASE_SERVICE_ACCOUNT` (notification-worker 전용, Required) |
-| **왜 이 벤더?** | `<TODO: FCM 선택 이유 — APNs 직접 연동 대비, 비용, iOS/Android 통일 처리>` |
+| **왜 이 벤더?** | - iOS/Android 푸시를 **단일 SDK**로 통합 처리 (APNs 직접 연동 시 iOS/Android 이중 관리 필요)<br>- 무료 (메시지 수 무제한)<br>- Supabase Edge Function에서 Firebase Admin SDK(Deno 호환)로 직접 연동 가능<br>- **선택 안 한 대안**: APNs 직접 (iOS 전용, Android 별도 FCM 필요), OneSignal (유료 tier로 빠르게 전환), Expo Push (Flutter 비친화적) |
 | **계약 / tier / 비용** | `<TODO: FCM은 무료 tier 사용 중? 메시지 수 제한?>` |
 | **핵심 한계** | `<TODO: FCM 메시지 전달 보장 없음(best-effort), 토큰 만료 처리>` |
 | **다운 시 영향** | `<TODO: FCM 장애 시 푸시 알림 미발송 — 인앱 알림(user_notifications)은 별도 유지>` |
@@ -145,7 +145,7 @@
 | **역할** | 이벤트 티켓 결제 처리. Flutter 앱에서 Iamport SDK로 결제 요청 → `payment-verify` EF에서 API 재검증 + 금액 위변조 체크 → `payment-webhook` EF에서 PG 웹훅 수신(IP Whitelist 방어). 부분 환불 지원(`payment-cancel` EF). |
 | **코드 위치** | `supabase/functions/payment-verify/`, `supabase/functions/payment-webhook/`, `supabase/functions/payment-cancel/`, `supabase/functions/_shared/iamport_client.ts`, `shared/packages/minglit_iamport_v1/` |
 | **환경변수** | `PORTONE_API_KEY`, `PORTONE_API_SECRET` (payment-verify, payment-cancel, payment-webhook, user-cancel-order 모두 사용) |
-| **왜 이 벤더?** | `<TODO: Iamport V1 선택 이유, V2 전환 계획 여부>` |
+| **왜 이 벤더?** | - **쉬운 API** (단일 SDK로 카드/계좌/PASS 등 다 처리)<br>- **저렴한 수수료** (수수료가 가장 큰 결정 요인 — 한국 PG 시장에서 가장 경쟁력)<br>- 한국 PG 통합 단일 게이트웨이 (토스페이먼츠 / KCP 등 별도 계약 X)<br>- **선택 안 한 대안**: 토스페이먼츠 (수수료 ↑), KCP (UX ↓), NicePay (레거시 SDK) |
 | **계약 / tier / 비용** | `<TODO: PG 수수료 구조 — 현재 코드에 3.5% 하드코딩됨>` |
 | **핵심 한계** | Iamport V1은 웹훅 HMAC 서명 미지원 → IP Whitelist(`52.78.100.19`, `52.78.48.223`, `52.78.17.128`) 의존. 부분 환불 이력 다건 미관리. |
 | **다운 시 영향** | `<TODO: PG 장애 시 결제 불가 — 이벤트 신청 차단 영향>` |
@@ -213,7 +213,7 @@
 | **역할** | Edge Function과 Flutter 앱의 에러 트래킹. Edge Function: `logger.ts`의 `initSentry()` + `withHandler()` 래퍼로 통합 (`tracesSampleRate: 0.2`). Flutter: `SENTRY_DSN` 환경변수로 초기화(Optional). |
 | **코드 위치** | `supabase/functions/_shared/logger.ts`, Flutter: `shared/packages/minglit_kit/` (sentry 초기화) |
 | **환경변수** | `SENTRY_DSN` (Flutter, Optional), `SENTRY_DSN_EDGE_FUNCTIONS` (GitHub Secrets, Edge Functions용, Required) |
-| **왜 이 벤더?** | `<TODO: Sentry 선택 이유 — Datadog, Bugsnag 대비 비용/기능 비교>` |
+| **왜 이 벤더?** | - **범용성** — Flutter + Edge Function (Deno) 양쪽 다 공식 지원<br>- 시장 표준 (대안 비교 학습 비용 ↓)<br>- 무료 한도 충분 (초기)<br>- **선택 안 한 대안**: Datadog (가격 ↑), Bugsnag (Flutter SDK 약함), Rollbar (마켓 점유율 ↓) |
 | **계약 / tier / 비용** | `<TODO: 현재 plan, 이벤트 수 제한, 월 비용>` |
 | **핵심 한계** | `<TODO: Sentry 샘플링 20% — 트레이스 누락 가능성, 민감정보 마스킹 처리(pii_masker.ts)>` |
 | **다운 시 영향** | `<TODO: Sentry 장애 시 에러 모니터링 미작동 — 서비스 운영에는 직접 영향 없음>` |
@@ -229,7 +229,7 @@
 | **역할** | Edge Function의 구조화 로그 저장 및 쿼리. `axiom_logger.ts`(130 LOC)가 로그를 Axiom으로 전송. `logger.ts`의 `log.info()`, `log.error()` 등이 내부적으로 Axiom과 연동. PII 마스킹 후 전송(`pii_masker.ts`). |
 | **코드 위치** | `supabase/functions/_shared/axiom_logger.ts`, `supabase/functions/_shared/logger.ts` |
 | **환경변수** | `AXIOM_API_TOKEN` (Edge Functions, Optional), `AXIOM_DATASET` (Edge Functions, Optional), `AXIOM_API_TOKEN` (GitHub Secrets, Optional) |
-| **왜 이 벤더?** | `<TODO: Axiom 선택 이유 — Datadog Logs, Papertrail 대비 비용/기능>` |
+| **왜 이 벤더?** | - **넉넉한 무료 한도** (500GB ingest/month free)<br>- **에이전트를 위한 CLI 강력 지원** (Claude Code 등 AI 에이전트가 로그 분석 시 즉시 활용)<br>- APL 쿼리 (SQL-like, 학습 빠름)<br>- Edge Function 로그 정합성 좋음 (Sentry는 error 위주, Axiom은 structured logs 위주)<br>- **선택 안 한 대안**: Datadog (가격 ↑), CloudWatch (AWS 종속 + UX 약함), Loki (자체 호스팅 부담) |
 | **계약 / tier / 비용** | `<TODO: Axiom free tier 사용 중? 데이터 보존 기간>` |
 | **핵심 한계** | `<TODO: 로그 보존 기간, 쿼리 속도 제한>` |
 | **다운 시 영향** | `<TODO: Axiom 장애 시 로그 유실 — 서비스 운영에는 직접 영향 없음>` |
@@ -245,7 +245,7 @@
 | **역할** | 피처 플래그 제어와 이벤트 로깅. Edge Function: `statsig_utils.ts`(115 LOC)의 `initStatsig()`, `logStatsigEvent()`. Flutter: `STATSIG_CLIENT_KEY`. Next.js 랜딩페이지: `NEXT_PUBLIC_STATSIG_CLIENT_KEY`. |
 | **코드 위치** | `supabase/functions/_shared/statsig_utils.ts`, Flutter 앱 초기화, `apps/landing_user/`, `apps/landing_partner/` |
 | **환경변수** | `STATSIG_CLIENT_KEY` (Flutter, Optional), `STATSIG_SERVER_KEY` (Edge Functions, Optional; GitHub Secrets Optional) |
-| **왜 이 벤더?** | `<TODO: Statsig 선택 이유 — LaunchDarkly, GrowthBook 대비>` |
+| **왜 이 벤더?** | - **넉넉한 무료 한도** (1M events/month free)<br>- **A/B 테스트 전문성** (단순 feature flag 이상의 실험 분석 도구)<br>- 자체 SDK + Flutter 지원<br>- **선택 안 한 대안**: LaunchDarkly (가격 ↑), Optimizely (엔터프라이즈 위주), 자체 구축 (운영 부담) |
 | **계약 / tier / 비용** | `<TODO: 현재 plan, MAU 기준 비용>` |
 | **핵심 한계** | `<TODO: 피처 플래그 조회 지연이 초기 렌더링에 영향 여부>` |
 | **다운 시 영향** | `<TODO: Statsig 장애 시 기본값(default) 동작 — 핵심 기능에는 영향 없어야 함>` |
