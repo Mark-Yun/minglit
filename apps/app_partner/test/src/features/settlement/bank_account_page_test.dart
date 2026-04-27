@@ -32,7 +32,10 @@ Future<void> _fillAndSubmit(
 }) async {
   await tester.enterText(find.widgetWithText(TextFormField, '은행명'), bank);
   await tester.enterText(find.widgetWithText(TextFormField, '예금주'), holder);
-  await tester.enterText(find.widgetWithText(TextFormField, '계좌번호'), accountNumber);
+  await tester.enterText(
+    find.widgetWithText(TextFormField, '계좌번호'),
+    accountNumber,
+  );
   await tester.tap(find.text('저장'));
   await tester.pump();
 }
@@ -43,7 +46,7 @@ void main() {
       await tester.pumpWidget(_buildForm());
       await tester.pump();
 
-      await _fillAndSubmit(tester, accountNumber: '');
+      await _fillAndSubmit(tester);
 
       expect(find.text('계좌번호를 입력해 주세요.'), findsOneWidget);
     });
@@ -100,7 +103,7 @@ void main() {
           ],
           child: const MaterialApp(
             home: Scaffold(
-              body: AccountEditForm(accountData: null, onSaved: _noop),
+              body: AccountEditForm(onSaved: _noop),
             ),
           ),
         ),
@@ -137,7 +140,7 @@ void main() {
           ],
           child: const MaterialApp(
             home: Scaffold(
-              body: AccountEditForm(accountData: null, onSaved: _noop),
+              body: AccountEditForm(onSaved: _noop),
             ),
           ),
         ),
