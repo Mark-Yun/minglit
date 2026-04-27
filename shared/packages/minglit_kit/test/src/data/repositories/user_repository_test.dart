@@ -2,6 +2,7 @@ import 'dart:async' show unawaited;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/src/data/repositories/user_repository.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../helpers/mocks.dart';
 import '../../../helpers/supabase_mock_helpers.dart';
@@ -51,18 +52,55 @@ void main() {
         expect(result.birthYear, 1990);
       });
 
-      test('returns null on error', () async {
+      // Fix #1952: PGRST116 (no rows) → null; other errors → rethrow.
+      test('returns null for PGRST116 (no rows found)', () async {
         unawaited(
           mockTable(
             mockClient,
             'user_profiles',
-            shouldThrow: Exception('not found'),
+            shouldThrow: PostgrestException(
+              message: 'no rows found',
+              code: 'PGRST116',
+            ),
           ),
         );
 
         final result = await repository.getUserProfile('user_unknown');
 
         expect(result, isNull);
+      });
+
+      test('rethrows on non-PGRST116 database error', () async {
+        unawaited(
+          mockTable(
+            mockClient,
+            'user_profiles',
+            shouldThrow: PostgrestException(
+              message: 'server error',
+              code: '500',
+            ),
+          ),
+        );
+
+        expect(
+          () => repository.getUserProfile('user_1'),
+          throwsA(isA<PostgrestException>()),
+        );
+      });
+
+      test('rethrows on generic network error', () async {
+        unawaited(
+          mockTable(
+            mockClient,
+            'user_profiles',
+            shouldThrow: Exception('network failure'),
+          ),
+        );
+
+        expect(
+          () => repository.getUserProfile('user_1'),
+          throwsA(isA<Exception>()),
+        );
       });
     });
 
@@ -96,7 +134,8 @@ void main() {
         expect(result, isEmpty);
       });
 
-      test('returns empty list on error', () async {
+      // Fix #1952: errors must be rethrown, not silently dropped.
+      test('rethrows on error', () async {
         unawaited(
           mockTable(
             mockClient,
@@ -105,9 +144,10 @@ void main() {
           ),
         );
 
-        final result = await repository.getApprovedVerificationIds('user_1');
-
-        expect(result, isEmpty);
+        expect(
+          () => repository.getApprovedVerificationIds('user_1'),
+          throwsA(isA<Exception>()),
+        );
       });
 
       test('filters out null verification IDs', () async {
