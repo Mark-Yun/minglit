@@ -50,7 +50,10 @@ class TicketTokenService {
         eventId: data['event_id'] as String,
         userId: data['user_id'] as String,
         signature: data['signature'] as String,
-        expiresAt: DateTime.parse(data['expires_at'] as String),
+        // Fix #1961: always normalize to UTC — local DateTime would produce
+        // the wrong toIso8601String() offset during verifyAndCheckin payload
+        // reconstruction on non-UTC devices.
+        expiresAt: DateTime.parse(data['expires_at'] as String).toUtc(),
       );
 
       // 3. Save to wallet for offline use

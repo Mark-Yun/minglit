@@ -45,6 +45,24 @@ void main() {
         expect(token.expiresAt.isAfter(DateTime.now()), isTrue);
       });
 
+      // Fix #1961: mintTicket must emit UTC expiresAt so toIso8601String()
+      // produces a 'Z' suffix — prevents sign/verify mismatch on non-UTC
+      // devices where local DateTime would produce a '+HH:MM' offset instead.
+      test('Fix #1961: expiresAt is UTC', () async {
+        final token = await repository.mintTicket(
+          ticketId: 'ticket_1',
+          eventId: 'event_1',
+          userId: 'user_1',
+          serverPrivateKey: keyPair,
+        );
+
+        expect(
+          token.expiresAt.isUtc,
+          isTrue,
+          reason: 'expiresAt must be UTC to avoid ISO8601 offset mismatch',
+        );
+      });
+
       test('generates different signatures for different payloads', () async {
         final token1 = await repository.mintTicket(
           ticketId: 'ticket_1',
@@ -205,6 +223,47 @@ void main() {
           throwsA(isA<StateError>()),
         );
       });
+
+      // Fix #1961: mint (UTC) → verify round-trip must succeed regardless of
+      // local timezone. Before the fix, mintTicket used DateTime.now() (local)
+      // and verifyAndCheckin used DateTime.now() (local), so the payloads would
+      // differ if the token was serialized/deserialized across timezones.
+      test(
+        'Fix #1961: sign-verify round-trip works with UTC expiresAt',
+        () async {
+          // Simulate a token minted with UTC expiresAt (as fixed)
+          final token = await repository.mintTicket(
+            ticketId: 'ticket-utc-1',
+            eventId: 'event-utc-1',
+            userId: 'user-utc-1',
+            serverPrivateKey: keyPair,
+          );
+
+          // Simulate the token being round-tripped through JSON (EF response
+          // returns UTC ISO8601 with 'Z'). Re-parse to mirror
+          // TicketTokenService.getToken behavior.
+          final expiresAtStr = token.expiresAt.toIso8601String();
+          final reparsedToken = token.copyWith(
+            expiresAt: DateTime.parse(expiresAtStr).toUtc(),
+          );
+
+          when(
+            () => mockClient.rpc<String>(
+              'process_qr_checkin',
+              params: any(named: 'params'),
+            ),
+          ).thenAnswer((_) => FakeRpcBuilder('success'));
+
+          final result = await repository.verifyAndCheckin(
+            token: reparsedToken,
+            serverPublicKey: publicKey,
+          );
+
+          // Signature must still be valid after UTC round-trip
+          expect(result, isTrue);
+          expect(token.expiresAt.isUtc, isTrue);
+        },
+      );
     });
   });
 }
