@@ -30,26 +30,31 @@ void main() {
   // PartyStatusEditSheet에 전달되는 경로를 직접 재현한다.
   // Party.visibility의 @Default('public')이 제거되면 아래 두 테스트가 실패한다.
   group('Party 모델 — visibility null 정규화 (#72)', () {
-    test('DB에서 visibility=null인 파티 → Party.fromJson → visibility는 "public"으로 정규화됨', () {
-      // 실제 크래시 경계: visibility 컬럼이 null인 기존 DB 레코드.
-      // @Default('public')이 제거되면 party.visibility가 null이 되어
-      // 이후 PartyStatusEditSheet 전달부에서 Null check operator 에러 발생.
-      final party = Party.fromJson({
-        'id': 'p-test-1',
-        'partner_id': 'partner-1',
-        'title': '테스트 파티',
-        'created_at': '2024-01-01T00:00:00.000Z',
-        'updated_at': '2024-01-01T00:00:00.000Z',
-        'visibility': null, // DB에 null이 저장된 경우
-      });
-      expect(
-        party.visibility,
-        equals('public'),
-        reason: 'Party.visibility @Default("public")이 null 레코드를 정규화해야 한다.',
-      );
-    });
+    test(
+      'DB에서 visibility=null인 파티 → Party.fromJson → visibility는 "public"으로 정규화됨',
+      () {
+        // 실제 크래시 경계: visibility 컬럼이 null인 기존 DB 레코드.
+        // @Default('public')이 제거되면 party.visibility가 null이 되어
+        // 이후 PartyStatusEditSheet 전달부에서 Null check operator 에러 발생.
+        final party = Party.fromJson({
+          'id': 'p-test-1',
+          'partner_id': 'partner-1',
+          'title': '테스트 파티',
+          'created_at': '2024-01-01T00:00:00.000Z',
+          'updated_at': '2024-01-01T00:00:00.000Z',
+          'visibility': null, // DB에 null이 저장된 경우
+        });
+        expect(
+          party.visibility,
+          equals('public'),
+          reason: 'Party.visibility @Default("public")이 null 레코드를 정규화해야 한다.',
+        );
+      },
+    );
 
-    testWidgets('DB에서 visibility=null인 파티 → PartyStatusEditSheet 크래시 없이 렌더', (tester) async {
+    testWidgets('DB에서 visibility=null인 파티 → PartyStatusEditSheet 크래시 없이 렌더', (
+      tester,
+    ) async {
       final party = Party.fromJson({
         'id': 'p-test-1',
         'partner_id': 'partner-1',
