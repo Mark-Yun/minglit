@@ -17,10 +17,10 @@ Widget _buildStep1({
         () => _FakeWizardController(state),
       ),
     ],
-    child: MaterialApp(
+    child: const MaterialApp(
       localizationsDelegates: kPartnerLocalizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: const Scaffold(
+      home: Scaffold(
         body: SingleChildScrollView(child: Step1BasicInfo()),
       ),
     ),

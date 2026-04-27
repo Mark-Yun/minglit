@@ -20,10 +20,10 @@ Widget _buildStep3({
       // Prevent network call; no autofill behavior needed in widget tests
       currentPartnerInfoProvider.overrideWith((ref) async => null),
     ],
-    child: MaterialApp(
+    child: const MaterialApp(
       localizationsDelegates: kPartnerLocalizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: const Scaffold(
+      home: Scaffold(
         body: SingleChildScrollView(child: Step3CapacityContact()),
       ),
     ),
@@ -40,22 +40,22 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('모집 인원 / 문의 연락처 라벨, PartyCapacityInput, PartyContactInput 표시됨',
-        (tester) async {
-      await tester.pumpWidget(_buildStep3());
-      await tester.pump();
+    testWidgets(
+      '모집 인원 / 문의 연락처 라벨, PartyCapacityInput, PartyContactInput 표시됨',
+      (tester) async {
+        await tester.pumpWidget(_buildStep3());
+        await tester.pump();
 
-      expect(find.text('모집 인원'), findsOneWidget);
-      expect(find.text('문의 연락처'), findsOneWidget);
-      expect(find.byType(PartyCapacityInput), findsOneWidget);
-      expect(find.byType(PartyContactInput), findsOneWidget);
-    });
+        expect(find.text('모집 인원'), findsOneWidget);
+        expect(find.text('문의 연락처'), findsOneWidget);
+        expect(find.byType(PartyCapacityInput), findsOneWidget);
+        expect(find.byType(PartyContactInput), findsOneWidget);
+      },
+    );
 
     testWidgets('성비 균형 off 시 허용 오차 NumberStepper 숨김', (tester) async {
       await tester.pumpWidget(
-        _buildStep3(
-          state: const PartyCreateWizardState(balanceEnabled: false),
-        ),
+        _buildStep3(),
       );
       await tester.pump();
 
