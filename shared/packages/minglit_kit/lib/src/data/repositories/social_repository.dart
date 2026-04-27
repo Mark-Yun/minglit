@@ -27,6 +27,13 @@ class SocialRepository {
   ///
   /// Fix #1957: explicit intent eliminates TOCTOU races — callers pass the
   /// desired final state, so concurrent calls with the same intent are safe.
+  /// Sets the interaction state for the current user with explicit intent.
+  ///
+  /// Delegates to the `set_social_interaction` Postgres function, which runs
+  /// in a single transaction with an advisory lock — eliminating TOCTOU races
+  /// and concurrent like/dislike cross-intent races.
+  ///
+  /// Fix #1957: explicit intent + atomic server-side operation.
   Future<void> setInteraction({
     required String targetId,
     required SocialTargetType targetType,
@@ -40,38 +47,17 @@ class SocialRepository {
     Log.d('setInteraction | type: $interactionType');
 
     try {
-      if (active) {
-        // Like/dislike mutual exclusivity — remove opposite before inserting.
-        if (interactionType == SocialInteractionType.like ||
-            interactionType == SocialInteractionType.dislike) {
-          final opposite = interactionType == SocialInteractionType.like
-              ? SocialInteractionType.dislike
-              : SocialInteractionType.like;
-          await _supabase
-              .from('social_interactions')
-              .delete()
-              .eq('user_id', userId)
-              .eq('target_id', targetId)
-              .eq('interaction_type', opposite.name);
-        }
-        await _supabase.from('social_interactions').upsert(
-          {
-            'user_id': userId,
-            'target_id': targetId,
-            'target_type': targetType.name,
-            'interaction_type': interactionType.name,
-          },
-          onConflict: 'user_id,target_id,interaction_type',
-          ignoreDuplicates: true,
-        );
-      } else {
-        await _supabase
-            .from('social_interactions')
-            .delete()
-            .eq('user_id', userId)
-            .eq('target_id', targetId)
-            .eq('interaction_type', interactionType.name);
-      }
+      // Fix #1957: single RPC call — atomic transaction + advisory lock prevents
+      // concurrent cross-intent (like vs dislike) races from both landing.
+      await _supabase.rpc<dynamic>(
+        'set_social_interaction',
+        params: {
+          'p_target_id': targetId,
+          'p_target_type': targetType.name,
+          'p_interaction_type': interactionType.name,
+          'p_active': active,
+        },
+      );
     } on Object catch (e, st) {
       Log.e('❌ [SocialRepo] setInteraction Error', e, st);
       rethrow;

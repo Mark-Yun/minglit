@@ -13,6 +13,15 @@ void main() {
 
   final mockUser = MockUser();
 
+  void stubRpc() {
+    when(
+      () => mockClient.rpc<dynamic>(
+        'set_social_interaction',
+        params: any(named: 'params'),
+      ),
+    ).thenAnswer((_) => FakeRpcBuilder<dynamic>(null));
+  }
+
   setUp(() {
     mockClient = createMockSupabase(currentUser: mockUser);
     when(() => mockUser.id).thenReturn('user_1');
@@ -22,7 +31,7 @@ void main() {
   group('SocialRepository', () {
     group('setInteraction', () {
       test('activates interaction without error', () async {
-        unawaited(mockTable(mockClient, 'social_interactions'));
+        stubRpc();
 
         await expectLater(
           repository.setInteraction(
@@ -36,7 +45,7 @@ void main() {
       });
 
       test('deactivates interaction without error', () async {
-        unawaited(mockTable(mockClient, 'social_interactions'));
+        stubRpc();
 
         await expectLater(
           repository.setInteraction(
@@ -49,9 +58,10 @@ void main() {
         );
       });
 
-      test('activating like removes dislike first (mutual exclusivity)',
-          () async {
-        final builder = mockTable(mockClient, 'social_interactions');
+      // Fix #1957: mutual exclusivity and advisory lock are enforced atomically
+      // inside set_social_interaction(). Verify the correct RPC params are sent.
+      test('passes correct params to set_social_interaction RPC', () async {
+        stubRpc();
 
         await repository.setInteraction(
           targetId: 'party_1',
@@ -60,35 +70,17 @@ void main() {
           active: true,
         );
 
-        // Fix #1957: verify dislike was removed before inserting like.
-        expect(
-          builder.recordedFilters.any(
-            (f) => f.column == 'interaction_type' && f.value == 'dislike',
+        verify(
+          () => mockClient.rpc<dynamic>(
+            'set_social_interaction',
+            params: {
+              'p_target_id': 'party_1',
+              'p_target_type': 'party',
+              'p_interaction_type': 'like',
+              'p_active': true,
+            },
           ),
-          isTrue,
-        );
-      });
-
-      test('activating non-like/dislike skips mutual exclusivity delete',
-          () async {
-        final builder = mockTable(mockClient, 'social_interactions');
-
-        await repository.setInteraction(
-          targetId: 'party_1',
-          targetType: SocialTargetType.party,
-          interactionType: SocialInteractionType.bookmark,
-          active: true,
-        );
-
-        // No delete filter for opposite types expected.
-        expect(
-          builder.recordedFilters.any(
-            (f) =>
-                f.column == 'interaction_type' &&
-                (f.value == 'like' || f.value == 'dislike'),
-          ),
-          isFalse,
-        );
+        ).called(1);
       });
 
       test('throws when user not authenticated', () async {
