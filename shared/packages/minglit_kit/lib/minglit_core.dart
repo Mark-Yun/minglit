@@ -10,3 +10,4 @@ export 'src/utils/navigation_observer.dart';
 export 'src/utils/refund_calculator.dart';
 export 'src/utils/riverpod_ext.dart';
 export 'src/utils/splash_screen.dart';
+export 'src/utils/supabase_image_url.dart';
