@@ -32,11 +32,14 @@ Deno.serve(withHandler(async (req) => {
     const rawBody = await req.text();
 
     // 1. IP Validation (Primary Security Layer for V1 — V1 has no HMAC signing)
-    // Fix #1892 H2: x-real-ip를 1순위로 신뢰 (Supabase Edge/Cloudflare가 실제 클라이언트 IP로 설정).
-    // x-real-ip 없을 때 XFF fallback: 가장 오른쪽 값(프록시가 마지막으로 추가한 hop) 사용.
-    // XFF leftmost는 클라이언트가 임의 조작 가능하므로 신뢰하지 않음.
+    // Fix #1892 H2: 우선순위 — edge/CDN이 주입하는 헤더를 신뢰, 클라이언트가 조작 가능한 leftmost XFF 금지.
+    //   1) x-real-ip: Supabase Edge/CDN이 실제 연결 IP로 설정
+    //   2) cf-connecting-ip: Cloudflare가 설정하는 클라이언트 IP (Supabase가 CF 인프라 사용 시)
+    //   3) XFF rightmost fallback: CDN이 XFF에 연결 IP를 append하는 구조에서의 안전한 fallback.
+    //      leftmost는 클라이언트가 임의 조작 가능하므로 사용하지 않음.
     const clientIp =
       req.headers.get("x-real-ip")?.trim() ||
+      req.headers.get("cf-connecting-ip")?.trim() ||
       req.headers.get("x-forwarded-for")?.split(",").map((s) => s.trim()).filter(Boolean).pop() ||
       "";
 

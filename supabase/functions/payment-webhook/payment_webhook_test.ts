@@ -152,6 +152,40 @@ Deno.test("payment-webhook - spoofed XFF first hop blocked", async () => {
   });
 });
 
+// Fix #1892 H2: cf-connecting-ip — x-real-ip 부재 시 Cloudflare 설정 헤더로 인증
+Deno.test("payment-webhook - cf-connecting-ip accepted when x-real-ip absent", async () => {
+  await withEnv(ENV, async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const { fetchMock } = createFetchMock([
+      {
+        matcher: "https://api.iamport.kr/users/getToken",
+        handler: () => jsonResponse({ code: 0, response: { access_token: "token" } }),
+      },
+      {
+        matcher: "https://api.iamport.kr/payments/imp_cfip",
+        handler: () => jsonResponse({ code: 0, response: { merchant_uid: "order-cfip", status: "paid" } }),
+      },
+      {
+        matcher: (req) => req.url.includes("/rest/v1/event_applications") && req.method === "PATCH",
+        handler: () => jsonResponse({}),
+      },
+    ]);
+
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        // x-real-ip 없이 cf-connecting-ip만 있는 경우 — Cloudflare 인프라에서 발생
+        const request = jsonRequest(
+          "http://localhost",
+          { imp_uid: "imp_cfip", merchant_uid: "order-cfip", status: "paid" },
+          { headers: { "cf-connecting-ip": PORTONE_IP } },
+        );
+        const response = await handler(request);
+        assertEquals(response.status, 200);
+      });
+    });
+  });
+});
+
 // Fix #1892 H2: x-real-ip가 XFF보다 우선 적용됨
 Deno.test("payment-webhook - x-real-ip takes precedence over XFF", async () => {
   await withEnv(ENV, async () => {
