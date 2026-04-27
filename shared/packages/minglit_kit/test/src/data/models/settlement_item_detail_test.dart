@@ -369,21 +369,24 @@ void main() {
 
     // Fix #1926: Supabase may return Postgres numeric columns as double.
     // Bare `as int` casts throw TypeError; use safe _toInt coercion instead.
-    test('Fix #1926: parses financial fields when Supabase returns them as double', () {
-      final result = SettlementItemDetail.fromJson({
-        ...baseItemJson(),
-        'gross_amount': 100000.0,
-        'platform_fee_amount': 5000.0,
-        'pg_fee_amount': 1500.0,
-        'vat_amount': 500.0,
-        'net_amount': 93000.0,
-      });
-      expect(result.grossAmount, 100000);
-      expect(result.platformFeeAmount, 5000);
-      expect(result.pgFeeAmount, 1500);
-      expect(result.vatAmount, 500);
-      expect(result.netAmount, 93000);
-    });
+    test(
+      'Fix #1926: parses financial fields when Supabase returns them as double',
+      () {
+        final result = SettlementItemDetail.fromJson({
+          ...baseItemJson(),
+          'gross_amount': 100000.0,
+          'platform_fee_amount': 5000.0,
+          'pg_fee_amount': 1500.0,
+          'vat_amount': 500.0,
+          'net_amount': 93000.0,
+        });
+        expect(result.grossAmount, 100000);
+        expect(result.platformFeeAmount, 5000);
+        expect(result.pgFeeAmount, 1500);
+        expect(result.vatAmount, 500);
+        expect(result.netAmount, 93000);
+      },
+    );
   });
 
   // Fix #1926: PayoutSummary and AdjustmentItemModel safe coercion tests.
