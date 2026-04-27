@@ -878,8 +878,9 @@ void main() {
             'id': 'event_ongoing',
             'status': 'ongoing',
             // Ongoing events have already started — start_time is in the past
-            'start_time':
-                now.subtract(const Duration(hours: 1)).toIso8601String(),
+            'start_time': now
+                .subtract(const Duration(hours: 1))
+                .toIso8601String(),
             'end_time': now.add(const Duration(hours: 2)).toIso8601String(),
           };
           final builder = mockTable(
@@ -971,43 +972,48 @@ void main() {
 
       // Fix #1941 v2: ongoing events have start_time in the PAST — verify
       // gt('end_time') is used so they are not excluded from the partner list.
-      test('returns ongoing-status event with past start_time (regression for #1941)',
-          () async {
-        final ongoingEventJson = {
-          ...eventJson,
-          'id': 'event_ongoing',
-          'status': 'ongoing',
-          // Ongoing events have already started — start_time is in the past
-          'start_time': now.subtract(const Duration(hours: 1)).toIso8601String(),
-          'end_time': now.add(const Duration(hours: 2)).toIso8601String(),
-        };
-        final builder = mockTable(
-          mockClient,
-          'events',
-          selectData: [ongoingEventJson],
-        );
+      test(
+        'returns ongoing-status event with past start_time (regression for #1941)',
+        () async {
+          final ongoingEventJson = {
+            ...eventJson,
+            'id': 'event_ongoing',
+            'status': 'ongoing',
+            // Ongoing events have already started — start_time is in the past
+            'start_time': now
+                .subtract(const Duration(hours: 1))
+                .toIso8601String(),
+            'end_time': now.add(const Duration(hours: 2)).toIso8601String(),
+          };
+          final builder = mockTable(
+            mockClient,
+            'events',
+            selectData: [ongoingEventJson],
+          );
 
-        final result = await repository.getEventsByPartnerId('partner_1');
+          final result = await repository.getEventsByPartnerId('partner_1');
 
-        expect(result, hasLength(1));
-        expect(result.first.status, 'ongoing');
-        // Filter must use gt('end_time') so ongoing events (start_time <= now)
-        // are not excluded.
-        expect(
-          builder.recordedFilters.any(
-            (f) => f.method == 'gt' && f.column == 'end_time',
-          ),
-          isTrue,
-          reason: 'expected gt(end_time) filter to include ongoing events',
-        );
-        expect(
-          builder.recordedFilters.any(
-            (f) => f.method == 'gte' && f.column == 'start_time',
-          ),
-          isFalse,
-          reason: 'gte(start_time) must not be used — it excludes ongoing events',
-        );
-      });
+          expect(result, hasLength(1));
+          expect(result.first.status, 'ongoing');
+          // Filter must use gt('end_time') so ongoing events (start_time <= now)
+          // are not excluded.
+          expect(
+            builder.recordedFilters.any(
+              (f) => f.method == 'gt' && f.column == 'end_time',
+            ),
+            isTrue,
+            reason: 'expected gt(end_time) filter to include ongoing events',
+          );
+          expect(
+            builder.recordedFilters.any(
+              (f) => f.method == 'gte' && f.column == 'start_time',
+            ),
+            isFalse,
+            reason:
+                'gte(start_time) must not be used — it excludes ongoing events',
+          );
+        },
+      );
     });
 
     group('getTodayEvents', () {
