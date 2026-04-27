@@ -1,7 +1,5 @@
-// TODO(#1892): verify_jwt=false 설정 후, 포트원 서버 호출자 검증 강화 필요
-// 현재: IP whitelist만 사용 (ALLOWED_IPS)
-// 추가 필요: 포트원 V1 webhook signature 검증 또는 HMAC 검증
-// 참고: V1은 HMAC 미지원이므로 IP whitelist가 1차 보안. 추가 보안 레이어 검토 필요.
+// Fix #1892: 호출자 검증 강화 (H1 — 127.0.0.1 prod 제거, H2 — XFF 파싱 개선)
+// V1은 HMAC 미지원이므로 IP whitelist + Portone cross-check가 방어선. V2 마이그레이션 시 HMAC 추가 가능.
 // Fix #179: esm.sh 직접 URL → deno.json import map 기반으로 통일
 import { createServiceClient } from "../_shared/supabase_client.ts";
 import { IamportClient } from "../_shared/iamport_client.ts";
@@ -19,7 +17,12 @@ if (!IMP_KEY || !IMP_SECRET) {
 }
 
 // Portone (Iamport V1) Webhook IP Whitelist
-const ALLOWED_IPS = ["52.78.100.19", "52.78.48.223", "52.78.17.128", "127.0.0.1"];
+// Fix #1892 H1: 127.0.0.1은 dev 환경에서만 허용 — production에서 localhost를 허용하면
+// X-Forwarded-For 스푸핑으로 IP 게이트가 무력화될 수 있음
+const _IS_DEV_ENV = Deno.env.get("ENVIRONMENT") === "dev";
+const ALLOWED_IPS = _IS_DEV_ENV
+  ? ["52.78.100.19", "52.78.48.223", "52.78.17.128", "127.0.0.1"]
+  : ["52.78.100.19", "52.78.48.223", "52.78.17.128"];
 
 initSentry();
 initStatsig();
@@ -29,8 +32,13 @@ Deno.serve(withHandler(async (req) => {
     const rawBody = await req.text();
 
     // 1. IP Validation (Primary Security Layer for V1 — V1 has no HMAC signing)
-    const forwardedFor = req.headers.get("x-forwarded-for");
-    const clientIp = forwardedFor ? forwardedFor.split(",")[0].trim() : "";
+    // Fix #1892 H2: x-real-ip를 1순위로 신뢰 (Supabase Edge/Cloudflare가 실제 클라이언트 IP로 설정).
+    // x-real-ip 없을 때 XFF fallback: 가장 오른쪽 값(프록시가 마지막으로 추가한 hop) 사용.
+    // XFF leftmost는 클라이언트가 임의 조작 가능하므로 신뢰하지 않음.
+    const clientIp =
+      req.headers.get("x-real-ip")?.trim() ||
+      req.headers.get("x-forwarded-for")?.split(",").map((s) => s.trim()).filter(Boolean).pop() ||
+      "";
 
     if (!clientIp || !ALLOWED_IPS.includes(clientIp)) {
       log({ function: FN, level: "warn", message: `Blocked Webhook Request from unauthorized IP: ${clientIp || "(empty)"}` });
