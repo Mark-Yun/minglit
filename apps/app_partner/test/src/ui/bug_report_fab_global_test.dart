@@ -4,7 +4,6 @@
 // Failure condition: someone removes BugReporterWrapper from main.dart or
 // sets enabled: false — both scenarios are covered below.
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
