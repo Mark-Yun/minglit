@@ -1,4 +1,5 @@
 import 'package:minglit_kit/src/data/models/user_profile.dart';
+import 'package:minglit_kit/src/utils/log.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -36,8 +37,14 @@ class SupabaseUserRepository implements UserRepository {
           .eq('id', userId)
           .single();
       return UserProfile.fromJson(data);
-    } on Object {
-      return null;
+    } on PostgrestException catch (e, st) {
+      // Fix #1952: PGRST116 = no rows — valid "not found" case.
+      if (e.code == 'PGRST116') return null;
+      Log.e('❌ [UserRepo] getUserProfile Error', e, st);
+      rethrow;
+    } catch (e, st) {
+      Log.e('❌ [UserRepo] getUserProfile Error', e, st);
+      rethrow;
     }
   }
 
@@ -55,8 +62,10 @@ class SupabaseUserRepository implements UserRepository {
           )
           .whereType<String>()
           .toList();
-    } on Object {
-      return [];
+    } catch (e, st) {
+      // Fix #1952: rethrow instead of silently returning [].
+      Log.e('❌ [UserRepo] getApprovedVerificationIds Error', e, st);
+      rethrow;
     }
   }
 }
