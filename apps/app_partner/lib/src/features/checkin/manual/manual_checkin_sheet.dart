@@ -23,6 +23,8 @@ class _ManualCheckinSheetState extends ConsumerState<ManualCheckinSheet> {
   final _searchController = TextEditingController();
   Timer? _debounce;
   String _query = '';
+  // Fix #1947: guard rapid taps — track ticket IDs with an in-flight RPC call.
+  final Set<String> _inFlightTicketIds = {};
 
   @override
   void dispose() {
@@ -208,7 +210,13 @@ class _ManualCheckinSheetState extends ConsumerState<ManualCheckinSheet> {
                               (p) => _ParticipantRow(
                                 key: ValueKey(p.id),
                                 participant: p,
-                                onCheckin: () => _checkin(p),
+                                isLoading: _inFlightTicketIds.contains(
+                                  p.ticketId,
+                                ),
+                                onCheckin:
+                                    _inFlightTicketIds.contains(p.ticketId)
+                                    ? null
+                                    : () => _checkin(p),
                               ),
                             ),
                           ],
@@ -240,6 +248,8 @@ class _ManualCheckinSheetState extends ConsumerState<ManualCheckinSheet> {
   }
 
   Future<void> _checkin(CheckinParticipant participant) async {
+    // Fix #1947: mark in-flight before any async gap to block duplicate taps.
+    setState(() => _inFlightTicketIds.add(participant.ticketId));
     HapticFeedback.selectionClick();
     try {
       final result = await ref
@@ -258,6 +268,8 @@ class _ManualCheckinSheetState extends ConsumerState<ManualCheckinSheet> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('체크인 처리 중 오류가 발생했습니다')),
       );
+    } finally {
+      if (mounted) setState(() => _inFlightTicketIds.remove(participant.ticketId));
     }
   }
 }
@@ -293,11 +305,13 @@ class _ParticipantRow extends StatelessWidget {
   const _ParticipantRow({
     required this.participant,
     required this.onCheckin,
+    this.isLoading = false,
     super.key,
   });
 
   final CheckinParticipant participant;
   final VoidCallback? onCheckin;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
@@ -354,7 +368,18 @@ class _ParticipantRow extends StatelessWidget {
             ),
 
             // 체크인 버튼 또는 완료 표시
-            if (onCheckin != null)
+            // Fix #1947: show spinner while in-flight to block duplicate taps.
+            if (isLoading)
+              const SizedBox.square(
+                dimension: 44,
+                child: Center(
+                  child: SizedBox.square(
+                    dimension: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+              )
+            else if (onCheckin != null)
               SizedBox(
                 height: 44,
                 child: Center(
