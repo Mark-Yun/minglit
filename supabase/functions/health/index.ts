@@ -2,6 +2,7 @@ import { successResponse, errorResponse } from "../_shared/response_utils.ts";
 import { initSentry, withHandler } from "../_shared/logger.ts";
 import { checkAllFunctions } from "../_shared/env_keystore.ts";
 import { nowISO } from "../_shared/temporal_utils.ts";
+import { requireServiceRole } from "../_shared/auth_utils.ts";
 
 initSentry();
 
@@ -142,8 +143,12 @@ Deno.serve(withHandler(async (req) => {
     },
   };
 
-  // env-check: report missing env vars per function (key names only, no values)
+  // Fix #1944: env-check exposes infra key names — require service role.
+  // The no-arg health check remains public for smoke tests.
   if (includeEnv) {
+    const auth = requireServiceRole(req);
+    if (auth instanceof Response) return auth;
+
     const missingByFunction = checkAllFunctions();
     const totalMissing = Object.values(missingByFunction).flat().length;
     body.env_check = {
