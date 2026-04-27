@@ -7,9 +7,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 EntryGroupTemplate _makeGroup(String id) => EntryGroupTemplate(
-      id: id,
-      partyId: 'party-test',
-    );
+  id: id,
+  partyId: 'party-test',
+);
 
 Widget _buildStep4({List<EntryGroupTemplate> entryGroups = const []}) {
   return ProviderScope(

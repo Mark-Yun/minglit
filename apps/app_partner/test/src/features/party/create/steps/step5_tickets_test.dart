@@ -8,13 +8,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 TicketTemplate _makeTicket(String id) => TicketTemplate(
-      id: id,
-      partyId: 'party-test',
-      name: '일반 티켓',
-      quantity: 10,
-      createdAt: DateTime(2024),
-      updatedAt: DateTime(2024),
-    );
+  id: id,
+  partyId: 'party-test',
+  name: '일반 티켓',
+  quantity: 10,
+  createdAt: DateTime(2024),
+  updatedAt: DateTime(2024),
+);
 
 Widget _buildStep5({
   List<TicketTemplate> tickets = const [],
