@@ -348,8 +348,11 @@ void main() {
           matching: find.byType(FilledButton),
         ),
       );
-      expect(buttonDuring.onPressed, isNull,
-          reason: 'Button must be disabled while in-flight to prevent double-tap');
+      expect(
+        buttonDuring.onPressed,
+        isNull,
+        reason: 'Button must be disabled while in-flight to prevent double-tap',
+      );
 
       // Complete the async operation
       retryCompleter.complete();
