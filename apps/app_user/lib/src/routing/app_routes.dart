@@ -259,6 +259,11 @@ class AccountManagementRoute extends GoRouteData with $AccountManagementRoute {
             // Fix #1213: 기존 회원 탈퇴 플로우를 계정 관리에서 재사용
             ref.read(accountDeletionCoordinatorProvider).start();
           },
+          // Fix #1861: 계정 관리에서 본인인증 직접 진입 가능하도록
+          onCertification: () => context.push('/certification'),
+          isVerified:
+              ref.watch(currentUserProfileProvider).asData?.value?.isVerified ??
+              false,
         );
       },
     );
