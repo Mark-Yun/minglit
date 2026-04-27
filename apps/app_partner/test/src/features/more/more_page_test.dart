@@ -168,6 +168,43 @@ void main() {
       verify(() => mockCoordinator.pushAccountManagement()).called(1);
     });
 
+    // Fix #1859: regression — '계좌 관리' 라벨이 '정산 계좌 관리'로 돌아오는 것을 방지
+    testWidgets('shows 계좌 관리 (not 정산 계좌 관리) when has SETTLEMENT_EDIT permission',
+        (tester) async {
+      when(
+        () => mockCoordinator.pushBankAccountManagement(),
+      ).thenReturn(null);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            currentPartnerInfoProvider.overrideWith(
+              (ref) async => testPartner,
+            ),
+            currentMemberPermissionsProvider.overrideWith(
+              (ref) async => ['SETTLEMENT_EDIT'],
+            ),
+            moreCoordinatorProvider.overrideWithValue(mockCoordinator),
+            authControllerProvider.overrideWith(MockAuthController.new),
+            minglitUrlConfigProvider.overrideWithValue(
+              const MinglitUrlConfig(MinglitDomains.production()),
+            ),
+            goRouterProvider.overrideWithValue(mockRouter),
+          ],
+          child: const MaterialApp(home: MorePage()),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('계좌 관리'), findsOneWidget);
+      expect(find.text('정산 계좌 관리'), findsNothing);
+
+      await tester.tap(find.text('계좌 관리'));
+      await tester.pumpAndSettle();
+
+      verify(() => mockCoordinator.pushBankAccountManagement()).called(1);
+    });
+
     testWidgets('placeholder header does not overflow on mobile width', (
       tester,
     ) async {
