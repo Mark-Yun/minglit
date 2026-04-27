@@ -6,11 +6,15 @@ void main() {
   Widget wrap({
     required VoidCallback onLogout,
     VoidCallback? onDeleteAccount,
+    VoidCallback? onCertification,
+    bool isVerified = false,
   }) {
     return MaterialApp(
       home: AccountManagementPage(
         onLogout: onLogout,
         onDeleteAccount: onDeleteAccount ?? () {},
+        onCertification: onCertification,
+        isVerified: isVerified,
       ),
     );
   }
@@ -63,6 +67,58 @@ void main() {
       expect(logoutCalled, isFalse);
       // 다이얼로그가 닫히고 페이지가 유지됨
       expect(find.text('로그아웃'), findsOneWidget);
+    });
+  });
+
+  // Fix #1861: 본인인증 타일 표시 여부 및 상태 검증
+  group('AccountManagementPage certification tile', () {
+    testWidgets('onCertification null이면 본인인증 타일 숨김', (tester) async {
+      await tester.pumpWidget(
+        wrap(onLogout: () {}),
+      );
+
+      expect(find.text('본인인증'), findsNothing);
+    });
+
+    testWidgets('onCertification non-null이면 본인인증 타일 표시', (tester) async {
+      await tester.pumpWidget(
+        wrap(onLogout: () {}, onCertification: () {}),
+      );
+
+      expect(find.text('본인인증'), findsOneWidget);
+    });
+
+    testWidgets('isVerified false이면 "인증하기" 텍스트 표시', (tester) async {
+      await tester.pumpWidget(
+        wrap(onLogout: () {}, onCertification: () {}),
+      );
+
+      expect(find.text('인증하기'), findsOneWidget);
+      expect(find.text('인증 완료'), findsNothing);
+    });
+
+    testWidgets('isVerified true이면 "인증 완료" 텍스트 표시', (tester) async {
+      await tester.pumpWidget(
+        wrap(onLogout: () {}, onCertification: () {}, isVerified: true),
+      );
+
+      expect(find.text('인증 완료'), findsOneWidget);
+      expect(find.text('인증하기'), findsNothing);
+    });
+
+    testWidgets('본인인증 타일 탭 시 onCertification 호출', (tester) async {
+      var certificationCalled = false;
+      await tester.pumpWidget(
+        wrap(
+          onLogout: () {},
+          onCertification: () => certificationCalled = true,
+        ),
+      );
+
+      await tester.tap(find.text('본인인증'));
+      await tester.pumpAndSettle();
+
+      expect(certificationCalled, isTrue);
     });
   });
 }

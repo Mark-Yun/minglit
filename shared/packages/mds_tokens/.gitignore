@@ -1,0 +1,10 @@
+# Node.js
+node_modules/
+
+# Style Dictionary build artefacts that are NOT committed (none currently — tokens.g.dart IS committed)
+# If you add a non-Dart platform (e.g. CSS, JSON), add its output path here.
+
+# Dart/pub cache
+.dart_tool/
+.packages
+pubspec.lock

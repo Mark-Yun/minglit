@@ -9,68 +9,71 @@ class ExploreFilterChipBar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final filters = ref.watch(activeFiltersProvider);
 
-    return SizedBox(
-      height: 36,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(
-          horizontal: MinglitSpacing.medium,
-        ),
-        children: [
-          // Sort chips — single selection
-          // Sort chips — single selection
-          MinglitFilterChip(
-            label: '추천순',
-            icon: Icons.local_fire_department,
-            isSelected: filters.sortType == ExploreSortType.recommended,
-            onTap: () => ref
-                .read(activeFiltersProvider.notifier)
-                .setSortType(ExploreSortType.recommended),
+    return Padding(
+      padding: const EdgeInsets.only(top: MinglitSpacing.small),
+      child: SizedBox(
+        height: 36,
+        child: ListView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(
+            horizontal: MinglitSpacing.medium,
           ),
-          const SizedBox(width: MinglitSpacing.small),
-          MinglitFilterChip(
-            label: '마감임박',
-            icon: Icons.hourglass_bottom,
-            isSelected: filters.sortType == ExploreSortType.closingSoon,
-            onTap: () => ref
-                .read(activeFiltersProvider.notifier)
-                .setSortType(ExploreSortType.closingSoon),
-          ),
-          const SizedBox(width: MinglitSpacing.small),
-          MinglitFilterChip(
-            label: '가까운날짜',
-            icon: Icons.event,
-            isSelected: filters.sortType == ExploreSortType.nearestDate,
-            onTap: () => ref
-                .read(activeFiltersProvider.notifier)
-                .setSortType(ExploreSortType.nearestDate),
-          ),
-          // Divider between sort and toggle chips
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: MinglitSpacing.small),
-            child: VerticalDivider(
-              width: 1,
-              thickness: 1,
-              indent: 8,
-              endIndent: 8,
+          children: [
+            // Sort chips — single selection
+            // Sort chips — single selection
+            MinglitFilterChip(
+              label: '추천순',
+              icon: Icons.local_fire_department,
+              isSelected: filters.sortType == ExploreSortType.recommended,
+              onTap: () => ref
+                  .read(activeFiltersProvider.notifier)
+                  .setSortType(ExploreSortType.recommended),
             ),
-          ),
-          // Toggle chips
-          MinglitFilterChip(
-            label: '가까운 거리',
-            icon: Icons.near_me_outlined,
-            isSelected: filters.nearbyEnabled,
-            onTap: () => _onNearbyTap(context, ref),
-          ),
-          const SizedBox(width: MinglitSpacing.small),
-          MinglitFilterChip(
-            label: '참여 가능',
-            icon: Icons.check_circle_outline,
-            isSelected: filters.eligibilityEnabled,
-            onTap: () =>
-                ref.read(activeFiltersProvider.notifier).toggleEligibility(),
-          ),
-        ],
+            const SizedBox(width: MinglitSpacing.small),
+            MinglitFilterChip(
+              label: '마감임박',
+              icon: Icons.hourglass_bottom,
+              isSelected: filters.sortType == ExploreSortType.closingSoon,
+              onTap: () => ref
+                  .read(activeFiltersProvider.notifier)
+                  .setSortType(ExploreSortType.closingSoon),
+            ),
+            const SizedBox(width: MinglitSpacing.small),
+            MinglitFilterChip(
+              label: '가까운날짜',
+              icon: Icons.event,
+              isSelected: filters.sortType == ExploreSortType.nearestDate,
+              onTap: () => ref
+                  .read(activeFiltersProvider.notifier)
+                  .setSortType(ExploreSortType.nearestDate),
+            ),
+            // Divider between sort and toggle chips
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: MinglitSpacing.small),
+              child: VerticalDivider(
+                width: 1,
+                thickness: 1,
+                indent: 8,
+                endIndent: 8,
+              ),
+            ),
+            // Toggle chips
+            MinglitFilterChip(
+              label: '가까운 거리',
+              icon: Icons.near_me_outlined,
+              isSelected: filters.nearbyEnabled,
+              onTap: () => _onNearbyTap(context, ref),
+            ),
+            const SizedBox(width: MinglitSpacing.small),
+            MinglitFilterChip(
+              label: '참여 가능',
+              icon: Icons.check_circle_outline,
+              isSelected: filters.eligibilityEnabled,
+              onTap: () =>
+                  ref.read(activeFiltersProvider.notifier).toggleEligibility(),
+            ),
+          ],
+        ),
       ),
     );
   }

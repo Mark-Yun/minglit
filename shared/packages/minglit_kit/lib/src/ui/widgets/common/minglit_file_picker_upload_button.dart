@@ -1,6 +1,6 @@
 // ignore_for_file: type=lint
 import 'package:flutter/material.dart';
-import 'package:minglit_kit/src/theme/minglit_theme.dart';
+import 'package:mds/src/theme/minglit_theme.dart';
 
 class MinglitFilePickerUploadButton extends StatelessWidget {
   const MinglitFilePickerUploadButton({

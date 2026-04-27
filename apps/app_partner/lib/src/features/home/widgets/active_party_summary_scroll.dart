@@ -90,23 +90,25 @@ class ActivePartySummaryScroll extends StatelessWidget {
         else
           SizedBox(
             height: 140,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              // Fix #422: 좌우 패딩으로 카드 잘림 방지
-              padding: const EdgeInsets.symmetric(
-                horizontal: MinglitSpacing.medium,
+            child: MinglitHorizontalScrollGroup(
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                // Fix #422: 좌우 패딩으로 카드 잘림 방지
+                padding: const EdgeInsets.symmetric(
+                  horizontal: MinglitSpacing.medium,
+                ),
+                itemCount: parties.length,
+                separatorBuilder: (_, _) => const SizedBox(
+                  width: MinglitSpacing.small,
+                ),
+                itemBuilder: (context, index) {
+                  final party = parties[index];
+                  return _PartyCard(
+                    party: party,
+                    onTap: () => onPartyTap(party),
+                  );
+                },
               ),
-              itemCount: parties.length,
-              separatorBuilder: (_, _) => const SizedBox(
-                width: MinglitSpacing.small,
-              ),
-              itemBuilder: (context, index) {
-                final party = parties[index];
-                return _PartyCard(
-                  party: party,
-                  onTap: () => onPartyTap(party),
-                );
-              },
             ),
           ),
       ],

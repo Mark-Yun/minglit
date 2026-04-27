@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:minglit_kit/src/ui/feedback/feedback_components.dart';
+import 'package:mds/src/ui/feedback/feedback_components.dart';
 
 /// **Minglit Feedback Extensions**
 ///

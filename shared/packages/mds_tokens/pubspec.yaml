@@ -1,0 +1,14 @@
+name: mds_tokens
+description: "Design tokens (SSOT) — codegen Dart consts via Style Dictionary"
+version: 26.04.1865-dev
+publish_to: 'none'
+resolution: workspace
+
+environment:
+  sdk: ^3.10.4
+
+# Pure Dart package — no Flutter dependency required.
+# Consumers get typed const values for color, spacing, radius, typography.
+
+dev_dependencies:
+  lints: ^6.0.0

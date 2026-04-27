@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:minglit_kit/src/theme/minglit_theme.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_content_layout.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_section.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_section_divider.dart';
+import 'package:mds/src/theme/minglit_theme.dart';
+import 'package:mds/src/ui/widgets/common/minglit_content_layout.dart';
+import 'package:mds/src/ui/widgets/common/minglit_section.dart';
+import 'package:mds/src/ui/widgets/common/minglit_section_divider.dart';
 
 void main() {
   Widget wrap(Widget child) {
