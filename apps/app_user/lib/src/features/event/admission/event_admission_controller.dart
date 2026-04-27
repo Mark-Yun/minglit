@@ -1,14 +1,15 @@
 import 'dart:async';
 
+// Fix #1934: use common location to avoid cross-feature import from event→home
+import 'package:app_user/src/common/widgets/match_results_content.dart';
 import 'package:app_user/src/features/auth/logic/auth_coordinator.dart';
-import 'package:app_user/src/features/home/widgets/event_now_phases/results_content.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-part 'event_admission_controller.g.dart';
 part 'admission_action_handler.dart';
+part 'event_admission_controller.g.dart';
 part 'event_admission_state.dart';
 
 @riverpod
@@ -236,9 +237,7 @@ class EventAdmissionController extends _$EventAdmissionController {
               padding: EdgeInsets.only(
                 bottom: MediaQuery.of(sheetContext).viewPadding.bottom,
               ),
-              // ResultsContent only reads activeEvent.event (title)
-              // and myMatchesProvider(event.id) — participantStatus is unused.
-              child: ResultsContent(
+              child: MatchResultsContent(
                 activeEvent: TodayActiveEvent(
                   event: event,
                   participantStatus: 'checked_in',
