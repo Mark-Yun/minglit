@@ -1,6 +1,6 @@
 {
   "name": "landing_user",
-  "version": "26.04.1817-dev",
+  "version": "26.04.1914-dev",
   "private": true,
   "scripts": {
     "dev": "next dev -p 3002",
@@ -9,11 +9,11 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@statsig/react-bindings": "^3.32.5",
+    "@statsig/react-bindings": "^3.32.6",
     "lucide-react": "^1.7.0",
     "next": "16.2.3",
-    "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react": "19.2.5",
+    "react-dom": "19.2.5"
   },
   "optionalDependencies": {
     "@tailwindcss/oxide-linux-x64-gnu": "4.2.2",

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:minglit_kit/src/ui/widgets/common/minglit_horizontal_scroll_group.dart';
+import 'package:mds/src/ui/widgets/common/minglit_horizontal_scroll_group.dart';
 
 Widget _wrap(Widget child) {
   return MaterialApp(home: Scaffold(body: child));

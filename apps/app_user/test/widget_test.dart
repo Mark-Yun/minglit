@@ -95,8 +95,8 @@ void main() {
     );
 
     await tester.pump();
-    expect(find.byType(MinglitCircularProgressIndicator), findsOneWidget);
-    // completer never resolved → always loading
+    // Fix #1856: loading state now shows skeleton cards instead of progress indicator
+    expect(find.byType(MinglitEventCard), findsWidgets);
   });
 
   testWidgets('HomePage shows empty state text when no events returned', (

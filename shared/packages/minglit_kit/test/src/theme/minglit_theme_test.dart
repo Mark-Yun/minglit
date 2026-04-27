@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:minglit_kit/src/theme/minglit_theme.dart';
+import 'package:mds/src/theme/minglit_theme.dart';
 
 void main() {
   group('MinglitTheme', () {

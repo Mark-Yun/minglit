@@ -1,0 +1,41 @@
+{
+  "color": {
+    "background": { "$value": "#FFFFFF", "$type": "color", "$description": "White background color" },
+    "primary": { "$value": "#9900FF", "$type": "color", "$description": "Primary brand purple" },
+    "secondary": { "$value": "#FF9900", "$type": "color", "$description": "Secondary amber accent" },
+    "tertiary": { "$value": "#48C9B0", "$type": "color", "$description": "Tertiary mint accent" },
+    "surface": { "$value": "#F9FAFB", "$type": "color", "$description": "Light surface background" },
+    "error": { "$value": "#EF4444", "$type": "color", "$description": "Error red color" },
+    "textPrimary": { "$value": "#111827", "$type": "color", "$description": "Primary text color (near-black)" },
+    "textSecondary": { "$value": "#4B5563", "$type": "color", "$description": "Secondary text color (dark gray)" },
+    "success": { "$value": "#16A34A", "$type": "color", "$description": "Success green color" },
+    "info": { "$value": "#3B82F6", "$type": "color", "$description": "Info blue color" },
+    "warning": { "$value": "#D97706", "$type": "color", "$description": "Warning amber color" },
+    "divider": { "$value": "#E5E7EB", "$type": "color", "$description": "Light theme border/divider" },
+    "scrim": { "$value": "#00000080", "$type": "color", "$description": "Semi-transparent black scrim" },
+    "glitchCyan": { "$value": "#21FFFE", "$type": "color", "$description": "Glitch effect cyan — splash" },
+    "primaryDark": { "$value": "#7B2FBE", "$type": "color", "$description": "Darker primary variant" },
+    "dark": {
+      "background": { "$value": "#0F0F0F", "$type": "color", "$description": "Dark background" },
+      "surface": { "$value": "#212121", "$type": "color", "$description": "Dark surface" },
+      "textPrimary": { "$value": "#FFFFFF", "$type": "color", "$description": "Dark primary text" },
+      "textSecondary": { "$value": "#AAAAAA", "$type": "color", "$description": "Dark secondary text" },
+      "primary": { "$value": "#AA33FF", "$type": "color", "$description": "Dark primary brand" },
+      "success": { "$value": "#4ADE80", "$type": "color", "$description": "Dark success green" },
+      "info": { "$value": "#60A5FA", "$type": "color", "$description": "Dark info blue" },
+      "warning": { "$value": "#FBBF24", "$type": "color", "$description": "Dark warning amber" },
+      "divider": { "$value": "#3D3D3D", "$type": "color", "$description": "Dark divider" }
+    },
+    "partner": {
+      "primary": { "$value": "#6C3CE1", "$type": "color", "$description": "Partner primary indigo" },
+      "primaryLight": { "$value": "#8B5CF6", "$type": "color", "$description": "Partner lighter variant" },
+      "primarySurface": { "$value": "#F5F0FF", "$type": "color", "$description": "Partner surface tint" },
+      "primaryBorder": { "$value": "#E8E0FF", "$type": "color", "$description": "Partner border color" },
+      "primaryContainer": { "$value": "#F0EDFF", "$type": "color", "$description": "Partner container fill" },
+      "dark": {
+        "primary": { "$value": "#9B7BEC", "$type": "color", "$description": "Partner dark primary" },
+        "primaryLight": { "$value": "#B39DFF", "$type": "color", "$description": "Partner dark primary light" }
+      }
+    }
+  }
+}

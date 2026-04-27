@@ -26,7 +26,9 @@ Layer 2 (Qualification): user_verifications → verification_submissions → par
 ## 2. Layer 1 — Identity Verification
 
 ### 2.1 Flow
-User App → Portone SDK → identity-verify → user_profiles 업데이트
+User App (minglit_iamport_v1 SDK) → identity-verify EF → user_profiles 업데이트
+
+> **클라이언트 SDK 현황**: 클라이언트는 `minglit_iamport_v1` (Iamport V1 SDK)를 사용해 본인인증 UI를 띄운다. 백엔드 Edge Function `identity-verify`는 Portone V2 API로 검증한다. V1 SDK + V2 백엔드 혼용 구조이며, SDK V2 전환은 별도 에픽으로 추적 중.
 
 ### 2.2 Edge Functions
 - `identity-verify`: Portone V2 API를 사용한다. `getIdentityVerification(identity_verification_id)` 호출 후 `status === "VERIFIED"` 임을 확인한다. `verifiedCustomer` 데이터를 추출하여 `update_user_identity` RPC를 호출해 name, birth_date, gender, phone_number와 CI/DI(암호화 저장)를 업데이트하고 is_verified를 true로 설정한다.

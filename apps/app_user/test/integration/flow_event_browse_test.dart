@@ -19,7 +19,8 @@ void main() {
 
   group('이벤트 탐색 플로우 — 홈→상세→파트너', () {
     // ── 홈 화면: AsyncLoading ──
-    testWidgets('홈 AsyncLoading → MinglitCircularProgressIndicator 표시', (
+    // Fix #1856: loading state now shows skeleton cards instead of progress indicator
+    testWidgets('홈 AsyncLoading → skeleton card 표시', (
       tester,
     ) async {
       setKoreanLocale(tester);
@@ -34,7 +35,7 @@ void main() {
       );
       await tester.pump();
 
-      expect(find.byType(MinglitCircularProgressIndicator), findsOneWidget);
+      expect(find.byType(MinglitEventCard), findsWidgets);
     });
 
     // ── 홈 화면: AsyncError ──

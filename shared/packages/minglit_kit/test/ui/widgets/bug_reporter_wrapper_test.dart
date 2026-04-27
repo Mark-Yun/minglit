@@ -24,26 +24,26 @@ void main() {
       expect(find.text('Test Child Widget'), findsOneWidget);
     });
 
-    testWidgets('BugReporterWrapper does not render a FAB directly', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: BugReporterWrapper(
-                enabled: false,
-                child: Text('Test Content'),
+    testWidgets(
+      'BugReporterWrapper with enabled=false does not render a FAB',
+      (tester) async {
+        await tester.pumpWidget(
+          const ProviderScope(
+            child: MaterialApp(
+              home: Scaffold(
+                body: BugReporterWrapper(
+                  enabled: false,
+                  child: Text('Test Content'),
+                ),
               ),
             ),
           ),
-        ),
-      );
+        );
 
-      // BugReporterWrapper itself does not render a FAB.
-      // FAB is in Scaffold.floatingActionButton (home_page), not here.
-      expect(find.byType(FloatingActionButton), findsNothing);
-    });
+        // enabled=false suppresses the Stack overlay FAB entirely.
+        expect(find.byType(FloatingActionButton), findsNothing);
+      },
+    );
 
     testWidgets('widget builds without errors', (tester) async {
       await tester.pumpWidget(
@@ -152,27 +152,29 @@ void main() {
       // No crash = state was properly cleaned up
     });
 
-    // BugReporterWrapper registers _showReportDialog via bugReporterCallbackProvider.
-    // FAB (#1466) is in Scaffold.floatingActionButton, not inside BugReporterWrapper.
-    testWidgets('BugReporterWrapper does not render a FAB directly', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: BugReporterWrapper(
-                child: Text('content'),
+    // Fix #1858: BugReporterWrapper now renders BugReportFab as a Stack overlay.
+    // FAB is hidden by default (bugReportFabVisibleProvider == false).
+    testWidgets(
+      'BugReporterWrapper FAB hidden by default (provider=false)',
+      (tester) async {
+        await tester.pumpWidget(
+          const ProviderScope(
+            child: MaterialApp(
+              home: Scaffold(
+                body: BugReporterWrapper(
+                  child: Text('content'),
+                ),
               ),
             ),
           ),
-        ),
-      );
+        );
+        await tester.pump();
 
-      expect(find.text('content'), findsOneWidget);
-      // FAB lives in Scaffold.floatingActionButton (home_page), not here
-      expect(find.byType(FloatingActionButton), findsNothing);
-    });
+        expect(find.text('content'), findsOneWidget);
+        // BugReportFab returns SizedBox.shrink() when provider is false
+        expect(find.byType(FloatingActionButton), findsNothing);
+      },
+    );
 
     // Regression test for #1285: callback is registered in provider after mount.
     testWidgets(
@@ -243,7 +245,7 @@ void main() {
     });
   });
 
-  // Fix #1466: BugReportFab toggle behavior
+  // Fix #1466 / Fix #1858: BugReportFab toggle behavior
   group('BugReportFab', () {
     testWidgets('hidden by default (bugReportFabVisibleProvider == false)', (
       tester,
@@ -263,7 +265,8 @@ void main() {
       expect(find.byType(FloatingActionButton), findsNothing);
     });
 
-    // Fix #1466: BugReportFab는 FAB visible + callback 모두 set 시에만 보임.
+    // Fix #1466 / Fix #1858: BugReportFab는 FAB visible + callback 모두 set 시에만 보임.
+    // Fix #1858 이후 BugReporterWrapper가 Stack overlay로 BugReportFab을 직접 렌더링한다.
     // _BugReporterCallbackNotifier와 _BugReportFabVisibleNotifier 모두 private이므로
     // BugReporterWrapper를 마운트하여 실제 callback을 등록하고,
     // notifier.toggle()로 FAB visible 상태를 활성화한다.
@@ -278,7 +281,8 @@ void main() {
           container: container,
           child: const MaterialApp(
             home: Scaffold(
-              floatingActionButton: BugReportFab(),
+              // Fix #1858: FAB is now rendered by BugReporterWrapper Stack overlay,
+              // not by Scaffold.floatingActionButton — don't double-mount here.
               body: BugReporterWrapper(child: Text('content')),
             ),
           ),
@@ -293,6 +297,72 @@ void main() {
 
       expect(find.byType(FloatingActionButton), findsOneWidget);
     });
+
+    // Fix #1858: Test A — BugReporterWrapper 글로벌 오버레이 FAB 노출 검증
+    // provider=true + callback 등록 시 BugReporterWrapper Stack 내에서 FAB 등장
+    testWidgets(
+      'Test A: BugReporterWrapper shows FAB overlay when provider is true',
+      (tester) async {
+        final container = ProviderContainer();
+        addTearDown(container.dispose);
+
+        await tester.pumpWidget(
+          UncontrolledProviderScope(
+            container: container,
+            child: const MaterialApp(
+              home: Scaffold(
+                body: BugReporterWrapper(child: Text('content')),
+              ),
+            ),
+          ),
+        );
+        // postFrameCallback fires — BugReporterWrapper registers callback
+        await tester.pump();
+
+        // FAB hidden by default
+        expect(find.byType(FloatingActionButton), findsNothing);
+
+        // Toggle to visible
+        container.read(bugReportFabVisibleProvider.notifier).toggle();
+        await tester.pump();
+
+        // FAB appears inside the BugReporterWrapper Stack overlay
+        expect(find.byType(FloatingActionButton), findsOneWidget);
+      },
+    );
+
+    // Fix #1858: Test B — provider=false のとき FAB は見えない (BugReporterWrapper内)
+    testWidgets(
+      'Test B: BugReporterWrapper hides FAB overlay when provider is false',
+      (tester) async {
+        final container = ProviderContainer();
+        addTearDown(container.dispose);
+
+        await tester.pumpWidget(
+          UncontrolledProviderScope(
+            container: container,
+            child: const MaterialApp(
+              home: Scaffold(
+                body: BugReporterWrapper(child: Text('content')),
+              ),
+            ),
+          ),
+        );
+        await tester.pump();
+
+        // Provider is false by default — no FAB
+        expect(find.byType(FloatingActionButton), findsNothing);
+
+        // Toggle on, then toggle off again
+        container.read(bugReportFabVisibleProvider.notifier).toggle();
+        await tester.pump();
+        expect(find.byType(FloatingActionButton), findsOneWidget);
+
+        container.read(bugReportFabVisibleProvider.notifier).toggle();
+        await tester.pump();
+        expect(find.byType(FloatingActionButton), findsNothing);
+      },
+    );
 
     // Fix #1466: BugReportAction은 callback이 등록되어 있을 때만 IconButton을 렌더링.
     // BugReporterWrapper를 마운트하여 실제 callback을 등록한다.

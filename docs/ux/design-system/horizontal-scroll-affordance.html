@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minglit UX - Horizontal Scroll Affordance</title>
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --primary: #3b82f6;
+            --chip-bg: #f3f4f6;
+            --spacing-m: 16px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f9fafb;
+            margin: 0;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 40px;
+        }
+
+        .container {
+            width: 375px;
+            background: var(--bg-color);
+            border-radius: 24px;
+            padding: 24px 0;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        h2 {
+            font-size: 18px;
+            margin: 0 24px 16px;
+            color: var(--text-primary);
+        }
+
+        /* The Scroll Wrapper Component */
+        .scroll-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .scroll-container {
+            display: flex;
+            overflow-x: auto;
+            gap: 12px;
+            padding: 4px 24px;
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none;  /* IE and Edge */
+            scroll-behavior: smooth;
+        }
+
+        .scroll-container::-webkit-scrollbar {
+            display: none; /* Chrome, Safari, Opera */
+        }
+
+        .chip {
+            flex: 0 0 auto;
+            padding: 8px 16px;
+            background: var(--chip-bg);
+            border-radius: 20px;
+            font-size: 14px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: background 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .chip.selected {
+            background: #eff6ff;
+            color: var(--primary);
+            border-color: var(--primary);
+            font-weight: 600;
+        }
+
+        /* Fades */
+        .fade-left, .fade-right {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 48px;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            z-index: 1;
+        }
+
+        .fade-left {
+            left: 0;
+            background: linear-gradient(to right, var(--bg-color) 20%, transparent);
+            opacity: 0;
+        }
+
+        .fade-right {
+            right: 0;
+            background: linear-gradient(to left, var(--bg-color) 20%, transparent);
+            opacity: 1;
+        }
+
+        .chevron {
+            position: absolute;
+            right: 8px;
+            z-index: 2;
+            color: var(--text-secondary);
+            opacity: 0.6;
+            font-size: 18px;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        /* Scrolled state simulation */
+        .container.scrolled-middle .fade-left { opacity: 1; }
+        .container.scrolled-middle .fade-right { opacity: 1; }
+        
+        .container.scrolled-end .fade-left { opacity: 1; }
+        .container.scrolled-end .fade-right { opacity: 0; }
+        .container.scrolled-end .chevron { opacity: 0; }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+        }
+
+        button {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+            background: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #f3f4f6;
+        }
+
+        .spec-note {
+            width: 375px;
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="widget-container">
+        <h2>정산 내역 필터</h2>
+        <div class="scroll-wrapper">
+            <div class="fade-left" id="fade-left"></div>
+            <div class="chevron" id="chevron">▸</div>
+            <div class="scroll-container" id="scroll-container">
+                <div class="chip selected">전체</div>
+                <div class="chip">대기 중</div>
+                <div class="chip">확정됨</div>
+                <div class="chip">지급 프로세스</div>
+                <div class="chip">완료</div>
+                <div class="chip">실패</div>
+                <div class="chip">보류</div>
+                <div class="chip">취소</div>
+            </div>
+            <div class="fade-right" id="fade-right"></div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button onclick="scrollToStart()">시작</button>
+        <button onclick="scrollToMiddle()">중간</button>
+        <button onclick="scrollToEnd()">끝</button>
+    </div>
+
+    <div class="spec-note">
+        <h3>디자인 사양</h3>
+        <ul>
+            <li><strong>엣지 페이드:</strong> 12~24pt 너비의 Linear Gradient. 배경색과 동일한 색상 사용.</li>
+            <li><strong>인디케이터:</strong> 우측 끝에 <code>▸</code> (Chevron) 배치. opacity 0.4~0.6.</li>
+            <li><strong>동작:</strong>
+                <ul>
+                    <li>좌측 끝일 때: 우측 페이드 + Chevron 표시.</li>
+                    <li>중간일 때: 양쪽 페이드 표시 + Chevron 표시.</li>
+                    <li>우측 끝일 때: 좌측 페이드 표시.</li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+
+    <script>
+        const container = document.getElementById('widget-container');
+        const scrollContainer = document.getElementById('scroll-container');
+        const fadeLeft = document.getElementById('fade-left');
+        const fadeRight = document.getElementById('fade-right');
+        const chevron = document.getElementById('chevron');
+
+        function updateState() {
+            const scrollLeft = scrollContainer.scrollLeft;
+            const maxScroll = scrollContainer.scrollWidth - scrollContainer.clientWidth;
+
+            if (scrollLeft <= 5) {
+                fadeLeft.style.opacity = '0';
+                fadeRight.style.opacity = '1';
+                chevron.style.opacity = '0.6';
+            } else if (scrollLeft >= maxScroll - 5) {
+                fadeLeft.style.opacity = '1';
+                fadeRight.style.opacity = '0';
+                chevron.style.opacity = '0';
+            } else {
+                fadeLeft.style.opacity = '1';
+                fadeRight.style.opacity = '1';
+                chevron.style.opacity = '0.6';
+            }
+        }
+
+        scrollContainer.addEventListener('scroll', updateState);
+
+        function scrollToStart() {
+            scrollContainer.scrollTo({ left: 0, behavior: 'smooth' });
+        }
+
+        function scrollToMiddle() {
+            scrollContainer.scrollTo({ left: 100, behavior: 'smooth' });
+        }
+
+        function scrollToEnd() {
+            scrollContainer.scrollTo({ left: scrollContainer.scrollWidth, behavior: 'smooth' });
+        }
+
+        // Initialize
+        updateState();
+    </script>
+</body>
+</html>

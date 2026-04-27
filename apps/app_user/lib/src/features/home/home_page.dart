@@ -70,8 +70,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     });
 
     return Scaffold(
-      // Fix #1466: FAB 토글 — BugReportAction으로 표시/숨김 전환
-      floatingActionButton: const BugReportFab(),
+      // Fix #1858: BugReportFab을 BugReporterWrapper 글로벌 오버레이로 이전
       // Fix #667: Scaffold.bottomSheet does not preserve the parent bottom
       // inset here, so pad the bar manually above the home indicator.
       bottomSheet: reservesNowBarSpace
@@ -160,22 +159,13 @@ class _HomePageState extends ConsumerState<HomePage> {
               surfaceTintColor: MinglitColors.transparent,
             ),
             const SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.only(top: MinglitSpacing.small),
-                child: ExploreFilterChipBar(),
-              ),
+              child: ExploreFilterChipBar(),
             ),
             const SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.only(top: MinglitSpacing.small),
-                child: FeaturedTagChipBar(),
-              ),
+              child: FeaturedTagChipBar(),
             ),
             const SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.only(top: MinglitSpacing.small),
-                child: TrendingTagSection(),
-              ),
+              child: TrendingTagSection(),
             ),
             // ignore: use_minglit_async_value_widget, returns Sliver which is incompatible with Widget-based MinglitAsyncValueWidget
             recommendationState.when(
@@ -193,10 +183,9 @@ class _HomePageState extends ConsumerState<HomePage> {
                 }
                 // First page fully filtered client-side: show loading while
                 // auto-fetch (triggered by ref.listen above) loads next page.
+                // Fix #1856: shimmer skeleton instead of progress indicator
                 if (state.events.isEmpty) {
-                  return const SliverFillRemaining(
-                    child: Center(child: MinglitCircularProgressIndicator()),
-                  );
+                  return _eventFeedSkeleton();
                 }
                 return SliverPadding(
                   padding: const EdgeInsets.only(
@@ -218,9 +207,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                   ),
                 );
               },
-              loading: () => const SliverFillRemaining(
-                child: Center(child: MinglitCircularProgressIndicator()),
-              ),
+              // Fix #1856: shimmer skeleton instead of progress indicator
+              loading: _eventFeedSkeleton,
               // Fix #192: 피드 로드 실패 시 에러 메시지와 재시도 버튼 표시
               error: (_, _) => SliverFillRemaining(
                 child: Center(
@@ -259,4 +247,17 @@ class _HomePageState extends ConsumerState<HomePage> {
       ),
     );
   }
+
+  // Fix #1856: skeleton list to replace progress indicator during initial feed load
+  static Widget _eventFeedSkeleton() => SliverPadding(
+    padding: const EdgeInsets.only(
+      top: MinglitSpacing.small,
+      bottom: MinglitSpacing.medium,
+    ),
+    sliver: SliverList.separated(
+      itemCount: 5,
+      separatorBuilder: (_, _) => const SizedBox(height: MinglitSpacing.small),
+      itemBuilder: (_, _) => const MinglitEventCard.loading(),
+    ),
+  );
 }

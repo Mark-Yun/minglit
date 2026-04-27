@@ -191,6 +191,10 @@ RouteBase get $partnerShellRoute => StatefulShellRouteData.$route(
           factory: $ApplicationListRoute._fromState,
           routes: [
             GoRouteData.$route(
+              path: 'event/:applicationId',
+              factory: $EventApplicationDetailRoute._fromState,
+            ),
+            GoRouteData.$route(
               path: ':applicationId',
               factory: $ApplicationDetailRoute._fromState,
             ),
@@ -374,6 +378,33 @@ mixin $ApplicationListRoute on GoRouteData {
 
   @override
   String get location => GoRouteData.$location('/applications');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+mixin $EventApplicationDetailRoute on GoRouteData {
+  static EventApplicationDetailRoute _fromState(GoRouterState state) =>
+      EventApplicationDetailRoute(
+        applicationId: state.pathParameters['applicationId']!,
+      );
+
+  EventApplicationDetailRoute get _self => this as EventApplicationDetailRoute;
+
+  @override
+  String get location => GoRouteData.$location(
+    '/applications/event/${Uri.encodeComponent(_self.applicationId)}',
+  );
 
   @override
   void go(BuildContext context) => context.go(location);
