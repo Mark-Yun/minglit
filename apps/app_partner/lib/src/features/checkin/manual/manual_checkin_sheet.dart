@@ -269,8 +269,9 @@ class _ManualCheckinSheetState extends ConsumerState<ManualCheckinSheet> {
         const SnackBar(content: Text('체크인 처리 중 오류가 발생했습니다')),
       );
     } finally {
-      if (mounted)
+      if (mounted) {
         setState(() => _inFlightTicketIds.remove(participant.ticketId));
+      }
     }
   }
 }
