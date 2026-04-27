@@ -88,7 +88,8 @@ class MorePage extends ConsumerWidget {
                 if (canEditSettlement)
                   MinglitSettingsTile(
                     leading: Icons.account_balance_wallet_outlined,
-                    title: '정산 계좌 관리',
+                    // Fix #1859: '정산 계좌 관리' → '계좌 관리' — settlement tab button과 BankAccountPage 타이틀과 통일
+                    title: '계좌 관리',
                     onTap: moreCoordinator.pushBankAccountManagement,
                   ),
                 MinglitSettingsTile(
