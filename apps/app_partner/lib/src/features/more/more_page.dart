@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:app_partner/src/features/more/more_coordinator.dart';
 import 'package:app_partner/src/logic/current_partner_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:minglit_kit/minglit_dev.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -189,40 +188,6 @@ class MorePage extends ConsumerWidget {
               ],
             ),
 
-            // Dev Only — Fix #1624: 'dev' 추가 (Supabase dev 프로젝트와 정합성)
-            if (const String.fromEnvironment(
-                      'ENVIRONMENT',
-                      defaultValue: 'production',
-                    ) ==
-                    'local' ||
-                const String.fromEnvironment(
-                      'ENVIRONMENT',
-                      defaultValue: 'production',
-                    ) ==
-                    'development' ||
-                const String.fromEnvironment(
-                      'ENVIRONMENT',
-                      defaultValue: 'production',
-                    ) ==
-                    'dev') ...[
-              const SizedBox(height: MinglitSpacing.large),
-              MinglitSettingsGroup(
-                header: '개발자 도구',
-                children: [
-                  MinglitSettingsTile(
-                    leading: Icons.palette_outlined,
-                    title: 'Design Catalog',
-                    subtitle: 'Dev Only',
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute<void>(
-                        builder: (_) => const DesignCatalogPage(),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
           ],
         ),
       ),
