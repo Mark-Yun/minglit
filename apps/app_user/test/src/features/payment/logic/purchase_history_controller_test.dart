@@ -480,7 +480,7 @@ void main() {
     });
 
     ProviderContainer makeContainer({PolicyRepository? policyRepo}) {
-      return ProviderContainer(
+      final c = ProviderContainer(
         overrides: [
           currentUserProvider.overrideWith((ref) => null),
           eventRepositoryProvider.overrideWithValue(mockEventRepo),
@@ -488,6 +488,12 @@ void main() {
             policyRepositoryProvider.overrideWithValue(policyRepo),
         ],
       );
+      // Fix #1951: _requestRefund calls ref.invalidate(purchaseHistoryControllerProvider)
+      // on itself. Without a listener the AutoDispose provider is immediately
+      // disposed, causing the try-block to throw before onSuccess() runs.
+      // A listener keeps the provider alive so invalidate triggers a rebuild.
+      c.listen(purchaseHistoryControllerProvider, (_, __) {});
+      return c;
     }
 
     PurchaseHistoryController getCtrl(ProviderContainer c) =>
