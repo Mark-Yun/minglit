@@ -131,3 +131,90 @@ Deno.test({
     assertEquals(response.status, 405);
   },
 });
+
+// Fix #1944: ?env=true must require service_role — key names are infrastructure-sensitive
+Deno.test({
+  name: "health - ?env=true without auth returns 401",
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+
+    const { fetchMock } = createFetchMock([
+      { matcher: "/rest/v1/", handler: () => new Response(null, { status: 200 }) },
+      { matcher: "/auth/v1/health", handler: () => jsonResponse({ status: "ok" }) },
+      { matcher: "/storage/v1/bucket", handler: () => jsonResponse([]) },
+    ]);
+
+    await withEnv({
+      SUPABASE_URL: "http://localhost:54321",
+      SUPABASE_ANON_KEY: "test-anon-key",
+      SUPABASE_SERVICE_ROLE_KEY: "test-service-key",
+    }, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const response = await handler(
+          new Request("http://localhost?env=true", { method: "GET" }),
+        );
+        assertEquals(response.status, 401);
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "health - ?env=true with wrong bearer returns 401",
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+
+    const { fetchMock } = createFetchMock([
+      { matcher: "/rest/v1/", handler: () => new Response(null, { status: 200 }) },
+      { matcher: "/auth/v1/health", handler: () => jsonResponse({ status: "ok" }) },
+      { matcher: "/storage/v1/bucket", handler: () => jsonResponse([]) },
+    ]);
+
+    await withEnv({
+      SUPABASE_URL: "http://localhost:54321",
+      SUPABASE_ANON_KEY: "test-anon-key",
+      SUPABASE_SERVICE_ROLE_KEY: "test-service-key",
+    }, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const response = await handler(
+          new Request("http://localhost?env=true", {
+            method: "GET",
+            headers: { Authorization: "Bearer wrong-key" },
+          }),
+        );
+        assertEquals(response.status, 401);
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "health - ?env=true with correct service role returns env_check",
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+
+    const { fetchMock } = createFetchMock([
+      { matcher: "/rest/v1/", handler: () => new Response(null, { status: 200 }) },
+      { matcher: "/auth/v1/health", handler: () => jsonResponse({ status: "ok" }) },
+      { matcher: "/storage/v1/bucket", handler: () => jsonResponse([]) },
+    ]);
+
+    await withEnv({
+      SUPABASE_URL: "http://localhost:54321",
+      SUPABASE_ANON_KEY: "test-anon-key",
+      SUPABASE_SERVICE_ROLE_KEY: "test-service-key",
+    }, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const response = await handler(
+          new Request("http://localhost?env=true", {
+            method: "GET",
+            headers: { Authorization: "Bearer test-service-key" },
+          }),
+        );
+        const body = await readJson(response);
+        assertEquals(typeof body.env_check, "object");
+        assertEquals(typeof body.env_check.status, "string");
+      });
+    });
+  },
+});
