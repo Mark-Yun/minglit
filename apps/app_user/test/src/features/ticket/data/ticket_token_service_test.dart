@@ -158,44 +158,5 @@ void main() {
       expect(result, isNull);
     });
 
-    // Fix #1961: EF always returns UTC ISO8601 (with 'Z'), but DateTime.parse
-    // without .toUtc() creates a local DateTime on devices — toIso8601String()
-    // would then emit '+HH:MM' instead of 'Z', causing payload mismatch in
-    // verifyAndCheckin on non-UTC devices.
-    test('Fix #1961: normalizes expiresAt to UTC from EF response', () async {
-      when(
-        () => mockWallet.getTicket('ticket_1'),
-      ).thenAnswer((_) async => null);
-      when(() => mockWallet.saveTicket(any())).thenAnswer((_) async {});
-
-      // EF returns UTC ISO8601 string with 'Z' suffix
-      final utcExpiry = DateTime.utc(2026, 6, 1, 12);
-      when(
-        () => mockFunctions.invoke(
-          'user-get-ticket-token',
-          body: {'ticket_id': 'ticket_1'},
-        ),
-      ).thenAnswer(
-        (_) async => FunctionResponse(
-          status: 200,
-          data: {
-            'ticket_id': 'ticket_1',
-            'event_id': 'event_1',
-            'user_id': 'user_1',
-            'signature': 'sig',
-            'expires_at': utcExpiry.toIso8601String(), // '2026-06-01T12:00:00.000Z'
-          },
-        ),
-      );
-
-      final result = await service.getToken('ticket_1');
-
-      expect(result, isNotNull);
-      expect(
-        result!.expiresAt.isUtc,
-        isTrue,
-        reason: 'expiresAt must be UTC to prevent ISO8601 offset mismatch',
-      );
-    });
   });
 }

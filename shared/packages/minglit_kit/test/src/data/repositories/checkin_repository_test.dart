@@ -224,14 +224,14 @@ void main() {
         );
       });
 
-      // Fix #1961: mint (UTC) → verify round-trip must succeed regardless of
-      // local timezone. Before the fix, mintTicket used DateTime.now() (local)
-      // and verifyAndCheckin used DateTime.now() (local), so the payloads would
-      // differ if the token was serialized/deserialized across timezones.
+      // Fix #1961: mintTicket must use UTC so that JSON round-trip preserves
+      // the exact ISO8601 string used during signing. Before the fix,
+      // DateTime.now() (local, no 'Z') produced a different toIso8601String()
+      // than DateTime.now().toUtc() (UTC, 'Z' suffix) — causing signature
+      // mismatch after JSON serialization on any timezone.
       test(
-        'Fix #1961: sign-verify round-trip works with UTC expiresAt',
+        'Fix #1961: sign-verify round-trip after JSON serialization',
         () async {
-          // Simulate a token minted with UTC expiresAt (as fixed)
           final token = await repository.mintTicket(
             ticketId: 'ticket-utc-1',
             eventId: 'event-utc-1',
@@ -239,13 +239,22 @@ void main() {
             serverPrivateKey: keyPair,
           );
 
-          // Simulate the token being round-tripped through JSON (EF response
-          // returns UTC ISO8601 with 'Z'). Re-parse to mirror
-          // TicketTokenService.getToken behavior.
+          // Serialize expiresAt as ISO8601, then re-parse without calling .toUtc().
+          // With the fix: toIso8601String() emits 'Z' suffix → Dart parses it
+          // back as UTC (isUtc=true) and toIso8601String() still emits 'Z' —
+          // signed and verification payloads are identical.
+          // Without the fix: toIso8601String() emits no 'Z' → Dart parses it
+          // as local (isUtc=false) — passes on local machine but breaks when the
+          // token is issued by mintTicket (local) and verified against a UTC
+          // round-tripped copy from the wallet.
           final expiresAtStr = token.expiresAt.toIso8601String();
           final reparsedToken = token.copyWith(
-            expiresAt: DateTime.parse(expiresAtStr).toUtc(),
+            expiresAt: DateTime.parse(expiresAtStr),
           );
+
+          // After round-trip through JSON, expiresAt must still be UTC.
+          // Without the fix this fails on every machine (isUtc=false).
+          expect(reparsedToken.expiresAt.isUtc, isTrue);
 
           when(
             () => mockClient.rpc<String>(
@@ -259,9 +268,7 @@ void main() {
             serverPublicKey: publicKey,
           );
 
-          // Signature must still be valid after UTC round-trip
           expect(result, isTrue);
-          expect(token.expiresAt.isUtc, isTrue);
         },
       );
     });
