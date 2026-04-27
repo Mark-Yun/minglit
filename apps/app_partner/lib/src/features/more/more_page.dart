@@ -187,7 +187,6 @@ class MorePage extends ConsumerWidget {
                 ),
               ],
             ),
-
           ],
         ),
       ),
