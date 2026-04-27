@@ -13,6 +13,15 @@ void main() {
 
   final mockUser = MockUser();
 
+  void stubRpc() {
+    when(
+      () => mockClient.rpc<dynamic>(
+        'set_social_interaction',
+        params: any(named: 'params'),
+      ),
+    ).thenAnswer((_) => FakeRpcBuilder<dynamic>(null));
+  }
+
   setUp(() {
     mockClient = createMockSupabase(currentUser: mockUser);
     when(() => mockUser.id).thenReturn('user_1');
@@ -20,59 +29,70 @@ void main() {
   });
 
   group('SocialRepository', () {
-    group('toggleInteraction', () {
-      test('removes existing interaction and returns false', () async {
-        // existing record found
-        unawaited(
-          mockTable(
-            mockClient,
-            'social_interactions',
-            maybeSingleData: {
-              'id': 'interaction_1',
-              'user_id': 'user_1',
-              'target_id': 'party_1',
-              'interaction_type': 'like',
-            },
+    group('setInteraction', () {
+      test('activates interaction without error', () async {
+        stubRpc();
+
+        await expectLater(
+          repository.setInteraction(
+            targetId: 'party_1',
+            targetType: SocialTargetType.party,
+            interactionType: SocialInteractionType.like,
+            active: true,
           ),
+          completes,
         );
-
-        final result = await repository.toggleInteraction(
-          targetId: 'party_1',
-          targetType: SocialTargetType.party,
-          interactionType: SocialInteractionType.like,
-        );
-
-        expect(result, isFalse);
       });
 
-      test('creates new interaction and returns true', () async {
-        // no existing record
-        unawaited(
-          mockTable(
-            mockClient,
-            'social_interactions',
-          ),
-        );
+      test('deactivates interaction without error', () async {
+        stubRpc();
 
-        final result = await repository.toggleInteraction(
+        await expectLater(
+          repository.setInteraction(
+            targetId: 'party_1',
+            targetType: SocialTargetType.party,
+            interactionType: SocialInteractionType.like,
+            active: false,
+          ),
+          completes,
+        );
+      });
+
+      // Fix #1957: mutual exclusivity and advisory lock are enforced atomically
+      // inside set_social_interaction(). Verify the correct RPC params are sent.
+      test('passes correct params to set_social_interaction RPC', () async {
+        stubRpc();
+
+        await repository.setInteraction(
           targetId: 'party_1',
           targetType: SocialTargetType.party,
           interactionType: SocialInteractionType.like,
+          active: true,
         );
 
-        expect(result, isTrue);
+        verify(
+          () => mockClient.rpc<dynamic>(
+            'set_social_interaction',
+            params: {
+              'p_target_id': 'party_1',
+              'p_target_type': 'party',
+              'p_interaction_type': 'like',
+              'p_active': true,
+            },
+          ),
+        ).called(1);
       });
 
       test('throws when user not authenticated', () async {
-        // Recreate without user
         mockClient = createMockSupabase();
         repository = SocialRepository(supabase: mockClient);
 
         expect(
-          () => repository.toggleInteraction(
+          () => repository.setInteraction(
             targetId: 'party_1',
             targetType: SocialTargetType.party,
             interactionType: SocialInteractionType.like,
+            active: true,
           ),
           throwsA(isA<Exception>()),
         );

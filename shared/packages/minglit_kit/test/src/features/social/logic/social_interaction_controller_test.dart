@@ -78,12 +78,13 @@ void main() {
 
     test('toggle optimistically updates state', () async {
       when(
-        () => mockRepo.toggleInteraction(
+        () => mockRepo.setInteraction(
           targetId: targetId,
           targetType: targetType,
           interactionType: interactionType,
+          active: any(named: 'active'),
         ),
-      ).thenAnswer((_) async => true);
+      ).thenAnswer((_) async {});
 
       final container = createTestContainer(initialState: false);
 
@@ -115,12 +116,55 @@ void main() {
       expect(state.value, isTrue);
     });
 
-    test('toggle reverts state on error', () async {
+    test('toggle passes explicit active intent to repository', () async {
       when(
-        () => mockRepo.toggleInteraction(
+        () => mockRepo.setInteraction(
           targetId: targetId,
           targetType: targetType,
           interactionType: interactionType,
+          active: any(named: 'active'),
+        ),
+      ).thenAnswer((_) async {});
+
+      final container = createTestContainer(initialState: false);
+
+      await container.read(
+        socialInteractionControllerProvider(
+          targetId: targetId,
+          targetType: targetType,
+          interactionType: interactionType,
+        ).future,
+      );
+
+      await container
+          .read(
+            socialInteractionControllerProvider(
+              targetId: targetId,
+              targetType: targetType,
+              interactionType: interactionType,
+            ).notifier,
+          )
+          .toggle();
+
+      // Fix #1957: verify explicit intent (active: true) was passed, not
+      // a stateless toggle — eliminates TOCTOU concurrent-tap bug.
+      verify(
+        () => mockRepo.setInteraction(
+          targetId: targetId,
+          targetType: targetType,
+          interactionType: interactionType,
+          active: true,
+        ),
+      ).called(1);
+    });
+
+    test('toggle reverts state on error', () async {
+      when(
+        () => mockRepo.setInteraction(
+          targetId: targetId,
+          targetType: targetType,
+          interactionType: interactionType,
+          active: any(named: 'active'),
         ),
       ).thenThrow(Exception('Network error'));
 
@@ -191,10 +235,11 @@ void main() {
       await notifier.toggle();
 
       verifyNever(
-        () => mockRepo.toggleInteraction(
+        () => mockRepo.setInteraction(
           targetId: any(named: 'targetId'),
           targetType: any(named: 'targetType'),
           interactionType: any(named: 'interactionType'),
+          active: any(named: 'active'),
         ),
       );
     });
@@ -232,15 +277,12 @@ class _TestSocialInteractionController extends SocialInteractionController {
     state = AsyncData(newIsActive);
 
     try {
-      final actualIsActive = await repository.toggleInteraction(
+      await repository.setInteraction(
         targetId: targetId,
         targetType: targetType,
         interactionType: interactionType,
+        active: newIsActive,
       );
-
-      if (actualIsActive != newIsActive) {
-        ref.invalidateSelf();
-      }
     } on Object catch (e, st) {
       state = AsyncData(currentIsActive);
       state = AsyncError(e, st);

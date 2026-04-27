@@ -40,15 +40,12 @@ class SocialInteractionController extends _$SocialInteractionController {
     state = AsyncData(newIsActive);
 
     try {
-      final actualIsActive = await repository.toggleInteraction(
+      await repository.setInteraction(
         targetId: targetId,
         targetType: targetType,
         interactionType: interactionType,
+        active: newIsActive,
       );
-
-      if (actualIsActive != newIsActive) {
-        ref.invalidateSelf();
-      }
     } on Object catch (e, st) {
       Log.e('❌ [SocialController] Toggle Failed', e, st);
       state = AsyncData(currentIsActive);

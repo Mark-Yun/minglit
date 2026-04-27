@@ -60,7 +60,9 @@ class CheckinRepository {
     required String userId,
     required SimpleKeyPair serverPrivateKey, // In prod, this is on the server
   }) async {
-    final expiresAt = DateTime.now().add(const Duration(days: 7));
+    // Fix #1961: use UTC so toIso8601String() emits 'Z' suffix — consistent
+    // with EF-issued tokens and with verifyAndCheckin payload reconstruction.
+    final expiresAt = DateTime.now().toUtc().add(const Duration(days: 7));
 
     // Payload to sign
     final payload = '$ticketId|$eventId|$userId|${expiresAt.toIso8601String()}';
@@ -95,7 +97,9 @@ class CheckinRepository {
     if (!isValid) return false;
 
     // 3. Check expiration
-    if (token.expiresAt.isBefore(DateTime.now())) return false;
+    // Fix #1961: normalize both sides to UTC — local DateTime.now() and a UTC
+    // expiresAt are not directly comparable across timezones.
+    if (token.expiresAt.toUtc().isBefore(DateTime.now().toUtc())) return false;
 
     // 4. Atomic DB check-in via process_qr_checkin RPC
     // Fix #1810: Phase 2 — 서명 검증 통과 후 DB 체크인 처리

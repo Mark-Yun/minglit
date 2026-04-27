@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app_partner/src/features/checkin/manual/checkin_participant.dart';
 import 'package:app_partner/src/features/checkin/manual/manual_checkin_controller.dart';
 import 'package:app_partner/src/features/checkin/manual/manual_checkin_sheet.dart';
@@ -24,6 +26,32 @@ class _DataController extends ManualCheckinController {
       );
     }
     return checkinResult;
+  }
+}
+
+/// Controller with a controllable delay — used to test in-flight guard.
+class _SlowController extends ManualCheckinController {
+  _SlowController(this._participants, this._completer);
+  final List<CheckinParticipant> _participants;
+  final Completer<void> _completer;
+  int checkinCallCount = 0;
+
+  @override
+  Future<List<CheckinParticipant>> build(String eventId) async => _participants;
+
+  @override
+  Future<String> checkin(String ticketId) async {
+    checkinCallCount++;
+    await _completer.future;
+    state = state.whenData(
+      (list) => list
+          .map(
+            (p) =>
+                p.ticketId == ticketId ? p.copyWith(status: 'checked_in') : p,
+          )
+          .toList(),
+    );
+    return 'success';
   }
 }
 
@@ -148,6 +176,56 @@ void main() {
 
       final btn = tester.widget<OutlinedButton>(find.byType(OutlinedButton));
       expect(btn.onPressed, isNull);
+    });
+
+    // Fix #1947: rapid taps must not fire duplicate process_manual_checkin RPC
+    testWidgets('체크인 버튼 탭 중 스피너 표시 — 중복 탭 차단', (tester) async {
+      final completer = Completer<void>();
+      late _SlowController controller;
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            manualCheckinControllerProvider('event-1').overrideWith(() {
+              return controller = _SlowController([_participantA], completer);
+            }),
+          ],
+          child: const MaterialApp(
+            home: Scaffold(
+              body: ManualCheckinSheet(eventId: 'event-1'),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Rapid double tap before next frame — exercises the synchronous
+      // _inFlightTicketIds guard in _checkin() directly.
+      final checkinButton = find.text('체크인');
+      await tester.tap(checkinButton);
+      await tester.tap(checkinButton);
+      await tester.pump();
+
+      // Spinner is shown while in-flight.
+      expect(
+        find.byType(CircularProgressIndicator),
+        findsOneWidget,
+        reason: 'expected loading spinner while checkin RPC is in-flight',
+      );
+      // 체크인 button is gone (replaced by spinner).
+      expect(find.text('체크인'), findsNothing);
+
+      // Complete the RPC.
+      completer.complete();
+      await tester.pumpAndSettle();
+
+      // checkin() was called exactly once — no duplicate RPC.
+      expect(
+        controller.checkinCallCount,
+        1,
+        reason: 'duplicate tap must not fire a second checkin() RPC',
+      );
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+      expect(find.text('체크인 완료 (1명)'), findsOneWidget);
     });
   });
 }

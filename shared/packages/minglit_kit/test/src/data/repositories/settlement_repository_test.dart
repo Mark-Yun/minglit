@@ -362,7 +362,7 @@ void main() {
         final eventJson = {
           'id': 'event_1',
           'title': '테스트 이벤트',
-          'date': '2026-03-01',
+          'start_time': '2026-03-01T10:00:00.000Z',
           'parties': {'name': '테스트 파티'},
         };
         mockTable(mockClient, 'events', maybeSingleData: eventJson);
@@ -372,6 +372,7 @@ void main() {
         expect(result, isNotNull);
         expect(result!['id'], 'event_1');
         expect(result['title'], '테스트 이벤트');
+        expect(result['start_time'], isNotNull);
       });
 
       test('returns null when event not found', () async {
@@ -394,6 +395,38 @@ void main() {
           throwsA(isA<Exception>()),
         );
       });
+
+      // Fix #1937: 'date' column does not exist; actual column is start_time.
+      // Regression guard: if someone reverts select() back to include 'date',
+      // this assertion fails before the real DB does.
+      test(
+        'Fix #1937: selects start_time, not date',
+        () async {
+          final eventsBuilder = mockTable(
+            mockClient,
+            'events',
+            maybeSingleData: {
+              'id': 'event_1',
+              'title': '테스트 이벤트',
+              'start_time': '2026-03-01T10:00:00.000Z',
+              'parties': {'name': '테스트 파티'},
+            },
+          );
+
+          await repository.getEventInfo('event_1');
+
+          expect(
+            eventsBuilder.lastSelectColumns,
+            contains('start_time'),
+            reason: 'select() must include start_time (not date)',
+          );
+          expect(
+            eventsBuilder.lastSelectColumns,
+            isNot(contains('date')),
+            reason: "events table has no 'date' column — Fix #1937",
+          );
+        },
+      );
     });
 
     // -------------------------------------------------------------------------

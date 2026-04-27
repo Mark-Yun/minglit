@@ -217,7 +217,8 @@ class SettlementRepository {
     try {
       final data = await _supabase
           .from('events')
-          .select('id, title, date, parties(name)')
+          // Fix #1937: 'date' column does not exist; actual column is start_time
+          .select('id, title, start_time, parties(name)')
           .eq('id', eventId)
           .maybeSingle();
 

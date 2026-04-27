@@ -33,6 +33,7 @@ FakeTableBuilder mockTable(
   Map<String, dynamic>? singleData,
   Map<String, dynamic>? maybeSingleData,
   Map<String, dynamic>? insertReturnData,
+  List<Map<String, dynamic>>? upsertReturnData,
   int countValue = 0,
   Exception? shouldThrow,
 }) {
@@ -42,6 +43,7 @@ FakeTableBuilder mockTable(
     maybeSingleData:
         maybeSingleData ?? (selectData.isNotEmpty ? selectData.first : null),
     insertReturnData: insertReturnData,
+    upsertReturnData: upsertReturnData,
     countValue: countValue,
     shouldThrow: shouldThrow,
   );
@@ -72,6 +74,7 @@ class FakeTableBuilder extends Fake implements SupabaseQueryBuilder {
     this.singleData = const {},
     this.maybeSingleData,
     this.insertReturnData,
+    this.upsertReturnData,
     this.countValue = 0,
     this.shouldThrow,
   });
@@ -80,6 +83,7 @@ class FakeTableBuilder extends Fake implements SupabaseQueryBuilder {
   final Map<String, dynamic> singleData;
   final Map<String, dynamic>? maybeSingleData;
   final Map<String, dynamic>? insertReturnData;
+  final List<Map<String, dynamic>>? upsertReturnData;
   final int countValue;
   final Exception? shouldThrow;
   final List<RecordedFilterOperation> recordedFilters = [];
@@ -159,10 +163,11 @@ class FakeTableBuilder extends Fake implements SupabaseQueryBuilder {
     CountOption? count,
   }) {
     if (shouldThrow != null) throw shouldThrow!;
+    final data = upsertReturnData ?? selectData;
     return _FakeFilterBuilder(
-      selectData: selectData,
-      singleData: singleData,
-      maybeSingleData: maybeSingleData,
+      selectData: data,
+      singleData: data.isNotEmpty ? data.first : singleData,
+      maybeSingleData: data.isNotEmpty ? data.first : null,
       countValue: countValue,
       recordedFilters: recordedFilters,
       recordedOrderColumns: recordedOrderColumns,
