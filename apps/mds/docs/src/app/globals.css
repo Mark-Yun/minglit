@@ -186,3 +186,169 @@
   width: 100%;
   display: block;
 }
+
+/* Visual playground — hero / anatomy / grids share generous spacing,
+   no internal dividers. Hierarchy comes from spacing + sub-labels. */
+.mds-spec {
+  gap: var(--spacing-xlarge);
+}
+.mds-spec__group {
+  gap: var(--spacing-sm);
+}
+
+/* Soft panel — bg surface + rounded, no border. Wraps section content
+   so each block reads as its own canvas (like hero / anatomy already do)
+   without re-introducing nested boxes-in-boxes. */
+.mds-spec__panel {
+  background: var(--color-surface);
+  border-radius: var(--radius-card);
+  padding: var(--spacing-medium);
+}
+
+/* Horizontal grid for variant / size / state comparison rows. */
+.mds-spec__grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-medium);
+  align-items: flex-end;
+}
+.mds-spec__cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+}
+.mds-spec__cell-label {
+  font: 500 11px/1 ui-monospace, monospace;
+  color: var(--color-text-secondary);
+  letter-spacing: 0.3px;
+}
+
+/* Hero — single big primary button up top of the spec card. */
+.mds-spec__hero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xlarge) var(--spacing-medium);
+  background: var(--color-surface);
+  border-radius: var(--radius-card);
+}
+
+/* Anatomy — labels positioned around a hero button. Use primary
+   token color (no separate annotation palette). */
+.mds-spec__anatomy {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  padding: 64px 32px;
+  background: var(--color-surface);
+  border-radius: var(--radius-card);
+}
+.mds-spec__anatomy-btn { position: relative; z-index: 1; }
+.mds-spec__anatomy-label {
+  position: absolute;
+  font: 500 10px/1.2 ui-monospace, monospace;
+  color: var(--color-primary);
+  background: white;
+  border: 1px solid var(--color-divider);
+  padding: 3px 6px;
+  border-radius: var(--radius-badge);
+  white-space: nowrap;
+}
+
+/* Code block (Dart usage). */
+.mds-spec__code {
+  font: 13px/1.55 ui-monospace, "SF Mono", Menlo, monospace;
+  background: #1f1f23;
+  color: #f4f4f5;
+  border-radius: var(--radius-card);
+  padding: var(--spacing-medium);
+  overflow-x: auto;
+  white-space: pre;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Reference tables — props, preview, tokens.
+   Shared minimal styling: mono code cells, body text cells, divider rows,
+   no header background, last row no bottom border. */
+.mds-spec__props-table,
+.mds-spec__preview-table,
+.mds-spec__tokens-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--typography-font-size-caption);
+}
+.mds-spec__props-table th,
+.mds-spec__props-table td,
+.mds-spec__preview-table th,
+.mds-spec__preview-table td,
+.mds-spec__tokens-table th,
+.mds-spec__tokens-table td {
+  text-align: left;
+  padding: 10px;
+  border-bottom: 1px solid var(--color-divider);
+  vertical-align: middle;
+}
+.mds-spec__props-table th,
+.mds-spec__preview-table th,
+.mds-spec__tokens-table th {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-secondary);
+  border-bottom-width: 2px;
+}
+.mds-spec__props-table tr:last-child td,
+.mds-spec__preview-table tr:last-child td,
+.mds-spec__tokens-table tr:last-child td { border-bottom: none; }
+.mds-spec__props-table code,
+.mds-spec__preview-table code,
+.mds-spec__tokens-table code {
+  font-family: ui-monospace, monospace;
+  font-size: var(--typography-font-size-caption);
+  color: var(--color-primary);
+}
+.mds-spec__props-table td { vertical-align: top; }
+.mds-spec__props-table .req {
+  color: var(--color-error);
+  font-weight: 700;
+  margin-left: 4px;
+}
+
+/* Guidelines — simple ✓/✗ rows, no colored backgrounds.
+   Mark on the left in success/error, text in the middle, optional
+   inline recipe on the right. */
+.mds-spec__guideline-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+.mds-spec__guideline-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+.mds-spec__guideline-mark {
+  flex: 0 0 auto;
+  width: 56px;
+  font: 700 11px/1 ui-monospace, monospace;
+  letter-spacing: 0.5px;
+}
+.mds-spec__guideline-mark--do { color: var(--color-success); }
+.mds-spec__guideline-mark--dont { color: var(--color-error); }
+.mds-spec__guideline-text {
+  flex: 1;
+  min-width: 200px;
+  font-size: var(--typography-font-size-body);
+  line-height: var(--typography-line-height-normal);
+  color: var(--color-text-primary);
+}
+.mds-spec__guideline-recipe {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xsmall);
+}

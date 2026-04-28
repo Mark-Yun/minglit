@@ -38,6 +38,26 @@ export type ComponentCategory =
  * of this spec — not the other way around. Adding/changing a component
  * starts here.
  */
+
+/** Rich prop definition — type / default / required / notes. */
+export interface PropDef {
+  name: string;
+  type: string;
+  /** Default value (Dart literal). Omit for required props. */
+  default?: string;
+  required?: boolean;
+  notes?: string;
+}
+
+/** Visual usage guideline — paired with a recipe component or short note. */
+export interface GuidelineEntry {
+  kind: 'do' | 'dont';
+  /** Short imperative text. */
+  text: string;
+  /** Optional preview key — looked up in inline spec module. */
+  recipeKey?: string;
+}
+
 export interface ComponentSpec {
   /** Component name (PascalCase). */
   name: string;
@@ -45,18 +65,29 @@ export interface ComponentSpec {
   category: ComponentCategory;
   /** One-line role description. */
   purpose: string;
-  /** Public API contract (props with conceptual meaning). */
-  props?: string[];
+  /**
+   * Public API contract. String for stub/quick listing; PropDef for rich
+   * specs that should render as a table with type / default / required.
+   */
+  props?: Array<string | PropDef>;
   /** Visual variants (e.g. primary / secondary / destructive). */
   variants?: string[];
   /** Interactive states (e.g. default / disabled / loading / focused). */
   states?: string[];
-  /** mds_tokens this component consumes. */
-  tokens?: string[];
+  /**
+   * mds_tokens this component consumes. String for stub entries; TokenUsage
+   * for rich specs that should render as a `token | where applied` table.
+   */
+  tokens?: Array<string | TokenUsage>;
   /** Accessibility requirements (ARIA, keyboard nav). */
   accessibility?: string[];
-  /** Usage do/don't notes. */
-  guidelines?: string[];
+  /**
+   * Usage guidelines — string for plain bullet, GuidelineEntry for
+   * structured do/don't pairs that render visually.
+   */
+  guidelines?: Array<string | GuidelineEntry>;
+  /** Copy-paste Dart usage example (rendered as code block). */
+  dartUsage?: string;
   /**
    * Path under /public/specs/components/ to a static HTML design spec
    * (visual mockup with spec-mode annotations). Optional — not all
@@ -67,6 +98,26 @@ export interface ComponentSpec {
   usedIn?: string[];
 }
 
+/** Type guard for PropDef vs plain string entry. */
+export function isPropDef(p: string | PropDef): p is PropDef {
+  return typeof p === 'object' && p !== null && 'name' in p;
+}
+
+/** Type guard for GuidelineEntry vs plain string. */
+export function isGuidelineEntry(g: string | GuidelineEntry): g is GuidelineEntry {
+  return typeof g === 'object' && g !== null && 'kind' in g;
+}
+
+/** Token usage row — token name + where it's applied. */
+export interface TokenUsage {
+  name: string;
+  where: string;
+}
+
+export function isTokenUsage(t: string | TokenUsage): t is TokenUsage {
+  return typeof t === 'object' && t !== null && 'name' in t && 'where' in t;
+}
+
 export const MDS_COMPONENTS: ComponentSpec[] = [
   // ---------- Buttons ----------
   {
@@ -74,21 +125,23 @@ export const MDS_COMPONENTS: ComponentSpec[] = [
     category: 'Action',
     purpose: 'Unified CTA button enforcing mds tokens. 4 variants × 3 sizes, with loading + leading icon.',
     props: [
-      'label',
-      'onPressed',
-      'icon',
-      'isLoading',
-      'size (default: large; text default: medium)',
-      'expand (default: true; text default: false)',
+      { name: 'label',     type: 'String',         required: true,  notes: 'Visible button text.' },
+      { name: 'onPressed', type: 'VoidCallback?',  default: 'null', notes: '`null` disables the button.' },
+      { name: 'icon',      type: 'IconData?',      default: 'null', notes: 'Optional leading icon.' },
+      { name: 'isLoading', type: 'bool',           default: 'false', notes: 'Shows spinner, blocks taps.' },
+      { name: 'size',      type: 'MinglitButtonSize', default: 'large', notes: 'sm / md / lg. text variant defaults to medium.' },
+      { name: 'expand',    type: 'bool',           default: 'true',  notes: 'Stretch to parent width. text variant defaults to false.' },
     ],
     variants: ['primary', 'secondary', 'text', 'destructive'],
     states: ['default', 'hovered', 'pressed', 'disabled', 'loading'],
     tokens: [
-      'color-primary', 'color-on-primary',
-      'color-error', 'color-on-error',
-      'spacing-small (icon-label gap)',
-      'spacing-medium (horizontal padding)',
-      'radius-button (12px)',
+      { name: 'color-primary',     where: 'primary bg · secondary border+text · text fg' },
+      { name: 'color-on-primary',  where: 'primary text (literal #fff)' },
+      { name: 'color-error',       where: 'destructive bg' },
+      { name: 'color-on-error',    where: 'destructive text (literal #fff)' },
+      { name: 'spacing-small',     where: 'icon ↔ label gap (8px)' },
+      { name: 'spacing-medium',    where: 'horizontal padding (16px)' },
+      { name: 'radius-button',     where: 'border radius (12px)' },
     ],
     accessibility: [
       'Disabled state announced to screen readers (onPressed == null)',
@@ -96,12 +149,37 @@ export const MDS_COMPONENTS: ComponentSpec[] = [
       'Min touch target ≥ 36px (size=small) — prefer medium/large for primary CTAs',
     ],
     guidelines: [
-      'DO: one primary per screen (main CTA)',
-      'DON\'T: stack multiple destructive buttons in same view',
-      'DO: use isLoading for async actions (prevents double-tap)',
-      'DO: pair destructive with confirm dialog (MinglitAlert.showConfirm)',
-      'DO: use text variant for inline / secondary actions inside cards',
+      { kind: 'do',   text: '한 화면에 primary 버튼은 하나 — 메인 CTA만.',                recipeKey: 'do-single-primary' },
+      { kind: 'dont', text: 'primary 두 개를 같은 뷰에 쌓지 말 것 — 사용자가 어느 쪽이 메인인지 모름.', recipeKey: 'dont-double-primary' },
+      { kind: 'do',   text: 'destructive는 항상 confirm dialog와 짝 — 취소 + 삭제.',     recipeKey: 'do-destructive-pair' },
+      { kind: 'dont', text: 'destructive를 단독으로 두지 말 것 — 실수 클릭 위험.',         recipeKey: 'dont-bare-destructive' },
+      { kind: 'do',   text: '비동기 액션엔 isLoading 사용 — 중복 탭 차단.',                recipeKey: 'do-loading-async' },
     ],
+    dartUsage: `// Primary CTA
+MinglitButton(
+  label: '참여하기',
+  onPressed: () => submit(),
+)
+
+// Destructive with confirm dialog
+MinglitButton.destructive(
+  label: '삭제하기',
+  icon: Icons.delete_outline,
+  onPressed: () async {
+    final ok = await MinglitAlert.showConfirm(
+      context,
+      title: '정말 삭제하시겠어요?',
+    );
+    if (ok) await deletePost();
+  },
+)
+
+// Inline text action
+MinglitButton.text(
+  label: '더보기',
+  icon: Icons.arrow_forward,
+  onPressed: () => viewMore(),
+)`,
     visualSpec: '/specs/components/minglit_button.html',
   },
   {

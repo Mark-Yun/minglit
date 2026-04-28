@@ -19,7 +19,10 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@mds/icons-react": [
+        "../../../shared/packages/mds/icons/react/src/generated/index.tsx"
+      ]
     }
   },
   "include": [
