@@ -280,20 +280,36 @@ class _TimelineItem extends StatelessWidget {
   }
 }
 
-class ActionButtons extends ConsumerWidget {
+// Fix #1930: convert to StatefulWidget to guard against duplicate retry taps.
+// RetryPayoutButton in bank_account_page.dart uses the same _isRetrying pattern.
+class ActionButtons extends ConsumerStatefulWidget {
   const ActionButtons({required this.detail, super.key});
   final SettlementItemDetail detail;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ActionButtons> createState() => _ActionButtonsState();
+}
+
+class _ActionButtonsState extends ConsumerState<ActionButtons> {
+  bool _isRetrying = false;
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (detail.status == 'FAILED' && detail.retryable)
+        if (widget.detail.status == 'FAILED' && widget.detail.retryable)
           FilledButton.icon(
-            onPressed: () => _retryPayout(context, ref),
-            icon: const Icon(Icons.refresh),
-            label: const Text('재지급 요청'),
+            // Fix #1930: null onPressed while in-flight prevents duplicate RPC calls
+            onPressed: _isRetrying ? null : _retryPayout,
+            icon: _isRetrying
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.refresh),
+            label: Text(_isRetrying ? '요청 중...' : '재지급 요청'),
           ),
         const SizedBox(height: MinglitSpacing.small),
         OutlinedButton.icon(
@@ -305,20 +321,28 @@ class ActionButtons extends ConsumerWidget {
     );
   }
 
-  Future<void> _retryPayout(BuildContext context, WidgetRef ref) async {
-    if (detail.payoutId == null) return;
-    final partner = await ref.read(currentPartnerInfoProvider.future);
-    if (partner == null) return;
-    await ref
-        .read(settlementCoordinatorProvider.notifier)
-        .retryPayout(
-          context,
-          payoutId: detail.payoutId!,
-          partnerId: partner.id,
-        );
+  Future<void> _retryPayout() async {
+    // Synchronous guard: setState → rebuild takes one frame, so rapid double-taps
+    // can invoke this before onPressed becomes null. This stops the duplicate RPC.
+    if (_isRetrying) return;
+    if (widget.detail.payoutId == null) return;
+    setState(() => _isRetrying = true);
+    try {
+      final partner = await ref.read(currentPartnerInfoProvider.future);
+      if (!mounted || partner == null) return;
+      await ref
+          .read(settlementCoordinatorProvider.notifier)
+          .retryPayout(
+            context,
+            payoutId: widget.detail.payoutId!,
+            partnerId: partner.id,
+          );
+    } finally {
+      if (mounted) setState(() => _isRetrying = false);
+    }
   }
 
   void _downloadCsv(BuildContext context) {
-    unawaited(DownloadBottomSheet.show(context, detail));
+    unawaited(DownloadBottomSheet.show(context, widget.detail));
   }
 }

@@ -2,6 +2,7 @@
 
 import 'dart:async';
 
+import 'package:app_partner/src/features/settlement/settlement_coordinator.dart';
 import 'package:app_partner/src/features/settlement/settlement_detail_page.dart';
 import 'package:app_partner/src/logic/current_partner_provider.dart';
 import 'package:flutter/material.dart';
@@ -299,6 +300,112 @@ void main() {
     });
   });
 
+  // Fix #1930: retry button must be disabled while an RPC is in-flight.
+  group('ActionButtons — in-flight guard (Fix #1930)', () {
+    testWidgets('retry button is disabled while retryPayout is in-flight', (
+      tester,
+    ) async {
+      final retryCompleter = Completer<void>();
+      final fakeCoordinator = _SlowSettlementCoordinator(retryCompleter.future);
+
+      final detail = _makeDetail(
+        status: 'FAILED',
+        retryable: true,
+        payoutId: 'payout-1',
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            currentPartnerInfoProvider.overrideWith(
+              (ref) async =>
+                  const Partner(id: 'partner-1', name: 'Test Partner'),
+            ),
+            settlementCoordinatorProvider.overrideWith(
+              () => fakeCoordinator,
+            ),
+          ],
+          child: MaterialApp(
+            home: Scaffold(body: ActionButtons(detail: detail)),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      // Button is enabled initially
+      final buttonBefore = tester.widget<FilledButton>(
+        find.widgetWithText(FilledButton, '재지급 요청'),
+      );
+      expect(buttonBefore.onPressed, isNotNull);
+
+      // Tap — triggers async retryPayout; button becomes disabled
+      await tester.tap(find.text('재지급 요청'));
+      await tester.pump();
+
+      final buttonDuring = tester.widget<FilledButton>(
+        find.ancestor(
+          of: find.text('요청 중...'),
+          matching: find.byType(FilledButton),
+        ),
+      );
+      expect(
+        buttonDuring.onPressed,
+        isNull,
+        reason: 'Button must be disabled while in-flight to prevent double-tap',
+      );
+
+      // Complete the async operation
+      retryCompleter.complete();
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('double-tap fires only one retryPayout RPC (synchronous guard)', (
+      tester,
+    ) async {
+      final retryCompleter = Completer<void>();
+      final fakeCoordinator = _SlowSettlementCoordinator(retryCompleter.future);
+
+      final detail = _makeDetail(
+        status: 'FAILED',
+        retryable: true,
+        payoutId: 'payout-1',
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            currentPartnerInfoProvider.overrideWith(
+              (ref) async =>
+                  const Partner(id: 'partner-1', name: 'Test Partner'),
+            ),
+            settlementCoordinatorProvider.overrideWith(
+              () => fakeCoordinator,
+            ),
+          ],
+          child: MaterialApp(
+            home: Scaffold(body: ActionButtons(detail: detail)),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      // Tap twice without pumping — second tap arrives before rebuild applies
+      // onPressed: null, which is exactly the race the synchronous guard closes.
+      await tester.tap(find.text('재지급 요청'));
+      await tester.tap(find.text('재지급 요청'));
+      await tester.pump();
+
+      expect(
+        fakeCoordinator.callCount,
+        1,
+        reason: 'Synchronous _isRetrying guard must drop the second tap',
+      );
+
+      retryCompleter.complete();
+      await tester.pumpAndSettle();
+    });
+  });
+
   group('AmountBreakdown', () {
     testWidgets('displays all fee rows', (tester) async {
       final detail = _makeDetail();
@@ -314,4 +421,21 @@ void main() {
       expect(find.text('정산금'), findsOneWidget);
     });
   });
+}
+
+/// Slow coordinator for Fix #1930 test: retryPayout blocks until future completes.
+class _SlowSettlementCoordinator extends SettlementCoordinator {
+  _SlowSettlementCoordinator(this._future);
+  final Future<void> _future;
+  int callCount = 0;
+
+  @override
+  Future<void> retryPayout(
+    BuildContext context, {
+    required String payoutId,
+    required String partnerId,
+  }) async {
+    callCount++;
+    await _future;
+  }
 }
