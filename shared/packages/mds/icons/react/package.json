@@ -1,0 +1,11 @@
+{
+  "name": "@minglit/mds-icons-react",
+  "version": "26.04.1922-dev",
+  "private": true,
+  "description": "React components for the Minglit Design System icon set.",
+  "main": "src/generated/index.tsx",
+  "types": "src/generated/index.tsx",
+  "peerDependencies": {
+    "react": ">=18.0.0"
+  }
+}

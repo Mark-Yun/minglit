@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { MdsIcons, type MdsIconName } from '@/lib/mds-icons-react';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -38,32 +39,27 @@ function getIcons(): IconEntry[] {
 // Icon card component
 // ---------------------------------------------------------------------------
 function IconCard({ icon }: { icon: IconEntry }) {
-  const snippet = `MdsIcons.${icon.camel}(size: 24)`;
+  const Component = MdsIcons[icon.name as MdsIconName];
 
   return (
     <div className="bg-white rounded-xl border border-[var(--color-divider)] overflow-hidden hover:shadow-sm transition-shadow">
-      {/* SVG preview */}
+      {/* Live React component preview */}
       <div
-        className="flex items-center justify-center h-20 bg-[var(--color-surface)]"
+        className="flex items-center justify-center h-24 bg-[var(--color-surface)]"
         style={{ color: 'var(--color-primary)' }}
       >
-        <div
-          className="w-8 h-8"
-          // SVG uses currentColor — inherits color from parent
-          dangerouslySetInnerHTML={{ __html: icon.svgContent }}
-          style={{ display: 'contents' }}
-        />
+        {Component ? <Component size={32} /> : null}
       </div>
 
       <div className="p-3 space-y-2">
-        {/* Icon name */}
         <p className="text-xs font-semibold text-[var(--color-text-primary)] font-mono truncate">
           {icon.name}
         </p>
-
-        {/* Dart usage snippet */}
-        <code className="text-xs text-[var(--color-primary)] bg-[var(--color-surface)] px-2 py-1 rounded block truncate">
-          {snippet}
+        <code className="text-[10px] text-[var(--color-text-secondary)] bg-[var(--color-surface)] px-2 py-1 rounded block truncate">
+          MdsIcons.{icon.camel}(size: 24)
+        </code>
+        <code className="text-[10px] text-[#0d9488] bg-[#ecfdf5] px-2 py-1 rounded block truncate">
+          &lt;{icon.name.replace(/_([a-z])/g, (_, c) => c.toUpperCase()).replace(/^./, c => c.toUpperCase())} size={'{24}'} /&gt;
         </code>
       </div>
     </div>
