@@ -76,6 +76,59 @@ void main() {
     });
 
     testWidgets(
+      'Fix #1929: autoDispose re-fetches on page re-entry in same ProviderScope',
+      (tester) async {
+        // Without autoDispose, FutureProvider caches the result in the shared
+        // ProviderScope indefinitely. Re-entry would show stale data.
+        var callCount = 0;
+        when(() => mockSocialRepo.getBlockedPartners()).thenAnswer((_) async {
+          callCount++;
+          return <Map<String, dynamic>>[];
+        });
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              socialRepositoryProvider.overrideWithValue(mockSocialRepo),
+            ],
+            child: MaterialApp(
+              home: Builder(
+                builder: (context) => ElevatedButton(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (_) => const BlockedPartnersPage(),
+                    ),
+                  ),
+                  child: const Text('Open'),
+                ),
+              ),
+            ),
+          ),
+        );
+
+        // First visit
+        await tester.tap(find.text('Open'));
+        await tester.pumpAndSettle();
+        expect(callCount, 1);
+
+        // Navigate back — autoDispose disposes the provider when widget unmounts
+        final NavigatorState nav = tester.state(find.byType(Navigator));
+        nav.pop();
+        await tester.pumpAndSettle();
+
+        // Second visit — autoDispose must have fired; provider re-fetches
+        await tester.tap(find.text('Open'));
+        await tester.pumpAndSettle();
+        expect(
+          callCount,
+          2,
+          reason: 'autoDispose provider must re-fetch on re-entry',
+        );
+      },
+    );
+
+    testWidgets(
       'Fix #1929: blockedPartnersProvider invalidated after unblock',
       (tester) async {
         when(() => mockSocialRepo.getBlockedPartners()).thenAnswer(

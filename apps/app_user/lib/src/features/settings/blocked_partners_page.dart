@@ -4,7 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 // Fix #1929: manual widget state를 Riverpod FutureProvider로 대체해 차단 목록 로딩을 관리
-final blockedPartnersProvider = FutureProvider<List<Map<String, dynamic>>>((
+// Fix #1927: autoDispose로 페이지 재진입 시마다 최신 목록을 새로 fetch
+final blockedPartnersProvider = FutureProvider.autoDispose<
+  List<Map<String, dynamic>>
+>((
   ref,
 ) async {
   // Fix #270: 네트워크 실패 시 에러 처리 — 영구 로딩 상태 방지
