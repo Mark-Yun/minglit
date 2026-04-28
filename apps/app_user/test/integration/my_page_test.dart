@@ -4,6 +4,7 @@ import 'package:app_user/src/features/payment/ui/purchase_history_page.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
+import 'package:url_launcher/url_launcher.dart' show LaunchMode;
 import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
 
 import 'utils/golden_capture.dart';
