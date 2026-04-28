@@ -165,9 +165,13 @@ class _EventInfoSection extends StatelessWidget {
           ),
 
           // Divider
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: MinglitSpacing.sm),
-            child: Divider(height: 1, color: MinglitColors.surface),
+          // Fix #1931: use theme-aware color so divider renders correctly in dark mode
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: MinglitSpacing.sm),
+            child: Divider(
+              height: 1,
+              color: Theme.of(context).colorScheme.outlineVariant,
+            ),
           ),
 
           // Event title (center aligned, 2-line ellipsis)
