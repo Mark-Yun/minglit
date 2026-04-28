@@ -397,6 +397,61 @@ Deno.test({
 });
 
 Deno.test({
+  name: "notification-worker §50 ①: consent query DB error → pgmq_delete NOT called (message preserved for retry)",
+  fn: async () => {
+  const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+
+  const stubs = [
+    stub(WorkerUtils.prototype, "isProcessed", async () => false),
+    stub(WorkerUtils.prototype, "markProcessed", async () => {}),
+    stub(WorkerUtils.prototype, "moveToDLQ", async () => {}),
+    stub(WorkerUtils.prototype, "logTimeLag", () => {}),
+  ];
+
+  const { fetchMock, calls } = createFetchMock([
+    {
+      matcher: (req) => req.url.includes("/rest/v1/rpc/pgmq_read"),
+      handler: () => jsonResponse([mockMarketingNotificationMessage]),
+    },
+    {
+      // Regression(#2040): transient DB error must not cause message to be dropped.
+      // Supabase JS returns { data: null, error } on HTTP 5xx; code must throw, not drop.
+      matcher: (req) => req.url.includes("/rest/v1/user_consents"),
+      handler: () => new Response(
+        JSON.stringify({ code: "PGRST001", message: "DB connection error", details: null, hint: null }),
+        { status: 500, headers: { "Content-Type": "application/json" } },
+      ),
+    },
+  ]);
+
+  try {
+    await withEnv(
+      {
+        SUPABASE_URL: "https://supabase.test",
+        SUPABASE_SERVICE_ROLE_KEY: "service-key",
+        FIREBASE_SERVICE_ACCOUNT: firebaseServiceAccountJson,
+      },
+      async () => {
+        await withMockedFetch(fetchMock, async () => {
+          await withNoIntervals(async () => {
+            await handler(new Request("http://localhost", { headers: { "Authorization": "Bearer service-key" } }));
+          });
+        });
+      },
+    );
+  } finally {
+    // pgmq_delete must NOT be called — message stays in queue for PGMQ VT retry
+    const deleteCall = calls.find((c) => c.url.includes("/rest/v1/rpc/pgmq_delete"));
+    assertEquals(deleteCall, undefined, "pgmq_delete must not be called on consent query error");
+    // FCM must NOT be called
+    const fcmCall = calls.find((c) => c.url.includes("fcm.googleapis.com"));
+    assertEquals(fcmCall, undefined, "FCM must not be called on consent query error");
+    stubs.forEach((s) => s.restore());
+  }
+  },
+});
+
+Deno.test({
   name: "notification-worker §50 ④: marketing title gets (광고) prepend",
   fn: async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));

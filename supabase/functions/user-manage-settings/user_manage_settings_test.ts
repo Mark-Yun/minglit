@@ -244,12 +244,16 @@ Deno.test("delete_token — token 누락 → 400", async () => {
 
 // ===== update_settings tests =====
 
-Deno.test("update_settings — marketing_consent 변경 → DB 반영", async () => {
+Deno.test("update_settings — marketing_consent 변경 → user_settings + user_consents 동시 반영", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock, calls } = createFetchMock([
     authRoute,
     dbUpsertSettingsRoute({ marketing_consent: true }),
+    {
+      matcher: (req: Request) => req.url.includes("/rest/v1/user_consents") && req.method === "POST",
+      handler: () => jsonResponse({}),
+    },
   ]);
 
   await withEnv(ENV, async () => {
@@ -266,12 +270,59 @@ Deno.test("update_settings — marketing_consent 변경 → DB 반영", async ()
         assertEquals(payload.success, true);
         assertEquals(payload.settings.marketing_consent, true);
 
-        const dbCall = calls.find(
+        const settingsCall = calls.find(
           (c) => c.url.includes("/rest/v1/user_settings") && c.method === "POST",
         );
-        const body = JSON.parse(dbCall!.body!);
-        assertEquals(body.user_id, "user-123");
-        assertEquals(body.marketing_consent, true);
+        const settingsBody = JSON.parse(settingsCall!.body!);
+        assertEquals(settingsBody.user_id, "user-123");
+        assertEquals(settingsBody.marketing_consent, true);
+
+        // Regression(#2040): marketing_consent 변경 시 user_consents도 sync되어야 함
+        const consentCall = calls.find(
+          (c) => c.url.includes("/rest/v1/user_consents") && c.method === "POST",
+        );
+        assertEquals(!!consentCall, true, "user_consents upsert must be called");
+        const consentBody = JSON.parse(consentCall!.body!);
+        assertEquals(consentBody.user_id, "user-123");
+        assertEquals(consentBody.consent_key, "marketing_consent");
+        assertEquals(consentBody.consented, true);
+        assertEquals(consentBody.withdrawn_at, null);
+      });
+    });
+  });
+});
+
+Deno.test("update_settings — marketing_consent false → user_consents withdrawn_at 설정 (Regression #2040)", async () => {
+  const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+
+  const { fetchMock, calls } = createFetchMock([
+    authRoute,
+    dbUpsertSettingsRoute({ marketing_consent: false }),
+    {
+      matcher: (req: Request) => req.url.includes("/rest/v1/user_consents") && req.method === "POST",
+      handler: () => jsonResponse({}),
+    },
+  ]);
+
+  await withEnv(ENV, async () => {
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const request = authenticatedJsonRequest("http://localhost", {
+          action: "update_settings",
+          settings: { marketing_consent: false },
+        });
+        const response = await handler(request);
+        assertEquals(response.status, 200);
+
+        // 설정 화면에서 수신거부 시 user_consents에 withdrawn_at이 설정되어야 함.
+        // 이를 통해 notification-worker §50 가드가 해당 사용자에게 마케팅 알림을 차단한다.
+        const consentCall = calls.find(
+          (c) => c.url.includes("/rest/v1/user_consents") && c.method === "POST",
+        );
+        assertEquals(!!consentCall, true, "user_consents upsert must be called on opt-out");
+        const consentBody = JSON.parse(consentCall!.body!);
+        assertEquals(consentBody.consented, false);
+        assertEquals(typeof consentBody.withdrawn_at, "string", "withdrawn_at must be set on opt-out");
       });
     });
   });

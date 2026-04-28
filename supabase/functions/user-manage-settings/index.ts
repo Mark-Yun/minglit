@@ -180,6 +180,40 @@ Deno.serve(withHandler(async (req) => {
           return errorResponse("Failed to update settings", 500);
         }
 
+        // Sync marketing_consent change into user_consents (§50 guard source of truth).
+        // The notification-worker reads user_consents exclusively; without this sync a
+        // settings-screen opt-out would not suppress marketing delivery.
+        if ("marketing_consent" in sanitized) {
+          const consented = sanitized["marketing_consent"] as boolean;
+          const now = new Date().toISOString();
+          const { error: consentSyncError } = await withSpan(
+            "db.upsert.user_consents_marketing",
+            "db.upsert",
+            () =>
+              supabase
+                .from("user_consents")
+                .upsert(
+                  {
+                    user_id: userId,
+                    consent_key: "marketing_consent",
+                    consented,
+                    consented_at: consented ? now : undefined,
+                    withdrawn_at: consented ? null : now,
+                  },
+                  { onConflict: "user_id,consent_key" },
+                ),
+          );
+          if (consentSyncError) {
+            log({
+              function: FN,
+              level: "error",
+              message: "Failed to sync marketing_consent to user_consents",
+              metadata: { userId, detail: consentSyncError },
+            });
+            return errorResponse("Failed to sync marketing consent", 500);
+          }
+        }
+
         logStatsigEvent(
           userId,
           "settings_updated",
