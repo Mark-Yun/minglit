@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:app_user/src/common/widgets/minglit_avatar_image.dart';
 import 'package:app_user/src/features/event/admission/event_admission_controller.dart';
 import 'package:app_user/src/features/event/detail/event_detail_now_provider.dart';
 import 'package:app_user/src/features/event/detail/open_in_app_dialog.dart';

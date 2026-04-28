@@ -1,4 +1,3 @@
-import 'package:app_user/src/common/widgets/minglit_avatar_image.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 

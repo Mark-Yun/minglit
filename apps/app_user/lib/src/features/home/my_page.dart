@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:app_user/src/common/widgets/minglit_avatar_image.dart';
 import 'package:app_user/src/features/auth/logic/auth_coordinator.dart';
 import 'package:app_user/src/features/home/logic/home_coordinator.dart';
 import 'package:flutter/material.dart';
