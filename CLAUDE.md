@@ -101,6 +101,11 @@ adb -s adb-R3CX803P2ND-8btuuD._adb-tls-connect._tcp install -r build/app/outputs
 - 같은 날짜에 여러 migration 필요 시 순차 번호 사용 (예: 000001, 000002, 000003).
 - Migration 파일은 한번 dev/main에 머지되면 내용 수정 금지. 수정 필요 시 새 migration 추가.
 
+## Branch Rebase Rules
+
+- `shared/packages/**`를 수정하는 PR을 생성하기 전에 반드시 `git rebase origin/dev`를 수행한다.
+  ci.yml의 paths filter가 업데이트될 수 있으며, stale branch에서는 새 패키지가 CI 트리거에서 누락될 수 있다.
+
 ## Branch Protection
 
 - `dev` 브랜치는 direct push 금지. 반드시 feature branch에서 PR을 통해 머지.
