@@ -112,6 +112,12 @@ class _EventNowBarContentState extends ConsumerState<_EventNowBarContent>
 
   @override
   Widget build(BuildContext context) {
+    // Fix #2022: Watch eventRealtimeProvider to activate the Supabase Realtime
+    // subscription for this event. Without this watch, EventRealtime.build()
+    // is never called, so CHECKED_IN→MATCHING/RESULTS transitions require an
+    // app restart instead of happening automatically.
+    ref.watch(eventRealtimeProvider(widget.activeEvent.event.id));
+
     final stateAsync = ref.watch(eventNowBarStateProvider(widget.activeEvent));
 
     return stateAsync.when(

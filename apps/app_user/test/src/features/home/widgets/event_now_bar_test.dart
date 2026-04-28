@@ -237,6 +237,34 @@ void main() {
       expect(find.text('종료됨'), findsOneWidget);
     });
 
+    // Fix #2022: regression guard — eventRealtimeProvider must be watched so
+    // the Supabase Realtime subscription activates on mount.
+    testWidgets('eventRealtimeProvider is watched when active event shown', (
+      tester,
+    ) async {
+      final event = makeActiveEvent();
+      stubMatchingNotAvailable('event_1');
+
+      var realtimeBuilt = false;
+
+      await tester.pumpWidget(
+        createTestWidget(
+          activeEvents: [event],
+          overrides: [
+            eventRealtimeProvider('event_1').overrideWith((_) {
+              realtimeBuilt = true;
+            }),
+          ],
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(realtimeBuilt, isTrue,
+          reason:
+              'EventNowBar must watch eventRealtimeProvider to activate the '
+              'Supabase Realtime subscription');
+    });
+
     testWidgets('keeps cached event visible when state resolution fails', (
       tester,
     ) async {
