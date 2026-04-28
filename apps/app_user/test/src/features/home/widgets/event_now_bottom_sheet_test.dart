@@ -419,7 +419,7 @@ void main() {
         expect(find.text('매칭 결과'), findsOneWidget);
         expect(find.text('1명과 매칭되었어요!'), findsOneWidget);
         expect(find.text('김민지'), findsOneWidget);
-        expect(find.text('010-1234-5678'), findsOneWidget);
+        expect(find.text('010-****-5678'), findsOneWidget);
         expect(find.byIcon(Icons.favorite), findsWidgets);
       },
     );
