@@ -72,6 +72,14 @@ class EventNowBarStateNotifier extends _$EventNowBarStateNotifier {
     // matchCandidatesProvider resolution triggers a rebuild of this provider.
     final now = ref.watch(clockProvider)();
 
+    // Fix #2017: Watch before any await to establish subscriptions at the
+    // top of build(). Riverpod 3.x requires all ref.watch calls to happen
+    // before any async gap — subscriptions created here ensure this notifier
+    // rebuilds when match data changes, without the disposal loop that
+    // ref.watch-after-await caused in _computeState.
+    ref.watch(myMatchesProvider(event.id));
+    ref.watch(matchCandidatesProvider(event.id));
+
     // Compute the raw state from current data.
     final rawState = await _computeState(
       event,
@@ -98,11 +106,8 @@ class EventNowBarStateNotifier extends _$EventNowBarStateNotifier {
     }
 
     // RESULTS: myMatchesProvider has results (including empty list means
-    // matching round completed).
-    // Fix #2017: ref.read (not ref.watch) — ref.watch creates a subscription
-    // that triggers rebuild whenever myMatchesProvider transitions
-    // (loading→error), causing a rebuild loop and
-    // "disposed during loading state" StateError in tests and navigation.
+    // matching round completed). ref.read avoids creating a second subscription
+    // here — reactivity is handled by ref.watch in build() above.
     try {
       final matches = await ref.read(myMatchesProvider(event.id).future);
       if (matches.isNotEmpty) {
@@ -117,7 +122,7 @@ class EventNowBarStateNotifier extends _$EventNowBarStateNotifier {
     }
 
     // MATCHING: matchCandidatesProvider returns non-empty list.
-    // Fix #2017: ref.read (not ref.watch) — same reason as myMatchesProvider.
+    // ref.read avoids a second subscription — see comment above.
     try {
       final candidates = await ref.read(
         matchCandidatesProvider(event.id).future,
