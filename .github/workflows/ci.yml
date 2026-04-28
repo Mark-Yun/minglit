@@ -88,6 +88,7 @@ jobs:
             - 'apps/app_partner/**'
           minglit_kit:
             - 'shared/packages/minglit_kit/**'
+            - 'shared/packages/**'
           mds_core:
             - 'shared/packages/mds/core/**'
           mds_storybook:
