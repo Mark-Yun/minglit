@@ -98,7 +98,7 @@ adb -s adb-R3CX803P2ND-8btuuD._adb-tls-connect._tcp install -r build/app/outputs
 - 새 migration 생성 시, 반드시 `ls supabase/migrations/` 로 기존 version 확인 후 다음 번호 사용.
 - Feature branch에서 migration 작성 시, dev branch의 최신 상태와 비교 필수:
   `git diff dev -- supabase/migrations/` 로 충돌 여부 확인.
-- 같은 날짜에 여러 migration 필요 시 순차 번호 사용 (예: 000001, 000002, 000003).
+- 같은 날짜에 여러 migration 필요 시 순차 번호 사용 (예: 000001, 000002, 000003). **번호를 건너뛰지 말 것** — gap은 CI 경고를 발생시키고 삭제된 migration이 있는지 의심받는다. 의도적으로 건너뛴 경우 `supabase/migrations/KNOWN_GAPS.md`에 이유를 기록한다.
 - Migration 파일은 한번 dev/main에 머지되면 내용 수정 금지. 수정 필요 시 새 migration 추가.
 
 ## Branch Protection
