@@ -34,13 +34,13 @@ class _PerforationLine extends StatelessWidget {
             ),
           ),
           // Left notch — positioned to overlap card left edge
-          Positioned(
+          const Positioned(
             left: -_notchRadius,
             top: 0,
             child: _NotchCircle(size: _notchDiameter),
           ),
           // Right notch — positioned to overlap card right edge
-          Positioned(
+          const Positioned(
             right: -_notchRadius,
             top: 0,
             child: _NotchCircle(size: _notchDiameter),

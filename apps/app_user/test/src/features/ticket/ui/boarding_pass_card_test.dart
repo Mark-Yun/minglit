@@ -322,13 +322,16 @@ void main() {
                 (w) =>
                     w is Container &&
                     w.decoration is BoxDecoration &&
-                    (w.decoration as BoxDecoration).shape == BoxShape.circle,
+                    (w.decoration! as BoxDecoration).shape == BoxShape.circle,
               ),
             )
             .toList();
 
-        expect(circleContainers, isNotEmpty,
-            reason: 'Expected notch circle Containers in the widget tree');
+        expect(
+          circleContainers,
+          isNotEmpty,
+          reason: 'Expected notch circle Containers in the widget tree',
+        );
         for (final c in circleContainers) {
           final color = (c.decoration! as BoxDecoration).color;
           expect(
