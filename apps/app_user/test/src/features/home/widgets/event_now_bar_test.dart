@@ -71,6 +71,10 @@ void main() {
           if (throwError) throw Exception('Network error');
           return activeEvents;
         }),
+        // Fix #2022: prevent EventRealtime from touching Supabase in tests.
+        // Caller overrides (via ...overrides.cast()) take precedence.
+        for (final e in activeEvents)
+          eventRealtimeProvider(e.event.id).overrideWith(_NoOpEventRealtime.new),
         ...overrides.cast(),
       ],
       child: MaterialApp(
@@ -299,6 +303,11 @@ class _ThrowingStateNotifier extends EventNowBarStateNotifier {
   FutureOr<EventNowBarState> build(TodayActiveEvent activeEvent) {
     throw Exception('state failure');
   }
+}
+
+class _NoOpEventRealtime extends EventRealtime {
+  @override
+  void build(String eventId) {}
 }
 
 class _TrackingEventRealtime extends EventRealtime {
