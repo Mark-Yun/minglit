@@ -41,7 +41,7 @@ Minglit의 Supabase 기반 백엔드 인프라를 기술한다.
 
 ### 2.1 Table Inventory
 
-총 **56개 테이블(analytics 스키마 5개 포함)** + **4개 뷰** + **4개 PGMQ 인프라 테이블** + **admin 스키마 3개 테이블(컴플라이언스 인프라, 별도 집계)**.
+총 **62개 테이블(analytics 스키마 5개 포함)** + **4개 뷰** + **4개 PGMQ 인프라 테이블** + **admin 스키마 3개 테이블(컴플라이언스 인프라, 별도 집계)**.
 
 > **Note**: 아래 테이블 목록이 실제 migration과 일치하는지 정기적으로 검증합니다.
 
@@ -103,6 +103,17 @@ Minglit의 Supabase 기반 백엔드 인프라를 기술한다.
 | `user_consents` | 유저 약관 동의 기록 | user_id, policy_id, consented_at, revoked_at |
 | `location_access_log` | 위치정보 이용 확인자료 (위치정보법 §16, 6개월 보관) | user_id, accessed_at, purpose (nearby_search), country_code |
 | `ef_auth_manifest` | pg_cron 대상 EF 인증 레벨 선언 (Fix #1760, cron-targeted EF 전용) | ef_name (PK), required_auth (service_role), description |
+| `webhook_imp_uid_log` | PortOne V1 결제 웹훅 idempotency 로그 (Fix #1949, 재처리 방지) | imp_uid (PK), merchant_uid, processed_at |
+
+#### Tags & Discovery (태그/디스커버리)
+
+| Table | Purpose | Key Columns |
+|-------|---------|-------------|
+| `tags` | 태그 마스터 (PGroonga prefix match 지원) | id (PK), name (UNIQUE), is_featured, usage_count |
+| `party_tags` | 파티↔태그 연결 (M:N) | party_id, tag_id (PK 복합) |
+| `user_interest_tags` | 유저 관심 태그 (M:N) | user_id, tag_id (PK 복합) |
+| `tag_usage_daily` | 태그 일별 사용량 집계 | tag_id, date (PK 복합), daily_count |
+| `tag_usage_monthly` | 태그 월별 사용량 집계 (일별 롤업) | tag_id, month (PK 복합), monthly_count |
 
 #### Account Management (계정 관리)
 
