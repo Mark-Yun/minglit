@@ -36,8 +36,10 @@ void main() {
       ).thenAnswer((_) async => throw Exception('Network error'));
 
       await tester.pumpWidget(buildTestWidget());
-      await tester.pump();
-      await tester.pump();
+      // pumpAndSettle waits for FutureProvider error state to propagate through
+      // the async chain (mock → FutureProvider catch/rethrow → Riverpod rebuild).
+      // Two pump() calls were insufficient for this multi-hop async chain.
+      await tester.pumpAndSettle();
 
       // Fix #1929: error body rendered by FutureProvider.when(error:)
       expect(find.text('차단 목록을 불러오지 못했습니다'), findsOneWidget);
