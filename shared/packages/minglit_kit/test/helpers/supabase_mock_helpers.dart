@@ -90,6 +90,11 @@ class FakeTableBuilder extends Fake implements SupabaseQueryBuilder {
   // Tracks the columns string passed to .select() — used in regression tests
   // to assert that specific columns (e.g. 'event_at') are queried.
   String? lastSelectColumns;
+  // Tracks every columns string passed to .select() across all calls.
+  // Useful when the same mock is reused for multiple calls (e.g. two queries
+  // on the same table overwrite each other in mocktail, so lastSelectColumns
+  // only reflects the final call).
+  final List<String> selectHistory = [];
   // Tracks column names passed to .order() — used in regression tests.
   final List<String> recordedOrderColumns = [];
 
@@ -99,6 +104,7 @@ class FakeTableBuilder extends Fake implements SupabaseQueryBuilder {
   ]) {
     if (shouldThrow != null) throw shouldThrow!;
     lastSelectColumns = columns;
+    selectHistory.add(columns);
     return _FakeFilterBuilder(
       selectData: selectData,
       singleData: singleData,

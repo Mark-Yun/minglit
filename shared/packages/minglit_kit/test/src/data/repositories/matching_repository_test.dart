@@ -298,6 +298,84 @@ void main() {
 
         final result = await repository.getMatchingCandidates('event_1');
         expect(result, isEmpty);
+
+        final participantBuilder = mockTable(
+          mockClient,
+          'event_participants',
+          selectData: [
+            {
+              'user_id': 'user_2',
+              'display_name': '상대방',
+              'birth_year': 1996,
+              'ticket': {
+                'target_entry_group_ids': ['group_f'],
+              },
+            },
+          ],
+          maybeSingleData: {
+            'ticket': {
+              'target_entry_group_ids': ['group_m'],
+            },
+          },
+        );
+        // Empty rules → code falls back to gender-based entry_groups path,
+        // allowing the entry_groups select() regression guards below to run.
+        final rulesBuilder = mockTable(
+          mockClient,
+          'match_rules',
+          selectData: [],
+        );
+        final entryGroupsBuilder = mockTable(
+          mockClient,
+          'entry_groups',
+          selectData: [
+            {'id': 'group_m', 'gender': 'male'},
+          ],
+        );
+        // oppositeGroupsBuilder overwrites entryGroupsBuilder for 'entry_groups'
+        // in mocktail, so both entry_groups calls go through this builder.
+        // Includes 'gender' so myGender is resolved and the second query runs.
+        final oppositeGroupsBuilder = mockTable(
+          mockClient,
+          'entry_groups',
+          selectData: [
+            {'id': 'group_f', 'gender': 'female'},
+          ],
+        );
+        unawaited(participantBuilder);
+        unawaited(rulesBuilder);
+        unawaited(entryGroupsBuilder);
+        unawaited(oppositeGroupsBuilder);
+
+        final candidates = await repository.getMatchingCandidates('event_1');
+
+        expect(candidates, hasLength(1));
+        // Fix #2011: regression guard — lastSelectColumns must include expected column
+        expect(
+          rulesBuilder.lastSelectColumns,
+          contains('target_group_id'),
+          reason: 'Fix #2011: select() must include target_group_id',
+        );
+        // Fix #2011: regression guard — both entry_groups calls go through
+        // oppositeGroupsBuilder because mocktail overwrites stubs with the same
+        // table name. Use selectHistory (all calls) to assert 'gender' appeared.
+        expect(
+          oppositeGroupsBuilder.selectHistory,
+          contains('id, gender'),
+          reason: 'Fix #2011: select() must include gender',
+        );
+        // Fix #2011: regression guard — lastSelectColumns must include expected column
+        expect(
+          oppositeGroupsBuilder.lastSelectColumns,
+          contains('id'),
+          reason: 'Fix #2011: select() must include id',
+        );
+        // Fix #2011: regression guard — lastSelectColumns must include expected column
+        expect(
+          participantBuilder.lastSelectColumns,
+          contains('user_id'),
+          reason: 'Fix #2011: select() must include user_id',
+        );
       });
     });
   });

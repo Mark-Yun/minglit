@@ -142,13 +142,12 @@ void main() {
 
     group('getDeletionStatus', () {
       test('returns pending status when deleted_at exists', () async {
-        unawaited(
-          mockTable(
-            mockClient,
-            'user_profiles',
-            maybeSingleData: {'deleted_at': '2026-03-30T00:00:00Z'},
-          ),
+        final builder = mockTable(
+          mockClient,
+          'user_profiles',
+          maybeSingleData: {'deleted_at': '2026-03-30T00:00:00Z'},
         );
+        unawaited(builder);
 
         final result = await repository.getDeletionStatus();
 
@@ -156,6 +155,12 @@ void main() {
         expect(result!.isPending, true);
         expect(result.deletedAt, DateTime.parse('2026-03-30T00:00:00Z'));
         expect(result.gracePeriodEnds, DateTime.parse('2026-04-06T00:00:00Z'));
+        // Fix #2011: regression guard — lastSelectColumns must include expected column
+        expect(
+          builder.lastSelectColumns,
+          contains('deleted_at'),
+          reason: 'Fix #2011: select() must include deleted_at',
+        );
       });
 
       test('returns non-pending status when deleted_at is null', () async {
