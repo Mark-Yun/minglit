@@ -251,9 +251,9 @@ void main() {
         createTestWidget(
           activeEvents: [event],
           overrides: [
-            eventRealtimeProvider('event_1').overrideWith((_) {
-              realtimeBuilt = true;
-            }),
+            eventRealtimeProvider('event_1').overrideWith(
+              () => _TrackingEventRealtime(() { realtimeBuilt = true; }),
+            ),
           ],
         ),
       );
@@ -297,4 +297,12 @@ class _ThrowingStateNotifier extends EventNowBarStateNotifier {
   FutureOr<EventNowBarState> build(TodayActiveEvent activeEvent) {
     throw Exception('state failure');
   }
+}
+
+class _TrackingEventRealtime extends EventRealtime {
+  _TrackingEventRealtime(this._onBuild);
+  final void Function() _onBuild;
+
+  @override
+  void build(String eventId) => _onBuild();
 }
