@@ -1,7 +1,7 @@
 # Graph Report - /Users/mark/workspace/minglit-worker-runtime/workspace/audit-legal-claude-subagents  (2026-04-29)
 
 ## Corpus Check
-- 1127 files · ~1,194,636 words
+- 1127 files · ~1,414,028 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -2038,11 +2038,11 @@ _Questions this graph is uniquely positioned to answer:_
 - **What is the exact relationship between `Architecture Audit #1092 — 2026-04-06` and `AI Basic Law Compliance (Korea 2026)`?**
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
 - **Why does `package:flutter/material.dart` connect `Community 0` to `Community 2`, `Community 5`, `Community 37`, `Community 9`, `Community 10`, `Community 15`, `Community 16`, `Community 19`, `Community 20`, `Community 25`, `Community 27`?**
-  _High betweenness centrality (0.046) - this node is a cross-community bridge._
-- **Why does `PolicyRepository` connect `Community 1` to `Community 3`, `Community 6`?**
-  _High betweenness centrality (0.032) - this node is a cross-community bridge._
-- **Why does `RPC: get_current_policy` connect `Community 3` to `Community 1`?**
-  _High betweenness centrality (0.027) - this node is a cross-community bridge._
+  _High betweenness centrality (0.058) - this node is a cross-community bridge._
+- **Why does `package:minglit_kit/minglit_kit.dart` connect `Community 0` to `Community 2`, `Community 37`, `Community 9`, `Community 10`, `Community 15`, `Community 16`, `Community 20`, `Community 25`?**
+  _High betweenness centrality (0.033) - this node is a cross-community bridge._
+- **Why does `minglit_kit Package` connect `Community 4` to `Community 8`, `Community 1`, `Community 24`?**
+  _High betweenness centrality (0.022) - this node is a cross-community bridge._
 - **What connects `reporter (AutoLabelAllureReporter)`, `BugReporterWrapper Widget Test Suite`, `MinglitListTile Widget Test Suite` to the rest of the system?**
   _1711 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
