@@ -120,6 +120,37 @@ void main() {
 
   // ─── Widget-level Interaction Tests ─────────────────────────────────────
 
+  // Fix #1923: signOut must be called before goToHome — otherwise the widget
+  // is disposed and context.mounted is always false, making the toast unreachable.
+  group('IT-U06: 탈퇴 완료 페이지 — 확인 버튼 동작 (Fix #1923)', () {
+    testWidgets('확인 버튼 탭 시 성공 토스트가 표시됨 — goToHome 이전에 toast', (
+      tester,
+    ) async {
+      // Use createTestApp (real router via goRouterProvider) so that goToHome()
+      // actually calls router.go('/') and unmounts DeletionCompletePage.
+      // With the bug (goToHome first), context.mounted becomes false after
+      // navigation and the toast is never shown — this test would fail.
+      await tester.pumpWidget(
+        createTestApp(
+          isLoggedIn: true,
+          currentUser: testUser,
+          initialLocation: '/my/privacy/delete/complete',
+          additionalOverrides: _deletionRouterOverrides(),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(DeletionCompletePage), findsOneWidget);
+
+      await tester.tap(find.text('확인'));
+      await tester.pump(); // execute async _finish(): signOut → goToHome
+      await tester.pump(); // settle navigation frame
+
+      // Toast was shown on root ScaffoldMessenger BEFORE goToHome() — it
+      // persists after navigation completes.
+      expect(find.text('탈퇴 요청이 접수되었어요.'), findsOneWidget);
+    });
+  });
+
   group('IT-U06: 탈퇴 사유 선택 페이지 인터랙션', () {
     final capture = GoldenCapture('cuj_u06');
     Widget buildReasonPage({
