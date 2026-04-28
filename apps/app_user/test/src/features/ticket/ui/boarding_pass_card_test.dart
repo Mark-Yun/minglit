@@ -344,7 +344,9 @@ void main() {
 
         // Divider in _EventInfoSection must also use theme-aware color, not
         // MinglitColors.surface. outlineVariant in dark theme != lightSurface.
-        final dividers = tester.widgetList<Divider>(find.byType(Divider)).toList();
+        final dividers = tester
+            .widgetList<Divider>(find.byType(Divider))
+            .toList();
         expect(dividers, isNotEmpty, reason: 'Expected Divider in event info');
         for (final d in dividers) {
           expect(
