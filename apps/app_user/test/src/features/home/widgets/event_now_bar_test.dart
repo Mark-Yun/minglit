@@ -71,6 +71,13 @@ void main() {
           if (throwError) throw Exception('Network error');
           return activeEvents;
         }),
+        // Fix #2022: prevent EventRealtime from touching Supabase in tests.
+        // Do not pass eventRealtimeProvider overrides via the overrides param —
+        // duplicate overrides for the same provider key cause an AssertionError.
+        for (final e in activeEvents)
+          eventRealtimeProvider(
+            e.event.id,
+          ).overrideWith(_NoOpEventRealtime.new),
         ...overrides.cast(),
       ],
       child: MaterialApp(
@@ -237,6 +244,50 @@ void main() {
       expect(find.text('종료됨'), findsOneWidget);
     });
 
+    // Fix #2022: regression guard — eventRealtimeProvider must be watched so
+    // the Supabase Realtime subscription activates on mount.
+    // Uses raw ProviderScope to avoid duplicate override with createTestWidget's
+    // default _NoOpEventRealtime injection.
+    testWidgets('eventRealtimeProvider is watched when active event shown', (
+      tester,
+    ) async {
+      final event = makeActiveEvent();
+      stubMatchingNotAvailable('event_1');
+
+      var realtimeBuilt = false;
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            eventRepositoryProvider.overrideWithValue(mockEventRepo),
+            matchingRepositoryProvider.overrideWith((ref) => mockMatchingRepo),
+            todayActiveEventsProvider.overrideWith((ref) => [event]),
+            eventRealtimeProvider('event_1').overrideWith(
+              () => _TrackingEventRealtime(() {
+                realtimeBuilt = true;
+              }),
+            ),
+          ],
+          child: MaterialApp(
+            theme: MinglitTheme.materialTheme,
+            home: const Scaffold(
+              body: SizedBox.expand(),
+              bottomSheet: EventNowBar(),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        realtimeBuilt,
+        isTrue,
+        reason:
+            'EventNowBar must watch eventRealtimeProvider to activate the '
+            'Supabase Realtime subscription',
+      );
+    });
+
     testWidgets('keeps cached event visible when state resolution fails', (
       tester,
     ) async {
@@ -266,4 +317,17 @@ class _ThrowingStateNotifier extends EventNowBarStateNotifier {
   FutureOr<EventNowBarState> build(TodayActiveEvent activeEvent) {
     throw Exception('state failure');
   }
+}
+
+class _NoOpEventRealtime extends EventRealtime {
+  @override
+  void build(String eventId) {}
+}
+
+class _TrackingEventRealtime extends EventRealtime {
+  _TrackingEventRealtime(this._onBuild);
+  final void Function() _onBuild;
+
+  @override
+  void build(String eventId) => _onBuild();
 }
