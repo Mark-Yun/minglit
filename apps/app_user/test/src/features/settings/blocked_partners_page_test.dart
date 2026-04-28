@@ -154,7 +154,6 @@ void main() {
         ).thenAnswer((_) async => []);
 
         await tester.tap(find.text('차단 해제'));
-        // Dismiss the dialog
         await tester.pumpAndSettle();
         // MinglitAlert.showConfirm uses AlertDialog — tap confirm button
         if (find.text('해제').evaluate().isNotEmpty) {
@@ -163,6 +162,15 @@ void main() {
         }
 
         verify(() => mockSocialRepo.unblockPartner('p1')).called(1);
+        // Fix #1929: ref.invalidate(blockedPartnersProvider) must trigger re-fetch
+        // Verify getBlockedPartners() was called a second time (initial + after invalidate)
+        verify(() => mockSocialRepo.getBlockedPartners()).called(2);
+        // UI must reflect the empty list returned by the second fetch
+        expect(
+          find.text('차단된 파트너가 없습니다'),
+          findsOneWidget,
+          reason: 'invalidate must cause re-fetch; UI must show empty state',
+        );
       },
     );
   });
