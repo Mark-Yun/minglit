@@ -102,7 +102,7 @@ P2 — 실 발송 전 가드 구축 필요. 마케팅 푸시 도입 일정에 �
    - 단순 거부도 가능하나 프로모션 효과 손실 → 재예약 권장
 
 3. **"(광고)" 표기 자동 prepend**
-   - 마케팅 카테고리는 title 또는 body 앞에 `[광고]` 자동 prepend
+   - 마케팅 카테고리는 title 또는 body 앞에 `(광고)` 자동 prepend
    - 발송 후에도 `user_notifications`에 그대로 저장되어 감사 가능
 
 ### 단기 (P3)
@@ -124,7 +124,7 @@ P2 — 실 발송 전 가드 구축 필요. 마케팅 푸시 도입 일정에 �
 
 - [ ] notification-worker가 `category='marketing'` 페이로드를 받으면 user의 marketing_consent를 조회하고, false면 drop
 - [ ] 한국 시간 21:00–08:00 발송 시도는 차단 또는 재예약
-- [ ] 마케팅 카테고리 메시지는 "[광고]" 접두어가 강제됨
+- [ ] 마케팅 카테고리 메시지는 "(광고)" 접두어가 강제됨
 - [ ] 동의 후 2년 경과 사용자에 대해 재확인 또는 자동 withdraw 처리
 - [ ] pgTAP 또는 deno test로 위 4개 가드 모두 회귀 테스트 작성
 - [ ] `docs/legal/retention-map.md`에 광고성 정보 가드 매트릭스 추가
