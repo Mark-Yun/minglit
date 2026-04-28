@@ -409,12 +409,22 @@ void main() {
 
         final filters = builder.recordedFilters;
         expect(
-          filters.any((f) => f.method == 'eq' && f.column == 'event_id' && f.value == 'event_1'),
+          filters.any(
+            (f) =>
+                f.method == 'eq' &&
+                f.column == 'event_id' &&
+                f.value == 'event_1',
+          ),
           isTrue,
           reason: 'Must filter by event_id',
         );
         expect(
-          filters.any((f) => f.method == 'eq' && f.column == 'voter_id' && f.value == 'user_1'),
+          filters.any(
+            (f) =>
+                f.method == 'eq' &&
+                f.column == 'voter_id' &&
+                f.value == 'user_1',
+          ),
           isTrue,
           reason: 'Must filter by voter_id (current user)',
         );
