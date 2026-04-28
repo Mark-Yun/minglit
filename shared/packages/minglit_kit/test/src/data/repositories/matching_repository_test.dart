@@ -378,6 +378,58 @@ void main() {
         );
       });
     });
+
+    // Fix #1959: server-side count path
+    group('getMyVoteCount', () {
+      test('returns 0 when user is not authenticated', () async {
+        mockClient = createMockSupabase(); // no user
+        repository = MatchingRepository(supabase: mockClient);
+
+        final result = await repository.getMyVoteCount('event_1');
+        expect(result, 0);
+      });
+
+      test('returns server-side count from PostgREST count response', () async {
+        unawaited(
+          mockTable(mockClient, 'match_votes', countValue: 3),
+        );
+
+        final result = await repository.getMyVoteCount('event_1');
+        expect(result, 3);
+      });
+
+      test('passes event_id and voter_id filters to the query', () async {
+        final builder = mockTable(
+          mockClient,
+          'match_votes',
+          countValue: 2,
+        );
+
+        await repository.getMyVoteCount('event_1');
+
+        final filters = builder.recordedFilters;
+        expect(
+          filters.any(
+            (f) =>
+                f.method == 'eq' &&
+                f.column == 'event_id' &&
+                f.value == 'event_1',
+          ),
+          isTrue,
+          reason: 'Must filter by event_id',
+        );
+        expect(
+          filters.any(
+            (f) =>
+                f.method == 'eq' &&
+                f.column == 'voter_id' &&
+                f.value == 'user_1',
+          ),
+          isTrue,
+          reason: 'Must filter by voter_id (current user)',
+        );
+      });
+    });
   });
 
   group('MatchingRepository providers', () {

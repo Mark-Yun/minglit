@@ -221,19 +221,19 @@ class MatchingRepository {
 
   /// Fetches the voter's current vote count for an event.
   // Fix #306: 잔여 투표 수 표시용
+  // Fix #1959: Use server-side count instead of fetching full rows
   Future<int> getMyVoteCount(String eventId) async {
     final userId = _supabase.auth.currentUser?.id;
     if (userId == null) return 0;
 
     try {
-      final data =
-          await _supabase
-                  .from('match_votes')
-                  .select()
-                  .eq('event_id', eventId)
-                  .eq('voter_id', userId)
-              as List;
-      return data.length;
+      final res = await _supabase
+          .from('match_votes')
+          .select('voter_id')
+          .eq('event_id', eventId)
+          .eq('voter_id', userId)
+          .count(CountOption.exact);
+      return res.count;
     } catch (e, st) {
       Log.e('❌ [MatchingRepo] getMyVoteCount Error', e, st);
       rethrow;
