@@ -688,7 +688,7 @@ Nodes (82): ADB Device Connection — wireless adb pair 요구사항, ADR-001: S
 Cohesion: 0.04
 Nodes (80): AccountDeletionController, AccountDeletionControllerTest, AccountRepository, AppPermissionSettingsScreen, AppPermissionSettingsScreenTest, AppRouterTest (partner), DefaultFirebaseOptions (app_user), app_user main.dart (+72 more)
 
-### Community 13 - "Community 13"
+### Community 17 - "Community 17"
 Cohesion: 0.04
 Nodes (68): CUJ Recurring Event Integration Test (IT-P09), DB Table: recurrence_rules, Edge Function: recurrence-rules, EntryGroupEditorScreen, EventBasicInfoSummary, EventCapacitySummary, EventContactSummary, EventCreateCoordinator (+60 more)
 
@@ -713,10 +713,18 @@ Cohesion: 0.09
 Nodes (44): ActionRunner, Admin Dashboard Spec, Admin Dashboard Wireframe, backend-simulator E2E Tests, backend-simulator Edge Function (main handler), DB Table: partner_verified_users, EF: apply-event, EF: event-checkin (+36 more)
 
 ### Community 19 - "Community 19"
+Cohesion: 0.09
+Nodes (45): ActionRunner, Admin Dashboard Spec, Admin Dashboard Wireframe, backend-simulator E2E Tests, backend-simulator Edge Function (main handler), DB Table: partner_verified_users, EF: apply-event, EF: event-checkin (+37 more)
+
+### Community 20 - "Community 20"
 Cohesion: 0.06
 Nodes (33): fixtures/mock_events.dart, package:mds/mds.dart, package:widgetbook/widgetbook.dart, build, _ColorsStory, _ColorSwatch, _DarkColorsStory, _FilterChipStory (+25 more)
 
-### Community 20 - "Community 20"
+### Community 21 - "Community 21"
+Cohesion: 0.07
+Nodes (32): package:app_user/src/features/account_deletion/ui/deletion_complete_page.dart, package:app_user/src/features/account_deletion/ui/deletion_info_page.dart, package:app_user/src/features/account_deletion/ui/deletion_reason_page.dart, package:app_user/src/features/account_deletion/ui/deletion_verify_page.dart, package:app_user/src/features/auth/login_page.dart, package:app_user/src/features/home/my_page.dart, package:app_user/src/features/payment/ui/purchase_history_page.dart, package:plugin_platform_interface/plugin_platform_interface.dart (+24 more)
+
+### Community 22 - "Community 22"
 Cohesion: 0.07
 Nodes (32): package:app_user/src/features/account_deletion/ui/deletion_complete_page.dart, package:app_user/src/features/account_deletion/ui/deletion_info_page.dart, package:app_user/src/features/account_deletion/ui/deletion_reason_page.dart, package:app_user/src/features/account_deletion/ui/deletion_verify_page.dart, package:app_user/src/features/auth/login_page.dart, package:app_user/src/features/home/my_page.dart, package:app_user/src/features/payment/ui/purchase_history_page.dart, package:plugin_platform_interface/plugin_platform_interface.dart (+24 more)
 
@@ -860,11 +868,23 @@ Nodes (0):
 Cohesion: 0.33
 Nodes (0): 
 
-### Community 56 - "Community 56"
+### Community 65 - "Community 65"
 Cohesion: 0.4
 Nodes (6): AdminCoordinator, AdminCoordinator Unit Test, PartnerApplicationDetailPage, PartnerApplicationListPage, partnerApplicationProvider, partnerApplicationsProvider
 
-### Community 57 - "Community 57"
+### Community 66 - "Community 66"
+Cohesion: 0.4
+Nodes (4): AgeUtil, calculateKoreanAge, calculateManAge, calculateManAgeFromDate
+
+### Community 67 - "Community 67"
+Cohesion: 0.4
+Nodes (4): allure_report Dart Package, AutoLabelAllureReporter, MinglitException Test Suite, MinglitException (exceptions.dart)
+
+### Community 68 - "Community 68"
+Cohesion: 0.7
+Nodes (4): checkAuth(), checkDatabase(), checkStorage(), withTimeout()
+
+### Community 69 - "Community 69"
 Cohesion: 0.4
 Nodes (6): CI/CD Deploy Pipeline Test Cases, Edge Function Environment Variables, Flutter Environment Variables, GitHub Secrets Configuration, Environment Variable Reference, JUSO_CONFIRM_KEY Required/Optional Mismatch Issue
 
@@ -970,7 +990,7 @@ Nodes (2): _EventRepositoryCheckinQueries, FormatException
 
 ### Community 83 - "Community 83"
 Cohesion: 0.67
-Nodes (3): Axiom Structured Logger, Axiom Logger Test Suite, PII Masker (maskMetadata)
+Nodes (2): _EventRepositoryCheckinQueries, FormatException
 
 ### Community 84 - "Community 84"
 Cohesion: 0.67
@@ -1030,7 +1050,7 @@ Nodes (2): MinglitBottomSheet, MinglitBottomSheetTest
 
 ### Community 98 - "Community 98"
 Cohesion: 1.0
-Nodes (2): MinglitTextField, MinglitTextFieldTest
+Nodes (3): EventNowMultiStack, EventNowMultiStack Widget Test, sortActiveEvents
 
 ### Community 99 - "Community 99"
 Cohesion: 1.0
@@ -1050,7 +1070,7 @@ Nodes (2): ThemeController, ThemeSettingsTile
 
 ### Community 103 - "Community 103"
 Cohesion: 1.0
-Nodes (1): supabaseImageUrl
+Nodes (3): Runtime QA Scheduler System, Incident #1765: Flutter SDK Missing in Runtime Environment, Incident #1850: Testing Device Disconnected - Pixel 7a
 
 ### Community 104 - "Community 104"
 Cohesion: 1.0

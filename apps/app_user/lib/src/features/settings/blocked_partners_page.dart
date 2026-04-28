@@ -80,11 +80,11 @@ class BlockedPartnersPage extends ConsumerWidget {
               final name = p['name'] as String? ?? '';
               final imageUrl = p['profile_image_url'] as String?;
               return ListTile(
-                leading: CircleAvatar(
-                  backgroundImage: imageUrl != null
-                      ? NetworkImage(imageUrl)
-                      : null,
-                  child: imageUrl == null ? const Icon(Icons.store) : null,
+                // Fix #1936: MinglitAvatarImage handles caching + error fallback
+                leading: MinglitAvatarImage(
+                  radius: 20,
+                  url: imageUrl,
+                  fallbackIcon: Icons.store,
                 ),
                 title: Text(name),
                 trailing: TextButton(

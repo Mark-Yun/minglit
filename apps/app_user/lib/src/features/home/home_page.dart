@@ -126,20 +126,11 @@ class _HomePageState extends ConsumerState<HomePage> {
                   // Fix #1630: AppBar context.push() → GoRouter 주입 패턴
                   IconButton(
                     onPressed: homeCoordinator.pushMyPage,
-                    icon: CircleAvatar(
+                    // Fix #1936: MinglitAvatarImage handles caching + error fallback
+                    icon: MinglitAvatarImage(
                       radius: 14,
-                      backgroundImage: user.userMetadata?['avatar_url'] != null
-                          ? NetworkImage(
-                              user.userMetadata!['avatar_url'] as String,
-                            )
-                          : null,
-                      onBackgroundImageError:
-                          user.userMetadata?['avatar_url'] != null
-                          ? (_, _) {}
-                          : null,
-                      child: user.userMetadata?['avatar_url'] == null
-                          ? const Icon(Icons.person, size: 14)
-                          : null,
+                      url: user.userMetadata?['avatar_url'] as String?,
+                      fallbackIconSize: 14,
                     ),
                   ),
                 ] else

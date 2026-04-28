@@ -4744,7 +4744,7 @@
       "author": null,
       "contributor": null,
       "id": "event_card_sold_out_test",
-      "community": 6,
+      "community": 15,
       "norm_label": "eventcard sold out test suite"
     },
     {
@@ -4757,7 +4757,7 @@
       "author": null,
       "contributor": null,
       "id": "event_card_ratio_test",
-      "community": 6,
+      "community": 15,
       "norm_label": "eventcard aspect ratio test suite"
     },
     {
@@ -4975,7 +4975,7 @@
       "author": null,
       "contributor": null,
       "id": "event_card_golden_test",
-      "community": 6,
+      "community": 15,
       "norm_label": "event_card_golden_test.dart"
     },
     {
@@ -4988,7 +4988,7 @@
       "author": null,
       "contributor": null,
       "id": "minglit_event_card_widget",
-      "community": 6,
+      "community": 15,
       "norm_label": "mingliteventcard widget"
     },
     {
@@ -5001,7 +5001,7 @@
       "author": null,
       "contributor": null,
       "id": "minglit_theme",
-      "community": 6,
+      "community": 15,
       "norm_label": "minglittheme"
     },
     {
@@ -5140,7 +5140,7 @@
       "author": null,
       "contributor": null,
       "id": "test_utils",
-      "community": 8,
+      "community": 4,
       "norm_label": "test utils (createcontainer)"
     },
     {
@@ -5205,7 +5205,7 @@
       "author": null,
       "contributor": null,
       "id": "event_card_state_test",
-      "community": 6,
+      "community": 15,
       "norm_label": "eventcardstatetest"
     },
     {
@@ -5218,7 +5218,7 @@
       "author": null,
       "contributor": null,
       "id": "minglit_event_card",
-      "community": 6,
+      "community": 15,
       "norm_label": "mingliteventcard"
     },
     {
@@ -5257,7 +5257,7 @@
       "author": null,
       "contributor": null,
       "id": "minglit_chip_group_test",
-      "community": 6,
+      "community": 15,
       "norm_label": "minglitchipgrouptest"
     },
     {
@@ -5270,7 +5270,7 @@
       "author": null,
       "contributor": null,
       "id": "minglit_chip_group",
-      "community": 6,
+      "community": 15,
       "norm_label": "minglitchipgroup"
     },
     {
@@ -5309,7 +5309,7 @@
       "author": null,
       "contributor": null,
       "id": "minglit_error_state_test",
-      "community": 6,
+      "community": 15,
       "norm_label": "mingliterrorstatetest"
     },
     {
@@ -5322,7 +5322,7 @@
       "author": null,
       "contributor": null,
       "id": "minglit_error_state",
-      "community": 6,
+      "community": 15,
       "norm_label": "mingliterrorstate"
     },
     {
@@ -5335,7 +5335,7 @@
       "author": null,
       "contributor": null,
       "id": "minglit_filter_chip_test",
-      "community": 6,
+      "community": 15,
       "norm_label": "minglitfilterchiptest"
     },
     {
@@ -5348,7 +5348,7 @@
       "author": null,
       "contributor": null,
       "id": "minglit_filter_chip",
-      "community": 6,
+      "community": 15,
       "norm_label": "minglitfilterchip"
     },
     {
@@ -5439,7 +5439,7 @@
       "author": null,
       "contributor": null,
       "id": "account_management_page_test",
-      "community": 6,
+      "community": 15,
       "norm_label": "accountmanagementpagetest"
     },
     {
@@ -5452,7 +5452,7 @@
       "author": null,
       "contributor": null,
       "id": "account_management_page",
-      "community": 6,
+      "community": 15,
       "norm_label": "accountmanagementpage"
     },
     {
@@ -5491,7 +5491,7 @@
       "author": null,
       "contributor": null,
       "id": "minglit_empty_state_test",
-      "community": 6,
+      "community": 15,
       "norm_label": "minglitemptystatetest"
     },
     {
@@ -5504,7 +5504,7 @@
       "author": null,
       "contributor": null,
       "id": "minglit_empty_state",
-      "community": 6,
+      "community": 15,
       "norm_label": "minglitemptystate"
     },
     {
@@ -5543,7 +5543,7 @@
       "author": null,
       "contributor": null,
       "id": "minglit_chip_test",
-      "community": 6,
+      "community": 15,
       "norm_label": "minglitchiptest"
     },
     {
@@ -5556,7 +5556,7 @@
       "author": null,
       "contributor": null,
       "id": "minglit_chip",
-      "community": 6,
+      "community": 15,
       "norm_label": "minglitchip"
     },
     {
@@ -5569,7 +5569,7 @@
       "author": null,
       "contributor": null,
       "id": "minglit_section_test",
-      "community": 6,
+      "community": 15,
       "norm_label": "minglitsectiontest"
     },
     {
@@ -5582,7 +5582,7 @@
       "author": null,
       "contributor": null,
       "id": "minglit_section",
-      "community": 6,
+      "community": 15,
       "norm_label": "minglitsection"
     },
     {
@@ -6305,7 +6305,7 @@
       "author": null,
       "contributor": null,
       "id": "event_feed_provider_test",
-      "community": 6,
+      "community": 15,
       "norm_label": "eventfeedprovidertest"
     },
     {
@@ -6318,7 +6318,7 @@
       "author": null,
       "contributor": null,
       "id": "event_feed_provider",
-      "community": 6,
+      "community": 15,
       "norm_label": "partnereventsprovider"
     },
     {
@@ -6553,7 +6553,7 @@
       "author": null,
       "contributor": null,
       "id": "minglit_theme_test",
-      "community": 6,
+      "community": 15,
       "norm_label": "minglitthemetest"
     },
     {
@@ -6566,7 +6566,7 @@
       "author": null,
       "contributor": null,
       "id": "minglit_colors",
-      "community": 6,
+      "community": 15,
       "norm_label": "minglitcolors"
     },
     {
@@ -6579,7 +6579,7 @@
       "author": null,
       "contributor": null,
       "id": "minglit_partner_colors",
-      "community": 6,
+      "community": 15,
       "norm_label": "minglitpartnercolors"
     },
     {
@@ -6592,7 +6592,7 @@
       "author": null,
       "contributor": null,
       "id": "minglit_spacing",
-      "community": 6,
+      "community": 15,
       "norm_label": "minglitspacing"
     },
     {
@@ -6605,7 +6605,7 @@
       "author": null,
       "contributor": null,
       "id": "minglit_radius",
-      "community": 6,
+      "community": 15,
       "norm_label": "minglitradius"
     },
     {
@@ -6618,7 +6618,7 @@
       "author": null,
       "contributor": null,
       "id": "minglit_icon_size",
-      "community": 6,
+      "community": 15,
       "norm_label": "mingliticonsize"
     },
     {
@@ -7195,7 +7195,7 @@
       "author": null,
       "contributor": null,
       "id": "party_repository_test",
-      "community": 6,
+      "community": 15,
       "norm_label": "partyrepository test"
     },
     {
@@ -7234,7 +7234,7 @@
       "author": null,
       "contributor": null,
       "id": "party_model",
-      "community": 6,
+      "community": 15,
       "norm_label": "party/location model"
     },
     {
@@ -7247,7 +7247,7 @@
       "author": null,
       "contributor": null,
       "id": "event_model",
-      "community": 6,
+      "community": 15,
       "norm_label": "event model"
     },
     {
@@ -7260,7 +7260,7 @@
       "author": null,
       "contributor": null,
       "id": "entry_group_template_model",
-      "community": 6,
+      "community": 15,
       "norm_label": "entrygrouptemplate model"
     },
     {
@@ -7964,7 +7964,7 @@
       "author": null,
       "contributor": null,
       "id": "event_model_test",
-      "community": 6,
+      "community": 15,
       "norm_label": "event model test"
     },
     {
@@ -7977,7 +7977,7 @@
       "author": null,
       "contributor": null,
       "id": "metadata_key_test",
-      "community": 6,
+      "community": 15,
       "norm_label": "metadatakey test"
     },
     {
@@ -7990,7 +7990,7 @@
       "author": null,
       "contributor": null,
       "id": "metadata_key_model",
-      "community": 6,
+      "community": 15,
       "norm_label": "metadatakey / metakeys"
     },
     {
@@ -8055,7 +8055,7 @@
       "author": null,
       "contributor": null,
       "id": "party_entry_group_test",
-      "community": 6,
+      "community": 15,
       "norm_label": "partyentrygroup model test"
     },
     {
@@ -8068,7 +8068,7 @@
       "author": null,
       "contributor": null,
       "id": "entry_group_model",
-      "community": 6,
+      "community": 15,
       "norm_label": "entrygroup model"
     },
     {
@@ -8081,7 +8081,7 @@
       "author": null,
       "contributor": null,
       "id": "social_interaction_test",
-      "community": 6,
+      "community": 15,
       "norm_label": "socialinteraction model test"
     },
     {
@@ -8120,7 +8120,7 @@
       "author": null,
       "contributor": null,
       "id": "party_model_test",
-      "community": 6,
+      "community": 15,
       "norm_label": "party/location model test"
     },
     {
@@ -8307,7 +8307,7 @@
       "author": null,
       "contributor": null,
       "id": "partner_detail_view",
-      "community": 6,
+      "community": 15,
       "norm_label": "partnerdetailview"
     },
     {
@@ -8385,7 +8385,7 @@
       "author": null,
       "contributor": null,
       "id": "add_action_card",
-      "community": 6,
+      "community": 15,
       "norm_label": "addactioncard"
     },
     {
@@ -8476,7 +8476,7 @@
       "author": null,
       "contributor": null,
       "id": "user_session_info",
-      "community": 6,
+      "community": 15,
       "norm_label": "usersessioninfo"
     },
     {
@@ -8797,7 +8797,7 @@
       "author": null,
       "contributor": null,
       "id": "minglit_social_action_chip",
-      "community": 6,
+      "community": 15,
       "norm_label": "minglitsocialactionchip"
     },
     {
@@ -8810,7 +8810,7 @@
       "author": null,
       "contributor": null,
       "id": "minglit_social_button",
-      "community": 6,
+      "community": 15,
       "norm_label": "minglitsocialbutton"
     },
     {
@@ -8989,7 +8989,7 @@
       "author": null,
       "contributor": null,
       "id": "party_detail_view",
-      "community": 6,
+      "community": 15,
       "norm_label": "partydetailview"
     },
     {
@@ -9159,7 +9159,7 @@
       "author": null,
       "contributor": null,
       "id": "dev_screen_item",
-      "community": 6,
+      "community": 15,
       "norm_label": "devscreenitem"
     },
     {
@@ -9172,7 +9172,7 @@
       "author": null,
       "contributor": null,
       "id": "dev_screen_list",
-      "community": 6,
+      "community": 15,
       "norm_label": "devscreenlist"
     },
     {
@@ -9464,7 +9464,7 @@
       "author": null,
       "contributor": null,
       "id": "splash_screen",
-      "community": 6,
+      "community": 15,
       "norm_label": "minglitsplashscreen"
     },
     {
@@ -9477,7 +9477,7 @@
       "author": null,
       "contributor": null,
       "id": "minglit_text_logo",
-      "community": 6,
+      "community": 15,
       "norm_label": "minglittextlogo"
     },
     {
@@ -10468,7 +10468,7 @@
       "author": null,
       "contributor": null,
       "id": "today_active_event_model",
-      "community": 6,
+      "community": 15,
       "norm_label": "todayactiveevent"
     },
     {
@@ -10520,7 +10520,7 @@
       "author": null,
       "contributor": null,
       "id": "report_detail_model",
-      "community": 6,
+      "community": 15,
       "norm_label": "reportdetail"
     },
     {
@@ -10533,7 +10533,7 @@
       "author": null,
       "contributor": null,
       "id": "report_reason_enum",
-      "community": 6,
+      "community": 15,
       "norm_label": "reportreason"
     },
     {
@@ -10559,7 +10559,7 @@
       "author": null,
       "contributor": null,
       "id": "partner_model",
-      "community": 6,
+      "community": 15,
       "norm_label": "partner model"
     },
     {
@@ -10598,7 +10598,7 @@
       "author": null,
       "contributor": null,
       "id": "social_target_type_enum",
-      "community": 6,
+      "community": 15,
       "norm_label": "socialtargettype"
     },
     {
@@ -10611,7 +10611,7 @@
       "author": null,
       "contributor": null,
       "id": "social_interaction_type_enum",
-      "community": 6,
+      "community": 15,
       "norm_label": "socialinteractiontype"
     },
     {
@@ -10736,7 +10736,7 @@
     {
       "label": "mds.dart",
       "file_type": "code",
-      "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-nesting/shared/packages/mds/core/lib/mds.dart",
+      "source_file": "/private/tmp/fix-1936-avatar-image/shared/packages/mds/core/lib/mds.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_nesting_shared_packages_mds_core_lib_mds_dart",
       "community": 157,
@@ -11909,7 +11909,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-nesting/shared/packages/mds/core/lib/src/ui/widgets/common/minglit_settings_group.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_nesting_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_settings_group_dart",
-      "community": 19,
+      "community": 20,
       "norm_label": "minglit_settings_group.dart"
     },
     {
@@ -11918,7 +11918,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-nesting/shared/packages/mds/core/lib/src/ui/widgets/common/minglit_settings_group.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_nesting_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_settings_group_dart_minglitsettingsgroup",
-      "community": 19,
+      "community": 20,
       "norm_label": "minglitsettingsgroup"
     },
     {
@@ -11927,7 +11927,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-nesting/shared/packages/mds/core/lib/src/ui/widgets/common/minglit_settings_group.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_nesting_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_settings_group_dart_build",
-      "community": 19,
+      "community": 20,
       "norm_label": "build"
     },
     {
@@ -11936,7 +11936,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-nesting/shared/packages/mds/core/lib/src/ui/widgets/common/minglit_settings_group.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_nesting_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_settings_group_dart_padding",
-      "community": 19,
+      "community": 20,
       "norm_label": "padding"
     },
     {
@@ -11945,7 +11945,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons/apps/mds/storybook/lib/main.dart",
       "source_location": null,
       "id": "package_mds_mds_dart",
-      "community": 19,
+      "community": 20,
       "norm_label": "package:mds/mds.dart"
     },
     {
@@ -12086,11 +12086,56 @@
     {
       "label": "package:mds/src/ui/widgets/common/minglit_image.dart",
       "file_type": "code",
-      "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-nesting/shared/packages/mds/core/lib/src/ui/widgets/common/minglit_image_carousel.dart",
+      "source_file": "/private/tmp/fix-1936-avatar-image/shared/packages/mds/core/lib/src/ui/widgets/common/minglit_avatar_image.dart",
       "source_location": null,
       "id": "package_mds_src_ui_widgets_common_minglit_image_dart",
       "community": 5,
       "norm_label": "package:mds/src/ui/widgets/common/minglit_image.dart"
+    },
+    {
+      "label": "minglit_avatar_image.dart",
+      "file_type": "code",
+      "source_file": "/private/tmp/fix-1936-avatar-image/shared/packages/mds/core/lib/src/ui/widgets/common/minglit_avatar_image.dart",
+      "source_location": null,
+      "id": "private_tmp_fix_1936_avatar_image_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_avatar_image_dart",
+      "community": 5,
+      "norm_label": "minglit_avatar_image.dart"
+    },
+    {
+      "label": "MinglitAvatarImage",
+      "file_type": "code",
+      "source_file": "/private/tmp/fix-1936-avatar-image/shared/packages/mds/core/lib/src/ui/widgets/common/minglit_avatar_image.dart",
+      "source_location": null,
+      "id": "private_tmp_fix_1936_avatar_image_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_avatar_image_dart_minglitavatarimage",
+      "community": 5,
+      "norm_label": "minglitavatarimage"
+    },
+    {
+      "label": "build",
+      "file_type": "code",
+      "source_file": "/private/tmp/fix-1936-avatar-image/shared/packages/mds/core/lib/src/ui/widgets/common/minglit_avatar_image.dart",
+      "source_location": null,
+      "id": "private_tmp_fix_1936_avatar_image_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_avatar_image_dart_build",
+      "community": 5,
+      "norm_label": "build"
+    },
+    {
+      "label": "CircleAvatar",
+      "file_type": "code",
+      "source_file": "/private/tmp/fix-1936-avatar-image/shared/packages/mds/core/lib/src/ui/widgets/common/minglit_avatar_image.dart",
+      "source_location": null,
+      "id": "private_tmp_fix_1936_avatar_image_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_avatar_image_dart_circleavatar",
+      "community": 5,
+      "norm_label": "circleavatar"
+    },
+    {
+      "label": "ClipOval",
+      "file_type": "code",
+      "source_file": "/private/tmp/fix-1936-avatar-image/shared/packages/mds/core/lib/src/ui/widgets/common/minglit_avatar_image.dart",
+      "source_location": null,
+      "id": "private_tmp_fix_1936_avatar_image_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_avatar_image_dart_clipoval",
+      "community": 5,
+      "norm_label": "clipoval"
     },
     {
       "label": "minglit_image_source_sheet.dart",
@@ -12251,7 +12296,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-nesting/shared/packages/mds/core/lib/src/ui/widgets/common/minglit_settings_tile.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_nesting_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_settings_tile_dart",
-      "community": 19,
+      "community": 20,
       "norm_label": "minglit_settings_tile.dart"
     },
     {
@@ -12260,7 +12305,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-nesting/shared/packages/mds/core/lib/src/ui/widgets/common/minglit_settings_tile.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_nesting_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_settings_tile_dart_minglitsettingstile",
-      "community": 19,
+      "community": 20,
       "norm_label": "minglitsettingstile"
     },
     {
@@ -12269,7 +12314,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-nesting/shared/packages/mds/core/lib/src/ui/widgets/common/minglit_settings_tile.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_nesting_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_settings_tile_dart_build",
-      "community": 19,
+      "community": 20,
       "norm_label": "build"
     },
     {
@@ -12278,7 +12323,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-nesting/shared/packages/mds/core/lib/src/ui/widgets/common/minglit_settings_tile.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_nesting_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_settings_tile_dart_inkwell",
-      "community": 19,
+      "community": 20,
       "norm_label": "inkwell"
     },
     {
@@ -12287,7 +12332,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-nesting/shared/packages/mds/core/lib/src/ui/widgets/common/minglit_settings_tile.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_nesting_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_settings_tile_dart_sizedbox",
-      "community": 19,
+      "community": 20,
       "norm_label": "sizedbox"
     },
     {
@@ -18269,7 +18314,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons/apps/mds/storybook/lib/main.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_apps_mds_storybook_lib_main_dart",
-      "community": 19,
+      "community": 20,
       "norm_label": "main.dart"
     },
     {
@@ -18278,7 +18323,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons/apps/mds/storybook/lib/main.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_apps_mds_storybook_lib_main_dart_mdsstorybookapp",
-      "community": 19,
+      "community": 20,
       "norm_label": "mdsstorybookapp"
     },
     {
@@ -18287,7 +18332,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons/apps/mds/storybook/lib/main.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_apps_mds_storybook_lib_main_dart_colorsstory",
-      "community": 19,
+      "community": 20,
       "norm_label": "_colorsstory"
     },
     {
@@ -18296,7 +18341,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons/apps/mds/storybook/lib/main.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_apps_mds_storybook_lib_main_dart_darkcolorsstory",
-      "community": 19,
+      "community": 20,
       "norm_label": "_darkcolorsstory"
     },
     {
@@ -18305,7 +18350,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons/apps/mds/storybook/lib/main.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_apps_mds_storybook_lib_main_dart_colorswatch",
-      "community": 19,
+      "community": 20,
       "norm_label": "_colorswatch"
     },
     {
@@ -18314,7 +18359,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons/apps/mds/storybook/lib/main.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_apps_mds_storybook_lib_main_dart_spacingstory",
-      "community": 19,
+      "community": 20,
       "norm_label": "_spacingstory"
     },
     {
@@ -18323,7 +18368,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons/apps/mds/storybook/lib/main.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_apps_mds_storybook_lib_main_dart_radiusstory",
-      "community": 19,
+      "community": 20,
       "norm_label": "_radiusstory"
     },
     {
@@ -18332,7 +18377,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons/apps/mds/storybook/lib/main.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_apps_mds_storybook_lib_main_dart_typographystory",
-      "community": 19,
+      "community": 20,
       "norm_label": "_typographystory"
     },
     {
@@ -18341,7 +18386,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons/apps/mds/storybook/lib/main.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_apps_mds_storybook_lib_main_dart_filterchipstory",
-      "community": 19,
+      "community": 20,
       "norm_label": "_filterchipstory"
     },
     {
@@ -18350,7 +18395,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons/apps/mds/storybook/lib/main.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_apps_mds_storybook_lib_main_dart_filterchipstorystate",
-      "community": 19,
+      "community": 20,
       "norm_label": "_filterchipstorystate"
     },
     {
@@ -18359,7 +18404,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons/apps/mds/storybook/lib/main.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_apps_mds_storybook_lib_main_dart_main",
-      "community": 19,
+      "community": 20,
       "norm_label": "main"
     },
     {
@@ -18368,7 +18413,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons/apps/mds/storybook/lib/main.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_apps_mds_storybook_lib_main_dart_build",
-      "community": 19,
+      "community": 20,
       "norm_label": "build"
     },
     {
@@ -18377,7 +18422,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons/apps/mds/storybook/lib/main.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_apps_mds_storybook_lib_main_dart_sizedbox",
-      "community": 19,
+      "community": 20,
       "norm_label": "sizedbox"
     },
     {
@@ -18386,7 +18431,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons/apps/mds/storybook/lib/main.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_apps_mds_storybook_lib_main_dart_minglitbutton",
-      "community": 19,
+      "community": 20,
       "norm_label": "minglitbutton"
     },
     {
@@ -18395,7 +18440,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons/apps/mds/storybook/lib/main.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_apps_mds_storybook_lib_main_dart_minglitsection",
-      "community": 19,
+      "community": 20,
       "norm_label": "minglitsection"
     },
     {
@@ -18404,7 +18449,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons/apps/mds/storybook/lib/main.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_apps_mds_storybook_lib_main_dart_text",
-      "community": 19,
+      "community": 20,
       "norm_label": "text"
     },
     {
@@ -18413,7 +18458,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons/apps/mds/storybook/lib/main.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_apps_mds_storybook_lib_main_dart_minglitlisttile",
-      "community": 19,
+      "community": 20,
       "norm_label": "minglitlisttile"
     },
     {
@@ -18422,7 +18467,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons/apps/mds/storybook/lib/main.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_apps_mds_storybook_lib_main_dart_minglitskeleton",
-      "community": 19,
+      "community": 20,
       "norm_label": "minglitskeleton"
     },
     {
@@ -18431,7 +18476,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons/apps/mds/storybook/lib/main.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_apps_mds_storybook_lib_main_dart_minglitlinearprogressindicator",
-      "community": 19,
+      "community": 20,
       "norm_label": "minglitlinearprogressindicator"
     },
     {
@@ -18440,7 +18485,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons/apps/mds/storybook/lib/main.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_apps_mds_storybook_lib_main_dart_spacer",
-      "community": 19,
+      "community": 20,
       "norm_label": "spacer"
     },
     {
@@ -18449,7 +18494,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons/apps/mds/storybook/lib/main.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_apps_mds_storybook_lib_main_dart_singlechildscrollview",
-      "community": 19,
+      "community": 20,
       "norm_label": "singlechildscrollview"
     },
     {
@@ -18458,7 +18503,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons/apps/mds/storybook/lib/main.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_apps_mds_storybook_lib_main_dart_listview",
-      "community": 19,
+      "community": 20,
       "norm_label": "listview"
     },
     {
@@ -18467,7 +18512,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons/apps/mds/storybook/lib/main.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_apps_mds_storybook_lib_main_dart_padding",
-      "community": 19,
+      "community": 20,
       "norm_label": "padding"
     },
     {
@@ -18476,7 +18521,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons/apps/mds/storybook/lib/main.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_apps_mds_storybook_lib_main_dart_wrap",
-      "community": 19,
+      "community": 20,
       "norm_label": "wrap"
     },
     {
@@ -18485,7 +18530,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons/apps/mds/storybook/lib/main.dart",
       "source_location": null,
       "id": "package_widgetbook_widgetbook_dart",
-      "community": 19,
+      "community": 20,
       "norm_label": "package:widgetbook/widgetbook.dart"
     },
     {
@@ -18494,7 +18539,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons/apps/mds/storybook/lib/main.dart",
       "source_location": null,
       "id": "fixtures_mock_events_dart",
-      "community": 19,
+      "community": 20,
       "norm_label": "fixtures/mock_events.dart"
     },
     {
@@ -19252,7 +19297,7 @@
     {
       "label": "HomePage",
       "file_type": "code",
-      "source_file": "/Users/mark/workspace/minglit-graphify-init/apps/app_user/lib/src/features/home/home_page.dart",
+      "source_file": "/Users/mark/workspace/minglit-graphify-init/apps/app_user/test/integration/home_navigation_test.dart",
       "source_location": null,
       "source_url": null,
       "captured_at": null,
@@ -24850,9 +24895,18 @@
       "norm_label": "html_stub (dart:html stub)"
     },
     {
+      "label": "event_detail_content.dart",
+      "file_type": "code",
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "id": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "community": 33,
+      "norm_label": "event_detail_content.dart"
+    },
+    {
       "label": "_EventDetailContent",
       "file_type": "code",
-      "source_file": "/Users/mark/workspace/minglit-graphify-init/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
       "source_location": null,
       "source_url": null,
       "captured_at": null,
@@ -24861,6 +24915,150 @@
       "id": "event_detail_content",
       "community": 1,
       "norm_label": "_eventdetailcontent"
+    },
+    {
+      "label": "_EventDetailContentState",
+      "file_type": "code",
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "id": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_eventdetailcontentstate",
+      "community": 33,
+      "norm_label": "_eventdetailcontentstate"
+    },
+    {
+      "label": "_SliverTabBarDelegate",
+      "file_type": "code",
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "id": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_slivertabbardelegate",
+      "community": 33,
+      "norm_label": "_slivertabbardelegate"
+    },
+    {
+      "label": "initState",
+      "file_type": "code",
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "id": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_initstate",
+      "community": 33,
+      "norm_label": "initstate"
+    },
+    {
+      "label": "dispose",
+      "file_type": "code",
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "id": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_dispose",
+      "community": 33,
+      "norm_label": "dispose"
+    },
+    {
+      "label": "_onScroll",
+      "file_type": "code",
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "id": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_onscroll",
+      "community": 33,
+      "norm_label": "_onscroll"
+    },
+    {
+      "label": "_scrollToSection",
+      "file_type": "code",
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "id": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_scrolltosection",
+      "community": 33,
+      "norm_label": "_scrolltosection"
+    },
+    {
+      "label": "build",
+      "file_type": "code",
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "id": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_build",
+      "community": 33,
+      "norm_label": "build"
+    },
+    {
+      "label": "Stack",
+      "file_type": "code",
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "id": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_stack",
+      "community": 33,
+      "norm_label": "stack"
+    },
+    {
+      "label": "SnackBar",
+      "file_type": "code",
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "id": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_snackbar",
+      "community": 33,
+      "norm_label": "snackbar"
+    },
+    {
+      "label": "showReportBottomSheet",
+      "file_type": "code",
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "id": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_showreportbottomsheet",
+      "community": 33,
+      "norm_label": "showreportbottomsheet"
+    },
+    {
+      "label": "PopupMenuItem",
+      "file_type": "code",
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "id": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_popupmenuitem",
+      "community": 33,
+      "norm_label": "popupmenuitem"
+    },
+    {
+      "label": "SizedBox",
+      "file_type": "code",
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "id": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_sizedbox",
+      "community": 33,
+      "norm_label": "sizedbox"
+    },
+    {
+      "label": "Function",
+      "file_type": "code",
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "id": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_function",
+      "community": 33,
+      "norm_label": "function"
+    },
+    {
+      "label": "ColoredBox",
+      "file_type": "code",
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "id": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_coloredbox",
+      "community": 33,
+      "norm_label": "coloredbox"
+    },
+    {
+      "label": "Divider",
+      "file_type": "code",
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "id": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_divider",
+      "community": 33,
+      "norm_label": "divider"
+    },
+    {
+      "label": "shouldRebuild",
+      "file_type": "code",
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "id": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_shouldrebuild",
+      "community": 33,
+      "norm_label": "shouldrebuild"
     },
     {
       "label": "_VerificationSection",
@@ -26030,7 +26228,7 @@
       "author": null,
       "contributor": null,
       "id": "partner_golden_test_helpers",
-      "community": 6,
+      "community": 15,
       "norm_label": "partnergoldentesthelpers"
     },
     {
@@ -27018,7 +27216,7 @@
       "author": null,
       "contributor": null,
       "id": "partner_dashboard_controller_test",
-      "community": 8,
+      "community": 4,
       "norm_label": "partnerdashboardcontroller test"
     },
     {
@@ -54214,6 +54412,18 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
+      "source_file": "/private/tmp/fix-1936-avatar-image/shared/packages/mds/core/lib/src/ui/widgets/common/minglit_avatar_image.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "private_tmp_fix_1936_avatar_image_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_avatar_image_dart",
+      "_tgt": "package_flutter_material_dart",
+      "source": "package_flutter_material_dart",
+      "target": "private_tmp_fix_1936_avatar_image_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_avatar_image_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-nesting/shared/packages/mds/core/lib/src/ui/widgets/common/minglit_image_source_sheet.dart",
       "source_location": null,
       "weight": 1.0,
@@ -56849,6 +57059,66 @@
       "_tgt": "package_mds_src_ui_widgets_common_minglit_image_dart",
       "source": "users_mark_workspace_minglit_claude_worktrees_mds_nesting_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_image_carousel_dart",
       "target": "package_mds_src_ui_widgets_common_minglit_image_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/private/tmp/fix-1936-avatar-image/shared/packages/mds/core/lib/src/ui/widgets/common/minglit_avatar_image.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "private_tmp_fix_1936_avatar_image_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_avatar_image_dart",
+      "_tgt": "package_mds_src_ui_widgets_common_minglit_image_dart",
+      "source": "package_mds_src_ui_widgets_common_minglit_image_dart",
+      "target": "private_tmp_fix_1936_avatar_image_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_avatar_image_dart"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/private/tmp/fix-1936-avatar-image/shared/packages/mds/core/lib/src/ui/widgets/common/minglit_avatar_image.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "private_tmp_fix_1936_avatar_image_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_avatar_image_dart",
+      "_tgt": "private_tmp_fix_1936_avatar_image_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_avatar_image_dart_minglitavatarimage",
+      "source": "private_tmp_fix_1936_avatar_image_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_avatar_image_dart",
+      "target": "private_tmp_fix_1936_avatar_image_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_avatar_image_dart_minglitavatarimage"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/private/tmp/fix-1936-avatar-image/shared/packages/mds/core/lib/src/ui/widgets/common/minglit_avatar_image.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "private_tmp_fix_1936_avatar_image_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_avatar_image_dart",
+      "_tgt": "private_tmp_fix_1936_avatar_image_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_avatar_image_dart_build",
+      "source": "private_tmp_fix_1936_avatar_image_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_avatar_image_dart",
+      "target": "private_tmp_fix_1936_avatar_image_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_avatar_image_dart_build"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/private/tmp/fix-1936-avatar-image/shared/packages/mds/core/lib/src/ui/widgets/common/minglit_avatar_image.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "private_tmp_fix_1936_avatar_image_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_avatar_image_dart",
+      "_tgt": "private_tmp_fix_1936_avatar_image_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_avatar_image_dart_circleavatar",
+      "source": "private_tmp_fix_1936_avatar_image_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_avatar_image_dart",
+      "target": "private_tmp_fix_1936_avatar_image_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_avatar_image_dart_circleavatar"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/private/tmp/fix-1936-avatar-image/shared/packages/mds/core/lib/src/ui/widgets/common/minglit_avatar_image.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "private_tmp_fix_1936_avatar_image_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_avatar_image_dart",
+      "_tgt": "private_tmp_fix_1936_avatar_image_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_avatar_image_dart_clipoval",
+      "source": "private_tmp_fix_1936_avatar_image_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_avatar_image_dart",
+      "target": "private_tmp_fix_1936_avatar_image_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_avatar_image_dart_clipoval"
     },
     {
       "relation": "defines",
@@ -70414,18 +70684,6 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "/Users/mark/workspace/minglit-graphify-init/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "event_detail_content",
-      "_tgt": "event_detail_controller",
-      "source": "event_detail_controller",
-      "target": "event_detail_content"
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "/Users/mark/workspace/minglit-graphify-init/apps/app_partner/lib/src/features/party/event/detail/event_detail_page.dart",
       "source_location": null,
       "weight": 1.0,
@@ -70829,18 +71087,6 @@
       "_tgt": "event_detail_page",
       "source": "event_detail_page",
       "target": "event_detail_scenarios"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "/Users/mark/workspace/minglit-graphify-init/apps/app_user/lib/src/features/event/detail/event_detail_page.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "event_detail_page",
-      "_tgt": "event_detail_content",
-      "source": "event_detail_page",
-      "target": "event_detail_content"
     },
     {
       "relation": "references",
@@ -79567,30 +79813,6 @@
       "target": "event_bottom_ticket_bar"
     },
     {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "/Users/mark/workspace/minglit-graphify-init/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "event_detail_content",
-      "_tgt": "event_coordinator",
-      "source": "event_coordinator",
-      "target": "event_detail_content"
-    },
-    {
-      "relation": "references",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "/Users/mark/workspace/minglit-graphify-init/apps/app_user/lib/src/features/event/detail/report_bottom_sheet.dart",
-      "source_location": null,
-      "weight": 0.8,
-      "_src": "report_bottom_sheet",
-      "_tgt": "event_detail_content",
-      "source": "report_bottom_sheet",
-      "target": "event_detail_content"
-    },
-    {
       "relation": "references",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
@@ -79603,16 +79825,208 @@
       "target": "open_in_app_dialog"
     },
     {
-      "relation": "calls",
+      "relation": "defines",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "/Users/mark/workspace/minglit-graphify-init/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
       "source_location": null,
       "weight": 1.0,
-      "_src": "event_detail_content",
-      "_tgt": "open_in_app_dialog",
-      "source": "event_detail_content",
-      "target": "open_in_app_dialog"
+      "_src": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "_tgt": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_eventdetailcontent",
+      "source": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "target": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_eventdetailcontent"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "_tgt": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_eventdetailcontentstate",
+      "source": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "target": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_eventdetailcontentstate"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "_tgt": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_slivertabbardelegate",
+      "source": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "target": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_slivertabbardelegate"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "_tgt": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_initstate",
+      "source": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "target": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_initstate"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "_tgt": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_dispose",
+      "source": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "target": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_dispose"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "_tgt": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_onscroll",
+      "source": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "target": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_onscroll"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "_tgt": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_scrolltosection",
+      "source": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "target": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_scrolltosection"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "_tgt": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_build",
+      "source": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "target": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_build"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "_tgt": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_stack",
+      "source": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "target": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_stack"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "_tgt": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_snackbar",
+      "source": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "target": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_snackbar"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "_tgt": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_showreportbottomsheet",
+      "source": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "target": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_showreportbottomsheet"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "_tgt": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_popupmenuitem",
+      "source": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "target": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_popupmenuitem"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "_tgt": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_sizedbox",
+      "source": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "target": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_sizedbox"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "_tgt": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_function",
+      "source": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "target": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_function"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "_tgt": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_coloredbox",
+      "source": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "target": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_coloredbox"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "_tgt": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_divider",
+      "source": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "target": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_divider"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "_tgt": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_shouldrebuild",
+      "source": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "target": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_shouldrebuild"
     },
     {
       "relation": "calls",

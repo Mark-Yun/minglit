@@ -23,6 +23,7 @@ export 'src/ui/widgets/common/minglit_empty_state.dart';
 export 'src/ui/widgets/common/minglit_error_state.dart';
 export 'src/ui/widgets/common/minglit_filter_chip.dart';
 export 'src/ui/widgets/common/minglit_horizontal_scroll_group.dart';
+export 'src/ui/widgets/common/minglit_avatar_image.dart';
 export 'src/ui/widgets/common/minglit_image.dart';
 export 'src/ui/widgets/common/minglit_image_carousel.dart';
 export 'src/ui/widgets/common/minglit_image_source_sheet.dart';
