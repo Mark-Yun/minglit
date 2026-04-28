@@ -1,6 +1,3 @@
-// Fix #1925: partnerContact (phone number) must be masked in ResultsContent UI.
-// Personal phone numbers are sensitive PII under 개인정보보호법 §24.
-
 import 'package:app_user/src/common/widgets/match_results_content.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -37,6 +34,8 @@ void main() {
     );
   }
 
+  // Fix #1925: partnerContact (phone number) must be masked in ResultsContent UI.
+  // Personal phone numbers are sensitive PII under 개인정보보호법 §24.
   group('MatchResultsContent — phone masking (Fix #1925)', () {
     testWidgets('partnerContact is masked — raw phone not shown', (
       tester,

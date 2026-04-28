@@ -202,8 +202,9 @@ String _maskPhone(String phone) {
   if (local.length == 10) {
     return '${local.substring(0, 3)}-***-${local.substring(6)}';
   }
-  // Fallback: mask all but last 4
-  return '***-****-${local.length >= 4 ? local.substring(local.length - 4) : '****'}';
+  // Fallback: never expose full input — short numbers (<=4 digits) are fully masked
+  if (local.length <= 4) return '***-****-****';
+  return '***-****-${local.substring(local.length - 4)}';
 }
 
 class _DragHandle extends StatelessWidget {
