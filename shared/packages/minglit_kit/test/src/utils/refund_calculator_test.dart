@@ -104,7 +104,7 @@ void main() {
       final paidAt = now.subtract(
         const Duration(hours: 2, milliseconds: 1),
       );
-      final eventStart = now.add(const Duration(days: 3)); // inside cutoff
+      final eventStart = now.add(const Duration(days: 3)); // outside cutoff
       final result = RefundCalculator.calculate(
         eventStartTime: eventStart,
         paymentAmount: amount,
