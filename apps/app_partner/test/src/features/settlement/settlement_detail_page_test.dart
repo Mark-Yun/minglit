@@ -358,6 +358,52 @@ void main() {
       retryCompleter.complete();
       await tester.pumpAndSettle();
     });
+
+    testWidgets('double-tap fires only one retryPayout RPC (synchronous guard)', (
+      tester,
+    ) async {
+      final retryCompleter = Completer<void>();
+      final fakeCoordinator = _SlowSettlementCoordinator(retryCompleter.future);
+
+      final detail = _makeDetail(
+        status: 'FAILED',
+        retryable: true,
+        payoutId: 'payout-1',
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            currentPartnerInfoProvider.overrideWith(
+              (ref) async =>
+                  const Partner(id: 'partner-1', name: 'Test Partner'),
+            ),
+            settlementCoordinatorProvider.overrideWith(
+              () => fakeCoordinator,
+            ),
+          ],
+          child: MaterialApp(
+            home: Scaffold(body: ActionButtons(detail: detail)),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      // Tap twice without pumping — second tap arrives before rebuild applies
+      // onPressed: null, which is exactly the race the synchronous guard closes.
+      await tester.tap(find.text('재지급 요청'));
+      await tester.tap(find.text('재지급 요청'));
+      await tester.pump();
+
+      expect(
+        fakeCoordinator.callCount,
+        1,
+        reason: 'Synchronous _isRetrying guard must drop the second tap',
+      );
+
+      retryCompleter.complete();
+      await tester.pumpAndSettle();
+    });
   });
 
   group('AmountBreakdown', () {
@@ -381,6 +427,7 @@ void main() {
 class _SlowSettlementCoordinator extends SettlementCoordinator {
   _SlowSettlementCoordinator(this._future);
   final Future<void> _future;
+  int callCount = 0;
 
   @override
   Future<void> retryPayout(
@@ -388,6 +435,7 @@ class _SlowSettlementCoordinator extends SettlementCoordinator {
     required String payoutId,
     required String partnerId,
   }) async {
+    callCount++;
     await _future;
   }
 }

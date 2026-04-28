@@ -322,6 +322,9 @@ class _ActionButtonsState extends ConsumerState<ActionButtons> {
   }
 
   Future<void> _retryPayout() async {
+    // Synchronous guard: setState → rebuild takes one frame, so rapid double-taps
+    // can invoke this before onPressed becomes null. This stops the duplicate RPC.
+    if (_isRetrying) return;
     if (widget.detail.payoutId == null) return;
     setState(() => _isRetrying = true);
     try {
