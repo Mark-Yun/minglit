@@ -12,6 +12,7 @@ import {
   type PropDef,
   type GuidelineEntry,
   type TokenUsage,
+  type PlacementSpec,
 } from '@/lib/components';
 import MinglitButtonSpec, {
   GUIDELINE_RECIPES as MINGLIT_BUTTON_RECIPES,
@@ -178,6 +179,16 @@ function ComponentSection({ c }: { c: ComponentSpec }) {
         </div>
       )}
 
+      {/* Placement — where on a screen + spacing to neighbors + compositions. */}
+      {c.placement && (
+        <Section title="Placement">
+          <PlacementBlock
+            placement={c.placement}
+            recipes={inlineSpec?.recipes}
+          />
+        </Section>
+      )}
+
       {/* Tokens — table when entries are TokenUsage, chip list otherwise. */}
       {c.tokens && c.tokens.length > 0 && (
         <Section title="Tokens">
@@ -327,6 +338,127 @@ function ChipList({
           {p}
         </code>
       ))}
+    </div>
+  );
+}
+
+function PlacementBlock({
+  placement,
+  recipes,
+}: {
+  placement: PlacementSpec;
+  recipes?: Record<string, ComponentType>;
+}) {
+  return (
+    <div className="flex flex-col" style={{ gap: 'var(--spacing-medium)' }}>
+      {/* Where */}
+      <div>
+        <p
+          className="mds-text-caption-tiny font-bold uppercase"
+          style={{
+            letterSpacing: '0.5px',
+            color: 'var(--color-text-secondary)',
+            marginBottom: 'var(--spacing-xsmall)',
+          }}
+        >
+          Where on a screen
+        </p>
+        <ul
+          className="mds-text-body list-disc pl-5"
+          style={{ color: 'var(--color-text-primary)' }}
+        >
+          {placement.where.map((w) => (
+            <li key={w} dangerouslySetInnerHTML={{ __html: w.replace(/`([^`]+)`/g, '<code>$1</code>') }} />
+          ))}
+        </ul>
+      </div>
+
+      {/* Spacing relations */}
+      {placement.spacing && placement.spacing.length > 0 && (
+        <div>
+          <p
+            className="mds-text-caption-tiny font-bold uppercase"
+            style={{
+              letterSpacing: '0.5px',
+              color: 'var(--color-text-secondary)',
+              marginBottom: 'var(--spacing-xsmall)',
+            }}
+          >
+            Spacing to neighbors
+          </p>
+          <table className="mds-spec__tokens-table">
+            <thead>
+              <tr>
+                <th style={{ width: 200 }}>Neighbor</th>
+                <th style={{ width: 200 }}>Gap</th>
+                <th>Reason</th>
+              </tr>
+            </thead>
+            <tbody>
+              {placement.spacing.map((s) => (
+                <tr key={s.neighbor}>
+                  <td style={{ color: 'var(--color-text-primary)' }}>{s.neighbor}</td>
+                  <td><code>{s.gap}</code></td>
+                  <td style={{ color: 'var(--color-text-secondary)' }}>{s.note ?? ''}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Compositions */}
+      {placement.compositions && placement.compositions.length > 0 && (
+        <div>
+          <p
+            className="mds-text-caption-tiny font-bold uppercase"
+            style={{
+              letterSpacing: '0.5px',
+              color: 'var(--color-text-secondary)',
+              marginBottom: 'var(--spacing-xsmall)',
+            }}
+          >
+            Common compositions
+          </p>
+          <div className="flex flex-col" style={{ gap: 'var(--spacing-sm)' }}>
+            {placement.compositions.map((comp) => {
+              const Recipe = comp.recipeKey ? recipes?.[comp.recipeKey] : undefined;
+              return (
+                <div
+                  key={comp.label}
+                  className="flex items-center flex-wrap"
+                  style={{ gap: 'var(--spacing-medium)' }}
+                >
+                  <div style={{ flex: '1 1 240px', minWidth: 240 }}>
+                    <p
+                      className="mds-text-body"
+                      style={{ color: 'var(--color-text-primary)', fontWeight: 600 }}
+                    >
+                      {comp.label}
+                    </p>
+                    {comp.description && (
+                      <p
+                        className="mds-text-caption"
+                        style={{ color: 'var(--color-text-secondary)' }}
+                      >
+                        {comp.description}
+                      </p>
+                    )}
+                  </div>
+                  {Recipe && (
+                    <div
+                      className="flex items-center"
+                      style={{ gap: 'var(--spacing-xsmall)', flex: '0 0 auto' }}
+                    >
+                      <Recipe />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

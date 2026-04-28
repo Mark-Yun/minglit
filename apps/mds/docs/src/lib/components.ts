@@ -88,6 +88,8 @@ export interface ComponentSpec {
   guidelines?: Array<string | GuidelineEntry>;
   /** Copy-paste Dart usage example (rendered as code block). */
   dartUsage?: string;
+  /** Where this component lives on a screen + spacing relations. */
+  placement?: PlacementSpec;
   /**
    * Path under /public/specs/components/ to a static HTML design spec
    * (visual mockup with spec-mode annotations). Optional — not all
@@ -116,6 +118,20 @@ export interface TokenUsage {
 
 export function isTokenUsage(t: string | TokenUsage): t is TokenUsage {
   return typeof t === 'object' && t !== null && 'name' in t && 'where' in t;
+}
+
+/** Placement guidance — where this component sits on a screen and how
+ *  it spaces against neighbours. Bridges between scaffold-level layout
+ *  (/foundations/layout) and component-level visual spec. */
+export interface PlacementSpec {
+  /** Where this component typically lives. Free-form descriptions, e.g.
+   *  "Bottom CTA", "Inline in form", "AppBar trailing slot". */
+  where: string[];
+  /** Spacing relations to common neighbours. */
+  spacing?: Array<{ neighbor: string; gap: string; note?: string }>;
+  /** Common compositions with other components. recipeKey looks up an
+   *  inline preview in the spec module's GUIDELINE_RECIPES. */
+  compositions?: Array<{ label: string; description?: string; recipeKey?: string }>;
 }
 
 export const MDS_COMPONENTS: ComponentSpec[] = [
@@ -181,6 +197,25 @@ MinglitButton.text(
   onPressed: () => viewMore(),
 )`,
     visualSpec: '/specs/components/minglit_button.html',
+    placement: {
+      where: [
+        'Bottom CTA — `Detail + Bottom CTA` 스캐폴드의 하단, expand=true 풀폭.',
+        'Form action — `Form + Bottom CTA` 스캐폴드의 마지막 필드 아래.',
+        'Dialog action — `Centered dialog`의 액션 row, secondary와 페어로.',
+        'Inline (text variant) — 카드 안 인라인 / AppBar trailing 슬롯.',
+      ],
+      spacing: [
+        { neighbor: '바로 위 form 필드',          gap: 'spacing-large (24px)',     note: '입력과 액션의 시각적 분리' },
+        { neighbor: '같은 액션 row의 sibling 버튼', gap: 'spacing-small (8px)',      note: 'cancel + primary 페어' },
+        { neighbor: '바로 위 섹션 본문',          gap: 'spacing-medium (16px)',    note: '버튼은 자기 섹션의 마지막 요소' },
+        { neighbor: '화면 좌/우 가장자리 (expand=true)', gap: 'spacing-screen-edge (16px)' },
+      ],
+      compositions: [
+        { label: 'Cancel + Primary pair',  description: '폼 액션 row의 표준 — 좌측 cancel, 우측 primary.', recipeKey: 'do-single-primary' },
+        { label: 'Destructive + Cancel pair', description: 'destructive를 단독으로 두지 않는 안전 패턴.',     recipeKey: 'do-destructive-pair' },
+        { label: 'Loading async',            description: '비동기 액션엔 isLoading으로 더블 탭 차단.',       recipeKey: 'do-loading-async' },
+      ],
+    },
   },
   {
     name: 'MinglitChip',
