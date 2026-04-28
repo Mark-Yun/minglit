@@ -533,6 +533,60 @@ Deno.test({
 });
 
 Deno.test({
+  name: "notification-worker §50 ①: consent DB error does not delete message (retryable)",
+  fn: async () => {
+  const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+
+  const stubs = [
+    stub(WorkerUtils.prototype, "isProcessed", async () => false),
+    stub(WorkerUtils.prototype, "markProcessed", async () => {}),
+    stub(WorkerUtils.prototype, "moveToDLQ", async () => {}),
+    stub(WorkerUtils.prototype, "logTimeLag", () => {}),
+  ];
+
+  const { fetchMock, calls } = createFetchMock([
+    {
+      matcher: (req) => req.url.includes("/rest/v1/rpc/pgmq_read"),
+      handler: () => jsonResponse([mockMarketingNotificationMessage]),
+    },
+    {
+      // Simulate transient DB error on user_consents lookup
+      matcher: (req) => req.url.includes("/rest/v1/user_consents"),
+      handler: () => new Response(
+        JSON.stringify({ message: "connection timeout", code: "08006", details: null, hint: null }),
+        { status: 500, headers: { "Content-Type": "application/json" } }
+      ),
+    },
+  ]);
+
+  try {
+    await withEnv(
+      {
+        SUPABASE_URL: "https://supabase.test",
+        SUPABASE_SERVICE_ROLE_KEY: "service-key",
+        FIREBASE_SERVICE_ACCOUNT: firebaseServiceAccountJson,
+      },
+      async () => {
+        await withMockedFetch(fetchMock, async () => {
+          await withNoIntervals(async () => {
+            await handler(new Request("http://localhost", { headers: { "Authorization": "Bearer service-key" } }));
+          });
+        });
+      },
+    );
+  } finally {
+    // pgmq_delete must NOT be called — message stays in queue for PGMQ VT retry
+    const deleteCall = calls.find((c) => c.url.includes("/rest/v1/rpc/pgmq_delete"));
+    assertEquals(deleteCall, undefined);
+    // FCM must NOT be called
+    const fcmCall = calls.find((c) => c.url.includes("fcm.googleapis.com"));
+    assertEquals(fcmCall, undefined);
+    stubs.forEach((s) => s.restore());
+  }
+  },
+});
+
+Deno.test({
   name: "notification-worker §50: service category bypasses all guards",
   fn: async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));

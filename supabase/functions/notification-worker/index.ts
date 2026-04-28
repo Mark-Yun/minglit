@@ -376,13 +376,17 @@ Deno.serve(withHandler(async (req) => {
         // §50 Marketing Notification Guards (정보통신망법 §50 준수)
         if (category === 'marketing') {
           // Guard 1 — §50 ①: 수신 동의 미확인 시 drop (3천만원 이하 과태료)
-          const { data: consent } = await supabase
+          const { data: consent, error: consentError } = await supabase
             .from('user_consents')
             .select('id')
             .eq('user_id', userId)
             .eq('consent_key', 'marketing_consent')
             .is('withdrawn_at', null)
             .maybeSingle();
+          if (consentError) {
+            log({ function: FN, level: 'error', message: 'marketing_consent_query_error', metadata: { userId, traceId, error: consentError } });
+            throw consentError;
+          }
           if (!consent) {
             log({ function: FN, level: 'info', message: 'marketing_consent_missing_drop', metadata: { userId, traceId } });
             await utils.markProcessed(traceId);
