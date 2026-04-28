@@ -106,8 +106,9 @@ class EventNowBarStateNotifier extends _$EventNowBarStateNotifier {
     }
 
     // RESULTS: myMatchesProvider has results (including empty list means
-    // matching round completed). ref.read avoids creating a second subscription
-    // here — reactivity is handled by ref.watch in build() above.
+    // matching round completed). ref.read avoids creating a subscription here —
+    // this notifier rebuilds only when todayActiveEventsProvider is invalidated
+    // externally (via EventRealtime or polling).
     try {
       final matches = await ref.read(myMatchesProvider(event.id).future);
       if (matches.isNotEmpty) {
@@ -122,7 +123,7 @@ class EventNowBarStateNotifier extends _$EventNowBarStateNotifier {
     }
 
     // MATCHING: matchCandidatesProvider returns non-empty list.
-    // ref.read avoids a second subscription — see comment above.
+    // ref.read avoids a subscription — see comment above.
     try {
       final candidates = await ref.read(
         matchCandidatesProvider(event.id).future,
