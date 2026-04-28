@@ -248,7 +248,7 @@ void main() {
             ),
             // Fix #2022: prevent EventRealtime from touching Supabase in tests
             eventRealtimeProvider('active_event').overrideWith(
-              () => _NoOpEventRealtime(),
+              _NoOpEventRealtime.new,
             ),
           ],
         ),
@@ -288,7 +288,7 @@ void main() {
             ),
             // Fix #2022: prevent EventRealtime from touching Supabase in tests
             eventRealtimeProvider('active_event').overrideWith(
-              () => _NoOpEventRealtime(),
+              _NoOpEventRealtime.new,
             ),
           ],
         ),
@@ -369,7 +369,7 @@ void main() {
             ),
             // Fix #2022: prevent EventRealtime from touching Supabase in tests
             eventRealtimeProvider('active_event').overrideWith(
-              () => _NoOpEventRealtime(),
+              _NoOpEventRealtime.new,
             ),
           ],
         ),

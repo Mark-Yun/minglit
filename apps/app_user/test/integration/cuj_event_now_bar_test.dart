@@ -79,7 +79,7 @@ void main() {
         // in integration tests where Supabase is not initialized.
         if (eventList.isNotEmpty)
           eventRealtimeProvider(eventList.first.event.id).overrideWith(
-            () => _NoOpEventRealtime(),
+            _NoOpEventRealtime.new,
           ),
         // Phase 1: QR 토큰 프로바이더 — null 반환으로 에러 위젯 폴백
         if (state == EventNowBarState.checkInReady ||
