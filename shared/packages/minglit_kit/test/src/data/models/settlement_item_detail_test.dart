@@ -366,5 +366,51 @@ void main() {
       expect(json['payout_id'], isNull);
       expect(json['settlement_period_start'], isNull);
     });
+
+    // Fix #1926: Supabase may return Postgres numeric columns as double.
+    // Bare `as int` casts throw TypeError; use safe _toInt coercion instead.
+    test(
+      'Fix #1926: parses financial fields when Supabase returns them as double',
+      () {
+        final result = SettlementItemDetail.fromJson({
+          ...baseItemJson(),
+          'gross_amount': 100000.0,
+          'platform_fee_amount': 5000.0,
+          'pg_fee_amount': 1500.0,
+          'vat_amount': 500.0,
+          'net_amount': 93000.0,
+        });
+        expect(result.grossAmount, 100000);
+        expect(result.platformFeeAmount, 5000);
+        expect(result.pgFeeAmount, 1500);
+        expect(result.vatAmount, 500);
+        expect(result.netAmount, 93000);
+      },
+    );
+  });
+
+  // Fix #1926: PayoutSummary and AdjustmentItemModel safe coercion tests.
+  group('PayoutSummary.fromJson — Fix #1926 numeric coercion', () {
+    test('totalNetAmount parses double from Supabase numeric column', () {
+      final result = PayoutSummary.fromJson({
+        'id': 'payout-1',
+        'status': 'COMPLETED',
+        'total_net_amount': 93000.0,
+        'scheduled_at': null,
+      });
+      expect(result.totalNetAmount, 93000);
+    });
+  });
+
+  group('AdjustmentItemModel.fromJson — Fix #1926 numeric coercion', () {
+    test('amountSigned parses double from Supabase numeric column', () {
+      final result = AdjustmentItemModel.fromJson({
+        'id': 'adj-1',
+        'adjustment_type': 'REFUND',
+        'amount_signed': -5000.0,
+        'status': 'APPLIED',
+      });
+      expect(result.amountSigned, -5000);
+    });
   });
 }

@@ -19,7 +19,8 @@ class PayoutSummary {
     return PayoutSummary(
       id: json['id'] as String,
       status: json['status'] as String,
-      totalNetAmount: json['total_net_amount'] as int,
+      // Fix #1926: Supabase may return numeric columns as double — use safe coercion
+      totalNetAmount: _toInt(json['total_net_amount']),
       scheduledAt: json['scheduled_at'] == null
           ? null
           : DateTime.parse(json['scheduled_at'] as String),
@@ -118,7 +119,8 @@ class AdjustmentItemModel {
     return AdjustmentItemModel(
       id: json['id'] as String,
       adjustmentType: json['adjustment_type'] as String,
-      amountSigned: json['amount_signed'] as int,
+      // Fix #1926: Supabase may return numeric columns as double — use safe coercion
+      amountSigned: _toInt(json['amount_signed']),
       status: json['status'] as String,
       reasonCode: json['reason_code'] as String?,
     );
@@ -197,11 +199,12 @@ class SettlementItemDetail {
       partnerId: json['partner_id'] as String,
       eventId: json['event_id'] as String?,
       status: json['status'] as String,
-      grossAmount: json['gross_amount'] as int,
-      platformFeeAmount: json['platform_fee_amount'] as int,
-      pgFeeAmount: json['pg_fee_amount'] as int,
-      vatAmount: json['vat_amount'] as int,
-      netAmount: json['net_amount'] as int,
+      // Fix #1926: Supabase may return numeric columns as double — use safe coercion
+      grossAmount: _toInt(json['gross_amount']),
+      platformFeeAmount: _toInt(json['platform_fee_amount']),
+      pgFeeAmount: _toInt(json['pg_fee_amount']),
+      vatAmount: _toInt(json['vat_amount']),
+      netAmount: _toInt(json['net_amount']),
       currency: json['currency'] as String,
       holdReasonCode: json['hold_reason_code'] as String?,
       holdReasonDetail: json['hold_reason_detail'] as String?,
@@ -341,4 +344,13 @@ class SettlementItemDetail {
     'retryable': retryable,
     'retry_count': retryCount,
   };
+}
+
+// Fix #1926: Supabase PostgREST may return Postgres numeric columns as double
+// (e.g. 10000.0). Direct `as int` casts throw TypeError in that case.
+int _toInt(dynamic value) {
+  if (value is int) return value;
+  if (value is num) return value.round();
+  if (value is String) return int.tryParse(value) ?? 0;
+  return 0;
 }

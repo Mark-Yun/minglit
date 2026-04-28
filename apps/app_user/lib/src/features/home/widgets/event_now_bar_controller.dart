@@ -67,16 +67,28 @@ class EventNowBarStateNotifier extends _$EventNowBarStateNotifier {
   FutureOr<EventNowBarState> build(TodayActiveEvent activeEvent) async {
     final event = activeEvent.event;
 
-    // Fix #1321: Read clock BEFORE any async gaps — ref.watch/read throws
-    // "Ref disposed" if called after an await when myMatchesProvider or
-    // matchCandidatesProvider resolution triggers a rebuild of this provider.
+    // Fix #1321: Capture all ref accesses BEFORE any async gaps.
+    // ref.watch/read throws "Ref disposed" if called after an await when a
+    // watched provider triggers a rebuild of this notifier mid-flight.
     final now = ref.watch(clockProvider)();
+
+    // Fix #2017: Do NOT use myMatchesProvider/matchCandidatesProvider here.
+    // Those are auto-dispose async providers. Even ref.read() can cause
+    // "provider disposed during loading state" because auto-dispose providers
+    // are torn down when their listener count hits zero before the future
+    // resolves. Read the keepAlive matchingRepositoryProvider directly instead
+    // and call async methods on the repository object — no Riverpod lifecycle
+    // involved after this point. Reactivity is preserved via EventRealtime
+    // invalidating todayActiveEventsProvider, which provides new args to this
+    // notifier.
+    final matchingRepo = ref.read(matchingRepositoryProvider);
 
     // Compute the raw state from current data.
     final rawState = await _computeState(
       event,
       activeEvent.participantStatus,
       now,
+      matchingRepo,
     );
 
     // Enforce forward-only transitions.
@@ -91,24 +103,21 @@ class EventNowBarStateNotifier extends _$EventNowBarStateNotifier {
     Event event,
     String participantStatus,
     DateTime now,
+    MatchingRepository matchingRepo,
   ) async {
     // ENDED: event is completed or cancelled.
     if (event.status == 'completed' || event.status == 'cancelled') {
       return EventNowBarState.ended;
     }
 
-    // RESULTS: myMatchesProvider has results (including empty list means
-    // matching round completed).
-    // Fix #1942: was `on Object catch (_)` — swallows Error subclasses and hides
-    // network/auth failures silently. Use `on Exception` so programming Errors
-    // propagate, and log so production failures are visible in Axiom.
+    // RESULTS: direct repository call avoids auto-dispose lifecycle issues
+    // (see Fix #2017 comment in build()). This notifier rebuilds only when
+    // todayActiveEventsProvider is invalidated externally.
     try {
-      final matches = await ref.watch(myMatchesProvider(event.id).future);
+      final matches = await matchingRepo.getMyMatches(event.id);
       if (matches.isNotEmpty) {
         return EventNowBarState.results;
       }
-    } on StateError {
-      // Fix #1942: Riverpod disposes the provider during navigation — degrade silently.
     } on Exception catch (e, st) {
       Log.e(
         '⚠️ [EventNowBar] myMatches unavailable, degrading to lower state',
@@ -117,16 +126,12 @@ class EventNowBarStateNotifier extends _$EventNowBarStateNotifier {
       );
     }
 
-    // MATCHING: matchCandidatesProvider returns non-empty list.
+    // MATCHING: matchCandidates via direct repository call — see above.
     try {
-      final candidates = await ref.watch(
-        matchCandidatesProvider(event.id).future,
-      );
+      final candidates = await matchingRepo.getMatchingCandidates(event.id);
       if (candidates.isNotEmpty) {
         return EventNowBarState.matching;
       }
-    } on StateError {
-      // Fix #1942: Riverpod disposes the provider during navigation — degrade silently.
     } on Exception catch (e, st) {
       Log.e(
         '⚠️ [EventNowBar] matchCandidates unavailable, degrading to lower state',

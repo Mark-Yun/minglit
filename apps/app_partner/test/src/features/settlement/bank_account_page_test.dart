@@ -1,7 +1,9 @@
 // Fix #1938: bank account number validation regression tests
+// Fix #1928: RetryPayoutButton success message duplicate regression guard
 
 import 'package:app_partner/src/features/settlement/bank_account_page.dart';
 import 'package:app_partner/src/logic/current_partner_provider.dart';
+import 'package:app_partner/src/routing/app_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -152,6 +154,57 @@ void main() {
       expect(find.text('계좌번호는 10~16자리 숫자여야 합니다.'), findsNothing);
       expect(find.text('계좌번호를 입력해 주세요.'), findsNothing);
     });
+  });
+
+  // Fix #1928: RetryPayoutButton must not show its own success snackbar —
+  // coordinator.retryPayout already calls showMinglitSuccess.
+  group('RetryPayoutButton — Fix #1928: no duplicate success message', () {
+    testWidgets(
+      'success message appears exactly once (coordinator only, not widget)',
+      (tester) async {
+        final mockRepo = MockSettlementRepository();
+        final mockRouter = MockGoRouter();
+        when(() => mockRouter.go(any())).thenReturn(null);
+        when(() => mockRouter.push(any())).thenAnswer((_) => Future.value());
+        when(
+          () => mockRepo.retryPayout(
+            payoutId: any(named: 'payoutId'),
+            partnerId: any(named: 'partnerId'),
+          ),
+        ).thenAnswer((_) async => {'status': 'ok'});
+
+        var onSuccessCalled = false;
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              settlementRepositoryProvider.overrideWithValue(mockRepo),
+              goRouterProvider.overrideWithValue(mockRouter),
+            ],
+            child: MaterialApp(
+              home: Scaffold(
+                body: RetryPayoutButton(
+                  payoutId: 'payout-1',
+                  partnerId: 'partner-1',
+                  onSuccess: () => onSuccessCalled = true,
+                ),
+              ),
+            ),
+          ),
+        );
+
+        await tester.tap(find.text('재지급 요청'));
+        await tester.pumpAndSettle();
+
+        // Coordinator shows the success toast — must appear exactly once
+        expect(
+          find.text('재지급 요청이 완료되었습니다.'),
+          findsOneWidget,
+          reason: 'success message must appear once (from coordinator only)',
+        );
+        expect(onSuccessCalled, isTrue);
+      },
+    );
   });
 }
 

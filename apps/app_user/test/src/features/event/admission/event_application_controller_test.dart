@@ -811,6 +811,79 @@ void main() {
     );
   });
 
+  // Fix #1924: buyer_tel must never contain a fabricated phone number.
+  group('payment payload — buyer_tel (Fix #1924)', () {
+    test('user with phone → buyer_tel is the real phone number', () async {
+      when(() => mockUser.phone).thenReturn('01012345678');
+      when(
+        () => mockEventRepo.applyEvent(
+          eventId: any(named: 'eventId'),
+          ticketId: any(named: 'ticketId'),
+          verificationData: any(named: 'verificationData'),
+        ),
+      ).thenAnswer(
+        (_) async => const PaidApplyEventResult(
+          applicationId: 'app_tel1',
+          orderId: 'order_tel1',
+          paymentAmount: 10000,
+        ),
+      );
+
+      final spy = _SpyIamportController();
+      final container = createContainer(
+        overrides: [
+          currentUserProvider.overrideWith((ref) => mockUser),
+          eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
+          iamportControllerProvider.overrideWith(() => spy),
+        ],
+      );
+      final notifier = container.read(
+        eventApplicationControllerProvider(testEvent).notifier,
+      );
+      notifier.selectTicket(testEvent.tickets!.first);
+      await notifier.submitApplication(mockContext);
+
+      expect(spy.capturedData?['buyer_tel'], '01012345678');
+    });
+
+    test(
+      'user without phone → buyer_tel is empty string, not stub number',
+      () async {
+        when(() => mockUser.phone).thenReturn(null);
+        when(
+          () => mockEventRepo.applyEvent(
+            eventId: any(named: 'eventId'),
+            ticketId: any(named: 'ticketId'),
+            verificationData: any(named: 'verificationData'),
+          ),
+        ).thenAnswer(
+          (_) async => const PaidApplyEventResult(
+            applicationId: 'app_tel2',
+            orderId: 'order_tel2',
+            paymentAmount: 10000,
+          ),
+        );
+
+        final spy = _SpyIamportController();
+        final container = createContainer(
+          overrides: [
+            currentUserProvider.overrideWith((ref) => mockUser),
+            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
+            iamportControllerProvider.overrideWith(() => spy),
+          ],
+        );
+        final notifier = container.read(
+          eventApplicationControllerProvider(testEvent).notifier,
+        );
+        notifier.selectTicket(testEvent.tickets!.first);
+        await notifier.submitApplication(mockContext);
+
+        expect(spy.capturedData?['buyer_tel'], '');
+        expect(spy.capturedData?['buyer_tel'], isNot('01000000000'));
+      },
+    );
+  });
+
   group('EventApplicationState.copyWith', () {
     test('copies all fields', () {
       final ticket = Ticket(
@@ -860,4 +933,22 @@ void main() {
       expect(copied.errorMessage, 'msg');
     });
   });
+}
+
+/// Captures the data argument passed to startPayment for assertion in tests.
+class _SpyIamportController extends IamportController {
+  Map<String, dynamic>? capturedData;
+
+  @override
+  AsyncValue<IamportResultModel?> build() => const AsyncData(null);
+
+  @override
+  Future<String?> startPayment({
+    required BuildContext context,
+    required String userCode,
+    required Map<String, dynamic> data,
+  }) async {
+    capturedData = data;
+    return null; // simulate user cancellation to keep test simple
+  }
 }
