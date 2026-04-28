@@ -246,6 +246,10 @@ void main() {
             eventNowBarStateProvider(activeEvent).overrideWith(
               () => _FixedNowBarStateNotifier(EventNowBarState.matching),
             ),
+            // Fix #2022: prevent EventRealtime from touching Supabase in tests
+            eventRealtimeProvider('active_event').overrideWith(
+              _NoOpEventRealtime.new,
+            ),
           ],
         ),
       );
@@ -281,6 +285,10 @@ void main() {
             todayActiveEventsProvider.overrideWith((_) => [activeEvent]),
             eventNowBarStateProvider(activeEvent).overrideWith(
               () => _FixedNowBarStateNotifier(EventNowBarState.waiting),
+            ),
+            // Fix #2022: prevent EventRealtime from touching Supabase in tests
+            eventRealtimeProvider('active_event').overrideWith(
+              _NoOpEventRealtime.new,
             ),
           ],
         ),
@@ -358,6 +366,10 @@ void main() {
             todayActiveEventsProvider.overrideWith((_) => [activeEvent]),
             eventNowBarStateProvider(activeEvent).overrideWith(
               () => _FixedNowBarStateNotifier(EventNowBarState.matching),
+            ),
+            // Fix #2022: prevent EventRealtime from touching Supabase in tests
+            eventRealtimeProvider('active_event').overrideWith(
+              _NoOpEventRealtime.new,
             ),
           ],
         ),
@@ -466,6 +478,13 @@ class _MockNoMoreNotifier extends RecommendationFeedNotifier {
       hasMore: false,
     );
   }
+}
+
+/// Fix #2022: No-op EventRealtime stub — prevents Supabase Realtime
+/// initialization in tests.
+class _NoOpEventRealtime extends EventRealtime {
+  @override
+  void build(String eventId) {}
 }
 
 class _FixedNowBarStateNotifier extends EventNowBarStateNotifier {
