@@ -98,7 +98,9 @@
    Class prefix `mds-spec-` to avoid Tailwind / app collisions.
    ============================================================ */
 .mds-spec { display: flex; flex-direction: column; gap: 12px; }
-.mds-spec__group { display: flex; flex-direction: column; gap: 6px; }
+/* .mds-spec__group base — display:flex/column applied here; gap is overridden
+   below in the playground block (var(--spacing-sm)). */
+.mds-spec__group { display: flex; flex-direction: column; }
 .mds-spec__label {
   font-size: 10px;
   font-weight: 700;
@@ -351,4 +353,442 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-xsmall);
+}
+
+/* ============================================================
+   B1 — Chip / FilterChip / ChipGroup spec preview classes.
+   Mirrors MinglitChip Dart sizes/colors using mds tokens.
+   ============================================================ */
+
+.mds-spec-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--radius-chip, 100px);
+  border: 0.5px solid rgba(0, 0, 0, 0.12);
+  font-family: var(--typography-font-family-brand, sans-serif);
+  font-weight: 500;
+  white-space: nowrap;
+  vertical-align: middle;
+  line-height: 1.4;
+}
+.mds-spec-chip--sm {
+  padding: var(--spacing-xxsmall, 2px) var(--spacing-small, 8px);
+  font-size: 10px;
+}
+.mds-spec-chip--md {
+  padding: var(--spacing-xsmall, 4px) var(--spacing-small, 8px);
+  font-size: var(--typography-font-size-chip-label, 13px);
+}
+.mds-spec-chip--lg {
+  padding: var(--spacing-xsmall2, 6px) var(--spacing-sm, 12px);
+  font-size: var(--typography-font-size-body, 14px);
+}
+.mds-spec-chip--surface {
+  background: color-mix(in srgb, var(--color-text-primary, #111827) 8%, transparent);
+  color: var(--color-text-secondary, #4b5563);
+}
+.mds-spec-chip--primary {
+  background: color-mix(in srgb, var(--color-primary, #9900ff) 15%, transparent);
+  color: var(--color-primary, #9900ff);
+  border-color: color-mix(in srgb, var(--color-primary, #9900ff) 30%, transparent);
+}
+.mds-spec-chip--success {
+  background: color-mix(in srgb, var(--color-success, #16a34a) 12%, transparent);
+  color: var(--color-success, #16a34a);
+  border-color: color-mix(in srgb, var(--color-success, #16a34a) 30%, transparent);
+}
+.mds-spec-chip--info {
+  background: color-mix(in srgb, var(--color-info, #3b82f6) 12%, transparent);
+  color: var(--color-info, #3b82f6);
+  border-color: color-mix(in srgb, var(--color-info, #3b82f6) 30%, transparent);
+}
+.mds-spec-chip--warning {
+  background: color-mix(in srgb, var(--color-warning, #d97706) 12%, transparent);
+  color: var(--color-warning, #d97706);
+  border-color: color-mix(in srgb, var(--color-warning, #d97706) 30%, transparent);
+}
+.mds-spec-chip--disabled { opacity: 0.4; pointer-events: none; }
+.mds-spec-chip__icon {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  margin-inline-end: var(--spacing-xsmall, 4px);
+}
+.mds-spec-chip__sep {
+  display: inline-block;
+  width: 1px;
+  height: 1em;
+  background: currentColor;
+  opacity: 0.25;
+  margin-inline: var(--spacing-xsmall, 4px);
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+.mds-spec-chip__label { display: inline; }
+
+.mds-spec-fchip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--radius-chip, 100px);
+  font-family: var(--typography-font-family-brand, sans-serif);
+  font-weight: 500;
+  white-space: nowrap;
+  vertical-align: middle;
+  line-height: 1.4;
+  cursor: pointer;
+  user-select: none;
+  background: color-mix(in srgb, var(--color-text-primary, #111827) 8%, transparent);
+  color: var(--color-text-secondary, #4b5563);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.mds-spec-fchip--selected {
+  background: var(--color-text-primary, #111827);
+  color: var(--color-background, #ffffff);
+}
+.mds-spec-fchip--disabled { opacity: 0.4; pointer-events: none; }
+.mds-spec-fchip--sm {
+  padding: var(--spacing-xxsmall, 2px) var(--spacing-small, 8px);
+  font-size: 12px;
+}
+.mds-spec-fchip--md {
+  padding: var(--spacing-xsmall2, 6px) var(--spacing-sm, 12px);
+  font-size: var(--typography-font-size-chip-label, 13px);
+}
+.mds-spec-fchip--lg {
+  padding: var(--spacing-xsmall, 4px) var(--spacing-sm, 12px);
+  font-size: var(--typography-font-size-body, 14px);
+}
+.mds-spec-fchip__icon {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  margin-inline-end: var(--spacing-xsmall, 4px);
+}
+.mds-spec-fchip__label { display: inline; }
+
+.mds-spec-chipgroup { width: 100%; box-sizing: border-box; }
+.mds-spec-chipgroup--scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  height: 40px;
+  display: flex;
+  align-items: center;
+}
+.mds-spec-chipgroup--scroll::-webkit-scrollbar { display: none; }
+.mds-spec-chipgroup__track {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+.mds-spec-chipgroup--wrap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+.mds-spec-chipgroup__scaffold-demo {
+  border: 1px solid var(--color-divider, #e5e7eb);
+  border-radius: var(--radius-card, 16px);
+  overflow: hidden;
+  background: var(--color-background, #ffffff);
+}
+.mds-spec-chipgroup__appbar {
+  padding: 12px var(--spacing-medium, 16px);
+  border-bottom: 1px solid var(--color-divider, #e5e7eb);
+  background: var(--color-background, #ffffff);
+}
+.mds-spec-chipgroup__list-placeholder {
+  padding: var(--spacing-small, 8px) var(--spacing-medium, 16px) var(--spacing-medium, 16px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-card-gap, 12px);
+}
+.mds-spec-chipgroup__card-ph {
+  height: 72px;
+  border-radius: var(--radius-card, 16px);
+  background: var(--color-surface, #f9fafb);
+  border: 1px solid var(--color-divider, #e5e7eb);
+}
+
+/* ============================================================
+   B2 — TextField / NumberStepperInput spec preview classes.
+   ============================================================ */
+
+.mds-spec-input__field-root { display: flex; flex-direction: column; gap: 0; width: 100%; }
+.mds-spec-input__label {
+  display: block;
+  font-size: var(--typography-font-size-caption);
+  font-weight: var(--typography-font-weight-medium);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-xsmall);
+  pointer-events: none;
+}
+.mds-spec-input__box {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xsmall);
+  border-style: solid;
+  border-radius: var(--radius-input);
+  padding: var(--spacing-sm) var(--spacing-medium);
+  background: var(--color-background);
+  transition: border-color 0.15s, border-width 0.1s;
+  min-height: 48px;
+}
+.mds-spec-input__icon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+.mds-spec-input__input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: var(--typography-font-size-body);
+  color: var(--color-text-primary);
+  font-family: var(--typography-font-family-brand);
+  min-width: 0;
+}
+.mds-spec-input__input::placeholder {
+  color: var(--color-text-secondary);
+  opacity: 0.7;
+}
+.mds-spec-input__input--multiline {
+  resize: none;
+  line-height: var(--typography-line-height-normal);
+}
+.mds-spec-input__error {
+  margin-top: var(--spacing-xsmall);
+  font-size: var(--typography-font-size-caption);
+  color: var(--color-error);
+  line-height: var(--typography-line-height-normal);
+}
+.mds-spec-input__helper {
+  margin-top: var(--spacing-xsmall);
+  font-size: var(--typography-font-size-caption);
+  color: var(--color-text-secondary);
+  line-height: var(--typography-line-height-normal);
+}
+.mds-spec-input__form-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-medium);
+  width: 100%;
+}
+
+.mds-spec-stepper__root {
+  display: inline-flex;
+  flex-direction: column;
+  gap: var(--spacing-small);
+  align-items: flex-start;
+}
+.mds-spec-stepper__label {
+  font-size: var(--typography-font-size-caption);
+  font-weight: var(--typography-font-weight-semi-bold);
+  color: var(--color-text-secondary);
+}
+.mds-spec-stepper__row {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-input);
+  background: var(--color-surface);
+  overflow: hidden;
+  padding: 0 var(--spacing-xsmall);
+  min-width: 160px;
+}
+.mds-spec-stepper__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-small);
+  transition: background 0.1s;
+  padding: 0;
+}
+.mds-spec-stepper__btn:hover:not(:disabled) { background: rgba(0, 0, 0, 0.05); }
+.mds-spec-stepper__btn--disabled,
+.mds-spec-stepper__btn:disabled {
+  color: var(--color-divider);
+  cursor: not-allowed;
+}
+.mds-spec-stepper__value-box {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xsmall);
+  padding: var(--spacing-sm) 0;
+  min-width: 48px;
+}
+.mds-spec-stepper__value {
+  font-size: var(--typography-font-size-button);
+  font-weight: var(--typography-font-weight-bold);
+  color: var(--color-text-primary);
+  font-family: var(--typography-font-family-brand);
+  text-align: center;
+}
+.mds-spec-stepper__suffix {
+  font-size: var(--typography-font-size-caption);
+  font-weight: var(--typography-font-weight-regular);
+  color: var(--color-text-secondary);
+}
+
+/* ============================================================
+   B3 — Empty / Error state spec preview classes.
+   ============================================================ */
+
+.mds-spec-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+.mds-spec-state--empty-full,
+.mds-spec-state--error-full { background: transparent; }
+.mds-spec-state--empty-card {
+  background: var(--color-surface);
+  border-radius: var(--radius-card);
+}
+.mds-spec-state--empty-inline {
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-card);
+}
+.mds-spec-state--error-card {
+  background: rgba(239, 68, 68, 0.06);
+  border-radius: var(--radius-card);
+}
+.mds-spec-state--error-inline {
+  background: rgba(239, 68, 68, 0.06);
+  border: 1px solid rgba(239, 68, 68, 0.5);
+  border-radius: var(--radius-card);
+}
+
+/* ============================================================
+   B4 — Overlay spec preview classes (faux phone, dialog, sheet).
+   ============================================================ */
+
+.mds-spec-overlay__phone {
+  width: 280px;
+  height: 480px;
+  border-radius: 28px;
+  border: 2px solid var(--color-divider);
+  background: white;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.mds-spec-overlay__scrim {
+  position: absolute;
+  inset: 0;
+  background: var(--color-scrim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mds-spec-overlay__bg-content {
+  position: absolute;
+  inset: 0;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.mds-spec-overlay__bg-row {
+  height: 14px;
+  border-radius: 4px;
+  background: var(--color-surface);
+}
+.mds-spec-overlay__bg-row--tall { height: 48px; }
+.mds-spec-overlay__bg-appbar {
+  height: 24px;
+  border-radius: 4px;
+  background: var(--color-surface);
+  margin-bottom: 4px;
+}
+.mds-spec-overlay__dialog-card {
+  width: 220px;
+  background: white;
+  border-radius: var(--radius-dialog);
+  padding: var(--spacing-large);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+  position: relative;
+  z-index: 1;
+}
+.mds-spec-overlay__dialog-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1.3;
+}
+.mds-spec-overlay__dialog-title--destructive { color: var(--color-error); }
+.mds-spec-overlay__dialog-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-small);
+}
+.mds-spec-overlay__dialog-content {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+.mds-spec-overlay__dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-small);
+  margin-top: var(--spacing-xsmall);
+}
+.mds-spec-overlay__anatomy-label {
+  position: absolute;
+  font: 500 10px/1.2 ui-monospace, monospace;
+  color: var(--color-primary);
+  background: white;
+  border: 1px solid var(--color-divider);
+  padding: 3px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.mds-spec-overlay__sheet {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  background: white;
+  border-top-left-radius: var(--radius-card);
+  border-top-right-radius: var(--radius-card);
+  padding: var(--spacing-small) 0 var(--spacing-medium);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-small);
+}
+.mds-spec-overlay__sheet-handle {
+  width: 28px; height: 3px;
+  background: var(--color-divider);
+  border-radius: 999px;
+  align-self: center;
+  margin-bottom: var(--spacing-xsmall);
+}
+.mds-spec-overlay__sheet-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  padding: 0 var(--spacing-medium);
+}
+.mds-spec-overlay__sheet-row {
+  height: 36px;
+  margin: 0 var(--spacing-medium);
+  border-radius: 6px;
+  background: var(--color-surface);
 }

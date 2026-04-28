@@ -17,6 +17,36 @@ import {
 import MinglitButtonSpec, {
   GUIDELINE_RECIPES as MINGLIT_BUTTON_RECIPES,
 } from '@/components/specs/MinglitButtonSpec';
+import MinglitChipSpec, {
+  GUIDELINE_RECIPES as MINGLIT_CHIP_RECIPES,
+} from '@/components/specs/MinglitChipSpec';
+import MinglitFilterChipSpec, {
+  GUIDELINE_RECIPES as MINGLIT_FILTER_CHIP_RECIPES,
+} from '@/components/specs/MinglitFilterChipSpec';
+import MinglitChipGroupSpec, {
+  GUIDELINE_RECIPES as MINGLIT_CHIP_GROUP_RECIPES,
+} from '@/components/specs/MinglitChipGroupSpec';
+import MinglitTextFieldSpec, {
+  GUIDELINE_RECIPES as MINGLIT_TEXT_FIELD_RECIPES,
+} from '@/components/specs/MinglitTextFieldSpec';
+import NumberStepperInputSpec, {
+  GUIDELINE_RECIPES as NUMBER_STEPPER_INPUT_RECIPES,
+} from '@/components/specs/NumberStepperInputSpec';
+import MinglitEmptyStateSpec, {
+  GUIDELINE_RECIPES as MINGLIT_EMPTY_STATE_RECIPES,
+} from '@/components/specs/MinglitEmptyStateSpec';
+import MinglitErrorStateSpec, {
+  GUIDELINE_RECIPES as MINGLIT_ERROR_STATE_RECIPES,
+} from '@/components/specs/MinglitErrorStateSpec';
+import MinglitAlertSpec, {
+  GUIDELINE_RECIPES as MINGLIT_ALERT_RECIPES,
+} from '@/components/specs/MinglitAlertSpec';
+import MinglitDialogSpec, {
+  GUIDELINE_RECIPES as MINGLIT_DIALOG_RECIPES,
+} from '@/components/specs/MinglitDialogSpec';
+import MinglitBottomSheetSpec, {
+  GUIDELINE_RECIPES as MINGLIT_BOTTOM_SHEET_RECIPES,
+} from '@/components/specs/MinglitBottomSheetSpec';
 
 /**
  * Inline visual specs registered by component name.
@@ -29,7 +59,17 @@ interface InlineSpecModule {
 }
 
 const INLINE_SPECS: Record<string, InlineSpecModule> = {
-  MinglitButton: { Visual: MinglitButtonSpec, recipes: MINGLIT_BUTTON_RECIPES },
+  MinglitButton:     { Visual: MinglitButtonSpec,     recipes: MINGLIT_BUTTON_RECIPES },
+  MinglitChip:       { Visual: MinglitChipSpec,       recipes: MINGLIT_CHIP_RECIPES },
+  MinglitFilterChip: { Visual: MinglitFilterChipSpec, recipes: MINGLIT_FILTER_CHIP_RECIPES },
+  MinglitChipGroup:  { Visual: MinglitChipGroupSpec,  recipes: MINGLIT_CHIP_GROUP_RECIPES },
+  MinglitTextField:    { Visual: MinglitTextFieldSpec,    recipes: MINGLIT_TEXT_FIELD_RECIPES },
+  NumberStepperInput:  { Visual: NumberStepperInputSpec,  recipes: NUMBER_STEPPER_INPUT_RECIPES },
+  MinglitEmptyState:   { Visual: MinglitEmptyStateSpec,   recipes: MINGLIT_EMPTY_STATE_RECIPES },
+  MinglitErrorState:   { Visual: MinglitErrorStateSpec,   recipes: MINGLIT_ERROR_STATE_RECIPES },
+  MinglitAlert:        { Visual: MinglitAlertSpec,        recipes: MINGLIT_ALERT_RECIPES },
+  MinglitDialog:       { Visual: MinglitDialogSpec,       recipes: MINGLIT_DIALOG_RECIPES },
+  MinglitBottomSheet:  { Visual: MinglitBottomSheetSpec,  recipes: MINGLIT_BOTTOM_SHEET_RECIPES },
 };
 
 // ---------------------------------------------------------------------------
