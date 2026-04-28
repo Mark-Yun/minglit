@@ -252,7 +252,9 @@ void main() {
           activeEvents: [event],
           overrides: [
             eventRealtimeProvider('event_1').overrideWith(
-              () => _TrackingEventRealtime(() { realtimeBuilt = true; }),
+              () => _TrackingEventRealtime(() {
+                realtimeBuilt = true;
+              }),
             ),
           ],
         ),
