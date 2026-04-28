@@ -304,6 +304,7 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent>
                                 radius: MinglitRadius.input,
                                 url: partnerProfileImageUrl,
                                 fallbackIcon: Icons.store,
+                                fallbackIconSize: MinglitIconSize.xsmall,
                               ),
                               const SizedBox(width: MinglitSpacing.small),
                               Flexible(

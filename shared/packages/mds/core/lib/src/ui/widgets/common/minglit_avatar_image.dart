@@ -12,6 +12,7 @@ class MinglitAvatarImage extends StatelessWidget {
     required this.radius,
     this.url,
     this.fallbackIcon = Icons.person,
+    this.fallbackIconSize,
     this.backgroundColor,
     this.fallbackIconColor,
     super.key,
@@ -20,6 +21,12 @@ class MinglitAvatarImage extends StatelessWidget {
   final double radius;
   final String? url;
   final IconData fallbackIcon;
+
+  /// Icon size for the fallback placeholder. Defaults to Flutter's standard
+  /// 24px when null. Pass an explicit value to match the original call-site
+  /// icon size when it differs from the Flutter default.
+  final double? fallbackIconSize;
+
   final Color? backgroundColor;
   final Color? fallbackIconColor;
 
@@ -31,7 +38,7 @@ class MinglitAvatarImage extends StatelessWidget {
       return CircleAvatar(
         radius: radius,
         backgroundColor: backgroundColor,
-        child: Icon(fallbackIcon, color: fallbackIconColor, size: radius),
+        child: Icon(fallbackIcon, color: fallbackIconColor, size: fallbackIconSize),
       );
     }
 

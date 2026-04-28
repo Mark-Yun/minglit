@@ -130,6 +130,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                     icon: MinglitAvatarImage(
                       radius: 14,
                       url: user.userMetadata?['avatar_url'] as String?,
+                      fallbackIconSize: 14,
                     ),
                   ),
                 ] else
