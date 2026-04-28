@@ -19073,6 +19073,15 @@
     {
       "label": "page.tsx",
       "file_type": "code",
+      "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/mds/docs/src/app/foundations/layout/page.tsx",
+      "source_location": "L1",
+      "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_mds_docs_src_app_foundations_layout_page_tsx",
+      "community": 185,
+      "norm_label": "page.tsx"
+    },
+    {
+      "label": "page.tsx",
+      "file_type": "code",
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L1",
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_mds_docs_src_app_components_page_tsx",
@@ -19083,7 +19092,7 @@
       "label": "specCompleteness()",
       "file_type": "code",
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/mds/docs/src/app/components/page.tsx",
-      "source_location": "L37",
+      "source_location": "L38",
       "id": "page_speccompleteness",
       "community": 81,
       "norm_label": "speccompleteness()"
@@ -19092,7 +19101,7 @@
       "label": "Section()",
       "file_type": "code",
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/mds/docs/src/app/components/page.tsx",
-      "source_location": "L55",
+      "source_location": "L56",
       "id": "page_section",
       "community": 81,
       "norm_label": "section()"
@@ -19157,7 +19166,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/mds/docs/src/components/Sidebar.tsx",
       "source_location": "L1",
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_mds_docs_src_components_sidebar_tsx",
-      "community": 185,
+      "community": 186,
       "norm_label": "sidebar.tsx"
     },
     {
@@ -19191,7 +19200,7 @@
       "label": "isPropDef()",
       "file_type": "code",
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/mds/docs/src/lib/components.ts",
-      "source_location": "L102",
+      "source_location": "L104",
       "id": "components_ispropdef",
       "community": 51,
       "norm_label": "ispropdef()"
@@ -19200,7 +19209,7 @@
       "label": "isGuidelineEntry()",
       "file_type": "code",
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/mds/docs/src/lib/components.ts",
-      "source_location": "L107",
+      "source_location": "L109",
       "id": "components_isguidelineentry",
       "community": 51,
       "norm_label": "isguidelineentry()"
@@ -19209,7 +19218,7 @@
       "label": "isTokenUsage()",
       "file_type": "code",
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/mds/docs/src/lib/components.ts",
-      "source_location": "L117",
+      "source_location": "L119",
       "id": "components_istokenusage",
       "community": 51,
       "norm_label": "istokenusage()"
@@ -19218,7 +19227,7 @@
       "label": "getComponentsByCategory()",
       "file_type": "code",
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/mds/docs/src/lib/components.ts",
-      "source_location": "L396",
+      "source_location": "L431",
       "id": "components_getcomponentsbycategory",
       "community": 51,
       "norm_label": "getcomponentsbycategory()"
@@ -19227,7 +19236,7 @@
       "label": "getComponentByName()",
       "file_type": "code",
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/mds/docs/src/lib/components.ts",
-      "source_location": "L411",
+      "source_location": "L446",
       "id": "components_getcomponentbyname",
       "community": 51,
       "norm_label": "getcomponentbyname()"
@@ -19238,7 +19247,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/mds/docs/src/lib/mds-icons-react.ts",
       "source_location": "L1",
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_mds_docs_src_lib_mds_icons_react_ts",
-      "community": 186,
+      "community": 187,
       "norm_label": "mds-icons-react.ts"
     },
     {
@@ -19337,7 +19346,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-extraction/apps/landing_user/postcss.config.mjs",
       "source_location": "L1",
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_extraction_apps_landing_user_postcss_config_mjs",
-      "community": 187,
+      "community": 188,
       "norm_label": "postcss.config.mjs"
     },
     {
@@ -19350,7 +19359,7 @@
       "author": null,
       "contributor": null,
       "id": "landing_user_eslint_config",
-      "community": 188,
+      "community": 189,
       "norm_label": "landing_user eslint config"
     },
     {
@@ -19402,7 +19411,7 @@
       "author": null,
       "contributor": null,
       "id": "landing_user_home_page",
-      "community": 189,
+      "community": 190,
       "norm_label": "landinguserpage"
     },
     {
@@ -19506,7 +19515,7 @@
       "author": null,
       "contributor": null,
       "id": "integration_test_driver",
-      "community": 190,
+      "community": 191,
       "norm_label": "integration test driver"
     },
     {
@@ -19532,7 +19541,7 @@
       "author": null,
       "contributor": null,
       "id": "reporter",
-      "community": 191,
+      "community": 192,
       "norm_label": "reporter.dart (autolabelallurereporter)"
     },
     {
@@ -20518,7 +20527,7 @@
       "author": null,
       "contributor": null,
       "id": "alchemist_package",
-      "community": 192,
+      "community": 193,
       "norm_label": "alchemist package"
     },
     {
@@ -21590,7 +21599,7 @@
       "author": null,
       "contributor": null,
       "id": "auth_coordinator_test",
-      "community": 193,
+      "community": 194,
       "norm_label": "authcoordinator unit test"
     },
     {
@@ -22098,7 +22107,7 @@
       "author": null,
       "contributor": null,
       "id": "deletion_complete_page_test",
-      "community": 194,
+      "community": 195,
       "norm_label": "deletioncompletepage test"
     },
     {
@@ -22416,7 +22425,7 @@
       "author": null,
       "contributor": null,
       "id": "status_badge_test",
-      "community": 195,
+      "community": 196,
       "norm_label": "statusbadge widget test"
     },
     {
@@ -22561,7 +22570,7 @@
       "author": null,
       "contributor": null,
       "id": "permission_grant_test",
-      "community": 196,
+      "community": 197,
       "norm_label": "permission_grant_test (patrol, skipped)"
     },
     {
@@ -22574,7 +22583,7 @@
       "author": null,
       "contributor": null,
       "id": "payment_pg_test",
-      "community": 197,
+      "community": 198,
       "norm_label": "payment_pg_test (patrol, skipped)"
     },
     {
@@ -22587,7 +22596,7 @@
       "author": null,
       "contributor": null,
       "id": "kakao_login_test",
-      "community": 198,
+      "community": 199,
       "norm_label": "kakao_login_test (patrol, skipped)"
     },
     {
@@ -23536,7 +23545,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_user/lib/src/features/consent/ui/consent_detail_sheet.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_user_lib_src_features_consent_ui_consent_detail_sheet_dart",
-      "community": 199,
+      "community": 200,
       "norm_label": "consent_detail_sheet.dart"
     },
     {
@@ -25200,7 +25209,7 @@
       "author": null,
       "contributor": null,
       "id": "app_user_app_routes",
-      "community": 200,
+      "community": 201,
       "norm_label": "app_user approutes (app_routes.dart)"
     },
     {
@@ -25239,7 +25248,7 @@
       "author": null,
       "contributor": null,
       "id": "app_user_app_router",
-      "community": 201,
+      "community": 202,
       "norm_label": "app_user approuter (app_router.dart)"
     },
     {
@@ -28298,7 +28307,7 @@
       "author": null,
       "contributor": null,
       "id": "review_verification_screen_test",
-      "community": 202,
+      "community": 203,
       "norm_label": "reviewverificationscreen snapshot_data type guard test"
     },
     {
@@ -28848,7 +28857,7 @@
       "author": null,
       "contributor": null,
       "id": "account_deletion_flow_test",
-      "community": 203,
+      "community": 204,
       "norm_label": "accountdeletion flow logic unit test"
     },
     {
@@ -29017,7 +29026,7 @@
       "author": null,
       "contributor": null,
       "id": "firebase_options",
-      "community": 204,
+      "community": 205,
       "norm_label": "defaultfirebaseoptions"
     },
     {
@@ -29200,7 +29209,7 @@
       "author": null,
       "contributor": null,
       "id": "minglit_editable_section",
-      "community": 205,
+      "community": 206,
       "norm_label": "mingliteditablesection"
     },
     {
@@ -29560,7 +29569,7 @@
       "author": null,
       "contributor": null,
       "id": "today_party_card",
-      "community": 206,
+      "community": 207,
       "norm_label": "todaypartycard"
     },
     {
@@ -31199,7 +31208,7 @@
       "author": null,
       "contributor": null,
       "id": "event_card",
-      "community": 207,
+      "community": 208,
       "norm_label": "eventcard"
     },
     {
@@ -31329,7 +31338,7 @@
       "author": null,
       "contributor": null,
       "id": "party_image_editor",
-      "community": 208,
+      "community": 209,
       "norm_label": "partyimageeditor"
     },
     {
@@ -31355,7 +31364,7 @@
       "author": null,
       "contributor": null,
       "id": "party_status_edit_sheet",
-      "community": 209,
+      "community": 210,
       "norm_label": "partystatuseditsheet"
     },
     {
@@ -31498,7 +31507,7 @@
       "author": null,
       "contributor": null,
       "id": "party_verification_input",
-      "community": 210,
+      "community": 211,
       "norm_label": "partyverificationinput"
     },
     {
@@ -33187,7 +33196,7 @@
       "author": null,
       "contributor": null,
       "id": "app_partner_app_routes",
-      "community": 211,
+      "community": 212,
       "norm_label": "app_partner approutes (app_routes.dart)"
     },
     {
@@ -33226,7 +33235,7 @@
       "author": null,
       "contributor": null,
       "id": "app_partner_app_router",
-      "community": 212,
+      "community": 213,
       "norm_label": "app_partner approuter (app_router.dart)"
     },
     {
@@ -33252,7 +33261,7 @@
       "author": null,
       "contributor": null,
       "id": "landing_partner_postcss",
-      "community": 213,
+      "community": 214,
       "norm_label": "landing partner postcss config"
     },
     {
@@ -33265,7 +33274,7 @@
       "author": null,
       "contributor": null,
       "id": "landing_partner_eslint",
-      "community": 214,
+      "community": 215,
       "norm_label": "landing partner eslint config"
     },
     {
@@ -33317,7 +33326,7 @@
       "author": null,
       "contributor": null,
       "id": "landing_partner_page",
-      "community": 215,
+      "community": 216,
       "norm_label": "landing partner home page"
     },
     {
@@ -33330,7 +33339,7 @@
       "author": null,
       "contributor": null,
       "id": "landing_partner_privacy",
-      "community": 216,
+      "community": 217,
       "norm_label": "landing partner privacy policy page"
     },
     {
@@ -33368,7 +33377,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 217,
+      "community": 218,
       "norm_label": "appuser readme",
       "id": "app_user_readme"
     },
@@ -33381,7 +33390,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 218,
+      "community": 219,
       "norm_label": "app partner readme",
       "id": "app_partner_readme"
     },
@@ -33394,7 +33403,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 219,
+      "community": 220,
       "norm_label": "landing_user readme",
       "id": "landing_user_readme"
     },
@@ -33407,7 +33416,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 220,
+      "community": 221,
       "norm_label": "landing partner readme",
       "id": "landing_partner_readme"
     },
@@ -33420,7 +33429,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 221,
+      "community": 222,
       "norm_label": "minglit_kit changelog",
       "id": "minglit_kit_changelog"
     },
@@ -33433,7 +33442,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 222,
+      "community": 223,
       "norm_label": "minglit_kit readme",
       "id": "minglit_kit_readme"
     },
@@ -33459,7 +33468,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 223,
+      "community": 224,
       "norm_label": "pretendard font ofl license",
       "id": "pretendard_ofl"
     },
@@ -33602,7 +33611,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 224,
+      "community": 225,
       "norm_label": "\u1100\u116e\u1106\u1162 \u1102\u1162\u110b\u1167\u11a8 \u1109\u1162\u11a8\u1109\u1161\u11bc \u110b\u1171\u1100\u1168 \u1105\u1175\u1103\u1175\u110c\u1161\u110b\u1175\u11ab \u110b\u116a\u110b\u1175\u110b\u1165\u1111\u1173\u1105\u1166\u110b\u1175\u11b7",
       "id": "purchase_history_color_hierarchy_wireframe"
     },
@@ -33888,7 +33897,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 225,
+      "community": 226,
       "norm_label": "my tickets test plan",
       "id": "my_tickets_test_plan"
     },
@@ -34369,7 +34378,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 226,
+      "community": 227,
       "norm_label": "partner detail event card wireframe",
       "id": "partner_detail_event_card_wireframe"
     },
@@ -34603,7 +34612,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 227,
+      "community": 228,
       "norm_label": "minglitemptystate variants wireframe",
       "id": "empty_state_variants_wireframe"
     },
@@ -34759,7 +34768,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 228,
+      "community": 229,
       "norm_label": "\u1111\u1161\u1110\u1173\u1102\u1165 \u110c\u1165\u11bc\u1109\u1161\u11ab \u110b\u1165\u1103\u1173\u1106\u1175\u11ab ui/ux \u1109\u1165\u11af\u1100\u1168",
       "id": "partner_settlement_admin_uiux"
     },
@@ -34928,7 +34937,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 229,
+      "community": 230,
       "norm_label": "event now bar technical plan",
       "id": "event_now_bar_plan"
     },
@@ -36825,7 +36834,7 @@
       "captured_at": "2026-04-08",
       "author": "Mark-Yun",
       "contributor": null,
-      "community": 230,
+      "community": 231,
       "norm_label": "security audit report \u2014 tag discovery phase 1",
       "id": "security_report_1175"
     },
@@ -37293,7 +37302,7 @@
       "captured_at": "2026-04-23",
       "author": "Mark-Yun",
       "contributor": null,
-      "community": 231,
+      "community": 232,
       "norm_label": "runtime qa bug \u2014 app_partner devuserswitchscreen non-functional + am force-stop auto-login failure",
       "id": "qa_report_1776"
     },
@@ -37631,7 +37640,7 @@
       "captured_at": "2026-04-17",
       "author": "Mark-Yun",
       "contributor": null,
-      "community": 232,
+      "community": 233,
       "norm_label": "issue #1542: login \u1111\u1166\u110b\u1175\u110c\u1175 \u1103\u1161\u110f\u1173 \u1110\u1166\u1106\u1161 \u110b\u1175\u11af\u1100\u116a\u11ab\u1109\u1165\u11bc (p3-low)",
       "id": "issue1542_login_theme"
     },
@@ -37644,7 +37653,7 @@
       "captured_at": "2026-04-24",
       "author": "Mark-Yun",
       "contributor": null,
-      "community": 233,
+      "community": 234,
       "norm_label": "bug report \u2014 p-s31 /dev deeplink 404",
       "id": "qa_report_1825"
     },
@@ -37722,7 +37731,7 @@
       "captured_at": "2026-04-21",
       "author": "Mark-Yun",
       "contributor": null,
-      "community": 234,
+      "community": 235,
       "norm_label": "runtime qa \u2014 cuj-u03 refund button label mismatch",
       "id": "qa_report_1681"
     },
@@ -37800,7 +37809,7 @@
       "captured_at": "2026-04-20",
       "author": "Mark-Yun",
       "contributor": null,
-      "community": 235,
+      "community": 236,
       "norm_label": "runtime qa bug \u2014 build server disk full (98%)",
       "id": "qa_report_1663"
     },
@@ -37891,7 +37900,7 @@
       "captured_at": "2026-04-25",
       "author": "Mark-Yun",
       "contributor": null,
-      "community": 236,
+      "community": 237,
       "norm_label": "runtime qa bug \u2014 pixel 7a adb wireless session disconnect",
       "id": "qa_report_1849"
     },
@@ -39009,7 +39018,7 @@
       "captured_at": "2026-04-04",
       "author": "Mark-Yun",
       "contributor": null,
-      "community": 237,
+      "community": 238,
       "norm_label": "ops alert #990 \u2014 dependabot ci actions update (actions/checkout v4->v6)",
       "id": "ops_alert_990"
     },
@@ -39607,7 +39616,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 238,
+      "community": 239,
       "norm_label": "app logo: purple gradient speech bubble with white 'm', orange sparkle accent",
       "id": "icon_full_png"
     },
@@ -39620,7 +39629,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 239,
+      "community": 240,
       "norm_label": "app splash icon: purple gradient chat bubble with white 'm' and orange sparkle",
       "id": "splash_icon_png"
     },
@@ -39633,7 +39642,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 240,
+      "community": 241,
       "norm_label": "minglit app splash icon: purple chat bubble with white 'm' and orange sparkle",
       "id": "splash_icon_android12_png"
     },
@@ -39646,7 +39655,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 241,
+      "community": 242,
       "norm_label": "app icon foreground: purple chat bubble with white 'm' and orange sparkle",
       "id": "icon_foreground_png"
     },
@@ -39659,7 +39668,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 242,
+      "community": 243,
       "norm_label": "purple-blue gradient background image for app_partner icon",
       "id": "icon_background_png"
     },
@@ -39672,7 +39681,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 243,
+      "community": 244,
       "norm_label": "minglit inverted logo: white wordmark with cyan and orange shadow layers on transparent background",
       "id": "minglit_logo_inverted_svg"
     },
@@ -39685,7 +39694,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 244,
+      "community": 245,
       "norm_label": "minglit wordmark logo svg with transparent background, cyan/orange layered text",
       "id": "minglit_logo_background_transparent_svg"
     },
@@ -39698,7 +39707,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 245,
+      "community": 246,
       "norm_label": "minglit app bar logo \u2014 bold italic 'minglit' text in purple with cyan and orange shadow layers",
       "id": "minglit_app_bar_logo_png"
     },
@@ -39711,7 +39720,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 246,
+      "community": 247,
       "norm_label": "upscale lounge/restaurant interior with bar, green velvet chairs, asian art, warm lighting",
       "id": "party_premium_lounge"
     },
@@ -39724,7 +39733,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 247,
+      "community": 248,
       "norm_label": "bright minimalist korean cafe interior with numbered wooden tables, plants, string lights, and coffee bar",
       "id": "party_lounge_bright_jpg"
     },
@@ -39737,7 +39746,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 248,
+      "community": 249,
       "norm_label": "warm sunlit cafe interior with wood furniture, plants, string lights, and menu board",
       "id": "party_cafe_warm_jpg"
     },
@@ -39750,7 +39759,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 249,
+      "community": 250,
       "norm_label": "participation status redesign (after) \u2014 not-logged-in state with counts and login prompt",
       "id": "screenshot_05_nologin_png"
     },
@@ -39763,7 +39772,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 250,
+      "community": 251,
       "norm_label": "dark theme participation status redesign, 2-group male/female layout with progress bars",
       "id": "screenshot_07_dark_2group"
     },
@@ -39776,7 +39785,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 251,
+      "community": 252,
       "norm_label": "participation status redesign after-state with 4 groups showing 12/40 total and per-group cards",
       "id": "04_after_4group_png"
     },
@@ -39789,7 +39798,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 252,
+      "community": 253,
       "norm_label": "empty participation status ui: 0/20 total, 0/10 male/female, empty state message",
       "id": "06_empty_png"
     },
@@ -39802,7 +39811,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 253,
+      "community": 254,
       "norm_label": "participation status redesign after variant: 2-group (male/female) split with progress bars",
       "id": "02_after_2group_png"
     },
@@ -39815,7 +39824,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 254,
+      "community": 255,
       "norm_label": "participation status redesign: 2-group (male/female) expanded view with counts and age breakdowns",
       "id": "03_after_2group_expanded"
     },
@@ -39828,7 +39837,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 255,
+      "community": 256,
       "norm_label": "before state: participation status ui with male/female groups, 2/10 capacity each",
       "id": "01_before_png"
     },
@@ -40283,7 +40292,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 256,
+      "community": 257,
       "norm_label": "user_profiles table",
       "id": "user_profiles_table"
     },
@@ -68209,7 +68218,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/mds/docs/src/app/components/page.tsx",
-      "source_location": "L37",
+      "source_location": "L38",
       "weight": 1.0,
       "_src": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_mds_docs_src_app_components_page_tsx",
       "_tgt": "page_speccompleteness",
@@ -68221,7 +68230,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/mds/docs/src/app/components/page.tsx",
-      "source_location": "L55",
+      "source_location": "L56",
       "weight": 1.0,
       "_src": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_mds_docs_src_app_components_page_tsx",
       "_tgt": "page_section",
@@ -68293,7 +68302,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/mds/docs/src/lib/components.ts",
-      "source_location": "L102",
+      "source_location": "L104",
       "weight": 1.0,
       "_src": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_mds_docs_src_lib_components_ts",
       "_tgt": "components_ispropdef",
@@ -68305,7 +68314,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/mds/docs/src/lib/components.ts",
-      "source_location": "L107",
+      "source_location": "L109",
       "weight": 1.0,
       "_src": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_mds_docs_src_lib_components_ts",
       "_tgt": "components_isguidelineentry",
@@ -68317,7 +68326,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/mds/docs/src/lib/components.ts",
-      "source_location": "L117",
+      "source_location": "L119",
       "weight": 1.0,
       "_src": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_mds_docs_src_lib_components_ts",
       "_tgt": "components_istokenusage",
@@ -68329,7 +68338,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/mds/docs/src/lib/components.ts",
-      "source_location": "L396",
+      "source_location": "L431",
       "weight": 1.0,
       "_src": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_mds_docs_src_lib_components_ts",
       "_tgt": "components_getcomponentsbycategory",
@@ -68341,7 +68350,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/mds/docs/src/lib/components.ts",
-      "source_location": "L411",
+      "source_location": "L446",
       "weight": 1.0,
       "_src": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_mds_docs_src_lib_components_ts",
       "_tgt": "components_getcomponentbyname",

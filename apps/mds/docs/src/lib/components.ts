@@ -240,6 +240,16 @@ MinglitButton.text(
     category: 'Action',
     purpose: 'Fixed-bottom CTA bar (e.g. "Apply" on detail screens).',
     props: ['label', 'onPressed', 'isLoading'],
+    placement: {
+      where: [
+        '`Detail + Bottom CTA` 스캐폴드 / `Form + Bottom CTA` 스캐폴드의 하단 슬롯.',
+        '스크롤 영역 바깥에 고정. safe area 위에 위치.',
+      ],
+      spacing: [
+        { neighbor: '화면 좌/우 가장자리',  gap: 'spacing-screen-edge (16px)', note: 'CTA 버튼은 풀폭이지만 컨테이너 패딩으로 처리' },
+        { neighbor: 'safe area bottom',    gap: '0',                          note: '시스템 인셋 바로 위' },
+      ],
+    },
   },
 
   // ---------- Inputs ----------
@@ -262,6 +272,17 @@ MinglitButton.text(
     category: 'Cards',
     purpose: 'Generic content card with optional header / footer.',
     props: ['child', 'header', 'footer', 'onTap', 'padding'],
+    placement: {
+      where: [
+        '`List + Filter chips` 스캐폴드의 리스트 항목 — 카드 단위 컨텐츠.',
+        '`Detail + Bottom CTA`의 본문 안 정보 그룹핑.',
+      ],
+      spacing: [
+        { neighbor: '같은 리스트의 sibling 카드', gap: 'spacing-card-gap (12px)' },
+        { neighbor: '카드 내부 상하 패딩',         gap: 'spacing-card-content-v (16px)' },
+        { neighbor: '카드 내부 좌우 패딩',         gap: 'spacing-medium (16px)' },
+      ],
+    },
   },
   {
     name: 'MinglitTag',
@@ -302,36 +323,94 @@ MinglitButton.text(
     category: 'Sections',
     purpose: 'Section wrapper with optional header / divider spacing.',
     props: ['header', 'children', 'padding'],
+    placement: {
+      where: [
+        '`Detail + Bottom CTA`의 스크롤 본문 안 — 한 화면당 여러 섹션을 세로로 쌓음.',
+        '`MinglitContentLayout` 안의 직계 자식.',
+      ],
+      spacing: [
+        { neighbor: '다음 섹션',           gap: 'spacing-section-gap (40px)', note: '큰 토픽 단위 분리' },
+        { neighbor: '섹션 헤더 → 본문',    gap: 'spacing-medium (16px)' },
+        { neighbor: '섹션 내 그룹 사이',    gap: 'spacing-large (24px)' },
+      ],
+    },
   },
   {
     name: 'MinglitSectionDivider',
     category: 'Sections',
     purpose: 'Horizontal divider with consistent spacing.',
     props: ['spacing'],
+    placement: {
+      where: [
+        '섹션 사이 명시적 시각 구분이 필요할 때만 — 보통은 spacing-section-gap 만으로 충분.',
+        'thick(8px) — 섹션 단위 강한 분리. thin(1px) — 그룹 단위 약한 분리.',
+      ],
+    },
   },
   {
     name: 'MinglitListTile',
     category: 'Lists',
     purpose: 'Generic list row with leading / trailing slots.',
     props: ['leading', 'title', 'subtitle', 'trailing', 'onTap'],
+    placement: {
+      where: [
+        '리스트 / 멤버 / 알림 같은 동질적 row의 반복 단위.',
+        '`MinglitContentCard` 안에서도 사용 가능 (카드 내부 row).',
+      ],
+      spacing: [
+        { neighbor: '같은 리스트의 sibling tile', gap: '0', note: '연속 row는 보더 없이 붙음 (divider는 별도)' },
+        { neighbor: '내부 vertical padding',       gap: 'spacing-card-content-v (16px)', note: 'hit zone 56pt 이상 보장' },
+      ],
+    },
   },
   {
     name: 'MinglitKeyValueRow',
     category: 'Lists',
     purpose: 'Aligned key-value pair row (info displays).',
     props: ['keyText', 'value', 'highlight'],
+    placement: {
+      where: [
+        '`MinglitContentCard` 내부 — 정산 / 상세 정보 / 통계 row.',
+        'highlight=true는 합계 / 강조 row 1개에만.',
+      ],
+      spacing: [
+        { neighbor: '같은 카드 안 sibling row', gap: 'spacing-small (8px)' },
+        { neighbor: 'highlight row 위 divider', gap: 'thin divider', note: '합계 앞에 명시적 구분' },
+      ],
+    },
   },
   {
     name: 'MinglitContentLayout',
     category: 'Layouts',
     purpose: 'Standard content area scaffolding (padding + scroll).',
     props: ['child', 'padding', 'scrollable'],
+    placement: {
+      where: [
+        '대부분의 화면 본문 — `Detail + Bottom CTA`, `Form + Bottom CTA`, `List + Filter chips` 스캐폴드의 body root.',
+        'AppBar 아래 / Bottom CTA 위에 배치.',
+      ],
+      spacing: [
+        { neighbor: '좌/우 화면 가장자리', gap: 'spacing-screen-edge (16px)', note: '내부 패딩으로 처리' },
+        { neighbor: '내부 sections 사이',  gap: 'spacing-section-gap (40px)' },
+        { neighbor: '상단 (AppBar 아래)',  gap: 'spacing-medium (16px)' },
+      ],
+    },
   },
   {
     name: 'MinglitHorizontalScrollGroup',
     category: 'Lists',
     purpose: 'Horizontally scrolling row of cards / chips.',
     props: ['children', 'spacing', 'padding'],
+    placement: {
+      where: [
+        '섹션 안에서 sibling 카드들이 가로로 펼쳐질 때 — 추천 / 인기 / 최근 같은 카탈로그.',
+        '한 화면 안에 2-3개 이상 스택하지 말 것 (수직 정보가 묻힘).',
+      ],
+      spacing: [
+        { neighbor: '내부 카드 사이',          gap: 'spacing-card-gap (12px)' },
+        { neighbor: '좌/우 첫·마지막 카드 패딩', gap: 'spacing-screen-edge (16px)', note: '스크롤 끝에서 화면 가장자리까지' },
+      ],
+    },
   },
 
   // ---------- Settings ----------
@@ -341,6 +420,17 @@ MinglitButton.text(
     purpose: 'Grouped settings list with optional header label.',
     props: ['header', 'children'],
     usedIn: ['user-MyPageRoute'],
+    placement: {
+      where: [
+        '`Settings groups` 스캐폴드 — 한 화면에 여러 그룹을 세로로 스택.',
+        '같은 토픽의 설정 tile들을 묶음. 헤더 라벨로 그룹 의미 명시.',
+      ],
+      spacing: [
+        { neighbor: '다음 그룹',          gap: 'spacing-large (24px)' },
+        { neighbor: '그룹 헤더 → 첫 tile', gap: 'spacing-small (8px)' },
+        { neighbor: '내부 tiles 사이',     gap: '0', note: 'tile 자체 padding이 hit zone 보장' },
+      ],
+    },
   },
   {
     name: 'MinglitSettingsTile',
@@ -348,6 +438,17 @@ MinglitButton.text(
     purpose: 'Settings row with leading icon, title, optional subtitle, trailing chevron.',
     props: ['leading', 'title', 'subtitle', 'trailing', 'destructive', 'onTap'],
     usedIn: ['user-MyPageRoute'],
+    placement: {
+      where: [
+        '`MinglitSettingsGroup` 내부 직계 자식. 단독 사용 안 함.',
+        'destructive=true는 그룹의 마지막 tile에 — 계정 삭제 / 로그아웃 같은 종결 액션.',
+      ],
+      spacing: [
+        { neighbor: '같은 그룹 sibling tile', gap: '0', note: '연속 row는 붙고, 내부 padding이 hit zone 형성' },
+        { neighbor: '내부 vertical padding',  gap: 'spacing-card-content-v (16px)', note: 'hit zone 56pt' },
+        { neighbor: '내부 horizontal padding', gap: 'spacing-medium (16px)' },
+      ],
+    },
   },
 
   // ---------- Loading ----------
