@@ -8,7 +8,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'event_repository.g.dart';
-part 'event_repository_queries.dart';
+part 'event_repository_checkin_queries.dart';
 part 'event_repository_application_queries.dart';
 part 'event_repository_partner_queries.dart';
 part 'event_repository_feed_queries.dart';
@@ -23,7 +23,7 @@ EventRepository eventRepository(Ref ref) {
 /// Repository for Event-related data operations.
 class EventRepository extends _SupabaseEventContextBase
     with
-        _EventRepositoryQueries,
+        _EventRepositoryCheckinQueries,
         _EventRepositoryApplicationQueries,
         _EventRepositoryPartnerQueries,
         _EventRepositoryFeedQueries,

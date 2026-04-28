@@ -29,8 +29,7 @@ final class PaidApplyEventResult extends ApplyEventResult {
   final int paymentAmount;
 }
 
-mixin _EventRepositoryCommands
-    on _SupabaseEventContext, _EventRepositoryQueries {
+mixin _EventRepositoryCommands on _SupabaseEventContext {
   /// Deletes an application record.
   Future<void> deleteApplication({
     required String eventId,
