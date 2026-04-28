@@ -27,7 +27,7 @@ class MinglitAvatarImage extends StatelessWidget {
   Widget build(BuildContext context) {
     final size = radius * 2;
 
-    Widget placeholder = CircleAvatar(
+    final Widget placeholder = CircleAvatar(
       radius: radius,
       backgroundColor: backgroundColor,
       child: Icon(fallbackIcon, color: fallbackIconColor, size: radius),

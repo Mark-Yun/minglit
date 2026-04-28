@@ -139,7 +139,6 @@ class _MatchResultCard extends StatelessWidget {
           MinglitAvatarImage(
             radius: 24,
             url: match.partnerProfileImage,
-            fallbackIcon: Icons.person,
             backgroundColor: MinglitColors.primary.withValues(
               alpha: MinglitOpacity.highlight,
             ),

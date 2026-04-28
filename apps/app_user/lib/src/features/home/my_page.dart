@@ -246,7 +246,6 @@ class _ProfileTile extends StatelessWidget {
             MinglitAvatarImage(
               radius: 24,
               url: avatarUrl,
-              fallbackIcon: Icons.person,
               backgroundColor: colorScheme.primaryContainer,
               fallbackIconColor: colorScheme.primary,
             ),
