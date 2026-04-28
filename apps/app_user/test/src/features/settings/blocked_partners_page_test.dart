@@ -113,7 +113,7 @@ void main() {
         expect(callCount, 1);
 
         // Navigate back — autoDispose disposes the provider when widget unmounts
-        final NavigatorState nav = tester.state(find.byType(Navigator));
+        final nav = tester.state(find.byType(Navigator));
         nav.pop();
         await tester.pumpAndSettle();
 
