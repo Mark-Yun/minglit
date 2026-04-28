@@ -6,7 +6,6 @@ import 'package:app_partner/src/features/home/widgets/event_action_card.dart';
 import 'package:app_partner/src/features/home/widgets/location_guide_banner.dart';
 import 'package:app_partner/src/features/home/widgets/onboarding_step_guide.dart';
 import 'package:app_partner/src/features/home/widgets/todo_summary_chips.dart';
-import 'package:app_partner/src/features/home/widgets/weekly_stats_row.dart';
 import 'package:app_partner/src/logic/current_partner_provider.dart';
 import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
@@ -162,16 +161,8 @@ class PartnerHomePage extends ConsumerWidget {
                     _buildEventSection(context, ref, state),
                     const SizedBox(height: MinglitSpacing.large),
 
-                    // 4. Weekly Stats
-                    const _SectionHeader(title: '이번 주 성과'),
-                    const SizedBox(height: MinglitSpacing.small),
-                    // Note: weekly stats values below are placeholders — not yet backed by a real API.
-                    WeeklyStatsRow(
-                      totalRevenue: null,
-                      totalApplications: state.pendingReviewCount,
-                      checkinRate: null,
-                    ),
-                    const SizedBox(height: MinglitSpacing.large),
+                    // Fix #1950: WeeklyStatsRow hidden until backend API is wired —
+                    // hardcoded nulls rendered as ₩0 / 0% and misled partners.
                   ],
                 ],
               ),
