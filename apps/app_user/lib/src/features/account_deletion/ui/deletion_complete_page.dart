@@ -52,10 +52,11 @@ class DeletionCompletePage extends ConsumerWidget {
   }
 
   Future<void> _finish(BuildContext context, WidgetRef ref) async {
-    ref.read(appCoordinatorProvider).goToHome();
-    await Future<void>.delayed(Duration.zero);
+    // Fix #1923: show toast and signOut before navigation — goToHome() disposes
+    // this widget so any post-navigation context.mounted check is always false.
+    context.showMinglitSuccess('탈퇴 요청이 접수되었어요.');
     await ref.read(authControllerProvider.notifier).signOut();
     if (!context.mounted) return;
-    context.showMinglitSuccess('탈퇴 요청이 접수되었어요.');
+    ref.read(appCoordinatorProvider).goToHome();
   }
 }
