@@ -12,7 +12,7 @@
 
 BEGIN;
 
-SELECT plan(19);
+SELECT plan(20);
 
 SELECT tests.authenticate_as_service_role();
 
@@ -245,7 +245,41 @@ SELECT ok(
   '#2041: 6일 미응답 → 아직 철회 없음 (7일 미만)'
 );
 
--- ── 6. idempotent 확인 ────────────────────────────────────────────────────────
+-- ── 6. 안내 후 앱에서 동의 갱신한 경우 자동 철회 없음 검증 ──────────────────────────
+
+DO $$
+DECLARE
+  v_renewed_after_notif uuid;
+BEGIN
+  -- fixture G: 8일 전 갱신 안내 발송 + 이후 앱에서 마케팅 동의 갱신 (consented_at=now())
+  -- → consented_at > renewal_notified_at 이므로 Step 1 자동 철회 대상 아님
+  -- Regression(#2041): 이전 코드는 consented_at 검사 없이 7일 경과만으로 철회
+  v_renewed_after_notif := tests.create_supabase_user(
+    'consent_2041_renewed_after_notif', 'consent_2041_renewed_after_notif@pgtap.local'
+  );
+  INSERT INTO public.user_consents
+    (user_id, consent_key, consented, consented_at, withdrawn_at, renewal_notified_at)
+  VALUES
+    (v_renewed_after_notif, 'marketing_consent', true,
+     now(),                         -- 앱에서 동의 갱신 (renewal_notified_at보다 최근)
+     NULL,
+     now() - INTERVAL '8 days');    -- 8일 전 갱신 안내 발송됨
+
+  PERFORM set_config('renewal_test.renewed_after_notif', v_renewed_after_notif::text, true);
+END $$;
+
+SELECT admin.process_marketing_consent_renewals(730);
+
+-- 20. fixture G: renewal_notified_at=8일 전 + consented_at=now() → 자동 철회 없음
+SELECT ok(
+  (SELECT consented = true AND withdrawn_at IS NULL
+     FROM public.user_consents
+    WHERE user_id = current_setting('renewal_test.renewed_after_notif')::uuid
+      AND consent_key = 'marketing_consent'),
+  '#2041 Regression: 갱신 안내 후 앱에서 동의 갱신한 사용자는 자동 철회 없음 (consented_at >= renewal_notified_at)'
+);
+
+-- ── 7. idempotent 확인 ────────────────────────────────────────────────────────
 
 -- 18. 재실행 시 이미 notified_at 설정된 사용자 재처리 없음
 -- (fixture A: renewal_notified_at이 설정됐으므로 이제 발송 대상이 아님)

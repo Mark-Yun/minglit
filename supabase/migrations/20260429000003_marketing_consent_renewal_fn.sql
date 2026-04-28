@@ -20,7 +20,8 @@ DECLARE
   v_user_id   uuid;
 BEGIN
   -- 1. 갱신 안내 7일 이상 미응답 → 자동 철회
-  --    (사용자가 갱신하면 앱이 renewal_notified_at=NULL로 리셋하므로 해당 없음)
+  --    consented_at < renewal_notified_at: 발송 후 앱에서 동의를 갱신한 경우 제외
+  --    (consented_at이 renewal_notified_at보다 크면 사용자가 안내 후 동의를 갱신한 것)
   UPDATE public.user_consents
   SET withdrawn_at = now(),
       consented    = false
@@ -28,7 +29,8 @@ BEGIN
     AND consented             = true
     AND withdrawn_at          IS NULL
     AND renewal_notified_at   IS NOT NULL
-    AND renewal_notified_at   < now() - INTERVAL '7 days';
+    AND renewal_notified_at   < now() - INTERVAL '7 days'
+    AND consented_at          < renewal_notified_at;  -- Fix #2041: 발송 후 동의 갱신한 경우 제외
 
   GET DIAGNOSTICS v_withdrawn = ROW_COUNT;
 
