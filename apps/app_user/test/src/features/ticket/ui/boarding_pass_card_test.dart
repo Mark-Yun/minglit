@@ -292,5 +292,70 @@ void main() {
         );
       },
     );
+
+    // Fix #1931 regression guard: _NotchCircle must not use hardcoded
+    // MinglitColors.surface in dark mode (causes bright circles on dark page).
+    testWidgets(
+      'dark mode: notch circles use scaffoldBackgroundColor, not hardcoded surface (Fix #1931)',
+      (tester) async {
+        final darkTheme = ThemeData.dark(useMaterial3: true);
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: darkTheme,
+            home: Scaffold(
+              body: SingleChildScrollView(
+                child: _Host(token: _makeToken(), eventMeta: _makeMeta()),
+              ),
+            ),
+          ),
+        );
+        await tester.pump();
+
+        expect(find.byType(BoardingPassCard), findsOneWidget);
+
+        // MinglitColors.surface = 0xFFF9FAFB (light-mode only).
+        // In dark mode, notch circles must match scaffoldBackgroundColor.
+        const lightSurface = Color(0xFFF9FAFB);
+        final circleContainers = tester
+            .widgetList<Container>(
+              find.byWidgetPredicate(
+                (w) =>
+                    w is Container &&
+                    w.decoration is BoxDecoration &&
+                    (w.decoration! as BoxDecoration).shape == BoxShape.circle,
+              ),
+            )
+            .toList();
+
+        expect(
+          circleContainers,
+          isNotEmpty,
+          reason: 'Expected notch circle Containers in the widget tree',
+        );
+        for (final c in circleContainers) {
+          final color = (c.decoration! as BoxDecoration).color;
+          expect(
+            color,
+            isNot(lightSurface),
+            reason:
+                '_NotchCircle must not use MinglitColors.surface in dark mode',
+          );
+        }
+
+        // Divider in _EventInfoSection must also use theme-aware color, not
+        // MinglitColors.surface. outlineVariant in dark theme != lightSurface.
+        final dividers = tester
+            .widgetList<Divider>(find.byType(Divider))
+            .toList();
+        expect(dividers, isNotEmpty, reason: 'Expected Divider in event info');
+        for (final d in dividers) {
+          expect(
+            d.color,
+            isNot(lightSurface),
+            reason: 'Divider must not use MinglitColors.surface in dark mode',
+          );
+        }
+      },
+    );
   });
 }

@@ -16,10 +16,12 @@ class _PerforationLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Fix #1931: use theme-aware color so dash line is visible in dark mode
+    final dashColor = Theme.of(context).colorScheme.outlineVariant;
     return Container(
       color: MinglitColors.background,
       height: _notchDiameter,
-      child: const Stack(
+      child: Stack(
         clipBehavior: Clip.none,
         children: [
           // Dashed center line (excludes the notch areas)
@@ -27,18 +29,18 @@ class _PerforationLine extends StatelessWidget {
             child: CustomPaint(
               painter: _DashLinePainter(
                 notchRadius: _notchRadius,
-                dashColor: MinglitColors.divider,
+                dashColor: dashColor,
               ),
             ),
           ),
           // Left notch — positioned to overlap card left edge
-          Positioned(
+          const Positioned(
             left: -_notchRadius,
             top: 0,
             child: _NotchCircle(size: _notchDiameter),
           ),
           // Right notch — positioned to overlap card right edge
-          Positioned(
+          const Positioned(
             right: -_notchRadius,
             top: 0,
             child: _NotchCircle(size: _notchDiameter),
@@ -49,7 +51,7 @@ class _PerforationLine extends StatelessWidget {
   }
 }
 
-/// Solid circle in scaffold surface color — creates the "cutout" illusion.
+/// Solid circle matching page background — creates the "cutout" illusion.
 class _NotchCircle extends StatelessWidget {
   const _NotchCircle({required this.size});
 
@@ -57,11 +59,12 @@ class _NotchCircle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Fix #1931: match scaffold background so dark mode doesn't show white circles
     return Container(
       width: size,
       height: size,
-      decoration: const BoxDecoration(
-        color: MinglitColors.surface,
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
         shape: BoxShape.circle,
       ),
     );
@@ -101,7 +104,9 @@ class _DashLinePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_DashLinePainter oldDelegate) => false;
+  bool shouldRepaint(_DashLinePainter oldDelegate) =>
+      oldDelegate.dashColor != dashColor ||
+      oldDelegate.notchRadius != notchRadius;
 }
 
 // ---------------------------------------------------------------------------
