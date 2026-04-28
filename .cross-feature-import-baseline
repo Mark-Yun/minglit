@@ -19,6 +19,5 @@ settings/privacy_page.dart: settings -> account_deletion
 settings/privacy_page.dart: settings -> consent
 tag/ui/tag_event_list_page.dart: tag -> event
 
-# app_partner (2 violations as of 2026-04-27)
+# app_partner (1 violation as of 2026-04-27)
 application/event_application_detail_page.dart: application -> party
-party/event/create/event_create_controller.dart: party -> home

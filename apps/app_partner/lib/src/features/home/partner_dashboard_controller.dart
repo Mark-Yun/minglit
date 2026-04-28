@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:app_partner/src/logic/current_partner_provider.dart';
-
+import 'package:app_partner/src/logic/dashboard_refresh_notifier.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -28,6 +28,9 @@ abstract class PartnerDashboardState with _$PartnerDashboardState {
 class PartnerDashboardController extends _$PartnerDashboardController {
   @override
   PartnerDashboardState build() {
+    // Fix #1943: watch shared refresh signal — bumped by event_create_controller
+    // after successful creation, triggering auto-rebuild without cross-feature coupling.
+    ref.watch(dashboardRefreshProvider);
     // Schedule loading after build() returns so that `state` is initialized.
     // unawaited() runs synchronously until the first await, which would
     // access `state` before build() has returned — causing
