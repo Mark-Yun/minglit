@@ -106,22 +106,27 @@ void main() {
 
     group('getApprovedVerificationIds', () {
       test('returns list of verification IDs', () async {
-        unawaited(
-          mockTable(
-            mockClient,
-            'partner_verified_users',
-            selectData: [
-              {'verification_id': 'v_1'},
-              {'verification_id': 'v_2'},
-              {'verification_id': 'v_3'},
-            ],
-          ),
+        final builder = mockTable(
+          mockClient,
+          'partner_verified_users',
+          selectData: [
+            {'verification_id': 'v_1'},
+            {'verification_id': 'v_2'},
+            {'verification_id': 'v_3'},
+          ],
         );
+        unawaited(builder);
 
         final result = await repository.getApprovedVerificationIds('user_1');
 
         expect(result, hasLength(3));
         expect(result, containsAll(['v_1', 'v_2', 'v_3']));
+        // Fix #2011: regression guard — lastSelectColumns must include expected column
+        expect(
+          builder.lastSelectColumns,
+          contains('verification_id'),
+          reason: 'Fix #2011: select() must include verification_id',
+        );
       });
 
       test('returns empty list when no verifications', () async {

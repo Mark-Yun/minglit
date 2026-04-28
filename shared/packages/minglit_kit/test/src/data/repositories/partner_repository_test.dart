@@ -110,21 +110,26 @@ void main() {
       );
 
       test('returns managed partners when permissions exist', () async {
-        unawaited(
-          mockTable(
-            mockClient,
-            'partner_member_permissions',
-            selectData: [
-              {'partner_id': 'partner_1'},
-            ],
-          ),
+        final permissionsBuilder = mockTable(
+          mockClient,
+          'partner_member_permissions',
+          selectData: [
+            {'partner_id': 'partner_1'},
+          ],
         );
+        unawaited(permissionsBuilder);
         unawaited(mockTable(mockClient, 'partners', selectData: [partnerJson]));
 
         final result = await repository.getMyManagedPartners();
 
         expect(result, hasLength(1));
         expect(result.first.id, 'partner_1');
+        // Fix #2011: regression guard — lastSelectColumns must include expected column
+        expect(
+          permissionsBuilder.lastSelectColumns,
+          contains('partner_id'),
+          reason: 'Fix #2011: select() must include partner_id',
+        );
       });
 
       // Fix #1217: Fallback via approved applications when permissions missing
@@ -181,21 +186,26 @@ void main() {
       });
 
       test('returns role data when found', () async {
-        unawaited(
-          mockTable(
-            mockClient,
-            'partner_member_permissions',
-            maybeSingleData: {
-              'role': 'owner',
-              'permissions': ['all'],
-            },
-          ),
+        final builder = mockTable(
+          mockClient,
+          'partner_member_permissions',
+          maybeSingleData: {
+            'role': 'owner',
+            'permissions': ['all'],
+          },
         );
+        unawaited(builder);
 
         final result = await repository.getMyMemberRole('partner_1');
 
         expect(result, isNotNull);
         expect(result!['role'], 'owner');
+        // Fix #2011: regression guard — lastSelectColumns must include expected column
+        expect(
+          builder.lastSelectColumns,
+          contains('role'),
+          reason: 'Fix #2011: select() must include role',
+        );
       });
     });
 

@@ -147,7 +147,9 @@ class EventApplicationController extends _$EventApplicationController {
             'name': ticket.name,
             'amount': result.paymentAmount,
             'buyer_name': user.userMetadata?['name'] ?? '게스트',
-            'buyer_tel': user.phone ?? '01000000000',
+            // Fix #1924: never fabricate a phone number — omit with '' when phone is null.
+            // Iamport accepts an empty string; a hardcoded stub causes false PG records.
+            'buyer_tel': user.phone ?? '',
             'buyer_email': user.email ?? 'guest@minglit.com',
             'app_scheme': 'minglit',
           },

@@ -24,8 +24,11 @@ void main() {
     );
   }
 
-  group('BlockedPartnersPage — Fix #270 회귀 테스트', () {
-    testWidgets('network failure shows snackbar and stops loading', (
+  // Fix #270: network failure regression
+  // Fix #1927: Log.e replaces debugPrint; error body replaces snackbar
+  // Fix #1929: Riverpod FutureProvider replaces manual ConsumerStatefulWidget state
+  group('BlockedPartnersPage', () {
+    testWidgets('network failure shows error body and stops loading', (
       tester,
     ) async {
       when(
@@ -33,14 +36,13 @@ void main() {
       ).thenAnswer((_) async => throw Exception('Network error'));
 
       await tester.pumpWidget(buildTestWidget());
-      await tester.pump(); // initState → _load()
-      await tester.pump(); // Future completes with error
-      await tester.pump(); // SnackBar animation
+      // pumpAndSettle waits for FutureProvider error state to propagate through
+      // the async chain (mock → FutureProvider catch/rethrow → Riverpod rebuild).
+      // Two pump() calls were insufficient for this multi-hop async chain.
+      await tester.pumpAndSettle();
 
-      // SnackBar 표시 확인
+      // Fix #1929: error body rendered by FutureProvider.when(error:)
       expect(find.text('차단 목록을 불러오지 못했습니다'), findsOneWidget);
-
-      // 로딩 인디케이터가 더 이상 표시되지 않아야 함
       expect(find.byType(CircularProgressIndicator), findsNothing);
     });
 
@@ -58,10 +60,120 @@ void main() {
       await tester.pumpWidget(buildTestWidget());
       await tester.pump();
       await tester.pump();
-      await tester.pump();
 
       expect(find.text('Blocked Partner'), findsOneWidget);
       expect(find.text('차단 해제'), findsOneWidget);
     });
+
+    testWidgets('empty list shows empty state message', (tester) async {
+      when(
+        () => mockSocialRepo.getBlockedPartners(),
+      ).thenAnswer((_) async => []);
+
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.text('차단된 파트너가 없습니다'), findsOneWidget);
+    });
+
+    testWidgets(
+      'Fix #1929: autoDispose re-fetches on page re-entry in same ProviderScope',
+      (tester) async {
+        // Without autoDispose, FutureProvider caches the result in the shared
+        // ProviderScope indefinitely. Re-entry would show stale data.
+        var callCount = 0;
+        when(() => mockSocialRepo.getBlockedPartners()).thenAnswer((_) async {
+          callCount++;
+          return <Map<String, dynamic>>[];
+        });
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              socialRepositoryProvider.overrideWithValue(mockSocialRepo),
+            ],
+            child: MaterialApp(
+              home: Builder(
+                builder: (context) => ElevatedButton(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (_) => const BlockedPartnersPage(),
+                    ),
+                  ),
+                  child: const Text('Open'),
+                ),
+              ),
+            ),
+          ),
+        );
+
+        // First visit
+        await tester.tap(find.text('Open'));
+        await tester.pumpAndSettle();
+        expect(callCount, 1);
+
+        // Navigate back — autoDispose disposes the provider when widget unmounts
+        final nav = tester.state<NavigatorState>(
+          find.byType(Navigator),
+        );
+        nav.pop();
+        await tester.pumpAndSettle();
+
+        // Second visit — autoDispose must have fired; provider re-fetches
+        await tester.tap(find.text('Open'));
+        await tester.pumpAndSettle();
+        expect(
+          callCount,
+          2,
+          reason: 'autoDispose provider must re-fetch on re-entry',
+        );
+      },
+    );
+
+    testWidgets(
+      'Fix #1929: blockedPartnersProvider invalidated after unblock',
+      (tester) async {
+        when(() => mockSocialRepo.getBlockedPartners()).thenAnswer(
+          (_) async => [
+            {'id': 'p1', 'name': 'Partner A', 'profile_image_url': null},
+          ],
+        );
+        when(
+          () => mockSocialRepo.unblockPartner('p1'),
+        ).thenAnswer((_) async {});
+
+        await tester.pumpWidget(buildTestWidget());
+        await tester.pump();
+        await tester.pump();
+
+        expect(find.text('Partner A'), findsOneWidget);
+
+        // After unblock, provider should reload
+        when(
+          () => mockSocialRepo.getBlockedPartners(),
+        ).thenAnswer((_) async => []);
+
+        await tester.tap(find.text('차단 해제'));
+        await tester.pumpAndSettle();
+        // MinglitAlert.showConfirm uses AlertDialog — tap confirm button
+        if (find.text('해제').evaluate().isNotEmpty) {
+          await tester.tap(find.text('해제'));
+          await tester.pumpAndSettle();
+        }
+
+        verify(() => mockSocialRepo.unblockPartner('p1')).called(1);
+        // Fix #1929: ref.invalidate(blockedPartnersProvider) must trigger re-fetch
+        // Verify getBlockedPartners() was called a second time (initial + after invalidate)
+        verify(() => mockSocialRepo.getBlockedPartners()).called(2);
+        // UI must reflect the empty list returned by the second fetch
+        expect(
+          find.text('차단된 파트너가 없습니다'),
+          findsOneWidget,
+          reason: 'invalidate must cause re-fetch; UI must show empty state',
+        );
+      },
+    );
   });
 }
