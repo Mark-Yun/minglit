@@ -41,7 +41,7 @@ Minglit의 Supabase 기반 백엔드 인프라를 기술한다.
 
 ### 2.1 Table Inventory
 
-총 **54개 테이블(analytics 스키마 5개 포함)** + **4개 뷰** + **4개 PGMQ 인프라 테이블**.
+총 **56개 테이블(analytics 스키마 5개 포함)** + **4개 뷰** + **4개 PGMQ 인프라 테이블** + **admin 스키마 3개 테이블(컴플라이언스 인프라, 별도 집계)**.
 
 > **Note**: 아래 테이블 목록이 실제 migration과 일치하는지 정기적으로 검증합니다.
 
@@ -101,6 +101,8 @@ Minglit의 Supabase 기반 백엔드 인프라를 기술한다.
 | `system_settings` | 시스템 설정 키-값 | key (PK), value jsonb, description, updated_at, updated_by |
 | `policies` | 약관/정책 버전 관리 | id (PK uuid), key, value jsonb, version, effective_date, description, created_at |
 | `user_consents` | 유저 약관 동의 기록 | user_id, policy_id, consented_at, revoked_at |
+| `location_access_log` | 위치정보 이용 확인자료 (위치정보법 §16, 6개월 보관) | user_id, accessed_at, purpose (nearby_search), country_code |
+| `ef_auth_manifest` | pg_cron 대상 EF 인증 레벨 선언 (Fix #1760, cron-targeted EF 전용) | ef_name (PK), required_auth (service_role), description |
 
 #### Account Management (계정 관리)
 
@@ -133,6 +135,17 @@ Minglit의 Supabase 기반 백엔드 인프라를 기술한다.
 | `daily_revenue` | analytics | 일별 매출 집계 | date, gross, net, refunds |
 | `funnel_daily` | analytics | 일별 퍼널 전환율 | date, step, count, conversion_rate |
 | `github_daily_stats` | analytics | 일별 GitHub 이슈/PR 통계 | date, metric, count |
+
+#### Admin Schema — Compliance Infrastructure (admin 스키마, service_role 전용)
+
+> `admin` 스키마 테이블은 public 집계(56개)에 포함되지 않습니다.
+> authenticated/anon 역할은 접근 불가; service_role 또는 DB 직접 접근만 허용.
+
+| Table | Purpose | Key Columns |
+|-------|---------|-------------|
+| `retention_policies` | 데이터 보존 정책 정의 (법적 의무 기간 관리) | id, kind (cron/event), target (table/queue), retention_days, legal_min_days |
+| `retention_policy_audit` | 보존 정책 실행 이력 감사 로그 | policy_id, run_at, deleted_count, error |
+| `retention_allowed_targets` | 보존 정책 적용 허용 테이블 화이트리스트 (Fix #1749) | schema_name, table_name (PK 복합), ts_col, legal_min_days |
 
 #### PGMQ Infrastructure
 

@@ -77,11 +77,16 @@ apps/app_partner/lib/src/features/
 
 `shared/packages/` 디렉토리에는 모노레포 전체에서 공유되는 패키지가 위치합니다.
 
-| 패키지 | 역할 |
-|--------|------|
-| `minglit_kit` | 핵심 공유 라이브러리 (모델, 리포지토리, 위젯, 유틸리티) |
-| `minglit_iamport_v1` | Iamport V1 API 결제 연동 래퍼 |
-| `minglit_lints` | 모노레포 공통 린트 규칙 |
+| 패키지 | 경로 | 역할 |
+|--------|------|------|
+| `mds` | `shared/packages/mds/core/` | Minglit Design System 핵심 — 순수 UI 컴포넌트, 테마, 디자인 토큰 통합 |
+| `mds_tokens` | `shared/packages/mds/tokens/` | 디자인 토큰 SSOT — Style Dictionary → Dart 상수 코드젠 |
+| `mds_icons` | `shared/packages/mds/icons/` | SVG 기반 테마-어웨어 아이콘 패키지 |
+| `minglit_kit` | `shared/packages/minglit_kit/` | 핵심 공유 라이브러리 (모델, 리포지토리, 위젯, 유틸리티) |
+| `minglit_iamport_v1` | `shared/packages/minglit_iamport_v1/` | Iamport V1 API 결제 연동 래퍼 |
+| `minglit_lints` | `shared/packages/minglit_lints/` | 모노레포 공통 린트 규칙 |
+
+> `mds_storybook` (`apps/mds/storybook/`)는 MDS 컴포넌트 Widgetbook 스토리 앱으로, 패키지가 아닌 앱으로 분류됩니다.
 
 ### 2.2 Coordinator Pattern (Navigation)
 **UI는 "어디로 갈지" 모릅니다.** 단순히 Coordinator에게 "이 버튼이 눌렸다"고 알릴 뿐입니다.
