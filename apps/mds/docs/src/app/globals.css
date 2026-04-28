@@ -792,3 +792,342 @@
   border-radius: 6px;
   background: var(--color-surface);
 }
+
+/* ============================================================
+   B5 — Tag / Badge / ParticipantGauge spec preview classes.
+   ============================================================ */
+
+.mds-spec-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xsmall, 4px);
+  border-radius: var(--radius-chip, 100px);
+  font-family: inherit;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+  background: color-mix(in srgb, var(--tag-color, var(--color-primary)) 12%, transparent);
+  color: var(--tag-color, var(--color-primary));
+}
+.mds-spec-tag--sm {
+  padding: var(--spacing-xxsmall, 2px) var(--spacing-small, 8px);
+  font-size: 10px;
+}
+.mds-spec-tag--md {
+  padding: var(--spacing-xsmall, 4px) var(--spacing-sm, 12px);
+  font-size: var(--typography-font-size-chip-label, 13px);
+}
+.mds-spec-tag__icon {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+.mds-spec-tag--primary { --tag-color: var(--color-primary, #9900ff); }
+.mds-spec-tag--success { --tag-color: var(--color-success, #16a34a); }
+.mds-spec-tag--warning { --tag-color: var(--color-warning, #d97706); }
+.mds-spec-tag--error   { --tag-color: var(--color-error, #ef4444); }
+.mds-spec-tag--info    { --tag-color: var(--color-info, #3b82f6); }
+
+.mds-spec-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-small, 8px);
+  font-family: inherit;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+  padding: var(--spacing-xsmall, 4px) var(--spacing-sm, 12px);
+  font-size: var(--typography-font-size-chip-label, 13px);
+  background: color-mix(in srgb, var(--badge-color, var(--color-primary)) 12%, transparent);
+  color: var(--badge-color, var(--color-primary));
+}
+.mds-spec-badge--compact {
+  padding: var(--spacing-xxsmall, 2px) var(--spacing-small, 8px);
+  font-size: var(--typography-font-size-caption, 11px);
+}
+.mds-spec-badge--primary { --badge-color: var(--color-primary, #9900ff); }
+.mds-spec-badge--success { --badge-color: var(--color-success, #16a34a); }
+.mds-spec-badge--warning { --badge-color: var(--color-warning, #d97706); }
+.mds-spec-badge--error   { --badge-color: var(--color-error, #ef4444); }
+.mds-spec-badge--info    { --badge-color: var(--color-info, #3b82f6); }
+
+.mds-spec-gauge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xxsmall, 2px);
+  padding: var(--spacing-xxsmall, 2px) var(--spacing-xsmall2, 6px);
+  border-radius: var(--radius-chip, 100px);
+  background: color-mix(in srgb, var(--color-text-primary, #111827) 8%, transparent);
+  white-space: nowrap;
+}
+.mds-spec-gauge__segment {
+  display: inline-block;
+  width: 10px;
+  height: var(--spacing-small, 8px);
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+.mds-spec-gauge__label {
+  font-size: var(--typography-font-size-caption, 11px);
+  font-weight: 700;
+  color: var(--color-text-primary, #111827);
+  line-height: 1;
+  margin-left: var(--spacing-xsmall2, 6px);
+  margin-right: var(--spacing-xxsmall, 2px);
+}
+
+/* ============================================================
+   B6 — LoadingIndicator / Skeleton / AsyncValueWidget classes.
+   ============================================================ */
+
+@keyframes mds-spec-loader-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes mds-spec-loader-slide {
+  0%   { left: -40%; }
+  50%  { left: 60%; }
+  100% { left: 110%; }
+}
+.mds-spec-loader-circle { display: block; flex-shrink: 0; }
+.mds-spec-loader-linear { display: block; width: 100%; }
+
+@keyframes mds-spec-shimmer {
+  0%, 100% { opacity: 0.4; }
+  50%       { opacity: 0.85; }
+}
+.mds-spec-skeleton-block {
+  display: block;
+  background: var(--color-divider);
+  border-radius: var(--radius-small);
+  animation: mds-spec-shimmer 1.4s ease-in-out infinite;
+}
+
+.mds-spec-async {
+  font-family: monospace;
+  font-size: var(--typography-font-size-caption);
+  line-height: 1.6;
+}
+.mds-spec-async-state-card {
+  flex: 1 1 0;
+  min-width: 140px;
+  border-radius: var(--radius-card);
+  padding: var(--spacing-medium);
+  background: var(--color-surface);
+}
+
+/* ============================================================
+   B7 — Image / ImageCarousel / ImageSourceSheet classes.
+   ============================================================ */
+
+.mds-spec-image {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-card);
+  flex-shrink: 0;
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--color-primary) 20%, var(--color-surface)) 0%,
+    color-mix(in srgb, var(--color-secondary) 25%, var(--color-surface)) 60%,
+    color-mix(in srgb, var(--color-tertiary) 15%, var(--color-surface)) 100%
+  );
+}
+.mds-spec-image--square    { aspect-ratio: 1 / 1; }
+.mds-spec-image--landscape { aspect-ratio: 16 / 9; }
+.mds-spec-image--portrait  { aspect-ratio: 3 / 4; }
+.mds-spec-image--cover     { background-size: cover; }
+.mds-spec-image--contain   { background-size: contain; background-repeat: no-repeat; background-position: center; }
+.mds-spec-image--placeholder {
+  background: linear-gradient(90deg,
+    var(--color-surface) 25%,
+    color-mix(in srgb, var(--color-divider) 80%, white) 50%,
+    var(--color-surface) 75%
+  );
+  background-size: 200% 100%;
+  animation: mds-spec-image-shimmer 1.4s ease infinite;
+}
+@keyframes mds-spec-image-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.mds-spec-image--error {
+  background: color-mix(in srgb, var(--color-surface) 90%, var(--color-error));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mds-spec-image__icon {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.18;
+}
+.mds-spec-image__label {
+  position: absolute;
+  bottom: var(--spacing-small);
+  left: var(--spacing-small);
+  font: 600 10px/1 ui-monospace, monospace;
+  color: #fff;
+  background: rgba(0,0,0,0.45);
+  padding: 2px 6px;
+  border-radius: var(--radius-badge);
+  letter-spacing: 0.5px;
+}
+.mds-spec-image-anatomy {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 56px 40px;
+  background: var(--color-surface);
+  border-radius: var(--radius-card);
+  overflow: visible;
+}
+
+.mds-spec-carousel {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-card);
+  flex-shrink: 0;
+}
+.mds-spec-carousel--square    { aspect-ratio: 1 / 1; }
+.mds-spec-carousel--landscape { aspect-ratio: 16 / 9; }
+.mds-spec-carousel__track { display: flex; width: 100%; height: 100%; }
+.mds-spec-carousel__page {
+  flex: 0 0 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mds-spec-carousel__page--1 {
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--color-primary) 22%, var(--color-surface)) 0%,
+    color-mix(in srgb, var(--color-secondary) 28%, var(--color-surface)) 100%
+  );
+}
+.mds-spec-carousel__page--2 {
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--color-secondary) 20%, var(--color-surface)) 0%,
+    color-mix(in srgb, var(--color-tertiary) 25%, var(--color-surface)) 100%
+  );
+}
+.mds-spec-carousel__page--3 {
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--color-tertiary) 22%, var(--color-surface)) 0%,
+    color-mix(in srgb, var(--color-primary) 18%, var(--color-surface)) 100%
+  );
+}
+.mds-spec-carousel__counter {
+  position: absolute;
+  top: var(--spacing-small);
+  right: var(--spacing-small);
+  background: rgba(0,0,0,0.5);
+  color: #fff;
+  font: 600 10px/1 ui-monospace, monospace;
+  padding: 3px 7px;
+  border-radius: var(--radius-badge);
+  letter-spacing: 0.3px;
+  z-index: 2;
+  pointer-events: none;
+}
+.mds-spec-carousel__page-icon {
+  opacity: 0.18;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mds-spec-carousel__indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xsmall);
+  padding: var(--spacing-xsmall) 0;
+}
+.mds-spec-carousel__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--color-divider);
+  transition: width 0.2s ease, background 0.2s ease;
+  flex-shrink: 0;
+}
+.mds-spec-carousel__dot--active {
+  width: 18px;
+  background: var(--color-primary);
+}
+.mds-spec-carousel-anatomy {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xsmall);
+  padding: 52px 40px 52px;
+  background: var(--color-surface);
+  border-radius: var(--radius-card);
+  overflow: visible;
+}
+.mds-spec-carousel__gesture-hint {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  pointer-events: none;
+  padding: 0 var(--spacing-small);
+}
+.mds-spec-carousel__arrow {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: rgba(0,0,0,0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mds-spec-image-src__row {
+  height: 40px;
+  margin: 0 var(--spacing-medium);
+  border-radius: var(--radius-small);
+  background: var(--color-surface);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-small);
+  padding: 0 var(--spacing-sm);
+  flex-shrink: 0;
+}
+.mds-spec-image-src__row--cancel {
+  background: transparent;
+  border-top: 1px solid var(--color-divider);
+  margin-top: var(--spacing-xsmall);
+}
+.mds-spec-image-src__row-icon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+.mds-spec-image-src__row-label {
+  font-size: var(--typography-font-size-body);
+  font-weight: var(--typography-font-weight-medium);
+  color: var(--color-text-primary);
+  line-height: 1;
+}
+.mds-spec-image-src__row--cancel .mds-spec-image-src__row-label {
+  color: var(--color-text-secondary);
+  font-weight: var(--typography-font-weight-regular);
+}
+.mds-spec-image-src-anatomy {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  padding: 56px 32px 32px;
+  background: var(--color-surface);
+  border-radius: var(--radius-card);
+  overflow: visible;
+}

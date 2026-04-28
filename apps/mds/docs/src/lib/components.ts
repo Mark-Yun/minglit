@@ -661,20 +661,193 @@ NumberStepperInput(
   {
     name: 'MinglitTag',
     category: 'Tags & Badges',
-    purpose: 'Inline label tag (variant of chip without interaction).',
-    props: ['label', 'size', 'color'],
+    purpose: '읽기 전용 인라인 컬러 레이블. 카테고리·상태 표시 전용 — 상호작용 없음. MinglitChip과 달리 onTap 없음, MinglitBadge와 달리 icon + size 2가지 지원.',
+    props: [
+      { name: 'label', type: 'String',          required: true,  notes: '태그 안에 표시되는 텍스트 레이블.' },
+      { name: 'color', type: 'Color',           required: true,  notes: '배경 tint + 텍스트/아이콘 색. MinglitColors.primary / success / warning / error / info 중 하나 권장.' },
+      { name: 'icon',  type: 'IconData?',       default: 'null', notes: '선택적 leading 아이콘. label과 동일 color. spacing-xsmall(4px) gap.' },
+      { name: 'size',  type: 'MinglitTagSize',  default: 'medium', notes: 'small(h≈22, font 10px, icon 12px) / medium(h≈28, font 13px, icon 14px).' },
+    ],
+    variants: ['primary', 'success', 'warning', 'error', 'info'],
+    states: ['default (read-only)'],
+    tokens: [
+      { name: 'radius-chip',                       where: 'tag border radius (100px — fully rounded, MinglitRadius.chip)' },
+      { name: 'spacing-small',                     where: 'small 크기 수평 패딩 (8px)' },
+      { name: 'spacing-sm',                        where: 'medium 크기 수평 패딩 (12px)' },
+      { name: 'spacing-xxsmall',                   where: 'small 크기 수직 패딩 (2px)' },
+      { name: 'spacing-xsmall',                    where: 'medium 크기 수직 패딩 + icon↔label gap (4px)' },
+      { name: 'color-primary',                     where: 'primary variant 배경 tint + 텍스트' },
+      { name: 'color-success',                     where: 'success variant 배경 tint + 텍스트' },
+      { name: 'color-warning',                     where: 'warning variant 배경 tint + 텍스트' },
+      { name: 'color-error',                       where: 'error variant 배경 tint + 텍스트' },
+      { name: 'color-info',                        where: 'info variant 배경 tint + 텍스트' },
+      { name: 'typography-font-size-caption-tiny', where: 'small 크기 폰트 (10px)' },
+      { name: 'typography-font-size-chip-label',   where: 'medium 크기 폰트 (13px)' },
+    ],
+    accessibility: [
+      'MinglitTag는 항상 읽기 전용 — Semantics(button: false, label: label). 스크린 리더가 단순 텍스트로 읽음.',
+      '상호작용이 필요하면 MinglitChip(onTap 있음)을 사용한다.',
+    ],
+    guidelines: [
+      { kind: 'do',   text: '카드 인라인 카테고리/상태 표시는 small size Tag를 사용한다. MinglitContentCard 하단 row에서 MinglitParticipantGauge와 페어링.', recipeKey: 'do-tag-in-card' },
+      { kind: 'dont', text: 'MinglitTag를 버튼처럼 사용하지 말 것 (클릭 유도 텍스트 "+" 포함 등) — 항상 read-only 의미.', recipeKey: 'dont-tag-as-button' },
+      { kind: 'do',   text: '상태 색상은 시스템 의미에 맞게 — success=승인, warning=대기, error=취소. 커스텀 색상 사용 시 명암비 직접 확인.', recipeKey: 'do-status-mapping' },
+      { kind: 'dont', text: '인터랙티브 태그가 필요하면 MinglitTag가 아닌 MinglitChip(onTap)을 사용할 것.', recipeKey: 'dont-override-with-chip' },
+      { kind: 'do',   text: '공간이 제한된 카드 인라인 위치(리스트 행, trailing slot)에는 size=small을 사용한다.', recipeKey: 'do-small-size-inline' },
+    ],
+    dartUsage: `// 카테고리 태그 (medium, default)
+MinglitTag(label: '음악', color: MinglitColors.primary, icon: Icons.music_note)
+
+// 상태 태그 (small, 카드 인라인)
+MinglitTag(label: '승인', color: MinglitColors.success, size: MinglitTagSize.small)
+
+// 경고 상태 (icon 있음)
+MinglitTag(label: '대기', color: MinglitColors.warning, icon: Icons.hourglass_empty, size: MinglitTagSize.small)`,
+    placement: {
+      where: [
+        'MinglitContentCard 하단 row — 좌측에 MinglitParticipantGauge와 Row(spacer) 패턴으로 페어링. size=small.',
+        '`Detail + Bottom CTA` 스캐폴드 — MinglitSection 안 카테고리/상태 row. size=medium.',
+        '`List + Filter chips` 스캐폴드 — 카드 인라인 메타데이터 row. size=small.',
+      ],
+      spacing: [
+        { neighbor: 'sibling MinglitTag (Wrap)',     gap: 'spacing-small (8px)',  note: 'Wrap(spacing: MinglitSpacing.small) 기본값' },
+        { neighbor: 'MinglitParticipantGauge (Row)', gap: 'Spacer()',             note: '카드 하단 row — 태그 좌측, 게이지 우측' },
+        { neighbor: '카드 내 상위 텍스트',           gap: 'spacing-xsmall (4px)', note: '제목 → 태그 row 간격' },
+      ],
+      compositions: [
+        { label: 'Tag + Gauge in card row', description: 'MinglitContentCard 하단 — tag(left) + Spacer + gauge(right).', recipeKey: 'do-tag-in-card' },
+        { label: 'Status tags in detail',   description: '상세 페이지 MinglitSection 내 Wrap — 카테고리 + 상태 태그 2–3개.' },
+      ],
+    },
   },
   {
     name: 'MinglitBadge',
     category: 'Tags & Badges',
-    purpose: 'Notification badge (numeric / dot).',
-    props: ['count', 'maxCount', 'showZero'],
+    purpose: '앱 전역 상태 배지 — 정산·파티·이벤트 상태 표시, 알림 카운트 등. 직사각형 rounded 모서리(radius-small). MinglitTag와 달리 icon 없음, compact 모드 있음.',
+    props: [
+      { name: 'label',   type: 'String', required: true,  notes: '배지 안에 표시되는 텍스트. 상태 단어, 숫자 카운트, 분류 레이블 가능.' },
+      { name: 'color',   type: 'Color',  required: true,  notes: '배경 tint + 텍스트 색. MinglitColors.* 사용 권장.' },
+      { name: 'compact', type: 'bool',   default: 'false', notes: 'true: labelSmall(11px) + padding h:8px v:2px. false(default): labelMedium(13px) + h:12px v:4px.' },
+    ],
+    variants: ['success', 'warning', 'error', 'primary', 'info'],
+    states: ['default', 'compact'],
+    tokens: [
+      { name: 'radius-small',                    where: 'badge border radius (8px) — MinglitRadius.small, 직사각형 pill' },
+      { name: 'spacing-small',                   where: 'compact 수평 패딩 (8px)' },
+      { name: 'spacing-sm',                      where: 'default 수평 패딩 (12px)' },
+      { name: 'spacing-xxsmall',                 where: 'compact 수직 패딩 (2px)' },
+      { name: 'spacing-xsmall',                  where: 'default 수직 패딩 (4px)' },
+      { name: 'color-success',                   where: 'success variant 배경 tint + 텍스트' },
+      { name: 'color-warning',                   where: 'warning variant 배경 tint + 텍스트' },
+      { name: 'color-error',                     where: 'error variant 배경 tint + 텍스트' },
+      { name: 'color-primary',                   where: 'primary variant 배경 tint + 텍스트' },
+      { name: 'color-info',                      where: 'info variant 배경 tint + 텍스트' },
+      { name: 'typography-font-size-chip-label', where: 'default 폰트 (13px, labelMedium)' },
+      { name: 'typography-font-size-caption',    where: 'compact 폰트 (11px, labelSmall)' },
+    ],
+    accessibility: [
+      'MinglitBadge는 읽기 전용 상태 레이블. 스크린 리더는 label 텍스트를 직접 읽음.',
+      '숫자 카운트 배지는 aria-label로 맥락 제공 권장 (예: "알림 3개").',
+      '99 초과 카운트는 "99+"로 표시 — label 문자열 처리는 caller 책임.',
+    ],
+    guidelines: [
+      { kind: 'do',   text: '리스트 행/테이블 셀의 상태 표시에 compact=true를 사용한다. 넓은 공간(상세 섹션)에는 default를 사용.', recipeKey: 'do-badge-in-list-row' },
+      { kind: 'dont', text: 'MinglitBadge를 액션 버튼으로 사용하지 말 것 ("+", "요청" 등 행위 동사 포함) — MinglitButton 사용.', recipeKey: 'dont-badge-as-action' },
+      { kind: 'do',   text: '알림 카운트 배지는 99 초과 시 "99+"로 고정한다. caller에서 label = count > 99 ? "99+" : "$count" 처리.', recipeKey: 'do-max-overflow' },
+      { kind: 'do',   text: '상태 색상은 앱 전역 일관성을 유지: success=승인됨, warning=대기, error=거절. 같은 화면에서 색상 재사용하지 않을 것.', recipeKey: 'do-status-consistency' },
+      { kind: 'dont', text: '같은 화면에 5가지 이상 색상 배지를 쓰지 말 것 — 색상 피로도. 배지 종류는 2–3가지로 제한.' },
+    ],
+    dartUsage: `// 정산 상태 배지
+MinglitBadge(label: '승인됨', color: MinglitColors.success)
+
+// 대기 상태 (compact — 리스트 trailing)
+MinglitBadge(label: '대기', color: MinglitColors.warning, compact: true)
+
+// 알림 카운트 (99+ 처리)
+MinglitBadge(
+  label: notificationCount > 99 ? '99+' : '$notificationCount',
+  color: MinglitColors.error,
+  compact: true,
+)`,
+    placement: {
+      where: [
+        '`Detail + Bottom CTA` 스캐폴드 — MinglitSection 안 상태 row. default size.',
+        '리스트 행 trailing 슬롯 (MinglitListTile trailing). compact=true.',
+        'AppBar / 알림 아이콘 위 오버레이 카운트 배지. compact=true.',
+        '`Settings groups` — 설정 타일 trailing 상태 표시. compact=true.',
+      ],
+      spacing: [
+        { neighbor: '리스트 tile 좌측 텍스트',  gap: 'Spacer()',                note: 'trailing 배치 — Row(MainAxisAlignment.spaceBetween)' },
+        { neighbor: '상세 섹션 sibling 요소',   gap: 'spacing-xsmall (4px)',    note: '인라인 배지는 텍스트와 타이트하게' },
+        { neighbor: 'AppBar 아이콘 (오버레이)', gap: '0 (absolute position)',   note: 'Stack + Positioned으로 아이콘 우상단 오버레이' },
+      ],
+      compositions: [
+        { label: 'Status in list row',    description: '리스트 행 우측 trailing — compact 배지로 상태 표시.', recipeKey: 'do-badge-in-list-row' },
+        { label: 'Count overlay on icon', description: 'AppBar 알림 아이콘 위 오버레이. Stack + Positioned.', recipeKey: 'do-max-overflow' },
+      ],
+    },
   },
   {
     name: 'MinglitParticipantGauge',
     category: 'Tags & Badges',
-    purpose: 'Progress gauge for "N / M participants".',
-    props: ['current', 'max', 'showLabel'],
+    purpose: '파티/이벤트 참여자 수를 3-세그먼트 배터리 게이지로 시각화. current/max 비율에 따라 세그먼트 수와 색상이 자동 결정됨. 텍스트(N/M) + people 아이콘 포함 pill 컨테이너.',
+    props: [
+      { name: 'current', type: 'int', required: true, notes: '현재 참여자 수.' },
+      { name: 'max',     type: 'int', required: true, notes: '최대 정원. 0이면 비율 0으로 처리.' },
+    ],
+    variants: ['empty (0)', 'low (1-seg)', 'medium (2-seg)', 'full (3-seg)'],
+    states: ['empty (0/n)', 'partial (1 or 2 segments)', 'full (n/n)'],
+    tokens: [
+      { name: 'radius-chip',                   where: '컨테이너 border radius (100px — 완전한 pill)' },
+      { name: 'spacing-xsmall2',               where: '컨테이너 수평 패딩 (6px)' },
+      { name: 'spacing-xxsmall',               where: '컨테이너 수직 패딩 + 세그먼트 간 gap (2px)' },
+      { name: 'spacing-small',                 where: '각 세그먼트 높이 (8px = spacing-small)' },
+      { name: 'color-secondary',               where: '1-세그먼트 색 (orange, 0–33%)' },
+      { name: 'color-tertiary',                where: '2-세그먼트 색 (mint, 34–66%)' },
+      { name: 'color-primary',                 where: '3-세그먼트 색 (purple, 67–100%)' },
+      { name: 'color-divider',                 where: '비활성 세그먼트 색 (outlineVariant)' },
+      { name: 'typography-font-size-caption',  where: '레이블 텍스트 11px (labelSmall, w700)' },
+    ],
+    accessibility: [
+      'Semantics(label: "$current/$max 참여") 제공 권장 — 스크린 리더가 게이지 수치를 읽음.',
+      '색상만으로 상태를 전달하므로 텍스트 레이블(N/M) + 아이콘이 반드시 함께 표시됨 (색맹 대응).',
+    ],
+    guidelines: [
+      { kind: 'do',   text: 'MinglitContentCard 하단 row에서 MinglitTag(좌)와 Row + Spacer()로 배치. 카드 단위 참여 현황을 한눈에.', recipeKey: 'do-gauge-in-card' },
+      { kind: 'dont', text: '"참여자: 7/20명" 같은 raw 텍스트로 대체하지 말 것 — 시각적 밀도와 스캔성이 떨어짐.', recipeKey: 'dont-show-raw-text' },
+      { kind: 'do',   text: 'full 상태(n/n)는 primary 색상 3-세그먼트로 자동 강조됨 — 추가 스타일 없이 마감 상태를 전달.', recipeKey: 'do-full-state-highlight' },
+      { kind: 'dont', text: '세그먼트 색상을 직접 오버라이드하지 말 것 — 색상 의미(orange→mint→purple) 일관성이 앱 전역 기대값.', recipeKey: 'dont-override-colors' },
+      { kind: 'do',   text: 'max=0 엣지 케이스는 위젯이 ratio=0으로 처리하므로 null 체크 없이 바로 사용 가능.' },
+    ],
+    dartUsage: `// 기본 사용 (카드 하단 row)
+MinglitParticipantGauge(
+  current: event.currentParticipants,
+  max: event.maxParticipants,
+)
+
+// 카드 내 태그 + 게이지 패턴 (storybook 예시)
+Row(
+  children: [
+    MinglitTag(label: event.categoryLabel, color: MinglitColors.primary, size: MinglitTagSize.small),
+    const Spacer(),
+    MinglitParticipantGauge(current: event.currentParticipants, max: event.maxParticipants),
+  ],
+)`,
+    placement: {
+      where: [
+        'MinglitContentCard 하단 row 우측 trailing — MinglitTag(좌)와 Spacer()로 배치.',
+        '`Detail + Bottom CTA` 스캐폴드 — MinglitSection 안 참여 현황 row.',
+        '`List + Filter chips` 스캐폴드 — 카드 리스트 각 행 하단.',
+      ],
+      spacing: [
+        { neighbor: 'MinglitTag (Row 좌측)', gap: 'Spacer()',                       note: '카드 하단 row — 태그 좌측 고정, 게이지 우측 고정' },
+        { neighbor: '카드 하단 패딩',         gap: 'spacing-card-content-v (16px)',  note: 'MinglitContentCard 내부 패딩 기준' },
+      ],
+      compositions: [
+        { label: 'Tag + Gauge in card row', description: 'MinglitContentCard 하단 — MinglitTag(small, left) + Spacer + MinglitParticipantGauge(right).', recipeKey: 'do-gauge-in-card' },
+        { label: 'Gauge in detail section', description: '상세 페이지 참여 현황 섹션 — 단독 row, 전체 너비.' },
+      ],
+    },
   },
 
   // ---------- Feedback ----------
@@ -978,20 +1151,202 @@ MinglitErrorState.inline(
   {
     name: 'LoadingIndicator',
     category: 'Loading',
-    purpose: 'App-wide loading spinner wrapper.',
-    props: ['size', 'color'],
+    purpose: 'App-wide loading spinners. MinglitCircularProgressIndicator (centered spinning ring) and MinglitLinearProgressIndicator (horizontal track bar) — the two mds loading primitives used by AsyncValueWidget and Button.',
+    props: [
+      { name: 'size',            type: 'double',  default: '24',   notes: 'MinglitCircularProgressIndicator: width × height in px.' },
+      { name: 'strokeWidth',     type: 'double',  default: '2',    notes: 'Ring stroke thickness.' },
+      { name: 'color',           type: 'Color?',  default: 'null', notes: 'Arc / bar color override. null → theme primary (colorScheme.primary).' },
+      { name: 'value',           type: 'double?', default: 'null', notes: 'MinglitLinearProgressIndicator: 0.0–1.0. null = indeterminate.' },
+      { name: 'backgroundColor', type: 'Color?',  default: 'null', notes: 'Track fill color (linear). null → theme surfaceVariant.' },
+    ],
+    variants: ['circular-sm (size:16)', 'circular-md (size:24, default)', 'circular-lg (size:48)', 'linear-indeterminate', 'linear-determinate', 'linear-success'],
+    states: ['spinning (default)', 'value 0–1 (linear only)', 'color-overridden'],
+    tokens: [
+      { name: 'color-primary', where: 'arc / bar default fill' },
+      { name: 'color-divider', where: 'circular track bg / linear track bg' },
+      { name: 'color-success', where: 'progress complete color override (upload, step done)' },
+    ],
+    accessibility: [
+      'CircularProgressIndicator: Semantics(label: "로딩 중") wraps the SizedBox — screen readers announce when spinner appears.',
+      'LinearProgressIndicator: role="progressbar", aria-valuenow exposed. Pair with an offscreen status message for context.',
+      'MinglitButton.isLoading에 사용되는 spinner는 버튼의 aria-label이 상태 변화를 전달한다.',
+    ],
+    guidelines: [
+      { kind: 'do',   text: '카드 목록처럼 모양이 알려진 영역은 MinglitSkeleton 사용 — 레이아웃 이동 방지.',          recipeKey: 'do-skeleton-over-spinner' },
+      { kind: 'dont', text: '200ms 이하 fetch에서 스피너를 즉시 표시하지 말 것 — 순간 깜빡임이 더 나쁜 UX.',          recipeKey: 'dont-flash-spinner' },
+      { kind: 'do',   text: '비동기 fetch 중 MinglitAsyncValueWidget의 loading 슬롯에 스피너 또는 스켈레톤.',          recipeKey: 'do-async-loading' },
+      { kind: 'dont', text: 'lg(48px) 스피너를 버튼/칩 인라인에 쓰지 말 것 — 크기 불균형.',                           recipeKey: 'dont-size-overuse' },
+      { kind: 'do',   text: '진행률을 알 수 있는 경우(파일 업로드, 단계 이동)는 LinearProgressIndicator.value를 활용.', recipeKey: 'do-linear-determinate' },
+    ],
+    dartUsage: `// 원형 스피너 — 기본
+MinglitCircularProgressIndicator()
+
+// 원형 스피너 — 커스텀 사이즈 + 색상
+MinglitCircularProgressIndicator(size: 48, strokeWidth: 4, color: MinglitColors.success)
+
+// 선형 진행률 바 — 미결정
+MinglitLinearProgressIndicator()
+
+// 선형 진행률 바 — 30%
+MinglitLinearProgressIndicator(value: 0.3)
+
+// 선형 진행률 바 — 100% (완료 표시)
+MinglitLinearProgressIndicator(value: 1.0, color: MinglitColors.success)`,
+    placement: {
+      where: [
+        '`MinglitContentLayout` 중앙 — 페이지 전체 데이터 fetch 로딩.',
+        '`MinglitAsyncValueWidget` loading 슬롯 — 기본값으로 자동 삽입.',
+        '`MinglitButton` isLoading=true 내부 — 버튼 인라인 size:16 스피너.',
+        '페이지 상단 전역 — route transition 진행률 (linear, indeterminate).',
+      ],
+      spacing: [
+        { neighbor: 'MinglitContentLayout 내 상하 콘텐츠', gap: 'spacing-large (24px)', note: '스피너는 항상 Center()로 감싸 수직 중앙 배치' },
+      ],
+      compositions: [
+        { label: 'Circular inside AsyncValueWidget', description: 'loading: () => MinglitCircularProgressIndicator()가 기본값.', recipeKey: 'do-async-loading' },
+        { label: 'Linear upload progress',           description: 'value: uploadProgress로 실시간 진행률 노출.',                  recipeKey: 'do-linear-determinate' },
+      ],
+    },
+    usedIn: ['MinglitAsyncValueWidget', 'MinglitButton'],
   },
   {
     name: 'MinglitSkeleton',
     category: 'Loading',
-    purpose: 'Skeleton placeholder for loading content.',
-    props: ['width', 'height', 'borderRadius'],
+    purpose: '로딩 중 콘텐츠 자리에 펄스 애니메이션 placeholder. 데이터 fetch 중 레이아웃 모양을 유지해 카드 / 텍스트 라인 / 아바타 형태로 조합 가능.',
+    props: [
+      { name: 'width',        type: 'double?',                  default: 'null', notes: '고정 너비. null = SizedBox(width: double.infinity) — 부모 채움.' },
+      { name: 'height',       type: 'double?',                  default: 'null', notes: '고정 높이. 명시적으로 모든 스켈레톤에 설정해야 함.' },
+      { name: 'borderRadius', type: 'BorderRadiusGeometry?',    default: 'null', notes: 'null → radius-small (8px). 원형은 BorderRadius.circular(height/2).' },
+    ],
+    variants: ['text-line (h14–20)', 'circle/avatar (borderRadius: height/2)', 'image-block (h80–180, radius-card)', 'card (composed)'],
+    states: ['shimmer-active (always)', 'replaced (data loaded — 위젯 제거)'],
+    tokens: [
+      { name: 'color-surface',           where: 'shimmer 시작 색 (light mode)' },
+      { name: 'color-text-primary',      where: 'shimmer 끝 색 @ opacity (light mode)' },
+      { name: 'color-dark-surface',      where: 'shimmer 시작 (dark mode)' },
+      { name: 'color-dark-text-primary', where: 'shimmer 끝 @ opacity (dark mode)' },
+      { name: 'radius-small',            where: '기본 borderRadius (8px)' },
+      { name: 'radius-card',             where: 'image-block / card 스켈레톤 radius (16px)' },
+    ],
+    accessibility: [
+      'aria-hidden="true" — 스켈레톤 블록 자체는 스크린 리더에서 숨김.',
+      '스켈레톤 표시 중 상위에 role="status" + aria-live="polite" + aria-label="이벤트 목록 로딩 중" 권장.',
+      '로드 완료 후 실제 콘텐츠가 DOM에 삽입되면 스크린 리더가 자동으로 새 콘텐츠를 읽는다.',
+    ],
+    guidelines: [
+      { kind: 'do',   text: '카드 목록처럼 모양이 알려진 영역에는 스켈레톤 사용 — 레이아웃 이동 없이 자연스러운 전환.', recipeKey: 'do-skeleton-for-known-shape' },
+      { kind: 'dont', text: '카드 영역에 일반 스피너 대신 스켈레톤을 — 스피너는 모양 정보가 없어 레이아웃이 흔들린다.',  recipeKey: 'dont-generic-spinner-for-card' },
+      { kind: 'do',   text: '스켈레톤 → 실제 콘텐츠 전환 시 opacity 0→1 fade-in 0.2s 적용 — 갑작스러운 교체 방지.',     recipeKey: 'do-fade-in-transition' },
+      { kind: 'dont', text: '텍스트 스켈레톤 너비를 모두 100%로 맞추지 말 것 — 실제 텍스트는 각 줄 길이가 다양하다.',     recipeKey: 'dont-mix-widths' },
+      { kind: 'do',   text: '텍스트 라인 스켈레톤은 너비를 90%, 70%, 55%처럼 점진적으로 줄여 자연스럽게.',               recipeKey: 'do-varied-widths' },
+    ],
+    dartUsage: `// 텍스트 라인 스켈레톤
+MinglitSkeleton(width: 200, height: 16)
+MinglitSkeleton(width: 140, height: 16)
+
+// 원형 아바타 스켈레톤
+MinglitSkeleton(width: 40, height: 40, borderRadius: BorderRadius.circular(20))
+
+// 이미지 블록 스켈레톤
+MinglitSkeleton(width: double.infinity, height: 120, borderRadius: BorderRadius.circular(MinglitRadius.card))
+
+// 이벤트 카드 스켈레톤 (조합)
+Column(
+  crossAxisAlignment: CrossAxisAlignment.start,
+  children: [
+    MinglitSkeleton(width: double.infinity, height: 120, borderRadius: BorderRadius.circular(MinglitRadius.card)),
+    SizedBox(height: MinglitSpacing.small),
+    MinglitSkeleton(width: 180, height: 16),
+    SizedBox(height: MinglitSpacing.xsmall),
+    MinglitSkeleton(width: 120, height: 14),
+  ],
+)`,
+    placement: {
+      where: [
+        '`List + Filter chips` 스캐폴드 — 카드 리스트 fetch 중 MinglitContentCard 자리 대체.',
+        '`Detail + Bottom CTA` 스캐폴드 — MinglitSection 내부 콘텐츠 로딩 중 플레이스홀더.',
+        'MinglitAsyncValueWidget loading: 슬롯 — 커스텀 loading 콜백에 스켈레톤 주입.',
+      ],
+      spacing: [
+        { neighbor: 'sibling 스켈레톤 블록', gap: 'spacing-xsmall (4px)',    note: '텍스트 라인 스택' },
+        { neighbor: 'card 사이',             gap: 'spacing-card-gap (12px)', note: '카드 스켈레톤 목록' },
+      ],
+      compositions: [
+        { label: 'Card list skeleton in AsyncValueWidget', description: 'loading: () => 카드 스켈레톤 2–3개 Column으로 채워 레이아웃 확보.', recipeKey: 'do-skeleton-for-known-shape' },
+      ],
+    },
+    usedIn: ['MinglitAsyncValueWidget'],
   },
   {
     name: 'MinglitAsyncValueWidget',
     category: 'Loading',
-    purpose: 'Riverpod AsyncValue<T> renderer (data / loading / error).',
-    props: ['value', 'data', 'loading', 'error'],
+    purpose: '표준화된 Riverpod AsyncValue<T> 렌더러. data / loading / error 상태를 mds 기본값으로 dispatch. 모든 화면에서 value.when() 보일러플레이트를 제거한다.',
+    props: [
+      { name: 'value',            type: 'AsyncValue<T>',                        required: true,  notes: 'Riverpod provider의 ref.watch() 결과. ConsumerWidget 안에서만 사용.' },
+      { name: 'data',             type: 'Widget Function(T)',                   required: true,  notes: '데이터가 있을 때 빌드하는 위젯 빌더.' },
+      { name: 'loading',          type: 'Widget Function()?',                   default: 'null', notes: 'null → MinglitCircularProgressIndicator(). 스켈레톤 커스텀 주입 가능.' },
+      { name: 'error',            type: 'Widget Function(Object, StackTrace)?', default: 'null', notes: 'null → _DefaultErrorView. MinglitErrorState + onRetry 조합 권장.' },
+      { name: 'showErrorDetails', type: 'bool',                                 default: 'false', notes: 'true 시 error.toString()을 기본 에러 뷰에 노출. 개발/QA 전용.' },
+    ],
+    variants: ['default (circular loading + default error)', 'skeleton loading (custom loading slot)', 'error + retry (custom error slot)'],
+    states: ['loading', 'data', 'error'],
+    tokens: [
+      { name: 'color-primary',        where: 'default loading spinner arc' },
+      { name: 'color-error',          where: 'default error view icon + text' },
+      { name: 'spacing-large',        where: 'default error view internal padding (24px)' },
+      { name: 'color-text-secondary', where: 'default error detail text (showErrorDetails=true)' },
+    ],
+    accessibility: [
+      'loading 상태: MinglitCircularProgressIndicator의 Semantics(label: "로딩 중") 자동 적용.',
+      'error 상태: role="alert" + aria-live="assertive"를 커스텀 error 위젯에 추가 권장.',
+      'data 상태: 실제 콘텐츠 위젯이 a11y 책임을 이어받는다.',
+      'ConsumerWidget 바깥에서 사용 시 ProviderScope가 없으면 런타임 에러 — 반드시 Riverpod tree 안에서만 사용.',
+    ],
+    guidelines: [
+      { kind: 'do',   text: '카드 목록 fetch엔 loading: () => EventListSkeleton()으로 스켈레톤 주입 — 레이아웃 이동 방지.', recipeKey: 'do-skeleton-loading' },
+      { kind: 'dont', text: 'error 슬롯을 null로 두지 말 것 — 기본 뷰는 retry 없음. 항상 onRetry 콜백을 제공.',             recipeKey: 'dont-null-for-error' },
+      { kind: 'do',   text: 'error 슬롯에 MinglitErrorState + onRetry: () => ref.invalidate(provider) 패턴 사용.',           recipeKey: 'do-retry-on-error' },
+      { kind: 'dont', text: 'showErrorDetails=true를 프로덕션 빌드에 포함하지 말 것 — 내부 스택 트레이스 노출.',              recipeKey: 'dont-show-raw-error' },
+      { kind: 'do',   text: 'retry 시 ref.invalidate(provider)로 provider를 재실행 — ref.refresh는 즉시 새 값 필요 시만.', recipeKey: 'do-invalidate-on-retry' },
+    ],
+    dartUsage: `// 기본 — 원형 스피너 + 기본 에러 뷰
+MinglitAsyncValueWidget<List<Event>>(
+  value: ref.watch(eventsProvider),
+  data: (events) => EventListView(events: events),
+)
+
+// 커스텀 로딩 — 스켈레톤
+MinglitAsyncValueWidget<List<Event>>(
+  value: ref.watch(eventsProvider),
+  loading: () => const EventListSkeleton(),
+  data: (events) => EventListView(events: events),
+)
+
+// 커스텀 에러 — MinglitErrorState + retry
+MinglitAsyncValueWidget<UserProfile>(
+  value: ref.watch(profileProvider),
+  error: (err, _) => MinglitErrorState(
+    title: '프로필 정보를 불러오지 못했습니다',
+    onRetry: () => ref.invalidate(profileProvider),
+  ),
+  data: (profile) => ProfileView(profile: profile),
+)`,
+    placement: {
+      where: [
+        '`Detail + Bottom CTA` 스캐폴드 body — 이벤트 상세 / 프로필 상세 페이지 전체 래핑.',
+        '`List + Filter chips` 스캐폴드 scrollable list 영역 — 이벤트 목록 fetch.',
+        'MinglitSection 내부 콘텐츠 — 섹션 단위 데이터 로딩.',
+        '어느 scaffold body에도 사용 가능 — AsyncValue를 리턴하는 provider가 있는 곳 어디든.',
+      ],
+      spacing: [
+        { neighbor: 'loading/error 기본 뷰 내 패딩', gap: 'spacing-large (24px)', note: '_DefaultErrorView 내부 Center + Padding' },
+      ],
+      compositions: [
+        { label: 'With EventListSkeleton', description: '카드 목록 로딩 중 레이아웃 유지. loading 슬롯에 스켈레톤 조합.', recipeKey: 'do-skeleton-loading' },
+        { label: 'With MinglitErrorState', description: 'error 슬롯에 MinglitErrorState + ref.invalidate 패턴.',         recipeKey: 'do-retry-on-error' },
+      ],
+    },
+    usedIn: ['eventsProvider', 'profileProvider', 'partiesProvider'],
   },
 
   // ---------- Overlay ----------
@@ -1228,20 +1583,199 @@ await showMinglitBottomSheet(
   {
     name: 'MinglitImage',
     category: 'Media',
-    purpose: 'Themed image with placeholder + error fallback.',
-    props: ['url', 'width', 'height', 'fit', 'placeholder'],
+    purpose: '테마 네트워크 이미지. 로딩 중 shimmer placeholder + 로드 실패 시 error fallback overlay를 자동 처리한다.',
+    props: [
+      { name: 'url',          type: 'String',           required: true,   notes: '네트워크 이미지 URL. 빈 문자열이면 즉시 error fallback 표시.' },
+      { name: 'width',        type: 'double?',          default: 'null',  notes: 'null이면 부모 폭 채움.' },
+      { name: 'height',       type: 'double?',          default: 'null',  notes: 'null이면 aspectRatio 또는 부모 크기 기준.' },
+      { name: 'fit',          type: 'BoxFit',           default: 'BoxFit.cover', notes: '이미지 핏. 카드 썸네일은 cover, 프리뷰는 contain.' },
+      { name: 'borderRadius', type: 'BorderRadius?',    default: 'radius-card (16px)', notes: '기본 card radius 적용. 원형은 BorderRadius.circular(999) 전달.' },
+      { name: 'placeholder',  type: 'Widget?',          default: 'null',  notes: 'null이면 shimmer gradient 스켈레톤 자동 표시.' },
+    ],
+    variants: ['loaded (default)', 'placeholder (loading)', 'error fallback'],
+    states: ['loading → shimmer', 'loaded → 이미지 표시', 'error → fallback overlay'],
+    tokens: [
+      { name: 'radius-card',   where: '이미지 border-radius 기본값 (16px)' },
+      { name: 'color-surface', where: 'placeholder shimmer 베이스 색상' },
+      { name: 'color-divider', where: 'placeholder shimmer highlight 색상' },
+      { name: 'color-error',   where: 'error fallback 오버레이 색상 힌트' },
+    ],
+    accessibility: [
+      'url이 의미 있는 이미지이면 상위에서 Semantics(label: "...") 또는 excludeSemantics: true 처리 필요.',
+      'error fallback은 텍스트 레이블("이미지 없음")을 포함 — 이미지 내용을 알 수 없을 때 스크린 리더 지원.',
+    ],
+    guidelines: [
+      { kind: 'do',   text: '이미지 로딩 중에는 반드시 placeholder(shimmer)를 표시해 레이아웃 이동(CLS)을 방지한다.', recipeKey: 'do-placeholder' },
+      { kind: 'dont', text: '로드 실패 시 broken-image 아이콘을 직접 노출하지 말 것 — MinglitImage error fallback이 표준.', recipeKey: 'dont-broken-icon' },
+      { kind: 'do',   text: '에러 상태에는 error fallback overlay를 사용 — 사용자가 이미지가 없다는 것을 인지할 수 있게 한다.', recipeKey: 'do-error-fallback' },
+      { kind: 'do',   text: 'fit=BoxFit.cover를 유지해 종횡비를 보존한다. 카드 내 이미지 영역을 압축하지 말 것.', recipeKey: 'do-maintain-ratio' },
+      { kind: 'dont', text: '이미지 width/height를 임의로 늘려 종횡비를 깨지 말 것 — 콘텐츠가 찌그러져 보인다.', recipeKey: 'dont-stretch-image' },
+    ],
+    dartUsage: `// 기본 이미지 (이벤트 썸네일)
+MinglitImage(url: party.coverImageUrl, width: double.infinity, height: 200)
+
+// 프로필 원형 이미지
+MinglitImage(
+  url: user.profileImageUrl,
+  width: 48,
+  height: 48,
+  fit: BoxFit.cover,
+  borderRadius: BorderRadius.circular(999),
+)
+
+// contain 핏 (포스터 프리뷰)
+MinglitImage(url: event.posterUrl, width: 120, height: 160, fit: BoxFit.contain)`,
+    placement: {
+      where: [
+        '`Detail + Bottom CTA` 스캐폴드 — MinglitSection 안 이벤트 대표 이미지 히어로.',
+        '`List + Filter chips` 스캐폴드 — MinglitContentCard 내 썸네일 영역.',
+        '프로필 페이지 — 원형 아바타 (borderRadius.circular(999)).',
+      ],
+      spacing: [
+        { neighbor: 'MinglitSection 제목',     gap: 'spacing-medium (16px)', note: '이미지 하단 → 섹션 제목 상단' },
+        { neighbor: 'MinglitContentCard 경계', gap: '0',                     note: '카드 썸네일은 카드 상단에 붙임 — 별도 패딩 없음' },
+        { neighbor: '인접 텍스트',             gap: 'spacing-small (8px)',   note: '인라인 이미지-텍스트 페어' },
+      ],
+      compositions: [
+        { label: 'Event detail hero', description: '이벤트 상세 상단 풀폭 히어로 이미지.', recipeKey: 'do-maintain-ratio' },
+        { label: 'Card thumbnail',    description: 'MinglitContentCard 좌측 고정 썸네일.' },
+        { label: 'Profile avatar',    description: '원형 클립 아바타 (borderRadius.circular).' },
+      ],
+    },
   },
   {
     name: 'MinglitImageCarousel',
     category: 'Media',
-    purpose: 'Horizontally paged image carousel with indicator.',
-    props: ['urls', 'aspectRatio', 'showIndicator'],
+    purpose: '수평 페이지 슬라이드 이미지 캐러셀. PageView + 하단 도트 인디케이터로 구성. 이벤트 상세 히어로에 사진 여러 장 표시.',
+    props: [
+      { name: 'urls',          type: 'List<String>',       required: true,   notes: '이미지 URL 목록. 비어 있으면 빈 상태(empty placeholder) 표시.' },
+      { name: 'aspectRatio',   type: 'double',             default: '16 / 9', notes: '캐러셀 종횡비. 변경 시 모든 페이지에 동일 비율 적용.' },
+      { name: 'showIndicator', type: 'bool',               default: 'true',  notes: 'false이면 하단 도트 인디케이터 숨김.' },
+      { name: 'onPageChanged', type: 'ValueChanged<int>?', default: 'null',  notes: '페이지 변경 콜백. 페이지 번호(0-indexed) 전달.' },
+    ],
+    variants: ['with indicator (default)', 'without indicator (showIndicator=false)', 'square ratio', 'landscape ratio (default)'],
+    states: ['page 1 / N (첫 페이지 활성 dot)', 'page N / N (마지막 페이지)', 'single image (인디케이터 숨김 권장)'],
+    tokens: [
+      { name: 'radius-card',    where: '캐러셀 컨테이너 border-radius + overflow:hidden' },
+      { name: 'color-primary',  where: '활성 도트 색상 (18px 너비)' },
+      { name: 'color-divider',  where: '비활성 도트 색상 (6px 원형)' },
+      { name: 'spacing-xsmall', where: '도트 인디케이터 gap (4px)' },
+    ],
+    accessibility: [
+      'PageView에 Semantics(label: "이미지 캐러셀, N장") 래핑 권장.',
+      '각 이미지에 의미 있는 레이블 제공이 어려울 경우 excludeSemantics: true 처리.',
+      '스와이프 외에 접근성 도구로도 페이지 이동 가능하도록 onPageChanged 콜백 연결 필요.',
+    ],
+    guidelines: [
+      { kind: 'do',   text: 'aspectRatio를 고정해 모든 페이지가 동일한 높이를 유지한다 — 스와이프 시 레이아웃 점프 방지.', recipeKey: 'do-maintain-aspect-ratio' },
+      { kind: 'dont', text: '페이지마다 이미지 크기를 다르게 하지 말 것 — 높이가 달라지면 인디케이터 위치가 튄다.', recipeKey: 'dont-random-heights' },
+      { kind: 'do',   text: '이미지가 2장 이상일 때 showIndicator=true(기본)로 현재 페이지를 사용자에게 알린다.', recipeKey: 'do-show-indicator' },
+      { kind: 'dont', text: '이미지가 1장뿐인데 인디케이터를 표시하지 말 것 — showIndicator=false로 설정.', recipeKey: 'dont-no-feedback' },
+      { kind: 'do',   text: '캐러셀은 이벤트 상세 히어로 슬롯에만 사용 — 리스트 카드 안 인라인 캐러셀은 스크롤 충돌 원인.' },
+    ],
+    dartUsage: `// 이벤트 상세 히어로 캐러셀
+MinglitImageCarousel(
+  urls: party.imageUrls,
+  aspectRatio: 16 / 9,
+  showIndicator: true,
+  onPageChanged: (page) => debugPrint('page: $page'),
+)
+
+// 단일 이미지 — 인디케이터 끄기
+MinglitImageCarousel(
+  urls: [party.coverImageUrl],
+  showIndicator: false,
+)`,
+    placement: {
+      where: [
+        '`Detail + Bottom CTA` 스캐폴드 — AppBar 바로 아래 풀폭 히어로 영역.',
+        'MinglitSection 안 — 이벤트 사진 섹션 (섹션 타이틀 아래 직접 배치).',
+      ],
+      spacing: [
+        { neighbor: 'AppBar 하단',                   gap: '0',                          note: '히어로는 AppBar에 붙임 (edge-to-edge)' },
+        { neighbor: '아래 MinglitSection',           gap: 'spacing-section-gap (40px)', note: '히어로 → 첫 섹션 표준 간격' },
+        { neighbor: '도트 인디케이터 ↔ 다음 콘텐츠', gap: 'spacing-medium (16px)',      note: '인디케이터 아래 여백' },
+      ],
+      compositions: [
+        { label: 'Event detail hero carousel', description: '풀폭 16:9 히어로에 사진 N장 슬라이드.', recipeKey: 'do-maintain-aspect-ratio' },
+        { label: 'Single image fallback',      description: '1장일 때 showIndicator=false로 인디케이터 숨김.', recipeKey: 'dont-no-feedback' },
+      ],
+    },
   },
   {
     name: 'MinglitImageSourceSheet',
     category: 'Media',
-    purpose: 'Bottom sheet to pick image source (camera / library).',
-    props: ['onCamera', 'onGallery'],
+    purpose: '이미지 소스 선택 bottom sheet 컨텐츠. 카메라 촬영 / 앨범 선택 / 취소 행으로 구성. 반드시 MinglitBottomSheet의 child로 사용한다.',
+    props: [
+      { name: 'onCamera',  type: 'VoidCallback',  required: true,  notes: '"카메라로 촬영" 행 탭 콜백. 카메라 권한 요청 → 촬영 플로우 시작.' },
+      { name: 'onGallery', type: 'VoidCallback?', default: 'null', notes: '"앨범에서 선택" 행. null이면 행 자체가 렌더되지 않음 (camera-only variant).' },
+    ],
+    variants: ['both (default) — 카메라 + 앨범 + 취소', 'camera-only — 카메라 + 취소 (onGallery=null)'],
+    states: ['default — 모든 행 탭 가능', 'loading (외부 관리) — 권한 요청 중 dim 처리 권장'],
+    tokens: [
+      { name: 'color-surface',        where: '옵션 행 배경 (기본)' },
+      { name: 'color-divider',        where: '취소 행 위 구분선 + 비활성 도트' },
+      { name: 'color-text-primary',   where: '옵션 행 레이블 색상' },
+      { name: 'color-text-secondary', where: '취소 행 레이블 + 아이콘 색상' },
+      { name: 'radius-small',         where: '옵션 행 border-radius (8px)' },
+      { name: 'spacing-sm',           where: '행 내부 수평 패딩 (12px)' },
+      { name: 'spacing-small',        where: '아이콘 ↔ 레이블 gap (8px)' },
+      { name: 'spacing-medium',       where: '행 좌우 외부 여백 (MinglitBottomSheet 패딩과 일치)' },
+    ],
+    accessibility: [
+      '각 행에 Semantics(button: true, label: "카메라로 촬영") 적용 — 스크린 리더가 버튼으로 읽음.',
+      '취소 행은 Semantics(label: "취소, 시트 닫기") 추가 권장.',
+      '최소 터치 타겟 height: 40px — WCAG 2.5.5 (44dp 권장) 상 허용 범위 (InkWell 영역 확장 가능).',
+    ],
+    guidelines: [
+      { kind: 'do',   text: 'MinglitBottomSheet의 child로만 사용한다 — 독립 위젯으로 직접 push하지 말 것.', recipeKey: 'do-inside-bottom-sheet' },
+      { kind: 'dont', text: 'MinglitBottomSheet 없이 단독으로 렌더하지 말 것 — 스크림·드래그 핸들·타이틀 없이 UI가 노출된다.', recipeKey: 'dont-standalone' },
+      { kind: 'do',   text: '카메라만 필요한 경우 onGallery를 생략(null)해 camera-only variant를 사용한다.', recipeKey: 'do-camera-only' },
+      { kind: 'dont', text: '커스텀 시트를 직접 구현하지 말 것 — MinglitImageSourceSheet가 표준 패턴이다.', recipeKey: 'dont-custom-sheet' },
+      { kind: 'do',   text: '취소 행은 반드시 포함한다 — 사용자가 언제든 작업을 취소할 수 있어야 한다.' },
+    ],
+    dartUsage: `// 표준 — 카메라 + 앨범 + 취소
+await showMinglitBottomSheet(
+  context: context,
+  title: '사진 가져오기',
+  child: MinglitImageSourceSheet(
+    onCamera: () async {
+      Navigator.pop(context);
+      await _pickFromCamera();
+    },
+    onGallery: () async {
+      Navigator.pop(context);
+      await _pickFromGallery();
+    },
+  ),
+);
+
+// 카메라 전용
+await showMinglitBottomSheet(
+  context: context,
+  title: '사진 가져오기',
+  child: MinglitImageSourceSheet(
+    onCamera: () async {
+      Navigator.pop(context);
+      await _pickFromCamera();
+    },
+  ),
+);`,
+    placement: {
+      where: [
+        '`Bottom sheet` 스캐폴드 — MinglitBottomSheet의 child 슬롯 안. 직접 scaffold 종속 없음.',
+        '어느 화면에서든 showMinglitBottomSheet() 호출로 표시 — 프로필 편집, 이벤트 생성, 채팅 첨부 등.',
+      ],
+      spacing: [
+        { neighbor: 'MinglitBottomSheet title 아래', gap: 'spacing-small (8px)',   note: '시트 내부 gap — MinglitBottomSheet가 처리' },
+        { neighbor: '취소 행 위 구분선',             gap: 'spacing-xsmall (4px)',  note: 'marginTop on cancel row' },
+        { neighbor: '시트 하단',                     gap: 'spacing-medium (16px)', note: 'MinglitBottomSheet 하단 패딩' },
+      ],
+      compositions: [
+        { label: 'Inside MinglitBottomSheet', description: 'showMinglitBottomSheet(child: MinglitImageSourceSheet(...)) — 표준.', recipeKey: 'do-inside-bottom-sheet' },
+        { label: 'Camera-only variant',       description: 'onGallery 없이 카메라 전용 플로우.',                                  recipeKey: 'do-camera-only' },
+      ],
+    },
   },
 ];
 

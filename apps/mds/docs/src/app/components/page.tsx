@@ -47,6 +47,33 @@ import MinglitDialogSpec, {
 import MinglitBottomSheetSpec, {
   GUIDELINE_RECIPES as MINGLIT_BOTTOM_SHEET_RECIPES,
 } from '@/components/specs/MinglitBottomSheetSpec';
+import MinglitTagSpec, {
+  GUIDELINE_RECIPES as MINGLIT_TAG_RECIPES,
+} from '@/components/specs/MinglitTagSpec';
+import MinglitBadgeSpec, {
+  GUIDELINE_RECIPES as MINGLIT_BADGE_RECIPES,
+} from '@/components/specs/MinglitBadgeSpec';
+import MinglitParticipantGaugeSpec, {
+  GUIDELINE_RECIPES as MINGLIT_PARTICIPANT_GAUGE_RECIPES,
+} from '@/components/specs/MinglitParticipantGaugeSpec';
+import LoadingIndicatorSpec, {
+  GUIDELINE_RECIPES as LOADING_INDICATOR_RECIPES,
+} from '@/components/specs/LoadingIndicatorSpec';
+import MinglitSkeletonSpec, {
+  GUIDELINE_RECIPES as MINGLIT_SKELETON_RECIPES,
+} from '@/components/specs/MinglitSkeletonSpec';
+import MinglitAsyncValueWidgetSpec, {
+  GUIDELINE_RECIPES as MINGLIT_ASYNC_VALUE_RECIPES,
+} from '@/components/specs/MinglitAsyncValueWidgetSpec';
+import MinglitImageSpec, {
+  GUIDELINE_RECIPES as MINGLIT_IMAGE_RECIPES,
+} from '@/components/specs/MinglitImageSpec';
+import MinglitImageCarouselSpec, {
+  GUIDELINE_RECIPES as MINGLIT_IMAGE_CAROUSEL_RECIPES,
+} from '@/components/specs/MinglitImageCarouselSpec';
+import MinglitImageSourceSheetSpec, {
+  GUIDELINE_RECIPES as MINGLIT_IMAGE_SOURCE_SHEET_RECIPES,
+} from '@/components/specs/MinglitImageSourceSheetSpec';
 
 /**
  * Inline visual specs registered by component name.
@@ -70,6 +97,15 @@ const INLINE_SPECS: Record<string, InlineSpecModule> = {
   MinglitAlert:        { Visual: MinglitAlertSpec,        recipes: MINGLIT_ALERT_RECIPES },
   MinglitDialog:       { Visual: MinglitDialogSpec,       recipes: MINGLIT_DIALOG_RECIPES },
   MinglitBottomSheet:  { Visual: MinglitBottomSheetSpec,  recipes: MINGLIT_BOTTOM_SHEET_RECIPES },
+  MinglitTag:                 { Visual: MinglitTagSpec,                 recipes: MINGLIT_TAG_RECIPES },
+  MinglitBadge:               { Visual: MinglitBadgeSpec,               recipes: MINGLIT_BADGE_RECIPES },
+  MinglitParticipantGauge:    { Visual: MinglitParticipantGaugeSpec,    recipes: MINGLIT_PARTICIPANT_GAUGE_RECIPES },
+  LoadingIndicator:           { Visual: LoadingIndicatorSpec,           recipes: LOADING_INDICATOR_RECIPES },
+  MinglitSkeleton:            { Visual: MinglitSkeletonSpec,            recipes: MINGLIT_SKELETON_RECIPES },
+  MinglitAsyncValueWidget:    { Visual: MinglitAsyncValueWidgetSpec,    recipes: MINGLIT_ASYNC_VALUE_RECIPES },
+  MinglitImage:               { Visual: MinglitImageSpec,               recipes: MINGLIT_IMAGE_RECIPES },
+  MinglitImageCarousel:       { Visual: MinglitImageCarouselSpec,       recipes: MINGLIT_IMAGE_CAROUSEL_RECIPES },
+  MinglitImageSourceSheet:    { Visual: MinglitImageSourceSheetSpec,    recipes: MINGLIT_IMAGE_SOURCE_SHEET_RECIPES },
 };
 
 // ---------------------------------------------------------------------------
