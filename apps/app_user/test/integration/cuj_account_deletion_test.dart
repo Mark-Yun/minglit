@@ -410,4 +410,3 @@ class _SpyDeletionCoordinator extends AccountDeletionCoordinator {
     goCompleteCalled = true;
   }
 }
-
