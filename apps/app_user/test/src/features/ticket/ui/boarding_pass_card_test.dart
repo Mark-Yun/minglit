@@ -341,6 +341,18 @@ void main() {
                 '_NotchCircle must not use MinglitColors.surface in dark mode',
           );
         }
+
+        // Divider in _EventInfoSection must also use theme-aware color, not
+        // MinglitColors.surface. outlineVariant in dark theme != lightSurface.
+        final dividers = tester.widgetList<Divider>(find.byType(Divider)).toList();
+        expect(dividers, isNotEmpty, reason: 'Expected Divider in event info');
+        for (final d in dividers) {
+          expect(
+            d.color,
+            isNot(lightSurface),
+            reason: 'Divider must not use MinglitColors.surface in dark mode',
+          );
+        }
       },
     );
   });

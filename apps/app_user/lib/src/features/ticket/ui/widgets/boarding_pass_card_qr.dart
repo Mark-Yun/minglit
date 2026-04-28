@@ -104,7 +104,9 @@ class _DashLinePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_DashLinePainter oldDelegate) => false;
+  bool shouldRepaint(_DashLinePainter oldDelegate) =>
+      oldDelegate.dashColor != dashColor ||
+      oldDelegate.notchRadius != notchRadius;
 }
 
 // ---------------------------------------------------------------------------
