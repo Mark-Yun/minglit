@@ -119,6 +119,11 @@ class _FakeUrlLauncher extends Fake
   @override
   Future<bool> canLaunch(String url) async => true;
 
+  // url_launcher calls supportsMode before launchUrl; without this override
+  // Fake throws UnimplementedError which unawaited() silently swallows.
+  @override
+  Future<bool> supportsMode(LaunchMode mode) async => true;
+
   @override
   Future<bool> launchUrl(String url, LaunchOptions options) async {
     launchedUrls.add(url);
