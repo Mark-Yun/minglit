@@ -706,7 +706,8 @@ void main() {
                 .read(partnerDashboardControllerProvider)
                 .pendingReviewCount,
             isNot(99),
-            reason: 'Dashboard must rebuild via DashboardRefresh signal after event creation',
+            reason:
+                'Dashboard must rebuild via DashboardRefresh signal after event creation',
           );
         },
       );

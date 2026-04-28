@@ -1,3 +1,5 @@
+import 'package:app_partner/src/features/home/partner_dashboard_controller.dart'
+    show PartnerDashboardController;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'dashboard_refresh_notifier.g.dart';

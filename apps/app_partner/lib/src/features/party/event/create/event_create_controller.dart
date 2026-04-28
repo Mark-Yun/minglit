@@ -1,6 +1,6 @@
-import 'package:app_partner/src/logic/dashboard_refresh_notifier.dart';
 import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
 import 'package:app_partner/src/features/party/logic/recurrence_settings_controller.dart';
+import 'package:app_partner/src/logic/dashboard_refresh_notifier.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
