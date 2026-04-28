@@ -27,6 +27,20 @@ jobs:
             exit 1
           fi
           echo "✅ All migration versions unique ($(echo "$VERSIONS" | wc -l | tr -d ' ') files checked)"
+          # Fix #1968: warn on gaps in same-day sequence numbers (does not fail CI)
+          DATES=$(echo "$VERSIONS" | cut -c1-8 | sort -u)
+          for DATE in $DATES; do
+            SEQS=$(echo "$VERSIONS" | grep "^$DATE" | cut -c9-14 | sort -n | sed 's/^0*//')
+            PREV=""
+            for SEQ in $SEQS; do
+              if [ -n "$PREV" ] && [ "$SEQ" -ne "$((PREV + 1))" ]; then
+                GAP_FROM=$(printf "%06d" $((PREV + 1)))
+                GAP_TO=$(printf "%06d" $((SEQ - 1)))
+                echo "⚠️  Gap detected in migration sequence: ${DATE}${GAP_FROM}..${DATE}${GAP_TO} (between ${DATE}$(printf "%06d" $PREV) and ${DATE}$(printf "%06d" $SEQ))"
+              fi
+              PREV="$SEQ"
+            done
+          done
 
   # env-manifest.json ↔ EnvKeyStore drift 검사 (항상 실행 — path filter 없음)
   check-env-manifest-sync:
