@@ -154,7 +154,7 @@ Deno.serve(withHandler(async (req) => {
 
       if (application) {
         logStatsigEvent(application.user_id, 'payment_completed', payment.amount, { imp_uid, merchant_uid }).catch(() => {});
-        // Fix #2026: direct q_notifications push — tracked for migration to produce_event() pattern
+        // TODO(#2026): migrate to produce_event() pattern
         await supabase.rpc("pgmq_send", {
           queue_name: "q_notifications",
           message: {
