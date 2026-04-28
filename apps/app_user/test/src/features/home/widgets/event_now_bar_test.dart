@@ -259,10 +259,13 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(realtimeBuilt, isTrue,
-          reason:
-              'EventNowBar must watch eventRealtimeProvider to activate the '
-              'Supabase Realtime subscription');
+      expect(
+        realtimeBuilt,
+        isTrue,
+        reason:
+            'EventNowBar must watch eventRealtimeProvider to activate the '
+            'Supabase Realtime subscription',
+      );
     });
 
     testWidgets('keeps cached event visible when state resolution fails', (
