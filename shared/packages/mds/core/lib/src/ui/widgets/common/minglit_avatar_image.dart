@@ -42,12 +42,22 @@ class MinglitAvatarImage extends StatelessWidget {
       );
     }
 
+    // Fix #1936: pass caller-specific fallback as errorWidget so that a broken
+    // network image shows the branded icon (e.g. Icons.store) instead of the
+    // generic Icons.image_not_supported_outlined from MinglitImage's default.
+    final fallback = CircleAvatar(
+      radius: radius,
+      backgroundColor: backgroundColor,
+      child: Icon(fallbackIcon, color: fallbackIconColor, size: fallbackIconSize),
+    );
+
     return ClipOval(
       child: MinglitImage(
         path: url!,
         width: size,
         height: size,
         fit: BoxFit.cover,
+        errorWidget: fallback,
       ),
     );
   }

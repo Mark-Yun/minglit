@@ -60,23 +60,30 @@ void main() {
     expect(find.byType(CircleAvatar), findsNothing);
   });
 
-  testWidgets('image load failure renders without throwing', (tester) async {
-    // In flutter_test all NetworkImage requests fail — this confirms the
-    // MinglitImage errorBuilder path does not propagate an exception.
+  testWidgets('image load failure shows caller fallbackIcon, not generic icon',
+      (tester) async {
+    // Fix #1936: MinglitImage.errorBuilder used to hard-code
+    // Icons.image_not_supported_outlined; after the fix, MinglitAvatarImage
+    // passes a CircleAvatar with the caller's icon as the errorWidget.
+    // In flutter_test all NetworkImage requests fail synchronously, so pumping
+    // one frame triggers the errorBuilder.
     await tester.pumpWidget(
       _wrap(
         const MinglitAvatarImage(
           radius: 24,
           url: 'https://example.com/avatar.png',
+          fallbackIcon: Icons.store,
+          fallbackIconColor: Colors.red,
         ),
       ),
     );
-    // Let image loading settle (error fires after initial frame).
     await tester.pump(const Duration(milliseconds: 100));
 
     expect(tester.takeException(), isNull);
-    // After failure MinglitImage renders its error placeholder inside ClipOval.
-    expect(find.byType(ClipOval), findsOneWidget);
+    // Caller-specific icon must be visible.
+    expect(find.byIcon(Icons.store), findsOneWidget);
+    // Generic error icon must NOT appear.
+    expect(find.byIcon(Icons.image_not_supported_outlined), findsNothing);
   });
 
   testWidgets('fallbackIconSize overrides default icon size', (tester) async {
