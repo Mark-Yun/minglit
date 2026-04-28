@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:app_user/src/common/widgets/minglit_avatar_image.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
@@ -80,11 +81,11 @@ class BlockedPartnersPage extends ConsumerWidget {
               final name = p['name'] as String? ?? '';
               final imageUrl = p['profile_image_url'] as String?;
               return ListTile(
-                leading: CircleAvatar(
-                  backgroundImage: imageUrl != null
-                      ? NetworkImage(imageUrl)
-                      : null,
-                  child: imageUrl == null ? const Icon(Icons.store) : null,
+                // Fix #1936: MinglitAvatarImage handles caching + error fallback
+                leading: MinglitAvatarImage(
+                  radius: 20,
+                  url: imageUrl,
+                  fallbackIcon: Icons.store,
                 ),
                 title: Text(name),
                 trailing: TextButton(

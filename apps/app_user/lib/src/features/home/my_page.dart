@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:app_user/src/common/widgets/minglit_avatar_image.dart';
 import 'package:app_user/src/features/auth/logic/auth_coordinator.dart';
 import 'package:app_user/src/features/home/logic/home_coordinator.dart';
 import 'package:flutter/material.dart';
@@ -241,15 +242,13 @@ class _ProfileTile extends StatelessWidget {
         padding: const EdgeInsets.all(MinglitSpacing.medium),
         child: Row(
           children: [
-            CircleAvatar(
+            // Fix #1936: MinglitAvatarImage handles caching + error fallback
+            MinglitAvatarImage(
               radius: 24,
+              url: avatarUrl,
+              fallbackIcon: Icons.person,
               backgroundColor: colorScheme.primaryContainer,
-              backgroundImage: avatarUrl != null
-                  ? NetworkImage(avatarUrl!)
-                  : null,
-              child: avatarUrl == null
-                  ? Icon(Icons.person, color: colorScheme.primary)
-                  : null,
+              fallbackIconColor: colorScheme.primary,
             ),
             const SizedBox(width: MinglitSpacing.medium),
             Expanded(

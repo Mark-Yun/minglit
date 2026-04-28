@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:app_user/src/common/widgets/minglit_avatar_image.dart';
 import 'package:app_user/src/features/home/logic/home_coordinator.dart';
 import 'package:app_user/src/features/home/widgets/event_now_bar.dart';
 import 'package:app_user/src/features/home/widgets/event_now_bar_controller.dart';
@@ -126,20 +127,11 @@ class _HomePageState extends ConsumerState<HomePage> {
                   // Fix #1630: AppBar context.push() → GoRouter 주입 패턴
                   IconButton(
                     onPressed: homeCoordinator.pushMyPage,
-                    icon: CircleAvatar(
+                    // Fix #1936: MinglitAvatarImage handles caching + error fallback
+                    icon: MinglitAvatarImage(
                       radius: 14,
-                      backgroundImage: user.userMetadata?['avatar_url'] != null
-                          ? NetworkImage(
-                              user.userMetadata!['avatar_url'] as String,
-                            )
-                          : null,
-                      onBackgroundImageError:
-                          user.userMetadata?['avatar_url'] != null
-                          ? (_, _) {}
-                          : null,
-                      child: user.userMetadata?['avatar_url'] == null
-                          ? const Icon(Icons.person, size: 14)
-                          : null,
+                      url: user.userMetadata?['avatar_url'] as String?,
+                      fallbackIcon: Icons.person,
                     ),
                   ),
                 ] else
