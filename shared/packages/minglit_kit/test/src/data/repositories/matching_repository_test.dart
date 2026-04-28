@@ -318,12 +318,12 @@ void main() {
             },
           },
         );
+        // Empty rules → code falls back to gender-based entry_groups path,
+        // allowing the entry_groups select() regression guards below to run.
         final rulesBuilder = mockTable(
           mockClient,
           'match_rules',
-          selectData: [
-            {'target_group_id': 'group_f'},
-          ],
+          selectData: [],
         );
         final entryGroupsBuilder = mockTable(
           mockClient,
@@ -332,11 +332,14 @@ void main() {
             {'id': 'group_m', 'gender': 'male'},
           ],
         );
+        // oppositeGroupsBuilder overwrites entryGroupsBuilder for 'entry_groups'
+        // in mocktail, so both entry_groups calls go through this builder.
+        // Includes 'gender' so myGender is resolved and the second query runs.
         final oppositeGroupsBuilder = mockTable(
           mockClient,
           'entry_groups',
           selectData: [
-            {'id': 'group_f'},
+            {'id': 'group_f', 'gender': 'female'},
           ],
         );
         unawaited(participantBuilder);
