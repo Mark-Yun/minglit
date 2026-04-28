@@ -286,10 +286,8 @@ class _RetryPayoutButtonState extends ConsumerState<RetryPayoutButton> {
             payoutId: widget.payoutId,
             partnerId: widget.partnerId,
           );
+      // Fix #1928: coordinator already shows success toast via showMinglitSuccess
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('재지급 요청이 완료되었습니다.')),
-      );
       widget.onSuccess();
     } on Exception catch (e) {
       if (!mounted) return;
