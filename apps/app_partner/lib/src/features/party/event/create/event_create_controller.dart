@@ -1,4 +1,4 @@
-import 'package:app_partner/src/features/home/partner_dashboard_controller.dart';
+import 'package:app_partner/src/logic/dashboard_refresh_notifier.dart';
 import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
 import 'package:app_partner/src/features/party/logic/recurrence_settings_controller.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -193,8 +193,8 @@ class EventCreateController extends _$EventCreateController {
       }
 
       ref.invalidate(partyEventsProvider(state.partyId));
-      // Fix #1264: 이벤트 생성 후 파트너 대시보드 통계 즉시 갱신
-      ref.invalidate(partnerDashboardControllerProvider);
+      // Fix #1943: bump shared signal so dashboard refreshes without cross-feature import
+      ref.read(dashboardRefreshProvider.notifier).bump();
     });
 
     state = state.copyWith(status: result);
