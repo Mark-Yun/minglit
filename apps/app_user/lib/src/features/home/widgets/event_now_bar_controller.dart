@@ -99,16 +99,15 @@ class EventNowBarStateNotifier extends _$EventNowBarStateNotifier {
 
     // RESULTS: myMatchesProvider has results (including empty list means
     // matching round completed).
-    // Fix #1942: was `on Object catch (_)` — swallows Error subclasses and hides
-    // network/auth failures silently. Use `on Exception` so programming Errors
-    // propagate, and log so production failures are visible in Axiom.
+    // Fix #2017: ref.read (not ref.watch) — ref.watch creates a subscription
+    // that triggers rebuild whenever myMatchesProvider transitions
+    // (loading→error), causing a rebuild loop and
+    // "disposed during loading state" StateError in tests and navigation.
     try {
-      final matches = await ref.watch(myMatchesProvider(event.id).future);
+      final matches = await ref.read(myMatchesProvider(event.id).future);
       if (matches.isNotEmpty) {
         return EventNowBarState.results;
       }
-    } on StateError {
-      // Fix #1942: Riverpod disposes the provider during navigation — degrade silently.
     } on Exception catch (e, st) {
       Log.e(
         '⚠️ [EventNowBar] myMatches unavailable, degrading to lower state',
@@ -118,15 +117,14 @@ class EventNowBarStateNotifier extends _$EventNowBarStateNotifier {
     }
 
     // MATCHING: matchCandidatesProvider returns non-empty list.
+    // Fix #2017: ref.read (not ref.watch) — same reason as myMatchesProvider.
     try {
-      final candidates = await ref.watch(
+      final candidates = await ref.read(
         matchCandidatesProvider(event.id).future,
       );
       if (candidates.isNotEmpty) {
         return EventNowBarState.matching;
       }
-    } on StateError {
-      // Fix #1942: Riverpod disposes the provider during navigation — degrade silently.
     } on Exception catch (e, st) {
       Log.e(
         '⚠️ [EventNowBar] matchCandidates unavailable, degrading to lower state',
