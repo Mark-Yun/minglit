@@ -72,7 +72,8 @@ void main() {
           return activeEvents;
         }),
         // Fix #2022: prevent EventRealtime from touching Supabase in tests.
-        // Caller overrides (via ...overrides.cast()) take precedence.
+        // Do not pass eventRealtimeProvider overrides via the overrides param —
+        // duplicate overrides for the same provider key cause an AssertionError.
         for (final e in activeEvents)
           eventRealtimeProvider(
             e.event.id,
@@ -245,6 +246,8 @@ void main() {
 
     // Fix #2022: regression guard — eventRealtimeProvider must be watched so
     // the Supabase Realtime subscription activates on mount.
+    // Uses raw ProviderScope to avoid duplicate override with createTestWidget's
+    // default _NoOpEventRealtime injection.
     testWidgets('eventRealtimeProvider is watched when active event shown', (
       tester,
     ) async {
@@ -254,15 +257,24 @@ void main() {
       var realtimeBuilt = false;
 
       await tester.pumpWidget(
-        createTestWidget(
-          activeEvents: [event],
+        ProviderScope(
           overrides: [
+            eventRepositoryProvider.overrideWithValue(mockEventRepo),
+            matchingRepositoryProvider.overrideWith((ref) => mockMatchingRepo),
+            todayActiveEventsProvider.overrideWith((ref) => [event]),
             eventRealtimeProvider('event_1').overrideWith(
               () => _TrackingEventRealtime(() {
                 realtimeBuilt = true;
               }),
             ),
           ],
+          child: MaterialApp(
+            theme: MinglitTheme.materialTheme,
+            home: const Scaffold(
+              body: SizedBox.expand(),
+              bottomSheet: EventNowBar(),
+            ),
+          ),
         ),
       );
       await tester.pumpAndSettle();
