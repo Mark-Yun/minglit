@@ -299,17 +299,12 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent>
                               .pushPartnerDetail(partner.id),
                           child: Row(
                             children: [
-                              CircleAvatar(
-                                radius: MinglitRadius.input, // 12
-                                backgroundImage: partnerProfileImageUrl != null
-                                    ? NetworkImage(partnerProfileImageUrl)
-                                    : null,
-                                child: partnerProfileImageUrl == null
-                                    ? const Icon(
-                                        Icons.store,
-                                        size: MinglitIconSize.xsmall,
-                                      )
-                                    : null,
+                              // Fix #1936: MinglitAvatarImage handles caching + error fallback
+                              MinglitAvatarImage(
+                                radius: MinglitRadius.input,
+                                url: partnerProfileImageUrl,
+                                fallbackIcon: Icons.store,
+                                fallbackIconSize: MinglitIconSize.xsmall,
                               ),
                               const SizedBox(width: MinglitSpacing.small),
                               Flexible(

@@ -10736,7 +10736,7 @@
     {
       "label": "mds.dart",
       "file_type": "code",
-      "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-nesting/shared/packages/mds/core/lib/mds.dart",
+      "source_file": "/private/tmp/fix-1936-avatar-image/shared/packages/mds/core/lib/mds.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_nesting_shared_packages_mds_core_lib_mds_dart",
       "community": 157,
@@ -12086,11 +12086,56 @@
     {
       "label": "package:mds/src/ui/widgets/common/minglit_image.dart",
       "file_type": "code",
-      "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-nesting/shared/packages/mds/core/lib/src/ui/widgets/common/minglit_image_carousel.dart",
+      "source_file": "/private/tmp/fix-1936-avatar-image/shared/packages/mds/core/lib/src/ui/widgets/common/minglit_avatar_image.dart",
       "source_location": null,
       "id": "package_mds_src_ui_widgets_common_minglit_image_dart",
       "community": 5,
       "norm_label": "package:mds/src/ui/widgets/common/minglit_image.dart"
+    },
+    {
+      "label": "minglit_avatar_image.dart",
+      "file_type": "code",
+      "source_file": "/private/tmp/fix-1936-avatar-image/shared/packages/mds/core/lib/src/ui/widgets/common/minglit_avatar_image.dart",
+      "source_location": null,
+      "id": "private_tmp_fix_1936_avatar_image_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_avatar_image_dart",
+      "community": 5,
+      "norm_label": "minglit_avatar_image.dart"
+    },
+    {
+      "label": "MinglitAvatarImage",
+      "file_type": "code",
+      "source_file": "/private/tmp/fix-1936-avatar-image/shared/packages/mds/core/lib/src/ui/widgets/common/minglit_avatar_image.dart",
+      "source_location": null,
+      "id": "private_tmp_fix_1936_avatar_image_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_avatar_image_dart_minglitavatarimage",
+      "community": 5,
+      "norm_label": "minglitavatarimage"
+    },
+    {
+      "label": "build",
+      "file_type": "code",
+      "source_file": "/private/tmp/fix-1936-avatar-image/shared/packages/mds/core/lib/src/ui/widgets/common/minglit_avatar_image.dart",
+      "source_location": null,
+      "id": "private_tmp_fix_1936_avatar_image_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_avatar_image_dart_build",
+      "community": 5,
+      "norm_label": "build"
+    },
+    {
+      "label": "CircleAvatar",
+      "file_type": "code",
+      "source_file": "/private/tmp/fix-1936-avatar-image/shared/packages/mds/core/lib/src/ui/widgets/common/minglit_avatar_image.dart",
+      "source_location": null,
+      "id": "private_tmp_fix_1936_avatar_image_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_avatar_image_dart_circleavatar",
+      "community": 5,
+      "norm_label": "circleavatar"
+    },
+    {
+      "label": "ClipOval",
+      "file_type": "code",
+      "source_file": "/private/tmp/fix-1936-avatar-image/shared/packages/mds/core/lib/src/ui/widgets/common/minglit_avatar_image.dart",
+      "source_location": null,
+      "id": "private_tmp_fix_1936_avatar_image_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_avatar_image_dart_clipoval",
+      "community": 5,
+      "norm_label": "clipoval"
     },
     {
       "label": "minglit_image_source_sheet.dart",
@@ -19252,7 +19297,7 @@
     {
       "label": "HomePage",
       "file_type": "code",
-      "source_file": "/Users/mark/workspace/minglit-graphify-init/apps/app_user/lib/src/features/home/home_page.dart",
+      "source_file": "/Users/mark/workspace/minglit-graphify-init/apps/app_user/test/integration/home_navigation_test.dart",
       "source_location": null,
       "source_url": null,
       "captured_at": null,
@@ -24850,9 +24895,18 @@
       "norm_label": "html_stub (dart:html stub)"
     },
     {
+      "label": "event_detail_content.dart",
+      "file_type": "code",
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "id": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "community": 33,
+      "norm_label": "event_detail_content.dart"
+    },
+    {
       "label": "_EventDetailContent",
       "file_type": "code",
-      "source_file": "/Users/mark/workspace/minglit-graphify-init/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
       "source_location": null,
       "source_url": null,
       "captured_at": null,
@@ -24861,6 +24915,150 @@
       "id": "event_detail_content",
       "community": 1,
       "norm_label": "_eventdetailcontent"
+    },
+    {
+      "label": "_EventDetailContentState",
+      "file_type": "code",
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "id": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_eventdetailcontentstate",
+      "community": 33,
+      "norm_label": "_eventdetailcontentstate"
+    },
+    {
+      "label": "_SliverTabBarDelegate",
+      "file_type": "code",
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "id": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_slivertabbardelegate",
+      "community": 33,
+      "norm_label": "_slivertabbardelegate"
+    },
+    {
+      "label": "initState",
+      "file_type": "code",
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "id": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_initstate",
+      "community": 33,
+      "norm_label": "initstate"
+    },
+    {
+      "label": "dispose",
+      "file_type": "code",
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "id": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_dispose",
+      "community": 33,
+      "norm_label": "dispose"
+    },
+    {
+      "label": "_onScroll",
+      "file_type": "code",
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "id": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_onscroll",
+      "community": 33,
+      "norm_label": "_onscroll"
+    },
+    {
+      "label": "_scrollToSection",
+      "file_type": "code",
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "id": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_scrolltosection",
+      "community": 33,
+      "norm_label": "_scrolltosection"
+    },
+    {
+      "label": "build",
+      "file_type": "code",
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "id": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_build",
+      "community": 33,
+      "norm_label": "build"
+    },
+    {
+      "label": "Stack",
+      "file_type": "code",
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "id": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_stack",
+      "community": 33,
+      "norm_label": "stack"
+    },
+    {
+      "label": "SnackBar",
+      "file_type": "code",
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "id": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_snackbar",
+      "community": 33,
+      "norm_label": "snackbar"
+    },
+    {
+      "label": "showReportBottomSheet",
+      "file_type": "code",
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "id": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_showreportbottomsheet",
+      "community": 33,
+      "norm_label": "showreportbottomsheet"
+    },
+    {
+      "label": "PopupMenuItem",
+      "file_type": "code",
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "id": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_popupmenuitem",
+      "community": 33,
+      "norm_label": "popupmenuitem"
+    },
+    {
+      "label": "SizedBox",
+      "file_type": "code",
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "id": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_sizedbox",
+      "community": 33,
+      "norm_label": "sizedbox"
+    },
+    {
+      "label": "Function",
+      "file_type": "code",
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "id": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_function",
+      "community": 33,
+      "norm_label": "function"
+    },
+    {
+      "label": "ColoredBox",
+      "file_type": "code",
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "id": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_coloredbox",
+      "community": 33,
+      "norm_label": "coloredbox"
+    },
+    {
+      "label": "Divider",
+      "file_type": "code",
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "id": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_divider",
+      "community": 33,
+      "norm_label": "divider"
+    },
+    {
+      "label": "shouldRebuild",
+      "file_type": "code",
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "id": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_shouldrebuild",
+      "community": 33,
+      "norm_label": "shouldrebuild"
     },
     {
       "label": "_VerificationSection",
@@ -54238,6 +54436,18 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
+      "source_file": "/private/tmp/fix-1936-avatar-image/shared/packages/mds/core/lib/src/ui/widgets/common/minglit_avatar_image.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "private_tmp_fix_1936_avatar_image_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_avatar_image_dart",
+      "_tgt": "package_flutter_material_dart",
+      "source": "package_flutter_material_dart",
+      "target": "private_tmp_fix_1936_avatar_image_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_avatar_image_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-nesting/shared/packages/mds/core/lib/src/ui/widgets/common/minglit_image_source_sheet.dart",
       "source_location": null,
       "weight": 1.0,
@@ -56873,6 +57083,66 @@
       "_tgt": "package_mds_src_ui_widgets_common_minglit_image_dart",
       "source": "users_mark_workspace_minglit_claude_worktrees_mds_nesting_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_image_carousel_dart",
       "target": "package_mds_src_ui_widgets_common_minglit_image_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/private/tmp/fix-1936-avatar-image/shared/packages/mds/core/lib/src/ui/widgets/common/minglit_avatar_image.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "private_tmp_fix_1936_avatar_image_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_avatar_image_dart",
+      "_tgt": "package_mds_src_ui_widgets_common_minglit_image_dart",
+      "source": "package_mds_src_ui_widgets_common_minglit_image_dart",
+      "target": "private_tmp_fix_1936_avatar_image_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_avatar_image_dart"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/private/tmp/fix-1936-avatar-image/shared/packages/mds/core/lib/src/ui/widgets/common/minglit_avatar_image.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "private_tmp_fix_1936_avatar_image_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_avatar_image_dart",
+      "_tgt": "private_tmp_fix_1936_avatar_image_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_avatar_image_dart_minglitavatarimage",
+      "source": "private_tmp_fix_1936_avatar_image_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_avatar_image_dart",
+      "target": "private_tmp_fix_1936_avatar_image_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_avatar_image_dart_minglitavatarimage"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/private/tmp/fix-1936-avatar-image/shared/packages/mds/core/lib/src/ui/widgets/common/minglit_avatar_image.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "private_tmp_fix_1936_avatar_image_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_avatar_image_dart",
+      "_tgt": "private_tmp_fix_1936_avatar_image_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_avatar_image_dart_build",
+      "source": "private_tmp_fix_1936_avatar_image_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_avatar_image_dart",
+      "target": "private_tmp_fix_1936_avatar_image_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_avatar_image_dart_build"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/private/tmp/fix-1936-avatar-image/shared/packages/mds/core/lib/src/ui/widgets/common/minglit_avatar_image.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "private_tmp_fix_1936_avatar_image_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_avatar_image_dart",
+      "_tgt": "private_tmp_fix_1936_avatar_image_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_avatar_image_dart_circleavatar",
+      "source": "private_tmp_fix_1936_avatar_image_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_avatar_image_dart",
+      "target": "private_tmp_fix_1936_avatar_image_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_avatar_image_dart_circleavatar"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/private/tmp/fix-1936-avatar-image/shared/packages/mds/core/lib/src/ui/widgets/common/minglit_avatar_image.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "private_tmp_fix_1936_avatar_image_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_avatar_image_dart",
+      "_tgt": "private_tmp_fix_1936_avatar_image_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_avatar_image_dart_clipoval",
+      "source": "private_tmp_fix_1936_avatar_image_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_avatar_image_dart",
+      "target": "private_tmp_fix_1936_avatar_image_shared_packages_mds_core_lib_src_ui_widgets_common_minglit_avatar_image_dart_clipoval"
     },
     {
       "relation": "defines",
@@ -69971,18 +70241,6 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "/Users/mark/workspace/minglit-graphify-init/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "event_detail_content",
-      "_tgt": "event_detail_controller",
-      "source": "event_detail_controller",
-      "target": "event_detail_content"
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
       "source_file": "/Users/mark/workspace/minglit-graphify-init/apps/app_partner/lib/src/features/party/event/detail/event_detail_page.dart",
       "source_location": null,
       "weight": 1.0,
@@ -70386,18 +70644,6 @@
       "_tgt": "event_detail_page",
       "source": "event_detail_page",
       "target": "event_detail_scenarios"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "/Users/mark/workspace/minglit-graphify-init/apps/app_user/lib/src/features/event/detail/event_detail_page.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "event_detail_page",
-      "_tgt": "event_detail_content",
-      "source": "event_detail_page",
-      "target": "event_detail_content"
     },
     {
       "relation": "references",
@@ -79124,30 +79370,6 @@
       "target": "event_bottom_ticket_bar"
     },
     {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "/Users/mark/workspace/minglit-graphify-init/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "event_detail_content",
-      "_tgt": "event_coordinator",
-      "source": "event_coordinator",
-      "target": "event_detail_content"
-    },
-    {
-      "relation": "references",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "/Users/mark/workspace/minglit-graphify-init/apps/app_user/lib/src/features/event/detail/report_bottom_sheet.dart",
-      "source_location": null,
-      "weight": 0.8,
-      "_src": "report_bottom_sheet",
-      "_tgt": "event_detail_content",
-      "source": "report_bottom_sheet",
-      "target": "event_detail_content"
-    },
-    {
       "relation": "references",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
@@ -79160,16 +79382,208 @@
       "target": "open_in_app_dialog"
     },
     {
-      "relation": "calls",
+      "relation": "defines",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "/Users/mark/workspace/minglit-graphify-init/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
       "source_location": null,
       "weight": 1.0,
-      "_src": "event_detail_content",
-      "_tgt": "open_in_app_dialog",
-      "source": "event_detail_content",
-      "target": "open_in_app_dialog"
+      "_src": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "_tgt": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_eventdetailcontent",
+      "source": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "target": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_eventdetailcontent"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "_tgt": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_eventdetailcontentstate",
+      "source": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "target": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_eventdetailcontentstate"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "_tgt": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_slivertabbardelegate",
+      "source": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "target": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_slivertabbardelegate"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "_tgt": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_initstate",
+      "source": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "target": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_initstate"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "_tgt": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_dispose",
+      "source": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "target": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_dispose"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "_tgt": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_onscroll",
+      "source": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "target": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_onscroll"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "_tgt": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_scrolltosection",
+      "source": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "target": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_scrolltosection"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "_tgt": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_build",
+      "source": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "target": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_build"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "_tgt": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_stack",
+      "source": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "target": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_stack"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "_tgt": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_snackbar",
+      "source": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "target": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_snackbar"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "_tgt": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_showreportbottomsheet",
+      "source": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "target": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_showreportbottomsheet"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "_tgt": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_popupmenuitem",
+      "source": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "target": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_popupmenuitem"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "_tgt": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_sizedbox",
+      "source": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "target": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_sizedbox"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "_tgt": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_function",
+      "source": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "target": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_function"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "_tgt": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_coloredbox",
+      "source": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "target": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_coloredbox"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "_tgt": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_divider",
+      "source": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "target": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_divider"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "/private/tmp/fix-1936-avatar-image/apps/app_user/lib/src/features/event/detail/event_detail_content.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "_tgt": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_shouldrebuild",
+      "source": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart",
+      "target": "private_tmp_fix_1936_avatar_image_apps_app_user_lib_src_features_event_detail_event_detail_content_dart_shouldrebuild"
     },
     {
       "relation": "calls",

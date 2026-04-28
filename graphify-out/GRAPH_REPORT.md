@@ -717,6 +717,10 @@ Cohesion: 0.09
 Nodes (44): ActionRunner, Admin Dashboard Spec, Admin Dashboard Wireframe, backend-simulator E2E Tests, backend-simulator Edge Function (main handler), DB Table: partner_verified_users, EF: apply-event, EF: event-checkin (+36 more)
 
 ### Community 19 - "Community 19"
+Cohesion: 0.09
+Nodes (45): ActionRunner, Admin Dashboard Spec, Admin Dashboard Wireframe, backend-simulator E2E Tests, backend-simulator Edge Function (main handler), DB Table: partner_verified_users, EF: apply-event, EF: event-checkin (+37 more)
+
+### Community 20 - "Community 20"
 Cohesion: 0.06
 Nodes (33): fixtures/mock_events.dart, package:mds/mds.dart, package:widgetbook/widgetbook.dart, build, _ColorsStory, _ColorSwatch, _DarkColorsStory, _FilterChipStory (+25 more)
 
@@ -990,7 +994,7 @@ Nodes (2): _EventRepositoryCheckinQueries, FormatException
 
 ### Community 83 - "Community 83"
 Cohesion: 0.67
-Nodes (3): Axiom Structured Logger, Axiom Logger Test Suite, PII Masker (maskMetadata)
+Nodes (2): _EventRepositoryCheckinQueries, FormatException
 
 ### Community 84 - "Community 84"
 Cohesion: 0.67
@@ -1050,7 +1054,7 @@ Nodes (2): MinglitBottomSheet, MinglitBottomSheetTest
 
 ### Community 98 - "Community 98"
 Cohesion: 1.0
-Nodes (2): MinglitTextField, MinglitTextFieldTest
+Nodes (3): EventNowMultiStack, EventNowMultiStack Widget Test, sortActiveEvents
 
 ### Community 99 - "Community 99"
 Cohesion: 1.0
