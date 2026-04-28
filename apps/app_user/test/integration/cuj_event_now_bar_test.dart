@@ -75,6 +75,12 @@ void main() {
           eventNowBarStateProvider(eventList.first).overrideWith(
             () => _FakeEventNowBarStateNotifier(state),
           ),
+        // Fix #2022: prevent EventRealtime.build() from calling supabaseClientProvider
+        // in integration tests where Supabase is not initialized.
+        if (eventList.isNotEmpty)
+          eventRealtimeProvider(eventList.first.event.id).overrideWith(
+            () => _NoOpEventRealtime(),
+          ),
         // Phase 1: QR 토큰 프로바이더 — null 반환으로 에러 위젯 폴백
         if (state == EventNowBarState.checkInReady ||
             state == EventNowBarState.waiting)
@@ -386,6 +392,13 @@ class _FakeEventNowBarStateNotifier extends EventNowBarStateNotifier {
   @override
   FutureOr<EventNowBarState> build(TodayActiveEvent activeEvent) async =>
       _state;
+}
+
+/// Fix #2022: No-op EventRealtime stub — prevents Supabase Realtime
+/// initialization in integration tests.
+class _NoOpEventRealtime extends EventRealtime {
+  @override
+  void build(String eventId) {}
 }
 
 /// 테스트용 MatchingVoteController — 실제 네트워크 호출 없이 즉시 성공 반환.
