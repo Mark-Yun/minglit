@@ -87,7 +87,7 @@ void main() {
       // while inner providers (myMatchesProvider) are mid-flight.
       final sub = container.listen(
         eventNowBarStateProvider(activeEvent),
-        (_, __) {},
+        (_, _) {},
       );
       addTearDown(sub.close);
 
@@ -108,7 +108,7 @@ void main() {
         final container = makeContainer(eventId: 'event_1');
         final sub = container.listen(
           eventNowBarStateProvider(activeEvent),
-          (_, __) {},
+          (_, _) {},
         );
         addTearDown(sub.close);
 
@@ -133,7 +133,7 @@ void main() {
         );
         final sub = container.listen(
           eventNowBarStateProvider(activeEvent),
-          (_, __) {},
+          (_, _) {},
         );
         addTearDown(sub.close);
 
@@ -262,7 +262,7 @@ void main() {
 
       final sub1 = container.listen(
         eventNowBarStateProvider(endedEvent),
-        (_, __) {},
+        (_, _) {},
       );
       final result1 = await container.read(
         eventNowBarStateProvider(endedEvent).future,
@@ -286,7 +286,7 @@ void main() {
 
       final sub2 = container.listen(
         eventNowBarStateProvider(waitingEvent),
-        (_, __) {},
+        (_, _) {},
       );
       addTearDown(sub2.close);
       final result2 = await container.read(
@@ -340,7 +340,7 @@ void main() {
 
       final sub = container.listen(
         eventNowBarStateProvider(activeEvent),
-        (_, __) {},
+        (_, _) {},
       );
       addTearDown(sub.close);
 
