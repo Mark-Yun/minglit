@@ -96,6 +96,28 @@ void main() {
       expect(result.refundPercentage, 100);
     });
 
+    // Fix #1967: one millisecond past grace period boundary must NOT be refundable
+    // (unless the cutoff window is also still open). The <= operator in the
+    // implementation makes the boundary inclusive; this test pins that a 1ms
+    // overshoot correctly falls outside.
+    test('1ms past grace period boundary + outside cutoff → no refund', () {
+      final paidAt = now.subtract(
+        const Duration(hours: 2, milliseconds: 1),
+      );
+      final eventStart = now.add(const Duration(days: 3)); // inside cutoff
+      final result = RefundCalculator.calculate(
+        eventStartTime: eventStart,
+        paymentAmount: amount,
+        paidAt: paidAt,
+        gracePeriodHours: 2,
+        cutoffDays: 7,
+        now: now,
+      );
+      expect(result.refundPercentage, 0);
+      expect(result.refundAmount, 0);
+      expect(result.feeAmount, amount);
+    });
+
     test('exactly at cutoff boundary → full refund', () {
       final paidAt = now.subtract(const Duration(hours: 5));
       final eventStart = now.add(const Duration(days: 7));
