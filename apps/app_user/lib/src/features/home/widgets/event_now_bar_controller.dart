@@ -72,13 +72,13 @@ class EventNowBarStateNotifier extends _$EventNowBarStateNotifier {
     // matchCandidatesProvider resolution triggers a rebuild of this provider.
     final now = ref.watch(clockProvider)();
 
-    // Fix #2017: Watch before any await to establish subscriptions at the
-    // top of build(). Riverpod 3.x requires all ref.watch calls to happen
-    // before any async gap — subscriptions created here ensure this notifier
-    // rebuilds when match data changes, without the disposal loop that
-    // ref.watch-after-await caused in _computeState.
-    ref.watch(myMatchesProvider(event.id));
-    ref.watch(matchCandidatesProvider(event.id));
+    // Fix #2017: Do NOT ref.watch myMatchesProvider or matchCandidatesProvider
+    // here. Watching async providers in an async build() causes a disposal loop:
+    // when the watched provider transitions loading→data/error, Riverpod triggers
+    // a rebuild of this notifier, disposing the in-flight async build mid-await,
+    // which raises "provider disposed during loading state". Use ref.read only
+    // in _computeState; reactivity for match changes is handled via EventRealtime
+    // invalidating todayActiveEventsProvider.
 
     // Compute the raw state from current data.
     final rawState = await _computeState(
