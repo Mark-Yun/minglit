@@ -24,10 +24,16 @@ void main() {
     expect(find.byType(ClipOval), findsNothing);
   });
 
-  testWidgets('empty url shows CircleAvatar with fallback icon', (tester) async {
+  testWidgets('empty url shows CircleAvatar with fallback icon', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _wrap(
-        const MinglitAvatarImage(radius: 24, url: '', fallbackIcon: Icons.store),
+        const MinglitAvatarImage(
+          radius: 24,
+          url: '',
+          fallbackIcon: Icons.store,
+        ),
       ),
     );
 
@@ -36,8 +42,9 @@ void main() {
     expect(find.byType(ClipOval), findsNothing);
   });
 
-  testWidgets('non-null url produces ClipOval delegate to MinglitImage',
-      (tester) async {
+  testWidgets('non-null url produces ClipOval delegate to MinglitImage', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _wrap(
         const MinglitAvatarImage(
