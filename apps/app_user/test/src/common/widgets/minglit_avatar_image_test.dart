@@ -60,8 +60,9 @@ void main() {
     expect(find.byType(CircleAvatar), findsNothing);
   });
 
-  testWidgets('image load failure shows caller fallbackIcon, not generic icon',
-      (tester) async {
+  testWidgets('image load failure shows caller fallbackIcon, not generic icon', (
+    tester,
+  ) async {
     // Fix #1936: MinglitImage.errorBuilder used to hard-code
     // Icons.image_not_supported_outlined; after the fix, MinglitAvatarImage
     // passes a CircleAvatar with the caller's icon as the errorWidget.
