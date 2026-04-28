@@ -20,7 +20,6 @@ import 'package:app_user/src/features/account_deletion/ui/deletion_info_page.dar
 import 'package:app_user/src/features/account_deletion/ui/deletion_reason_page.dart';
 import 'package:app_user/src/features/account_deletion/ui/deletion_verify_page.dart';
 import 'package:app_user/src/features/auth/login_page.dart';
-import 'package:app_user/src/routing/app_coordinator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -124,27 +123,30 @@ void main() {
   // Fix #1923: signOut must be called before goToHome — otherwise the widget
   // is disposed and context.mounted is always false, making the toast unreachable.
   group('IT-U06: 탈퇴 완료 페이지 — 확인 버튼 동작 (Fix #1923)', () {
-    testWidgets('확인 버튼 탭 시 성공 토스트가 화면에 표시됨', (tester) async {
+    testWidgets('확인 버튼 탭 시 성공 토스트가 표시됨 — goToHome 이전에 toast', (
+      tester,
+    ) async {
+      // Use createTestApp (real router via goRouterProvider) so that goToHome()
+      // actually calls router.go('/') and unmounts DeletionCompletePage.
+      // With the bug (goToHome first), context.mounted becomes false after
+      // navigation and the toast is never shown — this test would fail.
       await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            currentUserProvider.overrideWith((_) => testUser),
-            authControllerProvider.overrideWith(
-              _FakeDeletionAuthController.new,
-            ),
-            appCoordinatorProvider.overrideWith(
-              (ref) => _NoopAppCoordinator(),
-            ),
-          ],
-          child: const MaterialApp(home: DeletionCompletePage()),
+        createTestApp(
+          isLoggedIn: true,
+          currentUser: testUser,
+          initialLocation: '/my/privacy/delete/complete',
+          additionalOverrides: _deletionRouterOverrides(),
         ),
       );
-      await tester.pump();
+      await tester.pumpAndSettle();
+      expect(find.byType(DeletionCompletePage), findsOneWidget);
 
       await tester.tap(find.text('확인'));
-      await tester.pump(); // frame to show SnackBar
+      await tester.pump(); // execute async _finish(): signOut → goToHome
+      await tester.pump(); // settle navigation frame
 
-      // Fix #1923: toast must be visible before goToHome disposes the widget
+      // Toast was shown on root ScaffoldMessenger BEFORE goToHome() — it
+      // persists after navigation completes.
       expect(find.text('탈퇴 요청이 접수되었어요.'), findsOneWidget);
     });
   });
@@ -409,56 +411,3 @@ class _SpyDeletionCoordinator extends AccountDeletionCoordinator {
   }
 }
 
-/// No-op AppCoordinator for Fix #1923 test — prevents actual router.go('/') call.
-class _NoopAppCoordinator extends AppCoordinator {
-  _NoopAppCoordinator()
-    : super(
-        GoRouter(
-          routes: [
-            GoRoute(
-              path: '/',
-              builder: (_, _) => const SizedBox.shrink(),
-            ),
-          ],
-        ),
-        _NoopDeletionCoordinator(),
-      );
-
-  @override
-  void goToHome() {}
-}
-
-class _NoopDeletionCoordinator extends AccountDeletionCoordinator {
-  _NoopDeletionCoordinator()
-    : super(
-        GoRouter(
-          routes: [
-            GoRoute(
-              path: '/',
-              builder: (_, _) => const SizedBox.shrink(),
-            ),
-          ],
-        ),
-      );
-
-  @override
-  void start() {}
-
-  @override
-  void pushInfo({WithdrawalReason? reason}) {}
-
-  @override
-  void pushVerify({WithdrawalReason? reason}) {}
-
-  @override
-  void goComplete() {}
-}
-
-/// Auth controller that no-ops signOut for Fix #1923 test.
-class _FakeDeletionAuthController extends AuthController {
-  @override
-  FutureOr<void> build() async {}
-
-  @override
-  Future<void> signOut() async {}
-}
