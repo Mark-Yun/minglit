@@ -77,7 +77,6 @@ void main() {
       setKoreanLocale(tester);
       final launchedUrls = <String>[];
       final fakeLauncher = _FakeUrlLauncher(launchedUrls);
-      UrlLauncherPlatform.instance = fakeLauncher;
 
       final user = createMockUserForTest();
       await tester.pumpWidget(
@@ -100,7 +99,12 @@ void main() {
       await tester.pump();
       await tester.pump();
 
+      // Fix: set AFTER pumpWidget so that dartPluginClass auto-registration
+      // (e.g. url_launcher_linux on CI) doesn't override our fake.
+      UrlLauncherPlatform.instance = fakeLauncher;
+
       await tester.scrollUntilVisible(find.text('개인정보처리방침'), 100);
+      await tester.pump(); // Settle scroll before tap
       await tester.tap(find.text('개인정보처리방침'));
       await tester.pump();
 
