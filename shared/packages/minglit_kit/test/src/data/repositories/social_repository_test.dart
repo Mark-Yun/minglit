@@ -172,6 +172,56 @@ void main() {
         );
 
         expect(result, 3);
+
+        final blockedIdsBuilder = mockTable(
+          mockClient,
+          'social_interactions',
+          selectData: [
+            {'target_id': 'partner_1'},
+          ],
+        );
+        unawaited(blockedIdsBuilder);
+
+        final blockedPartnerIds = await repository.getBlockedPartnerIds();
+
+        expect(blockedPartnerIds, ['partner_1']);
+        // Fix #2011: regression guard — lastSelectColumns must include expected column
+        expect(
+          blockedIdsBuilder.lastSelectColumns,
+          contains('target_id'),
+          reason: 'Fix #2011: select() must include target_id',
+        );
+
+        final partnersBuilder = mockTable(
+          mockClient,
+          'partners',
+          selectData: [
+            {
+              'id': 'partner_1',
+              'name': '파트너',
+              'profile_image_url': 'https://example.com/profile.png',
+            },
+          ],
+        );
+        final blockedIdsForPartnersBuilder = mockTable(
+          mockClient,
+          'social_interactions',
+          selectData: [
+            {'target_id': 'partner_1'},
+          ],
+        );
+        unawaited(partnersBuilder);
+        unawaited(blockedIdsForPartnersBuilder);
+
+        final blockedPartners = await repository.getBlockedPartners();
+
+        expect(blockedPartners, hasLength(1));
+        // Fix #2011: regression guard — lastSelectColumns must include expected column
+        expect(
+          partnersBuilder.lastSelectColumns,
+          contains('profile_image_url'),
+          reason: 'Fix #2011: select() must include profile_image_url',
+        );
       });
     });
   });

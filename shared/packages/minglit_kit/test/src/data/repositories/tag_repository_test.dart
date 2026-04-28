@@ -1,3 +1,5 @@
+import 'dart:async' show unawaited;
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/src/data/models/tag.dart';
 import 'package:minglit_kit/src/data/repositories/tag_repository.dart';
@@ -143,6 +145,54 @@ void main() {
         expect(result, isEmpty);
         // from('user_interest_tags') should never be called
         verifyNever(() => unauthClient.from('user_interest_tags'));
+
+        final mockUser = MockUser();
+        when(() => mockUser.id).thenReturn('user_1');
+        final authedClient = createMockSupabase(currentUser: mockUser);
+        final authedRepo = TagRepository(supabase: authedClient);
+
+        final interestTagsBuilder = mockTable(
+          authedClient,
+          'user_interest_tags',
+          selectData: [
+            {
+              'tag_id': 'tag_1',
+              'tags': tagJson1,
+            },
+          ],
+        );
+        unawaited(interestTagsBuilder);
+
+        final interestTags = await authedRepo.getUserInterestTags();
+
+        expect(interestTags, hasLength(1));
+        expect(interestTags.first.id, 'tag_1');
+        // Fix #2011: regression guard — lastSelectColumns must include expected column
+        expect(
+          interestTagsBuilder.lastSelectColumns,
+          contains('tag_id'),
+          reason: 'Fix #2011: select() must include tag_id',
+        );
+
+        final partyTagsBuilder = mockTable(
+          authedClient,
+          'party_tags',
+          selectData: [
+            {'tags': tagJson2},
+          ],
+        );
+        unawaited(partyTagsBuilder);
+
+        final partyTags = await authedRepo.getTagsByPartyId('party_1');
+
+        expect(partyTags, hasLength(1));
+        expect(partyTags.first.id, 'tag_2');
+        // Fix #2011: regression guard — lastSelectColumns must include expected column
+        expect(
+          partyTagsBuilder.lastSelectColumns,
+          contains('tags(*)'),
+          reason: 'Fix #2011: select() must include tags(*)',
+        );
       });
     });
   });

@@ -298,6 +298,79 @@ void main() {
 
         final result = await repository.getMatchingCandidates('event_1');
         expect(result, isEmpty);
+
+        final participantBuilder = mockTable(
+          mockClient,
+          'event_participants',
+          selectData: [
+            {
+              'user_id': 'user_2',
+              'display_name': '상대방',
+              'birth_year': 1996,
+              'ticket': {
+                'target_entry_group_ids': ['group_f'],
+              },
+            },
+          ],
+          maybeSingleData: {
+            'ticket': {
+              'target_entry_group_ids': ['group_m'],
+            },
+          },
+        );
+        final rulesBuilder = mockTable(
+          mockClient,
+          'match_rules',
+          selectData: [
+            {'target_group_id': 'group_f'},
+          ],
+        );
+        final entryGroupsBuilder = mockTable(
+          mockClient,
+          'entry_groups',
+          selectData: [
+            {'id': 'group_m', 'gender': 'male'},
+          ],
+        );
+        final oppositeGroupsBuilder = mockTable(
+          mockClient,
+          'entry_groups',
+          selectData: [
+            {'id': 'group_f'},
+          ],
+        );
+        unawaited(participantBuilder);
+        unawaited(rulesBuilder);
+        unawaited(entryGroupsBuilder);
+        unawaited(oppositeGroupsBuilder);
+
+        final candidates = await repository.getMatchingCandidates('event_1');
+
+        expect(candidates, hasLength(1));
+        // Fix #2011: regression guard — lastSelectColumns must include expected column
+        expect(
+          rulesBuilder.lastSelectColumns,
+          contains('target_group_id'),
+          reason: 'Fix #2011: select() must include target_group_id',
+        );
+        // Fix #2011: regression guard — lastSelectColumns must include expected column
+        expect(
+          entryGroupsBuilder.lastSelectColumns,
+          contains('gender'),
+          reason: 'Fix #2011: select() must include gender',
+        );
+        // Fix #2011: regression guard — lastSelectColumns must include expected column
+        expect(
+          oppositeGroupsBuilder.lastSelectColumns,
+          contains('id'),
+          reason: 'Fix #2011: select() must include id',
+        );
+        // Fix #2011: regression guard — lastSelectColumns must include expected column
+        expect(
+          participantBuilder.lastSelectColumns,
+          contains('user_id'),
+          reason: 'Fix #2011: select() must include user_id',
+        );
       });
     });
   });

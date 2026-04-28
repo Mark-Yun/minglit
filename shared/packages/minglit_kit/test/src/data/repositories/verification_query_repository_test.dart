@@ -275,33 +275,58 @@ void main() {
     // Fix #301: getVerificationComments now reads from snapshot_data JSON
     group('getVerificationComments', () {
       test('returns comments from snapshot_data', () async {
-        unawaited(
-          mockTable(
-            mockClient,
-            'verification_submissions',
-            maybeSingleData: {
-              'snapshot_data': [
-                {
-                  'submitted_at': '2026-03-15',
-                  'data': {'university': '서울대'},
-                  'comments': [
-                    {
-                      'author': 'user-1',
-                      'at': '2026-03-16T10:00:00Z',
-                      'text': '다시 올리겠습니다',
-                    },
-                  ],
-                },
-              ],
-            },
-          ),
+        final snapshotBuilder = mockTable(
+          mockClient,
+          'verification_submissions',
+          maybeSingleData: {
+            'snapshot_data': [
+              {
+                'submitted_at': '2026-03-15',
+                'data': {'university': '서울대'},
+                'comments': [
+                  {
+                    'author': 'user-1',
+                    'at': '2026-03-16T10:00:00Z',
+                    'text': '다시 올리겠습니다',
+                  },
+                ],
+              },
+            ],
+          },
         );
+        unawaited(snapshotBuilder);
 
         final result = await repository.getVerificationComments('sub_1');
 
         expect(result, hasLength(1));
         expect(result.first['author_id'], 'user-1');
         expect((result.first['content'] as Map)['text'], '다시 올리겠습니다');
+        // Fix #2011: regression guard — lastSelectColumns must include expected column
+        expect(
+          snapshotBuilder.lastSelectColumns,
+          contains('snapshot_data'),
+          reason: 'Fix #2011: select() must include snapshot_data',
+        );
+
+        final submissionBuilder = mockTable(
+          mockClient,
+          'verification_submissions',
+          maybeSingleData: {'id': 'sub_1'},
+        );
+        unawaited(submissionBuilder);
+
+        final submission = await repository.getSubmissionByApplicationId(
+          'app_1',
+        );
+
+        expect(submission, isNotNull);
+        expect(submission!['id'], 'sub_1');
+        // Fix #2011: regression guard — lastSelectColumns must include expected column
+        expect(
+          submissionBuilder.lastSelectColumns,
+          contains('id'),
+          reason: 'Fix #2011: select() must include id',
+        );
       });
 
       test('returns empty list when no submission found', () async {
