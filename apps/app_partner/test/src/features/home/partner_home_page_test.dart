@@ -91,7 +91,8 @@ void main() {
         expect(
           find.text('이번 주 성과'),
           findsNothing,
-          reason: 'Weekly stats header must not appear until backend API is wired',
+          reason:
+              'Weekly stats header must not appear until backend API is wired',
         );
       },
     );
