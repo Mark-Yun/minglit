@@ -67,24 +67,28 @@ class EventNowBarStateNotifier extends _$EventNowBarStateNotifier {
   FutureOr<EventNowBarState> build(TodayActiveEvent activeEvent) async {
     final event = activeEvent.event;
 
-    // Fix #1321: Read clock BEFORE any async gaps — ref.watch/read throws
-    // "Ref disposed" if called after an await when myMatchesProvider or
-    // matchCandidatesProvider resolution triggers a rebuild of this provider.
+    // Fix #1321: Capture all ref accesses BEFORE any async gaps.
+    // ref.watch/read throws "Ref disposed" if called after an await when a
+    // watched provider triggers a rebuild of this notifier mid-flight.
     final now = ref.watch(clockProvider)();
 
-    // Fix #2017: Do NOT ref.watch myMatchesProvider or matchCandidatesProvider
-    // here. Watching async providers in an async build() causes a disposal loop:
-    // when the watched provider transitions loading→data/error, Riverpod triggers
-    // a rebuild of this notifier, disposing the in-flight async build mid-await,
-    // which raises "provider disposed during loading state". Use ref.read only
-    // in _computeState; reactivity for match changes is handled via EventRealtime
-    // invalidating todayActiveEventsProvider.
+    // Fix #2017: Do NOT use myMatchesProvider/matchCandidatesProvider here.
+    // Those are auto-dispose async providers. Even ref.read() can cause
+    // "provider disposed during loading state" because auto-dispose providers
+    // are torn down when their listener count hits zero before the future
+    // resolves. Read the keepAlive matchingRepositoryProvider directly instead
+    // and call async methods on the repository object — no Riverpod lifecycle
+    // involved after this point. Reactivity is preserved via EventRealtime
+    // invalidating todayActiveEventsProvider, which provides new args to this
+    // notifier.
+    final matchingRepo = ref.read(matchingRepositoryProvider);
 
     // Compute the raw state from current data.
     final rawState = await _computeState(
       event,
       activeEvent.participantStatus,
       now,
+      matchingRepo,
     );
 
     // Enforce forward-only transitions.
@@ -99,18 +103,18 @@ class EventNowBarStateNotifier extends _$EventNowBarStateNotifier {
     Event event,
     String participantStatus,
     DateTime now,
+    MatchingRepository matchingRepo,
   ) async {
     // ENDED: event is completed or cancelled.
     if (event.status == 'completed' || event.status == 'cancelled') {
       return EventNowBarState.ended;
     }
 
-    // RESULTS: myMatchesProvider has results (including empty list means
-    // matching round completed). ref.read avoids creating a subscription here —
-    // this notifier rebuilds only when todayActiveEventsProvider is invalidated
-    // externally (via EventRealtime or polling).
+    // RESULTS: direct repository call avoids auto-dispose lifecycle issues
+    // (see Fix #2017 comment in build()). This notifier rebuilds only when
+    // todayActiveEventsProvider is invalidated externally.
     try {
-      final matches = await ref.read(myMatchesProvider(event.id).future);
+      final matches = await matchingRepo.getMyMatches(event.id);
       if (matches.isNotEmpty) {
         return EventNowBarState.results;
       }
@@ -122,12 +126,9 @@ class EventNowBarStateNotifier extends _$EventNowBarStateNotifier {
       );
     }
 
-    // MATCHING: matchCandidatesProvider returns non-empty list.
-    // ref.read avoids a subscription — see comment above.
+    // MATCHING: matchCandidates via direct repository call — see above.
     try {
-      final candidates = await ref.read(
-        matchCandidatesProvider(event.id).future,
-      );
+      final candidates = await matchingRepo.getMatchingCandidates(event.id);
       if (candidates.isNotEmpty) {
         return EventNowBarState.matching;
       }
