@@ -15,6 +15,7 @@ class MinglitImage extends StatelessWidget {
     this.fit = BoxFit.contain,
     this.semanticLabel,
     this.excludeFromSemantics = false,
+    this.errorWidget,
   });
 
   /// Image source path or URL.
@@ -34,6 +35,10 @@ class MinglitImage extends StatelessWidget {
 
   /// Whether to exclude this image from semantics.
   final bool excludeFromSemantics;
+
+  /// Optional widget to display when the image fails to load.
+  /// When null, falls back to the default error placeholder (icon container).
+  final Widget? errorWidget;
 
   bool get _isNetwork => path.startsWith('http');
   bool get _isAsset =>
@@ -131,7 +136,9 @@ class MinglitImage extends StatelessWidget {
       },
       // Fix #1558: errorBuilder에도 semantics 정책 적용
       // Fix #1655: 로드 실패 시 broken_image 대신 placeholder — 네트워크 오류/404 엑박 방지
+      // Fix #1936: caller가 errorWidget을 제공하면 해당 위젯을 우선 사용
       errorBuilder: (context, error, stackTrace) {
+        if (errorWidget != null) return errorWidget!;
         final theme = Theme.of(context);
         final fallback = Container(
           height: height,

@@ -688,7 +688,7 @@ Nodes (83): AccountDeletionController, AccountDeletionControllerTest, AccountRep
 Cohesion: 0.03
 Nodes (83): Partner App Smoke Test Cases, User App Smoke Test Cases, 25 Cross-Feature Import Violations (issue #452), Cross-Feature Coupling Violations (issue #436), Automation Test Guide (7-Layer), Partner CUJ Test Scenarios, CUJ-P01: Partner Onboarding → Event Creation, CUJ-P02: Application Review (Approve/Reject) (+75 more)
 
-### Community 13 - "Community 13"
+### Community 17 - "Community 17"
 Cohesion: 0.04
 Nodes (74): AccountManagementPage, AccountManagementPageTest, AddActionCard, DevScreenItem, DevScreenList, EntryGroup Model, EntryGroupTemplate model, handleMinglitError (+66 more)
 
@@ -713,6 +713,10 @@ Cohesion: 0.09
 Nodes (44): ActionRunner, Admin Dashboard Spec, Admin Dashboard Wireframe, backend-simulator E2E Tests, backend-simulator Edge Function (main handler), DB Table: partner_verified_users, EF: apply-event, EF: event-checkin (+36 more)
 
 ### Community 19 - "Community 19"
+Cohesion: 0.09
+Nodes (45): ActionRunner, Admin Dashboard Spec, Admin Dashboard Wireframe, backend-simulator E2E Tests, backend-simulator Edge Function (main handler), DB Table: partner_verified_users, EF: apply-event, EF: event-checkin (+37 more)
+
+### Community 20 - "Community 20"
 Cohesion: 0.06
 Nodes (23): Alchemist goldenTest, ClosingSoonEventsCard, ClosingSoonEventsCard Test, Edge Function Contract Tests, EventApplication, Test Fixtures (fixtures.ts), identity-verify Edge Function, minglit_kit_test (+15 more)
 
@@ -962,7 +966,7 @@ Nodes (2): _EventRepositoryCheckinQueries, FormatException
 
 ### Community 81 - "Community 81"
 Cohesion: 0.67
-Nodes (3): Axiom Structured Logger, Axiom Logger Test Suite, PII Masker (maskMetadata)
+Nodes (2): _EventRepositoryCheckinQueries, FormatException
 
 ### Community 82 - "Community 82"
 Cohesion: 0.67
@@ -1026,7 +1030,7 @@ Nodes (2): MinglitBottomSheet, MinglitBottomSheetTest
 
 ### Community 97 - "Community 97"
 Cohesion: 1.0
-Nodes (2): MinglitTextField, MinglitTextFieldTest
+Nodes (3): EventNowMultiStack, EventNowMultiStack Widget Test, sortActiveEvents
 
 ### Community 98 - "Community 98"
 Cohesion: 1.0
@@ -1046,7 +1050,7 @@ Nodes (2): ThemeController, ThemeSettingsTile
 
 ### Community 102 - "Community 102"
 Cohesion: 1.0
-Nodes (1): supabaseImageUrl
+Nodes (3): Runtime QA Scheduler System, Incident #1765: Flutter SDK Missing in Runtime Environment, Incident #1850: Testing Device Disconnected - Pixel 7a
 
 ### Community 103 - "Community 103"
 Cohesion: 1.0
