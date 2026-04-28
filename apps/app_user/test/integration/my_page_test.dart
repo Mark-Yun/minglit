@@ -4,7 +4,6 @@ import 'package:app_user/src/features/payment/ui/purchase_history_page.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
-import 'package:url_launcher_platform_interface/link.dart';
 import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
 
 import 'utils/golden_capture.dart';
@@ -116,9 +115,6 @@ class _FakeUrlLauncher extends Fake
     implements UrlLauncherPlatform {
   _FakeUrlLauncher(this.launchedUrls);
   final List<String> launchedUrls;
-
-  @override
-  LinkDelegate? get linkDelegate => null;
 
   @override
   Future<bool> canLaunch(String url) async => true;
