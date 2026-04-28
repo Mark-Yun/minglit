@@ -8,7 +8,7 @@ const navItems = [
   { href: '/', label: 'Home' },
   { href: '/tokens', label: 'Tokens' },
   { href: '/icons', label: 'Icons' },
-  { href: '/screens', label: 'Screens' },
+  { href: '/components', label: 'Components' },
   { href: '/flows', label: 'Flows' },
 ];
 
@@ -37,14 +37,6 @@ export default function Sidebar() {
           </li>
         );
       })}
-      <li>
-        <span className="flex items-center px-3 py-2 rounded-lg text-sm font-medium text-[var(--color-divider)] cursor-not-allowed select-none">
-          Components
-          <span className="ml-2 text-xs bg-[var(--color-surface)] text-[var(--color-text-secondary)] px-1.5 py-0.5 rounded">
-            soon
-          </span>
-        </span>
-      </li>
     </ul>
   );
 

@@ -57,10 +57,24 @@
   --spacing-card-content-v: 16px; /** 16px card internal vertical padding */
   --spacing-title-to-body: 4px; /** 4px title-to-body spacing */
   --spacing-section-gap: 40px; /** 40px section gap */
-  --typography-font-family-brand: Pretendard; /** Primary brand font */
-  --typography-font-size-caption-tiny: 10px; /** 10px caption tiny */
-  --typography-font-size-chip-label: 13px; /** 13px chip label */
-  --typography-font-size-app-bar-title: 18px; /** 18px app bar title */
-  --typography-font-weight-medium: 500; /** 500 medium weight */
-  --typography-font-weight-semi-bold: 600; /** 600 semi-bold weight */
+  --typography-font-family-brand: Pretendard; /** Body / UI */
+  --typography-font-family-display: RacingSansOne; /** Splash / hero */
+  --typography-font-size-caption-tiny: 10px; /** Legal / disclaimer */
+  --typography-font-size-caption: 11px; /** Helper text, metadata */
+  --typography-font-size-chip-label: 13px; /** Chip / tag label */
+  --typography-font-size-body: 14px; /** Default body */
+  --typography-font-size-button: 16px; /** Button label, emphasised body */
+  --typography-font-size-app-bar-title: 18px; /** App bar title */
+  --typography-font-size-section-title: 20px; /** Section header inside a page */
+  --typography-font-size-page-title: 24px; /** Page heading */
+  --typography-font-size-dialog-title: 28px; /** Dialog / bottom-sheet title */
+  --typography-font-size-display: 32px; /** Hero text */
+  --typography-font-size-display-brand: 48px; /** Splash brand */
+  --typography-font-weight-regular: 400; /** Regular */
+  --typography-font-weight-medium: 500; /** Medium */
+  --typography-font-weight-semi-bold: 600; /** Semi-bold */
+  --typography-font-weight-bold: 700; /** Bold */
+  --typography-line-height-tight: 1.2; /** Display, tight */
+  --typography-line-height-normal: 1.4; /** Default */
+  --typography-line-height-relaxed: 1.6; /** Long-form body */
 }

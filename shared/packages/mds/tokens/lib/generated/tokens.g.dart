@@ -170,22 +170,64 @@ class MdsTokens {
   /// 40px section gap
   static const double spacingSectionGap = 40.0;
 
-  /// Primary brand font
+  /// Body / UI
   static const String typographyFontFamilyBrand = 'Pretendard';
 
-  /// 10px caption tiny
+  /// Splash / hero
+  static const String typographyFontFamilyDisplay = 'RacingSansOne';
+
+  /// Legal / disclaimer
   static const double typographyFontSizeCaptionTiny = 10.0;
 
-  /// 13px chip label
+  /// Helper text, metadata
+  static const double typographyFontSizeCaption = 11.0;
+
+  /// Chip / tag label
   static const double typographyFontSizeChipLabel = 13.0;
 
-  /// 18px app bar title
+  /// Default body
+  static const double typographyFontSizeBody = 14.0;
+
+  /// Button label, emphasised body
+  static const double typographyFontSizeButton = 16.0;
+
+  /// App bar title
   static const double typographyFontSizeAppBarTitle = 18.0;
 
-  /// 500 medium weight
+  /// Section header inside a page
+  static const double typographyFontSizeSectionTitle = 20.0;
+
+  /// Page heading
+  static const double typographyFontSizePageTitle = 24.0;
+
+  /// Dialog / bottom-sheet title
+  static const double typographyFontSizeDialogTitle = 28.0;
+
+  /// Hero text
+  static const double typographyFontSizeDisplay = 32.0;
+
+  /// Splash brand
+  static const double typographyFontSizeDisplayBrand = 48.0;
+
+  /// Regular
+  static const int typographyFontWeightRegular = 400;
+
+  /// Medium
   static const int typographyFontWeightMedium = 500;
 
-  /// 600 semi-bold weight
+  /// Semi-bold
   static const int typographyFontWeightSemiBold = 600;
+
+  /// Bold
+  static const int typographyFontWeightBold = 700;
+
+  /// Display, tight
+  static const double typographyLineHeightTight = 1.2;
+
+  /// Default
+  static const double typographyLineHeightNormal = 1.4;
+
+  /// Long-form body
+  static const double typographyLineHeightRelaxed = 1.6;
 
 }

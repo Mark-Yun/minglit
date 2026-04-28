@@ -46,7 +46,7 @@ function IconCard({ icon }: { icon: IconEntry }) {
       {/* Live React component preview */}
       <div
         className="flex items-center justify-center h-24 bg-[var(--color-surface)]"
-        style={{ color: 'var(--color-primary)' }}
+        style={{ color: 'var(--color-text-primary)' }}
       >
         {Component ? <Component size={32} /> : null}
       </div>
