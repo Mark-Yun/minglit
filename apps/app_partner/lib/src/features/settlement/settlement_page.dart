@@ -195,8 +195,10 @@ class _RevenueSummaryCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Fix #1935: completed_gross_total excludes PROCESSING/READY/HOLD
+          // — use accurate label so partners aren't misled
           Text(
-            '이번 달 총 매출',
+            '정산 완료 매출',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: colorScheme.onPrimary.withValues(
                 alpha: MinglitOpacity.scrimLight,

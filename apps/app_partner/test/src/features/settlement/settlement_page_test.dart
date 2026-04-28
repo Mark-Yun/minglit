@@ -159,4 +159,29 @@ void main() {
       },
     );
   });
+
+  // Fix #1935 regression guard: header label must accurately reflect
+  // completed-only scope — not claim to be "이번 달 총 매출".
+  group('SettlementPage — Fix #1935: revenue card label accuracy', () {
+    testWidgets(
+      '대시보드: 매출 카드 헤더가 "정산 완료 매출"이어야 함 (이번 달 총 매출 아님)',
+      (tester) async {
+        await tester.pumpWidget(
+          _buildApp(permissions: ['SETTLEMENT_VIEW']),
+        );
+        await tester.pump();
+
+        expect(
+          find.text('정산 완료 매출'),
+          findsOneWidget,
+          reason: '매출 카드는 COMPLETED 항목만 포함하므로 "정산 완료 매출" 라벨을 표시해야 한다',
+        );
+        expect(
+          find.text('이번 달 총 매출'),
+          findsNothing,
+          reason: '"이번 달 총 매출"은 PROCESSING/READY 항목을 포함하지 않아 오해를 유발한다',
+        );
+      },
+    );
+  });
 }
