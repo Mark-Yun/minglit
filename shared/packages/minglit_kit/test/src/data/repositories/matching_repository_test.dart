@@ -353,10 +353,12 @@ void main() {
           contains('target_group_id'),
           reason: 'Fix #2011: select() must include target_group_id',
         );
-        // Fix #2011: regression guard — lastSelectColumns must include expected column
+        // Fix #2011: regression guard — both entry_groups calls go through
+        // oppositeGroupsBuilder because mocktail overwrites stubs with the same
+        // table name. Use selectHistory (all calls) to assert 'gender' appeared.
         expect(
-          entryGroupsBuilder.lastSelectColumns,
-          contains('gender'),
+          oppositeGroupsBuilder.selectHistory,
+          contains('id, gender'),
           reason: 'Fix #2011: select() must include gender',
         );
         // Fix #2011: regression guard — lastSelectColumns must include expected column
