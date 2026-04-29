@@ -32,10 +32,11 @@ const dbDeleteTokenRoute = {
   handler: () => jsonResponse({}),
 };
 
-function dbUpsertSettingsRoute(overrides?: Record<string, unknown>) {
+function dbUpsertSettingsRpcRoute(overrides?: Record<string, unknown>) {
   return {
     matcher: (req: Request) =>
-      req.url.includes("/rest/v1/user_settings") && req.method === "POST",
+      req.url.includes("/rest/v1/rpc/upsert_user_settings_with_consent") &&
+      req.method === "POST",
     handler: () =>
       jsonResponse({
         user_id: "user-123",
@@ -244,12 +245,12 @@ Deno.test("delete_token — token 누락 → 400", async () => {
 
 // ===== update_settings tests =====
 
-Deno.test("update_settings — marketing_consent 변경 → DB 반영", async () => {
+Deno.test("update_settings — marketing_consent 변경 → user_settings + user_consents 동시 반영", async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const { fetchMock, calls } = createFetchMock([
     authRoute,
-    dbUpsertSettingsRoute({ marketing_consent: true }),
+    dbUpsertSettingsRpcRoute({ marketing_consent: true }),
   ]);
 
   await withEnv(ENV, async () => {
@@ -266,12 +267,47 @@ Deno.test("update_settings — marketing_consent 변경 → DB 반영", async ()
         assertEquals(payload.success, true);
         assertEquals(payload.settings.marketing_consent, true);
 
-        const dbCall = calls.find(
-          (c) => c.url.includes("/rest/v1/user_settings") && c.method === "POST",
+        // Regression(#2040): marketing_consent + user_consents를 원자적 RPC로 동시 반영
+        const rpcCall = calls.find(
+          (c) =>
+            c.url.includes("/rest/v1/rpc/upsert_user_settings_with_consent") &&
+            c.method === "POST",
         );
-        const body = JSON.parse(dbCall!.body!);
-        assertEquals(body.user_id, "user-123");
-        assertEquals(body.marketing_consent, true);
+        assertEquals(!!rpcCall, true, "upsert_user_settings_with_consent RPC must be called");
+        const rpcBody = JSON.parse(rpcCall!.body!);
+        assertEquals(rpcBody.p_user_id, "user-123");
+        assertEquals(rpcBody.p_marketing_consent, true);
+      });
+    });
+  });
+});
+
+Deno.test("update_settings — marketing_consent false → user_consents withdrawn_at 설정 (Regression #2040)", async () => {
+  const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+
+  const { fetchMock, calls } = createFetchMock([
+    authRoute,
+    dbUpsertSettingsRpcRoute({ marketing_consent: false }),
+  ]);
+
+  await withEnv(ENV, async () => {
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const request = authenticatedJsonRequest("http://localhost", {
+          action: "update_settings",
+          settings: { marketing_consent: false },
+        });
+        const response = await handler(request);
+        assertEquals(response.status, 200);
+
+        const rpcCall = calls.find(
+          (c) =>
+            c.url.includes("/rest/v1/rpc/upsert_user_settings_with_consent") &&
+            c.method === "POST",
+        );
+        assertEquals(!!rpcCall, true, "upsert_user_settings_with_consent RPC must be called on opt-out");
+        const rpcBody = JSON.parse(rpcCall!.body!);
+        assertEquals(rpcBody.p_marketing_consent, false);
       });
     });
   });
@@ -282,7 +318,7 @@ Deno.test("update_settings — service_notification 변경", async () => {
 
   const { fetchMock } = createFetchMock([
     authRoute,
-    dbUpsertSettingsRoute({ service_notification: false }),
+    dbUpsertSettingsRpcRoute({ service_notification: false }),
   ]);
 
   await withEnv(ENV, async () => {

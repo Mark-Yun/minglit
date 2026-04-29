@@ -6,6 +6,7 @@ import { isoToUnix } from '../_shared/temporal_utils.ts'
 import * as jose from 'jose'
 import { initSentry, withHandler, log } from '../_shared/logger.ts'
 import { requireServiceRole } from '../_shared/auth_utils.ts'
+import { isNightTimeKST, secondsUntilKST8AM } from './marketing_guards.ts'
 
 const FN = "notification-worker";
 
@@ -370,6 +371,50 @@ Deno.serve(withHandler(async (req) => {
           log({ function: FN, level: "warn", message: `[${traceId}] No userId resolved. Skipping.` });
           await supabase.rpc('pgmq_delete', { queue_name: 'q_notifications', msg_id: msg.msg_id });
           return true;
+        }
+
+        // §50 Marketing Notification Guards (정보통신망법 §50 준수)
+        if (category === 'marketing') {
+          // Guard 1 — §50 ①: 수신 동의 미확인 시 drop (3천만원 이하 과태료)
+          const { data: consent, error: consentError } = await supabase
+            .from('user_consents')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('consent_key', 'marketing_consent')
+            .eq('consented', true)
+            .is('withdrawn_at', null)
+            .maybeSingle();
+          if (consentError) {
+            log({ function: FN, level: 'error', message: 'marketing_consent_query_error', metadata: { userId, traceId, error: consentError } });
+            throw consentError;
+          }
+          if (!consent) {
+            log({ function: FN, level: 'info', message: 'marketing_consent_missing_drop', metadata: { userId, traceId } });
+            await utils.markProcessed(traceId);
+            await supabase.rpc('pgmq_delete', { queue_name: 'q_notifications', msg_id: msg.msg_id });
+            return true;
+          }
+
+          // Guard 2 — §50 ⑤: KST 21:00–07:59 야간 발송 → 다음 오전 8시로 재예약
+          if (isNightTimeKST()) {
+            const delaySec = secondsUntilKST8AM();
+            log({ function: FN, level: 'info', message: 'marketing_night_reschedule', metadata: { userId, traceId, delaySec } });
+            const { error: setVtError } = await supabase.rpc('pgmq_set_vt', {
+              queue_name: 'q_notifications',
+              msg_id: msg.msg_id,
+              vt_offset: delaySec,
+            });
+            if (setVtError) {
+              log({ function: FN, level: 'error', message: 'marketing_night_reschedule_failed', metadata: { userId, traceId, delaySec, error: setVtError } });
+              throw setVtError;
+            }
+            return true;
+          }
+
+          // Guard 3 — §50 ④: "(광고)" 표기 자동 prepend (FCM + DB insert 모두 적용)
+          if (!/^\s*(\(광고\)|\[광고\])/.test(title)) {
+            title = `(광고) ${title}`;
+          }
         }
 
         // A. Get Access Token
