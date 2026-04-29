@@ -6,7 +6,7 @@ export type RequestHandler = (req: Request) => Response | Promise<Response>;
 export type FetchLike = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 
 export type FetchRoute = {
-  matcher: string | RegExp | ((req: Request) => boolean);
+  matcher: string | RegExp | ((req: Request) => boolean | Promise<boolean>);
   handler: (req: Request) => Response | Promise<Response>;
 };
 
@@ -85,7 +85,7 @@ export function createFetchMock(
           ? req.url.includes(route.matcher)
           : route.matcher instanceof RegExp
           ? route.matcher.test(req.url)
-          : route.matcher(req);
+          : await Promise.resolve(route.matcher(req));
       if (match) {
         return await route.handler(req);
       }
