@@ -3,8 +3,11 @@
 --
 -- 처리 순서 (매일 03:00 UTC = 12:00 KST, cleanup-retention cron과 동일):
 --   1. renewal_notified_at < now() - 7일 → consented=false, withdrawn_at=now() (자동 철회)
---   2. consented_at < now() - p_cutoff_days일 AND renewal_notified_at IS NULL
+--   2. consented_at < now() - p_cutoff_days일
+--      AND (renewal_notified_at IS NULL OR consented_at >= renewal_notified_at)
 --      → pgmq_send(service 카테고리 갱신 안내) + renewal_notified_at=now()
+--      ※ consented_at >= renewal_notified_at: 안내 후 사용자가 동의를 갱신한 경우
+--        새 2년 주기가 시작됐으므로 다시 만료 시 재알림 대상이 됨
 
 CREATE OR REPLACE FUNCTION admin.process_marketing_consent_renewals(
   p_cutoff_days int
@@ -41,7 +44,7 @@ BEGIN
     WHERE  uc.consent_key        = 'marketing_consent'
       AND  uc.consented           = true
       AND  uc.withdrawn_at        IS NULL
-      AND  uc.renewal_notified_at IS NULL
+      AND  (uc.renewal_notified_at IS NULL OR uc.consented_at >= uc.renewal_notified_at)
       AND  uc.consented_at        < now() - p_cutoff_days * INTERVAL '1 day'
   LOOP
     -- 서비스 카테고리 알림 — 광고성 아님, §50 마케팅 가드 면제

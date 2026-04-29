@@ -12,7 +12,7 @@
 
 BEGIN;
 
-SELECT plan(20);
+SELECT plan(21);
 
 SELECT tests.authenticate_as_service_role();
 
@@ -279,7 +279,43 @@ SELECT ok(
   '#2041 Regression: 갱신 안내 후 앱에서 동의 갱신한 사용자는 자동 철회 없음 (consented_at >= renewal_notified_at)'
 );
 
--- ── 7. idempotent 확인 ────────────────────────────────────────────────────────
+-- ── 7. 2번째 갱신 주기 재알림 검증 (Regression #2041) ───────────────────────────
+
+DO $$
+DECLARE
+  v_second_cycle_user uuid;
+BEGIN
+  -- fixture H: 800일 전 동의 갱신 (2년 초과) + 900일 전에 이미 갱신 안내 발송됨
+  --   consented_at(800일 전) > renewal_notified_at(900일 전) → 안내 후 동의를 갱신한 상태
+  --   consented_at(800일 전) < now() - 730일 → 새 2년 주기도 만료
+  --   → 2번째 갱신 안내 발송 대상이어야 함
+  --   Regression: 이전 코드는 renewal_notified_at IS NULL 조건으로 인해 재알림 불가
+  v_second_cycle_user := tests.create_supabase_user(
+    'consent_2041_second_cycle', 'consent_2041_second_cycle@pgtap.local'
+  );
+  INSERT INTO public.user_consents
+    (user_id, consent_key, consented, consented_at, withdrawn_at, renewal_notified_at)
+  VALUES
+    (v_second_cycle_user, 'marketing_consent', true,
+     now() - INTERVAL '800 days',   -- 800일 전 동의 갱신 (2년 만료)
+     NULL,
+     now() - INTERVAL '900 days');  -- 900일 전 갱신 안내 발송 (consented_at보다 오래됨)
+
+  PERFORM set_config('renewal_test.second_cycle_user', v_second_cycle_user::text, true);
+END $$;
+
+SELECT admin.process_marketing_consent_renewals(730);
+
+-- 21. fixture H: 2번째 갱신 주기 — renewal_notified_at이 갱신됨 (재알림 발송)
+SELECT ok(
+  (SELECT renewal_notified_at > now() - INTERVAL '5 minutes'
+     FROM public.user_consents
+    WHERE user_id = current_setting('renewal_test.second_cycle_user')::uuid
+      AND consent_key = 'marketing_consent'),
+  '#2041 Regression: 2번째 갱신 주기 — consented_at >= renewal_notified_at이면 재알림 발송됨'
+);
+
+-- ── 8. idempotent 확인 ────────────────────────────────────────────────────────
 
 -- 18. 재실행 시 이미 notified_at 설정된 사용자 재처리 없음
 -- (fixture A: renewal_notified_at이 설정됐으므로 이제 발송 대상이 아님)
