@@ -199,7 +199,13 @@ export function widgetNameFor(app: 'user' | 'partner', route: string): string | 
  * the flows table lights up automatically.
  */
 const ROUTE_DESIGNS: Record<string, string> = {
-  'user-MyPageRoute': '/specs/profile_home.html',
+  'user-MyPageRoute':           '/specs/my_page.html',
+  'user-LoginRoute':            '/specs/login_page.html',
+  'user-HomeRoute':             '/specs/home_page.html',
+  'user-EventDetailRoute':      '/specs/event_detail_page.html',
+  'partner-PartyCreateRoute':   '/specs/party_create_wizard_page.html',
+  'partner-PartyEditRoute':     '/specs/party_create_wizard_page.html',
+  'partner-SettlementDetailRoute': '/specs/settlement_detail_page.html',
 };
 
 /** Whether a screen design (wireframe / screenshot) is available for this route. */
