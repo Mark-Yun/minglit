@@ -273,11 +273,32 @@ export default function PrivacyPage() {
         </p>
       </section>
 
-      {/* 9. 책임자 정보 */}
+      {/* Fix #2041: 마케팅 정보 수신 정책 — §50 야간 차단 + 2년 재확인 명시 */}
       <section className="mb-12">
         <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
           <span className="w-1 h-5 bg-gray-400 mr-3 rounded-full" />
-          9. 개인정보 보호책임자 및 담당 부서
+          9. 광고성 정보 수신 및 마케팅 동의
+        </h2>
+        <ul className="list-disc pl-5 space-y-3 text-sm text-gray-600">
+          <li>
+            <strong>야간 광고 발송 차단 (정보통신망법 §50 ⑤항):</strong> 회사는 야간(21:00 ~ 익일 08:00 KST) 시간대에는 광고성 정보를 발송하지 않습니다. 해당 시간에 도달한 마케팅 알림은 다음 날 오전 8시로 자동 예약됩니다.
+          </li>
+          <li>
+            <strong>광고 표기 의무 (정보통신망법 §50 ④항):</strong> 모든 광고성 푸시 알림의 제목에는 <code className="text-xs bg-gray-100 px-1 py-0.5 rounded">(광고)</code> 문구가 표시됩니다.
+          </li>
+          <li>
+            <strong>2년 주기 재확인 (정보통신망법 §50 ⑧항):</strong> 마케팅 수신 동의 후 2년이 경과하면 서비스 알림으로 갱신 안내를 발송합니다. 안내 수신 후 7일 이내에 갱신하지 않으면 마케팅 수신 동의가 자동으로 철회됩니다. 갱신은 앱 내 [설정 &gt; 알림 설정] 메뉴에서 언제든지 가능합니다.
+          </li>
+          <li>
+            <strong>동의 철회:</strong> 마케팅 수신 동의는 앱 내 [설정 &gt; 알림 설정]에서 언제든지 철회할 수 있으며, 철회 즉시 광고성 정보 발송이 중단됩니다.
+          </li>
+        </ul>
+      </section>
+
+      <section className="mb-12">
+        <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+          <span className="w-1 h-5 bg-gray-400 mr-3 rounded-full" />
+          10. 개인정보 보호책임자 및 담당 부서
         </h2>
         <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100 text-sm text-gray-600">
           <ul className="space-y-2">

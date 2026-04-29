@@ -152,22 +152,20 @@ Deno.serve(withHandler(async (req) => {
           );
         }
 
+        // Fix #2040: user_settings + user_consents를 원자적 RPC로 동시 갱신 (partial write 방지)
         const { data, error } = await withSpan(
-          "db.upsert.user_settings",
-          "db.upsert",
+          "db.rpc.upsert_user_settings_with_consent",
+          "db.rpc",
           () =>
-            supabase
-              .from("user_settings")
-              .upsert(
-                {
-                  user_id: userId,
-                  ...sanitized,
-                  updated_at: new Date().toISOString(),
-                },
-                { onConflict: "user_id" },
-              )
-              .select()
-              .single(),
+            supabase.rpc("upsert_user_settings_with_consent", {
+              p_user_id: userId,
+              p_marketing_consent: "marketing_consent" in sanitized
+                ? sanitized["marketing_consent"] as boolean
+                : null,
+              p_service_notification: "service_notification" in sanitized
+                ? sanitized["service_notification"] as boolean
+                : null,
+            }),
         );
 
         if (error) {
@@ -175,7 +173,7 @@ Deno.serve(withHandler(async (req) => {
             function: FN,
             level: "error",
             message: "Failed to update settings",
-            metadata: { detail: error },
+            metadata: { userId, detail: error },
           });
           return errorResponse("Failed to update settings", 500);
         }

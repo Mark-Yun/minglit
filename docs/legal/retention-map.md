@@ -1,8 +1,9 @@
 # 개인정보 보유기간 선언 ↔ 구현 매핑
 
 **Owner**: legal-reviewer
-**개정**: 2026-04-22 (초판)
-**관련 PR/이슈**: #1695 (audit) · #1693 (retention_policies 인프라) · #1692
+**개정**: 2026-04-29 (광고성 정보 발송 가드 매트릭스 추가)  
+**이전 개정**: 2026-04-22 (초판)  
+**관련 PR/이슈**: #1695 (audit) · #1693 (retention_policies 인프라) · #1692 · #2038 (§50 audit) · #2040 (§50 구현)
 
 ---
 
@@ -204,9 +205,31 @@ VALUES
 
 ---
 
-## 5) 참조
+## 5) 광고성 정보 발송 가드 (정보통신망법 §50)
 
-- `apps/landing_user/src/app/privacy/page.tsx` — 사용자 선언 원문
+**출처**: audit-report #2038  
+**구현**: #2040 (`supabase/functions/notification-worker/`)
+
+### 의무–구현–테스트 매트릭스
+
+| 의무 | 조항 | 구현 위치 | 테스트 |
+|------|------|-----------|--------|
+| 수신 동의 확인 | §50 ① | `notification-worker/index.ts` — `user_consents.marketing_consent` 가드 | `notification_worker_test.ts` — "§50 ①: marketing without consent drops message" |
+| 야간 발송 차단 | §50 ⑤ | `notification-worker/marketing_guards.ts` — `isNightTimeKST()` + PGMQ `pgmq_set_vt` 재예약 | `notification_worker_test.ts` — "§50 ⑤: marketing at KST night triggers pgmq_set_vt" |
+| `(광고)` 표기 자동 prepend | §50 ④ | `notification-worker/index.ts` — FCM + DB insert 전 title prepend | `notification_worker_test.ts` — "§50 ④: marketing title gets (광고) prepend" |
+
+### 미구현 항목 (별도 이슈)
+
+| 의무 | 조항 | 상태 | 이슈 |
+|------|------|------|------|
+| 2년 경과 시 재확인 또는 자동 withdraw | §50 ⑧ | 미구현 | #2041 |
+| landing_user privacy 정책 야간·재동의 명시 | §50 ④ | 미구현 | #2041 |
+
+---
+
+## 6) 참조
+
+- `apps/landing_user/src/app/privacy/page.tsx` — 사용자 선언 원문 (§50 야간·재동의 정책 반영 필요, #2041)
 - `supabase/migrations/20260421000002_add_admin_schema_retention_policies.sql` — PR #1693 (admin 스키마 + retention_policies 인프라)
 - `supabase/migrations/20260422000001_location_access_log.sql` — PR #1698 (위치정보법 §16 구현)
 - `supabase/migrations/20260330000005_account_deletion.sql` — archived_records 스키마

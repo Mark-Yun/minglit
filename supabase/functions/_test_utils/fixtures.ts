@@ -65,6 +65,21 @@ export const mockNotificationMessage = {
   },
 };
 
+export const mockMarketingNotificationMessage = {
+  msg_id: 2,
+  read_ct: 0,
+  message: {
+    id: "trace-marketing-1",
+    user_id: "user-123",
+    type: "promotion",
+    title: "Special Offer",
+    body: "Check out our latest events!",
+    category: "marketing",
+    data: {},
+    meta: { occurred_at: 1700000000 },
+  },
+};
+
 export const mockVectorPartyMessage = {
   msg_id: 10,
   read_ct: 0,
