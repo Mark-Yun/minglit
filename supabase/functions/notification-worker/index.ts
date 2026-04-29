@@ -412,7 +412,7 @@ Deno.serve(withHandler(async (req) => {
           }
 
           // Guard 3 — §50 ④: "(광고)" 표기 자동 prepend (FCM + DB insert 모두 적용)
-          if (!title.startsWith('(광고)')) {
+          if (!/^\s*(\(광고\)|\[광고\])/.test(title)) {
             title = `(광고) ${title}`;
           }
         }

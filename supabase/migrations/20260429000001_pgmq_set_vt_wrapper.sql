@@ -5,7 +5,7 @@ create or replace function public.pgmq_set_vt(queue_name text, msg_id bigint, vt
 returns jsonb
 language plpgsql
 security definer
-set search_path = public, extensions, pgmq, temp
+set search_path = public, extensions, pgmq, pg_temp
 as $$
 begin
   return to_jsonb(pgmq.set_vt(queue_name, msg_id::int8, vt_offset));
