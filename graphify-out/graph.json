@@ -53066,8 +53066,8 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-security-claude-subagents/supabase/functions/notification-worker/index.ts",
       "source_location": "L49",
       "weight": 1.0,
-      "_src": "index_getaccesstoken",
-      "_tgt": "log_util",
+      "_src": "log_util",
+      "_tgt": "index_getaccesstoken",
       "source": "log_util",
       "target": "index_getaccesstoken"
     },
@@ -53078,8 +53078,8 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-security-claude-subagents/supabase/functions/notification-worker/index.ts",
       "source_location": "L80",
       "weight": 1.0,
-      "_src": "index_sendfcm",
-      "_tgt": "log_util",
+      "_src": "log_util",
+      "_tgt": "index_sendfcm",
       "source": "log_util",
       "target": "index_sendfcm"
     },
@@ -53090,8 +53090,8 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-security-claude-subagents/supabase/functions/notification-worker/index.ts",
       "source_location": "L174",
       "weight": 1.0,
-      "_src": "index_getaffecteduserid",
-      "_tgt": "log_util",
+      "_src": "log_util",
+      "_tgt": "index_getaffecteduserid",
       "source": "log_util",
       "target": "index_getaffecteduserid"
     },
@@ -53102,8 +53102,8 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-security-claude-subagents/supabase/functions/notification-worker/index.ts",
       "source_location": "L211",
       "weight": 1.0,
-      "_src": "index_sendtoallparticipants",
-      "_tgt": "log_util",
+      "_src": "log_util",
+      "_tgt": "index_sendtoallparticipants",
       "source": "log_util",
       "target": "index_sendtoallparticipants"
     },
