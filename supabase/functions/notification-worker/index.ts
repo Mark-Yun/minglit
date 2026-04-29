@@ -381,6 +381,7 @@ Deno.serve(withHandler(async (req) => {
             .select('id')
             .eq('user_id', userId)
             .eq('consent_key', 'marketing_consent')
+            .eq('consented', true)
             .is('withdrawn_at', null)
             .maybeSingle();
           if (consentError) {
@@ -398,11 +399,15 @@ Deno.serve(withHandler(async (req) => {
           if (isNightTimeKST()) {
             const delaySec = secondsUntilKST8AM();
             log({ function: FN, level: 'info', message: 'marketing_night_reschedule', metadata: { userId, traceId, delaySec } });
-            await supabase.rpc('pgmq_set_vt', {
+            const { error: setVtError } = await supabase.rpc('pgmq_set_vt', {
               queue_name: 'q_notifications',
               msg_id: msg.msg_id,
               vt_offset: delaySec,
             });
+            if (setVtError) {
+              log({ function: FN, level: 'error', message: 'marketing_night_reschedule_failed', metadata: { userId, traceId, delaySec, error: setVtError } });
+              throw setVtError;
+            }
             return true;
           }
 

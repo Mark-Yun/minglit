@@ -152,22 +152,20 @@ Deno.serve(withHandler(async (req) => {
           );
         }
 
+        // Fix #2040: user_settings + user_consents를 원자적 RPC로 동시 갱신 (partial write 방지)
         const { data, error } = await withSpan(
-          "db.upsert.user_settings",
-          "db.upsert",
+          "db.rpc.upsert_user_settings_with_consent",
+          "db.rpc",
           () =>
-            supabase
-              .from("user_settings")
-              .upsert(
-                {
-                  user_id: userId,
-                  ...sanitized,
-                  updated_at: new Date().toISOString(),
-                },
-                { onConflict: "user_id" },
-              )
-              .select()
-              .single(),
+            supabase.rpc("upsert_user_settings_with_consent", {
+              p_user_id: userId,
+              p_marketing_consent: "marketing_consent" in sanitized
+                ? sanitized["marketing_consent"] as boolean
+                : null,
+              p_service_notification: "service_notification" in sanitized
+                ? sanitized["service_notification"] as boolean
+                : null,
+            }),
         );
 
         if (error) {
@@ -175,43 +173,9 @@ Deno.serve(withHandler(async (req) => {
             function: FN,
             level: "error",
             message: "Failed to update settings",
-            metadata: { detail: error },
+            metadata: { userId, detail: error },
           });
           return errorResponse("Failed to update settings", 500);
-        }
-
-        // Sync marketing_consent change into user_consents (§50 guard source of truth).
-        // The notification-worker reads user_consents exclusively; without this sync a
-        // settings-screen opt-out would not suppress marketing delivery.
-        if ("marketing_consent" in sanitized) {
-          const consented = sanitized["marketing_consent"] as boolean;
-          const now = new Date().toISOString();
-          const { error: consentSyncError } = await withSpan(
-            "db.upsert.user_consents_marketing",
-            "db.upsert",
-            () =>
-              supabase
-                .from("user_consents")
-                .upsert(
-                  {
-                    user_id: userId,
-                    consent_key: "marketing_consent",
-                    consented,
-                    consented_at: consented ? now : undefined,
-                    withdrawn_at: consented ? null : now,
-                  },
-                  { onConflict: "user_id,consent_key" },
-                ),
-          );
-          if (consentSyncError) {
-            log({
-              function: FN,
-              level: "error",
-              message: "Failed to sync marketing_consent to user_consents",
-              metadata: { userId, detail: consentSyncError },
-            });
-            return errorResponse("Failed to sync marketing consent", 500);
-          }
         }
 
         logStatsigEvent(

@@ -11,3 +11,6 @@ begin
   return to_jsonb(pgmq.set_vt(queue_name, msg_id::int8, vt_offset));
 end;
 $$;
+
+revoke all on function public.pgmq_set_vt(text, bigint, int) from public, anon, authenticated;
+grant execute on function public.pgmq_set_vt(text, bigint, int) to service_role;
