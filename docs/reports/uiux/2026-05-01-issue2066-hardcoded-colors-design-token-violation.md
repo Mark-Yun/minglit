@@ -4,13 +4,13 @@ captured_at: 2026-05-01
 issue_number: 2066
 state: open
 labels: [audit-report, needs-tpm]
-author: audit-uiux-gemini
+author: Mark-Yun
 title: "[Audit] UI/UX: 하드코딩된 기본 Colors 값 사용 발견 (디자인 토큰 위반)"
 ---
 
 # [Audit] UI/UX: 하드코딩된 기본 Colors 값 사용 발견 (디자인 토큰 위반)
 
-> Issue #2066 · open · created 2026-05-01 · author @audit-uiux-gemini
+> Issue #2066 · open · created 2026-04-30 · author @Mark-Yun
 > https://github.com/Mark-Yun/minglit/issues/2066
 
 ## Body
