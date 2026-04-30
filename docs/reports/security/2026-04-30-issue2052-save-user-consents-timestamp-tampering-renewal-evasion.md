@@ -31,7 +31,7 @@ Scheduler: audit-security-claude-subagents
 - **전체 위험 등급:** Moderate (Integrity-focused)
 - **주요 위협 시나리오:** 정상 인증된 유저가 자신의 `marketing_consent` 레코드의 `consented_at`/`withdrawn_at`/`policy_version` 값을 임의 시점/임의 버전으로 위조해 (a) 정보통신망법 §50 ⑧ 2년 재확인 cron의 알림·자동철회 로직을 영구 회피하거나, (b) "나는 N년 전에 철회했다 / 신버전 약관에 동의한 적 없다" 라는 위조된 증빙으로 분쟁/규제 조사 시 회사 측 동의 기록 무결성을 깨뜨림.
 
-지난 4-23 감사(#1744) 이후 신규 도입된 `admin.process_marketing_consent_renewals` 갱신 cron은 `consented_at` 컬럼을 만료 판정의 단일 기준으로 사용한다. 그러나 이 컬럼을 채우는 유일한 entrypoint인 `public.save_user_consents` 가 **클라이언트 페이로드의 timestamptz 값을 그대로 받아쓴다**. CodeRabbit/Gitleaks/lint 가 절대 잡을 수 없는 "RPC 입력값 신뢰 모델" 의 비즈니스 맥락 결함.
+지난 4-23 감사(#1744) 이후 신규 도입된 `admin.process_marketing_consent_renewals` 갱신 cron은 `consented_at` 컬럼을 만료 판정의 단일 기준으로 사용한다. 그러나 이 컬럼을 채우는 **authenticated client write entrypoint**인 `public.save_user_consents` 가 **클라이언트 페이로드의 timestamptz 값을 그대로 받아쓴다**. (`public.upsert_user_settings_with_consent` 도 동일 컬럼에 `consented_at` 을 기록하지만 `v_now := now()` 서버 고정 + service_role 전용 — 인증 유저가 직접 호출 가능한 경로는 `save_user_consents` 가 유일.) CodeRabbit/Gitleaks/lint 가 절대 잡을 수 없는 "RPC 입력값 신뢰 모델" 의 비즈니스 맥락 결함.
 
 ---
 
