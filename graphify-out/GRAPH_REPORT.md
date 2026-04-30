@@ -1,7 +1,7 @@
-# Graph Report - /Users/mark/workspace/minglit-worker-runtime/workspace/audit-security-claude-subagents  (2026-04-30)
+# Graph Report - /Users/mark/workspace/minglit-worker-runtime/repos/workspace/fix-2054-save-user-consents-timestamp  (2026-04-30)
 
 ## Corpus Check
-- 1130 files · ~1,421,452 words
+- 1130 files · ~1,420,132 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -2162,11 +2162,11 @@ _Questions this graph is uniquely positioned to answer:_
 - **What is the exact relationship between `Architecture Audit #1092 — 2026-04-06` and `AI Basic Law Compliance (Korea 2026)`?**
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
 - **Why does `package:flutter/material.dart` connect `Community 0` to `Community 33`, `Community 1`, `Community 5`, `Community 6`, `Community 38`, `Community 8`, `Community 18`, `Community 24`?**
-  _High betweenness centrality (0.056) - this node is a cross-community bridge._
+  _High betweenness centrality (0.077) - this node is a cross-community bridge._
 - **Why does `package:minglit_kit/minglit_kit.dart` connect `Community 0` to `Community 32`, `Community 1`, `Community 6`, `Community 38`, `Community 8`, `Community 24`?**
-  _High betweenness centrality (0.029) - this node is a cross-community bridge._
+  _High betweenness centrality (0.025) - this node is a cross-community bridge._
 - **Why does `minglit_kit Package` connect `Community 7` to `Community 9`, `Community 2`, `Community 23`?**
-  _High betweenness centrality (0.021) - this node is a cross-community bridge._
+  _High betweenness centrality (0.019) - this node is a cross-community bridge._
 - **What connects `reporter (AutoLabelAllureReporter)`, `BugReporterWrapper Widget Test Suite`, `MinglitListTile Widget Test Suite` to the rest of the system?**
   _1778 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
