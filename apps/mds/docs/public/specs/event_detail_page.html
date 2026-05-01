@@ -794,15 +794,18 @@
     <span class="glyph">🎨</span>
     <h2>States</h2>
     <span class="lede">
-      6 states (Default · Loading · Error · Mid-scroll · Already Joined · Full). 모든 상태는 동일한
-      <strong>단일 CustomScrollView</strong> + scroll-spy TabBar — 탭은 화면 전환이 아닌 scroll shortcut + 활성 indicator.
+      6 states (Default · Loading · Error + 3 tab-focused: §3 참가 현황 / §4 필요 인증 / §5 환불 정책).
+      모든 상태는 동일한 <strong>단일 CustomScrollView</strong> + scroll-spy TabBar — 탭은 화면 전환이 아닌 scroll shortcut + 활성 indicator.
       각 state는 mini-table 6-row (조건/사용자액션/에지케이스/컴포넌트/토큰/노트). Default가 baseline.
     </span>
   </div>
 
   <section class="doc">
     <h2>State summary</h2>
-    <p class="intro">한눈에 6 states 비교. 자세한 사양은 아래 각 mini-table 참조.</p>
+    <p class="intro">
+      한눈에 6 states 비교. 자세한 사양은 아래 각 mini-table 참조.
+      Admission 분기 (eligible / soldOut / applied / rejected …)는 <a href="/specs/event_bottom_ticket_bar.html">EventBottomTicketBar</a> child spec에서 다룸 — 이 spec은 페이지 본문 (탭 / 섹션) 에 집중.
+    </p>
     <table class="ref">
       <thead>
         <tr>
@@ -813,12 +816,12 @@
         </tr>
       </thead>
       <tbody>
-        <tr class="is-baseline-tint"><td><strong>Default</strong> 🎯</td><td>primary</td><td>데이터 로드 + 스크롤 top + admission=available</td><td>Hero 풀 + TabBar(기본정보 active) + §1 visible + §2 peek + BottomTicketBar 풀</td></tr>
-        <tr><td><strong>Loading</strong></td><td>async</td><td><code>eventDetailControllerProvider.isLoading</code></td><td>전체 skeleton (hero + tabs + 카드 + bottom bar)</td></tr>
+        <tr class="is-baseline-tint"><td><strong>Default</strong> 🎯</td><td>primary</td><td>데이터 로드 + 스크롤 top</td><td>Hero 풀 + TabBar(§1 기본정보 active) + §1 visible + §2 peek</td></tr>
+        <tr><td><strong>Loading</strong></td><td>async</td><td><code>eventDetailControllerProvider.isLoading</code></td><td>전체 skeleton (hero + tabs + 섹션)</td></tr>
         <tr><td><strong>Error</strong></td><td>network/server</td><td><code>eventDetailControllerProvider.hasError</code></td><td><code>MinglitErrorState</code> fullPage + "다시 시도" CTA</td></tr>
-        <tr><td><strong>Mid-scroll</strong></td><td>scrolled</td><td>scrollOffset &gt; (§3 reveal offset)</td><td>Collapsed AppBar(타이틀 fade-in) + TabBar §3 auto-active + §2 ending/§3/§4 peek</td></tr>
-        <tr><td><strong>Already Joined</strong></td><td>enrolled</td><td>admissionState=enrolled (스크롤 top)</td><td>BottomTicketBar CTA만 "참여 취소" destructive — 페이지 구조 동일</td></tr>
-        <tr><td><strong>Full</strong></td><td>sold-out</td><td>admissionState=soldOut (스크롤 top)</td><td>BottomTicketBar CTA만 "정원 마감" disabled — 페이지 구조 동일</td></tr>
+        <tr><td><strong>§3 참가 현황 active</strong></td><td>scrolled</td><td>scrollOffset &gt; (§3 reveal offset)</td><td>Collapsed AppBar + TabBar §3 auto-active + EntryGroupCard list (참여 게이지)</td></tr>
+        <tr><td><strong>§4 필요 인증 active</strong></td><td>scrolled</td><td>scrollOffset &gt; (§4 reveal offset)</td><td>Collapsed AppBar + TabBar §4 auto-active + VerificationCard list (✓ / ! status)</td></tr>
+        <tr><td><strong>§5 환불 정책 active</strong></td><td>scrolled</td><td>scrollOffset &gt; (§5 reveal offset)</td><td>Collapsed AppBar + TabBar §5 auto-active + 환불 비율 table (시점별 %)</td></tr>
       </tbody>
     </table>
   </section>
@@ -1141,86 +1144,151 @@
         </tbody>
       </table>
 
-      <!-- State 5: Already joined — admission variant -->
+      <!-- State 5: §4 필요 인증 active (TabBar scroll-spy) -->
       <table class="ref state-mini">
         <thead>
-          <tr><th colspan="3"><strong>Already Joined</strong> <span class="tag tag--mute">enrolled</span> · <small>admissionState=enrolled (스크롤 top)</small></th></tr>
+          <tr><th colspan="3"><strong>§4 필요 인증 active</strong> <span class="tag tag--mute">scrolled</span> · <small>인증 카드 list가 viewport 중앙 (TabBar scroll-spy)</small></th></tr>
         </thead>
         <tbody>
           <tr>
             <td rowspan="6" class="state-mini__mock"><div class="viewport">
-          <div class="detail-hero">
-            <div class="detail-hero__img-placeholder" style="background:linear-gradient(135deg,#16a34a22,#9900ff11);">
-              <span style="color:var(--color-success);opacity:0.5;">파티 이미지</span>
-            </div>
-            <div class="detail-hero__gradient"></div>
-            <div class="detail-hero__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
-          </div>
-          <div class="detail-tabs">
-            <div class="detail-tab detail-tab--active">기본 정보</div>
-            <div class="detail-tab">상세 소개</div>
-            <div class="detail-tab">참가 현황</div>
-            <div class="detail-tab">필요 인증</div>
-            <div class="detail-tab">환불 정책</div>
-          </div>
-          <div style="position:absolute;top:260px;left:0;right:0;bottom:80px;overflow:hidden;padding:16px;">
-            <div class="detail-partner-row">
-              <div class="detail-partner-avatar"><svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2z"/></svg></div>
-              <div class="detail-partner-name">Skybar Seoul</div>
-            </div>
-            <div class="detail-title">강남 루프탑 소셜 파티</div>
-            <div class="detail-info-tile">
-              <div class="detail-info-tile__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/></svg></div>
-              <div class="detail-info-tile__title">4월 30일 (화) 19:30</div>
-            </div>
-          </div>
+              <div class="collapsed-appbar">
+                <div class="collapsed-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
+                <div class="collapsed-appbar__title">강남 루프탑 소셜 파티</div>
+                <div class="collapsed-appbar__more"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg></div>
+              </div>
+              <div style="position:absolute;top:56px;left:0;right:0;">
+                <div class="detail-tabs">
+                  <div class="detail-tab">기본 정보</div>
+                  <div class="detail-tab">상세 소개</div>
+                  <div class="detail-tab">참가 현황</div>
+                  <div class="detail-tab detail-tab--active">필요 인증</div>
+                  <div class="detail-tab">환불 정책</div>
+                </div>
+              </div>
+              <div style="position:absolute;top:105px;left:0;right:0;bottom:80px;overflow:hidden;">
+                <!-- §3 ending -->
+                <div style="padding:0 16px 12px;font-size:13px;color:var(--color-text-secondary);line-height:1.55;opacity:0.5;border-bottom:1px solid var(--color-divider);">
+                  … 일반 참여 (여성) 16/20명 참여
+                </div>
+                <!-- §4 필요 인증 (active) -->
+                <div class="minglit-section-header">필요 인증</div>
+                <div style="padding:0 16px;font-size:12px;color:var(--color-text-secondary);margin-bottom:12px;">참여하려면 아래 인증이 필요합니다.</div>
+                <div style="margin:0 16px 8px;padding:12px;border:1px solid var(--color-divider);border-radius:12px;background:var(--color-background);">
+                  <div style="display:flex;align-items:center;gap:12px;">
+                    <div style="width:36px;height:36px;border-radius:50%;background:color-mix(in srgb, var(--color-success) 14%, transparent);display:flex;align-items:center;justify-content:center;color:var(--color-success);">✓</div>
+                    <div style="flex:1;">
+                      <div style="font-size:14px;font-weight:600;color:var(--color-text-primary);">실명 인증</div>
+                      <div style="font-size:12px;color:var(--color-success);">완료됨</div>
+                    </div>
+                  </div>
+                </div>
+                <div style="margin:0 16px 8px;padding:12px;border:1px solid var(--color-divider);border-radius:12px;background:var(--color-background);">
+                  <div style="display:flex;align-items:center;gap:12px;">
+                    <div style="width:36px;height:36px;border-radius:50%;background:color-mix(in srgb, var(--color-warning) 14%, transparent);display:flex;align-items:center;justify-content:center;color:var(--color-warning);">!</div>
+                    <div style="flex:1;">
+                      <div style="font-size:14px;font-weight:600;color:var(--color-text-primary);">성별 인증</div>
+                      <div style="font-size:12px;color:var(--color-warning);">인증 필요 — 탭하여 시작</div>
+                    </div>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" style="color:var(--color-text-secondary);"><polyline points="9 18 15 12 9 6"/></svg>
+                  </div>
+                </div>
+                <!-- §5 peek -->
+                <div style="border-top:1px solid var(--color-divider);padding:12px 16px;font-size:13px;color:var(--color-text-secondary);">
+                  <div style="font-size:14px;font-weight:600;color:var(--color-text-primary);margin-bottom:4px;">환불 정책</div>
+                  취소 시점에 따라 환불액이 …
+                </div>
+              </div>
+              <span class="annotation" style="top:60px;right:8px;">scroll-spy: §4 active</span>
+              <span class="annotation" style="top:120px;left:8px;">↑ §3 참가 현황 (위로 사라짐)</span>
+              <span class="annotation" style="bottom:120px;right:8px;">↓ §5 환불 정책 (계속 스크롤)</span>
             </div></td>
             <td class="state-mini__aspect">조건</td>
-            <td><code>admissionState == enrolled</code> — 이미 신청 완료한 이벤트</td>
+            <td><code>_scrollController.offset &gt; (§4 GlobalKey reveal offset)</code> — <code>_VerificationSection</code> 영역 진입. <code>TabController.animateTo(3)</code> 자동 호출 → 필요 인증 탭 active.</td>
           </tr>
-          <tr><td class="state-mini__aspect">사용자 액션</td><td>BottomTicketBar의 "참여 취소" destructive 탭 → 취소 확인 다이얼로그 → 확인 시 처리 후 상태 변경</td></tr>
-          <tr><td class="state-mini__aspect">에지케이스</td><td>—</td></tr>
-          <tr><td class="state-mini__aspect">컴포넌트</td><td>동일 (전체 페이지 구조 동일 — BottomTicketBar의 CTA variant만 차이)</td></tr>
-          <tr><td class="state-mini__aspect">토큰</td><td>+ <code>color-error</code> 계열 (destructive button — MinglitButton.destructive 내부)</td></tr>
-          <tr><td class="state-mini__aspect">노트</td><td>📝 BottomTicketBar 12-state 중 <code>applied</code> — 자세한 사양은 <a href="/specs/event_bottom_ticket_bar.html">EventBottomTicketBar</a></td></tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              · <strong>인증 카드 (미완료) 탭</strong> → 해당 인증 화면으로 이동 (실명 / 성별 / 자격 등) — 인증 완료 후 자동 복귀<br>
+              · <strong>인증 카드 (완료) 탭</strong> → 무반응 또는 인증 상세 (재발급 등)<br>
+              · 다른 탭 탭 → 해당 섹션으로 animateTo
+            </td>
+          </tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>· 필요한 인증이 0개 → 섹션 자체 hidden (소비자 free 이벤트)<br>· 인증 카드 모두 완료 → 모든 카드에 ✓ + "완료" 표기</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>+ <code>VerificationCard</code> (icon + title + status + chevron · radius-card)<br>+ <code>_VerificationSection</code> (Header + Card list)<br>− Hero (collapsed AppBar로 대체)</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>+ <code>color-success</code> (완료 카드 icon · status text)<br>+ <code>color-warning</code> (미완료 카드 icon · status text — 액션 유도)<br>+ <code>radius-card</code> (12 · 인증 카드)</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 BottomTicketBar는 admission 분기 (eligible / qualificationRequired / rejected 등) — child spec 참고. 이 mini-table은 §4 본문에 집중.</td></tr>
         </tbody>
       </table>
 
-      <!-- State 6: Full — admission variant -->
+      <!-- State 6: §5 환불 정책 active (TabBar scroll-spy) -->
       <table class="ref state-mini">
         <thead>
-          <tr><th colspan="3"><strong>Full</strong> <span class="tag tag--mute">sold-out</span> · <small>admissionState=soldOut (스크롤 top)</small></th></tr>
+          <tr><th colspan="3"><strong>§5 환불 정책 active</strong> <span class="tag tag--mute">scrolled</span> · <small>피드 끝에 도달 — 정책 텍스트가 viewport 중앙</small></th></tr>
         </thead>
         <tbody>
           <tr>
             <td rowspan="6" class="state-mini__mock"><div class="viewport">
-          <div class="detail-hero">
-            <div class="detail-hero__img-placeholder" style="background:#f0f0f0;">
-              <span style="color:var(--color-text-secondary);opacity:0.5;">파티 이미지</span>
-            </div>
-            <div class="detail-hero__gradient" style="background:linear-gradient(to bottom,rgba(0,0,0,0.6),transparent);"></div>
-            <div class="detail-hero__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
-          </div>
-          <div class="detail-tabs">
-            <div class="detail-tab detail-tab--active">기본 정보</div>
-            <div class="detail-tab">상세 소개</div>
-            <div class="detail-tab">참가 현황</div>
-            <div class="detail-tab">필요 인증</div>
-            <div class="detail-tab">환불 정책</div>
-          </div>
-          <div style="position:absolute;top:260px;left:0;right:0;bottom:80px;overflow:hidden;padding:16px;">
-            <div class="detail-title">강남 루프탑 소셜 파티</div>
-            <div style="color:var(--color-text-secondary);font-size:13px;margin-top:4px;">4월 30일 (화) 19:30 · 강남구</div>
-          </div>
+              <div class="collapsed-appbar">
+                <div class="collapsed-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
+                <div class="collapsed-appbar__title">강남 루프탑 소셜 파티</div>
+                <div class="collapsed-appbar__more"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg></div>
+              </div>
+              <div style="position:absolute;top:56px;left:0;right:0;">
+                <div class="detail-tabs">
+                  <div class="detail-tab">기본 정보</div>
+                  <div class="detail-tab">상세 소개</div>
+                  <div class="detail-tab">참가 현황</div>
+                  <div class="detail-tab">필요 인증</div>
+                  <div class="detail-tab detail-tab--active">환불 정책</div>
+                </div>
+              </div>
+              <div style="position:absolute;top:105px;left:0;right:0;bottom:80px;overflow:hidden;">
+                <!-- §4 ending -->
+                <div style="padding:0 16px 12px;font-size:13px;color:var(--color-text-secondary);line-height:1.55;opacity:0.5;border-bottom:1px solid var(--color-divider);">
+                  … 성별 인증 — 인증 필요
+                </div>
+                <!-- §5 환불 정책 (active) -->
+                <div class="minglit-section-header">환불 정책</div>
+                <div style="margin:0 16px 12px;padding:14px 16px;border:1px solid var(--color-divider);border-radius:12px;background:var(--color-surface);">
+                  <div style="font-size:13px;font-weight:600;color:var(--color-text-primary);margin-bottom:8px;">취소 시점별 환불 비율</div>
+                  <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--color-divider);">
+                    <span style="color:var(--color-text-secondary);">7일 전까지</span>
+                    <span style="font-weight:600;color:var(--color-success);">100% 환불</span>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--color-divider);">
+                    <span style="color:var(--color-text-secondary);">3일 전까지</span>
+                    <span style="font-weight:600;color:var(--color-text-primary);">50% 환불</span>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;">
+                    <span style="color:var(--color-text-secondary);">당일</span>
+                    <span style="font-weight:600;color:var(--color-error);">환불 불가</span>
+                  </div>
+                </div>
+                <div style="padding:0 16px;font-size:12px;color:var(--color-text-secondary);line-height:1.55;">
+                  ※ 파트너 사정으로 인한 취소 시 100% 자동 환불됩니다. <a href="#" style="color:var(--color-primary);">자세히 보기</a>
+                </div>
+                <!-- 피드 끝 -->
+                <div style="padding:24px 16px;text-align:center;font-size:11px;color:var(--color-divider);">— 피드 끝 —</div>
+              </div>
+              <span class="annotation" style="top:60px;right:8px;">scroll-spy: §5 active</span>
+              <span class="annotation" style="top:120px;left:8px;">↑ §4 필요 인증 (위로 사라짐)</span>
             </div></td>
             <td class="state-mini__aspect">조건</td>
-            <td><code>admissionState == soldOut</code> — 모든 티켓의 <code>soldCount == quantity</code></td>
+            <td><code>_scrollController.offset &gt; (§5 GlobalKey reveal offset)</code> · 피드 끝 — 더 이상 다음 섹션 없음</td>
           </tr>
-          <tr><td class="state-mini__aspect">사용자 액션</td><td>BottomTicketBar 탭 무반응 (disabled). 페이지 다른 영역은 Default와 동일 인터랙션.</td></tr>
-          <tr><td class="state-mini__aspect">에지케이스</td><td>Fix #1211: full/soldOut 시 apply CTA 항상 disabled</td></tr>
-          <tr><td class="state-mini__aspect">컴포넌트</td><td>동일 (BottomTicketBar CTA variant만 차이)</td></tr>
-          <tr><td class="state-mini__aspect">토큰</td><td>+ <code>color-divider</code> (disabled bg) · + <code>color-text-secondary</code> (disabled label)</td></tr>
-          <tr><td class="state-mini__aspect">노트</td><td>📝 BottomTicketBar 12-state 중 <code>soldOut</code> — 자세한 사양은 <a href="/specs/event_bottom_ticket_bar.html">EventBottomTicketBar</a></td></tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              · <strong>"자세히 보기" 탭</strong> → 환불 정책 풀텍스트 다이얼로그 또는 외부 link<br>
+              · <strong>위로 스크롤</strong> → 이전 섹션 다시 노출 + scroll-spy 갱신<br>
+              · 다른 탭 탭 → 해당 섹션으로 animateTo (위쪽 섹션이라 항상 가능)
+            </td>
+          </tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>· 환불 정책이 partner-customizable이면 partner의 정책 표시. 표준 정책이 default<br>· "당일 환불 불가" 텍스트는 강조 (color-error)</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>+ <code>_RefundPolicySection</code> (Header + Table card)<br>+ Refund table (3 rows · 시점 / 비율)<br>+ "자세히 보기" inline link (color-primary)</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>+ <code>color-success</code> (100% 환불 강조)<br>+ <code>color-error</code> (환불 불가 강조)<br>+ <code>color-surface</code> (정책 카드 bg)</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 마지막 섹션 — 사용자가 여기까지 스크롤했다는 건 신청 직전 단계. BottomTicketBar로 즉시 액션 가능 (child spec 참고).</td></tr>
         </tbody>
       </table>
 
