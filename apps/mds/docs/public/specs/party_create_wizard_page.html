@@ -7,7 +7,16 @@
 <style>
 /* ============================================================
    PartyCreateWizardPage-specific atoms.
+   Partner app — brand color는 indigo(#6c3ce1). viewport 내부에서
+   --color-primary 토큰을 override해 partner palette로 자동 전환.
    ============================================================ */
+
+.viewport {
+  --color-primary: var(--color-partner-primary);   /* #6c3ce1 */
+}
+body.dark-mode .viewport {
+  --color-primary: var(--color-partner-dark-primary); /* #9b7bec */
+}
 
 /* --- App bar --- */
 .wizard-appbar {
@@ -155,7 +164,7 @@
 .wizard-image-slot__img {
   width: 100%; height: 100%;
   object-fit: cover;
-  background: linear-gradient(135deg, #9900ff22, #ff990022);
+  background: linear-gradient(135deg, #6c3ce122, #ff990022);
 }
 .wizard-image-slot__add {
   display: flex; flex-direction: column; align-items: center; gap: 4px;

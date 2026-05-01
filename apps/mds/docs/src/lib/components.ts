@@ -1942,7 +1942,7 @@ final reason = await MinglitDialog.show<String>(
       { name: 'spacing-small',        where: '핸들 상하 여백 8px' },
       { name: 'spacing-screen-edge',  where: '콘텐츠 좌우 패딩 16px' },
       { name: 'spacing-medium',       where: '콘텐츠 하단 패딩 16px' },
-      { name: 'spacing-sm',           where: '타이틀 → 콘텐츠 간격 12px' },
+      { name: 'spacing-medium',       where: '타이틀 → 콘텐츠 간격 16px (MinglitDialog와 통일)' },
     ],
     accessibility: [
       'showModalBottomSheet — barrier dismissible by tapping scrim (default isDismissible=true)',
@@ -1988,7 +1988,7 @@ await showMinglitBottomSheet(
       spacing: [
         { neighbor: '스크림(배경)',           gap: 'color-scrim overlay' },
         { neighbor: '시트 상단 핸들 여백',     gap: 'spacing-small (8px) 상하' },
-        { neighbor: '타이틀 → 콘텐츠',         gap: 'spacing-sm (12px)' },
+        { neighbor: '타이틀 → 콘텐츠',         gap: 'spacing-medium (16px)', note: 'MinglitDialog와 통일' },
         { neighbor: '콘텐츠 좌우 패딩',         gap: 'spacing-screen-edge (16px)' },
         { neighbor: '콘텐츠 하단 패딩',         gap: 'spacing-medium (16px) + SafeArea' },
       ],
