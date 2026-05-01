@@ -284,7 +284,9 @@ class _Orb extends StatelessWidget {
     // During reveal: orbs grow 2.5× and shift towards white.
     final size = baseSize * (1 + expand * 2.5);
     final opacity = (baseOpacity + expand * (0.6 - baseOpacity)).clamp(0, 1);
-    final orbColor = Color.lerp(color, MinglitColors.background, expand) ?? MinglitColors.background;
+    final orbColor =
+        Color.lerp(color, MinglitColors.background, expand) ??
+        MinglitColors.background;
 
     return Positioned(
       top: top,

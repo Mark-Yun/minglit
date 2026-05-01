@@ -158,7 +158,8 @@ class MinglitEventCard extends StatelessWidget {
                       child: ColorFiltered(
                         colorFilter: cardState == _EventCardState.ended
                             ? const ColorFilter.mode(
-                                Colors.grey, // ignore: minglit_no_hardcoded_colors -- saturation ColorFilter requires neutral grey for desaturation effect
+                                Colors
+                                    .grey, // ignore: minglit_no_hardcoded_colors -- saturation ColorFilter requires neutral grey for desaturation effect
                                 BlendMode.saturation,
                               )
                             : const ColorFilter.mode(
@@ -366,7 +367,9 @@ class _ParticipantDDayOverlay extends StatelessWidget {
 
     // Fix #478: ended state uses muted grey overlay background
     final overlayBgColor = cardState == _EventCardState.ended
-        ? MinglitColors.textSecondary.withValues(alpha: MinglitOpacity.scrimDark)
+        ? MinglitColors.textSecondary.withValues(
+            alpha: MinglitOpacity.scrimDark,
+          )
         : MinglitColors.textPrimary.withValues(alpha: MinglitOpacity.overlay);
 
     // Fix #478: D-Day label color — amber for today
