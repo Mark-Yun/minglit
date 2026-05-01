@@ -258,6 +258,36 @@ const ROUTE_DESIGN_OVERRIDES: Record<string, string> = {
   'partner-SettlementDetailRoute':'/specs/settlement_detail_page.html',
 };
 
+/**
+ * Sub-component specs that have no route of their own — they're embedded
+ * inside a parent screen but get their own spec because they carry significant
+ * state/behavior worth documenting separately. The /screens index lists them
+ * under their parent route as nested rows.
+ */
+export interface SubComponentSpec {
+  widget: string;          // e.g. 'EventBottomTicketBar'
+  parentRoute: string;     // e.g. 'EventDetailRoute' — must exist in route diagrams
+  filePath: string;        // dart source (relative to repo root)
+  specBasename: string;    // public/specs/ filename without .html
+}
+
+const SUB_COMPONENT_SPECS: { user: SubComponentSpec[]; partner: SubComponentSpec[] } = {
+  user: [
+    {
+      widget: 'EventBottomTicketBar',
+      parentRoute: 'EventDetailRoute',
+      filePath: 'apps/app_user/lib/src/features/event/detail/event_bottom_ticket_bar.dart',
+      specBasename: 'event_bottom_ticket_bar',
+    },
+  ],
+  partner: [],
+};
+
+/** Sub-component specs for an app. Used by /screens to render nested rows. */
+export function subComponentsFor(app: 'user' | 'partner'): SubComponentSpec[] {
+  return SUB_COMPONENT_SPECS[app];
+}
+
 /** RouteName → snake_case spec basename (without .html). Default rule only. */
 function deriveSpecBasename(route: string): string {
   const stripped = route.replace(/Route$/, ''); // 'EventDetail' or 'MyPage'

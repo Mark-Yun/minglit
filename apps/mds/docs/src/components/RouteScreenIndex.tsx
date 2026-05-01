@@ -1,12 +1,52 @@
+import { Fragment } from 'react';
 import {
   getRoutesByApp,
   widgetNameFor,
   screenSourceFor,
   hasDesignFor,
   designUrlFor,
+  subComponentsFor,
+  type SubComponentSpec,
 } from '@/lib/flow-data';
 
 const APP_LABELS = { user: 'app_user', partner: 'app_partner' } as const;
+
+function SubComponentRow({ sub, parentRoute }: { sub: SubComponentSpec; parentRoute: string }) {
+  const sourceUrl = `https://github.com/Mark-Yun/minglit/blob/dev/${sub.filePath}`;
+  const specUrl = `/specs/${sub.specBasename}.html`;
+  return (
+    <tr className="hover:bg-[var(--color-surface)] bg-[var(--color-surface)]/30">
+      <td className="px-4 py-2 pl-10">
+        <span className="text-[var(--color-text-secondary)] mr-1">↳</span>
+        <a
+          href={sourceUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-mono text-xs text-[var(--color-primary)] hover:underline"
+          title={sub.filePath}
+        >
+          {sub.widget} ↗
+        </a>
+      </td>
+      <td className="px-4 py-2">
+        <span className="font-mono text-xs text-[var(--color-text-secondary)] italic">
+          (sub of {parentRoute})
+        </span>
+      </td>
+      <td className="px-4 py-2">
+        <a
+          href={specUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs font-mono text-[var(--color-primary)] hover:underline"
+          title="Open sub-component spec in new tab"
+        >
+          spec ↗
+        </a>
+      </td>
+    </tr>
+  );
+}
 
 export default function RouteScreenIndex() {
   const routesByApp = getRoutesByApp();
@@ -43,52 +83,60 @@ export default function RouteScreenIndex() {
                   const widget = widgetNameFor(app, route);
                   const screen = screenSourceFor(app, route);
                   const routesUrl = `https://github.com/Mark-Yun/minglit/blob/dev/apps/app_${app}/lib/src/routing/app_routes.dart`;
+                  // Sub-components nested under this route — rendered as
+                  // indented rows immediately after the parent row.
+                  const subs = subComponentsFor(app).filter((s) => s.parentRoute === route);
                   return (
-                    <tr key={route} className="hover:bg-[var(--color-surface)]">
-                      <td className="px-4 py-2">
-                        {widget && screen.isWidget ? (
+                    <Fragment key={route}>
+                      <tr className="hover:bg-[var(--color-surface)]">
+                        <td className="px-4 py-2">
+                          {widget && screen.isWidget ? (
+                            <a
+                              href={screen.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-mono text-xs text-[var(--color-primary)] hover:underline"
+                              title={screen.filePath}
+                            >
+                              {widget} ↗
+                            </a>
+                          ) : (
+                            <span className="font-mono text-xs text-[var(--color-text-secondary)]">
+                              {widget ?? '—'}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-2">
                           <a
-                            href={screen.url}
+                            href={routesUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="font-mono text-xs text-[var(--color-primary)] hover:underline"
-                            title={screen.filePath}
+                            className="font-mono text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] hover:underline"
+                            title={`apps/app_${app}/lib/src/routing/app_routes.dart`}
                           >
-                            {widget} ↗
+                            {route} ↗
                           </a>
-                        ) : (
-                          <span className="font-mono text-xs text-[var(--color-text-secondary)]">
-                            {widget ?? '—'}
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-4 py-2">
-                        <a
-                          href={routesUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="font-mono text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] hover:underline"
-                          title={`apps/app_${app}/lib/src/routing/app_routes.dart`}
-                        >
-                          {route} ↗
-                        </a>
-                      </td>
-                      <td className="px-4 py-2">
-                        {hasDesignFor(app, route) ? (
-                          <a
-                            href={designUrlFor(app, route) ?? '#'}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs font-mono text-[var(--color-primary)] hover:underline"
-                            title="Open design spec in new tab"
-                          >
-                            spec ↗
-                          </a>
-                        ) : (
-                          <span className="text-xs text-[var(--color-divider)]">—</span>
-                        )}
-                      </td>
-                    </tr>
+                        </td>
+                        <td className="px-4 py-2">
+                          {hasDesignFor(app, route) ? (
+                            <a
+                              href={designUrlFor(app, route) ?? '#'}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs font-mono text-[var(--color-primary)] hover:underline"
+                              title="Open design spec in new tab"
+                            >
+                              spec ↗
+                            </a>
+                          ) : (
+                            <span className="text-xs text-[var(--color-divider)]">—</span>
+                          )}
+                        </td>
+                      </tr>
+                      {subs.map((sub) => (
+                        <SubComponentRow key={sub.widget} sub={sub} parentRoute={route} />
+                      ))}
+                    </Fragment>
                   );
                 })}
               </tbody>
