@@ -16,8 +16,9 @@
   align-items: center;
   justify-content: center;
   padding: 0 var(--spacing-screen-edge);
-  border-bottom: 1px solid var(--color-divider);
-  background: var(--color-background);
+  /* AppBar matches scaffold bg in actual app — no border below.
+     elevation: 0 + surfaceTintColor transparent → no auto tint. */
+  background: var(--color-surface);
 }
 .my-appbar h2 {
   font-size: var(--typography-font-size-app-bar-title);
@@ -25,79 +26,119 @@
   color: var(--color-text-primary);
 }
 
+/* MyPage Scaffold bg = MinglitColors.surface (light gray #f9fafb).
+   ColorScheme.surface (used by AppBar / cards) = MinglitColors.background (white #ffffff).
+   Override viewport bg here so cards stand out as whiter "elevated" containers. */
+.my-page-viewport { background: var(--color-surface); }
+/* AppBar shares scaffold bg — already set on .my-appbar above. */
 .my-list { padding: var(--spacing-medium) 0; }
 
+/* MinglitSettingsGroup — card with horizontal padding, NOT edge-to-edge.
+   Header sits OUTSIDE the card (uppercase labelMedium · letter-spacing 0.5).
+   Card bg = surfaceContainerLowest (≈ ColorScheme.surface = #ffffff).
+   Internal dividers between tiles use indent: 52px (= 16 + 20 + 16). */
 .my-group {
-  background: var(--color-background);
-  border-top: 1px solid var(--color-divider);
-  border-bottom: 1px solid var(--color-divider);
+  padding: 0 var(--spacing-medium);
 }
 .my-group + .my-group { margin-top: var(--spacing-large); }
 .my-group__header {
-  padding: var(--spacing-small) var(--spacing-screen-edge);
+  padding: 0 0 var(--spacing-small) var(--spacing-xsmall);
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--color-text-secondary);
-  background: var(--color-surface);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
+.my-group__card {
+  background: var(--color-background);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+}
+body.dark-mode .my-page-viewport { background: var(--color-dark-background); }
+body.dark-mode .my-group__card { background: var(--color-dark-surface); }
 
+/* MinglitSettingsTile — fixed 48px height. Icon (20) + title-stack + trailing.
+   Title and subtitle are vertically stacked in a Column (NOT inline). */
+.my-tile {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-medium);
+  padding: 0 var(--spacing-medium);
+  height: 48px;
+  cursor: pointer;
+  position: relative;
+}
+.my-tile + .my-tile::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 52px;  /* 16 (pad) + 20 (icon) + 16 (gap) */
+  right: 0;
+  height: 0.5px;
+  background: var(--color-divider);
+}
+.my-tile__icon {
+  width: 20px; height: 20px;
+  display: grid; place-items: center;
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+.my-tile__icon svg { width: 20px; height: 20px; }
+.my-tile__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+}
+.my-tile__title {
+  font-size: 14px;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.my-tile__subtitle {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.my-tile__chevron { color: var(--color-text-secondary); flex-shrink: 0; }
+.my-tile--destructive .my-tile__title,
+.my-tile--destructive .my-tile__icon { color: var(--color-error); }
+
+/* _ProfileTile (private widget · top-level group with single tile)
+   Inside the same surface card now. */
 .profile-tile {
   display: flex;
   align-items: center;
   gap: var(--spacing-medium);
-  padding: var(--spacing-medium) var(--spacing-screen-edge);
+  padding: var(--spacing-medium);
   cursor: pointer;
 }
 .profile-tile__avatar {
   width: 48px; height: 48px;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--color-primary) 18%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 22%, transparent);
   flex-shrink: 0;
   display: grid; place-items: center;
   color: var(--color-primary);
-  font-size: 22px;
 }
+.profile-tile__avatar svg { width: 22px; height: 22px; }
 .profile-tile__body { flex: 1; min-width: 0; }
 .profile-tile__name {
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--color-text-primary);
 }
 .profile-tile__email {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--color-text-secondary);
   margin-top: 2px;
 }
 .profile-tile__chevron { color: var(--color-text-secondary); }
-
-.my-tile {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  padding: 14px var(--spacing-screen-edge);
-  border-top: 1px solid var(--color-divider);
-  cursor: pointer;
-}
-.my-tile:first-child { border-top: 0; }
-.my-tile__icon {
-  width: 24px; height: 24px;
-  display: grid; place-items: center;
-  color: var(--color-text-secondary);
-  flex-shrink: 0;
-}
-.my-tile__icon svg { width: 22px; height: 22px; }
-.my-tile__title {
-  flex: 1;
-  font-size: 15px;
-  color: var(--color-text-primary);
-}
-.my-tile__subtitle {
-  font-size: 13px;
-  color: var(--color-text-secondary);
-}
-.my-tile__chevron { color: var(--color-text-secondary); }
-.my-tile--destructive .my-tile__title,
-.my-tile--destructive .my-tile__icon { color: var(--color-error); }
 
 /* Logged-out (auth guard) prompt — replaces the entire list when
    currentUserProvider is null. */
@@ -384,11 +425,12 @@
       <tbody>
         <tr>
           <td class="state-mini__mock" rowspan="6">
-            <div class="viewport">
+            <div class="viewport my-page-viewport">
               <div class="my-appbar"><h2>마이페이지</h2></div>
               <div class="my-list">
                 <div class="my-group">
-                  <div class="profile-tile">
+                  <div class="my-group__card">
+                    <div class="profile-tile">
                     <!-- CircleAvatar(radius: 24) · primaryContainer bg · Icons.person fallback -->
                     <div class="profile-tile__avatar">
                       <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M12 12c2.2 0 4-1.8 4-4s-1.8-4-4-4-4 1.8-4 4 1.8 4 4 4zm0 2c-2.7 0-8 1.3-8 4v2h16v-2c0-2.7-5.3-4-8-4z"/></svg>
@@ -402,92 +444,43 @@
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="9 18 15 12 9 6"/></svg>
                     </span>
                   </div>
+                  </div>
                 </div>
                 <div class="my-group" style="margin-top: var(--spacing-large);">
                   <div class="my-group__header">활동</div>
-                  <div class="my-tile">
-                    <!-- Icons.receipt_long_outlined -->
-                    <span class="my-tile__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M19 3H5v18l3-2 3 2 3-2 3 2 2-2V3z"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="13" y2="16"/></svg></span>
-                    <span class="my-tile__title">구매 내역</span>
-                    <span class="my-tile__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="9 18 15 12 9 6"/></svg></span>
-                  </div>
-                  <div class="my-tile">
-                    <!-- Icons.confirmation_number_outlined -->
-                    <span class="my-tile__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 10V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v4a2 2 0 1 1 0 4v4a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-4a2 2 0 1 1 0-4z"/><line x1="9" y1="9" x2="9" y2="11"/><line x1="9" y1="13" x2="9" y2="15"/></svg></span>
-                    <span class="my-tile__title">내 티켓</span>
-                    <span class="my-tile__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="9 18 15 12 9 6"/></svg></span>
+                  <div class="my-group__card">
+                    <div class="my-tile"><span class="my-tile__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M19 3H5v18l3-2 3 2 3-2 3 2 2-2V3z"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="13" y2="16"/></svg></span><div class="my-tile__body"><span class="my-tile__title">구매 내역</span></div><span class="my-tile__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="9 18 15 12 9 6"/></svg></span></div>
+                  <div class="my-tile"><span class="my-tile__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 10V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v4a2 2 0 1 1 0 4v4a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-4a2 2 0 1 1 0-4z"/><line x1="9" y1="9" x2="9" y2="11"/><line x1="9" y1="13" x2="9" y2="15"/></svg></span><div class="my-tile__body"><span class="my-tile__title">내 티켓</span></div><span class="my-tile__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="9 18 15 12 9 6"/></svg></span></div>
                   </div>
                 </div>
                 <div class="my-group" style="margin-top: var(--spacing-large);">
                   <div class="my-group__header">설정</div>
-                  <div class="my-tile">
-                    <!-- Icons.notifications_outlined -->
-                    <span class="my-tile__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 16v-5a6 6 0 0 0-12 0v5l-2 2v1h16v-1l-2-2z"/><path d="M10 21a2 2 0 0 0 4 0"/></svg></span>
-                    <span class="my-tile__title">알림 설정</span>
-                    <span class="my-tile__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="9 18 15 12 9 6"/></svg></span>
-                  </div>
-                  <div class="my-tile">
-                    <!-- ThemeSettingsTile (전용 widget) — Icons.brightness_6 (system 모드 시 absent / dark/light 모드별 분기 아이콘) -->
-                    <span class="my-tile__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></svg></span>
-                    <span class="my-tile__title">테마 설정</span>
-                    <span class="my-tile__subtitle">시스템</span>
-                    <span class="my-tile__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="9 18 15 12 9 6"/></svg></span>
+                  <div class="my-group__card">
+                    <div class="my-tile"><span class="my-tile__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 16v-5a6 6 0 0 0-12 0v5l-2 2v1h16v-1l-2-2z"/><path d="M10 21a2 2 0 0 0 4 0"/></svg></span><div class="my-tile__body"><span class="my-tile__title">알림 설정</span></div><span class="my-tile__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="9 18 15 12 9 6"/></svg></span></div>
+                  <div class="my-tile"><span class="my-tile__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></svg></span><div class="my-tile__body"><span class="my-tile__title">테마 설정</span><span class="my-tile__subtitle">시스템</span></div><span class="my-tile__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="9 18 15 12 9 6"/></svg></span></div>
                   </div>
                 </div>
                 <div class="my-group" style="margin-top: var(--spacing-large);">
                   <div class="my-group__header">개인정보 및 보안</div>
-                  <div class="my-tile">
-                    <!-- Icons.lock_outline -->
-                    <span class="my-tile__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>
-                    <span class="my-tile__title">개인정보</span>
-                    <span class="my-tile__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="9 18 15 12 9 6"/></svg></span>
-                  </div>
-                  <div class="my-tile">
-                    <!-- Icons.admin_panel_settings_outlined -->
-                    <span class="my-tile__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L4 5v6c0 5 3.4 9.6 8 11 4.6-1.4 8-6 8-11V5l-8-3z"/><circle cx="12" cy="11" r="2"/><path d="M9 16c0-1.5 1.3-2.5 3-2.5s3 1 3 2.5"/></svg></span>
-                    <span class="my-tile__title">권한 설정</span>
-                    <span class="my-tile__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="9 18 15 12 9 6"/></svg></span>
-                  </div>
-                  <div class="my-tile">
-                    <!-- Icons.block -->
-                    <span class="my-tile__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="5" y1="5" x2="19" y2="19"/></svg></span>
-                    <span class="my-tile__title">차단 목록</span>
-                    <span class="my-tile__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="9 18 15 12 9 6"/></svg></span>
+                  <div class="my-group__card">
+                    <div class="my-tile"><span class="my-tile__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span><div class="my-tile__body"><span class="my-tile__title">개인정보</span></div><span class="my-tile__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="9 18 15 12 9 6"/></svg></span></div>
+                  <div class="my-tile"><span class="my-tile__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L4 5v6c0 5 3.4 9.6 8 11 4.6-1.4 8-6 8-11V5l-8-3z"/><circle cx="12" cy="11" r="2"/><path d="M9 16c0-1.5 1.3-2.5 3-2.5s3 1 3 2.5"/></svg></span><div class="my-tile__body"><span class="my-tile__title">권한 설정</span></div><span class="my-tile__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="9 18 15 12 9 6"/></svg></span></div>
+                  <div class="my-tile"><span class="my-tile__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="5" y1="5" x2="19" y2="19"/></svg></span><div class="my-tile__body"><span class="my-tile__title">차단 목록</span></div><span class="my-tile__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="9 18 15 12 9 6"/></svg></span></div>
                   </div>
                 </div>
                 <div class="my-group" style="margin-top: var(--spacing-large);">
                   <div class="my-group__header">약관 및 정보</div>
-                  <div class="my-tile">
-                    <!-- Icons.shield_outlined -->
-                    <span class="my-tile__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L4 5v6c0 5 3.4 9.6 8 11 4.6-1.4 8-6 8-11V5l-8-3z"/></svg></span>
-                    <span class="my-tile__title">개인정보처리방침</span>
-                    <span class="my-tile__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="9 18 15 12 9 6"/></svg></span>
-                  </div>
-                  <div class="my-tile">
-                    <!-- Icons.description_outlined -->
-                    <span class="my-tile__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg></span>
-                    <span class="my-tile__title">이용약관</span>
-                    <span class="my-tile__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="9 18 15 12 9 6"/></svg></span>
-                  </div>
-                  <div class="my-tile" style="cursor:default;">
-                    <!-- Icons.info_outline · trailing: SettingsTileTrailing.none -->
-                    <span class="my-tile__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="11" x2="12" y2="16"/><circle cx="12" cy="8" r="0.6" fill="currentColor"/></svg></span>
-                    <span class="my-tile__title">앱 버전</span>
-                    <span class="my-tile__subtitle">26.04.x-dev</span>
+                  <div class="my-group__card">
+                    <div class="my-tile"><span class="my-tile__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L4 5v6c0 5 3.4 9.6 8 11 4.6-1.4 8-6 8-11V5l-8-3z"/></svg></span><div class="my-tile__body"><span class="my-tile__title">개인정보처리방침</span></div><span class="my-tile__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="9 18 15 12 9 6"/></svg></span></div>
+                  <div class="my-tile"><span class="my-tile__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg></span><div class="my-tile__body"><span class="my-tile__title">이용약관</span></div><span class="my-tile__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="9 18 15 12 9 6"/></svg></span></div>
+                  <div class="my-tile" style="cursor:default;"><span class="my-tile__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="11" x2="12" y2="16"/><circle cx="12" cy="8" r="0.6" fill="currentColor"/></svg></span><div class="my-tile__body"><span class="my-tile__title">앱 버전</span><span class="my-tile__subtitle">26.04.x-dev</span></div></div>
                   </div>
                 </div>
                 <div class="my-group" style="margin-top: var(--spacing-large);">
                   <div class="my-group__header">계정</div>
-                  <div class="my-tile">
-                    <!-- Icons.manage_accounts_outlined -->
-                    <span class="my-tile__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="8" r="4"/><path d="M2 20c0-4 4-7 8-7 1.5 0 2.9.4 4.1 1"/><circle cx="18" cy="16" r="3"/><line x1="18" y1="11" x2="18" y2="13"/><line x1="18" y1="19" x2="18" y2="21"/></svg></span>
-                    <span class="my-tile__title">계정 관리</span>
-                    <span class="my-tile__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="9 18 15 12 9 6"/></svg></span>
-                  </div>
-                  <div class="my-tile my-tile--destructive">
-                    <!-- Icons.logout_outlined · destructive: true · trailing: SettingsTileTrailing.none -->
-                    <span class="my-tile__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></span>
-                    <span class="my-tile__title">로그아웃</span>
+                  <div class="my-group__card">
+                    <div class="my-tile"><span class="my-tile__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="8" r="4"/><path d="M2 20c0-4 4-7 8-7 1.5 0 2.9.4 4.1 1"/><circle cx="18" cy="16" r="3"/><line x1="18" y1="11" x2="18" y2="13"/><line x1="18" y1="19" x2="18" y2="21"/></svg></span><div class="my-tile__body"><span class="my-tile__title">계정 관리</span></div><span class="my-tile__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="9 18 15 12 9 6"/></svg></span></div>
+                  <div class="my-tile my-tile--destructive"><span class="my-tile__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></span><div class="my-tile__body"><span class="my-tile__title">로그아웃</span></div></div>
                   </div>
                 </div>
                 <!-- SizedBox(height: MinglitSpacing.xxlarge) — 64px buffer above safeArea -->
@@ -554,7 +547,7 @@
       <tbody>
         <tr>
           <td class="state-mini__mock" rowspan="6">
-            <div class="viewport">
+            <div class="viewport my-page-viewport">
               <div class="my-appbar"><h2>마이페이지</h2></div>
               <div class="my-auth-guard">
                 <!-- Icons.person_outline · 64px · onSurfaceVariant -->
