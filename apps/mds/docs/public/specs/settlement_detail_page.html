@@ -7,7 +7,18 @@
 <style>
 /* ============================================================
    SettlementDetailPage-specific atoms.
+
+   Partner app theme — scoped to .viewport so docs chrome stays neutral.
+   Page = Scaffold w/ AppBar + scrollable body (StatusMessageCard +
+   AmountBreakdown + StatusTimeline + ActionButtons).
    ============================================================ */
+.viewport {
+  --color-primary: var(--color-partner-primary);   /* #6c3ce1 */
+  --spec-blueprint-rgb: 108, 60, 225;
+}
+body.dark-mode .viewport {
+  --color-primary: var(--color-partner-dark-primary); /* #9b7bec */
+}
 
 /* --- App bar --- */
 .settle-appbar {
@@ -376,6 +387,14 @@
     <tbody>
       <tr>
         <td>2026-05-01</td>
+        <td>1.1</td>
+        <td>mark-yun</td>
+        <td>
+          home_page quality 기준 맞춤 — Layout perspective 안에 sub-anatomy 섹션 5개 추가 (AppBar · StatusMessageCard · AmountBreakdown · StatusTimeline · ActionButtons), States perspective 안에 visual zoom-in 섹션 2개 추가 (AppBar · Status badge / Amount card). Partner brand color(<code>#6c3ce1</code>) viewport-scoped override 적용.
+        </td>
+      </tr>
+      <tr>
+        <td>2026-05-01</td>
         <td>1.0</td>
         <td>mark-yun</td>
         <td>
@@ -491,6 +510,376 @@
         <tr><td>③</td><td>AmountBreakdown</td><td>column stretch · label/value 양 끝 정렬</td><td>card inner pad: <code>spacing-medium</code> · title↔rows: <code>spacing-sm</code> · row v-pad: <code>spacing-xsmall (4px)</code></td></tr>
         <tr><td>④</td><td>StatusTimeline</td><td>column start · dot-timeline 패턴</td><td>card inner pad: <code>spacing-medium</code> · item v-pad: <code>spacing-xsmall2 (6px)</code> · dot↔text: <code>spacing-sm (12px)</code></td></tr>
         <tr><td>⑤</td><td>ActionButtons</td><td>column stretch · 버튼 풀폭</td><td>버튼 간: <code>spacing-small (8px)</code> · 버튼 height: 48px</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>AppBar anatomy (①)</h2>
+    <p class="intro">
+      상단 56px AppBar — 좌측 뒤로가기 아이콘과 "정산 상세" 타이틀로 구성된 표준 Material 헤더.
+      뒤로가기 아이콘은 좌측 끝에서 spacing-xsmall만큼 안쪽에 배치되며, 타이틀은 그 우측에 spacing-small만큼 떨어져 정렬된다.
+      하단에 1px <code>color-divider</code> 라인이 그어져 본문 영역과 구분된다.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="width: 343px; height: 90px;">
+        <!-- Outer -->
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <!-- Left padding -->
+        <div class="blueprint__align-marker" style="top:8px;left:0;">left: spacing-xsmall (4px)</div>
+
+        <!-- Back button -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:8px;left:4px;width:40px;height:40px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉠ Back<br>40×40</span>
+        </div>
+
+        <!-- Title region -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:14px;left:52px;right:8px;height:28px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉡ Title — "정산 상세"</span>
+        </div>
+
+        <!-- Bottom border -->
+        <div class="blueprint__align-marker" style="bottom:8px;left:8px;">bottom: 1px color-divider</div>
+        <div class="blueprint__align-marker" style="top:8px;right:0;">right: 0 (no trailing)</div>
+      </div>
+
+      <div class="layout-tree"><b>AppBar</b>(height: 56)
+└─ Row(crossAxis: center)
+   ├─ Padding(left: <i>spacing-xsmall = 4px</i>)
+   │
+   ├─ <em>Back</em>                                       ← ㉠
+   │  └─ <b>IconButton</b>(arrow_back_ios, 22) — 40×40 hit zone
+   │     · onTap → 정산 목록으로 복귀
+   │
+   └─ <em>Title</em>                                      ← ㉡
+      └─ <b>Text</b>('정산 상세', appBarTitle 스타일)
+         · 좌측 정렬 · flex: 1 (남는 공간 흡수)
+         · 좌측 가장자리에서 back hit zone 끝 + spacing-small(8) 떨어짐
+
+<em>Bottom border:</em> 1px solid <i>color-divider</i> (하단 1px 라인)
+<em>Background:</em> <i>color-background</i> (light) / <i>color-dark-background</i> (dark)
+<em>Trailing:</em> 없음 (공유/기타 액션 슬롯 미사용)</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>—</td><td>AppBar 외부</td><td>height 56 · 풀폭</td><td>left: <code>spacing-xsmall (4px)</code> · right: 0 · bottom: <code>1px color-divider</code></td></tr>
+        <tr><td>㉠</td><td>Back</td><td>좌측 정렬 · 40×40 hit zone</td><td>icon: 22 · 가장자리에서 4px 안쪽</td></tr>
+        <tr><td>㉡</td><td>Title</td><td>좌측 정렬 · flex grow</td><td>back↔title: <code>spacing-small (8px)</code> · 폰트: appBarTitle (18/600)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>StatusMessageCard anatomy (②)</h2>
+    <p class="intro">
+      본문 첫 카드 — 좌측에 상태 배지(pill), 우측에 한 줄 안내 메시지가 가로로 배치된 정보 카드.
+      배지는 자기 너비만큼 차지하고 메시지는 남는 가로 공간을 모두 흡수한다.
+      배지 색상이 정산 상태(대기 / 확정 / 지급 중 / 지급 완료 / 보류 / 지급 실패 / 취소)에 따라 달라지며 메시지 텍스트도 함께 바뀐다.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="width: 343px; height: 110px;">
+        <!-- Outer card -->
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region" style="top:16px;left:16px;right:16px;height:78px;border-style:solid;border-color:rgba(var(--spec-blueprint-rgb), 0.5);">
+          <span class="blueprint__region-label" style="font-size:10px;top:2px;left:4px;">card · radius-card · border 1px</span>
+        </div>
+
+        <!-- Badge -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:36px;left:32px;width:84px;height:28px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉠ Badge — pill</span>
+        </div>
+
+        <!-- Gap -->
+        <div class="blueprint__align-marker" style="top:42px;left:118px;">spacing-sm (12)</div>
+
+        <!-- Message text -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:36px;left:128px;right:32px;height:28px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉡ Message text · flex grow</span>
+        </div>
+
+        <div class="blueprint__align-marker" style="top:18px;left:18px;">card pad: spacing-medium (16)</div>
+      </div>
+
+      <div class="layout-tree"><b>Card</b>(radius: <i>radius-card = 16</i>, border: 1px <i>color-divider</i>)
+└─ <b>Padding</b>(<i>spacing-medium = 16</i>)
+   └─ <b>Row</b>(crossAxis: center)
+      ├─ <em>Badge</em>                                   ← ㉠
+      │  └─ <b>SettlementStatusBadge</b>(status, compact: false)
+      │     · 자기 너비 · pill 모양 (radius-badge)
+      │     · 8 status 별 bg/text 색 · CANCELED은 strikethrough
+      │
+      ├─ <b>SizedBox</b>(width: <i>spacing-sm = 12</i>)
+      │
+      └─ <em>Message</em>                                 ← ㉡
+         └─ <b>Expanded</b> → <b>Text</b>(상태별 안내문)
+            · 한 줄 → 두 줄 자동 줄바꿈 (line-height 1.55)
+            · 좌측 정렬 · bodyMedium
+
+<em>비고:</em> 배지 너비는 라벨 길이에 비례 (가장 긴 "지급 완료"
+기준 약 84px). 메시지가 길면 두 줄까지 늘어나며 카드 높이가 증가.</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>—</td><td>Card 외부</td><td>풀폭 · 자기 높이</td><td>card pad: <code>spacing-medium (16px)</code> · radius: <code>radius-card</code></td></tr>
+        <tr><td>㉠</td><td>Badge</td><td>좌측 정렬 · 자연 너비 (flex 0)</td><td>height: 28 · h-padding: <code>spacing-xsmall + spacing-sm</code> · radius: <code>radius-badge</code></td></tr>
+        <tr><td>—</td><td>Gap</td><td>—</td><td>badge ↔ text: <code>spacing-sm (12px)</code></td></tr>
+        <tr><td>㉡</td><td>Message</td><td>좌측 정렬 · flex grow (Expanded)</td><td>line-height 1.55 · 1–2 줄 가변</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>AmountBreakdown anatomy (③)</h2>
+    <p class="intro">
+      금액 내역 카드 — "금액 내역" 타이틀 아래에 항목별 행이 세로로 쌓인다.
+      각 행은 좌측에 라벨(총 매출 · PG 수수료 · 플랫폼 수수료 · VAT), 우측에 금액이 양 끝 정렬로 마주본다.
+      마지막 정산금 행은 굵게 강조되며, 그 위에 1px 분리선이 들어가 합계 의미를 시각적으로 표현한다.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="width: 343px; height: 230px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region" style="top:8px;left:16px;right:16px;height:214px;border-style:solid;border-color:rgba(var(--spec-blueprint-rgb), 0.5);">
+          <span class="blueprint__region-label" style="font-size:10px;top:2px;left:4px;">card · radius-card</span>
+        </div>
+
+        <!-- Title -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:24px;left:32px;width:80px;height:20px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉠ Title</span>
+        </div>
+
+        <!-- Rows (4 secondary) -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:60px;left:32px;right:32px;height:24px;">
+          <span class="blueprint__region-label" style="font-size:9px;">㉡ Row × 4 — label / value 양 끝</span>
+        </div>
+        <div class="blueprint__region" style="top:88px;left:32px;right:32px;height:24px;border-style:dashed;border-color:rgba(var(--spec-blueprint-rgb), 0.3);"></div>
+        <div class="blueprint__region" style="top:116px;left:32px;right:32px;height:24px;border-style:dashed;border-color:rgba(var(--spec-blueprint-rgb), 0.3);"></div>
+        <div class="blueprint__region" style="top:144px;left:32px;right:32px;height:24px;border-style:dashed;border-color:rgba(var(--spec-blueprint-rgb), 0.3);"></div>
+
+        <!-- Divider -->
+        <div class="blueprint__region" style="top:174px;left:32px;right:32px;height:1px;background:var(--color-divider);">
+          <span class="blueprint__region-label" style="font-size:9px;top:-12px;">㉢ 1px divider</span>
+        </div>
+
+        <!-- Total row -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:184px;left:32px;right:32px;height:28px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉣ Total — bold</span>
+        </div>
+      </div>
+
+      <div class="layout-tree"><b>Card</b>(radius: <i>radius-card</i>)
+└─ <b>Padding</b>(<i>spacing-medium = 16</i>)
+   └─ <b>Column</b>(crossAxis: stretch)
+      ├─ <em>Title</em>                                   ← ㉠
+      │  └─ <b>Text</b>('금액 내역', titleSmall · w700)
+      │
+      ├─ <b>SizedBox</b>(height: <i>spacing-sm = 12</i>)
+      │
+      ├─ <em>Rows × 4</em>                                ← ㉡
+      │  ├─ <b>_Row</b>('총 매출', '#,###')
+      │  ├─ <b>_Row</b>('PG 수수료', '-#,###', negative)
+      │  ├─ <b>_Row</b>('플랫폼 수수료', '-#,###', negative)
+      │  └─ <b>_Row</b>('VAT', '-#,###', negative)
+      │     · 각 _Row: Row(MainAxis.spaceBetween)
+      │       label(left, secondary) ↔ value(right, primary)
+      │     · 행 v-padding: <i>spacing-xsmall = 4</i>
+      │
+      ├─ <em>Divider</em>                                 ← ㉢
+      │  └─ <b>SizedBox</b>(height 1) · color-divider
+      │     v-margin: <i>spacing-xsmall</i>
+      │
+      └─ <em>Total row</em>                               ← ㉣
+         └─ <b>_Row</b>('정산금', '₩#,###', bold: true)
+            · label/value 모두 굵게 (w700)
+            · value 앞에 ₩ 접두사</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>—</td><td>Card 외부</td><td>풀폭 · 자기 높이</td><td>card pad: <code>spacing-medium</code></td></tr>
+        <tr><td>㉠</td><td>Title</td><td>좌측 정렬</td><td>title↔rows gap: <code>spacing-sm (12px)</code> · w700</td></tr>
+        <tr><td>㉡</td><td>Row × 4</td><td>row · 양 끝 정렬</td><td>v-padding: <code>spacing-xsmall (4px)</code> · 음수 값 색: <code>color-error</code></td></tr>
+        <tr><td>㉢</td><td>Divider</td><td>풀폭 · 1px</td><td>v-margin: <code>spacing-xsmall</code></td></tr>
+        <tr><td>㉣</td><td>Total row</td><td>row · 양 끝 정렬</td><td>label/value 모두 w700 · value 앞 ₩</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>StatusTimeline anatomy (④)</h2>
+    <p class="intro">
+      처리 이력 카드 — 정산이 거쳐온 상태 전환을 위에서 아래로 시간순 정렬한다.
+      각 항목은 좌측의 작은 점(8px) + 그 점들을 잇는 1px 세로선 + 우측의 상태/시각 텍스트로 구성된다.
+      처리 이력이 하나도 없으면 카드 전체가 숨겨진다 (대기 상태에서 흔함).
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="width: 343px; height: 200px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region" style="top:8px;left:16px;right:16px;height:184px;border-style:solid;border-color:rgba(var(--spec-blueprint-rgb), 0.5);">
+          <span class="blueprint__region-label" style="font-size:10px;top:2px;left:4px;">card · radius-card</span>
+        </div>
+
+        <!-- Title -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:24px;left:32px;width:80px;height:20px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉠ Title</span>
+        </div>
+
+        <!-- Items -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:60px;left:32px;width:8px;height:8px;border-radius:50%;"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:60px;left:52px;right:32px;height:32px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉡ Item 1 — status + time</span>
+        </div>
+
+        <!-- Connector -->
+        <div class="blueprint__region" style="top:74px;left:35px;width:1px;height:16px;background:var(--color-divider);">
+          <span class="blueprint__region-label" style="font-size:9px;top:0;left:6px;">㉢ connector</span>
+        </div>
+
+        <div class="blueprint__region blueprint__region--shaded" style="top:104px;left:32px;width:8px;height:8px;border-radius:50%;"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:104px;left:52px;right:32px;height:32px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉡ Item 2</span>
+        </div>
+
+        <div class="blueprint__region" style="top:118px;left:35px;width:1px;height:16px;background:var(--color-divider);"></div>
+
+        <div class="blueprint__region blueprint__region--shaded" style="top:148px;left:32px;width:8px;height:8px;border-radius:50%;"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:148px;left:52px;right:32px;height:32px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉡ Item 3</span>
+        </div>
+      </div>
+
+      <div class="layout-tree"><b>Card</b>(radius: <i>radius-card</i>)
+└─ <b>Padding</b>(<i>spacing-medium = 16</i>)
+   └─ <b>Column</b>(crossAxis: start)
+      ├─ <em>Title</em>                                   ← ㉠
+      │  └─ <b>Text</b>('처리 이력', titleSmall · w700)
+      │
+      ├─ <b>SizedBox</b>(height: <i>spacing-sm = 12</i>)
+      │
+      └─ <em>Items × N</em> (시간순)                      ← ㉡, ㉢
+         └─ <b>_TimelineItem</b>
+            └─ Row(crossAxis: start)
+               ├─ <b>Container</b>(8×8 dot, color-primary)
+               │   · margin-top: 5 (텍스트 첫 줄과 시각적 정렬)
+               ├─ <b>SizedBox</b>(width: <i>spacing-sm = 12</i>)
+               └─ <b>Column</b>(crossAxis: start)
+                  ├─ <b>Text</b>('PREV → NEXT', w600)
+                  └─ <b>Text</b>('MM/dd HH:mm', caption)
+
+      <em>Connector ㉢:</em> 항목 사이에 1px 세로선
+      (width 1, height 16) · color-divider
+      · dot 중심 라인에 정렬됨</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>—</td><td>Card 외부</td><td>풀폭 · histories ≥ 1 일 때만 표시</td><td>card pad: <code>spacing-medium</code></td></tr>
+        <tr><td>㉠</td><td>Title</td><td>좌측 정렬</td><td>title↔items: <code>spacing-sm (12px)</code></td></tr>
+        <tr><td>㉡</td><td>Item</td><td>row · crossAxis start (점이 첫 줄과 정렬)</td><td>v-padding: <code>spacing-xsmall2 (6px)</code> · dot↔text: <code>spacing-sm (12px)</code> · dot: 8×8 원</td></tr>
+        <tr><td>㉢</td><td>Connector</td><td>dot 중심 라인 정렬 · 1px 세로선</td><td>height: 16 · margin-left: 4 (dot의 절반)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>ActionButtons anatomy (⑤)</h2>
+    <p class="intro">
+      본문 마지막 영역 — 풀폭 액션 버튼이 세로로 쌓인다.
+      "재지급 요청"(filled · 강조) 버튼은 <em>지급 실패 + 재지급 가능</em> 상태에서만 표시되며 그 외 상태에서는 "CSV 다운로드"(outlined) 버튼만 노출된다.
+      두 버튼이 같이 보일 때는 강조 버튼이 위에 놓이고, 아래쪽에 보조 버튼이 배치된다.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="width: 343px; height: 130px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <!-- Filled button -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:8px;left:16px;right:16px;height:48px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉠ FilledButton.icon — 재지급 요청<br>FAILED+retryable 일 때만</span>
+        </div>
+
+        <!-- Gap -->
+        <div class="blueprint__align-marker" style="top:60px;left:50%;">spacing-small (8)</div>
+
+        <!-- Outlined button -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:64px;left:16px;right:16px;height:48px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉡ OutlinedButton.icon — CSV 다운로드 (항상)</span>
+        </div>
+      </div>
+
+      <div class="layout-tree"><b>Column</b>(crossAxis: stretch)
+   ├─ [FAILED + retryable] <em>Primary CTA</em>            ← ㉠
+   │  └─ <b>FilledButton.icon</b>
+   │     ├─ icon: <b>Icons.refresh</b> (18)
+   │     ├─ label: <b>Text</b>('재지급 요청')
+   │     ├─ height: 48 · radius: <i>radius-button = 12</i>
+   │     ├─ background: <i>color-primary</i> (partner indigo)
+   │     ├─ foreground: white
+   │     ├─ icon↔label gap: <i>spacing-small = 8</i>
+   │     └─ onTap → 처리 중 (버튼 비활성화) → 응답 후 갱신
+   │
+   ├─ <b>SizedBox</b>(height: <i>spacing-small = 8</i>)
+   │
+   └─ <em>Secondary CTA</em>                              ← ㉡
+      └─ <b>OutlinedButton.icon</b>
+         ├─ icon: <b>Icons.file_download</b> (18)
+         ├─ label: <b>Text</b>('CSV 다운로드')
+         ├─ height: 48 · radius: <i>radius-button = 12</i>
+         ├─ background: <i>color-background</i>
+         ├─ border: 1px <i>color-divider</i>
+         ├─ foreground: <i>color-text-primary</i>
+         └─ onTap → CSV 다운로드 바텀시트 슬라이드 업
+
+<em>비고:</em> 재지급 버튼이 안 보이는 상태에서는 CSV 버튼이
+홀로 첫 줄에 위치 (위쪽 spacing 동일).</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>—</td><td>Column 외부</td><td>crossAxis stretch · 풀폭</td><td>버튼 간: <code>spacing-small (8px)</code></td></tr>
+        <tr><td>㉠</td><td>Primary CTA — 재지급 요청</td><td>풀폭 · 가운데 정렬 · icon + label</td><td>height 48 · radius <code>radius-button</code> · icon↔label: <code>spacing-small</code> · 강조 — primary bg</td></tr>
+        <tr><td>㉡</td><td>Secondary CTA — CSV 다운로드</td><td>풀폭 · 가운데 정렬 · icon + label</td><td>height 48 · radius <code>radius-button</code> · 보더 1px <code>color-divider</code></td></tr>
       </tbody>
     </table>
   </section>
@@ -924,6 +1313,74 @@
     </table>
 
   </section>
+
+  <!-- ============================================================
+       Page-atom zoom-ins — AppBar / Status badge + Amount card 시각 디테일.
+       ============================================================ -->
+
+  <section class="doc">
+    <h2>AppBar — visual</h2>
+    <p class="intro">
+      56px 고정 AppBar. 좌측에 뒤로가기 아이콘, 그 우측에 "정산 상세" 타이틀.
+      배경 <code>color-background</code>, 하단 1px <code>color-divider</code> 라인. 다크 모드에서는 배경이 어둡게 전환되며 라인은 다크 디바이더 색으로 바뀐다.
+    </p>
+    <div class="visual-gallery" style="background: var(--color-surface); padding: 24px; border-radius: var(--radius-card); display: flex; justify-content: center; gap: 16px; flex-wrap: wrap;">
+      <div class="viewport" style="width: 343px; height: 56px; background: var(--color-background); border: 1px solid var(--color-divider); border-radius: 8px; overflow: hidden; position: relative;">
+        <div class="settle-appbar">
+          <div class="settle-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
+          <div class="settle-appbar__title">정산 상세</div>
+        </div>
+      </div>
+    </div>
+    <p class="intro" style="margin-top:12px;margin-bottom:0;">
+      ※ 스크롤 동작과 무관하게 항상 고정. 스크롤 그림자 / elevation 변화 없음 — 1px 라인이 본문과의 분리만 담당.
+    </p>
+  </section>
+
+  <section class="doc">
+    <h2>Status badge / Amount card — visual</h2>
+    <p class="intro">
+      상태 배지는 정산 lifecycle 7개 상태에 따라 색이 달라지는 pill. 같은 모양·크기·radius를 유지하며 배경/텍스트 색만 바뀐다.
+      취소 상태는 가로 취소선이 추가로 그어진다. 그 아래는 금액 내역 카드 — 항목별 행이 양 끝 정렬로 쌓이고 합계만 굵게 강조된다.
+    </p>
+    <div class="visual-gallery" style="background: var(--color-surface); padding: 24px; border-radius: var(--radius-card); display: flex; flex-direction: column; gap: 20px; align-items: center;">
+      <div class="viewport" style="width: 343px; background: var(--color-background); border: 1px solid var(--color-divider); border-radius: 8px; padding: 16px; display: flex; flex-wrap: wrap; gap: 8px;">
+        <div class="settle-badge settle-badge--pending">정산 대기</div>
+        <div class="settle-badge settle-badge--ready">정산 확정</div>
+        <div class="settle-badge settle-badge--processing">지급 중</div>
+        <div class="settle-badge settle-badge--completed">지급 완료</div>
+        <div class="settle-badge settle-badge--failed">지급 실패</div>
+        <div class="settle-badge settle-badge--hold">보류</div>
+        <div class="settle-badge settle-badge--canceled">취소</div>
+      </div>
+      <div class="viewport" style="width: 343px; background: var(--color-background); border: 1px solid var(--color-divider); border-radius: 8px; padding: 16px;">
+        <div class="settle-card" style="border:none;padding:0;">
+          <div class="settle-card__title">금액 내역</div>
+          <div class="amount-row"><div class="amount-row__label amount-row__label--secondary">총 매출</div><div class="amount-row__value">840,000</div></div>
+          <div class="amount-row"><div class="amount-row__label amount-row__label--secondary">PG 수수료</div><div class="amount-row__value amount-row__value--negative">-25,200</div></div>
+          <div class="amount-row"><div class="amount-row__label amount-row__label--secondary">플랫폼 수수료</div><div class="amount-row__value amount-row__value--negative">-84,000</div></div>
+          <div class="amount-row"><div class="amount-row__label amount-row__label--secondary">VAT</div><div class="amount-row__value amount-row__value--negative">-8,400</div></div>
+          <div class="amount-divider"></div>
+          <div class="amount-row" style="padding-top:8px;"><div class="amount-row__label" style="font-weight:700;">정산금</div><div class="amount-row__value amount-row__value--total">₩722,400</div></div>
+        </div>
+      </div>
+    </div>
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr><th style="width: 140px;">Status</th><th style="width: 220px;">Visual</th><th>의미</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>정산 대기 (PENDING)</td><td>회색 배경 + 보조 텍스트 색</td><td>이벤트 종료 직후, 정산이 확정되기 전</td></tr>
+        <tr><td>정산 확정 (READY)</td><td>파트너 보라 10% 틴트 + 보라 텍스트</td><td>정산 금액이 확정됨, 지급 대기</td></tr>
+        <tr><td>지급 중 (PROCESSING)</td><td>주황 12% 틴트 + 주황 텍스트</td><td>송금이 처리되는 중</td></tr>
+        <tr><td>지급 완료 (COMPLETED)</td><td>초록 10% 틴트 + 초록 텍스트</td><td>정산금이 계좌에 입금됨</td></tr>
+        <tr><td>지급 실패 (FAILED)</td><td>빨강 10% 틴트 + 빨강 텍스트</td><td>송금 실패, 재지급 가능 시 강조 버튼 노출</td></tr>
+        <tr><td>보류 (HOLD)</td><td>빨강 10% 틴트 + 빨강 텍스트</td><td>운영 개입 — 분쟁/검증 등으로 일시 정지</td></tr>
+        <tr><td>취소 (CANCELED)</td><td>회색 배경 + 가로 취소선</td><td>정산 자체가 취소됨</td></tr>
+      </tbody>
+    </table>
+  </section>
+
 </div>
 
 <!-- ============================================================

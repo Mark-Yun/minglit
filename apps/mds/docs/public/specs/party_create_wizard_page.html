@@ -606,6 +606,532 @@ body.dark-mode .viewport {
       </tbody>
     </table>
   </section>
+
+  <section class="doc">
+    <h2>AppBar anatomy (①)</h2>
+    <p class="intro">
+      상단 56px 고정 바 — 좌측 back 아이콘 + 단계 타이틀. 스크롤과 무관하게 항상 화면 상단에 고정.
+      back 버튼은 40×40 hit zone 안에 22px chevron, 좌측 가장자리에서 <code>spacing-xsmall (4px)</code> 떨어짐.
+      타이틀은 back 버튼 우측에 <code>spacing-small (8px)</code> 간격으로 좌측 정렬되며, 단계가 바뀔 때마다 라벨이 즉시 교체됨.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="width: 343px; height: 90px;">
+        <!-- Outer -->
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <!-- Left padding (xsmall) -->
+        <div class="blueprint__align-marker" style="top:8px;left:0;">left: spacing-xsmall (4px)</div>
+
+        <!-- Back button region -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:8px;left:4px;width:40px;height:40px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉠ Back<br>40×40 · icon 22</span>
+        </div>
+
+        <!-- Title region -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:14px;left:52px;right:8px;height:28px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉡ Step title — 18/600 · 좌측 정렬 · flex grow</span>
+        </div>
+
+        <!-- Bottom border -->
+        <div class="blueprint__align-marker" style="bottom:8px;left:8px;">bottom: 1px color-divider</div>
+      </div>
+
+      <div class="layout-tree"><b>AppBar</b>(height: 56, titleSpacing: 0)
+└─ Row(crossAxis: center)
+   ├─ Padding(left: <i>spacing-xsmall = 4px</i>)
+   │
+   ├─ <em>Back button</em>                                ← ㉠
+   │  └─ <b>IconButton</b>(Icons.chevron_left, size: 22)
+   │     · 40×40 hit zone
+   │     · onTap → 파티 목록으로 복귀
+   │
+   ├─ Gap: <i>spacing-small = 8px</i>
+   │
+   └─ <em>Step title</em>                                 ← ㉡
+      └─ <b>Text</b>(stepTitle, style: appBarTitle 18/600)
+         · 좌측 정렬 · flex grow (남는 공간 차지)
+         · 단계별 라벨: 기본 정보 · 장소 선택 · 정원 &amp; 연락처
+                        · 입장 규칙 · 티켓 · 검토 및 완료
+
+<em>Bottom border:</em> 1px solid <i>color-divider</i>
+<em>Background:</em> <i>color-background</i> (light) / <i>color-dark-background</i> (dark)</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>—</td><td>AppBar 외부</td><td>height 56 · 풀폭</td><td>left: <code>spacing-xsmall (4px)</code> · right: <code>spacing-xsmall (4px)</code> · bottom: <code>1px color-divider</code></td></tr>
+        <tr><td>㉠</td><td>Back 버튼</td><td>좌측 정렬 · 40×40 hit zone</td><td>icon size: 22px · hit zone padding: 9px (40-22)/2</td></tr>
+        <tr><td>㉡</td><td>Step title</td><td>좌측 정렬 · flex grow</td><td>back 버튼과 사이: <code>spacing-small (8px)</code> · padding-h 0</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Progress bar anatomy (②)</h2>
+    <p class="intro">
+      AppBar 바로 아래 4px 얇은 가로 막대 — 단계 진척도를 시각화. 채워진 부분은 좌측에서 시작해 강조 색으로,
+      나머지는 옅은 표면 색으로 비워 둠. 단계가 진행될수록 채움이 균등하게 늘어나며, 마지막 단계에 100%에 도달.
+      AppBar와 본문 사이에 다른 여백 없이 flush하게 붙음.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="width: 343px; height: 60px;">
+        <!-- Outer -->
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <!-- Track (full width) -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:24px;left:0;right:0;height:12px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉠ Track — full width · height 4 (over-rendered to 12 for readability)</span>
+        </div>
+
+        <!-- Fill (50% mock) -->
+        <div class="blueprint__region" style="top:26px;left:0;width:160px;height:8px;background:rgba(var(--spec-blueprint-rgb),0.6);border-color:transparent;">
+          <span class="blueprint__region-label" style="font-size:9px;color:white;">㉡ Fill — width = (step+1) / 6</span>
+        </div>
+
+        <div class="blueprint__align-marker" style="top:6px;left:0;">flush — AppBar 직하 · margin 0</div>
+      </div>
+
+      <div class="layout-tree"><b>MinglitLinearProgressIndicator</b>(height: 4)
+├─ <em>Track</em>                                         ← ㉠
+│  · width: 100% · height: 4
+│  · background: <i>color-surface</i> (옅은 표면 색)
+│
+└─ <em>Fill</em>                                          ← ㉡
+   · width: <i>(currentStep.index + 1) / 6 × 100%</i>
+   · height: 4 · radius: 2 (좌측 끝만 둥글게 처리될 수 있음)
+   · background: <i>color-primary</i> (partner indigo)
+   · 단계별 채움:
+       Step 1 →  16.7%
+       Step 2 →  33.3%
+       Step 3 →  50.0%
+       Step 4 →  66.7%
+       Step 5 →  83.3%
+       Step 6 → 100.0%
+
+<em>Position:</em> AppBar 직하 · margin 0 (flush)
+<em>Animation:</em> width transition 350ms — 단계 슬라이드와 동시에 부드럽게 채워짐</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>—</td><td>Progress bar 외부</td><td>full width · AppBar 직하 flush</td><td>height: 4px · margin: 0</td></tr>
+        <tr><td>㉠</td><td>Track</td><td>full width · 좌측 정렬</td><td>background: <code>color-surface</code></td></tr>
+        <tr><td>㉡</td><td>Fill</td><td>좌측에서 시작 · 폭 가변</td><td>width: 단계 비율 · background: <code>color-primary</code> · transition: 350ms</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Step body anatomy (③)</h2>
+    <p class="intro">
+      AppBar/Progress 바로 아래부터 하단 버튼 바 직전까지의 가변 높이 스크롤 영역. 단계가 바뀌면 좌우로 슬라이드되며 본문이 교체됨.
+      좌우 / 상하 모두 <code>spacing-medium (16px)</code> padding이 둘러싸고, 그 안에서 필드 그룹이 위에서 아래로 쌓임.
+      필드 그룹 사이는 <code>spacing-large (24px)</code>, 그룹 안에서 라벨↔필드 사이는 <code>spacing-medium (16px)</code>.
+      세로 스크롤은 자동으로 활성화되며, 사용자가 직접 좌우로 스와이프해 단계를 넘기는 것은 차단됨.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="width: 343px; height: 320px;">
+        <!-- Outer -->
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <!-- Padding markers -->
+        <div class="blueprint__align-marker" style="top:6px;left:0;">all padding: spacing-medium (16px)</div>
+
+        <!-- Field group 1 -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:30px;left:16px;right:16px;height:88px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉠ Field group — label + sub + input</span>
+        </div>
+
+        <!-- Gap (large = 24px) -->
+        <div class="blueprint__align-marker" style="top:122px;left:16px;">gap: spacing-large (24px)</div>
+
+        <!-- Field group 2 -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:142px;left:16px;right:16px;height:88px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉠ Field group — 다음 그룹 (24px gap)</span>
+        </div>
+
+        <!-- Gap -->
+        <div class="blueprint__align-marker" style="top:234px;left:16px;">gap: spacing-large (24px)</div>
+
+        <!-- Field group 3 (partial — scrolled below fold) -->
+        <div class="blueprint__region" style="top:254px;left:16px;right:16px;height:50px;border-style:dashed;border-color:rgba(var(--spec-blueprint-rgb), 0.3);">
+          <span class="blueprint__region-label" style="font-size:9px;">… 추가 필드 그룹 (스크롤로 노출)</span>
+        </div>
+
+        <div class="blueprint__align-marker" style="bottom:6px;right:0;">↕ scroll · 좌우 swipe 차단</div>
+      </div>
+
+      <div class="layout-tree"><b>PageView</b>(NeverScrollableScrollPhysics)
+└─ <b>Step{N}</b> child (단계별 위젯)
+   └─ <b>SingleChildScrollView</b>
+      └─ <b>Padding</b>(all: <i>spacing-medium = 16px</i>)
+         └─ <b>Column</b>(crossAxis: stretch)
+            ├─ <em>Field group</em>                          ← ㉠
+            │  ├─ <b>Text</b>(label · titleSmall 14/700)
+            │  ├─ Gap: <i>spacing-medium = 16px</i>
+            │  ├─ [optional] <b>Text</b>(sub · bodySmall 12)
+            │  │   <i>설명 / 힌트 텍스트 — 일부 그룹에만</i>
+            │  └─ <em>Input atom</em>
+            │     <i>(TextField · Quill · ImageGrid ·
+            │      LocationPicker · SwitchRow · ChipGroup ·
+            │      EntryRuleCard · TicketCard · ReviewSection)</i>
+            │
+            ├─ Gap: <i>spacing-large = 24px</i>
+            │
+            ├─ <em>Field group</em> (다음)                    ← ㉠
+            │
+            └─ … (단계마다 필드 수 가변)
+
+<em>Slide:</em> 좌→우 (forward) / 우→좌 (back) — <i>MinglitAnimation.medium (350ms)</i>
+<em>User scroll:</em> 세로만. 좌우 스와이프는 차단됨.</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>—</td><td>Step body 외부</td><td>AppBar+progress 직하 ↔ 하단 버튼 바 직전 · 가변 높이</td><td>padding all: <code>spacing-medium (16px)</code> · 세로 스크롤만</td></tr>
+        <tr><td>㉠</td><td>Field group</td><td>column stretch (full width)</td><td>그룹 사이: <code>spacing-large (24px)</code> · 그룹 안 라벨↔필드: <code>spacing-medium (16px)</code></td></tr>
+        <tr><td>—</td><td>슬라이드 전이</td><td>좌→우 (forward) · 우→좌 (back)</td><td>duration: 350ms · easeOut · 진행 바 채움과 동기</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Form input atoms anatomy (③-a)</h2>
+    <p class="intro">
+      각 단계의 본문에 등장하는 입력 atom들. 모두 같은 height 52px (높이가 큰 Quill / Image grid는 예외)와
+      <code>radius-input (12px)</code>를 공유해, 사용자가 한 단계 안에서 시각적 리듬이 일정하게 느껴지도록 정렬됨.
+      비활성 상태는 1px <code>color-divider</code> 보더, 채워진 상태는 1px <code>color-primary</code> 보더로 강조.
+      오류 상태는 1px <code>color-error</code> 보더 + 그 아래 11px caption 안내 문구.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="width: 343px; height: 380px;">
+        <!-- Outer -->
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <!-- TextField -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:8px;left:8px;right:8px;height:52px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉠ TextField — h 52 · radius-input · padding-h 16</span>
+        </div>
+
+        <!-- Quill -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:68px;left:8px;right:8px;height:80px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉡ Quill — toolbar 40 + body min 80 · radius-input</span>
+        </div>
+
+        <!-- Image grid -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:156px;left:8px;right:8px;height:80px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉢ Image grid — 4 col · 1:1 aspect · gap spacing-small (8)</span>
+        </div>
+
+        <!-- Location picker -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:244px;left:8px;right:8px;height:52px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉣ Location picker — h 52 · pin icon + label + chevron</span>
+        </div>
+
+        <!-- Switch row -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:304px;left:8px;right:8px;height:48px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉤ Switch row — text(title+sub) + 44×24 switch</span>
+        </div>
+      </div>
+
+      <div class="layout-tree"><em>① Text input</em>                                  ← ㉠
+└─ <b>MinglitTextField</b>(height: 52, radius-input)
+   · padding-h: <i>spacing-medium = 16</i>
+   · 비활성: border 1px <i>color-divider</i>
+   · 채움: border 1px <i>color-primary</i>
+   · 오류: border 1px <i>color-error</i> + 하단 11px helper
+
+<em>② Rich text (소개)</em>                              ← ㉡
+└─ <b>QuillEditor</b>(radius-input · min-height 120)
+   ├─ <b>Toolbar</b>(height 40, border-bottom 1px divider)
+   │  └─ Btn × N (B · I · ≡ · · — 28×28, gap 4)
+   └─ <b>Body</b>(padding 12, min-height 80)
+      · placeholder: <i>color-text-secondary</i>
+
+<em>③ Image grid (커버 이미지)</em>                      ← ㉢
+└─ <b>GridView</b>(crossAxisCount: 4, aspectRatio: 1)
+   · gap: <i>spacing-small = 8</i>
+   ├─ <em>Add slot</em>: dashed 1px divider · plus + "추가"
+   ├─ <em>Filled slot</em>: image + 우상단 × remove (20×20 scrim)
+   └─ <em>Empty slot</em>: opacity 0.4 (정원 미달)
+   · 4슬롯이 모두 채워지면 add 슬롯 자동 사라짐
+
+<em>④ Location picker</em>                              ← ㉣
+└─ <b>LocationPicker</b>(height 52, radius-input)
+   ├─ <b>Icon</b>(pin, 18, color-text-secondary)
+   ├─ Gap: <i>spacing-small = 8</i>
+   ├─ <b>Text</b>(장소명 또는 placeholder, flex grow)
+   └─ <b>Icon</b>(chevron_right, 16)
+   · 선택되면 border <i>color-primary</i>
+
+<em>⑤ Switch row</em>                                   ← ㉤
+└─ Row(crossAxis: center, padding-v: 8)
+   ├─ <b>Column</b>(flex grow)
+   │  ├─ <b>Text</b>(title · bodyMedium 14/500)
+   │  └─ <b>Text</b>(sub · bodySmall 12 · color-text-secondary)
+   └─ <b>Switch</b>(44×24, thumb 20)
+      · off: bg <i>color-divider</i>
+      · on: bg <i>color-primary</i></div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>㉠</td><td>Text input</td><td>height 52 · 좌측 정렬 텍스트</td><td>radius: <code>radius-input (12)</code> · padding-h: <code>spacing-medium (16)</code> · border 1px (divider / primary / error)</td></tr>
+        <tr><td>㉡</td><td>Rich text editor (Quill)</td><td>column · toolbar 위 + body 아래</td><td>toolbar h: 40 · body min-h: 80 · padding 12 · 토lbar btn 28×28 · gap 4</td></tr>
+        <tr><td>㉢</td><td>Image grid</td><td>4-column grid · aspect 1:1</td><td>gap: <code>spacing-small (8)</code> · radius: <code>radius-small (8)</code> · 채움 4개 한도</td></tr>
+        <tr><td>㉣</td><td>Location picker</td><td>row · pin + label + chevron</td><td>height 52 · padding-h: <code>spacing-medium</code> · icon 18/16 · gap: <code>spacing-small</code></td></tr>
+        <tr><td>㉤</td><td>Switch row</td><td>row · text 좌측 + switch 우측</td><td>padding-v: <code>spacing-small (8)</code> · switch: 44×24 · thumb 20 · 켜짐 시 thumb 좌→우 슬라이드</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Bottom navigation buttons anatomy (④)</h2>
+    <p class="intro">
+      화면 하단에 고정되는 80px 버튼 바. 좌측에 "이전"(보더 버튼, flex 1), 우측에 "다음" 또는 마지막 단계의
+      "생성하기 / 수정 완료"(채움 버튼, flex 2)가 배치. Step 1에서는 "이전" 슬롯이 비어 있고 "다음" 버튼이
+      가로 폭 전체를 차지함. 두 버튼 모두 height 48, 사이 간격은 <code>spacing-medium (16px)</code>.
+      바 자체는 <code>spacing-medium</code> all-padding 안에 SafeArea로 감싸짐.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="width: 343px; height: 80px;">
+        <!-- Outer -->
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <!-- Top border -->
+        <div class="blueprint__align-marker" style="top:0;left:8px;">top: 1px color-divider</div>
+
+        <!-- Padding marker -->
+        <div class="blueprint__align-marker" style="top:60px;right:0;">all padding: spacing-medium (16)</div>
+
+        <!-- Prev button (flex 1) -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:16px;left:16px;width:100px;height:48px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉠ 이전 — flex 1 · outline · h 48</span>
+        </div>
+
+        <!-- Gap -->
+        <div class="blueprint__align-marker" style="top:30px;left:120px;">gap: 16</div>
+
+        <!-- Next button (flex 2) -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:16px;left:140px;right:16px;height:48px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉡ 다음 / 생성하기 — flex 2 · filled · h 48</span>
+        </div>
+      </div>
+
+      <div class="layout-tree"><b>bottomNavigationBar</b>: <b>SafeArea</b>
+└─ <b>Container</b>(border-top: 1px <i>color-divider</i>, bg: <i>color-background</i>)
+   └─ <b>Padding</b>(all: <i>spacing-medium = 16</i>)
+      └─ <b>Row</b>(crossAxis: center, gap: <i>spacing-medium = 16</i>)
+         ├─ [step &gt; 0] <em>Prev button</em>             ← ㉠
+         │  └─ <b>OutlinedButton</b>(height: 48, flex: 1)
+         │     · border 1px <i>color-divider</i>
+         │     · bg <i>color-background</i> · text <i>color-text-primary</i>
+         │     · radius <i>radius-button = 12</i>
+         │     · 라벨: "이전"
+         │     · onTap → 직전 단계로 슬라이드
+         │
+         └─ <em>Next / Submit button</em>                   ← ㉡
+            └─ <b>FilledButton</b>(height: 48, flex: 2)
+               · bg <i>color-primary</i> · text white
+               · radius <i>radius-button = 12</i>
+               · 라벨 (단계별):
+                   Step 1 – 5 → "다음"
+                   Step 6 (Create) → "생성하기"
+                   Step 6 (Edit)   → "수정 완료"
+               · disabled (제출 중): bg <i>color-divider</i>, text <i>color-text-secondary</i>
+               · onTap → 유효성 통과 시 다음 단계 / 마지막엔 제출
+
+<em>Step 1 예외:</em> "이전" 슬롯 자체가 없음 → "다음"이 풀폭 차지
+<em>Double-tap guard:</em> 빠른 두 번 탭 시 두 번째 탭은 무시</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>—</td><td>Bottom nav 외부</td><td>화면 하단 고정 · height 80 · SafeArea</td><td>padding all: <code>spacing-medium (16)</code> · top: 1px <code>color-divider</code></td></tr>
+        <tr><td>㉠</td><td>Prev 버튼</td><td>좌측 정렬 · flex 1 (Step 2~6)</td><td>height 48 · radius: <code>radius-button (12)</code> · border 1px divider · bg background · Step 1에선 미노출</td></tr>
+        <tr><td>㉡</td><td>Next/Submit 버튼</td><td>우측 정렬 · flex 2 (Step 1엔 풀폭)</td><td>height 48 · radius: <code>radius-button</code> · bg <code>color-primary</code> · disabled 시 bg <code>color-divider</code></td></tr>
+        <tr><td>—</td><td>두 버튼 사이</td><td>row · gap</td><td>gap: <code>spacing-medium (16)</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Review section anatomy (③-b)</h2>
+    <p class="intro">
+      마지막 단계(검토 및 완료)에서만 본문에 등장하는 카드. 1~5단계의 입력값을 단계별로 묶어 한눈에 보여주며,
+      각 카드 우측 상단의 "수정" 텍스트 버튼으로 해당 단계로 빠르게 점프할 수 있음.
+      카드는 <code>radius-card (16)</code> 보더로 감싸지고, header 영역은 옅은 표면 색으로 본문과 시각적으로 분리됨.
+      카드 사이 간격은 <code>spacing-medium (16px)</code>, 본문 내부의 key-value 줄 사이는 6px의 좁은 간격.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="width: 343px; height: 200px;">
+        <!-- Outer card -->
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <!-- Page heading (above sections) -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:8px;left:8px;right:8px;height:28px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉠ Page heading — "파티 정보를 확인해 주세요" · 20/700</span>
+        </div>
+
+        <!-- Section card -->
+        <div class="blueprint__region" style="top:48px;left:8px;right:8px;height:120px;border-color:rgba(var(--spec-blueprint-rgb), 0.5);">
+          <!-- Header -->
+          <div class="blueprint__region blueprint__region--shaded" style="top:0;left:0;right:0;height:36px;">
+            <span class="blueprint__region-label" style="font-size:10px;">㉡ Header — title (좌) + "수정" (우) · bg color-surface</span>
+          </div>
+          <!-- Body -->
+          <div class="blueprint__region blueprint__region--shaded" style="top:40px;left:8px;right:8px;bottom:8px;">
+            <span class="blueprint__region-label" style="font-size:10px;">㉢ Body — Key/value rows · gap 6</span>
+          </div>
+        </div>
+
+        <div class="blueprint__align-marker" style="bottom:8px;right:8px;">카드 사이: spacing-medium (16)</div>
+      </div>
+
+      <div class="layout-tree"><em>Page heading</em>                                ← ㉠
+└─ <b>Text</b>("파티 정보를 확인해 주세요")
+   · sectionTitle 20/700 · color-text-primary
+   · 헤딩 ↔ 첫 카드 사이: <i>spacing-medium = 16</i>
+
+<em>Review section card × 5</em> (1~5단계 요약)         ← (per section)
+└─ <b>Container</b>(radius: <i>radius-card = 16</i>,
+                   border: 1px <i>color-divider</i>)
+   ├─ <em>Header</em>                                    ← ㉡
+   │  └─ Row(padding: <i>spacing-sm spacing-medium</i>,
+   │         bg: <i>color-surface</i>,
+   │         border-bottom: 1px <i>color-divider</i>)
+   │     ├─ <b>Text</b>(섹션 타이틀 · bodyMedium 14/600)
+   │     └─ <b>TextButton</b>("수정" · bodySmall 12/600 · primary)
+   │        · onTap → 해당 단계로 슬라이드 점프
+   │
+   └─ <em>Body</em>                                      ← ㉢
+      └─ <b>Padding</b>(all: <i>spacing-medium</i>)
+         └─ Column
+            └─ <em>Key/value row × N</em>
+               · key: 14/600 · min-width 60 · color-text-primary
+               · value: 14/400 · color-text-secondary
+               · 줄 사이 gap: 6px
+
+<em>카드 사이:</em> <i>spacing-medium = 16</i>
+<em>섹션 5종:</em> 기본 정보 · 장소 · 정원/연락처 · 입장 규칙 · 티켓
+<em>오류 카드(있을 때):</em> 같은 카드 형식, bg/border가 옅은 빨간 톤 — 헤딩 직하에 노출</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>㉠</td><td>Page heading</td><td>좌측 정렬 · 카드 위에 단독 줄</td><td>20/700 · 헤딩↔첫 카드: <code>spacing-medium (16)</code></td></tr>
+        <tr><td>㉡</td><td>Section header</td><td>row · 타이틀 좌 · "수정" 우</td><td>padding: <code>spacing-sm (12)</code> v · <code>spacing-medium (16)</code> h · bg: <code>color-surface</code> · 하단 1px divider</td></tr>
+        <tr><td>㉢</td><td>Section body</td><td>column · key 좌 + value 우</td><td>padding: <code>spacing-medium (16)</code> all · 줄 사이: 6px · key min-w: 60 · key↔value gap: <code>spacing-sm (12)</code></td></tr>
+        <tr><td>—</td><td>카드 사이</td><td>column · 위에서 아래로</td><td>gap: <code>spacing-medium (16)</code> · 카드 5개 (단계별)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Loading overlay anatomy (⑤)</h2>
+    <p class="intro">
+      마지막 단계의 "생성하기 / 수정 완료"를 누른 직후, 서버 응답을 기다리는 짧은 동안만 화면 전체에 등장하는 막.
+      배경은 반투명 검정 scrim, 가운데 36×36 흰색 회전 스피너 한 개. 이 막이 떠 있는 동안 그 아래의 모든 컨트롤은
+      터치에 반응하지 않으며, 시스템 뒤로가기도 일시적으로 막힘. 위저드 외 결제 / 인증 등의 다른 전역 흐름에서도
+      동일한 모습으로 재사용되는 공유 atom.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="width: 343px; height: 200px;">
+        <!-- Outer (full screen) -->
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <!-- Scrim -->
+        <div class="blueprint__region" style="top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.35);border-color:transparent;">
+          <span class="blueprint__region-label" style="top:8px;left:8px;font-size:10px;color:white;">㉠ Scrim — full screen · rgba(0,0,0,0.5)</span>
+        </div>
+
+        <!-- Spinner -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:50%;left:50%;width:48px;height:48px;margin-left:-24px;margin-top:-24px;background:rgba(255,255,255,0.15);border-color:white;">
+          <span class="blueprint__region-label" style="font-size:10px;color:white;top:48px;">㉡ Spinner 36×36 · white · 중앙</span>
+        </div>
+      </div>
+
+      <div class="layout-tree"><b>GlobalLoadingOverlay</b> (전역 atom)
+├─ <em>Scrim</em>                                         ← ㉠
+│  · position: 화면 전체 inset 0
+│  · background: rgba(0,0,0,0.5) — <i>color-scrim</i>
+│  · 터치 차단 (그 아래 모든 위젯이 터치에 반응하지 않음)
+│  · 등장: 100ms 페이드 인 (<i>MinglitAnimation.micro</i>)
+│
+└─ <em>Spinner</em>                                       ← ㉡
+   └─ <b>CircularProgressIndicator</b>(size: 36, color: white)
+      · 화면 중앙 정렬 (X · Y 모두 50%)
+      · stroke 3px · 반투명 흰 트랙 + 흰 진행 호
+      · 회전 0.7s linear infinite
+
+<em>버튼 시각 변화:</em> "생성하기" 버튼은 disabled 톤(bg <i>color-divider</i> · text <i>color-text-secondary</i>)으로 함께 노출
+<em>해제 시점:</em> 응답 도착(성공/실패 모두) 즉시 fade-out</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>㉠</td><td>Scrim</td><td>화면 전체 · inset 0 · z-top</td><td>background: <code>color-scrim</code> rgba(0,0,0,0.5) · 터치 차단</td></tr>
+        <tr><td>㉡</td><td>Spinner</td><td>중앙 정렬 (X·Y 50%)</td><td>size: 36×36 · stroke 3 · 흰색 · 0.7s linear infinite 회전</td></tr>
+        <tr><td>—</td><td>등장 / 사라짐</td><td>fade in / out</td><td>등장: 100ms (micro) · 사라짐: 응답 즉시</td></tr>
+      </tbody>
+    </table>
+  </section>
 </div>
 
 <!-- ============================================================
@@ -1223,6 +1749,148 @@ body.dark-mode .viewport {
     </table>
 
   </section>
+
+  <!-- ============================================================
+       VISUAL ZOOM-INS
+       Page-atom zoom-ins — AppBar+Progress / Bottom buttons 시각 디테일.
+       ============================================================ -->
+
+  <section class="doc">
+    <h2>AppBar + Progress bar — visual</h2>
+    <p class="intro">
+      상단 56px 바와 그 아래 4px 진행 바를 한 묶음으로 본 모습. 단계가 진행될수록 진행 바의 강조 색 채움이 좌측에서
+      우측으로 늘어나며, 마지막 검토 단계에서 100%에 도달. AppBar의 타이틀도 단계마다 즉시 바뀜.
+      모든 시각 요소가 partner indigo(<code>--color-primary</code>)에 묶여 일관된 인상.
+    </p>
+    <div class="visual-gallery" style="background: var(--color-surface); padding: 24px; border-radius: var(--radius-card); display: flex; flex-direction: column; gap: 16px; align-items: center;">
+
+      <!-- Step 1 -->
+      <div style="width: 375px; background: var(--color-background); border: 1px solid var(--color-divider); border-radius: 8px; overflow: hidden;">
+        <div class="wizard-appbar">
+          <div class="wizard-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
+          <div class="wizard-appbar__title">기본 정보</div>
+        </div>
+        <div class="wizard-progress"><div class="wizard-progress__fill" style="width:16.7%;"></div></div>
+      </div>
+
+      <!-- Step 3 -->
+      <div style="width: 375px; background: var(--color-background); border: 1px solid var(--color-divider); border-radius: 8px; overflow: hidden;">
+        <div class="wizard-appbar">
+          <div class="wizard-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
+          <div class="wizard-appbar__title">정원 &amp; 연락처</div>
+        </div>
+        <div class="wizard-progress"><div class="wizard-progress__fill" style="width:50%;"></div></div>
+      </div>
+
+      <!-- Step 6 -->
+      <div style="width: 375px; background: var(--color-background); border: 1px solid var(--color-divider); border-radius: 8px; overflow: hidden;">
+        <div class="wizard-appbar">
+          <div class="wizard-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
+          <div class="wizard-appbar__title">검토 및 완료</div>
+        </div>
+        <div class="wizard-progress"><div class="wizard-progress__fill" style="width:100%;"></div></div>
+      </div>
+
+    </div>
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr><th style="width: 140px;">Step</th><th style="width: 160px;">Title</th><th style="width: 140px;">Fill</th><th>비주얼 변화</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Step 1 / 6</td><td>기본 정보</td><td>16.7%</td><td>좌측 끝에 강조 색 짧은 막대만 보임 — 위저드 시작.</td></tr>
+        <tr><td>Step 2 / 6</td><td>장소 선택</td><td>33.3%</td><td>채움이 1/3 지점까지 부드럽게 늘어남.</td></tr>
+        <tr><td>Step 3 / 6</td><td>정원 &amp; 연락처</td><td>50.0%</td><td>채움이 가운데에 도달 — 위저드 절반 진행.</td></tr>
+        <tr><td>Step 4 / 6</td><td>입장 규칙</td><td>66.7%</td><td>채움이 2/3 지점에 — 후반부 진입.</td></tr>
+        <tr><td>Step 5 / 6</td><td>티켓</td><td>83.3%</td><td>채움이 우측 끝에 가까워짐 — 거의 완료.</td></tr>
+        <tr><td>Step 6 / 6</td><td>검토 및 완료</td><td>100.0%</td><td>막대 전체가 강조 색으로 채워져 마지막 단계임을 알림.</td></tr>
+      </tbody>
+    </table>
+    <p class="intro" style="margin-top:12px;margin-bottom:0;">
+      ※ 채움 폭은 단계 슬라이드와 같은 350ms 동안 부드럽게 보간되어 변경된다. AppBar 타이틀은 페이드 없이 단계가 바뀌는 순간 즉시 교체.
+    </p>
+  </section>
+
+  <section class="doc">
+    <h2>Bottom buttons — visual</h2>
+    <p class="intro">
+      화면 하단 80px 버튼 바의 단계별 / 상태별 시각 변형. Step 1엔 "이전" 슬롯 자체가 없어 "다음"이 풀폭을 차지하고,
+      Step 2 이후엔 보더 "이전" + 채움 "다음"이 1:2 비율로 나란히 배치된다. 마지막 단계의 "다음"은 라벨이
+      "생성하기 / 수정 완료"로 바뀌며, 제출 중에는 같은 위치의 버튼이 옅은 disabled 톤으로 비활성화된다.
+    </p>
+    <div class="visual-gallery" style="background: var(--color-surface); padding: 24px; border-radius: var(--radius-card); display: flex; flex-direction: column; gap: 16px; align-items: center;">
+
+      <!-- Variant 1: Step 1 — next only, full width -->
+      <div style="width: 375px; background: var(--color-background); border: 1px solid var(--color-divider); border-radius: 8px; overflow: hidden;">
+        <div style="padding: 4px 12px; background: var(--color-surface); font-size: 11px; color: var(--color-text-secondary); border-bottom: 1px solid var(--color-divider);">Step 1 — "이전" 없음 · "다음" 풀폭</div>
+        <div style="position: relative; height: 80px;">
+          <div class="wizard-bottom-nav" style="position: relative;">
+            <div class="wizard-btn-next" style="flex: 1;">다음</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Variant 2: Step 2-5 — prev + next, 1:2 -->
+      <div style="width: 375px; background: var(--color-background); border: 1px solid var(--color-divider); border-radius: 8px; overflow: hidden;">
+        <div style="padding: 4px 12px; background: var(--color-surface); font-size: 11px; color: var(--color-text-secondary); border-bottom: 1px solid var(--color-divider);">Step 2 – 5 — "이전"(보더) + "다음"(채움) · 1 : 2</div>
+        <div style="position: relative; height: 80px;">
+          <div class="wizard-bottom-nav" style="position: relative;">
+            <div class="wizard-btn-prev">이전</div>
+            <div class="wizard-btn-next">다음</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Variant 3: Step 6 — Create -->
+      <div style="width: 375px; background: var(--color-background); border: 1px solid var(--color-divider); border-radius: 8px; overflow: hidden;">
+        <div style="padding: 4px 12px; background: var(--color-surface); font-size: 11px; color: var(--color-text-secondary); border-bottom: 1px solid var(--color-divider);">Step 6 (Create) — "이전" + "생성하기"</div>
+        <div style="position: relative; height: 80px;">
+          <div class="wizard-bottom-nav" style="position: relative;">
+            <div class="wizard-btn-prev">이전</div>
+            <div class="wizard-btn-next">생성하기</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Variant 4: Step 6 — Edit -->
+      <div style="width: 375px; background: var(--color-background); border: 1px solid var(--color-divider); border-radius: 8px; overflow: hidden;">
+        <div style="padding: 4px 12px; background: var(--color-surface); font-size: 11px; color: var(--color-text-secondary); border-bottom: 1px solid var(--color-divider);">Step 6 (Edit) — 라벨이 "수정 완료"로 교체</div>
+        <div style="position: relative; height: 80px;">
+          <div class="wizard-bottom-nav" style="position: relative;">
+            <div class="wizard-btn-prev">이전</div>
+            <div class="wizard-btn-next">수정 완료</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Variant 5: Submitting — disabled -->
+      <div style="width: 375px; background: var(--color-background); border: 1px solid var(--color-divider); border-radius: 8px; overflow: hidden;">
+        <div style="padding: 4px 12px; background: var(--color-surface); font-size: 11px; color: var(--color-text-secondary); border-bottom: 1px solid var(--color-divider);">Submitting — 채움 버튼이 옅은 비활성 톤으로 전환</div>
+        <div style="position: relative; height: 80px;">
+          <div class="wizard-bottom-nav" style="position: relative;">
+            <div class="wizard-btn-prev">이전</div>
+            <div class="wizard-btn-next wizard-btn-next--disabled">생성하기</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr><th style="width: 200px;">Variant</th><th style="width: 180px;">Layout</th><th>비주얼 단서</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Step 1</td><td>Next 풀폭 (Prev 미노출)</td><td>채움 버튼 한 개가 화면 폭 거의 전체를 차지 — "이제 시작" 인상.</td></tr>
+        <tr><td>Step 2 – 5</td><td>Prev(보더) + Next(채움), 1 : 2</td><td>왼쪽 보더 버튼은 회색 톤, 오른쪽 채움 버튼만 강조 색 — "다음으로 가기"가 시각적으로 우선.</td></tr>
+        <tr><td>Step 6 — Create</td><td>Prev + Submit, 1 : 2</td><td>오른쪽 라벨이 "다음" → "생성하기"로 교체. 색·비율은 동일.</td></tr>
+        <tr><td>Step 6 — Edit</td><td>Prev + Submit, 1 : 2</td><td>오른쪽 라벨이 "수정 완료"로 교체. 수정 모드 진입 시에만 노출.</td></tr>
+        <tr><td>Submitting</td><td>Prev + Submit (disabled)</td><td>오른쪽 채움 버튼이 옅은 회색 톤으로 빠지며, 동시에 화면 전체 위에 풀스크린 로딩 막이 떠 어떤 컨트롤도 반응하지 않음.</td></tr>
+      </tbody>
+    </table>
+    <p class="intro" style="margin-top:12px;margin-bottom:0;">
+      ※ 두 버튼의 height(48), radius(<code>radius-button = 12</code>), 사이 gap(<code>spacing-medium = 16</code>)은 모든 variant에서 동일. 변하는 것은 라벨 / 비율 / 채움 버튼의 색뿐.
+    </p>
+  </section>
+
 </div>
 
 <!-- ============================================================
