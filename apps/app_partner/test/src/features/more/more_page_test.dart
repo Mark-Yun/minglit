@@ -223,5 +223,62 @@ void main() {
       expect(find.byType(OverflowBar), findsNothing);
       expect(tester.takeException(), isNull);
     });
+
+    // Fix #2069: regression guard — _ProfileTile must use MinglitAvatarImage
+    testWidgets(
+      'shows Icons.store fallback when profileImageUrl is null',
+      (tester) async {
+        // testPartner has no profileImageUrl, so MinglitAvatarImage renders CircleAvatar fallback
+        await tester.pumpWidget(buildSubject());
+        await tester.pumpAndSettle();
+
+        expect(find.byType(MinglitAvatarImage), findsOneWidget);
+        expect(find.byIcon(Icons.store), findsOneWidget);
+        // No ClipOval: url is null so MinglitAvatarImage renders CircleAvatar directly
+        expect(find.byType(ClipOval), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'renders MinglitAvatarImage (not CircleAvatar+NetworkImage) when profileImageUrl is set',
+      (tester) async {
+        const partnerWithAvatar = Partner(
+          id: 'test-partner-id',
+          name: 'Test Partner',
+          contactEmail: 'test@partner.com',
+          profileImageUrl: 'https://example.com/avatar.png',
+        );
+
+        await tester.pumpWidget(
+          buildSubject(
+            partnerValue: const AsyncValue.data(partnerWithAvatar),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.byType(MinglitAvatarImage), findsOneWidget);
+        // With a URL, MinglitAvatarImage wraps MinglitImage in ClipOval
+        expect(find.byType(ClipOval), findsOneWidget);
+        // No bare CircleAvatar visible (it's inside the error fallback, not on screen)
+        expect(
+          find.ancestor(
+            of: find.byType(ClipOval),
+            matching: find.byType(MinglitAvatarImage),
+          ),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      '_ProfileTile displayName and email are still rendered correctly',
+      (tester) async {
+        await tester.pumpWidget(buildSubject());
+        await tester.pumpAndSettle();
+
+        expect(find.text('Test Partner'), findsOneWidget);
+        expect(find.text('test@partner.com'), findsOneWidget);
+      },
+    );
   });
 }
