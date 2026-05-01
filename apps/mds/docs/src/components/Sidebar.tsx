@@ -11,6 +11,7 @@ const navItems = [
   { href: '/foundations/layout', label: 'Layout' },
   { href: '/components', label: 'Components' },
   { href: '/flows', label: 'Flows' },
+  { href: '/screens', label: 'Screens' },
 ];
 
 export default function Sidebar() {
@@ -89,8 +90,7 @@ export default function Sidebar() {
         </div>
         <nav className="flex-1 px-3 py-4 overflow-y-auto">{navList}</nav>
         <div className="px-6 py-4 border-t border-[var(--color-divider)]">
-          <p className="text-xs text-[var(--color-text-secondary)]">Phase 1</p>
-          <p className="text-xs text-[var(--color-divider)] mt-0.5">v26.04.1900-dev</p>
+          <p className="text-xs text-[var(--color-divider)]">v26.04.1900-dev</p>
         </div>
       </aside>
     </>
