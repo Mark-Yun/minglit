@@ -240,6 +240,7 @@ export function widgetNameFor(app: 'user' | 'partner', route: string): string | 
  */
 const KNOWN_SPEC_FILES: { user: ReadonlySet<string>; partner: ReadonlySet<string> } = {
   user: new Set([
+    'event_application_wizard_page',
     'event_detail_page',
     'home_page',
     'login_page',
@@ -247,8 +248,10 @@ const KNOWN_SPEC_FILES: { user: ReadonlySet<string>; partner: ReadonlySet<string
     'my_tickets_page',
     'notification_list_screen',
     'partner_detail_page',
+    'partner_events_page',
     'purchase_history_page',
     'search_page',
+    'signup_consent_page',
   ]),
   partner: new Set([
     'more_page',
@@ -257,6 +260,9 @@ const KNOWN_SPEC_FILES: { user: ReadonlySet<string>; partner: ReadonlySet<string
     'partner_home_page',
     'notification_list_screen',
     'event_application_manage_page',
+    'event_application_detail_page',
+    'bank_account_page',
+    'settlement_page',
     // remaining partner specs are reached via ROUTE_DESIGN_OVERRIDES below.
   ]),
 };
@@ -274,6 +280,9 @@ const ROUTE_DESIGN_OVERRIDES: Record<string, string> = {
   // ApplicationListRoute → default rule yields 'application_list_page', but the
   // actual widget is EventApplicationManagePage. Override to its real spec.
   'partner-ApplicationListRoute':    '/specs/event_application_manage_page.html',
+  // EventApplicationRoute → default rule yields 'event_application_page', but
+  // the widget is EventApplicationWizardPage. Override to its real spec.
+  'user-EventApplicationRoute':      '/specs/event_application_wizard_page.html',
 };
 
 /**

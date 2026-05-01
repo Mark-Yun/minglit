@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Spec — EventApplicationWizardPage (app_user · EventApplicationRoute)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* ============================================================
+   EventApplicationWizardPage-specific atoms.
+   Tokens / chrome / tables / perspectives come from /specs/_spec.css.
+   Cardinal rule: Scaffold (page) bg = --color-surface (gray).
+   Cards / AppBar are NOT inverted — AppBar matches scaffold (no border),
+   inner cards use --color-background (white).
+   ============================================================ */
+
+/* --- App bar (matches scaffold gray, no border) --- */
+.wiz-appbar {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--spacing-xsmall);
+  background: var(--color-surface);
+}
+.wiz-appbar__leading {
+  width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+}
+.wiz-appbar__leading svg { width: 20px; height: 20px; color: var(--color-text-primary); }
+.wiz-appbar__title {
+  flex: 1;
+  font-size: var(--typography-font-size-app-bar-title);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  text-align: center;
+  /* offset for the leading button so title sits centered */
+  padding-right: 40px;
+}
+
+/* --- Step indicator (two circles + connector) --- */
+.wiz-steps {
+  background: var(--color-surface);
+  padding: var(--spacing-medium) 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.wiz-step__circle {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+}
+.wiz-step__circle--active { background: var(--color-primary); }
+.wiz-step__circle--inactive { background: var(--color-text-secondary); }
+.wiz-step__col {
+  display: flex; flex-direction: column; align-items: center; gap: var(--spacing-xsmall);
+}
+.wiz-step__label {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+.wiz-step__label--active { color: var(--color-primary); font-weight: 700; }
+.wiz-step__connector {
+  width: 40px; height: 2px;
+  background: var(--color-divider);
+  margin: 0 var(--spacing-small);
+  /* connector aligns with circle center, push above label */
+  margin-bottom: 18px;
+}
+
+/* --- Body (scrolls between step indicator and footer) --- */
+.wiz-body {
+  position: absolute;
+  top: 120px; left: 0; right: 0; bottom: 80px;
+  overflow-y: auto;
+  scrollbar-width: none;
+  padding: var(--spacing-large);
+  background: var(--color-surface);
+}
+.wiz-body::-webkit-scrollbar { display: none; }
+
+.wiz-section-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-medium);
+}
+.wiz-section-sub {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin-top: var(--spacing-xxsmall);
+  margin-bottom: var(--spacing-large);
+  line-height: 1.5;
+}
+
+/* --- Verification form fields --- */
+.wiz-field {
+  margin-bottom: var(--spacing-medium);
+}
+.wiz-field__label {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-small);
+}
+.wiz-input {
+  width: 100%;
+  height: 52px;
+  border: 1px solid var(--color-divider);
+  border-radius: 4px; /* OutlineInputBorder default */
+  padding: 0 var(--spacing-medium);
+  font-size: 14px;
+  color: var(--color-text-primary);
+  background: var(--color-background);
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+}
+.wiz-input--placeholder { color: var(--color-text-secondary); }
+.wiz-input--filled { color: var(--color-text-primary); }
+.wiz-input--error { border-color: var(--color-error); }
+
+/* --- File picker (MinglitFilePicker) --- */
+.wiz-file-picker {
+  border: 1px dashed var(--color-divider);
+  border-radius: var(--radius-input);
+  padding: var(--spacing-medium);
+  background: var(--color-background);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-small);
+}
+.wiz-file-picker svg { width: 20px; height: 20px; color: var(--color-text-secondary); flex-shrink: 0; }
+.wiz-file-picker__hint { font-size: 13px; color: var(--color-text-secondary); flex: 1; }
+.wiz-file-picker__btn {
+  height: 32px;
+  padding: 0 var(--spacing-sm);
+  border-radius: var(--radius-button);
+  background: var(--color-primary);
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex; align-items: center;
+}
+.wiz-file-picker--filled {
+  border-style: solid;
+  border-color: var(--color-primary);
+}
+.wiz-file-picker__file {
+  font-size: 13px;
+  color: var(--color-primary);
+  flex: 1;
+  font-weight: 600;
+}
+
+/* --- Empty/no-verif notice --- */
+.wiz-no-verif {
+  text-align: center;
+  padding: 40px var(--spacing-medium);
+  font-size: 14px;
+  color: var(--color-text-primary);
+  line-height: 1.6;
+}
+
+/* --- Payment summary card --- */
+.wiz-pay-card {
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-small);
+  padding: var(--spacing-medium);
+  background: var(--color-background);
+  margin-bottom: var(--spacing-xlarge);
+}
+.wiz-pay-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.wiz-pay-row__label { font-size: 14px; color: var(--color-text-primary); }
+.wiz-pay-row__value { font-size: 14px; color: var(--color-text-primary); }
+.wiz-pay-divider {
+  height: 1px;
+  background: var(--color-divider);
+  margin: var(--spacing-medium) 0;
+}
+.wiz-pay-row--total .wiz-pay-row__label { font-weight: 700; }
+.wiz-pay-row--total .wiz-pay-row__value {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+.wiz-pay-notice {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+}
+
+/* --- Footer (prev / next buttons · matches surface bg) --- */
+.wiz-footer {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 80px;
+  padding: var(--spacing-medium);
+  background: var(--color-background);
+  border-top: 1px solid var(--color-divider);
+  display: flex;
+  gap: var(--spacing-medium);
+  align-items: center;
+  box-sizing: border-box;
+}
+.wiz-btn {
+  height: 48px;
+  border-radius: var(--radius-button);
+  font-size: 15px;
+  font-weight: 600;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+.wiz-btn--prev {
+  flex: 1;
+  background: var(--color-background);
+  border: 1px solid var(--color-divider);
+  color: var(--color-text-primary);
+}
+.wiz-btn--next {
+  flex: 2;
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  gap: var(--spacing-small);
+}
+.wiz-btn--loading {
+  opacity: 0.85;
+}
+
+/* --- Loading spinner inside button --- */
+.btn-spinner {
+  width: 16px; height: 16px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* --- PG payment overlay (Iamport WebView) --- */
+.pg-overlay {
+  position: absolute;
+  inset: 0;
+  background: white;
+  display: flex; flex-direction: column;
+}
+.pg-overlay__bar {
+  height: 44px;
+  background: #f3f4f6;
+  display: flex; align-items: center; padding: 0 12px;
+  font-size: 12px; color: #6b7280;
+  border-bottom: 1px solid var(--color-divider);
+}
+.pg-overlay__body {
+  flex: 1;
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column;
+  gap: var(--spacing-medium);
+  padding: var(--spacing-large);
+  text-align: center;
+}
+.pg-overlay__title { font-size: 16px; font-weight: 700; color: #111827; }
+.pg-overlay__sub { font-size: 13px; color: #4b5563; }
+
+/* --- Error confirm dialog --- */
+.dialog-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex; align-items: center; justify-content: center;
+  padding: var(--spacing-large);
+}
+.dialog {
+  width: 100%;
+  background: var(--color-background);
+  border-radius: var(--radius-card);
+  padding: var(--spacing-large);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-medium);
+}
+.dialog__title { font-size: 16px; font-weight: 700; color: var(--color-text-primary); }
+.dialog__msg { font-size: 14px; color: var(--color-text-primary); line-height: 1.5; white-space: pre-line; }
+.dialog__actions { display: flex; gap: var(--spacing-small); justify-content: flex-end; }
+.dialog__btn {
+  height: 36px;
+  padding: 0 var(--spacing-medium);
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: var(--radius-button);
+  cursor: pointer;
+}
+.dialog__btn--cancel { background: transparent; color: var(--color-text-secondary); border: none; }
+.dialog__btn--confirm { background: var(--color-primary); color: white; border: none; }
+
+/* --- Validation snackbar --- */
+.snackbar {
+  position: absolute;
+  bottom: 92px; left: 16px; right: 16px;
+  background: #323232;
+  color: white;
+  border-radius: var(--radius-small);
+  padding: 12px 16px;
+  font-size: 13px;
+  display: flex; align-items: center; gap: 8px;
+}
+.snackbar svg { width: 18px; height: 18px; color: var(--color-warning); flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
+</div>
+
+<div class="page">
+
+<!-- ============================================================
+     HEADER
+     ============================================================ -->
+<header>
+  <h1>Event Application Wizard</h1>
+</header>
+
+<!-- ============================================================
+     OVERVIEW
+     ============================================================ -->
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr>
+        <th style="width: 140px;">Status</th>
+        <td><strong>✅ 디자인완료</strong> <em style="color: var(--color-text-secondary);">— 2 step + verification 분기 + 결제 PG + 에러/제출 = 7 state</em></td>
+      </tr>
+      <tr>
+        <th>App</th>
+        <td><code>app_user</code></td>
+      </tr>
+      <tr>
+        <th>Category</th>
+        <td>event · admission · application</td>
+      </tr>
+      <tr>
+        <th>Route / Surface</th>
+        <td><code>EventApplicationRoute</code> · widget: <code>EventApplicationWizardPage</code> + <code>_VerificationStep</code> + <code>_PaymentStep</code> + <code>_StepIndicator</code> + <code>_Footer</code></td>
+      </tr>
+      <tr>
+        <th>Path</th>
+        <td><code>/events/:eventId/apply</code> <em style="color: var(--color-text-secondary);">(optional <code>?ticketId=</code> query)</em></td>
+      </tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>: <a href="/specs/event_detail_page.html"><code>EventDetailPage</code></a> (apply CTA에서 진입)<br>
+          <strong>Children</strong>: <em>—</em> <em style="color: var(--color-text-secondary);">(2 step은 internal — Column + step content swap, 별도 sub-route 없음)</em>. 성공 시 <code>PaymentSuccessScreen</code>으로 <code>pushReplacement</code>.
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>
+          이벤트 참여 신청을 인증(verification) → 결제(payment) 2단계 위저드로 안내한다.
+          티켓에 연결된 EntryGroup이 요구하는 인증 폼(텍스트 / 파일 업로드)을 채운 뒤
+          최종 결제 금액을 확인하고 신청을 제출한다. 무료 티켓은 결제 단계에서도 즉시 확정,
+          유료 티켓은 Iamport WebView로 PG 결제를 진행한다.
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry points</strong>: <code>EventDetailPage</code>의 <code>EventBottomTicketBar</code>에서 티켓 선택 후 "신청하기" 탭 → <code>?ticketId=</code> 쿼리로 진입.<br>
+          <strong>Exit points</strong>: 신청 성공 → <code>PaymentSuccessScreen</code>으로 교체 (뒤로 못 돌아옴) → "내 티켓 보기" / "이벤트 상세로 돌아가기" 분기. 결제 실패 → confirm 다이얼로그 → 다시 시도 또는 닫기 (page 유지). 닫기 버튼(X) → EventDetail 복귀.
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          밍글릿 이벤트는 신뢰 모델의 두 축인 <em>identity</em>(OAuth)와 <em>qualification</em>(직업/소속/특정 자격)을 구분한다.
+          이 화면은 qualification 인증을 받는 마지막 게이트다 — 파트너가 정의한 verification form을 사용자가 채워서 제출하면
+          파트너 측 <code>EventApplicationManagePage</code>에서 심사한다. 결제는 인증과 별개로 진행되지만 wizard에서 묶어 흐름을 단순화한다.
+          반려 시 100% 환불, 심사 최대 24시간이라는 정책이 결제 카드 하단에 명시된다.
+        </td>
+      </tr>
+      <tr>
+        <th>Frequency</th>
+        <td>이벤트 신청 시마다. 한 이벤트에 한 번 (티켓 단위) 신청 가능.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================
+     HISTORY
+     ============================================================ -->
+<section class="doc">
+  <h2>History</h2>
+  <p class="intro">이 spec의 주요 변경 이력. 최신 항목 위.</p>
+  <table class="ref">
+    <thead>
+      <tr>
+        <th style="width: 110px;">Date</th>
+        <th style="width: 80px;">Version</th>
+        <th style="width: 120px;">Author</th>
+        <th>Changes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2026-05-01</td>
+        <td>1.0</td>
+        <td>mark-yun</td>
+        <td>v1.4 template으로 신규 작성. 7 state mini-table (Step 1 Verification baseline · no-verif fast-path · validation error · Step 2 Payment · Submitting · PG WebView · Error dialog).</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- Anchor nav -->
+<nav class="perspective-nav">
+  <a href="#layout"><span class="glyph">🧱</span> Layout</a>
+  <a href="#states"><span class="glyph">🎨</span> States</a>
+  <a href="#behavior"><span class="glyph">🔄</span> Global Behavior</a>
+  <a href="#reference"><span class="glyph">📖</span> Reference</a>
+</nav>
+
+<!-- ============================================================
+     LAYOUT
+     ============================================================ -->
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Layout</h2>
+    <span class="lede">화면 구조 — 영역, 정렬, 간격 규칙. 색·타이포 무시.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree</h2>
+    <p class="intro">
+      Scaffold(scaffold gray bg) + AppBar("참여 신청" · CloseButton X · no border) + Column[StepIndicator(64px) → Expanded(SingleChildScrollView · padding-large) → Footer(SafeArea · prev+next buttons)]. Step 콘텐츠는 <code>state.step</code> 분기로 <code>_VerificationStep</code> 또는 <code>_PaymentStep</code>이 같은 Expanded 슬롯에서 swap된다. PageView가 아니라 단순 분기 Widget이라 스와이프 불가.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint">
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <!-- AppBar -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:0;left:0;right:0;height:56px;">
+          <span class="blueprint__region-label">① AppBar — title "참여 신청"<br>leading: CloseButton(X) · no border-bottom</span>
+        </div>
+        <!-- Step indicator -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:56px;left:0;right:0;height:64px;">
+          <span class="blueprint__region-label">② _StepIndicator<br>2 circles + connector · padding vertical-medium</span>
+        </div>
+        <!-- Step content -->
+        <div class="blueprint__region" style="top:120px;left:0;right:0;bottom:80px;">
+          <span class="blueprint__region-label">③ Expanded → SingleChildScrollView<br>padding: spacing-large (24)<br>_VerificationStep | _PaymentStep</span>
+        </div>
+        <!-- Footer -->
+        <div class="blueprint__region blueprint__region--shaded" style="bottom:0;left:0;right:0;height:80px;">
+          <span class="blueprint__region-label">④ _Footer — SafeArea · top border<br>[이전(flex:1)] [다음 / 결제하기(flex:2)]</span>
+        </div>
+
+        <div class="blueprint__align-marker" style="top:8px;right:8px;">AppBar (theme default)</div>
+        <div class="blueprint__align-marker" style="bottom:82px;right:8px;">SafeArea wrap</div>
+      </div>
+
+      <div class="layout-tree"><b>Scaffold</b>
+├─ <b>appBar</b>: AppBar(title: "참여 신청", leading: CloseButton)        ← ①
+└─ <b>body</b>: <b>MinglitAsyncValueWidget</b>(eventDetailControllerProvider)
+   └─ <b>_WizardBody</b>
+      └─ <b>Column</b>
+         ├─ <b>_StepIndicator</b>(currentStep)                          ← ②
+         │  └─ <b>Padding</b>(vertical: spacing-medium)
+         │     └─ <b>Row</b>(MainAxisAlignment.center)
+         │        ├─ <b>_buildCircle</b>("1", "인증",  active = step==verification)
+         │        ├─ <b>Container</b>(40 × 2 · spacing-small h-margin)  // connector
+         │        └─ <b>_buildCircle</b>("2", "결제",  active = step==payment)
+         │
+         ├─ <b>Expanded</b>                                             ← ③
+         │  └─ <b>SingleChildScrollView</b>(padding: spacing-large)
+         │     └─ state.step == verification
+         │        ? <b>_VerificationStep</b>(event)
+         │        : <b>_PaymentStep</b>(event)
+         │
+         │     <i>_VerificationStep</i>:
+         │        ├─ Title (titleMedium bold)
+         │        ├─ Description (bodySmall) — optional
+         │        ├─ Form fields (loop · TextFormField | MinglitFilePicker)
+         │        └─ <i>OR</i>: "이 티켓은 추가 인증이 필요하지 않습니다." Center
+         │
+         │     <i>_PaymentStep</i>:
+         │        ├─ Title "결제 상세" (titleMedium bold)
+         │        ├─ summary card (티켓명/가격 + Divider + 최종금액)
+         │        └─ 정책 안내 (반려 시 100% 환불 · 24시간 심사)
+         │
+         └─ <b>_Footer</b>                                              ← ④
+            └─ Container(padding: spacing-medium · top border outlineVariant)
+               └─ <b>SafeArea</b>
+                  └─ <b>Row</b>
+                     ├─ <i>(if step != verification)</i> Expanded(MinglitButton.secondary "이전") · flex 1
+                     ├─ SizedBox(width: spacing-medium) // gap
+                     └─ Expanded(MinglitButton "다음" | "결제하기") · flex 2
+                                <i>· isLoading = (status == submitting)</i></div>
+    </div>
+  </section>
+
+  <section class="doc">
+    <h2>Spacing &amp; alignment rules</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>①</td><td>AppBar</td><td>title center · leading 40 × 40 (CloseButton)</td><td>height 56 · 테마 기본 — <code>elevation:0</code> + <code>surfaceTintColor:transparent</code> 결과 scaffold-gray 일치 · 하단 border 없음.</td></tr>
+        <tr><td>②</td><td>_StepIndicator</td><td>Row · MainAxisAlignment.center</td><td>vertical padding: <code>spacing-medium (16)</code> · 원 직경 32(<code>radius=spacing-medium</code>) · 라벨↔원 gap: <code>spacing-xsmall (4)</code> · 원↔connector horizontal margin: <code>spacing-small (8)</code> · connector 폭 40 = <code>spacing-xlarge + spacing-small</code></td></tr>
+        <tr><td>③</td><td>step content</td><td>SingleChildScrollView · column start · CrossAxisAlignment.start</td><td>outer padding all: <code>spacing-large (24)</code> · 필드↔필드: <code>spacing-medium (16)</code> · 라벨↔input: <code>spacing-small (8)</code> · 결제 카드 padding: <code>spacing-medium</code></td></tr>
+        <tr><td>④</td><td>_Footer</td><td>Row · SafeArea · top border 1px outlineVariant</td><td>outer padding: <code>spacing-medium (16)</code> all · 이전↔다음 gap: <code>spacing-medium (16)</code> · 버튼 height 48 (MinglitButton 기본)</td></tr>
+        <tr><td>—</td><td>결제 카드</td><td>Container · radius-small 8</td><td>padding: <code>spacing-medium</code> · 안내 텍스트는 카드 밖, 위로부터 <code>spacing-xlarge (32)</code> gap</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<!-- ============================================================
+     STATES
+     ============================================================ -->
+<div class="perspective" id="states">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>States</h2>
+    <span class="lede">시각 변형 7종 (verification baseline + no-verif · validation error · payment · submitting · PG WebView · error dialog). baseline = Step 1 Verification, 나머지 additive diff.</span>
+  </div>
+
+  <section class="doc">
+    <p class="intro">
+      <strong>State 종류 식별 기준</strong>: <code>state.step</code> enum (<code>verification</code> · <code>payment</code>) + <code>state.status</code> (<code>initial</code> · <code>submitting</code> · <code>success</code> · <code>error</code>) + verification 요구 분기 (<code>requiredVerificationIds.isEmpty</code>) + 결제 분기 (Free vs Paid). Success state는 별도 mockup이 아니라 <code>PaymentSuccessScreen</code>으로 <code>pushReplacement</code> — 이 spec 범위 밖.
+    </p>
+
+    <!-- ============= State 1: Step 1 · Verification (baseline) ============= -->
+    <table class="ref state-mini is-baseline-tint">
+      <thead>
+        <tr><th colspan="3"><strong>Step 1 / 2 · 인증 (Verification)</strong> 🎯 <small>baseline · 인증 폼 입력</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="wiz-appbar">
+                <div class="wiz-appbar__leading"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+                <div class="wiz-appbar__title">참여 신청</div>
+              </div>
+              <div class="wiz-steps">
+                <div class="wiz-step__col">
+                  <div class="wiz-step__circle wiz-step__circle--active">1</div>
+                  <div class="wiz-step__label wiz-step__label--active">인증</div>
+                </div>
+                <div class="wiz-step__connector"></div>
+                <div class="wiz-step__col">
+                  <div class="wiz-step__circle wiz-step__circle--inactive">2</div>
+                  <div class="wiz-step__label">결제</div>
+                </div>
+              </div>
+              <div class="wiz-body">
+                <div class="wiz-section-title">재직 증명서 인증</div>
+                <div class="wiz-section-sub">현재 재직 중인 회사명과 사원증/명함을 업로드해주세요. 파트너가 검토 후 승인합니다.</div>
+
+                <div class="wiz-field">
+                  <div class="wiz-field__label">회사명</div>
+                  <div class="wiz-input wiz-input--filled">밍글릿</div>
+                </div>
+                <div class="wiz-field">
+                  <div class="wiz-field__label">증빙 서류</div>
+                  <div class="wiz-file-picker">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    <div class="wiz-file-picker__hint">증빙 서류를 업로드해주세요</div>
+                    <div class="wiz-file-picker__btn">선택</div>
+                  </div>
+                </div>
+              </div>
+              <div class="wiz-footer">
+                <div class="wiz-btn wiz-btn--next">다음</div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>state.step == verification</code> · <code>requiredVerificationIds.isNotEmpty</code> · <code>status == initial</code> · 한 개 이상 form field가 폼 스키마에 정의됨</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            ① <strong>텍스트 필드 입력</strong> → <code>updateVerificationData(key, value)</code> 즉시 호출 · onChanged마다 state map 갱신<br>
+            ② <strong>파일 picker 탭</strong> → OS 파일 선택 → <code>MinglitFilePicker</code>가 <code>verification-proofs</code> bucket의 <code>{userId}/applications/{eventId}/...</code> 경로로 자동 업로드 · 완료 시 첫 url을 <code>updateVerificationData</code>로 저장<br>
+            ③ <strong>"다음" 탭</strong> → <code>controller.nextStep()</code> → step을 <code>payment</code>로 이동 (현재 코드는 별도 client-side 검증 없음 — 빈 값도 허용)<br>
+            ④ <strong>X(닫기) 탭</strong> → <code>Navigator.pop</code> · EventDetail 복귀 (별도 confirm 없음)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · <code>verifIds</code>가 여러 개여도 현재 코드는 <code>verifs.first</code>만 표시 — 첫 번째 verification만 폼 노출 (TODO 댓글 참고)<br>
+            · 파일 업로드 중 화면 이동 → upload는 백그라운드 진행, 완료 시 state 갱신 시도 (mounted check)<br>
+            · 비로그인 상태로 file 필드 도달 → "로그인이 필요합니다." 텍스트로 fallback (정상 흐름에선 도달 불가)<br>
+            · <code>verifAsync</code> 로딩 → MinglitAsyncValueWidget 기본 스피너로 covered (이 spec 별도 state로 분리 안 함 — 짧은 transition)<br>
+            · <code>verifs.isEmpty</code> 응답 → "인증 정보를 불러올 수 없습니다." 텍스트
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            · <code>AppBar</code>(title · leading=CloseButton) — theme default<br>
+            · <code>_StepIndicator</code>: CircleAvatar(radius=spacing-medium=16) × 2 + Container connector(40×2)<br>
+            · <code>TextFormField</code> with <code>OutlineInputBorder</code>(default · radius 4 · placeholder)<br>
+            · <code>MinglitFilePicker</code>(label · hint · autoUpload=true · bucket=verification-proofs) — 별도 atom<br>
+            · <code>_Footer</code> + <code>MinglitButton</code> 단일 (이 step에는 prev 없음 · "다음" label · flex 2)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            · color: <code>color-primary</code> (활성 step circle · "다음" 버튼 · 활성 step 라벨), <code>color-text-secondary</code> (비활성 circle/라벨 · 카드 안내), <code>color-divider</code> (input border · connector · footer 상단 border), <code>color-background</code> (input · file picker bg · footer bg), <code>color-surface</code> (scaffold · AppBar · step indicator strip)<br>
+            · radius: <code>radius-button (12)</code> (다음 버튼) · OutlineInputBorder default 4 (TextFormField) · <code>radius-input (12)</code> (file picker)<br>
+            · spacing: <code>spacing-large (24)</code> (body padding) · <code>spacing-medium (16)</code> (StepIndicator vertical · footer padding · 필드 간격) · <code>spacing-small (8)</code> (라벨↔input · circle↔connector h-margin) · <code>spacing-xsmall (4)</code> (라벨↔원)<br>
+            · typography: appBarTitle (18/600) · titleMedium 14/700 (section title) · bodySmall (description · placeholder) · labelSmall (step circle 숫자 · 라벨) · bodyMedium (input)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 인증 폼 자체는 파트너가 정의(Verification.formSchema). field type별로 TextFormField vs MinglitFilePicker 분기. 현재 코드는 첫 번째 verification만 처리하고 다중 verification은 TODO. 7 state 모두 같은 scaffold(AppBar+StepIndicator+Footer) — body 콘텐츠와 footer 버튼 구성만 변경.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ============= State 2: No-verification fast-path ============= -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Step 1 · No verification required</strong> <small>fast-path · 인증 불필요 티켓</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="wiz-appbar">
+                <div class="wiz-appbar__leading"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+                <div class="wiz-appbar__title">참여 신청</div>
+              </div>
+              <div class="wiz-steps">
+                <div class="wiz-step__col">
+                  <div class="wiz-step__circle wiz-step__circle--active">1</div>
+                  <div class="wiz-step__label wiz-step__label--active">인증</div>
+                </div>
+                <div class="wiz-step__connector"></div>
+                <div class="wiz-step__col">
+                  <div class="wiz-step__circle wiz-step__circle--inactive">2</div>
+                  <div class="wiz-step__label">결제</div>
+                </div>
+              </div>
+              <div class="wiz-body">
+                <div class="wiz-no-verif">
+                  이 티켓은 추가 인증이 필요하지 않습니다.<br>
+                  바로 결제로 진행해주세요.
+                </div>
+              </div>
+              <div class="wiz-footer">
+                <div class="wiz-btn wiz-btn--next">다음</div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>requiredVerificationIds.isEmpty</code> — 선택한 ticket의 어떤 EntryGroup도 verification 요구 없음 · <code>state.step == verification</code></td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>↔ 입력 없음 → "다음" 단일 액션 · payment step으로 이동</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>· 선택된 티켓 없음(<code>selectedTicket == null</code>) → "티켓을 먼저 선택해주세요." 텍스트로 대체 (정상 흐름 아님 — initialTicketId 누락 시)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>− form 영역 전부 → <code>Center + Padding(vertical: spacing-xlarge + spacing-small = 40)</code>의 안내 Text 1개로 교체</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>− input/file-picker 토큰 사용 안 됨<br>+ <code>spacing-xlarge (32)</code> + <code>spacing-small (8)</code> = 40 vertical padding (Center 정렬)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 무료/검증 불요 이벤트(예: 일반 모임)의 fast-path. user는 다음 한 번만 누르면 결제 단계로 진입.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ============= State 3: Validation error (server) ============= -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Validation / submit error toast</strong> <small>유효성 실패 — snackbar</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="wiz-appbar">
+                <div class="wiz-appbar__leading"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+                <div class="wiz-appbar__title">참여 신청</div>
+              </div>
+              <div class="wiz-steps">
+                <div class="wiz-step__col">
+                  <div class="wiz-step__circle wiz-step__circle--active">1</div>
+                  <div class="wiz-step__label wiz-step__label--active">인증</div>
+                </div>
+                <div class="wiz-step__connector"></div>
+                <div class="wiz-step__col">
+                  <div class="wiz-step__circle wiz-step__circle--inactive">2</div>
+                  <div class="wiz-step__label">결제</div>
+                </div>
+              </div>
+              <div class="wiz-body">
+                <div class="wiz-section-title">재직 증명서 인증</div>
+                <div class="wiz-section-sub">현재 재직 중인 회사명과 사원증/명함을 업로드해주세요.</div>
+                <div class="wiz-field">
+                  <div class="wiz-field__label">회사명</div>
+                  <div class="wiz-input wiz-input--placeholder">회사명을(를) 입력하세요</div>
+                </div>
+                <div class="wiz-field">
+                  <div class="wiz-field__label">증빙 서류</div>
+                  <div class="wiz-file-picker">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    <div class="wiz-file-picker__hint">증빙 서류를 업로드해주세요</div>
+                    <div class="wiz-file-picker__btn">선택</div>
+                  </div>
+                </div>
+              </div>
+              <div class="snackbar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <span>필수 인증 항목을 모두 입력해주세요</span>
+              </div>
+              <div class="wiz-footer">
+                <div class="wiz-btn wiz-btn--next">다음</div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>현재 client-side 강제 검증은 없음 — 이 state는 서버 응답이 누락 필드를 reject하거나, 미래에 client validation을 추가할 때 진입. <code>status == error</code> + <code>errorMessage</code> 존재 + verification step에서 발생한 경우.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>+ snackbar 메시지 확인 → 빈 필드 채움 → 다시 "다음"</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>· snackbar 4초 자동 dismiss (Material 기본)<br>· 동일 에러 반복 발생 → 새 snackbar가 이전 것 교체</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>+ <code>SnackBar</code> (Material default · bottom 92 — footer 위) + 경고 아이콘<br>↔ 입력 필드는 baseline 동일 (현재 코드는 input border-error 토글이 없음 — TextFormField error decoration 미사용)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>+ <code>color-warning</code> (snackbar 아이콘) · #323232 (snackbar bg · Material default · token 미매핑)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 코드상 verification step에서의 client-side validation은 아직 없다 — "다음"은 무조건 통과한다. 이 state는 (a) 서버 reject 시 결제 step에서 dialog가 뜨는 흐름과 (b) 향후 form 필드 required 검증이 추가될 때를 대비한 합쳐진 placeholder. 현재 production에는 거의 노출되지 않음.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ============= State 4: Step 2 · Payment ============= -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Step 2 / 2 · 결제 (Payment)</strong> <small>step = payment · 결제 상세 확인</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="wiz-appbar">
+                <div class="wiz-appbar__leading"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+                <div class="wiz-appbar__title">참여 신청</div>
+              </div>
+              <div class="wiz-steps">
+                <div class="wiz-step__col">
+                  <div class="wiz-step__circle wiz-step__circle--inactive">1</div>
+                  <div class="wiz-step__label">인증</div>
+                </div>
+                <div class="wiz-step__connector"></div>
+                <div class="wiz-step__col">
+                  <div class="wiz-step__circle wiz-step__circle--active">2</div>
+                  <div class="wiz-step__label wiz-step__label--active">결제</div>
+                </div>
+              </div>
+              <div class="wiz-body">
+                <div class="wiz-section-title">결제 상세</div>
+                <div class="wiz-pay-card">
+                  <div class="wiz-pay-row">
+                    <div class="wiz-pay-row__label">얼리버드 입장권</div>
+                    <div class="wiz-pay-row__value">25,000원</div>
+                  </div>
+                  <div class="wiz-pay-divider"></div>
+                  <div class="wiz-pay-row wiz-pay-row--total">
+                    <div class="wiz-pay-row__label">최종 결제 금액</div>
+                    <div class="wiz-pay-row__value">25,000원</div>
+                  </div>
+                </div>
+                <div class="wiz-pay-notice">
+                  • 파트너 심사 반려 시 100% 환불됩니다.<br>
+                  • 결제 완료 후 심사에는 최대 24시간이 소요될 수 있습니다.
+                </div>
+              </div>
+              <div class="wiz-footer">
+                <div class="wiz-btn wiz-btn--prev">이전</div>
+                <div class="wiz-btn wiz-btn--next">결제하기</div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>state.step == payment</code> · <code>selectedTicket != null</code> · <code>status == initial</code></td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            ① <strong>"이전" 탭</strong> → <code>previousStep()</code> · verification step으로 복귀 · 입력 데이터 보존<br>
+            ② <strong>"결제하기" 탭</strong> → <code>submitApplication()</code> → status submitting → <code>apply-event</code> Edge Function 호출. 무료(<code>FreeApplyEventResult</code>) → 즉시 success. 유료(<code>PaidApplyEventResult</code>) → Iamport WebView 진입.<br>
+            ③ <strong>X 탭</strong> → 종료 (확인 없음)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>· ticket null → "티켓 정보가 없습니다." 텍스트 fallback · <code>price == 0</code> → 카드의 가격/총액 모두 "0원"으로 표시 (시각적 동일, EF 응답이 Free/Paid 분기를 결정)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            ↔ body 전체 교체 → titleMedium "결제 상세" + 결제 카드 + 안내 텍스트<br>
+            + Container (radius-small 8 · outlineVariant 1px border · padding spacing-medium · bg surfaceContainerLowest)<br>
+            + Divider(height 32) — 카드 내 행 분리<br>
+            + 안내 Text (labelSmall · color-outline)<br>
+            + <code>MinglitButton.secondary</code> "이전" (flex 1) — Footer에 추가
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            ↔ step circle: 1 → outline gray · 2 → primary · 라벨 색상 swap<br>
+            + <code>color-primary</code> (총액 강조 · titleLarge bold)<br>
+            + <code>color-outline</code> (안내 텍스트)<br>
+            + <code>radius-small (8)</code> (결제 카드)<br>
+            + surfaceContainerLowest (결제 카드 bg — 거의 white)<br>
+            + <code>spacing-xlarge (32)</code> (카드↔안내 gap)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 가격 포맷터: <code>NumberFormat('#,###')</code> + "원" suffix. 총액 색상은 primary(보라). 카드 bg는 약간 더 어두운 surfaceContainerLowest로 본문과 구분.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ============= State 5: Submitting ============= -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Submitting</strong> <small>status = submitting · CTA loading</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="wiz-appbar">
+                <div class="wiz-appbar__leading"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+                <div class="wiz-appbar__title">참여 신청</div>
+              </div>
+              <div class="wiz-steps">
+                <div class="wiz-step__col">
+                  <div class="wiz-step__circle wiz-step__circle--inactive">1</div>
+                  <div class="wiz-step__label">인증</div>
+                </div>
+                <div class="wiz-step__connector"></div>
+                <div class="wiz-step__col">
+                  <div class="wiz-step__circle wiz-step__circle--active">2</div>
+                  <div class="wiz-step__label wiz-step__label--active">결제</div>
+                </div>
+              </div>
+              <div class="wiz-body">
+                <div class="wiz-section-title">결제 상세</div>
+                <div class="wiz-pay-card">
+                  <div class="wiz-pay-row">
+                    <div class="wiz-pay-row__label">얼리버드 입장권</div>
+                    <div class="wiz-pay-row__value">25,000원</div>
+                  </div>
+                  <div class="wiz-pay-divider"></div>
+                  <div class="wiz-pay-row wiz-pay-row--total">
+                    <div class="wiz-pay-row__label">최종 결제 금액</div>
+                    <div class="wiz-pay-row__value">25,000원</div>
+                  </div>
+                </div>
+                <div class="wiz-pay-notice">
+                  • 파트너 심사 반려 시 100% 환불됩니다.<br>
+                  • 결제 완료 후 심사에는 최대 24시간이 소요될 수 있습니다.
+                </div>
+              </div>
+              <div class="wiz-footer">
+                <div class="wiz-btn wiz-btn--prev wiz-btn--loading"><div class="btn-spinner" style="border-top-color: var(--color-text-secondary); border-color: rgba(0,0,0,0.15);"></div></div>
+                <div class="wiz-btn wiz-btn--next wiz-btn--loading"><div class="btn-spinner"></div></div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>status == submitting</code> · "결제하기" 탭 직후 ~ EF 응답까지</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>— <em>(이전/결제 버튼 모두 isLoading · 비활성. X 탭은 가능)</em></td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>· 네트워크 지연 → 스피너 길게 보임 (timeout 없음) · 이 상태에서 X 탭 → wizard 종료. EF 응답은 그대로 처리되어 PaymentSuccessScreen 또는 에러 다이얼로그가 popped 화면 위에 뜨는 race 가능 (코드상 `context.mounted` 가드 있음)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>↔ MinglitButton(이전·결제하기) → <code>isLoading: true</code> — label 자리에 spinner. <code>onPressed</code>는 그대로지만 버튼 내부에서 무시</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>동일 (label 색만 spinner stroke로 대체)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 같은 isLoading flag가 두 버튼 모두에 전달됨 — 둘 다 spinner. 보통 결제 버튼만 로딩하면 충분하지만 코드는 두 버튼 모두 묶음. body 콘텐츠는 baseline payment와 동일.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ============= State 6: Iamport PG WebView ============= -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Iamport PG WebView</strong> <small>유료 티켓 · PaidApplyEventResult</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="pg-overlay">
+                <div class="pg-overlay__bar">
+                  <span style="margin-right:8px;">←</span>
+                  <span>service.iamport.kr</span>
+                </div>
+                <div class="pg-overlay__body">
+                  <div class="pg-overlay__title">결제 진행 중</div>
+                  <div class="pg-overlay__sub">
+                    카드 결제 / 계좌이체<br>
+                    Iamport PG WebView가 표시됩니다.
+                  </div>
+                  <div class="pg-overlay__sub" style="margin-top:24px;font-style:italic;color:#9ca3af;">
+                    [Iamport WebView · pg=html5_inicis · pay_method=card]
+                  </div>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>PaidApplyEventResult</code> 수신 · <code>iamportControllerProvider.startPayment()</code>가 push한 WebView가 wizard 화면 위에 덮음</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            ① 카드/계좌 등 결제 수단 선택 → 인증 → impUid 반환 → wizard로 자동 복귀<br>
+            ② <strong>WebView 시스템 back / 닫기</strong> → impUid null → "결제가 취소되었습니다." MinglitUserException → State 7 (error dialog)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>· 결제 성공 후 <code>confirmPayment</code> 단계에서 실패 → status error · 환불 처리는 백엔드 reconciliation에 의존<br>· app_scheme 'minglit' deeplink 미실행 시 → 외부 브라우저에 갇힘 (FAQ 케이스)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>↔ Wizard 전체 → <code>IamportPayment</code> WebView (별도 page push) — 상단 native bar + WebView body. Iamport SDK가 렌더링 — 자체 디자인.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>— <em>(외부 SDK 영역 — Minglit 토큰 미적용. native bar는 OS WebView 기본)</em></td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 PaymentParams: pg=html5_inicis · pay_method=card · merchant_uid=result.orderId · amount=result.paymentAmount · buyer_name/tel/email은 user.metadata fallback. 무료 티켓 시 이 state 건너뛰고 바로 success.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ============= State 7: Error confirm dialog ============= -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Payment error confirm dialog</strong> <small>status = error · 다시 시도/닫기</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="wiz-appbar">
+                <div class="wiz-appbar__leading"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+                <div class="wiz-appbar__title">참여 신청</div>
+              </div>
+              <div class="wiz-steps">
+                <div class="wiz-step__col">
+                  <div class="wiz-step__circle wiz-step__circle--inactive">1</div>
+                  <div class="wiz-step__label">인증</div>
+                </div>
+                <div class="wiz-step__connector"></div>
+                <div class="wiz-step__col">
+                  <div class="wiz-step__circle wiz-step__circle--active">2</div>
+                  <div class="wiz-step__label wiz-step__label--active">결제</div>
+                </div>
+              </div>
+              <div class="wiz-body" style="opacity:0.4;">
+                <div class="wiz-section-title">결제 상세</div>
+                <div class="wiz-pay-card">
+                  <div class="wiz-pay-row">
+                    <div class="wiz-pay-row__label">얼리버드 입장권</div>
+                    <div class="wiz-pay-row__value">25,000원</div>
+                  </div>
+                </div>
+              </div>
+              <div class="wiz-footer" style="opacity:0.4;">
+                <div class="wiz-btn wiz-btn--prev">이전</div>
+                <div class="wiz-btn wiz-btn--next">결제하기</div>
+              </div>
+              <div class="dialog-scrim">
+                <div class="dialog">
+                  <div class="dialog__title">결제 실패</div>
+                  <div class="dialog__msg">결제가 취소되었습니다.
+
+다시 시도하시겠어요?</div>
+                  <div class="dialog__actions">
+                    <div class="dialog__btn dialog__btn--cancel">닫기</div>
+                    <div class="dialog__btn dialog__btn--confirm">다시 시도</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>state.status == error</code> · ref.listen이 <code>_handlePaymentError</code> 호출 · <code>showMinglitConfirm</code> dialog 표시 (PG 취소 / confirmPayment 실패 / 네트워크 등)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            ① <strong>"다시 시도"</strong> → <code>resetStatus()</code> 후 <code>submitApplication</code> 재호출 → State 5 (Submitting) 복귀<br>
+            ② <strong>"닫기"</strong> → dialog dismiss · 결제 step에 머무름 (status는 initial로 reset)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>· errorMessage가 null → "결제를 완료하지 못했습니다." 기본 메시지<br>· dialog 외부 탭 → barrierDismissible 기본값 따름 (<code>showMinglitConfirm</code> 구현) — 보통 닫힘<br>· 다시 시도 후 또 실패 → 같은 dialog 재표시 (loop 없음, 매번 사용자 결정)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>+ <code>showMinglitConfirm</code>(<code>title</code> · <code>message</code> · <code>confirmLabel</code>="다시 시도" · <code>cancelLabel</code>="닫기") — Material Dialog 위에 wizard scrim · radius-card · padding spacing-large<br>↔ wizard body는 scrim(rgba(0,0,0,0.45)) 아래로 dimmed · 입력 무반응</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>+ <code>color-primary</code> (다시 시도 confirm btn) · <code>color-text-secondary</code> (닫기 cancel btn) · <code>radius-card (16)</code> (다이얼로그) · <code>spacing-large (24)</code> (다이얼로그 padding) · scrim 0.45 opacity (Material default)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 dialog는 결제 실패 한정 — verification step에선 호출 안 됨. 코드상 <code>_handlePaymentError</code>는 ref.listen 안에서 한 번만 트리거. 닫기 → resetStatus()이지만 step은 유지.</td>
+        </tr>
+      </tbody>
+    </table>
+
+  </section>
+</div>
+
+<!-- ============================================================
+     GLOBAL BEHAVIOR
+     ============================================================ -->
+<div class="perspective" id="behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">cross-cutting — 모든 state에 적용되는 액션, motion, 글로벌 에지케이스. state별 액션은 위 mini-table 참고.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Cross-cutting interactions</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 240px;">사용자 액션</th>
+          <th>화면에 보이는 결과</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>X (CloseButton) 탭</td>
+          <td>Navigator.pop — EventDetail로 복귀. 별도 confirm 없음. submitting 중에도 가능 (race 가능 — 코드의 mounted/context.mounted 가드 의존).</td>
+        </tr>
+        <tr>
+          <td>시스템 back / 스와이프</td>
+          <td>X와 동일. step별로 가로채지 않음. 입력 데이터는 controller 메모리에만 있어 dispose 시 사라짐.</td>
+        </tr>
+        <tr>
+          <td>step indicator 직접 탭</td>
+          <td>비반응 — circle/label에 onTap 없음. step 이동은 footer 버튼만으로.</td>
+        </tr>
+        <tr>
+          <td>EventApplicationStatus.success</td>
+          <td>ref.listen 트리거 → <code>Navigator.pushReplacement</code>로 <code>PaymentSuccessScreen</code>으로 교체. wizard는 stack에서 제거 → back으로 wizard 복귀 불가.</td>
+        </tr>
+        <tr>
+          <td>이미 결제 진행 중인 동일 이벤트로 재진입</td>
+          <td>중복 신청은 백엔드의 <code>apply-event</code> EF가 reject — error dialog로 안내. 클라 가드 없음.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Motion timing</h2>
+    <p class="intro">Source: <code>shared/packages/mds/core/lib/src/theme/minglit_design_tokens.dart</code> → <code>MinglitAnimation</code></p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 240px;">Transition</th>
+          <th style="width: 200px;">Token / Duration</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>화면 진입 (push from EventDetail)</td>
+          <td><code>MinglitAnimation.fast</code> (200ms)</td>
+          <td>GoRouter 기본 라우트 전환 — slide / fade.</td>
+        </tr>
+        <tr>
+          <td>step verification → payment swap</td>
+          <td>—</td>
+          <td>단순 widget 분기 — AnimatedSwitcher 없음. cut 전환. step circle 색상은 ColorScheme 기본 transition.</td>
+        </tr>
+        <tr>
+          <td>결제하기 → submitting</td>
+          <td><code>MinglitAnimation.micro</code> (100ms)</td>
+          <td>MinglitButton의 isLoading 토글 — 버튼 내부 spinner fade.</td>
+        </tr>
+        <tr>
+          <td>Iamport WebView push</td>
+          <td><code>MinglitAnimation.fast</code> (200ms)</td>
+          <td>MaterialPageRoute 기본 — full-screen slide-up.</td>
+        </tr>
+        <tr>
+          <td>error dialog in/out</td>
+          <td><code>MinglitAnimation.fast</code> (200ms)</td>
+          <td>showMinglitConfirm — Material default fade-in scale.</td>
+        </tr>
+        <tr>
+          <td>success → PaymentSuccessScreen</td>
+          <td><code>MinglitAnimation.fast</code> (200ms)</td>
+          <td>pushReplacement — 같은 stack 위치에서 fade.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Global edge cases</h2>
+    <ul class="notes">
+      <li><strong>initialTicketId 누락 진입</strong> — selectedTicket null 상태 · "티켓 정보가 없습니다." / "티켓을 먼저 선택해주세요." 텍스트로 fallback. 정상 흐름이 아니므로 footer 버튼은 의미 없음 (eventDetail로 돌아가야 함).</li>
+      <li><strong>여러 verification 요구</strong> — 코드상 <code>verifs.first</code>만 표시한다. 다중 verification은 미구현 (TODO). 일단 한 개 인증으로만 처리 가능.</li>
+      <li><strong>업로드 중 페이지 이탈</strong> — MinglitFilePicker가 백그라운드 업로드 진행. 완료 시 ref가 살아 있다면 state 갱신 시도 (mounted check 무시). 보통은 무해.</li>
+      <li><strong>EF 비동기 결과의 race</strong> — submitting 중 X로 종료 → ref.listen 콜백이 unmounted context에 닿을 수 있음. <code>context.mounted</code> 가드로 PaymentSuccessScreen push만 스킵. status 갱신은 controller 자체 (스킵 안 됨).</li>
+      <li><strong>다크 모드</strong> — 페이지 전체가 ColorScheme 토큰 사용 → 자동 swap. dialog/snackbar/Iamport WebView도 자체 다크 대응 (Iamport 외).</li>
+    </ul>
+  </section>
+</div>
+
+<!-- ============================================================
+     REFERENCE
+     ============================================================ -->
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">📖</span>
+    <h2>Reference</h2>
+    <span class="lede">implementation source + 인접 화면. Components / Tokens는 위 mini-table 참고.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Implementation source</h2>
+    <table class="ref">
+      <tbody>
+        <tr><th style="width: 200px;">Page widget</th><td><code>EventApplicationWizardPage</code> · <code>_WizardBody</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/event/admission/event_application_wizard_page.dart"><code>apps/app_user/lib/src/features/event/admission/event_application_wizard_page.dart</code></a></td></tr>
+        <tr><th>Step 1 (verification)</th><td><code>_VerificationStep</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/event/admission/wizard_verification_step.dart"><code>wizard_verification_step.dart</code></a> (part)</td></tr>
+        <tr><th>Step 2 (payment)</th><td><code>_PaymentStep</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/event/admission/wizard_payment_step.dart"><code>wizard_payment_step.dart</code></a> (part)</td></tr>
+        <tr><th>StepIndicator / Footer</th><td><code>_StepIndicator</code> · <code>_Footer</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/event/admission/wizard_widgets.dart"><code>wizard_widgets.dart</code></a> (part)</td></tr>
+        <tr><th>Controller</th><td><code>EventApplicationController</code> + <code>EventApplicationState</code> + <code>EventApplicationStep</code> + <code>EventApplicationStatus</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/event/admission/event_application_controller.dart"><code>event_application_controller.dart</code></a></td></tr>
+        <tr><th>Route</th><td><code>EventApplicationRoute</code> · <code>/events/:eventId/apply</code> · query <code>?ticketId=</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/routing/app_routes.dart"><code>app_routes.dart</code></a></td></tr>
+        <tr><th>Repository</th><td><code>eventRepositoryProvider.applyEvent</code> → Edge Function <code>apply-event</code>. 응답: <code>FreeApplyEventResult</code> | <code>PaidApplyEventResult</code>.</td></tr>
+        <tr><th>PG SDK</th><td>Iamport (<code>iamportControllerProvider</code>) · pg=<code>html5_inicis</code> · pay_method=<code>card</code> · app_scheme=<code>minglit</code>.</td></tr>
+        <tr><th>Success screen</th><td><code>PaymentSuccessScreen</code> — <code>pushReplacement</code>으로 wizard 교체.</td></tr>
+        <tr><th>Atom widgets</th><td><code>MinglitButton</code> · <code>MinglitButton.secondary</code> · <code>MinglitFilePicker</code> · <code>MinglitAsyncValueWidget</code> · <code>showMinglitConfirm</code> (BuildContext extension).</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 240px;">Spec</th><th>Relation</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><a href="/specs/event_detail_page.html"><code>EventDetailPage</code></a></td>
+          <td>진입 화면 — EventBottomTicketBar에서 "신청하기" 탭으로 이 wizard로 push. 닫기/back 시 복귀.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/event_bottom_ticket_bar.html"><code>EventBottomTicketBar</code></a></td>
+          <td>티켓 선택 + apply CTA를 담당하는 EventDetailPage 하위 sheet. 여기서 ticketId가 wizard로 전달됨.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/purchase_history_page.html"><code>PurchaseHistoryPage</code></a></td>
+          <td>성공 후 PaymentSuccessScreen "내 티켓 보기" 탭 시 이동하는 화면.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/event_application_manage_page.html"><code>EventApplicationManagePage</code> (partner)</a></td>
+          <td>파트너 측 — 사용자가 제출한 인증 데이터를 심사. 반려 시 100% 환불 정책 트리거.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/party_create_wizard_page.html"><code>PartyCreateWizardPage</code> (partner)</a></td>
+          <td>유사한 step wizard 패턴 — 6 step PageView. 이 spec은 그 단순화 변형(2 step Column 분기).</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+</div>
+
+<script>
+  document.getElementById('spec-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('spec-mode', e.target.checked);
+  });
+  document.getElementById('dark-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('dark-mode', e.target.checked);
+  });
+</script>
+
+</body>
+</html>

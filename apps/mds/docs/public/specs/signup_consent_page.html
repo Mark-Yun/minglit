@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Spec — SignupConsentPage (app_user · SignupConsentRoute)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* ============================================================
+   SignupConsent-specific atoms.
+   Tokens / chrome / mini-table은 /specs/_spec.css에서 import.
+   ============================================================ */
+
+/* Scaffold bg = MinglitColors.surface (#f9fafb light gray).
+   Cards / ColorScheme.surface = MinglitColors.background (#ffffff).
+   No AppBar in this screen (SafeArea + ListView starts at top). */
+.consent-viewport { background: var(--color-surface); position: relative; }
+body.dark-mode .consent-viewport { background: var(--color-dark-background); }
+
+/* Body — ListView padding fromLTRB(large, xlarge, large, large). */
+.consent-body {
+  position: absolute;
+  inset: 0 0 76px 0;     /* leave room for bottom CTA */
+  overflow: hidden;
+  padding: var(--spacing-xlarge) var(--spacing-large) var(--spacing-large);
+  display: flex;
+  flex-direction: column;
+}
+
+.consent-headline {
+  font-size: 28px;
+  line-height: 1.29;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.consent-subhead {
+  margin-top: var(--spacing-small);
+  font-size: 18px;
+  line-height: 1.33;
+  color: var(--color-text-secondary);
+}
+
+/* "전체 동의" tile — primary tint (softTint ≈ alpha 0.08) bg, radius-card,
+   circular checkbox + 2-line title/sub. */
+.consent-all {
+  margin-top: var(--spacing-xlarge);
+  border-radius: var(--radius-card);
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  padding: var(--spacing-small) var(--spacing-medium);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xsmall);
+  cursor: pointer;
+}
+.consent-all__check {
+  width: 24px; height: 24px; flex-shrink: 0;
+  border: 2px solid var(--color-primary);
+  border-radius: 999px;
+  background: transparent;
+  display: grid; place-items: center;
+}
+.consent-all__check svg { width: 16px; height: 16px; color: white; display: none; }
+.consent-all--on .consent-all__check { background: var(--color-primary); border-color: var(--color-primary); }
+.consent-all--on .consent-all__check svg { display: block; }
+.consent-all__body { flex: 1; min-width: 0; }
+.consent-all__title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+.consent-all__sub {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+/* Items card — single Card wrapping flat list of tiles (Fix #966). */
+.consent-card {
+  margin-top: var(--spacing-medium);
+  background: var(--color-background);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  /* CardTheme: 1dp Material elevation → spec mockup uses subtle border. */
+  border: 1px solid var(--color-divider);
+}
+body.dark-mode .consent-card {
+  background: var(--color-dark-surface);
+  border-color: var(--color-dark-divider);
+}
+
+/* Single consent item — InkWell + Padding(h:medium, v:small) + min-height 48. */
+.consent-item {
+  min-height: 48px;
+  padding: var(--spacing-small) var(--spacing-medium);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-small);
+  cursor: pointer;
+}
+.consent-item__check {
+  width: 18px; height: 18px; flex-shrink: 0;
+  border: 1.5px solid var(--color-text-secondary);
+  border-radius: 2px;
+  background: transparent;
+  display: grid; place-items: center;
+}
+.consent-item__check svg { width: 14px; height: 14px; color: white; display: none; }
+.consent-item--on .consent-item__check { background: var(--color-primary); border-color: var(--color-primary); }
+.consent-item--on .consent-item__check svg { display: block; }
+.consent-item__body { flex: 1; min-width: 0; display: flex; align-items: center; gap: var(--spacing-xsmall); }
+.consent-item__tag {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px var(--spacing-xsmall);
+  border-radius: var(--radius-chip);
+  flex-shrink: 0;
+}
+.consent-item__tag--required {
+  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+}
+.consent-item__tag--optional {
+  color: var(--color-text-secondary);
+  background: color-mix(in srgb, var(--color-text-secondary) 12%, transparent);
+}
+.consent-item__title {
+  font-size: 16px;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+.consent-item__detail {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  padding: var(--spacing-xsmall);
+  flex-shrink: 0;
+}
+
+/* Required/optional separator — Divider(height:1, indent:medium, endIndent:medium).
+   Renders only after the LAST required item. */
+.consent-divider {
+  height: 1px;
+  background: var(--color-divider);
+  margin: 0 var(--spacing-medium);
+}
+body.dark-mode .consent-divider { background: var(--color-dark-divider); }
+
+.consent-foot {
+  margin-top: var(--spacing-small);
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+/* Inline submit-progress row (only when _isSubmitting). */
+.consent-submitting {
+  margin-top: var(--spacing-medium);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-small);
+  font-size: 16px;
+  color: var(--color-text-secondary);
+}
+.consent-submitting__spinner {
+  width: 18px; height: 18px;
+  border: 2px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
+  border-top-color: var(--color-primary);
+  border-radius: 999px;
+  animation: spin 1s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* MinglitBottomCTA — fixed bottom bar (scaffold-gray bg, 0.5px outlineVariant top).
+   Single Elevated button height 56, radius-button, primary bg. */
+.bottom-cta {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  background: var(--color-surface);
+  border-top: 0.5px solid var(--color-divider);
+  padding: var(--spacing-sm) var(--spacing-screen-edge);
+  /* SafeArea bottom inset on real device — viewport here is fixed. */
+}
+body.dark-mode .bottom-cta {
+  background: var(--color-dark-background);
+  border-top-color: var(--color-dark-divider);
+}
+.bottom-cta__btn {
+  height: 56px;
+  width: 100%;
+  border-radius: var(--radius-button);
+  background: var(--color-primary);
+  color: white;
+  font-size: 16px;
+  font-weight: 700;
+  display: grid; place-items: center;
+  cursor: pointer;
+}
+.bottom-cta__btn--disabled {
+  background: color-mix(in srgb, var(--color-primary) 20%, var(--color-divider));
+  color: color-mix(in srgb, white 70%, var(--color-divider));
+  cursor: not-allowed;
+}
+
+/* Loading viewport — centered MinglitCircularProgressIndicator. */
+.consent-loading {
+  position: absolute; inset: 0;
+  display: grid; place-items: center;
+}
+.consent-loading__spinner {
+  width: 40px; height: 40px;
+  border: 3px solid color-mix(in srgb, var(--color-primary) 25%, transparent);
+  border-top-color: var(--color-primary);
+  border-radius: 999px;
+  animation: spin 1s linear infinite;
+}
+
+/* Error banner overlay — showMinglitError SnackBar from controller. */
+.consent-error-bar {
+  position: absolute;
+  left: var(--spacing-medium);
+  right: var(--spacing-medium);
+  bottom: 92px;
+  background: var(--color-error);
+  color: white;
+  padding: var(--spacing-small) var(--spacing-medium);
+  border-radius: var(--radius-small);
+  font-size: 13px;
+  line-height: 1.45;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-small);
+}
+.consent-error-bar svg { width: 18px; height: 18px; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
+</div>
+
+<div class="page">
+
+<!-- ============================================================
+     HEADER
+     ============================================================ -->
+<header>
+  <h1>Signup Consent</h1>
+</header>
+
+<!-- ============================================================
+     OVERVIEW
+     ============================================================ -->
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr>
+        <th style="width: 140px;">Status</th>
+        <td><strong>✅ 디자인완료</strong> <em style="color: var(--color-text-secondary);">— 5 state · 7 consent items (3 required + 4 optional)</em></td>
+      </tr>
+      <tr>
+        <th>App</th>
+        <td><code>app_user</code></td>
+      </tr>
+      <tr>
+        <th>Category</th>
+        <td>auth · onboarding · consent collection</td>
+      </tr>
+      <tr>
+        <th>Route / Surface</th>
+        <td><code>SignupConsentRoute</code> · widget: <code>SignupConsentPage</code></td>
+      </tr>
+      <tr>
+        <th>Path</th>
+        <td><code>/signup/consent</code> · query: <code>?from=&lt;original-path&gt;</code> (post-consent redirect)</td>
+      </tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>: <em>— (top-level — LoginRoute → 콜백 후 필수 동의 누락 시 진입)</em><br>
+          <strong>Children</strong>: <code>ConsentDetailSheet</code> (각 항목 "보기 ›" 탭 시 modal bottom sheet · 별도 spec 후보)
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>
+          첫 가입 시 서비스 이용에 필요한 약관(필수 3 + 선택 4)을 한 화면에서 수집한다. 필수 항목 모두 토글되어야 CTA가 enable되며, 저장 성공 시 <code>consentCoordinator.completeSignup()</code>이 <code>from</code> 경로로 복귀시킨다. <code>PopScope(canPop:false)</code>로 시스템 back을 차단해 중간 이탈을 막는다.
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry points</strong>: <a href="/specs/login_page.html">LoginRoute</a> → 인증 콜백 → 필수 consent 누락 시 자동 push (auth flow의 분기점) · OAuth/매직링크 첫 로그인 시 항상 1회.<br>
+          <strong>Exit points</strong>: 동의 저장 성공 → <code>completeSignup(from)</code>로 원래 가려던 화면 또는 HomeRoute · 시스템 back 차단 · 로그아웃 외 정상 이탈 경로 없음.
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          PIPA / 위치정보법 / 정보통신망법 동의 의무 + 14세 이상 확인이 한 번에 모이는 단일 게이트. Fix #966에서 SwitchListTile → 원형 체크박스 + 카드 단일화로 디자인 정리. Fix #1141에서 제3자 제공 동의 추가, Fix #1143에서 PIPA 제22조 제4항 강조 의무(수집 항목/이용 목적/보관 기간) 반영.
+        </td>
+      </tr>
+      <tr>
+        <th>Frequency</th>
+        <td>계정당 1회 (재로그인 시에는 이미 저장된 동의 hydrate되어 재진입 X). 정책 버전 bump(<code>_signupPolicyVersion</code>) 시 재수집 가능.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================
+     HISTORY
+     ============================================================ -->
+<section class="doc">
+  <h2>History</h2>
+  <p class="intro">
+    이 spec의 주요 변경 이력. 최신 항목 위.
+  </p>
+  <table class="ref">
+    <thead>
+      <tr>
+        <th style="width: 110px;">Date</th>
+        <th style="width: 80px;">Version</th>
+        <th style="width: 120px;">Author</th>
+        <th>Changes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2026-05-01</td>
+        <td>1.0</td>
+        <td>mark-yun</td>
+        <td>
+          v1.4 template으로 초안 작성. Source verify against <code>signup_consent_page.dart</code> (+ widgets / definitions parts) · <code>user_consent.dart</code>(<code>ConsentType.requiredTypes</code>: <em>termsOfService · privacyCollection · ageConfirmation</em>) · <code>MinglitBottomCTA</code> · <code>MinglitTheme.materialTheme</code>. States: Default(none toggled) / Required only / All toggled / Submitting / Error. Loading-on-entry는 별도 mini-table.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- Anchor nav -->
+<nav class="perspective-nav">
+  <a href="#layout"><span class="glyph">🧱</span> Layout</a>
+  <a href="#states"><span class="glyph">🎨</span> States</a>
+  <a href="#behavior"><span class="glyph">🔄</span> Global Behavior</a>
+  <a href="#reference"><span class="glyph">📖</span> Reference</a>
+</nav>
+
+<!-- ============================================================
+     LAYOUT
+     ============================================================ -->
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Layout</h2>
+    <span class="lede">AppBar 없음. SafeArea + ListView 본문 + Scaffold.bottomNavigationBar에 MinglitBottomCTA 고정.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree</h2>
+    <p class="intro">
+      <code>Scaffold</code>(<code>PopScope(canPop:false)</code>로 감싸짐). <code>body</code>는 <code>SafeArea</code> + <code>Column[Expanded(ListView(...))]</code>. <code>bottomNavigationBar</code>는 <code>MinglitBottomCTA</code> 단일 변형 (label "동의하고 시작하기").
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 600px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <!-- Headline -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:32px;left:24px;right:24px;height:36px;">
+          <span class="blueprint__region-label">① 헤드라인 "환영합니다!" · headlineMedium</span>
+        </div>
+        <!-- Subhead -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:76px;left:24px;right:24px;height:28px;">
+          <span class="blueprint__region-label">② 부제 · bodyLarge · onSurfaceVariant</span>
+        </div>
+        <!-- All-consent -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:144px;left:24px;right:24px;height:60px;">
+          <span class="blueprint__region-label">③ _AllConsentTile · primary tint bg · radius-card</span>
+        </div>
+        <!-- Items card -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:220px;left:24px;right:24px;height:280px;">
+          <span class="blueprint__region-label">④ Card { 7 _ConsentItemTile + 1 Divider }</span>
+        </div>
+        <!-- Foot caption -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:512px;left:24px;right:24px;height:22px;">
+          <span class="blueprint__region-label">⑤ 안내 문구 · bodyMedium</span>
+        </div>
+        <!-- Bottom CTA -->
+        <div class="blueprint__region blueprint__region--shaded" style="bottom:0;left:0;right:0;height:76px;">
+          <span class="blueprint__region-label">⑥ MinglitBottomCTA · "동의하고 시작하기"</span>
+        </div>
+      </div>
+
+      <div class="layout-tree"><b>PopScope</b>(canPop: <i>false</i>)
+└─ <b>Scaffold</b>
+   ├─ bottomNavigationBar: <b>MinglitBottomCTA</b>(<i>"동의하고 시작하기"</i>)        ← ⑥
+   │     enabled: <code>requiredSelected &amp;&amp; !_isSubmitting</code>
+   └─ body: <b>SafeArea</b>
+      └─ <b>Column</b>
+         └─ <b>Expanded</b>
+            └─ <b>ListView</b> padding: <code>fromLTRB(24, 32, 24, 24)</code>
+               ├─ <b>Text</b> "환영합니다!" · <code>headlineMedium</code>           ← ①
+               ├─ Gap: <code>spacing-small (8px)</code>
+               ├─ <b>Text</b> 부제 · <code>bodyLarge</code> · onSurfaceVariant     ← ②
+               ├─ Gap: <code>spacing-xlarge (32px)</code>
+               ├─ <b>_AllConsentTile</b>(allSelected, onToggle)                   ← ③
+               ├─ Gap: <code>spacing-medium (16px)</code>
+               ├─ <b>Card</b>                                                     ← ④
+               │  └─ <b>Column</b>
+               │     ├─ <b>_ConsentItemTile</b> × 3 (required)
+               │     ├─ <b>Divider</b>(h:1, indent/endIndent: 16)  ← 필수/선택 경계
+               │     └─ <b>_ConsentItemTile</b> × 4 (optional)
+               ├─ Gap: <code>spacing-small (8px)</code>
+               ├─ <b>Text</b> 안내 문구 · <code>bodyMedium</code>                  ← ⑤
+               └─ <em>(if _isSubmitting)</em> Row[<b>CircularProgressIndicator</b>(18px), Text "동의 내용을 저장하고 있어요."]</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>—</td><td>ListView padding</td><td>—</td><td><code>EdgeInsets.fromLTRB(spacing-large 24, spacing-xlarge 32, spacing-large 24, spacing-large 24)</code></td></tr>
+        <tr><td>①</td><td>헤드라인</td><td>start (LTR)</td><td>height: ~36 · <code>headlineMedium</code> (28/700/1.29)</td></tr>
+        <tr><td>②</td><td>부제</td><td>start</td><td>top gap: <code>spacing-small (8)</code> · <code>bodyLarge</code> (18/400/1.33 · onSurfaceVariant)</td></tr>
+        <tr><td>③</td><td>_AllConsentTile</td><td>Row crossAxis: center</td><td>top gap: <code>spacing-xlarge (32)</code> · padding: <code>h: spacing-medium (16) · v: spacing-small (8)</code> · gap(check↔body): <code>spacing-xsmall (4)</code> · radius: <code>radius-card (16)</code> · bg: primary @ <code>opacity-softTint</code></td></tr>
+        <tr><td>④</td><td>Card (items)</td><td>edge align (LTR)</td><td>top gap: <code>spacing-medium (16)</code> · radius: <code>radius-card (16)</code> · bg: <code>colorScheme.surface (#fff)</code> · 1dp Material elevation</td></tr>
+        <tr><td>—</td><td>_ConsentItemTile</td><td>Row crossAxis: center</td><td>min-height 48 · padding: <code>h: spacing-medium (16) · v: spacing-small (8)</code> · gap(check↔body): <code>spacing-small (8)</code></td></tr>
+        <tr><td>—</td><td>필수/선택 Divider</td><td>edge-inset</td><td>height: 1 · indent / endIndent: <code>spacing-medium (16)</code> · color: <code>color-divider</code></td></tr>
+        <tr><td>⑤</td><td>안내 문구</td><td>start</td><td>top gap: <code>spacing-small (8)</code> · <code>bodyMedium</code> (16/400/1.5 · onSurfaceVariant)</td></tr>
+        <tr><td>⑥</td><td>MinglitBottomCTA</td><td>전체 너비 ElevatedButton</td><td>padding: <code>h: spacing-screen-edge (16) · v: spacing-sm (12)</code> · button height 56 · radius: <code>radius-button (12)</code> · 상단 0.5px <code>outlineVariant</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy ① — _AllConsentTile</h2>
+    <p class="intro">
+      Material(InkWell) 위 Row[Checkbox(circle shape, IgnorePointer로 wrap), gap 4, Column[title primary 700, sub onSurfaceVariant]]. <strong>IgnorePointer로 Checkbox tap 흡수 차단</strong> — InkWell.onTap만 발화시켜 토글 중복(net no-op) 방지.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 140px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:24px;left:16px;width:24px;height:24px;">
+          <span class="blueprint__region-label">㉠ Checkbox(circle)</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:18px;left:60px;right:16px;height:18px;">
+          <span class="blueprint__region-label">㉡ "전체 동의" · titleSmall · primary · 700</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:48px;left:60px;right:16px;height:18px;">
+          <span class="blueprint__region-label">㉢ "필수와 선택 약관을…" · bodySmall · onSurfaceVariant</span>
+        </div>
+      </div>
+      <div class="layout-tree"><b>Material</b>(color: <code>primary @ opacity-softTint</code>, radius: <code>radius-card</code>)
+└─ <b>InkWell</b>(onTap: <code>onToggle(!allSelected)</code>)
+   └─ <b>Padding</b>(<code>h: spacing-medium (16) · v: spacing-small (8)</code>)
+      └─ <b>Row</b>(crossAxis: center)
+         ├─ <b>IgnorePointer</b>                           ← ㉠
+         │  └─ <b>Checkbox</b>(shape: <i>CircleBorder</i>, activeColor: <code>primary</code>)
+         ├─ Gap: <code>spacing-xsmall (4)</code>
+         └─ <b>Expanded</b>
+            └─ <b>Column</b>(crossAxis: start)
+               ├─ <b>Text</b> "전체 동의"                  ← ㉡
+               │     <code>titleSmall</code> · <code>primary</code> · weight 700
+               └─ <b>Text</b> "필수와 선택 약관을…"        ← ㉢
+                     <code>bodySmall</code> · <code>onSurfaceVariant</code></div>
+    </div>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy ② — _ConsentItemTile</h2>
+    <p class="intro">
+      InkWell 전체가 tap 영역. Row[Checkbox(IgnorePointer), Column[Row[Tag, Title]]]. detail 있는 항목은 우측 inline "보기 ›" 텍스트(GestureDetector + Semantics(button: true)). detail 없는 항목(만 14세 이상 확인)은 보기 텍스트 미렌더.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 120px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:24px;left:16px;width:18px;height:18px;">
+          <span class="blueprint__region-label">㉠ Checkbox</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:24px;left:42px;width:42px;height:18px;">
+          <span class="blueprint__region-label">㉡ Tag (필수 / 선택)</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:24px;left:90px;right:60px;height:18px;">
+          <span class="blueprint__region-label">㉢ Title · bodyMedium</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:20px;right:16px;width:36px;height:24px;">
+          <span class="blueprint__region-label">㉣ "보기 ›"</span>
+        </div>
+      </div>
+      <div class="layout-tree"><b>InkWell</b>(onTap: <code>onChanged(!selected)</code>)
+└─ <b>ConstrainedBox</b>(minHeight: 48)
+   └─ <b>Padding</b>(<code>h: spacing-medium · v: spacing-small</code>)
+      └─ <b>Row</b>(crossAxis: center)
+         ├─ <b>IgnorePointer</b> > <b>Checkbox</b>                       ← ㉠
+         │     <i>VisualDensity.compact</i>
+         ├─ Gap: <code>spacing-small (8)</code>
+         ├─ <b>Expanded</b>
+         │  └─ <b>Column</b>
+         │     └─ <b>Row</b>
+         │        ├─ <b>_ConsentTag</b>(required)                        ← ㉡
+         │        │     필수 → <code>primaryContainer</code> bg + <code>primary</code> fg
+         │        │     선택 → <code>surfaceContainerHighest</code> bg + <code>onSurfaceVariant</code> fg
+         │        │     <code>radius-chip</code> · padding: <code>h:xsmall, v:4</code> · <code>labelSmall</code>
+         │        ├─ Gap: <code>spacing-xsmall (4)</code>
+         │        └─ <b>Expanded</b> > <b>Text</b> 항목명 · <code>bodyMedium</code>   ← ㉢
+         └─ <em>(if detail != null)</em>
+            ├─ Gap: <code>spacing-xsmall (4)</code>
+            └─ <b>Semantics</b>(button: true, label: "{title} 상세 보기")
+               └─ <b>GestureDetector</b>(onTap: <code>showConsentDetailSheet</code>)
+                  └─ <b>Padding</b>(<code>spacing-xsmall (4)</code> all)
+                     └─ <b>Text</b> "보기 ›" · <code>bodySmall</code> · onSurfaceVariant   ← ㉣</div>
+    </div>
+  </section>
+</div>
+
+<!-- ============================================================
+     STATES
+     ============================================================ -->
+<div class="perspective" id="states">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>States</h2>
+    <span class="lede">5 state — baseline은 Default(none toggled). 토글 진행에 따라 CTA enabled / disabled가 갈리고, 제출 후 Submitting / Error로 분기.</span>
+  </div>
+
+  <section class="doc">
+    <p class="intro">
+      <strong>State 종류 식별 기준</strong>: 로컬 <code>_selectedConsents</code>(Set) + <code>_isSubmitting</code> 플래그 + <code>consentControllerProvider</code> AsyncValue.<br>
+      · 진입 직후 hydrate 전: <code>!_didHydrate &amp;&amp; consentState.isLoading</code> → loading 단독 화면.<br>
+      · hydrate 후: list 렌더 + CTA enabled/disabled 분기.<br>
+      · _submit 실행 중: <code>_isSubmitting = true</code> → CTA disabled + 인라인 progress.<br>
+      · 저장 실패 시 <code>showMinglitError</code>(SnackBar) + <code>_isSubmitting</code> 해제.
+    </p>
+
+    <h3 style="margin-top: 24px;">State summary</h3>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 200px;">State</th>
+          <th style="width: 100px;">Tag</th>
+          <th style="width: 240px;">조건 (요약)</th>
+          <th>Key visual differentiator</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Default · 미토글</strong> 🎯</td><td>baseline</td><td>hydrate 완료 + <code>_selectedConsents.isEmpty</code></td><td>모든 체크박스 빈 상태 + CTA disabled (회색)</td></tr>
+        <tr><td><strong>필수만 토글</strong></td><td>cta enabled</td><td><code>requiredTypes.every(selected)</code> + 일부 optional 미토글</td><td>필수 3개 ✓ + CTA primary 활성화</td></tr>
+        <tr><td><strong>전체 토글</strong></td><td>all on</td><td><code>_selectedConsents.length == _consentDefinitions.length</code></td><td>전체 동의 tile 카드 강조 + 모든 ✓ + CTA enabled</td></tr>
+        <tr><td><strong>Submitting</strong></td><td>async</td><td><code>_isSubmitting == true</code></td><td>CTA disabled + 본문에 inline spinner + "동의 내용을 저장하고 있어요."</td></tr>
+        <tr><td><strong>Error</strong></td><td>save fail</td><td><code>consentState.hasError</code></td><td>error SnackBar overlay (showMinglitError) + CTA 다시 enabled</td></tr>
+        <tr><td><em>Loading on entry</em></td><td>hydrate</td><td><code>!_didHydrate &amp;&amp; consentState.isLoading</code></td><td>전 화면 중앙 <code>MinglitCircularProgressIndicator</code> 단독</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ============================================
+         State 1 — Default (baseline · none toggled)
+         ============================================ -->
+    <table class="ref state-mini is-baseline-tint">
+      <thead>
+        <tr><th colspan="3"><strong>Default · 미토글</strong> 🎯 <small>baseline · CTA disabled</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport consent-viewport">
+              <div class="consent-body">
+                <div class="consent-headline">환영합니다!</div>
+                <div class="consent-subhead">밍릿 이용을 시작하기 전에 꼭 필요한 약관을 확인해주세요.</div>
+
+                <!-- _AllConsentTile (off) -->
+                <div class="consent-all" style="margin-top: 32px;">
+                  <span class="consent-all__check">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                  </span>
+                  <div class="consent-all__body">
+                    <div class="consent-all__title">전체 동의</div>
+                    <div class="consent-all__sub">필수와 선택 약관을 한 번에 설정할 수 있어요.</div>
+                  </div>
+                </div>
+
+                <!-- Card · 7 items + divider after required block -->
+                <div class="consent-card">
+                  <div class="consent-item">
+                    <span class="consent-item__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                    <div class="consent-item__body">
+                      <span class="consent-item__tag consent-item__tag--required">필수</span>
+                      <span class="consent-item__title">서비스 이용약관</span>
+                    </div>
+                    <span class="consent-item__detail">보기 ›</span>
+                  </div>
+                  <div class="consent-item">
+                    <span class="consent-item__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                    <div class="consent-item__body">
+                      <span class="consent-item__tag consent-item__tag--required">필수</span>
+                      <span class="consent-item__title">개인정보 수집·이용 동의</span>
+                    </div>
+                    <span class="consent-item__detail">보기 ›</span>
+                  </div>
+                  <div class="consent-item">
+                    <span class="consent-item__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                    <div class="consent-item__body">
+                      <span class="consent-item__tag consent-item__tag--required">필수</span>
+                      <span class="consent-item__title">만 14세 이상 확인</span>
+                    </div>
+                  </div>
+                  <div class="consent-divider"></div>
+                  <div class="consent-item">
+                    <span class="consent-item__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                    <div class="consent-item__body">
+                      <span class="consent-item__tag consent-item__tag--optional">선택</span>
+                      <span class="consent-item__title">제3자 제공 동의</span>
+                    </div>
+                    <span class="consent-item__detail">보기 ›</span>
+                  </div>
+                  <div class="consent-item">
+                    <span class="consent-item__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                    <div class="consent-item__body">
+                      <span class="consent-item__tag consent-item__tag--optional">선택</span>
+                      <span class="consent-item__title">위치정보 이용 동의</span>
+                    </div>
+                    <span class="consent-item__detail">보기 ›</span>
+                  </div>
+                  <div class="consent-item">
+                    <span class="consent-item__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                    <div class="consent-item__body">
+                      <span class="consent-item__tag consent-item__tag--optional">선택</span>
+                      <span class="consent-item__title">본인인증(CI/DI) 수집 동의</span>
+                    </div>
+                    <span class="consent-item__detail">보기 ›</span>
+                  </div>
+                  <div class="consent-item">
+                    <span class="consent-item__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                    <div class="consent-item__body">
+                      <span class="consent-item__tag consent-item__tag--optional">선택</span>
+                      <span class="consent-item__title">마케팅 정보 수신 동의</span>
+                    </div>
+                    <span class="consent-item__detail">보기 ›</span>
+                  </div>
+                </div>
+
+                <div class="consent-foot">선택 항목 미동의 시에도 서비스 이용이 가능합니다.</div>
+              </div>
+              <div class="bottom-cta">
+                <div class="bottom-cta__btn bottom-cta__btn--disabled">동의하고 시작하기</div>
+              </div>
+              <!-- Spec-mode callouts -->
+              <span class="callout" style="top:32px;left:24px;">ⓐ</span>
+              <span class="callout" style="top:160px;left:24px;">ⓑ</span>
+              <span class="callout" style="top:236px;left:24px;">ⓒ</span>
+              <span class="callout" style="bottom:18px;left:24px;">ⓓ</span>
+              <span class="annotation" style="top:128px;left:24px;">spacing-xlarge (32) — subhead → all-tile</span>
+              <span class="annotation" style="top:204px;left:24px;">spacing-medium (16) — all-tile → card</span>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>_didHydrate == true</code> · <code>_selectedConsents.isEmpty</code> (또는 hydrate 결과 빈 set) · <code>_isSubmitting == false</code></td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            ① <strong>전체 동의 tile 탭</strong> → <code>_toggleAll(true)</code> · 7개 모두 선택<br>
+            ② <strong>개별 item 탭</strong> → <code>_toggleSingle(type, !selected)</code> · 해당 항목만 토글<br>
+            ③ <strong>"보기 ›" 탭</strong> → <code>showConsentDetailSheet(context, content: definition.detail!)</code> · modal bottom sheet (만 14세 항목은 detail null이라 보기 미표시)<br>
+            ④ <strong>CTA 탭</strong> → <em>탭 무반응</em> (disabled — 필수 3개 미충족)<br>
+            ⑤ <strong>시스템 back / swipe</strong> → 무반응 (<code>PopScope(canPop:false)</code>)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · 첫 hydrate 시 서버에 이미 일부 consent가 저장돼 있으면 해당 항목 pre-checked로 시작 (이론상 신규 가입엔 비어있지만 재진입 시나리오 보호)<br>
+            · 만 14세 이상 확인 항목은 detail sheet 없음 — Tag + 타이틀만 표시
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            · <code>PopScope</code>(canPop: false)<br>
+            · <code>Scaffold</code>(no AppBar) · <code>SafeArea</code> · <code>ListView</code><br>
+            · <code>Text</code> headlineMedium "환영합니다!" · <code>Text</code> bodyLarge 부제<br>
+            · <code>_AllConsentTile</code> (Material + InkWell + IgnorePointer(Checkbox circle) + Column[titleSmall primary, bodySmall onSurfaceVariant])<br>
+            · <code>Card</code> · <code>Column</code> · <code>_ConsentItemTile</code> × 7 · <code>_ConsentTag</code> (필수/선택) · <code>Divider</code>(h:1, indent/endIndent: 16) · <code>GestureDetector</code> + <code>Semantics</code> "보기 ›"<br>
+            · <code>Text</code> bodyMedium 안내 문구<br>
+            · <a href="/components#MinglitBottomCTA"><code>MinglitBottomCTA</code></a>(label "동의하고 시작하기", enabled: false)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            · color: <code>color-surface (#f9fafb)</code> (scaffold), <code>color-background (#fff)</code> (Card), <code>color-primary</code> (all-tile bg @ <code>opacity-softTint</code> · checkbox active · CTA disabled bg-mix), <code>color-text-primary</code>, <code>color-text-secondary</code> (= onSurfaceVariant), <code>color-divider</code> (= outlineVariant), primaryContainer / surfaceContainerHighest (Tag bg)<br>
+            · spacing: <code>spacing-large (24)</code> (ListView h-pad), <code>spacing-xlarge (32)</code> (top pad · subhead↔all gap), <code>spacing-medium (16)</code> (item h-pad · card gap · divider indent · CTA h-pad), <code>spacing-small (8)</code> (subhead gap · item v-pad · CTA gap), <code>spacing-sm (12)</code> (CTA v-pad), <code>spacing-xsmall (4)</code> (all-tile check gap · tag→title gap · "보기" pad)<br>
+            · radius: <code>radius-card (16)</code> (all-tile · Card), <code>radius-button (12)</code> (CTA), <code>radius-chip (100)</code> (Tag)<br>
+            · typography: <code>headlineMedium</code> (28/700/1.29), <code>bodyLarge</code> (18/400/1.33), <code>titleSmall</code> (14/700/1.43), <code>bodyMedium</code> (16/400/1.5), <code>bodySmall</code> (13/400/1.5), <code>labelSmall</code> (11/500/1.45)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 ⓐ headline · ⓑ all-consent tile · ⓒ items Card · ⓓ disabled CTA. <strong>required-vs-optional 경계 Divider 로직</strong>: <code>definition.required &amp;&amp; (lastIndex || !next.required)</code> — <em>requiredTypes.last 의존 없이</em> definitions 순서만 신뢰 (Fix #966 주석). 현재 definitions order는 termsOfService → privacyCollection → ageConfirmation → thirdPartyProvision → locationConsent → identityVerification → marketingConsent. 향후 항목 추가 시 required → optional 경계 위치만 자동 갱신.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ============================================
+         State 2 — 필수만 토글 (CTA enabled)
+         ============================================ -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>필수만 토글 · CTA enabled</strong> <small>requiredTypes.every(selected)</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport consent-viewport">
+              <div class="consent-body">
+                <div class="consent-headline">환영합니다!</div>
+                <div class="consent-subhead">밍릿 이용을 시작하기 전에 꼭 필요한 약관을 확인해주세요.</div>
+
+                <div class="consent-all" style="margin-top: 32px;">
+                  <span class="consent-all__check">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                  </span>
+                  <div class="consent-all__body">
+                    <div class="consent-all__title">전체 동의</div>
+                    <div class="consent-all__sub">필수와 선택 약관을 한 번에 설정할 수 있어요.</div>
+                  </div>
+                </div>
+
+                <div class="consent-card">
+                  <div class="consent-item consent-item--on">
+                    <span class="consent-item__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                    <div class="consent-item__body"><span class="consent-item__tag consent-item__tag--required">필수</span><span class="consent-item__title">서비스 이용약관</span></div>
+                    <span class="consent-item__detail">보기 ›</span>
+                  </div>
+                  <div class="consent-item consent-item--on">
+                    <span class="consent-item__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                    <div class="consent-item__body"><span class="consent-item__tag consent-item__tag--required">필수</span><span class="consent-item__title">개인정보 수집·이용 동의</span></div>
+                    <span class="consent-item__detail">보기 ›</span>
+                  </div>
+                  <div class="consent-item consent-item--on">
+                    <span class="consent-item__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                    <div class="consent-item__body"><span class="consent-item__tag consent-item__tag--required">필수</span><span class="consent-item__title">만 14세 이상 확인</span></div>
+                  </div>
+                  <div class="consent-divider"></div>
+                  <div class="consent-item">
+                    <span class="consent-item__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                    <div class="consent-item__body"><span class="consent-item__tag consent-item__tag--optional">선택</span><span class="consent-item__title">제3자 제공 동의</span></div>
+                    <span class="consent-item__detail">보기 ›</span>
+                  </div>
+                  <div class="consent-item">
+                    <span class="consent-item__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                    <div class="consent-item__body"><span class="consent-item__tag consent-item__tag--optional">선택</span><span class="consent-item__title">위치정보 이용 동의</span></div>
+                    <span class="consent-item__detail">보기 ›</span>
+                  </div>
+                  <div class="consent-item">
+                    <span class="consent-item__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                    <div class="consent-item__body"><span class="consent-item__tag consent-item__tag--optional">선택</span><span class="consent-item__title">본인인증(CI/DI) 수집 동의</span></div>
+                    <span class="consent-item__detail">보기 ›</span>
+                  </div>
+                  <div class="consent-item">
+                    <span class="consent-item__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                    <div class="consent-item__body"><span class="consent-item__tag consent-item__tag--optional">선택</span><span class="consent-item__title">마케팅 정보 수신 동의</span></div>
+                    <span class="consent-item__detail">보기 ›</span>
+                  </div>
+                </div>
+
+                <div class="consent-foot">선택 항목 미동의 시에도 서비스 이용이 가능합니다.</div>
+              </div>
+              <div class="bottom-cta">
+                <div class="bottom-cta__btn">동의하고 시작하기</div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>ConsentType.requiredTypes.every(_selectedConsents.contains) == true</code> · 일부/전체 optional 미토글</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            + <strong>CTA 탭 → <code>_submit()</code></strong> · <code>_isSubmitting</code> true 전이 → Submitting state<br>
+            동일: 개별 item 탭 (선택 항목 토글 가능 · 필수 해제 시 즉시 Default state로 복귀) · "보기 ›" 탭 · 시스템 back 무반응
+          </td>
+        </tr>
+        <tr><td class="state-mini__aspect">에지케이스</td><td>· 필수 항목 중 하나를 다시 해제하면 즉시 CTA disabled (<code>requiredSelected</code> recompute) → Default state로 복귀</td></tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>동일 (Default 참조). 시각 차이만 — 필수 3개 Checkbox value: true · CTA enabled.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>+ <code>color-primary</code> 노출 강도 ↑ (CTA bg solid · 체크박스 fill) · <em>opacity-softTint</em>는 동일</td>
+        </tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 가장 흔한 정상 흐름의 종착 직전 — 통계상 마케팅/위치는 미토글 상태로 제출되는 경우 많음.</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ============================================
+         State 3 — 전체 토글
+         ============================================ -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>전체 토글 · all on</strong> <small>_selectedConsents.length == _consentDefinitions.length</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport consent-viewport">
+              <div class="consent-body">
+                <div class="consent-headline">환영합니다!</div>
+                <div class="consent-subhead">밍릿 이용을 시작하기 전에 꼭 필요한 약관을 확인해주세요.</div>
+
+                <div class="consent-all consent-all--on" style="margin-top: 32px;">
+                  <span class="consent-all__check">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                  </span>
+                  <div class="consent-all__body">
+                    <div class="consent-all__title">전체 동의</div>
+                    <div class="consent-all__sub">필수와 선택 약관을 한 번에 설정할 수 있어요.</div>
+                  </div>
+                </div>
+
+                <div class="consent-card">
+                  <div class="consent-item consent-item--on">
+                    <span class="consent-item__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                    <div class="consent-item__body"><span class="consent-item__tag consent-item__tag--required">필수</span><span class="consent-item__title">서비스 이용약관</span></div>
+                    <span class="consent-item__detail">보기 ›</span>
+                  </div>
+                  <div class="consent-item consent-item--on">
+                    <span class="consent-item__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                    <div class="consent-item__body"><span class="consent-item__tag consent-item__tag--required">필수</span><span class="consent-item__title">개인정보 수집·이용 동의</span></div>
+                    <span class="consent-item__detail">보기 ›</span>
+                  </div>
+                  <div class="consent-item consent-item--on">
+                    <span class="consent-item__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                    <div class="consent-item__body"><span class="consent-item__tag consent-item__tag--required">필수</span><span class="consent-item__title">만 14세 이상 확인</span></div>
+                  </div>
+                  <div class="consent-divider"></div>
+                  <div class="consent-item consent-item--on">
+                    <span class="consent-item__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                    <div class="consent-item__body"><span class="consent-item__tag consent-item__tag--optional">선택</span><span class="consent-item__title">제3자 제공 동의</span></div>
+                    <span class="consent-item__detail">보기 ›</span>
+                  </div>
+                  <div class="consent-item consent-item--on">
+                    <span class="consent-item__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                    <div class="consent-item__body"><span class="consent-item__tag consent-item__tag--optional">선택</span><span class="consent-item__title">위치정보 이용 동의</span></div>
+                    <span class="consent-item__detail">보기 ›</span>
+                  </div>
+                  <div class="consent-item consent-item--on">
+                    <span class="consent-item__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                    <div class="consent-item__body"><span class="consent-item__tag consent-item__tag--optional">선택</span><span class="consent-item__title">본인인증(CI/DI) 수집 동의</span></div>
+                    <span class="consent-item__detail">보기 ›</span>
+                  </div>
+                  <div class="consent-item consent-item--on">
+                    <span class="consent-item__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                    <div class="consent-item__body"><span class="consent-item__tag consent-item__tag--optional">선택</span><span class="consent-item__title">마케팅 정보 수신 동의</span></div>
+                    <span class="consent-item__detail">보기 ›</span>
+                  </div>
+                </div>
+
+                <div class="consent-foot">선택 항목 미동의 시에도 서비스 이용이 가능합니다.</div>
+              </div>
+              <div class="bottom-cta">
+                <div class="bottom-cta__btn">동의하고 시작하기</div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>allSelected == true</code> (필수 + 선택 모두 토글)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            동일 (CTA enabled · 제출 가능). 추가:<br>
+            + <strong>전체 동의 tile 재탭</strong> → <code>_toggleAll(false)</code> · <em>전체 해제</em> → Default state로 복귀
+          </td>
+        </tr>
+        <tr><td class="state-mini__aspect">에지케이스</td><td>· 단일 item 해제 시 → 해당 항목만 빠짐 · 전체 동의 체크 자동 해제 (allSelected 재계산)</td></tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>동일. 시각 차이만 — 7개 모두 ✓ + 전체 동의 tile checkbox 채워짐.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>동일</td>
+        </tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 _AllConsentTile checkbox는 <code>CircleBorder</code> shape — 일반 item Checkbox(square)와 시각적으로 구분.</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ============================================
+         State 4 — Submitting
+         ============================================ -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Submitting</strong> <small>async · _isSubmitting == true</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport consent-viewport">
+              <div class="consent-body">
+                <div class="consent-headline">환영합니다!</div>
+                <div class="consent-subhead">밍릿 이용을 시작하기 전에 꼭 필요한 약관을 확인해주세요.</div>
+
+                <div class="consent-all consent-all--on" style="margin-top: 32px;">
+                  <span class="consent-all__check">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                  </span>
+                  <div class="consent-all__body">
+                    <div class="consent-all__title">전체 동의</div>
+                    <div class="consent-all__sub">필수와 선택 약관을 한 번에 설정할 수 있어요.</div>
+                  </div>
+                </div>
+
+                <div class="consent-card">
+                  <div class="consent-item consent-item--on">
+                    <span class="consent-item__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                    <div class="consent-item__body"><span class="consent-item__tag consent-item__tag--required">필수</span><span class="consent-item__title">서비스 이용약관</span></div>
+                    <span class="consent-item__detail">보기 ›</span>
+                  </div>
+                  <div class="consent-item consent-item--on">
+                    <span class="consent-item__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                    <div class="consent-item__body"><span class="consent-item__tag consent-item__tag--required">필수</span><span class="consent-item__title">개인정보 수집·이용 동의</span></div>
+                    <span class="consent-item__detail">보기 ›</span>
+                  </div>
+                  <div class="consent-item consent-item--on">
+                    <span class="consent-item__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                    <div class="consent-item__body"><span class="consent-item__tag consent-item__tag--required">필수</span><span class="consent-item__title">만 14세 이상 확인</span></div>
+                  </div>
+                  <div class="consent-divider"></div>
+                  <div class="consent-item consent-item--on">
+                    <span class="consent-item__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                    <div class="consent-item__body"><span class="consent-item__tag consent-item__tag--optional">선택</span><span class="consent-item__title">제3자 제공 동의</span></div>
+                    <span class="consent-item__detail">보기 ›</span>
+                  </div>
+                  <div class="consent-item consent-item--on">
+                    <span class="consent-item__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                    <div class="consent-item__body"><span class="consent-item__tag consent-item__tag--optional">선택</span><span class="consent-item__title">위치정보 이용 동의</span></div>
+                    <span class="consent-item__detail">보기 ›</span>
+                  </div>
+                  <div class="consent-item consent-item--on">
+                    <span class="consent-item__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                    <div class="consent-item__body"><span class="consent-item__tag consent-item__tag--optional">선택</span><span class="consent-item__title">본인인증(CI/DI) 수집 동의</span></div>
+                    <span class="consent-item__detail">보기 ›</span>
+                  </div>
+                  <div class="consent-item consent-item--on">
+                    <span class="consent-item__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                    <div class="consent-item__body"><span class="consent-item__tag consent-item__tag--optional">선택</span><span class="consent-item__title">마케팅 정보 수신 동의</span></div>
+                    <span class="consent-item__detail">보기 ›</span>
+                  </div>
+                </div>
+
+                <div class="consent-foot">선택 항목 미동의 시에도 서비스 이용이 가능합니다.</div>
+
+                <div class="consent-submitting">
+                  <span class="consent-submitting__spinner"></span>
+                  <span>동의 내용을 저장하고 있어요.</span>
+                </div>
+              </div>
+              <div class="bottom-cta">
+                <div class="bottom-cta__btn bottom-cta__btn--disabled">동의하고 시작하기</div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>_isSubmitting == true</code> · CTA <code>enabled = requiredSelected &amp;&amp; !_isSubmitting</code>이라 false</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            ↔ 모든 액션 <strong>탭 무반응</strong> (CTA disabled · 그러나 InkWell은 여전히 활성 — 토글 자체는 가능하지만 권장하지 않음 · 보통 RPC 응답까지 100ms-1s)<br>
+            + <strong>완료 후</strong>: 성공 → <code>completeSignup(from)</code> · 실패 → Error state
+          </td>
+        </tr>
+        <tr><td class="state-mini__aspect">에지케이스</td><td>· _submit 진입 직후 <code>currentUserProvider == null</code>이면 <code>showMinglitWarning('로그인이 필요합니다.')</code> + 즉시 return (Submitting state로 진입하지 않음)</td></tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>+ Inline <code>Row</code>[<code>CircularProgressIndicator</code>(18×18 · strokeWidth 2) + <code>SizedBox(spacing-small)</code> + <code>Text</code> "동의 내용을 저장하고 있어요." (bodyMedium)]<br>↔ <code>MinglitBottomCTA</code> enabled: false</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>+ Material default progress indicator color (<code>color-primary</code> · stroke 2px)</td>
+        </tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 inline progress는 ListView 본문에 placed → 키보드 없는 화면이라 항상 보임. <code>MinglitBottomCTA</code>의 키보드 자동 hide 로직은 영향 없음.</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ============================================
+         State 5 — Error
+         ============================================ -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Error · save fail</strong> <small>consentState.hasError</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport consent-viewport">
+              <div class="consent-body">
+                <div class="consent-headline">환영합니다!</div>
+                <div class="consent-subhead">밍릿 이용을 시작하기 전에 꼭 필요한 약관을 확인해주세요.</div>
+
+                <div class="consent-all consent-all--on" style="margin-top: 32px;">
+                  <span class="consent-all__check">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                  </span>
+                  <div class="consent-all__body">
+                    <div class="consent-all__title">전체 동의</div>
+                    <div class="consent-all__sub">필수와 선택 약관을 한 번에 설정할 수 있어요.</div>
+                  </div>
+                </div>
+
+                <div class="consent-card">
+                  <div class="consent-item consent-item--on">
+                    <span class="consent-item__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                    <div class="consent-item__body"><span class="consent-item__tag consent-item__tag--required">필수</span><span class="consent-item__title">서비스 이용약관</span></div>
+                    <span class="consent-item__detail">보기 ›</span>
+                  </div>
+                  <div class="consent-item consent-item--on">
+                    <span class="consent-item__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                    <div class="consent-item__body"><span class="consent-item__tag consent-item__tag--required">필수</span><span class="consent-item__title">개인정보 수집·이용 동의</span></div>
+                    <span class="consent-item__detail">보기 ›</span>
+                  </div>
+                  <div class="consent-item consent-item--on">
+                    <span class="consent-item__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                    <div class="consent-item__body"><span class="consent-item__tag consent-item__tag--required">필수</span><span class="consent-item__title">만 14세 이상 확인</span></div>
+                  </div>
+                  <div class="consent-divider"></div>
+                  <div class="consent-item consent-item--on">
+                    <span class="consent-item__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                    <div class="consent-item__body"><span class="consent-item__tag consent-item__tag--optional">선택</span><span class="consent-item__title">제3자 제공 동의</span></div>
+                    <span class="consent-item__detail">보기 ›</span>
+                  </div>
+                  <div class="consent-item consent-item--on">
+                    <span class="consent-item__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                    <div class="consent-item__body"><span class="consent-item__tag consent-item__tag--optional">선택</span><span class="consent-item__title">위치정보 이용 동의</span></div>
+                    <span class="consent-item__detail">보기 ›</span>
+                  </div>
+                  <div class="consent-item consent-item--on">
+                    <span class="consent-item__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                    <div class="consent-item__body"><span class="consent-item__tag consent-item__tag--optional">선택</span><span class="consent-item__title">본인인증(CI/DI) 수집 동의</span></div>
+                    <span class="consent-item__detail">보기 ›</span>
+                  </div>
+                  <div class="consent-item consent-item--on">
+                    <span class="consent-item__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                    <div class="consent-item__body"><span class="consent-item__tag consent-item__tag--optional">선택</span><span class="consent-item__title">마케팅 정보 수신 동의</span></div>
+                    <span class="consent-item__detail">보기 ›</span>
+                  </div>
+                </div>
+
+                <div class="consent-foot">선택 항목 미동의 시에도 서비스 이용이 가능합니다.</div>
+              </div>
+              <div class="consent-error-bar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <span>일시적인 오류가 발생했어요. 잠시 후 다시 시도해주세요.</span>
+              </div>
+              <div class="bottom-cta">
+                <div class="bottom-cta__btn">동의하고 시작하기</div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>consentControllerProvider</code> AsyncValue가 error 상태로 도달 · <code>ref.listen</code>이 <code>showMinglitError(context)</code> 호출 · <code>_isSubmitting</code>은 <code>false</code>로 복귀</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            동일 (item 토글 가능 · CTA enabled — 다시 시도 가능)<br>
+            + <strong>SnackBar action 탭</strong> (있다면) → 재시도 콜백
+          </td>
+        </tr>
+        <tr><td class="state-mini__aspect">에지케이스</td><td>· 네트워크 끊김 · 서버 5xx · RLS 거부 등 모두 동일 SnackBar로 처리 (메시지는 controller에서 매핑)<br>· 사용자가 다시 CTA 탭 → Submitting state 재진입</td></tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>+ <code>showMinglitError</code> SnackBar (kit-shared · top of overlay) — <code>color-error</code> bg + <code>Icons.error_outline</code> + 본문<br>− 본문 inline progress (Submitting에서 추가됐던 row)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>+ <code>color-error (#dc2626)</code> · <code>radius-small (8)</code> (SnackBar) · <code>spacing-small / medium</code> (overlay padding)</td>
+        </tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 SnackBar는 <code>showMinglitError(context)</code> extension이 처리 — 위치는 화면 하단 위 floating(BottomCTA 위쪽). 실제 dismiss는 4초 후 자동 또는 swipe.</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ============================================
+         Side state — Loading on entry (full-page spinner)
+         ============================================ -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Loading on entry</strong> <small>hydrate 전 · transient</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport consent-viewport">
+              <div class="consent-loading">
+                <div class="consent-loading__spinner"></div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>!_didHydrate &amp;&amp; consentState.isLoading &amp;&amp; !consentState.hasError</code> — 첫 build에서 controller가 아직 응답 전</td>
+        </tr>
+        <tr><td class="state-mini__aspect">사용자 액션</td><td>↔ 모든 액션 미존재 (UI 미렌더)</td></tr>
+        <tr><td class="state-mini__aspect">에지케이스</td><td>· 응답이 빈 array면 즉시 Default state로 · 일부 record 있으면 hydrate 후 해당 항목만 pre-checked</td></tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>↔ 전체 → <code>Scaffold</code>(<code>body: Center(child: MinglitCircularProgressIndicator())</code>)<br>− headline · all-tile · Card · CTA (모두 미렌더)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>− 본문 토큰 전부 · + <code>color-primary</code> (spinner default)</td>
+        </tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 ref.listen이 첫 hasValue 때 selectedConsents를 hydrate (<code>_didHydrate</code> guard로 1회만). 이후 build는 본 Default state로 fall through.</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<!-- ============================================================
+     GLOBAL BEHAVIOR
+     ============================================================ -->
+<div class="perspective" id="behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">cross-cutting — 모든 state에 적용되는 액션, motion, 글로벌 에지케이스.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Cross-cutting interactions</h2>
+    <table class="ref">
+      <thead>
+        <tr><th style="width: 220px;">사용자 액션</th><th>화면에 보이는 결과</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>시스템 back / swipe-back</td>
+          <td><strong>차단됨</strong> — <code>PopScope(canPop: false)</code>. 사용자는 동의를 마치거나 앱을 종료해야 이탈 가능.</td>
+        </tr>
+        <tr>
+          <td>"보기 ›" 탭 (detail 있는 항목)</td>
+          <td><code>showConsentDetailSheet(context, content: definition.detail!)</code> — modal bottom sheet으로 ConsentDetailContent 노출. dismiss 시 본 화면 그대로 (state 변화 없음).</td>
+        </tr>
+        <tr>
+          <td>스크롤</td>
+          <td>ListView로 본문 전체 스크롤. CTA는 bottomNavigationBar에 고정 — 스크롤 영향 없음.</td>
+        </tr>
+        <tr>
+          <td>다크 모드 토글</td>
+          <td>scaffold(<code>color-dark-background</code>) · Card(<code>color-dark-surface</code>) · text/divider 토큰 자동 swap. primary tint(softTint)는 dark primary 기반으로 재계산.</td>
+        </tr>
+        <tr>
+          <td>로그아웃 (외부 트리거)</td>
+          <td><code>currentUserProvider == null</code> 전이 — _submit 호출 시 <code>showMinglitWarning</code> + return. 직접 LoginRoute로 redirect하지 않음 (auth provider stream에서 처리).</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Motion timing</h2>
+    <p class="intro">
+      Source: <code>shared/packages/mds/core/lib/src/theme/minglit_design_tokens.dart</code> → <code>MinglitAnimation</code>.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 240px;">Transition</th>
+          <th style="width: 200px;">Token / Duration</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>화면 진입 (Login → SignupConsent)</td>
+          <td><code>MinglitAnimation.fast</code> (200ms)</td>
+          <td>GoRouter slide push.</td>
+        </tr>
+        <tr>
+          <td>Checkbox 토글 (item · all)</td>
+          <td><code>MinglitAnimation.micro</code> (100ms)</td>
+          <td>Material checkbox built-in scale + fill animation.</td>
+        </tr>
+        <tr>
+          <td>전체 동의 → 7개 일괄 토글</td>
+          <td><code>MinglitAnimation.micro</code> (100ms · 동시)</td>
+          <td>7개 checkbox 동시 발화 — 카스케이드 없음.</td>
+        </tr>
+        <tr>
+          <td>Loading → Default (hydrate 직후)</td>
+          <td>cut</td>
+          <td>setState로 _didHydrate 토글 시 즉시 swap. AnimatedSwitcher 없음.</td>
+        </tr>
+        <tr>
+          <td>CTA enabled ↔ disabled 컬러 전환</td>
+          <td><code>MinglitAnimation.fast</code> (200ms)</td>
+          <td>Material ElevatedButton statesController fade.</td>
+        </tr>
+        <tr>
+          <td>"보기 ›" → ConsentDetailSheet 등장</td>
+          <td><code>MinglitAnimation.medium</code> (350ms)</td>
+          <td>Material modal bottom sheet slide-up.</td>
+        </tr>
+        <tr>
+          <td>Submitting inline row 등장</td>
+          <td><code>MinglitAnimation.fast</code> (200ms)</td>
+          <td>conditional widget — implicit fade via ListView rebuild.</td>
+        </tr>
+        <tr>
+          <td>Error SnackBar 등장</td>
+          <td><code>MinglitAnimation.medium</code> (350ms)</td>
+          <td>SnackBar slide-up · 4s 후 자동 dismiss.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Global edge cases</h2>
+    <ul class="notes">
+      <li><strong>네트워크 끊김</strong> — _submit 시 RPC 실패 → Error state (SnackBar). 사용자가 재시도 가능. hydrate 시점 끊김이면 Loading-on-entry에서 hasError로 분기 (controller가 retry policy 노출).</li>
+      <li><strong>다크 모드</strong> — 스캐폴드/Card/Divider/text 모두 dark 토큰 swap. primary tint(softTint)는 dark primary 기반. CTA의 disabled mix는 outlineVariant와 자동 재혼합.</li>
+      <li><strong>접근성</strong> — _ConsentItemTile 전체가 InkWell tap target (min 48). "보기 ›"는 <code>Semantics(button: true, label: "{title} 상세 보기")</code>로 별도 announce. CircleBorder Checkbox는 토글 announce가 일반 Checkbox와 동일.</li>
+      <li><strong>Big text</strong> — bodyMedium / titleSmall 모두 textTheme 기반이라 OS 글씨 크기에 비례. tile min-height 48 + Padding이라 2-line 헤딩에도 ellipsis 없이 wrap.</li>
+      <li><strong>중간 이탈 차단</strong> — <code>PopScope(canPop: false)</code>로 시스템 back 무력화. 다만 앱 강제 종료 → 재진입 시 controller는 빈 결과로 hydrate되어 다시 처음부터.</li>
+      <li><strong>이중 탭 방지</strong> — InkWell + IgnorePointer(Checkbox) 패턴 — Checkbox.onChanged는 빈 콜백, InkWell.onTap만 발화 (Fix: 중복 토글 방지).</li>
+      <li><strong>키보드</strong> — 입력 위젯 없음. <code>MinglitBottomCTA</code>는 키보드 등장 시 자동 hide되지만 본 화면에선 트리거되지 않음.</li>
+    </ul>
+  </section>
+</div>
+
+<!-- ============================================================
+     REFERENCE
+     ============================================================ -->
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">📖</span>
+    <h2>Reference</h2>
+    <span class="lede">implementation source + 인접 화면.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Implementation source</h2>
+    <table class="ref">
+      <tbody>
+        <tr><th style="width: 200px;">Widget</th><td><code>SignupConsentPage</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/consent/ui/signup_consent_page.dart"><code>apps/app_user/lib/src/features/consent/ui/signup_consent_page.dart</code></a></td></tr>
+        <tr><th>Part files</th><td><code>signup_consent_widgets.dart</code> (<code>_AllConsentTile</code>, <code>_ConsentItemTile</code>, <code>_ConsentTag</code>) · <code>signup_consent_definitions.dart</code> (<code>_ConsentDefinition</code> map · 7 entries)</td></tr>
+        <tr><th>Route</th><td><code>SignupConsentRoute</code> · <code>/signup/consent</code> · query: <code>from</code> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/routing/app_routes.dart"><code>app_routes.dart</code></a></td></tr>
+        <tr><th>Controller / Provider</th><td><code>consentControllerProvider</code> (AsyncValue&lt;List&lt;UserConsent&gt;&gt;) · <code>shared/packages/minglit_kit/lib/src/features/consent/logic/consent_controller.dart</code></td></tr>
+        <tr><th>Coordinator</th><td><code>consentCoordinatorProvider.completeSignup(from: widget.from)</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/consent/logic/consent_coordinator.dart"><code>consent_coordinator.dart</code></a></td></tr>
+        <tr><th>Required types</th><td><code>ConsentType.requiredTypes = [termsOfService, privacyCollection, ageConfirmation]</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/shared/packages/minglit_kit/lib/src/data/models/user_consent.dart"><code>user_consent.dart</code></a></td></tr>
+        <tr><th>Policy version</th><td><code>const _signupPolicyVersion = 1</code> (file-private). bump 시 재수집 트리거.</td></tr>
+        <tr><th>Detail sheet</th><td><code>showConsentDetailSheet(context, content: ConsentDetailContent)</code> — <code>apps/app_user/lib/src/features/consent/ui/consent_detail_sheet.dart</code> · 7개 항목 중 6개 detail 보유 (만 14세 항목만 detail null)</td></tr>
+        <tr><th>Bottom CTA atom</th><td><a href="/components#MinglitBottomCTA"><code>MinglitBottomCTA</code></a> · single 변형 · 키보드 자동 hide · SafeArea 처리 — <code>shared/packages/mds/core/lib/src/ui/widgets/common/minglit_bottom_cta.dart</code></td></tr>
+        <tr><th>Item atoms (private)</th><td><code>_AllConsentTile</code> (Material+InkWell · primary tint · circle Checkbox · IgnorePointer 패턴) · <code>_ConsentItemTile</code> (InkWell · ConstrainedBox minHeight 48 · IgnorePointer Checkbox · _ConsentTag · GestureDetector "보기 ›") · <code>_ConsentTag</code> (필수 → primaryContainer/primary · 선택 → surfaceContainerHighest/onSurfaceVariant)</td></tr>
+        <tr><th>Theme map</th><td>Scaffold bg = <code>MinglitColors.surface</code> · ColorScheme.surface = <code>MinglitColors.background</code> (Card bg) · onSurfaceVariant = <code>MinglitColors.textSecondary</code> · outlineVariant = divider · <a href="https://github.com/Mark-Yun/minglit/blob/dev/shared/packages/mds/core/lib/src/theme/minglit_theme.dart"><code>minglit_theme.dart</code></a></td></tr>
+        <tr><th>Pop behavior</th><td><code>PopScope(canPop: false)</code> — 시스템 back / swipe 무력화. 명시적 onPop 콜백 없음 (단순 차단).</td></tr>
+        <tr><th>Test</th><td><code>apps/app_user/test/src/features/consent/ui/signup_consent_page_test.dart</code> + <code>shared/packages/minglit_kit/test/src/features/consent/logic/consent_controller_test.dart</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 240px;">Spec</th><th>Relation</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><a href="/specs/login_page.html"><code>LoginPage</code></a></td>
+          <td>직접 진입원 — OAuth/매직링크 콜백 후 필수 consent 누락 시 push. <code>from</code> 파라미터로 최종 도착지 보존.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/home_page.html"><code>HomePage</code></a></td>
+          <td><code>completeSignup</code>의 디폴트 도착지. <code>from</code> null이면 HomeRoute로 복귀.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/my_page.html"><code>MyPage</code></a></td>
+          <td>가입 후 동의 변경(선택 항목 토글)은 MyPage 산하 PrivacyPage / NotificationSettings에서 처리 — 본 화면은 1회성.</td>
+        </tr>
+        <tr>
+          <td><a href="/foundations/layout">Layout foundations</a></td>
+          <td>AppBar 없는 단독 화면 + bottomNavigationBar CTA 패턴. <a href="/specs/party_create_wizard_page.html"><code>PartyCreateWizard</code></a>와 유사한 submit-bottom 흐름.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+</div>
+
+<script>
+  document.getElementById('spec-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('spec-mode', e.target.checked);
+  });
+  document.getElementById('dark-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('dark-mode', e.target.checked);
+  });
+</script>
+</body>
+</html>
