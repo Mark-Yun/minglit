@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Spec — EventBottomTicketBar (app_user · event_detail bottom CTA)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* ============================================================
+   Screen-specific atoms — BottomTicketBar primitives.
+   The bar itself is a horizontal Row(price column + CTA expanded)
+   pinned at the bottom of EventDetailPage. State changes via
+   eventAdmissionControllerProvider.
+   ============================================================ */
+
+.tbar {
+  width: 343px;
+  background: var(--color-surface);
+  padding: var(--spacing-medium);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-large);
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.06);
+}
+.tbar__price {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.tbar__price-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  letter-spacing: 0.02em;
+}
+.tbar__price-amount {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-secondary);
+  line-height: 1;
+}
+.tbar__btn {
+  flex: 1;
+  height: 48px;
+  border-radius: var(--radius-card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 600;
+  background: var(--color-primary);
+  color: var(--color-background);
+}
+.tbar__btn--destructive { background: #d32f2f; }
+.tbar__btn--disabled    { background: var(--color-divider); color: var(--color-text-secondary); }
+.tbar__btn--loading {
+  background: var(--color-divider);
+  color: var(--color-text-secondary);
+  font-size: 0;
+  position: relative;
+}
+.tbar__btn--loading::after {
+  content: '';
+  position: absolute;
+  width: 18px; height: 18px;
+  border: 2px solid var(--color-text-secondary);
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.tbar__btn--error { background: #ffebee; color: #c62828; }
+
+/* Ticket selection sheet (modal that rises on 구매하기 tap) */
+.tsheet {
+  width: 343px;
+  background: var(--color-surface);
+  border-top-left-radius: var(--radius-card);
+  border-top-right-radius: var(--radius-card);
+  padding: var(--spacing-large);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-medium);
+}
+.tsheet__title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.tsheet__banner {
+  display: flex;
+  gap: var(--spacing-small);
+  padding: var(--spacing-small) var(--spacing-medium);
+  background: color-mix(in srgb, var(--color-secondary) 12%, transparent);
+  border-left: 3px solid var(--color-secondary);
+  border-radius: 4px;
+}
+.tsheet__banner-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+  color: var(--color-secondary);
+}
+.tsheet__banner-text {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--color-text-primary);
+}
+.tsheet__banner-text strong { color: var(--color-secondary); font-weight: 700; }
+.tsheet__ticket {
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-card);
+  padding: var(--spacing-medium);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.tsheet__ticket--recommended {
+  border: 2px solid var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+}
+.tsheet__ticket-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+.tsheet__ticket-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: var(--color-primary);
+  color: var(--color-background);
+  font-size: 10px;
+  font-weight: 700;
+  width: fit-content;
+}
+.tsheet__ticket-price {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-secondary);
+}
+.tsheet__cta {
+  height: 48px;
+  border-radius: var(--radius-card);
+  background: var(--color-primary);
+  color: var(--color-background);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 600;
+}
+.tsheet__cta--disabled { background: var(--color-divider); color: var(--color-text-secondary); }
+
+body.dark-mode .visual-gallery {
+  --color-background: #0f0f0f;
+  --color-surface: #212121;
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #aaaaaa;
+  --color-divider: #3d3d3d;
+  --color-primary: #aa33ff;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+}
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode</label>
+</div>
+
+<div class="page">
+
+<header>
+  <h1>EventBottomTicketBar</h1>
+</header>
+
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr>
+        <th style="width: 140px;">Status</th>
+        <td>
+          <strong>🚧 디자인중</strong>
+          <em style="color: var(--color-text-secondary);">— 라벨/banner 이터레이션 중. 구현 코드는 직전 디자인완료 버전 기반.</em>
+        </td>
+      </tr>
+      <tr>
+        <th>App</th>
+        <td><code>app_user</code></td>
+      </tr>
+      <tr>
+        <th>Category</th>
+        <td>event · detail (sub-component of EventDetailPage)</td>
+      </tr>
+      <tr>
+        <th>Route / Surface</th>
+        <td><code>_BottomTicketBar</code> (private widget — EventDetailPage에 part of, 자체 route 없음)</td>
+      </tr>
+      <tr>
+        <th>Path</th>
+        <td>— (parent spec: <a href="/specs/event_detail_page.html"><code>EventDetailPage</code></a>, path: <code>/events/:eventId</code>)</td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>
+          이벤트 상세 페이지 최하단에 고정. 사용자가 즉시 입장권 구매로 진입할 수 있는 단일 surface.
+          가격(좌측) + 액션 버튼(우측 expanded) — admission state에 따라 라벨/스타일이 12종으로 동적 변환.
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry</strong>: <a href="/specs/event_detail_page.html">EventDetailPage</a>의 ⑥ 영역으로 자동 부착.<br>
+          <strong>Exit</strong>:
+          ① <code>eligible</code> → 티켓 선택 바텀시트 → <code>EventApplicationWizard</code>;
+          ② <code>qualificationRequired</code> → 티켓 선택 바텀시트(상단 심사 안내 banner) → wizard;
+          ③ <code>guest</code> → 로그인 화면;
+          ④ <code>identityRequired</code> → 본인인증 화면;
+          ⑤ <code>pendingPayment</code> → wizard 결제 step;
+          ⑥ <code>rejected</code> → 반려 사유 다이얼로그.
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          minglit 이벤트는 "오프라인 입장권 구매" mental model — 즉시 결제 transaction.
+          단, 일부 이벤트는 <strong>구매 후 파트너 심사</strong>가 있어 참여가 확정되지 않을 수 있음 (반려 시 자동 환불).
+          이 dual nature를 라벨 단계에서 명시하기 위해 <code>qualificationRequired</code> 상태는 "구매하고 신청하기"로,
+          그 외는 깔끔한 "구매하기"로 분리.
+          심사 안내 detail은 dialog가 아닌 <strong>티켓 선택 바텀시트 상단 banner</strong>에서 통합 노출 (별도 단계 추가 회피).
+        </td>
+      </tr>
+      <tr>
+        <th>Frequency</th>
+        <td>이벤트 상세 페이지 진입 시 항상 노출. 사용자당 한 이벤트 라이프사이클에서 1~5회 (탐색 → 결제 → 결제 재개 → 후속 확인).</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================
+     🕐 HISTORY
+     ============================================================ -->
+<section class="doc">
+  <h2>History</h2>
+  <table class="ref">
+    <thead>
+      <tr>
+        <th style="width: 110px;">Date</th>
+        <th style="width: 80px;">Version</th>
+        <th style="width: 120px;">Author</th>
+        <th>Changes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2026-05-01</td>
+        <td>1.4</td>
+        <td>mark-yun</td>
+        <td>Header를 <code>&lt;h1&gt;</code>만으로 단순화. Status · Role을 Overview 테이블로 흡수. Role 제거 (Purpose 첫 문장이 tagline 역할).</td>
+      </tr>
+      <tr>
+        <td>2026-05-01</td>
+        <td>1.3</td>
+        <td>mark-yun</td>
+        <td>Header에서 breadcrumb 제거 — App / Category / Route / Path를 Overview 테이블 행으로 흡수.</td>
+      </tr>
+      <tr>
+        <td>2026-05-01</td>
+        <td>1.2</td>
+        <td>mark-yun</td>
+        <td>Status 단순화: <code>designing</code> → <code>🚧 디자인중</code> (lifecycle phase 기반). <code>Purpose &amp; Context</code> → <code>Overview</code> 리네임. History를 Reference에서 Overview 아래로 이동. Ticket selection sheet 2 states를 mini-table 6-row 패턴으로 변환.</td>
+      </tr>
+      <tr>
+        <td>2026-05-01</td>
+        <td>1.1</td>
+        <td>mark-yun</td>
+        <td>새 템플릿으로 마이그레이션: mini-table 6-row 패턴 (조건/액션/에지/컴포넌트/토큰/노트) · State summary matrix · additive diff with eligible baseline · Reference: components/tokens 제거 → mini-tables로 분산 · Implementation source + History 추가.</td>
+      </tr>
+      <tr>
+        <td>2026-05-01</td>
+        <td>1.0</td>
+        <td>mark-yun</td>
+        <td>Initial spec authored. 12 admission state matrix · 입장권/구매하기 라벨 redesign (기존 "참가 신청하기" 패밀리 → "구매하기" 패밀리, qualificationRequired는 "구매하고 신청하기"로 dual mental model 시그널) · 심사 안내 banner UX (티켓 선택 sheet 상단 통합 — 별도 dialog 단계 추가 안 함).</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<nav class="perspective-nav">
+  <a href="#layout"><span class="glyph">🧱</span> Layout</a>
+  <a href="#states"><span class="glyph">🎨</span> States</a>
+  <a href="#global-behavior"><span class="glyph">🔄</span> Global Behavior</a>
+  <a href="#reference"><span class="glyph">📖</span> Reference</a>
+</nav>
+
+<!-- ============================================================
+     LAYOUT
+     ============================================================ -->
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Layout</h2>
+    <span class="lede">바 자체 구조 + 심사 안내 banner를 포함한 티켓 선택 바텀시트.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Bar anatomy</h2>
+    <p class="intro">
+      Row(crossAxis center) — 좌측 price column(crossAxis start) · spacing-large gap · 우측 expanded action button.
+      외부 padding <code>spacing-medium</code> 전방향. 상단 box-shadow elevation. SafeArea(top:false)로 하단 인디케이터 회피.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 100px;">
+        <div class="blueprint__region" style="top:0;left:0;right:0;bottom:0;border-style:solid;border-color:rgba(153,0,255,0.18);"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:16px;left:16px;width:100px;height:48px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉠ Price column</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:16px;left:140px;right:16px;height:48px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉡ Action button (Expanded)</span>
+        </div>
+        <div class="blueprint__align-marker" style="top:8px;right:8px;">box-shadow: 0 -2px 10px @6%</div>
+      </div>
+
+      <div class="layout-tree"><b>Container</b>(decoration: surface + box-shadow top)
+└─ <b>SafeArea</b>(top: false)
+   └─ <b>Row</b>
+      ├─ <em>Price column</em>                                        ← ㉠
+      │  └─ Column(mainAxisMin · crossAxisStart)
+      │     ├─ Text('<b>입장권</b>', style: <i>labelSmall</i>)
+      │     └─ Text('20,000원~' | '가격 미정',
+      │            style: <i>titleLarge</i> · <b>bold</b> · <i>color-secondary</i>)
+      │
+      ├─ Gap: <i>spacing-large (24)</i>
+      │
+      └─ <b>Expanded</b>                                              ← ㉡
+         └─ <em>MinglitAsyncValueWidget</em>(admissionAsync)
+            ├─ data → <b>_buildActionButton</b>(state)  (12 라벨 분기)
+            ├─ loading → <b>ElevatedButton</b>(disabled · 20px spinner)
+            └─ error → <b>ElevatedButton</b>(disabled · errorContainer · '오류 발생')
+
+<em>price 라벨 결정</em> — '입장권' (오프라인 티켓 구매 mental model 강화)
+   · "최저가" 폐지 — '~' suffix가 이미 starting-from을 의미, "최저가"는 자기-반복
+   · 비어있을 때 '가격 미정' fallback (tickets list 비어있을 때만)</div>
+    </div>
+  </section>
+
+  <section class="doc">
+    <h2>Ticket selection sheet anatomy</h2>
+    <p class="intro">
+      구매하기 / 구매하고 신청하기 탭 시 화면 하단에서 올라오는 modal sheet (<code>showModalBottomSheet · isScrollControlled: true</code>).
+      <code>TicketSelectionSheet</code> widget — 추천 티켓 자동 선택 + balance/verification 자격 검증 + 수량 선택 + 다음 step 진입.
+      <code>qualificationRequired</code> 이벤트에서는 <strong>상단 심사 안내 banner</strong>가 자동 출현.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 360px;">
+        <div class="blueprint__region" style="top:0;left:0;right:0;bottom:0;border-top-left-radius:16px;border-top-right-radius:16px;border-color:rgba(153,0,255,0.45);"></div>
+
+        <div class="blueprint__region blueprint__region--shaded" style="top:24px;left:24px;right:24px;height:32px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉠ Title — "티켓 선택" (headlineSmall bold)</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:72px;left:24px;right:24px;height:48px;background:rgba(255,153,0,0.08);border-color:rgba(255,153,0,0.6);">
+          <span class="blueprint__region-label" style="font-size:9px;">㉡ ⚠️ 심사 안내 banner (qualificationRequired only — 자동 노출)</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:136px;left:24px;right:24px;height:80px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉢ Recommended ticket (auto-selected · 2px primary border + tint)</span>
+        </div>
+        <div class="blueprint__region" style="top:232px;left:24px;right:24px;height:48px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉣ Other tickets (회색 border · ineligible reason 표시)</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:296px;left:24px;right:24px;height:48px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉤ MinglitButton "다음" — selected 없으면 disabled</span>
+        </div>
+      </div>
+
+      <div class="layout-tree"><b>showModalBottomSheet</b>(isScrollControlled: true)
+└─ <b>TicketSelectionSheet</b>
+   └─ Container(<i>radius-card</i> top corners · <i>spacing-large</i> all)
+      └─ Column(crossAxisStart · mainAxisMin)
+         ├─ Text('티켓 선택', <i>headlineSmall · bold</i>)             ← ㉠
+         ├─ Gap: <i>spacing-medium</i>
+         │
+         ├─ <em>심사 안내 banner</em> (if event.requiresQualification)  ← ㉡
+         │  └─ <b>MinglitInfoBanner</b>(tone: warning)
+         │     └─ "이 이벤트는 파트너 심사를 거쳐 참여가 확정됩니다.
+         │        <b>참여 불가시 자동 환불됩니다.</b>"
+         │
+         ├─ <em>State branch</em>:
+         │  ├─ loading                  → buildLoadingState
+         │  ├─ tickets empty            → buildEmptyState
+         │  ├─ no recommendation        → buildNoRecommendationState (tickets 모두 ineligible)
+         │  └─ has recommendation       → buildRecommendationState   ← ㉢ + ㉣
+         │     ├─ Recommended ticket card (primary border + tint + "추천" badge)  ← ㉢
+         │     └─ Other tickets list (border-divider · ineligible reason text)    ← ㉣
+         │
+         ├─ <em>Quantity section</em> (if _selectedTicketId != null)
+         │  └─ - / + counter for ticket count
+         │
+         ├─ <b>MinglitButton</b>(label: '다음' · disabled if no ticket)            ← ㉤
+         │
+         └─ SafeArea bottom inset (<i>viewPadding.bottom</i>)</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th>Spacing / 토큰</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>㉠</td><td>Title "티켓 선택"</td><td>headlineSmall bold · text-primary · 하단 <code>spacing-medium</code></td></tr>
+        <tr><td>㉡</td><td>심사 안내 banner</td><td><code>qualificationRequired</code>일 때만 출현. warning tone (color-secondary tint bg + 3px left border) · 12px line-height 1.5 · "참여 불가시 자동 환불됩니다" 굵게 강조</td></tr>
+        <tr><td>㉢</td><td>Recommended ticket</td><td>2px primary border · primary 6% tint bg · 자동 선택 · "추천" badge (상단 좌측)</td></tr>
+        <tr><td>㉣</td><td>Other tickets</td><td>1px divider border · 자격 미달 시 회색 처리 + ineligible reason 텍스트</td></tr>
+        <tr><td>㉤</td><td>"다음" 버튼</td><td><code>MinglitButton</code> full-width · 48h · 선택 없으면 disabled</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>12-state label matrix</h2>
+    <p class="intro">
+      <code>EventAdmissionStatus</code>(<code>admission_action_handler.dart</code>) 12개 케이스. 메인 case는 <code>eligible</code> — 사용자 95% 이상이 이 라벨을 봄.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 200px;">State</th>
+          <th style="width: 220px;">Label</th>
+          <th style="width: 100px;">Style</th>
+          <th>Enabled</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><code>guest</code></td><td>로그인하고 구매하기</td><td>primary</td><td>✓</td></tr>
+        <tr><td><code>identityRequired</code></td><td>본인인증 후 구매하기</td><td>primary</td><td>✓</td></tr>
+        <tr style="background: rgba(255,153,0,0.06);"><td><code>qualificationRequired</code> ⚠️</td><td><strong>구매하고 신청하기</strong></td><td>primary</td><td>✓</td></tr>
+        <tr style="background: rgba(153,0,255,0.05);"><td><code>eligible</code> 🎯 (메인)</td><td><strong>구매하기</strong></td><td>primary</td><td>✓</td></tr>
+        <tr><td><code>notEligible</code></td><td>참여 조건 미달 (또는 sub-reason)</td><td>disabled</td><td>—</td></tr>
+        <tr><td><code>full / soldOut</code></td><td>마감된 이벤트</td><td>disabled</td><td>—</td></tr>
+        <tr><td><code>pendingPayment</code></td><td>결제 계속하기</td><td>primary</td><td>✓</td></tr>
+        <tr><td><code>applied</code></td><td><strong>구매 완료</strong></td><td>disabled</td><td>—</td></tr>
+        <tr><td><code>rejected</code></td><td>심사 반려 (사유 확인)</td><td>destructive</td><td>✓</td></tr>
+        <tr><td><code>eventEnded</code></td><td>종료된 이벤트</td><td>disabled</td><td>—</td></tr>
+        <tr><td><code>eventEndedWithResults</code></td><td>매칭 결과 보기</td><td>primary</td><td>✓</td></tr>
+        <tr><td><code>eventEndedParticipated</code></td><td>참여 완료</td><td>disabled</td><td>—</td></tr>
+      </tbody>
+    </table>
+    <p class="intro" style="margin-top:12px;margin-bottom:0;">
+      ※ <strong>"신청" → "구매" 전환된 5개</strong>: <code>guest</code>, <code>identityRequired</code>, <code>qualificationRequired</code>, <code>eligible</code>, <code>applied</code>.
+      나머지 7개는 의미가 명확한 specific 라벨 (결제 계속 · 심사 반려 · 매칭 결과 · 참여 완료 등)이라 그대로 유지.
+      각 state의 <strong>탭 결과 / 인터랙션</strong>은 아래 Visual 섹션의 state 카드 sub-table에.
+    </p>
+  </section>
+</div>
+
+<!-- ============================================================
+     VISUAL
+     ============================================================ -->
+<div class="perspective" id="states">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>States</h2>
+    <span class="lede">
+      14 visible states (12 admission + async loading + async error + edge: tickets empty).
+      각 state mini-table은 6 aspect rows (조건/사용자액션/에지케이스/컴포넌트/토큰/노트).
+    </span>
+  </div>
+
+  <section class="doc">
+    <h2>State summary</h2>
+    <p class="intro">
+      14 states를 한눈에 비교. 자세한 사양은 아래 각 state mini-table 참조.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 200px;">State</th>
+          <th style="width: 100px;">Tag</th>
+          <th style="width: 220px;">조건 (요약)</th>
+          <th>Key visual differentiator</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><code>guest</code></td><td>비로그인</td><td><code>currentUser == null</code></td><td>"로그인하고 구매하기" primary 버튼</td></tr>
+        <tr><td><code>identityRequired</code></td><td>본인인증 미완</td><td><code>!hasIdentityVerified</code></td><td>"본인인증 후 구매하기" primary 버튼</td></tr>
+        <tr style="background: rgba(255,153,0,0.04);"><td><code>qualificationRequired</code> ⚠️</td><td>심사 필요</td><td><code>event.requiresQualification</code> + 자격 검증 통과</td><td>"구매하고 신청하기" — 심사 결과에 따라 환불 가능</td></tr>
+        <tr style="background: rgba(153,0,255,0.04);"><td><code>eligible</code> 🎯</td><td>메인 case</td><td>모든 사전 검증 통과 + 결제 가능</td><td><strong>"구매하기"</strong> primary 버튼 — 메인 CTA</td></tr>
+        <tr><td><code>notEligible</code></td><td>자격 미달</td><td><code>state.ineligibleReason != null</code></td><td>"참여 조건 미달" disabled (사유별 동적)</td></tr>
+        <tr><td><code>soldOut</code> · <code>full</code></td><td>정원 마감</td><td>모든 ticket의 <code>soldCount == quantity</code></td><td>"마감된 이벤트" disabled</td></tr>
+        <tr><td><code>pendingPayment</code></td><td>결제 중단</td><td>이전 신청 + 결제 미완료 application 존재</td><td>"결제 계속하기" primary — 티켓 sheet skip</td></tr>
+        <tr><td><code>applied</code></td><td>구매 완료</td><td>결제 완료 상태 (심사 진행 중일 수도)</td><td>"구매 완료" disabled</td></tr>
+        <tr><td><code>rejected</code></td><td>심사 반려</td><td><code>application.status == rejected</code></td><td><strong>destructive</strong> "심사 반려 (사유 확인)"</td></tr>
+        <tr><td><code>eventEnded</code></td><td>이벤트 종료</td><td><code>event.endTime</code> 경과 + 미참여</td><td>"종료된 이벤트" disabled</td></tr>
+        <tr><td><code>eventEndedWithResults</code></td><td>매칭 결과 도착</td><td>참여 + 매칭 결과 publish됨</td><td>"매칭 결과 보기" primary</td></tr>
+        <tr><td><code>eventEndedParticipated</code></td><td>참여 완료</td><td>참여 + 결과 따로 없음 (일반 이벤트)</td><td>"참여 완료" disabled</td></tr>
+        <tr><td><code>async loading</code></td><td>fetch 중</td><td><code>admissionAsync.isLoading</code></td><td>20px spinner inside disabled 버튼</td></tr>
+        <tr><td><code>async error</code></td><td>조회 실패</td><td><code>admissionAsync.hasError</code></td><td>"오류 발생" errorContainer 톤 disabled</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Bar — states gallery</h2>
+    <p class="intro">
+      각 state는 <strong>독립된 미니 테이블</strong> — 좌측 mockup(rowspan=6), 우측에 6 aspect rows.
+      <strong>첫 state(eligible 🎯 — 메인 case)는 풀 컴포넌트/토큰 리스트</strong>, 나머지는 additive diff
+      (<code>+</code> 추가 · <code>−</code> 제거 · <code>↔ X → Y</code> 교체 · <code>동일</code> · <code>—</code>).
+    </p>
+    <div class="visual-gallery" style="background: var(--color-surface); padding: 16px; border-radius: var(--radius-card); display: flex; flex-direction: column; gap: 16px;">
+
+      <!-- ─── eligible (메인 case · BASELINE for additive diff) ──────── -->
+      <table class="ref state-mini" style="background: rgba(153,0,255,0.04);">
+        <thead>
+          <tr><th colspan="3"><strong><code>eligible</code> 🎯</strong> · <small style="color:var(--color-primary);">메인 case · 컴포넌트/토큰 baseline</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="tbar"><div class="tbar__price"><div class="tbar__price-label">입장권</div><div class="tbar__price-amount">20,000원~</div></div><div class="tbar__btn">구매하기</div></div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>모든 사전 검증 통과 (로그인 + 본인인증 + 자격) + 결제 가능 + <code>event.endTime</code> 미경과 + 정원 미만</td>
+          </tr>
+          <tr><td>사용자 액션</td><td>"구매하기" 탭 → 티켓 선택 sheet 슬라이드 업 (banner 없음). 추천 티켓 자동 선택 → "다음" 탭 시 <code>EventApplicationWizard</code> push.</td></tr>
+          <tr><td>에지케이스</td><td>—</td></tr>
+          <tr>
+            <td>컴포넌트</td>
+            <td><code>MinglitAsyncValueWidget</code>(admissionAsync 분기) · <code>MinglitButton</code>(primary, full-width 48h, label dynamic per state) · Container(decoration: surface + box-shadow top) · <code>SafeArea</code>(top: false) · Row(price col + Expanded button)</td>
+          </tr>
+          <tr>
+            <td>토큰</td>
+            <td><code>color-surface</code> (bar bg) · <code>color-primary</code> (button bg) · <code>color-secondary</code> (price amount) · <code>color-text-secondary</code> (price label "입장권") · <code>color-background</code> (button label · SafeArea fill) · <code>spacing-medium (16px)</code> (outer pad) · <code>spacing-large (24px)</code> (price↔button gap) · <code>radius-card</code> (button radius) · typography <code>labelSmall (11/600)</code> (price label) · <code>titleLarge (20/700)</code> (price amount) · <code>bodyLarge (16/600)</code> (button label) · box-shadow <code>0 -2px 10px rgba(0,0,0,0.06)</code></td>
+          </tr>
+          <tr><td>노트</td><td>—</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ─── guest ─────────────────────────────────────── -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong><code>guest</code></strong> · <small>비로그인</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="tbar"><div class="tbar__price"><div class="tbar__price-label">입장권</div><div class="tbar__price-amount">20,000원~</div></div><div class="tbar__btn">로그인하고 구매하기</div></div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td><code>currentUser == null</code> — 비로그인 사용자가 이벤트 상세 진입</td>
+          </tr>
+          <tr><td>사용자 액션</td><td>"로그인하고 구매하기" 탭 → 로그인 화면(<code>LoginRoute</code>) push · <code>from='/events/:eventId'</code> 로 자동 복귀</td></tr>
+          <tr><td>에지케이스</td><td>—</td></tr>
+          <tr><td>컴포넌트</td><td>동일</td></tr>
+          <tr><td>토큰</td><td>동일</td></tr>
+          <tr><td>노트</td><td>—</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ─── identityRequired ──────────────────────────── -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong><code>identityRequired</code></strong> · <small>본인인증 미완</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="tbar"><div class="tbar__price"><div class="tbar__price-label">입장권</div><div class="tbar__price-amount">20,000원~</div></div><div class="tbar__btn">본인인증 후 구매하기</div></div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>로그인됨 + <code>!hasIdentityVerified</code> — 이벤트는 identityRequired</td>
+          </tr>
+          <tr><td>사용자 액션</td><td>"본인인증 후 구매하기" 탭 → 본인인증 화면(<code>CertificationRoute</code>) push · 완료 시 자동 복귀</td></tr>
+          <tr><td>에지케이스</td><td>—</td></tr>
+          <tr><td>컴포넌트</td><td>동일</td></tr>
+          <tr><td>토큰</td><td>동일</td></tr>
+          <tr><td>노트</td><td>—</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ─── qualificationRequired ⚠️ ───────────────────── -->
+      <table class="ref state-mini" style="background: rgba(255,153,0,0.04);">
+        <thead>
+          <tr><th colspan="3"><strong><code>qualificationRequired</code> ⚠️</strong> · <small style="color:#cc7a00;">심사 필요</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="tbar"><div class="tbar__price"><div class="tbar__price-label">입장권</div><div class="tbar__price-amount">20,000원~</div></div><div class="tbar__btn">구매하고 신청하기</div></div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td><code>event.requiresQualification == true</code> + 사전 검증 통과 — 결제 후 파트너 심사 필요</td>
+          </tr>
+          <tr><td>사용자 액션</td><td>"구매하고 신청하기" 탭 → 티켓 선택 sheet (상단 ⚠️ 심사 안내 banner — "참여 불가시 자동 환불됩니다"). 그 외 sheet 흐름은 eligible과 동일.</td></tr>
+          <tr><td>에지케이스</td><td><strong>심사 결과 분기</strong> — 결제 시 <code>applied</code>로 즉시 전이. 이후 심사 결과에 따라 <code>rejected</code>(자동 환불) 또는 <code>eventEndedParticipated</code>.</td></tr>
+          <tr><td>컴포넌트</td><td>동일 (sheet 안 banner는 별도 sub-spec — 아래 Ticket selection sheet 참조)</td></tr>
+          <tr><td>토큰</td><td>동일 (banner는 sheet 토큰)</td></tr>
+          <tr><td>노트</td><td>📝 라벨 "구매하고 신청하기"는 dual mental model 시그널 — 즉시 거래 + 후속 심사. UX 핵심 결정 (mark-yun, 2026-05).</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ─── notEligible ───────────────────────────────── -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong><code>notEligible</code></strong> · <small>자격 미달 · disabled</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="tbar"><div class="tbar__price"><div class="tbar__price-label">입장권</div><div class="tbar__price-amount">20,000원~</div></div><div class="tbar__btn tbar__btn--disabled">참여 조건 미달</div></div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>나이/성별/기존 참여 등 자격 검증 실패 — <code>state.ineligibleReason</code> 구체 사유 보유</td>
+          </tr>
+          <tr><td>사용자 액션</td><td>탭 무반응 (onPressed: null)</td></tr>
+          <tr><td>에지케이스</td><td><code>state.ineligibleReason</code>이 있으면 sub-reason으로 동적 표시 (예: "만 20세 이상 참여 가능"). 없으면 generic.</td></tr>
+          <tr><td>컴포넌트</td><td>동일 (MinglitButton의 <code>onPressed: null</code> built-in disabled state)</td></tr>
+          <tr><td>토큰</td><td>+ <code>color-divider</code> (disabled bg) · + <code>color-text-secondary</code> (disabled label)</td></tr>
+          <tr><td>노트</td><td>—</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ─── soldOut / full ────────────────────────────── -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong><code>soldOut</code> · <code>full</code></strong> · <small>정원 마감 · disabled</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="tbar"><div class="tbar__price"><div class="tbar__price-label">입장권</div><div class="tbar__price-amount">20,000원~</div></div><div class="tbar__btn tbar__btn--disabled">마감된 이벤트</div></div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>모든 ticket의 <code>soldCount == quantity</code> 도달</td>
+          </tr>
+          <tr><td>사용자 액션</td><td>탭 무반응</td></tr>
+          <tr><td>에지케이스</td><td>Fix #1211: full/soldOut 시 apply CTA 항상 disabled</td></tr>
+          <tr><td>컴포넌트</td><td>동일 (MinglitButton disabled)</td></tr>
+          <tr><td>토큰</td><td>동일 (notEligible과 같은 disabled tokens)</td></tr>
+          <tr><td>노트</td><td>—</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ─── pendingPayment ────────────────────────────── -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong><code>pendingPayment</code></strong> · <small style="color:var(--color-secondary);">결제 중단된 신청 있음</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="tbar"><div class="tbar__price"><div class="tbar__price-label">입장권</div><div class="tbar__price-amount">20,000원~</div></div><div class="tbar__btn">결제 계속하기</div></div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>이전 신청 + 결제 미완료 application 존재 (티켓은 이미 선택됨)</td>
+          </tr>
+          <tr><td>사용자 액션</td><td>"결제 계속하기" 탭 → <code>EventApplicationWizard</code>의 결제 step으로 직진. 티켓 선택 sheet skip.</td></tr>
+          <tr><td>에지케이스</td><td>—</td></tr>
+          <tr><td>컴포넌트</td><td>동일</td></tr>
+          <tr><td>토큰</td><td>동일</td></tr>
+          <tr><td>노트</td><td>—</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ─── applied ───────────────────────────────────── -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong><code>applied</code></strong> · <small>구매 완료 · disabled</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="tbar"><div class="tbar__price"><div class="tbar__price-label">입장권</div><div class="tbar__price-amount">20,000원~</div></div><div class="tbar__btn tbar__btn--disabled">구매 완료</div></div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>결제 완료 상태. 심사 있는 이벤트면 백그라운드 심사 진행 중일 수도</td>
+          </tr>
+          <tr><td>사용자 액션</td><td>탭 무반응</td></tr>
+          <tr><td>에지케이스</td><td>심사 있는 이벤트면 백그라운드 심사 중 — 상태 변동 시 <code>rejected</code> 또는 <code>eventEndedParticipated</code>로 자동 전이.</td></tr>
+          <tr><td>컴포넌트</td><td>동일 (disabled)</td></tr>
+          <tr><td>토큰</td><td>동일 (notEligible과 같은 disabled tokens)</td></tr>
+          <tr><td>노트</td><td>—</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ─── rejected ──────────────────────────────────── -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong><code>rejected</code></strong> · <small style="color:#c62828;">심사 반려 · destructive</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="tbar"><div class="tbar__price"><div class="tbar__price-label">입장권</div><div class="tbar__price-amount">20,000원~</div></div><div class="tbar__btn tbar__btn--destructive">심사 반려 (사유 확인)</div></div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td><code>application.status == rejected</code> — 결제 후 파트너 심사에서 반려됨</td>
+          </tr>
+          <tr><td>사용자 액션</td><td>"심사 반려 (사유 확인)" 탭 → 반려 사유 다이얼로그 + 자동 환불 안내.</td></tr>
+          <tr><td>에지케이스</td><td>—</td></tr>
+          <tr><td>컴포넌트</td><td>↔ <code>MinglitButton</code> → <code>MinglitButton.destructive</code> (variant)</td></tr>
+          <tr><td>토큰</td><td>+ <code>color-error</code> 계열 (destructive 내부 사용)</td></tr>
+          <tr><td>노트</td><td>—</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ─── eventEnded ────────────────────────────────── -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong><code>eventEnded</code></strong> · <small>이벤트 종료 · disabled</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="tbar"><div class="tbar__price"><div class="tbar__price-label">입장권</div><div class="tbar__price-amount">20,000원~</div></div><div class="tbar__btn tbar__btn--disabled">종료된 이벤트</div></div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td><code>event.endTime</code> 경과 + 미참여 (참여 안 한 이벤트가 종료됨)</td>
+          </tr>
+          <tr><td>사용자 액션</td><td>탭 무반응</td></tr>
+          <tr><td>에지케이스</td><td>—</td></tr>
+          <tr><td>컴포넌트</td><td>동일 (disabled)</td></tr>
+          <tr><td>토큰</td><td>동일</td></tr>
+          <tr><td>노트</td><td>—</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ─── eventEndedWithResults ─────────────────────── -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong><code>eventEndedWithResults</code></strong> · <small style="color:var(--color-primary);">매칭 결과 도착</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="tbar"><div class="tbar__price"><div class="tbar__price-label">입장권</div><div class="tbar__price-amount">20,000원~</div></div><div class="tbar__btn">매칭 결과 보기</div></div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>참여 + 매칭 결과 publish됨 — 매칭 가능한 이벤트 종료 후</td>
+          </tr>
+          <tr><td>사용자 액션</td><td>"매칭 결과 보기" 탭 → <code>EventResultsRoute</code> push (모달 sheet — EventNowBar results phase와 동일 surface).</td></tr>
+          <tr><td>에지케이스</td><td>—</td></tr>
+          <tr><td>컴포넌트</td><td>동일</td></tr>
+          <tr><td>토큰</td><td>동일</td></tr>
+          <tr><td>노트</td><td>—</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ─── eventEndedParticipated ────────────────────── -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong><code>eventEndedParticipated</code></strong> · <small>참여 완료 · disabled</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="tbar"><div class="tbar__price"><div class="tbar__price-label">입장권</div><div class="tbar__price-amount">20,000원~</div></div><div class="tbar__btn tbar__btn--disabled">참여 완료</div></div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>참여 후 이벤트 종료 + 매칭 결과 따로 없음 (일반 이벤트)</td>
+          </tr>
+          <tr><td>사용자 액션</td><td>탭 무반응</td></tr>
+          <tr><td>에지케이스</td><td>참여 후 이벤트 종료된 케이스. 매칭 결과가 따로 없는 일반 이벤트의 종착 state.</td></tr>
+          <tr><td>컴포넌트</td><td>동일 (disabled)</td></tr>
+          <tr><td>토큰</td><td>동일</td></tr>
+          <tr><td>노트</td><td>—</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ─── async loading ─────────────────────────────── -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong><code>async loading</code></strong> · <small>admission state fetch 중</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="tbar"><div class="tbar__price"><div class="tbar__price-label">입장권</div><div class="tbar__price-amount">20,000원~</div></div><div class="tbar__btn tbar__btn--loading"></div></div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td><code>admissionAsync.isLoading == true</code> — provider 응답 대기</td>
+          </tr>
+          <tr><td>사용자 액션</td><td>탭 무반응</td></tr>
+          <tr><td>에지케이스</td><td><code>MinglitAsyncValueWidget</code>의 loading 분기. provider 응답까지 대기.</td></tr>
+          <tr><td>컴포넌트</td><td>↔ <code>MinglitButton</code> → <code>ElevatedButton</code>(disabled) · + <code>MinglitCircularProgressIndicator</code>(size 20, button 내부 child)</td></tr>
+          <tr><td>토큰</td><td>동일 (spinner 내부 animation은 컴포넌트 캡슐화)</td></tr>
+          <tr><td>노트</td><td>—</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ─── async error ───────────────────────────────── -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong><code>async error</code></strong> · <small style="color:#c62828;">admission 조회 실패</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="tbar"><div class="tbar__price"><div class="tbar__price-label">입장권</div><div class="tbar__price-amount">20,000원~</div></div><div class="tbar__btn tbar__btn--error">오류 발생</div></div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td><code>admissionAsync.hasError == true</code> — 네트워크/서버 에러로 state 조회 실패</td>
+          </tr>
+          <tr><td>사용자 액션</td><td>탭 무반응</td></tr>
+          <tr><td>에지케이스</td><td>상위 EventDetailPage의 RefreshIndicator로 재시도 가능.</td></tr>
+          <tr><td>컴포넌트</td><td>↔ <code>MinglitButton</code> → <code>ElevatedButton</code>(disabled, errorContainer 톤)</td></tr>
+          <tr><td>토큰</td><td>+ <code>color-errorContainer</code> (button bg) · + <code>color-onErrorContainer</code> (label)</td></tr>
+          <tr><td>노트</td><td>—</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ─── edge: tickets empty ───────────────────────── -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong>edge: tickets empty</strong> · <small>가격 미정 fallback</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="tbar"><div class="tbar__price"><div class="tbar__price-label">입장권</div><div class="tbar__price-amount">가격 미정</div></div><div class="tbar__btn tbar__btn--disabled">참여 조건 미달</div></div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td><code>event.tickets == null || event.tickets.isEmpty</code> — 데이터 미등록 또는 fetch 실패</td>
+          </tr>
+          <tr><td>사용자 액션</td><td>탭 무반응 (admission state에 따라 — 보통 disabled)</td></tr>
+          <tr><td>에지케이스</td><td>가격 자리에 "가격 미정" 텍스트 fallback. 가격 amount 자리에 들어가지만 typography titleLarge는 그대로 유지.</td></tr>
+          <tr><td>컴포넌트</td><td>동일 (가격 라벨 텍스트만 fallback)</td></tr>
+          <tr><td>토큰</td><td>동일</td></tr>
+          <tr><td>노트</td><td>—</td></tr>
+        </tbody>
+      </table>
+
+    </div>
+  </section>
+
+  <section class="doc">
+    <h2>Ticket selection sheet — states</h2>
+    <p class="intro">
+      구매하기 / 구매하고 신청하기 탭 후 나타나는 modal sheet. 2 states (banner 유무).
+      <strong>without-banner가 baseline</strong>, with-banner는 additive diff.
+    </p>
+    <div class="visual-gallery" style="background: var(--color-surface); padding: 16px; border-radius: var(--radius-card); display: flex; flex-direction: column; gap: 16px;">
+
+      <!-- ─── without banner (eligible · BASELINE) ────────── -->
+      <table class="ref state-mini" style="background: rgba(153,0,255,0.04);">
+        <thead>
+          <tr><th colspan="3"><strong>without banner</strong> · <small style="color:var(--color-primary);">eligible 진입 · baseline</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="tsheet">
+                <div class="tsheet__title">티켓 선택</div>
+                <div class="tsheet__ticket tsheet__ticket--recommended">
+                  <div class="tsheet__ticket-tag">추천</div>
+                  <div class="tsheet__ticket-name">일반 입장권</div>
+                  <div class="tsheet__ticket-price">20,000원</div>
+                </div>
+                <div class="tsheet__ticket">
+                  <div class="tsheet__ticket-name">VIP 입장권</div>
+                  <div class="tsheet__ticket-price">50,000원</div>
+                </div>
+                <div class="tsheet__cta">다음</div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td><code>event.requiresQualification == false</code> · 사용자가 자격 검증 통과 + 결제만 남은 상태에서 bar의 "구매하기" 탭으로 sheet 진입</td>
+          </tr>
+          <tr>
+            <td>사용자 액션</td>
+            <td>
+              · <strong>sheet 열림</strong> → balance + 사용자 프로필 + 인증 ID async fetch (loading state). 완료 시 추천 티켓 자동 선택 (보라 border + tint + "추천" badge).<br>
+              · <strong>다른 티켓 탭</strong> → 해당 티켓 선택됨 (보라 border 이동). 자격 미달은 회색 + 사유 텍스트 — 탭 무반응.<br>
+              · <strong>수량 +/- 탭</strong> → quantity 증감. 1 미만 / 재고 초과 방지.<br>
+              · <strong>"다음" 탭</strong> → sheet 닫힘 → <code>EventApplicationWizard</code> push (선택 ticketId 전달).<br>
+              · <strong>scrim 탭 / drag down</strong> → sheet dismiss. 이벤트 상세 페이지 그대로 유지 (구매 취소).
+            </td>
+          </tr>
+          <tr>
+            <td>에지케이스</td>
+            <td>
+              · <strong>balance fetch 실패</strong> → noiseless degradation. <code>Log.e</code> 로깅 후 sheet 정상 렌더 (Fix #459 — balance 검증 빠진 채 진행 가능).<br>
+              · <strong>모든 티켓 자격 미달</strong> → <code>buildNoRecommendationState</code> 분기. 추천 없이 모든 티켓 회색 + ineligible reason 표시. "다음" disabled.
+            </td>
+          </tr>
+          <tr>
+            <td>컴포넌트</td>
+            <td><code>TicketSelectionSheet</code> (Container · top-rounded · spacing-large padding) · Column(crossStart · mainMin) · <code>Text</code> "티켓 선택" (headlineSmall bold) · 추천 ticket card (border 2px primary + tint + "추천" badge) · 다른 ticket cards (border-divider) · 수량 -/+ counter (선택 시) · <code>MinglitButton</code> "다음" (full-width 48h, disabled if no selection) · <code>SafeArea</code> bottom inset</td>
+          </tr>
+          <tr>
+            <td>토큰</td>
+            <td><code>color-surface</code> (sheet bg) · <code>color-primary</code> (추천 border + tint) · <code>color-secondary</code> (가격 amount) · <code>color-divider</code> (다른 ticket border) · <code>color-text-primary</code> (ticket name) · <code>color-text-secondary</code> (ineligible reason) · <code>radius-card (16px)</code> (sheet 상단 코너) · <code>spacing-large (24px)</code> (외부 padding) · <code>spacing-medium (16px)</code> (elements gap) · typography <code>headlineSmall</code> bold (title) · typography <code>bodyMedium</code> (ticket name + 가격)</td>
+          </tr>
+          <tr>
+            <td>노트</td>
+            <td>📝 <code>TicketRecommendationUtil</code> 자동 선택 로직 — balanceStatus + userProfile + verificationIds 종합 (3개 async source 모두 완료 후 추천 결정).</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ─── with banner (qualificationRequired) ─────────── -->
+      <table class="ref state-mini" style="background: rgba(255,153,0,0.04);">
+        <thead>
+          <tr><th colspan="3"><strong>with banner ⚠️</strong> · <small style="color:#cc7a00;">qualificationRequired 진입 · 심사 안내</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="tsheet">
+                <div class="tsheet__title">티켓 선택</div>
+                <div class="tsheet__banner">
+                  <div class="tsheet__banner-icon">⚠️</div>
+                  <div class="tsheet__banner-text">
+                    이 이벤트는 파트너 심사를 거쳐 참여가 확정됩니다. <strong>참여 불가시 자동 환불됩니다.</strong>
+                  </div>
+                </div>
+                <div class="tsheet__ticket tsheet__ticket--recommended">
+                  <div class="tsheet__ticket-tag">추천</div>
+                  <div class="tsheet__ticket-name">일반 입장권</div>
+                  <div class="tsheet__ticket-price">20,000원</div>
+                </div>
+                <div class="tsheet__cta">다음</div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td><code>event.requiresQualification == true</code> · bar의 "구매하고 신청하기" 탭으로 sheet 진입 — 결제 후 파트너 심사 단계 존재</td>
+          </tr>
+          <tr><td>사용자 액션</td><td>동일 (sheet 내부 흐름은 baseline과 같음 — banner는 정적 표시)</td></tr>
+          <tr>
+            <td>에지케이스</td>
+            <td>동일 + banner는 정적 (탭/dismiss 동작 없음). screen reader role: alert로 자동 announce.</td>
+          </tr>
+          <tr><td>컴포넌트</td><td>+ <code>MinglitInfoBanner</code> (warning tone) — title row 바로 아래 자동 출현. 다른 컴포넌트 동일.</td></tr>
+          <tr>
+            <td>토큰</td>
+            <td>+ banner 전용 — <code>color-secondary</code> @ 12% tint bg · 3px left border · 나머지는 baseline 동일</td>
+          </tr>
+          <tr>
+            <td>노트</td>
+            <td>📝 <strong>UX 핵심 결정</strong> — 별도 dialog 단계 추가 없이 sheet 안에서 통합 안내. 사용자에게 추가 step 강요 안 함. "참여 불가시 자동 환불됩니다" 굵게 강조하여 expectation set.</td>
+          </tr>
+        </tbody>
+      </table>
+
+    </div>
+  </section>
+</div>
+
+<!-- ============================================================
+     BEHAVIOR
+     ============================================================ -->
+<div class="perspective" id="global-behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">
+      Cross-cutting / global only — 화면 전반에 걸친 동작.
+      state별 인터랙션은 위 States section의 각 state mini-table에 있음.
+    </span>
+  </div>
+
+  <section class="doc">
+    <h2>Motion &amp; timing</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 240px;">Transition</th>
+          <th style="width: 100px;">Duration</th>
+          <th>Curve / notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>admission state crossfade (eventDetailControllerProvider 데이터 변화 시)</td>
+          <td><code>MinglitAnimation.medium</code> · ~350ms</td>
+          <td>state별 라벨/스타일 변경 시 부드러운 전이 — 코드상 명시 transition은 없지만 setState rebuild로 즉시 반영</td>
+        </tr>
+        <tr>
+          <td>티켓 선택 sheet slide-up</td>
+          <td>~300ms</td>
+          <td>Material <code>showModalBottomSheet</code> 기본 — 상단 코너 radius-card · scrim 검정 ~50% alpha</td>
+        </tr>
+        <tr>
+          <td>buttonStyle 전환 (eligible→qualificationRequired 등)</td>
+          <td>OS default</td>
+          <td>색상/텍스트 즉시 교체 — 보통 데이터 fetch 완료 시 한 번만 발생, transition 없이 즉시</td>
+        </tr>
+        <tr>
+          <td>loading spinner</td>
+          <td>0.9s loop</td>
+          <td>20px <code>MinglitCircularProgressIndicator</code> · 원형 회전. provider 응답 대기 동안 무한 반복</td>
+        </tr>
+        <tr>
+          <td>심사 안내 banner 출현</td>
+          <td>없음 (instant)</td>
+          <td>sheet build 시점에 이미 렌더 — 별도 fade-in 없이 즉시 visible</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="intro" style="margin-top:12px;margin-bottom:0;">
+      ※ <code>MinglitAnimation</code> (<code>shared/packages/mds/core/lib/src/theme/minglit_design_tokens.dart</code>) — fast/medium/slow 4단계.
+      tokens.json 마이그레이션 진행 중.
+    </p>
+  </section>
+
+  <section class="doc">
+    <h2>Global edge cases</h2>
+    <p class="intro">
+      화면 전반 영향. (state-specific edge — 가격 미정, 사유별 disabled 라벨 등 — 은 위 Visual의 해당 state 카드에)
+    </p>
+    <ul class="notes">
+      <li><strong>balance 조회 실패</strong> — <code>_fetchBalanceStatus</code> 예외 catch 후 error 로깅 (<code>Log.e</code>) · loading 해제 + recommendation 시도. 사용자에게는 noiseless degradation (sheet 정상 표시 — 단, balance 검증이 빠진 채 진행). Fix #459.</li>
+      <li><strong>모든 티켓 자격 미달</strong> — sheet의 <code>buildNoRecommendationState</code> 분기 — 추천 없이 모든 티켓 회색 + ineligible reason 표시. "다음" disabled.</li>
+      <li><strong>로그인 후 복귀 race</strong> — 비로그인 → 로그인 화면 → 복귀 시 admission provider invalidate 필요 — 즉시 새 state(<code>eligible</code> 등)로 갱신되어야 stale state 안 보임.</li>
+      <li><strong>네트워크 끊김</strong> — admission async error 분기 진입 → "오류 발생" 라벨 + errorContainer 톤. 상위 EventDetailPage RefreshIndicator로 재시도.</li>
+      <li><strong>접근성</strong> — 심사 안내 banner는 <code>Semantics(role: alert)</code>로 screen reader가 자동 읽도록. 모든 disabled 버튼은 <code>onPressed: null</code> + 라벨 자체가 사유 텍스트 (예: "마감된 이벤트").</li>
+      <li><strong>다크 모드</strong> — banner tint(color-secondary 12%)와 ticket card primary tint(6%)가 dark surface 위에서도 충분한 contrast 유지. price color-secondary는 dark에서도 그대로 노란/주황 톤.</li>
+    </ul>
+  </section>
+</div>
+
+<!-- ============================================================
+     REFERENCE
+     ============================================================ -->
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">📖</span>
+    <h2>Reference</h2>
+    <span class="lede">
+      Implementation source + 인접 화면 link. <strong>Components / Tokens는 States section의 각 mini-table</strong>에 분산됨 — 여기에서 중복 명세하지 않음. <strong>History</strong>는 Overview 아래 별도 섹션으로 이전.
+    </span>
+  </div>
+
+  <section class="doc">
+    <h2>Implementation source</h2>
+    <table class="ref">
+      <thead>
+        <tr><th style="width: 200px;">항목</th><th>Path / Reference</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Widget class</strong></td><td><code>_BottomTicketBar</code> (private — EventDetailPage에 part of)</td></tr>
+        <tr><td><strong>File path</strong></td><td><a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/event/detail/event_bottom_ticket_bar.dart"><code>apps/app_user/lib/src/features/event/detail/event_bottom_ticket_bar.dart</code></a></td></tr>
+        <tr><td><strong>Controller / Provider</strong></td><td><code>eventAdmissionControllerProvider(event)</code> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/event/admission/event_admission_controller.dart"><code>event_admission_controller.dart</code></a></td></tr>
+        <tr><td><strong>State mapping</strong></td><td><code>AdmissionButtonConfig.fromState()</code> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/event/admission/admission_action_handler.dart"><code>admission_action_handler.dart</code></a> — 12개 state → 라벨/style 매핑 (designing 변경: "신청" → "구매" 5개 라벨)</td></tr>
+        <tr><td><strong>Ticket selection sheet</strong></td><td><code>TicketSelectionSheet</code> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/ticket/ui/ticket_selection_sheet.dart"><code>ticket_selection_sheet.dart</code></a> · 진입 helper: <code>eventCoordinator.showTicketSelection()</code></td></tr>
+        <tr><td><strong>Kit wrapper</strong></td><td><code>MinglitButton</code> · <code>shared/packages/mds/core/lib/src/ui/widgets/common/minglit_button.dart</code></td></tr>
+        <tr><td><strong>Route</strong></td><td>(none — bar는 EventDetailPage 일부, 자체 route 없음)</td></tr>
+      </tbody>
+    </table>
+    <p class="intro" style="margin-top: 12px; margin-bottom: 0;">
+      ※ status <code>🚧 designing</code>: 입장권/구매하기 라벨 변경 + 심사 안내 banner는 spec에만 존재, 코드 미반영. 구현 PR 머지 시 status를 <code>✅ implemented</code>로 전환.
+    </p>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 240px;">Spec</th><th>Relation</th></tr></thead>
+      <tbody>
+        <tr><td><a href="/specs/event_detail_page.html"><code>EventDetailPage</code></a></td><td>Parent — bar는 ⑥ 영역으로 자동 부착</td></tr>
+        <tr><td><code>EventApplicationWizard</code> (TBD spec)</td><td>"다음" 탭 후 결제 wizard로 이동 (verify → payment 2단계)</td></tr>
+        <tr><td><a href="/specs/login_page.html"><code>LoginPage</code></a></td><td>guest state 탭 시 <code>from='/events/:id'</code> 파라미터로 이동</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+</div>
+
+<!-- ============================================================
+     ✅ AUTHORING CHECKLIST
+     ============================================================ -->
+<section class="doc" style="border: 2px solid var(--color-primary); border-radius: var(--radius-card); padding: 16px 24px; margin-top: 32px;">
+  <h2 style="color: var(--color-primary);">✅ Authoring checklist</h2>
+  <ul class="notes" style="line-height: 1.9;">
+    <li>✅ <strong>Header</strong> — Title (h1)만</li>
+    <li>✅ <strong>Overview</strong> — Status · App · Category · Route/Surface · Path (parent link 포함) · Purpose · Entry/Exit · Background · Frequency 모두 채움</li>
+    <li>✅ <strong>History</strong> — 1.0 (initial) · 1.1 (template migration) · 1.2 (status simplify · Overview rename · History 위치) · 1.3 (breadcrumb → Overview 흡수) · 1.4 (Header 단순화 · Status/Role → Overview · Role 제거) 5 row</li>
+    <li>✅ <strong>Layout — top blueprint</strong> — Bar anatomy + Ticket sheet anatomy 분리 (component-tier spec — viewport 자체보다 두 sub-anatomy가 본체)</li>
+    <li>✅ <strong>Layout — Sub-anatomy</strong> — Bar · Ticket sheet 평면 나열</li>
+    <li>✅ <strong>States — 종류 enumerate</strong> — 12 admission + async loading + async error + edge tickets empty (총 14)</li>
+    <li>✅ <strong>States — mini-table 6 rows</strong> — 14 state 모두 (조건/액션/에지/컴포넌트/토큰/노트) 6행</li>
+    <li>✅ <strong>States — eligible baseline 풀 리스트</strong> — 메인 case에 컴포넌트 + 토큰 풀 명시</li>
+    <li>✅ <strong>States — additive diff</strong> — 5종 prefix(<code>+</code>/<code>−</code>/<code>↔</code>/<code>동일</code>/<code>—</code>)만 사용</li>
+    <li>✅ <strong>Ticket selection sheet — 2 states</strong> — without banner (baseline) · with banner ⚠️ (additive diff) 모두 mini-table 6-row 패턴</li>
+    <li>✅ <strong>Global Behavior — cross-cutting only</strong> — Motion timing + Global edge cases. state-specific 분리됨</li>
+    <li>✅ <strong>Global Behavior — Motion</strong> — 모든 duration이 <code>MinglitAnimation</code> token name + ms로 명시</li>
+    <li>✅ <strong>Global edge cases</strong> — balance fail · ticket all ineligible · login race · 네트워크 · 접근성 · 다크모드</li>
+    <li>✅ <strong>Reference — Implementation source</strong> — Widget · path · provider · state mapping · sheet · kit · route 모두 채움</li>
+    <li>✅ <strong>Reference — Related screens</strong> — EventDetailPage(parent) · ApplicationWizard · LoginPage</li>
+    <li>✅ <strong>Token 표기 통일</strong> — 모든 토큰이 <code>name (px)</code> 또는 <code>name</code> 형태</li>
+    <li>🚧 <strong>코드 검증</strong> — ad-hoc trigger 기반 (status와 분리). 라벨/banner 구현 PR 머지 시 multi-pass verify 후 History row 추가</li>
+  </ul>
+</section>
+
+</div>
+
+<script>
+  document.getElementById('spec-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('spec-mode', e.target.checked);
+  });
+  document.getElementById('dark-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('dark-mode', e.target.checked);
+  });
+</script>
+
+</body>
+</html>
