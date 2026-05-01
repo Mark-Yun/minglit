@@ -279,6 +279,18 @@ const SUB_COMPONENT_SPECS: { user: SubComponentSpec[]; partner: SubComponentSpec
       filePath: 'apps/app_user/lib/src/features/event/detail/event_bottom_ticket_bar.dart',
       specBasename: 'event_bottom_ticket_bar',
     },
+    {
+      widget: 'EventNowBar',
+      parentRoute: 'HomeRoute',
+      filePath: 'apps/app_user/lib/src/features/home/widgets/event_now_bar.dart',
+      specBasename: 'event_now_bar',
+    },
+    {
+      widget: 'MinglitEventCard',
+      parentRoute: 'HomeRoute',
+      filePath: 'shared/packages/minglit_kit/lib/src/widgets/event_card/minglit_event_card.dart',
+      specBasename: 'event_card',
+    },
   ],
   partner: [],
 };
