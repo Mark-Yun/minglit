@@ -527,17 +527,17 @@ body.dark-mode .visual-gallery {
             <td class="state-mini__aspect">조건</td>
             <td>모든 사전 검증 통과 (로그인 + 본인인증 + 자격) + 결제 가능 + <code>event.endTime</code> 미경과 + 정원 미만</td>
           </tr>
-          <tr><td>사용자 액션</td><td>"구매하기" 탭 → 티켓 선택 sheet 슬라이드 업 (banner 없음). 추천 티켓 자동 선택 → "다음" 탭 시 <code>EventApplicationWizard</code> push.</td></tr>
-          <tr><td>에지케이스</td><td>—</td></tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>"구매하기" 탭 → 티켓 선택 sheet 슬라이드 업 (banner 없음). 추천 티켓 자동 선택 → "다음" 탭 시 <code>EventApplicationWizard</code> push.</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>—</td></tr>
           <tr>
-            <td>컴포넌트</td>
+            <td class="state-mini__aspect">컴포넌트</td>
             <td><code>MinglitAsyncValueWidget</code>(admissionAsync 분기) · <code>MinglitButton</code>(primary, full-width 48h, label dynamic per state) · Container(decoration: surface + box-shadow top) · <code>SafeArea</code>(top: false) · Row(price col + Expanded button)</td>
           </tr>
           <tr>
-            <td>토큰</td>
+            <td class="state-mini__aspect">토큰</td>
             <td><code>color-surface</code> (bar bg) · <code>color-primary</code> (button bg) · <code>color-secondary</code> (price amount) · <code>color-text-secondary</code> (price label "입장권") · <code>color-background</code> (button label · SafeArea fill) · <code>spacing-medium (16px)</code> (outer pad) · <code>spacing-large (24px)</code> (price↔button gap) · <code>radius-card</code> (button radius) · typography <code>labelSmall (11/600)</code> (price label) · <code>titleLarge (20/700)</code> (price amount) · <code>bodyLarge (16/600)</code> (button label) · box-shadow <code>0 -2px 10px rgba(0,0,0,0.06)</code></td>
           </tr>
-          <tr><td>노트</td><td>—</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>—</td></tr>
         </tbody>
       </table>
 
@@ -554,11 +554,11 @@ body.dark-mode .visual-gallery {
             <td class="state-mini__aspect">조건</td>
             <td><code>currentUser == null</code> — 비로그인 사용자가 이벤트 상세 진입</td>
           </tr>
-          <tr><td>사용자 액션</td><td>"로그인하고 구매하기" 탭 → 로그인 화면(<code>LoginRoute</code>) push · <code>from='/events/:eventId'</code> 로 자동 복귀</td></tr>
-          <tr><td>에지케이스</td><td>—</td></tr>
-          <tr><td>컴포넌트</td><td>동일</td></tr>
-          <tr><td>토큰</td><td>동일</td></tr>
-          <tr><td>노트</td><td>—</td></tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>"로그인하고 구매하기" 탭 → 로그인 화면(<code>LoginRoute</code>) push · <code>from='/events/:eventId'</code> 로 자동 복귀</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>—</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>동일</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>동일</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>—</td></tr>
         </tbody>
       </table>
 
@@ -575,11 +575,11 @@ body.dark-mode .visual-gallery {
             <td class="state-mini__aspect">조건</td>
             <td>로그인됨 + <code>!hasIdentityVerified</code> — 이벤트는 identityRequired</td>
           </tr>
-          <tr><td>사용자 액션</td><td>"본인인증 후 구매하기" 탭 → 본인인증 화면(<code>CertificationRoute</code>) push · 완료 시 자동 복귀</td></tr>
-          <tr><td>에지케이스</td><td>—</td></tr>
-          <tr><td>컴포넌트</td><td>동일</td></tr>
-          <tr><td>토큰</td><td>동일</td></tr>
-          <tr><td>노트</td><td>—</td></tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>"본인인증 후 구매하기" 탭 → 본인인증 화면(<code>CertificationRoute</code>) push · 완료 시 자동 복귀</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>—</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>동일</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>동일</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>—</td></tr>
         </tbody>
       </table>
 
@@ -596,11 +596,11 @@ body.dark-mode .visual-gallery {
             <td class="state-mini__aspect">조건</td>
             <td><code>event.requiresQualification == true</code> + 사전 검증 통과 — 결제 후 파트너 심사 필요</td>
           </tr>
-          <tr><td>사용자 액션</td><td>"구매하고 신청하기" 탭 → 티켓 선택 sheet (상단 ⚠️ 심사 안내 banner — "참여 불가시 자동 환불됩니다"). 그 외 sheet 흐름은 eligible과 동일.</td></tr>
-          <tr><td>에지케이스</td><td><strong>심사 결과 분기</strong> — 결제 시 <code>applied</code>로 즉시 전이. 이후 심사 결과에 따라 <code>rejected</code>(자동 환불) 또는 <code>eventEndedParticipated</code>.</td></tr>
-          <tr><td>컴포넌트</td><td>동일 (sheet 안 banner는 별도 sub-spec — 아래 Ticket selection sheet 참조)</td></tr>
-          <tr><td>토큰</td><td>동일 (banner는 sheet 토큰)</td></tr>
-          <tr><td>노트</td><td>📝 라벨 "구매하고 신청하기"는 dual mental model 시그널 — 즉시 거래 + 후속 심사. UX 핵심 결정 (mark-yun, 2026-05).</td></tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>"구매하고 신청하기" 탭 → 티켓 선택 sheet (상단 ⚠️ 심사 안내 banner — "참여 불가시 자동 환불됩니다"). 그 외 sheet 흐름은 eligible과 동일.</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td><strong>심사 결과 분기</strong> — 결제 시 <code>applied</code>로 즉시 전이. 이후 심사 결과에 따라 <code>rejected</code>(자동 환불) 또는 <code>eventEndedParticipated</code>.</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>동일 (sheet 안 banner는 별도 sub-spec — 아래 Ticket selection sheet 참조)</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>동일 (banner는 sheet 토큰)</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 라벨 "구매하고 신청하기"는 dual mental model 시그널 — 즉시 거래 + 후속 심사. UX 핵심 결정 (mark-yun, 2026-05).</td></tr>
         </tbody>
       </table>
 
@@ -617,11 +617,11 @@ body.dark-mode .visual-gallery {
             <td class="state-mini__aspect">조건</td>
             <td>나이/성별/기존 참여 등 자격 검증 실패 — <code>state.ineligibleReason</code> 구체 사유 보유</td>
           </tr>
-          <tr><td>사용자 액션</td><td>탭 무반응 (onPressed: null)</td></tr>
-          <tr><td>에지케이스</td><td><code>state.ineligibleReason</code>이 있으면 sub-reason으로 동적 표시 (예: "만 20세 이상 참여 가능"). 없으면 generic.</td></tr>
-          <tr><td>컴포넌트</td><td>동일 (MinglitButton의 <code>onPressed: null</code> built-in disabled state)</td></tr>
-          <tr><td>토큰</td><td>+ <code>color-divider</code> (disabled bg) · + <code>color-text-secondary</code> (disabled label)</td></tr>
-          <tr><td>노트</td><td>—</td></tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>탭 무반응 (onPressed: null)</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td><code>state.ineligibleReason</code>이 있으면 sub-reason으로 동적 표시 (예: "만 20세 이상 참여 가능"). 없으면 generic.</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>동일 (MinglitButton의 <code>onPressed: null</code> built-in disabled state)</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>+ <code>color-divider</code> (disabled bg) · + <code>color-text-secondary</code> (disabled label)</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>—</td></tr>
         </tbody>
       </table>
 
@@ -638,11 +638,11 @@ body.dark-mode .visual-gallery {
             <td class="state-mini__aspect">조건</td>
             <td>모든 ticket의 <code>soldCount == quantity</code> 도달</td>
           </tr>
-          <tr><td>사용자 액션</td><td>탭 무반응</td></tr>
-          <tr><td>에지케이스</td><td>Fix #1211: full/soldOut 시 apply CTA 항상 disabled</td></tr>
-          <tr><td>컴포넌트</td><td>동일 (MinglitButton disabled)</td></tr>
-          <tr><td>토큰</td><td>동일 (notEligible과 같은 disabled tokens)</td></tr>
-          <tr><td>노트</td><td>—</td></tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>탭 무반응</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>Fix #1211: full/soldOut 시 apply CTA 항상 disabled</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>동일 (MinglitButton disabled)</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>동일 (notEligible과 같은 disabled tokens)</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>—</td></tr>
         </tbody>
       </table>
 
@@ -659,11 +659,11 @@ body.dark-mode .visual-gallery {
             <td class="state-mini__aspect">조건</td>
             <td>이전 신청 + 결제 미완료 application 존재 (티켓은 이미 선택됨)</td>
           </tr>
-          <tr><td>사용자 액션</td><td>"결제 계속하기" 탭 → <code>EventApplicationWizard</code>의 결제 step으로 직진. 티켓 선택 sheet skip.</td></tr>
-          <tr><td>에지케이스</td><td>—</td></tr>
-          <tr><td>컴포넌트</td><td>동일</td></tr>
-          <tr><td>토큰</td><td>동일</td></tr>
-          <tr><td>노트</td><td>—</td></tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>"결제 계속하기" 탭 → <code>EventApplicationWizard</code>의 결제 step으로 직진. 티켓 선택 sheet skip.</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>—</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>동일</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>동일</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>—</td></tr>
         </tbody>
       </table>
 
@@ -680,11 +680,11 @@ body.dark-mode .visual-gallery {
             <td class="state-mini__aspect">조건</td>
             <td>결제 완료 상태. 심사 있는 이벤트면 백그라운드 심사 진행 중일 수도</td>
           </tr>
-          <tr><td>사용자 액션</td><td>탭 무반응</td></tr>
-          <tr><td>에지케이스</td><td>심사 있는 이벤트면 백그라운드 심사 중 — 상태 변동 시 <code>rejected</code> 또는 <code>eventEndedParticipated</code>로 자동 전이.</td></tr>
-          <tr><td>컴포넌트</td><td>동일 (disabled)</td></tr>
-          <tr><td>토큰</td><td>동일 (notEligible과 같은 disabled tokens)</td></tr>
-          <tr><td>노트</td><td>—</td></tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>탭 무반응</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>심사 있는 이벤트면 백그라운드 심사 중 — 상태 변동 시 <code>rejected</code> 또는 <code>eventEndedParticipated</code>로 자동 전이.</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>동일 (disabled)</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>동일 (notEligible과 같은 disabled tokens)</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>—</td></tr>
         </tbody>
       </table>
 
@@ -701,11 +701,11 @@ body.dark-mode .visual-gallery {
             <td class="state-mini__aspect">조건</td>
             <td><code>application.status == rejected</code> — 결제 후 파트너 심사에서 반려됨</td>
           </tr>
-          <tr><td>사용자 액션</td><td>"심사 반려 (사유 확인)" 탭 → 반려 사유 다이얼로그 + 자동 환불 안내.</td></tr>
-          <tr><td>에지케이스</td><td>—</td></tr>
-          <tr><td>컴포넌트</td><td>↔ <code>MinglitButton</code> → <code>MinglitButton.destructive</code> (variant)</td></tr>
-          <tr><td>토큰</td><td>+ <code>color-error</code> 계열 (destructive 내부 사용)</td></tr>
-          <tr><td>노트</td><td>—</td></tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>"심사 반려 (사유 확인)" 탭 → 반려 사유 다이얼로그 + 자동 환불 안내.</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>—</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ <code>MinglitButton</code> → <code>MinglitButton.destructive</code> (variant)</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>+ <code>color-error</code> 계열 (destructive 내부 사용)</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>—</td></tr>
         </tbody>
       </table>
 
@@ -722,11 +722,11 @@ body.dark-mode .visual-gallery {
             <td class="state-mini__aspect">조건</td>
             <td><code>event.endTime</code> 경과 + 미참여 (참여 안 한 이벤트가 종료됨)</td>
           </tr>
-          <tr><td>사용자 액션</td><td>탭 무반응</td></tr>
-          <tr><td>에지케이스</td><td>—</td></tr>
-          <tr><td>컴포넌트</td><td>동일 (disabled)</td></tr>
-          <tr><td>토큰</td><td>동일</td></tr>
-          <tr><td>노트</td><td>—</td></tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>탭 무반응</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>—</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>동일 (disabled)</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>동일</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>—</td></tr>
         </tbody>
       </table>
 
@@ -743,11 +743,11 @@ body.dark-mode .visual-gallery {
             <td class="state-mini__aspect">조건</td>
             <td>참여 + 매칭 결과 publish됨 — 매칭 가능한 이벤트 종료 후</td>
           </tr>
-          <tr><td>사용자 액션</td><td>"매칭 결과 보기" 탭 → <code>EventResultsRoute</code> push (모달 sheet — EventNowBar results phase와 동일 surface).</td></tr>
-          <tr><td>에지케이스</td><td>—</td></tr>
-          <tr><td>컴포넌트</td><td>동일</td></tr>
-          <tr><td>토큰</td><td>동일</td></tr>
-          <tr><td>노트</td><td>—</td></tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>"매칭 결과 보기" 탭 → <code>EventResultsRoute</code> push (모달 sheet — EventNowBar results phase와 동일 surface).</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>—</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>동일</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>동일</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>—</td></tr>
         </tbody>
       </table>
 
@@ -764,11 +764,11 @@ body.dark-mode .visual-gallery {
             <td class="state-mini__aspect">조건</td>
             <td>참여 후 이벤트 종료 + 매칭 결과 따로 없음 (일반 이벤트)</td>
           </tr>
-          <tr><td>사용자 액션</td><td>탭 무반응</td></tr>
-          <tr><td>에지케이스</td><td>참여 후 이벤트 종료된 케이스. 매칭 결과가 따로 없는 일반 이벤트의 종착 state.</td></tr>
-          <tr><td>컴포넌트</td><td>동일 (disabled)</td></tr>
-          <tr><td>토큰</td><td>동일</td></tr>
-          <tr><td>노트</td><td>—</td></tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>탭 무반응</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>참여 후 이벤트 종료된 케이스. 매칭 결과가 따로 없는 일반 이벤트의 종착 state.</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>동일 (disabled)</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>동일</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>—</td></tr>
         </tbody>
       </table>
 
@@ -785,11 +785,11 @@ body.dark-mode .visual-gallery {
             <td class="state-mini__aspect">조건</td>
             <td><code>admissionAsync.isLoading == true</code> — provider 응답 대기</td>
           </tr>
-          <tr><td>사용자 액션</td><td>탭 무반응</td></tr>
-          <tr><td>에지케이스</td><td><code>MinglitAsyncValueWidget</code>의 loading 분기. provider 응답까지 대기.</td></tr>
-          <tr><td>컴포넌트</td><td>↔ <code>MinglitButton</code> → <code>ElevatedButton</code>(disabled) · + <code>MinglitCircularProgressIndicator</code>(size 20, button 내부 child)</td></tr>
-          <tr><td>토큰</td><td>동일 (spinner 내부 animation은 컴포넌트 캡슐화)</td></tr>
-          <tr><td>노트</td><td>—</td></tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>탭 무반응</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td><code>MinglitAsyncValueWidget</code>의 loading 분기. provider 응답까지 대기.</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ <code>MinglitButton</code> → <code>ElevatedButton</code>(disabled) · + <code>MinglitCircularProgressIndicator</code>(size 20, button 내부 child)</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>동일 (spinner 내부 animation은 컴포넌트 캡슐화)</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>—</td></tr>
         </tbody>
       </table>
 
@@ -806,11 +806,11 @@ body.dark-mode .visual-gallery {
             <td class="state-mini__aspect">조건</td>
             <td><code>admissionAsync.hasError == true</code> — 네트워크/서버 에러로 state 조회 실패</td>
           </tr>
-          <tr><td>사용자 액션</td><td>탭 무반응</td></tr>
-          <tr><td>에지케이스</td><td>상위 EventDetailPage의 RefreshIndicator로 재시도 가능.</td></tr>
-          <tr><td>컴포넌트</td><td>↔ <code>MinglitButton</code> → <code>ElevatedButton</code>(disabled, errorContainer 톤)</td></tr>
-          <tr><td>토큰</td><td>+ <code>color-errorContainer</code> (button bg) · + <code>color-onErrorContainer</code> (label)</td></tr>
-          <tr><td>노트</td><td>—</td></tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>탭 무반응</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>상위 EventDetailPage의 RefreshIndicator로 재시도 가능.</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ <code>MinglitButton</code> → <code>ElevatedButton</code>(disabled, errorContainer 톤)</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>+ <code>color-errorContainer</code> (button bg) · + <code>color-onErrorContainer</code> (label)</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>—</td></tr>
         </tbody>
       </table>
 
@@ -827,11 +827,11 @@ body.dark-mode .visual-gallery {
             <td class="state-mini__aspect">조건</td>
             <td><code>event.tickets == null || event.tickets.isEmpty</code> — 데이터 미등록 또는 fetch 실패</td>
           </tr>
-          <tr><td>사용자 액션</td><td>탭 무반응 (admission state에 따라 — 보통 disabled)</td></tr>
-          <tr><td>에지케이스</td><td>가격 자리에 "가격 미정" 텍스트 fallback. 가격 amount 자리에 들어가지만 typography titleLarge는 그대로 유지.</td></tr>
-          <tr><td>컴포넌트</td><td>동일 (가격 라벨 텍스트만 fallback)</td></tr>
-          <tr><td>토큰</td><td>동일</td></tr>
-          <tr><td>노트</td><td>—</td></tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>탭 무반응 (admission state에 따라 — 보통 disabled)</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>가격 자리에 "가격 미정" 텍스트 fallback. 가격 amount 자리에 들어가지만 typography titleLarge는 그대로 유지.</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>동일 (가격 라벨 텍스트만 fallback)</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>동일</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>—</td></tr>
         </tbody>
       </table>
 
@@ -872,7 +872,7 @@ body.dark-mode .visual-gallery {
             <td><code>event.requiresQualification == false</code> · 사용자가 자격 검증 통과 + 결제만 남은 상태에서 bar의 "구매하기" 탭으로 sheet 진입</td>
           </tr>
           <tr>
-            <td>사용자 액션</td>
+            <td class="state-mini__aspect">사용자 액션</td>
             <td>
               · <strong>sheet 열림</strong> → balance + 사용자 프로필 + 인증 ID async fetch (loading state). 완료 시 추천 티켓 자동 선택 (보라 border + tint + "추천" badge).<br>
               · <strong>다른 티켓 탭</strong> → 해당 티켓 선택됨 (보라 border 이동). 자격 미달은 회색 + 사유 텍스트 — 탭 무반응.<br>
@@ -882,22 +882,22 @@ body.dark-mode .visual-gallery {
             </td>
           </tr>
           <tr>
-            <td>에지케이스</td>
+            <td class="state-mini__aspect">에지케이스</td>
             <td>
               · <strong>balance fetch 실패</strong> → noiseless degradation. <code>Log.e</code> 로깅 후 sheet 정상 렌더 (Fix #459 — balance 검증 빠진 채 진행 가능).<br>
               · <strong>모든 티켓 자격 미달</strong> → <code>buildNoRecommendationState</code> 분기. 추천 없이 모든 티켓 회색 + ineligible reason 표시. "다음" disabled.
             </td>
           </tr>
           <tr>
-            <td>컴포넌트</td>
+            <td class="state-mini__aspect">컴포넌트</td>
             <td><code>TicketSelectionSheet</code> (Container · top-rounded · spacing-large padding) · Column(crossStart · mainMin) · <code>Text</code> "티켓 선택" (headlineSmall bold) · 추천 ticket card (border 2px primary + tint + "추천" badge) · 다른 ticket cards (border-divider) · 수량 -/+ counter (선택 시) · <code>MinglitButton</code> "다음" (full-width 48h, disabled if no selection) · <code>SafeArea</code> bottom inset</td>
           </tr>
           <tr>
-            <td>토큰</td>
+            <td class="state-mini__aspect">토큰</td>
             <td><code>color-surface</code> (sheet bg) · <code>color-primary</code> (추천 border + tint) · <code>color-secondary</code> (가격 amount) · <code>color-divider</code> (다른 ticket border) · <code>color-text-primary</code> (ticket name) · <code>color-text-secondary</code> (ineligible reason) · <code>radius-card (16px)</code> (sheet 상단 코너) · <code>spacing-large (24px)</code> (외부 padding) · <code>spacing-medium (16px)</code> (elements gap) · typography <code>headlineSmall</code> bold (title) · typography <code>bodyMedium</code> (ticket name + 가격)</td>
           </tr>
           <tr>
-            <td>노트</td>
+            <td class="state-mini__aspect">노트</td>
             <td>📝 <code>TicketRecommendationUtil</code> 자동 선택 로직 — balanceStatus + userProfile + verificationIds 종합 (3개 async source 모두 완료 후 추천 결정).</td>
           </tr>
         </tbody>
@@ -930,18 +930,18 @@ body.dark-mode .visual-gallery {
             <td class="state-mini__aspect">조건</td>
             <td><code>event.requiresQualification == true</code> · bar의 "구매하고 신청하기" 탭으로 sheet 진입 — 결제 후 파트너 심사 단계 존재</td>
           </tr>
-          <tr><td>사용자 액션</td><td>동일 (sheet 내부 흐름은 baseline과 같음 — banner는 정적 표시)</td></tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>동일 (sheet 내부 흐름은 baseline과 같음 — banner는 정적 표시)</td></tr>
           <tr>
-            <td>에지케이스</td>
+            <td class="state-mini__aspect">에지케이스</td>
             <td>동일 + banner는 정적 (탭/dismiss 동작 없음). screen reader role: alert로 자동 announce.</td>
           </tr>
-          <tr><td>컴포넌트</td><td>+ <code>MinglitInfoBanner</code> (warning tone) — title row 바로 아래 자동 출현. 다른 컴포넌트 동일.</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>+ <code>MinglitInfoBanner</code> (warning tone) — title row 바로 아래 자동 출현. 다른 컴포넌트 동일.</td></tr>
           <tr>
-            <td>토큰</td>
+            <td class="state-mini__aspect">토큰</td>
             <td>+ banner 전용 — <code>color-secondary</code> @ 12% tint bg · 3px left border · 나머지는 baseline 동일</td>
           </tr>
           <tr>
-            <td>노트</td>
+            <td class="state-mini__aspect">노트</td>
             <td>📝 <strong>UX 핵심 결정</strong> — 별도 dialog 단계 추가 없이 sheet 안에서 통합 안내. 사용자에게 추가 step 강요 안 함. "참여 불가시 자동 환불됩니다" 굵게 강조하여 expectation set.</td>
           </tr>
         </tbody>

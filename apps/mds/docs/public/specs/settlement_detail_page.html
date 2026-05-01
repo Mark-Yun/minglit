@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Spec — SettlementDetailPage (app_partner · SettlementDetailRoute)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* ============================================================
+   SettlementDetailPage-specific atoms.
+   ============================================================ */
+
+/* --- App bar --- */
+.settle-appbar {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--spacing-xsmall);
+  background: var(--color-background);
+  border-bottom: 1px solid var(--color-divider);
+}
+.settle-appbar__back {
+  width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+}
+.settle-appbar__back svg { width: 22px; height: 22px; color: var(--color-text-primary); }
+.settle-appbar__title {
+  flex: 1;
+  font-size: var(--typography-font-size-app-bar-title);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  padding: 0 var(--spacing-small);
+}
+
+/* --- Scrollable body --- */
+.settle-body {
+  position: absolute;
+  top: 56px; left: 0; right: 0; bottom: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+  padding: var(--spacing-medium);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-medium);
+}
+.settle-body::-webkit-scrollbar { display: none; }
+
+/* --- Card --- */
+.settle-card {
+  background: var(--color-background);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-card);
+  padding: var(--spacing-medium);
+}
+.settle-card__title {
+  font-size: var(--typography-font-size-body);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-sm);
+}
+
+/* --- Status badge --- */
+.settle-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--spacing-xsmall) var(--spacing-sm);
+  border-radius: var(--radius-badge);
+  font-size: var(--typography-font-size-body);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.settle-badge--pending {
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+}
+.settle-badge--ready {
+  background: rgba(153, 0, 255, 0.10);
+  color: var(--color-primary);
+}
+.settle-badge--processing {
+  background: rgba(255, 153, 0, 0.12);
+  color: var(--color-secondary);
+}
+.settle-badge--completed {
+  background: rgba(22, 163, 74, 0.10);
+  color: var(--color-success);
+}
+.settle-badge--failed {
+  background: rgba(239, 68, 68, 0.10);
+  color: var(--color-error);
+}
+.settle-badge--hold {
+  background: rgba(239, 68, 68, 0.10);
+  color: var(--color-error);
+}
+.settle-badge--canceled {
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  text-decoration: line-through;
+}
+
+/* --- Status message card (StatusMessageCard) --- */
+.settle-status-message {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+.settle-status-message__text {
+  flex: 1;
+  font-size: var(--typography-font-size-body);
+  color: var(--color-text-primary);
+  line-height: 1.55;
+}
+
+/* --- Amount breakdown (AmountBreakdown) --- */
+.amount-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-xsmall) 0;
+  border-bottom: 1px solid var(--color-surface);
+}
+.amount-row:last-child { border-bottom: none; }
+.amount-row__label {
+  font-size: var(--typography-font-size-body);
+  color: var(--color-text-primary);
+}
+.amount-row__label--secondary { color: var(--color-text-secondary); }
+.amount-row__value {
+  font-size: var(--typography-font-size-body);
+  color: var(--color-text-primary);
+}
+.amount-row__value--negative { color: var(--color-error); }
+.amount-row__value--total {
+  font-size: var(--typography-font-size-body);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.amount-divider {
+  height: 1px;
+  background: var(--color-divider);
+  margin: var(--spacing-xsmall) 0;
+}
+
+/* --- Timeline (StatusTimeline) --- */
+.timeline-item {
+  display: flex;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-xsmall2) 0;
+}
+.timeline-item__dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+.timeline-item__body { flex: 1; }
+.timeline-item__status {
+  font-size: var(--typography-font-size-body);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+.timeline-item__time {
+  font-size: var(--typography-font-size-caption);
+  color: var(--color-text-secondary);
+}
+.timeline-connector {
+  width: 1px; height: 16px;
+  background: var(--color-divider);
+  margin-left: 4px;
+}
+
+/* --- Action buttons (ActionButtons) --- */
+.settle-action-btn {
+  width: 100%;
+  height: 48px;
+  border-radius: var(--radius-button);
+  font-size: var(--typography-font-size-button);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-small);
+  cursor: pointer;
+  margin-bottom: var(--spacing-small);
+}
+.settle-action-btn--filled {
+  background: var(--color-primary);
+  color: white;
+  border: none;
+}
+.settle-action-btn--outlined {
+  background: var(--color-background);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-divider);
+}
+.settle-action-btn svg { width: 18px; height: 18px; }
+
+/* --- Error / full-page state --- */
+.settle-fullpage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 60px 24px;
+  gap: var(--spacing-sm);
+}
+.settle-fullpage__icon { color: var(--color-error); margin-bottom: 8px; }
+.settle-fullpage__title { font-size: var(--typography-font-size-body); font-weight: 600; color: var(--color-text-primary); }
+.settle-fullpage__sub { font-size: var(--typography-font-size-caption); color: var(--color-text-secondary); line-height: 1.6; max-width: 240px; }
+.settle-fullpage__btn {
+  margin-top: 8px;
+  padding: 10px 24px;
+  border-radius: var(--radius-button);
+  background: var(--color-primary);
+  color: white;
+  font-size: var(--typography-font-size-body);
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+}
+
+/* --- Skeleton --- */
+.skeleton-bar {
+  border-radius: 8px;
+  background: linear-gradient(90deg, var(--color-surface) 25%, var(--color-divider) 50%, var(--color-surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite;
+}
+@keyframes shimmer { to { background-position: -200% 0; } }
+
+/* --- Download bottom sheet stub (visual) --- */
+.download-sheet {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: var(--color-background);
+  border-top-left-radius: var(--radius-dialog);
+  border-top-right-radius: var(--radius-dialog);
+  border-top: 1px solid var(--color-divider);
+  padding: var(--spacing-medium);
+}
+.download-sheet__handle {
+  width: 32px; height: 4px;
+  border-radius: 2px;
+  background: var(--color-divider);
+  margin: 0 auto var(--spacing-medium);
+}
+.download-sheet__title {
+  font-size: var(--typography-font-size-app-bar-title);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-medium);
+}
+.download-sheet__options { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.download-sheet__option {
+  height: 52px;
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-input);
+  display: flex; align-items: center;
+  padding: 0 var(--spacing-medium);
+  gap: var(--spacing-sm);
+  font-size: var(--typography-font-size-body);
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+.download-sheet__option svg { width: 20px; height: 20px; color: var(--color-text-secondary); }
+
+/* --- Scrim for bottom sheet --- */
+.scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 5;
+}
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
+</div>
+
+<div class="page">
+
+<!-- ============================================================
+     Header
+     ============================================================ -->
+<header>
+  <div class="breadcrumb">app_partner · Settlement · SettlementDetailRoute</div>
+  <h1>Settlement Detail</h1>
+  <div class="meta">
+    <span>Widget: <code>SettlementDetailPage</code> + <code>_DetailContent</code></span>
+    <span>Role: <strong>정산 상세 · 금액 내역 · 지급 이력</strong></span>
+  </div>
+</header>
+
+<!-- ============================================================
+     Purpose & Context
+     ============================================================ -->
+<section class="doc">
+  <h2>Purpose &amp; Context</h2>
+  <table class="ref">
+    <tbody>
+      <tr>
+        <th style="width: 140px;">Purpose</th>
+        <td>
+          파트너가 특정 정산 항목의 상세 내용(상태, 금액 내역, 지급 이력)을 확인하고,
+          필요 시 재지급 요청 또는 CSV 다운로드 액션을 수행한다.
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry points</strong>: 정산 목록(SettlementListPage)에서 특정 항목 탭.<br>
+          <strong>Exit points</strong>: 뒤로 가기 → 정산 목록 / "재지급 요청" 성공 → 상태 갱신 + 현재 화면 유지 /
+          "CSV 다운로드" → DownloadBottomSheet → 파일 공유 시트.
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          밍글릿은 PG사 수수료, 플랫폼 수수료, VAT를 차감한 순 정산금을 파트너에게 지급한다.
+          각 정산 항목은 PENDING → READY → PROCESSING → COMPLETED 흐름을 따르며
+          HOLD / FAILED / CANCELED 예외 상태도 존재한다.
+          FAILED이고 retryable=true인 경우에만 "재지급 요청" 버튼이 표시된다.
+        </td>
+      </tr>
+      <tr>
+        <th>Frequency</th>
+        <td>이벤트 종료 후 정산 주기마다 1–2회 확인.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- Anchor nav -->
+<nav class="perspective-nav">
+  <a href="#layout"><span class="glyph">🧱</span> Layout</a>
+  <a href="#visual"><span class="glyph">🎨</span> Visual</a>
+  <a href="#behavior"><span class="glyph">🔄</span> Behavior</a>
+  <a href="#reference"><span class="glyph">📖</span> Reference</a>
+</nav>
+
+<!-- ============================================================
+     LAYOUT
+     ============================================================ -->
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Layout</h2>
+    <span class="lede">화면 구조 — 영역, 정렬, 간격 규칙. 색·타이포 무시.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree</h2>
+    <p class="intro">
+      AppBar("정산 상세") + SingleChildScrollView(MinglitContentLayout) — 섹션 사이 spacing-medium.
+      로딩/오류/데이터 없음은 Center 위젯으로 처리.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint">
+        <div class="blueprint__region" style="top:0;left:0;right:0;bottom:0;border-style:solid;border-color:rgba(153,0,255,0.18);"></div>
+
+        <!-- AppBar -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:0;left:0;right:0;height:56px;">
+          <span class="blueprint__region-label">① AppBar — "정산 상세"</span>
+        </div>
+        <!-- Status card -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:72px;left:16px;right:16px;height:72px;">
+          <span class="blueprint__region-label">② StatusMessageCard<br>badge + message text</span>
+        </div>
+        <!-- Amount breakdown -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:160px;left:16px;right:16px;height:180px;">
+          <span class="blueprint__region-label">③ AmountBreakdown<br>총 매출 / PG 수수료 / 플랫폼 수수료 / VAT / 정산금</span>
+        </div>
+        <!-- Timeline -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:356px;left:16px;right:16px;height:140px;">
+          <span class="blueprint__region-label">④ StatusTimeline<br>(histories.isNotEmpty 일 때만 표시)</span>
+        </div>
+        <!-- Action buttons -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:512px;left:16px;right:16px;height:112px;">
+          <span class="blueprint__region-label">⑤ ActionButtons<br>재지급 요청 (FAILED+retryable)<br>CSV 다운로드 (항상)</span>
+        </div>
+
+        <div class="blueprint__align-marker" style="top:8px;right:8px;">screen-edge pad</div>
+        <div class="blueprint__align-marker" style="bottom:8px;right:8px;">scroll bottom</div>
+      </div>
+
+      <div class="layout-tree"><b>Scaffold</b>
+├─ <b>appBar</b>: AppBar(title: Text('정산 상세'))          ← ①
+└─ <b>body</b>
+   ├─ [isLoading]  <b>Center</b> → <b>CircularProgressIndicator</b>
+   ├─ [error]      <b>Center</b> → error icon + title + message + retry button
+   ├─ [detail null] <b>Center</b> → Text('정산 항목을 찾을 수 없습니다.')
+   └─ [data]  <b>_DetailContent</b>
+      └─ <b>SingleChildScrollView</b>
+         └─ <b>MinglitContentLayout</b>(sectionGap: spacing-medium)
+            ├─ <b>StatusMessageCard</b>(status)                 ← ②
+            │  └─ Card → Row(SettlementStatusBadge + message Text)
+            │
+            ├─ <b>AmountBreakdown</b>(detail)                   ← ③
+            │  └─ Card → Column
+            │     ├─ "금액 내역" title
+            │     ├─ _Row('총 매출', '#,###원')
+            │     ├─ _Row('PG 수수료', '-#,###원')
+            │     ├─ _Row('플랫폼 수수료', '-#,###원')
+            │     ├─ _Row('VAT', '-#,###원')
+            │     ├─ Divider
+            │     └─ _Row('정산금', '₩#,###', bold:true)
+            │
+            ├─ [histories≥1] <b>StatusTimeline</b>(histories)   ← ④
+            │  └─ Card → Column
+            │     ├─ "처리 이력" title
+            │     └─ _TimelineItem × N (dot + status arrow + time)
+            │
+            └─ <b>ActionButtons</b>(detail)                     ← ⑤
+               └─ Column(stretch)
+                  ├─ [FAILED+retryable] FilledButton.icon(재지급 요청)
+                  └─ OutlinedButton.icon(CSV 다운로드)</div>
+    </div>
+  </section>
+
+  <section class="doc">
+    <h2>Spacing &amp; alignment rules</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>①</td><td>AppBar</td><td>height 56px · 뒤로가기 포함 Material AppBar</td><td>표준 AppBar.</td></tr>
+        <tr><td>—</td><td>MinglitContentLayout outer</td><td>column stretch · full-width scroll</td><td>섹션 간: <code>spacing-medium (16px)</code> · 콘텐츠 h-pad: <code>spacing-medium (16px)</code> (body padding)</td></tr>
+        <tr><td>②</td><td>StatusMessageCard</td><td>Row · badge + flex message</td><td>card inner pad: <code>spacing-medium</code> · badge↔text: <code>spacing-sm (12px)</code></td></tr>
+        <tr><td>③</td><td>AmountBreakdown</td><td>column stretch · label/value 양 끝 정렬</td><td>card inner pad: <code>spacing-medium</code> · title↔rows: <code>spacing-sm</code> · row v-pad: <code>spacing-xsmall (4px)</code></td></tr>
+        <tr><td>④</td><td>StatusTimeline</td><td>column start · dot-timeline 패턴</td><td>card inner pad: <code>spacing-medium</code> · item v-pad: <code>spacing-xsmall2 (6px)</code> · dot↔text: <code>spacing-sm (12px)</code></td></tr>
+        <tr><td>⑤</td><td>ActionButtons</td><td>column stretch · 버튼 풀폭</td><td>버튼 간: <code>spacing-small (8px)</code> · 버튼 height: 48px</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<!-- ============================================================
+     VISUAL
+     ============================================================ -->
+<div class="perspective" id="visual">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>Visual</h2>
+    <span class="lede">최종 렌더. 첫 번째(COMPLETED 상태)에서 spec mode 오버레이 포함.</span>
+  </div>
+
+  <section class="doc">
+    <h2>States gallery</h2>
+    <p class="intro">
+      5가지 시각 상태. 기본(COMPLETED), PENDING, FAILED(+재지급), HOLD, Error/Loading.
+    </p>
+
+    <div class="states">
+
+      <!-- State 1: Default — COMPLETED (annotated) -->
+      <div class="state">
+        <div class="state__label">
+          Default · 지급 완료 (COMPLETED)
+          <span class="tag">production</span>
+        </div>
+        <div class="state__condition">
+          detail.status == 'COMPLETED' · retryable: false · histories 존재
+        </div>
+        <div class="viewport">
+          <div class="settle-appbar">
+            <div class="settle-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
+            <div class="settle-appbar__title">정산 상세</div>
+          </div>
+
+          <div class="settle-body">
+            <!-- ② Status card -->
+            <div class="settle-card">
+              <div class="settle-status-message">
+                <div class="settle-badge settle-badge--completed">지급 완료</div>
+                <div class="settle-status-message__text">지급이 완료되었습니다.</div>
+              </div>
+            </div>
+
+            <!-- ③ Amount breakdown -->
+            <div class="settle-card">
+              <div class="settle-card__title">금액 내역</div>
+              <div class="amount-row">
+                <div class="amount-row__label amount-row__label--secondary">총 매출</div>
+                <div class="amount-row__value">840,000</div>
+              </div>
+              <div class="amount-row">
+                <div class="amount-row__label amount-row__label--secondary">PG 수수료</div>
+                <div class="amount-row__value amount-row__value--negative">-25,200</div>
+              </div>
+              <div class="amount-row">
+                <div class="amount-row__label amount-row__label--secondary">플랫폼 수수료</div>
+                <div class="amount-row__value amount-row__value--negative">-84,000</div>
+              </div>
+              <div class="amount-row">
+                <div class="amount-row__label amount-row__label--secondary">VAT</div>
+                <div class="amount-row__value amount-row__value--negative">-8,400</div>
+              </div>
+              <div class="amount-divider"></div>
+              <div class="amount-row" style="padding-top:8px;">
+                <div class="amount-row__label" style="font-weight:700;">정산금</div>
+                <div class="amount-row__value amount-row__value--total">₩722,400</div>
+              </div>
+            </div>
+
+            <!-- ④ Timeline -->
+            <div class="settle-card">
+              <div class="settle-card__title">처리 이력</div>
+              <div class="timeline-item">
+                <div class="timeline-item__dot"></div>
+                <div class="timeline-item__body">
+                  <div class="timeline-item__status">PENDING → READY</div>
+                  <div class="timeline-item__time">04/22 10:00</div>
+                </div>
+              </div>
+              <div class="timeline-connector"></div>
+              <div class="timeline-item">
+                <div class="timeline-item__dot"></div>
+                <div class="timeline-item__body">
+                  <div class="timeline-item__status">READY → PROCESSING</div>
+                  <div class="timeline-item__time">04/25 14:30</div>
+                </div>
+              </div>
+              <div class="timeline-connector"></div>
+              <div class="timeline-item">
+                <div class="timeline-item__dot"></div>
+                <div class="timeline-item__body">
+                  <div class="timeline-item__status">PROCESSING → COMPLETED</div>
+                  <div class="timeline-item__time">04/26 09:15</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ⑤ Actions — no retry (completed), only CSV -->
+            <div>
+              <div class="settle-action-btn settle-action-btn--outlined">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                CSV 다운로드
+              </div>
+            </div>
+          </div>
+
+          <!-- Spec-mode annotations -->
+          <span class="annotation" style="top:72px;left:8px;">Card — radius-card (16px)</span>
+          <span class="annotation" style="top:72px;right:8px;">spacing-medium — card pad</span>
+          <span class="annotation" style="top:160px;left:8px;">color-success — badge bg/text</span>
+          <span class="annotation" style="top:420px;right:8px;">color-primary — timeline dot</span>
+          <span class="annotation" style="bottom:68px;left:8px;">spacing-small — btn 간격</span>
+
+          <!-- Callouts -->
+          <span class="callout" style="top:82px;left:16px;">ⓐ</span>
+          <span class="callout" style="top:170px;left:8px;">ⓑ</span>
+          <span class="callout" style="top:398px;left:8px;">ⓒ</span>
+          <span class="callout" style="bottom:68px;right:8px;">ⓓ</span>
+
+          <!-- Type specs -->
+          <span class="type-spec" style="top:86px;left:110px;">14 / 600 / 1 — badge</span>
+          <span class="type-spec" style="top:86px;right:60px;">14 / 400 / 1.55 — msg</span>
+          <span class="type-spec" style="top:176px;left:150px;">14 / 700 / 1 — section title</span>
+          <span class="type-spec" style="top:330px;left:200px;">14 / 700 / 1 — 정산금</span>
+          <span class="type-spec" style="bottom:74px;left:100px;">16 / 600 / 1 — btn</span>
+        </div>
+      </div>
+
+      <!-- State 2: PENDING -->
+      <div class="state">
+        <div class="state__label">
+          정산 대기 (PENDING)
+          <span class="tag tag--mute">pending</span>
+        </div>
+        <div class="state__condition">
+          detail.status == 'PENDING' · 이벤트 종료 후 정산 확정 전
+        </div>
+        <div class="viewport">
+          <div class="settle-appbar">
+            <div class="settle-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
+            <div class="settle-appbar__title">정산 상세</div>
+          </div>
+          <div class="settle-body">
+            <div class="settle-card">
+              <div class="settle-status-message">
+                <div class="settle-badge settle-badge--pending">정산 대기</div>
+                <div class="settle-status-message__text">정산이 확정되기를 기다리고 있습니다.</div>
+              </div>
+            </div>
+            <div class="settle-card">
+              <div class="settle-card__title">금액 내역</div>
+              <div class="amount-row"><div class="amount-row__label amount-row__label--secondary">총 매출</div><div class="amount-row__value">600,000</div></div>
+              <div class="amount-row"><div class="amount-row__label amount-row__label--secondary">PG 수수료</div><div class="amount-row__value amount-row__value--negative">-18,000</div></div>
+              <div class="amount-row"><div class="amount-row__label amount-row__label--secondary">플랫폼 수수료</div><div class="amount-row__value amount-row__value--negative">-60,000</div></div>
+              <div class="amount-row"><div class="amount-row__label amount-row__label--secondary">VAT</div><div class="amount-row__value amount-row__value--negative">-6,000</div></div>
+              <div class="amount-divider"></div>
+              <div class="amount-row" style="padding-top:8px;"><div class="amount-row__label" style="font-weight:700;">정산금</div><div class="amount-row__value amount-row__value--total">₩516,000</div></div>
+            </div>
+            <!-- No timeline yet -->
+            <div>
+              <div class="settle-action-btn settle-action-btn--outlined">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                CSV 다운로드
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- State 3: FAILED + retryable -->
+      <div class="state">
+        <div class="state__label">
+          지급 실패 + 재지급 가능 (FAILED)
+          <span class="tag tag--mute">failed</span>
+        </div>
+        <div class="state__condition">
+          detail.status == 'FAILED' · detail.retryable == true · payoutId 존재
+        </div>
+        <div class="viewport">
+          <div class="settle-appbar">
+            <div class="settle-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
+            <div class="settle-appbar__title">정산 상세</div>
+          </div>
+          <div class="settle-body">
+            <div class="settle-card">
+              <div class="settle-status-message">
+                <div class="settle-badge settle-badge--failed">지급 실패</div>
+                <div class="settle-status-message__text">지급에 실패했습니다. 계좌 정보를 확인해 주세요.</div>
+              </div>
+            </div>
+            <div class="settle-card">
+              <div class="settle-card__title">금액 내역</div>
+              <div class="amount-row"><div class="amount-row__label amount-row__label--secondary">총 매출</div><div class="amount-row__value">350,000</div></div>
+              <div class="amount-row"><div class="amount-row__label amount-row__label--secondary">PG 수수료</div><div class="amount-row__value amount-row__value--negative">-10,500</div></div>
+              <div class="amount-row"><div class="amount-row__label amount-row__label--secondary">플랫폼 수수료</div><div class="amount-row__value amount-row__value--negative">-35,000</div></div>
+              <div class="amount-row"><div class="amount-row__label amount-row__label--secondary">VAT</div><div class="amount-row__value amount-row__value--negative">-3,500</div></div>
+              <div class="amount-divider"></div>
+              <div class="amount-row" style="padding-top:8px;"><div class="amount-row__label" style="font-weight:700;">정산금</div><div class="amount-row__value amount-row__value--total">₩301,000</div></div>
+            </div>
+            <div class="settle-card">
+              <div class="settle-card__title">처리 이력</div>
+              <div class="timeline-item">
+                <div class="timeline-item__dot" style="background:var(--color-error);"></div>
+                <div class="timeline-item__body">
+                  <div class="timeline-item__status">PROCESSING → FAILED</div>
+                  <div class="timeline-item__time">04/26 11:00</div>
+                </div>
+              </div>
+            </div>
+            <!-- Actions: retry + CSV -->
+            <div>
+              <div class="settle-action-btn settle-action-btn--filled">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                재지급 요청
+              </div>
+              <div class="settle-action-btn settle-action-btn--outlined">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                CSV 다운로드
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- State 4: HOLD -->
+      <div class="state">
+        <div class="state__label">
+          보류 (HOLD)
+          <span class="tag tag--mute">hold</span>
+        </div>
+        <div class="state__condition">
+          detail.status == 'HOLD' · 지원센터 문의 필요
+        </div>
+        <div class="viewport">
+          <div class="settle-appbar">
+            <div class="settle-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
+            <div class="settle-appbar__title">정산 상세</div>
+          </div>
+          <div class="settle-body">
+            <div class="settle-card">
+              <div class="settle-status-message">
+                <div class="settle-badge settle-badge--hold">보류</div>
+                <div class="settle-status-message__text">정산이 보류 중입니다. 지원센터에 문의해 주세요.</div>
+              </div>
+            </div>
+            <div class="settle-card">
+              <div class="settle-card__title">금액 내역</div>
+              <div class="amount-row"><div class="amount-row__label amount-row__label--secondary">총 매출</div><div class="amount-row__value">200,000</div></div>
+              <div class="amount-row"><div class="amount-row__label amount-row__label--secondary">PG 수수료</div><div class="amount-row__value amount-row__value--negative">-6,000</div></div>
+              <div class="amount-row"><div class="amount-row__label amount-row__label--secondary">플랫폼 수수료</div><div class="amount-row__value amount-row__value--negative">-20,000</div></div>
+              <div class="amount-row"><div class="amount-row__label amount-row__label--secondary">VAT</div><div class="amount-row__value amount-row__value--negative">-2,000</div></div>
+              <div class="amount-divider"></div>
+              <div class="amount-row" style="padding-top:8px;"><div class="amount-row__label" style="font-weight:700;">정산금</div><div class="amount-row__value amount-row__value--total">₩172,000</div></div>
+            </div>
+            <!-- HOLD: no retry, only CSV -->
+            <div>
+              <div class="settle-action-btn settle-action-btn--outlined">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                CSV 다운로드
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- State 5: Loading -->
+      <div class="state">
+        <div class="state__label">
+          Loading
+          <span class="tag tag--mute">async</span>
+        </div>
+        <div class="state__condition">
+          화면 진입 직후 정산 상세 데이터를 불러오는 중
+        </div>
+        <div class="viewport">
+          <div class="settle-appbar">
+            <div class="settle-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
+            <div class="settle-appbar__title">정산 상세</div>
+          </div>
+          <div style="position:absolute;top:56px;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;">
+            <div style="width:36px;height:36px;border:3px solid var(--color-divider);border-top-color:var(--color-primary);border-radius:50%;animation:spin 0.7s linear infinite;"></div>
+          </div>
+          <style>@keyframes spin{to{transform:rotate(360deg);}}</style>
+        </div>
+      </div>
+
+      <!-- State 6: CSV Download bottom sheet -->
+      <div class="state">
+        <div class="state__label">
+          CSV 다운로드 바텀시트
+          <span class="tag tag--mute">modal</span>
+        </div>
+        <div class="state__condition">
+          "CSV 다운로드" 탭 → DownloadBottomSheet.show(context, detail)
+        </div>
+        <div class="viewport">
+          <!-- Background blurred state — completed page under sheet -->
+          <div class="settle-appbar">
+            <div class="settle-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
+            <div class="settle-appbar__title">정산 상세</div>
+          </div>
+          <div class="settle-body" style="pointer-events:none;opacity:0.5;">
+            <div class="settle-card">
+              <div class="settle-status-message">
+                <div class="settle-badge settle-badge--completed">지급 완료</div>
+                <div class="settle-status-message__text">지급이 완료되었습니다.</div>
+              </div>
+            </div>
+          </div>
+          <!-- Scrim -->
+          <div class="scrim"></div>
+          <!-- Bottom sheet -->
+          <div class="download-sheet" style="z-index:10;position:absolute;">
+            <div class="download-sheet__handle"></div>
+            <div class="download-sheet__title">CSV 다운로드</div>
+            <div class="download-sheet__options">
+              <div class="download-sheet__option">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                이번 정산 내역 CSV
+              </div>
+              <div class="download-sheet__option">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                전체 정산 이력 CSV
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+</div>
+
+<!-- ============================================================
+     BEHAVIOR
+     ============================================================ -->
+<div class="perspective" id="behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Behavior</h2>
+    <span class="lede">사용자 액션과 화면이 보여주는 결과.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Interactions</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 220px;">사용자 액션</th>
+          <th>화면에 보이는 결과</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>뒤로 가기</td>
+          <td>정산 목록 화면으로 이동.</td>
+        </tr>
+        <tr>
+          <td>"재지급 요청" 버튼 탭</td>
+          <td>처리 중 표시 → 성공 시 스낵바/다이얼로그 피드백. 상태 배지와 타임라인이 갱신됨 (재로드 필요). 버튼이 비활성화되거나 사라질 수 있음.</td>
+        </tr>
+        <tr>
+          <td>"CSV 다운로드" 버튼 탭</td>
+          <td>DownloadBottomSheet 슬라이드업. 다운로드 범위(이번 정산 / 전체 이력) 선택지 표시.</td>
+        </tr>
+        <tr>
+          <td>DownloadBottomSheet — 옵션 탭</td>
+          <td>OS 파일 공유 시트 또는 저장 다이얼로그 표시. CSV 파일 이름: 정산ID 기반 자동 생성.</td>
+        </tr>
+        <tr>
+          <td>DownloadBottomSheet — 바깥 탭 / 아래 스와이프</td>
+          <td>바텀시트 닫힘, 배경 화면으로 복귀.</td>
+        </tr>
+        <tr>
+          <td>"다시 시도" 탭 (Error 상태)</td>
+          <td>로딩 스피너로 잠깐 전환 → 성공 시 데이터 표시, 실패 시 에러 화면이 다시 뜸.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Motion &amp; timing</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 220px;">Transition</th>
+          <th style="width: 100px;">Duration</th>
+          <th>Curve / notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>화면 진입 (목록 → 상세)</td>
+          <td>~250ms</td>
+          <td>좌→우 slide 전환 (~250ms). 진입 직후 데이터 fetch 시작.</td>
+        </tr>
+        <tr>
+          <td>로딩 → 데이터 표시</td>
+          <td>데이터 fetch 완료 시</td>
+          <td>cut 전환 (애니메이션 없음). 즉각 표시.</td>
+        </tr>
+        <tr>
+          <td>CSV 바텀시트 진입</td>
+          <td>~300ms</td>
+          <td>Material 바텀시트 slide-up. scrim fade-in.</td>
+        </tr>
+        <tr>
+          <td>재지급 요청 처리 중</td>
+          <td>서버 응답 대기</td>
+          <td>버튼 비활성화. 별도 전체 로딩 오버레이 없음 (버튼 레벨 피드백).</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="intro" style="margin-top:12px;margin-bottom:0;">
+      ※ mds_tokens에 motion duration token은 아직 미정의 — 위 수치는 임시값.
+    </p>
+  </section>
+
+  <section class="doc">
+    <h2>Edge cases</h2>
+    <ul class="notes">
+      <li><strong>histories 없음</strong> — StatusTimeline 섹션 전체 숨김. AmountBreakdown 바로 아래 ActionButtons로 이어짐.</li>
+      <li><strong>FAILED + retryable == false</strong> — "재지급 요청" 버튼 미표시. CSV 다운로드만 가능.</li>
+      <li><strong>CANCELED 상태</strong> — 배지 텍스트에 strikethrough 스타일 적용. "정산이 취소되었습니다." 메시지. CSV 다운로드만 표시.</li>
+      <li><strong>payoutId == null 이면서 재지급 요청</strong> — _retryPayout()에서 early return. 버튼 비활성화 처리 필요 (현재 source에서 payoutId null guard 있음).</li>
+      <li><strong>currentPartnerInfoProvider null</strong> — 재지급 요청 시 early return. 파트너 정보 없으면 요청 불가.</li>
+      <li><strong>금액 포맷</strong> — 모든 금액은 NumberFormat('#,###').format(value) 적용. 천 단위 콤마 포함. 정산금은 '₩' 접두사 포함.</li>
+      <li><strong>상태 timeline dot 색상</strong> — 정상 전환: color-primary. 실패 전환(FAILED 포함): color-error. 현재 Dart 소스는 모든 dot을 color-primary로 표시 — FAILED 전환 dot에 color-error 적용은 디자인 개선 권고.</li>
+      <li><strong>다크 모드</strong> — 카드 배경: color-background(dark:#0f0f0f). 배지 bg: 각 상태별 색상의 10% opacity 유지 (dark mode token 자동 조정). 타임라인 dot: color-primary(dark:#aa33ff). 금액 텍스트: color-text-primary(dark:white). CSV 버튼 border: color-divider(dark:#3d3d3d).</li>
+    </ul>
+  </section>
+</div>
+
+<!-- ============================================================
+     REFERENCE
+     ============================================================ -->
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">📖</span>
+    <h2>Reference</h2>
+    <span class="lede">사용된 컴포넌트 / 토큰 / 인접 화면.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Components used</h2>
+    <p class="intro">
+      Visual의 COMPLETED default state에서 spec mode를 켜면 ⓐ–ⓓ 번호가 화면에 떠서 아래 항목과 매칭된다.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 36px;">#</th>
+          <th style="width: 220px;">Component</th>
+          <th style="width: 180px;">Where on screen</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>ⓐ</td>
+          <td>SettlementStatusBadge</td>
+          <td>StatusMessageCard 좌측 (②)</td>
+          <td>compact:false 사용 (h-pad: spacing-sm, v-pad: spacing-xsmall). 8가지 상태 × 각자 bg/text color. CANCELED: strikethrough.</td>
+        </tr>
+        <tr>
+          <td>ⓑ</td>
+          <td>AmountBreakdown (내부 _Row)</td>
+          <td>금액 내역 카드 (③)</td>
+          <td>label/value 양 끝 정렬 Row. bold: true → fontWeight 700. 정산금에만 '₩' 접두사.</td>
+        </tr>
+        <tr>
+          <td>ⓒ</td>
+          <td>StatusTimeline (내부 _TimelineItem)</td>
+          <td>처리 이력 카드 (④)</td>
+          <td>8px dot(primary color) + status arrow text + timestamp. histories.isNotEmpty일 때만 카드 표시.</td>
+        </tr>
+        <tr>
+          <td>ⓓ</td>
+          <td>FilledButton / OutlinedButton</td>
+          <td>ActionButtons (⑤)</td>
+          <td>재지급: FilledButton.icon(icon:refresh, label:재지급 요청) — FAILED+retryable만. CSV: OutlinedButton.icon(icon:download) — 항상.</td>
+        </tr>
+        <tr>
+          <td>—</td>
+          <td>CircularProgressIndicator</td>
+          <td>Loading 상태 — 전체 화면 Center</td>
+          <td>Material 기본. MinglitCircularProgressIndicator가 아닌 Flutter 기본 사용 (현재 소스 기준).</td>
+        </tr>
+        <tr>
+          <td>—</td>
+          <td>DownloadBottomSheet</td>
+          <td>CSV 다운로드 바텀시트</td>
+          <td>showModalBottomSheet 기반. 다운로드 범위 옵션 목록 + 파일 공유.</td>
+        </tr>
+        <tr>
+          <td>—</td>
+          <td>MinglitContentLayout</td>
+          <td>_DetailContent 전체 레이아웃</td>
+          <td>sectionGap: spacing-medium. 섹션 목록을 Column으로 배치.</td>
+        </tr>
+        <tr>
+          <td>—</td>
+          <td>Card (Material)</td>
+          <td>각 섹션 래퍼</td>
+          <td>StatusMessageCard / AmountBreakdown / StatusTimeline — 모두 Card 사용. radius는 Material default (radius-card와 유사).</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Tokens consumed</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 240px;">Token</th>
+          <th>Where applied</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><code>color-background</code></td><td>Scaffold · 카드 bg · OutlinedButton bg</td></tr>
+        <tr><td><code>color-surface</code></td><td>PENDING/CANCELED 배지 bg · amount 행 하단 구분선 색</td></tr>
+        <tr><td><code>color-primary</code></td><td>READY 배지 bg/text · 타임라인 dot · FilledButton bg</td></tr>
+        <tr><td><code>color-secondary</code></td><td>PROCESSING 배지 bg/text</td></tr>
+        <tr><td><code>color-tertiary</code></td><td>COMPLETED 배지 bg/text (color-success 기반)</td></tr>
+        <tr><td><code>color-success</code></td><td>COMPLETED 배지 텍스트</td></tr>
+        <tr><td><code>color-error</code></td><td>FAILED / HOLD 배지 bg/text · FAILED timeline dot · 빠짐 금액 텍스트</td></tr>
+        <tr><td><code>color-text-primary</code></td><td>amount row label/value · timeline status text · 섹션 타이틀</td></tr>
+        <tr><td><code>color-text-secondary</code></td><td>총 매출/수수료 row label · timeline timestamp · 메시지 텍스트</td></tr>
+        <tr><td><code>color-divider</code></td><td>AppBar 하단 · 카드 border · amount Divider · OutlinedButton border</td></tr>
+        <tr><td><code>radius-card</code> (16px)</td><td>각 섹션 카드 코너 (Material Card default)</td></tr>
+        <tr><td><code>radius-badge</code> (4px)</td><td>SettlementStatusBadge 코너</td></tr>
+        <tr><td><code>radius-button</code> (12px)</td><td>FilledButton / OutlinedButton</td></tr>
+        <tr><td><code>spacing-medium</code> (16px)</td><td>섹션 간격 · 카드 inner padding all · body outer padding</td></tr>
+        <tr><td><code>spacing-sm</code> (12px)</td><td>badge↔message 갭 · section title↔rows 갭 · timeline dot↔text</td></tr>
+        <tr><td><code>spacing-small</code> (8px)</td><td>버튼 간격 · timeline item gap</td></tr>
+        <tr><td><code>spacing-xsmall</code> (4px)</td><td>amount row v-padding</td></tr>
+        <tr><td><code>spacing-xsmall2</code> (6px)</td><td>timeline item v-padding</td></tr>
+        <tr><td>typography: titleSmall (14/600)</td><td>섹션 카드 타이틀 (금액 내역 / 처리 이력)</td></tr>
+        <tr><td>typography: bodyMedium (14/400)</td><td>amount row text · timeline status · 상태 메시지</td></tr>
+        <tr><td>typography: bodyMedium (14/700)</td><td>정산금 row (bold:true)</td></tr>
+        <tr><td>typography: labelSmall (11/600)</td><td>SettlementStatusBadge (compact:true)</td></tr>
+        <tr><td>typography: bodySmall (12)</td><td>SettlementStatusBadge (compact:false) · timeline timestamp</td></tr>
+        <tr><td>typography: appBarTitle (18/600)</td><td>AppBar "정산 상세"</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 240px;">Spec</th><th>Relation</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><a href="/specs/party_create_wizard_page.html"><code>PartyCreateWizardPage</code></a></td>
+          <td>이 정산의 원천인 파티를 생성한 화면. 파트너 앱 동선의 상류.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/event_detail_page.html"><code>EventDetailPage</code></a></td>
+          <td>이 정산의 매출이 발생한 이벤트를 사용자가 보는 화면. 데이터 생산 지점.</td>
+        </tr>
+        <tr>
+          <td><a href="/foundations/layout">Layout foundations</a></td>
+          <td>Standard Scaffold + SingleChildScrollView. 탭바 없음 — 단독 상세 scaffold.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+</div>
+
+<script>
+  document.getElementById('spec-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('spec-mode', e.target.checked);
+  });
+  document.getElementById('dark-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('dark-mode', e.target.checked);
+  });
+</script>
+</body>
+</html>

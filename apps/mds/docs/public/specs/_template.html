@@ -618,23 +618,23 @@
             <td>[이 상태가 보이는 일반적 상황 — provider 값, user state, route param 등]</td>
           </tr>
           <tr>
-            <td>사용자 액션</td>
+            <td class="state-mini__aspect">사용자 액션</td>
             <td>"[액션]" 탭 → [즉각 피드백 + 상태 전이 + 도착지]</td>
           </tr>
           <tr>
-            <td>에지케이스</td>
+            <td class="state-mini__aspect">에지케이스</td>
             <td><strong>[edge case]</strong> — [user-visible behavior]</td>
           </tr>
           <tr>
-            <td>컴포넌트</td>
+            <td class="state-mini__aspect">컴포넌트</td>
             <td><code>MinglitButton</code> · <code>MinglitChip</code> · <code>MinglitEventCard</code> · <code>[+ 이 화면이 사용하는 모든 컴포넌트]</code></td>
           </tr>
           <tr>
-            <td>토큰</td>
+            <td class="state-mini__aspect">토큰</td>
             <td><code>color-primary</code> · <code>spacing-medium</code> · <code>radius-card</code> · typography <code>bodyMedium</code> · <code>[+ 사용 토큰 전부]</code></td>
           </tr>
           <tr>
-            <td>노트</td>
+            <td class="state-mini__aspect">노트</td>
             <td>📝 [free-form designer/dev memo — 결정 근거, TODO, 의문점 등]</td>
           </tr>
         </tbody>
@@ -658,19 +658,19 @@
             <td>[데이터가 0건일 때 — provider.value.isEmpty 등]</td>
           </tr>
           <tr>
-            <td>사용자 액션</td>
+            <td class="state-mini__aspect">사용자 액션</td>
             <td>"[CTA 버튼]" 탭 → [빈 상태에서 권장되는 다음 액션 결과]</td>
           </tr>
-          <tr><td>에지케이스</td><td>—</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>—</td></tr>
           <tr>
-            <td>컴포넌트</td>
+            <td class="state-mini__aspect">컴포넌트</td>
             <td>+ <code>MinglitEmptyState</code> (fullPage variant)</td>
           </tr>
           <tr>
-            <td>토큰</td>
+            <td class="state-mini__aspect">토큰</td>
             <td>동일 (Default 참조) — Empty 전용 추가 토큰 없음</td>
           </tr>
-          <tr><td>노트</td><td>—</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>—</td></tr>
         </tbody>
       </table>
 
@@ -691,17 +691,17 @@
             <td class="state-mini__aspect">조건</td>
             <td>[데이터 fetch 중 — provider.isLoading]</td>
           </tr>
-          <tr><td>사용자 액션</td><td>탭 무반응</td></tr>
-          <tr><td>에지케이스</td><td>—</td></tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>탭 무반응</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>—</td></tr>
           <tr>
-            <td>컴포넌트</td>
+            <td class="state-mini__aspect">컴포넌트</td>
             <td>↔ <code>[Default content widget]</code> → <code>MinglitSkeleton</code> (또는 <code>MinglitCircularProgressIndicator</code>)</td>
           </tr>
           <tr>
-            <td>토큰</td>
+            <td class="state-mini__aspect">토큰</td>
             <td>동일 (skeleton 내부 shimmer animation은 컴포넌트 자체에 캡슐화 — 추가 토큰 없음)</td>
           </tr>
-          <tr><td>노트</td><td>—</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>—</td></tr>
         </tbody>
       </table>
 
@@ -723,22 +723,22 @@
             <td>[로드 실패 — provider.hasError]</td>
           </tr>
           <tr>
-            <td>사용자 액션</td>
+            <td class="state-mini__aspect">사용자 액션</td>
             <td>"다시 시도" 탭 → provider invalidate → loading 재진입</td>
           </tr>
           <tr>
-            <td>에지케이스</td>
+            <td class="state-mini__aspect">에지케이스</td>
             <td>네트워크 vs 서버 에러 구분 필요 시 sub-state로 분리</td>
           </tr>
           <tr>
-            <td>컴포넌트</td>
+            <td class="state-mini__aspect">컴포넌트</td>
             <td>+ <code>MinglitErrorState</code>(fullPage), <code>TextButton</code> ("다시 시도")</td>
           </tr>
           <tr>
-            <td>토큰</td>
+            <td class="state-mini__aspect">토큰</td>
             <td>+ <code>color-error</code> · <code>color-errorContainer</code></td>
           </tr>
-          <tr><td>노트</td><td>—</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>—</td></tr>
         </tbody>
       </table>
 

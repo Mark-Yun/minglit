@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Spec — PartyCreateWizardPage (app_partner · PartyCreateWizardRoute)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* ============================================================
+   PartyCreateWizardPage-specific atoms.
+   ============================================================ */
+
+/* --- App bar --- */
+.wizard-appbar {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--spacing-xsmall);
+  background: var(--color-background);
+  border-bottom: 1px solid var(--color-divider);
+}
+.wizard-appbar__back {
+  width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+}
+.wizard-appbar__back svg { width: 22px; height: 22px; color: var(--color-text-primary); }
+.wizard-appbar__title {
+  flex: 1;
+  font-size: var(--typography-font-size-app-bar-title);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  padding: 0 var(--spacing-small);
+}
+
+/* --- Progress bar --- */
+.wizard-progress {
+  height: 4px;
+  background: var(--color-surface);
+  position: relative;
+}
+.wizard-progress__fill {
+  height: 100%;
+  background: var(--color-primary);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+/* --- Step body (scrollable) --- */
+.wizard-body {
+  position: absolute;
+  top: 60px; left: 0; right: 0; bottom: 80px;
+  overflow-y: auto;
+  scrollbar-width: none;
+  padding: var(--spacing-medium);
+}
+.wizard-body::-webkit-scrollbar { display: none; }
+
+/* --- Form field groups --- */
+.wizard-field-group {
+  margin-bottom: var(--spacing-large);
+}
+.wizard-field-label {
+  font-size: var(--typography-font-size-body);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-medium);
+}
+.wizard-field-sub {
+  font-size: var(--typography-font-size-caption);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-medium);
+  line-height: 1.55;
+}
+
+/* --- Text input mock --- */
+.wizard-input {
+  width: 100%;
+  height: 52px;
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-input);
+  padding: 0 var(--spacing-medium);
+  font-size: var(--typography-font-size-body);
+  color: var(--color-text-primary);
+  background: var(--color-background);
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+}
+.wizard-input--filled {
+  border-color: var(--color-primary);
+}
+.wizard-input--placeholder {
+  color: var(--color-text-secondary);
+}
+.wizard-input--error {
+  border-color: var(--color-error);
+}
+
+/* --- Quill editor mock --- */
+.wizard-quill {
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-input);
+  background: var(--color-background);
+  min-height: 120px;
+}
+.wizard-quill__toolbar {
+  height: 40px;
+  border-bottom: 1px solid var(--color-divider);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px;
+}
+.wizard-quill__toolbar-btn {
+  width: 28px; height: 28px;
+  border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+}
+.wizard-quill__body {
+  padding: 12px;
+  font-size: var(--typography-font-size-body);
+  color: var(--color-text-primary);
+  line-height: 1.7;
+  min-height: 80px;
+}
+.wizard-quill__placeholder {
+  color: var(--color-text-secondary);
+}
+
+/* --- Image upload grid --- */
+.wizard-image-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-small);
+}
+.wizard-image-slot {
+  aspect-ratio: 1;
+  border-radius: var(--radius-small);
+  border: 1px dashed var(--color-divider);
+  background: var(--color-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+  position: relative;
+}
+.wizard-image-slot--filled {
+  border-style: solid;
+  border-color: transparent;
+}
+.wizard-image-slot__img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  background: linear-gradient(135deg, #9900ff22, #ff990022);
+}
+.wizard-image-slot__add {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  color: var(--color-text-secondary);
+}
+.wizard-image-slot__add svg { width: 20px; height: 20px; }
+.wizard-image-slot__add span { font-size: 10px; }
+.wizard-image-slot__remove {
+  position: absolute; top: 4px; right: 4px;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: rgba(0,0,0,0.5); color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px;
+}
+
+/* --- SwitchListTile mock --- */
+.wizard-switch-row {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-small) 0;
+}
+.wizard-switch-row__text { flex: 1; }
+.wizard-switch-row__title { font-size: var(--typography-font-size-body); color: var(--color-text-primary); font-weight: 500; }
+.wizard-switch-row__sub { font-size: var(--typography-font-size-caption); color: var(--color-text-secondary); margin-top: 2px; }
+.wizard-switch {
+  width: 44px; height: 24px;
+  border-radius: 12px;
+  background: var(--color-divider);
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.wizard-switch--on { background: var(--color-primary); }
+.wizard-switch__thumb {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: white;
+  position: absolute; top: 2px; left: 2px;
+  transition: left 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+.wizard-switch--on .wizard-switch__thumb { left: 22px; }
+
+/* --- Location selector --- */
+.wizard-location-picker {
+  width: 100%;
+  height: 52px;
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-input);
+  padding: 0 var(--spacing-medium);
+  font-size: var(--typography-font-size-body);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-small);
+  cursor: pointer;
+  background: var(--color-background);
+}
+.wizard-location-picker svg { width: 18px; height: 18px; color: var(--color-text-secondary); flex-shrink: 0; }
+.wizard-location-picker__text { flex: 1; color: var(--color-text-primary); }
+.wizard-location-picker__placeholder { color: var(--color-text-secondary); }
+
+/* --- Entry group card (step 4) --- */
+.wizard-entry-card {
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-card);
+  padding: var(--spacing-medium);
+  background: var(--color-background);
+  margin-bottom: var(--spacing-sm);
+}
+.wizard-entry-card__header {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+}
+.wizard-entry-card__name { font-size: var(--typography-font-size-body); font-weight: 600; color: var(--color-text-primary); flex: 1; }
+.wizard-entry-card__delete { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--color-surface); cursor: pointer; }
+.wizard-entry-card__delete svg { width: 14px; height: 14px; color: var(--color-error); }
+.wizard-entry-card__detail { font-size: var(--typography-font-size-caption); color: var(--color-text-secondary); line-height: 1.55; }
+
+/* --- Add button --- */
+.wizard-add-btn {
+  width: 100%;
+  height: 48px;
+  border: 1px dashed var(--color-primary);
+  border-radius: var(--radius-card);
+  background: rgba(153,0,255,0.04);
+  color: var(--color-primary);
+  font-size: var(--typography-font-size-body);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-small);
+  cursor: pointer;
+}
+.wizard-add-btn svg { width: 18px; height: 18px; }
+
+/* --- Ticket item (step 5) --- */
+.wizard-ticket-item {
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-card);
+  padding: var(--spacing-medium);
+  margin-bottom: var(--spacing-sm);
+  background: var(--color-background);
+}
+.wizard-ticket-item__row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.wizard-ticket-item__name { font-size: var(--typography-font-size-body); font-weight: 600; color: var(--color-text-primary); }
+.wizard-ticket-item__price { font-size: var(--typography-font-size-body); font-weight: 700; color: var(--color-secondary); }
+.wizard-ticket-item__meta { font-size: var(--typography-font-size-caption); color: var(--color-text-secondary); }
+
+/* --- Review editable section --- */
+.review-section {
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-card);
+  margin-bottom: var(--spacing-medium);
+  overflow: hidden;
+  background: var(--color-background);
+}
+.review-section__header {
+  display: flex; align-items: center; padding: var(--spacing-sm) var(--spacing-medium);
+  background: var(--color-surface); border-bottom: 1px solid var(--color-divider);
+  cursor: pointer;
+}
+.review-section__title { flex: 1; font-size: var(--typography-font-size-body); font-weight: 600; color: var(--color-text-primary); }
+.review-section__edit { font-size: var(--typography-font-size-caption); color: var(--color-primary); font-weight: 600; }
+.review-section__body { padding: var(--spacing-medium); }
+.review-kv { display: flex; gap: var(--spacing-sm); font-size: var(--typography-font-size-body); color: var(--color-text-primary); margin-bottom: 6px; }
+.review-kv__key { font-weight: 600; flex-shrink: 0; min-width: 60px; }
+.review-kv__val { color: var(--color-text-secondary); }
+
+/* --- Error card (review validation) --- */
+.wizard-error-card {
+  background: rgba(239,68,68,0.07);
+  border: 1px solid rgba(239,68,68,0.3);
+  border-radius: var(--radius-card);
+  padding: var(--spacing-medium);
+  margin-bottom: var(--spacing-large);
+}
+.wizard-error-card__header { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+.wizard-error-card__title { font-size: var(--typography-font-size-body); font-weight: 700; color: var(--color-error); }
+.wizard-error-card__item { font-size: var(--typography-font-size-caption); color: var(--color-error); padding-left: 28px; margin-bottom: 2px; }
+
+/* --- Bottom nav (prev / next buttons) --- */
+.wizard-bottom-nav {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 80px;
+  padding: var(--spacing-medium);
+  background: var(--color-background);
+  border-top: 1px solid var(--color-divider);
+  display: flex;
+  gap: var(--spacing-medium);
+  align-items: center;
+}
+.wizard-btn-prev {
+  flex: 1;
+  height: 48px;
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-button);
+  background: var(--color-background);
+  color: var(--color-text-primary);
+  font-size: var(--typography-font-size-button);
+  font-weight: 600;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+.wizard-btn-next {
+  flex: 2;
+  height: 48px;
+  border-radius: var(--radius-button);
+  background: var(--color-primary);
+  color: white;
+  font-size: var(--typography-font-size-button);
+  font-weight: 600;
+  border: none;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+.wizard-btn-next--disabled {
+  background: var(--color-divider);
+  color: var(--color-text-secondary);
+}
+
+/* --- Loading overlay (global loading) --- */
+.global-loading {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+.spinner-white {
+  width: 36px; height: 36px;
+  border: 3px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* --- Validation snackbar (step error) --- */
+.snackbar {
+  position: absolute;
+  bottom: 88px; left: 16px; right: 16px;
+  background: #323232;
+  color: white;
+  border-radius: var(--radius-small);
+  padding: 12px 16px;
+  font-size: var(--typography-font-size-body);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.snackbar svg { width: 18px; height: 18px; color: var(--color-warning); flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
+</div>
+
+<div class="page">
+
+<!-- ============================================================
+     Header
+     ============================================================ -->
+<header>
+  <div class="breadcrumb">app_partner · Party · PartyCreateWizardRoute</div>
+  <h1>Party Create Wizard</h1>
+  <div class="meta">
+    <span>Widget: <code>PartyCreateWizardPage</code> + <code>Step1BasicInfo</code> … <code>Step6Review</code></span>
+    <span>Role: <strong>파티 생성 / 수정 위저드</strong></span>
+  </div>
+</header>
+
+<!-- ============================================================
+     Purpose & Context
+     ============================================================ -->
+<section class="doc">
+  <h2>Purpose &amp; Context</h2>
+  <table class="ref">
+    <tbody>
+      <tr>
+        <th style="width: 140px;">Purpose</th>
+        <td>
+          파트너가 새 파티(모임)를 생성하거나 기존 파티를 수정할 수 있도록
+          6단계 위저드로 안내한다. 각 단계에서 입력한 정보를 마지막 검토 단계에서
+          한눈에 확인하고 최종 생성/수정 처리한다.
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry points</strong>: 파티 목록(PartyListPage) "새 파티 만들기" 버튼 /
+          기존 파티 상세(PartyDetailPage) "수정" 메뉴 (<code>partyId</code> 전달 시 Edit 모드).<br>
+          <strong>Exit points</strong>: 생성/수정 성공 → 파티 목록 복귀 + 성공 스낵바 /
+          뒤로 가기 → (단계 이탈 확인 다이얼로그 없음) 파티 목록 복귀.
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          파티 정보가 복잡하고 다양한 필드(기본 정보, 위치, 정원/연락처, 입장 규칙, 티켓, 검토)로 나뉘기 때문에
+          단계별 위저드가 UX를 단순화한다.
+          수정 모드(<code>partyId</code> 전달)에서는 기존 데이터를 prefill하며, prefill 로딩 중에는
+          스피너 화면을 표시한다.
+          double-tap 방지를 위한 guard(_isNextingStep)가 적용되어 있다.
+        </td>
+      </tr>
+      <tr>
+        <th>Frequency</th>
+        <td>파트너당 파티 생성 1회 / 이후 수정 시 재진입.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- Anchor nav -->
+<nav class="perspective-nav">
+  <a href="#layout"><span class="glyph">🧱</span> Layout</a>
+  <a href="#visual"><span class="glyph">🎨</span> Visual</a>
+  <a href="#behavior"><span class="glyph">🔄</span> Behavior</a>
+  <a href="#reference"><span class="glyph">📖</span> Reference</a>
+</nav>
+
+<!-- ============================================================
+     LAYOUT
+     ============================================================ -->
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Layout</h2>
+    <span class="lede">화면 구조 — 영역, 정렬, 간격 규칙. 색·타이포 무시.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree</h2>
+    <p class="intro">
+      AppBar(단계 타이틀) + LinearProgressIndicator(4px) + Expanded(PageView 6단계) + SafeArea bottomNavigationBar(이전/다음 버튼).
+      PageView는 NeverScrollableScrollPhysics — 사용자가 직접 스와이프 불가.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint">
+        <div class="blueprint__region" style="top:0;left:0;right:0;bottom:0;border-style:solid;border-color:rgba(153,0,255,0.18);"></div>
+
+        <!-- AppBar -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:0;left:0;right:0;height:56px;">
+          <span class="blueprint__region-label">① AppBar — step title<br>← back btn</span>
+        </div>
+        <!-- Progress bar -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:56px;left:0;right:0;height:4px;">
+          <span class="blueprint__region-label">② MinglitLinearProgressIndicator (4px)</span>
+        </div>
+        <!-- Step content -->
+        <div class="blueprint__region" style="top:60px;left:0;right:0;bottom:80px;">
+          <span class="blueprint__region-label">③ PageView (NeverScrollable)<br>Step 1 – 6 컨텐츠<br>SingleChildScrollView + padding-all-medium</span>
+        </div>
+        <!-- Bottom nav -->
+        <div class="blueprint__region blueprint__region--shaded" style="bottom:0;left:0;right:0;height:80px;">
+          <span class="blueprint__region-label">④ bottomNavigationBar — SafeArea<br>이전 버튼(flex:1) + 다음/완료 버튼(flex:2)</span>
+        </div>
+
+        <div class="blueprint__align-marker" style="top:8px;right:8px;">simpleAppBar</div>
+        <div class="blueprint__align-marker" style="bottom:82px;right:8px;">SafeArea wrap</div>
+      </div>
+
+      <div class="layout-tree"><b>Scaffold</b>
+├─ <b>appBar</b>: MinglitTheme.simpleAppBar(title: stepTitle) ← ①
+├─ <b>body</b>: <b>Column</b>
+│  ├─ <b>MinglitLinearProgressIndicator</b>                     ← ②
+│  │  value: (currentStep.index + 1) / 6
+│  │  color: primary · bg: surfaceContainerHighest
+│  └─ <b>Expanded</b>
+│     └─ <b>PageView</b>(controller, NeverScrollable)           ← ③
+│        ├─ <b>Step1BasicInfo</b>      — 기본 정보
+│        │  ├─ 파티 제목 TextFormField
+│        │  ├─ 파티 소개 QuillEditor (rich text)
+│        │  ├─ 커버 이미지 PartyImageEditor (4-slot grid)
+│        │  ├─ 공개 범위 SwitchListTile (비공개 파티)
+│        │  └─ 태그 TagSelectionSection
+│        ├─ <b>Step2Location</b>       — 장소 선택
+│        │  ├─ 장소 검색 버튼 (→ LocationSearchPage)
+│        │  ├─ 상세 주소 TextFormField
+│        │  └─ 찾아오는 방법 TextFormField
+│        ├─ <b>Step3CapacityContact</b> — 정원 &amp; 연락처
+│        │  ├─ 최소 확정 인원 NumberInput
+│        │  ├─ 연락처 방법 toggle chips (phone/email/kakao)
+│        │  └─ 성비 균형 SwitchListTile + tolerance slider
+│        ├─ <b>Step4EntryRules</b>     — 입장 규칙
+│        │  ├─ EntryGroupCard × N  (이름+인증+조건)
+│        │  └─ "+ 그룹 추가" 버튼
+│        ├─ <b>Step5Tickets</b>        — 티켓
+│        │  └─ PartyTicketTemplateInput (add/remove/edit)
+│        └─ <b>Step6Review</b>         — 검토 &amp; 완료
+│           ├─ 유효성 오류 카드 (있으면)
+│           └─ MinglitEditableSection × 5 (각 단계 요약 + 수정 버튼)
+│
+└─ <b>bottomNavigationBar</b>: <b>SafeArea</b>                  ← ④
+   └─ <b>Padding</b>(all: spacing-medium)
+      └─ <b>Row</b>
+         ├─ [step &gt; 0] OutlinedButton(이전) flex:1
+         └─ ElevatedButton(다음 / 생성하기 / 수정 완료) flex:2</div>
+    </div>
+  </section>
+
+  <section class="doc">
+    <h2>Spacing &amp; alignment rules</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>①</td><td>AppBar</td><td>crossAxis: center · height 56px</td><td>standard AppBar — back 버튼 포함 MinglitTheme.simpleAppBar.</td></tr>
+        <tr><td>②</td><td>LinearProgressIndicator</td><td>full-width · height 4px</td><td>margin 없음 — AppBar 바로 아래 flush.</td></tr>
+        <tr><td>③</td><td>각 Step(PageView child)</td><td>SingleChildScrollView → column start</td><td>outer pad: <code>spacing-medium (16px)</code> all · 필드 간: <code>spacing-large (24px)</code> · 레이블↔필드: <code>spacing-medium (16px)</code></td></tr>
+        <tr><td>④</td><td>bottomNavigationBar</td><td>Row · SafeArea · center</td><td>outer pad: <code>spacing-medium (16px)</code> all · 이전↔다음 버튼 간: <code>spacing-medium (16px)</code> · 버튼 height: 48px</td></tr>
+        <tr><td>—</td><td>입장 그룹 카드 (Step 4)</td><td>column start · border radius-card</td><td>pad: <code>spacing-medium</code> · 그룹 간: <code>spacing-sm (12px)</code></td></tr>
+        <tr><td>—</td><td>검토 섹션 (Step 6)</td><td>column stretch · editable section card</td><td>섹션 간: <code>spacing-large (24px)</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<!-- ============================================================
+     VISUAL
+     ============================================================ -->
+<div class="perspective" id="visual">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>Visual</h2>
+    <span class="lede">각 단계(Step)가 별도 상태. 첫 번째 상태(Step 1 default)에서 spec mode 오버레이 포함.</span>
+  </div>
+
+  <section class="doc">
+    <h2>States gallery</h2>
+    <p class="intro">
+      6단계 + 수정 모드 로딩 + 제출 중 = 8가지 시각 상태. 첫 번째(Step 1 — 기본 정보 작성 중)가 spec mode 오버레이를 포함한다.
+    </p>
+
+    <div class="states">
+
+      <!-- State 1: Step 1 — 기본 정보 (annotated) -->
+      <div class="state">
+        <div class="state__label">
+          Step 1 / 6 · 기본 정보
+          <span class="tag">production</span>
+        </div>
+        <div class="state__condition">
+          currentStep = basicInfo · 제목 입력 중 · 이미지 미업로드
+        </div>
+        <div class="viewport">
+          <!-- AppBar -->
+          <div class="wizard-appbar">
+            <div class="wizard-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
+            <div class="wizard-appbar__title">기본 정보</div>
+          </div>
+          <!-- Progress: 1/6 -->
+          <div class="wizard-progress"><div class="wizard-progress__fill" style="width:16.7%;"></div></div>
+
+          <!-- Step 1 body -->
+          <div class="wizard-body">
+            <!-- 파티 제목 -->
+            <div class="wizard-field-group">
+              <div class="wizard-field-label">파티 제목</div>
+              <div class="wizard-input wizard-input--filled">강남 루프탑 소셜 파티</div>
+            </div>
+            <!-- 파티 소개 -->
+            <div class="wizard-field-group">
+              <div class="wizard-field-label">파티 소개</div>
+              <div class="wizard-quill">
+                <div class="wizard-quill__toolbar">
+                  <div class="wizard-quill__toolbar-btn" style="font-weight:700;">B</div>
+                  <div class="wizard-quill__toolbar-btn" style="font-style:italic;">I</div>
+                  <div class="wizard-quill__toolbar-btn">≡</div>
+                  <div class="wizard-quill__toolbar-btn">·</div>
+                </div>
+                <div class="wizard-quill__body wizard-quill__placeholder">파티를 소개하는 글을 적어주세요</div>
+              </div>
+            </div>
+            <!-- 커버 이미지 -->
+            <div class="wizard-field-group">
+              <div class="wizard-field-label">커버 이미지</div>
+              <div class="wizard-image-grid">
+                <div class="wizard-image-slot">
+                  <div class="wizard-image-slot__add">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                    <span>추가</span>
+                  </div>
+                </div>
+                <div class="wizard-image-slot" style="border-style:solid;border-color:transparent;">
+                  <div class="wizard-image-slot__img"></div>
+                  <div class="wizard-image-slot__remove">×</div>
+                </div>
+                <div class="wizard-image-slot" style="opacity:0.4;"></div>
+                <div class="wizard-image-slot" style="opacity:0.4;"></div>
+              </div>
+            </div>
+            <!-- 공개 범위 -->
+            <div class="wizard-field-group">
+              <div class="wizard-field-label">공개 범위</div>
+              <div class="wizard-switch-row">
+                <div class="wizard-switch-row__text">
+                  <div class="wizard-switch-row__title">비공개 파티</div>
+                  <div class="wizard-switch-row__sub">링크를 가진 사용자만 접근 가능</div>
+                </div>
+                <div class="wizard-switch"><div class="wizard-switch__thumb"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom nav — Step 1 has no "이전" button -->
+          <div class="wizard-bottom-nav">
+            <div class="wizard-btn-next">다음</div>
+          </div>
+
+          <!-- Spec-mode annotations -->
+          <span class="annotation" style="top:58px;left:8px;">progress: 1/6 (16.7%)</span>
+          <span class="annotation" style="top:58px;right:8px;">color-primary fill</span>
+          <span class="annotation" style="top:96px;left:8px;">spacing-medium — outer pad</span>
+          <span class="annotation" style="top:128px;right:8px;">radius-input (12px)</span>
+          <span class="annotation" style="bottom:82px;right:8px;">flex:2 — 다음 버튼</span>
+
+          <!-- Callouts -->
+          <span class="callout" style="top:58px;left:60px;">ⓐ</span>
+          <span class="callout" style="top:96px;left:8px;">ⓑ</span>
+          <span class="callout" style="top:172px;right:8px;">ⓒ</span>
+          <span class="callout" style="top:290px;right:8px;">ⓓ</span>
+          <span class="callout" style="bottom:86px;right:8px;">ⓔ</span>
+
+          <!-- Type specs -->
+          <span class="type-spec" style="top:76px;left:150px;">18 / 600 / 1 — AppBar title</span>
+          <span class="type-spec" style="top:108px;left:200px;">14 / 700 / 1 — field label</span>
+          <span class="type-spec" style="top:140px;left:200px;">14 / 400 / 1 — input</span>
+          <span class="type-spec" style="bottom:92px;right:60px;">16 / 600 / 1 — btn</span>
+        </div>
+      </div>
+
+      <!-- State 2: Step 2 — 장소 선택 -->
+      <div class="state">
+        <div class="state__label">
+          Step 2 / 6 · 장소 선택
+          <span class="tag tag--mute">step-2</span>
+        </div>
+        <div class="state__condition">
+          currentStep = location · 장소 선택 완료 · 상세 주소 미입력
+        </div>
+        <div class="viewport">
+          <div class="wizard-appbar">
+            <div class="wizard-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
+            <div class="wizard-appbar__title">장소 선택</div>
+          </div>
+          <div class="wizard-progress"><div class="wizard-progress__fill" style="width:33.3%;"></div></div>
+          <div class="wizard-body">
+            <div class="wizard-field-group">
+              <div class="wizard-field-label">파티 장소</div>
+              <div class="wizard-location-picker wizard-input--filled" style="border-color:var(--color-primary);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                <span class="wizard-location-picker__text">Skybar Seoul 강남점</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
+              </div>
+              <div style="margin-top:6px;font-size:11px;color:var(--color-text-secondary);">서울 강남구 테헤란로 123</div>
+            </div>
+            <div class="wizard-field-group">
+              <div class="wizard-field-label">상세 주소</div>
+              <div class="wizard-input wizard-input--placeholder">ex. 3층 오픈 테라스</div>
+            </div>
+            <div class="wizard-field-group">
+              <div class="wizard-field-label">찾아오는 방법</div>
+              <div class="wizard-input" style="height:80px;align-items:flex-start;padding-top:12px;color:var(--color-text-secondary);">강남역 11번 출구에서 도보 5분</div>
+            </div>
+          </div>
+          <div class="wizard-bottom-nav">
+            <div class="wizard-btn-prev">이전</div>
+            <div class="wizard-btn-next">다음</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- State 3: Step 3 — 정원 & 연락처 -->
+      <div class="state">
+        <div class="state__label">
+          Step 3 / 6 · 정원 &amp; 연락처
+          <span class="tag tag--mute">step-3</span>
+        </div>
+        <div class="state__condition">
+          currentStep = capacityAndContact
+        </div>
+        <div class="viewport">
+          <div class="wizard-appbar">
+            <div class="wizard-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
+            <div class="wizard-appbar__title">정원 &amp; 연락처</div>
+          </div>
+          <div class="wizard-progress"><div class="wizard-progress__fill" style="width:50%;"></div></div>
+          <div class="wizard-body">
+            <div class="wizard-field-group">
+              <div class="wizard-field-label">최소 확정 인원</div>
+              <div class="wizard-field-sub">최소 인원에 미치지 않으면 파티가 취소됩니다.</div>
+              <div class="wizard-input wizard-input--filled" style="width:120px;">4명</div>
+            </div>
+            <div class="wizard-field-group">
+              <div class="wizard-field-label">연락처 방법</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <div class="filter-chip filter-chip--active" style="height:36px;padding:0 12px;border-radius:100px;border:1px solid var(--color-primary);background:rgba(153,0,255,0.08);color:var(--color-primary);font-size:13px;font-weight:600;display:inline-flex;align-items:center;">전화</div>
+                <div class="filter-chip" style="height:36px;padding:0 12px;border-radius:100px;border:1px solid var(--color-divider);background:var(--color-background);color:var(--color-text-secondary);font-size:13px;display:inline-flex;align-items:center;">이메일</div>
+                <div class="filter-chip filter-chip--active" style="height:36px;padding:0 12px;border-radius:100px;border:1px solid var(--color-primary);background:rgba(153,0,255,0.08);color:var(--color-primary);font-size:13px;font-weight:600;display:inline-flex;align-items:center;">카카오</div>
+              </div>
+            </div>
+            <div class="wizard-field-group">
+              <div class="wizard-field-label">전화번호</div>
+              <div class="wizard-input wizard-input--filled">010-1234-5678</div>
+            </div>
+            <div class="wizard-field-group">
+              <div class="wizard-field-label">성비 균형</div>
+              <div class="wizard-switch-row">
+                <div class="wizard-switch-row__text">
+                  <div class="wizard-switch-row__title">성비 균형 맞추기</div>
+                  <div class="wizard-switch-row__sub">남/여 비율을 자동으로 조정합니다</div>
+                </div>
+                <div class="wizard-switch wizard-switch--on"><div class="wizard-switch__thumb"></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="wizard-bottom-nav">
+            <div class="wizard-btn-prev">이전</div>
+            <div class="wizard-btn-next">다음</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- State 4: Step 4 — 입장 규칙 -->
+      <div class="state">
+        <div class="state__label">
+          Step 4 / 6 · 입장 규칙
+          <span class="tag tag--mute">step-4</span>
+        </div>
+        <div class="state__condition">
+          currentStep = entryRules · 2개 그룹 설정됨
+        </div>
+        <div class="viewport">
+          <div class="wizard-appbar">
+            <div class="wizard-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
+            <div class="wizard-appbar__title">입장 규칙</div>
+          </div>
+          <div class="wizard-progress"><div class="wizard-progress__fill" style="width:66.7%;"></div></div>
+          <div class="wizard-body">
+            <div class="wizard-entry-card">
+              <div class="wizard-entry-card__header">
+                <div class="wizard-entry-card__name">일반 참여 (남성)</div>
+                <div class="wizard-entry-card__delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></div>
+              </div>
+              <div class="wizard-entry-card__detail">필요 인증: 성별 인증 · 나이 제한: 25–35세</div>
+            </div>
+            <div class="wizard-entry-card">
+              <div class="wizard-entry-card__header">
+                <div class="wizard-entry-card__name">일반 참여 (여성)</div>
+                <div class="wizard-entry-card__delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></div>
+              </div>
+              <div class="wizard-entry-card__detail">필요 인증: 성별 인증 · 나이 제한: 25–35세</div>
+            </div>
+            <div class="wizard-add-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              그룹 추가
+            </div>
+          </div>
+          <div class="wizard-bottom-nav">
+            <div class="wizard-btn-prev">이전</div>
+            <div class="wizard-btn-next">다음</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- State 5: Step 5 — 티켓 -->
+      <div class="state">
+        <div class="state__label">
+          Step 5 / 6 · 티켓
+          <span class="tag tag--mute">step-5</span>
+        </div>
+        <div class="state__condition">
+          currentStep = tickets · 2개 티켓 설정됨
+        </div>
+        <div class="viewport">
+          <div class="wizard-appbar">
+            <div class="wizard-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
+            <div class="wizard-appbar__title">티켓</div>
+          </div>
+          <div class="wizard-progress"><div class="wizard-progress__fill" style="width:83.3%;"></div></div>
+          <div class="wizard-body">
+            <div class="wizard-field-label" style="margin-bottom:4px;">티켓 설정</div>
+            <div class="wizard-field-sub">각 티켓의 가격, 수량, 대상 입장 그룹을 지정하세요.</div>
+            <div style="height:16px;"></div>
+            <div class="wizard-ticket-item">
+              <div class="wizard-ticket-item__row">
+                <div class="wizard-ticket-item__name">일반 티켓 (남성)</div>
+                <div class="wizard-ticket-item__price">20,000원</div>
+              </div>
+              <div class="wizard-ticket-item__meta">수량: 20매 · 대상: 일반 참여 (남성)</div>
+            </div>
+            <div class="wizard-ticket-item">
+              <div class="wizard-ticket-item__row">
+                <div class="wizard-ticket-item__name">일반 티켓 (여성)</div>
+                <div class="wizard-ticket-item__price">15,000원</div>
+              </div>
+              <div class="wizard-ticket-item__meta">수량: 20매 · 대상: 일반 참여 (여성)</div>
+            </div>
+            <div class="wizard-add-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              티켓 추가
+            </div>
+          </div>
+          <div class="wizard-bottom-nav">
+            <div class="wizard-btn-prev">이전</div>
+            <div class="wizard-btn-next">다음</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- State 6: Step 6 — 검토 (완료) -->
+      <div class="state">
+        <div class="state__label">
+          Step 6 / 6 · 검토 &amp; 생성
+          <span class="tag tag--mute">step-6</span>
+        </div>
+        <div class="state__condition">
+          currentStep = review · 유효성 오류 없음 · "생성하기" 버튼 활성
+        </div>
+        <div class="viewport">
+          <div class="wizard-appbar">
+            <div class="wizard-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
+            <div class="wizard-appbar__title">검토 및 완료</div>
+          </div>
+          <div class="wizard-progress"><div class="wizard-progress__fill" style="width:100%;"></div></div>
+          <div class="wizard-body" style="top:60px;bottom:80px;">
+            <div style="font-size:20px;font-weight:700;color:var(--color-text-primary);margin-bottom:16px;">파티 정보를 확인해 주세요</div>
+            <div class="review-section">
+              <div class="review-section__header">
+                <div class="review-section__title">기본 정보</div>
+                <div class="review-section__edit">수정</div>
+              </div>
+              <div class="review-section__body">
+                <div class="review-kv"><span class="review-kv__key">제목</span><span class="review-kv__val">강남 루프탑 소셜 파티</span></div>
+                <div class="review-kv"><span class="review-kv__key">공개</span><span class="review-kv__val">공개</span></div>
+              </div>
+            </div>
+            <div class="review-section">
+              <div class="review-section__header">
+                <div class="review-section__title">장소</div>
+                <div class="review-section__edit">수정</div>
+              </div>
+              <div class="review-section__body">
+                <div class="review-kv"><span class="review-kv__key">장소</span><span class="review-kv__val">Skybar Seoul 강남점</span></div>
+                <div class="review-kv"><span class="review-kv__key">주소</span><span class="review-kv__val">서울 강남구 테헤란로 123</span></div>
+              </div>
+            </div>
+            <div class="review-section">
+              <div class="review-section__header">
+                <div class="review-section__title">티켓</div>
+                <div class="review-section__edit">수정</div>
+              </div>
+              <div class="review-section__body">
+                <div class="review-kv"><span class="review-kv__key">일반(남)</span><span class="review-kv__val">20,000원 × 20매</span></div>
+                <div class="review-kv"><span class="review-kv__key">일반(여)</span><span class="review-kv__val">15,000원 × 20매</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="wizard-bottom-nav">
+            <div class="wizard-btn-prev">이전</div>
+            <div class="wizard-btn-next">생성하기</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- State 7: Step validation error snackbar -->
+      <div class="state">
+        <div class="state__label">
+          Step validation error · 다음 탭 + 유효성 오류
+          <span class="tag tag--mute">validation</span>
+        </div>
+        <div class="state__condition">
+          "다음" 버튼 탭 → currentStepValidationErrors.isNotEmpty → snackbar 표시
+        </div>
+        <div class="viewport">
+          <div class="wizard-appbar">
+            <div class="wizard-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
+            <div class="wizard-appbar__title">기본 정보</div>
+          </div>
+          <div class="wizard-progress"><div class="wizard-progress__fill" style="width:16.7%;"></div></div>
+          <div class="wizard-body">
+            <div class="wizard-field-group">
+              <div class="wizard-field-label">파티 제목</div>
+              <div class="wizard-input wizard-input--error wizard-input--placeholder">파티 제목을 입력하세요</div>
+              <div style="font-size:11px;color:var(--color-error);margin-top:4px;">파티 제목은 필수 항목입니다</div>
+            </div>
+            <div class="wizard-field-group">
+              <div class="wizard-field-label">파티 소개</div>
+              <div class="wizard-quill" style="border-color:var(--color-divider);">
+                <div class="wizard-quill__toolbar"></div>
+                <div class="wizard-quill__body wizard-quill__placeholder">파티를 소개하는 글을 적어주세요</div>
+              </div>
+            </div>
+          </div>
+          <div class="wizard-bottom-nav">
+            <div class="wizard-btn-next">다음</div>
+          </div>
+          <!-- Snackbar -->
+          <div class="snackbar">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+            파티 제목은 필수 항목입니다
+          </div>
+        </div>
+      </div>
+
+      <!-- State 8: Submitting (global loading overlay) -->
+      <div class="state">
+        <div class="state__label">
+          Submitting · 생성 처리 중
+          <span class="tag tag--mute">async</span>
+        </div>
+        <div class="state__condition">
+          "생성하기" 탭 → globalLoadingControllerProvider.show() → 전체 로딩 오버레이
+        </div>
+        <div class="viewport">
+          <div class="wizard-appbar">
+            <div class="wizard-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
+            <div class="wizard-appbar__title">검토 및 완료</div>
+          </div>
+          <div class="wizard-progress"><div class="wizard-progress__fill" style="width:100%;"></div></div>
+          <div class="wizard-body">
+            <div style="font-size:20px;font-weight:700;color:var(--color-text-primary);margin-bottom:16px;">파티 정보를 확인해 주세요</div>
+            <div class="review-section">
+              <div class="review-section__header">
+                <div class="review-section__title">기본 정보</div>
+                <div class="review-section__edit">수정</div>
+              </div>
+              <div class="review-section__body">
+                <div class="review-kv"><span class="review-kv__key">제목</span><span class="review-kv__val">강남 루프탑 소셜 파티</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="wizard-bottom-nav">
+            <div class="wizard-btn-prev">이전</div>
+            <div class="wizard-btn-next wizard-btn-next--disabled">생성하기</div>
+          </div>
+          <!-- Global loading overlay -->
+          <div class="global-loading">
+            <div class="spinner-white"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+</div>
+
+<!-- ============================================================
+     BEHAVIOR
+     ============================================================ -->
+<div class="perspective" id="behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Behavior</h2>
+    <span class="lede">사용자 액션과 화면이 보여주는 결과.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Interactions</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 220px;">사용자 액션</th>
+          <th>화면에 보이는 결과</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>"다음" 버튼 탭 (유효성 통과)</td>
+          <td>PageView가 다음 단계로 ~300ms easeInOut 슬라이드. 프로그레스 바가 증가. AppBar 타이틀이 다음 단계명으로 변경.</td>
+        </tr>
+        <tr>
+          <td>"다음" 버튼 탭 (유효성 실패)</td>
+          <td>스낵바로 첫 번째 오류 메시지 표시. 페이지 이동 없음. 오류 필드에 빨간 border 표시.</td>
+        </tr>
+        <tr>
+          <td>"다음" 버튼 연속 더블 탭</td>
+          <td>두 번째 탭은 무시 (_isNextingStep guard). 단계가 2번 건너뛰어지지 않음.</td>
+        </tr>
+        <tr>
+          <td>"이전" 버튼 탭</td>
+          <td>PageView가 이전 단계로 슬라이드. 입력 데이터 유지. Step 1에선 "이전" 버튼 없음.</td>
+        </tr>
+        <tr>
+          <td>뒤로 가기 (시스템)</td>
+          <td>위저드 종료 확인 없이 파티 목록으로 이동. 입력된 데이터 유실.</td>
+        </tr>
+        <tr>
+          <td>파티 제목 입력</td>
+          <td>입력 커서 표시 · 상태 실시간 업데이트.</td>
+        </tr>
+        <tr>
+          <td>커버 이미지 "+ 추가" 탭</td>
+          <td>OS 이미지 피커 또는 갤러리 시트 오픈. 선택한 이미지가 그리드에 추가. 최대 슬롯 채움 시 추가 버튼 숨김.</td>
+        </tr>
+        <tr>
+          <td>커버 이미지 "×" 탭</td>
+          <td>해당 이미지 즉시 제거. 그리드 재배열.</td>
+        </tr>
+        <tr>
+          <td>장소 검색 버튼 탭 (Step 2)</td>
+          <td>장소 검색 화면(LocationSearchPage)으로 이동. 선택 후 복귀 시 장소 정보 자동 입력.</td>
+        </tr>
+        <tr>
+          <td>"그룹 추가" 탭 (Step 4)</td>
+          <td>입장 그룹 생성 바텀시트 또는 inline 폼 출현.</td>
+        </tr>
+        <tr>
+          <td>입장 그룹 삭제 아이콘 탭</td>
+          <td>해당 그룹 즉시 제거. 관련 티켓의 targetEntryGroupId도 연결 해제.</td>
+        </tr>
+        <tr>
+          <td>검토(Step 6) 섹션 "수정" 탭</td>
+          <td>해당 단계(e.g. "기본 정보")로 PageView가 즉시 이동. 검토 화면 없이 바로 해당 step 보임.</td>
+        </tr>
+        <tr>
+          <td>"생성하기" 버튼 탭 (유효성 OK)</td>
+          <td>전체 로딩 오버레이(GlobalLoading) 표시. 완료 시 "파티 정보가 생성되었습니다" 스낵바 + 파티 목록 화면으로 자동 이동.</td>
+        </tr>
+        <tr>
+          <td>"생성하기" 버튼 탭 (유효성 오류)</td>
+          <td>버튼이 disabled 상태 — 탭 불가. 오류 카드가 상단에 표시되며 미완성 항목 목록 나열.</td>
+        </tr>
+        <tr>
+          <td>생성 실패 (서버 오류)</td>
+          <td>로딩 오버레이 해제 + 에러 다이얼로그/스낵바 표시. 검토 화면으로 복귀, 재시도 가능.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Motion &amp; timing</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 220px;">Transition</th>
+          <th style="width: 100px;">Duration</th>
+          <th>Curve / notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>단계 간 PageView 전환</td>
+          <td>MinglitAnimation.medium (~300ms)</td>
+          <td>Curves.easeInOut. 좌→우 slide (다음) / 우→좌 slide (이전).</td>
+        </tr>
+        <tr>
+          <td>프로그레스 바 증가/감소</td>
+          <td>~300ms</td>
+          <td>width animation (CSS transition). 단계 전환과 동시 진행.</td>
+        </tr>
+        <tr>
+          <td>AppBar 타이틀 변경</td>
+          <td>~150ms</td>
+          <td>Flutter AppBar 기본 — step 전환 시 함께 변경. fade 없이 즉각 교체.</td>
+        </tr>
+        <tr>
+          <td>유효성 오류 → 스낵바</td>
+          <td>~200ms</td>
+          <td>Material Snackbar slide-up. 자동 닫힘 4초.</td>
+        </tr>
+        <tr>
+          <td>전체 로딩 오버레이 진입</td>
+          <td>~150ms</td>
+          <td>Opacity fade-in. 배경 scrim + 중앙 white spinner.</td>
+        </tr>
+        <tr>
+          <td>검토 → 수정 단계 점프</td>
+          <td>MinglitAnimation.medium</td>
+          <td>PageView.animateToPage(step.index) easeInOut.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="intro" style="margin-top:12px;margin-bottom:0;">
+      ※ mds_tokens에 motion duration token은 아직 미정의 — 위 수치는 임시값.
+    </p>
+  </section>
+
+  <section class="doc">
+    <h2>Edge cases</h2>
+    <ul class="notes">
+      <li><strong>수정 모드 진입 (partyId 전달)</strong> — AppBar 타이틀 "수정" 표시. prefill 로딩 중에는 전체 스피너 화면. prefill 완료 후 Step 1 노출, 모든 필드에 기존 값 채워짐.</li>
+      <li><strong>수정 모드 완료 버튼</strong> — "생성하기" 대신 "수정 완료" 텍스트. 성공 스낵바: "파티 정보가 수정되었습니다."</li>
+      <li><strong>Step 1 이미지 없이 다음 탭</strong> — 커버 이미지 없이 진행 가능 (필수 아님). 검토 단계에서 이미지 없음 경고가 나올 수 있음.</li>
+      <li><strong>비공개 파티 토글 ON</strong> — 스위치 보라색으로 전환. 메인 피드에서 노출되지 않으며 링크 공유로만 진입 가능한 상태 표시.</li>
+      <li><strong>Step 4 그룹 없이 다음 탭</strong> — 유효성 오류: "최소 1개의 입장 그룹이 필요합니다." 스낵바. 페이지 이동 없음.</li>
+      <li><strong>Step 5 티켓 없이 다음 탭</strong> — 유효성 오류: "최소 1개의 티켓이 필요합니다." 스낵바.</li>
+      <li><strong>검토 단계 유효성 오류 카드</strong> — 오류 항목 목록 나열 (예: "파티 제목이 비어 있습니다" · "티켓이 없습니다"). "생성하기" 버튼 비활성화(disabled). 오류 항목별 "수정" 클릭 시 해당 단계로 이동.</li>
+      <li><strong>다크 모드</strong> — AppBar · PageView 배경: color-background(dark). 프로그레스 바 fill: color-primary(dark:#aa33ff). 입력 필드 테두리: color-divider(dark). "다음" 버튼: color-primary 유지. 오류 테두리/텍스트: color-error 유지.</li>
+    </ul>
+  </section>
+</div>
+
+<!-- ============================================================
+     REFERENCE
+     ============================================================ -->
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">📖</span>
+    <h2>Reference</h2>
+    <span class="lede">사용된 컴포넌트 / 토큰 / 인접 화면.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Components used</h2>
+    <p class="intro">
+      Visual의 Step 1 default state에서 spec mode를 켜면 ⓐ–ⓔ 번호가 화면에 떠서 아래 항목과 매칭된다.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 36px;">#</th>
+          <th style="width: 220px;">Component</th>
+          <th style="width: 180px;">Where on screen</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>ⓐ</td>
+          <td><a href="/components#LinearProgressIndicator"><code>MinglitLinearProgressIndicator</code></a></td>
+          <td>AppBar 바로 아래 (②)</td>
+          <td>height 4px. value = (stepIndex+1)/6. 단계 전환 시 animated width.</td>
+        </tr>
+        <tr>
+          <td>ⓑ</td>
+          <td>TextFormField</td>
+          <td>각 Step 입력 필드</td>
+          <td>radius-input (12px). 오류 시 error border + helper text.</td>
+        </tr>
+        <tr>
+          <td>ⓒ</td>
+          <td>QuillEditor (flutter_quill)</td>
+          <td>Step 1 파티 소개</td>
+          <td>Toolbar + 에디터 영역. Rich text (bold/italic/list). delta JSON 저장.</td>
+        </tr>
+        <tr>
+          <td>ⓓ</td>
+          <td>SwitchListTile</td>
+          <td>Step 1 공개 범위 / Step 3 성비 균형</td>
+          <td>Material SwitchListTile. contentPadding: EdgeInsets.zero.</td>
+        </tr>
+        <tr>
+          <td>ⓔ</td>
+          <td>ElevatedButton / OutlinedButton</td>
+          <td>bottomNavigationBar (④)</td>
+          <td>이전: OutlinedButton flex:1. 다음/완료: ElevatedButton flex:2. Loading 시 disabled.</td>
+        </tr>
+        <tr>
+          <td>—</td>
+          <td><a href="/components#CircularProgressIndicator"><code>MinglitCircularProgressIndicator</code></a></td>
+          <td>수정 모드 prefill 로딩 / 제출 중</td>
+          <td>prefill: 전체 화면 중앙. 제출: GlobalLoadingController 오버레이.</td>
+        </tr>
+        <tr>
+          <td>—</td>
+          <td>MinglitEditableSection</td>
+          <td>Step 6 검토 섹션</td>
+          <td>title + "수정" 버튼 + child summary. 탭 시 해당 단계로 이동.</td>
+        </tr>
+        <tr>
+          <td>—</td>
+          <td>TagSelectionSection</td>
+          <td>Step 1 태그</td>
+          <td>태그 검색 + 다중 선택 칩.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Tokens consumed</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 240px;">Token</th>
+          <th>Where applied</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><code>color-background</code></td><td>Scaffold · AppBar · PageView · 입력 필드 bg · 버튼 bg(기본)</td></tr>
+        <tr><td><code>color-surface</code></td><td>프로그레스 트랙 bg · 검토 섹션 헤더 bg · 이미지 슬롯 bg</td></tr>
+        <tr><td><code>color-primary</code></td><td>프로그레스 fill · 활성 연락처 칩 · 스위치 ON · 이전/다음 버튼 border/bg</td></tr>
+        <tr><td><code>color-secondary</code></td><td>티켓 가격 텍스트</td></tr>
+        <tr><td><code>color-error</code></td><td>유효성 오류 border · 에러 카드 border/텍스트 · 삭제 아이콘</td></tr>
+        <tr><td><code>color-text-primary</code></td><td>필드 라벨 · 입력 텍스트 · 카드 이름 · AppBar 타이틀</td></tr>
+        <tr><td><code>color-text-secondary</code></td><td>placeholder · sub 텍스트 · 비활성 칩 · 캡션</td></tr>
+        <tr><td><code>color-divider</code></td><td>AppBar/bar border · 입력 필드 기본 border · 섹션 구분선</td></tr>
+        <tr><td><code>radius-input</code> (12px)</td><td>텍스트 입력 필드 코너</td></tr>
+        <tr><td><code>radius-card</code> (16px)</td><td>입장 그룹 카드 · 티켓 아이템 · 검토 섹션 · 에러 카드</td></tr>
+        <tr><td><code>radius-button</code> (12px)</td><td>이전/다음 버튼</td></tr>
+        <tr><td><code>spacing-medium</code> (16px)</td><td>Step body outer pad all · AppBar↔progress gap · bottom nav pad · 버튼 간격</td></tr>
+        <tr><td><code>spacing-large</code> (24px)</td><td>필드 간격 · 검토 섹션 간격</td></tr>
+        <tr><td>typography: titleMedium (16/600)</td><td>필드 섹션 라벨</td></tr>
+        <tr><td>typography: titleLarge (20/700)</td><td>Step 6 검토 타이틀</td></tr>
+        <tr><td>typography: bodyMedium (14/400)</td><td>입력 텍스트 · 요약 내용</td></tr>
+        <tr><td>typography: appBarTitle (18/600)</td><td>AppBar 단계 타이틀</td></tr>
+        <tr><td>typography: buttonLarge (16/600)</td><td>이전/다음/생성하기 버튼 텍스트</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 240px;">Spec</th><th>Relation</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><a href="/specs/event_detail_page.html"><code>EventDetailPage</code></a></td>
+          <td>이 위저드에서 생성된 파티/이벤트를 사용자가 보는 상세 화면.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/settlement_detail_page.html"><code>SettlementDetailPage</code></a></td>
+          <td>생성된 파티의 매출·정산을 파트너가 확인하는 화면.</td>
+        </tr>
+        <tr>
+          <td><a href="/foundations/layout">Layout foundations</a></td>
+          <td>Scaffold + bottomNavigationBar 패턴 (탭바 없음 — 독립 wizard scaffold).</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+</div>
+
+<script>
+  document.getElementById('spec-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('spec-mode', e.target.checked);
+  });
+  document.getElementById('dark-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('dark-mode', e.target.checked);
+  });
+</script>
+</body>
+</html>
