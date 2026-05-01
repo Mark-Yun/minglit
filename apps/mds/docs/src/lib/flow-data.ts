@@ -241,6 +241,12 @@ export function widgetNameFor(app: 'user' | 'partner', route: string): string | 
 const KNOWN_SPEC_FILES: { user: ReadonlySet<string>; partner: ReadonlySet<string> } = {
   user: new Set([
     'account_management_page',
+    'auth_callback_page',
+    'blocked_partners_page',
+    'deletion_complete_page',
+    'deletion_info_page',
+    'deletion_reason_page',
+    'deletion_verify_page',
     'event_application_wizard_page',
     'event_check_in_screen',
     'event_checked_in_screen',
@@ -249,6 +255,7 @@ const KNOWN_SPEC_FILES: { user: ReadonlySet<string>; partner: ReadonlySet<string
     'event_results_screen',
     'event_review_screen',
     'home_page',
+    'identity_verification_screen',
     'login_page',
     'my_page',
     'my_tickets_page',
@@ -261,25 +268,34 @@ const KNOWN_SPEC_FILES: { user: ReadonlySet<string>; partner: ReadonlySet<string
     'search_page',
     'signup_consent_page',
     'tag_event_list_page',
+    'ticket_qr_screen',
   ]),
   partner: new Set([
     'account_management_page',
+    'bank_account_page',
+    'checkin_placeholder_page',
+    'create_verification_page',
+    'event_application_detail_page',
+    'event_application_manage_page',
+    'event_create_page',
+    'location_guide_page',
     'more_page',
-    'party_detail_page',
-    'party_list_page',
+    'notification_list_screen',
+    'notification_settings_screen',
+    'partner_application_detail_page',
     'partner_apply_page',
     'partner_apply_status_page',
     'partner_home_page',
+    'partner_login_page',
+    'partner_member_list_page',
+    'partner_member_permission_page',
     'partner_welcome_page',
-    'notification_list_screen',
-    'notification_settings_screen',
-    'event_application_manage_page',
-    'event_application_detail_page',
-    'event_create_page',
+    'party_detail_page',
+    'party_list_page',
+    'recurrence_management_screen',
+    'settlement_page',
     'ticket_create_page',
     'ticket_edit_page',
-    'bank_account_page',
-    'settlement_page',
     'verification_manage_page',
     // remaining partner specs are reached via ROUTE_DESIGN_OVERRIDES below.
   ]),
@@ -331,6 +347,28 @@ const ROUTE_DESIGN_OVERRIDES: Record<string, string> = {
   // routed bottom-sheet widget is EventMatchingScreen (matching/matchingReady
   // states share the same route). Override to its real spec.
   'user-EventMatchingRoute':         '/specs/event_matching_screen.html',
+  // CertificationRoute (user) → kit-shared IdentityVerificationScreen. Default
+  // rule yields 'certification_page', override to the widget-named spec basename.
+  'user-CertificationRoute':         '/specs/identity_verification_screen.html',
+  // TicketQRRoute → widget is TicketQRScreen. Default rule yields 'ticket_qr_page'.
+  'user-TicketQRRoute':              '/specs/ticket_qr_screen.html',
+  // Partner LoginRoute → PartnerLoginPage (NOT the user app's LoginPage). Default
+  // rule yields 'login_page', which would point to the user spec — override to
+  // the partner-specific spec.
+  'partner-LoginRoute':              '/specs/partner_login_page.html',
+  // CheckinRoute → CheckinPlaceholderPage. Default rule yields 'checkin_page'.
+  'partner-CheckinRoute':            '/specs/checkin_placeholder_page.html',
+  // ApplicationDetailRoute (partner) → PartnerApplicationDetailPage (admin-side
+  // partner application review). Distinct from EventApplicationDetailRoute.
+  'partner-ApplicationDetailRoute':  '/specs/partner_application_detail_page.html',
+  // MemberListRoute → PartnerMemberListPage. Default rule yields 'member_list_page'.
+  'partner-MemberListRoute':         '/specs/partner_member_list_page.html',
+  // MemberPermissionRoute → PartnerMemberPermissionPage. Default would be
+  // 'member_permission_page'.
+  'partner-MemberPermissionRoute':   '/specs/partner_member_permission_page.html',
+  // RecurrenceManagementRoute → RecurrenceManagementScreen. Default would be
+  // 'recurrence_management_page'.
+  'partner-RecurrenceManagementRoute':'/specs/recurrence_management_screen.html',
 };
 
 /**

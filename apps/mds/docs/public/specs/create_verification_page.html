@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Spec — CreateVerificationPage (app_partner · CreateVerificationRoute)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* ============================================================
+   CreateVerificationPage-specific atoms.
+   Partner brand purple — scoped to .viewport.
+   Page = simpleAppBar('새 인증 만들기') + body Form(ListView)
+        + bottomNavigationBar(SafeArea + ElevatedButton 풀폭 '저장하기').
+   Body sections: BasicInfo (3 TextFormFields) + FormBuilder (header + add menu + dynamic field cards or empty hint).
+   ============================================================ */
+.viewport {
+  --color-primary: var(--color-partner-primary);
+  --spec-blueprint-rgb: 108, 60, 225;
+}
+body.dark-mode .viewport {
+  --color-primary: var(--color-partner-dark-primary);
+}
+
+.cv-appbar {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  background: var(--color-surface);
+}
+.cv-appbar__back {
+  width: 40px; height: 40px;
+  margin-left: var(--spacing-xsmall);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--color-text-primary);
+}
+.cv-appbar__back svg { width: 22px; height: 22px; }
+.cv-appbar__title {
+  flex: 1;
+  font-size: var(--typography-font-size-app-bar-title);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.cv-body {
+  position: absolute;
+  top: 56px; left: 0; right: 0; bottom: 76px;
+  background: var(--color-surface);
+  overflow-y: auto;
+  scrollbar-width: none;
+  padding: var(--spacing-medium);
+}
+.cv-body::-webkit-scrollbar { display: none; }
+
+/* --- Section title (titleLarge bold) --- */
+.cv-section-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1.3;
+}
+.cv-section-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-small);
+}
+.cv-add-icon {
+  width: 28px; height: 28px;
+  color: var(--color-text-secondary);
+  display: flex; align-items: center; justify-content: center;
+}
+.cv-add-icon svg { width: 24px; height: 24px; }
+
+/* --- TextFormField (Material outlined-ish · MinglitTextField) --- */
+.cv-field {
+  margin-top: var(--spacing-medium);
+}
+.cv-field__label {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-xxsmall);
+}
+.cv-field__input {
+  display: block;
+  width: 100%;
+  height: 44px;
+  padding: 0 var(--spacing-small);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-input);
+  background: var(--color-background);
+  font-size: var(--typography-font-size-body);
+  color: var(--color-text-primary);
+  box-sizing: border-box;
+}
+.cv-field__input--multiline {
+  height: 64px;
+  padding: var(--spacing-small);
+}
+.cv-field__hint {
+  color: var(--color-text-secondary);
+  opacity: 0.6;
+}
+.cv-field__input--focused {
+  border-color: var(--color-primary);
+  border-width: 2px;
+}
+.cv-field__error {
+  margin-top: var(--spacing-xxsmall);
+  font-size: 12px;
+  color: var(--color-error);
+}
+
+/* --- Form builder section --- */
+.cv-builder {
+  margin-top: var(--spacing-large);
+}
+
+/* --- Empty hint (dashed container — '+ 버튼을 눌러 필드를 추가하세요') --- */
+.cv-empty {
+  margin-top: var(--spacing-small);
+  padding: var(--spacing-xlarge);
+  background: color-mix(in srgb, var(--color-text-secondary) 8%, transparent);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-small);
+  text-align: center;
+  font-size: var(--typography-font-size-body);
+  color: var(--color-text-secondary);
+}
+
+/* --- Field editor card (ReorderableListView item) --- */
+.cv-fec {
+  margin-top: var(--spacing-medium);
+  background: var(--color-background);
+  border-radius: var(--radius-card);
+  padding: var(--spacing-medium);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+.cv-fec__header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-small);
+}
+.cv-fec__header svg { width: 18px; height: 18px; color: var(--color-text-secondary); }
+.cv-fec__type-label {
+  font-size: var(--typography-font-size-body);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  flex: 1;
+}
+.cv-fec__delete, .cv-fec__drag {
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--color-text-secondary);
+}
+.cv-fec__delete svg, .cv-fec__drag svg { width: 20px; height: 20px; }
+.cv-fec__divider {
+  height: 1px;
+  background: var(--color-divider);
+  margin: var(--spacing-small) 0;
+}
+.cv-fec__row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-medium);
+}
+.cv-fec__label-input {
+  flex: 1;
+  height: 36px;
+  padding: 0 var(--spacing-small);
+  border-bottom: 1px solid var(--color-divider);
+  font-size: var(--typography-font-size-body);
+  color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+}
+.cv-fec__required {
+  display: flex; align-items: center;
+  gap: var(--spacing-xsmall);
+}
+.cv-fec__cb {
+  width: 18px; height: 18px;
+  border-radius: 2px;
+  border: 2px solid var(--color-primary);
+  background: var(--color-primary);
+  display: flex; align-items: center; justify-content: center;
+}
+.cv-fec__cb svg { width: 12px; height: 12px; color: #fff; }
+.cv-fec__cb--off {
+  background: transparent;
+  border-color: var(--color-text-secondary);
+}
+.cv-fec__cb--off svg { display: none; }
+.cv-fec__required-label {
+  font-size: var(--typography-font-size-body);
+  color: var(--color-text-primary);
+}
+
+/* --- Bottom save button (ElevatedButton 풀폭) --- */
+.cv-bottombar {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  padding: var(--spacing-small) var(--spacing-medium);
+  background: var(--color-surface);
+}
+.cv-save {
+  width: 100%;
+  height: 48px;
+  background: var(--color-primary);
+  color: #fff;
+  border-radius: var(--radius-button);
+  font-size: var(--typography-font-size-body);
+  font-weight: 700;
+  border: none;
+}
+
+/* --- Popup menu (PopupMenuButton · PopupMenuItem text/file) --- */
+.cv-popup {
+  position: absolute;
+  top: 96px; right: 16px;
+  background: var(--color-background);
+  border-radius: var(--radius-small);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.16);
+  min-width: 140px;
+  padding: var(--spacing-xsmall) 0;
+}
+.cv-popup__item {
+  height: 40px;
+  display: flex; align-items: center;
+  padding: 0 var(--spacing-medium);
+  font-size: var(--typography-font-size-body);
+  color: var(--color-text-primary);
+}
+.cv-popup__item:hover {
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+}
+
+/* --- Reorder drag overlay (proxyDecorator) --- */
+.cv-fec--drag {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  opacity: 0.92;
+}
+
+/* --- Snackbar success / error overlay --- */
+.cv-snack {
+  position: absolute;
+  left: 16px; right: 16px;
+  bottom: 88px;
+  padding: var(--spacing-medium);
+  border-radius: var(--radius-input);
+  font-size: var(--typography-font-size-body);
+  font-weight: 500;
+  color: #fff;
+  display: flex; align-items: center; gap: var(--spacing-small);
+}
+.cv-snack--success { background: var(--color-success, #2e7d32); }
+.cv-snack--error { background: rgba(40, 40, 50, 0.95); }
+.cv-snack svg { width: 20px; height: 20px; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
+</div>
+
+<div class="page">
+
+<header>
+  <h1>Create Verification</h1>
+</header>
+
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr>
+        <th style="width: 140px;">Status</th>
+        <td><strong>✅ 디자인완료</strong> <em style="color: var(--color-text-secondary);">— 8 state · 새 커스텀 인증 정의 + 입력 양식 빌더</em></td>
+      </tr>
+      <tr><th>App</th><td><code>app_partner</code></td></tr>
+      <tr><th>Category</th><td>verification · partner ops · custom verification CRUD</td></tr>
+      <tr>
+        <th>Route / Surface</th>
+        <td><code>CreateVerificationRoute</code> · widget: <code>CreateVerificationPage</code></td>
+      </tr>
+      <tr>
+        <th>Path</th>
+        <td><code>/more/verifications/create</code></td>
+      </tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>: <a href="/specs/verification_manage_page.html"><code>VerificationManagePage</code></a> (사용 중 탭의 AddActionCard 탭 시 push)<br>
+          <strong>Children</strong>: <em>—</em> (overlay만 — PopupMenu, snackbar; 내부 위젯 <code>_FieldEditorCard</code>는 별도 spec 없음)
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>
+          파트너가 새 커스텀 인증을 정의하기 위한 풀-페이지 폼. 표시 이름·관리용 이름·설명 3개 기본 필드 + 동적으로 추가/재배치/삭제 가능한 입력 양식(text/file 필드)을 한 화면에 입력 후 저장.
+          파트너 인증 풀(verification_manage)에 새 row를 만드는 단일 진입점.
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry points</strong>: VerificationManagePage(사용 중 탭) → AddActionCard '새로운 인증 만들기' 탭.<br>
+          <strong>Exit points</strong>: 저장 성공 → success snackbar('인증이 생성되었습니다.') + Navigator.pop(context, true) (verification_manage 화면이 invalidate되어 새 인증 active 리스트에 등장) · AppBar back → 변경 무시하고 pop · 검증 실패 → form validator inline error 노출 + 화면 유지 · save 에러 → handleMinglitError snackbar.
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          파트너 커스텀 인증은 (1) 표시 이름(유저에게 보임) · (2) 관리용 이름(내부 식별자) · (3) 설명(유저 가이드) · (4) 동적 입력 양식 4가지 요소로 구성. 양식은 빌더 패턴(추가→편집→재배치→삭제)으로 구현되어 PopupMenu 'add'에서 type을 고르면 새 _FieldEditorCard가 ReorderableListView에 추가된다. drag handle은 44×44 hit target(Fix #1801)으로 보장.
+          저장은 단일 RPC — 성공 시 verification_manage_state가 invalidate되어 호출자가 자동으로 active 리스트 갱신.
+        </td>
+      </tr>
+      <tr>
+        <th>Frequency</th>
+        <td>활성 파트너 기준 분기당 0~수회. 셋업 직후 1~3회 집중 사용 후 가끔 신규 인증 추가.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="doc">
+  <h2>History</h2>
+  <p class="intro">이 spec의 주요 변경 이력. 최신 항목 위.</p>
+  <table class="ref">
+    <thead>
+      <tr>
+        <th style="width: 110px;">Date</th>
+        <th style="width: 80px;">Version</th>
+        <th style="width: 120px;">Author</th>
+        <th>Changes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2026-05-01</td>
+        <td>1.0</td>
+        <td>mark-yun</td>
+        <td>v1.4 template으로 작성. 8 state(Default empty builder · Filled basic info · Add field popup · Field editor card · Reorder dragging · Validation error · Saving · Save success/error) → mini-table per state, baseline = Default(폼 비어있고 builder도 empty hint 노출). 파트너 brand color(<code>#6c3ce1</code>) viewport-scoped.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<nav class="perspective-nav">
+  <a href="#layout"><span class="glyph">🧱</span> Layout</a>
+  <a href="#states"><span class="glyph">🎨</span> States</a>
+  <a href="#global-behavior"><span class="glyph">🔄</span> Global Behavior</a>
+  <a href="#reference"><span class="glyph">📖</span> Reference</a>
+</nav>
+
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Layout</h2>
+    <span class="lede">화면 구조 — 영역, 정렬, 간격 규칙. 색·타이포 무시.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree</h2>
+    <p class="intro">
+      Scaffold = simpleAppBar('새 인증 만들기') + body(Form + ListView · pad <code>spacing-medium = 16</code>) + bottomNavigationBar(SafeArea + Padding(h:16, v:8) + ElevatedButton '저장하기'). body는 위에서 BasicInfo(섹션 타이틀 + 3 TextFormField) + 16gap + FormBuilder(타이틀 + add icon + ReorderableListView 또는 empty hint). 이 화면 자체에는 Loading 분기가 없음 — 로컬 상태만 사용 (controller는 fetch 안 함).
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:0;left:0;right:0;height:56px;">
+          <span class="blueprint__region-label">① AppBar — back · '새 인증 만들기'</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:56px;left:0;right:0;height:200px;">
+          <span class="blueprint__region-label">② BasicInfo — '기본 정보' + 3 TextFormFields</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:280px;left:0;right:0;bottom:80px;">
+          <span class="blueprint__region-label">③ FormBuilder — '입력 양식 설정' + add icon + dynamic editor list / empty hint</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="bottom:0;left:0;right:0;height:80px;">
+          <span class="blueprint__region-label">④ bottomNavigationBar — SafeArea + ElevatedButton '저장하기'</span>
+        </div>
+      </div>
+
+      <div class="layout-tree"><b>Scaffold</b>
+├─ <b>appBar</b>: simpleAppBar(title:'새 인증 만들기')
+├─ <b>body</b>: <b>Form</b>(key)
+│  └─ <b>ListView</b>(pad <code>spacing-medium = 16</code>)
+│     ├─ <em>BasicInfo</em>                                      ← ②
+│     │  ├─ Text('기본 정보' · titleLarge)
+│     │  ├─ SizedBox(<code>spacing-medium</code>)
+│     │  ├─ TextFormField(label '인증 이름 (유저에게 표시)')
+│     │  ├─ SizedBox(<code>spacing-medium</code>)
+│     │  ├─ TextFormField(label '관리용 이름 (내부 식별용)')
+│     │  ├─ SizedBox(<code>spacing-medium</code>)
+│     │  └─ TextFormField(label '설명' · maxLines:2)
+│     ├─ SizedBox(<code>spacing-large = 24</code>)
+│     │
+│     └─ <em>FormBuilder</em>                                    ← ③
+│        ├─ Row.spaceBetween
+│        │  ├─ Text('입력 양식 설정' · titleLarge)
+│        │  └─ <b>PopupMenuButton&lt;String&gt;</b> (icon: add_circle)
+│        │     └─ items: PopupMenuItem('text', '텍스트 입력') · PopupMenuItem('file', '파일 업로드')
+│        ├─ SizedBox(<code>spacing-small</code>)
+│        └─ if state.fields.isEmpty
+│           → <b>Container</b>(dashed-ish · '+ 버튼을 눌러 필드를 추가하세요')
+│           else
+│           → <b>ReorderableListView.builder</b>(shrinkWrap · NeverScrollable · proxyDecorator(Material radius-card))
+│              └─ <b>_FieldEditorCard</b> × N
+│                 ├─ Card(Padding all <code>spacing-medium</code>)
+│                 ├─ Row[typeIcon · typeLabel · Spacer · IconButton(delete) · ReorderableDragStartListener(44×44 drag_handle)]
+│                 ├─ Divider
+│                 └─ Row[Expanded(TextField '라벨') · gap 16 · Row[Checkbox · '필수']]
+└─ <b>bottomNavigationBar</b>: SafeArea + Padding(h 16, v 8) + ElevatedButton('저장하기')   ← ④</div>
+    </div>
+  </section>
+
+  <section class="doc">
+    <h2>Spacing &amp; alignment rules</h2>
+    <table class="ref">
+      <thead>
+        <tr><th style="width: 60px;">#</th><th style="width: 200px;">Region</th><th style="width: 220px;">Alignment</th><th>Spacing</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>—</td><td>Outer page padding</td><td>ListView pad-all <code>spacing-medium (16)</code></td><td>좌우 16 · 상하 16 (tile-내부 padding은 별도)</td></tr>
+        <tr><td>①</td><td>AppBar</td><td>height 56 · centerTitle:false · scaffold-gray bg</td><td>title typography <code>app-bar-title (18 / 700)</code></td></tr>
+        <tr><td>②</td><td>BasicInfo</td><td>Column.start · 좌측 정렬</td><td>title → field <code>spacing-medium (16)</code> · field 사이 <code>spacing-medium (16)</code></td></tr>
+        <tr><td>③</td><td>FormBuilder</td><td>Column.start · header는 Row.spaceBetween (title 좌 + add icon 우)</td><td>title row → list <code>spacing-small (8)</code> · field card 사이 <code>spacing-medium (16)</code></td></tr>
+        <tr><td>—</td><td>FieldEditor Card 내부</td><td>Padding all <code>spacing-medium (16)</code> · Column</td><td>header row → divider, divider → label row 사이 <code>spacing-small (8)</code> · drag handle 44×44</td></tr>
+        <tr><td>④</td><td>bottomNavigationBar</td><td>SafeArea + Padding(h <code>spacing-medium (16)</code>, v <code>spacing-small (8)</code>)</td><td>button height 48 · 풀폭</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy ① — TextFormField (basic info × 3)</h2>
+    <p class="intro">
+      Material InputDecoration default + label + hint. hintStyle은 onSurfaceVariant @ 0.6 opacity (Fix #1801). validator 실패 시 inline error 텍스트 + border error 색.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 100px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:8px;left:12px;width:140px;height:14px;">
+          <span class="blueprint__region-label">㉠ label</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:30px;left:0;right:0;height:44px;border-radius:12px;">
+          <span class="blueprint__region-label">㉡ input(border 1 / focus 2)</span>
+        </div>
+      </div>
+      <div class="layout-tree"><b>TextFormField</b>(controller, onChanged → controller.update*, validator)
+├─ decoration: InputDecoration
+│  ├─ labelText: '인증 이름 (유저에게 표시)'                    ← ㉠
+│  ├─ hintText: '예: 골프 핸디캡 인증'
+│  └─ hintStyle: bodyMedium · onSurfaceVariant @ 0.6 opacity
+└─ validator: (v) => v.isEmpty ? '이름을 입력해주세요.' : null   ← ㉡</div>
+    </div>
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr><th style="width: 60px;">#</th><th style="width: 180px;">Region</th><th style="width: 220px;">Alignment</th><th>Spacing / tokens</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>㉠</td><td>label</td><td>top-left · floating Material default</td><td>typography <code>caption</code> · color <code>onSurface</code></td></tr>
+        <tr><td>㉡</td><td>input border</td><td>radius <code>radius-input (12)</code> · border 1px / focused 2px primary</td><td>height ~44 · padding-horizontal <code>spacing-small (8)</code> · text <code>bodyMedium</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy ② — _FieldEditorCard (양식 빌더 row)</h2>
+    <p class="intro">
+      각 필드는 Card 한 장. header(typeIcon + typeLabel + delete + drag) → divider → Row[label 입력 + 필수 체크박스]. drag handle은 44×44 명시 (Fix #1801) — 작은 hit target으로 인한 reorder 실수를 막음.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 160px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:16px;left:16px;width:18px;height:18px;">
+          <span class="blueprint__region-label">㉠ icon</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:14px;left:48px;width:80px;height:22px;">
+          <span class="blueprint__region-label">㉡ type label</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:8px;right:60px;width:36px;height:36px;">
+          <span class="blueprint__region-label">㉢ delete</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:6px;right:16px;width:44px;height:44px;">
+          <span class="blueprint__region-label">㉣ drag 44</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:60px;left:16px;right:16px;height:1px;"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:80px;left:16px;right:120px;height:36px;">
+          <span class="blueprint__region-label">㉤ label TextField</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:84px;right:16px;width:80px;height:24px;">
+          <span class="blueprint__region-label">㉥ Check + 필수</span>
+        </div>
+      </div>
+      <div class="layout-tree"><b>Card</b>(margin only-bottom <code>spacing-medium (16)</code>)
+└─ <b>Padding</b>(all <code>spacing-medium</code>)
+   └─ Column
+      ├─ Row[<b>Icon</b>(typeIcon · 18 / small)             ← ㉠
+      │     gap <code>spacing-small (8)</code>
+      │     <b>Text</b>(typeLabel · titleMedium bold)        ← ㉡
+      │     <b>Spacer</b>
+      │     <b>IconButton</b>(delete)                        ← ㉢
+      │     <b>ReorderableDragStartListener</b>(SizedBox 44×44 drag_handle) ← ㉣
+      ├─ <b>Divider</b>
+      └─ Row[
+        Expanded → <b>TextField</b>(focusNode, label '라벨 (질문 내용)' · isDense · onChanged → onUpdate(field.copyWith(label))) ← ㉤
+        gap <code>spacing-medium (16)</code>
+        Row[<b>Checkbox</b>(activeColor primary, value field.required) · <b>Text</b>('필수' bodyMedium)] ← ㉥
+      ]</div>
+    </div>
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr><th style="width: 60px;">#</th><th style="width: 180px;">Region</th><th style="width: 220px;">Alignment</th><th>Spacing / tokens</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>㉠</td><td>typeIcon</td><td>좌측 · 18 size</td><td>color <code>onSurfaceVariant</code> · icon: text→text_fields · file→upload_file · number→numbers · date→calendar_today</td></tr>
+        <tr><td>㉡</td><td>typeLabel</td><td>좌측 flex 자유</td><td>typography <code>titleMedium</code> bold · color <code>onSurface</code></td></tr>
+        <tr><td>㉢</td><td>delete IconButton</td><td>우측</td><td>icon delete · color <code>onSurfaceVariant</code></td></tr>
+        <tr><td>㉣</td><td>drag handle</td><td>우측 · SizedBox 44×44 (Fix #1801)</td><td>icon drag_handle · ReorderableDragStartListener wrap — 길게 누르고 끌어 이동</td></tr>
+        <tr><td>㉤</td><td>label TextField</td><td>flex · isDense:true</td><td>focusNode 사용 · onChanged → field.copyWith(label) · didUpdateWidget에서 외부 변경이 있을 땐 focus 없을 때만 sync</td></tr>
+        <tr><td>㉥</td><td>required check</td><td>우측 · Row[Checkbox · Text]</td><td>activeColor <code>color-primary</code> · label <code>bodyMedium</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<div class="perspective" id="states">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>States</h2>
+    <span class="lede">시각 변형 8종. baseline = Default(빈 폼 + empty builder hint), 나머지는 additive diff.</span>
+  </div>
+
+  <section class="doc">
+    <p class="intro">
+      <strong>State 식별 기준</strong>: <code>createVerificationControllerProvider</code> state(displayName · internalName · description · fields · submitting · error) · 로컬 TextEditingController 입력 · Form validator 결과 · PopupMenu 오버레이 · Reorder drag 진행 · 저장 결과(success/error). fetch loading은 없음 — 이 화면은 신규 작성 폼이라 진입 즉시 default state.
+    </p>
+
+    <h3 style="margin-top: 24px;">State summary <small style="font-size:12px;font-weight:400;color:var(--color-text-secondary);">— 8 states</small></h3>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 200px;">State</th>
+          <th style="width: 100px;">Tag</th>
+          <th style="width: 220px;">조건 (요약)</th>
+          <th>Key visual differentiator</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Default · empty form</strong></td><td>baseline</td><td>진입 직후 · fields 0개</td><td>3 빈 TextFormField · '입력 양식' 아래 dashed empty hint · Save 버튼 enabled</td></tr>
+        <tr><td><strong>Basic info filled</strong></td><td>progress</td><td>3 필드 텍스트 입력</td><td>각 input에 텍스트 + label floating 위치 · validator 통과</td></tr>
+        <tr><td><strong>Add field popup</strong></td><td>overlay</td><td>add_circle 아이콘 탭</td><td>우상단 PopupMenu(텍스트 입력 / 파일 업로드 2 항목)</td></tr>
+        <tr><td><strong>Field editor card</strong></td><td>builder</td><td>fields 1+ 추가됨</td><td>각 필드 카드(typeIcon + typeLabel + delete + drag + 라벨 + 필수 체크)</td></tr>
+        <tr><td><strong>Reorder dragging</strong></td><td>builder</td><td>drag handle을 길게 누르고 끄는 중</td><td>해당 카드가 약간 떠올라 그림자 강조 (proxyDecorator) · 다른 카드 위치 swap 애니메이션</td></tr>
+        <tr><td><strong>Validation error</strong></td><td>error</td><td>저장 시 displayName/internalName 빈 값</td><td>해당 input border error 빨강 + 아래 helperText '이름을 입력해주세요.'</td></tr>
+        <tr><td><strong>Saving</strong></td><td>async</td><td>controller.submit 진행 중</td><td>save 버튼 자체는 변경 안 됨(state.error 변화만 listen) — 글로벌 loader 사용 없음 / 저장 도중 사용자가 다시 누르면 controller가 처리</td></tr>
+        <tr><td><strong>Save success / error</strong></td><td>overlay</td><td>RPC 결과</td><td>success → snackbar('인증이 생성되었습니다.') + Navigator.pop(true) · error → ref.listen이 handleMinglitError snackbar 호출</td></tr>
+      </tbody>
+    </table>
+
+    <div class="visual-gallery" style="background: var(--color-surface); padding: 16px; border-radius: var(--radius-card); display: flex; flex-direction: column; gap: 16px;">
+
+      <!-- ─── Default ─────────────────── -->
+      <table class="ref state-mini is-baseline-tint">
+        <thead>
+          <tr><th colspan="3"><strong>Default · empty form</strong> 🎯 <small>baseline · 진입 직후 빈 폼</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="state-mini__mock" rowspan="6">
+              <div class="viewport">
+                <div class="cv-appbar">
+                  <div class="cv-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 6 9 12 15 18"/></svg></div>
+                  <div class="cv-appbar__title">새 인증 만들기</div>
+                </div>
+                <div class="cv-body">
+                  <div class="cv-section-title">기본 정보</div>
+                  <div class="cv-field">
+                    <div class="cv-field__label">인증 이름 (유저에게 표시)</div>
+                    <div class="cv-field__input"><span class="cv-field__hint">예: 골프 핸디캡 인증</span></div>
+                  </div>
+                  <div class="cv-field">
+                    <div class="cv-field__label">관리용 이름 (내부 식별용)</div>
+                    <div class="cv-field__input"><span class="cv-field__hint">예: Golf Handicap 2024</span></div>
+                  </div>
+                  <div class="cv-field">
+                    <div class="cv-field__label">설명</div>
+                    <div class="cv-field__input cv-field__input--multiline"><span class="cv-field__hint">유저가 인증할 때 참고할 설명을 적어주세요.</span></div>
+                  </div>
+                  <div class="cv-builder">
+                    <div class="cv-section-title-row">
+                      <div class="cv-section-title">입력 양식 설정</div>
+                      <div class="cv-add-icon">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/><line x1="12" y1="8" x2="12" y2="16" stroke="currentColor" stroke-width="2"/><line x1="8" y1="12" x2="16" y2="12" stroke="currentColor" stroke-width="2"/></svg>
+                      </div>
+                    </div>
+                    <div class="cv-empty">+ 버튼을 눌러 필드를 추가하세요</div>
+                  </div>
+                </div>
+                <div class="cv-bottombar">
+                  <button class="cv-save">저장하기</button>
+                </div>
+                <span class="annotation" style="top:60px;left:8px;">spacing-medium — body padding</span>
+                <span class="callout" style="top:75px;left:80px;">ⓐ</span>
+                <span class="callout" style="top:130px;right:30px;">ⓑ</span>
+                <span class="callout" style="bottom:50px;right:30px;">ⓒ</span>
+                <span class="callout" style="bottom:18px;left:90px;">ⓓ</span>
+                <span class="type-spec" style="top:78px;left:24px;">22 / 700 / 1.3</span>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>진입 즉시 — controller state default(displayName/internalName/description 빈 문자열 · fields []) · 3 controller text도 모두 빈 문자열.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              ① <strong>AppBar back</strong> → VerificationManagePage로 pop (변경 무시)<br>
+              ② <strong>각 TextFormField</strong> 탭 → 키보드 노출 + label floating · 입력 → onChanged → controller.update*<br>
+              ③ <strong>add_circle 아이콘</strong> 탭 → PopupMenu 오버레이 (텍스트 입력 / 파일 업로드)<br>
+              ④ <strong>'저장하기' 버튼</strong> 탭 → _formKey.validate() → 통과 시 controller.submit(partnerId) → 성공 시 snackbar + pop(true) · 실패 시 inline 또는 global error
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td>
+              · partnerId가 null로 들어오면 controller.submit(null)이 호출됨 — 백엔드에서 default partner로 처리하거나 에러 반환<br>
+              · empty hint Container의 dashed-ish 배경은 surfaceContainerHighest @ muted opacity — 다크 모드에서도 유지<br>
+              · 키보드 호출 시 ListView.builder는 자동 padding 추가하지 않으나 Form은 그대로 — 입력 필드가 키보드 뒤로 가려질 수 있음(MediaQuery resize default)
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>
+              · <code>Scaffold</code> + <code>simpleAppBar</code> + <code>bottomNavigationBar</code>(SafeArea + Padding + ElevatedButton)<br>
+              · <code>Form</code>(_formKey) + <code>ListView</code>(pad medium)<br>
+              · 3× <code>TextFormField</code>(controller · onChanged · validator · InputDecoration with hintStyle 0.6 opacity)<br>
+              · <code>PopupMenuButton&lt;String&gt;</code>(icon: add_circle, items: text/file)<br>
+              · <code>Container</code>(empty hint) — surfaceContainerHighest @ muted bg, outlineVariant border, radius-small<br>
+              · <code>ElevatedButton</code>('저장하기' 풀폭)
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>
+              · color: <code>color-partner-primary</code> (#6c3ce1 — TextField focused border · Save bg · add_circle icon은 onSurfaceVariant 사용 주의), <code>onSurfaceVariant</code> (label · hint · empty hint text · add_circle icon), <code>color-divider</code> (input default border · empty hint border), <code>color-surface</code> (scaffold + appbar + bottombar bg), <code>color-background</code> (input bg)<br>
+              · radius: <code>radius-input (12)</code> (TextField), <code>radius-small (8)</code> (empty hint), <code>radius-button (12)</code> (Save), <code>radius-card (16)</code> (FieldEditor Card · 후속 state)<br>
+              · spacing: <code>spacing-medium (16)</code> (body pad · field 사이 · button v pad), <code>spacing-large (24)</code> (basic→builder gap), <code>spacing-xlarge (32)</code> (empty hint padding all), <code>spacing-small (8)</code> (button h pad · header→list)<br>
+              · typography: section title <code>titleLarge (22 / 700)</code>, label <code>caption</code>, input <code>bodyMedium (14)</code>, save <code>bodyLarge (16 / 700)</code>, empty hint <code>bodyMedium · onSurfaceVariant</code><br>
+              · opacity: hint <code>0.6</code> (Fix #1801 · MinglitOpacity.separator) · empty hint container bg <code>MinglitOpacity.muted</code>
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 baseline. AppBar back으로 변경사항 무시 가능 — dirty guard 없음 (향후 confirm 후보). add_circle 아이콘이 onSurfaceVariant 색이라 partner brand 보라가 아닌 점이 의도 — 폼 흐름에서 'add'는 액션 강조 필요 없다고 판단(메인 액션은 Save).</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ─── Basic info filled ─────────────────── -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong>Basic info filled</strong> <small>3 필드 입력 완료 · validator 통과</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="state-mini__mock" rowspan="6">
+              <div class="viewport">
+                <div class="cv-appbar">
+                  <div class="cv-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 6 9 12 15 18"/></svg></div>
+                  <div class="cv-appbar__title">새 인증 만들기</div>
+                </div>
+                <div class="cv-body">
+                  <div class="cv-section-title">기본 정보</div>
+                  <div class="cv-field">
+                    <div class="cv-field__label">인증 이름 (유저에게 표시)</div>
+                    <div class="cv-field__input cv-field__input--focused">골프 핸디캡 인증</div>
+                  </div>
+                  <div class="cv-field">
+                    <div class="cv-field__label">관리용 이름 (내부 식별용)</div>
+                    <div class="cv-field__input">Golf Handicap 2024</div>
+                  </div>
+                  <div class="cv-field">
+                    <div class="cv-field__label">설명</div>
+                    <div class="cv-field__input cv-field__input--multiline">싱글 핸디캡(10 이하) 보유자만 입장 가능합니다.</div>
+                  </div>
+                  <div class="cv-builder">
+                    <div class="cv-section-title-row">
+                      <div class="cv-section-title">입력 양식 설정</div>
+                      <div class="cv-add-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
+                    </div>
+                    <div class="cv-empty">+ 버튼을 눌러 필드를 추가하세요</div>
+                  </div>
+                </div>
+                <div class="cv-bottombar">
+                  <button class="cv-save">저장하기</button>
+                </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>+ displayName · internalName · description 모두 비어있지 않음. validator 호출 시 통과. 첫 번째 필드는 focused (border 2px primary).</td>
+          </tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>↔ 입력 텍스트 변경 시 controller.update* 호출 · 키보드 dismiss(빈 영역 탭) 시 floating label은 그대로 유지(text 있으면 label 위로 올라간 채). 동일: AppBar back · add 아이콘 · Save.</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>+ description은 maxLines:2이라 두 줄까지 텍스트 자동 wrap · 그 이상은 스크롤 발생.</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>동일</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>↔ focused TextField border <code>color-partner-primary</code>(2px width)</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 fields 비어 있어도 저장 가능 — backend가 fields[] empty도 허용하면 OK. validator는 fields에 대해서는 검증 안 함.</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ─── Add field popup ─────────────────── -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong>Add field popup</strong> <small>add_circle 탭 시 PopupMenu</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="state-mini__mock" rowspan="6">
+              <div class="viewport">
+                <div class="cv-appbar">
+                  <div class="cv-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 6 9 12 15 18"/></svg></div>
+                  <div class="cv-appbar__title">새 인증 만들기</div>
+                </div>
+                <div class="cv-body">
+                  <div class="cv-section-title">기본 정보</div>
+                  <div class="cv-field">
+                    <div class="cv-field__label">인증 이름 (유저에게 표시)</div>
+                    <div class="cv-field__input">골프 핸디캡 인증</div>
+                  </div>
+                  <div class="cv-builder">
+                    <div class="cv-section-title-row">
+                      <div class="cv-section-title">입력 양식 설정</div>
+                      <div class="cv-add-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
+                    </div>
+                    <div class="cv-empty">+ 버튼을 눌러 필드를 추가하세요</div>
+                  </div>
+                </div>
+                <div class="cv-popup">
+                  <div class="cv-popup__item">텍스트 입력</div>
+                  <div class="cv-popup__item">파일 업로드</div>
+                </div>
+                <div class="cv-bottombar">
+                  <button class="cv-save">저장하기</button>
+                </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>+ <code>PopupMenuButton.onSelected</code> 트리거를 위한 메뉴 오픈 — Material default position(아이콘 아래 또는 위)</td>
+          </tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>+ '텍스트 입력' 탭 → controller.addField('text') · '파일 업로드' 탭 → controller.addField('file') · 외부 영역 탭 → menu dismiss</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>+ 메뉴 표시 중 키보드가 떠 있으면 dismiss됨(Material default 동작).</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>+ <code>PopupMenuButton&lt;String&gt;</code> · 2× <code>PopupMenuItem&lt;String&gt;</code> (value: 'text' / 'file')</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>+ menu bg <code>color-background</code> · radius <code>radius-small (8)</code> · shadow Material default</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 number/date 필드 type도 _FieldEditorCard switch엔 있지만 PopupMenu에서 노출되지 않음 — 향후 빌더 확장 후보.</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ─── Field editor card ─────────────────── -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong>Field editor card</strong> <small>fields 1+ 추가된 상태</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="state-mini__mock" rowspan="6">
+              <div class="viewport">
+                <div class="cv-appbar">
+                  <div class="cv-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 6 9 12 15 18"/></svg></div>
+                  <div class="cv-appbar__title">새 인증 만들기</div>
+                </div>
+                <div class="cv-body">
+                  <div class="cv-section-title">기본 정보</div>
+                  <div class="cv-field">
+                    <div class="cv-field__label">인증 이름 (유저에게 표시)</div>
+                    <div class="cv-field__input">골프 핸디캡 인증</div>
+                  </div>
+                  <div class="cv-builder">
+                    <div class="cv-section-title-row">
+                      <div class="cv-section-title">입력 양식 설정</div>
+                      <div class="cv-add-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
+                    </div>
+                    <div class="cv-fec">
+                      <div class="cv-fec__header">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="14" y2="18"/></svg>
+                        <div class="cv-fec__type-label">텍스트</div>
+                        <div class="cv-fec__delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></div>
+                        <div class="cv-fec__drag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/></svg></div>
+                      </div>
+                      <div class="cv-fec__divider"></div>
+                      <div class="cv-fec__row">
+                        <div class="cv-fec__label-input">핸디캡 점수</div>
+                        <div class="cv-fec__required">
+                          <div class="cv-fec__cb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="5 12 10 17 19 7"/></svg></div>
+                          <div class="cv-fec__required-label">필수</div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="cv-fec">
+                      <div class="cv-fec__header">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="9 13 12 16 15 13"/><line x1="12" y1="11" x2="12" y2="20"/></svg>
+                        <div class="cv-fec__type-label">파일</div>
+                        <div class="cv-fec__delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></div>
+                        <div class="cv-fec__drag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/></svg></div>
+                      </div>
+                      <div class="cv-fec__divider"></div>
+                      <div class="cv-fec__row">
+                        <div class="cv-fec__label-input">핸디캡 증빙 사진</div>
+                        <div class="cv-fec__required">
+                          <div class="cv-fec__cb cv-fec__cb--off"></div>
+                          <div class="cv-fec__required-label">필수</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="cv-bottombar">
+                  <button class="cv-save">저장하기</button>
+                </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>+ <code>state.fields.length &gt; 0</code> · ReorderableListView.builder가 empty hint를 대체.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              + ⓐ <strong>label TextField</strong> 입력 → onChanged → onUpdate(field.copyWith(label))<br>
+              + ⓑ <strong>'필수' Checkbox</strong> 토글 → onUpdate(field.copyWith(required))<br>
+              + ⓒ <strong>delete IconButton</strong> 탭 → onDelete → controller.removeField(index)<br>
+              + ⓓ <strong>drag handle</strong>(44×44 hit) 길게 누름 → ReorderableDragStartListener 활성 → 드래그 시 proxyDecorator 효과
+            </td>
+          </tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>+ 라벨 필드의 외부 controller 변경(다른 field가 reorder/delete로 영향 받을 때) — didUpdateWidget이 _focusNode.hasFocus로 가드하여 사용자가 입력 중일 때 텍스트가 덮어써지지 않음.</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>+ <code>ReorderableListView.builder</code>(shrinkWrap · NeverScrollableScrollPhysics · proxyDecorator → Material radius-card) · <code>_FieldEditorCard</code> × N</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>+ Card bg <code>color-background</code> · radius <code>radius-card (16)</code> · drag handle 44×44 (Fix #1801) · checkbox active <code>color-primary</code></td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 PopupMenu에 number/date가 없어 현재는 text/file 2종만 추가 가능. typeIcon은 4종 모두 정의되어 있어 backend에서 number/date 들어와도 정상 렌더(읽기 호환).</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ─── Reorder dragging ─────────────────── -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong>Reorder dragging</strong> <small>drag handle 길게 누르고 끄는 중</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="state-mini__mock" rowspan="6">
+              <div class="viewport">
+                <div class="cv-appbar">
+                  <div class="cv-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 6 9 12 15 18"/></svg></div>
+                  <div class="cv-appbar__title">새 인증 만들기</div>
+                </div>
+                <div class="cv-body">
+                  <div class="cv-section-title-row" style="margin-top:24px;">
+                    <div class="cv-section-title">입력 양식 설정</div>
+                    <div class="cv-add-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
+                  </div>
+                  <div class="cv-fec" style="opacity:0.4;">
+                    <div class="cv-fec__header">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="14" y2="18"/></svg>
+                      <div class="cv-fec__type-label">텍스트</div>
+                    </div>
+                  </div>
+                  <div class="cv-fec cv-fec--drag" style="margin-top:8px; transform: translateY(-12px);">
+                    <div class="cv-fec__header">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                      <div class="cv-fec__type-label">파일</div>
+                      <div class="cv-fec__drag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/></svg></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="cv-bottombar"><button class="cv-save">저장하기</button></div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>+ ReorderableListView 내부 drag 시작 — proxyDecorator가 활성화되어 들고 있는 카드를 Material clipBehavior antiAlias + radius-card 16으로 lift up.</td>
+          </tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>+ 손가락 위치를 따라 카드 이동 → 다른 카드 위로 가면 그 자리로 swap · 손가락 떼면 controller.reorderFields(oldIndex, newIndex) 호출</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>+ ReorderableListView의 newIndex는 oldIndex 위로 이동 시 그대로지만 아래로 이동 시 -1 보정 필요(controller.reorderFields 내부에서 처리). 이 화면에서는 그냥 컨트롤러에 위임.</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>+ proxyDecorator: Material(borderRadius radius-card · color colorScheme.surface @ MinglitOpacity.none · clipBehavior.antiAlias)</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>+ shadow box 0 8 24 rgba(0,0,0,0.2) (Material elevation 8 default)</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 drag handle 44×44 (Fix #1801) — 작은 hit으로 drag 시도 실패하던 문제 수정. 향후 long-press cancel 표시 등 보강 후보.</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ─── Validation error ─────────────────── -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong>Validation error</strong> <small>저장 시 displayName/internalName 빈 값</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="state-mini__mock" rowspan="6">
+              <div class="viewport">
+                <div class="cv-appbar">
+                  <div class="cv-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 6 9 12 15 18"/></svg></div>
+                  <div class="cv-appbar__title">새 인증 만들기</div>
+                </div>
+                <div class="cv-body">
+                  <div class="cv-section-title">기본 정보</div>
+                  <div class="cv-field">
+                    <div class="cv-field__label" style="color: var(--color-error);">인증 이름 (유저에게 표시)</div>
+                    <div class="cv-field__input" style="border-color: var(--color-error); border-width:2px;"></div>
+                    <div class="cv-field__error">이름을 입력해주세요.</div>
+                  </div>
+                  <div class="cv-field">
+                    <div class="cv-field__label" style="color: var(--color-error);">관리용 이름 (내부 식별용)</div>
+                    <div class="cv-field__input" style="border-color: var(--color-error); border-width:2px;"></div>
+                    <div class="cv-field__error">관리용 이름을 입력해주세요.</div>
+                  </div>
+                  <div class="cv-field">
+                    <div class="cv-field__label">설명</div>
+                    <div class="cv-field__input cv-field__input--multiline"></div>
+                  </div>
+                </div>
+                <div class="cv-bottombar"><button class="cv-save">저장하기</button></div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>+ Save 탭 → <code>_formKey.currentState!.validate()</code> 호출 → displayName / internalName 둘 중 하나라도 빈 값이면 false 반환 → submit 호출 안 함 + inline error 표시 (Material InputDecoration default error UI)</td>
+          </tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>+ 빈 input에 텍스트 입력 → autovalidate가 OFF이라 다음 Save 탭 시까지 error 유지. 하지만 Form rebuilds 시 validator는 trigger되지 않음 — 사용자는 Save 다시 눌러야 사라짐.</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>+ description은 validator 없음(maxLines만 정의) — 빈 채로 저장 가능.</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>+ Material InputDecoration error states (errorText · errorBorder)</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>+ <code>color-error</code> (label · border · helperText)</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 autovalidateMode 없음 — 첫 Save 클릭 시점에만 검증. 향후 onUserInteraction으로 도입 후보.</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ─── Saving ─────────────────── -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong>Saving</strong> <small>controller.submit 진행 중</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="state-mini__mock" rowspan="6">
+              <div class="viewport">
+                <div class="cv-appbar">
+                  <div class="cv-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 6 9 12 15 18"/></svg></div>
+                  <div class="cv-appbar__title">새 인증 만들기</div>
+                </div>
+                <div class="cv-body">
+                  <div class="cv-section-title">기본 정보</div>
+                  <div class="cv-field">
+                    <div class="cv-field__label">인증 이름 (유저에게 표시)</div>
+                    <div class="cv-field__input">골프 핸디캡 인증</div>
+                  </div>
+                  <div class="cv-field">
+                    <div class="cv-field__label">관리용 이름 (내부 식별용)</div>
+                    <div class="cv-field__input">Golf Handicap 2024</div>
+                  </div>
+                </div>
+                <div class="cv-bottombar"><button class="cv-save" style="opacity:0.6;">저장하기</button></div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>+ <code>controller.submit(partnerId)</code> Future 진행 중 — 현재 widget 코드에서는 별도 isSubmitting 시각 표시 없음(state.error만 ref.listen). 글로벌 loader도 사용 안 함.</td>
+          </tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>+ 사용자가 다시 Save를 누르면 controller.submit이 다시 호출됨 — controller 내부에서 race를 막는 가드가 있어야 함(향후 보강 후보, 현재는 미보장).</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>+ 사용자가 도중 AppBar back으로 pop하면 mounted 체크 후 snackbar/pop 무시 (Future는 fire-and-forget).</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>동일(시각적으로 변화 없음)</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>동일</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 시각 인디케이터 부재가 가장 큰 UX 갭 — 향후 button 내부 spinner / 글로벌 loader 도입 후보. 현재는 빠른 RPC라 사용자가 인지하기 전에 결과가 나오는 경우가 대부분.</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ─── Save success / error ─────────────────── -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong>Save success / error</strong> <small>RPC 결과</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="state-mini__mock" rowspan="6">
+              <div class="viewport">
+                <div class="cv-appbar">
+                  <div class="cv-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 6 9 12 15 18"/></svg></div>
+                  <div class="cv-appbar__title">새 인증 만들기</div>
+                </div>
+                <div class="cv-body">
+                  <div class="cv-section-title">기본 정보</div>
+                  <div class="cv-field">
+                    <div class="cv-field__label">인증 이름 (유저에게 표시)</div>
+                    <div class="cv-field__input">골프 핸디캡 인증</div>
+                  </div>
+                </div>
+                <div class="cv-snack cv-snack--success">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                  인증이 생성되었습니다.
+                </div>
+                <div class="cv-bottombar"><button class="cv-save">저장하기</button></div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>+ Success: <code>controller.submit</code>이 true 반환 → <code>showMinglitSuccess('인증이 생성되었습니다.')</code> + <code>Navigator.pop(context, true)</code>. Error: state.error 변경 → ref.listen이 <code>handleMinglitError(context, next.error!)</code> 호출.</td>
+          </tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>+ Success: 화면 pop된 후 verification_manage가 invalidate되어 active 리스트 새 인증 등장 · Error: snackbar 자동 dismiss 후 폼 그대로 유지 → 사용자가 다시 Save 가능</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>+ Success snackbar는 ScaffoldMessenger global queue → pop 후 verification_manage 화면 위에서 표시 · Error는 listen 콜백이 prev.error != next.error 비교라 같은 에러 연속 발생 시 snackbar 한 번만</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>+ Success: <code>SnackBar</code>(MinglitSuccess) · Error: handleMinglitError 내부에서 dispatch (보통 dark snackbar)</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>+ success bg <code>color-success</code> · error는 dark / depending on handleMinglitError</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 Navigator.pop(context, true)으로 boolean 결과 반환 — verification_manage가 이걸 listen해서 invalidate. 호출자가 listen 안 하면 invalidate 안 됨(현재는 listen 안 함 — Provider invalidate가 backend write 직후 자동 invalidate되도록 controller가 처리하는 패턴 가능).</td></tr>
+        </tbody>
+      </table>
+
+    </div>
+  </section>
+</div>
+
+<div class="perspective" id="global-behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">cross-cutting · motion · global edges.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Cross-cutting interactions</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 220px;">사용자 액션</th><th>화면에 보이는 결과</th></tr></thead>
+      <tbody>
+        <tr><td>OS back / AppBar back</td><td>모든 state에서 가능 — VerificationManagePage로 pop. dirty guard 없음 (변경 무시).</td></tr>
+        <tr><td>키보드 호출/dismiss</td><td>TextField 탭 시 키보드 push → ListView가 자동 reverse 패딩 적용. 빈 영역 탭 / focus 잃으면 dismiss</td></tr>
+        <tr><td>앱 background → foreground</td><td>로컬 controller state는 유지 — 사용자가 다시 돌아와도 입력값 보존. (앱 강제 종료 시는 사라짐)</td></tr>
+        <tr><td>가로 회전 / 큰 글씨</td><td>ListView로 모든 항목 스크롤 가능 · 잘림 없음</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Motion &amp; timing</h2>
+    <table class="ref" style="margin-bottom: 16px;">
+      <thead><tr><th style="width: 200px;">Token</th><th style="width: 80px;">Value</th><th>Use case</th></tr></thead>
+      <tbody>
+        <tr><td><code>MinglitAnimation.micro</code></td><td>100ms</td><td>Checkbox toggle ripple · IconButton ripple</td></tr>
+        <tr><td><code>MinglitAnimation.fast</code></td><td>200ms</td><td>TextField focus border transition (1px → 2px) · Save button press feedback</td></tr>
+        <tr><td><code>MinglitAnimation.medium</code></td><td>350ms</td><td>route push from VerificationManage · PopupMenu enter/exit · ReorderableListView item swap · snackbar slide-up</td></tr>
+      </tbody>
+    </table>
+    <table class="ref">
+      <thead><tr><th style="width: 220px;">Transition</th><th style="width: 140px;">Duration (token)</th><th>Curve / notes</th></tr></thead>
+      <tbody>
+        <tr><td>verification_manage → create (push)</td><td><code>medium</code> (350ms)</td><td>Material default route transition</td></tr>
+        <tr><td>label floating animation</td><td><code>fast</code> (200ms)</td><td>Material InputDecoration default — focus/blur 시</td></tr>
+        <tr><td>PopupMenu open/close</td><td><code>medium</code> (350ms)</td><td>Material default scale + fade</td></tr>
+        <tr><td>Reorder swap</td><td><code>medium</code> (350ms)</td><td>ReorderableListView default reorderAnimationDuration</td></tr>
+        <tr><td>add field → editor card 등장</td><td><code>fast</code> (200ms)</td><td>setState 후 ListView 자체 layout — 별도 AnimatedSwitcher 없음</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Global edge cases</h2>
+    <ul class="notes">
+      <li><strong>네트워크 끊김</strong> — Save 시 controller.submit이 throw → state.error → handleMinglitError snackbar · 폼 유지</li>
+      <li><strong>auth 만료</strong> — RPC 401 → controller error → handleMinglitError</li>
+      <li><strong>다크 모드</strong> — 모든 토큰 자동 변환. partner-dark-primary로 focus border / save button dim · empty hint container도 dark surfaceContainerHighest</li>
+      <li><strong>접근성</strong> — TextFormField label은 sr 읽음 · Checkbox 'checked/unchecked' · drag handle은 sr label 'Reorder' default · PopupMenuItem semantics OK</li>
+      <li><strong>저성능 디바이스</strong> — Reorder drag가 무거울 수 있음 — 현재 buildDefaultDragHandles=false라 명시적 drag listener만 활성, 다소 가벼움</li>
+    </ul>
+  </section>
+</div>
+
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">📖</span>
+    <h2>Reference</h2>
+    <span class="lede">Implementation source + 인접 화면 link.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Implementation source</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 200px;">항목</th><th>Path / Reference</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Widget class</strong></td><td><code>CreateVerificationPage</code> · 내부: <code>_FieldEditorCard</code></td></tr>
+        <tr><td><strong>File path</strong></td><td><a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/features/verification/create/create_verification_page.dart"><code>apps/app_partner/lib/src/features/verification/create/create_verification_page.dart</code></a></td></tr>
+        <tr><td><strong>Controller</strong></td><td><a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/features/verification/create/create_verification_controller.dart"><code>create_verification_controller.dart</code></a> · <code>createVerificationControllerProvider</code></td></tr>
+        <tr><td><strong>State</strong></td><td><code>CreateVerificationState</code>(displayName · internalName · description · fields · submitting · error) · freezed</td></tr>
+        <tr><td><strong>Route</strong></td><td><code>CreateVerificationRoute({this.partnerId})</code> · path: <code>/more/verifications/create</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 240px;">Spec</th><th>Relation</th></tr></thead>
+      <tbody>
+        <tr><td><a href="/specs/verification_manage_page.html"><code>VerificationManagePage</code></a></td><td>Parent — 진입점, 저장 후 active 리스트 자동 갱신</td></tr>
+        <tr><td><a href="/specs/more_page.html"><code>MorePage</code></a></td><td>Grandparent — 더보기 탭 root</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+</div>
+
+<script>
+  document.getElementById('spec-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('spec-mode', e.target.checked);
+  });
+  document.getElementById('dark-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('dark-mode', e.target.checked);
+  });
+</script>
+
+</body>
+</html>

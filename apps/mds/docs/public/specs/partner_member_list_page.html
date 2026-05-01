@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Spec — PartnerMemberListPage (app_partner · MemberListRoute)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* ============================================================
+   PartnerMemberListPage-specific atoms.
+   Partner brand purple — scoped to .viewport.
+   Page = Scaffold + simpleAppBar(title + IconButton) + body(AsyncValueWidget)
+        + FloatingActionButton.extended (label + icon).
+   ============================================================ */
+.viewport {
+  --color-primary: var(--color-partner-primary);   /* #6c3ce1 */
+  --spec-blueprint-rgb: 108, 60, 225;
+}
+body.dark-mode .viewport {
+  --color-primary: var(--color-partner-dark-primary);
+}
+
+/* --- App bar (simpleAppBar · scaffold gray · no border · trailing IconButton) --- */
+.pml-appbar {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  background: var(--color-surface);
+  position: relative;
+}
+.pml-appbar__back {
+  width: 40px; height: 40px;
+  margin-left: var(--spacing-xsmall);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--color-text-primary);
+}
+.pml-appbar__back svg { width: 22px; height: 22px; }
+.pml-appbar__title {
+  flex: 1;
+  font-size: var(--typography-font-size-app-bar-title);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.pml-appbar__action {
+  width: 40px; height: 40px;
+  margin-right: var(--spacing-xsmall);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--color-text-primary);
+}
+.pml-appbar__action svg { width: 22px; height: 22px; }
+
+/* --- Body --- */
+.pml-body {
+  position: absolute;
+  top: 56px;
+  left: 0; right: 0; bottom: 0;
+  background: var(--color-surface);
+  overflow-y: auto;
+  scrollbar-width: none;
+  padding: var(--spacing-medium);
+}
+.pml-body::-webkit-scrollbar { display: none; }
+
+/* --- Member card (Card · ListTile · trailing badge + chevron) --- */
+.pml-card {
+  background: var(--color-background);
+  border-radius: var(--radius-card);
+  margin-bottom: var(--spacing-small);
+  padding: var(--spacing-small) var(--spacing-medium);
+  display: flex;
+  align-items: center;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+.pml-card__avatar {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-text-secondary) 15%, transparent);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+.pml-card__avatar svg { width: 22px; height: 22px; }
+.pml-card__name {
+  flex: 1;
+  margin-left: var(--spacing-medium);
+  font-size: var(--typography-font-size-body);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pml-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 var(--spacing-small);
+  border-radius: var(--radius-chip);
+  font-size: 11px;
+  font-weight: 700;
+  margin-right: var(--spacing-small);
+  flex-shrink: 0;
+}
+.pml-badge--owner {
+  background: color-mix(in srgb, var(--color-primary) 15%, transparent);
+  color: var(--color-primary);
+}
+.pml-badge--manager {
+  background: color-mix(in srgb, var(--color-tertiary) 18%, transparent);
+  color: var(--color-tertiary);
+}
+.pml-badge--staff {
+  background: color-mix(in srgb, var(--color-text-secondary) 14%, transparent);
+  color: var(--color-text-secondary);
+}
+.pml-card__chev {
+  width: 18px; height: 18px;
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+
+/* --- FAB.extended (bottom-right, label + icon) --- */
+.pml-fab {
+  position: absolute;
+  bottom: 16px; right: 16px;
+  display: inline-flex; align-items: center;
+  height: 48px;
+  padding: 0 var(--spacing-medium);
+  background: var(--color-primary);
+  color: #fff;
+  border-radius: var(--radius-button);
+  font-size: var(--typography-font-size-body);
+  font-weight: 700;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.18);
+  gap: var(--spacing-small);
+}
+.pml-fab svg { width: 18px; height: 18px; }
+
+/* --- Empty state (Center column · Icon + caption) --- */
+.pml-empty {
+  position: absolute;
+  inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: var(--spacing-medium);
+  padding: 0 var(--spacing-large);
+  text-align: center;
+}
+.pml-empty svg { width: 56px; height: 56px; color: var(--color-divider); }
+.pml-empty__msg {
+  font-size: var(--typography-font-size-body);
+  color: var(--color-text-secondary);
+}
+
+/* --- Spinner (MinglitAsyncValueWidget loading) --- */
+.pml-spinner {
+  width: 36px; height: 36px;
+  border: 3px solid var(--color-divider);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: pml-spin 0.7s linear infinite;
+  margin: auto;
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+}
+@keyframes pml-spin { to { transform: rotate(360deg); } }
+
+/* --- Error column (custom _buildErrorView · Icon + msg + retry button) --- */
+.pml-error {
+  position: absolute;
+  inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: var(--spacing-medium);
+  padding: 0 var(--spacing-large);
+  text-align: center;
+}
+.pml-error svg { width: 48px; height: 48px; color: var(--color-error); }
+.pml-error__msg {
+  font-size: var(--typography-font-size-body);
+  color: var(--color-text-primary);
+  white-space: pre-wrap;
+}
+.pml-error__btn {
+  height: 40px;
+  padding: 0 var(--spacing-large);
+  background: var(--color-primary);
+  color: #fff;
+  border-radius: var(--radius-button);
+  font-size: var(--typography-font-size-body);
+  font-weight: 700;
+  border: none;
+}
+
+/* --- Info snackbar overlay (showMinglitInfo from _showInviteDialog) --- */
+.pml-snack {
+  position: absolute;
+  left: 16px; right: 16px;
+  bottom: 80px;
+  background: rgba(40, 40, 50, 0.95);
+  color: #fff;
+  padding: var(--spacing-medium);
+  border-radius: var(--radius-input);
+  font-size: var(--typography-font-size-body);
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
+</div>
+
+<div class="page">
+
+<header>
+  <h1>Partner Member List</h1>
+</header>
+
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr>
+        <th style="width: 140px;">Status</th>
+        <td><strong>✅ 디자인완료</strong> <em style="color: var(--color-text-secondary);">— 5 state · 파트너 직원 명단 + 역할 배지</em></td>
+      </tr>
+      <tr><th>App</th><td><code>app_partner</code></td></tr>
+      <tr><th>Category</th><td>member · partner ops · staff roster</td></tr>
+      <tr>
+        <th>Route / Surface</th>
+        <td><code>MemberListRoute</code> · widget: <code>PartnerMemberListPage</code></td>
+      </tr>
+      <tr>
+        <th>Path</th>
+        <td><code>/more/partners/:partnerId/members</code></td>
+      </tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>: <a href="/specs/more_page.html"><code>MorePage</code></a> (더보기 → "직원 관리")<br>
+          <strong>Children</strong>: <a href="/specs/partner_member_permission_page.html"><code>PartnerMemberPermissionPage</code></a> (멤버 카드 탭 시 push)
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>
+          파트너 가게에 등록된 직원(owner/manager/staff)을 한 화면에 모아 누가 어떤 역할인지 한눈에 보여주고, 카드 탭으로 권한 편집 화면으로 보내는 명단 허브.
+          파트너 권한 위임 흐름의 진입점.
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry points</strong>: MorePage → "직원 관리" 메뉴 탭.<br>
+          <strong>Exit points</strong>: AppBar back → MorePage 복귀 · 멤버 카드 탭 → <code>MemberPermissionRoute</code> push (권한 편집) · FAB/AppBar IconButton "직원 추가" 탭 → 현재는 <code>showMinglitInfo('준비 중입니다.')</code> snackbar (초대 다이얼로그 미구현).
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          파트너 멤버는 owner(설립자) · manager(운영/심사) · staff(현장 단순업무) 3 단계로 권한이 분리되어 있고, 이 화면은 그 권한 편집의 첫 진입점이다. 카드별 trailing 배지 색은 시맨틱 컬러로 통일해 한눈에 권한 위계를 파악하게 했다 — owner=primary(파트너 보라), manager=tertiary, staff=outline(중립).
+          초대 흐름은 backend RPC + 별도 다이얼로그 화면이 필요해 현재는 placeholder snackbar로 막아둠.
+        </td>
+      </tr>
+      <tr>
+        <th>Frequency</th>
+        <td>활성 파트너 기준 월 0~수회. 신규 직원 합류/이탈 이벤트 발생 시점에만 진입.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="doc">
+  <h2>History</h2>
+  <p class="intro">이 spec의 주요 변경 이력. 최신 항목 위.</p>
+  <table class="ref">
+    <thead>
+      <tr>
+        <th style="width: 110px;">Date</th>
+        <th style="width: 80px;">Version</th>
+        <th style="width: 120px;">Author</th>
+        <th>Changes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2026-05-01</td>
+        <td>1.0</td>
+        <td>mark-yun</td>
+        <td>v1.4 template으로 작성. 5 state(Default · Empty · Loading · Error · Invite stub snackbar) — baseline = Default(3명 멤버 owner/manager/staff 섞임). 파트너 brand color(<code>#6c3ce1</code>) viewport-scoped override. role 배지 시맨틱 컬러 (owner=primary · manager=tertiary · staff=outline) 명시.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<nav class="perspective-nav">
+  <a href="#layout"><span class="glyph">🧱</span> Layout</a>
+  <a href="#states"><span class="glyph">🎨</span> States</a>
+  <a href="#global-behavior"><span class="glyph">🔄</span> Global Behavior</a>
+  <a href="#reference"><span class="glyph">📖</span> Reference</a>
+</nav>
+
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Layout</h2>
+    <span class="lede">화면 구조 — 영역, 정렬, 간격 규칙. 색·타이포 무시.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree</h2>
+    <p class="intro">
+      Scaffold = AppBar(title '직원 관리' + 우측 person_add_alt_1_outlined IconButton) + body(MinglitAsyncValueWidget) + FloatingActionButton.extended('직원 추가' + add icon · 우하단). 본문은 ListView.builder + RefreshIndicator(pull-to-refresh).
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:0;left:0;right:0;height:56px;">
+          <span class="blueprint__region-label">① AppBar — back · '직원 관리' · person_add IconButton</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:56px;left:0;right:0;bottom:0;">
+          <span class="blueprint__region-label">② body · ListView.builder of MemberCard (RefreshIndicator wrap)</span>
+        </div>
+        <div class="blueprint__region" style="bottom:16px;right:16px;width:140px;height:48px;border-radius:12px;">
+          <span class="blueprint__region-label">③ FAB.extended</span>
+        </div>
+        <div class="blueprint__align-marker" style="top:8px;right:8px;">screen-edge pad 16</div>
+      </div>
+
+      <div class="layout-tree"><b>Scaffold</b>
+├─ <b>appBar</b>: MinglitTheme.simpleAppBar
+│  ├─ leading: BackButton (auto)
+│  ├─ title: Text('직원 관리')
+│  └─ actions: [<b>IconButton</b>(person_add_alt_1_outlined → _showInviteDialog)]
+├─ <b>body</b>: <code>MinglitAsyncValueWidget&lt;List&lt;Map&gt;&gt;</code>     ← ②
+│   ├─ loading: MinglitCircularProgressIndicator
+│   ├─ error:   _buildErrorView (Icon error_outline + msg + ElevatedButton '다시 시도')
+│   └─ data:    if isEmpty → _emptyView(Icon people_outline + '등록된 직원이 없습니다.')
+│                else → RefreshIndicator
+│                       └─ ListView.builder
+│                          └─ Card · ListTile
+│                             ├─ leading: CircleAvatar(Icon person)
+│                             ├─ title: Text(userName, ellipsis)
+│                             └─ trailing: Row[MinglitBadge(role · compact) · chevron_right]
+└─ <b>floatingActionButton</b>: FloatingActionButton.extended       ← ③
+   └─ label '직원 추가' + Icon add</div>
+    </div>
+  </section>
+
+  <section class="doc">
+    <h2>Spacing &amp; alignment rules</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>①</td><td>AppBar</td><td>height 56 · centerTitle:false (left-aligned via simpleAppBar) · scaffold-gray bg · no border</td><td>title typography <code>app-bar-title (18)</code> · trailing IconButton 40×40 with <code>person_add_alt_1_outlined</code></td></tr>
+        <tr><td>②</td><td>body — ListView.builder</td><td>EdgeInsets.all(<code>spacing-medium = 16</code>) · vertical scroll · RefreshIndicator on top</td><td>카드 사이: <code>SizedBox(height: spacing-small = 8)</code> via Card.margin</td></tr>
+        <tr><td>—</td><td>MemberCard 내부 (ListTile)</td><td>row · leading(40 avatar) · flex Title · trailing(Badge + chevron)</td><td>Card.margin only-bottom <code>spacing-small (8)</code> · ListTile default 패딩 horizontal 16</td></tr>
+        <tr><td>—</td><td>Trailing Row</td><td>mainAxisSize.min · 끝 정렬</td><td>Badge ↔ chevron: <code>SizedBox(width: spacing-small = 8)</code> · chevron <code>icon-size-small (18px)</code></td></tr>
+        <tr><td>③</td><td>FAB.extended</td><td>Scaffold default placement (right-bottom · margin 16 from edges)</td><td>height 48 · horizontal padding <code>spacing-medium (16)</code> · gap label↔icon <code>spacing-small (8)</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy ① — MemberCard (ListTile)</h2>
+    <p class="intro">
+      각 멤버 카드는 Material Card + ListTile 합성. leading(원형 아바타) + title(Text · ellipsis) + trailing(역할 Badge + chevron). 전체 카드 onTap → 권한 화면 push.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 90px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:16px;left:16px;width:40px;height:40px;border-radius:50%;">
+          <span class="blueprint__region-label">㉠ avatar 40</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:24px;left:72px;right:160px;height:24px;">
+          <span class="blueprint__region-label">㉡ name (ellipsis)</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:22px;right:48px;width:60px;height:22px;border-radius:11px;">
+          <span class="blueprint__region-label">㉢ Badge</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:24px;right:16px;width:18px;height:18px;">
+          <span class="blueprint__region-label">㉣ chev</span>
+        </div>
+      </div>
+      <div class="layout-tree"><b>Card</b>(margin only-bottom 8)
+└─ <b>ListTile</b>(onTap → ref.read(memberCoordinatorProvider).goToMemberPermission)
+   ├─ leading: <b>CircleAvatar</b>                       ← ㉠
+   │  └─ Icon(person)
+   ├─ title: <b>Text</b>(userName)                       ← ㉡
+   │  └─ maxLines:1 · overflow.ellipsis · bodyLarge bold
+   └─ trailing: <b>Row</b>(mainAxisSize.min)
+      ├─ <b>MinglitBadge</b>(label · color · compact:true)  ← ㉢
+      ├─ SizedBox(width: <code>spacing-small (8)</code>)
+      └─ <b>Icon</b>(chevron_right · <code>icon-size-small (18)</code>) ← ㉣</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr><th style="width: 60px;">#</th><th style="width: 180px;">Region</th><th style="width: 220px;">Alignment</th><th>Spacing / tokens</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>㉠</td><td>CircleAvatar(person)</td><td>40×40 · circle · ListTile leading slot</td><td>bg = primaryContainer (theme default) · color onPrimaryContainer</td></tr>
+        <tr><td>㉡</td><td>Title</td><td>flex · left align · ellipsis</td><td>typography <code>bodyLarge</code> · fontWeight bold</td></tr>
+        <tr><td>㉢</td><td>Role Badge</td><td>compact:true · pill · 끝 정렬</td><td>색은 role별: owner=<code>color-primary</code> · manager=<code>color-tertiary</code> · staff=<code>colorScheme.outline</code></td></tr>
+        <tr><td>㉣</td><td>Chevron</td><td>끝 정렬 · 22 size box → icon 18</td><td>color <code>colorScheme.outline</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<div class="perspective" id="states">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>States</h2>
+    <span class="lede">시각 변형 5종. baseline = Default(3명 멤버 owner/manager/staff 혼합), 나머지는 additive diff.</span>
+  </div>
+
+  <section class="doc">
+    <p class="intro">
+      <strong>State 식별 기준</strong>: <code>partnerMembersProvider(partnerId)</code> AsyncValue lifecycle · members 리스트 길이 · 초대 IconButton/FAB 탭으로 띄우는 snackbar.
+    </p>
+
+    <h3 style="margin-top: 24px;">State summary <small style="font-size:12px;font-weight:400;color:var(--color-text-secondary);">— 5 states</small></h3>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 200px;">State</th>
+          <th style="width: 100px;">Tag</th>
+          <th style="width: 220px;">조건 (요약)</th>
+          <th>Key visual differentiator</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Default</strong></td><td>baseline</td><td>data fetch 완료 · members 1+</td><td>ListView of MemberCard, owner=보라/manager=라임/staff=중립 배지</td></tr>
+        <tr><td><strong>Empty</strong></td><td>no data</td><td>members.isEmpty</td><td>중앙 people_outline 아이콘 + '등록된 직원이 없습니다.' (FAB만 살아있음)</td></tr>
+        <tr><td><strong>Loading</strong></td><td>async</td><td>provider.isLoading (initial)</td><td>중앙 MinglitCircularProgressIndicator (AppBar/FAB 그대로)</td></tr>
+        <tr><td><strong>Error</strong></td><td>network/server</td><td>provider.hasError</td><td>중앙 error_outline + 메시지 + '다시 시도' ElevatedButton</td></tr>
+        <tr><td><strong>Invite stub snackbar</strong></td><td>overlay</td><td>FAB 또는 AppBar IconButton 탭 직후</td><td>하단 dark snackbar('준비 중입니다.') overlay</td></tr>
+      </tbody>
+    </table>
+
+    <div class="visual-gallery" style="background: var(--color-surface); padding: 16px; border-radius: var(--radius-card); display: flex; flex-direction: column; gap: 16px;">
+
+      <!-- ─── Default ─────────────────── -->
+      <table class="ref state-mini is-baseline-tint">
+        <thead>
+          <tr><th colspan="3"><strong>Default</strong> 🎯 <small>baseline · 멤버 3명 (owner/manager/staff)</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="state-mini__mock" rowspan="6">
+              <div class="viewport">
+                <div class="pml-appbar">
+                  <div class="pml-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 6 9 12 15 18"/></svg></div>
+                  <div class="pml-appbar__title">직원 관리</div>
+                  <div class="pml-appbar__action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg></div>
+                </div>
+                <div class="pml-body">
+                  <div class="pml-card">
+                    <div class="pml-card__avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg></div>
+                    <div class="pml-card__name">박민호</div>
+                    <span class="pml-badge pml-badge--owner">소유자</span>
+                    <svg class="pml-card__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 6 15 12 9 18"/></svg>
+                  </div>
+                  <div class="pml-card__sep" style="height:8px;"></div>
+                  <div class="pml-card">
+                    <div class="pml-card__avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg></div>
+                    <div class="pml-card__name">김서연</div>
+                    <span class="pml-badge pml-badge--manager">매니저</span>
+                    <svg class="pml-card__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 6 15 12 9 18"/></svg>
+                  </div>
+                  <div class="pml-card__sep" style="height:8px;"></div>
+                  <div class="pml-card">
+                    <div class="pml-card__avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg></div>
+                    <div class="pml-card__name">이도윤</div>
+                    <span class="pml-badge pml-badge--staff">직원</span>
+                    <svg class="pml-card__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 6 15 12 9 18"/></svg>
+                  </div>
+                </div>
+                <div class="pml-fab">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  직원 추가
+                </div>
+                <span class="annotation" style="top:8px;left:8px;">spacing-medium — body padding</span>
+                <span class="callout" style="top:80px;right:50px;">ⓐ</span>
+                <span class="callout" style="bottom:32px;right:130px;">ⓑ</span>
+                <span class="type-spec" style="top:74px;left:80px;">14 / 700 / 1.4</span>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td><code>partnerMembersProvider(partnerId).hasValue == true</code> · <code>members.isNotEmpty</code> (1명 이상). owner는 항상 1명 보장(파트너 가입 시 자동 추가).</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              ① <strong>AppBar back</strong> → MorePage로 pop<br>
+              ② <strong>person_add IconButton</strong>(우상단) 또는 <strong>FAB '직원 추가'</strong>(우하단) 탭 → 둘 다 동일하게 <code>_showInviteDialog</code> → <code>showMinglitInfo('준비 중입니다.')</code> snackbar<br>
+              ③ <strong>멤버 카드 본체</strong> 탭 → <code>memberCoordinator.goToMemberPermission(partnerId, targetUserId)</code> → <code>MemberPermissionRoute</code> push (단, <code>user_id</code>가 null이면 무반응 — Fix #270)<br>
+              ④ <strong>Pull-to-refresh</strong> → <code>ref.refresh(partnerMembersProvider(partnerId).future)</code> · loading indicator는 RefreshIndicator 자체 spinner
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td>
+              · 이름이 매우 길면 maxLines:1 + ellipsis로 trailing 정렬 보호 (Fix #1662)<br>
+              · <code>user_id</code>가 null인 dynamic map row는 onTap 무반응(Fix #270) — 보통 백엔드 join 실패 시<br>
+              · role 문자열이 owner/manager/staff 외 값(예: backend에 새 enum 추가) → fallback "직원"(staff) + outline 색 (안전 default)<br>
+              · partnerMembers에 동일 user_id 중복 row 들어와도 ListView.builder는 그대로 렌더(서버 unique 보장)
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>
+              · <code>Scaffold</code> + <code>MinglitTheme.simpleAppBar</code>(title + actions) · <code>IconButton</code>(person_add_alt_1_outlined)<br>
+              · <code>MinglitAsyncValueWidget&lt;List&lt;Map&gt;&gt;</code> wrapper<br>
+              · <code>RefreshIndicator</code> + <code>ListView.builder</code> (padding all <code>spacing-medium</code>)<br>
+              · <code>Card</code> + <code>ListTile</code>(leading: CircleAvatar(Icon person), title: Text, trailing: Row[MinglitBadge · Icon chevron_right])<br>
+              · <code>MinglitBadge</code>(label · color · compact:true · pill shape)<br>
+              · <code>FloatingActionButton.extended</code>(label '직원 추가' + Icon add)
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>
+              · color: <code>color-partner-primary</code> (#6c3ce1 — owner 배지 · FAB bg), <code>color-tertiary</code> (manager 배지), <code>colorScheme.outline</code> (staff 배지 · chevron · CircleAvatar bg), <code>color-surface</code> (scaffold + appbar bg), <code>color-background</code> (Card bg = colorScheme.surface white)<br>
+              · radius: <code>radius-card (16)</code> (Card · shape 기본은 Material default 12, 기본 카드 theme이 적용되면 16), <code>radius-button (12)</code> (FAB.extended · ElevatedButton)<br>
+              · spacing: <code>spacing-medium (16)</code> (body padding · FAB margin), <code>spacing-small (8)</code> (Card.margin bottom · trailing badge↔chev gap), <code>spacing-xsmall (4)</code> (icon paddings)<br>
+              · typography: <code>app-bar-title (18 / 700)</code>, <code>bodyLarge (16 / 700)</code> (멤버 이름), badge label (11 / 700 / 1)<br>
+              · icon size: <code>icon-size-small (20)</code> (CircleAvatar Icon · IconButton inner · 멤버 chevron 18 trim)
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 baseline UX. owner=primary 색은 의도적 강조 — 가게 대표 1명을 시각적으로 구분. _showInviteDialog가 stub인 게 가장 큰 미구현 — 별도 PR로 초대 다이얼로그(이메일 입력 + role 선택) 도입 예정.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ─── Empty ─────────────────── -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong>Empty</strong> <small>members.isEmpty</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="state-mini__mock" rowspan="6">
+              <div class="viewport">
+                <div class="pml-appbar">
+                  <div class="pml-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 6 9 12 15 18"/></svg></div>
+                  <div class="pml-appbar__title">직원 관리</div>
+                  <div class="pml-appbar__action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg></div>
+                </div>
+                <div class="pml-body" style="padding:0;">
+                  <div class="pml-empty">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20v-1a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v1"/><path d="M14 20v-1a3 3 0 0 1 3-3h1a3 3 0 0 1 3 3v1"/></svg>
+                    <div class="pml-empty__msg">등록된 직원이 없습니다.</div>
+                  </div>
+                </div>
+                <div class="pml-fab">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  직원 추가
+                </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>+ <code>members.isEmpty == true</code>. <em>이론상 발생 안 함</em> — owner가 자동 추가되므로 최소 1명 보장. 백엔드 데이터 레이스 시 일시적으로만 가능.</td>
+          </tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>↔ 카드 액션(없음) · 동일: AppBar back · person_add · FAB</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>+ owner 자동 추가가 실패한 partner 객체에서만 발생 — 이 경우 backend RPC retry 필요.</td></tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>
+              ↔ ListView.builder → <code>Center</code> + <code>Column</code>[Icon(people_outline · size <code>icon-size-xlarge × 2 = 64</code>) + Text('등록된 직원이 없습니다.')]<br>
+              − Card · ListTile · MinglitBadge<br>
+              동일: AppBar · FAB
+            </td>
+          </tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>+ icon color <code>colorScheme.outline</code> · text color <code>colorScheme.outline</code> · typography <code>bodyMedium</code> · spacing icon↔text <code>spacing-medium (16)</code></td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 발생 가능성 매우 낮음(owner 자동 추가 보장). 그래도 빈 화면을 friendly하게 처리해 두는 게 안전망.</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ─── Loading ─────────────────── -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong>Loading</strong> <small>provider.isLoading (initial)</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="state-mini__mock" rowspan="6">
+              <div class="viewport">
+                <div class="pml-appbar">
+                  <div class="pml-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 6 9 12 15 18"/></svg></div>
+                  <div class="pml-appbar__title">직원 관리</div>
+                  <div class="pml-appbar__action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg></div>
+                </div>
+                <div class="pml-body" style="padding:0;">
+                  <div class="pml-spinner"></div>
+                </div>
+                <div class="pml-fab">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  직원 추가
+                </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>+ <code>partnerMembersProvider.isLoading == true</code> (initial fetch · pull-to-refresh 시는 RefreshIndicator로 처리되어 이 분기 미진입)</td>
+          </tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>탭 무반응(카드 없음). AppBar/FAB는 enabled. FAB 탭 시 invite stub 진입 가능.</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>—</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ ListView.builder → <code>MinglitCircularProgressIndicator</code> (Center)</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>spinner color = ProgressIndicatorTheme default (partner primary tint)</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 fetch는 단일 RPC <code>getPartnerMembers</code>이라 분 단위 지연 없음 (보통 200ms 이내). 그래도 슬로우 네트워크 대비 spinner 노출.</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ─── Error ─────────────────── -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong>Error</strong> <small>provider.hasError</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="state-mini__mock" rowspan="6">
+              <div class="viewport">
+                <div class="pml-appbar">
+                  <div class="pml-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 6 9 12 15 18"/></svg></div>
+                  <div class="pml-appbar__title">직원 관리</div>
+                  <div class="pml-appbar__action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg></div>
+                </div>
+                <div class="pml-body" style="padding:0;">
+                  <div class="pml-error">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    <div class="pml-error__msg">목록을 불러오지 못했습니다.<br>SocketException: Failed host lookup</div>
+                    <button class="pml-error__btn">다시 시도</button>
+                  </div>
+                </div>
+                <div class="pml-fab">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  직원 추가
+                </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>+ <code>partnerMembersProvider.hasError == true</code> (RPC 실패 · network · auth · server 5xx 모두 동일 분기)</td>
+          </tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>+ <strong>'다시 시도' ElevatedButton</strong> 탭 → <code>ref.invalidate(partnerMembersProvider(partnerId))</code> → loading 재진입. 동일: AppBar back · FAB.</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>+ AsyncValueWidget의 default error처리가 아니라 _buildErrorView 커스텀 — 원본 Object error를 toString()으로 메시지에 그대로 노출 (디버깅 친화적이지만 프로덕션에서는 stacktrace 일부가 노출될 수 있음 — 후속 정리 후보).</td></tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>
+              ↔ ListView.builder → <code>Center</code> + <code>Column</code>[Icon(error_outline · size <code>icon-size-xlarge × 1.5 = 48</code>, color error) + Text(error msg, textAlign center) + ElevatedButton('다시 시도')]<br>
+              − Card · ListTile
+            </td>
+          </tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>+ <code>color-error</code> (icon) · ElevatedButton color = <code>color-primary</code>(파트너 보라)</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 retry button이 명시적으로 있는 점이 다른 partner 화면(_DefaultErrorView)과 차이 — 이 화면은 fetch 비용이 낮아 retry UX를 적극적으로 노출.</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ─── Invite stub snackbar ─────────────────── -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong>Invite stub snackbar</strong> <small>FAB / IconButton 탭 직후</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="state-mini__mock" rowspan="6">
+              <div class="viewport">
+                <div class="pml-appbar">
+                  <div class="pml-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 6 9 12 15 18"/></svg></div>
+                  <div class="pml-appbar__title">직원 관리</div>
+                  <div class="pml-appbar__action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg></div>
+                </div>
+                <div class="pml-body">
+                  <div class="pml-card">
+                    <div class="pml-card__avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg></div>
+                    <div class="pml-card__name">박민호</div>
+                    <span class="pml-badge pml-badge--owner">소유자</span>
+                    <svg class="pml-card__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 6 15 12 9 18"/></svg>
+                  </div>
+                </div>
+                <div class="pml-snack">준비 중입니다.</div>
+                <div class="pml-fab">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  직원 추가
+                </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>+ FAB '직원 추가' 또는 AppBar person_add IconButton 탭 직후 — <code>_showInviteDialog</code> 호출이 <code>context.showMinglitInfo('준비 중입니다.')</code> stub만 띄움. snackbar duration 후 자동 dismiss.</td>
+          </tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>+ snackbar 자동 dismiss (~3s) · 그 외 baseline 액션 모두 가능 (snackbar는 modal blocker 아님)</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>+ 짧은 시간 동안 FAB 연타 시 snackbar는 ScaffoldMessenger queue로 쌓이지 않고 단일 인스턴스 유지 (showMinglitInfo 내부 dedupe).</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>+ <code>SnackBar</code>(MinglitInfo variant — dark bg + 흰 글자) overlay</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>+ snackbar bg #28282E (rgba(40,40,50,.95)) · color #fff · radius <code>radius-input (12)</code></td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 placeholder 상태. 향후 실제 invite 다이얼로그(이메일 + role 선택)로 교체 시 이 state는 삭제되고 새 spec으로 분리될 가능성.</td></tr>
+        </tbody>
+      </table>
+
+    </div>
+  </section>
+</div>
+
+<div class="perspective" id="global-behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">cross-cutting · motion · global edges.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Cross-cutting interactions</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 220px;">사용자 액션</th><th>화면에 보이는 결과</th></tr></thead>
+      <tbody>
+        <tr><td>OS back / AppBar back</td><td>MorePage로 pop (모든 state 동일 · loading/error 중에도 가능)</td></tr>
+        <tr><td>Pull-to-refresh</td><td>data state에서만 가능 — RefreshIndicator로 spinner 표시 → <code>partnerMembersProvider</code> refresh → 새 리스트 렌더 (loading/empty/error에서는 ListView 자체가 없어 트리거 안 됨)</td></tr>
+        <tr><td>FAB '직원 추가' 또는 person_add IconButton</td><td>모든 state에서 enabled · 모두 동일 stub snackbar (현재)</td></tr>
+        <tr><td>앱 background → foreground</td><td>provider 자동 refetch 없음 — 수동 pull-to-refresh 필요</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Motion &amp; timing</h2>
+    <table class="ref" style="margin-bottom: 16px;">
+      <thead><tr><th style="width: 200px;">Token</th><th style="width: 80px;">Value</th><th>Use case</th></tr></thead>
+      <tbody>
+        <tr><td><code>MinglitAnimation.micro</code></td><td>100ms</td><td>ListTile ripple · IconButton ripple</td></tr>
+        <tr><td><code>MinglitAnimation.fast</code></td><td>200ms</td><td>RefreshIndicator scale-in/out · FAB lift on tap</td></tr>
+        <tr><td><code>MinglitAnimation.medium</code></td><td>350ms</td><td>route push to MemberPermissionRoute (sharedAxisScaled — 권한 페이지가 직접 정의)</td></tr>
+      </tbody>
+    </table>
+    <table class="ref">
+      <thead><tr><th style="width: 220px;">Transition</th><th style="width: 140px;">Duration (token)</th><th>Curve / notes</th></tr></thead>
+      <tbody>
+        <tr><td>loading → data</td><td><code>fast</code> (200ms)</td><td>AsyncValueWidget의 default fade switch</td></tr>
+        <tr><td>error → loading (retry)</td><td><code>fast</code> (200ms)</td><td>같은 위치에서 spinner로 교체</td></tr>
+        <tr><td>card 탭 → permission push</td><td><code>medium</code> (350ms)</td><td>sharedAxisScaled (MemberPermissionRoute가 정의)</td></tr>
+        <tr><td>snackbar slide-up/dismiss</td><td><code>medium</code> (350ms)</td><td>ScaffoldMessenger default · auto-dismiss ~3s</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Global edge cases</h2>
+    <ul class="notes">
+      <li><strong>네트워크 끊김</strong> — 즉시 Error state 진입. retry 버튼 탭 → invalidate · 재시도</li>
+      <li><strong>auth 만료</strong> — RPC 401 → Error state. 글로벌 auth interceptor가 로그인 화면으로 redirect할 수 있음</li>
+      <li><strong>다크 모드</strong> — 모든 토큰 자동 변환(<code>color-surface</code>, <code>color-background</code>, badge bg는 <code>color-mix</code>로 자동 dim)</li>
+      <li><strong>접근성</strong> — CircleAvatar에 semantic label 없음(향후 보강 후보) · MinglitBadge label은 sr 읽음 · ListTile onTap은 키보드 enter 가능</li>
+    </ul>
+  </section>
+</div>
+
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">📖</span>
+    <h2>Reference</h2>
+    <span class="lede">Implementation source + 인접 화면 link.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Implementation source</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 200px;">항목</th><th>Path / Reference</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Widget class</strong></td><td><code>PartnerMemberListPage</code></td></tr>
+        <tr><td><strong>File path</strong></td><td><a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/features/member/partner_member_list_page.dart"><code>apps/app_partner/lib/src/features/member/partner_member_list_page.dart</code></a></td></tr>
+        <tr><td><strong>Provider</strong></td><td><code>partnerMembersProvider(partnerId)</code> (file-local riverpod) · <code>memberCoordinatorProvider</code> (navigation)</td></tr>
+        <tr><td><strong>Repository</strong></td><td><code>partnerRepositoryProvider.getPartnerMembers(partnerId)</code></td></tr>
+        <tr><td><strong>Route</strong></td><td><code>MemberListRoute</code> · path: <code>/more/partners/:partnerId/members</code> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/routing/app_routes.dart"><code>app_routes.dart</code></a></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 240px;">Spec</th><th>Relation</th></tr></thead>
+      <tbody>
+        <tr><td><a href="/specs/more_page.html"><code>MorePage</code></a></td><td>Parent — 진입점</td></tr>
+        <tr><td><a href="/specs/partner_member_permission_page.html"><code>PartnerMemberPermissionPage</code></a></td><td>Child — 카드 탭 시 push (역할 + 권한 편집)</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+</div>
+
+<script>
+  document.getElementById('spec-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('spec-mode', e.target.checked);
+  });
+  document.getElementById('dark-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('dark-mode', e.target.checked);
+  });
+</script>
+
+</body>
+</html>

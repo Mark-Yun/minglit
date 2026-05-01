@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Spec — PartnerLoginPage (app_partner · LoginRoute)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* ============================================================
+   PartnerLoginPage-specific atoms.
+   Partner brand override: scoped via .viewport.
+   MinglitPartnerColors.primary = #6c3ce1 (indigo)
+   ============================================================ */
+.viewport {
+  --color-primary: var(--color-partner-primary);    /* #6c3ce1 */
+  --spec-blueprint-rgb: 108, 60, 225;
+}
+body.dark-mode .viewport {
+  --color-primary: var(--color-partner-dark-primary);
+}
+
+.login {
+  position: absolute;
+  inset: 0;
+  padding: var(--spacing-large);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+.login__spacer { flex: 1; min-height: 16px; }
+.login__brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-medium);
+}
+.login__logo {
+  height: 64px;
+  width: auto;
+  display: block;
+}
+.login__partner-badge {
+  font-size: var(--typography-font-size-app-bar-title);
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: var(--color-primary);
+}
+.login__slogan {
+  font-size: var(--typography-font-size-body);
+  color: var(--color-text-secondary);
+  text-align: center;
+  line-height: 1.45;
+}
+.login__buttons {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+.login__cta {
+  font-size: var(--typography-font-size-caption);
+  text-align: center;
+  margin-top: var(--spacing-medium);
+}
+.login__cta button {
+  background: transparent;
+  border: none;
+  color: var(--color-primary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: var(--spacing-small);
+}
+.login__bottom-spacer { height: var(--spacing-large); }
+
+/* OAuth brand-locked buttons — same as login_page */
+.btn-social {
+  height: 48px;
+  border-radius: var(--radius-small);
+  border: 1px solid var(--color-divider);
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-small);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-social__icon { width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; line-height: 1; }
+.btn-social__icon svg { width: 20px; height: 20px; display: block; }
+.btn-social--google { background: #ffffff; color: #111827; border-color: #e5e7eb; }
+body.dark-mode .viewport .btn-social--google { background: #212121; color: #ffffff; border-color: #3d3d3d; }
+.btn-social--apple { background: #111827; color: #ffffff; border-color: #111827; }
+body.dark-mode .viewport .btn-social--apple { background: #ffffff; color: #111827; border-color: #ffffff; }
+.btn-social--kakao { background: #FEE500; color: #111827; border-color: #FEE500; }
+
+/* Loading spinner — partner indigo */
+.spinner {
+  width: 36px; height: 36px;
+  border: 3px solid var(--color-divider);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.center-spinner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
+</div>
+
+<div class="page">
+
+<header>
+  <h1>Partner Login</h1>
+</header>
+
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr>
+        <th style="width: 140px;">Status</th>
+        <td><strong>✅ 디자인완료</strong> <em style="color: var(--color-text-secondary);">— 4 states · 파트너 입점 / 운영자 진입 전용 entry</em></td>
+      </tr>
+      <tr><th>App</th><td><code>app_partner</code></td></tr>
+      <tr><th>Category</th><td>auth · entry · partner</td></tr>
+      <tr>
+        <th>Route / Surface</th>
+        <td><code>LoginRoute</code> (app_partner · 사용자 앱 LoginRoute와 별개) · widget: <code>PartnerLoginPage</code> + <code>MinglitLoginScreen(isPartner: true)</code></td>
+      </tr>
+      <tr><th>Path</th><td><code>/login</code></td></tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>: <em>— (top-level screen)</em><br>
+          <strong>Children</strong>: <em>—</em> · 5탭 시 <a href="/specs/dev_user_switch_screen.html"><code>DevUserSwitchScreen</code></a>으로 전환 (dev only)
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>
+          파트너 앱(app_partner)의 OAuth 진입점. 사용자 앱과 widget(<code>MinglitLoginScreen</code>)을 공유하지만
+          <code>isPartner: true</code> props로 PARTNER 배지 · "Spark Your Business" 슬로건 · 파트너 색(#6c3ce1) 적용.
+          입점 사장님 / 운영자가 로그인 후 자기 가게/이벤트 관리에 바로 진입.
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry points</strong>: 파트너 앱 첫 실행 / 로그아웃 직후 / 보호 화면 직접 진입 (redirect).<br>
+          <strong>Exit points</strong>: 인증 성공 → <code>PartnerHomeRoute</code> (또는 redirect 원본). 5탭(dev) → DevUserSwitchScreen.
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          User / Partner 두 앱이 같은 Supabase 계정 시스템을 공유하지만, 진입 시 어느 앱인지에 따라 후속 흐름이
+          달라짐 (사용자: HomePage / 파트너: PartnerHome). widget을 <code>MinglitLoginScreen</code>으로 공유해
+          OAuth 흐름을 단일 책임으로 유지하되, props로 분기. <strong>색은 파트너 indigo(#6c3ce1)로 명시 분기</strong> —
+          사용자 앱 보라(#9900ff)와 시각적으로 구분.
+        </td>
+      </tr>
+      <tr>
+        <th>Frequency</th>
+        <td>로그아웃 상태에선 매번. 인증된 파트너에겐 1회 / 세션 만료 시.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="doc">
+  <h2>History</h2>
+  <p class="intro">최신 항목 위.</p>
+  <table class="ref">
+    <thead>
+      <tr>
+        <th style="width: 110px;">Date</th>
+        <th style="width: 80px;">Version</th>
+        <th style="width: 120px;">Author</th>
+        <th>Changes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2026-05-01</td>
+        <td>1.0</td>
+        <td>mark-yun</td>
+        <td>v1.4 template으로 작성. 파트너 indigo(#6c3ce1) 색 분기를 <code>.viewport</code>로 scope. <code>MinglitLoginScreen(isPartner: true)</code>의 partner 변형을 partner 앱 관점에서 단독 spec화 — login_page.html(공유 spec)의 partner state와는 다른 entry 시점.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<nav class="perspective-nav">
+  <a href="#layout"><span class="glyph">🧱</span> Layout</a>
+  <a href="#states"><span class="glyph">🎨</span> States</a>
+  <a href="#global-behavior"><span class="glyph">🔄</span> Global Behavior</a>
+  <a href="#reference"><span class="glyph">📖</span> Reference</a>
+</nav>
+
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Layout</h2>
+    <span class="lede">Scaffold(SafeArea + Padding(24) + Column) — login_page.html 공유 widget(<code>MinglitLoginScreen</code>) 동일 구조. partner 변형: PARTNER 배지 + slogan 변경 + Terms 자리 → "파트너 입점 문의" CTA.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree</h2>
+    <p class="intro">
+      좌측은 영역 경계 wireframe (음영 = 콘텐츠), 우측은 위젯 위계.
+      좌우 <code>spacing-large (24px)</code> 패딩. 콘텐츠는 두 Spacer 사이 수직 중앙. PARTNER 배지가 logo와 slogan 사이에 추가됨.
+    </p>
+
+    <div class="layout-grid">
+      <div class="blueprint">
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <div class="blueprint__region" style="top:24px; left:24px; right:24px; height:200px;">
+          <span class="blueprint__region-label">① Spacer (flex)</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:224px; left:24px; right:24px; height:160px;">
+          <span class="blueprint__region-label">② Brand block — center<br>logo + PARTNER 배지 + slogan</span>
+        </div>
+        <div class="blueprint__region" style="top:384px; left:24px; right:24px; height:88px;">
+          <span class="blueprint__region-label">③ Spacer (flex)</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:472px; left:24px; right:24px; height:168px;">
+          <span class="blueprint__region-label">④ Button group — Column<br>height 48 each · spacing-sm gap</span>
+        </div>
+        <div class="blueprint__region" style="top:656px; left:40px; right:40px; height:40px;">
+          <span class="blueprint__region-label">⑤ "파트너 입점 문의" CTA · TextButton</span>
+        </div>
+        <div class="blueprint__region" style="bottom:0; left:24px; right:24px; height:24px;">
+          <span class="blueprint__region-label">⑥ Bottom spacer · spacing-large</span>
+        </div>
+
+        <div class="blueprint__align-marker" style="top:8px; right:8px;">crossAxis: stretch</div>
+      </div>
+
+      <div class="layout-tree"><b>Scaffold</b>
+└─ <b>SafeArea</b>
+   └─ <b>Padding</b>(horizontal: <i>spacing-large = 24px</i>)
+      └─ <b>Column</b>(mainAxis: center, crossAxis: stretch)
+         ├─ <b>Spacer</b>(flex: 1)                           ← ①
+         │
+         ├─ <em>Brand block</em>                              ← ②
+         │  ├─ <b>Logo</b> (height: 64) — minglit_logo SVG
+         │  ├─ Gap: <i>spacing-medium = 16px</i>
+         │  ├─ <b>PARTNER 배지</b> — Text("PARTNER" · weight 600 · letter-spacing 2 · <code>color-partner-primary</code>)
+         │  ├─ Gap: <i>spacing-medium = 16px</i>
+         │  └─ <b>Slogan</b> — Text("Verified Vibe, Spark Your Business")
+         │
+         ├─ <b>Spacer</b>(flex: 1)                           ← ③
+         │
+         ├─ <em>Button group</em>                            ← ④
+         │  ├─ <b>Google</b>      (height 48 · radius-small)
+         │  ├─ Gap: <i>spacing-sm = 12px</i>
+         │  ├─ <b>Apple</b>       <i>(conditional — kIsWeb || iOS / macOS)</i>
+         │  ├─ Gap: <i>spacing-sm = 12px</i>
+         │  └─ <b>Kakao</b>       (height 48 · brand-locked yellow)
+         │
+         ├─ Gap: <i>spacing-medium = 16px</i>
+         │
+         ├─ <em>Partner CTA</em>                             ← ⑤
+         │  └─ <b>TextButton</b>("파트너 입점 문의" · <code>color-partner-primary</code>)
+         │
+         └─ Bottom spacer: <i>spacing-large = 24px</i>      ← ⑥</div>
+    </div>
+  </section>
+
+  <section class="doc">
+    <h2>Spacing &amp; alignment rules</h2>
+    <table class="ref">
+      <thead>
+        <tr><th style="width:60px;">#</th><th style="width:200px;">Region</th><th style="width:220px;">Alignment</th><th>Spacing</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>—</td><td>Outer page padding</td><td>—</td><td>horizontal: <code>spacing-large (24px)</code></td></tr>
+        <tr><td>①</td><td>Top spacer</td><td>flex</td><td>—</td></tr>
+        <tr><td>②</td><td>Brand block</td><td>cross axis: center</td><td>logo↔배지: <code>spacing-medium (16px)</code> · 배지↔slogan: <code>spacing-medium (16px)</code></td></tr>
+        <tr><td>③</td><td>Mid spacer</td><td>flex</td><td>—</td></tr>
+        <tr><td>④</td><td>Button group</td><td>cross axis: stretch · 풀폭</td><td>버튼 사이: <code>spacing-sm (12px)</code></td></tr>
+        <tr><td>⑤</td><td>Partner CTA</td><td>cross axis: center</td><td>group↔CTA: <code>spacing-medium (16px)</code></td></tr>
+        <tr><td>⑥</td><td>Bottom spacer</td><td>—</td><td>height: <code>spacing-large (24px)</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<div class="perspective" id="states">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>States</h2>
+    <span class="lede">4 states — platform 분기 + async 진행. 사용자 앱과 동일 widget이라 분기 패턴은 같지만 시각은 partner indigo + PARTNER 배지가 주된 차별점.</span>
+  </div>
+
+  <section class="doc">
+    <p class="intro">
+      <strong>State 종류 식별</strong>: <code>defaultTargetPlatform</code> + <code>kIsWeb</code> · <code>authControllerProvider</code> AsyncValue · <code>onDevTrigger</code> dev 분기.
+    </p>
+
+    <!-- ─── Default · iOS / macOS / Web (baseline) ─────────────────────────────── -->
+    <table class="ref state-mini is-baseline-tint">
+      <thead>
+        <tr><th colspan="3"><strong>Default · iOS / macOS / Web</strong> 🎯 <small>baseline · 풀 OAuth 3종</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="login">
+                <div class="login__spacer"></div>
+                <div class="login__brand">
+                  <img class="login__logo" src="/logos/minglit_logo_background_transparent.svg" alt="minglit">
+                  <div class="login__partner-badge">PARTNER</div>
+                  <div class="login__slogan">Verified Vibe, Spark Your Business</div>
+                </div>
+                <div class="login__spacer"></div>
+                <div class="login__buttons">
+                  <button class="btn-social btn-social--google"><span class="btn-social__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg></span><span>Google로 시작하기</span></button>
+                  <button class="btn-social btn-social--apple"><span class="btn-social__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.365 1.43c0 1.14-.493 2.27-1.177 3.08-.744.9-1.99 1.57-2.987 1.57-.12 0-.23-.02-.3-.03-.01-.06-.04-.22-.04-.39 0-1.15.572-2.27 1.206-2.98.804-.94 2.142-1.64 3.248-1.68.03.13.05.28.05.43zm4.565 15.71c-.03.07-.463 1.58-1.518 3.12-.945 1.34-1.94 2.71-3.43 2.71-1.517 0-1.9-.88-3.63-.88-1.698 0-2.302.91-3.67.91-1.377 0-2.332-1.26-3.428-2.8-1.287-1.82-2.323-4.63-2.323-7.28 0-4.28 2.797-6.55 5.552-6.55 1.448 0 2.675.95 3.6.95.865 0 2.222-1.01 3.902-1.01.613 0 2.886.06 4.374 2.19-.13.09-2.383 1.37-2.383 4.19 0 3.26 2.854 4.42 2.955 4.45z"/></svg></span><span>Apple로 시작하기</span></button>
+                  <button class="btn-social btn-social--kakao"><span class="btn-social__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C7.03 3 3 6.14 3 10c0 2.42 1.59 4.55 4 5.79V21l4.46-2.97c.18.01.36.02.54.02 4.97 0 9-3.14 9-7s-4.03-7-9-7z"/></svg></span><span>Kakao로 시작하기</span></button>
+                </div>
+                <div class="login__cta"><button>파트너 입점 문의</button></div>
+                <div class="login__bottom-spacer"></div>
+              </div>
+              <span class="callout" style="top:240px; left:50%; transform: translateX(-50%) translateY(-10px);">ⓐ</span>
+              <span class="callout" style="top:300px; left:50%; transform: translateX(-50%) translateY(-10px);">ⓑ</span>
+              <span class="callout" style="top:340px; left:50%; transform: translateX(-50%) translateY(-10px);">ⓒ</span>
+              <span class="callout" style="top:480px; left:14px;">ⓓ</span>
+              <span class="callout" style="top:660px; left:50%; transform: translateX(-50%) translateY(-10px);">ⓔ</span>
+              <span class="annotation" style="top:280px; right:8px;">spacing-medium</span>
+              <span class="type-spec" style="top:316px; left:8px;">18 / 600 / letter-spacing 2</span>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>kIsWeb || defaultTargetPlatform == TargetPlatform.iOS || .macOS</code> · <code>authState.isLoading == false</code></td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            ① <strong>Google 탭</strong> → <code>signInWithGoogle()</code> → Loading state → 외부 OAuth → callback → PartnerHomeRoute<br>
+            ② <strong>Apple 탭</strong> → <code>signInWithApple()</code> → OS 인증 시트 → callback<br>
+            ③ <strong>Kakao 탭</strong> → <code>signInWithKakao()</code> → KakaoTalk 또는 OAuth 페이지<br>
+            ④ <strong>"파트너 입점 문의" 탭</strong> → 외부 브라우저로 입점 문의 페이지 (이 화면 그대로 유지)<br>
+            ⑤ <strong>로고 5번 탭</strong> (dev only) → DevUserSwitchScreen
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · 인증 실패 (서버/네트워크) → <code>handleMinglitError(context, error, stackTrace)</code> → 공통 에러 다이얼로그 → default 복귀<br>
+            · OAuth 도중 외부 브라우저 닫음 → 별도 에러 표시 없이 default 복귀<br>
+            · 이미 로그인된 사용자 직접 진입 → router redirect로 홈으로 자동 이동 (이 화면 미표시)<br>
+            · ENVIRONMENT가 <code>local</code>/<code>development</code>/<code>dev</code> 중 하나면 dev trigger 활성 — 그 외엔 5탭 무반응
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            · <code>MinglitLoginScreen</code>(isPartner: true · kit-shared)<br>
+            · Logo (SVG · 64px h · light/dark auto-swap) — ⓐ<br>
+            · PARTNER 배지 (Text · 18px · weight 600 · letter-spacing 2 · <code>color-partner-primary</code>) — ⓑ<br>
+            · Slogan (Text · bodyMedium · color-text-secondary · "Verified Vibe, Spark Your Business") — ⓒ<br>
+            · OAuth 버튼 3종 (brand-locked — Google · Apple · Kakao · height 48 · radius-small) — ⓓ<br>
+            · "파트너 입점 문의" TextButton (<code>color-partner-primary</code> · 외부 링크) — ⓔ
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            · <strong>brand-scoped</strong>: <code>color-partner-primary</code> (#6c3ce1 · PARTNER 배지 · CTA · spinner)<br>
+            · color: <code>color-background</code> · <code>color-text-primary</code> · <code>color-text-secondary</code> · <code>color-divider</code> (Google border)<br>
+            · radius: <code>radius-small</code> (8 · OAuth 버튼)<br>
+            · spacing: <code>spacing-large</code> (24 · 좌우 padding · bottom safe), <code>spacing-medium</code> (16 · 로고↔배지↔slogan · group↔CTA), <code>spacing-sm</code> (12 · 버튼 사이), <code>spacing-small</code> (8 · 아이콘↔라벨)<br>
+            · typography: bodyMedium (slogan), titleMedium (PARTNER 배지 18/600), bodySmall (CTA)<br>
+            · brand-locked exception: Kakao <code>#FEE500</code>
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 widget(<code>MinglitLoginScreen</code>)을 사용자 앱과 공유하지만, <strong>이 spec은 partner 앱 관점에서 단독</strong> — Coordinator/Provider/Route 모두 partner 쪽. <code>color-partner-primary</code>는 <code>.viewport</code> 스코프로만 적용되어 spec doc(이 페이지) 자체는 사용자 보라색 유지.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ─── Default · Android (no Apple) ─────────────────────────────── -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Default · Android</strong> <small>no-apple · platform = Android</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="login">
+                <div class="login__spacer"></div>
+                <div class="login__brand">
+                  <img class="login__logo" src="/logos/minglit_logo_background_transparent.svg" alt="minglit">
+                  <div class="login__partner-badge">PARTNER</div>
+                  <div class="login__slogan">Verified Vibe, Spark Your Business</div>
+                </div>
+                <div class="login__spacer"></div>
+                <div class="login__buttons">
+                  <button class="btn-social btn-social--google"><span class="btn-social__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg></span><span>Google로 시작하기</span></button>
+                  <button class="btn-social btn-social--kakao"><span class="btn-social__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C7.03 3 3 6.14 3 10c0 2.42 1.59 4.55 4 5.79V21l4.46-2.97c.18.01.36.02.54.02 4.97 0 9-3.14 9-7s-4.03-7-9-7z"/></svg></span><span>Kakao로 시작하기</span></button>
+                </div>
+                <div class="login__cta"><button>파트너 입점 문의</button></div>
+                <div class="login__bottom-spacer"></div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>!kIsWeb &amp;&amp; defaultTargetPlatform == TargetPlatform.android</code> → <code>onAppleSignIn == null</code></td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>동일 <em>(단, Apple 액션 없음 — 버튼이 화면에 없음)</em></td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>동일</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>− Apple OAuth 버튼 <em>(Apple Sign In은 Android 미지원)</em>. Kakao가 위로 올라옴 (conditional rendering — spacer 미잔존)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>동일</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 한국 시장에서 Android가 다수 — 실질적 baseline은 이쪽일 수 있음. 분류상 "platform fallback"으로 두 번째.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ─── Loading ─────────────────────────────── -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Loading</strong> <small>async · OAuth 진행 중</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="center-spinner">
+                <div class="spinner"></div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>authState.isLoading == true</code> — OAuth 버튼 탭 직후 ~ 외부 브라우저 표시 직전 (보통 100~300ms). 이 분기에서는 <code>MinglitLoginScreen</code>이 아닌 <code>Scaffold(body: MinglitCircularProgressIndicator())</code> 풀스크린 표시</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>— <em>(no-op — 모든 탭 무반응. spinner만 회전)</em></td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>· OAuth 페이지가 늦게 뜸 → spinner 길게 보임 (timeout 없음 — OS-level)<br>· 사용자 시스템 back → 인증 취소 → AsyncError → handleMinglitError로 default 복귀</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>↔ <code>MinglitLoginScreen</code> 전체 → <code>MinglitCircularProgressIndicator</code> (화면 중앙) — kit-shared widget이 여기서는 등장 안 함, partner 위젯이 직접 반환</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>− OAuth 버튼/Logo/배지 토큰 모두 미사용. spinner 색상 <code>color-partner-primary</code> (CircularProgressIndicator default가 theme primary 사용)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 짧은 transition state — 외부 브라우저로 OAuth가 넘어가는 시간 채움. fade 없이 cut. 사용자 앱과 동일한 패턴이지만 spinner 색이 partner indigo.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ─── Auth Error ─────────────────────────────── -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Auth Error (transient)</strong> <small>provider AsyncError · 다이얼로그</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="login">
+                <div class="login__spacer"></div>
+                <div class="login__brand">
+                  <img class="login__logo" src="/logos/minglit_logo_background_transparent.svg" alt="minglit">
+                  <div class="login__partner-badge">PARTNER</div>
+                  <div class="login__slogan">Verified Vibe, Spark Your Business</div>
+                </div>
+                <div class="login__spacer"></div>
+                <div class="login__buttons">
+                  <button class="btn-social btn-social--google"><span class="btn-social__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/></svg></span><span>Google로 시작하기</span></button>
+                  <button class="btn-social btn-social--kakao"><span class="btn-social__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C7.03 3 3 6.14 3 10c0 2.42 1.59 4.55 4 5.79V21l4.46-2.97c.18.01.36.02.54.02 4.97 0 9-3.14 9-7s-4.03-7-9-7z"/></svg></span><span>Kakao로 시작하기</span></button>
+                </div>
+                <div class="login__cta"><button>파트너 입점 문의</button></div>
+                <div class="login__bottom-spacer"></div>
+              </div>
+              <!-- Error dialog overlay -->
+              <div style="position:absolute; inset:0; background: rgba(0,0,0,0.45); display:flex; align-items:center; justify-content:center;">
+                <div style="background:#fff; border-radius:16px; padding:20px; width:80%; max-width:280px; text-align:center;">
+                  <div style="font-size:16px; font-weight:700; color:#111; margin-bottom:8px;">로그인에 실패했습니다</div>
+                  <div style="font-size:13px; color:#444; line-height:1.45; margin-bottom:16px;">잠시 후 다시 시도해주세요.</div>
+                  <button style="background:transparent; border:none; color: var(--color-primary); font-weight:700; font-size:14px;">확인</button>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>ref.listen(authControllerProvider)</code>의 <code>next is AsyncError</code> 분기 → <code>handleMinglitError(context, error, stackTrace)</code> → 공통 에러 다이얼로그 표시</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>"확인" 탭 → 다이얼로그 dismiss → Default state 복귀 (재시도 가능)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>· 짧은 시간에 여러 OAuth 시도 시 다이얼로그가 누적 표시 — handleMinglitError가 dedupe (보통)<br>· 다이얼로그 떠 있는 동안 다시 OAuth 탭 — 다이얼로그가 dismiss되며 새 흐름 시작</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>+ <code>MinglitAlert</code> / <code>handleMinglitError</code> 다이얼로그 (kit-shared)<br>· 본체 화면(Default)은 그대로 유지 — 다이얼로그는 modal overlay</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>+ scrim opacity (Material default), <code>radius-card</code> (16 · 다이얼로그) · "확인" 액션 색 <code>color-partner-primary</code></td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 transient state — 사용자가 "확인"을 누르면 즉시 사라짐. AsyncError는 stream이라 한 번만 fire되고, 동일 에러를 다시 보고 싶으면 재시도 필요. fix #1624 관련: ENVIRONMENT 분기 dev 추가.</td>
+        </tr>
+      </tbody>
+    </table>
+
+  </section>
+</div>
+
+<div class="perspective" id="global-behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">cross-cutting — 모든 state에 적용. 사용자 앱과 동일 widget이지만 partner-specific 동작 강조.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Cross-cutting interactions</h2>
+    <table class="ref">
+      <thead>
+        <tr><th style="width:240px;">사용자 액션</th><th>화면에 보이는 결과</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>로고 5번 탭 (dev only · 2초 안)</td>
+          <td>ENVIRONMENT ∈ {local, development, dev}일 때만 — <code>DevUserSwitchRoute().push&lt;void&gt;(context)</code>. Production에서는 무반응.</td>
+        </tr>
+        <tr>
+          <td>OS back / 시스템 back swipe</td>
+          <td>보호된 화면 redirect로 진입한 경우 → 홈으로. 첫 진입이면 OS 기본 (Android 종료 / iOS 무반응).</td>
+        </tr>
+        <tr>
+          <td>다크 모드 토글</td>
+          <td>OAuth 버튼 색상 자동 swap (Google 흰→어두운, Apple 검정→흰). PARTNER 배지/CTA 색이 <code>color-partner-dark-primary</code>로 swap. Kakao만 brand-locked 노랑 유지.</td>
+        </tr>
+        <tr>
+          <td>"파트너 입점 문의" 탭</td>
+          <td>외부 브라우저로 입점 문의 페이지 (이 화면은 background에서 그대로 유지).</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Motion &amp; timing</h2>
+    <p class="intro">Source: <code>shared/packages/mds/core/lib/src/theme/minglit_design_tokens.dart</code> → <code>MinglitAnimation</code>.</p>
+    <table class="ref" style="margin-bottom: 16px;">
+      <thead><tr><th style="width:200px;">Token</th><th style="width:80px;">Value</th><th>Use case</th></tr></thead>
+      <tbody>
+        <tr><td><code>MinglitAnimation.micro</code></td><td>100ms</td><td>버튼 탭 → Loading state 전환 (cut)</td></tr>
+        <tr><td><code>MinglitAnimation.fast</code></td><td>200ms</td><td>OAuth 복귀 → 홈/원래 화면 · 다이얼로그 fade</td></tr>
+      </tbody>
+    </table>
+    <table class="ref">
+      <thead><tr><th style="width:240px;">Transition</th><th style="width:160px;">Duration (token)</th><th>Curve / notes</th></tr></thead>
+      <tbody>
+        <tr><td>화면 진입 (cold start)</td><td>—</td><td>Native scaffold 전환 — 별도 entry animation 없음.</td></tr>
+        <tr><td>OAuth 버튼 탭 → Loading</td><td><code>micro</code> (100ms)</td><td>전체 화면이 spinner로 즉시 교체. fade 없이 cut — 즉각 피드백.</td></tr>
+        <tr><td>Loading → 외부 OAuth 브라우저</td><td>OS 기본</td><td>OS-level 전환.</td></tr>
+        <tr><td>OAuth 복귀 → PartnerHome</td><td><code>fast</code> (200ms)</td><td>GoRouter 기본 라우트 전환 — slide / fade.</td></tr>
+        <tr><td>Auth Error 다이얼로그 in/out</td><td><code>fast</code> (200ms)</td><td>중앙 fade-in scale (Material default).</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Global edge cases</h2>
+    <ul class="notes">
+      <li><strong>이미 로그인된 파트너 직접 진입</strong> — router redirect로 PartnerHome으로 자동 이동 (이 화면 미표시).</li>
+      <li><strong>보호된 화면 redirect</strong> — 인증 후 처음 가려던 화면으로 자동 복귀.</li>
+      <li><strong>ENVIRONMENT mismatch</strong> — Fix #1624: <code>development</code> 외에 <code>dev</code>도 허용 — Supabase dev 프로젝트와 일치.</li>
+      <li><strong>다크 모드</strong> — <code>color-partner-primary</code> → <code>color-partner-dark-primary</code> 자동 swap. PARTNER 배지/CTA 색이 다크 톤으로.</li>
+      <li><strong>접근성</strong> — OAuth 버튼이 height 48 + 라벨 명시 — TalkBack에서 의미 전달. PARTNER 배지는 시각 강조용 — semanticLabel 별도 없음.</li>
+    </ul>
+  </section>
+</div>
+
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">📖</span>
+    <h2>Reference</h2>
+    <span class="lede">implementation source + 인접 화면.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Implementation source</h2>
+    <table class="ref">
+      <tbody>
+        <tr><th style="width:200px;">Widget class</th><td><code>PartnerLoginPage</code> · <code>ConsumerWidget</code></td></tr>
+        <tr>
+          <th>File path</th>
+          <td><a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/features/auth/partner_login_page.dart"><code>apps/app_partner/lib/src/features/auth/partner_login_page.dart</code></a></td>
+        </tr>
+        <tr>
+          <th>Shared widget</th>
+          <td><code>MinglitLoginScreen</code>(isPartner: true · onGoogle/Apple/Kakao/DevTrigger props) — kit-shared</td>
+        </tr>
+        <tr>
+          <th>Auth controller</th>
+          <td><code>authControllerProvider</code> (kit-shared) — <code>signInWithGoogle</code> · <code>signInWithApple</code> · <code>signInWithKakao</code></td>
+        </tr>
+        <tr>
+          <th>Route</th>
+          <td><code>LoginRoute</code> (app_partner) · path: <code>/login</code> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/routing/app_routes.dart"><code>app_routes.dart</code></a></td>
+        </tr>
+        <tr>
+          <th>Brand color</th>
+          <td><code>MinglitPartnerColors.primary</code> = <code>#6c3ce1</code> · scoped via <code>.viewport</code>의 <code>--color-primary</code> override. <code>MinglitColors.primary</code>(#9900ff · 사용자 보라)는 사용 안 함.</td>
+        </tr>
+        <tr>
+          <th>Dev trigger gate</th>
+          <td><code>String.fromEnvironment('ENVIRONMENT', defaultValue: 'production')</code> ∈ {local, development, dev} · Fix #1624: dev 추가</td>
+        </tr>
+        <tr>
+          <th>Test override</th>
+          <td><code>isDevEnvOverride</code> (<code>@visibleForTesting</code>) — compile-time 상수를 우회</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width:240px;">Spec</th><th>Relation</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><a href="/specs/login_page.html"><code>LoginPage</code></a> (user)</td>
+          <td>같은 widget(<code>MinglitLoginScreen</code>) 사용 — props로 분기. 본 spec과 partner state는 시각적으로 동일.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/partner_home_page.html"><code>PartnerHomePage</code></a></td>
+          <td>로그인 성공 후 도착하는 메인 화면.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/partner_apply_page.html"><code>PartnerApplyPage</code></a></td>
+          <td>"파트너 입점 문의"가 외부 링크로 보내는 별도 신청 흐름. (앱 내 신청 화면)</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/auth_callback_page.html"><code>AuthCallbackPage</code></a></td>
+          <td>OAuth 복귀 처리. <em>Note: app_user에 정의됨 — partner 앱은 자체 처리 흐름.</em></td>
+        </tr>
+        <tr>
+          <td><a href="/specs/dev_user_switch_screen.html"><code>DevUserSwitchScreen</code></a></td>
+          <td>Logo 5탭 (dev 환경)으로 이동하는 테스트용 계정 전환 화면.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+</div>
+
+<script>
+  document.getElementById('spec-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('spec-mode', e.target.checked);
+  });
+  document.getElementById('dark-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('dark-mode', e.target.checked);
+  });
+</script>
+
+</body>
+</html>

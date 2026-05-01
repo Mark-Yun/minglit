@@ -1,7 +1,7 @@
 # Graph Report - /Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react  (2026-05-01)
 
 ## Corpus Check
-- 1154 files · ~1,594,033 words
+- 1154 files · ~1,621,544 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -2160,10 +2160,10 @@ _Questions this graph is uniquely positioned to answer:_
 - **What is the exact relationship between `Architecture Audit #1092 — 2026-04-06` and `AI Basic Law Compliance (Korea 2026)`?**
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
 - **Why does `package:flutter/material.dart` connect `Community 1` to `Community 0`, `Community 12`, `Community 14`, `Community 16`, `Community 22`?**
-  _High betweenness centrality (0.049) - this node is a cross-community bridge._
+  _High betweenness centrality (0.035) - this node is a cross-community bridge._
 - **Why does `PolicyRepository` connect `Community 2` to `Community 3`, `Community 4`?**
   _High betweenness centrality (0.025) - this node is a cross-community bridge._
-- **Why does `RPC: get_current_policy` connect `Community 3` to `Community 2`?**
+- **Why does `minglit_kit Package` connect `Community 5` to `Community 2`, `Community 20`, `Community 6`?**
   _High betweenness centrality (0.024) - this node is a cross-community bridge._
 - **What connects `reporter (AutoLabelAllureReporter)`, `BugReporterWrapper Widget Test Suite`, `MinglitListTile Widget Test Suite` to the rest of the system?**
   _1405 weakly-connected nodes found - possible documentation gaps or missing edges._

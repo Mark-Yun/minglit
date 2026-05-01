@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Spec — CheckinPlaceholderPage (app_partner · CheckinTabRoute)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* ============================================================
+   CheckinPlaceholderPage-specific atoms.
+   Partner brand override — page is in app_partner.
+   ============================================================ */
+.viewport {
+  --color-primary: var(--color-partner-primary);   /* #6c3ce1 */
+  --spec-blueprint-rgb: 108, 60, 225;
+}
+body.dark-mode .viewport {
+  --color-primary: var(--color-partner-dark-primary);
+}
+
+/* AppBar — simpleAppBar(title: '체크인'), matches scaffold gray, no border */
+.cp-appbar {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--spacing-xsmall);
+  background: var(--color-surface);
+}
+.cp-appbar__back {
+  width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+}
+.cp-appbar__back svg { width: 22px; height: 22px; color: var(--color-text-primary); }
+.cp-appbar__title {
+  font-size: var(--typography-font-size-app-bar-title);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-left: var(--spacing-xsmall);
+}
+
+/* Body */
+.cp-body {
+  position: absolute;
+  top: 56px; left: 0; right: 0; bottom: 0;
+  background: var(--color-surface);
+}
+
+/* Empty state (0 events) */
+.cp-empty {
+  position: absolute; inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-medium);
+  padding: var(--spacing-large);
+  text-align: center;
+}
+.cp-empty__icon { color: var(--color-text-secondary); opacity: 0.7; }
+.cp-empty__icon svg { width: 64px; height: 64px; }
+.cp-empty__title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-top: var(--spacing-small);
+}
+.cp-empty__sub {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+/* Selection list (2+ events) */
+.cp-list {
+  position: absolute; inset: 0;
+  padding: var(--spacing-medium);
+  display: flex;
+  flex-direction: column;
+}
+.cp-list__title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+.cp-list__sub {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+  margin-bottom: var(--spacing-medium);
+}
+.cp-event-card {
+  background: var(--color-background);
+  border-radius: var(--radius-card);
+  padding: var(--spacing-medium);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-small);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.cp-event-card__time {
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--color-primary);
+  letter-spacing: -0.5px;
+  line-height: 1.0;
+  min-width: 60px;
+}
+.cp-event-card__time--live { color: var(--color-success); }
+.cp-event-card__info { flex: 1; min-width: 0; }
+.cp-event-card__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.cp-event-card__count {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
+.cp-event-card__chev svg { width: 22px; height: 22px; color: var(--color-text-secondary); }
+.cp-live-badge {
+  padding: 4px var(--spacing-small);
+  border-radius: var(--radius-small);
+  background: rgba(22, 163, 74, 0.20);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-success);
+}
+
+/* Loading state */
+.cp-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.cp-spinner {
+  width: 32px; height: 32px;
+  border: 3px solid var(--color-divider);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+}
+
+/* Error state */
+.cp-error {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-large);
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+/* QR scanner direct (1 event) — dark theme proxy */
+.cp-scanner {
+  position: absolute;
+  inset: 0;
+  background: #0a0a14;
+  display: flex;
+  flex-direction: column;
+}
+.cp-scanner__appbar {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--spacing-medium);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+}
+.cp-scanner__appbar svg { width: 22px; height: 22px; margin-right: var(--spacing-small); }
+.cp-scanner__viewport {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.cp-scanner__frame {
+  width: 220px; height: 220px;
+  border: 2px solid #fff;
+  border-radius: 24px;
+  position: relative;
+}
+.cp-scanner__hint {
+  position: absolute;
+  bottom: 80px;
+  left: 0; right: 0;
+  text-align: center;
+  color: #fff;
+  font-size: 13px;
+  opacity: 0.8;
+}
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
+</div>
+
+<div class="page">
+
+<header>
+  <h1>체크인 진입</h1>
+</header>
+
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr><th style="width: 140px;">Status</th><td><strong>✅ 디자인완료</strong></td></tr>
+      <tr><th>App</th><td><code>app_partner</code></td></tr>
+      <tr><th>Category</th><td>checkin (탭)</td></tr>
+      <tr><th>Route / Surface</th><td><code>CheckinPlaceholderPage</code> — Bottom nav 체크인 탭 직접 자식 (route라기보다 IndexedStack child)</td></tr>
+      <tr><th>Path</th><td><em>—</em> (탭 자식 · URL 없음, parent shell이 <code>/partner/home</code>)</td></tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>: <a href="/specs/partner_home_page.html"><code>PartnerHomePage</code></a> shell의 BottomNavBar 체크인 탭<br>
+          <strong>Children</strong>: <code>QRScannerScreen</code> (탐색 시작점 · 별도 화면)
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>
+          파트너가 체크인 탭을 누르는 순간 오늘 진행 예정 이벤트 수에 따라 자동 분기한다 — 0개면 안내, 1개면 즉시 QR 스캐너, 2개 이상이면 선택 리스트.
+          이름은 "Placeholder"지만 실제로는 dispatcher 화면. 단순 진입 마찰을 줄여 가장 흔한 1-event 케이스에서 별도 선택 없이 바로 스캔 가능.
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry points</strong>: PartnerHome BottomNav 체크인 탭 탭.<br>
+          <strong>Exit points</strong>: 1개 이벤트 → <code>QRScannerScreen</code>(다크 테마) push. 2+ → 카드 탭 → <code>QRScannerScreen</code> push. 0개 → 탭 변경으로만 이탈.
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          파트너가 운영일에 체크인 탭을 누를 때 가장 잦은 시나리오는 "오늘 1 이벤트". 매번 선택 화면을 거치게 하면 마찰이 커서 1개일 때는 자동 routing.
+          "오늘" 정의는 시작 3시간 전 ~ 종료 1시간 후 윈도우 (<code>todayEventsProvider</code>). FutureProvider 기반이라 partnerId 변경 시 자동 invalidate.
+        </td>
+      </tr>
+      <tr><th>Frequency</th><td>운영일에 매 진입마다 (체크인 시작/중간 중)</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="doc">
+  <h2>History</h2>
+  <table class="ref">
+    <thead>
+      <tr><th style="width: 110px;">Date</th><th style="width: 80px;">Version</th><th style="width: 120px;">Author</th><th>Changes</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2026-05-01</td>
+        <td>1.0</td>
+        <td>mark-yun</td>
+        <td>v1.4 template 신규 작성. 5개 state enumerate (Loading partner / Error partner / Empty 0events / Direct-scan 1event / Selection 2+events). Implementation의 자동 분기 로직(events.length 기반)을 state별로 풀어 명시.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<nav class="perspective-nav">
+  <a href="#layout"><span class="glyph">🧱</span> Layout</a>
+  <a href="#states"><span class="glyph">🎨</span> States</a>
+  <a href="#global-behavior"><span class="glyph">🔄</span> Global Behavior</a>
+  <a href="#reference"><span class="glyph">📖</span> Reference</a>
+</nav>
+
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Layout</h2>
+    <span class="lede">두 단계 dispatcher: ① currentPartnerInfoProvider → ② todayEventsProvider → events.length 분기 (0 / 1 / 2+). state별 layout이 완전히 다름.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree</h2>
+    <p class="intro">
+      모든 state는 simpleAppBar('체크인') + body. body 형태가 state별로 갈림 — Empty(중앙 정렬 컬럼) / Selection(상단 헤더 + ListView) / 1-event는 자체 화면 push라 본 페이지 잔영 없음.
+    </p>
+
+    <div class="layout-grid">
+      <div class="blueprint">
+        <div class="blueprint__region" style="top:0; left:0; right:0; bottom:0; border-style:solid; border-color: rgba(var(--spec-blueprint-rgb), 0.18);"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:0; left:0; right:0; height:56px;">
+          <span class="blueprint__region-label">① AppBar · h=56 · "체크인"</span>
+        </div>
+        <div class="blueprint__region" style="top:56px; left:0; right:0; bottom:0;">
+          <span class="blueprint__region-label">② Body · state-switching</span>
+        </div>
+        <div class="blueprint__align-marker" style="top:64px; left:8px;">Empty: center · Selection: top + scroll</div>
+      </div>
+
+      <div class="layout-tree"><b>Scaffold</b>
+└─ <b>AppBar</b> = MinglitTheme.simpleAppBar('체크인') ← ①
+└─ <b>body</b>: AsyncValue.when(...)              ← ②
+   ├─ loading  → CircularProgressIndicator(center)
+   ├─ error    → Text(center)
+   └─ data(partner) → AsyncValue.when(events)
+      ├─ loading  → CircularProgressIndicator
+      ├─ error    → Text("이벤트를 불러올 수 없습니다")
+      └─ data(events) →
+         · events.length == 1 → push QRScannerScreen
+         · 0  → _CheckinSelectionPage(empty body)
+         · 2+ → _CheckinSelectionPage(list body)</div>
+    </div>
+  </section>
+
+  <section class="doc">
+    <h2>Spacing &amp; alignment rules</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 60px;">#</th><th style="width: 200px;">Region</th><th style="width: 220px;">Alignment</th><th>Spacing</th></tr></thead>
+      <tbody>
+        <tr><td>①</td><td>AppBar</td><td>title leading + back</td><td>height: 56</td></tr>
+        <tr><td>② (Empty)</td><td>Empty body</td><td>main + cross axis: center · MainAxisSize.min</td><td>padding all <code>spacing-large (24px)</code> · gaps: <code>spacing-medium (16px)</code> + <code>spacing-small (8px)</code></td></tr>
+        <tr><td>② (Selection)</td><td>Selection body</td><td>crossAxis: start (header) · ListView fills below</td><td>padding all <code>spacing-medium (16px)</code> · header↔list <code>spacing-medium (16px)</code> · ListView separator <code>spacing-small (8px)</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy ① — Empty body (0 events)</h2>
+    <p class="intro">
+      중앙 Column(MainAxisSize.min) — qr_code_scanner Icon (xlarge*2 ≈ 64) → spacing-medium → titleMedium ("오늘 예정된 이벤트가 없습니다") → spacing-small → bodyMedium 부연 ("이벤트 당일에 체크인을 시작할 수 있어요"). 부연은 onSurfaceVariant + textAlign.center.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 200px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:30px;left:50%;transform:translateX(-50%);width:64px;height:64px;border-radius:8px;">
+          <span class="blueprint__region-label" style="left:-10px;width:84px;">㉠ qr icon (xlarge*2)</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:110px;left:24px;right:24px;height:24px;">
+          <span class="blueprint__region-label">㉡ title (titleMedium)</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:148px;left:24px;right:24px;height:32px;">
+          <span class="blueprint__region-label">㉢ subtitle (bodyMedium · onSurfaceVariant)</span>
+        </div>
+      </div>
+      <div class="layout-tree"><b>Center</b>
+└─ <b>Padding</b>(<code>spacing-large (24px)</code>)
+   └─ <b>Column</b>(MainAxisSize.min)
+      ├─ <b>Icon</b>(qr_code_scanner, size: 64, onSurfaceVariant)  ← ㉠
+      ├─ Gap: <code>spacing-medium (16px)</code>
+      ├─ <b>Text</b>(titleMedium · 오늘 예정된 이벤트가 없습니다)  ← ㉡
+      ├─ Gap: <code>spacing-small (8px)</code>
+      └─ <b>Text</b>(bodyMedium · onSurfaceVariant · center)       ← ㉢</div>
+    </div>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy ② — Selection list (2+ events)</h2>
+    <p class="intro">
+      상단 헤더(titleMedium w800 + bodySmall 카운트) → spacing-medium → Expanded(ListView.separated). 각 카드는 Card(InkWell) — Row(시간 큰 타이포 + Expanded 정보 + LIVE 배지 OR chevron).
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 280px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:16px;left:16px;right:16px;height:44px;">
+          <span class="blueprint__region-label">㉠ Header (title + sub)</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:80px;left:16px;right:16px;height:60px;">
+          <span class="blueprint__region-label">㉡ Card #1 (시간 + info + chevron/LIVE)</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:148px;left:16px;right:16px;height:60px;">
+          <span class="blueprint__region-label">㉢ Card #2 ...</span>
+        </div>
+      </div>
+      <div class="layout-tree"><b>Padding</b>(all <code>spacing-medium (16px)</code>)
+└─ <b>Column</b>(crossAxis: start)
+   ├─ <em>Header</em>                                ← ㉠
+   │  ├─ <b>Text</b>(titleMedium · w800 · "이벤트를 선택하세요")
+   │  └─ <b>Text</b>(bodySmall · "오늘 N개 이벤트가 진행됩니다")
+   ├─ Gap: <code>spacing-medium (16px)</code>
+   │
+   └─ <b>Expanded</b>
+      └─ <b>ListView.separated</b>                   ← ㉡㉢...
+         · separator: SizedBox(<code>spacing-small (8px)</code>)
+         · item: Card → InkWell(radius-card) → Padding(<code>spacing-medium (16px)</code>) → Row
+            ├─ <b>Text</b>(timeFmt 'HH:mm', titleLarge · w900 · primary or success)
+            ├─ Gap: <code>spacing-sm (12px)</code>
+            ├─ <b>Expanded</b>
+            │  ├─ <b>Text</b>(titleSmall · party.title ?? event.title)
+            │  └─ <b>Text</b>(bodySmall · "current/max 명")
+            └─ if isLive
+                · LIVE chip (success bg + success label)
+               else
+                · Icon(chevron_right)</div>
+    </div>
+  </section>
+</div>
+
+<div class="perspective" id="states">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>States</h2>
+    <span class="lede">5종 — partner / events 두 단계 async + events.length 3-way 분기. baseline은 Default(Selection 2+events) — 가장 정보 풍부한 케이스.</span>
+  </div>
+
+  <section class="doc">
+    <h3 style="margin-top: 8px;">State summary</h3>
+    <table class="ref">
+      <thead>
+        <tr><th style="width: 220px;">State</th><th style="width: 100px;">Tag</th><th style="width: 220px;">조건 (요약)</th><th>Key visual differentiator</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Selection (2+ events)</strong> 🎯</td><td>baseline</td><td>오늘 윈도우 이벤트 ≥ 2</td><td>상단 헤더 + 시간순 카드 리스트 · LIVE 배지 가능</td></tr>
+        <tr><td><strong>Direct scan (1 event)</strong></td><td>auto-route</td><td>오늘 윈도우 이벤트 == 1</td><td>본 화면 머무르지 않고 즉시 QRScannerScreen push (다크 테마)</td></tr>
+        <tr><td><strong>Empty (0 events)</strong></td><td>no events</td><td>오늘 윈도우 이벤트 == 0</td><td>중앙 qr 아이콘 + 안내 문구 풀-페이지</td></tr>
+        <tr><td><strong>Loading</strong></td><td>async</td><td>partner 또는 events fetch 중</td><td>중앙 CircularProgressIndicator 단독</td></tr>
+        <tr><td><strong>Error</strong></td><td>partner/events fail</td><td>provider hasError</td><td>중앙 평문 에러 텍스트 (재시도 CTA 없음)</td></tr>
+      </tbody>
+    </table>
+
+    <div class="visual-gallery" style="background: var(--color-surface); padding: 16px; border-radius: var(--radius-card); display: flex; flex-direction: column; gap: 16px;">
+
+      <!-- Selection 2+ (baseline) -->
+      <table class="ref state-mini is-baseline-tint">
+        <thead>
+          <tr><th colspan="3"><strong>Selection (2+ events)</strong> 🎯 <small>baseline · 가장 정보 풍부</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="viewport">
+                <div class="cp-appbar">
+                  <div class="cp-appbar__back">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+                  </div>
+                  <div class="cp-appbar__title">체크인</div>
+                </div>
+                <div class="cp-body">
+                  <div class="cp-list">
+                    <div class="cp-list__title">이벤트를 선택하세요</div>
+                    <div class="cp-list__sub">오늘 3개 이벤트가 진행됩니다</div>
+                    <div class="cp-event-card">
+                      <div class="cp-event-card__time cp-event-card__time--live">14:00</div>
+                      <div class="cp-event-card__info">
+                        <div class="cp-event-card__title">한강 노을 와인 모임</div>
+                        <div class="cp-event-card__count">8/12명</div>
+                      </div>
+                      <div class="cp-live-badge">LIVE</div>
+                    </div>
+                    <div class="cp-event-card">
+                      <div class="cp-event-card__time">18:00</div>
+                      <div class="cp-event-card__info">
+                        <div class="cp-event-card__title">스피드 데이팅 · 30대</div>
+                        <div class="cp-event-card__count">0/16명</div>
+                      </div>
+                      <div class="cp-event-card__chev">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 6l6 6-6 6"/></svg>
+                      </div>
+                    </div>
+                    <div class="cp-event-card">
+                      <div class="cp-event-card__time">20:30</div>
+                      <div class="cp-event-card__info">
+                        <div class="cp-event-card__title">테이블 게임 나이트</div>
+                        <div class="cp-event-card__count">3/8명</div>
+                      </div>
+                      <div class="cp-event-card__chev">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 6l6 6-6 6"/></svg>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <span class="annotation" style="top:8px;left:120px;">simpleAppBar · transparent</span>
+                <span class="annotation" style="top:120px;left:8px;">padding all 16</span>
+                <span class="callout" style="top:80px;left:8px;">ⓐ</span>
+                <span class="callout" style="top:160px;right:8px;">ⓑ</span>
+                <span class="callout" style="top:170px;right:50px;">ⓒ</span>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td><code>currentPartnerInfoProvider</code> = data(non-null) AND <code>todayEventsProvider</code> = data with length ≥ 2.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>이벤트 카드 탭 → <code>_ScannerWrapper</code>(다크 테마 ColorScheme partner.primary seed) → <code>QRScannerScreen</code> push.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>AppBar back → BottomNav 다른 탭으로만 복귀 (탭 자식이라 navigator.pop 안됨 — 실제로는 BottomNav 다른 탭 직접 탭).</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td><strong>title null</strong> — <code>event.party?.title ?? event.title ?? ''</code> 폴백 (Fix #1742). <strong>참여자 0명</strong> — '0/16명' 그대로 표기. <strong>긴 title</strong> — Expanded 내 ellipsis.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td><code>MinglitTheme.simpleAppBar</code> · <code>Card</code>(InkWell) · <code>ListView.separated</code> · <code>Icon</code>(chevron_right ⓑ) · LIVE chip(Container · success.highlight bg ⓒ) · <code>Text</code> 5종 (title, sub, time ⓐ, eventTitle, count)</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>
+              <code>spacing-medium (16px)</code> · <code>spacing-small (8px)</code> · <code>spacing-sm (12px)</code> · <code>spacing-xsmall (4px)</code>
+              · <code>radius-card (16px)</code> · <code>radius-small (8px)</code>
+              · color: <code>colorScheme.primary</code> (시간 ⓐ) · <code>MinglitColors.success</code> (LIVE 시간 + chip) · <code>onSurfaceVariant</code> (chevron ⓑ)
+              · typography <code>titleMedium</code> w800 · <code>titleLarge</code> w900 (시간) · <code>titleSmall</code> · <code>bodySmall</code> · <code>labelSmall</code> w700 (LIVE)
+              · <code>MinglitOpacity.highlight</code> (LIVE chip bg)
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 LIVE 판정: <code>now.isAfter(start) &amp;&amp; now.isBefore(end)</code>. 시간 표기는 항상 'HH:mm' (24h). chip은 LIVE일 때만 노출 — 그 외엔 chevron. 카드 InkWell ripple은 partner.primary 톤.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Direct scan -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong>Direct scan (1 event)</strong> <span class="tag">auto-route</span></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="viewport">
+                <div class="cp-scanner">
+                  <div class="cp-scanner__appbar">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+                    한강 노을 와인 모임
+                  </div>
+                  <div class="cp-scanner__viewport">
+                    <div class="cp-scanner__frame"></div>
+                    <div class="cp-scanner__hint">QR을 프레임 안에 맞춰주세요</div>
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>events.length == 1 — 본 페이지 build 결과가 <code>_ScannerWrapper</code> (별도 화면 push 아닌 같은 자리에서 swap).</td>
+          </tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>QRScannerScreen 자체 액션으로 위임 (별도 spec).</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>↔ <code>_ScannerWrapper</code>는 Theme(Brightness.dark + ColorScheme.fromSeed(partner.primary))로 강제 다크 테마. 시스템 라이트 모드여도 다크.</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ <code>Scaffold</code>(체크인 AppBar + body) → <code>_ScannerWrapper</code> → <code>QRScannerScreen</code> (별도 spec)</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>↔ light scheme → dark scheme(seed: <code>MinglitPartnerColors.primary</code> 강제). Fix #652로 하드코딩 제거.</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 본 페이지의 simpleAppBar('체크인')는 이 분기에서 노출되지 않음 — _ScannerWrapper가 자체 Scaffold를 가짐. 사용자 입장에선 "탭하자마자 스캐너"라 본 페이지 잔영 없음.</td></tr>
+        </tbody>
+      </table>
+
+      <!-- Empty 0 events -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong>Empty (0 events)</strong> <span class="tag tag--mute">no events</span></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="viewport">
+                <div class="cp-appbar">
+                  <div class="cp-appbar__back">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+                  </div>
+                  <div class="cp-appbar__title">체크인</div>
+                </div>
+                <div class="cp-body">
+                  <div class="cp-empty">
+                    <div class="cp-empty__icon">
+                      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 11h2v2H3v-2zm8-6h2v4h-2V5zm-2 6h4v4h-2v-2H9v-2zm6 0h2v2h-2v-2zM3 3h6v6H3V3zm2 2v2h2V5H5zm10-2h6v6h-6V3zm2 2v2h2V5h-2zM3 15h6v6H3v-6zm2 2v2h2v-2H5zm10 0h2v2h-2v-2zm4 0h2v2h-2v-2zm0-4h2v2h-2v-2zm-4-4h6v2h-6V9z"/></svg>
+                    </div>
+                    <div class="cp-empty__title">오늘 예정된 이벤트가 없습니다</div>
+                    <div class="cp-empty__sub">이벤트 당일에 체크인을<br>시작할 수 있어요</div>
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>todayEventsProvider data == [] (오늘 윈도우 = start - 3h ~ end + 1h 내 이벤트 0개).</td>
+          </tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>탭 가능한 CTA 없음 — BottomNav 다른 탭으로 이탈만.</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td><strong>막 시작/종료 직후</strong> — 윈도우 외 = 0개 처리. 자동 새로고침 없음 (provider invalidate 시점은 탭 재진입).</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ Selection layout → <code>Center</code> + <code>Icon</code>(qr_code_scanner, size 64) + 2x <code>Text</code></td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>+ <code>MinglitIconSize.xlarge * 2</code> (= 64) · <code>onSurfaceVariant</code> (icon + sub text)</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 retry CTA 없음 — 데이터 누락이 아닌 정상적 빈 상태로 취급. 탭 재진입 시 provider 자동 재실행.</td></tr>
+        </tbody>
+      </table>
+
+      <!-- Loading -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong>Loading</strong> <span class="tag tag--mute">async</span></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="viewport">
+                <div class="cp-body" style="top:0;">
+                  <div class="cp-loading"><div class="cp-spinner"></div></div>
+                </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>currentPartnerInfoProvider 또는 todayEventsProvider == loading. partner loading 단계에서는 AppBar조차 그려지지 않고 풀-페이지 spinner.</td>
+          </tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>탭 무반응</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td><strong>partner vs events loading 차이</strong> — partner loading은 simpleAppBar 없는 풀 spinner / events loading은 simpleAppBar('체크인') + 중앙 spinner</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ body content → <code>CircularProgressIndicator</code></td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>동일 — spinner는 colorScheme.primary 자동</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 두 provider가 직렬 await — 첫 fetch는 보통 100~300ms. 로컬 캐시 적중 시 prac. 0ms.</td></tr>
+        </tbody>
+      </table>
+
+      <!-- Error -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong>Error</strong> <span class="tag tag--mute">network / not-found</span></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="viewport">
+                <div class="cp-appbar">
+                  <div class="cp-appbar__back">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+                  </div>
+                  <div class="cp-appbar__title">체크인</div>
+                </div>
+                <div class="cp-body">
+                  <div class="cp-error">이벤트를 불러올 수 없습니다</div>
+                </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>provider hasError. partner error: "오류가 발생했습니다: $e" / events error: "이벤트를 불러올 수 없습니다" / partner null(non-error): "파트너 정보를 불러올 수 없습니다"</td>
+          </tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>탭 가능한 retry CTA 없음 — 탭 재진입(provider autoDispose) 시 자동 재시도</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td><strong>3가지 메시지 분기</strong> — partner exception / events exception / partner data null. 모두 동일한 평문 Text 레이아웃.</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ body content → <code>Center</code> + <code>Text</code> 단일</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>동일 — error styling 별도 없음 (평범한 onSurface)</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 retry CTA 부재가 디자인 부채 — events error에서 invalidate 트리거 button 추천. 향후 MinglitErrorState(fullPage) 적용 후보.</td></tr>
+        </tbody>
+      </table>
+
+    </div>
+  </section>
+</div>
+
+<div class="perspective" id="global-behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">탭 자식이라 BottomNav 진입/이탈 + provider lifecycle.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Cross-cutting interactions</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 220px;">사용자 액션</th><th>화면에 보이는 결과</th></tr></thead>
+      <tbody>
+        <tr><td>BottomNav 체크인 탭 진입</td><td>autoDispose provider 재실행 → loading → data/error/empty 분기</td></tr>
+        <tr><td>BottomNav 다른 탭 이탈</td><td>autoDispose 카운트다운 시작 — 짧은 시간 내 재진입 시 캐시 활용</td></tr>
+        <tr><td>OS back (Android)</td><td>탭 자식이라 navigator.pop 무시 — 실제로는 앱 종료 또는 pre-shell 화면</td></tr>
+        <tr><td>scanner 화면에서 back</td><td>본 페이지로 복귀 — 1-event 분기는 자동 push라 back 시 본 페이지 처음 보게 됨</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Motion &amp; timing</h2>
+    <table class="ref" style="margin-bottom: 16px;">
+      <thead><tr><th style="width: 200px;">Token</th><th style="width: 80px;">Value</th><th>Use case</th></tr></thead>
+      <tbody>
+        <tr><td><code>MinglitAnimation.fast</code></td><td>200ms</td><td>route push (1-event scanner 진입)</td></tr>
+        <tr><td><code>MinglitAnimation.medium</code></td><td>350ms</td><td>AsyncValue.when crossfade (loading ↔ data)</td></tr>
+      </tbody>
+    </table>
+    <table class="ref">
+      <thead><tr><th style="width: 220px;">Transition</th><th style="width: 140px;">Duration (token)</th><th>Curve / notes</th></tr></thead>
+      <tbody>
+        <tr><td>탭 진입 → loading → data</td><td><code>medium</code> (350ms)</td><td>AnimatedSwitcher 효과 (MinglitAsyncValueWidget 내부 패턴)</td></tr>
+        <tr><td>1-event auto → QRScannerScreen</td><td><code>fast</code> (200ms)</td><td>Material slide push</td></tr>
+        <tr><td>InkWell ripple (Selection card)</td><td><code>micro</code> (100ms)</td><td>Material 기본 ripple</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Global edge cases</h2>
+    <ul class="notes">
+      <li><strong>네트워크 끊김</strong> — events fetch fail → "이벤트를 불러올 수 없습니다" 평문 텍스트. retry CTA 없음 (디자인 부채).</li>
+      <li><strong>오늘 윈도우 경계</strong> — start - 3h ~ end + 1h 윈도우. 자정 이후도 같은 "오늘"로 잡힐 수 있음 (현재 정의: now 기준 윈도우 inclusion).</li>
+      <li><strong>다크 모드</strong> — 본 페이지는 light/dark 자동 (colorScheme). 단, 1-event 분기는 항상 dark theme 강제 (Theme override).</li>
+      <li><strong>접근성</strong> — Empty/Error 메시지는 SemanticsLabel 자동(Text). icon은 decorative — Semantics excludeSemantics 권장 (현재 미적용).</li>
+    </ul>
+  </section>
+</div>
+
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">📖</span>
+    <h2>Reference</h2>
+    <span class="lede">Implementation source + 인접 화면.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Implementation source</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 200px;">항목</th><th>Path / Reference</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Widget class</strong></td><td><code>CheckinPlaceholderPage</code> (ConsumerWidget)</td></tr>
+        <tr><td><strong>File path</strong></td><td><a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/features/checkin/checkin_placeholder_page.dart"><code>apps/app_partner/lib/src/features/checkin/checkin_placeholder_page.dart</code></a></td></tr>
+        <tr><td><strong>Provider</strong></td><td><code>currentPartnerInfoProvider</code> · <code>todayEventsProvider(partnerId)</code> (FutureProvider.family.autoDispose)</td></tr>
+        <tr><td><strong>Internal widgets</strong></td><td><code>_CheckinEntryPage</code> · <code>_ScannerWrapper</code> · <code>_CheckinSelectionPage</code></td></tr>
+        <tr><td><strong>Route</strong></td><td><em>—</em> (BottomNav 탭 자식 — IndexedStack child of partner shell)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 240px;">Spec</th><th>Relation</th></tr></thead>
+      <tbody>
+        <tr><td><a href="/specs/partner_home_page.html"><code>PartnerHomePage</code></a></td><td>Sibling — BottomNav 같은 shell의 다른 탭.</td></tr>
+        <tr><td><a href="/specs/event_check_in_screen.html"><code>EventCheckInScreen</code></a></td><td>관련 — 사용자측 체크인 화면 (역할 반대).</td></tr>
+        <tr><td><a href="/specs/event_checked_in_screen.html"><code>EventCheckedInScreen</code></a></td><td>관련 — 체크인 완료 후 사용자 화면.</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+</div>
+
+<script>
+  document.getElementById('spec-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('spec-mode', e.target.checked);
+  });
+  document.getElementById('dark-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('dark-mode', e.target.checked);
+  });
+</script>
+
+</body>
+</html>

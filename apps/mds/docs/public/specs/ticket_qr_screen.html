@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Spec — TicketQRScreen (app_user · TicketQRRoute)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* ============================================================
+   TicketQRScreen-specific atoms.
+   User app — uses default user purple (#9900ff). No partner override.
+   The BoardingPassCard child has its own spec (TBD) — replaced here
+   with a comment box per playbook §6 (no child screen renders).
+   ============================================================ */
+
+.tqr-viewport { background: var(--color-surface); }
+body.dark-mode .tqr-viewport { background: var(--color-dark-background); }
+
+/* AppBar — simpleAppBar('내 티켓') · matches scaffold gray, no border below */
+.tqr-appbar {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--spacing-xsmall);
+  background: var(--color-surface);
+}
+.tqr-appbar__back {
+  width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+}
+.tqr-appbar__back svg { width: 22px; height: 22px; color: var(--color-text-primary); }
+.tqr-appbar__title {
+  font-size: var(--typography-font-size-app-bar-title);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-left: var(--spacing-xsmall);
+}
+body.dark-mode .tqr-appbar { background: var(--color-dark-background); }
+body.dark-mode .tqr-appbar__title { color: var(--color-dark-text-primary); }
+
+/* Body — SingleChildScrollView · padding all 24 (large) */
+.tqr-body {
+  position: absolute;
+  top: 56px; left: 0; right: 0; bottom: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+  padding: var(--spacing-large);
+  background: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-large);
+}
+.tqr-body::-webkit-scrollbar { display: none; }
+body.dark-mode .tqr-body { background: var(--color-dark-background); }
+
+/* BoardingPassCard placeholder — per playbook §6: do not render child here.
+   Show as a labeled outline block with brief composition hint. */
+.tqr-bp-placeholder {
+  width: 280px;
+  border: 2px dashed color-mix(in srgb, var(--color-primary) 40%, transparent);
+  border-radius: var(--radius-card);
+  background: var(--color-background);
+  padding: var(--spacing-medium);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-small);
+  position: relative;
+}
+.tqr-bp-placeholder__tag {
+  position: absolute;
+  top: -10px;
+  left: 12px;
+  background: var(--color-surface);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-primary);
+  letter-spacing: 0.5px;
+}
+.tqr-bp-placeholder__row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  text-align: center;
+  line-height: 1.5;
+}
+.tqr-bp-placeholder__qr {
+  width: 140px; height: 140px;
+  background: repeating-conic-gradient(var(--color-text-primary) 0% 25%, transparent 0% 50%) 50% / 12px 12px;
+  border-radius: 6px;
+  opacity: 0.4;
+}
+body.dark-mode .tqr-bp-placeholder { background: var(--color-dark-surface); }
+body.dark-mode .tqr-bp-placeholder__tag { background: var(--color-dark-background); }
+
+/* Instruction text */
+.tqr-instruction {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  text-align: center;
+  line-height: 1.5;
+}
+.tqr-anti-fraud {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  opacity: 0.6;
+  text-align: center;
+  margin-top: -12px;
+}
+
+/* Loading spinner */
+.tqr-loading {
+  position: absolute; inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.tqr-spinner {
+  width: 32px; height: 32px;
+  border: 3px solid var(--color-divider);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+}
+
+/* Not-found state */
+.tqr-notfound {
+  position: absolute; inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-medium);
+  padding: var(--spacing-large);
+  text-align: center;
+}
+.tqr-notfound svg {
+  width: 48px; height: 48px;
+  color: var(--color-error);
+}
+.tqr-notfound__text {
+  font-size: 14px;
+  color: var(--color-text-primary);
+}
+
+/* Error wrapper from MinglitAsyncValueWidget (network) */
+.tqr-error {
+  position: absolute; inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-medium);
+  padding: var(--spacing-large);
+  text-align: center;
+}
+.tqr-error svg {
+  width: 48px; height: 48px;
+  color: var(--color-error);
+}
+.tqr-error__retry {
+  background: transparent;
+  border: 1px solid var(--color-primary);
+  color: var(--color-primary);
+  padding: 8px 16px;
+  border-radius: var(--radius-button);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Brightness boost glow indicator */
+.tqr-brightness-glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, rgba(255,255,255,0.10), transparent 60%);
+}
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
+</div>
+
+<div class="page">
+
+<header>
+  <h1>티켓 QR (보딩패스)</h1>
+</header>
+
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr><th style="width: 140px;">Status</th><td><strong>✅ 디자인완료</strong></td></tr>
+      <tr><th>App</th><td><code>app_user</code></td></tr>
+      <tr><th>Category</th><td>ticket · entry/QR</td></tr>
+      <tr><th>Route / Surface</th><td><code>TicketQRRoute</code></td></tr>
+      <tr><th>Path</th><td><code>/tickets/:ticketId/qr</code></td></tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>: <a href="/specs/my_tickets_page.html"><code>MyTicketsPage</code></a> (내 티켓 list에서 진입) · <a href="/specs/event_checked_in_screen.html"><code>EventCheckedInScreen</code></a> (오늘 banner CTA에서 진입) · deep link도 진입 가능<br>
+          <strong>Children</strong>: <code>BoardingPassCard</code> (sub-component widget — 별도 spec TBD)
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>
+          사용자의 티켓을 항공 보딩패스 메타포로 표시하고 입장용 QR 코드를 가장 잘 보이도록 한다.
+          진입 즉시 화면 밝기를 최대로 올리고, 카드 하단에 입장 안내 + 캡처 방지 안내를 노출한다. offline 모드 — 로컬 wallet에 캐시된 토큰이 있으면 네트워크 없이도 노출된다.
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry points</strong>: MyTicketsPage 카드 탭 / TodayBanner "QR" 버튼 / EventCheckedInScreen 진행 버튼 / push notification deep link.<br>
+          <strong>Exit points</strong>: AppBar back → 진입 화면 복귀 (dispose 시 brightness 복원). 토큰 만료 시 별도 재발급 흐름은 BoardingPassCard 자체에서 처리.
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          입장 게이트에서 파트너 카메라가 QR을 스캔하는 시나리오라 ① 화면 밝기 최대 ② QR 가시성 ③ 보딩패스 메타포로 신뢰감 확보가 모두 필요. boarding/confirmed/used status 기반 시각 분기는 BoardingPassCard 내부에 캡슐화되어 본 화면은 호스팅만 책임진다 (Fix #1526 리팩터링 결과).
+          eventMeta는 deep link 진입 시 null일 수 있어 graceful degradation — 카드에 placeholder dashes 노출.
+        </td>
+      </tr>
+      <tr><th>Frequency</th><td>입장 직전 1~2회 / 티켓당</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="doc">
+  <h2>History</h2>
+  <table class="ref">
+    <thead>
+      <tr><th style="width: 110px;">Date</th><th style="width: 80px;">Version</th><th style="width: 120px;">Author</th><th>Changes</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2026-05-01</td>
+        <td>1.0</td>
+        <td>mark-yun</td>
+        <td>v1.4 template 신규 작성. 5개 state enumerate (Default-with-meta baseline / No-eventMeta / Loading / Error / Not-found). BoardingPassCard 내부 status(boarding/confirmed/used)는 child spec으로 위임 — 본 spec은 호스팅 + brightness/AppBar/안내 텍스트만 담당.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<nav class="perspective-nav">
+  <a href="#layout"><span class="glyph">🧱</span> Layout</a>
+  <a href="#states"><span class="glyph">🎨</span> States</a>
+  <a href="#global-behavior"><span class="glyph">🔄</span> Global Behavior</a>
+  <a href="#reference"><span class="glyph">📖</span> Reference</a>
+</nav>
+
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Layout</h2>
+    <span class="lede">simpleAppBar('내 티켓') + 중앙 정렬 SingleChildScrollView. 본문은 BoardingPassCard + 안내 2-line.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree</h2>
+    <p class="intro">
+      AppBar(h56). body는 SingleChildScrollView · padding all 24 (large) · Column(center). 카드 + spacing-large + 안내 + spacing-small + 캡처 방지 안내.
+    </p>
+
+    <div class="layout-grid">
+      <div class="blueprint">
+        <div class="blueprint__region" style="top:0; left:0; right:0; bottom:0; border-style:solid; border-color: rgba(var(--spec-blueprint-rgb), 0.18);"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:0; left:0; right:0; height:56px;">
+          <span class="blueprint__region-label">① AppBar · h=56 · "내 티켓"</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:80px; left:24px; right:24px; height:380px;">
+          <span class="blueprint__region-label">② BoardingPassCard (child spec)</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:484px; left:24px; right:24px; height:36px;">
+          <span class="blueprint__region-label">③ 입장 안내 (bodySmall · onSurfaceVariant)</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:528px; left:24px; right:24px; height:24px;">
+          <span class="blueprint__region-label">④ 캡처 방지 안내 (labelSmall · muted)</span>
+        </div>
+      </div>
+
+      <div class="layout-tree"><b>Scaffold</b>(backgroundColor: <code>MinglitColors.surface</code>)
+└─ <b>AppBar</b> = MinglitTheme.simpleAppBar('내 티켓') ← ①
+└─ <b>body</b>: <b>Consumer</b>(builder: ref.watch(_ticketTokenProvider(ticketId)))
+   └─ <b>MinglitAsyncValueWidget</b>&lt;TicketToken?&gt;(value: ticketAsync)
+      └─ data(token) →
+         ├─ if token == null → Center(Column(error_outline + Text('티켓 정보를 찾을 수 없습니다')))
+         └─ else → <b>SingleChildScrollView</b>(padding: <code>spacing-large (24px)</code>)
+            └─ <b>Column</b>
+               ├─ <b>BoardingPassCard</b>                ← ②
+               │  · token: TicketToken
+               │  · eventMeta: TicketEventMeta? (nullable)
+               │  · scanningAnimation: AnimationController(2s repeat reverse)
+               │  · (자체 spec — 4영역: brand header + event info + perforation + QR stub)
+               │
+               ├─ Gap: <code>spacing-large (24px)</code>
+               │
+               ├─ <b>Text</b>('입장 시 파트너에게 이 화면을 보여주세요')  ← ③
+               │  · bodySmall · onSurfaceVariant · center
+               │
+               ├─ Gap: <code>spacing-small (8px)</code>
+               │
+               └─ <b>Text</b>('스크린샷은 입장에 사용할 수 없습니다')   ← ④
+                  · labelSmall · onSurfaceVariant.muted · center</div>
+    </div>
+  </section>
+
+  <section class="doc">
+    <h2>Spacing &amp; alignment rules</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 60px;">#</th><th style="width: 200px;">Region</th><th style="width: 220px;">Alignment</th><th>Spacing</th></tr></thead>
+      <tbody>
+        <tr><td>—</td><td>Outer body padding</td><td>—</td><td>all <code>spacing-large (24px)</code></td></tr>
+        <tr><td>①</td><td>AppBar</td><td>title leading + back</td><td>height: 56</td></tr>
+        <tr><td>②</td><td>BoardingPassCard</td><td>crossAxis: center · 풀폭에서 max-width로 자체 collapse</td><td>—</td></tr>
+        <tr><td>③</td><td>입장 안내</td><td>textAlign: center</td><td>card↔text: <code>spacing-large (24px)</code></td></tr>
+        <tr><td>④</td><td>캡처 방지 안내</td><td>textAlign: center</td><td>text↔text: <code>spacing-small (8px)</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy ① — Body host (BoardingPassCard 호스팅)</h2>
+    <p class="intro">
+      본 화면이 직접 그리는 부분은 SingleChildScrollView 내부 Column뿐 — BoardingPassCard 자체는 별도 child spec. 본 화면이 카드에 주입하는 props 3개:
+      <code>token</code>(필수) · <code>eventMeta</code>(nullable, deep link 시 null) · <code>scanningAnimation</code>(_TicketQRScreenState가 소유한 2s repeating AnimationController · 부모가 lifecycle 관리해 카드 hot-restart 시 안전).
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 240px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:16px;left:16px;right:16px;bottom:80px;">
+          <span class="blueprint__region-label">㉠ BoardingPassCard slot (child spec — 본 spec 미렌더)</span>
+        </div>
+        <div class="blueprint__region" style="bottom:40px;left:16px;right:16px;height:18px;">
+          <span class="blueprint__region-label">㉡ 입장 안내</span>
+        </div>
+        <div class="blueprint__region" style="bottom:8px;left:16px;right:16px;height:18px;">
+          <span class="blueprint__region-label">㉢ 캡처 방지 안내</span>
+        </div>
+      </div>
+      <div class="layout-tree"><b>SingleChildScrollView</b>
+└─ <b>Padding</b>(<code>spacing-large (24px)</code> all)
+   └─ <b>Column</b>
+      ├─ <em>BoardingPassCard slot</em>            ← ㉠
+      │  · 본 화면은 카드를 build에 직접 호출하나
+      │    내부 구조는 child spec (boarding_pass_card)
+      │
+      ├─ Gap: <code>spacing-large (24px)</code>
+      │
+      ├─ <em>입장 안내</em>                          ← ㉡
+      │
+      ├─ Gap: <code>spacing-small (8px)</code>
+      │
+      └─ <em>캡처 방지 안내</em>                     ← ㉢</div>
+    </div>
+  </section>
+</div>
+
+<div class="perspective" id="states">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>States</h2>
+    <span class="lede">5종 — token async + eventMeta nullable. baseline은 Default(token data + eventMeta non-null) — 가장 풍부한 케이스.</span>
+  </div>
+
+  <section class="doc">
+    <h3>State summary</h3>
+    <table class="ref">
+      <thead>
+        <tr><th style="width: 200px;">State</th><th style="width: 110px;">Tag</th><th style="width: 220px;">조건 (요약)</th><th>Key visual differentiator</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Default · with eventMeta</strong> 🎯</td><td>baseline</td><td>token data 있음 + eventMeta non-null</td><td>BoardingPassCard 풀 정보 + 입장/캡처 안내 2-line</td></tr>
+        <tr><td><strong>Without eventMeta</strong></td><td>graceful</td><td>token data 있음 + eventMeta == null (deep link 진입)</td><td>BoardingPassCard에 placeholder dashes — title/date/venue 자리에 '—'</td></tr>
+        <tr><td><strong>Loading</strong></td><td>async</td><td>_ticketTokenProvider isLoading</td><td>중앙 spinner (MinglitAsyncValueWidget)</td></tr>
+        <tr><td><strong>Error</strong></td><td>network</td><td>provider hasError</td><td>중앙 에러 + retry CTA (MinglitAsyncValueWidget 기본)</td></tr>
+        <tr><td><strong>Not found</strong></td><td>data null</td><td>provider data == null (Edge Function 200 + null)</td><td>중앙 error_outline icon + "티켓 정보를 찾을 수 없습니다"</td></tr>
+      </tbody>
+    </table>
+
+    <div class="visual-gallery" style="background: var(--color-surface); padding: 16px; border-radius: var(--radius-card); display: flex; flex-direction: column; gap: 16px;">
+
+      <!-- Default with eventMeta (baseline) -->
+      <table class="ref state-mini is-baseline-tint">
+        <thead>
+          <tr><th colspan="3"><strong>Default · with eventMeta</strong> 🎯 <small>baseline · 가장 풍부한 케이스</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="viewport tqr-viewport">
+                <div class="tqr-appbar">
+                  <div class="tqr-appbar__back">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+                  </div>
+                  <div class="tqr-appbar__title">내 티켓</div>
+                </div>
+                <div class="tqr-body">
+                  <!-- (BoardingPassCard 영역 — 별도 spec, 여기선 placeholder slot으로만 표시 per playbook §6) -->
+                  <div class="tqr-bp-placeholder">
+                    <span class="tqr-bp-placeholder__tag">BoardingPassCard · child spec</span>
+                    <div class="tqr-bp-placeholder__row">
+                      <strong style="color: var(--color-primary); font-weight:700; font-size:13px;">한강 노을 와인 모임</strong>
+                      <span>2026-05-15 · 18:00 · 한강시민공원</span>
+                    </div>
+                    <div style="border-top: 1px dashed var(--color-divider); margin: 4px 0;"></div>
+                    <div style="display:flex; justify-content:center;">
+                      <div class="tqr-bp-placeholder__qr"></div>
+                    </div>
+                    <div class="tqr-bp-placeholder__row">
+                      <span>(brand header · event info · perforation · QR stub)</span>
+                    </div>
+                  </div>
+                  <div class="tqr-instruction">입장 시 파트너에게 이 화면을 보여주세요</div>
+                  <div class="tqr-anti-fraud">스크린샷은 입장에 사용할 수 없습니다</div>
+                </div>
+                <div class="tqr-brightness-glow"></div>
+                <span class="annotation" style="top:8px;left:120px;">simpleAppBar('내 티켓')</span>
+                <span class="annotation" style="top:80px;left:8px;">padding all 24</span>
+                <span class="callout" style="top:80px;right:8px;">ⓐ</span>
+                <span class="callout" style="top:380px;right:8px;">ⓑ</span>
+                <span class="callout" style="top:430px;right:8px;">ⓒ</span>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>_ticketTokenProvider(ticketId).data == TicketToken(non-null) AND widget.eventMeta != null. 본 화면이 가장 자주 도달되는 분기.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>AppBar back → 진입 화면 복귀 + dispose에서 _restoreBrightness 호출 (원래 밝기 복원).</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>스크롤 ↕ — 카드 + 안내가 화면보다 길면 스크롤 가능 (작은 디바이스). 그 외 액션은 BoardingPassCard 내부 (자체 spec).</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td><strong>brightness API 실패</strong> — try/catch로 Log.e만 남기고 진행 (사용자에 영향 없음). <strong>app background → foreground</strong> — BoardingPassCard 내부에서 status 재계산 (boarding 자정 경계 등 child 책임).</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td><code>MinglitTheme.simpleAppBar</code> · <code>Scaffold</code>(backgroundColor: <code>MinglitColors.surface</code>) · <code>Consumer</code> + <code>MinglitAsyncValueWidget</code>&lt;TicketToken?&gt; · <code>SingleChildScrollView</code> · <code>Column</code> · <code>BoardingPassCard</code> ⓐ (별도 spec) · <code>Text</code> ⓑ (입장 안내) · <code>Text</code> ⓒ (캡처 방지) · <code>ScreenBrightness</code> service · <code>AnimationController</code>(scanningAnimation, 2s repeat reverse)</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>
+              <code>spacing-large (24px)</code> · <code>spacing-small (8px)</code> · <code>spacing-medium (16px)</code> (not-found icon spacing)
+              · color: <code>MinglitColors.surface</code> (Scaffold bg) · <code>onSurfaceVariant</code> (안내 텍스트) · <code>MinglitOpacity.muted</code> (캡처 방지)
+              · typography <code>bodySmall</code> · <code>labelSmall</code>
+              · animation: 2000ms repeat reverse (scanning line) — <em>(unscoped — token 미정의)</em>
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 brightness 강제 1.0은 화면 진입에 한정 — dispose에서 원래 값으로 복원. screen_brightness 패키지의 application scope 사용 (system은 변경 안 함). Fix #382: _originalBrightness 강제 언래핑 제거 — null 안전성 확보.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Without eventMeta -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong>Without eventMeta (deep link 진입)</strong> <span class="tag">graceful</span></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="viewport tqr-viewport">
+                <div class="tqr-appbar">
+                  <div class="tqr-appbar__back">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+                  </div>
+                  <div class="tqr-appbar__title">내 티켓</div>
+                </div>
+                <div class="tqr-body">
+                  <div class="tqr-bp-placeholder">
+                    <span class="tqr-bp-placeholder__tag">BoardingPassCard · eventMeta=null</span>
+                    <div class="tqr-bp-placeholder__row">
+                      <strong style="color: var(--color-text-secondary); font-weight:700; font-size:13px;">— — —</strong>
+                      <span style="color: var(--color-text-secondary); opacity: 0.6;">— · — · —</span>
+                    </div>
+                    <div style="border-top: 1px dashed var(--color-divider); margin: 4px 0;"></div>
+                    <div style="display:flex; justify-content:center;">
+                      <div class="tqr-bp-placeholder__qr"></div>
+                    </div>
+                    <div class="tqr-bp-placeholder__row">
+                      <span>(placeholder dashes · QR is still valid)</span>
+                    </div>
+                  </div>
+                  <div class="tqr-instruction">입장 시 파트너에게 이 화면을 보여주세요</div>
+                  <div class="tqr-anti-fraud">스크린샷은 입장에 사용할 수 없습니다</div>
+                </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>token data 있음 + widget.eventMeta == null. push notification deep link 또는 외부 URL 진입에서 발생 — 호출자가 이벤트 메타를 모를 때.</td>
+          </tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>동일 (Default 참조). QR은 정상 작동.</td></tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td><strong>placeholder dashes</strong> — BoardingPassCard 자체 graceful degradation. 입장 안내/캡처 방지 안내는 그대로 노출.</td>
+          </tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>동일 — 단지 BoardingPassCard에 eventMeta=null 전달</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>동일</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 호출자가 가능한 경우 eventMeta를 채워 보내는 게 권장 — UX 정보 풍부함 차이. 현재 deep link 흐름은 미충족.</td></tr>
+        </tbody>
+      </table>
+
+      <!-- Loading -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong>Loading</strong> <span class="tag tag--mute">async</span></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="viewport tqr-viewport">
+                <div class="tqr-appbar">
+                  <div class="tqr-appbar__back">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+                  </div>
+                  <div class="tqr-appbar__title">내 티켓</div>
+                </div>
+                <div class="tqr-loading"><div class="tqr-spinner"></div></div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>_ticketTokenProvider(ticketId).isLoading. 로컬 wallet 적중 시 거의 즉시 / Edge Function fetch 시 100~500ms.</td>
+          </tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>탭 무반응. AppBar back은 동작.</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td><strong>brightness 이미 1.0</strong> — initState에서 set, build cycle과 독립적이라 loading 중에도 화면 밝아짐.</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ body content → <code>CircularProgressIndicator</code> (MinglitAsyncValueWidget 내부)</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>동일</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 wallet 적중 비율이 낮은 첫 진입에선 잠깐 spinner. 한 번 보면 캐싱되어 다음 진입은 즉시.</td></tr>
+        </tbody>
+      </table>
+
+      <!-- Error -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong>Error</strong> <span class="tag tag--mute">network</span></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="viewport tqr-viewport">
+                <div class="tqr-appbar">
+                  <div class="tqr-appbar__back">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+                  </div>
+                  <div class="tqr-appbar__title">내 티켓</div>
+                </div>
+                <div class="tqr-error">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                  <div class="tqr-notfound__text">티켓을 불러오지 못했습니다</div>
+                  <button class="tqr-error__retry">다시 시도</button>
+                </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>provider hasError — 토큰 fetch Edge Function 호출 실패 (네트워크 끊김, 5xx 등). MinglitAsyncValueWidget 기본 fallback이 노출.</td>
+          </tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>"다시 시도" 탭 → provider invalidate → loading 재진입.</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td><strong>로컬 wallet 적중</strong> — Edge Function 실패해도 캐시된 token이 있으면 Loading을 거치지 않고 바로 Default state. 본 Error는 wallet 미적중 + 네트워크 실패의 곱집합.</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ body content → <code>MinglitAsyncValueWidget</code> 기본 error fallback (Center + error_outline + Text + retry button)</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>+ <code>color-error</code> (icon)</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 retry CTA는 MinglitAsyncValueWidget 자체 제공. 디자인 커스터마이즈 안 하고 기본값 사용.</td></tr>
+        </tbody>
+      </table>
+
+      <!-- Not found -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong>Not found (data == null)</strong> <span class="tag tag--mute">data null</span></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="viewport tqr-viewport">
+                <div class="tqr-appbar">
+                  <div class="tqr-appbar__back">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+                  </div>
+                  <div class="tqr-appbar__title">내 티켓</div>
+                </div>
+                <div class="tqr-notfound">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                  <div class="tqr-notfound__text">티켓 정보를 찾을 수 없습니다.</div>
+                </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>provider data 도착했으나 token == null — Edge Function이 200 + body null 반환 (예: 티켓 환불됨, ticketId 만료, 권한 없음).</td>
+          </tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>AppBar back으로만 이탈. retry CTA 없음 (의도적 — 재시도해도 결과 동일).</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td><strong>Error 분기와 구분</strong> — Error는 fetch 자체 실패, Not-found는 fetch 성공 + 데이터 부재. 현재 디자인은 별도 메시지로 구분.</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ body content → <code>Center</code> + <code>Column</code>(<code>Icon</code>(error_outline, 48, error) + Gap medium + <code>Text</code>('티켓 정보를 찾을 수 없습니다.'))</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>+ <code>MinglitColors.error</code> (icon · 48px) · <code>spacing-medium (16px)</code> (icon↔text)</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 향후: 티켓 만료/환불 사유 명시 추천 (현재 단일 메시지). MinglitEmptyState(fullPage)로 통일 후보.</td></tr>
+        </tbody>
+      </table>
+
+    </div>
+  </section>
+</div>
+
+<div class="perspective" id="global-behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">brightness 제어 · scanning animation lifecycle · provider lifecycle.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Cross-cutting interactions</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 220px;">사용자 액션</th><th>화면에 보이는 결과</th></tr></thead>
+      <tbody>
+        <tr><td>화면 진입 (initState)</td><td>① _scanningController.repeat(reverse: true) 시작 (2s 사이클) ② _maximizeBrightness — application scope만 1.0으로</td></tr>
+        <tr><td>화면 이탈 (dispose)</td><td>① _scanningController.dispose ② _restoreBrightness — _originalBrightness가 null 아니면 복원 (Fix #382)</td></tr>
+        <tr><td>app background → foreground</td><td>BoardingPassCard 내부 WidgetsBindingObserver가 status 재계산 (자정 경계 처리). 본 화면 자체는 추가 동작 없음.</td></tr>
+        <tr><td>OS back / AppBar back</td><td>navigator.pop — 진입 화면 복귀 (MyTicketsPage / EventCheckedInScreen / push notification chain).</td></tr>
+        <tr><td>Pull-to-refresh</td><td>지원 안 함. 캐시 무효화는 외부 액션(예: 환불)이 트리거.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Motion &amp; timing</h2>
+    <table class="ref" style="margin-bottom: 16px;">
+      <thead><tr><th style="width: 200px;">Token</th><th style="width: 80px;">Value</th><th>Use case</th></tr></thead>
+      <tbody>
+        <tr><td><code>MinglitAnimation.fast</code></td><td>200ms</td><td>route push/pop · button ripple</td></tr>
+        <tr><td><code>MinglitAnimation.medium</code></td><td>350ms</td><td>AsyncValue.when crossfade</td></tr>
+        <tr><td><em>(unscoped)</em> scanning line</td><td>2000ms</td><td>BoardingPassCard QR 위 스캔 라인 · repeat reverse · 본 화면이 controller 소유</td></tr>
+      </tbody>
+    </table>
+    <table class="ref">
+      <thead><tr><th style="width: 220px;">Transition</th><th style="width: 140px;">Duration (token)</th><th>Curve / notes</th></tr></thead>
+      <tbody>
+        <tr><td>화면 진입</td><td><code>fast</code> (200ms)</td><td>Material slide push (push notification deep link은 fade)</td></tr>
+        <tr><td>loading → data</td><td><code>medium</code> (350ms)</td><td>MinglitAsyncValueWidget 내부 crossfade</td></tr>
+        <tr><td>scanning line (BoardingPassCard 내부)</td><td>2000ms unscoped</td><td>repeat reverse (linear) — child spec 책임</td></tr>
+        <tr><td>brightness 적용</td><td><em>OS native</em></td><td>iOS/Android OS가 알아서 fade — token 없음</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Global edge cases</h2>
+    <ul class="notes">
+      <li><strong>네트워크 끊김 + wallet 미적중</strong> — Error state. wallet 적중 시 offline 가능 (의도적 디자인).</li>
+      <li><strong>screen_brightness 권한 거부 / 미지원</strong> — try/catch로 무시, 기본 밝기 유지. 사용자에게 안내 없음.</li>
+      <li><strong>스크린샷 / 화면 녹화</strong> — anti-fraud 안내는 텍스트 only. 실제 차단(FLAG_SECURE)은 BoardingPassCard 내부 또는 native layer에서 (현재 미적용 — 정책 결정 후속).</li>
+      <li><strong>다크 모드</strong> — Scaffold bg는 항상 <code>MinglitColors.surface</code>(light gray) — 입장 게이트 가독성을 위해 라이트 강제 (Scaffold backgroundColor 직접 명시). 다크 모드 시스템에서도 본 화면만 라이트 톤.</li>
+      <li><strong>접근성</strong> — 큰 글씨 시 Column이 자연 wrap. screen reader는 BoardingPassCard 내부 semantic + 본 화면의 안내 텍스트 2-line 차례로 읽음.</li>
+      <li><strong>시간대</strong> — boarding 자정 경계 판정은 local timezone (boardingPassStatus 함수). UTC 아님 — child 책임.</li>
+    </ul>
+  </section>
+</div>
+
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">📖</span>
+    <h2>Reference</h2>
+    <span class="lede">Implementation source + 인접 화면.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Implementation source</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 200px;">항목</th><th>Path / Reference</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Widget class</strong></td><td><code>TicketQRScreen</code> (StatefulWidget · SingleTickerProviderStateMixin)</td></tr>
+        <tr><td><strong>File path</strong></td><td><a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/ticket/ui/ticket_qr_screen.dart"><code>apps/app_user/lib/src/features/ticket/ui/ticket_qr_screen.dart</code></a></td></tr>
+        <tr><td><strong>Provider</strong></td><td><code>_ticketTokenProvider(ticketId)</code> (FutureProvider.family) — <code>ticketTokenServiceProvider.getToken(ticketId)</code></td></tr>
+        <tr><td><strong>Child widget</strong></td><td><code>BoardingPassCard</code> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/ticket/ui/widgets/boarding_pass_card.dart"><code>boarding_pass_card.dart</code></a> (별도 spec TBD)</td></tr>
+        <tr><td><strong>Models</strong></td><td><code>TicketToken</code> (data) · <code>TicketEventMeta</code> (display context)</td></tr>
+        <tr><td><strong>External</strong></td><td><code>screen_brightness</code> 패키지 — <code>ScreenBrightness().setApplicationScreenBrightness(1)</code></td></tr>
+        <tr><td><strong>Route</strong></td><td><code>TicketQRRoute</code> · path: <code>/tickets/:ticketId/qr</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 240px;">Spec</th><th>Relation</th></tr></thead>
+      <tbody>
+        <tr><td><a href="/specs/my_tickets_page.html"><code>MyTicketsPage</code></a></td><td>Parent — 티켓 list에서 본 화면 진입.</td></tr>
+        <tr><td><a href="/specs/event_checked_in_screen.html"><code>EventCheckedInScreen</code></a></td><td>인접 — 체크인 직전 화면, QR 버튼으로 본 화면 진입.</td></tr>
+        <tr><td><a href="/specs/event_check_in_screen.html"><code>EventCheckInScreen</code></a></td><td>인접 — 체크인 진행 화면 (사용자 측).</td></tr>
+        <tr><td><code>BoardingPassCard</code> <em>(spec TBD)</em></td><td>Child sub-component — 본 화면이 호스팅. 4영역(brand + event info + perforation + QR stub) 자체 spec.</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+</div>
+
+<script>
+  document.getElementById('spec-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('spec-mode', e.target.checked);
+  });
+  document.getElementById('dark-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('dark-mode', e.target.checked);
+  });
+</script>
+
+</body>
+</html>
