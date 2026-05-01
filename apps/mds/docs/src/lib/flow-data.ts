@@ -240,6 +240,7 @@ export function widgetNameFor(app: 'user' | 'partner', route: string): string | 
  */
 const KNOWN_SPEC_FILES: { user: ReadonlySet<string>; partner: ReadonlySet<string> } = {
   user: new Set([
+    'account_management_page',
     'event_application_wizard_page',
     'event_check_in_screen',
     'event_checked_in_screen',
@@ -252,14 +253,17 @@ const KNOWN_SPEC_FILES: { user: ReadonlySet<string>; partner: ReadonlySet<string
     'my_page',
     'my_tickets_page',
     'notification_list_screen',
+    'notification_settings_screen',
     'partner_detail_page',
     'partner_events_page',
+    'privacy_page',
     'purchase_history_page',
     'search_page',
     'signup_consent_page',
     'tag_event_list_page',
   ]),
   partner: new Set([
+    'account_management_page',
     'more_page',
     'party_detail_page',
     'party_list_page',
@@ -268,11 +272,15 @@ const KNOWN_SPEC_FILES: { user: ReadonlySet<string>; partner: ReadonlySet<string
     'partner_home_page',
     'partner_welcome_page',
     'notification_list_screen',
+    'notification_settings_screen',
     'event_application_manage_page',
     'event_application_detail_page',
     'event_create_page',
+    'ticket_create_page',
+    'ticket_edit_page',
     'bank_account_page',
     'settlement_page',
+    'verification_manage_page',
     // remaining partner specs are reached via ROUTE_DESIGN_OVERRIDES below.
   ]),
 };
@@ -282,11 +290,25 @@ const ROUTE_DESIGN_OVERRIDES: Record<string, string> = {
   'partner-HomeRoute':            '/specs/partner_home_page.html',
   'partner-PartyCreateRoute':     '/specs/party_create_wizard_page.html',
   'partner-PartyEditRoute':       '/specs/party_create_wizard_page.html', // shares spec
+  // PartyTicketEditRoute hosts the same TicketEditPage widget as TicketEditRoute,
+  // but with eventId='' (template mode). Default rule for TicketEditRoute already
+  // resolves to ticket_edit_page; override the party-scoped variant explicitly.
+  'partner-PartyTicketEditRoute': '/specs/ticket_edit_page.html',
   'partner-SettlementDetailRoute':'/specs/settlement_detail_page.html',
+  // AccountManagementPage → kit-shared widget. Default rule for user yields
+  // 'account_management_page' (already matches), but partner's
+  // PartnerAccountManagementRoute would derive 'partner_account_management_page'
+  // — override both routes to the shared spec basename.
+  'user-AccountManagementRoute':         '/specs/account_management_page.html',
+  'partner-PartnerAccountManagementRoute':'/specs/account_management_page.html',
   // NotificationCenterRoute → kit-shared NotificationListScreen widget. Default rule
   // would derive 'notification_center_page', but the spec basename matches the widget.
   'user-NotificationCenterRoute':    '/specs/notification_list_screen.html',
   'partner-NotificationCenterRoute': '/specs/notification_list_screen.html',
+  // NotificationSettingsRoute → kit-shared NotificationSettingsScreen widget. Default
+  // rule yields 'notification_settings_page', but the spec basename matches the widget.
+  'user-NotificationSettingsRoute':    '/specs/notification_settings_screen.html',
+  'partner-NotificationSettingsRoute': '/specs/notification_settings_screen.html',
   // ApplicationListRoute → default rule yields 'application_list_page', but the
   // actual widget is EventApplicationManagePage. Override to its real spec.
   'partner-ApplicationListRoute':    '/specs/event_application_manage_page.html',

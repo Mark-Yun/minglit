@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Spec — PrivacyPage (app_user / PrivacyRoute)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* ============================================================
+   PrivacyPage-specific atoms.
+   Tokens / chrome / mini-table은 /specs/_spec.css에서 import.
+   ============================================================ */
+
+.pv-appbar {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--spacing-medium);
+  gap: var(--spacing-small);
+  /* AppBar matches scaffold bg in actual app — no border below.
+     elevation: 0 + surfaceTintColor transparent → no auto tint. */
+  background: var(--color-surface);
+}
+.pv-appbar__back {
+  width: 40px; height: 40px;
+  display: grid; place-items: center;
+  color: var(--color-text-primary);
+}
+.pv-appbar__title {
+  font-size: var(--typography-font-size-app-bar-title);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+/* PrivacyPage Scaffold bg = MinglitColors.surface (#f9fafb).
+   ListTile / Card backgrounds = ColorScheme.surface = MinglitColors.background (#ffffff). */
+.pv-viewport { background: var(--color-surface); }
+body.dark-mode .pv-viewport { background: var(--color-dark-background); }
+
+/* Section header — _SectionHeader private widget.
+   Padding: fromLTRB(screen-edge, large(24), screen-edge, small(8))
+   Style: titleSmall(14/600) + onSurfaceVariant tint. */
+.pv-section-header {
+  padding: var(--spacing-large) var(--spacing-screen-edge) var(--spacing-small);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+/* Raw ListTile rendering — NOT MinglitSettingsTile.
+   PrivacyPage uses plain Material ListTile + SwitchListTile + Divider(height:1).
+   Default ListTile minHeight ≈ 56 with content padding 16 horizontal. */
+.pv-tile {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-medium);
+  padding: 0 var(--spacing-screen-edge);
+  min-height: 56px;
+  background: var(--color-background);
+  cursor: pointer;
+}
+.pv-tile__title {
+  flex: 1;
+  font-size: 16px;
+  color: var(--color-text-primary);
+}
+.pv-tile__trailing {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xsmall);
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+.pv-tile__chevron { color: var(--color-text-secondary); display: grid; place-items: center; }
+.pv-tile__chevron svg { width: 24px; height: 24px; }
+body.dark-mode .pv-tile { background: var(--color-dark-surface); }
+
+/* SwitchListTile — Material Switch (40×24 visually). */
+.pv-switch-tile {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-medium);
+  padding: 0 var(--spacing-screen-edge);
+  min-height: 56px;
+  background: var(--color-background);
+}
+.pv-switch-tile__title {
+  flex: 1;
+  font-size: 16px;
+  color: var(--color-text-primary);
+}
+body.dark-mode .pv-switch-tile { background: var(--color-dark-surface); }
+.pv-switch {
+  width: 40px; height: 24px;
+  border-radius: 999px;
+  position: relative;
+  background: var(--color-divider);
+  flex-shrink: 0;
+}
+.pv-switch::after {
+  content: '';
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: white;
+  transition: left 0.15s;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+.pv-switch--on { background: var(--color-primary); }
+.pv-switch--on::after { left: 18px; }
+
+/* full-width Divider (height: 1) between section blocks. */
+.pv-divider {
+  height: 1px;
+  background: var(--color-divider);
+}
+
+/* Account section — Card with horizontal margin (screenEdge) + ListTile + TextButton. */
+.pv-account-card {
+  margin: 0 var(--spacing-screen-edge);
+  background: var(--color-background);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+body.dark-mode .pv-account-card { background: var(--color-dark-surface); }
+.pv-account-tile {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-medium);
+  padding: var(--spacing-medium) var(--spacing-medium);
+}
+.pv-account-tile__icon {
+  width: 24px; height: 24px;
+  display: grid; place-items: center;
+  color: var(--color-error);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.pv-account-tile__icon svg { width: 24px; height: 24px; }
+.pv-account-tile__body { flex: 1; min-width: 0; }
+.pv-account-tile__title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+.pv-account-tile__subtitle {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+/* Full-width TextButton — TextButton at width:double.infinity below the card. */
+.pv-text-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 48px;
+  margin: var(--spacing-medium) var(--spacing-screen-edge) 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-primary);
+  cursor: pointer;
+}
+
+/* Loading / error placeholders */
+.pv-loading {
+  position: absolute;
+  inset: 56px 0 0 0;
+  display: grid;
+  place-items: center;
+}
+.pv-spinner {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: 3px solid var(--color-divider);
+  border-top-color: var(--color-primary);
+  animation: pv-spin 0.9s linear infinite;
+}
+@keyframes pv-spin { to { transform: rotate(360deg); } }
+
+.pv-error {
+  position: absolute;
+  inset: 56px 0 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-large);
+  text-align: center;
+}
+.pv-error__msg {
+  font-size: 18px;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
+</div>
+
+<div class="page">
+
+<!-- ============================================================
+     📍 HEADER
+     ============================================================ -->
+<header>
+  <h1>Privacy Settings</h1>
+</header>
+
+<!-- ============================================================
+     🎯 OVERVIEW
+     ============================================================ -->
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr>
+        <th style="width: 140px;">Status</th>
+        <td><strong>✅ 디자인완료</strong> <em style="color: var(--color-text-secondary);">— 3 state · 동의 + 약관 + 계정 3 섹션</em></td>
+      </tr>
+      <tr>
+        <th>App</th>
+        <td><code>app_user</code></td>
+      </tr>
+      <tr>
+        <th>Category</th>
+        <td>my · settings · privacy + account</td>
+      </tr>
+      <tr>
+        <th>Route / Surface</th>
+        <td><code>PrivacyRoute</code> · widget: <code>PrivacyPage</code> (ConsumerStatefulWidget)</td>
+      </tr>
+      <tr>
+        <th>Path</th>
+        <td><code>/my/privacy</code></td>
+      </tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>: <a href="/specs/my_page.html"><code>MyPage</code></a> (개인정보 tile → push)
+          <br>
+          <strong>Children</strong>:
+          <a href="/specs/blocked_partners_page.html"><em>BlockedPartnersPage</em></a> <em style="color:var(--color-text-secondary);">(인접 — 차단 목록)</em>,
+          <em>DeletionReasonRoute → DeletionInfoRoute → DeletionVerifyRoute → DeletionCompleteRoute</em>
+          <em style="color:var(--color-text-secondary);">(회원 탈퇴 4-step 위저드 · 후속 spec)</em>.
+          ConsentDetailSheet은 별도 spec 미작성 (modal bottom sheet).
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>
+          사용자가 자신의 개인정보 동의 현황을 한 곳에서 확인·토글하고, 약관 원문을 다시 열람하며, 회원 탈퇴 플로우의 진입점에 도달할 수 있는 settings 서브페이지.
+          필수 동의(이용약관 / 개인정보 수집·이용 / 본인인증)는 read-only로, 선택 동의(제3자 제공 / 마케팅 / 위치)는 SwitchListTile로 즉시 토글 가능.
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry</strong>: <a href="/specs/my_page.html">MyPage</a> "개인정보 및 보안 → 개인정보" tile → push.<br>
+          <strong>Exit</strong>: ① AppBar back → MyPage 복귀 / ② 동의 항목 탭 → ConsentDetailSheet (modal · 같은 화면 유지) / ③ 회원 탈퇴 시작하기 → <code>appCoordinator.startAccountDeletion()</code> → DeletionReason 위저드.
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          한국 개인정보보호법 / 위치정보법은 (1) 동의 현황 열람, (2) 선택 동의 철회, (3) 약관 원문 열람을 사용자에게 보장해야 함. 이 페이지가 그 단일 surface.
+          회원 탈퇴는 법적 권리이자 위험한 액션이므로, 같은 페이지 안에 "계정" 섹션을 두되 강한 visual separation (Card + color-error 아이콘)으로 분리.
+          탈퇴 진행 중(<code>DeletionStatus.isPending</code>) 상태에서 다시 진입하면 "탈퇴 요청 진행 중 / 다시 로그인하면 복구" 안내로 라벨이 바뀜.
+        </td>
+      </tr>
+      <tr>
+        <th>Frequency</th>
+        <td>월 1회 미만 — 약관/개인정보 확인이나 마케팅 동의 변경, 또는 탈퇴 결심 시점에만 진입.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================
+     🕐 HISTORY
+     ============================================================ -->
+<section class="doc">
+  <h2>History</h2>
+  <p class="intro">
+    이 spec의 주요 변경 이력. 최신 항목 위.
+  </p>
+  <table class="ref">
+    <thead>
+      <tr>
+        <th style="width: 110px;">Date</th>
+        <th style="width: 80px;">Version</th>
+        <th style="width: 120px;">Author</th>
+        <th>Changes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2026-05-01</td>
+        <td>1.0</td>
+        <td>mark-yun</td>
+        <td>v1.4 template으로 작성. Default(데이터 로드 완료) / Loading / Error 3-state. 동의/약관/계정 3 섹션 분해 + 회원 탈퇴 진행 중 sub-variant 노트.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- Anchor nav -->
+<nav class="perspective-nav">
+  <a href="#layout"><span class="glyph">🧱</span> Layout</a>
+  <a href="#states"><span class="glyph">🎨</span> States</a>
+  <a href="#behavior"><span class="glyph">🔄</span> Global Behavior</a>
+  <a href="#reference"><span class="glyph">📖</span> Reference</a>
+</nav>
+
+<!-- ============================================================
+     🧱 LAYOUT
+     ============================================================ -->
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Layout</h2>
+    <span class="lede">AppBar + ListView. 3 섹션(동의 현황 · 약관 보기 · 계정), 사이에 1px Divider.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree</h2>
+    <p class="intro">
+      Scaffold(<code>AppBar(title:'개인정보')</code>) + body는 <code>consentControllerProvider</code>의 <code>AsyncValue.when</code>으로 분기.
+      data 분기에서만 ListView 노출 — 섹션 헤더 + ListTile/SwitchListTile/Card 조합.
+      <strong>Drift 노트</strong>: PrivacyPage는 MyPage와 달리 <code>MinglitSettingsGroup</code>/<code>MinglitSettingsTile</code>을 쓰지 않고 raw <code>ListTile</code>/<code>SwitchListTile</code> + 자체 <code>_SectionHeader</code> private widget 사용. 따라서 카드 외곽선 / 52px indent divider 없음 — edge-to-edge full-width tile.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 660px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <!-- AppBar -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:0;left:0;right:0;height:56px;">
+          <span class="blueprint__region-label">① AppBar — back + "개인정보"</span>
+        </div>
+
+        <!-- 동의 현황 section -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:64px;left:0;right:0;height:48px;">
+          <span class="blueprint__region-label">② "동의 현황" header</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:120px;left:0;right:0;height:336px;">
+          <span class="blueprint__region-label">③ 6 tile (3 read-only + 3 switch)</span>
+        </div>
+
+        <!-- Divider -->
+        <div class="blueprint__align-marker" style="top:464px;left:8px;">↳ Divider(height:1)</div>
+
+        <!-- 약관 보기 section -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:472px;left:0;right:0;height:48px;">
+          <span class="blueprint__region-label">④ "약관 보기" header</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:528px;left:0;right:0;height:96px;">
+          <span class="blueprint__region-label">⑤ 3 tile (chevron only)</span>
+        </div>
+
+        <div class="blueprint__align-marker" style="bottom:8px;left:8px;">↓ + Divider + "계정" + Card + TextButton (스크롤)</div>
+      </div>
+
+      <div class="layout-tree"><b>Scaffold</b>
+└─ <b>AppBar</b>(<i>title: '개인정보'</i>)                                         ← ①
+└─ Body = consentState.when(
+   ├─ loading: <b>Center</b> > <code>MinglitCircularProgressIndicator()</code>      ← Loading state
+   ├─ error:   <b>Center</b> > Padding(large) > <code>Text('동의 정보를 불러올 수 없습니다.')</code>
+   └─ data: <b>ListView</b>
+      ├─ <em>_SectionHeader</em>(title: '동의 현황')                            ← ②
+      ├─ <b>_ReadOnlyConsentTile</b>(title: '서비스 이용약관')                  ← ③
+      ├─ <b>_ReadOnlyConsentTile</b>(title: '개인정보 수집·이용')
+      ├─ <b>SwitchListTile</b>(title: '제3자 제공 동의')
+      ├─ <b>SwitchListTile</b>(title: '마케팅 정보 수신')
+      ├─ <b>SwitchListTile</b>(title: '위치정보 이용 동의')
+      ├─ <b>_ReadOnlyConsentTile</b>(title: '본인인증 정보' · statusText: '동의됨'|'미동의')
+      ├─ <b>Divider</b>(height: 1)
+      ├─ <em>_SectionHeader</em>(title: '약관 보기')                            ← ④
+      ├─ <b>ListTile</b>(title: '서비스 이용약관' · trailing: chevron_right)    ← ⑤
+      ├─ <b>ListTile</b>(title: '개인정보처리방침' · trailing: chevron_right)
+      ├─ <b>ListTile</b>(title: '위치정보 이용약관' · trailing: chevron_right)
+      ├─ <b>Divider</b>(height: 1)
+      ├─ <em>_SectionHeader</em>(title: '계정')                                  ← ⑥
+      ├─ <b>Card</b>(margin: H = screenEdge)
+      │  └─ <b>ListTile</b>(
+      │       leading: <i>Icons.person_remove_outlined</i> | <i>Icons.hourglass_top</i> · color-error,
+      │       title: '회원 탈퇴' | '탈퇴 요청 진행 중',
+      │       subtitle: 안내 문구 (isPending에 따라 분기)
+      │     )
+      ├─ SizedBox(<i>spacing-medium</i>)
+      ├─ <b>SizedBox</b>(width: ∞) > <b>TextButton</b>('회원 탈퇴 시작하기' | '탈퇴 진행 상태 보기')
+      └─ SizedBox(<i>spacing-large</i>)</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>①</td><td>AppBar</td><td>title 좌측 정렬 + leading back · centerTitle 미지정 (기본 false)</td><td>height: 56 · scaffold-gray bg · no border</td></tr>
+        <tr><td>②④⑥</td><td>_SectionHeader</td><td>좌측 정렬 · titleSmall(14/600) + onSurfaceVariant</td><td><code>EdgeInsets.fromLTRB(screenEdge, large(24), screenEdge, small(8))</code></td></tr>
+        <tr><td>③</td><td>동의 현황 tile group</td><td>edge-to-edge ListTile / SwitchListTile</td><td>각 ListTile minHeight ≈ 56 · contentPadding 기본(H = 16) · subtitle 없음</td></tr>
+        <tr><td>—</td><td>section divider</td><td>full-width · Divider(height:1)</td><td><code>color-divider</code> · 두 위치 (③↔④, ⑤↔⑥ 사이)</td></tr>
+        <tr><td>⑤</td><td>약관 보기 group</td><td>edge-to-edge ListTile · trailing: <code>Icons.chevron_right</code></td><td>3 tile 연속 — 사이 divider 없음 (Material 기본)</td></tr>
+        <tr><td>⑥</td><td>계정 Card</td><td>margin H: <code>spacing-screen-edge</code> · 내부 ListTile</td><td>radius-card · leading icon (color-error) + title + subtitle</td></tr>
+        <tr><td>—</td><td>탈퇴 CTA</td><td>full-width TextButton (Material 기본 — 텍스트 only · primary tint)</td><td>위 SizedBox(spacing-medium) · 아래 SizedBox(spacing-large) for safeArea buffer</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<!-- ============================================================
+     🎨 STATES
+     ============================================================ -->
+<div class="perspective" id="states">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>States</h2>
+    <span class="lede">3 state. baseline = Default(consents 로드 완료). Loading / Error는 body 영역만 swap.</span>
+  </div>
+
+  <section class="doc">
+    <p class="intro">
+      <strong>State 종류 식별 기준</strong>: <code>consentControllerProvider</code>의 <code>AsyncValue.when(loading/error/data)</code> 분기.
+      AppBar는 모든 state에서 동일하게 노출. body만 swap.
+      <code>accountDeletionControllerProvider</code>는 별도 watch — pending이면 "계정" 섹션 라벨 / 아이콘만 변형(default state 안의 sub-variant로 다룸).
+    </p>
+
+    <!-- State 1: Default (data, baseline) -->
+    <table class="ref state-mini is-baseline-tint">
+      <thead>
+        <tr><th colspan="3"><strong>Default · 동의 현황 로드 완료</strong> 🎯 <small>baseline · 일반 진입</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport pv-viewport">
+              <div class="pv-appbar">
+                <span class="pv-appbar__back">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><polyline points="15 18 9 12 15 6"/></svg>
+                </span>
+                <span class="pv-appbar__title">개인정보</span>
+              </div>
+
+              <!-- 동의 현황 section -->
+              <div class="pv-section-header">동의 현황</div>
+              <div class="pv-tile">
+                <span class="pv-tile__title">서비스 이용약관</span>
+                <span class="pv-tile__trailing">동의됨</span>
+                <span class="pv-tile__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
+              </div>
+              <div class="pv-tile">
+                <span class="pv-tile__title">개인정보 수집·이용</span>
+                <span class="pv-tile__trailing">동의됨</span>
+                <span class="pv-tile__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
+              </div>
+              <div class="pv-switch-tile">
+                <span class="pv-switch-tile__title">제3자 제공 동의</span>
+                <span class="pv-switch pv-switch--on"></span>
+              </div>
+              <div class="pv-switch-tile">
+                <span class="pv-switch-tile__title">마케팅 정보 수신</span>
+                <span class="pv-switch"></span>
+              </div>
+              <div class="pv-switch-tile">
+                <span class="pv-switch-tile__title">위치정보 이용 동의</span>
+                <span class="pv-switch pv-switch--on"></span>
+              </div>
+              <div class="pv-tile">
+                <span class="pv-tile__title">본인인증 정보</span>
+                <span class="pv-tile__trailing">동의됨</span>
+                <span class="pv-tile__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
+              </div>
+
+              <div class="pv-divider"></div>
+
+              <!-- 약관 보기 section -->
+              <div class="pv-section-header">약관 보기</div>
+              <div class="pv-tile">
+                <span class="pv-tile__title">서비스 이용약관</span>
+                <span class="pv-tile__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
+              </div>
+              <div class="pv-tile">
+                <span class="pv-tile__title">개인정보처리방침</span>
+                <span class="pv-tile__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
+              </div>
+              <div class="pv-tile">
+                <span class="pv-tile__title">위치정보 이용약관</span>
+                <span class="pv-tile__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
+              </div>
+
+              <div class="pv-divider"></div>
+
+              <!-- 계정 section -->
+              <div class="pv-section-header">계정</div>
+              <div class="pv-account-card">
+                <div class="pv-account-tile">
+                  <span class="pv-account-tile__icon">
+                    <!-- Icons.person_remove_outlined -->
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="8" r="4"/><path d="M2 21c0-3.9 3.1-7 7-7 1.6 0 3 .5 4.2 1.4"/><line x1="14" y1="11" x2="22" y2="11"/></svg>
+                  </span>
+                  <div class="pv-account-tile__body">
+                    <div class="pv-account-tile__title">회원 탈퇴</div>
+                    <div class="pv-account-tile__subtitle">탈퇴 사유 선택, 안내 확인, 본인 확인 후 요청할 수 있어요.</div>
+                  </div>
+                </div>
+              </div>
+              <div class="pv-text-btn">회원 탈퇴 시작하기</div>
+              <div style="height: var(--spacing-large);"></div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>consentState.hasValue == true</code> · <code>currentUserProvider != null</code> · 동의 row 6개 모두 fetch 완료</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            ① <strong>read-only 동의 tile 탭</strong> → <code>showConsentDetailSheet</code>(약관/개인정보/CI·DI 본문) — modal bottom sheet (initialChildSize 0.82).<br>
+            ② <strong>SwitchListTile 토글</strong> → <code>consentControllerProvider.notifier.toggleConsent(type, consented:v)</code> · 즉시 optimistic UI 반영 · 실패 시 SnackBar + invalidate (Fix #886).<br>
+            ③ <strong>"본인인증 정보" 탭</strong> → <code>identityVerification</code> 동의된 경우만 detail sheet · 미동의면 onTap null (chevron 미노출).<br>
+            ④ <strong>약관 보기 ListTile 탭</strong> → 각각 detail sheet (이용약관 / 처리방침 / 위치정보).<br>
+            ⑤ <strong>"회원 탈퇴 시작하기" 탭</strong> → <code>appCoordinator.startAccountDeletion()</code> → DeletionReasonRoute push.<br>
+            ⑥ <strong>AppBar back</strong> → MyPage 복귀.
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · 본인인증 미완료 사용자 → "본인인증 정보" tile statusText='미동의' · onTap=null · chevron 미렌더 (탭 무반응).<br>
+            · 토글 직후 네트워크 실패 → Fix #886: SnackBar "동의 변경에 실패했습니다. 다시 시도해주세요." + microtask로 <code>ref.invalidate(consentControllerProvider)</code> → 서버 상태로 원상복구.<br>
+            · <strong>회원 탈퇴 진행 중</strong> (<code>deletionStatus.value?.isPending == true</code>) — Card 안 leading 아이콘이 <code>Icons.hourglass_top</code>으로 변경, 제목 "탈퇴 요청 진행 중", subtitle "유예 기간 안에는 다시 로그인해 계정을 복구할 수 있어요.", TextButton 라벨 "탈퇴 진행 상태 보기"로 변경.<br>
+            · ConsentDetailSheet은 modal — 닫으면 바로 PrivacyPage로 복귀, list 상태 변화 없음.
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            · <code>AppBar(title: Text('개인정보'))</code> — Material 기본 (centerTitle 미지정)<br>
+            · <code>ListView</code> + <code>_SectionHeader</code>(private · titleSmall + onSurfaceVariant) × 3<br>
+            · <code>_ReadOnlyConsentTile</code>(private · ListTile · trailing: Row[Text(statusText), Icons.chevron_right]) × 3<br>
+            · <code>SwitchListTile</code> × 3 (제3자 제공 / 마케팅 / 위치)<br>
+            · <code>ListTile</code> + <code>Icons.chevron_right</code> × 3 (약관 보기)<br>
+            · <code>Divider(height: 1)</code> × 2<br>
+            · <code>Card</code>(margin H: screenEdge) + <code>ListTile</code>(leading: Icon(color-error) · title · subtitle)<br>
+            · <code>TextButton</code>(width: ∞) — 회원 탈퇴 진입<br>
+            · <code>showConsentDetailSheet</code> → <code>ConsentDetailSheet</code> (DraggableScrollableSheet · initial 0.82)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            · color: <code>color-surface</code> (scaffold + AppBar bg · #f9fafb), <code>color-background</code> (ListTile / Card bg · #ffffff), <code>color-text-primary</code> (tile title), <code>color-text-secondary</code> (statusText · 헤더 · subtitle), <code>color-divider</code> (1px Divider · Switch off track), <code>color-primary</code> (Switch on · TextButton text), <code>color-error</code> (회원 탈퇴 leading icon)<br>
+            · spacing: <code>spacing-large (24)</code> (헤더 top padding · CTA 하단 buffer), <code>spacing-medium (16)</code> (Card↔TextButton gap · header bottom padding 의 일부), <code>spacing-small (8)</code> (header bottom padding), <code>spacing-screen-edge (16)</code> (헤더 좌우 · Card margin · ListTile 기본 contentPadding)<br>
+            · radius: <code>radius-card (16)</code> (Card)<br>
+            · typography: appBarTitle (18/600), bodyLarge (18 · ListTile title 기본은 bodyLarge 매핑 · statusText는 bodyMedium 14), titleSmall (14/600 · _SectionHeader)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 <strong>Drift 알림</strong>: PrivacyPage는 MyPage와 동일한 settings 카테고리지만 <code>MinglitSettingsGroup</code>/<code>MinglitSettingsTile</code>을 쓰지 않고 raw <code>ListTile</code>/<code>SwitchListTile</code> + 자체 <code>_SectionHeader</code> 사용 — edge-to-edge full-width tile, 카드 외곽선 / 52px indent divider 없음. 디자인 일관성을 위해선 후속 PR에서 MinglitSettingsGroup으로 정리 검토 가치.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 2: Loading -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Loading · 동의 정보 fetch 중</strong> <small>consentState.isLoading</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport pv-viewport">
+              <div class="pv-appbar">
+                <span class="pv-appbar__back">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><polyline points="15 18 9 12 15 6"/></svg>
+                </span>
+                <span class="pv-appbar__title">개인정보</span>
+              </div>
+              <div class="pv-loading">
+                <div class="pv-spinner"></div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>consentState.isLoading</code> · 첫 진입 또는 invalidate 직후</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>+ <strong>AppBar back</strong> → MyPage 복귀<br>− 동의 토글 / 약관 열람 / 탈퇴 CTA (모두 미렌더)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>· 일반적으로 cached AsyncValue → 진입 즉시 data 분기로 진행, Loading은 invalidate(#886 fail-revert) 또는 첫 가입 직후에만 짧게 보임<br>· Loading 중에도 AppBar back은 동작</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>↔ Body → <code>Center(child: <a href="/components#MinglitCircularProgressIndicator">MinglitCircularProgressIndicator</a>())</code><br>− ListView 전체 (헤더 / tile / Card / TextButton 모두 미렌더)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>+ <code>color-primary</code> (spinner stroke)<br>− 그 외 list/Card/divider 토큰 (미렌더)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 진입 시 transient — 사용자에게는 거의 안 보임. invalidate-driven re-fetch 시점에 더 자주 잠깐 노출.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 3: Error -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Error · 동의 정보 로드 실패</strong> <small>consentState.hasError &amp;&amp; !hasValue</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport pv-viewport">
+              <div class="pv-appbar">
+                <span class="pv-appbar__back">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><polyline points="15 18 9 12 15 6"/></svg>
+                </span>
+                <span class="pv-appbar__title">개인정보</span>
+              </div>
+              <div class="pv-error">
+                <div class="pv-error__msg">동의 정보를 불러올 수 없습니다.</div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>consentState.hasError</code> AND prev <code>!hasValue</code> (즉, 첫 fetch 실패) · 네트워크 / 인증 실패 / 서버 5xx 등</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>+ <strong>AppBar back</strong> → MyPage 복귀 (재진입 시 retry)<br>− retry 버튼 없음 — 사용자는 back → 재진입으로만 retry 가능</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>· prev hasValue 였던 상태에서 hasError 로 transition → ref.listen 분기에서 SnackBar 노출 + invalidate (Fix #886) — 화면은 default state 유지, 이 Error mockup으로 가지 않음<br>· 토글 실패는 별도 UX (SnackBar) — 이 Error state로 fall-through 안 함</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>↔ Body → <code>Center(Padding(MinglitSpacing.large, Text('동의 정보를 불러올 수 없습니다.', bodyLarge)))</code><br>− ListView 전체</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>+ <code>spacing-large (24)</code> (Padding), bodyLarge (18 · text)<br>+ <code>color-text-secondary</code> (메시지 — bodyLarge 기본 톤)<br>− 그 외</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 retry CTA가 없는 점은 추후 보강 후보 (P3 enhancement) — 현재는 back → 재진입 또는 앱 재시작.</td>
+        </tr>
+      </tbody>
+    </table>
+
+  </section>
+</div>
+
+<!-- ============================================================
+     🔄 GLOBAL BEHAVIOR
+     ============================================================ -->
+<div class="perspective" id="behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">cross-cutting — 모든 state에 적용되는 액션, motion, 글로벌 에지케이스.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Cross-cutting interactions</h2>
+    <table class="ref">
+      <thead>
+        <tr><th style="width: 220px;">사용자 액션</th><th>화면에 보이는 결과</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>뒤로 가기 (시스템 back / AppBar back)</td>
+          <td>MyPage로 pop. PopScope 별도 처리 없음 — 표준 GoRouter pop.</td>
+        </tr>
+        <tr>
+          <td>다크 모드 토글</td>
+          <td>scaffold / ListTile / Card 모두 dark 토큰으로 자동 swap. error icon (color-error) / Switch on (color-primary)는 그대로 유지.</td>
+        </tr>
+        <tr>
+          <td>동의 토글 실패 (Fix #886)</td>
+          <td>SnackBar "동의 변경에 실패했습니다. 다시 시도해주세요." + microtask invalidate → 서버 상태로 UI 원상복구. 사용자는 default state 유지.</td>
+        </tr>
+        <tr>
+          <td>탈퇴 진행 중 재진입</td>
+          <td>"계정" 섹션 라벨 / 아이콘 / subtitle / TextButton 라벨이 모두 isPending 변형으로 swap. 동의/약관 섹션은 동일.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Motion timing</h2>
+    <p class="intro">
+      Source: <code>shared/packages/mds/core/lib/src/theme/minglit_design_tokens.dart</code>
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 240px;">Transition</th>
+          <th style="width: 200px;">Token / Duration</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>화면 진입 (MyPage → PrivacyPage)</td>
+          <td><code>MinglitAnimation.fast</code> (200ms)</td>
+          <td>GoRouter 좌→우 slide.</td>
+        </tr>
+        <tr>
+          <td>SwitchListTile 토글 thumb</td>
+          <td><code>MinglitAnimation.micro</code> (100ms 안팎)</td>
+          <td>Material Switch 기본 — track / thumb 보간.</td>
+        </tr>
+        <tr>
+          <td>ConsentDetailSheet 등장</td>
+          <td><code>MinglitAnimation.medium</code> (350ms)</td>
+          <td>showModalBottomSheet 기본 — 하단에서 슬라이드 업.</td>
+        </tr>
+        <tr>
+          <td>Loading → Default crossfade</td>
+          <td><code>MinglitAnimation.medium</code> (350ms 추정)</td>
+          <td>AsyncValue.when의 자동 swap — Flutter 기본 cut에 가까움 (실측 시 transition 거의 안 보임).</td>
+        </tr>
+        <tr>
+          <td>SnackBar fade-in</td>
+          <td><code>MinglitAnimation.fast</code> (200ms)</td>
+          <td>토글 실패 시 (Fix #886).</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Global edge cases</h2>
+    <ul class="notes">
+      <li><strong>비인증 진입</strong> — PrivacyRoute는 redirect guard로 보호되어 있어 일반 경로로는 비인증 사용자 진입 불가. 직접 deep-link 시 LoginRoute로 redirect.</li>
+      <li><strong>탈퇴 직후 재진입</strong> — DeletionStatus가 pending → 이 페이지의 "계정" 섹션이 진행 상태 변형으로 표시. 다시 로그인하면 cancel 가능 (Account Management 또는 별도 플로우).</li>
+      <li><strong>법령 의무 — 필수 동의는 토글 불가</strong> — 서비스 이용약관 / 개인정보 수집·이용 / 본인인증은 read-only로 노출, 철회는 회원 탈퇴를 통해서만 가능 (개인정보처리방침 본문에 명시).</li>
+      <li><strong>약관 본문은 in-app sheet</strong> — 외부 브라우저 launch 아님. ConsentDetailSheet의 정적 const 컨텐츠 (privacy_page.dart 하단 _termsOfServiceContent / _privacyPolicyContent / _locationConsentContent).</li>
+    </ul>
+  </section>
+</div>
+
+<!-- ============================================================
+     📖 REFERENCE
+     ============================================================ -->
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">📖</span>
+    <h2>Reference</h2>
+    <span class="lede">implementation source + 인접 화면.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Implementation source</h2>
+    <table class="ref">
+      <tbody>
+        <tr><th style="width: 200px;">Widget</th><td><code>PrivacyPage</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/settings/privacy_page.dart"><code>apps/app_user/lib/src/features/settings/privacy_page.dart</code></a></td></tr>
+        <tr><th>Route</th><td><code>PrivacyRoute</code> · <code>/my/privacy</code> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/routing/app_routes.dart"><code>app_routes.dart</code></a></td></tr>
+        <tr><th>Consent provider</th><td><code>consentControllerProvider</code> · <code>toggleConsent(type, consented:)</code> — Riverpod async controller. <code>ConsentType</code>: termsOfService / privacyCollection / thirdPartyProvision / marketingConsent / locationConsent / identityVerification.</td></tr>
+        <tr><th>Account deletion provider</th><td><code>accountDeletionControllerProvider</code> · <code>DeletionStatus.isPending</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/shared/packages/minglit_kit/lib/src/features/account_deletion/logic/account_deletion_controller.dart"><code>shared/packages/minglit_kit/lib/src/features/account_deletion/logic/account_deletion_controller.dart</code></a></td></tr>
+        <tr><th>Coordinator</th><td><code>appCoordinatorProvider.startAccountDeletion()</code> → DeletionReasonRoute push (4-step 위저드 시작점).</td></tr>
+        <tr><th>Bottom sheet</th><td><code>showConsentDetailSheet(context, content:)</code> · <code>ConsentDetailSheet</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/common/widgets/consent_detail_sheet.dart"><code>apps/app_user/lib/src/common/widgets/consent_detail_sheet.dart</code></a> (DraggableScrollableSheet · initialChildSize 0.82).</td></tr>
+        <tr><th>Static content</th><td>약관 / 처리방침 / 위치정보약관 본문은 privacy_page.dart 하단의 const <code>ConsentDetailContent</code> 4개 (termsOfService · privacyCollection · privacyPolicy · locationConsent · identityVerification).</td></tr>
+        <tr><th>Icons (Material)</th><td><code>chevron_right</code> · <code>person_remove_outlined</code> (탈퇴 idle) · <code>hourglass_top</code> (탈퇴 진행 중)</td></tr>
+        <tr><th>Loading widget</th><td><a href="/components#MinglitCircularProgressIndicator"><code>MinglitCircularProgressIndicator</code></a> (kit-shared)</td></tr>
+        <tr><th>Bug-fix history</th><td>Fix #886: 토글 실패 시 SnackBar + invalidate으로 원상복구. Fix #1157: 보유기간 명시 (관심 태그 등 즉시 파기).</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 240px;">Spec</th><th>Relation</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><a href="/specs/my_page.html"><code>MyPage</code></a></td>
+          <td>Parent — "개인정보 및 보안 → 개인정보" tile에서 push.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/blocked_partners_page.html"><code>BlockedPartnersPage</code></a></td>
+          <td>Sibling — MyPage의 인접 settings (차단 목록). 같은 카테고리지만 별개 라우트.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/signup_consent_page.html"><code>SignupConsentPage</code></a></td>
+          <td>가입 시 동의 수집 — 이 페이지에서 보이는 동의 row의 source-of-truth 입력 surface.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/login_page.html"><code>LoginPage</code></a></td>
+          <td>탈퇴 진행 중 → 다시 로그인하면 복구 가능. 비인증 deep-link 시 redirect 도착지.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+</div>
+
+<script>
+  document.getElementById('spec-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('spec-mode', e.target.checked);
+  });
+  document.getElementById('dark-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('dark-mode', e.target.checked);
+  });
+</script>
+</body>
+</html>

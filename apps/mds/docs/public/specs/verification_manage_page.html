@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Spec — VerificationManagePage (app_partner · VerificationManageRoute)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* ============================================================
+   VerificationManagePage-specific atoms.
+
+   Partner app theme — scoped to .viewport so docs chrome stays neutral.
+   Page = Scaffold w/ AppBar(title + TabBar) + body(TabBarView 2 탭).
+   No bottom navigation: this is a leaf route under /more (parent shell
+   hides nav for non-root paths — Fix-tracked in PartnerScaffold).
+   ============================================================ */
+.viewport {
+  --color-primary: var(--color-partner-primary);   /* #6c3ce1 */
+  --spec-blueprint-rgb: 108, 60, 225;
+}
+body.dark-mode .viewport {
+  --color-primary: var(--color-partner-dark-primary); /* #9b7bec */
+}
+
+/* --- App bar (back · title · scaffold gray, no border) --- */
+.vm-appbar {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  background: var(--color-surface);
+  position: relative;
+}
+.vm-appbar__back {
+  width: 40px; height: 40px;
+  margin-left: var(--spacing-xsmall);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--color-text-primary);
+}
+.vm-appbar__back svg { width: 22px; height: 22px; }
+.vm-appbar__title {
+  flex: 1;
+  /* centerTitle: false → left aligned, no extra padding */
+  font-size: var(--typography-font-size-app-bar-title);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+/* --- TabBar (2 equal-flex tabs) --- */
+.vm-tabbar {
+  height: 48px;
+  display: flex;
+  background: var(--color-surface);
+}
+.vm-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--typography-font-size-body);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  position: relative;
+}
+.vm-tab--active {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+.vm-tab--active::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 2px;
+  background: var(--color-primary);
+}
+
+/* --- Body (Scaffold bg = surface light gray) --- */
+.vm-body {
+  position: absolute;
+  top: 104px;          /* 56 appbar + 48 tabbar */
+  left: 0; right: 0; bottom: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+  background: var(--color-surface);
+  padding: var(--spacing-large);  /* MinglitSpacing.large = 24 */
+}
+.vm-body::-webkit-scrollbar { display: none; }
+
+/* --- AddActionCard (tertiary tinted) --- */
+.vm-add {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-medium);
+  /* tertiary @ activeChip (~.20) — partner tertiary lime */
+  background: color-mix(in srgb, var(--color-tertiary) 20%, transparent);
+  border-radius: var(--radius-input);   /* 12 */
+  color: var(--color-tertiary);
+  margin-bottom: var(--spacing-medium);
+}
+.vm-add__icon { width: 20px; height: 20px; flex-shrink: 0; }
+.vm-add__text {
+  flex: 1;
+  margin-left: var(--spacing-medium);
+  display: flex; flex-direction: column; gap: var(--spacing-xxsmall);
+}
+.vm-add__title {
+  font-size: var(--typography-font-size-body);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.vm-add__sub {
+  font-size: var(--typography-font-size-caption);
+  color: var(--color-text-secondary);
+}
+.vm-add__chev {
+  width: 24px; height: 24px;
+  margin-left: var(--spacing-small);
+  /* tertiary @ separator (.40) */
+  color: color-mix(in srgb, var(--color-tertiary) 60%, transparent);
+  flex-shrink: 0;
+}
+
+/* --- VerificationCard --- */
+.vm-card {
+  display: flex;
+  align-items: flex-start;
+  background: var(--color-background);
+  border: 1px solid color-mix(in srgb, var(--color-divider) 60%, transparent);
+  border-radius: var(--radius-card);  /* 16 */
+  padding: var(--spacing-medium);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+  margin-bottom: var(--spacing-medium);
+}
+.vm-card:last-child { margin-bottom: 0; }
+.vm-card__icon-wrap {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  /* surfaceContainerHighest @ strong (.70) */
+  background: rgba(0, 0, 0, 0.05);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.vm-card__icon-wrap svg { width: 20px; height: 20px; color: var(--color-text-secondary); }
+.vm-card__info {
+  flex: 1;
+  min-width: 0;
+  margin-left: var(--spacing-medium);
+}
+.vm-card__title {
+  font-size: var(--typography-font-size-body);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1.4;
+}
+.vm-card__internal {
+  margin-top: var(--spacing-xxsmall);
+  font-size: var(--typography-font-size-caption);
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+.vm-card__desc {
+  margin-top: 0;
+  font-size: var(--typography-font-size-caption);
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+.vm-card__action {
+  width: 40px; height: 40px;
+  margin-left: var(--spacing-small);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+.vm-card__action svg { width: 22px; height: 22px; }
+
+/* --- Card-variant empty state (active tab only · MinglitEmptyState.card) --- */
+.vm-empty-card {
+  background: var(--color-background);  /* surfaceContainerLowest ≈ white */
+  border-radius: var(--radius-card);
+  padding: var(--spacing-xlarge);  /* 32 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--spacing-medium);
+}
+.vm-empty-card svg { width: 32px; height: 32px; color: var(--color-divider); }
+.vm-empty-card__title {
+  font-size: var(--typography-font-size-app-bar-title);   /* titleMedium */
+  color: var(--color-text-primary);
+}
+
+/* --- Full-page empty (archived tab — MinglitEmptyState.card too, but body
+       has no AddActionCard above so the card sits alone) --- */
+
+/* --- Loading spinner --- */
+.vm-spinner {
+  width: 36px; height: 36px;
+  border: 3px solid var(--color-divider);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: vm-spin 0.7s linear infinite;
+  margin: auto;
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+}
+@keyframes vm-spin { to { transform: rotate(360deg); } }
+
+/* --- Error column (default _DefaultErrorView · centered) --- */
+.vm-error {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: var(--spacing-medium);
+  padding: 0 var(--spacing-large);
+  text-align: center;
+}
+.vm-error svg { width: 32px; height: 32px; color: var(--color-error); }
+.vm-error__msg {
+  font-size: var(--typography-font-size-app-bar-title);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+/* --- Confirm dialog overlay (MinglitAlert.showConfirm) --- */
+.vm-dialog-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 var(--spacing-large);
+}
+.vm-dialog {
+  width: 100%;
+  max-width: 320px;
+  background: var(--color-background);
+  border-radius: var(--radius-card);
+  padding: var(--spacing-large);
+  display: flex; flex-direction: column;
+  gap: var(--spacing-medium);
+}
+.vm-dialog__title {
+  font-size: var(--typography-font-size-app-bar-title);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.vm-dialog__body {
+  font-size: var(--typography-font-size-body);
+  color: var(--color-text-primary);
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+.vm-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-small);
+}
+.vm-dialog__btn {
+  height: 36px;
+  padding: 0 var(--spacing-medium);
+  border-radius: var(--radius-button);
+  font-size: var(--typography-font-size-body);
+  font-weight: 700;
+  border: none;
+  background: transparent;
+}
+.vm-dialog__btn--cancel { color: var(--color-text-secondary); }
+.vm-dialog__btn--destructive {
+  background: var(--color-error);
+  color: #fff;
+}
+.vm-dialog__btn--confirm {
+  background: var(--color-primary);
+  color: #fff;
+}
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
+</div>
+
+<div class="page">
+
+<!-- ============================================================
+     HEADER
+     ============================================================ -->
+<header>
+  <h1>Verification Manage</h1>
+</header>
+
+<!-- ============================================================
+     OVERVIEW
+     ============================================================ -->
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr>
+        <th style="width: 140px;">Status</th>
+        <td><strong>✅ 디자인완료</strong> <em style="color: var(--color-text-secondary);">— 6 state · 파트너 커스텀 인증 관리 (사용 중/보관됨)</em></td>
+      </tr>
+      <tr>
+        <th>App</th>
+        <td><code>app_partner</code></td>
+      </tr>
+      <tr>
+        <th>Category</th>
+        <td>verification · partner ops · custom verification CRUD</td>
+      </tr>
+      <tr>
+        <th>Route / Surface</th>
+        <td><code>VerificationManageRoute</code> · widget: <code>VerificationManagePage</code></td>
+      </tr>
+      <tr>
+        <th>Path</th>
+        <td><code>/more/verifications/manage</code></td>
+      </tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>: <a href="/specs/more_page.html"><code>MorePage</code></a> (더보기 탭에서 push)<br>
+          <strong>Children</strong>: <code>CreateVerificationRoute</code> (AddActionCard 탭 시 push) · <code>_ActiveList</code> · <code>_ArchivedList</code> · <code>_VerificationManageCard</code> <em>(internal widgets — no separate spec)</em>
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>
+          파트너가 자기 가게 전용 커스텀 인증(예: '단골 회원', '월간 멤버십' 등)을 정의하고, 더 이상 쓰지 않는 인증을 보관하거나 다시 복구할 수 있게 한다.
+          파티 생성 시 입장 조건으로 선택할 수 있는 인증 풀(pool)을 관리하는 단일 진입점.
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry points</strong>: 더보기(MorePage) → "커스텀 인증 관리" 항목 탭.<br>
+          <strong>Exit points</strong>: AppBar back → MorePage 복귀 · AddActionCard → <code>CreateVerificationRoute</code> push (생성 후 active 리스트에 자동 반영) · 보관/복구 confirm → 같은 화면 stay (state 갱신).
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          파티 생성 wizard에서 입장 조건으로 인증을 고를 때 보이는 후보 목록은 (1) 시스템 글로벌 인증 + (2) 이 화면에서 만든 파트너 커스텀 인증(active만)이다.
+          보관(archive)은 hard-delete가 아닌 soft-delete (<code>is_active=false</code>) — 과거 파티의 인증 이력 보존을 위해. 사용 중/보관됨을 2 탭으로 분리한 이유는 active 리스트가 파티 생성에서 직접 노출되는 풀이기 때문에 시각적으로 명확히 구분해야 하기 때문.
+        </td>
+      </tr>
+      <tr>
+        <th>Frequency</th>
+        <td>활성 파트너 기준 월 0~수회. 신규 파트너 onboarding 직후 1회 집중 사용 후 안정 운영기에는 거의 진입하지 않음.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================
+     HISTORY
+     ============================================================ -->
+<section class="doc">
+  <h2>History</h2>
+  <p class="intro">이 spec의 주요 변경 이력. 최신 항목 위.</p>
+  <table class="ref">
+    <thead>
+      <tr>
+        <th style="width: 110px;">Date</th>
+        <th style="width: 80px;">Version</th>
+        <th style="width: 120px;">Author</th>
+        <th>Changes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2026-05-01</td>
+        <td>1.0</td>
+        <td>mark-yun</td>
+        <td>v1.4 template으로 작성. 6 state(Default 사용 중 · 보관됨 · Empty active · Empty archived · Loading · Error · Archive confirm dialog) → mini-table per state, baseline = 사용 중 탭(active list with verifications + AddActionCard), additive diff. 파트너 brand color(<code>#6c3ce1</code>) viewport-scoped override.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- Anchor nav -->
+<nav class="perspective-nav">
+  <a href="#layout"><span class="glyph">🧱</span> Layout</a>
+  <a href="#states"><span class="glyph">🎨</span> States</a>
+  <a href="#behavior"><span class="glyph">🔄</span> Global Behavior</a>
+  <a href="#reference"><span class="glyph">📖</span> Reference</a>
+</nav>
+
+<!-- ============================================================
+     LAYOUT
+     ============================================================ -->
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Layout</h2>
+    <span class="lede">화면 구조 — 영역, 정렬, 간격 규칙. 색·타이포 무시.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree</h2>
+    <p class="intro">
+      Scaffold = AppBar(left-aligned title '커스텀 인증 관리' + 2탭 TabBar) + body(MinglitAsyncValueWidget → TabBarView · 각 탭은 _ActiveList 또는 _ArchivedList). Active 탭은 SingleChildScrollView로 AddActionCard + ListView.separated(NeverScrollable, shrinkWrap)을 묶어 스크롤. Archived 탭은 ListView.separated 단독 스크롤. 하단 네비게이션 없음 — leaf route.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint">
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <!-- AppBar -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:0;left:0;right:0;height:56px;">
+          <span class="blueprint__region-label">① AppBar — back + '커스텀 인증 관리' (left-aligned)</span>
+        </div>
+        <!-- TabBar -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:56px;left:0;right:0;height:48px;">
+          <span class="blueprint__region-label">② TabBar — 사용 중 · 보관됨</span>
+        </div>
+        <!-- Body -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:104px;left:0;right:0;bottom:0;">
+          <span class="blueprint__region-label">③ TabBarView body<br>(_ActiveList: AddActionCard + cards<br>· _ArchivedList: cards only)</span>
+        </div>
+
+        <div class="blueprint__align-marker" style="top:8px;right:8px;">screen-edge pad 24 (large)</div>
+      </div>
+
+      <div class="layout-tree"><b>Scaffold</b>
+├─ <b>appBar</b>: AppBar
+│  ├─ leading: BackButton (auto)
+│  ├─ title: Text('커스텀 인증 관리') · centerTitle:false
+│  └─ <b>bottom</b>: TabBar(length:2)                          ← ②
+│     ├─ Tab('사용 중')
+│     └─ Tab('보관됨')
+├─ <b>body</b>: <code>MinglitAsyncValueWidget&lt;VerificationManageState&gt;</code>
+│   ├─ loading: <code>MinglitCircularProgressIndicator</code>
+│   ├─ error:   <code>_DefaultErrorView</code> (Icon error_outline + '오류가 발생했습니다.')
+│   └─ data:    TabBarView                                       ← ③
+│      ├─ <b>_ActiveList</b> (SingleChildScrollView · pad 24)
+│      │  ├─ <code>AddActionCard</code> ('새로운 인증 만들기' / 부제 / chevron)
+│      │  ├─ SizedBox 16
+│      │  └─ if active.isEmpty
+│      │     ├─ <code>MinglitEmptyState.card</code> ('생성된 인증이 없습니다.')
+│      │  else
+│      │     └─ ListView.separated (shrinkWrap · NeverScrollable)
+│      │        └─ _VerificationManageCard × N
+│      │           └─ VerificationCard(trailing: IconButton(archive_outlined))
+│      └─ <b>_ArchivedList</b>
+│         ├─ if empty → <code>MinglitEmptyState.card</code> ('보관된 인증이 없습니다.')
+│         └─ else → ListView.separated (pad 24)
+│            └─ _VerificationManageCard × N
+│               └─ VerificationCard(trailing: IconButton(restore_from_trash))
+└─ (no bottomNavigationBar — leaf route under /more)</div>
+    </div>
+  </section>
+
+  <section class="doc">
+    <h2>Spacing &amp; alignment rules</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>①</td><td>AppBar</td><td>height 56 · centerTitle:false (left-aligned) · bg = surface (no border) · scrolledUnderElevation 0</td><td>title typography <code>titleMedium</code> · fontWeight bold · iconTheme onSurface</td></tr>
+        <tr><td>②</td><td>TabBar</td><td>height 48 · 2 equal-flex tabs · indicator 2px partner primary · indicatorColor matches labelColor (active)</td><td>label color: active = <code>colorScheme.primary</code> · inactive = <code>onSurfaceVariant</code></td></tr>
+        <tr><td>③</td><td>TabBarView body (active)</td><td>SingleChildScrollView · pad <code>spacing-large (24)</code> on all sides · column stretch</td><td>AddActionCard ↔ list 사이: <code>SizedBox(height: spacing-medium = 16)</code> · 카드 사이: ListView.separated(<code>SizedBox(height: 16)</code>)</td></tr>
+        <tr><td>—</td><td>AddActionCard 내부</td><td>row · icon(20) + flex Column(title + subtitle) + chevron(24)</td><td>icon↔text: <code>spacing-medium (16)</code> · title↔sub: <code>spacing-xxsmall (2)</code> · text↔chev: <code>spacing-small (8)</code> · 패딩 all <code>spacing-medium (16)</code> · radius <code>radius-input (12)</code></td></tr>
+        <tr><td>—</td><td>VerificationCard 내부</td><td>row · iconWrap(40 circle) + Expanded info column + optional trailing IconButton</td><td>icon↔info: <code>spacing-medium (16)</code> · title↔internal: <code>spacing-xxsmall (2)</code> · trailing↔info: <code>spacing-small (8)</code> · 패딩 all <code>spacing-medium (16)</code> · radius <code>radius-card (16)</code> · border 1px outlineVariant @ strong (.70) · shadow blur 4 offset (0,2)</td></tr>
+        <tr><td>③′</td><td>TabBarView body (archived)</td><td>ListView.separated 단독 · pad <code>spacing-large (24)</code></td><td>카드 사이: <code>SizedBox(height: 16)</code> · empty 시 ListView 자체가 MinglitEmptyState.card로 대체</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<!-- ============================================================
+     STATES
+     ============================================================ -->
+<div class="perspective" id="states">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>States</h2>
+    <span class="lede">시각 변형 6종. baseline = Default(사용 중 탭 · verifications + AddActionCard), 나머지는 additive diff.</span>
+  </div>
+
+  <section class="doc">
+    <p class="intro">
+      <strong>State 식별 기준</strong>: 활성 탭 인덱스(0=사용 중 · 1=보관됨) · <code>verificationManageControllerProvider</code> AsyncValue lifecycle · <code>state.active.isEmpty</code> / <code>state.archived.isEmpty</code> · 보관/복구 confirm dialog overlay. 색은 <em>partner brand <code>#6c3ce1</code></em> (user app <code>#9900ff</code> 아님).
+    </p>
+
+    <h3 style="margin-top: 24px;">State summary <small style="font-size:12px;font-weight:400;color:var(--color-text-secondary);">— 6 states</small></h3>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 200px;">State</th>
+          <th style="width: 100px;">Tag</th>
+          <th style="width: 220px;">조건 (요약)</th>
+          <th>Key visual differentiator</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Default · 사용 중</strong></td><td>baseline</td><td>tab 0 · active 1+개</td><td>AddActionCard(tertiary tint) + VerificationCard 리스트, 각 카드 우측 archive_outlined IconButton</td></tr>
+        <tr><td><strong>보관됨 탭</strong></td><td>history</td><td>tab 1 · archived 1+개</td><td>− AddActionCard · 카드 우측 IconButton 아이콘이 restore_from_trash로 변경</td></tr>
+        <tr><td><strong>Empty · 사용 중</strong></td><td>no data</td><td>tab 0 · active.isEmpty</td><td>AddActionCard 유지 · 그 아래 MinglitEmptyState.card('생성된 인증이 없습니다.')</td></tr>
+        <tr><td><strong>Empty · 보관됨</strong></td><td>no data</td><td>tab 1 · archived.isEmpty</td><td>MinglitEmptyState.card('보관된 인증이 없습니다.') 단독 (AddActionCard 없음)</td></tr>
+        <tr><td><strong>Loading</strong></td><td>async</td><td>provider.isLoading</td><td>중앙 MinglitCircularProgressIndicator (TabBar 보임 · TabBarView 영역만 spinner)</td></tr>
+        <tr><td><strong>Error</strong></td><td>network/server</td><td>provider.hasError</td><td>중앙 _DefaultErrorView — Icon error_outline + '오류가 발생했습니다.' (retry 버튼 없음)</td></tr>
+        <tr><td><strong>Archive confirm dialog</strong></td><td>overlay</td><td>archive IconButton 탭 직후</td><td>scrim + AlertDialog(MinglitAlert.showConfirm · isDestructive:true) — 빨간 '보관하기' 버튼</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ─── State 1: Default · 사용 중 (baseline) ─────────────────── -->
+    <table class="ref state-mini is-baseline-tint">
+      <thead>
+        <tr><th colspan="3"><strong>Default · 사용 중 (active list)</strong> 🎯 <small>baseline · 인증을 1개 이상 만들어둔 일반 진입</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="vm-appbar">
+                <div class="vm-appbar__back">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 6 9 12 15 18"/></svg>
+                </div>
+                <div class="vm-appbar__title">커스텀 인증 관리</div>
+              </div>
+              <div class="vm-tabbar">
+                <div class="vm-tab vm-tab--active">사용 중</div>
+                <div class="vm-tab">보관됨</div>
+              </div>
+              <div class="vm-body">
+                <!-- AddActionCard -->
+                <div class="vm-add">
+                  <svg class="vm-add__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                  <div class="vm-add__text">
+                    <div class="vm-add__title">새로운 인증 만들기</div>
+                    <div class="vm-add__sub">우리 가게만의 특별한 입장 조건을 만들어보세요.</div>
+                  </div>
+                  <svg class="vm-add__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 6 15 12 9 18"/></svg>
+                </div>
+                <!-- Card 1 — career -->
+                <div class="vm-card">
+                  <div class="vm-card__icon-wrap">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>
+                  </div>
+                  <div class="vm-card__info">
+                    <div class="vm-card__title">단골 회원 인증</div>
+                    <div class="vm-card__internal">[regular_member]</div>
+                    <div class="vm-card__desc">3개월 이상 방문 기록이 있는 회원만 입장 가능</div>
+                  </div>
+                  <div class="vm-card__action">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+                  </div>
+                </div>
+                <!-- Card 2 — etc -->
+                <div class="vm-card">
+                  <div class="vm-card__icon-wrap">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>
+                  </div>
+                  <div class="vm-card__info">
+                    <div class="vm-card__title">VIP 멤버십</div>
+                    <div class="vm-card__internal">[vip_membership]</div>
+                    <div class="vm-card__desc">월간 VIP 등급 멤버 한정</div>
+                  </div>
+                  <div class="vm-card__action">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+                  </div>
+                </div>
+                <!-- Card 3 — academic -->
+                <div class="vm-card">
+                  <div class="vm-card__icon-wrap">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10L12 4 2 10l10 6 10-6z"/><path d="M6 12v5a6 6 0 0 0 12 0v-5"/></svg>
+                  </div>
+                  <div class="vm-card__info">
+                    <div class="vm-card__title">대학생 인증</div>
+                    <div class="vm-card__internal">[student_id_local]</div>
+                  </div>
+                  <div class="vm-card__action">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>활성 탭 = 0(사용 중) · <code>state.active.isNotEmpty</code> · partner 객체 정상 fetch.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            ① <strong>AppBar back</strong> → MorePage로 pop<br>
+            ② <strong>탭 전환</strong>(사용 중 ↔ 보관됨) → <code>DefaultTabController</code> · TabBarView swipe/tap 모두 수용 · 같은 provider 캐시 유지(전환 시 refetch 없음)<br>
+            ③ <strong>AddActionCard 탭</strong> → <code>const CreateVerificationRoute().push&lt;void&gt;(context)</code> · 생성 후 pop 시 controller 자체가 invalidate 되진 않으나 <code>CreateVerificationPage</code>가 완료 시 invalidate 트리거(외부 책임)<br>
+            ④ <strong>VerificationCard 본체</strong> 탭 → <em>무반응</em> (VerificationCard.onTap을 _VerificationManageCard에서 넘기지 않음 — 현재 화면에서는 row 자체가 정보 표시용)<br>
+            ⑤ <strong>archive_outlined IconButton</strong> 탭 → <code>_confirmArchive</code> → MinglitAlert.showConfirm(isDestructive:true) → 확정 시 <code>archiveVerification</code> RPC → globalLoadingController show/hide → state 재 fetch · 해당 카드는 active 리스트에서 사라지고 archived로 이동(보관됨 탭 진입 시 보임)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · <code>verification.internalName == verification.displayName</code> 또는 빈 문자열이면 <code>[internal]</code> 라인 미렌더 (VerificationCard 내부 분기)<br>
+            · <code>verification.description</code>이 null/빈 문자열이면 description 라인 미렌더 (제목 + internal만 표시)<br>
+            · <code>VerificationCategory</code>가 backend에서 새 enum 추가 시 fallback 없음 — switch는 6 케이스(career/academic/asset/marriage/vehicle/etc) 전부 커버되어 컴파일 에러로 강제됨<br>
+            · 보관 confirm 도중 globalLoadingController가 show 상태이므로 화면 전체가 modal blocker로 잠김 — 동일 카드 두 번 탭 race 방지<br>
+            · 카드의 InkWell.onTap이 null이라 ripple도 발생하지 않음 (단지 IconButton만 인터랙티브)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            · <code>Scaffold</code> + <code>AppBar</code>(title:Text, centerTitle:false, bottom:TabBar) · <code>DefaultTabController(length:2)</code><br>
+            · <code>TabBar</code>(2 tabs) · <code>TabBarView</code> with <code>_ActiveList</code> + <code>_ArchivedList</code><br>
+            · <code>MinglitAsyncValueWidget&lt;VerificationManageState&gt;</code> wrapper<br>
+            · <code>SingleChildScrollView</code> + <code>Column(crossAxisAlignment.stretch)</code><br>
+            · <code>AddActionCard</code>(tertiary tint · iconData defaults to <code>Icons.add_circle_outline</code> · chevron right)<br>
+            · <code>ListView.separated</code> (shrinkWrap · NeverScrollableScrollPhysics · separator: SizedBox 16)<br>
+            · <code>_VerificationManageCard</code> → <code>VerificationCard</code> (icon wrap surfaceContainerHighest @ strong + Column [displayName · [internalName] · description] + trailing IconButton archive_outlined w/ tooltip '보관하기')
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            · color: <code>color-partner-primary</code> (<code>#6c3ce1</code> — TabBar indicator/active label), <code>color-tertiary</code> (AddActionCard bg @ activeChip + icon · chevron @ separator), <code>color-surface</code> (scaffold + appbar + tabbar bg), <code>color-background</code> (VerificationCard bg = colorScheme.surface white), <code>onSurfaceVariant</code> (icon wrap aux color · trailing IconButton color)<br>
+            · radius: <code>radius-card (16)</code> (VerificationCard), <code>radius-input (12)</code> (AddActionCard)<br>
+            · spacing: <code>spacing-large (24)</code> (body padding all), <code>spacing-medium (16)</code> (card 내부 padding · 카드 사이 separator · icon↔text), <code>spacing-small (8)</code> (text↔chevron · trailing↔info), <code>spacing-xxsmall (2)</code> (title↔internal·description), <code>spacing-small + spacing-xxsmall (10)</code> (VerificationCard icon wrap padding)<br>
+            · typography: <code>app-bar-title (18)</code>, <code>body (14)</code> (card title · AddActionCard title), <code>caption (12)</code> (internal/description · AddActionCard subtitle)<br>
+            · opacity: <code>activeChip (.20)</code> (AddActionCard bg fill from tertiary), <code>strong (.70)</code> (VerificationCard border · icon-wrap surfaceContainerHighest fill)<br>
+            · icon size: <code>small (20)</code> (AddActionCard leading · VerificationCard category icon), <code>medium (24)</code> (AddActionCard trailing chevron)<br>
+            · animation: AddActionCard <code>AnimatedContainer</code> duration <code>MinglitAnimation.fast (200ms)</code>
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 가장 일반적 진입 상태. 보관(archive) 액션은 controller-내부에서 globalLoadingController로 감싸져 있어 RPC 진행 중 화면 전체가 block된다. AppBar back은 Material default(없으면 자동 추가). row의 onTap을 넘기지 않은 건 의도 — 향후 카드 인라인 편집 도입 시 전달 가능.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ─── State 2: 보관됨 탭 ─────────────────── -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>보관됨 탭 (archived list)</strong> <small>tab 1 · 보관된 인증 1+개</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="vm-appbar">
+                <div class="vm-appbar__back">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 6 9 12 15 18"/></svg>
+                </div>
+                <div class="vm-appbar__title">커스텀 인증 관리</div>
+              </div>
+              <div class="vm-tabbar">
+                <div class="vm-tab">사용 중</div>
+                <div class="vm-tab vm-tab--active">보관됨</div>
+              </div>
+              <div class="vm-body">
+                <div class="vm-card">
+                  <div class="vm-card__icon-wrap">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 14V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v8"/><path d="M3 14h18l-1 6H4z"/></svg>
+                  </div>
+                  <div class="vm-card__info">
+                    <div class="vm-card__title">기프트 카드 소지</div>
+                    <div class="vm-card__internal">[gift_card]</div>
+                    <div class="vm-card__desc">5월 프로모션용 일회성 인증 — 종료 후 보관</div>
+                  </div>
+                  <div class="vm-card__action">
+                    <!-- restore_from_trash -->
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><polyline points="9 14 12 11 15 14"/><line x1="12" y1="11" x2="12" y2="17"/></svg>
+                  </div>
+                </div>
+                <div class="vm-card">
+                  <div class="vm-card__icon-wrap">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+                  </div>
+                  <div class="vm-card__info">
+                    <div class="vm-card__title">신규 회원 한정</div>
+                    <div class="vm-card__internal">[newcomer_only]</div>
+                  </div>
+                  <div class="vm-card__action">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><polyline points="9 14 12 11 15 14"/><line x1="12" y1="11" x2="12" y2="17"/></svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>↔ 활성 탭 = 1 · <code>state.archived.isNotEmpty</code></td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            ↔ archive IconButton 자리 → <strong>restore_from_trash IconButton</strong> 탭 → <code>_confirmRestore</code> → MinglitAlert.showConfirm(isDestructive:false) → 확정 시 <code>restoreVerification</code> RPC → 카드는 archived에서 사라지고 active 리스트로 이동<br>
+            동일: AppBar back · 탭 전환 · 카드 본체는 무반응 · AddActionCard는 등장 안 함
+          </td>
+        </tr>
+        <tr><td class="state-mini__aspect">에지케이스</td><td>+ 복구 후 같은 internalName이 active에 이미 살아있는 경우는 발생하지 않음 (DB unique constraint). 만약 RPC에서 conflict → controller가 AsyncError로 전환 → 다음 빌드에 _DefaultErrorView 표시 (state는 락이 풀린 상태로 유지).</td></tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            − <code>SingleChildScrollView</code>, − <code>AddActionCard</code>, − <code>NeverScrollableScrollPhysics</code>(active의 inner ListView)<br>
+            ↔ ListView.separated 단독(자체 스크롤 · padding all <code>spacing-large = 24</code>)<br>
+            ↔ trailing icon: <code>Icons.archive_outlined</code> → <code>Icons.restore_from_trash</code> · tooltip '보관하기' → '복구하기'<br>
+            ↔ confirm dialog isDestructive: true → false (default red 버튼 사라짐 · partner primary 색 사용)
+          </td>
+        </tr>
+        <tr><td class="state-mini__aspect">토큰</td><td>− <code>color-tertiary</code> usage (no AddActionCard) · 동일: card · primary · spacing</td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 보관된 인증은 <em>새 파티 생성 시 선택지에 노출되지 않음</em>. 단, 과거 파티가 이 인증을 입장 조건으로 잡고 있었다면 그 파티의 신청자/신청 이력은 그대로 유효 — soft-delete의 의도가 이력 보존.</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ─── State 3: Empty 사용 중 ─────────────────── -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Empty · 사용 중</strong> <small>active.isEmpty</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="vm-appbar">
+                <div class="vm-appbar__back">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 6 9 12 15 18"/></svg>
+                </div>
+                <div class="vm-appbar__title">커스텀 인증 관리</div>
+              </div>
+              <div class="vm-tabbar">
+                <div class="vm-tab vm-tab--active">사용 중</div>
+                <div class="vm-tab">보관됨</div>
+              </div>
+              <div class="vm-body">
+                <div class="vm-add">
+                  <svg class="vm-add__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                  <div class="vm-add__text">
+                    <div class="vm-add__title">새로운 인증 만들기</div>
+                    <div class="vm-add__sub">우리 가게만의 특별한 입장 조건을 만들어보세요.</div>
+                  </div>
+                  <svg class="vm-add__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 6 15 12 9 18"/></svg>
+                </div>
+                <div class="vm-empty-card">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                  <div class="vm-empty-card__title">생성된 인증이 없습니다.</div>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>+ <code>state.active.isEmpty == true</code> (파트너가 아직 커스텀 인증을 하나도 만들지 않음 — 신규 파트너 일반)</td>
+        </tr>
+        <tr><td class="state-mini__aspect">사용자 액션</td><td>↔ AddActionCard만 의미 있는 인터랙션 — 탭 → CreateVerificationRoute. 동일: AppBar back · 탭 전환.</td></tr>
+        <tr><td class="state-mini__aspect">에지케이스</td><td>+ 신규 파트너의 첫 진입 = 100% 이 상태. CreateVerificationPage에서 생성 후 돌아오면 active 리스트에 새 인증이 들어가며 baseline 상태로 전환.</td></tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            ↔ ListView.separated → <code>MinglitEmptyState.card</code>(title:'생성된 인증이 없습니다.', icon:Icons.verified_user_outlined)<br>
+            + <code>Container</code> with surfaceContainerLowest bg · radius-card · pad-xlarge<br>
+            + Icon 32px <code>outlineVariant</code> · titleMedium '생성된 인증이 없습니다.'
+          </td>
+        </tr>
+        <tr><td class="state-mini__aspect">토큰</td><td>+ icon size <code>xlarge (32)</code>, color <code>outlineVariant</code> · spacing icon↔title <code>spacing-medium (16)</code> · pad <code>spacing-xlarge (32)</code></td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 EmptyState.card는 transparent 배경 위에 white 카드로 떠 있는 형태가 의도. AddActionCard가 위에 함께 보여 첫 액션 유도가 명확.</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ─── State 4: Empty 보관됨 ─────────────────── -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Empty · 보관됨</strong> <small>archived.isEmpty</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="vm-appbar">
+                <div class="vm-appbar__back">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 6 9 12 15 18"/></svg>
+                </div>
+                <div class="vm-appbar__title">커스텀 인증 관리</div>
+              </div>
+              <div class="vm-tabbar">
+                <div class="vm-tab">사용 중</div>
+                <div class="vm-tab vm-tab--active">보관됨</div>
+              </div>
+              <div class="vm-body" style="padding: 0;">
+                <div class="vm-empty-card" style="margin: 24px;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                  <div class="vm-empty-card__title">보관된 인증이 없습니다.</div>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>+ tab 1 · <code>state.archived.isEmpty == true</code> (보관한 적 없음 — 신규 파트너 default)</td>
+        </tr>
+        <tr><td class="state-mini__aspect">사용자 액션</td><td>− 카드 액션(없음) · 동일: AppBar back · 탭 전환</td></tr>
+        <tr><td class="state-mini__aspect">에지케이스</td><td>+ Archived 탭은 _ArchivedList가 직접 <code>return MinglitEmptyState.card(...)</code>를 반환 — ListView.separated 자체가 없음. 따라서 padding-large가 <em>외부 padding으로 들어가지 않고</em> EmptyState.card는 화면 정중앙이 아닌 TabBarView 영역의 자연스런 위치에 표시됨 (Center 효과가 EmptyState 내부 Center로 처리).</td></tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            ↔ ListView.separated → <code>MinglitEmptyState.card</code>(title:'보관된 인증이 없습니다.', icon:Icons.verified_user_outlined)<br>
+            − padding wrapper (active 탭과 달리 _ArchivedList가 padding을 ListView에 줬는데, empty 분기에서는 직접 EmptyState만 반환)
+          </td>
+        </tr>
+        <tr><td class="state-mini__aspect">토큰</td><td>동일 (Empty 사용 중과 같음 — EmptyState.card variant)</td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 padding이 active의 empty와 미묘하게 달라 보일 수 있음(active은 Column 내 stretch 24px padding 안쪽, archived는 padding 없이 EmptyState.card 자체가 viewport에 fill). 정확한 픽셀이 중요하면 active와 동일하게 wrapping 통일하는 후속 정리 후보.</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ─── State 5: Loading ─────────────────── -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Loading</strong> <small>provider.isLoading</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="vm-appbar">
+                <div class="vm-appbar__back">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 6 9 12 15 18"/></svg>
+                </div>
+                <div class="vm-appbar__title">커스텀 인증 관리</div>
+              </div>
+              <div class="vm-tabbar">
+                <div class="vm-tab vm-tab--active">사용 중</div>
+                <div class="vm-tab">보관됨</div>
+              </div>
+              <div class="vm-body" style="padding: 0;">
+                <div class="vm-spinner"></div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>+ <code>verificationManageControllerProvider.isLoading</code> (initial fetch · partner 객체 fetch + active/archived parallel Future.wait 진행중)</td>
+        </tr>
+        <tr><td class="state-mini__aspect">사용자 액션</td><td>탭 전환 가능 (DefaultTabController는 별도라 인터랙션 됨) · 그 외 무반응. archive/restore 진행 중 별도 globalLoadingController가 화면 전체 modal로 잠금 — 이 경우는 build의 AsyncValue.loading과 다름(글로벌 loader는 Scaffold 위에 띄움).</td></tr>
+        <tr><td class="state-mini__aspect">에지케이스</td><td>+ <code>partner == null</code>이면 controller는 빈 state(<code>VerificationManageState()</code>)로 데이터 분기에 진입 — Loading은 정상 종료되지만 양쪽 탭 모두 Empty로 보임.</td></tr>
+        <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ TabBarView/ActiveList/ArchivedList → <code>MinglitCircularProgressIndicator</code> (Center) · TabBar는 그대로 노출</td></tr>
+        <tr><td class="state-mini__aspect">토큰</td><td>spinner color = ProgressIndicatorTheme default (partner primary tint)</td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 active/archived를 Future.wait로 병렬 fetch라 단일 RPC fail 시 양쪽 모두 error 분기로 떨어짐. UX 개선 후보: skeleton card list 도입.</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ─── State 6: Error ─────────────────── -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Error</strong> <small>provider.hasError</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="vm-appbar">
+                <div class="vm-appbar__back">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 6 9 12 15 18"/></svg>
+                </div>
+                <div class="vm-appbar__title">커스텀 인증 관리</div>
+              </div>
+              <div class="vm-tabbar">
+                <div class="vm-tab vm-tab--active">사용 중</div>
+                <div class="vm-tab">보관됨</div>
+              </div>
+              <div class="vm-body" style="padding: 0;">
+                <div class="vm-error">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  <div class="vm-error__msg">오류가 발생했습니다.</div>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>+ <code>verificationManageControllerProvider.hasError</code> — initial fetch 실패 또는 archive/restore RPC 실패 후 controller가 <code>state = AsyncError(e, st)</code>로 직접 전환한 경우.</td>
+        </tr>
+        <tr><td class="state-mini__aspect">사용자 액션</td><td>− retry 버튼 없음 (<code>MinglitAsyncValueWidget</code> default error는 Icon + 텍스트만). 사용자는 AppBar back으로 빠져나갔다 다시 진입(또는 다른 화면 거쳐 controller 재 build) 외 자동 retry 경로 없음.</td></tr>
+        <tr><td class="state-mini__aspect">에지케이스</td><td>+ archive/restore 도중 에러로 진입한 경우 globalLoadingController는 finally block에서 hide됨 — 화면 잠금이 풀려 back 버튼 누를 수 있음. + <code>showErrorDetails:false</code>(default)이라 e.toString()은 노출되지 않음.</td></tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            ↔ TabBarView → <code>_DefaultErrorView</code> (in MinglitAsyncValueWidget) — Center + Column<br>
+            + <code>Icon</code>(error_outline · color = error · size xlarge 32)<br>
+            + <code>Text</code>('오류가 발생했습니다.' · titleMedium bold)
+          </td>
+        </tr>
+        <tr><td class="state-mini__aspect">토큰</td><td>+ <code>color-error</code> (icon) · spacing icon↔text <code>spacing-medium (16)</code></td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 retry UX 부재가 알려진 약점 — 향후 page 자체에 <code>error</code> custom builder를 넘겨 'FilledButton 다시 시도'를 추가하는 게 후속 개선.</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ─── State 7: Archive confirm dialog ─────────────────── -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Archive confirm dialog</strong> <small>archive IconButton 탭 직후</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="vm-appbar">
+                <div class="vm-appbar__back">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 6 9 12 15 18"/></svg>
+                </div>
+                <div class="vm-appbar__title">커스텀 인증 관리</div>
+              </div>
+              <div class="vm-tabbar">
+                <div class="vm-tab vm-tab--active">사용 중</div>
+                <div class="vm-tab">보관됨</div>
+              </div>
+              <div class="vm-body">
+                <div class="vm-add">
+                  <svg class="vm-add__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                  <div class="vm-add__text">
+                    <div class="vm-add__title">새로운 인증 만들기</div>
+                    <div class="vm-add__sub">우리 가게만의 특별한 입장 조건을 만들어보세요.</div>
+                  </div>
+                  <svg class="vm-add__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 6 15 12 9 18"/></svg>
+                </div>
+                <div class="vm-card" style="opacity:0.5;">
+                  <div class="vm-card__icon-wrap">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="13" rx="2"/></svg>
+                  </div>
+                  <div class="vm-card__info">
+                    <div class="vm-card__title">단골 회원 인증</div>
+                    <div class="vm-card__internal">[regular_member]</div>
+                  </div>
+                </div>
+              </div>
+              <div class="vm-dialog-scrim">
+                <div class="vm-dialog">
+                  <div class="vm-dialog__title">인증 보관</div>
+                  <div class="vm-dialog__body">'단골 회원 인증' 인증을 보관함으로 이동하시겠습니까?
+
+더 이상 새로운 파티에 이 인증을 사용할 수 없게 됩니다.</div>
+                  <div class="vm-dialog__actions">
+                    <button class="vm-dialog__btn vm-dialog__btn--cancel">취소</button>
+                    <button class="vm-dialog__btn vm-dialog__btn--destructive">보관하기</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>+ archive_outlined IconButton 탭 → <code>MinglitAlert.showConfirm(isDestructive:true)</code> dialog가 위에 띄워진 직후. (보관됨 탭의 restore 액션은 isDestructive:false라 partner primary 색 사용 — 별도 mini-table 생략, 본 state의 변형으로 본다.)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            + <strong>'취소'</strong> 탭 → dialog dismiss · 화면 그대로 (Future&lt;bool&gt; resolve to false → archiveVerification 미호출)<br>
+            + <strong>'보관하기'</strong>(빨간 destructive) 탭 → resolve true → globalLoadingController.show → repo.deleteVerification(soft) → state 재 fetch → AsyncData(newState) · 카드는 active 리스트에서 사라짐<br>
+            + <strong>scrim 외부 탭</strong> → dialog dismiss (Material default barrier dismiss)
+          </td>
+        </tr>
+        <tr><td class="state-mini__aspect">에지케이스</td><td>+ RPC 실패 시 controller가 <code>state = AsyncError(e, st)</code>로 전환 → 다음 빌드는 Error state로 떨어짐 (carryover 없이 전체 화면 error). 성공 후 같은 인증을 다시 archive 시도하는 race는 발생 불가 (active에서 이미 사라졌기 때문).</td></tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            + <code>MinglitAlert.showConfirm</code> overlay = <code>AlertDialog</code>(MinglitAlertType.destructive) · scrim Material default<br>
+            + content body는 multi-line 문자열 + 빈 줄 — 그대로 줄바꿈 노출<br>
+            + confirm 버튼 isDestructive:true → background = <code>color-error</code> · foreground white · 'cancel'은 text button gray
+          </td>
+        </tr>
+        <tr><td class="state-mini__aspect">토큰</td><td>+ <code>color-error</code> (destructive 버튼 fill) · scrim alpha .45 · dialog radius <code>radius-card (16)</code> · button radius <code>radius-button (12)</code></td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 동일 패턴이 보관됨 탭의 복구 dialog에서도 사용되며 차이는 isDestructive:false → confirm 버튼 색이 partner primary로 바뀐다는 점뿐. content 카피는 '복구하시겠습니까?' / '다시 파티 생성 시 선택할 수 있게 됩니다.'</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<!-- ============================================================
+     GLOBAL BEHAVIOR
+     ============================================================ -->
+<div class="perspective" id="behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">cross-cutting — 모든 state에 적용되는 액션, motion, 글로벌 에지케이스. 각 state 한정 액션은 위 mini-table 참고.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Cross-cutting interactions</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 240px;">사용자 액션</th>
+          <th>화면에 보이는 결과</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>탭 전환 (사용 중 ↔ 보관됨)</td>
+          <td><code>DefaultTabController</code> · TabBarView swipe/tap 모두 수용. 단일 provider가 양쪽 리스트(<code>state.active</code>, <code>state.archived</code>)를 동시에 들고 있어 전환 시 refetch 없음 — 클라이언트 측 split만 일어남.</td>
+        </tr>
+        <tr>
+          <td>AppBar back / OS back</td>
+          <td>MorePage(부모 라우트)로 pop. Stack 위 dialog가 떠 있으면 dialog만 dismiss됨 (Material default).</td>
+        </tr>
+        <tr>
+          <td>archive/restore 실행 중</td>
+          <td><code>globalLoadingController.show()</code> — 화면 전체에 modal scrim + spinner. RPC 끝까지 사용자 입력 차단(중복 클릭 방지). finally에서 hide.</td>
+        </tr>
+        <tr>
+          <td>다크 모드 토글</td>
+          <td>scaffold bg → <code>color-dark-surface</code> · primary → <code>color-partner-dark-primary</code>(<code>#9b7bec</code>). VerificationCard border가 dark에서 보이도록 outlineVariant도 dark 토큰으로 매핑.</td>
+        </tr>
+        <tr>
+          <td>CreateVerificationRoute push 후 pop</td>
+          <td>외부에서 controller invalidate를 호출해야 active 리스트에 반영(현재 코드는 Create 페이지가 이를 책임지는 구조 — 본 spec 범위 외). 자동 갱신은 보장되지 않음.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Motion timing</h2>
+    <p class="intro">
+      Source: <code>shared/packages/mds/core/lib/src/theme/minglit_design_tokens.dart</code> · <code>MinglitAnimation</code>.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 240px;">Transition</th>
+          <th style="width: 200px;">Token / Duration</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Tab indicator 슬라이드</td>
+          <td>Material default (~300ms)</td>
+          <td>TabController의 default kTabScrollDuration. AnimationToken과 1:1 매핑 안 됨, medium에 가까움.</td>
+        </tr>
+        <tr>
+          <td>TabBarView page swipe</td>
+          <td>Material default (~300ms)</td>
+          <td>fling curve.</td>
+        </tr>
+        <tr>
+          <td>AddActionCard color/shape transition</td>
+          <td><code>MinglitAnimation.fast</code> (200ms)</td>
+          <td>AnimatedContainer 기본 — 현재 정적이지만 향후 hover/pressed에 사용 예정.</td>
+        </tr>
+        <tr>
+          <td>CreateVerificationRoute push</td>
+          <td><code>MinglitAnimation.fast</code> (200ms)</td>
+          <td>go_router 기본 push transition (Material default — fadeUp).</td>
+        </tr>
+        <tr>
+          <td>MinglitAlert.showConfirm scale-fade</td>
+          <td>Material default (~150ms)</td>
+          <td>AlertDialog 기본. dismiss도 동일.</td>
+        </tr>
+        <tr>
+          <td>archive/restore 후 list update</td>
+          <td>cut (no animation)</td>
+          <td>controller가 state = AsyncData(newState) 직접 set → AnimatedSwitcher 등 미사용 → 즉시 swap.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Global edge cases</h2>
+    <ul class="notes">
+      <li><strong>partner 객체 null</strong> — currentPartnerInfoProvider가 null을 emit하면 controller는 빈 state로 즉시 데이터 분기 진입. Loading은 끝나고 양쪽 탭 모두 Empty로 보이지만, 실제로는 'partner not signed in / org not selected' 상황. 별도 안내 문구 없음 (현재 약점).</li>
+      <li><strong>parallel fetch fail</strong> — Future.wait 중 어느 쪽이라도 throw 하면 controller는 AsyncError로 전환 — 양쪽 탭 모두 _DefaultErrorView. partial recovery 불가.</li>
+      <li><strong>archive/restore RPC 실패</strong> — controller가 직접 catch → state = AsyncError. 즉, 액션 결과 실패 시 전체 페이지가 error로 떨어짐 (snackbar로 가벼운 노출이 아님). UX 개선 후보: SnackBar로 결과 표시 + 리스트는 stale 유지.</li>
+      <li><strong>같은 카테고리 아이콘 collision</strong> — switch 매핑은 enum 값별 1:1이므로 collision은 없음. 단, etc 카테고리는 verified_user_outlined로 fallback (의미상 모호).</li>
+      <li><strong>다크 모드</strong> — partner dark primary(<code>#9b7bec</code>) 사용. tertiary tint(AddActionCard bg)도 dark에서 어둡게 매핑되어 텍스트 가독성 검증 권장.</li>
+      <li><strong>접근성</strong> — IconButton tooltip ('보관하기' / '복구하기') 노출. VerificationCard 자체에는 별도 Semantics가 없어 screen reader는 displayName + internalName + description을 순차 읽음. internalName 대괄호는 음성 출력에서 어색할 수 있음 (개선 후보).</li>
+    </ul>
+  </section>
+</div>
+
+<!-- ============================================================
+     REFERENCE
+     ============================================================ -->
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">📖</span>
+    <h2>Reference</h2>
+    <span class="lede">implementation source + 인접 화면. Components / Tokens는 위 mini-table 참고.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Implementation source</h2>
+    <table class="ref">
+      <tbody>
+        <tr><th style="width: 200px;">Widget</th><td><code>VerificationManagePage</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/features/verification/manage/verification_manage_page.dart"><code>apps/app_partner/lib/src/features/verification/manage/verification_manage_page.dart</code></a></td></tr>
+        <tr><th>Internal widgets</th><td><code>_ActiveList</code> · <code>_ArchivedList</code> · <code>_VerificationManageCard</code> (page 파일 내부 private)</td></tr>
+        <tr><th>Shared atoms</th><td><code>VerificationCard</code> (<code>shared/packages/minglit_kit/lib/src/ui/widgets/common/verification_card.dart</code>) · <code>AddActionCard</code> (kit common) · <code>MinglitEmptyState.card</code> · <code>MinglitAsyncValueWidget</code> · <code>MinglitAlert.showConfirm</code></td></tr>
+        <tr><th>Route</th><td><code>VerificationManageRoute</code> · path <code>/more/verifications/manage</code> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/routing/app_routes.dart"><code>app_routes.dart</code></a> (MoreBranch · StatefulShell · 5번째 branch)</td></tr>
+        <tr><th>Sibling push target</th><td><code>CreateVerificationRoute</code> · path <code>/more/verifications/create</code> · sibling under MoreBranch (not nested child)</td></tr>
+        <tr><th>Provider</th><td><code>verificationManageControllerProvider</code> (AsyncNotifierProvider · <code>VerificationManageController</code>) · <code>currentPartnerInfoProvider</code> · <code>verificationRepositoryProvider</code> · <code>globalLoadingControllerProvider</code></td></tr>
+        <tr><th>Repository methods</th><td><code>VerificationRepository.getPartnerVerifications(partnerId, isActive: true|false)</code> · <code>deleteVerification(id)</code> (soft) · <code>restoreVerification(id)</code></td></tr>
+        <tr><th>Theme</th><td><code>MinglitTheme.partnerTheme</code> — primary <code>MinglitPartnerColors.primary</code>(<code>#6c3ce1</code>). user app(<code>#9900ff</code>)과 다름.</td></tr>
+        <tr><th>Model</th><td><code>Verification</code> (<code>shared/packages/minglit_kit/lib/src/data/models/verification.dart</code>) · <code>VerificationCategory</code> enum (career/academic/asset/marriage/vehicle/etc) — switch에서 카테고리 아이콘 매핑.</td></tr>
+        <tr><th>⚠️ 알려진 drift</th><td>Error state에 retry 버튼 없음 — back 후 재진입만 회복 경로. archive/restore 실패도 Error state로 전체 떨어짐(SnackBar 미사용). active 탭의 empty와 archived 탭의 empty는 padding wrapping이 미세하게 다름(active은 SingleChildScrollView 내부, archived는 EmptyState 단독). CreateVerificationRoute pop 후 자동 invalidate 미보장(외부 트리거 의존).</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 240px;">Spec</th><th>Relation</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><a href="/specs/more_page.html"><code>MorePage</code></a></td>
+          <td>부모 라우트. 더보기 메뉴 항목에서 본 화면으로 push.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/party_create_wizard_page.html"><code>PartyCreateWizardPage</code></a></td>
+          <td>파티 생성 wizard의 "입장 조건" 단계에서 본 화면 active 리스트에 있는 인증을 후보로 노출. 보관됨 인증은 노출되지 않음.</td>
+        </tr>
+        <tr>
+          <td><a href="/foundations/layout">Layout foundations</a></td>
+          <td>Standard Scaffold + AppBar(bottom:TabBar) + TabBarView · leaf route under StatefulShell (no bottom nav).</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+</div>
+
+<script>
+  document.getElementById('spec-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('spec-mode', e.target.checked);
+  });
+  document.getElementById('dark-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('dark-mode', e.target.checked);
+  });
+</script>
+</body>
+</html>

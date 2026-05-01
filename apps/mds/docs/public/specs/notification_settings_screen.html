@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Spec — NotificationSettingsScreen (kit-shared · NotificationSettingsRoute)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* ============================================================
+   NotificationSettingsScreen-specific atoms.
+   Tokens / chrome / mini-table은 /specs/_spec.css에서 import.
+   widget: shared/packages/minglit_kit/lib/src/features/notification/
+           notification_settings_screen.dart
+   ============================================================ */
+
+/* Scaffold = MinglitColors.surface (light gray #f9fafb).
+   AppBar inherits scaffold gray (elevation 0 + surfaceTintColor transparent).
+   ListView is edge-to-edge — SwitchListTile은 자체 horizontal padding 16. */
+.ns-viewport { background: var(--color-surface); }
+body.dark-mode .ns-viewport { background: var(--color-dark-background); }
+
+/* AppBar — Material AppBar(title: Text('알림 설정')) · NO leading icon override
+   (Material default back arrow), NO actions. */
+.ns-appbar {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  padding: 0 4px 0 4px;
+  background: var(--color-surface);
+}
+.ns-appbar__back {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  color: var(--color-text-primary);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.ns-appbar__back svg { width: 22px; height: 22px; }
+.ns-appbar h2 {
+  flex: 1;
+  font-size: var(--typography-font-size-app-bar-title);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  /* Material AppBar default — left aligned (centerTitle false on Android) */
+  text-align: left;
+  padding-left: 4px;
+}
+body.dark-mode .ns-appbar { background: var(--color-dark-background); }
+body.dark-mode .ns-appbar h2,
+body.dark-mode .ns-appbar__back { color: var(--color-dark-text-primary); }
+
+/* SwitchListTile — Material default (NOT MinglitSettingsTile).
+   Edge-to-edge, transparent bg → scaffold gray 그대로 비침.
+   Material default contentPadding: 16 horizontal · vertical auto-fit.
+   title (bodyLarge 16) + subtitle (bodyMedium 14, onSurfaceVariant) Column. */
+.ns-list { padding: 8px 0; }
+
+.ns-tile {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-medium);
+  padding: 8px 16px;
+  background: transparent;
+  min-height: 72px;
+}
+.ns-tile__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.ns-tile__title {
+  font-size: 16px;
+  line-height: 1.4;
+  color: var(--color-text-primary);
+}
+.ns-tile__subtitle {
+  font-size: 14px;
+  line-height: 1.35;
+  color: var(--color-text-secondary);
+}
+
+/* Adaptive Switch — Material on Android (track 52×32, thumb 20).
+   Switch.adaptive(activeTrackColor: colorScheme.primary). */
+.ns-switch {
+  position: relative;
+  width: 52px;
+  height: 32px;
+  border-radius: 16px;
+  background: var(--color-divider);
+  flex-shrink: 0;
+  transition: background 200ms;
+}
+.ns-switch--on { background: var(--color-primary); }
+.ns-switch--disabled { opacity: 0.38; }
+.ns-switch__thumb {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  transition: left 200ms;
+}
+.ns-switch--on .ns-switch__thumb { left: 24px; }
+
+/* Inter-tile divider — const Divider() · default thickness 0 · height 16 reserved.
+   Material Divider: full-width, color = theme.dividerColor (≈ outlineVariant). */
+.ns-divider {
+  height: 16px;
+  display: flex;
+  align-items: center;
+}
+.ns-divider::before {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--color-divider);
+}
+
+/* --- Loading state · MinglitCircularProgressIndicator centered ---
+   MinglitAsyncValueWidget wraps body — loading uses its default. */
+.ns-loading {
+  position: absolute;
+  inset: 56px 0 0 0;
+  display: grid;
+  place-items: center;
+}
+.ns-spinner {
+  width: 36px; height: 36px;
+  border: 3px solid var(--color-divider);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: ns-spin 0.7s linear infinite;
+}
+@keyframes ns-spin { to { transform: rotate(360deg); } }
+
+/* --- Error state · _DefaultErrorView (showErrorDetails false 기본) ---
+   Icon(error_outline · xlarge 32 · error color) + "오류가 발생했습니다." titleMedium bold. */
+.ns-error {
+  position: absolute;
+  inset: 56px 0 0 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-large);
+  text-align: center;
+}
+.ns-error__icon { color: var(--color-error); margin-bottom: var(--spacing-medium); }
+.ns-error__icon svg { width: 32px; height: 32px; }
+.ns-error__title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+/* --- Empty / null fallback · Center(Text('설정 정보를 불러올 수 없습니다.')) --- */
+.ns-empty {
+  position: absolute;
+  inset: 56px 0 0 0;
+  display: grid;
+  place-items: center;
+  padding: 0 var(--spacing-large);
+  text-align: center;
+}
+.ns-empty__text {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+/* --- Permission-denied banner (현재 미구현 · Phase 2) ---
+   OS push permission이 꺼졌을 때만 보일 가상의 안내. 토글은 그대로 보이지만
+   탭 시 효과가 OS에서 차단되므로 banner로 시스템 설정 이동을 유도. */
+.ns-banner {
+  margin: var(--spacing-medium);
+  padding: 12px 16px;
+  background: color-mix(in srgb, var(--color-warning) 14%, transparent);
+  border-radius: var(--radius-card);
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.ns-banner__icon { color: var(--color-warning); flex-shrink: 0; }
+.ns-banner__icon svg { width: 20px; height: 20px; }
+.ns-banner__body { flex: 1; }
+.ns-banner__title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+.ns-banner__sub {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
+.ns-banner__cta {
+  align-self: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-primary);
+  white-space: nowrap;
+}
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
+</div>
+
+<div class="page">
+
+<!-- ============================================================
+     HEADER
+     ============================================================ -->
+<header>
+  <h1>Notification Settings Screen</h1>
+</header>
+
+<!-- ============================================================
+     OVERVIEW
+     ============================================================ -->
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr>
+        <th style="width: 140px;">Status</th>
+        <td><strong>디자인완료</strong> <em style="color: var(--color-text-secondary);">— 6 state · kit-shared (user + partner) · 토글 2개만 노출하는 minimal settings</em></td>
+      </tr>
+      <tr>
+        <th>App</th>
+        <td><code>app_user</code> + <code>app_partner</code> — <strong>shared</strong>. 두 앱 모두 <code>NotificationSettingsRoute</code>가 동일한 <code>NotificationSettingsScreen</code>(kit-shared)을 그대로 push. 분기 props 없음.</td>
+      </tr>
+      <tr>
+        <th>Category</th>
+        <td>settings · notification · toggle-list</td>
+      </tr>
+      <tr>
+        <th>Route / Surface</th>
+        <td><code>NotificationSettingsRoute</code> · widget: <code>NotificationSettingsScreen</code> (<code>shared/packages/minglit_kit</code>)</td>
+      </tr>
+      <tr>
+        <th>Path</th>
+        <td><code>/my/notification-settings</code> (user) · <code>/more/notification-settings</code> (partner)</td>
+      </tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>:
+          user — <a href="/specs/my_page.html"><code>MyPage</code></a> 알림 설정 tile ·
+          partner — <a href="/specs/more_page.html"><code>MorePage</code></a> 알림 설정 tile<br>
+          <strong>Children</strong>: <em>—</em>
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>
+          앱이 보낼 알림 카테고리(서비스 알림 · 마케팅 정보 수신)에 대한 사용자의 동의를 켜고 끄는 단일 설정 화면. 데이터 소스는
+          <code>user_settings</code> 테이블(<code>service_notification</code> · <code>marketing_consent</code> 두 컬럼). 실제 OS 푸시 권한과는 별개 — DB 기반 opt-in/out flag.
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry</strong>: MyPage / MorePage "알림 설정" tile → <code>context.push(NotificationSettingsRoute().location)</code>.<br>
+          <strong>Exit</strong>: AppBar back / 시스템 back → 직전 화면 복귀. 별도 명시적 저장 버튼 없음 — 토글 변경마다 즉시 optimistic update + 서버 호출.
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          토글 단위 즉시 저장 모델. <code>NotificationSettingsController.updateSetting</code>은 (1) optimistic state 갈아끼우기 → (2) server <code>repository.updateSettings(userId, {key: value})</code> → (3) 실패 시 previous state로 revert + <code>AsyncError</code>로 화면 전환. 따라서 서버 실패는 빨간 에러 화면으로 전환되어 사용자가 인지함 (Notification list와는 다른 정책).
+        </td>
+      </tr>
+      <tr>
+        <th>Frequency</th>
+        <td>매우 낮음 — 가입 직후 1회 또는 마케팅 푸시가 거슬릴 때 산발적. 일반적으로 세션당 ≤ 1회.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================
+     HISTORY
+     ============================================================ -->
+<section class="doc">
+  <h2>History</h2>
+  <p class="intro">이 spec의 주요 변경 이력. 최신 항목 위.</p>
+  <table class="ref">
+    <thead>
+      <tr>
+        <th style="width: 110px;">Date</th>
+        <th style="width: 80px;">Version</th>
+        <th style="width: 120px;">Author</th>
+        <th>Changes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2026-05-01</td>
+        <td>1.0</td>
+        <td>mark-yun</td>
+        <td>v1.4 template으로 작성. 6 state(Default mixed / All-off / All-on / Loading / Error / Permission-denied) mini-table. kit-shared 단일 위젯 · user(MyPage) + partner(MorePage) 진입점. <strong>주의</strong>: 실제 구현은 <code>MinglitSettingsTile</code>이 아니라 Flutter Material <code>SwitchListTile</code> + <code>Divider()</code> 조합 — MDS atom 미적용.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- Anchor nav -->
+<nav class="perspective-nav">
+  <a href="#layout"><span class="glyph">🧱</span> Layout</a>
+  <a href="#states"><span class="glyph">🎨</span> States</a>
+  <a href="#behavior"><span class="glyph">🔄</span> Global Behavior</a>
+  <a href="#reference"><span class="glyph">📖</span> Reference</a>
+</nav>
+
+<!-- ============================================================
+     LAYOUT
+     ============================================================ -->
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Layout</h2>
+    <span class="lede">Scaffold + AppBar(title "알림 설정") + body는 <code>MinglitAsyncValueWidget</code>로 감싼 ListView. ListView 안에 <code>SwitchListTile</code> × 2 + 가운데 <code>Divider()</code>.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree</h2>
+    <p class="intro">
+      AppBar는 Material default(좌측 back · 좌측 title 정렬). body는 <code>MinglitAsyncValueWidget&lt;UserSettings?&gt;</code>가 wrap — settings null이면 <code>Center("설정 정보를 불러올 수 없습니다.")</code>, 정상이면 ListView로 두 토글 노출. <strong>MinglitSettingsGroup / MinglitSettingsTile 미사용</strong> — 실제 구현은 SwitchListTile 두 개 + 가운데 Divider 단순 조합.
+    </p>
+
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 320px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <!-- AppBar -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:0;left:0;right:0;height:56px;">
+          <span class="blueprint__region-label">① AppBar — back + "알림 설정"</span>
+        </div>
+
+        <!-- ListView padding top 8 -->
+        <div class="blueprint__region" style="top:64px;left:0;right:0;height:80px;">
+          <span class="blueprint__region-label">② SwitchListTile #1 — 서비스 알림</span>
+        </div>
+        <div class="blueprint__region" style="top:144px;left:0;right:0;height:16px;">
+          <span class="blueprint__region-label">③ Divider()</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:160px;left:0;right:0;height:80px;">
+          <span class="blueprint__region-label">④ SwitchListTile #2 — 마케팅 정보 수신 동의</span>
+        </div>
+      </div>
+
+      <div class="layout-tree"><b>Scaffold</b>
+└─ <b>AppBar</b>(<i>title: "알림 설정"</i>)                  ← ①
+└─ <b>MinglitAsyncValueWidget&lt;UserSettings?&gt;</b>
+   ├─ loading: <em>MinglitCircularProgressIndicator</em>
+   ├─ error:   <em>_DefaultErrorView</em> (icon + "오류가 발생했습니다.")
+   └─ data: settings == null ?
+            <b>Center</b>(<i>"설정 정보를 불러올 수 없습니다."</i>)
+          : <b>ListView</b>(children)
+            ├─ <b>SwitchListTile</b>(서비스 알림)            ← ②
+            │  ├─ title:    Text(<i>"서비스 알림"</i>)
+            │  ├─ subtitle: Text(<i>"예약, 매칭 등 …"</i>)
+            │  ├─ value:    settings.serviceNotification
+            │  └─ onChanged: controller.updateSetting('service_notification', v)
+            ├─ <b>Divider</b>()                             ← ③
+            └─ <b>SwitchListTile</b>(마케팅 정보 수신 동의)  ← ④
+               ├─ title:    Text(<i>"마케팅 정보 수신 동의"</i>)
+               ├─ subtitle: Text(<i>"이벤트, 할인 혜택 …"</i>)
+               ├─ value:    settings.marketingConsent
+               └─ onChanged: controller.updateSetting('marketing_consent', v)</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>—</td><td>Body padding</td><td>—</td><td>ListView default top/bottom 8 padding · 좌우 0 (SwitchListTile 자체 16 horizontal)</td></tr>
+        <tr><td>①</td><td>AppBar</td><td>title left-aligned (Android Material default · centerTitle 미설정) · leading back arrow auto</td><td>height 56 · scaffold gray bg · <strong>border-bottom 없음</strong> (theme elevation 0 + surfaceTintColor transparent)</td></tr>
+        <tr><td>②④</td><td>SwitchListTile</td><td>title 좌상 · subtitle 좌하 (Column) · Switch 우측</td><td>min-height ≈ 72 · contentPadding (Material default) 16 horizontal · title bodyLarge 16 · subtitle bodyMedium 14 onSurfaceVariant · Switch.adaptive 52×32</td></tr>
+        <tr><td>③</td><td>Divider</td><td>full width</td><td><code>Divider()</code> default — height 16 reserved · 1px 가운데 라인 · color theme.dividerColor (≈ outlineVariant)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>SwitchListTile sub-anatomy</h2>
+    <p class="intro">
+      Material 기본 <code>SwitchListTile</code> — <code>MinglitSettingsTile</code>(48px 고정 · trailing toggle)과는 별개 atom이다. subtitle이 두 줄 이상으로 늘어날 수 있고 row 높이도 가변이라 본 화면에서는 평균 ≈ 72px. <strong>Phase 2 후보</strong>: 기존 SwitchListTile을 <code>MinglitSettingsGroup</code> + <code>MinglitSettingsTile(trailing: SettingsTileTrailing.toggle)</code>로 교체해 my_page와 시각 통일.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr><th style="width: 200px;">Region</th><th>Alignment</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>title</td><td>top-left</td><td>bodyLarge 16 · color onSurface · single line (보통)</td></tr>
+        <tr><td>subtitle</td><td>title 아래 좌측</td><td>bodyMedium 14 · color onSurfaceVariant · 자연스럽게 wrap (현재 두 항목 모두 1-2줄)</td></tr>
+        <tr><td>Switch (trailing)</td><td>centerRight</td><td><code>Switch.adaptive(value, onChanged, activeTrackColor: colorScheme.primary)</code> · Android Material 52×32 · iOS Cupertino 51×31</td></tr>
+        <tr><td>tile background</td><td>—</td><td>투명 (scaffold gray가 비침). disabled/loading 시 별도 색 변경 없음 — onChanged null로만 차단</td></tr>
+        <tr><td>tap behavior</td><td>—</td><td>tile 어디를 눌러도 toggle 발동 (SwitchListTile default). subtitle 영역 탭도 토글 트리거.</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<!-- ============================================================
+     STATES
+     ============================================================ -->
+<div class="perspective" id="states">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>States</h2>
+    <span class="lede">6 state. baseline = Default(서비스 ON · 마케팅 OFF — 가장 흔한 신규 사용자 기본값). MinglitAsyncValueWidget 3-way + data 안에서 settings null fallback + Permission-denied(현재 미구현 · Phase 2 가상 변형).</span>
+  </div>
+
+  <section class="doc">
+    <p class="intro">
+      <strong>State 종류 식별 기준</strong>: <code>MinglitAsyncValueWidget</code>의 (loading / error / data) + data 안에서 <code>settings == null</code> 분기 + 두 토글의 on/off 시각 변주 (코드 분기 아님 — 시각적 베리언트). Permission-denied는 OS 권한 차단을 표시할 가상의 banner — 현재 코드에 없음.
+    </p>
+
+    <!-- State 1: Default (mixed: service ON, marketing OFF) — baseline -->
+    <table class="ref state-mini is-baseline-tint">
+      <thead>
+        <tr><th colspan="3"><strong>Default · 서비스 ON / 마케팅 OFF</strong> 🎯 <small>baseline · 가장 흔한 초기 상태</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport ns-viewport">
+              <div class="ns-appbar">
+                <button class="ns-appbar__back" title="뒤로 가기">
+                  <!-- Icons.arrow_back -->
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
+                </button>
+                <h2>알림 설정</h2>
+              </div>
+              <div class="ns-list">
+                <div class="ns-tile">
+                  <div class="ns-tile__body">
+                    <div class="ns-tile__title">서비스 알림</div>
+                    <div class="ns-tile__subtitle">예약, 매칭 등 서비스 이용에 필수적인 알림을 받습니다.</div>
+                  </div>
+                  <div class="ns-switch ns-switch--on"><div class="ns-switch__thumb"></div></div>
+                </div>
+                <div class="ns-divider"></div>
+                <div class="ns-tile">
+                  <div class="ns-tile__body">
+                    <div class="ns-tile__title">마케팅 정보 수신 동의</div>
+                    <div class="ns-tile__subtitle">이벤트, 할인 혜택 등 유용한 소식을 받습니다.</div>
+                  </div>
+                  <div class="ns-switch"><div class="ns-switch__thumb"></div></div>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>settingsAsync.hasValue &amp;&amp; settings != null</code> · <code>serviceNotification == true</code> &amp; <code>marketingConsent == false</code> — 일반 신규 가입자(<code>UserSettings</code> 모델 default: serviceNotification true, marketingConsent false)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            ① <strong>서비스 알림 토글 탭</strong> → 즉시 off로 시각 갱신 (optimistic) → <code>updateSetting('service_notification', false)</code> 서버 반영<br>
+            ② <strong>마케팅 토글 탭</strong> → 즉시 on으로 시각 갱신 → <code>updateSetting('marketing_consent', true)</code> 서버 반영<br>
+            ③ <strong>tile body 탭</strong> → 토글과 동일 동작 (SwitchListTile default — title/subtitle 영역 클릭도 onChanged 트리거)<br>
+            ④ <strong>back</strong> → MyPage / MorePage 복귀
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · 서버 실패 시 <code>state = previousState</code> 후 즉시 <code>state = AsyncError</code> 세팅 → 화면이 <strong>Error 갈래</strong>로 전환되어 토글이 보이지 않게 됨 — 사용자는 다시 화면을 떠야 retry 가능 (코드 53-57행)<br>
+            · 동일 토글을 빠르게 연타 시 마지막 호출만 의미 있음 — 중간 호출은 race condition 가능 (debounce 미부착)<br>
+            · 서비스 알림을 끄면 매칭 / 결제 등 critical push도 차단됨 — UX 경고 없음 (Phase 2: 확인 다이얼로그)<br>
+            · OS push 권한이 꺼져 있어도 토글은 자유롭게 변경 가능 — DB flag와 OS 권한은 분리
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            · <code>Scaffold</code> + <code>AppBar(title: Text('알림 설정'))</code><br>
+            · <a href="/components#MinglitAsyncValueWidget"><code>MinglitAsyncValueWidget&lt;UserSettings?&gt;</code></a> wrap (default loading / default error)<br>
+            · <code>ListView</code> (separated 아님 · plain children 리스트)<br>
+            · <code>SwitchListTile</code> × 2 (Material · MDS atom 아님)<br>
+            · <code>Divider()</code> × 1 (가운데 1개)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            · color: <code>color-surface</code> (scaffold + AppBar bg), <code>color-text-primary</code> (title · AppBar title · back arrow), <code>color-text-secondary</code> (subtitle · onSurfaceVariant), <code>color-primary</code> (Switch on track), <code>color-divider</code> (Switch off track · Divider line)<br>
+            · radius: <em>—</em> (SwitchListTile · Divider 모두 사각)<br>
+            · spacing: <code>spacing-medium</code> (16 · contentPadding horizontal), <code>spacing-xsmall</code> (4 · title-subtitle gap)<br>
+            · typography: appBarTitle (18/600), bodyLarge (16 · title), bodyMedium (14 · subtitle)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 baseline은 <strong>구현된 그대로</strong>: Material SwitchListTile 두 개 + 가운데 Divider. 그룹 헤더 없음, 카드 없음, 아이콘 없음. my_page의 SettingsGroup 시각 시스템과 통일되어 있지 않다 — Phase 2 정비 후보.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 2: All-off -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>All-off · 둘 다 OFF</strong> <small>모든 알림 거부</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport ns-viewport">
+              <div class="ns-appbar">
+                <button class="ns-appbar__back" title="뒤로 가기">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
+                </button>
+                <h2>알림 설정</h2>
+              </div>
+              <div class="ns-list">
+                <div class="ns-tile">
+                  <div class="ns-tile__body">
+                    <div class="ns-tile__title">서비스 알림</div>
+                    <div class="ns-tile__subtitle">예약, 매칭 등 서비스 이용에 필수적인 알림을 받습니다.</div>
+                  </div>
+                  <div class="ns-switch"><div class="ns-switch__thumb"></div></div>
+                </div>
+                <div class="ns-divider"></div>
+                <div class="ns-tile">
+                  <div class="ns-tile__body">
+                    <div class="ns-tile__title">마케팅 정보 수신 동의</div>
+                    <div class="ns-tile__subtitle">이벤트, 할인 혜택 등 유용한 소식을 받습니다.</div>
+                  </div>
+                  <div class="ns-switch"><div class="ns-switch__thumb"></div></div>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>↔ baseline 동일, <strong>+ <code>serviceNotification == false</code> &amp; <code>marketingConsent == false</code></strong> — 사용자가 두 토글을 모두 직접 끔</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>동일 — 다시 켜기 위해 토글 탭 가능</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · 서비스 알림이 꺼진 상태에서는 매칭 결과 / 결제 결과 등 critical 알림도 보내지 않음 → 사용자 경험 저하 가능. 서비스 차원의 confirmation 다이얼로그 미부착<br>
+            · "마케팅 동의 철회"는 법적으로 사용자에게 즉시 통지 의무가 있는 경우가 있음 — 본 화면은 별도 안내 없음
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>동일 — 두 Switch 모두 off 시각</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            ↔ baseline 동일<br>
+            − <code>color-primary</code> 미사용 (활성 트랙 없음)<br>
+            + <code>color-divider</code> 활용도 증가 (Switch off track 색상)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 baseline과 컴포넌트 구조는 동일. 단지 두 토글 모두 OFF 시각 변주. 토글의 활성 색이 사라져 화면이 시각적으로 매우 단조롭다.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 3: All-on -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>All-on · 둘 다 ON</strong> <small>모든 알림 수신 동의</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport ns-viewport">
+              <div class="ns-appbar">
+                <button class="ns-appbar__back" title="뒤로 가기">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
+                </button>
+                <h2>알림 설정</h2>
+              </div>
+              <div class="ns-list">
+                <div class="ns-tile">
+                  <div class="ns-tile__body">
+                    <div class="ns-tile__title">서비스 알림</div>
+                    <div class="ns-tile__subtitle">예약, 매칭 등 서비스 이용에 필수적인 알림을 받습니다.</div>
+                  </div>
+                  <div class="ns-switch ns-switch--on"><div class="ns-switch__thumb"></div></div>
+                </div>
+                <div class="ns-divider"></div>
+                <div class="ns-tile">
+                  <div class="ns-tile__body">
+                    <div class="ns-tile__title">마케팅 정보 수신 동의</div>
+                    <div class="ns-tile__subtitle">이벤트, 할인 혜택 등 유용한 소식을 받습니다.</div>
+                  </div>
+                  <div class="ns-switch ns-switch--on"><div class="ns-switch__thumb"></div></div>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>↔ baseline 동일, <strong>+ <code>marketingConsent == true</code></strong> (서비스는 baseline에서 이미 true) — 가입 시 마케팅 동의 체크 또는 본 화면에서 사용자가 직접 켬</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>동일</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · 마케팅 동의 시 서버에서는 <code>marketing_consent_updated_at</code>(현재 모델에 없음 · Phase 2)을 함께 갱신해야 법적 audit trail이 충족됨 — 현재는 단순 boolean flag만 갱신<br>
+            · 가입 시 동의했더라도 사용자가 본 화면에서 끄고 다시 켜면 동의 시각이 갱신되어야 하지만 현재 구현은 그러지 않음
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>동일</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            ↔ baseline 동일<br>
+            + <code>color-primary</code> 활용도 증가 (두 Switch 모두 active track)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 두 토글 모두 ON일 때 brand purple이 두 줄에 걸쳐 시선 집중 — 사용자에게 "모든 알림이 켜져 있다"는 강한 시각 단서.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 4: Loading -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Loading</strong> <small>최초 진입 / settings fetch 진행 중</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport ns-viewport">
+              <div class="ns-appbar">
+                <button class="ns-appbar__back" title="뒤로 가기">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
+                </button>
+                <h2>알림 설정</h2>
+              </div>
+              <div class="ns-loading">
+                <div class="ns-spinner"></div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>settingsAsync.isLoading</code> — 진입 직후 <code>repository.getSettings(user.id)</code> 응답까지. 토글 변경 후 <code>updateSetting</code> 중에는 <strong>loading으로 빠지지 않음</strong>(optimistic state는 즉시 hasValue) — 이 state는 사실상 첫 fetch에만 보임</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>− 토글 / list 액션 모두 없음 (body 자체가 spinner 단일)<br>동일: AppBar back은 작동 (응답 대기 취소)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · 네트워크 timeout 미설정 (Supabase default) → spinner 무한 노출 가능<br>
+            · settings는 신규 사용자라면 row가 없을 수 있는데, controller가 <code>?? UserSettings(userId, updatedAt: now)</code> default를 만들어 반환하므로 보통 짧게 끝남
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>↔ list 전체 → <code>MinglitCircularProgressIndicator</code> (MinglitAsyncValueWidget default)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>− list 토큰 미사용<br>+ <code>color-primary</code> (spinner)<br>+ <code>color-surface</code> (scaffold bg)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 단일 fetch → 매우 짧은 transition (≤ 500ms 일반). AppBar는 그대로 유지된다.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 5: Error -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Error</strong> <small>fetch 실패 또는 토글 update 실패 후 revert</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport ns-viewport">
+              <div class="ns-appbar">
+                <button class="ns-appbar__back" title="뒤로 가기">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
+                </button>
+                <h2>알림 설정</h2>
+              </div>
+              <div class="ns-error">
+                <div class="ns-error__icon">
+                  <!-- Icons.error_outline -->
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                </div>
+                <div class="ns-error__title">오류가 발생했습니다.</div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>settingsAsync.hasError</code> — (1) 최초 fetch 실패, (2) 토글 update 호출이 서버 실패해서 controller가 <code>state = AsyncError(e, st)</code>로 명시 전환한 경우(코드 56행)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>− 토글 / 직접 retry 버튼 없음<br>동일: back으로 화면 떠나기 → 다시 진입 시 controller rebuild → fresh fetch</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · update 실패 → revert + AsyncError → 화면이 토글에서 에러로 갑자기 바뀜 → 사용자 입장에선 "내가 토글했는데 화면이 깨졌다" 경험. SnackBar 같은 부드러운 알림이 더 적합 (Phase 2)<br>
+            · <code>showErrorDetails</code> false(default) → 본문 메시지 노출 없음, 단 "오류가 발생했습니다." 한 줄만<br>
+            · 에러 후 같은 provider key가 살아있어서 자동 재시도는 일어나지 않음 — 화면 재진입 필요
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>↔ list 전체 → <code>_DefaultErrorView</code> (MinglitAsyncValueWidget 내부 private) — Icon(error_outline · xlarge) + Text("오류가 발생했습니다." · titleMedium bold)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>− list 토큰 미사용<br>+ <code>color-error</code> (icon)<br>+ <code>color-text-primary</code> (title)<br>+ <code>color-surface</code> (scaffold)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 토글 update 실패 시 revert → AsyncError 흐름은 사용자에게 다소 가혹한 UX. 향후 SnackBar로 비파괴적 피드백 + state는 baseline 유지하는 패턴이 권장된다.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 6: Permission denied (OS push permission off) -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Permission-denied · OS 푸시 권한 차단</strong> <small>가상 · Phase 2 — 현재 미구현</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport ns-viewport">
+              <div class="ns-appbar">
+                <button class="ns-appbar__back" title="뒤로 가기">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
+                </button>
+                <h2>알림 설정</h2>
+              </div>
+              <div class="ns-banner">
+                <div class="ns-banner__icon">
+                  <!-- Icons.notifications_off -->
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13.73 21a2 2 0 0 1-3.46 0"/><path d="M18.63 13A17.89 17.89 0 0 1 18 8"/><path d="M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9h14"/><path d="M18 8a6 6 0 0 0-9.33-5"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                </div>
+                <div class="ns-banner__body">
+                  <div class="ns-banner__title">시스템 푸시 알림이 꺼져 있어요</div>
+                  <div class="ns-banner__sub">앱 내 토글을 켜도 OS 권한이 차단되어 알림이 도착하지 않을 수 있어요.</div>
+                </div>
+                <div class="ns-banner__cta">설정 열기</div>
+              </div>
+              <div class="ns-list">
+                <div class="ns-tile">
+                  <div class="ns-tile__body">
+                    <div class="ns-tile__title">서비스 알림</div>
+                    <div class="ns-tile__subtitle">예약, 매칭 등 서비스 이용에 필수적인 알림을 받습니다.</div>
+                  </div>
+                  <div class="ns-switch ns-switch--on"><div class="ns-switch__thumb"></div></div>
+                </div>
+                <div class="ns-divider"></div>
+                <div class="ns-tile">
+                  <div class="ns-tile__body">
+                    <div class="ns-tile__title">마케팅 정보 수신 동의</div>
+                    <div class="ns-tile__subtitle">이벤트, 할인 혜택 등 유용한 소식을 받습니다.</div>
+                  </div>
+                  <div class="ns-switch"><div class="ns-switch__thumb"></div></div>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>↔ baseline 동일, <strong>+ OS 푸시 권한 == denied</strong>(<code>firebase_messaging.requestPermission()</code> 또는 native channel 결과). <strong>현재 본 화면에는 코드가 없음</strong> — 가상의 Phase 2 변형이며 구현이 들어오면 banner를 list 위에 prepend하는 방식이 권장</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            + <strong>banner "설정 열기" 탭</strong> → <code>app_settings</code> / <code>permission_handler.openAppSettings()</code>로 OS 시스템 설정 진입 → 사용자가 권한 허용 후 앱으로 복귀<br>
+            동일: 토글은 그대로 변경 가능 (DB flag는 OS 권한과 분리)<br>
+            동일: back으로 떠나기
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · iOS는 사용자가 한번 거부하면 시스템 설정에 직접 들어가야만 다시 허용 가능 — banner CTA가 가장 좋은 진입점<br>
+            · Android 13+에서도 POST_NOTIFICATIONS runtime permission 필요 — 미허용 시 동일 banner 노출이 적합<br>
+            · 권한이 다시 허용되면 banner 사라짐 — <code>AppLifecycleState.resumed</code> 시 권한 재확인이 필요
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>+ <strong>경고 banner</strong>(현재 미구현) — Icon(notifications_off) + title/sub + "설정 열기" CTA Text. <a href="/components#MinglitAlert"><code>MinglitAlert</code></a> 활용 후보</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            ↔ baseline 동일<br>
+            + <code>color-warning</code> (banner bg 14% tint · icon 색)<br>
+            + <code>color-primary</code> ("설정 열기" CTA text)<br>
+            + <code>radius-card</code> (banner 카드)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 <strong>가상 state</strong>: 본 화면 source(<code>notification_settings_screen.dart</code>)에는 권한 검사 / banner 코드가 없다. 디자인 의도를 반영한 Phase 2 안. 실제 OS 권한은 <code>NotificationInitializer</code>(별도 파일)에서 관리하므로 통합 시점에 결합 필요.</td>
+        </tr>
+      </tbody>
+    </table>
+
+  </section>
+</div>
+
+<!-- ============================================================
+     GLOBAL BEHAVIOR
+     ============================================================ -->
+<div class="perspective" id="behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">cross-cutting — 모든 state에 적용되는 액션, motion, 글로벌 에지케이스. kit-shared 위젯 — user/partner 동일.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Cross-cutting interactions</h2>
+    <table class="ref">
+      <thead>
+        <tr><th style="width: 220px;">사용자 액션</th><th>화면에 보이는 결과</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>뒤로 가기 (시스템 back · AppBar back)</td>
+          <td>직전 화면(MyPage / MorePage) 복귀. Material default pop transition (200ms 우→좌 slide). 별도 unsaved-state 경고 없음 — 이미 토글마다 즉시 저장되므로 dirty state가 존재하지 않음.</td>
+        </tr>
+        <tr>
+          <td>다크 모드 토글</td>
+          <td>scaffold / Switch off track / Divider / 텍스트 전부 dark 토큰 swap. Switch on track은 brand primary 그대로 유지.</td>
+        </tr>
+        <tr>
+          <td>SwitchListTile tap haptic</td>
+          <td>Material default — InkWell ripple + light haptic. tile 전체 영역(title/subtitle 포함)이 hit target.</td>
+        </tr>
+        <tr>
+          <td>토글 빠른 연타</td>
+          <td>매번 optimistic state + 서버 호출. debounce 미부착 — 마지막 호출이 최종 서버 상태가 되지만 중간 호출에서 실패 시 그 시점의 previous state로 revert → AsyncError 발생할 수 있음(race).</td>
+        </tr>
+        <tr>
+          <td>partner 앱에서 진입</td>
+          <td>동일 위젯 · 동일 동작. 단 partner primary color로 인해 Switch on track 색상이 user와 미세하게 다를 수 있음.</td>
+        </tr>
+        <tr>
+          <td>로그아웃 / 계정 변경 후 진입</td>
+          <td><code>currentUserProvider</code> null → controller가 null 반환 → "설정 정보를 불러올 수 없습니다." 로 fallback. 이론상 로그아웃 후엔 본 화면 진입 자체가 막혀야 정상.</td>
+        </tr>
+        <tr>
+          <td>외부 push 알림 도착 (백그라운드)</td>
+          <td>본 화면 위에서도 OS banner 표시. 화면 자체에는 영향 없음. push는 <code>service_notification</code> / <code>marketing_consent</code> flag를 서버에서 검사해 발송 결정.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Motion timing</h2>
+    <p class="intro">
+      Source: <code>shared/packages/mds/core/lib/src/theme/minglit_design_tokens.dart</code> → <code>MinglitAnimation</code>
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 240px;">Transition</th>
+          <th style="width: 200px;">Token / Duration</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>화면 진입 (MyPage / MorePage → NotificationSettings)</td>
+          <td><code>MinglitAnimation.fast</code> (200ms)</td>
+          <td>GoRouter Material default 좌→우 slide. user/partner 동일.</td>
+        </tr>
+        <tr>
+          <td>Switch thumb slide</td>
+          <td>~ 200ms (Material default · 미명시)</td>
+          <td>Switch.adaptive default — Phase 2에서 <code>MinglitAnimation.fast</code> 매핑 검토.</td>
+        </tr>
+        <tr>
+          <td>Switch track color crossfade</td>
+          <td>~ 200ms (Material default)</td>
+          <td>off → on 시 divider gray → primary purple로 fade.</td>
+        </tr>
+        <tr>
+          <td>Loading → Default 교체</td>
+          <td>cut</td>
+          <td>MinglitAsyncValueWidget은 <code>AsyncValue.when</code> 직접 분기 — fade 없이 즉시 교체.</td>
+        </tr>
+        <tr>
+          <td>Default → Error 전환 (update 실패)</td>
+          <td>cut</td>
+          <td>controller가 <code>state = AsyncError</code>로 즉시 전환 → 화면 갈래 즉시 swap. 부드러운 transition 없음.</td>
+        </tr>
+        <tr>
+          <td>InkWell ripple (tile · back button)</td>
+          <td><code>MinglitAnimation.micro</code> (100ms)</td>
+          <td>Material default ripple expand.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Global edge cases</h2>
+    <ul class="notes">
+      <li><strong>Update 실패 → AsyncError 화면 전환</strong> — 토글 한 번 실패가 화면 전체를 에러 갈래로 보내므로 사용자에겐 가혹한 UX. SnackBar + state baseline 유지가 권장 (Phase 2 후보).</li>
+      <li><strong>OS 푸시 권한과 DB flag 분리</strong> — 본 화면의 토글은 DB flag만 변경한다. OS 권한 차단 여부는 표시되지 않음 — 사용자가 "토글 켰는데 알림이 안 와요"로 문의할 가능성. Permission-denied banner 도입 검토.</li>
+      <li><strong>마케팅 동의 audit trail 부재</strong> — 동의/철회 시각이 별도 컬럼으로 기록되지 않음. 법적 audit 요구가 있다면 <code>marketing_consent_updated_at</code> 컬럼 추가 필요.</li>
+      <li><strong>Default 값 보장</strong> — settings row가 없는 신규 사용자도 controller가 <code>UserSettings(userId, updatedAt: now)</code> default를 만들어 반환하므로 빈 화면을 보지 않음(코드 20-25행). 단 첫 토글 변경 시 INSERT가 발생하는데, repository updateSettings가 upsert인지 update인지에 따라 동작이 갈림 — 검증 필요.</li>
+      <li><strong>kit-shared 단일 위젯</strong> — user/partner 분기 props 없음. theme.colorScheme.primary만 다르므로 Switch active track 색만 차이. 동작/문구/구조는 100% 동일.</li>
+      <li><strong>자동 retry 부재</strong> — Error 갈래에서 retry 버튼이 없음. 사용자는 화면을 떠났다 다시 진입해야 controller rebuild가 일어남. _DefaultErrorView는 retry CTA 미포함.</li>
+    </ul>
+  </section>
+</div>
+
+<!-- ============================================================
+     REFERENCE
+     ============================================================ -->
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">📖</span>
+    <h2>Reference</h2>
+    <span class="lede">implementation source + 인접 화면.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Implementation source</h2>
+    <table class="ref">
+      <tbody>
+        <tr><th style="width: 200px;">Widget (kit-shared)</th><td><code>NotificationSettingsScreen</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/shared/packages/minglit_kit/lib/src/features/notification/notification_settings_screen.dart"><code>shared/packages/minglit_kit/lib/src/features/notification/notification_settings_screen.dart</code></a> (단일 위젯 · user + partner 공용 · 67 LOC)</td></tr>
+        <tr><th>Controller</th><td><code>NotificationSettingsController</code> (Riverpod) — <a href="https://github.com/Mark-Yun/minglit/blob/dev/shared/packages/minglit_kit/lib/src/features/notification/logic/notification_settings_controller.dart"><code>shared/packages/minglit_kit/lib/src/features/notification/logic/notification_settings_controller.dart</code></a> (build / updateSetting · optimistic + revert + AsyncError 정책)</td></tr>
+        <tr><th>Data model</th><td><code>UserSettings</code> (freezed) — <code>shared/packages/minglit_kit/lib/src/data/models/user_settings.dart</code> · 필드: <code>userId</code>, <code>updatedAt</code>, <code>marketingConsent</code> (default false), <code>serviceNotification</code> (default true)</td></tr>
+        <tr><th>Repository</th><td><code>NotificationRepository</code> — <code>shared/packages/minglit_kit/lib/src/data/repositories/notification_repository.dart</code> (<code>getSettings(userId)</code> · <code>updateSettings(userId, Map)</code>)</td></tr>
+        <tr><th>Route (user)</th><td><code>NotificationSettingsRoute</code> · <code>/my/notification-settings</code> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/routing/app_routes.dart"><code>apps/app_user/.../app_routes.dart</code></a> (line 225)</td></tr>
+        <tr><th>Route (partner)</th><td><code>NotificationSettingsRoute</code> · <code>/more/notification-settings</code> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/routing/app_routes.dart"><code>apps/app_partner/.../app_routes.dart</code></a> (line 181, 499)</td></tr>
+        <tr><th>Async wrapper</th><td><a href="/components#MinglitAsyncValueWidget"><code>MinglitAsyncValueWidget</code></a> — loading default(<code>MinglitCircularProgressIndicator</code>) · error default(<code>_DefaultErrorView</code>: error_outline icon + "오류가 발생했습니다." titleMedium bold, <code>showErrorDetails</code> false)</td></tr>
+        <tr><th>Tile widget</th><td>Flutter Material <code>SwitchListTile</code> — <strong>NOT MinglitSettingsTile</strong>. 결과적으로 my_page의 SettingsGroup 카드 시각과 통일되지 않음 (Phase 2 정비 후보).</td></tr>
+        <tr><th>Toggle key constants</th><td>코드 inline string: <code>'service_notification'</code>, <code>'marketing_consent'</code>. 그 외 key는 controller 43행에서 <code>return</code> 처리(no-op).</td></tr>
+        <tr><th>Update 정책</th><td>(1) optimistic state · (2) server call · (3) 실패 시 <code>state = previousState</code> + <code>state = AsyncError(e, st)</code>로 화면을 에러 갈래로 전환 (코드 49-57행).</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 240px;">Spec</th><th>Relation</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><a href="/specs/my_page.html"><code>MyPage</code></a></td>
+          <td>user 진입점 — 설정 group의 "알림 설정" tile에서 push.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/more_page.html"><code>MorePage</code></a></td>
+          <td>partner 진입점 — 동일 패턴, 동일 위젯.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/notification_list_screen.html"><code>NotificationListScreen</code></a></td>
+          <td>알림 히스토리 화면 — 동일 <code>NotificationRepository</code>를 공유하지만 데이터 모델은 다름(<code>user_notifications</code> vs <code>user_settings</code>). 본 화면의 토글이 push 발송 게이트로 작용한다.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/signup_consent_page.html"><code>SignupConsentPage</code></a></td>
+          <td>가입 시 마케팅 동의 최초 수집 화면 — 본 화면이 사후 변경 진입점.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+</div>
+
+<script>
+  document.getElementById('spec-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('spec-mode', e.target.checked);
+  });
+  document.getElementById('dark-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('dark-mode', e.target.checked);
+  });
+</script>
+</body>
+</html>
