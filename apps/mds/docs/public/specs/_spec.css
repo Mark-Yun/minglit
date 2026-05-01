@@ -311,6 +311,11 @@ section.doc > p.intro {
   white-space: nowrap;
   background: color-mix(in srgb, var(--color-surface) 50%, transparent);
 }
+/* Subtle brand-purple tint for "this is the baseline / 🎯 case" rows in
+   summary matrices and baseline mini-tables. Apply to <tr> or <table>. */
+.is-baseline-tint {
+  background: rgba(var(--spec-blueprint-rgb), 0.04);
+}
 .viewport {
   width: var(--spec-viewport-w);
   height: var(--spec-viewport-h);
@@ -319,6 +324,24 @@ section.doc > p.intro {
   border-radius: 24px;
   position: relative;
   overflow: hidden;
+}
+/* Compact strip variant — for documenting horizontal bar widgets
+   (EventNowBar, BottomTicketBar) without rendering the full phone frame.
+   Width matches a real device row; height is content-driven (default 96). */
+.viewport-strip {
+  width: var(--spec-viewport-w);
+  height: 96px;
+  background: var(--color-background);
+  position: relative;
+  overflow: hidden;
+}
+/* Tiny meta heading used to label state variants in sub-anatomy galleries
+   (e.g. "today · D-day == 0 — D-Day 라벨 …"). */
+.variant-label {
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--color-text-secondary);
 }
 .viewport__appbar {
   height: 56px;
@@ -506,6 +529,17 @@ body.spec-mode .type-spec { display: inline-block; }
 }
 .blueprint__region--shaded {
   background: rgba(var(--spec-blueprint-rgb), 0.14);
+}
+/* Full-canvas outline. Use on the first child of a .blueprint to draw the
+   outer-most "this is the screen" rectangle. Replaces the inline
+   `top:0;left:0;right:0;bottom:0;border-style:solid;...` pattern. */
+.blueprint__region--full {
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-style: solid;
+  border-color: rgba(var(--spec-blueprint-rgb), 0.18);
 }
 .blueprint__align-marker {
   position: absolute;

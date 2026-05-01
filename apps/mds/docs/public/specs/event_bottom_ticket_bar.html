@@ -315,7 +315,7 @@ body.dark-mode .visual-gallery {
     </p>
     <div class="layout-grid">
       <div class="blueprint" style="height: 100px;">
-        <div class="blueprint__region" style="top:0;left:0;right:0;bottom:0;border-style:solid;border-color:rgba(var(--spec-blueprint-rgb), 0.18);"></div>
+        <div class="blueprint__region blueprint__region--full"></div>
         <div class="blueprint__region blueprint__region--shaded" style="top:16px;left:16px;width:100px;height:48px;">
           <span class="blueprint__region-label" style="font-size:10px;">㉠ Price column</span>
         </div>
@@ -490,7 +490,7 @@ body.dark-mode .visual-gallery {
         <tr><td><code>guest</code></td><td>비로그인</td><td><code>currentUser == null</code></td><td>"로그인하고 구매하기" primary 버튼</td></tr>
         <tr><td><code>identityRequired</code></td><td>본인인증 미완</td><td><code>!hasIdentityVerified</code></td><td>"본인인증 후 구매하기" primary 버튼</td></tr>
         <tr style="background: rgba(255,153,0,0.04);"><td><code>qualificationRequired</code> ⚠️</td><td>심사 필요</td><td><code>event.requiresQualification</code> + 자격 검증 통과</td><td>"구매하고 신청하기" — 심사 결과에 따라 환불 가능</td></tr>
-        <tr style="background: rgba(var(--spec-blueprint-rgb), 0.04);"><td><code>eligible</code> 🎯</td><td>메인 case</td><td>모든 사전 검증 통과 + 결제 가능</td><td><strong>"구매하기"</strong> primary 버튼 — 메인 CTA</td></tr>
+        <tr class="is-baseline-tint"><td><code>eligible</code> 🎯</td><td>메인 case</td><td>모든 사전 검증 통과 + 결제 가능</td><td><strong>"구매하기"</strong> primary 버튼 — 메인 CTA</td></tr>
         <tr><td><code>notEligible</code></td><td>자격 미달</td><td><code>state.ineligibleReason != null</code></td><td>"참여 조건 미달" disabled (사유별 동적)</td></tr>
         <tr><td><code>soldOut</code> · <code>full</code></td><td>정원 마감</td><td>모든 ticket의 <code>soldCount == quantity</code></td><td>"마감된 이벤트" disabled</td></tr>
         <tr><td><code>pendingPayment</code></td><td>결제 중단</td><td>이전 신청 + 결제 미완료 application 존재</td><td>"결제 계속하기" primary — 티켓 sheet skip</td></tr>
@@ -515,7 +515,7 @@ body.dark-mode .visual-gallery {
     <div class="visual-gallery" style="background: var(--color-surface); padding: 16px; border-radius: var(--radius-card); display: flex; flex-direction: column; gap: 16px;">
 
       <!-- ─── eligible (메인 case · BASELINE for additive diff) ──────── -->
-      <table class="ref state-mini" style="background: rgba(var(--spec-blueprint-rgb), 0.04);">
+      <table class="ref state-mini is-baseline-tint">
         <thead>
           <tr><th colspan="3"><strong><code>eligible</code> 🎯</strong> · <small style="color:var(--color-primary);">메인 case · 컴포넌트/토큰 baseline</small></th></tr>
         </thead>
@@ -847,7 +847,7 @@ body.dark-mode .visual-gallery {
     <div class="visual-gallery" style="background: var(--color-surface); padding: 16px; border-radius: var(--radius-card); display: flex; flex-direction: column; gap: 16px;">
 
       <!-- ─── without banner (eligible · BASELINE) ────────── -->
-      <table class="ref state-mini" style="background: rgba(var(--spec-blueprint-rgb), 0.04);">
+      <table class="ref state-mini is-baseline-tint">
         <thead>
           <tr><th colspan="3"><strong>without banner</strong> · <small style="color:var(--color-primary);">eligible 진입 · baseline</small></th></tr>
         </thead>

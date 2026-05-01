@@ -680,7 +680,7 @@ body.dark-mode .visual-gallery .chip-bar__divider {
     </p>
     <div class="layout-grid">
       <div class="blueprint">
-        <div class="blueprint__region" style="top:0;left:0;right:0;bottom:0;border-style:solid;border-color:rgba(var(--spec-blueprint-rgb), 0.18);"></div>
+        <div class="blueprint__region blueprint__region--full"></div>
 
         <!-- AppBar -->
         <div class="blueprint__region blueprint__region--shaded" style="top:0;left:0;right:0;height:56px;">
@@ -773,7 +773,7 @@ body.dark-mode .visual-gallery .chip-bar__divider {
     <div class="layout-grid">
       <div class="blueprint" style="width: 343px; height: 90px;">
         <!-- Outer -->
-        <div class="blueprint__region" style="top:0;left:0;right:0;bottom:0;border-style:solid;border-color:rgba(var(--spec-blueprint-rgb), 0.18);"></div>
+        <div class="blueprint__region blueprint__region--full"></div>
 
         <!-- Left padding (screen-edge) -->
         <div class="blueprint__align-marker" style="top:8px;left:0;">left: spacing-screen-edge (16px)</div>
@@ -851,7 +851,7 @@ body.dark-mode .visual-gallery .chip-bar__divider {
     <div class="layout-grid">
       <div class="blueprint" style="width: 343px; height: 60px;">
         <!-- Outer -->
-        <div class="blueprint__region" style="top:0;left:0;right:0;bottom:0;border-style:solid;border-color:rgba(var(--spec-blueprint-rgb), 0.18);"></div>
+        <div class="blueprint__region blueprint__region--full"></div>
 
         <!-- Sort chips group (left) -->
         <div class="blueprint__region blueprint__region--shaded" style="top:12px;left:16px;width:155px;height:32px;">
@@ -924,7 +924,7 @@ active 상태: bg=primary 0.08 · border=primary · color=primary · w600</div>
     <div class="layout-grid">
       <div class="blueprint" style="width: 343px; height: 250px;">
         <!-- Card outer -->
-        <div class="blueprint__region" style="top:0;left:0;right:0;bottom:0;border-style:solid;border-color:rgba(var(--spec-blueprint-rgb), 0.18);"></div>
+        <div class="blueprint__region blueprint__region--full"></div>
 
         <!-- Image area (2:1 — 172px) -->
         <div class="blueprint__region blueprint__region--shaded" style="top:0;left:0;right:0;height:172px;">
@@ -1037,7 +1037,7 @@ active 상태: bg=primary 0.08 · border=primary · color=primary · w600</div>
     <div class="layout-grid">
       <div class="blueprint" style="width: 343px; height: 88px;">
         <!-- Outer -->
-        <div class="blueprint__region" style="top:0;left:0;right:0;bottom:0;border-style:solid;border-color:rgba(var(--spec-blueprint-rgb), 0.18);"></div>
+        <div class="blueprint__region blueprint__region--full"></div>
 
         <!-- Bar with top-rounded corners -->
         <div class="blueprint__region blueprint__region--shaded" style="top:8px;left:0;right:0;height:64px;border-top-left-radius:16px;border-top-right-radius:16px;">
@@ -1151,11 +1151,11 @@ custom onTap callback이 있으면 그걸 호출.
       </thead>
       <tbody>
         <tr><td><code>waiting</code> · 시작 전</td><td><code>color-text-secondary</code> + blink</td><td>곧 시작</td><td>"N분 후" / "N시간 후" 텍스트</td></tr>
-        <tr style="background: rgba(var(--spec-blueprint-rgb), 0.04);"><td><code>checkInReady</code> ⚡ <em>action</em></td><td><code>color-primary</code> + pulse + halo</td><td><strong>체크인하세요</strong> (bold · primary)</td><td>—</td></tr>
+        <tr class="is-baseline-tint"><td><code>checkInReady</code> ⚡ <em>action</em></td><td><code>color-primary</code> + pulse + halo</td><td><strong>체크인하세요</strong> (bold · primary)</td><td>—</td></tr>
         <tr><td><code>checkedIn</code></td><td><code>color-success</code> + blink</td><td>체크인 완료</td><td>—</td></tr>
-        <tr style="background: rgba(var(--spec-blueprint-rgb), 0.04);"><td><code>matchingReady</code> ⚡ <em>action</em></td><td><code>color-primary</code> + pulse + halo</td><td><strong>매칭 시작하세요</strong> (bold · primary)</td><td>—</td></tr>
+        <tr class="is-baseline-tint"><td><code>matchingReady</code> ⚡ <em>action</em></td><td><code>color-primary</code> + pulse + halo</td><td><strong>매칭 시작하세요</strong> (bold · primary)</td><td>—</td></tr>
         <tr><td><code>matching</code> · 처리 중</td><td><code>color-success</code> + blink</td><td>매칭 진행 중</td><td>—</td></tr>
-        <tr style="background: rgba(var(--spec-blueprint-rgb), 0.04);"><td><code>results</code> ⚡ <em>action</em></td><td><code>color-primary</code> + pulse + halo</td><td><strong>결과 확인</strong> (bold · primary)</td><td>—</td></tr>
+        <tr class="is-baseline-tint"><td><code>results</code> ⚡ <em>action</em></td><td><code>color-primary</code> + pulse + halo</td><td><strong>결과 확인</strong> (bold · primary)</td><td>—</td></tr>
         <tr><td><code>ended</code></td><td><code>color-text-secondary</code> + blink</td><td>종료됨</td><td>—</td></tr>
       </tbody>
     </table>
@@ -1721,7 +1721,7 @@ custom onTap callback이 있으면 그걸 호출.
 
       <!-- Normal state -->
       <div>
-        <p style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--color-text-secondary);">normal · 미래 이벤트</p>
+        <p class="variant-label">normal · 미래 이벤트</p>
         <div style="background: var(--color-background); border: 1px solid var(--color-divider); border-radius: 8px; overflow: hidden;">
           <div class="event-card" style="border-bottom:none;">
             <div class="event-card__image" style="background: linear-gradient(135deg, #e6f0ff 0%, #d6e8ff 100%);">
@@ -1762,7 +1762,7 @@ custom onTap callback이 있으면 그걸 호출.
 
       <!-- Today state -->
       <div>
-        <p style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--color-text-secondary);">today · D-day == 0 — D-Day 라벨 "오늘" amber 강조</p>
+        <p class="variant-label">today · D-day == 0 — D-Day 라벨 "오늘" amber 강조</p>
         <div style="background: var(--color-background); border: 1px solid var(--color-divider); border-radius: 8px; overflow: hidden;">
           <div class="event-card" style="border-bottom:none;">
             <div class="event-card__image" style="background: linear-gradient(135deg, #f0e6ff 0%, #ffe8d6 100%);">
@@ -1799,7 +1799,7 @@ custom onTap callback이 있으면 그걸 호출.
 
       <!-- SoldOut state -->
       <div>
-        <p style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--color-text-secondary);">soldOut · 참여 == max — 검정 scrim + "마감" 배지 + "만석" 텍스트</p>
+        <p class="variant-label">soldOut · 참여 == max — 검정 scrim + "마감" 배지 + "만석" 텍스트</p>
         <div style="background: var(--color-background); border: 1px solid var(--color-divider); border-radius: 8px; overflow: hidden;">
           <div class="event-card" style="border-bottom:none;">
             <div class="event-card__image" style="background: linear-gradient(135deg, #ffe6e6 0%, #ffd6d6 100%);">
@@ -1837,7 +1837,7 @@ custom onTap callback이 있으면 그걸 호출.
 
       <!-- Ended state -->
       <div>
-        <p style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--color-text-secondary);">ended · start &lt; now — image grayscale + D-Day "종료"</p>
+        <p class="variant-label">ended · start &lt; now — image grayscale + D-Day "종료"</p>
         <div style="background: var(--color-background); border: 1px solid var(--color-divider); border-radius: 8px; overflow: hidden;">
           <div class="event-card" style="border-bottom:none;">
             <div class="event-card__image event-card__image--ended" style="background: linear-gradient(135deg, #d4d4d4 0%, #b8b8b8 100%);">
@@ -1883,8 +1883,8 @@ custom onTap callback이 있으면 그걸 호출.
 
       <!-- waiting -->
       <div>
-        <p style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--color-text-secondary);">waiting · 시작 전 — 곧 시작 + "N분 후"</p>
-        <div style="width: 375px; background: var(--color-background); overflow: hidden; position: relative; height: 96px;">
+        <p class="variant-label">waiting · 시작 전 — 곧 시작 + "N분 후"</p>
+        <div class="viewport-strip">
           <div class="event-now-bar">
             <div class="event-now-bar__dot event-now-bar__dot--gray event-now-bar__dot--blink"></div>
             <div class="event-now-bar__title">강남 루프탑 소셜 파티</div>
@@ -1897,7 +1897,7 @@ custom onTap callback이 있으면 그걸 호출.
       <!-- checkInReady (action required — pulse + tint + bold status) -->
       <div>
         <p style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--color-secondary);">⚡ checkInReady · 체크인 가능 — 사용자 입력 필요 (action variant)</p>
-        <div style="width: 375px; background: var(--color-background); overflow: hidden; position: relative; height: 96px;">
+        <div class="viewport-strip">
           <div class="event-now-bar event-now-bar--action">
             <div class="event-now-bar__dot event-now-bar__dot--primary event-now-bar__dot--pulse"></div>
             <div class="event-now-bar__title">강남 루프탑 소셜 파티</div>
@@ -1908,8 +1908,8 @@ custom onTap callback이 있으면 그걸 호출.
 
       <!-- checkedIn -->
       <div>
-        <p style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--color-text-secondary);">checkedIn · 체크인 완료 — success(green) dot</p>
-        <div style="width: 375px; background: var(--color-background); overflow: hidden; position: relative; height: 96px;">
+        <p class="variant-label">checkedIn · 체크인 완료 — success(green) dot</p>
+        <div class="viewport-strip">
           <div class="event-now-bar">
             <div class="event-now-bar__dot event-now-bar__dot--success event-now-bar__dot--blink"></div>
             <div class="event-now-bar__title">강남 루프탑 소셜 파티</div>
@@ -1921,7 +1921,7 @@ custom onTap callback이 있으면 그걸 호출.
       <!-- matchingReady (action required — user must tap to start matching) -->
       <div>
         <p style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--color-secondary);">⚡ matchingReady · 매칭 시작 가능 — 사용자 입력 필요 (action variant)</p>
-        <div style="width: 375px; background: var(--color-background); overflow: hidden; position: relative; height: 96px;">
+        <div class="viewport-strip">
           <div class="event-now-bar event-now-bar--action">
             <div class="event-now-bar__dot event-now-bar__dot--primary event-now-bar__dot--pulse"></div>
             <div class="event-now-bar__title">강남 루프탑 소셜 파티</div>
@@ -1932,8 +1932,8 @@ custom onTap callback이 있으면 그걸 호출.
 
       <!-- matching (in progress, passive — system is processing) -->
       <div>
-        <p style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--color-text-secondary);">matching · 매칭 진행 중 — 시스템 처리 중 (passive · success dot · blink)</p>
-        <div style="width: 375px; background: var(--color-background); overflow: hidden; position: relative; height: 96px;">
+        <p class="variant-label">matching · 매칭 진행 중 — 시스템 처리 중 (passive · success dot · blink)</p>
+        <div class="viewport-strip">
           <div class="event-now-bar">
             <div class="event-now-bar__dot event-now-bar__dot--success event-now-bar__dot--blink"></div>
             <div class="event-now-bar__title">강남 루프탑 소셜 파티</div>
@@ -1945,7 +1945,7 @@ custom onTap callback이 있으면 그걸 호출.
       <!-- results (action required — pulse + tint + bold status) -->
       <div>
         <p style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--color-secondary);">⚡ results · 결과 확인 — 사용자 입력 필요 (action variant)</p>
-        <div style="width: 375px; background: var(--color-background); overflow: hidden; position: relative; height: 96px;">
+        <div class="viewport-strip">
           <div class="event-now-bar event-now-bar--action">
             <div class="event-now-bar__dot event-now-bar__dot--primary event-now-bar__dot--pulse"></div>
             <div class="event-now-bar__title">강남 루프탑 소셜 파티</div>
@@ -1956,8 +1956,8 @@ custom onTap callback이 있으면 그걸 호출.
 
       <!-- ended -->
       <div>
-        <p style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--color-text-secondary);">ended · 종료됨 — gray dot</p>
-        <div style="width: 375px; background: var(--color-background); overflow: hidden; position: relative; height: 96px;">
+        <p class="variant-label">ended · 종료됨 — gray dot</p>
+        <div class="viewport-strip">
           <div class="event-now-bar">
             <div class="event-now-bar__dot event-now-bar__dot--gray event-now-bar__dot--blink"></div>
             <div class="event-now-bar__title">강남 루프탑 소셜 파티</div>

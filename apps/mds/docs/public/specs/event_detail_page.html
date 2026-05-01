@@ -575,7 +575,7 @@
     </p>
     <div class="layout-grid">
       <div class="blueprint">
-        <div class="blueprint__region" style="top:0;left:0;right:0;bottom:0;border-style:solid;border-color:rgba(var(--spec-blueprint-rgb), 0.18);"></div>
+        <div class="blueprint__region blueprint__region--full"></div>
 
         <!-- Hero SliverAppBar expanded -->
         <div class="blueprint__region blueprint__region--shaded" style="top:0;left:0;right:0;height:211px;">
@@ -691,7 +691,7 @@
     </p>
     <div class="layout-grid">
       <div class="blueprint" style="height: 280px;">
-        <div class="blueprint__region" style="top:0;left:0;right:0;bottom:0;border-style:solid;border-color:rgba(var(--spec-blueprint-rgb), 0.18);"></div>
+        <div class="blueprint__region blueprint__region--full"></div>
 
         <div class="blueprint__region blueprint__region--shaded" style="top:16px;left:16px;right:16px;height:24px;">
           <span class="blueprint__region-label">㉠ Partner row — avatar 24×24 + name + chevron (tap → PartnerDetail)</span>
@@ -806,7 +806,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr style="background: rgba(var(--spec-blueprint-rgb), 0.04);"><td><strong>Default</strong> 🎯</td><td>primary</td><td>데이터 로드 + 스크롤 top + admission=available</td><td>Hero 풀 + TabBar(기본정보 active) + §1 visible + §2 peek + BottomTicketBar 풀</td></tr>
+        <tr class="is-baseline-tint"><td><strong>Default</strong> 🎯</td><td>primary</td><td>데이터 로드 + 스크롤 top + admission=available</td><td>Hero 풀 + TabBar(기본정보 active) + §1 visible + §2 peek + BottomTicketBar 풀</td></tr>
         <tr><td><strong>Loading</strong></td><td>async</td><td><code>eventDetailControllerProvider.isLoading</code></td><td>전체 skeleton (hero + tabs + 카드 + bottom bar)</td></tr>
         <tr><td><strong>Error</strong></td><td>network/server</td><td><code>eventDetailControllerProvider.hasError</code></td><td><code>MinglitErrorState</code> fullPage + "다시 시도" CTA</td></tr>
         <tr><td><strong>Mid-scroll</strong></td><td>scrolled</td><td>scrollOffset &gt; (§3 reveal offset)</td><td>Collapsed AppBar(타이틀 fade-in) + TabBar §3 auto-active + §2 ending/§3/§4 peek</td></tr>
@@ -830,7 +830,7 @@
     <div class="visual-gallery" style="background: var(--color-surface); padding: 16px; border-radius: var(--radius-card); display: flex; flex-direction: column; gap: 16px;">
 
       <!-- State 1: Default — BASELINE for additive diff -->
-      <table class="ref state-mini" style="background: rgba(var(--spec-blueprint-rgb), 0.04);">
+      <table class="ref state-mini is-baseline-tint">
         <thead>
           <tr><th colspan="3"><strong>Default</strong> 🎯 <span class="tag">production</span> · <small style="color:var(--color-primary);">baseline · 페이지 진입 직후 (스크롤 top)</small></th></tr>
         </thead>
