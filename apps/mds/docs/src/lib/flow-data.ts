@@ -285,6 +285,7 @@ const KNOWN_SPEC_FILES: { user: ReadonlySet<string>; partner: ReadonlySet<string
     'partner_application_detail_page',
     'partner_apply_page',
     'partner_apply_status_page',
+    'partner_event_detail_page',
     'partner_home_page',
     'partner_login_page',
     'partner_member_list_page',
@@ -311,6 +312,10 @@ const ROUTE_DESIGN_OVERRIDES: Record<string, string> = {
   // resolves to ticket_edit_page; override the party-scoped variant explicitly.
   'partner-PartyTicketEditRoute': '/specs/ticket_edit_page.html',
   'partner-SettlementDetailRoute':'/specs/settlement_detail_page.html',
+  // Partner EventDetailRoute → partner-side EventDetailPage (운영 관리 + 참가 신청 탭).
+  // Default rule yields 'event_detail_page' which would point to the user-side spec —
+  // override to the partner-specific spec.
+  'partner-EventDetailRoute':     '/specs/partner_event_detail_page.html',
   // AccountManagementPage → kit-shared widget. Default rule for user yields
   // 'account_management_page' (already matches), but partner's
   // PartnerAccountManagementRoute would derive 'partner_account_management_page'
