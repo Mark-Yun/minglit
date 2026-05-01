@@ -3,80 +3,37 @@
 <head>
 <meta charset="UTF-8">
 <title>Spec — MyPage (app_user / MyPageRoute)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
 <style>
-/* Tokens — mirror of mds_tokens (regenerate when tokens.json changes) */
-:root {
-  --color-background: #ffffff;
-  --color-surface: #f9fafb;
-  --color-primary: #9900ff;
-  --color-error: #ef4444;
-  --color-text-primary: #111827;
-  --color-text-secondary: #4b5563;
-  --color-divider: #e5e7eb;
-  --spacing-xsmall: 4px;
-  --spacing-small: 8px;
-  --spacing-sm: 12px;
-  --spacing-medium: 16px;
-  --spacing-large: 24px;
-  --spacing-xlarge: 32px;
-  --spacing-screen-edge: 16px;
-  --radius-card: 16px;
-  --typography-font-size-app-bar-title: 18px;
-}
+/* ============================================================
+   MyPage-specific atoms.
+   Tokens / chrome / mini-table은 /specs/_spec.css에서 import.
+   ============================================================ */
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
-body {
-  background: #e5e5e5;
-  font-family: Pretendard, -apple-system, sans-serif;
-  padding: 24px;
-  min-height: 100vh;
-}
-
-.toolbar {
-  position: fixed; top: 12px; right: 12px;
-  background: white;
-  border: 1px solid #aaa;
-  border-radius: 8px;
-  padding: 8px 12px;
-  font: 13px sans-serif;
-  z-index: 1000;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-}
-.toolbar label { cursor: pointer; user-select: none; }
-
-.viewport {
-  width: 375px;
-  margin: 0 auto;
-  background: var(--color-background);
-  border: 1px solid #ccc;
-  position: relative;
-  overflow: hidden;
-}
-
-.appbar {
+.my-appbar {
   height: 56px;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0 var(--spacing-screen-edge);
   border-bottom: 1px solid var(--color-divider);
+  background: var(--color-background);
 }
-.appbar h1 {
+.my-appbar h2 {
   font-size: var(--typography-font-size-app-bar-title);
   font-weight: 600;
   color: var(--color-text-primary);
 }
 
-.list { padding: var(--spacing-medium) 0; }
+.my-list { padding: var(--spacing-medium) 0; }
 
-.group {
+.my-group {
   background: var(--color-background);
   border-top: 1px solid var(--color-divider);
   border-bottom: 1px solid var(--color-divider);
 }
-.group + .group { margin-top: var(--spacing-large); }
-.group__header {
+.my-group + .my-group { margin-top: var(--spacing-large); }
+.my-group__header {
   padding: var(--spacing-small) var(--spacing-screen-edge);
   font-size: 13px;
   font-weight: 600;
@@ -94,7 +51,7 @@ body {
 .profile-tile__avatar {
   width: 56px; height: 56px;
   border-radius: 999px;
-  background: linear-gradient(135deg, #d4baff, var(--color-primary));
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 30%, transparent), var(--color-primary));
   flex-shrink: 0;
   display: grid; place-items: center;
   color: white;
@@ -114,7 +71,7 @@ body {
 }
 .profile-tile__chevron { color: var(--color-text-secondary); }
 
-.tile {
+.my-tile {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
@@ -122,8 +79,8 @@ body {
   border-top: 1px solid var(--color-divider);
   cursor: pointer;
 }
-.tile:first-child { border-top: 0; }
-.tile__icon {
+.my-tile:first-child { border-top: 0; }
+.my-tile__icon {
   width: 24px; height: 24px;
   display: grid; place-items: center;
   color: var(--color-text-secondary);
@@ -131,224 +88,597 @@ body {
   font-size: 18px;
   font-family: ui-monospace, monospace;
 }
-.tile__title {
+.my-tile__title {
   flex: 1;
   font-size: 15px;
   color: var(--color-text-primary);
 }
-.tile__subtitle {
+.my-tile__subtitle {
   font-size: 13px;
   color: var(--color-text-secondary);
 }
-.tile__chevron { color: var(--color-text-secondary); }
-.tile--destructive .tile__title,
-.tile--destructive .tile__icon { color: var(--color-error); }
+.my-tile__chevron { color: var(--color-text-secondary); }
+.my-tile--destructive .my-tile__title,
+.my-tile--destructive .my-tile__icon { color: var(--color-error); }
 
-.icon-stub {
-  font-size: 18px;
-  font-family: ui-monospace, monospace;
-}
-
-/* Spec mode overlay */
-body.spec-mode .group,
-body.spec-mode .tile,
-body.spec-mode .profile-tile,
-body.spec-mode .appbar,
-body.spec-mode [data-spec] {
-  outline: 1px dashed rgba(204, 0, 102, 0.35);
-  position: relative;
-}
-body.spec-mode [data-spacing-token]::before {
-  content: attr(data-spacing-token);
+/* Logged-out (auth guard) prompt — replaces the entire list when
+   currentUserProvider is null. */
+.my-auth-guard {
   position: absolute;
-  top: -10px; left: 4px;
-  font: 9px/1 'JetBrains Mono', monospace;
-  color: #c06;
-  background: rgba(255, 240, 245, 0.95);
-  border: 1px solid #c06;
-  padding: 1px 4px;
-  border-radius: 3px;
-  z-index: 5;
-  pointer-events: none;
+  inset: 56px 0 0 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--spacing-large);
+  text-align: center;
+  gap: var(--spacing-medium);
 }
-body.spec-mode [data-color-token]::after {
-  content: attr(data-color-token);
-  position: absolute;
-  bottom: -10px; right: 4px;
-  font: 9px/1 'JetBrains Mono', monospace;
-  color: #069;
-  background: rgba(230, 245, 255, 0.95);
-  border: 1px solid #069;
-  padding: 1px 4px;
-  border-radius: 3px;
-  z-index: 5;
-  pointer-events: none;
-}
-
-.notes {
-  width: 375px;
-  margin: 24px auto 0;
-  padding: 16px;
-  background: white;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  font-size: 13px;
-  color: var(--color-text-secondary);
-  line-height: 1.6;
-}
-.notes h2 {
-  font-size: 14px;
-  color: var(--color-text-primary);
-  margin-bottom: 8px;
-}
-.notes code {
-  font-family: ui-monospace, monospace;
-  font-size: 12px;
+.my-auth-guard__icon {
+  width: 64px; height: 64px;
+  border-radius: 50%;
   background: var(--color-surface);
-  padding: 1px 5px;
-  border-radius: 3px;
+  display: grid; place-items: center;
+  color: var(--color-text-secondary);
+  font-size: 28px;
+  font-family: ui-monospace, monospace;
 }
-.notes ul { padding-left: 18px; margin-top: 4px; }
-.notes li { margin: 2px 0; }
+.my-auth-guard__title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.my-auth-guard__sub {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+.my-auth-guard__cta {
+  margin-top: var(--spacing-small);
+  padding: 12px 24px;
+  background: var(--color-primary);
+  color: white;
+  border-radius: var(--radius-button);
+  font-size: 14px;
+  font-weight: 600;
+}
 </style>
 </head>
 <body>
 
 <div class="toolbar">
-  <label><input type="checkbox" id="spec-toggle"> Spec mode</label>
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
 </div>
 
-<div class="viewport" data-spec data-spec-section="MyPage screen">
+<div class="page">
 
-  <header class="appbar" data-spec data-spec-section="AppBar">
-    <h1>마이페이지</h1>
-  </header>
+<!-- ============================================================
+     📍 HEADER
+     ============================================================ -->
+<header>
+  <h1>My Page</h1>
+</header>
 
-  <main class="list" data-spacing-token="py: spacing-medium">
+<!-- ============================================================
+     🎯 OVERVIEW
+     ============================================================ -->
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr>
+        <th style="width: 140px;">Status</th>
+        <td><strong>✅ 디자인완료</strong> <em style="color: var(--color-text-secondary);">— 2 state · 6 SettingsGroup</em></td>
+      </tr>
+      <tr>
+        <th>App</th>
+        <td><code>app_user</code></td>
+      </tr>
+      <tr>
+        <th>Category</th>
+        <td>my · settings hub</td>
+      </tr>
+      <tr>
+        <th>Route / Surface</th>
+        <td><code>MyPageRoute</code> · widget: <code>MyPage</code></td>
+      </tr>
+      <tr>
+        <th>Path</th>
+        <td><code>/my</code></td>
+      </tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>: <em>— (top-level — HomePage AppBar 아바타 탭으로 진입)</em><br>
+          <strong>Children</strong>: <em>—</em> <em style="color: var(--color-text-secondary);">(각 tile은 하위 settings 화면으로 push — 별도 spec으로 분리 예정)</em>
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>
+          사용자의 활동(구매 내역 / 내 티켓), 설정(알림 / 테마), 개인정보 / 보안, 약관 / 정보, 계정 관리를 모두 진입 가능한 단일 settings hub. 6개 그룹으로 나뉜 tile list.
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry points</strong>: HomePage AppBar 우측 아바타 탭 (인증 후) / push 알림에서 일부 settings로 deep-link.<br>
+          <strong>Exit points</strong>: 각 tile 탭 → 하위 settings 화면 / 로그아웃 → LoginRoute / 뒤로 가기 → HomePage 복귀.
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          밍글릿은 settings를 가능한 한 평면 list로 노출해 사용자가 원하는 항목을 빠르게 찾도록 함 — 그룹화는 의미 단위(활동 / 설정 / 개인정보 / 약관 / 계정)로만, 카테고리 페이지 내 nested 구조 회피.
+          현재 HomePage의 아바타 탭이 유일한 진입점 — 하단 탭바 없는 단독 화면.
+        </td>
+      </tr>
+      <tr>
+        <th>Frequency</th>
+        <td>설정 변경 시 또는 활동 내역 확인 시 — 주 1-2회 정도.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
 
-    <section class="group" data-spec data-spec-section="ProfileGroup">
-      <div class="profile-tile" data-color-token="bg: background">
-        <div class="profile-tile__avatar" data-color-token="bg: primary gradient">홍</div>
-        <div class="profile-tile__body">
-          <div class="profile-tile__name" data-color-token="color: text-primary">홍길동</div>
-          <div class="profile-tile__email" data-color-token="color: text-secondary">user@example.com</div>
+<!-- ============================================================
+     🕐 HISTORY
+     ============================================================ -->
+<section class="doc">
+  <h2>History</h2>
+  <p class="intro">
+    이 spec의 주요 변경 이력. 최신 항목 위.
+  </p>
+  <table class="ref">
+    <thead>
+      <tr>
+        <th style="width: 110px;">Date</th>
+        <th style="width: 80px;">Version</th>
+        <th style="width: 120px;">Author</th>
+        <th>Changes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2026-05-01</td>
+        <td>1.0</td>
+        <td>mark-yun</td>
+        <td>
+          v1.4 template으로 <strong>전면 재작성</strong>. 이전 spec은 v0.5 era — 인라인 토큰 정의 + 단일 mockup + spec notes 정도. 이번 버전은 Overview / History / Layout(blueprint + 6 SettingsGroup sub-anatomy) / States(2 mini-table — Default / Logged out) / Global Behavior / Reference 풀세트.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- Anchor nav -->
+<nav class="perspective-nav">
+  <a href="#layout"><span class="glyph">🧱</span> Layout</a>
+  <a href="#states"><span class="glyph">🎨</span> States</a>
+  <a href="#behavior"><span class="glyph">🔄</span> Global Behavior</a>
+  <a href="#reference"><span class="glyph">📖</span> Reference</a>
+</nav>
+
+<!-- ============================================================
+     🧱 LAYOUT
+     ============================================================ -->
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Layout</h2>
+    <span class="lede">AppBar + scroll body의 6 SettingsGroup. 그룹 사이 spacing-large.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree</h2>
+    <p class="intro">
+      Scaffold + AppBar (간단 title only · "마이페이지") + ListView 또는 SingleChildScrollView로 6 그룹 + spacing-medium body padding (vertical).
+      각 그룹은 top/bottom border만 있는 카드 (h-margin 없음 · edge-to-edge), 그 안에 tile들이 배치.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 600px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <!-- AppBar -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:0;left:0;right:0;height:56px;">
+          <span class="blueprint__region-label">① AppBar — "마이페이지"</span>
         </div>
-        <span class="profile-tile__chevron icon-stub">›</span>
-      </div>
-    </section>
 
-    <section class="group" data-spec data-spec-section="ActivityGroup" data-spacing-token="mt: spacing-large">
-      <div class="group__header" data-color-token="bg: surface">활동</div>
-      <div class="tile">
-        <span class="tile__icon icon-stub">📋</span>
-        <span class="tile__title">구매 내역</span>
-        <span class="tile__chevron icon-stub">›</span>
-      </div>
-      <div class="tile">
-        <span class="tile__icon icon-stub">🎫</span>
-        <span class="tile__title">내 티켓</span>
-        <span class="tile__chevron icon-stub">›</span>
-      </div>
-    </section>
+        <!-- Profile group -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:72px;left:0;right:0;height:88px;">
+          <span class="blueprint__region-label">② ProfileGroup — avatar + name + email</span>
+        </div>
 
-    <section class="group" data-spec data-spec-section="SettingsGroup" data-spacing-token="mt: spacing-large">
-      <div class="group__header">설정</div>
-      <div class="tile">
-        <span class="tile__icon icon-stub">🔔</span>
-        <span class="tile__title">알림 설정</span>
-        <span class="tile__chevron icon-stub">›</span>
-      </div>
-      <div class="tile">
-        <span class="tile__icon icon-stub">🌓</span>
-        <span class="tile__title">테마 설정</span>
-        <span class="tile__subtitle">시스템</span>
-        <span class="tile__chevron icon-stub">›</span>
-      </div>
-    </section>
+        <!-- Activity group -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:184px;left:0;right:0;height:104px;">
+          <span class="blueprint__region-label">③ ActivityGroup — 구매 내역 / 내 티켓</span>
+        </div>
 
-    <section class="group" data-spec data-spec-section="PrivacyGroup" data-spacing-token="mt: spacing-large">
-      <div class="group__header">개인정보 및 보안</div>
-      <div class="tile">
-        <span class="tile__icon icon-stub">🔒</span>
-        <span class="tile__title">개인정보</span>
-        <span class="tile__chevron icon-stub">›</span>
-      </div>
-      <div class="tile">
-        <span class="tile__icon icon-stub">⚙</span>
-        <span class="tile__title">권한 설정</span>
-        <span class="tile__chevron icon-stub">›</span>
-      </div>
-      <div class="tile">
-        <span class="tile__icon icon-stub">🚫</span>
-        <span class="tile__title">차단 목록</span>
-        <span class="tile__chevron icon-stub">›</span>
-      </div>
-    </section>
+        <!-- Settings group -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:312px;left:0;right:0;height:104px;">
+          <span class="blueprint__region-label">④ SettingsGroup — 알림 / 테마</span>
+        </div>
 
-    <section class="group" data-spec data-spec-section="TermsGroup" data-spacing-token="mt: spacing-large">
-      <div class="group__header">약관 및 정보</div>
-      <div class="tile">
-        <span class="tile__icon icon-stub">🛡</span>
-        <span class="tile__title">개인정보처리방침</span>
-        <span class="tile__chevron icon-stub">›</span>
-      </div>
-      <div class="tile">
-        <span class="tile__icon icon-stub">📄</span>
-        <span class="tile__title">이용약관</span>
-        <span class="tile__chevron icon-stub">›</span>
-      </div>
-      <div class="tile">
-        <span class="tile__icon icon-stub">ⓘ</span>
-        <span class="tile__title">앱 버전</span>
-        <span class="tile__subtitle">26.04.1900-dev</span>
-      </div>
-    </section>
+        <!-- Privacy group -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:440px;left:0;right:0;height:152px;">
+          <span class="blueprint__region-label">⑤ PrivacyGroup — 개인정보 / 권한 / 차단</span>
+        </div>
 
-    <section class="group" data-spec data-spec-section="AccountGroup" data-spacing-token="mt: spacing-large">
-      <div class="group__header">계정</div>
-      <div class="tile">
-        <span class="tile__icon icon-stub">👤</span>
-        <span class="tile__title">계정 관리</span>
-        <span class="tile__chevron icon-stub">›</span>
+        <div class="blueprint__align-marker" style="bottom:8px;left:8px;">+ TermsGroup ⑥ + AccountGroup ⑦ (스크롤 필요)</div>
       </div>
-      <div class="tile tile--destructive">
-        <span class="tile__icon icon-stub">↩</span>
-        <span class="tile__title" data-color-token="color: error">로그아웃</span>
-      </div>
-    </section>
 
-    <div style="height: var(--spacing-xlarge);"></div>
-  </main>
+      <div class="layout-tree"><b>Scaffold</b>
+└─ <b>AppBar</b>(<i>title: "마이페이지"</i> · <i>showBackButton: false</i>)             ← ①
+└─ <b>SingleChildScrollView</b>
+   └─ Padding(<i>spacing-medium</i> vertical)
+      └─ Column
+         ├─ <em>ProfileGroup</em> (MinglitSettingsGroup · 1 tile)              ← ②
+         │  └─ <b>ProfileTile</b> avatar(56) + name + email + chevron
+         ├─ Gap: <i>spacing-large (24)</i>
+         │
+         ├─ <em>ActivityGroup</em> (header: "활동" · 2 tiles)                  ← ③
+         │  ├─ <b>구매 내역</b> tile
+         │  └─ <b>내 티켓</b> tile
+         ├─ Gap: <i>spacing-large</i>
+         │
+         ├─ <em>SettingsGroup</em> (header: "설정" · 2 tiles)                  ← ④
+         │  ├─ <b>알림 설정</b> tile
+         │  └─ <b>테마 설정</b> tile (subtitle: "시스템")
+         ├─ Gap: <i>spacing-large</i>
+         │
+         ├─ <em>PrivacyGroup</em> (header: "개인정보 및 보안" · 3 tiles)       ← ⑤
+         │  ├─ <b>개인정보</b> tile
+         │  ├─ <b>권한 설정</b> tile
+         │  └─ <b>차단 목록</b> tile
+         ├─ Gap: <i>spacing-large</i>
+         │
+         ├─ <em>TermsGroup</em> (header: "약관 및 정보" · 3 tiles)             ← ⑥
+         │  ├─ <b>개인정보처리방침</b> tile
+         │  ├─ <b>이용약관</b> tile
+         │  └─ <b>앱 버전</b> tile (subtitle: "26.04.x-dev" · cursor 미적용)
+         ├─ Gap: <i>spacing-large</i>
+         │
+         └─ <em>AccountGroup</em> (header: "계정" · 2 tiles)                   ← ⑦
+            ├─ <b>계정 관리</b> tile
+            └─ <b>로그아웃</b> tile (destructive · color-error)</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>—</td><td>Body padding</td><td>—</td><td>vertical: <code>spacing-medium (16px)</code> · horizontal: 0 (그룹 자체는 edge-to-edge)</td></tr>
+        <tr><td>①</td><td>AppBar</td><td>title center · showBackButton: false</td><td>height: 56 · 하단 1px <code>color-divider</code></td></tr>
+        <tr><td>②</td><td>ProfileGroup</td><td>edge-to-edge · 1 tile (ProfileTile)</td><td>height: 88 (single tile · padding-medium v) · top/bottom 1px divider</td></tr>
+        <tr><td>③–⑦</td><td>SettingsGroup × 5</td><td>edge-to-edge · 헤더 + tile list</td><td>그룹 사이: <code>spacing-large (24)</code> · header 좌우 padding: <code>spacing-screen-edge</code> · header v-padding: <code>spacing-small (8)</code> · tile 좌우 padding: <code>spacing-screen-edge</code> · tile v-padding: 14px (icon 24+ 5px buffer)</td></tr>
+        <tr><td>—</td><td>tile-tile divider</td><td>top border 1px (첫 tile 제외)</td><td><code>color-divider</code> · per-tile</td></tr>
+      </tbody>
+    </table>
+  </section>
 </div>
 
-<aside class="notes">
-  <h2>Spec notes</h2>
-  <ul>
-    <li><strong>Source:</strong> <code>apps/app_user/lib/src/features/home/my_page.dart</code></li>
-    <li><strong>Route:</strong> <code>MyPageRoute</code> (path <code>/my</code>)</li>
-    <li><strong>Composition:</strong> 6 <code>MinglitSettingsGroup</code> separated by <code>SizedBox(height: MinglitSpacing.large)</code></li>
-    <li><strong>AppBar:</strong> <code>MinglitTheme.simpleAppBar(title: '마이페이지', showBackButton: false)</code></li>
-    <li><strong>List padding:</strong> <code>EdgeInsets.symmetric(vertical: MinglitSpacing.medium)</code></li>
-    <li><strong>Auth guard:</strong> when <code>currentUserProvider</code> is null, login prompt is shown instead</li>
-  </ul>
-  <h2 style="margin-top:12px;">Tokens used</h2>
-  <ul>
-    <li><code>--spacing-medium</code>, <code>--spacing-large</code>, <code>--spacing-xlarge</code>, <code>--spacing-screen-edge</code></li>
-    <li><code>--color-background</code>, <code>--color-surface</code>, <code>--color-text-primary</code>, <code>--color-text-secondary</code>, <code>--color-error</code>, <code>--color-divider</code>, <code>--color-primary</code></li>
-    <li><code>--typography-font-size-app-bar-title</code> (18px)</li>
-  </ul>
-  <h2 style="margin-top:12px;">Icons referenced (not in mds_icons yet)</h2>
-  <ul>
-    <li>receipt_long_outlined, confirmation_number_outlined, notifications_outlined, lock_outline, admin_panel_settings_outlined, block, shield_outlined, description_outlined, info_outline, manage_accounts_outlined, logout_outlined</li>
-    <li>Currently shown as emoji stubs. When mds_icons covers them, swap to <code>&lt;svg&gt;</code> from mds_icons codegen.</li>
-  </ul>
-</aside>
+<!-- ============================================================
+     🎨 STATES
+     ============================================================ -->
+<div class="perspective" id="states">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>States</h2>
+    <span class="lede">2 state. baseline = Default(로그인). 비로그인 시 auth guard로 settings list 미노출.</span>
+  </div>
+
+  <section class="doc">
+    <p class="intro">
+      <strong>State 종류 식별 기준</strong>: <code>currentUserProvider</code> 분기 — null이면 auth guard, 아니면 default.
+      Loading state는 별도 미상세 — <code>currentUserProvider</code>는 cached + sync 접근 (auth provider state) → 진입 직후 즉시 분기.
+    </p>
+
+    <!-- State 1: Default (logged in, baseline) -->
+    <table class="ref state-mini is-baseline-tint">
+      <thead>
+        <tr><th colspan="3"><strong>Default · 로그인</strong> 🎯 <small>baseline · 6 SettingsGroup 노출</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="my-appbar"><h2>마이페이지</h2></div>
+              <div class="my-list">
+                <div class="my-group">
+                  <div class="profile-tile">
+                    <div class="profile-tile__avatar">홍</div>
+                    <div class="profile-tile__body">
+                      <div class="profile-tile__name">홍길동</div>
+                      <div class="profile-tile__email">user@example.com</div>
+                    </div>
+                    <span class="profile-tile__chevron">›</span>
+                  </div>
+                </div>
+                <div class="my-group" style="margin-top: var(--spacing-large);">
+                  <div class="my-group__header">활동</div>
+                  <div class="my-tile">
+                    <span class="my-tile__icon">📋</span>
+                    <span class="my-tile__title">구매 내역</span>
+                    <span class="my-tile__chevron">›</span>
+                  </div>
+                  <div class="my-tile">
+                    <span class="my-tile__icon">🎫</span>
+                    <span class="my-tile__title">내 티켓</span>
+                    <span class="my-tile__chevron">›</span>
+                  </div>
+                </div>
+                <div class="my-group" style="margin-top: var(--spacing-large);">
+                  <div class="my-group__header">설정</div>
+                  <div class="my-tile">
+                    <span class="my-tile__icon">🔔</span>
+                    <span class="my-tile__title">알림 설정</span>
+                    <span class="my-tile__chevron">›</span>
+                  </div>
+                  <div class="my-tile">
+                    <span class="my-tile__icon">🌓</span>
+                    <span class="my-tile__title">테마 설정</span>
+                    <span class="my-tile__subtitle">시스템</span>
+                    <span class="my-tile__chevron">›</span>
+                  </div>
+                </div>
+                <div class="my-group" style="margin-top: var(--spacing-large);">
+                  <div class="my-group__header">개인정보 및 보안</div>
+                  <div class="my-tile">
+                    <span class="my-tile__icon">🔒</span>
+                    <span class="my-tile__title">개인정보</span>
+                    <span class="my-tile__chevron">›</span>
+                  </div>
+                  <div class="my-tile">
+                    <span class="my-tile__icon">⚙</span>
+                    <span class="my-tile__title">권한 설정</span>
+                    <span class="my-tile__chevron">›</span>
+                  </div>
+                  <div class="my-tile">
+                    <span class="my-tile__icon">🚫</span>
+                    <span class="my-tile__title">차단 목록</span>
+                    <span class="my-tile__chevron">›</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>currentUserProvider != null</code> · 인증 상태</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            ① <strong>ProfileTile 탭</strong> → 프로필 편집 화면 (별도 spec 후속)<br>
+            ② <strong>각 settings tile 탭</strong> → 해당 settings 화면 push<br>
+            ③ <strong>스크롤</strong> → TermsGroup / AccountGroup 노출<br>
+            ④ <strong>로그아웃 탭</strong> → confirm 다이얼로그 → 확인 시 로그아웃 + LoginRoute redirect<br>
+            ⑤ <strong>뒤로 가기</strong> → HomePage 복귀
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · 앱 버전 tile은 cursor 없음 (탭 무반응 · subtitle만 표기)<br>
+            · 일부 tile은 placeholder ("구현 준비 중") — 후속 spec에서 라우팅 활성화<br>
+            · 로그아웃 confirm 다이얼로그는 destructive 스타일 (color-error)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            · <code>MinglitAppBar</code> (title only · "마이페이지" · showBackButton: false)<br>
+            · <code>ProfileTile</code> (avatar 56 + name + email + chevron)<br>
+            · <code>MinglitSettingsGroup</code> × 6 (header + tile list · top/bottom border)<br>
+            · <code>SettingsTile</code> (icon + title + optional subtitle + chevron · destructive variant)<br>
+            · <code>ConfirmDialog</code> (로그아웃 시 — Material 기본)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            · color: <code>color-background</code> (scaffold · 그룹 bg), <code>color-surface</code> (그룹 헤더 bg), <code>color-text-primary</code> (title · name), <code>color-text-secondary</code> (sub · email · 그룹 헤더 · chevron · icon), <code>color-divider</code> (top/bottom · tile separator), <code>color-primary</code> (avatar gradient), <code>color-error</code> (로그아웃 destructive)<br>
+            · spacing: <code>spacing-medium</code> (16 · body v-padding · profile gap), <code>spacing-screen-edge</code> (16 · 그룹 h-padding), <code>spacing-large</code> (24 · 그룹 사이 간격), <code>spacing-small</code> (8 · 헤더 v-padding), <code>spacing-sm</code> (12 · tile icon↔title gap), 14px (tile v-padding)<br>
+            · radius: <code>radius-button</code> (12 · ConfirmDialog 버튼 — Material default)<br>
+            · typography: appBarTitle (18/600), bodyMedium (15/400 · tile title), bodySmall (13 · subtitle · email · 그룹 헤더), titleSmall (16/600 · profile name)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 viewport mockup은 ProfileGroup ~ PrivacyGroup만 (5/6) 표시 — TermsGroup / AccountGroup은 스크롤 필요. 실제 화면에선 6개 모두 노출.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 2: Logged out (auth guard) -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Logged out · auth guard</strong> <small>currentUserProvider == null</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="my-appbar"><h2>마이페이지</h2></div>
+              <div class="my-auth-guard">
+                <div class="my-auth-guard__icon">👤</div>
+                <div class="my-auth-guard__title">로그인이 필요해요</div>
+                <div class="my-auth-guard__sub">설정과 활동 내역을 보려면<br>로그인이 필요합니다.</div>
+                <div class="my-auth-guard__cta">로그인하기</div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>currentUserProvider == null</code> · 비인증 상태에서 deep-link 또는 로그아웃 직후 진입</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>+ <strong>"로그인하기" 탭</strong> → <a href="/specs/login_page.html">LoginRoute</a> push (<code>from='/my'</code> 파라미터 포함 — 로그인 성공 시 자동 복귀)<br>− 모든 settings list 액션 (none rendered)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>· 인증 도중 fetch 실패 → 다시 auth guard 노출<br>· 로그인 성공 후 자동으로 default state로 전환 (Riverpod stream 갱신)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>↔ Body → AuthGuard prompt (icon + title + sub + CTA)<br>− ProfileGroup<br>− 5 SettingsGroup<br>+ <code>FilledButton</code> (CTA "로그인하기")</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>+ <code>color-primary</code> (CTA bg)<br>+ <code>radius-button</code> (12 · CTA)<br>+ <code>spacing-large</code> (icon ↔ title gap)<br>− 그룹 / tile 토큰 (미렌더)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 일반적으론 진입 자체가 막힘 (HomePage 아바타가 인증 사용자만 노출). 직접 deep-link 또는 로그아웃 직후 잠깐 보이는 transient state.</td>
+        </tr>
+      </tbody>
+    </table>
+
+  </section>
+</div>
+
+<!-- ============================================================
+     🔄 GLOBAL BEHAVIOR
+     ============================================================ -->
+<div class="perspective" id="behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">cross-cutting — 모든 state에 적용되는 액션, motion, 글로벌 에지케이스.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Cross-cutting interactions</h2>
+    <table class="ref">
+      <thead>
+        <tr><th style="width: 220px;">사용자 액션</th><th>화면에 보이는 결과</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>뒤로 가기 (시스템 back / AppBar back)</td>
+          <td>HomePage로 복귀.</td>
+        </tr>
+        <tr>
+          <td>다크 모드 토글</td>
+          <td>scaffold / 그룹 / tile 모두 dark 토큰으로 자동 swap. avatar gradient 그대로 (primary 파생).</td>
+        </tr>
+        <tr>
+          <td>tile tap haptic</td>
+          <td>모든 cursor:pointer tile은 ripple + haptic light. 앱 버전 tile만 무반응.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Motion timing</h2>
+    <p class="intro">
+      Source: <code>shared/packages/mds/core/lib/src/theme/minglit_design_tokens.dart</code>
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 240px;">Transition</th>
+          <th style="width: 200px;">Token / Duration</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>화면 진입 (HomePage → MyPage)</td>
+          <td><code>MinglitAnimation.fast</code> (200ms)</td>
+          <td>GoRouter 좌→우 slide.</td>
+        </tr>
+        <tr>
+          <td>tile → 하위 settings 화면</td>
+          <td><code>MinglitAnimation.fast</code> (200ms)</td>
+          <td>Push transition slide.</td>
+        </tr>
+        <tr>
+          <td>로그아웃 confirm 다이얼로그</td>
+          <td><code>MinglitAnimation.fast</code> (200ms)</td>
+          <td>Material 중앙 fade-in scale.</td>
+        </tr>
+        <tr>
+          <td>인증 → default state 전환</td>
+          <td>cut</td>
+          <td>Riverpod stream 갱신 시 즉시 교체. 별도 transition 없음.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Global edge cases</h2>
+    <ul class="notes">
+      <li><strong>스크롤 끝 도달</strong> — AccountGroup 마지막 (로그아웃 tile)이 화면 끝. 추가 padding 없음 — safeArea로 처리.</li>
+      <li><strong>그룹 헤더 스크롤 위 체류</strong> — sticky 아님. 일반 스크롤 (다른 spec에 sticky 패턴 있다면 분리).</li>
+      <li><strong>placeholder tile</strong> — "구현 준비 중" 스낵바로 임시 응답. 후속 spec에서 라우팅 활성화.</li>
+    </ul>
+  </section>
+</div>
+
+<!-- ============================================================
+     📖 REFERENCE
+     ============================================================ -->
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">📖</span>
+    <h2>Reference</h2>
+    <span class="lede">implementation source + 인접 화면.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Implementation source</h2>
+    <table class="ref">
+      <tbody>
+        <tr><th style="width: 200px;">Widget</th><td><code>MyPage</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/home/my_page.dart"><code>apps/app_user/lib/src/features/home/my_page.dart</code></a></td></tr>
+        <tr><th>Route</th><td><code>MyPageRoute</code> · <code>/my</code> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/routing/app_routes.dart"><code>app_routes.dart</code></a></td></tr>
+        <tr><th>Auth gate</th><td><code>currentUserProvider</code> — null 시 auth guard prompt 노출. HomePage 측에서도 인증 사용자만 아바타 표시 → 일반 진입은 항상 default state.</td></tr>
+        <tr><th>SettingsGroup atom</th><td><code>MinglitSettingsGroup</code> (kit-shared) — header + tile list · top/bottom border · edge-to-edge</td></tr>
+        <tr><th>Icon source</th><td>현재 emoji stub 사용 (📋 🎫 🔔 🌓 🔒 ⚙ 🚫 🛡 📄 ⓘ 👤 ↩). <code>mds_icons</code> codegen 도입 후 SVG로 교체.</td></tr>
+        <tr><th>Sub-screens (각 tile)</th><td>구매 내역 · 내 티켓 · 알림 설정 · 테마 설정 · 개인정보 · 권한 설정 · 차단 목록 · 약관 · 계정 관리 — 각각 별도 spec 후보 (Phase 2 backlog).</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 240px;">Spec</th><th>Relation</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><a href="/specs/home_page.html"><code>HomePage</code></a></td>
+          <td>유일한 정상 진입점 — AppBar 아바타 탭.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/login_page.html"><code>LoginPage</code></a></td>
+          <td>auth guard CTA → LoginRoute (<code>from='/my'</code>) → 성공 시 자동 복귀.</td>
+        </tr>
+        <tr>
+          <td><a href="/foundations/layout">Layout foundations</a></td>
+          <td>Standard Scaffold + SingleChildScrollView. 단독 화면 (탭바 없음).</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+</div>
 
 <script>
   document.getElementById('spec-toggle').addEventListener('change', (e) => {
     document.body.classList.toggle('spec-mode', e.target.checked);
   });
+  document.getElementById('dark-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('dark-mode', e.target.checked);
+  });
 </script>
-
 </body>
 </html>
