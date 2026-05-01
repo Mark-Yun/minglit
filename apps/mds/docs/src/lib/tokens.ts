@@ -1,5 +1,26 @@
+/**
+ * Server-side token loaders — read JSON files at build time and parse them
+ * into the shapes consumed by the docs UI. Re-exports the client-safe
+ * types and TEXT_STYLES from `tokens-shared.ts` so existing imports of
+ * `@/lib/tokens` keep working.
+ */
 import fs from 'fs';
 import path from 'path';
+import type {
+  ColorToken,
+  SpacingToken,
+  RadiusToken,
+  TypographyToken,
+} from './tokens-shared';
+
+export type {
+  ColorToken,
+  SpacingToken,
+  RadiusToken,
+  TypographyToken,
+  TextStyle,
+} from './tokens-shared';
+export { TEXT_STYLES } from './tokens-shared';
 
 // ---------------------------------------------------------------------------
 // W3C Design Token types
@@ -15,39 +36,6 @@ interface TokenGroup {
   [key: string]: W3CToken | TokenGroup;
 }
 
-// ---------------------------------------------------------------------------
-// Parsed token shapes
-// ---------------------------------------------------------------------------
-export interface ColorToken {
-  name: string;          // e.g. "color-primary"
-  cssVar: string;        // e.g. "--color-primary"
-  dartName: string;      // e.g. "MdsTokens.colorPrimary"
-  hex: string;
-  description: string;
-  group: 'semantic' | 'dark' | 'partner';
-}
-
-export interface SpacingToken {
-  name: string;
-  cssVar: string;
-  value: number;
-  description: string;
-}
-
-export interface RadiusToken {
-  name: string;
-  cssVar: string;
-  value: number;
-  description: string;
-}
-
-export interface TypographyToken {
-  name: string;
-  cssVar: string;
-  value: string | number;
-  type: 'fontFamily' | 'fontSize' | 'fontWeight';
-  description: string;
-}
 
 // ---------------------------------------------------------------------------
 // Helpers

@@ -8,8 +8,10 @@ const navItems = [
   { href: '/', label: 'Home' },
   { href: '/tokens', label: 'Tokens' },
   { href: '/icons', label: 'Icons' },
-  { href: '/screens', label: 'Screens' },
+  { href: '/foundations/layout', label: 'Layout' },
+  { href: '/components', label: 'Components' },
   { href: '/flows', label: 'Flows' },
+  { href: '/screens', label: 'Screens' },
 ];
 
 export default function Sidebar() {
@@ -37,14 +39,6 @@ export default function Sidebar() {
           </li>
         );
       })}
-      <li>
-        <span className="flex items-center px-3 py-2 rounded-lg text-sm font-medium text-[var(--color-divider)] cursor-not-allowed select-none">
-          Components
-          <span className="ml-2 text-xs bg-[var(--color-surface)] text-[var(--color-text-secondary)] px-1.5 py-0.5 rounded">
-            soon
-          </span>
-        </span>
-      </li>
     </ul>
   );
 
@@ -96,8 +90,7 @@ export default function Sidebar() {
         </div>
         <nav className="flex-1 px-3 py-4 overflow-y-auto">{navList}</nav>
         <div className="px-6 py-4 border-t border-[var(--color-divider)]">
-          <p className="text-xs text-[var(--color-text-secondary)]">Phase 1</p>
-          <p className="text-xs text-[var(--color-divider)] mt-0.5">v26.04.1900-dev</p>
+          <p className="text-xs text-[var(--color-divider)]">v26.04.1900-dev</p>
         </div>
       </aside>
     </>

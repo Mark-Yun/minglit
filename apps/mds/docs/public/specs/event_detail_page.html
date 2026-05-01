@@ -1,0 +1,2102 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Spec — EventDetailPage (app_user · EventDetailRoute)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* ============================================================
+   EventDetailPage-specific atoms.
+   ============================================================ */
+
+/* --- Hero image carousel area --- */
+.detail-hero {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: var(--color-surface);
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+}
+.detail-hero__img-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+  font-size: 11px;
+}
+.detail-hero__gradient {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 80px;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent);
+}
+.detail-hero__back {
+  position: absolute;
+  top: 8px; left: 4px;
+  width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  color: white;
+}
+.detail-hero__back svg { width: 22px; height: 22px; }
+.detail-hero__more {
+  position: absolute;
+  top: 8px; right: 4px;
+  width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  color: white;
+}
+.detail-hero__more svg { width: 22px; height: 22px; }
+.detail-hero__dots {
+  position: absolute;
+  bottom: 8px; left: 50%;
+  transform: translateX(-50%);
+  display: flex; gap: 4px;
+}
+.detail-hero__dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.5);
+}
+.detail-hero__dot--active {
+  background: white;
+  width: 16px;
+  border-radius: 3px;
+}
+
+/* --- Tab bar (pinned) --- */
+.detail-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--color-divider);
+  background: var(--color-background);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.detail-tabs::-webkit-scrollbar { display: none; }
+.detail-tab {
+  padding: 10px 14px;
+  font-size: var(--typography-font-size-body);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  flex-shrink: 0;
+}
+.detail-tab--active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+  font-weight: 600;
+}
+
+/* --- Scrollable content body --- */
+.detail-body {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 80px;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.detail-body::-webkit-scrollbar { display: none; }
+
+/* --- Section 1: Basic Info --- */
+.detail-section {
+  padding: var(--spacing-medium) var(--spacing-screen-edge);
+}
+.detail-section + .detail-section {
+  padding-top: 0;
+}
+
+.detail-partner-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-small);
+  margin-bottom: var(--spacing-small);
+  cursor: pointer;
+}
+.detail-partner-avatar {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.detail-partner-avatar svg { width: 12px; height: 12px; color: var(--color-text-secondary); }
+.detail-partner-name {
+  font-size: var(--typography-font-size-body);
+  color: var(--color-text-secondary);
+  flex: 1;
+}
+.detail-partner-chevron { color: var(--color-text-secondary); }
+
+.detail-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1.35;
+  margin-bottom: var(--spacing-medium);
+}
+
+.detail-info-tile {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-small);
+}
+.detail-info-tile__icon {
+  width: 20px; height: 20px;
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+  margin-top: 1px;
+}
+.detail-info-tile__icon svg { width: 20px; height: 20px; }
+.detail-info-tile__text {}
+.detail-info-tile__title {
+  font-size: var(--typography-font-size-body);
+  font-weight: 500;
+  color: var(--color-text-primary);
+  line-height: 1.4;
+}
+.detail-info-tile__sub {
+  font-size: var(--typography-font-size-caption);
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
+.detail-action-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-small);
+  margin-top: var(--spacing-medium);
+}
+/* Mirrors MinglitChip(size: large) / MinglitSocialActionChip from minglit_kit.
+   – radius-small (8px), NOT pill — chips here are functional buttons, not tags
+   – 12px h · 6px v padding (MinglitSpacing.sm / xsmall2)
+   – icon | 1px vertical divider | label  (Fix #136 in minglit_chip.dart)
+   – 0.5–1px border outlineVariant @ muted alpha (active: filled bg) */
+.detail-action-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xsmall);
+  padding: 6px var(--spacing-sm);
+  border-radius: 8px;
+  border: 1px solid var(--color-divider);
+  background: var(--color-background);
+  font-size: var(--typography-font-size-body);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+.detail-action-chip--active {
+  background: rgba(var(--spec-blueprint-rgb), 0.08);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+.detail-action-chip svg { width: 16px; height: 16px; }
+/* Vertical separator between icon and label (matches MinglitChip Fix #136) */
+.detail-action-chip__sep {
+  width: 1px;
+  height: 14px;
+  background: var(--color-divider);
+  margin: 0 var(--spacing-xsmall);
+  flex-shrink: 0;
+}
+
+/* --- Section divider --- */
+.detail-section-divider {
+  height: 8px;
+  background: var(--color-surface);
+  margin: 0;
+}
+
+/* --- MinglitSection title --- */
+.minglit-section-header {
+  padding: var(--spacing-medium) var(--spacing-screen-edge) var(--spacing-sm);
+  font-size: var(--typography-font-size-body);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+/* --- Entry group card --- */
+.entry-group-card {
+  margin: 0 var(--spacing-screen-edge) var(--spacing-medium);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-small);
+  padding: var(--spacing-small);
+  position: relative;
+  background: var(--color-surface);
+}
+.entry-group-card__name {
+  font-size: var(--typography-font-size-body);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-xxsmall);
+}
+.entry-group-card__count {
+  font-size: var(--typography-font-size-caption);
+  color: var(--color-text-secondary);
+}
+.entry-group-card__gauge {
+  position: absolute;
+  top: var(--spacing-small);
+  right: var(--spacing-small);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+.gauge-bar-wrap {
+  width: 80px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--color-divider);
+  overflow: hidden;
+}
+.gauge-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--color-primary);
+}
+.gauge-label {
+  font-size: 10px;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
+
+/* --- Verification card stub --- */
+.verification-card {
+  margin: 0 var(--spacing-screen-edge) var(--spacing-small);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-small);
+  padding: var(--spacing-sm) var(--spacing-medium);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  cursor: pointer;
+  background: var(--color-background);
+}
+.verification-card__icon {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: rgba(var(--spec-blueprint-rgb), 0.08);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  color: var(--color-primary);
+}
+.verification-card__icon svg { width: 20px; height: 20px; }
+.verification-card__body { flex: 1; }
+.verification-card__name {
+  font-size: var(--typography-font-size-body);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+.verification-card__desc {
+  font-size: var(--typography-font-size-caption);
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
+/* --- Bottom ticket bar --- */
+.detail-bottom-bar {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: var(--color-background);
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
+  padding: var(--spacing-medium);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-large);
+}
+.detail-bottom-bar__price {}
+.detail-bottom-bar__label {
+  font-size: var(--typography-font-size-caption);
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
+.detail-bottom-bar__amount {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-secondary);
+}
+.detail-bottom-bar__btn {
+  flex: 1;
+  height: 48px;
+  border-radius: var(--radius-card);
+  background: var(--color-primary);
+  color: white;
+  font-size: var(--typography-font-size-button);
+  font-weight: 600;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.detail-bottom-bar__btn--disabled {
+  background: var(--color-divider);
+  color: var(--color-text-secondary);
+  cursor: default;
+}
+.detail-bottom-bar__btn--destructive {
+  background: var(--color-error);
+}
+
+/* --- Quill body text placeholder --- */
+.quill-body {
+  padding: 0 var(--spacing-screen-edge);
+  padding-top: var(--spacing-section-gap);
+  color: var(--color-text-primary);
+  font-size: var(--typography-font-size-body);
+  line-height: 1.7;
+}
+.quill-body p { margin-bottom: 12px; }
+.quill-body h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+
+/* --- Refund policy --- */
+.refund-section {
+  padding: 0 var(--spacing-screen-edge);
+  padding-top: var(--spacing-section-gap);
+  padding-bottom: var(--spacing-section-gap);
+}
+.refund-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--typography-font-size-body);
+  color: var(--color-text-primary);
+  padding: var(--spacing-xsmall) 0;
+  border-bottom: 1px solid var(--color-divider);
+}
+.refund-row__label { color: var(--color-text-secondary); }
+
+/* --- Skeleton --- */
+.skeleton-bar {
+  border-radius: var(--radius-card);
+  background: linear-gradient(90deg, var(--color-surface) 25%, var(--color-divider) 50%, var(--color-surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite;
+}
+@keyframes shimmer { to { background-position: -200% 0; } }
+
+/* --- Error / full-page states --- */
+.detail-fullpage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  height: 100%;
+  padding: var(--spacing-xxlarge) var(--spacing-large);
+  gap: var(--spacing-sm);
+}
+.detail-fullpage__icon { color: var(--color-text-secondary); margin-bottom: 8px; }
+.detail-fullpage__title { font-size: var(--typography-font-size-body); font-weight: 600; color: var(--color-text-primary); }
+.detail-fullpage__sub { font-size: var(--typography-font-size-caption); color: var(--color-text-secondary); line-height: 1.55; }
+.detail-fullpage__btn {
+  margin-top: 8px;
+  padding: 8px 20px;
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-button);
+  color: var(--color-primary);
+  font-size: var(--typography-font-size-body);
+  font-weight: 600;
+  background: transparent;
+  cursor: pointer;
+}
+
+/* --- AppBar overlay (collapsed state bar) --- */
+.collapsed-appbar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 56px;
+  background: var(--color-background);
+  display: flex;
+  align-items: center;
+  padding: 0 var(--spacing-xsmall);
+  border-bottom: 1px solid var(--color-divider);
+  z-index: 5;
+}
+.collapsed-appbar__back { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
+.collapsed-appbar__back svg { width: 22px; height: 22px; color: var(--color-text-primary); }
+.collapsed-appbar__title { flex: 1; font-size: 16px; font-weight: 600; color: var(--color-text-primary); padding: 0 8px; }
+.collapsed-appbar__more { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
+.collapsed-appbar__more svg { width: 22px; height: 22px; color: var(--color-text-primary); }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
+</div>
+
+<div class="page">
+
+<!-- ============================================================
+     Header
+     ============================================================ -->
+<header>
+  <h1>Event Detail</h1>
+</header>
+
+<!-- ============================================================
+     Overview
+     ============================================================ -->
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr>
+        <th style="width: 140px;">Status</th>
+        <td>
+          <strong>🚧 디자인중</strong>
+          <em style="color: var(--color-text-secondary);">— scroll-spy + §1 sub-anatomy 정리 + BottomTicketBar 별도 spec 분리. 라벨 변경(BottomTicketBar) 이터레이션 중.</em>
+        </td>
+      </tr>
+      <tr><th>App</th><td><code>app_user</code></td></tr>
+      <tr><th>Category</th><td>event · detail</td></tr>
+      <tr><th>Route / Surface</th><td><code>EventDetailRoute</code> · widget: <code>EventDetailPage</code> (+ <code>_EventDetailContent</code> · <code>_BottomTicketBar</code> via part of)</td></tr>
+      <tr><th>Path</th><td><code>/events/:eventId</code></td></tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>: <em>— (top-level screen)</em><br>
+          <strong>Children</strong>: <a href="/specs/event_bottom_ticket_bar.html"><code>EventBottomTicketBar</code></a> (⑥ 영역, 별도 spec)
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>
+          이벤트 참여 결정의 핵심 화면 — 모든 정보(기본 정보 · 상세 소개 · 참가 현황 · 필요 인증 · 환불 정책)를
+          단일 scrollable 페이지에 5개 섹션으로 배치하고 하단 CTA로 참여/상태별 액션을 수행한다.
+          상단의 5탭은 화면 전환이 아닌 <strong>scroll-spy</strong> — 탭 탭 시 섹션으로 animate-scroll, 스크롤 시 활성 탭 자동 갱신.
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry points</strong>: 홈 피드 카드 탭 / 태그 이벤트 목록 탭 / 공유 링크(딥링크) 직접 진입.<br>
+          <strong>Exit points</strong>: 뒤로 가기 → 이전 화면 / 파트너 이름 탭 → <code>PartnerDetailPage</code> /
+          "구매하기" CTA → 티켓 선택 바텀시트 → <code>EventApplicationWizard</code> /
+          "참여 취소" → 취소 확인 다이얼로그 / 공유하기 → OS share sheet.
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          5탭 scroll-spy 구조로 정보 밀도 ↑ + 단일 스크롤 흐름 보존.
+          히어로 이미지 collapse 시 AppBar에 이벤트 타이틀 fade-in (CollapseMode.pin).
+          파트너 차단·신고는 ⋮ 메뉴로 접근 (인증된 사용자에게만).
+          <strong>BottomTicketBar는 별도 spec</strong>으로 분리 — <a href="/specs/event_bottom_ticket_bar.html">EventBottomTicketBar</a> 참고.
+        </td>
+      </tr>
+      <tr>
+        <th>Frequency</th>
+        <td>관심 이벤트마다 1회 이상 — 참여 전 반복 열람.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================
+     🕐 HISTORY
+     ============================================================ -->
+<section class="doc">
+  <h2>History</h2>
+  <table class="ref">
+    <thead>
+      <tr>
+        <th style="width: 110px;">Date</th>
+        <th style="width: 80px;">Version</th>
+        <th style="width: 120px;">Author</th>
+        <th>Changes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2026-05-01</td>
+        <td>2.0</td>
+        <td>mark-yun</td>
+        <td>
+          <strong>새 템플릿으로 마이그레이션.</strong> Header → Title만, 메타는 Overview 테이블 9행으로 흡수.
+          Visual → States 리네임, 6 states 모두 mini-table 6-row 패턴 (Default baseline + additive diff).
+          Behavior → Global Behavior. Reference에서 Components used + Tokens consumed 표 제거 (mini-tables로 분산), Implementation source 추가.
+          Status: 🚧 디자인중.
+        </td>
+      </tr>
+      <tr>
+        <td>2026-05-01</td>
+        <td>1.3</td>
+        <td>mark-yun</td>
+        <td>
+          BottomTicketBar 영역 분리 — 자체 spec(<a href="/specs/event_bottom_ticket_bar.html">event_bottom_ticket_bar.html</a>)으로 추출.
+          이 페이지에서는 ⑥ 영역으로 stub 처리, 자세한 12-state 매트릭스는 그쪽에 위임.
+        </td>
+      </tr>
+      <tr>
+        <td>2026-04-29</td>
+        <td>1.2</td>
+        <td>mark-yun</td>
+        <td>
+          <strong>scroll-spy 패턴 명시.</strong> Visual states 재구성 — Default를 "스크롤 top", State 4를 "Mid-scroll · §3 active"로 reframe.
+          탭이 화면 전환이 아닌 scroll-spy임을 Layout intro + State summary에 명확히 표기. 사용자가 보고하던 혼선("탭으로만 나뉘어져있음") 해소.
+          §1 기본 정보 sub-anatomy 섹션 추가 (Sub-anatomy parallel structure 도입).
+        </td>
+      </tr>
+      <tr>
+        <td>2026-04-XX</td>
+        <td>1.0</td>
+        <td>mark-yun</td>
+        <td>Initial spec — 4-perspective 구조 (Layout / Visual / Behavior / Reference). 6 states (Default · Loading · Error · Scrolled · Already Joined · Full). BottomTicketBar 인라인 작성.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- Anchor nav -->
+<nav class="perspective-nav">
+  <a href="#layout"><span class="glyph">🧱</span> Layout</a>
+  <a href="#states"><span class="glyph">🎨</span> States</a>
+  <a href="#global-behavior"><span class="glyph">🔄</span> Global Behavior</a>
+  <a href="#reference"><span class="glyph">📖</span> Reference</a>
+</nav>
+
+<!-- ============================================================
+     LAYOUT
+     ============================================================ -->
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Layout</h2>
+    <span class="lede">화면 구조 — 영역, 정렬, 간격 규칙. 색·타이포 무시.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree</h2>
+    <p class="intro">
+      Column(Expanded + BottomTicketBar). Expanded 내부는 AnimatedSwitcher — loading/error/data 전환.
+      data 상태: <strong>단일 CustomScrollView</strong> — SliverAppBar(expandedHeight=16:9 이미지) + SliverPersistentHeader(탭바) + 5개 SliverToBoxAdapter 섹션이 <strong>한 줄로 길게 스크롤</strong>됨.
+      AppBar는 pinned — collapse 시 타이틀 fade-in.
+      <strong>TabBar는 화면 전환이 아닌 scroll-spy</strong> — 탭 탭하면 해당 섹션으로 animateTo(300ms easeInOut), 사용자가 스크롤하면 GlobalKey 기반 viewport 검사로 현재 보이는 섹션을 감지해 active tab 자동 업데이트(<code>_isTabTapScroll</code> guard로 탭 탭 직후 충돌 방지).
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint">
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <!-- Hero SliverAppBar expanded -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:0;left:0;right:0;height:211px;">
+          <span class="blueprint__region-label">① Hero image — 16:9<br>SliverAppBar expandedHeight<br>Back btn · ⋮ menu (white icons)</span>
+        </div>
+        <!-- Pinned tab bar -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:211px;left:0;right:0;height:49px;">
+          <span class="blueprint__region-label">② Pinned TabBar<br>5 tabs scrollable · kTextTabBarHeight+1</span>
+        </div>
+        <!-- Section 1 basic info -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:260px;left:0;right:0;height:180px;">
+          <span class="blueprint__region-label">③ 기본 정보<br>partner row + title + info tiles + action chips</span>
+        </div>
+        <!-- Section 2 description -->
+        <div class="blueprint__region" style="top:440px;left:0;right:0;height:80px;">
+          <span class="blueprint__region-label">④ 상세 소개<br>QuillViewer rich text</span>
+        </div>
+        <!-- Sections 3-5 (compressed) -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:520px;left:0;right:0;height:100px;">
+          <span class="blueprint__region-label">⑤ 참가 현황 / 필요 인증 / 환불 정책<br>(§3§4§5 collapsed view)</span>
+        </div>
+        <!-- Bottom ticket bar -->
+        <div class="blueprint__region blueprint__region--shaded" style="bottom:0;left:0;right:0;height:80px;">
+          <span class="blueprint__region-label">⑥ BottomTicketBar<br>price col + CTA button · SafeArea top:false</span>
+        </div>
+
+        <div class="blueprint__align-marker" style="top:8px;right:8px;">SliverAppBar pinned</div>
+        <div class="blueprint__align-marker" style="bottom:82px;right:8px;">Column bottom</div>
+      </div>
+
+      <div class="layout-tree"><b>Scaffold</b>
+└─ <b>Column</b>
+   ├─ <b>Expanded</b>
+   │  └─ <b>AnimatedSwitcher</b>(duration: MinglitAnimation.medium)
+   │     ├─ [loading] <b>_EventDetailContentSkeleton</b>
+   │     ├─ [error]   <b>MinglitErrorState</b>(fullPage)
+   │     └─ [data]    <b>_EventDetailContent</b>
+   │        └─ <b>Stack</b>
+   │           ├─ <b>RefreshIndicator</b>
+   │           │  └─ <b>CustomScrollView</b>
+   │           │     ├─ <b>SliverAppBar</b>(expanded=16:9, pinned)  ← ①
+   │           │     │  ├─ <b>FlexibleSpaceBar</b>
+   │           │     │  │  ├─ <b>MinglitImageCarousel</b>(imageUrls)
+   │           │     │  │  └─ gradient overlay (top black→transparent)
+   │           │     │  ├─ leading: <b>BackButton</b>(color: iconColor)
+   │           │     │  └─ actions: <b>PopupMenuButton</b>(block/report) <i>(partner≠null &amp; user≠null)</i>
+   │           │     │
+   │           │     ├─ <b>SliverPersistentHeader</b>(pinned)       ← ②
+   │           │     │  └─ <b>TabBar</b>(scrollable, tabAlignment:start)
+   │           │     │     └─ tabs: 기본 정보 / 상세 소개 / 참가 현황 / 필요 인증 / 환불 정책
+   │           │     │
+   │           │     ├─ <b>SliverToBoxAdapter</b>: §1 기본 정보     ← ③
+   │           │     │  ├─ partner row (CircleAvatar + name + chevron)
+   │           │     │  ├─ title Text(headlineSmall bold)
+   │           │     │  ├─ <b>_InfoTile</b> — 날짜·시간·진행 시간
+   │           │     │  ├─ <b>_InfoTile</b> — 장소 이름·주소
+   │           │     │  └─ Wrap: <b>MinglitSocialActionChip</b>(like) + <b>MinglitChip</b>(공유하기)
+   │           │     │
+   │           │     ├─ <b>SliverToBoxAdapter</b>: §2 상세 소개     ← ④
+   │           │     │  └─ <b>_QuillViewer</b>(delta JSON)
+   │           │     │
+   │           │     ├─ <b>SliverToBoxAdapter</b>: §3 참가 현황
+   │           │     │  └─ <b>MinglitSection</b>(title: '참여 현황')
+   │           │     │     └─ <b>EntryGroupDetail</b> × N + <b>MinglitParticipantGauge</b>
+   │           │     │
+   │           │     ├─ <b>SliverToBoxAdapter</b>: §4 필요 인증      ← ⑤
+   │           │     │  └─ <b>MinglitSection</b> → <b>VerificationCard</b> × N
+   │           │     │
+   │           │     ├─ <b>SliverToBoxAdapter</b>: §5 환불 정책
+   │           │     │  └─ <b>MinglitSection</b> → <b>_RefundPolicySection</b>
+   │           │     │
+   │           │     └─ <b>SliverToBoxAdapter</b>(bottom padding: screenHeight/2)
+   │           │
+   │           └─ <b>OpenInAppBanner</b> (Positioned bottom)   <i>(if !_bannerDismissed)</i>
+   │
+   └─ <em>BottomTicketBar</em>                                ← ⑥
+      ├─ [data]    <b>_BottomTicketBar</b>
+      │  ├─ price Column(최저가 label + 금액 titleLarge secondary-color)
+      │  └─ <b>MinglitButton</b> / <b>MinglitButton.destructive</b> (admission state)
+      ├─ [loading] <b>_BottomTicketBarSkeleton</b>
+      └─ [error]   SizedBox.shrink()</div>
+    </div>
+  </section>
+
+  <section class="doc">
+    <h2>Spacing &amp; alignment rules</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>①</td><td>Hero SliverAppBar</td><td>expandedHeight = screenWidth × 9/16 (px)</td><td>back/more 버튼: top <code>spacing-small+8</code>. 아이콘 색상: 히어로 visible=white, collapsed=onSurface.</td></tr>
+        <tr><td>②</td><td>Pinned TabBar</td><td>scrollable · tabAlignment: start (no 52dp indent)</td><td>height: kTextTabBarHeight+1 ≈ 49px. 하단 Divider 1px.</td></tr>
+        <tr><td>③</td><td>§1 기본 정보</td><td>column start · screen-edge h-padding</td><td>h-pad: <code>spacing-screen-edge (16px)</code> · v-pad: <code>spacing-medium (16px)</code> · 섹션 내 gap: <code>spacing-small (8px)</code></td></tr>
+        <tr><td>④</td><td>§2 상세 소개</td><td>column start</td><td>top: <code>spacing-sectionGap (40px)</code> · h-pad: <code>spacing-screen-edge</code></td></tr>
+        <tr><td>⑤</td><td>§3§4§5 각 섹션</td><td>column start (MinglitSection 내부 표준)</td><td>top: <code>spacing-sectionGap (40px)</code> 각 섹션 첫 padding</td></tr>
+        <tr><td>⑥</td><td>BottomTicketBar</td><td>Row · price col (crossAxis start) + 버튼 flex:1</td><td>outer pad: <code>spacing-medium (16px)</code> all · price↔button: <code>spacing-large (24px)</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>§1 기본 정보 — sub-anatomy</h2>
+    <p class="intro">
+      §1 (③)의 내부 구조 — Column(crossAxis start) · h-pad <code>spacing-screen-edge</code> · v-pad <code>spacing-medium</code>.
+      partner row(있을 때만) → 이벤트명 → InfoTile × 2 (날짜·장소) → action chips (Wrap).
+      파트너 없는 일부 이벤트는 partner row 영역이 통째로 사라지고 그 밑이 위로 collapse.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 280px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <div class="blueprint__region blueprint__region--shaded" style="top:16px;left:16px;right:16px;height:24px;">
+          <span class="blueprint__region-label">㉠ Partner row — avatar 24×24 + name + chevron (tap → PartnerDetail)</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:48px;left:16px;right:16px;height:32px;">
+          <span class="blueprint__region-label">㉡ Title (headlineSmall · bold · multi-line)</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:96px;left:16px;right:16px;height:44px;">
+          <span class="blueprint__region-label">㉢ InfoTile — 📅 날짜 · 지속시간</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:148px;left:16px;right:16px;height:44px;">
+          <span class="blueprint__region-label">㉣ InfoTile — 📍 장소 이름 · 주소</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:208px;left:16px;right:16px;height:36px;">
+          <span class="blueprint__region-label">㉤ Wrap — MinglitSocialActionChip(좋아요) + MinglitChip.large(공유하기)</span>
+        </div>
+
+        <div class="blueprint__align-marker" style="top:8px;right:8px;">h-pad: spacing-screen-edge (16)</div>
+      </div>
+
+      <div class="layout-tree"><b>SliverToBoxAdapter</b> (§1)
+└─ <b>Padding</b>(<i>screenEdge h · medium v</i>)
+   └─ <b>Column</b>(crossAxis: start)
+      ├─ <em>Partner row</em> (if partner != null)              ← ㉠
+      │  └─ <b>GestureDetector</b>(opaque · onTap: pushPartnerDetail)
+      │     └─ Row
+      │        ├─ <b>CircleAvatar</b>(radius: <i>radius-input = 12</i>) — 24×24
+      │        ├─ Gap: <i>spacing-small (8)</i>
+      │        ├─ Flexible Text(<i>titleSmall · onSurfaceVariant</i>)
+      │        ├─ Gap: <i>spacing-xsmall (4)</i>
+      │        └─ Icon(<i>chevron_right · 16 · onSurfaceVariant</i>)
+      ├─ Gap: <i>spacing-small (8)</i>  <i>(if partner)</i>
+      │
+      ├─ <em>Title</em>                                         ← ㉡
+      │  └─ Text(<i>headlineSmall</i> · <b>bold</b>)
+      │  · 폴백: party.title → event.title → '제목 없음'
+      ├─ Gap: <i>spacing-medium (16)</i>
+      │
+      ├─ <em>InfoTile #1 — 날짜·시간</em>                       ← ㉢
+      │  └─ <b>_InfoTile</b>(icon: calendar_today_outlined,
+      │                     title: 'M월 d일 (E) HH:mm',
+      │                     subtitle: '<code>{durationHours}</code>시간')
+      ├─ Gap: <i>spacing-small (8)</i>
+      │
+      ├─ <em>InfoTile #2 — 장소</em>                            ← ㉣
+      │  └─ <b>_InfoTile</b>(icon: location_on_outlined,
+      │                     title: location?.name ?? '장소 미정',
+      │                     subtitle: location?.address ?? '주소 정보 없음')
+      ├─ Gap: <i>spacing-medium (16)</i>
+      │
+      └─ <em>Action chips</em> Wrap(spacing/runSpacing: small)  ← ㉤
+         ├─ <b>MinglitSocialActionChip</b>(targetType: party · interactionType: like)
+         │  · activeIcon: <i>thumb_up</i> · inactiveIcon: <i>thumb_up_outlined</i>
+         │  · activeColor: <i>color-primary</i>
+         │  · onUnauthenticatedTap: <i>pushLogin()</i> (게스트일 때만)
+         │  · radius: <i>radius-small (8)</i> · padding: 12h · 6v · 1px outline border
+         │
+         └─ <b>MinglitChip</b>(size: large · label: '공유하기' · icon: share_outlined)
+            · onTap: <code>ShareUtils.shareEvent(eventTitle, eventId, baseUrl)</code>
+            · radius: <i>radius-small (8)</i> · padding: 12h · 6v
+            · 내부: <i>icon (16) | 1px outlineVariant divider | label (labelLarge)</i>
+
+<em>※ Chip은 mds <code>MinglitChip</code> / <code>MinglitSocialActionChip</code> 컴포넌트 그대로 사용.</em>
+<em>   pill(radius-chip)이 아니라 radius-small(8) 직사각형 — 기능 버튼 톤.</em>
+<em>   FilterChipBar의 chip(radius-chip pill)과 시각적으로 명확히 구분됨 — 역할이 다름.</em></div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 180px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing / tokens</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>㉠</td><td>Partner row</td><td>row crossAxis center · 좌측 정렬 · 전체 width</td><td>avatar 24×24 (<code>radius-input = 12</code>) · avatar↔name <code>spacing-small (8)</code> · name↔chevron <code>spacing-xsmall (4)</code> · 행 하단 <code>spacing-small (8)</code></td></tr>
+        <tr><td>㉡</td><td>Event title</td><td>좌측 정렬 · multi-line</td><td>typography <code>headlineSmall</code> bold · 하단 <code>spacing-medium (16)</code></td></tr>
+        <tr><td>㉢</td><td>InfoTile — 날짜</td><td>row · icon-leading + 2-line text</td><td>icon-text gap: <code>spacing-sm (12)</code> · 행 하단 <code>spacing-small (8)</code></td></tr>
+        <tr><td>㉣</td><td>InfoTile — 장소</td><td>row · icon-leading + 2-line text</td><td>icon-text gap: <code>spacing-sm</code> · 행 하단 <code>spacing-medium (16)</code></td></tr>
+        <tr><td>㉤</td><td>Action chips Wrap</td><td>spacing/runSpacing: <code>spacing-small (8)</code></td><td>chip radius: <code>radius-small (8)</code> · padding 12h · 6v · 내부 icon | 1px divider | label · text <code>labelLarge</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Hero image carousel anatomy (①)</h2>
+    <p class="intro">
+      ① 영역의 내부 구조 — 화면 너비 × 9/16 비율의 16:9 이미지 영역. 가로 스와이프 캐러셀(점 인디케이터 포함) 위에 어두운 그라데이션이 얇게 깔리고, 그 위에 흰색 뒤로가기 / ⋮ 메뉴 아이콘이 떠 있다.
+      이미지가 여러 장이면 하단 중앙에 점 인디케이터가 표시되고, 한 장이면 인디케이터 자체가 사라진다.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 220px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <div class="blueprint__region blueprint__region--shaded" style="top:0;left:0;right:0;height:80px;border-style:dashed;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉠ Top gradient overlay (h=80 · black 0.5 → transparent)</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:8px;left:4px;width:40px;height:40px;">
+          <span class="blueprint__region-label" style="font-size:9px;">㉡ Back<br>40×40</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:8px;right:4px;width:40px;height:40px;">
+          <span class="blueprint__region-label" style="font-size:9px;">㉢ ⋮<br>40×40</span>
+        </div>
+        <div class="blueprint__region" style="top:90px;left:50%;transform:translateX(-50%);width:160px;height:60px;border-style:dashed;border-color:rgba(var(--spec-blueprint-rgb),0.3);">
+          <span class="blueprint__region-label" style="font-size:10px;">㉣ Carousel image — 16:9</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="bottom:8px;left:50%;transform:translateX(-50%);width:64px;height:10px;">
+          <span class="blueprint__region-label" style="font-size:9px;">㉤ dot indicators</span>
+        </div>
+
+        <div class="blueprint__align-marker" style="top:8px;left:50px;">aspect: 16/9 (h = w × 9/16)</div>
+        <div class="blueprint__align-marker" style="bottom:0;left:8px;">bottom edge → TabBar 위에 직접 닿음</div>
+      </div>
+
+      <div class="layout-tree"><b>SliverAppBar</b>(pinned, expandedHeight: <i>screenWidth × 9/16</i>)
+└─ <b>FlexibleSpaceBar</b>(collapseMode: pin)
+   └─ <b>Stack</b>(fit: expand)
+      ├─ <em>Carousel</em>                                 ← ㉣
+      │  └─ <b>MinglitImageCarousel</b>(imageUrls)
+      │     · 가로 스와이프로 다음/이전 이미지로 전환
+      │     · 좌우 끝에서는 더 이상 넘어가지 않음 (반복 안 함)
+      │
+      ├─ <em>Top gradient</em>                             ← ㉠
+      │  · 위 80px 영역 흑색 0.5 → 투명 그라데이션
+      │  · 흰색 아이콘 가독성 확보용 — 이미지 톤 무관하게 선명
+      │
+      ├─ leading: <em>BackButton</em>                      ← ㉡
+      │  · 40×40 hit zone · 좌측 가장자리 4px
+      │  · 색상: 펼쳐진 상태에서는 흰색, 접힌 상태로 가면 onSurface로 자동 전환
+      │
+      ├─ actions: <em>PopupMenuButton(⋮)</em>              ← ㉢
+      │  · 우측 가장자리 4px · 40×40
+      │  · 차단 / 신고 메뉴 항목 노출 (로그인 + 파트너 존재 시에만 표시)
+      │
+      └─ <em>Page indicator</em>                           ← ㉤
+         · 하단 중앙에 작은 점들이 가로로 배치
+         · 활성 점은 가로로 길쭉한 알약 모양으로 강조
+         · 이미지가 1장이면 영역 자체가 사라짐</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing / tokens</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>—</td><td>Hero 외부</td><td>full-width · aspect 16:9</td><td>height = screenWidth × 9/16 · bottom edge가 TabBar 시작점</td></tr>
+        <tr><td>㉠</td><td>Top gradient overlay</td><td>top 정렬 · 풀폭 · 높이 80px</td><td>색: 검정 0.5 → 투명 (선형) · 아이콘 가독성용</td></tr>
+        <tr><td>㉡</td><td>뒤로 버튼</td><td>좌상 정렬</td><td>top: <code>spacing-small (8)</code> · left: 4px · 40×40 hit zone · icon 22</td></tr>
+        <tr><td>㉢</td><td>⋮ 메뉴 버튼</td><td>우상 정렬</td><td>top: <code>spacing-small (8)</code> · right: 4px · 40×40 hit zone · icon 22 · 로그인 + 파트너 존재 시에만 노출</td></tr>
+        <tr><td>㉣</td><td>이미지 캐러셀</td><td>fit: cover · 가로 스와이프</td><td>각 이미지가 풀폭 채움 · 페이지 단위 슬라이드</td></tr>
+        <tr><td>㉤</td><td>점 인디케이터</td><td>하단 중앙 정렬</td><td>bottom: <code>spacing-small (8)</code> · 점 사이 gap: 4px · 점 크기 6 · 활성: 가로 16 알약 · 1장이면 숨김</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Pinned TabBar anatomy (②)</h2>
+    <p class="intro">
+      ② 영역의 내부 구조 — 히어로 바로 아래에 붙는 49px 가로 스크롤 탭 바. 5개 탭(기본 정보 · 상세 소개 · 참가 현황 · 필요 인증 · 환불 정책)이 좌측부터 차례로 늘어서 있고, 활성 탭은 색상 + 아래 2px 보라 언더라인으로 표시된다.
+      탭은 화면을 갈아끼우지 않고 <strong>같은 페이지 안의 해당 섹션으로 부드럽게 스크롤</strong>한다.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="width: 343px; height: 70px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <div class="blueprint__region blueprint__region--shaded" style="top:8px;left:0;width:80px;height:32px;">
+          <span class="blueprint__region-label" style="font-size:9px;">㉠ Tab #1 active<br>(언더라인)</span>
+        </div>
+        <div class="blueprint__region" style="top:8px;left:80px;width:78px;height:32px;border-style:dashed;border-color:rgba(var(--spec-blueprint-rgb),0.3);">
+          <span class="blueprint__region-label" style="font-size:9px;">㉡ Tab #2</span>
+        </div>
+        <div class="blueprint__region" style="top:8px;left:158px;width:78px;height:32px;border-style:dashed;border-color:rgba(var(--spec-blueprint-rgb),0.3);">
+          <span class="blueprint__region-label" style="font-size:9px;">㉢ Tab #3</span>
+        </div>
+        <div class="blueprint__region" style="top:8px;left:236px;width:78px;height:32px;border-style:dashed;border-color:rgba(var(--spec-blueprint-rgb),0.3);">
+          <span class="blueprint__region-label" style="font-size:9px;">㉣ Tab #4 …</span>
+        </div>
+        <div class="blueprint__region" style="bottom:8px;left:0;right:0;height:1px;background:var(--color-divider);"></div>
+        <div class="blueprint__region" style="top:38px;left:8px;width:64px;height:2px;background:var(--color-primary);"></div>
+
+        <div class="blueprint__align-marker" style="top:8px;right:8px;">→ 가로 스크롤 (5탭)</div>
+        <div class="blueprint__align-marker" style="bottom:8px;left:8px;">하단 1px divider</div>
+      </div>
+
+      <div class="layout-tree"><b>SliverPersistentHeader</b>(pinned, height ≈ 49)
+└─ <b>Container</b>(bg: <i>color-background</i>, border-bottom: 1px <i>color-divider</i>)
+   └─ <b>TabBar</b>(scrollable, tabAlignment: start)
+      ├─ <em>Tab #1 — 기본 정보</em>                      ← ㉠
+      ├─ <em>Tab #2 — 상세 소개</em>                      ← ㉡
+      ├─ <em>Tab #3 — 참가 현황</em>                      ← ㉢
+      ├─ <em>Tab #4 — 필요 인증</em>                      ← ㉣
+      └─ <em>Tab #5 — 환불 정책</em>
+
+<em>각 탭 내부:</em>
+· 좌우 padding 14px · 상하 padding 10px
+· 비활성 라벨: <i>color-text-secondary</i> · w500
+· 활성 라벨: <i>color-primary</i> · w600 + 하단 2px <i>color-primary</i> 언더라인
+· 탭 사이 간격: 0 (각 탭의 padding으로 분리됨)
+
+<em>스크롤 동기화:</em>
+· 사용자가 페이지를 스크롤하면 현재 보이는 섹션의 탭이 자동으로 활성화됨
+· 탭을 직접 탭하면 그 섹션으로 약 300ms 부드럽게 스크롤
+· 탭 직후 잠깐은 자동 갱신이 멈춰 충돌하지 않음</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing / tokens</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>—</td><td>TabBar 외부</td><td>full-width · 가로 스크롤</td><td>height ≈ 49px (kTextTabBarHeight + 1) · 하단 1px <code>color-divider</code></td></tr>
+        <tr><td>㉠–㉣</td><td>각 탭</td><td>tabAlignment: start (좌측부터) · row crossAxis center</td><td>padding: 10v · 14h · gap: 0 · 라벨 <code>bodyMedium</code> w500 (활성 w600)</td></tr>
+        <tr><td>—</td><td>활성 indicator</td><td>탭 라벨 하단에 정렬</td><td>높이 2px · 색 <code>color-primary</code> · 너비 = 라벨 너비</td></tr>
+        <tr><td>—</td><td>비활성 라벨</td><td>—</td><td>색 <code>color-text-secondary</code> · w500</td></tr>
+        <tr><td>—</td><td>활성 라벨</td><td>—</td><td>색 <code>color-primary</code> · w600</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>§3 참가 현황 — sub-anatomy</h2>
+    <p class="intro">
+      §3 영역의 내부 구조 — "참여 현황" 섹션 헤더 + 입장권(또는 입장 그룹)별 카드 리스트.
+      각 카드에는 좌측에 그룹명 + 현재 참여 인원, 우측에 정원 대비 현재 참여 비율을 보여주는 가로 게이지 바와 "현재/정원" 텍스트가 함께 붙는다.
+      입장 그룹이 정의되지 않은 단순 이벤트는 카드 없이 "N명 / M명" 텍스트 한 줄만 노출된다.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 220px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <div class="blueprint__region blueprint__region--shaded" style="top:16px;left:16px;width:120px;height:24px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉠ Section header — "참여 현황"</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:56px;left:16px;right:16px;height:64px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉡ Entry group card #1 — name + count + gauge</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:136px;left:16px;right:16px;height:64px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉢ Entry group card #2</span>
+        </div>
+
+        <div class="blueprint__region" style="top:64px;right:24px;width:80px;height:6px;background:var(--color-primary);"></div>
+        <div class="blueprint__region" style="top:144px;right:24px;width:80px;height:6px;background:var(--color-primary);"></div>
+
+        <div class="blueprint__align-marker" style="top:8px;right:8px;">card h-margin: spacing-screen-edge (16)</div>
+      </div>
+
+      <div class="layout-tree"><b>SliverToBoxAdapter</b> (§3)
+└─ <b>MinglitSection</b>(title: '참여 현황')
+   ├─ <em>Section header</em>                              ← ㉠
+   │  · "참여 현황" · <i>bodyMedium · bold</i>
+   │  · padding: <i>medium · screenEdge · sm</i>
+   │
+   └─ <b>Column</b>
+      ├─ <em>Entry group card #1</em>                      ← ㉡
+      │  └─ <b>Container</b>(border 1px · radius-small · h-margin screenEdge)
+      │     └─ Stack
+      │        ├─ Column(crossAxis: start)
+      │        │  ├─ <i>그룹 이름</i> (bodyMedium · w600)
+      │        │  └─ <i>"N명 참여"</i> (bodySmall · text-secondary)
+      │        └─ <em>Gauge cluster</em> (Positioned top-right)
+      │           ├─ <b>MinglitParticipantGauge</b> — 80×6 알약 바
+      │           │  · 채워진 부분: <i>color-primary</i>
+      │           │  · 빈 부분: <i>color-divider</i>
+      │           └─ <i>"현재/정원"</i> 라벨 (10 · w600 · text-secondary)
+      │
+      └─ <em>Entry group card #2 …</em>                    ← ㉢
+         · 동일 구조, 정원 / 현재 인원만 다름
+         · 입장 그룹이 0개면 카드 없이 "N명 / M명" 한 줄로 대체</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 180px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing / tokens</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>㉠</td><td>Section header</td><td>좌측 정렬 · 섹션 첫 줄</td><td>padding: <code>medium</code> · <code>screenEdge</code> · <code>sm</code> · text <code>bodyMedium</code> w700 <code>color-text-primary</code></td></tr>
+        <tr><td>㉡㉢</td><td>Entry group card</td><td>풀폭 (좌우 16 margin) · 내부 Stack</td><td>border 1px <code>color-divider</code> · radius <code>radius-small (8)</code> · padding <code>spacing-small (8)</code> · 카드 사이 <code>spacing-medium (16)</code></td></tr>
+        <tr><td>—</td><td>그룹 이름 / 인원수</td><td>카드 좌측 column</td><td>이름 <code>bodyMedium</code> w600 · 인원수 <code>bodySmall</code> <code>color-text-secondary</code> · 줄 간격 <code>spacing-xxsmall (2)</code></td></tr>
+        <tr><td>—</td><td>Gauge bar</td><td>카드 우측 상단 정렬</td><td>너비 80 · 높이 6 · radius 3 · 채움 <code>color-primary</code> · 배경 <code>color-divider</code></td></tr>
+        <tr><td>—</td><td>"현재/정원" 라벨</td><td>gauge 바로 아래 우측 정렬</td><td>10px · w600 · <code>color-text-secondary</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>§4 필요 인증 — sub-anatomy</h2>
+    <p class="intro">
+      §4 영역의 내부 구조 — "필요 인증" 섹션 헤더 + "참여하려면 아래 인증이 필요합니다" 안내 문구 + 인증 카드 리스트.
+      각 카드는 좌측 동그란 상태 아이콘(완료=초록 ✓ / 미완료=노랑 !), 가운데 인증 이름 + 상태 텍스트, 우측 chevron(미완료에만)으로 구성된다.
+      탭하면 해당 인증 화면으로 이동하고, 모두 완료된 상태에서는 모두 ✓ + "완료" 표기로 보인다.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 240px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <div class="blueprint__region blueprint__region--shaded" style="top:16px;left:16px;width:120px;height:24px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉠ Section header — "필요 인증"</span>
+        </div>
+        <div class="blueprint__region" style="top:48px;left:16px;right:16px;height:18px;border-style:dashed;border-color:rgba(var(--spec-blueprint-rgb),0.3);">
+          <span class="blueprint__region-label" style="font-size:9px;">㉡ Helper text — "참여하려면 …"</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:80px;left:16px;right:16px;height:60px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉢ Verification card #1 — ✓ icon · name · "완료됨"</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:152px;left:16px;right:16px;height:60px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉣ Verification card #2 — ! icon · name · "인증 필요" · ›</span>
+        </div>
+
+        <div class="blueprint__region" style="top:96px;left:24px;width:36px;height:36px;border-radius:18px;background:rgba(var(--spec-blueprint-rgb),0.16);"></div>
+        <div class="blueprint__region" style="top:168px;left:24px;width:36px;height:36px;border-radius:18px;background:rgba(255,170,0,0.18);"></div>
+
+        <div class="blueprint__align-marker" style="top:8px;right:8px;">card h-margin: spacing-screen-edge (16)</div>
+      </div>
+
+      <div class="layout-tree"><b>SliverToBoxAdapter</b> (§4)
+└─ <b>MinglitSection</b>(title: '필요 인증')
+   ├─ <em>Section header</em>                              ← ㉠
+   │  · "필요 인증" · <i>bodyMedium · bold</i>
+   │
+   ├─ <em>Helper text</em>                                 ← ㉡
+   │  · "참여하려면 아래 인증이 필요합니다."
+   │  · <i>bodySmall · text-secondary</i>
+   │  · 인증이 0개면 "별도의 인증이 필요하지 않습니다." 한 줄로 대체
+   │
+   └─ <b>Column</b>
+      ├─ <em>Verification card (완료)</em>                 ← ㉢
+      │  └─ Row
+      │     ├─ <em>Status circle</em> 36×36
+      │     │  · 배경: <i>color-success</i> 14% tint
+      │     │  · 아이콘: ✓ (<i>color-success</i>)
+      │     ├─ Column(flex 1)
+      │     │  ├─ <i>인증 이름</i> (bodyMedium · w600 · text-primary)
+      │     │  └─ <i>"완료됨"</i> (bodySmall · color-success)
+      │     └─ <em>(no chevron)</em>
+      │
+      └─ <em>Verification card (미완료)</em>               ← ㉣
+         └─ Row
+            ├─ <em>Status circle</em> 36×36
+            │  · 배경: <i>color-warning</i> 14% tint
+            │  · 아이콘: ! (<i>color-warning</i>)
+            ├─ Column(flex 1)
+            │  ├─ <i>인증 이름</i> (bodyMedium · w600)
+            │  └─ <i>"인증 필요 — 탭하여 시작"</i> (bodySmall · color-warning)
+            └─ <em>chevron_right</em> (16 · text-secondary)
+            · 카드 전체가 탭 영역 — 탭 시 해당 인증 화면으로 이동</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 180px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing / tokens</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>㉠</td><td>Section header</td><td>좌측 정렬 · 섹션 첫 줄</td><td>padding: <code>medium</code> · <code>screenEdge</code> · <code>sm</code> · text <code>bodyMedium</code> w700</td></tr>
+        <tr><td>㉡</td><td>Helper text</td><td>좌측 정렬</td><td>h-padding <code>spacing-screen-edge</code> · 하단 <code>spacing-sm (12)</code> · text <code>bodySmall</code> <code>color-text-secondary</code></td></tr>
+        <tr><td>㉢</td><td>완료 카드</td><td>row crossAxis center · 좌우 16 margin</td><td>border 1px <code>color-divider</code> · radius <code>radius-card (12)</code> · padding 12 · 카드 간 <code>spacing-small (8)</code></td></tr>
+        <tr><td>—</td><td>Status circle (완료)</td><td>row leading</td><td>36×36 원형 · bg <code>color-success</code> 14% · 아이콘 색 <code>color-success</code></td></tr>
+        <tr><td>㉣</td><td>미완료 카드</td><td>row crossAxis center · 동일 외형</td><td>좌측 status circle bg <code>color-warning</code> 14% · 우측 chevron 16 <code>color-text-secondary</code></td></tr>
+        <tr><td>—</td><td>이름 / 상태 텍스트</td><td>중앙 column</td><td>이름 <code>bodyMedium</code> w600 · 상태 <code>bodySmall</code> (완료=success / 미완료=warning)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>§5 환불 정책 — sub-anatomy</h2>
+    <p class="intro">
+      §5 영역의 내부 구조 — "환불 정책" 섹션 헤더 + 환불 비율 카드(취소 시점별 % 표) + 보조 문구("파트너 사정 시 100% 자동 환불 …" / "자세히 보기" 인라인 링크).
+      카드 안의 각 행은 좌측 시점 라벨 + 우측 환불 비율로 구성되고, 100% 환불은 success 강조, 환불 불가는 error 강조 색으로 표시된다.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 240px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <div class="blueprint__region blueprint__region--shaded" style="top:16px;left:16px;width:120px;height:24px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉠ Section header — "환불 정책"</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:56px;left:16px;right:16px;height:130px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉡ Refund table card — 3 rows (시점 ↔ 비율)</span>
+        </div>
+        <div class="blueprint__region" style="top:200px;left:16px;right:16px;height:18px;border-style:dashed;border-color:rgba(var(--spec-blueprint-rgb),0.3);">
+          <span class="blueprint__region-label" style="font-size:9px;">㉢ "자세히 보기" inline link</span>
+        </div>
+
+        <div class="blueprint__align-marker" style="top:8px;right:8px;">h-margin: spacing-screen-edge</div>
+      </div>
+
+      <div class="layout-tree"><b>SliverToBoxAdapter</b> (§5)
+└─ <b>MinglitSection</b>(title: '환불 정책')
+   ├─ <em>Section header</em>                              ← ㉠
+   │  · "환불 정책" · <i>bodyMedium · bold</i>
+   │
+   ├─ <em>Refund table card</em>                           ← ㉡
+   │  └─ <b>Container</b>(bg surface · border 1px · radius-card)
+   │     ├─ <i>"취소 시점별 환불 비율"</i> 라벨 (bodySmall · w600)
+   │     └─ <b>Column</b>
+   │        ├─ <em>Row #1 — "7일 전까지" / "100% 환불"</em>
+   │        │  · 우측 값: <i>color-success</i> · w600
+   │        │  · 행 하단 1px <i>color-divider</i>
+   │        ├─ <em>Row #2 — "3일 전까지" / "50% 환불"</em>
+   │        │  · 우측 값: <i>text-primary</i> · w600
+   │        │  · 행 하단 1px divider
+   │        └─ <em>Row #3 — "당일" / "환불 불가"</em>
+   │           · 우측 값: <i>color-error</i> · w600 (강조)
+   │           · 마지막 행은 하단 divider 없음
+   │
+   └─ <em>Helper text</em>                                 ← ㉢
+      · "※ 파트너 사정으로 인한 취소 시 100% 자동 환불됩니다."
+      · 끝에 "자세히 보기" 인라인 링크 (<i>color-primary</i>)
+      · 탭 시 환불 정책 본문 다이얼로그 / 외부 링크</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 180px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing / tokens</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>㉠</td><td>Section header</td><td>좌측 정렬 · 섹션 첫 줄</td><td>padding: <code>medium</code> · <code>screenEdge</code> · <code>sm</code> · text <code>bodyMedium</code> w700</td></tr>
+        <tr><td>㉡</td><td>Refund table card</td><td>풀폭 (좌우 16 margin) · column</td><td>bg <code>color-surface</code> · border 1px <code>color-divider</code> · radius <code>radius-card (12)</code> · padding 14v · 16h</td></tr>
+        <tr><td>—</td><td>표 행 (3개)</td><td>row · justify space-between</td><td>각 행 padding 6v 0h · 행 하단 1px <code>color-divider</code> (마지막 행은 없음)</td></tr>
+        <tr><td>—</td><td>좌측 시점 라벨</td><td>좌측 정렬</td><td>text <code>bodyMedium</code> · <code>color-text-secondary</code></td></tr>
+        <tr><td>—</td><td>우측 환불 비율</td><td>우측 정렬</td><td>w600 · 100% → <code>color-success</code> · 부분 환불 → <code>color-text-primary</code> · 환불 불가 → <code>color-error</code></td></tr>
+        <tr><td>㉢</td><td>Helper + 인라인 링크</td><td>좌측 정렬</td><td>h-padding <code>spacing-screen-edge</code> · text <code>bodySmall</code> <code>color-text-secondary</code> · "자세히 보기"는 <code>color-primary</code> 인라인</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Bottom CTA bar anatomy (⑥ — 요약)</h2>
+    <p class="intro">
+      ⑥ 영역의 외형만 짧게 요약 — 자세한 12-state 매트릭스(참여 가능 / 마감 / 신청됨 / 거절 등)와 가격 라벨 분기는
+      <a href="/specs/event_bottom_ticket_bar.html"><code>EventBottomTicketBar</code></a> child spec에 있다.
+      여기서는 "스크롤 영역 아래에 항상 떠 있는 80px 고정 바" 라는 외부 골격만 다룬다.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="width: 343px; height: 100px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <div class="blueprint__region blueprint__region--shaded" style="top:16px;left:16px;width:96px;height:48px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉠ 가격 영역<br>"최저가" + 금액</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:16px;left:136px;right:16px;height:48px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉡ CTA 버튼 (flex: 1) — 48 height · radius-card</span>
+        </div>
+
+        <div class="blueprint__align-marker" style="top:0;left:8px;">상단 그림자 (스크롤 영역과 분리)</div>
+        <div class="blueprint__align-marker" style="bottom:0;right:8px;">SafeArea bottom</div>
+      </div>
+
+      <div class="layout-tree"><b>Container</b>(bg <i>color-background</i>, top shadow)
+└─ <b>Padding</b>(<i>spacing-medium = 16</i> all)
+   └─ <b>Row</b>(crossAxis: center)
+      ├─ <em>가격 영역</em>                                ← ㉠
+      │  └─ <b>Column</b>(crossAxis: start)
+      │     ├─ <i>"최저가"</i> (labelSmall · text-secondary · w600)
+      │     └─ <i>가격 금액</i> (titleLarge · w700 · <i>color-secondary</i>)
+      │  · 가격이 미정인 상태에서는 라벨이 다른 안내 문구로 대체될 수 있음 (child spec)
+      │
+      ├─ Gap: <i>spacing-large (24)</i>
+      │
+      └─ <em>CTA 버튼</em>                                 ← ㉡
+         └─ <b>MinglitButton</b> / <b>MinglitButton.destructive</b> (flex: 1, height 48)
+            · 라벨: 입장 상태에 따라 "구매하기" / "입장권 보기" / "참여 취소" / "신청 마감" 등으로 변함 (child spec 12-state)
+            · 비활성 상태에서는 회색 + 클릭 불가
+            · 파괴적 액션(참여 취소 등)에서는 빨강 톤
+
+<em>※ 자세한 라벨 / 색상 / 비활성 분기는 EventBottomTicketBar spec.</em></div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 180px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing / tokens</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>—</td><td>Bar 외부</td><td>풀폭 · 화면 하단 고정 · row crossAxis center</td><td>height ≈ 80 (padding 포함) · padding <code>spacing-medium (16)</code> all · bg <code>color-background</code> · 상단 soft shadow</td></tr>
+        <tr><td>㉠</td><td>가격 영역</td><td>row leading · column crossAxis start</td><td>라벨 <code>labelSmall</code> w600 <code>color-text-secondary</code> · 금액 <code>titleLarge</code> w700 <code>color-secondary</code></td></tr>
+        <tr><td>—</td><td>가격 ↔ 버튼 gap</td><td>—</td><td><code>spacing-large (24)</code></td></tr>
+        <tr><td>㉡</td><td>CTA 버튼</td><td>flex: 1 · 우측 풀폭 흡수</td><td>height 48 · radius <code>radius-card (12)</code> · text <code>labelLarge</code> w600 · bg <code>color-primary</code> (활성) / <code>color-divider</code> (비활성) / <code>color-error</code> (파괴적)</td></tr>
+        <tr><td>—</td><td>SafeArea</td><td>bottom (iOS home indicator)</td><td>top: false — 하단 시스템 영역만 인셋</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<!-- ============================================================
+     STATES
+     ============================================================ -->
+<div class="perspective" id="states">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>States</h2>
+    <span class="lede">
+      6 states (Default · Loading · Error + 3 tab-focused: §3 참가 현황 / §4 필요 인증 / §5 환불 정책).
+      모든 상태는 동일한 <strong>단일 CustomScrollView</strong> + scroll-spy TabBar — 탭은 화면 전환이 아닌 scroll shortcut + 활성 indicator.
+      각 state는 mini-table 6-row (조건/사용자액션/에지케이스/컴포넌트/토큰/노트). Default가 baseline.
+    </span>
+  </div>
+
+  <section class="doc">
+    <h2>State summary</h2>
+    <p class="intro">
+      한눈에 6 states 비교. 자세한 사양은 아래 각 mini-table 참조.
+      Admission 분기 (참여 가능 / 마감 / 신청됨 / 거절 등)는 <a href="/specs/event_bottom_ticket_bar.html">EventBottomTicketBar</a> child spec에서 다룸 — 이 spec은 페이지 본문 (탭 / 섹션)에 집중.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 200px;">State</th>
+          <th style="width: 110px;">Tag</th>
+          <th style="width: 240px;">조건 (요약)</th>
+          <th>Key visual differentiator</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="is-baseline-tint"><td><strong>Default</strong> 🎯</td><td>primary</td><td>데이터 로드 + 스크롤 top</td><td>Hero 풀 + TabBar(§1 기본정보 active) + §1 visible + §2 peek</td></tr>
+        <tr><td><strong>Loading</strong></td><td>async</td><td>이벤트 데이터를 불러오는 중</td><td>전체 skeleton (hero + tabs + 섹션)</td></tr>
+        <tr><td><strong>Error</strong></td><td>network/server</td><td>이벤트 데이터를 받지 못한 상태</td><td>전체 화면 안내 + "다시 시도" CTA</td></tr>
+        <tr><td><strong>§3 참가 현황 active</strong></td><td>scrolled</td><td>참가 현황 섹션이 화면 상단에 도달</td><td>Collapsed AppBar + TabBar §3 auto-active + 참여 게이지 카드 리스트</td></tr>
+        <tr><td><strong>§4 필요 인증 active</strong></td><td>scrolled</td><td>필요 인증 섹션이 화면 상단에 도달</td><td>Collapsed AppBar + TabBar §4 auto-active + 인증 카드 리스트 (✓ / ! status)</td></tr>
+        <tr><td><strong>§5 환불 정책 active</strong></td><td>scrolled</td><td>환불 정책 섹션이 화면 상단에 도달</td><td>Collapsed AppBar + TabBar §5 auto-active + 환불 비율 table (시점별 %)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>States gallery</h2>
+    <p class="intro">
+      각 state mini-table — mockup(rowspan=6) + 6 aspect rows. <strong>Default가 baseline</strong>; 나머지 5 states는
+      additive diff (<code>+</code> · <code>−</code> · <code>↔ X → Y</code> · <code>동일</code> · <code>—</code>).
+      모든 mockup은 동일 <strong>단일 CustomScrollView</strong> 구조 (5개 섹션이 한 페이지에 연속 배치) — 탭은 scroll-spy.
+      TabBar는 scroll-spy: 현재 보이는 섹션이 자동 강조되며, 탭 탭은 그 섹션으로 animate-scroll.
+      State 1은 스크롤 top(§1 기본 정보 + §2 상세 소개 시작), State 4는 scrolled mid-page(§3 참가 현황 active)를 보여줌.
+      각 state mockup의 viewport 안에 살짝 보이는 다음 섹션이 "이건 스크롤 페이지다"를 시사.
+    </p>
+
+    <div class="visual-gallery" style="background: var(--color-surface); padding: 16px; border-radius: var(--radius-card); display: flex; flex-direction: column; gap: 16px;">
+
+      <!-- State 1: Default — BASELINE for additive diff -->
+      <table class="ref state-mini is-baseline-tint">
+        <thead>
+          <tr><th colspan="3"><strong>Default</strong> 🎯 <span class="tag">production</span></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock"><div class="viewport">
+          <!-- Hero area (expanded, icons white) — at top of scroll, image fully visible -->
+          <div class="detail-hero">
+            <div class="detail-hero__img-placeholder" style="background: linear-gradient(135deg, #9900ff22, #ff990022);">
+              <span style="color:var(--color-primary);opacity:0.4;">16:9 파티 이미지</span>
+            </div>
+            <div class="detail-hero__gradient"></div>
+            <div class="detail-hero__back">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+            </div>
+            <div class="detail-hero__more">
+              <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+            </div>
+            <div class="detail-hero__dots">
+              <div class="detail-hero__dot detail-hero__dot--active"></div>
+              <div class="detail-hero__dot"></div>
+              <div class="detail-hero__dot"></div>
+            </div>
+          </div>
+
+          <!-- Pinned TabBar — §1 active (auto-detected from scroll position 0) -->
+          <div class="detail-tabs">
+            <div class="detail-tab detail-tab--active">기본 정보</div>
+            <div class="detail-tab">상세 소개</div>
+            <div class="detail-tab">참가 현황</div>
+            <div class="detail-tab">필요 인증</div>
+            <div class="detail-tab">환불 정책</div>
+          </div>
+
+          <!-- Single CustomScrollView body (NOT switched per tab — all sections present, scrollable) -->
+          <div style="position:absolute;top:260px;left:0;right:0;bottom:80px;overflow:hidden;">
+            <!-- §1 기본 정보 (currently in viewport) -->
+            <div class="detail-section">
+              <div class="detail-partner-row">
+                <div class="detail-partner-avatar">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2z"/></svg>
+                </div>
+                <div class="detail-partner-name">Skybar Seoul</div>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" class="detail-partner-chevron"><polyline points="9 18 15 12 9 6"/></svg>
+              </div>
+              <div class="detail-title">강남 루프탑 소셜 파티 — Verified Vibe</div>
+              <div class="detail-info-tile">
+                <div class="detail-info-tile__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg></div>
+                <div class="detail-info-tile__text">
+                  <div class="detail-info-tile__title">4월 30일 (화) 19:30</div>
+                  <div class="detail-info-tile__sub">3시간</div>
+                </div>
+              </div>
+              <div class="detail-info-tile">
+                <div class="detail-info-tile__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+                <div class="detail-info-tile__text">
+                  <div class="detail-info-tile__title">Skybar Seoul 강남점</div>
+                  <div class="detail-info-tile__sub">서울 강남구 테헤란로 123</div>
+                </div>
+              </div>
+              <div class="detail-action-chips">
+                <!-- MinglitSocialActionChip — Icons.thumb_up_outlined -->
+                <div class="detail-action-chip">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14.6 8h-3.96l.74-3.55c.04-.18.02-.36-.05-.51-.03-.07-.07-.13-.12-.19l-1.4-1.39-5.3 5.3C4.27 7.94 4 8.45 4 9v8c0 1.1.9 2 2 2h7c.41 0 .81-.13 1.13-.36L18.5 17l-3-9zM6 17V9l3.13-3.13L8.06 11h7.27l1.6 4.81L13.59 17H6zm14-7h2v9h-2z"/></svg>
+                  <span class="detail-action-chip__sep"></span>
+                  좋아요
+                </div>
+                <!-- MinglitChip(size: large) — Icons.share_outlined -->
+                <div class="detail-action-chip">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92zM18 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM6 13c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm12 7.02c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z"/></svg>
+                  <span class="detail-action-chip__sep"></span>
+                  공유하기
+                </div>
+              </div>
+            </div>
+            <!-- §2 상세 소개 — peeks at viewport bottom, signals "scroll continues" -->
+            <div style="border-top:1px solid var(--color-divider);padding:16px;">
+              <div style="font-size:14px;color:var(--color-text-secondary);line-height:1.6;">
+                루프탑에서 와인 한 잔과 함께 다양한 사람들과 자연스럽게 어울려 보세요. 강남 한복판에서 즐기는 한 시간 반의 특별한 …
+              </div>
+            </div>
+          </div>
+
+
+          <!-- Spec-mode annotations -->
+          <span class="annotation" style="top:8px;left:8px;">hero h = screenWidth×9/16</span>
+          <span class="annotation" style="top:215px;right:8px;">TabBar pinned · scroll-spy</span>
+          <span class="annotation" style="bottom:120px;left:8px;">↓ §2 상세 소개 (스크롤하면 보임)</span>
+
+          <!-- Callouts -->
+          <span class="callout" style="top:190px;left:8px;">ⓐ</span>
+          <span class="callout" style="top:215px;right:8px;">ⓑ</span>
+          <span class="callout" style="top:295px;left:8px;">ⓒ</span>
+          <span class="callout" style="top:370px;left:8px;">ⓓ</span>
+          <span class="callout" style="top:440px;right:8px;">ⓔ</span>
+
+          <!-- Type specs -->
+          <span class="type-spec" style="top:270px;left:200px;">14 / 400 / 1 — partner</span>
+          <span class="type-spec" style="top:308px;left:200px;">22 / 700 / 1.35 — title</span>
+            </div></td>
+            <td class="state-mini__aspect">조건</td>
+            <td>이벤트 데이터가 도착해 페이지 진입 직후 스크롤 top에 머무는 상태. 활성 섹션은 §1 기본 정보, 신청 가능 분기.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              · <strong>위로 스크롤</strong> → hero가 접히고 AppBar 타이틀이 자연스럽게 나타남 + 활성 탭이 다음 섹션으로 자동 갱신<br>
+              · <strong>히어로 좌/우 스와이프</strong> → 이미지 캐러셀 전환, 점 인디케이터 갱신<br>
+              · <strong>탭 탭</strong> → 해당 섹션으로 약 300ms easeInOut 부드러운 스크롤<br>
+              · <strong>파트너 행 탭</strong> → <a href="/specs/partner_detail_page.html">PartnerDetailPage</a>로 이동<br>
+              · <strong>"좋아요" 칩 탭</strong> (로그인) → 토글 (active/inactive) · (비로그인) → <a href="/specs/login_page.html">LoginPage</a>로 이동<br>
+              · <strong>"공유하기" 칩 탭</strong> → OS 공유 시트 (이벤트 링크 포함)<br>
+              · <strong>⋮ 메뉴 탭</strong> (로그인 + 파트너 존재) → 차단 / 신고 팝업<br>
+              · <strong>BottomTicketBar 탭</strong> → 12 state별 분기 (자세한 사양은 <a href="/specs/event_bottom_ticket_bar.html">EventBottomTicketBar</a>)
+            </td>
+          </tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>—</td></tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>
+              <code>Scaffold</code> · 하단 BottomTicketBar 고정 · 새로고침 가능한 단일 스크롤 영역 · <code>SliverAppBar</code>(hero 16:9 · 뒤로가기 + ⋮ 메뉴) · <code>MinglitImageCarousel</code>(가로 스와이프 + 점 인디케이터) · 고정 <code>TabBar</code>(가로 스크롤 · 보이는 섹션이 자동 활성화) · 5개 섹션 본문 · <code>_InfoTile</code> · <code>MinglitSocialActionChip</code>(좋아요) · <code>MinglitChip</code>(size.large, 공유하기) · 본문 뷰어(서식 있는 텍스트) · 참여 게이지 카드 · 인증 카드 · 환불 정책 카드 · <code>OpenInAppBanner</code>(딥링크 진입 시 하단 노출) · <a href="/specs/event_bottom_ticket_bar.html"><code>_BottomTicketBar</code></a>(별도 spec)
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>
+              <code>color-primary</code> (button bg, chip active, partner color) · <code>color-secondary</code> (price amount) · <code>color-success</code> (verified badge) · <code>color-text-primary</code> (title, body) · <code>color-text-secondary</code> (chip text, sub, partner) · <code>color-divider</code> (section borders, tab divider) · <code>color-surface</code> (card bg, skeleton bg) · <code>color-background</code> (scaffold) · <code>radius-card (16px)</code> · <code>radius-small (8px)</code> (action chip) · <code>radius-input (12px)</code> (avatar) · <code>spacing-screen-edge (16px)</code> · <code>spacing-medium (16px)</code> · <code>spacing-small (8px)</code> · <code>spacing-sm (12px)</code> · <code>spacing-xsmall (4px)</code> · <code>spacing-sectionGap (40px)</code> · typography <code>headlineSmall</code> bold (event title) · <code>titleSmall</code> (partner name) · <code>titleMedium</code> (collapsed AppBar title) · <code>bodyMedium</code> (info tile title) · <code>bodySmall</code> (info tile sub) · <code>labelLarge</code> (chip label, btn) · <code>labelSmall</code> (price label) · <code>titleLarge</code> (price amount) · <code>MinglitOpacity.gradient</code> (hero overlay) · <code>MinglitOpacity.muted</code> (chevron) · <code>MinglitAnimation.medium</code> (350ms · AnimatedSwitcher data/loading transition)
+            </td>
+          </tr>
+          <tr><td class="state-mini__aspect">노트</td><td>—</td></tr>
+        </tbody>
+      </table>
+
+      <!-- State 2: Loading -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong>Loading</strong> <span class="tag tag--mute">async</span></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock"><div class="viewport">
+          <!-- Skeleton hero -->
+          <div class="skeleton-bar" style="width:100%;aspect-ratio:16/9;border-radius:0;"></div>
+          <!-- Skeleton tabs -->
+          <div style="height:49px;background:var(--color-background);border-bottom:1px solid var(--color-divider);display:flex;align-items:center;gap:8px;padding:0 16px;">
+            <div class="skeleton-bar" style="height:16px;width:60px;border-radius:8px;"></div>
+            <div class="skeleton-bar" style="height:16px;width:60px;border-radius:8px;"></div>
+            <div class="skeleton-bar" style="height:16px;width:60px;border-radius:8px;"></div>
+          </div>
+          <!-- Skeleton content -->
+          <div style="padding:16px;display:flex;flex-direction:column;gap:12px;">
+            <div class="skeleton-bar" style="height:12px;width:40%;border-radius:6px;"></div>
+            <div class="skeleton-bar" style="height:24px;width:85%;border-radius:6px;"></div>
+            <div class="skeleton-bar" style="height:24px;width:70%;border-radius:6px;"></div>
+            <div class="skeleton-bar" style="height:48px;width:100%;border-radius:8px;"></div>
+            <div class="skeleton-bar" style="height:48px;width:100%;border-radius:8px;"></div>
+          </div>
+          <!-- Skeleton bottom bar -->
+          <div style="position:absolute;bottom:0;left:0;right:0;padding:16px;background:var(--color-background);display:flex;gap:24px;box-shadow:0 -2px 8px rgba(0,0,0,0.06);">
+            <div style="display:flex;flex-direction:column;gap:4px;">
+              <div class="skeleton-bar" style="height:12px;width:40px;border-radius:6px;"></div>
+              <div class="skeleton-bar" style="height:24px;width:100px;border-radius:6px;"></div>
+            </div>
+            <div class="skeleton-bar" style="flex:1;height:48px;border-radius:var(--radius-card);"></div>
+          </div>
+            </div></td>
+            <td class="state-mini__aspect">조건</td>
+            <td>이벤트 데이터를 불러오는 중인 상태. 처음 진입 시점에만 보이고, 새로고침 시에는 기존 콘텐츠 위에 RefreshIndicator만 노출.</td>
+          </tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>탭 무반응 (스켈레톤만 표시). 데이터가 도착하면 부드럽게 Default 화면으로 전환.</td></tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td>전환 시 레이아웃이 깨지지 않도록 외곽 구조가 미리 잡혀 있음.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>↔ Default 콘텐츠 → 자리 표시(스켈레톤) 카드들 (hero · tabs · sections) + 하단 바 스켈레톤</td>
+          </tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>+ shimmer animation (skeleton 컴포넌트 내부 캡슐화 — color-divider 50% 펄스)</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>—</td></tr>
+        </tbody>
+      </table>
+
+      <!-- State 3: Error -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong>Error</strong> <span class="tag tag--mute">network/server</span></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock"><div class="viewport">
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;">
+            <div style="height:56px;background:var(--color-background);border-bottom:1px solid var(--color-divider);display:flex;align-items:center;padding:0 4px;">
+              <div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><polyline points="15 18 9 12 15 6"/></svg>
+              </div>
+            </div>
+            <div class="detail-fullpage">
+              <div class="detail-fullpage__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              </div>
+              <div class="detail-fullpage__title">이벤트를 불러올 수 없습니다</div>
+              <div class="detail-fullpage__sub">네트워크 연결을 확인하고 다시 시도해 주세요.</div>
+              <div class="detail-fullpage__btn">다시 시도</div>
+            </div>
+          </div>
+            </div></td>
+            <td class="state-mini__aspect">조건</td>
+            <td>이벤트 데이터를 받지 못한 상태. 네트워크 / 서버 오류.</td>
+          </tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>"다시 시도" 탭 → 다시 받아오기 → Loading 상태로 진입.</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>네트워크 / 서버 / 권한 오류를 구분하지 않고 동일한 안내로 표시.</td></tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>↔ Default 내용 → 전체 화면 안내 (아이콘 + 타이틀 + 본문 + "다시 시도" 버튼) + 뒤로 버튼만 유지. 하단 BottomTicketBar 미노출.</td>
+          </tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>+ <code>color-error</code> 계열 (icon + accent)</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>—</td></tr>
+        </tbody>
+      </table>
+
+      <!-- State 4: Mid-scroll — §3 참가 현황이 뷰포트 상단에 도달, TabBar follows scroll position -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong>Mid-scroll</strong> <span class="tag tag--mute">scrolled</span> · <small>§3 참가 현황 활성 (TabBar 자동 강조)</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock"><div class="viewport">
+          <!-- Collapsed AppBar (hero is gone, title shows) -->
+          <div class="collapsed-appbar">
+            <div class="collapsed-appbar__back">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+            </div>
+            <div class="collapsed-appbar__title">강남 루프탑 소셜 파티</div>
+            <div class="collapsed-appbar__more">
+              <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+            </div>
+          </div>
+          <!-- Pinned TabBar — §3 참가 현황 auto-active (scroll-spy) -->
+          <div style="position:absolute;top:56px;left:0;right:0;">
+            <div class="detail-tabs">
+              <div class="detail-tab">기본 정보</div>
+              <div class="detail-tab">상세 소개</div>
+              <div class="detail-tab detail-tab--active">참가 현황</div>
+              <div class="detail-tab">필요 인증</div>
+              <div class="detail-tab">환불 정책</div>
+            </div>
+          </div>
+          <!-- Continuous scroll content — §2 ending, §3 in focus, §4 peek (single CustomScrollView) -->
+          <div style="position:absolute;top:105px;left:0;right:0;bottom:80px;overflow:hidden;">
+            <!-- §2 상세 소개 ending (just leaving viewport top) -->
+            <div style="padding:0 16px 12px;font-size:13px;color:var(--color-text-secondary);line-height:1.55;opacity:0.55;border-bottom:1px solid var(--color-divider);">
+              … 와인 페어링까지 즐기실 수 있는 한정 모임입니다.
+            </div>
+            <!-- §3 참가 현황 (active) -->
+            <div class="minglit-section-header">참여 현황</div>
+            <div class="entry-group-card">
+              <div class="entry-group-card__name">일반 참여 (남성)</div>
+              <div class="entry-group-card__count">8명 참여</div>
+              <div class="entry-group-card__gauge">
+                <div class="gauge-bar-wrap"><div class="gauge-bar-fill" style="width:65%;"></div></div>
+                <div class="gauge-label">13/20</div>
+              </div>
+            </div>
+            <div class="entry-group-card">
+              <div class="entry-group-card__name">일반 참여 (여성)</div>
+              <div class="entry-group-card__count">10명 참여</div>
+              <div class="entry-group-card__gauge">
+                <div class="gauge-bar-wrap"><div class="gauge-bar-fill" style="width:80%;"></div></div>
+                <div class="gauge-label">16/20</div>
+              </div>
+            </div>
+            <!-- §4 필요 인증 peek — signals "scroll continues" (NOT a tab switch) -->
+            <div style="border-top:1px solid var(--color-divider);padding:12px 16px;font-size:13px;color:var(--color-text-secondary);">
+              <div style="font-size:14px;font-weight:600;color:var(--color-text-primary);margin-bottom:4px;">필요 인증</div>
+              참여 자격을 확인하기 위해 …
+            </div>
+          </div>
+
+          <!-- Annotations highlighting scroll-spy nature -->
+          <span class="annotation" style="top:60px;right:8px;">scroll-spy: §3 active</span>
+          <span class="annotation" style="top:120px;left:8px;">↑ §2 상세 소개 (스크롤로 위로 사라짐)</span>
+          <span class="annotation" style="bottom:120px;right:8px;">↓ §4 필요 인증 (계속 스크롤)</span>
+            </div></td>
+            <td class="state-mini__aspect">조건</td>
+            <td>스크롤이 §3 참가 현황 영역까지 내려와 hero가 접히고 AppBar 타이틀이 노출, TabBar의 §3가 자동으로 활성화된 상태.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              · 계속 스크롤 → 다른 섹션으로 이동 + 활성 탭 자동 갱신<br>
+              · 위로 스크롤 → hero가 다시 펼쳐지고 AppBar 타이틀이 사라짐<br>
+              · 다른 탭 탭 → 그 섹션으로 부드러운 스크롤. 탭 탭 직후 잠깐은 자동 갱신이 멈춰 충돌하지 않음
+            </td>
+          </tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>탭 탭 후 부드러운 스크롤 중에 자동 활성 탭이 다른 곳으로 튀는 현상이 일어나지 않도록 처리됨.</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>동일 (단순히 스크롤 위치만 다름 — 화면 구조는 그대로)</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>동일</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>—</td></tr>
+        </tbody>
+      </table>
+
+      <!-- State 5: §4 필요 인증 active (TabBar scroll-spy) -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong>§4 필요 인증 active</strong> <span class="tag tag--mute">scrolled</span> · <small>인증 카드 리스트가 화면 중앙에 위치</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock"><div class="viewport">
+              <div class="collapsed-appbar">
+                <div class="collapsed-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
+                <div class="collapsed-appbar__title">강남 루프탑 소셜 파티</div>
+                <div class="collapsed-appbar__more"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg></div>
+              </div>
+              <div style="position:absolute;top:56px;left:0;right:0;">
+                <div class="detail-tabs">
+                  <div class="detail-tab">기본 정보</div>
+                  <div class="detail-tab">상세 소개</div>
+                  <div class="detail-tab">참가 현황</div>
+                  <div class="detail-tab detail-tab--active">필요 인증</div>
+                  <div class="detail-tab">환불 정책</div>
+                </div>
+              </div>
+              <div style="position:absolute;top:105px;left:0;right:0;bottom:80px;overflow:hidden;">
+                <!-- §3 ending -->
+                <div style="padding:0 16px 12px;font-size:13px;color:var(--color-text-secondary);line-height:1.55;opacity:0.5;border-bottom:1px solid var(--color-divider);">
+                  … 일반 참여 (여성) 16/20명 참여
+                </div>
+                <!-- §4 필요 인증 (active) -->
+                <div class="minglit-section-header">필요 인증</div>
+                <div style="padding:0 16px;font-size:12px;color:var(--color-text-secondary);margin-bottom:12px;">참여하려면 아래 인증이 필요합니다.</div>
+                <div style="margin:0 16px 8px;padding:12px;border:1px solid var(--color-divider);border-radius:12px;background:var(--color-background);">
+                  <div style="display:flex;align-items:center;gap:12px;">
+                    <div style="width:36px;height:36px;border-radius:50%;background:color-mix(in srgb, var(--color-success) 14%, transparent);display:flex;align-items:center;justify-content:center;color:var(--color-success);">✓</div>
+                    <div style="flex:1;">
+                      <div style="font-size:14px;font-weight:600;color:var(--color-text-primary);">실명 인증</div>
+                      <div style="font-size:12px;color:var(--color-success);">완료됨</div>
+                    </div>
+                  </div>
+                </div>
+                <div style="margin:0 16px 8px;padding:12px;border:1px solid var(--color-divider);border-radius:12px;background:var(--color-background);">
+                  <div style="display:flex;align-items:center;gap:12px;">
+                    <div style="width:36px;height:36px;border-radius:50%;background:color-mix(in srgb, var(--color-warning) 14%, transparent);display:flex;align-items:center;justify-content:center;color:var(--color-warning);">!</div>
+                    <div style="flex:1;">
+                      <div style="font-size:14px;font-weight:600;color:var(--color-text-primary);">성별 인증</div>
+                      <div style="font-size:12px;color:var(--color-warning);">인증 필요 — 탭하여 시작</div>
+                    </div>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" style="color:var(--color-text-secondary);"><polyline points="9 18 15 12 9 6"/></svg>
+                  </div>
+                </div>
+                <!-- §5 peek -->
+                <div style="border-top:1px solid var(--color-divider);padding:12px 16px;font-size:13px;color:var(--color-text-secondary);">
+                  <div style="font-size:14px;font-weight:600;color:var(--color-text-primary);margin-bottom:4px;">환불 정책</div>
+                  취소 시점에 따라 환불액이 …
+                </div>
+              </div>
+              <span class="annotation" style="top:60px;right:8px;">scroll-spy: §4 active</span>
+              <span class="annotation" style="top:120px;left:8px;">↑ §3 참가 현황 (위로 사라짐)</span>
+              <span class="annotation" style="bottom:120px;right:8px;">↓ §5 환불 정책 (계속 스크롤)</span>
+            </div></td>
+            <td class="state-mini__aspect">조건</td>
+            <td>스크롤이 §4 필요 인증 영역까지 내려와 TabBar의 §4가 자동으로 활성화된 상태.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              · <strong>인증 카드 (미완료) 탭</strong> → 해당 인증 화면으로 이동 (실명 / 성별 / 자격 등) — 인증 완료 후 자동 복귀<br>
+              · <strong>인증 카드 (완료) 탭</strong> → 무반응 또는 인증 상세 (재발급 등)<br>
+              · 다른 탭 탭 → 해당 섹션으로 부드러운 스크롤
+            </td>
+          </tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>· 필요한 인증이 0개 → 섹션 자체가 노출되지 않음 (제약 없는 이벤트)<br>· 인증 카드 모두 완료 → 모든 카드에 ✓ + "완료" 표기</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>+ <code>VerificationCard</code> (아이콘 + 타이틀 + 상태 + chevron · radius-card)<br>+ 인증 섹션 (Header + Card list)<br>− Hero (collapsed AppBar로 대체)</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>+ <code>color-success</code> (완료 카드 icon · status text)<br>+ <code>color-warning</code> (미완료 카드 icon · status text — 액션 유도)<br>+ <code>radius-card</code> (12 · 인증 카드)</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 BottomTicketBar는 admission 분기 (eligible / qualificationRequired / rejected 등) — child spec 참고. 이 mini-table은 §4 본문에 집중.</td></tr>
+        </tbody>
+      </table>
+
+      <!-- State 6: §5 환불 정책 active (TabBar scroll-spy) -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong>§5 환불 정책 active</strong> <span class="tag tag--mute">scrolled</span> · <small>스크롤 끝에 도달 — 정책 텍스트가 화면 중앙에 위치</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock"><div class="viewport">
+              <div class="collapsed-appbar">
+                <div class="collapsed-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
+                <div class="collapsed-appbar__title">강남 루프탑 소셜 파티</div>
+                <div class="collapsed-appbar__more"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg></div>
+              </div>
+              <div style="position:absolute;top:56px;left:0;right:0;">
+                <div class="detail-tabs">
+                  <div class="detail-tab">기본 정보</div>
+                  <div class="detail-tab">상세 소개</div>
+                  <div class="detail-tab">참가 현황</div>
+                  <div class="detail-tab">필요 인증</div>
+                  <div class="detail-tab detail-tab--active">환불 정책</div>
+                </div>
+              </div>
+              <div style="position:absolute;top:105px;left:0;right:0;bottom:80px;overflow:hidden;">
+                <!-- §4 ending -->
+                <div style="padding:0 16px 12px;font-size:13px;color:var(--color-text-secondary);line-height:1.55;opacity:0.5;border-bottom:1px solid var(--color-divider);">
+                  … 성별 인증 — 인증 필요
+                </div>
+                <!-- §5 환불 정책 (active) -->
+                <div class="minglit-section-header">환불 정책</div>
+                <div style="margin:0 16px 12px;padding:14px 16px;border:1px solid var(--color-divider);border-radius:12px;background:var(--color-surface);">
+                  <div style="font-size:13px;font-weight:600;color:var(--color-text-primary);margin-bottom:8px;">취소 시점별 환불 비율</div>
+                  <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--color-divider);">
+                    <span style="color:var(--color-text-secondary);">7일 전까지</span>
+                    <span style="font-weight:600;color:var(--color-success);">100% 환불</span>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--color-divider);">
+                    <span style="color:var(--color-text-secondary);">3일 전까지</span>
+                    <span style="font-weight:600;color:var(--color-text-primary);">50% 환불</span>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;">
+                    <span style="color:var(--color-text-secondary);">당일</span>
+                    <span style="font-weight:600;color:var(--color-error);">환불 불가</span>
+                  </div>
+                </div>
+                <div style="padding:0 16px;font-size:12px;color:var(--color-text-secondary);line-height:1.55;">
+                  ※ 파트너 사정으로 인한 취소 시 100% 자동 환불됩니다. <a href="#" style="color:var(--color-primary);">자세히 보기</a>
+                </div>
+                <!-- 피드 끝 -->
+                <div style="padding:24px 16px;text-align:center;font-size:11px;color:var(--color-divider);">— 피드 끝 —</div>
+              </div>
+              <span class="annotation" style="top:60px;right:8px;">scroll-spy: §5 active</span>
+              <span class="annotation" style="top:120px;left:8px;">↑ §4 필요 인증 (위로 사라짐)</span>
+            </div></td>
+            <td class="state-mini__aspect">조건</td>
+            <td>스크롤이 §5 환불 정책 영역까지 내려와 TabBar의 §5가 자동으로 활성화된 상태. 더 이상 다음 섹션이 없음.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              · <strong>"자세히 보기" 탭</strong> → 환불 정책 본문 다이얼로그 또는 외부 링크<br>
+              · <strong>위로 스크롤</strong> → 이전 섹션 다시 노출 + 활성 탭 자동 갱신<br>
+              · 다른 탭 탭 → 해당 섹션으로 부드러운 스크롤 (위쪽 섹션이라 항상 가능)
+            </td>
+          </tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>· 파트너가 직접 정한 환불 정책이 있으면 그 정책을 표시, 아니면 표준 정책이 노출<br>· "당일 환불 불가" 텍스트는 강조 (color-error)</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>+ 환불 정책 섹션 (Header + Table card)<br>+ 환불 표 (3 rows · 시점 / 비율)<br>+ "자세히 보기" inline link (color-primary)</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>+ <code>color-success</code> (100% 환불 강조)<br>+ <code>color-error</code> (환불 불가 강조)<br>+ <code>color-surface</code> (정책 카드 bg)</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 마지막 섹션 — 사용자가 여기까지 스크롤했다는 건 신청 직전 단계. BottomTicketBar로 즉시 액션 가능 (child spec 참고).</td></tr>
+        </tbody>
+      </table>
+
+    </div>
+  </section>
+
+  <!-- ============================================================
+       Page-atom zoom-ins — AppBar (펼친/접힌) / Bottom CTA bar 시각 디테일.
+       sub-anatomy(레이아웃)와 짝을 이뤄, 톤·아이콘·강조색만 클로즈업.
+       ============================================================ -->
+
+  <section class="doc">
+    <h2>AppBar — visual</h2>
+    <p class="intro">
+      AppBar는 스크롤에 따라 두 모습으로 나타난다 — 펼친 상태(① 위에 떠 있는 흰색 아이콘 모드)와 접힌 상태(56px 고정 바 + 이벤트 타이틀이 가운데 노출).
+      어두운 그라데이션과 흰색 아이콘이 결합되어 어떤 이미지 위에서도 가독성이 유지되고, 접힌 뒤에는 onSurface 톤으로 자연스럽게 자리잡는다.
+    </p>
+    <div class="visual-gallery" style="background: var(--color-surface); padding: 24px; border-radius: var(--radius-card); display: flex; flex-direction: column; gap: 16px;">
+
+      <!-- Variant 1: expanded (over hero, white icons) -->
+      <div>
+        <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:8px;font-weight:600;">펼친 상태 — 히어로 위 흰색 아이콘</div>
+        <div style="display:flex;justify-content:center;">
+          <div style="width: 375px; background: var(--color-background); border: 1px solid var(--color-divider); border-radius: 8px; overflow: hidden;">
+            <div class="detail-hero" style="aspect-ratio:auto;height:120px;">
+              <div class="detail-hero__img-placeholder" style="background: linear-gradient(135deg, #9900ff33, #ff990033);">
+                <span style="color:var(--color-primary);opacity:0.4;">16:9 파티 이미지</span>
+              </div>
+              <div class="detail-hero__gradient"></div>
+              <div class="detail-hero__back">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+              </div>
+              <div class="detail-hero__more">
+                <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+              </div>
+              <div class="detail-hero__dots">
+                <div class="detail-hero__dot detail-hero__dot--active"></div>
+                <div class="detail-hero__dot"></div>
+                <div class="detail-hero__dot"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Variant 2: collapsed (white bg, dark icons + title) -->
+      <div>
+        <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:8px;font-weight:600;">접힌 상태 — 56px 고정 바 + 이벤트 타이틀</div>
+        <div style="display:flex;justify-content:center;">
+          <div style="width: 375px; background: var(--color-background); border: 1px solid var(--color-divider); border-radius: 8px; overflow: hidden;">
+            <div style="position:relative;height:56px;background:var(--color-background);border-bottom:1px solid var(--color-divider);display:flex;align-items:center;padding:0 4px;">
+              <div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;color:var(--color-text-primary);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><polyline points="15 18 9 12 15 6"/></svg>
+              </div>
+              <div style="flex:1;font-size:16px;font-weight:600;color:var(--color-text-primary);padding:0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">강남 루프탑 소셜 파티 — Verified Vibe</div>
+              <div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;color:var(--color-text-primary);">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr><th style="width: 120px;">상태</th><th style="width: 200px;">아이콘 색</th><th>배경 / 강조</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>펼친 상태</td><td>흰색 (back · ⋮)</td><td>이미지 위에 검정 0.5 → 투명 그라데이션 80px · 점 인디케이터 흰색</td></tr>
+        <tr><td>접힌 상태</td><td>onSurface (텍스트 톤)</td><td>배경 <code>color-background</code> · 하단 1px <code>color-divider</code> · 이벤트 타이틀 <code>titleMedium</code> w600 1줄 ellipsis</td></tr>
+        <tr><td>다크 모드 (펼친)</td><td>흰색 유지 (브랜드 톤)</td><td>그라데이션은 그대로 — 어떤 이미지 위에서도 가독성 보장</td></tr>
+        <tr><td>다크 모드 (접힌)</td><td>onSurface (다크 토큰)</td><td>배경 다크 background · divider 다크 톤으로 자동 전환</td></tr>
+      </tbody>
+    </table>
+    <p class="intro" style="margin-top:12px;margin-bottom:0;">
+      ※ 펼친 상태에서 ⋮ 메뉴는 <strong>로그인 + 파트너 존재</strong> 시에만 노출. 접힌 상태에서도 동일 — 메뉴 항목(차단 / 신고)도 같음.
+    </p>
+  </section>
+
+  <section class="doc">
+    <h2>Bottom CTA bar — visual</h2>
+    <p class="intro">
+      ⑥ Bottom CTA bar는 입장 가능 여부와 사용자 상태에 따라 라벨 / 색이 바뀐다 — 같은 80px 골격 안에서 가격 영역 + CTA 버튼 두 슬롯의 톤만 달라진다.
+      여기서는 자주 마주치는 4개 변형을 한눈에 비교할 수 있도록 모았고, 자세한 12-state 매트릭스는 child spec 참고.
+    </p>
+    <div class="visual-gallery" style="background: var(--color-surface); padding: 24px; border-radius: var(--radius-card); display: flex; flex-direction: column; gap: 12px;">
+
+      <!-- Variant 1: 참여 가능 (default) -->
+      <div>
+        <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:6px;font-weight:600;">참여 가능 — 기본</div>
+        <div style="display:flex;justify-content:center;">
+          <div style="width: 375px; background: var(--color-background); border: 1px solid var(--color-divider); border-radius: 8px; padding: var(--spacing-medium); display: flex; align-items: center; gap: var(--spacing-large); box-shadow: 0 -2px 10px rgba(0,0,0,0.04);">
+            <div>
+              <div style="font-size: var(--typography-font-size-caption); color: var(--color-text-secondary); font-weight: 600;">최저가</div>
+              <div style="font-size: 20px; font-weight: 700; color: var(--color-secondary);">35,000원</div>
+            </div>
+            <button style="flex:1;height:48px;border-radius:var(--radius-card);background:var(--color-primary);color:white;font-size:var(--typography-font-size-button);font-weight:600;border:none;">구매하기</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Variant 2: 신청됨 (already joined — 입장권 보기) -->
+      <div>
+        <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:6px;font-weight:600;">신청됨 — 입장권 보기</div>
+        <div style="display:flex;justify-content:center;">
+          <div style="width: 375px; background: var(--color-background); border: 1px solid var(--color-divider); border-radius: 8px; padding: var(--spacing-medium); display: flex; align-items: center; gap: var(--spacing-large); box-shadow: 0 -2px 10px rgba(0,0,0,0.04);">
+            <div>
+              <div style="font-size: var(--typography-font-size-caption); color: var(--color-text-secondary); font-weight: 600;">결제 완료</div>
+              <div style="font-size: 20px; font-weight: 700; color: var(--color-text-primary);">35,000원</div>
+            </div>
+            <button style="flex:1;height:48px;border-radius:var(--radius-card);background:var(--color-primary);color:white;font-size:var(--typography-font-size-button);font-weight:600;border:none;display:flex;align-items:center;justify-content:center;gap:6px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="3" y="6" width="18" height="13" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              입장권 보기
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Variant 3: 마감 (disabled) -->
+      <div>
+        <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:6px;font-weight:600;">마감 — 비활성</div>
+        <div style="display:flex;justify-content:center;">
+          <div style="width: 375px; background: var(--color-background); border: 1px solid var(--color-divider); border-radius: 8px; padding: var(--spacing-medium); display: flex; align-items: center; gap: var(--spacing-large); box-shadow: 0 -2px 10px rgba(0,0,0,0.04);">
+            <div>
+              <div style="font-size: var(--typography-font-size-caption); color: var(--color-text-secondary); font-weight: 600;">최저가</div>
+              <div style="font-size: 20px; font-weight: 700; color: var(--color-text-secondary);">35,000원</div>
+            </div>
+            <button style="flex:1;height:48px;border-radius:var(--radius-card);background:var(--color-divider);color:var(--color-text-secondary);font-size:var(--typography-font-size-button);font-weight:600;border:none;cursor:default;">신청 마감</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Variant 4: 참여 취소 (destructive) -->
+      <div>
+        <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:6px;font-weight:600;">참여 취소 — 파괴적 액션</div>
+        <div style="display:flex;justify-content:center;">
+          <div style="width: 375px; background: var(--color-background); border: 1px solid var(--color-divider); border-radius: 8px; padding: var(--spacing-medium); display: flex; align-items: center; gap: var(--spacing-large); box-shadow: 0 -2px 10px rgba(0,0,0,0.04);">
+            <div>
+              <div style="font-size: var(--typography-font-size-caption); color: var(--color-text-secondary); font-weight: 600;">결제 완료</div>
+              <div style="font-size: 20px; font-weight: 700; color: var(--color-text-primary);">35,000원</div>
+            </div>
+            <button style="flex:1;height:48px;border-radius:var(--radius-card);background:var(--color-error);color:white;font-size:var(--typography-font-size-button);font-weight:600;border:none;">참여 취소</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr><th style="width: 140px;">변형</th><th style="width: 200px;">CTA 색</th><th>가격 영역 톤</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>참여 가능 (기본)</td><td>bg <code>color-primary</code> · 흰 글자</td><td>"최저가" + 금액 <code>color-secondary</code> 강조</td></tr>
+        <tr><td>신청됨 (입장권 보기)</td><td>bg <code>color-primary</code> · 흰 글자 · leading 티켓 아이콘</td><td>"결제 완료" + 금액 <code>color-text-primary</code></td></tr>
+        <tr><td>마감 (비활성)</td><td>bg <code>color-divider</code> · 글자 <code>color-text-secondary</code> · 클릭 불가</td><td>금액도 <code>color-text-secondary</code>로 흐리게</td></tr>
+        <tr><td>참여 취소 (파괴적)</td><td>bg <code>color-error</code> · 흰 글자</td><td>"결제 완료" + 금액 <code>color-text-primary</code></td></tr>
+      </tbody>
+    </table>
+    <p class="intro" style="margin-top:12px;margin-bottom:0;">
+      ※ 자세한 12-state 매트릭스(심사 안내 banner / 자격 요건 미충족 / 거절 / 환불 진행 등)는 <a href="/specs/event_bottom_ticket_bar.html"><code>EventBottomTicketBar</code></a> child spec 참고.
+    </p>
+  </section>
+</div>
+
+<!-- ============================================================
+     BEHAVIOR
+     ============================================================ -->
+<div class="perspective" id="global-behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">
+      Cross-cutting / global only — 모든/다수 state에 동일하게 적용되는 동작.
+      state-specific 인터랙션은 위 States section의 각 state mini-table 참조.
+    </span>
+  </div>
+
+  <section class="doc">
+    <h2>Cross-cutting interactions</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 220px;">사용자 액션</th>
+          <th>화면에 보이는 결과</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>뒤로 가기 (OS back / AppBar 뒤로 버튼)</td>
+          <td>이전 화면으로 이동 — 모든 state에서 동일.</td>
+        </tr>
+        <tr>
+          <td>풀-다운 새로고침</td>
+          <td>이벤트 데이터를 다시 받아옴. Loading 상태로 돌아가지 않고 기존 콘텐츠는 유지하면서 최신 참여 현황 / 가격 등을 갱신.</td>
+        </tr>
+        <tr>
+          <td>OpenInAppBanner "앱에서 열기" 탭</td>
+          <td>OS 기본 앱 연결 시트 또는 앱스토어로 이동 — 딥링크로 진입한 경우에만 노출.</td>
+        </tr>
+        <tr>
+          <td>OpenInAppBanner 닫기</td>
+          <td>배너가 사라지고 아래 콘텐츠가 더 넓게 표시. 세션 내에서 다시 표시되지 않음.</td>
+        </tr>
+        <tr>
+          <td>VerificationCard 탭</td>
+          <td>인증 상세 화면으로 이동 예정 — 현재는 "구현 준비 중입니다" 안내 (모든 state에서 동일).</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="intro" style="margin-top: 12px; margin-bottom: 0;">
+      ※ state-specific 액션 (히어로 carousel · 탭 탭 · 좋아요 · 공유 · ⋮ 메뉴 등 Default state에서만 / BottomTicketBar 12-state별 분기 등)은 위 States section의 mini-table에 분산.
+    </p>
+  </section>
+
+  <section class="doc">
+    <h2>Motion &amp; timing</h2>
+    <p class="intro">
+      <strong>임시값 사용 금지</strong> — duration은 <code>MinglitAnimation</code> 토큰에서 선택.
+    </p>
+    <table class="ref" style="margin-bottom: 16px;">
+      <thead>
+        <tr><th style="width: 200px;">Token</th><th style="width: 80px;">Value</th><th>Use case</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>MinglitAnimation.micro</code></td><td>100ms</td><td>좋아요 칩 토글 · ripple</td></tr>
+        <tr><td><code>MinglitAnimation.fast</code></td><td>200ms</td><td>다이얼로그 scale fade-in</td></tr>
+        <tr><td><code>MinglitAnimation.medium</code></td><td>350ms</td><td>AnimatedSwitcher (loading → data crossfade) · 티켓 sheet slide-up · 탭→섹션 scroll</td></tr>
+        <tr><td><em>(OS default)</em> hero carousel · AppBar title fade</td><td>~150–250ms</td><td>PageView · SliverAppBar collapse mode default</td></tr>
+      </tbody>
+    </table>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 220px;">Transition</th>
+          <th style="width: 140px;">Duration (token)</th>
+          <th>Curve / notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>화면 진입 (loading → data)</td>
+          <td><code>medium</code> (350ms)</td>
+          <td>AnimatedSwitcher crossfade — 스켈레톤에서 실제 콘텐츠로 부드럽게 전환</td>
+        </tr>
+        <tr>
+          <td>Hero 이미지 carousel 스와이프</td>
+          <td>~250ms (PageView default)</td>
+          <td>PageView 기본 slide · dot indicator 동기</td>
+        </tr>
+        <tr>
+          <td>스크롤 시 AppBar 타이틀 fade-in/out</td>
+          <td>~150ms (SliverAppBar default)</td>
+          <td>SliverAppBar CollapseMode.pin</td>
+        </tr>
+        <tr>
+          <td>탭 탭 → 섹션 scroll</td>
+          <td><code>medium</code> 근사 (300ms)</td>
+          <td>easeInOut. 탭 탭 직후 잠깐은 자동 갱신이 멈춰 충돌하지 않음.</td>
+        </tr>
+        <tr>
+          <td>좋아요 칩 토글</td>
+          <td><code>micro</code> (100ms)</td>
+          <td>배경색 fade · 즉각 피드백</td>
+        </tr>
+        <tr>
+          <td>티켓 선택 sheet 출현</td>
+          <td><code>medium</code> 근사 (300ms hardcode)</td>
+          <td>Material showModalBottomSheet slide-up</td>
+        </tr>
+        <tr>
+          <td>확인 다이얼로그 진입</td>
+          <td><code>fast</code> (200ms)</td>
+          <td>Material Dialog scale fade-in</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Global edge cases</h2>
+    <p class="intro">
+      화면 전반에 영향을 주는 edge case. state-specific edge case는 위 States section의 각 mini-table 에지케이스 행에.
+    </p>
+    <ul class="notes">
+      <li><strong>이미지 없음</strong> — <code>MinglitImageCarousel</code>은 빈 imageUrls 처리. 이미지 영역에 placeholder 배경 표시.</li>
+      <li><strong>파트너가 null (party 없음)</strong> — 파트너 행 숨김 + ⋮ 메뉴 숨김. 이벤트 제목은 <code>event.title</code>로 폴백.</li>
+      <li><strong>entryGroups 없음 (단순 이벤트)</strong> — 참가 현황에 "N명 / M명" 텍스트만 표시 (게이지 없음).</li>
+      <li><strong>필요 인증 없음</strong> — "별도의 인증이 필요하지 않습니다." 문구 표시.</li>
+      <li><strong>OpenInAppBanner</strong> — 딥링크로 진입한 경우만 하단 배너 표시. 스크롤 콘텐츠와 겹침 — 배너 닫으면 스크롤 영역 확보.</li>
+      <li><strong>네트워크 끊김</strong> — Error state 진입. RefreshIndicator로 재시도 가능.</li>
+      <li><strong>다크 모드</strong> — 히어로 아이콘(expanded): 흰색 유지 (브랜드 감성, primary container). collapsed 상태: onSurface 색상으로 자동 전환. 카드 배경 / 섹션 divider / 탭 언더라인 모두 mds 다크 토큰 자동 반영. 가격 색상: <code>color-secondary</code> 유지.</li>
+      <li><strong>접근성</strong> — TabBar는 Material 기본 a11y. 히어로 carousel은 dot 위치를 screen reader가 읽음. ⋮ 메뉴는 popup으로 키보드 nav 가능.</li>
+    </ul>
+    <p class="intro" style="margin-top: 12px; margin-bottom: 0;">
+      ※ <strong>BottomTicketBar 관련 edge</strong> (가격 미정 · admissionState loading/error 등)는 <a href="/specs/event_bottom_ticket_bar.html">EventBottomTicketBar</a> spec에 있음.
+    </p>
+  </section>
+</div>
+
+<!-- ============================================================
+     REFERENCE
+     ============================================================ -->
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">📖</span>
+    <h2>Reference</h2>
+    <span class="lede">
+      Implementation source + 인접 화면 link만. <strong>Components / Tokens는 States section의 각 mini-table</strong>에 분산됨.
+    </span>
+  </div>
+
+  <section class="doc">
+    <h2>Implementation source</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 200px;">항목</th><th>Path / Reference</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Widget class</strong></td><td><code>EventDetailPage</code> + <code>_EventDetailContent</code> + <code>_BottomTicketBar</code> (모두 같은 파일에 part of)</td></tr>
+        <tr><td><strong>File path</strong></td><td><a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/event/detail/event_detail_page.dart"><code>apps/app_user/lib/src/features/event/detail/event_detail_page.dart</code></a></td></tr>
+        <tr><td><strong>Part files</strong></td><td><code>event_detail_content.dart</code> · <code>event_bottom_ticket_bar.dart</code> · <code>event_entry_conditions_section.dart</code> · <code>event_verification_section.dart</code> · <code>event_refund_policy_section.dart</code> · <code>event_quill_viewer.dart</code> · <code>event_info_tile.dart</code> · <code>event_detail_content_skeleton.dart</code></td></tr>
+        <tr><td><strong>Controller / Provider</strong></td><td><code>eventDetailControllerProvider(eventId)</code> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/event/logic/event_detail_controller.dart"><code>event_detail_controller.dart</code></a></td></tr>
+        <tr><td><strong>Coordinator</strong></td><td><code>eventCoordinatorProvider</code> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/event/logic/event_coordinator.dart"><code>event_coordinator.dart</code></a> — pushPartnerDetail · pushLogin · 등</td></tr>
+        <tr><td><strong>Admission state</strong></td><td><code>eventAdmissionControllerProvider(event)</code> — see <a href="/specs/event_bottom_ticket_bar.html">EventBottomTicketBar spec</a></td></tr>
+        <tr><td><strong>Route</strong></td><td><code>EventDetailRoute</code> · path: <code>/events/:eventId</code> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/routing/app_routes.dart"><code>app_routes.dart</code></a></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 240px;">Spec</th><th>Relation</th></tr></thead>
+      <tbody>
+        <tr><td><a href="/specs/home_page.html"><code>HomePage</code></a></td><td>피드 카드 탭 → 이 화면으로 진입 (주 경로). 태그 chip 탭 → TagEventListPage → 이 화면.</td></tr>
+        <tr><td><a href="/specs/event_bottom_ticket_bar.html"><code>EventBottomTicketBar</code></a></td><td>⑥ 영역 — 별도 spec으로 분리. 12 admission state · 입장권/구매하기 라벨 redesign · 심사 안내 banner.</td></tr>
+        <tr><td><code>PartnerDetailPage</code> (TBD spec)</td><td>파트너 row 탭 시 진입 — <code>event_coordinator.pushPartnerDetail()</code></td></tr>
+        <tr><td><code>EventApplicationWizard</code> (TBD spec)</td><td>"구매하기" → 티켓 선택 sheet → wizard로 진입</td></tr>
+        <tr><td><a href="/specs/login_page.html"><code>LoginPage</code></a></td><td>비로그인 + "좋아요" 탭 시 진입 (auth-required interaction)</td></tr>
+        <tr><td><a href="/specs/party_create_wizard_page.html"><code>PartyCreateWizardPage</code></a></td><td>파트너가 이 이벤트를 만든 화면. 같은 event 데이터의 생산자 측.</td></tr>
+        <tr><td><a href="/specs/settlement_detail_page.html"><code>SettlementDetailPage</code></a></td><td>이 이벤트의 매출에서 발생한 정산을 파트너가 확인하는 화면.</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<!-- ============================================================
+     ✅ AUTHORING CHECKLIST
+     ============================================================ -->
+<section class="doc" style="border: 2px solid var(--color-primary); border-radius: var(--radius-card); padding: 16px 24px; margin-top: 32px;">
+  <h2 style="color: var(--color-primary);">✅ Authoring checklist</h2>
+  <ul class="notes" style="line-height: 1.9;">
+    <li>✅ <strong>Header</strong> — Title (h1)만</li>
+    <li>✅ <strong>Overview</strong> — Status (🚧 디자인중) · App · Category · Route · Path · Purpose · Entry/Exit · Background · Frequency 모두 채움</li>
+    <li>✅ <strong>History</strong> — 1.0 (initial) · 1.2 (scroll-spy + §1 sub-anatomy) · 1.3 (BottomTicketBar 분리) · 2.0 (새 템플릿 마이그레이션) 4 row</li>
+    <li>✅ <strong>Layout — top blueprint</strong> — Hero + TabBar + 5 sections + BottomTicketBar (⑥은 별도 spec link)</li>
+    <li>✅ <strong>Layout — Sub-anatomy</strong> — §1 기본 정보 작성됨. 다른 section sub-anatomy는 추후 확장 (현재는 ⑥ → 별도 spec)</li>
+    <li>🚧 <strong>Layout — Sub-anatomy 확장 TODO</strong> — §2 상세 소개(QuillViewer) · §3 참가 현황(EntryGroupDetail+Gauge) · §4 필요 인증(VerificationCard) · §5 환불 정책 — 향후 추가</li>
+    <li>✅ <strong>States — 종류</strong> — Default · Loading · Error · Mid-scroll · Already Joined · Full (총 6)</li>
+    <li>✅ <strong>States — mini-table 6 rows</strong> — 6 state 모두 (조건/액션/에지/컴포넌트/토큰/노트)</li>
+    <li>✅ <strong>States — Default baseline 풀 리스트</strong> — 컴포넌트 + 토큰 풀 명시</li>
+    <li>✅ <strong>States — additive diff</strong> — Loading은 ↔ Skeleton, Error는 ↔ ErrorState 등 5종 prefix 사용</li>
+    <li>✅ <strong>State summary matrix</strong> — 6 state 한눈 비교 표 추가됨 (5+ states 권장 충족)</li>
+    <li>✅ <strong>Global Behavior — cross-cutting only</strong> — 뒤로가기 · pull-to-refresh · OpenInAppBanner · VerificationCard 등. state-specific은 mini-table로 이동.</li>
+    <li>✅ <strong>Global Behavior — Motion</strong> — MinglitAnimation token 매핑 표 + transitions 표 (token 이름 + ms)</li>
+    <li>✅ <strong>Global edge cases</strong> — 이미지 없음 · 파트너 null · entryGroups 없음 · 인증 없음 · OpenInAppBanner · 네트워크 · 다크모드 · 접근성</li>
+    <li>✅ <strong>Reference — Implementation source</strong> — 모든 항목 채움 (widget · path · parts · controller · coordinator · admission · route)</li>
+    <li>✅ <strong>Reference — Related screens</strong> — Home · BottomTicketBar(분리됨) · PartnerDetail · ApplicationWizard · Login · PartyCreate · Settlement</li>
+    <li>✅ <strong>Token 표기 통일</strong> — 모든 토큰 <code>name (px)</code> 형태 또는 typography <code>name (size/weight)</code></li>
+    <li>🚧 <strong>코드 검증</strong> — ad-hoc trigger 기반 (status가 디자인중). BottomTicketBar 라벨 변경 + 후속 redesign이 코드에 반영되면 multi-pass verify 후 History row 추가</li>
+  </ul>
+</section>
+
+</div>
+
+<script>
+  document.getElementById('spec-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('spec-mode', e.target.checked);
+  });
+  document.getElementById('dark-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('dark-mode', e.target.checked);
+  });
+</script>
+</body>
+</html>

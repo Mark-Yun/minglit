@@ -1,0 +1,1826 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Spec — EventDetailPage (app_partner · EventDetailRoute)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* ============================================================
+   Partner EventDetailPage — partner-side event ops screen.
+   파트너 brand color (#6c3ce1) viewport-scoped — docs chrome 무영향.
+   ============================================================ */
+.viewport {
+  --color-primary: var(--color-partner-primary);   /* #6c3ce1 */
+  --spec-blueprint-rgb: 108, 60, 225;
+}
+body.dark-mode .viewport {
+  --color-primary: var(--color-partner-dark-primary); /* #9b7bec */
+}
+
+/* --- AppBar (partner — left-aligned title + bottom TabBar) --- */
+.ped-appbar {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  background: var(--color-background);
+  position: relative;
+}
+.ped-appbar__back {
+  width: 40px; height: 40px;
+  margin-left: var(--spacing-xsmall);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--color-text-primary);
+}
+.ped-appbar__back svg { width: 22px; height: 22px; }
+.ped-appbar__title {
+  flex: 1;
+  font-size: var(--typography-font-size-app-bar-title);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+/* --- TabBar (2 equal-flex tabs, primary underline) --- */
+.ped-tabbar {
+  height: 48px;
+  display: flex;
+  background: var(--color-background);
+  border-bottom: 1px solid var(--color-divider);
+}
+.ped-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--typography-font-size-body);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  position: relative;
+}
+.ped-tab--active {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+.ped-tab--active::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 2px;
+  background: var(--color-primary);
+}
+
+/* --- Body container --- */
+.ped-body {
+  position: absolute;
+  top: 104px;          /* 56 appbar + 48 tabbar */
+  left: 0; right: 0; bottom: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+  background: var(--color-background);
+  padding-bottom: var(--spacing-large);
+}
+.ped-body::-webkit-scrollbar { display: none; }
+
+/* --- Event title block (Tab 1, top of MinglitContentLayout) --- */
+.ped-title {
+  padding: var(--spacing-medium) var(--spacing-screen-edge) 0;
+  font-size: 22px;          /* headlineSmall */
+  font-weight: 700;
+  color: var(--color-primary);
+  line-height: 1.35;
+}
+
+/* --- Detail info card (5 DetailRow + 4 dividers) --- */
+.ped-card {
+  margin: var(--spacing-medium) var(--spacing-screen-edge);
+  padding: var(--spacing-medium);
+  background: var(--color-surface);
+  border-radius: var(--radius-card);  /* 16 */
+  border: 1px solid var(--color-divider);
+  display: flex;
+  flex-direction: column;
+}
+.ped-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-small);
+}
+.ped-row__icon {
+  width: 18px; height: 18px;
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
+.ped-row__icon svg { width: 18px; height: 18px; }
+.ped-row__label {
+  font-size: var(--typography-font-size-body);
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+  max-width: 120px;
+}
+.ped-row__value {
+  flex: 1;
+  text-align: right;
+  font-size: var(--typography-font-size-body);
+  color: var(--color-text-primary);
+}
+.ped-row__value--accent {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+.ped-row__value--error {
+  color: var(--color-error);
+  font-weight: 700;
+}
+.ped-row__value--muted {
+  color: var(--color-text-secondary);
+  font-weight: 700;
+}
+.ped-divider {
+  height: 1px;
+  background: var(--color-divider);
+  margin: var(--spacing-small) 0;
+}
+
+/* --- MinglitSection header w/ trailing button --- */
+.ped-section-header {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-small) var(--spacing-screen-edge) var(--spacing-xsmall);
+}
+.ped-section-header__title {
+  font-size: var(--typography-font-size-body);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  flex: 1;
+}
+.ped-section-header__trailing {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xsmall);
+  color: var(--color-primary);
+  font-size: var(--typography-font-size-body);
+  font-weight: 600;
+  height: 32px;
+  padding: 0 var(--spacing-small);
+  cursor: pointer;
+}
+.ped-section-header__trailing svg {
+  width: 16px; height: 16px;
+}
+
+/* --- Ticket list item card --- */
+.ped-ticket {
+  margin: 0 var(--spacing-screen-edge) var(--spacing-small);
+  padding: var(--spacing-medium);
+  background: var(--color-surface);
+  border-radius: var(--radius-card);
+  border: 1px solid var(--color-divider);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-medium);
+}
+.ped-ticket__body { flex: 1; min-width: 0; }
+.ped-ticket__name {
+  font-size: var(--typography-font-size-body);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-xxsmall);
+}
+.ped-ticket__sub {
+  font-size: var(--typography-font-size-caption);
+  color: var(--color-text-secondary);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xsmall);
+}
+.ped-ticket__price {
+  font-size: var(--typography-font-size-body);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+}
+
+/* --- Ticket status header (sub-row inside tickets section) --- */
+.ped-ticket-stat {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-small) var(--spacing-screen-edge);
+  color: var(--color-text-secondary);
+  gap: var(--spacing-xsmall);
+}
+.ped-ticket-stat svg { width: 14px; height: 14px; flex-shrink: 0; }
+.ped-ticket-stat__label {
+  flex: 1;
+  font-size: var(--typography-font-size-caption);
+}
+.ped-ticket-stat__count {
+  font-size: var(--typography-font-size-caption);
+  white-space: nowrap;
+}
+
+/* --- AddActionCard variant (ticket empty state w/ create button) --- */
+.ped-add {
+  margin: 0 var(--spacing-screen-edge);
+  padding: var(--spacing-medium);
+  border-radius: var(--radius-input);
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  border: 1px dashed color-mix(in srgb, var(--color-primary) 40%, transparent);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-medium);
+}
+.ped-add__icon {
+  width: 24px; height: 24px;
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+.ped-add__icon svg { width: 24px; height: 24px; }
+.ped-add__text { flex: 1; }
+.ped-add__title {
+  font-size: var(--typography-font-size-body);
+  font-weight: 700;
+  color: var(--color-primary);
+}
+.ped-add__sub {
+  font-size: var(--typography-font-size-caption);
+  color: var(--color-text-secondary);
+  margin-top: var(--spacing-xxsmall);
+}
+
+/* --- Application list (Tab 2) --- */
+.ped-app-section {
+  padding: 0 var(--spacing-medium);
+  margin-top: var(--spacing-small);
+}
+.ped-app-section__title {
+  font-size: var(--typography-font-size-app-bar-title);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  padding: var(--spacing-medium) 0 var(--spacing-small);
+}
+.ped-app-section__title--muted {
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+.ped-app-card {
+  background: var(--color-background);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-card);
+  padding: var(--spacing-sm) var(--spacing-medium);
+  margin-bottom: var(--spacing-small);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-medium);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+.ped-app-card__avatar {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-primary) 18%, transparent);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+.ped-app-card__body { flex: 1; min-width: 0; }
+.ped-app-card__name {
+  font-size: var(--typography-font-size-body);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+.ped-app-card__sub {
+  font-size: var(--typography-font-size-caption);
+  color: var(--color-text-secondary);
+}
+.ped-app-card__badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--spacing-small);
+  border-radius: var(--radius-small);
+  font-size: 11px;
+  font-weight: 700;
+  border: 1px solid;
+  background: var(--color-background);
+  flex-shrink: 0;
+}
+.ped-app-card__badge--pending {
+  color: var(--color-warning, #d97706);
+  border-color: color-mix(in srgb, var(--color-warning, #d97706) 60%, transparent);
+  background: color-mix(in srgb, var(--color-warning, #d97706) 10%, transparent);
+}
+.ped-app-card__badge--approved {
+  color: var(--color-success, #16a34a);
+  border-color: color-mix(in srgb, var(--color-success, #16a34a) 60%, transparent);
+  background: color-mix(in srgb, var(--color-success, #16a34a) 10%, transparent);
+}
+.ped-app-card__badge--paid {
+  color: var(--color-primary);
+  border-color: color-mix(in srgb, var(--color-primary) 60%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+}
+.ped-app-card__badge--rejected {
+  color: var(--color-error);
+  border-color: color-mix(in srgb, var(--color-error) 60%, transparent);
+  background: color-mix(in srgb, var(--color-error) 10%, transparent);
+}
+
+/* --- Empty / loading / error variants --- */
+.ped-spinner {
+  width: 32px; height: 32px;
+  border: 3px solid var(--color-divider);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: ped-spin 0.7s linear infinite;
+  margin: auto;
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+}
+@keyframes ped-spin { to { transform: rotate(360deg); } }
+
+.ped-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xlarge) var(--spacing-large);
+  color: var(--color-text-secondary);
+  font-size: var(--typography-font-size-body);
+  text-align: center;
+}
+
+.ped-error {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: var(--spacing-medium);
+  padding: 0 var(--spacing-large);
+  text-align: center;
+}
+.ped-error svg { width: 32px; height: 32px; color: var(--color-error); }
+.ped-error__msg {
+  font-size: var(--typography-font-size-body);
+  color: var(--color-text-primary);
+}
+
+/* --- Skeleton (data 로드 전) --- */
+.ped-skel-bar {
+  border-radius: var(--radius-small);
+  background: linear-gradient(90deg, var(--color-surface) 25%, var(--color-divider) 50%, var(--color-surface) 75%);
+  background-size: 200% 100%;
+  animation: ped-shimmer 1.2s infinite;
+}
+@keyframes ped-shimmer { to { background-position: -200% 0; } }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
+</div>
+
+<div class="page">
+
+<!-- ============================================================
+     HEADER
+     ============================================================ -->
+<header>
+  <h1>Partner Event Detail</h1>
+</header>
+
+<!-- ============================================================
+     OVERVIEW
+     ============================================================ -->
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr>
+        <th style="width: 140px;">Status</th>
+        <td><strong>✅ 디자인완료</strong> <em style="color: var(--color-text-secondary);">— 5 state · 파트너 이벤트 운영(티켓 관리 + 참가 신청 심사) 단일 진입점</em></td>
+      </tr>
+      <tr>
+        <th>App</th>
+        <td><code>app_partner</code></td>
+      </tr>
+      <tr>
+        <th>Category</th>
+        <td>event · partner ops · 운영 관리 + 신청 심사</td>
+      </tr>
+      <tr>
+        <th>Route / Surface</th>
+        <td><code>EventDetailRoute</code> · widget: <code>EventDetailPage</code> (+ <code>_EventInfoTab</code> · <code>_DetailRow</code> internal widgets)</td>
+      </tr>
+      <tr>
+        <th>Path</th>
+        <td><code>/parties/:partyId/events/:eventId</code></td>
+      </tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>: <a href="/specs/party_detail_page.html"><code>PartyDetailPage</code></a> (이벤트 카드 탭 시 push)<br>
+          <strong>Children</strong>: <a href="/specs/ticket_create_page.html"><code>TicketCreateRoute</code></a> (티켓 만들기 버튼 / Add 카드 탭) · <a href="/specs/ticket_edit_page.html"><code>TicketEditRoute</code></a> (티켓 카드 탭) · <code>EventApplicationReviewDialog</code> (심사 대기 카드 탭 — 다이얼로그)
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>
+          파트너가 자신의 파티에 속한 단일 이벤트를 한 화면에서 운영하도록 한다 — 좌측 탭(운영 관리)에서는 일정 / 정원 / 상태 / 공개 설정 같은 핵심 메타를 한눈에 보고 그 아래에서 입장권을 추가하거나 수정할 수 있고, 우측 탭(참가 신청)에서는 들어온 신청을 심사 대기 / 처리 완료로 묶어 빠르게 승인 · 거절할 수 있다.
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry points</strong>: <a href="/specs/party_detail_page.html">PartyDetailPage</a>의 이벤트 카드 탭 → 이 화면 진입 (운영 관리 탭이 기본).<br>
+          <strong>Exit points</strong>: AppBar back → 파티 상세 / "티켓 만들기" 또는 Add 카드 → <a href="/specs/ticket_create_page.html">TicketCreatePage</a> / 티켓 카드 탭 → <a href="/specs/ticket_edit_page.html">TicketEditPage</a> / 신청 카드(심사 대기) 탭 → 심사 다이얼로그 → 승인/거절 후 같은 화면 머무름 / "참가 신청" 탭 전환 → 같은 페이지 안에서 본문 교체.
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          이 화면은 user app의 <a href="/specs/event_detail_page.html">EventDetailPage</a>와 같은 이벤트를 보지만 관점이 정반대다 — user는 "이 이벤트에 참여할까?"를 결정하고, partner는 "이 이벤트가 잘 굴러가고 있나, 누구를 받을까?"를 결정한다. 그래서 partner 쪽은 이미지 캐러셀 / 환불 정책 / CTA 바 같은 영업 톤 요소가 모두 빠지고, 대신 운영용 메타 표 + 티켓 CRUD 진입점 + 신청 심사 입구의 3 블록만 남긴다.
+          파티 단위로 묶인 여러 이벤트 중 하나에 대한 "운영 데스크"라고 보면 된다.
+        </td>
+      </tr>
+      <tr>
+        <th>Frequency</th>
+        <td>운영 중인 이벤트 1건당 활성기 동안 다회 — 신청이 들어올 때마다 알림을 받고 진입해 심사한다. 신청자 많은 이벤트는 일 단위로, 한산한 이벤트는 행사 직전 1~2회로 사용량이 갈린다.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================
+     HISTORY
+     ============================================================ -->
+<section class="doc">
+  <h2>History</h2>
+  <p class="intro">이 spec의 주요 변경 이력. 최신 항목 위.</p>
+  <table class="ref">
+    <thead>
+      <tr>
+        <th style="width: 110px;">Date</th>
+        <th style="width: 80px;">Version</th>
+        <th style="width: 120px;">Author</th>
+        <th>Changes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2026-05-01</td>
+        <td>1.0</td>
+        <td>mark-yun</td>
+        <td>
+          v1.4 template으로 신규 작성. 파트너 brand color (<code>#6c3ce1</code>) viewport-scoped override. 5 state(Default 운영 관리 · Tab 2 신청 활성 · 신청 비어있음 · Loading · Error) → mini-table per state, additive diff.
+          5 sub-anatomy (AppBar+TabBar · Title block · Detail info card · Tickets section · Applications tab) + 2 visual zoom-in (AppBar+TabBar / Detail info card status별).
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- Anchor nav -->
+<nav class="perspective-nav">
+  <a href="#layout"><span class="glyph">🧱</span> Layout</a>
+  <a href="#states"><span class="glyph">🎨</span> States</a>
+  <a href="#global-behavior"><span class="glyph">🔄</span> Global Behavior</a>
+  <a href="#reference"><span class="glyph">📖</span> Reference</a>
+</nav>
+
+<!-- ============================================================
+     LAYOUT
+     ============================================================ -->
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Layout</h2>
+    <span class="lede">화면 구조 — 영역, 정렬, 간격 규칙. 색·타이포 무시.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree</h2>
+    <p class="intro">
+      Scaffold = AppBar(title '이벤트 상세' + 2탭 TabBar) + body(이벤트 데이터 비동기 로드 → TabBarView 2 자식). 좌측 탭 "운영 관리"는 세로 스크롤 페이지로, 이벤트 제목 + 운영 메타 카드(5행) + 입장권 섹션이 차례로 쌓인다. 우측 탭 "참가 신청"은 들어온 신청을 심사 대기 / 처리 완료 두 그룹으로 분리한 리스트가 그대로 영역을 채운다. 하단 네비게이션 / CTA 바는 없다 — leaf route.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint">
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <!-- AppBar -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:0;left:0;right:0;height:56px;">
+          <span class="blueprint__region-label">① AppBar — back + '이벤트 상세' (left-aligned)</span>
+        </div>
+        <!-- TabBar -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:56px;left:0;right:0;height:48px;">
+          <span class="blueprint__region-label">② TabBar — 운영 관리 · 참가 신청</span>
+        </div>
+        <!-- Title -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:120px;left:16px;right:16px;height:32px;">
+          <span class="blueprint__region-label">③ Event title (headlineSmall · primary)</span>
+        </div>
+        <!-- Detail info card -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:168px;left:16px;right:16px;height:200px;">
+          <span class="blueprint__region-label">④ Detail info card<br>날짜 / 시간 / 참가 현황 / 상태 / 공개 설정 (5 DetailRow + 4 dividers)</span>
+        </div>
+        <!-- Tickets section -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:384px;left:0;right:0;bottom:0;">
+          <span class="blueprint__region-label">⑤ Tickets section<br>섹션 헤더(+ '티켓 만들기' trailing) + status header + 입장권 카드 N개 + Add 카드</span>
+        </div>
+
+        <div class="blueprint__align-marker" style="top:8px;right:8px;">screen-edge pad 16</div>
+      </div>
+
+      <div class="layout-tree"><b>DefaultTabController</b>(length: 2)
+└─ <b>Scaffold</b>
+   ├─ <b>appBar</b>: AppBar
+   │  ├─ leading: BackButton (auto)
+   │  ├─ title: Text('이벤트 상세') · centerTitle: false
+   │  └─ <b>bottom</b>: TabBar(length: 2)                       ← ②
+   │     ├─ Tab('운영 관리')
+   │     └─ Tab('참가 신청')
+   └─ <b>body</b>: <code>MinglitAsyncValueWidget&lt;Event&gt;</code>
+      ├─ loading: <code>MinglitCircularProgressIndicator</code>
+      ├─ error:   Centered text ('이벤트 로드 실패')
+      └─ data:    <b>TabBarView</b>
+         ├─ <b>_EventInfoTab</b> (운영 관리)                    ← ③④⑤
+         │  └─ SingleChildScrollView
+         │     └─ <code>MinglitContentLayout</code>(sections: [
+         │        ├─ Padding(<i>screenEdge h</i>) → Text(event.title) <i>headlineSmall · bold · primary</i>
+         │        ├─ Padding(<i>screenEdge h</i>) → Container(border + radius-card)
+         │        │  └─ Column [
+         │        │     ├─ <b>_DetailRow</b>(calendar_today, '일정 (날짜)', dateFormat)
+         │        │     ├─ Divider
+         │        │     ├─ <b>_DetailRow</b>(access_time, '시작 ~ 종료 시간', timeFormat)
+         │        │     ├─ Divider
+         │        │     ├─ <b>_DetailRow</b>(people_outline, '참가 현황',
+         │        │     │              '확정 N명 / 신청 M명 (대기 P)')
+         │        │     ├─ Divider
+         │        │     ├─ <b>_DetailRow</b>(info_outline, '상태',
+         │        │     │              status label, valueColor: status별)
+         │        │     ├─ Divider
+         │        │     └─ <b>_DetailRow</b>(visibility, '공개 설정',
+         │        │                    '공개' / '비공개' / '파티 설정 따라가기')
+         │        │  ]
+         │        └─ <code>MinglitSection</code>(title: '입장권 관리',
+         │             trailing: TextButton.icon(Icons.add, '티켓 만들기'))
+         │           └─ <code>MinglitAsyncValueWidget</code>(ticketsAsync)
+         │              └─ <code>TicketListView</code>
+         │                 ├─ if tickets.isEmpty + onCreate
+         │                 │  → <code>AddActionCard</code> ('새 티켓 만들기')
+         │                 └─ else
+         │                    ├─ <code>TicketStatusHeader</code>(totalIssued/maxParticipants)
+         │                    └─ ListView.separated [
+         │                       ├─ <b>TicketListItem</b>(ticket, entryGroups) × N
+         │                       │   · onTap → push <a href="/specs/ticket_edit_page.html">TicketEditRoute</a>
+         │                       └─ <code>AddActionCard</code> (작은 'add' 아이콘)
+         │                          · onTap → push <a href="/specs/ticket_create_page.html">TicketCreateRoute</a>
+         │                    ]
+         │     ])
+         │
+         └─ <b>EventApplicationListView</b>(eventId)            ← Tab 2
+            └─ <code>MinglitAsyncValueWidget</code>(applicationsAsync)
+               ├─ if empty → 가운데 텍스트 ('신청 내역이 없습니다.')
+               └─ else → ListView(padding: medium)
+                  ├─ if pendingReviews.isNotEmpty
+                  │  ├─ Text('심사 대기 중 (N)') <i>titleMedium · bold</i>
+                  │  └─ <b>_ApplicationCard</b> × N (status: pending_review)
+                  └─ if others.isNotEmpty
+                     ├─ Text('처리 완료 (N)') <i>titleMedium · outline color</i>
+                     └─ <b>_ApplicationCard</b> × N (approved · paid · rejected)</div>
+    </div>
+  </section>
+
+  <section class="doc">
+    <h2>Spacing &amp; alignment rules</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>①</td><td>AppBar</td><td>height 56 · row crossAxis center · 좌측 정렬 타이틀</td><td>back left: <code>spacing-xsmall (4)</code> · title↔back gap: 0 (BackButton width 흡수)</td></tr>
+        <tr><td>②</td><td>TabBar</td><td>height 48 · 2탭 flex equal</td><td>각 탭 row · indicator height 2 · 하단 1px <code>color-divider</code></td></tr>
+        <tr><td>③</td><td>Event title (Tab 1)</td><td>좌측 정렬 · multi-line</td><td>h-padding: <code>spacing-screen-edge (16)</code> · 위 <code>spacing-medium (16)</code></td></tr>
+        <tr><td>④</td><td>Detail info card</td><td>풀폭 with screen-edge h-margin · column</td><td>h-margin: <code>spacing-screen-edge (16)</code> · padding: <code>spacing-medium (16)</code> all · radius: <code>radius-card (16)</code> · row 사이 divider top/bottom <code>spacing-small (8)</code></td></tr>
+        <tr><td>⑤</td><td>Tickets section</td><td>풀폭 · column stretch</td><td>section header padding: <code>spacing-medium</code> top · 카드 사이 <code>spacing-small (8)</code> · 카드 h-margin: <code>spacing-screen-edge</code></td></tr>
+        <tr><td>—</td><td>Tab 2 list</td><td>list padding all <code>spacing-medium (16)</code></td><td>그룹 사이 <code>spacing-large (24)</code> · 카드 사이 <code>spacing-small (8)</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>AppBar + TabBar anatomy (①②)</h2>
+    <p class="intro">
+      상단 56px AppBar + 48px TabBar로 묶인 한 덩어리. AppBar에는 좌측에 뒤로가기, 그 옆에 "이벤트 상세" 타이틀이 좌측 정렬로 붙는다(센터 타이틀 아님).
+      AppBar 바로 아래 TabBar는 화면 너비를 정확히 2등분한 두 탭(운영 관리 · 참가 신청) — 활성 탭은 라벨이 파트너 보라색으로 굵어지고 그 아래 2px 보라 언더라인이 그려진다.
+      탭은 탭하면 본문이 즉시 다른 탭의 내용으로 갈아끼워진다(같은 페이지 안 두 번째 화면 — 스크롤 위치는 탭별로 따로 보존되지 않음, 탭마다 자체 스크롤 영역).
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="width: 343px; height: 130px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <!-- AppBar back -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:8px;left:4px;width:40px;height:40px;">
+          <span class="blueprint__region-label" style="font-size:9px;">㉠ Back<br>40×40</span>
+        </div>
+        <!-- AppBar title -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:14px;left:48px;width:160px;height:28px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉡ Title — '이벤트 상세' (left)</span>
+        </div>
+
+        <!-- TabBar tabs -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:64px;left:0;width:170px;height:48px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉢ Tab #1 — '운영 관리' (active)</span>
+        </div>
+        <div class="blueprint__region" style="top:64px;left:170px;width:170px;height:48px;border-style:dashed;border-color:rgba(var(--spec-blueprint-rgb),0.3);">
+          <span class="blueprint__region-label" style="font-size:10px;">㉣ Tab #2 — '참가 신청'</span>
+        </div>
+        <!-- Active indicator -->
+        <div class="blueprint__region" style="top:110px;left:0;width:170px;height:2px;background:var(--color-primary);"></div>
+        <!-- Bottom divider -->
+        <div class="blueprint__region" style="bottom:8px;left:0;right:0;height:1px;background:var(--color-divider);"></div>
+
+        <div class="blueprint__align-marker" style="top:8px;right:8px;">left-aligned title</div>
+        <div class="blueprint__align-marker" style="bottom:14px;left:8px;">divider 하단 1px</div>
+      </div>
+
+      <div class="layout-tree"><b>AppBar</b>(height: 56, centerTitle: false)
+├─ leading: <b>BackButton</b>(width 40)                  ← ㉠
+│  · 좌측 가장자리 4px · 40×40 hit zone · onSurface
+│
+├─ title: <b>Text</b>('이벤트 상세')                     ← ㉡
+│  · 좌측 정렬 (centerTitle 미사용)
+│  · <i>titleMedium</i> 톤 / w700
+│
+└─ bottom: <b>TabBar</b>(length: 2)                      ← ㉢㉣
+   · height 48 · indicator weight 2
+   · 2탭 → 각 탭이 화면 너비의 정확히 1/2 흡수
+   ├─ Tab(text: '운영 관리')   <i>(default selected)</i>
+   └─ Tab(text: '참가 신청')
+
+<em>각 탭 내부:</em>
+· crossAxis center · 라벨 가운데 정렬
+· 비활성: <i>color-text-secondary · w500</i>
+· 활성: <i>color-primary (partner #6c3ce1) · w700</i>
+   · 활성 라벨 하단에 2px <i>color-primary</i> 언더라인 (탭 너비 전체)
+
+<em>탭 전환:</em>
+· 탭 탭 → 본문이 즉시 같은 페이지 안에서 다른 자식으로 슬라이드
+· DefaultTabController가 둘을 묶어 동기화
+· 본문은 탭별 자체 스크롤 영역 (위치 공유 안 됨)</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing / tokens</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>—</td><td>AppBar 외부</td><td>height 56 · 풀폭</td><td>bg <code>color-background</code> · 자체 elevation 0 (TabBar divider가 분리 역할)</td></tr>
+        <tr><td>㉠</td><td>BackButton</td><td>좌상 정렬</td><td>40×40 hit zone · icon 22 · color <code>onSurface</code> · left margin: 4px</td></tr>
+        <tr><td>㉡</td><td>Title</td><td>BackButton 우측에 바로 이어 · 좌측 정렬</td><td>typography <code>titleMedium</code> w700 · color <code>color-text-primary</code></td></tr>
+        <tr><td>㉢㉣</td><td>각 Tab</td><td>flex equal (각 1/2) · row crossAxis center</td><td>height 48 · 라벨 <code>bodyMedium</code> · 비활성 w500/text-secondary · 활성 w700/primary</td></tr>
+        <tr><td>—</td><td>Active indicator</td><td>활성 탭 하단</td><td>height 2px · color <code>color-primary (partner)</code> · width = 탭 width</td></tr>
+        <tr><td>—</td><td>TabBar 하단 divider</td><td>풀폭</td><td>1px <code>color-divider</code> — body와 분리</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Event title block anatomy (③)</h2>
+    <p class="intro">
+      운영 관리 탭의 첫 줄 — 이벤트 제목이 단독 블록으로 떠 있다. 화면 좌우 가장자리에서 16px 떨어져 있고, 한 줄에 안 들어가면 자연스럽게 줄바꿈되며 글자 크기가 줄지 않는다.
+      파트너 보라색 + 굵은 헤드라인 톤으로 화면에서 가장 시각적 무게가 큰 요소 — 사용자가 "지금 운영 중인 이벤트가 무엇인지" 즉시 인지하게 하는 앵커.
+      이벤트에 제목이 비어있으면 이 블록 자체가 사라지고 그 아래 카드가 위로 붙는다.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="width: 343px; height: 80px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:16px;left:16px;right:16px;height:32px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉠ Title — headlineSmall · w700 · color-primary</span>
+        </div>
+        <div class="blueprint__align-marker" style="top:8px;right:8px;">h-padding: spacing-screen-edge (16)</div>
+        <div class="blueprint__align-marker" style="bottom:8px;left:8px;">block bottom → 카드 위 spacing-medium (16)</div>
+      </div>
+
+      <div class="layout-tree"><b>Padding</b>(<i>screenEdge h</i> · top: 0)
+└─ <b>Text</b>(event.title)                              ← ㉠
+   · style: <i>headlineSmall</i>
+   · weight: <i>FontWeight.bold</i>
+   · color: <i>colorScheme.primary (partner #6c3ce1)</i>
+   · 줄바꿈 가능 (maxLines 미지정)
+
+<em>표시 조건:</em>
+· event.title이 비어있지 않으면 노출
+· 비어있으면 블록 통째로 사라지고 그 아래 카드가 위로 붙음 (Padding 자체가 sections 배열에 포함되지 않음)
+
+<em>※ user app 쪽 EventDetailPage의 hero 이미지 위에 떠 있는 타이틀과 달리,
+   partner는 운영 페이지라 시각 무게를 본문 첫 줄에 둔다 — 이미지 캐러셀 없음.</em></div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing / tokens</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>㉠</td><td>Event title</td><td>좌측 정렬 · multi-line</td><td>typography <code>headlineSmall</code> bold · color <code>color-primary (partner)</code> · h-pad <code>spacing-screen-edge (16)</code> · 하단 <code>spacing-medium</code> (다음 카드 사이)</td></tr>
+        <tr><td>—</td><td>제목 없는 케이스</td><td>—</td><td>블록 미노출 — 카드가 위로 collapse</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Detail info card anatomy (④)</h2>
+    <p class="intro">
+      운영에 필요한 핵심 메타 다섯 줄을 담은 라운드 카드. 좌우 가장자리에서 16px 떨어진 풀폭 블록이며, 안쪽은 16px 패딩이 둘러싼다. 행 하나하나는 좌측 아이콘 → 라벨(굵은 회색) → 값(우측 정렬)으로 같은 골격을 공유하고, 행 사이는 1px divider로 가볍게 끊는다.
+      값 영역은 행마다 톤이 달라질 수 있다 — 상태 행은 운영 단계에 따라 보라(예정) / 빨강(취소됨) / 회색(완료)으로 색이 바뀌고 두꺼워지며, 나머지 4행은 본문 톤 그대로다.
+      라벨이 길어지면 최대 2줄까지 줄바꿈되고 ellipsis로 잘리며, 값도 동일하게 2줄까지 허용 + ellipsis 처리.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 240px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <!-- Card outer -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:8px;left:16px;right:16px;bottom:8px;border-style:solid;border-color:rgba(var(--spec-blueprint-rgb),0.6);">
+          <span class="blueprint__region-label" style="font-size:9px;top:2px;">㉠ Card — radius 16 · border 1px · padding 16</span>
+        </div>
+
+        <!-- Row 1 -->
+        <div class="blueprint__region" style="top:24px;left:32px;width:18px;height:18px;background:rgba(var(--spec-blueprint-rgb),0.3);">
+          <span class="blueprint__region-label" style="font-size:8px;">📅</span>
+        </div>
+        <div class="blueprint__region" style="top:24px;left:60px;width:80px;height:18px;border-style:dashed;border-color:rgba(var(--spec-blueprint-rgb),0.3);">
+          <span class="blueprint__region-label" style="font-size:8px;">㉡ label</span>
+        </div>
+        <div class="blueprint__region" style="top:24px;right:32px;width:130px;height:18px;border-style:dashed;border-color:rgba(var(--spec-blueprint-rgb),0.3);">
+          <span class="blueprint__region-label" style="font-size:8px;">㉢ value (right)</span>
+        </div>
+        <!-- Divider -->
+        <div class="blueprint__region" style="top:56px;left:32px;right:32px;height:1px;background:var(--color-divider);"></div>
+
+        <!-- Row 2 .. 5 stub markers -->
+        <div class="blueprint__align-marker" style="top:72px;left:32px;font-size:8px;">⏰ 시간 / value</div>
+        <div class="blueprint__region" style="top:96px;left:32px;right:32px;height:1px;background:var(--color-divider);"></div>
+        <div class="blueprint__align-marker" style="top:108px;left:32px;font-size:8px;">👥 참가 현황 / value</div>
+        <div class="blueprint__region" style="top:132px;left:32px;right:32px;height:1px;background:var(--color-divider);"></div>
+        <div class="blueprint__align-marker" style="top:144px;left:32px;font-size:8px;">ℹ️ 상태 / value (color-primary if scheduled)</div>
+        <div class="blueprint__region" style="top:168px;left:32px;right:32px;height:1px;background:var(--color-divider);"></div>
+        <div class="blueprint__align-marker" style="top:180px;left:32px;font-size:8px;">👁 공개 설정 / value</div>
+
+        <div class="blueprint__align-marker" style="top:8px;right:8px;">h-margin: spacing-screen-edge (16)</div>
+      </div>
+
+      <div class="layout-tree"><b>Padding</b>(<i>screenEdge h</i>)
+└─ <b>Container</b>(                                    ← ㉠
+   │   color: <i>color-surface</i>,
+   │   borderRadius: <i>radius-card (16)</i>,
+   │   border: 1px <i>color-divider (outlineVariant)</i>,
+   │   padding: <i>spacing-medium (16)</i> all)
+   └─ <b>Column</b>
+      ├─ <b>_DetailRow</b>(calendar_today, '일정 (날짜)',    ← row #1
+      │     value: 'yyyy년 MM월 dd일 (E)')
+      ├─ Divider(spacing-small v-padding 양쪽)
+      ├─ <b>_DetailRow</b>(access_time, '시간',              ← row #2
+      │     value: 'a h:mm ~ a h:mm')
+      ├─ Divider
+      ├─ <b>_DetailRow</b>(people_outline, '참가 현황',      ← row #3
+      │     value: '확정 N명 / 신청 M명 (대기 P)')
+      ├─ Divider
+      ├─ <b>_DetailRow</b>(info_outline, '상태',             ← row #4
+      │     value: status label,
+      │     valueColor: <i>scheduled→primary · cancelled→error · completed→outline</i>)
+      ├─ Divider
+      └─ <b>_DetailRow</b>(visibility, '공개 설정',          ← row #5
+            value: '공개' / '비공개' / '파티 설정 따라가기')
+
+<em>각 행(_DetailRow) 내부 구조:</em>
+└─ Row(crossAxis: start)
+   ├─ <b>Icon</b>(small · onSurfaceVariant)              ← ㉡ left
+   ├─ Gap: <i>spacing-small (8)</i>
+   ├─ Flexible <b>Text</b>(label)                        ← ㉡ label
+   │  · <i>bodyMedium · w700 · onSurfaceVariant</i>
+   │  · maxLines: 2 · ellipsis
+   ├─ Gap: <i>spacing-small (8)</i>
+   └─ Expanded <b>Text</b>(value)                        ← ㉢ value
+      · textAlign: right
+      · <i>bodyMedium</i>
+      · color/weight: valueColor 있으면 그 색 + bold, 없으면 기본
+      · maxLines: 2 · ellipsis</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 180px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing / tokens</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>㉠</td><td>Card 외곽</td><td>풀폭 with screen-edge h-margin</td><td>radius <code>radius-card (16)</code> · padding <code>spacing-medium (16)</code> all · border 1px <code>color-divider</code> · bg <code>color-surface</code></td></tr>
+        <tr><td>㉡</td><td>Label 영역 (각 행)</td><td>row leading · icon + label</td><td>icon <code>iconSize-small (≈18)</code> color <code>color-text-secondary</code> · gap <code>spacing-small (8)</code> · 라벨 <code>bodyMedium</code> w700 <code>color-text-secondary</code> · maxLines 2 · ellipsis</td></tr>
+        <tr><td>㉢</td><td>Value 영역 (각 행)</td><td>row trailing · 우측 정렬</td><td>typography <code>bodyMedium</code> · 기본은 <code>color-text-primary</code> · 상태 행은 <code>primary / error / outline</code> 중 하나 + <code>w700</code> · maxLines 2 · ellipsis</td></tr>
+        <tr><td>—</td><td>Divider (행 사이)</td><td>풀폭 · 행 사이</td><td>height 1px <code>color-divider</code> · 위/아래 padding <code>spacing-small (8)</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Tickets section anatomy (⑤)</h2>
+    <p class="intro">
+      카드 아래에 이어 붙는 입장권 관리 섹션. 헤더 한 줄(좌측 "입장권 관리" 타이틀 + 우측 "+ 티켓 만들기" 텍스트 버튼) 다음에 본문이 온다.
+      티켓이 하나라도 있으면 작은 상태 표시줄(현재 발행 수 vs 정원)이 위에 깔리고, 그 아래로 입장권 카드가 한 줄에 하나씩 쌓이며, 마지막 자리에는 늘 작은 "+ 추가" 카드가 붙어 새 티켓을 더 만들 수 있다.
+      티켓이 하나도 없으면 본문이 통째로 보라색 빈 상태 카드("새 티켓 만들기")로 바뀐다 — 헤더의 "+ 티켓 만들기" 버튼과 빈 상태 카드 어느 쪽을 탭해도 같은 화면(<a href="/specs/ticket_create_page.html">TicketCreatePage</a>)으로 이동한다.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 280px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <!-- Section header -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:16px;left:16px;width:120px;height:24px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉠ Section title — '입장권 관리'</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:12px;right:16px;width:120px;height:32px;">
+          <span class="blueprint__region-label" style="font-size:9px;">㉡ '+ 티켓 만들기' (TextButton)</span>
+        </div>
+
+        <!-- Status header -->
+        <div class="blueprint__region" style="top:56px;left:16px;right:16px;height:24px;border-style:dashed;border-color:rgba(var(--spec-blueprint-rgb),0.3);">
+          <span class="blueprint__region-label" style="font-size:9px;">㉢ TicketStatusHeader — 발행 N / 정원 M</span>
+        </div>
+
+        <!-- Ticket card 1 -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:88px;left:16px;right:16px;height:60px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉣ TicketListItem #1</span>
+        </div>
+        <!-- Ticket card 2 -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:156px;left:16px;right:16px;height:60px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉤ TicketListItem #2</span>
+        </div>
+        <!-- AddActionCard (trailing) -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:224px;left:16px;right:16px;height:48px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉥ AddActionCard — '+ 추가'</span>
+        </div>
+
+        <div class="blueprint__align-marker" style="top:8px;right:8px;">h-margin: 16</div>
+      </div>
+
+      <div class="layout-tree"><code>MinglitSection</code>(title: '입장권 관리',
+   trailing: <b>TextButton.icon</b>(Icons.add, '티켓 만들기'),
+   padding: EdgeInsets.zero,
+   child: ...)
+├─ <em>Section header row</em>                          ← ㉠㉡
+│  ├─ Title: '입장권 관리' <i>· bodyMedium · w700</i>
+│  └─ Trailing: <b>TextButton.icon</b>
+│     · icon: Icons.add (size small ≈18)
+│     · label: '티켓 만들기'
+│     · color: <i>color-primary (partner)</i>
+│     · onPressed: push <a href="/specs/ticket_create_page.html">TicketCreateRoute</a>
+│
+└─ <code>MinglitAsyncValueWidget</code>(ticketsAsync)
+   ├─ loading: small spinner
+   ├─ error: 작은 텍스트 ('티켓 로드 실패')
+   └─ data → <b>TicketListView</b>
+      ├─ <em>case A — 빈 상태</em>
+      │  └─ <code>AddActionCard</code> (large)         ← 빈 상태 단독
+      │     · 보라 dashed background · '새 티켓 만들기'
+      │     · onTap → TicketCreateRoute
+      │
+      └─ <em>case B — 티켓 있음</em>
+         ├─ <b>TicketStatusHeader</b>                  ← ㉢
+         │  · ℹ️ '발행 N / 정원 M' (labelMedium · text-secondary)
+         │  · h-padding xxsmall
+         │
+         └─ ListView.separated
+            ├─ <b>TicketListItem</b>(ticket) × N       ← ㉣㉤
+            │  · Card · radius-card · border outlineVariant
+            │  · 좌측: 티켓 이름 + 발행/정원 라벨
+            │  · 우측: 가격
+            │  · onTap → push <a href="/specs/ticket_edit_page.html">TicketEditRoute</a>(ticketId)
+            │
+            └─ <code>AddActionCard</code> (small + 아이콘) ← ㉥
+               · trailing 자리에 늘 한 칸 더 붙음
+               · onTap → TicketCreateRoute (헤더 버튼과 동일 행선지)</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing / tokens</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>㉠</td><td>Section title</td><td>좌측 정렬</td><td>typography <code>bodyMedium</code> w700 · color <code>color-text-primary</code> · h-pad <code>spacing-screen-edge</code></td></tr>
+        <tr><td>㉡</td><td>Trailing button</td><td>우측 정렬 · row icon + label</td><td>height 32 · icon size <code>iconSize-small (≈18)</code> · color <code>color-primary</code> · gap <code>spacing-xsmall</code></td></tr>
+        <tr><td>㉢</td><td>TicketStatusHeader</td><td>row · icon + label + count(우측)</td><td>typography <code>labelMedium</code>(label) / <code>bodySmall</code>(count) · color <code>color-text-secondary</code> · v-pad <code>spacing-small</code></td></tr>
+        <tr><td>㉣㉤</td><td>TicketListItem</td><td>풀폭 카드 · row 안</td><td>radius <code>radius-card</code> · border outlineVariant · padding <code>spacing-medium</code> · 카드 사이 <code>spacing-small (8)</code></td></tr>
+        <tr><td>㉥</td><td>AddActionCard (trailing)</td><td>풀폭 · 항상 리스트 끝에</td><td>radius <code>radius-input</code> · 보라 dashed border · padding <code>spacing-medium</code> · top margin <code>spacing-xxsmall</code></td></tr>
+        <tr><td>—</td><td>빈 상태 (case A)</td><td>풀폭 단일 카드</td><td>같은 AddActionCard 컴포넌트, 라벨이 '새 티켓 만들기'로 큰 톤</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Applications tab anatomy (Tab 2)</h2>
+    <p class="intro">
+      "참가 신청" 탭의 본문은 들어온 신청을 두 묶음으로 나눠 보여주는 리스트다 — 위쪽 "심사 대기 중 (N)" 그룹은 파트너의 즉시 액션이 필요한 신청만, 아래쪽 "처리 완료 (N)" 그룹은 이미 승인 / 거절 / 결제완료된 신청을 정리한 묶음이다.
+      각 신청 카드는 좌측 원형 아바타(이름 첫 글자) + 가운데 이름 / 성별·생년 + 우측에 작은 상태 뱃지로 구성된다.
+      심사 대기 카드만 탭 가능하고, 탭하면 같은 화면 위에 심사 다이얼로그가 뜬다 — 거기서 승인/거절을 누르면 다이얼로그가 닫히고 SnackBar가 잠깐 떴다 사라지면서 카드가 자동으로 "처리 완료" 그룹으로 옮겨간다.
+      신청이 하나도 없는 이벤트는 두 묶음 헤더 자체가 사라지고 가운데 한 줄짜리 안내 텍스트만 남는다.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 320px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <!-- Pending group title -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:16px;left:16px;width:160px;height:24px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉠ '심사 대기 중 (3)' — titleMedium · bold</span>
+        </div>
+        <!-- Pending cards -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:48px;left:16px;right:16px;height:56px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉡ ApplicationCard #1 — 심사 대기 (탭 가능)</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:112px;left:16px;right:16px;height:56px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉢ ApplicationCard #2 — 심사 대기</span>
+        </div>
+
+        <!-- Group gap -->
+        <div class="blueprint__align-marker" style="top:184px;right:8px;">↕ spacing-large (24) — 그룹 사이</div>
+
+        <!-- Done group title -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:200px;left:16px;width:130px;height:24px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉣ '처리 완료 (5)' — outline color</span>
+        </div>
+        <!-- Done card -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:232px;left:16px;right:16px;height:56px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉤ ApplicationCard #3 — 결제완료 (탭 비활성)</span>
+        </div>
+
+        <div class="blueprint__align-marker" style="top:8px;right:8px;">list padding 16</div>
+      </div>
+
+      <div class="layout-tree"><b>EventApplicationListView</b>(eventId)
+└─ <code>MinglitAsyncValueWidget</code>(applicationsAsync)
+   ├─ loading: full-page spinner
+   ├─ error: full-page error state
+   └─ data:
+      ├─ <em>case A — 빈 상태</em>
+      │  └─ Center → Text('신청 내역이 없습니다.')
+      │
+      └─ <em>case B — 데이터 있음</em>
+         └─ ListView(padding: <i>spacing-medium (16)</i>)
+            ├─ <em>Pending group</em> (if pendingReviews.isNotEmpty)
+            │  ├─ Text('심사 대기 중 (N)')                  ← ㉠
+            │  │  · <i>titleMedium · w700 · text-primary</i>
+            │  ├─ SizedBox(<i>spacing-small (8)</i>)
+            │  ├─ <b>_ApplicationCard</b> × N             ← ㉡㉢
+            │  │  · onTap → <b>showDialog</b>(<code>EventApplicationReviewDialog</code>)
+            │  │  · 다이얼로그 결과 → 승인/거절 처리 → 카드가 다른 그룹으로 이동
+            │  └─ SizedBox(<i>spacing-large (24)</i>)
+            │
+            └─ <em>Completed group</em> (if others.isNotEmpty)
+               ├─ Text('처리 완료 (N)')                    ← ㉣
+               │  · <i>titleMedium · color outline (회색 톤)</i>
+               ├─ SizedBox(<i>spacing-small</i>)
+               └─ <b>_ApplicationCard</b> × N             ← ㉤
+                  · status: approved / paid / rejected
+                  · onTap: null (탭 무반응)
+
+<em>각 _ApplicationCard 내부:</em>
+└─ Card(margin bottom: spacing-small)
+   └─ ListTile
+      ├─ leading: <b>CircleAvatar</b>
+      │  · bg: primaryContainer
+      │  · child: 이름 첫 글자 (한 글자) — onPrimaryContainer
+      ├─ title: Text(user.name) <i>· bodyMedium</i>
+      ├─ subtitle: Text('남/여 · YYYY-MM-DD')
+      └─ trailing: <b>_StatusBadge</b>
+         · 박스 (radius-small · border 1px · padding small/xxsmall)
+         · 라벨 색·테두리: status별 매핑
+            · pending_review → '심사 중' · warning 톤
+            · approved       → '승인됨' · success 톤
+            · paid           → '결제완료' · primary 톤
+            · rejected       → '거절됨' · error 톤
+            · 그 외          → 원래 status string · outline 톤
+
+<em>심사 처리 후:</em>
+· 승인/거절 성공 → SnackBar('심사 처리가 완료되었습니다.') 노출
+· 신청 리스트 자동 새로고침 (해당 카드가 처리 완료 그룹으로 이동)
+· 실패 → 에러 처리 (공통 에러 핸들러로 위임)</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing / tokens</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>—</td><td>List 외곽</td><td>풀폭 column · 자체 스크롤</td><td>padding all <code>spacing-medium (16)</code></td></tr>
+        <tr><td>㉠</td><td>Pending group title</td><td>좌측 정렬</td><td>typography <code>titleMedium</code> w700 <code>color-text-primary</code> · 하단 <code>spacing-small (8)</code></td></tr>
+        <tr><td>㉡㉢</td><td>Pending card</td><td>풀폭 Card · row(avatar/body/badge)</td><td>margin bottom <code>spacing-small</code> · ListTile 기본 padding · onTap 활성</td></tr>
+        <tr><td>—</td><td>그룹 사이 gap</td><td>—</td><td><code>spacing-large (24)</code></td></tr>
+        <tr><td>㉣</td><td>Completed group title</td><td>좌측 정렬</td><td>typography <code>titleMedium</code> · color <code>color-outline</code> (회색 톤) · 하단 <code>spacing-small</code></td></tr>
+        <tr><td>㉤</td><td>Completed card</td><td>풀폭 Card · 동일 골격</td><td>onTap: null (탭 비활성) · 그 외 동일</td></tr>
+        <tr><td>—</td><td>빈 상태</td><td>가운데 정렬 1줄</td><td>'신청 내역이 없습니다.' <code>bodyMedium</code> <code>color-text-secondary</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<!-- ============================================================
+     STATES
+     ============================================================ -->
+<div class="perspective" id="states">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>States</h2>
+    <span class="lede">
+      5 state (Default 운영 관리 · Tab 2 신청 활성 · 신청 비어있음 · Loading · Error). Default = baseline (운영 관리 탭 · 데이터 로드 완료 · 티켓 ≥ 1개 · 신청 ≥ 1개).
+      각 state는 mini-table 6-row (조건/사용자액션/에지케이스/컴포넌트/토큰/노트). 나머지 state는 additive diff (<code>+</code> · <code>−</code> · <code>↔ X → Y</code> · <code>동일</code> · <code>—</code>).
+    </span>
+  </div>
+
+  <section class="doc">
+    <h2>State summary</h2>
+    <p class="intro">한눈에 5 state 비교. 자세한 사양은 아래 각 mini-table.</p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 200px;">State</th>
+          <th style="width: 110px;">Tag</th>
+          <th style="width: 240px;">조건 (요약)</th>
+          <th>Key visual differentiator</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="is-baseline-tint"><td><strong>Default · 운영 관리</strong> 🎯</td><td>primary</td><td>Tab 1 활성 · 데이터 로드 · 티켓 ≥ 1</td><td>제목 + 메타 카드(5행) + 입장권 카드 N개 + Add 카드</td></tr>
+        <tr><td><strong>Tab 2 · 신청 활성</strong></td><td>tab-switched</td><td>Tab 2 활성 · 신청 ≥ 1</td><td>"심사 대기 중 (N)" + "처리 완료 (N)" 두 묶음 리스트, 카드별 상태 뱃지</td></tr>
+        <tr><td><strong>Tab 2 · 신청 비어있음</strong></td><td>empty</td><td>Tab 2 활성 · 신청 데이터 0건</td><td>가운데 안내 1줄만 (그룹 헤더 사라짐)</td></tr>
+        <tr><td><strong>Loading</strong></td><td>async</td><td>이벤트 데이터 로드 중</td><td>풀-스크린 spinner (AppBar+TabBar는 살아있음)</td></tr>
+        <tr><td><strong>Error</strong></td><td>network/server</td><td>이벤트 데이터 로드 실패</td><td>가운데 에러 안내 텍스트만 (탭 본문 미렌더)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>States gallery</h2>
+    <p class="intro">
+      각 state mini-table — mockup(rowspan=6) + 6 aspect rows. <strong>Default가 baseline</strong>; 나머지 4 states는 additive diff prefix 사용.
+    </p>
+
+    <div class="visual-gallery" style="background: var(--color-surface); padding: 16px; border-radius: var(--radius-card); display: flex; flex-direction: column; gap: 16px;">
+
+      <!-- ===================================================
+           STATE 1 — Default (운영 관리 탭, 티켓 있음)
+           =================================================== -->
+      <table class="ref state-mini is-baseline-tint">
+        <thead>
+          <tr><th colspan="3"><strong>Default · 운영 관리</strong> 🎯 <span class="tag">production</span></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock"><div class="viewport">
+              <!-- AppBar -->
+              <div class="ped-appbar">
+                <div class="ped-appbar__back">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                </div>
+                <div class="ped-appbar__title">이벤트 상세</div>
+              </div>
+              <!-- TabBar -->
+              <div class="ped-tabbar">
+                <div class="ped-tab ped-tab--active">운영 관리</div>
+                <div class="ped-tab">참가 신청</div>
+              </div>
+              <!-- Body -->
+              <div class="ped-body">
+                <!-- Title -->
+                <div class="ped-title">금요일 와인 클래스</div>
+                <!-- Detail info card -->
+                <div class="ped-card">
+                  <div class="ped-row">
+                    <div class="ped-row__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+                    <div class="ped-row__label">일정 (날짜)</div>
+                    <div class="ped-row__value">2026년 05월 15일 (금)</div>
+                  </div>
+                  <div class="ped-divider"></div>
+                  <div class="ped-row">
+                    <div class="ped-row__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+                    <div class="ped-row__label">시간</div>
+                    <div class="ped-row__value">오후 7:30 ~ 오후 9:30</div>
+                  </div>
+                  <div class="ped-divider"></div>
+                  <div class="ped-row">
+                    <div class="ped-row__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+                    <div class="ped-row__label">참가 현황</div>
+                    <div class="ped-row__value">확정 8명 / 신청 12명 (대기 4)</div>
+                  </div>
+                  <div class="ped-divider"></div>
+                  <div class="ped-row">
+                    <div class="ped-row__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div>
+                    <div class="ped-row__label">상태</div>
+                    <div class="ped-row__value ped-row__value--accent">예정됨</div>
+                  </div>
+                  <div class="ped-divider"></div>
+                  <div class="ped-row">
+                    <div class="ped-row__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
+                    <div class="ped-row__label">공개 설정</div>
+                    <div class="ped-row__value">공개</div>
+                  </div>
+                </div>
+                <!-- Section header -->
+                <div class="ped-section-header">
+                  <div class="ped-section-header__title">입장권 관리</div>
+                  <div class="ped-section-header__trailing">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    티켓 만들기
+                  </div>
+                </div>
+                <!-- Status header -->
+                <div class="ped-ticket-stat">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                  <div class="ped-ticket-stat__label">총 발행 수량 / 정원</div>
+                  <div class="ped-ticket-stat__count">발행 18 / 정원 20</div>
+                </div>
+                <!-- Ticket cards -->
+                <div class="ped-ticket">
+                  <div class="ped-ticket__body">
+                    <div class="ped-ticket__name">얼리버드 입장권</div>
+                    <div class="ped-ticket__sub">
+                      <span>발행 8 / 8</span>
+                      <span>·</span>
+                      <span>일반 그룹</span>
+                    </div>
+                  </div>
+                  <div class="ped-ticket__price">35,000원</div>
+                </div>
+                <div class="ped-ticket">
+                  <div class="ped-ticket__body">
+                    <div class="ped-ticket__name">정상가 입장권</div>
+                    <div class="ped-ticket__sub">
+                      <span>발행 10 / 12</span>
+                      <span>·</span>
+                      <span>일반 그룹</span>
+                    </div>
+                  </div>
+                  <div class="ped-ticket__price">45,000원</div>
+                </div>
+                <!-- Add card (trailing) -->
+                <div class="ped-add" style="margin-top:8px;">
+                  <div class="ped-add__icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  </div>
+                  <div class="ped-add__text">
+                    <div class="ped-add__title">티켓 추가</div>
+                    <div class="ped-add__sub">남은 정원만큼 더 만들 수 있어요.</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Spec annotations -->
+              <span class="annotation" style="top:14px;right:8px;">centerTitle: false</span>
+              <span class="annotation" style="top:60px;right:8px;">2탭 flex equal</span>
+              <span class="annotation" style="top:120px;left:8px;">title: headlineSmall · primary</span>
+              <span class="annotation" style="top:200px;right:8px;">card border + radius 16</span>
+
+              <!-- Callouts -->
+              <span class="callout" style="top:14px;left:8px;">ⓐ</span>
+              <span class="callout" style="top:60px;left:8px;">ⓑ</span>
+              <span class="callout" style="top:115px;left:8px;">ⓒ</span>
+              <span class="callout" style="top:165px;right:8px;">ⓓ</span>
+              <span class="callout" style="top:380px;left:8px;">ⓔ</span>
+            </div></td>
+            <td class="state-mini__aspect">조건</td>
+            <td>운영 관리(Tab 1) 활성 · 이벤트 데이터 로드 완료 · 티켓 1개 이상 발행됨 · 상태는 "예정됨"(scheduled).</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              · <strong>탭 #2 ('참가 신청') 탭</strong> → 본문이 즉시 신청 리스트로 갈아끼워짐<br>
+              · <strong>"+ 티켓 만들기" 버튼 탭</strong> → <a href="/specs/ticket_create_page.html">TicketCreatePage</a>로 이동<br>
+              · <strong>입장권 카드 탭</strong> → <a href="/specs/ticket_edit_page.html">TicketEditPage</a>로 이동 (해당 티켓 선택 상태)<br>
+              · <strong>리스트 끝 "+ 추가" 카드 탭</strong> → "+ 티켓 만들기"와 동일한 화면으로 이동<br>
+              · <strong>뒤로가기</strong> → 파티 상세로 복귀
+            </td>
+          </tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>· 라벨/값이 길어지면 2줄까지 줄바꿈 후 ellipsis<br>· 제목 비어있으면 제목 블록 통째로 사라짐 (카드가 위로 붙음)<br>· 정원이 정해지지 않은 이벤트는 status header가 사라지고 바로 카드부터 시작</td></tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>
+              <code>Scaffold</code> · <code>AppBar</code>(left-aligned title + bottom TabBar) · <code>DefaultTabController(length: 2)</code> · <code>TabBarView</code> · <code>MinglitAsyncValueWidget</code> · <code>SingleChildScrollView</code> · <code>MinglitContentLayout</code> · 운영 메타 카드(border container · 5 <code>_DetailRow</code> + Divider) · <code>MinglitSection</code>(title + trailing TextButton.icon) · <code>TicketListView</code> · <code>TicketStatusHeader</code> · <code>TicketListItem</code> × N · <code>AddActionCard</code>(trailing)
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>
+              <code>color-primary</code> (partner #6c3ce1 — 제목 / 활성 탭 / 상태값(예정됨) / Add 카드 강조) · <code>color-text-primary</code> (값) · <code>color-text-secondary</code> (라벨 / sub) · <code>color-divider</code> (카드 border / divider) · <code>color-surface</code> (카드 bg) · <code>color-background</code> (scaffold) · <code>radius-card (16)</code> (메타 카드 / 티켓 카드) · <code>radius-input (12)</code> (Add 카드) · <code>radius-small (8)</code> (status badge) · <code>spacing-screen-edge (16)</code> · <code>spacing-medium (16)</code> · <code>spacing-small (8)</code> · <code>spacing-xsmall (4)</code> · <code>spacing-xxsmall (2)</code> · typography <code>titleMedium</code> w700 (AppBar title) · <code>headlineSmall</code> w700 (이벤트 title) · <code>bodyMedium</code> w700 (라벨) / 기본 (값) · <code>labelMedium</code> (status header) · <code>bodySmall</code> (count) · <code>bodyMedium</code> (탭 라벨) · iconSize <code>small (≈18)</code>
+            </td>
+          </tr>
+          <tr><td class="state-mini__aspect">노트</td><td>—</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ===================================================
+           STATE 2 — Tab 2 신청 활성
+           =================================================== -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong>Tab 2 · 신청 활성</strong> <span class="tag tag--mute">tab-switched</span> · <small>신청 묶음 2개 (심사 대기 + 처리 완료)</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock"><div class="viewport">
+              <div class="ped-appbar">
+                <div class="ped-appbar__back">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                </div>
+                <div class="ped-appbar__title">이벤트 상세</div>
+              </div>
+              <div class="ped-tabbar">
+                <div class="ped-tab">운영 관리</div>
+                <div class="ped-tab ped-tab--active">참가 신청</div>
+              </div>
+              <div class="ped-body" style="padding-top:0;">
+                <div class="ped-app-section">
+                  <div class="ped-app-section__title">심사 대기 중 (3)</div>
+                  <!-- Pending card 1 -->
+                  <div class="ped-app-card">
+                    <div class="ped-app-card__avatar">김</div>
+                    <div class="ped-app-card__body">
+                      <div class="ped-app-card__name">김민지</div>
+                      <div class="ped-app-card__sub">여 · 1996-03-12</div>
+                    </div>
+                    <div class="ped-app-card__badge ped-app-card__badge--pending">심사 중</div>
+                  </div>
+                  <!-- Pending card 2 -->
+                  <div class="ped-app-card">
+                    <div class="ped-app-card__avatar">박</div>
+                    <div class="ped-app-card__body">
+                      <div class="ped-app-card__name">박재훈</div>
+                      <div class="ped-app-card__sub">남 · 1990-07-04</div>
+                    </div>
+                    <div class="ped-app-card__badge ped-app-card__badge--pending">심사 중</div>
+                  </div>
+                  <!-- Pending card 3 -->
+                  <div class="ped-app-card">
+                    <div class="ped-app-card__avatar">이</div>
+                    <div class="ped-app-card__body">
+                      <div class="ped-app-card__name">이서연</div>
+                      <div class="ped-app-card__sub">여 · 1998-11-29</div>
+                    </div>
+                    <div class="ped-app-card__badge ped-app-card__badge--pending">심사 중</div>
+                  </div>
+
+                  <div class="ped-app-section__title ped-app-section__title--muted">처리 완료 (5)</div>
+                  <div class="ped-app-card">
+                    <div class="ped-app-card__avatar">최</div>
+                    <div class="ped-app-card__body">
+                      <div class="ped-app-card__name">최수아</div>
+                      <div class="ped-app-card__sub">여 · 1995-02-18</div>
+                    </div>
+                    <div class="ped-app-card__badge ped-app-card__badge--paid">결제완료</div>
+                  </div>
+                  <div class="ped-app-card">
+                    <div class="ped-app-card__avatar">정</div>
+                    <div class="ped-app-card__body">
+                      <div class="ped-app-card__name">정도윤</div>
+                      <div class="ped-app-card__sub">남 · 1992-09-08</div>
+                    </div>
+                    <div class="ped-app-card__badge ped-app-card__badge--rejected">거절됨</div>
+                  </div>
+                </div>
+              </div>
+
+              <span class="annotation" style="top:60px;right:8px;">tab #2 active · primary 강조</span>
+              <span class="annotation" style="top:120px;left:8px;">titleMedium · bold · 카운트 (3)</span>
+              <span class="annotation" style="bottom:160px;left:8px;">처리 완료 — outline 회색 톤</span>
+            </div></td>
+            <td class="state-mini__aspect">조건</td>
+            <td>참가 신청(Tab 2)으로 사용자가 전환 + 신청 데이터 1건 이상 도착. 위쪽 "심사 대기 중" 묶음에 즉시 액션 필요한 카드, 아래 "처리 완료" 묶음에 그 외.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              · <strong>심사 대기 카드 탭</strong> → 같은 화면 위에 심사 다이얼로그 노출. 승인/거절 → 다이얼로그 닫힘 + SnackBar('심사 처리가 완료되었습니다.') + 카드가 자동으로 처리 완료 그룹으로 이동<br>
+              · <strong>처리 완료 카드 탭</strong> → 무반응 (탭 비활성)<br>
+              · <strong>탭 #1 ('운영 관리') 탭</strong> → 본문 즉시 운영 관리로 갈아끼워짐
+            </td>
+          </tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>· 한쪽 묶음만 비어있으면 그 헤더 + 카드 자체가 사라지고 다른 묶음만 남음<br>· 심사 처리 실패 시 SnackBar 대신 공통 에러 처리 — 카드는 그대로 유지</td></tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>↔ Default 본문 → <code>EventApplicationListView</code> · <code>ListView</code> + 그룹 헤더 Text × 2 + <code>_ApplicationCard</code>(<code>Card</code> + <code>ListTile</code>: <code>CircleAvatar</code> 좌 / 이름·성별·생년 가운데 / <code>_StatusBadge</code> 우) · <code>EventApplicationReviewDialog</code>(심사 대기 카드 탭 시) · <code>SnackBar</code>(심사 완료)</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>
+              + <code>color-primary-container</code> (CircleAvatar bg) / <code>color-on-primary-container</code> (이름 첫 글자) · <code>color-warning</code> (심사 중 뱃지) · <code>color-success</code> (승인됨 뱃지) · <code>color-primary</code> (결제완료 뱃지) · <code>color-error</code> (거절됨 뱃지) · <code>color-outline</code> (처리 완료 그룹 헤더 색) · typography <code>titleMedium</code> w700/normal (그룹 헤더) · <code>bodyMedium</code> (이름) · <code>bodyMedium</code>(subtitle, secondary) · <code>labelSmall</code> w700 (status badge)
+            </td>
+          </tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 두 그룹 사이는 큰 여백(spacing-large)으로 시각 구분 — 심사 대기를 시선이 먼저 닿는 위치에 둔다.</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ===================================================
+           STATE 3 — Tab 2 신청 비어있음
+           =================================================== -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong>Tab 2 · 신청 비어있음</strong> <span class="tag tag--mute">empty</span></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock"><div class="viewport">
+              <div class="ped-appbar">
+                <div class="ped-appbar__back">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                </div>
+                <div class="ped-appbar__title">이벤트 상세</div>
+              </div>
+              <div class="ped-tabbar">
+                <div class="ped-tab">운영 관리</div>
+                <div class="ped-tab ped-tab--active">참가 신청</div>
+              </div>
+              <div class="ped-empty" style="position:absolute;top:104px;left:0;right:0;bottom:0;">
+                신청 내역이 없습니다.
+              </div>
+              <span class="annotation" style="top:60px;right:8px;">tab #2 active</span>
+              <span class="annotation" style="top:240px;right:8px;">center align · single line</span>
+            </div></td>
+            <td class="state-mini__aspect">조건</td>
+            <td>참가 신청 탭 활성 + 신청 데이터 0건. 새 이벤트라 아직 아무도 신청하지 않은 시점.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              · 탭 #1로 다시 전환 → 운영 관리 본문 노출<br>
+              · 뒤로가기 → 파티 상세<br>
+              · (이 화면 자체에는 더 할 일이 없음)
+            </td>
+          </tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>—</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ State 2의 ListView+카드들 → 가운데 정렬된 단일 안내 텍스트(<code>Center</code> + <code>Text</code>)</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>− status badge 색상들<br>− primaryContainer 아바타<br>+ <code>color-text-secondary</code> 단독</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 빈 상태에서도 AppBar + TabBar 골격은 그대로 — 사용자가 다시 운영 관리로 돌아가는 길을 잃지 않음.</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ===================================================
+           STATE 4 — Loading
+           =================================================== -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong>Loading</strong> <span class="tag tag--mute">async</span></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock"><div class="viewport">
+              <div class="ped-appbar">
+                <div class="ped-appbar__back">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                </div>
+                <div class="ped-appbar__title">이벤트 상세</div>
+              </div>
+              <div class="ped-tabbar">
+                <div class="ped-tab ped-tab--active">운영 관리</div>
+                <div class="ped-tab">참가 신청</div>
+              </div>
+              <div style="position:absolute;top:104px;left:0;right:0;bottom:0;">
+                <div class="ped-spinner"></div>
+              </div>
+              <span class="annotation" style="top:60px;right:8px;">탭 동작 가능</span>
+              <span class="annotation" style="top:260px;right:8px;">center spinner · primary 톤</span>
+            </div></td>
+            <td class="state-mini__aspect">조건</td>
+            <td>이벤트 데이터를 처음 받아오는 중. AppBar + TabBar는 이미 그려져 있고, 본문 영역만 비어있는 자리에 spinner가 도는 중.</td>
+          </tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>· 탭 전환은 가능 (다만 본문은 같은 spinner를 보여줌)<br>· 데이터가 도착하면 spinner가 사라지고 Default 본문으로 자동 전환</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>로딩이 길어져도 spinner가 그대로 유지됨 (timeout 별도 처리 없음 — 실패 시 Error로 전환)</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ Default 본문(메타 카드 + 티켓 리스트) → <code>MinglitCircularProgressIndicator</code> 단독 (가운데 정렬)</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>+ <code>color-primary</code> (spinner accent)<br>− 메타 카드 / 티켓 / Add 카드 토큰들</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>—</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ===================================================
+           STATE 5 — Error
+           =================================================== -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong>Error</strong> <span class="tag tag--mute">network/server</span></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock"><div class="viewport">
+              <div class="ped-appbar">
+                <div class="ped-appbar__back">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                </div>
+                <div class="ped-appbar__title">이벤트 상세</div>
+              </div>
+              <div class="ped-tabbar">
+                <div class="ped-tab ped-tab--active">운영 관리</div>
+                <div class="ped-tab">참가 신청</div>
+              </div>
+              <div class="ped-error" style="top:104px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <div class="ped-error__msg">이벤트를 불러오지 못했습니다.<br>잠시 후 다시 시도해 주세요.</div>
+              </div>
+              <span class="annotation" style="top:200px;right:8px;">error icon · color-error</span>
+              <span class="annotation" style="top:260px;right:8px;">centered message</span>
+            </div></td>
+            <td class="state-mini__aspect">조건</td>
+            <td>이벤트 데이터 로드 실패 (네트워크 끊김 / 서버 오류 / 권한). 본문 영역은 통째로 에러 안내로 대체.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              · <strong>뒤로가기</strong> → 파티 상세로 복귀<br>
+              · <strong>탭 전환</strong>은 가능하지만 양쪽 본문이 같은 에러 안내로 대체 (이벤트 자체가 안 들어와서)<br>
+              · (자동 retry는 없음 — 사용자가 다시 진입해야 함)
+            </td>
+          </tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>네트워크 / 서버 / 권한 오류를 별도로 구분하지 않고 동일한 안내를 보여줌.</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ Default 본문 → 가운데 정렬 에러 안내(<code>Icon</code> error_outline + <code>Text</code>)</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>+ <code>color-error</code> (icon)<br>− 운영 관리 토큰 전체</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 retry 버튼 없음 — 다음 진입에서 자동으로 다시 받아옴.</td></tr>
+        </tbody>
+      </table>
+
+    </div>
+  </section>
+
+  <!-- ============================================================
+       Page-atom zoom-ins — AppBar+TabBar 전환 / Detail card status별
+       ============================================================ -->
+
+  <section class="doc">
+    <h2>AppBar + TabBar — visual</h2>
+    <p class="intro">
+      두 탭 사이를 오갈 때 시선에 가장 먼저 들어오는 게 활성 탭의 색·굵기·언더라인 변화다. 비활성 탭은 옅은 회색 라벨이고, 활성 탭은 파트너 보라색 + 굵기 700 + 하단 2px 보라 언더라인이 동시에 들어온다.
+      AppBar 자체는 두 탭 모두에서 동일 — 좌측 정렬 "이벤트 상세" 타이틀 + 좌상 BackButton. 다크 모드에서도 같은 패턴이 다크 브랜드 톤으로 자동 반영된다.
+    </p>
+    <div class="visual-gallery" style="background: var(--color-surface); padding: 24px; border-radius: var(--radius-card); display: flex; flex-direction: column; gap: 16px;">
+
+      <!-- Variant 1: 운영 관리 탭 active -->
+      <div>
+        <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:8px;font-weight:600;">운영 관리(Tab 1) 활성</div>
+        <div style="display:flex;justify-content:center;">
+          <div style="width: 375px; background: var(--color-background); border: 1px solid var(--color-divider); border-radius: 8px; overflow: hidden;" class="viewport">
+            <div class="ped-appbar">
+              <div class="ped-appbar__back">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+              </div>
+              <div class="ped-appbar__title">이벤트 상세</div>
+            </div>
+            <div class="ped-tabbar">
+              <div class="ped-tab ped-tab--active">운영 관리</div>
+              <div class="ped-tab">참가 신청</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Variant 2: 참가 신청 탭 active -->
+      <div>
+        <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:8px;font-weight:600;">참가 신청(Tab 2) 활성</div>
+        <div style="display:flex;justify-content:center;">
+          <div style="width: 375px; background: var(--color-background); border: 1px solid var(--color-divider); border-radius: 8px; overflow: hidden;" class="viewport">
+            <div class="ped-appbar">
+              <div class="ped-appbar__back">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+              </div>
+              <div class="ped-appbar__title">이벤트 상세</div>
+            </div>
+            <div class="ped-tabbar">
+              <div class="ped-tab">운영 관리</div>
+              <div class="ped-tab ped-tab--active">참가 신청</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr><th style="width: 140px;">탭 라벨</th><th style="width: 200px;">색 / 굵기</th><th>하단 indicator</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>비활성 탭</td><td><code>color-text-secondary</code> · w500</td><td>없음 (기본 divider 1px만)</td></tr>
+        <tr><td>활성 탭</td><td><code>color-primary (partner #6c3ce1)</code> · w700</td><td>2px <code>color-primary</code> · 탭 너비 전체</td></tr>
+        <tr><td>다크 모드 활성</td><td><code>color-partner-dark-primary (#9b7bec)</code> · w700</td><td>같은 색의 2px 라인 — 다크 톤 자동 반영</td></tr>
+        <tr><td>AppBar (모든 상태)</td><td>타이틀 <code>color-text-primary</code> · w700 · <code>titleMedium</code></td><td>해당 없음 (TabBar가 분리 역할)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Detail info card — visual (상태별 톤)</h2>
+    <p class="intro">
+      운영 메타 카드의 4번째 행("상태")은 운영 단계에 따라 값의 색이 바뀌는 유일한 행이다 — 다른 4행은 늘 같은 톤이고 이 행만 시그널 컬러를 가진다.
+      예정됨은 파트너 보라(앞으로 진행될 이벤트), 취소됨은 빨강(주의 — 환불 / 사후 안내 필요), 완료됨은 회색(이미 끝나 별도 액션 없음). 사용자가 카드 한 장 안에서 "지금 이 이벤트가 어떤 단계인지"를 색으로 즉시 파악할 수 있게 한다.
+    </p>
+    <div class="visual-gallery" style="background: var(--color-surface); padding: 24px; border-radius: var(--radius-card); display: flex; flex-direction: column; gap: 12px;">
+
+      <!-- Variant 1: scheduled (primary) -->
+      <div>
+        <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:6px;font-weight:600;">예정됨 — 보라 톤</div>
+        <div style="display:flex;justify-content:center;">
+          <div style="width: 375px;" class="viewport">
+            <div class="ped-card" style="margin:0;">
+              <div class="ped-row">
+                <div class="ped-row__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div>
+                <div class="ped-row__label">상태</div>
+                <div class="ped-row__value ped-row__value--accent">예정됨</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Variant 2: cancelled (error) -->
+      <div>
+        <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:6px;font-weight:600;">취소됨 — 빨강 톤</div>
+        <div style="display:flex;justify-content:center;">
+          <div style="width: 375px;" class="viewport">
+            <div class="ped-card" style="margin:0;">
+              <div class="ped-row">
+                <div class="ped-row__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div>
+                <div class="ped-row__label">상태</div>
+                <div class="ped-row__value ped-row__value--error">취소됨</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Variant 3: completed (outline / muted) -->
+      <div>
+        <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:6px;font-weight:600;">완료됨 — 회색 톤</div>
+        <div style="display:flex;justify-content:center;">
+          <div style="width: 375px;" class="viewport">
+            <div class="ped-card" style="margin:0;">
+              <div class="ped-row">
+                <div class="ped-row__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div>
+                <div class="ped-row__label">상태</div>
+                <div class="ped-row__value ped-row__value--muted">완료됨</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr><th style="width: 140px;">상태</th><th style="width: 200px;">값 색 / 굵기</th><th>의미 / 신호</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>예정됨 (scheduled)</td><td><code>color-primary</code> (partner) · w700</td><td>아직 진행 전 — 파트너의 운영 액션이 가장 활발한 단계</td></tr>
+        <tr><td>취소됨 (cancelled)</td><td><code>color-error</code> · w700</td><td>주의 — 환불 / 신청자 안내 등 사후 처리가 필요할 수 있음</td></tr>
+        <tr><td>완료됨 (completed)</td><td><code>color-outline</code> · w700</td><td>이벤트 종료 — 추가 운영 액션은 거의 없음, 정산/리뷰 단계로 이동</td></tr>
+        <tr><td>그 외 / null</td><td>기본 본문 톤 (color: 미지정 → bold도 미적용)</td><td>예외적 status 문자열 그대로 노출 — 별도 시그널 없음</td></tr>
+      </tbody>
+    </table>
+    <p class="intro" style="margin-top:12px;margin-bottom:0;">
+      ※ 다른 4행(일정 / 시간 / 참가 현황 / 공개 설정)은 상태와 무관하게 늘 본문 톤(<code>color-text-primary</code>)으로 표시 — 색 변화 없음.
+    </p>
+  </section>
+</div>
+
+<!-- ============================================================
+     GLOBAL BEHAVIOR
+     ============================================================ -->
+<div class="perspective" id="global-behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">
+      Cross-cutting / global only — 모든/다수 state에 동일하게 적용되는 동작.
+      state-specific 인터랙션은 위 States section의 각 state mini-table 참조.
+    </span>
+  </div>
+
+  <section class="doc">
+    <h2>Cross-cutting interactions</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 220px;">사용자 액션</th>
+          <th>화면에 보이는 결과</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>뒤로 가기 (OS back / AppBar 뒤로 버튼)</td>
+          <td>파티 상세로 복귀 — 모든 state에서 동일.</td>
+        </tr>
+        <tr>
+          <td>탭 전환 (Tab 1 ↔ Tab 2)</td>
+          <td>본문이 즉시 다른 탭의 내용으로 갈아끼워짐. AppBar / TabBar는 그대로 — 활성 indicator만 색·위치가 바뀐다. 탭별 스크롤 위치는 따로 보존되지 않고 각 탭의 자체 스크롤 영역이 항상 위에서 시작.</td>
+        </tr>
+        <tr>
+          <td>다른 화면에서 돌아옴 (TicketCreate / TicketEdit / 심사 다이얼로그)</td>
+          <td>이 화면은 자동으로 최신 데이터를 다시 받아옴 — 새로 만든 티켓이 리스트에 추가되거나, 심사 처리된 신청이 처리 완료 그룹으로 이동한다.</td>
+        </tr>
+        <tr>
+          <td>심사 처리 성공 (참가 신청 탭에서)</td>
+          <td>다이얼로그 닫힘 → SnackBar('심사 처리가 완료되었습니다.') 잠깐 표시 → 신청 리스트가 자동 갱신되며 해당 카드가 처리 완료 그룹으로 이동.</td>
+        </tr>
+        <tr>
+          <td>심사 처리 실패</td>
+          <td>SnackBar 대신 공통 에러 안내가 노출되고, 카드는 심사 대기 그룹에 그대로 유지된다.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="intro" style="margin-top: 12px; margin-bottom: 0;">
+      ※ state-specific 액션 (티켓 카드 탭 / 심사 대기 카드 탭 등)은 위 States section의 mini-table에 분산.
+    </p>
+  </section>
+
+  <section class="doc">
+    <h2>Motion &amp; timing</h2>
+    <p class="intro">
+      <strong>임시값 사용 금지</strong> — duration은 <code>MinglitAnimation</code> 토큰에서 선택.
+    </p>
+    <table class="ref" style="margin-bottom: 16px;">
+      <thead>
+        <tr><th style="width: 200px;">Token</th><th style="width: 80px;">Value</th><th>Use case</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>MinglitAnimation.micro</code></td><td>100ms</td><td>탭 active indicator 슬라이드 (탭 → 다음 탭)</td></tr>
+        <tr><td><code>MinglitAnimation.fast</code></td><td>200ms</td><td>심사 다이얼로그 scale fade-in/out</td></tr>
+        <tr><td><code>MinglitAnimation.medium</code></td><td>350ms</td><td>TabBarView 본문 슬라이드 (Tab 1 ↔ Tab 2) · loading → data 크로스페이드</td></tr>
+        <tr><td><em>(OS default)</em> SnackBar</td><td>~250ms 진입 / 4s 표시 / 200ms 퇴장</td><td>Material SnackBar 기본</td></tr>
+      </tbody>
+    </table>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 220px;">Transition</th>
+          <th style="width: 140px;">Duration (token)</th>
+          <th>Curve / notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>탭 전환 (본문 슬라이드)</td>
+          <td><code>medium</code> (350ms)</td>
+          <td>TabBarView 기본 — easeInOut · 이전 탭 본문 사라지고 다음 탭 본문이 좌/우에서 슬라이드인</td>
+        </tr>
+        <tr>
+          <td>활성 indicator 이동</td>
+          <td><code>micro</code> 근사 (~100ms)</td>
+          <td>TabBar indicator가 다음 탭 위치로 부드럽게 슬라이드</td>
+        </tr>
+        <tr>
+          <td>이벤트 데이터 로드 (Loading → Default)</td>
+          <td><code>medium</code> (350ms)</td>
+          <td>spinner fade-out + 본문 fade-in 크로스페이드</td>
+        </tr>
+        <tr>
+          <td>심사 다이얼로그 진입/퇴장</td>
+          <td><code>fast</code> (200ms)</td>
+          <td>Material Dialog scale fade</td>
+        </tr>
+        <tr>
+          <td>심사 처리 후 리스트 갱신</td>
+          <td>~ms (즉시)</td>
+          <td>리스트가 새 데이터로 다시 그려짐 — 카드 위치 변경은 별도 애니메이션 없이 즉시 반영</td>
+        </tr>
+        <tr>
+          <td>SnackBar 등장</td>
+          <td>OS default</td>
+          <td>화면 하단에서 슬라이드 업 → 약 4초 머무름 → 자동 사라짐</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Global edge cases</h2>
+    <p class="intro">
+      화면 전반에 영향을 주는 edge case. state-specific edge case는 위 States section의 각 mini-table 에지케이스 행에.
+    </p>
+    <ul class="notes">
+      <li><strong>이벤트 제목이 비어있음</strong> — Tab 1 상단의 제목 블록 통째로 사라짐. 메타 카드가 곧바로 시작 위치로 올라간다.</li>
+      <li><strong>참가 현황 / 신청 카운트가 0</strong> — 메타 카드의 "참가 현황" 행은 "확정 0명 / 신청 0명 (대기 0)"으로 노출 (행 자체는 사라지지 않음).</li>
+      <li><strong>티켓이 0개</strong> — 입장권 섹션 본문이 큰 보라 빈 상태 카드("새 티켓 만들기") 한 장으로 대체. 헤더의 "+ 티켓 만들기" 버튼은 그대로 노출.</li>
+      <li><strong>정원(maxParticipants)이 정해지지 않음</strong> — 입장권 섹션의 status header(발행/정원 라인)가 사라지고 곧바로 카드부터 시작.</li>
+      <li><strong>입장 그룹이 정의되지 않은 단순 이벤트</strong> — 티켓 카드 sub-라벨에서 "그룹" 정보가 빠지고 발행/정원 텍스트만 남는다.</li>
+      <li><strong>다크 모드</strong> — 활성 탭 / 이벤트 제목 / Add 카드의 partner primary 톤이 다크 브랜드 톤(#9b7bec)으로 자동 전환. 메타 카드 / 티켓 카드 / 신청 카드 / divider / status badge 모두 mds 다크 토큰 자동 반영. 상태값 색(예정/취소/완료)도 동일 매핑이 다크 컬러 셋으로 적용.</li>
+      <li><strong>접근성</strong> — TabBar는 Material 기본 a11y. 메타 카드의 라벨/값은 row 단위로 grouped. status badge 텍스트는 색 의존이 아니라 라벨 자체를 읽으면 의미가 전달되도록 작성. 심사 다이얼로그는 popup으로 키보드 nav 가능.</li>
+      <li><strong>네트워크 끊김 (재진입 전)</strong> — Loading이 길어지다 결국 Error state로 전환. AppBar + TabBar는 살아있어 사용자가 뒤로갈 수 있음.</li>
+    </ul>
+    <p class="intro" style="margin-top: 12px; margin-bottom: 0;">
+      ※ <strong>티켓 / 심사 다이얼로그 자체의 edge</strong> (가격 미정 / 심사 거절 사유 미입력 등)는 각 child spec / 다이얼로그 내부 사양 참고.
+    </p>
+  </section>
+</div>
+
+<!-- ============================================================
+     REFERENCE
+     ============================================================ -->
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">📖</span>
+    <h2>Reference</h2>
+    <span class="lede">
+      Implementation source + 인접 화면 link만. <strong>Components / Tokens는 States section의 각 mini-table</strong>에 분산됨.
+    </span>
+  </div>
+
+  <section class="doc">
+    <h2>Implementation source</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 200px;">항목</th><th>Path / Reference</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Widget class</strong></td><td><code>EventDetailPage</code> (+ <code>_EventInfoTab</code> · <code>_DetailRow</code> internal widgets)</td></tr>
+        <tr><td><strong>File path</strong></td><td><a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/features/party/event/detail/event_detail_page.dart"><code>apps/app_partner/lib/src/features/party/event/detail/event_detail_page.dart</code></a></td></tr>
+        <tr><td><strong>Tab 2 widget</strong></td><td><a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/features/party/event/widgets/event_application_list_view.dart"><code>event_application_list_view.dart</code></a> (<code>EventApplicationListView</code> + <code>_ApplicationCard</code> + <code>_StatusBadge</code>)</td></tr>
+        <tr><td><strong>Ticket list widget</strong></td><td><a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/features/party/event/widgets/ticket_list_item.dart"><code>ticket_list_item.dart</code></a> (<code>TicketListView</code> · <code>TicketListItem</code> · <code>TicketStatusHeader</code>)</td></tr>
+        <tr><td><strong>Controller / Provider</strong></td><td><code>eventDetailProvider(eventId)</code> · <code>eventTicketsProvider(eventId)</code> · <code>eventApplicationsProvider(eventId)</code> · <code>eventApplicationReviewControllerProvider</code> · <code>partyDetailProvider(partyId)</code></td></tr>
+        <tr><td><strong>Review dialog</strong></td><td><code>EventApplicationReviewDialog</code> — 심사 대기 카드 탭 시 노출되는 승인/거절 다이얼로그</td></tr>
+        <tr><td><strong>Route</strong></td><td><code>EventDetailRoute</code> · path: <code>/parties/:partyId/events/:eventId</code> · <code>app_partner/lib/src/routing/app_routes.dart</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 240px;">Spec</th><th>Relation</th></tr></thead>
+      <tbody>
+        <tr><td><a href="/specs/party_detail_page.html"><code>PartyDetailPage</code></a></td><td>Parent — 이 화면으로 진입하는 주 경로 (이벤트 카드 탭).</td></tr>
+        <tr><td><a href="/specs/ticket_create_page.html"><code>TicketCreatePage</code></a></td><td>"+ 티켓 만들기" 버튼 / 빈 상태 카드 / 리스트 끝 Add 카드 → 모두 여기로 이동.</td></tr>
+        <tr><td><a href="/specs/ticket_edit_page.html"><code>TicketEditPage</code></a></td><td>입장권 카드 탭 → 해당 티켓을 선택한 상태로 이 화면으로 이동.</td></tr>
+        <tr><td><a href="/specs/event_application_manage_page.html"><code>EventApplicationManagePage</code></a></td><td>여러 이벤트의 신청을 한꺼번에 관리하는 화면 — 이 화면 Tab 2의 단일 이벤트 버전.</td></tr>
+        <tr><td><a href="/specs/event_application_detail_page.html"><code>EventApplicationDetailPage</code></a></td><td>개별 신청 상세 — 본 화면에서는 다이얼로그로 처리하지만, 더 깊은 정보가 필요할 때 이쪽으로 향한다.</td></tr>
+        <tr><td><a href="/specs/event_create_page.html"><code>EventCreatePage</code></a></td><td>이 화면이 보여주는 이벤트를 처음 만든 화면 — 같은 event 데이터의 생성 단계.</td></tr>
+        <tr><td><a href="/specs/event_detail_page.html"><code>EventDetailPage (user)</code></a></td><td>같은 이벤트의 user 측 화면 — 영업 톤(이미지 캐러셀 + CTA 바). 같은 데이터, 정반대 관점.</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<!-- ============================================================
+     ✅ AUTHORING CHECKLIST
+     ============================================================ -->
+<section class="doc" style="border: 2px solid var(--color-primary); border-radius: var(--radius-card); padding: 16px 24px; margin-top: 32px;">
+  <h2 style="color: var(--color-primary);">✅ Authoring checklist</h2>
+  <ul class="notes" style="line-height: 1.9;">
+    <li>✅ <strong>Header</strong> — Title (h1)만</li>
+    <li>✅ <strong>Overview</strong> — Status (✅ 디자인완료) · App · Category · Route · Path · Hierarchy · Purpose · User journey · Background · Frequency 10행 모두 채움</li>
+    <li>✅ <strong>History</strong> — v1.0 (2026-05-01) 초기 작성</li>
+    <li>✅ <strong>Layout — top blueprint</strong> — AppBar + TabBar + Title + Detail card + Tickets section 5블록 + tree</li>
+    <li>✅ <strong>Layout — Sub-anatomy 5종</strong> — AppBar+TabBar · Title block · Detail info card · Tickets section · Applications tab</li>
+    <li>✅ <strong>States — 5종</strong> — Default 운영 관리 · Tab 2 신청 활성 · Tab 2 신청 비어있음 · Loading · Error</li>
+    <li>✅ <strong>States — mini-table 6 rows</strong> — 5 state 모두 (조건/액션/에지/컴포넌트/토큰/노트)</li>
+    <li>✅ <strong>States — Default baseline 풀 리스트</strong> — 컴포넌트 + 토큰 풀 명시</li>
+    <li>✅ <strong>States — additive diff</strong> — 나머지 4 state는 ↔ / + / − prefix 사용</li>
+    <li>✅ <strong>State summary matrix</strong> — 5 state 한눈 비교</li>
+    <li>✅ <strong>Visual zoom-in 2종</strong> — AppBar+TabBar(active 변화) · Detail info card(상태별 톤)</li>
+    <li>✅ <strong>Global Behavior — cross-cutting only</strong> — 뒤로가기 · 탭 전환 · 화면 복귀 시 새로고침 · 심사 처리 성공/실패</li>
+    <li>✅ <strong>Global Behavior — Motion</strong> — MinglitAnimation token 매핑 표 + transitions 표</li>
+    <li>✅ <strong>Global edge cases</strong> — 제목 빈/카운트 0/티켓 0/정원 미정/그룹 없음/다크모드/접근성/네트워크</li>
+    <li>✅ <strong>Reference — Implementation source</strong> — widget · file · tab2 widget · ticket widget · controllers · review dialog · route</li>
+    <li>✅ <strong>Reference — Related screens</strong> — PartyDetail · TicketCreate · TicketEdit · ApplicationManage · ApplicationDetail · EventCreate · user EventDetail</li>
+    <li>✅ <strong>Partner brand color</strong> — viewport-scoped <code>--color-primary</code> 오버라이드 (#6c3ce1 / dark #9b7bec)</li>
+    <li>✅ <strong>톤 룰</strong> — 사용자 관찰 가능 묘사. provider/method/AsyncValue/Riverpod 용어 사용 안 함 (widget 트리 내 컴포넌트 contract만 widget 이름 사용)</li>
+  </ul>
+</section>
+
+</div>
+
+<script>
+  document.getElementById('spec-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('spec-mode', e.target.checked);
+  });
+  document.getElementById('dark-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('dark-mode', e.target.checked);
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Spec — EventNowBar (app_user · embedded in HomePage)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* ============================================================
+   EventNowBar-specific atoms.
+   Tokens / chrome / mini-table / blueprint은 /specs/_spec.css에서 import.
+   ============================================================ */
+
+/* Wrapper used inside .viewport-strip mockups so EventNowBar sits at the
+   bottom of a 96px-tall preview (real position is Scaffold.bottomSheet). */
+.event-now-bar {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 64px;
+  background: var(--color-surface);
+  border-top-left-radius: var(--radius-card);
+  border-top-right-radius: var(--radius-card);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08), 0 -1px 4px rgba(0, 0, 0, 0.04);
+  display: flex;
+  align-items: center;
+  padding: 10px var(--spacing-screen-edge) 0;
+  gap: var(--spacing-sm);
+  cursor: pointer;
+}
+.event-now-bar::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  width: 7px;
+  height: 7px;
+  margin-left: -3.5px;
+  border-top: 1.5px solid var(--color-text-secondary);
+  border-right: 1.5px solid var(--color-text-secondary);
+  transform: rotate(-45deg);
+  pointer-events: none;
+}
+.event-now-bar--action::before {
+  border-top-color: var(--color-primary);
+  border-right-color: var(--color-primary);
+  animation: enb-chevron-blink 1.4s ease-in-out infinite;
+}
+
+/* Action-required variant — checkInReady · matchingReady · results.
+   Tint bg + bold primary status + dot pulse-with-halo + chevron blink. */
+.event-now-bar--action {
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--color-primary) 10%, var(--color-surface)) 0%,
+    color-mix(in srgb, var(--color-primary)  2%, var(--color-surface)) 100%);
+}
+.event-now-bar--action .event-now-bar__status {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.event-now-bar__dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  position: relative;
+}
+.event-now-bar__dot--gray { background: var(--color-text-secondary); }
+.event-now-bar__dot--primary { background: var(--color-primary); }
+.event-now-bar__dot--success { background: var(--color-success); }
+
+.event-now-bar__dot--pulse {
+  animation: enb-dot-pulse 1.4s ease-in-out infinite;
+}
+.event-now-bar__dot--pulse::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  background: inherit;
+  z-index: -1;
+  animation: enb-halo 1.6s ease-out infinite;
+}
+.event-now-bar__dot--blink {
+  animation: enb-dot-pulse 1.8s ease-in-out infinite;
+}
+@keyframes enb-dot-pulse {
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 1; }
+}
+@keyframes enb-halo {
+  0%   { transform: scale(1);   opacity: 0.45; }
+  80%  { transform: scale(2.6); opacity: 0; }
+  100% { transform: scale(2.6); opacity: 0; }
+}
+@keyframes enb-chevron-blink {
+  0%, 100% { opacity: 0.45; }
+  50%      { opacity: 1; }
+}
+
+.event-now-bar__title {
+  font-size: var(--typography-font-size-body);
+  font-weight: 400;
+  color: var(--color-text-primary);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.event-now-bar__status {
+  font-size: var(--typography-font-size-caption);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+.event-now-bar__trailing {
+  font-size: var(--typography-font-size-caption);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
+</div>
+
+<div class="page">
+
+<!-- ============================================================
+     📍 HEADER
+     ============================================================ -->
+<header>
+  <h1>Event Now Bar</h1>
+</header>
+
+<!-- ============================================================
+     🎯 OVERVIEW
+     ============================================================ -->
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr>
+        <th style="width: 140px;">Status</th>
+        <td><strong>✅ 디자인완료</strong> <em style="color: var(--color-text-secondary);">— 7 visible state + 3 hidden state · 5개 routed sheet 진입점</em></td>
+      </tr>
+      <tr>
+        <th>App</th>
+        <td><code>app_user</code></td>
+      </tr>
+      <tr>
+        <th>Category</th>
+        <td>home · persistent bar · sub-component</td>
+      </tr>
+      <tr>
+        <th>Route / Surface</th>
+        <td><code>EventNowBar</code> (HomePage 하단 영역에 부착되는 sub-component, 자체 route 없음)</td>
+      </tr>
+      <tr>
+        <th>Path</th>
+        <td><code>/</code> (홈 화면의 일부 — 자체 경로 없음)</td>
+      </tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>: <a href="/specs/home_page.html"><code>HomePage</code></a> 하단 영역 — 오늘 참여 중인 이벤트가 있을 때만 노출.<br>
+          <strong>Children</strong>: <em>—</em> <em style="color: var(--color-text-secondary);">(탭 시 5개 시트로 진입 — Reference 섹션의 routed-sheet 매핑 참고)</em>
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>
+          홈 화면 하단에 떠 있는 64px persistent mini-bar. 사용자가 오늘 참여 중인 이벤트(active event) 1건을 항상 화면 위에 노출하고, 진행 단계에 맞는 다음 액션을 한 탭 거리에 둔다.
+          좌측 status dot · 가운데 이벤트 제목 · 우측 status 텍스트 + (waiting일 때만) 시간 텍스트.
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry points</strong>: 홈 화면 진입 직후 — 하단 영역에 자동 부착. 오늘 참여 중인 이벤트가 있을 때만 보임 (없으면 안 보임).<br>
+          <strong>Exit points</strong>: 탭 → 현재 단계에 맞는 시트로 진입 (5종 — check-in / checked-in / matching / results / review).
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          밍글릿은 "오늘 참여 중인 이벤트의 다음 액션이 무엇인지" 즉시 인지시키는 게 핵심 UX.
+          진행 단계가 자주 바뀌고 (체크인 → 매칭 → 결과 발표) 각 단계마다 사용자 입력 타이밍이 다르므로,
+          홈 화면을 떠나지 않고 한 번의 탭으로 다음 단계를 밟을 수 있도록 persistent bar로 설계.
+          action 상태(체크인 준비됨 · 투표 가능 · 결과 발표)는 dot pulse + halo + chevron blink + bold primary status로 강한 시선 유도, passive 상태는 dot blink만으로 살아있는 느낌만 유지.
+        </td>
+      </tr>
+      <tr>
+        <th>Frequency</th>
+        <td>홈 화면 진입 시마다 (오늘 참여 중인 이벤트가 있을 때). 단계가 바뀔 때마다 dot / status가 자동 갱신.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================
+     🕐 HISTORY
+     ============================================================ -->
+<section class="doc">
+  <h2>History</h2>
+  <p class="intro">
+    이 spec의 주요 변경 이력. 최신 항목 위.
+  </p>
+  <table class="ref">
+    <thead>
+      <tr>
+        <th style="width: 110px;">Date</th>
+        <th style="width: 80px;">Version</th>
+        <th style="width: 120px;">Author</th>
+        <th>Changes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2026-05-01</td>
+        <td>1.0</td>
+        <td>mark-yun</td>
+        <td>
+          v1.4 template으로 신규 spec 작성 — home_page.html의 EventNowBar anatomy / visual gallery / 시트 매핑 섹션을 분리. mini-table per state (7 visible state, baseline = waiting), additive diff. 3 hidden state(loading / offline / no-active)는 Global Behavior 섹션에 정리.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- Anchor nav -->
+<nav class="perspective-nav">
+  <a href="#layout"><span class="glyph">🧱</span> Layout</a>
+  <a href="#states"><span class="glyph">🎨</span> States</a>
+  <a href="#behavior"><span class="glyph">🔄</span> Global Behavior</a>
+  <a href="#reference"><span class="glyph">📖</span> Reference</a>
+</nav>
+
+<!-- ============================================================
+     🧱 LAYOUT
+     ============================================================ -->
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Layout</h2>
+    <span class="lede">화면 구조 — 64px bar · top-rounded corners · 3 region (dot · title · status). 색·타이포 무시.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree</h2>
+    <p class="intro">
+      홈 화면 하단에 부착되는 64px persistent bar. top corners <code>radius-card (16px)</code>, 상단 부유감은 box-shadow로만 표현 (border 없음). top-center에 위치한 작은 ▲ chevron이 "탭 시 확장" 단서.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="width: 343px; height: 88px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:8px;left:0;right:0;height:64px;border-top-left-radius:16px;border-top-right-radius:16px;">
+          <span class="blueprint__region-label" style="font-size:10px;">Bar — h=64 · top corners radius-card (16px)</span>
+        </div>
+        <div class="blueprint__region" style="top:14px;left:50%;width:8px;height:8px;margin-left:-4px;border-color:rgba(var(--spec-blueprint-rgb), 0.6);">
+          <span class="blueprint__region-label" style="font-size:9px;left:14px;">▲ chevron</span>
+        </div>
+        <div class="blueprint__region" style="top:36px;left:16px;width:8px;height:8px;border-radius:50%;background:rgba(var(--spec-blueprint-rgb), 0.6);border-color:transparent;">
+          <span class="blueprint__region-label" style="font-size:9px;left:18px;">㉠ dot</span>
+        </div>
+        <div class="blueprint__region" style="top:28px;left:36px;right:130px;height:24px;background:rgba(var(--spec-blueprint-rgb), 0.06);border-color:rgba(var(--spec-blueprint-rgb), 0.4);">
+          <span class="blueprint__region-label" style="font-size:9px;">㉡ Title (Flexible · ellipsis)</span>
+        </div>
+        <div class="blueprint__region" style="top:28px;right:16px;width:106px;height:24px;background:rgba(var(--spec-blueprint-rgb), 0.06);border-color:rgba(var(--spec-blueprint-rgb), 0.4);">
+          <span class="blueprint__region-label" style="font-size:9px;">㉢ status (+ time on waiting)</span>
+        </div>
+        <div class="blueprint__align-marker" style="bottom:8px;left:8px;">background: surface · safeArea below</div>
+      </div>
+
+      <div class="layout-tree"><b>HomePage</b>
+└─ <em>bottom slot</em>: <b>EventNowBar</b>(h=64)
+   <i>· 오늘 참여 중인 이벤트가 없거나, 정보를 받아오는 중이거나, 오프라인이면 숨김</i>
+
+<b>EventNowBar Container</b>
+├─ height: 64
+├─ background: <i>color-surface</i>  <i>(action: 10%→2% primary tint gradient)</i>
+├─ border-radius: <i>radius-card (16px)</i>  <i>top-left + top-right only</i>
+├─ box-shadow: <i>0 -4px 20px rgba(0,0,0,0.08), 0 -1px 4px rgba(0,0,0,0.04)</i>  <i>(border 없음)</i>
+├─ padding: 10px <i>spacing-screen-edge (16px)</i> 0
+│
+├─ <em>Up-chevron</em> (::before pseudo)              ← top-center 확장 단서
+│  · 7×7 rotated borders · top: 8px · centered
+│  · color: text-secondary  <i>(action: primary + 1.4s opacity blink)</i>
+│
+└─ 가로 row(crossAxis: center · gap: spacing-sm)
+   ├─ <em>Status dot</em>                              ← ㉠
+   │  · 8×8 circle · color per state
+   │  · action 상태 → primary + pulse(1.4s) + halo ring(1.6s)
+   │  · passive 상태 → blink(1.8s) opacity only
+   │
+   ├─ Gap: <i>spacing-sm (12px)</i>
+   ├─ <em>Event title</em> (Flexible)                  ← ㉡
+   │  · bodyMedium · text-primary · 1줄 ellipsis
+   ├─ Spacer (자동 grow)
+   └─ <em>Status text</em>                             ← ㉢
+      · bodySmall · text-secondary  <i>(action: bold w700 · primary)</i>
+      · waiting only → 우측에 시간 텍스트 추가 ("N분 후" / "N시간 후")</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>—</td><td>Bar 외부</td><td>height 64 · 풀폭 · bottomSheet 고정</td><td>top corners: <code>radius-card (16px)</code> · 상단 부유감은 box-shadow로만 · safeArea 위에 배치</td></tr>
+        <tr><td>—</td><td>Up-chevron</td><td>top-center · pseudo-element</td><td>7×7 rotated borders · top: 8px · color: text-secondary (action: primary + blink)</td></tr>
+        <tr><td>—</td><td>Inner padding</td><td>row · crossAxis center · 10px top offset</td><td>horizontal: <code>spacing-screen-edge (16px)</code> · padding-top: 10px (chevron 공간)</td></tr>
+        <tr><td>㉠</td><td>Status dot</td><td>좌측 시작</td><td>8×8 circle · dot↔title: <code>spacing-sm (12px)</code></td></tr>
+        <tr><td>㉡</td><td>Event title</td><td>Flexible · 좌측 정렬 · 1줄 ellipsis</td><td>title↔Spacer: 자동 grow</td></tr>
+        <tr><td>㉢</td><td>Status text</td><td>우측 끝</td><td>bodySmall · waiting일 때만 시간 텍스트가 우측에 추가됨</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<!-- ============================================================
+     🎨 STATES — mini-table per state
+     ============================================================ -->
+<div class="perspective" id="states">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>States</h2>
+    <span class="lede">시각 변형 7종 (visible). baseline = waiting. action 상태(체크인 준비됨 / 투표 가능 / 결과 발표)는 시선 유도 강화. 3 hidden state는 Global Behavior 참고.</span>
+  </div>
+
+  <section class="doc">
+    <p class="intro">
+      이벤트 진행 단계에 따라 자동 분기 (waiting · checkInReady · checkedIn · matchingReady · matching · results · ended). 모든 state는 같은 layout (dot + title + status)을 공유하고, dot 색상 / status 텍스트 / 강조 표현이 변경된다.
+    </p>
+
+    <!-- State 1: waiting (baseline) -->
+    <table class="ref state-mini is-baseline-tint">
+      <thead>
+        <tr><th colspan="3"><strong>waiting · 시작 전</strong> 🎯 <small>baseline · passive</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport-strip">
+              <div class="event-now-bar">
+                <div class="event-now-bar__dot event-now-bar__dot--gray event-now-bar__dot--blink"></div>
+                <div class="event-now-bar__title">강남 루프탑 소셜 파티</div>
+                <div class="event-now-bar__status">곧 시작</div>
+                <div class="event-now-bar__trailing" style="font-size: 12px; color: var(--color-text-secondary); display: inline; width: auto; height: auto;">12분 후</div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>이벤트 시작 전 (시작까지 일정 시간 이내) · 사용자 액션 미요구.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>탭 → <a href="/specs/event_check_in_screen.html">체크인 화면</a> 시트 진입 (체크인 사전 준비 화면).</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>· 시작까지 1시간 미만 → trailing "N분 후" / 1시간 이상 → "N시간 후" / 24시간 이상 → bar 숨김<br>· 사용자가 다른 탭으로 이동하면 bar도 사라짐 (홈 화면에서만 노출).</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            · <code>StatusDot</code> (8×8 · gray · blink 1.8s opacity)<br>
+            · <code>EventTitle</code> (Flexible · bodyMedium · text-primary · 1줄 ellipsis)<br>
+            · <code>StatusText</code> (bodySmall · text-secondary · "곧 시작")<br>
+            · <code>TrailingTime</code> (caption · text-secondary · "N분 후" / "N시간 후")<br>
+            · Up-chevron pseudo (text-secondary)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            · color: <code>color-surface</code> (bg), <code>color-text-secondary</code> (dot · status · trailing · chevron), <code>color-text-primary</code> (title)<br>
+            · radius: <code>radius-card</code> (16 · top corners only)<br>
+            · spacing: <code>spacing-screen-edge</code> (16 · h-padding), <code>spacing-sm</code> (12 · dot↔title gap), 10px (top — chevron 공간)<br>
+            · typography: bodyMedium (14/400 · title), bodySmall (12 · status), caption (11 · trailing)<br>
+            · shadow: <code>0 -4px 20px rgba(0,0,0,0.08), 0 -1px 4px rgba(0,0,0,0.04)</code> (custom · 토큰화 후보)<br>
+            · animation: <code>1.8s ease-in-out infinite</code> (dot blink — opacity 0.55↔1)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 trailing 시간 텍스트가 등장하는 유일한 state. 다른 6 state는 trailing 없음. 시각 강조 약함 — 사용자가 인지만 하면 됨.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 2: checkInReady (action) -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>checkInReady ⚡</strong> <small>action · 체크인 가능 — 사용자 입력 필요</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport-strip">
+              <div class="event-now-bar event-now-bar--action">
+                <div class="event-now-bar__dot event-now-bar__dot--primary event-now-bar__dot--pulse"></div>
+                <div class="event-now-bar__title">강남 루프탑 소셜 파티</div>
+                <div class="event-now-bar__status">체크인하세요</div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>이벤트 시작 시각이 도달했는데 사용자가 아직 체크인하지 않은 상태.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>탭 → <a href="/specs/event_check_in_screen.html">체크인 화면</a> 시트 (QR 코드 + 위치 안내).</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>· 시작 후 일정 시간 동안 미체크인 → no-show 처리 (ended 상태로 전환).</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            ↔ <code>StatusDot</code>: gray + blink → <strong>primary + pulse(1.4s) + halo ring(1.6s)</strong><br>
+            ↔ <code>StatusText</code>: text-secondary → <strong>primary bold (w700)</strong> · 텍스트 "체크인하세요"<br>
+            ↔ Up-chevron: text-secondary → primary + 1.4s blink<br>
+            + <code>--action</code> bg 그라디언트 (10% → 2% primary tint)<br>
+            − TrailingTime
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            + <code>color-primary</code> (dot · status · chevron)<br>
+            + <code>color-mix(in srgb, primary 10%/2%, surface)</code> (--action gradient bg)<br>
+            + animation: <code>1.4s ease-in-out infinite</code> (dot pulse), <code>1.6s ease-out infinite</code> (halo ring)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 action variant 패턴 — checkInReady · matchingReady · results 3개 state가 동일한 시각 강조 (status 텍스트만 다름).</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 3: checkedIn -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>checkedIn</strong> <small>passive · 체크인 완료</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport-strip">
+              <div class="event-now-bar">
+                <div class="event-now-bar__dot event-now-bar__dot--success event-now-bar__dot--blink"></div>
+                <div class="event-now-bar__title">강남 루프탑 소셜 파티</div>
+                <div class="event-now-bar__status">체크인 완료</div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>EventNowBarState.checkedIn</code> · 체크인 완료 후 매칭 시작 전</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>탭 → <code>/events/:id/checked-in</code> 시트 (체크인 confirmation + 곧 매칭 시작 안내)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>동일</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>↔ Dot color → <strong>success (green)</strong> + blink<br>↔ Status text → "체크인 완료" (text-secondary 유지 — passive)<br>− TrailingTime</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>↔ Dot bg → <code>color-success</code><br>나머지 동일</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 success dot은 "긍정적 진행 중" 시각 단서. action 강조 없이 차분하게 유지.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 4: matchingReady (action) -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>matchingReady ⚡</strong> <small>action · 매칭 시작 가능 — 사용자 입력 필요</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport-strip">
+              <div class="event-now-bar event-now-bar--action">
+                <div class="event-now-bar__dot event-now-bar__dot--primary event-now-bar__dot--pulse"></div>
+                <div class="event-now-bar__title">강남 루프탑 소셜 파티</div>
+                <div class="event-now-bar__status">매칭 시작하세요</div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>EventNowBarState.matchingReady</code> · 매칭 phase 진입 + 사용자 vote 미시작</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>탭 → <code>/events/:id/matching</code> 시트 (잔여 투표 수 + 후보 grid + vote 액션)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>· vote timeout 도달 → matching state로 자동 전환 (시스템 처리 대기)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>checkInReady와 동일 visual variant (action). Status 텍스트 → "매칭 시작하세요"</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>checkInReady와 동일</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 동일 action variant — checkInReady의 sibling. 차이는 status 텍스트 뿐.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 5: matching (passive — system processing) -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>matching</strong> <small>passive · 매칭 진행 중 — 시스템 처리 중</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport-strip">
+              <div class="event-now-bar">
+                <div class="event-now-bar__dot event-now-bar__dot--success event-now-bar__dot--blink"></div>
+                <div class="event-now-bar__title">강남 루프탑 소셜 파티</div>
+                <div class="event-now-bar__status">매칭 진행 중</div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>EventNowBarState.matching</code> · 사용자 vote 완료 후 결과 산출 대기</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>탭 → <code>/events/:id/matching</code> 시트 (대기 표시 — 시스템 처리 중)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>· 결과 산출 완료 → results state로 자동 전환 (Riverpod stream 갱신)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>checkedIn과 동일 visual variant (passive · success dot · blink). Status 텍스트 → "매칭 진행 중"</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>checkedIn과 동일</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 시스템 처리 진행 중 — 사용자는 결과 대기. action 강조 없음 (passive).</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 6: results (action) -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>results ⚡</strong> <small>action · 결과 확인 — 사용자 입력 필요</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport-strip">
+              <div class="event-now-bar event-now-bar--action">
+                <div class="event-now-bar__dot event-now-bar__dot--primary event-now-bar__dot--pulse"></div>
+                <div class="event-now-bar__title">강남 루프탑 소셜 파티</div>
+                <div class="event-now-bar__status">결과 확인</div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>EventNowBarState.results</code> · 매칭 결과 산출 완료 + 사용자 미열람</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>탭 → <code>/events/:id/results</code> 시트 (매치 카드 리스트 또는 empty fallback)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>· 매치 0건 → results 시트에 empty state ("이번 이벤트는 매칭 결과가 없습니다")</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>checkInReady · matchingReady와 동일 visual variant (action). Status 텍스트 → "결과 확인"</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>checkInReady와 동일</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 3개 action variant 중 마지막 — 이 이후 ended로 전환.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 7: ended -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>ended</strong> <small>passive · 종료됨</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport-strip">
+              <div class="event-now-bar">
+                <div class="event-now-bar__dot event-now-bar__dot--gray event-now-bar__dot--blink"></div>
+                <div class="event-now-bar__title">강남 루프탑 소셜 파티</div>
+                <div class="event-now-bar__status">종료됨</div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>EventNowBarState.ended</code> · 결과 확인 후 또는 이벤트 자연 종료</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>탭 → <code>/events/:id/review</code> 시트 (5-star 별점 + 리뷰 작성하기)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>· 24시간 후 자동 dismiss (이 이벤트는 더 이상 active 아님 → bar 숨김)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>waiting과 동일 visual variant (passive · gray dot · blink). Status 텍스트 → "종료됨". TrailingTime 없음.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>waiting과 동일 (단, trailing 없음)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 lifecycle의 마지막 visible state. 다음 phase는 hidden state(no-active)로 자동 전환.</td>
+        </tr>
+      </tbody>
+    </table>
+
+  </section>
+</div>
+
+<!-- ============================================================
+     🔄 GLOBAL BEHAVIOR
+     ============================================================ -->
+<div class="perspective" id="behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">cross-cutting — 모든 state에 적용되는 액션, motion, hidden state. state별 액션은 위 mini-table 참고.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Hidden states (bar 자체가 렌더되지 않음)</h2>
+    <p class="intro">
+      visible 7 state 외에 3개 hidden state가 있다. 이 경우 EventNowBar는 <code>SizedBox.shrink</code>로 화면에서 사라지고, HomePage 피드 하단 padding도 줄어든다 (bar 공간 만큼 64+safeArea).
+    </p>
+    <table class="ref">
+      <thead>
+        <tr><th style="width: 140px;">Hidden state</th><th>조건</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>loading</code></td><td><code>eventsAsync.loading</code> — 초기 fetch 중. 활성 이벤트 유무 미확정 상태에선 노출하지 않음.</td></tr>
+        <tr><td><code>offline</code></td><td>네트워크 실패 — 활성 이벤트 정보 신뢰할 수 없으므로 노출 안 함.</td></tr>
+        <tr><td><code>no-active</code></td><td>활성 이벤트 0개 — 표시할 게 없음.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Cross-cutting interactions</h2>
+    <table class="ref">
+      <thead>
+        <tr><th style="width: 220px;">사용자 액션</th><th>화면에 보이는 결과</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>EventNowBar 탭 (모든 visible state)</td>
+          <td><code>state</code>에 맞는 route를 <code>router.push()</code>. 모든 라우트는 ModalBottomSheetRoute로 화면 하단 슬라이드업 (Material 3 sheet detents · top corners radius-card · 검정 ~50% scrim · swipe-down dismiss).</td>
+        </tr>
+        <tr>
+          <td>다크 모드 토글</td>
+          <td>bar bg → <code>color-dark-surface</code>. shadow 그대로 (어두운 배경 위에서도 부유감 유지). dot 색상은 다크 토큰으로 자동 swap.</td>
+        </tr>
+        <tr>
+          <td>Phase 자동 전환 (백엔드 상태 변경)</td>
+          <td>Riverpod stream으로 <code>EventNowBarState</code> 갱신 → dot 색상 / status 텍스트 / variant 자동 변환. 별도 transition animation 없음 (cut).</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Motion timing</h2>
+    <p class="intro">
+      Source: <code>shared/packages/mds/core/lib/src/theme/minglit_design_tokens.dart</code>
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 240px;">Transition</th>
+          <th style="width: 200px;">Token / Duration</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Routed sheet 진입</td>
+          <td><code>MinglitAnimation.medium</code> (350ms)</td>
+          <td>Material 3 sheet slide-up. scrim fade-in.</td>
+        </tr>
+        <tr>
+          <td>State 전환 (cut)</td>
+          <td>—</td>
+          <td>Phase 변경 시 dot/status 즉시 교체. 별도 transition 없음.</td>
+        </tr>
+        <tr>
+          <td>Action 상태 dot pulse</td>
+          <td>1.4s loop</td>
+          <td>opacity 0.55↔1 (ease-in-out infinite). 시선 유도.</td>
+        </tr>
+        <tr>
+          <td>Action 상태 halo ring</td>
+          <td>1.6s loop</td>
+          <td>scale 1→2.6, opacity 0.45→0 (ease-out infinite).</td>
+        </tr>
+        <tr>
+          <td>Action 상태 chevron blink</td>
+          <td>1.4s loop</td>
+          <td>opacity 0.45↔1 (ease-in-out infinite). dot pulse와 동기.</td>
+        </tr>
+        <tr>
+          <td>Passive 상태 dot blink</td>
+          <td>1.8s loop</td>
+          <td>opacity 0.55↔1 (ease-in-out infinite). 살아있는 느낌만 주고 시선 경쟁 안 함.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="intro" style="margin-top: 12px;">
+      ※ 1.4s / 1.6s / 1.8s pulse / blink 속도는 attention loop 카테고리 — MinglitAnimation 토큰에 미정의. 향후 motion scale 확장 시 토큰화 후보.
+    </p>
+  </section>
+
+  <section class="doc">
+    <h2>Global edge cases</h2>
+    <ul class="notes">
+      <li><strong>HomePage 한정 surface</strong> — bar는 HomePage Scaffold.bottomSheet 슬롯에만 부착. 다른 탭/라우트로 이동 시 사라짐.</li>
+      <li><strong>피드 padding 보정</strong> — bar 표시 시 피드 하단에 64+safeArea+spacing-medium 만큼 padding 추가 (마지막 카드가 bar에 가려지지 않도록).</li>
+      <li><strong>다중 활성 이벤트</strong> — 같은 시점에 active event가 2개 이상이어도 bar는 1건만 노출 (가장 임박 / 가장 진행 phase 우선). 나머지는 bar 탭 후 시트 안에서 분기.</li>
+    </ul>
+  </section>
+</div>
+
+<!-- ============================================================
+     📖 REFERENCE
+     ============================================================ -->
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">📖</span>
+    <h2>Reference</h2>
+    <span class="lede">implementation source + routed-sheet 매핑 + 인접 화면.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Routed sheet 매핑 (탭 → phase별 시트)</h2>
+    <p class="intro">
+      bar 탭 시 현재 <code>EventNowBarState</code>에 맞는 route을 push — 화면 하단 ModalBottomSheetRoute로 진입.
+      <strong>각 phase는 독립 라우트로 배포되는 진짜 screen</strong> — 시트은 surface일 뿐이고 콘텐츠는 deep-link 가능한 페이지급.
+      동일 라우트를 MyPage("진행 중인 이벤트") · push 알림(매칭 결과 도착 등) · share URL 등 어디서든 진입 가능.
+      Material 3 / GoRouter <code>pageBuilder → ModalBottomSheetRoute</code> 패턴.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 130px;">Bar state</th>
+          <th style="width: 220px;">Route</th>
+          <th style="width: 180px;">Screen</th>
+          <th>역할</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>waiting</code> /<br><code>checkInReady</code></td>
+          <td><code>/events/:id/check-in</code></td>
+          <td><code>EventCheckInScreen</code></td>
+          <td>QR 코드 + 이벤트명/시간 + 위치 deeplink</td>
+        </tr>
+        <tr>
+          <td><code>checkedIn</code></td>
+          <td><code>/events/:id/checked-in</code></td>
+          <td><code>EventCheckedInScreen</code></td>
+          <td>체크인 완료 confirmation + 참석자 / 아바타 + "곧 매칭 시작" 안내</td>
+        </tr>
+        <tr>
+          <td><code>matching</code> /<br><code>matchingReady</code></td>
+          <td><code>/events/:id/matching</code></td>
+          <td><code>EventMatchingScreen</code></td>
+          <td>잔여 투표 수 + 후보 grid (vote 액션)</td>
+        </tr>
+        <tr>
+          <td><code>results</code></td>
+          <td><code>/events/:id/results</code></td>
+          <td><code>EventResultsScreen</code></td>
+          <td>매칭 결과 — 매치 카드 리스트 또는 empty fallback</td>
+        </tr>
+        <tr>
+          <td><code>ended</code></td>
+          <td><code>/events/:id/review</code></td>
+          <td><code>EventReviewScreen</code></td>
+          <td>종료 confirmation + 5-star 별점 + "리뷰 작성하기" CTA</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="intro" style="margin-top: 12px;">
+      ※ 기존 <code>/tickets/:ticketId/qr</code> (<code>TicketQRRoute</code>)는 <code>EventCheckInScreen</code>과 사실상 동일 화면 — 통합 또는 alias 처리 예정.<br>
+      ※ 각 phase screen 스펙은 별도 작성 예정 (Phase 2 bulk).
+    </p>
+  </section>
+
+  <section class="doc">
+    <h2>Implementation source</h2>
+    <table class="ref">
+      <tbody>
+        <tr><th style="width: 200px;">Widget</th><td><code>EventNowBar</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/home/widgets/event_now_bar.dart"><code>apps/app_user/lib/src/features/home/widgets/event_now_bar.dart</code></a></td></tr>
+        <tr><th>Embedded in</th><td><code>HomePage</code> Scaffold.bottomSheet 슬롯 — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/home/home_page.dart"><code>apps/app_user/lib/src/features/home/home_page.dart</code></a></td></tr>
+        <tr><th>State enum</th><td><code>EventNowBarState</code> (waiting · checkInReady · checkedIn · matchingReady · matching · results · ended)</td></tr>
+        <tr><th>Provider</th><td><code>activeEventNowBarStateProvider</code> — Riverpod stream. 백엔드 phase 변경 시 자동 갱신.</td></tr>
+        <tr><th>Route registration</th><td>5종 ModalBottomSheetRoute — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/routing/app_routes.dart"><code>app_routes.dart</code></a></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 240px;">Spec</th><th>Relation</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><a href="/specs/home_page.html"><code>HomePage</code></a></td>
+          <td>이 bar의 parent surface — bottomSheet 슬롯에 부착.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/event_detail_page.html"><code>EventDetailPage</code></a></td>
+          <td>bar에 표시되는 active event의 상세 화면. event card 탭 시 진입 (홈 피드 본문 경로 — bar와 별도).</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+</div>
+
+<script>
+  document.getElementById('spec-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('spec-mode', e.target.checked);
+  });
+  document.getElementById('dark-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('dark-mode', e.target.checked);
+  });
+</script>
+</body>
+</html>

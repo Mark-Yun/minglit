@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Spec — PartyListPage (app_partner · PartyListRoute)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* ============================================================
+   PartyListPage-specific atoms.
+
+   Partner brand override: this app uses MinglitPartnerColors.primary
+   (#6c3ce1 — toned-down indigo) instead of MinglitColors.primary
+   (#9900ff). Scoped via .viewport so docs chrome stays neutral.
+   ============================================================ */
+.viewport {
+  --color-primary: var(--color-partner-primary);   /* #6c3ce1 */
+  --spec-blueprint-rgb: 108, 60, 225;
+}
+body.dark-mode .viewport {
+  --color-primary: var(--color-partner-dark-primary);
+}
+
+/* --- App bar (matches scaffold gray, no border) --- */
+.pl-appbar {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--spacing-xsmall);
+  background: var(--color-surface);
+  position: relative;
+}
+.pl-appbar__back,
+.pl-appbar__action {
+  width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--color-text-primary);
+}
+.pl-appbar__back svg,
+.pl-appbar__action svg { width: 22px; height: 22px; }
+.pl-appbar__title {
+  flex: 1;
+  text-align: center;
+  font-size: var(--typography-font-size-app-bar-title);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.4;
+}
+
+/* --- Body (Scaffold bg = surface light gray) --- */
+.pl-body {
+  position: absolute;
+  top: 56px; left: 0; right: 0; bottom: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+  background: var(--color-surface);
+}
+.pl-body::-webkit-scrollbar { display: none; }
+
+/* --- Card (PartyListItem · Material Card · radius 0 · elevation 0) --- */
+.pl-card {
+  background: var(--color-background);
+  margin: 4px 0;        /* MinglitSpacing.xsmall vertical */
+  overflow: hidden;
+  position: relative;
+}
+.pl-card + .pl-card { border-top: 1px solid var(--color-divider); }
+
+/* --- Header (Title row · onSurface bg · titleMedium bold + chevron) --- */
+.pl-card__header {
+  background: var(--color-background);
+  padding: var(--spacing-medium);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-small);
+}
+.pl-card__title {
+  flex: 1;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1.5;
+}
+.pl-card__chev {
+  width: 20px; height: 20px;
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* --- Body (16:9 image with gradient + content layer) --- */
+.pl-card__media {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: linear-gradient(135deg, #6c3ce1 0%, #4a2698 80%);
+  overflow: hidden;
+}
+.pl-card__media--placeholder {
+  /* onSurface (dark) bg with party_mode icon centered */
+  background: #1f1f1f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pl-card__media--placeholder svg {
+  width: 64px; height: 64px;
+  color: rgba(255,255,255,0.18);
+}
+.pl-card__media--photo {
+  background-image: linear-gradient(135deg, #b58cff 0%, #6c3ce1 50%, #2a1759 100%);
+}
+.pl-card__media--photo2 {
+  background-image: linear-gradient(135deg, #ffb997 0%, #d96b3d 60%, #4a1c0e 100%);
+}
+
+/* --- Bottom-up gradient overlay (60% → 100%) --- */
+.pl-card__gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom,
+    rgba(0,0,0,0) 60%,
+    rgba(0,0,0,0.50) 100%);
+  pointer-events: none;
+}
+
+/* --- Content layer over media (padding 16) --- */
+.pl-card__content {
+  position: absolute;
+  inset: 0;
+  padding: var(--spacing-medium);
+  display: flex;
+  flex-direction: column;
+}
+.pl-card__top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--spacing-small);
+}
+
+/* --- Status badge (top-left) — radius-small · w700 · shadow --- */
+.pl-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--spacing-small);
+  border-radius: var(--radius-small);
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.20);
+  letter-spacing: 0.2px;
+}
+.pl-status--active   { background: var(--color-tertiary); }   /* '운영중' */
+.pl-status--closed   { background: #9e9e9e; }                  /* '종료됨' (outline) */
+.pl-status--draft    { background: var(--color-secondary); }   /* '임시저장' */
+
+/* --- Like button (top-right) — MinglitSocialButton · heart_outline --- */
+.pl-like {
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  color: rgba(255,255,255,0.95);
+}
+.pl-like svg { width: 22px; height: 22px; }
+.pl-like--liked { color: var(--color-error); }
+
+/* --- Info chips wrap (bottom-left) --- */
+.pl-chips {
+  margin-top: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+.pl-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px var(--spacing-small);
+  border-radius: var(--radius-chip);
+  background: rgba(0,0,0,0.55);
+  border: 0.5px solid rgba(255,255,255,0.18);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+.pl-chip svg {
+  width: 10px; height: 10px;
+  color: #fff;
+}
+
+/* --- Empty state (centered) --- */
+.pl-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-large);
+  text-align: center;
+  gap: var(--spacing-medium);
+}
+.pl-empty__icon {
+  width: 64px; height: 64px;
+  color: var(--color-divider);
+}
+.pl-empty__text {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+/* --- Loading / Error full-page --- */
+.pl-fullpage {
+  position: absolute; inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: var(--spacing-small);
+}
+.pl-spinner {
+  width: 36px; height: 36px;
+  border: 3px solid var(--color-divider);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.pl-error__icon { width: 48px; height: 48px; color: var(--color-error); }
+.pl-error__text {
+  font-size: 14px; font-weight: 700;
+  color: var(--color-text-primary);
+}
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
+</div>
+
+<div class="page">
+
+<!-- ============================================================
+     HEADER
+     ============================================================ -->
+<header>
+  <h1>Party List</h1>
+</header>
+
+<!-- ============================================================
+     OVERVIEW
+     ============================================================ -->
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr>
+        <th style="width: 140px;">Status</th>
+        <td><strong>✅ 디자인완료</strong> <em style="color: var(--color-text-secondary);">— 4 state · 파트너 파티 운영 진입 hub</em></td>
+      </tr>
+      <tr>
+        <th>App</th>
+        <td><code>app_partner</code></td>
+      </tr>
+      <tr>
+        <th>Category</th>
+        <td>party · list / management</td>
+      </tr>
+      <tr>
+        <th>Route / Surface</th>
+        <td><code>PartyListRoute</code> · widget: <code>PartyListPage</code> (ConsumerWidget · Scaffold + ListView.separated)</td>
+      </tr>
+      <tr>
+        <th>Path</th>
+        <td><code>/more/parties</code></td>
+      </tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>: <a href="/specs/partner_home_page.html"><code>PartnerHomePage</code></a> (더보기 탭 → "파티 관리" 메뉴 또는 EventActionCardEmpty / TodoSummaryChips → 파티 리스트)<br>
+          <strong>Children</strong>:
+          <a href="/specs/party_detail_page.html"><code>PartyDetailRoute</code></a> (카드 탭),
+          <a href="/specs/party_create_wizard_page.html"><code>PartyCreateRoute</code></a> (AppBar + 액션),
+          <code>CheckinRoute</code> (QR 스캔 액션 — Fix #540 route-based push) ·
+          <code>PartyListItem</code> <em>(internal widget — no separate spec, 카드 atom)</em>
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>
+          파트너가 자신의 파티(이벤트의 상위 컨테이너)를 한 번에 둘러보고 운영할 곳으로 들어가는 진입 화면.
+          각 카드에서 파티 이미지 · 상태 배지 · 위치 / 정원 / 조건 / 인증 요구 chip을 한눈에 보고,
+          탭하여 PartyDetailPage(3-tab 운영 콘솔)로 push.
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry points</strong>: PartnerHomePage 더보기 탭의 "파티 관리", Onboarding 직후 "첫 파티 만들기" 후 복귀, EventActionCardEmpty의 파티 선택 시트(<code>_PartySelectionSheet</code>)에서 "전체 보기".<br>
+          <strong>Exit points</strong>: 카드 탭 → <code>PartyDetailRoute</code> · AppBar "+" → <code>PartyCreateRoute</code> · QR 아이콘 → <code>CheckinRoute</code> · 뒤로가기 → MorePage.
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          파티는 파트너 운영의 최소 단위로, 한 파티 안에 여러 이벤트 인스턴스(반복/일회성)가 들어간다.
+          이 화면은 <em>비-edge-to-edge</em> 카드 리스트(<code>radius-card</code> 미적용 · <code>RoundedRectangleBorder()</code>) +
+          1px <code>outlineVariant</code> 좌우 풀폭 divider로, "한 화면에 가능한 많은 파티를 빠르게 훑기"를
+          최우선한 정보 밀도 디자인. 카드 자체는 머리(타이틀)와 16:9 이미지 본문으로 분리된 듀얼 레이아웃이며,
+          본문 위에 status 배지와 chip group을 floating으로 얹는다.
+        </td>
+      </tr>
+      <tr>
+        <th>Frequency</th>
+        <td>운영 중인 파트너가 매일 1회 이상 진입. 파티가 0개일 때는 onboarding 직후 한 번 빈 화면을 거친다.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================
+     HISTORY
+     ============================================================ -->
+<section class="doc">
+  <h2>History</h2>
+  <p class="intro">spec 주요 변경 이력. 최신 항목 위.</p>
+  <table class="ref">
+    <thead>
+      <tr>
+        <th style="width: 110px;">Date</th>
+        <th style="width: 80px;">Version</th>
+        <th style="width: 120px;">Author</th>
+        <th>Changes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2026-05-01</td>
+        <td>1.0</td>
+        <td>mark-yun</td>
+        <td>v1.4 template으로 작성. 4 state(Default(파티 ≥ 1) · Empty · Loading · Error) mini-table per state, baseline = Default. Partner brand indigo (<code>--color-partner-primary</code> · <code>#6c3ce1</code>) viewport-scoped 적용 — user app primary(<code>#9900ff</code>)와 명시적으로 분리.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- Anchor nav -->
+<nav class="perspective-nav">
+  <a href="#layout"><span class="glyph">🧱</span> Layout</a>
+  <a href="#states"><span class="glyph">🎨</span> States</a>
+  <a href="#behavior"><span class="glyph">🔄</span> Global Behavior</a>
+  <a href="#reference"><span class="glyph">📖</span> Reference</a>
+</nav>
+
+<!-- ============================================================
+     LAYOUT
+     ============================================================ -->
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Layout</h2>
+    <span class="lede">화면 구조 — 영역, 정렬, 간격 규칙. 색·타이포 무시.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree</h2>
+    <p class="intro">
+      <code>simpleAppBar</code>(centerTitle · back + QR + 추가 액션) + body
+      <code>MinglitAsyncValueWidget</code> wrapping
+      <code>ListView.separated</code>. 카드(<code>PartyListItem</code>)는
+      edge-to-edge(좌우 margin 없음) · 4px vertical · 1px <code>outlineVariant</code> divider로 구분.
+      카드는 <strong>title row(상단 흰 영역)</strong> + <strong>16:9 이미지 본문(중첩 chip + status badge)</strong> 두 영역으로 구성.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint">
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <!-- AppBar -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:0;left:0;right:0;height:56px;">
+          <span class="blueprint__region-label">① AppBar — back + 타이틀 "파티 기획 관리" + QR + add</span>
+        </div>
+        <!-- Card 1 header -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:60px;left:0;right:0;height:48px;">
+          <span class="blueprint__region-label">② Card 1 · header (title + chevron)</span>
+        </div>
+        <!-- Card 1 media -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:108px;left:0;right:0;height:200px;">
+          <span class="blueprint__region-label">③ Card 1 · 16:9 media + status / like / chips overlay</span>
+        </div>
+        <!-- Divider -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:312px;left:0;right:0;height:4px;">
+          <span class="blueprint__region-label">④ Divider 1px outlineVariant</span>
+        </div>
+        <!-- Card 2 header -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:320px;left:0;right:0;height:48px;">
+          <span class="blueprint__region-label">⑤ Card 2 · header</span>
+        </div>
+        <!-- Card 2 media -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:368px;left:0;right:0;height:200px;">
+          <span class="blueprint__region-label">⑥ Card 2 · media</span>
+        </div>
+
+        <div class="blueprint__align-marker" style="top:8px;right:8px;">edge-to-edge · screen-edge pad 0</div>
+      </div>
+
+      <div class="layout-tree"><b>Scaffold</b>
+├─ <b>appBar</b>: MinglitTheme.simpleAppBar(centerTitle:true)
+│  ├─ title: Text('파티 기획 관리')                          ← ①
+│  ├─ leading: BackButton (auto)
+│  └─ actions:
+│     ├─ IconButton(qr_code_scanner) → CheckinRoute.push
+│     └─ IconButton(add)              → coordinator.goToCreate
+├─ <b>body</b>: MinglitAsyncValueWidget(value: partyListProvider)
+│   ├─ loading → MinglitCircularProgressIndicator (centered)
+│   ├─ error   → _DefaultErrorView (Icons.error_outline · titleMedium)
+│   └─ data:
+│       ├─ if parties.isEmpty → Center( Column(
+│       │     Icon(party_mode_outlined · size 64 · outlineVariant),
+│       │     SizedBox(h:16),
+│       │     Text('등록된 파티가 없습니다.\n새로운 파티를 기획해보세요!')
+│       │  ))
+│       └─ else → ListView.separated(
+│             padding: only(bottom: spacing-large/24)
+│             separator: Divider(h:1, thickness:1, outlineVariant)
+│             item: <b>PartyListItem(party, onTap: goToDetail(party.id))</b>
+│          )
+│             └─ <b>PartyListItem (Card · radius 0 · elevation 0)</b>
+│                └─ InkWell → Column(stretch)
+│                   ├─ <b>Header</b> Container(pad H:16 V:16 · bg colorScheme.surface)
+│                   │  └─ Row(Title titleMedium bold · Spacer · Icons.chevron_right) ← ②/⑤
+│                   └─ <b>Body</b> AspectRatio(16:9) → Stack( ← ③/⑥
+│                       ├─ Image.network(imageUrl, fit cover) OR _placeholder
+│                       │   (ColoredBox(onSurface) · Icon(party_mode · 96px · subtle))
+│                       ├─ DecoratedBox(LinearGradient top→bottom · 0→onSurface 0.5 · stops[.6,1])
+│                       └─ Padding(all 16) → Column(stretch)
+│                          ├─ Row spaceBetween(
+│                          │     <b>_buildStatusBadge</b>(active/closed/draft → tertiary/outline/secondary),
+│                          │     <b>MinglitSocialButton</b>(like · target party.id)
+│                          │  )
+│                          ├─ Spacer
+│                          └─ Wrap(spacing 2 · runSpacing 2): InfoChip × N
+│                              · location_on / location_off + party.location.name | "지정된 장소 없음"
+│                              · people + "최대 N명"
+│                              · assignment + condition (각 condition 하나당 chip · '조건 없음' 제외)
+│                              · verified_user / verified_user_outlined + 인증 N개 / 불필요</div>
+    </div>
+  </section>
+
+  <section class="doc">
+    <h2>Spacing &amp; alignment rules</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>①</td><td>AppBar (simpleAppBar)</td><td>height 56 · centerTitle · back leading · 2 actions trailing</td><td>bg = scaffold(<code>--color-surface</code>) · surfaceTint transparent · no border-bottom · icon size 22~24</td></tr>
+        <tr><td>—</td><td>ListView</td><td>fill body · vertical scroll</td><td>padding only(bottom: <code>spacing-large</code>(24)) · 좌우 0 · 상단 0</td></tr>
+        <tr><td>②/⑤</td><td>PartyListItem · Card</td><td>edge-to-edge · radius 0 · elevation 0 · clip antiAlias</td><td>margin: vertical <code>xsmall</code>(4) · horizontal 0</td></tr>
+        <tr><td>—</td><td>Card · Header</td><td>row · 타이틀 expanded · chevron 우측</td><td>padding: H <code>medium</code>(16) · V <code>medium</code>(16) · 타이틀↔chev: <code>small</code>(8)</td></tr>
+        <tr><td>③/⑥</td><td>Card · Media (Stack)</td><td>aspectRatio 16/9 · fit expand</td><td>image cover · gradient overlay 60%~100% (top→bottom · 0 → onSurface 0.5)</td></tr>
+        <tr><td>—</td><td>Card · Content layer</td><td>position fill · column stretch · top status / like row · bottom Wrap</td><td>padding all <code>medium</code>(16) · 위 행과 chip 사이 Spacer로 분배</td></tr>
+        <tr><td>—</td><td>Status badge</td><td>row · text only · top-left</td><td>padding: H <code>small</code>(8) · V <code>xxsmall</code>(2) · radius <code>small</code>(8) · shadow blur 4 · offset (0,2) · color tertiary/outline/secondary</td></tr>
+        <tr><td>—</td><td>InfoChip</td><td>row(min) · icon + label · 흰색 텍스트</td><td>padding: H <code>small</code>(8) · V <code>xxsmall</code>(2) · radius <code>chip</code>(100) · bg onSurface @ strong opacity · border 0.5px surface@subtle · icon 0.75× xsmall</td></tr>
+        <tr><td>④</td><td>Inter-card divider</td><td>full-width · ListView.separated</td><td>height 1 · thickness 1 · color <code>outlineVariant</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<!-- ============================================================
+     STATES
+     ============================================================ -->
+<div class="perspective" id="states">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>States</h2>
+    <span class="lede">시각 변형 4종. baseline = Default(파티 ≥ 1), 나머지는 additive diff.</span>
+  </div>
+
+  <section class="doc">
+    <p class="intro">
+      <strong>State 식별 기준</strong>: 데이터가 도착했는지 / 가져오는 중인지 / 실패했는지, 그리고 도착했을 때 파티가 1개 이상인지 0개인지에 따라 4가지로 분기.
+    </p>
+
+    <!-- ============== State 1: Default (baseline) ============== -->
+    <table class="ref state-mini is-baseline-tint">
+      <thead>
+        <tr><th colspan="3"><strong>Default · 파티 ≥ 1</strong> 🎯 <small>baseline · 등록된 파티가 한 개 이상인 일반 상태</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="pl-appbar">
+                <div class="pl-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
+                <div class="pl-appbar__title">파티 기획 관리</div>
+                <div class="pl-appbar__action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM18 14h3M14 18h3v3M18 21h3v-3"/></svg></div>
+                <div class="pl-appbar__action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+              </div>
+              <div class="pl-body">
+
+                <!-- Card 1 (active · with photo) -->
+                <div class="pl-card">
+                  <div class="pl-card__header">
+                    <div class="pl-card__title">금요일의 와인 모임 · 강남</div>
+                    <svg class="pl-card__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                  </div>
+                  <div class="pl-card__media pl-card__media--photo">
+                    <div class="pl-card__gradient"></div>
+                    <div class="pl-card__content">
+                      <div class="pl-card__top-row">
+                        <span class="pl-status pl-status--active">운영중</span>
+                        <div class="pl-like">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                        </div>
+                      </div>
+                      <div class="pl-chips">
+                        <span class="pl-chip">
+                          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>
+                          강남 와인러버스
+                        </span>
+                        <span class="pl-chip">
+                          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+                          최대 20명
+                        </span>
+                        <span class="pl-chip">
+                          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM7 7h10v2H7zm0 4h10v2H7zm0 4h7v2H7z"/></svg>
+                          여성 25-35
+                        </span>
+                        <span class="pl-chip">
+                          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+                          인증 1개 필요
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Card 2 (closed · no image) -->
+                <div class="pl-card">
+                  <div class="pl-card__header">
+                    <div class="pl-card__title">홍대 보드게임 정모</div>
+                    <svg class="pl-card__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                  </div>
+                  <div class="pl-card__media pl-card__media--placeholder">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm6 14H8.41l-1.7-1.7C7.15 14.42 7.5 14 8 14h6c.83 0 1.5-.67 1.5-1.5S14.83 11 14 11h-3v-1c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3h2c0-.55.45-1 1-1s1 .45 1 1-.45 1-1 1H9.5c-.83 0-1.5.67-1.5 1.5V11H6c-.55 0-1 .45-1 1v.5C5 13.88 6.12 15 7.5 15v.59l1.7 1.71c.39.39.9.7 1.46.7h7.34v-1z"/></svg>
+                    <div class="pl-card__gradient"></div>
+                    <div class="pl-card__content">
+                      <div class="pl-card__top-row">
+                        <span class="pl-status pl-status--closed">종료됨</span>
+                        <div class="pl-like pl-like--liked">
+                          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                        </div>
+                      </div>
+                      <div class="pl-chips">
+                        <span class="pl-chip">
+                          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14.84 16.26L19 12.1V14h2V8h-6v2h2.59l-3.95 3.95-2.84-2.84L4 17.1l1.41 1.41 5.39-5.39 2.84 2.84z"/></svg>
+                          지정된 장소 없음
+                        </span>
+                        <span class="pl-chip">
+                          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+                          최대 8명
+                        </span>
+                        <span class="pl-chip">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+                          인증 불필요
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>등록된 파티가 한 개 이상 있는 일반 상태.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            ① <strong>카드 탭</strong> — 해당 파티의 운영 화면으로 이동.<br>
+            ② <strong>뒤로가기</strong> — 이전 화면(보통 더보기 탭)으로 복귀.<br>
+            ③ <strong>AppBar QR 아이콘 탭</strong> — 체크인 화면으로 이동.<br>
+            ④ <strong>AppBar + 아이콘 탭</strong> — 새 파티 만들기 화면으로 이동.<br>
+            ⑤ <strong>카드의 하트 아이콘 탭</strong> — 좋아요 토글이 즉시 반영, 페이지 이동 없음.<br>
+            ⑥ 세로 스크롤 — 당겨서 새로고침은 지원하지 않음. 새로고침은 화면을 다시 들어와야 됨.
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · 파티 이미지가 등록되지 않으면 어두운 배경에 파티 아이콘이 중앙에 표시되는 기본 이미지로 대체.<br>
+            · 이미지 로드에 실패해도 동일한 기본 이미지로 자연스럽게 대체.<br>
+            · 장소가 지정되지 않은 파티는 "지정된 장소 없음" 칩을 장소 슬롯에 노출.<br>
+            · 별도 참여 조건이 없으면 조건 칩은 표시되지 않음.<br>
+            · 인증 요구가 없는 파티는 "인증 불필요" 칩으로 표시.<br>
+            · 제목이 길면 줄바꿈되어 두 줄 이상으로 표시되며, 잘리지 않음.<br>
+            · 알 수 없는 상태값이 들어오면 원문 그대로 노출되고 기본 색상(파트너 보라)으로 표시.
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            · <code>MinglitTheme.simpleAppBar</code> (centerTitle:true · showBackButton 자동 · surfaceTint transparent)<br>
+            · <code>MinglitAsyncValueWidget</code>(value: <code>partyListProvider</code>) — 자동 loading/error/data 분기<br>
+            · <code>ListView.separated</code> (padding bottom <code>spacing-large</code>) + <code>Divider</code> 1px <code>outlineVariant</code><br>
+            · <code>PartyListItem</code> = <code>Card</code>(elevation 0 · radius 0 · clip antiAlias) + <code>InkWell</code>:
+              header(titleMedium bold · <code>Icons.chevron_right</code>) +
+              16:9 <code>Stack</code>(image / placeholder · gradient overlay · <code>_buildStatusBadge</code> · <code>MinglitSocialButton</code>(like) · <code>Wrap</code>{<code>_InfoChip</code> × N})<br>
+            · status 색 매핑: active→<code>colorScheme.tertiary</code> · closed→<code>colorScheme.outline</code> · draft→<code>colorScheme.secondary</code> · else→<code>colorScheme.primary</code>(partner indigo)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            · 색: <code>--color-partner-primary</code> (#6c3ce1) · <code>--color-tertiary</code> (active) · <code>--color-secondary</code> (draft) · <code>--color-divider</code>(=outlineVariant) · 텍스트 white(onSurface gradient 위) · 카드 bg <code>--color-background</code><br>
+            · spacing: card vertical <code>xsmall</code>(4) · header H/V <code>medium</code>(16) · content padding <code>medium</code>(16) · chip wrap <code>xxsmall</code>(2)<br>
+            · radius: card 0 (rounded 0 명시) · status badge <code>small</code>(8) · chip <code>chip</code>(100)<br>
+            · 타이포: title <code>titleMedium</code>(16/bold) · status label <code>labelSmall</code>(11/bold) · chip <code>labelSmall</code>(11/w500) · empty body <code>bodyMedium</code>(16/onSurfaceVariant)<br>
+            · opacity: gradient onSurface 0.5 (mediumEmphasis) · chip bg onSurface "strong"(0.55) · chip border surface "subtle"(0.18) · placeholder icon "subtle"
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 카드는 의도적으로 직각으로 처리 — edge-to-edge 정보 밀도를 최우선으로 둔 디자인. 변경 시 카드 사이 얇은 구분선과의 시각 균형 재검토 필요.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ============== State 2: Empty ============== -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Empty · 등록된 파티 0</strong> <small>온보딩 직후나 모든 파티가 정리된 직후의 빈 상태</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="pl-appbar">
+                <div class="pl-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
+                <div class="pl-appbar__title">파티 기획 관리</div>
+                <div class="pl-appbar__action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM18 14h3M14 18h3v3M18 21h3v-3"/></svg></div>
+                <div class="pl-appbar__action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+              </div>
+              <div class="pl-body">
+                <div class="pl-empty">
+                  <svg class="pl-empty__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+                    <line x1="9" y1="9" x2="9.01" y2="9"/>
+                    <line x1="15" y1="9" x2="15.01" y2="9"/>
+                  </svg>
+                  <div class="pl-empty__text">등록된 파티가 없습니다.
+새로운 파티를 기획해보세요!</div>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>등록된 파티가 한 개도 없는 상태. 신규 가입 직후, 또는 운영하던 파티를 모두 정리한 직후 노출.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>리스트 자체가 없으므로 카드 탭 / 좋아요 동작은 없음. AppBar 우상단 + 아이콘이 새 파티로 진입할 수 있는 유일한 길이며, 뒤로가기 / QR 아이콘은 동일하게 동작.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · 파트너 자격이 아직 없는 사용자도 동일한 빈 화면으로 도달 — 자격/온보딩 안내는 이 화면이 아니라 진입 직전 단계에서 처리됨.<br>
+            · 빈 화면 안에는 별도 CTA 버튼이 없어서, 사용자는 우상단 + 버튼이 다음 단계의 진입점임을 스스로 인지해야 함.
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            ↔ <code>PartyListItem</code> → <code>Center(Column)</code>:
+            <code>Icon(Icons.party_mode_outlined · size 64 · color outlineVariant)</code> +
+            <code>SizedBox(h: spacing-medium)</code> +
+            <code>Text('등록된 파티가 없습니다.\n새로운 파티를 기획해보세요!' · textAlign center · bodyMedium · onSurfaceVariant)</code>.<br>
+            − <code>ListView.separated</code> 미렌더. 액션 CTA 버튼은 <em>없음</em> (AppBar +가 그 역할).
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>+ <code>spacing-medium</code>(16) icon ↔ text · <code>--color-divider</code>(outlineVariant)로 아이콘 톤다운 · <code>bodyMedium</code> on <code>onSurfaceVariant</code>. 동일: AppBar.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 빈 화면에 명시적 CTA가 없어, "+" 버튼이 다음 진입점임을 사용자가 직접 발견해야 한다는 약점. 향후 본문 영역에 "첫 파티 만들기" 버튼 추가 검토.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ============== State 3: Loading ============== -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Loading · 파티 목록 가져오는 중</strong> <small>화면 진입 직후 또는 새로고침 직후</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="pl-appbar">
+                <div class="pl-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
+                <div class="pl-appbar__title">파티 기획 관리</div>
+                <div class="pl-appbar__action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM18 14h3M14 18h3v3M18 21h3v-3"/></svg></div>
+                <div class="pl-appbar__action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+              </div>
+              <div class="pl-body">
+                <div class="pl-fullpage">
+                  <div class="pl-spinner"></div>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>화면에 진입하거나 새로고침 직후, 파티 목록이 도착하기 전의 대기 상태.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>로딩 중에도 AppBar는 그대로 살아있어 뒤로가기 / QR / + 진입은 가능. 단, 카드 탭처럼 목록이 있어야 가능한 동작은 노출되지 않음.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · 네트워크가 매우 느릴 때는 스피너가 길게 노출됨. 사용자는 뒤로가기로 이탈할 수 있음.<br>
+            · 로딩 중 다른 화면으로 이동했다가 돌아오면 이전에 받아둔 결과가 있으면 즉시 일반 상태로 전환.
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>↔ <code>MinglitAsyncValueWidget</code> default loading slot → <code>MinglitCircularProgressIndicator</code> (centered · partner primary tint via theme).</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>+ spinner border <code>--color-divider</code> · top-color <code>--color-primary</code>(viewport-scoped partner indigo). 동일: AppBar.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 스켈레톤 없이 단순 스피너로 처리. 보통 운영 데이터가 적어 (1~5개) 스켈레톤의 가치가 낮다고 판단됨.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ============== State 4: Error ============== -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Error · 목록 불러오기 실패</strong> <small>네트워크 또는 서버 오류로 결과를 받지 못한 경우</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="pl-appbar">
+                <div class="pl-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
+                <div class="pl-appbar__title">파티 기획 관리</div>
+                <div class="pl-appbar__action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM18 14h3M14 18h3v3M18 21h3v-3"/></svg></div>
+                <div class="pl-appbar__action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+              </div>
+              <div class="pl-body">
+                <div class="pl-fullpage">
+                  <svg class="pl-error__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                  </svg>
+                  <div class="pl-error__text">오류가 발생했습니다.</div>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>네트워크 또는 서버 문제로 파티 목록을 받아오지 못한 상태.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>화면 안에는 별도 재시도 버튼이 없음. AppBar의 뒤로가기 / QR / + 는 동일하게 동작하며, 재시도는 화면을 다시 들어와야 일어남.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · 구체적인 오류 사유는 노출되지 않고, "오류가 발생했습니다."라는 일반 안내만 표시.<br>
+            · 파트너 자격이 없는 경우에도 동일한 오류 화면으로 도달할 수 있음 — 자격 안내는 이 화면 진입 직전에서 처리되어야 정상.
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>↔ <code>MinglitAsyncValueWidget</code> default error slot → <code>_DefaultErrorView</code>: <code>Icon(Icons.error_outline · size xlarge · colorScheme.error)</code> + <code>spacing-medium</code> + <code>Text('오류가 발생했습니다.' · titleMedium · bold)</code>. detail body 미노출.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>+ <code>--color-error</code> (icon) · <code>titleMedium</code> bold (text). 동일: AppBar.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 화면 안 재시도 버튼 부재가 UX 약점. 향후 명시적 재시도 버튼 추가 검토.</td>
+        </tr>
+      </tbody>
+    </table>
+
+  </section>
+</div>
+
+<!-- ============================================================
+     GLOBAL BEHAVIOR
+     ============================================================ -->
+<div class="perspective" id="behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">cross-cutting interactions · 모션 토큰 · 전역 에지케이스.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Cross-cutting interactions</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 240px;">사용자 액션</th>
+          <th>화면에 보이는 결과</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>카드 탭</td>
+          <td>해당 파티의 운영 화면(이벤트 / 파티 정보 / 입장 그룹·티켓 3탭)으로 이동.</td>
+        </tr>
+        <tr>
+          <td>AppBar 우상단 + 아이콘 탭</td>
+          <td>새 파티 만들기 위저드로 이동.</td>
+        </tr>
+        <tr>
+          <td>AppBar QR 아이콘 탭</td>
+          <td>체크인 화면으로 이동. 같은 위치는 하단 탭의 체크인과 동일 도착지지만 별도의 스택으로 열림.</td>
+        </tr>
+        <tr>
+          <td>카드 우상단 하트 아이콘 탭</td>
+          <td>좋아요가 즉시 토글되어 색상이 바뀜. 페이지 이동 없음. 다음 새로고침 전까지 좋아요 상태가 다른 화면과 잠시 어긋날 수 있음.</td>
+        </tr>
+        <tr>
+          <td>이미지 영역</td>
+          <td>등록된 이미지가 있으면 그 이미지가, 없거나 불러오지 못하면 동일한 어두운 배경 + 파티 아이콘의 기본 이미지가 표시됨. 카드 자체 레이아웃은 동일.</td>
+        </tr>
+        <tr>
+          <td>리스트 끝까지 스크롤</td>
+          <td>마지막 카드 아래에 약간의 여백이 보여 시각적으로 끝남이 명확. 추가 로드 없음.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Motion timing</h2>
+    <p class="intro">Source: <code>shared/packages/mds/core/lib/src/theme/minglit_design_tokens.dart</code> · <code>MinglitAnimation</code>.</p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 240px;">Transition</th>
+          <th style="width: 200px;">Token / Duration</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>카드 탭 → 파티 상세</td>
+          <td><code>MinglitAnimation.medium</code> (350ms)</td>
+          <td>들어오는 화면이 살짝 확대되며 부드럽게 들어오는 표준 전환.</td>
+        </tr>
+        <tr>
+          <td>+ 탭 → 새 파티 만들기</td>
+          <td><code>MinglitAnimation.fast</code> (200ms)</td>
+          <td>좌→우 슬라이드 기본 푸시.</td>
+        </tr>
+        <tr>
+          <td>카드 탭 잉크 효과</td>
+          <td><code>MinglitAnimation.micro</code> (100ms)</td>
+          <td>카드 전체에 잉크 리플. 카드가 직각이라 리플도 직각 경계 안에서 퍼짐.</td>
+        </tr>
+        <tr>
+          <td>좋아요 토글</td>
+          <td><code>MinglitAnimation.fast</code> (200ms)</td>
+          <td>하트 아이콘이 외곽선 ↔ 채움으로 전환되며 색이 흰색에서 빨강으로 자연스럽게 바뀜.</td>
+        </tr>
+        <tr>
+          <td>로딩 → 결과 노출</td>
+          <td>cut (no animation)</td>
+          <td>별도 전환 애니메이션 없이 즉시 교체.</td>
+        </tr>
+        <tr>
+          <td>QR 액션 → 체크인</td>
+          <td><code>MinglitAnimation.fast</code> (200ms)</td>
+          <td>좌→우 슬라이드 기본 푸시.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Global edge cases</h2>
+    <ul class="notes">
+      <li><strong>다중 파트너 보유</strong> — 한 사용자가 여러 파트너 자격을 동시에 갖는 경우, 화면에서 파트너를 전환할 UI는 없음. 이 경우 첫 번째 파트너의 파티만 노출. 다중 파트너 운영을 지원하려면 AppBar에 파트너 선택 UI가 필요.</li>
+      <li><strong>알 수 없는 상태값</strong> — 백엔드에서 새 상태값이 추가되더라도 화면이 깨지지 않고 원문 텍스트와 기본 파트너 보라색으로 안전하게 표시됨.</li>
+      <li><strong>파티 수가 매우 많을 때</strong> — 현 디자인은 50개 이상 운영하는 헤비 파트너에 대한 검색 / 필터 UI를 갖고 있지 않음. 향후 추가 검토 후보.</li>
+      <li><strong>당겨서 새로고침 부재</strong> — 데이터를 즉시 갱신할 수 있는 풀투리프레시 동작은 없음. 화면을 다시 들어와야 새 데이터가 반영됨.</li>
+      <li><strong>다른 화면 다녀온 뒤</strong> — 새 파티를 만들거나 수정한 뒤 이 화면으로 돌아오면 변경 결과가 반영됨.</li>
+      <li><strong>파트너 브랜드 색</strong> — 이 화면을 포함한 파트너 앱 전체가 사용자 앱과 다른 보라색을 사용. 사용자 앱과 같은 컴포넌트를 재사용할 때는 색 차이 검증이 필요.</li>
+    </ul>
+  </section>
+</div>
+
+<!-- ============================================================
+     REFERENCE
+     ============================================================ -->
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">📖</span>
+    <h2>Reference</h2>
+    <span class="lede">implementation source + 인접 화면. Components / Tokens는 위 mini-table 참고.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Implementation source</h2>
+    <table class="ref">
+      <tbody>
+        <tr><th style="width: 200px;">Widget</th><td><code>PartyListPage</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/features/party/list/party_list_page.dart"><code>apps/app_partner/lib/src/features/party/list/party_list_page.dart</code></a></td></tr>
+        <tr><th>Item widget</th><td><code>PartyListItem</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/features/party/list/widgets/party_list_item.dart"><code>apps/app_partner/lib/src/features/party/list/widgets/party_list_item.dart</code></a> (<code>_InfoChip</code> 포함)</td></tr>
+        <tr><th>Route</th><td><code>PartyListRoute</code> · <code>/more/parties</code> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/routing/app_routes.dart"><code>app_routes.dart</code></a> (MoreBranch · StatefulShell)</td></tr>
+        <tr><th>Controller / providers</th><td><code>partyListProvider</code> (<code>@riverpod Future&lt;List&lt;Party&gt;&gt;</code> · <code>partnerRepo.getMyManagedPartners() → partyRepo.getPartiesByPartnerId(first.id)</code>) · <code>partyListCoordinatorProvider</code> (root <code>GoRouter</code> 주입 — Fix #1680)</td></tr>
+        <tr><th>Coordinator</th><td><code>PartyListCoordinator</code> — <code>goToCreate()</code> / <code>goToDetail(partyId)</code> · 둘 다 <code>_router.push</code> 사용해 root navigator로 push (shell branch 경계 안전)</td></tr>
+        <tr><th>Internal widgets</th><td><code>PartyListItem</code> + <code>_InfoChip</code> + <code>_buildPlaceholder</code> + <code>_buildStatusBadge</code> · <code>MinglitSocialButton</code>(like) · <code>MinglitAsyncValueWidget</code> · <code>MinglitCircularProgressIndicator</code> · <code>_DefaultErrorView</code></td></tr>
+        <tr><th>L10n keys</th><td><code>partyList_badge_active/closed/draft</code> · <code>partyList_chip_maxParticipants(count)</code> · <code>partyList_chip_requiredVerifications(count)</code> · <code>partyList_chip_noVerification</code> · <code>partyList_message_noLocation</code> · <code>partyList_error_load(error)</code> <em>(정의되었으나 현재 미사용 — default error view fallback)</em></td></tr>
+        <tr><th>Theme</th><td><code>MinglitTheme.partnerTheme</code> — primary <code>MinglitPartnerColors.primary</code>(<code>#6c3ce1</code>). user app(<code>#9900ff</code>)과 다름. status badge는 secondary/tertiary/outline 사용 (이건 user와 공유).</td></tr>
+        <tr><th>Related fixes</th><td>Fix #540 (route-based QR navigation · cross-feature import 제거) · Fix #180 (location null-safe 접근) · Fix #1680 (Coordinator root GoRouter 주입)</td></tr>
+        <tr><th>⚠️ 알려진 drift</th><td>Empty 상태에 명시적 "첫 파티 만들기" CTA 부재(AppBar +가 유일 forward path) · Error 상태에 retry 버튼 없음(<code>partyList_error_load</code> ARB는 unused) · Pull-to-refresh 미구현 · 다중 partner 미지원(<code>myPartners.first</code> 단일 가정).</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 240px;">Spec</th><th>Relation</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><a href="/specs/partner_home_page.html"><code>PartnerHomePage</code></a></td>
+          <td>주 진입 출처 — 더보기 탭 / EventActionCardEmpty / TodoSummaryChips에서 이 리스트로 push.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/party_detail_page.html"><code>PartyDetailPage</code></a></td>
+          <td>카드 탭의 도착지 — 3-tab 운영 콘솔(이벤트 / 파티 정보 / 입장 그룹·티켓).</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/party_create_wizard_page.html"><code>PartyCreateWizardPage</code></a></td>
+          <td>AppBar "+" 액션의 도착지 — 신규 파티 wizard.</td>
+        </tr>
+        <tr>
+          <td><a href="/foundations/layout">Layout foundations</a></td>
+          <td>Standard Scaffold + simpleAppBar + ListView.separated · edge-to-edge 카드 / 1px outlineVariant divider.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+</div>
+
+<script>
+  document.getElementById('spec-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('spec-mode', e.target.checked);
+  });
+  document.getElementById('dark-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('dark-mode', e.target.checked);
+  });
+</script>
+</body>
+</html>

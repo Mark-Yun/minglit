@@ -73,7 +73,8 @@ class MinglitBottomSheet extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: MinglitSpacing.sm),
+            // title↔content 갭 — sm(12) → medium(16). MinglitDialog의 갭과 통일.
+            const SizedBox(height: MinglitSpacing.medium),
           ],
           Flexible(
             child: Padding(

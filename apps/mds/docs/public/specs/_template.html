@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<!--
+  Screen spec template — copy this file as `apps/mds/docs/public/specs/{snake_case_widget}.html`.
+
+  Filename = snake_case of widget class. e.g.
+    EventDetailPage       → event_detail_page.html
+    PartyCreateWizardPage → party_create_wizard_page.html
+
+  Full authoring guide (status lifecycle, spec types, additive diff syntax,
+  motion tokens, etc.) → /specs/_authoring.html
+-->
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Spec — [SCREEN NAME] ([app] · [RouteName])</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* ============================================================
+   Screen-specific atoms only.
+   Keep this block minimal — most styles come from _spec.css.
+   ============================================================ */
+
+/* TODO: layout + custom widgets unique to this screen.
+   Common pattern:
+     .{screen}__container       — outermost screen flex/grid
+     .{screen}__hero            — top hero region
+     .{screen}__body            — scrollable body
+     .{screen}__cta             — bottom CTA region
+     .{screen}__custom-button   — only if it can't reuse mds_spec_btn
+*/
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     Toolbar — universal toggles (do NOT modify)
+     ============================================================ -->
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
+</div>
+
+<div class="page">
+
+<!-- ============================================================
+     📍 HEADER — compact route metadata
+     ============================================================ -->
+<header>
+  <!-- TEMPLATE-ONLY banner — delete this <p> block when copying to a real spec. -->
+  <p style="font-size: 12px; color: var(--color-text-secondary); margin-bottom: 8px;">
+    📋 This is the spec template. Full authoring guide →
+    <a href="/specs/_authoring.html" style="color: var(--color-primary); font-weight: 600;">/specs/_authoring.html</a>
+  </p>
+  <!-- short, user-facing screen name (not the widget class name) -->
+  <h1>[Screen Title]</h1>
+  <!-- 모든 메타 (Status · App · Category · Route · Path · Purpose 등) → Overview 테이블.
+       Widget class · file path · provider → Reference > Implementation source. -->
+</header>
+
+<!-- ============================================================
+     🎯 PURPOSE & CONTEXT — why this screen exists
+     ============================================================ -->
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr>
+        <th style="width: 140px;">Status</th>
+        <td>
+          <strong>[🚧 디자인중 | ✅ 디자인완료]</strong>
+          <em style="color: var(--color-text-secondary);">— 라이프사이클 phase (구현 추적은 History row로)</em>
+        </td>
+      </tr>
+      <tr>
+        <th>App</th>
+        <td><code>app_user</code> · 또는 <code>app_partner</code> · 또는 <code>shared</code> (양쪽 사용)</td>
+      </tr>
+      <tr>
+        <th>Category</th>
+        <td>[feature 그룹 — auth · home · event · partner · payment · my · ticket 등]</td>
+      </tr>
+      <tr>
+        <th>Route / Surface</th>
+        <td><code>[RouteName]</code> · 또는 sub-component (route 없음 — parent screen의 일부)</td>
+      </tr>
+      <tr>
+        <th>Path</th>
+        <td>
+          <code>[/path/:param]</code> · 또는 sub-component: <code>[/parent/path]</code> · route 없는 widget: "—"
+        </td>
+      </tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>: <em>— (top-level screen)</em> · 또는 <a href="/specs/[parent].html"><code>[ParentScreen]</code></a> (sub-component인 경우)<br>
+          <strong>Children</strong>: <em>—</em> · 또는 별도 spec으로 분리된 sub-component들의 링크 (예:
+          <a href="/specs/[child].html"><code>[ChildSpec]</code></a>)
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>
+          [<strong>1-2 sentences</strong>: 이 화면이 무엇을 위한 화면인가. 사용자가 이 화면에서 무엇을 달성하는가.
+          첫 문장은 짧은 tagline 형태로 — 이 spec 카드의 "역할 한 줄 요약" 역할.]
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry points</strong>: [어디서 이 화면으로 오는가 — 진입점 1-3개.]<br>
+          <strong>Exit points</strong>: [어디로 가는가 — 성공 / 취소 / 에러 분기 포함.]
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          [디자인 결정의 배경. 왜 이 흐름인가, 왜 이 컨셉인가. 비즈니스 / 신뢰 / 사용성 관점.]
+        </td>
+      </tr>
+      <tr>
+        <th>Frequency</th>
+        <td>[얼마나 자주 보는가 — 매일 / 1회만 / 특정 트리거 시 등.]</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================
+     🕐 HISTORY — spec change log (right after Overview)
+     ============================================================ -->
+<section class="doc">
+  <h2>History</h2>
+  <p class="intro">
+    이 spec의 주요 변경 이력. 최신 항목 위에 추가 (최신 → 오래된 순).
+    의미 있는 디자인/동작 변경만 — 소소한 typo는 생략. 구현 PR 머지 시에도 row 추가
+    ("Implemented in PR #123 (date)" 형태).
+  </p>
+  <p class="intro" style="font-size: 12px; color: var(--color-text-secondary);">
+    아래는 이 <strong>템플릿 자체</strong>의 진화 이력 — 실제 spec 작성 시 본인 화면의 history로 교체.
+  </p>
+  <table class="ref">
+    <thead>
+      <tr>
+        <th style="width: 110px;">Date</th>
+        <th style="width: 80px;">Version</th>
+        <th style="width: 120px;">Author</th>
+        <th>Changes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2026-05-01</td>
+        <td>1.4</td>
+        <td>mark-yun</td>
+        <td>
+          <strong>Hierarchy 행</strong> 추가 — Overview 테이블에 Parent + Children 통합. parent 링크는 Path 행에서 분리 (Path는 URL 전용으로 정리). 부모/자식 spec 관계가 한 곳에서 보이고 양방향 추적 가능.
+        </td>
+      </tr>
+      <tr>
+        <td>2026-05-01</td>
+        <td>1.3</td>
+        <td>mark-yun</td>
+        <td>
+          Path 행에 <strong>parent link 패턴</strong> 추가 — sub-component spec일 때 <code>"— (parent spec: &lt;a href&gt;ParentScreen&lt;/a&gt;, path: ...)"</code> 형태로 parent를 클릭 가능 링크로.
+        </td>
+      </tr>
+      <tr>
+        <td>2026-05-01</td>
+        <td>1.2</td>
+        <td>mark-yun</td>
+        <td>
+          Header를 <strong>Title(h1)만</strong>으로 단순화. Status · Role 메타가 Overview 테이블로 흡수됨. Role은 Purpose와 의미 중복이라 제거 (Purpose 첫 문장이 tagline 역할).
+          최종: Overview 테이블 9행 — Status · App · Category · Route · Path · Purpose · User journey · Background · Frequency.
+        </td>
+      </tr>
+      <tr>
+        <td>2026-05-01</td>
+        <td>1.1</td>
+        <td>mark-yun</td>
+        <td>
+          Header에서 breadcrumb (<code>app · category · RouteName</code>) 제거. App / Category / Route / Path를 <strong>Overview 테이블 행</strong>으로 흡수 — 명시적 라벨로 모호함 해결.
+        </td>
+      </tr>
+      <tr>
+        <td>2026-05-01</td>
+        <td>1.0</td>
+        <td>mark-yun</td>
+        <td>
+          <strong>Canonical template published.</strong>
+          Structure: Header → Overview → History → Layout (top blueprint + parallel sub-anatomies) → States (mini-table per state · 6 rows · additive diff) → Global Behavior (cross-cutting + motion tokens + global edges) → Reference (Implementation source + Related screens).
+          Status field simplified to 2 phases (🚧 디자인중 / ✅ 디자인완료) — 구현 추적은 History row로 분리.
+          Authoring checklist for self-verification at end.
+          Pattern derived from Material 3 · Carbon · Polaris comparison, adapted for per-screen specs (rare in public design systems — most are per-component).
+        </td>
+      </tr>
+      <tr>
+        <td>2026-05-01</td>
+        <td>0.5</td>
+        <td>mark-yun</td>
+        <td>
+          <strong>Mini-table per state.</strong>
+          card 패턴 (label + condition + viewport + 별도 표) → 단일 mini-table (thead 헤더 + mockup rowspan=6 + 6 aspect rows: 조건 / 사용자액션 / 에지케이스 / 컴포넌트 / 토큰 / 노트).
+          Additive diff syntax 도입 — first state는 풀 리스트, 이후 state는 변경분만 (<code>+ X</code> · <code>− X</code> · <code>↔ X → Y</code> · <code>동일</code> · <code>—</code>).
+          Reference에서 Components used + Tokens consumed 표 제거 — 각 state mini-table로 분산.
+          State summary matrix (optional, 5+ states일 때 권장).
+        </td>
+      </tr>
+      <tr>
+        <td>2026-05-01</td>
+        <td>0.1</td>
+        <td>mark-yun</td>
+        <td>
+          <strong>Initial scaffold.</strong>
+          4-perspective 구조: Layout / Visual / Behavior / Reference.
+          Per-state 카드 + 별도 Interactions 표 + Motion timing + Edge cases 분리.
+          Sub-anatomy 개념 도입 (numbered region with internal composition마다 1 섹션).
+          Token 표기 (<code>spacing-name (px)</code> 형태), MinglitAnimation 토큰 매핑 (micro/fast/medium/slow).
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================
+     Anchor nav — keep as-is, 4 perspectives
+     ============================================================ -->
+<nav class="perspective-nav">
+  <a href="#layout"><span class="glyph">🧱</span> Layout</a>
+  <a href="#states"><span class="glyph">🎨</span> States</a>
+  <a href="#global-behavior"><span class="glyph">🔄</span> Global Behavior</a>
+  <a href="#reference"><span class="glyph">📖</span> Reference</a>
+</nav>
+
+<!-- ============================================================
+     🧱 PERSPECTIVE 1 · LAYOUT — structural blueprint
+     ============================================================ -->
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Layout</h2>
+    <span class="lede">
+      화면 구조 — 영역, 정렬, 간격 규칙. 색·타이포 무시.
+      Top-level blueprint + 모든 internal-composition region당 평면 Sub-anatomy 섹션 (① ② ③ ...).
+    </span>
+  </div>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree</h2>
+    <p class="intro">
+      [1-2 sentences explaining the high-level structure. e.g. "AppBar + scrollable body + fixed Bottom CTA."]
+    </p>
+
+    <div class="layout-grid">
+      <!-- ────── Wireframe blueprint ──────
+        Use absolute-positioned .blueprint__region divs to outline
+        each layout region. Number them ①②③... so the tree and the
+        spacing/alignment table can cross-reference.
+        Use .blueprint__region--shaded for content regions, plain
+        for spacers.
+      -->
+      <div class="blueprint">
+        <!-- Whole frame outline (always include) -->
+        <div class="blueprint__region" style="top:0; left:0; right:0; bottom:0; border-style:solid; border-color: rgba(var(--spec-blueprint-rgb), 0.18);"></div>
+
+        <!-- ⚠️ TODO: 아래 height/top/bottom 픽셀 값은 EXAMPLE — 실제 화면 비례에
+             맞춰 반드시 변경. 대충 56/80 고정 사용 금지. 실 widget 측정값 사용. -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:0; left:0; right:0; height:56px;">
+          <span class="blueprint__region-label">① [Region name] · h=[?px]</span>
+        </div>
+        <div class="blueprint__region" style="top:56px; left:0; right:0; bottom:80px;">
+          <span class="blueprint__region-label">② [Region name]</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="bottom:0; left:0; right:0; height:80px;">
+          <span class="blueprint__region-label">③ [Region name] · h=[?px]</span>
+        </div>
+
+        <!-- Optional alignment markers -->
+        <div class="blueprint__align-marker" style="top:8px; right:8px;">[align: ...]</div>
+      </div>
+
+      <!-- ────── Tree outline ──────
+        Use <b> for widgets, <code> for token references, <em> for
+        named region groupings. Mirror the numbered regions from
+        the blueprint with ← ① markers.
+        Token 표기 통일: <code>spacing-medium (16px)</code> 형태 (이름 + 괄호 픽셀).
+      -->
+      <div class="layout-tree"><b>Scaffold</b>
+└─ <b>SafeArea</b>
+   ├─ <em>[region name]</em>                      ← ①
+   │  ├─ <b>[Widget]</b>
+   │  └─ Gap: <code>spacing-medium (16px)</code>
+   │
+   ├─ <em>[scrollable body]</em>                  ← ②
+   │  └─ [child widgets]
+   │
+   └─ <em>[bottom region]</em>                    ← ③
+      └─ [child widgets]</div>
+    </div>
+  </section>
+
+  <section class="doc">
+    <h2>Spacing &amp; alignment rules</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- TODO: one row per numbered region. Cite real mds_tokens. -->
+        <tr><td>—</td><td>Outer page padding</td><td>—</td><td>horizontal: <code>spacing-screen-edge (16px)</code></td></tr>
+        <tr><td>①</td><td>[region]</td><td>[mainAxis / crossAxis]</td><td><code>spacing-? (?px)</code></td></tr>
+        <tr><td>②</td><td>[region]</td><td>[align]</td><td><code>...</code></td></tr>
+        <tr><td>③</td><td>[region]</td><td>[align]</td><td><code>...</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomies — required per region</h2>
+    <p class="intro">
+      <strong>Top-level blueprint은 화면 골조만 보여줌</strong>. 각 numbered region이 internal
+      composition을 가지면 그 region마다 별도 Sub-anatomy 섹션을 <strong>반드시 작성</strong> —
+      이게 빠지면 다른 사람/agent가 이 spec만 보고 그 영역을 정확히 재현 못 함.
+      <strong>구조는 평면 PARALLEL</strong> — Sub-anatomy ①, Sub-anatomy ②, ③ ... 같은 level에서
+      나열만. 깊이를 늘리지 않음 (sub-sub-anatomy 만들지 말 것).
+    </p>
+    <table class="ref">
+      <thead>
+        <tr><th style="width: 200px;">Region 형태</th><th>Sub-anatomy 작성</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>자식 위젯 2개 이상 + 정렬/간격 규칙 있음</td><td><strong>REQUIRED</strong> — blueprint + tree + spacing 표 모두 작성</td></tr>
+        <tr><td>자식 위젯 1개 (atom — 예: <code>MinglitButton</code> 단독)</td><td>생략 가능 — <code>/components/{name}.html</code> 참조로 위임</td></tr>
+        <tr><td>list / grid (반복 element)</td><td>REQUIRED — 1 item의 internal composition 작성, 반복 패턴 명시 (gap, count)</td></tr>
+        <tr><td>scrollable body 내부에 여러 sections</td><td>REQUIRED — 각 section을 별도 Sub-anatomy로 분리</td></tr>
+      </tbody>
+    </table>
+    <p class="intro" style="margin-top: 12px;">
+      <strong>Numbering</strong> — top-level blueprint은 <code>①②③</code>, sub-anatomy 내부는 <code>㉠㉡㉢</code>.
+      혼동 방지를 위해 깊이별로 다른 글리프 사용.
+    </p>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy ① — [Region name]</h2>
+    <p class="intro">
+      [이 region의 internal composition 1-2 sentences. 무엇이 어디에, 어떤 정렬로.]
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 200px;">
+        <!-- ⚠️ height: 200px도 EXAMPLE — sub-region 비례에 맞춰 변경 -->
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:16px;left:16px;width:100px;height:24px;">
+          <span class="blueprint__region-label">㉠ [child]</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:48px;left:16px;right:16px;height:32px;">
+          <span class="blueprint__region-label">㉡ [child]</span>
+        </div>
+      </div>
+
+      <div class="layout-tree"><b>[Parent widget for this region]</b>
+└─ <b>Padding</b>(<code>spacing-? (?px)</code> h/v)
+   └─ <b>Column / Row</b>(crossAxis: ...)
+      ├─ <em>[child name]</em>                                ← ㉠
+      │  └─ <b>[Widget]</b>(<code>tokens</code>)
+      ├─ Gap: <code>spacing-? (?px)</code>
+      │
+      └─ <em>[child name]</em>                                ← ㉡
+         └─ <b>[Widget]</b>(<code>tokens</code>)</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 180px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing / tokens</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>㉠</td><td>[child]</td><td>[align]</td><td><code>spacing-? (?px)</code></td></tr>
+        <tr><td>㉡</td><td>[child]</td><td>[align]</td><td><code>spacing-? (?px)</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy ② — [Region name]</h2>
+    <p class="intro">
+      [Sub-anatomy ①과 동일 패턴. 모든 internal composition region당 1 섹션 — 평면 나열.]
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 200px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:16px;left:16px;right:16px;height:60px;">
+          <span class="blueprint__region-label">㉠ [child]</span>
+        </div>
+      </div>
+      <div class="layout-tree"><b>[Parent widget for this region]</b>
+└─ ...</div>
+    </div>
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr><th style="width: 60px;">#</th><th style="width: 180px;">Region</th><th style="width: 220px;">Alignment</th><th>Spacing / tokens</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>㉠</td><td>[child]</td><td>[align]</td><td><code>spacing-? (?px)</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- TODO: Sub-anatomy ③ ④ ... internal composition을 가진 모든 numbered region당
+       1 섹션씩 평면 추가. 단순 atom region은 생략 가능 (/components/ 참조). -->
+
+</div>
+
+<!-- ============================================================
+     🎨 PERSPECTIVE 2 · STATES — visual states + per-state spec
+     ============================================================ -->
+<div class="perspective" id="states">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>States</h2>
+    <span class="lede">
+      각 state의 시각 mockup + state-specific 사양 — 6 aspect rows (조건 · 사용자 액션 ·
+      에지케이스 · 컴포넌트 · 토큰 · 노트). 첫 state mockup만 spec-mode annotation 표시.
+      Dark mode toggle로 다크 변형 확인.
+    </span>
+  </div>
+
+  <section class="doc">
+    <h2>States gallery</h2>
+    <p class="intro">
+      각 state는 <strong>독립된 미니 테이블</strong> — header(state name + tag) → 좌측 mockup(rowspan=6) +
+      우측 6 aspect rows (조건 / 사용자 액션 / 에지케이스 / 컴포넌트 / 토큰 / 노트).
+      여러 mini-table이 vertical stack으로 쌓임. cross-cutting 동작은 아래 Global Behavior 섹션에.
+    </p>
+
+    <p class="intro" style="background: var(--color-surface); padding: 12px; border-left: 3px solid var(--color-primary); border-radius: 4px;">
+      <strong>📋 Aspect 행 작성 룰</strong><br>
+      · <strong>조건</strong> — provider 값 / route param / user state / async status 기준 명시 (예: <code>provider.isLoading</code>, <code>admissionState == eligible</code>)<br>
+      · <strong>사용자 액션</strong> — 이 state에서 가능한 모든 탭/스와이프/입력 (액션 N개면 N행으로 반복). disabled/무반응이면 "탭 무반응" 한 행<br>
+      · <strong>에지케이스</strong> — 이 state 한정 변형. 없으면 "—". (cross-cutting edge는 Global Behavior로)<br>
+      · <strong>컴포넌트</strong> — 첫 state는 <strong>풀 리스트</strong>. 2번째 state부터 <strong>변경분만</strong>:
+        <code>+ X</code> (추가) · <code>− X</code> (제거) · <code>↔ X → Y</code> (교체) · <code>동일</code> (변경 없음) · <code>—</code> (해당 없음)<br>
+      · <strong>토큰</strong> — 컴포넌트와 동일 룰. 첫 state는 풀 리스트, 이후 변경분만<br>
+      · <strong>노트</strong> — free-form designer/dev memo (결정 근거, TODO, 의문점). 없으면 "—"<br>
+      <br>
+      <strong>State 종류 식별</strong> — Default/Empty/Loading/Error는 default placeholder. 화면별로 실제
+      provider state · route param · user state 기준으로 enumerate. 예: wizard → Step1/Step2/Submit/Success ·
+      event-detail → admission state별 (eligible/soldOut/applied/rejected/...).
+    </p>
+
+    <!-- ════════════════════════════════════════════════════════════
+         State summary matrix — 선택적 (state 5개 이상일 때 권장)
+         ════════════════════════════════════════════════════════════
+         아래 mini-tables를 자세히 보기 전에 한눈에 모든 state를 비교할 수
+         있는 overview. state가 적으면(≤4) 생략 가능. -->
+    <h3 style="margin-top: 24px;">State summary <small style="font-size:12px;font-weight:400;color:var(--color-text-secondary);">— state 5개 이상일 때 권장</small></h3>
+    <p class="intro">
+      모든 state를 한 row씩 한눈에 비교. 자세한 사양은 아래 각 state mini-table 참조.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 180px;">State</th>
+          <th style="width: 100px;">Tag</th>
+          <th style="width: 220px;">조건 (요약)</th>
+          <th>Key visual differentiator</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- TODO: 각 state 1행씩. Key visual differentiator는 "이 state가 다른 state와 시각적으로 어떻게 구분되는지" 한 줄. -->
+        <tr><td><strong>Default</strong></td><td>primary</td><td>[데이터 로드 완료]</td><td>모든 컴포넌트 풀 렌더 — 인터랙션 가능</td></tr>
+        <tr><td><strong>Empty</strong></td><td>no data</td><td>[데이터 0건]</td><td>풀-페이지 EmptyState 단독 표시</td></tr>
+        <tr><td><strong>Loading</strong></td><td>async</td><td>[fetch 중]</td><td>Skeleton/Indicator로 컴포넌트 자리 표시</td></tr>
+        <tr><td><strong>Error</strong></td><td>network/server</td><td>[로드 실패]</td><td>에러 아이콘 + 다시 시도 CTA</td></tr>
+      </tbody>
+    </table>
+
+    <div class="visual-gallery" style="background: var(--color-surface); padding: 16px; border-radius: var(--radius-card); display: flex; flex-direction: column; gap: 16px;">
+
+      <!-- ─── Default (annotated, primary case) ──────────── -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3">
+            <strong>Default</strong> <span class="tag">primary</span>
+          </th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="viewport">
+                <!-- TODO: real screen content (real logo / icons / Korean copy) -->
+                [SCREEN CONTENT]
+
+                <!-- ════════════════════════════════════════════════════════
+                     Spec-mode overlays — 첫 state(Default) mockup에서만 사용.
+                     Spec mode toggle 켰을 때만 표시됨 (다른 state mockup엔 추가 X).
+                     ════════════════════════════════════════════════════════
+                     · annotation: 토큰 라벨을 화면 위 특정 위치에 (spacing-medium 등)
+                     · callout (ⓐⓑⓒ): 컴포넌트 위치 표시 — 첫 state의
+                       "컴포넌트" 행에 나열한 순서와 1:1 매칭 (ⓐ = 1번째, ⓑ = 2번째 ...)
+                     · type-spec: 타이포 inline (size/weight/line-height) -->
+                <span class="annotation" style="top:8px;left:8px;">spacing-? — [where]</span>
+
+                <!-- Numbered callouts — 첫 state mockup의 컴포넌트 row 순서와 일치 -->
+                <span class="callout" style="top:?px;right:?px;">ⓐ</span>
+                <span class="callout" style="top:?px;right:?px;">ⓑ</span>
+
+                <!-- Typography inline specs (size / weight / line-height) -->
+                <span class="type-spec" style="top:?px;left:?px;">14 / 400 / 1.45</span>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>[이 상태가 보이는 일반적 상황 — provider 값, user state, route param 등]</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>"[액션]" 탭 → [즉각 피드백 + 상태 전이 + 도착지]</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td><strong>[edge case]</strong> — [user-visible behavior]</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td><code>MinglitButton</code> · <code>MinglitChip</code> · <code>MinglitEventCard</code> · <code>[+ 이 화면이 사용하는 모든 컴포넌트]</code></td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td><code>color-primary</code> · <code>spacing-medium</code> · <code>radius-card</code> · typography <code>bodyMedium</code> · <code>[+ 사용 토큰 전부]</code></td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 [free-form designer/dev memo — 결정 근거, TODO, 의문점 등]</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ─── Empty ─────────────────────────────────────── -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3">
+            <strong>Empty</strong> <span class="tag tag--mute">no data</span>
+          </th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="viewport">
+                [EMPTY STATE — usually MinglitEmptyState(fullPage)]
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>[데이터가 0건일 때 — provider.value.isEmpty 등]</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>"[CTA 버튼]" 탭 → [빈 상태에서 권장되는 다음 액션 결과]</td>
+          </tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>—</td></tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>+ <code>MinglitEmptyState</code> (fullPage variant)</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>동일 (Default 참조) — Empty 전용 추가 토큰 없음</td>
+          </tr>
+          <tr><td class="state-mini__aspect">노트</td><td>—</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ─── Loading ───────────────────────────────────── -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3">
+            <strong>Loading</strong> <span class="tag tag--mute">async</span>
+          </th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="viewport">
+                [LOADING — MinglitSkeleton or MinglitCircularProgressIndicator]
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>[데이터 fetch 중 — provider.isLoading]</td>
+          </tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>탭 무반응</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>—</td></tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>↔ <code>[Default content widget]</code> → <code>MinglitSkeleton</code> (또는 <code>MinglitCircularProgressIndicator</code>)</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>동일 (skeleton 내부 shimmer animation은 컴포넌트 자체에 캡슐화 — 추가 토큰 없음)</td>
+          </tr>
+          <tr><td class="state-mini__aspect">노트</td><td>—</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ─── Error ─────────────────────────────────────── -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3">
+            <strong>Error</strong> <span class="tag tag--mute">network/server</span>
+          </th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="viewport">
+                [ERROR STATE — MinglitErrorState(fullPage) with retry]
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>[로드 실패 — provider.hasError]</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>"다시 시도" 탭 → provider invalidate → loading 재진입</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td>네트워크 vs 서버 에러 구분 필요 시 sub-state로 분리</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>+ <code>MinglitErrorState</code>(fullPage), <code>TextButton</code> ("다시 시도")</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>+ <code>color-error</code> · <code>color-errorContainer</code></td>
+          </tr>
+          <tr><td class="state-mini__aspect">노트</td><td>—</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ─── Add more states as needed ──────────────────── -->
+      <!-- Common variants: form-filled · validation-error · wizard-stepN ·
+           modal-open · drawer-open · admission state별 분기 등.
+           각 state는 자체 mini-table — mockup(rowspan=N) + N rows of aspect/detail.
+           Aspect 행은 자유롭게 추가/반복 (액션 2개면 사용자 액션 row 2개 등). -->
+
+    </div>
+  </section>
+</div>
+
+<!-- ============================================================
+     🔄 PERSPECTIVE 3 · GLOBAL BEHAVIOR — cross-cutting only
+     ============================================================ -->
+<div class="perspective" id="global-behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">
+      화면 전반에 걸친 cross-cutting 동작만 — motion timing, async lifecycle,
+      screen-wide edge cases. state-specific 동작은 위 States section의
+      각 state mini-table에 있음.
+    </span>
+  </div>
+
+  <section class="doc">
+    <h2>Cross-cutting interactions</h2>
+    <p class="intro">
+      <strong>판단 기준</strong> — 이 액션이 모든 state(또는 다수 state)에서 동일하게 가능하면 cross-cutting.
+      특정 state에서만 가능하면 그 state의 mini-table로. 회색지대일 때는: "Default state에서만 enabled,
+      다른 state는 무반응" → state-specific (Default mini-table에). "모든 state에서 항상 가능" → cross-cutting.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 220px;">사용자 액션</th>
+          <th>화면에 보이는 결과</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- TODO: 모든/다수 state에 적용되는 패턴만. 흔한 예:
+             · OS back / AppBar back (모든 state)
+             · pull-to-refresh (data + error state — refresh 가능한 화면)
+             · 키보드 입력 / Voice over 진입 (해당 시)
+             · system event (앱 background → foreground 등)
+             특정 state에서만 발생하는 액션은 그 state의 mini-table로. -->
+        <tr>
+          <td>뒤로 가기 (OS back / AppBar back)</td>
+          <td>[이전 화면으로 — 모든 state에서 동일]</td>
+        </tr>
+        <tr>
+          <td>Pull-to-refresh (있다면)</td>
+          <td>[provider refresh — loading → data 재진입]</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Motion &amp; timing</h2>
+    <p class="intro">
+      <strong>임시값 사용 금지</strong> — duration은 <code>MinglitAnimation</code> 토큰에서 선택 (<code>shared/packages/mds/core/lib/src/theme/minglit_design_tokens.dart</code>).
+    </p>
+    <table class="ref" style="margin-bottom: 16px;">
+      <thead>
+        <tr><th style="width: 200px;">Token</th><th style="width: 80px;">Value</th><th>Use case</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>MinglitAnimation.micro</code></td><td>100ms</td><td>즉각 피드백 — chip toggle, ripple, like 토글</td></tr>
+        <tr><td><code>MinglitAnimation.fast</code></td><td>200ms</td><td>간단 transition — fade, color change, hover</td></tr>
+        <tr><td><code>MinglitAnimation.medium</code></td><td>350ms</td><td>data crossfade, modal slide-up, sheet 진입</td></tr>
+        <tr><td><code>MinglitAnimation.slow</code></td><td>500ms</td><td>긴 page transition · 강조 모션</td></tr>
+        <tr><td><em>(unscoped)</em> attention loop</td><td>1.4–1.8s</td><td>blink / pulse / halo (token 미정의 — 직접 ms 명시)</td></tr>
+      </tbody>
+    </table>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 220px;">Transition</th>
+          <th style="width: 140px;">Duration (token)</th>
+          <th>Curve / notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- TODO: list each transition the user perceives. Reference token name + ms. -->
+        <tr>
+          <td>화면 진입 (loading → data)</td>
+          <td><code>medium</code> (350ms)</td>
+          <td>fade / crossfade — AnimatedSwitcher</td>
+        </tr>
+        <tr>
+          <td>[주요 state 전이]</td>
+          <td><code>?</code> (?ms)</td>
+          <td>[curve + 사용자 인지 포인트]</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Global edge cases</h2>
+    <p class="intro">
+      화면 전반에 영향을 주는 edge case만. state-specific edge case는 해당 state의 mini-table 에지케이스 행으로.
+      <strong>모든 항목 의무 아님</strong> — 화면에 적용되는 것만 작성 (예: 권한 안 쓰는 화면은 permission 항목 생략).
+      다크 모드는 모든 spec에 작성 권장 (mds 토큰 기반 화면이므로).
+    </p>
+    <ul class="notes">
+      <!-- TODO: 적용되는 항목만 남기고 나머지 삭제. -->
+      <li><strong>네트워크 끊김</strong> — [어떻게 나타나는가 — error state 진입 등] <em>(데이터 fetch 화면일 때)</em></li>
+      <li><strong>permission 거부</strong> — [위치 / 알림 / 카메라 권한 거부 시 처리] <em>(권한 사용 화면일 때)</em></li>
+      <li><strong>다크 모드</strong> — [우측 상단 Dark 토글로 확인 — 어떤 토큰이 어떻게 변하는가]</li>
+      <li><strong>접근성</strong> — [screen reader / 큰 글씨 / 고대비 — 영향받는 요소]</li>
+      <li><strong>저성능 디바이스</strong> — [무거운 애니메이션 / 이미지 로딩 시 처리] <em>(해당 시)</em></li>
+    </ul>
+  </section>
+</div>
+
+<!-- ============================================================
+     📖 PERSPECTIVE 4 · REFERENCE — related screens only
+     ============================================================ -->
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">📖</span>
+    <h2>Reference</h2>
+    <span class="lede">
+      Implementation source + 인접 화면 link만. <strong>Components / Tokens는 States section의 각 mini-table</strong>에
+      분산됨 — 여기에서 중복 명세하지 않음.
+    </span>
+  </div>
+
+  <section class="doc">
+    <h2>Implementation source</h2>
+    <p class="intro">
+      이 spec과 매칭되는 실제 Flutter source 위치. <code>designing</code> status면 미존재 항목은 <code>TBD</code>.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr><th style="width: 200px;">항목</th><th>Path / Reference</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Widget class</strong></td>
+          <td><code>[WidgetClassName]</code></td>
+        </tr>
+        <tr>
+          <td><strong>File path</strong></td>
+          <td><a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/[feature]/[file].dart"><code>apps/app_user/lib/src/features/[feature]/[file].dart</code></a></td>
+        </tr>
+        <tr>
+          <td><strong>Controller / Provider</strong></td>
+          <td><code>[xxxControllerProvider]</code> · <a href="..."><code>[file].dart</code></a></td>
+        </tr>
+        <tr>
+          <td><strong>Kit wrapper</strong> <em>(shared widget인 경우만)</em></td>
+          <td><code>[KitWrapperName]</code> · <code>shared/packages/minglit_kit/lib/...</code></td>
+        </tr>
+        <tr>
+          <td><strong>Route</strong></td>
+          <td><code>[RouteName]</code> · path: <code>/path/:param</code> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/routing/app_routes.dart"><code>app_routes.dart</code></a></td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="intro" style="margin-top: 12px; margin-bottom: 0;">
+      ※ 적용 안 되는 항목(예: route이 없는 sub-component spec)은 row 삭제. 항목별 미존재 시 <code>TBD</code>.
+    </p>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 240px;">Spec</th><th>Relation</th></tr></thead>
+      <tbody>
+        <!-- TODO: neighbor screens — entry sources, exit targets,
+             sibling steps in a wizard, parent/child screens. -->
+        <tr>
+          <td><a href="/specs/[neighbor].html"><code>[NeighborScreen]</code></a></td>
+          <td>[관계 — 어떤 흐름으로 연결되는가]</td>
+        </tr>
+        <tr>
+          <td><a href="/foundations/layout">Layout foundations</a></td>
+          <td>[이 화면이 따르는 scaffold — 또는 단독 진입]</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+</div>
+
+<!-- ============================================================
+     ✅ AUTHORING CHECKLIST — spec 작성 완료 전 self-check
+     ============================================================ -->
+<section class="doc" style="border: 2px solid var(--color-primary); border-radius: var(--radius-card); padding: 16px 24px; margin-top: 32px;">
+  <h2 style="color: var(--color-primary);">✅ Authoring checklist</h2>
+  <p class="intro">
+    spec 작성 완료 전 항목별 self-check. 모든 ✓를 채울 수 있어야 published-ready.
+  </p>
+  <ul class="notes" style="line-height: 1.9;">
+    <li><strong>Header</strong> — Title (h1)만</li>
+    <li><strong>Overview</strong> — Status (🚧 디자인중 | ✅ 디자인완료) · App · Category · Route/Surface · Path · Purpose · Entry/Exit · Background · Frequency 모두 채움 (해당 없으면 "—"). Purpose 첫 문장이 tagline 역할 (별도 Role 없음)</li>
+    <li><strong>History</strong> — Initial row + 의미 있는 변경 row 추가됨 (최신 → 오래된 순). 구현 머지 시점도 row로 추가</li>
+    <li><strong>Layout — top blueprint</strong> — 모든 numbered region(①②③...) 정확한 비례로 그림 (placeholder 56/80px 그대로 두지 않음)</li>
+    <li><strong>Layout — Sub-anatomy</strong> — internal composition을 가진 모든 region마다 1 섹션 (평면 나열, ① ② ③). 단일 atom region은 <code>/components/</code> 참조 명시</li>
+    <li><strong>States — 종류 enumerate</strong> — Default/Empty/Loading/Error placeholder 그대로 쓰지 않고, 실제 provider state · route param · user state 기준으로 enumerate</li>
+    <li><strong>States — mini-table 6 rows</strong> — 모든 state가 (조건 / 사용자 액션 / 에지케이스 / 컴포넌트 / 토큰 / 노트) 6행 채움. 해당 없으면 "—"</li>
+    <li><strong>States — 첫 state 풀 리스트</strong> — Default(or first state)에 사용된 모든 컴포넌트 + 토큰 명시</li>
+    <li><strong>States — 2번째+ additive diff</strong> — <code>+ X</code> / <code>− X</code> / <code>↔ X → Y</code> / <code>동일</code> / <code>—</code> 5종 prefix만 사용. prose 자유서술 금지</li>
+    <li><strong>States — Spec mode overlay</strong> — 첫 state mockup에만 annotation + callout(ⓐⓑⓒ) + type-spec 배치. 나머지 state mockup엔 추가 X</li>
+    <li><strong>Global Behavior — cross-cutting only</strong> — state-specific 액션 섞이지 않음 (회색지대 룰 적용)</li>
+    <li><strong>Global Behavior — Motion</strong> — 모든 duration이 <code>MinglitAnimation</code> token 이름 + ms로 표기. 임시값 금지</li>
+    <li><strong>Global edge cases</strong> — 적용되는 항목만 남김 (의무 아님). 다크 모드는 권장</li>
+    <li><strong>Reference — Implementation source</strong> — Widget class · File path (GitHub link) · Controller/Provider · Route 등 채움. 🚧 디자인중이면 미존재 항목 <code>TBD</code>로 명시</li>
+    <li><strong>Reference — Related screens</strong> — 인접 화면 link 작성. components/tokens 표 다시 만들지 않음 (states로 분산됨)</li>
+    <li><strong>State summary matrix</strong> (state 5개 이상일 때) — States 섹션 mini-tables 위에 overview 표 작성 (state · tag · 조건 · key visual differentiator)</li>
+    <li><strong>Token 표기 통일</strong> — 모든 토큰 참조가 <code>spacing-medium (16px)</code> 형태 (이름 + 괄호 픽셀)</li>
+    <li><strong>코드 검증 (ad-hoc, status와 분리)</strong> — spec ↔ code 일치 확인은 status가 아닌 별도 trigger 기반. agent가 "이 spec이 코드랑 맞나?" 요청받을 때 multi-pass verify 수행 (widget · token · 라벨 · 동작). 결과는 review 코멘트 또는 History row로 기록</li>
+  </ul>
+</section>
+
+</div>
+
+<script>
+  document.getElementById('spec-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('spec-mode', e.target.checked);
+  });
+  document.getElementById('dark-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('dark-mode', e.target.checked);
+  });
+</script>
+
+</body>
+</html>

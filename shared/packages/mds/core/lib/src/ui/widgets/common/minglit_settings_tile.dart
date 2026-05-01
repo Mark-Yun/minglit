@@ -22,7 +22,9 @@ enum SettingsTileTrailing {
 /// Follows the "layered trust system" design for high information density.
 ///
 /// Features:
-/// - Fixed height of 48px for compact layout.
+/// - Minimum height of 48px (1-line). When [subtitle] is provided the row
+///   grows naturally — vertical padding stays fixed at `MinglitSpacing.sm`
+///   (12px) so the second line is not cramped.
 /// - Support for icon, title, and optional subtitle.
 /// - Built-in trailing variants: [SettingsTileTrailing.navigation],
 ///   [SettingsTileTrailing.toggle], [SettingsTileTrailing.value].
@@ -143,8 +145,14 @@ class MinglitSettingsTile extends StatelessWidget {
           ? onTap
           : null,
       child: Container(
-        height: 48,
-        padding: const EdgeInsets.symmetric(horizontal: MinglitSpacing.medium),
+        // 1줄(title만)일 때는 minHeight 48이 발동해 그대로 48px.
+        // 2줄(title + subtitle)일 때는 vertical padding이 고정이라
+        // 자연스럽게 ~58로 자란다 — 두 번째 줄이 답답하지 않도록.
+        constraints: const BoxConstraints(minHeight: 48),
+        padding: const EdgeInsets.symmetric(
+          horizontal: MinglitSpacing.medium,
+          vertical: MinglitSpacing.sm,
+        ),
         child: Row(
           children: [
             if (leadingWidget != null) ...[
