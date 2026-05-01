@@ -447,19 +447,17 @@ body.dark-mode .viewport {
         <th>Purpose</th>
         <td>
           파트너가 기존 파티에서 새 회차(이벤트)를 생성한다. 진입 시 부모 파티의
-          기본 정보 / 정원 / 연락처 / 입장 그룹 / 티켓 템플릿이 자동 prefill되며
-          (<code>Event.createFromParty</code> + <code>Ticket.createFromTemplate</code>),
-          파트너는 일정·반복 규칙·티켓 등 운영 정보만 보강하면 된다.
+          기본 정보 / 정원 / 연락처 / 입장 그룹 / 티켓 템플릿이 자동으로 채워져 있으며,
+          파트너는 일정·반복 규칙·티켓 등 회차마다 달라지는 운영 정보만 보강하면 된다.
         </td>
       </tr>
       <tr>
         <th>User journey</th>
         <td>
-          <strong>Entry points</strong>: <code>PartyDetailPage</code> 이벤트 관리 탭의
-          "회차 만들기" CTA — <code>partyId</code> 전달.<br>
-          <strong>Exit points</strong>: 생성 성공 → <code>context.pop()</code> + 성공 스낵바("새로운 회차가 성공적으로 생성되었습니다.") → PartyDetailPage 복귀.
-          실패 → <code>handleMinglitError</code> 스낵바 (page 유지).
-          back 버튼 → 변경사항 confirm 다이얼로그 없이 즉시 pop.
+          <strong>Entry points</strong>: 파티 상세의 "이벤트 관리" 탭에서 "회차 만들기" CTA를 탭하면 진입.<br>
+          <strong>Exit points</strong>: 생성 성공 → 화면이 닫히며 파티 상세로 돌아가고, "새로운 회차가 성공적으로 생성되었습니다." 토스트가 잠시 노출.
+          실패 → 안내 토스트가 잠시 노출되고 화면은 그대로 유지.
+          뒤로가기 → 변경사항 확인 다이얼로그 없이 즉시 닫힘.
         </td>
       </tr>
       <tr>
@@ -641,17 +639,13 @@ body.dark-mode .viewport {
 
   <section class="doc">
     <p class="intro">
-      <strong>State 종류 식별 기준</strong>: <code>TabController.index</code> (0=운영 / 1=정보) ·
-      <code>recurrenceSettingsControllerProvider.isEnabled</code> ·
-      <code>state.status</code>(<code>AsyncValue&lt;void&gt;</code>: data → loading → error/data).
-      Edit 모드 없음 — 항상 신규 생성. <code>partyId</code>의 prefill은 initState
-      <code>postFrameCallback</code> 안에서 처리되므로 첫 frame에는 default 값(다음주 19시)이 잠깐 보일 수 있다 (state 6).
+      <strong>State 식별 기준</strong>: 활성 탭(운영 및 티켓 / 파티 정보), 반복 일정 켜짐 여부, 저장 진행/실패 여부에 따라 6가지 변형. 이 화면은 항상 새 회차를 만드는 흐름이며, 수정 모드는 없음. 진입 직후엔 부모 파티의 값으로 입력란이 채워지기 직전의 짧은 한 프레임이 잠시 보일 수 있다 (state 6).
     </p>
 
     <!-- State 1: Tab1 baseline -->
     <table class="ref state-mini is-baseline-tint">
       <thead>
-        <tr><th colspan="3"><strong>Tab1 / 운영 및 티켓 · 반복 off</strong> 🎯 <small>baseline · production</small></th></tr>
+        <tr><th colspan="3"><strong>Tab1 / 운영 및 티켓 · 반복 off</strong> 🎯 <small>baseline · 반복 일정 꺼져 있는 일반적인 신규 회차 작성 모습</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -727,27 +721,27 @@ body.dark-mode .viewport {
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>tabIndex == 0</code> · <code>recurrenceSettings.isEnabled == false</code> · <code>state.status</code> = data(null) · prefill 완료 (party templates 적용됨)</td>
+          <td>활성 탭이 "운영 및 티켓"이고, 반복 일정 토글이 꺼진 상태. 부모 파티의 값이 자동으로 채워져 일정 / 티켓이 표시되는 일반적인 신규 회차 작성 모습.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ① <strong>날짜 카드 탭</strong> → <code>showDatePicker</code> (firstDate: 30일 전 / lastDate: 1년 후)<br>
-            ② <strong>시작/종료 시간 카드 탭</strong> → <code>showTimePicker</code> · 시작 변경 시 endTime이 startTime 이전이면 +3h 자동 보정<br>
-            ③ <strong>반복 일정 SwitchListTile 탭</strong> → notifier.toggle() → State 2 전이<br>
-            ④ <strong>티켓 EditableSection 탭</strong> → <code>EventCreateCoordinator.openTicketTemplateManage</code> push (별도 화면)<br>
-            ⑤ <strong>"파티 정보" 탭 탭</strong> → State 3 (Tab2)<br>
-            ⑥ <strong>"회차 생성 완료" 버튼 탭</strong> → State 4 (submitting)<br>
-            ⑦ <strong>back 탭</strong> → confirm 없이 PartyDetailPage로 pop
+            ① <strong>날짜 카드 탭</strong> — 날짜 선택기가 열림 (선택 가능 범위: 30일 전 ~ 1년 후).<br>
+            ② <strong>시작 / 종료 시간 카드 탭</strong> — 시간 선택기. 시작 시간을 변경했을 때 종료가 그보다 빠르면 종료가 자동으로 시작 + 3시간으로 보정됨.<br>
+            ③ <strong>"반복 일정" 토글 탭</strong> — 반복 설정 영역이 즉시 펼쳐지며 다음 state로 전환.<br>
+            ④ <strong>"티켓" 섹션 탭</strong> — 티켓 템플릿 편집 화면으로 이동.<br>
+            ⑤ <strong>"파티 정보" 탭 헤더 탭</strong> — Tab2(파티 정보)로 슬라이드 전환.<br>
+            ⑥ <strong>"회차 생성 완료" 버튼 탭</strong> — 저장 진행 상태로 전환.<br>
+            ⑦ <strong>뒤로가기</strong> — 별도 확인 없이 즉시 닫힘.
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · prefill 전(첫 frame) — title/tickets 비어 있음 (State 6 참고)<br>
-            · 시작 시간을 종료 시간 이후로 변경 → endTime이 자동으로 +3h로 재설정 (controller updateStartTime)<br>
-            · 시간 차이가 음수가 되도록 종료 시간만 변경하는 경우 → "총 -X시간" 표시 (방어 로직 없음 — drift 후보)<br>
-            · 티켓 비어있음 → PartyTicketsSummary가 빈 상태 렌더 (showError=false라 카드 없음)
+            · 부모 파티 값이 채워지기 직전 한 프레임 동안은 제목 / 티켓이 비어 있는 모습이 잠시 보일 수 있음 (State 6 참고).<br>
+            · 시작 시간을 종료 시간 이후로 옮기면 종료 시간이 자동으로 시작 + 3시간으로 재설정.<br>
+            · 종료 시간만 시작 시간 이전으로 직접 옮기면 안내 메시지 없이 "총 -X시간"이 표시되는 약점이 있음 — 후속 정리 후보.<br>
+            · 티켓이 비어 있는 경우 — 티켓 섹션 안 본문이 비어 보이는 상태로 노출 (별도 안내 카드는 없음).
           </td>
         </tr>
         <tr>
@@ -775,7 +769,7 @@ body.dark-mode .viewport {
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 baseline 회차의 시작 시간은 <code>DateTime(now+7d, 19:00)</code>, 종료 시간은 +3h. <code>EventCreateController.build</code>에서 결정. prefill로 부모 파티 title·imageUrl·maxParticipants·contactOptions·entryGroups·tickets·location 일괄 적용.</td>
+          <td>📝 진입 시 기본 일정은 다음 주 같은 요일 19:00 ~ 22:00으로 미리 채워짐. 부모 파티의 제목 / 이미지 / 정원 / 연락 수단 / 입장 그룹 / 티켓 / 장소가 자동으로 적용되어, 사용자는 회차 일정과 반복 / 티켓만 손보면 됨.</td>
         </tr>
       </tbody>
     </table>
@@ -783,7 +777,7 @@ body.dark-mode .viewport {
     <!-- State 2: Tab1 with recurrence ON -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Tab1 · 반복 일정 ON (매주 월/수)</strong> <small>recurrence enabled · weekly + days</small></th></tr>
+        <tr><th colspan="3"><strong>Tab1 · 반복 일정 ON (매주 월/수)</strong> <small>반복 일정이 켜진 모습 — 매주 + 요일 두 개 선택 + 종료일 지정</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -852,24 +846,24 @@ body.dark-mode .viewport {
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>recurrenceSettings.isEnabled == true</code> · <code>pattern == weekly</code> · <code>daysOfWeek = {1, 3}</code> (월·수) · endDate 설정됨</td>
+          <td>반복 일정이 켜져 있고, 주기는 "매주", 요일은 월·수 두 개가 선택되어 있으며, 종료일이 지정된 모습.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            + <strong>주기 ChoiceChip 탭</strong> → 매주/격주/매월 토글 (단일 선택). monthly 선택 시 _DayOfWeekChips → _MonthDayInput(드롭다운 1~31일)으로 교체<br>
-            + <strong>요일 FilterChip 탭</strong> → daysOfWeek set toggle<br>
-            + <strong>"종료일" TextButton 탭</strong> → showDatePicker (initialDate: 30일 후 · 최대 2년 후) → 선택 시 텍스트로 표시. 다시 탭 시 null로 reset<br>
-            + <strong>제출</strong> 시 recurrenceRuleRepository.create(partyId, pattern, daysOfWeek, monthDay, startTime "HH:mm", endTime "HH:mm", endDate)
+            + <strong>주기 칩 탭</strong> — "매주 / 격주 / 매월" 중 하나만 선택 가능. "매월"을 고르면 요일 칩 자리에 "1~31일" 드롭다운으로 즉시 교체.<br>
+            + <strong>요일 동그라미 칩 탭</strong> — 요일을 복수 선택 가능. 선택된 요일은 강조 색의 채움 원으로 표시.<br>
+            + <strong>"종료일" 버튼 탭</strong> — 날짜 선택기가 열림 (선택 가능 범위: 30일 후 ~ 2년 후). 선택하면 날짜가 표시되고, 다시 누르면 종료일이 비워져 무기한으로 돌아감.<br>
+            + <strong>"회차 생성 완료" 탭 — 첫 회차와 함께 반복 규칙도 같이 만들어짐.
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · pattern == monthly → 요일 chips 자리에 1~31 dropdown ("매월 반복일")<br>
-            · daysOfWeek 비어있음 + weekly → previewDates 빈 상태 → "요일 또는 날짜를 선택하면 미리보기가 표시됩니다" 텍스트<br>
-            · 종료일 toggle 시 같은 TextButton이 "날짜 선택" ↔ "yyyy-MM-dd"로 텍스트만 갱신<br>
-            · Fix #1037: submit 직전 <code>recurrenceSnapshot</code>으로 read하여 await 중 race 차단
+            · "매월"을 선택하면 요일 칩이 1~31일 드롭다운("매월 반복일")으로 즉시 교체됨.<br>
+            · "매주" / "격주"인데 요일을 한 개도 선택하지 않으면 미리보기 영역에 "요일 또는 날짜를 선택하면 미리보기가 표시됩니다" 안내가 표시.<br>
+            · 종료일 버튼은 미설정일 땐 "날짜 선택", 설정 후엔 "yyyy-MM-dd" 형태로만 라벨이 바뀜.<br>
+            · 저장이 진행되는 동안 사용자가 반복 설정을 바꾸더라도, 누른 시점의 설정대로 안전하게 저장되도록 보장됨.
           </td>
         </tr>
         <tr>
@@ -895,7 +889,7 @@ body.dark-mode .viewport {
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 daysOfWeek는 JS 일요일=0 컨벤션. previewDates는 이번 회차 startTime을 기준으로 최대 N개를 클라이언트에서 계산해 서버 검증 전 시각화한다.</td>
+          <td>📝 미리보기 일정은 이번 회차의 시작 시간을 기준으로 앞으로의 몇 개 회차 날짜를 계산해 보여주는 시각화다.</td>
         </tr>
       </tbody>
     </table>
@@ -903,7 +897,7 @@ body.dark-mode .viewport {
     <!-- State 3: Tab2 (Info) -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Tab2 / 파티 정보</strong> <small>info tab · prefill 표시</small></th></tr>
+        <tr><th colspan="3"><strong>Tab2 / 파티 정보</strong> <small>부모 파티의 정보가 자동으로 채워진 모습</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -981,26 +975,25 @@ body.dark-mode .viewport {
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>tabIndex == 1</code> · party 데이터 prefill 완료 (title, description, imageUrl, location, entryGroups, contactOptions, maxParticipants 모두 표시)</td>
+          <td>활성 탭이 "파티 정보"이고, 부모 파티의 제목 / 설명 / 이미지 / 장소 / 입장 조건 / 정원 / 연락 수단이 자동으로 채워져 노출된 모습.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            + <strong>"기본 정보" 섹션 탭</strong> → <code>EventCreateCoordinator.openBasicInfoEdit</code> → <code>PartyBasicInfoEditScreen</code> push (title/desc/imageUrls 편집)<br>
-            + <strong>"인원 및 연락처" 섹션 탭</strong> → <code>openCapacityContactEdit</code> → <code>PartyCapacityContactEditScreen</code> push (max + options 편집 — min은 사용 안 함)<br>
-            + <strong>"장소" 섹션 탭</strong> → <code>openLocationEdit</code> → <code>PartyLocationEditScreen</code> push<br>
-            + <strong>"입장 조건" 섹션 탭</strong> → <code>onTap: () {}</code> — <strong>no-op</strong> (위젯 코멘트: "Event Entry Groups are read-only for now"). 그러나 isEditable=default(true)라 edit 아이콘은 그대로 표시 → drift<br>
-            + <strong>공개 설정 dropdown 탭</strong> → 3개 항목 (파티 설정 따라가기 / 공개 / 비공개)
+            + <strong>"기본 정보" 섹션 탭</strong> — 제목 / 설명 / 사진 편집 화면으로 이동.<br>
+            + <strong>"인원 및 연락처" 섹션 탭</strong> — 정원 / 연락 수단 편집 화면으로 이동. 이 화면에선 최대 인원과 연락 수단만 사용되며, 최소 인원은 회차에선 적용되지 않음.<br>
+            + <strong>"장소" 섹션 탭</strong> — 장소 편집 화면으로 이동.<br>
+            + <strong>"입장 조건" 섹션 탭</strong> — 현재는 읽기 전용으로 동작해 탭해도 다음 화면으로 이동하지 않음 (헤더에 펜 아이콘이 보이는 약점은 후속 정리 후보).<br>
+            + <strong>"공개 설정" 드롭다운 탭</strong> — "파티 설정 따라가기 / 공개 / 비공개" 세 가지 중 선택.
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · prefill 전 — title 빈 상태로 EditableSection 렌더 (subtitle 영역 비어 보임)<br>
-            · imageUrl null → image grid 자리 대체 placeholder (PartyBasicInfoSummary 책임)<br>
-            · entryGroups 비어있음 → PartyEntranceConditionSummary가 빈 상태<br>
-            · 공개 설정 카드만 외부 horizontal margin 0 → 다른 EditableSection과 시각적 정렬 어긋남 (drift 후보)<br>
-            · "인원 및 연락처" 편집 시 onSave(min, max, options)에서 min은 무시 (controller에 update 메서드 없음)
+            · 부모 파티 값이 채워지기 직전엔 제목 / 부제 영역이 잠시 비어 보일 수 있음.<br>
+            · 등록된 사진이 없는 파티는 사진 영역에 기본 안내 placeholder가 노출.<br>
+            · 입장 그룹이 비어 있는 파티는 "입장 조건" 영역도 비어 보임.<br>
+            · "공개 설정" 카드만 좌우 여백이 다른 섹션들과 살짝 다르게 붙어 보이는 정렬 어긋남이 있음 — 후속 정리 후보.
           </td>
         </tr>
         <tr>
@@ -1025,7 +1018,7 @@ body.dark-mode .viewport {
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 InfoTab은 일정과 무관 — startTime/endTime은 Tab1에서만 편집된다. 모든 편집은 controller에 즉시 반영(submit 시점이 아닌 onSave 콜백) → 탭 전환해도 값 유지.</td>
+          <td>📝 이 탭은 일정과 무관 — 시작 / 종료 시간은 "운영 및 티켓" 탭에서만 손본다. 어느 섹션이든 편집해서 저장하면 변경값이 즉시 화면에 반영되어, 탭을 전환해도 그대로 보존된다.</td>
         </tr>
       </tbody>
     </table>
@@ -1033,7 +1026,8 @@ body.dark-mode .viewport {
     <!-- State 4: Submitting -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>제출 중 (submitting)</strong> <small>state.status.isLoading</small></th></tr>
+        <tr><th colspan="3"><strong>제출 중 (submitting)</strong> <small>"회차 생성 완료"를 누른 직후 서버 응답 대기</small></th></tr>
+
       </thead>
       <tbody>
         <tr>
@@ -1068,22 +1062,22 @@ body.dark-mode .viewport {
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>state.status.isLoading == true</code> — submit() 호출 후 createEvent + (recurrence 활성 시) recurrenceRule.create + invalidate 진행 중</td>
+          <td>"회차 생성 완료"를 누른 직후, 서버에 회차(반복 일정이 켜져 있다면 반복 규칙도 함께)를 만드는 응답을 기다리는 짧은 구간.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ↔ submit 버튼 → <strong>onPressed: null</strong> (disabled) · 라벨 "회차 생성 중..."<br>
-            ↔ TabBarView/AppBar 등 다른 영역은 여전히 인터랙션 가능 (별도 globalLoading 미사용 — 실수 가능성 있음, drift 후보)<br>
-            완료 시: 성공 → <code>context.pop()</code> + showMinglitSuccess("새로운 회차가 성공적으로 생성되었습니다.") · 실패 → State 5 전이
+            ↔ "회차 생성 완료" 버튼이 비활성화되며 라벨이 "회차 생성 중..."으로 변경, 안에 작은 흰 스피너가 함께 노출.<br>
+            ↔ 본문(탭 / 입력 영역)은 여전히 손댈 수 있는 약점이 있어 후속 정리 후보 — 풀스크린 로딩 오버레이를 쓰지 않음.<br>
+            완료되면 — 성공 시 화면이 닫히고 부모 화면(파티 상세)으로 돌아가며 성공 토스트가 잠시 노출. 실패 시 다음 state로 전환.
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · location이 selectedLocation만 있고 locationId 없는 경우 → submit 중에 <code>locationRepository.createLocation</code>으로 새 location 먼저 생성 후 finalLocationId 사용 (party.partnerId 필요해서 partyDetailProvider.future read)<br>
-            · recurrence active → recurrenceSnapshot으로 race 회피하여 별도 create<br>
-            · partyEventsProvider invalidate + dashboardRefreshProvider.bump 호출 (Fix #1943)
+            · 새로 입력한 장소가 아직 등록되지 않은 곳이라면, 저장 도중에 장소를 먼저 만들고 그 결과로 회차가 만들어짐.<br>
+            · 반복 일정이 켜져 있더라도, 사용자가 저장 직전에 설정을 바꾸는 경우에 대비해 누른 순간의 설정값으로 안전하게 저장됨.<br>
+            · 저장이 끝나면 부모 화면(파티 상세)의 이벤트 목록과 대시보드 요약이 자동으로 갱신.
           </td>
         </tr>
         <tr>
@@ -1096,7 +1090,7 @@ body.dark-mode .viewport {
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 화면 자체에는 spinner 없음 — 사용자에게 진행 신호는 버튼 라벨 변화 + onPressed null 두 가지뿐. 글로벌 로딩 오버레이는 사용하지 않음.</td>
+          <td>📝 화면 전체를 덮는 풀스크린 로딩은 사용하지 않으며, 사용자에게 진행을 알리는 신호는 하단 버튼 라벨 변화와 비활성화뿐.</td>
         </tr>
       </tbody>
     </table>
@@ -1104,7 +1098,7 @@ body.dark-mode .viewport {
     <!-- State 5: Error -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>제출 실패 (error)</strong> <small>state.status.hasError</small></th></tr>
+        <tr><th colspan="3"><strong>제출 실패 (error)</strong> <small>저장 도중 오류로 회차가 만들어지지 못한 경우</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -1140,22 +1134,22 @@ body.dark-mode .viewport {
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>submit 후 <code>state.status.hasError</code> · <code>handleMinglitError(context, state.status.error!)</code> 호출됨</td>
+          <td>저장 시도 중 네트워크 또는 서버 문제가 생겨 회차를 만들지 못한 상태.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            + <strong>스낵바</strong> 표시 (3-4초 자동 dismiss · 액션 없음)<br>
-            ↔ submit 버튼 → enabled 상태로 복귀 (라벨 "회차 생성 완료") — 사용자가 그대로 다시 탭 가능<br>
-            화면 상태(폼 입력값)는 유지됨 — 다시 시도 시 처음부터 다시 입력 안 해도 됨
+            + <strong>안내 토스트</strong>가 화면 하단에 잠시 노출되었다가 자동으로 사라짐.<br>
+            ↔ "회차 생성 완료" 버튼이 활성화 상태로 복귀해 사용자가 즉시 다시 시도할 수 있음.<br>
+            입력 중이던 폼 값은 그대로 유지되어, 처음부터 다시 입력하지 않아도 됨.
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · 네트워크 단절 / 서버 5xx / RLS 거부 모두 같은 일반 에러 메시지로 표시 — 세분화 안 됨<br>
-            · location 새로 생성하다 실패 → finalLocationId가 비어 있어도 createEvent까지 진입했다가 실패 (locationRepository.createLocation의 throw가 AsyncValue.guard에 잡힘)<br>
-            · recurrence rule 만들다 실패 → event는 이미 생성된 상태라 부분 성공 가능 (cleanup 로직 없음 — drift 후보)
+            · 네트워크 단절 / 서버 오류 / 권한 문제 모두 동일한 일반 안내 메시지로 표시되며, 구체적인 사유는 노출되지 않음.<br>
+            · 새로 만든 장소까지 함께 저장하다가 실패하는 경우 — 회차 자체가 만들어지지 않음.<br>
+            · 회차는 만들어졌지만 반복 규칙이 만들어지지 못해 부분 성공이 발생할 수 있음 — 사용자에겐 일반 안내 토스트만 표기되는 약점이 있어 후속 정리 후보.
           </td>
         </tr>
         <tr>
@@ -1171,7 +1165,7 @@ body.dark-mode .viewport {
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 에러 카피는 <code>handleMinglitError</code>가 내부에서 분기 — 일반 RepositoryException은 default 카피, 알려진 에러는 specialized.</td>
+          <td>📝 토스트 메시지는 일반적인 사유는 default 안내, 알려진 특정 케이스는 그에 맞는 안내로 자동 분기되어 노출.</td>
         </tr>
       </tbody>
     </table>
@@ -1179,7 +1173,7 @@ body.dark-mode .viewport {
     <!-- State 6: Initial post-frame loading -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>초기 prefill 전 (1-frame transient)</strong> <small>postFrameCallback 실행 전</small></th></tr>
+        <tr><th colspan="3"><strong>초기 prefill 전 (한 프레임 잠깐)</strong> <small>화면 진입 직후 부모 파티 값이 채워지기 직전의 짧은 순간</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -1221,21 +1215,21 @@ body.dark-mode .viewport {
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>build 첫 frame — <code>initState</code>의 <code>WidgetsBinding.addPostFrameCallback</code>이 partyDetail/partyTickets/locationDetail future를 await 중. controller는 default 값(다음 주 19시 + 빈 title/tickets/contactOptions/entryGroups).</td>
+          <td>화면이 그려진 첫 순간, 부모 파티의 값을 가져와 채우기 직전. 화면에는 기본 일정값(다음 주 19시)만 보이고, 제목 / 티켓 / 연락 수단 / 입장 그룹은 잠시 비어 있음.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ↔ 일정 입력은 가능하지만 prefill이 아직 안 와서 — 직후 initWithParty가 호출되면 startTime/endTime은 controller가 보존, title/tickets/contactOptions/entryGroups/imageUrl/location은 party 값으로 덮어씀<br>
-            ↔ 현재 시점에 사용자가 startTime을 변경했다면 그 값은 유지 (initWithParty가 baseEvent를 만들 때 state.startTime을 사용하기 때문)
+            ↔ 이 순간에 일정을 손대더라도 잠시 후 부모 파티 값이 채워질 때 사용자가 입력한 시작 / 종료 시간은 그대로 보존됨.<br>
+            ↔ 그 외(제목 / 티켓 / 연락 수단 / 입장 그룹 / 이미지 / 장소)는 부모 파티 값으로 덮여 자동으로 채워짐.
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · partyDetailProvider future 실패 → initWithParty 미호출 → 화면 영영 빈 상태 (<strong>drift 후보</strong>: try/catch 없음, error toast 없음)<br>
-            · 빠른 back 누름 → mounted 가드로 안전 (<code>if (mounted) ...</code>)<br>
-            · location.locationId가 null인 파티 → location prefill skip (location 영역만 빈 상태)
+            · 부모 파티의 정보를 끝내 가져오지 못한 경우 — 화면이 비어 있는 상태로 머무름. 사용자에게 명시적인 안내가 노출되지 않는 약점이 있어 후속 정리 후보.<br>
+            · 이 짧은 순간에 사용자가 빠르게 뒤로가기를 눌러도 안전하게 닫히도록 처리됨.<br>
+            · 장소 정보가 없는 파티에서 진입한 경우 — 장소 영역만 비어 있는 상태로 노출.
           </td>
         </tr>
         <tr>
@@ -1248,7 +1242,7 @@ body.dark-mode .viewport {
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 transient state — Riverpod future가 캐시된 경우 (PartyDetailPage에서 진입했으니 보통 hit) postFrameCallback이 사실상 동기-즉시 완료 → 이 state가 실제로 보이는 시간은 1 frame (~16ms). 콜드 진입 시에만 잠깐 노출.</td>
+          <td>📝 보통은 부모 화면(파티 상세)에서 진입하기 때문에 데이터가 캐시되어 있어 사실상 한 프레임만 보이는 매우 짧은 전이 구간. 캐시가 비어 있는 콜드 진입에서만 잠깐 노출됨.</td>
         </tr>
       </tbody>
     </table>
@@ -1271,28 +1265,28 @@ body.dark-mode .viewport {
       <thead><tr><th style="width: 220px;">Trigger</th><th>Effect</th></tr></thead>
       <tbody>
         <tr>
-          <td>탭 전환 (TabBar / TabBarView)</td>
-          <td>controller index 변경 + body crossfade-slide. 입력값은 controller에 저장돼 있어 양방향 유지.</td>
+          <td>탭 헤더 탭 또는 좌우 스와이프</td>
+          <td>본문이 새 탭으로 부드럽게 슬라이드. 양쪽 탭의 입력값은 그대로 유지.</td>
         </tr>
         <tr>
-          <td>시작 시간 ↔ 종료 시간 정합성</td>
-          <td><code>updateStartTime</code>에서 endTime이 새 startTime 이전이면 endTime을 +3h로 자동 보정. 반대(endTime을 startTime 이전으로) 변경은 보정 없음.</td>
+          <td>시작 시간을 종료 이후로 변경</td>
+          <td>종료 시간이 자동으로 시작 + 3시간으로 보정. (반대로 종료를 시작 이전으로 옮기면 자동 보정은 일어나지 않음 — 후속 정리 후보.)</td>
         </tr>
         <tr>
-          <td>섹션 InkWell 탭 (EditableSection)</td>
-          <td>각 섹션 onTap → <code>EventCreateCoordinator.openXxx</code> → <code>MaterialPageRoute</code> push. onSave 콜백에서 controller를 일괄 update.</td>
+          <td>섹션 카드 탭 (Tab2)</td>
+          <td>해당 섹션 전용 편집 화면이 우→좌로 슬라이드되어 열리고, 저장하고 돌아오면 변경값이 즉시 화면에 반영됨.</td>
         </tr>
         <tr>
-          <td>제출 (회차 생성 완료)</td>
-          <td>1) status → loading 2) location 새로 만들 필요 시 createLocation 3) createEvent 4) recurrence active면 recurrenceRule.create 5) partyEventsProvider invalidate + dashboardRefreshProvider.bump 6) status → data → pop + success snackbar / status → error → handleMinglitError 스낵바.</td>
+          <td>"회차 생성 완료" 탭</td>
+          <td>저장이 진행되는 동안 버튼 라벨이 "회차 생성 중..."으로 바뀌며 비활성화. 성공하면 화면이 닫히고 부모 화면(파티 상세)으로 복귀, 부모 화면의 이벤트 목록과 대시보드 요약이 자동으로 갱신. 실패하면 안내 토스트가 잠시 노출되고 화면은 그대로 유지.</td>
         </tr>
         <tr>
-          <td>back 버튼</td>
-          <td>confirm 다이얼로그 없이 즉시 pop. 변경사항은 휘발 (controller dispose).</td>
+          <td>뒤로가기</td>
+          <td>별도 확인 다이얼로그 없이 즉시 닫힘. 입력 중이던 값은 보존되지 않음.</td>
         </tr>
         <tr>
-          <td>recurrence ON + monthly</td>
-          <td>요일 chip row가 1~31일 dropdown으로 즉시 교체. 기존 daysOfWeek 값은 유지되지만 화면에는 안 보임 (pattern이 weekly/biweekly로 돌아가면 다시 노출).</td>
+          <td>반복 일정 ON + "매월" 선택</td>
+          <td>요일 칩 자리가 1~31일 드롭다운으로 즉시 교체. "매주" / "격주"로 다시 돌아오면 이전에 선택했던 요일들이 그대로 다시 보임.</td>
         </tr>
       </tbody>
     </table>
@@ -1303,12 +1297,12 @@ body.dark-mode .viewport {
     <table class="ref">
       <thead><tr><th style="width: 220px;">Transition</th><th style="width: 220px;">Token</th><th>Note</th></tr></thead>
       <tbody>
-        <tr><td>탭 슬라이드 (TabBarView)</td><td><code>MinglitAnimation.fast</code> (200ms)</td><td>Material TabBarView 기본 swipe + indicator follow.</td></tr>
-        <tr><td>SwitchListTile on/off</td><td><code>MinglitAnimation.micro</code> (100ms)</td><td>thumb slide + bg color crossfade.</td></tr>
-        <tr><td>Recurrence 영역 expand/collapse</td><td>cut (no animation)</td><td>state.isEnabled에 따라 widget tree에서 추가/제거 — explicit AnimatedSize 없음.</td></tr>
-        <tr><td>섹션 편집 화면 push</td><td><code>MinglitAnimation.medium</code> (350ms — Material default)</td><td>MaterialPageRoute 기본 우→좌 slide.</td></tr>
-        <tr><td>스낵바 (성공/에러)</td><td><code>MinglitAnimation.fast</code> (200ms)</td><td>showMinglitSuccess / handleMinglitError 모두 ScaffoldMessenger 기본 슬라이드 업.</td></tr>
-        <tr><td>제출 → pop 후 PartyDetailPage 복귀</td><td>MaterialPageRoute pop default</td><td>좌→우 slide (Material 표준).</td></tr>
+        <tr><td>탭 슬라이드</td><td><code>MinglitAnimation.fast</code> (200ms)</td><td>본문이 좌우로 슬라이드되며 표시선이 따라 이동.</td></tr>
+        <tr><td>"반복 일정" 토글</td><td><code>MinglitAnimation.micro</code> (100ms)</td><td>토글의 thumb이 슬라이드되며 배경 색이 부드럽게 전환.</td></tr>
+        <tr><td>반복 설정 영역 펼치기 / 접기</td><td>cut (no animation)</td><td>토글 상태에 따라 영역이 즉시 나타나거나 사라짐 (별도 부드러운 전환 없음).</td></tr>
+        <tr><td>섹션 편집 화면 진입</td><td><code>MinglitAnimation.medium</code> (350ms)</td><td>우→좌 슬라이드 기본 푸시.</td></tr>
+        <tr><td>안내 토스트 (성공 / 실패)</td><td><code>MinglitAnimation.fast</code> (200ms)</td><td>화면 하단에서 슬라이드 업으로 등장.</td></tr>
+        <tr><td>저장 성공 → 부모 화면 복귀</td><td>좌→우 슬라이드</td><td>표준 닫힘 전환.</td></tr>
       </tbody>
     </table>
   </section>
@@ -1316,12 +1310,12 @@ body.dark-mode .viewport {
   <section class="doc">
     <h2>Global edge cases</h2>
     <ul class="notes">
-      <li><strong>partyId가 잘못된 값</strong> — partyDetailProvider future가 throw → initWithParty 미호출, 빈 상태로 머무름. 명시적 에러 표시 없음 (drift 후보).</li>
-      <li><strong>제출 중 back 누름</strong> — 별도 가드 없음. submit future는 백그라운드에서 계속 진행되며 state.status 갱신은 mounted 가드로 차단. 이미 만들어진 event는 server-side에 남는다.</li>
-      <li><strong>recurrence + location 동시 신규 생성</strong> — locationRepository.createLocation 실패 시 event 자체도 생성 안됨 (await chain). 그러나 createEvent 성공 후 recurrenceRule.create 실패 시 event는 남고 rule만 빠지는 부분 성공 가능 — 사용자에겐 일반 에러 토스트만.</li>
-      <li><strong>"입장 조건" 섹션</strong> — onTap이 빈 함수라 탭해도 아무 일 없음. edit 아이콘은 그대로 보여 사용자에게 혼동 줄 수 있음 (drift 후보 — isEditable=false 권장).</li>
-      <li><strong>InfoTab 공개 설정 카드</strong> — horizontal margin이 0이라 다른 EditableSection과 정렬이 안 맞음 (세 번째 섹션의 padding 이후 edge-to-edge로 카드가 붙음).</li>
-      <li><strong>localization</strong> — title은 <code>l10n.eventCreate_title</code>, Tab1 라벨은 하드코딩 "운영 및 티켓", Tab2 라벨은 <code>l10n.partyDetail_tab_info</code>로 일관성 부족 (drift 후보).</li>
+      <li><strong>부모 파티 정보를 가져오지 못한 경우</strong> — 화면이 빈 상태로 머무르며 사용자에게 명시적인 안내가 노출되지 않는 약점이 있음 — 후속 정리 후보.</li>
+      <li><strong>저장 진행 중 뒤로가기</strong> — 사용자가 화면을 빠져나가더라도 저장은 백그라운드에서 그대로 진행되며, 이미 만들어진 회차는 서버에 그대로 남는다.</li>
+      <li><strong>새 장소 + 반복 일정 동시 저장</strong> — 새 장소 만들기에 실패하면 회차 자체도 만들어지지 않음. 다만 회차는 만들어졌는데 반복 규칙이 만들어지지 못해 부분 성공이 발생할 가능성이 있고, 이때 사용자에겐 일반 안내 토스트만 표기 — 후속 정리 후보.</li>
+      <li><strong>"입장 조건" 섹션</strong> — 현재는 읽기 전용으로 동작해 탭해도 다음 화면으로 이동하지 않으나, 헤더에 펜 아이콘이 그대로 보여 혼동을 줄 수 있음 — 후속 정리 후보.</li>
+      <li><strong>"공개 설정" 카드 정렬</strong> — 다른 섹션과 좌우 여백이 살짝 어긋나 보이는 약점 — 후속 정리 후보.</li>
+      <li><strong>탭 라벨 일관성</strong> — "운영 및 티켓" 탭 라벨은 한국어로 고정되어 있고, "파티 정보" 탭은 다국어 키로 노출되어 있어 일관성이 약간 부족 — 후속 정리 후보.</li>
     </ul>
   </section>
 </div>
@@ -1369,7 +1363,7 @@ body.dark-mode .viewport {
       <tbody>
         <tr>
           <td><a href="/specs/party_detail_page.html"><code>PartyDetailPage</code></a></td>
-          <td>이 화면의 부모 — 이벤트 관리 탭의 "회차 만들기" CTA가 진입점. 생성 성공 시 pop 후 자동 갱신(partyEventsProvider invalidate).</td>
+          <td>이 화면의 부모 — 이벤트 관리 탭의 "회차 만들기" CTA가 진입점. 저장 성공 시 화면이 닫히면 부모의 이벤트 목록이 자동으로 갱신.</td>
         </tr>
         <tr>
           <td><a href="/specs/party_create_wizard_page.html"><code>PartyCreateWizardPage</code></a></td>

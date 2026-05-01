@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>Spec — EventResultsScreen (app_user · EventResultsRoute · routed bottom-sheet)</title>
+<title>Spec — EventResultsScreen (app_user · EventResultsRoute)</title>
 <link rel="stylesheet" href="/specs/_spec.css">
 <style>
 /* ============================================================
@@ -190,7 +190,7 @@
     <tbody>
       <tr>
         <th style="width: 140px;">Status</th>
-        <td><strong>🚧 디자인중</strong> <em style="color: var(--color-text-secondary);">— EventResultsRoute는 미구현. 현재는 EventNowBottomSheet의 results phase에서 ResultsContent를 렌더 (showModalBottomSheet). 본 spec은 routed sheet 추출 후 형태를 기준으로 작성.</em></td>
+        <td><strong>🚧 디자인중</strong> <em style="color: var(--color-text-secondary);">— 4 state · 홈 위에 올라오는 바텀시트</em></td>
       </tr>
       <tr>
         <th>App</th>
@@ -202,7 +202,7 @@
       </tr>
       <tr>
         <th>Route / Surface</th>
-        <td><code>EventResultsRoute</code> — <code>ModalBottomSheetRoute</code> (Material 3 sheet · top corners radius-card · scrim ~50%)</td>
+        <td><code>EventResultsRoute</code> · widget: <code>EventResultsScreen</code> (홈 위에 올라오는 바텀시트)</td>
       </tr>
       <tr>
         <th>Path</th>
@@ -211,8 +211,8 @@
       <tr>
         <th>Hierarchy</th>
         <td>
-          <strong>Parent</strong>: <a href="/specs/home_page.html"><code>HomeRoute</code></a> via <a href="/specs/event_now_bar.html"><code>EventNowBar</code></a> (<code>results</code> state · bar tap → <code>router.push(EventResultsRoute)</code>)<br>
-          <strong>Children</strong>: <em>—</em> <em style="color: var(--color-text-secondary);">(매치 카드만 노출 · 후속 액션은 외부 messenger deeplink — 별도 route 없음)</em>
+          <strong>Parent</strong>: <a href="/specs/home_page.html"><code>HomePage</code></a> — 시트가 올라와도 홈 화면은 어두워진 상태로 그대로 보임. 진입은 <a href="/specs/event_now_bar.html"><code>EventNowBar</code></a>가 "결과 발표" 상태일 때 탭.<br>
+          <strong>Children</strong>: <em>—</em> <em style="color: var(--color-text-secondary);">(매치 카드만 노출 · 후속 액션은 외부 메신저로 이관)</em>
         </td>
       </tr>
       <tr>
@@ -225,21 +225,21 @@
       <tr>
         <th>User journey</th>
         <td>
-          <strong>Entry points</strong>: HomePage 하단 EventNowBar의 <code>results</code> state(action variant) 탭 → sheet 슬라이드업.<br>
-          <strong>Exit points</strong>: swipe-down dismiss · scrim tap dismiss · system back. 모든 dismiss는 HomePage로 복귀 (parent route). 후속 결과 확인은 push 알림 / MyPage "진행 중인 이벤트"에서 동일 route로 재진입 가능.
+          <strong>Entry points</strong>: <a href="/specs/event_now_bar.html">EventNowBar</a>가 "결과 발표" 상태일 때 탭 → 시트가 화면 아래에서 올라옴.<br>
+          <strong>Exit points</strong>: 핸들 아래로 끌어내리기 · 시트 외곽 어두운 영역 탭 · 시스템 back → 시트 닫힘 (홈 화면 복귀). 결과는 푸시 알림 / 마이페이지 "진행 중인 이벤트"에서 동일 화면으로 재진입 가능.
         </td>
       </tr>
       <tr>
         <th>Background</th>
         <td>
-          밍글릿 매칭 phase의 클라이맥스 화면 — 사용자 입력 없이 결과만 노출하는 read-only screen이므로 bottom sheet으로 가볍게 처리.
-          매치 카드 자체는 익명성 보호 차원에서 partner side에서 동의한 contact만 표시 (DB <code>partner_contact</code> NULL 가능).
+          밍글릿 매칭의 클라이맥스 화면 — 사용자 입력 없이 결과만 노출하는 보기 전용 화면이므로 바텀시트로 가볍게 처리.
+          매치 카드 자체는 익명성 보호 차원에서 상대 측에서 동의한 연락처만 표시 (연락처 누락 가능).
           empty fallback("이번엔 아쉽지만, 다음 기회에!")은 사용자가 거절감을 받지 않도록 톤 조절.
         </td>
       </tr>
       <tr>
         <th>Frequency</th>
-        <td>이벤트 1회당 최대 1회 진입(결과 확인 후 EventNowBar는 ended state로 자동 전환). 다만 route 자체는 deeplink로 재진입 가능.</td>
+        <td>이벤트 1회당 최대 1회 진입 (결과 확인 후 EventNowBar는 "종료" 상태로 자동 전환). 다만 같은 경로로 deeplink 재진입은 가능.</td>
       </tr>
     </tbody>
   </table>
@@ -266,9 +266,8 @@
         <td>1.0</td>
         <td>mark-yun</td>
         <td>
-          v1.4 template으로 신규 작성 — EventNowBar의 <code>results</code> state에서 push되는 routed bottom-sheet 화면.
-          mini-table per state (4종 · baseline = withMatches), 익명성·empty fallback 정책 명시.
-          ResultsContent (= MatchResultsContent) widget을 routed sheet 형태로 추출했을 때의 사양.
+          v1.4 template으로 신규 작성 — EventNowBar가 "결과 발표" 상태일 때 진입하는 바텀시트.
+          mini-table per state (4종 · baseline = withMatches), 익명성 · empty fallback 정책 명시.
         </td>
       </tr>
     </tbody>
@@ -290,13 +289,13 @@
   <div class="perspective__header">
     <span class="glyph">🧱</span>
     <h2>Layout</h2>
-    <span class="lede">화면 구조 — scrim + bottom sheet · top corners radius-card · drag handle / hero / list 3 region. 색·타이포 무시.</span>
+    <span class="lede">화면 구조 — 어두워진 홈 위에 올라오는 바텀시트 · 상단 모서리만 radius-card · drag handle / hero / list 3 region. 색·타이포 무시.</span>
   </div>
 
   <section class="doc">
     <h2>Blueprint &amp; tree</h2>
     <p class="intro">
-      <code>ModalBottomSheetRoute</code>로 슬라이드업되는 sheet. <strong>AppBar 없음</strong> — 상단 drag handle(40×4)이 dismiss affordance. sheet 내부는 <code>SafeArea</code>로 bottom inset 보정. 콘텐츠 길이가 viewport을 넘으면 sheet 자체가 scroll(현재는 short content라 거의 발생하지 않음).
+      아래에서 위로 슬라이드되며 올라오는 바텀시트. <strong>AppBar 없음</strong> — 상단 drag handle(40×4)이 닫기 단서. 시트 내부는 안전 영역(하단 inset 보정). 콘텐츠가 길어지면 시트 자체가 스크롤(현재는 짧은 콘텐츠라 거의 발생하지 않음).
     </p>
     <div class="layout-grid">
       <div class="blueprint" style="width: 343px; height: 540px;">
@@ -331,43 +330,39 @@
         </div>
       </div>
 
-      <div class="layout-tree"><b>Navigator</b>
-└─ <em>ModalBottomSheetRoute</em>: <b>EventResultsScreen</b>
-   <i>· scrim above (Material default ~50% black)</i>
+      <div class="layout-tree"><b>Modal Bottom Sheet</b>
+└─ scrim 0.5 black
+└─ top corners: <i>radius-card 16</i>
+└─ box-shadow: <i>0 -4px 20px rgba(0,0,0,0.10)</i>
 
-<b>Sheet container</b>
-├─ background: <i>color-background (white)</i>
-├─ border-radius: <i>radius-card (16)</i>  <i>top corners only</i>
-├─ box-shadow: <i>0 -4px 20px rgba(0,0,0,0.10)</i>
-├─ padding-bottom: <i>SafeArea bottom + spacing-medium</i>
-│
-├─ <em>Drag handle</em>                              ← ㉠
-│  · 40×4 · radius 2 · text-secondary @35% alpha · top: 8px · centered
+<b>EventResultsScreen</b>
+├─ <em>Drag handle</em>                               ← ㉠
+│  · 40×4 · radius 2 · text-secondary 흐린 색 · top 8px · centered
 │
 └─ Padding(symmetric · h: spacing-screen-edge · v: spacing-large)
-   └─ Column(min · cross: center)
-      ├─ <em>Hero icon</em>                          ← ㉡
+   └─ 가운데 정렬 stacked column
+      ├─ <em>Hero icon</em>                           ← ㉡
       │  · 64×64 circle · color-primary bg
       │  · Icon(favorite · 36 · color-background)
       ├─ Gap: <i>spacing-medium (16)</i>
-      ├─ <em>Title</em> "매칭 결과"                  ← ㉢
+      ├─ <em>Title</em> "매칭 결과"                   ← ㉢
       │  · titleLarge · w700 · text-primary
       ├─ Gap: <i>spacing-small (8)</i>
-      ├─ <em>Sub</em> event.title                    ← ㉢
+      ├─ <em>Sub</em> 이벤트 이름                     ← ㉢
       │  · bodyMedium · text-secondary · centered
       ├─ Gap: <i>spacing-xlarge (32)</i>
       │
-      └─ matchesAsync.when:
-         ├─ data + matches.isNotEmpty:
-         │   ├─ <em>Count line</em>                  ← ㉣
+      └─ 매치 정보 분기:
+         ├─ 매치 1+건:
+         │   ├─ <em>Count line</em>                   ← ㉣
          │   │  · "N명과 매칭되었어요!" · titleSmall · primary · w600
          │   ├─ Gap: <i>spacing-medium (16)</i>
-         │   └─ for match in matches:
-         │       ├─ <b>MatchResultCard</b>           ← ㉤
+         │   └─ 각 매치마다:
+         │       ├─ <b>MatchResultCard</b>            ← ㉤
          │       └─ Gap: <i>spacing-small (8)</i>
-         ├─ data + matches.isEmpty: <em>EmptyResult</em>
-         ├─ loading: <em>120px spinner</em>
-         └─ error: <em>EmptyResult</em>              <i>(silently degrades to empty)</i></div>
+         ├─ 매치 0건: <em>EmptyResult</em>
+         ├─ 로딩: <em>120px spinner</em>
+         └─ 에러: <em>EmptyResult</em>                 <i>(조용히 empty로 폴백)</i></div>
     </div>
 
     <table class="ref" style="margin-top: 16px;">
@@ -392,17 +387,17 @@
 
   <section class="doc">
     <h2>MatchCard anatomy</h2>
-    <p class="intro">매치 1건당 1 카드. Row(avatar · name+contact · heart trailing) · radius-card · 1px primary tint border. 익명성 정책: <code>partnerName</code> / <code>partnerContact</code> nullable — partner side 동의 여부에 따라 노출.</p>
+    <p class="intro">매치 1건당 1 카드. avatar · 이름+연락처 · 하트 trailing의 가로 row 구조. radius-card · 1px primary tint border. 익명성 정책: 이름 / 연락처는 상대 측 동의 여부에 따라 노출 또는 누락.</p>
     <table class="ref">
       <thead>
         <tr><th style="width: 180px;">Element</th><th>Behavior</th></tr>
       </thead>
       <tbody>
-        <tr><td>Avatar (CircleAvatar 24r = 48 dia)</td><td>NetworkImage(partnerProfileImage) · null이면 Icon(person · primary tint)</td></tr>
-        <tr><td>Name</td><td>partnerName ?? '알 수 없음' · bodyLarge · w700 · 1줄 ellipsis</td></tr>
-        <tr><td>Contact</td><td>partnerContact != null일 때만 등장 · bodySmall · text-secondary · 1줄 ellipsis · 위 gap: 2px</td></tr>
-        <tr><td>Trailing heart</td><td>Icon(favorite · primary · MinglitIconSize.small ≈ 20)</td></tr>
-        <tr><td>Tap</td><td>현재 정의되지 않음 — 카드는 read-only. 후속 액션(채팅 등)은 external messenger deeplink로 이관 예정.</td></tr>
+        <tr><td>Avatar (48 dia 원형)</td><td>상대 프로필 이미지가 있으면 표시, 없으면 person 아이콘 (primary tint).</td></tr>
+        <tr><td>Name</td><td>상대 이름 (없으면 "알 수 없음") · bodyLarge · w700 · 1줄 ellipsis.</td></tr>
+        <tr><td>Contact</td><td>상대가 연락처를 노출 동의한 경우에만 표시. bodySmall · text-secondary · 1줄 ellipsis · 위 gap 2px.</td></tr>
+        <tr><td>Trailing heart</td><td>Icon(favorite · primary · 20).</td></tr>
+        <tr><td>Tap</td><td>현재 정의되지 않음 — 카드는 보기 전용. 후속 액션(채팅 등)은 외부 메신저로 이관 예정.</td></tr>
       </tbody>
     </table>
   </section>
@@ -415,12 +410,12 @@
   <div class="perspective__header">
     <span class="glyph">🎨</span>
     <h2>States</h2>
-    <span class="lede">시각 변형 4종. baseline = <code>withMatches</code> (1+ 매치). matchesAsync(<code>myMatchesProvider(eventId)</code>)의 data/loading/error + 빈 리스트 분기.</span>
+    <span class="lede">시각 변형 4종. baseline = withMatches (1+ 매치). 매치 결과 정보 도착 / 로딩 / 에러 + 빈 리스트로 분기.</span>
   </div>
 
   <section class="doc">
     <p class="intro">
-      <strong>State 식별 기준</strong>: <code>ref.watch(myMatchesProvider(event.id))</code>의 AsyncValue 분기 + 리스트 길이. error는 의도적으로 empty fallback과 동일 시각 (사용자 거절감 완화).
+      매치 정보가 도착했는지, 매치가 있는지, 받아오는 중인지에 따라 분기. 에러는 의도적으로 empty fallback과 동일한 모습 — 사용자 거절감을 완화하기 위함.
     </p>
 
     <!-- State 1: withMatches (baseline) -->
@@ -474,25 +469,25 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>matchesAsync.data</code> · <code>matches.isNotEmpty</code> · 일반적으로 1~3건 (matching algorithm cap)</td>
+          <td>매치 정보가 도착했고 매치가 1건 이상 있는 상태. 매칭 알고리즘 cap에 따라 일반적으로 1~3건.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>· 카드 read-only — tap 미정의<br>· swipe-down · scrim tap · system back → dismiss → HomePage 복귀 → EventNowBar는 <code>ended</code> state로 전환 (확인 처리)</td>
+          <td>· 카드 보기 전용 — 탭 동작 없음<br>· 핸들 아래로 끌어내리기 · 시트 외곽 어두운 영역 탭 · 시스템 back → 시트 닫힘 (홈 복귀). EventNowBar는 잠시 후 "종료" 상태로 자동 전환 (확인 처리).</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· <code>partnerName</code> null → "알 수 없음"<br>· <code>partnerContact</code> null → contact 라인 자체 미렌더 (gap 사라짐)<br>· <code>partnerProfileImage</code> null → person icon fallback<br>· 매치 4건 이상 → sheet 내부 scroll (<code>isScrollControlled: true</code>)</td>
+          <td>· 상대 이름이 비어있으면 "알 수 없음"<br>· 상대 연락처 미동의 시 contact 라인 자체가 사라짐<br>· 상대 프로필 이미지 없을 시 person 아이콘으로 폴백<br>· 매치 4건 이상이면 시트 내부에서 스크롤</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
           <td>
-            · <code>SheetContainer</code> (color-background · top corners radius-card · safeArea bottom)<br>
-            · <code>DragHandle</code> (40×4 · text-secondary @35%)<br>
-            · <code>HeroAvatar</code> (64×64 · color-primary bg · Icons.favorite 36)<br>
-            · <code>Title</code> (titleLarge w700) + <code>Sub</code> (bodyMedium text-secondary)<br>
-            · <code>CountLine</code> ("N명과 매칭되었어요!" · titleSmall primary w600)<br>
-            · <code>MatchResultCard</code> × N (CircleAvatar 24r · name + contact · trailing heart icon)
+            · 시트 (color-background · 상단 모서리 radius-card · 안전 영역 보정)<br>
+            · DragHandle (40×4 · text-secondary 흐린 색)<br>
+            · HeroAvatar (64×64 · color-primary bg · Icons.favorite 36)<br>
+            · Title (titleLarge w700) + Sub (bodyMedium text-secondary)<br>
+            · CountLine ("N명과 매칭되었어요!" · titleSmall primary w600)<br>
+            · MatchResultCard × N (avatar 48 · 이름 + 연락처 · trailing heart icon)
           </td>
         </tr>
         <tr>
@@ -507,7 +502,7 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 결과는 read-only — interaction 거의 없음. 익명성 정책상 partnerContact가 없는 매치는 "이름만" 카드로 노출되며, 실제 연락은 partner side에서 contact 등록한 경우에만 가능.</td>
+          <td>📝 결과는 보기 전용 — 거의 인터랙션이 없음. 익명성 정책상 상대가 연락처를 동의하지 않으면 "이름만" 카드로 노출되며, 실제 연락은 상대가 연락처를 등록한 경우에만 가능.</td>
         </tr>
       </tbody>
     </table>
@@ -541,29 +536,29 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>matchesAsync.data</code> · <code>matches.isEmpty</code> — 양방향 매치 0건</td>
+          <td>매치 정보가 도착했지만 매치가 0건인 상태 (양방향 매치 없음).</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>동일 (read-only · dismiss만 가능)</td>
+          <td>동일 (보기 전용 · 닫기만 가능).</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· error도 동일 mock으로 폴백 (사용자 입장에서 구분 불필요)<br>· "다음 이벤트 추천" CTA는 현재 미존재 — 후속 PR 후보</td>
+          <td>· 에러 상태도 동일한 화면으로 폴백 (사용자 입장에서 구분 불필요)<br>· "다음 이벤트 추천" CTA는 현재 미존재 — 후속 후보.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
           <td>
-            ↔ <code>CountLine</code> + <code>MatchResultCard</code> 리스트 → <strong>EmptyResult block</strong><br>
-            + <code>EmptyIcon</code> (Icons.sentiment_neutral · 48 · text-secondary @70% alpha)<br>
-            + <code>EmptyText</code> ("이번엔 아쉽지만, 다음 기회에!" · bodyMedium · text-secondary)<br>
+            ↔ CountLine + MatchResultCard 리스트 → <strong>EmptyResult block</strong><br>
+            + EmptyIcon (Icons.sentiment_neutral · 48 · text-secondary @70% alpha)<br>
+            + EmptyText ("이번엔 아쉽지만, 다음 기회에!" · bodyMedium · text-secondary)<br>
             나머지(handle · hero · title · sub) 동일
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
           <td>
-            ↔ icon color → <code>text-secondary</code> @ <code>MinglitOpacity.strong</code> (≈ 0.70)<br>
+            ↔ icon color → <code>text-secondary</code> @ strong opacity (≈ 0.70)<br>
             + spacing-xlarge (32 · 위·아래 v-padding), spacing-medium (16 · icon↔text gap)<br>
             나머지 동일
           </td>
@@ -601,21 +596,21 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>matchesAsync.loading</code> — 첫 fetch 중 (대부분 200~500ms)</td>
+          <td>시트가 처음 떠서 매치 정보를 받아오는 중 (보통 200~500ms).</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>동일 (dismiss만)</td>
+          <td>동일 (닫기만 가능).</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· 캐시된 매치가 있는 재진입 시 loading 안 보고 바로 data로 점프 (Riverpod cached)<br>· 네트워크 지연 시 spinner 무한 반복 — 별도 timeout 미정의</td>
+          <td>· 이전에 봤던 매치 정보가 캐시되어 있으면 로딩 없이 바로 결과 노출.<br>· 네트워크 지연 시 스피너 계속 반복 — 별도 타임아웃 미정의.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
           <td>
             ↔ count + list 영역 → <strong>120px LoadingBlock</strong><br>
-            + <code>MinglitCircularProgressIndicator</code> (= spec mockup의 28px primary spinner · 1s linear loop)<br>
+            + 스피너 (28px primary · 1s linear loop)<br>
             나머지(handle · hero · title · sub) 동일
           </td>
         </tr>
@@ -662,15 +657,15 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>matchesAsync.error</code> — fetch 실패 (network · 500 등)</td>
+          <td>매치 정보 받아오기 실패 (네트워크 / 서버 오류).</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>동일</td>
+          <td>동일.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· retry CTA 없음 — 사용자 입장에서 empty와 구분 불가 (의도적)<br>· 실제 에러는 Sentry에 보고됨 (UI 표면 X)</td>
+          <td>· 다시 시도 버튼 없음 — 사용자 입장에서 empty와 구분 불가 (의도적).<br>· 실제 에러는 모니터링 시스템에 보고됨 (UI에는 표면화하지 않음).</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
@@ -708,24 +703,24 @@
       </thead>
       <tbody>
         <tr>
-          <td>swipe-down</td>
-          <td>sheet drag-to-dismiss (Material 3 default detents). drag distance가 threshold 넘으면 slide-down + scrim fade-out → HomePage 복귀.</td>
+          <td>핸들 아래로 끌어내리기</td>
+          <td>핸들 또는 시트 본문을 아래로 드래그 → 일정 거리 이상 끌면 시트가 슬라이드다운하며 닫힘 (홈 화면 복귀).</td>
         </tr>
         <tr>
-          <td>scrim tap (sheet 외부 영역)</td>
-          <td>sheet dismiss (위와 동일 motion). <code>isDismissible: true</code> default.</td>
+          <td>시트 외곽 어두운 영역 탭</td>
+          <td>시트가 동일하게 닫힘.</td>
         </tr>
         <tr>
-          <td>system back / 안드로이드 back gesture</td>
-          <td>sheet pop. EventNowBar는 다음 stream tick에 <code>ended</code> state로 전환.</td>
+          <td>시스템 back / 안드로이드 back gesture</td>
+          <td>시트 닫힘. EventNowBar는 잠시 후 "종료" 상태로 자동 전환.</td>
         </tr>
         <tr>
           <td>다크 모드 토글</td>
           <td>sheet bg → <code>color-dark-background</code>. card bg → <code>color-dark-surface</code>. scrim 그대로. handle / 텍스트 컬러 dark 토큰으로 자동 swap.</td>
         </tr>
         <tr>
-          <td>matchesAsync 갱신 (실시간)</td>
-          <td>sheet 열려 있는 상태에서 stream이 새 데이터를 emit하면 list AnimatedSwitcher 없이 cut 교체 (현재 widget은 transition 미정의).</td>
+          <td>매치 정보 실시간 갱신</td>
+          <td>시트가 열려 있는 동안 새 매치 정보가 도착하면 리스트가 즉시 갱신 (별도 전환 애니메이션 없음).</td>
         </tr>
       </tbody>
     </table>
@@ -756,12 +751,12 @@
         <tr>
           <td>Loading spinner</td>
           <td>1s linear infinite (unscoped)</td>
-          <td>MinglitCircularProgressIndicator 기본 — token 미정의.</td>
+          <td>스피너 기본 — token 미정의.</td>
         </tr>
         <tr>
           <td>List → empty / loading → list 교차</td>
           <td>—</td>
-          <td>현재 cut. 향후 <code>MinglitAnimation.fast</code> (200ms) crossfade 도입 후보.</td>
+          <td>현재 즉시 swap. 향후 <code>MinglitAnimation.fast</code> (200ms) crossfade 도입 후보.</td>
         </tr>
       </tbody>
     </table>
@@ -770,11 +765,11 @@
   <section class="doc">
     <h2>Global edge cases</h2>
     <ul class="notes">
-      <li><strong>익명성</strong> — <code>partnerName</code> / <code>partnerContact</code>는 partner side 동의 시에만 노출. 모든 매치가 contact 미동의면 카드는 "이름만" 표시되고 실연락은 불가.</li>
-      <li><strong>매치 상한</strong> — matching algorithm cap에 따라 일반적으로 1~3건. 4건 이상은 sheet 내부 scroll (<code>isScrollControlled: true</code>).</li>
-      <li><strong>재진입</strong> — push 알림 / MyPage "진행 중인 이벤트" 등 다른 surface에서도 같은 route로 재진입. EventNowBar에서만 진입하는 게 아님.</li>
-      <li><strong>이벤트 종료 처리</strong> — sheet dismiss 시 EventNowBar는 stream 갱신으로 <code>ended</code> state로 전환 (사용자가 결과를 "확인 처리"한 것으로 간주).</li>
-      <li><strong>error silent degrade</strong> — fetch 실패 시 empty와 동일 화면. 사용자에게 retry option은 노출하지 않음. Sentry로만 보고.</li>
+      <li><strong>익명성</strong> — 상대 이름 / 연락처는 상대가 동의한 경우에만 노출. 모든 매치가 연락처 미동의면 카드는 "이름만" 표시되고 실제 연락은 불가.</li>
+      <li><strong>매치 상한</strong> — 매칭 알고리즘 cap에 따라 일반적으로 1~3건. 4건 이상은 시트 내부에서 스크롤.</li>
+      <li><strong>재진입</strong> — 푸시 알림 / 마이페이지 "진행 중인 이벤트" 등 다른 surface에서도 같은 화면으로 재진입 가능. EventNowBar에서만 진입하는 게 아님.</li>
+      <li><strong>이벤트 종료 처리</strong> — 시트 닫기 시 EventNowBar가 자동으로 "종료" 상태로 전환 (사용자가 결과를 "확인 처리"한 것으로 간주).</li>
+      <li><strong>error silent degrade</strong> — 매치 정보 받아오기에 실패하면 empty와 동일한 화면. 사용자에게 다시 시도 옵션은 노출하지 않고 모니터링 시스템에만 보고.</li>
     </ul>
   </section>
 </div>

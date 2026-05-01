@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>Spec — EventCheckedInScreen (app_user · EventCheckedInRoute · kit-shared)</title>
+<title>Spec — EventCheckedInScreen (app_user · EventCheckedInRoute)</title>
 <link rel="stylesheet" href="/specs/_spec.css">
 <style>
 /* ============================================================
@@ -216,11 +216,11 @@
     <tbody>
       <tr>
         <th style="width: 140px;">Status</th>
-        <td><strong>🚧 디자인중</strong> <em style="color: var(--color-text-secondary);">— 4 state · routed bottom sheet · kit-shared 예정 (현재 구현은 <code>EventNowBottomSheet</code>의 phase 2 콘텐츠 <code>CheckedInContent</code>로 inline)</em></td>
+        <td><strong>🚧 디자인중</strong> <em style="color: var(--color-text-secondary);">— 4 state · 홈 위에 올라오는 바텀시트</em></td>
       </tr>
       <tr>
         <th>App</th>
-        <td><code>app_user</code> <em style="color: var(--color-text-secondary);">(widget은 <code>minglit_kit</code> 패키지로 이전 예정 — kit-shared)</em></td>
+        <td><code>app_user</code></td>
       </tr>
       <tr>
         <th>Category</th>
@@ -228,7 +228,7 @@
       </tr>
       <tr>
         <th>Route / Surface</th>
-        <td><code>EventCheckedInRoute</code> (<code>ModalBottomSheetRoute</code> · GoRouter <code>pageBuilder</code>) · widget: <code>EventCheckedInScreen</code> (kit-shared) <em style="color: var(--color-text-secondary);">— 현재는 라우트 미등록 · phase 분기로 동일 시트 내부에서 inline swap</em></td>
+        <td><code>EventCheckedInRoute</code> · widget: <code>EventCheckedInScreen</code> (홈 위에 올라오는 바텀시트)</td>
       </tr>
       <tr>
         <th>Path</th>
@@ -237,8 +237,8 @@
       <tr>
         <th>Hierarchy</th>
         <td>
-          <strong>Parent</strong>: <a href="/specs/home_page.html"><code>HomePage</code></a> (HomeRoute) — 시트가 push 되어도 parent route 그대로 유지. 진입은 <a href="/specs/event_now_bar.html"><code>EventNowBar</code></a>의 <code>checkedIn</code> 탭, 또는 <a href="/specs/event_check_in_screen.html"><code>EventCheckInScreen</code></a> 성공 transition.<br>
-          <strong>Children</strong>: <em>—</em> <em style="color: var(--color-text-secondary);">(매칭 시작 시 <code>EventMatchingScreen</code>으로 자동 전환 — 별도 spec 예정)</em>
+          <strong>Parent</strong>: <a href="/specs/home_page.html"><code>HomePage</code></a> — 시트가 올라와도 홈 화면은 어두워진 상태로 그대로 보임. 진입은 <a href="/specs/event_now_bar.html"><code>EventNowBar</code></a>가 "체크인 완료" 상태일 때 탭, 또는 <a href="/specs/event_check_in_screen.html"><code>EventCheckInScreen</code></a>에서 체크인 인식 후 자동 전환.<br>
+          <strong>Children</strong>: <em>—</em> <em style="color: var(--color-text-secondary);">(매칭이 시작되면 <a href="/specs/event_matching_screen.html">매칭 화면</a>으로 자동 전환)</em>
         </td>
       </tr>
       <tr>
@@ -250,14 +250,14 @@
       <tr>
         <th>User journey</th>
         <td>
-          <strong>Entry points</strong>: ① <a href="/specs/event_check_in_screen.html"><code>EventCheckInScreen</code></a>에서 QR 스캔 성공 → 백엔드 phase가 <code>checkedIn</code>으로 변경 → 이 시트로 자동 transition. ② <code>EventNowBar</code>가 <code>checkedIn</code> state일 때 직접 탭. ③ push 알림 "체크인이 확인되었습니다" deeplink.<br>
-          <strong>Exit points</strong>: ① 백엔드 phase가 <code>matching</code>으로 전환 → <code>EventMatchingScreen</code>으로 자동 transition. ② scrim / 핸들 swipe-down → dismiss (parent HomeRoute 유지 · EventNowBar는 <code>checkedIn</code> state로 노출 지속).
+          <strong>Entry points</strong>: ① <a href="/specs/event_check_in_screen.html">체크인 화면</a>에서 QR 스캔이 인식되면 자동으로 이 시트로 전환. ② EventNowBar가 "체크인 완료" 상태일 때 직접 탭. ③ "체크인이 확인되었습니다" 푸시 알림 진입.<br>
+          <strong>Exit points</strong>: ① 매칭이 시작되면 <a href="/specs/event_matching_screen.html">매칭 화면</a>으로 자동 전환. ② 시트 외곽 어두운 영역 탭 / 핸들 아래로 끌어내리기 → 시트 닫힘 (홈 화면 복귀, EventNowBar는 "체크인 완료" 상태로 그대로 노출).
         </td>
       </tr>
       <tr>
         <th>Background</th>
         <td>
-          체크인 직후 사용자 심리 — "내가 잘 등록된 게 맞나?" 불안 + "다른 사람들도 왔나?" 호기심을 동시에 해소해야 한다. 그래서 이 화면은 ① 큰 success 체크 (시각 즉시성) ② 참석자 수 (밀도 신호) ③ 곧 매칭 시작 안내 (다음 단계 예고)의 3단 구조. 별도 라우트로 둔 이유는 EventCheckInScreen과 분리해 deeplink / push 알림 / EventNowBar 직접 탭 등 여러 entry로 진입 가능하게 하기 위함.
+          체크인 직후 사용자 심리 — "내가 잘 등록된 게 맞나?" 불안 + "다른 사람들도 왔나?" 호기심을 동시에 해소해야 한다. 그래서 이 화면은 ① 큰 success 체크 (시각 즉시성) ② 참석자 수 (밀도 신호) ③ 곧 매칭 시작 안내 (다음 단계 예고)의 3단 구조. 별도 화면으로 둔 이유는 체크인 화면과 분리해 딥링크 / 푸시 알림 / EventNowBar 직접 탭 등 여러 entry로 진입 가능하게 하기 위함.
         </td>
       </tr>
       <tr>
@@ -288,7 +288,7 @@
         <td>1.0</td>
         <td>mark-yun</td>
         <td>
-          v1.4 template으로 신규 spec 작성. <code>EventNowBar</code>의 5개 routed sheet 매핑 중 두 번째 (<code>checkedIn</code>). 실제 구현은 현재 <code>CheckedInContent</code>(<code>apps/app_user/lib/src/features/home/widgets/event_now_phases/checked_in_content.dart</code>)로 <code>EventNowBottomSheet</code>의 phase 2 분기에서 inline 렌더링 — 이 spec은 "kit-shared <code>EventCheckedInScreen</code> + 독립 라우트"로의 마이그레이션 타깃을 정의. 4 state · baseline = default(체크인 완료 confirmation).
+          v1.4 template으로 신규 spec 작성. EventNowBar에서 진입하는 5개 시트 중 두 번째 ("체크인 완료" 상태). 4 state · baseline = default (체크인 완료 confirmation).
         </td>
       </tr>
     </tbody>
@@ -316,7 +316,7 @@
   <section class="doc">
     <h2>Blueprint &amp; tree</h2>
     <p class="intro">
-      <code>showModalBottomSheet</code> + <code>RoundedRectangleBorder(top: Radius.circular(MinglitRadius.card))</code>로 부착되는 시트. 콘텐츠 자체는 가변이지만 baseline에서는 약 360px 내외. 시트 내부는 <code>SafeArea</code> + <code>Padding(horizontal: screenEdge, vertical: large)</code>이고, 본문은 <code>Column(mainAxisSize: MainAxisSize.min)</code>으로 위에서 아래로 stacked.
+      화면 하단에 부착되는 시트. 상단 모서리만 <code>radius-card (16)</code>으로 둥글고, 콘텐츠 길이에 따라 시트 높이가 가변 (baseline에서는 약 360px 내외). 본문은 위에서 아래로 stacked column.
     </p>
     <div class="layout-grid">
       <div class="blueprint" style="width: 343px; height: 600px;">
@@ -350,51 +350,49 @@
         </div>
       </div>
 
-      <div class="layout-tree"><b>ModalBottomSheetRoute</b>
-└─ <em>backgroundColor</em>: scrim 0.5 black
-└─ <em>shape</em>: RoundedRectangleBorder(top: <i>radius-card 16</i>)
-└─ <em>isScrollControlled</em>: true   <i>(콘텐츠 가변)</i>
+      <div class="layout-tree"><b>Modal Bottom Sheet</b>
+└─ scrim 0.5 black
+└─ top corners: <i>radius-card 16</i>
+└─ <i>(콘텐츠 길이에 따라 시트 높이 가변)</i>
 
 <b>EventCheckedInScreen</b>
-└─ SafeArea
-   └─ Padding(bottom: viewPadding.bottom)
-      └─ Padding(horizontal: <i>screenEdge 16</i> · vertical: <i>large 24</i>)
-         └─ Column(mainAxisSize: min · crossAxisAlignment: center)
-            ├─ <em>Drag handle</em>                       ← ㉠
-            │  · 40×4 · radius 2 · color: text-secondary @ alpha muted (0.3)
-            │
-            ├─ Gap: <i>spacing-xlarge (32)</i>
-            ├─ <em>Success check</em>                     ← ㉡
-            │  · 64×64 · BoxShape.circle · bg: <code>MinglitColors.success</code>
-            │  · Icon(check · size 36 · color: background)
-            │
-            ├─ Gap: <i>spacing-medium (16)</i>
-            ├─ <em>"체크인 완료!"</em>                    ← ㉢
-            │  · titleLarge · FontWeight.bold · center
-            │
-            ├─ Gap: <i>spacing-small (8)</i>
-            ├─ <em>Event title</em>                       ← ㉣
-            │  · bodyMedium · color: text-secondary · center
-            │  · fallback: "이벤트" (event.title null 시)
-            │
-            ├─ Gap: <i>spacing-xlarge (32)</i>
-            ├─ <em>Participant count row</em>             ← ㉤
-            │  · Row(mainAxisAlignment: center)
-            │  · Icon(people_outline · 20 · text-secondary)
-            │  · Gap: <i>spacing-small (8)</i>
-            │  · Text("참석자 N / M명" · bodyMedium · text-secondary)
-            │
-            ├─ Gap: <i>spacing-medium (16)</i>
-            ├─ <b>_ParticipantAvatarRow</b>               ← ㉥
-            │  · Row(mainAxisAlignment: center)
-            │  · displayCount = count.clamp(0, 5)
-            │  · CircleAvatar(radius 16 · primary @ highlight + i*0.15)
-            │  ·   child: Icon(person · 16 · primary @ separator alpha)
-            │  · "+remaining" (bodySmall · text-secondary · w600) — count > 5일 때만
-            │
-            ├─ Gap: <i>spacing-xlarge (32)</i>
-            └─ <em>"곧 매칭이 시작될 거예요"</em>          ← ㉦
-               · bodySmall · color: text-secondary · default align</div>
+└─ Safe area + 하단 inset
+   └─ Padding(horizontal: <i>screenEdge 16</i> · vertical: <i>large 24</i>)
+      └─ 가운데 정렬 stacked column
+         ├─ <em>Drag handle</em>                        ← ㉠
+         │  · 40×4 · radius 2 · text-secondary 흐린 색
+         │
+         ├─ Gap: <i>spacing-xlarge (32)</i>
+         ├─ <em>Success check</em>                      ← ㉡
+         │  · 64×64 원 · bg: success
+         │  · Icon(check · 36 · color: background)
+         │
+         ├─ Gap: <i>spacing-medium (16)</i>
+         ├─ <em>"체크인 완료!"</em>                      ← ㉢
+         │  · titleLarge · bold · center
+         │
+         ├─ Gap: <i>spacing-small (8)</i>
+         ├─ <em>Event title</em>                        ← ㉣
+         │  · bodyMedium · text-secondary · center
+         │  · fallback: "이벤트" (제목 누락 시)
+         │
+         ├─ Gap: <i>spacing-xlarge (32)</i>
+         ├─ <em>Participant count row</em>              ← ㉤
+         │  · 가운데 정렬 row
+         │  · Icon(people_outline · 20 · text-secondary)
+         │  · Gap: <i>spacing-small (8)</i>
+         │  · "참석자 N / M명" (bodyMedium · text-secondary)
+         │
+         ├─ Gap: <i>spacing-medium (16)</i>
+         ├─ <b>참석자 아바타 row</b>                     ← ㉥
+         │  · 가운데 정렬 row · 최대 5개 노출
+         │  · 32×32 원형 아바타 (primary 흐린 톤, 우측으로 갈수록 더 짙어짐)
+         │  ·   child: Icon(person · 16)
+         │  · "+N" (bodySmall · text-secondary · w600) — 6명 이상일 때만
+         │
+         ├─ Gap: <i>spacing-xlarge (32)</i>
+         └─ <em>"곧 매칭이 시작될 거예요"</em>            ← ㉦
+            · bodySmall · text-secondary · center</div>
     </div>
 
     <table class="ref" style="margin-top: 16px;">
@@ -428,18 +426,18 @@
   <div class="perspective__header">
     <span class="glyph">🎨</span>
     <h2>States</h2>
-    <span class="lede">시각 변형 4종. baseline = <code>default</code> (체크인 완료 confirmation). loading / error / matching-transition으로 분기. matching-transition은 이 시트가 dismiss 되기 직전 transient state.</span>
+    <span class="lede">시각 변형 4종. baseline = default (체크인 완료 confirmation). loading / error / matching-transition으로 분기. matching-transition은 시트가 닫히기 직전 잠깐 보이는 상태.</span>
   </div>
 
   <section class="doc">
     <p class="intro">
-      <strong>State 종류 식별 기준</strong>: <code>eventNowBarStateProvider(activeEvent)</code>의 <code>AsyncValue</code> + phase. data + <code>checkedIn</code> → default · loading → loading · error → error · phase가 <code>matching</code>으로 변경 → matching-transition. 참석자 수는 <code>activeEvent.event.currentParticipants</code> stream으로 갱신.
+      체크인 단계 정보가 잘 도착했는지, 아직 받아오는 중인지, 실패했는지에 따라 분기. 매칭이 시작되면 화면이 자동으로 다음 단계로 넘어간다. 참석자 수와 아바타는 실시간으로 갱신.
     </p>
 
     <!-- State 1: default (baseline) -->
     <table class="ref state-mini is-baseline-tint">
       <thead>
-        <tr><th colspan="3"><strong>default · 체크인 완료 confirmation</strong> 🎯 <small>baseline · phase = checkedIn · 참석자 12/30명</small></th></tr>
+        <tr><th colspan="3"><strong>default · 체크인 완료 confirmation</strong> 🎯 <small>baseline · 참석자 12/30명</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -485,53 +483,53 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>eventNowBarStateProvider</code> data → <code>EventNowBarState.checkedIn</code>. <code>activeEvent.event.currentParticipants</code> ≥ 1.</td>
+          <td>EventNowBar가 "체크인 완료" 상태이고 적어도 한 명 이상의 참석자가 도착해 있는 상태.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ① 콘텐츠는 read-only — primary CTA 없음. 사용자는 phase가 <code>matching</code>으로 변경되길 기다린다.<br>
-            ② 핸들 swipe-down / scrim 탭 → 시트 dismiss → HomeRoute 복귀 (EventNowBar는 <code>checkedIn</code> state로 노출 지속, 다시 탭하면 동일 시트 재노출).<br>
-            ③ phase 변경 → 350ms 후 <code>EventMatchingScreen</code>으로 자동 transition (시트 콘텐츠 swap 또는 dismiss + push).
+            ① 콘텐츠는 읽기 전용 — 별도 액션 버튼 없음. 사용자는 매칭이 시작되길 기다린다.<br>
+            ② 핸들 아래로 끌어내리기 / 시트 외곽 어두운 영역 탭 → 시트 닫힘 (홈 복귀, EventNowBar는 "체크인 완료" 상태로 그대로 노출, 다시 탭하면 같은 시트 재노출).<br>
+            ③ 매칭이 시작되면 잠시 후 <a href="/specs/event_matching_screen.html">매칭 화면</a>으로 자동 전환.
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · <code>event.title == null</code> → "이벤트" fallback 텍스트 (실제 코드 라인 67).<br>
-            · <code>currentParticipants == 0</code> → 아바타 row hidden (displayCount 0). count text는 "참석자 0 / 30명"으로 표시.<br>
-            · <code>currentParticipants > 5</code> → 5개 아바타 + "+N" (N = count − 5). 코드 라인 122 <code>count.clamp(0, 5)</code>.<br>
-            · 아바타는 placeholder만 — 실제 user 프로필 이미지는 미연결 (privacy 고려, 향후 design call). 색상은 primary @ highlight + i*0.15로 점진적 알파 변화.<br>
-            · 사용자가 다시 시트 진입 시에도 동일 콘텐츠 — refresh 트리거 없음. count는 stream으로 자동 갱신.
+            · 이벤트 제목이 누락된 경우 "이벤트"라는 fallback 텍스트 표시.<br>
+            · 참석자가 0명이면 아바타 row 자체가 숨김. count 텍스트는 "참석자 0 / 30명"으로 표시.<br>
+            · 참석자가 6명 이상이면 5개 아바타 + "+N" (N = 전체 − 5).<br>
+            · 아바타는 placeholder만 — 실제 user 프로필 이미지는 미연결 (privacy 고려, 향후 design call). 색상은 우측으로 갈수록 점진적으로 더 짙어짐.<br>
+            · 시트를 닫고 다시 열어도 동일 콘텐츠. 참석자 수는 실시간으로 자동 갱신.
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
           <td>
-            · Drag handle (40×4 · text-secondary @ <code>MinglitOpacity.muted</code> 0.3)<br>
-            · Success check Container (64×64 circle · bg <code>MinglitColors.success</code> · Icon(check · 36 · color: background))<br>
-            · "체크인 완료!" Text (titleLarge · FontWeight.bold)<br>
-            · Event title Text (bodyMedium · text-secondary · textAlign center)<br>
-            · Participant count Row (Icon(people_outline · 20 · text-secondary) + Text("참석자 N / M명" · bodyMedium · text-secondary))<br>
-            · <code>_ParticipantAvatarRow</code> (Row + CircleAvatar*N + "+remaining" Text)<br>
-            · Waiting Text (bodySmall · text-secondary)
+            · Drag handle (40×4 · text-secondary 흐린 색)<br>
+            · Success check (64×64 원 · bg success · Icon(check · 36 · color: background))<br>
+            · "체크인 완료!" (titleLarge · bold)<br>
+            · Event title (bodyMedium · text-secondary · center)<br>
+            · Participant count row (Icon(people_outline · 20 · text-secondary) + "참석자 N / M명")<br>
+            · 참석자 아바타 row (32×32 원형 아바타 × 최대 5 + "+N" 텍스트)<br>
+            · "곧 매칭이 시작될 거예요" (bodySmall · text-secondary)
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
           <td>
-            · color: <code>color-background</code> (sheet bg · check icon fill), <code>color-success</code> (check circle bg), <code>color-text-primary</code> (titleLarge), <code>color-text-secondary</code> (event title · count · waiting · handle), <code>color-primary</code> (avatar bg @ highlight 0.10 + i*0.15 step)<br>
+            · color: <code>color-background</code> (sheet bg · check icon fill), <code>color-success</code> (check circle bg), <code>color-text-primary</code> (titleLarge), <code>color-text-secondary</code> (event title · count · waiting · handle), <code>color-primary</code> (avatar bg — 우측으로 갈수록 점진적으로 더 짙은 톤)<br>
             · radius: <code>radius-card (16)</code> (sheet top corners), 50% (check circle · avatar)<br>
             · spacing: <code>spacing-screen-edge (16)</code> (h-padding), <code>spacing-large (24)</code> (v-padding), <code>spacing-xlarge (32)</code> (handle↔check · title↔count · avatars↔waiting), <code>spacing-medium (16)</code> (check↔title · count↔avatars), <code>spacing-small (8)</code> (title↔event · icon↔count text)<br>
             · typography: titleLarge(20/700 · "체크인 완료!"), bodyMedium(14 · event title · count), bodySmall(12 · waiting · "+N")<br>
-            · iconSize: <code>MinglitIconSize.small (20)</code> (people_outline), 36 (check), 16 (avatar person)<br>
-            · opacity: <code>MinglitOpacity.muted (0.3)</code> (handle), <code>highlight (0.10)</code> (avatar base bg), <code>separator</code> (avatar icon color)<br>
-            · scrim: <code>rgba(0,0,0,0.5)</code> (Material default)
+            · iconSize: 20 (people_outline), 36 (check), 16 (avatar person)<br>
+            · opacity: muted (0.3 · handle), 점진적 알파 (avatar bg)<br>
+            · scrim: <code>rgba(0,0,0,0.5)</code>
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 success check 색상은 <code>MinglitColors.success</code> 그대로 — <code>color-mix</code> 16% 같은 보조 surface 처리 없음. 코드(<code>checked_in_content.dart:46-53</code>) 그대로 채도 높은 success 원 + 흰 체크. EventCheckInScreen의 transient state(40% mix bg)와는 의도적으로 시각 차별화 — 이쪽이 "최종 확정" 신호.</td>
+          <td>📝 success check 색상은 채도 높은 success 원 + 흰 체크 — 보조 surface 처리(흐린 톤) 없이 가장 강한 success 신호. 체크인 화면의 transient state(흐린 success 톤)와는 의도적으로 시각 차별화 — 이쪽이 "최종 확정" 신호.</td>
         </tr>
       </tbody>
     </table>
@@ -539,7 +537,7 @@
     <!-- State 2: loading -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>loading · phase 평가 중</strong> <small>state AsyncValue.loading</small></th></tr>
+        <tr><th colspan="3"><strong>loading · 체크인 단계 받아오는 중</strong> <small></small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -563,19 +561,19 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>+ <code>eventNowBarStateProvider</code>가 <code>AsyncValue.loading</code> — 첫 진입 시, 또는 phase 재평가 중. 실제 <code>EventNowBottomSheet</code> 구현은 200px <code>Center(MinglitCircularProgressIndicator)</code> placeholder를 노출.</td>
+          <td>+ 시트가 처음 떠서 체크인 단계 정보를 받아오고 있는 상태. 200px 고정 영역 가운데에 스피너만 노출.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>− 모든 콘텐츠 read 불가. 핸들 swipe-down / scrim 탭으로 dismiss는 가능 (parent route 유지).</td>
+          <td>− 모든 콘텐츠 읽기 불가. 핸들 아래로 끌어내리기 / 시트 외곽 어두운 영역 탭으로 닫기는 가능.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>+ 네트워크 느림 → 스피너만 계속. provider 자체는 stream — 결국 data 또는 error로 resolve.</td>
+          <td>+ 네트워크 느림 → 스피너만 계속. 결국 정보가 도착하거나 error 상태로 떨어짐.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
-          <td>↔ 본문 전체 → <code>SizedBox(height: 200)</code> + <code>MinglitCircularProgressIndicator</code> (center). drag handle 동일.</td>
+          <td>↔ 본문 전체 → 200px 고정 영역 가운데 스피너. drag handle 동일.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
@@ -583,7 +581,7 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 EventCheckInScreen과 동일 fixed-height pattern — phase resolve 후 콘텐츠로 swap 시 시트 점프 방지.</td>
+          <td>📝 체크인 화면과 동일 fixed-height 패턴 — 정보 도착 후 콘텐츠로 swap 시 시트 점프 방지.</td>
         </tr>
       </tbody>
     </table>
@@ -591,7 +589,7 @@
     <!-- State 3: error -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>error · phase fetch 실패</strong> <small>state AsyncValue.error</small></th></tr>
+        <tr><th colspan="3"><strong>error · 체크인 정보 로드 실패</strong> <small></small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -621,15 +619,15 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>+ <code>eventNowBarStateProvider</code>가 <code>AsyncValue.error</code> — 네트워크 / Edge Function 실패. 현재 구현(<code>event_now_bottom_sheet.dart:69</code>)은 fallback으로 <code>checkInReady</code>로 회귀하지만, 마이그레이션 타깃(<code>EventCheckedInScreen</code>)은 명시적 error UI 노출 권장.</td>
+          <td>+ 네트워크 / 서버 오류로 체크인 단계 정보를 받지 못한 상태.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>+ retry CTA 명시 추가 후보 (현재 미정). dismiss → 재진입으로 retry는 가능 (Riverpod stream provider라 새 listen 시 refetch).</td>
+          <td>+ 명시적 다시 시도 버튼 추가 후보 (현재 미정). 시트 닫고 다시 열면 자동으로 재시도됨.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>+ 백엔드 phase 데이터가 일시적으로 누락된 상황 — 사용자는 이미 체크인했지만 클라이언트가 phase를 모르는 상태. 보수적으로 fallback 메시지만 노출하고 EventNowBar 측 stream이 회복되길 대기.</td>
+          <td>+ 사용자는 이미 체크인했지만 일시적으로 클라이언트가 단계 정보를 못 받는 상황. 보수적으로 fallback 메시지만 노출하고 자동 회복을 기다림.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
@@ -641,7 +639,7 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 현재 inline 구현은 error 시 phase 1(check-in ready)으로 돌아가는 수동 fallback이라 사용자 혼란 가능 — 마이그레이션 시 명시적 error UI로 분리 필요.</td>
+          <td>📝 사용자 혼란을 줄이기 위해 명시적 error UI 노출 권장.</td>
         </tr>
       </tbody>
     </table>
@@ -649,7 +647,7 @@
     <!-- State 4: matching-transition (transient) -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>matching-transition · 매칭 시작 (transient)</strong> <small>phase 변경 직후 짧게 표시 후 transition</small></th></tr>
+        <tr><th colspan="3"><strong>matching-transition · 매칭 시작 (transient)</strong> <small>매칭 화면으로 넘어가기 직전 잠깐 보이는 상태</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -688,19 +686,19 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>+ <code>EventNowBarState</code>가 <code>checkedIn</code> → <code>matching</code>으로 전환된 직후 (stream 갱신).</td>
+          <td>+ 매칭이 시작되어 단계가 "매칭 중"으로 막 전환된 직후.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>↔ 사용자 액션 불필요. 350ms 후 <code>EventMatchingScreen</code>으로 자동 transition. 그 사이 dismiss는 가능 — dismiss해도 EventNowBar는 <code>matching</code> state로 표시.</td>
+          <td>↔ 사용자 액션 불필요. 잠시 후 <a href="/specs/event_matching_screen.html">매칭 화면</a>으로 자동 전환. 그 사이 시트 닫기는 가능 — 닫아도 EventNowBar는 "매칭 중" 상태로 표시.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>+ phase race — 사용자가 swipe-down 도중 phase 변경 시 dismiss 우선. · 다음 화면 push 실패(라우트 미등록 등) 시 시트는 dismiss되고 EventNowBar 재진입에 의존.</td>
+          <td>+ 사용자가 시트를 닫는 도중 매칭이 시작되면 닫기 동작이 우선.<br>· 다음 화면 진입에 실패하면 시트가 닫히고 EventNowBar 재진입에 의존.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
-          <td>↔ waiting Text "곧 매칭이 시작될 거예요" → "매칭을 시작합니다…" (color-primary · w600). 그 외 영역은 baseline 유지하며 fade-out.</td>
+          <td>↔ "곧 매칭이 시작될 거예요" → "매칭을 시작합니다…" (color-primary · w600). 그 외 영역은 baseline 유지하며 fade-out.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
@@ -708,7 +706,7 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 transient state — 350ms 노출 후 EventMatchingScreen(별도 spec)으로 자동 전환. 이 spec에서는 "다음 화면 예고 + transition" 시각만 책임.</td>
+          <td>📝 잠깐 보이는 transient — 곧 매칭 화면으로 자동 전환. 이 spec에서는 "다음 화면 예고 + transition" 시각만 책임.</td>
         </tr>
       </tbody>
     </table>
@@ -737,24 +735,24 @@
       </thead>
       <tbody>
         <tr>
-          <td>Sheet dismiss (swipe-down)</td>
-          <td>핸들 영역 또는 시트 본문을 아래로 드래그 → 임계값 초과 시 dismiss. parent HomeRoute 유지 — back stack pop 1회. EventNowBar는 그대로 노출 (<code>checkedIn</code> state).</td>
+          <td>시트 닫기 — 핸들 아래로 끌어내리기</td>
+          <td>핸들 영역 또는 시트 본문을 아래로 드래그 → 일정 거리 이상 끌면 닫힘. 홈 화면은 그대로 유지. EventNowBar는 그대로 "체크인 완료" 상태로 노출.</td>
         </tr>
         <tr>
-          <td>Sheet dismiss (scrim 탭)</td>
-          <td>시트 외부(scrim) 탭 → 동일하게 dismiss. Material default barrier behavior.</td>
+          <td>시트 닫기 — 외곽 어두운 영역 탭</td>
+          <td>시트 외곽(어두워진 영역) 탭 → 동일하게 닫힘.</td>
         </tr>
         <tr>
-          <td>Sheet dismiss (system back)</td>
-          <td>안드로이드 back 버튼 / iOS swipe-from-edge → dismiss. parent route로.</td>
+          <td>시트 닫기 — 시스템 back</td>
+          <td>안드로이드 back 버튼 / iOS swipe-from-edge → 닫힘. 홈 화면으로 복귀.</td>
         </tr>
         <tr>
-          <td>Phase stream 자동 갱신</td>
-          <td><code>eventNowBarStateProvider(activeEvent)</code> Riverpod stream을 <code>ref.watch</code> — 백엔드 phase 변경 시 즉시 reflect. <code>matching</code>으로 전환되면 시트 콘텐츠가 transient view로 swap → 350ms 후 <code>EventMatchingScreen</code> push.</td>
+          <td>체크인 단계 자동 반영</td>
+          <td>백엔드에서 단계가 바뀌면 시트가 즉시 반영. "매칭 중"으로 바뀌면 시트 내용이 전환 화면으로 swap 되고 잠시 후 매칭 화면으로 자동 전환.</td>
         </tr>
         <tr>
-          <td>Participant count 갱신</td>
-          <td><code>activeEvent.event.currentParticipants</code> — Realtime channel 또는 polling으로 갱신. count 변경 시 텍스트와 아바타 row 즉시 재렌더링 (state mini-rebuild). 변경 시 별도 transition animation 없음 — 정수 swap.</td>
+          <td>참석자 수 / 아바타 갱신</td>
+          <td>참석자 수가 실시간으로 갱신되면 텍스트와 아바타 row가 즉시 다시 그려짐. 별도 전환 애니메이션 없이 즉시 swap.</td>
         </tr>
         <tr>
           <td>다크 모드 토글</td>
@@ -791,7 +789,7 @@
         <tr>
           <td>State swap (loading ↔ data ↔ error)</td>
           <td>—</td>
-          <td>cut. Riverpod <code>AsyncValue.when</code> 분기 — 별도 transition 없음 (의도적, 시트 jank 회피).</td>
+          <td>cut. 분기가 즉시 교체됨 — 별도 전환 애니메이션 없음 (의도적, 시트 jank 회피).</td>
         </tr>
         <tr>
           <td>Participant count / 아바타 갱신</td>
@@ -810,12 +808,12 @@
   <section class="doc">
     <h2>Global edge cases</h2>
     <ul class="notes">
-      <li><strong>Deeplink 진입</strong> — push 알림 / share URL로 직접 <code>/events/:id/checked-in</code> 진입 시 parent stack에 HomeRoute가 없을 수 있다. dismiss 시 <code>context.go('/')</code>로 fallback (라우트 가드 필요).</li>
-      <li><strong>Phase mismatch (체크인 미완료 상태로 진입)</strong> — phase가 <code>waiting</code> / <code>checkInReady</code>면 이 시트는 의미 없다. 라우트 가드에서 phase 체크 후 <code>EventCheckInScreen</code>으로 redirect 권장.</li>
+      <li><strong>딥링크 진입</strong> — 푸시 알림 / 공유 URL로 직접 진입 시 홈 화면이 뒤에 없을 수 있음. 시트 닫을 때 홈으로 복귀하도록 처리.</li>
+      <li><strong>아직 체크인하지 않은 상태로 진입</strong> — 단계가 "곧 입장" / "체크인 준비됨"이면 이 시트는 의미 없음. 라우트 가드에서 단계 체크 후 <a href="/specs/event_check_in_screen.html">체크인 화면</a>으로 redirect 권장.</li>
       <li><strong>참석자 수 0 / 1명</strong> — "참석자 1 / 30명" + 내 아바타만 1개. "곧 매칭이 시작될 거예요"가 약간 과장이 될 수 있어 향후 카피 보강 후보 ("다른 분들이 도착하면 매칭이 시작됩니다" 등).</li>
-      <li><strong>Offline</strong> — phase stream을 받을 수 없으면 마지막 캐시된 phase 사용. 사용자가 체크인한 직후 비행기 모드 등 → checkedIn 화면 유지되며 매칭으로 자동 전환은 실패. 재연결 시 stream 회복.</li>
-      <li><strong>매칭이 끝내 시작되지 않음</strong> — 운영 사고 / 인원 미달. 별도 핸들링 미정 — 추후 운영자 push로 EndedScreen으로 강제 전환 또는 "매칭이 지연되고 있습니다" 안내 추가 검토.</li>
-      <li><strong>다중 활성 이벤트</strong> — bar는 1건만 노출하므로 진입도 1건. 다른 체크인된 이벤트는 향후 별도 진입점 (MyTickets 등) 필요.</li>
+      <li><strong>오프라인</strong> — 단계 정보를 받을 수 없으면 마지막으로 알려진 단계 사용. 체크인 직후 비행기 모드 등 → 이 화면 유지되며 매칭 자동 전환은 실패. 재연결 시 자동 회복.</li>
+      <li><strong>매칭이 끝내 시작되지 않음</strong> — 운영 사고 / 인원 미달. 별도 처리 미정 — 추후 운영자 푸시로 종료 화면으로 강제 전환 또는 "매칭이 지연되고 있습니다" 안내 추가 검토.</li>
+      <li><strong>다중 활성 이벤트</strong> — EventNowBar는 한 번에 하나만 노출하므로 이 시트도 한 번에 하나. 다른 체크인된 이벤트는 향후 별도 진입점 (내 티켓 등) 필요.</li>
     </ul>
   </section>
 </div>

@@ -227,7 +227,7 @@ body.dark-mode .more-group__card { background: var(--color-dark-surface); }
       <tr>
         <th>Background</th>
         <td>
-          파트너 앱은 비즈니스 운영 도구라 settings 항목이 사용자 앱보다 많고 권한 분기가 있음 (예: <code>SETTLEMENT_EDIT</code> 없으면 "계좌 관리" 숨김). 그룹화는 의미 단위(비즈니스 / 설정 / 계정 / 약관)로만 — nested 카테고리 없이 평면 list.
+          파트너 앱은 비즈니스 운영 도구라 항목이 사용자 앱보다 많고, 멤버의 권한에 따라 일부 항목이 노출되지 않을 수 있음 (예: 정산 권한이 없으면 "계좌 관리" 숨김). 그룹화는 의미 단위(비즈니스 / 설정 / 계정 / 약관)로만 — 카테고리 안에 또 카테고리를 두지 않는 평면 리스트.
         </td>
       </tr>
       <tr>
@@ -426,21 +426,21 @@ body.dark-mode .more-group__card { background: var(--color-dark-surface); }
   <div class="perspective__header">
     <span class="glyph">🎨</span>
     <h2>States</h2>
-    <span class="lede">2 state. baseline = Default(전권 owner). <code>SETTLEMENT_EDIT</code> 미보유 시 "계좌 관리" tile 숨김.</span>
+    <span class="lede">2개 변형. baseline = 전권 파트너. 정산 권한이 없는 멤버에서는 "계좌 관리" 항목이 노출되지 않음.</span>
   </div>
 
   <section class="doc">
     <p class="intro">
-      <strong>State 종류 식별 기준</strong>:
-      ① <code>currentPartnerInfoProvider</code>가 data로 풀리고 <code>currentMemberPermissionsProvider</code>에 <code>SETTLEMENT_EDIT</code>이 있으면 baseline.
-      ② 권한이 비면 ("staff" 등 제한 멤버) "계좌 관리" tile만 빠진 reduced 상태.
-      ③ 프로필 fetch loading/error는 가장 위 ProfileGroup 자리만 spinner 또는 "정보를 불러올 수 없습니다" 폴백 — 별도 mini-table 없이 본 spec 노트에 기재.
+      <strong>State 식별 기준</strong>:
+      ① 정산 권한을 가진 일반(전권) 파트너로 진입하면 baseline. 비즈니스 관리 그룹의 4개 항목과 모든 그룹이 노출.
+      ② 정산 권한이 없는 멤버(예: 일반 직원)로 진입하면 비즈니스 관리 그룹에서 "계좌 관리" 항목 한 줄만 빠짐.
+      ③ 프로필 정보를 가져오는 동안 / 가져오기에 실패한 동안에는 화면 최상단의 프로필 영역만 로딩 인디케이터 또는 "정보를 불러올 수 없습니다" 안내로 바뀜 — 별도 변형으로 분리하지 않고 본 노트에 정리.
     </p>
 
     <!-- State 1: Default (logged in · owner / SETTLEMENT_EDIT, baseline) -->
     <table class="ref state-mini is-baseline-tint">
       <thead>
-        <tr><th colspan="3"><strong>Default · 전권 (owner / SETTLEMENT_EDIT)</strong> 🎯 <small>baseline · 5 SettingsGroup · 4 BusinessGroup tile 모두 노출</small></th></tr>
+        <tr><th colspan="3"><strong>Default · 전권 파트너</strong> 🎯 <small>baseline · 모든 그룹과 비즈니스 관리 4개 항목이 모두 노출되는 상태</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -562,28 +562,28 @@ body.dark-mode .more-group__card { background: var(--color-dark-surface); }
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>currentPartnerInfoProvider</code> = data · <code>currentMemberPermissionsProvider</code>에 <code>SETTLEMENT_EDIT</code> 포함 (owner 폴백 또는 명시 부여)</td>
+          <td>파트너 정보가 정상 도착했고 정산 권한도 부여된 상태. 비즈니스 관리 그룹의 4개 항목이 모두 노출.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ① <strong>ProfileTile 탭</strong> → <code>moreCoordinator.pushAccountManagement()</code><br>
-            ② <strong>비즈니스 tile (4종) 탭</strong> → 각 코디네이터 push (party / verification / bank / member)<br>
-            ③ <strong>알림 설정 / 테마 tile 탭</strong> → 알림 설정 push · 테마 SimpleDialog<br>
-            ④ <strong>로그아웃 탭</strong> → MinglitAlert.showConfirm (destructive) → 확인 시 signOut()<br>
-            ⑤ <strong>약관 tile 탭</strong> → launchUrl 외부 브라우저<br>
-            ⑥ <strong>스크롤</strong> → TermsGroup 노출
+            ① <strong>프로필 영역 탭</strong> — 계정 관리 화면으로 이동.<br>
+            ② <strong>비즈니스 관리 항목 탭</strong> (파티 · 인증 · 계좌 · 멤버) — 각각의 관리 화면으로 이동.<br>
+            ③ <strong>알림 설정 / 테마 항목 탭</strong> — 알림 설정 화면으로 이동, 또는 테마 선택 다이얼로그 노출.<br>
+            ④ <strong>로그아웃 탭</strong> — 위험 강조 톤의 확인 다이얼로그를 거쳐 로그아웃이 진행됨.<br>
+            ⑤ <strong>약관 / 정보 항목 탭</strong> — 외부 브라우저에서 해당 약관 페이지가 열림.<br>
+            ⑥ <strong>스크롤</strong> — 화면 아래쪽의 약관·정보 그룹이 노출.
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · 멤버 관리 탭 시 partner null이면 "파트너 정보를 불러오는 중입니다" 스낵바 (정상 push 차단)<br>
-            · 앱 버전 tile은 cursor 없음 (탭 무반응)<br>
-            · ProfileTile 영역은 partnerAsync 분기:<br>
-            &nbsp;&nbsp;– loading: <em>spinner (CircularProgressIndicator)</em> · padding large<br>
-            &nbsp;&nbsp;– error: 비활성 ProfileTile · displayName "정보를 불러올 수 없습니다" · onTap null · chevron 숨김<br>
-            &nbsp;&nbsp;– data null: 비활성 ProfileTile · displayName "파트너 정보를 불러올 수 없습니다"
+            · 파트너 정보가 아직 도착하지 않은 동안 멤버 관리 항목을 탭하면 "파트너 정보를 불러오는 중입니다" 안내 메시지가 잠깐 노출됨.<br>
+            · 앱 버전 항목은 탭해도 반응이 없음 — 정보 표시 전용.<br>
+            · 프로필 영역은 다음 세 가지 형태로 변할 수 있음:<br>
+            &nbsp;&nbsp;– 정보를 가져오는 중: 로딩 인디케이터<br>
+            &nbsp;&nbsp;– 정보 가져오기 실패: 비활성 프로필 영역 + "정보를 불러올 수 없습니다" 안내, 화살표 미노출<br>
+            &nbsp;&nbsp;– 파트너 정보가 비어있는 경우: 비활성 프로필 영역 + "파트너 정보를 불러올 수 없습니다" 안내
           </td>
         </tr>
         <tr>
@@ -611,7 +611,7 @@ body.dark-mode .more-group__card { background: var(--color-dark-surface); }
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 viewport mockup은 5/5 그룹 모두 표시 (ProfileGroup + 4 SettingsGroup) — 실제 화면에서도 단일 스크롤로 도달. <em>Fix #1859</em>: "정산 계좌 관리" → "계좌 관리"로 라벨 통일 (settlement 탭 / BankAccountPage 타이틀과 일치).</td>
+          <td>📝 위 mockup은 5개 그룹을 한 화면에 모두 노출했지만 실제로는 한 번의 스크롤로 마지막 그룹까지 도달함. 라벨은 "정산 계좌 관리" 대신 "계좌 관리"로 통일됨 — 정산 메뉴와 동일한 표기.</td>
         </tr>
       </tbody>
     </table>
@@ -619,7 +619,7 @@ body.dark-mode .more-group__card { background: var(--color-dark-surface); }
     <!-- State 2: Limited permissions (no SETTLEMENT_EDIT) -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Limited permissions · staff (no SETTLEMENT_EDIT)</strong> <small>BusinessGroup에서 "계좌 관리" tile 1줄 빠짐</small></th></tr>
+        <tr><th colspan="3"><strong>Limited permissions · 정산 권한 없는 멤버</strong> <small>비즈니스 관리 그룹에서 "계좌 관리" 한 줄이 빠진 형태</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -703,19 +703,19 @@ body.dark-mode .more-group__card { background: var(--color-dark-surface); }
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>currentMemberPermissionsProvider</code>에 <code>SETTLEMENT_EDIT</code> 미포함 (예: staff 멤버) · <code>canEditSettlement == false</code></td>
+          <td>정산 권한이 없는 멤버(예: 일반 직원)로 진입한 경우. 비즈니스 관리 그룹에서 "계좌 관리" 항목 한 줄이 노출되지 않음.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>− <strong>"계좌 관리" tile 액션 사라짐</strong> — settlement 진입 자체는 본 화면에서 차단 (PartnerScaffold 차원에서도 settlement 탭 자체가 가려짐)<br>↔ 그 외 모든 tile 액션 baseline과 <strong>동일</strong></td>
+          <td>− <strong>"계좌 관리" 항목이 노출되지 않음</strong> — 정산 화면에 들어갈 수 없도록 차단됨.<br>↔ 그 외의 모든 항목 액션은 baseline과 동일.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· 권한 fetch가 늦어 빈 list로 풀리는 짧은 시점에는 baseline이 잠깐 노출 → 권한 stream 도달하면 cut으로 tile 1줄 사라짐 (transient)<br>· owner 폴백 (memberRole == null)이 적용되면 권한이 비어 보여도 자동으로 <code>SETTLEMENT_VIEW + SETTLEMENT_EDIT</code> 부여 → 사실상 staff에서만 발생</td>
+          <td>· 권한 정보가 늦게 도착하는 짧은 시점에는 baseline 형태가 잠깐 노출되었다가, 권한이 도착하면 "계좌 관리" 항목이 자연스럽게 사라짐.<br>· 일반적으로는 정산 권한이 없는 직원 멤버에게서만 이 형태가 노출됨.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
-          <td>− BusinessGroup 내 "계좌 관리" <code>MinglitSettingsTile</code> (Icons.account_balance_wallet_outlined) 미렌더<br>↔ 나머지 컴포넌트 동일</td>
+          <td>− 비즈니스 관리 그룹 내 "계좌 관리" 항목 미노출.<br>↔ 나머지 항목은 baseline과 동일.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
@@ -723,7 +723,7 @@ body.dark-mode .more-group__card { background: var(--color-dark-surface); }
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 권한 분기는 client 레벨 fail-closed: tile 미렌더 + 라우터 가드 (PartnerScaffold). 권한이 비어 있는 상태에서 deep-link로 BankAccountRoute 진입해도 차단됨.</td>
+          <td>📝 권한이 없는 사용자가 외부 딥링크로 정산 화면에 직접 진입하더라도 자동으로 차단됨.</td>
         </tr>
       </tbody>
     </table>
@@ -749,24 +749,24 @@ body.dark-mode .more-group__card { background: var(--color-dark-surface); }
       </thead>
       <tbody>
         <tr>
-          <td>탭바 다른 탭 → 더보기</td>
-          <td>StatefulShell branch swap — More branch는 stack을 보존하므로 이전 nested push 위치로 복귀.</td>
+          <td>탭바의 다른 탭 → 더보기</td>
+          <td>더보기 탭의 이전 스크롤 위치와 진입했던 하위 화면이 보존된 상태로 복귀.</td>
         </tr>
         <tr>
           <td>다크 모드 토글</td>
-          <td>scaffold / 그룹 카드 / tile 모두 dark 토큰으로 자동 swap. ThemeSettingsTile의 icon이 dark_mode_outlined로 즉시 갱신 (MediaQuery brightness 변동 → riverpod rebuild).</td>
+          <td>scaffold·그룹 카드·항목이 다크 토큰으로 자동 전환. 테마 항목의 아이콘이 즉시 다크 톤 아이콘으로 갱신됨.</td>
         </tr>
         <tr>
-          <td>tile tap haptic</td>
-          <td>모든 InkWell tile은 ripple — 앱 버전 tile만 onTap 미연결 (무반응 · ripple 없음). 토글/스위치 trailing은 아직 사용 안 함.</td>
+          <td>항목 탭 피드백</td>
+          <td>탭 가능한 모든 항목은 가벼운 리플 피드백을 제공. 앱 버전 항목만 피드백 없음.</td>
         </tr>
         <tr>
-          <td>약관 / 정책 tile 탭</td>
-          <td><code>launchUrl</code> 외부 브라우저 호출 — 앱 컨텍스트 유지, 복귀 시 동일 화면.</td>
+          <td>약관 / 정책 항목 탭</td>
+          <td>외부 브라우저에서 해당 페이지가 열림. 앱으로 복귀하면 더보기 화면이 그대로 유지됨.</td>
         </tr>
         <tr>
-          <td>로그아웃 confirm 후</td>
-          <td><code>authControllerProvider.signOut()</code> → onboarding redirect → LoginRoute. PartnerScaffold도 함께 disposed.</td>
+          <td>로그아웃 확인 후</td>
+          <td>로그아웃이 진행되며 로그인 화면으로 자동 복귀.</td>
         </tr>
       </tbody>
     </table>
@@ -788,28 +788,28 @@ body.dark-mode .more-group__card { background: var(--color-dark-surface); }
       <tbody>
         <tr>
           <td>탭바 → 더보기 진입</td>
-          <td>cut</td>
-          <td>StatefulShell branch swap — fade 없음.</td>
+          <td>—</td>
+          <td>탭바 전환 시 별도 부드러운 전환 없이 즉시 교체.</td>
         </tr>
         <tr>
-          <td>tile → 하위 화면 push</td>
+          <td>항목 → 하위 화면 이동</td>
           <td><code>MinglitAnimation.fast</code> (200ms)</td>
-          <td>GoRouter 좌→우 slide.</td>
+          <td>화면이 좌→우로 슬라이드되며 다음 화면이 위에 얹힘.</td>
         </tr>
         <tr>
-          <td>로그아웃 confirm 다이얼로그</td>
+          <td>로그아웃 확인 다이얼로그</td>
           <td><code>MinglitAnimation.fast</code> (200ms)</td>
-          <td>Material 중앙 fade-in scale.</td>
+          <td>화면 중앙에 다이얼로그가 살짝 커지며 부드럽게 페이드 인.</td>
         </tr>
         <tr>
-          <td>테마 SimpleDialog</td>
+          <td>테마 선택 다이얼로그</td>
           <td><code>MinglitAnimation.fast</code> (200ms)</td>
-          <td>Material default — 라디오 선택 즉시 dismiss.</td>
+          <td>라디오 선택 직후 즉시 닫힘.</td>
         </tr>
         <tr>
-          <td>partnerAsync data 도달 (loading → default)</td>
-          <td>cut</td>
-          <td>Riverpod state 갱신 시 즉시 ProfileGroup 자리 spinner → tile로 swap. 별도 transition 없음.</td>
+          <td>프로필 정보 도달 → 본문 노출</td>
+          <td>—</td>
+          <td>로딩 인디케이터에서 프로필 영역으로 즉시 교체.</td>
         </tr>
       </tbody>
     </table>
@@ -818,11 +818,11 @@ body.dark-mode .more-group__card { background: var(--color-dark-surface); }
   <section class="doc">
     <h2>Global edge cases</h2>
     <ul class="notes">
-      <li><strong>스크롤 끝 도달</strong> — TermsGroup 마지막 (앱 버전 tile)이 화면 끝. ListView padding-bottom: <code>xxxlarge</code>로 home bar 가림 방지 (Fix #1824 / #1803).</li>
-      <li><strong>그룹 헤더 sticky 아님</strong> — 일반 스크롤. 그룹 헤더는 카드 바깥 위에 평범히 배치.</li>
-      <li><strong>권한 stream 늦은 도달</strong> — <code>currentMemberPermissionsProvider</code>가 비어 시작 → BusinessGroup이 잠깐 3 tile로 보일 수 있음 → 권한 도착 후 4 tile로 전환 (또는 그 반대). cut 전환.</li>
-      <li><strong>partnerAsync error</strong> — ProfileGroup 자리만 비활성 ProfileTile ("정보를 불러올 수 없습니다") · 나머지 group은 정상 노출 (멤버 관리만 partner.id 필요해서 탭 시 스낵바).</li>
-      <li><strong>앱 버전 fallback</strong> — <code>PackageInfo.fromPlatform()</code> 비동기 fail 시 하드코드 fallback "26.04.1455"가 잠깐 보일 수 있음.</li>
+      <li><strong>스크롤 끝 도달</strong> — 약관·정보 그룹의 마지막 항목(앱 버전)이 화면 하단 마지막에 위치. 시스템 홈바에 가려지지 않도록 하단에 충분한 여백을 확보.</li>
+      <li><strong>그룹 헤더 스크롤 동작</strong> — 그룹 헤더는 카드 바깥 위에 평범히 배치되며, 스크롤할 때 함께 흘러감.</li>
+      <li><strong>권한 정보가 늦게 도착</strong> — 권한이 도착하기 전에는 비즈니스 관리 그룹이 잠깐 다른 개수로 보일 수 있고, 권한이 도착하면 자연스럽게 최종 형태로 전환됨.</li>
+      <li><strong>파트너 정보 가져오기 실패</strong> — 프로필 영역만 비활성 상태("정보를 불러올 수 없습니다")가 되고, 나머지 그룹은 정상 노출됨. 멤버 관리 항목은 파트너 정보가 필요하므로 탭하면 잠깐 안내 메시지가 노출됨.</li>
+      <li><strong>앱 버전 임시 표기</strong> — 앱 버전을 가져오는 데 시간이 걸리는 짧은 동안에는 임시 버전 문자열이 잠깐 노출될 수 있음.</li>
     </ul>
   </section>
 </div>

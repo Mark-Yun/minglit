@@ -365,16 +365,16 @@ body.dark-mode .viewport {
       <tr>
         <th>User journey</th>
         <td>
-          <strong>Entry points</strong>: <a href="/specs/event_application_manage_page.html"><code>EventApplicationManagePage</code></a>의 "승인됨"/"거절됨" 탭에서 신청 행 탭 (Fix #1860 — 기존엔 행 자체 탭 동선 부재).<br>
-          <strong>Exit points</strong>: 승인/거절 처리 성공 → 스낵바 "처리가 완료되었습니다." → <code>Navigator.pop()</code>로 자동 복귀 / 뒤로 가기 → 신청 목록 / 처리 실패 시 <code>handleMinglitError</code> 다이얼로그 (화면은 유지).
+          <strong>Entry points</strong>: <a href="/specs/event_application_manage_page.html">신청 관리</a>의 "승인됨"/"거절됨" 탭에서 신청 행 탭.<br>
+          <strong>Exit points</strong>: 승인/거절 처리 성공 → "처리가 완료되었습니다." 안내와 함께 자동으로 목록으로 복귀. 뒤로 가기 → 신청 목록. 처리 실패 시 에러 다이얼로그 (화면은 유지).
         </td>
       </tr>
       <tr>
         <th>Background</th>
         <td>
-          이벤트 신청 워크플로우는 <code>pending_review</code> → (<code>approved</code> | <code>rejected</code>) → 결제 시 <code>paid</code>로 이동.
-          파트너가 status별 분기를 한 화면에서 바라보면서 단일 신청을 깊게 검토(거절 사유 작성·결제 금액 확인·신원 정보 검증)할 수 있도록 설계.
-          승인/거절 액션은 status가 <code>pending_review</code>일 때만 노출되어 부주의한 재처리를 방지.
+          이벤트 신청 워크플로우는 심사 대기 → (승인 또는 거절) → 결제 완료 순으로 흐름.
+          파트너가 한 신청을 깊게 검토(거절 사유 작성, 결제 금액 확인, 신원 정보 검증)할 수 있도록 설계.
+          승인/거절 액션은 심사 대기 상태일 때만 노출되어 부주의한 재처리를 방지.
         </td>
       </tr>
       <tr>
@@ -427,8 +427,8 @@ body.dark-mode .viewport {
   <section class="doc">
     <h2>Blueprint &amp; tree</h2>
     <p class="intro">
-      AppBar("신청 상세") + SingleChildScrollView. body는 프로필 카드 → 신청 정보 카드 (+ pending_review에선 심사 액션 row까지) 의 단순 stack.
-      MinglitAsyncValueWidget이 loading/error를 자동 처리.
+      AppBar("신청 상세") + 스크롤 body. body는 프로필 카드 → 신청 정보 카드 (+ 심사 대기 상태에선 심사 액션 row까지)의 단순 stack.
+      로딩/에러 분기는 화면이 자동 처리.
     </p>
 
     <div class="layout-grid">
@@ -464,43 +464,43 @@ body.dark-mode .viewport {
       </div>
 
       <div class="layout-tree"><b>Scaffold</b>(bg: <code>color-surface</code>)
-├─ <b>appBar</b>: AppBar(title: Text('신청 상세'))            ← ①
-└─ <b>body</b>: <b>MinglitAsyncValueWidget</b>(applicationAsync)
-   ├─ [loading] → <b>MinglitCircularProgressIndicator</b>
-   ├─ [error]   → <b>_DefaultErrorView</b>(error_outline + "오류가 발생했습니다.")
-   └─ [data]
-      ├─ [null] → <b>Center</b> → Text('신청 정보를 찾을 수 없습니다.')
-      └─ <b>_ApplicationDetailBody</b>
-         └─ <b>SingleChildScrollView</b>(padding: <code>spacing-medium (16)</code>)
-            └─ <b>Column</b>(crossAxis: start)
+├─ <b>AppBar</b>('신청 상세')                                  ← ①
+└─ <b>body</b>: 데이터 단계별 분기
+   ├─ 로딩  → 중앙 스피너
+   ├─ 에러  → 중앙 에러 아이콘 + "오류가 발생했습니다."
+   └─ 결과
+      ├─ 신청 없음 → 중앙 평문 "신청 정보를 찾을 수 없습니다."
+      └─ 결과 화면
+         └─ <b>스크롤 body</b>(padding: <code>spacing-medium (16)</code>)
+            └─ <b>Column</b>(좌측 정렬)
                ├─ <em>Profile card</em>                                 ← ②
-               │  └─ <b>Card</b> → Padding(<code>spacing-medium</code>) → Row
-               │     ├─ <b>CircleAvatar</b>(r=28, bg: primary@10%)
+               │  └─ Card → Padding(<code>spacing-medium</code>) → Row
+               │     ├─ <b>CircleAvatar</b>(56×56 · primary 옅은 배경)
                │     ├─ Gap: <code>spacing-medium (16)</code>
-               │     ├─ <b>Expanded</b> → Column(start)
-               │     │  ├─ Text(name) · titleMedium · w700
-               │     │  ├─ Text("{age}세 · {gender}")? · bodyMedium
-               │     │  └─ Text(birthDate)? · labelSmall
-               │     └─ <b>_StatusBadge</b>(status)
+               │     ├─ Column(좌측 정렬)
+               │     │  ├─ 이름 (titleMedium · w700)
+               │     │  ├─ "{age}세 · {gender}" (있을 때만)
+               │     │  └─ 생년월일 (있을 때만)
+               │     └─ 상태 배지
                │
                ├─ Gap: <code>spacing-medium (16)</code>
-               ├─ Text("신청 정보") · titleSmall · w700                    ← ③
+               ├─ "신청 정보" 섹션 헤더                                  ← ③
                ├─ Gap: <code>spacing-small (8)</code>
                ├─ <em>Info card</em>                                    ← ④
-               │  └─ <b>Card</b> → Column
-               │     ├─ <b>ListTile</b>(dense, "신청일", trailing: yyyy.MM.dd)
-               │     ├─ [paymentAmount&gt;0] <b>ListTile</b>(dense, "결제금액", trailing: "#,###원")
-               │     └─ [rejectionReason!=null] <b>ListTile</b>(dense, "거절 사유", subtitle)
+               │  └─ Card → Column
+               │     ├─ "신청일" 행 (yyyy.MM.dd)
+               │     ├─ "결제금액" 행 (있을 때만 — 천 단위 콤마 + 원)
+               │     └─ "거절 사유" 행 (있을 때만 — 멀티라인)
                │
-               └─ [status == 'pending_review']                          ← ⑤⑥
+               └─ [심사 대기 상태일 때만]                                ← ⑤⑥
                   ├─ Gap: <code>spacing-large (24)</code>
-                  ├─ Text("심사") · titleSmall · w700                    ← ⑤
+                  ├─ "심사" 섹션 헤더                                    ← ⑤
                   ├─ Gap: <code>spacing-small (8)</code>
                   └─ <em>Action row</em>                                ← ⑥
-                     └─ <b>Row</b>
-                        ├─ <b>Expanded</b>(<b>OutlinedButton.icon</b>: 거절 — error border/text)
+                     └─ Row
+                        ├─ 거절 (외곽선 + 에러 색)
                         ├─ Gap: <code>spacing-small (8)</code>
-                        └─ <b>Expanded</b>(<b>FilledButton.icon</b>: 승인 — primary bg)</div>
+                        └─ 승인 (primary 채움)</div>
     </div>
   </section>
 
@@ -572,7 +572,7 @@ body.dark-mode .viewport {
   <section class="doc">
     <h2>Sub-anatomy ② — Info Card (④)</h2>
     <p class="intro">
-      ListTile(dense:true) 행 stack. "신청일"은 항상 표시. "결제금액"은 <code>paymentAmount &gt; 0</code>일 때만, "거절 사유"는 <code>rejectionReason != null</code>일 때만 추가.
+      정보 행이 세로로 쌓인다. "신청일"은 항상 표시. "결제금액"은 금액이 있을 때만, "거절 사유"는 사유가 있을 때만 추가.
     </p>
     <div class="layout-grid">
       <div class="blueprint" style="height: 200px;">
@@ -614,7 +614,7 @@ body.dark-mode .viewport {
   <section class="doc">
     <h2>Sub-anatomy ③ — Action Row (⑥) — pending_review only</h2>
     <p class="intro">
-      <code>application.status == 'pending_review'</code>일 때만 "심사" 섹션과 함께 노출. Row(2 Expanded) — 좌: OutlinedButton 거절(error 색), 우: FilledButton 승인(primary 색).
+      심사 대기 상태일 때만 "심사" 섹션과 함께 노출. 한 줄에 두 버튼이 동일 폭으로 분할 — 좌측은 거절 (외곽선 + 에러 색), 우측은 승인 (primary 채움).
     </p>
     <div class="layout-grid">
       <div class="blueprint" style="height: 100px;">
@@ -658,7 +658,7 @@ body.dark-mode .viewport {
 
   <section class="doc">
     <p class="intro">
-      <strong>State 종류 식별 기준</strong>: <code>application.status</code> (<code>pending_review</code> · <code>approved</code> · <code>rejected</code> · <code>paid</code>) + async lifecycle (Loading · Error) + 거절 다이얼로그 modal overlay. status enum은 <code>_StatusBadge</code> switch에서 4값을 매핑하며, fallback은 status string 그대로 outline 색으로 표시.
+      신청 상태(심사 중 · 승인됨 · 거절됨 · 결제 완료) + 데이터 로딩/에러 + 거절 사유 다이얼로그(모달). 알 수 없는 상태값이 들어오면 그 문자열 그대로 외곽선 색으로 표시되는 fallback.
     </p>
 
     <h3 style="margin-top: 24px;">State summary</h3>
@@ -672,12 +672,12 @@ body.dark-mode .viewport {
         </tr>
       </thead>
       <tbody>
-        <tr><td><strong>Pending review</strong> 🎯</td><td>baseline</td><td><code>status == 'pending_review'</code></td><td>심사 섹션 + 거절/승인 버튼 row 노출 · warning(amber) 배지</td></tr>
-        <tr><td><strong>Approved</strong></td><td>read-only</td><td><code>status == 'approved'</code></td><td>심사 섹션 미노출 · success(green) 배지 · 결제금액 row 가능</td></tr>
-        <tr><td><strong>Rejected</strong></td><td>read-only</td><td><code>status == 'rejected'</code></td><td>심사 섹션 미노출 · error(red) 배지 · 거절 사유 row 추가</td></tr>
-        <tr><td><strong>Paid</strong></td><td>completed</td><td><code>status == 'paid'</code></td><td>primary(purple) 배지 · 결제금액 항상 표시 · 심사 섹션 없음</td></tr>
-        <tr><td><strong>Reject reason dialog</strong></td><td>modal</td><td>"거절" 탭에서 진입</td><td>scrim + AlertDialog · 사유 TextField + "취소" / "거절"</td></tr>
-        <tr><td><strong>Loading / Error</strong></td><td>async</td><td>provider isLoading / hasError</td><td>body 영역만 spinner 또는 에러 아이콘 + "오류가 발생했습니다." (AppBar 유지)</td></tr>
+        <tr><td><strong>Pending review</strong> 🎯</td><td>baseline</td><td>심사 대기</td><td>심사 섹션 + 거절/승인 버튼 row · warning(amber) 배지</td></tr>
+        <tr><td><strong>Approved</strong></td><td>read-only</td><td>승인됨</td><td>심사 섹션 미노출 · success(green) 배지 · 결제금액 행 가능</td></tr>
+        <tr><td><strong>Rejected</strong></td><td>read-only</td><td>거절됨</td><td>심사 섹션 미노출 · error(red) 배지 · 거절 사유 행 추가</td></tr>
+        <tr><td><strong>Paid</strong></td><td>completed</td><td>결제 완료</td><td>primary(purple) 배지 · 결제금액 항상 표시 · 심사 섹션 없음</td></tr>
+        <tr><td><strong>Reject reason dialog</strong></td><td>modal</td><td>"거절" 탭에서 진입</td><td>어두운 scrim + 다이얼로그 · 사유 입력란 + "취소" / "거절"</td></tr>
+        <tr><td><strong>Loading / Error</strong></td><td>async</td><td>데이터 로딩/실패</td><td>body 영역만 스피너 또는 에러 아이콘 + "오류가 발생했습니다." (AppBar 유지)</td></tr>
       </tbody>
     </table>
 
@@ -742,23 +742,23 @@ body.dark-mode .viewport {
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td><code>application.status == 'pending_review'</code> · <code>applicationAsync</code> 데이터 로드 완료</td>
+            <td>신청이 심사 대기 상태이고 데이터 로드 완료.</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">사용자 액션</td>
             <td>
-              ① <strong>"승인" 탭</strong> → <code>onApprove()</code> → <code>reviewApplication(status:'approved')</code> → 성공 시 SnackBar("처리가 완료되었습니다.") + <code>Navigator.pop()</code><br>
-              ② <strong>"거절" 탭</strong> → State 5 (거절 사유 다이얼로그) 진입<br>
-              ③ <strong>스크롤</strong> → Profile / Info / 심사 액션 순서대로 노출<br>
-              ④ <strong>뒤로 가기</strong> → 신청 목록으로 복귀
+              ① <strong>"승인" 탭</strong> → 승인 처리 → 성공 안내 "처리가 완료되었습니다." 와 함께 자동으로 목록으로 복귀.<br>
+              ② <strong>"거절" 탭</strong> → 거절 사유 다이얼로그 진입.<br>
+              ③ <strong>스크롤</strong> → 프로필 / 정보 / 심사 액션 순서대로 노출.<br>
+              ④ <strong>뒤로 가기</strong> → 신청 목록으로 복귀.
             </td>
           </tr>
           <tr>
             <td class="state-mini__aspect">에지케이스</td>
             <td>
-              · <code>user == null</code> → name="이름 없음", avatar 첫 글자="?". age/gender/birth row 미표시.<br>
-              · <code>paymentAmount == null || == 0</code> → "결제금액" row 자체 숨김 (무료 티켓 케이스).<br>
-              · 심사 처리 중 에러 → <code>handleMinglitError</code> 다이얼로그 (현 화면 유지, 버튼 다시 활성화).
+              · 사용자 정보가 비어있을 때 → 이름="이름 없음", 아바타 첫 글자="?", 나이/성별/생년월일 행 미표시.<br>
+              · 결제 금액이 없거나 0일 때 → "결제금액" 행 자체 숨김 (무료 티켓 케이스).<br>
+              · 심사 처리 중 에러 → 에러 다이얼로그 (현 화면 유지, 버튼 다시 활성화).
             </td>
           </tr>
           <tr>
@@ -830,7 +830,7 @@ body.dark-mode .viewport {
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td><code>application.status == 'approved'</code></td>
+            <td>승인된 상태.</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">사용자 액션</td>
@@ -838,7 +838,7 @@ body.dark-mode .viewport {
           </tr>
           <tr>
             <td class="state-mini__aspect">에지케이스</td>
-            <td>· 사용자가 후속 결제를 안 했으면 일정 시간 후 자동 만료 → <code>paid</code>로 옮겨가지 않음 (현 spec엔 별도 만료 state 없음 — 백엔드 cron 트리거).</td>
+            <td>· 사용자가 후속 결제를 안 했으면 일정 시간 후 자동 만료 → 결제 완료로 옮겨가지 않음 (별도 만료 상태는 본 화면엔 없음).</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">컴포넌트</td>
@@ -899,7 +899,7 @@ body.dark-mode .viewport {
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td><code>application.status == 'rejected'</code> · 일반적으로 <code>rejectionReason != null</code> (선택 사유 입력은 옵셔널)</td>
+            <td>거절된 상태. 보통 거절 사유가 함께 기록되어 있음 (사유 입력은 선택).</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">사용자 액션</td>
@@ -907,7 +907,7 @@ body.dark-mode .viewport {
           </tr>
           <tr>
             <td class="state-mini__aspect">에지케이스</td>
-            <td>· <code>rejectionReason == null</code> (사유 미입력 거절) → 거절 사유 row 자체 숨김. 사용자는 사유 없이 거절된 사실만 확인.</td>
+            <td>· 사유 미입력 거절일 때 → 거절 사유 행 자체 숨김. 사용자는 사유 없이 거절된 사실만 확인.</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">컴포넌트</td>
@@ -964,7 +964,7 @@ body.dark-mode .viewport {
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td><code>application.status == 'paid'</code> · <code>paymentAmount != null && paymentAmount &gt; 0</code> 일반적</td>
+            <td>결제 완료 상태이며 결제 금액이 표시됨.</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">사용자 액션</td>
@@ -972,7 +972,7 @@ body.dark-mode .viewport {
           </tr>
           <tr>
             <td class="state-mini__aspect">에지케이스</td>
-            <td>· 환불 진행 시 <code>refundStatus</code> 변경 (현 page는 refundStatus를 표시하지 않음 — drift 후보).<br>· <code>paidAt</code> 필드는 model엔 있으나 이 page에선 미렌더 (개선 후속).</td>
+            <td>· 환불 진행 시 환불 상태가 변경되지만 본 화면은 환불 상태를 표시하지 않음 — 후속 개선 후보.<br>· 결제 시각 필드도 본 화면에선 미표시.</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">컴포넌트</td>
@@ -984,7 +984,7 @@ body.dark-mode .viewport {
           </tr>
           <tr>
             <td class="state-mini__aspect">노트</td>
-            <td>📝 ⚠️ 환불(<code>refund_status</code>)·결제 시각(<code>paid_at</code>) 노출 부재 — Refunded/Canceled 라이프사이클을 반영하려면 후속 개선 필요. 현 코드 베이스라인은 4 status만 표기.</td>
+            <td>📝 ⚠️ 환불·결제 시각 노출 부재 — 환불/취소 라이프사이클을 반영하려면 후속 개선 필요. 현재는 4가지 상태만 표기.</td>
           </tr>
         </tbody>
       </table>
@@ -1026,20 +1026,20 @@ body.dark-mode .viewport {
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>State 1(pending)에서 "거절" 버튼 탭 → <code>showDialog&lt;String&gt;</code> 호출</td>
+            <td>심사 대기 상태에서 "거절" 버튼 탭 시.</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">사용자 액션</td>
             <td>
-              ① <strong>TextField 입력</strong> → 사유 작성 (maxLines: 3 · 선택)<br>
-              ② <strong>"취소" 탭</strong> → <code>Navigator.pop()</code>(null 반환) → 다이얼로그 닫힘, 변경 없음<br>
-              ③ <strong>"거절" 탭</strong> → <code>Navigator.pop(controller.text)</code> → <code>onReject(reason)</code> → <code>reviewApplication(status:'rejected', reason)</code> → 성공 시 SnackBar + Navigator.pop()<br>
-              ④ <strong>scrim 탭</strong> → 다이얼로그 닫힘 (Material default barrierDismissible)
+              ① <strong>사유 입력</strong> → 최대 3줄까지 보이는 입력란에 작성 (선택).<br>
+              ② <strong>"취소" 탭</strong> → 다이얼로그가 닫히고 변경 없음.<br>
+              ③ <strong>"거절" 탭</strong> → 거절 처리 → 성공 안내 노출 후 자동으로 목록으로 복귀.<br>
+              ④ <strong>다이얼로그 외부 영역 탭</strong> → 다이얼로그 닫힘.
             </td>
           </tr>
           <tr>
             <td class="state-mini__aspect">에지케이스</td>
-            <td>· 빈 문자열 입력 후 "거절" → <code>reason.isEmpty ? null : reason</code> 처리 (사유 없는 거절로 전송).<br>· 매우 긴 사유 → maxLines:3이지만 textarea는 스크롤로 더 길게 입력 가능 (백엔드 column 길이 제한 미상 — drift).</td>
+            <td>· 빈 문자열 입력 후 "거절" → 사유 없이 거절 처리됨.<br>· 매우 긴 사유 → 입력란이 3줄로 보이지만 내부 스크롤로 더 길게 입력 가능.</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">컴포넌트</td>
@@ -1051,7 +1051,7 @@ body.dark-mode .viewport {
           </tr>
           <tr>
             <td class="state-mini__aspect">노트</td>
-            <td>📝 "거절" 버튼은 destructive color로 강조하지 않음 — 일반 TextButton primary color. 디자인 개선 후보 (red 강조).</td>
+            <td>📝 "거절" 버튼은 파괴적 액션이지만 일반 텍스트 버튼 색(primary)을 그대로 씀. 디자인 개선 후보 (빨간색 강조).</td>
           </tr>
         </tbody>
       </table>
@@ -1078,19 +1078,19 @@ body.dark-mode .viewport {
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>· <strong>Loading</strong>: <code>eventApplicationDetailProvider(id).isLoading</code> (진입 직후)<br>· <strong>Error</strong>: <code>provider.hasError</code> (network/server)<br>· <strong>Not found</strong>: data == null (위젯 분기 — Center + Text("신청 정보를 찾을 수 없습니다."))</td>
+            <td>· <strong>Loading</strong>: 진입 직후 데이터 로딩 중<br>· <strong>Error</strong>: 네트워크/서버 오류<br>· <strong>Not found</strong>: 해당 신청을 찾을 수 없는 경우 → "신청 정보를 찾을 수 없습니다." 평문</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">사용자 액션</td>
-            <td>· 뒤로 가기만 가능 (목록 복귀)<br>· body 영역 모든 탭 무반응<br>· (재시도 버튼 없음 — MinglitAsyncValueWidget 기본 에러 뷰는 retry CTA 미제공)</td>
+            <td>· 뒤로 가기만 가능 (목록 복귀)<br>· body 영역 모든 탭 무반응<br>· 재시도 버튼 없음 — 기본 에러 화면은 재시도 액션을 제공하지 않음.</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">에지케이스</td>
-            <td>· <code>showErrorDetails: false</code>(default) → 에러 메시지 본문 미표시. 디버그 시 <code>showErrorDetails: true</code>로 확인.<br>· <code>data == null</code> 분기 (id는 유효하나 row 없음) → "신청 정보를 찾을 수 없습니다." Center text. 별도 mockup 생략(에러와 시각적으로 매우 유사).</td>
+            <td>· 기본적으로 사용자에게는 상세 에러 메시지가 보이지 않음 (디버그용 옵션은 별도).<br>· 신청을 찾을 수 없는 케이스 → 별도 mockup 생략 (에러 화면과 시각적으로 매우 유사).</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">컴포넌트</td>
-            <td>↔ <em>모든 spec 컴포넌트</em> → <code>MinglitCircularProgressIndicator</code> (loading) · <code>_DefaultErrorView</code> (error) — Center + Icons.error_outline (xlarge) + titleMedium "오류가 발생했습니다."</td>
+            <td>↔ <em>모든 spec 컴포넌트</em> → 로딩 시 중앙 스피너, 에러 시 중앙 에러 아이콘 + "오류가 발생했습니다." 텍스트.</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">토큰</td>
@@ -1126,19 +1126,19 @@ body.dark-mode .viewport {
       <tbody>
         <tr>
           <td>뒤로 가기 (시스템 back / AppBar back)</td>
-          <td><code>EventApplicationManagePage</code>로 복귀. 진행 중인 fetch는 Riverpod 자동 dispose.</td>
+          <td>신청 관리 화면으로 복귀. 진행 중인 데이터 조회는 자동 정리.</td>
         </tr>
         <tr>
-          <td>심사 완료 listener</td>
-          <td><code>ref.listenManual(eventApplicationReviewControllerProvider)</code>가 <code>AsyncData</code>를 받으면 SnackBar("처리가 완료되었습니다.") + <code>Navigator.pop()</code> 자동 실행. <code>AsyncError</code>는 <code>handleMinglitError</code>로 다이얼로그 표시 + 화면 유지.</td>
+          <td>심사 처리 결과</td>
+          <td>처분이 성공하면 "처리가 완료되었습니다." 안내 + 자동으로 목록 화면으로 복귀. 실패 시 에러 다이얼로그 노출 + 화면은 유지.</td>
         </tr>
         <tr>
           <td>다크 모드 토글</td>
-          <td>Scaffold bg → <code>color-dark-surface</code>(#212121). 카드 bg → <code>color-dark-background</code>. avatar/badge bg는 각 색상의 10% opacity 자동 보존. Partner primary는 <code>MinglitPartnerColorsDark.primary</code>(#9b7bec)로 자동 전환.</td>
+          <td>scaffold/카드 배경이 다크 톤으로 자동 전환. 아바타/배지의 옅은 배경은 각 색상의 비율 그대로 유지. partner primary도 다크 변형으로 자동 매핑.</td>
         </tr>
         <tr>
           <td>금액 포맷</td>
-          <td>모든 state에서 결제금액은 <code>RegExp(r'(\d)(?=(\d{3})+(?!\d))')</code>로 천 단위 콤마 적용 + "원" 접미사. 0/null은 row 자체 숨김.</td>
+          <td>모든 state에서 결제금액은 천 단위 콤마 + "원" 접미사. 0이나 비어있는 값은 행 자체가 숨김.</td>
         </tr>
       </tbody>
     </table>
@@ -1161,22 +1161,22 @@ body.dark-mode .viewport {
         <tr>
           <td>화면 진입 (목록 → 상세)</td>
           <td><code>MinglitAnimation.medium</code> (350ms)</td>
-          <td>sharedAxisScaled — Material 3 shared-axis Z-scale + fade. Route data가 직접 buildPage로 명시.</td>
+          <td>shared-axis Z-scale + fade.</td>
         </tr>
         <tr>
           <td>Loading → 데이터 표시</td>
           <td>cut (no animation)</td>
-          <td>MinglitAsyncValueWidget이 즉각 swap. fade 없음.</td>
+          <td>부드러운 페이드 없이 즉각 교체.</td>
         </tr>
         <tr>
           <td>거절 다이얼로그 in/out</td>
           <td><code>MinglitAnimation.fast</code> (200ms)</td>
-          <td>Material AlertDialog default scale + fade.</td>
+          <td>기본 다이얼로그 scale + fade.</td>
         </tr>
         <tr>
-          <td>승인/거절 처리 → SnackBar + pop</td>
+          <td>승인/거절 처리 → 안내 + 목록 복귀</td>
           <td><code>MinglitAnimation.fast</code> (200ms)</td>
-          <td>SnackBar slide-up + 즉시 pop. 사용자가 SnackBar 텍스트를 읽기 전에 화면 전환됨 — 스낵바는 다음 화면(목록)에서 잔존.</td>
+          <td>안내 스낵바가 슬라이드 업되고 즉시 목록 화면으로 복귀. 스낵바는 다음 화면에 남아있음.</td>
         </tr>
       </tbody>
     </table>
@@ -1185,11 +1185,11 @@ body.dark-mode .viewport {
   <section class="doc">
     <h2>Global edge cases</h2>
     <ul class="notes">
-      <li><strong>네트워크 끊김</strong> — 진입 직후라면 Loading → Error로 전환 (재시도 CTA 없음). 심사 처리 중이라면 controller가 AsyncError → handleMinglitError 다이얼로그.</li>
-      <li><strong>다크 모드</strong> — 우측 상단 Dark 토글로 확인. Partner primary는 <code>color-partner-dark-primary</code>(#9b7bec)로 자동 전환. 배지 bg는 각 색상의 alpha 비율 그대로 유지.</li>
-      <li><strong>알 수 없는 status</strong> — <code>_StatusBadge</code> switch fallback이 status 문자열 그대로 + <code>colorScheme.outline</code>으로 표시. 백엔드가 새 status 추가 시 디자인 업데이트 전까지 임시 노출.</li>
-      <li><strong>접근성</strong> — CircleAvatar의 이니셜은 단일 글자 — screen reader는 name을 별도 Text로 읽음. 거절/승인 버튼은 Material 기본 시맨틱 (semantics label = label text).</li>
-      <li><strong>모델-UI drift</strong> — <code>refund_status</code>·<code>paid_at</code>·<code>payment_id</code>는 모델에 존재하지만 page는 미렌더. Refunded/Canceled 케이스 가시성은 후속 개선 후보.</li>
+      <li><strong>네트워크 끊김</strong> — 진입 직후라면 로딩에서 에러로 전환 (재시도 버튼 없음). 심사 처리 중이라면 에러 다이얼로그.</li>
+      <li><strong>다크 모드</strong> — 다크 토글로 확인. partner primary는 다크 변형으로 자동 전환. 배지 배경은 각 색상의 옅은 비율을 그대로 유지.</li>
+      <li><strong>알 수 없는 상태값</strong> — 새 상태가 추가되어 본 화면에 매핑이 없으면 그 문자열 그대로 외곽선 색으로 표시되는 fallback이 동작.</li>
+      <li><strong>접근성</strong> — 아바타의 이니셜은 단일 글자 — screen reader는 이름 텍스트를 별도로 읽음. 버튼은 라벨 텍스트가 그대로 시맨틱.</li>
+      <li><strong>모델-UI drift</strong> — 환불 상태, 결제 시각 등은 데이터에 존재하지만 본 화면은 표시하지 않음. 환불/취소 케이스 가시성은 후속 개선 후보.</li>
     </ul>
   </section>
 </div>

@@ -470,16 +470,17 @@ body.dark-mode .acct-appbar__back { color: var(--color-dark-text-primary); }
 
   <section class="doc">
     <p class="intro">
-      <strong>State 종류 식별 기준</strong>:
-      ① 부모가 user인지 partner인지(<code>onPartnerProfile</code> · <code>onCertification</code> 두 prop 조합) ·
-      ② <code>isVerified</code> · ③ confirm dialog open / 부모 SnackBar 표시.
-      이 위젯 자체는 fetch하지 않으므로 Loading / Error mini-table은 없다 (Cardinal rules의 "Likely states"에서 의도적으로 제외).
+      <strong>State 식별 기준</strong>:
+      ① 사용자 앱(user)인지 파트너 앱(partner)인지에 따라 노출되는 항목이 다르고,
+      ② 사용자 앱에서는 본인인증 완료 여부에 따라 시각이 갈리며,
+      ③ 로그아웃 확인 다이얼로그가 떠 있는지, 파트너 모드에서 안내 SnackBar가 떠 있는지에 따라 변형이 추가됨.
+      이 화면 자체는 데이터를 직접 가져오지 않으므로 별도의 로딩 / 오류 변형은 정의하지 않음.
     </p>
 
     <!-- State 1: User default · unverified (baseline) -->
     <table class="ref state-mini is-baseline-tint">
       <thead>
-        <tr><th colspan="3"><strong>User · 본인인증 미완</strong> 🎯 <small>baseline · onCertification 노출 + isVerified=false</small></th></tr>
+        <tr><th colspan="3"><strong>User · 본인인증 미완</strong> 🎯 <small>baseline · 사용자 앱에서 본인인증을 아직 마치지 않은 상태</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -544,23 +545,23 @@ body.dark-mode .acct-appbar__back { color: var(--color-dark-text-primary); }
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>user 앱에서 <code>AccountManagementRoute.build()</code> · <code>onCertification != null</code> · <code>isVerified == false</code> (<code>currentUserProfileProvider</code>가 false 반환). <code>onPartnerProfile == null</code> → 파트너 프로필 타일 hide.</td>
+          <td>사용자 앱에서 마이페이지를 거쳐 진입한 경우. 본인인증을 아직 완료하지 않은 상태. 파트너 프로필 항목은 노출되지 않음.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ① <strong>본인인증 탭</strong> → <code>context.push(CertificationRoute().location)</code> (Fix #1861)<br>
-            ② <strong>로그아웃 탭</strong> → <code>MinglitAlert.showConfirm</code>(title "로그아웃" · content "로그아웃 하시겠어요?" · confirmText "로그아웃") → confirmed면 <code>onLogout()</code><br>
-            ③ <strong>회원 탈퇴 탭</strong> → <code>onDeleteAccount()</code> 즉시 — user에선 <code>accountDeletionCoordinator.start()</code> (별도 wizard route push)<br>
-            ④ <strong>뒤로 가기</strong> → MyPage 복귀
+            ① <strong>본인인증 탭</strong> — 본인인증 화면으로 이동.<br>
+            ② <strong>로그아웃 탭</strong> — "로그아웃 하시겠어요?" 확인 다이얼로그가 뜨고, 확인하면 로그아웃이 진행됨.<br>
+            ③ <strong>회원 탈퇴 탭</strong> — 별도의 회원 탈퇴 절차 화면으로 이동. (이 화면 자체에서는 추가 확인을 묻지 않고 바로 다음 단계로 넘김.)<br>
+            ④ <strong>뒤로 가기</strong> — 마이페이지로 복귀.
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · <code>currentUserProfileProvider</code>가 <code>AsyncLoading</code>/<code>AsyncError</code>이면 <code>asData?.value?.isVerified ?? false</code> → unverified 그대로 노출 (이 페이지는 spinner 없음 — 부모 watcher가 처리)<br>
-            · 회원 탈퇴는 confirm 없이 즉시 onTap → 외부 wizard에 confirm 단계 위임 (이 위젯은 dispatch만)<br>
-            · onCertification이 null이면 본인인증 타일 + Divider 함께 빠짐 → ListView가 SizedBox(16)로 시작 → Danger Zone만 노출되는 "minimal" 형태도 가능 (현재 user 라우트는 항상 onCertification 주입)
+            · 인증 정보가 아직 도착하지 않았거나 가져오기에 실패한 동안에도 화면은 즉시 노출되며, 본인인증 항목은 "인증하기" 상태로 표시됨.<br>
+            · 회원 탈퇴는 이 화면에서 추가 확인 없이 즉시 다음 단계 화면으로 넘어감 — 실제 확인은 그 다음 절차에서 진행.<br>
+            · 사용자 앱에서는 본인인증 항목이 항상 노출됨. 만약 본인인증 항목을 노출하지 않는 진입 형태라면 화면 상단이 짧아지고 위험 영역만 보이는 형태가 될 수 있음.
           </td>
         </tr>
         <tr>
@@ -587,7 +588,7 @@ body.dark-mode .acct-appbar__back { color: var(--color-dark-text-primary); }
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 baseline mockup은 user 모드 + unverified — 이 페이지에 진입하는 가장 흔한 진입 형태. user 라우트는 항상 <code>onCertification</code> 주입(Fix #1861 후) 이라 본인인증 타일은 <strong>user에서 항상 노출</strong>. partner 라우트는 그 반대 — 본인인증 타일 없음, 파트너 프로필만 있음. 두 모드를 별도 mini-table로 다룬다.</td>
+          <td>📝 baseline mockup은 사용자 앱 + 본인인증 미완 형태. 이 화면에 가장 흔히 들어오는 진입 형태. 사용자 앱에서는 본인인증 항목이 항상 노출되고, 파트너 앱에서는 본인인증 항목이 보이지 않는 대신 파트너 프로필 항목이 보임 — 두 모드를 별도 mini-table로 다룸.</td>
         </tr>
       </tbody>
     </table>
@@ -595,7 +596,7 @@ body.dark-mode .acct-appbar__back { color: var(--color-dark-text-primary); }
     <!-- State 2: User default · verified -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>User · 본인인증 완료</strong> <small>isVerified=true — 시각 변주(success tint)</small></th></tr>
+        <tr><th colspan="3"><strong>User · 본인인증 완료</strong> <small>본인인증 완료 후 항목에 success 톤이 적용된 변형</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -637,17 +638,17 @@ body.dark-mode .acct-appbar__back { color: var(--color-dark-text-primary); }
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>↔ baseline 동일 + <code>isVerified == true</code> (<code>currentUserProfileProvider.asData.value.isVerified</code>)</td>
+          <td>baseline과 동일하지만 본인인증을 이미 완료한 상태. 본인인증 항목의 아이콘과 보조 문구가 success 톤으로 표시됨.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>↔ 동일 — 본인인증 탭은 여전히 활성, <code>CertificationRoute</code>로 push (이미 인증된 상태에서도 화면 진입 자체는 막지 않음)<br>나머지 동일.</td>
+          <td>baseline과 동일. 본인인증 항목은 인증 완료 상태에서도 탭하면 본인인증 화면으로 이동(다시 들어가도 막지 않음). 그 외 액션은 동일.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · 인증 완료 후에도 <code>onCertification</code>이 살아있어 다시 진입 가능 — <code>CertificationRoute</code> 측에서 idempotent 처리 필요 (이 위젯은 분기 없음)<br>
-            · 인증 status 변동은 <code>currentUserProfileProvider</code> rebuild로만 전달 — 이 페이지는 부모에서 <code>ref.watch</code> 후 prop으로 흘려보내기 때문에 즉시 반영
+            · 인증 완료 후에도 본인인증 항목은 사라지지 않고 다시 진입할 수 있음 — 이미 인증된 사용자가 다시 들어가도 자연스럽게 처리됨.<br>
+            · 외부에서 본인인증 상태가 바뀌면, 이 화면이 띄워져 있는 동안에도 깜빡임 없이 아이콘과 보조 문구가 즉시 success 톤으로 교체됨.
           </td>
         </tr>
         <tr>
@@ -664,7 +665,7 @@ body.dark-mode .acct-appbar__back { color: var(--color-dark-text-primary); }
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 success token은 <code>MinglitColors.success</code> — 디자인시스템에 정식 등록됨. dark mode에서는 <code>MinglitColorsDark.success</code>로 자동 swap.</td>
+          <td>📝 success 색상은 디자인 시스템에 정식 등록되어 있어, 다크 모드에서도 같은 의미의 다크 톤으로 자동 전환됨.</td>
         </tr>
       </tbody>
     </table>
@@ -672,7 +673,7 @@ body.dark-mode .acct-appbar__back { color: var(--color-dark-text-primary); }
     <!-- State 3: Partner default -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Partner · 파트너 프로필 노출</strong> <small>onPartnerProfile != null · onCertification == null</small></th></tr>
+        <tr><th colspan="3"><strong>Partner · 파트너 프로필 노출</strong> <small>파트너 앱에서 진입한 경우 — 본인인증 대신 파트너 프로필 항목이 노출됨</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -712,24 +713,24 @@ body.dark-mode .acct-appbar__back { color: var(--color-dark-text-primary); }
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>partner 앱에서 <code>PartnerAccountManagementRoute.build()</code> · <code>onPartnerProfile != null</code> (현재 SnackBar 핸들러 주입) · <code>onCertification == null</code> → 본인인증 타일 hide.</td>
+          <td>파트너 앱의 더보기 화면을 거쳐 진입한 경우. 본인인증 항목은 노출되지 않고, 대신 파트너 프로필 항목이 상단에 노출됨.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ↔ 본인인증 탭 <strong>없음</strong> (타일 자체가 빠짐)<br>
-            + <strong>파트너 프로필 탭</strong> → <code>onPartnerProfile()</code> → 현재 <code>SnackBar("준비 중입니다.")</code> placeholder<br>
-            동일: 로그아웃 confirm → <code>onLogout</code> → 동일 패턴(<code>go('/')</code> + signOut)<br>
-            동일: 회원 탈퇴 → <code>moreCoordinator.pushAccountDeletion()</code> (partner 전용 coordinator)<br>
-            동일: 뒤로 가기 → MorePage 복귀
+            − 본인인증 탭 — 항목 자체가 노출되지 않음.<br>
+            + <strong>파트너 프로필 탭</strong> — 현재는 "준비 중입니다." 안내 메시지가 잠깐 노출됨 (실제 편집 화면은 다음 단계 작업).<br>
+            동일: 로그아웃 탭 — 확인 다이얼로그를 거쳐 로그인 화면으로 복귀.<br>
+            동일: 회원 탈퇴 탭 — 별도의 회원 탈퇴 절차 화면으로 이동.<br>
+            동일: 뒤로 가기 — 더보기 화면으로 복귀.
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · partner 라우트는 <code>onPartnerProfile</code>이 항상 주입되어 있음 — 본인인증 타일은 <strong>partner에서 절대 노출되지 않음</strong> (의도된 차이)<br>
-            · 파트너 프로필 핸들러가 placeholder라 사용자가 진입 → SnackBar 후 페이지 그대로 — Phase 2에서 실제 prefill page로 교체 예정<br>
-            · primary color는 partnerTheme(다른 보라)이지만 이 화면에는 primary 사용처 없음 (확인 dialog의 confirm button만 partnerTheme 색)
+            · 파트너 앱에서는 본인인증 항목이 절대 노출되지 않음 — 의도된 차이.<br>
+            · 파트너 프로필 항목은 현재 임시 안내 상태이며, 다음 단계에서 실제 프로필 편집 화면으로 교체될 예정.<br>
+            · 파트너 앱의 강조 색은 사용자 앱과 다른 톤이지만, 이 화면 본문에는 강조 색을 사용하는 영역이 없음 (확인 다이얼로그의 확인 버튼에서만 차이가 보임).
           </td>
         </tr>
         <tr>
@@ -747,7 +748,7 @@ body.dark-mode .acct-appbar__back { color: var(--color-dark-text-primary); }
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 partner SnackBar는 Scaffold가 부모 PartnerScaffold에서 제공 — 이 위젯의 Scaffold가 아닌 ScaffoldMessenger에 띄워짐. 자세한 시각은 State 6 참고.</td>
+          <td>📝 파트너 프로필 탭 후 노출되는 안내 메시지의 시각적 형태는 State 6에서 확인.</td>
         </tr>
       </tbody>
     </table>
@@ -755,7 +756,7 @@ body.dark-mode .acct-appbar__back { color: var(--color-dark-text-primary); }
     <!-- State 4: Logout confirm dialog -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>로그아웃 confirm dialog</strong> <small>MinglitAlert.showConfirm — Fix #1378</small></th></tr>
+        <tr><th colspan="3"><strong>로그아웃 확인 다이얼로그</strong> <small>로그아웃 항목 탭 시 노출되는 확인 다이얼로그</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -802,21 +803,21 @@ body.dark-mode .acct-appbar__back { color: var(--color-dark-text-primary); }
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>로그아웃 ListTile 탭 → <code>MinglitAlert.showConfirm(title: '로그아웃', content: '로그아웃 하시겠어요?', confirmText: '로그아웃')</code> 호출 → showDialog가 modal AlertDialog 띄움.</td>
+          <td>로그아웃 항목을 탭한 직후 — 화면 위에 "로그아웃 하시겠어요?" 라는 확인 다이얼로그가 떠 있는 상태. 뒷배경은 어둡게 가려짐.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            + <strong>"취소" 탭</strong> → <code>Navigator.pop(context, false)</code> → <code>confirmed = false</code> → onLogout 호출 안 됨, dialog만 닫힘<br>
-            + <strong>"로그아웃" 탭</strong> → <code>Navigator.pop(context, true)</code> → <code>confirmed = true</code> → <code>onLogout()</code> 실행<br>
-            + <strong>scrim 탭 / 시스템 back</strong> → barrierDismissible default(true) → null 반환 → <code>?? false</code>로 fallback → onLogout 호출 안 됨
+            + <strong>"취소" 탭</strong> — 다이얼로그만 닫히고 화면은 그대로 유지. 로그아웃은 진행되지 않음.<br>
+            + <strong>"로그아웃" 탭</strong> — 다이얼로그가 닫히면서 로그아웃이 진행되고 로그인 화면으로 복귀.<br>
+            + <strong>뒷배경 탭 또는 시스템 뒤로 가기</strong> — 취소와 동일하게 처리. 로그아웃은 진행되지 않음.
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · <code>isDestructive: false</code> default (showConfirm 호출 시 미명시) → confirm 버튼이 <strong>error red 아니라 primary purple</strong>로 노출. "로그아웃 하시겠어요?" 정도는 destructive로 보지 않는 톤.<br>
-            · onLogout 내부에서 <code>GoRouter.go('/')</code> 후 <code>Future.delayed(Duration.zero)</code>로 signOut을 lazy 호출 — context after dispose 에러 방지(Fix #404). 즉 dialog confirm → 다음 micro-task에서 실제 signOut 발생
+            · 확인 버튼은 위험 강조(빨강)가 아니라 일반 강조 색으로 표시 — 로그아웃은 다시 로그인하면 되돌릴 수 있는 행위라 톤을 강하게 가져가지 않음.<br>
+            · 확인 후 화면 자체는 곧바로 사라지지 않고 짧은 전환 프레임을 거쳐 로그인 화면으로 교체됨 (State 5 참고).
           </td>
         </tr>
         <tr>
@@ -839,7 +840,7 @@ body.dark-mode .acct-appbar__back { color: var(--color-dark-text-primary); }
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 dialog는 plain Material AlertDialog wrap이라 portrait/landscape 자동 대응. <code>isDestructive</code> flag를 활용하면 confirm을 error red로 만들 수 있지만 현재 호출은 false(default) — 의도된 톤.</td>
+          <td>📝 다이얼로그는 표준 형태라 portrait / landscape 모두 자연스럽게 대응. 확인 버튼을 위험 강조 색으로 만들 수도 있지만 현재는 일반 톤을 유지 — 의도된 디자인.</td>
         </tr>
       </tbody>
     </table>
@@ -847,7 +848,7 @@ body.dark-mode .acct-appbar__back { color: var(--color-dark-text-primary); }
     <!-- State 5: Logout running (post-confirm) -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>로그아웃 진행 중</strong> <small>onLogout 직후 짧은 transition</small></th></tr>
+        <tr><th colspan="3"><strong>로그아웃 진행 중</strong> <small>확인 후 로그인 화면으로 교체되기 직전의 짧은 전환 구간</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -884,21 +885,20 @@ body.dark-mode .acct-appbar__back { color: var(--color-dark-text-primary); }
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>confirm 후 onLogout 실행 — <code>GoRouter.go('/')</code> 호출 직후, route push transition(200ms) 동안의 짧은 frame. 화면 자체는 변화 없음.</td>
+          <td>로그아웃 확인 후 ~200ms 동안의 짧은 전환 구간. 화면은 baseline과 동일하게 보이지만 곧 로그인 화면으로 교체됨.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            − 모든 입력 무시 (transition 중)<br>
-            동일: 뒤로 가기는 의미 없음 — 곧 LoginRoute로 교체됨
+            − 이 구간의 입력은 전부 무시됨.<br>
+            동일: 뒤로 가기는 의미 없음 — 곧 로그인 화면으로 교체됨.
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · <code>Future.delayed(Duration.zero)</code> 안에서 <code>signOut()</code>이 호출되므로 transition 도중 auth state 변동 → router redirect rule이 다시 평가됨 → LoginRoute로 정착<br>
-            · 네트워크 지연으로 signOut이 늦어지면 LoginRoute가 보이는데 token은 아직 유효한 race window — 다음 protected route push 시 redirect로 보정됨<br>
-            · 이 화면 자체는 spinner / overlay 없음 (의도)
+            · 네트워크가 느리면 로그인 화면이 보이는데도 잠시 동안 인증이 살아 있는 짧은 구간이 생길 수 있으나, 다음 보호된 화면 진입 시 자동으로 로그인 화면으로 보정됨.<br>
+            · 이 구간에는 별도의 로딩 스피너나 오버레이를 띄우지 않음 — 의도된 디자인.
           </td>
         </tr>
         <tr>
@@ -911,7 +911,7 @@ body.dark-mode .acct-appbar__back { color: var(--color-dark-text-primary); }
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 사실상 baseline frame을 200ms 동안 잡고 있다가 LoginRoute로 교체. spec 상 별도 visual change는 없지만 <em>"확인을 눌렀는데 즉시 사라지지 않는다"</em>는 사용자 인식이 있어 별도 mini-table로 분리.</td>
+          <td>📝 시각적으로는 baseline과 같지만 사용자 입장에서 "확인을 눌렀는데 즉시 사라지지 않는다"는 짧은 인식이 있어 별도 변형으로 분리해 둠.</td>
         </tr>
       </tbody>
     </table>
@@ -919,7 +919,7 @@ body.dark-mode .acct-appbar__back { color: var(--color-dark-text-primary); }
     <!-- State 6: Partner — Snackbar (placeholder for partner profile) -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Partner · 파트너 프로필 placeholder SnackBar</strong> <small>onPartnerProfile 콜백 결과</small></th></tr>
+        <tr><th colspan="3"><strong>Partner · 파트너 프로필 안내 메시지</strong> <small>파트너 프로필 항목을 탭한 직후 노출되는 임시 안내 메시지</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -956,22 +956,22 @@ body.dark-mode .acct-appbar__back { color: var(--color-dark-text-primary); }
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>partner 모드 + 파트너 프로필 ListTile 탭 → 라우트 핸들러가 <code>ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('준비 중입니다.')))</code> 호출.</td>
+          <td>파트너 앱에서 파트너 프로필 항목을 탭한 직후. 화면 하단에 "준비 중입니다." 안내 메시지가 잠깐 떠 있는 상태.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            동일: 다른 모든 액션 그대로 (snackbar는 비차단)<br>
-            + snackbar 자체는 swipe-to-dismiss / Material default 4초 후 자동 소멸<br>
-            ↔ 페이지 navigation 없음 — placeholder 상태
+            동일: 안내 메시지가 떠 있는 동안에도 다른 항목은 그대로 탭할 수 있음 (메시지는 비차단).<br>
+            + 안내 메시지는 옆으로 밀어서 닫을 수 있고, 그대로 두면 잠시 후 자동으로 사라짐.<br>
+            ↔ 화면 이동은 발생하지 않음 — 임시 안내만 노출.
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · 빠르게 연타 시 SnackBar queue (Material default behavior) — 현재 dedupe 없음<br>
-            · Phase 2에서 실제 PartnerProfileEditPage로 교체될 임시 핸들러 (route 파일에 직접 인라인 구현)<br>
-            · user 모드에는 onPartnerProfile이 null이라 이 state 자체가 발생하지 않음
+            · 빠르게 여러 번 탭하면 안내 메시지가 차례로 쌓여 노출됨.<br>
+            · 다음 단계 작업에서 실제 파트너 프로필 편집 화면으로 교체될 예정인 임시 형태.<br>
+            · 사용자 앱에서는 파트너 프로필 항목 자체가 노출되지 않으므로 이 변형은 발생하지 않음.
           </td>
         </tr>
         <tr>
@@ -988,7 +988,7 @@ body.dark-mode .acct-appbar__back { color: var(--color-dark-text-primary); }
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 핸들러가 라우트 파일(<code>app_partner/.../app_routes.dart</code>)에 인라인 정의되어 있다 — 위젯 자체엔 SnackBar 호출 없음. 위젯은 <code>onPartnerProfile()</code> 호출만 한다.</td>
+          <td>📝 임시 안내 메시지는 다음 단계 작업에서 실제 파트너 프로필 편집 화면으로 교체될 예정.</td>
         </tr>
       </tbody>
     </table>
@@ -1015,31 +1015,31 @@ body.dark-mode .acct-appbar__back { color: var(--color-dark-text-primary); }
       <tbody>
         <tr>
           <td>뒤로 가기 (시스템 back · AppBar back)</td>
-          <td>user → MyPageRoute / partner → MoreRoute 복귀 — Material default pop transition.</td>
+          <td>사용자 앱 → 마이페이지, 파트너 앱 → 더보기 화면으로 복귀.</td>
         </tr>
         <tr>
           <td>다크 모드 토글</td>
-          <td>scaffold / tile / divider / dialog 모두 dark 토큰 swap. success(인증 완료)는 <code>MinglitColorsDark.success</code>로 swap, error(Danger border + 회원 탈퇴)는 <code>MinglitColors.error</code> 그대로(다크 ColorsDark에 error는 light과 동일 alias).</td>
+          <td>scaffold·tile·구분선·다이얼로그 배경이 다크 토큰으로 자동 전환. 인증 완료 표시의 success 색은 다크 모드에서도 같은 의미의 톤으로 자연스럽게 전환됨. 위험 영역의 빨강 톤은 동일하게 유지.</td>
         </tr>
         <tr>
-          <td>tile / IconButton tap haptic</td>
-          <td>Material InkWell ripple + default haptic light. transparent tile bg라서 ripple이 scaffold gray 위에서 보임.</td>
+          <td>tile · 아이콘 탭 피드백</td>
+          <td>탭 시 가벼운 리플과 haptic light 피드백을 제공.</td>
         </tr>
         <tr>
-          <td>회원 탈퇴 즉시 dispatch</td>
-          <td>이 위젯 내 confirm 없음 — onTap이 즉시 <code>onDeleteAccount()</code> 호출. confirm은 외부 wizard(<code>accountDeletionCoordinator</code> · <code>moreCoordinator.pushAccountDeletion</code>)에서 처리. 의도된 위임.</td>
+          <td>회원 탈퇴 탭</td>
+          <td>이 화면에서는 추가 확인을 묻지 않고 즉시 다음 단계의 회원 탈퇴 절차 화면으로 이동 — 실제 확인은 그 다음 절차에서 진행.</td>
         </tr>
         <tr>
-          <td>본인인증 토글(외부)</td>
-          <td><code>currentUserProfileProvider</code> 변동 시 부모 Consumer가 rebuild → <code>isVerified</code> prop 변경 → leading icon / subtitle 즉시 swap. 이 위젯 내부 state 없음.</td>
+          <td>본인인증 상태가 외부에서 변경됨</td>
+          <td>이 화면이 떠 있는 동안 인증을 마치면 본인인증 항목의 아이콘과 보조 문구가 깜빡임 없이 즉시 success 톤으로 교체됨.</td>
         </tr>
         <tr>
-          <td>partner 모드에서 진입</td>
-          <td>본인인증 타일 자체가 컴파일/렌더링되지 않음 (<code>onCertification == null</code>이라 spread 자체가 빈 list). 파트너 프로필 타일만 노출.</td>
+          <td>파트너 앱으로 진입</td>
+          <td>본인인증 항목은 노출되지 않음. 대신 파트너 프로필 항목이 상단에 노출됨.</td>
         </tr>
         <tr>
-          <td>scrim / barrier dismiss</td>
-          <td>로그아웃 dialog는 barrier 탭 시 cancel과 같음 (<code>?? false</code>). 회원 탈퇴는 dialog 없음.</td>
+          <td>로그아웃 다이얼로그의 뒷배경 탭</td>
+          <td>취소를 누른 것과 동일하게 처리되어 다이얼로그만 닫힘. 회원 탈퇴는 별도의 다이얼로그를 사용하지 않음.</td>
         </tr>
       </tbody>
     </table>
@@ -1060,34 +1060,34 @@ body.dark-mode .acct-appbar__back { color: var(--color-dark-text-primary); }
       </thead>
       <tbody>
         <tr>
-          <td>화면 진입 (parent → AccountManagement)</td>
+          <td>화면 진입 (부모 화면 → 계정 관리)</td>
           <td><code>MinglitAnimation.fast</code> (200ms)</td>
-          <td>GoRouter Material default 좌→우 slide. user/partner 모두 push from coordinator.</td>
+          <td>화면이 좌→우로 슬라이드되며 진입. 사용자 / 파트너 양쪽에서 동일.</td>
         </tr>
         <tr>
-          <td>로그아웃 dialog 등장</td>
+          <td>로그아웃 다이얼로그 등장</td>
           <td><code>MinglitAnimation.fast</code> (200ms)</td>
-          <td>Material showDialog default fade-in. AlertDialog는 별도 motion 토큰 적용 안 됨.</td>
+          <td>화면 위에 살짝 페이드 인.</td>
         </tr>
         <tr>
-          <td>로그아웃 후 LoginRoute push</td>
+          <td>로그아웃 확인 → 로그인 화면 교체</td>
           <td><code>MinglitAnimation.fast</code> (200ms)</td>
-          <td><code>GoRouter.go('/')</code> — RootRoute 교체. 새 location stack push transition.</td>
+          <td>현재 화면이 빠지고 로그인 화면으로 교체.</td>
         </tr>
         <tr>
-          <td>InkWell ripple (tile · 모든 버튼)</td>
+          <td>탭 리플</td>
           <td><code>MinglitAnimation.micro</code> (100ms)</td>
-          <td>Material default ripple expand.</td>
+          <td>모든 탭 가능한 항목에 적용되는 짧은 리플 피드백.</td>
         </tr>
         <tr>
-          <td>SnackBar enter / exit (partner)</td>
-          <td>~250ms (Material default)</td>
-          <td>토큰 미적용 — Phase 2에서 <code>MinglitAnimation.fast</code> 매핑 검토.</td>
+          <td>안내 메시지 등장 / 사라짐 (파트너)</td>
+          <td>~250ms</td>
+          <td>아래에서 살짝 올라왔다가 잠시 후 자연스럽게 사라짐.</td>
         </tr>
         <tr>
-          <td>본인인증 verified ↔ unverified swap</td>
-          <td>cut</td>
-          <td>prop 변경 시 즉시 rebuild — <code>AnimatedSwitcher</code> 미사용. 인증 직후 화면이 보이고 있다면 leading icon이 즉시 verified로 교체.</td>
+          <td>본인인증 미완 ↔ 완료 전환</td>
+          <td>—</td>
+          <td>별도 전환 애니메이션 없이 즉시 교체. 이 화면이 떠 있는 동안 인증을 마치면 깜빡임 없이 곧바로 success 톤으로 바뀜.</td>
         </tr>
       </tbody>
     </table>
@@ -1096,13 +1096,13 @@ body.dark-mode .acct-appbar__back { color: var(--color-dark-text-primary); }
   <section class="doc">
     <h2>Global edge cases</h2>
     <ul class="notes">
-      <li><strong>Loading / error mini-table 없음</strong> — 이 위젯 자체는 Stateless이고 fetch가 없다. <code>isVerified</code>를 가져오는 <code>currentUserProfileProvider</code>는 부모 Consumer에서 watch하며, AsyncLoading/AsyncError이면 <code>asData?.value?.isVerified ?? false</code>로 unverified fallback. 즉 인증 상태가 미확정인 동안에도 페이지는 즉시 렌더링.</li>
-      <li><strong>Permissions warning 없음</strong> — 진입 시점에 권한/role 검사 없음. AccountManagementRoute는 protected route guard로 보호되므로 비로그인 시 LoginRoute로 redirect (이 위젯 안에선 발생 X).</li>
-      <li><strong>회원 탈퇴 confirm 위임</strong> — 회원 탈퇴는 이 위젯 내에서 즉시 <code>onDeleteAccount()</code> 호출. confirm dialog는 외부 wizard(<code>accountDeletionCoordinator.start()</code>)에 위임 — destructive 액션 위치를 분리해 다단계 확인 가능.</li>
-      <li><strong>로그아웃 dialog의 confirm 색</strong> — <code>showConfirm</code> 호출이 <code>isDestructive: false</code> default라 confirm 버튼이 primary purple. 로그아웃이 "절대 되돌릴 수 없는 행위"는 아니므로 의도된 톤.</li>
-      <li><strong>signOut 비동기 race</strong> — <code>onLogout</code>이 <code>go('/')</code>를 먼저 호출 후 <code>Future.delayed(Duration.zero)</code> 안에서 <code>signOut</code>을 실행 (Fix #404). LoginRoute가 짧게 인증된 token으로 보이는 race가 있을 수 있으나 다음 protected push에서 redirect로 보정.</li>
-      <li><strong>kit-shared 분기 props</strong> — <code>onPartnerProfile</code>(partner) · <code>onCertification</code> + <code>isVerified</code>(user). null이면 spread 결과가 비어 ListView children에서 통째로 빠짐 — conditional rendering. partner는 본인인증 타일을 절대 보지 않고, user는 파트너 프로필 타일을 절대 보지 않는다.</li>
-      <li><strong>partner primary 색 차이</strong> — partnerTheme의 primary는 다른 보라. dialog confirm 버튼 color에만 영향 (이 페이지 본문은 primary 미사용).</li>
+      <li><strong>로딩 / 오류 변형 없음</strong> — 이 화면은 직접 데이터를 가져오지 않음. 본인인증 정보가 아직 도착하지 않았거나 가져오기에 실패한 동안에도 화면은 즉시 노출되며, 본인인증 항목은 "인증하기" 상태로 표시됨.</li>
+      <li><strong>권한 안내 없음</strong> — 비로그인 사용자는 이 화면에 도달하기 전에 로그인 화면으로 자동으로 보내지므로, 화면 안에서 별도의 권한 안내가 노출되는 경우는 없음.</li>
+      <li><strong>회원 탈퇴 확인은 다음 단계에서</strong> — 회원 탈퇴는 이 화면에서 추가 확인 없이 즉시 다음 단계 화면으로 넘어감. 실제 확인 절차는 별도 화면에서 진행 — 위험 액션을 한 화면에 모아두지 않음.</li>
+      <li><strong>로그아웃 다이얼로그의 확인 버튼 톤</strong> — 로그아웃은 다시 로그인하면 되돌릴 수 있는 행위라 확인 버튼을 위험 강조(빨강)가 아닌 일반 강조 색으로 표시 — 의도된 톤.</li>
+      <li><strong>로그아웃 후 짧은 전환 구간</strong> — 확인 직후 ~200ms 동안은 이전 화면이 그대로 보이다가 로그인 화면으로 교체됨. 네트워크가 느려 인증이 잠깐 살아있는 동안 보호된 화면에 다시 들어가도 자동으로 로그인 화면으로 보정됨.</li>
+      <li><strong>사용자 / 파트너 모드 차이</strong> — 사용자 앱에서는 본인인증 항목이 항상 노출되고 파트너 프로필 항목은 노출되지 않음. 파트너 앱에서는 그 반대.</li>
+      <li><strong>파트너 강조 색 차이</strong> — 파트너 앱은 강조 색이 사용자 앱과 약간 다른 보라 톤이지만, 이 화면 본문에는 강조 색 사용처가 없고 로그아웃 다이얼로그의 확인 버튼에서만 차이가 보임.</li>
     </ul>
   </section>
 </div>

@@ -561,19 +561,19 @@ body.dark-mode .viewport {
   <div class="perspective__header">
     <span class="glyph">🎨</span>
     <h2>States</h2>
-    <span class="lede">시각 변형 6종 — 5 step + submitting overlay + submit error. baseline = Step 1 (브랜드 정보, 빈 form), 나머지는 변경분만.</span>
+    <span class="lede">시각 변형 6종 — 5단계 폼 + 제출 중 오버레이 + 제출 실패 스낵바. baseline = Step 1 (브랜드 정보, 빈 폼). 나머지는 변경분만.</span>
   </div>
 
   <section class="doc">
     <p class="intro">
-      <strong>State 종류 식별 기준</strong>: <code>state.currentStep</code> int (0–4) + <code>state.isSaving || state.isSubmitting</code> (loading overlay) + <code>state.status</code> AsyncValue.error (snackbar). PageView는 NeverScrollable이라 직접 swipe 불가 — 모든 step 이동은 next/prev button → <code>animateToPage</code>(<code>MinglitAnimation.medium</code>).
-      모든 step은 같은 scaffold (AppBar + Progress + body + BottomNav)이며, AppBar title · Progress fill % · body content · prev 버튼 노출 여부만 다름.
+      <strong>State 식별 기준</strong>: 현재 노출된 단계(0–4) + 임시 저장/제출 진행 여부 (로딩 오버레이) + 저장/제출 실패 (스낵바). 단계 사이 이동은 좌우 스와이프가 아닌 하단의 "이전 / 다음" 버튼으로만 가능하며, 단계 간 이동은 약 0.35초의 부드러운 전환으로 일어난다.
+      모든 단계는 같은 화면 구조 (AppBar + 진행 바 + 본문 + 하단 버튼)를 공유하며, AppBar 타이틀 / 진행 바 채움 비율 / 본문 / "이전" 버튼 노출 여부만 다르다.
     </p>
 
     <!-- ───────── State 1 · Step 1 (baseline · empty form) ───────── -->
     <table class="ref state-mini is-baseline-tint">
       <thead>
-        <tr><th colspan="3"><strong>Step 1 · 브랜드 정보 (empty)</strong> 🎯 <small>baseline · currentStep = 0</small></th></tr>
+        <tr><th colspan="3"><strong>Step 1 · 브랜드 정보 (empty)</strong> 🎯 <small>baseline · 첫 번째 단계 · 빈 폼</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -612,25 +612,25 @@ body.dark-mode .viewport {
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>currentStep == 0</code> · 진입 직후 (Welcome → Apply 첫 진입) · 모든 필드 빈 값 · 이전 버튼 없음 · 다음 버튼은 활성 (validation은 다음 탭 시점에 평가)</td>
+          <td>화면에 진입한 직후 첫 단계가 노출된 상태. 모든 필드가 비어 있고, "이전" 버튼은 노출되지 않으며 "다음" 버튼은 활성 (실제 통과 여부는 탭 시점에 검증).</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ① <strong>브랜드명 입력</strong> → <code>updateField('brandName', val)</code> · onChange로 즉시 state 반영<br>
-            ② <strong>소개 입력</strong> (TextFormField maxLines=4) → <code>updateField('introduction', val)</code><br>
-            ③ <strong>"이미지 선택" 탭</strong> → <code>ImagePicker.pickImage(source: gallery, requestFullMetadata: false)</code> → 선택 시 <code>uploadProfileImage(file)</code><br>
-            ④ <strong>"다음" 탭</strong> → <code>nextStep()</code> · <code>validateStep(0) == brandName.isNotEmpty</code> · 통과 시 saveDraft + currentStep+1<br>
-            ⑤ <strong>back 탭</strong> → router pop (welcome 또는 redirect로 진입했으면 stack 비어있음)<br>
-            ⑥ <strong>⋮ 탭</strong> → PopupMenu (로그아웃)
+            ① <strong>브랜드명 입력</strong> — 입력하는 즉시 화면에 반영됨.<br>
+            ② <strong>소개 입력</strong> (여러 줄 텍스트 영역) — 입력하는 즉시 반영됨.<br>
+            ③ <strong>"이미지 선택" 탭</strong> — 갤러리에서 사진을 고르면 프로필 이미지로 업로드됨.<br>
+            ④ <strong>"다음" 버튼 탭</strong> — 브랜드명이 비어 있지 않으면 통과되어 임시 저장 후 다음 단계로 이동.<br>
+            ⑤ <strong>AppBar 뒤로가기 탭</strong> — 이전 화면으로 복귀. 자동으로 진입한 경우는 갈 곳이 없을 수 있음.<br>
+            ⑥ <strong>AppBar 우상단 ⋮ 탭</strong> — "로그아웃" 항목이 들어 있는 메뉴가 펼쳐짐.
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · 브랜드명 미입력 상태로 다음 탭 → <code>nextStep()</code>이 validateStep 실패로 step 미증가 · 시각적 피드백 없음 (button 비활성화 아닌, 탭해도 무반응) — <em>코드상 명시적 에러 토스트/스낵바 없음</em><br>
-            · iOS 갤러리 권한 거부 → ImagePicker null 반환 · onPick 미호출 · 기존 이미지 유지<br>
-            · loadDraft()가 빈 응답이면 빈 form 그대로 (이 baseline)
+            · 브랜드명을 비운 채 "다음"을 눌러도 다음 단계로 넘어가지 않음. 별도의 에러 토스트나 스낵바는 노출되지 않는다 — 그냥 반응이 없는 형태.<br>
+            · 갤러리 접근 권한이 거부되면 사진 선택이 일어나지 않고 기존 상태가 그대로 유지된다.<br>
+            · 이전에 저장한 임시 데이터가 없는 경우 빈 폼으로 시작 (이 baseline).
           </td>
         </tr>
         <tr>
@@ -655,7 +655,7 @@ body.dark-mode .viewport {
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 5 step 모두 같은 scaffold — Step 2/3/4/5는 body/title/progress만 swap. baseline은 이전 버튼 없음 (Step 1 진입 직후).</td>
+          <td>📝 5단계 모두 같은 화면 구조를 공유한다 — 2~5단계는 본문 / AppBar 타이틀 / 진행 바 채움 비율만 바뀐다. baseline은 첫 단계라서 "이전" 버튼이 노출되지 않는다.</td>
         </tr>
       </tbody>
     </table>
@@ -663,7 +663,7 @@ body.dark-mode .viewport {
     <!-- ───────── State 2 · Step 2 ───────── -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Step 2 · 사업자 정보</strong> <small>currentStep = 1 · filled 상태 예시</small></th></tr>
+        <tr><th colspan="3"><strong>Step 2 · 사업자 정보</strong> <small>두 번째 단계 · 모든 필드가 채워진 예시</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -707,18 +707,18 @@ body.dark-mode .viewport {
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>↔ <code>currentStep == 1</code> · 모든 필드 채워진 정상 입력 · 이전 버튼 등장 · validateStep(1) = bizName/Number/repName 모두 isNotEmpty 통과</td>
+          <td>↔ 두 번째 단계 · 사업자 유형 · 상호명 · 등록번호 · 대표자명이 모두 채워진 정상 상태 · "이전" 버튼이 등장.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ↔ AppBar title "사업자 정보" · Progress 20% → 40%<br>
-            + <strong>유형 dropdown 탭</strong> → individual / corporate 선택 (기본 "individual")<br>
-            + <strong>등록번호 keyboardType.number</strong> · 대표자명 일반 텍스트<br>
-            + <strong>"이전" 탭</strong> → <code>previousStep()</code> · animateToPage Step 1 (medium 350ms)
+            ↔ AppBar 타이틀이 "사업자 정보"로 바뀌고 진행 바가 20% → 40%로 채워짐.<br>
+            + <strong>유형 드롭다운 탭</strong> — 개인사업자 / 법인사업자 중 선택 (기본은 개인사업자).<br>
+            + <strong>등록번호 입력</strong> — 숫자 전용 키보드가 올라옴. 대표자명은 일반 텍스트 키보드.<br>
+            + <strong>"이전" 버튼 탭</strong> — 이전 단계로 부드럽게 이동 (약 0.35초의 슬라이드 전환).
           </td>
         </tr>
-        <tr><td class="state-mini__aspect">에지케이스</td><td>· 등록번호 형식 검증 없음 (isNotEmpty만) — 잘못된 번호도 다음 통과 · 검토 단계에서도 그대로 표시</td></tr>
+        <tr><td class="state-mini__aspect">에지케이스</td><td>· 등록번호의 형식은 클라이언트에서 별도로 검증되지 않음 — 비어 있지만 않으면 다음 단계로 진행할 수 있고, 검토 단계에서도 입력값이 그대로 표시된다.</td></tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
           <td>
@@ -730,14 +730,14 @@ body.dark-mode .viewport {
           </td>
         </tr>
         <tr><td class="state-mini__aspect">토큰</td><td>+ <code>color-primary</code>의 OutlinedButton border / fg (이전 버튼 — partnerOutlinedButton theme)<br>나머지 동일</td></tr>
-        <tr><td class="state-mini__aspect">노트</td><td>📝 사업자 유형 default = 'individual' (state factory). 처음부터 dropdown에 값이 채워져 있음.</td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 사업자 유형은 처음부터 "개인사업자"가 기본값으로 채워져 있다.</td></tr>
       </tbody>
     </table>
 
     <!-- ───────── State 3 · Step 3 with validation error ───────── -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Step 3 · 연락처/정산 (에러 변형)</strong> <small>currentStep = 2 · 이메일 형식 오류 시각화</small></th></tr>
+        <tr><th colspan="3"><strong>Step 3 · 연락처/정산 (에러 변형)</strong> <small>세 번째 단계 · 이메일 형식 오류 시각화</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -786,24 +786,24 @@ body.dark-mode .viewport {
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>↔ <code>currentStep == 2</code> · 이메일 필드에 형식 오류 입력 · 도로명 주소 미선택 (상세주소 disabled) · 이후 필드(계좌번호/예금주/세금계산서)는 스크롤 아래</td>
+          <td>↔ 세 번째 단계 · 이메일 필드에 잘못된 형식이 입력된 상태 · 도로명 주소가 아직 선택되지 않아 상세주소 입력이 비활성 · 이후 필드(계좌번호 / 예금주 / 세금계산서 이메일)는 스크롤 아래에 있음.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ↔ AppBar title "연락처 및 정산" · Progress 40% → 60%<br>
-            + <strong>도로명 주소 탭</strong> → <code>AddressSearchDialog</code>(fullscreenDialog) push → 선택 시 roadAddress 갱신, detailAddress reset<br>
-            + <strong>상세주소</strong> — 도로명 채워졌을 때만 enabled · onChanged → <code>updateField('detailAddress', ...)</code> (combined address 자동 재계산)<br>
-            + <strong>전화 keyboardType.phone</strong>, 이메일 emailAddress, 계좌번호 number — soft keyboard variant<br>
-            ↔ "다음" 탭 → validateStep(2): phone/email/bankName/accountNumber/accountHolder 5개 모두 isNotEmpty
+            ↔ AppBar 타이틀이 "연락처 및 정산"으로 바뀌고 진행 바가 40% → 60%로 채워짐.<br>
+            + <strong>도로명 주소 탭</strong> — 주소 검색 화면이 전체 화면으로 올라옴. 선택하면 도로명 주소가 채워지고 상세주소는 초기화됨.<br>
+            + <strong>상세주소 입력</strong> — 도로명 주소가 채워진 뒤에만 입력 가능. 입력하면 전체 주소가 자동으로 합쳐진다.<br>
+            + <strong>입력별 키보드</strong> — 전화번호 / 계좌번호는 숫자 키보드, 이메일은 이메일 키보드가 올라옴.<br>
+            ↔ "다음" 버튼 탭 — 전화 · 이메일 · 은행 · 계좌번호 · 예금주 5개 항목이 모두 비어 있지 않아야 다음 단계로 진행됨.
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            <em>주의</em>: 코드상 이메일 형식 검증 로직은 <strong>없음</strong> — <code>contactEmail.isNotEmpty</code>만 체크. 위 mockup의 "올바른 이메일 형식이 아닙니다" 표시는 향후 강화 가능 위치를 시각화한 <em>spec 권고</em>이며 현재는 미구현.<br>
-            · 도로명만 선택 후 상세 미입력 → combined <code>address = roadAddress</code> (Fix #1599 분기)<br>
-            · 도로명 변경 시 상세주소 자동 reset
+            <em>주의</em>: 현재 이메일 형식 검증은 클라이언트에서 수행되지 않으며, 비어 있지만 않으면 다음 단계로 진행할 수 있다. 위 mockup의 "올바른 이메일 형식이 아닙니다" 표시는 추후 강화될 수 있는 위치를 미리 보여주는 <em>spec 권고</em>이며 현재는 노출되지 않는다.<br>
+            · 도로명만 선택하고 상세주소를 비워 두면 도로명만 최종 주소로 사용된다.<br>
+            · 도로명 주소를 다시 선택하면 상세주소는 자동으로 초기화된다.
           </td>
         </tr>
         <tr>
@@ -818,14 +818,14 @@ body.dark-mode .viewport {
           </td>
         </tr>
         <tr><td class="state-mini__aspect">토큰</td><td>+ <code>color-error</code> (validation error border + 메시지 — 권고 시각화)<br>나머지 동일</td></tr>
-        <tr><td class="state-mini__aspect">노트</td><td>📝 가장 긴 step (8 필드). 이메일/전화 형식 검증은 backend 단에서 수행 — 클라이언트는 빈 값 체크만. 세금계산서 이메일은 선택사항 (validation에서 제외).</td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 가장 긴 단계 (8개 필드). 이메일과 전화번호의 형식은 서버에서 점검되며, 클라이언트는 비어 있는지만 확인한다. 세금계산서 이메일은 선택 항목.</td></tr>
       </tbody>
     </table>
 
     <!-- ───────── State 4 · Step 4 (documents picked) ───────── -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Step 4 · 서류 제출 (filled)</strong> <small>currentStep = 3 · 두 파일 모두 picked</small></th></tr>
+        <tr><th colspan="3"><strong>Step 4 · 서류 제출 (filled)</strong> <small>네 번째 단계 · 두 서류 파일이 모두 선택된 상태</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -872,7 +872,7 @@ body.dark-mode .viewport {
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>↔ <code>currentStep == 3</code> · <code>bizRegistrationPath != null &amp;&amp; bankbookPath != null</code> · validateStep(3) 통과</td>
+          <td>↔ 네 번째 단계 · 사업자등록증과 통장 사본 두 파일이 모두 선택된 상태.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
@@ -965,7 +965,7 @@ body.dark-mode .viewport {
           <td>
             · <code>validateAll()</code> 실패 → 제출 버튼 disabled (<code>canProceed() ? submit : null</code>) — 앞 step 누락 가능성<br>
             · <code>state.applicationId == null</code> (이전 saveDraft 모두 실패) → submit이 즉시 status=error로 분기, 서버 호출 없음 (Fix #1599)<br>
-            · 빈 값 필드 → "-" placeholder (`_ReviewItem`)
+            · 비어있는 필드는 "-" 플레이스홀더로 표시
           </td>
         </tr>
         <tr>
@@ -1023,7 +1023,7 @@ body.dark-mode .viewport {
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>− <strong>모든 입력 차단</strong> (scrim이 hit-test 흡수) · 이전/다음 버튼 disabled (<code>onPressed: isLoading ? null : ...</code>) · ⋮ 액션 버튼은 활성 (스크림 위 layer 아니지만 AppBar 영역엔 overlay 미적용 — 실제로는 PopupMenuButton 자체 onSelected만 차단)</td>
+          <td>− <strong>모든 입력 차단</strong> (scrim이 탭을 흡수) · 이전 / 다음 버튼은 비활성으로 흐려짐 · ⋮ AppBar 액션 버튼은 시각적으로는 활성 상태이지만 메뉴 선택은 차단됨</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
@@ -1084,7 +1084,7 @@ body.dark-mode .viewport {
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>+ <code>state.status</code> AsyncValue.error · listener가 <code>handleMinglitError(context, error, st)</code> 호출 → kit-shared 에러 SnackBar 노출. isSubmitting/isSaving은 false로 복귀 → 폼 다시 조작 가능.</td>
+          <td>+ 임시저장 또는 제출이 실패한 직후 — 화면 하단에 오류 안내 SnackBar가 노출되고 폼은 다시 조작 가능한 상태로 복귀.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>

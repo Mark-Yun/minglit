@@ -804,7 +804,7 @@
     <h2>State summary</h2>
     <p class="intro">
       한눈에 6 states 비교. 자세한 사양은 아래 각 mini-table 참조.
-      Admission 분기 (eligible / soldOut / applied / rejected …)는 <a href="/specs/event_bottom_ticket_bar.html">EventBottomTicketBar</a> child spec에서 다룸 — 이 spec은 페이지 본문 (탭 / 섹션) 에 집중.
+      Admission 분기 (참여 가능 / 마감 / 신청됨 / 거절 등)는 <a href="/specs/event_bottom_ticket_bar.html">EventBottomTicketBar</a> child spec에서 다룸 — 이 spec은 페이지 본문 (탭 / 섹션)에 집중.
     </p>
     <table class="ref">
       <thead>
@@ -817,11 +817,11 @@
       </thead>
       <tbody>
         <tr class="is-baseline-tint"><td><strong>Default</strong> 🎯</td><td>primary</td><td>데이터 로드 + 스크롤 top</td><td>Hero 풀 + TabBar(§1 기본정보 active) + §1 visible + §2 peek</td></tr>
-        <tr><td><strong>Loading</strong></td><td>async</td><td><code>eventDetailControllerProvider.isLoading</code></td><td>전체 skeleton (hero + tabs + 섹션)</td></tr>
-        <tr><td><strong>Error</strong></td><td>network/server</td><td><code>eventDetailControllerProvider.hasError</code></td><td><code>MinglitErrorState</code> fullPage + "다시 시도" CTA</td></tr>
-        <tr><td><strong>§3 참가 현황 active</strong></td><td>scrolled</td><td>scrollOffset &gt; (§3 reveal offset)</td><td>Collapsed AppBar + TabBar §3 auto-active + EntryGroupCard list (참여 게이지)</td></tr>
-        <tr><td><strong>§4 필요 인증 active</strong></td><td>scrolled</td><td>scrollOffset &gt; (§4 reveal offset)</td><td>Collapsed AppBar + TabBar §4 auto-active + VerificationCard list (✓ / ! status)</td></tr>
-        <tr><td><strong>§5 환불 정책 active</strong></td><td>scrolled</td><td>scrollOffset &gt; (§5 reveal offset)</td><td>Collapsed AppBar + TabBar §5 auto-active + 환불 비율 table (시점별 %)</td></tr>
+        <tr><td><strong>Loading</strong></td><td>async</td><td>이벤트 데이터를 불러오는 중</td><td>전체 skeleton (hero + tabs + 섹션)</td></tr>
+        <tr><td><strong>Error</strong></td><td>network/server</td><td>이벤트 데이터를 받지 못한 상태</td><td>전체 화면 안내 + "다시 시도" CTA</td></tr>
+        <tr><td><strong>§3 참가 현황 active</strong></td><td>scrolled</td><td>참가 현황 섹션이 화면 상단에 도달</td><td>Collapsed AppBar + TabBar §3 auto-active + 참여 게이지 카드 리스트</td></tr>
+        <tr><td><strong>§4 필요 인증 active</strong></td><td>scrolled</td><td>필요 인증 섹션이 화면 상단에 도달</td><td>Collapsed AppBar + TabBar §4 auto-active + 인증 카드 리스트 (✓ / ! status)</td></tr>
+        <tr><td><strong>§5 환불 정책 active</strong></td><td>scrolled</td><td>환불 정책 섹션이 화면 상단에 도달</td><td>Collapsed AppBar + TabBar §5 auto-active + 환불 비율 table (시점별 %)</td></tr>
       </tbody>
     </table>
   </section>
@@ -842,7 +842,7 @@
       <!-- State 1: Default — BASELINE for additive diff -->
       <table class="ref state-mini is-baseline-tint">
         <thead>
-          <tr><th colspan="3"><strong>Default</strong> 🎯 <span class="tag">production</span> · <small style="color:var(--color-primary);">baseline · 페이지 진입 직후 (스크롤 top)</small></th></tr>
+          <tr><th colspan="3"><strong>Default</strong> 🎯 <span class="tag">production</span></th></tr>
         </thead>
         <tbody>
           <tr>
@@ -942,26 +942,26 @@
           <span class="type-spec" style="top:308px;left:200px;">22 / 700 / 1.35 — title</span>
             </div></td>
             <td class="state-mini__aspect">조건</td>
-            <td><code>eventDetailControllerProvider.hasValue</code> · <code>_scrollController.offset == 0</code> · 활성 섹션: §1 기본 정보 (scroll-spy 자동 active) · <code>admissionState: available</code></td>
+            <td>이벤트 데이터가 도착해 페이지 진입 직후 스크롤 top에 머무는 상태. 활성 섹션은 §1 기본 정보, 신청 가능 분기.</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">사용자 액션</td>
             <td>
-              · <strong>위로 스크롤</strong> → hero collapse + AppBar 타이틀 fade-in + scroll-spy로 다음 섹션 active<br>
-              · <strong>히어로 좌/우 스와이프</strong> → 이미지 carousel 전환, dot indicator 갱신<br>
-              · <strong>탭 탭</strong> → 해당 섹션으로 ~300ms easeInOut animateTo (_isTabTapScroll guard 활성)<br>
-              · <strong>파트너 row 탭</strong> → <code>PartnerDetailRoute</code> push (event_coordinator)<br>
-              · <strong>"좋아요" 칩 탭</strong> (로그인) → 토글 (active/inactive) · (비로그인) → <code>LoginRoute</code> push<br>
-              · <strong>"공유하기" 칩 탭</strong> → OS share sheet (이벤트 link 포함)<br>
-              · <strong>⋮ 메뉴 탭</strong> (로그인 + 파트너 존재) → 차단 / 신고 popup<br>
-              · <strong>BottomTicketBar 탭</strong> → 12-state별 분기 (자세한 사양은 <a href="/specs/event_bottom_ticket_bar.html">EventBottomTicketBar</a>)
+              · <strong>위로 스크롤</strong> → hero가 접히고 AppBar 타이틀이 자연스럽게 나타남 + 활성 탭이 다음 섹션으로 자동 갱신<br>
+              · <strong>히어로 좌/우 스와이프</strong> → 이미지 캐러셀 전환, 점 인디케이터 갱신<br>
+              · <strong>탭 탭</strong> → 해당 섹션으로 약 300ms easeInOut 부드러운 스크롤<br>
+              · <strong>파트너 행 탭</strong> → <a href="/specs/partner_detail_page.html">PartnerDetailPage</a>로 이동<br>
+              · <strong>"좋아요" 칩 탭</strong> (로그인) → 토글 (active/inactive) · (비로그인) → <a href="/specs/login_page.html">LoginPage</a>로 이동<br>
+              · <strong>"공유하기" 칩 탭</strong> → OS 공유 시트 (이벤트 링크 포함)<br>
+              · <strong>⋮ 메뉴 탭</strong> (로그인 + 파트너 존재) → 차단 / 신고 팝업<br>
+              · <strong>BottomTicketBar 탭</strong> → 12 state별 분기 (자세한 사양은 <a href="/specs/event_bottom_ticket_bar.html">EventBottomTicketBar</a>)
             </td>
           </tr>
           <tr><td class="state-mini__aspect">에지케이스</td><td>—</td></tr>
           <tr>
             <td class="state-mini__aspect">컴포넌트</td>
             <td>
-              <code>Scaffold</code> · <code>Column(Expanded + BottomTicketBar)</code> · <code>AnimatedSwitcher</code>(<code>MinglitAnimation.medium</code> 350ms) · <code>RefreshIndicator</code> · <code>CustomScrollView</code> · <code>SliverAppBar</code>(pinned, expandedHeight = screenWidth × 9/16, FlexibleSpaceBar, BackButton + PopupMenuButton) · <code>MinglitImageCarousel</code>(PageView + dot indicators) · <code>SliverPersistentHeader</code>(pinned) + <code>TabBar</code>(scrollable, tabAlignment.start, scroll-spy via GlobalKey) · <code>SliverToBoxAdapter</code> × 5 (§1~§5) · <code>_InfoTile</code> · <code>MinglitSocialActionChip</code>(좋아요, like) · <code>MinglitChip</code>(size.large, 공유하기) · <code>_QuillViewer</code>(Quill JSON) · <code>_EntryConditionsSection</code>(MinglitSection + EntryGroupDetail × N + MinglitParticipantGauge) · <code>_VerificationSection</code>(VerificationCard × N) · <code>_RefundPolicySection</code> · <code>OpenInAppBanner</code>(Positioned bottom — deeplink 진입 시) · <a href="/specs/event_bottom_ticket_bar.html"><code>_BottomTicketBar</code></a>(별도 spec)
+              <code>Scaffold</code> · 하단 BottomTicketBar 고정 · 새로고침 가능한 단일 스크롤 영역 · <code>SliverAppBar</code>(hero 16:9 · 뒤로가기 + ⋮ 메뉴) · <code>MinglitImageCarousel</code>(가로 스와이프 + 점 인디케이터) · 고정 <code>TabBar</code>(가로 스크롤 · 보이는 섹션이 자동 활성화) · 5개 섹션 본문 · <code>_InfoTile</code> · <code>MinglitSocialActionChip</code>(좋아요) · <code>MinglitChip</code>(size.large, 공유하기) · 본문 뷰어(서식 있는 텍스트) · 참여 게이지 카드 · 인증 카드 · 환불 정책 카드 · <code>OpenInAppBanner</code>(딥링크 진입 시 하단 노출) · <a href="/specs/event_bottom_ticket_bar.html"><code>_BottomTicketBar</code></a>(별도 spec)
             </td>
           </tr>
           <tr>
@@ -977,7 +977,7 @@
       <!-- State 2: Loading -->
       <table class="ref state-mini">
         <thead>
-          <tr><th colspan="3"><strong>Loading</strong> <span class="tag tag--mute">async</span> · <small>이벤트 데이터 로드 중</small></th></tr>
+          <tr><th colspan="3"><strong>Loading</strong> <span class="tag tag--mute">async</span></th></tr>
         </thead>
         <tbody>
           <tr>
@@ -1008,16 +1008,16 @@
           </div>
             </div></td>
             <td class="state-mini__aspect">조건</td>
-            <td><code>eventDetailControllerProvider.isLoading == true</code> — 첫 fetch 시점만 (refresh 시는 기존 콘텐츠 + RefreshIndicator)</td>
+            <td>이벤트 데이터를 불러오는 중인 상태. 처음 진입 시점에만 보이고, 새로고침 시에는 기존 콘텐츠 위에 RefreshIndicator만 노출.</td>
           </tr>
-          <tr><td class="state-mini__aspect">사용자 액션</td><td>탭 무반응 (skeleton만 표시). 추후 데이터 도착 시 AnimatedSwitcher crossfade로 Default 진입.</td></tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>탭 무반응 (스켈레톤만 표시). 데이터가 도착하면 부드럽게 Default 화면으로 전환.</td></tr>
           <tr>
             <td class="state-mini__aspect">에지케이스</td>
-            <td>AnimatedSwitcher가 Stack을 사용하므로 Expanded가 직접 자식 못 됨 (Fix #1746) — Column/Expanded는 outer에 둠.</td>
+            <td>전환 시 레이아웃이 깨지지 않도록 외곽 구조가 미리 잡혀 있음.</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">컴포넌트</td>
-            <td>↔ Default content widgets → <code>_EventDetailContentSkeleton</code>(shimmer 카드들 — hero · tabs · sections) + <code>_BottomTicketBarSkeleton</code></td>
+            <td>↔ Default 콘텐츠 → 자리 표시(스켈레톤) 카드들 (hero · tabs · sections) + 하단 바 스켈레톤</td>
           </tr>
           <tr><td class="state-mini__aspect">토큰</td><td>+ shimmer animation (skeleton 컴포넌트 내부 캡슐화 — color-divider 50% 펄스)</td></tr>
           <tr><td class="state-mini__aspect">노트</td><td>—</td></tr>
@@ -1027,7 +1027,7 @@
       <!-- State 3: Error -->
       <table class="ref state-mini">
         <thead>
-          <tr><th colspan="3"><strong>Error</strong> <span class="tag tag--mute">network/server</span> · <small>로드 실패</small></th></tr>
+          <tr><th colspan="3"><strong>Error</strong> <span class="tag tag--mute">network/server</span></th></tr>
         </thead>
         <tbody>
           <tr>
@@ -1049,13 +1049,13 @@
           </div>
             </div></td>
             <td class="state-mini__aspect">조건</td>
-            <td><code>eventDetailControllerProvider.hasError == true</code> — 네트워크 / 서버 에러</td>
+            <td>이벤트 데이터를 받지 못한 상태. 네트워크 / 서버 오류.</td>
           </tr>
-          <tr><td class="state-mini__aspect">사용자 액션</td><td>"다시 시도" 탭 → <code>ref.invalidate(eventDetailControllerProvider)</code> → loading 재진입</td></tr>
-          <tr><td class="state-mini__aspect">에지케이스</td><td>네트워크 vs 서버 에러 구분 필요 시 sub-state로 분리 (현재 통합)</td></tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>"다시 시도" 탭 → 다시 받아오기 → Loading 상태로 진입.</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>네트워크 / 서버 / 권한 오류를 구분하지 않고 동일한 안내로 표시.</td></tr>
           <tr>
             <td class="state-mini__aspect">컴포넌트</td>
-            <td>↔ Default 내용 → <code>MinglitErrorState</code>(fullPage variant, retry callback) + BackButton만 유지 (AppBar 형태). BottomTicketBar는 <code>SizedBox.shrink()</code>.</td>
+            <td>↔ Default 내용 → 전체 화면 안내 (아이콘 + 타이틀 + 본문 + "다시 시도" 버튼) + 뒤로 버튼만 유지. 하단 BottomTicketBar 미노출.</td>
           </tr>
           <tr><td class="state-mini__aspect">토큰</td><td>+ <code>color-error</code> 계열 (icon + accent)</td></tr>
           <tr><td class="state-mini__aspect">노트</td><td>—</td></tr>
@@ -1065,7 +1065,7 @@
       <!-- State 4: Mid-scroll — §3 참가 현황이 뷰포트 상단에 도달, TabBar follows scroll position -->
       <table class="ref state-mini">
         <thead>
-          <tr><th colspan="3"><strong>Mid-scroll</strong> <span class="tag tag--mute">scrolled</span> · <small>§3 참가 현황 active (TabBar scroll-spy)</small></th></tr>
+          <tr><th colspan="3"><strong>Mid-scroll</strong> <span class="tag tag--mute">scrolled</span> · <small>§3 참가 현황 활성 (TabBar 자동 강조)</small></th></tr>
         </thead>
         <tbody>
           <tr>
@@ -1127,18 +1127,18 @@
           <span class="annotation" style="bottom:120px;right:8px;">↓ §4 필요 인증 (계속 스크롤)</span>
             </div></td>
             <td class="state-mini__aspect">조건</td>
-            <td><code>_scrollController.offset &gt; (§3 GlobalKey의 reveal offset)</code> — hero 접힘으로 AppBar 타이틀 fade-in. <code>_onScroll</code> listener가 §3을 감지해 <code>TabController.animateTo(2)</code> 호출 → 참가 현황 탭 자동 active.</td>
+            <td>스크롤이 §3 참가 현황 영역까지 내려와 hero가 접히고 AppBar 타이틀이 노출, TabBar의 §3가 자동으로 활성화된 상태.</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">사용자 액션</td>
             <td>
-              · 계속 스크롤 → 다른 섹션으로 이동 + scroll-spy로 활성 탭 갱신<br>
-              · 위로 스크롤 → hero 다시 펼침 + AppBar 타이틀 fade-out<br>
-              · 다른 탭 탭 → 그 섹션으로 animateTo (탭 탭 직후 <code>_isTabTapScroll</code> guard로 자동 update 일시 중단 — 충돌 방지)
+              · 계속 스크롤 → 다른 섹션으로 이동 + 활성 탭 자동 갱신<br>
+              · 위로 스크롤 → hero가 다시 펼쳐지고 AppBar 타이틀이 사라짐<br>
+              · 다른 탭 탭 → 그 섹션으로 부드러운 스크롤. 탭 탭 직후 잠깐은 자동 갱신이 멈춰 충돌하지 않음
             </td>
           </tr>
-          <tr><td class="state-mini__aspect">에지케이스</td><td>탭 탭 후 부드러운 scroll 중에 자동 scroll-spy가 다른 탭으로 활성화되는 현상 방지 — guard로 차단</td></tr>
-          <tr><td class="state-mini__aspect">컴포넌트</td><td>동일 (단순 scroll position 차이 — widget tree 변동 없음)</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>탭 탭 후 부드러운 스크롤 중에 자동 활성 탭이 다른 곳으로 튀는 현상이 일어나지 않도록 처리됨.</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>동일 (단순히 스크롤 위치만 다름 — 화면 구조는 그대로)</td></tr>
           <tr><td class="state-mini__aspect">토큰</td><td>동일</td></tr>
           <tr><td class="state-mini__aspect">노트</td><td>—</td></tr>
         </tbody>
@@ -1147,7 +1147,7 @@
       <!-- State 5: §4 필요 인증 active (TabBar scroll-spy) -->
       <table class="ref state-mini">
         <thead>
-          <tr><th colspan="3"><strong>§4 필요 인증 active</strong> <span class="tag tag--mute">scrolled</span> · <small>인증 카드 list가 viewport 중앙 (TabBar scroll-spy)</small></th></tr>
+          <tr><th colspan="3"><strong>§4 필요 인증 active</strong> <span class="tag tag--mute">scrolled</span> · <small>인증 카드 리스트가 화면 중앙에 위치</small></th></tr>
         </thead>
         <tbody>
           <tr>
@@ -1204,18 +1204,18 @@
               <span class="annotation" style="bottom:120px;right:8px;">↓ §5 환불 정책 (계속 스크롤)</span>
             </div></td>
             <td class="state-mini__aspect">조건</td>
-            <td><code>_scrollController.offset &gt; (§4 GlobalKey reveal offset)</code> — <code>_VerificationSection</code> 영역 진입. <code>TabController.animateTo(3)</code> 자동 호출 → 필요 인증 탭 active.</td>
+            <td>스크롤이 §4 필요 인증 영역까지 내려와 TabBar의 §4가 자동으로 활성화된 상태.</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">사용자 액션</td>
             <td>
               · <strong>인증 카드 (미완료) 탭</strong> → 해당 인증 화면으로 이동 (실명 / 성별 / 자격 등) — 인증 완료 후 자동 복귀<br>
               · <strong>인증 카드 (완료) 탭</strong> → 무반응 또는 인증 상세 (재발급 등)<br>
-              · 다른 탭 탭 → 해당 섹션으로 animateTo
+              · 다른 탭 탭 → 해당 섹션으로 부드러운 스크롤
             </td>
           </tr>
-          <tr><td class="state-mini__aspect">에지케이스</td><td>· 필요한 인증이 0개 → 섹션 자체 hidden (소비자 free 이벤트)<br>· 인증 카드 모두 완료 → 모든 카드에 ✓ + "완료" 표기</td></tr>
-          <tr><td class="state-mini__aspect">컴포넌트</td><td>+ <code>VerificationCard</code> (icon + title + status + chevron · radius-card)<br>+ <code>_VerificationSection</code> (Header + Card list)<br>− Hero (collapsed AppBar로 대체)</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>· 필요한 인증이 0개 → 섹션 자체가 노출되지 않음 (제약 없는 이벤트)<br>· 인증 카드 모두 완료 → 모든 카드에 ✓ + "완료" 표기</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>+ <code>VerificationCard</code> (아이콘 + 타이틀 + 상태 + chevron · radius-card)<br>+ 인증 섹션 (Header + Card list)<br>− Hero (collapsed AppBar로 대체)</td></tr>
           <tr><td class="state-mini__aspect">토큰</td><td>+ <code>color-success</code> (완료 카드 icon · status text)<br>+ <code>color-warning</code> (미완료 카드 icon · status text — 액션 유도)<br>+ <code>radius-card</code> (12 · 인증 카드)</td></tr>
           <tr><td class="state-mini__aspect">노트</td><td>📝 BottomTicketBar는 admission 분기 (eligible / qualificationRequired / rejected 등) — child spec 참고. 이 mini-table은 §4 본문에 집중.</td></tr>
         </tbody>
@@ -1224,7 +1224,7 @@
       <!-- State 6: §5 환불 정책 active (TabBar scroll-spy) -->
       <table class="ref state-mini">
         <thead>
-          <tr><th colspan="3"><strong>§5 환불 정책 active</strong> <span class="tag tag--mute">scrolled</span> · <small>피드 끝에 도달 — 정책 텍스트가 viewport 중앙</small></th></tr>
+          <tr><th colspan="3"><strong>§5 환불 정책 active</strong> <span class="tag tag--mute">scrolled</span> · <small>스크롤 끝에 도달 — 정책 텍스트가 화면 중앙에 위치</small></th></tr>
         </thead>
         <tbody>
           <tr>
@@ -1275,18 +1275,18 @@
               <span class="annotation" style="top:120px;left:8px;">↑ §4 필요 인증 (위로 사라짐)</span>
             </div></td>
             <td class="state-mini__aspect">조건</td>
-            <td><code>_scrollController.offset &gt; (§5 GlobalKey reveal offset)</code> · 피드 끝 — 더 이상 다음 섹션 없음</td>
+            <td>스크롤이 §5 환불 정책 영역까지 내려와 TabBar의 §5가 자동으로 활성화된 상태. 더 이상 다음 섹션이 없음.</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">사용자 액션</td>
             <td>
-              · <strong>"자세히 보기" 탭</strong> → 환불 정책 풀텍스트 다이얼로그 또는 외부 link<br>
-              · <strong>위로 스크롤</strong> → 이전 섹션 다시 노출 + scroll-spy 갱신<br>
-              · 다른 탭 탭 → 해당 섹션으로 animateTo (위쪽 섹션이라 항상 가능)
+              · <strong>"자세히 보기" 탭</strong> → 환불 정책 본문 다이얼로그 또는 외부 링크<br>
+              · <strong>위로 스크롤</strong> → 이전 섹션 다시 노출 + 활성 탭 자동 갱신<br>
+              · 다른 탭 탭 → 해당 섹션으로 부드러운 스크롤 (위쪽 섹션이라 항상 가능)
             </td>
           </tr>
-          <tr><td class="state-mini__aspect">에지케이스</td><td>· 환불 정책이 partner-customizable이면 partner의 정책 표시. 표준 정책이 default<br>· "당일 환불 불가" 텍스트는 강조 (color-error)</td></tr>
-          <tr><td class="state-mini__aspect">컴포넌트</td><td>+ <code>_RefundPolicySection</code> (Header + Table card)<br>+ Refund table (3 rows · 시점 / 비율)<br>+ "자세히 보기" inline link (color-primary)</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>· 파트너가 직접 정한 환불 정책이 있으면 그 정책을 표시, 아니면 표준 정책이 노출<br>· "당일 환불 불가" 텍스트는 강조 (color-error)</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>+ 환불 정책 섹션 (Header + Table card)<br>+ 환불 표 (3 rows · 시점 / 비율)<br>+ "자세히 보기" inline link (color-primary)</td></tr>
           <tr><td class="state-mini__aspect">토큰</td><td>+ <code>color-success</code> (100% 환불 강조)<br>+ <code>color-error</code> (환불 불가 강조)<br>+ <code>color-surface</code> (정책 카드 bg)</td></tr>
           <tr><td class="state-mini__aspect">노트</td><td>📝 마지막 섹션 — 사용자가 여기까지 스크롤했다는 건 신청 직전 단계. BottomTicketBar로 즉시 액션 가능 (child spec 참고).</td></tr>
         </tbody>
@@ -1320,24 +1320,24 @@
       </thead>
       <tbody>
         <tr>
-          <td>뒤로 가기 (OS back / AppBar BackButton)</td>
+          <td>뒤로 가기 (OS back / AppBar 뒤로 버튼)</td>
           <td>이전 화면으로 이동 — 모든 state에서 동일.</td>
         </tr>
         <tr>
-          <td>Pull-to-refresh</td>
-          <td><code>ref.refresh(eventDetailControllerProvider(eventId).future)</code> — 이벤트 데이터 재로드. loading 상태 진입 없이 기존 콘텐츠 유지하면서 갱신 (최신 참여 현황, 가격 등).</td>
+          <td>풀-다운 새로고침</td>
+          <td>이벤트 데이터를 다시 받아옴. Loading 상태로 돌아가지 않고 기존 콘텐츠는 유지하면서 최신 참여 현황 / 가격 등을 갱신.</td>
         </tr>
         <tr>
           <td>OpenInAppBanner "앱에서 열기" 탭</td>
-          <td>OS 기본 앱 연결 시트 또는 앱스토어로 이동 — 딥링크로 진입한 케이스에서만 노출.</td>
+          <td>OS 기본 앱 연결 시트 또는 앱스토어로 이동 — 딥링크로 진입한 경우에만 노출.</td>
         </tr>
         <tr>
           <td>OpenInAppBanner 닫기</td>
-          <td>배너가 사라지고 아래 콘텐츠가 더 넓게 표시. 세션 내에서 다시 표시되지 않음 (<code>_bannerDismissed</code> state).</td>
+          <td>배너가 사라지고 아래 콘텐츠가 더 넓게 표시. 세션 내에서 다시 표시되지 않음.</td>
         </tr>
         <tr>
           <td>VerificationCard 탭</td>
-          <td>인증 상세 화면으로 이동 예정 — 현재 "구현 준비 중입니다" 스낵바 표시 (Default · Already Joined · Full state 모두 적용).</td>
+          <td>인증 상세 화면으로 이동 예정 — 현재는 "구현 준비 중입니다" 안내 (모든 state에서 동일).</td>
         </tr>
       </tbody>
     </table>
@@ -1388,8 +1388,8 @@
         </tr>
         <tr>
           <td>탭 탭 → 섹션 scroll</td>
-          <td><code>medium</code> 근사 (300ms hardcode)</td>
-          <td>Curves.easeInOut · _isTabTapScroll guard로 자동 update 충돌 방지</td>
+          <td><code>medium</code> 근사 (300ms)</td>
+          <td>easeInOut. 탭 탭 직후 잠깐은 자동 갱신이 멈춰 충돌하지 않음.</td>
         </tr>
         <tr>
           <td>좋아요 칩 토글</td>

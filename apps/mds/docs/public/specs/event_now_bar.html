@@ -154,17 +154,17 @@
       </tr>
       <tr>
         <th>Route / Surface</th>
-        <td><code>EventNowBar</code> (private widget — Scaffold.bottomSheet 슬롯, 자체 route 없음)</td>
+        <td><code>EventNowBar</code> (HomePage 하단 영역에 부착되는 sub-component, 자체 route 없음)</td>
       </tr>
       <tr>
         <th>Path</th>
-        <td><code>/</code> (HomeRoute — parent route 자체 — 자체 route 없음)</td>
+        <td><code>/</code> (홈 화면의 일부 — 자체 경로 없음)</td>
       </tr>
       <tr>
         <th>Hierarchy</th>
         <td>
-          <strong>Parent</strong>: <a href="/specs/home_page.html"><code>HomePage</code></a> (Scaffold.bottomSheet 슬롯 — 활성 이벤트가 있을 때만 노출)<br>
-          <strong>Children</strong>: <em>—</em> <em style="color: var(--color-text-secondary);">(탭 시 5개 routed sheet으로 진입 — Reference 섹션의 routed-sheet 매핑 참고)</em>
+          <strong>Parent</strong>: <a href="/specs/home_page.html"><code>HomePage</code></a> 하단 영역 — 오늘 참여 중인 이벤트가 있을 때만 노출.<br>
+          <strong>Children</strong>: <em>—</em> <em style="color: var(--color-text-secondary);">(탭 시 5개 시트로 진입 — Reference 섹션의 routed-sheet 매핑 참고)</em>
         </td>
       </tr>
       <tr>
@@ -177,22 +177,22 @@
       <tr>
         <th>User journey</th>
         <td>
-          <strong>Entry points</strong>: HomePage 진입 직후 — Scaffold.bottomSheet 슬롯에 자동 부착. 활성 이벤트가 있을 때만 렌더 (없으면 <code>SizedBox.shrink</code>).<br>
-          <strong>Exit points</strong>: 탭 → state별 ModalBottomSheetRoute 진입 (5종 — check-in / checked-in / matching / results / review).
+          <strong>Entry points</strong>: 홈 화면 진입 직후 — 하단 영역에 자동 부착. 오늘 참여 중인 이벤트가 있을 때만 보임 (없으면 안 보임).<br>
+          <strong>Exit points</strong>: 탭 → 현재 단계에 맞는 시트로 진입 (5종 — check-in / checked-in / matching / results / review).
         </td>
       </tr>
       <tr>
         <th>Background</th>
         <td>
           밍글릿은 "오늘 참여 중인 이벤트의 다음 액션이 무엇인지" 즉시 인지시키는 게 핵심 UX.
-          진행 phase가 자주 바뀌고 (체크인 → 매칭 → 결과 발표) 각 phase마다 사용자 입력 타이밍이 다르므로,
+          진행 단계가 자주 바뀌고 (체크인 → 매칭 → 결과 발표) 각 단계마다 사용자 입력 타이밍이 다르므로,
           홈 화면을 떠나지 않고 한 번의 탭으로 다음 단계를 밟을 수 있도록 persistent bar로 설계.
-          action 상태(checkInReady · matchingReady · results)는 dot pulse + halo + chevron blink + bold primary status로 강한 시선 유도, passive 상태는 dot blink만으로 살아있는 느낌만 유지.
+          action 상태(체크인 준비됨 · 투표 가능 · 결과 발표)는 dot pulse + halo + chevron blink + bold primary status로 강한 시선 유도, passive 상태는 dot blink만으로 살아있는 느낌만 유지.
         </td>
       </tr>
       <tr>
         <th>Frequency</th>
-        <td>홈 화면 진입 시마다 (활성 이벤트가 있을 때). 이벤트 phase가 바뀔 때마다 dot/status가 자동 갱신.</td>
+        <td>홈 화면 진입 시마다 (오늘 참여 중인 이벤트가 있을 때). 단계가 바뀔 때마다 dot / status가 자동 갱신.</td>
       </tr>
     </tbody>
   </table>
@@ -221,7 +221,7 @@
         <td>1.0</td>
         <td>mark-yun</td>
         <td>
-          v1.4 template으로 신규 spec 작성 — <code>home_page.html</code>의 EventNowBar anatomy / visual gallery / routed-sheet 매핑 섹션을 분리. mini-table per state (7 visible state, baseline = waiting), additive diff. 3 hidden state(loading / offline / no-active)는 Global Behavior 섹션에 정리.
+          v1.4 template으로 신규 spec 작성 — home_page.html의 EventNowBar anatomy / visual gallery / 시트 매핑 섹션을 분리. mini-table per state (7 visible state, baseline = waiting), additive diff. 3 hidden state(loading / offline / no-active)는 Global Behavior 섹션에 정리.
         </td>
       </tr>
     </tbody>
@@ -249,7 +249,7 @@
   <section class="doc">
     <h2>Blueprint &amp; tree</h2>
     <p class="intro">
-      <code>Scaffold.bottomSheet</code> 슬롯에 부착되는 persistent 64px bar. top corners <code>radius-card (16px)</code>, 상단 부유감은 box-shadow로만 표현 (border 없음). chevron pseudo-element가 top-center에 위치하여 "탭 시 확장" affordance 제공.
+      홈 화면 하단에 부착되는 64px persistent bar. top corners <code>radius-card (16px)</code>, 상단 부유감은 box-shadow로만 표현 (border 없음). top-center에 위치한 작은 ▲ chevron이 "탭 시 확장" 단서.
     </p>
     <div class="layout-grid">
       <div class="blueprint" style="width: 343px; height: 88px;">
@@ -272,9 +272,9 @@
         <div class="blueprint__align-marker" style="bottom:8px;left:8px;">background: surface · safeArea below</div>
       </div>
 
-      <div class="layout-tree"><b>Scaffold</b>
-└─ <em>bottomSheet</em>: <b>EventNowBar</b>(h=64)
-   <i>· hidden (SizedBox.shrink) when no active events / loading / offline</i>
+      <div class="layout-tree"><b>HomePage</b>
+└─ <em>bottom slot</em>: <b>EventNowBar</b>(h=64)
+   <i>· 오늘 참여 중인 이벤트가 없거나, 정보를 받아오는 중이거나, 오프라인이면 숨김</i>
 
 <b>EventNowBar Container</b>
 ├─ height: 64
@@ -283,20 +283,20 @@
 ├─ box-shadow: <i>0 -4px 20px rgba(0,0,0,0.08), 0 -1px 4px rgba(0,0,0,0.04)</i>  <i>(border 없음)</i>
 ├─ padding: 10px <i>spacing-screen-edge (16px)</i> 0
 │
-├─ <em>Up-chevron</em> (::before pseudo)              ← top-center expand affordance
-│  · 7×7 rotated borders · top: 8px · centered (left: 50%)
+├─ <em>Up-chevron</em> (::before pseudo)              ← top-center 확장 단서
+│  · 7×7 rotated borders · top: 8px · centered
 │  · color: text-secondary  <i>(action: primary + 1.4s opacity blink)</i>
 │
-└─ Row(crossAxis: center · gap: spacing-sm)
+└─ 가로 row(crossAxis: center · gap: spacing-sm)
    ├─ <em>Status dot</em>                              ← ㉠
    │  · 8×8 circle · color per state
    │  · action 상태 → primary + pulse(1.4s) + halo ring(1.6s)
    │  · passive 상태 → blink(1.8s) opacity only
    │
    ├─ Gap: <i>spacing-sm (12px)</i>
-   ├─ <em>Event title</em> Flexible                    ← ㉡
+   ├─ <em>Event title</em> (Flexible)                  ← ㉡
    │  · bodyMedium · text-primary · 1줄 ellipsis
-   ├─ <b>Spacer</b>(flex: grow)
+   ├─ Spacer (자동 grow)
    └─ <em>Status text</em>                             ← ㉢
       · bodySmall · text-secondary  <i>(action: bold w700 · primary)</i>
       · waiting only → 우측에 시간 텍스트 추가 ("N분 후" / "N시간 후")</div>
@@ -330,12 +330,12 @@
   <div class="perspective__header">
     <span class="glyph">🎨</span>
     <h2>States</h2>
-    <span class="lede">시각 변형 7종 (visible). baseline = <code>waiting</code>. action 상태(checkInReady / matchingReady / results)는 시선 유도 강화. 3 hidden state는 Global Behavior 참고.</span>
+    <span class="lede">시각 변형 7종 (visible). baseline = waiting. action 상태(체크인 준비됨 / 투표 가능 / 결과 발표)는 시선 유도 강화. 3 hidden state는 Global Behavior 참고.</span>
   </div>
 
   <section class="doc">
     <p class="intro">
-      <strong>State 종류 식별 기준</strong>: <code>EventNowBarState</code> enum (waiting · checkInReady · checkedIn · matchingReady · matching · results · ended) — 이벤트 phase에 따라 자동 분기. 모든 state는 같은 layout (dot + title + status)을 공유하고, dot 색상 / status 텍스트 / strong action 강조가 변경된다.
+      이벤트 진행 단계에 따라 자동 분기 (waiting · checkInReady · checkedIn · matchingReady · matching · results · ended). 모든 state는 같은 layout (dot + title + status)을 공유하고, dot 색상 / status 텍스트 / 강조 표현이 변경된다.
     </p>
 
     <!-- State 1: waiting (baseline) -->
@@ -356,15 +356,15 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>EventNowBarState.waiting</code> · 이벤트 시작 전 (start - now ≤ 시간) · 사용자 액션 미요구</td>
+          <td>이벤트 시작 전 (시작까지 일정 시간 이내) · 사용자 액션 미요구.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>탭 → <code>/events/:id/check-in</code> 시트 진입 (체크인하기 사전 준비 화면)</td>
+          <td>탭 → <a href="/specs/event_check_in_screen.html">체크인 화면</a> 시트 진입 (체크인 사전 준비 화면).</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· 시작까지 1시간 미만 → trailing "N분 후" / 1시간 이상 → "N시간 후" / 24시간 이상 → bar 숨김 (no-active 처리)<br>· 사용자가 다른 탭으로 이동 → bar는 사라짐 (HomePage 한정 surface)</td>
+          <td>· 시작까지 1시간 미만 → trailing "N분 후" / 1시간 이상 → "N시간 후" / 24시간 이상 → bar 숨김<br>· 사용자가 다른 탭으로 이동하면 bar도 사라짐 (홈 화면에서만 노출).</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
@@ -411,15 +411,15 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>EventNowBarState.checkInReady</code> · 이벤트 시작 시간 도달 + 사용자 미체크인</td>
+          <td>이벤트 시작 시각이 도달했는데 사용자가 아직 체크인하지 않은 상태.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>탭 → <code>/events/:id/check-in</code> 시트 (QR 코드 + 위치 deeplink)</td>
+          <td>탭 → <a href="/specs/event_check_in_screen.html">체크인 화면</a> 시트 (QR 코드 + 위치 안내).</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· 시작 N분 후까지도 미체크인 → no-show 처리 (별도 ended 상태로 전환)</td>
+          <td>· 시작 후 일정 시간 동안 미체크인 → no-show 처리 (ended 상태로 전환).</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>

@@ -335,18 +335,17 @@
       <tr>
         <th>User journey</th>
         <td>
-          <strong>Entry points</strong>: 정산 목록(SettlementListPage)에서 특정 항목 탭.<br>
+          <strong>Entry points</strong>: 정산 목록 화면에서 특정 항목 탭.<br>
           <strong>Exit points</strong>: 뒤로 가기 → 정산 목록 / "재지급 요청" 성공 → 상태 갱신 + 현재 화면 유지 /
-          "CSV 다운로드" → DownloadBottomSheet → 파일 공유 시트.
+          "CSV 다운로드" → 다운로드 바텀시트 → OS 파일 공유.
         </td>
       </tr>
       <tr>
         <th>Background</th>
         <td>
-          밍글릿은 PG사 수수료, 플랫폼 수수료, VAT를 차감한 순 정산금을 파트너에게 지급한다.
-          각 정산 항목은 PENDING → READY → PROCESSING → COMPLETED 흐름을 따르며
-          HOLD / FAILED / CANCELED 예외 상태도 존재한다.
-          FAILED이고 retryable=true인 경우에만 "재지급 요청" 버튼이 표시된다.
+          밍글릿은 PG 수수료, 플랫폼 수수료, VAT를 차감한 순 정산금을 파트너에게 지급한다.
+          각 정산 항목은 대기 → 확정 → 지급 중 → 지급 완료 흐름을 따르며 보류 / 지급 실패 / 취소 예외 상태도 존재한다.
+          지급 실패 상태이면서 재지급이 가능한 경우에만 "재지급 요청" 버튼이 표시된다.
         </td>
       </tr>
       <tr>
@@ -509,7 +508,7 @@
 
   <section class="doc">
     <p class="intro">
-      <strong>State 종류 식별 기준</strong>: <code>detail.status</code> (PENDING / READY / PROCESSING / COMPLETED / HOLD / FAILED / CANCELED) + async lifecycle (Loading) + modal overlay (CSV 다운로드 바텀시트). 분기 기준은 <code>partner_settlement_repository</code>의 status enum.
+      <strong>State 종류 식별 기준</strong>: 정산 상태(대기 / 확정 / 지급 중 / 지급 완료 / 보류 / 지급 실패 / 취소) + 데이터 도착 여부 + CSV 다운로드 바텀시트 노출 여부.
     </p>
 
     <!-- State 1: Default · COMPLETED (baseline) -->
@@ -559,22 +558,22 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>detail.status == 'COMPLETED'</code> · <code>retryable: false</code> · <code>histories</code> 비어있지 않음</td>
+          <td>지급 완료 상태 · 재지급 버튼은 보이지 않음 · 처리 이력이 1개 이상 존재.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ① <strong>뒤로 가기</strong> → 정산 목록 복귀<br>
-            ② <strong>CSV 다운로드 탭</strong> → State 6 (DownloadBottomSheet 슬라이드업)<br>
-            ③ <strong>스크롤</strong> → 카드 4종 차례로 노출 (history 길어지면 timeline scroll 필요할 수 있음)
+            ① <strong>뒤로 가기</strong> → 정산 목록으로 복귀<br>
+            ② <strong>CSV 다운로드 탭</strong> → 다운로드 바텀시트 슬라이드 업<br>
+            ③ <strong>스크롤</strong> → 카드 4종이 차례로 노출됨
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · <code>histories</code> 없음 → 처리 이력 카드 전체 숨김 (③→⑤로 직접 연결)<br>
-            · 정산금이 0원 또는 음수 → 그대로 표시 (포맷터만 통과). 디자인 의도: 비정상값도 가시화.<br>
-            · 다크 모드: 카드 bg <code>color-dark-surface</code>(#212121), 배지 색상 10% opacity 유지
+            · 처리 이력이 비어있으면 처리 이력 카드 전체가 숨겨짐 (금액 내역 다음 바로 액션 버튼)<br>
+            · 정산금이 0원 또는 음수 → 그대로 표시. 디자인 의도: 비정상값도 가시화.<br>
+            · 다크 모드: 카드 bg <code>color-dark-surface</code>(#212121), 배지 색상은 약 10% 투명도 유지
           </td>
         </tr>
         <tr>
@@ -608,7 +607,7 @@
     <!-- State 2: PENDING -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>정산 대기 (PENDING)</strong> <small>이벤트 종료 후 정산 확정 전</small></th></tr>
+        <tr><th colspan="3"><strong>정산 대기 (PENDING)</strong> <small>이벤트 종료 후 정산이 확정되기 전 단계</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -644,15 +643,15 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>detail.status == 'PENDING'</code> · <code>histories</code>에 진행 이력 아직 없음</td>
+          <td>정산 대기 상태이며 처리 이력이 아직 비어 있음.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>동일 <em>(단, 진행이 정지 상태라 이력 변동 없음)</em></td>
+          <td>동일 <em>(진행 이력이 없으므로 이력 영역은 보이지 않음)</em></td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· 정산 확정 시점에 자동으로 PENDING → READY 전환 (백엔드 cron). 화면 자동 갱신 안 됨 — 새로 진입해야 반영</td>
+          <td>· 정산이 확정되는 시점에 자동으로 다음 상태로 넘어감. 화면이 자동으로 갱신되지는 않으므로 다시 진입해야 반영됨.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
@@ -672,7 +671,7 @@
     <!-- State 3: FAILED + retryable -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>지급 실패 + 재지급 가능 (FAILED)</strong> <small>retry path · destructive 표시</small></th></tr>
+        <tr><th colspan="3"><strong>지급 실패 + 재지급 가능 (FAILED)</strong> <small>재시도 가능한 실패 상태</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -722,15 +721,15 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>detail.status == 'FAILED'</code> · <code>retryable == true</code> · <code>payoutId != null</code> · <code>currentPartnerInfoProvider != null</code></td>
+          <td>지급 실패 상태이면서 재지급이 가능한 경우.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>+ <strong>재지급 요청 탭</strong> → 처리 중 (버튼 비활성화) → 성공 시 스낵바/다이얼로그 → 상태 갱신 (재로드 필요)<br>나머지 동일</td>
+          <td>+ <strong>재지급 요청 탭</strong> → 처리 중 (버튼 비활성화) → 성공 시 안내 메시지 → 상태가 갱신되어 화면 다시 로드<br>나머지 동일</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· <code>retryable == false</code>인 FAILED → 재지급 버튼 미표시. CSV만 가능 (별도 state 아님)<br>· <code>payoutId == null</code> → <code>_retryPayout()</code> early return. 가시 disabled 처리 권장<br>· 재지급 요청 중 네트워크 끊김 → 에러 다이얼로그 → 버튼 다시 활성화</td>
+          <td>· 재시도가 불가능한 실패는 재지급 버튼이 보이지 않음 (CSV만 가능)<br>· 식별자가 누락된 경우 재지급 버튼은 동작하지 않음 (비활성화 표시 권장)<br>· 재지급 요청 중 네트워크가 끊기면 오류 안내 메시지가 노출되고 버튼이 다시 활성화됨</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
@@ -742,7 +741,7 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 ⚠️ 현재 Dart 소스는 모든 timeline dot을 <code>color-primary</code>로 표시 — FAILED 전환 dot에 <code>color-error</code> 적용은 디자인 개선 권고 (구현 drift).</td>
+          <td>📝 ⚠️ 현재 모든 타임라인 dot이 primary 색으로 표시되어 있음 — 실패 전환 dot에 error 색 적용은 디자인 개선 권고 (구현 drift).</td>
         </tr>
       </tbody>
     </table>
@@ -750,7 +749,7 @@
     <!-- State 4: HOLD -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>보류 (HOLD)</strong> <small>지원센터 문의 필요 · admin gate</small></th></tr>
+        <tr><th colspan="3"><strong>보류 (HOLD)</strong> <small>지원센터 문의가 필요한 보류 상태</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -786,15 +785,15 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>detail.status == 'HOLD'</code> · 운영팀의 hold 처리 (분쟁 · 검증 등) · 사용자 액션 불가</td>
+          <td>운영팀에 의해 보류 처리된 상태 (분쟁 · 검증 등). 사용자 단독으로는 해소 불가.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>− 재지급 / 자동 갱신 모두 불가. CSV 다운로드만 가능. 지원센터 문의 안내</td>
+          <td>− 재지급 / 자동 갱신 모두 불가. CSV 다운로드만 가능. 지원센터 문의 안내가 노출됨.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· hold 사유 별도 surface 없음 — 메시지가 generic. (개선 후속: hold reason 표시)</td>
+          <td>· 보류 사유는 화면에 별도로 표시되지 않음 — 안내 문구가 일반적임 (향후 사유 표시 보강 후보).</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
@@ -814,7 +813,7 @@
     <!-- State 5: Loading -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Loading</strong> <small>async · 진입 직후 fetch 중</small></th></tr>
+        <tr><th colspan="3"><strong>Loading</strong> <small>진입 직후 데이터 조회 중</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -831,15 +830,15 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>화면 진입 직후 ~ <code>partnerSettlementDetailProvider(settlementId)</code> 응답 직전</td>
+          <td>화면 진입 직후 정산 상세 데이터를 받아오는 중.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>· 뒤로 가기만 가능 (목록으로 복귀 — fetch 취소)<br>· body 영역 모든 탭 무반응</td>
+          <td>· 뒤로 가기만 가능 (목록으로 복귀)<br>· 본문 영역의 모든 탭 무반응</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· fetch 실패 → Error state로 전환 (이 spec에선 별도 state 미상세 — Material default 에러 메시지)<br>· 진입 후 즉시 다른 라우트로 navigate → fetch 결과는 무시</td>
+          <td>· 데이터 조회 실패 → 오류 상태로 전환됨<br>· 진입 후 즉시 다른 화면으로 이동하면 도착한 결과는 무시됨</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
@@ -859,7 +858,7 @@
     <!-- State 6: CSV Download bottom sheet -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>CSV 다운로드 바텀시트</strong> <small>modal overlay · 임의 state 위에 부착</small></th></tr>
+        <tr><th colspan="3"><strong>CSV 다운로드 바텀시트</strong> <small>임의 상세 화면 위에 띄워지는 모달</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -895,19 +894,19 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>State 1–4의 "CSV 다운로드" 버튼 탭 → <code>DownloadBottomSheet.show(context, detail)</code> 호출</td>
+          <td>지급 완료/대기/실패/보류 화면에서 "CSV 다운로드" 버튼을 탭한 직후.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
             ① <strong>"이번 정산 내역 CSV" 탭</strong> → OS 파일 공유 시트 / 저장 다이얼로그<br>
             ② <strong>"전체 정산 이력 CSV" 탭</strong> → 동일하게 OS 공유 시트 (범위만 다름)<br>
-            ③ <strong>scrim 탭 / 아래 스와이프</strong> → 시트 닫힘, 배경 화면 복귀
+            ③ <strong>스크림 탭 / 아래 스와이프</strong> → 시트 닫힘, 배경 화면 복귀
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· CSV 생성 실패 (서버 오류) → 다이얼로그 에러 메시지, 시트는 닫힘<br>· 매우 큰 데이터셋 (수만 row) → 짧은 progress UI 없이 바로 OS 공유 시트로 (Flutter share_plus default)</td>
+          <td>· CSV 생성 실패 (서버 오류) → 오류 안내 메시지가 노출되고 시트는 닫힘<br>· 매우 큰 데이터셋 (수만 행) → 별도 진행 UI 없이 곧바로 OS 공유 시트로 진입</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
@@ -949,15 +948,15 @@
       <tbody>
         <tr>
           <td>뒤로 가기 (시스템 back / AppBar back)</td>
-          <td>정산 목록(SettlementListPage)으로 복귀. 진행 중인 fetch 있으면 취소.</td>
+          <td>정산 목록으로 복귀. 진행 중인 데이터 조회는 취소됨.</td>
         </tr>
         <tr>
           <td>다크 모드 토글</td>
-          <td>카드 bg → <code>color-dark-surface</code>(#212121). 배지 bg는 각 상태 색상의 10% opacity 유지 (자동 조정). 정산금 텍스트 → <code>color-dark-text-primary</code>(#fff). CSV 버튼 border → <code>color-dark-divider</code>(#3d3d3d).</td>
+          <td>카드 bg → <code>color-dark-surface</code>(#212121). 배지 bg는 각 상태 색상의 약 10% 투명도로 자동 조정. 정산금 텍스트 → <code>color-dark-text-primary</code>(#fff). CSV 버튼 테두리 → <code>color-dark-divider</code>(#3d3d3d).</td>
         </tr>
         <tr>
           <td>금액 포맷 (모든 state 공통)</td>
-          <td>모든 금액은 <code>NumberFormat('#,###').format(value)</code> 적용 — 천 단위 콤마. 정산금은 <code>₩</code> 접두사 포함. 음수 값은 <code>-</code> 접두사 (color-text-secondary).</td>
+          <td>모든 금액은 천 단위 콤마. 정산금은 <code>₩</code> 접두사 포함. 음수 값은 <code>-</code> 접두사로 표시.</td>
         </tr>
       </tbody>
     </table>
@@ -1004,9 +1003,9 @@
   <section class="doc">
     <h2>Global edge cases</h2>
     <ul class="notes">
-      <li><strong>CANCELED 상태</strong> — HOLD와 별도. 배지 텍스트에 strikethrough 스타일. "정산이 취소되었습니다." 메시지. CSV만 가능. (위 6개 state엔 미포함 — 발생 빈도가 낮은 admin path)</li>
-      <li><strong>fetch 실패</strong> — Error state 진입. Material default 에러 메시지 + "다시 시도" 버튼. (이 spec에선 별도 state 미상세)</li>
-      <li><strong>금액 음수/0원</strong> — 디자인은 그대로 표시 (포맷터만 통과). 비정상값도 가시화하는 의도.</li>
+      <li><strong>취소 상태</strong> — 보류와 별도. 배지 텍스트에 취소선 스타일이 적용되며 "정산이 취소되었습니다." 메시지가 노출됨. CSV만 가능. (위 6개 state에는 미포함 — 발생 빈도가 낮은 운영 경로)</li>
+      <li><strong>데이터 조회 실패</strong> — 오류 상태로 진입하며 일반 오류 메시지 + "다시 시도" 버튼이 노출됨.</li>
+      <li><strong>금액 음수/0원</strong> — 그대로 표시. 비정상값도 가시화하는 의도.</li>
     </ul>
   </section>
 </div>

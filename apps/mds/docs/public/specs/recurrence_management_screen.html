@@ -566,22 +566,22 @@ if cancelled:
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td><code>partyRecurrenceRuleProvider(partyId).hasValue</code> · <code>rule != null</code> · <code>rule.status == RecurrenceStatus.active</code> · <code>controllerState.isLoading == false</code></td>
+            <td>활성 상태의 반복 규칙이 있는 화면. 규칙 정보 카드와 두 액션 버튼이 모두 보임.</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">사용자 액션</td>
             <td>
-              ① <strong>AppBar back</strong> → PartyDetailPage로 pop<br>
-              ② <strong>'일시 정지' Outlined</strong> 탭 → controller.pause(ruleId) → invalidate + success snackbar('반복 규칙이 일시 정지되었습니다.') → state가 paused로 전환<br>
-              ③ <strong>'규칙 취소' Filled(error)</strong> 탭 → MinglitAlert.showConfirm(isDestructive:true · '반복 규칙 취소' / '반복 규칙을 취소하면 되돌릴 수 없습니다. 계속하시겠습니까?' / 확정 '취소하기' / '아니오') → 확정 시 controller.cancel(ruleId) → invalidate + success snackbar → state가 cancelled로 전환
+              ① <strong>AppBar 뒤로가기</strong> → 파티 상세 화면으로 복귀<br>
+              ② <strong>'일시 정지' 버튼</strong> 탭 → 즉시 일시 정지로 전환되고 "반복 규칙이 일시 정지되었습니다." 안내 노출<br>
+              ③ <strong>'규칙 취소' 버튼</strong> 탭 → 확인 다이얼로그('반복 규칙 취소 / 되돌릴 수 없습니다. 계속하시겠습니까? / 취소하기 / 아니오') 노출 → 확정 시 취소 상태로 전환되고 안내 노출
             </td>
           </tr>
           <tr>
             <td class="state-mini__aspect">에지케이스</td>
             <td>
-              · 액션 진행 중 controllerState.isLoading == true 동안 두 버튼 모두 onPressed=null로 disabled (race 방지)<br>
-              · endDate / lastGeneratedDate가 null이면 해당 row 미렌더 → Card 높이 줄어듦<br>
-              · pattern enum이 weekly/biweekly/monthly 외 값(향후 추가) → switch fallback 없음 — 컴파일 에러로 강제 (Dart sealed switch 패턴)
+              · 액션이 진행되는 동안 두 버튼 모두 비활성으로 회색 처리 (중복 탭 방지)<br>
+              · 종료일 / 마지막 생성일이 비어있으면 해당 줄은 보이지 않고 카드 높이가 줄어듦<br>
+              · 향후 추가될 반복 패턴 (격주 외 새 패턴 등)이 들어와도 화면에서는 안전하게 노출됨
             </td>
           </tr>
           <tr>
@@ -642,11 +642,11 @@ if cancelled:
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>↔ <code>rule.status == RecurrenceStatus.paused</code></td>
+            <td>↔ 반복 규칙이 일시 정지된 상태.</td>
           </tr>
           <tr><td class="state-mini__aspect">사용자 액션</td><td>
-            ↔ '일시 정지' Outlined → <strong>'규칙 취소' OutlinedButton</strong>(error 색) 탭 → MinglitAlert.showConfirm 동일 → controller.cancel<br>
-            ↔ '규칙 취소' Filled(error) → <strong>'재개' FilledButton</strong>(primary) 탭 → controller.resume(ruleId) → invalidate + success snackbar('반복 규칙이 재개되었습니다.') → state가 active로 전환
+            ↔ '일시 정지' (외곽선) → <strong>'규칙 취소' (외곽선, 에러 색)</strong> 탭 → 확인 다이얼로그 동일 → 확정 시 취소 상태로 전환<br>
+            ↔ '규칙 취소' (꽉찬 에러 색) → <strong>'재개' (꽉찬 강조 색)</strong> 탭 → 즉시 재개되고 "반복 규칙이 재개되었습니다." 안내 노출
           </td></tr>
           <tr><td class="state-mini__aspect">에지케이스</td><td>+ 일시 정지 동안 cron이 row를 스킵 · 재개 시 마지막 생성일 이후의 'missed' 슬롯은 자동 채워지지 않음(누락 패턴). 사용자에게 이 점을 알리는 별도 UI는 없음 — 향후 안내 hint 추가 후보.</td></tr>
           <tr><td class="state-mini__aspect">컴포넌트</td><td>
@@ -764,10 +764,10 @@ if cancelled:
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>+ active 또는 paused 상태에서 '규칙 취소' 버튼 탭 → <code>MinglitAlert.showConfirm(isDestructive:true · title:'반복 규칙 취소' · content:'반복 규칙을 취소하면 되돌릴 수 없습니다. 계속하시겠습니까?' · confirmText:'취소하기' · cancelText:'아니오')</code></td>
+            <td>+ 활성 또는 일시 정지 상태에서 '규칙 취소' 버튼을 탭 → 확인 다이얼로그 노출 (제목 "반복 규칙 취소", 본문 "반복 규칙을 취소하면 되돌릴 수 없습니다. 계속하시겠습니까?", 강조 버튼 "취소하기", 일반 버튼 "아니오")</td>
           </tr>
-          <tr><td class="state-mini__aspect">사용자 액션</td><td>+ '아니오' 탭 → dialog dismiss · 같은 화면 stay (status 변경 없음) · '취소하기' 탭 → confirmed=true → controller.cancel(ruleId) → invalidate → success snackbar('반복 규칙이 취소되었습니다.') → state가 cancelled로 전환</td></tr>
-          <tr><td class="state-mini__aspect">에지케이스</td><td>+ dialog 표시 중 OS back/scrim 탭 → cancel 처리 (confirmed=false). controller.cancel은 호출되지 않음.</td></tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>+ '아니오' 탭 → 다이얼로그가 닫히고 같은 화면 유지 · '취소하기' 탭 → 다이얼로그가 닫히고 취소 상태로 전환되며 "반복 규칙이 취소되었습니다." 안내 노출</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>+ 다이얼로그가 떠있는 중 OS 뒤로가기 / scrim 탭 → '아니오'와 동일하게 처리되어 상태는 그대로 유지.</td></tr>
           <tr><td class="state-mini__aspect">컴포넌트</td><td>+ <code>AlertDialog</code>(MinglitAlert.showConfirm wrapper) — title + content + 2 TextButton (cancel / destructive)</td></tr>
           <tr><td class="state-mini__aspect">토큰</td><td>+ scrim <code>rgba(0,0,0,0.45)</code> · dialog bg <code>color-background</code> · radius <code>radius-card (16)</code> · 확정 버튼 bg <code>color-error</code> + #fff text</td></tr>
           <tr><td class="state-mini__aspect">노트</td><td>📝 destructive variant 사용으로 우측이 빨간 filled. '아니오'는 transparent text, '취소하기'는 강조 — 잘못된 탭 방지를 위해 의도적으로 mass 차이.</td></tr>
@@ -802,11 +802,11 @@ if cancelled:
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>+ <code>recurrenceManagementControllerProvider.isLoading == true</code> — pause/resume/cancel 액션 진행 중 (RPC + invalidate)</td>
+            <td>+ 일시 정지 / 재개 / 취소 액션이 서버에 전송되고 응답을 기다리는 중.</td>
           </tr>
-          <tr><td class="state-mini__aspect">사용자 액션</td><td>+ 두 액션 버튼 모두 onPressed=null로 disabled (race 방지). AppBar back은 그대로 enabled · 도중 pop 가능 (RPC는 fire-and-forget).</td></tr>
-          <tr><td class="state-mini__aspect">에지케이스</td><td>+ Future가 길어지면(>3s) 사용자에게 별도 인디케이터 없음 — disabled 상태로만 표시. 향후 button 내부 spinner 후보.</td></tr>
-          <tr><td class="state-mini__aspect">컴포넌트</td><td>+ 버튼 onPressed: null (Material disabled state — 색이 자동 흐려짐)</td></tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>+ 두 액션 버튼 모두 비활성으로 흐려짐 (중복 탭 방지). AppBar 뒤로가기는 그대로 가능 — 화면을 떠나도 액션은 백그라운드에서 계속 진행됨.</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>+ 응답이 길어져도 (3초 이상) 별도 진행 인디케이터는 노출되지 않음 — 버튼 비활성 상태로만 표시. 향후 버튼 내부 스피너 후보.</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>+ 버튼이 비활성 상태로 자동 흐려짐 (Material disabled 기본 처리)</td></tr>
           <tr><td class="state-mini__aspect">토큰</td><td>+ disabled opacity (Material default ~0.38 on label · ~0.12 on bg)</td></tr>
           <tr><td class="state-mini__aspect">노트</td><td>📝 글로벌 loading scrim을 쓰지 않음 — pause는 가역적이라 그렇게 강한 인터럽트가 불필요. cancel은 confirm dialog가 이미 1차 마찰을 줘서 별도 scrim 안 둠.</td></tr>
         </tbody>
@@ -842,7 +842,7 @@ if cancelled:
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>+ controller.pause/resume/cancel이 hasError == false로 종료 → <code>showMinglitSuccess(message)</code> + invalidate(provider) → state 자동 갱신</td>
+            <td>+ 일시 정지 / 재개 / 취소 액션이 정상 처리된 직후 → 성공 안내 스낵바가 노출되고 화면이 새 상태에 맞게 자동 갱신됨</td>
           </tr>
           <tr><td class="state-mini__aspect">사용자 액션</td><td>+ snackbar 자동 dismiss (~3s). 새 status에 맞는 액션바로 갱신됨.</td></tr>
           <tr><td class="state-mini__aspect">에지케이스</td><td>+ 사용자가 빠르게 back 누르면 snackbar는 ScaffoldMessenger global queue로 PartyDetailPage 위에서 표시될 수 있음.</td></tr>
@@ -871,13 +871,13 @@ if cancelled:
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>+ Loading: <code>partyRecurrenceRuleProvider(partyId).isLoading</code> (initial fetch) · Error: <code>provider.hasError</code></td>
+            <td>+ Loading: 화면 첫 진입 시 규칙 정보를 불러오는 중 · Error: 불러오기에 실패한 상태.</td>
           </tr>
-          <tr><td class="state-mini__aspect">사용자 액션</td><td>+ Loading: 탭 무반응 (AppBar back만 가능) · Error: AsyncValueWidget default error UI (retry는 fetch 화면 내장 안 함 → back 후 재진입)</td></tr>
-          <tr><td class="state-mini__aspect">에지케이스</td><td>+ fetch 결과가 null이면 즉시 'No rule' state로 전환되고, RecurrenceRule이면 status 분기로 진입.</td></tr>
-          <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ _RecurrenceRuleContent → <code>MinglitCircularProgressIndicator</code> (Loading) · AsyncValueWidget default error widget</td></tr>
-          <tr><td class="state-mini__aspect">토큰</td><td>spinner color = ProgressIndicatorTheme default (partner primary tint)</td></tr>
-          <tr><td class="state-mini__aspect">노트</td><td>📝 fetch는 단일 RPC라 보통 빠름. 액션 도중 invalidate가 일어나면 잠깐 이 spinner를 거쳐 다시 data로 복귀.</td></tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>+ Loading: 본문 탭 무반응, AppBar 뒤로가기만 가능 · Error: 화면 내 재시도 버튼 없음 → 뒤로 갔다가 재진입 필요</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>+ 규칙이 없는 파티는 즉시 'No rule' 상태로 진입하고, 규칙이 있으면 활성 / 일시 정지 / 취소 분기로 진입.</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ 본문 영역이 <strong>중앙 스피너</strong> 또는 <strong>오류 안내</strong>로 교체</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>spinner color = 파트너 기본 인디고 톤</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 fetch는 보통 빠름. 액션 직후 화면이 갱신되는 짧은 순간 이 스피너가 잠깐 보였다가 새 상태로 복귀.</td></tr>
         </tbody>
       </table>
 

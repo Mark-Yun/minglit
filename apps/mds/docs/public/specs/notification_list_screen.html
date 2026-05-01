@@ -212,7 +212,7 @@ body.dark-mode .notif-tile__swipe-front { background: var(--color-dark-backgroun
           <strong>Parent</strong>:
           user — <a href="/specs/home_page.html"><code>HomePage</code></a> AppBar 알림 아이콘 ·
           partner — <a href="/specs/partner_home_page.html"><code>PartnerHomePage</code></a> AppBar 알림 아이콘<br>
-          <strong>Children</strong>: <em>—</em> <em style="color: var(--color-text-secondary);">(tile 탭 시 <code>deep_link</code>로 임의 route push — 별도 spec)</em>
+          <strong>Children</strong>: <em>—</em> <em style="color: var(--color-text-secondary);">(알림 탭 시 해당 알림이 가리키는 화면으로 이동 — 별도 spec)</em>
         </td>
       </tr>
       <tr>
@@ -226,14 +226,13 @@ body.dark-mode .notif-tile__swipe-front { background: var(--color-dark-backgroun
         <th>User journey</th>
         <td>
           <strong>Entry points</strong>: HomePage / PartnerHomePage AppBar 알림 아이콘 (미읽음 배지) · 외부 push 알림 → 직접 진입 (deep-link).<br>
-          <strong>Exit points</strong>: tile 탭 → <code>deep_link</code> 검증 후 <code>context.push(trimmed)</code> · 우→좌 swipe → tile 삭제 (페이지 유지) · AppBar "모두 읽음" → 전부 read 처리 후 새로고침 · 뒤로 가기 → Home 복귀.
+          <strong>Exit points</strong>: 알림 탭 → 해당 알림이 가리키는 화면으로 이동 · 우→좌 스와이프 → 해당 알림이 화면에서 사라지고 화면은 유지 · AppBar "모두 읽음" → 전체 읽음 처리 후 화면 갱신 · 뒤로 가기 → 홈으로 복귀.
         </td>
       </tr>
       <tr>
         <th>Background</th>
         <td>
-          알림 read-state 복원이 핵심. 미읽음(<code>is_read=false</code>)은 primary 5% 틴트 + bold title로 시각 분리, 읽음은 평문. 읽음 처리는 optimistic update —
-          tile 탭 즉시 UI에 반영하고 서버 실패는 swallow + log (Fix #1955) 해서 절대 크래시하지 않는다. swipe-to-dismiss 역시 optimistic — 화면에서 즉시 제거.
+          알림의 읽음 / 미읽음 시각 구분이 핵심. 미읽음 알림은 살짝 들어간 강조 톤과 굵은 제목으로 표시되고, 읽은 알림은 일반 텍스트로 표시됨. 알림을 탭하면 화면에 즉시 반영되고, 서버 처리에 실패하더라도 화면은 항상 성공한 것처럼 동작해 사용자 경험이 끊기지 않음. 스와이프 삭제 역시 화면에서 즉시 사라지는 형태.
         </td>
       </tr>
       <tr>
@@ -285,14 +284,13 @@ body.dark-mode .notif-tile__swipe-front { background: var(--color-dark-backgroun
   <div class="perspective__header">
     <span class="glyph">🧱</span>
     <h2>Layout</h2>
-    <span class="lede">AppBar(title + done_all action) + RefreshIndicator + ListView.separated. tile은 Material ListTile · 각 tile을 Dismissible로 감싸 좌측 swipe 시 빨간 삭제 배경 노출.</span>
+    <span class="lede">AppBar(타이틀 + "모두 읽음" 액션) + 당겨서 새로고침 가능한 알림 목록. 각 알림 항목은 우→좌 스와이프 시 빨간 삭제 배경이 노출되며, 끝까지 밀면 해당 항목이 사라짐.</span>
   </div>
 
   <section class="doc">
     <h2>Blueprint &amp; tree</h2>
     <p class="intro">
-      Scaffold + AppBar (title "알림 센터", trailing IconButton(Icons.done_all)) + body는 <code>MinglitAsyncValueWidget</code>로 wrapping된 <code>RefreshIndicator</code>+<code>ListView.separated</code>. tile 사이는 height 1 Divider.
-      tile padding은 ListTile default — leading 아이콘 없음 · title + subtitle Column(body + time) 구조.
+      Scaffold + AppBar(타이틀 "알림 센터", 우측 "모두 읽음" 아이콘) + 본문은 알림 데이터 진행 상태에 따라 노출되는 형태가 갈림. 알림이 도착한 경우에는 당겨서 새로고침 가능한 목록이 노출되며, 항목 사이에는 1px 구분선이 들어감. 항목 자체에는 좌측 아이콘 없이 제목 + 본문 + 시간 정보가 세로로 쌓여 노출됨.
     </p>
 
     <div class="layout-grid">
@@ -392,18 +390,18 @@ body.dark-mode .notif-tile__swipe-front { background: var(--color-dark-backgroun
   <div class="perspective__header">
     <span class="glyph">🎨</span>
     <h2>States</h2>
-    <span class="lede">5 state. baseline = Default(read + unread mixed). MinglitAsyncValueWidget이 loading/error 자동 처리 — 단 NotificationListScreen은 error builder를 inline override해 "에러: $err" plain Text로 표시한다 (코드 137행).</span>
+    <span class="lede">5개 변형. baseline = 읽음 / 미읽음이 섞여있는 일반 상태. 데이터가 도착하기 전 / 도착하지 않을 때의 변형도 함께 다룸.</span>
   </div>
 
   <section class="doc">
     <p class="intro">
-      <strong>State 종류 식별 기준</strong>: <code>MinglitAsyncValueWidget</code>의 3-way (loading / error / data) + data 안에서 <code>notifications.isEmpty</code> 분기. All-read는 data 갈래의 시각적 변주(unread 0건) — 별도 분기 코드는 없다.
+      <strong>State 식별 기준</strong>: 알림 데이터를 가져오는 진행 상태(로딩 / 오류 / 도착) + 도착한 데이터의 건수에 따라 5가지 변형. All-read 변형은 도착한 알림이 모두 읽음 처리되었을 때의 시각적 변주이며, 본문 구조는 Default와 동일.
     </p>
 
     <!-- State 1: Default with mixed notifications (baseline) -->
     <table class="ref state-mini is-baseline-tint">
       <thead>
-        <tr><th colspan="3"><strong>Default · mixed (read + unread)</strong> 🎯 <small>baseline · primary tintFill 0.05 unread overlay</small></th></tr>
+        <tr><th colspan="3"><strong>Default · 읽음 + 미읽음 혼합</strong> 🎯 <small>baseline · 미읽음 알림에 옅은 강조 톤이 적용된 형태</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -448,27 +446,26 @@ body.dark-mode .notif-tile__swipe-front { background: var(--color-dark-backgroun
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>stateAsync.hasValue &amp;&amp; notifications.isNotEmpty</code> · 인증 사용자 + 알림 ≥ 1건 (page size 20, <code>created_at DESC</code>)</td>
+          <td>로그인된 사용자에게 알림이 1건 이상 도착해 있는 상태. 최신 항목이 위에 오는 순서로 노출.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ① <strong>tile 탭</strong> → <code>controller.markAsRead(id)</code> (optimistic) → <code>deep_link</code> 검증 → <code>context.push(trimmed)</code><br>
-            ② <strong>우→좌 swipe</strong> → background red + delete icon 노출 → 끝까지 swipe 시 <code>onDismissed</code> → <code>controller.deleteNotification(id)</code> (optimistic remove)<br>
-            ③ <strong>AppBar "모두 읽음" 탭</strong> → <code>controller.markAllAsRead()</code> → <code>refresh()</code> → All-read state로 전환<br>
-            ④ <strong>풀-다운 새로고침</strong> → <code>RefreshIndicator</code> → <code>controller.refresh()</code><br>
-            ⑤ <strong>뒤로 가기</strong> → Home 복귀
+            ① <strong>알림 탭</strong> — 해당 알림이 즉시 읽음 처리되며, 알림이 가리키는 화면으로 이동.<br>
+            ② <strong>우→좌 스와이프</strong> — 빨간 삭제 배경과 휴지통 아이콘이 노출되고, 끝까지 밀면 해당 알림이 화면에서 즉시 사라짐.<br>
+            ③ <strong>AppBar "모두 읽음" 탭</strong> — 모든 알림이 읽음 처리되며, 모두 읽음 변형으로 전환.<br>
+            ④ <strong>아래로 당겨 새로고침</strong> — 알림 목록을 다시 가져옴.<br>
+            ⑤ <strong>뒤로 가기</strong> — 홈으로 복귀.
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · <code>deep_link</code>가 null/공백 → SnackBar "이동할 링크가 없습니다." (단 markAsRead는 이미 실행됨)<br>
-            · <code>deep_link</code>가 <code>'/'</code>로 시작하지 않음 → SnackBar "올바르지 않은 링크입니다." (markAsRead는 동일하게 실행)<br>
-            · <code>title</code>/<code>body</code>가 null → 빈 문자열로 fallback (코드 54-55행 <code>?? ''</code>)<br>
-            · <code>created_at</code> 파싱 실패 시 throw → ListView 빌드 중 예외 → AsyncValue.guard 밖이라 빨간 화면 가능 (현재 방어 없음)<br>
-            · markAsRead/deleteNotification은 서버 에러를 swallow + log (Fix #1955) — UI는 항상 성공처럼 보임. 서버 reflect는 다음 refresh에서<br>
-            · partner 앱에서도 동일 list/포맷 — 별도 partner 분기 없음 (kit-shared 단일 위젯)
+            · 알림이 가리키는 링크가 비어 있으면 "이동할 링크가 없습니다." 안내가 잠깐 노출됨. 이때도 읽음 처리는 정상적으로 수행.<br>
+            · 알림이 가리키는 링크가 올바르지 않으면 "올바르지 않은 링크입니다." 안내가 잠깐 노출됨. 이때도 읽음 처리는 정상적으로 수행.<br>
+            · 알림 본문이 비어 있는 경우 빈 영역으로 표시되어도 화면이 깨지지 않음.<br>
+            · 읽음 / 삭제 처리는 화면에서 즉시 반영되며, 서버 처리에 실패하더라도 사용자에게 별도 알림은 노출되지 않음. 다음 새로고침 시점에 서버 상태와 다시 맞춰짐.<br>
+            · 파트너 앱에서도 동일한 목록·포맷이 노출됨 (분기 없음).
           </td>
         </tr>
         <tr>
@@ -495,7 +492,7 @@ body.dark-mode .notif-tile__swipe-front { background: var(--color-dark-backgroun
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 viewport mockup은 4 tile (unread/read/unread/read) — 시각 변주 한눈에. 실제는 page size 20. <strong>kit-shared</strong> 위젯이라 user/partner 동일 화면 — partner의 brand purple과 user의 brand purple이 같은 <code>MinglitColors.primary</code>인지 여부가 unread tint 색에 영향(현재 partner는 <code>partnerTheme</code>에서 다른 primary로 override되므로 unread tint 색이 미세하게 다를 수 있음 — 의도된 결과).</td>
+          <td>📝 위 mockup은 4건만 노출했지만 실제로는 한 번에 최대 20건까지 보임. kit-shared 위젯이라 사용자 / 파트너 양쪽에서 같은 화면이 노출되며, 파트너 앱의 강조 색이 약간 다른 톤이라 미읽음 강조 톤 색이 사용자 앱과 미세하게 다르게 보일 수 있음 — 의도된 결과.</td>
         </tr>
       </tbody>
     </table>
@@ -503,7 +500,7 @@ body.dark-mode .notif-tile__swipe-front { background: var(--color-dark-backgroun
     <!-- State 2: All-read variant -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>All-read · 모두 읽음 처리됨</strong> <small>list 존재하지만 unread 0건 — 시각 변주</small></th></tr>
+        <tr><th colspan="3"><strong>All-read · 모두 읽음 처리됨</strong> <small>알림이 있지만 모두 읽음 처리된 상태 — 강조 톤 없이 평면 형태</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -537,21 +534,21 @@ body.dark-mode .notif-tile__swipe-front { background: var(--color-dark-backgroun
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>↔ baseline 동일 (data hasValue · isNotEmpty), <strong>+ 모든 item.is_read == true</strong> — 보통 "모두 읽음" 탭 후 refresh 결과 또는 자연스러운 UX 후</td>
+          <td>baseline과 동일하지만 화면 안의 모든 알림이 읽음 처리된 상태. 사용자가 "모두 읽음"을 탭한 직후나, 시간이 지나며 자연스럽게 모두 확인된 경우.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            동일: tile 탭 / swipe / 풀-다운 / 뒤로 가기<br>
-            ↔ "모두 읽음" 버튼 탭은 여전히 유효 (no-op 효과 — 서버에 같은 update 재실행, UI 변화 없음)<br>
-            − unread tint 시각 단서 없음 — 사용자 입장에선 평면 list
+            동일: 알림 탭 / 스와이프 / 당겨서 새로고침 / 뒤로 가기.<br>
+            ↔ "모두 읽음" 버튼 탭은 그대로 유효하지만 시각적 변화는 없음.<br>
+            − 미읽음 강조 톤이 없으므로 사용자 입장에서는 평면적인 목록으로 보임.
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            동일 baseline 에지케이스 + <strong>"모두 읽음" 멱등성</strong> — 이미 모두 읽음인 상태에서 또 탭해도 같은 update 쿼리 (성능 미미한 낭비, UI 무변).<br>
-            · refresh 직후 새 알림이 도착하면 그 tile만 unread → mixed 상태로 자동 전환
+            · 이미 모두 읽음인 상태에서 다시 "모두 읽음"을 탭해도 화면은 변하지 않음.<br>
+            · 새 알림이 도착하면 그 항목만 미읽음 강조 톤이 적용되어 자동으로 혼합 변형으로 전환됨.
           </td>
         </tr>
         <tr>
@@ -568,7 +565,7 @@ body.dark-mode .notif-tile__swipe-front { background: var(--color-dark-backgroun
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 별도 분기 코드 없음 — data 분기 안에서 <code>isRead</code>가 모두 true일 때 자연 발생. UI 시각 단서가 모두 빠지므로 list 자체가 "역사 보관함" 느낌이 됨.</td>
+          <td>📝 미읽음 강조 톤이 모두 빠지므로 화면이 "지난 알림 보관함" 같은 인상이 됨.</td>
         </tr>
       </tbody>
     </table>
@@ -576,7 +573,7 @@ body.dark-mode .notif-tile__swipe-front { background: var(--color-dark-backgroun
     <!-- State 3: Empty -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Empty · 알림 없음</strong> <small>notifications.isEmpty == true</small></th></tr>
+        <tr><th colspan="3"><strong>Empty · 알림 없음</strong> <small>도착한 알림이 한 건도 없는 상태</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -594,21 +591,21 @@ body.dark-mode .notif-tile__swipe-front { background: var(--color-dark-backgroun
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>notifications.isEmpty</code> — 신규 사용자 또는 모든 알림을 직접 swipe 삭제한 경우</td>
+          <td>도착한 알림이 한 건도 없는 상태. 신규 사용자이거나 모든 알림을 직접 스와이프해 지운 경우.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            − list 액션 모두 없음 (tile 0개)<br>
-            ↔ AppBar "모두 읽음" 버튼은 노출되지만 update할 row가 없어 사실상 no-op (서버 query 1회 발생)<br>
-            동일: 뒤로 가기 → Home 복귀
+            − 목록 항목이 없으므로 탭·스와이프 액션은 없음.<br>
+            ↔ "모두 읽음" 버튼은 노출되지만 사실상 변화 없음.<br>
+            동일: 뒤로 가기 → 홈으로 복귀.
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · <strong>RefreshIndicator 미부착</strong> — Empty 분기는 <code>Center</code>만 반환하므로 풀-다운 제스처가 작동하지 않음 (코드 40-42행, RefreshIndicator는 data 갈래 안쪽에만 있음). 사용자는 화면을 떠났다 다시 들어와야 retry 가능 — Phase 2 후보<br>
-            · "모두 읽음" 버튼은 빈 list에서도 그대로 노출 → 시각적 noise (별도 hide 분기 없음)
+            · 이 상태에서는 아래로 당겨 새로고침 제스처가 작동하지 않음. 다시 시도하려면 화면을 떠났다 다시 들어와야 함 (개선 후보).<br>
+            · "모두 읽음" 버튼은 알림이 없을 때도 노출됨 (시각적 noise — 개선 후보).
           </td>
         </tr>
         <tr>
@@ -625,7 +622,7 @@ body.dark-mode .notif-tile__swipe-front { background: var(--color-dark-backgroun
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 EmptyState atom 미적용은 의도라기보다 미정비 영역 — Phase 2에서 <code>MinglitEmptyState</code>(아이콘 + title + sub) 채택 검토. 현재 사용자에겐 매우 빈약한 안내.</td>
+          <td>📝 다른 화면들의 표준 Empty 비주얼(아이콘 + 안내 + CTA) 대비 매우 빈약한 안내. 후속 작업에서 보강 검토 가치.</td>
         </tr>
       </tbody>
     </table>
@@ -633,7 +630,7 @@ body.dark-mode .notif-tile__swipe-front { background: var(--color-dark-backgroun
     <!-- State 4: Loading -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Loading</strong> <small>async fetch 진행 중</small></th></tr>
+        <tr><th colspan="3"><strong>Loading</strong> <small>알림 목록을 가져오는 중에 노출되는 상태</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -651,17 +648,17 @@ body.dark-mode .notif-tile__swipe-front { background: var(--color-dark-backgroun
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>stateAsync.isLoading</code> — 진입 직후 ~ <code>repository.getNotifications()</code> 응답까지 (또는 "모두 읽음" 후 refresh 동안 — refresh가 state를 const AsyncValue.loading()으로 reset)</td>
+          <td>화면에 처음 들어왔거나, "모두 읽음" 직후 목록을 다시 가져오는 동안 노출되는 상태. 본문 영역 중앙에 로딩 인디케이터만 노출.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>↔ list / refresh / dismiss 모두 없음<br>동일: "모두 읽음" 버튼은 노출되지만 controller가 loading 중에도 호출은 가능 — 결과는 다음 응답에 반영<br>동일: 뒤로 가기 → Home (응답 대기 취소)</td>
+          <td>↔ 목록 액션 / 새로고침 / 스와이프는 모두 사용 불가.<br>동일: "모두 읽음" 버튼은 노출되며 탭하면 다음 응답에 반영됨.<br>동일: 뒤로 가기 → 홈으로 복귀.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · refresh 호출은 state를 명시적으로 loading으로 리셋 (코드 controller 27행) → "모두 읽음" 직후 잠시 깜빡 spinner 보임<br>
-            · 네트워크 timeout 없음 (Supabase client default) → spinner 길게 노출 가능
+            · "모두 읽음" 직후 목록을 다시 가져올 때 잠깐 인디케이터가 보일 수 있음.<br>
+            · 응답이 매우 느리면 인디케이터가 길게 노출될 수 있음 (별도의 시간 제한 없음).
           </td>
         </tr>
         <tr>
@@ -674,7 +671,7 @@ body.dark-mode .notif-tile__swipe-front { background: var(--color-dark-backgroun
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 짧은 transition state — 일반적으로 200-500ms. AppBar는 그대로 노출되어 "모두 읽음" 버튼이 응답 대기 중에도 보인다.</td>
+          <td>📝 짧게 지나가는 전환 변형 — 보통 수백 밀리초. AppBar는 그대로 노출되어 응답 대기 중에도 "모두 읽음" 버튼이 보임.</td>
         </tr>
       </tbody>
     </table>
@@ -682,7 +679,7 @@ body.dark-mode .notif-tile__swipe-front { background: var(--color-dark-backgroun
     <!-- State 5: Error -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Error</strong> <small>fetch 실패 — 네트워크 / RLS / 서버</small></th></tr>
+        <tr><th colspan="3"><strong>Error</strong> <small>알림을 가져오는 데 실패한 상태</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -700,17 +697,17 @@ body.dark-mode .notif-tile__swipe-front { background: var(--color-dark-backgroun
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>stateAsync.hasError</code> — repository / 네트워크 / RLS 거부 등 throw</td>
+          <td>알림 데이터를 가져오는 데 실패한 상태. 네트워크 / 권한 / 서버 오류 등.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>− list / swipe / pull-to-refresh 모두 없음<br>− 자동 retry 버튼 없음<br>↔ "모두 읽음" 버튼은 노출되지만 list가 error라 효과 없음 (server-side 호출은 가능)<br>동일: 뒤로 가기 → Home</td>
+          <td>− 목록·스와이프·당겨서 새로고침 모두 사용 불가.<br>− 별도의 다시 시도 버튼은 없음.<br>↔ "모두 읽음" 버튼은 노출되지만 화면에 변화는 없음.<br>동일: 뒤로 가기 → 홈으로 복귀.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · NotificationListScreen은 <code>error: builder</code>를 inline override (코드 137행) → <strong>_DefaultErrorView 미사용</strong>. plain <code>Center(child: Text('에러: $err'))</code>로 노출 → error 본문이 그대로 화면에 박힘 (디버그-친화 / UX-비친화)<br>
-            · Phase 2: <code>MinglitAsyncValueWidget</code> default error로 환원 권장 ("오류가 발생했습니다." + retry)
+            · 현재는 표준 오류 화면 대신 원본 오류 메시지가 그대로 노출됨 — 디버깅에 유리하지만 사용자 경험 측면에서는 보강 필요.<br>
+            · 후속 작업에서 표준 오류 화면("오류가 발생했습니다." + 다시 시도)으로 통일 권장.
           </td>
         </tr>
         <tr>
@@ -723,7 +720,7 @@ body.dark-mode .notif-tile__swipe-front { background: var(--color-dark-backgroun
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 inline error builder는 본문 노출이라 PII / token 정보 새어나갈 위험 — production에선 메시지를 "오류가 발생했습니다."로 sanitize 권장. 현재는 디버깅 목적의 fallback 그대로.</td>
+          <td>📝 원본 오류 메시지가 그대로 노출되므로 민감 정보가 보일 위험이 있음. 운영 환경에서는 사용자 친화적인 안내 문구로 정제 권장.</td>
         </tr>
       </tbody>
     </table>
@@ -750,31 +747,31 @@ body.dark-mode .notif-tile__swipe-front { background: var(--color-dark-backgroun
       <tbody>
         <tr>
           <td>뒤로 가기 (시스템 back · AppBar back)</td>
-          <td>Home 복귀 (Material default pop transition · 200ms 좌→우 slide). user → HomeRoute · partner → HomeRoute(partner shell).</td>
+          <td>홈으로 복귀 (좌→우 슬라이드).</td>
         </tr>
         <tr>
           <td>다크 모드 토글</td>
-          <td>scaffold / tile / divider 모두 dark 토큰 swap. unread tint primary는 brand 그대로 유지 (alpha 0.05).</td>
+          <td>scaffold·tile·구분선이 다크 토큰으로 자동 전환. 미읽음 강조 톤은 동일한 의미로 유지.</td>
         </tr>
         <tr>
-          <td>tile / IconButton tap haptic</td>
-          <td>InkWell ripple + Material default haptic light. read tile은 tileColor null이라 ripple이 scaffold gray 위에서 보임.</td>
+          <td>tile · 아이콘 버튼 탭 피드백</td>
+          <td>탭 시 가벼운 리플과 haptic light 피드백을 제공.</td>
         </tr>
         <tr>
-          <td>풀-다운 새로고침</td>
-          <td>data 갈래 한정 — Empty/Loading/Error에선 작동 안 함 (RefreshIndicator가 data 안쪽 ListView에만 부착됨). controller.refresh() → loading → 새 list.</td>
+          <td>아래로 당겨 새로고침</td>
+          <td>알림 목록이 노출된 상태에서만 동작. 알림이 없거나 로딩 / 오류 변형에서는 동작하지 않음.</td>
         </tr>
         <tr>
-          <td>swipe 부분 드래그 후 release</td>
-          <td>Dismissible default — threshold(40%)을 못 넘으면 spring back, 넘으면 fade-out + collapse 후 onDismissed 호출.</td>
+          <td>스와이프 일부만 끌고 놓기</td>
+          <td>일정 거리 이상 끌지 않으면 항목이 원래 자리로 돌아옴. 일정 거리 이상 끌면 항목이 사라지면서 삭제됨.</td>
         </tr>
         <tr>
-          <td>외부 push 알림 도착 (백그라운드)</td>
-          <td>OS notification banner 표시 — 사용자가 banner 탭 시 deep_link 그대로 push (이 화면 경유 안 함). 화면이 떠 있는 동안 새 알림은 자동 갱신되지 않음 (실시간 subscription 미부착) — refresh 시점에만 반영.</td>
+          <td>외부 푸시 알림 도착 (백그라운드)</td>
+          <td>OS 알림 배너가 떠 있을 때 사용자가 배너를 탭하면 알림이 가리키는 화면으로 곧장 이동 (이 화면을 거치지 않음). 이 화면이 떠 있는 동안 새 알림은 자동 갱신되지 않으며, 사용자가 직접 새로고침하거나 다시 들어와야 반영됨.</td>
         </tr>
         <tr>
-          <td>partner 앱에서 진입</td>
-          <td>동일 위젯 · 동일 동작. 단 partner primary color (다른 보라)로 인해 unread tint 색상이 user와 미세하게 다를 수 있음 (theme.colorScheme.primary 기반).</td>
+          <td>파트너 앱에서 진입</td>
+          <td>동일한 화면·동일한 동작. 다만 파트너 앱의 강조 색이 살짝 다른 톤이라 미읽음 강조 톤 색이 사용자 앱과 미세하게 다를 수 있음.</td>
         </tr>
       </tbody>
     </table>
@@ -795,34 +792,34 @@ body.dark-mode .notif-tile__swipe-front { background: var(--color-dark-backgroun
       </thead>
       <tbody>
         <tr>
-          <td>화면 진입 (Home → Notifications)</td>
+          <td>화면 진입 (홈 → 알림 센터)</td>
           <td><code>MinglitAnimation.fast</code> (200ms)</td>
-          <td>GoRouter Material default 좌→우 slide. user/partner 동일 — push from coordinator.</td>
+          <td>화면이 좌→우로 슬라이드되며 진입.</td>
         </tr>
         <tr>
-          <td>tile 탭 → deep_link push</td>
+          <td>알림 탭 → 다음 화면 이동</td>
           <td><code>MinglitAnimation.fast</code> (200ms)</td>
-          <td>일반 push — destination route 별도 transition 명시 시 그쪽 우선.</td>
+          <td>표준 슬라이드 전환.</td>
         </tr>
         <tr>
-          <td>Loading → Default 교체</td>
-          <td>cut</td>
-          <td>MinglitAsyncValueWidget은 AsyncValue.when 직접 분기 — fade 없이 즉시 교체.</td>
+          <td>로딩 → 본문 교체</td>
+          <td>—</td>
+          <td>별도 부드러운 전환 없이 즉시 교체.</td>
         </tr>
         <tr>
-          <td>Dismissible swipe + fade</td>
-          <td>~ 200ms (Material default · 미명시)</td>
-          <td>Dismissible default resizeDuration. 스토어된 token 미적용 (Phase 2에서 <code>MinglitAnimation.fast</code> 매핑 검토).</td>
+          <td>스와이프 후 항목 사라짐</td>
+          <td>~200ms</td>
+          <td>스와이프된 항목이 페이드 아웃되며 자리가 자연스럽게 좁혀짐.</td>
         </tr>
         <tr>
-          <td>InkWell ripple (tile · IconButton)</td>
+          <td>탭 리플</td>
           <td><code>MinglitAnimation.micro</code> (100ms)</td>
-          <td>Material default ripple expand.</td>
+          <td>모든 탭 가능한 항목에 적용되는 짧은 리플 피드백.</td>
         </tr>
         <tr>
-          <td>RefreshIndicator spinner show/hide</td>
+          <td>당겨서 새로고침 인디케이터</td>
           <td><code>MinglitAnimation.medium</code> (350ms)</td>
-          <td>Material default — drag 거리에 따라 spinner indicator 등장.</td>
+          <td>당기는 거리에 따라 인디케이터가 나타났다가 새로고침 후 자연스럽게 사라짐.</td>
         </tr>
       </tbody>
     </table>
@@ -831,12 +828,12 @@ body.dark-mode .notif-tile__swipe-front { background: var(--color-dark-backgroun
   <section class="doc">
     <h2>Global edge cases</h2>
     <ul class="notes">
-      <li><strong>Optimistic update vs server failure</strong> — markAsRead / deleteNotification / markAllAsRead 모두 서버 에러를 swallow + log (Fix #1955). 클라이언트는 항상 성공처럼 동작하지만 다음 refresh 시 stale state로 되돌아갈 수 있음 — race condition 알아두기.</li>
-      <li><strong>Unread badge 동기화</strong> — Home AppBar 미읽음 배지(99+ 캡)는 <code>notificationListProvider</code>에서 계산. 이 화면에서 markAsRead/markAllAsRead 시 동일 provider state 업데이트 → 배지 즉시 갱신 (cross-screen consistency).</li>
-      <li><strong>Pagination 부재</strong> — <code>getNotifications(limit: 20, offset: 0)</code> 단일 호출, scroll-to-load 없음. 21번째 알림 이후는 보이지 않음 — Phase 2에서 무한 스크롤 / "이전 알림 더 보기" 후보.</li>
-      <li><strong>RefreshIndicator 위치 한정</strong> — data 갈래 한정. Empty/Loading/Error에서는 풀-다운이 동작하지 않으므로 사용자가 retry하려면 화면을 떠났다 다시 진입 (의도되지 않은 UX 결함).</li>
-      <li><strong>kit-shared 단일 위젯</strong> — user/partner 분기 props 없음. Theme.of(context).colorScheme.primary만 다르므로 unread tint와 spinner 색만 차이가 남. 동작/문구/구조는 100% 동일.</li>
-      <li><strong>실시간 갱신 부재</strong> — Supabase realtime subscription 미부착. push 알림 도착 후 이 화면을 보고 있어도 list가 자동 업데이트되지 않음 — 사용자가 직접 풀-다운 / 다시 진입해야 함.</li>
+      <li><strong>읽음 / 삭제 처리는 화면에서 즉시 반영</strong> — 사용자에게는 항상 성공한 것처럼 보이지만, 서버 처리에 실패한 경우 다음 새로고침 시 서버 상태로 되돌아갈 수 있음.</li>
+      <li><strong>홈의 미읽음 배지와 동기화</strong> — 이 화면에서 읽음 처리하면 홈의 미읽음 배지도 즉시 갱신됨.</li>
+      <li><strong>페이지네이션 없음</strong> — 한 번에 최대 20건까지만 노출되며, 더 오래된 알림은 보이지 않음. 향후 무한 스크롤 보강 후보.</li>
+      <li><strong>당겨서 새로고침 영역 한정</strong> — 알림 목록이 보이는 변형에서만 동작. 알림이 없거나 로딩 / 오류 변형에서는 다시 시도하려면 화면을 떠났다 다시 들어와야 함.</li>
+      <li><strong>사용자 / 파트너 공용 화면</strong> — 동일한 화면이 양쪽 앱에서 노출됨. 미읽음 강조 톤과 로딩 인디케이터 색만 앱별 강조 색에 따라 살짝 다름. 동작·문구·구조는 100% 동일.</li>
+      <li><strong>실시간 갱신 없음</strong> — 이 화면이 떠 있는 동안 새 알림이 도착해도 자동으로 추가되지 않음. 사용자가 직접 새로고침하거나 다시 들어와야 반영됨.</li>
     </ul>
   </section>
 </div>

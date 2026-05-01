@@ -254,15 +254,15 @@ body.dark-mode .viewport {
       <tr>
         <th>User journey</th>
         <td>
-          <strong>Entry points</strong>: MorePage → "직원 관리" 메뉴 탭.<br>
-          <strong>Exit points</strong>: AppBar back → MorePage 복귀 · 멤버 카드 탭 → <code>MemberPermissionRoute</code> push (권한 편집) · FAB/AppBar IconButton "직원 추가" 탭 → 현재는 <code>showMinglitInfo('준비 중입니다.')</code> snackbar (초대 다이얼로그 미구현).
+          <strong>Entry points</strong>: 더보기 화면 → "직원 관리" 메뉴 탭.<br>
+          <strong>Exit points</strong>: AppBar back → 이전 화면 복귀 · 멤버 카드 탭 → 권한 편집 화면으로 이동 · FAB/AppBar 초대 아이콘 "직원 추가" 탭 → 현재는 '준비 중입니다.' 안내 메시지가 잠깐 노출됨 (초대 다이얼로그 미구현).
         </td>
       </tr>
       <tr>
         <th>Background</th>
         <td>
           파트너 멤버는 owner(설립자) · manager(운영/심사) · staff(현장 단순업무) 3 단계로 권한이 분리되어 있고, 이 화면은 그 권한 편집의 첫 진입점이다. 카드별 trailing 배지 색은 시맨틱 컬러로 통일해 한눈에 권한 위계를 파악하게 했다 — owner=primary(파트너 보라), manager=tertiary, staff=outline(중립).
-          초대 흐름은 backend RPC + 별도 다이얼로그 화면이 필요해 현재는 placeholder snackbar로 막아둠.
+          초대 흐름은 별도 다이얼로그 화면이 필요해 현재는 placeholder 안내 메시지로 막아둠.
         </td>
       </tr>
       <tr>
@@ -427,7 +427,7 @@ body.dark-mode .viewport {
 
   <section class="doc">
     <p class="intro">
-      <strong>State 식별 기준</strong>: <code>partnerMembersProvider(partnerId)</code> AsyncValue lifecycle · members 리스트 길이 · 초대 IconButton/FAB 탭으로 띄우는 snackbar.
+      <strong>State 식별 기준</strong>: 멤버 데이터 도착 여부 · 멤버 수 · 초대 버튼 탭으로 띄우는 안내 메시지.
     </p>
 
     <h3 style="margin-top: 24px;">State summary <small style="font-size:12px;font-weight:400;color:var(--color-text-secondary);">— 5 states</small></h3>
@@ -441,11 +441,11 @@ body.dark-mode .viewport {
         </tr>
       </thead>
       <tbody>
-        <tr><td><strong>Default</strong></td><td>baseline</td><td>data fetch 완료 · members 1+</td><td>ListView of MemberCard, owner=보라/manager=라임/staff=중립 배지</td></tr>
-        <tr><td><strong>Empty</strong></td><td>no data</td><td>members.isEmpty</td><td>중앙 people_outline 아이콘 + '등록된 직원이 없습니다.' (FAB만 살아있음)</td></tr>
-        <tr><td><strong>Loading</strong></td><td>async</td><td>provider.isLoading (initial)</td><td>중앙 MinglitCircularProgressIndicator (AppBar/FAB 그대로)</td></tr>
-        <tr><td><strong>Error</strong></td><td>network/server</td><td>provider.hasError</td><td>중앙 error_outline + 메시지 + '다시 시도' ElevatedButton</td></tr>
-        <tr><td><strong>Invite stub snackbar</strong></td><td>overlay</td><td>FAB 또는 AppBar IconButton 탭 직후</td><td>하단 dark snackbar('준비 중입니다.') overlay</td></tr>
+        <tr><td><strong>Default</strong></td><td>baseline</td><td>멤버 데이터가 도착했고 1명 이상 존재</td><td>멤버 카드 목록, owner=보라/manager=라임/staff=중립 배지</td></tr>
+        <tr><td><strong>Empty</strong></td><td>no data</td><td>멤버가 0명</td><td>중앙 인물 아이콘 + '등록된 직원이 없습니다.' (FAB만 살아있음)</td></tr>
+        <tr><td><strong>Loading</strong></td><td>async</td><td>멤버 데이터를 받아오는 중</td><td>중앙 스피너 (AppBar/FAB 그대로)</td></tr>
+        <tr><td><strong>Error</strong></td><td>network/server</td><td>멤버 데이터를 받지 못함</td><td>중앙 오류 아이콘 + 메시지 + '다시 시도' 버튼</td></tr>
+        <tr><td><strong>Invite stub snackbar</strong></td><td>overlay</td><td>FAB 또는 AppBar 초대 버튼 탭 직후</td><td>하단 dark snackbar('준비 중입니다.') overlay</td></tr>
       </tbody>
     </table>
 
@@ -498,24 +498,23 @@ body.dark-mode .viewport {
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td><code>partnerMembersProvider(partnerId).hasValue == true</code> · <code>members.isNotEmpty</code> (1명 이상). owner는 항상 1명 보장(파트너 가입 시 자동 추가).</td>
+            <td>멤버 데이터가 도착했고 1명 이상 존재. owner는 항상 1명 보장(파트너 가입 시 자동 추가).</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">사용자 액션</td>
             <td>
-              ① <strong>AppBar back</strong> → MorePage로 pop<br>
-              ② <strong>person_add IconButton</strong>(우상단) 또는 <strong>FAB '직원 추가'</strong>(우하단) 탭 → 둘 다 동일하게 <code>_showInviteDialog</code> → <code>showMinglitInfo('준비 중입니다.')</code> snackbar<br>
-              ③ <strong>멤버 카드 본체</strong> 탭 → <code>memberCoordinator.goToMemberPermission(partnerId, targetUserId)</code> → <code>MemberPermissionRoute</code> push (단, <code>user_id</code>가 null이면 무반응 — Fix #270)<br>
-              ④ <strong>Pull-to-refresh</strong> → <code>ref.refresh(partnerMembersProvider(partnerId).future)</code> · loading indicator는 RefreshIndicator 자체 spinner
+              ① <strong>AppBar back</strong> → 더보기 화면으로 복귀<br>
+              ② <strong>우상단 초대 아이콘</strong> 또는 <strong>FAB '직원 추가'</strong>(우하단) 탭 → 둘 다 동일하게 '준비 중입니다.' 안내 메시지가 하단에 잠깐 노출<br>
+              ③ <strong>멤버 카드 본체</strong> 탭 → 권한 편집 화면으로 이동<br>
+              ④ <strong>Pull-to-refresh</strong> → 목록 상단을 아래로 당기면 새로고침 인디케이터가 노출되며 최신 멤버 목록으로 갱신
             </td>
           </tr>
           <tr>
             <td class="state-mini__aspect">에지케이스</td>
             <td>
-              · 이름이 매우 길면 maxLines:1 + ellipsis로 trailing 정렬 보호 (Fix #1662)<br>
-              · <code>user_id</code>가 null인 dynamic map row는 onTap 무반응(Fix #270) — 보통 백엔드 join 실패 시<br>
-              · role 문자열이 owner/manager/staff 외 값(예: backend에 새 enum 추가) → fallback "직원"(staff) + outline 색 (안전 default)<br>
-              · partnerMembers에 동일 user_id 중복 row 들어와도 ListView.builder는 그대로 렌더(서버 unique 보장)
+              · 이름이 매우 길면 한 줄로 잘리며 말줄임표로 표시되어 trailing 정렬이 흐트러지지 않음<br>
+              · 멤버 정보가 불완전한 카드는 탭해도 반응하지 않음<br>
+              · 역할이 owner/manager/staff가 아닌 값으로 들어오면 안전하게 '직원'(중립 배지)로 표시
             </td>
           </tr>
           <tr>
@@ -541,7 +540,7 @@ body.dark-mode .viewport {
           </tr>
           <tr>
             <td class="state-mini__aspect">노트</td>
-            <td>📝 baseline UX. owner=primary 색은 의도적 강조 — 가게 대표 1명을 시각적으로 구분. _showInviteDialog가 stub인 게 가장 큰 미구현 — 별도 PR로 초대 다이얼로그(이메일 입력 + role 선택) 도입 예정.</td>
+            <td>📝 baseline UX. owner=primary 색은 의도적 강조 — 가게 대표 1명을 시각적으로 구분. 초대 흐름은 향후 별도 다이얼로그(이메일 입력 + 역할 선택)로 도입 예정.</td>
           </tr>
         </tbody>
       </table>
@@ -549,7 +548,7 @@ body.dark-mode .viewport {
       <!-- ─── Empty ─────────────────── -->
       <table class="ref state-mini">
         <thead>
-          <tr><th colspan="3"><strong>Empty</strong> <small>members.isEmpty</small></th></tr>
+          <tr><th colspan="3"><strong>Empty</strong> <small>등록된 직원이 0명</small></th></tr>
         </thead>
         <tbody>
           <tr>
@@ -573,10 +572,10 @@ body.dark-mode .viewport {
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>+ <code>members.isEmpty == true</code>. <em>이론상 발생 안 함</em> — owner가 자동 추가되므로 최소 1명 보장. 백엔드 데이터 레이스 시 일시적으로만 가능.</td>
+            <td>+ 멤버가 0명. <em>이론상 발생 안 함</em> — owner가 자동 추가되므로 최소 1명 보장. 데이터 레이스 시 일시적으로만 가능.</td>
           </tr>
-          <tr><td class="state-mini__aspect">사용자 액션</td><td>↔ 카드 액션(없음) · 동일: AppBar back · person_add · FAB</td></tr>
-          <tr><td class="state-mini__aspect">에지케이스</td><td>+ owner 자동 추가가 실패한 partner 객체에서만 발생 — 이 경우 backend RPC retry 필요.</td></tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>↔ 카드 액션(없음) · 동일: AppBar back · 초대 아이콘 · FAB</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>+ owner 자동 추가가 실패한 가게에서만 발생 — 데이터 보강이 필요한 예외 상황.</td></tr>
           <tr>
             <td class="state-mini__aspect">컴포넌트</td>
             <td>
@@ -593,7 +592,7 @@ body.dark-mode .viewport {
       <!-- ─── Loading ─────────────────── -->
       <table class="ref state-mini">
         <thead>
-          <tr><th colspan="3"><strong>Loading</strong> <small>provider.isLoading (initial)</small></th></tr>
+          <tr><th colspan="3"><strong>Loading</strong> <small>멤버 데이터를 받아오는 중</small></th></tr>
         </thead>
         <tbody>
           <tr>
@@ -614,20 +613,20 @@ body.dark-mode .viewport {
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>+ <code>partnerMembersProvider.isLoading == true</code> (initial fetch · pull-to-refresh 시는 RefreshIndicator로 처리되어 이 분기 미진입)</td>
+            <td>+ 첫 진입 시 멤버 데이터를 받아오는 중. (pull-to-refresh로 새로고침할 때는 별도 인디케이터로 표시되어 이 화면은 보이지 않음)</td>
           </tr>
-          <tr><td class="state-mini__aspect">사용자 액션</td><td>탭 무반응(카드 없음). AppBar/FAB는 enabled. FAB 탭 시 invite stub 진입 가능.</td></tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>카드가 없어 탭할 대상은 없음. AppBar back과 FAB/초대 아이콘은 그대로 사용 가능.</td></tr>
           <tr><td class="state-mini__aspect">에지케이스</td><td>—</td></tr>
           <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ ListView.builder → <code>MinglitCircularProgressIndicator</code> (Center)</td></tr>
           <tr><td class="state-mini__aspect">토큰</td><td>spinner color = ProgressIndicatorTheme default (partner primary tint)</td></tr>
-          <tr><td class="state-mini__aspect">노트</td><td>📝 fetch는 단일 RPC <code>getPartnerMembers</code>이라 분 단위 지연 없음 (보통 200ms 이내). 그래도 슬로우 네트워크 대비 spinner 노출.</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 데이터 조회는 보통 빠르게 끝나는 편이지만 슬로우 네트워크 대비 스피너를 항상 노출.</td></tr>
         </tbody>
       </table>
 
       <!-- ─── Error ─────────────────── -->
       <table class="ref state-mini">
         <thead>
-          <tr><th colspan="3"><strong>Error</strong> <small>provider.hasError</small></th></tr>
+          <tr><th colspan="3"><strong>Error</strong> <small>멤버 데이터를 받지 못함</small></th></tr>
         </thead>
         <tbody>
           <tr>
@@ -652,10 +651,10 @@ body.dark-mode .viewport {
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>+ <code>partnerMembersProvider.hasError == true</code> (RPC 실패 · network · auth · server 5xx 모두 동일 분기)</td>
+            <td>+ 멤버 데이터를 받아오지 못한 상태 (네트워크 / 인증 / 서버 오류 모두 동일하게 처리).</td>
           </tr>
-          <tr><td class="state-mini__aspect">사용자 액션</td><td>+ <strong>'다시 시도' ElevatedButton</strong> 탭 → <code>ref.invalidate(partnerMembersProvider(partnerId))</code> → loading 재진입. 동일: AppBar back · FAB.</td></tr>
-          <tr><td class="state-mini__aspect">에지케이스</td><td>+ AsyncValueWidget의 default error처리가 아니라 _buildErrorView 커스텀 — 원본 Object error를 toString()으로 메시지에 그대로 노출 (디버깅 친화적이지만 프로덕션에서는 stacktrace 일부가 노출될 수 있음 — 후속 정리 후보).</td></tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>+ <strong>'다시 시도' 버튼</strong> 탭 → 다시 Loading 상태로 진입해 데이터 재요청. 동일: AppBar back · FAB.</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>+ 화면에 노출되는 오류 메시지는 원본 오류 텍스트가 그대로 보일 수 있음 — 디버깅에는 친화적이지만 향후 사용자 친화적 메시지로 정돈 후보.</td></tr>
           <tr>
             <td class="state-mini__aspect">컴포넌트</td>
             <td>
@@ -664,7 +663,7 @@ body.dark-mode .viewport {
             </td>
           </tr>
           <tr><td class="state-mini__aspect">토큰</td><td>+ <code>color-error</code> (icon) · ElevatedButton color = <code>color-primary</code>(파트너 보라)</td></tr>
-          <tr><td class="state-mini__aspect">노트</td><td>📝 retry button이 명시적으로 있는 점이 다른 partner 화면(_DefaultErrorView)과 차이 — 이 화면은 fetch 비용이 낮아 retry UX를 적극적으로 노출.</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 다른 파트너 화면과 달리 명시적 '다시 시도' 버튼을 노출 — 이 화면은 데이터 조회 비용이 낮아 재시도 UX를 적극적으로 보여줌.</td></tr>
         </tbody>
       </table>
 
@@ -698,10 +697,10 @@ body.dark-mode .viewport {
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>+ FAB '직원 추가' 또는 AppBar person_add IconButton 탭 직후 — <code>_showInviteDialog</code> 호출이 <code>context.showMinglitInfo('준비 중입니다.')</code> stub만 띄움. snackbar duration 후 자동 dismiss.</td>
+            <td>+ FAB '직원 추가' 또는 AppBar 초대 아이콘 탭 직후 — '준비 중입니다.' 안내 메시지가 하단에 잠깐 노출. 일정 시간 후 자동으로 사라짐.</td>
           </tr>
-          <tr><td class="state-mini__aspect">사용자 액션</td><td>+ snackbar 자동 dismiss (~3s) · 그 외 baseline 액션 모두 가능 (snackbar는 modal blocker 아님)</td></tr>
-          <tr><td class="state-mini__aspect">에지케이스</td><td>+ 짧은 시간 동안 FAB 연타 시 snackbar는 ScaffoldMessenger queue로 쌓이지 않고 단일 인스턴스 유지 (showMinglitInfo 내부 dedupe).</td></tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>+ 안내 메시지는 약 3초 후 자동으로 사라짐 · 그 외 baseline 액션 모두 가능 (메시지는 화면을 막지 않음)</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>+ 초대 버튼을 연타해도 안내 메시지는 한 번만 노출되며 중복으로 쌓이지 않음.</td></tr>
           <tr><td class="state-mini__aspect">컴포넌트</td><td>+ <code>SnackBar</code>(MinglitInfo variant — dark bg + 흰 글자) overlay</td></tr>
           <tr><td class="state-mini__aspect">토큰</td><td>+ snackbar bg #28282E (rgba(40,40,50,.95)) · color #fff · radius <code>radius-input (12)</code></td></tr>
           <tr><td class="state-mini__aspect">노트</td><td>📝 placeholder 상태. 향후 실제 invite 다이얼로그(이메일 + role 선택)로 교체 시 이 state는 삭제되고 새 spec으로 분리될 가능성.</td></tr>
@@ -724,10 +723,10 @@ body.dark-mode .viewport {
     <table class="ref">
       <thead><tr><th style="width: 220px;">사용자 액션</th><th>화면에 보이는 결과</th></tr></thead>
       <tbody>
-        <tr><td>OS back / AppBar back</td><td>MorePage로 pop (모든 state 동일 · loading/error 중에도 가능)</td></tr>
-        <tr><td>Pull-to-refresh</td><td>data state에서만 가능 — RefreshIndicator로 spinner 표시 → <code>partnerMembersProvider</code> refresh → 새 리스트 렌더 (loading/empty/error에서는 ListView 자체가 없어 트리거 안 됨)</td></tr>
-        <tr><td>FAB '직원 추가' 또는 person_add IconButton</td><td>모든 state에서 enabled · 모두 동일 stub snackbar (현재)</td></tr>
-        <tr><td>앱 background → foreground</td><td>provider 자동 refetch 없음 — 수동 pull-to-refresh 필요</td></tr>
+        <tr><td>OS back / AppBar back</td><td>이전 화면으로 복귀 (모든 state 동일 · 로딩/오류 중에도 가능)</td></tr>
+        <tr><td>Pull-to-refresh</td><td>Default state에서만 가능 — 목록 상단을 아래로 당기면 인디케이터가 노출되며 멤버 목록이 갱신됨 (로딩/빈/오류 화면에서는 목록이 없어 동작하지 않음)</td></tr>
+        <tr><td>FAB '직원 추가' 또는 초대 아이콘</td><td>모든 state에서 동작 가능 · 현재는 '준비 중입니다.' 안내 메시지가 잠깐 노출됨</td></tr>
+        <tr><td>앱 background → foreground</td><td>자동 새로고침 없음 — 사용자가 직접 pull-to-refresh 해야 갱신</td></tr>
       </tbody>
     </table>
   </section>
@@ -745,10 +744,10 @@ body.dark-mode .viewport {
     <table class="ref">
       <thead><tr><th style="width: 220px;">Transition</th><th style="width: 140px;">Duration (token)</th><th>Curve / notes</th></tr></thead>
       <tbody>
-        <tr><td>loading → data</td><td><code>fast</code> (200ms)</td><td>AsyncValueWidget의 default fade switch</td></tr>
-        <tr><td>error → loading (retry)</td><td><code>fast</code> (200ms)</td><td>같은 위치에서 spinner로 교체</td></tr>
-        <tr><td>card 탭 → permission push</td><td><code>medium</code> (350ms)</td><td>sharedAxisScaled (MemberPermissionRoute가 정의)</td></tr>
-        <tr><td>snackbar slide-up/dismiss</td><td><code>medium</code> (350ms)</td><td>ScaffoldMessenger default · auto-dismiss ~3s</td></tr>
+        <tr><td>loading → data</td><td><code>fast</code> (200ms)</td><td>로딩에서 목록으로 부드럽게 전환</td></tr>
+        <tr><td>error → loading (retry)</td><td><code>fast</code> (200ms)</td><td>같은 위치에서 스피너로 교체</td></tr>
+        <tr><td>card 탭 → permission push</td><td><code>medium</code> (350ms)</td><td>sharedAxisScaled — 권한 화면이 정의하는 표준 전환</td></tr>
+        <tr><td>snackbar slide-up/dismiss</td><td><code>medium</code> (350ms)</td><td>안내 메시지 슬라이드 업, 약 3초 후 자동 사라짐</td></tr>
       </tbody>
     </table>
   </section>
@@ -756,10 +755,10 @@ body.dark-mode .viewport {
   <section class="doc">
     <h2>Global edge cases</h2>
     <ul class="notes">
-      <li><strong>네트워크 끊김</strong> — 즉시 Error state 진입. retry 버튼 탭 → invalidate · 재시도</li>
-      <li><strong>auth 만료</strong> — RPC 401 → Error state. 글로벌 auth interceptor가 로그인 화면으로 redirect할 수 있음</li>
-      <li><strong>다크 모드</strong> — 모든 토큰 자동 변환(<code>color-surface</code>, <code>color-background</code>, badge bg는 <code>color-mix</code>로 자동 dim)</li>
-      <li><strong>접근성</strong> — CircleAvatar에 semantic label 없음(향후 보강 후보) · MinglitBadge label은 sr 읽음 · ListTile onTap은 키보드 enter 가능</li>
+      <li><strong>네트워크 끊김</strong> — 즉시 오류 화면으로 전환. '다시 시도' 버튼으로 재시도 가능</li>
+      <li><strong>인증 만료</strong> — 오류 화면으로 진입. 인증 만료가 감지되면 로그인 화면으로 자동 이동될 수 있음</li>
+      <li><strong>다크 모드</strong> — scaffold / 카드 / 배지 색상 모두 다크 토큰으로 자동 전환</li>
+      <li><strong>접근성</strong> — 아바타에는 별도 음성 안내가 없음(향후 보강 후보) · 역할 배지 텍스트는 스크린 리더가 읽음 · 카드 탭은 키보드로도 가능</li>
     </ul>
   </section>
 </div>

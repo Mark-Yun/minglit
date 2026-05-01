@@ -222,15 +222,15 @@ body.dark-mode .viewport {
       <tr>
         <th>User journey</th>
         <td>
-          <strong>Entry points</strong>: PartnerMemberListPage → 멤버 카드 탭.<br>
-          <strong>Exit points</strong>: 저장 성공 → success snackbar + Navigator.pop() (멤버 리스트로 복귀, list invalidate되어 변경 반영) · AppBar back → 변경 무시하고 pop · 에러 → snackbar로만 알리고 화면 유지.
+          <strong>Entry points</strong>: 멤버 목록 화면 → 멤버 카드 탭.<br>
+          <strong>Exit points</strong>: 저장 성공 → 성공 안내 메시지가 잠깐 보이고 멤버 목록으로 복귀(변경사항 반영) · AppBar back → 변경 무시하고 복귀 · 오류 → 안내 메시지로만 알리고 화면 유지.
         </td>
       </tr>
       <tr>
         <th>Background</th>
         <td>
-          역할(role)은 3단계 enum이고 권한(permissions)은 추가 옵트인이 가능한 9개 flag 배열이다 — 같은 manager라도 가게마다 책임 범위가 달라 세부 토글로 보강. 역할 dropdown을 바꾸면 permissions가 그 역할의 default set으로 일제 초기화(<code>_syncPermissionsLocally</code>) — 사용자에게 정렬된 시작점을 주기 위함이고 그래서 dropdown 위 경고 문구('역할을 변경하면 권한 배열이 기본값으로 초기화됩니다.')를 partner primary 색으로 강조.
-          저장은 role + permissions 별도 RPC 2회 → 둘 다 성공해야 list/detail provider invalidate.
+          역할(role)은 3단계로 분리되어 있고 권한(permissions)은 추가 옵트인이 가능한 9개 항목으로 구성된다 — 같은 manager라도 가게마다 책임 범위가 달라 세부 토글로 보강. 역할 dropdown을 바꾸면 권한이 그 역할의 기본값으로 일제 초기화 — 사용자에게 정렬된 시작점을 주기 위함이고 그래서 dropdown 위 경고 문구('역할을 변경하면 권한 배열이 기본값으로 초기화됩니다.')를 partner primary 색으로 강조.
+          역할과 권한은 함께 저장되며, 저장이 완료되면 멤버 목록과 상세 화면이 갱신된다.
         </td>
       </tr>
       <tr>
@@ -402,7 +402,7 @@ body.dark-mode .viewport {
 
   <section class="doc">
     <p class="intro">
-      <strong>State 식별 기준</strong>: <code>partnerMemberProvider</code> AsyncValue · <code>memberData == null</code> · _selectedRole · _currentPermissions (mutable) · _isSaving 플래그 · save 결과(success snackbar / error handler).
+      <strong>State 식별 기준</strong>: 멤버 데이터 도착 여부 · 멤버 존재 여부 · 선택된 역할 / 권한 토글 상태 · 저장 진행 여부 · 저장 결과(성공/오류).
     </p>
 
     <h3 style="margin-top: 24px;">State summary <small style="font-size:12px;font-weight:400;color:var(--color-text-secondary);">— 7 states</small></h3>
@@ -416,13 +416,13 @@ body.dark-mode .viewport {
         </tr>
       </thead>
       <tbody>
-        <tr><td><strong>Default</strong></td><td>baseline</td><td>fetch 완료 · manager 역할 default</td><td>Dropdown='Manager (운영 및 심사)' · 6개 박스 체크 · 보라 경고문 · 풀폭 보라 Save 버튼</td></tr>
-        <tr><td><strong>Role changed → reset</strong></td><td>local mut.</td><td>Dropdown 변경 직후</td><td>체크 패턴이 새 역할 default로 일제히 갱신됨 (애니메이션 없음 · 즉시 setState)</td></tr>
-        <tr><td><strong>Saving</strong></td><td>async</td><td>_isSaving == true</td><td>폼 전체가 사라지고 화면 가운데 spinner</td></tr>
-        <tr><td><strong>Save success</strong></td><td>overlay</td><td>RPC 둘 다 성공 직후</td><td>녹색 success snackbar('저장되었습니다.') + Navigator.pop() 직후 화면 자체가 사라짐</td></tr>
-        <tr><td><strong>Save error</strong></td><td>overlay</td><td>RPC 실패</td><td>handleMinglitError 흐름 — dark error snackbar overlay, 폼은 그대로 유지(_isSaving=false)</td></tr>
-        <tr><td><strong>Member not found</strong></td><td>edge</td><td>memberData == null</td><td>중앙 텍스트 '멤버를 찾을 수 없습니다.'만 (form 없음)</td></tr>
-        <tr><td><strong>Loading / Error (fetch)</strong></td><td>async</td><td>provider lifecycle</td><td>Loading=중앙 spinner · Error=AsyncValueWidget default error</td></tr>
+        <tr><td><strong>Default</strong></td><td>baseline</td><td>멤버 데이터가 도착했고 manager 역할로 진입</td><td>Dropdown='Manager (운영 및 심사)' · 6개 박스 체크 · 보라 경고문 · 풀폭 보라 Save 버튼</td></tr>
+        <tr><td><strong>Role changed → reset</strong></td><td>local mut.</td><td>Dropdown 변경 직후</td><td>체크 패턴이 새 역할 기본값으로 일제히 갱신됨 (애니메이션 없이 즉시)</td></tr>
+        <tr><td><strong>Saving</strong></td><td>async</td><td>저장 진행 중</td><td>폼 전체가 사라지고 화면 가운데 스피너</td></tr>
+        <tr><td><strong>Save success</strong></td><td>overlay</td><td>저장 성공 직후</td><td>녹색 성공 안내 메시지('저장되었습니다.') + 멤버 목록으로 복귀 후 화면 자체가 사라짐</td></tr>
+        <tr><td><strong>Save error</strong></td><td>overlay</td><td>저장 실패</td><td>오류 안내 메시지가 잠깐 노출되고 폼은 그대로 유지</td></tr>
+        <tr><td><strong>Member not found</strong></td><td>edge</td><td>멤버를 찾을 수 없음</td><td>중앙 텍스트 '멤버를 찾을 수 없습니다.'만 (form 없음)</td></tr>
+        <tr><td><strong>Loading / Error (fetch)</strong></td><td>async</td><td>멤버 데이터 조회 중/실패</td><td>Loading=중앙 스피너 · Error=기본 오류 화면</td></tr>
       </tbody>
     </table>
 
@@ -431,7 +431,7 @@ body.dark-mode .viewport {
       <!-- ─── Default ─────────────────── -->
       <table class="ref state-mini is-baseline-tint">
         <thead>
-          <tr><th colspan="3"><strong>Default</strong> 🎯 <small>baseline · manager 역할 + 6 default permissions</small></th></tr>
+          <tr><th colspan="3"><strong>Default</strong> 🎯 <small>baseline · manager 역할 + 6개 기본 권한 체크</small></th></tr>
         </thead>
         <tbody>
           <tr>
@@ -472,24 +472,24 @@ body.dark-mode .viewport {
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td><code>partnerMemberProvider.hasValue</code> · <code>memberData != null</code> · <code>_isSaving == false</code> · 진입 시 raw role 'manager'(allowed enum) → _selectedRole='manager' · _currentPermissions = memberData['permissions']로부터 복사.</td>
+            <td>멤버 데이터가 도착했고 저장이 진행 중이 아님. 진입 시 멤버의 현재 역할(예: manager)과 현재 권한 체크 상태가 그대로 노출됨.</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">사용자 액션</td>
             <td>
-              ① <strong>AppBar back</strong> → MemberListPage로 pop (변경 무시)<br>
-              ② <strong>Role Dropdown</strong> 탭 → 3 항목 펼침 → 선택 시 setState(_selectedRole 변경 + <code>_syncPermissionsLocally</code> → _currentPermissions가 새 default로 reset)<br>
-              ③ <strong>permission tile</strong> 탭(또는 Checkbox 직접) → 해당 key add/remove from _currentPermissions<br>
-              ④ <strong>'변경 사항 저장' 버튼</strong> 탭 → <code>unawaited(_save())</code> → _isSaving=true → updateMemberRole + updateMemberPermissions → 두 invalidate → success snackbar + Navigator.pop
+              ① <strong>AppBar back</strong> → 멤버 목록으로 복귀 (변경 무시)<br>
+              ② <strong>Role Dropdown</strong> 탭 → 3개 항목이 펼쳐지고, 선택하면 권한 체크가 그 역할의 기본값으로 일제히 갱신됨<br>
+              ③ <strong>permission tile</strong> 또는 체크박스 탭 → 해당 권한이 토글됨<br>
+              ④ <strong>'변경 사항 저장' 버튼</strong> 탭 → 저장이 시작되어 화면 전체가 스피너로 바뀌고, 완료 시 성공 안내 메시지가 잠깐 노출되며 멤버 목록으로 복귀
             </td>
           </tr>
           <tr>
             <td class="state-mini__aspect">에지케이스</td>
             <td>
-              · raw role이 owner/manager/staff 외 값이면 fallback 'staff' (Fix #270)<br>
-              · permissions가 null/missing이면 빈 List로 시작<br>
-              · user_id가 null인 데이터로 진입 시 저장 시도하면 '사용자 정보를 확인할 수 없습니다' snackbar + 저장 무시(setState false 복구)<br>
-              · email이 빈 문자열이면 그대로 빈 줄로 렌더(Text '' → 0px)
+              · 역할이 owner/manager/staff가 아닌 값으로 들어오면 안전하게 'staff'로 진입<br>
+              · 권한 데이터가 비어있으면 모두 비체크 상태로 시작<br>
+              · 멤버 정보가 불완전한 데이터로 진입 후 저장 시도 시 '사용자 정보를 확인할 수 없습니다' 안내 메시지가 노출되고 저장이 진행되지 않음<br>
+              · 이메일이 비어있으면 빈 줄로 렌더되어 헤더 높이가 줄어듦
             </td>
           </tr>
           <tr>
@@ -514,7 +514,7 @@ body.dark-mode .viewport {
           </tr>
           <tr>
             <td class="state-mini__aspect">노트</td>
-            <td>📝 Form은 controllerless · 모든 상태 변경이 setState 동기. submit이 비동기로 시작되는 순간만 _isSaving 플래그가 화면 자체를 spinner로 교체. 변경 dirty 추적 없음(저장 안 누르고 back 시 무시) — 향후 confirm dialog 추가 후보.</td>
+            <td>📝 폼은 모든 변경이 즉시 화면에 반영되는 단순 구조. 저장이 시작되면 화면 전체가 스피너로 교체된다. 미저장 상태에서 back 시 별도 확인 없이 변경 무시 — 향후 확인 다이얼로그 추가 후보.</td>
           </tr>
         </tbody>
       </table>
@@ -522,7 +522,7 @@ body.dark-mode .viewport {
       <!-- ─── Role changed → reset ─────────────────── -->
       <table class="ref state-mini">
         <thead>
-          <tr><th colspan="3"><strong>Role changed → reset</strong> <small>local mutate · setState 직후</small></th></tr>
+          <tr><th colspan="3"><strong>Role changed → reset</strong> <small>역할을 바꾼 직후 권한이 새 기본값으로 갱신</small></th></tr>
         </thead>
         <tbody>
           <tr>
@@ -558,20 +558,20 @@ body.dark-mode .viewport {
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>+ Dropdown change(예: manager → staff) 직후 — <code>_syncPermissionsLocally('staff')</code>가 _currentPermissions = ['VERIFY_LIST_VIEW','COMMENT_MANAGE','PARTY_MANAGE'] 3개로 reset됨.</td>
+            <td>+ Dropdown 변경(예: manager → staff) 직후 — 권한 체크 상태가 staff의 기본 권한 3개로 일제히 재정렬됨.</td>
           </tr>
-          <tr><td class="state-mini__aspect">사용자 액션</td><td>동일 (Dropdown 추가 변경 가능 · 개별 tile toggle 가능). 사용자가 추가로 tile을 토글하면 default set에서 벗어남.</td></tr>
-          <tr><td class="state-mini__aspect">에지케이스</td><td>+ owner 선택 시 _currentPermissions = 9개 모두 (전체 체크) · staff 선택 시 3개만. UI에서 default-set이 무엇인지 따로 표시 안 함 — 사용자가 화면에서 직접 확인.</td></tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>동일 (Dropdown 추가 변경 가능 · 개별 tile 토글 가능). 토글하면 기본값에서 벗어남.</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>+ owner 선택 시 9개 모두 체크 · manager 6개 · staff 3개. 화면에서 어느 항목이 기본값인지 별도 표시는 없음 — 사용자가 화면에서 직접 확인.</td></tr>
           <tr><td class="state-mini__aspect">컴포넌트</td><td>동일</td></tr>
           <tr><td class="state-mini__aspect">토큰</td><td>동일</td></tr>
-          <tr><td class="state-mini__aspect">노트</td><td>📝 권한 reset이 silent — 사용자가 인지하지 못한 채 권한이 사라질 수 있음. 그래서 보라 경고문이 dropdown 위에 항상 노출. 향후 confirm dialog 도입 후보.</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 권한 reset이 silent — 사용자가 인지하지 못한 채 권한이 사라질 수 있음. 그래서 보라 경고문이 권한 섹션 위에 항상 노출. 향후 확인 다이얼로그 도입 후보.</td></tr>
         </tbody>
       </table>
 
       <!-- ─── Saving ─────────────────── -->
       <table class="ref state-mini">
         <thead>
-          <tr><th colspan="3"><strong>Saving</strong> <small>_isSaving == true</small></th></tr>
+          <tr><th colspan="3"><strong>Saving</strong> <small>저장 진행 중</small></th></tr>
         </thead>
         <tbody>
           <tr>
@@ -587,20 +587,20 @@ body.dark-mode .viewport {
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>+ Save 버튼 탭 직후 → <code>setState(() => _isSaving = true)</code>. updateMemberRole + updateMemberPermissions Future 진행 중.</td>
+            <td>+ Save 버튼 탭 직후 — 역할과 권한 저장이 진행 중.</td>
           </tr>
-          <tr><td class="state-mini__aspect">사용자 액션</td><td>↔ form 자체가 사라져 인터랙션 불가능. AppBar back은 enabled — 도중 pop 시 mounted 가드로 stateState 안전(Fix #270 패턴).</td></tr>
-          <tr><td class="state-mini__aspect">에지케이스</td><td>+ updateMemberRole 성공 + updateMemberPermissions 실패 → role만 commit된 partial state. handleMinglitError 진입 + _isSaving=false 복구. 사용자가 다시 저장 누르면 idempotent하게 재시도.</td></tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>↔ 폼 자체가 사라져 인터랙션 불가능. AppBar back은 그대로 동작 — 도중 복귀해도 안전하게 처리됨.</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>+ 역할은 저장됐는데 권한 저장이 실패하는 부분 성공 상황이 가능 → 오류 안내 메시지가 노출되고 폼이 다시 보이며 사용자가 재시도 가능. 재시도해도 결과는 동일하게 정렬됨.</td></tr>
           <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ 폼 전체 → <code>MinglitCircularProgressIndicator</code> (return 분기 — Scaffold body에 직접 노출)</td></tr>
           <tr><td class="state-mini__aspect">토큰</td><td>spinner color = ProgressIndicatorTheme default (partner primary tint)</td></tr>
-          <tr><td class="state-mini__aspect">노트</td><td>📝 글로벌 loader가 아닌 화면 내부 spinner라 다른 화면은 영향 없음. 단, save 도중 AppBar back으로 escape하면 Future가 fire-and-forget으로 진행 — Provider invalidate는 그대로 발생해 list 화면 갱신.</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 화면 내부 스피너라 다른 화면에는 영향 없음. 저장 도중 AppBar back으로 빠져나가도 저장은 백그라운드에서 계속 진행되며, 완료 시 멤버 목록이 자동으로 갱신됨.</td></tr>
         </tbody>
       </table>
 
       <!-- ─── Save success ─────────────────── -->
       <table class="ref state-mini">
         <thead>
-          <tr><th colspan="3"><strong>Save success</strong> <small>RPC 둘 다 성공 직후</small></th></tr>
+          <tr><th colspan="3"><strong>Save success</strong> <small>저장 성공 직후</small></th></tr>
         </thead>
         <tbody>
           <tr>
@@ -626,20 +626,20 @@ body.dark-mode .viewport {
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>+ updateMemberRole + updateMemberPermissions 둘 다 성공 → invalidate(list) + invalidate(detail) → <code>showMinglitSuccess('저장되었습니다.')</code> + <code>Navigator.pop()</code> (즉시 — snackbar는 list 화면 위에서 표시).</td>
+            <td>+ 저장이 모두 성공하면 멤버 목록과 상세 화면이 갱신되고 '저장되었습니다.' 안내 메시지가 잠깐 노출되며 멤버 목록으로 복귀.</td>
           </tr>
-          <tr><td class="state-mini__aspect">사용자 액션</td><td>+ snackbar 자동 dismiss (~3s). 화면 자체가 pop된 상태라 form 인터랙션 없음.</td></tr>
-          <tr><td class="state-mini__aspect">에지케이스</td><td>+ pop이 list 화면에서 즉시 새 권한 반영 (provider invalidate). 단, 사용자가 이미 다른 화면으로 빠르게 이동했다면 snackbar는 ScaffoldMessenger global queue로 표시 (현재 표시 중인 Scaffold 위).</td></tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>+ 안내 메시지는 약 3초 후 자동으로 사라짐. 권한 화면 자체는 이미 닫혀 인터랙션 없음.</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>+ 멤버 목록에 즉시 새 권한이 반영됨. 사용자가 이미 다른 화면으로 이동했다면 안내 메시지는 그 화면 위에 노출됨.</td></tr>
           <tr><td class="state-mini__aspect">컴포넌트</td><td>+ <code>SnackBar</code>(MinglitSuccess variant — green bg + 흰 글자 + 체크 아이콘)<br>↔ Scaffold pop (현재 화면 사라짐)</td></tr>
           <tr><td class="state-mini__aspect">토큰</td><td>+ snackbar bg <code>color-success</code> · color #fff</td></tr>
-          <tr><td class="state-mini__aspect">노트</td><td>📝 mockup은 시각화 위해 form 일부 + snackbar를 같이 그렸지만 실제로는 pop 직후라 form은 안 보임. 진짜로 보이는 건 list 화면 + snackbar.</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 mockup은 시각화 위해 폼 일부 + 안내 메시지를 같이 그렸지만 실제로는 화면이 닫힌 상태라 폼은 안 보임. 진짜로 보이는 건 멤버 목록 + 안내 메시지.</td></tr>
         </tbody>
       </table>
 
       <!-- ─── Save error ─────────────────── -->
       <table class="ref state-mini">
         <thead>
-          <tr><th colspan="3"><strong>Save error</strong> <small>RPC 실패</small></th></tr>
+          <tr><th colspan="3"><strong>Save error</strong> <small>저장 실패</small></th></tr>
         </thead>
         <tbody>
           <tr>
@@ -666,20 +666,20 @@ body.dark-mode .viewport {
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>+ <code>repository.updateMemberRole/Permissions</code>가 throw → catch → <code>handleMinglitError(context, e, st)</code> · _isSaving=false 복구</td>
+            <td>+ 저장 도중 오류가 발생하면 오류 안내 메시지가 노출되고 폼이 다시 보임.</td>
           </tr>
-          <tr><td class="state-mini__aspect">사용자 액션</td><td>+ snackbar 자동 dismiss · 폼은 그대로 유지 → 사용자가 다시 저장 버튼 탭 가능. 동일: 모든 baseline 액션.</td></tr>
-          <tr><td class="state-mini__aspect">에지케이스</td><td>+ partial commit (role 성공 + permissions 실패) 시 list 화면이 invalidate되지 않음 (둘 다 성공 시에만 invalidate). 다만 role은 서버에 commit된 상태 — 다음 진입 시 재 fetch로 정합성 회복.</td></tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>+ 안내 메시지는 자동으로 사라짐 · 폼은 그대로 유지되어 사용자가 다시 저장 버튼을 탭할 수 있음. 동일: 모든 baseline 액션.</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>+ 부분 성공(역할은 저장됐으나 권한 저장 실패) 상황에서는 멤버 목록 갱신이 즉시 일어나지 않을 수 있음. 다음 진입 시 다시 데이터를 받아오며 정합성이 회복됨.</td></tr>
           <tr><td class="state-mini__aspect">컴포넌트</td><td>+ <code>SnackBar</code>(MinglitError variant — dark bg + 흰 글자 + error icon · handleMinglitError가 dispatch)</td></tr>
           <tr><td class="state-mini__aspect">토큰</td><td>+ snackbar bg dark / color #fff (error specific)</td></tr>
-          <tr><td class="state-mini__aspect">노트</td><td>📝 retry는 사용자가 수동으로 다시 저장 — 자동 retry 없음. partial commit edge case 보완 필요(향후 single transactional RPC로 교체 후보).</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 자동 재시도 없음 — 사용자가 다시 저장 버튼을 눌러야 재시도. 부분 성공 상황 보완은 후속 작업 후보.</td></tr>
         </tbody>
       </table>
 
       <!-- ─── Member not found ─────────────────── -->
       <table class="ref state-mini">
         <thead>
-          <tr><th colspan="3"><strong>Member not found</strong> <small>memberData == null</small></th></tr>
+          <tr><th colspan="3"><strong>Member not found</strong> <small>해당 멤버를 찾을 수 없음</small></th></tr>
         </thead>
         <tbody>
           <tr>
@@ -693,10 +693,10 @@ body.dark-mode .viewport {
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>+ <code>partnerMemberProvider</code>가 null 반환 — <code>members.firstWhereOrNull((m) => m['user_id'] == targetUserId)</code> 미스 (해당 user가 멤버 리스트에 없음).</td>
+            <td>+ 해당 멤버가 목록에 존재하지 않는 경우.</td>
           </tr>
           <tr><td class="state-mini__aspect">사용자 액션</td><td>+ AppBar back만 가능. 폼/save 버튼 없음.</td></tr>
-          <tr><td class="state-mini__aspect">에지케이스</td><td>+ deep link로 잘못된 targetUserId 진입 · 또는 멤버가 다른 디바이스에서 막 삭제된 직후 진입. provider는 정상 hasValue 상태(null)이라 spinner도 안 보임.</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>+ 잘못된 딥링크로 진입 · 또는 멤버가 다른 디바이스에서 막 삭제된 직후 진입. 데이터 조회는 정상이지만 결과가 비어있어 스피너도 보이지 않음.</td></tr>
           <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ _MemberPermissionForm → <code>Center(Text('멤버를 찾을 수 없습니다.'))</code></td></tr>
           <tr><td class="state-mini__aspect">토큰</td><td>typography <code>bodyMedium</code> · color <code>onSurface</code></td></tr>
           <tr><td class="state-mini__aspect">노트</td><td>📝 친절도 낮음 — 향후 'list로 돌아가기' 버튼 추가 후보. 현재는 AppBar back만 살길.</td></tr>
@@ -706,7 +706,7 @@ body.dark-mode .viewport {
       <!-- ─── Loading / Error fetch ─────────────────── -->
       <table class="ref state-mini">
         <thead>
-          <tr><th colspan="3"><strong>Loading / Error (fetch)</strong> <small>partnerMemberProvider lifecycle</small></th></tr>
+          <tr><th colspan="3"><strong>Loading / Error (fetch)</strong> <small>멤버 데이터 조회 중 또는 실패</small></th></tr>
         </thead>
         <tbody>
           <tr>
@@ -722,13 +722,13 @@ body.dark-mode .viewport {
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>+ Loading: <code>partnerMemberProvider.isLoading</code> (initial fetch — getPartnerMembers 진행 중) · Error: <code>partnerMemberProvider.hasError</code> (네트워크/auth 실패)</td>
+            <td>+ Loading: 멤버 데이터를 처음 받아오는 중 · Error: 네트워크/인증 오류로 데이터를 받지 못한 상태</td>
           </tr>
-          <tr><td class="state-mini__aspect">사용자 액션</td><td>+ Loading: 탭 무반응 (AppBar back만 가능) · Error: AsyncValueWidget의 default error UI(retry 미내장 — back 후 재진입 필요)</td></tr>
-          <tr><td class="state-mini__aspect">에지케이스</td><td>+ list 화면에서 이 화면으로 push 직후 잠깐 보임(보통 200ms 이내). list cache가 살아있으면 거의 instant data 분기로 이동.</td></tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>+ Loading: 탭 무반응 (AppBar back만 가능) · Error: 기본 오류 화면(재시도 버튼 없음 — back 후 재진입 필요)</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>+ 멤버 목록에서 이 화면으로 진입 직후 잠깐 보임(보통 200ms 이내). 목록 데이터가 캐시되어 있으면 즉시 데이터 화면으로 이동.</td></tr>
           <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ _MemberPermissionForm → <code>MinglitCircularProgressIndicator</code> (Loading) 또는 AsyncValueWidget default error widget</td></tr>
           <tr><td class="state-mini__aspect">토큰</td><td>spinner color = ProgressIndicatorTheme default · error UI는 AsyncValueWidget 기본 토큰</td></tr>
-          <tr><td class="state-mini__aspect">노트</td><td>📝 partnerMembersProvider 캐시를 재사용하므로 list에서 push해 들어오면 보통 instant. cold-start 진입(deep link)일 때만 spinner가 의미 있음.</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 멤버 목록 데이터를 재사용하므로 목록에서 진입하면 보통 즉시. 콜드스타트(딥링크) 진입일 때만 스피너가 의미 있음.</td></tr>
         </tbody>
       </table>
 
@@ -748,10 +748,10 @@ body.dark-mode .viewport {
     <table class="ref">
       <thead><tr><th style="width: 220px;">사용자 액션</th><th>화면에 보이는 결과</th></tr></thead>
       <tbody>
-        <tr><td>OS back / AppBar back</td><td>모든 state에서 가능 — list 화면으로 pop. 변경사항이 있어도 confirm 없이 무시(향후 dirty guard 도입 후보)</td></tr>
-        <tr><td>키보드 dismiss</td><td>입력 필드 없음 — Dropdown은 키보드 호출 안 함. 스크롤 시 자동 hide 적용 안 됨</td></tr>
-        <tr><td>앱 background → foreground</td><td>provider 자동 refetch 없음. 단, _isSaving 중이었다면 Future는 계속 진행되어 결과 반영(mounted 가드).</td></tr>
-        <tr><td>화면 회전</td><td>SingleChildScrollView로 가로 화면 시 모든 항목 스크롤 — Form 자체 잘림 없음</td></tr>
+        <tr><td>OS back / AppBar back</td><td>모든 state에서 가능 — 멤버 목록으로 복귀. 변경사항이 있어도 별도 확인 없이 무시(향후 dirty guard 도입 후보)</td></tr>
+        <tr><td>키보드 dismiss</td><td>입력 필드 없음 — Dropdown은 키보드를 호출하지 않음.</td></tr>
+        <tr><td>앱 background → foreground</td><td>자동 새로고침 없음. 단, 저장 중이었다면 백그라운드에서 계속 진행되어 결과가 반영됨.</td></tr>
+        <tr><td>화면 회전</td><td>가로 화면에서도 모든 항목이 세로 스크롤로 노출되어 폼 자체 잘림 없음</td></tr>
       </tbody>
     </table>
   </section>
@@ -769,10 +769,10 @@ body.dark-mode .viewport {
     <table class="ref">
       <thead><tr><th style="width: 220px;">Transition</th><th style="width: 140px;">Duration (token)</th><th>Curve / notes</th></tr></thead>
       <tbody>
-        <tr><td>list → permission (push)</td><td><code>medium</code> (350ms)</td><td>MinglitPageTransitions.sharedAxisScaled</td></tr>
+        <tr><td>list → permission (push)</td><td><code>medium</code> (350ms)</td><td>sharedAxisScaled — 표준 push 전환</td></tr>
         <tr><td>Dropdown 열기/닫기</td><td><code>fast</code> (200ms)</td><td>Material default · 위로 펼침</td></tr>
-        <tr><td>form → spinner (Saving)</td><td><code>fast</code> (200ms)</td><td>setState 직후 build re-run (별도 AnimatedSwitcher 없음 — instant swap에 가까움)</td></tr>
-        <tr><td>Save success → pop</td><td><code>medium</code> (350ms)</td><td>Navigator.pop default reverse transition + snackbar slide-up 동시</td></tr>
+        <tr><td>form → spinner (Saving)</td><td><code>fast</code> (200ms)</td><td>거의 즉시 교체 (별도 페이드 없음)</td></tr>
+        <tr><td>Save success → pop</td><td><code>medium</code> (350ms)</td><td>표준 reverse 전환 + 안내 메시지 슬라이드 업 동시</td></tr>
       </tbody>
     </table>
   </section>
@@ -780,11 +780,11 @@ body.dark-mode .viewport {
   <section class="doc">
     <h2>Global edge cases</h2>
     <ul class="notes">
-      <li><strong>네트워크 끊김</strong> — 진입 시: Error fetch state · 저장 시: handleMinglitError snackbar + 폼 유지(재시도 가능)</li>
-      <li><strong>auth 만료</strong> — RPC 401 → handleMinglitError (auth 인터셉터가 로그인 redirect 가능)</li>
-      <li><strong>다크 모드</strong> — 모든 토큰 자동 변환. 보라 경고문은 partner-dark-primary로 dim, Save 버튼도 dim된 보라.</li>
-      <li><strong>접근성</strong> — Checkbox는 sr 'checked/unchecked' 읽음 · Dropdown은 sr label 누락 가능(향후 Semantics wrap 후보) · 큰 글씨 모드 시 9개 tile 세로로 길어져 스크롤 발생</li>
-      <li><strong>다국어</strong> — 권한 라벨이 ko 전용 ARB 키. en 추가 시 _permissionLabels Map만 확장</li>
+      <li><strong>네트워크 끊김</strong> — 진입 시: 오류 화면으로 진입 · 저장 시: 오류 안내 메시지 + 폼 유지(재시도 가능)</li>
+      <li><strong>인증 만료</strong> — 인증 만료가 감지되면 로그인 화면으로 자동 이동될 수 있음</li>
+      <li><strong>다크 모드</strong> — 모든 색상이 다크 톤으로 자동 전환. 보라 경고문 / 저장 버튼도 다크 보라로 dim.</li>
+      <li><strong>접근성</strong> — 체크박스는 'checked/unchecked' 음성 안내 · Dropdown은 음성 라벨이 누락될 수 있어 향후 보강 후보 · 큰 글씨 모드 시 9개 항목이 세로로 길어져 스크롤 발생</li>
+      <li><strong>다국어</strong> — 권한 라벨은 현재 한글 기준. 다국어 추가 시 라벨 사전만 확장하면 됨</li>
     </ul>
   </section>
 </div>

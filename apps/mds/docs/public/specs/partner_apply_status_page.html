@@ -208,7 +208,7 @@ body.dark-mode .viewport {
       </tr>
       <tr>
         <th>Route / Surface</th>
-        <td><code>PartnerApplyStatusRoute</code> · widget: <code>PartnerApplyStatusPage</code> (ConsumerWidget · 단일 SingleChildScrollView)</td>
+        <td><code>PartnerApplyStatusRoute</code> · widget: <code>PartnerApplyStatusPage</code> (full-page · 단독 진입)</td>
       </tr>
       <tr>
         <th>Path</th>
@@ -226,26 +226,26 @@ body.dark-mode .viewport {
         <td>
           신청서 제출 직후 또는 관리자 보완 요청 후의 사용자에게 현재 심사 상태를 알리고,
           보완 요청 상태에서는 신청서로 되돌아가 수정할 수 있는 진입점을 제공한다.
-          <code>OnboardingState.pendingReview</code> 또는 <code>OnboardingState.needsCorrection</code>일 때만 도달.
+          심사 대기 / 보완 요청 두 상태에만 노출되는 화면.
         </td>
       </tr>
       <tr>
         <th>User journey</th>
         <td>
-          <strong>Entry</strong>: <code>PartnerApplyPage</code> 제출 성공 직후 또는 router redirect.
-          앱 재진입 시 <code>onboardingStateProvider</code>가 <code>pendingReview</code>/<code>needsCorrection</code>으로 resolve되면 모든 경로에서 <code>/apply/status</code>로 강제 이동.<br>
+          <strong>Entry</strong>: 신청서 제출 성공 직후 또는 앱 재진입 시 자동 이동.
+          심사 대기 / 보완 요청 상태에서는 어느 경로로 진입해도 이 화면으로 강제 이동.<br>
           <strong>Exit</strong>:
-          ① <strong>승인 → hasPartner</strong>: <code>onboardingState</code> 변경에 의한 router refresh로 자동 <code>/</code>(<code>PartnerHomePage</code>)로 이동 — 이 화면에서는 별도 CTA 없음.<br>
-          ② <strong>보완 요청 → 신청서 수정</strong>: "신청서 수정하기" → <code>onboardingCoordinator.goToApply()</code> → <code>/apply</code>.<br>
-          ③ <strong>로그아웃</strong>: "로그아웃" 탭 → <code>authRepo.signOut()</code> → router redirect <code>/login</code>.
+          ① <strong>심사 통과</strong>: 별도 CTA 없이 자동으로 <a href="/specs/partner_home_page.html">PartnerHomePage</a>로 이동.<br>
+          ② <strong>보완 요청 → 신청서 수정</strong>: "신청서 수정하기" → 신청서 마법사로 이동.<br>
+          ③ <strong>로그아웃</strong>: "로그아웃" 탭 → 로그인 화면으로 복귀.
         </td>
       </tr>
       <tr>
         <th>Background</th>
         <td>
           파트너 신청은 관리자 수동 심사 + 서류 검토 단계가 있어 즉시 결과가 안 나온다 (영업일 기준 3~5일).
-          그 사이에 사용자가 앱을 다시 열어도 신청 마법사가 reopen되지 않게 별도 status 화면을 둠.
-          <code>OnboardingState</code> enum 6 상태 중 이 화면은 2개 상태(pending / needsCorrection)만 커버.
+          그 사이에 사용자가 앱을 다시 열어도 신청 마법사가 다시 열리지 않도록 별도 status 화면을 둔다.
+          이 화면은 심사 대기 / 보완 요청 두 상태에만 노출.
         </td>
       </tr>
       <tr>
@@ -348,35 +348,34 @@ body.dark-mode .viewport {
 
       <!-- Tree outline -->
       <div class="layout-tree"><b>Scaffold</b>
-├─ <b>appBar</b>: <i>AppBar</i>                              ← ①
-│   ├─ title: Text(<code>partnerApplication_status_title</code>)
-│   └─ <i>automaticallyImplyLeading: false</i>
+├─ <b>AppBar</b>                                          ← ①
+│   ├─ title: "입점 신청 현황"
+│   └─ 뒤로가기 없음
 │
-└─ <b>body</b>: <b>MinglitAsyncValueWidget</b>(onboardingState)
-    └─ <b>MinglitAsyncValueWidget</b>(application)
-       └─ <b>SingleChildScrollView</b>(padding all <code>spacing-large</code>)
-          └─ <b>Column</b>(crossAxis: stretch)
-             ├─ SizedBox(<code>spacing-xlarge</code>)
-             ├─ <b>Icon</b>(size 80, partner-primary | warning)   ← ②
-             ├─ SizedBox(<code>spacing-large</code>)
-             ├─ <b>_buildStatusMessage</b>                        ← ③
-             │   ├─ <em>pending</em>: Text(bodyLarge · center) — <code>partnerApplication_status_pending</code>
-             │   └─ <em>needsCorrection</em>: <b>Column</b>(crossAxis: start)
-             │       ├─ Text(bodyLarge · center) — <code>partnerApplication_status_needsCorrection</code>
-             │       └─ <em>(adminComment != null)</em> Container ← admin-comment box
-             │           ├─ padding all <code>spacing-medium</code>
-             │           ├─ bg: <code>MinglitColors.surface</code> (scaffold gray)
-             │           ├─ radius: <code>radius-input</code> (12)
-             │           └─ Column(crossAxis: start)
-             │               ├─ Text(<code>partnerApplication_status_adminComment</code>, labelMedium · textSecondary)
-             │               ├─ SizedBox(<code>spacing-small</code>)
-             │               └─ Text(application.adminComment, bodyMedium)
-             ├─ SizedBox(<code>spacing-xlarge</code>)
-             ├─ <em>(needsCorrection only)</em> <b>FilledButton</b>("신청서 수정하기")  ← ④
-             │   └─ onPressed → <code>onboardingCoordinator.goToApply()</code>
-             ├─ <em>(needsCorrection only)</em> SizedBox(<code>spacing-medium</code>)
-             └─ <b>OutlinedButton</b>("로그아웃")
-                 └─ onPressed → <code>authRepo.signOut()</code></div>
+└─ <b>body</b>: 비동기 분기 (onboarding / application 도착 후 콘텐츠 표시)
+    └─ <b>SingleChildScrollView</b>(padding all <code>spacing-large</code>)
+       └─ <b>Column</b>(crossAxis: stretch)
+          ├─ SizedBox(<code>spacing-xlarge</code>)
+          ├─ <b>Icon</b>(size 80, partner-primary 또는 warning)   ← ②
+          ├─ SizedBox(<code>spacing-large</code>)
+          ├─ <b>_buildStatusMessage</b>                          ← ③
+          │   ├─ <em>심사 대기</em>: 안내 텍스트 (bodyLarge · 가운데 정렬)
+          │   └─ <em>보완 요청</em>: <b>Column</b>(crossAxis: start)
+          │       ├─ 안내 텍스트 (bodyLarge · 가운데 정렬)
+          │       └─ <em>(관리자 코멘트가 있을 때)</em> 코멘트 박스
+          │           ├─ padding all <code>spacing-medium</code>
+          │           ├─ bg: scaffold gray
+          │           ├─ radius: <code>radius-input</code> (12)
+          │           └─ Column(crossAxis: start)
+          │               ├─ Text("관리자 코멘트" · labelMedium · textSecondary)
+          │               ├─ SizedBox(<code>spacing-small</code>)
+          │               └─ Text(코멘트 본문 · bodyMedium)
+          ├─ SizedBox(<code>spacing-xlarge</code>)
+          ├─ <em>(보완 요청에서만)</em> <b>FilledButton</b>("신청서 수정하기")  ← ④
+          │   └─ 탭 시 신청서 마법사로 이동
+          ├─ <em>(보완 요청에서만)</em> SizedBox(<code>spacing-medium</code>)
+          └─ <b>OutlinedButton</b>("로그아웃")
+              └─ 탭 시 로그인 화면으로 복귀</div>
     </div>
   </section>
 
@@ -413,14 +412,13 @@ body.dark-mode .viewport {
 
   <section class="doc">
     <p class="intro">
-      <strong>State 종류 식별 기준</strong>: <code>onboardingStateProvider</code> AsyncValue (loading/error/data) + <code>data</code>일 때 <code>OnboardingState</code> 분기 (<code>pendingReview</code> vs <code>needsCorrection</code>) + <code>application?.adminComment</code> null 여부.
-      router redirect가 다른 OnboardingState (loading 외 + needsApplication/draftInProgress/hasPartner)에서는 이 화면에 도달하지 않는다 — 도달했다면 곧바로 다른 라우트로 우회됨.
+      <strong>State 식별 기준</strong>: 데이터 로딩 상태 + 심사 상태(심사 대기 vs 보완 요청) + 관리자 코멘트 유무에 따라 5가지 변형. 그 외 상태(승인 / 거절 / 신청 전)에서는 이 화면이 자동 우회되어 다른 화면으로 이동.
     </p>
 
     <!-- ───────── State 1 · pendingReview (baseline) ───────── -->
     <table class="ref state-mini is-baseline-tint">
       <thead>
-        <tr><th colspan="3"><strong>Pending review</strong> 🎯 <small>baseline · OnboardingState.pendingReview</small></th></tr>
+        <tr><th colspan="3"><strong>Pending review</strong> 🎯</th></tr>
       </thead>
       <tbody>
         <tr>
@@ -445,33 +443,32 @@ body.dark-mode .viewport {
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>onboardingState == pendingReview</code> · <code>application.status == 'pending'</code> (제출 완료, 관리자 검토 대기)</td>
+          <td>신청서를 제출하고 관리자 검토를 기다리는 상태.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ① <strong>"로그아웃" 탭</strong> → <code>authRepo.signOut()</code> → auth state 변경 → router redirect <code>/login</code><br>
-            ② <strong>스크롤</strong> → 콘텐츠가 viewport 안에 들어가서 일반적으로 scroll 발생 안 함 (overflow 시에만)<br>
-            ③ <strong>시스템 back / 스와이프 back</strong> → <code>automaticallyImplyLeading: false</code> · stack에 보통 이전 항목 없음 (router redirect 진입) → no-op
+            ① <strong>"로그아웃" 탭</strong> → 로그인 화면으로 복귀<br>
+            ② <strong>스크롤</strong> → 콘텐츠가 일반적으로 한 화면에 다 들어와 스크롤 발생 안 함 (넘칠 때만)<br>
+            ③ <strong>시스템 back / 스와이프 back</strong> → 무반응 (위로 갈 화면 없음)
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · 심사 결과가 다른 디바이스/관리자 콘솔에서 갱신되어도 이 페이지가 즉시 알지 않음 — provider invalidate 또는 앱 재진입 시점에 갱신됨 (push notification 별도)<br>
-            · 다크모드 토글 → scaffold gray↔dark surface, hourglass icon partner-primary 라이트→다크 swap<br>
-            · 로그아웃 도중 widget tree dispose race — <code>authRepo.signOut()</code> await로 redirect race condition 회피 (코드 주석에 명시)
+            · 다른 디바이스 / 관리자 콘솔에서 심사 결과가 갱신되어도 이 화면이 곧바로 알지 못함 — 앱 재진입 시점에 갱신됨.<br>
+            · 다크모드 토글 → scaffold gray↔dark surface, hourglass 아이콘은 partner-primary 라이트↔다크 전환.<br>
+            · 로그아웃을 누른 직후 화면 전환 사이의 짧은 race가 발생하지 않도록 안전 장치가 있음.
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
           <td>
-            · <code>AppBar</code>(title=Text(<code>partnerApplication_status_title</code>) · <code>automaticallyImplyLeading: false</code>)<br>
-            · <code>MinglitAsyncValueWidget&lt;OnboardingState&gt;</code> + 중첩 <code>MinglitAsyncValueWidget&lt;PartnerApplication?&gt;</code><br>
+            · <code>AppBar</code>(타이틀 "입점 신청 현황" · 뒤로가기 없음)<br>
             · <code>SingleChildScrollView</code>(padding all <code>spacing-large</code>) + <code>Column</code>(crossAxis: stretch)<br>
-            · <code>Icon</code>(<code>Icons.hourglass_top_rounded</code> · size 80 · color <code>MinglitColors.primary</code> = partner-primary scoped)<br>
-            · <code>Text</code>(bodyLarge · textAlign center) — <code>partnerApplication_status_pending</code><br>
-            · <code>OutlinedButton</code> — Text(<code>home_button_logout</code>)
+            · <code>Icon</code>(<code>Icons.hourglass_top_rounded</code> · size 80 · color partner-primary)<br>
+            · 안내 <code>Text</code>(bodyLarge · 가운데 정렬) — "심사 중입니다."<br>
+            · <code>OutlinedButton</code> — "로그아웃"
           </td>
         </tr>
         <tr>
@@ -486,7 +483,7 @@ body.dark-mode .viewport {
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 pending state는 edit 버튼이 없음 (<code>if (onboardingState == OnboardingState.needsCorrection)</code> 조건). 사용자에게 능동적으로 할 게 없는 wait-only 화면.</td>
+          <td>📝 심사 대기 상태에는 수정 버튼이 없음. 사용자에게 능동적으로 할 게 없는 wait-only 화면.</td>
         </tr>
       </tbody>
     </table>
@@ -494,7 +491,7 @@ body.dark-mode .viewport {
     <!-- ───────── State 2 · needsCorrection · WITH admin comment ───────── -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Needs correction · with admin comment</strong> <small>OnboardingState.needsCorrection · application.adminComment != null</small></th></tr>
+        <tr><th colspan="3"><strong>Needs correction · with admin comment</strong></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -527,30 +524,30 @@ body.dark-mode .viewport {
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>+ <code>onboardingState == needsCorrection</code> · <code>application.status == 'needs_correction'</code> · <code>application.adminComment != null</code></td>
+          <td>관리자가 보완을 요청한 상태이며, 코멘트가 함께 첨부된 경우.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            + ① <strong>"신청서 수정하기" 탭</strong> → <code>onboardingCoordinatorProvider.goToApply()</code> → <code>router.go('/apply')</code> · 신청서가 prefilled로 reopen됨<br>
+            + ① <strong>"신청서 수정하기" 탭</strong> → 신청서 마법사가 기존 내용으로 채워진 채 다시 열림<br>
             ↔ "로그아웃" 동일
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            + adminComment가 매우 길면(여러 줄) admin box가 자라고, <code>SingleChildScrollView</code>가 스크롤을 활성화 — 외부 padding과 radius는 유지<br>
-            + 신청서 수정 → 재제출 시 <code>application.status</code>가 <code>'pending'</code>로 돌아가, 다음 진입에서는 baseline으로 자동 전환
+            + 코멘트가 매우 길면(여러 줄) 코멘트 박스가 자라고 화면이 스크롤됨 — 외부 패딩과 radius는 유지.<br>
+            + 신청서를 수정해 다시 제출하면 심사 대기 상태로 돌아가, 다음 진입에서는 baseline으로 자동 전환.
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
           <td>
-            ↔ icon: <code>Icons.hourglass_top_rounded</code> → <code>Icons.warning_amber_rounded</code><br>
-            ↔ icon color: <code>MinglitColors.primary</code> → <code>MinglitColors.warning</code><br>
-            ↔ message: <code>partnerApplication_status_pending</code> → <code>partnerApplication_status_needsCorrection</code> + admin-comment Container (padding all <code>spacing-medium</code> · bg <code>MinglitColors.surface</code> · radius <code>radius-input</code>)<br>
-            + admin-comment Container 내부: Text(<code>partnerApplication_status_adminComment</code>, labelMedium · textSecondary) + SizedBox(<code>spacing-small</code>) + Text(<code>application.adminComment</code>, bodyMedium)<br>
-            + <code>FilledButton</code> "신청서 수정하기" (<code>partnerApplication_button_editApplication</code>) 추가
+            ↔ 아이콘: 모래시계 → 경고 (warning_amber_rounded)<br>
+            ↔ 아이콘 색: partner-primary → warning<br>
+            ↔ 안내 텍스트: "심사 중입니다." → "보완이 필요합니다." + 관리자 코멘트 박스(padding all <code>spacing-medium</code> · bg scaffold gray · radius <code>radius-input</code>)<br>
+            + 코멘트 박스 내부: "관리자 코멘트" 라벨(labelMedium · textSecondary) + SizedBox(<code>spacing-small</code>) + 코멘트 본문(bodyMedium)<br>
+            + <code>FilledButton</code> "신청서 수정하기" 추가
           </td>
         </tr>
         <tr>
@@ -565,7 +562,7 @@ body.dark-mode .viewport {
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 admin box bg가 scaffold와 같은 색(<code>MinglitColors.surface</code>)인 점이 의도적 — radius/padding으로 영역만 분리하여 카드 chrome 없는 호스트 페이지의 톤과 어울림. 이 모킹에서는 명확성 위해 살짝 어두운 테두리를 그리지 않음 (Flutter 코드와 일치).</td>
+          <td>📝 코멘트 박스 배경이 scaffold와 같은 색인 점이 의도적 — radius / padding으로 영역만 분리하여, 카드 chrome 없는 호스트 페이지의 톤과 어울림. 별도 테두리는 그리지 않음.</td>
         </tr>
       </tbody>
     </table>
@@ -573,7 +570,7 @@ body.dark-mode .viewport {
     <!-- ───────── State 3 · needsCorrection · WITHOUT admin comment ───────── -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Needs correction · without admin comment</strong> <small>OnboardingState.needsCorrection · application.adminComment == null</small></th></tr>
+        <tr><th colspan="3"><strong>Needs correction · without admin comment</strong></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -601,26 +598,26 @@ body.dark-mode .viewport {
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>+ <code>application.adminComment == null</code> (관리자가 코멘트 없이 보완 요청만 남김 — 가능하지만 드문 케이스)</td>
+          <td>관리자가 코멘트 없이 보완 요청만 남긴 드문 케이스.</td>
         </tr>
-        <tr><td class="state-mini__aspect">사용자 액션</td><td>동일 (수정/로그아웃)</td></tr>
+        <tr><td class="state-mini__aspect">사용자 액션</td><td>동일 (수정 / 로그아웃)</td></tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>− admin box 부재 — 사용자는 어떤 부분을 수정할지 알 길이 없어 신청서로 들어가 모든 필드를 다시 살펴야 함 · UX 위험. 백엔드/관리자 측에서 always-set comment를 강제하면 이 state는 사라짐.</td>
+          <td>− 코멘트 박스 부재 — 사용자는 어떤 부분을 수정할지 알 길이 없어 신청서로 들어가 모든 필드를 다시 살펴야 함. 운영 정책상 항상 코멘트를 남기도록 강제하면 이 상태는 사라짐.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
-          <td>− admin-comment Container 제거 — Column(crossAxis: start)은 그대로 유지되지만 자식이 message Text 하나뿐</td>
+          <td>− 관리자 코멘트 박스 제거 — 안내 텍스트만 남음</td>
         </tr>
-        <tr><td class="state-mini__aspect">토큰</td><td>− admin box 관련 토큰 (radius-input · spacing-medium padding · color-surface) 미사용</td></tr>
-        <tr><td class="state-mini__aspect">노트</td><td>📝 v1.4 spec 작성 시 코드 분기는 <code>application?.adminComment != null</code>로 단일 — adminComment가 빈 문자열일 때는 box가 보이지만 본문이 빈 줄로 렌더링됨. 빈 문자열 처리 강화 여부는 <strong>uncertain</strong> (백엔드 정책 미확인).</td></tr>
+        <tr><td class="state-mini__aspect">토큰</td><td>− 코멘트 박스 관련 토큰 (radius-input · spacing-medium padding · color-surface) 미사용</td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 코멘트가 빈 문자열로 들어오면 박스는 보이지만 본문이 빈 줄로 렌더링됨. 빈 문자열을 별도로 다루는 정책은 미정.</td></tr>
       </tbody>
     </table>
 
     <!-- ───────── State 4 · Loading ───────── -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Loading</strong> <small>onboardingAsync OR applicationAsync 둘 다 가능</small></th></tr>
+        <tr><th colspan="3"><strong>Loading</strong></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -637,26 +634,26 @@ body.dark-mode .viewport {
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>+ <code>onboardingAsync.isLoading</code> 또는 (data 단계 통과 후) <code>applicationAsync.isLoading</code> · <code>MinglitAsyncValueWidget</code> 기본 loading view 표시</td>
+          <td>심사 상태 또는 신청서 데이터를 불러오는 중.</td>
         </tr>
-        <tr><td class="state-mini__aspect">사용자 액션</td><td>− 모든 인터랙션 막힘 (로그아웃 버튼 미렌더 · 본문 미렌더)</td></tr>
+        <tr><td class="state-mini__aspect">사용자 액션</td><td>− 모든 인터랙션 막힘 (로그아웃 버튼 / 본문 미노출)</td></tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· 진입 직후 짧게 깜빡일 가능성 — 빠르게 resolve되면 사용자가 인지 못 할 수도 · 네트워크 느림 시 무한 spinner (timeout 별도 처리 없음)</td>
+          <td>· 진입 직후 짧게 깜빡일 가능성 — 빠르게 도착하면 사용자가 인지 못 할 수도. 네트워크 느림 시 무한 스피너 (타임아웃 별도 처리 없음).</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
-          <td>↔ body: <code>MinglitCircularProgressIndicator</code> (중앙 정렬 · spinner 36px · partner-primary border-top)</td>
+          <td>↔ body: 화면 중앙 단일 스피너 (36px · partner-primary)</td>
         </tr>
-        <tr><td class="state-mini__aspect">토큰</td><td>↔ <code>color-divider</code> (spinner base) + <code>color-partner-primary</code> (spinner active arc)</td></tr>
-        <tr><td class="state-mini__aspect">노트</td><td>📝 onboarding과 application 두 future가 nested로 watch되므로, 각각의 loading이 independently 발생 가능. 사용자 perspective에선 동일 spinner.</td></tr>
+        <tr><td class="state-mini__aspect">토큰</td><td>↔ <code>color-divider</code> (스피너 base) + <code>color-partner-primary</code> (스피너 active arc)</td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 심사 상태 / 신청서 두 데이터가 순차로 도착하므로 각각의 로딩이 독립적으로 일어날 수 있음. 사용자 입장에서는 동일한 스피너로 보임.</td></tr>
       </tbody>
     </table>
 
     <!-- ───────── State 5 · Error ───────── -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Error</strong> <small>onboardingAsync OR applicationAsync error</small></th></tr>
+        <tr><th colspan="3"><strong>Error</strong></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -677,22 +674,22 @@ body.dark-mode .viewport {
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>+ <code>onboardingAsync.hasError</code> 또는 <code>applicationAsync.hasError</code> — 네트워크 오류 / Supabase 응답 실패 / repo 예외</td>
+          <td>심사 상태 또는 신청서 데이터를 받지 못한 상태. 네트워크 / 서버 / 권한 오류.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>− 명시적 retry CTA 없음 — provider invalidate 또는 앱 재진입 시 재시도. 화면 자체에 액션 버튼 없음.</td>
+          <td>− 명시적 재시도 버튼 없음 — 앱 재진입 시 재시도. 화면 자체에 액션 버튼 없음.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· <code>MinglitAsyncValueWidget</code> 기본 <code>showErrorDetails: false</code> — 에러 본문은 표시하지 않음 (사용자 친화)<br>· 로그아웃 진입 경로 사라짐 — 사용자가 갇힐 수 있음. <strong>uncertain</strong>: pull-to-refresh 미구현</td>
+          <td>· 구체적인 오류 사유는 화면에 표시되지 않음 — 일반 안내 문구만 노출.<br>· 로그아웃 진입 경로 사라짐 — 사용자가 갇힐 수 있음. 풀-다운 새로고침 없음.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
-          <td>↔ body: <code>_DefaultErrorView</code> (Center · Column · <code>Icon(Icons.error_outline)</code> size <code>MinglitIconSize.xlarge</code> · color <code>theme.colorScheme.error</code> · spacing-medium gap · Text("오류가 발생했습니다." titleMedium bold))</td>
+          <td>↔ body: 중앙 정렬 에러 아이콘 + "오류가 발생했습니다." (titleMedium bold)</td>
         </tr>
-        <tr><td class="state-mini__aspect">토큰</td><td>↔ <code>color-error</code> (icon) · titleMedium bold (제목)</td></tr>
-        <tr><td class="state-mini__aspect">노트</td><td>📝 default error view는 <code>MinglitAsyncValueWidget</code>에서 옴. 이 page는 별도 <code>error</code> override 없음 — 즉 모든 error는 동일 message로 보임.</td></tr>
+        <tr><td class="state-mini__aspect">토큰</td><td>↔ <code>color-error</code> (아이콘) · titleMedium bold (제목)</td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 모든 오류는 동일한 안내 문구로 보임.</td></tr>
       </tbody>
     </table>
 
@@ -720,24 +717,24 @@ body.dark-mode .viewport {
       </thead>
       <tbody>
         <tr>
-          <td>"신청서 수정하기" 탭 (needsCorrection only)</td>
-          <td><code>onboardingCoordinatorProvider.goToApply()</code> → <code>router.go('/apply')</code>. 신청서 마법사가 기존 draft/제출 데이터로 prefilled되어 reopen. 재제출 후 status가 <code>pending</code>으로 돌아오면 다음 진입에서는 baseline으로 자동 전환.</td>
+          <td>"신청서 수정하기" 탭 (보완 요청에서만)</td>
+          <td>신청서 마법사가 기존에 입력했던 내용으로 채워진 채 다시 열림. 재제출하면 심사 대기 상태로 돌아가 다음 진입 시 baseline으로 자동 전환.</td>
         </tr>
         <tr>
           <td>"로그아웃" 탭</td>
-          <td><code>authRepo.signOut()</code> await · auth provider invalidate · router refreshListenable 트리거 → <code>!isLoggedIn</code> 분기로 <code>/login</code>으로 redirect. 코드에 <em>"GoRouter redirect가 signOut 중 widget tree를 변경하는 race condition 방지"</em> 주석.</td>
+          <td>로그인 화면으로 복귀.</td>
         </tr>
         <tr>
-          <td>관리자 콘솔에서 application 상태 변경</td>
-          <td>이 화면이 active일 동안에는 자동 갱신 안 됨 (별도 push/realtime 미구현). 사용자가 앱을 재진입(provider rebuild)하면 <code>onboardingStateProvider</code>가 새 status로 resolve, 필요 시 router redirect로 다른 화면으로 이동:<br>· <code>approved</code> → <code>hasPartner</code> → <code>/</code> (PartnerHomePage)<br>· <code>rejected</code> → <code>needsApplication</code> → <code>/welcome</code><br>· <code>pending</code>↔<code>needs_correction</code> → 이 화면 안에서 state만 swap.</td>
+          <td>관리자가 외부에서 심사 상태를 변경</td>
+          <td>이 화면이 떠 있는 동안에는 자동 갱신되지 않음. 앱을 재진입하면 새 상태에 맞춰 자동으로 다른 화면으로 우회:<br>· 승인 → <a href="/specs/partner_home_page.html">PartnerHomePage</a><br>· 거절 → <a href="/specs/partner_welcome_page.html">PartnerWelcomePage</a><br>· 심사 대기 ↔ 보완 요청 → 이 화면 안에서 표시 변경.</td>
         </tr>
         <tr>
           <td>시스템 back / 스와이프 back</td>
-          <td><code>automaticallyImplyLeading: false</code>. router redirect로 도달했으므로 stack에 보통 이전 항목 없음 → Android에서 종료, iOS에서 무반응. 위로 갈 곳이 없음.</td>
+          <td>위로 갈 곳이 없음 → Android에서 종료, iOS에서 무반응.</td>
         </tr>
         <tr>
           <td>다크모드 토글</td>
-          <td>scaffold gray ↔ dark surface · partner-primary 라이트(#6c3ce1) ↔ 다크(#9b7bec) swap · warning 토큰은 자동 매핑.</td>
+          <td>scaffold gray ↔ dark surface · partner-primary 라이트(#6c3ce1) ↔ 다크(#9b7bec) 전환 · warning 색은 자동 매핑.</td>
         </tr>
       </tbody>
     </table>
@@ -758,34 +755,34 @@ body.dark-mode .viewport {
       </thead>
       <tbody>
         <tr>
-          <td>화면 진입 (router redirect)</td>
+          <td>화면 진입 (자동 이동)</td>
           <td><code>MinglitAnimation.fast</code> (200ms)</td>
-          <td>GoRouter 기본 라우트 전환. router redirect라서 사용자 입력으로 시작된 push와 시각적으로 동일.</td>
+          <td>플랫폼 기본 라우트 전환. 사용자 입력으로 시작된 push와 시각적으로 동일.</td>
         </tr>
         <tr>
-          <td>AsyncValue loading → data 전환</td>
-          <td>없음 (즉시 swap)</td>
-          <td><code>MinglitAsyncValueWidget</code>의 <code>value.when</code>은 단순 widget swap — fade/cross-fade 미적용. <em>uncertain</em>: 사용자 인지에는 짧은 깜빡임으로 보일 수 있음.</td>
+          <td>Loading → data 전환</td>
+          <td>cut</td>
+          <td>fade 없이 즉시 교체. 짧은 깜빡임으로 보일 수 있음.</td>
         </tr>
         <tr>
-          <td>"신청서 수정하기" → /apply 전환</td>
+          <td>"신청서 수정하기" → 신청서 화면 전환</td>
           <td><code>MinglitAnimation.fast</code> (200ms)</td>
-          <td>GoRouter <code>router.go</code> — replace top, default slide/fade.</td>
+          <td>플랫폼 기본 슬라이드/페이드.</td>
         </tr>
         <tr>
-          <td>로그아웃 → /login redirect</td>
+          <td>로그아웃 → 로그인 화면 전환</td>
           <td><code>MinglitAnimation.fast</code> (200ms)</td>
-          <td>auth invalidate → router refresh → <code>/login</code>으로 redirect. 사용자에겐 일반 라우트 전환과 동일.</td>
+          <td>일반 라우트 전환과 동일.</td>
         </tr>
         <tr>
-          <td>승인 결과 도달 → home redirect</td>
+          <td>심사 통과 → 홈 전환</td>
           <td><code>MinglitAnimation.fast</code> (200ms)</td>
-          <td>provider 갱신으로 OnboardingState=hasPartner → router redirect <code>/</code>. 이 화면에서는 별도 transient celebration 없음.</td>
+          <td>이 화면에서는 별도 축하 화면 없이 자동으로 홈으로 이동.</td>
         </tr>
         <tr>
-          <td>spinner 회전</td>
+          <td>스피너 회전</td>
           <td>0.7s linear loop (unscoped · attention)</td>
-          <td>Material default <code>CircularProgressIndicator</code> spin. token 없음.</td>
+          <td>플랫폼 기본 동작 — design token 없음.</td>
         </tr>
       </tbody>
     </table>
@@ -794,13 +791,13 @@ body.dark-mode .viewport {
   <section class="doc">
     <h2>Global edge cases</h2>
     <ul class="notes">
-      <li><strong>비로그인 상태에서 <code>/apply/status</code> 직접 진입</strong> — router redirect의 <code>!isLoggedIn</code> 분기로 즉시 <code>/login</code>으로 redirect, 화면 보이지 않음.</li>
-      <li><strong>이미 hasPartner인 사용자가 <code>/apply/status</code> 직접 진입</strong> — router redirect로 <code>/</code> (PartnerHomePage)로 우회. 이 화면 도달 안 함.</li>
-      <li><strong>application이 null인데 onboardingState가 pendingReview/needsCorrection</strong> — <code>application?.adminComment</code> null-safe 접근(코드 주석 #180)으로 crash 회피. needsCorrection branch는 admin box 미렌더 (state 3), pending branch는 텍스트만 표시 (state 1).</li>
-      <li><strong>onboardingState가 needsApplication / draftInProgress</strong> — 이 화면에 도달했더라도 router redirect가 즉시 <code>/welcome</code> 또는 <code>/apply</code>로 우회. 사용자에겐 짧은 깜빡임만 가능.</li>
-      <li><strong>application.status가 'rejected' 또는 unknown</strong> — <code>onboardingStateProvider</code> switch 마지막 분기에서 <code>OnboardingState.needsApplication</code>으로 매핑됨. 이 화면 도달 안 함 — <code>/welcome</code>으로 redirect.</li>
-      <li><strong>관리자 코멘트가 빈 문자열</strong> — <code>adminComment != null</code>는 true이므로 box는 그려지지만 본문 Text가 빈 줄. <em>uncertain</em>: 백엔드에서 빈 문자열 vs null 구분 정책.</li>
-      <li><strong>signOut 실패</strong> — <code>await authRepo.signOut()</code> 실패해도 화면에 별도 에러 표시 없음. auth state 무변화 → 사용자가 다시 로그아웃 시도 가능. <em>uncertain</em>: 실패 케이스에서 SnackBar 등 피드백 미구현.</li>
+      <li><strong>비로그인 상태로 직접 진입</strong> — 곧바로 로그인 화면으로 우회. 이 화면이 보이지 않음.</li>
+      <li><strong>이미 승인된 사용자가 이 URL로 진입</strong> — 곧바로 PartnerHomePage로 우회.</li>
+      <li><strong>심사 상태는 있으나 신청서 데이터가 없음</strong> — 안전하게 처리되어 화면이 깨지지 않음. 보완 요청 화면이라면 코멘트 박스가 노출되지 않고, 심사 대기 화면이라면 안내 텍스트만 표시.</li>
+      <li><strong>신청 전 / 작성 중 상태로 도달</strong> — 짧은 깜빡임 후 환영 화면 또는 신청서로 자동 우회.</li>
+      <li><strong>거절된 케이스</strong> — 이 화면이 아닌 환영 화면으로 우회.</li>
+      <li><strong>관리자 코멘트가 빈 문자열</strong> — 박스는 그려지지만 본문이 빈 줄로 표시될 수 있음.</li>
+      <li><strong>로그아웃 실패</strong> — 화면에 별도 오류 표시 없이 그대로 머무름. 사용자가 다시 로그아웃을 시도할 수 있음.</li>
     </ul>
   </section>
 </div>

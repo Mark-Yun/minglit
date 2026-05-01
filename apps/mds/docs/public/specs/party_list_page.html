@@ -488,14 +488,13 @@ body.dark-mode .viewport {
 
   <section class="doc">
     <p class="intro">
-      <strong>State 식별 기준</strong>: <code>partyListProvider</code>의 <code>AsyncValue</code> 상태(<code>data</code> / <code>loading</code> / <code>error</code>) ×
-      data일 때 <code>parties.isEmpty</code> 여부. 색상은 <em>partner brand <code>#6c3ce1</code></em>이며 user app(<code>#9900ff</code>)과 다르다.
+      <strong>State 식별 기준</strong>: 데이터가 도착했는지 / 가져오는 중인지 / 실패했는지, 그리고 도착했을 때 파티가 1개 이상인지 0개인지에 따라 4가지로 분기.
     </p>
 
     <!-- ============== State 1: Default (baseline) ============== -->
     <table class="ref state-mini is-baseline-tint">
       <thead>
-        <tr><th colspan="3"><strong>Default · 파티 ≥ 1</strong> 🎯 <small>baseline · partyListProvider.data == [Party, …]</small></th></tr>
+        <tr><th colspan="3"><strong>Default · 파티 ≥ 1</strong> 🎯 <small>baseline · 등록된 파티가 한 개 이상인 일반 상태</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -584,29 +583,29 @@ body.dark-mode .viewport {
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>partyListProvider</code> resolves to non-empty <code>List&lt;Party&gt;</code>. <code>partyRepo.getPartiesByPartnerId(myPartner.id)</code> returns ≥ 1 party.</td>
+          <td>등록된 파티가 한 개 이상 있는 일반 상태.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ① <strong>카드 탭(InkWell)</strong> → <code>coordinator.goToDetail(party.id)</code> → <code>PartyDetailRoute</code> push (sharedAxisScaled)<br>
-            ② <strong>AppBar back</strong> → MorePage 복귀<br>
-            ③ <strong>AppBar QR</strong> → <code>const CheckinRoute().push&lt;void&gt;(context)</code> (Fix #540 — qr→checkin cross-feature import 제거)<br>
-            ④ <strong>AppBar +</strong> → <code>coordinator.goToCreate</code> → <code>PartyCreateRoute</code><br>
-            ⑤ <strong>like 아이콘 탭(MinglitSocialButton)</strong> → like toggle (낙관적 업데이트 · party는 social target) — 페이지 전환 없음<br>
-            ⑥ 스크롤 — pull-to-refresh 없음(현 구현). reload는 화면 재진입으로.
+            ① <strong>카드 탭</strong> — 해당 파티의 운영 화면으로 이동.<br>
+            ② <strong>뒤로가기</strong> — 이전 화면(보통 더보기 탭)으로 복귀.<br>
+            ③ <strong>AppBar QR 아이콘 탭</strong> — 체크인 화면으로 이동.<br>
+            ④ <strong>AppBar + 아이콘 탭</strong> — 새 파티 만들기 화면으로 이동.<br>
+            ⑤ <strong>카드의 하트 아이콘 탭</strong> — 좋아요 토글이 즉시 반영, 페이지 이동 없음.<br>
+            ⑥ 세로 스크롤 — 당겨서 새로고침은 지원하지 않음. 새로고침은 화면을 다시 들어와야 됨.
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · <code>party.imageUrl == null</code> → <code>_buildPlaceholder</code> (onSurface 검정 + party_mode icon 96px subtle alpha)<br>
-            · <code>Image.network errorBuilder</code> 발동 → 동일 placeholder fallback<br>
-            · <code>party.location == null</code> → "지정된 장소 없음" + <code>Icons.location_off</code> chip<br>
-            · <code>conditionSummaries</code>에 '조건 없음' 항목 → 해당 chip 미렌더 (의도)<br>
-            · <code>requiredVerificationIds.isEmpty</code> → "인증 불필요" + <code>verified_user_outlined</code> chip<br>
-            · party.title 길이 자유 — header에 maxLines 제거되어 멀티라인 허용 (스크롤 안전)<br>
-            · <code>party.status</code>가 'active' / 'closed' / 'draft' 외 → label = 원시 status 문자열, color = primary
+            · 파티 이미지가 등록되지 않으면 어두운 배경에 파티 아이콘이 중앙에 표시되는 기본 이미지로 대체.<br>
+            · 이미지 로드에 실패해도 동일한 기본 이미지로 자연스럽게 대체.<br>
+            · 장소가 지정되지 않은 파티는 "지정된 장소 없음" 칩을 장소 슬롯에 노출.<br>
+            · 별도 참여 조건이 없으면 조건 칩은 표시되지 않음.<br>
+            · 인증 요구가 없는 파티는 "인증 불필요" 칩으로 표시.<br>
+            · 제목이 길면 줄바꿈되어 두 줄 이상으로 표시되며, 잘리지 않음.<br>
+            · 알 수 없는 상태값이 들어오면 원문 그대로 노출되고 기본 색상(파트너 보라)으로 표시.
           </td>
         </tr>
         <tr>
@@ -633,7 +632,7 @@ body.dark-mode .viewport {
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 카드는 <code>RoundedRectangleBorder()</code>(radius 0)로 의도적으로 직각 — edge-to-edge 정보 밀도 최우선. 변경 시 list separator(1px outlineVariant)와의 시각 균형 재검토 필요.</td>
+          <td>📝 카드는 의도적으로 직각으로 처리 — edge-to-edge 정보 밀도를 최우선으로 둔 디자인. 변경 시 카드 사이 얇은 구분선과의 시각 균형 재검토 필요.</td>
         </tr>
       </tbody>
     </table>
@@ -641,7 +640,7 @@ body.dark-mode .viewport {
     <!-- ============== State 2: Empty ============== -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Empty · 등록된 파티 0</strong> <small>onboarding 직후 또는 모든 파티 삭제 후</small></th></tr>
+        <tr><th colspan="3"><strong>Empty · 등록된 파티 0</strong> <small>온보딩 직후나 모든 파티가 정리된 직후의 빈 상태</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -668,17 +667,17 @@ body.dark-mode .viewport {
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>+ <code>parties.isEmpty == true</code> (resolved · empty list). 신규 가입 직후 / 모든 파티 closed&amp;hidden 상태 / 첫 파티 생성 시도 전.</td>
+          <td>등록된 파티가 한 개도 없는 상태. 신규 가입 직후, 또는 운영하던 파티를 모두 정리한 직후 노출.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>↔ <strong>카드 탭</strong> → <em>없음</em> (리스트 자체가 없음). 사용자는 <strong>AppBar +</strong>로 파티 생성 진입이 유일한 forward path. − like / detail tap 동작 없음. 동일: back / QR.</td>
+          <td>리스트 자체가 없으므로 카드 탭 / 좋아요 동작은 없음. AppBar 우상단 + 아이콘이 새 파티로 진입할 수 있는 유일한 길이며, 뒤로가기 / QR 아이콘은 동일하게 동작.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · <code>partnerRepo.getMyManagedPartners()</code>가 빈 list면 controller가 즉시 <code>[]</code> return → 동일 empty UI. 즉, "내 partner 0" 케이스도 이 state로 falls through (별도 분기 없음 — 권한/onboarding 가드는 라우팅 상위 책임)<br>
-            · 빈 메시지는 hard-coded 한국어 (현재 ARB 키화 안 됨 — 향후 정리 후보)
+            · 파트너 자격이 아직 없는 사용자도 동일한 빈 화면으로 도달 — 자격/온보딩 안내는 이 화면이 아니라 진입 직전 단계에서 처리됨.<br>
+            · 빈 화면 안에는 별도 CTA 버튼이 없어서, 사용자는 우상단 + 버튼이 다음 단계의 진입점임을 스스로 인지해야 함.
           </td>
         </tr>
         <tr>
@@ -697,7 +696,7 @@ body.dark-mode .viewport {
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 빈 상태에 명시적 CTA 버튼이 없어 "+" 버튼이 forward path임을 사용자가 발견해야 함. 향후 본문 안에 OutlinedButton "첫 파티 만들기" 추가 후보 — 사용자가 명시적으로 요청 시만 변경 (현 spec은 source 1:1 반영).</td>
+          <td>📝 빈 화면에 명시적 CTA가 없어, "+" 버튼이 다음 진입점임을 사용자가 직접 발견해야 한다는 약점. 향후 본문 영역에 "첫 파티 만들기" 버튼 추가 검토.</td>
         </tr>
       </tbody>
     </table>
@@ -705,7 +704,7 @@ body.dark-mode .viewport {
     <!-- ============== State 3: Loading ============== -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Loading · 파티 목록 fetch 중</strong> <small>AsyncValue.loading</small></th></tr>
+        <tr><th colspan="3"><strong>Loading · 파티 목록 가져오는 중</strong> <small>화면 진입 직후 또는 새로고침 직후</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -725,17 +724,17 @@ body.dark-mode .viewport {
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>+ <code>partyListProvider</code>가 <code>AsyncValue.loading</code>. 첫 진입 또는 invalidate 후 refetch 진행 중.</td>
+          <td>화면에 진입하거나 새로고침 직후, 파티 목록이 도착하기 전의 대기 상태.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>↔ 인터랙션 비차단 (AppBar 살아있음 — back / QR / + 모두 가능). 단, 데이터 의존 액션은 없음.</td>
+          <td>로딩 중에도 AppBar는 그대로 살아있어 뒤로가기 / QR / + 진입은 가능. 단, 카드 탭처럼 목록이 있어야 가능한 동작은 노출되지 않음.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · 네트워크 지연 시 spinner 무한 회전 (timeout 미설정) — 사용자가 back으로 이탈 가능<br>
-            · loading 중 다른 탭으로 이동 후 복귀 시 cached 결과가 있으면 즉시 data state로 전환
+            · 네트워크가 매우 느릴 때는 스피너가 길게 노출됨. 사용자는 뒤로가기로 이탈할 수 있음.<br>
+            · 로딩 중 다른 화면으로 이동했다가 돌아오면 이전에 받아둔 결과가 있으면 즉시 일반 상태로 전환.
           </td>
         </tr>
         <tr>
@@ -748,7 +747,7 @@ body.dark-mode .viewport {
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 skeleton 미사용 — 단순 spinner. 카드 수가 많지 않은 운영 데이터(보통 1~5)라 skeleton 가치 낮다고 판단된 듯.</td>
+          <td>📝 스켈레톤 없이 단순 스피너로 처리. 보통 운영 데이터가 적어 (1~5개) 스켈레톤의 가치가 낮다고 판단됨.</td>
         </tr>
       </tbody>
     </table>
@@ -756,7 +755,7 @@ body.dark-mode .viewport {
     <!-- ============== State 4: Error ============== -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Error · fetch 실패</strong> <small>AsyncValue.error</small></th></tr>
+        <tr><th colspan="3"><strong>Error · 목록 불러오기 실패</strong> <small>네트워크 또는 서버 오류로 결과를 받지 못한 경우</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -781,17 +780,17 @@ body.dark-mode .viewport {
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>+ <code>partyListProvider</code>가 <code>AsyncValue.error</code>. <code>partnerRepo</code> 또는 <code>partyRepo</code>가 throw (네트워크 / 권한 / supabase RLS reject 등).</td>
+          <td>네트워크 또는 서버 문제로 파티 목록을 받아오지 못한 상태.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>− retry 버튼 <em>없음</em> (현재 <code>showErrorDetails:false</code> 기본). 동일: back / QR / +. 재시도는 화면 재진입(이탈 후 복귀) 또는 provider invalidate 필요.</td>
+          <td>화면 안에는 별도 재시도 버튼이 없음. AppBar의 뒤로가기 / QR / + 는 동일하게 동작하며, 재시도는 화면을 다시 들어와야 일어남.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · <code>showErrorDetails: true</code>가 아니라서 raw error 메시지 미노출 — 사용자에게는 generic "오류가 발생했습니다."만 표시<br>
-            · 권한 부재(파트너 미승인 등)도 동일 화면으로 collapse — onboarding 가드는 라우팅에서 처리해야 정상
+            · 구체적인 오류 사유는 노출되지 않고, "오류가 발생했습니다."라는 일반 안내만 표시.<br>
+            · 파트너 자격이 없는 경우에도 동일한 오류 화면으로 도달할 수 있음 — 자격 안내는 이 화면 진입 직전에서 처리되어야 정상.
           </td>
         </tr>
         <tr>
@@ -804,7 +803,7 @@ body.dark-mode .viewport {
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 retry CTA 부재가 UX 약점. <code>partyList_error_load</code> ARB 키는 정의되어 있으나 현 화면에서 사용 안 됨 (<code>MinglitAsyncValueWidget</code> default 경로). 향후 onError 커스텀 슬롯에서 retry + ARB 메시지 사용 후보.</td>
+          <td>📝 화면 안 재시도 버튼 부재가 UX 약점. 향후 명시적 재시도 버튼 추가 검토.</td>
         </tr>
       </tbody>
     </table>
@@ -824,14 +823,40 @@ body.dark-mode .viewport {
 
   <section class="doc">
     <h2>Cross-cutting interactions</h2>
-    <ul class="notes">
-      <li><strong>Forward navigation</strong> — 카드 탭 → <code>PartyDetailRoute(partyId)</code> push (Coordinator가 root <code>GoRouter</code> 통해 push — Fix #1680로 shell-branch boundary 안전). 신규 생성 → <code>PartyCreateRoute</code>.</li>
-      <li><strong>QR action (Fix #540)</strong> — AppBar QR 버튼이 직접 <code>CheckinRoute</code>으로 이동. 기존엔 qr→checkin cross-feature import가 있었으나 route-based로 정리됨. shell의 CheckinBranch 탭과 동일 destination(스택은 분리).</li>
-      <li><strong>Like (MinglitSocialButton)</strong> — <code>SocialTargetType.party</code> · <code>SocialInteractionType.like</code>. 페이지 전환 없이 inline toggle. 데이터는 partyListProvider가 watch하지 않으므로 like 상태가 다음 refetch까지 stale일 수 있음 (button 자체가 자체 provider 보유).</li>
-      <li><strong>Status badge 색상</strong> — <code>theme.colorScheme.tertiary/outline/secondary</code> 사용. partner theme에서 secondary/tertiary는 user theme과 공유(<code>MinglitColors.secondary/tertiary</code>) — primary만 indigo로 분리.</li>
-      <li><strong>이미지 fallback chain</strong> — <code>imageUrl != null</code> ? <code>Image.network</code>(errorBuilder → placeholder) : 즉시 placeholder. 네트워크 에러 시 카드 자체는 정상 표시되며, 본문만 검정 + party_mode 아이콘.</li>
-      <li><strong>List padding</strong> — only(bottom: spacing-large)로 마지막 카드와 화면 끝 사이 24px 여백 확보 (FAB가 없으므로 system gesture overlap 방지 목적은 약함, 시각적 breathing room).</li>
-    </ul>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 240px;">사용자 액션</th>
+          <th>화면에 보이는 결과</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>카드 탭</td>
+          <td>해당 파티의 운영 화면(이벤트 / 파티 정보 / 입장 그룹·티켓 3탭)으로 이동.</td>
+        </tr>
+        <tr>
+          <td>AppBar 우상단 + 아이콘 탭</td>
+          <td>새 파티 만들기 위저드로 이동.</td>
+        </tr>
+        <tr>
+          <td>AppBar QR 아이콘 탭</td>
+          <td>체크인 화면으로 이동. 같은 위치는 하단 탭의 체크인과 동일 도착지지만 별도의 스택으로 열림.</td>
+        </tr>
+        <tr>
+          <td>카드 우상단 하트 아이콘 탭</td>
+          <td>좋아요가 즉시 토글되어 색상이 바뀜. 페이지 이동 없음. 다음 새로고침 전까지 좋아요 상태가 다른 화면과 잠시 어긋날 수 있음.</td>
+        </tr>
+        <tr>
+          <td>이미지 영역</td>
+          <td>등록된 이미지가 있으면 그 이미지가, 없거나 불러오지 못하면 동일한 어두운 배경 + 파티 아이콘의 기본 이미지가 표시됨. 카드 자체 레이아웃은 동일.</td>
+        </tr>
+        <tr>
+          <td>리스트 끝까지 스크롤</td>
+          <td>마지막 카드 아래에 약간의 여백이 보여 시각적으로 끝남이 명확. 추가 로드 없음.</td>
+        </tr>
+      </tbody>
+    </table>
   </section>
 
   <section class="doc">
@@ -847,34 +872,34 @@ body.dark-mode .viewport {
       </thead>
       <tbody>
         <tr>
-          <td>카드 탭 → PartyDetail</td>
+          <td>카드 탭 → 파티 상세</td>
           <td><code>MinglitAnimation.medium</code> (350ms)</td>
-          <td><code>MinglitPageTransitions.sharedAxisScaled</code> (PartyDetailRoute의 buildPage). incoming 약간 scale-up + fade.</td>
+          <td>들어오는 화면이 살짝 확대되며 부드럽게 들어오는 표준 전환.</td>
         </tr>
         <tr>
-          <td>+ 탭 → PartyCreate</td>
+          <td>+ 탭 → 새 파티 만들기</td>
           <td><code>MinglitAnimation.fast</code> (200ms)</td>
-          <td>기본 push (PartyCreateRoute는 <code>buildPage</code> override 없음 → MaterialPageRoute 기본 fade-through).</td>
+          <td>좌→우 슬라이드 기본 푸시.</td>
         </tr>
         <tr>
-          <td>InkWell ripple</td>
+          <td>카드 탭 잉크 효과</td>
           <td><code>MinglitAnimation.micro</code> (100ms)</td>
-          <td>카드 전체에 InkWell — Material 기본 ripple. radius 0이라 직각 영역 ripple.</td>
+          <td>카드 전체에 잉크 리플. 카드가 직각이라 리플도 직각 경계 안에서 퍼짐.</td>
         </tr>
         <tr>
-          <td>Like toggle</td>
+          <td>좋아요 토글</td>
           <td><code>MinglitAnimation.fast</code> (200ms)</td>
-          <td>MinglitSocialButton 내부 AnimatedSwitcher (heart_outline ↔ favorite). 색 swap white → error(red).</td>
+          <td>하트 아이콘이 외곽선 ↔ 채움으로 전환되며 색이 흰색에서 빨강으로 자연스럽게 바뀜.</td>
         </tr>
         <tr>
-          <td>Loading → Data</td>
+          <td>로딩 → 결과 노출</td>
           <td>cut (no animation)</td>
-          <td>MinglitAsyncValueWidget이 즉각 child swap. fade 없음.</td>
+          <td>별도 전환 애니메이션 없이 즉시 교체.</td>
         </tr>
         <tr>
-          <td>QR 액션 → Checkin</td>
+          <td>QR 액션 → 체크인</td>
           <td><code>MinglitAnimation.fast</code> (200ms)</td>
-          <td>CheckinRoute는 buildPage override 없음 → 기본 push.</td>
+          <td>좌→우 슬라이드 기본 푸시.</td>
         </tr>
       </tbody>
     </table>
@@ -883,12 +908,12 @@ body.dark-mode .viewport {
   <section class="doc">
     <h2>Global edge cases</h2>
     <ul class="notes">
-      <li><strong>다중 partner 보유</strong> — controller는 <code>myPartners.first</code>만 사용. 한 사용자가 여러 partner를 관리하는 경우 UI에서 partner 선택 수단이 없음 (현재 0/1 partner 가정). multi-partner 지원 시 AppBar에 dropdown 필요.</li>
-      <li><strong>Provider 영속성</strong> — partyListProvider는 <code>@riverpod</code> family가 아니라서 화면 이탈 시 disposal 정책에 따라 재진입 시 refetch될 수 있음 (autoDispose 설정 의존). create/edit 후 복귀하면 새 데이터 반영 필요.</li>
-      <li><strong>Status enum drift</strong> — <code>party.status</code>는 string ('active' / 'closed' / 'draft' / 미정의). 새 status가 백엔드에 추가되어도 클라이언트가 fallback(원시 문자열 + primary 색)으로 안전 처리.</li>
-      <li><strong>List 길이</strong> — 50+ 파티 운영하는 power partner 케이스 미보호. ListView.separated가 lazy 렌더하나 image network call이 누적될 수 있음. 향후 검색/필터 추가 후보.</li>
-      <li><strong>Pull-to-refresh 부재</strong> — 현재 <code>RefreshIndicator</code> 없음. 새로고침은 화면 재진입 또는 like/edit 액션으로만. 데이터 즉시성을 원하는 사용자에 약점.</li>
-      <li><strong>Theming</strong> — <code>MinglitTheme.partnerTheme</code>이 root Material에 적용되어 모든 child가 partner indigo primary를 받음. user app과 다르므로 cross-app 컴포넌트 재사용 시 색 검증 필수.</li>
+      <li><strong>다중 파트너 보유</strong> — 한 사용자가 여러 파트너 자격을 동시에 갖는 경우, 화면에서 파트너를 전환할 UI는 없음. 이 경우 첫 번째 파트너의 파티만 노출. 다중 파트너 운영을 지원하려면 AppBar에 파트너 선택 UI가 필요.</li>
+      <li><strong>알 수 없는 상태값</strong> — 백엔드에서 새 상태값이 추가되더라도 화면이 깨지지 않고 원문 텍스트와 기본 파트너 보라색으로 안전하게 표시됨.</li>
+      <li><strong>파티 수가 매우 많을 때</strong> — 현 디자인은 50개 이상 운영하는 헤비 파트너에 대한 검색 / 필터 UI를 갖고 있지 않음. 향후 추가 검토 후보.</li>
+      <li><strong>당겨서 새로고침 부재</strong> — 데이터를 즉시 갱신할 수 있는 풀투리프레시 동작은 없음. 화면을 다시 들어와야 새 데이터가 반영됨.</li>
+      <li><strong>다른 화면 다녀온 뒤</strong> — 새 파티를 만들거나 수정한 뒤 이 화면으로 돌아오면 변경 결과가 반영됨.</li>
+      <li><strong>파트너 브랜드 색</strong> — 이 화면을 포함한 파트너 앱 전체가 사용자 앱과 다른 보라색을 사용. 사용자 앱과 같은 컴포넌트를 재사용할 때는 색 차이 검증이 필요.</li>
     </ul>
   </section>
 </div>

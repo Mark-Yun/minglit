@@ -625,8 +625,7 @@
 
   <section class="doc">
     <p class="intro">
-      <strong>State 분기 기준</strong>: 활성 탭(<code>DefaultTabController</code>) + 각 탭의 async data + party.status (active/closed) + party.isPrivate.
-      Loading/Error는 화면 진입 직후 partyAsync 단계에서 분기된다 (<code>MinglitAsyncValueWidget</code>).
+      <strong>State 분기 기준</strong>: 활성 탭(이벤트 관리 / 파티 정보 / 입장 그룹 및 티켓), 각 탭의 데이터 유무, 파티의 활성 / 비활성 / 비공개 여부에 따라 6가지 변형. 진입 직후 데이터를 가져오는 동안엔 로딩 상태가 잠시 노출된다.
     </p>
 
     <!-- ========================================================
@@ -634,7 +633,7 @@
          ======================================================== -->
     <table class="ref state-mini is-baseline-tint">
       <thead>
-        <tr><th colspan="3"><strong>Tab1 · 이벤트 관리 (with events)</strong> 🎯 <small>baseline · production · 활성 운영 중</small></th></tr>
+        <tr><th colspan="3"><strong>Tab1 · 이벤트 관리 (with events)</strong> 🎯 <small>baseline · 활성 운영 중인 파티의 이벤트 탭</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -681,25 +680,25 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>partyAsync.hasValue</code> · 활성 탭 = Tab1 (<code>이벤트 관리</code>) · <code>partyEventsProvider</code> 데이터 ≥ 1 · <code>partyRecurrenceRuleProvider</code> rule != null && status != cancelled</td>
+          <td>파티 데이터가 도착했고, 활성 탭은 "이벤트 관리"이며, 이벤트가 한 개 이상 있고, 반복 규칙이 활성 상태로 설정되어 있는 일반적인 운영 모습.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ① <strong>탭 전환</strong> → Tab2 / Tab3 (animatedSwitcher fast 200ms)<br>
-            ② <strong>more_vert</strong> → State 6 (overflow menu popup)<br>
-            ③ <strong>RecurrenceRuleSummaryCard 탭</strong> → <code>RecurrenceManagementRoute</code> push<br>
-            ④ <strong>EventCard 탭</strong> → <code>coordinator.goToEventDetail(partyId, eventId)</code> = <code>EventDetailRoute</code> go<br>
-            ⑤ <strong>AddActionCard "이벤트 생성"</strong> → <code>EventCreateRoute</code> push<br>
-            ⑥ <strong>back</strong> → PartyListPage 복귀
+            ① <strong>다른 탭 헤더 탭 또는 좌우 스와이프</strong> — "파티 정보" / "입장 그룹 및 티켓" 탭으로 부드럽게 전환.<br>
+            ② <strong>AppBar 우상단 점 세 개 아이콘 탭</strong> — 오버플로우 메뉴(아래 State 6)가 열림.<br>
+            ③ <strong>반복 카드 탭</strong> — 반복 규칙 관리 화면으로 이동.<br>
+            ④ <strong>이벤트 카드 탭</strong> — 해당 이벤트 상세 화면으로 이동.<br>
+            ⑤ <strong>"이벤트 생성" 카드 탭</strong> — 새 이벤트 만들기 화면으로 이동.<br>
+            ⑥ <strong>뒤로가기</strong> — 파티 목록으로 복귀.
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · 반복 규칙 없음(rule==null) → RecurrenceRuleSummaryCard 전체 숨김 (<code>SizedBox.shrink</code>)<br>
-            · rule loading/error → 마찬가지로 숨김 (당겨오는 동안 깜빡임 방지)<br>
-            · 이벤트 fetch 실패 → 영역만 에러 텍스트 (<code>partyDetail_error_eventLoad</code>) · AppBar/Tabs는 유지
+            · 반복 규칙이 설정되지 않은 파티는 반복 카드 자체가 보이지 않음.<br>
+            · 반복 규칙을 가져오는 중이거나 실패한 경우에도 깜빡임 방지를 위해 카드 영역은 노출되지 않음.<br>
+            · 이벤트 목록을 가져오지 못하면 이벤트 영역에만 안내 메시지가 표시되고, 상단 AppBar / 탭 헤더는 그대로 유지됨.
           </td>
         </tr>
         <tr>
@@ -724,7 +723,7 @@
         <tr>
           <td class="state-mini__aspect">노트</td>
           <td>📝 가장 많이 보는 화면. 다른 5개 state는 이 baseline에서 변경분만 표시.<br>
-              ⚠️ Partner 앱은 <code>MinglitTheme.partnerTheme</code>을 쓰므로 primary는 indigo <code>#6c3ce1</code>이지 사용자 앱 brand purple <code>#9900ff</code>가 아님. spec 토큰 var는 <code>--color-partner-primary</code>.</td>
+              ⚠️ 파트너 앱은 사용자 앱과 다른 보라색을 쓴다 — 강조 색이 한 톤 차분한 인디고 계열이다. 컴포넌트를 두 앱 사이에서 재사용할 땐 색 차이를 검증해야 함.</td>
         </tr>
       </tbody>
     </table>
@@ -734,7 +733,7 @@
          ======================================================== -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Tab1 · 이벤트 비어있음</strong> <small>파티 갓 만든 직후 / 모든 이벤트 closed</small></th></tr>
+        <tr><th colspan="3"><strong>Tab1 · 이벤트 비어있음</strong> <small>파티를 갓 만들었거나 운영 중인 이벤트가 모두 마감된 직후</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -765,15 +764,15 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>partyEventsProvider</code> 결과가 빈 List · 반복 규칙도 없음 (RecurrenceRuleSummaryCard 숨김)</td>
+          <td>이벤트가 한 개도 등록되어 있지 않고, 반복 규칙도 설정되어 있지 않은 상태.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>+ <strong>"이벤트 생성" 탭</strong> → 첫 이벤트 만들기 wizard로 진입.<br>나머지 동일.</td>
+          <td>+ <strong>"이벤트 생성" 카드 탭</strong> — 첫 이벤트 만들기 화면으로 진입. 다른 동작은 baseline과 동일.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· events==[] && rule==null → 거의 빈 화면. AddActionCard만 노출.<br>· events==[] && rule!=null → 반복 카드 + AddActionCard. 이벤트는 cron이 만들기 전까지 없음.</td>
+          <td>· 이벤트도 없고 반복 규칙도 없는 경우 — 화면에는 "이벤트 생성" 카드만 노출되어 거의 빈 화면이 됨.<br>· 반복 규칙은 있는데 아직 첫 이벤트가 만들어지기 전 — 반복 카드 + "이벤트 생성" 카드 두 가지가 함께 노출됨.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
@@ -795,7 +794,7 @@
          ======================================================== -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Tab2 · 파티 정보</strong> <small>3 섹션 — 기본정보 · 인원·연락처 · 위치</small></th></tr>
+        <tr><th colspan="3"><strong>Tab2 · 파티 정보</strong> <small>기본 정보 · 인원·연락처 · 위치 세 섹션을 한 화면에서 확인·수정</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -857,25 +856,25 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>활성 탭 = Tab2 (<code>파티 정보</code>) · <code>locationDetailProvider(party.locationId)</code> 데이터 있음</td>
+          <td>활성 탭이 "파티 정보"이고, 파티의 위치 정보가 정상적으로 도착해 지도 미리보기 + 주소가 표시되는 일반 상태.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            + <strong>섹션 InkWell 탭</strong> (3개 어디든) → 각각 Coordinator 메서드:<br>
-            &nbsp;&nbsp;・ "기본 정보" → <code>openBasicInfoEdit</code> (PartyBasicInfoEditScreen modal)<br>
-            &nbsp;&nbsp;・ "인원 및 연락처" → <code>openCapacityContactEdit</code> (PartyCapacityContactEditScreen modal)<br>
-            &nbsp;&nbsp;・ "위치" → <code>openLocationEdit</code> (PartyLocationEditScreen modal)<br>
-            나머지 동일 (탭/메뉴/back).
+            + <strong>섹션 어디든 탭</strong> — 해당 섹션 전용 편집 화면이 열림.<br>
+            &nbsp;&nbsp;・ "기본 정보" 탭 — 제목 / 설명 / 사진 / 공개·비공개 편집 화면.<br>
+            &nbsp;&nbsp;・ "인원 및 연락처" 탭 — 최소·최대 인원 / 연락 수단 편집 화면.<br>
+            &nbsp;&nbsp;・ "위치" 탭 — 장소 편집 화면.<br>
+            상단 탭 헤더 / 점 세 개 메뉴 / 뒤로가기 동작은 baseline과 동일.
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · <code>locationId == null</code> 또는 location fetch 실패 → "위치" 섹션의 child가 빈/에러 placeholder (PartyLocationSummary가 처리). 섹션 자체는 표시.<br>
-            · description ops가 비어있음 → 본문 텍스트 영역 비어있음 (showFullDescription:true이지만 빈 ops)<br>
-            · isPrivate==false → "비공개" MinglitTag 미표시<br>
-            · 다크 모드: 섹션 bg 차이가 미세(<code>color-dark-surface</code>) — 이 spec에서는 명시적 배경은 viewport 토큰 변동으로 자동 반영
+            · 장소가 지정되지 않았거나 위치 정보를 못 받아온 경우 — "위치" 섹션 안에 안내 placeholder가 노출되며, 섹션 헤더와 편집 진입은 그대로 유지.<br>
+            · 설명 본문이 비어 있는 파티 — 본문 영역만 비어있는 상태로 노출됨.<br>
+            · 공개 파티 — "비공개" 뱃지는 노출되지 않음.<br>
+            · 마지막 섹션 아래에는 홈 인디케이터에 가리지 않을 정도의 여백이 확보됨.
           </td>
         </tr>
         <tr>
@@ -899,7 +898,7 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 화면 하단 padding은 <code>medium + safe-area</code> (#1830) — 홈 인디케이터에 마지막 섹션이 가리지 않도록.</td>
+          <td>📝 화면 하단 여백은 홈 인디케이터에 마지막 섹션이 가리지 않을 정도로 추가 확보됨.</td>
         </tr>
       </tbody>
     </table>
@@ -909,7 +908,7 @@
          ======================================================== -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Tab3 · 입장 그룹 및 티켓</strong> <small>2 섹션 — 입장 조건 · 티켓 list</small></th></tr>
+        <tr><th colspan="3"><strong>Tab3 · 입장 그룹 및 티켓</strong> <small>입장 조건과 발행한 티켓을 한 화면에서 관리</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -963,22 +962,22 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>활성 탭 = Tab3 (<code>입장 그룹 및 티켓</code>) · <code>partyTicketsProvider(partyId)</code> 데이터 있음 · <code>party.entryGroups</code> ≥ 1</td>
+          <td>활성 탭이 "입장 그룹 및 티켓"이고, 한 개 이상의 입장 그룹과 한 개 이상의 티켓이 등록되어 있는 일반 상태.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            + <strong>"입장 조건" 섹션 탭</strong> → <code>openEntryGroupManagement</code> (PartyEntryGroupManagementScreen modal)<br>
-            + <strong>티켓 행 탭</strong> → <code>PartyTicketEditRoute</code> push (ticketId 포함)<br>
-            + <strong>"티켓 생성" AddActionCard 탭</strong> → <code>TicketTemplateCreatePage</code> modal → 결과를 <code>partyTicketsProvider</code>에 invalidate
+            + <strong>"입장 조건" 섹션 탭</strong> — 입장 그룹 관리 화면이 열림.<br>
+            + <strong>티켓 행 탭</strong> — 해당 티켓 편집 화면으로 이동.<br>
+            + <strong>"티켓 생성" 카드 탭</strong> — 새 티켓 만들기 화면이 열리고, 저장하고 돌아오면 티켓 목록에 즉시 반영됨.
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · <code>entryGroups == []</code> → <code>PartyEntranceConditionSummary</code> 빈 placeholder (32px assignment_ind icon + label, 카드 안에서)<br>
-            · <code>tickets == []</code> + showError:false → <code>TicketListView</code>가 자체 빈 처리 (AddActionCard만 노출)<br>
-            · 티켓 fetch 실패 → 영역만 에러 텍스트 (<code>partyDetail_error_ticketLoad</code>)
+            · 입장 그룹이 한 개도 없는 경우 — "입장 조건" 섹션 안에 작은 아이콘 + 안내 라벨의 빈 안내가 노출됨.<br>
+            · 티켓이 없는 경우 — 티켓 행이 보이지 않고 "티켓 생성" 카드만 노출.<br>
+            · 티켓 목록을 못 가져온 경우 — 티켓 영역에만 안내 메시지가 표시되고 입장 조건 영역은 그대로 노출.
           </td>
         </tr>
         <tr>
@@ -997,7 +996,7 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 "입장 조건"은 EditableSection이지만 "입장권"은 plain title — 일관성 부족 (구현 drift 후속 검토 대상). 입장권 자체 편집은 카드 row InkWell + AddActionCard 이중 trigger.</td>
+          <td>📝 "입장 조건" 섹션은 헤더 자체에 편집 펜 아이콘이 붙는 편집 가능한 섹션이지만, "입장권" 섹션은 같은 형식의 헤더가 아닌 단순 타이틀이라 시각 일관성이 살짝 부족 — 후속 정리 후보. 티켓 편집은 카드 행 탭과 "티켓 생성" 카드 두 경로로 진입.</td>
         </tr>
       </tbody>
     </table>
@@ -1007,7 +1006,7 @@
          ======================================================== -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Loading</strong> <small>async · 진입 직후 partyAsync 로딩</small></th></tr>
+        <tr><th colspan="3"><strong>Loading</strong> <small>화면 진입 직후 파티 정보를 가져오는 동안</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -1019,15 +1018,15 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>화면 진입 ~ <code>partyDetailProvider(partyId)</code> 첫 응답 직전</td>
+          <td>화면 진입 직후, 파티 정보가 도착하기 전까지의 짧은 대기 구간.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>· back 가능 (시스템 back) — Scaffold 자체가 마운트되지 않은 상태 · MinglitAsyncValueWidget 기본 로딩 위젯</td>
+          <td>이 시점에는 시스템 뒤로가기로만 이탈 가능. 화면 안에는 스피너 외 별도 컨트롤이 없음.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· fetch 실패 → 별도 Scaffold(simpleAppBar) + Center(error text) — <code>error: (e, s) => Scaffold(...)</code> 분기 (party_detail_page.dart:140)</td>
+          <td>가져오기 실패 시 — 빈 AppBar 위에 가운데 정렬 안내 메시지가 뜨는 단순한 오류 화면으로 전환.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
@@ -1042,7 +1041,7 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 AppBar/TabBar도 아직 보이지 않음 — MinglitAsyncValueWidget이 Scaffold body 전체를 차지하기 때문. Error state는 simpleAppBar(빈 title) + Center 메시지로 대체.</td>
+          <td>📝 데이터가 도착하기 전엔 상단 AppBar / 탭 헤더도 아직 그려지지 않은 상태. 가져오기 실패 시엔 빈 AppBar + 가운데 정렬 안내 메시지로 대체된다.</td>
         </tr>
       </tbody>
     </table>
@@ -1052,7 +1051,7 @@
          ======================================================== -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Overflow Popup Menu</strong> <small>more_vert 탭 · 수정 / 활성화 or 비활성화</small></th></tr>
+        <tr><th colspan="3"><strong>Overflow Popup Menu</strong> <small>AppBar 우상단 점 세 개 아이콘 탭 시 열리는 메뉴</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -1090,23 +1089,23 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>State 1/2/3/4의 <code>more_vert</code> 탭 → <code>PopupMenuButton</code> 펼침. 항목 구성: 항상 "수정" + (status=='active' → "비활성화") + (status=='closed' → "활성화") — 셋 중 하나만 노출.</td>
+          <td>이전 4개 일반 상태에서 점 세 개 아이콘을 탭한 직후. 메뉴는 항상 "수정"을 보여주며, 운영중인 파티에는 "비활성화"가, 종료된 파티에는 "활성화"가 함께 노출된다 (둘 중 하나만).</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ① <strong>"수정" 탭</strong> → <code>coordinator.goToEditParty(party.id)</code> = <code>PartyEditRoute</code> push (PartyCreateWizardPage 재사용)<br>
-            ② <strong>"비활성화" 탭</strong> → <code>coordinator.deactivateParty</code> → <code>partyRepository.updatePartyStatus(..., 'closed')</code> + provider invalidate + success snackbar<br>
-            ③ <strong>"활성화" 탭</strong> → <code>activateParty</code> → status='active'<br>
-            ④ <strong>scrim 탭 / back</strong> → 메뉴 닫힘
+            ① <strong>"수정" 탭</strong> — 파티 편집 위저드(생성 위저드와 같은 화면)로 이동.<br>
+            ② <strong>"비활성화" 탭</strong> — 파티 상태가 즉시 종료로 바뀌고 화면이 자동으로 갱신, 성공 안내 토스트가 잠시 노출.<br>
+            ③ <strong>"활성화" 탭</strong> — 파티 상태가 즉시 운영중으로 바뀌고 화면이 자동 갱신.<br>
+            ④ <strong>메뉴 바깥 영역 탭 / 뒤로가기</strong> — 메뉴가 닫힘.
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · 비활성화 처리 중 네트워크 오류 → <code>handleMinglitError</code> 다이얼로그, status 변경 안 됨<br>
-            · status가 위 두 값(active/closed) 외 → 아무 토글 메뉴도 노출되지 않음 ("수정"만 보임)<br>
-            · 다른 탭(Tab2/Tab3) 위에서 메뉴 열어도 동일 — 메뉴는 AppBar action이므로 활성 탭과 무관
+            · 상태 변경 중 네트워크 오류가 나면 안내 다이얼로그가 뜨고, 파티 상태는 변경되지 않음.<br>
+            · 알 수 없는 상태값을 가진 파티는 "수정"만 노출되고 활성화/비활성화 항목은 표시되지 않음.<br>
+            · 다른 탭(파티 정보 / 입장 그룹 및 티켓)에서도 동일하게 동작 — 메뉴는 활성 탭과 무관하게 AppBar에서 열림.
           </td>
         </tr>
         <tr>
@@ -1127,7 +1126,7 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 status enum이 'active'/'closed' 두 값으로만 분기됨 (party_detail_page.dart:61, :75 — 다른 status 값은 어떤 토글도 표시 안 함). 활성/비활성은 <code>partyRepository.updatePartyStatus</code>로 즉시 server-side persist + provider invalidate.</td>
+          <td>📝 활성/비활성 토글은 운영중 / 종료 두 가지 상태에 한해서만 노출되며, 그 외 상태에서는 "수정"만 보인다. 토글 결과는 즉시 화면에 반영된다.</td>
         </tr>
       </tbody>
     </table>
@@ -1156,24 +1155,24 @@
       </thead>
       <tbody>
         <tr>
-          <td>back (시스템 back / AppBar back)</td>
-          <td>PartyListPage로 복귀. NestedScrollView 스크롤 위치는 보존 안 됨.</td>
+          <td>뒤로가기 (시스템 / AppBar back)</td>
+          <td>파티 목록 화면으로 복귀. 다시 들어오면 화면 스크롤은 처음 위치로 돌아옴.</td>
         </tr>
         <tr>
-          <td>탭 전환 (TabBar tap or swipe)</td>
-          <td>TabBarView가 새 탭으로 슬라이드. AppBar/Tabs는 pinned이므로 위치 고정. 각 탭의 SingleChildScrollView 위치는 마운트된 동안 보존 (DefaultTabController + state preservation).</td>
+          <td>탭 헤더 탭 또는 좌우 스와이프</td>
+          <td>탭 본문이 새 탭으로 부드럽게 슬라이드. 상단 AppBar / 탭 헤더는 고정. 마운트된 동안 각 탭의 스크롤 위치는 유지됨.</td>
         </tr>
         <tr>
-          <td>more_vert 메뉴 (활성화/비활성화 성공)</td>
-          <td><code>partyDetailProvider(partyId)</code> invalidate → 화면 자동 갱신. 성공 SnackBar(<code>showMinglitSuccess</code>) 노출.</td>
+          <td>오버플로우 메뉴 — 활성화 / 비활성화 성공</td>
+          <td>화면이 자동으로 새 상태에 맞게 갱신되고, 성공 안내 토스트가 잠시 노출됨.</td>
         </tr>
         <tr>
-          <td>any 편집 modal (Tab2/Tab3 섹션) 저장 성공</td>
-          <td>repository update → provider invalidate → 자동 재페치. Tab2의 BasicInfo/Capacity/Location, Tab3의 EntryGroup/Ticket 모두 동일 패턴.</td>
+          <td>탭 안 어떤 섹션이든 편집 후 저장</td>
+          <td>편집 화면에서 빠져나오면 해당 영역이 즉시 새 값으로 갱신됨 — 기본 정보 / 인원·연락처 / 위치 / 입장 그룹 / 티켓 모두 동일한 패턴.</td>
         </tr>
         <tr>
           <td>다크 모드 토글</td>
-          <td>Scaffold/AppBar/TabBar bg → <code>color-dark-surface</code>. 카드 bg → <code>color-dark-background</code>. TabBar indicator/label → <code>color-partner-dark-primary</code> (#9b7bec) — partner darkTheme이 유저 dark primary와 별도.</td>
+          <td>화면 / AppBar / 탭 헤더 / 카드 배경이 다크 톤으로 전환. 탭 표시선과 라벨은 파트너 다크 톤의 보라로 자동 전환됨.</td>
         </tr>
       </tbody>
     </table>
@@ -1194,27 +1193,27 @@
         <tr>
           <td>화면 진입 (목록 → 상세)</td>
           <td>shared-axis scaled (~300ms)</td>
-          <td><code>MinglitPageTransitions.sharedAxisScaled</code> (PartyDetailRoute는 buildPage 사용). MinglitAnimation token에 직접 매핑되지 않음 — 공유 helper 참고.</td>
+          <td>들어오는 화면이 살짝 확대되며 자연스럽게 들어오는 표준 전환.</td>
         </tr>
         <tr>
-          <td>탭 슬라이드 (TabBarView)</td>
+          <td>탭 슬라이드</td>
           <td><code>MinglitAnimation.fast</code> (200ms)</td>
-          <td>Material TabBarView 기본 transition. 좌우 슬라이드 + indicator follow.</td>
+          <td>탭 본문이 좌우로 슬라이드되며 표시선이 따라 이동.</td>
         </tr>
         <tr>
           <td>Loading → 데이터 표시</td>
           <td>cut (no animation)</td>
-          <td>MinglitAsyncValueWidget이 즉시 swap. fade 없음.</td>
+          <td>별도 전환 없이 즉시 교체.</td>
         </tr>
         <tr>
-          <td>Popup menu in/out</td>
+          <td>오버플로우 메뉴 열기 / 닫기</td>
           <td><code>MinglitAnimation.fast</code> (200ms)</td>
-          <td>Material PopupMenu 기본 fade + scale.</td>
+          <td>점 세 개 위치에서 자연스럽게 페이드 + 살짝 확대되며 열림.</td>
         </tr>
         <tr>
-          <td>Modal 편집 화면 push</td>
-          <td><code>MinglitAnimation.medium</code> (350ms — Material default)</td>
-          <td>Tab2/Tab3 섹션 → <code>MaterialPageRoute</code> push (Coordinator). 우→좌 slide.</td>
+          <td>섹션 편집 화면 진입</td>
+          <td><code>MinglitAnimation.medium</code> (350ms)</td>
+          <td>우→좌 슬라이드 기본 푸시.</td>
         </tr>
       </tbody>
     </table>
@@ -1223,10 +1222,10 @@
   <section class="doc">
     <h2>Global edge cases</h2>
     <ul class="notes">
-      <li><strong>partyAsync 에러</strong> — body 전체가 별도 <code>Scaffold(simpleAppBar(""))</code> + Center 에러 텍스트로 대체 (party_detail_page.dart:140). 이 분기는 NestedScrollView를 마운트하지 않는다.</li>
-      <li><strong>activateParty / deactivateParty 처리 중</strong> — <code>globalLoadingControllerProvider</code> show/hide로 풀스크린 로딩 오버레이 표시 (이 spec 범위 밖). 실패 시 <code>handleMinglitError</code>.</li>
-      <li><strong>탭 깊은 링크</strong> — initialIndex 없음. 항상 Tab1로 시작. Tab2/Tab3로 직접 진입하는 라우트는 없다.</li>
-      <li><strong>RecurrenceRuleSummaryCard 가시성</strong> — rule null / status==cancelled / loading / error 모두 <code>SizedBox.shrink</code>. 사용자에게는 차이 없음 (반복 규칙 없는 일회성 파티).</li>
+      <li><strong>파티 정보 로드 실패</strong> — 본문이 빈 AppBar + 가운데 정렬 안내 메시지의 단순한 오류 화면으로 대체. 이 경우 탭 헤더는 그려지지 않는다.</li>
+      <li><strong>활성화 / 비활성화 처리 중</strong> — 화면 전체에 잠시 풀스크린 로딩 오버레이가 노출되며, 실패하면 안내 다이얼로그가 뜨고 상태는 변경되지 않는다.</li>
+      <li><strong>탭 진입은 항상 첫 번째 탭에서</strong> — 외부에서 특정 탭으로 직접 진입하는 길은 없으며, 화면을 다시 들어오면 항상 "이벤트 관리" 탭에서 시작.</li>
+      <li><strong>반복 카드 가시성</strong> — 반복 규칙이 없거나 정리되었거나, 잠시 가져오는 중·실패한 경우 모두 카드가 보이지 않음. 사용자 입장에서는 동일하게 일회성 파티처럼 보인다.</li>
     </ul>
   </section>
 </div>

@@ -231,19 +231,19 @@ body.dark-mode .dv-appbar__back { color: var(--color-dark-text-primary); }
       <tr>
         <th>User journey</th>
         <td>
-          <strong>Entry points</strong>: InfoPage "계속 진행" 탭 → coordinator.pushVerify(reason).<br>
+          <strong>Entry points</strong>: 이전 안내 화면의 "계속 진행" 탭으로 진입.<br>
           <strong>Exit points</strong>:
-          ① "탈퇴 요청" 탭 + (비밀번호 검증 통과) + confirm dialog "탈퇴 요청" → <code>controller.requestDeletion</code> → CompletePage(go) ·
-          ② confirm dialog "돌아가기" 또는 barrier dismiss → 본 화면 그대로 유지 ·
-          ③ 비밀번호 빈 필드 / 잘못된 비밀번호 → 화면 머무름(error 표시) ·
-          ④ 뒤로 가기 → InfoPage 복귀.
+          ① "탈퇴 요청" 탭 + 본인 확인 통과 + 확인 다이얼로그의 "탈퇴 요청" → 마지막 완료 화면으로 이동 ·
+          ② 확인 다이얼로그의 "돌아가기" 또는 바깥 영역 탭 → 본 화면 그대로 유지 ·
+          ③ 비밀번호 빈 필드 / 잘못된 비밀번호 → 화면 머무름 (에러 안내 노출) ·
+          ④ 뒤로 가기 → 이전 안내 화면으로 복귀.
         </td>
       </tr>
       <tr>
         <th>Background</th>
         <td>
-          탈퇴 행위가 stranger / device 탈취 시나리오에서 악용되지 않도록 본인 확인을 강제. 비밀번호 사용자에겐 그 자리에서 password reauth(<code>controller.reauthenticate(password)</code>), 소셜 사용자는 controller가 별도 reauth flow를 수행하도록 위임 (현재 widget 안에서는 reauth(null)만 호출 — Phase 2에서 OAuth re-popup 예정).
-          확인 dialog를 한 번 더 끼워 넣어 "버튼 잘못 누름" 사고를 막는다(Fix 패턴 — 다른 destructive flow와 동일 톤).
+          탈퇴가 타인이나 단말 탈취 시나리오에서 악용되지 않도록 본인 확인을 강제한다. 비밀번호 계정은 이 자리에서 비밀번호로 재확인하고, 소셜 계정은 다음 단계에서 재인증을 진행한다 (현재는 가벼운 통과 상태 — 향후 OAuth 재인증 단계가 추가될 예정).
+          확인 다이얼로그를 한 번 더 끼워 넣어 "버튼 잘못 누름" 사고를 막는다 — 다른 destructive flow와 동일한 톤.
         </td>
       </tr>
       <tr><th>Frequency</th><td>매우 낮음 — 탈퇴 wizard 진입 시 1회.</td></tr>
@@ -374,7 +374,7 @@ body.dark-mode .dv-appbar__back { color: var(--color-dark-text-primary); }
   <section class="doc">
     <h2>Sub-anatomy ① — Reason recap (옵셔널 ListTile in Card)</h2>
     <p class="intro">
-      InfoPage와 동일하게 reason 미동반이면 통째로 빠진다. InfoPage의 chip-card와 달리 여기는 ListTile 형태 — 한 줄 leading icon + title + subtitle. 시각적으로 더 가벼움 (이미 InfoPage에서 사유를 보여줬으므로 reminder 톤).
+      이전 안내 화면과 마찬가지로 사유가 없으면 통째로 빠진다. 안내 화면의 사유 카드와 달리 여기서는 한 줄짜리 가벼운 카드(좌측 아이콘 + 제목 + 부제) — 이미 사유를 한 번 보여준 뒤의 reminder 톤.
     </p>
     <div class="layout-grid">
       <div class="blueprint" style="height: 200px;">
@@ -410,7 +410,7 @@ body.dark-mode .dv-appbar__back { color: var(--color-dark-text-primary); }
   <div class="perspective__header">
     <span class="glyph">🎨</span>
     <h2>States</h2>
-    <span class="lede">6 state. baseline = password user · 사유 동반. social user · 빈 비밀번호 에러 · loading · confirm dialog · reauth/submit 실패.</span>
+    <span class="lede">6가지 시각 변형. baseline = 비밀번호 사용자 · 사유 동반. 소셜 사용자 · 비밀번호 빈 필드 에러 · 제출 진행 중 · 확인 다이얼로그 · 본인 확인/제출 실패.</span>
   </div>
 
   <section class="doc">
@@ -418,12 +418,12 @@ body.dark-mode .dv-appbar__back { color: var(--color-dark-text-primary); }
     <table class="ref">
       <thead><tr><th style="width: 220px;">State</th><th style="width: 90px;">Tag</th><th style="width: 240px;">조건 (요약)</th><th>Key visual differentiator</th></tr></thead>
       <tbody>
-        <tr><td><strong>Password user · 사유 동반</strong></td><td>baseline</td><td><code>usesPasswordAuth == true</code> + reason valid</td><td>reason recap Card + 비밀번호 TextField + "탈퇴 요청" enabled</td></tr>
-        <tr><td><strong>Social user</strong></td><td>variant</td><td><code>usesPasswordAuth == false</code></td><td>비밀번호 TextField 대신 안내 Card "다음 단계에서 재인증 진행돼요"</td></tr>
-        <tr><td><strong>비밀번호 빈 필드 에러</strong></td><td>validation</td><td>password 사용자가 빈 필드로 "탈퇴 요청"</td><td>TextField red border + errorText "비밀번호를 입력해주세요."</td></tr>
-        <tr><td><strong>제출 진행 중</strong></td><td>loading</td><td><code>deletionState.isLoading == true</code></td><td>FilledButton에 20px CircularProgressIndicator (label 사라짐)</td></tr>
-        <tr><td><strong>Confirm dialog</strong></td><td>modal</td><td>reauth 통과 후 <code>showMinglitConfirm</code> 띄움</td><td>scrim + AlertDialog "정말 탈퇴할까요?" — 돌아가기 / 탈퇴 요청</td></tr>
-        <tr><td><strong>Reauth/Submit 실패</strong></td><td>error</td><td>reauthenticate 또는 requestDeletion이 throw</td><td><code>handleMinglitError</code> snackbar — 화면 그대로 유지</td></tr>
+        <tr><td><strong>Password user · 사유 동반</strong></td><td>baseline</td><td>비밀번호 계정 + 이전 단계에서 사유 동반</td><td>사유 카드 + 비밀번호 입력란 + "탈퇴 요청" 활성</td></tr>
+        <tr><td><strong>Social user</strong></td><td>variant</td><td>소셜 계정 (Google / Apple / Kakao 등)</td><td>비밀번호 입력란 대신 안내 카드 "다음 단계에서 재인증이 진행돼요"</td></tr>
+        <tr><td><strong>비밀번호 빈 필드 에러</strong></td><td>validation</td><td>비밀번호 계정이 빈 필드로 "탈퇴 요청" 시도</td><td>입력란 빨간 외곽선 + 에러 안내 "비밀번호를 입력해주세요."</td></tr>
+        <tr><td><strong>제출 진행 중</strong></td><td>loading</td><td>탈퇴 요청이 백엔드로 전송되고 응답을 기다리는 동안</td><td>"탈퇴 요청" 버튼 위치에 회전하는 스피너 (라벨 사라짐)</td></tr>
+        <tr><td><strong>Confirm dialog</strong></td><td>modal</td><td>본인 확인 통과 직후 한 번 더 묻는 단계</td><td>어두운 배경 + 다이얼로그 "정말 탈퇴할까요?" — 돌아가기 / 탈퇴 요청</td></tr>
+        <tr><td><strong>본인 확인 / 제출 실패</strong></td><td>error</td><td>본인 확인이나 탈퇴 요청이 실패한 경우</td><td>화면 하단에 에러 안내 스낵바 — 화면 그대로 유지</td></tr>
       </tbody>
     </table>
 
@@ -432,7 +432,7 @@ body.dark-mode .dv-appbar__back { color: var(--color-dark-text-primary); }
       <!-- State 1: Password user (baseline) -->
       <table class="ref state-mini is-baseline-tint">
         <thead>
-          <tr><th colspan="3"><strong>Password user · 사유 동반</strong> 🎯 <small>baseline · isPasswordUser=true · reason!=null</small></th></tr>
+          <tr><th colspan="3"><strong>Password user · 사유 동반</strong> 🎯 <small>baseline · 비밀번호 계정 사용자가 사유와 함께 진입한 상태</small></th></tr>
         </thead>
         <tbody>
           <tr>
@@ -477,22 +477,22 @@ body.dark-mode .dv-appbar__back { color: var(--color-dark-text-primary); }
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td><code>currentUserProvider</code>가 user 반환 + <code>usesPasswordAuth(user) == true</code> (email identity 또는 appMetadata.provider == 'email') · 그리고 reason 동반.</td>
+            <td>로그인된 사용자가 비밀번호 계정이며, 이전 안내 화면에서 사유와 함께 진입한 상태.</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">사용자 액션</td>
             <td>
-              · 비밀번호 입력 — onChanged에서 <code>_passwordErrorText != null</code>이면 setState로 clear (에러 사라짐).<br>
-              · <strong>"탈퇴 요청" 탭</strong> → <code>_submitDeletion(isPasswordUser: true, reason)</code> → password trim 검사 → 빈 필드면 errorText 세팅 후 return → 그렇지 않으면 <code>controller.reauthenticate(password)</code> → 성공 시 confirm dialog.<br>
-              · 뒤로 가기 → InfoPage 복귀.
+              · 비밀번호 입력 — 입력을 시작하면 직전의 빈 필드 에러 표시는 사라진다.<br>
+              · <strong>"탈퇴 요청" 탭</strong> → 비밀번호가 비어있으면 빈 필드 에러로 전이, 채워져 있으면 본인 확인을 거쳐 확인 다이얼로그가 뜬다.<br>
+              · 뒤로 가기 → 이전 안내 화면으로 복귀.
             </td>
           </tr>
           <tr>
             <td class="state-mini__aspect">에지케이스</td>
             <td>
-              · <code>currentUserProvider</code>가 transient하게 null (재로그인 race) — Scaffold(SizedBox.shrink)만 반환되어 빈 화면. 정상 흐름에선 발생 안 함.<br>
-              · password trim — 앞뒤 공백을 제거하고 빈 검사. 사용자가 공백만 입력하면 빈 필드 에러로 분기 (State 3).<br>
-              · password obscureText — Material default 점 character.
+              · 매우 드물게 사용자 정보를 잠시 얻지 못하는 순간에는 본문이 잠시 빈 화면으로 보일 수 있다.<br>
+              · 공백만 입력해도 빈 필드로 처리되어 에러가 노출된다.<br>
+              · 비밀번호는 입력 시 점 문자로 가려서 표시한다.
             </td>
           </tr>
           <tr>
@@ -519,7 +519,7 @@ body.dark-mode .dv-appbar__back { color: var(--color-dark-text-primary); }
           </tr>
           <tr>
             <td class="state-mini__aspect">노트</td>
-            <td>📝 surprising drift — <code>usesPasswordAuth(user)</code>는 단순 "email identity 보유"가 아니라 (a) identities[].provider == 'email' OR (b) appMetadata.provider == 'email' OR (c) appMetadata.providers list에 'email' 포함 — 세 분기 OR. Supabase user 구조에 따라 다른 분기 사용.</td>
+            <td>📝 비밀번호 계정 여부 판정은 여러 조건을 함께 본다 — 사용자에게 보이는 것은 "비밀번호 입력란이 뜨는가, 안내 카드가 뜨는가" 두 결과뿐.</td>
           </tr>
         </tbody>
       </table>
@@ -527,7 +527,7 @@ body.dark-mode .dv-appbar__back { color: var(--color-dark-text-primary); }
       <!-- State 2: Social user -->
       <table class="ref state-mini">
         <thead>
-          <tr><th colspan="3"><strong>Social user</strong> <small>usesPasswordAuth=false · OAuth (Google/Apple/Kakao …) 사용자</small></th></tr>
+          <tr><th colspan="3"><strong>Social user</strong> <small>Google / Apple / Kakao 등 소셜 로그인으로 가입한 사용자</small></th></tr>
         </thead>
         <tbody>
           <tr>
@@ -563,21 +563,21 @@ body.dark-mode .dv-appbar__back { color: var(--color-dark-text-primary); }
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>+ <code>usesPasswordAuth(user) == false</code> — TextField가 안내 Card로 swap.</td>
+            <td>소셜 로그인으로 가입한 사용자 — 비밀번호 입력란 자리에 안내 카드가 노출된다.</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">사용자 액션</td>
             <td>
-              ↔ 비밀번호 입력 <strong>없음</strong>.<br>
-              + <strong>"탈퇴 요청" 탭</strong> → <code>_submitDeletion(isPasswordUser: false, reason)</code> → password 검사 skip → <code>controller.reauthenticate(null)</code> 호출 → 성공 시 confirm dialog.<br>
-              동일: 뒤로 가기
+              · 비밀번호 입력은 없다.<br>
+              · <strong>"탈퇴 요청" 탭</strong> → 본인 확인을 거친 뒤 확인 다이얼로그가 뜬다.<br>
+              · 뒤로 가기 → 이전 안내 화면으로 복귀.
             </td>
           </tr>
           <tr>
             <td class="state-mini__aspect">에지케이스</td>
             <td>
-              · <code>reauthenticate(null)</code>의 실제 동작은 controller 구현에 따라 다름 — 현재 Phase 1에서는 immediate 통과(별도 OAuth re-popup 없음). Phase 2에서 OAuth re-popup 추가 예정 — 그 시점엔 controller 내부에서 OAuth flow를 띄우고 결과 await.<br>
-              · "다음 단계에서 재인증이 진행돼요" 카피는 <strong>현재 misleading</strong>한 면 — 실제로 reauth가 trivial하게 통과하는 상태이므로 사용자는 별도 단계 인지 못 함.
+              · 현재 단계에서는 별도의 재인증 절차 없이 가볍게 통과한다 — 향후 OAuth 재인증 단계가 추가되면 이 자리에서 한 번 더 확인이 진행될 예정이다.<br>
+              · "다음 단계에서 재인증이 진행돼요" 안내는 향후 단계가 추가되는 것을 염두에 둔 카피.
             </td>
           </tr>
           <tr>
@@ -590,7 +590,7 @@ body.dark-mode .dv-appbar__back { color: var(--color-dark-text-primary); }
           </tr>
           <tr>
             <td class="state-mini__aspect">노트</td>
-            <td>📝 사용자가 OAuth 계정인데 화면에 비밀번호 필드가 등장하면 혼란 — usesPasswordAuth 분기가 정확해야 함. 미래 OAuth provider 추가 시 (e.g. naver) 헬퍼에 추가하지 않으면 비밀번호 사용자로 잘못 분류될 위험.</td>
+            <td>📝 소셜 계정 사용자가 비밀번호 입력란을 만나면 혼란을 주므로, 가입 경로에 따라 정확히 두 화면이 분기되어야 한다.</td>
           </tr>
         </tbody>
       </table>
@@ -598,7 +598,7 @@ body.dark-mode .dv-appbar__back { color: var(--color-dark-text-primary); }
       <!-- State 3: empty password validation -->
       <table class="ref state-mini">
         <thead>
-          <tr><th colspan="3"><strong>비밀번호 빈 필드 에러</strong> <small>password 사용자 + 빈 필드로 탈퇴 요청</small></th></tr>
+          <tr><th colspan="3"><strong>비밀번호 빈 필드 에러</strong> <small>비밀번호 계정에서 빈 필드로 "탈퇴 요청"을 시도한 직후</small></th></tr>
         </thead>
         <tbody>
           <tr>
@@ -625,21 +625,21 @@ body.dark-mode .dv-appbar__back { color: var(--color-dark-text-primary); }
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>+ password 사용자 + 빈 password로 "탈퇴 요청" 탭 → <code>_passwordErrorText = '비밀번호를 입력해주세요.'</code> setState → MinglitTextField가 errorText props 받아 red border + 메시지.</td>
+            <td>비밀번호 계정 사용자가 빈 필드로 "탈퇴 요청"을 누른 직후 — 입력란 외곽선과 라벨이 빨간색으로 바뀌고 그 아래 안내 메시지 "비밀번호를 입력해주세요."가 노출된다.</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">사용자 액션</td>
             <td>
-              + 비밀번호 입력 시작 → onChanged → <code>_passwordErrorText = null</code> setState → red border + error text 사라짐 (clear 동작).<br>
-              + 빈 채로 다시 "탈퇴 요청" 탭 → 동일 에러 재발 (idempotent setState).<br>
-              동일: 뒤로 가기
+              · 비밀번호 입력 시작 → 빨간 외곽선과 안내 메시지가 즉시 사라진다.<br>
+              · 빈 채로 다시 "탈퇴 요청" 탭 → 동일한 빈 필드 에러가 다시 노출된다.<br>
+              · 뒤로 가기 → 이전 안내 화면으로 복귀.
             </td>
           </tr>
           <tr>
             <td class="state-mini__aspect">에지케이스</td>
             <td>
-              · 공백만 입력 후 submit — <code>password.trim().isEmpty</code>로 검사하므로 동일 에러.<br>
-              · State 1 mockup의 reason recap도 이 state에 동일하게 노출되지만 mini-table은 핵심 변화에 집중하기 위해 reason recap을 생략했다 (실제 화면에는 reason 동반 시 그대로 보임).
+              · 공백만 입력해도 빈 필드로 처리되어 동일한 에러가 노출된다.<br>
+              · 이 컷의 mock에서는 핵심 변화에 집중하기 위해 사유 카드를 생략했지만, 실제 화면에서는 사유와 함께 진입했다면 사유 카드도 그대로 노출된다.
             </td>
           </tr>
           <tr>
@@ -652,7 +652,7 @@ body.dark-mode .dv-appbar__back { color: var(--color-dark-text-primary); }
           </tr>
           <tr>
             <td class="state-mini__aspect">노트</td>
-            <td>📝 errorText는 client-side validation 전용 — 서버에서 "잘못된 비밀번호" 응답은 reauthenticate가 throw → catch에서 <code>handleMinglitError</code>로 처리(State 6 참조). 즉 "빈 필드"와 "틀린 비밀번호"는 다른 경로로 보여진다.</td>
+            <td>📝 "빈 필드"는 입력란 자체에 inline 에러로 안내되고, "틀린 비밀번호"는 본인 확인 실패 상태(State 6)의 스낵바로 안내된다 — 두 경로가 시각적으로 구분된다.</td>
           </tr>
         </tbody>
       </table>
@@ -660,7 +660,7 @@ body.dark-mode .dv-appbar__back { color: var(--color-dark-text-primary); }
       <!-- State 4: loading -->
       <table class="ref state-mini">
         <thead>
-          <tr><th colspan="3"><strong>제출 진행 중 (loading)</strong> <small>deletionState.isLoading == true</small></th></tr>
+          <tr><th colspan="3"><strong>제출 진행 중 (loading)</strong> <small>탈퇴 요청이 백엔드로 전송되고 응답을 기다리는 동안</small></th></tr>
         </thead>
         <tbody>
           <tr>
@@ -687,21 +687,21 @@ body.dark-mode .dv-appbar__back { color: var(--color-dark-text-primary); }
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>+ <code>controller.requestDeletion</code>이 진행 중 → <code>deletionState.isLoading == true</code> → FilledButton onPressed: null + child가 spinner로 swap.</td>
+            <td>탈퇴 요청이 백엔드로 전송되고 응답을 기다리는 동안 — "탈퇴 요청" 버튼 자리에 회전하는 스피너가 노출되고 라벨은 사라진다.</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">사용자 액션</td>
             <td>
-              − "탈퇴 요청" 탭 → 무반응 (onPressed: null)<br>
-              − TextField 입력은 가능하지만 의미 없음 (요청은 이미 진행 중)<br>
-              ↔ 뒤로 가기 → InfoPage 복귀 — race window: pop 후에도 background에서 controller가 mounted check 후 에러 처리하므로 정상 정리됨.
+              · "탈퇴 요청" 탭 → 비활성 상태라 반응하지 않음.<br>
+              · 비밀번호 입력은 가능하지만 진행 중인 요청에는 영향이 없다.<br>
+              · 뒤로 가기 → 이전 안내 화면으로 복귀.
             </td>
           </tr>
           <tr>
             <td class="state-mini__aspect">에지케이스</td>
             <td>
-              · loading 상태는 confirm dialog 통과 후 <code>controller.requestDeletion</code> await 동안만. reauthenticate await 동안에도 controller state가 isLoading일 수 있음 (controller 구현 내 둘 다 isLoading 갱신 시).<br>
-              · 네트워크 오래 걸리면 spinner가 무한히 도는 인상 — 별도 timeout UI 없음 (이미 confirm dialog 통과한 상태라 사용자 의도가 분명).
+              · 본인 확인 단계에서도 짧게 같은 스피너 톤이 보일 수 있다.<br>
+              · 네트워크가 오래 걸리면 스피너가 길게 회전한다 — 별도 timeout UI는 없다 (이미 확인 다이얼로그를 통과해 사용자 의도가 분명한 단계).
             </td>
           </tr>
           <tr>
@@ -714,7 +714,7 @@ body.dark-mode .dv-appbar__back { color: var(--color-dark-text-primary); }
           </tr>
           <tr>
             <td class="state-mini__aspect">노트</td>
-            <td>📝 ButtonStyle의 disabled bg는 Material default(<code>onSurface</code> 12% alpha) — primary purple이 사라지고 회색조로 변함. 시각적으로 "잠시 기다려" 신호.</td>
+            <td>📝 진행 중 버튼은 표준 비활성 톤으로 바뀌고 스피너가 그 자리에 노출되어 "잠시 기다려" 신호를 준다.</td>
           </tr>
         </tbody>
       </table>
@@ -722,7 +722,7 @@ body.dark-mode .dv-appbar__back { color: var(--color-dark-text-primary); }
       <!-- State 5: Confirm dialog -->
       <table class="ref state-mini">
         <thead>
-          <tr><th colspan="3"><strong>Confirm dialog "정말 탈퇴할까요?"</strong> <small>showMinglitConfirm — reauth 통과 후</small></th></tr>
+          <tr><th colspan="3"><strong>Confirm dialog "정말 탈퇴할까요?"</strong> <small>본인 확인 통과 직후 한 번 더 묻는 단계</small></th></tr>
         </thead>
         <tbody>
           <tr>
@@ -757,22 +757,22 @@ body.dark-mode .dv-appbar__back { color: var(--color-dark-text-primary); }
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>+ reauth 통과 직후 → <code>context.showMinglitConfirm(title: '정말 탈퇴할까요?', message: '탈퇴 요청 후 7일 동안은 다시 로그인해 복구할 수 있어요.', confirmLabel: '탈퇴 요청', cancelLabel: '돌아가기')</code>.</td>
+            <td>본인 확인을 통과한 직후 — 화면 위에 어두운 배경이 깔리고 한 번 더 의사를 묻는 다이얼로그가 등장한다. 제목 "정말 탈퇴할까요?", 본문 "탈퇴 요청 후 7일 동안은 다시 로그인해 복구할 수 있어요."가 노출된다.</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">사용자 액션</td>
             <td>
-              + <strong>"돌아가기" 탭</strong> → confirmed=false → 화면 그대로 유지 (비밀번호 입력 그대로 살아있음 — TextEditingController는 dispose 안 됨).<br>
-              + <strong>"탈퇴 요청" 탭</strong> → confirmed=true → <code>controller.requestDeletion(reason)</code> → 성공 시 <code>coordinator.goComplete()</code> → CompletePage(go).<br>
-              + <strong>scrim 탭 / 시스템 back</strong> → barrierDismissible default(true) → 결과 false fallback → 화면 유지
+              · <strong>"돌아가기" 탭</strong> → 다이얼로그가 닫히고 화면은 그대로 유지된다 (비밀번호 입력은 살아있음).<br>
+              · <strong>"탈퇴 요청" 탭</strong> → 탈퇴 요청이 시작되고, 성공 시 마지막 완료 화면으로 이동한다.<br>
+              · 어두운 배경 탭 / 시스템 뒤로 가기 → 다이얼로그가 닫히고 화면은 그대로 유지된다.
             </td>
           </tr>
           <tr>
             <td class="state-mini__aspect">에지케이스</td>
             <td>
-              · confirm은 destructive처럼 보이지만 <code>isDestructive</code> default false (정확한 옵션은 <code>showMinglitConfirm</code> impl 참조) — 확인 버튼이 primary purple로 노출되어 있어 부드러운 톤.<br>
-              · dialog open 동안 화면 spinner가 보이지 않음 — reauth는 이미 끝났고, requestDeletion은 아직 시작 안 함. confirm 사이의 idle window.<br>
-              · context.mounted 체크 — confirm 후 widget이 dispose되면 <code>!context.mounted</code>로 early return.
+              · 다이얼로그의 확인 버튼은 destructive 톤이 아닌 primary 색으로 노출되어 부드러운 인상을 준다.<br>
+              · 다이얼로그가 떠있는 동안에는 진행 중 스피너가 보이지 않는다 — 본인 확인은 이미 끝났고, 탈퇴 요청은 아직 시작되지 않은 idle window.<br>
+              · 다이얼로그를 띄우는 사이 화면이 사라지면 다음 단계로의 이동은 자동으로 취소된다.
             </td>
           </tr>
           <tr>
@@ -785,7 +785,7 @@ body.dark-mode .dv-appbar__back { color: var(--color-dark-text-primary); }
           </tr>
           <tr>
             <td class="state-mini__aspect">노트</td>
-            <td>📝 surprising drift — confirm dialog의 confirm label이 "탈퇴 요청" — 본 화면 CTA와 동일 라벨이라 사용자가 "이미 눌렀는데 또?" 인상을 받을 수 있음. 의도된 redundancy(이중 confirm).</td>
+            <td>📝 다이얼로그의 확인 버튼 라벨이 본 화면 CTA와 동일한 "탈퇴 요청"이다 — "이미 눌렀는데 또?"라는 인상을 줄 수 있지만, 한 번 더 묻기 위한 의도된 중복.</td>
           </tr>
         </tbody>
       </table>
@@ -793,7 +793,7 @@ body.dark-mode .dv-appbar__back { color: var(--color-dark-text-primary); }
       <!-- State 6: Reauth/Submit failure -->
       <table class="ref state-mini">
         <thead>
-          <tr><th colspan="3"><strong>Reauth / Submit 실패</strong> <small>handleMinglitError snackbar — 화면 그대로</small></th></tr>
+          <tr><th colspan="3"><strong>본인 확인 / 제출 실패</strong> <small>본인 확인이나 탈퇴 요청이 실패해 안내 스낵바가 노출된 상태</small></th></tr>
         </thead>
         <tbody>
           <tr>
@@ -819,22 +819,22 @@ body.dark-mode .dv-appbar__back { color: var(--color-dark-text-primary); }
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>+ <code>controller.reauthenticate(password)</code> 또는 <code>requestDeletion(reason)</code>이 throw → catch block → <code>handleMinglitError(context, error, stackTrace)</code> → MinglitErrorHandler가 SnackBar(error) 표시.</td>
+            <td>본인 확인이나 탈퇴 요청이 실패한 경우 — 화면 하단에 에러 메시지가 담긴 스낵바가 노출되고 화면 자체는 그대로 유지된다.</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">사용자 액션</td>
             <td>
-              + 비밀번호 재입력 — onChanged가 errorText는 client-side만 클리어 (서버 에러 메시지는 SnackBar 자체 timeout으로 사라짐)<br>
-              + 다시 "탈퇴 요청" → 동일 path 재시도 (Material default snackbar dedupe — 빠른 연속 호출 시 queue)<br>
-              동일: 뒤로 가기
+              · 비밀번호 재입력 — 서버 에러 메시지는 잠시 후 자동으로 사라진다.<br>
+              · 다시 "탈퇴 요청" → 동일한 흐름으로 재시도된다.<br>
+              · 뒤로 가기 → 이전 안내 화면으로 복귀.
             </td>
           </tr>
           <tr>
             <td class="state-mini__aspect">에지케이스</td>
             <td>
-              · reauthenticate 실패 — 네트워크 / 잘못된 password / OAuth provider 거절 등. 사용자에게 보이는 메시지는 error.toString()을 <code>handleMinglitError</code>가 사용자 메시지로 변환.<br>
-              · requestDeletion 실패 — reauth는 통과했으므로 confirm dialog까지 본 후의 실패. 의외 시나리오 (이미 인증된 상태). 같은 SnackBar로 처리.<br>
-              · context.mounted 체크 — async gap에서 widget dispose되면 SnackBar 호출 skip.
+              · 본인 확인 실패는 네트워크 문제, 잘못된 비밀번호, 소셜 인증 거절 등 다양한 사유에서 발생할 수 있으며, 사용자에게는 사유에 맞춘 한국어 안내가 보인다.<br>
+              · 본인 확인을 통과한 뒤의 탈퇴 요청 실패는 드물지만 동일한 스낵바로 안내된다.<br>
+              · 안내 도중 화면이 사라지면 스낵바는 노출되지 않는다.
             </td>
           </tr>
           <tr>
@@ -847,7 +847,7 @@ body.dark-mode .dv-appbar__back { color: var(--color-dark-text-primary); }
           </tr>
           <tr>
             <td class="state-mini__aspect">노트</td>
-            <td>📝 SnackBar 메시지 자체는 <code>handleMinglitError</code> 내부 매핑에 따라 다르다 — Supabase auth error code를 한국어로 변환. 토큰 측면에선 Material SnackBar default styling.</td>
+            <td>📝 스낵바 문구는 실패 사유에 따라 다르며 모두 한국어로 안내된다.</td>
           </tr>
         </tbody>
       </table>
@@ -868,12 +868,12 @@ body.dark-mode .dv-appbar__back { color: var(--color-dark-text-primary); }
     <table class="ref">
       <thead><tr><th style="width: 220px;">사용자 액션</th><th>화면에 보이는 결과</th></tr></thead>
       <tbody>
-        <tr><td>뒤로 가기 (시스템 back / AppBar back)</td><td>InfoPage 복귀 — Material default pop. 비밀번호는 dispose됨 (TextEditingController dispose).</td></tr>
-        <tr><td>키보드 입력 (password)</td><td>Scaffold <code>resizeToAvoidBottomInset</code>로 ListView 영역 축소 · CTA는 SafeArea 하단 fixed.</td></tr>
-        <tr><td>"탈퇴 요청" 탭</td><td>분기: password 빈 → 빈 필드 에러(State 3) · password 채워짐 또는 social → reauth 시도.</td></tr>
-        <tr><td>FilledButton ripple</td><td>Material default ripple — 100ms.</td></tr>
-        <tr><td>다크 모드 토글</td><td>scaffold/Card/TextField/dialog 모두 dark 토큰 swap. error red는 다크에서 동일 brand red.</td></tr>
-        <tr><td>currentUserProvider null 전이</td><td>Scaffold(SizedBox.shrink) — 빈 화면. 정상 흐름에선 발생 안 함 (signOut/refresh 한정).</td></tr>
+        <tr><td>뒤로 가기 (시스템 / AppBar)</td><td>이전 안내 화면으로 복귀하며, 비밀번호 입력 내용은 사라진다.</td></tr>
+        <tr><td>비밀번호 입력 중 키보드 등장</td><td>본문 영역이 자동으로 축소되어 입력란이 가려지지 않으며, 하단 CTA 영역은 안전 영역 하단에 고정된다.</td></tr>
+        <tr><td>"탈퇴 요청" 탭</td><td>비밀번호 계정이 빈 필드면 빈 필드 에러로 전이, 그렇지 않으면 본인 확인을 거쳐 확인 다이얼로그가 뜬다.</td></tr>
+        <tr><td>"탈퇴 요청" 탭 피드백</td><td>탭 시 짧은 ripple 피드백.</td></tr>
+        <tr><td>다크 모드 토글</td><td>배경/카드/입력란/다이얼로그 모두 다크 토큰으로 자동 전환되며, error 톤도 다크에서 동일하게 유지된다.</td></tr>
+        <tr><td>로그인 상태가 일시적으로 비는 순간</td><td>본문이 잠시 빈 화면으로 보일 수 있으며, 정상 흐름에서는 거의 발생하지 않는다.</td></tr>
       </tbody>
     </table>
   </section>
@@ -884,21 +884,21 @@ body.dark-mode .dv-appbar__back { color: var(--color-dark-text-primary); }
     <table class="ref">
       <thead><tr><th style="width: 200px;">Token</th><th style="width: 80px;">Value</th><th>Use</th></tr></thead>
       <tbody>
-        <tr><td><code>MinglitAnimation.micro</code></td><td>100ms</td><td>FilledButton / TextField focus ripple — Material default</td></tr>
-        <tr><td><code>MinglitAnimation.fast</code></td><td>200ms</td><td>InfoPage → VerifyPage push · CompletePage go · TextField error border swap (Material default)</td></tr>
-        <tr><td><code>MinglitAnimation.medium</code></td><td>350ms</td><td>Confirm dialog enter (Material AlertDialog default) · spinner appear/disappear</td></tr>
-        <tr><td><em>(unscoped)</em> spinner</td><td>1000ms loop</td><td>CircularProgressIndicator rotation (Flutter framework default)</td></tr>
+        <tr><td><code>MinglitAnimation.micro</code></td><td>100ms</td><td>버튼 / 입력란 포커스 ripple.</td></tr>
+        <tr><td><code>MinglitAnimation.fast</code></td><td>200ms</td><td>화면 진입 / 마지막 완료 화면으로의 전환 / 입력란 에러 외곽선 변화.</td></tr>
+        <tr><td><code>MinglitAnimation.medium</code></td><td>350ms</td><td>확인 다이얼로그 등장 / 스피너 등장과 사라짐.</td></tr>
+        <tr><td><em>(시스템 기본)</em> 스피너</td><td>1000ms loop</td><td>스피너 회전 주기.</td></tr>
       </tbody>
     </table>
     <table class="ref" style="margin-top: 12px;">
       <thead><tr><th style="width: 220px;">Transition</th><th style="width: 140px;">Duration (token)</th><th>Curve / notes</th></tr></thead>
       <tbody>
-        <tr><td>화면 진입 (InfoPage → VerifyPage)</td><td><code>fast</code> (200ms)</td><td>GoRouter push slide</td></tr>
-        <tr><td>Confirm dialog enter</td><td><code>medium</code> (350ms)</td><td>Material showDialog default fade-in</td></tr>
-        <tr><td>requestDeletion 성공 → CompletePage</td><td><code>fast</code> (200ms)</td><td>GoRouter <code>go</code> — stack 교체 transition</td></tr>
-        <tr><td>FilledButton enabled ↔ loading spinner</td><td>cut</td><td>setState 즉시 — child swap, AnimatedSwitcher 미사용</td></tr>
-        <tr><td>TextField error border</td><td><code>fast</code> (200ms)</td><td>Material default decoration animation</td></tr>
-        <tr><td>SnackBar enter / exit</td><td>~250ms</td><td>Material default · 4초 후 자동 dismiss</td></tr>
+        <tr><td>이전 단계 → 이 화면 진입</td><td><code>fast</code> (200ms)</td><td>표준 좌→우 slide 전환.</td></tr>
+        <tr><td>확인 다이얼로그 등장</td><td><code>medium</code> (350ms)</td><td>화면 위에 페이드인.</td></tr>
+        <tr><td>탈퇴 요청 성공 → 완료 화면</td><td><code>fast</code> (200ms)</td><td>스택을 교체하는 전환.</td></tr>
+        <tr><td>"탈퇴 요청" 활성 ↔ 진행 중 스피너</td><td>cut</td><td>전환 애니메이션 없이 즉시 교체.</td></tr>
+        <tr><td>입력란 에러 외곽선</td><td><code>fast</code> (200ms)</td><td>외곽선이 부드럽게 빨간색으로 전환.</td></tr>
+        <tr><td>스낵바 등장 / 사라짐</td><td>~250ms</td><td>약 4초 후 자동으로 사라짐.</td></tr>
       </tbody>
     </table>
   </section>
@@ -906,11 +906,11 @@ body.dark-mode .dv-appbar__back { color: var(--color-dark-text-primary); }
   <section class="doc">
     <h2>Global edge cases</h2>
     <ul class="notes">
-      <li><strong>네트워크 끊김</strong> — reauthenticate / requestDeletion이 timeout/network error로 throw → State 6(snackbar) 진입. 화면은 그대로 유지.</li>
-      <li><strong>다크 모드</strong> — scaffold/Card/TextField/dialog 모두 dark 토큰 자동 swap. password obscure dot의 색은 onSurface 기반.</li>
-      <li><strong>접근성</strong> — TextField는 obscure로 screen reader가 비밀번호 텍스트를 읽지 않음. errorText는 accessibility node에 안내.</li>
-      <li><strong>키보드 자동 포커스</strong> — 진입 직후 자동 focus 없음 (autofocus 미설정). 사용자가 탭해야 키보드 등장 — 의도된 mental gate.</li>
-      <li><strong>Disposed during async</strong> — _submitDeletion 내부 모든 await 후 <code>!context.mounted</code> 체크 — race window 안전.</li>
+      <li><strong>네트워크 끊김</strong> — 본인 확인이나 탈퇴 요청이 실패하면 화면 하단 스낵바로 안내되고 화면은 그대로 유지된다.</li>
+      <li><strong>다크 모드</strong> — 배경/카드/입력란/다이얼로그 모두 다크 토큰으로 자동 전환되고, 비밀번호의 점 문자도 다크에 맞는 톤으로 보인다.</li>
+      <li><strong>접근성</strong> — 비밀번호는 가려져 있어 스크린 리더가 직접 읽지 않으며, 에러 안내는 별도로 안내된다.</li>
+      <li><strong>키보드 자동 포커스</strong> — 화면 진입 직후 자동 포커스는 없다. 사용자가 입력란을 탭해야 키보드가 등장하며, 이는 의도된 한 단계의 mental gate.</li>
+      <li><strong>비동기 도중 화면 사라짐</strong> — 본인 확인이나 탈퇴 요청 중 화면이 사라지면 후속 안내(스낵바, 화면 전환)는 자동으로 생략된다.</li>
     </ul>
   </section>
 </div>

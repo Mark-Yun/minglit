@@ -222,8 +222,8 @@ body.dark-mode .tel-appbar__title { color: var(--color-dark-text-primary); }
       <tr>
         <th>Hierarchy</th>
         <td>
-          <strong>Parent</strong>: <a href="/specs/home_page.html"><code>HomePage</code></a> <em style="color: var(--color-text-secondary);">(TrendingTagSection / FeaturedTagChipBar 태그 chip 탭으로 진입 — <code>tagCoordinator.goToTagEventList(id, name)</code>)</em><br>
-          <strong>Children</strong>: <a href="/specs/event_card.html"><code>MinglitEventCard</code></a> (vertical cell · onTap → <code>eventCoordinator.goToEventDetail</code> · 4 visible state — 별도 spec)
+          <strong>Parent</strong>: <a href="/specs/home_page.html"><code>HomePage</code></a> <em style="color: var(--color-text-secondary);">(TrendingTagSection / FeaturedTagChipBar 태그 chip 탭으로 진입)</em><br>
+          <strong>Children</strong>: <a href="/specs/event_card.html"><code>MinglitEventCard</code></a> (수직 셀 · 탭 시 EventDetailPage로 이동 · 4 visible state — 별도 spec)
         </td>
       </tr>
       <tr>
@@ -236,16 +236,16 @@ body.dark-mode .tel-appbar__title { color: var(--color-dark-text-primary); }
       <tr>
         <th>User journey</th>
         <td>
-          <strong>Entry points</strong>: <a href="/specs/home_page.html"><code>HomePage</code></a> 의 <code>TrendingTagSection</code> 태그 카드 탭 / <code>FeaturedTagChipBar</code> chip 탭 — 둘 다 <code>tagCoordinator.goToTagEventList(tag.id, tag.name)</code>. 딥링크 <code>/tags/:tagId</code>도 가능 (단 <code>tagName</code>이 path/query에 없어 AppBar title이 빈 "#"로 노출될 수 있음 — <strong>uncertain</strong>).<br>
-          <strong>Exit points</strong>: 카드 탭 → <code>eventCoordinator.goToEventDetail(event.id)</code> → <a href="/specs/event_detail_page.html"><code>EventDetailRoute</code></a> · 뒤로 가기 → HomePage 복귀 · Empty state CTA "홈으로 돌아가기" → <code>HomeRoute</code> (Fix #1136 — pop이 아니라 명시적 go).
+          <strong>Entry points</strong>: <a href="/specs/home_page.html"><code>HomePage</code></a>의 트렌딩 태그 카드 / 추천 태그 chip 탭. 딥링크 <code>/tags/:tagId</code>도 가능. 단 외부 진입에서는 AppBar 타이틀이 빈 "#"로 보일 수 있음.<br>
+          <strong>Exit points</strong>: 카드 탭 → <a href="/specs/event_detail_page.html">EventDetailPage</a>로 이동 · 뒤로 가기 → HomePage 복귀 · Empty 상태 CTA "홈으로 돌아가기" → 홈으로 명시적 이동 (Fix #1136 — 이전 화면이 없을 때를 위해 단순 pop 대신 홈으로 이동).
         </td>
       </tr>
       <tr>
         <th>Background</th>
         <td>
-          태그 chip은 HomePage에서 노출되는 가벼운 affordance지만, 그 뒤에 어떤 이벤트들이 묶여 있는지를 풀어줄 화면이 필요했다.
-          <code>TagEventListController</code>는 10개씩 페이지로 가져오고(<code>_pageSize = 10</code>), 스크롤이 maxScrollExtent − 200px에 도달하면 자동 <code>loadMore()</code> — pull-to-refresh 미장착.
-          loadMore 실패 시 controller가 throw하지 않고 <code>isLoadingMore: false</code>로 silent 복구 (Fix #1149 — 글로벌 async error 폭주 방지).
+          태그 chip은 HomePage에서 노출되는 가벼운 단서지만, 그 뒤에 어떤 이벤트들이 묶여 있는지를 풀어줄 화면이 필요했다.
+          이벤트는 10건씩 페이지로 받아오고, 리스트 끝에 가까워지면 다음 페이지가 자동으로 이어 붙는다 — 별도 풀-다운 새로고침은 없음.
+          다음 페이지 로드가 실패해도 화면이 깨지지 않고 조용히 멈추도록 안전 장치가 들어 있음 (Fix #1149).
         </td>
       </tr>
       <tr><th>Frequency</th><td>관심 키워드에 대해 세션당 0~1회 — HomePage에서 chip을 발견하고 호기심에 진입하는 탐색 단계.</td></tr>
@@ -293,15 +293,14 @@ body.dark-mode .tel-appbar__title { color: var(--color-dark-text-primary); }
   <div class="perspective__header">
     <span class="glyph">🧱</span>
     <h2>Layout</h2>
-    <span class="lede">Scaffold + AppBar + 분기 body. Default는 <code>ListView.separated</code>(separator = SizedBox(small=8)), 그 외엔 Center에 단일 widget.</span>
+    <span class="lede">Scaffold + AppBar + 분기 body. Default는 카드 사이 8px 간격이 들어간 수직 리스트, 그 외엔 화면 중앙 단일 영역.</span>
   </div>
 
   <section class="doc">
     <h2>Blueprint &amp; tree</h2>
     <p class="intro">
-      page는 <code>stateAsync.when(data, loading, error)</code>로 직접 분기 — <code>MinglitAsyncValueWidget</code>은 사용하지 않는다.
-      data 안에서 다시 <code>events.isEmpty &amp;&amp; !hasMore</code>면 Empty Center, 아니면 ListView로 분기.
-      ListView는 외곽 padding 0 (edge-to-edge), 카드 사이에 8px gray gap (separator).
+      body는 로딩 / 에러 / 결과 3개 분기를 같은 영역에서 교체 노출. 결과가 0건이면 Empty 안내, 1건 이상이면 카드 리스트.
+      리스트는 외곽 패딩 0 (edge-to-edge), 카드 사이에 8px gray gap.
     </p>
 
     <div class="layout-grid">
@@ -336,30 +335,25 @@ body.dark-mode .tel-appbar__title { color: var(--color-dark-text-primary); }
       </div>
 
       <div class="layout-tree"><b>Scaffold</b>
-├─ <b>AppBar</b>(centerTitle: true)                                         ← ①
-│  └─ title: <code>Text('#$tagName')</code>
+├─ <b>AppBar</b>(centerTitle: true)                                ← ①
+│  └─ title: "#{태그 이름}"
 │
-└─ body: <b>stateAsync.when</b>(...)
+└─ body: 비동기 분기
    ├─ [loading]  Center → <b>MinglitCircularProgressIndicator</b>
    ├─ [error]    Center → Column(min) [
    │              Text("이벤트를 불러오지 못했습니다"),
    │              SizedBox(small),
-   │              TextButton("다시 시도") → ref.invalidate(controller)
+   │              TextButton("다시 시도") → 다시 받아오기
    │             ]
    └─ [data]
-      ├─ events.isEmpty &amp;&amp; !hasMore → <b>Center</b> → Column(min) [
+      ├─ 결과 0건 + 더 받아올 것 없음 → <b>Center</b> → Column(min) [
       │     Text("아직 이 태그의 이벤트가 없어요", outline),
       │     SizedBox(medium),
-      │     TextButton("홈으로 돌아가기") → HomeRoute().go(context)   <i>(Fix #1136)</i>
+      │     TextButton("홈으로 돌아가기") → 홈으로 이동   <i>(Fix #1136)</i>
       │   ]
-      └─ else → <b>ListView.separated</b>(controller: _scrollController)
-                · itemCount = events.length + (isLoadingMore ? 1 : 0)
-                · separatorBuilder = SizedBox(height: small=8)
-                · itemBuilder:
-                  ├─ index &lt; events.length → <a href="/specs/event_card.html"><b>MinglitEventCard</b></a>           ← ②③④
-                  │   · event: events[index]
-                  │   · onTap: eventCoordinator.goToEventDetail(event.id)   <i>(Fix #1136)</i>
-                  └─ else → Padding(medium) Center <b>MinglitCircularProgressIndicator</b>   <i>(pagination spinner)</i></div>
+      └─ 결과 1건 이상 → <b>ListView</b>(카드 사이 separator 8)         ← ②③④
+                · 다음 페이지 로딩 중이면 마지막에 작은 스피너 한 줄 추가
+                · 카드 탭 시 EventDetailPage로 이동                <i>(Fix #1136)</i></div>
     </div>
 
     <table class="ref" style="margin-top: 16px;">
@@ -372,10 +366,10 @@ body.dark-mode .tel-appbar__title { color: var(--color-dark-text-primary); }
         </tr>
       </thead>
       <tbody>
-        <tr><td>①</td><td>AppBar</td><td>centerTitle (Material default · auto-back arrow)</td><td>height: 56 · scaffold gray bg · <strong>border-bottom 없음</strong> · title typography <code>titleLarge</code> · raw <code>AppBar</code>(MinglitTheme.simpleAppBar 미사용 — surfaceTintColor 미지정이라 Material 3 default tint가 살짝 끼어들 수 있음 · <strong>uncertain</strong>)</td></tr>
-        <tr><td>②③④</td><td>MinglitEventCard cell</td><td>edge-to-edge (ListView.separated · 외곽 padding 없음)</td><td>카드 사이 separator <code>SizedBox(height: MinglitSpacing.small=8)</code> — 카드 본체 사이 8px gray gap. 카드 height ≈ 240px (image 2:1 + 본문). 자세한 anatomy는 child spec.</td></tr>
-        <tr><td>—</td><td>Pagination spinner</td><td>—</td><td><code>Padding(EdgeInsets.all(MinglitSpacing.medium=16))</code> + Center + <code>MinglitCircularProgressIndicator</code> · ListView 마지막 item 위치(<code>index ≥ events.length</code>)에 추가됨 — <code>isLoadingMore</code>가 true일 때만 노출.</td></tr>
-        <tr><td>—</td><td>Body</td><td>—</td><td>외곽 padding 0 — Scaffold body는 <code>stateAsync.when</code> 결과를 직결.</td></tr>
+        <tr><td>①</td><td>AppBar</td><td>centerTitle (자동 뒤로가기 leading)</td><td>height: 56 · scaffold gray bg · <strong>border-bottom 없음</strong> · title typography <code>titleLarge</code></td></tr>
+        <tr><td>②③④</td><td>MinglitEventCard cell</td><td>edge-to-edge · 외곽 패딩 없음</td><td>카드 사이 separator 8px (gray gap). 카드 height ≈ 240px (2:1 이미지 + 본문). 자세한 anatomy는 child spec.</td></tr>
+        <tr><td>—</td><td>Pagination spinner</td><td>—</td><td>다음 페이지 로딩 중에 리스트 끝에 한 줄 노출. 외곽 패딩 16px + 작은 중앙 정렬 스피너.</td></tr>
+        <tr><td>—</td><td>Body</td><td>—</td><td>외곽 padding 0 — 분기 결과가 그대로 화면에 채워짐.</td></tr>
       </tbody>
     </table>
   </section>
@@ -407,10 +401,10 @@ body.dark-mode .tel-appbar__title { color: var(--color-dark-text-primary); }
         </tr>
       </thead>
       <tbody>
-        <tr class="is-baseline-tint"><td><strong>Default</strong> 🎯</td><td>production</td><td><code>stateAsync.hasValue &amp;&amp; events.isNotEmpty</code></td><td>vertical ListView.separated · MinglitEventCard cell × N · 카드 사이 8px gap · scroll near bottom 시 pagination spinner 추가</td></tr>
-        <tr><td><strong>Empty</strong></td><td>data·empty</td><td><code>events.isEmpty &amp;&amp; !hasMore</code></td><td>화면 중앙 "아직 이 태그의 이벤트가 없어요" + "홈으로 돌아가기" TextButton</td></tr>
-        <tr><td><strong>Loading</strong></td><td>async</td><td><code>stateAsync.isLoading</code> (initial)</td><td>화면 중앙 단일 spinner · AppBar 타이틀은 정상 노출 (tagName 라우트 인자)</td></tr>
-        <tr><td><strong>Error</strong></td><td>network/server</td><td><code>stateAsync.hasError</code></td><td>"이벤트를 불러오지 못했습니다" + "다시 시도" TextButton (retry CTA — partner_events_page와 다른 점)</td></tr>
+        <tr class="is-baseline-tint"><td><strong>Default</strong> 🎯</td><td>production</td><td>이 태그에 이벤트 1개 이상</td><td>수직 카드 리스트 · 카드 사이 8px gap · 끝에 다다르면 다음 페이지가 자동으로 이어 붙음</td></tr>
+        <tr><td><strong>Empty</strong></td><td>data·empty</td><td>이 태그에 이벤트가 0개 (더 받아올 것도 없음)</td><td>화면 중앙 "아직 이 태그의 이벤트가 없어요" + "홈으로 돌아가기" 텍스트 버튼</td></tr>
+        <tr><td><strong>Loading</strong></td><td>async</td><td>첫 페이지를 불러오는 중</td><td>화면 중앙 단일 스피너 · AppBar 태그 이름은 그대로 노출</td></tr>
+        <tr><td><strong>Error</strong></td><td>network/server</td><td>첫 페이지를 받지 못한 상태</td><td>"이벤트를 불러오지 못했습니다" + "다시 시도" 텍스트 버튼 (재시도 CTA — partner_events_page와 다른 점)</td></tr>
       </tbody>
     </table>
   </section>
@@ -419,13 +413,13 @@ body.dark-mode .tel-appbar__title { color: var(--color-dark-text-primary); }
     <h2>States gallery</h2>
     <p class="intro">
       각 state mini-table — mockup(rowspan=6) + 6 aspect rows. <strong>Default가 baseline</strong>; 나머지 3 states는 additive diff.
-      카드 자체 anatomy / D-Day chip / sold-out scrim 등은 child spec에서 다룸 — 이 spec은 페이지 골격(AppBar + list/center 분기 + pagination)에 집중.
+      카드 자체 anatomy / D-Day 칩 / 만석 scrim 등은 child spec에서 다룸 — 이 spec은 페이지 골격(AppBar + list/center 분기 + 페이지네이션)에 집중.
     </p>
 
     <!-- State 1: Default — BASELINE -->
     <table class="ref state-mini is-baseline-tint">
       <thead>
-        <tr><th colspan="3"><strong>Default</strong> 🎯 <small style="color:var(--color-primary);">baseline · production · 이 태그에 이벤트 1개 이상</small></th></tr>
+        <tr><th colspan="3"><strong>Default</strong> 🎯</th></tr>
       </thead>
       <tbody>
         <tr>
@@ -467,30 +461,30 @@ body.dark-mode .tel-appbar__title { color: var(--color-dark-text-primary); }
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>tagEventListControllerProvider(tagId).hasValue</code> · <code>state.events.isNotEmpty</code></td>
+          <td>이 태그에 이벤트가 1개 이상 도착한 상태.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
             · <strong>뒤로 가기</strong> → HomePage 복귀<br>
-            · <strong>카드 탭</strong> → <code>eventCoordinator.goToEventDetail(event.id)</code> → <code>EventDetailRoute</code> (sharedAxisScaled transition · Fix #1136 — Coordinator 패턴)<br>
-            · <strong>스크롤</strong> → 추가 카드 노출 + maxScrollExtent − 200px 도달 시 자동 <code>loadMore()</code> (10개씩) → 카드 N+1 ~ N+10 append, 진행 중엔 list 끝에 pagination spinner 노출<br>
-            · <strong>카드 long-press</strong> — 미구현 (default Material InkWell만)
+            · <strong>카드 탭</strong> → <a href="/specs/event_detail_page.html">EventDetailPage</a>로 이동<br>
+            · <strong>스크롤</strong> → 추가 카드 노출. 끝에 다다르면 다음 10건이 자동으로 이어 붙고, 그 사이에는 리스트 끝에 작은 스피너 한 줄이 노출<br>
+            · <strong>카드 길게 누르기</strong> — 별도 액션 없음
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · <strong>PaginationLoading sub-state</strong>: <code>state.isLoadingMore == true</code>면 ListView 마지막 cell 자리에 <code>Padding(medium) Center MinglitCircularProgressIndicator</code> 추가. 별도 state로 분리하지 않음 (UI는 Default + 끝에 spinner row).<br>
-            · <strong>loadMore 실패</strong>: controller가 throw 안 함 (Fix #1149) — silent하게 <code>isLoadingMore: false</code>로 복구. 사용자에게 에러 노출 없음 — 다음 스크롤이 트리거하면 재시도. 실제 페이지 끝(<code>hasMore: false</code>)과 시각적으로 구분 안 됨 (<strong>uncertain UX</strong>).<br>
-            · <strong>hasMore: false</strong> 도달: pagination spinner 미노출. 추가 fetch 안 함 — 끝났다는 explicit "이게 전부예요" affordance 없음.<br>
-            · <strong>카드 mix</strong> (today / sold-out / ended): repository 정렬은 시간 기반 가정 (`getPartiesByTag` · 명시 보장 없음 · <strong>uncertain</strong>).
+            · <strong>PaginationLoading sub-state</strong>: 다음 페이지 로딩 중이면 리스트 끝에 작은 스피너 한 줄이 더해짐. 별도 페이지 상태로 분리하지 않음 (UI는 Default + 끝에 스피너 행).<br>
+            · <strong>다음 페이지 로딩 실패</strong>: 화면이 깨지지 않고 조용히 멈춤 — 사용자에게 별도 오류 안내 없이 스피너만 사라짐. 다음 스크롤이 다시 트리거하면 재시도. 실제 끝에 도달했을 때와 시각적으로 잘 구분되지 않음.<br>
+            · <strong>리스트 끝에 도달</strong>: 추가 스피너 없음. "이게 전부예요"라는 별도 안내도 없음.<br>
+            · <strong>카드 mix</strong> (오늘 / 만석 / 종료) — 정렬은 시간 기반으로 보이지만 명시적 보장은 아님.
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
           <td>
-            <code>Scaffold</code> · <code>AppBar</code>(<code>title: Text('#$tagName')</code> · centerTitle: true · raw AppBar) · <code>ListView.separated</code>(controller: _scrollController · itemCount: events.length + (isLoadingMore ? 1 : 0) · separatorBuilder: <code>SizedBox(height: MinglitSpacing.small=8)</code>) · <a href="/specs/event_card.html"><code>MinglitEventCard</code></a>(onTap → <code>eventCoordinator.goToEventDetail</code> · 별도 spec — child) · <code>MinglitCircularProgressIndicator</code> (pagination row · <code>Padding(EdgeInsets.all(medium=16))</code>)
+            <code>Scaffold</code> · <code>AppBar</code>(centerTitle · 타이틀 "#{태그 이름}") · 카드 리스트(카드 사이 8px gap · 다음 페이지 로딩 중에는 끝에 스피너 행 추가) · <a href="/specs/event_card.html"><code>MinglitEventCard</code></a>(탭 시 EventDetailPage로 이동 · 별도 spec — child) · 작은 중앙 스피너 (페이지네이션 행 · 외곽 패딩 16px)
           </td>
         </tr>
         <tr>
@@ -501,14 +495,14 @@ body.dark-mode .tel-appbar__title { color: var(--color-dark-text-primary); }
             · radius / typography / iconSize: 카드 자체에 위임 — child spec
           </td>
         </tr>
-        <tr><td class="state-mini__aspect">노트</td><td>📝 viewport mockup은 카드 3장 + pagination spinner 1로 표시 — 실제는 N개 + scroll. AppBar title의 tagName은 라우트 인자로 즉시 노출 (provider 응답 대기 없음). raw <code>AppBar</code>(MinglitTheme.simpleAppBar 미사용)라 surfaceTintColor 미지정 — Material 3가 살짝 tint를 끼울 수 있음 (실기기 verify 필요 · <strong>uncertain</strong>).</td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 mockup은 카드 3장 + 페이지네이션 스피너로 표시 — 실제는 N개 + 스크롤. AppBar의 태그 이름은 진입 직후부터 즉시 노출.</td></tr>
       </tbody>
     </table>
 
     <!-- State 2: Empty -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Empty</strong> <span class="tag tag--mute">data·empty</span> · <small>이 태그에 이벤트 0개 (hasMore: false)</small></th></tr>
+        <tr><th colspan="3"><strong>Empty</strong> <span class="tag tag--mute">data·empty</span></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -527,27 +521,27 @@ body.dark-mode .tel-appbar__title { color: var(--color-dark-text-primary); }
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>stateAsync.hasValue &amp;&amp; state.events.isEmpty &amp;&amp; !state.hasMore</code> — 첫 페이지가 비었고 더 가져올 것도 없음.</td>
+          <td>이 태그에 이벤트가 0개이고 더 받아올 것도 없는 상태.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ↔ list / scroll / 카드 액션 모두 없음 (cards 미렌더)<br>
-            + <strong>"홈으로 돌아가기" 탭</strong> → <code>const HomeRoute().go(context)</code> — Fix #1136: <code>context.pop()</code>은 이전 스택이 없을 때 동작 안 하므로 명시적 go 사용<br>
-            동일: 뒤로 가기 (시스템 back / AppBar back) → 이전 스택(보통 HomePage) pop
+            ↔ 리스트 / 스크롤 / 카드 액션 모두 없음 (카드 미노출)<br>
+            + <strong>"홈으로 돌아가기" 탭</strong> → 홈으로 명시적 이동 (Fix #1136 — 이전 스택이 없을 때를 위해 단순 pop 대신 홈으로 이동)<br>
+            동일: 뒤로 가기 (시스템 back / AppBar back) → 이전 화면 (보통 HomePage)으로 복귀
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · 첫 페이지 fetch가 0개를 리턴 → <code>events.length &gt;= _pageSize(10)</code>이 false → <code>hasMore: false</code>로 초기화 → Empty 분기 충족.<br>
-            · 첫 페이지 9개를 받은 경우(0 &lt; n &lt; 10): <code>hasMore: false</code>이지만 events.isNotEmpty라 Default로 분기 — Empty 화면 안 봄.<br>
-            · 딥링크로 진입한 알 수 없는 tagId — repository가 빈 list 리턴이면 동일 Empty 화면. 별도 "잘못된 태그" 안내 없음.
+            · 첫 페이지가 0건이면 더 받아올 것도 없는 것으로 간주되어 Empty 안내가 노출됨.<br>
+            · 첫 페이지 결과가 1~9건이면 더 받아올 것이 없더라도 Default 화면으로 분기 — Empty 화면을 보지 않음.<br>
+            · 알 수 없는 태그로 직접 진입해도 결과가 0건이면 동일한 Empty 화면. 별도 "잘못된 태그" 안내 없음.
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
-          <td>↔ ListView.separated → <code>Center</code>(<code>Column(MainAxisSize.min)</code>[ <code>Text('아직 이 태그의 이벤트가 없어요', bodyMedium · outline)</code> · <code>SizedBox(MinglitSpacing.medium=16)</code> · <code>TextButton('홈으로 돌아가기')</code> ])<br>· text style: <code>bodyMedium</code> · color <code>theme.colorScheme.outline</code><br>· <code>MinglitEmptyState</code> 사용 안 함 (커스텀 Center · my_tickets_page와 다른 점)</td>
+          <td>↔ 카드 리스트 → 화면 중앙 Column [ "아직 이 태그의 이벤트가 없어요" (bodyMedium · outline) · 16px gap · "홈으로 돌아가기" 텍스트 버튼 ]</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
@@ -558,14 +552,14 @@ body.dark-mode .tel-appbar__title { color: var(--color-dark-text-primary); }
             + spacing: <code>spacing-medium (16)</code> (text → button 사이 SizedBox)
           </td>
         </tr>
-        <tr><td class="state-mini__aspect">노트</td><td>📝 retry / 검색 안내 없음 — 단순히 홈으로 돌려보냄. enhancement 후보: "비슷한 태그 추천" 또는 "검색해보기" CTA. 빈 상태에서 무한 스크롤 사용자 액션이 사라지는 점은 의도적 — 더 이상 가져올 게 없으니.</td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 재시도 / 검색 안내 없음 — 단순히 홈으로 돌려보냄. 향후 "비슷한 태그 추천" 또는 "검색해보기" CTA 보강 후보. 빈 상태에서 스크롤 액션이 사라지는 것은 의도적 — 더 이상 받아올 게 없기 때문.</td></tr>
       </tbody>
     </table>
 
     <!-- State 3: Loading -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Loading</strong> <span class="tag tag--mute">async</span> · <small>첫 페이지 fetch 진행 중</small></th></tr>
+        <tr><th colspan="3"><strong>Loading</strong> <span class="tag tag--mute">async</span></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -583,27 +577,27 @@ body.dark-mode .tel-appbar__title { color: var(--color-dark-text-primary); }
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>stateAsync.isLoading</code> — 진입 직후 ~ <code>repository.getPartiesByTag(tagId, offset: 0)</code> 응답까지.</td>
+          <td>첫 페이지를 불러오는 중. 화면에 처음 들어올 때.</td>
         </tr>
-        <tr><td class="state-mini__aspect">사용자 액션</td><td>· 뒤로 가기 → HomePage 복귀 (즉시).<br>· 그 외 무반응 (spinner 회전).</td></tr>
+        <tr><td class="state-mini__aspect">사용자 액션</td><td>· 뒤로 가기 → HomePage 복귀 (즉시).<br>· 그 외 무반응 (스피너 회전).</td></tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · skeleton 미장착 — pull-to-refresh도 없음. timeout 없음 (Supabase client default).<br>
-            · 캐시 정책: <code>@riverpod</code> default(autoDispose) — 화면 떠나면 캐시 폐기. 재진입 시 매번 Loading을 거침 (PartnerEvents 5분 keepAlive와 다름).<br>
-            · 백그라운드 refresh(invalidate)이면 stateAsync는 hasValue 유지 → 이 화면 안 보이고 stale data 표시.
+            · 스켈레톤 / 풀-다운 새로고침 없음. 별도 타임아웃 없음.<br>
+            · 화면을 떠나면 캐시가 비워지므로 다시 들어올 때마다 Loading을 거침 (PartnerEvents와 다른 점).<br>
+            · 백그라운드에서 다시 받아오는 경우에는 직전 결과가 그대로 노출되어 이 화면이 보이지 않음.
           </td>
         </tr>
-        <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ ListView.separated → <code>Center</code>(<code>MinglitCircularProgressIndicator</code>) — <code>stateAsync.when(loading: ...)</code> 분기 직접 작성 (MinglitAsyncValueWidget 미사용)</td></tr>
-        <tr><td class="state-mini__aspect">토큰</td><td>− Default list 토큰 미사용<br>+ <code>color-primary</code> (spinner indicator 색)<br>+ <code>color-surface</code> (scaffold bg 유지)</td></tr>
-        <tr><td class="state-mini__aspect">노트</td><td>📝 AppBar title은 tagName 라우트 인자로 즉시 표시 — Loading state에서도 "어떤 태그를 보러 왔는지" 단서 제공. PaginationLoading(추가 페이지 fetch 중)은 이 state가 아니라 Default + spinner row — 구분 필요.</td></tr>
+        <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ 카드 리스트 → 화면 중앙 단일 스피너</td></tr>
+        <tr><td class="state-mini__aspect">토큰</td><td>− Default list 토큰 미사용<br>+ <code>color-primary</code> (스피너 색)<br>+ <code>color-surface</code> (scaffold bg 유지)</td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 AppBar의 태그 이름은 진입 직후부터 즉시 표시 — Loading 상태에서도 "어떤 태그를 보러 왔는지" 단서 제공. 다음 페이지 로딩(PaginationLoading)은 이 상태가 아니라 Default + 끝의 작은 스피너 행 — 구분 필요.</td></tr>
       </tbody>
     </table>
 
     <!-- State 4: Error -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Error</strong> <span class="tag tag--mute">network/server</span> · <small>첫 페이지 fetch 실패</small></th></tr>
+        <tr><th colspan="3"><strong>Error</strong> <span class="tag tag--mute">network/server</span></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -622,25 +616,25 @@ body.dark-mode .tel-appbar__title { color: var(--color-dark-text-primary); }
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>stateAsync.hasError</code> — 첫 페이지 fetch 시 repository / 네트워크 / RLS 거부 등 throw.</td>
+          <td>첫 페이지를 받지 못한 상태. 네트워크 / 서버 / 권한 오류.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ↔ list 액션 모두 없음<br>
-            + <strong>"다시 시도" 탭</strong> → <code>ref.invalidate(tagEventListControllerProvider(tagId))</code> → controller 재생성 → 다시 Loading → Default/Error<br>
+            ↔ 리스트 액션 모두 없음<br>
+            + <strong>"다시 시도" 탭</strong> → 첫 페이지를 다시 받아옴 → Loading → Default/Error<br>
             동일: 뒤로 가기 → HomePage 복귀
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · 메시지가 단일 줄 — error 본문(stack trace)은 노출 안 됨. 디버그 시 logger / Sentry 확인.<br>
-            · 인증 토큰 만료 등도 동일 error 화면 (별도 401 분기 없음).<br>
-            · loadMore 시(2번째 이후) 실패는 이 state로 안 옴 — controller가 silent 복구 (Fix #1149).
+            · 구체적인 오류 사유는 화면에 표시되지 않음 — 일반 안내 문구만 노출.<br>
+            · 인증 만료도 동일한 오류 화면 (별도 분기 없음).<br>
+            · 두 번째 이후 페이지 로딩 실패는 이 화면이 아닌 Default 안에서 조용히 처리됨 (Fix #1149).
           </td>
         </tr>
-        <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ ListView.separated → <code>Center</code>(<code>Column(MainAxisSize.min)</code>[ <code>Text('이벤트를 불러오지 못했습니다')</code> · <code>SizedBox(MinglitSpacing.small=8)</code> · <code>TextButton('다시 시도')</code> → <code>ref.invalidate(controller)</code> ])</td></tr>
+        <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ 카드 리스트 → 화면 중앙 Column [ "이벤트를 불러오지 못했습니다" · 8px gap · "다시 시도" 텍스트 버튼 ]</td></tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
           <td>
@@ -651,7 +645,7 @@ body.dark-mode .tel-appbar__title { color: var(--color-dark-text-primary); }
             <em>(partner_events_page와 달리 error icon / "오류가 발생했습니다." titleMedium 미사용 — 단순 bodyMedium + retry CTA 조합)</em>
           </td>
         </tr>
-        <tr><td class="state-mini__aspect">노트</td><td>📝 retry CTA가 있다는 점이 partner_events_page와의 차이 — 사용자가 "뒤로 → 다시 진입" 우회 없이 같은 화면에서 재시도 가능. 대신 error icon이 빠져 시각적으로 약하다 — Phase 2에서 icon + 통일된 레이아웃 검토 후보.</td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 재시도 버튼이 있다는 점이 partner_events_page와의 차이 — 사용자가 "뒤로 → 다시 진입" 없이 같은 화면에서 재시도 가능. 대신 에러 아이콘이 빠져 시각적으로 약하다 — Phase 2에서 아이콘 + 통일된 레이아웃 검토 후보.</td></tr>
       </tbody>
     </table>
 
@@ -679,28 +673,28 @@ body.dark-mode .tel-appbar__title { color: var(--color-dark-text-primary); }
       </thead>
       <tbody>
         <tr>
-          <td>뒤로 가기 (OS back / AppBar BackButton)</td>
-          <td>이전 화면(보통 HomePage)으로 pop — 4 state 모두 동일. transition은 GoRouter / Material default 역방향.</td>
+          <td>뒤로 가기 (OS back / AppBar 뒤로 버튼)</td>
+          <td>이전 화면(보통 HomePage)으로 복귀 — 4 state 모두 동일.</td>
         </tr>
         <tr>
           <td>카드 탭 (Default 한정)</td>
-          <td><code>eventCoordinator.goToEventDetail(event.id)</code> → <code>EventDetailRoute</code> push (sharedAxisScaled · 350ms). Coordinator 패턴(Fix #1136) — 위젯에서 직접 GoRouter 호출 금지.</td>
+          <td><a href="/specs/event_detail_page.html">EventDetailPage</a>로 이동 (sharedAxisScaled · 350ms 전환).</td>
         </tr>
         <tr>
           <td>리스트 끝부근 스크롤</td>
-          <td><code>_scrollController</code>가 maxScrollExtent − 200px 통과 시 <code>loadMore()</code> 자동 호출 — 다음 10개 fetch. 진행 중엔 list 끝에 pagination spinner. <code>!hasMore || isLoadingMore</code>면 no-op.</td>
+          <td>리스트 끝에 가까워지면 다음 10건이 자동으로 이어 붙음. 진행 중에는 리스트 끝에 작은 스피너 한 줄. 더 받아올 게 없거나 이미 진행 중이면 무반응.</td>
         </tr>
         <tr>
           <td>풀-다운 새로고침</td>
-          <td><strong>구현 안 됨</strong> — RefreshIndicator 미부착. 강제 새로고침은 "뒤로 → 다시 진입" 또는 invalidate 트리거 필요.</td>
+          <td>없음 — 강제로 다시 받으려면 "뒤로 → 다시 진입"으로 우회.</td>
         </tr>
         <tr>
           <td>딥링크로 직접 진입</td>
-          <td><code>/tags/:tagId</code> URL → Loading → Default(또는 Empty / Error). <strong>tagName이 path/query에 없음</strong> (route 정의에 query parameter 명시 없음 · 코드 주석엔 "passed as a query parameter" 적혀 있으나 실제 동작은 verify 필요) → AppBar title이 빈 "#"로 노출될 수 있음 (<strong>uncertain</strong>).</td>
+          <td><code>/tags/:tagId</code> URL로 곧장 진입 가능 → Loading → Default (또는 Empty / Error). 외부 진입에서는 AppBar 타이틀이 빈 "#"로 보일 수 있음.</td>
         </tr>
         <tr>
           <td>다크 모드 토글</td>
-          <td>scaffold / AppBar / 카드 모두 dark 토큰으로 자동 swap (mds 다크 토큰 매핑).</td>
+          <td>scaffold / AppBar / 카드 모두 다크 토큰으로 자동 전환.</td>
         </tr>
       </tbody>
     </table>
@@ -719,32 +713,32 @@ body.dark-mode .tel-appbar__title { color: var(--color-dark-text-primary); }
         <tr>
           <td>화면 진입 (HomePage → TagEventList)</td>
           <td><code>MinglitAnimation.fast</code> (200ms)</td>
-          <td>GoRouter Material default — TagEventListRoute에 커스텀 transition 미지정.</td>
+          <td>플랫폼 기본 push 전환.</td>
         </tr>
         <tr>
-          <td>카드 탭 → EventDetail push</td>
+          <td>카드 탭 → EventDetail 이동</td>
           <td><code>MinglitAnimation.medium</code> (350ms)</td>
-          <td><code>MinglitPageTransitions.sharedAxisScaled</code> — EventDetailRoute 정의에 명시.</td>
+          <td><code>MinglitPageTransitions.sharedAxisScaled</code> — EventDetail 진입의 표준 전환.</td>
         </tr>
         <tr>
-          <td>Loading → Default state 교체</td>
+          <td>Loading → Default 교체</td>
           <td>cut</td>
-          <td><code>stateAsync.when</code>이 직접 분기 — fade 없이 교체 (AnimatedSwitcher 미장착).</td>
+          <td>fade 없이 즉시 교체.</td>
         </tr>
         <tr>
-          <td>PaginationLoading append</td>
-          <td>cut + 자연스러운 ListView re-layout</td>
-          <td>itemCount이 +1되어 spinner row가 list 끝에 붙는다. 응답 도착하면 spinner row가 카드들로 교체 — explicit transition 없음.</td>
+          <td>다음 페이지 추가 노출</td>
+          <td>cut + 자연스러운 리스트 재배치</td>
+          <td>스피너 한 줄이 끝에 잠시 노출됐다가, 응답 도착 후 새 카드들로 교체됨.</td>
         </tr>
         <tr>
-          <td>InkWell ripple (카드 탭)</td>
+          <td>카드 탭 ripple</td>
           <td><code>MinglitAnimation.micro</code> (100ms)</td>
-          <td>Material default ripple expand · 카드 내부에서 처리.</td>
+          <td>Material 잉크 리플 — 카드 내부에서 처리.</td>
         </tr>
         <tr>
-          <td>ListView 스크롤 inertia</td>
-          <td>OS default (<code>BouncingScrollPhysics</code> · iOS) / Material default · Android</td>
-          <td>별도 token 없음.</td>
+          <td>리스트 스크롤 관성</td>
+          <td>OS 기본</td>
+          <td>iOS는 끝에서 살짝 튕김, Android는 Material 기본. 별도 token 없음.</td>
         </tr>
       </tbody>
     </table>
@@ -753,12 +747,11 @@ body.dark-mode .tel-appbar__title { color: var(--color-dark-text-primary); }
   <section class="doc">
     <h2>Global edge cases</h2>
     <ul class="notes">
-      <li><strong>tagName이 빈 문자열</strong> — AppBar title이 그냥 "#"로 노출됨. HomePage 정상 진입 경로에선 사실상 발생 안 함 (tag.name 보장) · 딥링크 / 외부 링크에선 발생 가능 — sanitize 미구현.</li>
-      <li><strong>provider autoDispose</strong> — <code>@riverpod</code> default라 화면 떠나면 캐시 폐기. 재진입마다 Loading을 거치며 첫 페이지 다시 받음. PartnerEventsPage(5분 keepAlive)와 다름 — 태그 목록은 짧은 탐색 단계라 캐시 정책이 가벼움.</li>
-      <li><strong>loadMore silent failure</strong> — <code>state = AsyncData(current.copyWith(isLoadingMore: false))</code>로 복구 (Fix #1149) → 사용자에겐 spinner가 슬그머니 사라지고 추가 카드가 안 붙는 상황으로 보임. 별도 toast / snackbar 없음.</li>
-      <li><strong>scroll listener leak 방지</strong> — <code>dispose()</code>에서 <code>_scrollController.removeListener(_onScroll)</code> + dispose 호출 (page lifecycle 관행).</li>
-      <li><strong>접근성</strong> — AppBar BackButton은 Material 기본 a11y. 카드 자체 Semantics는 child spec 참고 (Fix #996, #1558 — 만석/종료 announce 포함). pagination spinner는 별도 a11y 안내 없음.</li>
-      <li><strong>large list memory</strong> — pagination이 있어 한 번에 10개씩만 — partner_events_page의 "전부 받아 ListView.builder" 보다 메모리 안전. 다만 N이 매우 커지면 누적 events 길이가 무한정 증가 (페이지 누적 폐기 정책 없음).</li>
+      <li><strong>태그 이름이 빈 문자열</strong> — AppBar 타이틀이 그냥 "#"로 보일 수 있음. HomePage 정상 진입에서는 사실상 발생 안 함, 외부 진입에서만 가능.</li>
+      <li><strong>캐시 정책</strong> — 화면을 떠나면 결과가 비워지므로 다시 들어올 때마다 Loading을 거치며 첫 페이지를 다시 받음 (PartnerEventsPage와 다른 점 — 태그 목록은 짧은 탐색 단계라 캐시 정책이 가볍게).</li>
+      <li><strong>다음 페이지 로딩 실패</strong> — 사용자에게는 스피너가 슬그머니 사라지고 추가 카드가 안 붙는 상황으로 보임. 별도 toast / snackbar 없음.</li>
+      <li><strong>접근성</strong> — AppBar 뒤로 버튼은 플랫폼 기본 접근성 동작. 카드 자체 접근성 안내는 child spec 참고 (만석 / 종료 안내 포함). 페이지네이션 스피너는 별도 접근성 안내 없음.</li>
+      <li><strong>대용량 리스트</strong> — 한 번에 10건씩만 받아오므로 partner_events_page의 "전부 받아 표시" 방식보다 메모리 안전. 다만 N이 매우 커지면 누적 길이가 무한정 증가 (페이지 누적 폐기 정책 없음).</li>
     </ul>
   </section>
 </div>

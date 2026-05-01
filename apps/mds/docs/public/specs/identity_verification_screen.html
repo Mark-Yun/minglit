@@ -235,8 +235,8 @@
         <th>Background</th>
         <td>
           한국 법규(정보통신망법 / 본인확인기관 가이드)상 신원 확인이 필요한 거래(결제 · 매칭 · 사업자 등록 등)
-          전에 NICE / KCB 본인인증이 강제됨. CI/DI는 암호화 저장(<code>iamport_repository.verifyCertification</code>).
-          consent gate를 명시적으로 두는 이유: <strong>개인정보 수집·이용 동의</strong> 적법 처리근거 확보.
+          전에 NICE / KCB 본인인증이 강제됨. CI / DI는 암호화되어 안전하게 저장된다.
+          본인인증에 앞서 별도 동의 시트를 띄우는 이유: <strong>개인정보 수집·이용 동의</strong> 적법 처리근거 확보.
         </td>
       </tr>
       <tr>
@@ -356,13 +356,13 @@
   <div class="perspective__header">
     <span class="glyph">🎨</span>
     <h2>States</h2>
-    <span class="lede">5 states — _isLoading flag + _errorMessage + showIdentityVerificationConsentSheet 결과 + Iamport NICE WebView. 사용자가 인지할 수 있는 모든 단계 enumerate.</span>
+    <span class="lede">시각 변형 5종 — 로딩 / 동의 시트 / NICE 인증 창 / 성공 / 실패 후 재시도. 사용자가 인지할 수 있는 모든 단계를 나열.</span>
   </div>
 
   <section class="doc">
     <p class="intro">
-      <strong>State 종류 식별</strong>: <code>_isLoading</code> · <code>_errorMessage</code> · BottomSheet 결과 · NICE WebView visibility.
-      Loading은 진입 직후 첫 frame부터 — initState에서 <code>WidgetsBinding.instance.addPostFrameCallback</code>으로 자동 시작.
+      <strong>State 식별 기준</strong>: 로딩 진행 여부 · 에러 메시지 유무 · 동의 시트 노출 여부 · NICE 인증 창 노출 여부.
+      화면 진입 직후 자동으로 로딩 상태에서 시작.
     </p>
 
     <h3 style="margin-top: 24px;">State summary</h3>
@@ -376,11 +376,11 @@
         </tr>
       </thead>
       <tbody>
-        <tr><td><strong>Loading</strong> 🎯</td><td>baseline</td><td>진입 직후 · <code>_isLoading == true</code></td><td>화면 중앙 spinner + "창을 불러오는 중..." 메시지</td></tr>
-        <tr><td><strong>Consent sheet</strong></td><td>modal</td><td>동의 미수집 사용자에 한해 BottomSheet 자동 표시</td><td>하단 modal — 수집 항목 / 목적 / 보유 기간 + "동의하고 인증" / "취소"</td></tr>
-        <tr><td><strong>WebView · NICE 인증</strong></td><td>external</td><td>동의 통과 후 Iamport SDK가 인증 창 호스팅</td><td>NICE 통신사 선택 / 정보 입력 폼 (앱이 호스팅하는 native overlay)</td></tr>
-        <tr><td><strong>Success</strong></td><td>complete</td><td>verifyCertification 응답 OK → SnackBar + pop(true)</td><td>"✅ 본인인증이 성공적으로 완료되었습니다" SnackBar 잠깐 표시 후 화면 자체 종료</td></tr>
-        <tr><td><strong>Error / retry</strong></td><td>failure</td><td>인증 취소 / 창 차단 / 서버 에러</td><td>경고 아이콘 + 에러 메시지 + "본인인증 다시 시도하기" 버튼</td></tr>
+        <tr><td><strong>Loading</strong> 🎯</td><td>baseline</td><td>화면 진입 직후 인증 창을 준비하는 동안의 로딩 상태.</td><td>화면 중앙 스피너 + "창을 불러오는 중..." 메시지</td></tr>
+        <tr><td><strong>Consent sheet</strong></td><td>modal</td><td>본인확인 정보 수집·이용 동의가 아직 수집되지 않은 사용자에게만 자동으로 노출되는 시트.</td><td>하단 modal — 수집 항목 / 목적 / 보유 기간 + "동의하고 인증" / "취소"</td></tr>
+        <tr><td><strong>WebView · NICE 인증</strong></td><td>external</td><td>동의가 완료된 뒤 NICE 본인인증 창이 화면에 떠 있는 상태.</td><td>NICE 통신사 선택 / 정보 입력 폼 (앱이 호스팅하는 외부 인증 창)</td></tr>
+        <tr><td><strong>Success</strong></td><td>complete</td><td>본인인증이 성공적으로 처리되어 화면이 자동으로 종료되기 직전.</td><td>"✅ 본인인증이 성공적으로 완료되었습니다" 스낵바가 잠깐 표시된 뒤 화면 종료</td></tr>
+        <tr><td><strong>Error / retry</strong></td><td>failure</td><td>인증이 취소되거나 창이 열리지 않았거나 서버 오류로 실패한 상태.</td><td>경고 아이콘 + 에러 메시지 + "본인인증 다시 시도하기" 버튼</td></tr>
       </tbody>
     </table>
 
@@ -414,15 +414,15 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>_isLoading == true</code> · <code>_errorMessage == null</code> · <code>_startVerificationFlow()</code> 진행 중 (consent 확인 + NICE 호출 준비)</td>
+          <td>화면 진입 직후 인증 창을 준비하는 동안의 로딩 상태. 동의 여부 확인과 NICE 인증 호출 준비가 진행되는 구간.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>① <strong>AppBar back 탭</strong> → <code>Navigator.pop()</code> (인증 미완료 상태로 종료)<br>② 그 외 탭 무반응 — Loading 동안 인터랙션 가능 UI 없음</td>
+          <td>① <strong>AppBar 뒤로가기 탭</strong> — 인증을 마치지 않은 채로 화면이 종료되고 이전 화면으로 복귀.<br>② 그 외 화면에 인터랙션 가능한 요소가 없어 다른 탭은 받아들여지지 않음.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· <code>currentUserProvider == null</code> → "로그인이 필요합니다" 에러로 즉시 Error state 전이<br>· consent 확인이 매우 느린 디바이스 → spinner 길게 표시</td>
+          <td>· 로그인 정보가 없는 채로 진입하면 "로그인이 필요합니다" 메시지와 함께 즉시 실패 화면으로 전환됨.<br>· 디바이스 처리 속도가 느리면 스피너가 평소보다 오래 보일 수 있음.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
@@ -434,7 +434,7 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 양 앱 공유라 partner brand 색 미적용 — system <code>color-primary</code> 그대로. simpleAppBar는 scaffold-gray 배경 + 테두리 없음 (MinglitTheme).</td>
+          <td>📝 사용자 앱과 파트너 앱이 같은 화면을 공유하므로 파트너 브랜드 색은 사용하지 않고 표준 시스템 색을 그대로 적용. AppBar는 화면 배경과 같은 회색에 구분선 없음.</td>
         </tr>
       </tbody>
     </table>
@@ -442,7 +442,7 @@
     <!-- ─── Consent sheet ─────────────────────────────── -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Consent sheet</strong> <small>modal · 동의 미수집 사용자만</small></th></tr>
+        <tr><th colspan="3"><strong>Consent sheet</strong> <small>아직 동의가 수집되지 않은 사용자에게만 노출되는 시트</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -477,15 +477,15 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>consent_repository.getConsents(user.id)</code>에 <code>ConsentType.identityVerification</code> 미존재 → <code>showIdentityVerificationConsentSheet(context)</code> 자동 호출</td>
+          <td>본인확인 정보 수집·이용 동의가 아직 한 번도 수집되지 않은 사용자에게만 자동으로 노출되는 시트.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>① <strong>"동의하고 인증" 탭</strong> → <code>onAgree()</code> → <code>consentController.toggleConsent(true)</code> → WebView state 진입<br>② <strong>"취소" 탭</strong> → <code>onCancel()</code> → 시트 close → "본인확인정보 수집·이용 동의 후 인증을 진행할 수 있습니다" 메시지로 Error state 전이<br>③ 백드롭 탭 / 시스템 back → 취소와 동일</td>
+          <td>① <strong>"동의하고 인증" 탭</strong> — 동의가 저장되고 NICE 인증 창이 열림.<br>② <strong>"취소" 탭</strong> — 시트가 닫히고 "본인확인정보 수집·이용 동의 후 인증을 진행할 수 있습니다" 메시지와 함께 실패 화면으로 전환됨.<br>③ 시트 바깥(어두워진 영역) 탭 또는 시스템 뒤로가기 — 취소와 동일하게 처리됨.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· 시트가 떠 있는 동안 앱이 background로 가면 시트 dismiss 안 되고 그대로 유지<br>· consent 토글 실패 (네트워크) → handleMinglitError로 fallback (Error state 전이)</td>
+          <td>· 시트가 떠 있는 동안 앱이 백그라운드로 가도 시트는 닫히지 않고 그대로 유지됨.<br>· 네트워크 문제로 동의 저장에 실패하면 공통 에러 처리에 따라 실패 화면으로 전환됨.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
@@ -497,7 +497,7 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 시트는 별도 widget(<code>IdentityVerificationConsentSheet</code>)이라 본 화면 spec에는 layout만 요약. 정식 spec은 향후 <code>identity_verification_consent_sheet.html</code>로 분리 가능. <strong>적법 처리근거 확보가 핵심 — 동의 없이 NICE로 진입 금지.</strong></td>
+          <td>📝 시트는 별도 컴포넌트(<code>IdentityVerificationConsentSheet</code>)라 본 화면 spec에서는 레이아웃만 요약. 정식 spec은 추후 별도 페이지로 분리 가능. <strong>동의 없이 NICE 인증으로 진입하지 않는 것이 핵심.</strong></td>
         </tr>
       </tbody>
     </table>
@@ -505,7 +505,7 @@
     <!-- ─── WebView · NICE ─────────────────────────────── -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>WebView · NICE 인증</strong> <small>external · Iamport SDK 호스팅</small></th></tr>
+        <tr><th colspan="3"><strong>WebView · NICE 인증</strong> <small>NICE 본인인증 창이 화면에 떠 있는 상태</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -527,27 +527,27 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>service.verify(...)</code> 호출 직후 — Iamport SDK가 NICE 본인확인 페이지를 native overlay로 표시 (Custom Tabs / SFSafariViewController / WebView)</td>
+          <td>동의가 완료된 직후 NICE 본인인증 창이 앱 위에 외부 인증 창으로 표시된 상태. 인증 창의 디자인은 NICE 측 가이드라인을 따른다.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>① <strong>통신사 선택 + 정보 입력 + "인증요청"</strong> → SMS PASS / 통신사 인증 페이지 → 성공 시 verificationId 반환 (Success state)<br>② <strong>창 닫기 / 뒤로</strong> → <code>verificationId == null</code> → "인증이 취소되었거나 창이 열리지 않았습니다" → Error state</td>
+          <td>① <strong>통신사 선택 + 정보 입력 + "인증요청" 탭</strong> — SMS · PASS 등 통신사 인증을 거쳐 성공하면 성공 화면으로 전환됨.<br>② <strong>창 닫기 / 뒤로가기</strong> — 인증이 취소된 것으로 판단되어 "인증이 취소되었거나 창이 열리지 않았습니다" 메시지와 함께 실패 화면으로 전환됨.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· 팝업 차단(Web · macOS) → 창 자체 안 뜸 → 즉시 Error state<br>· NICE 측 점검 / 5xx → 인증 페이지에서 자체 메시지<br>· KISA 정책 변경(휴대폰 본인확인 → PASS 앱 강제 등) → SDK가 그 흐름을 따름</td>
+          <td>· 웹 / macOS에서 팝업이 차단되면 인증 창 자체가 뜨지 않으므로 즉시 실패 화면으로 전환됨.<br>· NICE 측 점검이나 서버 오류가 발생하면 인증 창 안에서 자체 메시지가 노출됨.<br>· 정부 정책 변화로 인증 흐름(예: 휴대폰 본인확인이 PASS 앱 강제로 변경 등)이 바뀌면 인증 창이 그 흐름을 그대로 따른다.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
-          <td>↔ Loading view → <code>getCertificationService().verify(...)</code>가 호스팅하는 native overlay (앱 Scaffold 외부)<br>− Scaffold body는 그대로 spinner 유지 (overlay 닫히면 다시 보임)</td>
+          <td>↔ 로딩 화면 위에 NICE 본인인증 창이 외부 인증 창으로 덮여 있는 상태. 인증 창이 닫히면 아래의 로딩 화면이 다시 보인다.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
-          <td>— <em>(WebView 내부는 NICE 자체 디자인 — minglit 토큰 미적용)</em></td>
+          <td>— <em>(인증 창 내부는 NICE 자체 디자인 — 밍글릿 디자인 토큰이 적용되지 않음)</em></td>
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 mockup은 NICE의 실제 화면을 단순화한 시뮬. 진짜 화면은 KISA 가이드라인을 따르는 NICE 페이지. <strong>이 화면은 minglit이 아무 컨트롤도 못 함 — entry/exit guard만.</strong></td>
+          <td>📝 mockup은 NICE 실제 화면을 단순화한 시뮬레이션. 실제 화면은 NICE가 정부 가이드라인에 따라 제공하는 페이지. <strong>밍글릿은 인증 창의 내용에 관여하지 않으며 인증 창의 진입과 종료만 관리.</strong></td>
         </tr>
       </tbody>
     </table>
@@ -555,7 +555,7 @@
     <!-- ─── Success ─────────────────────────────── -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Success</strong> <small>complete · pop(true) 직전</small></th></tr>
+        <tr><th colspan="3"><strong>Success</strong> <small>인증 성공 — 화면 종료 직전</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -578,27 +578,27 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>verificationId != null</code> → <code>iamport_repository.verifyCertification(verificationId)</code> 응답 OK → <code>ScaffoldMessenger.showSnackBar</code> + <code>Navigator.pop(true)</code></td>
+          <td>NICE 인증이 성공적으로 처리된 직후. 성공 스낵바가 표시되고 화면이 자동으로 종료되어 이전 화면으로 돌아감.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>— <em>(no-op — 자동 pop. 사용자는 SnackBar만 잠깐 보고 이전 화면 복귀)</em></td>
+          <td>— <em>(인터랙션 없음. 화면이 자동으로 닫히고 사용자는 스낵바만 잠깐 본 뒤 이전 화면으로 복귀.)</em></td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· verifyCertification이 서버 5xx → 동일하게 Error state로 (handleMinglitError)<br>· pop 시점에 화면이 unmount된 상태 → SnackBar 미표시 (mounted 가드)</td>
+          <td>· 인증 결과 검증이 서버 오류로 실패하면 실패 화면으로 전환됨.<br>· 화면이 이미 닫힌 상태라면 스낵바는 노출되지 않음.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
-          <td>+ SnackBar (<code>ScaffoldMessenger</code> default · 메시지 한 줄 · 약 4초 표시)<br>· Loading 화면이 그대로 살아 있음 (pop 직전 frame)</td>
+          <td>+ SnackBar (한 줄 메시지 · 약 4초 표시)<br>· 화면 종료 직전이라 본 화면은 마지막으로 로딩 모습이 그대로 유지됨.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
-          <td>+ SnackBar 자체 색 (Material default · scaffold-inverse) · 사용자 인지 시간 ~수백 ms</td>
+          <td>+ 스낵바 자체 색 (Material 기본). 화면이 보이는 시간은 보통 수백 ms 정도.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 이 화면 자체는 거의 안 보임 — pop이 즉시 실행됨. SnackBar는 호출 호스트 화면이 catch (이전 화면에서 잠깐 노출되는 형태로 보일 수도).</td>
+          <td>📝 본 화면 자체는 거의 노출되지 않은 채 즉시 종료됨. 스낵바는 이전 화면에서 잠깐 보이는 형태가 될 수도 있음.</td>
         </tr>
       </tbody>
     </table>
@@ -606,7 +606,7 @@
     <!-- ─── Error / retry ─────────────────────────────── -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Error / retry</strong> <small>failure · 사용자 개입 필요</small></th></tr>
+        <tr><th colspan="3"><strong>Error / retry</strong> <small>실패 — 사용자가 다시 시도해야 하는 상태</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -631,19 +631,19 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>_isLoading == false</code> + <code>_errorMessage != null</code>. 트리거: ① consent 거부 / 미동의 ② <code>verificationId == null</code> (사용자 취소 또는 창 차단) ③ NICE / 서버 에러 (catch)</td>
+          <td>인증이 정상적으로 완료되지 못한 상태. 발생 경로: ① 동의 시트에서 취소를 눌렀을 때 ② 인증 창에서 사용자가 인증을 취소했거나 창이 열리지 않았을 때 ③ NICE 또는 서버에서 오류가 발생했을 때.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>① <strong>"본인인증 다시 시도하기" 탭</strong> → <code>_startVerificationFlow()</code> 재호출 → Loading state 재진입 (consent는 이미 통과면 바로 NICE로)<br>② <strong>AppBar back 탭</strong> → <code>Navigator.pop()</code> (인증 미완료로 종료 — 호출자가 재시도 책임)</td>
+          <td>① <strong>"본인인증 다시 시도하기" 버튼 탭</strong> — 처음부터 다시 시작. 이미 동의가 완료된 상태라면 NICE 인증 창부터 바로 노출됨.<br>② <strong>AppBar 뒤로가기 탭</strong> — 인증을 마치지 않은 채로 화면을 종료하고 이전 화면으로 복귀. 이후 재시도는 호출 화면이 책임.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· <code>currentUserProvider == null</code>이면 메시지가 "로그인이 필요합니다."로 변형<br>· "본인확인정보 수집·이용 동의 후 인증을 진행할 수 있습니다" — consent 거부 분기 메시지 (별도 SnackBar 없음)</td>
+          <td>· 로그인 정보가 없으면 메시지가 "로그인이 필요합니다."로 바뀜.<br>· 동의 시트에서 취소한 경우는 "본인확인정보 수집·이용 동의 후 인증을 진행할 수 있습니다"라는 별도 메시지가 보이며 별도 스낵바는 노출되지 않음.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
-          <td>↔ <code>MinglitCircularProgressIndicator</code> → <code>Icon(Icons.error_outline)</code> (64px · <code>MinglitColors.warning</code>)<br>+ <code>ElevatedButton</code> ("본인인증 다시 시도하기" · width: ∞ · height: 52)<br>↔ Loading text → 동적 _errorMessage (또는 fallback "인증을 진행해주세요.")</td>
+          <td>↔ 스피너 자리가 경고 아이콘 (<code>Icons.error_outline</code> · 64px · <code>MinglitColors.warning</code>)으로 교체됨<br>+ <code>ElevatedButton</code> ("본인인증 다시 시도하기" · 화면 가로 풀폭 · height 52)<br>↔ 로딩 메시지 자리에 상황별 에러 메시지 (메시지가 없으면 "인증을 진행해주세요.")</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
@@ -651,7 +651,7 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 코드는 <code>MinglitColors.warning</code>(주황)을 쓰는데 의미상으론 error에 가까움 — 디자인 시스템 미세 드리프트. <strong>의도</strong>는 "사용자 개입으로 회복 가능" 강조 (error는 system 실패에 가깝).</td>
+          <td>📝 아이콘 색은 빨간 error 톤이 아닌 주황 warning 톤을 사용. <strong>의도</strong>는 "사용자가 다시 시도하면 회복 가능"한 상태임을 강조하기 위함 (시스템 자체 실패가 아닌 사용자 개입으로 해결되는 케이스).</td>
         </tr>
       </tbody>
     </table>
@@ -672,16 +672,16 @@
       <thead><tr><th style="width:240px;">사용자 액션</th><th>화면에 보이는 결과</th></tr></thead>
       <tbody>
         <tr>
-          <td>AppBar back / OS back / 스와이프</td>
-          <td>모든 state에서 <code>Navigator.pop()</code> — 결과 false (인증 미완료). 호출자 입장에서 재시도 책임. WebView state면 native overlay가 먼저 닫힘.</td>
+          <td>AppBar 뒤로가기 / OS 뒤로가기 / 스와이프</td>
+          <td>어떤 상태에서든 인증을 미완료한 상태로 화면이 종료되고 이전 화면으로 복귀. 인증 창이 떠 있던 상태라면 그 창이 먼저 닫힘. 이후 재시도는 호출 화면이 책임.</td>
         </tr>
         <tr>
-          <td>앱 background → foreground</td>
-          <td>WebView state면 NICE 페이지 그대로 유지. Loading/Error state면 화면 동일. consentController는 watch 가드로 dispose 방지 (Fix #1271).</td>
+          <td>앱이 백그라운드 → 다시 포그라운드로 복귀</td>
+          <td>인증 창이 떠 있던 경우 NICE 페이지가 그대로 유지됨. 로딩/실패 화면이었다면 동일하게 유지. 동의 시트가 떠 있던 경우에도 사라지지 않음.</td>
         </tr>
         <tr>
-          <td>네트워크 끊김 (모든 state)</td>
-          <td>· consent 조회 / verifyCertification 호출 실패 → <code>handleMinglitError</code> → Error state.<br>· NICE WebView 안에서 끊김 → NICE 페이지 자체 메시지.</td>
+          <td>네트워크 끊김 (모든 상태)</td>
+          <td>· 동의 조회나 인증 결과 검증이 실패하면 공통 에러 처리에 따라 실패 화면으로 전환됨.<br>· 인증 창 안에서 네트워크가 끊기면 인증 창이 자체 메시지를 노출.</td>
         </tr>
       </tbody>
     </table>
@@ -695,20 +695,20 @@
     <table class="ref" style="margin-bottom: 16px;">
       <thead><tr><th style="width:200px;">Token</th><th style="width:80px;">Value</th><th>Use case</th></tr></thead>
       <tbody>
-        <tr><td><code>MinglitAnimation.medium</code></td><td>350ms</td><td>BottomSheet slide-up · sheet dismiss</td></tr>
-        <tr><td><code>MinglitAnimation.fast</code></td><td>200ms</td><td>screen entry/exit (push/pop) · SnackBar fade</td></tr>
-        <tr><td><em>(unscoped)</em> spinner rotation</td><td>~700ms / cycle</td><td>MinglitCircularProgressIndicator 내부</td></tr>
+        <tr><td><code>MinglitAnimation.medium</code></td><td>350ms</td><td>동의 시트가 위로 올라오거나 닫히는 전환</td></tr>
+        <tr><td><code>MinglitAnimation.fast</code></td><td>200ms</td><td>화면이 등장하거나 사라질 때 / 스낵바 페이드</td></tr>
+        <tr><td><em>(unscoped)</em> 스피너 회전</td><td>약 700ms / cycle</td><td>스피너 컴포넌트 내부에서 자체 동작</td></tr>
       </tbody>
     </table>
     <table class="ref">
       <thead><tr><th style="width:240px;">Transition</th><th style="width:160px;">Duration (token)</th><th>Curve / notes</th></tr></thead>
       <tbody>
-        <tr><td>화면 entry (push)</td><td><code>fast</code> (200ms)</td><td>GoRouter 기본 — slide.</td></tr>
-        <tr><td>Loading → Consent sheet 슬라이드업</td><td><code>medium</code> (350ms)</td><td>BottomSheet default — easeOut.</td></tr>
-        <tr><td>Consent sheet → 닫힘 (동의 / 취소)</td><td><code>medium</code> (350ms)</td><td>BottomSheet dismiss — easeIn.</td></tr>
-        <tr><td>Loading ↔ WebView · NICE 페이지</td><td>OS 기본</td><td>OS-level overlay (Custom Tabs / SFSafari / WebView). custom 불가.</td></tr>
-        <tr><td>Loading → Error (cut)</td><td>setState (즉시)</td><td>fade 없음. text + icon 즉시 swap.</td></tr>
-        <tr><td>Success → pop + SnackBar</td><td><code>fast</code> (200ms)</td><td>GoRouter pop + Material SnackBar fade-in.</td></tr>
+        <tr><td>화면 진입</td><td><code>fast</code> (200ms)</td><td>표준 라우트 전환 (slide).</td></tr>
+        <tr><td>Loading → 동의 시트가 올라옴</td><td><code>medium</code> (350ms)</td><td>BottomSheet 기본 (ease-out).</td></tr>
+        <tr><td>동의 시트가 닫힘 (동의 / 취소)</td><td><code>medium</code> (350ms)</td><td>BottomSheet 기본 (ease-in).</td></tr>
+        <tr><td>Loading ↔ NICE 인증 창</td><td>OS 기본</td><td>OS가 처리하는 외부 인증 창 전환. 앱 차원에서 커스터마이징 불가.</td></tr>
+        <tr><td>Loading → Error (컷)</td><td>즉시</td><td>페이드 없이 텍스트와 아이콘이 즉시 교체됨.</td></tr>
+        <tr><td>Success → 화면 종료 + 스낵바</td><td><code>fast</code> (200ms)</td><td>표준 라우트 닫힘 + 스낵바 페이드 인.</td></tr>
       </tbody>
     </table>
   </section>
@@ -716,12 +716,12 @@
   <section class="doc">
     <h2>Global edge cases</h2>
     <ul class="notes">
-      <li><strong>로그인 안 됨</strong> — initState 시점에 currentUserProvider null이면 즉시 Error state로 ("로그인이 필요합니다."). 이 화면에서 로그인을 유도하지 않고 호출자가 책임.</li>
-      <li><strong>동의 거부</strong> — Consent sheet에서 "취소" 시 명시적 메시지로 Error state. 사용자가 재시도해도 sheet가 다시 떠서 동일한 선택지 제공.</li>
-      <li><strong>플랫폼별 SDK 차이</strong> — iOS/Android 네이티브 NICE 모듈, Web/macOS는 팝업창. <code>getCertificationService()</code>가 분기. 웹 팝업 차단 시 즉시 Error.</li>
-      <li><strong>다크 모드</strong> — Scaffold/메시지/spinner는 토큰 swap. <code>MinglitColors.warning</code>은 dark에서도 동일 (주황 톤 — 의도된 brand-locked). NICE WebView 내부는 영향 없음.</li>
-      <li><strong>접근성</strong> — AppBar title이 큰 글씨 / TalkBack에서 동작. spinner는 decorative · 메시지에 의미 집중. Error icon에 별도 semanticLabel 없음 — 옆 메시지가 의미 전달.</li>
-      <li><strong>중복 호출 방지</strong> — initState의 postFrameCallback은 1회만 발화. 재시도는 명시적 버튼 탭만 trigger.</li>
+      <li><strong>로그인 안 됨</strong> — 로그인 정보가 없는 채 진입하면 즉시 "로그인이 필요합니다." 메시지가 노출되는 실패 화면으로 전환됨. 본 화면에서는 로그인 유도를 하지 않으며 호출 화면이 책임.</li>
+      <li><strong>동의 거부</strong> — 동의 시트에서 "취소"를 누르면 명시적 안내 메시지와 함께 실패 화면으로 전환됨. 다시 시도하면 시트가 같은 선택지로 다시 떠서 다시 결정할 수 있음.</li>
+      <li><strong>플랫폼 차이</strong> — iOS / Android에서는 네이티브 인증 창, Web / macOS에서는 팝업으로 NICE 인증이 노출됨. 웹에서 팝업이 차단되면 즉시 실패 화면으로 전환됨.</li>
+      <li><strong>다크 모드</strong> — 화면 배경 / 메시지 / 스피너는 토큰에 따라 자동 전환됨. 경고 아이콘의 주황 톤은 다크 모드에서도 의도적으로 그대로 유지됨. NICE 인증 창 내부는 영향을 받지 않음.</li>
+      <li><strong>접근성</strong> — AppBar 타이틀이 큰 글씨로 표시되어 보이스 오버에서 잘 읽힘. 스피너는 장식 요소이고, 에러 아이콘의 의미는 옆 메시지가 전달.</li>
+      <li><strong>중복 진입 방지</strong> — 진입 직후 자동 시작은 1회만 일어남. 재시도는 명시적인 버튼 탭으로만 트리거됨.</li>
     </ul>
   </section>
 </div>

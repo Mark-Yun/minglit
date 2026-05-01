@@ -181,17 +181,17 @@ body.dark-mode .di-appbar__back { color: var(--color-dark-text-primary); }
       <tr>
         <th>User journey</th>
         <td>
-          <strong>Entry points</strong>: ReasonPage의 두 CTA — "다음"(reason 동반) · "선택하지 않고 계속하기"(reason 없이).<br>
+          <strong>Entry points</strong>: 사유 화면의 두 CTA — "다음"(사유 동반) · "선택하지 않고 계속하기"(사유 없이).<br>
           <strong>Exit points</strong>:
-          ① "계속 진행" 탭 → DeletionVerifyPage push (사유는 그대로 query로 전달) ·
-          ② 뒤로 가기 → ReasonPage 복귀 (선택 상태는 유지 — coordinator.push라 stack에 남아있음).
+          ① "계속 진행" 탭 → 다음 단계(본인 확인) — 사유는 그대로 다음 단계로 전달 ·
+          ② 뒤로 가기 → 이전 사유 화면으로 복귀 (이전 선택은 유지된다).
         </td>
       </tr>
       <tr>
         <th>Background</th>
         <td>
-          개인정보 처리방침 컴플라이언스로, 탈퇴 직전 "어떤 데이터가 어떻게 되는지"를 분명히 안내해야 한다 — 삭제 대상 / 법정 보존 대상 / 7일 grace period(복구 가능)를 세 분리된 시각 블록으로 제시.
-          유예 기간 카드만 error tint로 강조 — 사용자에게 "이게 끝이 아니다, 7일 복구 창이 있다"는 신호 + 동시에 "30일 재가입 제한"이라는 약한 deterrent.
+          개인정보 처리방침 컴플라이언스에 따라, 탈퇴 직전 "어떤 데이터가 어떻게 되는지"를 분명히 안내한다 — 삭제 대상 / 법정 보존 대상 / 7일 유예 기간(복구 가능)을 세 개의 분리된 시각 블록으로 제시한다.
+          유예 기간 카드만 error 톤으로 강조해 "7일 복구 창이 있다"는 신호와 함께 "30일 재가입 제한"이라는 약한 deterrent를 함께 전달한다.
         </td>
       </tr>
       <tr><th>Frequency</th><td>매우 낮음 — 탈퇴 wizard 진입 시 1회.</td></tr>
@@ -410,15 +410,15 @@ body.dark-mode .di-appbar__back { color: var(--color-dark-text-primary); }
   <div class="perspective__header">
     <span class="glyph">🎨</span>
     <h2>States</h2>
-    <span class="lede">2 state — baseline = reason 동반(상단 chip 노출). reason 없이 진입한 경우는 chip만 빠진 단순 변형. fetch 없음 → loading/error 없음.</span>
+    <span class="lede">2가지 시각 변형 — baseline = 사유 동반(상단 사유 카드 노출). 사유 없이 진입한 경우는 상단 카드만 빠진 단순 변형. 데이터 fetch가 없어 Loading/Error 상태는 다루지 않는다.</span>
   </div>
 
   <section class="doc">
     <p class="intro">
-      <strong>State 종류 식별 기준</strong>:
-      ① reason 동반 (route param이 valid · <code>buildWithdrawalReason</code> 결과 != null) — chip 노출 ·
-      ② reason 없음 / 무효 — chip 미노출.
-      이 widget은 <code>ConsumerWidget</code> · 내부 state 없음 · provider read만(coordinator). 상기 두 가지 외 분기 없음.
+      <strong>State 식별 기준</strong>:
+      ① 이전 단계에서 사유를 골라 진입 — 상단에 사유 카드 노출 ·
+      ② 사유 없이 진입 — 상단 카드 미노출.
+      이 화면은 데이터를 불러오지 않으며 위 두 분기 외 다른 상태는 없다.
     </p>
 
     <div class="visual-gallery" style="background: var(--color-surface); padding: 16px; border-radius: var(--radius-card); display: flex; flex-direction: column; gap: 16px;">
@@ -426,7 +426,7 @@ body.dark-mode .di-appbar__back { color: var(--color-dark-text-primary); }
       <!-- State 1: With reason (baseline) -->
       <table class="ref state-mini is-baseline-tint">
         <thead>
-          <tr><th colspan="3"><strong>Default · 사유 동반</strong> 🎯 <small>baseline · reason != null</small></th></tr>
+          <tr><th colspan="3"><strong>Default · 사유 동반</strong> 🎯 <small>baseline · 이전 단계에서 사유를 선택하고 들어온 상태</small></th></tr>
         </thead>
         <tbody>
           <tr>
@@ -479,22 +479,22 @@ body.dark-mode .di-appbar__back { color: var(--color-dark-text-primary); }
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>ReasonPage에서 reason 선택 후 진입 — <code>buildWithdrawalReason(reasonCode, reasonText)</code>가 <code>WithdrawalReason</code>을 반환. detail이 비어있으면 trim 후 null로 정규화 (chip의 detail row만 빠짐).</td>
+            <td>이전 사유 화면에서 사유를 선택해 진입한 상태. 상단 사유 카드에 선택한 사유가 요약 표시되며, 직접 입력한 상세 내용이 비어있으면 상세 줄은 빠진다.</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">사용자 액션</td>
             <td>
-              · <strong>"계속 진행" 탭</strong> → <code>coordinator.pushVerify(reason: reason)</code> → DeletionVerifyPage push (reason 그대로 query 전달).<br>
-              · ListView 스크롤 — 4개 블록(chip + 2 sections + grace)이 화면 높이를 넘으면 scroll.<br>
-              · 뒤로 가기 → ReasonPage 복귀 (선택 상태 유지 — pop이라 stack 위 page만 사라짐).
+              · <strong>"계속 진행" 탭</strong> → 본인 확인 단계로 넘어가며 사유는 그대로 함께 전달된다.<br>
+              · 리스트 스크롤 — 콘텐츠가 화면 높이를 넘으면 자연스럽게 스크롤된다.<br>
+              · 뒤로 가기 → 이전 사유 화면으로 복귀하며, 그때 선택한 사유는 그대로 유지된다.
             </td>
           </tr>
           <tr>
             <td class="state-mini__aspect">에지케이스</td>
             <td>
-              · reason.detail이 200자 만들어지면 chip의 ㉢ 영역이 줄바꿈되어 chip 자체가 길어진다 — 별도 maxLines 제한 없음 (의도적 — 사용자가 자기 입력을 다시 확인할 수 있도록)<br>
-              · query roundtrip — 이전 페이지에서 reason 선택 후 push 후, 뒤로 갔다가 다시 와도 reasonCode/reasonText가 query에 살아있어 chip이 다시 생성됨 (push라 페이지가 stack에 남아있어 사실상 재방문 일어나지 않지만, deep link로 진입 시 동작)<br>
-              · "법정 보존 정보"와 "삭제되는 정보" 카드의 색상 차이 없음 — 사용자가 구분하려면 title을 읽어야 함 (의도된 단조로움 — disclosure 톤)
+              · 직접 입력한 상세 내용이 길면 사유 카드가 여러 줄로 늘어난다 — 사용자가 자신의 입력을 다시 확인할 수 있도록 의도적으로 줄 수 제한이 없다.<br>
+              · 직접 링크로 이 화면에 진입해 사유 정보가 들어오면 동일하게 사유 카드가 표시된다.<br>
+              · "삭제되는 정보"와 "법정 보존 정보" 카드는 색상 차이가 없다 — 제목으로 구분하도록 의도된 단조로운 disclosure 톤.
             </td>
           </tr>
           <tr>
@@ -523,7 +523,7 @@ body.dark-mode .di-appbar__back { color: var(--color-dark-text-primary); }
           </tr>
           <tr>
             <td class="state-mini__aspect">노트</td>
-            <td>📝 surprising drift — bullet은 진짜 <code>Icon(Icons.circle, size: 8)</code>이라 텍스트와 baseline이 안 맞아 <code>Padding(top: 6)</code>으로 강제 정렬했다. spec mockup에서도 동일한 6px top offset을 재현해야 정확.</td>
+            <td>📝 항목 앞 점은 텍스트의 첫 줄 베이스라인에 맞춰 살짝 아래로 정렬한다.</td>
           </tr>
         </tbody>
       </table>
@@ -531,7 +531,7 @@ body.dark-mode .di-appbar__back { color: var(--color-dark-text-primary); }
       <!-- State 2: Without reason -->
       <table class="ref state-mini">
         <thead>
-          <tr><th colspan="3"><strong>사유 미동반</strong> <small>reason == null · "선택하지 않고 계속하기" 경로</small></th></tr>
+          <tr><th colspan="3"><strong>사유 미동반</strong> <small>이전 단계에서 사유를 선택하지 않고 진입한 상태</small></th></tr>
         </thead>
         <tbody>
           <tr>
@@ -571,22 +571,21 @@ body.dark-mode .di-appbar__back { color: var(--color-dark-text-primary); }
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>+ reasonCode/reasonText 둘 다 빈 query — <code>buildWithdrawalReason</code>이 null 반환 → 상단 chip + chip-section gap이 통째로 빠짐.</td>
+            <td>이전 사유 화면에서 사유 없이 "선택하지 않고 계속하기"로 진입한 상태. 상단 사유 카드와 그 아래 간격이 통째로 빠진다.</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">사용자 액션</td>
             <td>
-              ↔ "계속 진행" 탭 → <code>coordinator.pushVerify(reason: null)</code> — reason 없이 verify 단계로.<br>
-              동일: 뒤로 가기 → ReasonPage 복귀
+              · "계속 진행" 탭 → 사유 없이 본인 확인 단계로 진행.<br>
+              · 뒤로 가기 → 이전 사유 화면으로 복귀.
             </td>
           </tr>
           <tr><td class="state-mini__aspect">에지케이스</td><td>
-            · reasonCode이 unknown enum 값(미래 확장)이면 <code>parseWithdrawalReasonCode</code>가 null 반환 — chip 자체가 빠지지만 reasonText는 이미 사용 안 됨 (parsed code가 null이라).<br>
-            · query에 reasonText만 있고 reasonCode는 없는 비정상 진입 — 동일하게 reason=null로 fall-through (의도된 strict matching)
+            · 이 화면을 직접 링크로 진입해 사유 정보가 비어있거나 알 수 없는 값이면 상단 카드는 표시되지 않는다.
           </td></tr>
           <tr><td class="state-mini__aspect">컴포넌트</td><td>− reason chip <code>Container</code> + 인접 SizedBox(<code>spacing-large (24)</code>)<br>동일: 나머지 모두</td></tr>
           <tr><td class="state-mini__aspect">토큰</td><td>− <code>color-secondaryContainer</code> · <code>onSecondaryContainer</code> (chip 미노출이라 unused)<br>동일: 나머지</td></tr>
-          <tr><td class="state-mini__aspect">노트</td><td>📝 chip이 빠지면 화면 시작점부터 바로 "삭제되는 정보" Card라 약간 밋밋 — 의도된 단순화. 사유 없이 온 경로의 사용자에게 reason recap을 보여줄 게 없어서 자연스럽다.</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 사유 카드가 빠지면 화면이 곧바로 "삭제되는 정보" 카드부터 시작된다 — 사유 없이 진입한 경로에 자연스럽게 어울리는 단순화.</td></tr>
         </tbody>
       </table>
 
@@ -606,11 +605,11 @@ body.dark-mode .di-appbar__back { color: var(--color-dark-text-primary); }
     <table class="ref">
       <thead><tr><th style="width: 220px;">사용자 액션</th><th>화면에 보이는 결과</th></tr></thead>
       <tbody>
-        <tr><td>뒤로 가기 (시스템 back / AppBar back)</td><td>ReasonPage 복귀 — Material default pop. coordinator.push로 stack에 ReasonPage가 살아있어 선택 상태 유지.</td></tr>
-        <tr><td>"계속 진행" 탭</td><td>모든 state에서 항상 활성 — disabled 분기 없음. <code>coordinator.pushVerify(reason)</code>으로 step 3 push.</td></tr>
-        <tr><td>ListView 스크롤</td><td>긴 텍스트(reason.detail 또는 grace body)일 때 자연 스크롤. 하단 CTA 영역은 SafeArea + Padding으로 항상 fixed.</td></tr>
-        <tr><td>FilledButton ripple</td><td>Material default ripple — 100ms 짧은 피드백.</td></tr>
-        <tr><td>다크 모드 토글</td><td>scaffold/Card/grace warning 모두 dark 토큰 swap. error tint는 다크에서도 같은 brand error red 유지(MinglitColorsDark.error alias).</td></tr>
+        <tr><td>뒤로 가기 (시스템 / AppBar)</td><td>이전 사유 화면으로 복귀하며, 그때 선택했던 사유는 그대로 유지된다.</td></tr>
+        <tr><td>"계속 진행" 탭</td><td>모든 상태에서 항상 활성 — 비활성 분기 없음. 본인 확인 단계로 사유와 함께 진행.</td></tr>
+        <tr><td>스크롤</td><td>긴 텍스트일 때 본문이 자연스럽게 스크롤. 하단 CTA 영역은 안전 영역 하단에 항상 고정.</td></tr>
+        <tr><td>"계속 진행" 탭 피드백</td><td>탭 시 짧은 ripple 피드백.</td></tr>
+        <tr><td>다크 모드 토글</td><td>배경/카드/유예 기간 안내 모두 다크 토큰으로 자동 전환. error 톤은 다크에서도 동일하게 유지된다.</td></tr>
       </tbody>
     </table>
   </section>
@@ -621,16 +620,16 @@ body.dark-mode .di-appbar__back { color: var(--color-dark-text-primary); }
     <table class="ref">
       <thead><tr><th style="width: 200px;">Token</th><th style="width: 80px;">Value</th><th>Use</th></tr></thead>
       <tbody>
-        <tr><td><code>MinglitAnimation.micro</code></td><td>100ms</td><td>FilledButton ripple — Material default</td></tr>
-        <tr><td><code>MinglitAnimation.fast</code></td><td>200ms</td><td>VerifyPage push — GoRouter Material default</td></tr>
+        <tr><td><code>MinglitAnimation.micro</code></td><td>100ms</td><td>"계속 진행" 탭 ripple.</td></tr>
+        <tr><td><code>MinglitAnimation.fast</code></td><td>200ms</td><td>다음 단계로의 화면 전환.</td></tr>
       </tbody>
     </table>
     <table class="ref" style="margin-top: 12px;">
       <thead><tr><th style="width: 220px;">Transition</th><th style="width: 140px;">Duration (token)</th><th>Curve / notes</th></tr></thead>
       <tbody>
-        <tr><td>화면 진입 (ReasonPage → InfoPage)</td><td><code>fast</code> (200ms)</td><td>GoRouter push slide</td></tr>
-        <tr><td>"계속 진행" → VerifyPage</td><td><code>fast</code> (200ms)</td><td>GoRouter push slide</td></tr>
-        <tr><td>ListView scroll</td><td>—</td><td>Flutter ScrollPhysics (BouncingScrollPhysics on iOS · ClampingScrollPhysics on Android)</td></tr>
+        <tr><td>이전 단계 → 이 화면 진입</td><td><code>fast</code> (200ms)</td><td>표준 좌→우 slide 전환.</td></tr>
+        <tr><td>"계속 진행" → 본인 확인</td><td><code>fast</code> (200ms)</td><td>표준 좌→우 slide 전환.</td></tr>
+        <tr><td>본문 스크롤</td><td>—</td><td>플랫폼 표준 스크롤 동작 (iOS bounce / Android clamp).</td></tr>
       </tbody>
     </table>
   </section>
@@ -638,11 +637,11 @@ body.dark-mode .di-appbar__back { color: var(--color-dark-text-primary); }
   <section class="doc">
     <h2>Global edge cases</h2>
     <ul class="notes">
-      <li><strong>Loading / Error mini-table 없음</strong> — 위젯이 fetch하지 않음. 안내 텍스트는 const literal.</li>
-      <li><strong>다크 모드</strong> — <code>color-secondaryContainer</code>의 다크 변형, <code>color-error</code>의 다크 alias 모두 자동 swap. 정보 카드와 grace warning의 contrast가 유지되는지 design token 검증 필요.</li>
-      <li><strong>접근성</strong> — bullet은 의미 정보가 없으므로 screen reader가 무시(<code>Icon</code> default semantic). 본문 텍스트만 announce.</li>
-      <li><strong>긴 detail</strong> — reason.detail 200자 한계 시 chip이 7-8줄까지 늘어날 수 있음 — ListView가 자연 스크롤 처리.</li>
-      <li><strong>딥링크 진입</strong> — query 없이 직접 <code>/my/privacy/delete/info</code> 진입하면 reason=null로 정상 렌더 — ReasonPage step skip 시나리오 동일.</li>
+      <li><strong>Loading / Error 상태 없음</strong> — 이 화면은 데이터를 불러오지 않으며, 안내 텍스트는 항상 동일하게 노출된다.</li>
+      <li><strong>다크 모드</strong> — 사유 카드와 유예 기간 안내의 컬러 톤은 다크에서도 contrast가 유지되도록 자동 전환된다.</li>
+      <li><strong>접근성</strong> — 항목 앞 점은 의미 없는 장식으로 처리되며, 스크린 리더는 본문 텍스트만 읽는다.</li>
+      <li><strong>긴 입력 사유</strong> — 직접 입력한 상세 사유가 길면 사유 카드가 여러 줄로 늘어나며, 본문이 자연스럽게 스크롤된다.</li>
+      <li><strong>직접 링크 진입</strong> — 사유 정보 없이 이 화면을 직접 열면 사유 카드가 빠진 단순 상태로 렌더된다.</li>
     </ul>
   </section>
 </div>

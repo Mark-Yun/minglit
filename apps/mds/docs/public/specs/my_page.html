@@ -413,8 +413,7 @@ body.dark-mode .my-group__card { background: var(--color-dark-surface); }
 
   <section class="doc">
     <p class="intro">
-      <strong>State 종류 식별 기준</strong>: <code>currentUserProvider</code> 분기 — null이면 auth guard, 아니면 default.
-      Loading state는 별도 미상세 — <code>currentUserProvider</code>는 cached + sync 접근 (auth provider state) → 진입 직후 즉시 분기.
+      <strong>State 식별 기준</strong>: 사용자의 로그인 여부에 따라 2가지 변형. 로그인 상태이면 settings hub 전체가 노출되고, 비로그인 상태이면 안내 화면만 노출. 진입 직후 즉시 분기 — 별도의 로딩 화면은 보이지 않음.
     </p>
 
     <!-- State 1: Default (logged in, baseline) -->
@@ -489,24 +488,24 @@ body.dark-mode .my-group__card { background: var(--color-dark-surface); }
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>currentUserProvider != null</code> · 인증 상태</td>
+          <td>로그인된 상태로 마이페이지에 진입한 경우. 6개 그룹의 settings hub 전체가 노출.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ① <strong>ProfileTile 탭</strong> → 프로필 편집 화면 (별도 spec 후속)<br>
-            ② <strong>각 settings tile 탭</strong> → 해당 settings 화면 push<br>
-            ③ <strong>스크롤</strong> → TermsGroup / AccountGroup 노출<br>
-            ④ <strong>로그아웃 탭</strong> → confirm 다이얼로그 → 확인 시 로그아웃 + LoginRoute redirect<br>
-            ⑤ <strong>뒤로 가기</strong> → HomePage 복귀
+            ① <strong>프로필 영역 탭</strong> — 프로필 편집 화면으로 이동.<br>
+            ② <strong>각 settings tile 탭</strong> — 해당 하위 settings 화면으로 이동.<br>
+            ③ <strong>스크롤</strong> — 화면 아래쪽의 약관·정보 그룹과 계정 그룹이 노출.<br>
+            ④ <strong>로그아웃 탭</strong> — 확인 다이얼로그가 뜨고, 사용자가 확인하면 로그아웃 후 로그인 화면으로 이동.<br>
+            ⑤ <strong>뒤로 가기</strong> — 홈으로 복귀.
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · 앱 버전 tile은 cursor 없음 (탭 무반응 · subtitle만 표기)<br>
-            · 일부 tile은 placeholder ("구현 준비 중") — 후속 spec에서 라우팅 활성화<br>
-            · 로그아웃 confirm 다이얼로그는 destructive 스타일 (color-error)
+            · 앱 버전 tile은 탭해도 반응이 없음 — 정보 표시 전용.<br>
+            · 아직 준비되지 않은 일부 tile은 탭 시 "구현 준비 중" 안내 메시지가 잠깐 나타남.<br>
+            · 로그아웃 확인 다이얼로그의 확인 버튼은 위험 강조 색상으로 표시.
           </td>
         </tr>
         <tr>
@@ -534,7 +533,7 @@ body.dark-mode .my-group__card { background: var(--color-dark-surface); }
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 viewport mockup은 ProfileGroup ~ PrivacyGroup만 (5/6) 표시 — TermsGroup / AccountGroup은 스크롤 필요. 실제 화면에선 6개 모두 노출.</td>
+          <td>📝 위 mockup은 프로필 ~ 개인정보·보안 그룹까지만 보임. 실제 화면에서는 약관·정보 / 계정 그룹은 스크롤로 확인 가능.</td>
         </tr>
       </tbody>
     </table>
@@ -542,7 +541,7 @@ body.dark-mode .my-group__card { background: var(--color-dark-surface); }
     <!-- State 2: Logged out (auth guard) -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Logged out · auth guard</strong> <small>currentUserProvider == null</small></th></tr>
+        <tr><th colspan="3"><strong>Logged out · 비로그인</strong> <small>로그인이 필요한 안내 화면이 노출되는 상태</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -561,15 +560,15 @@ body.dark-mode .my-group__card { background: var(--color-dark-surface); }
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>currentUserProvider == null</code> · 비인증 상태에서 deep-link 또는 로그아웃 직후 진입</td>
+          <td>로그인되지 않은 상태로 화면이 노출된 경우. 외부 딥링크로 직접 진입했거나, 로그아웃 직후 잠깐 보이는 상태.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>+ <strong>"로그인" 탭</strong> → <code>authCoordinator.pushLogin(from: '/my')</code> → <a href="/specs/login_page.html">LoginRoute</a> · 로그인 성공 후 자동 복귀<br>− 모든 settings list 액션 (none rendered)</td>
+          <td>+ <strong>"로그인" 버튼 탭</strong> — <a href="/specs/login_page.html">로그인 화면</a>으로 이동. 로그인 성공 시 마이페이지로 자동 복귀.<br>− settings hub 항목들은 이 상태에서는 노출되지 않음.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· 인증 도중 fetch 실패 → 다시 auth guard 노출<br>· 로그인 성공 후 자동으로 default state로 전환 (Riverpod stream 갱신)</td>
+          <td>· 로그인 도중 실패하면 다시 이 안내 화면으로 돌아옴.<br>· 로그인이 완료되는 즉시 깜빡임 없이 settings hub 화면으로 자동 전환.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
@@ -581,7 +580,7 @@ body.dark-mode .my-group__card { background: var(--color-dark-surface); }
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 일반적으론 진입 자체가 막힘 (HomePage 아바타가 인증 사용자만 노출). 직접 deep-link 또는 로그아웃 직후 잠깐 보이는 transient state.</td>
+          <td>📝 일반적인 사용자 흐름에서는 거의 보이지 않는 상태. 홈의 진입 아이콘이 로그인 사용자에게만 노출되므로, 외부 딥링크나 로그아웃 직후처럼 예외적인 경로에서만 잠깐 보임.</td>
         </tr>
       </tbody>
     </table>
@@ -607,16 +606,16 @@ body.dark-mode .my-group__card { background: var(--color-dark-surface); }
       </thead>
       <tbody>
         <tr>
-          <td>뒤로 가기 (시스템 back / AppBar back)</td>
-          <td>HomePage로 복귀.</td>
+          <td>뒤로 가기 (시스템 back · AppBar back)</td>
+          <td>홈으로 복귀.</td>
         </tr>
         <tr>
           <td>다크 모드 토글</td>
-          <td>scaffold / 그룹 / tile 모두 dark 토큰으로 자동 swap. avatar gradient 그대로 (primary 파생).</td>
+          <td>scaffold·그룹·tile 배경이 다크 배경으로 전환. 프로필 아바타의 강조 색은 동일한 톤으로 유지.</td>
         </tr>
         <tr>
-          <td>tile tap haptic</td>
-          <td>모든 cursor:pointer tile은 ripple + haptic light. 앱 버전 tile만 무반응.</td>
+          <td>tile 탭 피드백</td>
+          <td>탭 가능한 모든 tile은 가벼운 리플과 haptic light 피드백을 제공. 앱 버전 tile만 피드백 없음.</td>
         </tr>
       </tbody>
     </table>
@@ -637,24 +636,24 @@ body.dark-mode .my-group__card { background: var(--color-dark-surface); }
       </thead>
       <tbody>
         <tr>
-          <td>화면 진입 (HomePage → MyPage)</td>
+          <td>화면 진입 (홈 → 마이페이지)</td>
           <td><code>MinglitAnimation.fast</code> (200ms)</td>
-          <td>GoRouter 좌→우 slide.</td>
+          <td>화면이 좌우로 슬라이드되며 진입.</td>
         </tr>
         <tr>
           <td>tile → 하위 settings 화면</td>
           <td><code>MinglitAnimation.fast</code> (200ms)</td>
-          <td>Push transition slide.</td>
+          <td>슬라이드로 다음 화면이 위에 얹힘.</td>
         </tr>
         <tr>
-          <td>로그아웃 confirm 다이얼로그</td>
+          <td>로그아웃 확인 다이얼로그</td>
           <td><code>MinglitAnimation.fast</code> (200ms)</td>
-          <td>Material 중앙 fade-in scale.</td>
+          <td>화면 중앙에 다이얼로그가 살짝 커지며 부드럽게 페이드 인.</td>
         </tr>
         <tr>
-          <td>인증 → default state 전환</td>
-          <td>cut</td>
-          <td>Riverpod stream 갱신 시 즉시 교체. 별도 transition 없음.</td>
+          <td>로그인 완료 → settings hub 노출</td>
+          <td>—</td>
+          <td>별도 전환 애니메이션 없이 즉시 교체. 의도적으로 부드러운 전환을 생략.</td>
         </tr>
       </tbody>
     </table>
@@ -663,9 +662,9 @@ body.dark-mode .my-group__card { background: var(--color-dark-surface); }
   <section class="doc">
     <h2>Global edge cases</h2>
     <ul class="notes">
-      <li><strong>스크롤 끝 도달</strong> — AccountGroup 마지막 (로그아웃 tile)이 화면 끝. 추가 padding 없음 — safeArea로 처리.</li>
-      <li><strong>그룹 헤더 스크롤 위 체류</strong> — sticky 아님. 일반 스크롤 (다른 spec에 sticky 패턴 있다면 분리).</li>
-      <li><strong>placeholder tile</strong> — "구현 준비 중" 스낵바로 임시 응답. 후속 spec에서 라우팅 활성화.</li>
+      <li><strong>스크롤 끝 도달</strong> — 계정 그룹의 마지막 항목(로그아웃)이 화면 하단 마지막에 위치. 별도 여백 없이 시스템 안전 영역까지 자연스럽게 마감.</li>
+      <li><strong>그룹 헤더 스크롤 동작</strong> — 그룹 헤더는 화면 상단에 고정되지 않고 일반 스크롤과 함께 흘러감.</li>
+      <li><strong>준비 중인 tile</strong> — 아직 활성화되지 않은 항목은 탭 시 "구현 준비 중" 안내 메시지가 잠깐 노출.</li>
     </ul>
   </section>
 </div>

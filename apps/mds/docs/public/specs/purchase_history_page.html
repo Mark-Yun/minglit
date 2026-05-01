@@ -663,16 +663,16 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>historyAsync.hasValue &amp;&amp; history.isNotEmpty</code> · 인증 사용자 + EventApplication ≥ 1 (status 무관 — 모든 결제/신청 이력)</td>
+          <td>로그인된 사용자가 결제 또는 신청 이력을 1건 이상 가지고 있는 상태 (모든 상태 포함).</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ① <strong>"영수증" tap</strong> (paymentId 있음) → <code>launchUrl(https://service.iamport.kr/payments/detail/{paymentId}, externalApplication)</code> · 실패 시 <code>showMinglitWarning('영수증 페이지를 열 수 없습니다.')</code><br>
-            ② <strong>"문의하기" tap</strong> → contactOptions 또는 partner contact에서 phone 우선 → <code>tel:</code>, 없으면 email → <code>mailto:</code>. 둘 다 없으면 <code>showMinglitWarning('연락처 정보가 없습니다.')</code><br>
-            ③ <strong>"예매 취소" tap</strong> (canCancel) → <code>controller.runRefundFlow(...)</code> → 환불 정책 조회 → <strong>Refund Confirm dialog</strong> overlay (state 5)<br>
-            ④ <strong>스크롤</strong> → 더 오래된 결제 노출 (현재 페이지네이션 없음 · 일괄 fetch)<br>
-            ⑤ <strong>뒤로 가기</strong> → MyPage 복귀
+            ① <strong>"영수증" 탭</strong> (결제건만 노출) → 외부 브라우저로 영수증 페이지 열기 · 열 수 없으면 "영수증 페이지를 열 수 없습니다." 안내<br>
+            ② <strong>"문의하기" 탭</strong> → 연락처가 등록돼 있으면 전화 앱 우선, 없으면 메일 앱으로 이동. 둘 다 없으면 "연락처 정보가 없습니다." 안내<br>
+            ③ <strong>"예매 취소" 탭</strong> (취소 가능 건만 노출) → 환불 정책을 조회한 뒤 환불 확인 다이얼로그 노출 (state 5)<br>
+            ④ <strong>스크롤</strong> → 더 오래된 결제 노출 (현재 페이지네이션 없이 한 번에 모두 표시)<br>
+            ⑤ <strong>뒤로 가기</strong> → 마이페이지로 복귀
           </td>
         </tr>
         <tr>
@@ -737,7 +737,7 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>history.isEmpty</code> — 한 번도 결제·신청 안 했거나 비로그인 (controller 14-18행이 빈 list 반환)</td>
+          <td>한 번도 결제·신청 이력이 없거나 비로그인 상태 (둘 다 빈 화면으로 통합).</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
@@ -789,18 +789,18 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>historyAsync.isLoading</code> — 진입 직후 ~ <code>repository.getMyPurchaseHistory(user.id)</code> 응답까지</td>
+          <td>화면 진입 직후 결제 이력을 불러오는 중.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>↔ 카드 액션 모두 없음 (no-op)<br>동일: 뒤로 가기 → MyPage 복귀 (응답 대기 취소)</td>
+          <td>↔ 카드 액션 모두 없음 (응답 대기 중)<br>동일: 뒤로 가기 → 마이페이지로 복귀 (응답 대기 취소)</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · 네트워크 느릴 때 spinner 길게 노출 (timeout 없음 — Supabase client 기본)<br>
-            · 인증 토큰 만료 → error state로 fall through (별도 401 처리 없음)<br>
-            · <code>ref.invalidate(purchaseHistoryControllerProvider)</code> 후 (예매 취소 성공 직후 · Fix #1951) 잠시 Loading로 다시 들어옴
+            · 네트워크가 느리면 스피너가 길게 노출됨 (별도 타임아웃 없음)<br>
+            · 인증이 만료되면 자동으로 오류 상태로 전환 (별도 안내 없음)<br>
+            · 예매 취소 성공 직후 (Fix #1951) 화면이 잠시 다시 Loading로 들어왔다가 갱신됨
           </td>
         </tr>
         <tr>
@@ -843,11 +843,11 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>historyAsync.hasError</code> — repository / 네트워크 / RLS 거부 등 throw</td>
+          <td>네트워크 / 권한 / 서버 오류로 결제 이력을 받아오지 못한 상태.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>− 카드 액션 모두 없음<br>동일: 뒤로 가기 → MyPage 복귀<br>− retry 버튼 없음 (default _DefaultErrorView · showErrorDetails: false)</td>
+          <td>− 카드 액션 모두 없음<br>동일: 뒤로 가기 → 마이페이지로 복귀<br>− 화면 내 재시도 버튼 없음 (오류 상세도 표시되지 않음)</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
@@ -867,7 +867,7 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 retry CTA 부재 — Phase 2에서 ref.invalidate(purchaseHistoryControllerProvider) 트리거 버튼 추가 검토.</td>
+          <td>📝 화면 내 재시도 CTA가 없는 게 약점. Phase 2에서 재시도 버튼 추가 검토.</td>
         </tr>
       </tbody>
     </table>
@@ -928,10 +928,10 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            + <strong>"예매 취소" tap</strong> → <code>cancelOrder(eventId, reason)</code> EF 호출 (Fix #299) → 성공 시 <code>showMinglitSuccess('예매가 취소되었습니다.')</code> + <code>Navigator.maybePop</code> + <code>ref.invalidate</code> (Fix #1951) → list refresh<br>
-            + <strong>"닫기" tap</strong> → dialog dismiss · default state로 복귀<br>
-            + <strong>shade tap</strong> → MinglitDialog barrierDismissible 기본값 (보통 dismiss 가능) → 닫기와 동일<br>
-            + <strong>EF 실패</strong> → <code>showError(message)</code> dialog ("다시 시도" / "닫기") · "다시 시도" 시 <code>_requestRefund</code> 재귀 호출
+            + <strong>"예매 취소" 탭</strong> → 환불 처리가 시작되고, 성공 시 "예매가 취소되었습니다." 안내가 노출되며 다이얼로그가 닫히고 리스트가 갱신됨<br>
+            + <strong>"닫기" 탭</strong> → 다이얼로그가 닫히고 default 상태로 복귀<br>
+            + <strong>scrim 탭</strong> → "닫기"와 동일하게 다이얼로그 닫힘<br>
+            + <strong>환불 처리 실패</strong> → "다시 시도 / 닫기" 옵션이 있는 오류 다이얼로그 노출. "다시 시도"는 같은 환불을 한 번 더 시도
           </td>
         </tr>
         <tr>
@@ -941,7 +941,7 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
             · <strong>정책 조회 실패</strong>: try/catch로 default(2h/7d) fallback (Fix #133) — dialog는 정상 표시<br>
             · <strong>refundPercentage == 0</strong>: showNotEligible alert로 분기, 이 dialog는 표시 안 됨<br>
             · <strong>paymentAmount == null</strong>: <code>paymentAmount ?? 0</code>로 안전하게 표시 (Fix #270)<br>
-            · <strong>EF 호출 중</strong>: <code>globalLoadingControllerProvider</code>가 풀화면 로딩 표시 (별도 spec) — confirm 직후 뜬다
+            · <strong>환불 처리 중</strong>: 풀화면 로딩 오버레이가 노출됨 (별도 spec) — 확인 직후 뜸
           </td>
         </tr>
         <tr>
@@ -1054,7 +1054,7 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
         <tr>
           <td>EF cancelOrder 진행 중</td>
           <td>—</td>
-          <td><code>globalLoadingControllerProvider</code>가 풀화면 dim + spinner overlay (별도 spec) — duration은 네트워크에 의존.</td>
+          <td>화면 전체에 어두운 dim + 중앙 스피너가 노출됨 (풀화면 로딩 오버레이 — 별도 spec). 표시 시간은 네트워크에 따라 달라짐.</td>
         </tr>
         <tr>
           <td>환불 성공 → invalidate → list refresh</td>

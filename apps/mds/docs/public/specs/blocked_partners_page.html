@@ -221,9 +221,8 @@
       <tr>
         <th>Background</th>
         <td>
-          파트너 차단은 <code>socialRepository</code> 레벨에서 관리(get/unblockPartner). 차단된 파트너의 이벤트/리뷰는
-          사용자 피드에서 노출 안 됨. 해제 후에는 다시 노출되는 게 즉시 반영되어야 하므로 해제 후 <code>_load()</code>를 다시 호출해 list refresh.
-          Fix #270: 네트워크 실패 시 영구 로딩 방지 — try/catch로 SnackBar 안내.
+          파트너를 차단하면 해당 파트너의 이벤트와 리뷰가 사용자 피드에 노출되지 않음. 차단을 해제하면 다시 노출되어야 하므로, 해제 직후 목록을 다시 가져와 화면을 갱신함.
+          네트워크 실패 시 화면이 영구 로딩 상태에 빠지지 않도록, 화면 하단에 안내 메시지가 잠깐 노출되고 본문은 Empty와 같은 형태로 마감됨.
         </td>
       </tr>
       <tr>
@@ -268,7 +267,7 @@
   <div class="perspective__header">
     <span class="glyph">🧱</span>
     <h2>Layout</h2>
-    <span class="lede">Material default <code>AppBar(title)</code> + body는 <code>_loading</code> 분기 → spinner / Empty / ListView. ListView item: <code>ListTile</code>(leading CircleAvatar · title · trailing TextButton).</span>
+    <span class="lede">상단 AppBar(title) + 본문은 차단 목록 진행 상태에 따라 로딩 인디케이터 / Empty 안내 / 행 리스트 중 하나로 노출. 행 항목: 좌측 아바타 · 가운데 이름 · 우측 "차단 해제" 버튼.</span>
   </div>
 
   <section class="doc">
@@ -307,9 +306,9 @@
       <div class="layout-tree"><b>Scaffold</b>
 ├─ <b>appBar: AppBar</b>(title: Text('차단 목록'))   ← ①
 └─ <b>body</b> — 분기                                  ← ②
-   ├─ <b>Center</b> + <b>MinglitCircularProgressIndicator</b>   <i>(_loading == true)</i>
-   ├─ <b>Center</b> + <b>Text</b>('차단된 파트너가 없습니다')   <i>(_partners == null || isEmpty)</i>
-   └─ <b>ListView.builder</b>(itemCount: _partners.length)     <i>(_partners 보유)</i>
+   ├─ <b>Center</b> + <b>MinglitCircularProgressIndicator</b>   <i>(가져오는 중)</i>
+   ├─ <b>Center</b> + <b>Text</b>('차단된 파트너가 없습니다')   <i>(차단된 파트너 0건)</i>
+   └─ <b>ListView.builder</b>(파트너 리스트)                   <i>(차단된 파트너 1건 이상)</i>
       └─ <b>ListTile</b>                                       ← ③
          ├─ <b>leading: CircleAvatar</b>(image | Icon(store))
          ├─ <b>title: Text</b>(name)
@@ -388,7 +387,7 @@
 
   <section class="doc">
     <p class="intro">
-      <strong>State 종류 식별</strong>: <code>_loading</code> bool · <code>_partners</code> nullable list. _load() 진입 시 _loading=true → 응답 후 _partners 채움. 에러 시 SnackBar로 fallback (Fix #270).
+      <strong>State 식별 기준</strong>: 차단 목록을 가져오는 진행 상태와 결과 건수에 따라 List(baseline) / Loading / Empty / Confirm dialog / Error fallback 5가지 변형으로 갈림. 데이터를 가져오는 데 실패하면 안내 메시지가 잠깐 노출되며 화면은 Empty와 같은 형태가 됨.
     </p>
 
     <h3 style="margin-top: 24px;">State summary</h3>
@@ -402,11 +401,11 @@
         </tr>
       </thead>
       <tbody>
-        <tr><td><strong>List (default)</strong> 🎯</td><td>baseline</td><td><code>_loading == false</code> · <code>_partners.isNotEmpty</code></td><td>ListTile 행들 · 각 행에 "차단 해제" TextButton</td></tr>
-        <tr><td><strong>Loading</strong></td><td>async</td><td>진입 직후 또는 _load() 재호출 직후</td><td>화면 정중앙 spinner</td></tr>
-        <tr><td><strong>Empty</strong></td><td>no data</td><td>응답 OK + 0건 · 또는 모두 해제 후</td><td>"차단된 파트너가 없습니다" 단독 텍스트</td></tr>
-        <tr><td><strong>Confirm dialog</strong></td><td>modal</td><td>"차단 해제" 탭 시</td><td>중앙 다이얼로그 — 제목 + 내용 + 해제/취소</td></tr>
-        <tr><td><strong>Error fallback</strong></td><td>network</td><td>getBlockedPartners 실패</td><td>SnackBar "차단 목록을 불러오지 못했습니다" + Empty 화면 (Fix #270)</td></tr>
+        <tr><td><strong>List (default)</strong> 🎯</td><td>baseline</td><td>차단된 파트너 목록이 1건 이상 도착한 상태</td><td>각 행에 "차단 해제" 버튼이 있는 행 리스트</td></tr>
+        <tr><td><strong>Loading</strong></td><td>async</td><td>화면 진입 직후 또는 차단 해제 후 목록을 다시 가져오는 동안</td><td>화면 정중앙 로딩 인디케이터</td></tr>
+        <tr><td><strong>Empty</strong></td><td>no data</td><td>응답이 도착했지만 차단된 파트너가 0건이거나, 모두 해제한 직후</td><td>"차단된 파트너가 없습니다" 단독 안내 문구</td></tr>
+        <tr><td><strong>Confirm dialog</strong></td><td>modal</td><td>"차단 해제" 버튼을 탭한 직후</td><td>화면 중앙에 확인 다이얼로그 노출 — 제목 + 본문 + 해제 / 취소</td></tr>
+        <tr><td><strong>Error fallback</strong></td><td>network</td><td>차단 목록을 가져오는 데 실패한 경우</td><td>화면 하단에 "차단 목록을 불러오지 못했습니다" 안내가 잠깐 노출되며, 본문은 Empty와 같은 형태</td></tr>
       </tbody>
     </table>
 
@@ -451,19 +450,19 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>_loading == false</code> · <code>_partners != null</code> · <code>_partners.isNotEmpty</code></td>
+          <td>차단된 파트너 목록이 1건 이상 도착해 화면 본문에 행 리스트가 노출된 상태.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ① <strong>"차단 해제" 탭</strong> → <code>_unblock(id)</code> → <code>MinglitAlert.showConfirm(...)</code> → Confirm dialog state<br>
-            ② <strong>AppBar back 탭</strong> → <code>Navigator.pop()</code> → 이전 화면<br>
-            ③ <strong>스크롤</strong> → ListView 자체 vertical scroll (긴 목록 시)
+            ① <strong>"차단 해제" 탭</strong> — 행 우측의 "차단 해제" 버튼을 누르면 확인 다이얼로그가 뜸.<br>
+            ② <strong>AppBar 뒤로 가기 탭</strong> — 이전 화면으로 복귀.<br>
+            ③ <strong>스크롤</strong> — 목록이 화면 길이를 넘으면 세로 스크롤로 나머지를 확인.
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· 파트너에 <code>profile_image_url</code> 없음 → CircleAvatar가 fallback Icon(<code>Icons.store</code>) 표시<br>· 매우 긴 name → ellipsis (...)로 잘림 (bodyLarge · single line)<br>· 동시에 여러 행의 "차단 해제"를 빠르게 탭 — 마지막 탭만 다이얼로그가 살아 있고 이전 것은 stale</td>
+          <td>· 프로필 이미지가 없는 파트너는 기본 아이콘(가게 모양)으로 표시.<br>· 파트너 이름이 매우 길면 한 줄로 잘리고 끝에 말줄임표가 표시됨.<br>· 여러 행의 "차단 해제"를 매우 빠르게 연속 탭하면, 마지막에 탭한 행의 다이얼로그만 노출됨.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
@@ -486,7 +485,7 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 <strong>드리프트</strong>: 코드는 <code>simpleAppBar</code>가 아닌 plain <code>AppBar</code> 사용 → 다른 minglit 화면(<code>simpleAppBar</code> 기준)과 elevation/surfaceTint 거동이 다를 수 있음. 향후 simpleAppBar로 통일 권장.</td>
+          <td>📝 <strong>드리프트</strong>: 다른 화면들과 달리 표준 minglit AppBar 톤이 아닌 Material 기본 AppBar 톤이 적용됨. 향후 일관성 위해 통일 권장.</td>
         </tr>
       </tbody>
     </table>
@@ -494,7 +493,7 @@
     <!-- ─── Loading ─────────────────────────────── -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Loading</strong> <small>async · _load() 진행 중</small></th></tr>
+        <tr><th colspan="3"><strong>Loading</strong> <small>차단 목록을 가져오는 중에 노출되는 상태</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -512,15 +511,15 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>_loading == true</code> — initState 직후 또는 차단 해제 후 list refresh 중</td>
+          <td>화면에 처음 들어왔거나, 차단 해제 후 목록을 다시 가져오는 동안 노출되는 상태.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>탭 무반응 (TextButton/스크롤 대상 없음). AppBar back은 평소대로 동작.</td>
+          <td>이 화면에서는 탭할 대상이 없음. 뒤로 가기는 평소대로 동작.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· 매우 느린 응답 → spinner 길게 표시 (timeout 없음)<br>· _load() 도중 화면 unmount → mounted 가드로 setState 미호출 (메모리 누수 방지)</td>
+          <td>· 응답이 매우 느리면 로딩 인디케이터가 길게 표시될 수 있음 (별도의 시간 제한 없음).<br>· 응답이 도착하기 전에 사용자가 화면을 떠나면 결과는 화면에 반영되지 않음.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
@@ -532,7 +531,7 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 짧은 transition state — 보통 200~600ms. Skeleton placeholder 미사용 — 단순 spinner.</td>
+          <td>📝 짧게 지나가는 전환 변형 — 보통 수백 밀리초 안에 다음 변형으로 교체됨. 별도의 스켈레톤 placeholder는 사용하지 않음.</td>
         </tr>
       </tbody>
     </table>
@@ -540,7 +539,7 @@
     <!-- ─── Empty ─────────────────────────────── -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Empty</strong> <small>no data · 차단 0건 또는 모두 해제 후</small></th></tr>
+        <tr><th colspan="3"><strong>Empty</strong> <small>차단된 파트너가 없거나, 모두 해제한 직후의 상태</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -558,15 +557,15 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>_loading == false</code> · <code>_partners == null || _partners.isEmpty</code></td>
+          <td>응답은 도착했지만 차단된 파트너가 한 명도 없는 경우. 또는 사용자가 모든 파트너의 차단을 해제한 직후.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>탭 무반응 (CTA 없음). AppBar back으로만 빠져나감.</td>
+          <td>이 화면에서 탭할 액션은 없음. 뒤로 가기로만 화면을 빠져나감.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· Error fallback과 시각이 동일 (메시지 차이만 있음 — 본 화면은 Empty 메시지가 항상 같음, SnackBar는 별도 overlay)</td>
+          <td>· 데이터를 가져오는 데 실패한 경우와 본문 형태가 동일 — 차이는 화면 하단에 안내 메시지가 잠깐 노출되는지 여부.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
@@ -578,7 +577,7 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 <code>MinglitEmptyState</code>(fullPage variant) 미사용 — 단순 텍스트로 인라인 처리. 향후 UX 통일 시 EmptyState 위젯으로 교체 권장.</td>
+          <td>📝 다른 화면들의 표준 Empty 비주얼(아이콘 + 안내 + CTA)과 달리 단순 텍스트만 노출. 향후 일관성 위해 통일 권장.</td>
         </tr>
       </tbody>
     </table>
@@ -586,7 +585,7 @@
     <!-- ─── Confirm dialog ─────────────────────────────── -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Confirm dialog</strong> <small>modal · 차단 해제 직전</small></th></tr>
+        <tr><th colspan="3"><strong>Confirm dialog</strong> <small>차단 해제 직전, 사용자에게 한 번 더 확인을 받는 상태</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -618,15 +617,15 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>List state에서 "차단 해제" 탭 → <code>MinglitAlert.showConfirm(title: '차단 해제', content: '이 파트너의 차단을 해제하시겠습니까?', confirmText: '해제')</code> 노출</td>
+          <td>리스트의 "차단 해제" 버튼을 탭한 직후. 화면 위에 "이 파트너의 차단을 해제하시겠습니까?" 다이얼로그가 떠 있는 상태.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>① <strong>"해제" 탭</strong> → <code>confirmed == true</code> → <code>socialRepository.unblockPartner(id)</code> → 성공 시 SnackBar "차단이 해제되었습니다" + <code>_load()</code> 재호출 (Loading state)<br>② <strong>"취소" 탭 / 백드롭 탭 / 시스템 back</strong> → <code>confirmed == false</code> → 다이얼로그 dismiss → List state 그대로</td>
+          <td>① <strong>"해제" 탭</strong> — 다이얼로그가 닫히고 차단이 해제됨. "차단이 해제되었습니다" 안내가 잠깐 노출되며 목록을 다시 가져오는 Loading 상태로 전환.<br>② <strong>"취소" 탭 · 뒷배경 탭 · 시스템 뒤로 가기</strong> — 다이얼로그만 닫히고 화면은 그대로 유지. 차단은 해제되지 않음.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· 다이얼로그 표시 중 화면이 unmount → <code>!mounted</code> 가드로 후속 setState 미호출<br>· unblockPartner 실패 → 코드 경로상 catch 없음 → handleMinglitError 미경유 → 사용자에게 메시지 누락 가능성 (잠재적 개선 영역)</td>
+          <td>· 다이얼로그가 떠 있는 동안 사용자가 화면을 떠나면 진행이 자연스럽게 중단됨.<br>· 차단 해제 자체에 실패한 경우, 현재는 별도 안내가 노출되지 않을 수 있음 (잠재적 개선 영역).</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
@@ -638,7 +637,7 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 confirmText: '해제' · cancel은 default text. 다이얼로그가 destructive action임에도 색이 brand-primary — error/destructive 강조 색은 미사용. (의도 확인 필요)</td>
+          <td>📝 위험 액션이지만 확인 버튼은 위험 강조(빨강)가 아니라 일반 강조 색으로 표시됨 — 디자인 의도 확인 필요.</td>
         </tr>
       </tbody>
     </table>
@@ -646,7 +645,7 @@
     <!-- ─── Error fallback (Fix #270) ─────────────────────────────── -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Error fallback</strong> <small>network · Fix #270</small></th></tr>
+        <tr><th colspan="3"><strong>Error fallback</strong> <small>차단 목록을 가져오는 데 실패했을 때의 안내 형태</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -665,15 +664,15 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>getBlockedPartners</code> throw → catch → <code>_loading = false</code> 유지 + SnackBar 표시. <code>_partners</code>는 이전 값(또는 초기 null) 유지</td>
+          <td>차단 목록을 가져오는 데 실패한 상태. 본문은 Empty와 같은 형태이며, 화면 하단에 "차단 목록을 불러오지 못했습니다" 안내가 잠깐 노출됨.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>· SnackBar는 ~4초 후 자동 dismiss. 명시적 "다시 시도" CTA 없음.<br>· 다시 시도하려면 화면을 떠났다 재진입 (또는 차단 해제 후 자동 _load() 발생)</td>
+          <td>· 안내 메시지는 잠시 후 자동으로 사라짐. 별도의 "다시 시도" 버튼은 없음.<br>· 다시 시도하려면 화면을 떠났다가 다시 들어오면 됨.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· 첫 진입 시 실패 → Empty와 시각적으로 구분 안 됨 (메시지가 같음 — "차단된 파트너가 없습니다")<br>· SnackBar가 화면을 떠난 직후 발생 → ScaffoldMessenger가 적절히 처리 (mounted 가드)</td>
+          <td>· 본문은 Empty와 시각적으로 구분되지 않음 — 차이는 화면 하단의 안내 메시지가 잠깐 떠 있는지 여부.<br>· 안내 메시지가 노출되기 직전에 사용자가 화면을 떠나도 자연스럽게 처리됨.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
@@ -685,7 +684,7 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 Fix #270 — try/catch 없을 때 영구 로딩 발생 → 추가 안전망. <strong>UX 개선 여지</strong>: Error 전용 시각(아이콘 + 다시 시도)으로 구분 권장. 현재는 Empty와 모호.</td>
+          <td>📝 <strong>UX 개선 여지</strong>: Error 전용 비주얼(아이콘 + 다시 시도)로 Empty와 구분 권장. 현재는 두 변형의 본문이 같아 모호함.</td>
         </tr>
       </tbody>
     </table>
@@ -706,20 +705,20 @@
       <thead><tr><th style="width:240px;">사용자 액션</th><th>화면에 보이는 결과</th></tr></thead>
       <tbody>
         <tr>
-          <td>AppBar back / OS back</td>
-          <td>모든 state에서 이전 화면으로 pop. unblock 처리 중이면 그 작업은 fire-and-forget으로 백그라운드 이어짐 (mounted 가드).</td>
+          <td>AppBar 뒤로 가기 · OS 뒤로 가기</td>
+          <td>모든 변형에서 이전 화면으로 복귀. 차단 해제가 진행 중일 때 화면을 떠나도 자연스럽게 처리됨.</td>
         </tr>
         <tr>
           <td>스크롤</td>
-          <td>List state에서 ListView 기본 vertical scroll. AppBar는 elevation/surfaceTint Material default 거동.</td>
+          <td>List 변형에서 목록을 세로로 스크롤할 수 있음.</td>
         </tr>
         <tr>
-          <td>네트워크 끊김 (모든 state)</td>
-          <td>· 진입 시 _load 실패 → SnackBar (Fix #270).<br>· unblock 실패 → 코드상 별도 catch 없음 (잠재 개선 영역).</td>
+          <td>네트워크 끊김</td>
+          <td>· 진입 시 목록을 가져오지 못하면 화면 하단에 안내 메시지가 잠깐 노출됨.<br>· 차단 해제 자체에 실패한 경우, 현재는 별도 안내가 노출되지 않을 수 있음 (잠재 개선 영역).</td>
         </tr>
         <tr>
-          <td>Pull-to-refresh</td>
-          <td>미지원 — RefreshIndicator 미사용. 재진입 또는 unblock으로 트리거되는 _load만이 refresh 경로.</td>
+          <td>당겨서 새로고침</td>
+          <td>지원하지 않음. 새로고침은 화면 재진입 또는 차단 해제 직후 자동으로만 일어남.</td>
         </tr>
       </tbody>
     </table>
@@ -731,19 +730,19 @@
     <table class="ref" style="margin-bottom: 16px;">
       <thead><tr><th style="width:200px;">Token</th><th style="width:80px;">Value</th><th>Use case</th></tr></thead>
       <tbody>
-        <tr><td><code>MinglitAnimation.fast</code></td><td>200ms</td><td>다이얼로그 fade-in scale · 화면 push/pop · SnackBar fade</td></tr>
-        <tr><td><code>MinglitAnimation.medium</code></td><td>350ms</td><td>list crossfade (Loading → List) — AnimatedSwitcher 미적용 시 cut</td></tr>
-        <tr><td><em>(unscoped)</em> SnackBar visible</td><td>~4000ms</td><td>Material default duration</td></tr>
+        <tr><td><code>MinglitAnimation.fast</code></td><td>200ms</td><td>다이얼로그 페이드 인 · 화면 진입 / 복귀 · 안내 메시지 페이드</td></tr>
+        <tr><td><code>MinglitAnimation.medium</code></td><td>350ms</td><td>큰 영역의 부드러운 전환에 사용되는 표준 토큰 (이 화면에서는 사용 안 함)</td></tr>
+        <tr><td>안내 메시지 노출 시간</td><td>~4000ms</td><td>화면 하단에 잠시 떠 있다가 자동으로 사라지는 시간</td></tr>
       </tbody>
     </table>
     <table class="ref">
       <thead><tr><th style="width:240px;">Transition</th><th style="width:160px;">Duration (token)</th><th>Curve / notes</th></tr></thead>
       <tbody>
-        <tr><td>화면 entry (push)</td><td><code>fast</code> (200ms)</td><td>GoRouter slide.</td></tr>
-        <tr><td>Loading → List / Empty</td><td>setState (즉시)</td><td>fade 없음 — cut transition. AnimatedSwitcher 미사용.</td></tr>
-        <tr><td>List → Confirm dialog</td><td><code>fast</code> (200ms)</td><td>Material AlertDialog default — 중앙 fade-in scale.</td></tr>
-        <tr><td>Confirm dialog → SnackBar + Loading</td><td><code>fast</code> (200ms) + cut</td><td>다이얼로그 dismiss → SnackBar slide-up + body가 즉시 spinner로.</td></tr>
-        <tr><td>List item 제거 (해제 후)</td><td>setState (즉시)</td><td>전체 list 재로드라 개별 row 애니메이션 없음.</td></tr>
+        <tr><td>화면 진입</td><td><code>fast</code> (200ms)</td><td>화면이 좌→우로 슬라이드되며 진입.</td></tr>
+        <tr><td>Loading → List / Empty</td><td>—</td><td>별도 전환 애니메이션 없이 즉시 교체.</td></tr>
+        <tr><td>List → Confirm dialog</td><td><code>fast</code> (200ms)</td><td>화면 위에 다이얼로그가 살짝 커지며 부드럽게 페이드 인.</td></tr>
+        <tr><td>Confirm dialog 확인 → 안내 메시지 + Loading</td><td><code>fast</code> (200ms)</td><td>다이얼로그가 닫히면서 안내 메시지가 아래에서 올라오고, 본문은 곧바로 로딩 인디케이터로 전환.</td></tr>
+        <tr><td>해제 후 행 제거</td><td>—</td><td>전체 목록을 다시 가져오는 형태이므로 개별 행이 사라지는 애니메이션은 없음.</td></tr>
       </tbody>
     </table>
   </section>
@@ -751,12 +750,12 @@
   <section class="doc">
     <h2>Global edge cases</h2>
     <ul class="notes">
-      <li><strong>네트워크 끊김</strong> — 진입 시 SnackBar로 안내(Fix #270). unblock 실패는 별도 안내 없음 (잠재 개선).</li>
-      <li><strong>다크 모드</strong> — Scaffold/AppBar/ListTile/다이얼로그 모두 토큰 기반 → 자동 swap. Empty 텍스트는 <code>onSurfaceVariant</code>로 톤 다운.</li>
-      <li><strong>접근성</strong> — TextButton "차단 해제" + 행의 name이 TalkBack에서 의미 전달. CircleAvatar의 fallback Icon은 decorative — semanticLabel 없음. 다이얼로그는 Material default semantics.</li>
-      <li><strong>긴 partner name</strong> — bodyLarge single line + ellipsis. UI 깨짐 방지.</li>
-      <li><strong>profile_image_url 없음</strong> — fallback <code>Icon(Icons.store)</code>로 graceful degrade.</li>
-      <li><strong>중복 unblock</strong> — 다이얼로그 confirm 후 _unblock이 중복 호출되지 않도록 single tap 가정 (별도 debounce 없음).</li>
+      <li><strong>네트워크 끊김</strong> — 차단 목록을 가져오지 못한 경우 화면 하단에 안내 메시지가 잠깐 노출됨. 차단 해제 자체에 실패한 경우는 현재 안내가 노출되지 않을 수 있음.</li>
+      <li><strong>다크 모드</strong> — scaffold·AppBar·행·다이얼로그 모두 다크 토큰으로 자동 전환. Empty 안내 문구는 보조 텍스트 톤으로 살짝 다운된 색으로 노출됨.</li>
+      <li><strong>접근성</strong> — "차단 해제" 버튼과 행의 파트너 이름이 스크린리더에서 의미 있게 전달됨.</li>
+      <li><strong>긴 파트너 이름</strong> — 한 줄로 잘리고 끝에 말줄임표가 표시되어 UI가 깨지지 않음.</li>
+      <li><strong>프로필 이미지 없음</strong> — 기본 아이콘(가게 모양)으로 자연스럽게 대체.</li>
+      <li><strong>중복 해제 방지</strong> — 확인 다이얼로그 → 해제는 한 번 탭으로 처리됨을 가정.</li>
     </ul>
   </section>
 </div>

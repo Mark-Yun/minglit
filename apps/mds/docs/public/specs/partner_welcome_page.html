@@ -428,18 +428,18 @@ body.dark-mode .viewport {
   <div class="perspective__header">
     <span class="glyph">🎨</span>
     <h2>States</h2>
-    <span class="lede">시각 변형 6종 — PageView 4페이지(같은 layout, content swap) + popup menu open + logout confirm dialog. 첫 page baseline 풀 리스트, 나머지는 변경분만.</span>
+    <span class="lede">시각 변형 6종 — 캐러셀 4페이지(같은 레이아웃에서 콘텐츠만 교체) + 우상단 메뉴 노출 + 로그아웃 확인 다이얼로그. 첫 페이지 baseline 풀 리스트, 나머지는 변경분만.</span>
   </div>
 
   <section class="doc">
     <p class="intro">
-      <strong>State 종류 식별 기준</strong>: <code>_currentPage</code> int (PageView <code>onPageChanged</code>) + PopupMenuButton open + <code>MinglitAlert.showConfirm</code> overlay. PageView 페이지는 layout/spacing/CTA 모두 동일하고 icon · title · body 3개만 swap된다.
+      <strong>State 식별 기준</strong>: 현재 노출된 캐러셀 페이지 번호 + 우상단 메뉴 노출 여부 + 로그아웃 확인 다이얼로그 노출 여부. 캐러셀 4개 페이지는 레이아웃·간격·CTA 모두 동일하고 아이콘·제목·본문만 교체된다.
     </p>
 
     <!-- ───────── State 1 · Page 1 (baseline) ───────── -->
     <table class="ref state-mini is-baseline-tint">
       <thead>
-        <tr><th colspan="3"><strong>Page 1 · 환영 인사</strong> 🎯 <small>baseline · _currentPage = 0</small></th></tr>
+        <tr><th colspan="3"><strong>Page 1 · 환영 인사</strong> 🎯 <small>baseline · 첫 번째 페이지</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -472,23 +472,23 @@ body.dark-mode .viewport {
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>_currentPage == 0</code> · 진입 직후 default · PageController 초기 위치</td>
+          <td>화면에 진입한 직후 노출되는 첫 번째 페이지.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ① <strong>좌→우 swipe</strong> → page 2로 이동, dot indicator 1번째 → 2번째로 active 이동 (300ms 가까운 PageView native curve)<br>
-            ② <strong>"파트너 신청서 작성하기" 탭</strong> → <code>onboardingCoordinator.goToApply()</code> → <code>/apply</code><br>
-            ③ <strong>AppBar ⋮ 탭</strong> → PopupMenu open ("로그아웃" item)<br>
-            ④ <strong>시스템 back / 스와이프 back</strong> → no-op (<code>showBackButton: false</code> · 위로 갈 곳 없음 — router redirect로 넘어와서 stack에 이전 항목이 없을 수 있음)
+            ① <strong>왼쪽으로 스와이프</strong> — 두 번째 페이지로 이동하고 인디케이터의 활성 dot이 1번째에서 2번째로 옮겨감 (약 0.3초의 부드러운 전환).<br>
+            ② <strong>"파트너 신청서 작성하기" 버튼 탭</strong> — 신청서 작성 화면으로 이동.<br>
+            ③ <strong>AppBar 우상단 ⋮ 탭</strong> — "로그아웃" 항목이 들어 있는 메뉴가 펼쳐짐.<br>
+            ④ <strong>시스템 뒤로가기 / 뒤로가기 스와이프</strong> — 반응 없음. 이 화면은 자동으로 진입한 화면이라 위로 갈 곳이 없음.
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · 우→좌 swipe (페이지 0 좌측으로) → ClampingScrollPhysics가 막아 미반응 · bounce 없음<br>
-            · CTA 연타 → router.go는 idempotent, 같은 경로 push 무시 · 로딩 indicator 없음<br>
-            · 다크모드 토글 → scaffold gray↔dark surface, icon/CTA 색상 partner-primary 라이트→다크 swap
+            · 첫 페이지 왼쪽으로 더 스와이프해도 반응이 없으며 바운스 효과도 없음.<br>
+            · CTA를 빠르게 여러 번 눌러도 같은 화면이 중복 진입되지 않으며 별도의 로딩 표시는 없음.<br>
+            · 다크 모드 전환 시 화면 배경과 아이콘 / CTA 색이 다크용 파트너 인디고로 자동 교체됨.
           </td>
         </tr>
         <tr>
@@ -522,7 +522,7 @@ body.dark-mode .viewport {
     <!-- ───────── State 2 · Page 2 ───────── -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Page 2 · 신청 절차 안내</strong> <small>_currentPage = 1</small></th></tr>
+        <tr><th colspan="3"><strong>Page 2 · 신청 절차 안내</strong> <small>두 번째 페이지</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -555,23 +555,23 @@ body.dark-mode .viewport {
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>_currentPage == 1</code> (page 0에서 우→좌 swipe)</td>
+          <td>첫 페이지에서 왼쪽으로 스와이프해 도착하는 두 번째 페이지.</td>
         </tr>
-        <tr><td class="state-mini__aspect">사용자 액션</td><td>↔ swipe로 page 0 또는 page 2 이동 가능 · CTA · ⋮ 동작 동일</td></tr>
+        <tr><td class="state-mini__aspect">사용자 액션</td><td>↔ 좌우 스와이프로 첫 페이지 또는 세 번째 페이지로 이동 가능. CTA와 우상단 메뉴 동작은 동일.</td></tr>
         <tr><td class="state-mini__aspect">에지케이스</td><td>동일</td></tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
           <td>↔ icon: <code>Icons.business_center_outlined</code> → <code>Icons.checklist_outlined</code><br>↔ title/body: <code>welcome_page2_title</code> / <code>welcome_page2_body</code><br>↔ DotIndicator currentIndex 0 → 1</td>
         </tr>
         <tr><td class="state-mini__aspect">토큰</td><td>동일</td></tr>
-        <tr><td class="state-mini__aspect">노트</td><td>📝 신청 4단계의 양적 부담을 미리 알리는 페이지 — 후속 ApplyPage 4-step wizard와 정합.</td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 신청서 4단계의 분량을 미리 알려주는 페이지 — 이후 신청서 마법사의 4단계 흐름과 일치.</td></tr>
       </tbody>
     </table>
 
     <!-- ───────── State 3 · Page 3 ───────── -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Page 3 · 함께 성장해요</strong> <small>_currentPage = 2</small></th></tr>
+        <tr><th colspan="3"><strong>Page 3 · 함께 성장해요</strong> <small>세 번째 페이지</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -604,23 +604,23 @@ body.dark-mode .viewport {
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>_currentPage == 2</code></td>
+          <td>두 번째 페이지에서 왼쪽으로 스와이프해 도착하는 세 번째 페이지.</td>
         </tr>
-        <tr><td class="state-mini__aspect">사용자 액션</td><td>동일 (swipe + CTA + ⋮)</td></tr>
+        <tr><td class="state-mini__aspect">사용자 액션</td><td>동일 (좌우 스와이프 + CTA + 우상단 메뉴)</td></tr>
         <tr><td class="state-mini__aspect">에지케이스</td><td>동일</td></tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
           <td>↔ icon: <code>Icons.celebration_outlined</code><br>↔ title/body: <code>welcome_page3_title</code> / <code>welcome_page3_body</code><br>↔ DotIndicator currentIndex 1 → 2</td>
         </tr>
         <tr><td class="state-mini__aspect">토큰</td><td>동일</td></tr>
-        <tr><td class="state-mini__aspect">노트</td><td>📝 매칭 가치제안 페이지 — celebration icon은 outlined variant.</td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 매칭 가치를 강조하는 페이지. celebration 아이콘의 외곽선 변형을 사용.</td></tr>
       </tbody>
     </table>
 
     <!-- ───────── State 4 · Page 4 ───────── -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Page 4 · 파트너 후기</strong> <small>_currentPage = 3</small></th></tr>
+        <tr><th colspan="3"><strong>Page 4 · 파트너 후기</strong> <small>네 번째 페이지 — 마지막 페이지</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -653,23 +653,23 @@ body.dark-mode .viewport {
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>_currentPage == 3</code> (마지막 페이지)</td>
+          <td>캐러셀의 마지막 페이지.</td>
         </tr>
-        <tr><td class="state-mini__aspect">사용자 액션</td><td>↔ 좌→우 swipe만 가능 (page 2로) · 우→좌 swipe는 ClampingScrollPhysics로 차단</td></tr>
-        <tr><td class="state-mini__aspect">에지케이스</td><td>− 자동 advance 없음 (PageController에 timer 없음)</td></tr>
+        <tr><td class="state-mini__aspect">사용자 액션</td><td>↔ 오른쪽으로 스와이프해 세 번째 페이지로 이동만 가능. 더 왼쪽으로 스와이프해도 반응 없음.</td></tr>
+        <tr><td class="state-mini__aspect">에지케이스</td><td>− 자동으로 다음 페이지로 넘어가는 동작은 없음. 사용자가 직접 스와이프해야 페이지가 바뀜.</td></tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
           <td>↔ icon: <code>Icons.format_quote_outlined</code><br>↔ title/body: <code>welcome_page4_title</code> / <code>welcome_page4_body</code><br>↔ DotIndicator currentIndex 2 → 3</td>
         </tr>
         <tr><td class="state-mini__aspect">토큰</td><td>동일</td></tr>
-        <tr><td class="state-mini__aspect">노트</td><td>📝 후기 인용. 본문 내 따옴표는 ARB string에 포함된 리터럴이며 별도 quote-typography 분기 아님.</td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 후기 인용 페이지. 본문에 따옴표가 포함되어 있지만 본문 typography가 별도로 바뀌지는 않는다.</td></tr>
       </tbody>
     </table>
 
     <!-- ───────── State 5 · Popup menu open ───────── -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Popup menu open</strong> <small>AppBar ⋮ 탭 직후 · Material PopupMenu</small></th></tr>
+        <tr><th colspan="3"><strong>Popup menu open</strong> <small>우상단 ⋮ 메뉴가 펼쳐진 상태</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -705,24 +705,24 @@ body.dark-mode .viewport {
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>+ AppBar ⋮ 탭 — <code>PopupMenuButton</code>이 메뉴를 우상단에 anchor 배치</td>
+          <td>+ AppBar 우상단 ⋮을 탭한 직후 — 메뉴가 우상단 모서리 아래쪽에 펼쳐짐.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>① <strong>"로그아웃" 탭</strong> → <code>onSelected('logout')</code> → <code>_showLogoutDialog</code> (다음 state)<br>② <strong>외부 영역 탭</strong> → 메뉴 dismiss · barrier transparent · default 복귀</td>
+          <td>① <strong>"로그아웃" 탭</strong> — 메뉴가 닫히면서 로그아웃 확인 다이얼로그가 노출됨.<br>② <strong>메뉴 바깥 영역 탭</strong> — 메뉴가 닫히고 기본 화면으로 복귀.</td>
         </tr>
-        <tr><td class="state-mini__aspect">에지케이스</td><td>· popup open 중 PageView swipe → 무시 (메뉴 barrier가 hit-test 흡수)</td></tr>
+        <tr><td class="state-mini__aspect">에지케이스</td><td>· 메뉴가 펼쳐진 동안에는 캐러셀 좌우 스와이프가 받아들여지지 않음.</td></tr>
         <tr><td class="state-mini__aspect">컴포넌트</td><td>+ Material <code>PopupMenuButton</code> overlay (단일 <code>PopupMenuItem</code> · value="logout" · child = Text(<code>home_button_logout</code>))</td>
         </tr>
         <tr><td class="state-mini__aspect">토큰</td><td>+ <code>color-background</code> (popup surface) · <code>radius-small</code> (popup card) · 그림자 = Material elevation 8 (token 없음)</td></tr>
-        <tr><td class="state-mini__aspect">노트</td><td>📝 PopupMenu의 위치/스타일은 Material default — 별도 커스터마이즈 없음.</td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 메뉴의 위치와 스타일은 Material 기본을 그대로 사용. 별도 커스터마이즈 없음.</td></tr>
       </tbody>
     </table>
 
     <!-- ───────── State 6 · Logout confirm dialog ───────── -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Logout confirm dialog</strong> <small>MinglitAlert.showConfirm overlay</small></th></tr>
+        <tr><th colspan="3"><strong>Logout confirm dialog</strong> <small>로그아웃 확인 다이얼로그가 노출된 상태</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -765,22 +765,22 @@ body.dark-mode .viewport {
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>+ Popup menu에서 "로그아웃" 선택 직후 — <code>MinglitAlert.showConfirm</code> 다이얼로그 띄워짐</td>
+          <td>+ 우상단 메뉴에서 "로그아웃"을 선택한 직후 — 화면 중앙에 확인 다이얼로그가 노출됨.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ① <strong>"로그아웃" 확인 탭</strong> → 다이얼로그 close → <code>Future.delayed(zero)</code> 후 <code>authRepo.signOut()</code> · 그 결과 router redirect로 <code>/login</code><br>
-            ② <strong>"취소" 탭 / barrier 탭 / 시스템 back</strong> → 다이얼로그 close · default 복귀
+            ① <strong>"로그아웃" 확인 버튼 탭</strong> — 다이얼로그가 닫히고 짧게 뒤이어 로그아웃 처리가 실행됨. 그 결과 자동으로 로그인 화면으로 이동.<br>
+            ② <strong>"취소" 탭 / 다이얼로그 바깥 영역 탭 / 시스템 뒤로가기</strong> — 다이얼로그가 닫히고 기본 화면으로 복귀.
           </td>
         </tr>
-        <tr><td class="state-mini__aspect">에지케이스</td><td>· signOut 실패 → 다이얼로그는 이미 닫힌 상태 · 화면은 그대로 · auth state는 무변화 → 사용자는 다시 시도 가능 · 별도 에러 표시 없음 (의도된 fire-and-forget)</td></tr>
+        <tr><td class="state-mini__aspect">에지케이스</td><td>· 로그아웃 처리에 실패해도 다이얼로그는 이미 닫힌 상태이고, 화면은 그대로 유지된다. 별도 에러 메시지는 노출되지 않으며 사용자가 다시 시도할 수 있다.</td></tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
           <td>+ <code>MinglitAlert.showConfirm</code> (title=<code>home_button_logout</code> · content="로그아웃 하시겠습니까?" · confirmText/cancelText l10n)</td>
         </tr>
         <tr><td class="state-mini__aspect">토큰</td><td>+ scrim rgba(0,0,0,0.32) · <code>radius-card</code> (16 · dialog) · <code>spacing-large</code> (24 · dialog padding)</td></tr>
-        <tr><td class="state-mini__aspect">노트</td><td>📝 <em>코드 주석에 명시</em>: dialog가 close된 뒤 signOut을 미세 지연(<code>Future.delayed(Duration.zero)</code>)으로 호출 — router redirect가 invalidated context를 hit하지 않도록.</td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 다이얼로그가 닫힌 뒤 한 박자 늦게 로그아웃이 실행되도록 의도된 동작 — 화면 전환 흐름이 어색해지지 않도록 함.</td></tr>
       </tbody>
     </table>
 
@@ -809,27 +809,27 @@ body.dark-mode .viewport {
       <tbody>
         <tr>
           <td>"파트너 신청서 작성하기" CTA 탭</td>
-          <td><code>onboardingCoordinator.goToApply()</code> → <code>router.go('/apply')</code> · GoRouter 기본 transition. 한 번 도달하면 application draft가 생성되어 다음부터 router redirect는 <code>/welcome</code> 대신 <code>/apply</code>로 우회.</td>
+          <td>신청서 작성 화면(<code>/apply</code>)으로 이동. 한 번 신청서가 시작되면 다음 진입부터는 이 환영 화면을 거치지 않고 곧바로 신청서 화면으로 우회됨.</td>
         </tr>
         <tr>
-          <td>좌우 swipe (페이지 carousel)</td>
-          <td><code>PageController</code> + <code>ClampingScrollPhysics</code> (양쪽 끝에서 bounce 없이 hard stop). DotIndicator는 <code>onPageChanged</code>에서 <code>setState</code>로 동기화되며 <code>AnimatedContainer</code>(MinglitAnimation.medium)로 크기/색 transition.</td>
+          <td>좌우 스와이프 (캐러셀)</td>
+          <td>좌우 스와이프로 캐러셀 페이지가 전환됨. 양쪽 끝에서는 바운스 없이 부드럽게 정지. dot 인디케이터는 약 0.35초의 부드러운 전환으로 활성 dot 위치가 따라감.</td>
         </tr>
         <tr>
-          <td>AppBar ⋮ 탭 → 로그아웃</td>
-          <td>PopupMenu open → "로그아웃" 선택 → <code>MinglitAlert.showConfirm</code> → 확인 시 <code>signOut()</code> → auth provider invalidate → router redirect <code>/login</code>.</td>
+          <td>AppBar 우상단 ⋮ 탭 → 로그아웃</td>
+          <td>메뉴가 펼쳐지고 "로그아웃" 선택 시 확인 다이얼로그가 노출됨. 확인하면 로그아웃 처리 후 자동으로 로그인 화면으로 이동.</td>
         </tr>
         <tr>
-          <td>시스템 back / 스와이프 back</td>
-          <td><code>showBackButton: false</code>이며 router redirect로 도달했기 때문에 stack에 이전 항목이 없을 가능성이 큼 — Android에서 종료 / iOS에서 무반응. 위로 갈 곳이 없음.</td>
+          <td>시스템 뒤로가기 / 뒤로가기 스와이프</td>
+          <td>뒤로가기 버튼 자체가 노출되지 않고, 자동 진입한 화면이라 위로 갈 곳도 없음 — Android는 앱 종료, iOS는 무반응.</td>
         </tr>
         <tr>
-          <td>onboarding state 변경 (외부 트리거)</td>
-          <td>다른 디바이스에서 application 생성 → <code>onboardingStateProvider</code>가 <code>draftInProgress</code>로 갱신 → router refreshListenable이 트리거 → "If on welcome page but no longer needsApplication" 분기로 <code>/apply</code>로 자동 이동.</td>
+          <td>외부에서 신청 상태가 바뀐 경우</td>
+          <td>다른 기기에서 신청서 작성을 시작하면 이 화면이 자동으로 닫히고 신청서 화면으로 이동.</td>
         </tr>
         <tr>
-          <td>다크모드 토글</td>
-          <td>scaffold gray ↔ dark surface · partner-primary 라이트(#6c3ce1) ↔ 다크(#9b7bec) swap. 모든 토큰은 자동 매핑.</td>
+          <td>다크 모드 토글</td>
+          <td>화면 배경이 다크용 surface로 전환되고, 파트너 인디고가 다크 톤으로 자동 교체됨.</td>
         </tr>
       </tbody>
     </table>
@@ -850,34 +850,34 @@ body.dark-mode .viewport {
       </thead>
       <tbody>
         <tr>
-          <td>화면 진입 (router redirect)</td>
+          <td>화면 진입 (자동 이동)</td>
           <td><code>MinglitAnimation.fast</code> (200ms)</td>
-          <td>GoRouter 기본 라우트 전환. router redirect라서 사용자 입력으로 시작된 push와 시각적으로 동일.</td>
+          <td>표준 라우트 전환. 자동 이동으로 진입한 경우와 사용자 동작으로 진입한 경우의 시각적 차이는 없음.</td>
         </tr>
         <tr>
-          <td>PageView swipe → 다음/이전 페이지</td>
-          <td>Flutter 기본 PageView curve (~300ms)</td>
-          <td>Native PageView animation — token 없음. Cubic ease-out.</td>
+          <td>캐러셀 좌우 스와이프 → 다음/이전 페이지</td>
+          <td>약 300ms</td>
+          <td>OS 기본 캐러셀 전환 곡선 (cubic ease-out).</td>
         </tr>
         <tr>
-          <td>DotIndicator active → idle 전환</td>
+          <td>인디케이터 활성 dot 전환</td>
           <td><code>MinglitAnimation.medium</code> (350ms)</td>
-          <td>크기 8↔10 + 색상 outlineVariant↔partner-primary. <code>AnimatedContainer</code>.</td>
+          <td>활성 dot의 크기와 색이 부드럽게 전환됨.</td>
         </tr>
         <tr>
-          <td>PopupMenu open / dismiss</td>
-          <td>Material default (~150ms)</td>
-          <td>Material PopupMenuButton 기본 fade + scale. token 없음.</td>
+          <td>우상단 메뉴 노출 / 닫힘</td>
+          <td>약 150ms</td>
+          <td>OS 기본 fade + scale. 디자인 토큰 없음.</td>
         </tr>
         <tr>
-          <td>Confirm dialog in/out</td>
+          <td>확인 다이얼로그 노출 / 닫힘</td>
           <td><code>MinglitAnimation.fast</code> (200ms)</td>
-          <td>중앙 fade-in scale (Material default). barrier scrim 동시 fade.</td>
+          <td>중앙에서 페이드 인/아웃 + 살짝 확대. 다이얼로그 뒤 어두워지는 영역도 동시에 페이드.</td>
         </tr>
         <tr>
-          <td>CTA 탭 → /apply 전환</td>
+          <td>CTA 탭 → 신청서 화면 전환</td>
           <td><code>MinglitAnimation.fast</code> (200ms)</td>
-          <td>GoRouter <code>router.go</code> — replace top, default slide/fade.</td>
+          <td>표준 라우트 전환 (slide / fade).</td>
         </tr>
       </tbody>
     </table>
@@ -886,10 +886,10 @@ body.dark-mode .viewport {
   <section class="doc">
     <h2>Global edge cases</h2>
     <ul class="notes">
-      <li><strong>이미 application이 있는 사용자가 <code>/welcome</code> 직접 진입</strong> — router redirect의 "If on welcome page but no longer needsApplication" 분기가 발동, <code>draftInProgress</code>면 <code>/apply</code>로, 그 외엔 <code>/</code>(home)로 자동 이동. 화면이 잠깐도 안 보임.</li>
-      <li><strong>로그아웃 직후 <code>/welcome</code> URL 직접 진입</strong> — <code>!isLoggedIn</code> 분기로 즉시 <code>/login</code>으로 redirect.</li>
-      <li><strong>onboardingState가 loading 중일 때 진입</strong> — <code>ref.read(onboardingStateProvider).hasValue</code>가 false면 redirect 분기를 통과 못 해 그대로 <code>/welcome</code> 머무름. provider가 resolve되면 refreshListenable이 router를 재평가, 필요 시 우회. 사용자에겐 짧은 깜빡임.</li>
-      <li><strong>signOut 실패</strong> — <code>authRepo.signOut()</code>은 fire-and-forget(<code>unawaited</code>). 실패해도 화면에 별도 에러 표시 없음. auth state 무변화 → 사용자가 ⋮ → 로그아웃 다시 시도 가능. <em>의도된 동작</em>.</li>
+      <li><strong>이미 신청서가 있는 사용자가 이 URL로 진입</strong> — 화면이 보이지 않고 자동으로 신청서 화면 또는 홈으로 이동.</li>
+      <li><strong>로그아웃 직후 이 URL로 진입</strong> — 즉시 로그인 화면으로 이동.</li>
+      <li><strong>신청 상태가 아직 확인되지 않은 채 진입</strong> — 화면이 잠깐 보였다가 상태가 확인되면 필요 시 다른 화면으로 자동 이동. 사용자에게는 짧은 깜빡임으로 인지됨.</li>
+      <li><strong>로그아웃 실패</strong> — 별도 에러 메시지가 노출되지 않고 화면이 그대로 유지된다. 사용자는 메뉴를 다시 열어 재시도할 수 있다. <em>의도된 동작</em>.</li>
     </ul>
   </section>
 </div>

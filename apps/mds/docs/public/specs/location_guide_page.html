@@ -358,13 +358,13 @@ body.dark-mode .viewport {
   <div class="perspective__header">
     <span class="glyph">🎨</span>
     <h2>States</h2>
-    <span class="lede">정적 가이드라 state 분기가 거의 없음. Default(전체 카드 풀 렌더) + 짧은 진입 직후 Initial render(스크롤 시작점) 정도.</span>
+    <span class="lede">정적 가이드라 state 분기가 거의 없음. Default(전체 카드 풀 렌더) + 짧은 진입 직후 화면 전환 프레임 정도.</span>
   </div>
 
   <section class="doc">
     <h2>States gallery</h2>
     <p class="intro">
-      LocationGuidePage는 StatelessWidget · 외부 데이터 fetch 없음 → Empty / Error / Loading async state 없음. 전부 정적 컴파일 타임 컨텐츠.
+      외부 데이터 조회가 없는 정적 가이드 화면이라 빈 상태 / 에러 / 로딩 분기가 없다. 모든 내용이 화면에 즉시 노출.
     </p>
 
     <div class="visual-gallery" style="background: var(--color-surface); padding: 16px; border-radius: var(--radius-card); display: flex; flex-direction: column; gap: 16px;">
@@ -414,15 +414,15 @@ body.dark-mode .viewport {
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>화면 진입 직후. StatelessWidget이라 데이터 fetch 없이 즉시 렌더. 스크롤 0 = 첫 카드 노출.</td>
+            <td>화면 진입 직후. 정적 가이드라 데이터 조회 없이 즉시 렌더. 스크롤 위치는 가장 위 — 첫 카드부터 보임.</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">사용자 액션</td>
-            <td>스크롤 ↕ → 3개 카드 차례로 노출. AppBar back 탭 → PartnerHomePage 복귀. 카드 자체는 비탭 (정적 텍스트).</td>
+            <td>스크롤 ↕ → 3개 카드 차례로 노출. AppBar back 탭 → 파트너 홈으로 복귀. 카드 자체는 탭 동작 없음 (정적 텍스트).</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">에지케이스</td>
-            <td><strong>긴 텍스트 wrap</strong> — Bullet/Step의 Text는 Expanded라 줄바꿈됨. <strong>한 화면 초과</strong> — SingleChildScrollView가 처리.</td>
+            <td><strong>긴 텍스트 줄바꿈</strong> — bullet/step 텍스트는 자연 wrap. <strong>한 화면을 넘는 길이</strong> — 스크롤로 처리.</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">컴포넌트</td>
@@ -439,7 +439,7 @@ body.dark-mode .viewport {
           </tr>
           <tr>
             <td class="state-mini__aspect">노트</td>
-            <td>📝 SectionCard · BulletItem · StepItem 모두 page-local <code>_</code> prefix 위젯 — 다른 화면에서 재사용 의도 없음. icon color는 colorScheme에서 가져오므로 partner brand(indigo)에서 자연 적응.</td>
+            <td>📝 본 화면 전용 컴포넌트(섹션 카드, bullet, step) — 다른 화면 재사용 의도 없음. 아이콘 색은 컬러 스킴에서 자동 매핑되어 partner 브랜드(indigo)에서도 자연스럽게 적응.</td>
           </tr>
         </tbody>
       </table>
@@ -465,13 +465,13 @@ body.dark-mode .viewport {
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>route push 직후 첫 frame — Material page transition 진행 중 (~150ms).</td>
+            <td>화면 진입 직후 첫 프레임 — 화면 전환 애니메이션이 끝나기 전(~150ms).</td>
           </tr>
-          <tr><td class="state-mini__aspect">사용자 액션</td><td>탭 무반응 (transition 중)</td></tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>탭 무반응 (전환 중)</td></tr>
           <tr><td class="state-mini__aspect">에지케이스</td><td>—</td></tr>
-          <tr><td class="state-mini__aspect">컴포넌트</td><td>동일 (단지 transition opacity 0~1)</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>동일 (전환 페이드 인만)</td></tr>
           <tr><td class="state-mini__aspect">토큰</td><td>동일</td></tr>
-          <tr><td class="state-mini__aspect">노트</td><td>📝 데이터 fetch가 없으므로 "Loading" state라 부를 수준의 분기는 아님 — Material 기본 page transition만.</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 데이터 조회가 없어 별도 로딩 분기는 아님 — 기본 화면 전환 애니메이션만.</td></tr>
         </tbody>
       </table>
 
@@ -491,9 +491,9 @@ body.dark-mode .viewport {
     <table class="ref">
       <thead><tr><th style="width: 220px;">사용자 액션</th><th>화면에 보이는 결과</th></tr></thead>
       <tbody>
-        <tr><td>뒤로 가기 (OS back / AppBar back)</td><td>PartnerHomePage 복귀 — Material 기본 reverse transition (~250ms)</td></tr>
-        <tr><td>스크롤 ↕</td><td>body 영역만 스크롤 (AppBar 고정). Bouncing scroll (iOS) / overscroll glow (Android).</td></tr>
-        <tr><td>Pull-to-refresh</td><td>동작 없음 — RefreshIndicator 미사용 (정적 컨텐츠)</td></tr>
+        <tr><td>뒤로 가기 (OS back / AppBar back)</td><td>파트너 홈으로 복귀 — 기본 reverse transition (~250ms)</td></tr>
+        <tr><td>스크롤 ↕</td><td>body 영역만 스크롤되고 AppBar는 고정. iOS는 바운스, Android는 overscroll glow.</td></tr>
+        <tr><td>아래로 당기기</td><td>동작 없음 — 정적 컨텐츠라 새로고침 비활성.</td></tr>
       </tbody>
     </table>
   </section>
@@ -518,9 +518,9 @@ body.dark-mode .viewport {
   <section class="doc">
     <h2>Global edge cases</h2>
     <ul class="notes">
-      <li><strong>다크 모드</strong> — <code>surfaceContainerHighest</code>가 Material dark scheme에서 자연 어두워짐. icon color (primary/secondary/error)는 dark variant로 자동 매핑.</li>
-      <li><strong>접근성</strong> — semantic header(titleSmall) + bullet text는 screen reader가 list 구조로 읽음. 큰 글씨 시 Card 내부 Column이 자연 wrap.</li>
-      <li><strong>다국어</strong> — 본 화면은 현재 ko-KR 하드코딩 (l10n 미적용). i18n 도입 시 문자열 외부화 필요.</li>
+      <li><strong>다크 모드</strong> — 카드 배경과 아이콘 색상이 다크 스킴에 맞춰 자동 어두워짐.</li>
+      <li><strong>접근성</strong> — 섹션 헤더 + bullet 텍스트는 리스트 구조로 읽힘. 큰 글씨 모드에선 카드 내부가 자연 줄바꿈.</li>
+      <li><strong>다국어</strong> — 본 화면은 현재 한국어 고정. 다국어 도입 시 문자열 외부화 필요.</li>
     </ul>
   </section>
 </div>

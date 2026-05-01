@@ -434,11 +434,11 @@ body.dark-mode .tqr-bp-placeholder__tag { background: var(--color-dark-backgroun
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>_ticketTokenProvider(ticketId).data == TicketToken(non-null) AND widget.eventMeta != null. 본 화면이 가장 자주 도달되는 분기.</td>
+            <td>티켓 QR 토큰과 이벤트 메타 정보가 모두 정상적으로 전달된 상태. 본 화면이 가장 자주 도달되는 분기.</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">사용자 액션</td>
-            <td>AppBar back → 진입 화면 복귀 + dispose에서 _restoreBrightness 호출 (원래 밝기 복원).</td>
+            <td>AppBar 뒤로가기 → 진입 화면으로 복귀하면서 화면 밝기가 원래 값으로 자동 복원됨.</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">사용자 액션</td>
@@ -463,7 +463,7 @@ body.dark-mode .tqr-bp-placeholder__tag { background: var(--color-dark-backgroun
           </tr>
           <tr>
             <td class="state-mini__aspect">노트</td>
-            <td>📝 brightness 강제 1.0은 화면 진입에 한정 — dispose에서 원래 값으로 복원. screen_brightness 패키지의 application scope 사용 (system은 변경 안 함). Fix #382: _originalBrightness 강제 언래핑 제거 — null 안전성 확보.</td>
+            <td>📝 화면 밝기 자동 최대화는 본 화면에 머무는 동안만 적용되고, 화면을 떠나면 즉시 원래 값으로 복원됨 (시스템 밝기는 건드리지 않음).</td>
           </tr>
         </tbody>
       </table>
@@ -536,7 +536,7 @@ body.dark-mode .tqr-bp-placeholder__tag { background: var(--color-dark-backgroun
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>_ticketTokenProvider(ticketId).isLoading. 로컬 wallet 적중 시 거의 즉시 / Edge Function fetch 시 100~500ms.</td>
+            <td>QR 토큰을 불러오는 중. 로컬 캐시 적중 시 거의 즉시, 서버에서 받아오는 경우 100~500ms 정도.</td>
           </tr>
           <tr><td class="state-mini__aspect">사용자 액션</td><td>탭 무반응. AppBar back은 동작.</td></tr>
           <tr><td class="state-mini__aspect">에지케이스</td><td><strong>brightness 이미 1.0</strong> — initState에서 set, build cycle과 독립적이라 loading 중에도 화면 밝아짐.</td></tr>

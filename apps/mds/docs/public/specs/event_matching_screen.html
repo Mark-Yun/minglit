@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>Spec — EventMatchingScreen (app_user · EventMatchingRoute · routed bottom-sheet)</title>
+<title>Spec — EventMatchingScreen (app_user · EventMatchingRoute)</title>
 <link rel="stylesheet" href="/specs/_spec.css">
 <style>
 /* ============================================================
@@ -342,7 +342,7 @@
     <tbody>
       <tr>
         <th style="width: 140px;">Status</th>
-        <td><strong>🚧 디자인중</strong> <em style="color: var(--color-text-secondary);">— <code>EventMatchingRoute</code>는 아직 미구현. 현재 동등 콘텐츠는 <code>EventNowBottomSheet</code>의 <code>matching</code> phase에서 <code>MatchingContent</code>(<code>matching_content.dart</code>)로 inline 렌더 — <code>showModalBottomSheet</code> 내부, 라우트 아님. 본 spec은 routed sheet 추출 후의 사양.</em></td>
+        <td><strong>🚧 디자인중</strong> <em style="color: var(--color-text-secondary);">— 5 state · 홈 위에 올라오는 바텀시트</em></td>
       </tr>
       <tr>
         <th>App</th>
@@ -354,7 +354,7 @@
       </tr>
       <tr>
         <th>Route / Surface</th>
-        <td><code>EventMatchingRoute</code> — <code>ModalBottomSheetRoute</code> (Material 3 sheet · top corners radius-card · scrim ~50%) <em style="color: var(--color-text-secondary);">· 신규 추가 예정</em></td>
+        <td><code>EventMatchingRoute</code> · widget: <code>EventMatchingScreen</code> (홈 위에 올라오는 바텀시트)</td>
       </tr>
       <tr>
         <th>Path</th>
@@ -363,34 +363,34 @@
       <tr>
         <th>Hierarchy</th>
         <td>
-          <strong>Parent</strong>: <a href="/specs/home_page.html"><code>HomeRoute</code></a> via <a href="/specs/event_now_bar.html"><code>EventNowBar</code></a> (<code>matchingReady</code> / <code>matching</code> state · bar tap → push)<br>
-          <strong>Children</strong>: <em>—</em> <em style="color: var(--color-text-secondary);">(투표 확정은 인라인 <code>showMinglitConfirm</code> 다이얼로그, 별도 route 없음)</em>
+          <strong>Parent</strong>: <a href="/specs/home_page.html"><code>HomePage</code></a> — 시트가 올라와도 홈 화면은 어두워진 상태로 그대로 보임. 진입은 <a href="/specs/event_now_bar.html"><code>EventNowBar</code></a>가 "투표 가능" 또는 "매칭 중" 상태일 때 탭.<br>
+          <strong>Children</strong>: <em>—</em> <em style="color: var(--color-text-secondary);">(투표 확정은 시트 위에 뜨는 confirm 다이얼로그)</em>
         </td>
       </tr>
       <tr>
         <th>Purpose</th>
         <td>
-          매칭 phase에서 사용자가 후보 목록을 보고 "선택" 버튼으로 투표를 행사하는 화면. 잔여 투표 수 / 투표 완료 후보 / 양방향 매치 성공 알림을 한 시트에서 모두 다룬다.
-          후보는 2-col grid로 노출, 카드 오버레이의 "선택" 버튼이 1차 액션. 양방향 매치가 성립한 상대는 상단 banner에 즉시 reveal — 결과가 phase 종료 전에 점진적으로 누적된다.
+          매칭 단계에서 사용자가 후보 목록을 보고 "선택" 버튼으로 투표하는 화면. 잔여 투표 수 / 투표 완료 후보 / 양방향 매치 성공 알림을 한 시트에서 모두 다룬다.
+          후보는 2열 grid로 노출, 카드 오버레이의 "선택" 버튼이 1차 액션. 양방향 매치가 성립한 상대는 상단 banner에 즉시 reveal — 결과가 매칭이 끝나기 전에 점진적으로 누적된다.
         </td>
       </tr>
       <tr>
         <th>User journey</th>
         <td>
-          <strong>Entry points</strong>: ① <a href="/specs/event_now_bar.html"><code>EventNowBar</code></a> 탭 (<code>matchingReady</code> action variant — 가장 흔한 진입). ② 동일 bar의 <code>matching</code> passive variant (사용자 vote 완료 후 진입 — view-only). ③ push 알림 "매칭이 시작됐어요" deeplink.<br>
-          <strong>Exit points</strong>: 후보 카드 "선택" → <code>_confirmAndVote</code> 다이얼로그 → 확정 시 SnackBar "투표가 완료되었습니다" + grid에 voted 마스크 표시 (시트 유지). · 모든 vote 소진 또는 phase가 <code>results</code>로 전환되면 시트 자동 dismiss + EventNowBar가 results state로 전환.
+          <strong>Entry points</strong>: ① <a href="/specs/event_now_bar.html">EventNowBar</a>가 "투표 가능" 상태일 때 탭 (가장 흔한 진입). ② 같은 바가 "매칭 중" 상태일 때 탭 (투표 후 진입 — 보기 전용). ③ "매칭이 시작됐어요" 푸시 알림 진입.<br>
+          <strong>Exit points</strong>: 후보 카드 "선택" → 확정 다이얼로그 → 확정 시 "투표가 완료되었습니다" 안내가 잠깐 노출되고 grid에 투표 완료 마스크 표시 (시트 유지). 모든 투표 소진 또는 매칭이 끝나 결과가 발표되면 시트 자동 닫힘 + EventNowBar가 "결과 발표" 상태로 전환.
         </td>
       </tr>
       <tr>
         <th>Background</th>
         <td>
-          매칭 phase는 EventNow 5단계의 클라이맥스 — 사용자 입력이 강하게 요구되는 구간 (bar의 <code>matchingReady</code>가 action variant인 이유). 기존 인라인 <code>MatchingVoteContent</code>는 화면을 가득 채우지만, EventNowBar 진입 흐름과 일관되게 모달 시트로 통일하면 "탭하고 끝, 닫으면 홈"의 UX가 그대로 유지된다.
-          시트 안에서 다중 vote / 양방향 match reveal / partner contact 노출이 모두 일어나기 때문에 <code>isScrollControlled: true</code>로 max-height 88%를 차지한다.
+          매칭은 EventNow 5단계의 클라이맥스 — 사용자 입력이 강하게 요구되는 구간 (바가 "투표 가능" 상태에서 강조 표시되는 이유). 기존 인라인 매칭 콘텐츠는 화면을 가득 채우지만, EventNowBar 진입 흐름과 일관되게 바텀시트로 통일하면 "탭하고 끝, 닫으면 홈"의 UX가 그대로 유지된다.
+          시트 안에서 다중 투표 / 양방향 매치 공개 / 파트너 연락처 노출이 모두 일어나기 때문에 시트 높이가 화면의 88%까지 차오를 수 있다.
         </td>
       </tr>
       <tr>
         <th>Frequency</th>
-        <td>이벤트당 1회 phase — 사용자는 보통 진입 후 N번의 vote를 마치고 닫는다. push 알림 / EventNowBar 재탭으로 재진입 가능 (vote 추가 / 매치 누적 확인).</td>
+        <td>이벤트당 1단계 — 사용자는 보통 진입 후 여러 번 투표하고 닫는다. 푸시 알림 / EventNowBar 재탭으로 재진입 가능 (투표 추가 / 매치 누적 확인).</td>
       </tr>
     </tbody>
   </table>
@@ -417,9 +417,8 @@
         <td>1.0</td>
         <td>mark-yun</td>
         <td>
-          v1.4 template으로 신규 작성 — <code>EventNowBar</code>의 <code>matchingReady</code> / <code>matching</code> state에서 push될 routed bottom-sheet 화면.
-          mini-table per state 5종 (baseline = matchingReady · 첫 reveal). <code>MatchingVoteContent</code> + <code>MatchingContent</code> wrapper 구조를 routed sheet으로 추출했을 때의 사양.
-          매치 banner, 잔여 투표 행, 후보 grid, voted 마스크, confirm dialog, error 폴백을 모두 mockup에 반영.
+          v1.4 template으로 신규 작성 — EventNowBar가 "투표 가능" / "매칭 중" 상태일 때 진입하는 바텀시트.
+          mini-table per state 5종 (baseline = matchingReady · 첫 reveal). 매치 banner, 잔여 투표 행, 후보 grid, voted 마스크, confirm dialog, error 폴백을 모두 mockup에 반영.
         </td>
       </tr>
     </tbody>
@@ -441,13 +440,13 @@
   <div class="perspective__header">
     <span class="glyph">🧱</span>
     <h2>Layout</h2>
-    <span class="lede">화면 구조 — scrim + bottom sheet · top corners radius-card · drag handle / 헤더 / (옵션) 매치 banner / 잔여 투표 행 / 후보 grid 4 region. AppBar 없음.</span>
+    <span class="lede">화면 구조 — 어두워진 홈 위에 올라오는 바텀시트 · 상단 모서리만 radius-card · drag handle / 헤더 / (옵션) 매치 banner / 잔여 투표 행 / 후보 grid 4 region. AppBar 없음.</span>
   </div>
 
   <section class="doc">
     <h2>Blueprint &amp; tree</h2>
     <p class="intro">
-      <code>ModalBottomSheetRoute</code>로 슬라이드업되는 sheet. <strong>AppBar 없음</strong> — 상단 drag handle(40×4)이 dismiss affordance. <code>isScrollControlled: true</code> — 후보 grid가 길어지면 시트 내부 scroll. 시트 본체는 <code>SafeArea</code> + <code>Padding</code>(<code>screenEdge</code> H · <code>large</code> V), 내부는 <code>Column(MainAxisSize.min)</code> + <code>SizedBox(height: 0.6 * screen.height)</code>로 grid 영역에 bound 부여 (<code>Expanded + GridView</code> 호스팅).
+      아래에서 위로 슬라이드되며 올라오는 바텀시트. <strong>AppBar 없음</strong> — 상단 drag handle(40×4)이 닫기 단서. 후보 grid가 길어지면 시트 내부에서 스크롤. 시트 본체는 가로 <code>screenEdge</code> 패딩 + 세로 <code>large</code> 패딩, 내부는 위에서 아래로 stacked column이고 grid 영역은 화면 높이의 약 60% 만큼 확보.
     </p>
     <div class="layout-grid">
       <div class="blueprint" style="width: 343px; height: 600px;">
@@ -475,53 +474,46 @@
         </div>
       </div>
 
-      <div class="layout-tree"><b>Navigator</b>
-└─ <em>ModalBottomSheetRoute</em>: <b>EventMatchingScreen</b>
-   <i>· scrim above (Material default ~50% black)</i>
+      <div class="layout-tree"><b>Modal Bottom Sheet</b>
+└─ scrim 0.5 black
+└─ top corners: <i>radius-card 16</i>
+└─ box-shadow: <i>0 -4px 20px rgba(0,0,0,0.10)</i>
+└─ <i>(콘텐츠 길이에 따라 시트 높이 가변, 최대 88%)</i>
 
-<b>Sheet container</b>
-├─ background: <i>color-background (white)</i>
-├─ border-radius: <i>radius-card (16)</i>  <i>top corners only</i>
-├─ box-shadow: <i>0 -4px 20px rgba(0,0,0,0.10)</i>
-├─ isScrollControlled: <i>true</i>  <i>(max-height 88%)</i>
-│
-└─ SafeArea
-   └─ Padding(bottom: viewPadding.bottom)
-      └─ Column(MainAxisSize.min)
-         ├─ <em>Drag handle</em>                            ← ㉠
-         │  · 40×4 · radius 2 · text-secondary @ muted
-         │
-         ├─ Gap: <i>spacing-large (24)</i>
-         ├─ <em>Title</em> event.title                      ← ㉡
-         │  · titleMedium · w700 · center
-         ├─ Gap: <i>spacing-small (8)</i>
-         ├─ <em>Vote status caption</em>                    ← ㉡
-         │  · "남은 투표: N / M" or "투표 완료!"
-         │  · bodySmall · secondary(remaining&gt;0) | success(=0) · w600
-         ├─ Gap: <i>spacing-medium (16)</i>
-         │
-         └─ <b>SizedBox(height: 0.6 * MediaQuery.height)</b>
-            └─ <b>MatchingVoteContent</b>
-               └─ Column
-                  ├─ <em>Match banner</em>                  ← ㉢
-                  │  · matchesAsync data + matches.isNotEmpty 일 때만
-                  │  · ColoredBox(secondaryContainer @ subtle)
-                  │  · "매칭 성공! (N명)" + horizontal listView
-                  │
-                  ├─ <em>Vote-meta row</em>                 ← ㉣
-                  │  · loading: 16px CircularProgress
-                  │  · error: error_outline + "투표 정보를 불러올 수 없습니다."
-                  │  · data: how_to_vote / check_circle + "남은 투표 N/M" or "투표 완료!"
-                  │
-                  └─ Expanded
-                     └─ <em>Candidates GridView</em>        ← ㉤
-                        · crossAxisCount: 2
-                        · childAspectRatio: 0.8
-                        · main+cross spacing: spacing-medium (16)
-                        · padding: spacing-medium (16)
-                        · empty: Center("투표 가능한 상대가 없습니다.")
-                        · loading: spinner
-                        · error: MinglitAsyncValueWidget default error</div>
+<b>EventMatchingScreen</b>
+└─ Safe area + 하단 inset
+   └─ 위에서 아래로 stacked column
+      ├─ <em>Drag handle</em>                             ← ㉠
+      │  · 40×4 · radius 2 · text-secondary 흐린 색
+      │
+      ├─ Gap: <i>spacing-large (24)</i>
+      ├─ <em>Title</em> 이벤트 이름                        ← ㉡
+      │  · titleMedium · w700 · center
+      ├─ Gap: <i>spacing-small (8)</i>
+      ├─ <em>Vote status caption</em>                     ← ㉡
+      │  · "남은 투표: N / M" 또는 "투표 완료!"
+      │  · bodySmall · secondary(잔여>0) | success(=0) · w600
+      ├─ Gap: <i>spacing-medium (16)</i>
+      │
+      └─ 화면 높이 약 60% 영역
+         └─ Column
+            ├─ <em>Match banner</em>                      ← ㉢
+            │  · 매치된 상대가 1명 이상일 때만 노출
+            │  · 살짝 강조된 배경 (secondaryContainer 톤)
+            │  · "매칭 성공! (N명)" + 가로 스와이프 리스트
+            │
+            ├─ <em>Vote-meta row</em>                     ← ㉣
+            │  · 로딩: 16px 스피너
+            │  · 에러: error_outline + "투표 정보를 불러올 수 없습니다."
+            │  · data: how_to_vote / check_circle + "남은 투표 N/M" 또는 "투표 완료!"
+            │
+            └─ <em>Candidates 2열 grid</em>               ← ㉤
+               · 2 cols · childAspect 0.8
+               · 카드 간 spacing: <i>spacing-medium (16)</i>
+               · grid padding: <i>spacing-medium (16)</i>
+               · empty: "투표 가능한 상대가 없습니다."
+               · loading: 스피너
+               · error: 에러 블록</div>
     </div>
 
     <table class="ref" style="margin-top: 16px;">
@@ -547,16 +539,16 @@
 
   <section class="doc">
     <h2>CandidateCard anatomy</h2>
-    <p class="intro">후보 1명당 1 카드. <code>Card</code> + <code>Stack</code> — 배경 placeholder, voted 마스크(조건부), 하단 그라디언트 + 이름 + "선택" 버튼. 카드 자체는 <code>clipBehavior: Clip.antiAlias</code>로 grid item 라운딩 유지.</p>
+    <p class="intro">후보 1명당 1 카드. 배경 placeholder + 투표 완료 마스크(조건부) + 하단 그라디언트 + 이름 + "선택" 버튼이 위에 겹쳐 쌓이는 구조. 카드 자체는 라운드 모서리로 잘림.</p>
     <table class="ref">
       <thead><tr><th style="width: 200px;">Element</th><th>Behavior</th></tr></thead>
       <tbody>
-        <tr><td>Background placeholder</td><td><code>ColoredBox</code>(<code>surfaceContainerHighest</code>) + <code>Icon(Icons.person · 48 · onSurfaceVariant)</code> — 프로필 이미지 자리.</td></tr>
-        <tr><td>Voted overlay</td><td><code>isVoted</code> 시 <code>Positioned.fill</code> · <code>color-primary @ MinglitOpacity.subtle</code> · <code>Icon(Icons.check_circle · 48 · primary)</code></td></tr>
-        <tr><td>Info overlay (bottom)</td><td>linear gradient (textPrimary @ highEmphasis → transparent) · padding spacing-small (8) · 이름(<code>bodyMedium</code> · w700 · color-background)</td></tr>
-        <tr><td>"선택" 버튼</td><td><code>ElevatedButton</code> · 풀폭 · padding zero · density compact · 라벨: 미투표=<strong>선택</strong>, 투표완료=<strong>투표 완료</strong></td></tr>
-        <tr><td>Disabled 조건</td><td><code>voteMetaLoading | voteMetaError | !hasVoteMeta | isVoted | allVotesUsed</code> 중 하나라도 true면 <code>onPressed: null</code></td></tr>
-        <tr><td>Tap → confirm dialog</td><td><code>showMinglitConfirm("투표 확인", "&lt;name&gt;님에게 투표하시겠습니까?", "투표하기")</code> → 확정 시 <code>MatchingVoteController.vote()</code> 호출</td></tr>
+        <tr><td>Background placeholder</td><td>흐린 surface tint 위에 person 아이콘 (48 · onSurfaceVariant) — 프로필 이미지 자리.</td></tr>
+        <tr><td>Voted overlay</td><td>이미 투표한 상대일 때 카드 전체에 primary tint 마스크 + check_circle 아이콘 (48 · primary).</td></tr>
+        <tr><td>Info overlay (bottom)</td><td>아래쪽으로 짙어지는 그라디언트 + 이름 (bodyMedium · w700 · color-background).</td></tr>
+        <tr><td>"선택" 버튼</td><td>카드 폭 풀폭 버튼. 라벨: 미투표=<strong>선택</strong>, 투표완료=<strong>투표 완료</strong>.</td></tr>
+        <tr><td>비활성 조건</td><td>잔여 투표 정보가 로딩/에러이거나, 이미 투표한 상대이거나, 잔여 투표가 0일 때 버튼이 비활성으로 회색 처리.</td></tr>
+        <tr><td>Tap → 확정 다이얼로그</td><td>"투표 확인 — &lt;이름&gt;님에게 투표하시겠습니까? · 투표하기" 다이얼로그가 시트 위에 뜸. 확정 시 투표 처리.</td></tr>
       </tbody>
     </table>
   </section>
@@ -569,18 +561,18 @@
   <div class="perspective__header">
     <span class="glyph">🎨</span>
     <h2>States</h2>
-    <span class="lede">시각 변형 5종. baseline = <code>matchingReady</code> (vote 첫 reveal). voting in progress / voting complete / loading / error로 분기. matching passive(시스템 처리 중)는 voting complete의 변형으로 처리.</span>
+    <span class="lede">시각 변형 5종. baseline = matchingReady (투표 첫 진입). voting in progress / voting complete / loading / error로 분기. 모든 투표를 마치면 시스템 결과 산출 대기 상태(passive).</span>
   </div>
 
   <section class="doc">
     <p class="intro">
-      <strong>State 식별 기준</strong>: <code>matchCandidatesProvider(eventId)</code> · <code>myMatchesProvider</code> · <code>myVoteCountProvider</code> · <code>maxVoteCountProvider</code> · <code>myVotedCandidateIdsProvider</code> 5개 AsyncValue 조합. baseline은 후보 data 도착 + voted 0건 + matches 0건. voting in progress = voted 1+건 (allUsed 아님). voting complete = voteCount &gt;= maxVote → bar는 <code>matching</code> passive로 변환. loading = candidates AsyncValue.loading. error = candidates AsyncValue.error 또는 voteMeta error.
+      후보가 도착했는지, 투표를 한 적이 있는지, 매치가 성립했는지, 잔여 투표가 남았는지에 따라 분기. baseline은 후보 도착 + 투표 0건 + 매치 0건. 투표 진행 중 = 투표 1+건. 투표 완료 = 잔여 투표 0건. 로딩/에러는 후보 또는 투표 정보를 받지 못한 상태.
     </p>
 
     <!-- State 1: matchingReady (baseline) -->
     <table class="ref state-mini is-baseline-tint">
       <thead>
-        <tr><th colspan="3"><strong>matchingReady · 첫 reveal</strong> 🎯 <small>baseline · 후보 grid 도착, vote 0건</small></th></tr>
+        <tr><th colspan="3"><strong>matchingReady · 첫 reveal</strong> 🎯 <small>baseline · 후보 grid 도착, 투표 0건</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -645,31 +637,31 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>matchCandidatesProvider</code> data + 후보 N≥1 · <code>myVotedCandidateIdsProvider</code> 빈 set · <code>myMatchesProvider</code> 빈 list · <code>EventNowBarState.matchingReady</code></td>
+          <td>후보 grid가 도착해 화면에 표시되고, 사용자는 아직 한 번도 투표하지 않은 상태. EventNowBar가 "투표 가능" 상태일 때.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ① 후보 카드 "선택" 탭 → <code>showMinglitConfirm</code> 다이얼로그 → "투표하기" → <code>MatchingVoteController.vote()</code> → success SnackBar + 카드에 voted 마스크 표시 + 잔여 카운트 1 감소.<br>
-            ② 핸들 swipe-down · scrim tap · system back → 시트 dismiss → HomeRoute 복귀 (vote 진행 상태는 서버에 저장돼 재진입 시 복원).
+            ① 후보 카드 "선택" 탭 → "투표 확인 — ○○님에게 투표하시겠습니까?" 다이얼로그 → "투표하기" 확정 → "투표가 완료되었습니다" 안내가 잠깐 노출 + 카드에 투표 완료 마스크 표시 + 잔여 카운트 1 감소.<br>
+            ② 핸들 아래로 끌어내리기 · 시트 외곽 어두운 영역 탭 · 시스템 back → 시트 닫힘, 홈 복귀 (투표 진행 상태는 서버에 저장돼 재진입 시 복원).
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · 후보가 0명 → grid 자리에 <code>Center("투표 가능한 상대가 없습니다.")</code><br>
-            · max vote = 0 (이벤트 설정 오류) → 모든 카드 disabled<br>
-            · 잔여 투표 1건일 때 다른 사용자가 같은 후보에 투표해 매치 성립 → 다음 stream tick에 매치 banner 등장 (사용자 액션 없이도 진행)
+            · 후보가 0명이면 grid 영역에 "투표 가능한 상대가 없습니다."<br>
+            · 이벤트 설정상 잔여 투표가 0이면 모든 카드 비활성<br>
+            · 잔여 투표 1건일 때 다른 사용자가 같은 후보에 투표해 매치 성립 → 잠시 후 매치 banner가 자동으로 등장 (사용자 액션 없이도 갱신)
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
           <td>
-            · <code>SheetContainer</code> + <code>DragHandle</code><br>
-            · <code>Header</code> (title titleMedium w700 · caption bodySmall secondary w600)<br>
-            · <code>VoteMetaRow</code> (Icon(<code>how_to_vote</code> 16 · onSurfaceVariant) + bodyMedium w600)<br>
-            · <code>CandidateGridView</code> (2 cols · aspect 0.8 · <code>Card</code>+<code>Stack</code>)<br>
-            · <code>CandidateCard</code> × N (placeholder + name + ElevatedButton "선택")
+            · 시트 + 드래그 핸들<br>
+            · Header (title titleMedium w700 · caption bodySmall secondary w600)<br>
+            · Vote-meta row (Icon(how_to_vote · 16 · onSurfaceVariant) + bodyMedium w600)<br>
+            · 후보 grid (2 cols · aspect 0.8)<br>
+            · CandidateCard × N (placeholder + name + "선택" 버튼)
           </td>
         </tr>
         <tr>
@@ -684,7 +676,7 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 baseline은 "후보 다 보임 · 매치 0 · vote 0". <code>MatchingContent</code> wrapper의 외곽 헤더 + 내부 <code>MatchingVoteContent</code>의 vote-meta row가 둘 다 잔여 투표를 표시 — 약간 중복이지만 wrapper가 진입 시 가장 빠르게 보이는 시각 신호라 그대로 둠.</td>
+          <td>📝 baseline은 "후보 다 보임 · 매치 0 · 투표 0". 헤더 caption + 본문 vote-meta row가 둘 다 잔여 투표 정보를 표시 — 약간 중복이지만 헤더가 진입 시 가장 빠르게 보이는 시각 신호라 그대로 둠.</td>
         </tr>
       </tbody>
     </table>
@@ -692,7 +684,7 @@
     <!-- State 2: voting in progress (1+ voted, mid-flow) -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>voting in progress</strong> <small>vote 1+건 + 매치 누적 가능</small></th></tr>
+        <tr><th colspan="3"><strong>voting in progress</strong> <small>투표 1+건, 매치가 누적 중일 수도 있음</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -778,24 +770,24 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>+ <code>myVotedCandidateIdsProvider</code>에 1개 이상 id 존재 · 일부 매치는 양방향 성립 (matches.isNotEmpty)</td>
+          <td>+ 사용자가 1번 이상 투표한 상태 · 일부 후보와 양방향 매치 성립.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>+ 미투표 카드만 "선택" 탭 가능 · 투표 완료 카드는 disabled (mask + "투표 완료" 라벨)<br>+ 매치 banner 가로 ListView swipe하여 매치된 상대 정보 확인</td>
+          <td>+ 미투표 카드만 "선택" 탭 가능 · 투표 완료 카드는 비활성 (마스크 + "투표 완료" 라벨)<br>+ 매치 banner 가로 스와이프하여 매치된 상대 정보 확인</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            + vote 진행 중 invalidate 타이밍 — vote() 성공 → <code>myMatchesProvider</code> · <code>myVotedCandidateIdsProvider</code> · <code>myVoteCountProvider</code> 동시 invalidate → 잠깐 voteMetaLoading 깜빡임 가능 (의도된 plain spinner)<br>
-            + matchPair에서 <code>partnerName</code> / <code>partnerContact</code> null 가능 — partner 동의 안 한 매치는 "알 수 없음" / "연락처 없음" 폴백
+            + 투표 직후 잠깐 vote-meta row가 로딩 스피너로 깜빡일 수 있음 (의도된 짧은 스피너).<br>
+            + 매치된 상대의 이름/연락처 정보가 비어있을 수 있음 — 상대가 동의하지 않은 매치는 "알 수 없음" / "연락처 없음" 폴백.
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
           <td>
-            + <strong>MatchSuccessBanner</strong> (<code>secondaryContainer @ subtle</code> bg · Icon(favorite · error 16) + "매칭 성공! (N명)" titleSmall · w700 · error · horizontal ListView 80px · MatchPair card 200px width · Border error @ strong)<br>
-            ↔ 일부 CandidateCard → voted 변형 (overlay mask + 회색 "투표 완료" button · disabled)
+            + <strong>MatchSuccessBanner</strong> (살짝 강조된 secondaryContainer 톤 bg · Icon(favorite · error 16) + "매칭 성공! (N명)" titleSmall · w700 · error · 가로 스와이프 리스트 80px · MatchPair 카드 200px width · 테두리 error @ strong)<br>
+            ↔ 일부 CandidateCard → voted 변형 (마스크 오버레이 + 회색 "투표 완료" 버튼 · 비활성)
           </td>
         </tr>
         <tr>
@@ -815,7 +807,7 @@
     <!-- State 3: voting complete (all votes used, awaiting results) -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>voting complete</strong> <small>모든 vote 소진 · 결과 산출 대기 (passive)</small></th></tr>
+        <tr><th colspan="3"><strong>voting complete</strong> <small>모든 투표 소진 · 결과 산출 대기 (passive)</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -904,15 +896,15 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>+ <code>voteCount &gt;= maxVote</code> (allUsed = true) · <code>EventNowBarState.matching</code> (passive · 시스템 결과 산출 대기)</td>
+          <td>+ 사용자가 잔여 투표를 모두 소진. EventNowBar가 "매칭 중"(passive · 시스템 결과 산출 대기) 상태.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>− 모든 카드 disabled — vote 추가 불가<br>↔ swipe-down dismiss → HomeRoute 복귀. EventNowBar는 phase가 <code>results</code>로 전환되면 자동으로 next routed sheet(<code>EventResultsRoute</code>)로 진입 trigger.</td>
+          <td>− 모든 카드 비활성 — 추가 투표 불가<br>↔ 시트 닫기 → 홈 복귀. 결과 발표 단계로 넘어가면 EventNowBar가 "결과 발표"로 전환되며 다음 시트로 진입 유도.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>+ 매치 0건일 수도 있음 (이 경우 banner 미렌더 · 헤더 + meta row + voted grid만)<br>+ 사용자가 매치 0인 상태에서 sheet 닫고 phase가 results로 변하면 EventResultsScreen에서 empty fallback 노출</td>
+          <td>+ 매치 0건일 수도 있음 (이 경우 banner 미렌더 · 헤더 + meta row + 모든 카드가 투표 완료 상태로만 보임)<br>+ 사용자가 매치 0인 상태에서 시트 닫고 결과 발표 단계로 넘어가면 결과 화면에서 empty fallback 노출</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
@@ -920,11 +912,11 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
-          <td>+ <code>color-success</code> (status caption) · <code>color-primary</code> (check_circle icon) · disabled gray surfaceContainerHighest 인용</td>
+          <td>+ <code>color-success</code> (status caption) · <code>color-primary</code> (check_circle icon) · 비활성 회색 surfaceContainerHighest 인용</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 transient 성격 — 보통 짧은 시간 후 phase가 results로 전환되어 다른 sheet로 이동. 사용자가 일찍 dismiss해도 EventNowBar가 다음 phase에서 다시 attention(action variant <code>results</code>) 강조함.</td>
+          <td>📝 잠깐 보이는 transient — 보통 짧은 시간 후 결과 발표 단계로 전환되어 다른 시트로 이동. 사용자가 일찍 닫아도 EventNowBar가 다음 단계에서 다시 강조(action variant)하여 진입을 유도.</td>
         </tr>
       </tbody>
     </table>
@@ -932,7 +924,7 @@
     <!-- State 4: loading -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>loading</strong> <small>candidates fetch 중 — 첫 진입 직후</small></th></tr>
+        <tr><th colspan="3"><strong>loading</strong> <small>후보 정보를 받아오는 중 — 첫 진입 직후</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -957,27 +949,27 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>+ <code>matchCandidatesProvider.loading</code> 또는 vote-meta provider trio가 모두 loading · 첫 fetch (200~500ms 일반)</td>
+          <td>+ 시트가 처음 떠서 후보 / 투표 정보를 받아오고 있는 상태 (보통 200~500ms).</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>− 후보 grid · vote 액션 · 매치 banner 모두 미노출. dismiss는 가능.</td>
+          <td>− 후보 grid · 투표 액션 · 매치 banner 모두 미노출. 시트 닫기는 가능.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>+ 캐시된 후보가 있는 재진입 시 loading skip하여 곧장 data state로 점프 (Riverpod cached AsyncValue)<br>+ 네트워크 timeout 시 spinner 무한 — 별도 retry CTA 없음 (사용자는 dismiss 후 재진입)</td>
+          <td>+ 이전에 봤던 후보 정보가 캐시되어 있으면 로딩 없이 바로 data state로 점프<br>+ 네트워크 타임아웃 시 스피너 계속 — 별도 다시 시도 버튼 없음 (사용자는 시트 닫고 다시 열면 됨)</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
-          <td>↔ banner · meta row · grid → <strong>320px LoadingBlock</strong> (32px primary spinner · 1s linear loop)<br>↔ status caption 미노출 (vote-meta still loading)</td>
+          <td>↔ banner · meta row · grid → <strong>320px LoadingBlock</strong> (32px primary spinner · 1s linear loop)<br>↔ status caption 미노출 (잔여 투표 정보 도착 전)</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
-          <td>+ animation: 1s linear infinite (<code>MinglitCircularProgressIndicator</code> · token 미정의 attention loop)<br>나머지 동일</td>
+          <td>+ animation: 1s linear infinite (스피너)<br>나머지 동일</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 헤더(title)는 미리 노출 — fetch 중에도 어떤 이벤트의 매칭인지 컨텍스트 유지. wrapper의 vote-meta status caption은 vote count provider 데이터 의존이라 loading 동안 미렌더.</td>
+          <td>📝 헤더(title)는 미리 노출 — fetch 중에도 어떤 이벤트의 매칭인지 컨텍스트 유지. 잔여 투표 caption은 정보가 도착해야 표시되므로 로딩 동안에는 보이지 않음.</td>
         </tr>
       </tbody>
     </table>
@@ -985,7 +977,7 @@
     <!-- State 5: error -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>error</strong> <small>candidates 또는 vote-meta fetch 실패</small></th></tr>
+        <tr><th colspan="3"><strong>error</strong> <small>후보 또는 투표 정보 로드 실패</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -1015,19 +1007,19 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>+ <code>matchCandidatesProvider.error</code> 또는 vote-meta provider 중 하나라도 <code>hasError</code>. 네트워크 / Edge Function 실패 또는 권한 부족.</td>
+          <td>+ 후보 또는 투표 정보 중 하나라도 받지 못한 상태. 네트워크 / 서버 실패 또는 권한 부족.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>− vote 액션 모두 disabled (모든 카드도 disabled 조건 적용)<br>+ vote-meta row가 inline 에러 메시지 표시 — 사용자는 dismiss 후 재진입(Riverpod invalidate trigger)으로 retry</td>
+          <td>− 투표 액션 모두 비활성<br>+ vote-meta row에 인라인 에러 메시지 표시 — 사용자는 시트 닫고 다시 열면 자동 재시도</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>+ vote action 자체의 error는 <code>handleMinglitError</code>로 SnackBar 노출 (sheet은 그대로) — fetch error와 다른 경로<br>+ partial error: candidates는 OK인데 vote-meta만 error → row inline 에러 + grid는 disabled (안전 모드)</td>
+          <td>+ 투표 액션 자체가 실패할 때는 시트는 유지하고 별도 안내 메시지가 잠깐 노출 (fetch 에러와 다른 경로)<br>+ 일부만 실패: 후보는 도착했는데 잔여 투표 정보만 실패 → row 인라인 에러 + grid는 비활성 (안전 모드)</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
-          <td>↔ vote-meta row → <code>error_outline</code> + bodyMedium error 메시지 ("투표 정보를 불러올 수 없습니다.")<br>↔ grid → <code>MinglitAsyncValueWidget</code> default error block (Icon + message)</td>
+          <td>↔ vote-meta row → <code>error_outline</code> + bodyMedium error 메시지 ("투표 정보를 불러올 수 없습니다.")<br>↔ grid → 에러 블록 (Icon + message)</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
@@ -1035,7 +1027,7 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 retry CTA는 현재 widget에 없음 — 향후 "다시 시도" TextButton 추가 후보. 매칭 phase 시간 제약상 사용자는 빠르게 재진입하는 패턴이 일반적이라 inline retry 부재가 큰 문제가 아니나, 계측을 통해 도입 여부 판단 예정.</td>
+          <td>📝 별도 다시 시도 버튼은 현재 미노출 — 향후 "다시 시도" 보조 CTA 추가 후보. 매칭 단계 시간 제약상 사용자는 빠르게 재진입하는 패턴이 일반적이라 인라인 retry 부재가 큰 문제는 아니지만, 계측을 통해 도입 여부 판단 예정.</td>
         </tr>
       </tbody>
     </table>
@@ -1061,32 +1053,32 @@
       </thead>
       <tbody>
         <tr>
-          <td>Sheet dismiss (swipe-down)</td>
-          <td>핸들 영역 또는 시트 본문을 아래로 드래그 → 임계값 초과 시 dismiss. parent HomeRoute 유지. vote 진행 상태는 서버 보존(재진입 시 복원).</td>
+          <td>시트 닫기 — 핸들 아래로 끌어내리기</td>
+          <td>핸들 영역 또는 시트 본문을 아래로 드래그 → 일정 거리 이상 끌면 닫힘. 홈 화면은 그대로 유지. 투표 진행 상태는 서버에 저장돼 재진입 시 그대로 복원.</td>
         </tr>
         <tr>
-          <td>Sheet dismiss (scrim 탭)</td>
-          <td>시트 외부(scrim) 탭 → 동일 dismiss. Material default <code>isDismissible: true</code>.</td>
+          <td>시트 닫기 — 외곽 어두운 영역 탭</td>
+          <td>시트 외곽(어두워진 영역) 탭 → 동일하게 닫힘.</td>
         </tr>
         <tr>
-          <td>Sheet dismiss (system back)</td>
-          <td>안드로이드 back · iOS swipe-from-edge → dismiss. parent route 복귀.</td>
+          <td>시트 닫기 — 시스템 back</td>
+          <td>안드로이드 back · iOS swipe-from-edge → 닫힘. 홈 화면으로 복귀.</td>
         </tr>
         <tr>
-          <td>Vote 확정 (tap 선택 → confirm dialog)</td>
-          <td><code>showMinglitConfirm</code>(<code>title: '투표 확인'</code> · <code>message: '&lt;name&gt;님에게 투표하시겠습니까?'</code> · <code>confirmLabel: '투표하기'</code>) — 다이얼로그 위에 표시. confirm 시 controller.<code>vote()</code>호출 → AsyncLoading → AsyncData 시 <code>showMinglitSuccess('투표가 완료되었습니다.')</code> + 3 provider invalidate(matches · votedIds · voteCount).</td>
+          <td>투표 확정 (탭 선택 → 다이얼로그)</td>
+          <td>"투표 확인 — ○○님에게 투표하시겠습니까? · 투표하기" 다이얼로그가 시트 위에 뜸. 확정 시 투표 처리 → "투표가 완료되었습니다" 안내가 잠깐 노출 + 매치 / 잔여 투표 / 투표 완료 카드가 동시에 갱신.</td>
         </tr>
         <tr>
-          <td>Vote 실패 (network / 권한)</td>
-          <td>controller state가 <code>AsyncError</code>로 변경 → <code>ref.listen</code> 콜백이 <code>handleMinglitError</code> 호출 → SnackBar 노출. 시트는 유지, 카드는 다시 enabled.</td>
+          <td>투표 실패 (network / 권한)</td>
+          <td>실패 시 안내 메시지가 잠깐 노출. 시트는 유지되고 카드는 다시 활성으로 복귀해 재시도 가능.</td>
         </tr>
         <tr>
-          <td>Phase stream 자동 갱신</td>
-          <td><code>eventNowBarStateProvider(activeEvent)</code> stream이 <code>matching</code> → <code>results</code>로 전환되면 sheet dismiss + EventNowBar가 results action variant로 표시되어 다음 routed sheet 진입을 유도.</td>
+          <td>매칭 단계 자동 반영</td>
+          <td>백엔드에서 단계가 "결과 발표"로 바뀌면 시트가 자동 닫히고 EventNowBar가 "결과 발표" 강조 상태로 표시되어 다음 시트 진입을 유도.</td>
         </tr>
         <tr>
-          <td>Realtime match update</td>
-          <td>다른 사용자가 동일 후보에 투표하여 매치 성립 시 <code>myMatchesProvider</code> stream이 신규 MatchPair emit → 매치 banner ListView에 카드 추가 (cut, animation 미정의).</td>
+          <td>실시간 매치 갱신</td>
+          <td>다른 사용자가 같은 후보에 투표해 매치가 성립하면 매치 banner 리스트에 카드가 즉시 추가 (별도 전환 애니메이션 없음).</td>
         </tr>
         <tr>
           <td>다크 모드 토글</td>
@@ -1126,7 +1118,7 @@
         <tr>
           <td>Voted overlay swap (선택 → 투표 완료)</td>
           <td>—</td>
-          <td>cut. provider invalidate 직후 rebuild → AnimatedSwitcher 미정의 (의도적 단순화).</td>
+          <td>cut. 투표 직후 즉시 swap — 별도 전환 애니메이션 없음 (의도적 단순화).</td>
         </tr>
         <tr>
           <td>SnackBar "투표가 완료되었습니다"</td>
@@ -1136,7 +1128,7 @@
         <tr>
           <td>Loading spinner</td>
           <td>1s linear infinite (unscoped)</td>
-          <td><code>MinglitCircularProgressIndicator</code> 기본 — token 미정의 attention loop.</td>
+          <td>스피너 기본 — token 미정의 attention loop.</td>
         </tr>
       </tbody>
     </table>
@@ -1145,12 +1137,12 @@
   <section class="doc">
     <h2>Global edge cases</h2>
     <ul class="notes">
-      <li><strong>Vote 더블탭 / 동시 요청</strong> — controller state가 AsyncLoading인 동안 후보 카드의 disabled 조건은 직접 체크하지 않음. UI 측에서는 이미 voted 카드가 disabled 처리되므로 같은 카드를 다시 탭할 수는 없으나, 다른 카드 더블탭 가능성은 존재 — 서버에서 unique constraint로 가드 (DB <code>match_votes</code> upsert + RLS).</li>
-      <li><strong>잔여 vote = 0인데 candidate fetch는 OK</strong> — 모든 카드 disabled, "선택" 버튼 회색. 사용자 입장에서 read-only 상태. EventNowBar의 phase가 곧 results로 넘어감.</li>
-      <li><strong>Push 알림 deeplink 진입</strong> — parent stack에 HomeRoute가 없으면 dismiss 시 <code>context.go('/')</code>로 fallback (라우트 가드 필요).</li>
-      <li><strong>Offline</strong> — candidates / vote-meta 모두 fail → error state. vote action도 fail → SnackBar. 캐시된 candidates가 있으면 read-only로 grid는 노출되나 vote 자체는 불가.</li>
-      <li><strong>이벤트 phase 미스매치</strong> — 사용자가 deeplink로 진입했는데 backend phase가 이미 <code>results</code> / <code>ended</code>면 candidates fetch는 빈 리스트 또는 error. error state로 노출.</li>
-      <li><strong>Vote 중 partner 차단</strong> — 차단된 partner의 후보는 candidates에서 자동 제외 (백엔드 RLS).</li>
+      <li><strong>투표 더블탭 / 동시 요청</strong> — UI 측에서는 이미 투표한 카드가 비활성으로 처리되므로 같은 카드를 다시 탭할 수는 없음. 다른 카드 더블탭 가능성은 백엔드의 unique 제약으로 가드.</li>
+      <li><strong>잔여 투표 0인데 후보는 정상 도착</strong> — 모든 카드 비활성, "선택" 버튼 회색. 사용자 입장에서 보기 전용 상태. EventNowBar가 곧 "결과 발표"로 넘어감.</li>
+      <li><strong>딥링크 진입</strong> — 푸시 알림 / 공유 URL로 직접 진입 시 홈 화면이 뒤에 없을 수 있음. 시트 닫을 때 홈으로 복귀하도록 처리.</li>
+      <li><strong>오프라인</strong> — 후보 / 투표 정보 모두 받지 못해 error state. 투표 액션도 실패 안내. 캐시된 후보가 있으면 보기 전용으로 grid는 노출되나 투표 자체는 불가.</li>
+      <li><strong>이벤트 단계 미스매치</strong> — 사용자가 딥링크로 진입했는데 이미 결과 발표 / 종료 단계면 후보 리스트가 비어있거나 error. error state로 노출.</li>
+      <li><strong>차단된 파트너</strong> — 차단된 파트너의 후보는 자동으로 후보 리스트에서 제외.</li>
     </ul>
   </section>
 </div>

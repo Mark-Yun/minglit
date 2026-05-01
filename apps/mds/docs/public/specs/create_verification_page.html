@@ -304,15 +304,15 @@ body.dark-mode .viewport {
       <tr>
         <th>User journey</th>
         <td>
-          <strong>Entry points</strong>: VerificationManagePage(사용 중 탭) → AddActionCard '새로운 인증 만들기' 탭.<br>
-          <strong>Exit points</strong>: 저장 성공 → success snackbar('인증이 생성되었습니다.') + Navigator.pop(context, true) (verification_manage 화면이 invalidate되어 새 인증 active 리스트에 등장) · AppBar back → 변경 무시하고 pop · 검증 실패 → form validator inline error 노출 + 화면 유지 · save 에러 → handleMinglitError snackbar.
+          <strong>Entry points</strong>: 인증 관리 화면(사용 중 탭) → '새로운 인증 만들기' 카드 탭.<br>
+          <strong>Exit points</strong>: 저장 성공 → '인증이 생성되었습니다.' 안내 메시지가 노출되며 화면이 닫히고 사용 중 리스트에 새 인증이 등장 · AppBar back → 변경 무시하고 복귀 · 검증 실패 → 해당 입력란 아래에 inline 오류 노출 + 화면 유지 · 저장 오류 → 오류 안내 메시지가 잠깐 노출됨.
         </td>
       </tr>
       <tr>
         <th>Background</th>
         <td>
-          파트너 커스텀 인증은 (1) 표시 이름(유저에게 보임) · (2) 관리용 이름(내부 식별자) · (3) 설명(유저 가이드) · (4) 동적 입력 양식 4가지 요소로 구성. 양식은 빌더 패턴(추가→편집→재배치→삭제)으로 구현되어 PopupMenu 'add'에서 type을 고르면 새 _FieldEditorCard가 ReorderableListView에 추가된다. drag handle은 44×44 hit target(Fix #1801)으로 보장.
-          저장은 단일 RPC — 성공 시 verification_manage_state가 invalidate되어 호출자가 자동으로 active 리스트 갱신.
+          파트너 커스텀 인증은 (1) 표시 이름(유저에게 보임) · (2) 관리용 이름(내부 식별자) · (3) 설명(유저 가이드) · (4) 동적 입력 양식 4가지 요소로 구성. 양식은 빌더 패턴(추가→편집→재배치→삭제)으로 구현되어 우상단 + 아이콘에서 type을 고르면 새 필드 카드가 추가된다. drag handle은 44×44 영역으로 잡혀, 작은 hit으로 끌기에 실패하던 문제를 막는다.
+          저장이 완료되면 인증 관리 화면의 사용 중 리스트에 자동으로 반영된다.
         </td>
       </tr>
       <tr>
@@ -534,7 +534,7 @@ body.dark-mode .viewport {
 
   <section class="doc">
     <p class="intro">
-      <strong>State 식별 기준</strong>: <code>createVerificationControllerProvider</code> state(displayName · internalName · description · fields · submitting · error) · 로컬 TextEditingController 입력 · Form validator 결과 · PopupMenu 오버레이 · Reorder drag 진행 · 저장 결과(success/error). fetch loading은 없음 — 이 화면은 신규 작성 폼이라 진입 즉시 default state.
+      <strong>State 식별 기준</strong>: 표시 이름 / 관리용 이름 / 설명 / 입력 양식 입력 상태 · 검증 결과 · 필드 추가 메뉴 노출 여부 · 재배치 드래그 진행 여부 · 저장 진행 / 결과(성공·오류). 첫 진입 시 별도 데이터 조회 없이 빈 폼이 즉시 노출됨.
     </p>
 
     <h3 style="margin-top: 24px;">State summary <small style="font-size:12px;font-weight:400;color:var(--color-text-secondary);">— 8 states</small></h3>
@@ -548,14 +548,14 @@ body.dark-mode .viewport {
         </tr>
       </thead>
       <tbody>
-        <tr><td><strong>Default · empty form</strong></td><td>baseline</td><td>진입 직후 · fields 0개</td><td>3 빈 TextFormField · '입력 양식' 아래 dashed empty hint · Save 버튼 enabled</td></tr>
-        <tr><td><strong>Basic info filled</strong></td><td>progress</td><td>3 필드 텍스트 입력</td><td>각 input에 텍스트 + label floating 위치 · validator 통과</td></tr>
-        <tr><td><strong>Add field popup</strong></td><td>overlay</td><td>add_circle 아이콘 탭</td><td>우상단 PopupMenu(텍스트 입력 / 파일 업로드 2 항목)</td></tr>
-        <tr><td><strong>Field editor card</strong></td><td>builder</td><td>fields 1+ 추가됨</td><td>각 필드 카드(typeIcon + typeLabel + delete + drag + 라벨 + 필수 체크)</td></tr>
-        <tr><td><strong>Reorder dragging</strong></td><td>builder</td><td>drag handle을 길게 누르고 끄는 중</td><td>해당 카드가 약간 떠올라 그림자 강조 (proxyDecorator) · 다른 카드 위치 swap 애니메이션</td></tr>
-        <tr><td><strong>Validation error</strong></td><td>error</td><td>저장 시 displayName/internalName 빈 값</td><td>해당 input border error 빨강 + 아래 helperText '이름을 입력해주세요.'</td></tr>
-        <tr><td><strong>Saving</strong></td><td>async</td><td>controller.submit 진행 중</td><td>save 버튼 자체는 변경 안 됨(state.error 변화만 listen) — 글로벌 loader 사용 없음 / 저장 도중 사용자가 다시 누르면 controller가 처리</td></tr>
-        <tr><td><strong>Save success / error</strong></td><td>overlay</td><td>RPC 결과</td><td>success → snackbar('인증이 생성되었습니다.') + Navigator.pop(true) · error → ref.listen이 handleMinglitError snackbar 호출</td></tr>
+        <tr><td><strong>Default · empty form</strong></td><td>baseline</td><td>진입 직후 · 입력 양식 0개</td><td>3개 빈 입력란 · '입력 양식' 아래 점선 empty hint · 저장 버튼 활성</td></tr>
+        <tr><td><strong>Basic info filled</strong></td><td>progress</td><td>3개 필드에 텍스트 입력</td><td>각 입력란에 텍스트 + 라벨이 위로 떠오른 상태 · 검증 통과</td></tr>
+        <tr><td><strong>Add field popup</strong></td><td>overlay</td><td>+ 아이콘 탭</td><td>우상단 팝업 메뉴(텍스트 입력 / 파일 업로드 2 항목)</td></tr>
+        <tr><td><strong>Field editor card</strong></td><td>builder</td><td>입력 양식 1+ 추가됨</td><td>각 필드 카드(타입 아이콘 + 타입 라벨 + 삭제 + 드래그 + 라벨 + 필수 체크)</td></tr>
+        <tr><td><strong>Reorder dragging</strong></td><td>builder</td><td>드래그 핸들을 길게 누르고 끄는 중</td><td>해당 카드가 약간 떠올라 그림자 강조 · 다른 카드 위치 swap 애니메이션</td></tr>
+        <tr><td><strong>Validation error</strong></td><td>error</td><td>저장 시 표시 이름/관리용 이름 빈 값</td><td>해당 입력란 테두리가 빨강 + 아래 '이름을 입력해주세요.' 안내</td></tr>
+        <tr><td><strong>Saving</strong></td><td>async</td><td>저장 진행 중</td><td>저장 버튼 자체는 시각적 변화 없음 — 별도 로더 표시 없음</td></tr>
+        <tr><td><strong>Save success / error</strong></td><td>overlay</td><td>저장 결과</td><td>성공 → '인증이 생성되었습니다.' 안내 + 화면 닫힘 · 오류 → 오류 안내 메시지 노출</td></tr>
       </tbody>
     </table>
 
@@ -610,23 +610,23 @@ body.dark-mode .viewport {
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>진입 즉시 — controller state default(displayName/internalName/description 빈 문자열 · fields []) · 3 controller text도 모두 빈 문자열.</td>
+            <td>진입 즉시 — 모든 입력란과 입력 양식 목록이 비어있는 상태.</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">사용자 액션</td>
             <td>
-              ① <strong>AppBar back</strong> → VerificationManagePage로 pop (변경 무시)<br>
-              ② <strong>각 TextFormField</strong> 탭 → 키보드 노출 + label floating · 입력 → onChanged → controller.update*<br>
-              ③ <strong>add_circle 아이콘</strong> 탭 → PopupMenu 오버레이 (텍스트 입력 / 파일 업로드)<br>
-              ④ <strong>'저장하기' 버튼</strong> 탭 → _formKey.validate() → 통과 시 controller.submit(partnerId) → 성공 시 snackbar + pop(true) · 실패 시 inline 또는 global error
+              ① <strong>AppBar back</strong> → 이전 화면으로 복귀 (변경 무시)<br>
+              ② <strong>각 입력란</strong> 탭 → 키보드 노출 + 라벨이 위로 떠오름<br>
+              ③ <strong>+ 아이콘</strong> 탭 → 팝업 메뉴(텍스트 입력 / 파일 업로드) 노출<br>
+              ④ <strong>'저장하기' 버튼</strong> 탭 → 검증 통과 시 저장 진행, 성공 시 안내 메시지가 뜨고 화면이 닫힘 · 실패 시 inline 또는 안내 메시지로 노출
             </td>
           </tr>
           <tr>
             <td class="state-mini__aspect">에지케이스</td>
             <td>
-              · partnerId가 null로 들어오면 controller.submit(null)이 호출됨 — 백엔드에서 default partner로 처리하거나 에러 반환<br>
-              · empty hint Container의 dashed-ish 배경은 surfaceContainerHighest @ muted opacity — 다크 모드에서도 유지<br>
-              · 키보드 호출 시 ListView.builder는 자동 padding 추가하지 않으나 Form은 그대로 — 입력 필드가 키보드 뒤로 가려질 수 있음(MediaQuery resize default)
+              · 파트너 컨텍스트가 없는 상태로 진입한 경우 저장 시 백엔드가 기본 파트너로 처리하거나 오류를 반환할 수 있음<br>
+              · 빈 양식 hint 영역의 옅은 배경은 다크 모드에서도 유지됨<br>
+              · 키보드가 올라올 때 입력 필드가 가려질 수 있음 (스크롤로 회피 가능)
             </td>
           </tr>
           <tr>
@@ -652,7 +652,7 @@ body.dark-mode .viewport {
           </tr>
           <tr>
             <td class="state-mini__aspect">노트</td>
-            <td>📝 baseline. AppBar back으로 변경사항 무시 가능 — dirty guard 없음 (향후 confirm 후보). add_circle 아이콘이 onSurfaceVariant 색이라 partner brand 보라가 아닌 점이 의도 — 폼 흐름에서 'add'는 액션 강조 필요 없다고 판단(메인 액션은 Save).</td>
+            <td>📝 baseline. AppBar back으로 변경사항 무시 가능 — 미저장 변경 보호 없음 (향후 확인 다이얼로그 후보). + 아이콘이 중성 회색이라 partner brand 보라가 아닌 점이 의도 — 폼 흐름에서 'add'는 액션 강조가 필요 없다고 판단(메인 액션은 저장).</td>
           </tr>
         </tbody>
       </table>
@@ -698,20 +698,20 @@ body.dark-mode .viewport {
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>+ displayName · internalName · description 모두 비어있지 않음. validator 호출 시 통과. 첫 번째 필드는 focused (border 2px primary).</td>
+            <td>+ 표시 이름 · 관리용 이름 · 설명 모두 비어있지 않음. 검증 시 통과. 첫 번째 필드는 포커스 상태(2px primary 테두리).</td>
           </tr>
-          <tr><td class="state-mini__aspect">사용자 액션</td><td>↔ 입력 텍스트 변경 시 controller.update* 호출 · 키보드 dismiss(빈 영역 탭) 시 floating label은 그대로 유지(text 있으면 label 위로 올라간 채). 동일: AppBar back · add 아이콘 · Save.</td></tr>
-          <tr><td class="state-mini__aspect">에지케이스</td><td>+ description은 maxLines:2이라 두 줄까지 텍스트 자동 wrap · 그 이상은 스크롤 발생.</td></tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>↔ 입력 텍스트가 변경되며 라벨은 위로 올라간 채 유지됨. 동일: AppBar back · + 아이콘 · 저장.</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>+ 설명은 두 줄까지 자동 wrap · 그 이상은 스크롤 발생.</td></tr>
           <tr><td class="state-mini__aspect">컴포넌트</td><td>동일</td></tr>
           <tr><td class="state-mini__aspect">토큰</td><td>↔ focused TextField border <code>color-partner-primary</code>(2px width)</td></tr>
-          <tr><td class="state-mini__aspect">노트</td><td>📝 fields 비어 있어도 저장 가능 — backend가 fields[] empty도 허용하면 OK. validator는 fields에 대해서는 검증 안 함.</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 입력 양식이 0개여도 저장 가능 — 검증은 표시 이름/관리용 이름에만 적용됨.</td></tr>
         </tbody>
       </table>
 
       <!-- ─── Add field popup ─────────────────── -->
       <table class="ref state-mini">
         <thead>
-          <tr><th colspan="3"><strong>Add field popup</strong> <small>add_circle 탭 시 PopupMenu</small></th></tr>
+          <tr><th colspan="3"><strong>Add field popup</strong> <small>+ 아이콘 탭 직후 팝업 메뉴 노출</small></th></tr>
         </thead>
         <tbody>
           <tr>
@@ -745,20 +745,20 @@ body.dark-mode .viewport {
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>+ <code>PopupMenuButton.onSelected</code> 트리거를 위한 메뉴 오픈 — Material default position(아이콘 아래 또는 위)</td>
+            <td>+ + 아이콘 탭 직후 팝업 메뉴가 아이콘 근처에 노출된 상태.</td>
           </tr>
-          <tr><td class="state-mini__aspect">사용자 액션</td><td>+ '텍스트 입력' 탭 → controller.addField('text') · '파일 업로드' 탭 → controller.addField('file') · 외부 영역 탭 → menu dismiss</td></tr>
-          <tr><td class="state-mini__aspect">에지케이스</td><td>+ 메뉴 표시 중 키보드가 떠 있으면 dismiss됨(Material default 동작).</td></tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>+ '텍스트 입력' 탭 → 텍스트 필드 카드 추가 · '파일 업로드' 탭 → 파일 필드 카드 추가 · 외부 영역 탭 → 메뉴 닫힘</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>+ 메뉴가 열리면 키보드가 떠 있을 경우 자동으로 내려감.</td></tr>
           <tr><td class="state-mini__aspect">컴포넌트</td><td>+ <code>PopupMenuButton&lt;String&gt;</code> · 2× <code>PopupMenuItem&lt;String&gt;</code> (value: 'text' / 'file')</td></tr>
           <tr><td class="state-mini__aspect">토큰</td><td>+ menu bg <code>color-background</code> · radius <code>radius-small (8)</code> · shadow Material default</td></tr>
-          <tr><td class="state-mini__aspect">노트</td><td>📝 number/date 필드 type도 _FieldEditorCard switch엔 있지만 PopupMenu에서 노출되지 않음 — 향후 빌더 확장 후보.</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 숫자/날짜 필드 타입도 카드 표시는 가능하지만 현재 추가 메뉴에는 노출되지 않음 — 향후 빌더 확장 후보.</td></tr>
         </tbody>
       </table>
 
       <!-- ─── Field editor card ─────────────────── -->
       <table class="ref state-mini">
         <thead>
-          <tr><th colspan="3"><strong>Field editor card</strong> <small>fields 1+ 추가된 상태</small></th></tr>
+          <tr><th colspan="3"><strong>Field editor card</strong> <small>입력 양식 카드가 1개 이상 추가된 상태</small></th></tr>
         </thead>
         <tbody>
           <tr>
@@ -819,28 +819,28 @@ body.dark-mode .viewport {
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>+ <code>state.fields.length &gt; 0</code> · ReorderableListView.builder가 empty hint를 대체.</td>
+            <td>+ 입력 양식이 1개 이상 추가되어 빈 양식 hint가 카드 리스트로 대체됨.</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">사용자 액션</td>
             <td>
-              + ⓐ <strong>label TextField</strong> 입력 → onChanged → onUpdate(field.copyWith(label))<br>
-              + ⓑ <strong>'필수' Checkbox</strong> 토글 → onUpdate(field.copyWith(required))<br>
-              + ⓒ <strong>delete IconButton</strong> 탭 → onDelete → controller.removeField(index)<br>
-              + ⓓ <strong>drag handle</strong>(44×44 hit) 길게 누름 → ReorderableDragStartListener 활성 → 드래그 시 proxyDecorator 효과
+              + ⓐ <strong>라벨 입력란</strong> 입력 → 해당 필드의 라벨이 즉시 갱신됨<br>
+              + ⓑ <strong>'필수' 체크박스</strong> 토글 → 해당 필드의 필수 여부가 즉시 반영됨<br>
+              + ⓒ <strong>삭제 아이콘</strong> 탭 → 해당 카드가 즉시 사라짐<br>
+              + ⓓ <strong>드래그 핸들</strong>(44×44 영역) 길게 누름 → 카드를 끌어 위치 재배치
             </td>
           </tr>
-          <tr><td class="state-mini__aspect">에지케이스</td><td>+ 라벨 필드의 외부 controller 변경(다른 field가 reorder/delete로 영향 받을 때) — didUpdateWidget이 _focusNode.hasFocus로 가드하여 사용자가 입력 중일 때 텍스트가 덮어써지지 않음.</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>+ 다른 카드가 추가/삭제/재배치될 때 사용자가 입력 중인 라벨 텍스트가 덮어써지지 않도록 보호됨.</td></tr>
           <tr><td class="state-mini__aspect">컴포넌트</td><td>+ <code>ReorderableListView.builder</code>(shrinkWrap · NeverScrollableScrollPhysics · proxyDecorator → Material radius-card) · <code>_FieldEditorCard</code> × N</td></tr>
           <tr><td class="state-mini__aspect">토큰</td><td>+ Card bg <code>color-background</code> · radius <code>radius-card (16)</code> · drag handle 44×44 (Fix #1801) · checkbox active <code>color-primary</code></td></tr>
-          <tr><td class="state-mini__aspect">노트</td><td>📝 PopupMenu에 number/date가 없어 현재는 text/file 2종만 추가 가능. typeIcon은 4종 모두 정의되어 있어 backend에서 number/date 들어와도 정상 렌더(읽기 호환).</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 추가 메뉴에는 텍스트/파일 2종만 노출되지만 카드 표시 자체는 숫자/날짜까지 4종을 지원해 데이터 호환성 유지.</td></tr>
         </tbody>
       </table>
 
       <!-- ─── Reorder dragging ─────────────────── -->
       <table class="ref state-mini">
         <thead>
-          <tr><th colspan="3"><strong>Reorder dragging</strong> <small>drag handle 길게 누르고 끄는 중</small></th></tr>
+          <tr><th colspan="3"><strong>Reorder dragging</strong> <small>드래그 핸들을 길게 누르고 끄는 중</small></th></tr>
         </thead>
         <tbody>
           <tr>
@@ -873,20 +873,20 @@ body.dark-mode .viewport {
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>+ ReorderableListView 내부 drag 시작 — proxyDecorator가 활성화되어 들고 있는 카드를 Material clipBehavior antiAlias + radius-card 16으로 lift up.</td>
+            <td>+ 드래그가 시작되어 들고 있는 카드가 그림자와 함께 살짝 떠오른 상태.</td>
           </tr>
-          <tr><td class="state-mini__aspect">사용자 액션</td><td>+ 손가락 위치를 따라 카드 이동 → 다른 카드 위로 가면 그 자리로 swap · 손가락 떼면 controller.reorderFields(oldIndex, newIndex) 호출</td></tr>
-          <tr><td class="state-mini__aspect">에지케이스</td><td>+ ReorderableListView의 newIndex는 oldIndex 위로 이동 시 그대로지만 아래로 이동 시 -1 보정 필요(controller.reorderFields 내부에서 처리). 이 화면에서는 그냥 컨트롤러에 위임.</td></tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>+ 손가락 위치를 따라 카드가 이동하며 다른 카드 위로 가면 그 자리로 swap · 손가락을 떼면 새 위치로 확정됨</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>+ 위/아래 어느 방향으로 옮겨도 최종 위치가 일관되게 정렬됨.</td></tr>
           <tr><td class="state-mini__aspect">컴포넌트</td><td>+ proxyDecorator: Material(borderRadius radius-card · color colorScheme.surface @ MinglitOpacity.none · clipBehavior.antiAlias)</td></tr>
           <tr><td class="state-mini__aspect">토큰</td><td>+ shadow box 0 8 24 rgba(0,0,0,0.2) (Material elevation 8 default)</td></tr>
-          <tr><td class="state-mini__aspect">노트</td><td>📝 drag handle 44×44 (Fix #1801) — 작은 hit으로 drag 시도 실패하던 문제 수정. 향후 long-press cancel 표시 등 보강 후보.</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 드래그 핸들의 hit 영역을 44×44로 보장 (Fix #1801) — 작은 hit으로 끌기에 실패하던 문제를 수정. 향후 길게 누름 취소 표시 등 보강 후보.</td></tr>
         </tbody>
       </table>
 
       <!-- ─── Validation error ─────────────────── -->
       <table class="ref state-mini">
         <thead>
-          <tr><th colspan="3"><strong>Validation error</strong> <small>저장 시 displayName/internalName 빈 값</small></th></tr>
+          <tr><th colspan="3"><strong>Validation error</strong> <small>저장 시 표시 이름/관리용 이름이 빈 값</small></th></tr>
         </thead>
         <tbody>
           <tr>
@@ -917,20 +917,20 @@ body.dark-mode .viewport {
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>+ Save 탭 → <code>_formKey.currentState!.validate()</code> 호출 → displayName / internalName 둘 중 하나라도 빈 값이면 false 반환 → submit 호출 안 함 + inline error 표시 (Material InputDecoration default error UI)</td>
+            <td>+ 저장 시 표시 이름 또는 관리용 이름이 비어 있으면 저장이 진행되지 않고 해당 입력란 아래에 inline 오류가 표시됨.</td>
           </tr>
-          <tr><td class="state-mini__aspect">사용자 액션</td><td>+ 빈 input에 텍스트 입력 → autovalidate가 OFF이라 다음 Save 탭 시까지 error 유지. 하지만 Form rebuilds 시 validator는 trigger되지 않음 — 사용자는 Save 다시 눌러야 사라짐.</td></tr>
-          <tr><td class="state-mini__aspect">에지케이스</td><td>+ description은 validator 없음(maxLines만 정의) — 빈 채로 저장 가능.</td></tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>+ 빈 입력란에 텍스트를 입력해도 inline 오류는 즉시 사라지지 않고 다음 저장 시도 시점에 갱신됨.</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>+ 설명은 검증 대상이 아님 — 빈 채로 저장 가능.</td></tr>
           <tr><td class="state-mini__aspect">컴포넌트</td><td>+ Material InputDecoration error states (errorText · errorBorder)</td></tr>
           <tr><td class="state-mini__aspect">토큰</td><td>+ <code>color-error</code> (label · border · helperText)</td></tr>
-          <tr><td class="state-mini__aspect">노트</td><td>📝 autovalidateMode 없음 — 첫 Save 클릭 시점에만 검증. 향후 onUserInteraction으로 도입 후보.</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 검증은 저장 버튼 탭 시점에만 일어남 — 향후 입력하는 즉시 검증으로 도입 후보.</td></tr>
         </tbody>
       </table>
 
       <!-- ─── Saving ─────────────────── -->
       <table class="ref state-mini">
         <thead>
-          <tr><th colspan="3"><strong>Saving</strong> <small>controller.submit 진행 중</small></th></tr>
+          <tr><th colspan="3"><strong>Saving</strong> <small>저장 진행 중</small></th></tr>
         </thead>
         <tbody>
           <tr>
@@ -955,20 +955,20 @@ body.dark-mode .viewport {
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>+ <code>controller.submit(partnerId)</code> Future 진행 중 — 현재 widget 코드에서는 별도 isSubmitting 시각 표시 없음(state.error만 ref.listen). 글로벌 loader도 사용 안 함.</td>
+            <td>+ 저장이 진행 중인 상태 — 현재 화면에는 별도 시각적 인디케이터가 없음. 글로벌 로더도 띄우지 않음.</td>
           </tr>
-          <tr><td class="state-mini__aspect">사용자 액션</td><td>+ 사용자가 다시 Save를 누르면 controller.submit이 다시 호출됨 — controller 내부에서 race를 막는 가드가 있어야 함(향후 보강 후보, 현재는 미보장).</td></tr>
-          <tr><td class="state-mini__aspect">에지케이스</td><td>+ 사용자가 도중 AppBar back으로 pop하면 mounted 체크 후 snackbar/pop 무시 (Future는 fire-and-forget).</td></tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>+ 저장 도중 사용자가 다시 저장 버튼을 누르면 저장이 다시 시도될 수 있음 — 중복 방지는 향후 보강 후보.</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>+ 저장 도중 AppBar back으로 화면을 빠져나가도 안내 메시지나 닫기 동작은 안전하게 처리되어 화면이 이미 닫혔을 때는 무시됨.</td></tr>
           <tr><td class="state-mini__aspect">컴포넌트</td><td>동일(시각적으로 변화 없음)</td></tr>
           <tr><td class="state-mini__aspect">토큰</td><td>동일</td></tr>
-          <tr><td class="state-mini__aspect">노트</td><td>📝 시각 인디케이터 부재가 가장 큰 UX 갭 — 향후 button 내부 spinner / 글로벌 loader 도입 후보. 현재는 빠른 RPC라 사용자가 인지하기 전에 결과가 나오는 경우가 대부분.</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 시각 인디케이터 부재가 가장 큰 UX 갭 — 향후 버튼 내부 스피너 / 전역 로더 도입 후보. 보통 빠르게 끝나 사용자가 인지하기 전에 결과가 나오는 경우가 대부분.</td></tr>
         </tbody>
       </table>
 
       <!-- ─── Save success / error ─────────────────── -->
       <table class="ref state-mini">
         <thead>
-          <tr><th colspan="3"><strong>Save success / error</strong> <small>RPC 결과</small></th></tr>
+          <tr><th colspan="3"><strong>Save success / error</strong> <small>저장 결과</small></th></tr>
         </thead>
         <tbody>
           <tr>
@@ -993,13 +993,13 @@ body.dark-mode .viewport {
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>+ Success: <code>controller.submit</code>이 true 반환 → <code>showMinglitSuccess('인증이 생성되었습니다.')</code> + <code>Navigator.pop(context, true)</code>. Error: state.error 변경 → ref.listen이 <code>handleMinglitError(context, next.error!)</code> 호출.</td>
+            <td>+ 성공: '인증이 생성되었습니다.' 안내 메시지가 노출되고 화면이 닫힘. 오류: 오류 안내 메시지가 잠깐 노출됨.</td>
           </tr>
-          <tr><td class="state-mini__aspect">사용자 액션</td><td>+ Success: 화면 pop된 후 verification_manage가 invalidate되어 active 리스트 새 인증 등장 · Error: snackbar 자동 dismiss 후 폼 그대로 유지 → 사용자가 다시 Save 가능</td></tr>
-          <tr><td class="state-mini__aspect">에지케이스</td><td>+ Success snackbar는 ScaffoldMessenger global queue → pop 후 verification_manage 화면 위에서 표시 · Error는 listen 콜백이 prev.error != next.error 비교라 같은 에러 연속 발생 시 snackbar 한 번만</td></tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>+ 성공: 화면이 닫힌 후 인증 관리 화면의 사용 중 리스트에 새 인증이 등장 · 오류: 안내 메시지 자동 사라짐 후 폼이 그대로 유지되어 사용자가 다시 저장을 시도할 수 있음</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>+ 성공 안내 메시지는 화면이 닫힌 다음 화면 위에 노출됨 · 동일한 오류가 연속 발생해도 안내 메시지는 한 번만 노출됨</td></tr>
           <tr><td class="state-mini__aspect">컴포넌트</td><td>+ Success: <code>SnackBar</code>(MinglitSuccess) · Error: handleMinglitError 내부에서 dispatch (보통 dark snackbar)</td></tr>
           <tr><td class="state-mini__aspect">토큰</td><td>+ success bg <code>color-success</code> · error는 dark / depending on handleMinglitError</td></tr>
-          <tr><td class="state-mini__aspect">노트</td><td>📝 Navigator.pop(context, true)으로 boolean 결과 반환 — verification_manage가 이걸 listen해서 invalidate. 호출자가 listen 안 하면 invalidate 안 됨(현재는 listen 안 함 — Provider invalidate가 backend write 직후 자동 invalidate되도록 controller가 처리하는 패턴 가능).</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 저장이 끝나면 인증 관리 화면이 자동으로 갱신된다.</td></tr>
         </tbody>
       </table>
 
@@ -1019,10 +1019,10 @@ body.dark-mode .viewport {
     <table class="ref">
       <thead><tr><th style="width: 220px;">사용자 액션</th><th>화면에 보이는 결과</th></tr></thead>
       <tbody>
-        <tr><td>OS back / AppBar back</td><td>모든 state에서 가능 — VerificationManagePage로 pop. dirty guard 없음 (변경 무시).</td></tr>
-        <tr><td>키보드 호출/dismiss</td><td>TextField 탭 시 키보드 push → ListView가 자동 reverse 패딩 적용. 빈 영역 탭 / focus 잃으면 dismiss</td></tr>
-        <tr><td>앱 background → foreground</td><td>로컬 controller state는 유지 — 사용자가 다시 돌아와도 입력값 보존. (앱 강제 종료 시는 사라짐)</td></tr>
-        <tr><td>가로 회전 / 큰 글씨</td><td>ListView로 모든 항목 스크롤 가능 · 잘림 없음</td></tr>
+        <tr><td>OS back / AppBar back</td><td>모든 state에서 가능 — 인증 관리 화면으로 복귀. 미저장 변경 보호 없음(변경 무시).</td></tr>
+        <tr><td>키보드 호출/dismiss</td><td>입력란을 탭하면 키보드가 올라오고 본문이 그만큼 스크롤됨. 빈 영역 탭 / focus를 잃으면 키보드가 내려감</td></tr>
+        <tr><td>앱 background → foreground</td><td>입력 중이던 값은 그대로 유지 — 다시 돌아와도 보존됨. (앱 강제 종료 시는 사라짐)</td></tr>
+        <tr><td>가로 회전 / 큰 글씨</td><td>모든 항목이 스크롤 가능 · 잘림 없음</td></tr>
       </tbody>
     </table>
   </section>
@@ -1052,11 +1052,11 @@ body.dark-mode .viewport {
   <section class="doc">
     <h2>Global edge cases</h2>
     <ul class="notes">
-      <li><strong>네트워크 끊김</strong> — Save 시 controller.submit이 throw → state.error → handleMinglitError snackbar · 폼 유지</li>
-      <li><strong>auth 만료</strong> — RPC 401 → controller error → handleMinglitError</li>
-      <li><strong>다크 모드</strong> — 모든 토큰 자동 변환. partner-dark-primary로 focus border / save button dim · empty hint container도 dark surfaceContainerHighest</li>
-      <li><strong>접근성</strong> — TextFormField label은 sr 읽음 · Checkbox 'checked/unchecked' · drag handle은 sr label 'Reorder' default · PopupMenuItem semantics OK</li>
-      <li><strong>저성능 디바이스</strong> — Reorder drag가 무거울 수 있음 — 현재 buildDefaultDragHandles=false라 명시적 drag listener만 활성, 다소 가벼움</li>
+      <li><strong>네트워크 끊김</strong> — 저장 시도 시 오류 안내 메시지가 잠깐 노출되며 폼은 그대로 유지됨</li>
+      <li><strong>인증 만료</strong> — 인증 만료가 감지되면 오류 안내 메시지가 노출됨</li>
+      <li><strong>다크 모드</strong> — 모든 색상이 다크 톤으로 자동 전환. focus 테두리 / 저장 버튼 / empty hint 영역 모두 다크 톤으로 dim</li>
+      <li><strong>접근성</strong> — 입력 라벨, '필수' 체크박스, 드래그 핸들, 팝업 메뉴 모두 음성 안내 가능</li>
+      <li><strong>저성능 디바이스</strong> — 드래그가 무거울 수 있음 — 명시적 드래그 영역에서만 동작하므로 비교적 가벼움</li>
     </ul>
   </section>
 </div>

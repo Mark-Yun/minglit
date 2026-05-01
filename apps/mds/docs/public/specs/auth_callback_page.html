@@ -92,25 +92,25 @@
       <tr>
         <th>Purpose</th>
         <td>
-          외부 OAuth 페이지(Google · Apple · Kakao)에서 돌아온 사용자를 Supabase 세션 처리
-          후 원래 가려던 화면(또는 홈)으로 자동 redirect 한다. 사용자에게 보이는 시간은
-          보통 100~500ms — Supabase SDK가 hash fragment를 파싱하는 동안만.
+          외부 로그인 페이지(Google · Apple · Kakao)에서 돌아온 사용자를 인증 처리한 뒤
+          원래 가려던 화면(또는 홈)으로 자동 이동시킨다. 사용자에게 보이는 시간은 보통
+          0.1~0.5초 — 인증 정보를 해석하는 짧은 구간 동안만.
         </td>
       </tr>
       <tr>
         <th>User journey</th>
         <td>
-          <strong>Entry points</strong>: OAuth provider의 redirect URL 응답 (사용자가 OAuth 페이지에서 인증 승인 후 자동 진입). 직접 URL 진입은 사실상 의미 없음.<br>
-          <strong>Exit points</strong>: 인증 성공 → <code>auth_return_url</code> SharedPreferences 값 (또는 <code>/</code>). 10초 timeout 또는 callback 실패 → "로그인 화면으로 돌아가기" 버튼 → <code>LoginRoute</code>.
+          <strong>Entry points</strong>: 외부 로그인 페이지에서 인증을 승인한 직후 자동 진입. 사용자가 직접 URL로 진입할 일은 거의 없음.<br>
+          <strong>Exit points</strong>: 인증 성공 시 원래 가려던 화면(없으면 홈)으로 자동 이동. 약 10초 시간 초과 또는 처리 실패 시 "로그인 화면으로 돌아가기" 버튼을 통해 로그인 화면으로 복귀.
         </td>
       </tr>
       <tr>
         <th>Background</th>
         <td>
-          OAuth 흐름은 외부 브라우저로 이탈 후 deep-link/URL scheme으로 돌아오기 때문에 앱 내에
-          명시적 "복귀 처리" 화면이 필요. 사용자는 잠깐의 로딩만 인지 — 사실상 내부 로직 화면.
-          Supabase의 <code>onAuthStateChange</code>가 SIGNED_IN 이벤트를 emit하는 순간 자동 redirect.
-          10초 timeout은 hash fragment 손상 / 서버 응답 지연에 대비한 안전망.
+          OAuth 흐름은 외부 브라우저로 이탈했다가 다시 앱으로 돌아오기 때문에 앱 내에
+          명시적인 "복귀 처리" 화면이 필요. 사용자는 잠깐의 로딩만 인지 — 사실상 내부 로직 화면.
+          인증이 정상 감지되는 순간 다음 화면으로 자동 이동된다. 약 10초 시간 초과는 인증
+          정보 손상이나 서버 응답 지연에 대비한 안전망.
         </td>
       </tr>
       <tr>
@@ -225,13 +225,13 @@
   <div class="perspective__header">
     <span class="glyph">🎨</span>
     <h2>States</h2>
-    <span class="lede">3 states — _isProcessing(true/false) + Supabase auth 이벤트 도착 여부. 사용자 인지 가능 시간이 짧지만 timeout 분기는 명시적 표시.</span>
+    <span class="lede">시각 변형 3종. 처리 중 / 인증 성공 후 이동 중 / 시간 초과·실패. 사용자에게 보이는 시간이 짧지만 시간 초과 분기는 명시적 화면으로 노출.</span>
   </div>
 
   <section class="doc">
     <p class="intro">
-      <strong>State 종류 식별</strong>: <code>_isProcessing</code> 플래그 + <code>currentUserProvider</code> 결과 + 10초 <code>Timer</code>.
-      Processing(스피너) → Redirecting("인증 성공! 이동 중...") → 또는 Timeout(에러 아이콘 + 재시도 버튼).
+      <strong>State 식별 기준</strong>: 처리 진행 여부 · 인증 성공 감지 여부 · 약 10초 시간 초과 여부.
+      Processing(스피너) → Redirecting(같은 스피너 + "인증 성공! 이동 중..." 메시지) → 또는 Timeout(에러 아이콘 + 재시도 버튼).
     </p>
 
     <h3 style="margin-top: 24px;">State summary</h3>
@@ -245,16 +245,16 @@
         </tr>
       </thead>
       <tbody>
-        <tr><td><strong>Processing</strong> 🎯</td><td>baseline</td><td><code>_isProcessing == true</code> · auth 미감지</td><td>스피너 + "로그인 처리 중입니다..." 메시지</td></tr>
-        <tr><td><strong>Redirecting</strong></td><td>success</td><td>auth 감지 → <code>_redirectUser()</code> 진입</td><td>스피너 유지 + "인증 성공! 이동 중..." 메시지</td></tr>
-        <tr><td><strong>Timeout / Error</strong></td><td>failure</td><td>10초 경과 또는 callback 처리 실패</td><td>에러 아이콘 + "시간 초과" 메시지 + "로그인 화면으로 돌아가기" 버튼</td></tr>
+        <tr><td><strong>Processing</strong> 🎯</td><td>baseline</td><td>로그인 처리가 진행 중이며 아직 인증 결과가 도착하지 않은 상태.</td><td>스피너 + "로그인 처리 중입니다..." 메시지</td></tr>
+        <tr><td><strong>Redirecting</strong></td><td>success</td><td>인증이 성공적으로 감지되어 다음 화면으로 이동을 준비하는 상태.</td><td>스피너 유지 + "인증 성공! 이동 중..." 메시지</td></tr>
+        <tr><td><strong>Timeout / Error</strong></td><td>failure</td><td>약 10초가 지나도록 결과가 도착하지 않거나 처리에 실패한 상태.</td><td>에러 아이콘 + "시간 초과" 메시지 + "로그인 화면으로 돌아가기" 버튼</td></tr>
       </tbody>
     </table>
 
     <!-- ─── Processing (baseline) ─────────────────────────────── -->
     <table class="ref state-mini is-baseline-tint">
       <thead>
-        <tr><th colspan="3"><strong>Processing</strong> 🎯 <small>baseline · OAuth redirect 도착 직후</small></th></tr>
+        <tr><th colspan="3"><strong>Processing</strong> 🎯 <small>baseline · 외부 로그인에서 막 돌아온 직후</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -271,15 +271,15 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>_isProcessing == true</code> · <code>currentUserProvider == null</code> · <code>Timer(Duration(seconds: 10))</code> 작동 중</td>
+          <td>로그인 처리가 진행 중이며 아직 인증 결과가 도착하지 않은 상태. 약 10초 시간 초과 카운트가 함께 동작 중.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>탭 무반응 — 인터랙션 가능한 UI 없음. 시스템 back은 OS 기본 (앱 종료 또는 이전 라우트)</td>
+          <td>화면에 인터랙션 가능한 요소가 없음. 시스템 뒤로가기는 OS 기본 동작 (앱 종료 또는 이전 화면).</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· Supabase가 즉시 처리 완료 → 사용자가 이 화면을 거의 못 봄 (<100ms)<br>· hash fragment 손상 → auth 이벤트 미발생 → Timeout state로 전이</td>
+          <td>· 인증 처리가 매우 빠르게 끝나면 사용자가 이 화면을 거의 인지하지 못한 채 다음 화면으로 넘어감 (보통 0.1초 이내).<br>· 외부 로그인에서 돌아온 정보가 손상돼 인증이 감지되지 않으면 약 10초 후 Timeout 상태로 전환됨.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
@@ -287,11 +287,11 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
-          <td>· color: <code>color-surface</code> (Scaffold bg), <code>color-primary</code> (spinner), <code>color-text-secondary</code> (theme.colorScheme.outline · 메시지)<br>· spacing: <code>spacing-large</code> (24 · 모든 inter-element gap)<br>· typography: <code>bodyLarge</code> (16/400/1.45)</td>
+          <td>· color: <code>color-surface</code> (배경), <code>color-primary</code> (스피너), <code>color-text-secondary</code> (메시지 · 차분한 톤)<br>· spacing: <code>spacing-large</code> (24 · 요소 사이 모든 간격)<br>· typography: <code>bodyLarge</code> (16 / 400 / 1.45)</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 메시지 색상은 <code>theme.colorScheme.outline</code>으로 명시(coordinator 비-주의 톤). spinner는 size 지정 없이 <code>MinglitCircularProgressIndicator()</code> default 사용.</td>
+          <td>📝 메시지는 일부러 시선을 끌지 않는 차분한 톤으로 처리. 스피너는 표준 크기를 그대로 사용.</td>
         </tr>
       </tbody>
     </table>
@@ -299,7 +299,7 @@
     <!-- ─── Redirecting ─────────────────────────────── -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Redirecting</strong> <small>auth 감지 · 목적지 이동 중</small></th></tr>
+        <tr><th colspan="3"><strong>Redirecting</strong> <small>인증 성공 감지 — 다음 화면으로 이동 중</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -312,15 +312,15 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>currentUserProvider != null</code> 감지 → <code>_redirectUser()</code> 호출 → <code>setState(_statusMessage = '인증 성공! 이동 중...')</code></td>
+          <td>인증이 성공적으로 감지된 직후. 메시지가 "인증 성공! 이동 중..."으로 바뀌고 다음 화면으로의 이동을 준비.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>동일 — 탭 무반응. 보통 100~300ms 안에 다음 화면으로 전이됨</td>
+          <td>동일 — 인터랙션 가능한 요소 없음. 보통 0.1~0.3초 안에 다음 화면으로 전환됨.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>SharedPreferences 읽기가 매우 느린 디바이스 → 메시지가 좀 더 길게 보임. <code>auth_return_url</code> 부재 시 <code>/</code>(홈)으로</td>
+          <td>이전에 가려던 화면 정보가 없으면 홈으로 이동. 디바이스 처리 속도가 느리면 메시지가 좀 더 오래 보일 수 있음.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
@@ -332,7 +332,7 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 시각적으로 baseline과 거의 구분 안 됨 — 텍스트만 변함. 사용자에게는 한 화면처럼 인지됨.</td>
+          <td>📝 시각적으로 baseline과 거의 구분되지 않음 — 메시지 텍스트만 바뀜. 사용자에게는 한 화면으로 인지됨.</td>
         </tr>
       </tbody>
     </table>
@@ -340,7 +340,7 @@
     <!-- ─── Timeout / Error ─────────────────────────────── -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Timeout / Error</strong> <small>10s 초과 · 사용자 개입 필요</small></th></tr>
+        <tr><th colspan="3"><strong>Timeout / Error</strong> <small>약 10초가 지나도록 결과가 도착하지 않거나 처리에 실패한 상태</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -357,27 +357,27 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>_isProcessing == false</code> (10초 Timer 발동 또는 명시적 실패) · <code>mounted == true</code></td>
+          <td>약 10초가 지나도록 인증 결과가 도착하지 않거나 처리에 실패한 상태. 사용자가 화면에 머물러 있을 때만 노출됨.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>"<strong>로그인 화면으로 돌아가기</strong>" 탭 → <code>authCoordinator.goToLogin()</code> → <code>LoginRoute</code></td>
+          <td>"<strong>로그인 화면으로 돌아가기</strong>" 버튼을 탭하면 로그인 화면으로 복귀.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· Timer 발동 직전에 auth 이벤트 도착 → <code>mounted &amp;&amp; _isProcessing</code> 가드로 timeout 무시 (race-safe)<br>· 사용자가 화면을 떠난 뒤 timeout → <code>!mounted</code>면 setState 미호출</td>
+          <td>· 시간 초과가 발생하기 직전에 인증 결과가 도착하면 시간 초과 화면은 노출되지 않고 정상 이동으로 이어짐.<br>· 사용자가 이미 화면을 떠난 뒤에 시간 초과가 발생하면 화면 갱신 없이 그대로 종료됨.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
-          <td>↔ <code>MinglitCircularProgressIndicator</code> → <code>Icon(Icons.error_outline)</code> (xlarge × 1.5 = 60px · color-error)<br>+ <code>ElevatedButton</code> ("로그인 화면으로 돌아가기")</td>
+          <td>↔ 스피너 자리가 에러 아이콘(<code>Icons.error_outline</code> · 60px · color-error)으로 교체됨<br>+ <code>ElevatedButton</code> ("로그인 화면으로 돌아가기")</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
-          <td>+ <code>color-error</code> (theme.colorScheme.error · 에러 아이콘)<br>+ <code>color-primary</code> (ElevatedButton bg) · <code>radius-button</code> (12px)<br>· typography 동일 (bodyLarge · color-text-secondary)</td>
+          <td>+ <code>color-error</code> (에러 아이콘)<br>+ <code>color-primary</code> (버튼 배경) · <code>radius-button</code> (12px)<br>· typography 동일 (bodyLarge · color-text-secondary)</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 timeout은 hard 10초 — 진행률 표시 없음. 사용자가 답답해할 수 있지만 OAuth flow의 보편적 idle 한계라 단순화. 메시지는 줄바꿈 포함 (<code>\n</code>).</td>
+          <td>📝 시간 초과 한도는 약 10초로 고정. 진행률 표시 없음. 메시지는 두 줄로 표시됨.</td>
         </tr>
       </tbody>
     </table>
@@ -398,16 +398,16 @@
       <thead><tr><th style="width:240px;">사용자 액션</th><th>화면에 보이는 결과</th></tr></thead>
       <tbody>
         <tr>
-          <td>OS back / 시스템 back swipe</td>
-          <td>OS 기본 동작 — 이 화면은 라우트 stack에 push되지만 보통 사용자가 인지하기 전에 redirect됨. timeout 시점이라면 LoginRoute로 명시적 이동 권장.</td>
+          <td>OS 뒤로가기 / 뒤로가기 스와이프</td>
+          <td>OS 기본 동작. 보통 사용자가 인지하기 전에 자동으로 다음 화면으로 이동되므로 거의 의미가 없음. 시간 초과 화면이 떠 있다면 로그인 화면으로 명시적으로 돌아가는 것을 권장.</td>
         </tr>
         <tr>
-          <td>외부 OAuth 페이지에서 거부 / 닫기</td>
-          <td>OS의 deep-link/redirect가 callback URL을 호출하지 않음 → 이 화면 자체에 진입 안 함 (앱이 background에 머무름).</td>
+          <td>외부 로그인 페이지에서 거부 / 창 닫기</td>
+          <td>이 화면 자체에 진입하지 않음. 앱은 그대로 백그라운드에 머무름.</td>
         </tr>
         <tr>
-          <td>앱 백그라운드 → foreground 복귀</td>
-          <td>Supabase SDK가 hash fragment를 한 번 더 시도. <code>_isProcessing</code>이 살아 있으면 그대로 대기, 사라졌으면 timeout state.</td>
+          <td>앱이 백그라운드에서 다시 포그라운드로 복귀</td>
+          <td>인증 처리가 한 번 더 시도됨. 처리가 진행 중이었다면 그대로 대기, 이미 시간 초과가 발생했다면 시간 초과 화면이 노출됨.</td>
         </tr>
       </tbody>
     </table>
@@ -421,33 +421,33 @@
     <table class="ref" style="margin-bottom: 16px;">
       <thead><tr><th style="width:200px;">Token</th><th style="width:80px;">Value</th><th>Use case</th></tr></thead>
       <tbody>
-        <tr><td><code>MinglitAnimation.fast</code></td><td>200ms</td><td>화면 entry/exit (GoRouter 라우트 전환)</td></tr>
-        <tr><td><em>(unscoped)</em> spinner rotation</td><td>~700ms / cycle</td><td>MinglitCircularProgressIndicator 내부 — Material 기본</td></tr>
-        <tr><td><em>(hard)</em> auth timeout</td><td>10000ms</td><td><code>Timer(Duration(seconds: 10))</code> · token 미정의 — magic number 명시</td></tr>
+        <tr><td><code>MinglitAnimation.fast</code></td><td>200ms</td><td>화면이 등장하거나 사라질 때의 표준 라우트 전환</td></tr>
+        <tr><td><em>(unscoped)</em> 스피너 회전</td><td>약 700ms / cycle</td><td>스피너 컴포넌트 내부에서 자체 동작 — Material 기본</td></tr>
+        <tr><td><em>(고정)</em> 인증 시간 초과</td><td>10000ms</td><td>약 10초 한도. 디자인 토큰이 아닌 명시적 약속값.</td></tr>
       </tbody>
     </table>
     <table class="ref">
       <thead><tr><th style="width:240px;">Transition</th><th style="width:160px;">Duration (token)</th><th>Curve / notes</th></tr></thead>
       <tbody>
         <tr>
-          <td>OAuth provider → AuthCallback 진입</td>
+          <td>외부 로그인 페이지에서 이 화면으로 진입</td>
           <td>OS 기본</td>
-          <td>OS-level deep-link 전환. App-level 커스텀 불가.</td>
+          <td>OS가 처리하는 외부 → 앱 복귀 전환. 앱 차원에서 커스터마이징 불가.</td>
         </tr>
         <tr>
           <td>Processing → Redirecting (메시지 변경)</td>
-          <td>setState (즉시)</td>
-          <td>fade 없이 cut transition. 텍스트만 swap.</td>
+          <td>즉시</td>
+          <td>페이드 없이 컷 전환. 메시지 텍스트만 교체됨.</td>
         </tr>
         <tr>
-          <td>AuthCallback → 목적지(/ 또는 from URL)</td>
+          <td>AuthCallback → 목적지 화면 (홈 또는 원래 가려던 화면)</td>
           <td><code>fast</code> (200ms)</td>
-          <td>GoRouter 기본 — slide / fade.</td>
+          <td>표준 라우트 전환 (slide / fade).</td>
         </tr>
         <tr>
-          <td>Processing → Timeout state</td>
-          <td>setState (즉시)</td>
-          <td>10초 후 Timer가 fire → cut transition. 사용자 인지 시점에 이미 error UI.</td>
+          <td>Processing → Timeout 상태</td>
+          <td>즉시</td>
+          <td>약 10초 후 자동으로 시간 초과 화면으로 컷 전환됨. 사용자가 인지하는 시점에 이미 에러 UI가 보이는 형태.</td>
         </tr>
       </tbody>
     </table>
@@ -456,10 +456,10 @@
   <section class="doc">
     <h2>Global edge cases</h2>
     <ul class="notes">
-      <li><strong>네트워크 끊김</strong> — Supabase가 토큰 교환 실패 → auth 이벤트 미발생 → 10초 후 Timeout state. 사용자에게 명시적 "네트워크" 메시지는 X (의도적 단순화).</li>
-      <li><strong>다크 모드</strong> — Scaffold/메시지가 토큰 기반 → 자동 swap. 에러 아이콘은 <code>color-error</code> 라이트/다크 토큰 사용. 스피너는 <code>color-primary</code>.</li>
-      <li><strong>접근성</strong> — 메시지가 stub 한국어 한 줄 — TalkBack/VoiceOver가 자동 읽음. 스피너는 자체 의미 없음(decorative). 에러 아이콘에 별도 semanticLabel 없음 → 옆 메시지가 의미 전달.</li>
-      <li><strong>이미 로그인된 채 재진입</strong> — initState의 <code>currentUserProvider != null</code> 체크가 즉시 redirect. 화면 잠깐도 안 보임.</li>
+      <li><strong>네트워크 끊김</strong> — 인증 결과가 도착하지 않으므로 약 10초 후 시간 초과 화면이 노출됨. "네트워크 오류" 같은 구체적 사유는 일부러 표시하지 않음.</li>
+      <li><strong>다크 모드</strong> — 배경과 메시지는 토큰 기반으로 자동 전환됨. 에러 아이콘과 스피너는 각자의 색 토큰을 그대로 사용.</li>
+      <li><strong>접근성</strong> — 메시지가 한 줄의 한국어 텍스트라 보이스 오버가 자동으로 읽어줌. 스피너는 장식 요소이고, 에러 아이콘의 의미는 옆 메시지가 전달.</li>
+      <li><strong>이미 로그인된 채 재진입</strong> — 화면이 보이기 전에 즉시 다음 화면으로 이동.</li>
     </ul>
   </section>
 </div>

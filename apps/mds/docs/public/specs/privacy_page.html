@@ -270,7 +270,7 @@ body.dark-mode .pv-account-card { background: var(--color-dark-surface); }
         <td>
           한국 개인정보보호법 / 위치정보법은 (1) 동의 현황 열람, (2) 선택 동의 철회, (3) 약관 원문 열람을 사용자에게 보장해야 함. 이 페이지가 그 단일 surface.
           회원 탈퇴는 법적 권리이자 위험한 액션이므로, 같은 페이지 안에 "계정" 섹션을 두되 강한 visual separation (Card + color-error 아이콘)으로 분리.
-          탈퇴 진행 중(<code>DeletionStatus.isPending</code>) 상태에서 다시 진입하면 "탈퇴 요청 진행 중 / 다시 로그인하면 복구" 안내로 라벨이 바뀜.
+          회원 탈퇴를 이미 신청한 상태로 다시 진입하면 "탈퇴 요청 진행 중 / 다시 로그인하면 복구" 안내로 "계정" 섹션의 라벨이 바뀜.
         </td>
       </tr>
       <tr>
@@ -330,9 +330,8 @@ body.dark-mode .pv-account-card { background: var(--color-dark-surface); }
   <section class="doc">
     <h2>Blueprint &amp; tree</h2>
     <p class="intro">
-      Scaffold(<code>AppBar(title:'개인정보')</code>) + body는 <code>consentControllerProvider</code>의 <code>AsyncValue.when</code>으로 분기.
-      data 분기에서만 ListView 노출 — 섹션 헤더 + ListTile/SwitchListTile/Card 조합.
-      <strong>Drift 노트</strong>: PrivacyPage는 MyPage와 달리 <code>MinglitSettingsGroup</code>/<code>MinglitSettingsTile</code>을 쓰지 않고 raw <code>ListTile</code>/<code>SwitchListTile</code> + 자체 <code>_SectionHeader</code> private widget 사용. 따라서 카드 외곽선 / 52px indent divider 없음 — edge-to-edge full-width tile.
+      Scaffold + AppBar("개인정보") + 본문은 동의 정보가 도착하면 ListView로 노출 — 섹션 헤더 + 동의 항목 / 약관 보기 / 계정 카드 조합.
+      <strong>Drift 노트</strong>: 마이페이지는 항목들이 카드 안에 묶이고 좌측 indent divider가 들어가지만, 이 화면은 항목들이 화면 끝까지 펼쳐지는 edge-to-edge 형태로 노출됨.
     </p>
     <div class="layout-grid">
       <div class="blueprint" style="height: 660px;">
@@ -367,10 +366,10 @@ body.dark-mode .pv-account-card { background: var(--color-dark-surface); }
 
       <div class="layout-tree"><b>Scaffold</b>
 └─ <b>AppBar</b>(<i>title: '개인정보'</i>)                                         ← ①
-└─ Body = consentState.when(
-   ├─ loading: <b>Center</b> > <code>MinglitCircularProgressIndicator()</code>      ← Loading state
-   ├─ error:   <b>Center</b> > Padding(large) > <code>Text('동의 정보를 불러올 수 없습니다.')</code>
-   └─ data: <b>ListView</b>
+└─ Body — 동의 정보 진행 상태에 따라 분기
+   ├─ 로딩 중: <b>Center</b> > <code>MinglitCircularProgressIndicator()</code>      ← Loading state
+   ├─ 오류:   <b>Center</b> > Padding(large) > <code>Text('동의 정보를 불러올 수 없습니다.')</code>
+   └─ 도착: <b>ListView</b>
       ├─ <em>_SectionHeader</em>(title: '동의 현황')                            ← ②
       ├─ <b>_ReadOnlyConsentTile</b>(title: '서비스 이용약관')                  ← ③
       ├─ <b>_ReadOnlyConsentTile</b>(title: '개인정보 수집·이용')
@@ -389,7 +388,7 @@ body.dark-mode .pv-account-card { background: var(--color-dark-surface); }
       │  └─ <b>ListTile</b>(
       │       leading: <i>Icons.person_remove_outlined</i> | <i>Icons.hourglass_top</i> · color-error,
       │       title: '회원 탈퇴' | '탈퇴 요청 진행 중',
-      │       subtitle: 안내 문구 (isPending에 따라 분기)
+      │       subtitle: 안내 문구 (탈퇴 진행 중 여부에 따라 분기)
       │     )
       ├─ SizedBox(<i>spacing-medium</i>)
       ├─ <b>SizedBox</b>(width: ∞) > <b>TextButton</b>('회원 탈퇴 시작하기' | '탈퇴 진행 상태 보기')
@@ -430,15 +429,13 @@ body.dark-mode .pv-account-card { background: var(--color-dark-surface); }
 
   <section class="doc">
     <p class="intro">
-      <strong>State 종류 식별 기준</strong>: <code>consentControllerProvider</code>의 <code>AsyncValue.when(loading/error/data)</code> 분기.
-      AppBar는 모든 state에서 동일하게 노출. body만 swap.
-      <code>accountDeletionControllerProvider</code>는 별도 watch — pending이면 "계정" 섹션 라벨 / 아이콘만 변형(default state 안의 sub-variant로 다룸).
+      <strong>State 식별 기준</strong>: 동의 정보를 가져오는 진행 상태에 따라 3가지 변형. AppBar는 모든 변형에서 동일하게 노출되고, 본문 영역만 바뀜. 회원 탈퇴를 이미 신청한 사용자라면 default 변형 안에서 "계정" 섹션의 표현이 바뀌는 sub-variant가 함께 적용됨.
     </p>
 
     <!-- State 1: Default (data, baseline) -->
     <table class="ref state-mini is-baseline-tint">
       <thead>
-        <tr><th colspan="3"><strong>Default · 동의 현황 로드 완료</strong> 🎯 <small>baseline · 일반 진입</small></th></tr>
+        <tr><th colspan="3"><strong>Default · 동의 현황 로드 완료</strong> 🎯 <small>baseline · 동의 정보가 모두 도착해 본문이 정상 노출되는 상태</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -519,26 +516,26 @@ body.dark-mode .pv-account-card { background: var(--color-dark-surface); }
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>consentState.hasValue == true</code> · <code>currentUserProvider != null</code> · 동의 row 6개 모두 fetch 완료</td>
+          <td>로그인된 사용자가 진입했고 6개 동의 항목이 모두 도착해 본문이 정상 노출된 상태.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ① <strong>read-only 동의 tile 탭</strong> → <code>showConsentDetailSheet</code>(약관/개인정보/CI·DI 본문) — modal bottom sheet (initialChildSize 0.82).<br>
-            ② <strong>SwitchListTile 토글</strong> → <code>consentControllerProvider.notifier.toggleConsent(type, consented:v)</code> · 즉시 optimistic UI 반영 · 실패 시 SnackBar + invalidate (Fix #886).<br>
-            ③ <strong>"본인인증 정보" 탭</strong> → <code>identityVerification</code> 동의된 경우만 detail sheet · 미동의면 onTap null (chevron 미노출).<br>
-            ④ <strong>약관 보기 ListTile 탭</strong> → 각각 detail sheet (이용약관 / 처리방침 / 위치정보).<br>
-            ⑤ <strong>"회원 탈퇴 시작하기" 탭</strong> → <code>appCoordinator.startAccountDeletion()</code> → DeletionReasonRoute push.<br>
-            ⑥ <strong>AppBar back</strong> → MyPage 복귀.
+            ① <strong>필수 동의 항목 탭</strong> (서비스 이용약관 · 개인정보 수집·이용 · 본인인증 정보) — 약관 본문이 화면 아래에서 올라오는 큰 시트로 노출.<br>
+            ② <strong>선택 동의 스위치 토글</strong> (제3자 제공 · 마케팅 · 위치정보) — 스위치가 즉시 반응하며 동의 / 철회가 적용. 적용에 실패하면 안내 메시지가 노출되고 스위치는 원래 상태로 자연스럽게 되돌아감.<br>
+            ③ <strong>"본인인증 정보" 탭</strong> — 본인인증을 마친 사용자에게만 본문 시트가 열리고, 아직 인증을 마치지 않은 사용자는 항목이 탭에 반응하지 않음.<br>
+            ④ <strong>약관 보기 항목 탭</strong> (서비스 이용약관 · 개인정보처리방침 · 위치정보 이용약관) — 약관 본문 시트가 노출.<br>
+            ⑤ <strong>"회원 탈퇴 시작하기" 탭</strong> — 회원 탈퇴 절차의 첫 화면(사유 선택)으로 이동.<br>
+            ⑥ <strong>뒤로 가기</strong> — 마이페이지로 복귀.
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · 본인인증 미완료 사용자 → "본인인증 정보" tile statusText='미동의' · onTap=null · chevron 미렌더 (탭 무반응).<br>
-            · 토글 직후 네트워크 실패 → Fix #886: SnackBar "동의 변경에 실패했습니다. 다시 시도해주세요." + microtask로 <code>ref.invalidate(consentControllerProvider)</code> → 서버 상태로 원상복구.<br>
-            · <strong>회원 탈퇴 진행 중</strong> (<code>deletionStatus.value?.isPending == true</code>) — Card 안 leading 아이콘이 <code>Icons.hourglass_top</code>으로 변경, 제목 "탈퇴 요청 진행 중", subtitle "유예 기간 안에는 다시 로그인해 계정을 복구할 수 있어요.", TextButton 라벨 "탈퇴 진행 상태 보기"로 변경.<br>
-            · ConsentDetailSheet은 modal — 닫으면 바로 PrivacyPage로 복귀, list 상태 변화 없음.
+            · 본인인증을 아직 마치지 않은 사용자에게는 "본인인증 정보" 항목이 "미동의" 상태로 표시되며, 탭에 반응하지 않고 화살표(chevron)도 표시되지 않음.<br>
+            · 동의 스위치 토글이 실패하면 "동의 변경에 실패했습니다. 다시 시도해주세요." 안내 메시지가 노출되고, 스위치 상태는 서버 기준으로 원래대로 복구됨.<br>
+            · <strong>회원 탈퇴를 이미 신청한 상태로 다시 진입한 경우</strong> — "계정" 섹션의 카드 아이콘이 모래시계로 바뀌고, 제목이 "탈퇴 요청 진행 중", 보조 문구가 "유예 기간 안에는 다시 로그인해 계정을 복구할 수 있어요." 로 바뀌며, 하단 버튼 라벨이 "탈퇴 진행 상태 보기" 로 바뀜.<br>
+            · 약관 본문 시트는 화면 위에 떠 있는 형태. 시트를 닫으면 이 화면이 그대로 다시 보이고, 동의 항목 상태는 변하지 않음.
           </td>
         </tr>
         <tr>
@@ -566,7 +563,7 @@ body.dark-mode .pv-account-card { background: var(--color-dark-surface); }
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 <strong>Drift 알림</strong>: PrivacyPage는 MyPage와 동일한 settings 카테고리지만 <code>MinglitSettingsGroup</code>/<code>MinglitSettingsTile</code>을 쓰지 않고 raw <code>ListTile</code>/<code>SwitchListTile</code> + 자체 <code>_SectionHeader</code> 사용 — edge-to-edge full-width tile, 카드 외곽선 / 52px indent divider 없음. 디자인 일관성을 위해선 후속 PR에서 MinglitSettingsGroup으로 정리 검토 가치.</td>
+          <td>📝 <strong>Drift 알림</strong>: 마이페이지는 항목들이 카드 안에 묶이고 좌측 indent divider가 들어가지만, 이 화면은 항목들이 화면 끝까지 펼쳐지는 edge-to-edge 형태로 노출됨. 디자인 일관성을 위해 후속 작업에서 통일 여부 검토 가치.</td>
         </tr>
       </tbody>
     </table>
@@ -574,7 +571,7 @@ body.dark-mode .pv-account-card { background: var(--color-dark-surface); }
     <!-- State 2: Loading -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Loading · 동의 정보 fetch 중</strong> <small>consentState.isLoading</small></th></tr>
+        <tr><th colspan="3"><strong>Loading · 동의 정보 가져오는 중</strong> <small>본문 데이터를 기다리는 동안 노출되는 상태</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -592,15 +589,15 @@ body.dark-mode .pv-account-card { background: var(--color-dark-surface); }
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>consentState.isLoading</code> · 첫 진입 또는 invalidate 직후</td>
+          <td>동의 정보를 처음 가져오는 중이거나 다시 조회하는 동안. AppBar 아래 영역 중앙에 로딩 인디케이터만 노출.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>+ <strong>AppBar back</strong> → MyPage 복귀<br>− 동의 토글 / 약관 열람 / 탈퇴 CTA (모두 미렌더)</td>
+          <td>+ <strong>뒤로 가기</strong> — 마이페이지로 복귀.<br>− 동의 토글 / 약관 열람 / 탈퇴 CTA — 본문이 아직 안 보이므로 사용 불가.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· 일반적으로 cached AsyncValue → 진입 즉시 data 분기로 진행, Loading은 invalidate(#886 fail-revert) 또는 첫 가입 직후에만 짧게 보임<br>· Loading 중에도 AppBar back은 동작</td>
+          <td>· 일반적으로 동의 정보는 캐시되어 있어 진입 직후 즉시 본문이 노출됨. Loading은 첫 가입 직후나 다시 조회가 필요한 시점에만 짧게 보임.<br>· Loading 중에도 뒤로 가기는 정상 동작.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
@@ -612,7 +609,7 @@ body.dark-mode .pv-account-card { background: var(--color-dark-surface); }
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 진입 시 transient — 사용자에게는 거의 안 보임. invalidate-driven re-fetch 시점에 더 자주 잠깐 노출.</td>
+          <td>📝 일반 사용자에게는 거의 보이지 않는 짧게 지나가는 변형. 동의 변경 후 다시 조회가 필요한 시점에서 잠깐 노출되는 경우가 더 흔함.</td>
         </tr>
       </tbody>
     </table>
@@ -620,7 +617,7 @@ body.dark-mode .pv-account-card { background: var(--color-dark-surface); }
     <!-- State 3: Error -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Error · 동의 정보 로드 실패</strong> <small>consentState.hasError &amp;&amp; !hasValue</small></th></tr>
+        <tr><th colspan="3"><strong>Error · 동의 정보 로드 실패</strong> <small>첫 진입에서 동의 정보를 가져오는 데 실패한 상태</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -638,15 +635,15 @@ body.dark-mode .pv-account-card { background: var(--color-dark-surface); }
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>consentState.hasError</code> AND prev <code>!hasValue</code> (즉, 첫 fetch 실패) · 네트워크 / 인증 실패 / 서버 5xx 등</td>
+          <td>화면 진입 후 동의 정보 자체를 한 번도 받지 못한 상태. 본문 영역 중앙에 안내 메시지만 노출.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>+ <strong>AppBar back</strong> → MyPage 복귀 (재진입 시 retry)<br>− retry 버튼 없음 — 사용자는 back → 재진입으로만 retry 가능</td>
+          <td>+ <strong>뒤로 가기</strong> — 마이페이지로 복귀. 다시 진입하면 다시 시도됨.<br>− 별도의 다시 시도 버튼은 없음.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· prev hasValue 였던 상태에서 hasError 로 transition → ref.listen 분기에서 SnackBar 노출 + invalidate (Fix #886) — 화면은 default state 유지, 이 Error mockup으로 가지 않음<br>· 토글 실패는 별도 UX (SnackBar) — 이 Error state로 fall-through 안 함</td>
+          <td>· 이미 본문이 한 번 노출된 후 다시 조회하다 실패한 경우는 이 화면으로 빠지지 않고, 안내 메시지(스낵바)만 노출되며 본문은 그대로 유지됨.<br>· 동의 스위치 토글 실패는 안내 메시지로 처리되며, 이 화면으로 빠지지 않음.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
@@ -658,7 +655,7 @@ body.dark-mode .pv-account-card { background: var(--color-dark-surface); }
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 retry CTA가 없는 점은 추후 보강 후보 (P3 enhancement) — 현재는 back → 재진입 또는 앱 재시작.</td>
+          <td>📝 다시 시도 버튼이 없는 점은 후속 보강 후보. 현재는 뒤로 가기 후 재진입 또는 앱 재시작이 필요.</td>
         </tr>
       </tbody>
     </table>
@@ -684,20 +681,20 @@ body.dark-mode .pv-account-card { background: var(--color-dark-surface); }
       </thead>
       <tbody>
         <tr>
-          <td>뒤로 가기 (시스템 back / AppBar back)</td>
-          <td>MyPage로 pop. PopScope 별도 처리 없음 — 표준 GoRouter pop.</td>
+          <td>뒤로 가기 (시스템 back · AppBar back)</td>
+          <td>마이페이지로 복귀.</td>
         </tr>
         <tr>
           <td>다크 모드 토글</td>
-          <td>scaffold / ListTile / Card 모두 dark 토큰으로 자동 swap. error icon (color-error) / Switch on (color-primary)는 그대로 유지.</td>
+          <td>scaffold·ListTile·카드 배경이 다크 토큰으로 자동 전환. 위험 강조(빨강) 아이콘과 켜진 스위치의 강조 색은 동일하게 유지.</td>
         </tr>
         <tr>
-          <td>동의 토글 실패 (Fix #886)</td>
-          <td>SnackBar "동의 변경에 실패했습니다. 다시 시도해주세요." + microtask invalidate → 서버 상태로 UI 원상복구. 사용자는 default state 유지.</td>
+          <td>동의 스위치 토글 실패</td>
+          <td>"동의 변경에 실패했습니다. 다시 시도해주세요." 안내 메시지가 노출되고, 스위치 상태는 서버 기준으로 자연스럽게 원상복구됨. 본문은 그대로 유지.</td>
         </tr>
         <tr>
-          <td>탈퇴 진행 중 재진입</td>
-          <td>"계정" 섹션 라벨 / 아이콘 / subtitle / TextButton 라벨이 모두 isPending 변형으로 swap. 동의/약관 섹션은 동일.</td>
+          <td>회원 탈퇴를 이미 신청한 상태로 재진입</td>
+          <td>"계정" 섹션의 아이콘·제목·보조 문구·하단 버튼 라벨이 진행 중 변형으로 바뀜. 동의·약관 섹션은 그대로 유지.</td>
         </tr>
       </tbody>
     </table>
@@ -718,29 +715,29 @@ body.dark-mode .pv-account-card { background: var(--color-dark-surface); }
       </thead>
       <tbody>
         <tr>
-          <td>화면 진입 (MyPage → PrivacyPage)</td>
+          <td>화면 진입 (마이페이지 → 개인정보)</td>
           <td><code>MinglitAnimation.fast</code> (200ms)</td>
-          <td>GoRouter 좌→우 slide.</td>
+          <td>화면이 좌→우로 슬라이드되며 진입.</td>
         </tr>
         <tr>
-          <td>SwitchListTile 토글 thumb</td>
+          <td>동의 스위치 thumb 이동</td>
           <td><code>MinglitAnimation.micro</code> (100ms 안팎)</td>
-          <td>Material Switch 기본 — track / thumb 보간.</td>
+          <td>스위치 thumb과 트랙이 부드럽게 보간되며 전환.</td>
         </tr>
         <tr>
-          <td>ConsentDetailSheet 등장</td>
+          <td>약관 본문 시트 등장</td>
           <td><code>MinglitAnimation.medium</code> (350ms)</td>
-          <td>showModalBottomSheet 기본 — 하단에서 슬라이드 업.</td>
+          <td>화면 아래에서 위로 부드럽게 슬라이드 업.</td>
         </tr>
         <tr>
-          <td>Loading → Default crossfade</td>
-          <td><code>MinglitAnimation.medium</code> (350ms 추정)</td>
-          <td>AsyncValue.when의 자동 swap — Flutter 기본 cut에 가까움 (실측 시 transition 거의 안 보임).</td>
+          <td>로딩 → 본문 노출 전환</td>
+          <td>—</td>
+          <td>별도의 부드러운 전환 없이 즉시 교체에 가까움.</td>
         </tr>
         <tr>
-          <td>SnackBar fade-in</td>
+          <td>안내 메시지 등장</td>
           <td><code>MinglitAnimation.fast</code> (200ms)</td>
-          <td>토글 실패 시 (Fix #886).</td>
+          <td>동의 토글 실패 시 노출되는 스낵바의 페이드 인.</td>
         </tr>
       </tbody>
     </table>
@@ -749,10 +746,10 @@ body.dark-mode .pv-account-card { background: var(--color-dark-surface); }
   <section class="doc">
     <h2>Global edge cases</h2>
     <ul class="notes">
-      <li><strong>비인증 진입</strong> — PrivacyRoute는 redirect guard로 보호되어 있어 일반 경로로는 비인증 사용자 진입 불가. 직접 deep-link 시 LoginRoute로 redirect.</li>
-      <li><strong>탈퇴 직후 재진입</strong> — DeletionStatus가 pending → 이 페이지의 "계정" 섹션이 진행 상태 변형으로 표시. 다시 로그인하면 cancel 가능 (Account Management 또는 별도 플로우).</li>
-      <li><strong>법령 의무 — 필수 동의는 토글 불가</strong> — 서비스 이용약관 / 개인정보 수집·이용 / 본인인증은 read-only로 노출, 철회는 회원 탈퇴를 통해서만 가능 (개인정보처리방침 본문에 명시).</li>
-      <li><strong>약관 본문은 in-app sheet</strong> — 외부 브라우저 launch 아님. ConsentDetailSheet의 정적 const 컨텐츠 (privacy_page.dart 하단 _termsOfServiceContent / _privacyPolicyContent / _locationConsentContent).</li>
+      <li><strong>비로그인 사용자의 진입</strong> — 비로그인 사용자는 이 화면에 도달하기 전에 로그인 화면으로 자동으로 보내짐.</li>
+      <li><strong>회원 탈퇴 신청 후 재진입</strong> — "계정" 섹션이 진행 중 변형으로 노출됨. 사용자가 유예 기간 안에 다시 로그인하면 탈퇴를 취소하고 계정을 복구할 수 있음.</li>
+      <li><strong>필수 동의는 토글 불가</strong> — 서비스 이용약관 / 개인정보 수집·이용 / 본인인증은 열람만 가능하고, 철회는 회원 탈퇴를 통해서만 가능.</li>
+      <li><strong>약관 본문은 앱 안에서 열림</strong> — 외부 브라우저로 빠지지 않고 화면 위로 올라오는 시트로 노출.</li>
     </ul>
   </section>
 </div>

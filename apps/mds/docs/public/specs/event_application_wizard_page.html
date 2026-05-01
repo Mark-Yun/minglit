@@ -545,13 +545,13 @@
 
   <section class="doc">
     <p class="intro">
-      <strong>State 종류 식별 기준</strong>: <code>state.step</code> enum (<code>verification</code> · <code>payment</code>) + <code>state.status</code> (<code>initial</code> · <code>submitting</code> · <code>success</code> · <code>error</code>) + verification 요구 분기 (<code>requiredVerificationIds.isEmpty</code>) + 결제 분기 (Free vs Paid). Success state는 별도 mockup이 아니라 <code>PaymentSuccessScreen</code>으로 <code>pushReplacement</code> — 이 spec 범위 밖.
+      <strong>State 식별 기준</strong>: 진행 중인 단계 (인증 / 결제) + 제출 상태 (대기 / 진행 중 / 성공 / 실패) + 인증 요구 유무 + 결제 분기 (무료 / 유료)에 따라 7가지 변형. 성공 상태는 별도 화면(PaymentSuccessScreen)으로 즉시 교체되어 이 spec 범위 밖.
     </p>
 
     <!-- ============= State 1: Step 1 · Verification (baseline) ============= -->
     <table class="ref state-mini is-baseline-tint">
       <thead>
-        <tr><th colspan="3"><strong>Step 1 / 2 · 인증 (Verification)</strong> 🎯 <small>baseline · 인증 폼 입력</small></th></tr>
+        <tr><th colspan="3"><strong>Step 1 / 2 · 인증 (Verification)</strong> 🎯</th></tr>
       </thead>
       <tbody>
         <tr>
@@ -595,25 +595,24 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>state.step == verification</code> · <code>requiredVerificationIds.isNotEmpty</code> · <code>status == initial</code> · 한 개 이상 form field가 폼 스키마에 정의됨</td>
+          <td>인증 단계에 머물러 있고, 선택한 티켓이 1개 이상의 인증 항목을 요구하며, 아직 제출 전인 상태.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ① <strong>텍스트 필드 입력</strong> → <code>updateVerificationData(key, value)</code> 즉시 호출 · onChanged마다 state map 갱신<br>
-            ② <strong>파일 picker 탭</strong> → OS 파일 선택 → <code>MinglitFilePicker</code>가 <code>verification-proofs</code> bucket의 <code>{userId}/applications/{eventId}/...</code> 경로로 자동 업로드 · 완료 시 첫 url을 <code>updateVerificationData</code>로 저장<br>
-            ③ <strong>"다음" 탭</strong> → <code>controller.nextStep()</code> → step을 <code>payment</code>로 이동 (현재 코드는 별도 client-side 검증 없음 — 빈 값도 허용)<br>
-            ④ <strong>X(닫기) 탭</strong> → <code>Navigator.pop</code> · EventDetail 복귀 (별도 confirm 없음)
+            ① <strong>텍스트 필드 입력</strong> → 입력하는 즉시 저장됨 (별도 저장 버튼 없음)<br>
+            ② <strong>파일 picker 탭</strong> → OS 파일 선택 → 자동 업로드 후 결과 URL이 폼에 저장됨<br>
+            ③ <strong>"다음" 탭</strong> → 결제 단계로 이동 (현재는 별도 입력 검증 없이 통과)<br>
+            ④ <strong>X(닫기) 탭</strong> → EventDetailPage로 복귀 (별도 확인 없음)
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · <code>verifIds</code>가 여러 개여도 현재 코드는 <code>verifs.first</code>만 표시 — 첫 번째 verification만 폼 노출 (TODO 댓글 참고)<br>
-            · 파일 업로드 중 화면 이동 → upload는 백그라운드 진행, 완료 시 state 갱신 시도 (mounted check)<br>
-            · 비로그인 상태로 file 필드 도달 → "로그인이 필요합니다." 텍스트로 fallback (정상 흐름에선 도달 불가)<br>
-            · <code>verifAsync</code> 로딩 → MinglitAsyncValueWidget 기본 스피너로 covered (이 spec 별도 state로 분리 안 함 — 짧은 transition)<br>
-            · <code>verifs.isEmpty</code> 응답 → "인증 정보를 불러올 수 없습니다." 텍스트
+            · 여러 인증을 요구하더라도 현재는 첫 번째 인증 폼만 노출 (다중 인증은 미구현)<br>
+            · 파일 업로드 중 화면 이동 → 업로드는 백그라운드 진행, 완료 시 결과 반영 시도<br>
+            · 비로그인 상태에서 파일 필드 도달 → "로그인이 필요합니다." 안내 (정상 흐름에선 도달 불가)<br>
+            · 인증 정보를 불러오지 못한 응답 → "인증 정보를 불러올 수 없습니다." 안내
           </td>
         </tr>
         <tr>
@@ -637,7 +636,7 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 인증 폼 자체는 파트너가 정의(Verification.formSchema). field type별로 TextFormField vs MinglitFilePicker 분기. 현재 코드는 첫 번째 verification만 처리하고 다중 verification은 TODO. 7 state 모두 같은 scaffold(AppBar+StepIndicator+Footer) — body 콘텐츠와 footer 버튼 구성만 변경.</td>
+          <td>📝 인증 폼 자체는 파트너가 정의. 필드 형식에 따라 텍스트 입력 또는 파일 업로더로 노출. 현재는 첫 번째 인증만 처리하고 다중 인증은 후속 보강. 7개 state 모두 같은 골격(AppBar + Step 표시 + Footer)을 공유하며 본문과 footer 버튼 구성만 변한다.</td>
         </tr>
       </tbody>
     </table>
@@ -645,7 +644,7 @@
     <!-- ============= State 2: No-verification fast-path ============= -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Step 1 · No verification required</strong> <small>fast-path · 인증 불필요 티켓</small></th></tr>
+        <tr><th colspan="3"><strong>Step 1 · No verification required</strong> <small>인증 불필요 티켓</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -678,15 +677,15 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>requiredVerificationIds.isEmpty</code> — 선택한 ticket의 어떤 EntryGroup도 verification 요구 없음 · <code>state.step == verification</code></td>
+          <td>선택한 티켓이 어떤 인증도 요구하지 않는 상태. 인증 단계에 머물러 있음.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>↔ 입력 없음 → "다음" 단일 액션 · payment step으로 이동</td>
+          <td>↔ 입력 없음 → "다음" 단일 액션 · 결제 단계로 이동</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· 선택된 티켓 없음(<code>selectedTicket == null</code>) → "티켓을 먼저 선택해주세요." 텍스트로 대체 (정상 흐름 아님 — initialTicketId 누락 시)</td>
+          <td>· 선택된 티켓이 없는 비정상 진입 → "티켓을 먼저 선택해주세요." 안내</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
@@ -706,7 +705,7 @@
     <!-- ============= State 3: Validation error (server) ============= -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Validation / submit error toast</strong> <small>유효성 실패 — snackbar</small></th></tr>
+        <tr><th colspan="3"><strong>Validation / submit error toast</strong> <small>유효성 실패 안내</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -753,27 +752,27 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>현재 client-side 강제 검증은 없음 — 이 state는 서버 응답이 누락 필드를 reject하거나, 미래에 client validation을 추가할 때 진입. <code>status == error</code> + <code>errorMessage</code> 존재 + verification step에서 발생한 경우.</td>
+          <td>인증 단계에서 제출이 거절된 상태. 현재는 클라 단의 강제 검증이 없으므로 서버가 누락 필드를 거부하거나 향후 검증이 추가될 때를 대비한 안내 화면.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>+ snackbar 메시지 확인 → 빈 필드 채움 → 다시 "다음"</td>
+          <td>+ 안내 메시지 확인 → 빈 필드를 채움 → 다시 "다음"</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· snackbar 4초 자동 dismiss (Material 기본)<br>· 동일 에러 반복 발생 → 새 snackbar가 이전 것 교체</td>
+          <td>· 안내는 짧은 시간 후 자동으로 사라짐<br>· 같은 오류가 반복되면 새 안내가 이전 것을 대체</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
-          <td>+ <code>SnackBar</code> (Material default · bottom 92 — footer 위) + 경고 아이콘<br>↔ 입력 필드는 baseline 동일 (현재 코드는 input border-error 토글이 없음 — TextFormField error decoration 미사용)</td>
+          <td>+ 하단 안내 토스트 (footer 위) + 경고 아이콘<br>↔ 입력 필드는 baseline과 동일 (현재는 입력 자체에 오류 강조 없음)</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
-          <td>+ <code>color-warning</code> (snackbar 아이콘) · #323232 (snackbar bg · Material default · token 미매핑)</td>
+          <td>+ <code>color-warning</code> (안내 아이콘) · #323232 (안내 박스 bg · Material 기본)</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 코드상 verification step에서의 client-side validation은 아직 없다 — "다음"은 무조건 통과한다. 이 state는 (a) 서버 reject 시 결제 step에서 dialog가 뜨는 흐름과 (b) 향후 form 필드 required 검증이 추가될 때를 대비한 합쳐진 placeholder. 현재 production에는 거의 노출되지 않음.</td>
+          <td>📝 인증 단계에서의 클라 단 검증은 아직 없어, "다음"은 무조건 통과한다. 이 화면은 향후 검증 강화가 추가될 때를 위한 자리. 현재 운영에는 거의 노출되지 않음.</td>
         </tr>
       </tbody>
     </table>
@@ -781,7 +780,7 @@
     <!-- ============= State 4: Step 2 · Payment ============= -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Step 2 / 2 · 결제 (Payment)</strong> <small>step = payment · 결제 상세 확인</small></th></tr>
+        <tr><th colspan="3"><strong>Step 2 / 2 · 결제 (Payment)</strong> <small>결제 상세 확인</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -827,27 +826,27 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>state.step == payment</code> · <code>selectedTicket != null</code> · <code>status == initial</code></td>
+          <td>결제 단계에 진입했고 선택된 티켓이 있으며 아직 제출 전인 상태.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ① <strong>"이전" 탭</strong> → <code>previousStep()</code> · verification step으로 복귀 · 입력 데이터 보존<br>
-            ② <strong>"결제하기" 탭</strong> → <code>submitApplication()</code> → status submitting → <code>apply-event</code> Edge Function 호출. 무료(<code>FreeApplyEventResult</code>) → 즉시 success. 유료(<code>PaidApplyEventResult</code>) → Iamport WebView 진입.<br>
+            ① <strong>"이전" 탭</strong> → 인증 단계로 복귀 · 입력 데이터는 그대로 유지<br>
+            ② <strong>"결제하기" 탭</strong> → 신청 제출 → 무료 티켓이면 즉시 성공 화면, 유료 티켓이면 결제 WebView로 진입<br>
             ③ <strong>X 탭</strong> → 종료 (확인 없음)
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· ticket null → "티켓 정보가 없습니다." 텍스트 fallback · <code>price == 0</code> → 카드의 가격/총액 모두 "0원"으로 표시 (시각적 동일, EF 응답이 Free/Paid 분기를 결정)</td>
+          <td>· 티켓 정보가 없는 비정상 진입 → "티켓 정보가 없습니다." 안내. · 가격이 0원인 티켓도 카드의 가격 / 총액 모두 "0원"으로 동일하게 표시 (이후 응답이 무료 / 유료 분기를 결정).</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
           <td>
             ↔ body 전체 교체 → titleMedium "결제 상세" + 결제 카드 + 안내 텍스트<br>
-            + Container (radius-small 8 · outlineVariant 1px border · padding spacing-medium · bg surfaceContainerLowest)<br>
+            + 결제 카드 (radius-small 8 · outlineVariant 1px border · padding spacing-medium · bg surfaceContainerLowest)<br>
             + Divider(height 32) — 카드 내 행 분리<br>
-            + 안내 Text (labelSmall · color-outline)<br>
+            + 안내 텍스트 (labelSmall · color-outline)<br>
             + <code>MinglitButton.secondary</code> "이전" (flex 1) — Footer에 추가
           </td>
         </tr>
@@ -864,7 +863,7 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 가격 포맷터: <code>NumberFormat('#,###')</code> + "원" suffix. 총액 색상은 primary(보라). 카드 bg는 약간 더 어두운 surfaceContainerLowest로 본문과 구분.</td>
+          <td>📝 가격은 천 단위 콤마 + "원" 접미사. 총액 색상은 primary(보라). 카드 bg는 약간 더 어두운 surfaceContainerLowest로 본문과 구분.</td>
         </tr>
       </tbody>
     </table>
@@ -872,7 +871,7 @@
     <!-- ============= State 5: Submitting ============= -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Submitting</strong> <small>status = submitting · CTA loading</small></th></tr>
+        <tr><th colspan="3"><strong>Submitting</strong> <small>제출 진행 중 · CTA 로딩</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -918,19 +917,19 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>status == submitting</code> · "결제하기" 탭 직후 ~ EF 응답까지</td>
+          <td>"결제하기"를 누른 직후 백엔드 응답을 기다리는 상태.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>— <em>(이전/결제 버튼 모두 isLoading · 비활성. X 탭은 가능)</em></td>
+          <td>— <em>(이전 / 결제 버튼 모두 로딩 · 비활성. X 탭은 가능)</em></td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· 네트워크 지연 → 스피너 길게 보임 (timeout 없음) · 이 상태에서 X 탭 → wizard 종료. EF 응답은 그대로 처리되어 PaymentSuccessScreen 또는 에러 다이얼로그가 popped 화면 위에 뜨는 race 가능 (코드상 `context.mounted` 가드 있음)</td>
+          <td>· 응답 지연 → 스피너 길게 보임 (별도 타임아웃 없음) · 이 상태에서 X를 누르면 wizard가 닫혀도 응답은 그대로 처리되어 성공 화면 또는 오류 안내가 뒤늦게 뜨는 race가 발생할 수 있음 (안전 장치 있음).</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
-          <td>↔ MinglitButton(이전·결제하기) → <code>isLoading: true</code> — label 자리에 spinner. <code>onPressed</code>는 그대로지만 버튼 내부에서 무시</td>
+          <td>↔ "이전 · 결제하기" 두 버튼 모두 라벨 자리에 스피너 표시 · 탭은 무시됨</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
@@ -938,7 +937,7 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 같은 isLoading flag가 두 버튼 모두에 전달됨 — 둘 다 spinner. 보통 결제 버튼만 로딩하면 충분하지만 코드는 두 버튼 모두 묶음. body 콘텐츠는 baseline payment와 동일.</td>
+          <td>📝 두 버튼 모두 같이 로딩 처리됨 — 보통은 결제 버튼만 로딩해도 충분하지만 현재는 묶여 있음. 본문은 결제 단계 baseline과 동일.</td>
         </tr>
       </tbody>
     </table>
@@ -946,7 +945,7 @@
     <!-- ============= State 6: Iamport PG WebView ============= -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Iamport PG WebView</strong> <small>유료 티켓 · PaidApplyEventResult</small></th></tr>
+        <tr><th colspan="3"><strong>Iamport PG WebView</strong> <small>유료 티켓 결제 진행</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -971,22 +970,22 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>PaidApplyEventResult</code> 수신 · <code>iamportControllerProvider.startPayment()</code>가 push한 WebView가 wizard 화면 위에 덮음</td>
+          <td>유료 티켓의 결제 단계로 진입해 외부 결제 WebView가 wizard 위에 덮인 상태.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ① 카드/계좌 등 결제 수단 선택 → 인증 → impUid 반환 → wizard로 자동 복귀<br>
-            ② <strong>WebView 시스템 back / 닫기</strong> → impUid null → "결제가 취소되었습니다." MinglitUserException → State 7 (error dialog)
+            ① 카드 / 계좌 등 결제 수단 선택 → 인증 → 결제 완료 후 wizard로 자동 복귀<br>
+            ② <strong>WebView 시스템 back / 닫기</strong> → 결제 취소 처리 → 오류 안내 다이얼로그
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· 결제 성공 후 <code>confirmPayment</code> 단계에서 실패 → status error · 환불 처리는 백엔드 reconciliation에 의존<br>· app_scheme 'minglit' deeplink 미실행 시 → 외부 브라우저에 갇힘 (FAQ 케이스)</td>
+          <td>· 결제 자체는 성공했지만 후속 확정 단계에서 실패 → 오류 화면 · 환불 처리는 백엔드 정산이 담당<br>· 앱 딥링크가 실행되지 않으면 외부 브라우저에 갇히는 경우가 있음 (FAQ 케이스)</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
-          <td>↔ Wizard 전체 → <code>IamportPayment</code> WebView (별도 page push) — 상단 native bar + WebView body. Iamport SDK가 렌더링 — 자체 디자인.</td>
+          <td>↔ Wizard 전체 → 외부 결제 WebView (상단 native bar + 결제사 본문). Wizard 화면은 그 뒤에 가려짐.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
@@ -994,7 +993,7 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 PaymentParams: pg=html5_inicis · pay_method=card · merchant_uid=result.orderId · amount=result.paymentAmount · buyer_name/tel/email은 user.metadata fallback. 무료 티켓 시 이 state 건너뛰고 바로 success.</td>
+          <td>📝 결제는 외부 결제사 SDK(Iamport)에 위임. 무료 티켓일 때는 이 단계를 건너뛰고 곧장 성공 화면.</td>
         </tr>
       </tbody>
     </table>
@@ -1051,13 +1050,13 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>state.status == error</code> · ref.listen이 <code>_handlePaymentError</code> 호출 · <code>showMinglitConfirm</code> dialog 표시 (PG 취소 / confirmPayment 실패 / 네트워크 등)</td>
+          <td>결제 실패 직후 (PG 사용자 취소 / 결제 승인 실패 / 네트워크 오류 등) "다시 시도 / 닫기" 옵션이 있는 확인 다이얼로그가 노출된 상태.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ① <strong>"다시 시도"</strong> → <code>resetStatus()</code> 후 <code>submitApplication</code> 재호출 → State 5 (Submitting) 복귀<br>
-            ② <strong>"닫기"</strong> → dialog dismiss · 결제 step에 머무름 (status는 initial로 reset)
+            ① <strong>"다시 시도"</strong> → 결제 step 처음부터 다시 진행 (Submitting 상태로 복귀)<br>
+            ② <strong>"닫기"</strong> → 다이얼로그가 닫히고 결제 step에 그대로 머무름
           </td>
         </tr>
         <tr>
@@ -1074,7 +1073,7 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 dialog는 결제 실패 한정 — verification step에선 호출 안 됨. 코드상 <code>_handlePaymentError</code>는 ref.listen 안에서 한 번만 트리거. 닫기 → resetStatus()이지만 step은 유지.</td>
+          <td>📝 이 다이얼로그는 결제 실패 한정 — 본인 인증 step에서는 노출되지 않음. 닫기를 누르면 step은 그대로 유지된다.</td>
         </tr>
       </tbody>
     </table>

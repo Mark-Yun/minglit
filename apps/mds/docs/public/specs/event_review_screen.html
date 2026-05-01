@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>Spec — EventReviewScreen (app_user · EventReviewRoute · routed bottom-sheet)</title>
+<title>Spec — EventReviewScreen (app_user · EventReviewRoute)</title>
 <link rel="stylesheet" href="/specs/_spec.css">
 <style>
 /* ============================================================
@@ -186,7 +186,7 @@
     <tbody>
       <tr>
         <th style="width: 140px;">Status</th>
-        <td><strong>🚧 디자인중</strong> <em style="color: var(--color-text-secondary);">— <code>EventReviewRoute</code> / <code>EventReviewScreen</code> 클래스 미구현. 현재는 <code>EndedContent</code> widget이 <code>EventNowBottomSheet</code> 내부 Phase 5 (ended)로 렌더 (showModalBottomSheet · 별도 route 아님). 본 spec은 routed sheet 추출 후 형태 + 제출 backend 도입 후의 사양 기준.</em></td>
+        <td><strong>🚧 디자인중</strong> <em style="color: var(--color-text-secondary);">— 5 state · 홈 위에 올라오는 바텀시트</em></td>
       </tr>
       <tr>
         <th>App</th>
@@ -198,7 +198,7 @@
       </tr>
       <tr>
         <th>Route / Surface</th>
-        <td><code>EventReviewRoute</code> — <code>ModalBottomSheetRoute</code> (Material 3 sheet · top corners radius-card · scrim ~50% · no AppBar)</td>
+        <td><code>EventReviewRoute</code> · widget: <code>EventReviewScreen</code> (홈 위에 올라오는 바텀시트)</td>
       </tr>
       <tr>
         <th>Path</th>
@@ -207,8 +207,8 @@
       <tr>
         <th>Hierarchy</th>
         <td>
-          <strong>Parent</strong>: <a href="/specs/home_page.html"><code>HomeRoute</code></a> via <a href="/specs/event_now_bar.html"><code>EventNowBar</code></a> (<code>ended</code> state · bar tap → <code>router.push(EventReviewRoute)</code>)<br>
-          <strong>Children</strong>: <em>—</em> <em style="color: var(--color-text-secondary);">("리뷰 작성하기" CTA는 현재 sheet dismiss만 수행 — 별도 long-form review route는 미정의)</em>
+          <strong>Parent</strong>: <a href="/specs/home_page.html"><code>HomePage</code></a> — 시트가 올라와도 홈 화면은 어두워진 상태로 그대로 보임. 진입은 <a href="/specs/event_now_bar.html"><code>EventNowBar</code></a>가 "리뷰 가능" 상태일 때 탭.<br>
+          <strong>Children</strong>: <em>—</em> <em style="color: var(--color-text-secondary);">("리뷰 작성하기" CTA는 현재 시트 닫기만 수행 — 별도 장문 리뷰 화면은 미정의)</em>
         </td>
       </tr>
       <tr>
@@ -220,19 +220,19 @@
       <tr>
         <th>User journey</th>
         <td>
-          <strong>Entry points</strong>: HomePage 하단 EventNowBar의 <code>ended</code> state 탭 → sheet 슬라이드업. push 알림 / MyPage "지난 이벤트" 등에서도 같은 route로 재진입 가능 (deeplink).<br>
-          <strong>Exit points</strong>: swipe-down dismiss · scrim tap · system back · CTA 제출 성공 시 자동 dismiss → HomePage 복귀. 한 번 제출하면 EventNowBar는 다음 stream tick에서 사라지거나 read-only로 전환.
+          <strong>Entry points</strong>: <a href="/specs/event_now_bar.html">EventNowBar</a>가 "리뷰 가능" 상태일 때 탭 → 시트가 화면 아래에서 올라옴. 푸시 알림 / 마이페이지 "지난 이벤트" 등에서도 같은 화면으로 재진입 가능 (딥링크).<br>
+          <strong>Exit points</strong>: 핸들 아래로 끌어내리기 · 시트 외곽 어두운 영역 탭 · 시스템 back · CTA 제출 성공 시 자동 닫힘 → 홈 복귀. 한 번 제출하면 EventNowBar는 잠시 후 사라지거나 보기 전용으로 전환.
         </td>
       </tr>
       <tr>
         <th>Background</th>
         <td>
-          매칭 phase의 마지막 단계 — 사용자에게 거절감 없이 가볍게 "이벤트 어땠어?"를 묻는 자리. 별점만 받고 즉시 dismiss 가능하도록 friction 최소화. 현재 Flutter 구현(<code>EndedContent</code>)은 별점 select state만 로컬 보관하고 CTA 탭 시 그대로 pop — backend 제출 로직은 아직 미구현(Fix #665 TODO).
+          매칭의 마지막 단계 — 사용자에게 거절감 없이 가볍게 "이벤트 어땠어?"를 묻는 자리. 별점만 받고 즉시 닫을 수 있도록 friction 최소화. 현재는 별점 입력만 로컬에 임시 보관하고 CTA 탭 시 그대로 닫힘 — 제출 backend 도입 예정.
         </td>
       </tr>
       <tr>
         <th>Frequency</th>
-        <td>이벤트 1회당 최대 1회(제출 후 read-only). 미제출 상태에서는 dismiss / 재진입 반복 가능.</td>
+        <td>이벤트 1회당 최대 1회(제출 후 보기 전용). 미제출 상태에서는 닫기 / 재진입 반복 가능.</td>
       </tr>
     </tbody>
   </table>
@@ -259,8 +259,7 @@
         <td>1.0</td>
         <td>mark-yun</td>
         <td>
-          v1.4 template으로 신규 작성 — EventNowBar의 <code>ended</code> state에서 push되는 routed bottom-sheet 화면.
-          현재 inline <code>EndedContent</code>(Fix #665) 시각 사양을 그대로 routed sheet 형태로 추출했을 때를 가정. mini-table 5종(Default · AlreadySubmitted · Submitting · Loading · Error) + 익명 톤 정책 명시.
+          v1.4 template으로 신규 작성 — EventNowBar가 "리뷰 가능" 상태일 때 진입하는 바텀시트. mini-table 5종(Default · AlreadySubmitted · Submitting · Loading · Error) + 톤 정책 명시.
         </td>
       </tr>
     </tbody>
@@ -282,13 +281,13 @@
   <div class="perspective__header">
     <span class="glyph">🧱</span>
     <h2>Layout</h2>
-    <span class="lede">화면 구조 — scrim + bottom sheet · top corners radius-card · drag handle / hero / star row / CTA. 색·타이포 무시.</span>
+    <span class="lede">화면 구조 — 어두워진 홈 위에 올라오는 바텀시트 · 상단 모서리만 radius-card · drag handle / hero / star row / CTA. 색·타이포 무시.</span>
   </div>
 
   <section class="doc">
     <h2>Blueprint &amp; tree</h2>
     <p class="intro">
-      <code>ModalBottomSheetRoute</code>로 슬라이드업되는 sheet. <strong>AppBar 없음</strong> — 상단 drag handle(40×4)이 dismiss affordance. sheet 내부는 <code>SafeArea</code>로 bottom inset 보정. 콘텐츠 길이 짧음(약 460px) — viewport을 거의 넘지 않음.
+      아래에서 위로 슬라이드되며 올라오는 바텀시트. <strong>AppBar 없음</strong> — 상단 drag handle(40×4)이 닫기 단서. 시트 내부는 안전 영역(하단 inset 보정). 콘텐츠 길이가 짧음(약 460px) — 화면을 거의 넘지 않음.
     </p>
     <div class="layout-grid">
       <div class="blueprint" style="width: 343px; height: 540px;">
@@ -327,46 +326,44 @@
         </div>
       </div>
 
-      <div class="layout-tree"><b>Navigator</b>
-└─ <em>ModalBottomSheetRoute</em>: <b>EventReviewScreen</b>
-   <i>· scrim above (Material default ~50% black)</i>
+      <div class="layout-tree"><b>Modal Bottom Sheet</b>
+└─ scrim 0.5 black
+└─ top corners: <i>radius-card 16</i>
+└─ box-shadow: <i>0 -4px 20px rgba(0,0,0,0.10)</i>
 
-<b>Sheet container</b>
-├─ background: <i>color-background (white)</i>
-├─ border-radius: <i>radius-card (16)</i>  <i>top corners only</i>
-├─ box-shadow: <i>0 -4px 20px rgba(0,0,0,0.10)</i>
+<b>EventReviewScreen</b>
 ├─ padding: <i>h: spacing-screen-edge · v: spacing-large</i>
-├─ SafeArea(bottom)
+├─ 안전 영역 (하단 inset 보정)
 │
 ├─ <em>Drag handle</em>                              ← ㉠
-│  · 40×4 · radius 2 · text-secondary @38% alpha · margin-top 12 · centered
+│  · 40×4 · radius 2 · text-secondary 흐린 색 · margin-top 12 · centered
 │
-└─ Column(min · cross: center)
+└─ 가운데 정렬 stacked column
    ├─ Gap: <i>spacing-xlarge (32)</i>
    ├─ <em>Hero icon</em>                             ← ㉡
-   │  · 64×64 circle · text-secondary @subtle bg
+   │  · 64×64 circle · text-secondary 흐린 톤 bg
    │  · Icon(event_available · 36 · text-secondary)
    ├─ Gap: <i>spacing-medium (16)</i>
-   ├─ <em>Title</em> "이벤트가 종료되었어요"          ← ㉢
+   ├─ <em>Title</em> "이벤트가 종료되었어요"           ← ㉢
    │  · titleLarge · w700 · text-primary
    ├─ Gap: <i>spacing-small (8)</i>
-   ├─ <em>Sub</em> event.title                       ← ㉢
+   ├─ <em>Sub</em> 이벤트 이름                        ← ㉢
    │  · bodyMedium · text-secondary · centered
    ├─ Gap: <i>spacing-xlarge (32)</i>
-   ├─ <em>Prompt</em> "이벤트는 어떠셨나요?"          ← ㉣
+   ├─ <em>Prompt</em> "이벤트는 어떠셨나요?"           ← ㉣
    │  · bodyMedium · text-primary
    ├─ Gap: <i>spacing-medium (16)</i>
-   ├─ <em>StarRatingRow</em>                         ← ㉤
-   │  · Row(center) · 5 × GestureDetector
-   │  · each: Icon(star/star_border · 40 · secondary or text-secondary @scrimMedium)
-   │  · h-padding 4 each side (= 8 gap)
+   ├─ <em>StarRatingRow</em>                          ← ㉤
+   │  · 가운데 정렬 row · 5 × 탭 가능한 별
+   │  · each: Icon(star/star_border · 40 · secondary 또는 text-secondary 흐린)
+   │  · 별마다 양 옆 padding 4 (≈ 8 gap)
    ├─ Gap: <i>spacing-xlarge (32)</i>
-   └─ <b>ElevatedButton.icon</b>                     ← ㉥
-      · width: double.infinity
+   └─ <b>제출 CTA "리뷰 작성하기"</b>                 ← ㉥
+      · width: 풀폭
       · padding: vertical spacing-medium (16)
-      · icon: Icon(rate_review_outlined)
+      · icon: rate_review_outlined
       · label: "리뷰 작성하기"
-      · onPressed: 현재 Navigator.pop · 향후 submit + pop</div>
+      · 탭 시: 현재는 시트 닫기, 향후 제출 + 닫기</div>
     </div>
 
     <table class="ref" style="margin-top: 16px;">
@@ -393,19 +390,19 @@
   <section class="doc">
     <h2>StarRatingRow anatomy</h2>
     <p class="intro">
-      Source: <code>_StarRatingRow</code> in <code>ended_content.dart</code>. 5개 별을 <code>List.generate(5)</code>로 생성. 각 GestureDetector 탭 → <code>setState(_rating = starIndex)</code>. <code>starIndex &le; _rating</code>이면 filled(<code>Icons.star</code> · color-secondary), 아니면 outline(<code>Icons.star_border</code> · text-secondary @scrimMedium).
+      별 5개가 가로로 나란히 표시. 사용자가 N번째 별을 탭하면 1~N번째 별이 모두 채워짐 (누적형 5-star UX).
     </p>
     <table class="ref">
       <thead>
         <tr><th style="width: 180px;">Element</th><th>Behavior</th></tr>
       </thead>
       <tbody>
-        <tr><td>Star icon (filled)</td><td><code>Icons.star</code> · 40px · <code>MinglitColors.secondary</code> (brand accent · 노란/주황 톤)</td></tr>
-        <tr><td>Star icon (empty)</td><td><code>Icons.star_border</code> · 40px · <code>MinglitColors.textSecondary</code> @ <code>MinglitOpacity.scrimMedium</code></td></tr>
-        <tr><td>Tap target</td><td>각 별: 40+8 = 48px(권장 tap minimum 충족) · GestureDetector — Material ripple 없음</td></tr>
-        <tr><td>State holding</td><td>현재 inline <code>StatefulWidget</code> 내부 <code>int _rating</code>. routed screen 추출 시 <code>StateProvider&lt;int&gt;</code>로 격상 권장.</td></tr>
-        <tr><td>Cumulative fill</td><td>"3별 탭 → 1·2·3 모두 filled" — 누적형 (동의된 5-star UX)</td></tr>
-        <tr><td>0별</td><td>초기 <code>_rating = 0</code> — 모두 outline. CTA disabled 처리 권장(현재 코드에는 미적용).</td></tr>
+        <tr><td>Star icon (filled)</td><td>Icons.star · 40px · color-secondary (brand accent · 노란/주황 톤)</td></tr>
+        <tr><td>Star icon (empty)</td><td>Icons.star_border · 40px · text-secondary 흐린 톤</td></tr>
+        <tr><td>Tap target</td><td>각 별: 40+8 = 48px (권장 탭 최소 영역 충족) · 별도 ripple 없음.</td></tr>
+        <tr><td>State holding</td><td>별점 값은 시트 내부에 임시 보관. 닫고 다시 열면 초기화 (제출 backend 도입 후에는 서버 보존).</td></tr>
+        <tr><td>Cumulative fill</td><td>"3별 탭 → 1·2·3 모두 filled" — 누적형.</td></tr>
+        <tr><td>0별</td><td>초기 별점 0 — 모두 outline. CTA 비활성 처리 권장 (현재는 미적용).</td></tr>
       </tbody>
     </table>
   </section>
@@ -418,12 +415,12 @@
   <div class="perspective__header">
     <span class="glyph">🎨</span>
     <h2>States</h2>
-    <span class="lede">시각 변형 5종. baseline = <code>default</code> (별점 입력 가능 · 미제출). 나머지: alreadySubmitted · submitting · loading · error.</span>
+    <span class="lede">시각 변형 5종. baseline = default (별점 입력 가능 · 미제출). 나머지: alreadySubmitted · submitting · loading · error.</span>
   </div>
 
   <section class="doc">
     <p class="intro">
-      <strong>State 식별 기준</strong>: review submission AsyncValue + 기제출 여부(<code>existingReview != null</code>). 현재 widget은 single state(별점 입력만)이지만, routed screen 추출 시 다음 5종이 필요.
+      이미 제출했는지 여부, 제출 진행 중인지, 정보를 받아오는 중인지에 따라 5종으로 분기. 현재는 별점 입력만 동작 — 나머지 4종은 backend 제출 도입 후 활성화 예정.
     </p>
 
     <!-- State 1: default (baseline) -->
@@ -459,26 +456,26 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>EventNowBar <code>ended</code> 탭 직후 진입 · review 미제출 · <code>_rating</code>은 0 또는 사용자가 한 번이라도 탭한 값(예: 4)</td>
+          <td>EventNowBar "리뷰 가능" 상태 탭 직후 진입 · 아직 별점을 제출하지 않은 상태 · 별점은 0 또는 사용자가 한 번이라도 탭한 값(예: 4).</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>· 별 탭 → <code>_rating</code> 갱신, 누적 fill<br>· "리뷰 작성하기" 탭 → submit 호출(향후) / 현재는 즉시 dismiss<br>· swipe-down · scrim tap · system back → dismiss(미제출 상태 유지)</td>
+          <td>· 별 탭 → 별점이 갱신, 누적으로 채워짐<br>· "리뷰 작성하기" 탭 → 제출 (향후) / 현재는 즉시 닫힘<br>· 핸들 아래로 끌어내리기 · 시트 외곽 어두운 영역 탭 · 시스템 back → 시트 닫힘 (미제출 상태 유지).</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· 0별 상태에서 CTA 탭 → 권장: disabled (현재 코드는 그대로 pop)<br>· 매우 긴 event title → 1줄 ellipsis 권장(현재 widget은 그냥 줄바꿈)<br>· 키보드 미사용 — IME 트리거 없음</td>
+          <td>· 0별 상태에서 CTA 탭 → 권장: 비활성 (현재는 그대로 닫힘)<br>· 매우 긴 이벤트 제목 → 1줄 ellipsis 권장 (현재는 줄바꿈)<br>· 텍스트 입력 없음 — 키보드 미사용.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
           <td>
-            · <code>SheetContainer</code> (color-background · top corners radius-card · safeArea bottom)<br>
-            · <code>DragHandle</code> (40×4 · text-secondary @38%)<br>
-            · <code>HeroCircle</code> (64 · text-secondary @subtle bg · Icon(event_available · 36 · text-secondary))<br>
-            · <code>Title</code> (titleLarge w700) + <code>Sub</code> (bodyMedium text-secondary)<br>
-            · <code>Prompt</code> ("이벤트는 어떠셨나요?" · bodyMedium · text-primary)<br>
-            · <code>StarRatingRow</code> (Row · 5 × Icon · star/star_border · 40 · secondary or text-secondary@scrimMedium)<br>
-            · <code>ElevatedButton.icon</code> (full-width · rate_review_outlined · "리뷰 작성하기")
+            · 시트 (color-background · 상단 모서리 radius-card · 안전 영역 보정)<br>
+            · DragHandle (40×4 · text-secondary 흐린 색)<br>
+            · HeroCircle (64 · text-secondary 흐린 톤 bg · Icon(event_available · 36 · text-secondary))<br>
+            · Title (titleLarge w700) + Sub (bodyMedium text-secondary)<br>
+            · Prompt ("이벤트는 어떠셨나요?" · bodyMedium · text-primary)<br>
+            · StarRatingRow (5 × star/star_border · 40 · secondary 또는 text-secondary 흐린 톤)<br>
+            · 제출 CTA (풀폭 · rate_review_outlined · "리뷰 작성하기")
           </td>
         </tr>
         <tr>
@@ -493,7 +490,7 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 현재 Flutter 코드는 별점 select state만 로컬 보관하고 CTA 탭 시 그대로 <code>Navigator.pop</code> — 백엔드 제출 로직 미구현(Fix #665 TODO). routed screen 추출 시 <code>StateProvider&lt;int&gt;</code> + <code>submitReviewProvider</code>로 격상 필요.</td>
+          <td>📝 현재는 별점 입력만 임시 보관하고 CTA 탭 시 그대로 시트 닫힘 — 제출 backend 도입 예정.</td>
         </tr>
       </tbody>
     </table>
@@ -530,19 +527,19 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>+ <code>existingReview != null</code> — 사용자가 같은 이벤트에 이미 별점 제출. push 알림 / MyPage 등에서 재진입.</td>
+          <td>+ 사용자가 같은 이벤트에 이미 별점을 제출한 상태에서 재진입. 푸시 알림 / 마이페이지 등에서 진입.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>− 별 탭 disabled (read-only)<br>− CTA 미렌더<br>+ 하단 "리뷰가 이미 제출되었어요 · {날짜}" caption<br>· dismiss는 동일 (swipe / scrim / back)</td>
+          <td>− 별 탭 비활성 (보기 전용)<br>− CTA 미노출<br>+ 하단 "리뷰가 이미 제출되었어요 · {날짜}" caption<br>· 시트 닫기는 동일.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· 별점 수정 불가 (1회 한정 · 정책)<br>· 제출 직후 자동 전환 — 사용자가 sheet 안에서 보지 못하고 dismiss될 수도 있음(서버 응답 후 자동 pop)</td>
+          <td>· 별점 수정 불가 (1회 한정 · 정책)<br>· 제출 직후 자동 전환 — 사용자가 시트 안에서 보지 못하고 닫힐 수도 있음 (서버 응답 후 자동 닫힘).</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
-          <td>↔ <code>StarRatingRow</code> 인터랙션 → IgnorePointer 감싼 read-only 5-star · _rating = existingReview.rating<br>− <code>ElevatedButton.icon</code> (CTA)<br>+ <code>SubmittedCaption</code> ("리뷰가 이미 제출되었어요 · {날짜}" · caption · text-secondary · 위에 1px divider)</td>
+          <td>↔ StarRatingRow → 보기 전용 5-star (별점은 기존 제출값으로 채워짐)<br>− 제출 CTA<br>+ SubmittedCaption ("리뷰가 이미 제출되었어요 · {날짜}" · caption · text-secondary · 위에 1px divider)</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
@@ -550,7 +547,7 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 정책 미확정 — 제출 후 sheet를 자동 dismiss할지, read-only로 보존할지 결정 필요. 본 spec은 "재진입 시 read-only 노출" 시나리오 가정.</td>
+          <td>📝 정책 미확정 — 제출 후 시트를 자동 닫을지, 보기 전용으로 보존할지 결정 필요. 본 spec은 "재진입 시 보기 전용 노출" 시나리오 가정.</td>
         </tr>
       </tbody>
     </table>
@@ -588,19 +585,19 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>+ <code>submitReview</code> AsyncValue.loading — CTA 탭 후 응답 대기(보통 200~600ms)</td>
+          <td>+ CTA 탭 후 제출 응답을 기다리는 중 (보통 200~600ms).</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>− 별 탭 disabled<br>↔ CTA disabled · label "제출 중…" + leading spinner<br>· dismiss(swipe/scrim) 차단? — 현재 정책 미정. 권장: <code>WillPopScope</code>로 차단 + 사용자에게 안내</td>
+          <td>− 별 탭 비활성<br>↔ CTA 비활성 · label "제출 중…" + 좌측 스피너<br>· 시트 닫기 차단 권장 (사용자 의도 모호 방지).</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· 응답 지연(2초+) → spinner 무한 — 별도 timeout UI 미정의<br>· 제출 성공 → 자동 pop · success snackbar(parent에서)<br>· 중복 탭 방지 — disabled 처리로 충분</td>
+          <td>· 응답 지연(2초+) → 스피너 계속 — 별도 타임아웃 UI 미정의<br>· 제출 성공 → 자동으로 시트 닫히고 "리뷰가 등록되었어요" 안내가 잠깐 노출<br>· 중복 탭 방지 — 비활성 처리로 충분.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
-          <td>↔ <code>StarRatingRow</code> → <code>IgnorePointer</code> 감쌈<br>↔ <code>ElevatedButton.icon</code> → onPressed: null + leading <code>MinglitCircularProgressIndicator(size: 18)</code> + label "제출 중…"</td>
+          <td>↔ StarRatingRow → 비활성<br>↔ 제출 CTA → 비활성 + 좌측에 18px 스피너 + label "제출 중…"</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
@@ -608,7 +605,7 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 backend 미구현 — 본 state는 routed screen 추출 + submit provider 도입 후 적용. 현재 코드는 즉시 pop이라 이 상태 없음.</td>
+          <td>📝 제출 backend 도입 후 활성화될 상태. 현재는 즉시 닫히므로 이 상태 미발생.</td>
         </tr>
       </tbody>
     </table>
@@ -637,19 +634,19 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>+ <code>existingReviewProvider(eventId).loading</code> — 첫 진입 후 기제출 여부 조회 중(보통 100~400ms · 캐시되면 skip)</td>
+          <td>+ 시트 진입 직후 기제출 여부를 조회하는 중 (보통 100~400ms · 캐시되면 skip).</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>· dismiss만 가능<br>− star row · prompt · CTA 미렌더</td>
+          <td>· 시트 닫기만 가능<br>− star row · prompt · CTA 미노출.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· 캐시 hit → loading 0ms (대부분의 경우)<br>· 아주 느린 응답(3s+) → 사용자가 dismiss 후 다시 진입할 수 있음 — provider scope으로 dedup 권장</td>
+          <td>· 캐시가 있으면 로딩 없이 즉시 결과 노출 (대부분의 경우)<br>· 매우 느린 응답(3초+) → 사용자가 시트 닫고 다시 진입할 수 있음 — 중복 요청 방지 권장.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
-          <td>− <code>Prompt</code> · <code>StarRatingRow</code> · <code>ElevatedButton.icon</code><br>↔ 그 자리에 <strong>120px LoadingBlock</strong> + <code>MinglitCircularProgressIndicator</code> (28px primary spinner · 1s linear loop)<br>나머지(handle · hero · title · sub) 동일</td>
+          <td>− Prompt · StarRatingRow · 제출 CTA<br>↔ 그 자리에 <strong>120px LoadingBlock</strong> + 28px 스피너 (1s linear loop)<br>나머지(handle · hero · title · sub) 동일.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
@@ -699,19 +696,19 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>+ <code>submitReview</code> AsyncValue.error — network · 5xx · validation 등</td>
+          <td>+ 제출 실패 (network · 5xx · 검증 오류 등).</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>· 별 탭 가능 (재선택 허용)<br>· "다시 시도" CTA → submit 재호출<br>· dismiss → 미제출 상태로 sheet 닫힘 (별점은 로컬 state로 유지되지 않음)</td>
+          <td>· 별 탭 가능 (재선택 허용)<br>· "다시 시도" CTA → 제출 재요청<br>· 시트 닫기 → 미제출 상태로 시트 닫힘 (별점은 보존되지 않음).</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· 동일 에러 반복 시 사용자 이탈 가능 — 분석 이벤트로 보고<br>· 4xx validation(예: 별점 0) → CTA disabled로 사전 방지 권장<br>· Sentry로도 동시 보고</td>
+          <td>· 동일 에러 반복 시 사용자 이탈 가능 — 분석 이벤트로 보고<br>· 별점 0 같은 검증 오류 → CTA 비활성으로 사전 방지 권장<br>· 모니터링 시스템에도 동시 보고.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
-          <td>+ <code>ErrorBanner</code> (color-error tint bg · 1px error border · radius-small · "제출에 실패했어요. 다시 시도해 주세요.")<br>↔ CTA label → "다시 시도" + <code>Icons.refresh</code> leading icon<br>나머지 동일</td>
+          <td>+ ErrorBanner (color-error tint bg · 1px error border · radius-small · "제출에 실패했어요. 다시 시도해 주세요.")<br>↔ CTA label → "다시 시도" + Icons.refresh leading icon<br>나머지 동일</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
@@ -719,7 +716,7 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 results screen은 silent degrade하지만, 리뷰는 사용자 액션이 있으므로 명시적 에러 노출 + retry CTA를 둔다(거절감 무관 · 단순 시스템 오류).</td>
+          <td>📝 결과 화면은 silent degrade지만, 리뷰는 사용자 액션이 있으므로 명시적 에러 노출 + 다시 시도 CTA를 둔다 (거절감 무관 · 단순 시스템 오류).</td>
         </tr>
       </tbody>
     </table>
@@ -745,28 +742,28 @@
       </thead>
       <tbody>
         <tr>
-          <td>swipe-down</td>
-          <td>sheet drag-to-dismiss (Material 3 default detents). drag distance threshold 넘으면 slide-down + scrim fade-out → HomePage 복귀. submitting 중에는 차단 권장.</td>
+          <td>핸들 아래로 끌어내리기</td>
+          <td>핸들 또는 시트 본문을 아래로 드래그 → 일정 거리 이상 끌면 시트가 슬라이드다운하며 닫힘 (홈 복귀). 제출 중에는 차단 권장.</td>
         </tr>
         <tr>
-          <td>scrim tap (sheet 외부 영역)</td>
-          <td>sheet dismiss (위와 동일 motion). <code>isDismissible: true</code> default. submitting 중에는 차단 권장.</td>
+          <td>시트 외곽 어두운 영역 탭</td>
+          <td>시트 동일하게 닫힘. 제출 중에는 차단 권장.</td>
         </tr>
         <tr>
-          <td>system back / 안드로이드 back gesture</td>
-          <td>sheet pop. 미제출이면 EventNowBar는 <code>ended</code> state 유지 — 다음 진입에 같은 sheet를 다시 push 가능.</td>
+          <td>시스템 back / 안드로이드 back gesture</td>
+          <td>시트 닫힘. 미제출이면 EventNowBar는 "리뷰 가능" 상태 유지 — 다음 진입에 같은 시트를 다시 노출 가능.</td>
         </tr>
         <tr>
           <td>제출 성공</td>
-          <td>auto pop → HomePage 복귀 + parent에서 success snackbar("리뷰가 등록되었어요"). EventNowBar는 다음 stream tick에 사라지거나 read-only 전환.</td>
+          <td>시트 자동 닫힘 → 홈 복귀 + "리뷰가 등록되었어요" 안내가 잠깐 노출. EventNowBar는 잠시 후 사라지거나 보기 전용으로 전환.</td>
         </tr>
         <tr>
           <td>다크 모드 토글</td>
           <td>sheet bg → <code>color-dark-background</code>. handle / 텍스트 / 별 컬러 dark 토큰으로 자동 swap. scrim 그대로.</td>
         </tr>
         <tr>
-          <td>existingReview 갱신 (실시간)</td>
-          <td>sheet 열려 있는 상태에서 stream이 새 데이터 emit하면 default → alreadySubmitted로 cut 교체 (transition 미정의).</td>
+          <td>기제출 정보 실시간 갱신</td>
+          <td>시트가 열려 있는 동안 새 정보가 도착하면 default → alreadySubmitted로 즉시 swap (별도 전환 애니메이션 없음).</td>
         </tr>
       </tbody>
     </table>
@@ -807,7 +804,7 @@
         <tr>
           <td>Loading / submitting spinner</td>
           <td>1s linear infinite (unscoped)</td>
-          <td><code>MinglitCircularProgressIndicator</code> 기본 — token 미정의.</td>
+          <td>스피너 기본 — token 미정의.</td>
         </tr>
       </tbody>
     </table>
@@ -816,11 +813,11 @@
   <section class="doc">
     <h2>Global edge cases</h2>
     <ul class="notes">
-      <li><strong>0별 제출 방지</strong> — <code>_rating == 0</code> 상태의 CTA는 disabled가 권장 정책. 현재 widget은 그대로 pop만 하므로 향후 backend 도입 시 수정 필요.</li>
-      <li><strong>1회 한정</strong> — 한 사용자 / 한 이벤트 / 한 리뷰. alreadySubmitted state에서는 별점 수정 불가. 정책 변경 시 별도 edit 화면 도입 검토.</li>
-      <li><strong>재진입 deeplink</strong> — push 알림 / MyPage "지난 이벤트" 등 EventNowBar 외에서도 같은 route로 진입 가능. 이 경우 alreadySubmitted state로 자주 진입.</li>
-      <li><strong>submitting dismiss 차단</strong> — 네트워크 진행 중 swipe/scrim/back으로 닫으면 user intent ambiguity 발생. <code>WillPopScope</code> + sheet <code>isDismissible: false</code>로 차단 권장 (현재 미구현).</li>
-      <li><strong>익명성</strong> — 별점은 partner side에 평균값으로만 노출. 개별 사용자 식별 X. 본 spec은 capture surface — 노출 surface는 별도(파트너 분석 페이지).</li>
+      <li><strong>0별 제출 방지</strong> — 별점 0 상태의 CTA는 비활성이 권장 정책. 현재는 그대로 닫히므로 향후 backend 도입 시 수정 필요.</li>
+      <li><strong>1회 한정</strong> — 한 사용자 / 한 이벤트 / 한 리뷰. 이미 제출한 상태에서는 별점 수정 불가. 정책 변경 시 별도 edit 화면 도입 검토.</li>
+      <li><strong>재진입 딥링크</strong> — 푸시 알림 / 마이페이지 "지난 이벤트" 등 EventNowBar 외에서도 같은 화면으로 진입 가능. 이 경우 보기 전용 상태로 자주 진입.</li>
+      <li><strong>제출 중 닫기 차단</strong> — 네트워크 진행 중 핸들 / 외곽 / back으로 닫으면 사용자 의도 모호 발생. 시트 닫기 차단 권장 (현재 미구현).</li>
+      <li><strong>익명성</strong> — 별점은 파트너 측에 평균값으로만 노출. 개별 사용자 식별 X. 본 spec은 capture surface — 노출 surface는 별도 (파트너 분석 페이지).</li>
     </ul>
   </section>
 </div>

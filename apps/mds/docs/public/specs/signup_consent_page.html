@@ -289,7 +289,7 @@ body.dark-mode .bottom-cta {
       <tr>
         <th>Purpose</th>
         <td>
-          첫 가입 시 서비스 이용에 필요한 약관(필수 3 + 선택 4)을 한 화면에서 수집한다. 필수 항목 모두 토글되어야 CTA가 enable되며, 저장 성공 시 <code>consentCoordinator.completeSignup()</code>이 <code>from</code> 경로로 복귀시킨다. <code>PopScope(canPop:false)</code>로 시스템 back을 차단해 중간 이탈을 막는다.
+          첫 가입 시 서비스 이용에 필요한 약관(필수 3 + 선택 4)을 한 화면에서 수집한다. 필수 항목이 모두 토글되어야 CTA가 활성화되며, 저장이 성공하면 사용자가 원래 가려던 화면(또는 홈)으로 자동 복귀된다. 시스템 뒤로가기를 차단해 중간 이탈을 막는다.
         </td>
       </tr>
       <tr>
@@ -531,16 +531,16 @@ body.dark-mode .bottom-cta {
   <div class="perspective__header">
     <span class="glyph">🎨</span>
     <h2>States</h2>
-    <span class="lede">5 state — baseline은 Default(none toggled). 토글 진행에 따라 CTA enabled / disabled가 갈리고, 제출 후 Submitting / Error로 분기.</span>
+    <span class="lede">시각 변형 5종 — baseline은 Default(아무 항목도 토글되지 않은 상태). 토글 진행에 따라 CTA가 활성/비활성으로 갈리고, 제출 후 Submitting / Error로 분기.</span>
   </div>
 
   <section class="doc">
     <p class="intro">
-      <strong>State 종류 식별 기준</strong>: 로컬 <code>_selectedConsents</code>(Set) + <code>_isSubmitting</code> 플래그 + <code>consentControllerProvider</code> AsyncValue.<br>
-      · 진입 직후 hydrate 전: <code>!_didHydrate &amp;&amp; consentState.isLoading</code> → loading 단독 화면.<br>
-      · hydrate 후: list 렌더 + CTA enabled/disabled 분기.<br>
-      · _submit 실행 중: <code>_isSubmitting = true</code> → CTA disabled + 인라인 progress.<br>
-      · 저장 실패 시 <code>showMinglitError</code>(SnackBar) + <code>_isSubmitting</code> 해제.
+      <strong>State 식별 기준</strong>: 현재 토글된 동의 항목 + 제출 진행 여부 + 저장 결과 (성공 / 실패).<br>
+      · 진입 직후 동의 정보를 가져오는 동안에는 화면 전체에 단독 로딩 스피너만 보임.<br>
+      · 정보가 도착하면 동의 리스트가 렌더링되고 토글 상태에 따라 CTA가 활성/비활성으로 갈림.<br>
+      · 제출 중에는 CTA가 비활성으로 바뀌고 본문 끝에 인라인 진행 표시가 추가됨.<br>
+      · 저장에 실패하면 화면 하단에 에러 스낵바가 노출되고 CTA는 다시 활성으로 복귀해 재시도 가능.
     </p>
 
     <h3 style="margin-top: 24px;">State summary</h3>
@@ -554,12 +554,12 @@ body.dark-mode .bottom-cta {
         </tr>
       </thead>
       <tbody>
-        <tr><td><strong>Default · 미토글</strong> 🎯</td><td>baseline</td><td>hydrate 완료 + <code>_selectedConsents.isEmpty</code></td><td>모든 체크박스 빈 상태 + CTA disabled (회색)</td></tr>
-        <tr><td><strong>필수만 토글</strong></td><td>cta enabled</td><td><code>requiredTypes.every(selected)</code> + 일부 optional 미토글</td><td>필수 3개 ✓ + CTA primary 활성화</td></tr>
-        <tr><td><strong>전체 토글</strong></td><td>all on</td><td><code>_selectedConsents.length == _consentDefinitions.length</code></td><td>전체 동의 tile 카드 강조 + 모든 ✓ + CTA enabled</td></tr>
-        <tr><td><strong>Submitting</strong></td><td>async</td><td><code>_isSubmitting == true</code></td><td>CTA disabled + 본문에 inline spinner + "동의 내용을 저장하고 있어요."</td></tr>
-        <tr><td><strong>Error</strong></td><td>save fail</td><td><code>consentState.hasError</code></td><td>error SnackBar overlay (showMinglitError) + CTA 다시 enabled</td></tr>
-        <tr><td><em>Loading on entry</em></td><td>hydrate</td><td><code>!_didHydrate &amp;&amp; consentState.isLoading</code></td><td>전 화면 중앙 <code>MinglitCircularProgressIndicator</code> 단독</td></tr>
+        <tr><td><strong>Default · 미토글</strong> 🎯</td><td>baseline</td><td>동의 정보가 도착했지만 사용자가 아직 어떤 항목도 토글하지 않은 상태.</td><td>모든 체크박스 빈 상태 + CTA 비활성 (회색)</td></tr>
+        <tr><td><strong>필수만 토글</strong></td><td>cta enabled</td><td>필수 3개가 모두 토글되고 일부 선택 항목은 토글되지 않은 상태.</td><td>필수 3개 ✓ + CTA primary 활성화</td></tr>
+        <tr><td><strong>전체 토글</strong></td><td>all on</td><td>필수와 선택 모두 토글된 상태.</td><td>전체 동의 카드 강조 + 모든 ✓ + CTA 활성</td></tr>
+        <tr><td><strong>Submitting</strong></td><td>async</td><td>CTA를 누른 뒤 동의 내용을 저장하는 동안의 진행 상태.</td><td>CTA 비활성 + 본문 끝에 인라인 스피너 + "동의 내용을 저장하고 있어요."</td></tr>
+        <tr><td><strong>Error</strong></td><td>save fail</td><td>저장 시도가 실패한 상태.</td><td>화면 하단에 에러 스낵바가 노출되고 CTA는 다시 활성으로 복귀</td></tr>
+        <tr><td><em>Loading on entry</em></td><td>hydrate</td><td>화면 진입 직후 저장된 동의 정보를 가져오는 짧은 구간.</td><td>화면 중앙에 단독 스피너만 노출</td></tr>
       </tbody>
     </table>
 
@@ -568,7 +568,7 @@ body.dark-mode .bottom-cta {
          ============================================ -->
     <table class="ref state-mini is-baseline-tint">
       <thead>
-        <tr><th colspan="3"><strong>Default · 미토글</strong> 🎯 <small>baseline · CTA disabled</small></th></tr>
+        <tr><th colspan="3"><strong>Default · 미토글</strong> 🎯 <small>baseline · 사용자가 아직 어떤 항목도 토글하지 않은 상태</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -664,23 +664,23 @@ body.dark-mode .bottom-cta {
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>_didHydrate == true</code> · <code>_selectedConsents.isEmpty</code> (또는 hydrate 결과 빈 set) · <code>_isSubmitting == false</code></td>
+          <td>동의 정보가 도착했지만 사용자가 아직 어떤 항목도 토글하지 않은 상태. 제출도 진행 중이 아님.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ① <strong>전체 동의 tile 탭</strong> → <code>_toggleAll(true)</code> · 7개 모두 선택<br>
-            ② <strong>개별 item 탭</strong> → <code>_toggleSingle(type, !selected)</code> · 해당 항목만 토글<br>
-            ③ <strong>"보기 ›" 탭</strong> → <code>showConsentDetailSheet(context, content: definition.detail!)</code> · modal bottom sheet (만 14세 항목은 detail null이라 보기 미표시)<br>
-            ④ <strong>CTA 탭</strong> → <em>탭 무반응</em> (disabled — 필수 3개 미충족)<br>
-            ⑤ <strong>시스템 back / swipe</strong> → 무반응 (<code>PopScope(canPop:false)</code>)
+            ① <strong>전체 동의 카드 탭</strong> — 7개 항목이 한 번에 모두 토글됨.<br>
+            ② <strong>개별 항목 탭</strong> — 해당 항목 하나만 토글됨.<br>
+            ③ <strong>"보기 ›" 탭</strong> — 항목별 상세 내용을 보여주는 하단 시트가 올라옴 (만 14세 이상 확인 항목만 별도 상세 화면이 없어 보기 텍스트도 노출되지 않음).<br>
+            ④ <strong>CTA 탭</strong> — 반응 없음 (필수 3개가 모두 토글되지 않은 동안에는 CTA가 비활성 상태).<br>
+            ⑤ <strong>시스템 뒤로가기 / 스와이프</strong> — 반응 없음. 동의를 마치거나 앱을 종료해야만 이 화면을 떠날 수 있음.
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · 첫 hydrate 시 서버에 이미 일부 consent가 저장돼 있으면 해당 항목 pre-checked로 시작 (이론상 신규 가입엔 비어있지만 재진입 시나리오 보호)<br>
-            · 만 14세 이상 확인 항목은 detail sheet 없음 — Tag + 타이틀만 표시
+            · 이전에 일부 동의가 저장돼 있던 사용자라면 해당 항목들이 미리 토글된 채로 화면이 시작될 수 있음 (신규 가입은 보통 빈 상태에서 시작).<br>
+            · 만 14세 이상 확인 항목은 별도 상세 시트가 없어 태그와 제목만 표시되고 "보기 ›"는 노출되지 않음.
           </td>
         </tr>
         <tr>
@@ -706,7 +706,7 @@ body.dark-mode .bottom-cta {
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 ⓐ headline · ⓑ all-consent tile · ⓒ items Card · ⓓ disabled CTA. <strong>required-vs-optional 경계 Divider 로직</strong>: <code>definition.required &amp;&amp; (lastIndex || !next.required)</code> — <em>requiredTypes.last 의존 없이</em> definitions 순서만 신뢰 (Fix #966 주석). 현재 definitions order는 termsOfService → privacyCollection → ageConfirmation → thirdPartyProvision → locationConsent → identityVerification → marketingConsent. 향후 항목 추가 시 required → optional 경계 위치만 자동 갱신.</td>
+          <td>📝 ⓐ 헤드라인 · ⓑ 전체 동의 카드 · ⓒ 동의 항목 카드 · ⓓ 비활성 CTA. <strong>필수 ↔ 선택 사이의 구분선</strong>은 마지막 필수 항목 바로 아래에 자동 위치 — 항목 순서가 바뀌거나 추가돼도 경계가 자동으로 따라간다. 현재 순서: 서비스 이용약관 → 개인정보 수집·이용 → 만 14세 이상 확인 → 제3자 제공 → 위치정보 → 본인인증 → 마케팅 정보 수신.</td>
         </tr>
       </tbody>
     </table>
@@ -716,7 +716,7 @@ body.dark-mode .bottom-cta {
          ============================================ -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>필수만 토글 · CTA enabled</strong> <small>requiredTypes.every(selected)</small></th></tr>
+        <tr><th colspan="3"><strong>필수만 토글 · CTA 활성</strong> <small>필수 항목 3개가 모두 토글된 상태</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -782,25 +782,25 @@ body.dark-mode .bottom-cta {
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>ConsentType.requiredTypes.every(_selectedConsents.contains) == true</code> · 일부/전체 optional 미토글</td>
+          <td>필수 3개 항목이 모두 토글되었지만 선택 항목은 일부 또는 전체가 아직 토글되지 않은 상태.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            + <strong>CTA 탭 → <code>_submit()</code></strong> · <code>_isSubmitting</code> true 전이 → Submitting state<br>
-            동일: 개별 item 탭 (선택 항목 토글 가능 · 필수 해제 시 즉시 Default state로 복귀) · "보기 ›" 탭 · 시스템 back 무반응
+            + <strong>CTA 탭</strong> — 동의 내용 저장이 시작되며 화면은 Submitting 상태로 전환됨.<br>
+            동일: 개별 항목 탭 (선택 항목 토글 가능 · 필수 항목을 해제하면 즉시 Default 상태로 복귀) · "보기 ›" 탭 · 시스템 뒤로가기 반응 없음.
           </td>
         </tr>
-        <tr><td class="state-mini__aspect">에지케이스</td><td>· 필수 항목 중 하나를 다시 해제하면 즉시 CTA disabled (<code>requiredSelected</code> recompute) → Default state로 복귀</td></tr>
+        <tr><td class="state-mini__aspect">에지케이스</td><td>· 필수 항목 중 하나를 다시 해제하면 즉시 CTA가 비활성으로 바뀌고 Default 상태로 복귀.</td></tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
-          <td>동일 (Default 참조). 시각 차이만 — 필수 3개 Checkbox value: true · CTA enabled.</td>
+          <td>동일 (Default 참조). 시각 차이만 — 필수 3개 체크박스가 채워져 있고 CTA가 활성 상태.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
-          <td>+ <code>color-primary</code> 노출 강도 ↑ (CTA bg solid · 체크박스 fill) · <em>opacity-softTint</em>는 동일</td>
+          <td>+ <code>color-primary</code>의 노출 강도가 강해짐 (CTA 배경이 단색 채움 · 체크박스 내부도 채워짐). 전체 동의 카드의 옅은 톤은 그대로 유지.</td>
         </tr>
-        <tr><td class="state-mini__aspect">노트</td><td>📝 가장 흔한 정상 흐름의 종착 직전 — 통계상 마케팅/위치는 미토글 상태로 제출되는 경우 많음.</td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 가장 자주 일어나는 정상 흐름의 직전 단계. 마케팅 / 위치 항목은 미토글 상태로 제출되는 경우가 많다.</td></tr>
       </tbody>
     </table>
 
@@ -809,7 +809,7 @@ body.dark-mode .bottom-cta {
          ============================================ -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>전체 토글 · all on</strong> <small>_selectedConsents.length == _consentDefinitions.length</small></th></tr>
+        <tr><th colspan="3"><strong>전체 토글 · all on</strong> <small>필수와 선택 7개 항목이 모두 토글된 상태</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -875,16 +875,16 @@ body.dark-mode .bottom-cta {
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>allSelected == true</code> (필수 + 선택 모두 토글)</td>
+          <td>필수와 선택을 포함한 모든 항목이 토글된 상태.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            동일 (CTA enabled · 제출 가능). 추가:<br>
-            + <strong>전체 동의 tile 재탭</strong> → <code>_toggleAll(false)</code> · <em>전체 해제</em> → Default state로 복귀
+            동일 (CTA 활성 · 제출 가능). 추가:<br>
+            + <strong>전체 동의 카드 다시 탭</strong> — 모든 항목이 한 번에 해제되어 Default 상태로 복귀.
           </td>
         </tr>
-        <tr><td class="state-mini__aspect">에지케이스</td><td>· 단일 item 해제 시 → 해당 항목만 빠짐 · 전체 동의 체크 자동 해제 (allSelected 재계산)</td></tr>
+        <tr><td class="state-mini__aspect">에지케이스</td><td>· 단일 항목을 해제하면 해당 항목만 빠지고 전체 동의 카드의 체크가 자동으로 해제됨.</td></tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
           <td>동일. 시각 차이만 — 7개 모두 ✓ + 전체 동의 tile checkbox 채워짐.</td>
@@ -893,7 +893,7 @@ body.dark-mode .bottom-cta {
           <td class="state-mini__aspect">토큰</td>
           <td>동일</td>
         </tr>
-        <tr><td class="state-mini__aspect">노트</td><td>📝 _AllConsentTile checkbox는 <code>CircleBorder</code> shape — 일반 item Checkbox(square)와 시각적으로 구분.</td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 전체 동의 카드의 체크는 원형이라, 사각형인 일반 항목 체크와 시각적으로 구분된다.</td></tr>
       </tbody>
     </table>
 
@@ -902,7 +902,7 @@ body.dark-mode .bottom-cta {
          ============================================ -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Submitting</strong> <small>async · _isSubmitting == true</small></th></tr>
+        <tr><th colspan="3"><strong>Submitting</strong> <small>동의 내용을 저장하는 동안의 진행 상태</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -973,25 +973,25 @@ body.dark-mode .bottom-cta {
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>_isSubmitting == true</code> · CTA <code>enabled = requiredSelected &amp;&amp; !_isSubmitting</code>이라 false</td>
+          <td>CTA를 누른 뒤 동의 내용이 저장되는 동안의 상태. CTA는 비활성으로 바뀐다.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ↔ 모든 액션 <strong>탭 무반응</strong> (CTA disabled · 그러나 InkWell은 여전히 활성 — 토글 자체는 가능하지만 권장하지 않음 · 보통 RPC 응답까지 100ms-1s)<br>
-            + <strong>완료 후</strong>: 성공 → <code>completeSignup(from)</code> · 실패 → Error state
+            ↔ CTA는 비활성이라 누를 수 없음. 항목 토글은 기술적으로 가능하지만 의미가 없는 짧은 구간이라 권장되지 않음. 보통 0.1~1초 안에 다음 상태로 전환됨.<br>
+            + <strong>완료 후</strong>: 성공하면 원래 가려던 화면 (또는 홈)으로 자동 이동, 실패하면 Error 상태로 전환됨.
           </td>
         </tr>
-        <tr><td class="state-mini__aspect">에지케이스</td><td>· _submit 진입 직후 <code>currentUserProvider == null</code>이면 <code>showMinglitWarning('로그인이 필요합니다.')</code> + 즉시 return (Submitting state로 진입하지 않음)</td></tr>
+        <tr><td class="state-mini__aspect">에지케이스</td><td>· 제출 시점에 사용자 인증 정보가 사라진 경우 "로그인이 필요합니다." 경고가 노출되고 Submitting 상태로 진입하지 않음.</td></tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
-          <td>+ Inline <code>Row</code>[<code>CircularProgressIndicator</code>(18×18 · strokeWidth 2) + <code>SizedBox(spacing-small)</code> + <code>Text</code> "동의 내용을 저장하고 있어요." (bodyMedium)]<br>↔ <code>MinglitBottomCTA</code> enabled: false</td>
+          <td>+ 본문 끝에 인라인 Row[작은 스피너 (18×18) + 간격 + 텍스트 "동의 내용을 저장하고 있어요." (bodyMedium)] 추가됨.<br>↔ <code>MinglitBottomCTA</code>는 비활성 상태.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
-          <td>+ Material default progress indicator color (<code>color-primary</code> · stroke 2px)</td>
+          <td>+ 진행 인디케이터 색은 <code>color-primary</code> · 굵기 2px.</td>
         </tr>
-        <tr><td class="state-mini__aspect">노트</td><td>📝 inline progress는 ListView 본문에 placed → 키보드 없는 화면이라 항상 보임. <code>MinglitBottomCTA</code>의 키보드 자동 hide 로직은 영향 없음.</td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 인라인 진행 표시는 본문 마지막에 위치. 이 화면은 입력 필드가 없어 키보드가 올라오지 않으므로 항상 화면에 보인다.</td></tr>
       </tbody>
     </table>
 
@@ -1000,7 +1000,7 @@ body.dark-mode .bottom-cta {
          ============================================ -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Error · save fail</strong> <small>consentState.hasError</small></th></tr>
+        <tr><th colspan="3"><strong>Error · save fail</strong> <small>저장에 실패해 에러 스낵바가 노출된 상태</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -1070,25 +1070,25 @@ body.dark-mode .bottom-cta {
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>consentControllerProvider</code> AsyncValue가 error 상태로 도달 · <code>ref.listen</code>이 <code>showMinglitError(context)</code> 호출 · <code>_isSubmitting</code>은 <code>false</code>로 복귀</td>
+          <td>저장에 실패해 화면 하단에 에러 스낵바가 잠깐 노출된 상태. 진행 표시는 사라지고 CTA는 다시 활성으로 복귀해 재시도가 가능해진다.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            동일 (item 토글 가능 · CTA enabled — 다시 시도 가능)<br>
-            + <strong>SnackBar action 탭</strong> (있다면) → 재시도 콜백
+            동일 (항목 토글 가능 · CTA가 다시 활성이라 다시 시도 가능)<br>
+            + <strong>스낵바 안의 액션 탭</strong> (제공되는 경우) — 재시도가 즉시 일어남.
           </td>
         </tr>
-        <tr><td class="state-mini__aspect">에지케이스</td><td>· 네트워크 끊김 · 서버 5xx · RLS 거부 등 모두 동일 SnackBar로 처리 (메시지는 controller에서 매핑)<br>· 사용자가 다시 CTA 탭 → Submitting state 재진입</td></tr>
+        <tr><td class="state-mini__aspect">에지케이스</td><td>· 네트워크 끊김 / 서버 오류 / 권한 거부 등은 모두 동일한 스낵바로 안내됨.<br>· 사용자가 CTA를 다시 누르면 Submitting 상태로 재진입.</td></tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
-          <td>+ <code>showMinglitError</code> SnackBar (kit-shared · top of overlay) — <code>color-error</code> bg + <code>Icons.error_outline</code> + 본문<br>− 본문 inline progress (Submitting에서 추가됐던 row)</td>
+          <td>+ 공통 에러 스낵바 (<code>color-error</code> 배경 + 경고 아이콘 + 본문 메시지)<br>− Submitting에서 추가됐던 인라인 진행 표시는 사라진다.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
-          <td>+ <code>color-error (#dc2626)</code> · <code>radius-small (8)</code> (SnackBar) · <code>spacing-small / medium</code> (overlay padding)</td>
+          <td>+ <code>color-error (#dc2626)</code> · <code>radius-small (8)</code> (스낵바) · <code>spacing-small / medium</code> (스낵바 내부 padding)</td>
         </tr>
-        <tr><td class="state-mini__aspect">노트</td><td>📝 SnackBar는 <code>showMinglitError(context)</code> extension이 처리 — 위치는 화면 하단 위 floating(BottomCTA 위쪽). 실제 dismiss는 4초 후 자동 또는 swipe.</td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 스낵바는 화면 하단 CTA 위쪽에 잠깐 떠 있다가 약 4초 후 자동으로 사라지거나 사용자가 스와이프해 닫을 수 있다.</td></tr>
       </tbody>
     </table>
 
@@ -1097,7 +1097,7 @@ body.dark-mode .bottom-cta {
          ============================================ -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Loading on entry</strong> <small>hydrate 전 · transient</small></th></tr>
+        <tr><th colspan="3"><strong>Loading on entry</strong> <small>화면 진입 직후 짧게 노출되는 로딩 상태</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -1109,19 +1109,19 @@ body.dark-mode .bottom-cta {
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>!_didHydrate &amp;&amp; consentState.isLoading &amp;&amp; !consentState.hasError</code> — 첫 build에서 controller가 아직 응답 전</td>
+          <td>화면 진입 직후 저장된 동의 정보를 가져오는 짧은 구간. 아직 결과가 도착하지 않은 상태.</td>
         </tr>
-        <tr><td class="state-mini__aspect">사용자 액션</td><td>↔ 모든 액션 미존재 (UI 미렌더)</td></tr>
-        <tr><td class="state-mini__aspect">에지케이스</td><td>· 응답이 빈 array면 즉시 Default state로 · 일부 record 있으면 hydrate 후 해당 항목만 pre-checked</td></tr>
+        <tr><td class="state-mini__aspect">사용자 액션</td><td>↔ 인터랙션 가능한 요소가 없음. 화면 중앙의 스피너만 회전.</td></tr>
+        <tr><td class="state-mini__aspect">에지케이스</td><td>· 저장된 동의가 없으면 Default 상태로 곧바로 진입.<br>· 일부 항목이 이미 저장돼 있으면 그 항목들이 미리 토글된 채로 시작됨.</td></tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
-          <td>↔ 전체 → <code>Scaffold</code>(<code>body: Center(child: MinglitCircularProgressIndicator())</code>)<br>− headline · all-tile · Card · CTA (모두 미렌더)</td>
+          <td>↔ 전체 화면이 중앙 스피너 (<code>MinglitCircularProgressIndicator</code>) 단독으로 교체됨.<br>− 헤드라인 · 전체 동의 카드 · 항목 카드 · CTA는 모두 노출되지 않음.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
-          <td>− 본문 토큰 전부 · + <code>color-primary</code> (spinner default)</td>
+          <td>− 본문 영역 토큰 전부 미사용. + <code>color-primary</code> (스피너 색).</td>
         </tr>
-        <tr><td class="state-mini__aspect">노트</td><td>📝 ref.listen이 첫 hasValue 때 selectedConsents를 hydrate (<code>_didHydrate</code> guard로 1회만). 이후 build는 본 Default state로 fall through.</td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 첫 응답이 도착하면 그 결과로 화면이 한 번만 초기화되고, 이후에는 자연스럽게 Default 상태로 이어진다.</td></tr>
       </tbody>
     </table>
   </section>
@@ -1145,24 +1145,24 @@ body.dark-mode .bottom-cta {
       </thead>
       <tbody>
         <tr>
-          <td>시스템 back / swipe-back</td>
-          <td><strong>차단됨</strong> — <code>PopScope(canPop: false)</code>. 사용자는 동의를 마치거나 앱을 종료해야 이탈 가능.</td>
+          <td>시스템 뒤로가기 / 뒤로가기 스와이프</td>
+          <td><strong>차단됨</strong>. 사용자는 동의를 마치거나 앱을 종료해야만 이 화면을 떠날 수 있다.</td>
         </tr>
         <tr>
-          <td>"보기 ›" 탭 (detail 있는 항목)</td>
-          <td><code>showConsentDetailSheet(context, content: definition.detail!)</code> — modal bottom sheet으로 ConsentDetailContent 노출. dismiss 시 본 화면 그대로 (state 변화 없음).</td>
+          <td>"보기 ›" 탭 (상세가 있는 항목)</td>
+          <td>해당 항목의 상세 내용을 보여주는 하단 시트가 올라옴. 시트가 닫히면 본 화면은 그대로 유지된다.</td>
         </tr>
         <tr>
           <td>스크롤</td>
-          <td>ListView로 본문 전체 스크롤. CTA는 bottomNavigationBar에 고정 — 스크롤 영향 없음.</td>
+          <td>본문 영역만 스크롤된다. 하단 CTA는 화면 아래쪽에 고정되어 스크롤의 영향을 받지 않는다.</td>
         </tr>
         <tr>
           <td>다크 모드 토글</td>
-          <td>scaffold(<code>color-dark-background</code>) · Card(<code>color-dark-surface</code>) · text/divider 토큰 자동 swap. primary tint(softTint)는 dark primary 기반으로 재계산.</td>
+          <td>화면 배경, 카드 배경, 텍스트 / 구분선 색이 다크 토큰으로 자동 전환됨. 전체 동의 카드의 옅은 톤도 다크 기준으로 재계산된다.</td>
         </tr>
         <tr>
-          <td>로그아웃 (외부 트리거)</td>
-          <td><code>currentUserProvider == null</code> 전이 — _submit 호출 시 <code>showMinglitWarning</code> + return. 직접 LoginRoute로 redirect하지 않음 (auth provider stream에서 처리).</td>
+          <td>외부에서 로그아웃이 발생한 경우</td>
+          <td>제출 시 사용자 인증 정보가 사라졌다는 경고가 노출되고 제출이 진행되지 않는다. 본 화면이 직접 로그인 화면으로 보내지는 않는다.</td>
         </tr>
       </tbody>
     </table>
@@ -1183,44 +1183,44 @@ body.dark-mode .bottom-cta {
       </thead>
       <tbody>
         <tr>
-          <td>화면 진입 (Login → SignupConsent)</td>
+          <td>화면 진입 (로그인 → 동의)</td>
           <td><code>MinglitAnimation.fast</code> (200ms)</td>
-          <td>GoRouter slide push.</td>
+          <td>표준 라우트 전환 (slide).</td>
         </tr>
         <tr>
-          <td>Checkbox 토글 (item · all)</td>
+          <td>체크박스 토글 (개별 항목 / 전체)</td>
           <td><code>MinglitAnimation.micro</code> (100ms)</td>
-          <td>Material checkbox built-in scale + fill animation.</td>
+          <td>Material 체크박스 기본의 scale + fill 애니메이션.</td>
         </tr>
         <tr>
           <td>전체 동의 → 7개 일괄 토글</td>
           <td><code>MinglitAnimation.micro</code> (100ms · 동시)</td>
-          <td>7개 checkbox 동시 발화 — 카스케이드 없음.</td>
+          <td>7개 체크박스가 동시에 발화. 순차 캐스케이드 없음.</td>
         </tr>
         <tr>
-          <td>Loading → Default (hydrate 직후)</td>
-          <td>cut</td>
-          <td>setState로 _didHydrate 토글 시 즉시 swap. AnimatedSwitcher 없음.</td>
+          <td>Loading → Default (정보 도착 직후)</td>
+          <td>컷</td>
+          <td>전환 애니메이션 없이 즉시 교체됨.</td>
         </tr>
         <tr>
-          <td>CTA enabled ↔ disabled 컬러 전환</td>
+          <td>CTA 활성 ↔ 비활성 색 전환</td>
           <td><code>MinglitAnimation.fast</code> (200ms)</td>
-          <td>Material ElevatedButton statesController fade.</td>
+          <td>버튼 색이 부드럽게 페이드 전환됨.</td>
         </tr>
         <tr>
-          <td>"보기 ›" → ConsentDetailSheet 등장</td>
+          <td>"보기 ›" → 상세 시트 등장</td>
           <td><code>MinglitAnimation.medium</code> (350ms)</td>
-          <td>Material modal bottom sheet slide-up.</td>
+          <td>하단 시트가 위로 슬라이드 업.</td>
         </tr>
         <tr>
-          <td>Submitting inline row 등장</td>
+          <td>Submitting 인라인 행 등장</td>
           <td><code>MinglitAnimation.fast</code> (200ms)</td>
-          <td>conditional widget — implicit fade via ListView rebuild.</td>
+          <td>조건부 노출. 본문이 다시 그려지면서 자연스럽게 페이드 인.</td>
         </tr>
         <tr>
-          <td>Error SnackBar 등장</td>
+          <td>에러 스낵바 등장</td>
           <td><code>MinglitAnimation.medium</code> (350ms)</td>
-          <td>SnackBar slide-up · 4s 후 자동 dismiss.</td>
+          <td>스낵바가 아래에서 슬라이드 업. 약 4초 후 자동으로 사라짐.</td>
         </tr>
       </tbody>
     </table>
@@ -1229,13 +1229,13 @@ body.dark-mode .bottom-cta {
   <section class="doc">
     <h2>Global edge cases</h2>
     <ul class="notes">
-      <li><strong>네트워크 끊김</strong> — _submit 시 RPC 실패 → Error state (SnackBar). 사용자가 재시도 가능. hydrate 시점 끊김이면 Loading-on-entry에서 hasError로 분기 (controller가 retry policy 노출).</li>
-      <li><strong>다크 모드</strong> — 스캐폴드/Card/Divider/text 모두 dark 토큰 swap. primary tint(softTint)는 dark primary 기반. CTA의 disabled mix는 outlineVariant와 자동 재혼합.</li>
-      <li><strong>접근성</strong> — _ConsentItemTile 전체가 InkWell tap target (min 48). "보기 ›"는 <code>Semantics(button: true, label: "{title} 상세 보기")</code>로 별도 announce. CircleBorder Checkbox는 토글 announce가 일반 Checkbox와 동일.</li>
-      <li><strong>Big text</strong> — bodyMedium / titleSmall 모두 textTheme 기반이라 OS 글씨 크기에 비례. tile min-height 48 + Padding이라 2-line 헤딩에도 ellipsis 없이 wrap.</li>
-      <li><strong>중간 이탈 차단</strong> — <code>PopScope(canPop: false)</code>로 시스템 back 무력화. 다만 앱 강제 종료 → 재진입 시 controller는 빈 결과로 hydrate되어 다시 처음부터.</li>
-      <li><strong>이중 탭 방지</strong> — InkWell + IgnorePointer(Checkbox) 패턴 — Checkbox.onChanged는 빈 콜백, InkWell.onTap만 발화 (Fix: 중복 토글 방지).</li>
-      <li><strong>키보드</strong> — 입력 위젯 없음. <code>MinglitBottomCTA</code>는 키보드 등장 시 자동 hide되지만 본 화면에선 트리거되지 않음.</li>
+      <li><strong>네트워크 끊김</strong> — 제출 시 실패하면 에러 스낵바와 함께 다시 시도할 수 있게 된다. 진입 직후 정보 조회에 실패하면 로딩 상태에서 에러로 전환된다.</li>
+      <li><strong>다크 모드</strong> — 화면 배경 / 카드 / 구분선 / 텍스트 모두 다크 토큰으로 자동 교체된다. 전체 동의 카드의 옅은 톤도 다크 기준으로 재계산된다.</li>
+      <li><strong>접근성</strong> — 각 항목 행 전체가 탭 영역(최소 48dp)이고, "보기 ›"는 별도 버튼으로 보이스 오버에 안내된다. 원형 체크박스도 일반 체크박스와 같은 방식으로 토글 상태가 안내된다.</li>
+      <li><strong>큰 글씨 옵션</strong> — 모든 텍스트가 OS 글씨 크기 설정에 비례. 항목 행은 충분한 높이로 두 줄 제목도 잘림 없이 wrap된다.</li>
+      <li><strong>중간 이탈 차단</strong> — 시스템 뒤로가기 / 스와이프 모두 무력화된다. 사용자가 앱을 강제 종료하면 다음 진입 시 다시 처음부터 시작된다.</li>
+      <li><strong>이중 탭 방지</strong> — 체크박스를 직접 누르는 것이 아니라 행 전체 탭만 받아들이도록 설계되어, 같은 동작이 두 번 일어나지 않는다.</li>
+      <li><strong>키보드</strong> — 입력 필드가 없으므로 키보드가 올라오지 않는다.</li>
     </ul>
   </section>
 </div>

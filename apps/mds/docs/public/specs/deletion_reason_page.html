@@ -213,19 +213,19 @@ body.dark-mode .dr-appbar__back { color: var(--color-dark-text-primary); }
       <tr>
         <th>User journey</th>
         <td>
-          <strong>Entry points</strong>: PrivacyPage "회원 탈퇴" 항목 탭 → coordinator.start() → push.<br>
+          <strong>Entry points</strong>: 개인정보 페이지의 "회원 탈퇴" 항목 탭으로 진입.<br>
           <strong>Exit points</strong>:
-          ① "선택하지 않고 계속하기" 탭 → DeletionInfoPage(reason=null) push ·
-          ② 사유 선택 + "다음" 탭 → DeletionInfoPage(reason=선택한 WithdrawalReason) push ·
-          ③ 뒤로 가기 → PrivacyPage 복귀.
+          ① "선택하지 않고 계속하기" 탭 → 사유 없이 다음 단계 ·
+          ② 사유 선택 + "다음" 탭 → 선택한 사유와 함께 다음 단계 ·
+          ③ 뒤로 가기 → 개인정보 페이지로 복귀.
         </td>
       </tr>
       <tr>
         <th>Background</th>
         <td>
-          개인정보 삭제 정책 컴플라이언스 요건상 탈퇴 사유 수집은 강제 아님 — "선택하지 않고 계속하기" CTA를 동등한 무게로 배치한 이유.
-          6개 사유는 product-led 분류(usage / events / competitor / privacy / usability / other) — Phase 2 retention 분석에 사용된다.
-          "직접 입력할게요"는 200자 제한 · 옵셔널 — "다음" 활성화는 사유 선택만 검사, detail 입력은 요구 안 함.
+          개인정보 삭제 정책 컴플라이언스 요건상 탈퇴 사유 수집은 강제가 아니다 — "선택하지 않고 계속하기" CTA를 동등한 무게로 배치한 이유.
+          6개 사유는 제품 관점의 분류(사용 빈도 / 이벤트 / 대안 서비스 / 개인정보 / 사용성 / 기타)이며, 향후 retention 분석에 활용된다.
+          "직접 입력할게요"는 최대 200자 · 옵셔널 — "다음"은 사유 선택만으로 활성화되고, 상세 입력은 비워두어도 진행할 수 있다.
         </td>
       </tr>
       <tr><th>Frequency</th><td>매우 낮음 — 계정당 ≤ 1회 (탈퇴 wizard 진입 시).</td></tr>
@@ -361,7 +361,7 @@ body.dark-mode .dr-appbar__back { color: var(--color-dark-text-primary); }
   <section class="doc">
     <h2>Sub-anatomy ① — 사유 카드 (RadioListTile in Card)</h2>
     <p class="intro">
-      6개 옵션이 동일 패턴으로 반복. <code>RadioListTile</code> 내부에서 leading radio + title(option.title) + subtitle(option.description). 선택된 카드는 radio가 채워지고 (Material default — primary purple 동그라미) Card의 visual 변화는 없다 (Material default — 별도 selected style 미적용).
+      6개 옵션이 동일 패턴으로 반복된다. 좌측 라디오 + 우측 타이틀/설명 구성. 선택된 카드는 라디오 동그라미가 primary 색으로 채워지는 변화만 일어나고, 카드 외곽선 등 다른 시각 변화는 없다.
     </p>
     <div class="layout-grid">
       <div class="blueprint" style="height: 200px;">
@@ -400,17 +400,17 @@ body.dark-mode .dr-appbar__back { color: var(--color-dark-text-primary); }
   <div class="perspective__header">
     <span class="glyph">🎨</span>
     <h2>States</h2>
-    <span class="lede">4 state — baseline = 미선택(둘러보기). 일반 사유 선택 · "직접 입력할게요" 선택(textfield 노출) · 데이터 fetch 없음 → loading/error mini-table 없음. coordinator는 동일한 <code>pushInfo()</code>를 두 가지 방식으로 호출 (with reason / without).</span>
+    <span class="lede">4가지 시각 변형 — baseline = 미선택(둘러보기). 일반 사유 선택 · "직접 입력할게요" 선택(입력란 노출) · 데이터 fetch가 없어 Loading/Error 상태는 다루지 않는다.</span>
   </div>
 
   <section class="doc">
     <p class="intro">
-      <strong>State 종류 식별 기준</strong>:
-      ① <code>_selectedCode == null</code> ↔ "다음" 비활성 / "선택하지 않고 계속하기"만 활성 (baseline) ·
-      ② <code>_selectedCode != null && != other</code> ↔ "다음" 활성 · textfield 미노출 ·
-      ③ <code>_selectedCode == other</code> ↔ MinglitTextField 노출 · "다음" 활성(detail 비어도 enable) ·
-      ④ "다음" disabled (Default 시점에 자동 — 별도 mini-table로 분리하지 않음, ① 행에 통합).
-      Stateful이지만 widget 자체는 fetch 안 함 → Loading/Error 없음.
+      <strong>State 식별 기준</strong>:
+      ① 사유 미선택 — "다음" 비활성, "선택하지 않고 계속하기"만 활성 (baseline) ·
+      ② 일반 사유 선택 — "다음" 활성, 입력란 미노출 ·
+      ③ "직접 입력할게요" 선택 — 입력란이 펼쳐지고 "다음" 활성 (상세 입력은 비워둬도 진행 가능) ·
+      ④ "다음" 비활성 — ①과 동일한 상태로, CTA 영역만 강조해 보여주는 별도 mini-table.
+      이 화면은 데이터 fetch가 없어 Loading/Error 상태는 없다.
     </p>
 
     <div class="visual-gallery" style="background: var(--color-surface); padding: 16px; border-radius: var(--radius-card); display: flex; flex-direction: column; gap: 16px;">
@@ -418,7 +418,7 @@ body.dark-mode .dr-appbar__back { color: var(--color-dark-text-primary); }
       <!-- State 1: Default · 미선택 (baseline) -->
       <table class="ref state-mini is-baseline-tint">
         <thead>
-          <tr><th colspan="3"><strong>Default · 미선택</strong> 🎯 <small>baseline · _selectedCode == null</small></th></tr>
+          <tr><th colspan="3"><strong>Default · 미선택</strong> 🎯 <small>baseline · 화면 진입 직후, 아직 어떤 사유도 선택하지 않은 상태</small></th></tr>
         </thead>
         <tbody>
           <tr>
@@ -505,22 +505,22 @@ body.dark-mode .dr-appbar__back { color: var(--color-dark-text-primary); }
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>화면 진입 직후 — <code>_selectedCode == null</code>. 사용자가 아직 라디오를 안 누른 상태.</td>
+            <td>화면 진입 직후, 사용자가 아직 어떤 사유도 선택하지 않은 상태.</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">사용자 액션</td>
             <td>
-              · <strong>"선택하지 않고 계속하기" 탭</strong> → <code>coordinator.pushInfo()</code> (reason 없이) → DeletionInfoPage push.<br>
-              · <strong>"다음" 탭</strong> → 비활성 (Material default disabled — 탭 무반응)<br>
-              · <strong>아무 사유 카드 탭</strong> → State 2(or State 3 if "직접 입력") 전이 · <code>setState</code>로 _selectedCode 갱신<br>
-              · 뒤로 가기 → PrivacyPage 복귀
+              · <strong>"선택하지 않고 계속하기" 탭</strong> → 사유 없이 다음 단계로 진행.<br>
+              · <strong>"다음" 탭</strong> → 비활성 상태라 반응하지 않음.<br>
+              · <strong>아무 사유 카드 탭</strong> → 해당 사유가 선택되며 다음 상태로 전이 ("직접 입력할게요"는 별도 상태).<br>
+              · 뒤로 가기 → 이전 화면(개인정보 페이지)으로 복귀.
             </td>
           </tr>
           <tr>
             <td class="state-mini__aspect">에지케이스</td>
             <td>
-              · "다음"이 disabled여도 "선택하지 않고 계속하기"로 동일 결과(reason=null)를 얻을 수 있는 의도적 dual-path — 사용자가 "다음"이 회색이라 막막해하지 않게 skip CTA가 항상 활성.<br>
-              · ListView 스크롤 시 카드 6개가 화면을 꽉 채울 수 있어 CTA 영역이 가려지지 않도록 Expanded + 분리된 Padding 영역으로 고정.
+              · "다음"이 비활성이어도 "선택하지 않고 계속하기"로 동일하게 진행할 수 있다 — 사용자가 막히지 않도록 skip CTA는 항상 활성.<br>
+              · 카드 6개가 화면을 꽉 채워도 하단 CTA 영역은 가려지지 않고 항상 고정 노출된다.
             </td>
           </tr>
           <tr>
@@ -546,7 +546,7 @@ body.dark-mode .dr-appbar__back { color: var(--color-dark-text-primary); }
           </tr>
           <tr>
             <td class="state-mini__aspect">노트</td>
-            <td>📝 ListView 안에 6개 Card를 직접 spread함 — for-loop의 마지막 Card 아래엔 SizedBox 없음 (Card 자체 margin-bottom 8로 처리). "직접 입력할게요"가 마지막에 위치 — textfield가 펼쳐질 때 ListView 끝에서 자연스레 노출됨.</td>
+            <td>📝 6개 카드는 동일 간격으로 세로 스택. "직접 입력할게요"가 리스트 마지막에 놓여, 입력란이 펼쳐질 때 자연스럽게 리스트 끝에서 이어진다.</td>
           </tr>
         </tbody>
       </table>
@@ -554,7 +554,7 @@ body.dark-mode .dr-appbar__back { color: var(--color-dark-text-primary); }
       <!-- State 2: General reason selected -->
       <table class="ref state-mini">
         <thead>
-          <tr><th colspan="3"><strong>일반 사유 선택</strong> <small>_selectedCode in {noLongerUse · noDesiredEvents · usingOtherService · privacyConcern · poorUsability}</small></th></tr>
+          <tr><th colspan="3"><strong>일반 사유 선택</strong> <small>"직접 입력할게요"를 제외한 5개 사유 중 하나를 선택한 상태</small></th></tr>
         </thead>
         <tbody>
           <tr>
@@ -636,22 +636,22 @@ body.dark-mode .dr-appbar__back { color: var(--color-dark-text-primary); }
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>+ 5개 일반 사유 중 하나 선택 — radio가 체크되고, "다음" enabled로 전환.</td>
+            <td>5개 일반 사유 중 하나를 선택한 상태 — 선택한 카드의 라디오가 채워지고 "다음"이 활성으로 바뀜.</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">사용자 액션</td>
             <td>
-              + <strong>"다음" 탭</strong> → <code>coordinator.pushInfo(reason: WithdrawalReason(reasonCode: _selectedCode!, detail: null))</code><br>
-              ↔ "선택하지 않고 계속하기" 탭 → 동일 동작 (reason=null로 push) — 선택했어도 skip CTA는 reason 무시<br>
-              + 다른 카드 탭 → <code>setState</code>로 _selectedCode 갱신 (단일 선택 — RadioListTile groupValue 동작)<br>
-              + 같은 카드 재탭 → groupValue 동일이라 setState는 호출되지만 시각 변화 없음
+              · <strong>"다음" 탭</strong> → 선택한 사유와 함께 다음 단계로 진행.<br>
+              · "선택하지 않고 계속하기" 탭 → 사유는 무시되고 사유 없이 다음 단계로 진행.<br>
+              · 다른 카드 탭 → 단일 선택이라 선택이 새 카드로 옮겨감.<br>
+              · 같은 카드 재탭 → 시각 변화 없음.
             </td>
           </tr>
           <tr>
             <td class="state-mini__aspect">에지케이스</td>
             <td>
-              · "선택하지 않고 계속하기"는 선택과 무관하게 항상 reason=null로 push — 사용자 의도로는 약간 어색하지만 의도된 동작 (skip 의미)<br>
-              · "직접 입력할게요"가 아닌 사유에서 _detailController는 빈 상태로 dispose. State 3 → State 2로 돌아가면 <code>_detailController.clear()</code>가 호출됨 (onChanged가 명시적으로)
+              · "선택하지 않고 계속하기"는 사유 선택 여부와 무관하게 항상 사유 없이 진행한다 — skip의 의미 그대로.<br>
+              · "직접 입력할게요"에서 일반 사유로 이동하면 입력란에 적었던 내용은 즉시 사라진다.
             </td>
           </tr>
           <tr>
@@ -664,7 +664,7 @@ body.dark-mode .dr-appbar__back { color: var(--color-dark-text-primary); }
           </tr>
           <tr>
             <td class="state-mini__aspect">노트</td>
-            <td>📝 RadioListTile은 Material default styling을 그대로 사용 — Card의 visual 변화(border tint 등) 없음. spec mockup에서는 시각적 강조를 위해 selected card에 옅은 primary tint를 그렸지만 실제 widget은 radio만 변한다.</td>
+            <td>📝 선택된 카드는 라디오 버튼이 primary 색으로 채워지는 변화만 있다. 카드 외곽선 등 다른 시각 변화는 없다.</td>
           </tr>
         </tbody>
       </table>
@@ -672,7 +672,7 @@ body.dark-mode .dr-appbar__back { color: var(--color-dark-text-primary); }
       <!-- State 3: "직접 입력할게요" selected — textfield reveal -->
       <table class="ref state-mini">
         <thead>
-          <tr><th colspan="3"><strong>"직접 입력할게요" 선택 — textfield 노출</strong> <small>_selectedCode == WithdrawalReasonCode.other</small></th></tr>
+          <tr><th colspan="3"><strong>"직접 입력할게요" 선택 — 입력란 노출</strong> <small>마지막 옵션을 선택해 자유 입력란이 펼쳐진 상태</small></th></tr>
         </thead>
         <tbody>
           <tr>
@@ -717,23 +717,23 @@ body.dark-mode .dr-appbar__back { color: var(--color-dark-text-primary); }
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>+ "직접 입력할게요" 카드 선택 → <code>_selectedCode == WithdrawalReasonCode.other</code> → 카드 리스트 아래 SizedBox(8) + MinglitTextField 펼쳐짐.</td>
+            <td>"직접 입력할게요" 카드를 선택해 카드 리스트 아래에 자유 입력란이 펼쳐진 상태.</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">사용자 액션</td>
             <td>
-              + <strong>textfield 입력</strong> → <code>onChanged: (_) =&gt; setState((){})</code> · 단순 rebuild (counter 갱신용)<br>
-              + 200자 이상 입력 시도 → <code>LengthLimitingTextInputFormatter(200)</code>이 차단 — 입력 자체가 reject<br>
-              + 다른 사유 카드 탭 → <code>_detailController.clear()</code> + setState → textfield 사라지고 State 2로 전이<br>
-              + <strong>"다음" 탭</strong> → <code>coordinator.pushInfo(reason: WithdrawalReason(reasonCode: other, detail: _detailController.text))</code> — detail이 빈 string이어도 그대로 전달
+              · <strong>입력란에 텍스트 입력</strong> → 입력에 따라 우하단 글자 수 카운터(0/200)가 갱신.<br>
+              · 200자를 넘기는 입력은 더 이상 추가되지 않는다.<br>
+              · 다른 사유 카드 탭 → 입력란이 닫히며 일반 사유 선택 상태로 전이, 적었던 내용은 사라진다.<br>
+              · <strong>"다음" 탭</strong> → 입력 내용과 함께 다음 단계로 진행 (입력란을 비워둬도 진행 가능).
             </td>
           </tr>
           <tr>
             <td class="state-mini__aspect">에지케이스</td>
             <td>
-              · detail이 빈 문자열이어도 "다음"은 enabled (RadioListTile groupValue로 충분) — 이후 InfoPage가 buildWithdrawalReason에서 trim()하여 빈 detail은 null로 정규화<br>
-              · TextField focus 시 키보드가 올라와도 별도 padding 조정 없음 — Scaffold default <code>resizeToAvoidBottomInset</code>로 ListView가 자동 축소됨<br>
-              · 이미 입력 중에 다른 카드를 탭하면 입력 내용이 즉시 dispose — confirm dialog 없음 (의도된 lightweight UX)
+              · 입력란이 비어 있어도 "다음"은 활성 — 사유만 선택해도 진행할 수 있다.<br>
+              · 입력 중 키보드가 올라오면 본문 영역이 자동으로 축소되어 입력란이 가려지지 않는다. 하단 CTA 영역은 안전 영역에 고정.<br>
+              · 입력 중 다른 카드를 탭하면 별도 확인 없이 입력 내용은 즉시 사라진다.
             </td>
           </tr>
           <tr>
@@ -746,7 +746,7 @@ body.dark-mode .dr-appbar__back { color: var(--color-dark-text-primary); }
           </tr>
           <tr>
             <td class="state-mini__aspect">노트</td>
-            <td>📝 surprising drift — "직접 입력할게요"를 골라도 detail 입력은 <strong>강제 아님</strong>. 사용자가 detail을 비워둔 채 "다음"을 누르면 reason은 <code>WithdrawalReason(other, detail: '')</code>로 push되고, 다음 페이지가 detail null 정규화. 즉 "직접 입력"이 사실상 "기타(미기재)"로 동작 가능.</td>
+            <td>📝 "직접 입력할게요"를 선택해도 입력 자체는 강제가 아니다. 비워둔 채 진행하면 사실상 "기타(미기재)"로 처리된다.</td>
           </tr>
         </tbody>
       </table>
@@ -754,7 +754,7 @@ body.dark-mode .dr-appbar__back { color: var(--color-dark-text-primary); }
       <!-- State 4: edge — 잘못된 setState 후 textfield 비어있는 채 다음 -->
       <table class="ref state-mini">
         <thead>
-          <tr><th colspan="3"><strong>"다음" 비활성 (skip만 가능)</strong> <small>summary — Default와 동치 · UI 차이 명시용</small></th></tr>
+          <tr><th colspan="3"><strong>"다음" 비활성 (skip만 가능)</strong> <small>Default와 같은 상태를 CTA 영역만 강조해 보여주는 별도 컷</small></th></tr>
         </thead>
         <tbody>
           <tr>
@@ -775,20 +775,20 @@ body.dark-mode .dr-appbar__back { color: var(--color-dark-text-primary); }
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>동일 — Default state(_selectedCode == null)와 동치. CTA 영역만 강조해 보여주는 별도 mini-table.</td>
+            <td>Default 상태와 동일. CTA 영역의 비활성 톤을 강조해 보여주는 별도 컷.</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">사용자 액션</td>
             <td>
-              ↔ "다음" 탭 → 무반응 (FilledButton onPressed: null)<br>
-              동일: "선택하지 않고 계속하기"는 항상 활성<br>
-              동일: 사유 카드 탭 → State 2 / State 3로 전이
+              · "다음" 탭 → 비활성 상태라 반응하지 않음.<br>
+              · "선택하지 않고 계속하기"는 항상 활성으로 진행 가능.<br>
+              · 사유 카드 탭 → 일반 사유 선택 / 직접 입력 상태로 전이.
             </td>
           </tr>
           <tr><td class="state-mini__aspect">에지케이스</td><td>—</td></tr>
           <tr><td class="state-mini__aspect">컴포넌트</td><td>동일</td></tr>
           <tr><td class="state-mini__aspect">토큰</td><td>+ FilledButton disabled tint — Material default(<code>onSurface</code> 12% bg + 38% text alpha)</td></tr>
-          <tr><td class="state-mini__aspect">노트</td><td>📝 사실상 baseline의 "CTA 영역 클로즈업"이라 mini-table 4번을 별도로 만들지 안 만들지 토론 가능 — disabled FilledButton의 톤을 다른 spec에서 빠르게 reference하기 좋아 유지.</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 비활성 CTA 톤을 다른 spec에서도 빠르게 참조할 수 있도록 별도 컷으로 유지한다.</td></tr>
         </tbody>
       </table>
 
@@ -808,11 +808,11 @@ body.dark-mode .dr-appbar__back { color: var(--color-dark-text-primary); }
     <table class="ref">
       <thead><tr><th style="width: 220px;">사용자 액션</th><th>화면에 보이는 결과</th></tr></thead>
       <tbody>
-        <tr><td>뒤로 가기 (시스템 back / AppBar back)</td><td>PrivacyPage 복귀 — Material default pop. Wizard 진행 정보 dispose됨 (StatefulWidget _selectedCode 사라짐).</td></tr>
-        <tr><td>"선택하지 않고 계속하기" 탭</td><td>모든 state에서 항상 활성 — 선택 여부 관계없이 reason=null로 push.</td></tr>
-        <tr><td>키보드 입력 (other 선택 시)</td><td>Scaffold <code>resizeToAvoidBottomInset</code>(default true)로 ListView 영역 축소 · CTA 영역은 SafeArea 하단에 고정 유지.</td></tr>
-        <tr><td>RadioListTile ripple</td><td>Material default ripple — radio + title 영역 전체 hit-target.</td></tr>
-        <tr><td>다크 모드 토글</td><td>Scaffold/Card/text 모두 dark 토큰 swap. primary purple은 그대로 (다크 ColorsDark.primary alias).</td></tr>
+        <tr><td>뒤로 가기 (시스템 / AppBar)</td><td>이전 화면(개인정보 페이지)으로 복귀. 이번 진입에서 선택했던 사유는 사라진다.</td></tr>
+        <tr><td>"선택하지 않고 계속하기" 탭</td><td>모든 상태에서 항상 활성 — 선택 여부와 무관하게 사유 없이 다음 단계로 진행.</td></tr>
+        <tr><td>"직접 입력할게요" 입력 중 키보드 등장</td><td>본문 영역이 자동으로 축소되어 입력란이 가려지지 않으며, 하단 CTA 영역은 안전 영역 하단에 고정된다.</td></tr>
+        <tr><td>카드 탭</td><td>라디오 + 타이틀 + 설명 영역 전체가 한 번의 탭으로 동작. 탭 시 표준 ripple.</td></tr>
+        <tr><td>다크 모드 토글</td><td>배경/카드/텍스트가 다크 토큰으로 자동 전환. primary 색은 동일하게 유지.</td></tr>
       </tbody>
     </table>
   </section>
@@ -823,19 +823,19 @@ body.dark-mode .dr-appbar__back { color: var(--color-dark-text-primary); }
     <table class="ref">
       <thead><tr><th style="width: 200px;">Token</th><th style="width: 80px;">Value</th><th>Use</th></tr></thead>
       <tbody>
-        <tr><td><code>MinglitAnimation.micro</code></td><td>100ms</td><td>RadioListTile / Button ripple — Material default</td></tr>
-        <tr><td><code>MinglitAnimation.fast</code></td><td>200ms</td><td>InfoPage push transition — GoRouter Material default 좌→우 slide</td></tr>
-        <tr><td><code>MinglitAnimation.medium</code></td><td>350ms</td><td>"직접 입력할게요" textfield reveal (사실상 instant rebuild — token 매핑이지만 AnimatedSwitcher 미사용 → cut)</td></tr>
-        <tr><td><em>(Material default)</em> 키보드</td><td>250–300ms</td><td>키보드 등장 시 ListView resize — Flutter framework가 처리 · 토큰 미적용</td></tr>
+        <tr><td><code>MinglitAnimation.micro</code></td><td>100ms</td><td>카드 탭 / 버튼 탭 ripple.</td></tr>
+        <tr><td><code>MinglitAnimation.fast</code></td><td>200ms</td><td>다음 단계로의 화면 전환.</td></tr>
+        <tr><td><code>MinglitAnimation.medium</code></td><td>350ms</td><td>"직접 입력할게요"의 입력란 노출은 의도적으로 즉시 교체로 처리.</td></tr>
+        <tr><td><em>(시스템 기본)</em> 키보드</td><td>250–300ms</td><td>키보드 등장/퇴장 시 본문 영역이 자연스럽게 축소/복귀.</td></tr>
       </tbody>
     </table>
     <table class="ref" style="margin-top: 12px;">
       <thead><tr><th style="width: 220px;">Transition</th><th style="width: 140px;">Duration (token)</th><th>Curve / notes</th></tr></thead>
       <tbody>
-        <tr><td>"다음" / "선택하지 않고…" → InfoPage</td><td><code>fast</code> (200ms)</td><td>GoRouter push slide</td></tr>
-        <tr><td>radio toggle</td><td><code>micro</code> (100ms)</td><td>Material Radio default fade</td></tr>
-        <tr><td>FilledButton enabled ↔ disabled</td><td>cut</td><td>setState 즉시 — AnimatedTheme 미사용</td></tr>
-        <tr><td>textfield reveal (other 선택)</td><td>cut</td><td>ListView가 즉시 rebuild — animation 없음 (의도)</td></tr>
+        <tr><td>"다음" / "선택하지 않고…" → 다음 단계</td><td><code>fast</code> (200ms)</td><td>표준 좌→우 slide 전환.</td></tr>
+        <tr><td>라디오 토글</td><td><code>micro</code> (100ms)</td><td>선택 시 라디오가 부드럽게 채워짐.</td></tr>
+        <tr><td>"다음" 활성 ↔ 비활성</td><td>cut</td><td>전환 애니메이션 없이 즉시 톤 변화.</td></tr>
+        <tr><td>입력란 노출 ("직접 입력할게요" 선택)</td><td>cut</td><td>즉시 펼쳐짐 — 부드러운 전환 의도적으로 생략.</td></tr>
       </tbody>
     </table>
   </section>
@@ -843,11 +843,11 @@ body.dark-mode .dr-appbar__back { color: var(--color-dark-text-primary); }
   <section class="doc">
     <h2>Global edge cases</h2>
     <ul class="notes">
-      <li><strong>Loading / Error mini-table 없음</strong> — 위젯 자체가 fetch하지 않음. 6개 사유는 컴파일타임 const list.</li>
-      <li><strong>다크 모드</strong> — Scaffold/Card/text 모두 <code>color-dark-*</code> 토큰으로 swap. primary는 동일 brand purple 유지.</li>
-      <li><strong>접근성</strong> — RadioListTile은 Material default semantics(role=radio, group). screen reader가 6개 옵션을 일관되게 announce.</li>
-      <li><strong>2번 탭(double tap)</strong> — onChanged는 같은 value로 호출되어도 visual 변화 없음. _selectedCode 동일하면 setState는 redundant rebuild만.</li>
-      <li><strong>화면 회전</strong> — ListView/Card layout이 width-aware라 자연 대응. 텍스트필드 maxLines 4 유지.</li>
+      <li><strong>Loading / Error 상태 없음</strong> — 이 화면은 데이터를 불러오지 않으며, 6개 사유는 항상 동일하게 노출된다.</li>
+      <li><strong>다크 모드</strong> — 배경/카드/텍스트는 다크 토큰으로 자동 전환되고 primary 색은 그대로 유지된다.</li>
+      <li><strong>접근성</strong> — 6개 옵션이 한 그룹의 라디오로 일관되게 안내된다.</li>
+      <li><strong>같은 카드 재탭</strong> — 이미 선택된 카드를 다시 탭해도 시각 변화는 없다.</li>
+      <li><strong>화면 회전</strong> — 카드 레이아웃이 가로/세로에 모두 자연스럽게 대응하고, 자유 입력란은 4줄 높이를 유지한다.</li>
     </ul>
   </section>
 </div>

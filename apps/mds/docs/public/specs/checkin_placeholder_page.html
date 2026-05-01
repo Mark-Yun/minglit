@@ -230,22 +230,22 @@ body.dark-mode .viewport {
       <tr>
         <th>Purpose</th>
         <td>
-          파트너가 체크인 탭을 누르는 순간 오늘 진행 예정 이벤트 수에 따라 자동 분기한다 — 0개면 안내, 1개면 즉시 QR 스캐너, 2개 이상이면 선택 리스트.
-          이름은 "Placeholder"지만 실제로는 dispatcher 화면. 단순 진입 마찰을 줄여 가장 흔한 1-event 케이스에서 별도 선택 없이 바로 스캔 가능.
+          파트너가 체크인 탭을 누르는 순간 오늘 진행 예정 이벤트 수에 따라 자동으로 다른 화면을 보여준다 — 이벤트가 없으면 안내, 1개면 즉시 스캐너, 2개 이상이면 선택 목록.
+          단순 진입 마찰을 줄여 가장 흔한 1-event 케이스에서 별도 선택 없이 바로 스캔 가능.
         </td>
       </tr>
       <tr>
         <th>User journey</th>
         <td>
-          <strong>Entry points</strong>: PartnerHome BottomNav 체크인 탭 탭.<br>
-          <strong>Exit points</strong>: 1개 이벤트 → <code>QRScannerScreen</code>(다크 테마) push. 2+ → 카드 탭 → <code>QRScannerScreen</code> push. 0개 → 탭 변경으로만 이탈.
+          <strong>Entry points</strong>: 파트너 홈의 하단 체크인 탭 진입.<br>
+          <strong>Exit points</strong>: 이벤트 1개일 땐 곧장 다크 테마 스캐너 화면으로 진입. 2개 이상일 땐 카드 선택 후 스캐너로 이동. 이벤트가 없으면 다른 탭으로만 이탈.
         </td>
       </tr>
       <tr>
         <th>Background</th>
         <td>
-          파트너가 운영일에 체크인 탭을 누를 때 가장 잦은 시나리오는 "오늘 1 이벤트". 매번 선택 화면을 거치게 하면 마찰이 커서 1개일 때는 자동 routing.
-          "오늘" 정의는 시작 3시간 전 ~ 종료 1시간 후 윈도우 (<code>todayEventsProvider</code>). FutureProvider 기반이라 partnerId 변경 시 자동 invalidate.
+          파트너가 운영일에 체크인 탭을 누를 때 가장 잦은 시나리오는 "오늘 1 이벤트". 매번 선택 화면을 거치게 하면 마찰이 커서 1개일 때는 자동으로 스캐너에 진입.
+          "오늘"의 기준은 시작 3시간 전부터 종료 1시간 후까지의 윈도우.
         </td>
       </tr>
       <tr><th>Frequency</th><td>운영일에 매 진입마다 (체크인 시작/중간 중)</td></tr>
@@ -264,7 +264,7 @@ body.dark-mode .viewport {
         <td>2026-05-01</td>
         <td>1.0</td>
         <td>mark-yun</td>
-        <td>v1.4 template 신규 작성. 5개 state enumerate (Loading partner / Error partner / Empty 0events / Direct-scan 1event / Selection 2+events). Implementation의 자동 분기 로직(events.length 기반)을 state별로 풀어 명시.</td>
+        <td>v1.4 template 신규 작성. 5개 state enumerate (Loading / Error / Empty 0events / Direct-scan 1event / Selection 2+events). 오늘 이벤트 수에 따른 자동 분기 동작을 state별로 풀어 명시.</td>
       </tr>
     </tbody>
   </table>
@@ -281,7 +281,7 @@ body.dark-mode .viewport {
   <div class="perspective__header">
     <span class="glyph">🧱</span>
     <h2>Layout</h2>
-    <span class="lede">두 단계 dispatcher: ① currentPartnerInfoProvider → ② todayEventsProvider → events.length 분기 (0 / 1 / 2+). state별 layout이 완전히 다름.</span>
+    <span class="lede">파트너 정보를 불러오고 오늘 예정 이벤트 수(0 / 1 / 2+)에 따라 화면이 갈린다. state별 레이아웃이 완전히 다름.</span>
   </div>
 
   <section class="doc">
@@ -303,17 +303,14 @@ body.dark-mode .viewport {
       </div>
 
       <div class="layout-tree"><b>Scaffold</b>
-└─ <b>AppBar</b> = MinglitTheme.simpleAppBar('체크인') ← ①
-└─ <b>body</b>: AsyncValue.when(...)              ← ②
-   ├─ loading  → CircularProgressIndicator(center)
-   ├─ error    → Text(center)
-   └─ data(partner) → AsyncValue.when(events)
-      ├─ loading  → CircularProgressIndicator
-      ├─ error    → Text("이벤트를 불러올 수 없습니다")
-      └─ data(events) →
-         · events.length == 1 → push QRScannerScreen
-         · 0  → _CheckinSelectionPage(empty body)
-         · 2+ → _CheckinSelectionPage(list body)</div>
+└─ <b>AppBar</b>('체크인')                         ← ①
+└─ <b>body</b>: 데이터 단계별 분기                   ← ②
+   ├─ 로딩  → 중앙 스피너
+   ├─ 에러  → 중앙 평문 텍스트
+   └─ 결과 (오늘 이벤트 수에 따라)
+      · 1개  → 다크 테마 스캐너 화면이 본 화면을 대체
+      · 0개  → 빈 안내 화면 (중앙 정렬)
+      · 2+개 → 선택 리스트 화면 (헤더 + 카드)</div>
     </div>
   </section>
 
@@ -347,14 +344,14 @@ body.dark-mode .viewport {
           <span class="blueprint__region-label">㉢ subtitle (bodyMedium · onSurfaceVariant)</span>
         </div>
       </div>
-      <div class="layout-tree"><b>Center</b>
+      <div class="layout-tree"><b>중앙 정렬 영역</b>
 └─ <b>Padding</b>(<code>spacing-large (24px)</code>)
-   └─ <b>Column</b>(MainAxisSize.min)
-      ├─ <b>Icon</b>(qr_code_scanner, size: 64, onSurfaceVariant)  ← ㉠
+   └─ <b>Column</b> (꼭 필요한 만큼만 차지)
+      ├─ <b>QR 아이콘</b>(64 · 보조 색상)         ← ㉠
       ├─ Gap: <code>spacing-medium (16px)</code>
       ├─ <b>Text</b>(titleMedium · 오늘 예정된 이벤트가 없습니다)  ← ㉡
       ├─ Gap: <code>spacing-small (8px)</code>
-      └─ <b>Text</b>(bodyMedium · onSurfaceVariant · center)       ← ㉢</div>
+      └─ <b>Text</b>(bodyMedium · 보조 색상 · 중앙 정렬)       ← ㉢</div>
     </div>
   </section>
 
@@ -377,25 +374,22 @@ body.dark-mode .viewport {
         </div>
       </div>
       <div class="layout-tree"><b>Padding</b>(all <code>spacing-medium (16px)</code>)
-└─ <b>Column</b>(crossAxis: start)
+└─ <b>Column</b>(좌측 정렬)
    ├─ <em>Header</em>                                ← ㉠
    │  ├─ <b>Text</b>(titleMedium · w800 · "이벤트를 선택하세요")
    │  └─ <b>Text</b>(bodySmall · "오늘 N개 이벤트가 진행됩니다")
    ├─ Gap: <code>spacing-medium (16px)</code>
    │
-   └─ <b>Expanded</b>
-      └─ <b>ListView.separated</b>                   ← ㉡㉢...
-         · separator: SizedBox(<code>spacing-small (8px)</code>)
-         · item: Card → InkWell(radius-card) → Padding(<code>spacing-medium (16px)</code>) → Row
-            ├─ <b>Text</b>(timeFmt 'HH:mm', titleLarge · w900 · primary or success)
+   └─ <b>스크롤 리스트</b>                           ← ㉡㉢...
+         · 카드 사이 간격: <code>spacing-small (8px)</code>
+         · 각 카드: 라운드 + 터치 ripple + Padding(<code>spacing-medium (16px)</code>) + Row
+            ├─ <b>시간</b>('HH:mm' · titleLarge · w900 · LIVE면 success / 그 외 primary)
             ├─ Gap: <code>spacing-sm (12px)</code>
-            ├─ <b>Expanded</b>
-            │  ├─ <b>Text</b>(titleSmall · party.title ?? event.title)
-            │  └─ <b>Text</b>(bodySmall · "current/max 명")
-            └─ if isLive
-                · LIVE chip (success bg + success label)
-               else
-                · Icon(chevron_right)</div>
+            ├─ <b>가변 영역</b>
+            │  ├─ <b>제목</b>(titleSmall · 파티 또는 이벤트 이름)
+            │  └─ <b>참여 인원</b>(bodySmall · "current/max 명")
+            └─ LIVE면 LIVE 배지 (success bg + success label),
+              그 외엔 chevron 화살표</div>
     </div>
   </section>
 </div>
@@ -404,7 +398,7 @@ body.dark-mode .viewport {
   <div class="perspective__header">
     <span class="glyph">🎨</span>
     <h2>States</h2>
-    <span class="lede">5종 — partner / events 두 단계 async + events.length 3-way 분기. baseline은 Default(Selection 2+events) — 가장 정보 풍부한 케이스.</span>
+    <span class="lede">5종 — 파트너/이벤트 데이터 로딩 단계 + 오늘 이벤트 수에 따른 3-way 분기. baseline은 Selection (2+events) — 가장 정보 풍부한 케이스.</span>
   </div>
 
   <section class="doc">
@@ -414,11 +408,11 @@ body.dark-mode .viewport {
         <tr><th style="width: 220px;">State</th><th style="width: 100px;">Tag</th><th style="width: 220px;">조건 (요약)</th><th>Key visual differentiator</th></tr>
       </thead>
       <tbody>
-        <tr><td><strong>Selection (2+ events)</strong> 🎯</td><td>baseline</td><td>오늘 윈도우 이벤트 ≥ 2</td><td>상단 헤더 + 시간순 카드 리스트 · LIVE 배지 가능</td></tr>
-        <tr><td><strong>Direct scan (1 event)</strong></td><td>auto-route</td><td>오늘 윈도우 이벤트 == 1</td><td>본 화면 머무르지 않고 즉시 QRScannerScreen push (다크 테마)</td></tr>
-        <tr><td><strong>Empty (0 events)</strong></td><td>no events</td><td>오늘 윈도우 이벤트 == 0</td><td>중앙 qr 아이콘 + 안내 문구 풀-페이지</td></tr>
-        <tr><td><strong>Loading</strong></td><td>async</td><td>partner 또는 events fetch 중</td><td>중앙 CircularProgressIndicator 단독</td></tr>
-        <tr><td><strong>Error</strong></td><td>partner/events fail</td><td>provider hasError</td><td>중앙 평문 에러 텍스트 (재시도 CTA 없음)</td></tr>
+        <tr><td><strong>Selection (2+ events)</strong> 🎯</td><td>baseline</td><td>오늘 예정 이벤트 2개 이상</td><td>상단 헤더 + 시간순 카드 리스트 · LIVE 배지 가능</td></tr>
+        <tr><td><strong>Direct scan (1 event)</strong></td><td>auto-route</td><td>오늘 예정 이벤트 1개</td><td>본 화면에 머무르지 않고 즉시 다크 테마 스캐너로 진입</td></tr>
+        <tr><td><strong>Empty (0 events)</strong></td><td>no events</td><td>오늘 예정 이벤트 없음</td><td>중앙 QR 아이콘 + 안내 문구 풀-페이지</td></tr>
+        <tr><td><strong>Loading</strong></td><td>async</td><td>파트너/이벤트 데이터 로딩 중</td><td>중앙 스피너 단독</td></tr>
+        <tr><td><strong>Error</strong></td><td>fail</td><td>데이터 로딩 실패</td><td>중앙 평문 에러 텍스트 (재시도 CTA 없음)</td></tr>
       </tbody>
     </table>
 
@@ -481,19 +475,19 @@ body.dark-mode .viewport {
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td><code>currentPartnerInfoProvider</code> = data(non-null) AND <code>todayEventsProvider</code> = data with length ≥ 2.</td>
+            <td>오늘 예정 이벤트가 2개 이상으로 모두 로드된 상태.</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">사용자 액션</td>
-            <td>이벤트 카드 탭 → <code>_ScannerWrapper</code>(다크 테마 ColorScheme partner.primary seed) → <code>QRScannerScreen</code> push.</td>
+            <td>이벤트 카드 탭 → 다크 테마 스캐너 화면으로 진입.</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">사용자 액션</td>
-            <td>AppBar back → BottomNav 다른 탭으로만 복귀 (탭 자식이라 navigator.pop 안됨 — 실제로는 BottomNav 다른 탭 직접 탭).</td>
+            <td>AppBar back → 본 화면은 탭의 자식이므로 뒤로가기는 동작하지 않음. 다른 탭으로 이동하려면 하단 탭을 직접 선택.</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">에지케이스</td>
-            <td><strong>title null</strong> — <code>event.party?.title ?? event.title ?? ''</code> 폴백 (Fix #1742). <strong>참여자 0명</strong> — '0/16명' 그대로 표기. <strong>긴 title</strong> — Expanded 내 ellipsis.</td>
+            <td><strong>제목이 비어있을 때</strong> — 파티 이름으로 자동 폴백. <strong>참여자 0명</strong> — '0/16명' 그대로 표기. <strong>긴 제목</strong> — 한 줄 ellipsis 처리.</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">컴포넌트</td>
@@ -511,7 +505,7 @@ body.dark-mode .viewport {
           </tr>
           <tr>
             <td class="state-mini__aspect">노트</td>
-            <td>📝 LIVE 판정: <code>now.isAfter(start) &amp;&amp; now.isBefore(end)</code>. 시간 표기는 항상 'HH:mm' (24h). chip은 LIVE일 때만 노출 — 그 외엔 chevron. 카드 InkWell ripple은 partner.primary 톤.</td>
+            <td>📝 LIVE 판정: 시작 시각이 지났고 종료 시각 전. 시간 표기는 항상 'HH:mm' (24h). 배지는 LIVE일 때만 노출 — 그 외엔 chevron 화살표. 카드 ripple은 partner primary 톤.</td>
           </tr>
         </tbody>
       </table>
@@ -538,13 +532,13 @@ body.dark-mode .viewport {
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>events.length == 1 — 본 페이지 build 결과가 <code>_ScannerWrapper</code> (별도 화면 push 아닌 같은 자리에서 swap).</td>
+            <td>오늘 예정 이벤트가 정확히 1개. 체크인 탭을 누르는 즉시 본 화면을 거치지 않고 스캐너 화면이 그 자리에 채워짐.</td>
           </tr>
-          <tr><td class="state-mini__aspect">사용자 액션</td><td>QRScannerScreen 자체 액션으로 위임 (별도 spec).</td></tr>
-          <tr><td class="state-mini__aspect">에지케이스</td><td>↔ <code>_ScannerWrapper</code>는 Theme(Brightness.dark + ColorScheme.fromSeed(partner.primary))로 강제 다크 테마. 시스템 라이트 모드여도 다크.</td></tr>
-          <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ <code>Scaffold</code>(체크인 AppBar + body) → <code>_ScannerWrapper</code> → <code>QRScannerScreen</code> (별도 spec)</td></tr>
-          <tr><td class="state-mini__aspect">토큰</td><td>↔ light scheme → dark scheme(seed: <code>MinglitPartnerColors.primary</code> 강제). Fix #652로 하드코딩 제거.</td></tr>
-          <tr><td class="state-mini__aspect">노트</td><td>📝 본 페이지의 simpleAppBar('체크인')는 이 분기에서 노출되지 않음 — _ScannerWrapper가 자체 Scaffold를 가짐. 사용자 입장에선 "탭하자마자 스캐너"라 본 페이지 잔영 없음.</td></tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>스캐너 화면 자체의 액션으로 위임 (별도 spec).</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>스캐너는 시스템이 라이트 모드여도 항상 다크 테마로 노출 (카메라 화면에서 가독성 유지).</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ 체크인 AppBar가 사라지고 스캐너 화면이 자체 AppBar와 함께 본 화면을 대체.</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>↔ 라이트 컬러 스킴 → 다크 스킴 강제 (partner primary 시드).</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 본 페이지의 '체크인' AppBar는 이 분기에서 노출되지 않음 — 스캐너 화면이 자체 화면을 가짐. 사용자 입장에선 "탭하자마자 스캐너"라 본 페이지 잔영 없음.</td></tr>
         </tbody>
       </table>
 
@@ -575,13 +569,13 @@ body.dark-mode .viewport {
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>todayEventsProvider data == [] (오늘 윈도우 = start - 3h ~ end + 1h 내 이벤트 0개).</td>
+            <td>오늘 윈도우(시작 3시간 전 ~ 종료 1시간 후) 내에 진행 예정 이벤트가 하나도 없는 상태.</td>
           </tr>
-          <tr><td class="state-mini__aspect">사용자 액션</td><td>탭 가능한 CTA 없음 — BottomNav 다른 탭으로 이탈만.</td></tr>
-          <tr><td class="state-mini__aspect">에지케이스</td><td><strong>막 시작/종료 직후</strong> — 윈도우 외 = 0개 처리. 자동 새로고침 없음 (provider invalidate 시점은 탭 재진입).</td></tr>
-          <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ Selection layout → <code>Center</code> + <code>Icon</code>(qr_code_scanner, size 64) + 2x <code>Text</code></td></tr>
-          <tr><td class="state-mini__aspect">토큰</td><td>+ <code>MinglitIconSize.xlarge * 2</code> (= 64) · <code>onSurfaceVariant</code> (icon + sub text)</td></tr>
-          <tr><td class="state-mini__aspect">노트</td><td>📝 retry CTA 없음 — 데이터 누락이 아닌 정상적 빈 상태로 취급. 탭 재진입 시 provider 자동 재실행.</td></tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>탭 가능한 액션 없음 — 다른 탭으로 이탈만.</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td><strong>막 시작/종료 직후</strong> — 윈도우 외이면 0개로 처리. 자동 새로고침 없음 (탭 재진입 시 다시 조회).</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ 선택 리스트 → 중앙 정렬 QR 아이콘(64) + 두 줄 안내 텍스트</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>+ 큰 아이콘 64px · 보조 색상 (아이콘 + 서브 텍스트)</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 재시도 CTA 없음 — 데이터 누락이 아닌 정상적 빈 상태로 취급. 탭 재진입 시 자동 재조회.</td></tr>
         </tbody>
       </table>
 
@@ -600,13 +594,13 @@ body.dark-mode .viewport {
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>currentPartnerInfoProvider 또는 todayEventsProvider == loading. partner loading 단계에서는 AppBar조차 그려지지 않고 풀-페이지 spinner.</td>
+            <td>파트너 정보나 오늘 이벤트 목록을 불러오는 중. 파트너 정보 로딩 단계에서는 AppBar 없이 풀 페이지 스피너만 노출.</td>
           </tr>
           <tr><td class="state-mini__aspect">사용자 액션</td><td>탭 무반응</td></tr>
-          <tr><td class="state-mini__aspect">에지케이스</td><td><strong>partner vs events loading 차이</strong> — partner loading은 simpleAppBar 없는 풀 spinner / events loading은 simpleAppBar('체크인') + 중앙 spinner</td></tr>
-          <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ body content → <code>CircularProgressIndicator</code></td></tr>
-          <tr><td class="state-mini__aspect">토큰</td><td>동일 — spinner는 colorScheme.primary 자동</td></tr>
-          <tr><td class="state-mini__aspect">노트</td><td>📝 두 provider가 직렬 await — 첫 fetch는 보통 100~300ms. 로컬 캐시 적중 시 prac. 0ms.</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td><strong>파트너 vs 이벤트 로딩 차이</strong> — 파트너 정보 로딩은 AppBar 없이 풀 스피너 / 이벤트 로딩은 '체크인' AppBar + 중앙 스피너</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ body 내용 → 중앙 스피너 단독</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>동일 — 스피너는 partner primary 자동</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 첫 로딩은 보통 짧게 지나감. 로컬 캐시 적중 시 거의 보이지 않음.</td></tr>
         </tbody>
       </table>
 
@@ -631,13 +625,13 @@ body.dark-mode .viewport {
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>provider hasError. partner error: "오류가 발생했습니다: $e" / events error: "이벤트를 불러올 수 없습니다" / partner null(non-error): "파트너 정보를 불러올 수 없습니다"</td>
+            <td>데이터 로딩 실패. 상황에 따라 "오류가 발생했습니다", "이벤트를 불러올 수 없습니다", "파트너 정보를 불러올 수 없습니다" 중 하나의 평문이 표시됨.</td>
           </tr>
-          <tr><td class="state-mini__aspect">사용자 액션</td><td>탭 가능한 retry CTA 없음 — 탭 재진입(provider autoDispose) 시 자동 재시도</td></tr>
-          <tr><td class="state-mini__aspect">에지케이스</td><td><strong>3가지 메시지 분기</strong> — partner exception / events exception / partner data null. 모두 동일한 평문 Text 레이아웃.</td></tr>
-          <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ body content → <code>Center</code> + <code>Text</code> 단일</td></tr>
-          <tr><td class="state-mini__aspect">토큰</td><td>동일 — error styling 별도 없음 (평범한 onSurface)</td></tr>
-          <tr><td class="state-mini__aspect">노트</td><td>📝 retry CTA 부재가 디자인 부채 — events error에서 invalidate 트리거 button 추천. 향후 MinglitErrorState(fullPage) 적용 후보.</td></tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>재시도 버튼 없음 — 탭을 다시 선택하면 자동 재조회.</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td><strong>3가지 메시지 분기</strong> — 파트너 정보 실패 / 이벤트 실패 / 파트너 정보가 비어있는 케이스. 시각적으로는 모두 동일 평문 텍스트.</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ body 내용 → 중앙 평문 텍스트 한 줄</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>동일 — 별도 에러 스타일 없음 (기본 텍스트)</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 재시도 버튼 부재가 디자인 부채 — 향후 풀 페이지 에러 컴포넌트 적용 후보.</td></tr>
         </tbody>
       </table>
 
@@ -649,7 +643,7 @@ body.dark-mode .viewport {
   <div class="perspective__header">
     <span class="glyph">🔄</span>
     <h2>Global Behavior</h2>
-    <span class="lede">탭 자식이라 BottomNav 진입/이탈 + provider lifecycle.</span>
+    <span class="lede">하단 탭의 자식 화면으로서 진입/이탈 + 데이터 갱신 동작.</span>
   </div>
 
   <section class="doc">
@@ -657,10 +651,10 @@ body.dark-mode .viewport {
     <table class="ref">
       <thead><tr><th style="width: 220px;">사용자 액션</th><th>화면에 보이는 결과</th></tr></thead>
       <tbody>
-        <tr><td>BottomNav 체크인 탭 진입</td><td>autoDispose provider 재실행 → loading → data/error/empty 분기</td></tr>
-        <tr><td>BottomNav 다른 탭 이탈</td><td>autoDispose 카운트다운 시작 — 짧은 시간 내 재진입 시 캐시 활용</td></tr>
-        <tr><td>OS back (Android)</td><td>탭 자식이라 navigator.pop 무시 — 실제로는 앱 종료 또는 pre-shell 화면</td></tr>
-        <tr><td>scanner 화면에서 back</td><td>본 페이지로 복귀 — 1-event 분기는 자동 push라 back 시 본 페이지 처음 보게 됨</td></tr>
+        <tr><td>체크인 탭 진입</td><td>데이터를 다시 조회 → 로딩 → 결과/에러/빈 상태 중 하나로 분기.</td></tr>
+        <tr><td>다른 탭으로 이탈</td><td>잠시 캐시가 유지되어 짧은 시간 내 재진입 시 빠르게 복원.</td></tr>
+        <tr><td>OS 뒤로가기 (Android)</td><td>본 화면은 탭의 자식이라 무시됨 — 앱 종료 또는 셸 이전 화면으로.</td></tr>
+        <tr><td>스캐너에서 뒤로가기</td><td>본 페이지로 복귀. 1-event 자동 진입 케이스에서는 이때 본 페이지를 처음 보게 됨.</td></tr>
       </tbody>
     </table>
   </section>
@@ -670,16 +664,16 @@ body.dark-mode .viewport {
     <table class="ref" style="margin-bottom: 16px;">
       <thead><tr><th style="width: 200px;">Token</th><th style="width: 80px;">Value</th><th>Use case</th></tr></thead>
       <tbody>
-        <tr><td><code>MinglitAnimation.fast</code></td><td>200ms</td><td>route push (1-event scanner 진입)</td></tr>
-        <tr><td><code>MinglitAnimation.medium</code></td><td>350ms</td><td>AsyncValue.when crossfade (loading ↔ data)</td></tr>
+        <tr><td><code>MinglitAnimation.fast</code></td><td>200ms</td><td>스캐너 화면 진입 (1-event 자동)</td></tr>
+        <tr><td><code>MinglitAnimation.medium</code></td><td>350ms</td><td>로딩 ↔ 결과 크로스페이드</td></tr>
       </tbody>
     </table>
     <table class="ref">
       <thead><tr><th style="width: 220px;">Transition</th><th style="width: 140px;">Duration (token)</th><th>Curve / notes</th></tr></thead>
       <tbody>
-        <tr><td>탭 진입 → loading → data</td><td><code>medium</code> (350ms)</td><td>AnimatedSwitcher 효과 (MinglitAsyncValueWidget 내부 패턴)</td></tr>
-        <tr><td>1-event auto → QRScannerScreen</td><td><code>fast</code> (200ms)</td><td>Material slide push</td></tr>
-        <tr><td>InkWell ripple (Selection card)</td><td><code>micro</code> (100ms)</td><td>Material 기본 ripple</td></tr>
+        <tr><td>탭 진입 → 로딩 → 결과</td><td><code>medium</code> (350ms)</td><td>크로스페이드 전환</td></tr>
+        <tr><td>1-event 자동 → 스캐너</td><td><code>fast</code> (200ms)</td><td>Material slide push</td></tr>
+        <tr><td>카드 리플 (Selection)</td><td><code>micro</code> (100ms)</td><td>Material 기본 ripple</td></tr>
       </tbody>
     </table>
   </section>
@@ -687,10 +681,10 @@ body.dark-mode .viewport {
   <section class="doc">
     <h2>Global edge cases</h2>
     <ul class="notes">
-      <li><strong>네트워크 끊김</strong> — events fetch fail → "이벤트를 불러올 수 없습니다" 평문 텍스트. retry CTA 없음 (디자인 부채).</li>
-      <li><strong>오늘 윈도우 경계</strong> — start - 3h ~ end + 1h 윈도우. 자정 이후도 같은 "오늘"로 잡힐 수 있음 (현재 정의: now 기준 윈도우 inclusion).</li>
-      <li><strong>다크 모드</strong> — 본 페이지는 light/dark 자동 (colorScheme). 단, 1-event 분기는 항상 dark theme 강제 (Theme override).</li>
-      <li><strong>접근성</strong> — Empty/Error 메시지는 SemanticsLabel 자동(Text). icon은 decorative — Semantics excludeSemantics 권장 (현재 미적용).</li>
+      <li><strong>네트워크 끊김</strong> — 이벤트 조회 실패 → "이벤트를 불러올 수 없습니다" 평문 텍스트. 재시도 버튼 없음 (디자인 부채).</li>
+      <li><strong>오늘 윈도우 경계</strong> — 시작 3시간 전부터 종료 1시간 후까지. 자정 이후도 같은 "오늘"로 잡힐 수 있음.</li>
+      <li><strong>다크 모드</strong> — 본 페이지는 라이트/다크 자동. 단, 1-event 분기로 진입한 스캐너 화면은 항상 다크.</li>
+      <li><strong>접근성</strong> — 빈 상태/에러 메시지는 자동으로 읽힘. 큰 아이콘은 장식용으로 처리 권장 (현재 미적용).</li>
     </ul>
   </section>
 </div>

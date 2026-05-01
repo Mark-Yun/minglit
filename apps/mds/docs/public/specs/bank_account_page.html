@@ -274,17 +274,17 @@
       <tr>
         <th>User journey</th>
         <td>
-          <strong>Entry points</strong>: SettlementPage → "계좌 관리" 액션 (or settlement detail FAILED 상태에서 안내 메시지 클릭).<br>
-          <strong>Exit points</strong>: 뒤로 가기 → SettlementPage / 저장 성공 → SnackBar + reload (현재 화면 유지, 카드/폼 모두 갱신).
+          <strong>Entry points</strong>: 정산 화면 → "계좌 관리" 액션 (또는 정산 상세의 지급 실패 상태에서 안내 메시지를 통해 진입).<br>
+          <strong>Exit points</strong>: 뒤로 가기 → 정산 화면으로 복귀 / 저장 성공 → 안내 메시지 + 화면 자동 갱신 (카드/폼 모두 새 값으로 반영).
         </td>
       </tr>
       <tr>
         <th>Background</th>
         <td>
-          밍글릿은 PG 정산 후 등록된 계좌로 송금한다. 계좌 정보가 없거나 잘못되면
-          payout이 FAILED → 재지급 요청 경로로 빠진다. 본 화면은 그 root cause를 자가 해결할 수 있는
+          밍글릿은 정산 후 등록된 계좌로 송금한다. 계좌 정보가 없거나 잘못되면
+          지급이 실패해 재지급 요청 경로로 빠진다. 본 화면은 그 원인을 사용자가 직접 해결할 수 있는
           유일한 surface. 계좌번호는 카드 표시 시에만 마스킹(<code>**** 1234</code>)되고,
-          폼 prefill에는 평문이 들어간다 — drift 참고.
+          편집 폼에는 평문으로 채워진다 — drift 참고.
         </td>
       </tr>
       <tr>
@@ -438,7 +438,7 @@
 
   <section class="doc">
     <p class="intro">
-      <strong>State 종류 식별 기준</strong>: <code>_accountData == null</code> (미등록 vs 등록) · <code>_isSaving</code> (저장 중) · <code>_isLoading</code> (초기 fetch) · <code>Form.validate()</code> 결과 (validation 에러). 모든 state는 같은 위젯 트리에서 분기되는 데이터-driven UI.
+      <strong>State 종류 식별 기준</strong>: 계좌 정보의 등록 여부 · 저장 진행 여부 · 첫 데이터 조회 진행 여부 · 폼 검증 결과. 모든 state는 같은 화면 구조 위에서 데이터에 따라 분기되어 노출된다.
     </p>
 
     <!-- State 1: Account registered (baseline) -->
@@ -483,23 +483,23 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>_isLoading == false</code> · <code>_accountData != null</code> · <code>_isSaving == false</code></td>
+          <td>데이터 조회가 끝났고 계좌 정보가 등록되어 있으며 저장이 진행 중이 아님.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ① <strong>뒤로 가기</strong> → SettlementPage 복귀<br>
-            ② <strong>필드 탭</strong> → 키보드 표시 + 라벨 floating up · prefill 평문(은행명/예금주/계좌번호 모두) 편집 가능<br>
-            ③ <strong>저장 탭</strong> → State 4 (Saving) → 성공 시 State 6 (SnackBar 노출) → onSaved → reload<br>
-            ④ <strong>스크롤</strong> → 키보드 노출 시 form까지 자동 스크롤
+            ① <strong>뒤로 가기</strong> → 정산 화면으로 복귀<br>
+            ② <strong>필드 탭</strong> → 키보드가 올라오고 라벨이 위로 떠오름 · 은행명 / 예금주 / 계좌번호가 평문으로 채워져 있어 그대로 편집 가능<br>
+            ③ <strong>저장 탭</strong> → 저장 진행(버튼 비활성) → 성공 시 안내 메시지가 노출되며 화면이 새 데이터로 갱신됨<br>
+            ④ <strong>스크롤</strong> → 키보드가 올라오면 폼까지 자동으로 스크롤됨
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · 계좌번호 마스킹은 카드 표시 시에만 (<code>'*' * (n-4) + last4</code>) — 폼은 평문 prefill (drift)<br>
-            · <code>account_holder</code> 미설정이면 카드에 '-' 표시, 폼엔 빈 문자열 prefill<br>
-            · 다크모드: 카드 bg <code>color-dark-surface</code>(#212121), 입력 border <code>color-dark-divider</code>
+            · 계좌번호 마스킹은 카드 표시 시에만 적용됨 — 편집 폼에는 평문이 그대로 채워짐 (drift)<br>
+            · 예금주가 비어 있으면 카드에 '-'로 표시되고 폼에는 빈 문자열로 채워짐<br>
+            · 다크모드: 카드 bg <code>color-dark-surface</code>(#212121), 입력 테두리 <code>color-dark-divider</code>
           </td>
         </tr>
         <tr>
@@ -567,15 +567,15 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>_isLoading == false</code> · <code>_accountData == null</code></td>
+          <td>데이터 조회가 끝났지만 등록된 계좌가 없는 상태.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>+ <strong>빈 폼 입력</strong> → 모든 필드 채우고 저장 → reload → State 1로 전환<br>나머지 동일</td>
+          <td>+ <strong>빈 폼 입력</strong> → 모든 필드를 채우고 저장 → 화면 갱신 → 등록된 계좌 화면으로 전환<br>나머지 동일</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· "계좌 수정" 카드 타이틀이 폼 의미와 어긋남 — 미등록 상태에선 "계좌 등록"이 더 정확. 현재는 unconditional 'titleSmall'로 "계좌 수정" 고정 (drift)</td>
+          <td>· 미등록 상태에서도 폼 카드 타이틀이 "계좌 수정"으로 고정되어 의미와 어긋남 — "계좌 등록"이 더 정확 (drift)</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
@@ -595,7 +595,7 @@
     <!-- State 3: Validation error -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Validation error</strong> <small>저장 탭 · 필드 검증 실패 (form.validate == false)</small></th></tr>
+        <tr><th colspan="3"><strong>Validation error</strong> <small>저장 탭 시 필드 검증이 실패한 상태</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -633,18 +633,18 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>저장 탭 시 <code>_formKey.currentState.validate() == false</code> — 빈 필드 또는 계좌번호 길이/형식 불일치</td>
+          <td>저장 탭 시 빈 필드 또는 계좌번호 길이/형식 불일치로 검증이 실패한 상태.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>+ <strong>에러 표시된 필드 수정</strong> → 다음 validate 시점에 통과 시 에러 사라짐<br>− 저장은 즉시 early return — Saving 상태로 진입하지 않음</td>
+          <td>+ <strong>에러 표시된 필드 수정</strong> → 다음 검증 시점에 통과하면 오류가 사라짐<br>− 저장은 진행되지 않음 (Saving 상태로 진입하지 않음)</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · 계좌번호 입력은 <code>FilteringTextInputFormatter.digitsOnly</code>로 비숫자 키스트로크 차단 — paste 시도도 숫자만 수용 (Fix #1938)<br>
+            · 계좌번호 입력은 숫자만 수용 — 키 입력 / 붙여넣기 모두 비숫자 차단 (Fix #1938)<br>
             · 9자리 이하 / 17자리 이상 → "10~16자리 숫자여야 합니다." 표시<br>
-            · 빈 필드 3종은 각각의 메시지 ('은행명/예금주/계좌번호를 입력해 주세요.')
+            · 빈 필드 3종은 각각의 안내 문구 ('은행명/예금주/계좌번호를 입력해 주세요.')
           </td>
         </tr>
         <tr>
@@ -657,7 +657,7 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 Material default validator 패턴 — autovalidateMode 미설정이라 첫 저장 탭 시 evaluate. 그 이후엔 onUserInteraction.</td>
+          <td>📝 검증은 첫 저장 탭 시점에 evaluate되고, 이후에는 사용자가 입력란을 만질 때마다 자동으로 다시 검증됨.</td>
         </tr>
       </tbody>
     </table>
@@ -665,7 +665,7 @@
     <!-- State 4: Saving -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Saving</strong> <small>upsertBankAccount 진행 중 · 버튼 disabled</small></th></tr>
+        <tr><th colspan="3"><strong>Saving</strong> <small>저장 진행 중 · 버튼 비활성</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -704,22 +704,22 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>validate 통과 후 <code>_isSaving == true</code> ~ <code>upsertBankAccount</code> 응답 직전</td>
+          <td>검증 통과 후 저장이 진행 중인 상태.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            − 저장 버튼 다시 탭 → onPressed null → 무반응<br>
-            ↔ 입력 필드 → 여전히 편집 가능 (Flutter default — controller disable 안 됨, drift)<br>
-            ↔ 뒤로 가기 → 가능 (단, 저장은 background에서 진행 · mounted check 후 SnackBar)
+            − 저장 버튼 다시 탭 → 무반응<br>
+            ↔ 입력 필드 → 여전히 편집 가능 (drift)<br>
+            ↔ 뒤로 가기 → 가능 (저장은 백그라운드에서 진행되며 결과는 안내 메시지로 노출됨)
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · 응답 지연 → 버튼 spinner만 길게 보임 (timeout 없음)<br>
-            · 네트워크 오류 → catch → SnackBar('저장 실패: $e') → _isSaving false 복귀 (현재 폼 그대로)<br>
-            · partner == null (currentPartnerInfoProvider) → early return · _isSaving 그대로 true 유지 가능 — drift 의심 (실측 필요)
+            · 응답 지연 → 버튼 스피너만 길게 보임 (별도 타임아웃 없음)<br>
+            · 네트워크 오류 → 오류 안내 메시지가 노출되고 버튼이 다시 활성화됨 (폼은 그대로 유지)<br>
+            · 파트너 컨텍스트가 없으면 저장이 진행되지 않음
           </td>
         </tr>
         <tr>
@@ -732,7 +732,7 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 ⚠️ 현재 Dart 소스는 disabled 시 라벨만 "저장 중..."으로 바꿈 — spinner는 본 spec의 디자인 개선 권고. 일관성을 위해 RetryPayoutButton처럼 inline CircularProgressIndicator 권장.</td>
+          <td>📝 ⚠️ 현재 비활성 상태에서 라벨만 "저장 중..."으로 변경됨 — 인라인 스피너 추가는 본 spec의 디자인 개선 권고. 재지급 요청 버튼과 같이 인라인 progress indicator 권장.</td>
         </tr>
       </tbody>
     </table>
@@ -740,7 +740,7 @@
     <!-- State 5: Save success (SnackBar) -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Save success</strong> <small>SnackBar 노출 · onSaved → _loadAccount 재호출</small></th></tr>
+        <tr><th colspan="3"><strong>Save success</strong> <small>저장 성공 · 안내 메시지 + 화면 자동 갱신</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -780,15 +780,15 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>upsertBankAccount</code> 성공 → SnackBar 노출 (~4s) + <code>onSaved()</code> → <code>_loadAccount()</code> 재호출 → 카드 갱신</td>
+          <td>저장이 성공하면 안내 메시지가 잠깐 노출되고 카드가 새 값으로 갱신됨.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>+ <strong>SnackBar 스와이프</strong> → 즉시 닫힘<br>나머지 동일 (편집 계속 가능)</td>
+          <td>+ <strong>안내 메시지 스와이프</strong> → 즉시 닫힘<br>나머지 동일 (편집 계속 가능)</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· _loadAccount() 중 화면 dispose → setState 무시 (mounted check 있음)<br>· 새 데이터로 카드만 갱신 — 폼 controller는 init 시점 텍스트 유지 (재진입 전엔 변경 안 됨, drift)</td>
+          <td>· 갱신 중 화면을 빠져나가면 안전하게 무시됨<br>· 카드만 새 값으로 갱신되고 편집 폼은 직전 입력값을 유지 (재진입 전까지는 변경 안 됨, drift)</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
@@ -800,7 +800,7 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 SnackBar 메시지 한 줄. action(retry/undo) 없음 — 재시도는 버튼 재탭으로.</td>
+          <td>📝 안내 메시지 한 줄. 재시도/되돌리기 버튼 없음 — 재시도는 사용자가 버튼을 다시 누르는 방식.</td>
         </tr>
       </tbody>
     </table>
@@ -808,7 +808,7 @@
     <!-- State 6: Loading -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Loading</strong> <small>async · 화면 진입 직후 fetch 중</small></th></tr>
+        <tr><th colspan="3"><strong>Loading</strong> <small>화면 진입 직후 데이터 조회 중</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -826,17 +826,17 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>화면 진입 직후 ~ <code>_loadAccount()</code> 응답 직전 (<code>_isLoading == true</code>)</td>
+          <td>화면 진입 직후 계좌 데이터를 받아오는 중.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>− 모든 body 액션 비활성. 뒤로 가기만 가능</td>
+          <td>− 본문 영역의 모든 액션 비활성. 뒤로 가기만 가능</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · partner == null → 즉시 _isLoading = false · _accountData = null → State 2로 전환 (Default 미등록)<br>
-            · fetch 실패 → catch → Log.e + _isLoading = false · _accountData = null → State 2로 전환 (에러 UI 별도 없음 · Fix #459)
+            · 파트너 컨텍스트가 없으면 즉시 미등록 화면으로 전환됨<br>
+            · 데이터 조회 실패 시 별도 오류 화면 없이 미등록 화면으로 전환됨 (Fix #459)
           </td>
         </tr>
         <tr>
@@ -849,7 +849,7 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 AppBar는 유지 (back tap 가능). body만 spinner로 대체. fetch 실패가 별도 에러 state로 surface되지 않는 점은 drift — 사용자는 미등록 상태로만 인지.</td>
+          <td>📝 AppBar는 유지 (back 가능). 본문만 스피너로 대체. 데이터 조회 실패가 별도 오류 화면으로 노출되지 않는 점은 drift — 사용자는 미등록 상태로만 인지하게 됨.</td>
         </tr>
       </tbody>
     </table>

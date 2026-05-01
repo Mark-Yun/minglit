@@ -398,18 +398,14 @@ body.dark-mode .viewport {
       <tr>
         <th>User journey</th>
         <td>
-          <strong>Entry points</strong>: 하단 NavigationBar "정산" 탭 / 푸시 알림(정산 완료) 탭.<br>
-          <strong>Exit points</strong>: 카드 탭 → <code>SettlementDetailPage</code> · AppBar 지갑 아이콘 → <code>BankAccountPage</code> (SETTLEMENT_EDIT 권한 보유 시) · 빈 상태 CTA "첫 이벤트 만들기" → <code>PartyCreate</code> (root GoRouter 위임 · cross-branch).
+          <strong>Entry points</strong>: 하단 네비게이션 "정산" 탭 / 푸시 알림(정산 완료) 탭.<br>
+          <strong>Exit points</strong>: 카드 탭 → 정산 상세 화면 · AppBar 지갑 아이콘 → 정산 계좌 화면 (정산 편집 권한 보유 시) · 빈 상태 CTA "첫 이벤트 만들기" → 파티 생성 화면 (다른 탭으로 점프).
         </td>
       </tr>
       <tr>
         <th>Background</th>
         <td>
-          정산 status enum(PENDING / READY / PROCESSING / COMPLETED / FAILED / HOLD / CANCELED)은
-          <code>partner_settlement_repository</code>에서 정의. 대시보드 카드는
-          <code>completed_gross_total</code>(COMPLETED만 합산 · #1935) /
-          <code>completed_net_total</code> / <code>pending_gross_total</code> /
-          <code>status_counts</code>를 사용. List는 <code>createdAt</code> 기준 월별 그룹.
+          정산 항목은 7가지 상태(대기 / 준비 / 처리 중 / 완료 / 실패 / 보류 / 취소)로 분류된다. 대시보드 카드는 정산 완료 매출 / 완료 순매출 / 대기 매출 / 상태별 카운트를 보여주며, 정산 내역 리스트는 항목 생성일 기준으로 월별 그룹으로 묶인다.
         </td>
       </tr>
       <tr>
@@ -568,10 +564,10 @@ body.dark-mode .viewport {
   <section class="doc">
     <p class="intro">
       <strong>State 종류 식별 기준</strong>:
-      ① TabController.index (0=대시보드 / 1=정산 내역)
-      ② <code>listState.items</code> 비어있음 + <code>selectedStatus</code> null/non-null
-      ③ <code>listState.error != null</code> (목록 fetch 실패 — Fix #127)
-      ④ <code>listState.isLoading</code> + items 비어있음.
+      ① 활성 탭(대시보드 / 정산 내역)
+      ② 정산 항목이 비어있는지 여부 + 상태 필터 선택 여부
+      ③ 정산 목록 조회 실패 여부
+      ④ 정산 목록 로딩 진행 여부.
     </p>
 
     <!-- State 1: List · Default (baseline) -->
@@ -659,26 +655,26 @@ body.dark-mode .viewport {
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>tabController.index == 1</code> · <code>listState.items.isNotEmpty</code> · <code>selectedStatus == null</code> · <code>error == null</code></td>
+          <td>활성 탭이 정산 내역이며, 정산 항목이 1개 이상 있고 상태 필터는 '전체'.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ① <strong>카드 탭</strong> → <code>SettlementDetailRoute(id)</code> (sharedAxisScaled 전환)<br>
-            ② <strong>chip 탭</strong> → <code>changeStatus(status)</code> · 해당 status로 list refetch (State 2 변형)<br>
-            ③ <strong>탭 스와이프 / "대시보드" tap</strong> → State 4 (Dashboard)<br>
-            ④ <strong>스크롤 끝 −200px</strong> → <code>loadMore()</code> infinite scroll<br>
-            ⑤ <strong>pull-to-refresh</strong> → <code>refresh()</code><br>
-            ⑥ <strong>지갑 아이콘</strong> → BankAccountPage (SETTLEMENT_EDIT 권한 보유 시만 노출 · #1568)
+            ① <strong>카드 탭</strong> → 정산 상세 화면으로 이동<br>
+            ② <strong>chip 탭</strong> → 해당 상태로 리스트가 좁혀짐 (State 2)<br>
+            ③ <strong>탭 스와이프 / "대시보드" tap</strong> → 대시보드 탭으로 전환<br>
+            ④ <strong>스크롤 끝</strong> → 다음 페이지가 자동으로 더 불러와짐<br>
+            ⑤ <strong>pull-to-refresh</strong> → 리스트 새로고침<br>
+            ⑥ <strong>지갑 아이콘</strong> → 정산 계좌 화면 (정산 편집 권한 보유 시만 노출)
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · 음수 정산금: <code>-₩42,000</code> 형식 (마이너스 부호 ₩ 앞 — Fix #1932)<br>
-            · 동일 월 내 여러 항목 → month header 1회만 표시 후 카드 연속<br>
-            · loadMore 중간 실패 → 하단 spinner 사라지고 다음 스크롤 시 재시도<br>
-            · CANCELED 항목 → 배지에 strikethrough (<code>SettlementStatus.canceled</code>)
+            · 음수 정산금: <code>-₩42,000</code> 형식 (마이너스 부호가 ₩ 앞)<br>
+            · 동일 월 내 여러 항목 → 월 헤더는 1회만 표시 후 카드 연속<br>
+            · 추가 로딩 중간 실패 → 하단 스피너가 사라지고 다음 스크롤 시 재시도<br>
+            · 취소된 항목 → 배지에 취소선 표시
           </td>
         </tr>
         <tr>
@@ -704,7 +700,7 @@ body.dark-mode .viewport {
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 SettlementCard 자체는 별도 widget이지만 spec은 분리하지 않음 (단순 row · status badge만 재사용). 6 status 배지 색상 매핑은 settlement_detail spec과 100% 동일 (<code>SettlementStatus.{bg,text}Color</code>).</td>
+          <td>📝 정산 카드 자체는 별도 widget이지만 spec은 분리하지 않음 (단순 row + 상태 배지만 재사용). 상태 배지 색상은 settlement_detail spec과 100% 동일.</td>
         </tr>
       </tbody>
     </table>
@@ -712,7 +708,7 @@ body.dark-mode .viewport {
     <!-- State 2: Filtered -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>List · Filtered (PROCESSING)</strong> <small>chip 1개 선택 · status로 list narrow</small></th></tr>
+        <tr><th colspan="3"><strong>List · Filtered (PROCESSING)</strong> <small>지급중 chip 선택 · 해당 상태만 표시</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -769,19 +765,19 @@ body.dark-mode .viewport {
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>selectedStatus == 'PROCESSING'</code> · <code>items.isNotEmpty</code></td>
+          <td>'지급중' chip이 선택되어 있고 해당 상태의 항목이 1개 이상 존재.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>+ "전체" chip 탭 → State 1로 복귀 · 동일 chip 재탭 → status 유지 (no-op · ChoiceChip onSelected 통과)<br>나머지 동일</td>
+          <td>+ "전체" chip 탭 → baseline으로 복귀 · 동일 chip 재탭 → 변화 없음<br>나머지 동일</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· filter 상태에서 결과 0건 → State 5(Empty filtered) 진입 · empty subtitle "다른 상태를 선택해 보세요." (CTA 없음)</td>
+          <td>· 필터가 켜진 상태에서 결과 0건 → 빈 상태가 노출되며 안내 부제는 "다른 상태를 선택해 보세요." (CTA 없음)</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
-          <td>↔ ChoiceChip selected → '지급중' (PROCESSING)<br>− 비-PROCESSING 카드 (server-side filter)</td>
+          <td>↔ chip 선택 → '지급중'<br>− 다른 상태의 카드는 보이지 않음</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
@@ -789,7 +785,7 @@ body.dark-mode .viewport {
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 chip 라벨 ↔ status enum 매핑은 <code>StatusFilterChips._statuses</code>에 하드코딩(전체=null · PENDING=대기 · READY=확정 · PROCESSING=지급중 · COMPLETED=완료 · FAILED=실패 · HOLD=보류 · CANCELED=취소).</td>
+          <td>📝 chip 라벨은 다음 7개 상태로 고정: 전체 · 대기 · 확정 · 지급중 · 완료 · 실패 · 보류 · 취소.</td>
         </tr>
       </tbody>
     </table>
@@ -835,18 +831,18 @@ body.dark-mode .viewport {
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>items.isEmpty</code> · <code>!isLoading</code> · <code>error == null</code> · <code>selectedStatus == null</code></td>
+          <td>정산 항목이 0개이고 로딩/오류가 아니며 상태 필터는 '전체'.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            + <strong>"첫 이벤트 만들기" CTA 탭</strong> → <code>settlementCoordinator.goToPartyCreate()</code> (root GoRouter — Fix #1680: <code>StatefulShellBranch</code> 간 cross-branch <code>context.push()</code> 무음 실패 방지 · SettlementBranch → MoreBranch 경계)<br>
-            + chip 탭 → 다른 status 선택 시 State 5(Empty filtered)
+            + <strong>"첫 이벤트 만들기" CTA 탭</strong> → 파티 생성 화면으로 이동 (정산 탭에서 더보기/이벤트 영역으로 점프)<br>
+            + chip 탭 → 다른 상태 선택 시 빈 필터 상태로 전환
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· 권한이 SETTLEMENT_VIEW만 있고 EDIT 없음 → AppBar 지갑 아이콘 자체 미렌더 (#1568) — empty 콘텐츠 자체엔 영향 없음</td>
+          <td>· 정산 조회 권한만 있고 편집 권한이 없으면 AppBar 지갑 아이콘이 보이지 않음 — 빈 상태 본문에는 영향 없음</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
@@ -858,7 +854,7 @@ body.dark-mode .viewport {
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 Fix #997: 빈 정산 상태에 CTA 추가 — 필터 없을 때만 노출. 필터 ON 상태에선 CTA 미노출 (subtitle 변경).</td>
+          <td>📝 빈 정산 상태에 CTA 추가 (Fix #997) — 필터 없을 때만 노출. 필터가 켜진 상태에서는 CTA가 노출되지 않고 안내 부제만 변경됨.</td>
         </tr>
       </tbody>
     </table>
@@ -866,7 +862,7 @@ body.dark-mode .viewport {
     <!-- State 4: Dashboard tab -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Dashboard tab</strong> <small>tabIndex 0 · 월별 요약 + 상태별 카운트</small></th></tr>
+        <tr><th colspan="3"><strong>Dashboard tab</strong> <small>대시보드 탭 · 월별 요약 + 상태별 카운트</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -910,23 +906,23 @@ body.dark-mode .viewport {
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>tabController.index == 0</code> · <code>dashState.status == AsyncData</code> · <code>dashboardData != null</code></td>
+          <td>활성 탭이 대시보드이며 월별 요약 데이터가 도착한 상태.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            + <strong>◀ / ▶ 월 이동</strong> → <code>changeMonth(-1 / +1)</code> · 새 month로 dashboard 재로드<br>
-            + <strong>pull-to-refresh</strong> → <code>loadDashboard()</code><br>
-            + <strong>"정산 내역" tab tap / 우 swipe</strong> → State 1로 전환<br>
-            ↔ chip row 없음 (List 탭 한정)
+            + <strong>◀ / ▶ 월 이동</strong> → 이전/다음 달로 이동하며 대시보드 데이터가 갱신됨<br>
+            + <strong>pull-to-refresh</strong> → 대시보드 새로고침<br>
+            + <strong>"정산 내역" tab tap / 우 swipe</strong> → 정산 내역 탭으로 전환<br>
+            ↔ 상태 필터 chip 없음 (정산 내역 탭 한정)
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · <code>completed_gross_total</code> 만 COMPLETED 합산 (PROCESSING/READY/HOLD 제외 — Fix #1935: 라벨 "정산 완료 매출"로 명확화)<br>
-            · status_counts 일부 status 키 누락 → 해당 cell count 0으로 표시<br>
-            · loading: <code>CircularProgressIndicator</code> Center · error: 텍스트 + "다시 시도" FilledButton
+            · '정산 완료 매출'은 완료 상태 항목만 합산 (지급중/확정/보류 제외)<br>
+            · 상태 카운트가 누락된 상태는 해당 cell이 0으로 표시<br>
+            · 로딩 중: 중앙 스피너 · 오류: 안내 텍스트 + "다시 시도" 버튼
           </td>
         </tr>
         <tr>
@@ -951,7 +947,7 @@ body.dark-mode .viewport {
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 Dashboard 탭은 7 status 모두(PENDING/READY/PROCESSING/COMPLETED/FAILED/HOLD/CANCELED) cell이 있고, List 탭 chip은 동일 7개. 두 surface 사이의 색상 mapping은 <code>SettlementStatus.{textColor,backgroundColor}(colorScheme)</code>로 단일화 — 색·라벨 drift 없음.</td>
+          <td>📝 대시보드 탭은 7개 상태 모두 cell이 있고, 정산 내역 탭 chip도 동일 7개. 두 화면의 색·라벨은 단일 매핑으로 통일되어 drift 없음.</td>
         </tr>
       </tbody>
     </table>
@@ -959,7 +955,7 @@ body.dark-mode .viewport {
     <!-- State 5: Loading -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Loading</strong> <small>async · 진입 직후 또는 refresh 중</small></th></tr>
+        <tr><th colspan="3"><strong>Loading</strong> <small>진입 직후 또는 새로고침 중</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -992,15 +988,15 @@ body.dark-mode .viewport {
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>isLoading == true</code> · <code>items.isEmpty</code> (최초 fetch). loadMore 시엔 list 하단 spinner footer로 표시됨 (이 state에 미포함)</td>
+          <td>최초 데이터 조회 중이고 항목이 비어 있는 상태. 추가 페이지를 더 받아오는 경우는 리스트 하단 스피너로 표시되며 이 화면과는 다름.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>↔ list 탭 가능 (chip은 fetch 발화), 카드 tap 영역 없음. tab 전환은 동일 가능</td>
+          <td>↔ chip 탭 가능 (탭하면 새 조회 시작), 카드 탭 영역은 없음. 탭 전환은 그대로 가능</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· refresh trigger 시 기존 items 유지하면서 RefreshIndicator의 progress overlay 표시 (별도 state로 그리지 않음 — Material default)<br>· fetch 실패 → State (Error) 진입 (아래)</td>
+          <td>· 새로고침 시 기존 항목을 그대로 둔 채 상단에 인디케이터만 노출 (별도 state로 그리지 않음)<br>· 데이터 조회 실패 → 오류 상태로 진입 (아래)</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
@@ -1020,7 +1016,7 @@ body.dark-mode .viewport {
     <!-- State 6: Error -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Error</strong> <small>list fetch 실패 · 재시도 CTA</small></th></tr>
+        <tr><th colspan="3"><strong>Error</strong> <small>정산 목록을 받지 못함 · 재시도 CTA</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -1058,15 +1054,15 @@ body.dark-mode .viewport {
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>error != null</code> · <code>items.isEmpty</code> · <code>!isLoading</code> (Fix #127: 빈 상태 대신 명시적 오류 surface)</td>
+          <td>정산 목록 조회가 실패했고 항목 캐시가 비어 있는 상태 (Fix #127: 빈 상태 대신 명시적 오류 화면).</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>+ <strong>"다시 시도" CTA</strong> → <code>refresh()</code> · 성공 시 baseline / Empty / Error 중 하나로 전환</td>
+          <td>+ <strong>"다시 시도" CTA</strong> → 새로고침 시도 · 성공 시 baseline / 빈 상태 / 오류 중 하나로 전환</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· error 있지만 items 캐시 보유 → empty 화면 대신 stale list + 무음 에러 (이 state엔 해당 안 됨)<br>· 권한 부족 (PostgREST 401/403) → 동일 surface로 표시 (메시지 분기 없음 — 후속 개선 후보)</td>
+          <td>· 오류는 발생했지만 직전 항목 캐시가 남아 있는 경우 → 빈 화면 대신 직전 리스트 + 무음 오류 (이 화면에는 해당 안 됨)<br>· 권한 부족으로 인한 거부 → 동일 화면으로 표시 (메시지 분기 없음 — 후속 개선 후보)</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
@@ -1078,7 +1074,7 @@ body.dark-mode .viewport {
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 시각적으로 Empty(state 3)과 매우 유사. 차이는 icon(error_outline vs receipt_long_outlined) + title + CTA 라벨. Fix #127 의도: 일반 빈 상태와 명확히 구분.</td>
+          <td>📝 시각적으로 빈 상태와 매우 유사. 차이는 아이콘 / 타이틀 / CTA 라벨. 일반 빈 상태와 명확히 구분하기 위함 (Fix #127).</td>
         </tr>
       </tbody>
     </table>
@@ -1108,23 +1104,23 @@ body.dark-mode .viewport {
       <tbody>
         <tr>
           <td>탭 전환 (대시보드 ↔ 정산 내역)</td>
-          <td><code>TabController.animateTo</code> · TabBarView swipe/tap 모두 수용. 두 탭은 별도 controller (DashboardController · ListController)로 fetch — 한쪽 새로고침이 다른 쪽 invalidate 안 함.</td>
+          <td>탭/스와이프 모두 가능. 두 탭은 데이터를 별도로 가져오므로 한쪽을 새로고침해도 다른 쪽은 자동 갱신되지 않음.</td>
         </tr>
         <tr>
           <td>AppBar 지갑 IconButton</td>
-          <td><code>SETTLEMENT_EDIT</code> 권한 보유 시만 노출 (#1568). 탭 → <code>settlementCoordinator.goToBankAccount()</code> → <code>BankAccountRoute</code>(/settlement/bank-account).</td>
+          <td>정산 편집 권한 보유 시만 노출. 탭 → 정산 계좌 화면으로 이동.</td>
         </tr>
         <tr>
-          <td>지원되지 않는 status 값 응답</td>
-          <td><code>SettlementStatus.fromString</code>이 <code>unknown</code>으로 fallback · 배지 라벨 "알 수 없음" · bg <code>surfaceContainerHighest</code> + text <code>onSurfaceVariant</code>. (Empty state UI 변화 없음)</td>
+          <td>알 수 없는 상태 값 응답</td>
+          <td>지원되지 않는 상태가 들어오면 "알 수 없음" 라벨로 표시되며 회색 배지로 fallback. (빈 상태 화면에는 영향 없음)</td>
         </tr>
         <tr>
           <td>다크 모드 토글</td>
-          <td>scaffold/list bg → <code>color-dark-surface</code>(#212121) · primary → <code>color-partner-dark-primary</code>(#9b7bec) · 배지 색상은 status별 10% opacity 유지 (자동 조정 · settlement_detail 동일).</td>
+          <td>scaffold/list 배경 → <code>color-dark-surface</code>(#212121) · primary → <code>color-partner-dark-primary</code>(#9b7bec) · 배지 색상은 상태별 약 10% 투명도로 자동 조정.</td>
         </tr>
         <tr>
           <td>금액 포맷 (모든 state 공통)</td>
-          <td>SettlementCard amount: <code>${negative ? '-' : ''}₩{formatted}</code> — 마이너스 부호는 ₩ 앞 (Fix #1932). 천 단위 콤마는 자체 <code>_formatAmount</code>(NumberFormat 미사용 · 직접 join). Dashboard total은 <code>NumberFormat('#,###')</code> + <code>₩</code> prefix.</td>
+          <td>정산 카드 금액은 음수일 때 마이너스 부호가 ₩ 앞에 표시됨 (예: <code>-₩42,000</code>). 천 단위 콤마는 모든 금액에 일관되게 적용.</td>
         </tr>
       </tbody>
     </table>
@@ -1176,10 +1172,10 @@ body.dark-mode .viewport {
   <section class="doc">
     <h2>Global edge cases</h2>
     <ul class="notes">
-      <li><strong>SETTLEMENT_VIEW 권한만 보유</strong> — AppBar 지갑 아이콘 미렌더 (#1568). list / dashboard는 정상 표시.</li>
-      <li><strong>infinite scroll race</strong> — <code>maxScrollExtent - 200</code> 도달 시 <code>loadMore()</code>. <code>isLoading</code> 가드는 controller에 있어야 중복 호출 방지 (현재 source는 가드 위치 점검 필요 — drift 후보).</li>
-      <li><strong>cross-branch CTA</strong> — Empty state CTA "첫 이벤트 만들기"는 <code>SettlementBranch → MoreBranch</code> 경계를 넘어야 하므로 root GoRouter를 쓰는 <code>settlementCoordinator</code>에 위임 (Fix #1680). <code>context.push()</code> 직접 호출은 무음 실패 — 사용 금지.</li>
-      <li><strong>dashboard error</strong> — Error 상태에서 다시 시도 버튼은 단순 FilledButton (MinglitEmptyState 아님 · 인라인 Center column). list 탭 Error와 시각적 결이 다름 — 후속 통일 후보.</li>
+      <li><strong>정산 조회 권한만 보유</strong> — AppBar 지갑 아이콘이 보이지 않음. 리스트 / 대시보드는 정상 표시.</li>
+      <li><strong>무한 스크롤 race</strong> — 리스트 끝에 가까워지면 자동으로 다음 페이지가 로드됨. 이미 로드 중인 동안에는 중복 호출이 일어나지 않도록 보장 필요 (drift 점검 후보).</li>
+      <li><strong>탭 경계 CTA</strong> — 빈 상태의 "첫 이벤트 만들기"는 정산 탭에서 다른 탭으로 점프해야 하므로 일반 push가 아닌 표준 코디네이터를 통해 이동.</li>
+      <li><strong>대시보드 오류</strong> — 대시보드 오류 화면의 '다시 시도' 버튼은 일반 FilledButton (정산 내역 탭의 빈/오류 화면과 시각적 결이 다름) — 후속 통일 후보.</li>
     </ul>
   </section>
 </div>

@@ -446,9 +446,8 @@
         <td>
           파티 정보가 복잡하고 다양한 필드(기본 정보, 위치, 정원/연락처, 입장 규칙, 티켓, 검토)로 나뉘기 때문에
           단계별 위저드가 UX를 단순화한다.
-          수정 모드(<code>partyId</code> 전달)에서는 기존 데이터를 prefill하며, prefill 로딩 중에는
-          스피너 화면을 표시한다.
-          double-tap 방지를 위한 guard(<code>_isNextingStep</code>)가 적용되어 있다.
+          기존 파티를 수정하기 위해 진입한 경우엔 기존 값을 채워 넣는 짧은 대기 동안 풀스크린 스피너가 잠시 노출된다.
+          "다음" 버튼은 빠르게 두 번 누르더라도 단계가 두 칸 진행되지 않도록 안전 처리되어 있다.
         </td>
       </tr>
       <tr>
@@ -612,13 +611,13 @@
 
   <section class="doc">
     <p class="intro">
-      <strong>State 종류 식별 기준</strong>: <code>currentStep</code> enum (basicInfo · location · capacityAndContact · entryRules · tickets · review) + validation 분기 (<code>currentStepValidationErrors</code>) + async submit (<code>globalLoadingControllerProvider</code>). Edit 모드 prefill loading은 별도 state 미포함 — Step 1 진입 직전 spinner라 이행적 transition.
+      <strong>State 식별 기준</strong>: 현재 단계 (기본 정보 / 장소 / 정원·연락처 / 입장 규칙 / 티켓 / 검토), 다음으로 넘어갈 때 입력값이 유효한지 여부, 마지막 단계에서 저장이 진행 중인지 여부에 따라 8가지 변형. 수정 모드의 첫 진입 직후엔 잠깐 풀스크린 스피너가 떠서 기존 값을 채우는 짧은 전이 구간이 있음 (별도 state로 분류하지 않음).
     </p>
 
     <!-- State 1: Step 1 · 기본 정보 (baseline) -->
     <table class="ref state-mini is-baseline-tint">
       <thead>
-        <tr><th colspan="3"><strong>Step 1 / 6 · 기본 정보</strong> 🎯 <small>baseline · production</small></th></tr>
+        <tr><th colspan="3"><strong>Step 1 / 6 · 기본 정보</strong> 🎯 <small>baseline · 위저드 첫 단계, 제목·소개·이미지·공개 여부 입력</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -680,26 +679,26 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>currentStep == basicInfo</code> · 진입 직후 (Create) 또는 prefill 완료 (Edit) · 제목 일부 입력됨</td>
+          <td>위저드 첫 단계인 "기본 정보". 새로 만들기로 진입한 직후, 또는 수정 모드에서 기존 값이 채워진 직후의 모습.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ① <strong>제목 입력</strong> → input filled 상태로 갱신<br>
-            ② <strong>소개 Quill 편집</strong> → bold/italic toolbar 액션 + 본문 편집<br>
-            ③ <strong>이미지 추가 슬롯 탭</strong> → OS 이미지 picker 호출<br>
-            ④ <strong>이미지 × 탭</strong> → 슬롯에서 제거<br>
-            ⑤ <strong>비공개 파티 switch 토글</strong> → on/off (link-only access)<br>
-            ⑥ <strong>"다음" 탭</strong> → validation 통과 시 Step 2 / 실패 시 State 7 (validation error)<br>
-            ⑦ <strong>back 탭</strong> → 별도 confirm 없이 파티 목록 복귀
+            ① <strong>제목 입력</strong> — 입력란 테두리가 강조 색으로 바뀌며 채워짐을 시각적으로 표시.<br>
+            ② <strong>소개 본문 편집</strong> — 굵게 / 기울임 / 목록 등 툴바로 서식을 적용하며 본문 입력.<br>
+            ③ <strong>이미지 추가 슬롯 탭</strong> — 갤러리에서 사진 선택 후 슬롯에 채워짐.<br>
+            ④ <strong>이미지 슬롯 우상단 × 탭</strong> — 해당 사진이 슬롯에서 즉시 제거.<br>
+            ⑤ <strong>"비공개 파티" 스위치 토글</strong> — 켜면 링크를 받은 사람만 접근 가능한 파티로 전환.<br>
+            ⑥ <strong>"다음" 탭</strong> — 입력값이 유효하면 다음 단계로 슬라이드, 미흡하면 입력란이 빨간 톤으로 강조되며 안내 토스트가 잠시 노출.<br>
+            ⑦ <strong>뒤로가기</strong> — 별도 확인 없이 파티 목록으로 복귀, 입력 중이던 값은 유지되지 않음.
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · 이미지 4개 슬롯 모두 채워짐 → "추가" 슬롯 사라짐<br>
-            · 제목 50자 초과 → input border <code>color-error</code> + 에러 메시지<br>
-            · 비공개 토글 ON → public/private flag 즉시 변경 (Step 6에서도 확인 가능)
+            · 이미지 4개 슬롯이 모두 채워지면 "추가" 슬롯은 자동으로 사라짐.<br>
+            · 제목이 허용 글자 수를 넘으면 입력란이 빨간 톤으로 바뀌고 아래에 안내 문구가 노출.<br>
+            · "비공개 파티"를 켠 결과는 마지막 검토 단계의 요약에서도 그대로 확인됨.
           </td>
         </tr>
         <tr>
@@ -725,7 +724,7 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 6 step 모두 같은 scaffold (AppBar + Progress + body + BottomNav). 다른 step은 body 콘텐츠와 progress %, AppBar title만 다름. 변경분만 표시.</td>
+          <td>📝 6단계 모두 같은 골격(상단 AppBar + 얇은 진행 바 + 본문 + 하단 이전/다음 바)을 공유. 다음 단계부터는 body 콘텐츠 / 진행 바 채움 / AppBar 타이틀의 변경분만 표기.</td>
         </tr>
       </tbody>
     </table>
@@ -733,7 +732,7 @@
     <!-- State 2: Step 2 · 장소 선택 -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Step 2 / 6 · 장소 선택</strong> <small>currentStep = location</small></th></tr>
+        <tr><th colspan="3"><strong>Step 2 / 6 · 장소 선택</strong> <small>파티가 열릴 장소와 상세 주소 / 찾아오는 방법 입력</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -770,15 +769,15 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>currentStep == location</code> · 장소 선택 완료 · 상세 주소 미입력</td>
+          <td>두 번째 단계인 "장소 선택". 장소를 한 곳 골랐고, 상세 주소는 아직 비어 있는 일반적인 모습.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>+ <strong>장소 picker 탭</strong> → 장소 검색 시트 (Naver/Kakao API) → 선택 → 자동 prefill (이름 + 주소)<br>+ <strong>상세 주소 / 찾아오는 방법 입력</strong> → 일반 텍스트 input<br>나머지 동일 (이전/다음)</td>
+          <td>+ <strong>장소 선택 영역 탭</strong> — 장소 검색 시트가 열리고, 선택하면 이름과 주소가 자동으로 채워짐.<br>+ <strong>상세 주소 / 찾아오는 방법 입력</strong> — 일반 텍스트 입력란.<br>이전 / 다음 / 뒤로가기는 baseline과 동일.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· 장소 검색 결과 없음 → 직접 입력 fallback (LocationPicker 내부 처리)<br>· "다음" 탭 시 장소 미선택 → State 7 (validation error)</td>
+          <td>· 검색 결과가 없을 땐 사용자가 직접 입력하는 길로 안내됨.<br>· 장소를 선택하지 않은 채 "다음"을 누르면 안내 토스트가 잠시 노출되며 다음 단계로 넘어가지 않음.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
@@ -790,7 +789,7 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 progress fill % = step / total × 100. UI에선 16.7 / 33.3 / 50.0 / 66.7 / 83.3 / 100 6단계.</td>
+          <td>📝 진행 바는 단계가 진행될수록 1/6, 2/6 ... 식으로 균등하게 채워지며, 마지막 검토 단계에서 100%에 도달.</td>
         </tr>
       </tbody>
     </table>
@@ -798,7 +797,7 @@
     <!-- State 3: Step 3 · 정원 & 연락처 -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Step 3 / 6 · 정원 &amp; 연락처</strong> <small>currentStep = capacityAndContact</small></th></tr>
+        <tr><th colspan="3"><strong>Step 3 / 6 · 정원 &amp; 연락처</strong> <small>최소 확정 인원 / 연락 수단 / 성비 균형 옵션 입력</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -845,15 +844,15 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>currentStep == capacityAndContact</code> · 최소 인원 + 연락처 방법 multi-select</td>
+          <td>세 번째 단계인 "정원 & 연락처". 최소 인원이 입력되어 있고, 연락 수단 칩 두 개가 활성화된 모습.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>+ <strong>최소 인원 number input</strong> (단위 "명")<br>+ <strong>연락처 방법 chip 탭</strong> → multi-select 토글 (전화 · 이메일 · 카카오)<br>+ <strong>전화번호 / 이메일 / 카카오 ID input</strong> → 선택된 chip마다 input 등장<br>+ <strong>성비 균형 switch 토글</strong> → 자동 조정 on/off</td>
+          <td>+ <strong>최소 인원 입력</strong> — 숫자를 직접 입력 (단위 "명").<br>+ <strong>연락처 방법 칩 탭</strong> — 전화 / 이메일 / 카카오를 복수로 선택 가능. 선택된 칩은 강조 색으로 바뀌며 채움 배경.<br>+ <strong>선택한 연락 수단별 입력란</strong> — 칩을 켤 때마다 해당 수단의 입력란이 노출.<br>+ <strong>"성비 균형 맞추기" 스위치</strong> — 켜면 남/여 비율이 자동으로 조정되도록 표기.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· 연락처 방법 0개 선택 → "다음" 탭 시 validation error<br>· 최소 인원이 티켓 총량보다 많음 → Step 6 review에서 경고</td>
+          <td>· 연락 수단을 한 개도 선택하지 않은 채 "다음"을 누르면 안내 토스트가 잠시 노출되며 다음 단계로 넘어가지 않음.<br>· 최소 인원이 발행 예정 티켓 총량보다 많으면 마지막 검토 단계에서 경고가 표시됨.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
@@ -865,7 +864,7 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 chip multi-select 패턴은 다른 wizard에서도 재사용 — MDS <code>MinglitFilterChipGroup</code> 표준.</td>
+          <td>📝 칩 다중 선택 패턴은 다른 위저드에서도 동일하게 사용되는 디자인 시스템 표준.</td>
         </tr>
       </tbody>
     </table>
@@ -873,7 +872,7 @@
     <!-- State 4: Step 4 · 입장 규칙 -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Step 4 / 6 · 입장 규칙</strong> <small>currentStep = entryRules · 그룹 2개 설정됨</small></th></tr>
+        <tr><th colspan="3"><strong>Step 4 / 6 · 입장 규칙</strong> <small>입장 그룹 2개가 설정된 모습</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -911,15 +910,15 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>currentStep == entryRules</code> · 입장 그룹 list (각 그룹은 인증 요구사항 + 나이 제한 + 성별 제한)</td>
+          <td>네 번째 단계인 "입장 규칙". 인증 요구사항 / 나이 제한 / 성별 제한이 묶인 입장 그룹이 한 개 이상 설정되어 있는 일반 모습.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>+ <strong>그룹 추가 버튼 탭</strong> → 입장 그룹 편집 시트 (신규 그룹)<br>+ <strong>그룹 카드 탭</strong> → 같은 시트 (편집)<br>+ <strong>그룹 카드 ⓧ 탭</strong> → 삭제 confirm 다이얼로그</td>
+          <td>+ <strong>"그룹 추가" 버튼 탭</strong> — 새 입장 그룹을 만드는 편집 시트가 열림.<br>+ <strong>그룹 카드 본문 탭</strong> — 같은 편집 시트가 열려 기존 그룹을 수정.<br>+ <strong>그룹 카드 우측 휴지통 아이콘 탭</strong> — 삭제 확인 다이얼로그가 뜨고, 확인하면 카드가 사라짐.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· 그룹 0개 → "다음" 탭 시 validation error ("최소 1개 그룹 필요")<br>· 그룹 10개 초과 → 추가 버튼 disabled (limit)<br>· 마지막 그룹 삭제 시도 → 다이얼로그에 경고 표시</td>
+          <td>· 그룹이 한 개도 없는 상태에서 "다음"을 누르면 "최소 1개 그룹이 필요합니다" 안내가 잠시 노출.<br>· 그룹 수가 한도(10개)에 이르면 "그룹 추가" 버튼이 흐릿하게 비활성화됨.<br>· 마지막 남은 그룹을 삭제하려 하면 다이얼로그에 경고가 함께 표시.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
@@ -941,7 +940,7 @@
     <!-- State 5: Step 5 · 티켓 -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Step 5 / 6 · 티켓</strong> <small>currentStep = tickets · 2개 티켓 설정됨</small></th></tr>
+        <tr><th colspan="3"><strong>Step 5 / 6 · 티켓</strong> <small>티켓 두 종류가 설정된 모습</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -982,15 +981,15 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>currentStep == tickets</code> · 티켓 list (이름 · 가격 · 수량 · 대상 입장그룹)</td>
+          <td>다섯 번째 단계인 "티켓". 한 종류 이상의 티켓(이름 / 가격 / 수량 / 대상 입장 그룹)이 설정된 일반 모습.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>+ <strong>티켓 추가 / 카드 탭</strong> → 티켓 편집 시트<br>+ <strong>티켓 카드 ⓧ 탭</strong> → 삭제 confirm 다이얼로그</td>
+          <td>+ <strong>"티켓 추가" 또는 카드 탭</strong> — 티켓 편집 시트가 열림.<br>+ <strong>티켓 카드 우측 휴지통 아이콘 탭</strong> — 삭제 확인 다이얼로그.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· 티켓 0개 → "다음" 탭 시 validation error<br>· 티켓 대상 그룹이 Step 4에서 삭제됨 → 진입 시 자동 reconcile (관계 끊김 표시)<br>· 가격 0원 → 무료 파티로 표시 (디자인 의도)</td>
+          <td>· 티켓이 한 개도 없는 상태에서 "다음"을 누르면 안내 토스트가 잠시 노출.<br>· 이전 단계에서 입장 그룹을 삭제하면 그 그룹과 연결된 티켓의 대상 표기가 자동으로 비워지고 사용자가 다시 지정해야 함.<br>· 가격을 0원으로 설정하면 무료 파티로 표기됨.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
@@ -1002,7 +1001,7 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 티켓 편집 시트도 그룹 편집 시트와 같은 패턴 — 별도 spec 후보. 가격은 <code>NumberFormat</code> + "원" 접미.</td>
+          <td>📝 티켓 편집 시트는 입장 그룹 편집 시트와 같은 패턴 — 별도 spec 후보. 가격은 천 단위 콤마 + "원" 접미로 표기됨.</td>
         </tr>
       </tbody>
     </table>
@@ -1010,7 +1009,7 @@
     <!-- State 6: Step 6 · 검토 & 생성 -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Step 6 / 6 · 검토 &amp; 생성</strong> <small>currentStep = review · 모든 입력 valid · "생성하기" 활성</small></th></tr>
+        <tr><th colspan="3"><strong>Step 6 / 6 · 검토 &amp; 생성</strong> <small>모든 입력이 유효하고 "생성하기" 버튼이 활성화된 마지막 단계</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -1061,19 +1060,19 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>currentStep == review</code> · 5 step 모두 valid · 페이지 타이틀 (h1) "파티 정보를 확인해 주세요"</td>
+          <td>마지막 단계인 "검토 및 완료". 1~5단계의 입력이 모두 유효해 화면에는 "파티 정보를 확인해 주세요" 헤딩과 함께 섹션별 요약이 노출됨.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ① <strong>섹션 "수정" 탭</strong> → 해당 step으로 점프 (currentStep 변경)<br>
-            ② <strong>"생성하기" 탭</strong> → State 8 (Submitting) → 성공 시 파티 목록 + 스낵바<br>
-            ③ <strong>"이전" 탭</strong> → Step 5
+            ① <strong>섹션 우측 "수정" 탭</strong> — 해당 단계로 화면이 슬라이드 전환되어 그 단계만 다시 손볼 수 있음. 다른 단계의 입력값은 그대로 유지.<br>
+            ② <strong>"생성하기" 탭</strong> — 저장 진행 중 상태로 전환 (다음 state) 후, 성공하면 파티 목록으로 돌아가며 성공 토스트가 잠시 노출.<br>
+            ③ <strong>"이전" 탭</strong> — 직전 단계(티켓)로 복귀.
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· Edit 모드에선 "생성하기" → "수정 완료"로 라벨 변경<br>· 검토 단계에서 다른 step의 데이터를 읽기만 — 수정은 해당 step 점프 후</td>
+          <td>· 수정 모드일 때는 "생성하기" 라벨이 "수정 완료"로 바뀐다.<br>· 이 단계에서는 요약을 읽기만 하며, 값 변경은 반드시 해당 단계로 이동해서 수행한다.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
@@ -1085,7 +1084,7 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 "수정" 점프는 <code>currentStep</code>만 변경 — 입력값은 controller state로 유지. 다시 검토 step으로 돌아오면 변경분 반영.</td>
+          <td>📝 "수정" 점프는 화면만 해당 단계로 이동시킬 뿐, 다른 단계의 입력값은 그대로 보존된다. 검토 단계로 돌아오면 손본 값이 즉시 반영되어 표시.</td>
         </tr>
       </tbody>
     </table>
@@ -1093,7 +1092,7 @@
     <!-- State 7: Validation error (snackbar) -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Validation error</strong> <small>"다음" 탭 + invalid · 임의 step 위에 부착</small></th></tr>
+        <tr><th colspan="3"><strong>Validation error</strong> <small>"다음"을 눌렀는데 입력이 미흡할 때 — 어떤 단계에서도 동일하게 노출</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -1128,15 +1127,15 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>"다음" 탭 → <code>currentStepValidationErrors.isNotEmpty</code> → 첫 에러 메시지로 snackbar 표시. <code>currentStep</code> 변경 안 됨.</td>
+          <td>"다음"을 눌렀지만 현 단계의 입력이 미흡한 상태. 화면 하단에 안내 토스트가 잠시 노출되고, 단계는 그대로 머무른다.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>· snackbar 자동 dismiss (~3s) 또는 수동 close<br>· 에러 필드 input 클릭 → 수정 → 다시 "다음" 탭<br>· "이전" 탭 → 이전 step으로 (validation guard 우회)</td>
+          <td>· 토스트는 잠시 후 자동으로 사라지며 사용자가 명시적으로 닫을 수도 있음.<br>· 빨간 톤으로 강조된 입력란을 다시 손본 후 "다음"을 누르면 정상 진행.<br>· "이전"은 유효성 검사를 거치지 않고 바로 이전 단계로 복귀 가능.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· 동시에 여러 필드 invalid → snackbar는 첫 에러만, 모든 invalid 필드는 inline error로 표시<br>· _isNextingStep guard로 double-tap 시 snackbar 중복 방지</td>
+          <td>· 동시에 여러 입력란이 미흡한 경우 — 토스트는 첫 번째 안내만 표시되지만, 미흡한 입력란들은 모두 빨간 톤으로 강조되며 그 아래 안내 문구가 함께 노출.<br>· "다음"을 빠르게 두 번 누르더라도 단계가 두 번 진행되지 않도록 안전 처리되어 있음.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
@@ -1148,7 +1147,7 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 mockup은 Step 1 컨텍스트지만, validation은 모든 step에서 동일 패턴. <code>_isNextingStep</code> guard는 double-tap 방지.</td>
+          <td>📝 mockup은 Step 1 모습이지만, 어떤 단계에서도 같은 패턴(빨간 강조 + 안내 토스트)으로 노출.</td>
         </tr>
       </tbody>
     </table>
@@ -1156,7 +1155,7 @@
     <!-- State 8: Submitting (global loading overlay) -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Submitting</strong> <small>"생성하기" 탭 → globalLoadingControllerProvider.show() · 전체 오버레이</small></th></tr>
+        <tr><th colspan="3"><strong>Submitting</strong> <small>"생성하기"를 누른 직후 — 화면 전체에 풀스크린 로딩 오버레이</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -1189,15 +1188,15 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>Step 6에서 "생성하기" 탭 직후 ~ 서버 응답 대기. <code>globalLoadingControllerProvider.show()</code> 호출.</td>
+          <td>마지막 단계에서 "생성하기"를 누른 직후, 서버 응답을 기다리는 짧은 구간. 화면 전체에 어두운 막과 가운데 흰 스피너가 노출됨.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>— <em>(전체 오버레이 — 모든 탭 무반응. back tap도 잠시 무시)</em></td>
+          <td>— <em>(이 시점에는 화면의 어떤 컨트롤도 반응하지 않음. 뒤로가기도 이 짧은 동안에는 동작하지 않음.)</em></td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· 서버 에러 → <code>hide()</code> 후 에러 다이얼로그 → Step 6 복귀 (입력값 유지)<br>· 네트워크 timeout → 동일하게 에러 다이얼로그<br>· 성공 → <code>hide()</code> + 파티 목록 라우트 + 성공 스낵바</td>
+          <td>· 서버 오류가 발생하면 오버레이가 사라지며 안내 다이얼로그가 뜨고, 검토 단계로 복귀 — 입력값은 그대로 유지.<br>· 네트워크가 끊기거나 응답이 너무 늦으면 동일한 안내 다이얼로그가 표시.<br>· 성공하면 오버레이가 사라지며 파티 목록으로 이동, 성공 토스트가 잠시 노출.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
@@ -1209,7 +1208,7 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 GlobalLoadingOverlay는 wizard 외에도 결제 / 인증 등 전역 async에서 재사용. 여러 spec에 같은 atom.</td>
+          <td>📝 풀스크린 로딩 오버레이는 위저드 외에도 결제 / 인증 등 다른 전역 흐름에서 동일한 모습으로 재사용되는 공유 atom.</td>
         </tr>
       </tbody>
     </table>
@@ -1238,16 +1237,16 @@
       </thead>
       <tbody>
         <tr>
-          <td>뒤로 가기 (시스템 back / AppBar back)</td>
-          <td>위저드 종료 confirm 없이 파티 목록 복귀 — 입력된 데이터 유실. (개선 후속: confirm 다이얼로그)</td>
+          <td>뒤로가기 (시스템 / AppBar back)</td>
+          <td>별도의 종료 확인 다이얼로그 없이 파티 목록으로 복귀하며, 입력 중이던 값은 보존되지 않음. (향후 종료 확인 다이얼로그 추가 검토)</td>
         </tr>
         <tr>
           <td>다크 모드 토글</td>
-          <td>AppBar / body bg → <code>color-dark-background</code>. progress fill → <code>color-dark-primary</code>(#aa33ff). input border → <code>color-dark-divider</code>. 에러 색상 유지.</td>
+          <td>AppBar / 본문 / 입력란 / 진행 바가 다크 톤으로 전환. 강조 색과 오류 색은 동일하게 식별 가능한 톤으로 유지.</td>
         </tr>
         <tr>
-          <td>"다음" 더블 탭 (모든 step)</td>
-          <td>두 번째 탭은 <code>_isNextingStep</code> guard로 무시 — step이 2단계 건너뛰지 않음.</td>
+          <td>"다음"을 빠르게 두 번 탭</td>
+          <td>두 번째 탭은 안전 처리되어 무시되며, 단계가 2칸 건너뛰지 않음.</td>
         </tr>
       </tbody>
     </table>
@@ -1268,34 +1267,34 @@
       </thead>
       <tbody>
         <tr>
-          <td>Step 간 PageView 슬라이드</td>
+          <td>단계 간 슬라이드</td>
           <td><code>MinglitAnimation.medium</code> (350ms)</td>
-          <td>Curves.easeInOut. 다음 = 좌→우, 이전 = 우→좌.</td>
+          <td>다음으로 갈 때는 좌→우, 이전으로 돌아갈 때는 우→좌로 부드럽게 슬라이드.</td>
         </tr>
         <tr>
-          <td>Progress bar fill 증감</td>
+          <td>진행 바 채움 증감</td>
           <td><code>MinglitAnimation.medium</code> (350ms)</td>
-          <td>CSS width transition. step 전환과 동시 진행.</td>
+          <td>단계 슬라이드와 동시에 진행 바가 부드럽게 채워짐.</td>
         </tr>
         <tr>
           <td>AppBar 타이틀 변경</td>
           <td>cut</td>
-          <td>Flutter AppBar 기본 — fade 없이 즉시 교체.</td>
+          <td>별도 페이드 없이 단계가 바뀌는 순간 즉시 교체.</td>
         </tr>
         <tr>
-          <td>Validation snackbar in/out</td>
+          <td>안내 토스트 등장 / 사라짐</td>
           <td><code>MinglitAnimation.fast</code> (200ms)</td>
-          <td>Material slide-up. 자동 dismiss 4s.</td>
+          <td>화면 하단에서 슬라이드 업으로 등장, 약 4초 후 자동으로 사라짐.</td>
         </tr>
         <tr>
-          <td>GlobalLoading overlay in</td>
+          <td>풀스크린 로딩 등장</td>
           <td><code>MinglitAnimation.micro</code> (100ms)</td>
-          <td>opacity fade. 즉각적 피드백.</td>
+          <td>"생성하기"를 누른 직후 즉각적으로 페이드 인되어 사용자에게 빠른 피드백을 줌.</td>
         </tr>
         <tr>
-          <td>"수정" 탭 → step 점프</td>
+          <td>검토 단계의 "수정" 탭 → 단계 점프</td>
           <td><code>MinglitAnimation.medium</code> (350ms)</td>
-          <td><code>PageView.animateToPage(step.index)</code> easeInOut.</td>
+          <td>해당 단계로 부드럽게 슬라이드 전환.</td>
         </tr>
       </tbody>
     </table>
@@ -1304,10 +1303,10 @@
   <section class="doc">
     <h2>Global edge cases</h2>
     <ul class="notes">
-      <li><strong>Edit 모드 prefill</strong> — <code>partyId</code> 전달 시 진입 직후 전체 스피너. <code>partyDetailProvider(partyId)</code> 응답 후 Step 1 모든 필드 prefill되어 노출.</li>
-      <li><strong>Edit 모드 완료 라벨</strong> — Step 6 "생성하기" → "수정 완료". 성공 스낵바도 "파티 정보가 수정되었습니다."</li>
-      <li><strong>Cross-step 무결성</strong> — Step 4에서 그룹 삭제 시 Step 5의 티켓 <code>targetEntryGroupId</code>도 자동 unlink. Step 5 진입 시 reconcile 표시.</li>
-      <li><strong>비공개 파티 flag</strong> — Step 1 토글 ON → 메인 피드 노출 안 됨. 링크 공유로만 접근 가능 (Step 6 review에서 "비공개" 표기).</li>
+      <li><strong>수정 모드 첫 진입</strong> — 기존 파티를 수정하기 위해 들어오면 진입 직후 잠깐 풀스크린 스피너가 뜨고, 곧 1단계의 모든 입력란이 기존 값으로 채워진 채 노출됨.</li>
+      <li><strong>수정 모드 마지막 단계</strong> — 마지막 단계의 "생성하기" 라벨이 "수정 완료"로 바뀌고, 성공 시 노출되는 토스트도 "파티 정보가 수정되었습니다."로 표기.</li>
+      <li><strong>단계 간 무결성</strong> — 4단계에서 입장 그룹을 삭제하면 5단계의 그 그룹과 연결된 티켓의 대상 표기가 자동으로 비워져, 5단계로 돌아가면 사용자가 다시 지정해야 한다는 표시가 노출.</li>
+      <li><strong>비공개 파티</strong> — 1단계의 비공개 토글을 켜면 메인 피드에는 노출되지 않으며 링크를 받은 사람만 접근 가능. 6단계 검토에서도 "비공개"로 표기됨.</li>
     </ul>
   </section>
 </div>

@@ -191,7 +191,7 @@ body.dark-mode .pep-appbar__title { color: var(--color-dark-text-primary); }
         <th>Hierarchy</th>
         <td>
           <strong>Parent</strong>: <a href="/specs/partner_detail_page.html"><code>PartnerDetailPage</code></a> <em style="color: var(--color-text-secondary);">("진행중인 이벤트 → 더 보기" 탭으로 진입)</em><br>
-          <strong>Children</strong>: <a href="/specs/event_card.html"><code>MinglitEventCard</code></a> (vertical cell · <code>showPartnerOverlay: false</code> · 4 visible state — 별도 spec)
+          <strong>Children</strong>: <a href="/specs/event_card.html"><code>MinglitEventCard</code></a> (수직 셀 · 파트너 오버레이 숨김 · 4 visible state — 별도 spec)
         </td>
       </tr>
       <tr>
@@ -205,17 +205,17 @@ body.dark-mode .pep-appbar__title { color: var(--color-dark-text-primary); }
       <tr>
         <th>User journey</th>
         <td>
-          <strong>Entry points</strong>: <a href="/specs/partner_detail_page.html"><code>PartnerDetailPage</code></a> "진행중인 이벤트 → 더 보기" TextButton 탭 — 사실상 단일 진입점. 딥링크 <code>/partners/:partnerId/events</code> 도 가능 (URL 공유 / 외부 링크).<br>
-          <strong>Exit points</strong>: 카드 탭 → <code>partnerCoordinator.pushEventDetail(event.id)</code> → <a href="/specs/event_detail_page.html"><code>EventDetailRoute</code></a> · 뒤로 가기 → PartnerDetailPage 복귀.
+          <strong>Entry points</strong>: <a href="/specs/partner_detail_page.html"><code>PartnerDetailPage</code></a> "진행중인 이벤트 → 더 보기" 텍스트 버튼 탭 — 사실상 단일 진입점. 딥링크 <code>/partners/:partnerId/events</code>도 가능 (URL 공유 / 외부 링크).<br>
+          <strong>Exit points</strong>: 카드 탭 → <a href="/specs/event_detail_page.html">EventDetailPage</a>로 이동 · 뒤로 가기 → PartnerDetailPage 복귀.
         </td>
       </tr>
       <tr>
         <th>Background</th>
         <td>
-          PartnerDetailPage의 가로 ListView는 (screenW − 48) × 0.65 카드를 사용해 한 화면에 1.5~2장만 노출 — "더 많은 이벤트가 있을 수 있다"는 affordance만 줌.
-          이 화면은 그 "더 많은 이벤트"를 풀폭 vertical list로 풀어주는 자리.
-          UI는 <code>ListView.builder</code> + <code>MinglitEventCard</code> 단순 조합 — 별도 filter / sort / pagination 없음.
-          <code>partnerEventsProvider</code>는 5분 캐시 (<code>ref.keepAlive()</code> + Timer) — 재진입 시 즉시 표시.
+          PartnerDetailPage의 가로 스크롤은 한 화면에 1.5~2장만 노출 — "더 많은 이벤트가 있을 수 있다"는 단서만 준다.
+          이 화면은 그 "더 많은 이벤트"를 풀폭 수직 리스트로 풀어주는 자리.
+          별도 필터 / 정렬 / 페이지네이션 없이 카드 리스트 한 묶음만 노출.
+          한 번 본 결과는 짧은 시간 동안 유지되어, 곧바로 다시 들어오면 즉시 같은 리스트가 보인다.
         </td>
       </tr>
       <tr><th>Frequency</th><td>관심 파트너에 대해 이벤트 사이클당 0~1회 — PartnerDetail에서 카드를 다 보고 더 둘러보고 싶을 때만 진입.</td></tr>
@@ -263,14 +263,14 @@ body.dark-mode .pep-appbar__title { color: var(--color-dark-text-primary); }
   <div class="perspective__header">
     <span class="glyph">🧱</span>
     <h2>Layout</h2>
-    <span class="lede">Scaffold + AppBar + ListView 단순 골격. body는 <code>MinglitAsyncValueWidget</code>이 loading / error / data 분기.</span>
+    <span class="lede">Scaffold + AppBar + ListView 단순 골격. body는 loading / error / data 3개 분기를 같은 영역에서 교체 노출.</span>
   </div>
 
   <section class="doc">
     <h2>Blueprint &amp; tree</h2>
     <p class="intro">
-      Body는 <code>ListView.builder</code> 한 개만 — 카드 사이 separator 없음, 외곽 padding 없음 (edge-to-edge).
-      카드 자체가 image 2:1 + 본문(타이틀 · meta · 태그 등)을 포함하므로 list는 별도 section header / sticky 영역을 두지 않는다.
+      Body는 카드가 화면 끝에서 끝까지(edge-to-edge) 이어진 단일 수직 리스트. 카드 사이 별도 구분선 없음, 외곽 패딩 없음.
+      카드 자체가 2:1 이미지 + 본문(타이틀 · 메타 · 태그)을 포함하므로 별도 섹션 헤더 / 고정 영역을 두지 않는다.
     </p>
 
     <div class="layout-grid">
@@ -301,16 +301,15 @@ body.dark-mode .pep-appbar__title { color: var(--color-dark-text-primary); }
 ├─ <b>AppBar</b>(centerTitle: true)                                         ← ①
 │  └─ title: <code>Text('$partnerName 이벤트')</code>
 │
-└─ body: <b>MinglitAsyncValueWidget&lt;List&lt;Event&gt;&gt;</b>(value: eventsAsync)
-   ├─ [loading]  <b>MinglitCircularProgressIndicator</b> (default)
-   ├─ [error]    <b>_DefaultErrorView</b> (icon error_outline + "오류가 발생했습니다.")
+└─ body: 비동기 분기
+   ├─ [loading]  <b>MinglitCircularProgressIndicator</b>
+   ├─ [error]    아이콘 + "오류가 발생했습니다."
    └─ [data]
-      ├─ events.isEmpty → <b>Center</b>(<code>Text('등록된 이벤트가 없습니다.')</code> · bodyMedium · outline)
-      └─ else            → <b>ListView.builder</b>(itemCount: events.length)
-                          └─ <a href="/specs/event_card.html"><b>MinglitEventCard</b></a>             ← ②③④
-                             · event: events[index]
-                             · showPartnerOverlay: <i>false</i>     <i>(partner 컨텍스트 — 중복 뱃지 제거 · Fix #1214)</i>
-                             · onTap: <code>partnerCoordinator.pushEventDetail(event.id)</code>     <i>(Fix #634)</i></div>
+      ├─ 이벤트 0개 → <b>Center</b>(<code>Text('등록된 이벤트가 없습니다.')</code> · bodyMedium · outline)
+      └─ 이벤트 N개 → <b>ListView</b>
+                     └─ <a href="/specs/event_card.html"><b>MinglitEventCard</b></a>             ← ②③④
+                        · 파트너 오버레이 숨김 <i>(Fix #1214: AppBar에 이미 파트너 이름이 노출되므로 중복 제거)</i>
+                        · onTap → EventDetailPage로 이동</div>
     </div>
 
     <table class="ref" style="margin-top: 16px;">
@@ -324,8 +323,8 @@ body.dark-mode .pep-appbar__title { color: var(--color-dark-text-primary); }
       </thead>
       <tbody>
         <tr><td>①</td><td>AppBar</td><td>centerTitle (Material default · auto-back arrow)</td><td>height: 56 · scaffold gray bg · <strong>border-bottom 없음</strong> · title typography <code>titleLarge</code></td></tr>
-        <tr><td>②③④</td><td>MinglitEventCard cell</td><td>edge-to-edge (ListView.builder · 외곽 padding 없음)</td><td>카드 사이 explicit separator 0 — 카드 본체의 bottom border / divider만으로 분리. 카드 height = AspectRatio(2:1) image + body — 2026-04 기준 (<code>~252px</code> on 384). 자세한 anatomy는 child spec.</td></tr>
-        <tr><td>—</td><td>Body</td><td>—</td><td>외곽 padding 0 — list만 노출 (Scaffold body는 <code>MinglitAsyncValueWidget</code>으로 직결).</td></tr>
+        <tr><td>②③④</td><td>MinglitEventCard cell</td><td>edge-to-edge · 외곽 패딩 없음</td><td>카드 사이 별도 구분선 0 — 카드 본체의 하단 divider만으로 분리. 카드 height = 2:1 이미지 + 본문 — 2026-04 기준 (<code>~252px</code> on 384). 자세한 anatomy는 child spec.</td></tr>
+        <tr><td>—</td><td>Body</td><td>—</td><td>외곽 padding 0 — 리스트만 노출.</td></tr>
       </tbody>
     </table>
   </section>
@@ -357,10 +356,10 @@ body.dark-mode .pep-appbar__title { color: var(--color-dark-text-primary); }
         </tr>
       </thead>
       <tbody>
-        <tr class="is-baseline-tint"><td><strong>Default</strong> 🎯</td><td>production</td><td><code>eventsAsync.hasValue &amp;&amp; events.isNotEmpty</code></td><td>vertical ListView · MinglitEventCard cell × N (mixed: 임박/오늘/만석/종료 — child spec 4 variant 자유 조합)</td></tr>
-        <tr><td><strong>EmptyEvents</strong></td><td>data·empty</td><td><code>eventsAsync.hasValue &amp;&amp; events.isEmpty</code></td><td>화면 중앙 텍스트 "등록된 이벤트가 없습니다." (bodyMedium · outline)</td></tr>
-        <tr><td><strong>Loading</strong></td><td>async</td><td><code>eventsAsync.isLoading</code></td><td>화면 중앙 단일 spinner · AppBar 타이틀은 정상 노출 (partnerName 라우트 인자)</td></tr>
-        <tr><td><strong>Error</strong></td><td>network/server</td><td><code>eventsAsync.hasError</code></td><td><code>_DefaultErrorView</code> — 에러 아이콘 + "오류가 발생했습니다."</td></tr>
+        <tr class="is-baseline-tint"><td><strong>Default</strong> 🎯</td><td>production</td><td>이벤트가 1개 이상 도착한 상태</td><td>수직 카드 리스트 · 이벤트 카드 × N (임박 / 오늘 / 만석 / 종료가 자유롭게 섞여 노출)</td></tr>
+        <tr><td><strong>EmptyEvents</strong></td><td>data·empty</td><td>파트너는 정상이지만 이벤트가 0개</td><td>화면 중앙 단일 안내 메시지 "등록된 이벤트가 없습니다."</td></tr>
+        <tr><td><strong>Loading</strong></td><td>async</td><td>이벤트 목록을 불러오는 중</td><td>화면 중앙 스피너 · AppBar 파트너 이름은 그대로 노출</td></tr>
+        <tr><td><strong>Error</strong></td><td>network/server</td><td>이벤트 목록을 받지 못한 상태</td><td>중앙 에러 아이콘 + "오류가 발생했습니다."</td></tr>
       </tbody>
     </table>
   </section>
@@ -369,13 +368,13 @@ body.dark-mode .pep-appbar__title { color: var(--color-dark-text-primary); }
     <h2>States gallery</h2>
     <p class="intro">
       각 state mini-table — mockup(rowspan=6) + 6 aspect rows. <strong>Default가 baseline</strong>; 나머지 3 states는 additive diff.
-      카드 자체 anatomy / D-Day chip / sold-out scrim 등은 child spec에서 다룸 — 이 spec은 페이지 골격(AppBar + list 분기)에 집중.
+      카드 자체 anatomy / D-Day 칩 / 만석 scrim 등은 child spec에서 다룸 — 이 spec은 페이지 골격(AppBar + 리스트 분기)에 집중.
     </p>
 
     <!-- State 1: Default — BASELINE -->
     <table class="ref state-mini is-baseline-tint">
       <thead>
-        <tr><th colspan="3"><strong>Default</strong> 🎯 <small style="color:var(--color-primary);">baseline · production · partnerEvents 1개 이상</small></th></tr>
+        <tr><th colspan="3"><strong>Default</strong> 🎯</th></tr>
       </thead>
       <tbody>
         <tr>
@@ -389,7 +388,7 @@ body.dark-mode .pep-appbar__title { color: var(--color-dark-text-primary); }
                 <div class="pep-appbar__title">Skybar Seoul 이벤트</div>
               </div>
 
-              <!-- Body — ListView.builder · MinglitEventCard cells -->
+              <!-- Body — 카드 리스트 -->
               <div class="pep-list">
                 <!-- Cell 1: future event (variant: normal) — child spec inline 렌더링 안 함 -->
                 <div class="pep-card-placeholder">
@@ -415,29 +414,29 @@ body.dark-mode .pep-appbar__title { color: var(--color-dark-text-primary); }
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>partnerEventsProvider(partnerId: ...).hasValue</code> · <code>events.isNotEmpty</code></td>
+          <td>이벤트가 1개 이상 도착한 상태.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
             · <strong>뒤로 가기</strong> → PartnerDetailPage 복귀<br>
-            · <strong>카드 탭</strong> → <code>partnerCoordinator.pushEventDetail(event.id)</code> → <code>EventDetailRoute</code> (sharedAxisScaled transition)<br>
-            · <strong>스크롤</strong> → 추가 카드 노출 (BouncingScrollPhysics)<br>
-            · <strong>카드 long-press</strong> — 미구현 (default Material InkWell만 — 별도 액션 없음)
+            · <strong>카드 탭</strong> → <a href="/specs/event_detail_page.html">EventDetailPage</a>로 이동<br>
+            · <strong>스크롤</strong> → 추가 카드 노출<br>
+            · <strong>카드 길게 누르기</strong> — 별도 액션 없음
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · 카드 mix (today / sold-out / ended) — 정렬은 repository 기본 (시작시간 기반 가정 · 명시 보장 없음 · <strong>uncertain</strong>).<br>
-            · 종료(ended) 이벤트가 섞여 있으면 grayscale 처리되어 "지난 이벤트" 시각 구분이 child spec에서 자동 적용.<br>
-            · 카드 수가 매우 많은 partner — pagination 미구현, 전체를 한번에 받아 ListView.builder로 lazy 렌더만 처리.
+            · 임박 / 오늘 / 만석 / 종료 카드가 섞여 노출. 정렬은 시작 시간 기준으로 보이지만 명시적 보장은 아님.<br>
+            · 종료된 이벤트는 카드 자체에서 흑백 처리되어 "지난 이벤트"로 시각 구분.<br>
+            · 운영 이력이 긴 파트너 — 페이지네이션 없이 한 번에 전체 리스트가 노출, 보이는 만큼만 점진적으로 그려짐.
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
           <td>
-            <code>Scaffold</code> · <code>AppBar</code>(<code>title: Text('$partnerName 이벤트')</code> · centerTitle) · <code>MinglitAsyncValueWidget&lt;List&lt;Event&gt;&gt;</code> · <code>ListView.builder</code>(itemCount: events.length) · <a href="/specs/event_card.html"><code>MinglitEventCard</code></a>(<code>showPartnerOverlay: false</code> · onTap → <code>partnerCoordinator.pushEventDetail</code> · 별도 spec — child)
+            <code>Scaffold</code> · <code>AppBar</code>(centerTitle · 타이틀 "{파트너 이름} 이벤트") · 카드 리스트 · <a href="/specs/event_card.html"><code>MinglitEventCard</code></a>(파트너 오버레이 숨김 · 탭 시 EventDetailPage로 이동 · 별도 spec — child)
           </td>
         </tr>
         <tr>
@@ -448,14 +447,14 @@ body.dark-mode .pep-appbar__title { color: var(--color-dark-text-primary); }
             · radius / typography / iconSize: 모두 카드 자체에 위임 — child spec
           </td>
         </tr>
-        <tr><td class="state-mini__aspect">노트</td><td>📝 viewport mockup은 카드 3장 placeholder로 표시 (실제 카드 미렌더링 — child spec 위임 규칙). 실제 사용 시 N개. AppBar title의 partnerName은 라우트 인자로 받아 즉시 노출 — provider 응답을 기다리지 않음 (PartnerDetailPage와 다른 점).</td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 mockup은 카드 3장 placeholder로 표시 (실제 카드 미렌더링 — child spec 위임 규칙). 실제 사용 시 N개. AppBar의 파트너 이름은 진입 직후부터 즉시 노출 — 데이터 도착 전에도 어디로 들어왔는지 단서 제공.</td></tr>
       </tbody>
     </table>
 
     <!-- State 2: EmptyEvents -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>EmptyEvents</strong> <span class="tag tag--mute">data·empty</span> · <small>partner는 정상이지만 이벤트 0개</small></th></tr>
+        <tr><th colspan="3"><strong>EmptyEvents</strong> <span class="tag tag--mute">data·empty</span></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -473,7 +472,7 @@ body.dark-mode .pep-appbar__title { color: var(--color-dark-text-primary); }
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>eventsAsync.hasValue &amp;&amp; events.isEmpty</code> — partner는 active이나 이벤트 list가 비어있음.</td>
+          <td>파트너는 정상이지만 이벤트 목록이 비어있는 상태.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
@@ -482,27 +481,27 @@ body.dark-mode .pep-appbar__title { color: var(--color-dark-text-primary); }
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · PartnerDetailPage 가로 list가 (시점에 따라) 1~2장 보였더라도 — 이 풀 리스트 fetch가 새 응답이라면 0개로 비어 보일 수 있음 (provider key 다름 + race).<br>
-            · 모든 이벤트가 ended라 repository에서 제외되는 경우 — provider 주석은 "upcoming"이라 적혀 있으나 repository 동작은 verify 필요 (<strong>uncertain</strong>).<br>
-            · 새로 가입한 partner — 첫 이벤트를 아직 만들지 않은 케이스에 자연스럽게 표시.
+            · PartnerDetailPage 가로 리스트에서 1~2장이 보였더라도, 이 풀 리스트가 새로 받아오는 시점에는 0개로 보일 수 있음.<br>
+            · 모든 이벤트가 종료된 파트너라면 빈 상태로 표시될 수 있음.<br>
+            · 새로 가입한 파트너 — 첫 이벤트를 아직 만들지 않은 케이스에 자연스럽게 표시.
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
-          <td>↔ ListView.builder → <code>Center</code>(<code>Text('등록된 이벤트가 없습니다.')</code>)<br>· text style: <code>bodyMedium</code> · color <code>theme.colorScheme.outline</code></td>
+          <td>↔ 카드 리스트 → 화면 중앙 단일 안내 텍스트 "등록된 이벤트가 없습니다." (bodyMedium · outline 색)</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
           <td>− Default list 토큰 미사용<br>+ <code>color-text-secondary</code> = outline (메시지 색)</td>
         </tr>
-        <tr><td class="state-mini__aspect">노트</td><td>📝 retry / "둘러보기" CTA 없음 — 단순 텍스트만. enhancement 후보 (e.g. "이 파트너 알림받기" 유도 또는 HomePage로 보내기).</td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 재시도 / "둘러보기" CTA 없음 — 단순 텍스트만. 향후 "이 파트너 알림받기" 유도 또는 홈으로 보내기 등 보강 후보.</td></tr>
       </tbody>
     </table>
 
     <!-- State 3: Loading -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Loading</strong> <span class="tag tag--mute">async</span> · <small>partnerEvents fetch 진행 중</small></th></tr>
+        <tr><th colspan="3"><strong>Loading</strong> <span class="tag tag--mute">async</span></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -520,26 +519,26 @@ body.dark-mode .pep-appbar__title { color: var(--color-dark-text-primary); }
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>eventsAsync.isLoading</code> — 첫 진입 시 또는 5분 캐시 만료 후 재 fetch.</td>
+          <td>이벤트 목록을 불러오는 중인 상태. 첫 진입 또는 캐시 만료 후 재진입 시.</td>
         </tr>
-        <tr><td class="state-mini__aspect">사용자 액션</td><td>· 뒤로 가기 → PartnerDetailPage 복귀 (즉시).<br>· 그 외 무반응 (spinner 회전).</td></tr>
+        <tr><td class="state-mini__aspect">사용자 액션</td><td>· 뒤로 가기 → PartnerDetailPage 복귀 (즉시).<br>· 그 외 무반응 (스피너 회전).</td></tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · 캐시(5분 keepAlive) hit이면 이 state를 거의 거치지 않고 즉시 Default 표시 — PartnerDetail에서 같은 provider를 watch했으면 진입 시 거의 무딜레이.<br>
-            · skeleton 미장착 — pull-to-refresh도 없음. timeout 없음 (Supabase client default).
+            · 직전에 같은 파트너 화면을 본 적이 있다면 캐시 덕분에 이 상태를 거의 거치지 않고 곧장 리스트가 노출됨.<br>
+            · 스켈레톤 / 풀-다운 새로고침 없음. 타임아웃 없음.
           </td>
         </tr>
-        <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ ListView.builder → <code>MinglitCircularProgressIndicator</code> (MinglitAsyncValueWidget의 default loading)</td></tr>
-        <tr><td class="state-mini__aspect">토큰</td><td>− Default list 토큰 미사용<br>+ <code>color-primary</code> (spinner 색)</td></tr>
-        <tr><td class="state-mini__aspect">노트</td><td>📝 AppBar title은 partnerName 라우트 인자로 즉시 표시 — Loading state에서도 "어디 진입했는지" 단서 제공 (PartnerDetailPage와 다른 점).</td></tr>
+        <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ 카드 리스트 → 화면 중앙 단일 스피너</td></tr>
+        <tr><td class="state-mini__aspect">토큰</td><td>− Default list 토큰 미사용<br>+ <code>color-primary</code> (스피너 색)</td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 AppBar의 파트너 이름은 진입 직후부터 즉시 표시 — Loading 상태에서도 "어디 진입했는지" 단서 제공.</td></tr>
       </tbody>
     </table>
 
     <!-- State 4: Error -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Error</strong> <span class="tag tag--mute">network/server</span> · <small>partnerEvents fetch 실패</small></th></tr>
+        <tr><th colspan="3"><strong>Error</strong> <span class="tag tag--mute">network/server</span></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -560,25 +559,25 @@ body.dark-mode .pep-appbar__title { color: var(--color-dark-text-primary); }
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>eventsAsync.hasError</code> — repository / 네트워크 / RLS 거부 등 throw.</td>
+          <td>이벤트 목록을 받지 못한 상태. 네트워크 / 서버 / 권한 오류.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>· 뒤로 가기만 가능 — retry CTA 없음 (default <code>_DefaultErrorView</code> · <code>showErrorDetails: false</code>).<br>· pull-to-refresh 미장착 — "뒤로 → 다시 진입"으로 우회 retry.</td>
+          <td>· 뒤로 가기만 가능 — 재시도 버튼 없음.<br>· 풀-다운 새로고침 없음 — "뒤로 → 다시 진입"으로 우회 재시도.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · <code>showErrorDetails: false</code> → error.toString() 미노출. 디버그 빌드에서도 동일.<br>
-            · 인증 토큰 만료도 동일 error 화면 (별도 401 분기 없음).
+            · 구체적인 오류 사유는 화면에 표시되지 않음 — 일반 안내 문구만 노출.<br>
+            · 인증 만료도 동일한 오류 화면 (별도 분기 없음).
           </td>
         </tr>
-        <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ ListView.builder → <code>_DefaultErrorView</code> (Icons.error_outline xlarge 32 + Text "오류가 발생했습니다." titleMedium bold)</td></tr>
+        <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ 카드 리스트 → 중앙 정렬 에러 아이콘 + "오류가 발생했습니다." (titleMedium bold)</td></tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
-          <td>+ <code>color-error</code> (icon)<br>+ <code>color-text-primary</code> (title)<br>+ spacing: <code>spacing-large (24)</code> (Center Padding) · <code>spacing-medium (16)</code> (icon → title gap)<br>− Default list 토큰</td>
+          <td>+ <code>color-error</code> (아이콘)<br>+ <code>color-text-primary</code> (타이틀)<br>+ spacing: <code>spacing-large (24)</code> (외곽 패딩) · <code>spacing-medium (16)</code> (아이콘↔타이틀 gap)<br>− Default list 토큰</td>
         </tr>
-        <tr><td class="state-mini__aspect">노트</td><td>📝 retry CTA 부재는 향후 enhancement 후보 — <code>ref.invalidate(partnerEventsProvider(partnerId: id))</code> 트리거 버튼 검토.</td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 재시도 버튼 부재는 향후 보강 후보.</td></tr>
       </tbody>
     </table>
 
@@ -606,24 +605,24 @@ body.dark-mode .pep-appbar__title { color: var(--color-dark-text-primary); }
       </thead>
       <tbody>
         <tr>
-          <td>뒤로 가기 (OS back / AppBar BackButton)</td>
-          <td>이전 화면(PartnerDetailPage)으로 pop — 4 state 모두 동일. transition은 GoRouter / Material default 역방향.</td>
+          <td>뒤로 가기 (OS back / AppBar 뒤로 버튼)</td>
+          <td>이전 화면(PartnerDetailPage)으로 복귀 — 4 state 모두 동일.</td>
         </tr>
         <tr>
           <td>카드 탭 (Default 한정)</td>
-          <td><code>partnerCoordinator.pushEventDetail(event.id)</code> → <code>EventDetailRoute</code> push (sharedAxisScaled · 350ms).</td>
+          <td><a href="/specs/event_detail_page.html">EventDetailPage</a>로 이동.</td>
         </tr>
         <tr>
           <td>풀-다운 새로고침</td>
-          <td><strong>구현 안 됨</strong> — RefreshIndicator 미부착. 5분 캐시(<code>ref.keepAlive</code> + Timer)이 만료되어야 자동 재 fetch.</td>
+          <td>없음 — 짧은 캐시 시간이 지나야 자동으로 다시 받아옴.</td>
         </tr>
         <tr>
           <td>딥링크로 직접 진입</td>
-          <td><code>/partners/:partnerId/events</code> URL → Loading → Default(또는 Empty / Error). partnerName이 라우트 path 인자가 아니라 <strong>extra</strong>로 전달되므로 딥링크에선 partnerName이 비어 보일 수 있음 — 실제 동작 verify 필요 (<strong>uncertain</strong>).</td>
+          <td><code>/partners/:partnerId/events</code> URL로 곧장 진입 가능 → Loading → Default (또는 Empty / Error). 외부 진입 경로에서는 AppBar의 파트너 이름이 비어 보일 수 있음.</td>
         </tr>
         <tr>
           <td>다크 모드 토글</td>
-          <td>scaffold / AppBar / 카드 모두 dark 토큰으로 자동 swap (mds 다크 토큰 매핑).</td>
+          <td>scaffold / AppBar / 카드 모두 다크 토큰으로 자동 전환.</td>
         </tr>
       </tbody>
     </table>
@@ -642,27 +641,27 @@ body.dark-mode .pep-appbar__title { color: var(--color-dark-text-primary); }
         <tr>
           <td>화면 진입 (PartnerDetail → PartnerEvents)</td>
           <td><code>MinglitAnimation.fast</code> (200ms)</td>
-          <td>GoRouter Material default — PartnerEventsRoute에 커스텀 transition 미지정.</td>
+          <td>플랫폼 기본 push 전환.</td>
         </tr>
         <tr>
-          <td>카드 탭 → EventDetail push</td>
+          <td>카드 탭 → EventDetail 진입</td>
           <td><code>MinglitAnimation.medium</code> (350ms)</td>
-          <td><code>MinglitPageTransitions.sharedAxisScaled</code> — EventDetailRoute 정의에 명시.</td>
+          <td><code>MinglitPageTransitions.sharedAxisScaled</code> — EventDetail 진입의 표준 전환.</td>
         </tr>
         <tr>
-          <td>Loading → Default state 교체</td>
+          <td>Loading → Default 교체</td>
           <td>cut</td>
-          <td><code>MinglitAsyncValueWidget</code>이 AsyncValue.when 직접 분기 — fade 없이 교체 (AnimatedSwitcher 미장착).</td>
+          <td>fade 없이 즉시 교체.</td>
         </tr>
         <tr>
-          <td>InkWell ripple (카드 탭)</td>
+          <td>카드 탭 ripple</td>
           <td><code>MinglitAnimation.micro</code> (100ms)</td>
-          <td>Material default ripple expand · 카드 내부에서 처리.</td>
+          <td>Material 잉크 리플 — 카드 내부에서 처리.</td>
         </tr>
         <tr>
-          <td>ListView 스크롤 inertia</td>
-          <td>OS default (<code>BouncingScrollPhysics</code> · iOS) / Material default · Android</td>
-          <td>별도 token 없음.</td>
+          <td>리스트 스크롤 관성</td>
+          <td>OS 기본</td>
+          <td>iOS는 끝에서 살짝 튕김, Android는 Material 기본. 별도 token 없음.</td>
         </tr>
       </tbody>
     </table>
@@ -671,11 +670,11 @@ body.dark-mode .pep-appbar__title { color: var(--color-dark-text-primary); }
   <section class="doc">
     <h2>Global edge cases</h2>
     <ul class="notes">
-      <li><strong>partnerName이 빈 문자열</strong> — AppBar title이 " 이벤트"(앞뒤 빈 칸)로 노출될 수 있음. PartnerDetailPage 진입 경로에선 사실상 발생 안 함 (partner.name 보장) · 딥링크에선 발생 가능 — sanitize 미구현.</li>
-      <li><strong>provider 캐시 공유</strong> — PartnerDetailPage와 같은 <code>partnerEventsProvider(partnerId: ...)</code>를 watch — 한쪽에서 데이터를 받으면 다른 쪽도 즉시 반영 (5분 keepAlive 동안).</li>
-      <li><strong>대용량 list</strong> — pagination 없음. partner가 운영 이력이 길면 한 번에 큰 list가 내려옴 (ListView.builder lazy 렌더링이 그나마 mitigation). repository에서 limit 거는지 verify 필요 (<strong>uncertain</strong>).</li>
-      <li><strong>접근성</strong> — AppBar BackButton은 Material 기본 a11y. 카드 자체 Semantics는 child spec 참고 (Fix #996, #1558 — 만석/종료 announce 포함).</li>
-      <li><strong>showPartnerOverlay: false</strong> — partner 컨텍스트(이미 AppBar에 partner 이름 노출)에서 카드 좌상단 partner overlay를 중복 노출하지 않음. PartnerDetailPage 가로 list와 동일 정책.</li>
+      <li><strong>파트너 이름이 빈 문자열</strong> — AppBar 타이틀이 " 이벤트"(앞뒤 빈 칸)로 보일 수 있음. PartnerDetailPage 진입 경로에선 사실상 발생 안 함, 외부 진입에서만 가능.</li>
+      <li><strong>리스트 캐시 공유</strong> — PartnerDetailPage와 같은 데이터 묶음을 공유 — 한쪽에서 데이터를 받으면 다른 쪽도 곧바로 반영.</li>
+      <li><strong>대용량 리스트</strong> — 페이지네이션 없음. 파트너가 운영 이력이 길면 한 번에 큰 리스트가 내려옴 (보이는 만큼만 점진적으로 그려짐).</li>
+      <li><strong>접근성</strong> — AppBar 뒤로 버튼은 플랫폼 기본 접근성 동작. 카드 자체의 접근성 안내는 child spec 참고 (만석 / 종료 안내 포함).</li>
+      <li><strong>파트너 오버레이 숨김</strong> — 이미 AppBar에 파트너 이름이 노출되므로 카드 좌상단의 파트너 오버레이는 중복 노출하지 않음. PartnerDetailPage 가로 리스트와 동일 정책.</li>
     </ul>
   </section>
 </div>
@@ -713,9 +712,9 @@ body.dark-mode .pep-appbar__title { color: var(--color-dark-text-primary); }
       <tbody>
         <tr><td><a href="/specs/partner_detail_page.html"><code>PartnerDetailPage</code></a></td><td>유일한 진입점 — "진행중인 이벤트 → 더 보기" TextButton 탭. 같은 <code>partnerEventsProvider</code>를 공유 (캐시 hit).</td></tr>
         <tr><td><a href="/specs/event_card.html"><code>MinglitEventCard</code></a></td><td>list cell 위젯 — 별도 spec. 4 visible state(normal · today · soldOut · ended). <code>showPartnerOverlay: false</code> 모드.</td></tr>
-        <tr><td><a href="/specs/event_detail_page.html"><code>EventDetailPage</code></a></td><td>카드 탭 시 push — <code>partnerCoordinator.pushEventDetail(event.id)</code>. sharedAxisScaled 350ms transition.</td></tr>
-        <tr><td><a href="/specs/home_page.html"><code>HomePage</code></a></td><td>유사 vertical event list 패턴 — 추천 피드 (다른 provider · 다른 컨텍스트).</td></tr>
-        <tr><td><a href="/specs/my_tickets_page.html"><code>MyTicketsPage</code></a></td><td>유사한 단일 list 화면 패턴 (Scaffold + AsyncValueWidget + ListView). 다만 상단에 todayBanner / section header 있음 — 이 화면은 단순 list 한 묶음만.</td></tr>
+        <tr><td><a href="/specs/event_detail_page.html"><code>EventDetailPage</code></a></td><td>카드 탭 시 진입. sharedAxisScaled 350ms 전환.</td></tr>
+        <tr><td><a href="/specs/home_page.html"><code>HomePage</code></a></td><td>유사한 수직 이벤트 리스트 패턴 — 추천 피드 (다른 컨텍스트).</td></tr>
+        <tr><td><a href="/specs/my_tickets_page.html"><code>MyTicketsPage</code></a></td><td>유사한 단일 리스트 화면 패턴. 다만 상단에 todayBanner / section header 있음 — 이 화면은 단순 리스트 한 묶음만.</td></tr>
       </tbody>
     </table>
   </section>

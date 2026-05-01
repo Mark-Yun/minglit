@@ -624,9 +624,9 @@ body.dark-mode .visual-gallery {
             <td class="state-mini__aspect">조건</td>
             <td>나이/성별/기존 참여 등 자격 검증 실패 — <code>state.ineligibleReason</code> 구체 사유 보유</td>
           </tr>
-          <tr><td class="state-mini__aspect">사용자 액션</td><td>탭 무반응 (onPressed: null)</td></tr>
-          <tr><td class="state-mini__aspect">에지케이스</td><td><code>state.ineligibleReason</code>이 있으면 sub-reason으로 동적 표시 (예: "만 20세 이상 참여 가능"). 없으면 generic.</td></tr>
-          <tr><td class="state-mini__aspect">컴포넌트</td><td>동일 (MinglitButton의 <code>onPressed: null</code> built-in disabled state)</td></tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>탭 무반응 (버튼 비활성)</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>구체 사유가 있으면 동적으로 표시 (예: "만 20세 이상 참여 가능"). 없으면 일반 안내.</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>동일 (MinglitButton 비활성 상태)</td></tr>
           <tr><td class="state-mini__aspect">토큰</td><td>+ <code>color-divider</code> (disabled bg) · + <code>color-text-secondary</code> (disabled label)</td></tr>
           <tr><td class="state-mini__aspect">노트</td><td>—</td></tr>
         </tbody>
@@ -832,7 +832,7 @@ body.dark-mode .visual-gallery {
               <div class="tbar"><div class="tbar__price"><div class="tbar__price-label">입장권</div><div class="tbar__price-amount">가격 미정</div></div><div class="tbar__btn tbar__btn--disabled">참여 조건 미달</div></div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td><code>event.tickets == null || event.tickets.isEmpty</code> — 데이터 미등록 또는 fetch 실패</td>
+            <td>티켓이 아직 등록되지 않았거나 데이터를 불러오지 못한 상태.</td>
           </tr>
           <tr><td class="state-mini__aspect">사용자 액션</td><td>탭 무반응 (admission state에 따라 — 보통 disabled)</td></tr>
           <tr><td class="state-mini__aspect">에지케이스</td><td>가격 자리에 "가격 미정" 텍스트 fallback. 가격 amount 자리에 들어가지만 typography titleLarge는 그대로 유지.</td></tr>

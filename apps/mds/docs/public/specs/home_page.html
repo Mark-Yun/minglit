@@ -1003,14 +1003,14 @@ active 상태: bg=primary 0.08 · border=primary · color=primary · w600</div>
 
   <section class="doc">
     <p class="intro">
-      <strong>State 종류 식별 기준</strong>: 인증 분기 (currentUserProvider) + async fetch lifecycle (recommendationFeedProvider) + empty/error 분기. EventCard / EventNowBar 자체 state는 child spec 참고.
+      <strong>State 식별 기준</strong>: 인증 여부 + 피드 로딩 상태 + 결과 유무에 따라 5가지 page-level 변형. EventCard / EventNowBar 자체 state는 child spec 참고.
     </p>
 
       <!-- State 1: Default — authenticated, data loaded, EventNowBar active -->
       
     <table class="ref state-mini is-baseline-tint">
       <thead>
-        <tr><th colspan="3"><strong>Default · 로그인 + 피드 로드됨 + 이벤트 진행 중</strong> 🎯 <small>baseline · production</small></th></tr>
+        <tr><th colspan="3"><strong>Default · 로그인 + 피드 로드됨 + 이벤트 진행 중</strong> 🎯</th></tr>
       </thead>
       <tbody>
         <tr>
@@ -1221,29 +1221,29 @@ active 상태: bg=primary 0.08 · border=primary · color=primary · w600</div>
                     </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>인증된 사용자 · <code>recommendationFeedProvider</code> 로드 완료 · <code>todayActiveEvents &gt; 0</code> · <code>EventNowBar</code>는 <code>checkInReady</code> action variant</td>
+          <td>로그인된 사용자가 추천 피드를 받았고, 오늘 참여 중인 이벤트가 있어 하단 EventNowBar가 액션 안내를 노출하는 상태.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>① <strong>스크롤</strong> → 카드 차례 노출 · 무한 스크롤 (다음 페이지 fetch)<br>
-        ② <strong>EventCard 탭</strong> → <a href="/specs/event_detail_page.html">EventDetailPage</a> 진입<br>
+          <td>① <strong>스크롤</strong> → 카드 차례 노출 · 끝에 다다르면 다음 결과가 자동으로 이어짐<br>
+        ② <strong>EventCard 탭</strong> → <a href="/specs/event_detail_page.html">EventDetailPage</a>로 이동<br>
         ③ <strong>FilterChip 탭</strong> → 필터 적용 (추천순 · 마감임박 · 가까운날짜) → 피드 갱신<br>
-        ④ <strong>"근처" 토글</strong> → 위치 권한 요청 (필요 시) → 위치 기반 sort<br>
-        ⑤ <strong>TagChip 탭</strong> → <code>TagEventListPage</code> 진입<br>
+        ④ <strong>"근처" 토글</strong> → 위치 권한 요청 (필요 시) → 위치 기반 정렬<br>
+        ⑤ <strong>TagChip 탭</strong> → <a href="/specs/tag_event_list_page.html">TagEventListPage</a>로 이동<br>
         ⑥ <strong>AppBar 검색 아이콘</strong> → SearchPage / <strong>알림</strong> → NotificationCenter / <strong>아바타</strong> → MyPage<br>
-        ⑦ <strong>EventNowBar 탭</strong> → state별 routed sheet (<a href="/specs/event_now_bar.html">child spec</a>)</td>
+        ⑦ <strong>EventNowBar 탭</strong> → 단계별 시트 (<a href="/specs/event_now_bar.html">child spec</a>)</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· 스크롤 마지막 도달 → "더 이상 결과 없음" 메시지 (피드 끝)<br>
+          <td>· 스크롤 마지막에 도달 → "더 이상 결과 없음" 메시지 (피드 끝)<br>
         · 위치 권한 거부 후 "근처" 토글 시도 → 권한 다이얼로그 재요청 안내<br>
-        · 다중 활성 이벤트 → EventNowBar에 1건만 (가장 임박 / 가장 진행 phase 우선)</td>
+        · 동시 활성 이벤트가 여러 건 → EventNowBar에는 가장 임박한 1건만 노출</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
           <td>· <code>MinglitAppBar</code> (검색 · 알림 · 아바타 3개 액션 아이콘)<br>
         · <code>FilterChipBar</code> (추천순 · 마감임박 · 가까운날짜 · "근처" 토글)<br>
-        · <a href="/specs/event_card.html"><code>MinglitEventCard</code></a> 피드 (SliverList · edge-to-edge · normal/today/soldOut/ended state — child spec)<br>
+        · <a href="/specs/event_card.html"><code>MinglitEventCard</code></a> 피드 (edge-to-edge · normal/today/soldOut/ended state — child spec)<br>
         · <a href="/specs/event_now_bar.html"><code>EventNowBar</code></a> (Scaffold.bottomSheet · 7 visible state — child spec)</td>
         </tr>
         <tr>
@@ -1265,7 +1265,7 @@ active 상태: bg=primary 0.08 · border=primary · color=primary · w600</div>
       
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Default · 비로그인</strong> <small>비로그인</small></th></tr>
+        <tr><th colspan="3"><strong>Default · 비로그인</strong></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -1333,15 +1333,15 @@ active 상태: bg=primary 0.08 · border=primary · color=primary · w600</div>
                     </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>currentUserProvider</code>가 null · 인증 실패 또는 로그아웃 직후 진입</td>
+          <td>로그인되지 않은 상태로 화면에 진입한 경우.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>+ <strong>"로그인하고 시작하기" 탭</strong> → <a href="/specs/login_page.html">LoginRoute</a> 진입<br>− 모든 다른 액션 (피드 / chip / EventNowBar 모두 미렌더)</td>
+          <td>+ <strong>"로그인하고 시작하기" 탭</strong> → <a href="/specs/login_page.html">LoginPage</a>로 이동<br>− 그 외 액션은 모두 막힘 (피드 / 칩 / 하단 바 모두 노출되지 않음)</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· 로그인 직후 자동으로 default state로 전환 (Riverpod stream 갱신)</td>
+          <td>· 로그인이 완료되면 자동으로 default 상태로 전환.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
@@ -1363,7 +1363,7 @@ active 상태: bg=primary 0.08 · border=primary · color=primary · w600</div>
       
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Loading · 피드 로드 중</strong> <small>피드 로드 중</small></th></tr>
+        <tr><th colspan="3"><strong>Loading · 피드 로드 중</strong></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -1403,19 +1403,19 @@ active 상태: bg=primary 0.08 · border=primary · color=primary · w600</div>
                     </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>recommendationFeedProvider.loading</code> · 진입 직후 또는 pull-to-refresh</td>
+          <td>피드를 불러오는 중. 진입 직후 또는 풀-다운 새로고침 직후.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>· AppBar 액션은 가능 (검색 · 알림 · 아바타)<br>· Pull-to-refresh로 다시 트리거 가능 (현재 진행 중이면 무반응)<br>− 피드 / chip 액션 (Skeleton 표시 — 미인터랙티브)</td>
+          <td>· AppBar 액션은 가능 (검색 · 알림 · 아바타)<br>· 풀-다운 새로고침으로 다시 트리거 가능 (이미 진행 중이면 무반응)<br>− 피드 / 칩 액션 (스켈레톤 표시 — 미인터랙티브)</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· fetch 시간 길어짐 → Skeleton 그대로 유지 · timeout 별도 없음<br>· 빠르게 응답 → loaded state로 즉시 전환 (cut)</td>
+          <td>· 응답이 길어지면 스켈레톤이 그대로 유지됨. 별도 타임아웃 없음.<br>· 빠르게 응답이 오면 곧바로 결과 화면으로 전환 (fade 없이 cut).</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
-          <td>↔ Feed → <code>EventCardSkeleton</code> × 5장 (image 회색 placeholder + body line skeleton)<br>↔ EventNowBar → hidden (loading state · child spec 참고)</td>
+          <td>↔ Feed → 카드 자리 표시(스켈레톤) × 5장 (이미지 자리 회색 + 본문 라인)<br>↔ EventNowBar → 노출되지 않음</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
@@ -1433,7 +1433,7 @@ active 상태: bg=primary 0.08 · border=primary · color=primary · w600</div>
       
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Empty · 추천 이벤트 없음</strong> <small>추천 이벤트 없음</small></th></tr>
+        <tr><th colspan="3"><strong>Empty · 추천 이벤트 없음</strong></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -1466,19 +1466,19 @@ active 상태: bg=primary 0.08 · border=primary · color=primary · w600</div>
                     </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>recommendationFeedProvider</code> 로드 완료 · feed.isEmpty · 필터 0개</td>
+          <td>피드 로드는 완료됐지만 표시할 이벤트가 0건이고 필터도 적용되지 않은 상태.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>+ <strong>"필터 초기화" 탭</strong> → 필터 reset · 피드 다시 fetch<br>+ <strong>"검색하기" 탭</strong> → SearchPage 진입</td>
+          <td>+ <strong>"필터 초기화" 탭</strong> → 필터를 리셋하고 다시 받아옴<br>+ <strong>"검색하기" 탭</strong> → SearchPage로 이동</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· 필터 적용 후 empty → 메시지 다름 ("이 필터로 보이는 이벤트가 없어요")<br>· 비로그인이면 default · 비로그인 state로 (이 state 도달 안 함)</td>
+          <td>· 필터 적용 후 결과가 0건이면 안내 문구가 다름 ("이 필터로 보이는 이벤트가 없어요").<br>· 비로그인 상태에서는 이 상태에 도달하지 않음.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
-          <td>↔ Feed → <code>MinglitEmptyState</code> (icon + title + body + 2 액션 버튼)<br>↔ EventNowBar → hidden (no-active state)<br>− EventCard, FilterChipBar (필터 비어있을 때) 그대로</td>
+          <td>↔ Feed → 안내 박스 (아이콘 + 타이틀 + 본문 + 액션 버튼 2개)<br>↔ EventNowBar → 노출되지 않음<br>− EventCard, FilterChipBar(필터가 비어있는 상태)는 그대로</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
@@ -1496,7 +1496,7 @@ active 상태: bg=primary 0.08 · border=primary · color=primary · w600</div>
       
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Error · 피드 로드 실패</strong> <small>피드 로드 실패</small></th></tr>
+        <tr><th colspan="3"><strong>Error · 피드 로드 실패</strong></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -1524,19 +1524,19 @@ active 상태: bg=primary 0.08 · border=primary · color=primary · w600</div>
                     </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>recommendationFeedProvider.error</code> · 네트워크 끊김 / 서버 5xx / timeout</td>
+          <td>피드를 받아오지 못한 상태. 네트워크 끊김 / 서버 오류 / 타임아웃.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>+ <strong>"다시 시도" 탭</strong> → 피드 다시 fetch (loading state로)<br>+ <strong>"새로고침" 탭</strong> → 페이지 전체 reload</td>
+          <td>+ <strong>"다시 시도" 탭</strong> → 피드를 다시 불러옴 (Loading 상태로 전환)<br>+ <strong>"새로고침" 탭</strong> → 화면 전체를 다시 불러옴</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· 재시도 시 같은 에러 반복 → 동일 화면 유지<br>· 네트워크 회복 → 자동 재시도 안 함 (사용자 액션 필요)</td>
+          <td>· 재시도 시 같은 오류가 반복되면 동일 화면 유지.<br>· 네트워크 회복만으로 자동 재시도되지 않음 — 사용자 액션 필요.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
-          <td>↔ Feed → <code>MinglitErrorState</code> (icon + title + body + "다시 시도" 버튼)<br>↔ EventNowBar → hidden (offline state)</td>
+          <td>↔ Feed → 안내 박스 (아이콘 + 타이틀 + 본문 + "다시 시도" 버튼)<br>↔ EventNowBar → 노출되지 않음</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>

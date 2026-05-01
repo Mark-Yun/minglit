@@ -392,7 +392,7 @@ body.dark-mode .viewport .btn-social--apple {
 
   <section class="doc">
     <p class="intro">
-      <strong>State 종류 식별 기준</strong>: platform 분기(iOS/Android) + async 진행 + app 변형(user/partner). 4종 모두 코드 분기 (Theme.of(context).platform · Future&lt;OAuthResult&gt; · widget 공유 후 props).
+      <strong>State 종류 식별 기준</strong>: 실행 중인 OS(iOS/Android) · 인증 진행 여부 · 어느 앱인지(사용자용/파트너용)에 따라 4가지 변형으로 분기.
     </p>
 
     <!-- State 1: Default · iOS / macOS / Web (baseline) -->
@@ -422,25 +422,25 @@ body.dark-mode .viewport .btn-social--apple {
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>platform ∈ {iOS, macOS, Web} · 인증 진행 중 아님 · 사용자 로그인 안 됨</td>
+          <td>iOS · macOS · Web에서 진입한 상태. 인증이 진행 중이 아니고 아직 로그인되지 않은 상태.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ① <strong>Google 탭</strong> → Loading state 진입 → 외부 OAuth 페이지 (브라우저 또는 in-app webview)<br>
-            ② <strong>Apple 탭</strong> → OS 인증 시트 (sign in with Apple) → 자동 callback<br>
-            ③ <strong>Kakao 탭</strong> → KakaoTalk 앱 또는 Kakao OAuth 페이지<br>
-            ④ <strong>이용약관 / 개인정보처리방침 링크 탭</strong> → 외부 브라우저로 이동 (이 화면 그대로)<br>
-            ⑤ <strong>로고 2초 안에 5번 탭</strong> (dev only) → DevUserSwitchScreen
+            ① <strong>Google 버튼 탭</strong> — 화면이 즉시 로딩으로 바뀌고 외부 Google 로그인 페이지로 넘어감.<br>
+            ② <strong>Apple 버튼 탭</strong> — 시스템이 제공하는 Apple 로그인 시트가 올라옴. 인증이 끝나면 자동으로 앱에 복귀.<br>
+            ③ <strong>Kakao 버튼 탭</strong> — KakaoTalk 앱이 설치돼 있으면 그쪽으로, 없으면 Kakao 로그인 페이지로 이동.<br>
+            ④ <strong>이용약관 / 개인정보처리방침 링크 탭</strong> — 외부 브라우저에서 해당 문서가 열림. 로그인 화면은 그대로 유지.<br>
+            ⑤ <strong>로고를 2초 안에 5번 탭</strong> (개발 환경 전용) — 테스트 계정 전환 화면으로 이동.
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · 인증 실패 (서버/네트워크) → 공통 에러 다이얼로그 잠깐 표시 → default 복귀<br>
-            · OAuth 도중 외부 브라우저 닫음 → 별도 에러 표시 없이 default 복귀<br>
-            · 이미 로그인된 사용자 직접 진입 → 화면 잠깐도 안 보이고 자동으로 홈 redirect<br>
-            · 다크모드 토글 → Google 흰→어두운, Apple 검정→흰 배경 swap. Kakao만 brand-locked 노랑 유지
+            · 인증 실패 (서버/네트워크 문제) — 공통 에러 다이얼로그가 잠깐 떴다가 닫히고 다시 기본 화면으로 복귀.<br>
+            · 외부 로그인 페이지를 사용자가 임의로 닫음 — 별도 에러 메시지 없이 기본 화면으로 복귀.<br>
+            · 이미 로그인된 사용자가 이 URL로 진입 — 화면이 보이지 않고 즉시 홈으로 이동.<br>
+            · 다크 모드 전환 — Google은 흰 배경에서 어두운 배경으로, Apple은 검정 배경에서 흰 배경으로 자동 교체. Kakao는 브랜드 가이드라인에 따라 노랑색 유지.
           </td>
         </tr>
         <tr>
@@ -495,11 +495,11 @@ body.dark-mode .viewport .btn-social--apple {
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>Theme.of(context).platform == TargetPlatform.android</code></td>
+          <td>Android 환경에서 진입한 상태.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>동일 <em>(단, Apple 액션 없음 — 버튼이 화면에 없음)</em></td>
+          <td>동일 <em>(Apple 버튼은 화면에 노출되지 않으므로 해당 액션도 없음)</em></td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
@@ -515,7 +515,7 @@ body.dark-mode .viewport .btn-social--apple {
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 Apple 자리는 conditional rendering이라 spacer 안 남음. 버튼 그룹 자체 height만 줄어듦.</td>
+          <td>📝 Apple 버튼이 빠진 자리에 빈 공간이 남지 않음. 버튼 그룹 전체 높이만 줄어듦.</td>
         </tr>
       </tbody>
     </table>
@@ -523,7 +523,7 @@ body.dark-mode .viewport .btn-social--apple {
     <!-- State 3: Loading -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Loading</strong> <small>async · 사인인 진행 중</small></th></tr>
+        <tr><th colspan="3"><strong>Loading</strong> <small>로그인 처리가 진행 중인 상태</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -535,15 +535,15 @@ body.dark-mode .viewport .btn-social--apple {
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>OAuth 버튼 중 하나 탭 직후 ~ 외부 브라우저 표시 직전 (보통 100~300ms)</td>
+          <td>OAuth 버튼 중 하나를 탭한 직후부터 외부 로그인 페이지가 화면에 뜨기 직전까지의 짧은 구간 (보통 0.1~0.3초).</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>— <em>(no-op — 모든 탭 무반응. 스피너만 회전)</em></td>
+          <td>— <em>(모든 탭이 받아들여지지 않음. 화면 중앙의 스피너만 회전.)</em></td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· OAuth 페이지가 늦게 뜸 → 스피너만 길게 보임 (timeout 없음 — OS-level)<br>· 사용자 시스템 back tap → 인증 취소되며 default 복귀</td>
+          <td>· 외부 로그인 페이지가 늦게 뜨면 스피너만 오래 보임. 자동 시간 초과는 없으며 OS가 처리.<br>· 사용자가 시스템 뒤로가기를 누르면 인증이 취소되고 기본 화면으로 복귀.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
@@ -555,7 +555,7 @@ body.dark-mode .viewport .btn-social--apple {
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 짧은 transition state — 외부 브라우저로 OAuth가 넘어가는 시간 채움. fade 없이 cut transition.</td>
+          <td>📝 외부 로그인 페이지로 넘어가는 짧은 전환 구간을 채우기 위한 화면. 별도의 페이드 전환 없이 즉시 교체됨.</td>
         </tr>
       </tbody>
     </table>
@@ -563,7 +563,7 @@ body.dark-mode .viewport .btn-social--apple {
     <!-- State 4: Partner variant -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Partner variant</strong> <small>app_partner · widget 공유 + props 다름</small></th></tr>
+        <tr><th colspan="3"><strong>Partner variant</strong> <small>파트너 앱에서 진입한 변형</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -588,11 +588,11 @@ body.dark-mode .viewport .btn-social--apple {
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>app_partner</code> 환경 — <code>MinglitLoginScreen(partner: true)</code> props</td>
+          <td>파트너 앱(<code>app_partner</code>)에서 진입한 상태.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>↔ "이용약관/개인정보 링크" → "<strong>파트너 입점 문의</strong>" 단일 TextButton (탭 시 외부 브라우저로 입점 문의 페이지)</td>
+          <td>↔ "이용약관 / 개인정보처리방침 링크" 자리가 "<strong>파트너 입점 문의</strong>" 단일 텍스트 버튼으로 교체됨. 탭하면 외부 브라우저에서 입점 문의 페이지가 열림.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
@@ -608,7 +608,7 @@ body.dark-mode .viewport .btn-social--apple {
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 widget(<code>MinglitLoginScreen</code>) 자체는 user/partner 공유. props로 분기 — 디자인 1:1 1:1 비교가 핵심.</td>
+          <td>📝 사용자 앱과 파트너 앱이 같은 화면 구조를 공유한다. 로고 아래 PARTNER 배지와 슬로건 끝의 단어, 하단 텍스트 버튼만 다르다.</td>
         </tr>
       </tbody>
     </table>
@@ -637,16 +637,16 @@ body.dark-mode .viewport .btn-social--apple {
       </thead>
       <tbody>
         <tr>
-          <td>로고를 2초 안에 5번 탭 (dev only)</td>
-          <td>DevUserSwitchScreen으로 전환 — 미리 정의된 테스트 계정 목록. production에선 무반응.</td>
+          <td>로고를 2초 안에 5번 탭 (개발 환경 전용)</td>
+          <td>테스트 계정 목록 화면으로 전환됨. 운영 환경에서는 반응하지 않음.</td>
         </tr>
         <tr>
-          <td>뒤로 가기 (시스템 back / 스와이프)</td>
-          <td>보호된 화면에서 redirect로 온 경우 → 홈으로 이동. 앱 첫 진입이면 시스템 기본 (Android 종료 / iOS 무반응).</td>
+          <td>뒤로 가기 (시스템 뒤로가기 / 스와이프)</td>
+          <td>보호된 화면에서 자동으로 이동된 경우는 홈으로 이동. 앱 첫 진입이면 OS 기본 동작 (Android는 앱 종료, iOS는 무반응).</td>
         </tr>
         <tr>
           <td>다크 모드 토글</td>
-          <td>OAuth 버튼 색상이 자동 swap (Google 흰→어두운, Apple 검정→흰). Kakao만 brand-locked 노랑 유지.</td>
+          <td>OAuth 버튼 색상이 자동으로 교체됨 (Google은 흰 배경에서 어두운 배경으로, Apple은 검정 배경에서 흰 배경으로). Kakao는 브랜드 가이드라인에 따라 노랑색 유지.</td>
         </tr>
       </tbody>
     </table>
@@ -667,29 +667,29 @@ body.dark-mode .viewport .btn-social--apple {
       </thead>
       <tbody>
         <tr>
-          <td>화면 진입 (cold start / 로그아웃 후)</td>
+          <td>화면 진입 (앱 처음 시작 / 로그아웃 직후)</td>
           <td>—</td>
-          <td>Native scaffold 전환 — 별도 entry animation 없음.</td>
+          <td>OS 기본 화면 전환을 그대로 사용. 별도의 진입 애니메이션 없음.</td>
         </tr>
         <tr>
-          <td>OAuth 버튼 탭 → Loading state</td>
+          <td>OAuth 버튼 탭 → 로딩 화면</td>
           <td><code>MinglitAnimation.micro</code> (100ms)</td>
-          <td>전체 화면이 spinner로 즉시 교체. fade 없이 cut — 사용자에게 즉각 피드백.</td>
+          <td>전체 화면이 스피너로 즉시 교체됨. 페이드 없이 컷 전환 — 사용자에게 즉각 피드백.</td>
         </tr>
         <tr>
-          <td>Loading → 외부 OAuth 브라우저</td>
+          <td>로딩 → 외부 로그인 페이지</td>
           <td>OS 기본</td>
-          <td>OS-level 브라우저 전환 — custom 불가.</td>
+          <td>OS가 제공하는 브라우저 전환을 그대로 사용. 커스터마이징 불가.</td>
         </tr>
         <tr>
-          <td>OAuth 복귀 → 홈/원래 화면</td>
+          <td>외부 인증에서 복귀 → 홈/원래 화면</td>
           <td><code>MinglitAnimation.fast</code> (200ms)</td>
-          <td>GoRouter 기본 라우트 전환 — slide / fade. 자동 redirect.</td>
+          <td>표준 라우트 전환 (slide / fade). 사용자 동작 없이 자동 이동.</td>
         </tr>
         <tr>
-          <td>에러 다이얼로그 in/out</td>
+          <td>에러 다이얼로그 노출 / 닫힘</td>
           <td><code>MinglitAnimation.fast</code> (200ms)</td>
-          <td>중앙 fade-in scale (Material default).</td>
+          <td>중앙에서 페이드 인/아웃 + 살짝 확대 (Material 기본).</td>
         </tr>
       </tbody>
     </table>
@@ -698,9 +698,9 @@ body.dark-mode .viewport .btn-social--apple {
   <section class="doc">
     <h2>Global edge cases</h2>
     <ul class="notes">
-      <li><strong>이미 로그인된 사용자가 이 URL 직접 진입</strong> — 화면이 잠깐도 안 보이고 자동으로 홈 redirect.</li>
-      <li><strong>보호된 화면에서 redirect</strong> — 인증 후 처음 가려던 화면으로 자동 복귀 (홈이 아님). <code>from</code> 쿼리 파라미터 사용.</li>
-      <li><strong>Dev 5탭 트리거 타이밍</strong> — 마지막 탭 후 2초가 지나면 카운트 리셋. 너무 천천히 탭하면 미발동.</li>
+      <li><strong>이미 로그인된 사용자가 이 URL로 진입</strong> — 화면이 보이지 않고 즉시 홈으로 이동.</li>
+      <li><strong>보호된 화면에서 자동으로 진입한 경우</strong> — 로그인을 마치면 처음 가려던 화면으로 자동 복귀 (홈으로 가지 않음).</li>
+      <li><strong>로고 5탭 트리거 타이밍</strong> — 마지막 탭으로부터 2초가 지나면 카운트가 리셋됨. 천천히 탭하면 발동되지 않음.</li>
     </ul>
   </section>
 </div>

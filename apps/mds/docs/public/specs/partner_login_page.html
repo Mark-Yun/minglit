@@ -302,12 +302,12 @@ body.dark-mode .viewport .btn-social--apple { background: #ffffff; color: #11182
   <div class="perspective__header">
     <span class="glyph">🎨</span>
     <h2>States</h2>
-    <span class="lede">4 states — platform 분기 + async 진행. 사용자 앱과 동일 widget이라 분기 패턴은 같지만 시각은 partner indigo + PARTNER 배지가 주된 차별점.</span>
+    <span class="lede">시각 변형 4종 — 실행 OS 분기와 인증 진행 상태에 따라 분기. 사용자 앱과 동일한 화면 구조를 공유하지만 파트너 인디고 색과 PARTNER 배지가 시각적 차별점.</span>
   </div>
 
   <section class="doc">
     <p class="intro">
-      <strong>State 종류 식별</strong>: <code>defaultTargetPlatform</code> + <code>kIsWeb</code> · <code>authControllerProvider</code> AsyncValue · <code>onDevTrigger</code> dev 분기.
+      <strong>State 식별 기준</strong>: 실행 중인 OS(iOS / Android / Web 등) · 인증 진행 여부 · 개발 환경 여부에 따라 4가지 변형으로 분기.
     </p>
 
     <!-- ─── Default · iOS / macOS / Web (baseline) ─────────────────────────────── -->
@@ -345,25 +345,25 @@ body.dark-mode .viewport .btn-social--apple { background: #ffffff; color: #11182
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>kIsWeb || defaultTargetPlatform == TargetPlatform.iOS || .macOS</code> · <code>authState.isLoading == false</code></td>
+          <td>iOS · macOS · Web에서 진입한 상태. 인증이 진행 중이 아니고 아직 로그인되지 않은 상태.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ① <strong>Google 탭</strong> → <code>signInWithGoogle()</code> → Loading state → 외부 OAuth → callback → PartnerHomeRoute<br>
-            ② <strong>Apple 탭</strong> → <code>signInWithApple()</code> → OS 인증 시트 → callback<br>
-            ③ <strong>Kakao 탭</strong> → <code>signInWithKakao()</code> → KakaoTalk 또는 OAuth 페이지<br>
-            ④ <strong>"파트너 입점 문의" 탭</strong> → 외부 브라우저로 입점 문의 페이지 (이 화면 그대로 유지)<br>
-            ⑤ <strong>로고 5번 탭</strong> (dev only) → DevUserSwitchScreen
+            ① <strong>Google 버튼 탭</strong> — 화면이 로딩으로 바뀌고 외부 Google 로그인 페이지로 이동. 인증이 끝나면 파트너 홈으로 자동 이동.<br>
+            ② <strong>Apple 버튼 탭</strong> — 시스템이 제공하는 Apple 로그인 시트가 올라오고, 인증이 끝나면 자동으로 앱에 복귀.<br>
+            ③ <strong>Kakao 버튼 탭</strong> — KakaoTalk 앱이 설치돼 있으면 그쪽으로, 없으면 Kakao 로그인 페이지로 이동.<br>
+            ④ <strong>"파트너 입점 문의" 탭</strong> — 외부 브라우저에서 입점 문의 페이지가 열림. 로그인 화면은 그대로 유지.<br>
+            ⑤ <strong>로고를 2초 안에 5번 탭</strong> (개발 환경 전용) — 테스트 계정 전환 화면으로 이동.
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · 인증 실패 (서버/네트워크) → <code>handleMinglitError(context, error, stackTrace)</code> → 공통 에러 다이얼로그 → default 복귀<br>
-            · OAuth 도중 외부 브라우저 닫음 → 별도 에러 표시 없이 default 복귀<br>
-            · 이미 로그인된 사용자 직접 진입 → router redirect로 홈으로 자동 이동 (이 화면 미표시)<br>
-            · ENVIRONMENT가 <code>local</code>/<code>development</code>/<code>dev</code> 중 하나면 dev trigger 활성 — 그 외엔 5탭 무반응
+            · 인증 실패 (서버/네트워크 문제) — 공통 에러 다이얼로그가 떴다가 닫히고 다시 기본 화면으로 복귀.<br>
+            · 외부 로그인 페이지를 사용자가 임의로 닫음 — 별도 에러 메시지 없이 기본 화면으로 복귀.<br>
+            · 이미 로그인된 파트너가 진입하면 화면이 보이지 않고 즉시 파트너 홈으로 이동.<br>
+            · 로고 5탭 트리거는 개발 환경에서만 동작. 운영 환경에서는 5번 탭해도 반응 없음.
           </td>
         </tr>
         <tr>
@@ -390,7 +390,7 @@ body.dark-mode .viewport .btn-social--apple { background: #ffffff; color: #11182
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 widget(<code>MinglitLoginScreen</code>)을 사용자 앱과 공유하지만, <strong>이 spec은 partner 앱 관점에서 단독</strong> — Coordinator/Provider/Route 모두 partner 쪽. <code>color-partner-primary</code>는 <code>.viewport</code> 스코프로만 적용되어 spec doc(이 페이지) 자체는 사용자 보라색 유지.</td>
+          <td>📝 사용자 앱과 같은 화면 구조를 공유하지만, <strong>이 spec은 파트너 앱 관점에서 단독</strong>으로 정의된다. 파트너 인디고 색은 viewport 안에서만 적용되며, spec 문서 자체의 다른 영역은 사용자 보라색을 유지.</td>
         </tr>
       </tbody>
     </table>
@@ -398,7 +398,7 @@ body.dark-mode .viewport .btn-social--apple { background: #ffffff; color: #11182
     <!-- ─── Default · Android (no Apple) ─────────────────────────────── -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Default · Android</strong> <small>no-apple · platform = Android</small></th></tr>
+        <tr><th colspan="3"><strong>Default · Android</strong> <small>Apple 버튼이 빠진 변형 · Android에서 진입한 상태</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -422,11 +422,11 @@ body.dark-mode .viewport .btn-social--apple { background: #ffffff; color: #11182
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>!kIsWeb &amp;&amp; defaultTargetPlatform == TargetPlatform.android</code> → <code>onAppleSignIn == null</code></td>
+          <td>Android 환경에서 진입한 상태. 이 환경에서는 Apple 로그인 버튼이 노출되지 않음.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>동일 <em>(단, Apple 액션 없음 — 버튼이 화면에 없음)</em></td>
+          <td>동일 <em>(Apple 버튼은 화면에 노출되지 않으므로 해당 액션도 없음)</em></td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
@@ -434,7 +434,7 @@ body.dark-mode .viewport .btn-social--apple { background: #ffffff; color: #11182
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
-          <td>− Apple OAuth 버튼 <em>(Apple Sign In은 Android 미지원)</em>. Kakao가 위로 올라옴 (conditional rendering — spacer 미잔존)</td>
+          <td>− Apple OAuth 버튼 <em>(Apple 로그인은 Android에서 지원되지 않음)</em>. Apple 자리에는 빈 공간이 남지 않고 Kakao가 위로 올라옴.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
@@ -442,7 +442,7 @@ body.dark-mode .viewport .btn-social--apple { background: #ffffff; color: #11182
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 한국 시장에서 Android가 다수 — 실질적 baseline은 이쪽일 수 있음. 분류상 "platform fallback"으로 두 번째.</td>
+          <td>📝 한국 시장에서 Android 비중이 크기 때문에 실제 사용자 입장에서는 이 변형이 가장 자주 보일 수 있음.</td>
         </tr>
       </tbody>
     </table>
@@ -450,7 +450,7 @@ body.dark-mode .viewport .btn-social--apple { background: #ffffff; color: #11182
     <!-- ─── Loading ─────────────────────────────── -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Loading</strong> <small>async · OAuth 진행 중</small></th></tr>
+        <tr><th colspan="3"><strong>Loading</strong> <small>로그인 처리가 진행 중인 상태</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -462,27 +462,27 @@ body.dark-mode .viewport .btn-social--apple { background: #ffffff; color: #11182
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>authState.isLoading == true</code> — OAuth 버튼 탭 직후 ~ 외부 브라우저 표시 직전 (보통 100~300ms). 이 분기에서는 <code>MinglitLoginScreen</code>이 아닌 <code>Scaffold(body: MinglitCircularProgressIndicator())</code> 풀스크린 표시</td>
+          <td>OAuth 버튼 중 하나를 탭한 직후부터 외부 로그인 페이지가 화면에 뜨기 직전까지의 짧은 구간 (보통 0.1~0.3초). 본체 화면 대신 화면 가운데 스피너만 보이는 풀스크린 로딩.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>— <em>(no-op — 모든 탭 무반응. spinner만 회전)</em></td>
+          <td>— <em>(모든 탭이 받아들여지지 않음. 화면 중앙의 스피너만 회전.)</em></td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· OAuth 페이지가 늦게 뜸 → spinner 길게 보임 (timeout 없음 — OS-level)<br>· 사용자 시스템 back → 인증 취소 → AsyncError → handleMinglitError로 default 복귀</td>
+          <td>· 외부 로그인 페이지가 늦게 뜨면 스피너만 오래 보임. 자동 시간 초과는 없으며 OS가 처리.<br>· 사용자가 시스템 뒤로가기를 누르면 인증이 취소되고 공통 에러 다이얼로그가 떴다가 닫히면서 기본 화면으로 복귀.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
-          <td>↔ <code>MinglitLoginScreen</code> 전체 → <code>MinglitCircularProgressIndicator</code> (화면 중앙) — kit-shared widget이 여기서는 등장 안 함, partner 위젯이 직접 반환</td>
+          <td>↔ 본 화면 자리에 풀스크린 스피너 (<code>MinglitCircularProgressIndicator</code>)가 화면 중앙에 표시됨. 평소 노출되던 로고 / 배지 / 버튼은 모두 사라짐.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
-          <td>− OAuth 버튼/Logo/배지 토큰 모두 미사용. spinner 색상 <code>color-partner-primary</code> (CircularProgressIndicator default가 theme primary 사용)</td>
+          <td>− OAuth 버튼 / 로고 / 배지의 토큰은 사용되지 않음. 스피너 색은 <code>color-partner-primary</code>.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 짧은 transition state — 외부 브라우저로 OAuth가 넘어가는 시간 채움. fade 없이 cut. 사용자 앱과 동일한 패턴이지만 spinner 색이 partner indigo.</td>
+          <td>📝 외부 로그인 페이지로 넘어가는 짧은 전환 구간을 채우기 위한 화면. 별도의 페이드 없이 즉시 교체됨. 사용자 앱과 같은 패턴이지만 스피너 색이 파트너 인디고.</td>
         </tr>
       </tbody>
     </table>
@@ -490,7 +490,7 @@ body.dark-mode .viewport .btn-social--apple { background: #ffffff; color: #11182
     <!-- ─── Auth Error ─────────────────────────────── -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Auth Error (transient)</strong> <small>provider AsyncError · 다이얼로그</small></th></tr>
+        <tr><th colspan="3"><strong>Auth Error (transient)</strong> <small>인증 실패 — 잠깐 다이얼로그가 노출됐다가 닫히는 상태</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -522,27 +522,27 @@ body.dark-mode .viewport .btn-social--apple { background: #ffffff; color: #11182
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>ref.listen(authControllerProvider)</code>의 <code>next is AsyncError</code> 분기 → <code>handleMinglitError(context, error, stackTrace)</code> → 공통 에러 다이얼로그 표시</td>
+          <td>인증 처리 중 오류가 발생해 공통 에러 다이얼로그가 잠깐 노출되는 상태. 본체 화면(기본 상태)은 다이얼로그 뒤에 그대로 남아 있음.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>"확인" 탭 → 다이얼로그 dismiss → Default state 복귀 (재시도 가능)</td>
+          <td>"확인" 버튼을 탭하면 다이얼로그가 닫히고 기본 상태로 복귀. 사용자가 다시 OAuth 버튼을 눌러 재시도할 수 있음.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· 짧은 시간에 여러 OAuth 시도 시 다이얼로그가 누적 표시 — handleMinglitError가 dedupe (보통)<br>· 다이얼로그 떠 있는 동안 다시 OAuth 탭 — 다이얼로그가 dismiss되며 새 흐름 시작</td>
+          <td>· 짧은 시간에 여러 번 시도해도 다이얼로그가 중복으로 쌓이지 않고 하나만 표시됨.<br>· 다이얼로그가 떠 있는 동안 다른 OAuth 버튼을 탭하면 다이얼로그가 닫히면서 새 흐름이 시작됨.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
-          <td>+ <code>MinglitAlert</code> / <code>handleMinglitError</code> 다이얼로그 (kit-shared)<br>· 본체 화면(Default)은 그대로 유지 — 다이얼로그는 modal overlay</td>
+          <td>+ 공통 에러 다이얼로그 (<code>MinglitAlert</code> · kit-shared)<br>· 본체 화면(기본 상태)은 다이얼로그 뒤에 그대로 보이며, 다이얼로그가 닫히면 다시 활성화됨.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
-          <td>+ scrim opacity (Material default), <code>radius-card</code> (16 · 다이얼로그) · "확인" 액션 색 <code>color-partner-primary</code></td>
+          <td>+ 다이얼로그 뒤 어두워지는 영역 (Material 기본), <code>radius-card</code> (16 · 다이얼로그 박스), "확인" 액션 색 <code>color-partner-primary</code>.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 transient state — 사용자가 "확인"을 누르면 즉시 사라짐. AsyncError는 stream이라 한 번만 fire되고, 동일 에러를 다시 보고 싶으면 재시도 필요. fix #1624 관련: ENVIRONMENT 분기 dev 추가.</td>
+          <td>📝 짧게 떴다 사라지는 상태. 사용자가 "확인"을 누르면 즉시 사라지며, 같은 오류 메시지를 다시 보려면 OAuth 버튼을 다시 눌러 재시도해야 한다.</td>
         </tr>
       </tbody>
     </table>
@@ -565,20 +565,20 @@ body.dark-mode .viewport .btn-social--apple { background: #ffffff; color: #11182
       </thead>
       <tbody>
         <tr>
-          <td>로고 5번 탭 (dev only · 2초 안)</td>
-          <td>ENVIRONMENT ∈ {local, development, dev}일 때만 — <code>DevUserSwitchRoute().push&lt;void&gt;(context)</code>. Production에서는 무반응.</td>
+          <td>로고 2초 안에 5번 탭 (개발 환경 전용)</td>
+          <td>개발 환경에서만 테스트 계정 전환 화면으로 이동. 운영 환경에서는 반응하지 않음.</td>
         </tr>
         <tr>
-          <td>OS back / 시스템 back swipe</td>
-          <td>보호된 화면 redirect로 진입한 경우 → 홈으로. 첫 진입이면 OS 기본 (Android 종료 / iOS 무반응).</td>
+          <td>OS 뒤로가기 / 뒤로가기 스와이프</td>
+          <td>보호된 화면에서 자동으로 이동된 경우는 홈으로 이동. 앱 첫 진입이면 OS 기본 동작 (Android는 앱 종료, iOS는 무반응).</td>
         </tr>
         <tr>
           <td>다크 모드 토글</td>
-          <td>OAuth 버튼 색상 자동 swap (Google 흰→어두운, Apple 검정→흰). PARTNER 배지/CTA 색이 <code>color-partner-dark-primary</code>로 swap. Kakao만 brand-locked 노랑 유지.</td>
+          <td>OAuth 버튼 색상이 자동 교체됨 (Google은 흰 배경에서 어두운 배경으로, Apple은 검정에서 흰 배경으로). PARTNER 배지와 입점 문의 CTA의 색이 다크 모드용 파트너 인디고로 전환됨. Kakao는 노랑색 그대로 유지.</td>
         </tr>
         <tr>
           <td>"파트너 입점 문의" 탭</td>
-          <td>외부 브라우저로 입점 문의 페이지 (이 화면은 background에서 그대로 유지).</td>
+          <td>외부 브라우저에서 입점 문의 페이지가 열림. 로그인 화면은 그대로 유지.</td>
         </tr>
       </tbody>
     </table>
@@ -597,11 +597,11 @@ body.dark-mode .viewport .btn-social--apple { background: #ffffff; color: #11182
     <table class="ref">
       <thead><tr><th style="width:240px;">Transition</th><th style="width:160px;">Duration (token)</th><th>Curve / notes</th></tr></thead>
       <tbody>
-        <tr><td>화면 진입 (cold start)</td><td>—</td><td>Native scaffold 전환 — 별도 entry animation 없음.</td></tr>
-        <tr><td>OAuth 버튼 탭 → Loading</td><td><code>micro</code> (100ms)</td><td>전체 화면이 spinner로 즉시 교체. fade 없이 cut — 즉각 피드백.</td></tr>
-        <tr><td>Loading → 외부 OAuth 브라우저</td><td>OS 기본</td><td>OS-level 전환.</td></tr>
-        <tr><td>OAuth 복귀 → PartnerHome</td><td><code>fast</code> (200ms)</td><td>GoRouter 기본 라우트 전환 — slide / fade.</td></tr>
-        <tr><td>Auth Error 다이얼로그 in/out</td><td><code>fast</code> (200ms)</td><td>중앙 fade-in scale (Material default).</td></tr>
+        <tr><td>화면 진입 (앱 처음 시작)</td><td>—</td><td>OS 기본 화면 전환을 그대로 사용. 별도의 진입 애니메이션 없음.</td></tr>
+        <tr><td>OAuth 버튼 탭 → 로딩 화면</td><td><code>micro</code> (100ms)</td><td>전체 화면이 스피너로 즉시 교체됨. 페이드 없이 컷 전환 — 사용자에게 즉각 피드백.</td></tr>
+        <tr><td>로딩 → 외부 로그인 페이지</td><td>OS 기본</td><td>OS가 처리하는 외부 페이지 전환.</td></tr>
+        <tr><td>외부 인증에서 복귀 → 파트너 홈</td><td><code>fast</code> (200ms)</td><td>표준 라우트 전환 (slide / fade).</td></tr>
+        <tr><td>인증 에러 다이얼로그 노출 / 닫힘</td><td><code>fast</code> (200ms)</td><td>중앙에서 페이드 인/아웃 + 살짝 확대 (Material 기본).</td></tr>
       </tbody>
     </table>
   </section>
@@ -609,11 +609,11 @@ body.dark-mode .viewport .btn-social--apple { background: #ffffff; color: #11182
   <section class="doc">
     <h2>Global edge cases</h2>
     <ul class="notes">
-      <li><strong>이미 로그인된 파트너 직접 진입</strong> — router redirect로 PartnerHome으로 자동 이동 (이 화면 미표시).</li>
-      <li><strong>보호된 화면 redirect</strong> — 인증 후 처음 가려던 화면으로 자동 복귀.</li>
-      <li><strong>ENVIRONMENT mismatch</strong> — Fix #1624: <code>development</code> 외에 <code>dev</code>도 허용 — Supabase dev 프로젝트와 일치.</li>
-      <li><strong>다크 모드</strong> — <code>color-partner-primary</code> → <code>color-partner-dark-primary</code> 자동 swap. PARTNER 배지/CTA 색이 다크 톤으로.</li>
-      <li><strong>접근성</strong> — OAuth 버튼이 height 48 + 라벨 명시 — TalkBack에서 의미 전달. PARTNER 배지는 시각 강조용 — semanticLabel 별도 없음.</li>
+      <li><strong>이미 로그인된 파트너가 진입</strong> — 화면이 보이지 않고 즉시 파트너 홈으로 이동.</li>
+      <li><strong>보호된 화면에서 자동으로 진입한 경우</strong> — 로그인을 마치면 처음 가려던 화면으로 자동 복귀 (홈으로 가지 않음).</li>
+      <li><strong>개발 환경 식별</strong> — local / development / dev 환경에서만 로고 5탭 트리거가 동작. 그 외 환경에서는 반응하지 않음.</li>
+      <li><strong>다크 모드</strong> — 파트너 인디고가 다크 모드용 톤으로 자동 전환됨. PARTNER 배지와 입점 문의 CTA 색이 다크 톤으로 변경됨.</li>
+      <li><strong>접근성</strong> — OAuth 버튼은 충분한 높이(48)와 명확한 라벨을 가져 보이스 오버에서 의미 전달이 잘 됨. PARTNER 배지는 시각 강조용 텍스트.</li>
     </ul>
   </section>
 </div>

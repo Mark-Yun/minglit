@@ -245,7 +245,7 @@ body.dark-mode .viewport {
         <th>Hierarchy</th>
         <td>
           <strong>Parent</strong>: <em>— (admin 전용 상세 화면 · 별도 list 진입)</em><br>
-          <strong>Children</strong>: image preview Dialog (인라인 다이얼로그) · 외부 launchUrl(PDF/문서)
+          <strong>Children</strong>: 이미지 미리보기 다이얼로그 (인라인) · 외부 앱(PDF/문서)
         </td>
       </tr>
       <tr>
@@ -265,8 +265,8 @@ body.dark-mode .viewport {
       <tr>
         <th>Background</th>
         <td>
-          파트너 가입 심사는 사업자 진위 검증과 정산 계좌 일치성이 핵심이라 단순 form 승인이 아닌 첨부 문서 열람 + admin comment 기록이 필요. 처분 분기 3종(approved / needs_correction / rejected)을 단일 화면 하단 가로 3-button으로 묶어 "신중한 한 번"을 유도.
-          dummy-id 모드: '/admin/applications/dummy-id' 진입 시 하드코딩 샘플 데이터로 디자인 확인 가능 (Repository 호출 없이).
+          파트너 가입 심사는 사업자 진위 검증과 정산 계좌 일치성이 핵심이라 단순 form 승인이 아닌 첨부 문서 열람 + 관리자 코멘트 기록이 필요. 처분 3종(승인 / 보완 요청 / 반려)을 단일 화면 하단 가로 3-button으로 묶어 "신중한 한 번"을 유도.
+          디자인 검증을 위해 더미 ID로 진입하면 샘플 데이터를 화면에 보여주는 모드도 있음.
         </td>
       </tr>
       <tr><th>Frequency</th><td>admin이 신청 들어올 때만 (불규칙)</td></tr>
@@ -302,7 +302,7 @@ body.dark-mode .viewport {
   <div class="perspective__header">
     <span class="glyph">🧱</span>
     <h2>Layout</h2>
-    <span class="lede">simpleAppBar + SingleChildScrollView. body는 4 섹션(기본정보 / 첨부파일 / 검토 또는 결과 / —). 검토 섹션은 status === 'pending'에서만 노출.</span>
+    <span class="lede">AppBar + 스크롤 body. body는 기본정보 → 첨부파일 → (심사 대기 상태면 검토, 아니면 결과) 섹션 순서.</span>
   </div>
 
   <section class="doc">
@@ -329,35 +329,34 @@ body.dark-mode .viewport {
       </div>
 
       <div class="layout-tree"><b>Scaffold</b>
-└─ <b>AppBar</b> = MinglitTheme.simpleAppBar(title: '신청 상세') ← ①
-└─ <b>body</b>: <b>MinglitAsyncValueWidget</b>(value: appAsync)
-   └─ data(app) →
-      ├─ if app == null  → Center(Text('해당 신청을 찾을 수 없습니다'))
-      └─ else            → SingleChildScrollView(padding: 16, Column · start)
+└─ <b>AppBar</b>('신청 상세')                          ← ①
+└─ <b>body</b>: 데이터 단계별 분기
+   ├─ 로딩  → 중앙 스피너
+   ├─ 에러 또는 신청 없음 → 중앙 평문 안내
+   └─ 결과 → 스크롤 body
          ├─ <em>기본정보 섹션</em>                       ← ②
-         │  · header: Text('기본 정보', titleMedium · w700)
-         │  · InfoRow * 6 (브랜드명 / 사업자명 / 대표자 / 사업자번호 / 연락처 / 주소)
+         │  · 헤더: '기본 정보'
+         │  · 정보 행 6개 (브랜드명 / 사업자명 / 대표자 / 사업자번호 / 연락처 / 주소)
          │
          ├─ Gap: <code>spacing-large (24px)</code>
          │
          ├─ <em>첨부파일 섹션</em>                       ← ③
-         │  · header: Text('첨부 파일', titleMedium · w700)
-         │  · FileLinkRow(사업자등록증) · FileLinkRow(통장사본)
+         │  · 헤더: '첨부 파일'
+         │  · 파일 링크 행 (사업자등록증 · 통장사본)
          │
          ├─ Gap: <code>spacing-large (24px)</code>
          │
-         ├─ if app.status == 'pending':
+         ├─ 심사 대기 상태일 때:
          │  └─ <em>검토 섹션</em>                       ← ④
-         │     · header: Text('검토', titleMedium · w700)
-         │     · TextField(maxLines: 3, OutlineInputBorder, label: '관리자 코멘트')
+         │     · 헤더: '검토'
+         │     · 관리자 코멘트 입력란 (3줄)
          │     · Gap spacing-medium
-         │     · Row(3 ElevatedButton: 승인 / 보완요청 / 반려, Expanded each, gap spacing-medium)
+         │     · 3개 버튼 (승인 / 보완요청 / 반려)
          │
-         └─ else (approved / rejected / needs_correction):
+         └─ 처분 완료 상태일 때:
             └─ <em>결과 섹션</em>
-               · header: Text('검토 결과')
-               · InfoRow(상태: app.status)
-               · if comment: InfoRow(코멘트: app.adminComment)</div>
+               · 헤더: '검토 결과'
+               · 상태 행 + (코멘트가 있으면) 코멘트 행</div>
     </div>
   </section>
 
@@ -378,7 +377,7 @@ body.dark-mode .viewport {
   <section class="doc">
     <h2>Sub-anatomy ① — InfoRow</h2>
     <p class="intro">
-      Row(crossAxis: start). 좌측 SizedBox(width: 100) Text(label · bodySmall · onSurfaceVariant). 우측 Expanded(Text(value · bodyMedium)). value가 null이면 '-' 폴백.
+      좌측 100px 폭 라벨 + 우측 가변 폭 값. 라벨은 보조 색상의 작은 텍스트, 값은 본문 텍스트. 값이 비어있으면 '-' 폴백.
     </p>
     <div class="layout-grid">
       <div class="blueprint" style="height: 100px;">
@@ -402,8 +401,8 @@ body.dark-mode .viewport {
   <section class="doc">
     <h2>Sub-anatomy ② — FileLinkRow (image / PDF)</h2>
     <p class="intro">
-      label + TextButton.icon(visibility_outlined + "다운로드"). path == null이면 SizedBox.shrink (행 자체 미노출).
-      탭 시 _openFile: jpg/png/gif/webp → 인앱 image dialog (InteractiveViewer 1×~4×) · else → 외부 launchUrl(externalApplication).
+      라벨 + "다운로드" 텍스트 버튼(눈 아이콘). 파일이 없으면 행 자체가 보이지 않음.
+      탭 시 이미지(jpg/png/gif/webp)는 인앱 미리보기 다이얼로그(0.5×~4× 줌)로, 그 외(PDF 등)는 OS 외부 앱으로 위임.
     </p>
     <div class="layout-grid">
       <div class="blueprint" style="height: 80px;">
@@ -431,7 +430,7 @@ body.dark-mode .viewport {
   <div class="perspective__header">
     <span class="glyph">🎨</span>
     <h2>States</h2>
-    <span class="lede">app.status에 따라 review section vs result section 분기. 추가로 async wrapper(MinglitAsyncValueWidget) loading/error.</span>
+    <span class="lede">신청 상태에 따라 검토 섹션과 결과 섹션이 갈린다. 추가로 데이터 로딩/에러 분기.</span>
   </div>
 
   <section class="doc">
@@ -441,13 +440,13 @@ body.dark-mode .viewport {
         <tr><th style="width: 200px;">State</th><th style="width: 110px;">Tag</th><th style="width: 220px;">조건 (요약)</th><th>Key visual differentiator</th></tr>
       </thead>
       <tbody>
-        <tr><td><strong>Pending review</strong> 🎯</td><td>baseline</td><td>app.status == 'pending'</td><td>하단 TextField + 3 ElevatedButton (승인 / 보완요청 / 반려)</td></tr>
-        <tr><td><strong>Approved</strong></td><td>processed</td><td>app.status == 'approved'</td><td>하단 결과 섹션 — 상태 텍스트 + adminComment</td></tr>
-        <tr><td><strong>Rejected</strong></td><td>processed</td><td>app.status == 'rejected'</td><td>동일 결과 섹션 (status 값만 다름)</td></tr>
-        <tr><td><strong>Needs correction</strong></td><td>processed</td><td>app.status == 'needs_correction'</td><td>동일 결과 섹션 + 코멘트는 보통 보완 안내 문구</td></tr>
-        <tr><td><strong>Loading</strong></td><td>async</td><td>appAsync.isLoading</td><td>중앙 spinner</td></tr>
-        <tr><td><strong>Not found / Error</strong></td><td>error</td><td>app == null OR provider hasError</td><td>중앙 평문 메시지</td></tr>
-        <tr><td><strong>Image preview (dialog)</strong></td><td>overlay</td><td>FileLink 이미지 탭</td><td>전면 다크 dialog · InteractiveViewer · 우상단 닫기 X</td></tr>
+        <tr><td><strong>Pending review</strong> 🎯</td><td>baseline</td><td>심사 대기 상태</td><td>하단에 코멘트 입력란 + 3개 버튼 (승인 / 보완요청 / 반려)</td></tr>
+        <tr><td><strong>Approved</strong></td><td>processed</td><td>승인 처리 완료</td><td>하단 결과 섹션 — 상태 + 관리자 코멘트</td></tr>
+        <tr><td><strong>Rejected</strong></td><td>processed</td><td>반려 처리 완료</td><td>동일 결과 섹션 (상태값만 다름)</td></tr>
+        <tr><td><strong>Needs correction</strong></td><td>processed</td><td>보완 요청 처리 완료</td><td>동일 결과 섹션 + 보완 안내 코멘트</td></tr>
+        <tr><td><strong>Loading</strong></td><td>async</td><td>데이터 로딩 중</td><td>중앙 스피너</td></tr>
+        <tr><td><strong>Not found / Error</strong></td><td>error</td><td>해당 신청 없음 또는 로딩 실패</td><td>중앙 평문 메시지</td></tr>
+        <tr><td><strong>Image preview (dialog)</strong></td><td>overlay</td><td>이미지 첨부파일 탭</td><td>전면 다크 다이얼로그 · 핀치 줌 · 우상단 닫기 X</td></tr>
       </tbody>
     </table>
 
@@ -511,23 +510,23 @@ body.dark-mode .viewport {
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>partnerApplicationProvider data: PartnerApplication(non-null) AND app.status == 'pending'.</td>
+            <td>해당 신청이 존재하고 아직 심사 대기 상태.</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">사용자 액션</td>
-            <td>FileLink "다운로드" 탭 → _openFile → image면 dialog · 그 외 launchUrl 외부 앱.</td>
+            <td>첨부파일 "다운로드" 탭 → 이미지면 인앱 다이얼로그로 미리보기, 그 외(PDF 등)는 OS 외부 앱으로 위임.</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">사용자 액션</td>
-            <td>"승인" 탭 → globalLoading.show() → reviewApplication(status: 'approved', comment: text) → success toast + provider invalidate → 화면이 Approved state로 전환.</td>
+            <td>"승인" 탭 → 전체 화면 로딩 overlay → 처분 완료 후 성공 토스트 노출 + 화면이 승인 결과 화면으로 자동 전환.</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">사용자 액션</td>
-            <td>"보완 요청" 탭 → status: 'needs_correction' · "반려" 탭 → status: 'rejected'. 동일 흐름.</td>
+            <td>"보완 요청" / "반려" 탭도 동일 흐름. 처분 후 결과 섹션이 표시됨.</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">에지케이스</td>
-            <td><strong>코멘트 비어있어도 처분 가능</strong> — disabled 처리 없음. <strong>중복 탭</strong> — globalLoading overlay가 추가 입력 차단. <strong>네트워크 실패</strong> — handleMinglitError로 SnackBar. <strong>dummy-id</strong> — Repository 호출 우회, 하드코딩 샘플 데이터 (디자인 검증용).</td>
+            <td><strong>코멘트가 비어있어도 처분 가능</strong> — 비활성 처리 없음. <strong>중복 탭</strong> — 전체 화면 로딩 overlay가 추가 입력을 차단. <strong>네트워크 실패</strong> — 에러 스낵바로 안내. <strong>더미 ID 모드</strong> — 데이터 조회 없이 샘플 데이터로 화면 확인.</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">컴포넌트</td>
@@ -545,7 +544,7 @@ body.dark-mode .viewport {
           </tr>
           <tr>
             <td class="state-mini__aspect">노트</td>
-            <td>📝 디자인 부채: 3-button 가로 배치는 좁은 width에서 라벨 압축 위험 ("보완 요청" wrap 가능). 향후 vertical stack 또는 destructive(반려) 분리 검토. 처분 후 _commentController는 그대로 남음 — provider invalidate 시 build 재실행되며 status가 바뀌어 review 섹션이 사라짐.</td>
+            <td>📝 디자인 부채: 3-button 가로 배치는 좁은 폭에서 "보완 요청" 라벨이 줄바꿈될 수 있음. 향후 세로 스택 또는 반려 버튼 분리 검토. 처분이 끝나면 검토 섹션은 결과 섹션으로 자동 교체된다.</td>
           </tr>
         </tbody>
       </table>
@@ -586,22 +585,22 @@ body.dark-mode .viewport {
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>app.status == 'approved'. status 값은 raw string 그대로 표시 (현재 디자인은 별도 매핑 없이 'approved' 텍스트).</td>
+            <td>승인 처리 완료 상태. 현재는 상태값을 영문 raw string 그대로 표시.</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">사용자 액션</td>
-            <td>FileLink 다운로드는 동일 가능. 처분 액션 (TextField + 3 button)은 노출되지 않음 — 재처분 불가.</td>
+            <td>첨부파일 다운로드는 동일하게 가능. 처분 액션(코멘트 입력 + 3개 버튼)은 노출되지 않음 — 재처분 불가.</td>
           </tr>
-          <tr><td class="state-mini__aspect">에지케이스</td><td><strong>adminComment null</strong> — 코멘트 행 자체 미노출 (`if (app.adminComment != null)`).</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td><strong>관리자 코멘트가 없을 때</strong> — 코멘트 행 자체가 보이지 않음.</td></tr>
           <tr>
             <td class="state-mini__aspect">컴포넌트</td>
-            <td>↔ 검토 섹션(TextField + buttons) → 결과 섹션(InfoRow * 1~2)</td>
+            <td>↔ 검토 섹션(코멘트 입력 + 버튼) → 결과 섹션(상태 + 코멘트 정보 행)</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">토큰</td>
-            <td>− <code>colorScheme.primary</code>(button) · <code>radius-input</code>(TextField) — 결과 섹션엔 InfoRow만 사용. 동일 typography.</td>
+            <td>− 버튼/입력란 토큰 미사용 — 결과 섹션은 정보 행만 사용. 동일 typography.</td>
           </tr>
-          <tr><td class="state-mini__aspect">노트</td><td>📝 향후: status 값을 사람이 읽는 라벨 + 색 chip으로 매핑 권장 (예: 승인 ✅ 초록 chip). 현재는 'approved' raw string 표시.</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 향후: 상태값을 한글 라벨 + 색 칩으로 매핑 권장 (예: 승인 ✅ 초록 칩). 현재는 'approved' 영문 그대로.</td></tr>
         </tbody>
       </table>
 
@@ -639,13 +638,13 @@ body.dark-mode .viewport {
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>app.status == 'rejected'.</td>
+            <td>반려 처리 완료 상태.</td>
           </tr>
           <tr><td class="state-mini__aspect">사용자 액션</td><td>동일 (Approved 참조)</td></tr>
           <tr><td class="state-mini__aspect">에지케이스</td><td>동일</td></tr>
           <tr><td class="state-mini__aspect">컴포넌트</td><td>동일 (Approved 참조)</td></tr>
           <tr><td class="state-mini__aspect">토큰</td><td>동일</td></tr>
-          <tr><td class="state-mini__aspect">노트</td><td>📝 신청자 측 PartnerApplyStatusPage에서는 이 status + comment를 read-only로 노출하여 보완 가이드 제공.</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 신청자 측 결과 화면에서는 이 상태와 코멘트가 읽기 전용으로 노출되어 보완 가이드 역할을 함.</td></tr>
         </tbody>
       </table>
 
@@ -683,13 +682,13 @@ body.dark-mode .viewport {
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>app.status == 'needs_correction'.</td>
+            <td>보완 요청 처리 완료 상태.</td>
           </tr>
-          <tr><td class="state-mini__aspect">사용자 액션</td><td>동일 (Approved 참조). 신청자측에서 보완 후 재제출 흐름은 별도 화면.</td></tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>동일 (Approved 참조). 신청자측의 보완 후 재제출 흐름은 별도 화면.</td></tr>
           <tr><td class="state-mini__aspect">에지케이스</td><td>동일</td></tr>
           <tr><td class="state-mini__aspect">컴포넌트</td><td>동일 (Approved 참조)</td></tr>
           <tr><td class="state-mini__aspect">토큰</td><td>동일</td></tr>
-          <tr><td class="state-mini__aspect">노트</td><td>📝 admin 입장에선 처분이 final이지만, 신청자가 보완 후 재제출 시 별도 신청 entry로 들어옴.</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 관리자 입장에선 처분이 종료되지만, 신청자가 보완 후 재제출 시 별도 신청으로 새로 들어옴.</td></tr>
         </tbody>
       </table>
 
@@ -714,13 +713,13 @@ body.dark-mode .viewport {
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>partnerApplicationProvider isLoading. MinglitAsyncValueWidget이 spinner 노출.</td>
+            <td>신청 정보를 불러오는 중. 중앙에 스피너만 노출.</td>
           </tr>
-          <tr><td class="state-mini__aspect">사용자 액션</td><td>탭 무반응 (AppBar back은 가능)</td></tr>
-          <tr><td class="state-mini__aspect">에지케이스</td><td>처분 진행 중에는 본 페이지의 spinner와 별도로 globalLoadingController가 전체 화면 overlay (이중 spinner 가능).</td></tr>
-          <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ body content → <code>CircularProgressIndicator</code> (MinglitAsyncValueWidget 내부)</td></tr>
-          <tr><td class="state-mini__aspect">토큰</td><td>동일 — spinner는 colorScheme.primary 자동</td></tr>
-          <tr><td class="state-mini__aspect">노트</td><td>📝 fetch는 보통 200~500ms. dummy-id는 즉시 (Future.value).</td></tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>탭 무반응 (AppBar 뒤로가기는 가능)</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>처분 진행 중에는 본 페이지 스피너와 별도로 전체 화면 로딩 overlay가 함께 노출될 수 있음.</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ body 내용 → 중앙 스피너 단독</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>동일 — 스피너는 partner primary 자동</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 보통 짧게 지나감. 더미 ID 모드는 즉시 표시.</td></tr>
         </tbody>
       </table>
 
@@ -745,13 +744,13 @@ body.dark-mode .viewport {
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>provider data == null (applicationId 매칭 실패) OR provider hasError → MinglitAsyncValueWidget이 에러 fallback.</td>
+            <td>해당 신청이 존재하지 않거나 데이터 로딩 실패. 평문 안내만 노출.</td>
           </tr>
-          <tr><td class="state-mini__aspect">사용자 액션</td><td>AppBar back으로만 이탈. retry CTA 없음.</td></tr>
-          <tr><td class="state-mini__aspect">에지케이스</td><td><strong>deep link 만료</strong> — push notification에서 진입했는데 신청이 삭제된 경우 도달.</td></tr>
-          <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ body content → <code>Center</code> + <code>Text</code> 단일</td></tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>AppBar 뒤로가기로만 이탈. 재시도 버튼 없음.</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td><strong>딥링크 만료</strong> — 푸시 알림으로 진입했는데 신청이 이미 삭제된 경우.</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ body 내용 → 중앙 평문 텍스트 한 줄</td></tr>
           <tr><td class="state-mini__aspect">토큰</td><td>동일</td></tr>
-          <tr><td class="state-mini__aspect">노트</td><td>📝 retry CTA 부재 — provider invalidate를 트리거하는 button이 없음. 후속 개선 권장.</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 재시도 버튼 부재 — 후속 개선 권장.</td></tr>
         </tbody>
       </table>
 
@@ -765,7 +764,7 @@ body.dark-mode .viewport {
             <td rowspan="6" class="state-mini__mock">
               <div class="viewport">
                 <div class="pad-dialog">
-                  <div class="pad-dialog__img">사업자등록증.jpg<br>(InteractiveViewer · 1× ~ 4×)</div>
+                  <div class="pad-dialog__img">사업자등록증.jpg<br>(핀치 줌 1× ~ 4×)</div>
                   <div class="pad-dialog__close">
                     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
                   </div>
@@ -773,13 +772,13 @@ body.dark-mode .viewport {
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>FileLink "다운로드" 탭 + 확장자 ∈ {jpg, jpeg, png, gif, webp}. _openFile이 Dialog showDialog로 노출.</td>
+            <td>이미지 첨부파일(jpg, jpeg, png, gif, webp) 다운로드 탭 시. 인앱 다이얼로그로 미리보기 노출.</td>
           </tr>
-          <tr><td class="state-mini__aspect">사용자 액션</td><td>핀치 줌 0.5×~4× · 드래그로 pan · 우상단 X 또는 dialog 외부 탭 → close.</td></tr>
-          <tr><td class="state-mini__aspect">에지케이스</td><td><strong>signedUrl 만료</strong> — Image.network 실패 → Flutter 기본 broken-image (현재 별도 핸들링 없음).</td></tr>
-          <tr><td class="state-mini__aspect">컴포넌트</td><td>+ <code>Dialog</code>(MinglitColors.textPrimary bg, insetPadding zero) · <code>InteractiveViewer</code>(min: 0.5, max: 4) · <code>Image.network</code>(signedUrl) · <code>IconButton</code>(close)</td></tr>
-          <tr><td class="state-mini__aspect">토큰</td><td>+ <code>MinglitColors.textPrimary</code> (dialog bg) · <code>MinglitColors.background</code> (close icon color)</td></tr>
-          <tr><td class="state-mini__aspect">노트</td><td>📝 PDF / 기타 확장자는 dialog가 아닌 launchUrl(externalApplication)로 OS 외부 앱 위임. signedUrl은 Supabase Storage 임시 URL.</td></tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>핀치로 0.5×~4× 줌 · 드래그로 이동 · 우상단 X 또는 다이얼로그 외부 탭으로 닫기.</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td><strong>이미지 URL 만료</strong> — 임시 URL이 만료되면 깨진 이미지 노출 (별도 핸들링 없음).</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>+ 전체 화면 다크 다이얼로그 · 핀치/드래그 지원 뷰어 · 닫기 아이콘 버튼</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>+ 다이얼로그 배경 · 닫기 아이콘 색</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 PDF/기타 확장자는 다이얼로그 대신 OS 외부 앱으로 위임. 첨부파일 URL은 임시 토큰 기반.</td></tr>
         </tbody>
       </table>
 
@@ -799,11 +798,11 @@ body.dark-mode .viewport {
     <table class="ref">
       <thead><tr><th style="width: 220px;">사용자 액션</th><th>화면에 보이는 결과</th></tr></thead>
       <tbody>
-        <tr><td>뒤로 가기 (OS back / AppBar back)</td><td>이전 화면(admin 신청 list 등)으로 복귀.</td></tr>
-        <tr><td>처분 진행 중 다른 액션</td><td>globalLoadingController가 전체 화면 overlay 노출 — 추가 입력 차단.</td></tr>
-        <tr><td>처분 완료 toast</td><td>context.showMinglitSuccess('처리되었습니다 — $status') · provider invalidate → review → 결과 섹션 자동 swap.</td></tr>
-        <tr><td>처분 실패 (예: 네트워크)</td><td>handleMinglitError(context, e, st) → SnackBar / dialog (Sentry로 전송).</td></tr>
-        <tr><td>외부 앱 launch (PDF)</td><td>iOS/Android OS 외부 앱(파일/PDF viewer)로 위임 → app 백그라운드. 복귀 시 본 화면 그대로.</td></tr>
+        <tr><td>뒤로 가기 (OS back / AppBar back)</td><td>이전 화면(관리자 신청 목록 등)으로 복귀.</td></tr>
+        <tr><td>처분 진행 중 다른 액션</td><td>전체 화면 로딩 overlay가 추가 입력을 차단.</td></tr>
+        <tr><td>처분 완료 토스트</td><td>"처리되었습니다 — 상태" 안내 + 검토 섹션이 결과 섹션으로 자동 교체.</td></tr>
+        <tr><td>처분 실패 (예: 네트워크)</td><td>에러 스낵바/다이얼로그로 안내 (서버 로그에도 함께 전송).</td></tr>
+        <tr><td>외부 앱 진입 (PDF 등)</td><td>OS 기본 파일/PDF 뷰어로 위임 → 앱이 백그라운드. 복귀 시 본 화면 그대로 유지.</td></tr>
       </tbody>
     </table>
   </section>
@@ -813,17 +812,17 @@ body.dark-mode .viewport {
     <table class="ref" style="margin-bottom: 16px;">
       <thead><tr><th style="width: 200px;">Token</th><th style="width: 80px;">Value</th><th>Use case</th></tr></thead>
       <tbody>
-        <tr><td><code>MinglitAnimation.fast</code></td><td>200ms</td><td>route push/pop · button ripple</td></tr>
-        <tr><td><code>MinglitAnimation.medium</code></td><td>350ms</td><td>showDialog 진입 · review → 결과 섹션 swap</td></tr>
+        <tr><td><code>MinglitAnimation.fast</code></td><td>200ms</td><td>화면 진입/이탈 · 버튼 ripple</td></tr>
+        <tr><td><code>MinglitAnimation.medium</code></td><td>350ms</td><td>다이얼로그 진입 · 검토 → 결과 섹션 전환</td></tr>
       </tbody>
     </table>
     <table class="ref">
       <thead><tr><th style="width: 220px;">Transition</th><th style="width: 140px;">Duration (token)</th><th>Curve / notes</th></tr></thead>
       <tbody>
         <tr><td>화면 진입</td><td><code>fast</code> (200ms)</td><td>Material slide push</td></tr>
-        <tr><td>처분 후 review → 결과</td><td><code>medium</code> (350ms)</td><td>provider invalidate → MinglitAsyncValueWidget crossfade</td></tr>
-        <tr><td>image preview Dialog 진입</td><td><code>medium</code> (350ms)</td><td>scale + fade (Material 기본 dialog)</td></tr>
-        <tr><td>InteractiveViewer 줌</td><td><em>실시간 (제스처 추적)</em></td><td>Material 기본 — token 없음</td></tr>
+        <tr><td>처분 후 검토 → 결과</td><td><code>medium</code> (350ms)</td><td>크로스페이드</td></tr>
+        <tr><td>이미지 미리보기 다이얼로그 진입</td><td><code>medium</code> (350ms)</td><td>scale + fade (기본 다이얼로그)</td></tr>
+        <tr><td>이미지 핀치 줌</td><td><em>실시간 (제스처 추적)</em></td><td>기본 — 별도 토큰 없음</td></tr>
       </tbody>
     </table>
   </section>
@@ -831,11 +830,11 @@ body.dark-mode .viewport {
   <section class="doc">
     <h2>Global edge cases</h2>
     <ul class="notes">
-      <li><strong>네트워크 끊김</strong> — review 처분 시 timeout → handleMinglitError SnackBar. 사용자 retry 가능.</li>
-      <li><strong>signedUrl 만료</strong> — Storage 1h TTL. dialog/외부 launch 직후 오래 머물면 다음 클릭 시 재 fetch 필요 (현재는 매 클릭 재 fetch).</li>
-      <li><strong>다크 모드</strong> — Material colorScheme dark variant 자동. ElevatedButton은 partner.primary 톤으로 자연 적응. image dialog는 항상 다크 (textPrimary 배경 유지).</li>
-      <li><strong>접근성</strong> — InfoRow의 SizedBox(width: 100) label은 큰 글씨 시 wrap 안되고 잘림 위험 → 향후 IntrinsicHeight 또는 vertical layout 검토.</li>
-      <li><strong>다국어</strong> — 모든 라벨/문구가 l10n.appDetail_*. 영문 fallback 존재.</li>
+      <li><strong>네트워크 끊김</strong> — 처분 시 시간 초과 시 에러 스낵바로 안내. 사용자 재시도 가능.</li>
+      <li><strong>첨부파일 URL 만료</strong> — 임시 URL은 1시간 후 만료. 미리보기에 오래 머문 뒤 다음 클릭 시 재발급 필요 (현재는 매 클릭 재발급).</li>
+      <li><strong>다크 모드</strong> — 컬러 스킴 자동 전환. 액션 버튼은 partner primary로 자연 적응. 이미지 다이얼로그는 항상 다크 배경 유지.</li>
+      <li><strong>접근성</strong> — 정보 행의 라벨 폭이 100px로 고정되어 큰 글씨 시 잘림 위험 — 향후 세로 레이아웃 검토.</li>
+      <li><strong>다국어</strong> — 모든 라벨/문구가 다국어화. 영문 fallback 존재.</li>
     </ul>
   </section>
 </div>
