@@ -11,8 +11,22 @@
  *
  * Adding a new component:
  *   1. Drop the Dart widget into shared/packages/mds/core/lib/src/ui/widgets/
- *   2. Add an entry below
- *   3. Optionally add a Widgetbook story (kept until 2026-06)
+ *   2. Add an entry below (props / variants / states / tokens / guidelines)
+ *   3. Author the inline visual playground — see
+ *      `src/components/specs/README.md` for the workflow. Start by copying
+ *      `src/components/specs/_template.tsx` and importing the shared atoms
+ *      from `src/components/specs/_atoms.tsx` (do NOT redeclare PreviewTable
+ *      etc. locally).
+ *   4. Register the new <Component>Spec in `src/app/components/page.tsx`
+ *      INLINE_SPECS map.
+ *   5. Optionally add a Widgetbook story (kept until 2026-06)
+ *
+ * Tone rule (same as the screen specs):
+ *   The `description` text on each entry — purpose / guideline body /
+ *   prop notes — should describe what the user sees and the visual
+ *   contract. Implementation details (provider names, controller
+ *   methods, lifecycle calls) belong in the Dart source, not here.
+ *   `dartUsage` sample code is the explicit exception.
  */
 
 export type ComponentCategory =
@@ -430,8 +444,41 @@ MinglitChipGroup(
   {
     name: 'MinglitBottomCta',
     category: 'Action',
-    purpose: 'Fixed-bottom CTA bar (e.g. "Apply" on detail screens).',
-    props: ['label', 'onPressed', 'isLoading'],
+    purpose: '화면 하단에 고정되는 핵심 액션 바. Scaffold.bottomNavigationBar 슬롯에 배치하며, 키보드가 올라오면 자동으로 사라져 입력 폼을 가리지 않는다.',
+    props: [
+      { name: 'label',             type: 'String',         required: true,  notes: '주요 버튼 텍스트.' },
+      { name: 'onPressed',         type: 'VoidCallback?',  default: 'null', notes: 'null이면 비활성. 풀스크린 로딩 / 폼 미완성 시 사용.' },
+      { name: 'icon',              type: 'IconData?',       default: 'null', notes: '주요 버튼 leading 아이콘. single / withPrice 변형에서만 지원.' },
+      { name: 'enabled',           type: 'bool',            default: 'true', notes: 'false면 모든 버튼이 비활성. onPressed null과 동일한 시각.' },
+      { name: 'secondaryLabel',    type: 'String',          notes: 'dual 변형 전용 — 좌측 외곽선 버튼 텍스트.' },
+      { name: 'onSecondaryPressed', type: 'VoidCallback?', notes: 'dual 변형 전용 — 좌측 버튼 콜백.' },
+      { name: 'priceText',         type: 'String',          notes: 'withPrice 변형 전용 — 좌측 가격 텍스트 (예: "20,000원~").' },
+      { name: 'priceSubText',      type: 'String?',         default: 'null', notes: 'withPrice 변형 전용 — 가격 위 작은 회색 라벨 (예: "최저가").' },
+    ],
+    variants: ['single', 'dual', 'withPrice'],
+    states: ['default', 'disabled', 'with icon', 'keyboard up (자동 숨김)'],
+    tokens: [
+      { name: 'color-surface',         where: 'scaffold 배경 — bottom CTA 컨테이너 배경.' },
+      { name: 'color-divider',         where: '상단 0.5px 구분선 (outlineVariant).' },
+      { name: 'color-primary',         where: '주요 버튼 fill (ElevatedButton).' },
+      { name: 'color-text-primary',    where: '외곽선 버튼 라벨 / 가격 텍스트.' },
+      { name: 'color-text-secondary',  where: '가격 위 부가 라벨 (priceSubText).' },
+      { name: 'spacing-screen-edge',   where: '좌우 padding (16px).' },
+      { name: 'spacing-sm',            where: '위아래 padding (12px) · withPrice 가격↔버튼 갭.' },
+      { name: 'spacing-small',         where: 'dual 변형의 두 버튼 사이 갭 (8px).' },
+      { name: 'radius-button',         where: '버튼 모서리 (12px).' },
+    ],
+    accessibility: [
+      'SafeArea 자동 처리 — 시스템 인셋(노치 / 홈 인디케이터) 위에 안전하게 위치.',
+      '키보드 표시 중에는 자동 숨김 — 입력 폼이 가려지지 않도록.',
+      '버튼은 시각 비활성 시 onPressed: null로 실제 탭도 차단.',
+    ],
+    guidelines: [
+      { kind: 'do',   text: '핵심 액션 한 가지만 있으면 single 변형. 화면 하단에 안전하게 고정.',           recipeKey: 'do-single-primary' },
+      { kind: 'do',   text: '저장 / 취소처럼 짝 액션이 필요할 때 dual 변형 — 좌측 보조, 우측 주요.',          recipeKey: 'do-dual-save-pair' },
+      { kind: 'do',   text: '가격이 액션과 함께 보여야 할 때 withPrice — 좌측에 정보, 우측에 액션.',          recipeKey: 'do-price-context' },
+      { kind: 'dont', text: 'AppBar 위 / 화면 중간에 사용 금지 — 이 컴포넌트는 화면 하단 고정 슬롯 전용.' },
+    ],
     placement: {
       where: [
         '`Detail + Bottom CTA` 스캐폴드 / `Form + Bottom CTA` 스캐폴드의 하단 슬롯.',
@@ -442,6 +489,27 @@ MinglitChipGroup(
         { neighbor: 'safe area bottom',    gap: '0',                          note: '시스템 인셋 바로 위' },
       ],
     },
+    dartUsage: `// 단일 버튼
+MinglitBottomCTA(
+  label: '참여하기',
+  onPressed: () => coordinator.apply(),
+)
+
+// 좌우 두 버튼
+MinglitBottomCTA.dual(
+  label: '저장',
+  onPressed: () => save(),
+  secondaryLabel: '취소',
+  onSecondaryPressed: () => Navigator.pop(context),
+)
+
+// 가격 + 버튼
+MinglitBottomCTA.withPrice(
+  label: '참여하기',
+  onPressed: () => apply(),
+  priceText: '20,000원~',
+  priceSubText: '최저가',
+)`,
   },
 
   // ---------- Inputs ----------
@@ -644,8 +712,32 @@ NumberStepperInput(
   {
     name: 'MinglitContentCard',
     category: 'Cards',
-    purpose: 'Generic content card with optional header / footer.',
-    props: ['child', 'header', 'footer', 'onTap', 'padding'],
+    purpose: '둥근 모서리 + 회색 보더의 통일된 카드 컨테이너. 콘텐츠 그룹핑 / 정보 묶음 / 선택 옵션 등 다목적으로 사용. highlighted=true면 보더가 primary 색으로 변경되어 강조 / 선택 상태를 표시.',
+    props: [
+      { name: 'child',       type: 'Widget',           required: true, notes: '카드 내부에 들어갈 콘텐츠. 자유 구성 (텍스트 / 이미지 / 리스트 등).' },
+      { name: 'padding',     type: 'EdgeInsetsGeometry?', default: 'null', notes: '내부 padding 오버라이드. null이면 기본 vertical card-content-v + horizontal medium.' },
+      { name: 'onTap',       type: 'VoidCallback?',    default: 'null', notes: '탭 콜백. 있으면 잉크 리플 + 탭 가능 (둥근 모서리 안쪽까지 리플).' },
+      { name: 'highlighted', type: 'bool?',            default: 'false', notes: 'true면 보더가 primary 색으로 변경 — 선택 / 추천 / 활성 상태 시각화.' },
+    ],
+    variants: ['default', 'highlighted', 'tappable'],
+    states: ['default', 'pressed (잉크 리플)', 'highlighted'],
+    tokens: [
+      { name: 'color-background',     where: '카드 배경 (colorScheme.surface = 라이트 화이트).' },
+      { name: 'color-divider',        where: '기본 보더 (1px outlineVariant).' },
+      { name: 'color-primary',        where: 'highlighted 보더 색.' },
+      { name: 'radius-card',          where: '카드 모서리 (16px).' },
+      { name: 'spacing-card-content-v', where: '내부 vertical padding (16px) — 기본값.' },
+      { name: 'spacing-medium',       where: '내부 horizontal padding (16px) — 기본값.' },
+    ],
+    accessibility: [
+      'onTap이 있으면 Material InkWell이 tap target / focus ring을 처리.',
+      'highlighted 상태는 시각만 — 선택 의미가 있으면 부모가 Semantics(selected: true)를 추가해야 함.',
+    ],
+    guidelines: [
+      { kind: 'do',   text: '여러 옵션 중 선택된 항목을 highlighted=true로 표시. 한 번에 하나만 강조.',  recipeKey: 'do-highlight-selected' },
+      { kind: 'dont', text: '여러 카드를 동시에 highlighted로 두지 말 것 — 강조 의미가 사라짐.',          recipeKey: 'dont-stacked-highlights' },
+      { kind: 'do',   text: 'onTap이 있으면 카드 전체가 탭 영역. 내부에 별도 버튼 두지 않는 것이 자연스러움.' },
+    ],
     placement: {
       where: [
         '`List + Filter chips` 스캐폴드의 리스트 항목 — 카드 단위 컨텐츠.',
@@ -657,6 +749,23 @@ NumberStepperInput(
         { neighbor: '카드 내부 좌우 패딩',         gap: 'spacing-medium (16px)' },
       ],
     },
+    dartUsage: `// 일반 카드
+MinglitContentCard(
+  child: Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text('루프탑 라운지', style: titleMedium),
+      Text('강남 · 5월 3일 · 19:00', style: bodySmall),
+    ],
+  ),
+)
+
+// 탭 가능 + 강조 (선택된 옵션)
+MinglitContentCard(
+  highlighted: isSelected,
+  onTap: () => onSelect(option),
+  child: Text(option.label),
+)`,
   },
   {
     name: 'MinglitTag',
@@ -1017,8 +1126,31 @@ MinglitErrorState.inline(
   {
     name: 'MinglitSection',
     category: 'Sections',
-    purpose: 'Section wrapper with optional header / divider spacing.',
-    props: ['header', 'children', 'padding'],
+    purpose: '제목 + 본문 + 옵션 trailing 액션을 통일된 구조로 감싸는 섹션 래퍼. 상세 / 리스트 페이지에서 콘텐츠를 의미 있는 그룹으로 묶어주는 가장 기본 atom.',
+    props: [
+      { name: 'title',      type: 'String',           required: true, notes: '섹션 제목 — 굵은 titleMedium으로 표시.' },
+      { name: 'child',      type: 'Widget',           required: true, notes: '제목 아래 본문 콘텐츠.' },
+      { name: 'trailing',   type: 'Widget?',          default: 'null', notes: '제목 우측 액션 — 보통 "더보기 →" TextButton.' },
+      { name: 'padding',    type: 'EdgeInsetsGeometry?', default: 'null', notes: '외곽 padding 오버라이드. null이면 horizontal screenEdge 16.' },
+      { name: 'titleStyle', type: 'TextStyle?',        default: 'null', notes: '제목 스타일 오버라이드. null이면 titleMedium.bold.' },
+      { name: 'spacing',    type: 'double?',           default: 'null', notes: '제목 ↔ 본문 간격. null이면 sm(12).' },
+    ],
+    variants: ['default', 'with trailing'],
+    states: ['default'],
+    tokens: [
+      { name: 'spacing-screen-edge', where: '외곽 horizontal padding 기본값 (16px).' },
+      { name: 'spacing-sm',          where: '제목 ↔ 본문 간격 기본값 (12px).' },
+      { name: 'color-text-primary',  where: '제목 색상.' },
+      { name: 'color-primary',       where: 'trailing 액션 (TextButton) 텍스트 색.' },
+    ],
+    accessibility: [
+      'title은 Semantics에서 heading으로 노출 — 스크린리더가 섹션 단위로 빠르게 탐색 가능.',
+      'trailing이 있으면 별도의 button Semantics — 제목 자체는 read-only.',
+    ],
+    guidelines: [
+      { kind: 'do',   text: '리스트가 잘려 있을 때 "더보기 →" trailing으로 전체 보기 진입점 제공.', recipeKey: 'do-trailing-for-overflow' },
+      { kind: 'dont', text: '아무 액션 없는 섹션에 trailing을 두지 말 것 — 시각적 노이즈만 추가.',  recipeKey: 'dont-trailing-without-action' },
+    ],
     placement: {
       where: [
         '`Detail + Bottom CTA`의 스크롤 본문 안 — 한 화면당 여러 섹션을 세로로 쌓음.',
@@ -1026,28 +1158,93 @@ MinglitErrorState.inline(
       ],
       spacing: [
         { neighbor: '다음 섹션',           gap: 'spacing-section-gap (40px)', note: '큰 토픽 단위 분리' },
-        { neighbor: '섹션 헤더 → 본문',    gap: 'spacing-medium (16px)' },
+        { neighbor: '섹션 헤더 → 본문',    gap: 'spacing-sm (12px)', note: '기본값 — spacing prop으로 조정 가능' },
         { neighbor: '섹션 내 그룹 사이',    gap: 'spacing-large (24px)' },
       ],
     },
+    dartUsage: `// 단순 섹션
+MinglitSection(
+  title: '이번 주 일정',
+  child: ScheduleList(items),
+)
+
+// 더보기 액션이 있는 섹션
+MinglitSection(
+  title: '추천 이벤트',
+  trailing: TextButton(
+    onPressed: () => goToAll(),
+    child: const Text('더보기'),
+  ),
+  child: HorizontalScrollGroup(child: cards),
+)`,
   },
   {
     name: 'MinglitSectionDivider',
     category: 'Sections',
-    purpose: 'Horizontal divider with consistent spacing.',
-    props: ['spacing'],
+    purpose: '콘텐츠 영역을 구분하는 두 가지 굵기의 디바이더. thin(1px)은 같은 그룹 내 행 사이 부드러운 구분, thick(8px)은 큰 섹션 간 강한 분리.',
+    props: [
+      { name: 'isThick', type: 'bool', required: true, notes: 'true면 8px 회색 띠, false면 1px 얇은 선. 보통 named constructor (.thick / .thin)로 사용.' },
+    ],
+    variants: ['thin (1px)', 'thick (8px)'],
+    states: ['default (정적)'],
+    tokens: [
+      { name: 'color-divider',                where: 'thin 선 색상 (1px).' },
+      { name: 'color-surface-container-highest', where: 'thick 띠 배경 (회색 8px).' },
+      { name: 'spacing-small',                where: 'thick 변형 높이 (8px).' },
+    ],
+    accessibility: [
+      '순수 시각 디바이더 — Semantics에 노출되지 않음 (스크린리더는 무시).',
+      '의미 있는 구분이 필요하면 부모가 별도 heading / Semantics를 제공.',
+    ],
+    guidelines: [
+      { kind: 'do',   text: '카드 / 그룹 안에서 행과 행을 가를 때 thin — 부드러운 시각적 호흡.',         recipeKey: 'do-thin-inside-group' },
+      { kind: 'do',   text: '큰 섹션(계정 / 알림 등) 사이를 강하게 분리할 때 thick.',                    recipeKey: 'do-thick-between-sections' },
+      { kind: 'dont', text: 'thick을 연속으로 여러 번 쓰지 말 것 — 화면이 회색 띠로 도배되는 인상.',     recipeKey: 'dont-stacked-thicks' },
+    ],
     placement: {
       where: [
         '섹션 사이 명시적 시각 구분이 필요할 때만 — 보통은 spacing-section-gap 만으로 충분.',
         'thick(8px) — 섹션 단위 강한 분리. thin(1px) — 그룹 단위 약한 분리.',
       ],
     },
+    dartUsage: `// 같은 그룹 내 행 구분
+const MinglitSectionDivider.thin()
+
+// 큰 섹션 사이 분리
+const MinglitSectionDivider.thick()`,
   },
   {
     name: 'MinglitListTile',
     category: 'Lists',
-    purpose: 'Generic list row with leading / trailing slots.',
-    props: ['leading', 'title', 'subtitle', 'trailing', 'onTap'],
+    purpose: '제목 + 옵션 부제 + 좌측 leading / 우측 trailing 슬롯을 가진 일반 리스트 행. 멤버 / 알림 / 도메인 데이터 같은 일반 리스트에 사용 (vs SettingsTile은 설정 화면 전용 48px 고정).',
+    props: [
+      { name: 'title',    type: 'String',          required: true, notes: '주 라벨 (bodyLarge).' },
+      { name: 'subtitle', type: 'String?',         default: 'null', notes: 'title 아래 보조 텍스트 — 들어가면 행이 2-line으로 자라남.' },
+      { name: 'leading',  type: 'Widget?',         default: 'null', notes: '좌측 슬롯 — 아이콘 / 직접 위젯. avatar가 함께 있으면 무시됨.' },
+      { name: 'avatar',   type: 'ImageProvider?',  default: 'null', notes: '편의 prop — 이미지를 CircleAvatar로 자동 래핑. leading보다 우선.' },
+      { name: 'trailing', type: 'Widget?',         default: 'null', notes: '우측 슬롯 — chevron / 뱃지 / 텍스트 등 자유.' },
+      { name: 'onTap',    type: 'VoidCallback?',   default: 'null', notes: '탭 콜백 — 있으면 잉크 리플 + Semantics(button: true).' },
+      { name: 'enabled',  type: 'bool',            default: 'true', notes: 'false면 흐려지고 탭 차단. 권한 부족 / 잠긴 항목.' },
+    ],
+    variants: ['avatar leading', 'icon leading', 'no leading'],
+    states: ['default', 'disabled', 'with subtitle (2-line)', 'title only (1-line)'],
+    tokens: [
+      { name: 'color-text-primary',    where: 'title 텍스트.' },
+      { name: 'color-text-secondary',  where: 'subtitle 텍스트 / leading 아이콘 색.' },
+      { name: 'spacing-medium',        where: '좌우 padding (16px) · leading↔title 갭.' },
+      { name: 'spacing-xsmall',        where: 'tile vertical padding (4px).' },
+      { name: 'radius-small',          where: 'InkWell shape (8px) — 탭 시 잉크 리플 모서리.' },
+    ],
+    accessibility: [
+      'onTap이 있으면 button: true Semantics, 비활성 시 enabled: false.',
+      'avatar가 있으면 CircleAvatar는 image label 부재 — 시각 보조에만 사용.',
+      'subtitle이 단순 보조 정보일 때만 — 핵심 정보는 title에 둘 것.',
+    ],
+    guidelines: [
+      { kind: 'do',   text: '사람 / 파트너 같은 entity는 avatar leading + 이름 title + 역할 subtitle.', recipeKey: 'do-avatar-person-row' },
+      { kind: 'do',   text: '추상 개념 / 시스템 알림은 24px 아이콘 leading.',                            recipeKey: 'do-icon-concept-row' },
+      { kind: 'dont', text: '설정 화면 행에는 사용하지 말 것 — MinglitSettingsTile (48px 고정)이 그 용도.', recipeKey: 'dont-use-for-settings' },
+    ],
     placement: {
       where: [
         '리스트 / 멤버 / 알림 같은 동질적 row의 반복 단위.',
@@ -1055,67 +1252,204 @@ MinglitErrorState.inline(
       ],
       spacing: [
         { neighbor: '같은 리스트의 sibling tile', gap: '0', note: '연속 row는 보더 없이 붙음 (divider는 별도)' },
-        { neighbor: '내부 vertical padding',       gap: 'spacing-card-content-v (16px)', note: 'hit zone 56pt 이상 보장' },
+        { neighbor: '내부 vertical padding',       gap: 'spacing-xsmall (4px)', note: 'Material ListTile 기본 + minVerticalPadding small' },
       ],
     },
+    dartUsage: `// 사람 행 — 아바타 + 역할
+MinglitListTile(
+  avatar: NetworkImage('https://example.com/photo.jpg'),
+  title: '홍길동',
+  subtitle: '파트너 매니저',
+  trailing: const Icon(Icons.chevron_right),
+  onTap: () => coordinator.openMember(id),
+)
+
+// 알림 행 — 아이콘 + 시간
+MinglitListTile(
+  leading: const Icon(Icons.mail_outline),
+  title: '새 메시지 도착',
+  subtitle: '2시간 전',
+  onTap: () => openNotification(),
+)`,
   },
   {
     name: 'MinglitKeyValueRow',
     category: 'Lists',
-    purpose: 'Aligned key-value pair row (info displays).',
-    props: ['keyText', 'value', 'highlight'],
+    purpose: '왼쪽 라벨 + 오른쪽 값 양 끝 정렬 행. 결제 / 정산 요약 카드, 이벤트 메타 정보 등 정형화된 정보 표시에 사용.',
+    props: [
+      { name: 'label',      type: 'String',  required: true, notes: '좌측 라벨 (bodyMedium · onSurfaceVariant 회색).' },
+      { name: 'value',      type: 'String',  required: true, notes: '우측 값 (bodyMedium).' },
+      { name: 'bold',       type: 'bool',    default: 'false', notes: 'true면 값 굵게 — 가격 / 합계 / 강조 숫자.' },
+      { name: 'valueColor', type: 'Color?',  default: 'null', notes: '값 색상 오버라이드 — 부족(error)·강조(primary) 등 의미 색상.' },
+    ],
+    variants: ['default', 'bold', 'colored value'],
+    states: ['default'],
+    tokens: [
+      { name: 'color-text-secondary', where: '라벨 색 (onSurfaceVariant).' },
+      { name: 'color-text-primary',   where: '값 색 (기본).' },
+      { name: 'color-primary',        where: '값 강조 색 — 합계 / 환불액 등.' },
+      { name: 'color-error',          where: '값 경고 색 — 잔여 부족 / 마이너스.' },
+      { name: 'spacing-xsmall',       where: '위아래 padding (4px) — 여러 row stack 시 답답하지 않은 간격.' },
+    ],
+    accessibility: [
+      'label / value가 함께 한 row를 형성하므로 스크린리더는 자연스럽게 "label, value" 순으로 읽음.',
+      '강조 색상은 시각만 — 의미가 있으면 부모 카드의 Semantics가 보강해야 함.',
+    ],
+    guidelines: [
+      { kind: 'do',   text: '여러 row를 stack한 후 마지막 합계 row만 bold + 강조 색으로.', recipeKey: 'do-bold-for-total' },
+      { kind: 'dont', text: '모든 row를 bold로 두면 강조의 의미가 사라짐.',                  recipeKey: 'dont-everything-bold' },
+    ],
     placement: {
       where: [
         '`MinglitContentCard` 내부 — 정산 / 상세 정보 / 통계 row.',
-        'highlight=true는 합계 / 강조 row 1개에만.',
+        'bold + valueColor는 합계 / 강조 row 1개에만.',
       ],
       spacing: [
-        { neighbor: '같은 카드 안 sibling row', gap: 'spacing-small (8px)' },
-        { neighbor: 'highlight row 위 divider', gap: 'thin divider', note: '합계 앞에 명시적 구분' },
+        { neighbor: '같은 카드 안 sibling row', gap: 'spacing-xsmall (4px)' },
+        { neighbor: '합계 row 위 divider',      gap: 'thin divider', note: '합계 앞에 명시적 구분' },
       ],
     },
+    dartUsage: `// 결제 / 환불 요약
+MinglitKeyValueRow(label: '결제 금액', value: '35,000원'),
+MinglitKeyValueRow(label: '수수료',    value: '-5,000원'),
+const Divider(thickness: 0.5),
+MinglitKeyValueRow(
+  label: '환불 금액',
+  value: '30,000원',
+  bold: true,
+  valueColor: theme.colorScheme.primary,
+)`,
   },
   {
     name: 'MinglitContentLayout',
     category: 'Layouts',
-    purpose: 'Standard content area scaffolding (padding + scroll).',
-    props: ['child', 'padding', 'scrollable'],
+    purpose: '상세 페이지의 섹션들을 통일된 간격으로 세로 나열하는 스캐폴드. 자체는 Column이라 어떤 스크롤 컨텍스트(SliverToBoxAdapter / SingleChildScrollView 등)에도 안전하게 사용. 스크롤은 부모가 관리.',
+    props: [
+      { name: 'sections',       type: 'List<Widget>', required: true, notes: '표시할 섹션 위젯 리스트 (보통 MinglitSection). 빈 리스트면 SizedBox.shrink.' },
+      { name: 'sectionGap',     type: 'double?',      default: 'null', notes: '섹션 사이 간격. null이면 sectionGap(40).' },
+      { name: 'topPadding',     type: 'double?',      default: 'null', notes: '첫 섹션 위 여백. null이면 large(24).' },
+      { name: 'bottomPadding',  type: 'double?',      default: 'null', notes: '마지막 섹션 아래 여백. null이면 xlarge(32).' },
+      { name: 'showDividers',   type: 'bool',         default: 'false', notes: 'true면 섹션 사이에 thin divider + halfGap을 좌우로 배치.' },
+    ],
+    variants: ['default (no dividers)', 'with dividers'],
+    states: ['default'],
+    tokens: [
+      { name: 'spacing-section-gap', where: '섹션 사이 간격 기본값 (40px).' },
+      { name: 'spacing-large',       where: '상단 padding 기본값 (24px).' },
+      { name: 'spacing-xlarge',      where: '하단 padding 기본값 (32px).' },
+      { name: 'color-divider',       where: 'showDividers=true일 때 thin 선 색.' },
+    ],
+    accessibility: [
+      '의미 있는 콘텐츠 흐름은 sections의 각 MinglitSection이 자체 heading을 가짐 — 이 컴포넌트는 시각 컨테이너만.',
+      '빈 sections 리스트일 때 SizedBox.shrink 반환 — 빈 컨테이너가 스크린리더에 노출되지 않음.',
+    ],
+    guidelines: [
+      { kind: 'do',   text: '대부분 default(no dividers) — 여백만으로 섹션 분리가 충분함.',          recipeKey: 'do-no-dividers-default' },
+      { kind: 'do',   text: '섹션 경계가 명확해야 할 때만 showDividers — 입력 / 확인 흐름 등.',       recipeKey: 'do-dividers-only-when-needed' },
+    ],
     placement: {
       where: [
         '대부분의 화면 본문 — `Detail + Bottom CTA`, `Form + Bottom CTA`, `List + Filter chips` 스캐폴드의 body root.',
-        'AppBar 아래 / Bottom CTA 위에 배치.',
+        'AppBar 아래 / Bottom CTA 위에 배치. 스크롤은 부모(SliverList / SingleChildScrollView)가 처리.',
       ],
       spacing: [
-        { neighbor: '좌/우 화면 가장자리', gap: 'spacing-screen-edge (16px)', note: '내부 패딩으로 처리' },
-        { neighbor: '내부 sections 사이',  gap: 'spacing-section-gap (40px)' },
-        { neighbor: '상단 (AppBar 아래)',  gap: 'spacing-medium (16px)' },
+        { neighbor: '좌/우 화면 가장자리', gap: 'spacing-screen-edge (16px)', note: '각 섹션 자체 padding으로 처리 — 이 컴포넌트는 horizontal 0' },
+        { neighbor: '내부 sections 사이',  gap: 'spacing-section-gap (40px)', note: 'sectionGap prop으로 조정' },
+        { neighbor: '상단 (AppBar 아래)',  gap: 'spacing-large (24px)', note: 'topPadding 기본값' },
       ],
     },
+    dartUsage: `// 일반 상세 페이지
+MinglitContentLayout(
+  sections: [
+    MinglitSection(title: '이벤트 정보', child: ...),
+    MinglitSection(title: '장소',       child: ...),
+    MinglitSection(title: '후기',       child: ...),
+  ],
+)
+
+// 디바이더로 강하게 분리하고 싶을 때
+MinglitContentLayout(
+  showDividers: true,
+  sections: [...],
+)`,
   },
   {
     name: 'MinglitHorizontalScrollGroup',
     category: 'Lists',
-    purpose: 'Horizontally scrolling row of cards / chips.',
-    props: ['children', 'spacing', 'padding'],
+    purpose: '가로 스크롤 콘텐츠의 affordance를 자동으로 처리해주는 wrapper. 양 끝에 콘텐츠가 더 있는지를 페이드 + chevron으로 시각화 — 스크롤이 가능하다는 것을 사용자가 즉시 알 수 있다.',
+    props: [
+      { name: 'child', type: 'Widget', required: true, notes: '가로 스크롤 가능한 위젯 (ListView / SingleChildScrollView 등).' },
+    ],
+    variants: ['scroll start', 'scrolling middle', 'scroll end'],
+    states: [
+      'no fades (콘텐츠가 화면에 다 들어옴)',
+      'right fade + chevron (시작 위치)',
+      'both fades (스크롤 중)',
+      'left fade only (끝 위치)',
+    ],
+    tokens: [
+      { name: 'color-surface',        where: '페이드 그라디언트의 시작/끝 색 — scaffold 배경과 동일.' },
+      { name: 'color-text-secondary', where: 'chevron 인디케이터 색 (40% opacity).' },
+      { name: 'spacing-medium',       where: '페이드 너비 (16px).' },
+    ],
+    accessibility: [
+      '페이드 / chevron은 시각적 힌트만 — IgnorePointer로 감싸 탭 동작에 영향 없음.',
+      '스크린리더는 child의 ListView를 그대로 탐색 — affordance는 시각 보조 역할.',
+    ],
+    guidelines: [
+      { kind: 'do',   text: '필터 칩 / 카테고리 칩처럼 가로로 펼쳐지는 row를 감쌀 때 사용.',           recipeKey: 'do-chips-row' },
+      { kind: 'dont', text: '콘텐츠가 화면에 다 들어와 스크롤이 불필요한 경우 감싸지 말 것 — 페이드 / chevron이 안 뜨고 단순 wrap만 됨.', recipeKey: 'dont-wrap-non-scrollable' },
+    ],
     placement: {
       where: [
         '섹션 안에서 sibling 카드들이 가로로 펼쳐질 때 — 추천 / 인기 / 최근 같은 카탈로그.',
         '한 화면 안에 2-3개 이상 스택하지 말 것 (수직 정보가 묻힘).',
       ],
       spacing: [
-        { neighbor: '내부 카드 사이',          gap: 'spacing-card-gap (12px)' },
+        { neighbor: '내부 카드 사이',          gap: 'spacing-card-gap (12px)', note: '내부 ListView가 처리' },
         { neighbor: '좌/우 첫·마지막 카드 패딩', gap: 'spacing-screen-edge (16px)', note: '스크롤 끝에서 화면 가장자리까지' },
       ],
     },
+    dartUsage: `MinglitHorizontalScrollGroup(
+  child: ListView.separated(
+    scrollDirection: Axis.horizontal,
+    padding: const EdgeInsets.symmetric(horizontal: MinglitSpacing.screenEdge),
+    itemCount: chips.length,
+    separatorBuilder: (_, _) => const SizedBox(width: MinglitSpacing.cardGap),
+    itemBuilder: (_, i) => MinglitChip(label: chips[i]),
+  ),
+)`,
   },
 
   // ---------- Settings ----------
   {
     name: 'MinglitSettingsGroup',
     category: 'Settings',
-    purpose: 'Grouped settings list with optional header label.',
-    props: ['header', 'children'],
-    usedIn: ['user-MyPageRoute'],
+    purpose: '여러 SettingsTile을 카드로 묶어주는 wrapper. 옵션 헤더 라벨이 카드 위에 회색 대문자로 표시되어 그룹의 의미를 명시한다. 카드 모서리(radius 16) 안쪽으로 콘텐츠가 깔끔히 잘리고, 행 사이에는 0.5px 얇은 선이 leading icon 폭만큼 들여쓰기 되어 그어진다.',
+    props: [
+      { name: 'children', type: 'List<Widget>', required: true, notes: '카드 안에 들어갈 SettingsTile들.' },
+      { name: 'header',   type: 'String?',      default: 'null', notes: '카드 위 헤더 라벨 — 자동 대문자 변환. null이면 헤더 없이 카드만.' },
+    ],
+    variants: ['with header', 'without header'],
+    states: ['default'],
+    tokens: [
+      { name: 'color-background',        where: '카드 배경 (라이트모드 surfaceContainerLowest = 흰색).' },
+      { name: 'color-text-secondary',    where: '헤더 라벨 색 (onSurfaceVariant).' },
+      { name: 'color-divider',           where: '행 사이 0.5px 얇은 선 (outlineVariant).' },
+      { name: 'radius-card',             where: '카드 모서리 (16px).' },
+      { name: 'spacing-medium',          where: '카드 좌우 horizontal padding (16px).' },
+      { name: 'spacing-small',           where: '헤더 ↔ 카드 간격 (8px).' },
+      { name: 'spacing-xsmall',          where: '헤더 좌측 들여쓰기 (4px).' },
+    ],
+    accessibility: [
+      '헤더는 텍스트만 — 의미 있는 그룹화는 부모 화면이 보강 (Semantics group).',
+      '내부 SettingsTile들이 각자 button Semantics를 가짐 — 그룹은 시각 컨테이너.',
+    ],
+    guidelines: [
+      { kind: 'do',   text: '같은 화면에 여러 그룹이 있으면 각각 헤더 라벨을 붙여 의미 분리 (계정 / 알림 / 정보 등).', recipeKey: 'do-multiple-groups-with-headers' },
+      { kind: 'dont', text: '한 그룹에 모든 설정을 다 쑤셔넣지 말 것 — 토픽별로 나누는 것이 스캔성에 유리.',          recipeKey: 'dont-giant-single-group' },
+    ],
+    usedIn: ['user-MyPageRoute', 'user-AccountManagementRoute', 'user-NotificationSettingsRoute'],
     placement: {
       where: [
         '`Settings groups` 스캐폴드 — 한 화면에 여러 그룹을 세로로 스택.',
@@ -1124,27 +1458,110 @@ MinglitErrorState.inline(
       spacing: [
         { neighbor: '다음 그룹',          gap: 'spacing-large (24px)' },
         { neighbor: '그룹 헤더 → 첫 tile', gap: 'spacing-small (8px)' },
-        { neighbor: '내부 tiles 사이',     gap: '0', note: 'tile 자체 padding이 hit zone 보장' },
+        { neighbor: '내부 tiles 사이',     gap: '0', note: '0.5px divider만 leading 폭(52)만큼 들여쓰기 되어 그어짐' },
       ],
     },
+    dartUsage: `MinglitSettingsGroup(
+  header: '계정',
+  children: [
+    MinglitSettingsTile(
+      leading: Icons.email_outlined,
+      title: '이메일',
+      subtitle: 'user@example.com',
+      trailing: SettingsTileTrailing.navigation,
+      onTap: () => coordinator.openEmail(),
+    ),
+    MinglitSettingsTile(
+      leading: Icons.lock_outline,
+      title: '비밀번호',
+      onTap: () => coordinator.openPassword(),
+    ),
+    MinglitSettingsTile(
+      leading: Icons.logout,
+      title: '로그아웃',
+      trailing: SettingsTileTrailing.none,
+      destructive: true,
+      onTap: () => signOut(),
+    ),
+  ],
+)`,
   },
   {
     name: 'MinglitSettingsTile',
     category: 'Settings',
-    purpose: 'Settings row with leading icon, title, optional subtitle, trailing chevron.',
-    props: ['leading', 'title', 'subtitle', 'trailing', 'destructive', 'onTap'],
-    usedIn: ['user-MyPageRoute'],
+    purpose: '설정 / 마이페이지 화면 전용 compact 행. 1줄(title만)일 때는 minHeight 48 고정, 2줄(title + subtitle)일 때는 자연스럽게 자라며 위아래 padding 12 유지. 우측 trailing은 navigation chevron / toggle / value text / none 중 선택.',
+    props: [
+      { name: 'title',         type: 'String',                required: true, notes: '주 라벨 (bodyMedium).' },
+      { name: 'leading',       type: 'IconData?',             default: 'null', notes: '좌측 20px 아이콘 (회색 onSurfaceVariant). 없으면 좌측 비움.' },
+      { name: 'subtitle',      type: 'String?',               default: 'null', notes: '현재 값 한 줄 (예: "한국어", "켜짐"). 들어가면 행이 ~58px로 자라남.' },
+      { name: 'trailing',      type: 'SettingsTileTrailing',  default: 'navigation', notes: 'navigation(chevron) · toggle(Switch) · value(text) · none.' },
+      { name: 'trailingValue', type: 'String?',               default: 'null', notes: 'trailing=value일 때 우측에 표시할 텍스트.' },
+      { name: 'toggleValue',   type: 'bool',                  default: 'false', notes: 'trailing=toggle일 때 스위치 상태.' },
+      { name: 'onToggleChanged', type: 'ValueChanged<bool>?', default: 'null', notes: 'trailing=toggle일 때 토글 변경 콜백.' },
+      { name: 'onTap',         type: 'VoidCallback?',         default: 'null', notes: '행 탭 콜백. trailing=toggle일 때는 동작 안 함 (토글만 반응).' },
+      { name: 'destructive',   type: 'bool',                  default: 'false', notes: 'true면 title + leading icon이 error 색(빨강) — 로그아웃 / 탈퇴.' },
+      { name: 'enabled',       type: 'bool',                  default: 'true', notes: 'false면 흐려지고 탭 차단.' },
+    ],
+    variants: ['navigation', 'toggle', 'value', 'none'],
+    states: ['default', 'with subtitle', 'destructive', 'disabled'],
+    tokens: [
+      { name: 'color-text-primary',    where: 'title 색 (기본).' },
+      { name: 'color-text-secondary',  where: 'leading icon · subtitle · value text · chevron 색.' },
+      { name: 'color-error',           where: 'destructive 시 title + leading icon 색.' },
+      { name: 'color-primary',         where: 'toggle ON 시 트랙 색.' },
+      { name: 'color-divider',         where: 'toggle OFF 시 트랙 색.' },
+      { name: 'spacing-medium',        where: '좌우 padding (16px) · leading↔title 갭.' },
+      { name: 'spacing-sm',            where: '위아래 padding (12px) — 고정.' },
+    ],
+    accessibility: [
+      'onTap이 있으면 InkWell button Semantics. trailing=toggle은 행 탭이 아니라 토글만 반응.',
+      'destructive 시각 강조는 색상만 — 의미 있는 destructive 액션은 confirm dialog와 함께.',
+      'enabled=false는 InkWell 차단 + 텍스트 / 아이콘 muted opacity.',
+    ],
+    guidelines: [
+      { kind: 'do',   text: '다음 화면으로 이동하는 행은 navigation — 우측에 chevron으로 진입 신호.',     recipeKey: 'do-navigation-row' },
+      { kind: 'do',   text: '온/오프 즉시 반영은 toggle — 행 탭은 비활성, 토글만 반응.',                  recipeKey: 'do-toggle-row' },
+      { kind: 'do',   text: '로그아웃 / 탈퇴 같은 종결 액션은 destructive + 그룹의 마지막에.',            recipeKey: 'do-destructive-last' },
+      { kind: 'dont', text: '한 그룹에 navigation / toggle / value를 무작위로 섞어서 시선이 분산되게 하지 말 것.', recipeKey: 'dont-mixed-trailing' },
+    ],
+    usedIn: ['user-MyPageRoute', 'user-AccountManagementRoute', 'user-NotificationSettingsRoute', 'user-PrivacyRoute'],
     placement: {
       where: [
         '`MinglitSettingsGroup` 내부 직계 자식. 단독 사용 안 함.',
         'destructive=true는 그룹의 마지막 tile에 — 계정 삭제 / 로그아웃 같은 종결 액션.',
       ],
       spacing: [
-        { neighbor: '같은 그룹 sibling tile', gap: '0', note: '연속 row는 붙고, 내부 padding이 hit zone 형성' },
-        { neighbor: '내부 vertical padding',  gap: 'spacing-card-content-v (16px)', note: 'hit zone 56pt' },
+        { neighbor: '같은 그룹 sibling tile', gap: '0', note: '연속 row는 붙고 group의 0.5px divider가 사이를 그음' },
+        { neighbor: '내부 vertical padding',  gap: 'spacing-sm (12px)', note: '고정 — 1줄 / 2줄 모두 동일' },
         { neighbor: '내부 horizontal padding', gap: 'spacing-medium (16px)' },
       ],
     },
+    dartUsage: `// 진입 행
+MinglitSettingsTile(
+  leading: Icons.language,
+  title: '언어',
+  subtitle: '한국어',
+  trailing: SettingsTileTrailing.navigation,
+  onTap: () => coordinator.openLanguage(),
+)
+
+// 토글 행
+MinglitSettingsTile(
+  leading: Icons.notifications_outlined,
+  title: '알림 받기',
+  trailing: SettingsTileTrailing.toggle,
+  toggleValue: enabled,
+  onToggleChanged: (v) => controller.setEnabled(v),
+)
+
+// destructive — 그룹 마지막
+MinglitSettingsTile(
+  leading: Icons.logout,
+  title: '로그아웃',
+  trailing: SettingsTileTrailing.none,
+  destructive: true,
+  onTap: () => signOut(),
+)`,
   },
 
   // ---------- Loading ----------

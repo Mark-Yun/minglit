@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type ComponentType } from 'react';
+import { useEffect, useState, type ComponentType } from 'react';
 import {
   getComponentsByCategory,
   MDS_COMPONENTS,
@@ -74,11 +74,54 @@ import MinglitImageCarouselSpec, {
 import MinglitImageSourceSheetSpec, {
   GUIDELINE_RECIPES as MINGLIT_IMAGE_SOURCE_SHEET_RECIPES,
 } from '@/components/specs/MinglitImageSourceSheetSpec';
+import MinglitSectionDividerSpec, {
+  GUIDELINE_RECIPES as MINGLIT_SECTION_DIVIDER_RECIPES,
+} from '@/components/specs/MinglitSectionDividerSpec';
+import MinglitSettingsTileSpec, {
+  GUIDELINE_RECIPES as MINGLIT_SETTINGS_TILE_RECIPES,
+} from '@/components/specs/MinglitSettingsTileSpec';
+import MinglitSettingsGroupSpec, {
+  GUIDELINE_RECIPES as MINGLIT_SETTINGS_GROUP_RECIPES,
+} from '@/components/specs/MinglitSettingsGroupSpec';
+import MinglitListTileSpec, {
+  GUIDELINE_RECIPES as MINGLIT_LIST_TILE_RECIPES,
+} from '@/components/specs/MinglitListTileSpec';
+import MinglitBottomCtaSpec, {
+  GUIDELINE_RECIPES as MINGLIT_BOTTOM_CTA_RECIPES,
+} from '@/components/specs/MinglitBottomCtaSpec';
+import MinglitContentCardSpec, {
+  GUIDELINE_RECIPES as MINGLIT_CONTENT_CARD_RECIPES,
+} from '@/components/specs/MinglitContentCardSpec';
+import MinglitSectionSpec, {
+  GUIDELINE_RECIPES as MINGLIT_SECTION_RECIPES,
+} from '@/components/specs/MinglitSectionSpec';
+import MinglitKeyValueRowSpec, {
+  GUIDELINE_RECIPES as MINGLIT_KEY_VALUE_ROW_RECIPES,
+} from '@/components/specs/MinglitKeyValueRowSpec';
+import MinglitContentLayoutSpec, {
+  GUIDELINE_RECIPES as MINGLIT_CONTENT_LAYOUT_RECIPES,
+} from '@/components/specs/MinglitContentLayoutSpec';
+import MinglitHorizontalScrollGroupSpec, {
+  GUIDELINE_RECIPES as MINGLIT_HORIZONTAL_SCROLL_GROUP_RECIPES,
+} from '@/components/specs/MinglitHorizontalScrollGroupSpec';
 
 /**
  * Inline visual specs registered by component name.
  * Each entry has a `Visual` component (rich playground) and an optional
  * `recipes` map for do/don't visualisations next to guideline text.
+ *
+ * To add a new component to this map:
+ *   1. Author `<Component>Spec.tsx` in `src/components/specs/` — start
+ *      from `src/components/specs/_template.tsx` and use the shared atoms
+ *      from `src/components/specs/_atoms.tsx` (PreviewTable, SpecRoot,
+ *      SpecHero, SpecAnatomy, SpecSection). See
+ *      `src/components/specs/README.md` for the full workflow + tone rule.
+ *   2. Import its default export + `GUIDELINE_RECIPES` above.
+ *   3. Add an entry to `INLINE_SPECS` keyed by component name.
+ *
+ * If a component has no entry here, the `/components` page renders a
+ * fallback link to `c.visualSpec` (when set) and the components.ts
+ * tabular data (props / variants / states / tokens / guidelines).
  */
 interface InlineSpecModule {
   Visual: ComponentType;
@@ -106,22 +149,17 @@ const INLINE_SPECS: Record<string, InlineSpecModule> = {
   MinglitImage:               { Visual: MinglitImageSpec,               recipes: MINGLIT_IMAGE_RECIPES },
   MinglitImageCarousel:       { Visual: MinglitImageCarouselSpec,       recipes: MINGLIT_IMAGE_CAROUSEL_RECIPES },
   MinglitImageSourceSheet:    { Visual: MinglitImageSourceSheetSpec,    recipes: MINGLIT_IMAGE_SOURCE_SHEET_RECIPES },
+  MinglitSectionDivider:      { Visual: MinglitSectionDividerSpec,      recipes: MINGLIT_SECTION_DIVIDER_RECIPES },
+  MinglitSettingsTile:        { Visual: MinglitSettingsTileSpec,        recipes: MINGLIT_SETTINGS_TILE_RECIPES },
+  MinglitSettingsGroup:       { Visual: MinglitSettingsGroupSpec,       recipes: MINGLIT_SETTINGS_GROUP_RECIPES },
+  MinglitListTile:            { Visual: MinglitListTileSpec,            recipes: MINGLIT_LIST_TILE_RECIPES },
+  MinglitBottomCta:           { Visual: MinglitBottomCtaSpec,           recipes: MINGLIT_BOTTOM_CTA_RECIPES },
+  MinglitContentCard:         { Visual: MinglitContentCardSpec,         recipes: MINGLIT_CONTENT_CARD_RECIPES },
+  MinglitSection:             { Visual: MinglitSectionSpec,             recipes: MINGLIT_SECTION_RECIPES },
+  MinglitKeyValueRow:         { Visual: MinglitKeyValueRowSpec,         recipes: MINGLIT_KEY_VALUE_ROW_RECIPES },
+  MinglitContentLayout:       { Visual: MinglitContentLayoutSpec,       recipes: MINGLIT_CONTENT_LAYOUT_RECIPES },
+  MinglitHorizontalScrollGroup: { Visual: MinglitHorizontalScrollGroupSpec, recipes: MINGLIT_HORIZONTAL_SCROLL_GROUP_RECIPES },
 };
-
-// ---------------------------------------------------------------------------
-// Completeness — drives the SPEC / API only / stub badge in the header.
-// ---------------------------------------------------------------------------
-function specCompleteness(c: ComponentSpec): 'rich' | 'minimal' | 'stub' {
-  const hasRich =
-    (c.variants && c.variants.length > 0) ||
-    (c.states && c.states.length > 0) ||
-    (c.tokens && c.tokens.length > 0) ||
-    (c.guidelines && c.guidelines.length > 0) ||
-    !!c.visualSpec;
-  if (hasRich) return 'rich';
-  if (c.props && c.props.length > 0) return 'minimal';
-  return 'stub';
-}
 
 // ---------------------------------------------------------------------------
 // Section primitive — micro-label header + soft surface panel.
@@ -159,7 +197,6 @@ function Section({
 // Component card
 // ---------------------------------------------------------------------------
 function ComponentSection({ c }: { c: ComponentSpec }) {
-  const completeness = specCompleteness(c);
   const inlineSpec = INLINE_SPECS[c.name];
   const richProps = (c.props ?? []).filter(isPropDef) as PropDef[];
   const stringProps = (c.props ?? []).filter((p) => !isPropDef(p)) as string[];
@@ -177,21 +214,19 @@ function ComponentSection({ c }: { c: ComponentSpec }) {
         gap: 'var(--spacing-xlarge)',
       }}
     >
-      {/* Header — name + category + completeness badge. No bottom border;
-          spacing carries the separation. */}
+      {/* Header — name + category. No bottom border; spacing carries the
+          separation. Completeness badge removed (2026-05-01) — all entries
+          are being authored to the same standard. */}
       <header
-        className="flex items-baseline justify-between flex-wrap"
-        style={{ gap: 'var(--spacing-small)' }}
+        className="flex items-baseline flex-wrap"
+        style={{ gap: 'var(--spacing-sm)' }}
       >
-        <div className="flex items-baseline flex-wrap" style={{ gap: 'var(--spacing-sm)' }}>
-          <h2 className="font-mono mds-text-page-title" style={{ color: 'var(--color-text-primary)' }}>
-            {c.name}
-          </h2>
-          <span className="mds-text-caption" style={{ color: 'var(--color-text-secondary)' }}>
-            {c.category}
-          </span>
-        </div>
-        <CompletenessBadge state={completeness} />
+        <h2 className="font-mono mds-text-page-title" style={{ color: 'var(--color-text-primary)' }}>
+          {c.name}
+        </h2>
+        <span className="mds-text-caption" style={{ color: 'var(--color-text-secondary)' }}>
+          {c.category}
+        </span>
       </header>
 
       {/* Purpose — sits right under header with normal gap, no own section. */}
@@ -339,55 +374,6 @@ function ComponentSection({ c }: { c: ComponentSpec }) {
 // ---------------------------------------------------------------------------
 // Subviews
 // ---------------------------------------------------------------------------
-function CompletenessBadge({ state }: { state: 'rich' | 'minimal' | 'stub' }) {
-  const baseStyle: React.CSSProperties = {
-    fontSize: 'var(--typography-font-size-caption-tiny)',
-    fontFamily: 'ui-monospace, monospace',
-    padding: '2px 6px',
-    borderRadius: 'var(--radius-badge)',
-  };
-  if (state === 'rich') {
-    return (
-      <span
-        style={{
-          ...baseStyle,
-          background: 'rgba(22, 163, 74, 0.12)',
-          color: 'var(--color-success)',
-        }}
-        title="Spec includes variants/states/tokens or design"
-      >
-        SPEC
-      </span>
-    );
-  }
-  if (state === 'minimal') {
-    return (
-      <span
-        style={{
-          ...baseStyle,
-          background: 'rgba(217, 119, 6, 0.12)',
-          color: 'var(--color-warning)',
-        }}
-        title="API only — variants / states / tokens missing"
-      >
-        API only
-      </span>
-    );
-  }
-  return (
-    <span
-      style={{
-        ...baseStyle,
-        background: 'var(--color-surface)',
-        color: 'var(--color-text-secondary)',
-      }}
-      title="Stub entry — author this spec"
-    >
-      stub
-    </span>
-  );
-}
-
 function ChipList({
   items,
   accent,
@@ -627,11 +613,34 @@ function GuidelineRow({
 export default function ComponentsPage() {
   const groups = getComponentsByCategory();
   const total = MDS_COMPONENTS.length;
-  const rich = MDS_COMPONENTS.filter((c) => specCompleteness(c) === 'rich').length;
 
   const [active, setActive] = useState<ComponentCategory>(
     groups[0]?.category ?? 'Action',
   );
+
+  // Hash → 자동 카테고리 활성화. URL이 /components#MinglitSettingsTile 처럼
+  // 들어오면 그 컴포넌트가 속한 카테고리 탭을 자동으로 켜고 거기로 스크롤.
+  // 진입 시 1회 + hashchange 이벤트마다 동작.
+  useEffect(() => {
+    const apply = () => {
+      const hash = decodeURIComponent(window.location.hash.slice(1));
+      if (!hash) return;
+      const target = MDS_COMPONENTS.find((c) => c.name === hash);
+      if (!target) return;
+      setActive(target.category);
+      // 카테고리 탭을 active로 바꾸면 React가 리렌더 → DOM에 카드가 마운트
+      // 된 다음 프레임에 스크롤해야 함.
+      requestAnimationFrame(() => {
+        document.getElementById(hash)?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        });
+      });
+    };
+    apply();
+    window.addEventListener('hashchange', apply);
+    return () => window.removeEventListener('hashchange', apply);
+  }, []);
 
   return (
     <div
@@ -665,11 +674,65 @@ export default function ComponentsPage() {
           and follows these specs — not the other way around.
         </p>
         <p className="mds-text-body" style={{ color: 'var(--color-text-secondary)' }}>
-          <strong>{total}</strong> components total ·{' '}
-          <strong style={{ color: 'var(--color-success)' }}>{rich}</strong> with rich spec ·{' '}
-          <strong style={{ color: 'var(--color-warning)' }}>{total - rich}</strong> need authoring
+          <strong>{total}</strong> components total
         </p>
       </div>
+
+      {/* Authoring guide — surfaces _template.tsx, _atoms.tsx, README so an
+          agent or new author can find them without grepping. */}
+      <aside
+        aria-label="신규 컴포넌트 spec 작성 가이드"
+        style={{
+          border: '1px solid var(--color-divider)',
+          borderRadius: 'var(--radius-card)',
+          padding: 'var(--spacing-medium)',
+          background: 'var(--color-surface)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 'var(--spacing-small)',
+        }}
+      >
+        <p
+          className="mds-text-caption-tiny font-bold uppercase"
+          style={{
+            letterSpacing: '0.5px',
+            color: 'var(--color-text-secondary)',
+            margin: 0,
+          }}
+        >
+          Authoring guide
+        </p>
+        <p
+          className="mds-text-body"
+          style={{ color: 'var(--color-text-primary)', margin: 0 }}
+        >
+          신규 컴포넌트 spec을 추가하시려면 아래 파일을 참고하세요. 이 문서는{' '}
+          <strong>유저가 보는 것 / 하는 것</strong>만 정의하고 구현 디테일은 비웁니다.
+        </p>
+        <ul
+          style={{
+            margin: 0,
+            paddingLeft: 'var(--spacing-medium)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 'var(--spacing-xsmall)',
+          }}
+        >
+          <li
+            className="mds-text-body"
+            style={{ color: 'var(--color-text-secondary)' }}
+          >
+            <a
+              href="/components/template"
+              className="hover:underline"
+              style={{ color: 'var(--color-primary)', fontWeight: 600 }}
+            >
+              /components/template
+            </a>{' '}
+            — 템플릿의 라이브 미리보기 + README + 소스코드를 한 페이지에서.
+          </li>
+        </ul>
+      </aside>
 
       {/* Tabs */}
       <nav
