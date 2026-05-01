@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Spec — EventApplicationManagePage (app_partner · ApplicationListRoute)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* ============================================================
+   EventApplicationManagePage-specific atoms.
+
+   Partner app theme:
+   - Page (Scaffold) bg = light gray (var(--color-surface))
+   - AppBar matches scaffold (light gray) — but TabBar adds an
+     explicit bottom hairline divider since TabBar.bottom is a
+     PreferredSizeWidget under the AppBar.
+   - Brand primary = MinglitPartnerColors.primary (#6c3ce1 — indigo)
+     → use via var(--color-partner-primary). Scoped to .viewport
+     so docs chrome stays neutral.
+   ============================================================ */
+.viewport {
+  --color-primary: var(--color-partner-primary);   /* #6c3ce1 */
+  --spec-blueprint-rgb: 108, 60, 225;
+}
+body.dark-mode .viewport {
+  --color-primary: var(--color-partner-dark-primary); /* #9b7bec */
+}
+
+/* --- App bar (centerTitle · scaffold gray, no border) --- */
+.eam-appbar {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface);
+  position: relative;
+}
+.eam-appbar__title {
+  font-size: var(--typography-font-size-app-bar-title);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+/* --- TabBar (3 tabs, Material default — primary indicator) --- */
+.eam-tabbar {
+  height: 48px;
+  display: flex;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-divider);
+}
+.eam-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--typography-font-size-body);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  position: relative;
+}
+.eam-tab--active {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+.eam-tab--active::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 2px;
+  background: var(--color-primary);
+}
+
+/* --- Scrollable body --- */
+.eam-body {
+  position: absolute;
+  top: 104px;          /* 56 appbar + 48 tabbar */
+  left: 0; right: 0; bottom: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+  background: var(--color-surface);
+}
+.eam-body::-webkit-scrollbar { display: none; }
+
+/* --- Event group section (per Event header + applications) --- */
+.eam-group__header {
+  padding: var(--spacing-sm) var(--spacing-medium);
+  /* surfaceContainerHighest @ alpha .3 → very pale gray over scaffold */
+  background: rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+}
+.eam-group__title {
+  font-size: var(--typography-font-size-body);
+  font-weight: 800;
+  color: var(--color-text-primary);
+  line-height: 1.4;
+}
+.eam-group__sub {
+  margin-top: 1px;
+  font-size: var(--typography-font-size-caption);
+  color: var(--color-text-secondary);
+}
+
+/* --- Application item row --- */
+.eam-item {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-sm) var(--spacing-medium);
+  background: var(--color-surface);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07); /* dividerColor @ alpha .3 */
+}
+.eam-item__avatar {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  /* primary @ highlight (.10) */
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+.eam-item__info {
+  flex: 1;
+  min-width: 0;
+  margin-left: var(--spacing-sm);
+}
+.eam-item__name {
+  font-size: var(--typography-font-size-body);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1.3;
+}
+.eam-item__sub {
+  margin-top: 1px;
+  font-size: var(--typography-font-size-caption);
+  color: var(--color-text-secondary);
+}
+
+/* --- Inline action buttons (pending tab only) --- */
+.eam-action {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.eam-action svg { width: 20px; height: 20px; }
+.eam-action--reject {
+  border: 1px solid var(--color-divider);
+  background: transparent;
+  color: var(--color-error);
+}
+.eam-action--approve {
+  background: var(--color-primary);
+  color: #fff;
+  margin-left: var(--spacing-xsmall);
+}
+
+/* --- Status badge (approved/rejected tabs) --- */
+.eam-badge {
+  padding: var(--spacing-xsmall) var(--spacing-small);
+  border-radius: var(--radius-small);
+  font-size: var(--typography-font-size-caption);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.eam-badge--approved {
+  background: rgba(22, 163, 74, 0.10);
+  color: var(--color-success);
+}
+.eam-badge--rejected {
+  background: rgba(239, 68, 68, 0.10);
+  color: var(--color-error);
+}
+.eam-badge--pending {
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: var(--color-primary);
+}
+
+/* --- Bulk approve CTA (pending tab only · SafeArea bottom) --- */
+.eam-cta-wrap {
+  position: absolute;
+  bottom: 56px;        /* sits above shell bottom nav */
+  left: 0; right: 0;
+  padding: var(--spacing-medium);
+  background: var(--color-surface);
+}
+.eam-cta {
+  width: 100%;
+  height: 44px;
+  border-radius: var(--radius-button);
+  background: var(--color-primary);
+  color: #fff;
+  font-size: var(--typography-font-size-body);
+  font-weight: 700;
+  border: none;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* --- Empty state (centered icon + label) --- */
+.eam-empty {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: var(--spacing-medium);
+  color: var(--color-text-secondary);
+}
+.eam-empty svg { width: 64px; height: 64px; opacity: 0.5; }
+.eam-empty__label {
+  font-size: var(--typography-font-size-body);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+/* --- Error column (centered text + retry FilledButton) --- */
+.eam-error {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: var(--spacing-small);
+  padding: 0 var(--spacing-large);
+  text-align: center;
+}
+.eam-error__msg {
+  font-size: var(--typography-font-size-body);
+  color: var(--color-text-primary);
+}
+.eam-error__retry {
+  height: 40px;
+  padding: 0 var(--spacing-large);
+  border-radius: var(--radius-button);
+  background: var(--color-primary);
+  color: #fff;
+  font-size: var(--typography-font-size-body);
+  font-weight: 700;
+  border: none;
+}
+
+/* --- Bottom navigation (shell-provided · 신청관리 active) --- */
+.eam-bottomnav {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 56px;
+  background: var(--color-background);
+  border-top: 1px solid var(--color-divider);
+  display: flex;
+}
+.eam-bottomnav__item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-size: 10px;
+  color: var(--color-text-secondary);
+}
+.eam-bottomnav__item svg { width: 22px; height: 22px; }
+.eam-bottomnav__item--active { color: var(--color-primary); font-weight: 700; }
+
+/* --- Loading spinner --- */
+.eam-spinner {
+  width: 36px; height: 36px;
+  border: 3px solid var(--color-divider);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: eam-spin 0.7s linear infinite;
+  margin: auto;
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+}
+@keyframes eam-spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
+</div>
+
+<div class="page">
+
+<!-- ============================================================
+     HEADER
+     ============================================================ -->
+<header>
+  <h1>Event Application Manage</h1>
+</header>
+
+<!-- ============================================================
+     OVERVIEW
+     ============================================================ -->
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr>
+        <th style="width: 140px;">Status</th>
+        <td><strong>✅ 디자인완료</strong> <em style="color: var(--color-text-secondary);">— 5 state · 파트너 신청관리 entry hub</em></td>
+      </tr>
+      <tr>
+        <th>App</th>
+        <td><code>app_partner</code></td>
+      </tr>
+      <tr>
+        <th>Category</th>
+        <td>application · partner ops · approval workflow</td>
+      </tr>
+      <tr>
+        <th>Route / Surface</th>
+        <td><code>ApplicationListRoute</code> · widget: <code>EventApplicationManagePage</code> (StatefulShell · ApplicationBranch)</td>
+      </tr>
+      <tr>
+        <th>Path</th>
+        <td><code>/applications</code></td>
+      </tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>: <em>— (top-level partner shell screen — bottom-nav 신청관리 탭)</em><br>
+          <strong>Children</strong>:
+          <code>EventApplicationDetailRoute</code> (승인됨/거절됨 항목 탭 시 push) · <code>_EventGroupSection</code> · <code>_ApplicationItem</code> · <code>_StatusBadge</code> · <code>_RejectDialog</code> <em>(internal widgets — no separate spec)</em>
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>
+          파트너가 자기 이벤트들에 들어온 신청을 한 화면에서 빠르게 승인/거절한다. 이벤트별로 grouping된
+          신청 목록을 3개 탭(대기중 · 승인됨 · 거절됨)으로 분기해 보여주고, "대기중" 탭에서는 row-inline의
+          승인/거절 버튼 + 하단 "전체 승인" CTA로 bulk 처리까지 한 번에 가능하게 한다.
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry points</strong>: 하단 NavigationBar "신청관리" 탭 / PartnerHomePage TodoSummaryChips "승인 대기" chip 탭 / 푸시 알림(신청 도착) 탭.<br>
+          <strong>Exit points</strong>: 승인/거절 인라인 액션 후 같은 화면 stay (snackbar) · "전체 승인" CTA · 승인됨/거절됨 항목 row 탭 → <code>EventApplicationDetailRoute</code> push · 다른 bottom-nav 탭으로 전환.
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          신청관리는 파트너의 일일 운영 task 중 가장 빈도가 높은 액션 — 모든 신청을 1) 승인하거나 2) 거절(사유 필수)해야 이벤트 capacity가 확정된다.
+          이벤트별로 group을 묶은 이유는 같은 이벤트의 여러 신청을 동시에 판단하는 게 자연스럽기 때문(나이/성별 mix 보고 판단). pending vs approved/rejected를
+          별도 탭으로 분리한 이유는 처리할 일과 이력을 명확히 구분하기 위함. Fix #1597로 7일 제한이 풀려 모든 미래 이벤트를 fetch하므로 chunk size 10으로 RPC pool 보호.
+        </td>
+      </tr>
+      <tr>
+        <th>Frequency</th>
+        <td>활성 파트너는 매일 1~수회. 푸시 알림이 trigger인 경우 즉시 진입.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================
+     HISTORY
+     ============================================================ -->
+<section class="doc">
+  <h2>History</h2>
+  <p class="intro">이 spec의 주요 변경 이력. 최신 항목 위.</p>
+  <table class="ref">
+    <thead>
+      <tr>
+        <th style="width: 110px;">Date</th>
+        <th style="width: 80px;">Version</th>
+        <th style="width: 120px;">Author</th>
+        <th>Changes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2026-05-01</td>
+        <td>1.0</td>
+        <td>mark-yun</td>
+        <td>v1.4 template으로 작성. 5 state(Default pending · Approved · Rejected · Empty · Loading · Error) → mini-table per state, baseline = Default(대기중 탭 with mixed event groups), additive diff. 파트너 brand color(#6c3ce1) viewport-scoped override.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- Anchor nav -->
+<nav class="perspective-nav">
+  <a href="#layout"><span class="glyph">🧱</span> Layout</a>
+  <a href="#states"><span class="glyph">🎨</span> States</a>
+  <a href="#behavior"><span class="glyph">🔄</span> Global Behavior</a>
+  <a href="#reference"><span class="glyph">📖</span> Reference</a>
+</nav>
+
+<!-- ============================================================
+     LAYOUT
+     ============================================================ -->
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Layout</h2>
+    <span class="lede">화면 구조 — 영역, 정렬, 간격 규칙. 색·타이포 무시.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree</h2>
+    <p class="intro">
+      Scaffold = AppBar(centerTitle '신청관리' + TabBar 3탭) + body(TabBarView · 각 탭은 _ApplicationTab) + 하단 NavigationBar(shell). 각 탭 body는 RefreshIndicator로 감싼 ListView.builder + (대기중 한정) bulk approve CTA SafeArea Padding. 각 ListView item은 _EventGroupSection — 이벤트 헤더 + N개 _ApplicationItem row.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint">
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <!-- AppBar -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:0;left:0;right:0;height:56px;">
+          <span class="blueprint__region-label">① AppBar — '신청관리' centerTitle</span>
+        </div>
+        <!-- TabBar -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:56px;left:0;right:0;height:48px;">
+          <span class="blueprint__region-label">② TabBar — 대기중 · 승인됨 · 거절됨</span>
+        </div>
+        <!-- Body -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:104px;left:0;right:0;bottom:128px;">
+          <span class="blueprint__region-label">③ TabBarView body<br>= ListView of _EventGroupSection (header + items)</span>
+        </div>
+        <!-- Bulk approve CTA (pending tab) -->
+        <div class="blueprint__region blueprint__region--shaded" style="bottom:56px;left:0;right:0;height:72px;">
+          <span class="blueprint__region-label">④ Bulk approve CTA (대기중 한정)</span>
+        </div>
+        <!-- Bottom nav -->
+        <div class="blueprint__region blueprint__region--shaded" style="bottom:0;left:0;right:0;height:56px;">
+          <span class="blueprint__region-label">⑤ NavigationBar (shell · 5 tabs)</span>
+        </div>
+
+        <div class="blueprint__align-marker" style="top:8px;right:8px;">screen-edge pad 16</div>
+      </div>
+
+      <div class="layout-tree"><b>Scaffold</b>
+├─ <b>appBar</b>: AppBar(title:'신청관리', centerTitle:true)
+│  └─ <b>bottom</b>: TabBar(controller, 3 tabs)             ← ②
+│     ├─ Tab('대기중')
+│     ├─ Tab('승인됨')
+│     └─ Tab('거절됨')
+├─ <b>body</b>: partnerAsync.when
+│   ├─ loading: CircularProgressIndicator
+│   ├─ error:   '오류: $e'
+│   └─ data:    TabBarView(controller)                       ← ③
+│      ├─ _ApplicationTab(pending+pending_review · showActions:true)
+│      ├─ _ApplicationTab(approved+paid · showActions:false)
+│      └─ _ApplicationTab(rejected · showActions:false)
+│         └─ groupedAsync.when
+│            ├─ loading → CircularProgressIndicator
+│            ├─ error   → Column('신청 목록을 불러올 수 없습니다' + FilledButton 다시 시도)
+│            └─ data    →
+│               ├─ if grouped.isEmpty → Center(Icon assignment_outlined + 라벨)
+│               └─ else → Column
+│                  ├─ Expanded(RefreshIndicator → ListView.builder)
+│                  │  └─ _EventGroupSection per Event
+│                  │     ├─ Container(이벤트 헤더 · party.title · 날짜·신청N건/N명)
+│                  │     └─ ...applications.map(_ApplicationItem)
+│                  │        ├─ CircleAvatar(이름 첫 글자)
+│                  │        ├─ Column(name + age·gender·timeAgo)
+│                  │        └─ if showActions → IconButton.reject + IconButton.approve
+│                  │                       else → _StatusBadge
+│                  └─ if showActions &amp;&amp; totalPending&gt;0
+│                     SafeArea(Padding all 16 · FilledButton '전체 승인 (N건)')   ← ④
+└─ <b>bottomNavigationBar</b>: (shell이 제공 — PartnerScaffold)                  ← ⑤</div>
+    </div>
+  </section>
+
+  <section class="doc">
+    <h2>Spacing &amp; alignment rules</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>①</td><td>AppBar</td><td>height 56 · centerTitle · bg = surface (no border)</td><td>title typography <code>app-bar-title (18px)</code></td></tr>
+        <tr><td>②</td><td>TabBar</td><td>height 48 · 3 equal-flex tabs · indicator 2px</td><td>indicator color = partner primary · label color (active = primary, inactive = secondary)</td></tr>
+        <tr><td>③</td><td>TabBarView body</td><td>vertical scroll · group header (sticky-look) + inline rows · pull-to-refresh</td><td>group header pad: <code>spacing-medium (16h)</code> · <code>spacing-sm (12v)</code> · row pad: <code>spacing-medium (16h)</code> · <code>spacing-sm (12v)</code> · row 분리: 1px border-bottom <code>color-divider</code> @alpha .3</td></tr>
+        <tr><td>—</td><td>_ApplicationItem 내부</td><td>row · avatar(40) + flex info column + actions/badge</td><td>avatar↔info: <code>spacing-sm (12px)</code> · reject↔approve 간격: <code>spacing-xsmall (4px)</code></td></tr>
+        <tr><td>④</td><td>Bulk approve CTA</td><td>SafeArea + Padding all 16 · 풀폭 FilledButton</td><td>버튼 height 44 (default FilledButton minimumSize) · border-radius <code>radius-button (12px)</code></td></tr>
+        <tr><td>⑤</td><td>NavigationBar</td><td>shell이 관리 — 5 destinations · 신청관리 active</td><td>height 56 · indicator partner primary · bg = colorScheme.surface (= white)</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<!-- ============================================================
+     STATES
+     ============================================================ -->
+<div class="perspective" id="states">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>States</h2>
+    <span class="lede">시각 변형 5종. baseline = Default(대기중 탭 · grouped events with pending applications), 나머지는 additive diff.</span>
+  </div>
+
+  <section class="doc">
+    <p class="intro">
+      <strong>State 식별 기준</strong>: 활성 탭 인덱스(0=pending · 1=approved · 2=rejected) · <code>eventApplicationsGroupedProvider</code> async lifecycle (loading / error / data) · <code>grouped.isEmpty</code> · <code>showActions</code> 플래그 (탭 0만 true). 색상은 <em>partner brand <code>#6c3ce1</code></em>이며 user app(<code>#9900ff</code>)과 다르다.
+    </p>
+
+    <h3 style="margin-top: 24px;">State summary <small style="font-size:12px;font-weight:400;color:var(--color-text-secondary);">— 5 states</small></h3>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 200px;">State</th>
+          <th style="width: 100px;">Tag</th>
+          <th style="width: 220px;">조건 (요약)</th>
+          <th>Key visual differentiator</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Default · 대기중 (pending)</strong></td><td>baseline</td><td>tab 0 · grouped 비어있지 않음</td><td>이벤트 헤더 + 사용자 row + reject/approve IconButton + 하단 "전체 승인" CTA</td></tr>
+        <tr><td><strong>Approved tab</strong></td><td>history</td><td>tab 1 · approved/paid 항목</td><td>인라인 액션 사라짐 · 우측에 success 색 "승인" badge · row tap 시 상세 push</td></tr>
+        <tr><td><strong>Rejected tab</strong></td><td>history</td><td>tab 2 · rejected 항목</td><td>error 색 "거절" badge · row tap 시 상세 push</td></tr>
+        <tr><td><strong>Empty</strong></td><td>no data</td><td>grouped.isEmpty</td><td>중앙 큰 assignment_outlined 아이콘 + 라벨 (탭별 카피 다름)</td></tr>
+        <tr><td><strong>Loading</strong></td><td>async</td><td>provider.isLoading</td><td>중앙 CircularProgressIndicator</td></tr>
+        <tr><td><strong>Error</strong></td><td>network/server</td><td>provider.hasError</td><td>중앙 텍스트 + "다시 시도" FilledButton</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ─── State 1: Default · 대기중 (baseline) ─────────────────── -->
+    <table class="ref state-mini is-baseline-tint">
+      <thead>
+        <tr><th colspan="3"><strong>Default · 대기중 (pending)</strong> 🎯 <small>baseline · 처리할 신청이 있는 일반 진입</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="eam-appbar">
+                <div class="eam-appbar__title">신청관리</div>
+              </div>
+              <div class="eam-tabbar">
+                <div class="eam-tab eam-tab--active">대기중</div>
+                <div class="eam-tab">승인됨</div>
+                <div class="eam-tab">거절됨</div>
+              </div>
+              <div class="eam-body">
+                <!-- Group 1 -->
+                <div class="eam-group__header">
+                  <div class="eam-group__title">금요 와인 모임 #12 · 5/3 (금) 19:30</div>
+                  <div class="eam-group__sub">2건 · 12/20명</div>
+                </div>
+                <div class="eam-item">
+                  <div class="eam-item__avatar">김</div>
+                  <div class="eam-item__info">
+                    <div class="eam-item__name">김지연</div>
+                    <div class="eam-item__sub">28세 · 여 · 12분 전</div>
+                  </div>
+                  <button class="eam-action eam-action--reject">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                  <button class="eam-action eam-action--approve">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                  </button>
+                </div>
+                <div class="eam-item">
+                  <div class="eam-item__avatar">박</div>
+                  <div class="eam-item__info">
+                    <div class="eam-item__name">박민수</div>
+                    <div class="eam-item__sub">31세 · 남 · 1시간 전</div>
+                  </div>
+                  <button class="eam-action eam-action--reject">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                  <button class="eam-action eam-action--approve">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                  </button>
+                </div>
+                <!-- Group 2 -->
+                <div class="eam-group__header">
+                  <div class="eam-group__title">목요 보드게임 · 5/9 (목) 20:00</div>
+                  <div class="eam-group__sub">1건 · 6/10명</div>
+                </div>
+                <div class="eam-item">
+                  <div class="eam-item__avatar">이</div>
+                  <div class="eam-item__info">
+                    <div class="eam-item__name">이수진</div>
+                    <div class="eam-item__sub">26세 · 여 · 3시간 전</div>
+                  </div>
+                  <button class="eam-action eam-action--reject">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                  <button class="eam-action eam-action--approve">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                  </button>
+                </div>
+              </div>
+              <div class="eam-cta-wrap">
+                <button class="eam-cta">전체 승인 (3건)</button>
+              </div>
+              <div class="eam-bottomnav">
+                <div class="eam-bottomnav__item"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l9 8h-3v9h-4v-6h-4v6H6v-9H3z"/></svg>홈</div>
+                <div class="eam-bottomnav__item eam-bottomnav__item--active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 12h8M8 17h5"/></svg>신청관리</div>
+                <div class="eam-bottomnav__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>체크인</div>
+                <div class="eam-bottomnav__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6"/></svg>정산</div>
+                <div class="eam-bottomnav__item"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>더보기</div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>활성 탭 = 0(대기중) · <code>statusFilter = ['pending','pending_review']</code> · <code>showActions = true</code> · grouped 1+ event with pending apps</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            ① 탭 전환 (대기중/승인됨/거절됨) → <code>TabController.animateTo</code> · 전환 중 같은 partner의 다른 statusFilter provider 재사용<br>
+            ② row의 <strong>거절 IconButton</strong> 탭 → <code>_RejectDialog</code>(AlertDialog · TextField maxLines:3 · 취소/거절) → 사유 입력 후 거절 시 <code>EventRepository.rejectApplication</code> · 스낵바 '거절되었습니다' · 다음 frame에 provider invalidate (Fix #1316)<br>
+            ③ row의 <strong>승인 IconButton</strong> 탭 → <code>EventRepository.approveApplication</code> · 스낵바 '승인되었습니다' · 즉시 invalidate<br>
+            ④ <strong>전체 승인 CTA</strong> 탭 → <code>MinglitAlert.showConfirm('대기 중인 N건을 모두 승인하시겠습니까?')</code> → 확인 시 이벤트별 <code>bulkApproveApplications</code> 순차 호출 · 실패 이벤트는 title 모아서 스낵바에 모두 표시 (Fix #1953)<br>
+            ⑤ <strong>아래로 당기기</strong> → RefreshIndicator → provider invalidate<br>
+            ⑥ row 본체 탭은 <em>무반응</em> (showActions=true이므로 InkWell.onTap=null)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · partner의 future events가 500개 이상이면 chunk 10개씩 직렬 fetch (Fix #1597 — PostgREST pool saturation 방지)<br>
+            · pending이지만 어떤 이벤트에도 신청이 없으면 그 그룹은 grouping에서 제외 (filtered.isNotEmpty)<br>
+            · user.name이 비어있으면 avatar에 '?' fallback · subtitle은 age/gender가 null이면 timeAgo만 표시<br>
+            · <code>event.title</code>이 null이면 <code>event.party?.title</code>로 폴백 (Fix #1742)<br>
+            · 거절 사유가 빈 문자열/공백뿐이면 dialog는 닫혔지만 RPC 미호출 (early return)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            · <code>Scaffold</code> + <code>AppBar</code>(title:Text '신청관리', centerTitle, bottom: TabBar)<br>
+            · <code>TabBar</code> + <code>TabController</code>(length:3) · <code>TabBarView</code> · 3 × <code>_ApplicationTab</code><br>
+            · <code>RefreshIndicator</code> + <code>ListView.builder</code> (AlwaysScrollableScrollPhysics)<br>
+            · <code>_EventGroupSection</code>(이벤트 헤더 Container surfaceContainerHighest @ muted + ...applications.map(_ApplicationItem))<br>
+            · <code>_ApplicationItem</code>(InkWell · Container with bottom border @ dividerColor muted · CircleAvatar(r=20, primary @ highlight) + Column name+sub + IconButton reject(Icons.close, error · CircleBorder) + IconButton approve(Icons.check, primary fill, white icon))<br>
+            · <code>FilledButton</code>('전체 승인 (N건)') in <code>SafeArea</code> + <code>Padding</code> all 16<br>
+            · <code>SnackBar</code>(승인/거절 결과) · <code>MinglitAlert.showConfirm</code>(전체 승인 확인) · <code>_RejectDialog</code>(AlertDialog + TextField maxLines:3)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            · color: <code>color-partner-primary</code> (<code>#6c3ce1</code> — TabBar indicator/active label · avatar tint · approve fill · 전체 승인 CTA), <code>color-error</code> (reject icon · _RejectDialog 거절 버튼 fill via FilledButton), <code>color-success</code> (Default 탭에서는 미사용 · 승인됨 탭에서 등장), <code>color-surface</code> (scaffold + appbar + 그룹 헤더 base + tabbar bg), <code>color-divider</code> (tabbar 하단 hairline · row 분리 @ alpha .3 · reject IconButton border)<br>
+            · radius: <code>radius-button (12)</code> (FilledButton CTA), <code>radius-small (8)</code> (status badge — Default 탭은 미사용)<br>
+            · spacing: <code>spacing-medium (16)</code> (group header h-pad · row h-pad · CTA wrap pad), <code>spacing-sm (12)</code> (group header v-pad · row v-pad · avatar↔info), <code>spacing-xsmall (4)</code> (reject↔approve)<br>
+            · typography: <code>app-bar-title (18)</code>, <code>body (14)</code> (group title · row name), <code>caption (12)</code> (group sub · row sub)<br>
+            · opacity: <code>highlight (.10)</code> (avatar bg), <code>muted (.30)</code> (row bottom border · group header bg)<br>
+            · icon size: <code>small (20)</code> (Icons.close/check inside IconButton), CircleAvatar radius 20 = 40px diameter
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 가장 일반적 진입 상태. 다른 state는 baseline에서 변경분만. <strong>탭 전환은 같은 화면 내에서 statusFilter만 바꿔 다른 provider family entry로 재요청</strong> — 각 탭이 독립 cache. row의 onTap이 showActions에 따라 분기되는 게 핵심 — pending에서는 inline 처리만, history 탭에서는 상세 진입.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ─── State 2: Approved tab ─────────────────── -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>승인됨 탭 (approved/paid history)</strong> <small>tab 1 · 처리 이력</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="eam-appbar">
+                <div class="eam-appbar__title">신청관리</div>
+              </div>
+              <div class="eam-tabbar">
+                <div class="eam-tab">대기중</div>
+                <div class="eam-tab eam-tab--active">승인됨</div>
+                <div class="eam-tab">거절됨</div>
+              </div>
+              <div class="eam-body">
+                <div class="eam-group__header">
+                  <div class="eam-group__title">금요 와인 모임 #11 · 4/26 (금) 19:30</div>
+                  <div class="eam-group__sub">2건 · 18/20명</div>
+                </div>
+                <div class="eam-item">
+                  <div class="eam-item__avatar">최</div>
+                  <div class="eam-item__info">
+                    <div class="eam-item__name">최서연</div>
+                    <div class="eam-item__sub">29세 · 여 · 2일 전</div>
+                  </div>
+                  <span class="eam-badge eam-badge--approved">승인</span>
+                </div>
+                <div class="eam-item">
+                  <div class="eam-item__avatar">정</div>
+                  <div class="eam-item__info">
+                    <div class="eam-item__name">정현우</div>
+                    <div class="eam-item__sub">33세 · 남 · 2일 전</div>
+                  </div>
+                  <span class="eam-badge eam-badge--approved">승인</span>
+                </div>
+                <div class="eam-group__header">
+                  <div class="eam-group__title">목요 보드게임 · 4/24 (목) 20:00</div>
+                  <div class="eam-group__sub">1건 · 8/10명</div>
+                </div>
+                <div class="eam-item">
+                  <div class="eam-item__avatar">윤</div>
+                  <div class="eam-item__info">
+                    <div class="eam-item__name">윤다은</div>
+                    <div class="eam-item__sub">27세 · 여 · 4일 전</div>
+                  </div>
+                  <span class="eam-badge eam-badge--approved">승인</span>
+                </div>
+              </div>
+              <div class="eam-bottomnav">
+                <div class="eam-bottomnav__item"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l9 8h-3v9h-4v-6h-4v6H6v-9H3z"/></svg>홈</div>
+                <div class="eam-bottomnav__item eam-bottomnav__item--active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 12h8M8 17h5"/></svg>신청관리</div>
+                <div class="eam-bottomnav__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>체크인</div>
+                <div class="eam-bottomnav__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6"/></svg>정산</div>
+                <div class="eam-bottomnav__item"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>더보기</div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>↔ 활성 탭 = 1 · <code>statusFilter = ['approved','paid']</code> · <code>showActions = false</code></td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            ↔ row의 reject/approve IconButton → <strong>row 본체 탭 (InkWell.onTap)</strong> → <code>EventApplicationDetailRoute(applicationId).push</code> (Fix #1860 · regression from #1914 복구)<br>
+            동일: 탭 전환, 아래로 당기기
+          </td>
+        </tr>
+        <tr><td class="state-mini__aspect">에지케이스</td><td>+ paid 상태(결제 완료)도 같은 그룹에 섞여 표시 — 시각적으로 구분하지 않음 (둘 다 '승인'으로 묶어 보여줌)</td></tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            − reject IconButton, − approve IconButton, − FilledButton(전체 승인) CTA, − SafeArea/Padding wrapper<br>
+            + <code>_StatusBadge(status='approved')</code> — Container with rounded radius-small, bg = success @ highlight (.10), text labelSmall w700 success color, '승인' 라벨 (paid도 동일 처리)<br>
+            + InkWell.onTap (row body) · pushTransition: <code>MinglitPageTransitions.sharedAxisScaled</code>
+          </td>
+        </tr>
+        <tr><td class="state-mini__aspect">토큰</td><td>+ <code>color-success</code> (badge fg + bg @ highlight) · − <code>color-error</code> · − <code>color-partner-primary</code> for approve fill (still used: tabbar indicator + bottomnav active + avatar tint)</td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 처리 이력 view. row 탭은 detail로만 가고 재처리 불가 (state 전이 없음). 상태 변경이 필요하면 다른 진입 경로(예: 정산·환불).</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ─── State 3: Rejected tab ─────────────────── -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>거절됨 탭 (rejected history)</strong> <small>tab 2 · 처리 이력</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="eam-appbar">
+                <div class="eam-appbar__title">신청관리</div>
+              </div>
+              <div class="eam-tabbar">
+                <div class="eam-tab">대기중</div>
+                <div class="eam-tab">승인됨</div>
+                <div class="eam-tab eam-tab--active">거절됨</div>
+              </div>
+              <div class="eam-body">
+                <div class="eam-group__header">
+                  <div class="eam-group__title">금요 와인 모임 #11 · 4/26 (금) 19:30</div>
+                  <div class="eam-group__sub">1건 · 18/20명</div>
+                </div>
+                <div class="eam-item">
+                  <div class="eam-item__avatar">강</div>
+                  <div class="eam-item__info">
+                    <div class="eam-item__name">강지훈</div>
+                    <div class="eam-item__sub">22세 · 남 · 3일 전</div>
+                  </div>
+                  <span class="eam-badge eam-badge--rejected">거절</span>
+                </div>
+                <div class="eam-group__header">
+                  <div class="eam-group__title">목요 보드게임 · 4/24 (목) 20:00</div>
+                  <div class="eam-group__sub">1건 · 8/10명</div>
+                </div>
+                <div class="eam-item">
+                  <div class="eam-item__avatar">한</div>
+                  <div class="eam-item__info">
+                    <div class="eam-item__name">한가람</div>
+                    <div class="eam-item__sub">25세 · 여 · 5일 전</div>
+                  </div>
+                  <span class="eam-badge eam-badge--rejected">거절</span>
+                </div>
+              </div>
+              <div class="eam-bottomnav">
+                <div class="eam-bottomnav__item"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l9 8h-3v9h-4v-6h-4v6H6v-9H3z"/></svg>홈</div>
+                <div class="eam-bottomnav__item eam-bottomnav__item--active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 12h8M8 17h5"/></svg>신청관리</div>
+                <div class="eam-bottomnav__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>체크인</div>
+                <div class="eam-bottomnav__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6"/></svg>정산</div>
+                <div class="eam-bottomnav__item"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>더보기</div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>↔ 활성 탭 = 2 · <code>statusFilter = ['rejected']</code> · <code>showActions = false</code></td>
+        </tr>
+        <tr><td class="state-mini__aspect">사용자 액션</td><td>동일 (Approved 탭과 같음 — row tap → detail push)</td></tr>
+        <tr><td class="state-mini__aspect">에지케이스</td><td>+ 거절 사유는 detail page에서 표시 — list view에서는 노출하지 않음</td></tr>
+        <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ <code>_StatusBadge(status='approved')</code> → <code>_StatusBadge(status='rejected')</code> · 라벨 '거절' · color = error</td></tr>
+        <tr><td class="state-mini__aspect">토큰</td><td>+ <code>color-error</code> (badge fg + bg @ highlight) · − <code>color-success</code></td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 거절은 사유가 필수라 detail에서만 사유 확인. 거절 후 동일 user의 재신청은 별도 application row로 들어옴 (현재 화면은 application 단위, user 단위 dedupe 없음).</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ─── State 4: Empty ─────────────────── -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Empty</strong> <small>grouped.isEmpty</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="eam-appbar">
+                <div class="eam-appbar__title">신청관리</div>
+              </div>
+              <div class="eam-tabbar">
+                <div class="eam-tab eam-tab--active">대기중</div>
+                <div class="eam-tab">승인됨</div>
+                <div class="eam-tab">거절됨</div>
+              </div>
+              <div class="eam-body">
+                <div class="eam-empty">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="6" y="3" width="12" height="18" rx="2"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
+                  <div class="eam-empty__label">대기 중인 신청이 없습니다</div>
+                </div>
+              </div>
+              <div class="eam-bottomnav">
+                <div class="eam-bottomnav__item"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l9 8h-3v9h-4v-6h-4v6H6v-9H3z"/></svg>홈</div>
+                <div class="eam-bottomnav__item eam-bottomnav__item--active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 12h8M8 17h5"/></svg>신청관리</div>
+                <div class="eam-bottomnav__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>체크인</div>
+                <div class="eam-bottomnav__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6"/></svg>정산</div>
+                <div class="eam-bottomnav__item"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>더보기</div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>+ <code>grouped.isEmpty == true</code> (어떤 미래 이벤트에도 statusFilter에 매칭되는 신청이 없음). 모든 탭에서 발생 가능.</td>
+        </tr>
+        <tr><td class="state-mini__aspect">사용자 액션</td><td>탭 전환 / 아래로 당기기는 그대로 가능. row 자체가 없으므로 row 액션 없음.</td></tr>
+        <tr><td class="state-mini__aspect">에지케이스</td><td>탭별 카피 분기 — <code>showActions ? '대기 중인 신청이 없습니다' : '해당 신청이 없습니다'</code> (승인됨/거절됨 탭 동일 카피)</td></tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            ↔ ListView/group/items → <code>Center</code> + <code>Column(mainAxisSize.min)</code><br>
+            + <code>Icon(Icons.assignment_outlined, size: MinglitIconSize.xlarge*2 = 64)</code> — color = <code>onSurfaceVariant</code><br>
+            + <code>Text</code>(탭별 카피) — <code>titleMedium</code>
+          </td>
+        </tr>
+        <tr><td class="state-mini__aspect">토큰</td><td>+ icon size <code>xlarge*2 (64)</code> · color = <code>onSurfaceVariant</code> · spacing icon↔label <code>spacing-medium (16)</code></td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 RefreshIndicator는 비활성 — 빈 Center는 Scrollable이 아님. 새로고침 받으려면 탭을 다시 선택해 provider invalidate. <em>(향후 빈 상태에서도 pull-to-refresh 가능하게 개선 후보)</em></td></tr>
+      </tbody>
+    </table>
+
+    <!-- ─── State 5: Loading ─────────────────── -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Loading</strong> <small>provider.isLoading</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="eam-appbar">
+                <div class="eam-appbar__title">신청관리</div>
+              </div>
+              <div class="eam-tabbar">
+                <div class="eam-tab eam-tab--active">대기중</div>
+                <div class="eam-tab">승인됨</div>
+                <div class="eam-tab">거절됨</div>
+              </div>
+              <div class="eam-body">
+                <div class="eam-spinner"></div>
+              </div>
+              <div class="eam-bottomnav">
+                <div class="eam-bottomnav__item"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l9 8h-3v9h-4v-6h-4v6H6v-9H3z"/></svg>홈</div>
+                <div class="eam-bottomnav__item eam-bottomnav__item--active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 12h8M8 17h5"/></svg>신청관리</div>
+                <div class="eam-bottomnav__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>체크인</div>
+                <div class="eam-bottomnav__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6"/></svg>정산</div>
+                <div class="eam-bottomnav__item"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>더보기</div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>+ <code>currentPartnerInfoProvider.isLoading</code> 또는 <code>eventApplicationsGroupedProvider.isLoading</code> (initial fetch / invalidate 후 refetch)</td>
+        </tr>
+        <tr><td class="state-mini__aspect">사용자 액션</td><td>탭 전환 가능 · 그 외 무반응. invalidate 발화 직후엔 잠시 stale data 유지(autoDispose · keepPrevious 미사용 — provider 재생성 시 즉시 loading)</td></tr>
+        <tr><td class="state-mini__aspect">에지케이스</td><td>partner 객체 자체가 null이면 별도 분기 — <code>'파트너 정보를 불러올 수 없습니다'</code> 텍스트 (Center)</td></tr>
+        <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ ListView/empty content → <code>Center(child: CircularProgressIndicator)</code> · 색은 ProgressIndicatorTheme이 partner primary로 매핑</td></tr>
+        <tr><td class="state-mini__aspect">토큰</td><td>동일 — spinner는 ProgressIndicatorTheme의 default color</td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 chunk fetch라 partner 이벤트 수에 비례해 loading 시간 늘어남 (10개씩 직렬). UX 개선 후보: skeleton list 도입.</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ─── State 6: Error ─────────────────── -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Error</strong> <small>provider.hasError</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="eam-appbar">
+                <div class="eam-appbar__title">신청관리</div>
+              </div>
+              <div class="eam-tabbar">
+                <div class="eam-tab eam-tab--active">대기중</div>
+                <div class="eam-tab">승인됨</div>
+                <div class="eam-tab">거절됨</div>
+              </div>
+              <div class="eam-body">
+                <div class="eam-error">
+                  <div class="eam-error__msg">신청 목록을 불러올 수 없습니다</div>
+                  <button class="eam-error__retry">다시 시도</button>
+                </div>
+              </div>
+              <div class="eam-bottomnav">
+                <div class="eam-bottomnav__item"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l9 8h-3v9h-4v-6h-4v6H6v-9H3z"/></svg>홈</div>
+                <div class="eam-bottomnav__item eam-bottomnav__item--active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 12h8M8 17h5"/></svg>신청관리</div>
+                <div class="eam-bottomnav__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>체크인</div>
+                <div class="eam-bottomnav__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6"/></svg>정산</div>
+                <div class="eam-bottomnav__item"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>더보기</div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>+ <code>eventApplicationsGroupedProvider.hasError</code> — RPC 실패(네트워크 / pool 초과 / 권한). partner provider 자체 에러는 Scaffold body 분기에서 <code>'오류: $e'</code> 단일 텍스트로 표시.</td>
+        </tr>
+        <tr><td class="state-mini__aspect">사용자 액션</td><td>"다시 시도" 탭 → <code>ref.invalidate(eventApplicationsGroupedProvider)</code> → loading 재진입</td></tr>
+        <tr><td class="state-mini__aspect">에지케이스</td><td>chunk fetch 도중 partial failure가 있어도 Future.wait이 throw하면 전체 error로 fallback (no partial data)</td></tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            ↔ ListView/empty content → <code>Center</code> + <code>Column(mainAxisSize.min)</code><br>
+            + <code>Text</code>('신청 목록을 불러올 수 없습니다') · <code>SizedBox(height: spacing-small)</code> · <code>FilledButton</code>('다시 시도')
+          </td>
+        </tr>
+        <tr><td class="state-mini__aspect">토큰</td><td>+ <code>spacing-small (8)</code> (msg↔retry button)</td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 detail error message는 노출 안 함 — 일반 카피만. 디버깅은 Sentry/Axiom에서. retry는 동일 family entry 재요청이라 chunked fetch 다시 (동일 cost).</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<!-- ============================================================
+     GLOBAL BEHAVIOR
+     ============================================================ -->
+<div class="perspective" id="behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">cross-cutting — 모든 state에 적용되는 액션, motion, 글로벌 에지케이스. 각 state 한정 액션은 위 mini-table 참고.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Cross-cutting interactions</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 240px;">사용자 액션</th>
+          <th>화면에 보이는 결과</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>탭 전환 (대기중 ↔ 승인됨 ↔ 거절됨)</td>
+          <td><code>TabController.animateTo</code> · TabBarView가 swipe/tap 모두 수용. 각 탭은 statusFilter가 다른 별도 family entry로 fetch — 하나의 캐시가 다른 탭의 cache를 무효화하지 않음.</td>
+        </tr>
+        <tr>
+          <td>아래로 당기기 (pull-to-refresh)</td>
+          <td><code>RefreshIndicator</code> → 활성 탭의 <code>eventApplicationsGroupedProvider</code> invalidate. 다른 탭은 stale 유지 (탭 전환 시점에 자기 fetch). Empty / Loading / Error state에서는 RefreshIndicator 미렌더 (Center widget).</td>
+        </tr>
+        <tr>
+          <td>하단 탭 전환 (다른 branch로)</td>
+          <td>StatefulShell branch 전환 — 신청관리 stack은 유지되어 돌아왔을 때 이전 탭/스크롤 위치 복원. 단, autoDispose family라 다음 진입 시 데이터는 refetch.</td>
+        </tr>
+        <tr>
+          <td>OS back / 시스템 뒤로</td>
+          <td>shell의 default back — 홈 branch로 pop하지 않고 앱 종료(Android) 또는 무반응. 신청관리는 top-level 탭이라 pop target 없음.</td>
+        </tr>
+        <tr>
+          <td>다크 모드 토글</td>
+          <td>scaffold bg → <code>color-dark-background</code>(#0f0f0f) · primary → <code>color-partner-dark-primary</code>(#9b7bec). status badge의 success/error 색은 dark에서도 유지(채도만 약간 보정).</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Motion timing</h2>
+    <p class="intro">
+      Source: <code>shared/packages/mds/core/lib/src/theme/minglit_design_tokens.dart</code> · <code>MinglitAnimation</code>.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 240px;">Transition</th>
+          <th style="width: 200px;">Token / Duration</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Tab indicator 슬라이드 (탭 전환)</td>
+          <td>Material default (~300ms)</td>
+          <td>TabController의 default kTabScrollDuration. AnimationToken에 1:1 매핑되진 않으나 medium에 가까움.</td>
+        </tr>
+        <tr>
+          <td>TabBarView page swipe</td>
+          <td>Material default (~300ms)</td>
+          <td>fling curve. tap 전환과 swipe 전환 모두 같은 duration.</td>
+        </tr>
+        <tr>
+          <td>Detail push (승인됨/거절됨 row 탭)</td>
+          <td><code>MinglitAnimation.medium</code> (350ms)</td>
+          <td><code>MinglitPageTransitions.sharedAxisScaled</code> (Fix #1860).</td>
+        </tr>
+        <tr>
+          <td>Snackbar 등장/소거 (승인/거절 결과)</td>
+          <td>Material default (~250ms)</td>
+          <td>ScaffoldMessenger 기본 timing. autohide 4s.</td>
+        </tr>
+        <tr>
+          <td>_RejectDialog show/dismiss</td>
+          <td>Material default AlertDialog (~150ms scale-fade)</td>
+          <td>Fix #1316 — TextEditingController는 dialog 닫힘 애니메이션 끝난 뒤에 dispose. invalidate는 PostFrameCallback으로 한 frame 지연.</td>
+        </tr>
+        <tr>
+          <td>승인/거절 후 list update</td>
+          <td>cut (no animation)</td>
+          <td>provider invalidate → AsyncValue swap. 별도 fade/anim 없음.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Global edge cases</h2>
+    <ul class="notes">
+      <li><strong>partner 객체 null</strong> — currentPartnerInfoProvider가 데이터로 null을 반환하면 body에 <code>'파트너 정보를 불러올 수 없습니다'</code> 단일 텍스트 (TabBar는 그대로 노출되지만 TabBarView 미렌더).</li>
+      <li><strong>future events 0개</strong> — partner가 미래 이벤트가 하나도 없으면 grouped는 빈 맵 → 모든 탭이 Empty state.</li>
+      <li><strong>chunk fetch pool saturation</strong> — Fix #1597 — 10개씩 직렬화. 100+ 이벤트 partner는 loading이 수 초 걸릴 수 있음 (skeleton 도입 후보).</li>
+      <li><strong>승인/거절 race</strong> — 같은 application을 두 번 빠르게 탭하면 두 번째는 이미 처리된 상태로 RPC 실패. snackbar에 '승인 실패: ...' / '거절 실패: ...' 표시.</li>
+      <li><strong>전체 승인 partial failure</strong> — Fix #1953 — 일부 이벤트만 실패하면 실패한 이벤트 title을 줄바꿈으로 모두 표시. 성공한 부분은 invalidate 후 list에서 사라짐.</li>
+      <li><strong>다크 모드</strong> — partner dark primary(#9b7bec)로 indicator/CTA 색이 흐려짐. badge bg @ highlight(.10)도 dark scaffold 위에서는 거의 안 보일 수 있어 채도 보정 필요. 다크 토글로 확인 권장.</li>
+      <li><strong>접근성</strong> — IconButton tooltip ('승인' / '거절') 제공 · CircleAvatar의 이름 첫 글자는 시각 보조용. screen reader는 row의 _ApplicationItem 전체 Semantics를 합쳐 읽음 (이름 + 메타 + 액션).</li>
+    </ul>
+  </section>
+</div>
+
+<!-- ============================================================
+     REFERENCE
+     ============================================================ -->
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">📖</span>
+    <h2>Reference</h2>
+    <span class="lede">implementation source + 인접 화면. Components / Tokens는 위 mini-table 참고.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Implementation source</h2>
+    <table class="ref">
+      <tbody>
+        <tr><th style="width: 200px;">Widget</th><td><code>EventApplicationManagePage</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/features/application/event_application_manage_page.dart"><code>apps/app_partner/lib/src/features/application/event_application_manage_page.dart</code></a></td></tr>
+        <tr><th>Internal widgets</th><td><code>_ApplicationTab</code> · <code>_EventGroupSection</code> · <code>_ApplicationItem</code> · <code>_StatusBadge</code> · <code>_RejectDialog</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/features/application/event_application_manage_tab.dart"><code>event_application_manage_tab.dart</code></a> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/features/application/event_application_manage_widgets.dart"><code>event_application_manage_widgets.dart</code></a> (part files)</td></tr>
+        <tr><th>Route</th><td><code>ApplicationListRoute</code> · path <code>/applications</code> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/routing/app_routes.dart"><code>app_routes.dart</code></a> (ApplicationBranch · StatefulShell)</td></tr>
+        <tr><th>Detail child route</th><td><code>EventApplicationDetailRoute</code> · path <code>/applications/event/:applicationId</code> · sharedAxisScaled transition (Fix #1860)</td></tr>
+        <tr><th>Provider</th><td><code>eventApplicationsGroupedProvider</code> (FutureProvider.family.autoDispose · key = (partnerId, statusFilter)) · <code>currentPartnerInfoProvider</code> · <code>eventRepositoryProvider</code></td></tr>
+        <tr><th>Repository methods</th><td><code>EventRepository.getPartnerFutureEvents</code> · <code>getApplicationsByEventId</code> · <code>approveApplication</code> · <code>bulkApproveApplications</code> · <code>rejectApplication</code></td></tr>
+        <tr><th>Theme</th><td><code>MinglitTheme.partnerTheme</code> — primary <code>MinglitPartnerColors.primary</code>(<code>#6c3ce1</code>). user app(<code>#9900ff</code>)과 다름.</td></tr>
+        <tr><th>Status enum drift</th><td>Pending 탭은 <code>['pending','pending_review']</code>, 승인됨 탭은 <code>['approved','paid']</code>를 합쳐 표시(visual에서는 동일 '승인' badge), 거절됨 탭은 <code>['rejected']</code>만. <em>refunded / canceled 등은 이 화면에서 노출되지 않음 — 정산/환불 플로우에서 처리.</em></td></tr>
+        <tr><th>⚠️ 알려진 drift</th><td>Empty/Loading/Error state에서는 RefreshIndicator가 미동작 — 빈 상태에서 새로고침하려면 탭을 다시 선택. chunk fetch가 직렬이라 large partner는 시간 큼. row 탭 onTap은 showActions에 따라 분기되는데, 이게 Approved 탭에서 한 차례 사라졌다가 #1860에서 복구된 regression 사례 — 변경 시 주의.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 240px;">Spec</th><th>Relation</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><a href="/specs/partner_home_page.html"><code>PartnerHomePage</code></a></td>
+          <td>홈 TodoSummaryChips "승인 대기" chip이 이 화면 대기중 탭으로 진입하는 가장 일반적 entry. <code>pendingReviewCount</code>는 같은 데이터의 카운트.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/event_detail_page.html"><code>EventDetailPage</code></a></td>
+          <td>이벤트별 그룹 헤더에 노출되는 이벤트는 EventDetail에서 정의된 동일 이벤트 객체. detail에서 capacity / 시작 시간 변경 시 본 화면 group sub("N건 · A/B명")도 영향.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/party_detail_page.html"><code>PartyDetailPage</code></a></td>
+          <td>group title의 fallback 경로 — <code>event.title ?? party.title</code> (Fix #1742). party를 수정하면 본 그룹 title도 변경.</td>
+        </tr>
+        <tr>
+          <td><a href="/foundations/layout">Layout foundations</a></td>
+          <td>Standard Scaffold + AppBar(bottom:TabBar) + TabBarView + StatefulShell bottom nav.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+</div>
+
+<script>
+  document.getElementById('spec-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('spec-mode', e.target.checked);
+  });
+  document.getElementById('dark-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('dark-mode', e.target.checked);
+  });
+</script>
+</body>
+</html>

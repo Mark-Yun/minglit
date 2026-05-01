@@ -245,11 +245,18 @@ const KNOWN_SPEC_FILES: { user: ReadonlySet<string>; partner: ReadonlySet<string
     'login_page',
     'my_page',
     'my_tickets_page',
+    'notification_list_screen',
+    'partner_detail_page',
+    'purchase_history_page',
     'search_page',
   ]),
   partner: new Set([
+    'more_page',
     'party_detail_page',
+    'party_list_page',
     'partner_home_page',
+    'notification_list_screen',
+    'event_application_manage_page',
     // remaining partner specs are reached via ROUTE_DESIGN_OVERRIDES below.
   ]),
 };
@@ -260,6 +267,13 @@ const ROUTE_DESIGN_OVERRIDES: Record<string, string> = {
   'partner-PartyCreateRoute':     '/specs/party_create_wizard_page.html',
   'partner-PartyEditRoute':       '/specs/party_create_wizard_page.html', // shares spec
   'partner-SettlementDetailRoute':'/specs/settlement_detail_page.html',
+  // NotificationCenterRoute → kit-shared NotificationListScreen widget. Default rule
+  // would derive 'notification_center_page', but the spec basename matches the widget.
+  'user-NotificationCenterRoute':    '/specs/notification_list_screen.html',
+  'partner-NotificationCenterRoute': '/specs/notification_list_screen.html',
+  // ApplicationListRoute → default rule yields 'application_list_page', but the
+  // actual widget is EventApplicationManagePage. Override to its real spec.
+  'partner-ApplicationListRoute':    '/specs/event_application_manage_page.html',
 };
 
 /**

@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Spec — NotificationListScreen (kit-shared · NotificationCenterRoute)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* ============================================================
+   NotificationListScreen-specific atoms.
+   Tokens / chrome / mini-table은 /specs/_spec.css에서 import.
+   widget: shared/packages/minglit_kit/lib/src/features/notification/
+           notification_list_screen.dart
+   ============================================================ */
+
+/* Scaffold = MinglitColors.surface (light gray #f9fafb).
+   Tile bg는 ListTile default(투명) → scaffold gray가 비침.
+   Unread tile만 primary tintFill 0.05 overlay. */
+.notif-viewport { background: var(--color-surface); }
+body.dark-mode .notif-viewport { background: var(--color-dark-background); }
+
+/* AppBar — title "알림 센터" + done_all action · scaffold gray bg · no border. */
+.notif-appbar {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--spacing-screen-edge);
+  background: var(--color-surface);
+}
+.notif-appbar h2 {
+  flex: 1;
+  font-size: var(--typography-font-size-app-bar-title);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  text-align: center;
+}
+.notif-appbar__action {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  color: var(--color-text-primary);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.notif-appbar__action svg { width: 22px; height: 22px; }
+body.dark-mode .notif-appbar { background: var(--color-dark-background); }
+body.dark-mode .notif-appbar h2,
+body.dark-mode .notif-appbar__action { color: var(--color-dark-text-primary); }
+
+/* --- Notification ListTile (Material default density) --- */
+.notif-list { padding: 0; }
+
+.notif-tile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xsmall);
+  padding: 12px var(--spacing-screen-edge);
+  background: transparent;
+  position: relative;
+}
+/* Unread tile bg: theme.colorScheme.primary.withValues(alpha: 0.05) */
+.notif-tile--unread {
+  background: color-mix(in srgb, var(--color-primary) 5%, transparent);
+}
+.notif-tile__title {
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+.notif-tile--unread .notif-tile__title {
+  font-weight: 700;
+}
+.notif-tile__body {
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+.notif-tile__time {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  opacity: 0.65;
+  margin-top: var(--spacing-xsmall);
+}
+
+/* Divider — Divider(height: 1) — full width 0.5-1px outlineVariant */
+.notif-divider {
+  height: 1px;
+  background: var(--color-divider);
+}
+
+/* Dismissible delete background — visible during right-to-left swipe. */
+.notif-tile--swiping {
+  position: relative;
+  overflow: hidden;
+}
+.notif-tile__swipe-bg {
+  position: absolute;
+  inset: 0;
+  background: var(--color-error);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: var(--spacing-large);
+  color: var(--color-background);
+}
+.notif-tile__swipe-bg svg { width: 22px; height: 22px; }
+.notif-tile__swipe-front {
+  position: relative;
+  transform: translateX(-72px);
+  background: var(--color-surface);
+  padding: 12px var(--spacing-screen-edge);
+}
+body.dark-mode .notif-tile__swipe-front { background: var(--color-dark-background); }
+
+/* --- Empty state (Center + Text "알림이 없습니다.") --- */
+.notif-empty {
+  position: absolute;
+  inset: 56px 0 0 0;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 0 var(--spacing-large);
+}
+.notif-empty__text {
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+/* --- Loading state (MinglitCircularProgressIndicator centered) --- */
+.notif-loading {
+  position: absolute;
+  inset: 56px 0 0 0;
+  display: grid;
+  place-items: center;
+}
+.notif-spinner {
+  width: 36px; height: 36px;
+  border: 3px solid var(--color-divider);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: notif-spin 0.7s linear infinite;
+}
+@keyframes notif-spin { to { transform: rotate(360deg); } }
+
+/* --- Error state (_DefaultErrorView · showErrorDetails: false 기준,
+       단 NotificationListScreen은 error: builder를 직접 override해서
+       Center + "에러: $err"로 표시한다 — 코드 137행 참고). --- */
+.notif-error {
+  position: absolute;
+  inset: 56px 0 0 0;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 0 var(--spacing-large);
+}
+.notif-error__text {
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
+</div>
+
+<div class="page">
+
+<!-- ============================================================
+     HEADER
+     ============================================================ -->
+<header>
+  <h1>Notification List Screen</h1>
+</header>
+
+<!-- ============================================================
+     OVERVIEW
+     ============================================================ -->
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr>
+        <th style="width: 140px;">Status</th>
+        <td><strong>디자인완료</strong> <em style="color: var(--color-text-secondary);">— 5 state · kit-shared (user + partner)</em></td>
+      </tr>
+      <tr>
+        <th>App</th>
+        <td><code>app_user</code> + <code>app_partner</code> — <strong>shared between user / partner</strong>. 두 앱 모두 <code>NotificationCenterRoute</code>가 동일한 <code>NotificationListScreen</code>(kit-shared)을 그대로 push 한다. 분기 props 없음.</td>
+      </tr>
+      <tr>
+        <th>Category</th>
+        <td>notification · feed · async-list</td>
+      </tr>
+      <tr>
+        <th>Route / Surface</th>
+        <td><code>NotificationCenterRoute</code> · widget: <code>NotificationListScreen</code> (<code>shared/packages/minglit_kit</code>)</td>
+      </tr>
+      <tr>
+        <th>Path</th>
+        <td><code>/notifications</code> (user · partner 동일)</td>
+      </tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>:
+          user — <a href="/specs/home_page.html"><code>HomePage</code></a> AppBar 알림 아이콘 ·
+          partner — <a href="/specs/partner_home_page.html"><code>PartnerHomePage</code></a> AppBar 알림 아이콘<br>
+          <strong>Children</strong>: <em>—</em> <em style="color: var(--color-text-secondary);">(tile 탭 시 <code>deep_link</code>로 임의 route push — 별도 spec)</em>
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>
+          푸시 / 인앱 알림 히스토리를 한곳에서 보고, 읽음 처리·전체 읽음·개별 삭제·deep-link 이동을 수행하는 단일 list 화면. 데이터 소스는
+          <code>user_notifications</code> 테이블 (page size 20).
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry points</strong>: HomePage / PartnerHomePage AppBar 알림 아이콘 (미읽음 배지) · 외부 push 알림 → 직접 진입 (deep-link).<br>
+          <strong>Exit points</strong>: tile 탭 → <code>deep_link</code> 검증 후 <code>context.push(trimmed)</code> · 우→좌 swipe → tile 삭제 (페이지 유지) · AppBar "모두 읽음" → 전부 read 처리 후 새로고침 · 뒤로 가기 → Home 복귀.
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          알림 read-state 복원이 핵심. 미읽음(<code>is_read=false</code>)은 primary 5% 틴트 + bold title로 시각 분리, 읽음은 평문. 읽음 처리는 optimistic update —
+          tile 탭 즉시 UI에 반영하고 서버 실패는 swallow + log (Fix #1955) 해서 절대 크래시하지 않는다. swipe-to-dismiss 역시 optimistic — 화면에서 즉시 제거.
+        </td>
+      </tr>
+      <tr>
+        <th>Frequency</th>
+        <td>활성 사용자 일 1-3회 (push 알림 도착 빈도 / 읽지 않은 알림 누적 시).</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================
+     HISTORY
+     ============================================================ -->
+<section class="doc">
+  <h2>History</h2>
+  <p class="intro">이 spec의 주요 변경 이력. 최신 항목 위.</p>
+  <table class="ref">
+    <thead>
+      <tr>
+        <th style="width: 110px;">Date</th>
+        <th style="width: 80px;">Version</th>
+        <th style="width: 120px;">Author</th>
+        <th>Changes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2026-05-01</td>
+        <td>1.0</td>
+        <td>mark-yun</td>
+        <td>v1.4 template으로 작성. 5 state(Default mixed / All-read / Empty / Loading / Error) mini-table, kit-shared 1 widget · 2 앱 동시 entry, ListTile + Dismissible swipe + primary tintFill 0.05 unread overlay 분해.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- Anchor nav -->
+<nav class="perspective-nav">
+  <a href="#layout"><span class="glyph">🧱</span> Layout</a>
+  <a href="#states"><span class="glyph">🎨</span> States</a>
+  <a href="#behavior"><span class="glyph">🔄</span> Global Behavior</a>
+  <a href="#reference"><span class="glyph">📖</span> Reference</a>
+</nav>
+
+<!-- ============================================================
+     LAYOUT
+     ============================================================ -->
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Layout</h2>
+    <span class="lede">AppBar(title + done_all action) + RefreshIndicator + ListView.separated. tile은 Material ListTile · 각 tile을 Dismissible로 감싸 좌측 swipe 시 빨간 삭제 배경 노출.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree</h2>
+    <p class="intro">
+      Scaffold + AppBar (title "알림 센터", trailing IconButton(Icons.done_all)) + body는 <code>MinglitAsyncValueWidget</code>로 wrapping된 <code>RefreshIndicator</code>+<code>ListView.separated</code>. tile 사이는 height 1 Divider.
+      tile padding은 ListTile default — leading 아이콘 없음 · title + subtitle Column(body + time) 구조.
+    </p>
+
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 600px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <!-- AppBar -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:0;left:0;right:0;height:56px;">
+          <span class="blueprint__region-label">① AppBar — "알림 센터" + done_all action</span>
+        </div>
+
+        <!-- ListView -->
+        <div class="blueprint__region" style="top:56px;left:0;right:0;height:88px;">
+          <span class="blueprint__region-label">② Tile #0 (unread · primary 5% bg)</span>
+        </div>
+        <div class="blueprint__region" style="top:144px;left:0;right:0;height:1px;"></div>
+
+        <div class="blueprint__region blueprint__region--shaded" style="top:145px;left:0;right:0;height:88px;">
+          <span class="blueprint__region-label">③ Tile #1 (read · 투명 bg)</span>
+        </div>
+        <div class="blueprint__region" style="top:233px;left:0;right:0;height:1px;"></div>
+
+        <div class="blueprint__region" style="top:234px;left:0;right:0;height:88px;">
+          <span class="blueprint__region-label">④ Tile #2 (unread)</span>
+        </div>
+
+        <!-- swipe affordance hint -->
+        <div class="blueprint__align-marker" style="top:240px;right:8px;">⇠ swipe-to-dismiss</div>
+      </div>
+
+      <div class="layout-tree"><b>Scaffold</b>
+└─ <b>AppBar</b>(<i>title: "알림 센터"</i>)                    ← ①
+│  └─ actions: [<b>IconButton</b>(Icons.done_all, tooltip "모두 읽음")]
+└─ <b>MinglitAsyncValueWidget&lt;List&lt;Map&gt;&gt;</b>
+   └─ data: <em>if notifications.isEmpty → Center("알림이 없습니다.")</em>
+            <em>else →</em>
+   └─ <b>RefreshIndicator</b>(onRefresh: <code>controller.refresh()</code>)
+      └─ <b>ListView.separated</b>
+         ├─ separator: <b>Divider</b>(height: 1)
+         └─ itemBuilder: <b>Dismissible</b>(key: id, direction: endToStart) ← ②③④
+            ├─ background: Container(<i>color: error</i>) + Icons.delete (right)
+            ├─ onDismissed: <code>controller.deleteNotification(id)</code>
+            └─ child: <b>ListTile</b>
+               ├─ tileColor: <em>isRead ? null : primary.withValues(0.05)</em>
+               ├─ title: <b>Text</b>(title, <em>w700 if !isRead else normal</em>)
+               ├─ subtitle: <b>Column</b>
+               │  ├─ SizedBox(<i>xsmall</i>)
+               │  ├─ <b>Text</b>(body)
+               │  ├─ SizedBox(<i>xsmall</i>)
+               │  └─ <b>Text</b>(<em>MM/dd HH:mm</em>, labelSmall · outline color)
+               └─ onTap: markAsRead(id) → push(deep_link) | snackBar 분기</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>—</td><td>Body padding</td><td>—</td><td>ListView edge-to-edge · 좌우 padding 없음 (ListTile 내부 default 16px horizontal)</td></tr>
+        <tr><td>①</td><td>AppBar</td><td>title centered (Material default) · trailing action right</td><td>height 56 · scaffold gray bg · <strong>border-bottom 없음</strong> · IconButton 48×48 hit target</td></tr>
+        <tr><td>②③④</td><td>Notification ListTile</td><td>title left · time bottom-left of subtitle</td><td>ListTile default density · horizontalTitleGap 16 · vertical pad 8 · 좌우 16 · subtitle Column에 <code>SizedBox(xsmall=4)</code> × 2 (title gap · time gap)</td></tr>
+        <tr><td>—</td><td>Inter-tile divider</td><td>full width</td><td><code>Divider(height: 1)</code> · color outlineVariant — full width (indent 없음 — leading icon 부재)</td></tr>
+        <tr><td>—</td><td>Dismissible swipe BG</td><td>centerRight — Icon delete 우측 정렬</td><td>padding-right <code>spacing-large (24)</code> · bg <code>MinglitColors.error</code> · icon color <code>MinglitColors.background</code> (white)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Notification tile sub-anatomy</h2>
+    <p class="intro">
+      tile 자체는 plain Material <code>ListTile</code>. 단 두 가지 변주: <strong>tileColor</strong>(unread → primary tintFill 0.05) + <strong>title fontWeight</strong>(unread → bold). leading 아이콘 / trailing chevron 없음. Dismissible로 감싼 결과 좌측 swipe 시 background 노출.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr><th style="width: 200px;">Region</th><th>Alignment</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>title</td><td>top-left · single line (overflow ellipsis — Material default)</td><td>bodyMedium · color <code>onSurfaceVariant</code> · weight <em>bold (unread)</em> / normal (read)</td></tr>
+        <tr><td>subtitle Column · body</td><td>title 아래 좌측</td><td>bodyMedium 그대로 — <code>Text(body)</code> · multi-line wrap (Material ListTile은 height auto-grow)</td></tr>
+        <tr><td>subtitle Column · time</td><td>body 아래 좌측</td><td>labelSmall · color <code>colorScheme.outline</code> · format <code>DateFormat('MM/dd HH:mm')</code> → <code>created_at</code> UTC를 toLocal()</td></tr>
+        <tr><td>tileColor</td><td>—</td><td>unread → <code>theme.colorScheme.primary.withValues(alpha: MinglitOpacity.tintFill = 0.05)</code> · read → null (투명, scaffold 비침)</td></tr>
+        <tr><td>swipe background</td><td>centerRight</td><td>전체 영역을 덮는 Container(error red) · Icons.delete 22px · padding-right <code>spacing-large</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<!-- ============================================================
+     STATES
+     ============================================================ -->
+<div class="perspective" id="states">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>States</h2>
+    <span class="lede">5 state. baseline = Default(read + unread mixed). MinglitAsyncValueWidget이 loading/error 자동 처리 — 단 NotificationListScreen은 error builder를 inline override해 "에러: $err" plain Text로 표시한다 (코드 137행).</span>
+  </div>
+
+  <section class="doc">
+    <p class="intro">
+      <strong>State 종류 식별 기준</strong>: <code>MinglitAsyncValueWidget</code>의 3-way (loading / error / data) + data 안에서 <code>notifications.isEmpty</code> 분기. All-read는 data 갈래의 시각적 변주(unread 0건) — 별도 분기 코드는 없다.
+    </p>
+
+    <!-- State 1: Default with mixed notifications (baseline) -->
+    <table class="ref state-mini is-baseline-tint">
+      <thead>
+        <tr><th colspan="3"><strong>Default · mixed (read + unread)</strong> 🎯 <small>baseline · primary tintFill 0.05 unread overlay</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport notif-viewport">
+              <div class="notif-appbar">
+                <h2>알림 센터</h2>
+                <button class="notif-appbar__action" title="모두 읽음">
+                  <!-- Icons.done_all · 22px -->
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 12 8 17 16 8"/><polyline points="9 16 13 20 21 11"/></svg>
+                </button>
+              </div>
+              <div class="notif-list">
+                <!-- Tile #0 — unread -->
+                <div class="notif-tile notif-tile--unread">
+                  <div class="notif-tile__title">새로운 매칭이 도착했어요</div>
+                  <div class="notif-tile__body">금요일 와인 모임에서 매칭된 상대가 있어요. 확인해 보세요.</div>
+                  <div class="notif-tile__time">05/01 19:42</div>
+                </div>
+                <div class="notif-divider"></div>
+                <!-- Tile #1 — read -->
+                <div class="notif-tile">
+                  <div class="notif-tile__title">결제가 완료되었습니다</div>
+                  <div class="notif-tile__body">스피드 데이팅 · 강남 라운지 결제 12,000원이 정상 처리됐어요.</div>
+                  <div class="notif-tile__time">04/30 15:08</div>
+                </div>
+                <div class="notif-divider"></div>
+                <!-- Tile #2 — unread -->
+                <div class="notif-tile notif-tile--unread">
+                  <div class="notif-tile__title">이벤트 시작 1시간 전</div>
+                  <div class="notif-tile__body">"봄 가든 파티" 시작까지 1시간 남았습니다.</div>
+                  <div class="notif-tile__time">04/30 17:00</div>
+                </div>
+                <div class="notif-divider"></div>
+                <!-- Tile #3 — read -->
+                <div class="notif-tile">
+                  <div class="notif-tile__title">파트너 인증이 승인되었습니다</div>
+                  <div class="notif-tile__body">파트너 신청이 승인되어 이제 이벤트를 등록할 수 있어요.</div>
+                  <div class="notif-tile__time">04/29 11:20</div>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>stateAsync.hasValue &amp;&amp; notifications.isNotEmpty</code> · 인증 사용자 + 알림 ≥ 1건 (page size 20, <code>created_at DESC</code>)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            ① <strong>tile 탭</strong> → <code>controller.markAsRead(id)</code> (optimistic) → <code>deep_link</code> 검증 → <code>context.push(trimmed)</code><br>
+            ② <strong>우→좌 swipe</strong> → background red + delete icon 노출 → 끝까지 swipe 시 <code>onDismissed</code> → <code>controller.deleteNotification(id)</code> (optimistic remove)<br>
+            ③ <strong>AppBar "모두 읽음" 탭</strong> → <code>controller.markAllAsRead()</code> → <code>refresh()</code> → All-read state로 전환<br>
+            ④ <strong>풀-다운 새로고침</strong> → <code>RefreshIndicator</code> → <code>controller.refresh()</code><br>
+            ⑤ <strong>뒤로 가기</strong> → Home 복귀
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · <code>deep_link</code>가 null/공백 → SnackBar "이동할 링크가 없습니다." (단 markAsRead는 이미 실행됨)<br>
+            · <code>deep_link</code>가 <code>'/'</code>로 시작하지 않음 → SnackBar "올바르지 않은 링크입니다." (markAsRead는 동일하게 실행)<br>
+            · <code>title</code>/<code>body</code>가 null → 빈 문자열로 fallback (코드 54-55행 <code>?? ''</code>)<br>
+            · <code>created_at</code> 파싱 실패 시 throw → ListView 빌드 중 예외 → AsyncValue.guard 밖이라 빨간 화면 가능 (현재 방어 없음)<br>
+            · markAsRead/deleteNotification은 서버 에러를 swallow + log (Fix #1955) — UI는 항상 성공처럼 보임. 서버 reflect는 다음 refresh에서<br>
+            · partner 앱에서도 동일 list/포맷 — 별도 partner 분기 없음 (kit-shared 단일 위젯)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            · <code>Scaffold</code> + <code>AppBar(title: Text('알림 센터'), actions: [IconButton(Icons.done_all)])</code><br>
+            · <a href="/components#MinglitAsyncValueWidget"><code>MinglitAsyncValueWidget&lt;List&lt;Map&gt;&gt;</code></a> 외곽 wrap (단 error 분기는 inline override)<br>
+            · <code>RefreshIndicator</code> (Material default · primary spinner)<br>
+            · <code>ListView.separated</code> + <code>Divider(height: 1)</code><br>
+            · <code>Dismissible</code>(direction: endToStart · key: id) — background Container(error) + Icons.delete<br>
+            · <code>ListTile</code>(tileColor 분기 · title bodyMedium · subtitle Column 3-row · onTap)<br>
+            · <code>SnackBar</code>(deep_link null/invalid 분기 시)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            · color: <code>color-surface</code> (scaffold + AppBar bg · light gray), <code>color-primary</code> (unread tint <code>tintFill = 0.05</code>), <code>color-text-primary</code> (AppBar title · IconButton fg · ListTile title), <code>color-text-secondary</code> (subtitle body · onSurfaceVariant), <code>color-divider</code> (outlineVariant · inter-tile divider · time outline color), <code>color-error</code> (Dismissible bg), <code>color-background</code> (Dismissible delete icon = white)<br>
+            · radius: <em>—</em> (tile은 사각, ListTile default · radius 없음)<br>
+            · spacing: <code>spacing-large</code> (24 · Dismissible padding-right), <code>spacing-screen-edge</code> (16 · ListTile horizontal default), <code>spacing-xsmall</code> (4 · subtitle Column에 SizedBox 2개 — title→body, body→time)<br>
+            · opacity: <code>MinglitOpacity.tintFill = 0.05</code> (unread tile bg)<br>
+            · typography: appBarTitle (18/600), bodyMedium (16 · title + body — title은 unread 때 w700, read 때 normal), labelSmall (11/500 · time · outline color)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 viewport mockup은 4 tile (unread/read/unread/read) — 시각 변주 한눈에. 실제는 page size 20. <strong>kit-shared</strong> 위젯이라 user/partner 동일 화면 — partner의 brand purple과 user의 brand purple이 같은 <code>MinglitColors.primary</code>인지 여부가 unread tint 색에 영향(현재 partner는 <code>partnerTheme</code>에서 다른 primary로 override되므로 unread tint 색이 미세하게 다를 수 있음 — 의도된 결과).</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 2: All-read variant -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>All-read · 모두 읽음 처리됨</strong> <small>list 존재하지만 unread 0건 — 시각 변주</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport notif-viewport">
+              <div class="notif-appbar">
+                <h2>알림 센터</h2>
+                <button class="notif-appbar__action" title="모두 읽음">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 12 8 17 16 8"/><polyline points="9 16 13 20 21 11"/></svg>
+                </button>
+              </div>
+              <div class="notif-list">
+                <div class="notif-tile">
+                  <div class="notif-tile__title">새로운 매칭이 도착했어요</div>
+                  <div class="notif-tile__body">금요일 와인 모임에서 매칭된 상대가 있어요. 확인해 보세요.</div>
+                  <div class="notif-tile__time">05/01 19:42</div>
+                </div>
+                <div class="notif-divider"></div>
+                <div class="notif-tile">
+                  <div class="notif-tile__title">결제가 완료되었습니다</div>
+                  <div class="notif-tile__body">스피드 데이팅 · 강남 라운지 결제 12,000원이 정상 처리됐어요.</div>
+                  <div class="notif-tile__time">04/30 15:08</div>
+                </div>
+                <div class="notif-divider"></div>
+                <div class="notif-tile">
+                  <div class="notif-tile__title">이벤트 시작 1시간 전</div>
+                  <div class="notif-tile__body">"봄 가든 파티" 시작까지 1시간 남았습니다.</div>
+                  <div class="notif-tile__time">04/30 17:00</div>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>↔ baseline 동일 (data hasValue · isNotEmpty), <strong>+ 모든 item.is_read == true</strong> — 보통 "모두 읽음" 탭 후 refresh 결과 또는 자연스러운 UX 후</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            동일: tile 탭 / swipe / 풀-다운 / 뒤로 가기<br>
+            ↔ "모두 읽음" 버튼 탭은 여전히 유효 (no-op 효과 — 서버에 같은 update 재실행, UI 변화 없음)<br>
+            − unread tint 시각 단서 없음 — 사용자 입장에선 평면 list
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            동일 baseline 에지케이스 + <strong>"모두 읽음" 멱등성</strong> — 이미 모두 읽음인 상태에서 또 탭해도 같은 update 쿼리 (성능 미미한 낭비, UI 무변).<br>
+            · refresh 직후 새 알림이 도착하면 그 tile만 unread → mixed 상태로 자동 전환
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>동일 — ListTile <code>tileColor: null</code> (unread 분기 미적용)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            ↔ baseline 동일<br>
+            − <code>MinglitOpacity.tintFill = 0.05</code> 미사용 (unread 0건)<br>
+            − title <em>w700</em> 분기 미사용 — 모든 tile w400 normal
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 별도 분기 코드 없음 — data 분기 안에서 <code>isRead</code>가 모두 true일 때 자연 발생. UI 시각 단서가 모두 빠지므로 list 자체가 "역사 보관함" 느낌이 됨.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 3: Empty -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Empty · 알림 없음</strong> <small>notifications.isEmpty == true</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport notif-viewport">
+              <div class="notif-appbar">
+                <h2>알림 센터</h2>
+                <button class="notif-appbar__action" title="모두 읽음">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 12 8 17 16 8"/><polyline points="9 16 13 20 21 11"/></svg>
+                </button>
+              </div>
+              <div class="notif-empty">
+                <div class="notif-empty__text">알림이 없습니다.</div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>notifications.isEmpty</code> — 신규 사용자 또는 모든 알림을 직접 swipe 삭제한 경우</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            − list 액션 모두 없음 (tile 0개)<br>
+            ↔ AppBar "모두 읽음" 버튼은 노출되지만 update할 row가 없어 사실상 no-op (서버 query 1회 발생)<br>
+            동일: 뒤로 가기 → Home 복귀
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · <strong>RefreshIndicator 미부착</strong> — Empty 분기는 <code>Center</code>만 반환하므로 풀-다운 제스처가 작동하지 않음 (코드 40-42행, RefreshIndicator는 data 갈래 안쪽에만 있음). 사용자는 화면을 떠났다 다시 들어와야 retry 가능 — Phase 2 후보<br>
+            · "모두 읽음" 버튼은 빈 list에서도 그대로 노출 → 시각적 noise (별도 hide 분기 없음)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>↔ ListView / RefreshIndicator → <code>Center(child: Text('알림이 없습니다.'))</code> 단일 — <strong>전용 EmptyState atom 미사용</strong> (plain Text)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            − list 토큰 모두 미사용<br>
+            + <code>color-text-secondary</code> (Text 색 — bodyMedium default)<br>
+            + <code>color-surface</code> (scaffold bg 유지)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 EmptyState atom 미적용은 의도라기보다 미정비 영역 — Phase 2에서 <code>MinglitEmptyState</code>(아이콘 + title + sub) 채택 검토. 현재 사용자에겐 매우 빈약한 안내.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 4: Loading -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Loading</strong> <small>async fetch 진행 중</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport notif-viewport">
+              <div class="notif-appbar">
+                <h2>알림 센터</h2>
+                <button class="notif-appbar__action" title="모두 읽음">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 12 8 17 16 8"/><polyline points="9 16 13 20 21 11"/></svg>
+                </button>
+              </div>
+              <div class="notif-loading">
+                <div class="notif-spinner"></div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>stateAsync.isLoading</code> — 진입 직후 ~ <code>repository.getNotifications()</code> 응답까지 (또는 "모두 읽음" 후 refresh 동안 — refresh가 state를 const AsyncValue.loading()으로 reset)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>↔ list / refresh / dismiss 모두 없음<br>동일: "모두 읽음" 버튼은 노출되지만 controller가 loading 중에도 호출은 가능 — 결과는 다음 응답에 반영<br>동일: 뒤로 가기 → Home (응답 대기 취소)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · refresh 호출은 state를 명시적으로 loading으로 리셋 (코드 controller 27행) → "모두 읽음" 직후 잠시 깜빡 spinner 보임<br>
+            · 네트워크 timeout 없음 (Supabase client default) → spinner 길게 노출 가능
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>↔ list 전체 → <code>MinglitCircularProgressIndicator</code> (MinglitAsyncValueWidget default loading) · 화면 중앙</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>− list 토큰 모두 미사용<br>+ <code>color-primary</code> (spinner 색)<br>+ <code>color-surface</code> (scaffold bg 유지)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 짧은 transition state — 일반적으로 200-500ms. AppBar는 그대로 노출되어 "모두 읽음" 버튼이 응답 대기 중에도 보인다.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 5: Error -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Error</strong> <small>fetch 실패 — 네트워크 / RLS / 서버</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport notif-viewport">
+              <div class="notif-appbar">
+                <h2>알림 센터</h2>
+                <button class="notif-appbar__action" title="모두 읽음">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 12 8 17 16 8"/><polyline points="9 16 13 20 21 11"/></svg>
+                </button>
+              </div>
+              <div class="notif-error">
+                <div class="notif-error__text">에러: SocketException: Failed host lookup …</div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>stateAsync.hasError</code> — repository / 네트워크 / RLS 거부 등 throw</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>− list / swipe / pull-to-refresh 모두 없음<br>− 자동 retry 버튼 없음<br>↔ "모두 읽음" 버튼은 노출되지만 list가 error라 효과 없음 (server-side 호출은 가능)<br>동일: 뒤로 가기 → Home</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · NotificationListScreen은 <code>error: builder</code>를 inline override (코드 137행) → <strong>_DefaultErrorView 미사용</strong>. plain <code>Center(child: Text('에러: $err'))</code>로 노출 → error 본문이 그대로 화면에 박힘 (디버그-친화 / UX-비친화)<br>
+            · Phase 2: <code>MinglitAsyncValueWidget</code> default error로 환원 권장 ("오류가 발생했습니다." + retry)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>↔ list 전체 → <code>Center</code> + <code>Text('에러: $err')</code> (inline override). <em>Default error UI 미적용</em>.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>− list 토큰 모두 미사용<br>+ <code>color-text-secondary</code> (Text default)<br>+ <code>color-surface</code> (scaffold)<br>− <code>color-error</code> 미사용 (icon / 경고 색 없음)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 inline error builder는 본문 노출이라 PII / token 정보 새어나갈 위험 — production에선 메시지를 "오류가 발생했습니다."로 sanitize 권장. 현재는 디버깅 목적의 fallback 그대로.</td>
+        </tr>
+      </tbody>
+    </table>
+
+  </section>
+</div>
+
+<!-- ============================================================
+     GLOBAL BEHAVIOR
+     ============================================================ -->
+<div class="perspective" id="behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">cross-cutting — 모든 state에 적용되는 액션, motion, 글로벌 에지케이스. kit-shared 위젯이라 user/partner 양쪽에서 동일하게 작동.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Cross-cutting interactions</h2>
+    <table class="ref">
+      <thead>
+        <tr><th style="width: 220px;">사용자 액션</th><th>화면에 보이는 결과</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>뒤로 가기 (시스템 back · AppBar back)</td>
+          <td>Home 복귀 (Material default pop transition · 200ms 좌→우 slide). user → HomeRoute · partner → HomeRoute(partner shell).</td>
+        </tr>
+        <tr>
+          <td>다크 모드 토글</td>
+          <td>scaffold / tile / divider 모두 dark 토큰 swap. unread tint primary는 brand 그대로 유지 (alpha 0.05).</td>
+        </tr>
+        <tr>
+          <td>tile / IconButton tap haptic</td>
+          <td>InkWell ripple + Material default haptic light. read tile은 tileColor null이라 ripple이 scaffold gray 위에서 보임.</td>
+        </tr>
+        <tr>
+          <td>풀-다운 새로고침</td>
+          <td>data 갈래 한정 — Empty/Loading/Error에선 작동 안 함 (RefreshIndicator가 data 안쪽 ListView에만 부착됨). controller.refresh() → loading → 새 list.</td>
+        </tr>
+        <tr>
+          <td>swipe 부분 드래그 후 release</td>
+          <td>Dismissible default — threshold(40%)을 못 넘으면 spring back, 넘으면 fade-out + collapse 후 onDismissed 호출.</td>
+        </tr>
+        <tr>
+          <td>외부 push 알림 도착 (백그라운드)</td>
+          <td>OS notification banner 표시 — 사용자가 banner 탭 시 deep_link 그대로 push (이 화면 경유 안 함). 화면이 떠 있는 동안 새 알림은 자동 갱신되지 않음 (실시간 subscription 미부착) — refresh 시점에만 반영.</td>
+        </tr>
+        <tr>
+          <td>partner 앱에서 진입</td>
+          <td>동일 위젯 · 동일 동작. 단 partner primary color (다른 보라)로 인해 unread tint 색상이 user와 미세하게 다를 수 있음 (theme.colorScheme.primary 기반).</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Motion timing</h2>
+    <p class="intro">
+      Source: <code>shared/packages/mds/core/lib/src/theme/minglit_design_tokens.dart</code> → <code>MinglitAnimation</code>
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 240px;">Transition</th>
+          <th style="width: 200px;">Token / Duration</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>화면 진입 (Home → Notifications)</td>
+          <td><code>MinglitAnimation.fast</code> (200ms)</td>
+          <td>GoRouter Material default 좌→우 slide. user/partner 동일 — push from coordinator.</td>
+        </tr>
+        <tr>
+          <td>tile 탭 → deep_link push</td>
+          <td><code>MinglitAnimation.fast</code> (200ms)</td>
+          <td>일반 push — destination route 별도 transition 명시 시 그쪽 우선.</td>
+        </tr>
+        <tr>
+          <td>Loading → Default 교체</td>
+          <td>cut</td>
+          <td>MinglitAsyncValueWidget은 AsyncValue.when 직접 분기 — fade 없이 즉시 교체.</td>
+        </tr>
+        <tr>
+          <td>Dismissible swipe + fade</td>
+          <td>~ 200ms (Material default · 미명시)</td>
+          <td>Dismissible default resizeDuration. 스토어된 token 미적용 (Phase 2에서 <code>MinglitAnimation.fast</code> 매핑 검토).</td>
+        </tr>
+        <tr>
+          <td>InkWell ripple (tile · IconButton)</td>
+          <td><code>MinglitAnimation.micro</code> (100ms)</td>
+          <td>Material default ripple expand.</td>
+        </tr>
+        <tr>
+          <td>RefreshIndicator spinner show/hide</td>
+          <td><code>MinglitAnimation.medium</code> (350ms)</td>
+          <td>Material default — drag 거리에 따라 spinner indicator 등장.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Global edge cases</h2>
+    <ul class="notes">
+      <li><strong>Optimistic update vs server failure</strong> — markAsRead / deleteNotification / markAllAsRead 모두 서버 에러를 swallow + log (Fix #1955). 클라이언트는 항상 성공처럼 동작하지만 다음 refresh 시 stale state로 되돌아갈 수 있음 — race condition 알아두기.</li>
+      <li><strong>Unread badge 동기화</strong> — Home AppBar 미읽음 배지(99+ 캡)는 <code>notificationListProvider</code>에서 계산. 이 화면에서 markAsRead/markAllAsRead 시 동일 provider state 업데이트 → 배지 즉시 갱신 (cross-screen consistency).</li>
+      <li><strong>Pagination 부재</strong> — <code>getNotifications(limit: 20, offset: 0)</code> 단일 호출, scroll-to-load 없음. 21번째 알림 이후는 보이지 않음 — Phase 2에서 무한 스크롤 / "이전 알림 더 보기" 후보.</li>
+      <li><strong>RefreshIndicator 위치 한정</strong> — data 갈래 한정. Empty/Loading/Error에서는 풀-다운이 동작하지 않으므로 사용자가 retry하려면 화면을 떠났다 다시 진입 (의도되지 않은 UX 결함).</li>
+      <li><strong>kit-shared 단일 위젯</strong> — user/partner 분기 props 없음. Theme.of(context).colorScheme.primary만 다르므로 unread tint와 spinner 색만 차이가 남. 동작/문구/구조는 100% 동일.</li>
+      <li><strong>실시간 갱신 부재</strong> — Supabase realtime subscription 미부착. push 알림 도착 후 이 화면을 보고 있어도 list가 자동 업데이트되지 않음 — 사용자가 직접 풀-다운 / 다시 진입해야 함.</li>
+    </ul>
+  </section>
+</div>
+
+<!-- ============================================================
+     REFERENCE
+     ============================================================ -->
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">📖</span>
+    <h2>Reference</h2>
+    <span class="lede">implementation source + 인접 화면.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Implementation source</h2>
+    <table class="ref">
+      <tbody>
+        <tr><th style="width: 200px;">Widget (kit-shared)</th><td><code>NotificationListScreen</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/shared/packages/minglit_kit/lib/src/features/notification/notification_list_screen.dart"><code>shared/packages/minglit_kit/lib/src/features/notification/notification_list_screen.dart</code></a> (단일 위젯 · user + partner 공용)</td></tr>
+        <tr><th>Controller</th><td><code>NotificationList</code> (Riverpod) — <a href="https://github.com/Mark-Yun/minglit/blob/dev/shared/packages/minglit_kit/lib/src/features/notification/notification_list_controller.dart"><code>shared/packages/minglit_kit/lib/src/features/notification/notification_list_controller.dart</code></a> (build / refresh / markAsRead / markAllAsRead / deleteNotification — 모두 optimistic)</td></tr>
+        <tr><th>Repository</th><td><code>NotificationRepository</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/shared/packages/minglit_kit/lib/src/data/repositories/notification_repository.dart"><code>shared/packages/minglit_kit/lib/src/data/repositories/notification_repository.dart</code></a> (Supabase <code>user_notifications</code> · page size 20 · created_at desc · markAsRead/All/delete 에러 swallow Fix #1955)</td></tr>
+        <tr><th>Route (user)</th><td><code>NotificationCenterRoute</code> · <code>/notifications</code> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/routing/app_routes.dart"><code>apps/app_user/.../app_routes.dart</code></a> (line 213)</td></tr>
+        <tr><th>Route (partner)</th><td><code>NotificationCenterRoute</code> · <code>/notifications</code> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/routing/app_routes.dart"><code>apps/app_partner/.../app_routes.dart</code></a> (line 92)</td></tr>
+        <tr><th>Navigation (user)</th><td><code>homeCoordinator</code> — <code>_router.push(const NotificationCenterRoute().location)</code> (<code>apps/app_user/.../home_coordinator.dart:34</code>)</td></tr>
+        <tr><th>Navigation (partner)</th><td><code>partnerHomeCoordinator</code> — <code>_router.push(const NotificationCenterRoute().location)</code> (<code>apps/app_partner/.../partner_home_coordinator.dart:18</code>)</td></tr>
+        <tr><th>Async wrapper</th><td><a href="/components#MinglitAsyncValueWidget"><code>MinglitAsyncValueWidget</code></a> — loading은 default(<code>MinglitCircularProgressIndicator</code>) · <strong>error는 inline override</strong>(plain <code>Center(Text('에러: $err'))</code>) → <em>_DefaultErrorView 미적용</em></td></tr>
+        <tr><th>Icons (Material)</th><td><code>done_all</code> (AppBar action — 모두 읽음) · <code>delete</code> (Dismissible swipe BG)</td></tr>
+        <tr><th>Date format</th><td><code>DateFormat('MM/dd HH:mm')</code> (intl) · <code>DateTime.parse(created_at).toLocal()</code></td></tr>
+        <tr><th>Unread tint</th><td><code>theme.colorScheme.primary.withValues(alpha: MinglitOpacity.tintFill)</code> · tintFill = 0.05</td></tr>
+        <tr><th>Deep-link 검증</th><td>코드 114-128행: null/empty → SnackBar "이동할 링크가 없습니다." · prefix '/' 미일치 → SnackBar "올바르지 않은 링크입니다." · valid → <code>context.push(trimmed)</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 240px;">Spec</th><th>Relation</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><a href="/specs/home_page.html"><code>HomePage</code></a></td>
+          <td>user 진입점 — AppBar 알림 아이콘 + 미읽음 배지에서 push.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/partner_home_page.html"><code>PartnerHomePage</code></a></td>
+          <td>partner 진입점 — 동일 패턴, 동일 위젯.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/notification_settings_page.html"><code>NotificationSettingsScreen</code></a></td>
+          <td>알림 카테고리별 on/off 설정 — 본 화면과 데이터 모델은 분리(<code>user_settings</code>) 되었지만 동일 repository(<code>NotificationRepository</code>)에서 다룸.</td>
+        </tr>
+        <tr>
+          <td><em>deep_link push targets</em></td>
+          <td>tile 탭 시 push되는 destination — EventDetailRoute / TicketQRRoute / ApplicationDetailRoute 등 임의. 별도 spec 참조.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+</div>
+
+<script>
+  document.getElementById('spec-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('spec-mode', e.target.checked);
+  });
+  document.getElementById('dark-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('dark-mode', e.target.checked);
+  });
+</script>
+</body>
+</html>
