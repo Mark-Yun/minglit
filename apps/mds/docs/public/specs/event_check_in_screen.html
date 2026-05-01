@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Spec — EventCheckInScreen (app_user · EventCheckInRoute · kit-shared)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* ============================================================
+   EventCheckInScreen-specific atoms.
+   Sheet chrome, scrim, QR card, location row.
+   Tokens / mini-table / blueprint은 /specs/_spec.css에서 import.
+   ============================================================ */
+
+/* The viewport sits over a dimmed scaffold ("background screen")
+   because this screen is a ModalBottomSheetRoute — the parent
+   HomePage stays visible underneath. */
+.scaffold-dim {
+  position: absolute;
+  inset: 0;
+  background: var(--color-surface);
+  /* faint silhouette of HomePage feed underneath */
+  background-image:
+    linear-gradient(180deg,
+      rgba(0,0,0,0) 0%,
+      rgba(0,0,0,0) 100%);
+}
+.scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 5;
+}
+
+/* The bottom sheet itself — anchored to viewport bottom, top corners
+   radius-card, white card surface. Real Flutter shape:
+   RoundedRectangleBorder(top: Radius.circular(MinglitRadius.card)). */
+.checkin-sheet {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: var(--color-background);
+  border-top-left-radius: var(--radius-card);
+  border-top-right-radius: var(--radius-card);
+  padding: 0 0 24px 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  max-height: 88%;
+  overflow: hidden;
+}
+.checkin-sheet__handle {
+  width: 40px;
+  height: 4px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--color-text-secondary) 38%, transparent);
+  margin: 12px auto var(--spacing-large);
+  flex-shrink: 0;
+}
+.checkin-sheet__body {
+  padding: 0 var(--spacing-screen-edge);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-large);
+}
+.checkin-sheet__title {
+  font-size: var(--typography-font-size-app-bar-title);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  text-align: center;
+  line-height: 1.3;
+}
+.checkin-sheet__subtitle {
+  font-size: var(--typography-font-size-body);
+  color: var(--color-text-secondary);
+  text-align: center;
+  margin-top: calc(-1 * var(--spacing-large) + var(--spacing-small));
+}
+
+/* QR code card — 240px QR + 16px padding + scanning line.
+   Mirrors TicketQRViewer atom (BoxShadow + radius-card). */
+.checkin-qr {
+  position: relative;
+  width: 272px;
+  height: 272px;
+  background: var(--color-background);
+  border-radius: var(--radius-card);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.checkin-qr__code {
+  width: 240px;
+  height: 240px;
+  background-image:
+    linear-gradient(90deg, #111 50%, transparent 50%),
+    linear-gradient(0deg, #111 50%, transparent 50%);
+  background-size: 12px 12px, 12px 12px;
+  background-position: 0 0, 0 0;
+  filter: contrast(2);
+  /* fallback solid pattern using radial dots */
+  background:
+    radial-gradient(circle, #111 1.5px, transparent 2px) 0 0 / 10px 10px,
+    var(--color-background);
+  border: 2px solid #111;
+}
+.checkin-qr__finder {
+  position: absolute;
+  width: 56px; height: 56px;
+  border: 8px solid #111;
+  background: var(--color-background);
+}
+.checkin-qr__finder--tl { top: 22px; left: 22px; }
+.checkin-qr__finder--tr { top: 22px; right: 22px; }
+.checkin-qr__finder--bl { bottom: 22px; left: 22px; }
+.checkin-qr__finder::after {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  background: #111;
+}
+.checkin-qr__scan {
+  position: absolute;
+  left: 26px;
+  right: 26px;
+  height: 2px;
+  background: var(--color-primary);
+  box-shadow: 0 0 8px 2px color-mix(in srgb, var(--color-primary) 60%, transparent);
+  top: 50%;
+  animation: checkin-scan 2s ease-in-out infinite alternate;
+}
+@keyframes checkin-scan {
+  0%   { top: 26px; }
+  100% { top: 240px; }
+}
+
+/* Location row — Icon (primary 16) + name + "위치 안내 보기" underline. */
+.checkin-location {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-small);
+  padding: var(--spacing-small) var(--spacing-medium);
+  border-radius: var(--radius-button);
+  cursor: pointer;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.checkin-location__icon {
+  width: 16px;
+  height: 16px;
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+.checkin-location__name {
+  font-size: var(--typography-font-size-body);
+  color: var(--color-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+}
+.checkin-location__cta {
+  font-size: var(--typography-font-size-caption);
+  color: var(--color-primary);
+  text-decoration: underline;
+  white-space: nowrap;
+}
+
+/* Loading spinner (proxy of MinglitCircularProgressIndicator). */
+.checkin-spinner {
+  width: 36px; height: 36px;
+  border: 3px solid var(--color-divider);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: checkin-spin 0.7s linear infinite;
+}
+@keyframes checkin-spin { to { transform: rotate(360deg); } }
+
+/* Error / fallback — error icon + message + retry. */
+.checkin-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-medium);
+  height: 280px;
+  justify-content: center;
+}
+.checkin-error__icon {
+  width: 48px;
+  height: 48px;
+  color: var(--color-error);
+}
+.checkin-error__msg {
+  font-size: var(--typography-font-size-body);
+  color: var(--color-text-primary);
+}
+.checkin-error__retry {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xsmall);
+  color: var(--color-primary);
+  font-size: var(--typography-font-size-body);
+  font-weight: 600;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.checkin-error__retry svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Checked-in success state — large check + message. */
+.checkin-done {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-medium);
+  padding: var(--spacing-xlarge) 0;
+}
+.checkin-done__check {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-success) 16%, var(--color-background));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.checkin-done__check svg {
+  width: 36px;
+  height: 36px;
+  color: var(--color-success);
+}
+.checkin-done__title {
+  font-size: var(--typography-font-size-app-bar-title);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.checkin-done__sub {
+  font-size: var(--typography-font-size-body);
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+/* Faint silhouette of HomePage under scrim — just a status bar + title hint */
+.bg-home {
+  position: absolute;
+  inset: 0;
+  background: var(--color-surface);
+  padding: var(--spacing-screen-edge);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-medium);
+}
+.bg-home__statusbar {
+  height: 24px;
+}
+.bg-home__title {
+  font-size: var(--typography-font-size-app-bar-title);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  opacity: 0.5;
+}
+.bg-home__feed-card {
+  height: 96px;
+  background: var(--color-background);
+  border-radius: var(--radius-card);
+  opacity: 0.5;
+}
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
+</div>
+
+<div class="page">
+
+<!-- ============================================================
+     📍 HEADER
+     ============================================================ -->
+<header>
+  <h1>Event Check-In</h1>
+</header>
+
+<!-- ============================================================
+     🎯 OVERVIEW
+     ============================================================ -->
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr>
+        <th style="width: 140px;">Status</th>
+        <td><strong>🚧 디자인중</strong> <em style="color: var(--color-text-secondary);">— 4 state · routed bottom sheet · kit-shared 예정 (현재 구현은 <code>EventNowBottomSheet</code>의 phase 1 콘텐츠로 inline)</em></td>
+      </tr>
+      <tr>
+        <th>App</th>
+        <td><code>app_user</code> <em style="color: var(--color-text-secondary);">(widget은 <code>minglit_kit</code> 패키지에 거주 — kit-shared)</em></td>
+      </tr>
+      <tr>
+        <th>Category</th>
+        <td>event · check-in · modal sheet</td>
+      </tr>
+      <tr>
+        <th>Route / Surface</th>
+        <td><code>EventCheckInRoute</code> (<code>ModalBottomSheetRoute</code> · GoRouter <code>pageBuilder</code>) · widget: <code>EventCheckInScreen</code> (kit-shared)</td>
+      </tr>
+      <tr>
+        <th>Path</th>
+        <td><code>/events/:id/check-in</code></td>
+      </tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>: <a href="/specs/home_page.html"><code>HomePage</code></a> (HomeRoute) — 시트가 push 되는 동안에도 parent route 그대로 유지. 진입은 <a href="/specs/event_now_bar.html"><code>EventNowBar</code></a>의 <code>checkInReady</code> / <code>waiting</code> 탭.<br>
+          <strong>Children</strong>: <em>—</em> <em style="color: var(--color-text-secondary);">(체크인 완료 시 <code>EventCheckedInScreen</code> 시트로 transition — 별도 spec)</em>
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>
+          오늘 참여 중인 이벤트 입장을 위한 QR 티켓을 즉시 보여주는 routed 바텀시트. 사용자는 이 한 화면에서 QR 스캔, 이벤트 정보 확인, 위치 deeplink까지 한 번에 끝낸다.
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry points</strong>: ① <code>EventNowBar</code> 탭 (<code>waiting</code> / <code>checkInReady</code> state) — 가장 흔한 경로. ② push 알림 "곧 입장 시작" → deeplink. ③ <code>MyTickets</code> "오늘 입장 가능한 티켓" 탭.<br>
+          <strong>Exit points</strong>: 파트너가 QR 스캔 → 백엔드 phase 변경 → <code>EventNowBarState.checkedIn</code> → 시트 자동 전환 (또는 dismiss + EventCheckedInScreen push). · scrim / 핸들 swipe-down → dismiss (parent HomeRoute 유지).
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          기존 <code>TicketQRRoute</code>(<code>/tickets/:ticketId/qr</code>)는 풀-페이지 Scaffold이지만, 체크인 흐름은 "홈에서 한 탭, 끝나면 바로 복귀"가 자연스러운 UX다. 그래서 ModalBottomSheetRoute로 분리 — Material 3 / GoRouter <code>pageBuilder → ModalBottomSheetRoute</code> 패턴. 동일 콘텐츠를 deep-link 가능한 라우트로 두면 push 알림 / share URL / MyPage "진행 중인 이벤트" 등 어디서든 진입 가능하다. 향후 <code>TicketQRRoute</code>와 통합 또는 alias 처리 예정 (event_now_bar spec 참고).
+        </td>
+      </tr>
+      <tr>
+        <th>Frequency</th>
+        <td>이벤트 시작 직전 — 사용자당 이벤트 1회 (체크인 완료 후에는 <code>checkedIn</code> 시트로 자동 전환).</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================
+     🕐 HISTORY
+     ============================================================ -->
+<section class="doc">
+  <h2>History</h2>
+  <table class="ref">
+    <thead>
+      <tr>
+        <th style="width: 110px;">Date</th>
+        <th style="width: 80px;">Version</th>
+        <th style="width: 120px;">Author</th>
+        <th>Changes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2026-05-01</td>
+        <td>1.0</td>
+        <td>mark-yun</td>
+        <td>
+          v1.4 template으로 신규 spec 작성. <code>EventNowBar</code>의 5개 routed sheet 매핑 중 첫 번째 (<code>checkInReady</code> / <code>waiting</code>). 실제 구현은 현재 <code>CheckInReadyContent</code>(<code>app_user/lib/src/features/home/widgets/event_now_phases/check_in_ready_content.dart</code>)로 <code>showModalBottomSheet</code> 내부에서 inline 렌더링 — 이 spec은 "kit-shared <code>EventCheckInScreen</code> + 독립 라우트"로의 마이그레이션 타깃을 정의. 4 state · baseline = default(QR ready). <code>TicketQRViewer</code> atom 재활용.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- Anchor nav -->
+<nav class="perspective-nav">
+  <a href="#layout"><span class="glyph">🧱</span> Layout</a>
+  <a href="#states"><span class="glyph">🎨</span> States</a>
+  <a href="#behavior"><span class="glyph">🔄</span> Global Behavior</a>
+  <a href="#reference"><span class="glyph">📖</span> Reference</a>
+</nav>
+
+<!-- ============================================================
+     🧱 LAYOUT
+     ============================================================ -->
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Layout</h2>
+    <span class="lede">화면 구조 — modal bottom sheet · top corners radius-card · drag handle + 콘텐츠 column. AppBar 없음. parent HomePage가 scrim 아래로 보임.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree</h2>
+    <p class="intro">
+      <code>showModalBottomSheet</code> + <code>RoundedRectangleBorder(top: Radius.circular(MinglitRadius.card))</code>로 부착되는 시트. <code>isScrollControlled: true</code>라 max-height ≈ 88% (콘텐츠 길이에 따라 가변). 시트 내부는 <code>SafeArea</code> + 단일 <code>Padding</code>이고, 콘텐츠는 <code>Column(mainAxisSize: MainAxisSize.min)</code>로 위에서 아래로 stacked.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="width: 343px; height: 600px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region" style="top:0;left:0;right:0;height:200px;background:rgba(var(--spec-blueprint-rgb), 0.04);border-color:rgba(var(--spec-blueprint-rgb), 0.3);">
+          <span class="blueprint__region-label" style="font-size:10px;">Scrim — rgba(0,0,0,0.5) · parent HomePage 위에 dim layer</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:200px;left:0;right:0;bottom:0;border-top-left-radius:16px;border-top-right-radius:16px;">
+          <span class="blueprint__region-label" style="font-size:10px;">Sheet — bg: color-background · top corners radius-card (16) · safeArea bottom</span>
+        </div>
+        <div class="blueprint__region" style="top:212px;left:50%;width:40px;height:4px;margin-left:-20px;border-radius:2px;background:rgba(var(--spec-blueprint-rgb), 0.5);border-color:transparent;">
+          <span class="blueprint__region-label" style="font-size:9px;left:50px;">㉠ drag handle (40×4)</span>
+        </div>
+        <div class="blueprint__region" style="top:248px;left:24px;right:24px;height:24px;background:rgba(var(--spec-blueprint-rgb), 0.06);border-color:rgba(var(--spec-blueprint-rgb), 0.4);">
+          <span class="blueprint__region-label" style="font-size:9px;">㉡ Title (titleMedium · bold · center)</span>
+        </div>
+        <div class="blueprint__region" style="top:280px;left:24px;right:24px;height:18px;background:rgba(var(--spec-blueprint-rgb), 0.06);border-color:rgba(var(--spec-blueprint-rgb), 0.4);">
+          <span class="blueprint__region-label" style="font-size:9px;">㉢ Time (bodyMedium · text-secondary · center)</span>
+        </div>
+        <div class="blueprint__region" style="top:312px;left:36px;right:36px;height:240px;border-radius:16px;background:rgba(var(--spec-blueprint-rgb), 0.06);border-color:rgba(var(--spec-blueprint-rgb), 0.4);">
+          <span class="blueprint__region-label" style="font-size:9px;">㉣ QR card — 272×272 with 16 padding · 240×240 QR · scan line</span>
+        </div>
+        <div class="blueprint__region" style="bottom:24px;left:60px;right:60px;height:36px;border-radius:12px;background:rgba(var(--spec-blueprint-rgb), 0.06);border-color:rgba(var(--spec-blueprint-rgb), 0.4);">
+          <span class="blueprint__region-label" style="font-size:9px;">㉤ Location row (icon + name + "위치 안내 보기")</span>
+        </div>
+      </div>
+
+      <div class="layout-tree"><b>ModalBottomSheetRoute</b>
+└─ <em>backgroundColor</em>: scrim 0.5 black
+└─ <em>shape</em>: RoundedRectangleBorder(top: <i>radius-card 16</i>)
+└─ <em>isScrollControlled</em>: true   <i>(콘텐츠 길이 가변)</i>
+
+<b>EventCheckInScreen</b>
+└─ SafeArea
+   └─ Padding(bottom: viewPadding.bottom)
+      └─ Column(mainAxisSize: min)
+         ├─ <em>Drag handle</em>                      ← ㉠
+         │  · 40×4 · radius 2 · color: text-secondary @ alpha muted
+         │
+         ├─ Gap: <i>spacing-large (24)</i>
+         ├─ <em>Event title</em>                      ← ㉡
+         │  · titleMedium · bold · center
+         │
+         ├─ Gap: <i>spacing-small (8)</i>
+         ├─ <em>Event time</em>                       ← ㉢
+         │  · bodyMedium · text-secondary · "M월 d일 HH:mm"
+         │
+         ├─ Gap: <i>spacing-large (24)</i>
+         ├─ <b>TicketQRViewer</b>                     ← ㉣
+         │  · 240×240 QR + 16 padding (boxShadow card)
+         │  · scanning line (2s reverse loop · primary)
+         │  · 화면 brightness max로 자동 설정 (initState)
+         │  · QrImageView(jsonEncode(token))
+         │
+         ├─ Gap: <i>spacing-large (24)</i>
+         └─ <em>Location row</em> (event.party.location 있을 때만)  ← ㉤
+            · InkWell · radius-button (12)
+            · Icon(location_on_outlined · primary · 16)
+            · location.name (bodyMedium · primary · 1줄 ellipsis)
+            · "위치 안내 보기" (bodySmall · primary · underline)
+            · onTap → geo: URI deeplink (외부 지도 앱)</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>—</td><td>Sheet 외부</td><td>bottom-anchored · 풀폭 · max-height 88vh</td><td>top corners <code>radius-card (16)</code> · scrim <code>rgba(0,0,0,0.5)</code> (Material default)</td></tr>
+        <tr><td>—</td><td>Sheet body padding</td><td>vertical: spacing-large (24) · horizontal: spacing-screen-edge (16)</td><td>bottom: <code>MediaQuery.viewPadding.bottom</code> 추가 (홈버튼 영역 회피)</td></tr>
+        <tr><td>㉠</td><td>Drag handle</td><td>top-center</td><td>40×4 · radius 2 · margin-bottom: <code>spacing-large (24)</code></td></tr>
+        <tr><td>㉡</td><td>Event title</td><td>center</td><td>title↔time gap: <code>spacing-small (8)</code></td></tr>
+        <tr><td>㉢</td><td>Event time</td><td>center</td><td>time↔QR gap: <code>spacing-large (24)</code></td></tr>
+        <tr><td>㉣</td><td>QR card</td><td>center</td><td>240×240 QR + 16 padding (총 272×272) · QR↔location gap: <code>spacing-large (24)</code></td></tr>
+        <tr><td>㉤</td><td>Location row</td><td>center · wrap</td><td>icon↔name gap: <code>spacing-small (8)</code> · padding: vertical 8 · horizontal 16</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<!-- ============================================================
+     🎨 STATES — mini-table per state
+     ============================================================ -->
+<div class="perspective" id="states">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>States</h2>
+    <span class="lede">시각 변형 4종. baseline = <code>default</code> (QR ready). loading / error / checked-in으로 분기. checked-in은 시트가 dismiss 되거나 EventCheckedInScreen으로 전환되는 transient state.</span>
+  </div>
+
+  <section class="doc">
+    <p class="intro">
+      <strong>State 종류 식별 기준</strong>: <code>eventTicketTokenProvider(eventId)</code>의 <code>AsyncValue</code> + <code>EventNowBarState</code> phase. data → default · loading → loading · error or token == null → error. phase가 <code>checkedIn</code>으로 변하면 시트 자동 전환.
+    </p>
+
+    <!-- State 1: default (baseline) -->
+    <table class="ref state-mini is-baseline-tint">
+      <thead>
+        <tr><th colspan="3"><strong>default · QR ready</strong> 🎯 <small>baseline · token 로드 완료</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="bg-home">
+                <div class="bg-home__statusbar"></div>
+                <div class="bg-home__title">홈</div>
+                <div class="bg-home__feed-card"></div>
+                <div class="bg-home__feed-card"></div>
+              </div>
+              <div class="scrim"></div>
+              <div class="checkin-sheet">
+                <div class="checkin-sheet__handle"></div>
+                <div class="checkin-sheet__body">
+                  <div class="checkin-sheet__title">강남 루프탑 소셜 파티</div>
+                  <div class="checkin-sheet__subtitle">5월 1일 19:00</div>
+                  <div class="checkin-qr">
+                    <div class="checkin-qr__code"></div>
+                    <div class="checkin-qr__finder checkin-qr__finder--tl"></div>
+                    <div class="checkin-qr__finder checkin-qr__finder--tr"></div>
+                    <div class="checkin-qr__finder checkin-qr__finder--bl"></div>
+                    <div class="checkin-qr__scan"></div>
+                  </div>
+                  <div class="checkin-location">
+                    <svg class="checkin-location__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M12 22s8-7.5 8-13a8 8 0 1 0-16 0c0 5.5 8 13 8 13z"/>
+                      <circle cx="12" cy="9" r="3"/>
+                    </svg>
+                    <span class="checkin-location__name">위워크 강남점 옥상</span>
+                    <span class="checkin-location__cta">위치 안내 보기</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>eventTicketTokenProvider</code> data → non-null token. <code>EventNowBarState.waiting</code> 또는 <code>checkInReady</code>.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            ① QR 화면을 파트너 스캐너에 노출 → 백엔드 검증 → phase가 <code>checkedIn</code>으로 변경 → 시트 자동 전환.<br>
+            ② 위치 행 탭 → <code>geo:lat,lng?q=address</code> URI로 외부 지도 앱 실행 (<code>launchUrl</code>).<br>
+            ③ 핸들 swipe-down / scrim 탭 → 시트 dismiss → HomeRoute 복귀 (EventNowBar 그대로 유지).
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · <code>event.party.location == null</code> → 위치 행 hidden (전체 row 미렌더).<br>
+            · 외부 지도 앱 실행 실패 → SnackBar "지도 앱을 열 수 없습니다".<br>
+            · 시트 진입 시 화면 brightness 자동 최대 → dispose에서 원래 값으로 복원 (<code>screen_brightness</code> 패키지).<br>
+            · 스크린샷 방지 안내 — 콘텐츠 자체에는 미표시 (TicketQRScreen과 달리). EventNowBar 진입은 즉시성이 우선이라 안내문 생략.
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            · Drag handle (40×4 · text-secondary @ <code>MinglitOpacity.muted</code>)<br>
+            · Event title (titleMedium · bold · center)<br>
+            · Event time (bodyMedium · text-secondary · <code>DateFormat('M월 d일 HH:mm')</code>)<br>
+            · <code>TicketQRViewer</code> (240×240 QR · 16 padding · boxShadow · 2s reverse scanning line)<br>
+            · <code>_LocationRow</code> (InkWell · Icon(location_on_outlined) + name + "위치 안내 보기")
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            · color: <code>color-background</code> (sheet bg · QR card bg), <code>color-text-primary</code> (title), <code>color-text-secondary</code> (time · handle), <code>color-primary</code> (scan line · location icon · CTA)<br>
+            · radius: <code>radius-card (16)</code> (sheet top corners · QR card), <code>radius-button (12)</code> (location InkWell)<br>
+            · spacing: <code>spacing-screen-edge (16)</code> (h-padding), <code>spacing-large (24)</code> (v-padding · gaps), <code>spacing-small (8)</code> (title↔time)<br>
+            · typography: titleMedium(16/700 · title), bodyMedium(14 · time · location name), bodySmall(12 · CTA)<br>
+            · scrim: <code>rgba(0,0,0,0.5)</code> (Material default)<br>
+            · animation: 2s reverse loop (QR scan line, controller seconds:2)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 <code>TicketQRRoute</code>의 <code>TicketQRScreen</code>과 사실상 동일 콘텐츠지만 surface가 다르다 — 풀 스크린 Scaffold(+AppBar "내 티켓") vs 모달 시트(+drag handle). 향후 통합 또는 alias 처리 예정 (<code>EventNowBar</code> spec Reference 참고).</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 2: loading -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>loading · 토큰 fetch 중</strong> <small>token AsyncValue.loading</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="bg-home">
+                <div class="bg-home__statusbar"></div>
+                <div class="bg-home__title">홈</div>
+                <div class="bg-home__feed-card"></div>
+                <div class="bg-home__feed-card"></div>
+              </div>
+              <div class="scrim"></div>
+              <div class="checkin-sheet">
+                <div class="checkin-sheet__handle"></div>
+                <div class="checkin-sheet__body">
+                  <div class="checkin-sheet__title">강남 루프탑 소셜 파티</div>
+                  <div class="checkin-sheet__subtitle">5월 1일 19:00</div>
+                  <div style="height: 280px; display: flex; align-items: center; justify-content: center;">
+                    <div class="checkin-spinner"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>+ <code>eventTicketTokenProvider</code>가 <code>AsyncValue.loading</code> — 첫 진입 시, 또는 <code>ref.invalidate</code> 후 재요청 중.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>− QR 노출 / 위치 탭 모두 불가. 핸들 swipe-down / scrim 탭으로 dismiss는 가능 (parent route 유지).</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>+ 네트워크 느림 → 스피너만 계속 → 사용자가 dismiss 후 재진입 가능. fetch 자체는 백그라운드에서 계속.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>↔ <code>TicketQRViewer</code> → <code>SizedBox(height: 280)</code> + <code>MinglitCircularProgressIndicator</code> (center). title · time · handle 동일.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>+ spinner: <code>color-primary</code> · 36×36. 나머지 동일.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 280px height fix는 layout shift 방지용 — 토큰 도착 시 QR로 swap 되어도 시트 높이가 점프하지 않는다.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 3: error -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>error · QR 로드 실패</strong> <small>token AsyncValue.error 또는 null</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="bg-home">
+                <div class="bg-home__statusbar"></div>
+                <div class="bg-home__title">홈</div>
+                <div class="bg-home__feed-card"></div>
+                <div class="bg-home__feed-card"></div>
+              </div>
+              <div class="scrim"></div>
+              <div class="checkin-sheet">
+                <div class="checkin-sheet__handle"></div>
+                <div class="checkin-sheet__body">
+                  <div class="checkin-sheet__title">강남 루프탑 소셜 파티</div>
+                  <div class="checkin-sheet__subtitle">5월 1일 19:00</div>
+                  <div class="checkin-error">
+                    <svg class="checkin-error__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="12" cy="12" r="10"/>
+                      <line x1="12" y1="8" x2="12" y2="12"/>
+                      <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                    <div class="checkin-error__msg">QR 코드를 불러올 수 없습니다</div>
+                    <button class="checkin-error__retry">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="23 4 23 10 17 10"/>
+                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                      </svg>
+                      다시 시도
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>+ <code>AsyncValue.error</code> (네트워크 / Edge Function 실패) 또는 <code>data == null</code> (토큰 만료 / 권한 없음).</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>+ "다시 시도" 탭 → <code>ref.invalidate(eventTicketTokenProvider(eventId))</code> → loading 재진입. dismiss / parent route 복귀 가능.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>+ 반복 실패 시 사용자에게 명확한 다음 단계 안내 부재 — 향후 "현장 안내 데스크 문의" 보조 CTA 추가 후보. · 권한 없는 사용자(타인의 eventId deeplink) → 동일 에러 표시 (보안상 구분 메시지 미노출).</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>↔ <code>TicketQRViewer</code> → <code>_QRErrorWidget</code> (Icon(error_outline 48 · error) + bodyMedium 메시지 + <code>TextButton.icon(refresh)</code> "다시 시도"). title · time · handle 동일.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>+ <code>color-error</code> (icon), <code>color-primary</code> (retry CTA · TextButton 기본). 동일 height 280px.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 fallback 패턴은 <code>check_in_ready_content.dart</code>의 <code>_QRErrorWidget</code>과 일치. <code>TicketQRScreen</code>의 "티켓 정보를 찾을 수 없습니다"보다 retry 액션이 더 적극적 — 현장 진입 임박 상황이라 사용자가 즉시 재시도해야 함.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 4: checked-in (transient) -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>checked-in · 체크인 완료 (transient)</strong> <small>phase 변경 직후 짧게 표시 후 transition</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="bg-home">
+                <div class="bg-home__statusbar"></div>
+                <div class="bg-home__title">홈</div>
+                <div class="bg-home__feed-card"></div>
+                <div class="bg-home__feed-card"></div>
+              </div>
+              <div class="scrim"></div>
+              <div class="checkin-sheet">
+                <div class="checkin-sheet__handle"></div>
+                <div class="checkin-sheet__body">
+                  <div class="checkin-done">
+                    <div class="checkin-done__check">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                    </div>
+                    <div class="checkin-done__title">체크인 완료</div>
+                    <div class="checkin-done__sub">강남 루프탑 소셜 파티<br>곧 매칭이 시작됩니다</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>+ <code>EventNowBarState</code>가 <code>checkInReady</code>/<code>waiting</code> → <code>checkedIn</code>으로 전환된 직후. <code>eventNowBarStateProvider</code> stream 갱신.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>↔ 사용자 액션 불필요. 350ms 후 <code>EventCheckedInScreen</code>으로 자동 transition (또는 dismiss + push). 그 동안 dismiss는 가능.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>+ stream race — 사용자가 swipe-down 도중 phase 변경 시 dismiss 우선 (parent route 복귀, EventNowBar는 새 state 반영). · phase 전환 후 사용자가 직접 재진입 시 곧장 EventCheckedInScreen이 push 되도록 라우트 가드 검토 필요.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>↔ QR card · location row → 큰 success icon (72×72 · success 16% bg circle + check 36px) + "체크인 완료" titleMedium + 이벤트명 / "곧 매칭이 시작됩니다" 보조 텍스트. drag handle 동일.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>+ <code>color-success</code> (icon · 16% mix bg). 나머지 동일.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 transient state — 350ms 노출 후 <code>EventCheckedInScreen</code>으로 자동 전환. 별도 spec(EventCheckedInScreen)으로 다음 phase 전체 다룸. 이 spec에서는 "성공 → 다음 화면" 시각 confirmation만 책임.</td>
+        </tr>
+      </tbody>
+    </table>
+
+  </section>
+</div>
+
+<!-- ============================================================
+     🔄 GLOBAL BEHAVIOR
+     ============================================================ -->
+<div class="perspective" id="behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">cross-cutting — 모든 state에 공통 적용. modal sheet dismiss · brightness · phase stream.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Cross-cutting interactions</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 240px;">Interaction</th>
+          <th>Behavior</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Sheet dismiss (swipe-down)</td>
+          <td>핸들 영역 또는 시트 본문을 아래로 드래그 → 임계값 초과 시 dismiss. parent HomeRoute는 유지 — back stack pop 1회. EventNowBar는 그대로 노출.</td>
+        </tr>
+        <tr>
+          <td>Sheet dismiss (scrim 탭)</td>
+          <td>시트 외부(scrim) 탭 → 동일하게 dismiss. Material default barrier behavior.</td>
+        </tr>
+        <tr>
+          <td>Sheet dismiss (system back)</td>
+          <td>안드로이드 back 버튼 / iOS swipe-from-edge → dismiss. parent route로.</td>
+        </tr>
+        <tr>
+          <td>Screen brightness 자동 최대</td>
+          <td><code>TicketQRViewer</code>의 <code>initState</code>에서 <code>ScreenBrightness().setApplicationScreenBrightness(1)</code> 호출. dispose에서 원래 값 복원. 어두운 환경에서 QR 스캔 성공률↑.</td>
+        </tr>
+        <tr>
+          <td>Phase stream 자동 갱신</td>
+          <td><code>eventNowBarStateProvider(activeEvent)</code> Riverpod stream을 <code>ref.watch</code> — 백엔드 phase 변경 시 즉시 reflect. <code>checkedIn</code>으로 전환되면 시트 콘텐츠가 success view로 swap 후 transition.</td>
+        </tr>
+        <tr>
+          <td>다크 모드 토글</td>
+          <td>sheet bg → <code>color-dark-background</code>. scrim, QR(검정 모듈)은 그대로 (대비 유지). 다크 토큰 자동 swap.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Motion timing</h2>
+    <p class="intro">
+      Source: <code>shared/packages/mds/core/lib/src/theme/minglit_design_tokens.dart</code> — <code>MinglitAnimation</code>.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 240px;">Transition</th>
+          <th style="width: 200px;">Token / Duration</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Sheet slide-up (route push)</td>
+          <td><code>MinglitAnimation.medium</code> (350ms)</td>
+          <td>Material 3 modal sheet 기본. scrim fade-in 동시.</td>
+        </tr>
+        <tr>
+          <td>Sheet dismiss (slide-down)</td>
+          <td><code>MinglitAnimation.medium</code> (350ms)</td>
+          <td>swipe / scrim / system back 모두 동일 timing.</td>
+        </tr>
+        <tr>
+          <td>QR scan line</td>
+          <td>2000ms reverse loop</td>
+          <td>controller <code>Duration(seconds: 2)</code> · <code>repeat(reverse: true)</code>. attention loop — MinglitAnimation 미정의.</td>
+        </tr>
+        <tr>
+          <td>State swap (loading ↔ data ↔ error)</td>
+          <td>—</td>
+          <td>cut. Riverpod <code>AsyncValue.when</code> 분기 — 별도 transition animation 없음 (의도적, 시트 높이 fix로 jank 회피).</td>
+        </tr>
+        <tr>
+          <td>checked-in transition</td>
+          <td><code>MinglitAnimation.medium</code> (350ms)</td>
+          <td>success view 노출 후 EventCheckedInScreen으로 push 또는 dismiss + replace.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="intro" style="margin-top: 12px;">
+      ※ 2s scan loop는 attention loop 카테고리 — <code>MinglitAnimation</code> 토큰에 미정의. 향후 motion scale 확장 시 토큰화 후보.
+    </p>
+  </section>
+
+  <section class="doc">
+    <h2>Global edge cases</h2>
+    <ul class="notes">
+      <li><strong>Deeplink 진입</strong> — push 알림 / share URL로 직접 <code>/events/:id/check-in</code> 진입 시 parent stack에 HomeRoute가 없을 수 있다. dismiss 시 <code>context.go('/')</code>로 fallback (라우트 가드 필요).</li>
+      <li><strong>이벤트 시작 24시간 초과 (no-active)</strong> — <code>EventNowBar</code>가 hidden 처리되는 시점. 직접 deeplink 진입은 가능하나, 토큰 fetch 시 권한 체크에서 fail → error state.</li>
+      <li><strong>스크린샷 / 화면 녹화</strong> — anti-fraud 안내문은 <code>TicketQRScreen</code>(풀-페이지)에는 있고 이 시트에는 없다. 의도적 — EventNowBar 진입은 즉시성이 우선이고 scaffold 영역이 좁다. 향후 fraud 신호가 늘면 추가 검토.</li>
+      <li><strong>Offline</strong> — <code>ticketTokenServiceProvider</code>가 로컬 wallet 캐시를 우선 시도(Fix #1206). 캐시 hit 시 offline에서도 QR 노출 가능. miss 시 error state.</li>
+      <li><strong>다중 활성 이벤트</strong> — bar가 1건만 노출하므로 진입도 1건. 다른 이벤트 QR은 <code>MyTicketsPage</code> 경유 진입.</li>
+    </ul>
+  </section>
+</div>
+
+<!-- ============================================================
+     📖 REFERENCE
+     ============================================================ -->
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">📖</span>
+    <h2>Reference</h2>
+    <span class="lede">implementation source + 인접 화면.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Implementation source</h2>
+    <table class="ref">
+      <tbody>
+        <tr>
+          <th style="width: 200px;">Widget (target)</th>
+          <td><code>EventCheckInScreen</code> — kit-shared (<code>shared/packages/minglit_kit/lib/src/...</code>) <em style="color: var(--color-text-secondary);">— 신규 추가 예정. 현재는 미존재.</em></td>
+        </tr>
+        <tr>
+          <th>Current implementation</th>
+          <td><code>CheckInReadyContent</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/home/widgets/event_now_phases/check_in_ready_content.dart"><code>apps/app_user/lib/src/features/home/widgets/event_now_phases/check_in_ready_content.dart</code></a> · <code>EventNowBottomSheet</code> 내부에 inline 렌더링 (showModalBottomSheet, 라우트 아님)</td>
+        </tr>
+        <tr>
+          <th>Sheet wrapper (current)</th>
+          <td><code>showEventNowBottomSheet</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/home/widgets/event_now_bottom_sheet.dart"><code>event_now_bottom_sheet.dart</code></a> · phase별 콘텐츠 분기.</td>
+        </tr>
+        <tr>
+          <th>Atom — QR viewer</th>
+          <td><code>TicketQRViewer</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/common/widgets/ticket_qr_viewer.dart"><code>ticket_qr_viewer.dart</code></a> · 스캐닝 라인 + brightness max + <code>QrImageView</code></td>
+        </tr>
+        <tr>
+          <th>Provider</th>
+          <td><code>eventTicketTokenProvider(eventId)</code> · <code>eventNowBarStateProvider(activeEvent)</code> — Riverpod stream</td>
+        </tr>
+        <tr>
+          <th>Route registration (target)</th>
+          <td><code>EventCheckInRoute</code> — <code>app_routes.dart</code> · <code>@TypedGoRoute&lt;EventCheckInRoute&gt;(path: '/events/:id/check-in')</code> · <code>pageBuilder → ModalBottomSheetRoute</code> <em style="color: var(--color-text-secondary);">— 신규 추가 예정. 현재는 미등록.</em></td>
+        </tr>
+        <tr>
+          <th>Theme</th>
+          <td><code>MinglitTheme.materialTheme</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/shared/packages/mds/core/lib/src/theme/minglit_theme.dart"><code>minglit_theme.dart</code></a> · sheet bg = <code>ColorScheme.surface</code>(white) · scrim = Material default 0.5 black</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 240px;">Spec</th><th>Relation</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><a href="/specs/event_now_bar.html"><code>EventNowBar</code></a></td>
+          <td>이 시트의 진입 trigger — bar의 <code>checkInReady</code> / <code>waiting</code> state 탭. routed-sheet 매핑 5종 중 첫 번째.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/home_page.html"><code>HomePage</code></a></td>
+          <td>parent route — 시트가 push 되는 동안 scrim 아래로 그대로 유지. dismiss 시 복귀.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/my_tickets_page.html"><code>MyTicketsPage</code></a></td>
+          <td>대안 진입 — "오늘 입장 가능한 티켓" 영역에서 진입 (deeplink). 현재는 <code>TicketQRRoute</code>로 진입 — 통합 시 동일 시트로 통합 후보.</td>
+        </tr>
+        <tr>
+          <td><code>EventCheckedInScreen</code> <em style="color: var(--color-text-secondary);">(spec 미작성)</em></td>
+          <td>다음 phase — 체크인 완료 시 자동 transition. EventNowBar의 두 번째 routed sheet.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+</div>
+
+<script>
+  document.getElementById('spec-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('spec-mode', e.target.checked);
+  });
+  document.getElementById('dark-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('dark-mode', e.target.checked);
+  });
+</script>
+</body>
+</html>

@@ -241,7 +241,9 @@ export function widgetNameFor(app: 'user' | 'partner', route: string): string | 
 const KNOWN_SPEC_FILES: { user: ReadonlySet<string>; partner: ReadonlySet<string> } = {
   user: new Set([
     'event_application_wizard_page',
+    'event_check_in_screen',
     'event_detail_page',
+    'event_results_screen',
     'home_page',
     'login_page',
     'my_page',
@@ -258,9 +260,11 @@ const KNOWN_SPEC_FILES: { user: ReadonlySet<string>; partner: ReadonlySet<string
     'party_detail_page',
     'party_list_page',
     'partner_home_page',
+    'partner_welcome_page',
     'notification_list_screen',
     'event_application_manage_page',
     'event_application_detail_page',
+    'event_create_page',
     'bank_account_page',
     'settlement_page',
     // remaining partner specs are reached via ROUTE_DESIGN_OVERRIDES below.
@@ -283,6 +287,12 @@ const ROUTE_DESIGN_OVERRIDES: Record<string, string> = {
   // EventApplicationRoute → default rule yields 'event_application_page', but
   // the widget is EventApplicationWizardPage. Override to its real spec.
   'user-EventApplicationRoute':      '/specs/event_application_wizard_page.html',
+  // EventResultsRoute → default rule yields 'event_results_page', but the
+  // routed bottom-sheet widget is EventResultsScreen. Override to its real spec.
+  'user-EventResultsRoute':          '/specs/event_results_screen.html',
+  // EventCheckInRoute → default rule yields 'event_check_in_page', but the
+  // routed bottom-sheet widget is EventCheckInScreen (kit-shared). Override.
+  'user-EventCheckInRoute':          '/specs/event_check_in_screen.html',
 };
 
 /**
