@@ -242,8 +242,11 @@ const KNOWN_SPEC_FILES: { user: ReadonlySet<string>; partner: ReadonlySet<string
   user: new Set([
     'event_application_wizard_page',
     'event_check_in_screen',
+    'event_checked_in_screen',
     'event_detail_page',
+    'event_matching_screen',
     'event_results_screen',
+    'event_review_screen',
     'home_page',
     'login_page',
     'my_page',
@@ -254,11 +257,14 @@ const KNOWN_SPEC_FILES: { user: ReadonlySet<string>; partner: ReadonlySet<string
     'purchase_history_page',
     'search_page',
     'signup_consent_page',
+    'tag_event_list_page',
   ]),
   partner: new Set([
     'more_page',
     'party_detail_page',
     'party_list_page',
+    'partner_apply_page',
+    'partner_apply_status_page',
     'partner_home_page',
     'partner_welcome_page',
     'notification_list_screen',
@@ -293,6 +299,16 @@ const ROUTE_DESIGN_OVERRIDES: Record<string, string> = {
   // EventCheckInRoute → default rule yields 'event_check_in_page', but the
   // routed bottom-sheet widget is EventCheckInScreen (kit-shared). Override.
   'user-EventCheckInRoute':          '/specs/event_check_in_screen.html',
+  // EventCheckedInRoute → default rule yields 'event_checked_in_page', but the
+  // routed bottom-sheet widget is EventCheckedInScreen (kit-shared). Override.
+  'user-EventCheckedInRoute':        '/specs/event_checked_in_screen.html',
+  // EventReviewRoute → default rule yields 'event_review_page', but the
+  // routed bottom-sheet widget is EventReviewScreen. Override to its real spec.
+  'user-EventReviewRoute':           '/specs/event_review_screen.html',
+  // EventMatchingRoute → default rule yields 'event_matching_page', but the
+  // routed bottom-sheet widget is EventMatchingScreen (matching/matchingReady
+  // states share the same route). Override to its real spec.
+  'user-EventMatchingRoute':         '/specs/event_matching_screen.html',
 };
 
 /**
