@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Spec — SearchPage (app_user · SearchRoute)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* ============================================================
+   SearchPage-specific atoms.
+   Tokens / chrome / mini-table은 /specs/_spec.css 에서 import.
+   ============================================================ */
+
+/* Scaffold bg = MinglitColors.surface (#f9fafb light gray).
+   AppBar shares scaffold bg (MinglitTheme.materialTheme.appBarTheme
+   backgroundColor override → MinglitColors.surface, no border-bottom). */
+.search-viewport { background: var(--color-surface); }
+body.dark-mode .search-viewport { background: var(--color-dark-background); }
+
+/* AppBar — scaffold-gray bg, no border-bottom, single inline TextField title.
+   Height 56 (M3 default). Leading back button auto-implied by Scaffold/AppBar.
+   titleSpacing handled by AppBar default (NavigationToolbar.kMiddleSpacing = 16). */
+.search-appbar {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--spacing-small);
+  background: var(--color-surface);
+  gap: 0;
+  flex-shrink: 0;
+}
+body.dark-mode .search-appbar { background: var(--color-dark-background); }
+.search-appbar__back {
+  width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--color-text-primary);
+  flex-shrink: 0;
+}
+.search-appbar__back svg { width: 22px; height: 22px; }
+.search-appbar__field {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  height: 56px;
+  padding-left: var(--spacing-small);
+}
+.search-appbar__input {
+  flex: 1;
+  font-size: var(--typography-font-size-app-bar-title);
+  color: var(--color-text-primary);
+  background: transparent;
+  border: none;
+  outline: none;
+  height: 100%;
+  padding: 0;
+}
+.search-appbar__input::placeholder {
+  color: var(--color-text-secondary);
+}
+/* Caret (text-cursor) — visible when autofocused with empty value */
+.search-appbar__caret {
+  display: inline-block;
+  width: 1.5px; height: 22px;
+  background: var(--color-primary);
+  margin-left: 1px;
+  vertical-align: middle;
+  animation: caret-blink 1s step-end infinite; /* unscoped attention loop */
+}
+@keyframes caret-blink { 50% { opacity: 0; } }
+.search-appbar__suffix {
+  width: 48px; height: 48px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+.search-appbar__suffix svg { width: 22px; height: 22px; }
+
+/* Body — fills remaining viewport. Different layouts per state. */
+.search-body {
+  flex: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* Empty state — vertically centered Column, padding xlarge (32). */
+.search-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xlarge);
+  gap: 0;
+  text-align: center;
+}
+.search-empty__icon {
+  width: 64px; height: 64px;
+  color: var(--color-divider); /* outlineVariant ≈ divider */
+  display: grid; place-items: center;
+  margin-bottom: var(--spacing-medium);
+}
+.search-empty__icon svg { width: 64px; height: 64px; }
+.search-empty__title {
+  font-size: 18px; /* bodyLarge */
+  line-height: 1.33;
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--spacing-large) 0;
+}
+.search-empty__subtitle {
+  font-size: 16px; /* bodyMedium */
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--spacing-small) 0;
+}
+.search-empty__chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--spacing-small) var(--spacing-small);
+  /* runSpacing in Wrap = MinglitSpacing.xsmall (4) — emulated via row gap */
+}
+
+/* MinglitChip (medium · default) — 8h × 4v padding · radius-small (8) ·
+   bg surfaceContainerHighest @ strong · border 0.5px outlineVariant @ muted ·
+   labelMedium (12 / 500) · 14px icon (none here). */
+.mg-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.04); /* surfaceContainerHighest @ ~0.66 strong */
+  border: 0.5px solid rgba(0, 0, 0, 0.08); /* outlineVariant @ muted */
+  border-radius: var(--radius-small);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  /* a11y wraps chip in 48dp ConstrainedBox, but the chip itself stays compact */
+}
+body.dark-mode .mg-chip {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Empty-result state — same vertical-center layout, slightly different copy */
+.search-noresult__title {
+  font-size: 16px; /* titleMedium */
+  font-weight: 700;
+  line-height: 1.5;
+  color: var(--color-text-primary);
+  margin: 0 0 var(--spacing-small) 0;
+}
+.search-noresult__subtitle {
+  font-size: 16px; /* bodyMedium */
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+/* Results list — ListView.separated with vertical padding medium (16),
+   separator gap small (8). Each row is a MinglitEventCard placeholder
+   (rendered as ghost slot — full card spec lives in event_card.html). */
+.search-results {
+  flex: 1;
+  overflow: hidden;
+  padding: var(--spacing-medium) 0;
+}
+.search-results__row {
+  height: 220px; /* event_card 2:1 image + content area, approx */
+  background: rgba(var(--spec-blueprint-rgb), 0.04);
+  border: 1.5px dashed rgba(var(--spec-blueprint-rgb), 0.5);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px;
+  color: rgba(var(--spec-blueprint-rgb), 0.85);
+  font-weight: 600;
+  text-align: center;
+  padding: 0 var(--spacing-medium);
+}
+.search-results__row + .search-results__row { margin-top: var(--spacing-small); }
+
+/* Loading spinner (visual proxy of MinglitCircularProgressIndicator) */
+.search-spinner-wrap {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.spinner {
+  width: 36px; height: 36px;
+  border: 3px solid var(--color-divider);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Error state — centered Text only (no icon, no retry — matches source) */
+.search-error {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  padding: var(--spacing-xlarge);
+  text-align: center;
+  font-size: 16px;
+  color: var(--color-text-secondary);
+}
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
+</div>
+
+<div class="page">
+
+<!-- ============================================================
+     📍 HEADER
+     ============================================================ -->
+<header>
+  <h1>Search</h1>
+</header>
+
+<!-- ============================================================
+     🎯 OVERVIEW
+     ============================================================ -->
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr>
+        <th style="width: 140px;">Status</th>
+        <td><strong>✅ 디자인완료</strong> <em style="color: var(--color-text-secondary);">— 6개 state · debounce 500ms</em></td>
+      </tr>
+      <tr>
+        <th>App</th>
+        <td><code>app_user</code></td>
+      </tr>
+      <tr>
+        <th>Category</th>
+        <td>discovery · search</td>
+      </tr>
+      <tr>
+        <th>Route / Surface</th>
+        <td><code>SearchRoute</code> · widget: <code>SearchPage</code> (full-page · 단독 진입)</td>
+      </tr>
+      <tr>
+        <th>Path</th>
+        <td><code>/search</code></td>
+      </tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>: <em>— (top-level screen, push from <a href="/specs/home_page.html">HomePage</a> AppBar 검색 아이콘)</em><br>
+          <strong>Children</strong>: <a href="/specs/event_card.html"><code>MinglitEventCard</code></a> (결과 리스트 cell — 별도 spec)
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>
+          이벤트(파티/클래스/모임)를 키워드로 즉시 검색해 EventDetail로 진입할 수 있게 한다.
+          home 추천 피드에서 노출되지 않는 long-tail 이벤트를 사용자가 능동적으로 찾는 보조 도구.
+          PGroonga 기반 한글 형태소 검색을 백엔드에서 수행 (<a href="https://github.com/Mark-Yun/minglit/blob/dev/docs/architecture/search-and-recommendation.md">search-and-recommendation.md</a>).
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry points</strong>: <a href="/specs/home_page.html">HomePage</a> AppBar 돋보기 아이콘 · 외부 딥링크 <code>/search</code>.<br>
+          <strong>Exit points</strong>: ① 검색 결과 카드 탭 → <a href="/specs/event_detail_page.html">EventDetailPage</a> · ② AppBar back → 이전 화면 (보통 Home).<br>
+          중간 경로: 빈 입력 상태에서 추천 키워드 chip 탭 → 자동 입력 + 즉시 fetch.
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          PGroonga 한글 검색 인덱스를 활용 — 추천 피드에 안 뜨는 기간/소규모 이벤트도 발견 가능해야 한다는 PM 요구.
+          매 keystroke fetch는 네트워크 비용 + 백엔드 부하가 크므로 <strong>500ms debounce</strong> 후 1회 fetch.
+          비어있는 검색어(<code>query.isEmpty</code>) 진입 시 추천 키워드 chip 4종을 노출해 cold-start UX 보강 (#997, #1381).
+        </td>
+      </tr>
+      <tr>
+        <th>Frequency</th>
+        <td>능동 사용자 기준 세션당 0~3회 — 추천 피드가 우선 소비되는 구조라 보조 도구.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================
+     🕐 HISTORY
+     ============================================================ -->
+<section class="doc">
+  <h2>History</h2>
+  <p class="intro">이 spec의 주요 변경 이력. 최신 항목 위.</p>
+  <table class="ref">
+    <thead>
+      <tr>
+        <th style="width: 110px;">Date</th>
+        <th style="width: 80px;">Version</th>
+        <th style="width: 120px;">Author</th>
+        <th>Changes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2026-05-01</td>
+        <td>1.0</td>
+        <td>mark-yun</td>
+        <td>v1.4 template으로 작성. 6 state(Empty / Typing / Loading / Has results / Empty results / Error)를 mini-table로 분리, baseline = Empty. AppBar inline TextField + 500ms debounce 동작을 Global Behavior로 분리.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================
+     Anchor nav
+     ============================================================ -->
+<nav class="perspective-nav">
+  <a href="#layout"><span class="glyph">🧱</span> Layout</a>
+  <a href="#states"><span class="glyph">🎨</span> States</a>
+  <a href="#behavior"><span class="glyph">🔄</span> Global Behavior</a>
+  <a href="#reference"><span class="glyph">📖</span> Reference</a>
+</nav>
+
+<!-- ============================================================
+     PERSPECTIVE 1 · LAYOUT
+     ============================================================ -->
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Layout</h2>
+    <span class="lede">화면 구조 — AppBar + Body. body는 query/asyncValue에 따라 4개 영역 중 하나 렌더.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree</h2>
+    <p class="intro">
+      좌측은 wireframe(음영 = 콘텐츠), 우측은 위젯 위계. AppBar는 scaffold와 같은
+      light-gray bg (<code>MinglitColors.surface</code> = #f9fafb), 아래 구분선 없음.
+      Body는 <code>Builder</code> + <code>MinglitAsyncValueWidget</code> 조합으로 5개 분기를 한 영역에 합성.
+    </p>
+
+    <div class="layout-grid">
+      <!-- Wireframe blueprint -->
+      <div class="blueprint">
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <!-- AppBar -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:0; left:0; right:0; height:56px;">
+          <span class="blueprint__region-label">① AppBar — back · TextField · clear×<br>height 56 · bg = scaffold gray · no border</span>
+        </div>
+
+        <!-- Body region -->
+        <div class="blueprint__region" style="top:56px; left:0; right:0; bottom:0;">
+          <span class="blueprint__region-label">② Body — Builder switch (query · asyncValue)</span>
+        </div>
+
+        <!-- Body content region (centered group) -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:240px; left:32px; right:32px; height:280px;">
+          <span class="blueprint__region-label">③ Empty / NoResult — vertical-center Column<br>padding-xlarge (32) all sides</span>
+        </div>
+
+        <!-- Alignment markers -->
+        <div class="blueprint__align-marker" style="top:8px; right:8px;">crossAxis: stretch</div>
+        <div class="blueprint__align-marker" style="top:300px; right:8px;">align: center</div>
+      </div>
+
+      <!-- Tree outline -->
+      <div class="layout-tree"><b>Scaffold</b>
+└─ <b>AppBar</b> <i>(MinglitTheme appBar — bg = surface · no border · elevation 0)</i> ← ①
+│  └─ title: <b>TextField</b>(autofocus · onChanged → debounce 500ms)
+│     ├─ hintText: <i>'이벤트 검색'</i>
+│     ├─ border: <i>InputBorder.none</i>
+│     └─ suffixIcon: <b>ValueListenableBuilder</b>
+│        └─ <em>value.text.isNotEmpty</em>
+│           ? <b>IconButton</b>(Icons.clear)
+│           : <b>SizedBox.shrink()</b>
+│
+└─ body: <b>Builder</b> ← ②
+   └─ <em>query.isEmpty?</em>
+      ├─ <b>true</b> → <b>Center</b> > <b>Padding</b>(<i>spacing-xlarge</i>) > <b>Column</b>  ← ③
+      │   ├─ <b>Icon</b>(Icons.search · 64 · outlineVariant)
+      │   ├─ Gap: <i>spacing-medium = 16</i>
+      │   ├─ <b>Text</b>('검색어를 입력하세요' · bodyLarge · onSurfaceVariant)
+      │   ├─ Gap: <i>spacing-large = 24</i>
+      │   ├─ <b>Text</b>('이런 키워드는 어때요?' · bodyMedium)
+      │   ├─ Gap: <i>spacing-small = 8</i>
+      │   └─ <b>Wrap</b>(spacing 8 · runSpacing 4 · center)
+      │      └─ <b>MinglitChip</b> × 4 [파티 · 클래스 · 스포츠 · 아트]
+      │
+      └─ <b>false</b> → <b>MinglitAsyncValueWidget</b>(searchResultsProvider)
+         ├─ <b>data</b>(events): <em>events.isEmpty?</em>
+         │   ├─ <b>true</b>  → <b>Center</b> > <b>Column</b> [Icons.search_off_outlined + 안내 2줄]
+         │   └─ <b>false</b> → <b>ListView.separated</b>(v-pad <i>medium</i> · gap <i>small</i>)
+         │      └─ <b>MinglitEventCard</b> × N <em>(별도 spec)</em>
+         ├─ <b>loading</b>: <b>Center</b> > <b>MinglitCircularProgressIndicator</b>
+         └─ <b>error</b>: <b>Center</b> > <b>Text</b>('검색 중 오류가 발생했습니다')</div>
+    </div>
+  </section>
+
+  <section class="doc">
+    <h2>Spacing &amp; alignment rules</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>①</td><td>AppBar</td><td>title leading edge — back button 우측 시작</td><td>height 56 · titleSpacing 16 (M3 default) · suffix IconButton 48dp 영역</td></tr>
+        <tr><td>②</td><td>Body</td><td>—</td><td>AppBar 아래 전체 — 패딩 없음, 영역별로 inner padding 부여</td></tr>
+        <tr><td>③</td><td>Empty / NoResult Column</td><td>cross axis: center · main axis: center (Center 위젯)</td><td>outer padding <code>spacing-xlarge (32)</code> · 아이콘↔타이틀 <code>spacing-medium (16)</code> · 타이틀↔서브 <code>spacing-large (24)</code> (Empty) / <code>spacing-small (8)</code> (NoResult)</td></tr>
+        <tr><td>—</td><td>Suggested chips Wrap</td><td>WrapAlignment.center · 가로 wrap</td><td>spacing <code>spacing-small (8)</code> · runSpacing <code>spacing-xsmall (4)</code></td></tr>
+        <tr><td>—</td><td>Results ListView.separated</td><td>edge-to-edge · 카드 자체 horizontal 0</td><td>vertical padding <code>spacing-medium (16)</code> · separator <code>SizedBox(h: spacing-small = 8)</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<!-- ============================================================
+     PERSPECTIVE 2 · STATES
+     ============================================================ -->
+<div class="perspective" id="states">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>States</h2>
+    <span class="lede">시각 변형 6종. baseline = Empty(검색어 미입력). 나머지는 baseline에서 변경분만.</span>
+  </div>
+
+  <section class="doc">
+    <p class="intro">
+      <strong>State 식별 기준</strong>: <code>query.isEmpty</code> + <code>_controller.text.isNotEmpty</code> + <code>searchResultsProvider</code> AsyncValue 상태 + <code>events.isEmpty</code>. SearchPage는 단일 widget이지만 5개 분기를 한 화면에 합성한다.
+    </p>
+
+    <!-- State 1: Empty (baseline) -->
+    <table class="ref state-mini is-baseline-tint">
+      <thead>
+        <tr><th colspan="3"><strong>Empty · 검색어 미입력</strong> 🎯 <small>baseline · query.isEmpty &amp;&amp; controller.text.isEmpty</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport search-viewport">
+              <div class="search-appbar">
+                <div class="search-appbar__back" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                </div>
+                <div class="search-appbar__field">
+                  <span style="color: var(--color-text-secondary); font-size: var(--typography-font-size-app-bar-title);">이벤트 검색</span>
+                  <span class="search-appbar__caret" aria-hidden="true"></span>
+                </div>
+              </div>
+              <div class="search-body">
+                <div class="search-empty">
+                  <div class="search-empty__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  </div>
+                  <p class="search-empty__title">검색어를 입력하세요</p>
+                  <p class="search-empty__subtitle">이런 키워드는 어때요?</p>
+                  <div class="search-empty__chips">
+                    <span class="mg-chip">파티</span>
+                    <span class="mg-chip">클래스</span>
+                    <span class="mg-chip">스포츠</span>
+                    <span class="mg-chip">아트</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>query.isEmpty == true</code> · 진입 직후 (autofocus + initState에서 <code>searchQueryProvider.clear()</code>를 microtask로 호출) · 또는 사용자가 입력을 모두 지운 직후</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            ① <strong>키 입력</strong> → <code>_onSearchChanged</code> → 500ms 후 <code>searchQueryProvider.update(value.trim())</code> → <em>Loading</em> state 전환<br>
+            ② <strong>추천 chip 탭</strong> (파티/클래스/스포츠/아트) → controller.text 즉시 세팅 + <code>searchQueryProvider.update(keyword)</code> 즉시 호출 (debounce 우회) → <em>Loading</em><br>
+            ③ <strong>back 탭 / 시스템 back</strong> → 이전 화면 복귀 (보통 Home)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · 진입 시 잔여 query가 있는 경우 → <code>Future.microtask</code>로 <code>searchQueryProvider.clear()</code> 강제 (Fix #226 — Riverpod 3 dispose 안전성).<br>
+            · chip 탭 시 진행 중인 debounce timer는 <code>_debounce?.cancel()</code>로 무효화 — 새 keyword 즉시 적용.<br>
+            · 키보드는 자동으로 올라옴 (autofocus: true) — 권한/포커스 issue 시 OS 처리.
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            · <code>AppBar</code> (back 자동 leading + inline <code>TextField</code> · suffixIcon empty)<br>
+            · <code>TextField</code>(autofocus · hintText '이벤트 검색' · <code>InputBorder.none</code>)<br>
+            · <code>Icon</code>(<code>Icons.search</code> · 64 · <code>outlineVariant</code>)<br>
+            · 안내 <code>Text</code> 2줄 (bodyLarge · bodyMedium · onSurfaceVariant)<br>
+            · <code>Wrap</code> + <code>MinglitChip</code> × 4 (size: medium · onTap 있음 → 48dp ConstrainedBox)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            · color: <code>color-surface</code> (scaffold + AppBar bg), <code>color-text-primary</code>, <code>color-text-secondary</code> (안내 + chip 텍스트), <code>outlineVariant</code> (큰 search 아이콘)<br>
+            · radius: <code>radius-small</code> (8 · MinglitChip)<br>
+            · spacing: <code>spacing-xlarge</code> (32 · 외곽 패딩), <code>spacing-large</code> (24 · 안내↔chip-prompt), <code>spacing-medium</code> (16 · 아이콘↔타이틀), <code>spacing-small</code> (8 · chip 사이 + prompt↔chips), <code>spacing-xsmall</code> (4 · chip runSpacing)<br>
+            · typography: appBarTitle (18 · TextField input), bodyLarge (18 · 타이틀), bodyMedium (16 · 서브), labelMedium (12 · chip)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 baseline. AppBar caret blink은 운영체제 제어 — design token 없음. 추천 chip 4개는 <code>const suggestedKeywords</code>로 하드코딩 (#997).</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 2: Typing (clear button visible) -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Typing · debounce 대기중</strong> <small>controller.text.isNotEmpty &amp;&amp; query == 직전 값</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport search-viewport">
+              <div class="search-appbar">
+                <div class="search-appbar__back" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                </div>
+                <div class="search-appbar__field">
+                  <span style="color: var(--color-text-primary); font-size: var(--typography-font-size-app-bar-title);">루프탑파</span>
+                  <span class="search-appbar__caret" aria-hidden="true"></span>
+                </div>
+                <div class="search-appbar__suffix" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </div>
+              </div>
+              <div class="search-body">
+                <div class="search-empty">
+                  <div class="search-empty__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  </div>
+                  <p class="search-empty__title">검색어를 입력하세요</p>
+                  <p class="search-empty__subtitle">이런 키워드는 어때요?</p>
+                  <div class="search-empty__chips">
+                    <span class="mg-chip">파티</span>
+                    <span class="mg-chip">클래스</span>
+                    <span class="mg-chip">스포츠</span>
+                    <span class="mg-chip">아트</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>사용자가 입력 중 — <code>_controller.text.isNotEmpty</code> 이지만 <code>searchQueryProvider</code>는 아직 직전 값을 들고 있음 (500ms debounce 동안 body는 직전 분기 유지)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            ① 추가 키 입력 → 매 keystroke마다 <code>_debounce?.cancel()</code> + 새 timer 시작<br>
+            ② <strong>clear 아이콘 탭</strong> → <code>_controller.clear()</code> + <code>searchQueryProvider.clear()</code> → Empty(baseline)로 즉시 복귀<br>
+            ③ 동일 — back 종료
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · 직전 query가 있었으면 body는 직전 결과를 유지 (이 화면처럼 첫 입력이면 Empty body 그대로)<br>
+            · 입력값이 trim 시 빈 문자열인 경우 (공백만) → 500ms 후 <code>update('')</code> → <code>query.isEmpty</code>로 다시 Empty
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>+ <code>IconButton</code>(<code>Icons.clear</code>) — <code>TextField.suffixIcon</code> · <code>ValueListenableBuilder</code>로 <code>text.isNotEmpty</code>일 때만 렌더<br>↔ TextField hint 사라지고 입력 텍스트가 표시됨</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>동일 <em>(clear icon은 IconButton 기본 색상 = <code>color-text-secondary</code>)</em></td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 시각적으로 짧은 transition state. body는 직전 분기를 그대로 유지 — 사용자에게 깜빡임 없이 결과 갱신을 준비.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 3: Loading -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Loading</strong> <small>searchResultsProvider.isLoading · debounce 종료 직후</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport search-viewport">
+              <div class="search-appbar">
+                <div class="search-appbar__back" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                </div>
+                <div class="search-appbar__field">
+                  <span style="color: var(--color-text-primary); font-size: var(--typography-font-size-app-bar-title);">루프탑파티</span>
+                  <span class="search-appbar__caret" aria-hidden="true"></span>
+                </div>
+                <div class="search-appbar__suffix" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </div>
+              </div>
+              <div class="search-body">
+                <div class="search-spinner-wrap">
+                  <div class="spinner"></div>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>query.isNotEmpty</code> &amp;&amp; <code>searchAsync.isLoading == true</code> — debounce 후 첫 fetch 또는 keyword 변경 fetch 중</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>① 추가 키 입력 → 새 debounce(500ms) 사이클 — fetch는 cancel되지 않지만 결과가 도착해도 새 query가 우선<br>② clear 탭 → 즉시 Empty 복귀 (진행 중 fetch는 무시)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>· 네트워크가 매우 빠르면 이 state가 한 frame만 보이고 사라짐 — 깜빡임 방지 위한 별도 delay 없음.<br>· 백엔드 지연 길면 사용자가 새 keyword를 입력해 자동 cancel/restart.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>↔ Body → <code>Center(child: MinglitCircularProgressIndicator())</code><br>− 추천 chip / 안내 텍스트 / search 아이콘 모두 사라짐</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>− Empty 토큰 모두 미사용. Spinner stroke <code>color-primary</code>, track <code>color-divider</code></td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 짧은 transition. AnimatedSwitcher 없음 — cut transition.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 4: Has results -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Has results</strong> <small>searchAsync.data &amp;&amp; events.isNotEmpty</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport search-viewport">
+              <div class="search-appbar">
+                <div class="search-appbar__back" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                </div>
+                <div class="search-appbar__field">
+                  <span style="color: var(--color-text-primary); font-size: var(--typography-font-size-app-bar-title);">루프탑파티</span>
+                </div>
+                <div class="search-appbar__suffix" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </div>
+              </div>
+              <div class="search-body">
+                <div class="search-results">
+                  <!-- (MinglitEventCard 영역 — 별도 spec /specs/event_card.html · 카드 자체 normal/today/soldOut/ended state 포함) -->
+                  <div class="search-results__row">MinglitEventCard #1<br><small>2:1 image · partner overlay · D-Day · title · meta · price</small></div>
+                  <div class="search-results__row">MinglitEventCard #2<br><small>(별도 spec — 4 visual state 포함)</small></div>
+                  <div class="search-results__row">MinglitEventCard #3</div>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>searchAsync</code> = data + <code>events.isNotEmpty</code></td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            ① <strong>카드 탭</strong> → <code>searchCoordinator.pushEventDetail(event.id)</code> → <a href="/specs/event_detail_page.html">EventDetailPage</a> (Fix #634)<br>
+            ② 키워드 변경 → 다시 Loading → 새 결과 (이 화면 깜빡임 — AnimatedSwitcher 없음)<br>
+            ③ clear → Empty 복귀
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>· 결과가 1건이어도 동일 ListView (별도 single-result UI 없음).<br>· 결과는 페이지네이션 없음 — 백엔드가 제한된 N건만 반환 (PGroonga + LIMIT). 끝까지 스크롤해도 추가 fetch 없음.<br>· 카드 자체 state(<em>오늘/마감/종료</em>) 분기는 <a href="/specs/event_card.html">child spec</a> 참고.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>↔ Body → <code>ListView.separated</code> + <a href="/specs/event_card.html"><code>MinglitEventCard</code></a> × N (별도 spec)<br>− 안내 텍스트 / 추천 chip / 큰 search 아이콘 모두 사라짐</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>· spacing: <code>spacing-medium</code> (16 · ListView vertical padding · 양 끝), <code>spacing-small</code> (8 · separator)<br>· 카드 내부 토큰은 <a href="/specs/event_card.html">event_card.html</a> 참고</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 카드 영역은 별도 spec — 본 mockup은 cell slot만 표시. ListView edge-to-edge (가로 padding 0).</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 5: Empty results -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Empty results · 검색 결과 없음</strong> <small>searchAsync.data &amp;&amp; events.isEmpty</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport search-viewport">
+              <div class="search-appbar">
+                <div class="search-appbar__back" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                </div>
+                <div class="search-appbar__field">
+                  <span style="color: var(--color-text-primary); font-size: var(--typography-font-size-app-bar-title);">존재하지않는키워드</span>
+                </div>
+                <div class="search-appbar__suffix" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </div>
+              </div>
+              <div class="search-body">
+                <div class="search-empty">
+                  <div class="search-empty__icon" aria-hidden="true">
+                    <!-- Material Icons.search_off_outlined — search circle with diagonal slash -->
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                  </div>
+                  <p class="search-noresult__title">검색 결과가 없습니다.</p>
+                  <p class="search-noresult__subtitle">다른 키워드로 시도해보세요.</p>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>searchAsync</code> = data + <code>events.isEmpty</code></td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>① 키워드 변경 → 새 fetch · ② clear → Empty 복귀 · ③ back</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>· 추천 chip은 이 state에서는 <strong>표시 안 됨</strong> — query가 비어있지 않으므로 baseline 분기로 안 들어감 (#997 NoResult는 별도 layout).<br>· 사용자에게 다음 행동 단서가 부족하므로 PR #997에서 아이콘 + 안내 2줄로 보강.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>↔ <code>Icon</code>(<code>Icons.search_off_outlined</code> · 64) → search 아이콘 변경<br>↔ 타이틀 → titleMedium '검색 결과가 없습니다.' · onSurface (Empty의 bodyLarge보다 더 강조)<br>↔ 서브 → bodyMedium '다른 키워드로 시도해보세요.' · onSurfaceVariant<br>− 추천 chip Wrap 제거</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>↔ typography: titleMedium (16 · 700) for 타이틀 · bodyMedium (16) for 서브<br>· spacing: <code>spacing-xlarge</code> (32 · padding), <code>spacing-medium</code> (16 · 아이콘↔타이틀), <code>spacing-small</code> (8 · 타이틀↔서브) — Empty와 살짝 다름</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 #997 PR에서 design 보강. 결과 0건이어도 카드 cell slot은 그리지 않고 안내 메시지만 노출.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 6: Error -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Error</strong> <small>searchAsync.hasError</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport search-viewport">
+              <div class="search-appbar">
+                <div class="search-appbar__back" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                </div>
+                <div class="search-appbar__field">
+                  <span style="color: var(--color-text-primary); font-size: var(--typography-font-size-app-bar-title);">루프탑파티</span>
+                </div>
+                <div class="search-appbar__suffix" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </div>
+              </div>
+              <div class="search-body">
+                <div class="search-error">검색 중 오류가 발생했습니다</div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>searchAsync</code> = error (네트워크 / 백엔드 / parse 실패)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>키워드 변경(재시도) · clear · back — 별도 retry 버튼 없음</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>· 사용자는 새 keyword를 입력해야 재시도 — passive recovery.<br>· error 객체 자체는 화면에 표시 안 됨 — debugging은 Sentry/Axiom 의존 (참고: <a href="https://github.com/Mark-Yun/minglit/blob/dev/docs/debugging/edge-functions.md">edge-functions.md</a>).</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>↔ Body → <code>Center(child: Text('검색 중 오류가 발생했습니다'))</code><br>− 아이콘 / 추천 chip / 안내 텍스트 / 결과 리스트 모두 없음</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>− 별도 토큰 미사용. 메시지는 기본 Text 스타일 — bodyMedium · onSurfaceVariant</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 minimal error UI — 추후 retry 버튼 추가 가능성 (현재 source에는 없음).</td>
+        </tr>
+      </tbody>
+    </table>
+
+  </section>
+</div>
+
+<!-- ============================================================
+     PERSPECTIVE 3 · GLOBAL BEHAVIOR
+     ============================================================ -->
+<div class="perspective" id="behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">cross-cutting — 모든 state에 적용되는 액션, motion, 글로벌 에지케이스. state 한정 액션은 위 mini-table 참고.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Cross-cutting interactions</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 240px;">사용자 액션</th>
+          <th>화면에 보이는 결과</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>키 입력 (TextField onChanged)</td>
+          <td>매 keystroke 마다 <code>_debounce?.cancel()</code> + 500ms timer 시작. timer 만료 시 <code>searchQueryProvider.update(value.trim())</code> 1회 호출 → <code>searchResultsProvider</code>가 재계산되어 fetch.</td>
+        </tr>
+        <tr>
+          <td>clear 아이콘 탭 (suffixIcon)</td>
+          <td><code>_controller.clear()</code> + <code>searchQueryProvider.clear()</code> 동시 호출. body는 즉시 Empty(baseline)로 복귀. 진행 중 fetch가 있어도 query가 비어 더는 사용되지 않음.</td>
+        </tr>
+        <tr>
+          <td>back (AppBar / 시스템)</td>
+          <td>이전 화면 복귀. <code>dispose()</code>에서 <code>_debounce?.cancel()</code> + <code>_controller.dispose()</code>. <code>searchQueryProvider</code>는 dispose에서 clear하지 <strong>않음</strong> — Riverpod ≥3 dispose 중 state 변경 금지 (Fix #226). 대신 다음 진입 시 <code>initState</code> microtask로 clear.</td>
+        </tr>
+        <tr>
+          <td>다크 모드 토글</td>
+          <td>scaffold/AppBar bg → <code>color-dark-background</code>, MinglitChip / 안내 텍스트 / spinner는 토큰 기반 자동 swap.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Motion timing</h2>
+    <p class="intro">
+      Source: <code>shared/packages/mds/core/lib/src/theme/minglit_design_tokens.dart</code> → <code>MinglitAnimation</code>.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 240px;">Transition</th>
+          <th style="width: 200px;">Token / Duration</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>화면 진입 (HomePage AppBar 검색 탭)</td>
+          <td><code>MinglitAnimation.fast</code> (200ms)</td>
+          <td>GoRouter 기본 push 전환. AppBar TextField가 autofocus → keyboard slide-up은 OS 기본.</td>
+        </tr>
+        <tr>
+          <td>키 입력 → query 반영</td>
+          <td>500ms debounce <em>(unscoped — Timer 직접 사용)</em></td>
+          <td><code>MinglitAnimation</code>에 매핑된 토큰이 아님. 백엔드 부하 + UX 균형으로 PM 합의된 값.</td>
+        </tr>
+        <tr>
+          <td>chip 탭 → 즉시 fetch</td>
+          <td><code>MinglitAnimation.micro</code> (100ms)</td>
+          <td>Material InkWell ripple. debounce 우회 — controller.text 직접 세팅 + provider update 즉시 호출.</td>
+        </tr>
+        <tr>
+          <td>Loading ↔ Has results / Empty results</td>
+          <td>—</td>
+          <td>AnimatedSwitcher 없음. 분기 위젯이 즉시 swap (cut). 깜빡임을 줄이려는 fade는 의도적으로 없음.</td>
+        </tr>
+        <tr>
+          <td>caret blink</td>
+          <td>OS 기본 <em>(unscoped)</em></td>
+          <td>플랫폼이 제어. design token 없음.</td>
+        </tr>
+        <tr>
+          <td>결과 카드 탭 → EventDetail</td>
+          <td><code>MinglitAnimation.medium</code> (350ms)</td>
+          <td><code>MinglitPageTransitions.sharedAxisScaled</code> — EventDetailRoute의 <code>buildPage</code>에 정의됨.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Global edge cases</h2>
+    <ul class="notes">
+      <li><strong>진입 시 잔여 query 정리</strong> — <code>initState</code>에서 <code>Future.microtask(() =&gt; searchQueryProvider.clear())</code> 호출 (Fix #226 — Riverpod 3 dispose 안전성). dispose에서 clear하면 unsafe state mutation.</li>
+      <li><strong>debounce timer 누수 방지</strong> — chip 탭 시 + dispose 시 <code>_debounce?.cancel()</code> 명시.</li>
+      <li><strong>공백만 입력</strong> — <code>value.trim()</code>으로 공백을 제거한 키워드를 query에 반영 → 빈 문자열이면 Empty로 자동 복귀.</li>
+      <li><strong>fetch race</strong> — 짧은 간격 keyword 변경 시 이전 fetch가 늦게 도착해도 Riverpod이 가장 최근 query 기준 결과만 노출 (provider invalidation).</li>
+      <li><strong>retry 없음</strong> — Error state에서 사용자가 직접 keyword를 다시 입력해야 재시도. 자동 retry 없음.</li>
+    </ul>
+  </section>
+</div>
+
+<!-- ============================================================
+     REFERENCE
+     ============================================================ -->
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">📖</span>
+    <h2>Reference</h2>
+    <span class="lede">implementation source + 인접 화면. Components / Tokens는 위 mini-table 참고.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Implementation source</h2>
+    <table class="ref">
+      <tbody>
+        <tr><th style="width: 200px;">Widget</th><td><code>SearchPage</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/search/search_page.dart"><code>apps/app_user/lib/src/features/search/search_page.dart</code></a></td></tr>
+        <tr><th>Route</th><td><code>SearchRoute</code> · <code>/search</code> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/routing/app_routes.dart"><code>app_routes.dart</code></a></td></tr>
+        <tr><th>Coordinator</th><td><code>searchCoordinatorProvider</code> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/search/logic/search_coordinator.dart"><code>search_coordinator.dart</code></a> (Fix #634 — event_coordinator 분리)</td></tr>
+        <tr><th>Providers</th><td><code>searchQueryProvider</code> (string state · update / clear) · <code>searchResultsProvider</code> (AsyncValue&lt;List&lt;Event&gt;&gt; · PGroonga fetch)</td></tr>
+        <tr><th>Backend</th><td>PGroonga 한글 검색 + pgvector 보조 — <a href="https://github.com/Mark-Yun/minglit/blob/dev/docs/architecture/search-and-recommendation.md"><code>docs/architecture/search-and-recommendation.md</code></a></td></tr>
+        <tr><th>Atoms</th><td><code>MinglitChip</code> · <code>MinglitEventCard</code> · <code>MinglitAsyncValueWidget</code> · <code>MinglitCircularProgressIndicator</code> (모두 mds_core / minglit_kit)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 240px;">Spec</th><th>Relation</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><a href="/specs/home_page.html"><code>HomePage</code></a></td>
+          <td>유일한 진입점 — AppBar 돋보기 아이콘 → SearchRoute push.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/event_detail_page.html"><code>EventDetailPage</code></a></td>
+          <td>결과 카드 탭 시 진입. <code>searchCoordinator.pushEventDetail</code>.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/event_card.html"><code>MinglitEventCard</code></a></td>
+          <td>결과 리스트 cell — 4개 visual state (normal/today/soldOut/ended)는 child spec 참고.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+</div>
+
+<script>
+  document.getElementById('spec-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('spec-mode', e.target.checked);
+  });
+  document.getElementById('dark-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('dark-mode', e.target.checked);
+  });
+</script>
+
+</body>
+</html>

@@ -244,15 +244,19 @@ const KNOWN_SPEC_FILES: { user: ReadonlySet<string>; partner: ReadonlySet<string
     'home_page',
     'login_page',
     'my_page',
+    'my_tickets_page',
+    'search_page',
   ]),
   partner: new Set([
-    // partner currently has no top-level specs that match the default rule;
-    // its specs are reached via ROUTE_DESIGN_OVERRIDES below.
+    'party_detail_page',
+    'partner_home_page',
+    // remaining partner specs are reached via ROUTE_DESIGN_OVERRIDES below.
   ]),
 };
 
 /** Routes that share specs or use non-default basenames. */
 const ROUTE_DESIGN_OVERRIDES: Record<string, string> = {
+  'partner-HomeRoute':            '/specs/partner_home_page.html',
   'partner-PartyCreateRoute':     '/specs/party_create_wizard_page.html',
   'partner-PartyEditRoute':       '/specs/party_create_wizard_page.html', // shares spec
   'partner-SettlementDetailRoute':'/specs/settlement_detail_page.html',

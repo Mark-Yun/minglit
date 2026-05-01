@@ -1,0 +1,1402 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Spec — PartnerHomePage (app_partner · HomeRoute)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* ============================================================
+   PartnerHomePage-specific atoms.
+   Partner brand override: this app uses MinglitPartnerColors.primary
+   (#6c3ce1 — toned-down indigo) instead of MinglitColors.primary
+   (#9900ff). Scoped via .viewport so docs chrome stays neutral.
+   ============================================================ */
+.viewport {
+  --color-primary: var(--color-partner-primary);   /* #6c3ce1 */
+  --spec-blueprint-rgb: 108, 60, 225;
+}
+body.dark-mode .viewport {
+  --color-primary: var(--color-partner-dark-primary); /* #9b7bec */
+}
+
+/* --- App bar (matches scaffold gray, no border) --- */
+.ph-appbar {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--spacing-xsmall);
+  background: var(--color-surface);
+}
+.ph-appbar__logo {
+  height: 28px;
+  display: flex;
+  align-items: center;
+  padding-left: var(--spacing-medium);
+  flex: 1;
+  font-family: 'RacingSansOne', sans-serif;
+  font-size: 22px;
+  letter-spacing: 1px;
+  color: var(--color-primary);
+}
+.ph-appbar__action {
+  width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+}
+.ph-appbar__action svg { width: 22px; height: 22px; color: var(--color-text-primary); }
+.ph-appbar__badge {
+  position: absolute;
+  top: 6px; right: 6px;
+  min-width: 16px; height: 16px;
+  padding: 0 4px;
+  background: var(--color-error);
+  border: 1.5px solid var(--color-background);
+  border-radius: var(--radius-button);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  line-height: 1;
+}
+
+/* --- Scrollable body — Scaffold bg = surface (light gray) --- */
+.ph-body {
+  position: absolute;
+  top: 56px; left: 0; right: 0; bottom: 56px;
+  overflow-y: auto;
+  scrollbar-width: none;
+  padding: var(--spacing-medium);
+  background: var(--color-surface);
+}
+.ph-body::-webkit-scrollbar { display: none; }
+
+/* --- Greeting --- */
+.ph-greeting__name {
+  font-size: var(--typography-font-size-app-bar-title); /* 16~18 ≈ titleMedium */
+  font-weight: 800;
+  color: var(--color-text-primary);
+  line-height: 1.4;
+}
+.ph-greeting__sub {
+  margin-top: 2px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+/* --- Section header (titleSmall · w800) --- */
+.ph-section-header {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-small);
+}
+
+/* --- Location guide banner (tertiaryContainer-toned) --- */
+.ph-location-banner {
+  background: #d6f4ec;            /* visual proxy for tertiaryContainer (mint family) */
+  border-radius: var(--radius-card);
+  padding: var(--spacing-large);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-medium);
+}
+.ph-location-banner svg { width: 20px; height: 20px; color: #0f5949; flex-shrink: 0; }
+.ph-location-banner__title {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f5949;
+}
+.ph-location-banner__chev { width: 16px; height: 16px; color: #0f5949; }
+
+/* --- Todo summary chips (3-up) --- */
+.ph-chips { display: flex; gap: var(--spacing-small); }
+.ph-chip {
+  flex: 1;
+  padding: var(--spacing-medium) var(--spacing-sm);
+  border-radius: var(--radius-input);
+  background: var(--color-divider);  /* surfaceContainerHighest proxy */
+  text-align: center;
+}
+.ph-chip__count {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--color-text-secondary);
+  line-height: 1.2;
+}
+.ph-chip__label {
+  margin-top: 2px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+.ph-chip--active-error {
+  background: rgba(239, 68, 68, 0.08);
+}
+.ph-chip--active-error .ph-chip__count,
+.ph-chip--active-error .ph-chip__label { color: var(--color-error); }
+.ph-chip--active-primary {
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+}
+.ph-chip--active-primary .ph-chip__count,
+.ph-chip--active-primary .ph-chip__label { color: var(--color-primary); }
+
+/* --- Event action card (phase-aware) --- */
+.ph-event-card {
+  background: var(--color-background);
+  border: 1.5px solid var(--color-divider);
+  border-radius: var(--radius-button);
+  padding: var(--spacing-medium);
+}
+.ph-event-card--live { border-color: var(--color-primary); }
+.ph-phase-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px var(--spacing-small);
+  border-radius: var(--radius-small);
+  font-size: 11px;
+  font-weight: 700;
+}
+.ph-phase-badge__dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+}
+.ph-phase-badge--recruiting { background: rgba(22, 163, 74, 0.10); color: var(--color-success); }
+.ph-phase-badge--recruiting .ph-phase-badge__dot { background: var(--color-success); }
+.ph-phase-badge--preparing { background: rgba(239, 68, 68, 0.10); color: var(--color-error); }
+.ph-phase-badge--preparing .ph-phase-badge__dot { background: var(--color-error); }
+.ph-phase-badge--live { background: color-mix(in srgb, var(--color-primary) 10%, transparent); color: var(--color-primary); }
+.ph-phase-badge--live .ph-phase-badge__dot { background: var(--color-primary); }
+.ph-phase-badge--ended { background: var(--color-divider); color: var(--color-text-secondary); }
+.ph-phase-badge--ended .ph-phase-badge__dot { background: var(--color-text-secondary); }
+
+.ph-event-row { display: flex; align-items: flex-start; gap: var(--spacing-small); margin-top: var(--spacing-small); }
+.ph-event-row__time {
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: -1px;
+  color: var(--color-primary);
+  line-height: 1.0;
+  min-width: 78px;
+}
+.ph-event-row__time--ended { color: var(--color-text-secondary); }
+.ph-event-row__meta { flex: 1; min-width: 0; }
+.ph-event-row__title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ph-event-row__party { font-size: 13px; color: var(--color-text-secondary); }
+
+.ph-progress {
+  margin-top: var(--spacing-sm);
+  display: flex; align-items: center; gap: var(--spacing-sm);
+}
+.ph-progress__bar {
+  flex: 1; height: 6px;
+  border-radius: 3px;
+  background: var(--color-divider);
+  overflow: hidden;
+}
+.ph-progress__fill { height: 100%; background: var(--color-primary); }
+.ph-progress__fill--success { background: var(--color-success); }
+.ph-progress__label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+.ph-progress__label--success { color: var(--color-success); }
+
+.ph-cta {
+  margin-top: var(--spacing-sm);
+  width: 100%;
+  height: 40px;
+  border-radius: var(--radius-input);
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-small);
+  border: none;
+}
+.ph-cta--success { background: var(--color-success); }
+.ph-cta svg { width: 18px; height: 18px; }
+.ph-secondary-row {
+  margin-top: var(--spacing-small);
+  display: flex; gap: var(--spacing-small);
+}
+.ph-secondary-btn {
+  flex: 1; height: 36px;
+  border-radius: var(--radius-input);
+  border: 1px solid var(--color-divider);
+  background: transparent;
+  color: var(--color-primary);
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-small);
+}
+.ph-secondary-btn svg { width: 16px; height: 16px; }
+
+/* --- Ended stats row (3 cells) --- */
+.ph-ended-stats {
+  margin-top: var(--spacing-sm);
+  display: flex;
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-input);
+  background: var(--color-background);
+}
+.ph-ended-stats__cell {
+  flex: 1;
+  padding: var(--spacing-small) var(--spacing-xsmall);
+  text-align: center;
+}
+.ph-ended-stats__value { font-size: 14px; font-weight: 800; color: var(--color-text-primary); }
+.ph-ended-stats__label { font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; }
+
+/* --- Empty state event card --- */
+.ph-event-empty {
+  background: var(--color-divider);  /* surfaceContainerLow proxy */
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-button);
+  padding: var(--spacing-large);
+  text-align: center;
+}
+.ph-event-empty__icon { width: 60px; height: 60px; color: var(--color-text-secondary); margin: 0 auto var(--spacing-sm); display: block; }
+.ph-event-empty__title { font-size: 14px; font-weight: 700; color: var(--color-text-primary); }
+.ph-event-empty__cta {
+  margin-top: var(--spacing-medium);
+  width: 100%;
+  height: 40px;
+  border-radius: var(--radius-input);
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  gap: var(--spacing-small);
+  border: none;
+}
+.ph-event-empty__cta svg { width: 18px; height: 18px; }
+
+/* --- Weekly stats row --- */
+.ph-weekly {
+  display: flex;
+  background: var(--color-divider);  /* surfaceContainerHighest proxy */
+  border-radius: var(--radius-input);
+  overflow: hidden;
+}
+.ph-weekly__cell {
+  flex: 1;
+  background: var(--color-background);
+  padding: var(--spacing-medium) var(--spacing-small);
+  margin: 1px;
+  text-align: center;
+}
+.ph-weekly__cell:first-child { border-top-left-radius: var(--radius-input); border-bottom-left-radius: var(--radius-input); }
+.ph-weekly__cell:last-child { border-top-right-radius: var(--radius-input); border-bottom-right-radius: var(--radius-input); }
+.ph-weekly__value { font-size: 16px; font-weight: 800; color: var(--color-text-primary); }
+.ph-weekly__label { margin-top: 2px; font-size: 11px; font-weight: 600; color: var(--color-text-secondary); }
+
+/* --- Onboarding (steps card · progress · welcome) --- */
+.ph-onb-emoji { text-align: center; font-size: 40px; margin-top: var(--spacing-large); }
+.ph-onb-welcome { text-align: center; margin-top: var(--spacing-sm); }
+.ph-onb-welcome__title { font-size: 20px; font-weight: 900; color: var(--color-text-primary); }
+.ph-onb-welcome__sub { font-size: 14px; color: var(--color-text-secondary); margin-top: 2px; }
+
+.ph-onb-progress {
+  margin-top: var(--spacing-large);
+  padding: 0 var(--spacing-xsmall);
+}
+.ph-onb-progress__row {
+  display: flex; justify-content: space-between;
+  font-size: 11px; font-weight: 700;
+}
+.ph-onb-progress__label { color: var(--color-text-secondary); }
+.ph-onb-progress__count { color: var(--color-primary); }
+.ph-onb-progress__bar {
+  margin-top: 6px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--color-divider);
+  overflow: hidden;
+}
+.ph-onb-progress__fill { height: 100%; background: var(--color-primary); }
+
+.ph-onb-card {
+  margin-top: var(--spacing-medium);
+  background: var(--color-background);
+  border-radius: var(--radius-card);
+  border: 1px solid var(--color-divider);
+  overflow: hidden;
+}
+.ph-onb-step {
+  display: flex; align-items: center;
+  padding: var(--spacing-sm) var(--spacing-medium);
+  gap: var(--spacing-sm);
+}
+.ph-onb-step + .ph-onb-step { border-top: 1px solid var(--color-divider); }
+.ph-onb-step--current { background: color-mix(in srgb, var(--color-primary) 6%, transparent); }
+.ph-onb-step--locked { opacity: 0.4; }
+.ph-onb-step__circle {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--color-divider);
+  color: var(--color-text-primary);
+  font-size: 11px; font-weight: 800;
+}
+.ph-onb-step__circle--done { background: var(--color-success); color: #fff; }
+.ph-onb-step__circle--current { background: var(--color-primary); color: #fff; }
+.ph-onb-step__circle svg { width: 14px; height: 14px; }
+.ph-onb-step__title {
+  flex: 1;
+  font-size: 14px; font-weight: 600;
+  color: var(--color-text-primary);
+}
+.ph-onb-step__title--done { text-decoration: line-through; color: var(--color-text-secondary); font-weight: 600; }
+.ph-onb-step__sub { font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; }
+.ph-onb-step__chev { width: 18px; height: 18px; color: var(--color-primary); }
+
+.ph-onb-cta {
+  margin-top: var(--spacing-medium);
+  width: 100%;
+  height: 40px;
+  border-radius: var(--radius-input);
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  gap: var(--spacing-small);
+  border: none;
+}
+.ph-onb-cta svg { width: 18px; height: 18px; }
+
+.ph-onb-flow {
+  margin-top: var(--spacing-large);
+  background: var(--color-divider);
+  border-radius: var(--radius-input);
+  padding: var(--spacing-medium);
+}
+.ph-onb-flow__title { font-size: 12px; font-weight: 800; color: var(--color-text-primary); }
+.ph-onb-flow__row { display: flex; align-items: center; margin-top: var(--spacing-sm); }
+.ph-onb-flow__step { flex: 1; text-align: center; }
+.ph-onb-flow__icon { font-size: 24px; line-height: 1.0; }
+.ph-onb-flow__label { font-size: 11px; font-weight: 700; color: var(--color-text-primary); margin-top: 2px; }
+.ph-onb-flow__sub { font-size: 10px; color: var(--color-text-secondary); }
+.ph-onb-flow__arrow svg { width: 14px; height: 14px; color: var(--color-text-secondary); }
+
+/* --- Bottom navigation (Material 3 NavigationBar) --- */
+.ph-bottomnav {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 56px;
+  background: var(--color-background);
+  border-top: 1px solid var(--color-divider);
+  display: flex;
+}
+.ph-bottomnav__item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-size: 10px;
+  color: var(--color-text-secondary);
+}
+.ph-bottomnav__item svg { width: 22px; height: 22px; }
+.ph-bottomnav__item--active { color: var(--color-primary); font-weight: 700; }
+
+/* --- Loading spinner --- */
+.spinner {
+  width: 36px; height: 36px;
+  border: 3px solid var(--color-divider);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
+</div>
+
+<div class="page">
+
+<!-- ============================================================
+     HEADER
+     ============================================================ -->
+<header>
+  <h1>Partner Home</h1>
+</header>
+
+<!-- ============================================================
+     OVERVIEW
+     ============================================================ -->
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr>
+        <th style="width: 140px;">Status</th>
+        <td><strong>✅ 디자인완료</strong> <em style="color: var(--color-text-secondary);">— 5개 state · 파트너 대시보드 entry hub</em></td>
+      </tr>
+      <tr>
+        <th>App</th>
+        <td><code>app_partner</code></td>
+      </tr>
+      <tr>
+        <th>Category</th>
+        <td>dashboard · entry hub</td>
+      </tr>
+      <tr>
+        <th>Route / Surface</th>
+        <td><code>HomeRoute</code> · widget: <code>PartnerHomePage</code> (StatefulShell home branch)</td>
+      </tr>
+      <tr>
+        <th>Path</th>
+        <td><code>/</code></td>
+      </tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>: <em>— (top-level partner shell screen — bottom-nav home tab)</em><br>
+          <strong>Children</strong>:
+          <a href="/specs/location_guide_page.html"><code>LocationGuidePage</code></a> (배너 탭),
+          <code>EventActionCard</code> / <code>OnboardingStepGuide</code> / <code>WeeklyStatsRow</code> / <code>TodoSummaryChips</code> / <code>LocationGuideBanner</code> <em>(internal widgets — no separate spec)</em>
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>
+          파트너가 앱에 진입했을 때 가장 시급한 액션(승인 대기 신청, 임박/진행 중 이벤트, 첫 파티 만들기)으로
+          한눈에 도달할 수 있게 하는 단일 대시보드. 파트너 lifecycle의 모든 단계
+          (onboarding · 운영 중 · 이벤트 종료 직후)를 같은 화면에서 phase-별 UI로 분기한다.
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry points</strong>: 앱 cold start (로그인 후 → 홈 redirect) / 다른 탭에서 홈 탭 재선택 / 푸시 알림 → 홈.<br>
+          <strong>Exit points</strong>: 알림 센터(우측 상단), 장소 가이드 배너, EventActionCard CTA(신청관리/체크인/이벤트 생성), TodoSummaryChips(승인 대기 → 신청관리 탭), Onboarding CTA(파티/이벤트 생성), 하단 NavigationBar(신청관리/체크인/정산/더보기).
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          파트너 사용자는 1) 처음 가입 직후(이벤트 0개) 또는 2) 운영 중(이벤트 ≥1)이라는 두 가지 상태를 가진다.
+          홈은 <code>state.hasAnyEvents</code>로 그 둘을 구분해 완전히 다른 UI를 그린다.
+          운영 중인 파트너에겐 가장 임박한 이벤트 1개를 <code>EventActionCard</code>로 강조하고,
+          phase(recruiting / preparing / live / ended within 24h)에 따라 메인 CTA가 달라진다.
+        </td>
+      </tr>
+      <tr>
+        <th>Frequency</th>
+        <td>로그인 세션마다 진입. 운영 중인 이벤트가 있을 땐 하루 수회. 진행 중 이벤트(LIVE) 동안엔 새로고침 빈번.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================
+     HISTORY
+     ============================================================ -->
+<section class="doc">
+  <h2>History</h2>
+  <p class="intro">
+    이 spec의 주요 변경 이력. 최신 항목 위.
+  </p>
+  <table class="ref">
+    <thead>
+      <tr>
+        <th style="width: 110px;">Date</th>
+        <th style="width: 80px;">Version</th>
+        <th style="width: 120px;">Author</th>
+        <th>Changes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2026-05-01</td>
+        <td>1.0</td>
+        <td>mark-yun</td>
+        <td>v1.4 template으로 작성. 5 state(Default · LIVE · Ended · Onboarding pre-party · Loading) → mini-table per state, baseline = Default(recruiting), additive diff. 파트너 brand color(#6c3ce1) viewport-scoped override.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- Anchor nav -->
+<nav class="perspective-nav">
+  <a href="#layout"><span class="glyph">🧱</span> Layout</a>
+  <a href="#states"><span class="glyph">🎨</span> States</a>
+  <a href="#behavior"><span class="glyph">🔄</span> Global Behavior</a>
+  <a href="#reference"><span class="glyph">📖</span> Reference</a>
+</nav>
+
+<!-- ============================================================
+     LAYOUT
+     ============================================================ -->
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Layout</h2>
+    <span class="lede">화면 구조 — 영역, 정렬, 간격 규칙. 색·타이포 무시.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree</h2>
+    <p class="intro">
+      AppBar(로고 좌측) + body(SingleChildScrollView · padding all 16) + bottomNavigationBar(shell이 제공).
+      body는 <code>state.hasAnyEvents</code>로 onboarding vs normal 분기.
+      섹션 사이 간격은 <code>spacing-medium</code>(16) 또는 <code>spacing-large</code>(24).
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint">
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <!-- AppBar -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:0;left:0;right:0;height:56px;">
+          <span class="blueprint__region-label">① AppBar — 로고(좌) + 알림 + 버그리포트(dev)</span>
+        </div>
+        <!-- Greeting -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:72px;left:16px;right:16px;height:48px;">
+          <span class="blueprint__region-label">② Greeting (👋 이름 + subtitle)</span>
+        </div>
+        <!-- Location banner -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:136px;left:16px;right:16px;height:56px;">
+          <span class="blueprint__region-label">③ LocationGuideBanner</span>
+        </div>
+        <!-- Todo chips -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:208px;left:16px;right:16px;height:64px;">
+          <span class="blueprint__region-label">④ TodoSummaryChips × 3</span>
+        </div>
+        <!-- Event section -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:296px;left:16px;right:16px;height:200px;">
+          <span class="blueprint__region-label">⑤ Section title + EventActionCard<br>(phase별 변형)</span>
+        </div>
+        <!-- Weekly stats -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:520px;left:16px;right:16px;height:96px;">
+          <span class="blueprint__region-label">⑥ "이번 주 성과" + WeeklyStatsRow</span>
+        </div>
+        <!-- Bottom nav -->
+        <div class="blueprint__region blueprint__region--shaded" style="bottom:0;left:0;right:0;height:56px;">
+          <span class="blueprint__region-label">⑦ NavigationBar (shell · 5 tabs)</span>
+        </div>
+
+        <div class="blueprint__align-marker" style="top:8px;right:8px;">screen-edge pad 16</div>
+      </div>
+
+      <div class="layout-tree"><b>Scaffold</b>
+├─ <b>appBar</b>: AppBar
+│  ├─ title: MinglitTheme.appBarLogo(h:36) · centerTitle:false
+│  └─ actions: [BugReportAction, IconButton(notifications) + unreadBadge]
+├─ <b>body</b>: MinglitAsyncValueWidget(state.status)
+│   └─ data → RefreshIndicator → SingleChildScrollView
+│      └─ Column(stretch · padding all 16)
+│         ├─ <b>if showOnboarding</b> (= !state.hasAnyEvents)
+│         │   ├─ _GreetingSection(pendingCount: 0)             ← ②
+│         │   ├─ LocationGuideBanner                            ← ③
+│         │   └─ OnboardingStepGuide(hasParty)                  ← (replaces ④/⑤/⑥)
+│         │
+│         └─ <b>else (normal dashboard)</b>
+│             ├─ _GreetingSection(primaryEvent · pendingCount)  ← ②
+│             ├─ LocationGuideBanner                            ← ③
+│             ├─ TodoSummaryChips × 3                           ← ④
+│             ├─ _SectionHeader(phase별 title) + EventActionCard
+│             │  └─ if primaryEvent == null → EventActionCardEmpty ← ⑤
+│             └─ _SectionHeader('이번 주 성과') + WeeklyStatsRow ← ⑥
+│
+└─ <b>bottomNavigationBar</b>: (shell이 제공 — PartnerScaffold)  ← ⑦
+   NavigationBar(home · 신청관리 · 체크인 · [정산] · 더보기)</div>
+    </div>
+  </section>
+
+  <section class="doc">
+    <h2>Spacing &amp; alignment rules</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>①</td><td>AppBar</td><td>height 56 · 로고 좌측 정렬 · actions 우측</td><td>logo height 36 · surfaceTint transparent · bg = surface (no border)</td></tr>
+        <tr><td>—</td><td>SingleChildScrollView body</td><td>column stretch · scroll vertical · pull-to-refresh</td><td>padding all <code>spacing-medium (16)</code></td></tr>
+        <tr><td>②</td><td>Greeting</td><td>column start</td><td>name↔sub: 2 (xxsmall) · 다음 섹션과 간격: <code>spacing-medium (16)</code></td></tr>
+        <tr><td>③</td><td>LocationGuideBanner</td><td>row · icon + flex title + chevron</td><td>card pad: <code>spacing-large (24)</code> · icon↔title: <code>spacing-medium (16)</code> · 다음 섹션 간격: <code>spacing-large (24)</code></td></tr>
+        <tr><td>④</td><td>TodoSummaryChips</td><td>row · 3 expanded chips</td><td>chip 간 간격: <code>spacing-small (8)</code> · 다음 섹션 간격: <code>spacing-large (24)</code></td></tr>
+        <tr><td>⑤</td><td>EventActionCard</td><td>column stretch · 풀폭 CTA 위 · 보조 버튼 row</td><td>card pad: <code>spacing-medium (16)</code> · phase badge↔time row: <code>spacing-small (8)</code> · progress↔CTA: <code>spacing-sm (12)</code> · CTA↔보조: <code>spacing-small (8)</code> · 다음 섹션 간격: <code>spacing-large (24)</code></td></tr>
+        <tr><td>⑥</td><td>WeeklyStatsRow</td><td>row · 3 cells equal flex</td><td>section title↔row: <code>spacing-small (8)</code> · row 외부 wrapper bg = surfaceContainerHighest (1px gap 효과)</td></tr>
+        <tr><td>⑦</td><td>NavigationBar</td><td>shell이 관리 — 5 destinations</td><td>height 56 · indicatorColor transparent · backgroundColor = colorScheme.surface (= white)</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<!-- ============================================================
+     STATES
+     ============================================================ -->
+<div class="perspective" id="states">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>States</h2>
+    <span class="lede">시각 변형 5종. baseline = Default(recruiting), 나머지는 additive diff.</span>
+  </div>
+
+  <section class="doc">
+    <p class="intro">
+      <strong>State 식별 기준</strong>: <code>state.hasAnyEvents</code> (onboarding 분기) · <code>selectPrimaryEvent(state.upcomingEvents)</code> 결과 · <code>getEventPhase(event)</code> (recruiting/preparing/live/ended) · async lifecycle (state.status loading). 색상은 <em>partner brand <code>#6c3ce1</code></em>이며 user app(<code>#9900ff</code>)과 다르다.
+    </p>
+
+    <!-- State 1: Default · recruiting (baseline) -->
+    <table class="ref state-mini is-baseline-tint">
+      <thead>
+        <tr><th colspan="3"><strong>Default · 모집 중 (recruiting)</strong> 🎯 <small>baseline · primaryEvent ≥ 3시간 후</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="ph-appbar">
+                <div class="ph-appbar__logo">minglit</div>
+                <div class="ph-appbar__action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4v6"/><circle cx="12" cy="14" r="2"/><rect x="4" y="2" width="16" height="20" rx="2"/></svg></div>
+                <div class="ph-appbar__action">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                  <div class="ph-appbar__badge">3</div>
+                </div>
+              </div>
+              <div class="ph-body">
+                <div class="ph-greeting__name">👋 박파트너 님</div>
+                <div class="ph-greeting__sub">오늘 할 일 3건</div>
+                <div style="height: 16px;"></div>
+
+                <div class="ph-location-banner">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>
+                  <div class="ph-location-banner__title">장소 가이드</div>
+                  <svg class="ph-location-banner__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                </div>
+                <div style="height: 24px;"></div>
+
+                <div class="ph-chips">
+                  <div class="ph-chip ph-chip--active-error">
+                    <div class="ph-chip__count">3</div>
+                    <div class="ph-chip__label">승인 대기</div>
+                  </div>
+                  <div class="ph-chip ph-chip--active-primary">
+                    <div class="ph-chip__count">2</div>
+                    <div class="ph-chip__label">다가오는 이벤트</div>
+                  </div>
+                  <div class="ph-chip">
+                    <div class="ph-chip__count">-</div>
+                    <div class="ph-chip__label">준비 중</div>
+                  </div>
+                </div>
+                <div style="height: 24px;"></div>
+
+                <div class="ph-section-header">다음 이벤트</div>
+                <div class="ph-event-card">
+                  <span class="ph-phase-badge ph-phase-badge--recruiting">
+                    <span class="ph-phase-badge__dot"></span> 모집 중 · D-3
+                  </span>
+                  <div class="ph-event-row">
+                    <div class="ph-event-row__time">19:30</div>
+                    <div class="ph-event-row__meta">
+                      <div class="ph-event-row__title">금요 와인 모임 #12</div>
+                      <div class="ph-event-row__party">강남 와인러버스</div>
+                    </div>
+                  </div>
+                  <div class="ph-progress">
+                    <div class="ph-progress__bar"><div class="ph-progress__fill" style="width: 60%;"></div></div>
+                    <div class="ph-progress__label">12/20명</div>
+                  </div>
+                  <button class="ph-cta">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                    신청 현황 보기
+                  </button>
+                  <div class="ph-secondary-row">
+                    <button class="ph-secondary-btn">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                      이벤트 수정
+                    </button>
+                    <button class="ph-secondary-btn">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                      공유/홍보
+                    </button>
+                  </div>
+                </div>
+                <div style="height: 24px;"></div>
+
+                <div class="ph-section-header">이번 주 성과</div>
+                <div class="ph-weekly">
+                  <div class="ph-weekly__cell"><div class="ph-weekly__value">₩0</div><div class="ph-weekly__label">매출</div></div>
+                  <div class="ph-weekly__cell"><div class="ph-weekly__value">3</div><div class="ph-weekly__label">신청</div></div>
+                  <div class="ph-weekly__cell"><div class="ph-weekly__value">0%</div><div class="ph-weekly__label">체크인율</div></div>
+                </div>
+              </div>
+              <div class="ph-bottomnav">
+                <div class="ph-bottomnav__item ph-bottomnav__item--active"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l9 8h-3v9h-4v-6h-4v6H6v-9H3z"/></svg>홈</div>
+                <div class="ph-bottomnav__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 12h8M8 17h5"/></svg>신청관리</div>
+                <div class="ph-bottomnav__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>체크인</div>
+                <div class="ph-bottomnav__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6"/></svg>정산</div>
+                <div class="ph-bottomnav__item"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>더보기</div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>state.hasAnyEvents == true</code> · <code>selectPrimaryEvent != null</code> · <code>getEventPhase == recruiting</code> (D-day &gt; 3시간) · <code>pendingReviewCount &gt; 0</code></td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            ① <strong>알림 아이콘 탭</strong> → NotificationCenterRoute push (<code>coordinator.pushNotificationCenter</code>) · 미읽음 배지(99+ 캡)<br>
+            ② <strong>장소 가이드 배너 탭</strong> → LocationGuideRoute push<br>
+            ③ <strong>"승인 대기" chip 탭</strong> → 신청관리 탭으로 이동 (<code>coordinator.goToApplicationList</code>)<br>
+            ④ <strong>"다가오는 이벤트" chip 탭</strong> → PartyListRoute push<br>
+            ⑤ <strong>"신청 현황 보기" CTA</strong> → 신청관리 탭<br>
+            ⑥ <strong>"이벤트 수정"</strong> → EventDetailRoute push · <strong>"공유/홍보"</strong> → "준비 중입니다" 스낵바<br>
+            ⑦ <strong>아래로 당기기</strong> → RefreshIndicator → loadDashboardData()
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · <code>upcomingEvents</code>는 있으나 모두 ≥ 24h 후가 아니라면 phase가 다른 state로 분기 (이 spec의 다른 state 참고)<br>
+            · <code>pendingReviewCount == 0</code> → greeting subtitle "오늘 할 일 없음" + 첫 chip dim<br>
+            · 알림 미읽음 99 초과 → "99+" 표시 (cap)<br>
+            · partner null (provider 로딩 직후) → 이름 자리 "파트너" placeholder
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            · <code>AppBar</code> (centerTitle:false · MinglitTheme.appBarLogo h36 · BugReportAction · IconButton(notifications) + Stack badge)<br>
+            · <code>_GreetingSection</code> (titleMedium w800 + bodySmall)<br>
+            · <code>LocationGuideBanner</code> (Card · tertiaryContainer bg · Icons.location_on)<br>
+            · <code>TodoSummaryChips</code> 3개 (승인 대기 · 다가오는 이벤트 · 미답변 리뷰[준비중]) — error/primary/warning 색<br>
+            · <code>_SectionHeader</code> + <code>EventActionCard</code>(phase=recruiting) — Container border 1.5px outlineVariant · phase badge(success) · headlineMedium 시간(28px w900) · LinearProgressIndicator · FilledButton.icon "신청 현황 보기" + 2 OutlinedButton (수정/공유)<br>
+            · <code>_SectionHeader</code> + <code>WeeklyStatsRow</code> (3 cell · titleMedium value)<br>
+            · <code>NavigationBar</code> (shell · partner primary indicator)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            · color: <code>color-partner-primary</code> (<code>#6c3ce1</code> — 모든 primary 자리), <code>color-success</code> (recruiting 배지/진행률), <code>color-error</code> (alarm badge · 승인 대기 chip), <code>color-tertiary-container</code> proxy (location banner mint), <code>color-surface</code> (scaffold), <code>color-background</code> (cards), <code>color-divider</code> (chip inactive · card border)<br>
+            · radius: <code>radius-card</code> (16 · banner), <code>radius-button</code> (12 · event card · alarm badge pill), <code>radius-input</code> (12 · CTA · chip · weekly), <code>radius-small</code> (8 · phase badge)<br>
+            · spacing: <code>spacing-medium</code> (16 · screen pad · 카드 inner · greeting↔banner), <code>spacing-large</code> (24 · 섹션 간), <code>spacing-sm</code> (12 · progress↔CTA), <code>spacing-small</code> (8 · chip 간 · CTA↔보조)<br>
+            · typography: titleMedium (16/800 — greeting name), bodySmall (13 — sub), titleSmall (14/800 — section header), headlineMedium (28/900 — event time), labelSmall (11/700 — phase badge · stat label)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 가장 일반적 상태. 다른 4개 state는 baseline에서 변경분만 표시. EventActionCard의 phase 변형이 핵심 다양성.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 2: LIVE event in progress -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>LIVE · 진행 중 이벤트</strong> <small>이벤트 시작 ~ 종료 사이</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="ph-appbar">
+                <div class="ph-appbar__logo">minglit</div>
+                <div class="ph-appbar__action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4v6"/><circle cx="12" cy="14" r="2"/><rect x="4" y="2" width="16" height="20" rx="2"/></svg></div>
+                <div class="ph-appbar__action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
+              </div>
+              <div class="ph-body">
+                <div class="ph-greeting__name">👋 박파트너 님</div>
+                <div class="ph-greeting__sub">이벤트 진행 중!</div>
+                <div style="height: 16px;"></div>
+
+                <div class="ph-location-banner">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>
+                  <div class="ph-location-banner__title">장소 가이드</div>
+                  <svg class="ph-location-banner__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                </div>
+                <div style="height: 24px;"></div>
+
+                <div class="ph-chips">
+                  <div class="ph-chip">
+                    <div class="ph-chip__count">0</div>
+                    <div class="ph-chip__label">승인 대기</div>
+                  </div>
+                  <div class="ph-chip ph-chip--active-primary">
+                    <div class="ph-chip__count">1</div>
+                    <div class="ph-chip__label">다가오는 이벤트</div>
+                  </div>
+                  <div class="ph-chip">
+                    <div class="ph-chip__count">-</div>
+                    <div class="ph-chip__label">준비 중</div>
+                  </div>
+                </div>
+                <div style="height: 24px;"></div>
+
+                <div class="ph-section-header">진행 중 이벤트</div>
+                <div class="ph-event-card ph-event-card--live">
+                  <span class="ph-phase-badge ph-phase-badge--live">
+                    <span class="ph-phase-badge__dot"></span> LIVE · 24분 경과
+                  </span>
+                  <div class="ph-event-row">
+                    <div class="ph-event-row__time">19:30</div>
+                    <div class="ph-event-row__meta">
+                      <div class="ph-event-row__title">금요 와인 모임 #12</div>
+                      <div class="ph-event-row__party">강남 와인러버스</div>
+                    </div>
+                  </div>
+                  <div class="ph-progress">
+                    <div class="ph-progress__bar"><div class="ph-progress__fill ph-progress__fill--success" style="width: 80%;"></div></div>
+                    <div class="ph-progress__label ph-progress__label--success">체크인 16/20명</div>
+                  </div>
+                  <button class="ph-cta ph-cta--success">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+                    체크인 계속하기
+                  </button>
+                  <div class="ph-secondary-row">
+                    <button class="ph-secondary-btn">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                      참석 현황
+                    </button>
+                  </div>
+                </div>
+                <div style="height: 24px;"></div>
+
+                <div class="ph-section-header">이번 주 성과</div>
+                <div class="ph-weekly">
+                  <div class="ph-weekly__cell"><div class="ph-weekly__value">₩240K</div><div class="ph-weekly__label">매출</div></div>
+                  <div class="ph-weekly__cell"><div class="ph-weekly__value">0</div><div class="ph-weekly__label">신청</div></div>
+                  <div class="ph-weekly__cell"><div class="ph-weekly__value">80%</div><div class="ph-weekly__label">체크인율</div></div>
+                </div>
+              </div>
+              <div class="ph-bottomnav">
+                <div class="ph-bottomnav__item ph-bottomnav__item--active"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l9 8h-3v9h-4v-6h-4v6H6v-9H3z"/></svg>홈</div>
+                <div class="ph-bottomnav__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 12h8M8 17h5"/></svg>신청관리</div>
+                <div class="ph-bottomnav__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>체크인</div>
+                <div class="ph-bottomnav__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6"/></svg>정산</div>
+                <div class="ph-bottomnav__item"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>더보기</div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>getEventPhase == live</code> (event.startTime ≤ now &lt; event.endTime)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>+ <strong>"체크인 계속하기" CTA</strong> → 체크인 탭 이동 (<code>coordinator.goToCheckin</code>)<br>↔ 보조 액션 → "참석 현황" 1개만 (sec2 == null)<br>나머지 동일</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>· 시간 표시는 <code>HH:mm</code> 시작 시각 — "X분 경과"는 phase badge에서 LIVE 라벨로 표시<br>· LIVE 동안 새 신청은 차단 (체크인 진행 중) — 승인 대기 chip 0이 정상</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>↔ Phase badge → "LIVE · N분 경과" (color-primary bg+text)<br>↔ Card border → 1.5px <code>color-primary</code> (recruiting의 outlineVariant 대비 강조)<br>↔ Progress fill / label → <code>color-success</code> (체크인율 강조)<br>↔ FilledButton bg → <code>color-success</code> (체크인 시작 색상 일관성)<br>− "공유/홍보" 보조 버튼 (live phase에선 sec2 == null)<br>↔ Greeting subtitle → "이벤트 진행 중!"</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>+ <code>color-primary</code>(card border) · <code>color-success</code>(progress · CTA bg)<br>− <code>color-success</code>(recruiting badge — LIVE에선 primary로 대체)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 LIVE는 카드 border가 1.5px primary로 강조. CTA 색이 success로 바뀌는 건 디자인 의도 (체크인 안전한 진행 행동 = 성공 색).</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 3: Ended within 24h -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>이벤트 결과 (ended)</strong> <small>종료 후 24h 이내 — review path</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="ph-appbar">
+                <div class="ph-appbar__logo">minglit</div>
+                <div class="ph-appbar__action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4v6"/><circle cx="12" cy="14" r="2"/><rect x="4" y="2" width="16" height="20" rx="2"/></svg></div>
+                <div class="ph-appbar__action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
+              </div>
+              <div class="ph-body">
+                <div class="ph-greeting__name">👋 박파트너 님</div>
+                <div class="ph-greeting__sub">오늘 이벤트 수고하셨어요!</div>
+                <div style="height: 16px;"></div>
+
+                <div class="ph-location-banner">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>
+                  <div class="ph-location-banner__title">장소 가이드</div>
+                  <svg class="ph-location-banner__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                </div>
+                <div style="height: 24px;"></div>
+
+                <div class="ph-chips">
+                  <div class="ph-chip">
+                    <div class="ph-chip__count">0</div>
+                    <div class="ph-chip__label">승인 대기</div>
+                  </div>
+                  <div class="ph-chip">
+                    <div class="ph-chip__count">0</div>
+                    <div class="ph-chip__label">다가오는 이벤트</div>
+                  </div>
+                  <div class="ph-chip">
+                    <div class="ph-chip__count">-</div>
+                    <div class="ph-chip__label">준비 중</div>
+                  </div>
+                </div>
+                <div style="height: 24px;"></div>
+
+                <div class="ph-section-header">이벤트 결과</div>
+                <div class="ph-event-card">
+                  <span class="ph-phase-badge ph-phase-badge--ended">
+                    <span class="ph-phase-badge__dot"></span> 종료 · 2시간 전
+                  </span>
+                  <div class="ph-event-row">
+                    <div class="ph-event-row__time ph-event-row__time--ended">19:30</div>
+                    <div class="ph-event-row__meta">
+                      <div class="ph-event-row__title">금요 와인 모임 #11</div>
+                      <div class="ph-event-row__party">강남 와인러버스</div>
+                    </div>
+                  </div>
+                  <div class="ph-ended-stats">
+                    <div class="ph-ended-stats__cell"><div class="ph-ended-stats__value">17명</div><div class="ph-ended-stats__label">참석 확정</div></div>
+                    <div class="ph-ended-stats__cell"><div class="ph-ended-stats__value">₩340,000</div><div class="ph-ended-stats__label">매출</div></div>
+                    <div class="ph-ended-stats__cell"><div class="ph-ended-stats__value">85%</div><div class="ph-ended-stats__label">출석률</div></div>
+                  </div>
+                  <button class="ph-cta">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                    다음 회차 만들기
+                  </button>
+                  <div class="ph-secondary-row">
+                    <button class="ph-secondary-btn">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+                      상세 결과
+                    </button>
+                  </div>
+                </div>
+                <div style="height: 24px;"></div>
+
+                <div class="ph-section-header">이번 주 성과</div>
+                <div class="ph-weekly">
+                  <div class="ph-weekly__cell"><div class="ph-weekly__value">₩340K</div><div class="ph-weekly__label">매출</div></div>
+                  <div class="ph-weekly__cell"><div class="ph-weekly__value">0</div><div class="ph-weekly__label">신청</div></div>
+                  <div class="ph-weekly__cell"><div class="ph-weekly__value">85%</div><div class="ph-weekly__label">체크인율</div></div>
+                </div>
+              </div>
+              <div class="ph-bottomnav">
+                <div class="ph-bottomnav__item ph-bottomnav__item--active"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l9 8h-3v9h-4v-6h-4v6H6v-9H3z"/></svg>홈</div>
+                <div class="ph-bottomnav__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 12h8M8 17h5"/></svg>신청관리</div>
+                <div class="ph-bottomnav__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>체크인</div>
+                <div class="ph-bottomnav__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6"/></svg>정산</div>
+                <div class="ph-bottomnav__item"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>더보기</div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>getEventPhase == ended</code> (now &gt; endTime, endTime &gt; now − 24h) · <code>selectPrimaryEvent</code>이 ended 이벤트를 잡음 (다른 phase 후보 없을 때)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>+ <strong>"다음 회차 만들기" CTA</strong> → EventCreateRoute push (<code>coordinator.pushEventCreate(partyId)</code>) — pre-fill은 미구현(#520)<br>+ <strong>"상세 결과"</strong> → EventDetailRoute push<br>나머지 동일</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>· 24h 초과 ended → <code>selectPrimaryEvent</code>에서 cutoff 제외 → empty card로 fallback (Default 모집 후보 없을 시)<br>· tickets 없음 → 매출 ₩0 표시 (소스 기본값)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>↔ Phase badge → "종료 · N시간 전" (surfaceContainerHighest bg + onSurfaceVariant)<br>↔ 시간 텍스트 색 → <code>onSurfaceVariant</code> (회색 — 종료 강조)<br>↔ Progress bar → <code>_EndedStatsRow</code> (3 cell: 참석 확정 / 매출 / 출석률)<br>↔ FilledButton 라벨 → "다음 회차 만들기" (replay icon)<br>↔ 보조 → "상세 결과" 1개 (sec2 null)<br>↔ Card bg → <code>surfaceContainerLow</code> (recruiting의 surfaceContainerLowest 대비 약간 더 진함)<br>↔ Greeting subtitle → "오늘 이벤트 수고하셨어요!"</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>+ <code>color-text-secondary</code> (시간 회색 처리)<br>+ <code>color-divider</code>(ended stats border + cell divider)<br>− <code>color-success</code> (recruiting의 진행률 색 미사용)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 결과 회고 + 다음 회차 유도 패턴. 색감이 가장 차분 — 종료 분위기. EventActionCard 내부에 <code>_EndedStatsRow</code> (Fix #523로 매출 하드코딩 0 제거).</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 4: Onboarding (no events ever) -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Onboarding · 첫 파티 만들기 전</strong> <small>!hasAnyEvents · 가입 직후</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="ph-appbar">
+                <div class="ph-appbar__logo">minglit</div>
+                <div class="ph-appbar__action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4v6"/><circle cx="12" cy="14" r="2"/><rect x="4" y="2" width="16" height="20" rx="2"/></svg></div>
+                <div class="ph-appbar__action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
+              </div>
+              <div class="ph-body">
+                <div class="ph-greeting__name">👋 박파트너 님</div>
+                <div class="ph-greeting__sub">오늘 할 일 없음</div>
+                <div style="height: 16px;"></div>
+
+                <div class="ph-location-banner">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>
+                  <div class="ph-location-banner__title">장소 가이드</div>
+                  <svg class="ph-location-banner__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                </div>
+                <div style="height: 16px;"></div>
+
+                <div class="ph-onb-emoji">🎊</div>
+                <div class="ph-onb-welcome">
+                  <div class="ph-onb-welcome__title">환영합니다!</div>
+                  <div class="ph-onb-welcome__sub">파트너 가입이 승인되었어요</div>
+                </div>
+
+                <div class="ph-onb-progress">
+                  <div class="ph-onb-progress__row">
+                    <div class="ph-onb-progress__label">시작하기</div>
+                    <div class="ph-onb-progress__count">2/4 완료</div>
+                  </div>
+                  <div class="ph-onb-progress__bar"><div class="ph-onb-progress__fill" style="width: 50%;"></div></div>
+                </div>
+
+                <div class="ph-onb-card">
+                  <div class="ph-onb-step">
+                    <div class="ph-onb-step__circle ph-onb-step__circle--done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+                    <div class="ph-onb-step__title ph-onb-step__title--done">파트너 가입</div>
+                  </div>
+                  <div class="ph-onb-step">
+                    <div class="ph-onb-step__circle ph-onb-step__circle--done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+                    <div class="ph-onb-step__title ph-onb-step__title--done">계좌 등록</div>
+                  </div>
+                  <div class="ph-onb-step ph-onb-step--current">
+                    <div class="ph-onb-step__circle ph-onb-step__circle--current">3</div>
+                    <div style="flex:1;">
+                      <div class="ph-onb-step__title">첫 파티 만들기</div>
+                      <div class="ph-onb-step__sub">파티는 이벤트를 묶는 브랜드예요</div>
+                    </div>
+                    <svg class="ph-onb-step__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                  </div>
+                  <div class="ph-onb-step ph-onb-step--locked">
+                    <div class="ph-onb-step__circle">4</div>
+                    <div style="flex:1;">
+                      <div class="ph-onb-step__title">첫 이벤트 만들기</div>
+                      <div class="ph-onb-step__sub">파티 생성 후 가능</div>
+                    </div>
+                  </div>
+                </div>
+
+                <button class="ph-onb-cta">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5.8 11.3 2 22l10.7-3.79"/><path d="M4 3h.01"/><path d="M22 8h.01"/><path d="M15 2h.01"/><path d="M22 20h.01"/><path d="m22 2-2.24.75a2.9 2.9 0 0 0-1.96 3.12c.13.94-.21 1.87-.85 2.5l-1.32 1.32A2 2 0 0 0 14 11.5v.5"/><path d="M9 13l-1.32-1.32a2 2 0 0 1-.43-2.21l1.32-3.16"/></svg>
+                  첫 파티 만들기
+                </button>
+
+                <div class="ph-onb-flow">
+                  <div class="ph-onb-flow__title">이렇게 진행돼요</div>
+                  <div class="ph-onb-flow__row">
+                    <div class="ph-onb-flow__step">
+                      <div class="ph-onb-flow__icon">🎉</div>
+                      <div class="ph-onb-flow__label">파티</div>
+                      <div class="ph-onb-flow__sub">브랜드 설정</div>
+                    </div>
+                    <div class="ph-onb-flow__arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+                    <div class="ph-onb-flow__step">
+                      <div class="ph-onb-flow__icon">📅</div>
+                      <div class="ph-onb-flow__label">이벤트</div>
+                      <div class="ph-onb-flow__sub">날짜·인원</div>
+                    </div>
+                    <div class="ph-onb-flow__arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+                    <div class="ph-onb-flow__step">
+                      <div class="ph-onb-flow__icon">👥</div>
+                      <div class="ph-onb-flow__label">신청</div>
+                      <div class="ph-onb-flow__sub">승인·관리</div>
+                    </div>
+                    <div class="ph-onb-flow__arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+                    <div class="ph-onb-flow__step">
+                      <div class="ph-onb-flow__icon">💰</div>
+                      <div class="ph-onb-flow__label">정산</div>
+                      <div class="ph-onb-flow__sub">자동 입금</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="ph-bottomnav">
+                <div class="ph-bottomnav__item ph-bottomnav__item--active"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l9 8h-3v9h-4v-6h-4v6H6v-9H3z"/></svg>홈</div>
+                <div class="ph-bottomnav__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 12h8M8 17h5"/></svg>신청관리</div>
+                <div class="ph-bottomnav__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>체크인</div>
+                <div class="ph-bottomnav__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6"/></svg>정산</div>
+                <div class="ph-bottomnav__item"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>더보기</div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>!state.hasAnyEvents</code> (이벤트 단 한 번도 만든 적 없음 — Fix #1215로 이전의 upcomingEvents 기준에서 변경) · 가입/계좌 단계는 onboarding 외부에서 완료</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>+ <strong>"첫 파티 만들기" CTA</strong> → PartyCreateRoute (<code>coordinator.pushPartyCreate</code>)<br>− 모든 normal dashboard 컴포넌트 (chips · event card · weekly stats)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · <code>hasParty == true</code> (파티는 만들었으나 이벤트 0개) → progress 3/4, step3 done, step4 current. CTA → "첫 이벤트 만들기" (Icons.event_outlined). welcome 헤더+flow 안내 숨김 + 파티 카드 행 추가 (purple tinted)<br>
+            · 이벤트 1개라도 생성하면 onboarding 영구 종료 → Default state로 전환<br>
+            · activeParties 1개일 땐 sheet 없이 바로 EventCreateRoute push (코드: parties.length == 1 분기)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>+ <code>OnboardingStepGuide</code> · 🎊 emoji + welcome + LinearProgressIndicator + Card(_StepRow × 4) + FilledButton + "이렇게 진행돼요" 가이드<br>− <code>TodoSummaryChips</code> / <code>EventActionCard</code> / <code>WeeklyStatsRow</code> / <code>_SectionHeader</code><br>↔ Greeting <code>pendingCount: 0</code> 강제 → "오늘 할 일 없음"</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>+ <code>color-success</code> (완료 step circle), <code>color-primary</code>(현재 step bg tint · progress fill · CTA), <code>color-divider</code>(잠긴 step circle · progress track)<br>· radius: <code>radius-card</code> (steps card), <code>radius-input</code>(progress · CTA · flow guide)<br>· spacing: 그대로 (16/24/8/12)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 _StepRow 4단계는 partner 가입(완료) → 계좌 등록(완료) → 첫 파티(현재) → 첫 이벤트(잠금) 순서. 마지막 "이렇게 진행돼요" flow는 emoji 4개 (🎉 📅 👥 💰) — Fix #596로 fontSize MinglitIconSize.medium(24)로 변경됨.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 5: Loading -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Loading</strong> <small>state.status async · 진입 직후 dashboard fetch</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="ph-appbar">
+                <div class="ph-appbar__logo">minglit</div>
+                <div class="ph-appbar__action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4v6"/><circle cx="12" cy="14" r="2"/><rect x="4" y="2" width="16" height="20" rx="2"/></svg></div>
+                <div class="ph-appbar__action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
+              </div>
+              <div style="position:absolute;top:56px;left:0;right:0;bottom:56px;display:flex;align-items:center;justify-content:center;background:var(--color-surface);">
+                <div class="spinner"></div>
+              </div>
+              <div class="ph-bottomnav">
+                <div class="ph-bottomnav__item ph-bottomnav__item--active"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l9 8h-3v9h-4v-6h-4v6H6v-9H3z"/></svg>홈</div>
+                <div class="ph-bottomnav__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 12h8M8 17h5"/></svg>신청관리</div>
+                <div class="ph-bottomnav__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>체크인</div>
+                <div class="ph-bottomnav__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6"/></svg>정산</div>
+                <div class="ph-bottomnav__item"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>더보기</div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>state.status</code> = AsyncLoading (controller가 dashboard data fetching 중) · MinglitAsyncValueWidget의 loading branch 진입</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>· AppBar / 하단 NavigationBar 모두 인터랙션 가능 (다른 탭으로 이동 가능)<br>· body 영역 모든 탭 무반응 — 스피너만 회전</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>· fetch 에러 → MinglitAsyncValueWidget이 에러 fallback 렌더 (이 spec 별도 state 미상세 — 일반 에러 view)<br>· 매우 빠른 fetch → spinner 한 프레임도 안 보일 수 있음</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>↔ body 전체 → <code>MinglitCircularProgressIndicator</code>(MinglitAsyncValueWidget default loading slot) — Material default<br>− 모든 dashboard 컴포넌트 (greeting · banner · chips · event card · weekly · onboarding)<br>· AppBar / NavigationBar는 유지 (shell이 항상 그림)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>− 모든 dashboard 토큰 미사용. 스피너만 <code>color-primary</code>(track <code>color-divider</code>)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 AppBar + 하단 NavigationBar는 유지 — partner는 다른 탭으로 즉시 이동 가능. body만 spinner로 대체.</td>
+        </tr>
+      </tbody>
+    </table>
+
+  </section>
+</div>
+
+<!-- ============================================================
+     BEHAVIOR
+     ============================================================ -->
+<div class="perspective" id="behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">cross-cutting — 모든 state에 적용되는 액션, motion, 글로벌 에지케이스. 각 state 한정 액션은 위 mini-table 참고.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Cross-cutting interactions</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 240px;">사용자 액션</th>
+          <th>화면에 보이는 결과</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>아래로 당기기 (pull-to-refresh)</td>
+          <td><code>RefreshIndicator</code> → <code>partnerDashboardController.loadDashboardData()</code> 재호출. 갱신 완료 시 자동으로 data 반영. (단, Loading state에선 RefreshIndicator 자체 미렌더 — MinglitAsyncValueWidget loading branch이므로)</td>
+        </tr>
+        <tr>
+          <td>알림 아이콘 탭</td>
+          <td>NotificationCenterRoute 외부 push (shell 밖 — bottom nav 사라짐). 미읽음 카운트는 <code>notificationListProvider</code>에서 계산 (is_read=false). 99 초과 시 "99+".</td>
+        </tr>
+        <tr>
+          <td>BugReportAction (dev only · 알림 좌측)</td>
+          <td>Fix #1285: FAB을 대체. 운영 빌드에서는 미렌더. 디자인 1:1 비교 시 prod 빌드 기준으로 무시.</td>
+        </tr>
+        <tr>
+          <td>하단 탭 전환</td>
+          <td>StatefulShell branch 전환 — 홈 stack은 유지. settlement 탭은 <code>hasSettlementAccessProvider</code>가 true일 때만 노출(SETTLEMENT_VIEW 권한). 미보유 시 탭 자체 미렌더.</td>
+        </tr>
+        <tr>
+          <td>다크 모드 토글</td>
+          <td>scaffold bg → <code>color-dark-background</code>(#0f0f0f) · 카드 → <code>color-dark-surface</code>(#212121) · primary → <code>color-partner-dark-primary</code>(#9b7bec). location banner의 mint는 dark에서도 비슷한 채도 유지.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Motion timing</h2>
+    <p class="intro">
+      Source: <code>shared/packages/mds/core/lib/src/theme/minglit_design_tokens.dart</code> · <code>MinglitAnimation</code>.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 240px;">Transition</th>
+          <th style="width: 200px;">Token / Duration</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>탭 전환 (홈 ↔ 신청관리/체크인/정산/더보기)</td>
+          <td><code>MinglitAnimation.medium</code> (350ms)</td>
+          <td><code>FadeThroughTransition</code> via PageTransitionSwitcher (PartnerScaffold). Outgoing은 IgnorePointer로 입력 차단(Fix #1835).</td>
+        </tr>
+        <tr>
+          <td>Loading → 데이터 표시</td>
+          <td>cut (no animation)</td>
+          <td>MinglitAsyncValueWidget이 즉각 child swap. fade 없음.</td>
+        </tr>
+        <tr>
+          <td>Pull-to-refresh</td>
+          <td>OS 기본 (iOS/Android RefreshIndicator)</td>
+          <td>Material default — primary 색의 spinner.</td>
+        </tr>
+        <tr>
+          <td>Onboarding → Default 전환 (첫 이벤트 생성 후 복귀)</td>
+          <td><code>MinglitAnimation.medium</code> (350ms)</td>
+          <td>다음 진입 시 controller.loadDashboardData()로 fetch → AsyncValueWidget swap. (자동 polling 없음 — 진입 trigger.)</td>
+        </tr>
+        <tr>
+          <td>EventActionCard phase 전환 (recruiting → preparing → live → ended)</td>
+          <td>cut</td>
+          <td>실시간 자동 전환 없음. 새로 진입하거나 pull-to-refresh 해야 phase 재계산. <em>(시간 기반이라 자동 갱신 권장 — 향후 개선)</em></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Global edge cases</h2>
+    <ul class="notes">
+      <li><strong>partner null</strong> — currentPartnerInfoProvider가 아직 로드 중이면 greeting 이름 자리 "파트너" placeholder. 다른 컴포넌트는 영향 없음.</li>
+      <li><strong>state.activeParties.length</strong> — 0이면 onboarding 내 "첫 파티" CTA · 1이면 EventCreate 직접 push · 2+면 _PartySelectionSheet bottom sheet 노출 후 선택.</li>
+      <li><strong>WeeklyStatsRow 데이터 부재</strong> — 현재 totalRevenue / checkinRate는 placeholder (실 API 미연결). null 들어오면 ₩0 / 0% 표시(Fix #1611). totalApplications만 pendingReviewCount 재사용.</li>
+      <li><strong>upcoming chip 카운트</strong> — <code>upcomingEvents.length</code>(7일 이내 시작 예정) 사용. recruiting/preparing/live phase 모두 포함 — ended는 미포함.</li>
+      <li><strong>SETTLEMENT_VIEW 권한 미보유</strong> — 하단 nav에서 정산 탭 미노출. 직접 URL 진입 시 redirect/에러는 라우팅 상위에서 처리.</li>
+    </ul>
+  </section>
+</div>
+
+<!-- ============================================================
+     REFERENCE
+     ============================================================ -->
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">📖</span>
+    <h2>Reference</h2>
+    <span class="lede">implementation source + 인접 화면. Components / Tokens는 위 mini-table 참고.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Implementation source</h2>
+    <table class="ref">
+      <tbody>
+        <tr><th style="width: 200px;">Widget</th><td><code>PartnerHomePage</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/features/home/partner_home_page.dart"><code>apps/app_partner/lib/src/features/home/partner_home_page.dart</code></a></td></tr>
+        <tr><th>Route</th><td><code>HomeRoute</code> · <code>/</code> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/routing/app_routes.dart"><code>app_routes.dart</code></a> (HomeBranch · StatefulShell)</td></tr>
+        <tr><th>Shell</th><td><code>PartnerScaffold</code> — bottom NavigationBar 5 tab (Home · 신청관리 · 체크인 · [정산] · 더보기). PageTransitionSwitcher + FadeThroughTransition.</td></tr>
+        <tr><th>Controller / providers</th><td><code>partnerDashboardControllerProvider</code> · <code>currentPartnerInfoProvider</code> · <code>notificationListProvider</code> · <code>hasSettlementAccessProvider</code> · <code>partnerHomeCoordinatorProvider</code></td></tr>
+        <tr><th>Internal widgets</th><td><code>EventActionCard</code> + <code>EventActionCardEmpty</code> + <code>_EndedStatsRow</code> · <code>OnboardingStepGuide</code> + <code>_StepRow</code> + <code>_FlowStep</code> · <code>TodoSummaryChips</code> + <code>_TodoChip</code> · <code>WeeklyStatsRow</code> + <code>_StatItem</code> · <code>LocationGuideBanner</code> · <code>_GreetingSection</code> · <code>_SectionHeader</code> · <code>_PartySelectionSheet</code></td></tr>
+        <tr><th>Phase logic</th><td><code>getEventPhase(event)</code> · <code>selectPrimaryEvent(events)</code> — recruiting (>3h) · preparing (≤3h) · live · ended (≤24h since end). 우선순위: live &gt; preparing &gt; ended &gt; recruiting.</td></tr>
+        <tr><th>Theme</th><td><code>MinglitTheme.partnerTheme</code> — primary <code>MinglitPartnerColors.primary</code>(<code>#6c3ce1</code>). user app(<code>#9900ff</code>)과 다름.</td></tr>
+        <tr><th>⚠️ 알려진 drift</th><td>Phase 전환은 시간 기반이지만 화면이 자동 재계산하지 않음 — 새로 진입 또는 pull-to-refresh 필요. preparing(D-3h) 같은 경계는 사용자가 인지하지 못할 수 있음. 향후 개선 후보.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 240px;">Spec</th><th>Relation</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><a href="/specs/login_page.html"><code>PartnerLoginPage</code></a></td>
+          <td>로그인 후 onboarding 미완료면 PartnerWelcome → PartnerApply → PartnerApplyStatus 거쳐 이 홈으로 진입.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/party_create_wizard_page.html"><code>PartyCreateWizardPage</code></a></td>
+          <td>Onboarding 또는 Default(파티 0개) 상태에서 EventActionCardEmpty의 "파티 만들기" CTA의 도착지.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/event_detail_page.html"><code>EventDetailPage</code></a></td>
+          <td>EventActionCard "이벤트 수정" / "상세 결과" 보조 액션의 도착지 (recruiting / ended phase).</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/settlement_detail_page.html"><code>SettlementDetailPage</code></a></td>
+          <td>하단 정산 탭 진입 후 항목 탭으로 진입하는 detail (SETTLEMENT_VIEW 권한 보유 시).</td>
+        </tr>
+        <tr>
+          <td><a href="/foundations/layout">Layout foundations</a></td>
+          <td>Standard Scaffold + SingleChildScrollView + StatefulShell bottom nav.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+</div>
+
+<script>
+  document.getElementById('spec-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('spec-mode', e.target.checked);
+  });
+  document.getElementById('dark-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('dark-mode', e.target.checked);
+  });
+</script>
+</body>
+</html>
