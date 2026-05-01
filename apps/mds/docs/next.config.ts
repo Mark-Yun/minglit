@@ -1,7 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  turbopack: {
+    resolveAlias: {
+      "@upsetjs/venn.js": "./src/lib/empty-stub.ts",
+    },
+  },
 };
 
 export default nextConfig;
