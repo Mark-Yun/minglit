@@ -382,26 +382,50 @@
 <div class="page">
 
 <!-- ============================================================
-     Header
+     📍 HEADER
      ============================================================ -->
 <header>
-  <div class="breadcrumb">app_partner · Party · PartyCreateWizardRoute</div>
   <h1>Party Create Wizard</h1>
-  <div class="meta">
-    <span>Widget: <code>PartyCreateWizardPage</code> + <code>Step1BasicInfo</code> … <code>Step6Review</code></span>
-    <span>Role: <strong>파티 생성 / 수정 위저드</strong></span>
-  </div>
 </header>
 
 <!-- ============================================================
-     Purpose & Context
+     🎯 OVERVIEW
      ============================================================ -->
 <section class="doc">
-  <h2>Purpose &amp; Context</h2>
+  <h2>Overview</h2>
   <table class="ref">
     <tbody>
       <tr>
-        <th style="width: 140px;">Purpose</th>
+        <th style="width: 140px;">Status</th>
+        <td><strong>✅ 디자인완료</strong> <em style="color: var(--color-text-secondary);">— 6 step + validation/submitting 8 state · Create / Edit 공유</em></td>
+      </tr>
+      <tr>
+        <th>App</th>
+        <td><code>app_partner</code></td>
+      </tr>
+      <tr>
+        <th>Category</th>
+        <td>party · create / edit</td>
+      </tr>
+      <tr>
+        <th>Route / Surface</th>
+        <td>
+          <code>PartyCreateRoute</code> · <code>PartyEditRoute</code> (shared spec) · widget: <code>PartyCreateWizardPage</code> + <code>Step1BasicInfo</code>…<code>Step6Review</code>
+        </td>
+      </tr>
+      <tr>
+        <th>Path</th>
+        <td>Create: <code>/more/parties/new</code> · Edit: <code>/more/parties/:partyId/edit</code></td>
+      </tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>: <em>— (top-level partner screen — 파티 목록에서 진입하는 wizard)</em><br>
+          <strong>Children</strong>: <em>— (6 step은 internal sub-routes 아닌 stepper widget으로 한 화면 안에서 처리)</em>
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
         <td>
           파트너가 새 파티(모임)를 생성하거나 기존 파티를 수정할 수 있도록
           6단계 위저드로 안내한다. 각 단계에서 입력한 정보를 마지막 검토 단계에서
@@ -424,7 +448,7 @@
           단계별 위저드가 UX를 단순화한다.
           수정 모드(<code>partyId</code> 전달)에서는 기존 데이터를 prefill하며, prefill 로딩 중에는
           스피너 화면을 표시한다.
-          double-tap 방지를 위한 guard(_isNextingStep)가 적용되어 있다.
+          double-tap 방지를 위한 guard(<code>_isNextingStep</code>)가 적용되어 있다.
         </td>
       </tr>
       <tr>
@@ -435,11 +459,41 @@
   </table>
 </section>
 
+<!-- ============================================================
+     🕐 HISTORY
+     ============================================================ -->
+<section class="doc">
+  <h2>History</h2>
+  <p class="intro">
+    이 spec의 주요 변경 이력. 최신 항목 위.
+  </p>
+  <table class="ref">
+    <thead>
+      <tr>
+        <th style="width: 110px;">Date</th>
+        <th style="width: 80px;">Version</th>
+        <th style="width: 120px;">Author</th>
+        <th>Changes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2026-05-01</td>
+        <td>1.0</td>
+        <td>mark-yun</td>
+        <td>
+          v1.4 template으로 마이그레이션. Header → Overview 흡수 (Status · App · Category · Route · Path · Hierarchy 6행 추가). 8 states (6 step + validation error + submitting) → mini-table per state, baseline = Step 1 (기본 정보), additive diff. Reference의 Components / Tokens → 각 state mini-table에 분산.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
 <!-- Anchor nav -->
 <nav class="perspective-nav">
   <a href="#layout"><span class="glyph">🧱</span> Layout</a>
-  <a href="#visual"><span class="glyph">🎨</span> Visual</a>
-  <a href="#behavior"><span class="glyph">🔄</span> Behavior</a>
+  <a href="#states"><span class="glyph">🎨</span> States</a>
+  <a href="#behavior"><span class="glyph">🔄</span> Global Behavior</a>
   <a href="#reference"><span class="glyph">📖</span> Reference</a>
 </nav>
 
@@ -549,430 +603,617 @@
 <!-- ============================================================
      VISUAL
      ============================================================ -->
-<div class="perspective" id="visual">
+<div class="perspective" id="states">
   <div class="perspective__header">
     <span class="glyph">🎨</span>
-    <h2>Visual</h2>
-    <span class="lede">각 단계(Step)가 별도 상태. 첫 번째 상태(Step 1 default)에서 spec mode 오버레이 포함.</span>
+    <h2>States</h2>
+    <span class="lede">시각 변형 8종 (6 step + validation error + submitting). baseline = Step 1, 나머지는 additive diff.</span>
   </div>
 
   <section class="doc">
-    <h2>States gallery</h2>
     <p class="intro">
-      6단계 + 수정 모드 로딩 + 제출 중 = 8가지 시각 상태. 첫 번째(Step 1 — 기본 정보 작성 중)가 spec mode 오버레이를 포함한다.
+      <strong>State 종류 식별 기준</strong>: <code>currentStep</code> enum (basicInfo · location · capacityAndContact · entryRules · tickets · review) + validation 분기 (<code>currentStepValidationErrors</code>) + async submit (<code>globalLoadingControllerProvider</code>). Edit 모드 prefill loading은 별도 state 미포함 — Step 1 진입 직전 spinner라 이행적 transition.
     </p>
 
-    <div class="states">
-
-      <!-- State 1: Step 1 — 기본 정보 (annotated) -->
-      <div class="state">
-        <div class="state__label">
-          Step 1 / 6 · 기본 정보
-          <span class="tag">production</span>
-        </div>
-        <div class="state__condition">
-          currentStep = basicInfo · 제목 입력 중 · 이미지 미업로드
-        </div>
-        <div class="viewport">
-          <!-- AppBar -->
-          <div class="wizard-appbar">
-            <div class="wizard-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
-            <div class="wizard-appbar__title">기본 정보</div>
-          </div>
-          <!-- Progress: 1/6 -->
-          <div class="wizard-progress"><div class="wizard-progress__fill" style="width:16.7%;"></div></div>
-
-          <!-- Step 1 body -->
-          <div class="wizard-body">
-            <!-- 파티 제목 -->
-            <div class="wizard-field-group">
-              <div class="wizard-field-label">파티 제목</div>
-              <div class="wizard-input wizard-input--filled">강남 루프탑 소셜 파티</div>
-            </div>
-            <!-- 파티 소개 -->
-            <div class="wizard-field-group">
-              <div class="wizard-field-label">파티 소개</div>
-              <div class="wizard-quill">
-                <div class="wizard-quill__toolbar">
-                  <div class="wizard-quill__toolbar-btn" style="font-weight:700;">B</div>
-                  <div class="wizard-quill__toolbar-btn" style="font-style:italic;">I</div>
-                  <div class="wizard-quill__toolbar-btn">≡</div>
-                  <div class="wizard-quill__toolbar-btn">·</div>
-                </div>
-                <div class="wizard-quill__body wizard-quill__placeholder">파티를 소개하는 글을 적어주세요</div>
+    <!-- State 1: Step 1 · 기본 정보 (baseline) -->
+    <table class="ref state-mini is-baseline-tint">
+      <thead>
+        <tr><th colspan="3"><strong>Step 1 / 6 · 기본 정보</strong> 🎯 <small>baseline · production</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="wizard-appbar">
+                <div class="wizard-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
+                <div class="wizard-appbar__title">기본 정보</div>
               </div>
-            </div>
-            <!-- 커버 이미지 -->
-            <div class="wizard-field-group">
-              <div class="wizard-field-label">커버 이미지</div>
-              <div class="wizard-image-grid">
-                <div class="wizard-image-slot">
-                  <div class="wizard-image-slot__add">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-                    <span>추가</span>
+              <div class="wizard-progress"><div class="wizard-progress__fill" style="width:16.7%;"></div></div>
+              <div class="wizard-body">
+                <div class="wizard-field-group">
+                  <div class="wizard-field-label">파티 제목</div>
+                  <div class="wizard-input wizard-input--filled">강남 루프탑 소셜 파티</div>
+                </div>
+                <div class="wizard-field-group">
+                  <div class="wizard-field-label">파티 소개</div>
+                  <div class="wizard-quill">
+                    <div class="wizard-quill__toolbar">
+                      <div class="wizard-quill__toolbar-btn" style="font-weight:700;">B</div>
+                      <div class="wizard-quill__toolbar-btn" style="font-style:italic;">I</div>
+                      <div class="wizard-quill__toolbar-btn">≡</div>
+                      <div class="wizard-quill__toolbar-btn">·</div>
+                    </div>
+                    <div class="wizard-quill__body wizard-quill__placeholder">파티를 소개하는 글을 적어주세요</div>
                   </div>
                 </div>
-                <div class="wizard-image-slot" style="border-style:solid;border-color:transparent;">
-                  <div class="wizard-image-slot__img"></div>
-                  <div class="wizard-image-slot__remove">×</div>
+                <div class="wizard-field-group">
+                  <div class="wizard-field-label">커버 이미지</div>
+                  <div class="wizard-image-grid">
+                    <div class="wizard-image-slot">
+                      <div class="wizard-image-slot__add">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                        <span>추가</span>
+                      </div>
+                    </div>
+                    <div class="wizard-image-slot" style="border-style:solid;border-color:transparent;">
+                      <div class="wizard-image-slot__img"></div>
+                      <div class="wizard-image-slot__remove">×</div>
+                    </div>
+                    <div class="wizard-image-slot" style="opacity:0.4;"></div>
+                    <div class="wizard-image-slot" style="opacity:0.4;"></div>
+                  </div>
                 </div>
-                <div class="wizard-image-slot" style="opacity:0.4;"></div>
-                <div class="wizard-image-slot" style="opacity:0.4;"></div>
-              </div>
-            </div>
-            <!-- 공개 범위 -->
-            <div class="wizard-field-group">
-              <div class="wizard-field-label">공개 범위</div>
-              <div class="wizard-switch-row">
-                <div class="wizard-switch-row__text">
-                  <div class="wizard-switch-row__title">비공개 파티</div>
-                  <div class="wizard-switch-row__sub">링크를 가진 사용자만 접근 가능</div>
+                <div class="wizard-field-group">
+                  <div class="wizard-field-label">공개 범위</div>
+                  <div class="wizard-switch-row">
+                    <div class="wizard-switch-row__text">
+                      <div class="wizard-switch-row__title">비공개 파티</div>
+                      <div class="wizard-switch-row__sub">링크를 가진 사용자만 접근 가능</div>
+                    </div>
+                    <div class="wizard-switch"><div class="wizard-switch__thumb"></div></div>
+                  </div>
                 </div>
-                <div class="wizard-switch"><div class="wizard-switch__thumb"></div></div>
+              </div>
+              <div class="wizard-bottom-nav">
+                <div class="wizard-btn-next">다음</div>
               </div>
             </div>
-          </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>currentStep == basicInfo</code> · 진입 직후 (Create) 또는 prefill 완료 (Edit) · 제목 일부 입력됨</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            ① <strong>제목 입력</strong> → input filled 상태로 갱신<br>
+            ② <strong>소개 Quill 편집</strong> → bold/italic toolbar 액션 + 본문 편집<br>
+            ③ <strong>이미지 추가 슬롯 탭</strong> → OS 이미지 picker 호출<br>
+            ④ <strong>이미지 × 탭</strong> → 슬롯에서 제거<br>
+            ⑤ <strong>비공개 파티 switch 토글</strong> → on/off (link-only access)<br>
+            ⑥ <strong>"다음" 탭</strong> → validation 통과 시 Step 2 / 실패 시 State 7 (validation error)<br>
+            ⑦ <strong>back 탭</strong> → 별도 confirm 없이 파티 목록 복귀
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · 이미지 4개 슬롯 모두 채워짐 → "추가" 슬롯 사라짐<br>
+            · 제목 50자 초과 → input border <code>color-error</code> + 에러 메시지<br>
+            · 비공개 토글 ON → public/private flag 즉시 변경 (Step 6에서도 확인 가능)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            · <code>MinglitAppBar</code> (back · title)<br>
+            · <code>WizardProgressBar</code> (16.7% fill — 1/6 step)<br>
+            · <code>MinglitTextField</code> (filled · placeholder · error variant)<br>
+            · <code>QuillEditor</code> (bold/italic/list toolbar · placeholder)<br>
+            · <code>ImageSlotGrid</code> 4개 슬롯 (add 슬롯 · 채워진 슬롯 + remove · 비활성 슬롯)<br>
+            · <code>SwitchRow</code> (제목 + 부제 + Switch)<br>
+            · <code>WizardBottomNav</code> + <code>FilledButton</code> (다음 — Step 1엔 prev 없음)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            · color: <code>color-primary</code> (progress fill · 다음 버튼), <code>color-background</code>, <code>color-surface</code>, <code>color-divider</code> (input border · 비활성 슬롯), <code>color-text-primary/secondary</code><br>
+            · radius: <code>radius-input</code> (12 · input · slot), <code>radius-button</code> (12 · 다음 버튼), <code>radius-card</code> (16 · Quill body)<br>
+            · spacing: <code>spacing-medium</code> (16 · body padding · field 간격), <code>spacing-sm</code> (12 · label↔input · slot gap), <code>spacing-small</code> (8 · 부제↔본문 · toolbar btn gap)<br>
+            · typography: appBarTitle (18/600), titleSmall (14/700 — field label), bodyMedium (14/400 — input), bodySmall (12 — sub-label · sub)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 6 step 모두 같은 scaffold (AppBar + Progress + body + BottomNav). 다른 step은 body 콘텐츠와 progress %, AppBar title만 다름. 변경분만 표시.</td>
+        </tr>
+      </tbody>
+    </table>
 
-          <!-- Bottom nav — Step 1 has no "이전" button -->
-          <div class="wizard-bottom-nav">
-            <div class="wizard-btn-next">다음</div>
-          </div>
-
-          <!-- Spec-mode annotations -->
-          <span class="annotation" style="top:58px;left:8px;">progress: 1/6 (16.7%)</span>
-          <span class="annotation" style="top:58px;right:8px;">color-primary fill</span>
-          <span class="annotation" style="top:96px;left:8px;">spacing-medium — outer pad</span>
-          <span class="annotation" style="top:128px;right:8px;">radius-input (12px)</span>
-          <span class="annotation" style="bottom:82px;right:8px;">flex:2 — 다음 버튼</span>
-
-          <!-- Callouts -->
-          <span class="callout" style="top:58px;left:60px;">ⓐ</span>
-          <span class="callout" style="top:96px;left:8px;">ⓑ</span>
-          <span class="callout" style="top:172px;right:8px;">ⓒ</span>
-          <span class="callout" style="top:290px;right:8px;">ⓓ</span>
-          <span class="callout" style="bottom:86px;right:8px;">ⓔ</span>
-
-          <!-- Type specs -->
-          <span class="type-spec" style="top:76px;left:150px;">18 / 600 / 1 — AppBar title</span>
-          <span class="type-spec" style="top:108px;left:200px;">14 / 700 / 1 — field label</span>
-          <span class="type-spec" style="top:140px;left:200px;">14 / 400 / 1 — input</span>
-          <span class="type-spec" style="bottom:92px;right:60px;">16 / 600 / 1 — btn</span>
-        </div>
-      </div>
-
-      <!-- State 2: Step 2 — 장소 선택 -->
-      <div class="state">
-        <div class="state__label">
-          Step 2 / 6 · 장소 선택
-          <span class="tag tag--mute">step-2</span>
-        </div>
-        <div class="state__condition">
-          currentStep = location · 장소 선택 완료 · 상세 주소 미입력
-        </div>
-        <div class="viewport">
-          <div class="wizard-appbar">
-            <div class="wizard-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
-            <div class="wizard-appbar__title">장소 선택</div>
-          </div>
-          <div class="wizard-progress"><div class="wizard-progress__fill" style="width:33.3%;"></div></div>
-          <div class="wizard-body">
-            <div class="wizard-field-group">
-              <div class="wizard-field-label">파티 장소</div>
-              <div class="wizard-location-picker wizard-input--filled" style="border-color:var(--color-primary);">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                <span class="wizard-location-picker__text">Skybar Seoul 강남점</span>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
+    <!-- State 2: Step 2 · 장소 선택 -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Step 2 / 6 · 장소 선택</strong> <small>currentStep = location</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="wizard-appbar">
+                <div class="wizard-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
+                <div class="wizard-appbar__title">장소 선택</div>
               </div>
-              <div style="margin-top:6px;font-size:11px;color:var(--color-text-secondary);">서울 강남구 테헤란로 123</div>
-            </div>
-            <div class="wizard-field-group">
-              <div class="wizard-field-label">상세 주소</div>
-              <div class="wizard-input wizard-input--placeholder">ex. 3층 오픈 테라스</div>
-            </div>
-            <div class="wizard-field-group">
-              <div class="wizard-field-label">찾아오는 방법</div>
-              <div class="wizard-input" style="height:80px;align-items:flex-start;padding-top:12px;color:var(--color-text-secondary);">강남역 11번 출구에서 도보 5분</div>
-            </div>
-          </div>
-          <div class="wizard-bottom-nav">
-            <div class="wizard-btn-prev">이전</div>
-            <div class="wizard-btn-next">다음</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- State 3: Step 3 — 정원 & 연락처 -->
-      <div class="state">
-        <div class="state__label">
-          Step 3 / 6 · 정원 &amp; 연락처
-          <span class="tag tag--mute">step-3</span>
-        </div>
-        <div class="state__condition">
-          currentStep = capacityAndContact
-        </div>
-        <div class="viewport">
-          <div class="wizard-appbar">
-            <div class="wizard-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
-            <div class="wizard-appbar__title">정원 &amp; 연락처</div>
-          </div>
-          <div class="wizard-progress"><div class="wizard-progress__fill" style="width:50%;"></div></div>
-          <div class="wizard-body">
-            <div class="wizard-field-group">
-              <div class="wizard-field-label">최소 확정 인원</div>
-              <div class="wizard-field-sub">최소 인원에 미치지 않으면 파티가 취소됩니다.</div>
-              <div class="wizard-input wizard-input--filled" style="width:120px;">4명</div>
-            </div>
-            <div class="wizard-field-group">
-              <div class="wizard-field-label">연락처 방법</div>
-              <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                <div class="filter-chip filter-chip--active" style="height:36px;padding:0 12px;border-radius:100px;border:1px solid var(--color-primary);background:rgba(var(--spec-blueprint-rgb), 0.08);color:var(--color-primary);font-size:13px;font-weight:600;display:inline-flex;align-items:center;">전화</div>
-                <div class="filter-chip" style="height:36px;padding:0 12px;border-radius:100px;border:1px solid var(--color-divider);background:var(--color-background);color:var(--color-text-secondary);font-size:13px;display:inline-flex;align-items:center;">이메일</div>
-                <div class="filter-chip filter-chip--active" style="height:36px;padding:0 12px;border-radius:100px;border:1px solid var(--color-primary);background:rgba(var(--spec-blueprint-rgb), 0.08);color:var(--color-primary);font-size:13px;font-weight:600;display:inline-flex;align-items:center;">카카오</div>
-              </div>
-            </div>
-            <div class="wizard-field-group">
-              <div class="wizard-field-label">전화번호</div>
-              <div class="wizard-input wizard-input--filled">010-1234-5678</div>
-            </div>
-            <div class="wizard-field-group">
-              <div class="wizard-field-label">성비 균형</div>
-              <div class="wizard-switch-row">
-                <div class="wizard-switch-row__text">
-                  <div class="wizard-switch-row__title">성비 균형 맞추기</div>
-                  <div class="wizard-switch-row__sub">남/여 비율을 자동으로 조정합니다</div>
+              <div class="wizard-progress"><div class="wizard-progress__fill" style="width:33.3%;"></div></div>
+              <div class="wizard-body">
+                <div class="wizard-field-group">
+                  <div class="wizard-field-label">파티 장소</div>
+                  <div class="wizard-location-picker wizard-input--filled" style="border-color:var(--color-primary);">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    <span class="wizard-location-picker__text">Skybar Seoul 강남점</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
+                  </div>
+                  <div style="margin-top:6px;font-size:11px;color:var(--color-text-secondary);">서울 강남구 테헤란로 123</div>
                 </div>
-                <div class="wizard-switch wizard-switch--on"><div class="wizard-switch__thumb"></div></div>
+                <div class="wizard-field-group">
+                  <div class="wizard-field-label">상세 주소</div>
+                  <div class="wizard-input wizard-input--placeholder">ex. 3층 오픈 테라스</div>
+                </div>
+                <div class="wizard-field-group">
+                  <div class="wizard-field-label">찾아오는 방법</div>
+                  <div class="wizard-input" style="height:80px;align-items:flex-start;padding-top:12px;color:var(--color-text-secondary);">강남역 11번 출구에서 도보 5분</div>
+                </div>
+              </div>
+              <div class="wizard-bottom-nav">
+                <div class="wizard-btn-prev">이전</div>
+                <div class="wizard-btn-next">다음</div>
               </div>
             </div>
-          </div>
-          <div class="wizard-bottom-nav">
-            <div class="wizard-btn-prev">이전</div>
-            <div class="wizard-btn-next">다음</div>
-          </div>
-        </div>
-      </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>currentStep == location</code> · 장소 선택 완료 · 상세 주소 미입력</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>+ <strong>장소 picker 탭</strong> → 장소 검색 시트 (Naver/Kakao API) → 선택 → 자동 prefill (이름 + 주소)<br>+ <strong>상세 주소 / 찾아오는 방법 입력</strong> → 일반 텍스트 input<br>나머지 동일 (이전/다음)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>· 장소 검색 결과 없음 → 직접 입력 fallback (LocationPicker 내부 처리)<br>· "다음" 탭 시 장소 미선택 → State 7 (validation error)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>+ <code>LocationPicker</code> (선택된 장소 + arrow chevron)<br>+ <code>WizardBottomNav</code>의 <code>OutlinedButton</code> "이전" (Step 2부터 등장)<br>↔ <code>WizardProgressBar</code> fill → 33.3% (2/6)<br>↔ AppBar title → "장소 선택"<br>− 이미지 grid · Quill · Switch</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>+ LocationPicker 활성 border → <code>color-primary</code> (선택 시)<br>나머지 동일</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 progress fill % = step / total × 100. UI에선 16.7 / 33.3 / 50.0 / 66.7 / 83.3 / 100 6단계.</td>
+        </tr>
+      </tbody>
+    </table>
 
-      <!-- State 4: Step 4 — 입장 규칙 -->
-      <div class="state">
-        <div class="state__label">
-          Step 4 / 6 · 입장 규칙
-          <span class="tag tag--mute">step-4</span>
-        </div>
-        <div class="state__condition">
-          currentStep = entryRules · 2개 그룹 설정됨
-        </div>
-        <div class="viewport">
-          <div class="wizard-appbar">
-            <div class="wizard-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
-            <div class="wizard-appbar__title">입장 규칙</div>
-          </div>
-          <div class="wizard-progress"><div class="wizard-progress__fill" style="width:66.7%;"></div></div>
-          <div class="wizard-body">
-            <div class="wizard-entry-card">
-              <div class="wizard-entry-card__header">
-                <div class="wizard-entry-card__name">일반 참여 (남성)</div>
-                <div class="wizard-entry-card__delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></div>
+    <!-- State 3: Step 3 · 정원 & 연락처 -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Step 3 / 6 · 정원 &amp; 연락처</strong> <small>currentStep = capacityAndContact</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="wizard-appbar">
+                <div class="wizard-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
+                <div class="wizard-appbar__title">정원 &amp; 연락처</div>
               </div>
-              <div class="wizard-entry-card__detail">필요 인증: 성별 인증 · 나이 제한: 25–35세</div>
-            </div>
-            <div class="wizard-entry-card">
-              <div class="wizard-entry-card__header">
-                <div class="wizard-entry-card__name">일반 참여 (여성)</div>
-                <div class="wizard-entry-card__delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></div>
+              <div class="wizard-progress"><div class="wizard-progress__fill" style="width:50%;"></div></div>
+              <div class="wizard-body">
+                <div class="wizard-field-group">
+                  <div class="wizard-field-label">최소 확정 인원</div>
+                  <div class="wizard-field-sub">최소 인원에 미치지 않으면 파티가 취소됩니다.</div>
+                  <div class="wizard-input wizard-input--filled" style="width:120px;">4명</div>
+                </div>
+                <div class="wizard-field-group">
+                  <div class="wizard-field-label">연락처 방법</div>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <div class="filter-chip filter-chip--active" style="height:36px;padding:0 12px;border-radius:100px;border:1px solid var(--color-primary);background:rgba(var(--spec-blueprint-rgb), 0.08);color:var(--color-primary);font-size:13px;font-weight:600;display:inline-flex;align-items:center;">전화</div>
+                    <div class="filter-chip" style="height:36px;padding:0 12px;border-radius:100px;border:1px solid var(--color-divider);background:var(--color-background);color:var(--color-text-secondary);font-size:13px;display:inline-flex;align-items:center;">이메일</div>
+                    <div class="filter-chip filter-chip--active" style="height:36px;padding:0 12px;border-radius:100px;border:1px solid var(--color-primary);background:rgba(var(--spec-blueprint-rgb), 0.08);color:var(--color-primary);font-size:13px;font-weight:600;display:inline-flex;align-items:center;">카카오</div>
+                  </div>
+                </div>
+                <div class="wizard-field-group">
+                  <div class="wizard-field-label">전화번호</div>
+                  <div class="wizard-input wizard-input--filled">010-1234-5678</div>
+                </div>
+                <div class="wizard-field-group">
+                  <div class="wizard-field-label">성비 균형</div>
+                  <div class="wizard-switch-row">
+                    <div class="wizard-switch-row__text">
+                      <div class="wizard-switch-row__title">성비 균형 맞추기</div>
+                      <div class="wizard-switch-row__sub">남/여 비율을 자동으로 조정합니다</div>
+                    </div>
+                    <div class="wizard-switch wizard-switch--on"><div class="wizard-switch__thumb"></div></div>
+                  </div>
+                </div>
               </div>
-              <div class="wizard-entry-card__detail">필요 인증: 성별 인증 · 나이 제한: 25–35세</div>
+              <div class="wizard-bottom-nav">
+                <div class="wizard-btn-prev">이전</div>
+                <div class="wizard-btn-next">다음</div>
+              </div>
             </div>
-            <div class="wizard-add-btn">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              그룹 추가
-            </div>
-          </div>
-          <div class="wizard-bottom-nav">
-            <div class="wizard-btn-prev">이전</div>
-            <div class="wizard-btn-next">다음</div>
-          </div>
-        </div>
-      </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>currentStep == capacityAndContact</code> · 최소 인원 + 연락처 방법 multi-select</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>+ <strong>최소 인원 number input</strong> (단위 "명")<br>+ <strong>연락처 방법 chip 탭</strong> → multi-select 토글 (전화 · 이메일 · 카카오)<br>+ <strong>전화번호 / 이메일 / 카카오 ID input</strong> → 선택된 chip마다 input 등장<br>+ <strong>성비 균형 switch 토글</strong> → 자동 조정 on/off</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>· 연락처 방법 0개 선택 → "다음" 탭 시 validation error<br>· 최소 인원이 티켓 총량보다 많음 → Step 6 review에서 경고</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>+ <code>NumberStepperInput</code> (최소 인원, 최대 4 자리)<br>+ <code>MinglitFilterChipGroup</code> (연락처 방법 multi-select)<br>+ <code>SwitchRow</code> (성비 균형)<br>↔ <code>WizardProgressBar</code> fill → 50% (3/6)<br>↔ AppBar title → "정원 &amp; 연락처"</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>+ chip 활성 bg → <code>rgba(var(--spec-blueprint-rgb), 0.08)</code> + <code>color-primary</code> border<br>+ chip 비활성 → <code>color-divider</code> border + <code>color-background</code> bg<br>+ <code>radius-chip</code> (100px · fully rounded)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 chip multi-select 패턴은 다른 wizard에서도 재사용 — MDS <code>MinglitFilterChipGroup</code> 표준.</td>
+        </tr>
+      </tbody>
+    </table>
 
-      <!-- State 5: Step 5 — 티켓 -->
-      <div class="state">
-        <div class="state__label">
-          Step 5 / 6 · 티켓
-          <span class="tag tag--mute">step-5</span>
-        </div>
-        <div class="state__condition">
-          currentStep = tickets · 2개 티켓 설정됨
-        </div>
-        <div class="viewport">
-          <div class="wizard-appbar">
-            <div class="wizard-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
-            <div class="wizard-appbar__title">티켓</div>
-          </div>
-          <div class="wizard-progress"><div class="wizard-progress__fill" style="width:83.3%;"></div></div>
-          <div class="wizard-body">
-            <div class="wizard-field-label" style="margin-bottom:4px;">티켓 설정</div>
-            <div class="wizard-field-sub">각 티켓의 가격, 수량, 대상 입장 그룹을 지정하세요.</div>
-            <div style="height:16px;"></div>
-            <div class="wizard-ticket-item">
-              <div class="wizard-ticket-item__row">
-                <div class="wizard-ticket-item__name">일반 티켓 (남성)</div>
-                <div class="wizard-ticket-item__price">20,000원</div>
+    <!-- State 4: Step 4 · 입장 규칙 -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Step 4 / 6 · 입장 규칙</strong> <small>currentStep = entryRules · 그룹 2개 설정됨</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="wizard-appbar">
+                <div class="wizard-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
+                <div class="wizard-appbar__title">입장 규칙</div>
               </div>
-              <div class="wizard-ticket-item__meta">수량: 20매 · 대상: 일반 참여 (남성)</div>
-            </div>
-            <div class="wizard-ticket-item">
-              <div class="wizard-ticket-item__row">
-                <div class="wizard-ticket-item__name">일반 티켓 (여성)</div>
-                <div class="wizard-ticket-item__price">15,000원</div>
+              <div class="wizard-progress"><div class="wizard-progress__fill" style="width:66.7%;"></div></div>
+              <div class="wizard-body">
+                <div class="wizard-entry-card">
+                  <div class="wizard-entry-card__header">
+                    <div class="wizard-entry-card__name">일반 참여 (남성)</div>
+                    <div class="wizard-entry-card__delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></div>
+                  </div>
+                  <div class="wizard-entry-card__detail">필요 인증: 성별 인증 · 나이 제한: 25–35세</div>
+                </div>
+                <div class="wizard-entry-card">
+                  <div class="wizard-entry-card__header">
+                    <div class="wizard-entry-card__name">일반 참여 (여성)</div>
+                    <div class="wizard-entry-card__delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></div>
+                  </div>
+                  <div class="wizard-entry-card__detail">필요 인증: 성별 인증 · 나이 제한: 25–35세</div>
+                </div>
+                <div class="wizard-add-btn">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  그룹 추가
+                </div>
               </div>
-              <div class="wizard-ticket-item__meta">수량: 20매 · 대상: 일반 참여 (여성)</div>
+              <div class="wizard-bottom-nav">
+                <div class="wizard-btn-prev">이전</div>
+                <div class="wizard-btn-next">다음</div>
+              </div>
             </div>
-            <div class="wizard-add-btn">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              티켓 추가
-            </div>
-          </div>
-          <div class="wizard-bottom-nav">
-            <div class="wizard-btn-prev">이전</div>
-            <div class="wizard-btn-next">다음</div>
-          </div>
-        </div>
-      </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>currentStep == entryRules</code> · 입장 그룹 list (각 그룹은 인증 요구사항 + 나이 제한 + 성별 제한)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>+ <strong>그룹 추가 버튼 탭</strong> → 입장 그룹 편집 시트 (신규 그룹)<br>+ <strong>그룹 카드 탭</strong> → 같은 시트 (편집)<br>+ <strong>그룹 카드 ⓧ 탭</strong> → 삭제 confirm 다이얼로그</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>· 그룹 0개 → "다음" 탭 시 validation error ("최소 1개 그룹 필요")<br>· 그룹 10개 초과 → 추가 버튼 disabled (limit)<br>· 마지막 그룹 삭제 시도 → 다이얼로그에 경고 표시</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>+ <code>EntryRuleCard</code> (이름 · detail · delete icon · radius-card)<br>+ <code>WizardAddButton</code> (dashed border · plus icon · 그룹/티켓 추가 공통)<br>↔ <code>WizardProgressBar</code> fill → 66.7% (4/6)<br>↔ AppBar title → "입장 규칙"<br>− body 일반 input / chip / switch (이 step은 카드 list 위주)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>+ <code>radius-card</code> (16 · EntryRuleCard) + dashed border (color-divider · WizardAddButton)<br>나머지 동일</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 그룹 편집 시트는 별도 spec 후보 (현재 이 spec 안에서 다루지 않음 — wizard 본체에 집중).</td>
+        </tr>
+      </tbody>
+    </table>
 
-      <!-- State 6: Step 6 — 검토 (완료) -->
-      <div class="state">
-        <div class="state__label">
-          Step 6 / 6 · 검토 &amp; 생성
-          <span class="tag tag--mute">step-6</span>
-        </div>
-        <div class="state__condition">
-          currentStep = review · 유효성 오류 없음 · "생성하기" 버튼 활성
-        </div>
-        <div class="viewport">
-          <div class="wizard-appbar">
-            <div class="wizard-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
-            <div class="wizard-appbar__title">검토 및 완료</div>
-          </div>
-          <div class="wizard-progress"><div class="wizard-progress__fill" style="width:100%;"></div></div>
-          <div class="wizard-body" style="top:60px;bottom:80px;">
-            <div style="font-size:20px;font-weight:700;color:var(--color-text-primary);margin-bottom:16px;">파티 정보를 확인해 주세요</div>
-            <div class="review-section">
-              <div class="review-section__header">
-                <div class="review-section__title">기본 정보</div>
-                <div class="review-section__edit">수정</div>
-              </div>
-              <div class="review-section__body">
-                <div class="review-kv"><span class="review-kv__key">제목</span><span class="review-kv__val">강남 루프탑 소셜 파티</span></div>
-                <div class="review-kv"><span class="review-kv__key">공개</span><span class="review-kv__val">공개</span></div>
-              </div>
-            </div>
-            <div class="review-section">
-              <div class="review-section__header">
-                <div class="review-section__title">장소</div>
-                <div class="review-section__edit">수정</div>
-              </div>
-              <div class="review-section__body">
-                <div class="review-kv"><span class="review-kv__key">장소</span><span class="review-kv__val">Skybar Seoul 강남점</span></div>
-                <div class="review-kv"><span class="review-kv__key">주소</span><span class="review-kv__val">서울 강남구 테헤란로 123</span></div>
-              </div>
-            </div>
-            <div class="review-section">
-              <div class="review-section__header">
-                <div class="review-section__title">티켓</div>
-                <div class="review-section__edit">수정</div>
-              </div>
-              <div class="review-section__body">
-                <div class="review-kv"><span class="review-kv__key">일반(남)</span><span class="review-kv__val">20,000원 × 20매</span></div>
-                <div class="review-kv"><span class="review-kv__key">일반(여)</span><span class="review-kv__val">15,000원 × 20매</span></div>
-              </div>
-            </div>
-          </div>
-          <div class="wizard-bottom-nav">
-            <div class="wizard-btn-prev">이전</div>
-            <div class="wizard-btn-next">생성하기</div>
-          </div>
-        </div>
-      </div>
+    <!-- State 4 above (already migrated alongside State 3) -->
 
-      <!-- State 7: Step validation error snackbar -->
-      <div class="state">
-        <div class="state__label">
-          Step validation error · 다음 탭 + 유효성 오류
-          <span class="tag tag--mute">validation</span>
-        </div>
-        <div class="state__condition">
-          "다음" 버튼 탭 → currentStepValidationErrors.isNotEmpty → snackbar 표시
-        </div>
-        <div class="viewport">
-          <div class="wizard-appbar">
-            <div class="wizard-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
-            <div class="wizard-appbar__title">기본 정보</div>
-          </div>
-          <div class="wizard-progress"><div class="wizard-progress__fill" style="width:16.7%;"></div></div>
-          <div class="wizard-body">
-            <div class="wizard-field-group">
-              <div class="wizard-field-label">파티 제목</div>
-              <div class="wizard-input wizard-input--error wizard-input--placeholder">파티 제목을 입력하세요</div>
-              <div style="font-size:11px;color:var(--color-error);margin-top:4px;">파티 제목은 필수 항목입니다</div>
-            </div>
-            <div class="wizard-field-group">
-              <div class="wizard-field-label">파티 소개</div>
-              <div class="wizard-quill" style="border-color:var(--color-divider);">
-                <div class="wizard-quill__toolbar"></div>
-                <div class="wizard-quill__body wizard-quill__placeholder">파티를 소개하는 글을 적어주세요</div>
+    <!-- State 5: Step 5 · 티켓 -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Step 5 / 6 · 티켓</strong> <small>currentStep = tickets · 2개 티켓 설정됨</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="wizard-appbar">
+                <div class="wizard-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
+                <div class="wizard-appbar__title">티켓</div>
+              </div>
+              <div class="wizard-progress"><div class="wizard-progress__fill" style="width:83.3%;"></div></div>
+              <div class="wizard-body">
+                <div class="wizard-field-label" style="margin-bottom:4px;">티켓 설정</div>
+                <div class="wizard-field-sub">각 티켓의 가격, 수량, 대상 입장 그룹을 지정하세요.</div>
+                <div style="height:16px;"></div>
+                <div class="wizard-ticket-item">
+                  <div class="wizard-ticket-item__row">
+                    <div class="wizard-ticket-item__name">일반 티켓 (남성)</div>
+                    <div class="wizard-ticket-item__price">20,000원</div>
+                  </div>
+                  <div class="wizard-ticket-item__meta">수량: 20매 · 대상: 일반 참여 (남성)</div>
+                </div>
+                <div class="wizard-ticket-item">
+                  <div class="wizard-ticket-item__row">
+                    <div class="wizard-ticket-item__name">일반 티켓 (여성)</div>
+                    <div class="wizard-ticket-item__price">15,000원</div>
+                  </div>
+                  <div class="wizard-ticket-item__meta">수량: 20매 · 대상: 일반 참여 (여성)</div>
+                </div>
+                <div class="wizard-add-btn">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  티켓 추가
+                </div>
+              </div>
+              <div class="wizard-bottom-nav">
+                <div class="wizard-btn-prev">이전</div>
+                <div class="wizard-btn-next">다음</div>
               </div>
             </div>
-          </div>
-          <div class="wizard-bottom-nav">
-            <div class="wizard-btn-next">다음</div>
-          </div>
-          <!-- Snackbar -->
-          <div class="snackbar">
-            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
-            파티 제목은 필수 항목입니다
-          </div>
-        </div>
-      </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>currentStep == tickets</code> · 티켓 list (이름 · 가격 · 수량 · 대상 입장그룹)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>+ <strong>티켓 추가 / 카드 탭</strong> → 티켓 편집 시트<br>+ <strong>티켓 카드 ⓧ 탭</strong> → 삭제 confirm 다이얼로그</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>· 티켓 0개 → "다음" 탭 시 validation error<br>· 티켓 대상 그룹이 Step 4에서 삭제됨 → 진입 시 자동 reconcile (관계 끊김 표시)<br>· 가격 0원 → 무료 파티로 표시 (디자인 의도)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>+ <code>TicketCard</code> (이름 · 가격 양 끝 정렬 · meta 라인 · radius-card)<br>↔ <code>WizardProgressBar</code> fill → 83.3% (5/6)<br>↔ AppBar title → "티켓"</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>+ 가격 → <code>color-text-primary</code> bold (14/700)<br>+ meta 라인 → <code>color-text-secondary</code> bodySmall</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 티켓 편집 시트도 그룹 편집 시트와 같은 패턴 — 별도 spec 후보. 가격은 <code>NumberFormat</code> + "원" 접미.</td>
+        </tr>
+      </tbody>
+    </table>
 
-      <!-- State 8: Submitting (global loading overlay) -->
-      <div class="state">
-        <div class="state__label">
-          Submitting · 생성 처리 중
-          <span class="tag tag--mute">async</span>
-        </div>
-        <div class="state__condition">
-          "생성하기" 탭 → globalLoadingControllerProvider.show() → 전체 로딩 오버레이
-        </div>
-        <div class="viewport">
-          <div class="wizard-appbar">
-            <div class="wizard-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
-            <div class="wizard-appbar__title">검토 및 완료</div>
-          </div>
-          <div class="wizard-progress"><div class="wizard-progress__fill" style="width:100%;"></div></div>
-          <div class="wizard-body">
-            <div style="font-size:20px;font-weight:700;color:var(--color-text-primary);margin-bottom:16px;">파티 정보를 확인해 주세요</div>
-            <div class="review-section">
-              <div class="review-section__header">
-                <div class="review-section__title">기본 정보</div>
-                <div class="review-section__edit">수정</div>
+    <!-- State 6: Step 6 · 검토 & 생성 -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Step 6 / 6 · 검토 &amp; 생성</strong> <small>currentStep = review · 모든 입력 valid · "생성하기" 활성</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="wizard-appbar">
+                <div class="wizard-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
+                <div class="wizard-appbar__title">검토 및 완료</div>
               </div>
-              <div class="review-section__body">
-                <div class="review-kv"><span class="review-kv__key">제목</span><span class="review-kv__val">강남 루프탑 소셜 파티</span></div>
+              <div class="wizard-progress"><div class="wizard-progress__fill" style="width:100%;"></div></div>
+              <div class="wizard-body" style="top:60px;bottom:80px;">
+                <div style="font-size:20px;font-weight:700;color:var(--color-text-primary);margin-bottom:16px;">파티 정보를 확인해 주세요</div>
+                <div class="review-section">
+                  <div class="review-section__header">
+                    <div class="review-section__title">기본 정보</div>
+                    <div class="review-section__edit">수정</div>
+                  </div>
+                  <div class="review-section__body">
+                    <div class="review-kv"><span class="review-kv__key">제목</span><span class="review-kv__val">강남 루프탑 소셜 파티</span></div>
+                    <div class="review-kv"><span class="review-kv__key">공개</span><span class="review-kv__val">공개</span></div>
+                  </div>
+                </div>
+                <div class="review-section">
+                  <div class="review-section__header">
+                    <div class="review-section__title">장소</div>
+                    <div class="review-section__edit">수정</div>
+                  </div>
+                  <div class="review-section__body">
+                    <div class="review-kv"><span class="review-kv__key">장소</span><span class="review-kv__val">Skybar Seoul 강남점</span></div>
+                    <div class="review-kv"><span class="review-kv__key">주소</span><span class="review-kv__val">서울 강남구 테헤란로 123</span></div>
+                  </div>
+                </div>
+                <div class="review-section">
+                  <div class="review-section__header">
+                    <div class="review-section__title">티켓</div>
+                    <div class="review-section__edit">수정</div>
+                  </div>
+                  <div class="review-section__body">
+                    <div class="review-kv"><span class="review-kv__key">일반(남)</span><span class="review-kv__val">20,000원 × 20매</span></div>
+                    <div class="review-kv"><span class="review-kv__key">일반(여)</span><span class="review-kv__val">15,000원 × 20매</span></div>
+                  </div>
+                </div>
+              </div>
+              <div class="wizard-bottom-nav">
+                <div class="wizard-btn-prev">이전</div>
+                <div class="wizard-btn-next">생성하기</div>
               </div>
             </div>
-          </div>
-          <div class="wizard-bottom-nav">
-            <div class="wizard-btn-prev">이전</div>
-            <div class="wizard-btn-next wizard-btn-next--disabled">생성하기</div>
-          </div>
-          <!-- Global loading overlay -->
-          <div class="global-loading">
-            <div class="spinner-white"></div>
-          </div>
-        </div>
-      </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>currentStep == review</code> · 5 step 모두 valid · 페이지 타이틀 (h1) "파티 정보를 확인해 주세요"</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            ① <strong>섹션 "수정" 탭</strong> → 해당 step으로 점프 (currentStep 변경)<br>
+            ② <strong>"생성하기" 탭</strong> → State 8 (Submitting) → 성공 시 파티 목록 + 스낵바<br>
+            ③ <strong>"이전" 탭</strong> → Step 5
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>· Edit 모드에선 "생성하기" → "수정 완료"로 라벨 변경<br>· 검토 단계에서 다른 step의 데이터를 읽기만 — 수정은 해당 step 점프 후</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>+ <code>ReviewSection</code> (header + body · 섹션 타이틀 · "수정" TextButton)<br>+ <code>ReviewKvRow</code> (key/value 좌우 정렬)<br>+ Page heading (20/700) "파티 정보를 확인해 주세요"<br>↔ <code>WizardProgressBar</code> fill → 100% (6/6)<br>↔ "다음" 버튼 → "생성하기" 라벨<br>− Step 1-5의 input 필드 일체 (검토 모드라 read-only)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>+ Page heading → <code>typography-font-size-section-title</code> (20px) + bold (700)<br>+ "수정" link → <code>color-primary</code> · bodySmall<br>+ ReviewSection card → <code>radius-card</code> + <code>color-divider</code> border</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 "수정" 점프는 <code>currentStep</code>만 변경 — 입력값은 controller state로 유지. 다시 검토 step으로 돌아오면 변경분 반영.</td>
+        </tr>
+      </tbody>
+    </table>
 
-    </div>
+    <!-- State 7: Validation error (snackbar) -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Validation error</strong> <small>"다음" 탭 + invalid · 임의 step 위에 부착</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="wizard-appbar">
+                <div class="wizard-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
+                <div class="wizard-appbar__title">기본 정보</div>
+              </div>
+              <div class="wizard-progress"><div class="wizard-progress__fill" style="width:16.7%;"></div></div>
+              <div class="wizard-body">
+                <div class="wizard-field-group">
+                  <div class="wizard-field-label">파티 제목</div>
+                  <div class="wizard-input wizard-input--error wizard-input--placeholder">파티 제목을 입력하세요</div>
+                  <div style="font-size:11px;color:var(--color-error);margin-top:4px;">파티 제목은 필수 항목입니다</div>
+                </div>
+                <div class="wizard-field-group">
+                  <div class="wizard-field-label">파티 소개</div>
+                  <div class="wizard-quill" style="border-color:var(--color-divider);">
+                    <div class="wizard-quill__toolbar"></div>
+                    <div class="wizard-quill__body wizard-quill__placeholder">파티를 소개하는 글을 적어주세요</div>
+                  </div>
+                </div>
+              </div>
+              <div class="wizard-bottom-nav">
+                <div class="wizard-btn-next">다음</div>
+              </div>
+              <div class="snackbar">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                파티 제목은 필수 항목입니다
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>"다음" 탭 → <code>currentStepValidationErrors.isNotEmpty</code> → 첫 에러 메시지로 snackbar 표시. <code>currentStep</code> 변경 안 됨.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>· snackbar 자동 dismiss (~3s) 또는 수동 close<br>· 에러 필드 input 클릭 → 수정 → 다시 "다음" 탭<br>· "이전" 탭 → 이전 step으로 (validation guard 우회)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>· 동시에 여러 필드 invalid → snackbar는 첫 에러만, 모든 invalid 필드는 inline error로 표시<br>· _isNextingStep guard로 double-tap 시 snackbar 중복 방지</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>+ <code>MinglitTextField</code> error variant (border <code>color-error</code> + 하단 helper text)<br>+ <code>InlineErrorText</code> (caption · color-error · 4px gap)<br>+ <code>SnackBar</code> (Material default · info icon + label · 화면 하단 fixed)<br>↔ Step 1 input "filled" → "error placeholder"</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>+ <code>color-error</code> (input border · helper text · snackbar bg)<br>+ <code>typography-font-size-caption</code> (11px · helper text)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 mockup은 Step 1 컨텍스트지만, validation은 모든 step에서 동일 패턴. <code>_isNextingStep</code> guard는 double-tap 방지.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 8: Submitting (global loading overlay) -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Submitting</strong> <small>"생성하기" 탭 → globalLoadingControllerProvider.show() · 전체 오버레이</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="wizard-appbar">
+                <div class="wizard-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
+                <div class="wizard-appbar__title">검토 및 완료</div>
+              </div>
+              <div class="wizard-progress"><div class="wizard-progress__fill" style="width:100%;"></div></div>
+              <div class="wizard-body">
+                <div style="font-size:20px;font-weight:700;color:var(--color-text-primary);margin-bottom:16px;">파티 정보를 확인해 주세요</div>
+                <div class="review-section">
+                  <div class="review-section__header">
+                    <div class="review-section__title">기본 정보</div>
+                    <div class="review-section__edit">수정</div>
+                  </div>
+                  <div class="review-section__body">
+                    <div class="review-kv"><span class="review-kv__key">제목</span><span class="review-kv__val">강남 루프탑 소셜 파티</span></div>
+                  </div>
+                </div>
+              </div>
+              <div class="wizard-bottom-nav">
+                <div class="wizard-btn-prev">이전</div>
+                <div class="wizard-btn-next wizard-btn-next--disabled">생성하기</div>
+              </div>
+              <div class="global-loading">
+                <div class="spinner-white"></div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>Step 6에서 "생성하기" 탭 직후 ~ 서버 응답 대기. <code>globalLoadingControllerProvider.show()</code> 호출.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>— <em>(전체 오버레이 — 모든 탭 무반응. back tap도 잠시 무시)</em></td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>· 서버 에러 → <code>hide()</code> 후 에러 다이얼로그 → Step 6 복귀 (입력값 유지)<br>· 네트워크 timeout → 동일하게 에러 다이얼로그<br>· 성공 → <code>hide()</code> + 파티 목록 라우트 + 성공 스낵바</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>+ <code>GlobalLoadingOverlay</code> (전체 화면 scrim + 중앙 white spinner · 앱 전역 사용)<br>↔ "생성하기" 버튼 → disabled 상태 (visual cue)<br>− 다른 모든 액션 (overlay 위 unreachable)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>+ overlay scrim → <code>color-scrim</code> (rgba(0,0,0,0.5))<br>+ spinner → 흰색 (overlay 위 contrast)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 GlobalLoadingOverlay는 wizard 외에도 결제 / 인증 등 전역 async에서 재사용. 여러 spec에 같은 atom.</td>
+        </tr>
+      </tbody>
+    </table>
+
   </section>
 </div>
 
@@ -982,143 +1223,91 @@
 <div class="perspective" id="behavior">
   <div class="perspective__header">
     <span class="glyph">🔄</span>
-    <h2>Behavior</h2>
-    <span class="lede">사용자 액션과 화면이 보여주는 결과.</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">cross-cutting — 모든 step에 적용되는 액션, motion, 글로벌 에지케이스. step별 액션은 위 mini-table 참고.</span>
   </div>
 
   <section class="doc">
-    <h2>Interactions</h2>
+    <h2>Cross-cutting interactions</h2>
     <table class="ref">
       <thead>
         <tr>
-          <th style="width: 220px;">사용자 액션</th>
+          <th style="width: 240px;">사용자 액션</th>
           <th>화면에 보이는 결과</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td>"다음" 버튼 탭 (유효성 통과)</td>
-          <td>PageView가 다음 단계로 ~300ms easeInOut 슬라이드. 프로그레스 바가 증가. AppBar 타이틀이 다음 단계명으로 변경.</td>
+          <td>뒤로 가기 (시스템 back / AppBar back)</td>
+          <td>위저드 종료 confirm 없이 파티 목록 복귀 — 입력된 데이터 유실. (개선 후속: confirm 다이얼로그)</td>
         </tr>
         <tr>
-          <td>"다음" 버튼 탭 (유효성 실패)</td>
-          <td>스낵바로 첫 번째 오류 메시지 표시. 페이지 이동 없음. 오류 필드에 빨간 border 표시.</td>
+          <td>다크 모드 토글</td>
+          <td>AppBar / body bg → <code>color-dark-background</code>. progress fill → <code>color-dark-primary</code>(#aa33ff). input border → <code>color-dark-divider</code>. 에러 색상 유지.</td>
         </tr>
         <tr>
-          <td>"다음" 버튼 연속 더블 탭</td>
-          <td>두 번째 탭은 무시 (_isNextingStep guard). 단계가 2번 건너뛰어지지 않음.</td>
-        </tr>
-        <tr>
-          <td>"이전" 버튼 탭</td>
-          <td>PageView가 이전 단계로 슬라이드. 입력 데이터 유지. Step 1에선 "이전" 버튼 없음.</td>
-        </tr>
-        <tr>
-          <td>뒤로 가기 (시스템)</td>
-          <td>위저드 종료 확인 없이 파티 목록으로 이동. 입력된 데이터 유실.</td>
-        </tr>
-        <tr>
-          <td>파티 제목 입력</td>
-          <td>입력 커서 표시 · 상태 실시간 업데이트.</td>
-        </tr>
-        <tr>
-          <td>커버 이미지 "+ 추가" 탭</td>
-          <td>OS 이미지 피커 또는 갤러리 시트 오픈. 선택한 이미지가 그리드에 추가. 최대 슬롯 채움 시 추가 버튼 숨김.</td>
-        </tr>
-        <tr>
-          <td>커버 이미지 "×" 탭</td>
-          <td>해당 이미지 즉시 제거. 그리드 재배열.</td>
-        </tr>
-        <tr>
-          <td>장소 검색 버튼 탭 (Step 2)</td>
-          <td>장소 검색 화면(LocationSearchPage)으로 이동. 선택 후 복귀 시 장소 정보 자동 입력.</td>
-        </tr>
-        <tr>
-          <td>"그룹 추가" 탭 (Step 4)</td>
-          <td>입장 그룹 생성 바텀시트 또는 inline 폼 출현.</td>
-        </tr>
-        <tr>
-          <td>입장 그룹 삭제 아이콘 탭</td>
-          <td>해당 그룹 즉시 제거. 관련 티켓의 targetEntryGroupId도 연결 해제.</td>
-        </tr>
-        <tr>
-          <td>검토(Step 6) 섹션 "수정" 탭</td>
-          <td>해당 단계(e.g. "기본 정보")로 PageView가 즉시 이동. 검토 화면 없이 바로 해당 step 보임.</td>
-        </tr>
-        <tr>
-          <td>"생성하기" 버튼 탭 (유효성 OK)</td>
-          <td>전체 로딩 오버레이(GlobalLoading) 표시. 완료 시 "파티 정보가 생성되었습니다" 스낵바 + 파티 목록 화면으로 자동 이동.</td>
-        </tr>
-        <tr>
-          <td>"생성하기" 버튼 탭 (유효성 오류)</td>
-          <td>버튼이 disabled 상태 — 탭 불가. 오류 카드가 상단에 표시되며 미완성 항목 목록 나열.</td>
-        </tr>
-        <tr>
-          <td>생성 실패 (서버 오류)</td>
-          <td>로딩 오버레이 해제 + 에러 다이얼로그/스낵바 표시. 검토 화면으로 복귀, 재시도 가능.</td>
+          <td>"다음" 더블 탭 (모든 step)</td>
+          <td>두 번째 탭은 <code>_isNextingStep</code> guard로 무시 — step이 2단계 건너뛰지 않음.</td>
         </tr>
       </tbody>
     </table>
   </section>
 
   <section class="doc">
-    <h2>Motion &amp; timing</h2>
+    <h2>Motion timing</h2>
+    <p class="intro">
+      Source: <code>shared/packages/mds/core/lib/src/theme/minglit_design_tokens.dart</code>
+    </p>
     <table class="ref">
       <thead>
         <tr>
-          <th style="width: 220px;">Transition</th>
-          <th style="width: 100px;">Duration</th>
-          <th>Curve / notes</th>
+          <th style="width: 240px;">Transition</th>
+          <th style="width: 200px;">Token / Duration</th>
+          <th>Notes</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td>단계 간 PageView 전환</td>
-          <td>MinglitAnimation.medium (~300ms)</td>
-          <td>Curves.easeInOut. 좌→우 slide (다음) / 우→좌 slide (이전).</td>
+          <td>Step 간 PageView 슬라이드</td>
+          <td><code>MinglitAnimation.medium</code> (350ms)</td>
+          <td>Curves.easeInOut. 다음 = 좌→우, 이전 = 우→좌.</td>
         </tr>
         <tr>
-          <td>프로그레스 바 증가/감소</td>
-          <td>~300ms</td>
-          <td>width animation (CSS transition). 단계 전환과 동시 진행.</td>
+          <td>Progress bar fill 증감</td>
+          <td><code>MinglitAnimation.medium</code> (350ms)</td>
+          <td>CSS width transition. step 전환과 동시 진행.</td>
         </tr>
         <tr>
           <td>AppBar 타이틀 변경</td>
-          <td>~150ms</td>
-          <td>Flutter AppBar 기본 — step 전환 시 함께 변경. fade 없이 즉각 교체.</td>
+          <td>cut</td>
+          <td>Flutter AppBar 기본 — fade 없이 즉시 교체.</td>
         </tr>
         <tr>
-          <td>유효성 오류 → 스낵바</td>
-          <td>~200ms</td>
-          <td>Material Snackbar slide-up. 자동 닫힘 4초.</td>
+          <td>Validation snackbar in/out</td>
+          <td><code>MinglitAnimation.fast</code> (200ms)</td>
+          <td>Material slide-up. 자동 dismiss 4s.</td>
         </tr>
         <tr>
-          <td>전체 로딩 오버레이 진입</td>
-          <td>~150ms</td>
-          <td>Opacity fade-in. 배경 scrim + 중앙 white spinner.</td>
+          <td>GlobalLoading overlay in</td>
+          <td><code>MinglitAnimation.micro</code> (100ms)</td>
+          <td>opacity fade. 즉각적 피드백.</td>
         </tr>
         <tr>
-          <td>검토 → 수정 단계 점프</td>
-          <td>MinglitAnimation.medium</td>
-          <td>PageView.animateToPage(step.index) easeInOut.</td>
+          <td>"수정" 탭 → step 점프</td>
+          <td><code>MinglitAnimation.medium</code> (350ms)</td>
+          <td><code>PageView.animateToPage(step.index)</code> easeInOut.</td>
         </tr>
       </tbody>
     </table>
-    <p class="intro" style="margin-top:12px;margin-bottom:0;">
-      ※ mds_tokens에 motion duration token은 아직 미정의 — 위 수치는 임시값.
-    </p>
   </section>
 
   <section class="doc">
-    <h2>Edge cases</h2>
+    <h2>Global edge cases</h2>
     <ul class="notes">
-      <li><strong>수정 모드 진입 (partyId 전달)</strong> — AppBar 타이틀 "수정" 표시. prefill 로딩 중에는 전체 스피너 화면. prefill 완료 후 Step 1 노출, 모든 필드에 기존 값 채워짐.</li>
-      <li><strong>수정 모드 완료 버튼</strong> — "생성하기" 대신 "수정 완료" 텍스트. 성공 스낵바: "파티 정보가 수정되었습니다."</li>
-      <li><strong>Step 1 이미지 없이 다음 탭</strong> — 커버 이미지 없이 진행 가능 (필수 아님). 검토 단계에서 이미지 없음 경고가 나올 수 있음.</li>
-      <li><strong>비공개 파티 토글 ON</strong> — 스위치 보라색으로 전환. 메인 피드에서 노출되지 않으며 링크 공유로만 진입 가능한 상태 표시.</li>
-      <li><strong>Step 4 그룹 없이 다음 탭</strong> — 유효성 오류: "최소 1개의 입장 그룹이 필요합니다." 스낵바. 페이지 이동 없음.</li>
-      <li><strong>Step 5 티켓 없이 다음 탭</strong> — 유효성 오류: "최소 1개의 티켓이 필요합니다." 스낵바.</li>
-      <li><strong>검토 단계 유효성 오류 카드</strong> — 오류 항목 목록 나열 (예: "파티 제목이 비어 있습니다" · "티켓이 없습니다"). "생성하기" 버튼 비활성화(disabled). 오류 항목별 "수정" 클릭 시 해당 단계로 이동.</li>
-      <li><strong>다크 모드</strong> — AppBar · PageView 배경: color-background(dark). 프로그레스 바 fill: color-primary(dark:#aa33ff). 입력 필드 테두리: color-divider(dark). "다음" 버튼: color-primary 유지. 오류 테두리/텍스트: color-error 유지.</li>
+      <li><strong>Edit 모드 prefill</strong> — <code>partyId</code> 전달 시 진입 직후 전체 스피너. <code>partyDetailProvider(partyId)</code> 응답 후 Step 1 모든 필드 prefill되어 노출.</li>
+      <li><strong>Edit 모드 완료 라벨</strong> — Step 6 "생성하기" → "수정 완료". 성공 스낵바도 "파티 정보가 수정되었습니다."</li>
+      <li><strong>Cross-step 무결성</strong> — Step 4에서 그룹 삭제 시 Step 5의 티켓 <code>targetEntryGroupId</code>도 자동 unlink. Step 5 진입 시 reconcile 표시.</li>
+      <li><strong>비공개 파티 flag</strong> — Step 1 토글 ON → 메인 피드 노출 안 됨. 링크 공유로만 접근 가능 (Step 6 review에서 "비공개" 표기).</li>
     </ul>
   </section>
 </div>
@@ -1130,104 +1319,20 @@
   <div class="perspective__header">
     <span class="glyph">📖</span>
     <h2>Reference</h2>
-    <span class="lede">사용된 컴포넌트 / 토큰 / 인접 화면.</span>
+    <span class="lede">implementation source + 인접 화면. Components / Tokens는 위 mini-table 참고.</span>
   </div>
 
   <section class="doc">
-    <h2>Components used</h2>
-    <p class="intro">
-      Visual의 Step 1 default state에서 spec mode를 켜면 ⓐ–ⓔ 번호가 화면에 떠서 아래 항목과 매칭된다.
-    </p>
+    <h2>Implementation source</h2>
     <table class="ref">
-      <thead>
-        <tr>
-          <th style="width: 36px;">#</th>
-          <th style="width: 220px;">Component</th>
-          <th style="width: 180px;">Where on screen</th>
-          <th>Notes</th>
-        </tr>
-      </thead>
       <tbody>
-        <tr>
-          <td>ⓐ</td>
-          <td><a href="/components#LinearProgressIndicator"><code>MinglitLinearProgressIndicator</code></a></td>
-          <td>AppBar 바로 아래 (②)</td>
-          <td>height 4px. value = (stepIndex+1)/6. 단계 전환 시 animated width.</td>
-        </tr>
-        <tr>
-          <td>ⓑ</td>
-          <td>TextFormField</td>
-          <td>각 Step 입력 필드</td>
-          <td>radius-input (12px). 오류 시 error border + helper text.</td>
-        </tr>
-        <tr>
-          <td>ⓒ</td>
-          <td>QuillEditor (flutter_quill)</td>
-          <td>Step 1 파티 소개</td>
-          <td>Toolbar + 에디터 영역. Rich text (bold/italic/list). delta JSON 저장.</td>
-        </tr>
-        <tr>
-          <td>ⓓ</td>
-          <td>SwitchListTile</td>
-          <td>Step 1 공개 범위 / Step 3 성비 균형</td>
-          <td>Material SwitchListTile. contentPadding: EdgeInsets.zero.</td>
-        </tr>
-        <tr>
-          <td>ⓔ</td>
-          <td>ElevatedButton / OutlinedButton</td>
-          <td>bottomNavigationBar (④)</td>
-          <td>이전: OutlinedButton flex:1. 다음/완료: ElevatedButton flex:2. Loading 시 disabled.</td>
-        </tr>
-        <tr>
-          <td>—</td>
-          <td><a href="/components#CircularProgressIndicator"><code>MinglitCircularProgressIndicator</code></a></td>
-          <td>수정 모드 prefill 로딩 / 제출 중</td>
-          <td>prefill: 전체 화면 중앙. 제출: GlobalLoadingController 오버레이.</td>
-        </tr>
-        <tr>
-          <td>—</td>
-          <td>MinglitEditableSection</td>
-          <td>Step 6 검토 섹션</td>
-          <td>title + "수정" 버튼 + child summary. 탭 시 해당 단계로 이동.</td>
-        </tr>
-        <tr>
-          <td>—</td>
-          <td>TagSelectionSection</td>
-          <td>Step 1 태그</td>
-          <td>태그 검색 + 다중 선택 칩.</td>
-        </tr>
-      </tbody>
-    </table>
-  </section>
-
-  <section class="doc">
-    <h2>Tokens consumed</h2>
-    <table class="ref">
-      <thead>
-        <tr>
-          <th style="width: 240px;">Token</th>
-          <th>Where applied</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr><td><code>color-background</code></td><td>Scaffold · AppBar · PageView · 입력 필드 bg · 버튼 bg(기본)</td></tr>
-        <tr><td><code>color-surface</code></td><td>프로그레스 트랙 bg · 검토 섹션 헤더 bg · 이미지 슬롯 bg</td></tr>
-        <tr><td><code>color-primary</code></td><td>프로그레스 fill · 활성 연락처 칩 · 스위치 ON · 이전/다음 버튼 border/bg</td></tr>
-        <tr><td><code>color-secondary</code></td><td>티켓 가격 텍스트</td></tr>
-        <tr><td><code>color-error</code></td><td>유효성 오류 border · 에러 카드 border/텍스트 · 삭제 아이콘</td></tr>
-        <tr><td><code>color-text-primary</code></td><td>필드 라벨 · 입력 텍스트 · 카드 이름 · AppBar 타이틀</td></tr>
-        <tr><td><code>color-text-secondary</code></td><td>placeholder · sub 텍스트 · 비활성 칩 · 캡션</td></tr>
-        <tr><td><code>color-divider</code></td><td>AppBar/bar border · 입력 필드 기본 border · 섹션 구분선</td></tr>
-        <tr><td><code>radius-input</code> (12px)</td><td>텍스트 입력 필드 코너</td></tr>
-        <tr><td><code>radius-card</code> (16px)</td><td>입장 그룹 카드 · 티켓 아이템 · 검토 섹션 · 에러 카드</td></tr>
-        <tr><td><code>radius-button</code> (12px)</td><td>이전/다음 버튼</td></tr>
-        <tr><td><code>spacing-medium</code> (16px)</td><td>Step body outer pad all · AppBar↔progress gap · bottom nav pad · 버튼 간격</td></tr>
-        <tr><td><code>spacing-large</code> (24px)</td><td>필드 간격 · 검토 섹션 간격</td></tr>
-        <tr><td>typography: titleMedium (16/600)</td><td>필드 섹션 라벨</td></tr>
-        <tr><td>typography: titleLarge (20/700)</td><td>Step 6 검토 타이틀</td></tr>
-        <tr><td>typography: bodyMedium (14/400)</td><td>입력 텍스트 · 요약 내용</td></tr>
-        <tr><td>typography: appBarTitle (18/600)</td><td>AppBar 단계 타이틀</td></tr>
-        <tr><td>typography: buttonLarge (16/600)</td><td>이전/다음/생성하기 버튼 텍스트</td></tr>
+        <tr><th style="width: 200px;">Widget</th><td><code>PartyCreateWizardPage</code> + <code>Step1BasicInfo</code>…<code>Step6Review</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/features/party/create/party_create_wizard_page.dart"><code>apps/app_partner/lib/src/features/party/create/party_create_wizard_page.dart</code></a></td></tr>
+        <tr><th>Routes</th><td><code>PartyCreateRoute</code> · <code>PartyEditRoute</code> (shared spec) · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/routing/app_routes.dart"><code>app_routes.dart</code></a></td></tr>
+        <tr><th>Controller</th><td><code>partyWizardControllerProvider</code> — currentStep · validation · submitting · prefill / Edit 분기 (<code>partyId</code> 존재 여부)</td></tr>
+        <tr><th>Step models</th><td><code>WizardStep</code> enum (basicInfo · location · capacityAndContact · entryRules · tickets · review) — UI에서 progress fill 계산 + AppBar title 분기</td></tr>
+        <tr><th>Sub-sheets</th><td>장소 검색 시트 · 입장 그룹 편집 시트 · 티켓 편집 시트 — 각각 별도 spec 후보 (현재 wizard 본체에 집중)</td></tr>
+        <tr><th>Global atom</th><td><code>GlobalLoadingOverlay</code> (<code>globalLoadingControllerProvider</code>) — wizard 외 결제 / 인증에도 공유 사용</td></tr>
+        <tr><th>Guard</th><td><code>_isNextingStep</code> — double-tap 방지. step 전환 진행 중에 두 번째 "다음" 탭 ignore.</td></tr>
       </tbody>
     </table>
   </section>
