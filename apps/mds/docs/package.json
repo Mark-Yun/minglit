@@ -3,6 +3,9 @@
   "version": "26.04.1900-dev",
   "private": true,
   "scripts": {
+    "tokens:sync": "cp ../../../shared/packages/mds/tokens/lib/generated/tokens.css public/tokens.css",
+    "predev": "npm run tokens:sync",
+    "prebuild": "npm run tokens:sync",
     "dev": "next dev -p 3003",
     "build": "next build",
     "start": "next start",
