@@ -199,7 +199,8 @@ class MinglitEventCard extends StatelessWidget {
                       Positioned.fill(
                         child: DecoratedBox(
                           decoration: BoxDecoration(
-                            color: MinglitColors.textPrimary.withValues(
+                            // ignore: minglit_no_hardcoded_colors -- pure black scrim; no equivalent MDS token
+                            color: Colors.black.withValues(
                               alpha: MinglitOpacity.strong,
                             ),
                           ),
@@ -210,7 +211,8 @@ class MinglitEventCard extends StatelessWidget {
                                 vertical: MinglitSpacing.small,
                               ),
                               decoration: BoxDecoration(
-                                color: MinglitColors.textPrimary.withValues(
+                                // ignore: minglit_no_hardcoded_colors -- pure black badge bg; no equivalent MDS token
+                                color: Colors.black.withValues(
                                   alpha: MinglitOpacity.separator,
                                 ),
                                 borderRadius: BorderRadius.circular(
@@ -367,7 +369,8 @@ class _ParticipantDDayOverlay extends StatelessWidget {
 
     // Fix #478: ended state uses muted grey overlay background
     final overlayBgColor = cardState == _EventCardState.ended
-        ? MinglitColors.textSecondary.withValues(
+        // ignore: minglit_no_hardcoded_colors -- greyed-out scrim; no equivalent MDS token
+        ? Colors.grey.withValues(
             alpha: MinglitOpacity.scrimDark,
           )
         : MinglitColors.textPrimary.withValues(alpha: MinglitOpacity.overlay);

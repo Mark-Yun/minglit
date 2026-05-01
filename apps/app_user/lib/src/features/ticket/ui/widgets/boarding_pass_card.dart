@@ -128,7 +128,8 @@ class _BoardingPassCardState extends State<BoardingPassCard>
           borderRadius: BorderRadius.circular(MinglitRadius.card),
           boxShadow: [
             BoxShadow(
-              color: MinglitColors.textPrimary.withValues(
+              // ignore: minglit_no_hardcoded_colors -- drop shadow; no equivalent MDS token for pure black
+              color: Colors.black.withValues(
                 alpha: MinglitOpacity.shadowMd,
               ),
               blurRadius: 20,
