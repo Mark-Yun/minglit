@@ -64,27 +64,32 @@ const OVERLAY_CSS = `
   margin-bottom: 4px;
 }
 
-/* ── alert / dialog card ─────────────────────────────────────────────── */
+/* ── alert / dialog card — M3 mobile 톤 (2026-05-01 spec contract):
+   - 외부 insetPadding 16 H · 24 V (M3 mobile 권장)
+   - 내부 padding 24 (M3 default)
+   - title↔content 갭 16 / content↔actions 갭 24 (M3 표준 — 내부 vertical 호흡)
+   - radius 28 (M3 default)
+   - actions 우측 정렬 small text buttons */
 .mds-spec-overlay__dialog-card {
   width: 220px;
   background: white;
-  border-radius: var(--radius-dialog);   /* 28px */
+  border-radius: var(--radius-dialog);   /* 28px — M3 default */
   padding: var(--spacing-large);         /* 24px */
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);               /* 12px */
+  gap: var(--spacing-medium);            /* 16px — title↔content gap */
   box-shadow: 0 8px 24px rgba(0,0,0,0.25);
   position: relative;
   z-index: 1;
 }
 .mds-spec-overlay__dialog-title {
-  font-size: 15px;
+  font-size: 18px;
   font-weight: 700;
   color: var(--color-text-primary);
-  line-height: 1.3;
+  line-height: 1.35;
 }
 .mds-spec-overlay__dialog-title--destructive {
-  color: var(--color-error);
+  color: var(--color-text-primary);     /* destructive도 title은 일반 색 (option C) */
 }
 .mds-spec-overlay__dialog-icon {
   display: inline-flex;
@@ -92,15 +97,15 @@ const OVERLAY_CSS = `
   gap: var(--spacing-small);
 }
 .mds-spec-overlay__dialog-content {
-  font-size: 13px;
+  font-size: 16px;
   color: var(--color-text-secondary);
   line-height: 1.5;
 }
 .mds-spec-overlay__dialog-actions {
   display: flex;
   justify-content: flex-end;
-  gap: var(--spacing-small);            /* spacing-small 8px between buttons */
-  margin-top: var(--spacing-xsmall);
+  gap: var(--spacing-sm);                /* 12px — M3 minimum 8보다 살짝 분리. 클릭미스 방지 */
+  margin-top: var(--spacing-small);      /* 16(card gap) + 8(this) = 24 (content↔actions, M3) */
 }
 
 /* ── anatomy labels ──────────────────────────────────────────────────── */
@@ -179,14 +184,18 @@ function PhoneWithDialog({
   content,
   destructive = false,
   showCancel = true,
+  size = 'compact',
 }: {
   title: string;
   content?: string;
   destructive?: boolean;
   showCancel?: boolean;
+  /** 'screen' = 375×812 (Hero 전용) · 'compact' = 280×480 (PreviewTable 등). */
+  size?: 'screen' | 'compact';
 }) {
+  const dim = size === 'screen' ? { width: 375, height: 812 } : undefined;
   return (
-    <div className="mds-spec-overlay__phone">
+    <div className="mds-spec-overlay__phone" style={dim}>
       {/* background content behind scrim */}
       <div className="mds-spec-overlay__bg-content">
         <div className="mds-spec-overlay__bg-appbar" />
@@ -198,26 +207,15 @@ function PhoneWithDialog({
 
       {/* scrim overlay */}
       <div className="mds-spec-overlay__scrim">
-        <div className="mds-spec-overlay__dialog-card">
-          {/* title row — with warning icon if destructive */}
-          {destructive ? (
-            <div className="mds-spec-overlay__dialog-icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path
-                  d="M12 2L2 19h20L12 2zm0 3l7.5 13h-15L12 5zm-1 4v4h2v-4h-2zm0 6v2h2v-2h-2z"
-                  fill="var(--color-error)"
-                />
-              </svg>
-              <span
-                className="mds-spec-overlay__dialog-title mds-spec-overlay__dialog-title--destructive"
-              >
-                {title}
-              </span>
-            </div>
-          ) : (
-            <span className="mds-spec-overlay__dialog-title">{title}</span>
-          )}
-
+        {/* M3 mobile 톤 (2026-05-01):
+            - 외부 16 H · 24 V (insetPadding) → screen mode 폭 343
+            - 내부 padding 24 / radius 28 / 우측 정렬 actions
+            - destructive 버튼만 빨강 (option C) */}
+        <div
+          className="mds-spec-overlay__dialog-card"
+          style={size === 'screen' ? { width: 343 } : undefined}
+        >
+          <span className="mds-spec-overlay__dialog-title">{title}</span>
           {content && (
             <span className="mds-spec-overlay__dialog-content">{content}</span>
           )}
@@ -226,14 +224,14 @@ function PhoneWithDialog({
             {showCancel && (
               <button
                 className="mds-spec-btn mds-spec-btn--text mds-spec-btn--sm"
-                style={{ height: 36, fontSize: 13 }}
+                style={{ height: 44, fontSize: 16, color: 'var(--color-text-secondary)', fontWeight: 500 }}
               >
                 취소
               </button>
             )}
             <button
               className={`mds-spec-btn mds-spec-btn--sm${destructive ? ' mds-spec-btn--destructive' : ' mds-spec-btn--primary'}`}
-              style={{ height: 36, fontSize: 13 }}
+              style={{ height: 44, fontSize: 16, fontWeight: destructive ? 700 : 600 }}
             >
               {destructive ? '삭제' : '확인'}
             </button>
@@ -281,17 +279,19 @@ export default function MinglitAlertSpec() {
     <div className="mds-spec">
       <OverlayStyles />
 
-      {/* ── Hero ─────────────────────────────────────────────────────── */}
-      <div className="mds-spec__hero" style={{ gap: 24 }}>
+      {/* ── Hero — 풀스크린(375×812) phone 두 개. 좁은 화면에선 wrap. */}
+      <div className="mds-spec__hero" style={{ gap: 24, flexWrap: 'wrap', justifyContent: 'center' }}>
         <PhoneWithDialog
           title="정말 삭제하시겠어요?"
           content="삭제된 파티는 복구할 수 없습니다."
           destructive
+          size="screen"
         />
         <PhoneWithDialog
           title="정말 나가시겠어요?"
           content="저장하지 않은 내용이 사라집니다."
           showCancel
+          size="screen"
         />
       </div>
       <p className="mds-spec__label" style={{ textAlign: 'center', marginTop: -8 }}>
@@ -306,11 +306,20 @@ export default function MinglitAlertSpec() {
           <span className="mds-spec-overlay__anatomy-label" style={{ top: 8, left: '50%', transform: 'translateX(-50%)' }}>
             color-scrim · rgba(0,0,0,0.5) — 화면 전체 덮음
           </span>
-          <span className="mds-spec-overlay__anatomy-label" style={{ top: 56, left: 12 }}>
+          <span className="mds-spec-overlay__anatomy-label" style={{ top: 40, left: 8 }}>
+            insetPadding: medium 16 H · large 24 V (외부 여백, M3 mobile)
+          </span>
+          <span className="mds-spec-overlay__anatomy-label" style={{ top: 40, right: 8 }}>
             radius-dialog · 28px — card corners
           </span>
-          <span className="mds-spec-overlay__anatomy-label" style={{ top: 56, right: 8 }}>
-            spacing-large · 24px — title / content padding
+          <span className="mds-spec-overlay__anatomy-label" style={{ top: 96, right: 8 }}>
+            spacing-large · 24px — 내부 padding 좌우상하
+          </span>
+          <span className="mds-spec-overlay__anatomy-label" style={{ top: 130, left: 8 }}>
+            spacing-medium · 16px — title↔content 갭
+          </span>
+          <span className="mds-spec-overlay__anatomy-label" style={{ bottom: 40, left: 8 }}>
+            spacing-large · 24px — content↔actions 갭
           </span>
           <span className="mds-spec-overlay__anatomy-label" style={{ bottom: 8, left: '50%', transform: 'translateX(-50%)' }}>
             spacing-small · 8px — button gap in action row
@@ -329,8 +338,8 @@ export default function MinglitAlertSpec() {
                 <span className="mds-spec-overlay__dialog-title">정말 삭제하시겠어요?</span>
                 <span className="mds-spec-overlay__dialog-content">삭제된 파티는 복구할 수 없습니다.</span>
                 <div className="mds-spec-overlay__dialog-actions">
-                  <button className="mds-spec-btn mds-spec-btn--text mds-spec-btn--sm" style={{ height: 34, fontSize: 12 }}>취소</button>
-                  <button className="mds-spec-btn mds-spec-btn--destructive mds-spec-btn--sm" style={{ height: 34, fontSize: 12 }}>삭제</button>
+                  <button className="mds-spec-btn mds-spec-btn--text mds-spec-btn--sm" style={{ height: 38, fontSize: 13, color: 'var(--color-text-secondary)', fontWeight: 500 }}>취소</button>
+                  <button className="mds-spec-btn mds-spec-btn--destructive mds-spec-btn--sm" style={{ height: 38, fontSize: 13 }}>삭제</button>
                 </div>
               </div>
             </div>
@@ -375,7 +384,7 @@ export default function MinglitAlertSpec() {
                     destructive
                   />
                 ),
-                description: 'showConfirm(isDestructive: true) — 경고 아이콘 + 에러 색상. 삭제/탈퇴 등 비가역적 액션에 사용.',
+                description: 'showConfirm(isDestructive: true) — 확인 버튼만 빨강 (bold). 아이콘 / 타이틀은 일반 색. 삭제·탈퇴 등 비가역 액션에 사용.',
               },
             ]}
           />

@@ -72,15 +72,19 @@ function PhoneWithCustomDialog({
   title,
   children,
   actions,
+  size = 'compact',
 }: {
   title: string;
   children: React.ReactNode;
   actions?: React.ReactNode;
+  /** 'screen' = 375×812 (iPhone 표준, Hero 전용) · 'compact' = 280×480 (Variants 등). */
+  size?: 'screen' | 'compact';
 }) {
+  const dim = size === 'screen' ? { width: 375, height: 812 } : { width: 280, height: 480 };
   return (
     <div
       className="mds-spec-overlay__phone"
-      style={{ width: 280, height: 480 }}
+      style={dim}
     >
       {/* background content */}
       <div className="mds-spec-overlay__bg-content">
@@ -93,9 +97,12 @@ function PhoneWithCustomDialog({
 
       {/* scrim */}
       <div className="mds-spec-overlay__scrim">
+        {/* screen mode dialog 폭 = phone(375) − insetPadding(16+16) = 343.
+            외부 여백 16 H는 M3 mobile 권장.
+            compact 모드는 CSS 기본값(--wide modifier) 유지. */}
         <div
           className="mds-spec-overlay__dialog-card mds-spec-overlay__dialog-card--wide"
-          style={{ gap: 'var(--spacing-sm)' }}
+          style={size === 'screen' ? { gap: 'var(--spacing-medium)', width: 343 } : { gap: 'var(--spacing-medium)' }}
         >
           <span className="mds-spec-overlay__dialog-title">{title}</span>
           <div className="mds-spec-overlay__dialog-custom-content">{children}</div>
@@ -212,13 +219,14 @@ export default function MinglitDialogSpec() {
     <div className="mds-spec">
       <DialogStyles />
 
-      {/* ── Hero ─────────────────────────────────────────────────────── */}
-      <div className="mds-spec__hero" style={{ gap: 24 }}>
+      {/* ── Hero — 풀스크린(375×812) phone 두 개를 나란히. 좁은 화면에선 wrap. */}
+      <div className="mds-spec__hero" style={{ gap: 24, flexWrap: 'wrap', justifyContent: 'center' }}>
         <PhoneWithCustomDialog
           title="사진 가져오기"
+          size="screen"
           actions={
             <>
-              <button className="mds-spec-btn mds-spec-btn--text mds-spec-btn--sm" style={{ height: 34, fontSize: 13 }}>취소</button>
+              <button className="mds-spec-btn mds-spec-btn--text mds-spec-btn--sm" style={{ height: 34, fontSize: 13, color: 'var(--color-text-secondary)', fontWeight: 500 }}>취소</button>
               <button className="mds-spec-btn mds-spec-btn--primary mds-spec-btn--sm" style={{ height: 34, fontSize: 13 }}>확인</button>
             </>
           }
@@ -228,9 +236,10 @@ export default function MinglitDialogSpec() {
 
         <PhoneWithCustomDialog
           title="신고하기"
+          size="screen"
           actions={
             <>
-              <button className="mds-spec-btn mds-spec-btn--text mds-spec-btn--sm" style={{ height: 34, fontSize: 13 }}>취소</button>
+              <button className="mds-spec-btn mds-spec-btn--text mds-spec-btn--sm" style={{ height: 34, fontSize: 13, color: 'var(--color-text-secondary)', fontWeight: 500 }}>취소</button>
               <button className="mds-spec-btn mds-spec-btn--primary mds-spec-btn--sm" style={{ height: 34, fontSize: 13 }}>신고</button>
             </>
           }
@@ -259,14 +268,20 @@ export default function MinglitDialogSpec() {
           <span className="mds-spec-overlay__anatomy-label" style={{ top: 8, left: '50%', transform: 'translateX(-50%)' }}>
             color-scrim — 배경 dimming
           </span>
-          <span className="mds-spec-overlay__anatomy-label" style={{ top: 56, left: 8 }}>
+          <span className="mds-spec-overlay__anatomy-label" style={{ top: 40, left: 8 }}>
+            insetPadding: medium 16 H · large 24 V (M3 mobile)
+          </span>
+          <span className="mds-spec-overlay__anatomy-label" style={{ top: 40, right: 8 }}>
             radius-dialog · 28px
           </span>
-          <span className="mds-spec-overlay__anatomy-label" style={{ top: 56, right: 8 }}>
-            title → content: spacing-small (8px)
+          <span className="mds-spec-overlay__anatomy-label" style={{ top: 96, right: 8 }}>
+            spacing-large · 24px — 내부 padding
+          </span>
+          <span className="mds-spec-overlay__anatomy-label" style={{ top: 130, left: 8 }}>
+            title→content: medium 16 · content→actions: large 24 (M3)
           </span>
           <span className="mds-spec-overlay__anatomy-label" style={{ bottom: 8, left: '50%', transform: 'translateX(-50%)' }}>
-            actions padding: spacing-large (24px) horizontal
+            actions padding: large 24 horizontal
           </span>
 
           <div className="mds-spec-overlay__phone" style={{ width: 220, height: 360 }}>
@@ -280,7 +295,7 @@ export default function MinglitDialogSpec() {
                 <span className="mds-spec-overlay__dialog-title">참여 인원 설정</span>
                 <StepperContent />
                 <div className="mds-spec-overlay__dialog-actions">
-                  <button className="mds-spec-btn mds-spec-btn--text mds-spec-btn--sm" style={{ height: 32, fontSize: 12 }}>취소</button>
+                  <button className="mds-spec-btn mds-spec-btn--text mds-spec-btn--sm" style={{ height: 32, fontSize: 12, color: 'var(--color-text-secondary)', fontWeight: 500 }}>취소</button>
                   <button className="mds-spec-btn mds-spec-btn--primary mds-spec-btn--sm" style={{ height: 32, fontSize: 12 }}>확인</button>
                 </div>
               </div>
@@ -302,7 +317,7 @@ export default function MinglitDialogSpec() {
                     title="사진 가져오기"
                     actions={
                       <>
-                        <button className="mds-spec-btn mds-spec-btn--text mds-spec-btn--sm" style={{ height: 32, fontSize: 12 }}>취소</button>
+                        <button className="mds-spec-btn mds-spec-btn--text mds-spec-btn--sm" style={{ height: 32, fontSize: 12, color: 'var(--color-text-secondary)', fontWeight: 500 }}>취소</button>
                         <button className="mds-spec-btn mds-spec-btn--primary mds-spec-btn--sm" style={{ height: 32, fontSize: 12 }}>확인</button>
                       </>
                     }
@@ -319,7 +334,7 @@ export default function MinglitDialogSpec() {
                     title="참여 인원 설정"
                     actions={
                       <>
-                        <button className="mds-spec-btn mds-spec-btn--text mds-spec-btn--sm" style={{ height: 32, fontSize: 12 }}>취소</button>
+                        <button className="mds-spec-btn mds-spec-btn--text mds-spec-btn--sm" style={{ height: 32, fontSize: 12, color: 'var(--color-text-secondary)', fontWeight: 500 }}>취소</button>
                         <button className="mds-spec-btn mds-spec-btn--primary mds-spec-btn--sm" style={{ height: 32, fontSize: 12 }}>확인</button>
                       </>
                     }
@@ -336,7 +351,7 @@ export default function MinglitDialogSpec() {
                     title="신고하기"
                     actions={
                       <>
-                        <button className="mds-spec-btn mds-spec-btn--text mds-spec-btn--sm" style={{ height: 32, fontSize: 12 }}>취소</button>
+                        <button className="mds-spec-btn mds-spec-btn--text mds-spec-btn--sm" style={{ height: 32, fontSize: 12, color: 'var(--color-text-secondary)', fontWeight: 500 }}>취소</button>
                         <button className="mds-spec-btn mds-spec-btn--primary mds-spec-btn--sm" style={{ height: 32, fontSize: 12 }}>신고</button>
                       </>
                     }
@@ -401,7 +416,7 @@ function DoCustomContent() {
       title="신고하기"
       actions={
         <>
-          <button className="mds-spec-btn mds-spec-btn--text mds-spec-btn--sm" style={{ height: 32, fontSize: 12 }}>취소</button>
+          <button className="mds-spec-btn mds-spec-btn--text mds-spec-btn--sm" style={{ height: 32, fontSize: 12, color: 'var(--color-text-secondary)', fontWeight: 500 }}>취소</button>
           <button className="mds-spec-btn mds-spec-btn--primary mds-spec-btn--sm" style={{ height: 32, fontSize: 12 }}>신고</button>
         </>
       }
