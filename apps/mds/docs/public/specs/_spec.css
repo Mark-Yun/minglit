@@ -22,6 +22,11 @@
      Standard mobile viewport: iPhone 14/15 base. */
   --spec-viewport-w: 375px;
   --spec-viewport-h: 812px;
+
+  /* Brand purple as RGB triplet for blueprint visualization tints.
+     Mirrors --color-primary (#9900ff); kept separate so opacity-modulated
+     fills/borders can use rgba(var(--spec-blueprint-rgb), <alpha>). */
+  --spec-blueprint-rgb: 153, 0, 255;
 }
 
 @font-face {
@@ -248,7 +253,7 @@ section.doc > p.intro {
   font: 600 10px/1 ui-monospace, monospace;
   padding: 3px 6px;
   border-radius: var(--radius-badge);
-  background: rgba(153, 0, 255, 0.1);
+  background: rgba(var(--spec-blueprint-rgb), 0.1);
   color: var(--color-primary);
   letter-spacing: 0.3px;
 }
@@ -403,7 +408,7 @@ ul.notes li code {
 }
 body.spec-mode .annotation { display: inline-block; }
 body.spec-mode .viewport {
-  outline: 1px dashed rgba(153, 0, 255, 0.35);
+  outline: 1px dashed rgba(var(--spec-blueprint-rgb), 0.35);
 }
 
 /* Spec-mode highlight overlays (filled area indicating where a token applies) */
@@ -411,8 +416,8 @@ body.spec-mode .viewport {
   position: absolute;
   pointer-events: none;
   display: none;
-  background: rgba(153, 0, 255, 0.08);
-  border: 1px dashed rgba(153, 0, 255, 0.4);
+  background: rgba(var(--spec-blueprint-rgb), 0.08);
+  border: 1px dashed rgba(var(--spec-blueprint-rgb), 0.4);
   z-index: 9;
 }
 body.spec-mode .region { display: block; }
@@ -483,8 +488,8 @@ body.spec-mode .type-spec { display: inline-block; }
 }
 .blueprint__region {
   position: absolute;
-  background: rgba(153, 0, 255, 0.06);
-  border: 1px dashed rgba(153, 0, 255, 0.5);
+  background: rgba(var(--spec-blueprint-rgb), 0.06);
+  border: 1px dashed rgba(var(--spec-blueprint-rgb), 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -500,7 +505,7 @@ body.spec-mode .type-spec { display: inline-block; }
   white-space: nowrap;
 }
 .blueprint__region--shaded {
-  background: rgba(153, 0, 255, 0.14);
+  background: rgba(var(--spec-blueprint-rgb), 0.14);
 }
 .blueprint__align-marker {
   position: absolute;

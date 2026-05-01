@@ -357,7 +357,7 @@
       -->
       <div class="blueprint">
         <!-- Whole frame outline (always include) -->
-        <div class="blueprint__region" style="top:0; left:0; right:0; bottom:0; border-style:solid; border-color: rgba(153,0,255,0.18);"></div>
+        <div class="blueprint__region" style="top:0; left:0; right:0; bottom:0; border-style:solid; border-color: rgba(var(--spec-blueprint-rgb), 0.18);"></div>
 
         <!-- ⚠️ TODO: 아래 height/top/bottom 픽셀 값은 EXAMPLE — 실제 화면 비례에
              맞춰 반드시 변경. 대충 56/80 고정 사용 금지. 실 widget 측정값 사용. -->
@@ -450,7 +450,7 @@
     <div class="layout-grid">
       <div class="blueprint" style="height: 200px;">
         <!-- ⚠️ height: 200px도 EXAMPLE — sub-region 비례에 맞춰 변경 -->
-        <div class="blueprint__region" style="top:0;left:0;right:0;bottom:0;border-style:solid;border-color:rgba(153,0,255,0.18);"></div>
+        <div class="blueprint__region" style="top:0;left:0;right:0;bottom:0;border-style:solid;border-color:rgba(var(--spec-blueprint-rgb), 0.18);"></div>
         <div class="blueprint__region blueprint__region--shaded" style="top:16px;left:16px;width:100px;height:24px;">
           <span class="blueprint__region-label">㉠ [child]</span>
         </div>
@@ -493,7 +493,7 @@
     </p>
     <div class="layout-grid">
       <div class="blueprint" style="height: 200px;">
-        <div class="blueprint__region" style="top:0;left:0;right:0;bottom:0;border-style:solid;border-color:rgba(153,0,255,0.18);"></div>
+        <div class="blueprint__region" style="top:0;left:0;right:0;bottom:0;border-style:solid;border-color:rgba(var(--spec-blueprint-rgb), 0.18);"></div>
         <div class="blueprint__region blueprint__region--shaded" style="top:16px;left:16px;right:16px;height:60px;">
           <span class="blueprint__region-label">㉠ [child]</span>
         </div>

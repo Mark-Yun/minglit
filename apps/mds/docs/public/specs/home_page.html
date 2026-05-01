@@ -89,7 +89,7 @@
   flex-shrink: 0;
 }
 .filter-chip--active {
-  background: rgba(153, 0, 255, 0.08);
+  background: rgba(var(--spec-blueprint-rgb), 0.08);
   border-color: var(--color-primary);
   color: var(--color-primary);
   font-weight: 600;
@@ -114,7 +114,7 @@
   height: 28px;
   padding: 0 var(--spacing-small);
   border-radius: var(--radius-chip);
-  background: rgba(153, 0, 255, 0.08);
+  background: rgba(var(--spec-blueprint-rgb), 0.08);
   font-size: var(--typography-font-size-chip-label);
   font-weight: 500;
   color: var(--color-primary);
@@ -377,7 +377,7 @@ body.dark-mode .visual-gallery .home-appbar__avatar {
   border-color: var(--color-divider);
 }
 /* Filter chip bar — chip default bg/border/text via tokens; active variant uses
-   hardcoded rgba(153,0,255,...) tint, so dark needs explicit primary-mixed bg. */
+   hardcoded rgba(var(--spec-blueprint-rgb), ...) tint, so dark needs explicit primary-mixed bg. */
 body.dark-mode .visual-gallery .filter-chip {
   background: var(--color-background);
   border-color: var(--color-divider);
@@ -680,7 +680,7 @@ body.dark-mode .visual-gallery .chip-bar__divider {
     </p>
     <div class="layout-grid">
       <div class="blueprint">
-        <div class="blueprint__region" style="top:0;left:0;right:0;bottom:0;border-style:solid;border-color:rgba(153,0,255,0.18);"></div>
+        <div class="blueprint__region" style="top:0;left:0;right:0;bottom:0;border-style:solid;border-color:rgba(var(--spec-blueprint-rgb), 0.18);"></div>
 
         <!-- AppBar -->
         <div class="blueprint__region blueprint__region--shaded" style="top:0;left:0;right:0;height:56px;">
@@ -773,7 +773,7 @@ body.dark-mode .visual-gallery .chip-bar__divider {
     <div class="layout-grid">
       <div class="blueprint" style="width: 343px; height: 90px;">
         <!-- Outer -->
-        <div class="blueprint__region" style="top:0;left:0;right:0;bottom:0;border-style:solid;border-color:rgba(153,0,255,0.18);"></div>
+        <div class="blueprint__region" style="top:0;left:0;right:0;bottom:0;border-style:solid;border-color:rgba(var(--spec-blueprint-rgb), 0.18);"></div>
 
         <!-- Left padding (screen-edge) -->
         <div class="blueprint__align-marker" style="top:8px;left:0;">left: spacing-screen-edge (16px)</div>
@@ -784,7 +784,7 @@ body.dark-mode .visual-gallery .chip-bar__divider {
         </div>
 
         <!-- Spacer (margin-left auto) -->
-        <div class="blueprint__region" style="top:14px;left:137px;right:128px;height:28px;border-style:dashed;border-color:rgba(153,0,255,0.3);">
+        <div class="blueprint__region" style="top:14px;left:137px;right:128px;height:28px;border-style:dashed;border-color:rgba(var(--spec-blueprint-rgb), 0.3);">
           <span class="blueprint__region-label" style="font-size:9px;">flex grow (남는 공간)</span>
         </div>
 
@@ -851,7 +851,7 @@ body.dark-mode .visual-gallery .chip-bar__divider {
     <div class="layout-grid">
       <div class="blueprint" style="width: 343px; height: 60px;">
         <!-- Outer -->
-        <div class="blueprint__region" style="top:0;left:0;right:0;bottom:0;border-style:solid;border-color:rgba(153,0,255,0.18);"></div>
+        <div class="blueprint__region" style="top:0;left:0;right:0;bottom:0;border-style:solid;border-color:rgba(var(--spec-blueprint-rgb), 0.18);"></div>
 
         <!-- Sort chips group (left) -->
         <div class="blueprint__region blueprint__region--shaded" style="top:12px;left:16px;width:155px;height:32px;">
@@ -924,7 +924,7 @@ active 상태: bg=primary 0.08 · border=primary · color=primary · w600</div>
     <div class="layout-grid">
       <div class="blueprint" style="width: 343px; height: 250px;">
         <!-- Card outer -->
-        <div class="blueprint__region" style="top:0;left:0;right:0;bottom:0;border-style:solid;border-color:rgba(153,0,255,0.18);"></div>
+        <div class="blueprint__region" style="top:0;left:0;right:0;bottom:0;border-style:solid;border-color:rgba(var(--spec-blueprint-rgb), 0.18);"></div>
 
         <!-- Image area (2:1 — 172px) -->
         <div class="blueprint__region blueprint__region--shaded" style="top:0;left:0;right:0;height:172px;">
@@ -932,17 +932,17 @@ active 상태: bg=primary 0.08 · border=primary · color=primary · w600</div>
         </div>
 
         <!-- Partner overlay top-left -->
-        <div class="blueprint__region" style="top:8px;left:8px;width:120px;height:28px;border-color:rgba(153,0,255,0.55);">
+        <div class="blueprint__region" style="top:8px;left:8px;width:120px;height:28px;border-color:rgba(var(--spec-blueprint-rgb), 0.55);">
           <span class="blueprint__region-label" style="font-size:9px;">㉡ Partner overlay</span>
         </div>
 
         <!-- Participant + D-Day overlay top-right -->
-        <div class="blueprint__region" style="top:8px;right:8px;width:160px;height:28px;border-color:rgba(153,0,255,0.55);">
+        <div class="blueprint__region" style="top:8px;right:8px;width:160px;height:28px;border-color:rgba(var(--spec-blueprint-rgb), 0.55);">
           <span class="blueprint__region-label" style="font-size:9px;">㉢ Participant + D-Day</span>
         </div>
 
         <!-- Tag chips overlay bottom (now on image, not body) -->
-        <div class="blueprint__region" style="top:140px;left:16px;right:16px;height:24px;border-color:rgba(153,0,255,0.6);background:rgba(153,0,255,0.1);">
+        <div class="blueprint__region" style="top:140px;left:16px;right:16px;height:24px;border-color:rgba(var(--spec-blueprint-rgb), 0.6);background:rgba(var(--spec-blueprint-rgb), 0.1);">
           <span class="blueprint__region-label" style="font-size:9px;">㉣ Tag chips overlay (image bottom)</span>
         </div>
 
@@ -1037,7 +1037,7 @@ active 상태: bg=primary 0.08 · border=primary · color=primary · w600</div>
     <div class="layout-grid">
       <div class="blueprint" style="width: 343px; height: 88px;">
         <!-- Outer -->
-        <div class="blueprint__region" style="top:0;left:0;right:0;bottom:0;border-style:solid;border-color:rgba(153,0,255,0.18);"></div>
+        <div class="blueprint__region" style="top:0;left:0;right:0;bottom:0;border-style:solid;border-color:rgba(var(--spec-blueprint-rgb), 0.18);"></div>
 
         <!-- Bar with top-rounded corners -->
         <div class="blueprint__region blueprint__region--shaded" style="top:8px;left:0;right:0;height:64px;border-top-left-radius:16px;border-top-right-radius:16px;">
@@ -1045,22 +1045,22 @@ active 상태: bg=primary 0.08 · border=primary · color=primary · w600</div>
         </div>
 
         <!-- Up-chevron at top center -->
-        <div class="blueprint__region" style="top:14px;left:50%;width:8px;height:8px;margin-left:-4px;border-color:rgba(153,0,255,0.6);">
+        <div class="blueprint__region" style="top:14px;left:50%;width:8px;height:8px;margin-left:-4px;border-color:rgba(var(--spec-blueprint-rgb), 0.6);">
           <span class="blueprint__region-label" style="font-size:9px;left:14px;">▲ chevron</span>
         </div>
 
         <!-- Status dot left -->
-        <div class="blueprint__region" style="top:36px;left:16px;width:8px;height:8px;border-radius:50%;background:rgba(153,0,255,0.6);border-color:transparent;">
+        <div class="blueprint__region" style="top:36px;left:16px;width:8px;height:8px;border-radius:50%;background:rgba(var(--spec-blueprint-rgb), 0.6);border-color:transparent;">
           <span class="blueprint__region-label" style="font-size:9px;left:18px;">㉠ dot</span>
         </div>
 
         <!-- Title middle -->
-        <div class="blueprint__region" style="top:28px;left:36px;right:130px;height:24px;background:rgba(153,0,255,0.06);border-color:rgba(153,0,255,0.4);">
+        <div class="blueprint__region" style="top:28px;left:36px;right:130px;height:24px;background:rgba(var(--spec-blueprint-rgb), 0.06);border-color:rgba(var(--spec-blueprint-rgb), 0.4);">
           <span class="blueprint__region-label" style="font-size:9px;">㉡ Title (Flexible · ellipsis)</span>
         </div>
 
         <!-- Status text right -->
-        <div class="blueprint__region" style="top:28px;right:16px;width:106px;height:24px;background:rgba(153,0,255,0.06);border-color:rgba(153,0,255,0.4);">
+        <div class="blueprint__region" style="top:28px;right:16px;width:106px;height:24px;background:rgba(var(--spec-blueprint-rgb), 0.06);border-color:rgba(var(--spec-blueprint-rgb), 0.4);">
           <span class="blueprint__region-label" style="font-size:9px;">㉢ status (+ time on waiting)</span>
         </div>
 
@@ -1151,11 +1151,11 @@ custom onTap callback이 있으면 그걸 호출.
       </thead>
       <tbody>
         <tr><td><code>waiting</code> · 시작 전</td><td><code>color-text-secondary</code> + blink</td><td>곧 시작</td><td>"N분 후" / "N시간 후" 텍스트</td></tr>
-        <tr style="background: rgba(153, 0, 255, 0.04);"><td><code>checkInReady</code> ⚡ <em>action</em></td><td><code>color-primary</code> + pulse + halo</td><td><strong>체크인하세요</strong> (bold · primary)</td><td>—</td></tr>
+        <tr style="background: rgba(var(--spec-blueprint-rgb), 0.04);"><td><code>checkInReady</code> ⚡ <em>action</em></td><td><code>color-primary</code> + pulse + halo</td><td><strong>체크인하세요</strong> (bold · primary)</td><td>—</td></tr>
         <tr><td><code>checkedIn</code></td><td><code>color-success</code> + blink</td><td>체크인 완료</td><td>—</td></tr>
-        <tr style="background: rgba(153, 0, 255, 0.04);"><td><code>matchingReady</code> ⚡ <em>action</em></td><td><code>color-primary</code> + pulse + halo</td><td><strong>매칭 시작하세요</strong> (bold · primary)</td><td>—</td></tr>
+        <tr style="background: rgba(var(--spec-blueprint-rgb), 0.04);"><td><code>matchingReady</code> ⚡ <em>action</em></td><td><code>color-primary</code> + pulse + halo</td><td><strong>매칭 시작하세요</strong> (bold · primary)</td><td>—</td></tr>
         <tr><td><code>matching</code> · 처리 중</td><td><code>color-success</code> + blink</td><td>매칭 진행 중</td><td>—</td></tr>
-        <tr style="background: rgba(153, 0, 255, 0.04);"><td><code>results</code> ⚡ <em>action</em></td><td><code>color-primary</code> + pulse + halo</td><td><strong>결과 확인</strong> (bold · primary)</td><td>—</td></tr>
+        <tr style="background: rgba(var(--spec-blueprint-rgb), 0.04);"><td><code>results</code> ⚡ <em>action</em></td><td><code>color-primary</code> + pulse + halo</td><td><strong>결과 확인</strong> (bold · primary)</td><td>—</td></tr>
         <tr><td><code>ended</code></td><td><code>color-text-secondary</code> + blink</td><td>종료됨</td><td>—</td></tr>
       </tbody>
     </table>
