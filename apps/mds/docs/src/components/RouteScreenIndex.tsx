@@ -28,10 +28,10 @@ export default function RouteScreenIndex() {
               <thead>
                 <tr className="border-b border-[var(--color-divider)] bg-[var(--color-surface)]">
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[var(--color-text-primary)]">
-                    Route
+                    Screen Widget
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[var(--color-text-primary)]">
-                    Screen Widget
+                    Route
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[var(--color-text-primary)]">
                     Design Spec
@@ -45,17 +45,6 @@ export default function RouteScreenIndex() {
                   const routesUrl = `https://github.com/Mark-Yun/minglit/blob/dev/apps/app_${app}/lib/src/routing/app_routes.dart`;
                   return (
                     <tr key={route} className="hover:bg-[var(--color-surface)]">
-                      <td className="px-4 py-2">
-                        <a
-                          href={routesUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="font-mono text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] hover:underline"
-                          title={`apps/app_${app}/lib/src/routing/app_routes.dart`}
-                        >
-                          {route} ↗
-                        </a>
-                      </td>
                       <td className="px-4 py-2">
                         {widget && screen.isWidget ? (
                           <a
@@ -72,6 +61,17 @@ export default function RouteScreenIndex() {
                             {widget ?? '—'}
                           </span>
                         )}
+                      </td>
+                      <td className="px-4 py-2">
+                        <a
+                          href={routesUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-mono text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] hover:underline"
+                          title={`apps/app_${app}/lib/src/routing/app_routes.dart`}
+                        >
+                          {route} ↗
+                        </a>
                       </td>
                       <td className="px-4 py-2">
                         {hasDesignFor(app, route) ? (
