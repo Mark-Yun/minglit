@@ -128,7 +128,7 @@ class _CheckinScannerOverlayState extends State<CheckinScannerOverlay>
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               fontWeight: FontWeight.w500,
-              color: Colors.white.withValues(alpha: 0.75),
+              color: MinglitColors.background.withValues(alpha: 0.75),
             ),
           ),
         ),
@@ -227,13 +227,13 @@ class _ScanFab extends StatelessWidget {
         decoration: BoxDecoration(
           color: isActive
               ? MinglitPartnerColors.primary.withValues(alpha: 0.85)
-              : Colors.white.withValues(alpha: 0.12),
+              : MinglitColors.background.withValues(alpha: 0.12),
           border: Border.all(
-            color: Colors.white.withValues(alpha: 0.18),
+            color: MinglitColors.background.withValues(alpha: 0.18),
           ),
           borderRadius: BorderRadius.circular(MinglitRadius.button),
         ),
-        child: Icon(icon, color: Colors.white, size: 20),
+        child: Icon(icon, color: MinglitColors.background, size: 20),
       ),
     );
   }
@@ -268,7 +268,7 @@ class CheckinResultBanner extends StatelessWidget {
           borderRadius: BorderRadius.circular(MinglitRadius.card),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.2),
+              color: MinglitColors.textPrimary.withValues(alpha: 0.2),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -276,7 +276,7 @@ class CheckinResultBanner extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(icon, color: Colors.white, size: 24),
+            Icon(icon, color: MinglitColors.background, size: 24),
             const SizedBox(width: MinglitSpacing.sm),
             Expanded(
               child: Column(
@@ -286,7 +286,7 @@ class CheckinResultBanner extends StatelessWidget {
                   Text(
                     title,
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Colors.white,
+                      color: MinglitColors.background,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -294,7 +294,7 @@ class CheckinResultBanner extends StatelessWidget {
                     Text(
                       subtitle,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.white,
+                        color: MinglitColors.background,
                       ),
                     ),
                 ],
@@ -332,7 +332,7 @@ class CheckinResultBanner extends StatelessWidget {
         );
       case CheckinResult.idle:
       case CheckinResult.processing:
-        return (Colors.transparent, Icons.info, '', '');
+        return (MinglitColors.transparent, Icons.info, '', '');
     }
   }
 }
