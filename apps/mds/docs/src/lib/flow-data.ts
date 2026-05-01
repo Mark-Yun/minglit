@@ -223,31 +223,39 @@ export function widgetNameFor(app: 'user' | 'partner', route: string): string | 
 }
 
 /**
- * Spec files that exist under `/public/specs/`. Update when a new spec is
- * authored — keep alphabetical. Sub-component specs (no route — e.g.
- * event_bottom_ticket_bar) are not relevant here but listed for completeness.
+ * Spec files that exist under `/public/specs/`, scoped per app.
+ *
+ * Routes (e.g. `EventDetailRoute`, `LoginRoute`) repeat across the two apps
+ * but map to different widgets — partner's `EventDetailPage` is a partner
+ * management screen, not the consumer-facing one. Tracking per-app prevents
+ * the partner index from claiming user-only specs.
  *
  * Default mapping rule: RouteName → snake_case basename + `_page` suffix.
  *   `EventDetailRoute` → `event_detail_page.html`
  *   `MyPageRoute`      → `my_page.html` (already ends with `_page`)
  *   `LoginRoute`       → `login_page.html`
  *
- * Special cases (shared specs, non-default basenames) → ROUTE_DESIGN_OVERRIDES.
+ * Special cases (shared specs across apps, non-default basenames) →
+ * ROUTE_DESIGN_OVERRIDES.
  */
-const KNOWN_SPEC_FILES: ReadonlySet<string> = new Set([
-  'event_bottom_ticket_bar', // sub-component, no route
-  'event_detail_page',
-  'home_page',
-  'login_page',
-  'my_page',
-  'party_create_wizard_page',
-  'settlement_detail_page',
-]);
+const KNOWN_SPEC_FILES: { user: ReadonlySet<string>; partner: ReadonlySet<string> } = {
+  user: new Set([
+    'event_detail_page',
+    'home_page',
+    'login_page',
+    'my_page',
+  ]),
+  partner: new Set([
+    // partner currently has no top-level specs that match the default rule;
+    // its specs are reached via ROUTE_DESIGN_OVERRIDES below.
+  ]),
+};
 
 /** Routes that share specs or use non-default basenames. */
 const ROUTE_DESIGN_OVERRIDES: Record<string, string> = {
-  'partner-PartyCreateRoute': '/specs/party_create_wizard_page.html',
-  'partner-PartyEditRoute':   '/specs/party_create_wizard_page.html', // shares spec
+  'partner-PartyCreateRoute':     '/specs/party_create_wizard_page.html',
+  'partner-PartyEditRoute':       '/specs/party_create_wizard_page.html', // shares spec
+  'partner-SettlementDetailRoute':'/specs/settlement_detail_page.html',
 };
 
 /** RouteName → snake_case spec basename (without .html). Default rule only. */
@@ -270,7 +278,7 @@ export function designUrlFor(app: 'user' | 'partner', route: string): string | n
   const override = ROUTE_DESIGN_OVERRIDES[`${app}-${route}`];
   if (override) return override;
   const basename = deriveSpecBasename(route);
-  return KNOWN_SPEC_FILES.has(basename) ? `/specs/${basename}.html` : null;
+  return KNOWN_SPEC_FILES[app].has(basename) ? `/specs/${basename}.html` : null;
 }
 
 /**
