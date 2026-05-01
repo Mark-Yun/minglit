@@ -26,6 +26,14 @@ const sections = [
     accent: 'var(--color-info)',
   },
   {
+    href: '/specs/_authoring.html',
+    title: 'Spec Authoring',
+    description:
+      'How to author a screen / sheet / component spec — status lifecycle, additive diff syntax, motion tokens. Links to the copy-and-edit template.',
+    badge: 'guide',
+    accent: 'var(--color-warning)',
+  },
+  {
     href: '#',
     title: 'Components',
     description:
@@ -85,8 +93,16 @@ export default function HomePage() {
             </div>
           );
 
-          return isDisabled ? (
-            <div key={title}>{card}</div>
+          if (isDisabled) {
+            return <div key={title}>{card}</div>;
+          }
+          // Static HTML in /public bypasses the App Router — use a plain anchor
+          // so Next.js doesn't attempt client-side navigation.
+          const isStatic = href.endsWith('.html');
+          return isStatic ? (
+            <a key={title} href={href} target="_blank" rel="noreferrer" className="block">
+              {card}
+            </a>
           ) : (
             <Link key={title} href={href} className="block">
               {card}
