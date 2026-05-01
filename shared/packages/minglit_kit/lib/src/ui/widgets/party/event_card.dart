@@ -158,11 +158,11 @@ class MinglitEventCard extends StatelessWidget {
                       child: ColorFiltered(
                         colorFilter: cardState == _EventCardState.ended
                             ? const ColorFilter.mode(
-                                Colors.grey,
+                                Colors.grey, // ignore: minglit_no_hardcoded_colors -- saturation ColorFilter requires neutral grey for desaturation effect
                                 BlendMode.saturation,
                               )
                             : const ColorFilter.mode(
-                                Colors.transparent,
+                                MinglitColors.transparent,
                                 BlendMode.dst,
                               ),
                         child: MinglitImage(
@@ -198,7 +198,7 @@ class MinglitEventCard extends StatelessWidget {
                       Positioned.fill(
                         child: DecoratedBox(
                           decoration: BoxDecoration(
-                            color: Colors.black.withValues(
+                            color: MinglitColors.textPrimary.withValues(
                               alpha: MinglitOpacity.strong,
                             ),
                           ),
@@ -209,7 +209,7 @@ class MinglitEventCard extends StatelessWidget {
                                 vertical: MinglitSpacing.small,
                               ),
                               decoration: BoxDecoration(
-                                color: Colors.black.withValues(
+                                color: MinglitColors.textPrimary.withValues(
                                   alpha: MinglitOpacity.separator,
                                 ),
                                 borderRadius: BorderRadius.circular(
@@ -220,7 +220,7 @@ class MinglitEventCard extends StatelessWidget {
                                 '마감',
                                 style: Theme.of(context).textTheme.titleMedium
                                     ?.copyWith(
-                                      color: Colors.white,
+                                      color: MinglitColors.background,
                                       fontWeight: FontWeight.bold,
                                     ),
                               ),
@@ -366,7 +366,7 @@ class _ParticipantDDayOverlay extends StatelessWidget {
 
     // Fix #478: ended state uses muted grey overlay background
     final overlayBgColor = cardState == _EventCardState.ended
-        ? Colors.grey.withValues(alpha: MinglitOpacity.scrimDark)
+        ? MinglitColors.textSecondary.withValues(alpha: MinglitOpacity.scrimDark)
         : MinglitColors.textPrimary.withValues(alpha: MinglitOpacity.overlay);
 
     // Fix #478: D-Day label color — amber for today

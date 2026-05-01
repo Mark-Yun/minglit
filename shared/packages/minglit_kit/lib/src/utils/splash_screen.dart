@@ -178,7 +178,7 @@ class _MinglitSplashScreenState extends State<MinglitSplashScreen>
                 top: -20 + math.sin(t * 2 * math.pi) * 40,
                 right: -20 + math.cos(t * 2 * math.pi) * 50,
                 baseSize: 320,
-                color: Colors.white,
+                color: MinglitColors.background,
                 baseOpacity: 0.12 + math.sin(t * 2 * math.pi) * 0.06,
               ),
               _Orb(
@@ -186,7 +186,7 @@ class _MinglitSplashScreenState extends State<MinglitSplashScreen>
                 bottom: -10 + math.cos(t * 2 * math.pi + 1) * 35,
                 left: -30 + math.sin(t * 2 * math.pi + 1) * 45,
                 baseSize: 260,
-                color: Colors.white,
+                color: MinglitColors.background,
                 baseOpacity: 0.1 + math.cos(t * 2 * math.pi) * 0.05,
               ),
               _Orb(
@@ -202,7 +202,7 @@ class _MinglitSplashScreenState extends State<MinglitSplashScreen>
                 top: screenHeight * 0.6 + math.cos(t * 2 * math.pi + 4) * 20,
                 left: 40 + math.sin(t * 2 * math.pi + 4) * 30,
                 baseSize: 150,
-                color: Colors.white,
+                color: MinglitColors.background,
                 baseOpacity: 0.08 + math.cos(t * 2 * math.pi + 3) * 0.04,
               ),
 
@@ -210,7 +210,7 @@ class _MinglitSplashScreenState extends State<MinglitSplashScreen>
               Positioned.fill(
                 child: IgnorePointer(
                   child: ColoredBox(
-                    color: Colors.white.withValues(alpha: white),
+                    color: MinglitColors.background.withValues(alpha: white),
                   ),
                 ),
               ),
@@ -284,7 +284,7 @@ class _Orb extends StatelessWidget {
     // During reveal: orbs grow 2.5× and shift towards white.
     final size = baseSize * (1 + expand * 2.5);
     final opacity = (baseOpacity + expand * (0.6 - baseOpacity)).clamp(0, 1);
-    final orbColor = Color.lerp(color, Colors.white, expand) ?? Colors.white;
+    final orbColor = Color.lerp(color, MinglitColors.background, expand) ?? MinglitColors.background;
 
     return Positioned(
       top: top,

@@ -8,7 +8,7 @@ Future<void> showConsentDetailSheet(
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
-    backgroundColor: Colors.transparent,
+    backgroundColor: MinglitColors.transparent,
     builder: (_) => ConsentDetailSheet(content: content),
   );
 }
