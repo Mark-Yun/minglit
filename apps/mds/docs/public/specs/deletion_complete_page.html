@@ -10,7 +10,13 @@
    widget: apps/app_user/lib/src/features/account_deletion/ui/deletion_complete_page.dart
    ============================================================ */
 
-.dc-viewport { background: var(--color-surface); }
+/* Override default `.viewport` (relative + overflow:hidden) to flex column so
+   .dc-body can `flex: 1` and fill the remaining height below the AppBar. */
+.dc-viewport {
+  background: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+}
 body.dark-mode .dc-viewport { background: var(--color-dark-background); }
 
 .dc-appbar {
