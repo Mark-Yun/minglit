@@ -46,6 +46,24 @@ export default function FlowsPage() {
           </code>
           ); each route&apos;s source link in the table below jumps to that widget&apos;s file.
         </p>
+        <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-xs text-[var(--color-text-secondary)]">
+          <span>
+            <span className="inline-block align-middle w-6 h-px bg-[var(--color-text-secondary)] mr-2" />
+            <strong className="text-[var(--color-text-primary)]">solid</strong> — direct route push
+          </span>
+          <span>
+            <span
+              className="inline-block align-middle w-6 h-px mr-2"
+              style={{
+                background:
+                  'repeating-linear-gradient(to right, var(--color-text-secondary) 0 3px, transparent 3px 6px)',
+              }}
+            />
+            <strong className="text-[var(--color-text-primary)]">dashed</strong> — overlay
+            route (modal sheet · dialog) or embedded widget — same router stack, presented
+            in-place
+          </span>
+        </div>
         <div className="mt-3 p-3 bg-[var(--color-surface)] rounded-lg border border-[var(--color-divider)] text-sm text-[var(--color-text-secondary)]">
           <strong className="text-[var(--color-warning)]">Manual update required:</strong> When
           routes change, update{' '}

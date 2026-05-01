@@ -2,6 +2,12 @@
  * Navigation flow charts — shared between /flows (client renderer) and
  * any in-page anchor consumers.
  *
+ * Edge style legend:
+ *   `-->`   solid = direct route push (router.push / router.go)
+ *   `-.->`  dashed = overlay route or embedded widget — same router stack
+ *           but presented as modal sheet, dialog, or composed sub-screen
+ *           (e.g. EventNowBar tap → bottom-sheet routes).
+ *
  * When routes change, update both the Mermaid charts here AND regenerate
  * route-pages.json (see scripts/parse-routes.py — eventually).
  */
@@ -17,85 +23,108 @@ const ROUTE_PAGES = routePagesData as RoutePagesMap;
 // app_user
 // ---------------------------------------------------------------------------
 
-const APP_USER_AUTH_FLOW = `stateDiagram-v2
-  direction TB
-  [*] --> HomeRoute : initial "/" (not protected)
-  HomeRoute --> LoginRoute : tap protected route (not logged in)
-  LoginRoute --> HomeRoute : login success
-  LoginRoute --> SignupConsentRoute : login success + no required consents
-  SignupConsentRoute --> HomeRoute : consents accepted
-  AuthCallbackRoute --> HomeRoute : OAuth redirect handled
-  HomeRoute --> CertificationRoute : tap verify account (/certification)
+const APP_USER_AUTH_FLOW = `flowchart TB
+  Start([App start]) --> HomeRoute
+  HomeRoute -->|"tap protected route (not logged in)"| LoginRoute
+  LoginRoute -->|"login success"| HomeRoute
+  LoginRoute -->|"login success + no required consents"| SignupConsentRoute
+  SignupConsentRoute -->|"consents accepted"| HomeRoute
+  AuthCallbackRoute -->|"OAuth redirect handled"| HomeRoute
+  HomeRoute -->|"tap verify account (/certification)"| CertificationRoute
 `;
 
-const APP_USER_MAIN_FLOW = `stateDiagram-v2
-  direction TB
-  HomeRoute --> SearchRoute : tap search
-  HomeRoute --> EventDetailRoute : tap event card (/events/:eventId)
-  HomeRoute --> PartnerDetailRoute : tap partner card (/partners/:partnerId)
-  HomeRoute --> TagEventListRoute : tap tag (/tags/:tagId)
-  PartnerDetailRoute --> PartnerEventsRoute : view all events (/partners/:partnerId/events)
-  EventDetailRoute --> EventApplicationRoute : tap apply (/events/:eventId/apply)
-  HomeRoute --> NotificationCenterRoute : tap notifications (/notifications)
-  HomeRoute --> MyPageRoute : tap my page (/my)
-  MyPageRoute --> NotificationSettingsRoute : notification settings
-  MyPageRoute --> AccountManagementRoute : account management (/my/account)
-  MyPageRoute --> PrivacyRoute : privacy (/my/privacy)
-  PrivacyRoute --> DeletionReasonRoute : start account deletion
-  DeletionReasonRoute --> DeletionInfoRoute : select reason
-  DeletionInfoRoute --> DeletionVerifyRoute : confirm
-  DeletionVerifyRoute --> DeletionCompleteRoute : verified
-  HomeRoute --> MyTicketsRoute : my tickets (/tickets/my)
-  MyTicketsRoute --> TicketQRRoute : view QR (/tickets/:ticketId/qr)
-  HomeRoute --> PurchaseHistoryRoute : purchase history
-  MyPageRoute --> BlockedPartnersRoute : blocked partners
+const APP_USER_MAIN_FLOW = `flowchart TB
+  %% Hub widget (not a route — signals overlay sheet group).
+  EventNowBar[["EventNowBar widget"]]
+
+  %% From HomePage AppBar / feed / tag bars (verified against home_page.dart).
+  HomeRoute -->|"tap search"| SearchRoute
+  HomeRoute -->|"tap notifications"| NotificationCenterRoute
+  HomeRoute -->|"tap avatar (/my)"| MyPageRoute
+  HomeRoute -->|"tap event card"| EventDetailRoute
+  HomeRoute -->|"tap tag chip"| TagEventListRoute
+
+  %% From SearchPage (search_coordinator:18).
+  SearchRoute -->|"tap result"| EventDetailRoute
+
+  %% From EventDetailPage / EventApplicationWizardPage (event_coordinator).
+  EventDetailRoute -->|"tap partner"| PartnerDetailRoute
+  EventDetailRoute -->|"tap apply (/events/:eventId/apply)"| EventApplicationRoute
+  EventApplicationRoute -->|"submit success → /my/purchases"| PurchaseHistoryRoute
+
+  %% From PartnerDetailPage / PartnerEventsPage (partner_coordinator).
+  PartnerDetailRoute -->|"view all events"| PartnerEventsRoute
+  PartnerDetailRoute -->|"tap event"| EventDetailRoute
+  PartnerEventsRoute -->|"tap event"| EventDetailRoute
+
+  %% From TagEventListPage (event_coordinator.goToEventDetail).
+  TagEventListRoute -->|"tap event"| EventDetailRoute
+
+  %% From MyPage (my_page.dart → homeCoordinator).
+  MyPageRoute -->|"my tickets"| MyTicketsRoute
+  MyPageRoute -->|"purchase history"| PurchaseHistoryRoute
+  MyPageRoute -->|"notification settings"| NotificationSettingsRoute
+  MyPageRoute -->|"account management"| AccountManagementRoute
+  MyPageRoute -->|"privacy"| PrivacyRoute
+  MyPageRoute -->|"blocked partners"| BlockedPartnersRoute
+
+  %% From MyTicketsPage (appCoordinator).
+  MyTicketsRoute -->|"tap card"| EventDetailRoute
+  MyTicketsRoute -->|"view QR"| TicketQRRoute
+
+  %% Account deletion flow (from PrivacyRoute).
+  PrivacyRoute -->|"start account deletion"| DeletionReasonRoute
+  DeletionReasonRoute -->|"select reason"| DeletionInfoRoute
+  DeletionInfoRoute -->|"confirm"| DeletionVerifyRoute
+  DeletionVerifyRoute -->|"verified"| DeletionCompleteRoute
+
+  %% EventNowBar overlay hub — 5 phase routed bottom-sheets (Material 3 sheet-route).
+  %% Bar widget is embedded in HomePage; tap pushes one of 5 routes presented as sheet.
+  HomeRoute -.->|"embeds (bottomSheet slot)"| EventNowBar
+  EventNowBar -.->|"checkInReady"| EventCheckInRoute
+  EventNowBar -.->|"checkedIn"| EventCheckedInRoute
+  EventNowBar -.->|"matching"| EventMatchingRoute
+  EventNowBar -.->|"results"| EventResultsRoute
+  EventNowBar -.->|"ended"| EventReviewRoute
 `;
 
 // ---------------------------------------------------------------------------
 // app_partner
 // ---------------------------------------------------------------------------
 
-const APP_PARTNER_ONBOARDING_FLOW = `stateDiagram-v2
-  direction LR
-  [*] --> LoginRoute : not logged in → redirect
-  LoginRoute --> PartnerWelcomeRoute : login success + needsApplication
-  PartnerWelcomeRoute --> PartnerApplyRoute : start application (/apply)
-  PartnerApplyRoute --> PartnerApplyStatusRoute : submit → pending review (/apply/status)
-  PartnerApplyStatusRoute --> HomeRoute : approved → hasPartner
+const APP_PARTNER_ONBOARDING_FLOW = `flowchart LR
+  Start([App start]) -->|"not logged in → redirect"| LoginRoute
+  LoginRoute -->|"login success + needsApplication"| PartnerWelcomeRoute
+  PartnerWelcomeRoute -->|"start application (/apply)"| PartnerApplyRoute
+  PartnerApplyRoute -->|"submit → pending review (/apply/status)"| PartnerApplyStatusRoute
+  PartnerApplyStatusRoute -->|"approved → hasPartner"| HomeRoute
 `;
 
-const APP_PARTNER_MAIN_FLOW = `stateDiagram-v2
-  direction TB
-  HomeRoute : Home (/)
-  ApplicationListRoute : Applications (/applications)
-  CheckinRoute : Check-in (/checkin)
-  SettlementRoute : Settlement (/settlement)
-  MoreRoute : More (/more)
-
-  [*] --> HomeRoute
-  HomeRoute --> LocationGuideRoute : view location guide
-  HomeRoute --> ApplicationListRoute : bottom nav
-  ApplicationListRoute --> EventApplicationDetailRoute : tap event application
-  ApplicationListRoute --> ApplicationDetailRoute : tap partner application
-  HomeRoute --> CheckinRoute : bottom nav
-  HomeRoute --> SettlementRoute : bottom nav (SETTLEMENT_VIEW role required)
-  SettlementRoute --> SettlementDetailRoute : tap settlement item
-  SettlementRoute --> BankAccountRoute : manage bank account
-  HomeRoute --> MoreRoute : bottom nav
-  MoreRoute --> PartyListRoute : manage parties (/more/parties)
-  PartyListRoute --> PartyCreateRoute : create party
-  PartyListRoute --> PartyDetailRoute : tap party
-  PartyDetailRoute --> PartyEditRoute : edit party
-  PartyDetailRoute --> EventCreateRoute : create event
-  PartyDetailRoute --> EventDetailRoute : tap event
-  EventDetailRoute --> TicketCreateRoute : create ticket
-  EventDetailRoute --> TicketEditRoute : edit ticket
-  PartyDetailRoute --> RecurrenceManagementRoute : manage recurrence
-  MoreRoute --> VerificationManageRoute : verifications
-  VerificationManageRoute --> CreateVerificationRoute : create verification
-  MoreRoute --> MemberListRoute : member management
-  MemberListRoute --> MemberPermissionRoute : set permission
-  MoreRoute --> PartnerAccountManagementRoute : account (/more/account)
+const APP_PARTNER_MAIN_FLOW = `flowchart TB
+  Start([Start]) --> HomeRoute
+  HomeRoute -->|"view location guide"| LocationGuideRoute
+  HomeRoute -->|"bottom nav"| ApplicationListRoute
+  ApplicationListRoute -->|"tap event application"| EventApplicationDetailRoute
+  ApplicationListRoute -->|"tap partner application"| ApplicationDetailRoute
+  HomeRoute -->|"bottom nav"| CheckinRoute
+  HomeRoute -->|"bottom nav (SETTLEMENT_VIEW role required)"| SettlementRoute
+  SettlementRoute -->|"tap settlement item"| SettlementDetailRoute
+  SettlementRoute -->|"manage bank account"| BankAccountRoute
+  HomeRoute -->|"bottom nav"| MoreRoute
+  MoreRoute -->|"manage parties (/more/parties)"| PartyListRoute
+  PartyListRoute -->|"create party"| PartyCreateRoute
+  PartyListRoute -->|"tap party"| PartyDetailRoute
+  PartyDetailRoute -->|"edit party"| PartyEditRoute
+  PartyDetailRoute -->|"create event"| EventCreateRoute
+  PartyDetailRoute -->|"tap event"| EventDetailRoute
+  EventDetailRoute -->|"create ticket"| TicketCreateRoute
+  EventDetailRoute -->|"edit ticket"| TicketEditRoute
+  PartyDetailRoute -->|"manage recurrence"| RecurrenceManagementRoute
+  MoreRoute -->|"verifications"| VerificationManageRoute
+  VerificationManageRoute -->|"create verification"| CreateVerificationRoute
+  MoreRoute -->|"member management"| MemberListRoute
+  MemberListRoute -->|"set permission"| MemberPermissionRoute
+  MoreRoute -->|"account (/more/account)"| PartnerAccountManagementRoute
 `;
 
 // ---------------------------------------------------------------------------
@@ -194,28 +223,54 @@ export function widgetNameFor(app: 'user' | 'partner', route: string): string | 
 }
 
 /**
- * Map of route → static wireframe HTML path under `/public/specs/`.
- * Add an entry here when a wireframe is authored. The Design column in
- * the flows table lights up automatically.
+ * Spec files that exist under `/public/specs/`. Update when a new spec is
+ * authored — keep alphabetical. Sub-component specs (no route — e.g.
+ * event_bottom_ticket_bar) are not relevant here but listed for completeness.
+ *
+ * Default mapping rule: RouteName → snake_case basename + `_page` suffix.
+ *   `EventDetailRoute` → `event_detail_page.html`
+ *   `MyPageRoute`      → `my_page.html` (already ends with `_page`)
+ *   `LoginRoute`       → `login_page.html`
+ *
+ * Special cases (shared specs, non-default basenames) → ROUTE_DESIGN_OVERRIDES.
  */
-const ROUTE_DESIGNS: Record<string, string> = {
-  'user-MyPageRoute':           '/specs/my_page.html',
-  'user-LoginRoute':            '/specs/login_page.html',
-  'user-HomeRoute':             '/specs/home_page.html',
-  'user-EventDetailRoute':      '/specs/event_detail_page.html',
-  'partner-PartyCreateRoute':   '/specs/party_create_wizard_page.html',
-  'partner-PartyEditRoute':     '/specs/party_create_wizard_page.html',
-  'partner-SettlementDetailRoute': '/specs/settlement_detail_page.html',
+const KNOWN_SPEC_FILES: ReadonlySet<string> = new Set([
+  'event_bottom_ticket_bar', // sub-component, no route
+  'event_detail_page',
+  'home_page',
+  'login_page',
+  'my_page',
+  'party_create_wizard_page',
+  'settlement_detail_page',
+]);
+
+/** Routes that share specs or use non-default basenames. */
+const ROUTE_DESIGN_OVERRIDES: Record<string, string> = {
+  'partner-PartyCreateRoute': '/specs/party_create_wizard_page.html',
+  'partner-PartyEditRoute':   '/specs/party_create_wizard_page.html', // shares spec
 };
+
+/** RouteName → snake_case spec basename (without .html). Default rule only. */
+function deriveSpecBasename(route: string): string {
+  const stripped = route.replace(/Route$/, ''); // 'EventDetail' or 'MyPage'
+  const snake = stripped
+    .replace(/([A-Z])/g, '_$1')
+    .toLowerCase()
+    .replace(/^_/, ''); // 'event_detail' or 'my_page'
+  return snake.endsWith('_page') ? snake : `${snake}_page`;
+}
 
 /** Whether a screen design (wireframe / screenshot) is available for this route. */
 export function hasDesignFor(app: 'user' | 'partner', route: string): boolean {
-  return `${app}-${route}` in ROUTE_DESIGNS;
+  return designUrlFor(app, route) !== null;
 }
 
 /** URL of the wireframe / screenshot for this route (or null). */
 export function designUrlFor(app: 'user' | 'partner', route: string): string | null {
-  return ROUTE_DESIGNS[`${app}-${route}`] ?? null;
+  const override = ROUTE_DESIGN_OVERRIDES[`${app}-${route}`];
+  if (override) return override;
+  const basename = deriveSpecBasename(route);
+  return KNOWN_SPEC_FILES.has(basename) ? `/specs/${basename}.html` : null;
 }
 
 /**
@@ -242,7 +297,7 @@ export function screenSourceFor(app: 'user' | 'partner', route: string): {
 }
 
 /**
- * Augment a Mermaid stateDiagram with `Node : Label` directives so each
+ * Augment a Mermaid flowchart with `Node["Label"]` declarations so each
  * RouteName node renders the corresponding widget class name (e.g. HomePage)
  * while keeping the route ID as the transition key.
  */
@@ -250,13 +305,13 @@ export function withWidgetLabels(chart: string, app: 'user' | 'partner'): string
   const labels: string[] = [];
   for (const route of extractRoutes(chart)) {
     const widget = widgetNameFor(app, route);
-    if (widget) labels.push(`  ${route} : ${widget}`);
+    if (widget) labels.push(`  ${route}["${widget}"]`);
   }
   if (labels.length === 0) return chart;
-  // Insert labels after the first stateDiagram line (after `direction TB` or similar)
+  // Insert labels right after the `flowchart TB|LR` header line.
   const lines = chart.split('\n');
-  const firstNonHeader = lines.findIndex((l, i) => i > 0 && !/direction/.test(l) && l.trim() !== '');
-  const insertAt = firstNonHeader === -1 ? lines.length : firstNonHeader;
-  lines.splice(insertAt, 0, ...labels);
+  const insertAt = lines.findIndex((l, i) => i > 0 && l.trim() !== '');
+  const target = insertAt === -1 ? lines.length : insertAt;
+  lines.splice(target, 0, ...labels);
   return lines.join('\n');
 }
