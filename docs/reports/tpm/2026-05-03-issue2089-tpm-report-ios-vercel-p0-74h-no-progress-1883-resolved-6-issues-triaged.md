@@ -19,7 +19,7 @@ Scheduler: tpm-exec-report-claude-subagents
 
 ## Headline
 
-- **#1883 Pixel 7a 해소** — Mark가 어제(05-03) 단말 재연결 + Flutter SDK 3.41.9 PATH fix(worker-runtime#d1c328c6) → close. 어제 리포트의 P0 4건 중 1건 진전.
+- **#1883 Pixel 7a 해소** — Mark가 어제(05-02) 단말 재연결 + Flutter SDK 3.41.9 PATH fix(worker-runtime#d1c328c6) → close. 어제 리포트의 P0 4건 중 1건 진전.
 - **iOS Deploy 양쪽 + Vercel Deploy는 24h 추가 무진전** — #2049 (~74h), #2061 (~66h), #1917 (~6일). 어제 리포트(#2083)에 코멘트 0건. Apple 자격증명 / Vercel 환경변수 의심 여전.
 - **신규 이슈 0건 (2026-05-03)** — 새 백로그 유입 없음.
 - **이번 사이클 트리아지 6건**: 미아 이슈(`needs-*` 미부여) 6개 모두 라우팅 라벨 부여 → 백로그 0.
