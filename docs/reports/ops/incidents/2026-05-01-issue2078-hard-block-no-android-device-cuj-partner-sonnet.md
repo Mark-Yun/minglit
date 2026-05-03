@@ -4,13 +4,13 @@ captured_at: 2026-05-01
 issue_number: 2078
 state: open
 labels: [report-runtime-qa, bug, report-exec]
-author: github-actions[bot]
+author: Mark-Yun
 title: "🛑 Hard Block — No Android Device Connected (runtime-qa-cuj-partner-sonnet-subagents)"
 ---
 
 # 🛑 Hard Block — No Android Device Connected (runtime-qa-cuj-partner-sonnet-subagents)
 
-> Issue #2078 · open · created 2026-05-01 · author @runtime-qa-cuj-partner-sonnet-subagents
+> Issue #2078 · open · created 2026-05-01 · author @Mark-Yun
 > https://github.com/Mark-Yun/minglit/issues/2078
 
 ## Body
