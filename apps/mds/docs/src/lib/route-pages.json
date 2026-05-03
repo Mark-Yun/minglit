@@ -178,14 +178,6 @@
       "widget": "EventDetailPage",
       "file": "apps/app_partner/lib/src/features/party/event/detail/event_detail_page.dart"
     },
-    "EventEditRoute": {
-      "widget": "EventEditPage",
-      "file": "apps/app_partner/lib/src/features/party/event/edit/event_edit_page.dart"
-    },
-    "EventApplicationListRoute": {
-      "widget": "EventApplicationListPage",
-      "file": "apps/app_partner/lib/src/features/event/applications/event_application_list_page.dart"
-    },
     "TicketCreateRoute": {
       "widget": "TicketCreatePage",
       "file": "apps/app_partner/lib/src/features/ticket/create/ticket_create_page.dart"
