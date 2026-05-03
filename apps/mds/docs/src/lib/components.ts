@@ -1420,6 +1420,80 @@ MinglitContentLayout(
   ),
 )`,
   },
+  {
+    name: 'MinglitTimeline',
+    category: 'Lists',
+    purpose:
+      '시간 순으로 진행된 이벤트를 vertical stepper로 보여주는 generic wrapper. 각 step은 좌측 dot + 그 아래로 이어지는 line + 우측 heading row(title + trailing slot) + 자유 children slot. 마지막 step은 line 없음. dot 색은 tone 분기 — success / progress / error / neutral / muted (semantic-neutral · 어떤 도메인 lifecycle도 매핑 가능). pulsing은 tone과 orthogonal한 박동 효과 (현재 진행 강조).',
+    props: [
+      { name: 'children', type: 'List<MinglitTimelineStep>', required: true, notes: '하나 이상의 step. 시간 순 (위→아래).' },
+    ],
+    variants: ['(step의 tone 별로 분기 — Tone 표 참조)'],
+    states: [
+      'success (dot color-success — 달성/통과)',
+      'progress (dot color-primary — 현재 진행)',
+      'error (dot + title color-error — 실패/거절)',
+      'neutral (dot color-text-secondary — 종결 비강조)',
+      'muted (outline only · color-text-secondary border — 미래/대기)',
+      'pulsing=true (1.4s loop — tone과 orthogonal)',
+    ],
+    tokens: [
+      { name: 'color-success',        where: 'success tone dot.' },
+      { name: 'color-primary',        where: 'progress tone dot + title.' },
+      { name: 'color-error',          where: 'error tone dot + title.' },
+      { name: 'color-text-secondary', where: 'neutral / muted dot · trailing 메타 텍스트 색.' },
+      { name: 'color-divider',        where: 'connecting line 2px 색.' },
+      { name: 'spacing-xlarge',       where: 'step 간 vertical gap (32px).' },
+      { name: 'spacing-small',        where: 'title ↔ trailing inline gap (8px).' },
+    ],
+    accessibility: [
+      'step title은 의미를 한국어로 명확히 전달 — 색에 의존하지 않고 라벨로도 인지 가능.',
+      'pulsing은 시각 단서 — screen reader는 title만 읽음.',
+      '저성능 디바이스 / OS 모션 감소 설정 시 pulsing 제거하고 정적 dot으로 fallback 권장.',
+    ],
+    guidelines: [
+      { kind: 'do',   text: '시간 순 진행을 보여줄 때 (신청/심사 review · 정산 진행 · 환불 진행 · 주문 추적 등). tone 매핑은 use case별로 자유.', recipeKey: 'application-review' },
+      { kind: 'do',   text: '주문 추적 같이 미래 step도 보여주려면 muted tone 사용 — outline only로 "아직 도달 안 함" 시각화.', recipeKey: 'order-tracking' },
+      { kind: 'do',   text: 'step 안 사유 / 메시지 / collapsible 같은 page-specific 컨텐츠는 children slot으로 주입. component 자체는 structure(dot/line/heading)만 책임.', recipeKey: 'rejection-flow' },
+      { kind: 'dont', text: '단순 step 리스트(번호 매김 / 순서 안내)에 쓰지 말 것 — 시간 / 진행 metaphor가 있을 때만.' },
+    ],
+    placement: {
+      where: [
+        '카드 안의 메인 컨텐츠 — 카드 전체가 timeline 한 개일 때.',
+        '사용 예: EventApplicationReviewPage 진행 단계 카드 (첫 use case).',
+        '향후 use case: 정산 진행 / 환불 진행 / 주문/배송 추적 / 알림 history 등.',
+      ],
+      spacing: [
+        { neighbor: '카드 padding 안쪽', gap: 'spacing-medium (16px)', note: 'dot column 32px 추가 padding-left' },
+        { neighbor: 'step 간',           gap: 'spacing-xlarge (32px)' },
+      ],
+    },
+    dartUsage: `// 신청 review use case (tone 매핑 — completed→success / active→progress+pulsing / failed→error / cancelled→neutral)
+MinglitTimeline(
+  children: [
+    MinglitTimelineStep(
+      tone: TimelineTone.success,
+      title: '신청',
+      trailing: Text('2026.04.10 19:42'),
+    ),
+    MinglitTimelineStep(
+      tone: TimelineTone.success,
+      title: '결제 완료',
+      trailing: Text('2026.04.10 19:43 · 25,000원'),
+    ),
+    MinglitTimelineStep(
+      tone: TimelineTone.progress,
+      pulsing: true,
+      title: '심사 진행 중',
+      isLast: true,
+      child: Text('이벤트 시작까지 자동 환불 안내'),
+    ),
+  ],
+)`,
+    usedIn: [
+      'event_application_review_page',
+    ],
+  },
 
   // ---------- Settings ----------
   {
@@ -1941,8 +2015,7 @@ final reason = await MinglitDialog.show<String>(
       { name: 'color-divider',        where: '드래그 핸들 색상 (with muted opacity)' },
       { name: 'spacing-small',        where: '핸들 상하 여백 8px' },
       { name: 'spacing-screen-edge',  where: '콘텐츠 좌우 패딩 16px' },
-      { name: 'spacing-medium',       where: '콘텐츠 하단 패딩 16px' },
-      { name: 'spacing-medium',       where: '타이틀 → 콘텐츠 간격 16px (MinglitDialog와 통일)' },
+      { name: 'spacing-medium',       where: '콘텐츠 하단 패딩 16px · 타이틀 → 콘텐츠 간격 16px (MinglitDialog와 통일)' },
     ],
     accessibility: [
       'showModalBottomSheet — barrier dismissible by tapping scrim (default isDismissible=true)',
