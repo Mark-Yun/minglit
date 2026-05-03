@@ -68,9 +68,16 @@ const APP_USER_MAIN_FLOW = `flowchart TB
   MyPageRoute -->|"privacy"| PrivacyRoute
   MyPageRoute -->|"blocked partners"| BlockedPartnersRoute
 
-  %% From MyTicketsPage (appCoordinator).
-  MyTicketsRoute -->|"tap card"| EventDetailRoute
-  MyTicketsRoute -->|"view QR"| TicketQRRoute
+  %% From MyTicketsPage (v2 — OngoingBanner stack hub).
+  %% Empty state CTAs to PurchaseHistory / HomePage; banner footer actions go to 5 sheets (shared with EventNowBar).
+  MyTicketsRoute -->|"tap banner body"| EventDetailRoute
+  MyTicketsRoute -->|"empty: 구매내역 보기"| PurchaseHistoryRoute
+  MyTicketsRoute -->|"empty: 이벤트 둘러보기"| HomeRoute
+  MyTicketsRoute -.->|"banner: checkIn / preview"| EventCheckInRoute
+  MyTicketsRoute -.->|"banner: checkedIn"| EventCheckedInRoute
+  MyTicketsRoute -.->|"banner: matching"| EventMatchingRoute
+  MyTicketsRoute -.->|"banner: results"| EventResultsRoute
+  MyTicketsRoute -.->|"banner: review"| EventReviewRoute
 
   %% Account deletion flow (from PrivacyRoute).
   PrivacyRoute -->|"start account deletion"| DeletionReasonRoute
