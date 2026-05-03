@@ -19028,17 +19028,17 @@
     {
       "label": "page.tsx",
       "file_type": "code",
-      "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/mds/docs/src/app/components/page.tsx",
+      "source_file": "/Users/mark/workspace/minglit-purchase-history-cleanup/apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L1",
-      "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_mds_docs_src_app_components_page_tsx",
+      "id": "users_mark_workspace_minglit_purchase_history_cleanup_apps_mds_docs_src_app_components_page_tsx",
       "community": 93,
       "norm_label": "page.tsx"
     },
     {
       "label": "Section()",
       "file_type": "code",
-      "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/mds/docs/src/app/components/page.tsx",
-      "source_location": "L170",
+      "source_file": "/Users/mark/workspace/minglit-purchase-history-cleanup/apps/mds/docs/src/app/components/page.tsx",
+      "source_location": "L174",
       "id": "page_section",
       "community": 93,
       "norm_label": "section()"
@@ -19046,8 +19046,8 @@
     {
       "label": "apply()",
       "file_type": "code",
-      "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/mds/docs/src/app/components/page.tsx",
-      "source_location": "L625",
+      "source_file": "/Users/mark/workspace/minglit-purchase-history-cleanup/apps/mds/docs/src/app/components/page.tsx",
+      "source_location": "L629",
       "id": "page_apply",
       "community": 93,
       "norm_label": "apply()"
@@ -19575,6 +19575,15 @@
       "norm_label": "peopleicon()"
     },
     {
+      "label": "MinglitTimelineSpec.tsx",
+      "file_type": "code",
+      "source_file": "/Users/mark/workspace/minglit-purchase-history-cleanup/apps/mds/docs/src/components/specs/MinglitTimelineSpec.tsx",
+      "source_location": "L1",
+      "id": "users_mark_workspace_minglit_purchase_history_cleanup_apps_mds_docs_src_components_specs_minglittimelinespec_tsx",
+      "community": 243,
+      "norm_label": "minglittimelinespec.tsx"
+    },
+    {
       "label": "MinglitContentCardSpec.tsx",
       "file_type": "code",
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/mds/docs/src/components/specs/MinglitContentCardSpec.tsx",
@@ -19598,7 +19607,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/mds/docs/src/components/specs/MinglitChipGroupSpec.tsx",
       "source_location": "L1",
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_mds_docs_src_components_specs_minglitchipgroupspec_tsx",
-      "community": 243,
+      "community": 244,
       "norm_label": "minglitchipgroupspec.tsx"
     },
     {
@@ -19643,7 +19652,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/mds/docs/src/components/specs/MinglitContentLayoutSpec.tsx",
       "source_location": "L1",
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_mds_docs_src_components_specs_minglitcontentlayoutspec_tsx",
-      "community": 244,
+      "community": 245,
       "norm_label": "minglitcontentlayoutspec.tsx"
     },
     {
@@ -19652,7 +19661,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/mds/docs/src/components/specs/MinglitBadgeSpec.tsx",
       "source_location": "L1",
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_mds_docs_src_components_specs_minglitbadgespec_tsx",
-      "community": 245,
+      "community": 246,
       "norm_label": "minglitbadgespec.tsx"
     },
     {
@@ -19715,7 +19724,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/mds/docs/src/components/specs/MinglitFilterChipSpec.tsx",
       "source_location": "L1",
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_mds_docs_src_components_specs_minglitfilterchipspec_tsx",
-      "community": 246,
+      "community": 247,
       "norm_label": "minglitfilterchipspec.tsx"
     },
     {
@@ -19742,22 +19751,22 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/mds/docs/src/components/specs/MinglitSectionSpec.tsx",
       "source_location": "L1",
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_mds_docs_src_components_specs_minglitsectionspec_tsx",
-      "community": 247,
+      "community": 248,
       "norm_label": "minglitsectionspec.tsx"
     },
     {
       "label": "components.ts",
       "file_type": "code",
-      "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/mds/docs/src/lib/components.ts",
+      "source_file": "/Users/mark/workspace/minglit-purchase-history-cleanup/apps/mds/docs/src/lib/components.ts",
       "source_location": "L1",
-      "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_mds_docs_src_lib_components_ts",
+      "id": "users_mark_workspace_minglit_purchase_history_cleanup_apps_mds_docs_src_lib_components_ts",
       "community": 57,
       "norm_label": "components.ts"
     },
     {
       "label": "isPropDef()",
       "file_type": "code",
-      "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/mds/docs/src/lib/components.ts",
+      "source_file": "/Users/mark/workspace/minglit-purchase-history-cleanup/apps/mds/docs/src/lib/components.ts",
       "source_location": "L118",
       "id": "components_ispropdef",
       "community": 57,
@@ -19766,7 +19775,7 @@
     {
       "label": "isGuidelineEntry()",
       "file_type": "code",
-      "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/mds/docs/src/lib/components.ts",
+      "source_file": "/Users/mark/workspace/minglit-purchase-history-cleanup/apps/mds/docs/src/lib/components.ts",
       "source_location": "L123",
       "id": "components_isguidelineentry",
       "community": 57,
@@ -19775,7 +19784,7 @@
     {
       "label": "isTokenUsage()",
       "file_type": "code",
-      "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/mds/docs/src/lib/components.ts",
+      "source_file": "/Users/mark/workspace/minglit-purchase-history-cleanup/apps/mds/docs/src/lib/components.ts",
       "source_location": "L133",
       "id": "components_istokenusage",
       "community": 57,
@@ -19784,8 +19793,8 @@
     {
       "label": "getComponentsByCategory()",
       "file_type": "code",
-      "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/mds/docs/src/lib/components.ts",
-      "source_location": "L2219",
+      "source_file": "/Users/mark/workspace/minglit-purchase-history-cleanup/apps/mds/docs/src/lib/components.ts",
+      "source_location": "L2292",
       "id": "components_getcomponentsbycategory",
       "community": 57,
       "norm_label": "getcomponentsbycategory()"
@@ -19793,8 +19802,8 @@
     {
       "label": "getComponentByName()",
       "file_type": "code",
-      "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/mds/docs/src/lib/components.ts",
-      "source_location": "L2234",
+      "source_file": "/Users/mark/workspace/minglit-purchase-history-cleanup/apps/mds/docs/src/lib/components.ts",
+      "source_location": "L2307",
       "id": "components_getcomponentbyname",
       "community": 57,
       "norm_label": "getcomponentbyname()"
@@ -19832,7 +19841,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/mds/docs/src/lib/mds-icons-react.ts",
       "source_location": "L1",
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_mds_docs_src_lib_mds_icons_react_ts",
-      "community": 248,
+      "community": 249,
       "norm_label": "mds-icons-react.ts"
     },
     {
@@ -19949,7 +19958,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-extraction/apps/landing_user/postcss.config.mjs",
       "source_location": "L1",
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_extraction_apps_landing_user_postcss_config_mjs",
-      "community": 249,
+      "community": 250,
       "norm_label": "postcss.config.mjs"
     },
     {
@@ -19962,7 +19971,7 @@
       "author": null,
       "contributor": null,
       "id": "landing_user_eslint_config",
-      "community": 250,
+      "community": 251,
       "norm_label": "landing_user eslint config"
     },
     {
@@ -20014,7 +20023,7 @@
       "author": null,
       "contributor": null,
       "id": "landing_user_home_page",
-      "community": 251,
+      "community": 252,
       "norm_label": "landinguserpage"
     },
     {
@@ -20123,7 +20132,7 @@
       "author": null,
       "contributor": null,
       "id": "integration_test_driver",
-      "community": 252,
+      "community": 253,
       "norm_label": "integration test driver"
     },
     {
@@ -20149,7 +20158,7 @@
       "author": null,
       "contributor": null,
       "id": "reporter",
-      "community": 253,
+      "community": 254,
       "norm_label": "reporter.dart (autolabelallurereporter)"
     },
     {
@@ -21393,7 +21402,7 @@
       "author": null,
       "contributor": null,
       "id": "alchemist_package",
-      "community": 254,
+      "community": 255,
       "norm_label": "alchemist package"
     },
     {
@@ -22771,7 +22780,7 @@
       "author": null,
       "contributor": null,
       "id": "auth_coordinator_test",
-      "community": 255,
+      "community": 256,
       "norm_label": "authcoordinator unit test"
     },
     {
@@ -23410,7 +23419,7 @@
       "author": null,
       "contributor": null,
       "id": "deletion_complete_page_test",
-      "community": 256,
+      "community": 257,
       "norm_label": "deletioncompletepage test"
     },
     {
@@ -23720,7 +23729,7 @@
       "author": null,
       "contributor": null,
       "id": "status_badge_test",
-      "community": 257,
+      "community": 258,
       "norm_label": "statusbadge widget test"
     },
     {
@@ -23937,7 +23946,7 @@
       "author": null,
       "contributor": null,
       "id": "permission_grant_test",
-      "community": 258,
+      "community": 259,
       "norm_label": "permission_grant_test (patrol, skipped)"
     },
     {
@@ -23950,7 +23959,7 @@
       "author": null,
       "contributor": null,
       "id": "payment_pg_test",
-      "community": 259,
+      "community": 260,
       "norm_label": "payment_pg_test (patrol, skipped)"
     },
     {
@@ -23963,7 +23972,7 @@
       "author": null,
       "contributor": null,
       "id": "kakao_login_test",
-      "community": 260,
+      "community": 261,
       "norm_label": "kakao_login_test (patrol, skipped)"
     },
     {
@@ -25492,7 +25501,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_user/lib/src/features/consent/ui/consent_detail_sheet.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_user_lib_src_features_consent_ui_consent_detail_sheet_dart",
-      "community": 261,
+      "community": 262,
       "norm_label": "consent_detail_sheet.dart"
     },
     {
@@ -27326,7 +27335,7 @@
       "author": null,
       "contributor": null,
       "id": "app_user_app_routes",
-      "community": 262,
+      "community": 263,
       "norm_label": "app_user approutes (app_routes.dart)"
     },
     {
@@ -27365,7 +27374,7 @@
       "author": null,
       "contributor": null,
       "id": "app_user_app_router",
-      "community": 263,
+      "community": 264,
       "norm_label": "app_user approuter (app_router.dart)"
     },
     {
@@ -29321,7 +29330,7 @@
       "author": null,
       "contributor": null,
       "id": "download_bottom_sheet_test",
-      "community": 264,
+      "community": 265,
       "norm_label": "downloadbottomsheet csv test"
     },
     {
@@ -30858,7 +30867,7 @@
       "author": null,
       "contributor": null,
       "id": "review_verification_screen_test",
-      "community": 265,
+      "community": 266,
       "norm_label": "reviewverificationscreen snapshot_data type guard test"
     },
     {
@@ -31408,7 +31417,7 @@
       "author": null,
       "contributor": null,
       "id": "account_deletion_flow_test",
-      "community": 266,
+      "community": 267,
       "norm_label": "accountdeletion flow logic unit test"
     },
     {
@@ -31577,7 +31586,7 @@
       "author": null,
       "contributor": null,
       "id": "firebase_options",
-      "community": 267,
+      "community": 268,
       "norm_label": "defaultfirebaseoptions"
     },
     {
@@ -31751,7 +31760,7 @@
       "author": null,
       "contributor": null,
       "id": "minglit_editable_section",
-      "community": 268,
+      "community": 269,
       "norm_label": "mingliteditablesection"
     },
     {
@@ -32111,7 +32120,7 @@
       "author": null,
       "contributor": null,
       "id": "today_party_card",
-      "community": 269,
+      "community": 270,
       "norm_label": "todaypartycard"
     },
     {
@@ -32853,7 +32862,7 @@
       "author": null,
       "contributor": null,
       "id": "settlement_shimmer",
-      "community": 270,
+      "community": 271,
       "norm_label": "settlementlistshimmer"
     },
     {
@@ -33905,7 +33914,7 @@
       "author": null,
       "contributor": null,
       "id": "event_card",
-      "community": 271,
+      "community": 272,
       "norm_label": "eventcard"
     },
     {
@@ -34035,7 +34044,7 @@
       "author": null,
       "contributor": null,
       "id": "party_image_editor",
-      "community": 272,
+      "community": 273,
       "norm_label": "partyimageeditor"
     },
     {
@@ -34061,7 +34070,7 @@
       "author": null,
       "contributor": null,
       "id": "party_status_edit_sheet",
-      "community": 273,
+      "community": 274,
       "norm_label": "partystatuseditsheet"
     },
     {
@@ -34204,7 +34213,7 @@
       "author": null,
       "contributor": null,
       "id": "party_verification_input",
-      "community": 274,
+      "community": 275,
       "norm_label": "partyverificationinput"
     },
     {
@@ -35868,7 +35877,7 @@
       "author": null,
       "contributor": null,
       "id": "app_partner_app_routes",
-      "community": 275,
+      "community": 276,
       "norm_label": "app_partner approutes (app_routes.dart)"
     },
     {
@@ -35907,7 +35916,7 @@
       "author": null,
       "contributor": null,
       "id": "app_partner_app_router",
-      "community": 276,
+      "community": 277,
       "norm_label": "app_partner approuter (app_router.dart)"
     },
     {
@@ -35933,7 +35942,7 @@
       "author": null,
       "contributor": null,
       "id": "landing_partner_postcss",
-      "community": 277,
+      "community": 278,
       "norm_label": "landing partner postcss config"
     },
     {
@@ -35946,7 +35955,7 @@
       "author": null,
       "contributor": null,
       "id": "landing_partner_eslint",
-      "community": 278,
+      "community": 279,
       "norm_label": "landing partner eslint config"
     },
     {
@@ -35998,7 +36007,7 @@
       "author": null,
       "contributor": null,
       "id": "landing_partner_page",
-      "community": 279,
+      "community": 280,
       "norm_label": "landing partner home page"
     },
     {
@@ -36011,7 +36020,7 @@
       "author": null,
       "contributor": null,
       "id": "landing_partner_privacy",
-      "community": 280,
+      "community": 281,
       "norm_label": "landing partner privacy policy page"
     },
     {
@@ -36049,7 +36058,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 281,
+      "community": 282,
       "norm_label": "appuser readme",
       "id": "app_user_readme"
     },
@@ -36062,7 +36071,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 282,
+      "community": 283,
       "norm_label": "app partner readme",
       "id": "app_partner_readme"
     },
@@ -36075,7 +36084,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 283,
+      "community": 284,
       "norm_label": "landing_user readme",
       "id": "landing_user_readme"
     },
@@ -36088,7 +36097,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 284,
+      "community": 285,
       "norm_label": "landing partner readme",
       "id": "landing_partner_readme"
     },
@@ -36101,7 +36110,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 285,
+      "community": 286,
       "norm_label": "minglit_kit changelog",
       "id": "minglit_kit_changelog"
     },
@@ -36114,7 +36123,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 286,
+      "community": 287,
       "norm_label": "minglit_kit readme",
       "id": "minglit_kit_readme"
     },
@@ -36140,7 +36149,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 287,
+      "community": 288,
       "norm_label": "pretendard font ofl license",
       "id": "pretendard_ofl"
     },
@@ -36283,7 +36292,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 288,
+      "community": 289,
       "norm_label": "\u1100\u116e\u1106\u1162 \u1102\u1162\u110b\u1167\u11a8 \u1109\u1162\u11a8\u1109\u1161\u11bc \u110b\u1171\u1100\u1168 \u1105\u1175\u1103\u1175\u110c\u1161\u110b\u1175\u11ab \u110b\u116a\u110b\u1175\u110b\u1165\u1111\u1173\u1105\u1166\u110b\u1175\u11b7",
       "id": "purchase_history_color_hierarchy_wireframe"
     },
@@ -36569,7 +36578,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 289,
+      "community": 290,
       "norm_label": "my tickets test plan",
       "id": "my_tickets_test_plan"
     },
@@ -37050,7 +37059,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 290,
+      "community": 291,
       "norm_label": "partner detail event card wireframe",
       "id": "partner_detail_event_card_wireframe"
     },
@@ -37284,7 +37293,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 291,
+      "community": 292,
       "norm_label": "minglitemptystate variants wireframe",
       "id": "empty_state_variants_wireframe"
     },
@@ -37440,7 +37449,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 292,
+      "community": 293,
       "norm_label": "\u1111\u1161\u1110\u1173\u1102\u1165 \u110c\u1165\u11bc\u1109\u1161\u11ab \u110b\u1165\u1103\u1173\u1106\u1175\u11ab ui/ux \u1109\u1165\u11af\u1100\u1168",
       "id": "partner_settlement_admin_uiux"
     },
@@ -37609,7 +37618,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 293,
+      "community": 294,
       "norm_label": "event now bar technical plan",
       "id": "event_now_bar_plan"
     },
@@ -39506,7 +39515,7 @@
       "captured_at": "2026-04-08",
       "author": "Mark-Yun",
       "contributor": null,
-      "community": 294,
+      "community": 295,
       "norm_label": "security audit report \u2014 tag discovery phase 1",
       "id": "security_report_1175"
     },
@@ -39974,7 +39983,7 @@
       "captured_at": "2026-04-23",
       "author": "Mark-Yun",
       "contributor": null,
-      "community": 295,
+      "community": 296,
       "norm_label": "runtime qa bug \u2014 app_partner devuserswitchscreen non-functional + am force-stop auto-login failure",
       "id": "qa_report_1776"
     },
@@ -40312,7 +40321,7 @@
       "captured_at": "2026-04-17",
       "author": "Mark-Yun",
       "contributor": null,
-      "community": 296,
+      "community": 297,
       "norm_label": "issue #1542: login \u1111\u1166\u110b\u1175\u110c\u1175 \u1103\u1161\u110f\u1173 \u1110\u1166\u1106\u1161 \u110b\u1175\u11af\u1100\u116a\u11ab\u1109\u1165\u11bc (p3-low)",
       "id": "issue1542_login_theme"
     },
@@ -40325,7 +40334,7 @@
       "captured_at": "2026-04-24",
       "author": "Mark-Yun",
       "contributor": null,
-      "community": 297,
+      "community": 298,
       "norm_label": "bug report \u2014 p-s31 /dev deeplink 404",
       "id": "qa_report_1825"
     },
@@ -40403,7 +40412,7 @@
       "captured_at": "2026-04-21",
       "author": "Mark-Yun",
       "contributor": null,
-      "community": 298,
+      "community": 299,
       "norm_label": "runtime qa \u2014 cuj-u03 refund button label mismatch",
       "id": "qa_report_1681"
     },
@@ -40481,7 +40490,7 @@
       "captured_at": "2026-04-20",
       "author": "Mark-Yun",
       "contributor": null,
-      "community": 299,
+      "community": 300,
       "norm_label": "runtime qa bug \u2014 build server disk full (98%)",
       "id": "qa_report_1663"
     },
@@ -40572,7 +40581,7 @@
       "captured_at": "2026-04-25",
       "author": "Mark-Yun",
       "contributor": null,
-      "community": 300,
+      "community": 301,
       "norm_label": "runtime qa bug \u2014 pixel 7a adb wireless session disconnect",
       "id": "qa_report_1849"
     },
@@ -41690,7 +41699,7 @@
       "captured_at": "2026-04-04",
       "author": "Mark-Yun",
       "contributor": null,
-      "community": 301,
+      "community": 302,
       "norm_label": "ops alert #990 \u2014 dependabot ci actions update (actions/checkout v4->v6)",
       "id": "ops_alert_990"
     },
@@ -42288,7 +42297,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 302,
+      "community": 303,
       "norm_label": "app logo: purple gradient speech bubble with white 'm', orange sparkle accent",
       "id": "icon_full_png"
     },
@@ -42301,7 +42310,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 303,
+      "community": 304,
       "norm_label": "app splash icon: purple gradient chat bubble with white 'm' and orange sparkle",
       "id": "splash_icon_png"
     },
@@ -42314,7 +42323,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 304,
+      "community": 305,
       "norm_label": "minglit app splash icon: purple chat bubble with white 'm' and orange sparkle",
       "id": "splash_icon_android12_png"
     },
@@ -42327,7 +42336,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 305,
+      "community": 306,
       "norm_label": "app icon foreground: purple chat bubble with white 'm' and orange sparkle",
       "id": "icon_foreground_png"
     },
@@ -42340,7 +42349,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 306,
+      "community": 307,
       "norm_label": "purple-blue gradient background image for app_partner icon",
       "id": "icon_background_png"
     },
@@ -42353,7 +42362,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 307,
+      "community": 308,
       "norm_label": "minglit inverted logo: white wordmark with cyan and orange shadow layers on transparent background",
       "id": "minglit_logo_inverted_svg"
     },
@@ -42366,7 +42375,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 308,
+      "community": 309,
       "norm_label": "minglit wordmark logo svg with transparent background, cyan/orange layered text",
       "id": "minglit_logo_background_transparent_svg"
     },
@@ -42379,7 +42388,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 309,
+      "community": 310,
       "norm_label": "minglit app bar logo \u2014 bold italic 'minglit' text in purple with cyan and orange shadow layers",
       "id": "minglit_app_bar_logo_png"
     },
@@ -42392,7 +42401,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 310,
+      "community": 311,
       "norm_label": "upscale lounge/restaurant interior with bar, green velvet chairs, asian art, warm lighting",
       "id": "party_premium_lounge"
     },
@@ -42405,7 +42414,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 311,
+      "community": 312,
       "norm_label": "bright minimalist korean cafe interior with numbered wooden tables, plants, string lights, and coffee bar",
       "id": "party_lounge_bright_jpg"
     },
@@ -42418,7 +42427,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 312,
+      "community": 313,
       "norm_label": "warm sunlit cafe interior with wood furniture, plants, string lights, and menu board",
       "id": "party_cafe_warm_jpg"
     },
@@ -42431,7 +42440,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 313,
+      "community": 314,
       "norm_label": "participation status redesign (after) \u2014 not-logged-in state with counts and login prompt",
       "id": "screenshot_05_nologin_png"
     },
@@ -42444,7 +42453,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 314,
+      "community": 315,
       "norm_label": "dark theme participation status redesign, 2-group male/female layout with progress bars",
       "id": "screenshot_07_dark_2group"
     },
@@ -42457,7 +42466,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 315,
+      "community": 316,
       "norm_label": "participation status redesign after-state with 4 groups showing 12/40 total and per-group cards",
       "id": "04_after_4group_png"
     },
@@ -42470,7 +42479,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 316,
+      "community": 317,
       "norm_label": "empty participation status ui: 0/20 total, 0/10 male/female, empty state message",
       "id": "06_empty_png"
     },
@@ -42483,7 +42492,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 317,
+      "community": 318,
       "norm_label": "participation status redesign after variant: 2-group (male/female) split with progress bars",
       "id": "02_after_2group_png"
     },
@@ -42496,7 +42505,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 318,
+      "community": 319,
       "norm_label": "participation status redesign: 2-group (male/female) expanded view with counts and age breakdowns",
       "id": "03_after_2group_expanded"
     },
@@ -42509,7 +42518,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 319,
+      "community": 320,
       "norm_label": "before state: participation status ui with male/female groups, 2/10 capacity each",
       "id": "01_before_png"
     },
@@ -42964,7 +42973,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 320,
+      "community": 321,
       "norm_label": "user_profiles table",
       "id": "user_profiles_table"
     },
@@ -69940,24 +69949,24 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/mds/docs/src/app/components/page.tsx",
-      "source_location": "L170",
+      "source_file": "/Users/mark/workspace/minglit-purchase-history-cleanup/apps/mds/docs/src/app/components/page.tsx",
+      "source_location": "L174",
       "weight": 1.0,
-      "_src": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_mds_docs_src_app_components_page_tsx",
+      "_src": "users_mark_workspace_minglit_purchase_history_cleanup_apps_mds_docs_src_app_components_page_tsx",
       "_tgt": "page_section",
-      "source": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_mds_docs_src_app_components_page_tsx",
+      "source": "users_mark_workspace_minglit_purchase_history_cleanup_apps_mds_docs_src_app_components_page_tsx",
       "target": "page_section",
       "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/mds/docs/src/app/components/page.tsx",
-      "source_location": "L625",
+      "source_file": "/Users/mark/workspace/minglit-purchase-history-cleanup/apps/mds/docs/src/app/components/page.tsx",
+      "source_location": "L629",
       "weight": 1.0,
-      "_src": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_mds_docs_src_app_components_page_tsx",
+      "_src": "users_mark_workspace_minglit_purchase_history_cleanup_apps_mds_docs_src_app_components_page_tsx",
       "_tgt": "page_apply",
-      "source": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_mds_docs_src_app_components_page_tsx",
+      "source": "users_mark_workspace_minglit_purchase_history_cleanup_apps_mds_docs_src_app_components_page_tsx",
       "target": "page_apply",
       "confidence_score": 1.0
     },
@@ -70432,60 +70441,60 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/mds/docs/src/lib/components.ts",
+      "source_file": "/Users/mark/workspace/minglit-purchase-history-cleanup/apps/mds/docs/src/lib/components.ts",
       "source_location": "L118",
       "weight": 1.0,
-      "_src": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_mds_docs_src_lib_components_ts",
+      "_src": "users_mark_workspace_minglit_purchase_history_cleanup_apps_mds_docs_src_lib_components_ts",
       "_tgt": "components_ispropdef",
-      "source": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_mds_docs_src_lib_components_ts",
+      "source": "users_mark_workspace_minglit_purchase_history_cleanup_apps_mds_docs_src_lib_components_ts",
       "target": "components_ispropdef",
       "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/mds/docs/src/lib/components.ts",
+      "source_file": "/Users/mark/workspace/minglit-purchase-history-cleanup/apps/mds/docs/src/lib/components.ts",
       "source_location": "L123",
       "weight": 1.0,
-      "_src": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_mds_docs_src_lib_components_ts",
+      "_src": "users_mark_workspace_minglit_purchase_history_cleanup_apps_mds_docs_src_lib_components_ts",
       "_tgt": "components_isguidelineentry",
-      "source": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_mds_docs_src_lib_components_ts",
+      "source": "users_mark_workspace_minglit_purchase_history_cleanup_apps_mds_docs_src_lib_components_ts",
       "target": "components_isguidelineentry",
       "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/mds/docs/src/lib/components.ts",
+      "source_file": "/Users/mark/workspace/minglit-purchase-history-cleanup/apps/mds/docs/src/lib/components.ts",
       "source_location": "L133",
       "weight": 1.0,
-      "_src": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_mds_docs_src_lib_components_ts",
+      "_src": "users_mark_workspace_minglit_purchase_history_cleanup_apps_mds_docs_src_lib_components_ts",
       "_tgt": "components_istokenusage",
-      "source": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_mds_docs_src_lib_components_ts",
+      "source": "users_mark_workspace_minglit_purchase_history_cleanup_apps_mds_docs_src_lib_components_ts",
       "target": "components_istokenusage",
       "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/mds/docs/src/lib/components.ts",
-      "source_location": "L2219",
+      "source_file": "/Users/mark/workspace/minglit-purchase-history-cleanup/apps/mds/docs/src/lib/components.ts",
+      "source_location": "L2292",
       "weight": 1.0,
-      "_src": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_mds_docs_src_lib_components_ts",
+      "_src": "users_mark_workspace_minglit_purchase_history_cleanup_apps_mds_docs_src_lib_components_ts",
       "_tgt": "components_getcomponentsbycategory",
-      "source": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_mds_docs_src_lib_components_ts",
+      "source": "users_mark_workspace_minglit_purchase_history_cleanup_apps_mds_docs_src_lib_components_ts",
       "target": "components_getcomponentsbycategory",
       "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/mds/docs/src/lib/components.ts",
-      "source_location": "L2234",
+      "source_file": "/Users/mark/workspace/minglit-purchase-history-cleanup/apps/mds/docs/src/lib/components.ts",
+      "source_location": "L2307",
       "weight": 1.0,
-      "_src": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_mds_docs_src_lib_components_ts",
+      "_src": "users_mark_workspace_minglit_purchase_history_cleanup_apps_mds_docs_src_lib_components_ts",
       "_tgt": "components_getcomponentbyname",
-      "source": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_mds_docs_src_lib_components_ts",
+      "source": "users_mark_workspace_minglit_purchase_history_cleanup_apps_mds_docs_src_lib_components_ts",
       "target": "components_getcomponentbyname",
       "confidence_score": 1.0
     },
