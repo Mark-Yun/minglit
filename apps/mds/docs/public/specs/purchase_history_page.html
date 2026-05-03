@@ -176,47 +176,18 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
   margin-left: var(--spacing-medium);
 }
 
-/* 5. Actions row — IntrinsicHeight + Row · CrossAxisAlignment.stretch.
-   영수증 / 문의하기: TextButton (text only · primary fg).
-   예매 취소: ElevatedButton (errorContainer bg · onErrorContainer fg · flex 2). */
-.ph-card__actions {
+/* --- Card chevron — InkWell tap affordance to detail page --- */
+.ph-card__chevron {
   display: flex;
-  align-items: stretch;
-  gap: var(--spacing-small);
-}
-.ph-action--text {
-  flex: 1;
-  height: 40px;
-  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  border: none;
-  background: transparent;
-  color: var(--color-primary);
-  font-size: 14px;
+  justify-content: flex-end;
+  margin-top: var(--spacing-xsmall);
+  color: var(--color-text-secondary);
+  font-size: 12px;
   font-weight: 500;
-  cursor: pointer;
-  border-radius: var(--radius-small);
-  padding: 0 var(--spacing-sm);
+  gap: var(--spacing-xsmall);
 }
-.ph-action--cancel {
-  flex: 2;
-  height: 40px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  cursor: pointer;
-  border-radius: var(--radius-button);
-  padding: 0 var(--spacing-medium);
-  background: rgba(239, 68, 68, 0.12);
-  color: var(--color-error);
-  font-size: 14px;
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
+.ph-card__chevron svg { width: 14px; height: 14px; }
 
 /* --- Empty state (centered Text only) --- */
 .ph-empty {
@@ -268,67 +239,6 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
   color: var(--color-text-primary);
 }
 
-/* --- Refund confirm dialog (MinglitDialog) --- */
-.ph-dialog-shade {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  display: grid;
-  place-items: center;
-}
-.ph-dialog {
-  width: 304px;
-  background: var(--color-background);
-  border-radius: var(--radius-card);
-  padding: var(--spacing-large);
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-}
-.ph-dialog__title {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--color-text-primary);
-}
-.ph-dialog__event-name {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--color-text-primary);
-  margin-top: var(--spacing-xsmall);
-}
-.ph-dialog__row {
-  display: flex;
-  justify-content: space-between;
-  font-size: 12px;
-  padding: var(--spacing-xsmall) 0;
-}
-.ph-dialog__row span:first-child { color: var(--color-text-secondary); }
-.ph-dialog__row span:last-child { color: var(--color-text-primary); font-weight: 600; }
-.ph-dialog__note {
-  font-size: 11px;
-  color: var(--color-text-secondary);
-  margin-top: var(--spacing-xsmall);
-}
-.ph-dialog__actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--spacing-small);
-  margin-top: var(--spacing-medium);
-}
-.ph-dialog__btn {
-  height: 36px;
-  padding: 0 var(--spacing-medium);
-  border-radius: var(--radius-button);
-  font-size: 14px;
-  font-weight: 600;
-  border: none;
-  cursor: pointer;
-}
-.ph-dialog__btn--text { background: transparent; color: var(--color-text-secondary); }
-.ph-dialog__btn--danger {
-  background: rgba(239, 68, 68, 0.12);
-  color: var(--color-error);
-}
 </style>
 </head>
 <body>
@@ -356,7 +266,7 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
     <tbody>
       <tr>
         <th style="width: 140px;">Status</th>
-        <td><strong>✅ 디자인완료</strong> <em style="color: var(--color-text-secondary);">— 5 state · MinglitAsyncValueWidget 기반</em></td>
+        <td><strong>📝 Redesign</strong> <em style="color: var(--color-text-secondary);">— v1.1 (인라인 액션 제거 · 카드 탭 → 상세 페이지로 위임)</em></td>
       </tr>
       <tr>
         <th>App</th>
@@ -378,32 +288,29 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
         <th>Hierarchy</th>
         <td>
           <strong>Parent</strong>: <a href="/specs/my_page.html"><code>MyPage</code></a> <em style="color: var(--color-text-secondary);">("활동 → 구매 내역" tile에서 진입) · <a href="/specs/event_detail_page.html"><code>EventApplicationRoute</code></a> 결제 완료 후 redirect</em><br>
-          <strong>Children</strong>: <em>—</em> <em style="color: var(--color-text-secondary);">(외부 영수증은 url_launcher로 브라우저 이동, 환불 confirm은 동일 페이지의 MinglitDialog overlay)</em>
+          <strong>Children</strong>: <a href="/specs/purchase_history_detail_page.html"><code>PurchaseHistoryDetailRoute</code></a> <em style="color: var(--color-text-secondary);">(카드 탭 시 push — 결제 정보 / 환불 정책 / 파트너 정보 / 예매 취소 등 모든 후속 액션은 상세 화면이 담당)</em>
         </td>
       </tr>
       <tr>
         <th>Purpose</th>
         <td>
-          사용자의 결제/신청 이력을 시간 역순 list로 한 곳에 모아 보여주고, 자동 환불 가능 기간 내인 active 티켓에 한해
-          이 페이지에서 직접 "예매 취소"(환불) 플로우를 진행할 수 있게 한다. paid · pending · cancelled · rejected 등
-          모든 상태가 섞여 노출된다 (active 티켓만 모이는 <a href="/specs/my_tickets_page.html"><code>MyTicketsPage</code></a>와는 다름).
+          사용자의 결제/신청 이력을 시간 역순 list로 한 곳에 모아 보여주는 화면. 카드 한 장은 "어떤 이벤트 / 언제 결제 / 현재 상태"의 최소 시그널만 노출하고, 결제 상세 / 환불 / 문의 / 영수증 등 후속 액션은 모두 상세 페이지로 위임한다.
+          paid · pending · cancelled · rejected 등 모든 상태가 섞여 노출된다 (active 티켓만 모이는 <a href="/specs/my_tickets_page.html"><code>MyTicketsPage</code></a>와는 다름).
         </td>
       </tr>
       <tr>
         <th>User journey</th>
         <td>
           <strong>Entry points</strong>: MyPage "구매 내역" tile / EventApplicationWizard 결제 완료 후 push.<br>
-          <strong>Exit points</strong>: "영수증" tap → 외부 브라우저 (service.iamport.kr) · "문의하기" tap → 시스템 dialer/메일앱 (tel: / mailto:) ·
-          "예매 취소" tap → MinglitDialog confirm → user-cancel-order EF 호출 → 성공 시 success snackbar + Navigator.maybePop · 뒤로 가기 → MyPage 복귀.
+          <strong>Exit points</strong>: 카드 탭 → <a href="/specs/purchase_history_detail_page.html">PurchaseHistoryDetailRoute</a> push (모든 후속 액션은 상세에서) · 뒤로 가기 → MyPage 복귀.
+          상세 화면에서 예매 취소 등 status가 변경된 뒤 본 화면 복귀 시 자동 invalidate되어 카드의 status 뱃지가 갱신된다.
         </td>
       </tr>
       <tr>
         <th>Background</th>
         <td>
-          MyTickets와 분리한 이유: MyTickets는 "지금 갈 수 있는 티켓"에 초점 (active만), Purchase History는 "결제 기록"으로
-          회계/환불 관점. 따라서 cancelled/rejected/payment_failed도 모두 보여 환불·문의의 기록 추적이 가능하게 한다.
-          환불 플로우는 정책 조회 실패 시 default(grace 2h / cutoff 7d)로 fallback하여 절대 멈추지 않게 설계됨 (Fix #133).
-          영수증 버튼은 paymentId가 있는 유료 결제에만 노출 — 무료 티켓은 iamport 결제 자체가 없음 (Fix #1820).
+          MyTickets와 분리한 이유: MyTickets는 "지금 갈 수 있는 티켓"에 초점 (active만), Purchase History는 "결제 기록"으로 회계/환불 관점. cancelled/rejected/payment_failed도 모두 보여 환불·문의의 기록 추적이 가능하게 한다.
+          v1은 카드마다 인라인 영수증 / 문의 / 예매 취소 버튼을 노출했는데, 카드가 무겁고 환불 confirm 다이얼로그까지 같은 페이지에 얹혀 책임이 과적되어 있었다. v1.1에서 카드는 시그널만 담당하고 액션은 상세 페이지로 분리해 list ↔ detail 책임을 명확히 가른다.
         </td>
       </tr>
       <tr>
@@ -432,6 +339,12 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
       </tr>
     </thead>
     <tbody>
+      <tr>
+        <td>2026-05-03</td>
+        <td>1.1</td>
+        <td>mark-yun</td>
+        <td>책임 분리 정리 (PR #2094 후속). 카드의 인라인 액션(영수증 / 문의하기 / 예매 취소) + 환불 confirm 다이얼로그 state를 상세 페이지로 위임. 카드는 header / info / divider / pay-row + chevron 4섹션으로 단순화. State 5(Refund confirm) 제거 → 4 state. canCancel 판정 / contactOptions fallback / 환불 정책 조회 / iamport 영수증 등 detail-page 책임도 본 spec에서 모두 제거.</td>
+      </tr>
       <tr>
         <td>2026-05-01</td>
         <td>1.0</td>
@@ -464,7 +377,7 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
     <h2>Blueprint &amp; tree</h2>
     <p class="intro">
       Scaffold + Material default AppBar (title "구매 내역") + MinglitAsyncValueWidget. data branch: 빈 list면 중앙 메시지, 아니면 ListView.separated가
-      모든 application을 시간 역순으로 카드 list로 출력. 카드 1개 높이는 가변 — 환불 가능(canCancel) 여부에 따라 actions row의 버튼 개수가 달라짐.
+      모든 application을 시간 역순으로 카드 list로 출력. 카드는 모두 동일 높이 — 인라인 액션 없이 InkWell 전체가 탭되어 상세 페이지로 push.
     </p>
 
     <div class="layout-grid">
@@ -477,18 +390,18 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
         </div>
 
         <!-- Card 1 -->
-        <div class="blueprint__region blueprint__region--shaded" style="top:72px;left:16px;right:16px;height:240px;">
-          <span class="blueprint__region-label">② PurchaseHistoryCard #1<br>header / info / divider / pay-row / actions</span>
+        <div class="blueprint__region blueprint__region--shaded" style="top:72px;left:16px;right:16px;height:188px;">
+          <span class="blueprint__region-label">② PurchaseHistoryCard #1<br>header / info / divider / pay-row / chevron</span>
         </div>
 
         <!-- gap -->
-        <div class="blueprint__region" style="top:312px;left:16px;right:16px;height:16px;">
+        <div class="blueprint__region" style="top:260px;left:16px;right:16px;height:16px;">
           <span class="blueprint__region-label">— separator: SizedBox(spacing-medium 16)</span>
         </div>
 
         <!-- Card 2 -->
-        <div class="blueprint__region blueprint__region--shaded" style="top:328px;left:16px;right:16px;height:200px;">
-          <span class="blueprint__region-label">③ PurchaseHistoryCard #2 (canCancel: false · 영수증+문의하기만)</span>
+        <div class="blueprint__region blueprint__region--shaded" style="top:276px;left:16px;right:16px;height:188px;">
+          <span class="blueprint__region-label">③ PurchaseHistoryCard #2 (status badge만 다름 · 동일 높이)</span>
         </div>
 
         <div class="blueprint__align-marker" style="bottom:8px;right:8px;">+ list bottom: spacing-medium 16</div>
@@ -507,17 +420,14 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
          ├─ padding: <i>EdgeInsets.all(spacing-medium 16)</i>
          ├─ separator: SizedBox(height: <i>spacing-medium 16</i>)
          └─ <b>PurchaseHistoryCard</b> × n                       ← ② / ③
-            └─ Container · radius-card · 1px outlineVariant · shadowXs · pad-medium
-               ├─ <em>1. Header Row</em>: paidAt(yyyy.MM.dd) ↔ <b>StatusBadge</b>
-               ├─ SizedBox(spacing-medium)
-               ├─ <em>2. Info Row</em>: 80×80 thumb (<b>MinglitImage</b>) + Column(title titleMedium bold · "M월 d일 (E) HH:mm" bodySmall · location bodySmall onSurfaceVariant)
-               ├─ <b>Divider</b>(height: <i>spacing-xlarge 32</i>)
-               ├─ <em>3. Pay Row</em>: ticket name bodyMedium ↔ "{amount}원" bodyLarge bold
-               ├─ SizedBox(spacing-medium)
-               └─ <em>4. Actions Row</em> (IntrinsicHeight + Row stretch)
-                  ├─ <em>if paymentId != null</em> → TextButton "영수증" (flex 1)  // Fix #1820
-                  ├─ TextButton "문의하기" (flex 1)
-                  └─ <em>if canCancel</em> → ElevatedButton "예매 취소" (flex 2 · errorContainer bg)  // Fix #1234</div>
+            └─ <b>InkWell</b>(onTap → push <a href="/specs/purchase_history_detail_page.html">PurchaseHistoryDetailRoute</a>(applicationId))
+               └─ Container · radius-card · 1px outlineVariant · shadowXs · pad-medium
+                  ├─ <em>1. Header Row</em>: paidAt(yyyy.MM.dd) ↔ <b>StatusBadge</b>
+                  ├─ SizedBox(spacing-medium)
+                  ├─ <em>2. Info Row</em>: 80×80 thumb (<b>MinglitImage</b>) + Column(title titleMedium bold · "M월 d일 (E) HH:mm" bodySmall · location bodySmall onSurfaceVariant)
+                  ├─ <b>Divider</b>(height: <i>spacing-xlarge 32</i>)
+                  ├─ <em>3. Pay Row</em>: ticket name bodyMedium ↔ "{amount}원" bodyLarge bold
+                  └─ <em>4. Chevron Row</em>: Text('상세 보기') + Icon(chevron_right · 14 · text-secondary)</div>
     </div>
 
     <table class="ref" style="margin-top: 16px;">
@@ -532,7 +442,7 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
       <tbody>
         <tr><td>—</td><td>Body padding</td><td>—</td><td>ListView padding all: <code>spacing-medium (16)</code></td></tr>
         <tr><td>①</td><td>AppBar</td><td>title left + auto back arrow (Material default · push 진입 시 자동)</td><td>height: 56 · scaffold gray bg · <strong>border-bottom 없음</strong></td></tr>
-        <tr><td>②③</td><td>PurchaseHistoryCard</td><td>list child (full width inside list padding)</td><td>padding all: <code>medium (16)</code> · radius: <code>radius-card (16)</code> · 1px outlineVariant border · boxShadow blur 8 offset (0,2) opacity <code>shadowXs (0.06)</code> · header→info: <code>medium</code> · info↔divider: <code>xlarge (32, divider 자체 height)</code> · divider→pay-row: 0 (Divider 내장) · pay-row→actions: <code>medium</code></td></tr>
+        <tr><td>②③</td><td>PurchaseHistoryCard</td><td>list child (full width inside list padding) · 카드 전체가 InkWell — 탭하면 상세 push</td><td>padding all: <code>medium (16)</code> · radius: <code>radius-card (16)</code> · 1px outlineVariant border · boxShadow blur 8 offset (0,2) opacity <code>shadowXs (0.06)</code> · header→info: <code>medium</code> · info↔divider: <code>xlarge (32, divider 자체 height)</code> · divider→pay-row: 0 (Divider 내장) · pay-row→chevron: <code>xsmall (4)</code></td></tr>
         <tr><td>—</td><td>list separator</td><td>vertical SizedBox</td><td>SizedBox height <code>spacing-medium (16)</code></td></tr>
       </tbody>
     </table>
@@ -541,7 +451,7 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
   <section class="doc">
     <h2>PurchaseHistoryCard sub-anatomy</h2>
     <p class="intro">
-      카드는 항상 4 section. 가변 요소는 (a) StatusBadge 색·라벨 (8 status 분기), (b) actions row 버튼 개수 (paymentId·canCancel 조합으로 2-3개).
+      카드는 항상 5 region(header / info / divider / pay-row / chevron). 가변 요소는 StatusBadge의 색·라벨(8 status)뿐 — 모든 카드는 동일 높이.
     </p>
     <table class="ref">
       <thead>
@@ -551,22 +461,14 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
         <tr><td>1. Header (date + StatusBadge)</td><td>spaceBetween · 좌우 끝</td><td>좌: <code>paidAt ?? createdAt</code>를 <code>toLocal()</code> 후 <code>yyyy.MM.dd</code> 포맷 (Fix #579 · UTC→KST 날짜 차이 방지) · labelMedium onSurfaceVariant. 우: <a href="/components#StatusBadge"><code>StatusBadge</code></a> = <code>MinglitBadge</code> (8 status 분기 · Fix #1236, #1541)</td></tr>
         <tr><td>2. Info row</td><td>start cross-axis</td><td>thumb 80×80 (<code>MinglitImage</code> · radius-small · BoxFit.cover · imageUrl 없으면 placeholder) + <code>spacing-medium</code> gap + Expanded Column(eventName titleMedium bold maxLines 1 ellipsis · "M월 d일 (E) HH:mm" bodySmall · location bodySmall onSurfaceVariant)</td></tr>
         <tr><td>3. Divider</td><td>—</td><td><code>Divider(height: spacing-xlarge 32)</code> — 1px line + 16/16 v-margin (Material Divider default)</td></tr>
-        <tr><td>4. Pay row</td><td>spaceBetween baseline</td><td>좌: ticket name bodyMedium · 우: <code>NumberFormat('#,###').format(paymentAmount ?? 0) + '원'</code> bodyLarge bold</td></tr>
-        <tr><td>5. Actions row</td><td>IntrinsicHeight + Row stretch · 가운데 정렬</td><td>paymentId 있음 → "영수증" TextButton flex 1 · 항상 "문의하기" TextButton flex 1 · canCancel → "예매 취소" ElevatedButton flex 2 errorContainer bg (Fix #1234 — 2줄 깨짐 방지로 cancel만 flex 2). 영수증 누락 시 SizedBox(spacing-small) gap도 함께 누락.</td></tr>
+        <tr><td>4. Pay row</td><td>spaceBetween baseline</td><td>좌: ticket name bodyMedium · 우: <code>NumberFormat('#,###').format(paymentAmount ?? 0) + '원'</code> bodyLarge bold. 무료 티켓이면 "0원"으로 표기.</td></tr>
+        <tr><td>5. Chevron row</td><td>row trailing · 우측 정렬</td><td>Text('상세 보기') 12px w500 secondary + Icon(chevron_right · 14px · text-secondary). 카드 전체가 InkWell 안에 있어 어디를 탭해도 동일하게 push — chevron은 affordance signal일 뿐.</td></tr>
       </tbody>
     </table>
 
-    <p class="variant-label">canCancel 판정 (Fix #1235, #1652 · controller 35-52행)</p>
-    <table class="ref">
-      <thead><tr><th style="width: 200px;">조건</th><th>결과</th></tr></thead>
-      <tbody>
-        <tr><td><code>status</code> == paid 또는 approved</td><td>active 티켓 (<code>isActiveTicket</code>)</td></tr>
-        <tr><td><code>refundStatus</code> == 'none'</td><td>중복 환불 방지</td></tr>
-        <tr><td><code>eventStartTime &gt; now</code></td><td>이벤트 시작 전만 (Fix #1235)</td></tr>
-        <tr><td>유료(<code>paymentAmount &gt; 0 || paymentId != null</code>): paymentId/paymentAmount/eventStartTime 모두 not-null</td><td>iamport 환불 호출 가능</td></tr>
-        <tr><td>무료(<code>paymentAmount == 0 &amp;&amp; paymentId == null</code>): eventStartTime not-null</td><td>user-cancel-order EF가 무료 케이스 분기 처리 (Fix #1652)</td></tr>
-      </tbody>
-    </table>
+    <p class="intro" style="margin-top: 12px;">
+      <strong>v1.1 변경 메모</strong>: v1에서는 카드 마지막에 액션 row(영수증 / 문의하기 / 예매 취소)가 있었고 canCancel 판정 / contactOptions fallback 로직이 list spec에 포함되어 있었다. v1.1에서는 모두 <a href="/specs/purchase_history_detail_page.html">상세 페이지</a>로 위임 — 본 spec은 카드 시그널만 다룬다.
+    </p>
   </section>
 </div>
 
@@ -577,12 +479,12 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
   <div class="perspective__header">
     <span class="glyph">🎨</span>
     <h2>States</h2>
-    <span class="lede">5 state. baseline = Default(구매 이력 보유). MinglitAsyncValueWidget이 loading/error 자동 처리, data branch에서 history.isEmpty 분기. 환불 confirm은 같은 페이지 위 MinglitDialog overlay.</span>
+    <span class="lede">4 state. baseline = Default(구매 이력 보유). MinglitAsyncValueWidget이 loading/error 자동 처리, data branch에서 history.isEmpty 분기. 환불 confirm 등 액션 흐름은 본 spec 범위 밖(상세 페이지 담당).</span>
   </div>
 
   <section class="doc">
     <p class="intro">
-      <strong>State 종류 식별 기준</strong>: <code>MinglitAsyncValueWidget</code>의 3-way (loading / error / data) + data 안에서 <code>history.isEmpty</code> 분기 + 사용자가 "예매 취소" 탭 시 <code>MinglitDialog.show</code> 오버레이.
+      <strong>State 종류 식별 기준</strong>: <code>MinglitAsyncValueWidget</code>의 3-way (loading / error / data) + data 안에서 <code>history.isEmpty</code> 분기.
       <em>비로그인 사용자는 controller 14-18행에서 빈 list 반환 → Empty state로 보임.</em>
     </p>
 
@@ -603,7 +505,7 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
                 <h2>구매 내역</h2>
               </div>
               <div class="ph-list">
-                <!-- Card 1 — paid · canCancel: true -->
+                <!-- Card 1 — paid (active 결제완료) -->
                 <div class="ph-card">
                   <div class="ph-card__header">
                     <span class="ph-card__date">2026.04.28</span>
@@ -625,14 +527,13 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
                     <span class="ph-card__ticket-name">스탠다드 입장권</span>
                     <span class="ph-card__amount">25,000원</span>
                   </div>
-                  <div class="ph-card__actions">
-                    <button class="ph-action--text">영수증</button>
-                    <button class="ph-action--text">문의하기</button>
-                    <button class="ph-action--cancel">예매 취소</button>
+                  <div class="ph-card__chevron">
+                    <span>상세 보기</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
                   </div>
                 </div>
 
-                <!-- Card 2 — cancelled · canCancel: false (no cancel button) -->
+                <!-- Card 2 — cancelled (status badge만 다름 · 동일 높이) -->
                 <div class="ph-card">
                   <div class="ph-card__header">
                     <span class="ph-card__date">2026.04.10</span>
@@ -653,10 +554,9 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
                     <span class="ph-card__ticket-name">얼리버드 입장권</span>
                     <span class="ph-card__amount">15,000원</span>
                   </div>
-                  <div class="ph-card__actions">
-                    <button class="ph-action--text">영수증</button>
-                    <button class="ph-action--text">문의하기</button>
-                    <!-- canCancel: false · ElevatedButton 미렌더 -->
+                  <div class="ph-card__chevron">
+                    <span>상세 보기</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
                   </div>
                 </div>
               </div>
@@ -668,21 +568,19 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ① <strong>"영수증" 탭</strong> (결제건만 노출) → 외부 브라우저로 영수증 페이지 열기 · 열 수 없으면 "영수증 페이지를 열 수 없습니다." 안내<br>
-            ② <strong>"문의하기" 탭</strong> → 연락처가 등록돼 있으면 전화 앱 우선, 없으면 메일 앱으로 이동. 둘 다 없으면 "연락처 정보가 없습니다." 안내<br>
-            ③ <strong>"예매 취소" 탭</strong> (취소 가능 건만 노출) → 환불 정책을 조회한 뒤 환불 확인 다이얼로그 노출 (state 5)<br>
-            ④ <strong>스크롤</strong> → 더 오래된 결제 노출 (현재 페이지네이션 없이 한 번에 모두 표시)<br>
-            ⑤ <strong>뒤로 가기</strong> → 마이페이지로 복귀
+            ① <strong>카드 탭</strong> → <a href="/specs/purchase_history_detail_page.html">PurchaseHistoryDetailRoute</a>로 push (모든 후속 액션은 상세에서 — 결제 정보 / 환불 / 문의 / 영수증 등)<br>
+            ② <strong>스크롤</strong> → 더 오래된 결제 노출 (현재 페이지네이션 없이 한 번에 모두 표시)<br>
+            ③ <strong>뒤로 가기</strong> → 마이페이지로 복귀<br>
+            ④ <strong>상세 페이지에서 status 변경 후 복귀</strong> → 자동 invalidate → 카드의 status badge가 갱신됨 (예: 결제완료 → 환불 완료)
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · <strong>무료 티켓</strong> (paymentAmount=0 &amp;&amp; paymentId=null) → "영수증" 버튼 미렌더 (Fix #1820) · "예매 취소"는 isFree branch로 활성 (Fix #1652)<br>
+            · <strong>무료 티켓</strong> (paymentAmount=0 &amp;&amp; paymentId=null) → 카드는 동일 표기, "0원"으로 노출. 영수증 / 환불 분기는 상세에서 처리.<br>
             · <strong>event/party 관계 끊김</strong> → eventName "제목 없음" · location "장소 정보 없음" · dateLabel "-"<br>
             · <strong>StatusBadge 색</strong>: paid/approved → success 초록 · pending_review → warning 노랑 · pending/payment_pending → info 파랑 · cancelled → neutral 회색 · rejected/payment_failed → error 빨강 · 그 외 → "알수없음" 회색<br>
-            · <strong>"예매 취소" 버튼 라벨 wrap</strong>: flex 2 + maxLines 1 + ellipsis로 1줄 강제 (Fix #1234)<br>
-            · <strong>contactOptions key 우선순위</strong>: event.contactOptions 비었으면 party.contactOptions로 fallback · 그 후 phone &gt; email · 둘 다 없으면 partner.contactPhone/Email로 한번 더 fallback
+            · <strong>InkWell 탭 영역</strong>: 카드 전체. chevron 영역만 별도 hit-region 없음 — 어디를 눌러도 동일하게 detail push.
           </td>
         </tr>
         <tr>
@@ -691,27 +589,25 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
             · <code>Scaffold</code> + Material <code>AppBar(title: Text('구매 내역'))</code> — auto back arrow (push 진입)<br>
             · <a href="/components#MinglitAsyncValueWidget"><code>MinglitAsyncValueWidget&lt;List&lt;EventApplication&gt;&gt;</code></a> 외곽 wrapping<br>
             · <code>ListView.separated</code> · padding all medium · separator SizedBox medium<br>
-            · <code>PurchaseHistoryCard</code> (file-private · part of purchase_history_page.dart): Container + radius-card + 1px outlineVariant + shadowXs · 4-section Column<br>
+            · <code>PurchaseHistoryCard</code> (file-private · part of purchase_history_page.dart): InkWell wrap → Container + radius-card + 1px outlineVariant + shadowXs · 5-region Column<br>
             · <a href="/components#StatusBadge"><code>StatusBadge</code></a> = <a href="/components#MinglitBadge"><code>MinglitBadge</code></a> tinted bg + color text (8 status 분기 · Fix #1236, #1541)<br>
             · <a href="/components#MinglitImage"><code>MinglitImage</code></a> 80×80 (radius-small)<br>
-            · <code>TextButton</code> "영수증"·"문의하기" (Fix #1236 — 보조 버튼 위계)<br>
-            · <code>ElevatedButton</code> "예매 취소" (errorContainer bg / onErrorContainer fg)<br>
-            · <code>url_launcher</code>: <code>launchUrl(externalApplication)</code> for 영수증·tel:·mailto:
+            · <code>Icon(Icons.chevron_right · 14)</code> + <code>Text('상세 보기')</code> — affordance signal (Fix #1234 인라인 액션 폐기 후 도입)
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
           <td>
-            · color: <code>color-surface</code> (scaffold + AppBar bg · light gray + thumb fallback bg), <code>color-background</code> (card bg · 흰색), <code>color-text-primary</code> (title · ticket name · amount), <code>color-text-secondary</code> (date · location · onSurfaceVariant), <code>color-divider</code> (outlineVariant · card border · in-card divider), 의미론적 status: <code>color-success</code> · <code>color-warning</code> · <code>color-error</code> · <code>color-text-secondary</code> (cancelled neutral) · info(#3b82f6 · pending), <code>color-error</code> + <code>errorContainer</code> tint (예매 취소 ElevatedButton)<br>
-            · radius: <code>radius-card</code> (16 · card 외곽), <code>radius-small</code> (8 · thumb · status badge · TextButton · 영수증 등), <code>radius-button</code> (12 · ElevatedButton 예매 취소 — Material default)<br>
-            · spacing: <code>spacing-medium</code> (16 · ListView padding · card padding · header→info · pay→actions · 카드 사이 separator · info row gap · amount left margin), <code>spacing-xlarge</code> (32 · Divider height = 1px + 16/16 v-margin), <code>spacing-sm</code> (12 · status badge h-pad), <code>spacing-small</code> (8 · actions inter-button gap), <code>spacing-xsmall</code> (4 · status badge v-pad · text gap · card meta gap)<br>
+            · color: <code>color-surface</code> (scaffold + AppBar bg · light gray + thumb fallback bg), <code>color-background</code> (card bg · 흰색), <code>color-text-primary</code> (title · ticket name · amount), <code>color-text-secondary</code> (date · location · onSurfaceVariant · chevron), <code>color-divider</code> (outlineVariant · card border · in-card divider), 의미론적 status: <code>color-success</code> · <code>color-warning</code> · <code>color-error</code> · <code>color-text-secondary</code> (cancelled neutral) · info(#3b82f6 · pending)<br>
+            · radius: <code>radius-card</code> (16 · card 외곽), <code>radius-small</code> (8 · thumb · status badge)<br>
+            · spacing: <code>spacing-medium</code> (16 · ListView padding · card padding · header→info · 카드 사이 separator · info row gap · amount left margin), <code>spacing-xlarge</code> (32 · Divider height = 1px + 16/16 v-margin), <code>spacing-sm</code> (12 · status badge h-pad), <code>spacing-xsmall</code> (4 · status badge v-pad · text gap · card meta gap · pay-row→chevron)<br>
             · opacity: <code>shadowXs (0.06)</code> (card boxShadow alpha · MinglitColors.textPrimary tint), <code>subtle (0.20)</code> (MinglitBadge bg tint)<br>
-            · typography: appBarTitle (18/600), titleMedium bold (eventName), bodyLarge bold (amount), bodyMedium (ticket name), bodySmall (date · location · meta), labelMedium (date · w500 · onSurfaceVariant), labelMedium w600 (StatusBadge label)
+            · typography: appBarTitle (18/600), titleMedium bold (eventName), bodyLarge bold (amount), bodyMedium (ticket name), bodySmall (date · location · meta · chevron), labelMedium (date · w500 · onSurfaceVariant), labelMedium w600 (StatusBadge label)
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 viewport mockup은 카드 2개만 표시 (paid+canCancel · cancelled+no-cancel). 실제로는 8 status 모두 섞여 시간 역순으로 노출 (paidAt DESC). 페이지네이션은 미구현 — controller에 "Future features: infinite scroll" 주석. 결제 직후 PurchaseHistoryRoute로 push redirect되면 즉시 baseline 진입.</td>
+          <td>📝 viewport mockup은 카드 2개만 표시 (paid · cancelled). 실제로는 8 status 모두 섞여 시간 역순으로 노출 (paidAt DESC). 페이지네이션은 미구현 — controller에 "Future features: infinite scroll" 주석. 결제 직후 PurchaseHistoryRoute로 push redirect되면 즉시 baseline 진입.</td>
         </tr>
       </tbody>
     </table>
@@ -741,7 +637,7 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>− 카드 액션 모두 없음 (list 미렌더)<br>동일: 뒤로 가기 → MyPage 복귀<br>− CTA 버튼 없음 (단순 Center Text — MinglitEmptyState 미사용)</td>
+          <td>− 카드 list 미렌더 (탭할 카드 없음)<br>동일: 뒤로 가기 → MyPage 복귀<br>− CTA 버튼 없음 (단순 Center Text — MinglitEmptyState 미사용)</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
@@ -793,14 +689,14 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>↔ 카드 액션 모두 없음 (응답 대기 중)<br>동일: 뒤로 가기 → 마이페이지로 복귀 (응답 대기 취소)</td>
+          <td>↔ 카드 list 미렌더 (응답 대기 중)<br>동일: 뒤로 가기 → 마이페이지로 복귀 (응답 대기 취소)</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
             · 네트워크가 느리면 스피너가 길게 노출됨 (별도 타임아웃 없음)<br>
             · 인증이 만료되면 자동으로 오류 상태로 전환 (별도 안내 없음)<br>
-            · 예매 취소 성공 직후 (Fix #1951) 화면이 잠시 다시 Loading로 들어왔다가 갱신됨
+            · 상세 페이지에서 환불/예매 취소 성공 직후 (Fix #1951) 본 화면이 잠시 Loading로 들어왔다가 갱신됨
           </td>
         </tr>
         <tr>
@@ -813,7 +709,7 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 짧은 transition state — 일반적으로 200-500ms. 환불 성공 후 Riverpod invalidate로도 잠시 진입 (loading 후 default로 자동 복귀, 취소된 application은 status 'cancelled'로 표시).</td>
+          <td>📝 짧은 transition state — 일반적으로 200-500ms. 상세 페이지에서 status 변경 후 invalidate로도 잠시 진입 (loading 후 default로 자동 복귀, 취소된 application은 status 'cancelled'로 표시).</td>
         </tr>
       </tbody>
     </table>
@@ -847,7 +743,7 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>− 카드 액션 모두 없음<br>동일: 뒤로 가기 → 마이페이지로 복귀<br>− 화면 내 재시도 버튼 없음 (오류 상세도 표시되지 않음)</td>
+          <td>− 카드 list 미렌더<br>동일: 뒤로 가기 → 마이페이지로 복귀<br>− 화면 내 재시도 버튼 없음 (오류 상세도 표시되지 않음)</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
@@ -868,108 +764,6 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
         <tr>
           <td class="state-mini__aspect">노트</td>
           <td>📝 화면 내 재시도 CTA가 없는 게 약점. Phase 2에서 재시도 버튼 추가 검토.</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <!-- State 5: Refund confirm dialog -->
-    <table class="ref state-mini">
-      <thead>
-        <tr><th colspan="3"><strong>Refund Confirm Dialog</strong> <small>"예매 취소" tap → MinglitDialog overlay</small></th></tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td class="state-mini__mock" rowspan="6">
-            <div class="viewport ph-viewport">
-              <div class="ph-appbar">
-                <span class="ph-appbar__back">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-                </span>
-                <h2>구매 내역</h2>
-              </div>
-              <!-- background list partly visible (dim) — 단순화: 카드 1개 -->
-              <div class="ph-list" style="opacity: 0.4;">
-                <div class="ph-card">
-                  <div class="ph-card__header">
-                    <span class="ph-card__date">2026.04.28</span>
-                    <span class="ph-status-badge ph-status-badge--success">결제완료</span>
-                  </div>
-                  <div class="ph-card__info">
-                    <div class="ph-card__thumb">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="12" cy="15" r="2"/></svg>
-                    </div>
-                    <div class="ph-card__text">
-                      <div class="ph-card__title">스피드 데이팅 · 강남 라운지</div>
-                      <div class="ph-card__meta">5월 4일 (월) 20:00</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="ph-dialog-shade">
-                <div class="ph-dialog">
-                  <div class="ph-dialog__title">예매 취소 확인</div>
-                  <div class="ph-dialog__event-name">스피드 데이팅 · 강남 라운지</div>
-                  <div class="ph-dialog__row"><span>결제 금액</span><span>25,000원</span></div>
-                  <div class="ph-dialog__row"><span>환불 비율</span><span>80%</span></div>
-                  <div class="ph-dialog__row"><span>환불 금액</span><span>20,000원</span></div>
-                  <div class="ph-dialog__row"><span>수수료</span><span>5,000원</span></div>
-                  <div class="ph-dialog__note">환불 수수료는 취소 시점에 따라 달라집니다.</div>
-                  <div class="ph-dialog__actions">
-                    <button class="ph-dialog__btn ph-dialog__btn--text">닫기</button>
-                    <button class="ph-dialog__btn ph-dialog__btn--danger">예매 취소</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </td>
-          <td class="state-mini__aspect">조건</td>
-          <td>"예매 취소" 버튼 tap → controller가 정책(grace 2h / cutoff 7d)을 조회 → <code>RefundCalculator.calculate</code> → <code>refundPercentage &gt; 0</code>일 때 이 dialog 표시. 0%면 별도 alert("환불 불가 — 자동 환불 기간이 지났습니다." Fix #1140)로 분기.</td>
-        </tr>
-        <tr>
-          <td class="state-mini__aspect">사용자 액션</td>
-          <td>
-            + <strong>"예매 취소" 탭</strong> → 환불 처리가 시작되고, 성공 시 "예매가 취소되었습니다." 안내가 노출되며 다이얼로그가 닫히고 리스트가 갱신됨<br>
-            + <strong>"닫기" 탭</strong> → 다이얼로그가 닫히고 default 상태로 복귀<br>
-            + <strong>scrim 탭</strong> → "닫기"와 동일하게 다이얼로그 닫힘<br>
-            + <strong>환불 처리 실패</strong> → "다시 시도 / 닫기" 옵션이 있는 오류 다이얼로그 노출. "다시 시도"는 같은 환불을 한 번 더 시도
-          </td>
-        </tr>
-        <tr>
-          <td class="state-mini__aspect">에지케이스</td>
-          <td>
-            · <strong>무료 티켓</strong>: refundPercentage 100 / refundAmount 0 / feeAmount 0으로 고정 (controller 102-108행 · Fix #1652)<br>
-            · <strong>정책 조회 실패</strong>: try/catch로 default(2h/7d) fallback (Fix #133) — dialog는 정상 표시<br>
-            · <strong>refundPercentage == 0</strong>: showNotEligible alert로 분기, 이 dialog는 표시 안 됨<br>
-            · <strong>paymentAmount == null</strong>: <code>paymentAmount ?? 0</code>로 안전하게 표시 (Fix #270)<br>
-            · <strong>환불 처리 중</strong>: 풀화면 로딩 오버레이가 노출됨 (별도 spec) — 확인 직후 뜸
-          </td>
-        </tr>
-        <tr>
-          <td class="state-mini__aspect">컴포넌트</td>
-          <td>
-            + <code>MinglitDialog.show&lt;bool&gt;</code> (title + content + actions)<br>
-            + content: Column(eventName titleSmall bold + <code>_RefundRow</code> × 4 + 안내 bodySmall onSurfaceVariant)<br>
-            + <code>_RefundRow</code> (private · part of purchase_history_page.dart): Padding bottom xsmall · Row spaceBetween (label bodySmall onSurfaceVariant + value bodyMedium w600)<br>
-            + actions: <code>TextButton</code> "닫기" + <code>ElevatedButton</code> "예매 취소" (errorContainer bg / onErrorContainer fg)<br>
-            + 실패 시 <code>MinglitDialog.show&lt;bool&gt;</code>("환불 처리 실패" + Text(message) + "닫기"/"다시 시도")<br>
-            + 환불 불가 시 <code>context.showMinglitAlert</code>(Fix #1140)<br>
-            + 결제 정보 누락 시 <code>showMinglitAlert("환불 정보를 확인할 수 없습니다")</code>
-          </td>
-        </tr>
-        <tr>
-          <td class="state-mini__aspect">토큰</td>
-          <td>
-            + <code>color-background</code> (dialog bg · 흰색)<br>
-            + <code>color-text-primary</code> (title · event name · row value), <code>color-text-secondary</code> (label · note)<br>
-            + <code>color-error</code> + errorContainer tint (예매 취소 ElevatedButton)<br>
-            + radius: <code>radius-card</code> (16 · MinglitDialog 외곽), <code>radius-button</code> (12 · 버튼)<br>
-            + spacing: <code>spacing-large</code> (24 · dialog padding), <code>spacing-medium</code> (16 · title→내용), <code>spacing-small</code> (8 · note 위), <code>spacing-xsmall</code> (4 · _RefundRow 사이 bottom padding)<br>
-            + scrim: 검은 알파 (Material default barrier — 보통 0.32~0.45)
-          </td>
-        </tr>
-        <tr>
-          <td class="state-mini__aspect">노트</td>
-          <td>📝 refundPercentage 80% 예시는 "이벤트 시작 7d 전 + grace 통과" 케이스. 실제 비율은 RefundCalculator의 cutoffDays/gracePeriodHours/eventStartTime 기준으로 0/50/80/100 등 단계로 산출 — 정확한 정책은 별도 RefundCalculator spec 참고.</td>
         </tr>
       </tbody>
     </table>
@@ -1003,20 +797,16 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
           <td>scaffold / card / dialog 모두 dark 토큰으로 자동 swap. StatusBadge 색은 light/dark colorset이 분리되어 있어 자동 대응.</td>
         </tr>
         <tr>
-          <td>card / 버튼 tap haptic</td>
-          <td>InkWell ripple + Material default haptic light. card 본체는 InkWell 없음 (탭 전체 액션 부재 — 영수증/문의/취소 버튼만 액션).</td>
+          <td>card tap haptic</td>
+          <td>InkWell ripple + Material default haptic light. 카드 전체가 단일 InkWell — 탭하면 상세 페이지로 push.</td>
         </tr>
         <tr>
           <td>풀-다운 새로고침</td>
-          <td><strong>구현 안 됨</strong> — ListView 위에 RefreshIndicator 미부착. 갱신은 (a) 환불 성공 후 ref.invalidate (자동) (b) 화면 재진입 (Phase 2 후보).</td>
+          <td><strong>구현 안 됨</strong> — ListView 위에 RefreshIndicator 미부착. 갱신은 (a) 상세 화면에서 status 변경 후 복귀 시 ref.invalidate (자동) (b) 화면 재진입 (Phase 2 후보).</td>
         </tr>
         <tr>
           <td>결제 직후 redirect</td>
           <td>EventApplicationWizard 결제 완료 → <code>PurchaseHistoryRoute</code>로 push (스택 교체 형태) — 즉시 default state 진입. 새 결제는 paidAt DESC로 list 최상단.</td>
-        </tr>
-        <tr>
-          <td>외부 url_launcher 실패</td>
-          <td>iOS/Android에서 브라우저·dialer·메일앱이 없으면 launchUrl이 false 반환 → <code>showMinglitWarning</code>로 토스트 안내. 화면 자체는 그대로 유지.</td>
         </tr>
       </tbody>
     </table>
@@ -1047,22 +837,17 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
           <td>GoRouter default — PurchaseHistoryRoute는 커스텀 transition 미지정.</td>
         </tr>
         <tr>
-          <td>"예매 취소" tap → MinglitDialog show</td>
-          <td><code>MinglitAnimation.medium</code> (350ms)</td>
-          <td>MinglitDialog는 fade + scale-in (Material default · 350ms 근사).</td>
+          <td>카드 tap → 상세 페이지 push</td>
+          <td><code>MinglitAnimation.fast</code> (200ms)</td>
+          <td>GoRouter Material default 좌→우 slide.</td>
         </tr>
         <tr>
-          <td>EF cancelOrder 진행 중</td>
-          <td>—</td>
-          <td>화면 전체에 어두운 dim + 중앙 스피너가 노출됨 (풀화면 로딩 오버레이 — 별도 spec). 표시 시간은 네트워크에 따라 달라짐.</td>
-        </tr>
-        <tr>
-          <td>환불 성공 → invalidate → list refresh</td>
+          <td>상세 페이지 status 변경 후 복귀 → list refresh</td>
           <td>cut</td>
           <td>MinglitAsyncValueWidget이 AsyncValue.when 직접 분기 — fade 없이 Loading→Default 교체.</td>
         </tr>
         <tr>
-          <td>InkWell ripple (TextButton · ElevatedButton · dialog 버튼)</td>
+          <td>InkWell ripple (카드 본체)</td>
           <td><code>MinglitAnimation.micro</code> (100ms)</td>
           <td>Material default ripple expand.</td>
         </tr>
@@ -1074,11 +859,9 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
     <h2>Global edge cases</h2>
     <ul class="notes">
       <li><strong>paidAt 누락</strong> — 결제 직후 webhook 처리 전이면 paidAt이 null일 수 있음. <code>paidAt ?? createdAt</code>로 fallback (Fix #579) · 표시 날짜는 <code>toLocal()</code> 후 yyyy.MM.dd.</li>
-      <li><strong>환불 정책 조회 실패</strong> — <code>policyRepository.getRefundPolicy()</code>가 throw해도 try/catch로 default(grace 2h / cutoff 7d) fallback (Fix #133). 사용자에게는 에러 노출 없이 정상 confirm dialog로 진행.</li>
-      <li><strong>이벤트 시작 후 cancel 시도</strong> — canCancel이 이미 false라 버튼 자체가 안 그려짐. 이벤트가 시작 직전에 시작해도 화면 떠 있는 동안 자동 재계산 안 됨 (재진입 시 갱신).</li>
-      <li><strong>중복 invalidate 방지</strong> — _requestRefund의 onSuccess 호출 후 invalidate (Fix #1951 — Riverpod 3.x mid-action self-invalidate 시 StateError 회피).</li>
-      <li><strong>contactOptions 누락</strong> — phone/email 모두 없으면 "연락처 정보가 없습니다" 토스트만 노출 · launch 시도 자체 안 함.</li>
-      <li><strong>iamport 영수증 URL 패턴 의존성</strong> — <code>service.iamport.kr/payments/detail/{paymentId}</code>는 외부 도메인. 도메인 바뀌면 영수증 미동작 — Phase 2에서 backend 보낸 receipt URL 사용 검토.</li>
+      <li><strong>중복 invalidate 방지</strong> — 상세 화면에서 환불/취소 액션의 onSuccess 호출 후 invalidate (Fix #1951 — Riverpod 3.x mid-action self-invalidate 시 StateError 회피). 본 화면은 invalidate 결과만 받아 갱신.</li>
+      <li><strong>list 정렬 일관성</strong> — paidAt DESC가 기본. paidAt이 null인 항목은 createdAt으로 fallback해도 정렬 키는 동일하게 paidAt 우선 — 결과적으로 createdAt fallback 항목은 시간 정렬 시 약간 어긋날 수 있음(허용 범위).</li>
+      <li><strong>StatusBadge 8 status 분기 일관성</strong> — Detail page와 동일한 라벨 / 톤을 사용. 새 status 추가 시 두 spec을 동시 갱신해야 시각 일관성 유지.</li>
     </ul>
   </section>
 </div>
@@ -1098,20 +881,14 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
     <table class="ref">
       <tbody>
         <tr><th style="width: 200px;">Widget</th><td><code>PurchaseHistoryPage</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/payment/ui/purchase_history_page.dart"><code>apps/app_user/lib/src/features/payment/ui/purchase_history_page.dart</code></a></td></tr>
-        <tr><th>Card atom</th><td><code>PurchaseHistoryCard</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/payment/ui/purchase_history_card.dart"><code>apps/app_user/lib/src/features/payment/ui/purchase_history_card.dart</code></a> (<code>part of purchase_history_page.dart</code>)</td></tr>
-        <tr><th>Refund row atom</th><td><code>_RefundRow</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/payment/ui/purchase_history_refund_row.dart"><code>purchase_history_refund_row.dart</code></a> (private · dialog 내용 row)</td></tr>
-        <tr><th>Controller</th><td><code>PurchaseHistoryController</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/payment/logic/purchase_history_controller.dart"><code>purchase_history_controller.dart</code></a> (Riverpod async · canCancel/runRefundFlow/calculateRefund/_requestRefund)</td></tr>
+        <tr><th>Card atom</th><td><code>PurchaseHistoryCard</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/payment/ui/purchase_history_card.dart"><code>apps/app_user/lib/src/features/payment/ui/purchase_history_card.dart</code></a> (<code>part of purchase_history_page.dart</code>) · v1.1에서 인라인 액션 / canCancel / contactOptions / refund row 모두 제거</td></tr>
+        <tr><th>Controller</th><td><code>PurchaseHistoryController</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/payment/logic/purchase_history_controller.dart"><code>purchase_history_controller.dart</code></a> (Riverpod async · list fetch만 담당. 환불/취소 로직은 detail의 controller로 이전)</td></tr>
         <tr><th>Route</th><td><code>PurchaseHistoryRoute</code> · <code>/purchase-history</code> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/routing/app_routes.dart"><code>app_routes.dart</code></a></td></tr>
+        <tr><th>Detail route</th><td><a href="/specs/purchase_history_detail_page.html"><code>PurchaseHistoryDetailRoute</code></a> · <code>/purchase-history/:applicationId</code> — 카드 탭으로 push</td></tr>
         <tr><th>Repository</th><td><code>eventRepositoryProvider.getMyPurchaseHistory(userId)</code> — Supabase에서 <code>EventApplication</code> list 가져옴 (status 필터 없음 · 모든 결제/신청)</td></tr>
-        <tr><th>Cancel EF</th><td><code>eventRepositoryProvider.cancelOrder(eventId, reason)</code> — <code>user-cancel-order</code> Edge Function 호출 (Fix #299, #1652 · 무료 티켓 분기 처리)</td></tr>
-        <tr><th>Policy repository</th><td><code>policyRepositoryProvider.getRefundPolicy()</code> — grace_period_hours / cutoff_days. 실패 시 default(2/7) fallback (Fix #133)</td></tr>
-        <tr><th>Refund calculator</th><td><code>RefundCalculator.calculate(eventStartTime, paymentAmount, paidAt, gracePeriodHours, cutoffDays)</code> — refundPercentage / refundAmount / feeAmount 산출</td></tr>
         <tr><th>Async wrapper</th><td><a href="/components#MinglitAsyncValueWidget"><code>MinglitAsyncValueWidget</code></a> — 3-way (loading / error / data)</td></tr>
         <tr><th>StatusBadge</th><td><a href="/components#StatusBadge"><code>StatusBadge</code></a> = <a href="/components#MinglitBadge"><code>MinglitBadge</code></a>(label, color) · 8 status 분기 (Fix #638, #1236, #1541)</td></tr>
-        <tr><th>MinglitDialog</th><td><a href="/components#MinglitDialog"><code>MinglitDialog.show&lt;T&gt;</code></a> — title + content + actions · barrier dismissible</td></tr>
-        <tr><th>Snack helpers</th><td><code>context.showMinglitWarning</code> · <code>context.showMinglitSuccess</code> · <code>context.showMinglitAlert</code> (minglit_kit)</td></tr>
-        <tr><th>External launcher</th><td><code>url_launcher.launchUrl(uri, mode: externalApplication)</code> — 영수증(<code>https://service.iamport.kr/payments/detail/{paymentId}</code>) · <code>tel:</code> · <code>mailto:</code></td></tr>
-        <tr><th>Icons (Material)</th><td><code>arrow_back</code> (AppBar default · Material auto) · <code>error_outline</code> (error state · 32px xlarge · color.error) · <code>event</code> (thumb fallback · MinglitImage placeholder)</td></tr>
+        <tr><th>Icons (Material)</th><td><code>arrow_back</code> (AppBar default · Material auto) · <code>error_outline</code> (error state · 32px xlarge · color.error) · <code>chevron_right</code> (카드 affordance · 14px · text-secondary) · <code>event</code> (thumb fallback · MinglitImage placeholder)</td></tr>
         <tr><th>Sort behavior</th><td>repository fetch 시 paidAt DESC (가장 최근 결제 먼저) · 페이지네이션 미구현 (controller에 "Future features: infinite scroll, filtering" 주석)</td></tr>
       </tbody>
     </table>
@@ -1125,6 +902,10 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
         <tr>
           <td><a href="/specs/my_page.html"><code>MyPage</code></a></td>
           <td>주 진입점 — "활동 → 구매 내역" tile 탭.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/purchase_history_detail_page.html"><code>PurchaseHistoryDetailPage</code></a></td>
+          <td>Child — 카드 탭 시 push되는 상세 페이지. 결제 정보 / 환불 정책 / 파트너 정보 / 예매 취소 등 모든 후속 액션이 여기에 있음.</td>
         </tr>
         <tr>
           <td><a href="/specs/my_tickets_page.html"><code>MyTicketsPage</code></a></td>
