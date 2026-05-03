@@ -72,7 +72,8 @@ class _MinglitFilePickerState extends ConsumerState<MinglitFilePicker> {
 
     // Default File Picker
     try {
-      final result = await FilePicker.platform.pickFiles(
+      // Fix #2086: file_picker v11 removed FilePicker.platform — use static FilePicker.pickFiles()
+      final result = await FilePicker.pickFiles(
         type: widget.fileType,
         allowMultiple: widget.allowMultiple,
         withData: kIsWeb, // Web needs bytes
