@@ -1,0 +1,1699 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Spec — PurchaseHistoryDetailPage (app_user · PurchaseHistoryDetailRoute)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* ============================================================
+   PurchaseHistoryDetailPage-specific atoms.
+   Tokens / chrome / mini-table은 /specs/_spec.css에서 import.
+   ============================================================ */
+
+.phd-viewport { background: var(--color-surface); position: relative; overflow: hidden; }
+body.dark-mode .phd-viewport { background: var(--color-dark-background); }
+
+/* AppBar */
+.phd-appbar {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-medium);
+  padding: 0 var(--spacing-screen-edge);
+  background: var(--color-surface);
+}
+.phd-appbar__back svg { width: 24px; height: 24px; color: var(--color-text-primary); }
+.phd-appbar h2 {
+  font-size: var(--typography-font-size-app-bar-title);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+body.dark-mode .phd-appbar { background: var(--color-dark-background); }
+body.dark-mode .phd-appbar h2 { color: var(--color-dark-text-primary); }
+
+/* Scrollable body */
+.phd-body {
+  position: absolute;
+  top: 56px; left: 0; right: 0; bottom: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+  padding: var(--spacing-medium);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-medium);
+}
+.phd-body::-webkit-scrollbar { display: none; }
+
+/* Card */
+.phd-card {
+  background: var(--color-background);
+  border-radius: var(--radius-card);
+  padding: var(--spacing-medium);
+  box-shadow: 0 2px 8px rgba(31, 41, 55, 0.06);
+  display: flex;
+  flex-direction: column;
+}
+body.dark-mode .phd-card { background: var(--color-dark-surface); }
+
+/* --- Hero card (StatusBadge 제거됨 v1.2) --- */
+.phd-hero__thumb {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-medium);
+  background: var(--color-surface);
+  display: grid;
+  place-items: center;
+  color: var(--color-text-secondary);
+  overflow: hidden;
+  margin-bottom: var(--spacing-medium);
+}
+.phd-hero__thumb svg { width: 40px; height: 40px; }
+.phd-hero__title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1.4;
+}
+.phd-hero__meta {
+  font-size: 14px;
+  color: var(--color-text-primary);
+  margin-top: var(--spacing-xsmall);
+}
+.phd-hero__meta--muted { color: var(--color-text-secondary); }
+
+/* StatusBadge */
+.phd-status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--spacing-xsmall) var(--spacing-sm);
+  border-radius: var(--radius-small);
+  font-size: 12px;
+  font-weight: 600;
+}
+.phd-status-badge--success { background: rgba(22, 163, 74, 0.20); color: var(--color-success); }
+.phd-status-badge--warning { background: rgba(245, 158, 11, 0.20); color: var(--color-warning); }
+.phd-status-badge--info    { background: rgba(59, 130, 246, 0.20); color: #3b82f6; }
+.phd-status-badge--neutral { background: rgba(107, 114, 128, 0.20); color: var(--color-text-secondary); }
+.phd-status-badge--error   { background: rgba(239, 68, 68, 0.20); color: var(--color-error); }
+
+/* Section title */
+.phd-section__title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-medium);
+}
+
+/* KeyValueRow */
+.phd-kv {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: var(--spacing-sm) 0;
+  font-size: 14px;
+}
+.phd-kv + .phd-kv { border-top: 1px solid var(--color-divider); }
+.phd-kv__label { color: var(--color-text-secondary); }
+.phd-kv__value { color: var(--color-text-primary); font-weight: 500; }
+.phd-kv__value--strong { font-weight: 700; }
+
+/* 카드 내부 보조 액션 (영수증 / 문의하기) — v1.2: margin-top 제거 + 검정 톤 */
+.phd-card-action {
+  padding-top: var(--spacing-medium);
+  border-top: 1px solid var(--color-divider);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  background: transparent;
+  border-left: none;
+  border-right: none;
+  border-bottom: none;
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  width: 100%;
+}
+
+/* --- 파트너 정보 카드 --- */
+.phd-partner-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-medium);
+  cursor: pointer;
+  padding: var(--spacing-xsmall) 0;
+}
+.phd-partner-row__avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  color: var(--color-text-secondary);
+  overflow: hidden;
+}
+.phd-partner-row__avatar svg { width: 22px; height: 22px; }
+.phd-partner-row__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.phd-partner-row__name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.phd-partner-row__intro {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.phd-partner-row__chevron {
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+}
+.phd-partner-row__chevron svg { width: 18px; height: 18px; }
+
+/* --- 심사 상태 row card (v1.4: title + subtitle ListTile) --- */
+.phd-listtile {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  gap: var(--spacing-medium);
+}
+.phd-listtile__main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.phd-listtile__label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+.phd-listtile__subtitle {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+.phd-listtile__trail {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-small);
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+.phd-listtile__trail svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+/* --- 환불 정책 카드 --- */
+.phd-refund-section + .phd-refund-section,
+.phd-card-cancel + .phd-refund-section {
+  margin-top: var(--spacing-medium);
+  padding-top: var(--spacing-medium);
+  border-top: 1px solid var(--color-divider);
+}
+.phd-refund-section__heading {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: var(--spacing-small);
+}
+.phd-policy-row {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--spacing-xsmall) 0;
+  font-size: 13px;
+}
+.phd-policy-row__label { color: var(--color-text-primary); }
+.phd-policy-row__value { color: var(--color-text-secondary); font-weight: 500; }
+/* v1.3: 정렬 어긋남 방지를 위해 padding/bg 제거 — 그냥 label/value 모두 bold */
+.phd-policy-row--current .phd-policy-row__label,
+.phd-policy-row--current .phd-policy-row__value {
+  font-weight: 700;
+}
+.phd-refund-section__copy {
+  font-size: 13px;
+  color: var(--color-text-primary);
+  line-height: 1.5;
+  margin-bottom: var(--spacing-small);
+}
+.phd-refund-section__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xsmall);
+  margin-top: var(--spacing-xsmall);
+  color: var(--color-primary);
+  font-size: 13px;
+  font-weight: 600;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+/* --- 환불 정책 카드 내 예매 취소 버튼 (sticky BottomCTA 대체 · v1.6) ---
+   카드 마지막 element로 위치. canCancel false일 때 disabled (Material default — 회색).
+   active 상태는 errorContainer tint, disabled는 onSurface 12%/38% 알파. */
+.phd-card-cancel {
+  display: block;
+  width: 100%;
+  height: 48px;
+  margin-top: var(--spacing-medium);
+  border: none;
+  border-radius: var(--radius-button);
+  background: rgba(239, 68, 68, 0.12);
+  color: var(--color-error);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.phd-card-cancel:disabled,
+.phd-card-cancel--disabled {
+  background: rgba(31, 41, 55, 0.05);
+  color: rgba(31, 41, 55, 0.38);
+  cursor: not-allowed;
+}
+
+/* --- Loading / Error --- */
+.phd-loading, .phd-error {
+  position: absolute;
+  inset: 56px 0 0 0;
+  display: grid;
+  place-items: center;
+}
+.phd-error {
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  padding: 0 var(--spacing-large);
+  justify-content: center;
+}
+.phd-error__icon { color: var(--color-error); }
+.phd-error__icon svg { width: 32px; height: 32px; }
+.phd-error__title {
+  margin-top: var(--spacing-medium);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.phd-spinner {
+  width: 36px; height: 36px;
+  border: 3px solid var(--color-divider);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: phd-spin 0.7s linear infinite;
+}
+@keyframes phd-spin { to { transform: rotate(360deg); } }
+
+/* --- Refund confirm dialog --- */
+.phd-dialog-shade {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: grid;
+  place-items: center;
+}
+.phd-dialog {
+  width: 304px;
+  background: var(--color-background);
+  border-radius: var(--radius-card);
+  padding: var(--spacing-large);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+.phd-dialog__title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.phd-dialog__event-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-top: var(--spacing-xsmall);
+}
+.phd-dialog__row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  padding: var(--spacing-xsmall) 0;
+}
+.phd-dialog__row span:first-child { color: var(--color-text-secondary); }
+.phd-dialog__row span:last-child { color: var(--color-text-primary); font-weight: 600; }
+.phd-dialog__note {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  margin-top: var(--spacing-xsmall);
+}
+.phd-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-small);
+  margin-top: var(--spacing-medium);
+}
+.phd-dialog__btn {
+  height: 36px;
+  padding: 0 var(--spacing-medium);
+  border-radius: var(--radius-button);
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+}
+.phd-dialog__btn--text { background: transparent; color: var(--color-text-secondary); }
+.phd-dialog__btn--danger {
+  background: rgba(239, 68, 68, 0.12);
+  color: var(--color-error);
+}
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
+</div>
+
+<div class="page">
+
+<header>
+  <h1>Purchase History Detail</h1>
+</header>
+
+<!-- ============================================================
+     OVERVIEW
+     ============================================================ -->
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr>
+        <th style="width: 140px;">Status</th>
+        <td><strong>🚧 디자인중</strong> <em style="color: var(--color-text-secondary);">— PurchaseHistoryPage 카드 분리 제안. Flutter 미구현 (TBD).</em></td>
+      </tr>
+      <tr><th>App</th><td><code>app_user</code></td></tr>
+      <tr><th>Category</th><td>my · payment · history</td></tr>
+      <tr><th>Route / Surface</th><td><code>PurchaseHistoryDetailRoute</code> · widget: <code>PurchaseHistoryDetailPage</code> <em style="color: var(--color-text-secondary);">(TBD)</em></td></tr>
+      <tr><th>Path</th><td><code>/purchase-history/:applicationId</code></td></tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>: <a href="/specs/purchase_history_page.html"><code>PurchaseHistoryPage</code></a> <em style="color: var(--color-text-secondary);">(list 카드 tap 시 push)</em><br>
+          <strong>Children</strong>:
+          <a href="/specs/partner_detail_page.html"><code>PartnerDetailPage</code></a> (파트너 정보 row tap),
+          <a href="/specs/event_application_review_page.html"><code>EventApplicationReviewPage</code></a> <em style="color: var(--color-text-secondary);">(가칭 · 후속 spec — 심사 상태 row tap. 거절 사유 / 신청 답변 / 검토 시점)</em>
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>
+          결제 1건의 모든 정보를 한 화면에서 보여주고, "이 결제와 관련된 4가지 외부 진입점"(영수증 · 파트너 · 문의 · 심사 상태)을 모은 뒤 환불 정책 카드 안에서 정책 안내와 같은 자리에 예매 취소 버튼을 둬 환불을 진행한다.
+          이 페이지의 핵심 책임은 <strong>결제 정보 + 환불 정책(플랫폼/파트너 두 갈래) 안내</strong>. 거절 사유·신청 답변 같은 심층 정보는 한 뎁스 더 들어간 심사 상태 detail로 분리.
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry points</strong>: PurchaseHistory 리스트 카드 tap (단일 진입점).<br>
+          <strong>Exit points</strong>: <strong>4가지 outbound</strong> — ① 영수증 (외부 브라우저 · service.iamport.kr) · ② 문의하기 (시스템 dialer/메일앱) · ③ 파트너 detail push · ④ 심사 상태 detail push. 그 외: "예매 취소" tap → MinglitDialog confirm → cancelOrder EF → 성공 시 list로 복귀 · 뒤로 가기 → list로 복귀.
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          기존 <a href="/specs/purchase_history_page.html"><code>PurchaseHistoryPage</code></a> 카드는 1장이 곧 미니 상세 — 카드마다 errorContainer 빨간 버튼이 박혀 list 전체가 위험 신호로 도배되고, 1장이 짊어진 책임 과다(식별 + 다단계 액션)가 누적된 결과로 분리.
+          이 detail은 정보 과다를 막기 위해 <strong>심층 정보(거절 사유 / 신청 답변)를 본문에 펴지 않고</strong> 심사 상태 detail로 위임. 본문은 결제·환불·관련 페이지 진입에 집중.
+          <strong>환불 정책은 두 갈래</strong> — 플랫폼 환불 정책(정책 단계표 + 카드 내 예매 취소 버튼으로 진행) + 파트너 직접 환불(자동 환불 외 케이스 안내). 두 갈래 모두 단일 카드에 묶음. 파트너 환불 안내 옆에 별도 CTA는 두지 않고, 바로 아래 ⑤ 파트너 정보 카드의 "문의하기"로 일원화(v1.3) — 동일 페이지 안에서 같은 launcher가 두 번 나오는 중복 제거.
+          <strong>심사 상태는 ② 자리</strong>에 배치 — Hero(① 식별)에서 결제 상태(StatusBadge)를 분리해 status는 status 섹션에 모았다. 사용자 인지 흐름: "어떤 이벤트 → 지금 어떤 상태 → 얼마/언제 냈나 → 누구한테 → 환불은 어떻게."
+        </td>
+      </tr>
+      <tr>
+        <th>Frequency</th>
+        <td>리스트에서 1건을 골랐을 때만 — 결제 1건당 0-2회 (영수증 확인 + 환불/문의 결심 시).</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================
+     HISTORY
+     ============================================================ -->
+<section class="doc">
+  <h2>History</h2>
+  <p class="intro">이 spec의 주요 변경 이력. 최신 항목 위.</p>
+  <table class="ref">
+    <thead>
+      <tr><th style="width: 110px;">Date</th><th style="width: 80px;">Version</th><th style="width: 120px;">Author</th><th>Changes</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2026-05-03</td>
+        <td>1.8</td>
+        <td>mark-yun</td>
+        <td>
+          <strong>State 4 (결제 실패) 결제 정보 카드 라벨 정정</strong> — "결제 금액" → "결제 시도 금액". 결제 자체가 일어나지 않은 케이스에서 "결제 금액"이라는 표현이 misleading. 이미 적용된 "결제일 → 결제 시도일" 패턴과 동일한 결로 일관 처리.
+        </td>
+      </tr>
+      <tr>
+        <td>2026-05-03</td>
+        <td>1.7</td>
+        <td>mark-yun</td>
+        <td>
+          <strong>예매 취소 버튼 위치 미세 조정</strong> — 환불 정책 카드 안에서 버튼 위치를 "카드 마지막"에서 "플랫폼 정책 ↔ 파트너 직접 환불 사이 (divider 위)"로 이동. 흐름이 "정책 안내 → 액션(버튼) → divider → 자동 환불 외 대안 안내"로 정렬되어 카드 안에서 정보→액션→대안 사이클이 자연스럽게 마무리됨.
+          <strong>파트너 직접 환불 섹션은 항상 노출</strong> — 처음에 disabled일 때만 노출하는 옵션도 검토했으나, active 사용자가 "다른 환불 경로"의 존재를 모를 수 있다는 discoverability 우려로 두 상태 모두 노출 유지.
+        </td>
+      </tr>
+      <tr>
+        <td>2026-05-03</td>
+        <td>1.6</td>
+        <td>mark-yun</td>
+        <td>
+          <strong>예매 취소 버튼을 환불 정책 카드 안으로 이전</strong> — sticky BottomCTA 제거. 카드 마지막 element로 위치(margin-top spacing-medium · height 48 · radius-button). "정책을 본 직후 같은 카드에서 액션" 흐름.
+          <strong>canCancel false면 미렌더가 아니라 disabled로 노출</strong> — Material default disabled tokens (onSurface 5%/38%) 사용해 암묵적 합의 UI 그대로 활용. disabled 버튼이 마지막 단계 highlight 바로 아래 위치해 "왜 안 되는지" self-explain. errorContainer를 유지하면서 opacity만 낮추는 방식은 채택 X (모호한 시그널 회피).
+          <strong>State별 처리</strong> — 1: active / 2: disabled / 3: 카드 swap으로 미렌더 / 4: 카드 미노출로 미렌더 / 5: "신청 취소 안내" 카드 안 동일 패턴(카피만 "신청 취소"). body의 80px bottom padding 제거, sticky CTA 영역 제거 — 화면 밀도 ↑.
+        </td>
+      </tr>
+      <tr>
+        <td>2026-05-03</td>
+        <td>1.5</td>
+        <td>mark-yun</td>
+        <td>
+          <strong>심사 상태 row trail에 RefundBadge 추가</strong> — <code>refundStatus != 'none'</code>일 때 StatusBadge 옆에 두 번째 badge 노출 ("환불 완료" neutral / "환불 처리 중" warning / "환불 실패" error). cancelled / rejected는 backend가 자동으로 'refunded' 동기화 → 두 badge 항상 함께.
+          <strong>State 4를 payment_failed 단독으로 좁힘</strong> — 도메인 가정에 따라 cancelled / rejected는 항상 refundStatus 'refunded'를 동반하므로 State 3(환불 완료)에 통합. State 4는 결제 자체가 실패한 케이스(paymentId 없음, 환불 개념 자체 없음)만 담음. mockup도 결제 실패 예시로 변경.
+          <strong>Sub-anatomy ② status 표 보강</strong> — "함의되는 refundStatus" 컬럼 추가 + RefundBadge 별도 표 + status × refundStatus 조합 가이드 문단 추가.
+        </td>
+      </tr>
+      <tr>
+        <td>2026-05-03</td>
+        <td>1.4</td>
+        <td>mark-yun</td>
+        <td>
+          <strong>심사 상태 row 2-line ListTile로 확장</strong> — 라벨 아래에 subtitle "마지막 업데이트: {relative time}" 추가 (<code>VerificationSubmission.reviewedAt</code> 또는 <code>application.updatedAt</code> 기준 · 방금/N분 전/N시간 전/N일 전/N주 전/yyyy.MM.dd 단계 포맷). 사용자가 detail로 진입하지 않고도 "최근 변동" 시점을 인지.
+          <strong>심사 상태 명세 보강</strong> — Sub-anatomy ②에 8 status 분기마다 "사용자 관점 의미 + 다음 단계" 컬럼 추가. cancelled / rejected는 보통 자동 환불을 동반함을 명시.
+          <strong>환불 완료 카드 → 환불 정보 카드로 통합</strong> — refundStatus 'refunded' 상태에서 결제 정보 카드를 미노출하고, 환불 정책 카드를 "환불 정보" 카드로 swap. 카드 내용을 결제 정보 + 환불 결과 통합(티켓 · 결제 금액 · 환불일 · 환불 비율 · 환불 금액 · 수수료) — 한 카드에서 "원래 얼마 → 얼마 돌려받음" 비교 가능. 영수증 버튼도 그쪽으로 이전.
+        </td>
+      </tr>
+      <tr>
+        <td>2026-05-03</td>
+        <td>1.3</td>
+        <td>mark-yun</td>
+        <td>
+          <strong>환불 정책 카드 정리</strong> — 카피 변경: "환불 정보" → "환불 정책", "플랫폼 자동 환불" → "플랫폼 환불 정책". 현재 단계 highlight를 primary color tint + h-padding(12px) 강조 → <strong>label/value 모두 bold</strong>로 변경 (색·padding 변경 없음 — row 정렬 어긋남 방지).
+          <strong>파트너 환불 CTA 제거</strong> — "파트너 문의하기 →" 버튼 삭제. 파트너 환불 안내는 안내 문구만 남기고, 문의 진입은 ⑤ 파트너 정보 카드의 "문의하기"로 일원화 (동일 launcher 중복 제거).
+          <strong>카드 순서 재배치</strong> — 환불 정책 ↔ 파트너 정보 swap. 새 순서: Hero → 심사 상태 → 결제 정보 → 환불 정책 → 파트너 정보. "이 결제는 환불 어떻게 되는데? 안 되면 → 바로 아래 파트너에게 직접 연락" 자연 흐름.
+        </td>
+      </tr>
+      <tr>
+        <td>2026-05-03</td>
+        <td>1.2</td>
+        <td>mark-yun</td>
+        <td>
+          IA 미세 조정 — <strong>StatusBadge를 Hero에서 심사 상태 row로 이관</strong>. status는 status 섹션에 모음. <strong>심사 상태 row를 ② 자리</strong>로 이동(기존 ④). row 내부 패턴: <code>[심사 상태 · StatusBadge · ›]</code> · "자세히" 텍스트 제거(chevron이 affordance 충분).
+          <strong>보조 액션 톤 다운</strong> — 영수증 / 문의하기 TextButton 색을 <code>color-primary</code>(브랜드) → <code>color-text-primary</code>(검정/짙은 회색)으로. plain TextButton 위계.
+          <strong>여백 정리</strong> — 결제 정보 / 파트너 정보 카드의 보조 액션 row에서 <code>margin-top: spacing-medium</code> 제거. divider가 마지막 row 바로 아래 붙고, 버튼 padding-top만 유지.
+        </td>
+      </tr>
+      <tr>
+        <td>2026-05-03</td>
+        <td>1.1</td>
+        <td>mark-yun</td>
+        <td>
+          IA 재정렬 — <strong>5섹션 + BottomCTA</strong>로 재구성. 파트너 정보 카드 신규(프로필+이름+소개+chevron+문의하기), 심사 상태 row 신규(상태 무관 일관 카피 + chevron · 심사 상태 detail로 push), 환불 정책 카드를 <strong>플랫폼 환불 정책 + 파트너 직접 환불</strong> 두 섹션으로 통합.
+          <strong>canCancel 조건 확장</strong> — 기존 paid/approved만 → paid/approved + pending/pending_review 추가 (파트너 미수락 단계에서도 유저 측 자유 환불 가능). Flutter <code>PurchaseHistoryController.isActiveTicket</code> 변경 필요 (후속 PR).
+          <strong>refundStatus 'refunded' state 신규</strong> — 환불 정책 카드 → 환불 완료 카드(환불일/비율/금액/수수료)로 swap. 거절 사유 안내 박스 제거 (심사 상태 detail로 위임).
+        </td>
+      </tr>
+      <tr>
+        <td>2026-05-02</td>
+        <td>1.0</td>
+        <td>mark-yun</td>
+        <td>v1.4 template으로 신규 작성. PurchaseHistoryPage 카드의 책임 과다(식별 + 결제 상세 + 다단계 액션 + 위험 액션)를 분리하기 위한 detail 화면 초안. Hero / 결제 정보 / 환불 정책 / BottomCTA(예매 취소) 4섹션. 7 state 정의.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- Anchor nav -->
+<nav class="perspective-nav">
+  <a href="#layout"><span class="glyph">🧱</span> Layout</a>
+  <a href="#states"><span class="glyph">🎨</span> States</a>
+  <a href="#global-behavior"><span class="glyph">🔄</span> Global Behavior</a>
+  <a href="#reference"><span class="glyph">📖</span> Reference</a>
+</nav>
+
+<!-- ============================================================
+     LAYOUT
+     ============================================================ -->
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Layout</h2>
+    <span class="lede">AppBar + 스크롤 body(5 카드). 본문 카드 사이 vertical medium(16) gap. 카드는 흰 배경 + radius-card(16) + 약한 drop shadow. 예매 취소 액션은 sticky BottomCTA가 아니라 <strong>환불 정책 카드 안 마지막 element</strong>로 통합 (v1.6 — canCancel false면 disabled).</span>
+  </div>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree</h2>
+    <p class="intro">
+      Scaffold + Material default AppBar (title "구매 상세") + MinglitAsyncValueWidget. data branch: 단일 EventApplication을 받아 Hero → 심사 상태 → 결제 정보 → 환불 정책 → 파트너 정보 5개 카드를 vertical stack으로 출력. <strong>예매 취소는 환불 정책 카드 안 마지막 element</strong>로 위치 — sticky BottomCTA 없음.
+      <strong>v1.3: 정보 흐름 재정렬</strong> — "이건 어떤 이벤트인가 → 지금 어떤 상태인가 → 얼마/언제 냈나 → 환불은 어떻게 가능한가 → (자동 환불 외) 누구에게 직접 연락하나" 순. 환불 정책이 파트너 정보보다 위에 있어야 "자동 환불 안 되면 → 파트너에 직접 연락" 흐름이 자연스럽게 시선에 걸림.
+      <strong>v1.6: 예매 취소 카드 내 통합</strong> — 환불 정책을 본 직후 같은 카드 안에서 액션 가능. canCancel false일 때 sticky 버튼이 사라지는 게 아니라 <strong>같은 자리에 disabled로 노출</strong> — "왜 안 되는지" 정책 마지막 단계 highlight와 직관적으로 연결됨.
+    </p>
+
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 720px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:0;left:0;right:0;height:56px;">
+          <span class="blueprint__region-label">① AppBar — back arrow + "구매 상세"</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:72px;left:16px;right:16px;height:208px;">
+          <span class="blueprint__region-label">② Hero card — thumb 16:9 + 제목/일시/장소</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:296px;left:16px;right:16px;height:56px;">
+          <span class="blueprint__region-label">③ 심사 상태 row — 라벨 + StatusBadge + chevron</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:368px;left:16px;right:16px;height:160px;">
+          <span class="blueprint__region-label">④ 결제 정보 card — KeyValueRow × N + 영수증</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:544px;left:16px;right:16px;height:88px; opacity:0.6;">
+          <span class="blueprint__region-label">⑤ 환불 정책 (예매 취소 포함) · ⑥ 파트너 정보 (스크롤)</span>
+        </div>
+        <div class="blueprint__align-marker" style="bottom:8px;right:8px;">scrollable body — sticky CTA 없음</div>
+      </div>
+
+      <div class="layout-tree"><b>Scaffold</b>
+└─ <b>AppBar</b>(<i>title: "구매 상세"</i>)                           ← ①
+└─ <b>MinglitAsyncValueWidget&lt;EventApplication&gt;</b>
+   ├─ loading → <b>MinglitCircularProgressIndicator</b>
+   ├─ error   → <b>_DefaultErrorView</b>
+   └─ data    → <b>SingleChildScrollView</b>(padding all <i>spacing-medium</i>)
+      └─ <b>Column</b>(gap: <i>spacing-medium</i>)
+         ├─ <em>Hero card</em>                                ← ②
+         ├─ <em>심사 상태 row card</em>                        ← ③
+         ├─ <em>결제 정보 card</em>                            ← ④
+         ├─ <em>환불 정책 card</em> (예매 취소 버튼 포함)       ← ⑤
+         └─ <em>파트너 정보 card</em>                          ← ⑥</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr><th style="width: 60px;">#</th><th style="width: 200px;">Region</th><th style="width: 220px;">Alignment</th><th>Spacing</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>—</td><td>Body padding</td><td>—</td><td>SingleChildScrollView padding all: <code>spacing-medium (16px)</code> — sticky CTA 없으므로 bottom 추가 padding 불필요 (v1.6)</td></tr>
+        <tr><td>①</td><td>AppBar</td><td>title left + auto back arrow</td><td>height: 56 · scaffold gray bg · border-bottom 없음</td></tr>
+        <tr><td>②③④⑤⑥</td><td>본문 5 카드</td><td>full width · vertical stack</td><td>radius: <code>radius-card (16px)</code> · padding all: <code>spacing-medium (16px)</code> · shadow blur 8 offset (0,2) opacity <code>shadowXs (0.06)</code> · 카드 사이 gap <code>spacing-medium (16px)</code></td></tr>
+        <tr><td>⑤ 내부</td><td>예매 취소 버튼</td><td>full width · 카드 마지막 element</td><td>height 48 · margin-top <code>spacing-medium</code> · radius <code>radius-button (12px)</code> · active: bg <code>color-error 12% tint</code> + fg <code>color-error</code> · disabled: bg <code>onSurface 5%</code> + fg <code>onSurface 38%</code> + cursor not-allowed (Material default)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy ① — Hero card</h2>
+    <p class="intro">
+      이벤트 식별 영역. 큰 thumbnail + 제목/일시/장소를 세로로 쌓음. <strong>StatusBadge는 Hero에 두지 않음</strong> — status 시각 indicator는 ③ 심사 상태 row에 모음. 이로써 Hero는 "이건 어떤 이벤트인가?" 한 가지 질문에만 답함.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 200px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:16px;left:16px;right:16px;height:90px;"><span class="blueprint__region-label">㉠ thumb 16:9 · radius-medium</span></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:120px;left:16px;right:16px;height:24px;"><span class="blueprint__region-label">㉡ 이벤트명 (titleLarge bold)</span></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:152px;left:16px;right:16px;height:18px;"><span class="blueprint__region-label">㉢ 일시 (bodyMedium)</span></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:174px;left:16px;right:16px;height:18px;"><span class="blueprint__region-label">㉣ 장소 (bodyMedium · onSurfaceVariant)</span></div>
+      </div>
+      <div class="layout-tree"><b>Container</b>(card chrome)
+└─ <b>Padding</b>(<code>spacing-medium</code>)
+   └─ <b>Column</b>(crossAxis: start)
+      ├─ <em>thumb</em>                                       ← ㉠
+      ├─ Gap: <code>spacing-medium</code>
+      ├─ <em>이벤트명</em>                                     ← ㉡
+      ├─ Gap: <code>spacing-xsmall</code>
+      ├─ <em>일시</em>                                         ← ㉢
+      └─ <em>장소</em>                                         ← ㉣</div>
+    </div>
+    <table class="ref" style="margin-top: 16px;">
+      <thead><tr><th style="width: 60px;">#</th><th style="width: 180px;">Region</th><th style="width: 220px;">Alignment</th><th>Spacing / tokens</th></tr></thead>
+      <tbody>
+        <tr><td>㉠</td><td>thumb</td><td>full width · 16:9</td><td><code>radius-medium (12px)</code> · 누락 시 placeholder bg <code>color-surface</code></td></tr>
+        <tr><td>㉡</td><td>이벤트명</td><td>start · maxLines 2</td><td>typography <code>titleLarge</code> w700</td></tr>
+        <tr><td>㉢</td><td>일시</td><td>start</td><td>typography <code>bodyMedium</code></td></tr>
+        <tr><td>㉣</td><td>장소</td><td>start</td><td>typography <code>bodyMedium</code> · color <code>color-text-secondary</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy ② — 심사 상태 row card</h2>
+    <p class="intro">
+      현재 결제 상태(StatusBadge)와 심사 detail 진입을 단일 row에 묶음. <strong>2-line ListTile</strong> — 위에 라벨 "심사 상태", 아래에 마지막 업데이트 상대 시간(<code>application.updatedAt</code> 또는 <code>VerificationSubmission.reviewedAt</code> 기준 · "방금" / "{N}시간 전" / "{N}일 전" / "{yyyy.MM.dd}"). 라벨은 <strong>status에 따라 분기하지 않음</strong> — 항상 "심사 상태". status별 시각 indicator는 inline StatusBadge로, 심층 정보(거절 사유 / 신청 답변 / 검토 시점)는 한 뎁스 더 들어간 <a href="/specs/event_application_review_page.html"><code>EventApplicationReviewPage</code></a>(가칭)에서.
+      "자세히" 텍스트는 의도적으로 제거 — chevron이 tappable affordance 충분히 전달. <strong>v1.4 추가</strong>: subtitle "마지막 업데이트: ..." — 사용자가 carrier로 진입하지 않고도 신청·심사·환불 처리의 최근 활동 시점을 인지.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 100px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:16px;left:16px;width:140px;height:24px;"><span class="blueprint__region-label">㉠ "심사 상태" 라벨</span></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:42px;left:16px;width:200px;height:18px;"><span class="blueprint__region-label">㉡ 마지막 업데이트 시간</span></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:24px;right:16px;width:120px;height:24px;"><span class="blueprint__region-label">㉢ StatusBadge + ›</span></div>
+      </div>
+      <div class="layout-tree"><b>Container</b>(card chrome · padding all <code>spacing-medium</code>)
+└─ <b>InkWell</b>(onTap → push EventApplicationReviewRoute)
+   └─ <b>Row</b>(spaceBetween · center crossAxis · gap <code>spacing-medium</code>)
+      ├─ <b>Column</b>(crossAxis: start · gap 2px)
+      │  ├─ <b>Text</b>("심사 상태" · <code>bodyLarge</code> w500)               ← ㉠
+      │  └─ <b>Text</b>("마지막 업데이트: {relative}" · <code>bodySmall</code>)   ← ㉡
+      └─ <b>Row</b>(<code>spacing-small</code> gap · center)                  ← ㉢
+         ├─ <b>StatusBadge</b>(application.status · 8 분기)
+         ├─ <em>if refundStatus != 'none'</em> → <b>RefundBadge</b>(refundStatus)
+         │     <em>("환불 완료" · neutral / "환불 처리 중" · warning / "환불 실패" · error)</em>
+         └─ <b>Icon</b>(Icons.chevron_right · onSurfaceVariant)</div>
+    </div>
+    <table class="ref" style="margin-top: 16px;">
+      <thead><tr><th style="width: 60px;">#</th><th style="width: 180px;">Region</th><th style="width: 220px;">Alignment</th><th>Spacing / tokens</th></tr></thead>
+      <tbody>
+        <tr><td>㉠</td><td>"심사 상태" 라벨</td><td>start</td><td>typography <code>bodyLarge</code> w500 · color <code>color-text-primary</code></td></tr>
+        <tr><td>㉡</td><td>마지막 업데이트 시간</td><td>start</td><td>typography <code>bodySmall</code> · color <code>color-text-secondary</code> · gap 2px (㉠과 사이)</td></tr>
+        <tr><td>㉢</td><td>trail (StatusBadge + chevron)</td><td>center · 사이 gap <code>spacing-small (8px)</code></td><td>StatusBadge 토큰: <code>radius-small (8px)</code> v-padding <code>spacing-xsmall</code> h-padding <code>spacing-sm</code> · chevron 18 onSurfaceVariant · 전체 InkWell ripple</td></tr>
+      </tbody>
+    </table>
+
+    <p class="variant-label">마지막 업데이트 — 데이터 소스 + 상대 시간 포맷</p>
+    <table class="ref">
+      <thead><tr><th style="width: 220px;">조건</th><th>표시</th></tr></thead>
+      <tbody>
+        <tr><td>심사 처리된 적 있음 (<code>VerificationSubmission.reviewedAt</code> 존재)</td><td>reviewedAt 기준 상대 시간</td></tr>
+        <tr><td>심사 처리 전</td><td><code>application.updatedAt</code> 기준 상대 시간 (결제·신청·자동 동기화 등 가장 최근 변경)</td></tr>
+        <tr><td>1분 미만</td><td>"방금"</td></tr>
+        <tr><td>1시간 미만</td><td>"{N}분 전"</td></tr>
+        <tr><td>24시간 미만</td><td>"{N}시간 전"</td></tr>
+        <tr><td>7일 미만</td><td>"{N}일 전"</td></tr>
+        <tr><td>4주 미만</td><td>"{N}주 전"</td></tr>
+        <tr><td>그 이상</td><td>"{yyyy.MM.dd}" (절대 날짜)</td></tr>
+      </tbody>
+    </table>
+
+    <p class="variant-label">StatusBadge — application.status 8 분기 · 함의되는 환불 상태</p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 140px;">application.status</th>
+          <th style="width: 110px;">status badge 라벨 / 색</th>
+          <th style="width: 200px;">함의되는 refundStatus</th>
+          <th style="width: 220px;">사용자 관점 의미</th>
+          <th>다음 단계</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><code>paid</code></td><td>"결제완료" / success</td><td>'none' (정상) — 환불 badge 없음</td><td>결제 완료, 입장권 확보됨. 자격 심사 없는 이벤트.</td><td>이벤트 당일 체크인. 환불은 환불 정책 카드 내 "예매 취소" 버튼.</td></tr>
+        <tr><td><code>approved</code></td><td>"승인됨" / success</td><td>'none' (정상) — 환불 badge 없음</td><td>파트너가 신청 승인. 결제도 완료.</td><td>이벤트 당일 체크인.</td></tr>
+        <tr><td><code>pending_review</code></td><td>"심사 중" / warning</td><td>'none' (정상) — 환불 badge 없음</td><td>파트너 검토 중. 결제는 끝났고 승인 대기.</td><td>알림 대기. 본인 의사로 취소도 가능.</td></tr>
+        <tr><td><code>pending</code> · <code>payment_pending</code></td><td>"결제 대기" / info</td><td>'none' (정상) — 환불 badge 없음</td><td>결제 처리 중 (PG 응답 대기).</td><td>잠시 후 자동 갱신.</td></tr>
+        <tr><td><code>cancelled</code></td><td>"취소됨" / neutral</td><td><strong>'refunded' (정상)</strong> — "환불 완료" badge 함께 노출</td><td>사용자가 직접 취소 → 자동 환불 처리됨.</td><td>없음 — 환불 정보 카드 확인 또는 새 이벤트.</td></tr>
+        <tr><td><code>rejected</code></td><td>"거절됨" / error</td><td><strong>'refunded' (정상)</strong> — "환불 완료" badge 함께 노출</td><td>파트너가 신청 거절 → 자동 환불 처리됨.</td><td>심사 detail에서 거절 사유 확인. 결제는 환불됨.</td></tr>
+        <tr><td><code>payment_failed</code></td><td>"결제 실패" / error</td><td>'none' (환불 개념 자체 없음) — 환불 badge 없음</td><td>결제 자체 실패 (카드/잔액/네트워크). 결제 행위 없음.</td><td>다른 결제 수단으로 새 신청 (별도 흐름).</td></tr>
+        <tr><td>그 외 (예외)</td><td>"알수없음" / neutral</td><td>—</td><td>backend가 알 수 없는 status 반환. 이론상 발생 X.</td><td>새로고침 또는 고객센터.</td></tr>
+      </tbody>
+    </table>
+
+    <p class="variant-label">RefundBadge — refundStatus별 별도 badge (status badge 옆에 함께 노출)</p>
+    <table class="ref">
+      <thead><tr><th style="width: 200px;">refundStatus</th><th style="width: 200px;">badge 라벨 / 색</th><th>표시 조건</th></tr></thead>
+      <tbody>
+        <tr><td><code>'none'</code> (default)</td><td>—</td><td>badge 미노출 (환불 행위가 없거나 진행 중 아님)</td></tr>
+        <tr><td><code>'refunded'</code></td><td>"환불 완료" / neutral</td><td>cancelled / rejected와 함께 — 자동 환불 처리 완료</td></tr>
+        <tr><td><code>'refund_pending'</code> (가칭 · backend TBD)</td><td>"환불 처리 중" / warning</td><td>환불 EF 호출 후 PG 응답 대기 — 잠깐 보일 수 있음</td></tr>
+        <tr><td><code>'refund_failed'</code> (가칭 · backend TBD)</td><td>"환불 실패" / error</td><td>환불 시도 실패 — 사용자가 고객센터로 우회 필요</td></tr>
+      </tbody>
+    </table>
+
+    <p class="intro" style="margin-top: 12px;">
+      <strong>note — application.status × refundStatus 조합 가이드</strong><br>
+      · <code>cancelled</code>·<code>rejected</code> 는 backend가 자동으로 <code>refundStatus = 'refunded'</code>로 동기화 → 두 badge가 항상 함께 (status badge + "환불 완료"). 이 케이스는 화면이 <strong>State 3(환불 완료)</strong>로 분류되어 결제 정보 카드 미노출 + 환불 정보 카드 노출.<br>
+      · <code>payment_failed</code> 는 결제 자체가 안 됐으므로 환불 개념 없음 (refundStatus 'none' 유지) → 환불 badge 미노출. 화면은 <strong>State 4(결제 실패)</strong>로 분류되어 결제 정보 카드만 노출, 영수증 버튼은 paymentId 없어 자동 미노출.<br>
+      · cancelled / rejected에서 refundStatus가 'none'인 경우는 비정상 — backend 일관성 문제. spec 기본 가정 외, 후속에서 처리.
+    </p>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy ③ — 결제 정보 card</h2>
+    <p class="intro">
+      결제 1건의 raw fact + 영수증 진입. KeyValueRow 패턴 — label은 onSurfaceVariant, value는 onSurface. 결제 금액은 강조(w700). 카드 하단 1px divider 바로 아래 "영수증" plain TextButton — 외부 브라우저로 iamport 영수증 페이지 열기.
+      <strong>v1.2: divider와 마지막 KV row 사이 여백 제거</strong> · <strong>버튼 색 검정 톤(plain)</strong>.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 180px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:16px;left:16px;right:16px;height:24px;"><span class="blueprint__region-label">㉠ "결제 정보" 섹션 제목</span></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:56px;left:16px;right:16px;height:80px;"><span class="blueprint__region-label">㉡ KeyValueRow × 3</span></div>
+        <div class="blueprint__region" style="top:140px;left:16px;right:16px;height:1px;"><span class="blueprint__region-label">— 1px divider (margin 0)</span></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:144px;left:16px;right:16px;height:32px;"><span class="blueprint__region-label">㉢ TextButton "영수증" (paymentId 있을 때만)</span></div>
+      </div>
+      <div class="layout-tree"><b>Container</b>(card chrome)
+└─ <b>Padding</b>(<code>spacing-medium</code>)
+   └─ <b>Column</b>(crossAxis: stretch)
+      ├─ <em>"결제 정보"</em>                                  ← ㉠
+      ├─ Gap: <code>spacing-medium</code>
+      ├─ <em>KeyValueRow list</em>                             ← ㉡
+      │  ├─ <b>MinglitKeyValueRow</b>("결제일", "yyyy.MM.dd HH:mm")
+      │  ├─ <b>MinglitKeyValueRow</b>("티켓", ticket.name ?? "티켓 정보 없음")
+      │  └─ <b>MinglitKeyValueRow</b>("결제 금액", "{amount}원" · value strong)
+      ├─ <b>Divider</b>(1px · margin-top 0 · 마지막 KV row의 padding-bottom 그대로 유지)
+      └─ <em>if paymentId 있음</em>                           ← ㉢
+         └─ <b>TextButton</b>("영수증" full width · color <code>color-text-primary</code> · padding-top <code>spacing-medium</code>)</div>
+    </div>
+    <table class="ref" style="margin-top: 16px;">
+      <thead><tr><th style="width: 60px;">#</th><th style="width: 180px;">Region</th><th style="width: 220px;">Alignment</th><th>Spacing / tokens</th></tr></thead>
+      <tbody>
+        <tr><td>㉠</td><td>섹션 제목</td><td>start</td><td>typography <code>labelLarge</code> w700</td></tr>
+        <tr><td>㉡</td><td>KeyValueRow list</td><td>spaceBetween (label ↔ value)</td><td>row v-padding <code>spacing-sm</code> · 사이 1px <code>color-divider</code> · label <code>bodyMedium</code> onSurfaceVariant · value <code>bodyMedium</code> w500 · 결제 금액 value <code>bodyLarge</code> w700</td></tr>
+        <tr><td>㉢</td><td>영수증 버튼</td><td>full width · 가운데 정렬</td><td>height 40 · color <code>color-text-primary</code> (<strong>v1.2</strong> · 검정/짙은 회색 plain) · typography <code>labelLarge</code> w500 · padding-top <code>spacing-medium</code> · top border 1px <code>color-divider</code> · margin-top 0</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy ④ — 환불 정책 card</h2>
+    <p class="intro">
+      두 갈래 환불 정책을 단일 카드로 안내. 상단 "플랫폼 환불 정책"은 RefundCalculator 정책(grace_period_hours / cutoff_days · 기본 2/7)을 4단계 row로 풀어 보여주고 현재 시점 단계를 <strong>label/value 모두 bold</strong>로 강조 (v1.3 — 색·padding 강조 제거 · 정렬 어긋남 방지). 중간 "파트너 직접 환불"은 자동 환불 외 케이스에서 파트너에게 직접 연락하는 안내만 (CTA 버튼은 ⑤ 파트너 정보 카드의 "문의하기"로 일원화 — v1.3에서 중복 CTA 제거).
+      <strong>v1.6: "예매 취소" 버튼을 카드 안으로 통합</strong> — 정책을 본 직후 같은 카드 안에서 액션. canCancel 충족 시 active(errorContainer), 미충족 시 disabled(Material default 회색). disabled 상태가 단계 row 바로 아래 위치해 "왜 안 되는지" 시각적으로 self-explain.
+      <strong>v1.7: 버튼 위치 — 플랫폼 정책과 파트너 직접 환불 사이</strong>로 이동. 버튼 아래에 divider + 파트너 직접 환불 안내가 옴. 흐름: "정책 → 액션 → (자동 환불 외) 대안 안내". 파트너 직접 환불 안내는 active / disabled 두 상태 모두 노출 — 사용자가 카드 진입 전부터 "다른 환불 경로" 존재를 인지하도록 (discoverability).
+      <strong>v1.4: refundStatus가 'refunded'면 이 카드와 결제 정보 카드 둘 다 사라지고, 두 정보가 합쳐진 "환불 정보" 카드 1개로 swap</strong> — 결제 정보(티켓·결제 금액)와 환불 결과(환불일·환불 비율·환불 금액·수수료)를 한 카드에서 비교 가능. 영수증 버튼도 그쪽으로 이전 (paymentId 있을 때). 환불 완료 카드에는 예매 취소 버튼 자체가 없음.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 360px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:16px;left:16px;right:16px;height:24px;"><span class="blueprint__region-label">㉠ "환불 정책" 섹션 제목</span></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:56px;left:16px;right:16px;height:24px;"><span class="blueprint__region-label">㉡ "플랫폼 환불 정책" 서브 헤딩</span></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:88px;left:16px;right:16px;height:96px;"><span class="blueprint__region-label">㉢ 단계별 row × 4 (현재 단계 bold)</span></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:200px;left:16px;right:16px;height:48px;"><span class="blueprint__region-label">㉣ 예매 취소 버튼 (active / disabled · v1.7 — 디바이더 위로 이동)</span></div>
+        <div class="blueprint__region" style="top:264px;left:16px;right:16px;height:1px;"><span class="blueprint__region-label">— 1px divider (버튼 ↔ 파트너 직접 환불 사이)</span></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:280px;left:16px;right:16px;height:24px;"><span class="blueprint__region-label">㉤ "파트너 직접 환불" 서브 헤딩</span></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:312px;left:16px;right:16px;height:24px;"><span class="blueprint__region-label">㉥ 안내 문구 (항상 노출)</span></div>
+      </div>
+      <div class="layout-tree"><b>Container</b>(card chrome)
+└─ <b>Padding</b>(<code>spacing-medium</code>)
+   └─ <b>Column</b>(crossAxis: stretch)
+      ├─ <em>"환불 정책"</em>                                  ← ㉠
+      ├─ Gap: <code>spacing-medium</code>
+      ├─ <em>플랫폼 환불 정책 섹션</em>
+      │  ├─ <b>Text</b>("플랫폼 환불 정책" · <code>labelSmall</code> w700 onSurfaceVariant · uppercase) ← ㉡
+      │  ├─ Gap: <code>spacing-small</code>
+      │  └─ <em>단계별 row × 4</em>                           ← ㉢
+      │     <em>(현재 단계 row만 label/value 모두 w700 — 색·bg·padding 변경 없음)</em>
+      ├─ <em>예매 취소 버튼</em>                                ← ㉣
+      │  └─ <b>FilledButton</b>("예매 취소" · width 100% · height 48 · margin-top <code>spacing-medium</code>)
+      │     ├─ <em>if canCancel</em> → enabled · errorContainer bg / onErrorContainer fg
+      │     └─ <em>else</em> → disabled · onSurface 5% bg / onSurface 38% fg · cursor not-allowed
+      ├─ <b>Divider</b>(1px) + <code>spacing-medium</code> v-margin <em>(버튼과 파트너 환불 안내 사이 명확한 구분)</em>
+      └─ <em>파트너 직접 환불 섹션</em>
+         ├─ <b>Text</b>("파트너 직접 환불" · <code>labelSmall</code> w700 onSurfaceVariant · uppercase) ← ㉤
+         └─ <b>Text</b>("자동 환불 기간 외에도 파트너에게 환불 요청 가능" · <code>bodySmall</code>) ← ㉥
+            <em>(CTA 버튼 없음 — 바로 아래 ⑤ 파트너 정보 카드의 "문의하기" 사용 · 항상 노출 — discoverability 확보)</em></div>
+    </div>
+    <table class="ref" style="margin-top: 16px;">
+      <thead><tr><th style="width: 60px;">#</th><th style="width: 180px;">Region</th><th style="width: 220px;">Alignment</th><th>Spacing / tokens</th></tr></thead>
+      <tbody>
+        <tr><td>㉠</td><td>섹션 제목</td><td>start</td><td>typography <code>labelLarge</code> w700</td></tr>
+        <tr><td>㉡㉤</td><td>서브 헤딩</td><td>start</td><td>typography <code>labelSmall</code> w700 · color <code>color-text-secondary</code> · uppercase · letter-spacing 0.04em</td></tr>
+        <tr><td>㉢</td><td>플랫폼 단계별 row × 4</td><td>spaceBetween</td><td>row v-padding <code>spacing-xsmall</code> · h-padding 0 (모든 row 동일 — v1.3) · label <code>bodyMedium</code> onSurface · value <code>bodyMedium</code> w500 onSurfaceVariant · <strong>현재 단계 row: label w700 + value w700</strong> (색은 동일 유지 — 차분한 강조)</td></tr>
+        <tr><td>㉣</td><td>예매 취소 버튼</td><td>full width · 가운데 정렬</td><td>height 48 · radius <code>radius-button (12px)</code> · margin-top <code>spacing-medium</code> · typography <code>labelLarge</code> w600 · <strong>active</strong>: bg <code>color-error</code> 12% tint + fg <code>color-error</code> · <strong>disabled</strong>: bg <code>onSurface</code> 5% tint + fg <code>onSurface</code> 38% tint + cursor not-allowed (Material default) · <strong>v1.7</strong>: 위치가 플랫폼 정책 ↔ 파트너 직접 환불 사이로 이동 — divider가 버튼 아래에 위치하여 "정책 → 액션 → (자동 환불 외) 대안" 흐름 자연스러움</td></tr>
+        <tr><td>㉥</td><td>파트너 환불 안내</td><td>start</td><td>안내 <code>bodySmall</code> · color <code>color-text-primary</code> · CTA 없음 · <strong>active/disabled 모두 노출</strong> (v1.7 — discoverability 확보 위해 항상)</td></tr>
+      </tbody>
+    </table>
+
+    <p class="variant-label">예매 취소 버튼 — canCancel 분기 · 노출 방식</p>
+    <table class="ref">
+      <thead><tr><th style="width: 200px;">상태 조건</th><th>버튼 표시</th><th>적용 state</th></tr></thead>
+      <tbody>
+        <tr><td>canCancel == true</td><td><strong>active</strong> — errorContainer · 탭 시 환불 확인 다이얼로그 (state 8)</td><td>State 1 (활성 + 환불 가능)</td></tr>
+        <tr><td>canCancel == false (자동 환불 기간 종료 / 시작 후)</td><td><strong>disabled</strong> — Material 회색 · 탭 무반응 · cursor not-allowed</td><td>State 2 (환불 기간 종료)</td></tr>
+        <tr><td>refundStatus == 'refunded'</td><td><strong>버튼 미렌더</strong> — 카드 자체가 "환불 정보" 카드로 swap</td><td>State 3 (환불 완료)</td></tr>
+        <tr><td>status == payment_failed</td><td><strong>버튼 미렌더</strong> — 환불 정책 카드 자체 미노출</td><td>State 4 (결제 실패)</td></tr>
+        <tr><td>무료 티켓 (paymentAmount 0 + paymentId 없음)</td><td>"신청 취소 안내" 카드 안에 동일 패턴 — 카피만 "신청 취소"로 미세 조정. 시작 전 active, 시작 후 disabled</td><td>State 5 (무료 티켓)</td></tr>
+      </tbody>
+    </table>
+    <p class="intro" style="margin-top: 12px;">
+      <strong>note — disabled 시각</strong>: Material default disabled tokens 사용 (별도 disabled colorset 신규 정의 X). 이로써 "비활성화된 버튼"이라는 암묵적 합의 UI를 그대로 활용 — 사용자가 학습 비용 없이 인지. errorContainer 색을 유지한 채 opacity만 낮추는 방식은 채택하지 않음 ("빨간 액션이지만 잠겨있다"는 모호한 시그널을 피하기 위해).
+    </p>
+
+    <p class="variant-label">플랫폼 환불 정책 단계 row 라벨 — 정책값에 따라 동적</p>
+    <table class="ref">
+      <thead><tr><th style="width: 240px;">단계</th><th>label 패턴</th><th>value</th></tr></thead>
+      <tbody>
+        <tr><td>1. Grace 기간 내</td><td>"결제 후 {graceHours}시간 이내"</td><td>"100% 환불"</td></tr>
+        <tr><td>2. Cutoff 이전</td><td>"이벤트 시작 {cutoffDays}일 이전"</td><td>"100% 환불"</td></tr>
+        <tr><td>3. Cutoff 이내 ~ 시작 직전</td><td>"이벤트 시작 {cutoffDays}일 이내"</td><td>"부분 환불 (RefundCalculator 비율)"</td></tr>
+        <tr><td>4. 시작 후</td><td>"이벤트 시작 후"</td><td>"자동 환불 불가"</td></tr>
+      </tbody>
+    </table>
+    <p class="intro" style="margin-top: 12px;">
+      <strong>note</strong> — 정확한 단계 비율(50/80/100 등)은 <code>RefundCalculator</code> 로직과 일치해야 함. 정책 조회 실패 시 default(grace 2h / cutoff 7d) fallback (Fix #133).
+    </p>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy ⑤ — 파트너 정보 card</h2>
+    <p class="intro">
+      파트너 식별 + 두 갈래 진입(파트너 detail · 문의하기). 상단 row 전체가 tap target — 작은 원형 프로필 + 파트너명 + 한 줄 소개 + 우측 chevron으로 "이 파트너에 대해 더 알아보기" 시그널. 하단 1px divider 바로 아래 "문의하기" plain TextButton — 시스템 dialer/메일앱 연결.
+      <strong>v1.3: 환불 정책 카드 바로 아래 위치</strong> — "자동 환불 안 되면 → 파트너에 직접 연락" 흐름이 시선에 자연스럽게 걸리도록.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 160px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:16px;left:16px;right:16px;height:24px;"><span class="blueprint__region-label">㉠ "파트너" 섹션 제목</span></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:56px;left:16px;right:16px;height:56px;"><span class="blueprint__region-label">㉡ 파트너 row · avatar + 이름/소개 + chevron</span></div>
+        <div class="blueprint__region" style="top:120px;left:16px;right:16px;height:1px;"><span class="blueprint__region-label">— 1px divider (margin 0)</span></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:124px;left:16px;right:16px;height:32px;"><span class="blueprint__region-label">㉢ TextButton "문의하기"</span></div>
+      </div>
+      <div class="layout-tree"><b>Container</b>(card chrome)
+└─ <b>Padding</b>(<code>spacing-medium</code>)
+   └─ <b>Column</b>(crossAxis: stretch)
+      ├─ <em>"파트너"</em>                                     ← ㉠
+      ├─ Gap: <code>spacing-medium</code>
+      ├─ <em>파트너 row</em> (InkWell · onTap → PartnerDetail)  ← ㉡
+      │  ├─ <b>CircleAvatar</b>(48 · partner.profileImageUrl ?? placeholder)
+      │  ├─ Gap: <code>spacing-medium</code>
+      │  ├─ <b>Expanded</b>(Column)
+      │  │  ├─ <b>Text</b>(partner.name · titleSmall w700 · maxLines 1 ellipsis)
+      │  │  └─ <b>Text</b>(partner.introduction ?? "" · bodySmall onSurfaceVariant · maxLines 1 ellipsis)
+      │  └─ <b>Icon</b>(Icons.chevron_right · onSurfaceVariant)
+      ├─ <b>Divider</b>(1px · margin 0)
+      └─ <b>TextButton</b>("문의하기" full width · color <code>color-text-primary</code> · padding-top <code>spacing-medium</code>) ← ㉢</div>
+    </div>
+    <table class="ref" style="margin-top: 16px;">
+      <thead><tr><th style="width: 60px;">#</th><th style="width: 180px;">Region</th><th style="width: 220px;">Alignment</th><th>Spacing / tokens</th></tr></thead>
+      <tbody>
+        <tr><td>㉠</td><td>섹션 제목</td><td>start</td><td>typography <code>labelLarge</code> w700</td></tr>
+        <tr><td>㉡</td><td>파트너 row</td><td>center · gap medium</td><td>avatar 48×48 radius 50% · 누락 시 placeholder bg <code>color-surface</code> + 아이콘 onSurfaceVariant · name <code>titleSmall</code> w700 · intro <code>bodySmall</code> onSurfaceVariant · chevron 18 onSurfaceVariant · 전체 InkWell</td></tr>
+        <tr><td>㉢</td><td>문의하기 버튼</td><td>full width · 가운데 정렬</td><td>height 40 · color <code>color-text-primary</code> · typography <code>labelLarge</code> w500 · padding-top <code>spacing-medium</code> · top border 1px <code>color-divider</code> · margin-top 0</td></tr>
+      </tbody>
+    </table>
+    <p class="variant-label">파트너 row · 데이터 누락 시 변형</p>
+    <table class="ref">
+      <thead><tr><th style="width: 200px;">조건</th><th>표시</th></tr></thead>
+      <tbody>
+        <tr><td>profileImageUrl 없음</td><td>placeholder 아이콘 (Icons.storefront 또는 Icons.person · onSurfaceVariant)</td></tr>
+        <tr><td>introduction 없음</td><td>두 번째 line 자체 미렌더 — name 1행만 노출</td></tr>
+        <tr><td>partner 자체 누락</td><td>카드 전체 미렌더. 이 경우 "문의하기" 진입점이 사라짐 — 사용자는 환불 정책 카드의 안내 문구만 보고 다른 경로(고객센터 등)로 우회</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>canCancel 판정 — Flutter 후속 변경 필요</h2>
+    <p class="intro">
+      "예매 취소" 버튼은 Sub-anatomy ④ 환불 정책 카드 안에 통합되었음 (v1.6). canCancel 판정 로직은 그대로 — true면 active, false면 disabled로 노출.
+      <strong>v1.1 확장</strong>: 활성 status 화이트리스트에 <code>pending</code>, <code>pending_review</code> 추가 — 파트너 미수락 단계에서도 유저는 자유롭게 환불(=신청 취소) 가능. 현재 Flutter <code>isActiveTicket</code>은 paid/approved만 — 후속 PR에서 확장 필요.
+    </p>
+    <table class="ref">
+      <thead><tr><th style="width: 240px;">조건</th><th>결과</th></tr></thead>
+      <tbody>
+        <tr><td><code>status</code> ∈ {paid, approved, pending, pending_review}</td><td>활성 티켓으로 간주 — <strong>기존 paid/approved에 pending/pending_review 추가</strong></td></tr>
+        <tr><td><code>refundStatus</code> == 'none'</td><td>중복 환불 방지</td></tr>
+        <tr><td><code>eventStartTime &gt; now</code></td><td>이벤트 시작 전만</td></tr>
+        <tr><td>유료(paymentAmount &gt; 0 || paymentId 있음): paymentId/paymentAmount/eventStartTime 모두 not-null</td><td>iamport 환불 호출 가능</td></tr>
+        <tr><td>무료(paymentAmount == 0 &amp;&amp; paymentId 없음): eventStartTime not-null</td><td>user-cancel-order EF가 무료 케이스 분기 처리 (Fix #1652)</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<!-- ============================================================
+     STATES
+     ============================================================ -->
+<div class="perspective" id="states">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>States</h2>
+    <span class="lede">8 state. baseline = Default · 활성 + 환불 가능. 변형은 환불 정책 카드 내 예매 취소 버튼 active/disabled / 환불 정책 카드 노출 여부 / 환불 완료 swap / 심사 상태 row의 StatusBadge 색으로 갈라짐.</span>
+  </div>
+
+  <section class="doc">
+    <p class="intro">
+      <strong>State 종류 식별 기준</strong>: <code>MinglitAsyncValueWidget</code>의 3-way + data 안에서 결제 상태(<code>application.status</code>) + 환불 상태(<code>application.refundStatus</code>) + 환불 가능 여부(<code>canCancel</code>) + 무료/유료(<code>paymentId</code> 유무)로 분기.
+    </p>
+
+    <h3 style="margin-top: 24px;">State summary <small style="font-size:12px;font-weight:400;color:var(--color-text-secondary);">— 8 states</small></h3>
+    <table class="ref">
+      <thead>
+        <tr><th style="width: 220px;">State</th><th style="width: 100px;">Tag</th><th style="width: 240px;">조건 (요약)</th><th>Key visual differentiator</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Default · 활성 + 환불 가능</strong></td><td>baseline</td><td>활성 (paid/approved/pending/pending_review) + 시작 전 + 자동 환불 기간 내</td><td>환불 정책 카드 현재 단계 highlight + <strong>카드 내 예매 취소 버튼 active</strong> (errorContainer) + 심사 상태 badge success</td></tr>
+        <tr><td><strong>Default · 환불 기간 종료</strong></td><td>variant</td><td>활성이지만 시작 후 또는 자동 환불 기간 만료</td><td>환불 정책 카드 마지막 단계 highlight + <strong>카드 내 예매 취소 버튼 disabled</strong> (Material 회색) + 파트너 환불 안내 강조</td></tr>
+        <tr><td><strong>Default · 환불 완료</strong></td><td>variant</td><td>refundStatus == 'refunded' (보통 cancelled / rejected와 함께)</td><td><strong>결제 정보 카드 미노출</strong> · 환불 정책 → 환불 정보 카드로 통합 swap (티켓·결제 금액·환불 결과 모두 포함) · 예매 취소 버튼 미렌더 · 심사 상태 badge neutral/error + RefundBadge "환불 완료"</td></tr>
+        <tr><td><strong>Default · 결제 실패</strong></td><td>variant</td><td>payment_failed (환불 개념 없음)</td><td>환불 정책 / 환불 정보 카드 둘 다 미노출 + 영수증 미노출(paymentId 없음) + 예매 취소 버튼 미렌더 + 심사 상태 badge error</td></tr>
+        <tr><td><strong>Default · 무료 티켓</strong></td><td>variant</td><td>paymentAmount 0 + paymentId 없음 + 활성 + 시작 전</td><td>영수증 버튼 미노출 · 결제 금액 0원 · 환불 정책 → "신청 취소 안내" 카드 단순화 + <strong>카드 내 "신청 취소" 버튼 active</strong></td></tr>
+        <tr><td><strong>Loading</strong></td><td>async</td><td>fetch 중</td><td>화면 중앙 spinner</td></tr>
+        <tr><td><strong>Error</strong></td><td>network/server</td><td>로드 실패</td><td>error_outline icon + "오류가 발생했습니다."</td></tr>
+        <tr><td><strong>Refund Confirm Dialog</strong></td><td>overlay</td><td>"예매 취소" tap → 정책 조회 → refundPercentage &gt; 0</td><td>본문 위 scrim + MinglitDialog</td></tr>
+      </tbody>
+    </table>
+
+    <div class="visual-gallery" style="background: var(--color-surface); padding: 16px; border-radius: var(--radius-card); display: flex; flex-direction: column; gap: 16px;">
+
+      <!-- ─── State 1: Default · 활성 + 환불 가능 (baseline) ──────────── -->
+      <table class="ref state-mini is-baseline-tint">
+        <thead>
+          <tr><th colspan="3"><strong>Default · 활성 + 환불 가능</strong> 🎯 <small>baseline · 5 카드 · 환불 정책 카드 내 예매 취소 버튼 active</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="state-mini__mock" rowspan="6">
+              <div class="viewport phd-viewport">
+                <div class="phd-appbar">
+                  <span class="phd-appbar__back">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                  </span>
+                  <h2>구매 상세</h2>
+                </div>
+                <div class="phd-body">
+                  <!-- ② Hero card (no StatusBadge) -->
+                  <div class="phd-card">
+                    <div class="phd-hero__thumb">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="12" cy="15" r="2"/></svg>
+                    </div>
+                    <div class="phd-hero__title">스피드 데이팅 · 강남 라운지</div>
+                    <div class="phd-hero__meta">5월 4일 (월) 20:00</div>
+                    <div class="phd-hero__meta phd-hero__meta--muted">강남역 5번 출구 · 라운지B</div>
+                  </div>
+                  <!-- ③ 심사 상태 row (with StatusBadge) -->
+                  <div class="phd-card">
+                    <div class="phd-listtile">
+                      <div class="phd-listtile__main">
+                        <span class="phd-listtile__label">심사 상태</span>
+                        <span class="phd-listtile__subtitle">마지막 업데이트: 2시간 전</span>
+                      </div>
+                      <span class="phd-listtile__trail">
+                        <span class="phd-status-badge phd-status-badge--success">결제완료</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                      </span>
+                    </div>
+                  </div>
+                  <!-- ④ 결제 정보 -->
+                  <div class="phd-card">
+                    <div class="phd-section__title">결제 정보</div>
+                    <div class="phd-kv"><span class="phd-kv__label">결제일</span><span class="phd-kv__value">2026.04.28 14:32</span></div>
+                    <div class="phd-kv"><span class="phd-kv__label">티켓</span><span class="phd-kv__value">스탠다드 입장권</span></div>
+                    <div class="phd-kv"><span class="phd-kv__label">결제 금액</span><span class="phd-kv__value phd-kv__value--strong">25,000원</span></div>
+                    <button class="phd-card-action">영수증</button>
+                  </div>
+                  <!-- ⑤ 환불 정책 -->
+                  <div class="phd-card">
+                    <div class="phd-section__title">환불 정책</div>
+                    <div class="phd-refund-section">
+                      <div class="phd-refund-section__heading">플랫폼 환불 정책</div>
+                      <div class="phd-policy-row"><span class="phd-policy-row__label">결제 후 2시간 이내</span><span class="phd-policy-row__value">100% 환불</span></div>
+                      <div class="phd-policy-row phd-policy-row--current"><span class="phd-policy-row__label">이벤트 시작 7일 이전</span><span class="phd-policy-row__value">100% 환불</span></div>
+                      <div class="phd-policy-row"><span class="phd-policy-row__label">이벤트 시작 7일 이내</span><span class="phd-policy-row__value">부분 환불</span></div>
+                      <div class="phd-policy-row"><span class="phd-policy-row__label">이벤트 시작 후</span><span class="phd-policy-row__value">자동 환불 불가</span></div>
+                    </div>
+                    <button class="phd-card-cancel">예매 취소</button>
+                    <div class="phd-refund-section">
+                      <div class="phd-refund-section__heading">파트너 직접 환불</div>
+                      <div class="phd-refund-section__copy">자동 환불 기간 외에도 파트너에게 환불을 요청할 수 있습니다.</div>
+                    </div>
+                  </div>
+                  <!-- ⑥ 파트너 정보 -->
+                  <div class="phd-card">
+                    <div class="phd-section__title">파트너</div>
+                    <div class="phd-partner-row">
+                      <div class="phd-partner-row__avatar">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l1-4h16l1 4M3 9v10h18V9M3 9h18M9 13h6"/></svg>
+                      </div>
+                      <div class="phd-partner-row__text">
+                        <div class="phd-partner-row__name">강남 라운지</div>
+                        <div class="phd-partner-row__intro">데이팅 전용 프리미엄 공간</div>
+                      </div>
+                      <div class="phd-partner-row__chevron">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                      </div>
+                    </div>
+                    <button class="phd-card-action">문의하기</button>
+                  </div>
+                </div>
+                <span class="callout" style="top:88px;left:24px;">ⓐ</span>
+                <span class="callout" style="top:300px;left:24px;">ⓑ</span>
+                <span class="callout" style="top:372px;left:24px;">ⓒ</span>
+                <span class="callout" style="top:548px;left:24px;">ⓓ</span>
+                <span class="callout" style="top:760px;left:24px;">ⓔ</span>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>활성 결제 상태(결제 완료 또는 신청 완료/심사 진행 중)이고, 자동 환불 기간 내이며, 이벤트가 아직 시작되지 않은 결제. 결제·이벤트 정보 모두 유효.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              ① <strong>"영수증" 탭</strong> → 외부 브라우저로 영수증 페이지 열기. 열 수 없으면 "영수증 페이지를 열 수 없습니다." 안내<br>
+              ② <strong>심사 상태 row 탭</strong> → 심사 상태 detail로 이동 (거절 사유 / 신청 답변 / 검토 시점 등)<br>
+              ③ <strong>스크롤</strong> → 환불 정책 카드 → 파트너 정보 카드 순으로 노출<br>
+              ④ <strong>파트너 row 탭</strong> → 파트너 detail로 이동<br>
+              ⑤ <strong>"문의하기" 탭</strong> (파트너 정보 카드) → 연락처가 있으면 전화 앱(우선) 또는 메일 앱이 열림. 둘 다 없으면 "연락처 정보가 없습니다." 안내. 환불 정책 카드의 "파트너 직접 환불" 안내를 본 사용자가 자연스럽게 바로 아래 카드의 이 버튼을 탭하는 흐름<br>
+              ⑥ <strong>"예매 취소" 탭</strong> → 환불 확인 다이얼로그 노출 (state 8)<br>
+              ⑦ <strong>뒤로 가기</strong> → 구매 내역 리스트로 복귀
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td>
+              · <strong>이벤트 정보 누락</strong> — 이벤트명 "제목 없음" / 일시 "-" / 장소 "장소 정보 없음"으로 fallback<br>
+              · <strong>썸네일 누락</strong> — placeholder 아이콘이 들어간 회색 박스<br>
+              · <strong>파트너 정보 누락</strong> — 파트너 카드 자체 미렌더<br>
+              · <strong>파트너 소개 누락</strong> — 파트너 row의 두 번째 line 미렌더 (이름만 1행)<br>
+              · <strong>연락처 우선순위</strong> — 이벤트 → 모임 → 파트너 fallback. 같은 source 내 phone &gt; email<br>
+              · <strong>환불 정책 조회 실패</strong> — 기본 정책(2시간 / 7일)으로 표시<br>
+              · <strong>현재 단계 highlight</strong> — paid/시작 시점 기준으로 4 단계 중 1개에 label/value 모두 bold (v1.3 · 색·padding 변경 없음)
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>
+              · <code>Scaffold</code> + Material <code>AppBar(title: Text('구매 상세'))</code> · auto back arrow<br>
+              · <a href="/components#MinglitAsyncValueWidget"><code>MinglitAsyncValueWidget&lt;EventApplication&gt;</code></a> 외곽<br>
+              · <code>SingleChildScrollView</code> + <code>Column</code> (5 카드 stack · sticky CTA 없음 v1.6)<br>
+              · <a href="/components#MinglitContentCard"><code>MinglitContentCard</code></a> × 5 — 또는 file-private wrapper<br>
+              · Hero: <a href="/components#MinglitImage"><code>MinglitImage</code></a>(16:9 · radius-medium) (StatusBadge 없음)<br>
+              · 심사 상태 row: <code>InkWell</code> + Row(<strong>Column(label "심사 상태" · subtitle "마지막 업데이트: ...")</strong> · <a href="/components#StatusBadge"><code>StatusBadge</code></a> + chevron) — 2-line ListTile (v1.4)<br>
+              · 결제 정보: <a href="/components#MinglitKeyValueRow"><code>MinglitKeyValueRow</code></a> × 3 + plain <code>TextButton</code> "영수증" (color-text-primary)<br>
+              · 파트너 정보: <code>InkWell</code> + <code>CircleAvatar</code> + <code>Text</code> × 2 + <code>Icon</code>(chevron_right) + <code>Divider</code> + plain <code>TextButton</code> "문의하기" (color-text-primary)<br>
+              · 환불 정책: 두 sub-section (플랫폼 단계 row × 4 + 파트너 안내) — CTA 버튼 없음 (v1.3 · ⑤ 파트너 정보의 "문의하기"로 일원화)<br>
+              · 환불 정책 카드 내 <code>FilledButton</code> "예매 취소" — active(errorContainer / onErrorContainer) / disabled(Material default — onSurface 5%/38%) v1.6<br>
+              · <code>url_launcher</code>: 영수증 · tel: · mailto:
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>
+              · color: <code>color-surface</code> (scaffold + AppBar + thumb fallback + avatar fallback bg), <code>color-background</code> (카드 · BottomCTA bg), <code>color-text-primary</code> (제목 · 값 · 라벨 · 정책 label · 영수증/문의 버튼), <code>color-text-secondary</code> (KeyValueRow label · 정책 value · 안내 · 장소 · 소개 · chevron · 서브 헤딩), <code>color-divider</code> (KeyValueRow separator · 카드 내 divider · BottomCTA top border), <code>color-error</code> + errorContainer tint (예매 취소), 의미론적 status: <code>color-success</code> · <code>color-warning</code> · 정보 파랑 · <code>color-error</code> · <em>color-primary는 사용 안 함 (v1.3 — 환불 현재 단계 tint 제거 · 파트너 환불 CTA 제거)</em><br>
+              · radius: <code>radius-card (16px)</code>, <code>radius-medium (12px)</code> (Hero thumb), <code>radius-small (8px)</code> (StatusBadge), 50% (파트너 avatar), <code>radius-button (12px)</code> (예매 취소)<br>
+              · spacing: <code>spacing-medium (16px)</code> (body padding · card padding · 카드 사이 gap · 섹션 제목→내용 · KeyValueRow→영수증 padding-top · 파트너 row→문의하기 padding-top · Hero thumb→title · 두 환불 섹션 사이 v-margin), <code>spacing-sm (12px)</code> (KeyValueRow v-padding · StatusBadge h-padding), <code>spacing-small (8px)</code> (서브 헤딩→본문 · 심사 상태 row trail gap · 심사 상태 badge↔chevron gap), <code>spacing-xsmall (4px)</code> (제목→일시 · 정책 row v-padding · StatusBadge v-padding)<br>
+              · opacity: <code>shadowXs (0.06)</code>, <code>subtle (0.20)</code> (StatusBadge bg tint), 12% (예매 취소 tint)<br>
+              · typography: appBarTitle (18/600), titleLarge bold (이벤트명), titleSmall bold (파트너명), bodyLarge w500 (심사 상태 라벨 · 결제 금액 value), bodyMedium (일시 · KeyValueRow · 정책 row · <strong>현재 단계 row의 label/value 모두 w700</strong>), labelLarge bold (섹션 제목), labelLarge w500 (TextButton 영수증/문의), labelMedium w600 (StatusBadge), labelSmall bold uppercase (서브 헤딩), bodySmall (장소 · 파트너 소개 · 정책 안내 · 파트너 환불 안내)
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 ⓐ Hero · ⓑ 심사 상태 · ⓒ 결제 정보 · ⓓ 환불 정책 (예매 취소 버튼 포함) · ⓔ 파트너 정보. v1.6: sticky BottomCTA 제거, 예매 취소 버튼이 환불 정책 카드 안 마지막 element로 이전. v1.3: 카드 순서를 결제 → 환불 → 파트너로 재배치(자동 환불 안 되면 → 파트너 직접 연락 흐름).</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ─── State 2: Default · 환불 기간 종료 ──────────── -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong>Default · 환불 기간 종료</strong> <small>환불 정책 카드 내 예매 취소 버튼 disabled · 마지막 단계 highlight + 파트너 환불 강조</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="state-mini__mock" rowspan="6">
+              <div class="viewport phd-viewport">
+                <div class="phd-appbar">
+                  <span class="phd-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></span>
+                  <h2>구매 상세</h2>
+                </div>
+                <div class="phd-body">
+                  <div class="phd-card">
+                    <div class="phd-hero__thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="12" cy="15" r="2"/></svg></div>
+                    <div class="phd-hero__title">스피드 데이팅 · 강남 라운지</div>
+                    <div class="phd-hero__meta">4월 27일 (일) 20:00</div>
+                    <div class="phd-hero__meta phd-hero__meta--muted">강남역 5번 출구 · 라운지B</div>
+                  </div>
+                  <div class="phd-card">
+                    <div class="phd-listtile">
+                      <div class="phd-listtile__main">
+                        <span class="phd-listtile__label">심사 상태</span>
+                        <span class="phd-listtile__subtitle">마지막 업데이트: 1일 전</span>
+                      </div>
+                      <span class="phd-listtile__trail">
+                        <span class="phd-status-badge phd-status-badge--success">결제완료</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                      </span>
+                    </div>
+                  </div>
+                  <div class="phd-card">
+                    <div class="phd-section__title">결제 정보</div>
+                    <div class="phd-kv"><span class="phd-kv__label">결제일</span><span class="phd-kv__value">2026.04.20 09:14</span></div>
+                    <div class="phd-kv"><span class="phd-kv__label">티켓</span><span class="phd-kv__value">스탠다드 입장권</span></div>
+                    <div class="phd-kv"><span class="phd-kv__label">결제 금액</span><span class="phd-kv__value phd-kv__value--strong">25,000원</span></div>
+                    <button class="phd-card-action">영수증</button>
+                  </div>
+                  <div class="phd-card">
+                    <div class="phd-section__title">환불 정책</div>
+                    <div class="phd-refund-section">
+                      <div class="phd-refund-section__heading">플랫폼 환불 정책</div>
+                      <div class="phd-policy-row"><span class="phd-policy-row__label">결제 후 2시간 이내</span><span class="phd-policy-row__value">100% 환불</span></div>
+                      <div class="phd-policy-row"><span class="phd-policy-row__label">이벤트 시작 7일 이전</span><span class="phd-policy-row__value">100% 환불</span></div>
+                      <div class="phd-policy-row"><span class="phd-policy-row__label">이벤트 시작 7일 이내</span><span class="phd-policy-row__value">부분 환불</span></div>
+                      <div class="phd-policy-row phd-policy-row--current"><span class="phd-policy-row__label">이벤트 시작 후</span><span class="phd-policy-row__value">자동 환불 불가</span></div>
+                    </div>
+                    <button class="phd-card-cancel phd-card-cancel--disabled" disabled>예매 취소</button>
+                    <div class="phd-refund-section">
+                      <div class="phd-refund-section__heading">파트너 직접 환불</div>
+                      <div class="phd-refund-section__copy">자동 환불 기간이 지났습니다. 환불을 원하시면 파트너에게 직접 요청해주세요.</div>
+                    </div>
+                  </div>
+                  <div class="phd-card">
+                    <div class="phd-section__title">파트너</div>
+                    <div class="phd-partner-row">
+                      <div class="phd-partner-row__avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l1-4h16l1 4M3 9v10h18V9"/></svg></div>
+                      <div class="phd-partner-row__text">
+                        <div class="phd-partner-row__name">강남 라운지</div>
+                        <div class="phd-partner-row__intro">데이팅 전용 프리미엄 공간</div>
+                      </div>
+                      <div class="phd-partner-row__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+                    </div>
+                    <button class="phd-card-action">문의하기</button>
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>↔ 활성 결제이지만 이벤트가 이미 시작됐거나 자동 환불 기간이 지난 상태.</td>
+          </tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>− "예매 취소" 탭 (CTA 미노출)<br>↔ 환불 정책 카드의 "파트너 직접 환불" 안내 카피 강조("자동 환불 기간이 지났습니다 — 파트너에게 직접 요청") → 사용자가 바로 아래 ⑤ 파트너 정보 카드의 "문의하기" 탭<br>동일: 영수증 / 심사 상태 row / 파트너 row / 문의하기 / 스크롤 / 뒤로</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>· 환불 정책 카드 마지막 단계 highlight로 사용자가 "왜 자동 취소가 안 되는지" 즉시 인지<br>· 파트너 환불 안내 카피가 "지났습니다 — 파트너에게 직접 요청" 톤으로 미세 조정 (현재 단계가 4번일 때만)</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ 환불 정책 카드 내 예매 취소 버튼: active → <strong>disabled</strong> (Material default 회색 · cursor not-allowed). 위치 그대로, 시각만 변경<br>동일: 그 외 모두</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>↔ 예매 취소 버튼 색: <code>color-error</code> 12% tint + <code>color-error</code> fg → <code>onSurface</code> 5% bg + <code>onSurface</code> 38% fg (Material disabled defaults)<br>동일: 그 외</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 body 하단 80px 비움 제거 — scaffold body 끝까지 차지. "파트너 직접 환불"이 핵심 다음 액션으로 부각.</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ─── State 3: Default · 환불 완료 ──────────── -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong>Default · 환불 완료</strong> <small>refundStatus == 'refunded' — 환불 정책 → 환불 완료 카드 swap · 심사 상태 badge neutral</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="state-mini__mock" rowspan="6">
+              <div class="viewport phd-viewport">
+                <div class="phd-appbar">
+                  <span class="phd-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></span>
+                  <h2>구매 상세</h2>
+                </div>
+                <div class="phd-body">
+                  <div class="phd-card">
+                    <div class="phd-hero__thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+                    <div class="phd-hero__title">봄 가든 파티</div>
+                    <div class="phd-hero__meta">4월 20일 (일) 18:00</div>
+                    <div class="phd-hero__meta phd-hero__meta--muted">서울숲 가든존</div>
+                  </div>
+                  <div class="phd-card">
+                    <div class="phd-listtile">
+                      <div class="phd-listtile__main">
+                        <span class="phd-listtile__label">심사 상태</span>
+                        <span class="phd-listtile__subtitle">마지막 업데이트: 방금</span>
+                      </div>
+                      <span class="phd-listtile__trail">
+                        <span class="phd-status-badge phd-status-badge--neutral">취소됨</span>
+                        <span class="phd-status-badge phd-status-badge--neutral">환불 완료</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                      </span>
+                    </div>
+                  </div>
+                  <!-- 환불 정보 카드 (결제 정보 카드 미노출 · 환불 정보로 통합 v1.4) -->
+                  <div class="phd-card">
+                    <div class="phd-section__title">환불 정보</div>
+                    <div class="phd-kv"><span class="phd-kv__label">환불일</span><span class="phd-kv__value">2026.04.13 11:08</span></div>
+                    <div class="phd-kv"><span class="phd-kv__label">티켓</span><span class="phd-kv__value">얼리버드 입장권</span></div>
+                    <div class="phd-kv"><span class="phd-kv__label">결제 금액</span><span class="phd-kv__value">15,000원</span></div>
+                    <div class="phd-kv"><span class="phd-kv__label">환불 비율</span><span class="phd-kv__value">80%</span></div>
+                    <div class="phd-kv"><span class="phd-kv__label">환불 금액</span><span class="phd-kv__value phd-kv__value--strong">12,000원</span></div>
+                    <div class="phd-kv"><span class="phd-kv__label">수수료</span><span class="phd-kv__value">3,000원</span></div>
+                    <button class="phd-card-action">영수증</button>
+                  </div>
+                  <div class="phd-card">
+                    <div class="phd-section__title">파트너</div>
+                    <div class="phd-partner-row">
+                      <div class="phd-partner-row__avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l1-4h16l1 4"/></svg></div>
+                      <div class="phd-partner-row__text">
+                        <div class="phd-partner-row__name">서울숲 파티</div>
+                        <div class="phd-partner-row__intro">야외 가든 모임 전문</div>
+                      </div>
+                      <div class="phd-partner-row__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+                    </div>
+                    <button class="phd-card-action">문의하기</button>
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>↔ 환불이 이미 처리 완료된 결제 (<code>refundStatus == 'refunded'</code>). status는 cancelled 또는 종결 상태.</td>
+          </tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>− "예매 취소" 탭 (환불 정책 → 환불 정보 카드 swap으로 버튼 자체 미렌더)<br>↔ "영수증" 탭 (위치가 환불 정보 카드 내부로 이동 · paymentId 있을 때만)<br>동일: 심사 상태 row / 파트너 row / 문의하기 / 뒤로<br>− 환불 정책 단계 안내 액션 없음 (이미 환불 완료)</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>· <strong>결제 정보 카드 미노출 (v1.4)</strong> — 환불된 결제는 결제 사실보다 환불 결과가 핵심이라 결제 정보를 환불 정보 카드로 통합. 결제일/티켓/결제 금액/환불일/환불 비율/환불 금액/수수료 모두 한 카드<br>· 환불 비율 / 환불 금액 / 수수료가 누락된 결제 (구버전) → 해당 행 미렌더, "환불일"·"결제 금액"만 표시<br>· 환불 처리 직후 list invalidate되며 detail unmount → 다시 진입 시 이 state 표시<br>· 심사 상태 row의 StatusBadge: cancelled(취소됨 · neutral) 또는 rejected(거절됨 · error)</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>− 예매 취소 버튼 (환불 정보 카드에는 없음 · v1.6)<br>− <strong>결제 정보 카드 전체</strong> (v1.4 · 환불 정보 카드로 통합)<br>↔ 환불 정책 카드 (플랫폼 + 파트너 두 섹션) → <strong>환불 정보 카드</strong> (KeyValueRow × 6 + 영수증 버튼)<br>↔ 심사 상태 row의 StatusBadge: success → neutral / error<br>+ <strong>RefundBadge "환불 완료"</strong> (StatusBadge 옆에 함께 노출 · v1.5)</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>↔ 환불 정책 row 토큰 미사용 → KeyValueRow 토큰 (이전 결제 정보 카드의 패턴 재사용)<br>− <code>color-error</code> · errorContainer tint</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 환불 정보 카드의 6행 = 결제 정보 3행(티켓 · 결제 금액) + 환불 결과 4행(환불일·비율·금액·수수료) 통합. 사용자가 한 카드에서 "원래 얼마 → 얼마 돌려받음"을 비교 가능. 환불 처리 시점(환불일)은 EF 응답 또는 별도 컬럼 추가 필요 (TBD).</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ─── State 4: Default · 결제 실패 ──────────── -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong>Default · 결제 실패</strong> <small>payment_failed — 환불 자체 개념 없음 · 환불 카드 미노출 · 심사 상태 badge error</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="state-mini__mock" rowspan="6">
+              <div class="viewport phd-viewport">
+                <div class="phd-appbar">
+                  <span class="phd-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></span>
+                  <h2>구매 상세</h2>
+                </div>
+                <div class="phd-body">
+                  <div class="phd-card">
+                    <div class="phd-hero__thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+                    <div class="phd-hero__title">봄 가든 파티</div>
+                    <div class="phd-hero__meta">4월 20일 (일) 18:00</div>
+                    <div class="phd-hero__meta phd-hero__meta--muted">서울숲 가든존</div>
+                  </div>
+                  <div class="phd-card">
+                    <div class="phd-listtile">
+                      <div class="phd-listtile__main">
+                        <span class="phd-listtile__label">심사 상태</span>
+                        <span class="phd-listtile__subtitle">마지막 업데이트: 5일 전</span>
+                      </div>
+                      <span class="phd-listtile__trail">
+                        <span class="phd-status-badge phd-status-badge--error">결제 실패</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                      </span>
+                    </div>
+                  </div>
+                  <div class="phd-card">
+                    <div class="phd-section__title">결제 정보</div>
+                    <div class="phd-kv"><span class="phd-kv__label">결제 시도일</span><span class="phd-kv__value">2026.04.18 21:14</span></div>
+                    <div class="phd-kv"><span class="phd-kv__label">티켓</span><span class="phd-kv__value">얼리버드 입장권</span></div>
+                    <div class="phd-kv"><span class="phd-kv__label">결제 시도 금액</span><span class="phd-kv__value phd-kv__value--strong">15,000원</span></div>
+                    <!-- 영수증 버튼 미노출 — paymentId 없음 -->
+                  </div>
+                  <div class="phd-card">
+                    <div class="phd-section__title">파트너</div>
+                    <div class="phd-partner-row">
+                      <div class="phd-partner-row__avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l1-4h16l1 4"/></svg></div>
+                      <div class="phd-partner-row__text">
+                        <div class="phd-partner-row__name">서울숲 파티</div>
+                        <div class="phd-partner-row__intro">야외 가든 모임 전문</div>
+                      </div>
+                      <div class="phd-partner-row__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+                    </div>
+                    <button class="phd-card-action">문의하기</button>
+                  </div>
+                  <!-- 환불 정책 / 환불 정보 카드 모두 미노출 -->
+                </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>↔ 결제 자체가 실패한 상태 (PG 인증 실패 / 카드 잔액 부족 / 네트워크 오류 등). <strong>결제 행위가 일어나지 않았으므로 환불 자체 개념 없음</strong> — refundStatus는 'none'이어야 정상.</td>
+          </tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>− "영수증" 탭 (paymentId 없음 → 버튼 미노출)<br>− "예매 취소" 탭 (환불 정책 카드 미노출로 버튼 자체 미렌더)<br>+ <strong>심사 상태 row</strong>가 핵심 다음 액션 — 결제 실패 원인을 심사 detail에서 확인<br>동일: 파트너 row / 문의하기 / 뒤로<br><em>실제로는 별도 "다시 결제" 흐름이 필요하지만 현재 spec 범위 외 — Phase 2</em></td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>· paymentId가 null이라 영수증 버튼 자동 미노출<br>· "환불 정책" / "환불 정보" 카드 둘 다 미노출 — 환불 자체 개념이 없는 케이스<br>· StatusBadge: error red — 사용자가 즉시 "뭔가 잘못됨" 인지<br>· 결제 정보 카드 라벨 미세 조정: 첫 행 "결제일" → "<strong>결제 시도일</strong>" (createdAt 사용 · 실제 결제 없음), 마지막 행 "결제 금액" → "<strong>결제 시도 금액</strong>" (실제 결제 안 됐음을 명확히 · v1.8)</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>− 환불 정책 / 환불 정보 card 전체 → 예매 취소 버튼도 자동 미렌더<br>− 영수증 <code>TextButton</code> (paymentId 없음)<br>↔ 심사 상태 row의 <code>StatusBadge</code> 색 → error</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>↔ status color: success → <code>color-error</code> (badge)<br>− 환불 정책 관련 토큰 미사용</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 v1.5: State 4를 payment_failed 단독으로 좁힘. cancelled / rejected는 (사용자 도메인 가정) refundStatus 'refunded'와 함께 와 State 3(환불 완료)로 분류됨. 이 가정이 깨지는 케이스(rejected + 'none' 등)는 비정상 — 후속에서 backend 일관성 확보 필요.</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ─── State 5: Default · 무료 티켓 ──────────── -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong>Default · 무료 티켓</strong> <small>paymentId 없음 · 영수증 미노출 · "신청 취소 안내" 카드 + 카드 내 "신청 취소" 버튼 active</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="state-mini__mock" rowspan="6">
+              <div class="viewport phd-viewport">
+                <div class="phd-appbar">
+                  <span class="phd-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></span>
+                  <h2>구매 상세</h2>
+                </div>
+                <div class="phd-body">
+                  <div class="phd-card">
+                    <div class="phd-hero__thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+                    <div class="phd-hero__title">오픈 카페 모임 — 무료</div>
+                    <div class="phd-hero__meta">5월 8일 (금) 19:00</div>
+                    <div class="phd-hero__meta phd-hero__meta--muted">홍대입구역 9번 출구 · 카페노아</div>
+                  </div>
+                  <div class="phd-card">
+                    <div class="phd-listtile">
+                      <div class="phd-listtile__main">
+                        <span class="phd-listtile__label">심사 상태</span>
+                        <span class="phd-listtile__subtitle">마지막 업데이트: 5시간 전</span>
+                      </div>
+                      <span class="phd-listtile__trail">
+                        <span class="phd-status-badge phd-status-badge--success">신청완료</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                      </span>
+                    </div>
+                  </div>
+                  <div class="phd-card">
+                    <div class="phd-section__title">결제 정보</div>
+                    <div class="phd-kv"><span class="phd-kv__label">신청일</span><span class="phd-kv__value">2026.05.01 22:08</span></div>
+                    <div class="phd-kv"><span class="phd-kv__label">티켓</span><span class="phd-kv__value">무료 입장권</span></div>
+                    <div class="phd-kv"><span class="phd-kv__label">결제 금액</span><span class="phd-kv__value phd-kv__value--strong">0원</span></div>
+                  </div>
+                  <div class="phd-card">
+                    <div class="phd-section__title">신청 취소 안내</div>
+                    <div class="phd-refund-section">
+                      <div class="phd-policy-row phd-policy-row--current"><span class="phd-policy-row__label">이벤트 시작 전</span><span class="phd-policy-row__value">언제든 신청 취소</span></div>
+                      <div class="phd-policy-row"><span class="phd-policy-row__label">이벤트 시작 후</span><span class="phd-policy-row__value">취소 불가</span></div>
+                      <div class="phd-refund-section__copy" style="margin-top: 12px; margin-bottom: 0;">무료 티켓은 환불 절차 없이 신청 취소만 진행됩니다.</div>
+                    </div>
+                    <button class="phd-card-cancel">신청 취소</button>
+                  </div>
+                  <div class="phd-card">
+                    <div class="phd-section__title">파트너</div>
+                    <div class="phd-partner-row">
+                      <div class="phd-partner-row__avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l1-4h16l1 4"/></svg></div>
+                      <div class="phd-partner-row__text">
+                        <div class="phd-partner-row__name">카페노아</div>
+                        <div class="phd-partner-row__intro">홍대 모임 전문 카페</div>
+                      </div>
+                      <div class="phd-partner-row__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+                    </div>
+                    <button class="phd-card-action">문의하기</button>
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>↔ 결제 금액이 0원이고 결제 식별자가 없는 무료 신청. 활성 + 시작 전이면 취소(=신청 취소) 가능.</td>
+          </tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>− "영수증" 탭 (버튼 미노출)<br>↔ "예매 취소" → 환불 다이얼로그 (state 8) — 비율 100% / 금액 0원 / 수수료 0원으로 단순화<br>동일: 심사 상태 row / 파트너 row / 문의하기 / 스크롤 / 뒤로</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>· 결제 정보 카드 첫 행 라벨이 "신청일" (paid 이력 없으므로 createdAt 사용)<br>· 환불 정책 카드 → "신청 취소 안내" 카드로 카피·구조 단순화 (플랫폼/파트너 두 갈래 분리 제거 · 단계 2개)<br>· 심사 상태 row badge 라벨이 "신청완료" (결제 개념이 아니므로 미세 조정)</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>− 영수증 <code>TextButton</code><br>↔ "환불 정책" → "신청 취소 안내" 카드 (단계 row × 2 + 안내 문구 · 파트너 환불 섹션 미노출)</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>동일 (Default 활성 참조)</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 무료 변형은 RefundCalculator를 거치지 않고 고정 문구. 정책 spec 동기화 불필요. "신청 취소" 카피는 무료에서만, 유료는 "예매 취소" 그대로.</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ─── State 6: Loading ──────────── -->
+      <table class="ref state-mini">
+        <thead><tr><th colspan="3"><strong>Loading</strong> <small>async fetch 진행 중</small></th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="state-mini__mock" rowspan="6">
+              <div class="viewport phd-viewport">
+                <div class="phd-appbar">
+                  <span class="phd-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></span>
+                  <h2>구매 상세</h2>
+                </div>
+                <div class="phd-loading"><div class="phd-spinner"></div></div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>화면 진입 직후 결제 1건의 정보를 불러오는 중. (list에서 객체를 함께 push하면 거의 발생하지 않고, applicationId만으로 진입한 경우에만 보임)</td>
+          </tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>↔ 모든 액션 무반응<br>동일: 뒤로 → list로 복귀</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>· 네트워크가 느리면 spinner가 길게 노출<br>· 인증 만료 시 자동으로 오류 상태로 전환</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ 5 카드 전부 → <code>MinglitCircularProgressIndicator</code> · 화면 중앙</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>− 카드 토큰 모두 미사용<br>+ <code>color-primary</code> (spinner)<br>동일: <code>color-surface</code> scaffold bg</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 list에서 객체를 함께 넘기면 즉시 default state — Loading은 deep-link에서만.</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ─── State 7: Error ──────────── -->
+      <table class="ref state-mini">
+        <thead><tr><th colspan="3"><strong>Error</strong> <small>fetch 실패 — 네트워크 / RLS / 서버</small></th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="state-mini__mock" rowspan="6">
+              <div class="viewport phd-viewport">
+                <div class="phd-appbar">
+                  <span class="phd-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></span>
+                  <h2>구매 상세</h2>
+                </div>
+                <div class="phd-error">
+                  <div class="phd-error__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="13"/><circle cx="12" cy="16.5" r="0.7" fill="currentColor"/></svg></div>
+                  <div class="phd-error__title">오류가 발생했습니다.</div>
+                </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>↔ 네트워크 / 권한 / 서버 오류로 결제 1건을 받아오지 못한 상태.</td>
+          </tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>− 모든 카드/버튼 액션 없음<br>동일: 뒤로 → list로 복귀<br>− 화면 내 재시도 버튼 없음</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>· 에러 본문 노출 X (디버깅은 logger / Sentry)<br>· 토큰 만료도 동일 error 화면</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ 5 카드 전부 → <code>_DefaultErrorView</code> (Icons.error_outline + Text)</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>− 카드 토큰 미사용<br>+ <code>color-error</code> (icon)<br>+ <code>color-text-primary</code> (title)<br>+ spacing: <code>spacing-large</code> · <code>spacing-medium</code></td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 화면 내 재시도 CTA 없음 (list spec과 동일).</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ─── State 8: Refund Confirm Dialog ──────────── -->
+      <table class="ref state-mini">
+        <thead><tr><th colspan="3"><strong>Refund Confirm Dialog</strong> <small>"예매 취소" tap → MinglitDialog overlay</small></th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="state-mini__mock" rowspan="6">
+              <div class="viewport phd-viewport">
+                <div class="phd-appbar">
+                  <span class="phd-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></span>
+                  <h2>구매 상세</h2>
+                </div>
+                <div class="phd-body" style="opacity:0.4;">
+                  <div class="phd-card">
+                    <div class="phd-hero__thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/></svg></div>
+                    <div class="phd-hero__title">스피드 데이팅 · 강남 라운지</div>
+                    <div class="phd-hero__meta">5월 4일 (월) 20:00</div>
+                  </div>
+                </div>
+                <div class="phd-dialog-shade">
+                  <div class="phd-dialog">
+                    <div class="phd-dialog__title">예매 취소 확인</div>
+                    <div class="phd-dialog__event-name">스피드 데이팅 · 강남 라운지</div>
+                    <div class="phd-dialog__row"><span>결제 금액</span><span>25,000원</span></div>
+                    <div class="phd-dialog__row"><span>환불 비율</span><span>80%</span></div>
+                    <div class="phd-dialog__row"><span>환불 금액</span><span>20,000원</span></div>
+                    <div class="phd-dialog__row"><span>수수료</span><span>5,000원</span></div>
+                    <div class="phd-dialog__note">환불 수수료는 취소 시점에 따라 달라집니다.</div>
+                    <div class="phd-dialog__actions">
+                      <button class="phd-dialog__btn phd-dialog__btn--text">닫기</button>
+                      <button class="phd-dialog__btn phd-dialog__btn--danger">예매 취소</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>+ "예매 취소" tap → 정책 조회 → 환불 비율 계산 → 0%가 아닐 때만 다이얼로그 표시. 0%이면 환불 불가 안내로 분기.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              + <strong>"예매 취소" 탭</strong> → 환불 처리 → 성공 시 "예매가 취소되었습니다." + list로 복귀<br>
+              + <strong>"닫기" 탭</strong> → 다이얼로그 닫힘 + detail로 복귀<br>
+              + <strong>scrim 탭</strong> → "닫기"와 동일<br>
+              + <strong>환불 처리 실패</strong> → "다시 시도 / 닫기" 옵션이 있는 오류 다이얼로그
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td>
+              · 무료 티켓: 비율 100 / 금액 0 / 수수료 0 고정<br>
+              · 정책 조회 실패: 기본 정책(2/7) fallback — 사용자에게 에러 노출 없음<br>
+              · 비율 0%: 다이얼로그 미노출 → "환불 불가" 안내로 분기<br>
+              · 결제 정보 누락: "환불 정보를 확인할 수 없습니다" 안내<br>
+              · 환불 처리 중: 글로벌 dim + spinner (별도 spec)
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>
+              + <code>MinglitDialog.show&lt;bool&gt;</code><br>
+              + content: Column(eventName titleSmall bold + <code>_RefundRow</code> × 4 + 안내 bodySmall onSurfaceVariant)<br>
+              + <code>_RefundRow</code> (private · part of detail page)<br>
+              + actions: <code>TextButton</code> "닫기" + <code>ElevatedButton</code> "예매 취소" (errorContainer / onErrorContainer)<br>
+              + 실패 시 <code>MinglitDialog.show</code>("환불 처리 실패")<br>
+              + 환불 불가 / 결제 정보 누락 시 <code>context.showMinglitAlert</code>
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>
+              + <code>color-background</code> (dialog bg)<br>
+              + <code>color-text-primary</code> · <code>color-text-secondary</code><br>
+              + <code>color-error</code> + errorContainer tint<br>
+              + radius: <code>radius-card</code>, <code>radius-button</code><br>
+              + spacing: <code>spacing-large</code>, <code>spacing-medium</code>, <code>spacing-small</code>, <code>spacing-xsmall</code><br>
+              + scrim: 검은 알파 (Material default · 0.32~0.45)
+            </td>
+          </tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 list spec과 동일 다이얼로그를 detail로 이관 — list 카드는 다이얼로그 호출 책임을 잃음. 80% 예시는 "이벤트 시작 7d 전 + grace 통과" 케이스.</td></tr>
+        </tbody>
+      </table>
+
+    </div>
+  </section>
+</div>
+
+<!-- ============================================================
+     GLOBAL BEHAVIOR
+     ============================================================ -->
+<div class="perspective" id="global-behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">cross-cutting — 모든 state에 적용되는 액션, motion, 글로벌 에지케이스.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Cross-cutting interactions</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 220px;">사용자 액션</th><th>화면에 보이는 결과</th></tr></thead>
+      <tbody>
+        <tr><td>뒤로 가기</td><td>구매 내역 리스트로 복귀.</td></tr>
+        <tr><td>다크 모드 토글</td><td>scaffold / 카드 / dialog 모두 dark 토큰으로 swap. StatusBadge는 light/dark colorset 분리. 예매 취소 버튼 disabled 색도 dark onSurface 알파로 자동 swap.</td></tr>
+        <tr><td>버튼 / row tap haptic</td><td>InkWell ripple + Material default haptic light. 카드 본체 자체는 tap 액션 없음 — 심사 상태 row / 파트너 row / 영수증 / 문의 / 예매 취소 버튼만 액션.</td></tr>
+        <tr><td>풀-다운 새로고침</td><td><strong>구현 안 함</strong> — 단일 결제 detail이라 갱신은 (a) 환불 성공 후 list로 복귀 (b) 화면 재진입.</td></tr>
+        <tr><td>리스트 → detail push (entry)</td><td>list 카드 tap → <code>extra: application</code>으로 함께 push 권장. applicationId만으로 deep-link도 허용 — 이때 Loading.</td></tr>
+        <tr><td>외부 url_launcher 실패</td><td>browser·dialer·메일앱 부재 시 launchUrl false → <code>showMinglitWarning</code> 토스트.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Motion timing</h2>
+    <p class="intro">Source: <code>shared/packages/mds/core/lib/src/theme/minglit_design_tokens.dart</code> → <code>MinglitAnimation</code>.</p>
+    <table class="ref">
+      <thead><tr><th style="width: 240px;">Transition</th><th style="width: 200px;">Token / Duration</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>list → detail push</td><td><code>MinglitAnimation.fast</code> (200ms)</td><td>GoRouter Material default 좌→우 slide.</td></tr>
+        <tr><td>심사 상태 row tap → 심사 detail push</td><td><code>MinglitAnimation.fast</code> (200ms)</td><td>동일 GoRouter 패턴.</td></tr>
+        <tr><td>파트너 row tap → PartnerDetail push</td><td><code>MinglitAnimation.fast</code> (200ms)</td><td>동일 GoRouter 패턴.</td></tr>
+        <tr><td>"예매 취소" tap → MinglitDialog show</td><td><code>MinglitAnimation.medium</code> (350ms)</td><td>fade + scale-in.</td></tr>
+        <tr><td>EF cancelOrder 진행 중</td><td>—</td><td>화면 전체 dim + spinner (글로벌 로딩 오버레이).</td></tr>
+        <tr><td>환불 성공 → list로 복귀 + invalidate</td><td>cut</td><td>Navigator.maybePop + ref.invalidate. detail 화면 unmount.</td></tr>
+        <tr><td>InkWell ripple</td><td><code>MinglitAnimation.micro</code> (100ms)</td><td>Material default ripple.</td></tr>
+        <tr><td>예매 취소 버튼 active/disabled (canCancel 변동)</td><td>cut</td><td>화면 진입 시 한 번만 결정 — 시간 경과로 false 전환 시 재진입까지 갱신 안 됨. disabled 전환 시 fade 등 transition 없음 (re-render).</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Global edge cases</h2>
+    <ul class="notes">
+      <li><strong>paidAt 누락</strong> — webhook 처리 전이면 null. <code>paidAt ?? createdAt</code> fallback (Fix #579 패턴). 무료 티켓에서는 결제 정보 카드 첫 행 라벨이 "신청일"로 미세 조정.</li>
+      <li><strong>환불 정책 조회 실패</strong> — 기본 정책(grace 2h / cutoff 7d) fallback (Fix #133 패턴).</li>
+      <li><strong>이벤트 시작 후 cancel 시도</strong> — canCancel false면 환불 정책 카드 안 예매 취소 버튼이 disabled로 노출 (cursor not-allowed). 시간 경과 자동 재계산 안 됨 — 재진입 시 갱신.</li>
+      <li><strong>중복 invalidate 방지</strong> — onSuccess(maybePop) 후 invalidate (Fix #1951 패턴).</li>
+      <li><strong>contactOptions 누락</strong> — phone/email 모두 없으면 "연락처 정보가 없습니다" 토스트만. ④ 파트너 카드 + ⑥ 환불 정책 카드의 "문의하기"가 동일 fallback 경로.</li>
+      <li><strong>파트너 정보 누락</strong> — ⑤ 파트너 정보 카드 자체 미렌더 → 화면에서 "문의하기" 진입점이 사라짐. 환불 정책 카드의 안내 문구는 그대로 노출되지만 사용자는 다른 경로(고객센터 등)로 우회. <em>v1.3에서 환불 정책 카드의 CTA를 제거했기 때문에, 파트너 카드가 미렌더되면 in-app 문의 경로 자체가 끊김 — 후속 PR에서 fallback CTA(고객센터 등) 추가 검토 필요.</em></li>
+      <li><strong>iamport 영수증 URL 의존성</strong> — Phase 2에서 backend가 보낸 receipt URL 사용 검토.</li>
+      <li><strong>다크 모드</strong> — 카드 bg → <code>color-dark-surface</code>, scaffold → <code>color-dark-background</code>.</li>
+      <li><strong>접근성</strong> — 예매 취소 버튼 라벨 명확("예매 취소" / 무료는 "신청 취소"). disabled 상태도 screen reader가 "비활성화됨"을 읽을 수 있게 <code>aria-disabled</code> 또는 native <code>disabled</code> 속성 사용. 환불 정책 현재 단계 highlight는 색에만 의존하지 않고 row 위치/bold로도 식별 가능. 심사 상태 row의 StatusBadge 색은 8 status 분기가 명확한 라벨과 함께 노출됨.</li>
+    </ul>
+  </section>
+</div>
+
+<!-- ============================================================
+     REFERENCE
+     ============================================================ -->
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">📖</span>
+    <h2>Reference</h2>
+    <span class="lede">implementation source + 인접 화면. 🚧 디자인중 — 미존재 항목은 TBD.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Implementation source</h2>
+    <p class="intro">이 spec과 매칭되는 실제 Flutter source 위치. Status 🚧 디자인중이므로 대부분 TBD.</p>
+    <table class="ref">
+      <tbody>
+        <tr><th style="width: 200px;">Widget class</th><td><code>PurchaseHistoryDetailPage</code> · <code>TBD</code></td></tr>
+        <tr><th>File path</th><td><code>apps/app_user/lib/src/features/payment/ui/purchase_history_detail_page.dart</code> · <code>TBD</code></td></tr>
+        <tr><th>Refund row atom</th><td><code>_RefundRow</code> — list spec의 <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/payment/ui/purchase_history_refund_row.dart"><code>purchase_history_refund_row.dart</code></a>를 detail part로 이관 권장</td></tr>
+        <tr><th>Controller</th><td><code>PurchaseHistoryDetailController</code> · 또는 list와 동일 <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/payment/logic/purchase_history_controller.dart"><code>PurchaseHistoryController</code></a> 재사용 · <code>TBD</code></td></tr>
+        <tr><th>Route</th><td><code>PurchaseHistoryDetailRoute</code> · path: <code>/purchase-history/:applicationId</code> · <code>TBD</code></td></tr>
+        <tr><th>List entry</th><td><a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/routing/app_routes.dart"><code>app_routes.dart</code></a>의 <code>PurchaseHistoryRoute</code> 하위로 추가</td></tr>
+        <tr><th>Repository</th><td>list와 동일 — <code>eventRepositoryProvider.getMyPurchaseHistory(userId)</code>로 받은 list에서 단일 application을 push (extra) · 또는 <code>getApplicationById(id)</code> 별도 정의 · <code>TBD</code></td></tr>
+        <tr><th>Cancel EF</th><td><code>eventRepositoryProvider.cancelOrder(eventId, reason)</code> — list spec과 동일 EF 재사용</td></tr>
+        <tr><th>Policy repository</th><td><code>policyRepositoryProvider.getRefundPolicy()</code> — Fix #133 fallback</td></tr>
+        <tr><th>Refund calculator</th><td><code>RefundCalculator.calculate(...)</code></td></tr>
+        <tr><th>Async wrapper</th><td><a href="/components#MinglitAsyncValueWidget"><code>MinglitAsyncValueWidget</code></a></td></tr>
+        <tr><th>StatusBadge</th><td><a href="/components#StatusBadge"><code>StatusBadge</code></a> = <a href="/components#MinglitBadge"><code>MinglitBadge</code></a> · 8 status 분기 (심사 상태 row 내부에 inline)</td></tr>
+        <tr><th>예매 취소 버튼</th><td>환불 정책 카드 내 <code>FilledButton</code>(또는 <code>ElevatedButton</code>) — Material default disabled style 적용 · 별도 <code>MinglitBottomCta</code> 미사용 (v1.6)</td></tr>
+        <tr><th>KeyValueRow</th><td><a href="/components#MinglitKeyValueRow"><code>MinglitKeyValueRow</code></a> — 결제 정보 / 환불 완료 카드</td></tr>
+        <tr><th>MinglitDialog</th><td><a href="/components#MinglitDialog"><code>MinglitDialog.show&lt;T&gt;</code></a> — 환불 confirm</td></tr>
+        <tr><th>External launcher</th><td><code>url_launcher.launchUrl</code> — 영수증·tel:·mailto:</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>후속 작업 (이 detail이 활성되려면 필요한 변경)</h2>
+    <p class="intro">이 spec은 <strong>이번 PR에서 spec만 머지</strong> · 아래 변경은 별도 후속 PR.</p>
+    <table class="ref">
+      <thead><tr><th style="width: 280px;">변경 항목</th><th>설명</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Flutter — canCancel 조건 확장</strong></td>
+          <td><code>PurchaseHistoryController.isActiveTicket</code>의 status 화이트리스트에 <code>pending</code>, <code>pending_review</code> 추가. 파트너 미수락 단계에서도 유저가 자유롭게 환불(=신청 취소) 가능하게.</td>
+        </tr>
+        <tr>
+          <td><strong>Flutter — detail 위젯/라우트 신규</strong></td>
+          <td><code>PurchaseHistoryDetailPage</code> + <code>PurchaseHistoryDetailRoute</code> 추가. list 카드 위젯의 <code>_onCancelPressed</code> / <code>_showRefundConfirmDialog</code> / <code>_showRefundErrorDialog</code> + <code>part 'purchase_history_refund_row.dart'</code>를 detail로 이관.</td>
+        </tr>
+        <tr>
+          <td><strong>Spec — list spec 슬림화</strong></td>
+          <td><a href="/specs/purchase_history_page.html"><code>PurchaseHistoryPage</code></a> 카드 sub-anatomy 축소: header(date · StatusBadge) + info(thumb · 제목 · 일시 · 장소) + 우측 chevron만. divider/pay-row/actions row 제거. 카드 자체가 tap target. State 5(Refund Confirm Dialog) 제거 — detail spec 단일 정의.</td>
+        </tr>
+        <tr>
+          <td><strong>Spec — 심사 상태 detail 신규 (가칭)</strong></td>
+          <td><code>event_application_review_page.html</code> 신규 spec — 거절 사유(<code>rejectionReason</code>) / 신청 답변 스냅샷(<code>VerificationSubmission.snapshotData</code>) / 검토 시점(<code>reviewedAt</code>) / 검토자(<code>reviewedBy</code>) / 단계별 진행 표시. 라우트 path: <code>/purchase-history/:applicationId/review</code> 등.</td>
+        </tr>
+        <tr>
+          <td><strong>Spec — 파트너 detail 확인</strong></td>
+          <td><a href="/specs/partner_detail_page.html"><code>PartnerDetailPage</code></a> 존재 여부 확인 · 미존재 시 별도 spec 작업 필요.</td>
+        </tr>
+        <tr>
+          <td><strong>Backend — refundedAt 컬럼</strong></td>
+          <td>State 3(환불 완료)의 환불 완료 카드 첫 행 "환불일"이 표시 가능하려면 EF 응답 또는 EventApplication에 환불 처리 시점 필요. 현재 <code>refundStatus</code>만 있고 시점 컬럼 없음 — DB 마이그레이션 또는 응답 enrichment 필요.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 240px;">Spec</th><th>Relation</th></tr></thead>
+      <tbody>
+        <tr><td><a href="/specs/purchase_history_page.html"><code>PurchaseHistoryPage</code></a></td><td>부모 — list 카드 tap 시 detail push.</td></tr>
+        <tr><td><a href="/specs/partner_detail_page.html"><code>PartnerDetailPage</code></a></td><td>자식 — 파트너 row tap 시 push.</td></tr>
+        <tr><td><a href="/specs/event_application_review_page.html"><code>EventApplicationReviewPage</code></a> <em>(가칭)</em></td><td>자식 — 심사 상태 row tap 시 push. 거절 사유 / 신청 답변 / 검토 시점 등.</td></tr>
+        <tr><td><a href="/specs/my_tickets_page.html"><code>MyTicketsPage</code></a></td><td>형제 — active 티켓만. Phase 2에서 동일 detail로 deep-link 가능.</td></tr>
+        <tr><td><a href="/specs/event_detail_page.html"><code>EventDetailPage</code></a></td><td>EventApplicationWizard 결제 완료 후 detail로 직접 push redirect 가능 (Phase 2).</td></tr>
+        <tr><td><a href="/specs/login_page.html"><code>LoginPage</code></a></td><td>비로그인 deep-link 시 RLS 차단 → Error state.</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+</div>
+
+<script>
+  document.getElementById('spec-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('spec-mode', e.target.checked);
+  });
+  document.getElementById('dark-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('dark-mode', e.target.checked);
+  });
+</script>
+
+</body>
+</html>

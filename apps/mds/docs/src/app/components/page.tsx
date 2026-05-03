@@ -104,6 +104,9 @@ import MinglitContentLayoutSpec, {
 import MinglitHorizontalScrollGroupSpec, {
   GUIDELINE_RECIPES as MINGLIT_HORIZONTAL_SCROLL_GROUP_RECIPES,
 } from '@/components/specs/MinglitHorizontalScrollGroupSpec';
+import MinglitTimelineSpec, {
+  GUIDELINE_RECIPES as MINGLIT_TIMELINE_RECIPES,
+} from '@/components/specs/MinglitTimelineSpec';
 
 /**
  * Inline visual specs registered by component name.
@@ -159,6 +162,7 @@ const INLINE_SPECS: Record<string, InlineSpecModule> = {
   MinglitKeyValueRow:         { Visual: MinglitKeyValueRowSpec,         recipes: MINGLIT_KEY_VALUE_ROW_RECIPES },
   MinglitContentLayout:       { Visual: MinglitContentLayoutSpec,       recipes: MINGLIT_CONTENT_LAYOUT_RECIPES },
   MinglitHorizontalScrollGroup: { Visual: MinglitHorizontalScrollGroupSpec, recipes: MINGLIT_HORIZONTAL_SCROLL_GROUP_RECIPES },
+  MinglitTimeline:            { Visual: MinglitTimelineSpec,            recipes: MINGLIT_TIMELINE_RECIPES },
 };
 
 // ---------------------------------------------------------------------------
