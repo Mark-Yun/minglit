@@ -55,7 +55,7 @@ body.dark-mode .ph-appbar h2 { color: var(--color-dark-text-primary); }
 }
 body.dark-mode .ph-card { background: var(--color-dark-surface); }
 
-/* 1. Header row: paid date · StatusBadge */
+/* 1. Header row: paid date · "상세 보기" affordance */
 .ph-card__header {
   display: flex;
   align-items: center;
@@ -68,6 +68,15 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
   color: var(--color-text-secondary);
   letter-spacing: 0.02em;
 }
+.ph-card__more {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xsmall);
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+}
+.ph-card__more svg { width: 14px; height: 14px; }
 
 /* StatusBadge (= MinglitBadge tinted bg + color text) */
 .ph-status-badge {
@@ -124,6 +133,12 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
   flex-direction: column;
   gap: var(--spacing-xsmall);
 }
+.ph-card__badge-wrap {
+  /* StatusBadge above the title — left-aligned, inline-flex so the badge
+     hugs its content (no full-width stretch). */
+  display: flex;
+  margin-bottom: 2px;
+}
 .ph-card__title {
   font-size: 16px;
   font-weight: 700;
@@ -157,7 +172,6 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  margin-bottom: var(--spacing-medium);
 }
 .ph-card__ticket-name {
   font-size: 14px;
@@ -175,19 +189,6 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
   flex-shrink: 0;
   margin-left: var(--spacing-medium);
 }
-
-/* --- Card chevron — InkWell tap affordance to detail page --- */
-.ph-card__chevron {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  margin-top: var(--spacing-xsmall);
-  color: var(--color-text-secondary);
-  font-size: 12px;
-  font-weight: 500;
-  gap: var(--spacing-xsmall);
-}
-.ph-card__chevron svg { width: 14px; height: 14px; }
 
 /* --- Empty state (centered Text only) --- */
 .ph-empty {
@@ -343,7 +344,7 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
         <td>2026-05-03</td>
         <td>1.1</td>
         <td>mark-yun</td>
-        <td>책임 분리 정리 (PR #2094 후속). 카드의 인라인 액션(영수증 / 문의하기 / 예매 취소) + 환불 confirm 다이얼로그 state를 상세 페이지로 위임. 카드는 header / info / divider / pay-row + chevron 4섹션으로 단순화. State 5(Refund confirm) 제거 → 4 state. canCancel 판정 / contactOptions fallback / 환불 정책 조회 / iamport 영수증 등 detail-page 책임도 본 spec에서 모두 제거.</td>
+        <td>책임 분리 정리 (PR #2094 후속). 카드의 인라인 액션(영수증 / 문의하기 / 예매 취소) + 환불 confirm 다이얼로그 state를 상세 페이지로 위임. 카드는 header / info / divider / pay-row 4 region. State 5(Refund confirm) 제거 → 4 state. canCancel 판정 / contactOptions fallback / 환불 정책 조회 / iamport 영수증 등 detail-page 책임도 본 spec에서 모두 제거. <strong>StatusBadge 위치를 header 우측 → info row 내 이벤트 타이틀 위로 이동</strong>해 시각적 묶음 강화, header 우측은 '상세 보기' affordance가 차지.</td>
       </tr>
       <tr>
         <td>2026-05-01</td>
@@ -391,7 +392,7 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
 
         <!-- Card 1 -->
         <div class="blueprint__region blueprint__region--shaded" style="top:72px;left:16px;right:16px;height:188px;">
-          <span class="blueprint__region-label">② PurchaseHistoryCard #1<br>header / info / divider / pay-row / chevron</span>
+          <span class="blueprint__region-label">② PurchaseHistoryCard #1<br>header(date · 상세 보기) / info(thumb · badge+title+meta) / divider / pay-row</span>
         </div>
 
         <!-- gap -->
@@ -422,12 +423,11 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
          └─ <b>PurchaseHistoryCard</b> × n                       ← ② / ③
             └─ <b>InkWell</b>(onTap → push <a href="/specs/purchase_history_detail_page.html">PurchaseHistoryDetailRoute</a>(applicationId))
                └─ Container · radius-card · 1px outlineVariant · shadowXs · pad-medium
-                  ├─ <em>1. Header Row</em>: paidAt(yyyy.MM.dd) ↔ <b>StatusBadge</b>
+                  ├─ <em>1. Header Row</em>: paidAt(yyyy.MM.dd) ↔ Text('상세 보기') + Icon(chevron_right · 14 · text-secondary)
                   ├─ SizedBox(spacing-medium)
-                  ├─ <em>2. Info Row</em>: 80×80 thumb (<b>MinglitImage</b>) + Column(title titleMedium bold · "M월 d일 (E) HH:mm" bodySmall · location bodySmall onSurfaceVariant)
+                  ├─ <em>2. Info Row</em>: 80×80 thumb (<b>MinglitImage</b>) + Column(<b>StatusBadge</b> inline-flex · title titleMedium bold · "M월 d일 (E) HH:mm" bodySmall · location bodySmall onSurfaceVariant)
                   ├─ <b>Divider</b>(height: <i>spacing-xlarge 32</i>)
-                  ├─ <em>3. Pay Row</em>: ticket name bodyMedium ↔ "{amount}원" bodyLarge bold
-                  └─ <em>4. Chevron Row</em>: Text('상세 보기') + Icon(chevron_right · 14 · text-secondary)</div>
+                  └─ <em>3. Pay Row</em>: ticket name bodyMedium ↔ "{amount}원" bodyLarge bold</div>
     </div>
 
     <table class="ref" style="margin-top: 16px;">
@@ -442,7 +442,7 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
       <tbody>
         <tr><td>—</td><td>Body padding</td><td>—</td><td>ListView padding all: <code>spacing-medium (16)</code></td></tr>
         <tr><td>①</td><td>AppBar</td><td>title left + auto back arrow (Material default · push 진입 시 자동)</td><td>height: 56 · scaffold gray bg · <strong>border-bottom 없음</strong></td></tr>
-        <tr><td>②③</td><td>PurchaseHistoryCard</td><td>list child (full width inside list padding) · 카드 전체가 InkWell — 탭하면 상세 push</td><td>padding all: <code>medium (16)</code> · radius: <code>radius-card (16)</code> · 1px outlineVariant border · boxShadow blur 8 offset (0,2) opacity <code>shadowXs (0.06)</code> · header→info: <code>medium</code> · info↔divider: <code>xlarge (32, divider 자체 height)</code> · divider→pay-row: 0 (Divider 내장) · pay-row→chevron: <code>xsmall (4)</code></td></tr>
+        <tr><td>②③</td><td>PurchaseHistoryCard</td><td>list child (full width inside list padding) · 카드 전체가 InkWell — 탭하면 상세 push</td><td>padding all: <code>medium (16)</code> · radius: <code>radius-card (16)</code> · 1px outlineVariant border · boxShadow blur 8 offset (0,2) opacity <code>shadowXs (0.06)</code> · header→info: <code>medium</code> · info↔divider: <code>xlarge (32, divider 자체 height)</code> · divider→pay-row: 0 (Divider 내장) · 카드 하단은 padding-medium만 (행 하나로 종결)</td></tr>
         <tr><td>—</td><td>list separator</td><td>vertical SizedBox</td><td>SizedBox height <code>spacing-medium (16)</code></td></tr>
       </tbody>
     </table>
@@ -451,23 +451,22 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
   <section class="doc">
     <h2>PurchaseHistoryCard sub-anatomy</h2>
     <p class="intro">
-      카드는 항상 5 region(header / info / divider / pay-row / chevron). 가변 요소는 StatusBadge의 색·라벨(8 status)뿐 — 모든 카드는 동일 높이.
+      카드는 항상 4 region(header / info / divider / pay-row). 가변 요소는 StatusBadge의 색·라벨(8 status)뿐 — 모든 카드는 동일 높이. StatusBadge는 info row 안에서 이벤트 타이틀 위에 inline으로 노출 (← 시각적 묶음 강화).
     </p>
     <table class="ref">
       <thead>
         <tr><th style="width: 200px;">Region</th><th>Alignment</th><th>Notes</th></tr>
       </thead>
       <tbody>
-        <tr><td>1. Header (date + StatusBadge)</td><td>spaceBetween · 좌우 끝</td><td>좌: <code>paidAt ?? createdAt</code>를 <code>toLocal()</code> 후 <code>yyyy.MM.dd</code> 포맷 (Fix #579 · UTC→KST 날짜 차이 방지) · labelMedium onSurfaceVariant. 우: <a href="/components#StatusBadge"><code>StatusBadge</code></a> = <code>MinglitBadge</code> (8 status 분기 · Fix #1236, #1541)</td></tr>
-        <tr><td>2. Info row</td><td>start cross-axis</td><td>thumb 80×80 (<code>MinglitImage</code> · radius-small · BoxFit.cover · imageUrl 없으면 placeholder) + <code>spacing-medium</code> gap + Expanded Column(eventName titleMedium bold maxLines 1 ellipsis · "M월 d일 (E) HH:mm" bodySmall · location bodySmall onSurfaceVariant)</td></tr>
+        <tr><td>1. Header (date · 상세 보기)</td><td>spaceBetween · 좌우 끝</td><td>좌: <code>paidAt ?? createdAt</code>를 <code>toLocal()</code> 후 <code>yyyy.MM.dd</code> 포맷 (Fix #579 · UTC→KST 날짜 차이 방지) · labelMedium onSurfaceVariant. 우: Text('상세 보기') 12px w500 secondary + Icon(chevron_right · 14px · text-secondary) — 카드 전체가 InkWell이라 어디를 탭해도 push되지만 affordance signal로 노출.</td></tr>
+        <tr><td>2. Info row (thumb · 텍스트 column)</td><td>start cross-axis</td><td>thumb 80×80 (<code>MinglitImage</code> · radius-small · BoxFit.cover · imageUrl 없으면 placeholder) + <code>spacing-medium</code> gap + Expanded Column [<a href="/components#StatusBadge"><code>StatusBadge</code></a>(inline-flex · 자기 폭만 차지, 좌측 정렬) · eventName titleMedium bold maxLines 1 ellipsis · "M월 d일 (E) HH:mm" bodySmall · location bodySmall onSurfaceVariant]. badge ↔ title gap 2px (xsmall 미만 — 시각적 묶음 강조).</td></tr>
         <tr><td>3. Divider</td><td>—</td><td><code>Divider(height: spacing-xlarge 32)</code> — 1px line + 16/16 v-margin (Material Divider default)</td></tr>
         <tr><td>4. Pay row</td><td>spaceBetween baseline</td><td>좌: ticket name bodyMedium · 우: <code>NumberFormat('#,###').format(paymentAmount ?? 0) + '원'</code> bodyLarge bold. 무료 티켓이면 "0원"으로 표기.</td></tr>
-        <tr><td>5. Chevron row</td><td>row trailing · 우측 정렬</td><td>Text('상세 보기') 12px w500 secondary + Icon(chevron_right · 14px · text-secondary). 카드 전체가 InkWell 안에 있어 어디를 탭해도 동일하게 push — chevron은 affordance signal일 뿐.</td></tr>
       </tbody>
     </table>
 
     <p class="intro" style="margin-top: 12px;">
-      <strong>v1.1 변경 메모</strong>: v1에서는 카드 마지막에 액션 row(영수증 / 문의하기 / 예매 취소)가 있었고 canCancel 판정 / contactOptions fallback 로직이 list spec에 포함되어 있었다. v1.1에서는 모두 <a href="/specs/purchase_history_detail_page.html">상세 페이지</a>로 위임 — 본 spec은 카드 시그널만 다룬다.
+      <strong>v1.1 변경 메모</strong>: v1에서는 카드 마지막에 액션 row(영수증 / 문의하기 / 예매 취소)가 있었고 canCancel 판정 / contactOptions fallback 로직이 list spec에 포함되어 있었다. v1.1에서는 모두 <a href="/specs/purchase_history_detail_page.html">상세 페이지</a>로 위임 — 본 spec은 카드 시그널만 다룬다. StatusBadge 위치도 header 우측 → info row 안 (이벤트 타이틀 위)으로 이동해 시각적 묶음을 강화하고, header 우측은 '상세 보기' affordance가 차지한다.
     </p>
   </section>
 </div>
@@ -509,7 +508,10 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
                 <div class="ph-card">
                   <div class="ph-card__header">
                     <span class="ph-card__date">2026.04.28</span>
-                    <span class="ph-status-badge ph-status-badge--success">결제완료</span>
+                    <span class="ph-card__more">
+                      상세 보기
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                    </span>
                   </div>
                   <div class="ph-card__info">
                     <div class="ph-card__thumb">
@@ -517,6 +519,7 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="12" cy="15" r="2"/></svg>
                     </div>
                     <div class="ph-card__text">
+                      <div class="ph-card__badge-wrap"><span class="ph-status-badge ph-status-badge--success">결제완료</span></div>
                       <div class="ph-card__title">스피드 데이팅 · 강남 라운지</div>
                       <div class="ph-card__meta">5월 4일 (월) 20:00</div>
                       <div class="ph-card__meta ph-card__meta--muted">강남역 5번 출구 · 라운지B</div>
@@ -527,23 +530,23 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
                     <span class="ph-card__ticket-name">스탠다드 입장권</span>
                     <span class="ph-card__amount">25,000원</span>
                   </div>
-                  <div class="ph-card__chevron">
-                    <span>상세 보기</span>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-                  </div>
                 </div>
 
                 <!-- Card 2 — cancelled (status badge만 다름 · 동일 높이) -->
                 <div class="ph-card">
                   <div class="ph-card__header">
                     <span class="ph-card__date">2026.04.10</span>
-                    <span class="ph-status-badge ph-status-badge--neutral">취소됨</span>
+                    <span class="ph-card__more">
+                      상세 보기
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                    </span>
                   </div>
                   <div class="ph-card__info">
                     <div class="ph-card__thumb">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="12" cy="15" r="2"/></svg>
                     </div>
                     <div class="ph-card__text">
+                      <div class="ph-card__badge-wrap"><span class="ph-status-badge ph-status-badge--neutral">취소됨</span></div>
                       <div class="ph-card__title">봄 가든 파티</div>
                       <div class="ph-card__meta">4월 20일 (일) 18:00</div>
                       <div class="ph-card__meta ph-card__meta--muted">서울숲 가든존</div>
@@ -553,10 +556,6 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
                   <div class="ph-card__pay-row">
                     <span class="ph-card__ticket-name">얼리버드 입장권</span>
                     <span class="ph-card__amount">15,000원</span>
-                  </div>
-                  <div class="ph-card__chevron">
-                    <span>상세 보기</span>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
                   </div>
                 </div>
               </div>
@@ -589,10 +588,10 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
             · <code>Scaffold</code> + Material <code>AppBar(title: Text('구매 내역'))</code> — auto back arrow (push 진입)<br>
             · <a href="/components#MinglitAsyncValueWidget"><code>MinglitAsyncValueWidget&lt;List&lt;EventApplication&gt;&gt;</code></a> 외곽 wrapping<br>
             · <code>ListView.separated</code> · padding all medium · separator SizedBox medium<br>
-            · <code>PurchaseHistoryCard</code> (file-private · part of purchase_history_page.dart): InkWell wrap → Container + radius-card + 1px outlineVariant + shadowXs · 5-region Column<br>
-            · <a href="/components#StatusBadge"><code>StatusBadge</code></a> = <a href="/components#MinglitBadge"><code>MinglitBadge</code></a> tinted bg + color text (8 status 분기 · Fix #1236, #1541)<br>
+            · <code>PurchaseHistoryCard</code> (file-private · part of purchase_history_page.dart): InkWell wrap → Container + radius-card + 1px outlineVariant + shadowXs · 4-region Column<br>
+            · <a href="/components#StatusBadge"><code>StatusBadge</code></a> = <a href="/components#MinglitBadge"><code>MinglitBadge</code></a> tinted bg + color text (8 status 분기 · Fix #1236, #1541) — info row 안 이벤트 타이틀 위에 inline-flex로 배치<br>
             · <a href="/components#MinglitImage"><code>MinglitImage</code></a> 80×80 (radius-small)<br>
-            · <code>Icon(Icons.chevron_right · 14)</code> + <code>Text('상세 보기')</code> — affordance signal (Fix #1234 인라인 액션 폐기 후 도입)
+            · <code>Icon(Icons.chevron_right · 14)</code> + <code>Text('상세 보기')</code> — header 우측의 affordance signal (Fix #1234 인라인 액션 폐기 후 도입)
           </td>
         </tr>
         <tr>
