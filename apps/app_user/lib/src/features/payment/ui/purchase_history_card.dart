@@ -144,29 +144,36 @@ class PurchaseHistoryCard extends ConsumerWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Fix #1820: 무료 티켓(paymentId 없음)에서 영수증 버튼 노출 금지
-                if (paymentId != null && paymentId.isNotEmpty) ...[
-                  Expanded(
-                    child: TextButton(
-                      onPressed: () async {
+                // Fix #2076: 무료 티켓도 영수증 버튼 표시 — CUJ-U03 spec.
+                // 유료: iamport 링크 / 무료: 인앱 신청 확인서 다이얼로그
+                Expanded(
+                  child: TextButton(
+                    onPressed: () async {
+                      if (paymentId != null && paymentId.isNotEmpty) {
                         final receiptUrl = Uri.parse(
                           'https://service.iamport.kr/payments/detail/$paymentId',
                         );
-
                         final launched = await launchUrl(
                           receiptUrl,
                           mode: LaunchMode.externalApplication,
                         );
-
                         if (!launched && context.mounted) {
                           context.showMinglitWarning('영수증 페이지를 열 수 없습니다.');
                         }
-                      },
-                      child: const Text('영수증'),
-                    ),
+                      } else {
+                        await _showFreeTicketReceipt(
+                          context: context,
+                          eventName: eventName,
+                          dateLabel: dateLabel,
+                          ticketName: ticket?.name ?? '티켓 정보 없음',
+                          status: application.status,
+                        );
+                      }
+                    },
+                    child: const Text('영수증'),
                   ),
-                  const SizedBox(width: MinglitSpacing.small),
-                ],
+                ),
+                const SizedBox(width: MinglitSpacing.small),
                 Expanded(
                   child: TextButton(
                     onPressed: () async {
@@ -233,6 +240,44 @@ class PurchaseHistoryCard extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> _showFreeTicketReceipt({
+    required BuildContext context,
+    required String eventName,
+    required String dateLabel,
+    required String ticketName,
+    required String status,
+  }) async {
+    final theme = Theme.of(context);
+    await MinglitDialog.show<void>(
+      context: context,
+      title: '신청 확인서',
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _RefundRow(label: '이벤트', value: eventName),
+          _RefundRow(label: '일시', value: dateLabel),
+          _RefundRow(label: '티켓', value: ticketName),
+          const _RefundRow(label: '결제 금액', value: '0원'),
+          _RefundRow(label: '상태', value: status),
+          const SizedBox(height: MinglitSpacing.small),
+          Text(
+            '무료 티켓은 결제 영수증이 발행되지 않습니다.',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        ElevatedButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('확인'),
+        ),
+      ],
     );
   }
 
