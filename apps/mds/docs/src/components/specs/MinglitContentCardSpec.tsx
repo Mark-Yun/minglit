@@ -28,13 +28,21 @@ function ContentCardDemo({
   children,
   highlighted = false,
   tappable = false,
+  bordered = true,
   width,
 }: {
   children: ReactNode;
   highlighted?: boolean;
   tappable?: boolean;
+  bordered?: boolean;
   width?: number | string;
 }) {
+  // highlighted 우선 (선택 강조). bordered=false일 때 보더 자체 제거.
+  const border = highlighted
+    ? '1px solid var(--color-primary)'
+    : bordered
+      ? '1px solid var(--color-divider)'
+      : 'none';
   return (
     <div
       style={{
@@ -42,9 +50,7 @@ function ContentCardDemo({
         padding: '16px 16px',
         background: 'white',
         borderRadius: 16,
-        border: highlighted
-          ? '1px solid var(--color-primary)'
-          : '1px solid var(--color-divider)',
+        border,
         cursor: tappable ? 'pointer' : 'default',
         transition: 'box-shadow 0.15s',
       }}
@@ -126,6 +132,21 @@ export default function MinglitContentCardSpec() {
               ),
               description: 'onTap이 연결된 카드. 탭 시 카드 내부에 잉크 리플 효과가 둥근 모서리 안쪽까지 표시.',
             },
+            {
+              name: 'borderless (bordered=false)',
+              preview: (
+                <div style={{ background: 'var(--color-surface)', padding: 12, borderRadius: 12 }}>
+                  <ContentCardDemo width={216} bordered={false}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <span style={{ fontSize: 14, fontWeight: 600 }}>보더 없는 카드</span>
+                      <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>bg 대비로만 분리</span>
+                    </div>
+                  </ContentCardDemo>
+                </div>
+              ),
+              description:
+                '보더 제거 — 페이지 내 카드가 다수 쌓이고 섹션 헤더 + bg 대비로 위계가 충분히 명확할 때. 운영 hub 화면에서 정보 도메인이 같은 카드들을 가볍게 묶을 때 사용. 기본값(true) 유지가 일반적.',
+            },
           ]}
         />
       </SpecSection>
@@ -200,7 +221,47 @@ function DontStackedHighlights() {
   );
 }
 
+function DoBorderlessWhenHierarchyClear() {
+  // 운영 hub 패턴: 같은 정보 도메인 카드들을 섹션 헤더 + bg 대비로 묶음
+  return (
+    <div style={{ background: 'var(--color-background)', padding: 12, borderRadius: 12 }}>
+      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-primary)', marginBottom: 8 }}>
+        참가 현황
+      </div>
+      <ContentCardDemo width={200} bordered={false}>
+        <span style={{ fontSize: 13 }}>전체 분수 + 진행 바</span>
+      </ContentCardDemo>
+      <div style={{ height: 8 }} />
+      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-primary)', marginBottom: 8 }}>
+        기대 매출
+      </div>
+      <ContentCardDemo width={200} bordered={false}>
+        <span style={{ fontSize: 13 }}>현재 / 최대 매출</span>
+      </ContentCardDemo>
+    </div>
+  );
+}
+
+function DontMixBorderless() {
+  // 보더 있는 카드와 없는 카드 섞임 — 카드 경계 인식 어려움
+  return (
+    <div style={{ background: 'var(--color-background)', padding: 12, borderRadius: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <ContentCardDemo width={220}>
+        <span style={{ fontSize: 13 }}>이벤트 카드 (bordered)</span>
+      </ContentCardDemo>
+      <ContentCardDemo width={220} bordered={false}>
+        <span style={{ fontSize: 13 }}>알림 메시지 (borderless)</span>
+      </ContentCardDemo>
+      <ContentCardDemo width={220}>
+        <span style={{ fontSize: 13 }}>옵션 카드 (bordered)</span>
+      </ContentCardDemo>
+    </div>
+  );
+}
+
 export const GUIDELINE_RECIPES: Record<string, ComponentType> = {
   'do-highlight-selected': DoHighlightSelected,
   'dont-stacked-highlights': DontStackedHighlights,
+  'do-borderless-when-hierarchy-clear': DoBorderlessWhenHierarchyClear,
+  'dont-mix-borderless': DontMixBorderless,
 };
