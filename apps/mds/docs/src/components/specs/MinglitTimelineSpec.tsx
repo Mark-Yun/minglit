@@ -138,7 +138,7 @@ function TimelineDemo({ children }: { children: ReactNode }) {
     <div
       style={{
         position: 'relative',
-        background: 'white',
+        background: 'var(--color-background)',
         padding: '16px 16px 16px 48px',
         borderRadius: 16,
         border: '1px solid var(--color-divider)',
