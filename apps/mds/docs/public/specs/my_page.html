@@ -399,11 +399,11 @@ body.dark-mode .my-group__card { background: var(--color-dark-surface); }
         </tr>
       </thead>
       <tbody>
-        <tr><td>—</td><td>Body padding</td><td>—</td><td>vertical: <code>spacing-medium (16px)</code> · horizontal: 0 (그룹 자체는 edge-to-edge)</td></tr>
-        <tr><td>①</td><td>AppBar</td><td>title center · showBackButton: false</td><td>height: 56 · 하단 1px <code>color-divider</code></td></tr>
-        <tr><td>②</td><td>ProfileGroup</td><td>headerless · 1 tile (_ProfileTile)</td><td>height: ~80 (avatar 48 + padding-medium all = 16+48+16) · 탭 영역 전체에 ripple · 트레일링 chevron — 탭 시 계정 관리 화면으로 이동</td></tr>
-        <tr><td>③–⑥</td><td>SettingsGroup × 4</td><td>헤더 + tile list (그룹 카드)</td><td>그룹 사이: <code>spacing-large (24)</code> · header 좌우 padding: <code>spacing-screen-edge</code> · header v-padding: <code>spacing-small (8)</code> · tile 좌우 padding: <code>spacing-screen-edge</code> · tile height: 48px</td></tr>
-        <tr><td>—</td><td>tile-tile divider</td><td>top border 1px (첫 tile 제외)</td><td><code>color-divider</code> · per-tile</td></tr>
+        <tr><td>—</td><td>Body padding</td><td>—</td><td>vertical: <code>spacing-medium (16px)</code> · horizontal: 0 (그룹 자체에 좌우 padding 16)</td></tr>
+        <tr><td>①</td><td>AppBar</td><td>title center · showBackButton: false · scaffold bg · border 없음</td><td>height: 56 · gray bg · <code>surfaceTintColor: transparent</code> · elevation 0</td></tr>
+        <tr><td>②</td><td>ProfileGroup</td><td>headerless · 1 tile (_ProfileTile · avatar 48 + name/email + chevron)</td><td>card bg <code>color-background</code> · radius <code>radius-card</code> · h-padding <code>spacing-medium</code> · 탭 영역 전체에 ripple — 탭 시 계정 관리 화면으로 이동</td></tr>
+        <tr><td>③–⑥</td><td>SettingsGroup × 4</td><td>헤더 + tile list (그룹 카드)</td><td>그룹 사이: <code>spacing-large (24)</code> · header h-padding: <code>spacing-xsmall</code> · header v-padding: <code>spacing-small (8)</code> · tile h-padding: <code>spacing-medium</code> · tile height: 48 (subtitle 있을 시 56+ 자동)</td></tr>
+        <tr><td>—</td><td>tile-tile divider</td><td>두 번째 tile부터 top hairline 0.5px · indent 52(= padding 16 + icon 20 + gap 16)</td><td><code>color-divider</code> · per-tile</td></tr>
       </tbody>
     </table>
   </section>
@@ -524,10 +524,10 @@ body.dark-mode .my-group__card { background: var(--color-dark-surface); }
         <tr>
           <td class="state-mini__aspect">토큰</td>
           <td>
-            · color: <code>color-background</code> (scaffold · 그룹 bg), <code>color-surface</code> (그룹 헤더 bg), <code>color-text-primary</code> (title · name), <code>color-text-secondary</code> (sub · email · 그룹 헤더 · chevron · icon), <code>color-divider</code> (top/bottom · tile separator), <code>color-primary</code> (avatar gradient)<br>
-            · spacing: <code>spacing-medium</code> (16 · body v-padding · profile gap), <code>spacing-screen-edge</code> (16 · 그룹 h-padding), <code>spacing-large</code> (24 · 그룹 사이 간격), <code>spacing-small</code> (8 · 헤더 v-padding), <code>spacing-sm</code> (12 · tile icon↔title gap), 14px (tile v-padding)<br>
-            · radius: <code>radius-button</code> (12 · ConfirmDialog 버튼 — Material default)<br>
-            · typography: appBarTitle (18/600), bodyMedium (15/400 · tile title), bodySmall (13 · subtitle · email · 그룹 헤더), titleSmall (16/600 · profile name)
+            · color: <code>color-surface</code> (scaffold bg), <code>color-background</code> (그룹 카드 surface), <code>color-text-primary</code> (tile title · profile name), <code>color-text-secondary</code> (subtitle · email · 그룹 헤더 · chevron · leading icon), <code>color-divider</code> (tile 사이 indent hairline), <code>color-primary</code> (avatar bg)<br>
+            · spacing: <code>spacing-medium</code> (16 · body v-padding · 그룹 h-padding · tile h-padding · icon ↔ title gap), <code>spacing-large</code> (24 · 그룹 사이 gap), <code>spacing-small</code> (8 · 헤더 v-padding · subtitle tile padding), <code>spacing-xsmall</code> (헤더 h-padding)<br>
+            · radius: <code>radius-card</code> (그룹 카드 corner)<br>
+            · typography: appBarTitle (18/600), 그룹 헤더(13 · 500 · uppercase · letter-spacing 0.5), tile title (14), tile subtitle (12), profile name (16/700), profile email (12)
           </td>
         </tr>
         <tr>
@@ -680,7 +680,7 @@ body.dark-mode .my-group__card { background: var(--color-dark-surface); }
         <tr><th style="width: 200px;">Widget</th><td><code>MyPage</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/home/my_page.dart"><code>apps/app_user/lib/src/features/home/my_page.dart</code></a></td></tr>
         <tr><th>Route</th><td><code>MyPageRoute</code> · <code>/my</code> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/routing/app_routes.dart"><code>app_routes.dart</code></a></td></tr>
         <tr><th>Auth gate</th><td><code>currentUserProvider</code> — null 시 auth guard prompt 노출. HomePage 측에서도 인증 사용자만 아바타 표시 → 일반 진입은 항상 default state.</td></tr>
-        <tr><th>SettingsGroup atom</th><td><a href="/components#MinglitSettingsGroup"><code>MinglitSettingsGroup</code></a> (kit-shared · components 등록됨) — header + tile list · top/bottom border · edge-to-edge</td></tr>
+        <tr><th>SettingsGroup atom</th><td><a href="/components#MinglitSettingsGroup"><code>MinglitSettingsGroup</code></a> (kit-shared · components 등록됨) — uppercase header(13 · 500 · letter-spacing 0.5) outside + 둥근 카드(<code>color-background</code> bg · <code>radius-card</code>) · 카드는 <code>spacing-medium</code> 좌우 padding 안에 위치 (NOT edge-to-edge)</td></tr>
         <tr><th>SettingsTile atom</th><td><a href="/components#MinglitSettingsTile"><code>MinglitSettingsTile</code></a> — leading: <code>IconData</code> · title · subtitle · trailing (chevron / none) · destructive 분기</td></tr>
         <tr><th>ThemeSettingsTile</th><td><code>ThemeSettingsTile</code> 전용 widget — 테마 모드 (system / light / dark) 분기 + 현재 모드 subtitle. <a href="https://github.com/Mark-Yun/minglit/blob/dev/shared/packages/minglit_kit/lib/src/features/theme/theme_settings_tile.dart"><code>shared/packages/minglit_kit/lib/src/features/theme/theme_settings_tile.dart</code></a></td></tr>
         <tr><th>Icons (Material)</th><td><code>person_outline</code> (auth guard) · <code>person</code> (avatar fallback) · <code>chevron_right</code> · <code>receipt_long_outlined</code> · <code>confirmation_number_outlined</code> · <code>notifications_outlined</code> · <code>lock_outline</code> · <code>admin_panel_settings_outlined</code> · <code>block</code> · <code>shield_outlined</code> · <code>description_outlined</code> · <code>info_outline</code></td></tr>
