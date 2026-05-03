@@ -173,16 +173,6 @@ body.dark-mode .ongoing-banner { background: var(--color-dark-surface); }
   50%      { box-shadow: 0 0 0 6px color-mix(in srgb, var(--color-primary)  0%, transparent); }
 }
 
-/* Result-pending 알림 dot (chip 옆에 작게) */
-.ongoing-banner__notif-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--color-error);
-  flex-shrink: 0;
-  margin-left: 4px;
-}
-
 /* mockup viewport — banner는 list 안 단일 카드로 띄움 (스택 버튼이 들어가는 phase 대비 320px) */
 .viewport.ob-viewport { background: var(--color-surface); height: 320px; padding: 0; }
 body.dark-mode .viewport.ob-viewport { background: var(--color-dark-background); }
@@ -352,7 +342,7 @@ body.dark-mode .viewport.ob-viewport { background: var(--color-dark-background);
 │  ├─ <b>PhaseChip</b> (좌)
 │  │  · 4×10 padding · radius-chip · 11/700
 │  │  · waiting=warning · checkIn/checked=success · matching=primary
-│  │  · results=primary tint + dot pulse + 알림 dot(error · 미확인 시)
+│  │  · results=primary tint + dot pulse (미확인) / success 초록 + solid dot (확인 완료)
 │  └─ <b>Trailing meta</b> (우)
 │     · "X시간 후 시작" / "X분 남음" / D-Day · D+N
 │     · matching phase는 strong tone (primary w700)
@@ -546,10 +536,10 @@ body.dark-mode .viewport.ob-viewport { background: var(--color-dark-background);
           <td class="state-mini__aspect">컴포넌트</td>
           <td>
             ↔ baseline 대비:<br>
-            + Card variant: <code>--action</code> (외곽 primary 30% tint · bg primary 6% gradient)<br>
-            + PhaseChip tone: success + dot pulse<br>
+            + PhaseChip tone: success + dot pulse (action 시그널)<br>
             + Trailing 시간 표현: "지금 입장 가능" (strong primary)<br>
-            + Footer primary button: pulse animation (1.6s) · 동일하게 길찾기 outline 버튼은 위에 그대로 stack
+            + Footer primary button: pulse animation (1.6s) — chip dot pulse + button pulse 두 단서로 사용자 attention 유도. 길찾기 outline 버튼은 위에 그대로 stack<br>
+            <em>(카드 bg는 모든 phase 공통 흰 surface — gradient 변형 없음)</em>
           </td>
         </tr>
         <tr>
@@ -695,10 +685,10 @@ body.dark-mode .viewport.ob-viewport { background: var(--color-dark-background);
           <td class="state-mini__aspect">컴포넌트</td>
           <td>
             ↔ baseline 대비:<br>
-            + Card variant: <code>--action</code><br>
             + PhaseChip tone: primary fill (흰 dot + pulse) — 가장 강한 액션 시그널<br>
             + Trailing: "지금 시작 가능" (strong primary)<br>
-            + Footer button: pulse · 텍스트 only ("매칭 시작하기")
+            + Footer button: pulse · 텍스트 only ("매칭 시작하기")<br>
+            <em>(카드 bg는 모든 phase 공통 흰 surface — gradient 변형 없음. action 강조는 chip dot pulse + button pulse만으로)</em>
           </td>
         </tr>
         <tr>
@@ -768,7 +758,6 @@ body.dark-mode .viewport.ob-viewport { background: var(--color-dark-background);
           <td class="state-mini__aspect">컴포넌트</td>
           <td>
             ↔ matchingReady 대비:<br>
-            − Card variant <code>--action</code> 제거 (gradient bg 없음 — passive 톤과 시각 일관)<br>
             + PhaseChip dot pulse 유지 ("매칭 중") — 백엔드에서 결과 처리 중인 시그널<br>
             + Trailing: "결과 대기" (passive · secondary)<br>
             + Info meta: "X명 선택함" (선택 카운트만 · 진행률·마감시간 없음)<br>
@@ -1026,7 +1015,7 @@ body.dark-mode .viewport.ob-viewport { background: var(--color-dark-background);
             (이 phase는 hidden state — MyTicketsPage에서 자동으로 사라지고, 회고는 <a href="/specs/purchase_history_page.html">PurchaseHistory</a>에서 timeline으로 확인)
           </td>
           <td class="state-mini__aspect">조건</td>
-          매칭 결과 공개 후 또는 noShow 시점부터 <strong>1주일(7일)</strong> 경과 시 자동으로 ended로 전환. results / noShow 모두 동일한 7일 정책. 7일 초과 시점에 banner는 MyTicketsPage list에서 사라지고, PurchaseHistory 지난 티켓 timeline으로 이관 (재진입 가능).</td>
+          <td>매칭 결과 공개 후 또는 noShow 시점부터 <strong>1주일(7일)</strong> 경과 시 자동으로 ended로 전환. results / noShow 모두 동일한 7일 정책. 7일 초과 시점에 banner는 MyTicketsPage list에서 사라지고, PurchaseHistory 지난 티켓 timeline으로 이관 (재진입 가능).</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
@@ -1163,11 +1152,11 @@ body.dark-mode .viewport.ob-viewport { background: var(--color-dark-background);
         <tr><th>Phase</th><th>Footer 라벨</th><th>Sheet (재사용)</th><th>주요 컨텐츠</th></tr>
       </thead>
       <tbody>
-        <tr><td>waiting</td><td>"입장 QR 미리 보기"</td><td>CheckInPreviewSheet</td><td>QR 미리보기 (체크인 비활성)</td></tr>
-        <tr><td>checkInReady</td><td>"입장 QR 보기"</td><td>CheckInSheet</td><td>QR 풀스크린 · 운영자 스캔용</td></tr>
-        <tr><td>checkedIn</td><td>(passive · "매칭 시작 대기 중")</td><td>CheckedInSheet (banner 본체 탭)</td><td>참가자 명단 · 매칭 안내</td></tr>
-        <tr><td>matchingReady</td><td>"매칭 시작하기"</td><td>MatchingSheet</td><td>좋아요 swipe UI 진입</td></tr>
-        <tr><td>matching</td><td>"매칭 계속하기"</td><td>MatchingSheet</td><td>남은 카드부터 재개</td></tr>
+        <tr><td>waiting</td><td>"입장 QR 보기"</td><td>CheckInPreviewSheet</td><td>QR 미리보기 (체크인 비활성 · 시간 전)</td></tr>
+        <tr><td>checkInReady</td><td>"입장 QR 보기" (pulse)</td><td>CheckInSheet</td><td>QR 풀스크린 · 운영자 스캔용</td></tr>
+        <tr><td>checkedIn</td><td>(passive · "즐거운 시간 보내세요")</td><td>CheckedInSheet (banner 본체 탭으로 진입 가능)</td><td>참가자 명단 · 매칭 안내</td></tr>
+        <tr><td>matchingReady</td><td>"매칭 시작하기" (pulse)</td><td>MatchingSheet</td><td>좋아요 swipe UI 진입</td></tr>
+        <tr><td>matching</td><td>(passive · "매칭 결과를 기다리고 있습니다")</td><td>—</td><td>좋아요 ≥1개 보낸 후 결과 대기 — footer 비활성</td></tr>
         <tr><td>results · 미확인</td><td>"매칭 결과 보기" (pulse)</td><td>ResultsSheet (첫 진입 시 <code>match_results_viewed_at</code> mutation)</td><td>매치된 사람 / 받은 좋아요 / 채팅 진입점</td></tr>
         <tr><td>results · 확인 완료</td><td>"매칭 결과 다시 보기" (outline)</td><td>ResultsSheet (재진입)</td><td>회고 / 채팅 진입점 — 1주일까지 유지</td></tr>
         <tr><td>noShow</td><td>(footer 없음)</td><td>—</td><td>informational only · 카드 본체 탭 → EventDetail</td></tr>
