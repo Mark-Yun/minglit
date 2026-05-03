@@ -83,8 +83,7 @@ void main() {
       );
 
       final container = makeContainer(eventId: 'event_1');
-      // Riverpod 3.x: container.listen() keeps autoDispose provider alive
-      // while inner providers (myMatchesProvider) are mid-flight.
+      // Fix #2017: Riverpod 3.x autoDispose 레이스 — listen()으로 provider를 살려두고 tearDown에서 정리
       final sub = container.listen(
         eventNowBarStateProvider(activeEvent),
         (_, _) {},
