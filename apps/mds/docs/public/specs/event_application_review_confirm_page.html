@@ -812,6 +812,18 @@ body.dark-mode .viewport {
   </section>
 
   <section class="doc">
+    <h2>Capacity skip 결과 노출 규칙 (State 3)</h2>
+    <ul>
+      <li><strong>상단 banner</strong> — warn 톤. 제목 "정원 초과로 일부 보류" + 본문 "총 N건 중 M건이 정원 초과로 처리되지 않았습니다. 보류된 신청은 그대로 마킹이 남아있어 다음 시도에서 다시 확정할 수 있습니다."</li>
+      <li><strong>summary cell 라벨</strong> — 보류된 마킹 분포에 한해 라벨이 "승인 보류" / "거절 보류"로 변경(숫자는 보류된 건수 기준). 처리된 건은 캐시에서 제거되어 표시 X.</li>
+      <li><strong>섹션 카운트</strong> — "(N건)" 대신 "(N건 보류)" 표기로 보류 상태 명시.</li>
+      <li><strong>카드별 cap 시그널</strong> — 각 보류 카드 안에 warn 톤의 "⚠ 정원 초과로 다음 시도에서 보류됨" 메시지 노출.</li>
+      <li><strong>CTA 라벨</strong> — "확정 (총 N건)" → "다시 확정 (N건)"으로 변경 (재시도 의도 명시).</li>
+      <li>다시 시도 시도 시 capacity가 여전히 부족하면 같은 State 3가 반복 — 운영자가 carousel 수정으로 거절 전환하거나 캐시에서 제거할 수 있어야 함(후속 spec 보강).</li>
+    </ul>
+  </section>
+
+  <section class="doc">
     <h2>수정 진입 → 자동 복귀 흐름</h2>
     <ul>
       <li>본 화면 카드 탭 → <code>CarouselRoute</code>를 single-user mode로 push (기존 carousel 큐와는 별개의 페이지로 진입).</li>

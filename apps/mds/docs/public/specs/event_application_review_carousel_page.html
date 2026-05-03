@@ -591,8 +591,7 @@ body.dark-mode .viewport {
             · <strong>승인 탭</strong> → 로컬 마킹(approve) → 200ms 뒤 다음 페이지로 swipe-in (자동 advance)<br>
             · <strong>거절 탭</strong> → 사유 sheet 모달 노출(State 2)<br>
             · <strong>썸네일 탭</strong> → 풀스크린 이미지 viewer (별도 spec — 본 spec 범위 밖)<br>
-            · <strong>appbar close X</strong> → 리스트로 pop, 로컬 마킹 보존<br>
-            · <strong>뒤로가기 제스처</strong> → 동일 (리스트 pop + 마킹 보존)
+            · <strong>appbar close X / 뒤로가기 제스처</strong> → queue 모드에서는 리스트로 pop · modify 모드(State 3 진입 컨텍스트)에서는 confirm 화면으로 pop · 두 경우 모두 로컬 마킹은 보존
           </td>
         </tr>
         <tr><td class="state-mini__aspect">에지케이스</td><td>· 입장그룹의 required가 0개면 verification 카드 영역이 비어있고 banner 아래 "추가 제출 정보 없음" 안내 노출(빈 줄 금지)<br>· 사용자가 required verification 일부를 미제출했으면 해당 카드에 "미제출" 시그널 + 거절 사유 자동 prefill 후보로 'required' chip 강조<br>· progress 'X / N' = 큐 안 위치(1-indexed) / 큐 총 길이</td></tr>
@@ -608,7 +607,7 @@ body.dark-mode .viewport {
             <code>color-primary</code>(partner — avatar bg @ 15% / progress text / 승인 버튼 / required chip 10%) · <code>color-text-primary</code>(이름 / 카드 제목 / val) · <code>color-text-secondary</code>(서브 / caption / key / 일반 chip) · <code>color-error</code>(거절 버튼 outline + text) · <code>color-divider</code>(카드 border / 일반 chip bg / 사진 placeholder bg) · <code>color-background</code>(카드 bg) · <code>radius-card</code> · <code>radius-small</code>(사진) · 999(chip / pill) · typography 18px w700 (이름) / 13px w700 (label · 카드 제목) / 12px (sub · key · val · caption) / 11px secondary / 10px w500 (chip) / 10px w600 ("필수" 태그) / 15px w700 (CTA)
           </td>
         </tr>
-        <tr><td class="state-mini__aspect">노트</td><td>📝 baseline. PageView 자동 advance는 100ms 페이드 + 200ms slide. 사용자가 의도적으로 swipe하지 않도록 physics는 NeverScrollable.</td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 baseline. 자동 advance는 <strong>마킹 후 200ms 지연</strong> → <code>PageController.nextPage</code> 호출(기본 페이지 전환 ~300ms slide). 운영자가 의도적으로 swipe하지 않도록 physics는 NeverScrollable.</td></tr>
       </tbody>
     </table>
 
@@ -699,23 +698,24 @@ body.dark-mode .viewport {
               </div>
             </div>
             <div class="erc-cta">
-              <div class="erc-cta__btn erc-cta__btn--reject">거절 (수정)</div>
-              <div class="erc-cta__btn erc-cta__btn--approve">승인으로 변경</div>
+              <div class="erc-cta__btn erc-cta__btn--reject">거절</div>
+              <div class="erc-cta__btn erc-cta__btn--approve">승인</div>
             </div>
           </div></td>
           <td class="state-mini__aspect">조건</td>
-          <td>confirm 화면에서 마킹된 사용자 카드 탭 → 그 사용자로 돌아온 경우, 또는 carousel 안에서 같은 사용자로 다시 swipe된 경우. <strong>_MarkPill</strong>이 사용자 헤더 아래 노출되어 현재 마킹 상태를 명시.</td>
+          <td>confirm 화면에서 마킹된 사용자 카드 탭으로 진입(modify 모드). <strong>_MarkPill</strong>이 사용자 헤더 아래 노출되어 현재 마킹 상태와 사유를 명시. CTA 라벨은 baseline과 동일('거절' / '승인') — 실제 동작은 진입 모드에 따라 달라진다.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            · <strong>현재 마킹과 같은 버튼 탭</strong> → 마킹 변경 없음 (no-op) · 자동 advance도 없음 — 사용자가 의도를 한번 더 확인하도록<br>
-            · <strong>다른 버튼 탭</strong> → 마킹 덮어쓰기 (예: 거절 → 승인) · 거절일 경우 사유 sheet 다시 노출 → 마킹 갱신 후 confirm 화면으로 즉시 pop<br>
-            · <strong>_MarkPill 탭</strong> → 거절 마킹이면 사유 sheet 다시 열어 사유만 수정 가능, 승인 마킹이면 동작 없음<br>
-            · 수정 모드 진입은 confirm 화면에서 왔다는 것을 의미 — 액션 후 자동 advance 대신 confirm 화면으로 즉시 pop
+            · <strong>거절 버튼 탭</strong> → 사유 sheet 노출 (현재 거절 마킹이면 기존 사유 prefill 후 편집, 승인 마킹이면 새 사유 입력) → 확정 시 마킹 갱신 → confirm 화면으로 즉시 pop<br>
+            · <strong>승인 버튼 탭</strong> → 마킹을 승인으로 갱신(기존 거절 사유는 폐기, 변경 없으면 동일) → confirm 화면으로 즉시 pop<br>
+            · <strong>_MarkPill 탭</strong> → 거절 마킹이면 사유 sheet 다시 열어 사유만 수정 가능, 승인 마킹이면 동작 없음(시각적 시그널 역할만)<br>
+            · <strong>appbar close X / 시스템 back</strong> → confirm 화면으로 pop (queue 모드의 list pop과 다름) · 마킹은 보존<br>
+            · 수정 모드는 단일 사용자만 다룸 — 액션 후 자동 다음 사용자 advance는 일어나지 않고 항상 confirm으로 복귀
           </td>
         </tr>
-        <tr><td class="state-mini__aspect">노트</td><td>📝 수정 흐름은 confirm 화면에서 진입한 단일 사용자만 다룬다 — 수정 후 자동 다음 사용자 advance는 일어나지 않음. carousel 자연 흐름 vs confirm 진입 수정의 행동 차이가 핵심.</td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 진입 모드는 라우트 인자(<code>mode: queue | modify</code>)로 carousel 페이지가 인식. 같은 화면이지만 close X 도착지와 advance 정책이 분기. CTA 라벨은 통일해 학습 비용을 낮춤.</td></tr>
       </tbody>
     </table>
 
@@ -769,6 +769,16 @@ body.dark-mode .viewport {
       <li>승인 / 거절 마킹 → 200ms 후 <code>PageController.nextPage</code>로 다음 사용자 swipe-in.</li>
       <li>마지막 사용자에서 마킹 → State 4 transition(약 600ms) → confirm 화면 <code>pushReplacement</code>.</li>
       <li>수정 모드(State 3) 진입 시 advance 규칙은 다름: 마킹 갱신 후 confirm으로 즉시 pop, 다음 사용자로 advance하지 않음.</li>
+    </ul>
+  </section>
+
+  <section class="doc">
+    <h2>진입 모드 &amp; close 동작 분기</h2>
+    <ul>
+      <li>라우트 인자로 진입 모드 식별 — <code>mode: queue</code>(리스트/CTA에서 진입) / <code>mode: modify</code>(confirm 카드 탭에서 진입).</li>
+      <li><strong>queue 모드</strong> — close X / 시스템 back → 리스트로 pop. 자동 advance + 큐 끝 confirm pushReplacement 흐름 동작.</li>
+      <li><strong>modify 모드</strong> — close X / 시스템 back → confirm 화면으로 pop (한 단계만). 자동 advance 없음, 결정 후 즉시 confirm으로 pop.</li>
+      <li>두 모드 모두 마킹 캐시는 동일 컨테이너를 공유 — 진입 모드만 동작 분기를 결정한다.</li>
     </ul>
   </section>
 

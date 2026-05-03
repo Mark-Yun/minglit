@@ -829,7 +829,7 @@ body.dark-mode .viewport {
     <h2>Sub-section 그룹화 규칙</h2>
     <ul>
       <li><strong>심사 대기 그룹</strong>은 입장그룹별 sub-section으로 묶여 표시된다. 매핑은 <code>application.ticketId</code> → <code>ticket.target_entry_group_id(s)</code> → <code>entry_group</code>으로 해석.</li>
-      <li>sub-section 정렬 — 입장그룹의 정의 순서(이벤트 생성 시 순서) 유지. 자연 정렬 외 정책 없음.</li>
+      <li>sub-section 정렬 — <code>entry_group.created_at ASC</code> (이벤트 정의 시 입장그룹이 생성된 순서). 별도 position / display_order 컬럼은 도입하지 않는다 — 운영자가 사후 순서 조정을 요구한 적 없고, #2102 1:1 enforce 작업과 결합해 의도치 않은 컬럼 추가를 피한다.</li>
       <li>sub-section 안 카드 정렬 — <code>created_at DESC</code> (최근 신청이 위).</li>
       <li>심사 대기 카운트(상단 헤더 + appbar count)는 모든 sub-section 합산.</li>
       <li>입장그룹의 pending이 0이면 sub-section은 통째로 숨긴다(빈 헤더 노출 금지).</li>
