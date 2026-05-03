@@ -453,13 +453,90 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
     <p class="intro">
       카드는 항상 4 region(header / info / divider / pay-row). 가변 요소는 StatusBadge의 색·라벨(8 status)뿐 — 모든 카드는 동일 높이. StatusBadge는 info row 안에서 이벤트 타이틀 위에 inline으로 노출 (← 시각적 묶음 강화).
     </p>
+
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 216px;">
+        <!-- card outline -->
+        <div class="blueprint__region blueprint__region--full" style="border-radius: 16px;"></div>
+
+        <!-- ① Header row -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:16px;left:16px;width:120px;height:24px;">
+          <span class="blueprint__region-label">①ⓛ date — yyyy.MM.dd</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:16px;right:16px;width:96px;height:24px;">
+          <span class="blueprint__region-label">①ⓡ '상세 보기' + chevron</span>
+        </div>
+
+        <!-- ② Info row -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:56px;left:16px;width:80px;height:80px;border-radius:8px;">
+          <span class="blueprint__region-label" style="font-size:9px;">②a thumb 80×80</span>
+        </div>
+        <div class="blueprint__region" style="top:56px;left:112px;right:16px;height:18px;">
+          <span class="blueprint__region-label">②b StatusBadge (inline-flex · 좌측 정렬)</span>
+        </div>
+        <div class="blueprint__region" style="top:78px;left:112px;right:16px;height:22px;">
+          <span class="blueprint__region-label">②c eventName · titleMedium bold</span>
+        </div>
+        <div class="blueprint__region" style="top:104px;left:112px;right:16px;height:14px;">
+          <span class="blueprint__region-label">②d "M월 d일 (E) HH:mm" · bodySmall</span>
+        </div>
+        <div class="blueprint__region" style="top:122px;left:112px;right:16px;height:14px;">
+          <span class="blueprint__region-label">②e location · bodySmall secondary</span>
+        </div>
+
+        <!-- ③ Divider -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:152px;left:16px;right:16px;height:1px;">
+          <span class="blueprint__region-label" style="top:-14px;">③ Divider 1px (height: spacing-xlarge 32 = 16/16 v-margin)</span>
+        </div>
+
+        <!-- ④ Pay row -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:168px;left:16px;width:140px;height:24px;">
+          <span class="blueprint__region-label">④ⓛ ticket name · bodyMedium</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:168px;right:16px;width:96px;height:24px;">
+          <span class="blueprint__region-label">④ⓡ amount · bodyLarge bold</span>
+        </div>
+
+        <div class="blueprint__align-marker" style="top:8px;right:8px;">card pad-medium 16</div>
+        <div class="blueprint__align-marker" style="top:48px;right:8px;">↕ header→info: spacing-medium 16</div>
+        <div class="blueprint__align-marker" style="top:144px;right:8px;">↕ info↔divider: divider 자체 height 32</div>
+        <div class="blueprint__align-marker" style="top:162px;right:8px;">↕ divider→pay-row: 0 (Divider 내장 margin)</div>
+      </div>
+
+      <div class="layout-tree"><b>PurchaseHistoryCard</b>
+└─ <b>InkWell</b>(onTap → push DetailRoute)
+   └─ <b>Container</b>(radius-card · 1px outlineVariant · shadowXs · pad-medium)
+      └─ Column [
+         ├─ <em>① Header</em>: <b>Row</b> spaceBetween
+         │  ├─ Text(date) · labelMedium · w500 · secondary
+         │  └─ Row(gap xsmall) [Text('상세 보기') · 12px w500 secondary, Icon(chevron_right · 14)]
+         │
+         ├─ SizedBox(<i>spacing-medium 16</i>)
+         │
+         ├─ <em>② Info</em>: <b>Row</b>(crossAxis: start)
+         │  ├─ <b>MinglitImage</b> 80×80 · radius-small · BoxFit.cover
+         │  └─ Expanded → Column(gap xsmall) [
+         │     ├─ <b>StatusBadge</b>(inline-flex · 좌측 정렬 · 자기 폭만 차지)
+         │     ├─ Text(eventName) · titleMedium bold · maxLines 1 ellipsis
+         │     ├─ Text("M월 d일 (E) HH:mm") · bodySmall
+         │     └─ Text(location) · bodySmall · secondary
+         │  ]
+         │  · badge↔title 시각 간격 4–6px (Column gap xsmall 4 + badge-wrap margin-bottom 2 — xsmall 미만 시각 묶음 강조)
+         │
+         ├─ <b>Divider</b>(height: <i>spacing-xlarge 32</i>) · 1px line + 16/16 v-margin
+         │
+         └─ <em>③ Pay</em>: <b>Row</b> spaceBetween baseline
+            ├─ Text(ticket.name) · bodyMedium · ellipsis
+            └─ Text("{amount}원") · bodyLarge bold</div>
+    </div>
+
     <table class="ref">
       <thead>
         <tr><th style="width: 200px;">Region</th><th>Alignment</th><th>Notes</th></tr>
       </thead>
       <tbody>
         <tr><td>1. Header (date · 상세 보기)</td><td>spaceBetween · 좌우 끝</td><td>좌: <code>paidAt ?? createdAt</code>를 <code>toLocal()</code> 후 <code>yyyy.MM.dd</code> 포맷 (Fix #579 · UTC→KST 날짜 차이 방지) · labelMedium onSurfaceVariant. 우: Text('상세 보기') 12px w500 secondary + Icon(chevron_right · 14px · text-secondary) — 카드 전체가 InkWell이라 어디를 탭해도 push되지만 affordance signal로 노출.</td></tr>
-        <tr><td>2. Info row (thumb · 텍스트 column)</td><td>start cross-axis</td><td>thumb 80×80 (<code>MinglitImage</code> · radius-small · BoxFit.cover · imageUrl 없으면 placeholder) + <code>spacing-medium</code> gap + Expanded Column [<a href="/components#StatusBadge"><code>StatusBadge</code></a>(inline-flex · 자기 폭만 차지, 좌측 정렬) · eventName titleMedium bold maxLines 1 ellipsis · "M월 d일 (E) HH:mm" bodySmall · location bodySmall onSurfaceVariant]. badge ↔ title gap 2px (xsmall 미만 — 시각적 묶음 강조).</td></tr>
+        <tr><td>2. Info row (thumb · 텍스트 column)</td><td>start cross-axis</td><td>thumb 80×80 (<code>MinglitImage</code> · radius-small · BoxFit.cover · imageUrl 없으면 placeholder) + <code>spacing-medium</code> gap + Expanded Column [<a href="/components#StatusBadge"><code>StatusBadge</code></a>(inline-flex · 자기 폭만 차지, 좌측 정렬) · eventName titleMedium bold maxLines 1 ellipsis · "M월 d일 (E) HH:mm" bodySmall · location bodySmall onSurfaceVariant]. badge ↔ title 시각 간격 4–6px (Column gap xsmall 4 + badge-wrap margin-bottom 2 → xsmall 미만 시각적 묶음 강조).</td></tr>
         <tr><td>3. Divider</td><td>—</td><td><code>Divider(height: spacing-xlarge 32)</code> — 1px line + 16/16 v-margin (Material Divider default)</td></tr>
         <tr><td>4. Pay row</td><td>spaceBetween baseline</td><td>좌: ticket name bodyMedium · 우: <code>NumberFormat('#,###').format(paymentAmount ?? 0) + '원'</code> bodyLarge bold. 무료 티켓이면 "0원"으로 표기.</td></tr>
       </tbody>
