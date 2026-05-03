@@ -324,7 +324,7 @@ body.dark-mode .acct-group__card { background: var(--color-dark-surface); }
         <td>1.1</td>
         <td>mark-yun</td>
         <td>
-          MyPage와 동일한 <strong>그룹 카드 + 컴팩트 tile 패턴</strong>으로 visual contract 통일. ListTile default + border-wrapped Danger Zone 폐기 → 둘 다 MinglitSettingsGroup 카드 안의 MinglitSettingsTile(48px · subtitle 있을 시 56+ 자동 늘어남 · 20px icon · 14px title)로 일원화. 그룹 구조: "계정" 헤더(본인인증 / 파트너 프로필) + 헤더 없는 카드(로그아웃 / 회원 탈퇴 destructive) — destructive tile 빨강이 충분한 시그널이라 라벨 중복 없이 시각적 gap만으로 분리. 진입은 MyPage 상단 프로필 영역 탭으로만 — MyPage AccountGroup 폐기와 짝.
+          MyPage와 동일한 <strong>그룹 카드 + 컴팩트 tile 패턴</strong>으로 visual contract 통일. ListTile default + border-wrapped Danger Zone 폐기 → 둘 다 MinglitSettingsGroup 카드 안의 MinglitSettingsTile(48px · subtitle 있을 시 56+ 자동 늘어남 · 20px icon · 14px title)로 일원화. 그룹 구조: 헤더 없는 프로필 카드(본인인증 / 파트너 프로필) + "계정 관리" 헤더 카드(로그아웃 / 회원 탈퇴 destructive) — 신원/프로필 항목은 페이지 타이틀과 의미가 겹쳐 헤더 생략, destructive 그룹은 "계정 관리" 라벨로 의도 명시. 진입은 MyPage 상단 프로필 영역 탭으로만 — MyPage AccountGroup 폐기와 짝.
         </td>
       </tr>
       <tr>
@@ -352,15 +352,15 @@ body.dark-mode .acct-group__card { background: var(--color-dark-surface); }
   <div class="perspective__header">
     <span class="glyph">🧱</span>
     <h2>Layout</h2>
-    <span class="lede">AppBar(title + back) + scroll body의 2 SettingsGroup — "계정" 헤더(본인인증 / 파트너 프로필) + 헤더 없는 카드(로그아웃 / 회원 탈퇴 destructive). MyPage와 동일한 그룹 카드 + tile 패턴 · destructive tile 빨강이 시그널이라 두 번째 그룹은 라벨 없이 gap만으로 분리.</span>
+    <span class="lede">AppBar(title + back) + scroll body의 2 SettingsGroup — 헤더 없는 프로필 카드(본인인증 / 파트너 프로필) + "계정 관리" 헤더 카드(로그아웃 / 회원 탈퇴 destructive). MyPage와 동일한 그룹 카드 + tile 패턴.</span>
   </div>
 
   <section class="doc">
     <h2>Blueprint &amp; tree</h2>
     <p class="intro">
       Scaffold + AppBar("계정 관리" + back) + ListView로 두 개의 그룹 카드가 spacing-large 간격으로 배치.
-      첫 그룹 "계정"은 본인인증(user only · isVerified로 success 톤 토글) + 파트너 프로필(partner only) 분기로 채워짐 — null 분기 props는 카드에서 통째로 빠진다.
-      둘째 그룹은 헤더 없이 카드만 — 로그아웃(확인 다이얼로그 경유) + 회원 탈퇴(destructive tile · 외부 coordinator로 이관). 두 항목은 같은 그룹 카드 안에 indent된 hairline divider로 분리.
+      첫 그룹은 헤더 없이 프로필 카드만 — 본인인증(user only · isVerified로 success 톤 토글) + 파트너 프로필(partner only) 분기로 채워짐 (null 분기 props는 카드에서 통째로 빠진다). 페이지 타이틀과 의미가 겹쳐 별도 라벨 생략.
+      둘째 그룹은 "계정 관리" 헤더 카드 — 로그아웃(확인 다이얼로그 경유) + 회원 탈퇴(destructive tile · 외부 coordinator로 이관). 두 항목은 같은 그룹 카드 안에 indent된 hairline divider로 분리. destructive 의도를 헤더 라벨로 명시.
     </p>
 
     <div class="layout-grid">
@@ -377,27 +377,27 @@ body.dark-mode .acct-group__card { background: var(--color-dark-surface); }
           <span class="blueprint__region-label">body v-padding · spacing-medium</span>
         </div>
 
-        <!-- 계정 group header -->
-        <div class="blueprint__region" style="top:72px;left:16px;right:16px;height:24px;">
-          <span class="blueprint__region-label">② "계정" group header</span>
-        </div>
-
-        <!-- 계정 group card -->
-        <div class="blueprint__region blueprint__region--shaded" style="top:96px;left:16px;right:16px;height:96px;">
-          <span class="blueprint__region-label">③ AccountGroup card<br>본인인증(user) / 파트너 프로필(partner)</span>
+        <!-- 헤더 없는 프로필 card -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:72px;left:16px;right:16px;height:96px;">
+          <span class="blueprint__region-label">② ProfileCard (헤더 없음)<br>본인인증(user) / 파트너 프로필(partner)</span>
         </div>
 
         <!-- gap -->
-        <div class="blueprint__region" style="top:200px;left:0;right:0;height:24px;">
+        <div class="blueprint__region" style="top:176px;left:0;right:0;height:24px;">
           <span class="blueprint__region-label">spacing-large gap</span>
         </div>
 
-        <!-- 헤더 없는 destructive card -->
-        <div class="blueprint__region blueprint__region--shaded" style="top:224px;left:16px;right:16px;height:96px;">
-          <span class="blueprint__region-label">④ DangerGroup card (헤더 없음)<br>로그아웃 + 회원 탈퇴(destructive)</span>
+        <!-- 계정 관리 group header -->
+        <div class="blueprint__region" style="top:200px;left:16px;right:16px;height:24px;">
+          <span class="blueprint__region-label">③ "계정 관리" group header</span>
         </div>
 
-        <div class="blueprint__align-marker" style="top:140px;right:8px;">conditional ③ (props)</div>
+        <!-- destructive card -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:224px;left:16px;right:16px;height:96px;">
+          <span class="blueprint__region-label">④ DangerCard ("계정 관리" 헤더)<br>로그아웃 + 회원 탈퇴(destructive)</span>
+        </div>
+
+        <div class="blueprint__align-marker" style="top:120px;right:8px;">conditional ② (props)</div>
         <div class="blueprint__align-marker" style="top:280px;right:8px;">destructive tile</div>
       </div>
 
@@ -406,7 +406,7 @@ body.dark-mode .acct-group__card { background: var(--color-dark-surface); }
 └─ <b>SingleChildScrollView</b>
    └─ Padding(<i>spacing-medium</i> vertical)
       └─ Column
-         ├─ <em>AccountGroup</em> (header: "계정")                   ← ②③
+         ├─ <em>ProfileGroup</em> (헤더 없음)                         ← ②
          │  └─ MinglitSettingsGroup card
          │     ├─ <em>if onCertification != null:</em>     <i>(user · Fix #1861)</i>
          │     │   └─ <b>본인인증</b> tile
@@ -421,8 +421,8 @@ body.dark-mode .acct-group__card { background: var(--color-dark-surface); }
          │            └─ chevron
          ├─ Gap: <i>spacing-large (24)</i>
          │
-         └─ <em>DangerGroup</em> (헤더 없음)                          ← ④
-            └─ MinglitSettingsGroup card (header 없이 카드만)
+         └─ <em>DangerGroup</em> (header: "계정 관리")                 ← ③④
+            └─ MinglitSettingsGroup card
                ├─ <b>로그아웃</b> tile
                │  ├─ leading: logout
                │  ├─ title: "로그아웃"
@@ -445,10 +445,10 @@ body.dark-mode .acct-group__card { background: var(--color-dark-surface); }
       <tbody>
         <tr><td>—</td><td>Body padding</td><td>—</td><td>vertical: <code>spacing-medium (16)</code> · horizontal: 0(그룹 자체에 좌우 padding 16)</td></tr>
         <tr><td>①</td><td>AppBar</td><td>title centered · leading back · scaffold bg · border 없음</td><td>height 56 · gray bg · <code>surfaceTintColor: transparent</code> · elevation 0</td></tr>
-        <tr><td>②</td><td>"계정" group header</td><td>그룹 카드 위쪽 좌측 · uppercase</td><td>13px · 500 · letter-spacing 0.5 · v-padding <code>spacing-small (8)</code> · h-padding <code>spacing-xsmall</code></td></tr>
-        <tr><td>③</td><td>AccountGroup card</td><td>본인인증(user) / 파트너 프로필(partner) · 헤더 + tile list</td><td>card bg <code>color-background</code> · radius <code>radius-card</code> · h-padding <code>spacing-medium</code> · tile height 48 · leading icon 20 · indent 52 hairline</td></tr>
+        <tr><td>②</td><td>ProfileCard (헤더 없음)</td><td>본인인증(user) / 파트너 프로필(partner) · 카드만 · 페이지 타이틀과 의미 겹쳐 라벨 생략</td><td>card bg <code>color-background</code> · radius <code>radius-card</code> · h-padding <code>spacing-medium</code> · tile height 48 (subtitle 있을 시 56+) · leading icon 20 · indent 52 hairline</td></tr>
         <tr><td>—</td><td>그룹 사이 gap</td><td>—</td><td><code>spacing-large (24)</code></td></tr>
-        <tr><td>④</td><td>DangerGroup card (헤더 없음)</td><td>로그아웃 + 회원 탈퇴(destructive) · 같은 카드 안 hairline 분리</td><td>↔ ③ card 동일 · 헤더 라벨 없이 카드만 · 회원 탈퇴 tile만 leading + title이 <code>color-error</code> · destructive tile 빨강이 위험 시그널</td></tr>
+        <tr><td>③</td><td>"계정 관리" group header</td><td>destructive 카드 위쪽 좌측 · uppercase</td><td>13px · 500 · letter-spacing 0.5 · v-padding <code>spacing-small (8)</code> · h-padding <code>spacing-xsmall</code> · destructive 의도 명시</td></tr>
+        <tr><td>④</td><td>DangerCard</td><td>로그아웃 + 회원 탈퇴(destructive) · 같은 카드 안 hairline 분리</td><td>↔ ② card 동일 · 회원 탈퇴 tile만 leading + title이 <code>color-error</code> · destructive tile 빨강 + "계정 관리" 헤더 라벨 조합으로 위험 시그널</td></tr>
       </tbody>
     </table>
   </section>
@@ -511,7 +511,6 @@ body.dark-mode .acct-group__card { background: var(--color-dark-surface); }
               </div>
               <div class="acct-list">
                 <div class="acct-group">
-                  <div class="acct-group__header">계정</div>
                   <div class="acct-group__card">
                 <!-- 본인인증 (user only) — unverified -->
                 <div class="acct-tile acct-tile--has-subtitle">
@@ -531,6 +530,7 @@ body.dark-mode .acct-group__card { background: var(--color-dark-surface); }
                   </div>
                 </div>
                 <div class="acct-group">
+                  <div class="acct-group__header">계정 관리</div>
                   <div class="acct-group__card">
                     <!-- 로그아웃 -->
                     <div class="acct-tile">
@@ -581,9 +581,9 @@ body.dark-mode .acct-group__card { background: var(--color-dark-surface); }
           <td class="state-mini__aspect">컴포넌트</td>
           <td>
             · <code>Scaffold</code> + 표준 AppBar("계정 관리" + back)<br>
-            · <a href="/components#MinglitSettingsGroup"><code>MinglitSettingsGroup</code></a>("계정" 헤더)<br>
-            ·  └ <a href="/components#MinglitSettingsTile"><code>MinglitSettingsTile</code></a>(본인인증 · subtitle "인증하기" · chevron · has-subtitle variant)<br>
             · <a href="/components#MinglitSettingsGroup"><code>MinglitSettingsGroup</code></a>(헤더 없음)<br>
+            ·  └ <a href="/components#MinglitSettingsTile"><code>MinglitSettingsTile</code></a>(본인인증 · subtitle "인증하기" · chevron · has-subtitle variant)<br>
+            · <a href="/components#MinglitSettingsGroup"><code>MinglitSettingsGroup</code></a>("계정 관리" 헤더)<br>
             ·  ├ <a href="/components#MinglitSettingsTile"><code>MinglitSettingsTile</code></a>(로그아웃 · 기본형 · 탭 시 확인 다이얼로그)<br>
             ·  └ <a href="/components#MinglitSettingsTile"><code>MinglitSettingsTile</code></a>(회원 탈퇴 · destructive variant · 탭 시 외부 coordinator)<br>
             · <a href="https://github.com/Mark-Yun/minglit/blob/dev/shared/packages/mds/core/lib/src/ui/widgets/common/minglit_alert.dart"><code>MinglitAlert.showConfirm</code></a>(로그아웃 confirm)
@@ -620,7 +620,6 @@ body.dark-mode .acct-group__card { background: var(--color-dark-surface); }
               </div>
               <div class="acct-list">
                 <div class="acct-group">
-                  <div class="acct-group__header">계정</div>
                   <div class="acct-group__card">
                 <div class="acct-tile acct-tile--has-subtitle">
                   <div class="acct-tile__icon acct-tile__icon--success">
@@ -636,6 +635,7 @@ body.dark-mode .acct-group__card { background: var(--color-dark-surface); }
                   </div>
                 </div>
                 <div class="acct-group">
+                  <div class="acct-group__header">계정 관리</div>
                   <div class="acct-group__card">
                     <div class="acct-tile">
                       <div class="acct-tile__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></div>
@@ -698,7 +698,6 @@ body.dark-mode .acct-group__card { background: var(--color-dark-surface); }
               </div>
               <div class="acct-list">
                 <div class="acct-group">
-                  <div class="acct-group__header">계정</div>
                   <div class="acct-group__card">
                 <!-- 파트너 프로필 (partner only) -->
                 <div class="acct-tile">
@@ -712,6 +711,7 @@ body.dark-mode .acct-group__card { background: var(--color-dark-surface); }
                   </div>
                 </div>
                 <div class="acct-group">
+                  <div class="acct-group__header">계정 관리</div>
                   <div class="acct-group__card">
                     <div class="acct-tile">
                       <div class="acct-tile__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></div>
@@ -751,9 +751,9 @@ body.dark-mode .acct-group__card { background: var(--color-dark-surface); }
           <td class="state-mini__aspect">컴포넌트</td>
           <td>
             ↔ user baseline 대비:<br>
-            + <a href="/components#MinglitSettingsTile"><code>MinglitSettingsTile</code></a>(파트너 프로필 · 기본형 · subtitle 없음 · chevron) — "계정" 그룹 카드 안<br>
+            + <a href="/components#MinglitSettingsTile"><code>MinglitSettingsTile</code></a>(파트너 프로필 · 기본형 · subtitle 없음 · chevron) — 헤더 없는 프로필 카드 안<br>
             − 본인인증 tile 미사용 (분기 props가 null이라 카드에서 통째로 빠짐)<br>
-            동일: 헤더 없는 destructive 카드(로그아웃 + 회원 탈퇴)
+            동일: "계정 관리" 헤더 destructive 카드(로그아웃 + 회원 탈퇴)
           </td>
         </tr>
         <tr>
@@ -782,7 +782,6 @@ body.dark-mode .acct-group__card { background: var(--color-dark-surface); }
               </div>
               <div class="acct-list">
                 <div class="acct-group">
-                  <div class="acct-group__header">계정</div>
                   <div class="acct-group__card">
                 <div class="acct-tile acct-tile--has-subtitle">
                   <div class="acct-tile__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l8 4v5c0 5-3.5 8.5-8 9-4.5-.5-8-4-8-9V7l8-4z"/></svg></div>
@@ -792,6 +791,7 @@ body.dark-mode .acct-group__card { background: var(--color-dark-surface); }
                   </div>
                 </div>
                 <div class="acct-group">
+                  <div class="acct-group__header">계정 관리</div>
                   <div class="acct-group__card">
                     <div class="acct-tile">
                       <div class="acct-tile__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></div>
@@ -876,7 +876,6 @@ body.dark-mode .acct-group__card { background: var(--color-dark-surface); }
               <!-- Scaffold가 그대로 보임 — go('/') transition 200ms 동안 유지 -->
               <div class="acct-list">
                 <div class="acct-group">
-                  <div class="acct-group__header">계정</div>
                   <div class="acct-group__card">
                 <div class="acct-tile acct-tile--has-subtitle">
                   <div class="acct-tile__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l8 4v5c0 5-3.5 8.5-8 9-4.5-.5-8-4-8-9V7l8-4z"/></svg></div>
@@ -886,6 +885,7 @@ body.dark-mode .acct-group__card { background: var(--color-dark-surface); }
                   </div>
                 </div>
                 <div class="acct-group">
+                  <div class="acct-group__header">계정 관리</div>
                   <div class="acct-group__card">
                     <div class="acct-tile">
                       <div class="acct-tile__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></div>
@@ -947,7 +947,6 @@ body.dark-mode .acct-group__card { background: var(--color-dark-surface); }
               </div>
               <div class="acct-list">
                 <div class="acct-group">
-                  <div class="acct-group__header">계정</div>
                   <div class="acct-group__card">
                 <div class="acct-tile">
                   <div class="acct-tile__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7l1.5-3h15L21 7"/><path d="M3 7v13h18V7"/><path d="M3 7c0 2 1.5 3 3 3s3-1 3-3M9 7c0 2 1.5 3 3 3s3-1 3-3M15 7c0 2 1.5 3 3 3s3-1 3-3"/></svg></div>
@@ -957,6 +956,7 @@ body.dark-mode .acct-group__card { background: var(--color-dark-surface); }
                   </div>
                 </div>
                 <div class="acct-group">
+                  <div class="acct-group__header">계정 관리</div>
                   <div class="acct-group__card">
                     <div class="acct-tile">
                       <div class="acct-tile__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></div>
