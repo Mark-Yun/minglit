@@ -8,6 +8,10 @@ on:
       - 'apps/mds/docs/src/lib/components.ts'
       - 'apps/mds/docs/src/components/specs/**'
 
+concurrency:
+  group: mds-spec-change-issue-${{ github.ref }}
+  cancel-in-progress: false
+
 permissions:
   contents: read
   issues: write
@@ -16,15 +20,22 @@ jobs:
   file-issue:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           fetch-depth: 2
 
       - name: Collect changed spec files
         id: collect
+        env:
+          BASE_SHA: ${{ github.event.before }}
+          HEAD_SHA: ${{ github.sha }}
         run: |
-          # diff against the previous commit on dev (PR merge or direct push)
-          CHANGED=$(git diff --name-only HEAD~1 HEAD -- \
+          # Use github.event.before as base; fall back to HEAD^ for first push to branch
+          if [ "$BASE_SHA" = "0000000000000000000000000000000000000000" ]; then
+            BASE_SHA="${HEAD_SHA}^"
+          fi
+
+          CHANGED=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA" -- \
             'apps/mds/docs/public/specs/**' \
             'apps/mds/docs/src/lib/components.ts' \
             'apps/mds/docs/src/components/specs/**' || true)
@@ -45,11 +56,19 @@ jobs:
       - name: Build issue body
         if: steps.collect.outputs.skip != 'true'
         id: body
+        env:
+          COMMIT_SHA: ${{ github.sha }}
+          REPO: ${{ github.repository }}
+          AUTHOR: ${{ github.event.head_commit.author.name }}
+          BASE_SHA: ${{ github.event.before }}
+          CHANGED_FILES: ${{ steps.collect.outputs.files }}
         run: |
-          COMMIT_SHA="${{ github.sha }}"
-          COMMIT_URL="https://github.com/${{ github.repository }}/commit/${COMMIT_SHA}"
+          COMMIT_URL="https://github.com/${REPO}/commit/${COMMIT_SHA}"
           COMMIT_MSG=$(git log -1 --pretty=%s "$COMMIT_SHA")
-          AUTHOR="${{ github.event.head_commit.author.name }}"
+
+          if [ "$BASE_SHA" = "0000000000000000000000000000000000000000" ]; then
+            BASE_SHA="${COMMIT_SHA}^"
+          fi
 
           {
             echo "body<<BODY_EOF"
@@ -58,7 +77,7 @@ jobs:
             while IFS= read -r f; do
               [ -z "$f" ] && continue
               echo "- \`$f\`"
-            done <<< "${{ steps.collect.outputs.files }}"
+            done <<< "$CHANGED_FILES"
             echo ""
             echo "## 원인 commit"
             echo ""
@@ -68,7 +87,7 @@ jobs:
             echo "## diff 요약 (최대 200줄)"
             echo ""
             echo '```diff'
-            git diff HEAD~1 HEAD -- \
+            git diff "$BASE_SHA" "$COMMIT_SHA" -- \
               'apps/mds/docs/public/specs/**' \
               'apps/mds/docs/src/lib/components.ts' \
               'apps/mds/docs/src/components/specs/**' \
@@ -86,11 +105,10 @@ jobs:
             echo '```bash'
             while IFS= read -r f; do
               [ -z "$f" ] && continue
-              # spec 파일명에서 화면/컴포넌트 이름 추출
               base=$(basename "$f" .html)
               base=$(basename "$base" .tsx)
               echo "grep -r '$base' apps/app_user/lib/ apps/app_partner/lib/ shared/packages/minglit_kit/lib/"
-            done <<< "${{ steps.collect.outputs.files }}"
+            done <<< "$CHANGED_FILES"
             echo '```'
             echo "BODY_EOF"
           } >> "$GITHUB_OUTPUT"
@@ -99,11 +117,14 @@ jobs:
         if: steps.collect.outputs.skip != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COMMIT_SHA: ${{ github.sha }}
+          REPO: ${{ github.repository }}
+          CHANGED_FILES: ${{ steps.collect.outputs.files }}
+          BODY: ${{ steps.body.outputs.body }}
         run: |
-          COMMIT_SHA="${{ github.sha }}"
-          FILE_COUNT=$(echo "${{ steps.collect.outputs.files }}" | grep -c '.' || echo 0)
+          FILE_COUNT=$(echo "$CHANGED_FILES" | grep -c '.' || echo 0)
 
           gh issue create \
-            --repo "${{ github.repository }}" \
+            --repo "$REPO" \
             --title "[mds-change] ${FILE_COUNT}개 spec 변경 — 코드 반영 검토 필요 (${COMMIT_SHA:0:7})" \
-            --body "${{ steps.body.outputs.body }}"
+            --body "$BODY"
