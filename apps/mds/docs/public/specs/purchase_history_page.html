@@ -455,7 +455,7 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
     </p>
 
     <div class="layout-grid">
-      <div class="blueprint" style="height: 232px;">
+      <div class="blueprint" style="height: 216px;">
         <!-- card outline -->
         <div class="blueprint__region blueprint__region--full" style="border-radius: 16px;"></div>
 
@@ -490,17 +490,17 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
         </div>
 
         <!-- ④ Pay row -->
-        <div class="blueprint__region blueprint__region--shaded" style="top:184px;left:16px;width:140px;height:24px;">
+        <div class="blueprint__region blueprint__region--shaded" style="top:168px;left:16px;width:140px;height:24px;">
           <span class="blueprint__region-label">④ⓛ ticket name · bodyMedium</span>
         </div>
-        <div class="blueprint__region blueprint__region--shaded" style="top:184px;right:16px;width:96px;height:24px;">
+        <div class="blueprint__region blueprint__region--shaded" style="top:168px;right:16px;width:96px;height:24px;">
           <span class="blueprint__region-label">④ⓡ amount · bodyLarge bold</span>
         </div>
 
         <div class="blueprint__align-marker" style="top:8px;right:8px;">card pad-medium 16</div>
         <div class="blueprint__align-marker" style="top:48px;right:8px;">↕ header→info: spacing-medium 16</div>
         <div class="blueprint__align-marker" style="top:144px;right:8px;">↕ info↔divider: divider 자체 height 32</div>
-        <div class="blueprint__align-marker" style="top:178px;right:8px;">↕ divider→pay-row: 0 (Divider 내장 margin)</div>
+        <div class="blueprint__align-marker" style="top:162px;right:8px;">↕ divider→pay-row: 0 (Divider 내장 margin)</div>
       </div>
 
       <div class="layout-tree"><b>PurchaseHistoryCard</b>
@@ -521,7 +521,7 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
          │     ├─ Text("M월 d일 (E) HH:mm") · bodySmall
          │     └─ Text(location) · bodySmall · secondary
          │  ]
-         │  · badge↔title gap 2px (xsmall 미만 — 시각 묶음 강조)
+         │  · badge↔title 시각 간격 4–6px (Column gap xsmall 4 + badge-wrap margin-bottom 2 — xsmall 미만 시각 묶음 강조)
          │
          ├─ <b>Divider</b>(height: <i>spacing-xlarge 32</i>) · 1px line + 16/16 v-margin
          │
@@ -536,7 +536,7 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
       </thead>
       <tbody>
         <tr><td>1. Header (date · 상세 보기)</td><td>spaceBetween · 좌우 끝</td><td>좌: <code>paidAt ?? createdAt</code>를 <code>toLocal()</code> 후 <code>yyyy.MM.dd</code> 포맷 (Fix #579 · UTC→KST 날짜 차이 방지) · labelMedium onSurfaceVariant. 우: Text('상세 보기') 12px w500 secondary + Icon(chevron_right · 14px · text-secondary) — 카드 전체가 InkWell이라 어디를 탭해도 push되지만 affordance signal로 노출.</td></tr>
-        <tr><td>2. Info row (thumb · 텍스트 column)</td><td>start cross-axis</td><td>thumb 80×80 (<code>MinglitImage</code> · radius-small · BoxFit.cover · imageUrl 없으면 placeholder) + <code>spacing-medium</code> gap + Expanded Column [<a href="/components#StatusBadge"><code>StatusBadge</code></a>(inline-flex · 자기 폭만 차지, 좌측 정렬) · eventName titleMedium bold maxLines 1 ellipsis · "M월 d일 (E) HH:mm" bodySmall · location bodySmall onSurfaceVariant]. badge ↔ title gap 2px (xsmall 미만 — 시각적 묶음 강조).</td></tr>
+        <tr><td>2. Info row (thumb · 텍스트 column)</td><td>start cross-axis</td><td>thumb 80×80 (<code>MinglitImage</code> · radius-small · BoxFit.cover · imageUrl 없으면 placeholder) + <code>spacing-medium</code> gap + Expanded Column [<a href="/components#StatusBadge"><code>StatusBadge</code></a>(inline-flex · 자기 폭만 차지, 좌측 정렬) · eventName titleMedium bold maxLines 1 ellipsis · "M월 d일 (E) HH:mm" bodySmall · location bodySmall onSurfaceVariant]. badge ↔ title 시각 간격 4–6px (Column gap xsmall 4 + badge-wrap margin-bottom 2 → xsmall 미만 시각적 묶음 강조).</td></tr>
         <tr><td>3. Divider</td><td>—</td><td><code>Divider(height: spacing-xlarge 32)</code> — 1px line + 16/16 v-margin (Material Divider default)</td></tr>
         <tr><td>4. Pay row</td><td>spaceBetween baseline</td><td>좌: ticket name bodyMedium · 우: <code>NumberFormat('#,###').format(paymentAmount ?? 0) + '원'</code> bodyLarge bold. 무료 티켓이면 "0원"으로 표기.</td></tr>
       </tbody>
