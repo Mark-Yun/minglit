@@ -188,11 +188,16 @@ class _PartnerApplyPageState extends ConsumerState<PartnerApplyPage> {
               Expanded(
                 flex: 2,
                 child: ElevatedButton(
+                  // Fix #2162, #2163: validate current step before advancing —
+                  // nextStep() had no validation gate, allowing progression
+                  // through Step 3/4 without required fields
                   onPressed: isLoading
                       ? null
                       : (isLastStep
                             ? (notifier.canProceed() ? notifier.submit : null)
-                            : notifier.nextStep),
+                            : (notifier.validateStep(state.currentStep)
+                                ? notifier.nextStep
+                                : null)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: MinglitColors.primary,
                     foregroundColor: MinglitColors.background,

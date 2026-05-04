@@ -89,6 +89,111 @@ void main() {
 
       expect(find.text('신청하기'), findsOneWidget);
     });
+
+    // Fix #2161: Step 2(biz info) — Next button gates on validateStep(1)
+    group('Fix #2161 — Step 2 biz info validation', () {
+      testWidgets('Next disabled when biz fields are empty', (tester) async {
+        await tester.pumpWidget(buildTestWidget());
+        await tester.pump();
+
+        final element = tester.element(find.byType(PartnerApplyPage));
+        ProviderScope.containerOf(element)
+            .read(partnerApplyControllerProvider.notifier)
+            .setStep(1);
+
+        await tester.pumpAndSettle();
+
+        expect(
+          tester.widget<ElevatedButton>(find.byType(ElevatedButton)).onPressed,
+          isNull,
+        );
+      });
+
+      testWidgets('Next enabled when all biz fields filled', (tester) async {
+        await tester.pumpWidget(buildTestWidget());
+        await tester.pump();
+
+        final element = tester.element(find.byType(PartnerApplyPage));
+        final notifier = ProviderScope.containerOf(element)
+            .read(partnerApplyControllerProvider.notifier);
+        notifier
+          ..setStep(1)
+          ..updateField('bizName', 'Example Corp')
+          ..updateField('bizNumber', '123-45-67890')
+          ..updateField('representativeName', '홍길동');
+
+        await tester.pumpAndSettle();
+
+        expect(
+          tester.widget<ElevatedButton>(find.byType(ElevatedButton)).onPressed,
+          isNotNull,
+        );
+      });
+    });
+
+    // Fix #2162: Step 3(contact/bank) — Next button gates on validateStep(2)
+    group('Fix #2162 — Step 3 contact/bank validation', () {
+      testWidgets('Next disabled when contact fields are empty', (tester) async {
+        await tester.pumpWidget(buildTestWidget());
+        await tester.pump();
+
+        final element = tester.element(find.byType(PartnerApplyPage));
+        ProviderScope.containerOf(element)
+            .read(partnerApplyControllerProvider.notifier)
+            .setStep(2);
+
+        await tester.pumpAndSettle();
+
+        expect(
+          tester.widget<ElevatedButton>(find.byType(ElevatedButton)).onPressed,
+          isNull,
+        );
+      });
+
+      testWidgets('Next enabled when all contact and bank fields filled',
+          (tester) async {
+        await tester.pumpWidget(buildTestWidget());
+        await tester.pump();
+
+        final element = tester.element(find.byType(PartnerApplyPage));
+        final notifier = ProviderScope.containerOf(element)
+            .read(partnerApplyControllerProvider.notifier);
+        notifier
+          ..setStep(2)
+          ..updateField('contactPhone', '010-1234-5678')
+          ..updateField('contactEmail', 'biz@example.com')
+          ..updateField('bankName', '국민은행')
+          ..updateField('accountNumber', '123456789012')
+          ..updateField('accountHolder', '홍길동');
+
+        await tester.pumpAndSettle();
+
+        expect(
+          tester.widget<ElevatedButton>(find.byType(ElevatedButton)).onPressed,
+          isNotNull,
+        );
+      });
+    });
+
+    // Fix #2163: Step 4(documents) — Next button gates on validateStep(3)
+    group('Fix #2163 — Step 4 documents validation', () {
+      testWidgets('Next disabled when no documents uploaded', (tester) async {
+        await tester.pumpWidget(buildTestWidget());
+        await tester.pump();
+
+        final element = tester.element(find.byType(PartnerApplyPage));
+        ProviderScope.containerOf(element)
+            .read(partnerApplyControllerProvider.notifier)
+            .setStep(3);
+
+        await tester.pumpAndSettle();
+
+        expect(
+          tester.widget<ElevatedButton>(find.byType(ElevatedButton)).onPressed,
+          isNull,
+        );
+      });
+    });
   });
 
   // Fix #2130: draft restore 시 animateToPage 애니메이션 중
