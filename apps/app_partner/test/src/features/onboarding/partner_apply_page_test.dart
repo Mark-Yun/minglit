@@ -1,5 +1,7 @@
 import 'package:app_partner/src/features/onboarding/partner_apply_controller.dart';
 import 'package:app_partner/src/features/onboarding/partner_apply_page.dart';
+import 'package:app_partner/src/features/onboarding/steps/step1_basic_info.dart';
+import 'package:app_partner/src/features/onboarding/steps/step5_review.dart';
 import 'package:app_partner/src/l10n/generated/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -149,19 +151,20 @@ void main() {
       await tester.pump(); // post-frame callback fires (loadDraft starts)
       await tester.pump(); // loadDraft completes (mock is instant)
 
-      // Fix #2130 적용 후: jumpToPage(4)이므로 즉시 page 4로 이동
-      // 수정 전: animateToPage(4)이므로 여기서는 page 0~4 사이에 있음
-      // AppBar 제목과 PageView 내용이 일치해야 함
+      // Fix #2130 적용 후: jumpToPage(4)이므로 즉시 page 4로 이동.
+      // 수정 전 animateToPage(4)라면 이 시점에 PageView는 여전히 page 0 근처에
+      // 있으므로 Step1BasicInfo가 렌더되고 Step5Review는 위젯 트리에 없다.
       final element = tester.element(find.byType(PartnerApplyPage));
       final state = ProviderScope.containerOf(
         element,
       ).read(partnerApplyControllerProvider);
 
-      // state가 4로 업데이트되었다면 title도 "최종 확인"이어야 함
-      if (state.currentStep == 4) {
-        // jumpToPage는 즉시이므로 title과 page가 동기화
-        expect(find.text('최종 확인'), findsOneWidget);
-      }
+      // controller state가 4여야 한다 (조건부 검사 아님)
+      expect(state.currentStep, 4);
+      // PageView가 page 4에 있으면 Step5Review가 렌더된다
+      expect(find.byType(Step5Review), findsOneWidget);
+      // page 0이 아니므로 Step1BasicInfo는 위젯 트리에 없어야 한다
+      expect(find.byType(Step1BasicInfo), findsNothing);
 
       await tester.pumpAndSettle();
       expect(find.text('최종 확인'), findsOneWidget);
