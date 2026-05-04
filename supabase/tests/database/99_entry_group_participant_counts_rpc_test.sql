@@ -134,7 +134,7 @@ DECLARE
   v_party_id   uuid;
   v_empty_event_id uuid;
 BEGIN
-  SELECT partner_id INTO v_partner_id
+  SELECT id INTO v_partner_id
   FROM public.partners WHERE name = 'EGPC Test Partner';
 
   SELECT id INTO v_party_id FROM public.parties WHERE partner_id = v_partner_id LIMIT 1;
