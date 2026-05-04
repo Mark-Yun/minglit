@@ -24,6 +24,15 @@ class VerificationManagePage extends ConsumerWidget {
             color: theme.colorScheme.onSurface,
           ),
           iconTheme: IconThemeData(color: theme.colorScheme.onSurface),
+          // Fix #2142: navigate to pending review queue
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.rate_review_outlined),
+              tooltip: '심사 대기',
+              onPressed: () =>
+                  const VerificationReviewRoute().push<void>(context),
+            ),
+          ],
           bottom: TabBar(
             labelColor: theme.colorScheme.primary,
             unselectedLabelColor: theme.colorScheme.onSurfaceVariant,

@@ -31,6 +31,7 @@ import 'package:app_partner/src/features/ticket/create/ticket_create_page.dart';
 import 'package:app_partner/src/features/ticket/edit/ticket_edit_page.dart';
 import 'package:app_partner/src/features/verification/create/create_verification_page.dart';
 import 'package:app_partner/src/features/verification/manage/verification_manage_page.dart';
+import 'package:app_partner/src/features/verification/review/review_verification_screen.dart';
 import 'package:app_partner/src/ui/shell/partner_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -178,6 +179,8 @@ class NotificationCenterRoute extends GoRouteData
             // Settings, Profile, etc.
             TypedGoRoute<VerificationManageRoute>(path: 'verifications/manage'),
             TypedGoRoute<CreateVerificationRoute>(path: 'verifications/create'),
+            // Fix #2142: ReviewVerificationScreen had no registered route
+            TypedGoRoute<VerificationReviewRoute>(path: 'verifications/review'),
             TypedGoRoute<NotificationSettingsRoute>(
               path: 'notification-settings',
             ),
@@ -468,6 +471,14 @@ class CreateVerificationRoute extends GoRouteData
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       CreateVerificationPage(partnerId: partnerId);
+}
+
+// Fix #2142: register the review route so ReviewVerificationScreen is reachable
+class VerificationReviewRoute extends GoRouteData with $VerificationReviewRoute {
+  const VerificationReviewRoute();
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const ReviewVerificationScreen();
 }
 
 class MemberListRoute extends GoRouteData with $MemberListRoute {
