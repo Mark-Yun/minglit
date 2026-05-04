@@ -36,8 +36,11 @@ class _PartnerApplyPageState extends ConsumerState<PartnerApplyPage> {
 
   Future<void> _restoreDraft() async {
     _isRestoringDraft = true;
-    await ref.read(partnerApplyControllerProvider.notifier).loadDraft();
-    _isRestoringDraft = false;
+    try {
+      await ref.read(partnerApplyControllerProvider.notifier).loadDraft();
+    } finally {
+      _isRestoringDraft = false;
+    }
     if (!mounted) return;
     final step = ref.read(partnerApplyControllerProvider).currentStep;
     if (step > 0 && _pageController.hasClients) {
