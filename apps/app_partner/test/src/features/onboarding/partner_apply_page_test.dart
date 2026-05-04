@@ -97,9 +97,9 @@ void main() {
         await tester.pump();
 
         final element = tester.element(find.byType(PartnerApplyPage));
-        ProviderScope.containerOf(element)
-            .read(partnerApplyControllerProvider.notifier)
-            .setStep(1);
+        ProviderScope.containerOf(
+          element,
+        ).read(partnerApplyControllerProvider.notifier).setStep(1);
 
         await tester.pumpAndSettle();
 
@@ -114,8 +114,9 @@ void main() {
         await tester.pump();
 
         final element = tester.element(find.byType(PartnerApplyPage));
-        final notifier = ProviderScope.containerOf(element)
-            .read(partnerApplyControllerProvider.notifier);
+        final notifier = ProviderScope.containerOf(
+          element,
+        ).read(partnerApplyControllerProvider.notifier);
         notifier
           ..setStep(1)
           ..updateField('bizName', 'Example Corp')
@@ -133,14 +134,16 @@ void main() {
 
     // Fix #2162: Step 3(contact/bank) — Next button gates on validateStep(2)
     group('Fix #2162 — Step 3 contact/bank validation', () {
-      testWidgets('Next disabled when contact fields are empty', (tester) async {
+      testWidgets('Next disabled when contact fields are empty', (
+        tester,
+      ) async {
         await tester.pumpWidget(buildTestWidget());
         await tester.pump();
 
         final element = tester.element(find.byType(PartnerApplyPage));
-        ProviderScope.containerOf(element)
-            .read(partnerApplyControllerProvider.notifier)
-            .setStep(2);
+        ProviderScope.containerOf(
+          element,
+        ).read(partnerApplyControllerProvider.notifier).setStep(2);
 
         await tester.pumpAndSettle();
 
@@ -150,14 +153,16 @@ void main() {
         );
       });
 
-      testWidgets('Next enabled when all contact and bank fields filled',
-          (tester) async {
+      testWidgets('Next enabled when all contact and bank fields filled', (
+        tester,
+      ) async {
         await tester.pumpWidget(buildTestWidget());
         await tester.pump();
 
         final element = tester.element(find.byType(PartnerApplyPage));
-        final notifier = ProviderScope.containerOf(element)
-            .read(partnerApplyControllerProvider.notifier);
+        final notifier = ProviderScope.containerOf(
+          element,
+        ).read(partnerApplyControllerProvider.notifier);
         notifier
           ..setStep(2)
           ..updateField('contactPhone', '010-1234-5678')
@@ -182,9 +187,9 @@ void main() {
         await tester.pump();
 
         final element = tester.element(find.byType(PartnerApplyPage));
-        ProviderScope.containerOf(element)
-            .read(partnerApplyControllerProvider.notifier)
-            .setStep(3);
+        ProviderScope.containerOf(
+          element,
+        ).read(partnerApplyControllerProvider.notifier).setStep(3);
 
         await tester.pumpAndSettle();
 
