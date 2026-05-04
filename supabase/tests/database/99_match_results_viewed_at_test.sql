@@ -72,19 +72,17 @@ SELECT is(
 );
 
 -- ============================================================
--- Test 3: 본인 row 업데이트 가능 (idempotent: NULL인 경우만)
+-- Test 3: 본인 신청서 RPC 호출 → true 반환
 -- ============================================================
 
 SELECT tests.authenticate_as('mrv_user_a');
 
-SELECT lives_ok(
-  format(
-    $$UPDATE public.event_applications
-      SET match_results_viewed_at = NOW()
-      WHERE id = '%s'::uuid AND match_results_viewed_at IS NULL$$,
-    current_setting('tests.mrv_app_a_id')
-  ),
-  'user_a: 자기 신청서 match_results_viewed_at 업데이트 가능'
+SELECT is(
+  (SELECT public.mark_match_results_viewed(
+    current_setting('tests.mrv_app_a_id')::uuid
+  )),
+  true,
+  'user_a: mark_match_results_viewed(자기 신청서) → true'
 );
 
 -- ============================================================
@@ -99,47 +97,28 @@ SELECT isnt(
 );
 
 -- ============================================================
--- Test 5: 타인 row는 업데이트 불가 (RLS 차단)
+-- Test 5: 타인 신청서 RPC 호출 → permission denied 예외
 -- ============================================================
 
-SELECT is(
-  (WITH upd AS (
-    UPDATE public.event_applications
-      SET match_results_viewed_at = NOW()
-      WHERE id = current_setting('tests.mrv_app_b_id')::uuid
-        AND match_results_viewed_at IS NULL
-    RETURNING 1
-  ) SELECT count(*)::integer FROM upd),
-  0::integer,
-  'user_a가 user_b 신청서 업데이트 시 0 rows affected (RLS 차단)'
+SELECT throws_like(
+  format(
+    $$SELECT public.mark_match_results_viewed('%s'::uuid)$$,
+    current_setting('tests.mrv_app_b_id')
+  ),
+  '%permission denied%',
+  'user_a가 user_b 신청서 호출 시 permission denied 예외'
 );
 
 -- ============================================================
--- Test 6: 이미 set된 경우 idempotent (WHERE IS NULL 조건으로 재업데이트 방지)
+-- Test 6: 이미 set된 경우 idempotent (false 반환, 값 변경 없음)
 -- ============================================================
 
-DO $$
-DECLARE
-  v_first_time timestamptz;
-BEGIN
-  SELECT match_results_viewed_at INTO v_first_time
-  FROM public.event_applications
-  WHERE id = current_setting('tests.mrv_app_a_id')::uuid;
-
-  PERFORM set_config('tests.mrv_first_viewed_at', v_first_time::text, true);
-END $$;
-
--- 다시 업데이트 시도 (WHERE IS NULL → 0 rows affected, 값 변경 없음)
-UPDATE public.event_applications
-  SET match_results_viewed_at = NOW() + interval '1 hour'
-  WHERE id = current_setting('tests.mrv_app_a_id')::uuid
-    AND match_results_viewed_at IS NULL;
-
 SELECT is(
-  (SELECT match_results_viewed_at::text FROM public.event_applications
-   WHERE id = current_setting('tests.mrv_app_a_id')::uuid),
-  current_setting('tests.mrv_first_viewed_at'),
-  'match_results_viewed_at 이미 set된 경우 WHERE IS NULL로 idempotent 보장'
+  (SELECT public.mark_match_results_viewed(
+    current_setting('tests.mrv_app_a_id')::uuid
+  )),
+  false,
+  'mark_match_results_viewed 재호출 시 false (이미 set, idempotent)'
 );
 
 SELECT * FROM finish();
