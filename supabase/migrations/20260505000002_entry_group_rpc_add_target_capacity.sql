@@ -5,6 +5,10 @@
 -- 기존 호출자에 영향 없음.
 -- ============================================================
 
+-- DROP required: PostgreSQL disallows CREATE OR REPLACE when the return type changes
+-- (SQLSTATE 42P13). Callers only need the result type at runtime, not at parse time.
+drop function if exists public.get_entry_group_participant_counts(uuid);
+
 create or replace function public.get_entry_group_participant_counts(
   p_event_id uuid
 )
