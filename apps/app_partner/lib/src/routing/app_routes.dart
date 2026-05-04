@@ -474,7 +474,8 @@ class CreateVerificationRoute extends GoRouteData
 }
 
 // Fix #2142: register the review route so ReviewVerificationScreen is reachable
-class VerificationReviewRoute extends GoRouteData with $VerificationReviewRoute {
+class VerificationReviewRoute extends GoRouteData
+    with $VerificationReviewRoute {
   const VerificationReviewRoute();
   @override
   Widget build(BuildContext context, GoRouterState state) =>
