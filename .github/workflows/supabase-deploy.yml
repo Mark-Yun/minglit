@@ -165,42 +165,42 @@ jobs:
           SUPABASE_URL_VALUE="https://${PROJECT_ID}.supabase.co"
 
           # Idempotent upsert via 2-call pattern (check existence → create or update).
-          # All values passed via psql -v + :'var' (client-side auto-quote) → SQL injection
-          # safe. Plain SELECT statements (no DO blocks) so :'var' interpolation works
-          # (psql skips substitution inside dollar-quoted strings).
+          # Fix #2154 후속: psql -c 안에서 :'var' 보간이 동작 안 함 (LINE 1: ... = :'name'
+          # syntax error). 기존 Verify vault secrets step 패턴 따라 bash interpolation
+          # 사용. SQL injection 방어: 값 안의 ' 를 '' 로 escape (PostgreSQL 표준 string
+          # literal escape). secret 값(JWT/URL)은 base64url + . / https + alphanumeric
+          # 이라 ' 자체가 없지만 defensive escape 적용.
+          sql_escape() {
+            printf '%s' "$1" | sed "s/'/''/g"
+          }
+
           sync_secret() {
             local name="$1"
             local value="$2"
             local desc="$3"
-            local existing_id
+            local existing_id name_esc value_esc desc_esc
+
+            name_esc=$(sql_escape "$name")
+            value_esc=$(sql_escape "$value")
+            desc_esc=$(sql_escape "$desc")
 
             existing_id=$(PGPASSWORD="${DB_PASSWORD}" psql "${CONN_URL}" \
-              -t -A -v ON_ERROR_STOP=1 \
-              -v name="${name}" \
-              -c "SELECT id FROM vault.secrets WHERE name = :'name';") || {
+              -t -A \
+              -c "SELECT id FROM vault.secrets WHERE name = '${name_esc}';") || {
               echo "::error::psql failed querying vault.secrets for '${name}'"
               exit 1
             }
 
             if [ -z "$existing_id" ]; then
               PGPASSWORD="${DB_PASSWORD}" psql "${CONN_URL}" \
-                -v ON_ERROR_STOP=1 \
-                -v name="${name}" \
-                -v val="${value}" \
-                -v desc="${desc}" \
-                -c "SELECT vault.create_secret(:'val', :'name', :'desc');" > /dev/null || {
+                -c "SELECT vault.create_secret('${value_esc}', '${name_esc}', '${desc_esc}');" > /dev/null || {
                 echo "::error::vault.create_secret failed for '${name}'"
                 exit 1
               }
               echo "vault: ${name} created"
             else
               PGPASSWORD="${DB_PASSWORD}" psql "${CONN_URL}" \
-                -v ON_ERROR_STOP=1 \
-                -v name="${name}" \
-                -v val="${value}" \
-                -v desc="${desc}" \
-                -v id="${existing_id}" \
-                -c "SELECT vault.update_secret(:'id'::uuid, :'val', :'name', :'desc');" > /dev/null || {
+                -c "SELECT vault.update_secret('${existing_id}'::uuid, '${value_esc}', '${name_esc}', '${desc_esc}');" > /dev/null || {
                 echo "::error::vault.update_secret failed for '${name}'"
                 exit 1
               }
