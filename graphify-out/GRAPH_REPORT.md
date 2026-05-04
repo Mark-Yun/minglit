@@ -1,7 +1,7 @@
 # Graph Report - /private/tmp/minglit-vault-sync  (2026-05-04)
 
 ## Corpus Check
-- 1175 files · ~1,791,478 words
+- 1175 files · ~1,792,083 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -2430,11 +2430,11 @@ _Questions this graph is uniquely positioned to answer:_
 - **What is the exact relationship between `Architecture Audit #1092 — 2026-04-06` and `AI Basic Law Compliance (Korea 2026)`?**
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
 - **Why does `package:flutter/material.dart` connect `Community 2` to `Community 0`, `Community 1`, `Community 5`, `Community 7`, `Community 17`, `Community 18`, `Community 21`, `Community 25`?**
-  _High betweenness centrality (0.054) - this node is a cross-community bridge._
+  _High betweenness centrality (0.069) - this node is a cross-community bridge._
 - **Why does `package:minglit_kit/minglit_kit.dart` connect `Community 1` to `Community 0`, `Community 2`, `Community 5`, `Community 7`, `Community 17`, `Community 18`, `Community 25`?**
-  _High betweenness centrality (0.032) - this node is a cross-community bridge._
+  _High betweenness centrality (0.034) - this node is a cross-community bridge._
 - **Why does `MinglitTheme` connect `Community 3` to `Community 11`, `Community 4`?**
-  _High betweenness centrality (0.018) - this node is a cross-community bridge._
+  _High betweenness centrality (0.022) - this node is a cross-community bridge._
 - **What connects `reporter (AutoLabelAllureReporter)`, `BugReporterWrapper Widget Test Suite`, `MinglitListTile Widget Test Suite` to the rest of the system?**
   _1867 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
