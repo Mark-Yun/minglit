@@ -144,6 +144,12 @@ void main() {
           username: 'test_user',
         ),
       );
+      // Fix #2155: getUserProfile and getApprovedVerificationIds are fetched in
+      // parallel, so getApprovedVerificationIds is now called even when
+      // identityRequired would short-circuit.
+      when(
+        () => mockUserRepo.getApprovedVerificationIds('user_1'),
+      ).thenAnswer((_) async => []);
 
       final container = createContainer(
         overrides: [
@@ -687,6 +693,53 @@ void main() {
     });
   });
 
+  // Fix #2155: 병렬 패치 회귀 테스트 — getUserProfile 과 getApprovedVerificationIds 가
+  // 동시에 호출되는지 확인 (sequential 으로 되돌아가지 않도록)
+  group('EventAdmissionController — parallel fetch (Fix #2155)', () {
+    test(
+      'both getUserProfile and getApprovedVerificationIds are called for active event',
+      () async {
+        when(
+          () => mockEventRepo.getApplication(
+            eventId: any(named: 'eventId'),
+            userId: any(named: 'userId'),
+          ),
+        ).thenAnswer((_) async => null);
+
+        when(() => mockUserRepo.getUserProfile('user_1')).thenAnswer(
+          (_) async => UserProfile(
+            id: 'user_1',
+            name: 'Test User',
+            username: 'test_user',
+            isVerified: true,
+            gender: 'male',
+            birthDate: DateTime(1995),
+          ),
+        );
+        when(
+          () => mockUserRepo.getApprovedVerificationIds('user_1'),
+        ).thenAnswer((_) async => []);
+
+        final container = createContainer(
+          overrides: [
+            currentUserProvider.overrideWith((ref) => mockUser),
+            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
+            userRepositoryProvider.overrideWith((ref) => mockUserRepo),
+          ],
+        );
+
+        await container.read(
+          eventAdmissionControllerProvider(testEvent).future,
+        );
+
+        verify(() => mockUserRepo.getUserProfile('user_1')).called(1);
+        verify(
+          () => mockUserRepo.getApprovedVerificationIds('user_1'),
+        ).called(1);
+      },
+    );
+  });
+
   // Fix #1287: EventAdmissionController 에러 경로 테스트
   group('EventAdmissionController — error paths (Fix #1287)', () {
     test(
@@ -759,6 +812,44 @@ void main() {
 
         final raw = container.read(eventAdmissionControllerProvider(testEvent));
         expect(raw.error, isA<Exception>());
+      },
+    );
+
+    // Regression #2155: unverified user + verifIds throws => identityRequired (not AsyncError)
+    test(
+      'unverified user gets identityRequired even when getApprovedVerificationIds throws',
+      () async {
+        when(
+          () => mockEventRepo.getApplication(
+            eventId: any(named: 'eventId'),
+            userId: any(named: 'userId'),
+          ),
+        ).thenAnswer((_) async => null);
+
+        when(() => mockUserRepo.getUserProfile('user_1')).thenAnswer(
+          (_) async => const UserProfile(
+            id: 'user_1',
+            name: 'Test User',
+            username: 'test_user',
+            // isVerified defaults to false — triggers identityRequired
+          ),
+        );
+        when(
+          () => mockUserRepo.getApprovedVerificationIds(any()),
+        ).thenThrow(Exception('Verification DB error'));
+
+        final container = createContainer(
+          overrides: [
+            currentUserProvider.overrideWith((ref) => mockUser),
+            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
+            userRepositoryProvider.overrideWith((ref) => mockUserRepo),
+          ],
+        );
+
+        final state = await container.read(
+          eventAdmissionControllerProvider(testEvent).future,
+        );
+        expect(state.status, EventAdmissionStatus.identityRequired);
       },
     );
 
