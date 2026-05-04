@@ -733,7 +733,9 @@ void main() {
         );
 
         verify(() => mockUserRepo.getUserProfile('user_1')).called(1);
-        verify(() => mockUserRepo.getApprovedVerificationIds('user_1')).called(1);
+        verify(
+          () => mockUserRepo.getApprovedVerificationIds('user_1'),
+        ).called(1);
       },
     );
   });
