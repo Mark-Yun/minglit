@@ -99,7 +99,8 @@ AdmissionState _checkEligibility({
           allMissingIds.addAll(missingIds);
         }
       } else {
-        final isGenderMismatch = group.gender != null &&
+        final isGenderMismatch =
+            group.gender != null &&
             userProfile.gender != null &&
             group.gender != userProfile.gender;
         if (isGenderMismatch) {
@@ -130,7 +131,8 @@ AdmissionState _checkEligibility({
   return AdmissionState(
     status: EventAdmissionStatus.notEligible,
     user: currentUser,
-    ineligibleReason: bestIneligibleReason ?? firstIneligibleReason ?? '참여 조건이 맞지 않습니다.',
+    ineligibleReason:
+        bestIneligibleReason ?? firstIneligibleReason ?? '참여 조건이 맞지 않습니다.',
   );
 }
 

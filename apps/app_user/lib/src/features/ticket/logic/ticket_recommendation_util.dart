@@ -95,7 +95,8 @@ class TicketRecommendationUtil {
     for (final group in groups) {
       final reason = _checkGroupCondition(group, userProfile);
       if (reason != null) {
-        final isGenderMismatch = group.gender != null &&
+        final isGenderMismatch =
+            group.gender != null &&
             userProfile.gender != null &&
             group.gender != userProfile.gender;
         if (isGenderMismatch) {

@@ -224,45 +224,48 @@ void main() {
 
     // Fix #2160: female user with age mismatch should see age error, not gender error
     // from the male group that iterates first in the groups list.
-    test('shows age error from gender-matched group, not gender error from mismatched group', () {
-      final ageLimitedEvent = baseEvent.copyWith(
-        entryGroups: [
-          const EntryGroup(
-            id: 'group_m',
-            eventId: 'event_1',
-            gender: 'male',
-            birthYearMin: 1990,
-          ),
-          const EntryGroup(
-            id: 'group_f',
-            eventId: 'event_1',
-            gender: 'female',
-            birthYearMin: 1990,
-          ),
-        ],
-      );
+    test(
+      'shows age error from gender-matched group, not gender error from mismatched group',
+      () {
+        final ageLimitedEvent = baseEvent.copyWith(
+          entryGroups: [
+            const EntryGroup(
+              id: 'group_m',
+              eventId: 'event_1',
+              gender: 'male',
+              birthYearMin: 1990,
+            ),
+            const EntryGroup(
+              id: 'group_f',
+              eventId: 'event_1',
+              gender: 'female',
+              birthYearMin: 1990,
+            ),
+          ],
+        );
 
-      final tooOldFemale = UserProfile(
-        id: 'user_old_f',
-        name: 'Old Female',
-        username: 'old_f',
-        isVerified: true,
-        gender: 'female',
-        birthDate: DateTime(1985), // 1985 < birthYearMin 1990
-      );
+        final tooOldFemale = UserProfile(
+          id: 'user_old_f',
+          name: 'Old Female',
+          username: 'old_f',
+          isVerified: true,
+          gender: 'female',
+          birthDate: DateTime(1985), // 1985 < birthYearMin 1990
+        );
 
-      final result = TicketRecommendationUtil.recommend(
-        event: ageLimitedEvent,
-        userProfile: tooOldFemale,
-        approvedVerificationIds: [],
-        balanceStatus: {'ticket_m': true, 'ticket_f': true},
-      );
+        final result = TicketRecommendationUtil.recommend(
+          event: ageLimitedEvent,
+          userProfile: tooOldFemale,
+          approvedVerificationIds: [],
+          balanceStatus: {'ticket_m': true, 'ticket_f': true},
+        );
 
-      expect(result.recommendedTicket, isNull);
-      // Must show age error from the female group, NOT gender error from male group
-      expect(result.ineligibleReasons['ticket_f'], contains('1990'));
-      expect(result.ineligibleReasons['ticket_f'], isNot(contains('성별')));
-    });
+        expect(result.recommendedTicket, isNull);
+        // Must show age error from the female group, NOT gender error from male group
+        expect(result.ineligibleReasons['ticket_f'], contains('1990'));
+        expect(result.ineligibleReasons['ticket_f'], isNot(contains('성별')));
+      },
+    );
 
     test('sorts eligible tickets by price ascending', () {
       final multiTicketEvent = baseEvent.copyWith(
