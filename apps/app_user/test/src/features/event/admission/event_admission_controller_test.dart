@@ -70,6 +70,27 @@ void main() {
     ],
   );
 
+  // Fix #2160: event with both male and female entry groups sharing the same
+  // age restriction — used to verify gender-matched reason priority in _checkEligibility.
+  final testMixedGenderEvent = testEvent.copyWith(
+    tickets: [
+      Ticket(
+        id: 'ticket_1',
+        eventId: 'event_1',
+        name: 'Normal Ticket',
+        createdAt: _fixedNow,
+        updatedAt: _fixedNow,
+        targetEntryGroupIds: ['group_m', 'group_f'],
+        requiredVerificationIds: [],
+        price: 10000,
+      ),
+    ],
+    entryGroups: [
+      const EntryGroup(id: 'group_m', eventId: 'event_1', gender: 'male', birthYearMin: 1990),
+      const EntryGroup(id: 'group_f', eventId: 'event_1', gender: 'female', birthYearMin: 1990),
+    ],
+  );
+
   setUp(() {
     mockEventRepo = MockEventRepository();
     mockUserRepo = MockUserRepository();
@@ -199,6 +220,50 @@ void main() {
         eventAdmissionControllerProvider(testEvent).future,
       );
       expect(state.status, EventAdmissionStatus.notEligible);
+    });
+
+    // Fix #2160: regression guard for _checkEligibility — female user with age
+    // mismatch must see age error from the gender-matched female group, not the
+    // gender error from the male group that appears first in the groups list.
+    test('ineligibleReason prefers age error from gender-matched group over gender error', () async {
+      when(
+        () => mockEventRepo.getApplication(
+          eventId: any(named: 'eventId'),
+          userId: any(named: 'userId'),
+        ),
+      ).thenAnswer((_) async => null);
+
+      when(() => mockUserRepo.getUserProfile('user_1')).thenAnswer(
+        (_) async => UserProfile(
+          id: 'user_1',
+          name: 'Test User',
+          username: 'test_user',
+          isVerified: true,
+          gender: 'female',
+          birthDate: DateTime(1985), // 1985 < birthYearMin 1990 → age mismatch on female group
+        ),
+      );
+      when(
+        () => mockUserRepo.getApprovedVerificationIds('user_1'),
+      ).thenAnswer((_) async => []);
+      when(() => mockEventRepo.getEventById(any())).thenAnswer(
+        (_) async => testMixedGenderEvent,
+      );
+
+      final container = createContainer(
+        overrides: [
+          currentUserProvider.overrideWith((ref) => mockUser),
+          eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
+          userRepositoryProvider.overrideWith((ref) => mockUserRepo),
+        ],
+      );
+
+      final state = await container.read(
+        eventAdmissionControllerProvider(testMixedGenderEvent).future,
+      );
+      expect(state.status, EventAdmissionStatus.notEligible);
+      expect(state.ineligibleReason, contains('1990'));
+      expect(state.ineligibleReason, isNot(contains('성별')));
     });
 
     test(
