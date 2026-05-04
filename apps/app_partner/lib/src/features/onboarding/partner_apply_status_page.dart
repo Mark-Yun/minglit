@@ -10,8 +10,9 @@ import 'package:minglit_kit/minglit_kit.dart';
 // instance on every rebuild → infinite rebuild loop and getMyApplication spam.
 // Top-level provider has stable identity, breaking the cycle.
 // ignore: specify_nonobvious_property_types
-final _myApplicationProvider =
-    FutureProvider.autoDispose<PartnerApplication?>((ref) {
+final _myApplicationProvider = FutureProvider.autoDispose<PartnerApplication?>((
+  ref,
+) {
   final repo = ref.read(partnerRepositoryProvider);
   return repo.getMyApplication();
 });
