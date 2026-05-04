@@ -136,6 +136,83 @@ jobs:
       - name: Install PostgreSQL client
         run: sudo apt-get update && sudo apt-get install -y postgresql-client
 
+      # Fix #2153: pg_cron→EF auth용 vault secret 자동 동기화 — #352에서 IPv6 이슈로
+      # 제거된 inject step을 #1228 pooler 전환 후 부활. idempotent upsert로 secret이
+      # 어떤 이유로 사라져도 (인프라 이전 #1553, branching, 수동 삭제) 다음 deploy에서
+      # 자동 복구. main은 SUPABASE_MAIN_SECRET_KEY GH Secret 등록 후 활성화 (현재 누락 시
+      # 빈 값 가드로 fail-fast).
+      - name: Sync Vault secrets
+        env:
+          DB_PASSWORD: ${{ steps.env.outputs.DB_PASSWORD }}
+          PROJECT_ID: ${{ steps.env.outputs.PROJECT_ID }}
+          SERVICE_ROLE_KEY: ${{ steps.env.outputs.SERVICE_ROLE_KEY }}
+          ENV_NAME: ${{ steps.env.outputs.ENV }}
+          # Fix #1228: pooler endpoint for IPv4 (db.{ref}.supabase.co is IPv6 only)
+          # Fix #1553: aws-0 → aws-1 infrastructure migration
+          POOLER_HOST: aws-1-ap-northeast-2.pooler.supabase.com
+        run: |
+          # Fail-fast guards
+          if [ -z "$SERVICE_ROLE_KEY" ]; then
+            echo "::error::SERVICE_ROLE_KEY is empty — register SUPABASE_${ENV_NAME^^}_SECRET_KEY in GitHub Secrets"
+            exit 1
+          fi
+          if [ -z "$PROJECT_ID" ] || [ -z "$DB_PASSWORD" ]; then
+            echo "::error::PROJECT_ID or DB_PASSWORD is empty"
+            exit 1
+          fi
+
+          CONN_URL="postgresql://postgres.${PROJECT_ID}@${POOLER_HOST}:5432/postgres?sslmode=require"
+          SUPABASE_URL_VALUE="https://${PROJECT_ID}.supabase.co"
+
+          # Idempotent upsert via 2-call pattern (check existence → create or update).
+          # All values passed via psql -v + :'var' (client-side auto-quote) → SQL injection
+          # safe. Plain SELECT statements (no DO blocks) so :'var' interpolation works
+          # (psql skips substitution inside dollar-quoted strings).
+          sync_secret() {
+            local name="$1"
+            local value="$2"
+            local desc="$3"
+            local existing_id
+
+            existing_id=$(PGPASSWORD="${DB_PASSWORD}" psql "${CONN_URL}" \
+              -t -A -v ON_ERROR_STOP=1 \
+              -v name="${name}" \
+              -c "SELECT id FROM vault.secrets WHERE name = :'name';") || {
+              echo "::error::psql failed querying vault.secrets for '${name}'"
+              exit 1
+            }
+
+            if [ -z "$existing_id" ]; then
+              PGPASSWORD="${DB_PASSWORD}" psql "${CONN_URL}" \
+                -v ON_ERROR_STOP=1 \
+                -v name="${name}" \
+                -v val="${value}" \
+                -v desc="${desc}" \
+                -c "SELECT vault.create_secret(:'val', :'name', :'desc');" > /dev/null || {
+                echo "::error::vault.create_secret failed for '${name}'"
+                exit 1
+              }
+              echo "vault: ${name} created"
+            else
+              PGPASSWORD="${DB_PASSWORD}" psql "${CONN_URL}" \
+                -v ON_ERROR_STOP=1 \
+                -v name="${name}" \
+                -v val="${value}" \
+                -v desc="${desc}" \
+                -v id="${existing_id}" \
+                -c "SELECT vault.update_secret(:'id'::uuid, :'val', :'name', :'desc');" > /dev/null || {
+                echo "::error::vault.update_secret failed for '${name}'"
+                exit 1
+              }
+              echo "vault: ${name} updated (id=${existing_id})"
+            fi
+          }
+
+          sync_secret "service_role_key" "${SERVICE_ROLE_KEY}" "Service role JWT for pg_cron -> EF auth (CI auto-sync)"
+          sync_secret "supabase_url"     "${SUPABASE_URL_VALUE}" "Supabase project URL for pg_cron -> EF calls (CI auto-sync)"
+
+          echo "Vault sync complete (${ENV_NAME})"
+
       # Fix #1413: seed via CLI — psql/pooler 불필요, CLI가 자체 연결
       # Note: --include-seed는 마이그레이션 push도 포함하지만 Supabase CLI가
       # schema_migrations 테이블로 이미 적용된 마이그레이션을 추적·스킵하므로 이중 적용 없음.
