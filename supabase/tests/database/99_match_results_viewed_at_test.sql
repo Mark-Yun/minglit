@@ -103,14 +103,14 @@ SELECT isnt(
 -- ============================================================
 
 SELECT is(
-  (
+  (WITH upd AS (
     UPDATE public.event_applications
       SET match_results_viewed_at = NOW()
       WHERE id = current_setting('tests.mrv_app_b_id')::uuid
         AND match_results_viewed_at IS NULL
     RETURNING 1
-  )::integer,
-  NULL::integer,
+  ) SELECT count(*)::integer FROM upd),
+  0::integer,
   'user_a가 user_b 신청서 업데이트 시 0 rows affected (RLS 차단)'
 );
 
