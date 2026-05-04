@@ -87,11 +87,22 @@ class TicketRecommendationUtil {
       return const _TicketEligibility.eligible();
     }
 
-    String? firstReason;
+    // Fix #2160: track gender-compatible reason (age/etc.) separately from pure
+    // gender-mismatch reason — prefer the former so a female user gets the age
+    // error from the female group, not the gender error from the male group.
+    String? bestReason;
+    String? fallbackReason;
     for (final group in groups) {
       final reason = _checkGroupCondition(group, userProfile);
       if (reason != null) {
-        firstReason ??= reason;
+        final isGenderMismatch = group.gender != null &&
+            userProfile.gender != null &&
+            group.gender != userProfile.gender;
+        if (isGenderMismatch) {
+          fallbackReason ??= reason;
+        } else {
+          bestReason ??= reason;
+        }
         continue;
       }
 
@@ -106,11 +117,11 @@ class TicketRecommendationUtil {
       if (missing.isEmpty) {
         return const _TicketEligibility.eligible();
       }
-      firstReason ??= '필수 인증이 필요합니다.';
+      bestReason ??= '필수 인증이 필요합니다.';
     }
 
     return _TicketEligibility.ineligible(
-      firstReason ?? '참여 조건이 맞지 않습니다.',
+      bestReason ?? fallbackReason ?? '참여 조건이 맞지 않습니다.',
     );
   }
 
