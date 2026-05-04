@@ -112,9 +112,24 @@ class EventAdmissionController extends _$EventAdmissionController {
 
     // Fix #2155: parallelize getUserProfile and getApprovedVerificationIds —
     // both only need currentUser.id and are independent, eliminating ~2s of sequential wait.
+    // Regression guard: an unverified user must still see identityRequired even if
+    // getApprovedVerificationIds throws — capture that error and re-raise only when
+    // the user IS verified (where the error is actually relevant).
+    Object? verifIdsError;
+    StackTrace? verifIdsSt;
+    Future<List<String>> safeGetVerifIds() async {
+      try {
+        return await userRepository.getApprovedVerificationIds(currentUser.id);
+      } catch (e, st) {
+        verifIdsError = e;
+        verifIdsSt = st;
+        return [];
+      }
+    }
+
     final (userProfile, userVerifIds) = await (
       userRepository.getUserProfile(currentUser.id),
-      userRepository.getApprovedVerificationIds(currentUser.id),
+      safeGetVerifIds(),
     ).wait;
 
     // 4. Check Identity
@@ -123,6 +138,11 @@ class EventAdmissionController extends _$EventAdmissionController {
         status: EventAdmissionStatus.identityRequired,
         user: currentUser,
       );
+    }
+
+    // User IS verified — surface deferred verifIds error if it occurred
+    if (verifIdsError != null) {
+      Error.throwWithStackTrace(verifIdsError!, verifIdsSt!);
     }
 
     // 5. Check Eligibility & Qualifications

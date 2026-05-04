@@ -815,6 +815,44 @@ void main() {
       },
     );
 
+    // Regression #2155: unverified user + verifIds throws => identityRequired (not AsyncError)
+    test(
+      'unverified user gets identityRequired even when getApprovedVerificationIds throws',
+      () async {
+        when(
+          () => mockEventRepo.getApplication(
+            eventId: any(named: 'eventId'),
+            userId: any(named: 'userId'),
+          ),
+        ).thenAnswer((_) async => null);
+
+        when(() => mockUserRepo.getUserProfile('user_1')).thenAnswer(
+          (_) async => const UserProfile(
+            id: 'user_1',
+            name: 'Test User',
+            username: 'test_user',
+            // isVerified defaults to false — triggers identityRequired
+          ),
+        );
+        when(
+          () => mockUserRepo.getApprovedVerificationIds(any()),
+        ).thenThrow(Exception('Verification DB error'));
+
+        final container = createContainer(
+          overrides: [
+            currentUserProvider.overrideWith((ref) => mockUser),
+            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
+            userRepositoryProvider.overrideWith((ref) => mockUserRepo),
+          ],
+        );
+
+        final state = await container.read(
+          eventAdmissionControllerProvider(testEvent).future,
+        );
+        expect(state.status, EventAdmissionStatus.identityRequired);
+      },
+    );
+
     test(
       'provider error field is set when getApprovedVerificationIds throws',
       () async {
