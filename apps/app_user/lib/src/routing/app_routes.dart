@@ -118,19 +118,18 @@ class PartnerDetailRoute extends GoRouteData with $PartnerDetailRoute {
 
 /// **Partner Events Route**: Full list of events for a partner.
 /// Path: `/partners/:partnerId/events`
+// Fix #2137: partnerName removed from route — PartnerEventsPage fetches it
+// from partnerDetailProvider so the route is self-sufficient and never throws
+// on a missing query param.
 @TypedGoRoute<PartnerEventsRoute>(path: '/partners/:partnerId/events')
 class PartnerEventsRoute extends GoRouteData with $PartnerEventsRoute {
-  const PartnerEventsRoute({
-    required this.partnerId,
-    required this.partnerName,
-  });
+  const PartnerEventsRoute({required this.partnerId});
 
   final String partnerId;
-  final String partnerName;
 
   @override
   Widget build(BuildContext context, GoRouterState state) =>
-      PartnerEventsPage(partnerId: partnerId, partnerName: partnerName);
+      PartnerEventsPage(partnerId: partnerId);
 }
 
 /// **Certification Route**: Identity Verification Screen.

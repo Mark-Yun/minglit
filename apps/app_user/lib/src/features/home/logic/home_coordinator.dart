@@ -90,18 +90,8 @@ class HomeCoordinator {
     unawaited(_router.push(EventDetailRoute(eventId: eventId).location));
   }
 
-  void pushPartnerEvents({
-    required String partnerId,
-    required String partnerName,
-  }) {
-    unawaited(
-      _router.push(
-        PartnerEventsRoute(
-          partnerId: partnerId,
-          partnerName: partnerName,
-        ).location,
-      ),
-    );
+  void pushPartnerEvents({required String partnerId}) {
+    unawaited(_router.push(PartnerEventsRoute(partnerId: partnerId).location));
   }
 
   // Fix #1213: 계정 관리 서브페이지 진입점
