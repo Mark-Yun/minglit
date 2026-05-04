@@ -36,7 +36,7 @@ BEGIN
 
   -- user_a 신청서: match_results_viewed_at NULL (미확인)
   INSERT INTO public.event_applications (event_id, user_id, ticket_id, status)
-  VALUES (v_event_id, tests.get_supabase_uid('mrv_user_a'), v_ticket_id, 'applied')
+  VALUES (v_event_id, tests.get_supabase_uid('mrv_user_a'), v_ticket_id, 'pending')
   RETURNING id INTO v_app_a_id;
 
   -- user_b 신청서: match_results_viewed_at NULL (미확인)
