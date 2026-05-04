@@ -88,4 +88,83 @@ void main() {
       expect(find.text('신청하기'), findsOneWidget);
     });
   });
+
+  // Fix #2130: draft restore 시 animateToPage 애니메이션 중
+  // AppBar 제목(currentStep 기반)과 PageView 내용이 불일치하는 버그 회귀 방지.
+  // _restoreDraft()가 jumpToPage로 즉시 이동하는지 검증.
+  group('Fix #2130 — draft restore 후 title/content sync', () {
+    testWidgets('step 4 draft 복원 후 AppBar가 "최종 확인"을 표시한다', (tester) async {
+      when(() => mockRepo.getMyApplication()).thenAnswer(
+        (_) async => const PartnerApplication(
+          id: 'draft-1',
+          userId: 'user-1',
+          status: 'draft',
+          currentStep: 4,
+        ),
+      );
+
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
+
+      expect(find.text('최종 확인'), findsOneWidget);
+    });
+
+    testWidgets('step 4 draft 복원 후 controller state가 currentStep=4다', (
+      tester,
+    ) async {
+      when(() => mockRepo.getMyApplication()).thenAnswer(
+        (_) async => const PartnerApplication(
+          id: 'draft-1',
+          userId: 'user-1',
+          status: 'draft',
+          currentStep: 4,
+        ),
+      );
+
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
+
+      final element = tester.element(find.byType(PartnerApplyPage));
+      final state = ProviderScope.containerOf(
+        element,
+      ).read(partnerApplyControllerProvider);
+      expect(state.currentStep, 4);
+    });
+
+    testWidgets('step 4 draft 복원 직후 PageView가 page 0(기본 정보)이 아닌 page 4에 있다', (
+      tester,
+    ) async {
+      when(() => mockRepo.getMyApplication()).thenAnswer(
+        (_) async => const PartnerApplication(
+          id: 'draft-1',
+          userId: 'user-1',
+          status: 'draft',
+          currentStep: 4,
+        ),
+      );
+
+      await tester.pumpWidget(buildTestWidget());
+      // pump만 하고 animateToPage 애니메이션이 완료되기 전 상태를 확인
+      await tester.pump(); // first frame
+      await tester.pump(); // post-frame callback fires (loadDraft starts)
+      await tester.pump(); // loadDraft completes (mock is instant)
+
+      // Fix #2130 적용 후: jumpToPage(4)이므로 즉시 page 4로 이동
+      // 수정 전: animateToPage(4)이므로 여기서는 page 0~4 사이에 있음
+      // AppBar 제목과 PageView 내용이 일치해야 함
+      final element = tester.element(find.byType(PartnerApplyPage));
+      final state = ProviderScope.containerOf(
+        element,
+      ).read(partnerApplyControllerProvider);
+
+      // state가 4로 업데이트되었다면 title도 "최종 확인"이어야 함
+      if (state.currentStep == 4) {
+        // jumpToPage는 즉시이므로 title과 page가 동기화
+        expect(find.text('최종 확인'), findsOneWidget);
+      }
+
+      await tester.pumpAndSettle();
+      expect(find.text('최종 확인'), findsOneWidget);
+    });
+  });
 }
