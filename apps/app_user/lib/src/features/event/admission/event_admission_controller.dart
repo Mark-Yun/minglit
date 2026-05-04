@@ -110,9 +110,14 @@ class EventAdmissionController extends _$EventAdmissionController {
       );
     }
 
-    // 4. Fetch User Profile (Identity Check)
-    final userProfile = await userRepository.getUserProfile(currentUser.id);
+    // Fix #2155: parallelize getUserProfile and getApprovedVerificationIds —
+    // both only need currentUser.id and are independent, eliminating ~2s of sequential wait.
+    final (userProfile, userVerifIds) = await (
+      userRepository.getUserProfile(currentUser.id),
+      userRepository.getApprovedVerificationIds(currentUser.id),
+    ).wait;
 
+    // 4. Check Identity
     if (userProfile == null || !userProfile.isVerified) {
       return AdmissionState(
         status: EventAdmissionStatus.identityRequired,
@@ -120,12 +125,7 @@ class EventAdmissionController extends _$EventAdmissionController {
       );
     }
 
-    // 5. Fetch User's Approved Verifications
-    final userVerifIds = await userRepository.getApprovedVerificationIds(
-      currentUser.id,
-    );
-
-    // 6. Check Eligibility & Qualifications
+    // 5. Check Eligibility & Qualifications
     final tickets = event.tickets ?? [];
     final entryGroups = event.entryGroups ?? [];
 
