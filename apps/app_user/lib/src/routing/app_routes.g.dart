@@ -217,17 +217,13 @@ RouteBase get $partnerEventsRoute => GoRouteData.$route(
 
 mixin $PartnerEventsRoute on GoRouteData {
   static PartnerEventsRoute _fromState(GoRouterState state) =>
-      PartnerEventsRoute(
-        partnerId: state.pathParameters['partnerId']!,
-        partnerName: state.uri.queryParameters['partner-name']!,
-      );
+      PartnerEventsRoute(partnerId: state.pathParameters['partnerId']!);
 
   PartnerEventsRoute get _self => this as PartnerEventsRoute;
 
   @override
   String get location => GoRouteData.$location(
     '/partners/${Uri.encodeComponent(_self.partnerId)}/events',
-    queryParams: {'partner-name': _self.partnerName},
   );
 
   @override

@@ -19,17 +19,7 @@ class PartnerCoordinator {
     unawaited(_router.push(EventDetailRoute(eventId: eventId).location));
   }
 
-  void pushPartnerEvents({
-    required String partnerId,
-    required String partnerName,
-  }) {
-    unawaited(
-      _router.push(
-        PartnerEventsRoute(
-          partnerId: partnerId,
-          partnerName: partnerName,
-        ).location,
-      ),
-    );
+  void pushPartnerEvents({required String partnerId}) {
+    unawaited(_router.push(PartnerEventsRoute(partnerId: partnerId).location));
   }
 }
