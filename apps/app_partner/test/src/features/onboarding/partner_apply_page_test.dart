@@ -1,5 +1,7 @@
 import 'package:app_partner/src/features/onboarding/partner_apply_controller.dart';
 import 'package:app_partner/src/features/onboarding/partner_apply_page.dart';
+import 'package:app_partner/src/features/onboarding/steps/step1_basic_info.dart';
+import 'package:app_partner/src/features/onboarding/steps/step5_review.dart';
 import 'package:app_partner/src/l10n/generated/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -86,6 +88,86 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('신청하기'), findsOneWidget);
+    });
+  });
+
+  // Fix #2130: draft restore 시 animateToPage 애니메이션 중
+  // AppBar 제목(currentStep 기반)과 PageView 내용이 불일치하는 버그 회귀 방지.
+  // _restoreDraft()가 jumpToPage로 즉시 이동하는지 검증.
+  group('Fix #2130 — draft restore 후 title/content sync', () {
+    testWidgets('step 4 draft 복원 후 AppBar가 "최종 확인"을 표시한다', (tester) async {
+      when(() => mockRepo.getMyApplication()).thenAnswer(
+        (_) async => const PartnerApplication(
+          id: 'draft-1',
+          userId: 'user-1',
+          status: 'draft',
+          currentStep: 4,
+        ),
+      );
+
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
+
+      expect(find.text('최종 확인'), findsOneWidget);
+    });
+
+    testWidgets('step 4 draft 복원 후 controller state가 currentStep=4다', (
+      tester,
+    ) async {
+      when(() => mockRepo.getMyApplication()).thenAnswer(
+        (_) async => const PartnerApplication(
+          id: 'draft-1',
+          userId: 'user-1',
+          status: 'draft',
+          currentStep: 4,
+        ),
+      );
+
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
+
+      final element = tester.element(find.byType(PartnerApplyPage));
+      final state = ProviderScope.containerOf(
+        element,
+      ).read(partnerApplyControllerProvider);
+      expect(state.currentStep, 4);
+    });
+
+    testWidgets('step 4 draft 복원 직후 PageView가 page 0(기본 정보)이 아닌 page 4에 있다', (
+      tester,
+    ) async {
+      when(() => mockRepo.getMyApplication()).thenAnswer(
+        (_) async => const PartnerApplication(
+          id: 'draft-1',
+          userId: 'user-1',
+          status: 'draft',
+          currentStep: 4,
+        ),
+      );
+
+      await tester.pumpWidget(buildTestWidget());
+      // pump만 하고 animateToPage 애니메이션이 완료되기 전 상태를 확인
+      await tester.pump(); // first frame
+      await tester.pump(); // post-frame callback fires (loadDraft starts)
+      await tester.pump(); // loadDraft completes (mock is instant)
+
+      // Fix #2130 적용 후: jumpToPage(4)이므로 즉시 page 4로 이동.
+      // 수정 전 animateToPage(4)라면 이 시점에 PageView는 여전히 page 0 근처에
+      // 있으므로 Step1BasicInfo가 렌더되고 Step5Review는 위젯 트리에 없다.
+      final element = tester.element(find.byType(PartnerApplyPage));
+      final state = ProviderScope.containerOf(
+        element,
+      ).read(partnerApplyControllerProvider);
+
+      // controller state가 4여야 한다 (조건부 검사 아님)
+      expect(state.currentStep, 4);
+      // PageView가 page 4에 있으면 Step5Review가 렌더된다
+      expect(find.byType(Step5Review), findsOneWidget);
+      // page 0이 아니므로 Step1BasicInfo는 위젯 트리에 없어야 한다
+      expect(find.byType(Step1BasicInfo), findsNothing);
+
+      await tester.pumpAndSettle();
+      expect(find.text('최종 확인'), findsOneWidget);
     });
   });
 }
