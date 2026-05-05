@@ -1,4 +1,4 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:mds/src/theme/minglit_theme.dart';
 
 /// Visualises event capacity — confirmed (filled) and pending (waiting) against total.
