@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:app_user/src/features/account_deletion/logic/account_deletion_coordinator.dart';
 import 'package:app_user/src/features/settings/privacy_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -9,16 +8,10 @@ import 'package:mocktail/mocktail.dart';
 
 class MockConsentRepository extends Mock implements ConsentRepository {}
 
-class MockAccountRepository extends Mock implements AccountRepository {}
-
 class MockUser extends Mock implements User {}
-
-class MockAccountDeletionCoordinator extends Mock
-    implements AccountDeletionCoordinator {}
 
 void main() {
   late MockConsentRepository mockRepository;
-  late MockAccountRepository mockAccountRepo;
   late MockUser mockUser;
 
   final testConsents = [
@@ -74,7 +67,6 @@ void main() {
 
   setUp(() {
     mockRepository = MockConsentRepository();
-    mockAccountRepo = MockAccountRepository();
     mockUser = MockUser();
 
     when(() => mockUser.id).thenReturn('user_1');
@@ -84,9 +76,6 @@ void main() {
     when(
       () => mockRepository.saveConsents('user_1', any()),
     ).thenAnswer((_) async {});
-    when(
-      () => mockAccountRepo.getDeletionStatus(),
-    ).thenAnswer((_) async => null);
   });
 
   Future<void> pumpPage(WidgetTester tester) async {
@@ -95,10 +84,6 @@ void main() {
         overrides: [
           consentRepositoryProvider.overrideWithValue(mockRepository),
           currentUserProvider.overrideWithValue(mockUser),
-          accountRepositoryProvider.overrideWithValue(mockAccountRepo),
-          accountDeletionCoordinatorProvider.overrideWithValue(
-            MockAccountDeletionCoordinator(),
-          ),
         ],
         child: MaterialApp(
           theme: MinglitTheme.materialTheme,
@@ -121,10 +106,6 @@ void main() {
         overrides: [
           consentRepositoryProvider.overrideWithValue(mockRepository),
           currentUserProvider.overrideWithValue(mockUser),
-          accountRepositoryProvider.overrideWithValue(mockAccountRepo),
-          accountDeletionCoordinatorProvider.overrideWithValue(
-            MockAccountDeletionCoordinator(),
-          ),
         ],
         child: MaterialApp(
           theme: MinglitTheme.materialTheme,
@@ -277,9 +258,8 @@ void main() {
     ).called(greaterThanOrEqualTo(1));
   });
 
-  // Fix #2093: 회원 탈퇴 섹션은 PrivacyPage에서 제거됨 (AccountManagementPage로 이동).
-  // 회귀 가드 — PrivacyPage에 '회원 탈퇴' 텍스트나 버튼이 노출되지 않아야 함.
-  testWidgets('회원 탈퇴 섹션이 PrivacyPage에 노출되지 않는다', (tester) async {
+  // Fix #2093: 회원 탈퇴는 계정 관리 페이지로 이동 — PrivacyPage에 중복 표시 방지
+  testWidgets('PrivacyPage에 회원 탈퇴 버튼이 없다', (tester) async {
     await pumpPage(tester);
 
     expect(find.text('회원 탈퇴'), findsNothing);
