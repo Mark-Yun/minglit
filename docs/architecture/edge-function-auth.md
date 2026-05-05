@@ -23,7 +23,7 @@ Minglit의 모든 Edge Function (EF) 인증/인가 모델을 기술한다.
 
 1. **모든 EF는 어떤 형태든 보호되어야 한다** — JWT (게이트웨이), service_role 매칭, 외부 인증 (IP/HMAC), 또는 환경 가드
 2. **정책은 중앙 manifest 에서 선언적으로 관리한다** — 코드 안 if-then 분산 금지
-3. **wrapper 가 잊을 수 없도록 강제한다** — 보일러플레이트 자동 처리 + manifest/env 누락 시 startup throw (deploy fail)
+3. **wrapper 가 잊을 수 없도록 강제한다** — 보일러플레이트 자동 처리 + manifest/env 누락 시 모든 요청에 HTTP 500 반환 (deploy 자체는 성공)
 4. **확장 가능해야 한다** — rate limit / deprecation / audit 등 미래 정책 추가가 manifest 필드 추가만으로 가능
 
 ### 1.3 Supabase 가 제공하는 것 / 안 하는 것
@@ -241,14 +241,20 @@ export function minglitEdgeFunction(handler: EFHandler, opts?: MinglitEFOptions)
 
 ### 4.2 동작 (startup → request)
 
-#### Startup (모듈 로드 시 1회 — 실패 시 deploy fail)
+#### Startup (모듈 로드 시 1회 — 실패 시 `_initError` 저장, deploy 는 성공)
+
+> **실제 동작**: `tryInit()` 내부에서 throw 가 발생해도 try-catch 로 잡아 `_initError` 에 저장한다.
+> `Deno.serve()` 는 항상 호출되므로 deploy 자체는 성공한다.
+> 이후 모든 요청에서 `_initError` 가 있으면 HTTP 500 을 반환한다.
+> (e2e 검증: `supabase/functions/_shared/edge_function_manifest_test.ts`)
+
 1. `Deno.mainModule` 파싱 → `fnName` 자동 감지
    - 패턴: `/functions/<name>/index\.ts$` 매칭
-   - 실패 시 **throw** (deploy 자체 fail — 게이트웨이가 EF 시작 못 함)
+   - 실패 시 throw → `_initError` 저장 → 모든 요청에 HTTP 500
 2. `auth-manifest.json` import 후 `manifest.functions[fnName]` lookup
-   - 없으면 **throw** — manifest 누락 자동 검출
+   - 없으면 throw → `_initError` 저장 — manifest 누락 자동 검출
 3. `Deno.env.get("ENVIRONMENT")` 확인
-   - undefined 면 **throw** — 환경 변수 누락은 deploy 환경 문제 (즉시 발견)
+   - undefined 면 throw → `_initError` 저장 — 환경 변수 누락 즉시 검출
 4. Sentry SDK init (모든 EF 공통). Statsig/Axiom 은 `opts.features` 에 명시된 EF 만
 
 #### Request (호출마다)
@@ -609,7 +615,7 @@ Phase 1~4 동안 **옛 헬퍼와 새 wrapper 가 공존**. 마이그레이션되
 
 | # | 주제 | 우선순위 |
 |---|---|---|
-| TBD-1 | manifest 누락 → startup throw 시나리오 검증 (deploy fail 동작 e2e) | P2 |
+| ~~TBD-1~~ | ~~manifest 누락 → startup throw 시나리오 검증~~ (완료: `_shared/edge_function_manifest_test.ts`, 실제 동작은 HTTP 500/request — deploy 성공) | ~~P2~~ |
 | TBD-2 | 60 EF 마이그레이션 진척 트래킹 (Phase 3 의 epic) | P2 |
 | TBD-3 | 옛 auth 헬퍼 deprecation timeline + 제거 (Phase 5) | P3 |
 | TBD-4 | `external_auth` HMAC / custom 패턴 실제 적용 (PortOne 등) | P3 |
@@ -640,4 +646,4 @@ Phase 1~4 동안 **옛 헬퍼와 새 wrapper 가 공존**. 마이그레이션되
 | **wrapper** | `minglitEdgeFunction` — Deno.serve 를 감싸 cross-cutting concern 처리 |
 | **gateway** | Supabase EF 게이트웨이 — verify_jwt 처리 + EF runtime 진입 |
 | **lazy injection** | EFContext 의 `supabase` / `logger` 는 첫 접근 시에만 생성 |
-| **deploy fail** | manifest/env 누락으로 startup throw → EF 가 시작 자체를 못 함 (request-time 503 아님) |
+| **deploy fail** | ~~manifest/env 누락으로 startup throw → EF 가 시작 자체를 못 함~~ **실제**: `tryInit()` 이 throw 를 catch → `_initError` 저장 → deploy 성공 + 모든 요청에 HTTP 500 반환 |
