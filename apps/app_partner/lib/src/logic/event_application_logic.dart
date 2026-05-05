@@ -1,7 +1,7 @@
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-part 'event_application_controller.g.dart';
+part 'event_application_logic.g.dart';
 
 @riverpod
 Future<List<EventApplication>> eventApplications(

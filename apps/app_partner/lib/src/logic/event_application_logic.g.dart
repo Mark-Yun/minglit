@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'event_application_controller.dart';
+part of 'event_application_logic.dart';
 
 // **************************************************************************
 // RiverpodGenerator
