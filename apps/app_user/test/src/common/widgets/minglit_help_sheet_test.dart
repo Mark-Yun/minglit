@@ -2,11 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
-Widget _wrap(Widget child) => MaterialApp(
-  theme: MinglitTheme.materialTheme,
-  home: Scaffold(body: child),
-);
-
 Future<void> _openSheet(
   WidgetTester tester, {
   String title = '도움말',
@@ -93,56 +88,57 @@ void main() {
       expect(find.text('조건 안내'), findsOneWidget);
     });
 
-    testWidgets('section without leading renders no extra icon', (
-      tester,
-    ) async {
-      await _openSheet(
-        tester,
-        sections: const [
-          HelpSection(title: '안내', body: '내용입니다.'),
-        ],
-      );
+    testWidgets(
+      'section without leading renders no extra icon',
+      (tester) async {
+        await _openSheet(
+          tester,
+          sections: const [
+            HelpSection(title: '안내', body: '내용입니다.'),
+          ],
+        );
 
-      expect(find.byType(Icon), findsNothing);
-    });
+        expect(find.byType(Icon), findsNothing);
+      },
+    );
 
-    testWidgets('renders without crash for empty sections list', (
-      tester,
-    ) async {
-      await _openSheet(tester, sections: const []);
-      expect(find.text('확인'), findsOneWidget);
-    });
+    testWidgets(
+      'renders without crash for empty sections list',
+      (tester) async {
+        await _openSheet(tester);
+        expect(find.text('확인'), findsOneWidget);
+      },
+    );
 
-    testWidgets('first section has no top divider; second does', (
-      tester,
-    ) async {
-      await _openSheet(
-        tester,
-        sections: const [
-          HelpSection(title: '첫째', body: '내용1'),
-          HelpSection(title: '둘째', body: '내용2'),
-        ],
-      );
+    testWidgets(
+      'first section has no top divider; second does',
+      (tester) async {
+        await _openSheet(
+          tester,
+          sections: const [
+            HelpSection(title: '첫째', body: '내용1'),
+            HelpSection(title: '둘째', body: '내용2'),
+          ],
+        );
 
-      final decoratedBoxes = tester
-          .widgetList<DecoratedBox>(
-            find.byType(DecoratedBox),
-          )
-          .toList();
+        final decoratedBoxes = tester.widgetList<DecoratedBox>(
+          find.byType(DecoratedBox),
+        ).toList();
 
-      final sectionBoxes = decoratedBoxes.where((b) {
-        final decoration = b.decoration;
-        if (decoration is BoxDecoration) {
-          final border = decoration.border;
-          if (border is Border) {
-            return border.top.width > 0;
+        final sectionBoxes = decoratedBoxes.where((b) {
+          final decoration = b.decoration;
+          if (decoration is BoxDecoration) {
+            final border = decoration.border;
+            if (border is Border) {
+              return border.top.width > 0;
+            }
           }
-        }
-        return false;
-      }).toList();
+          return false;
+        }).toList();
 
-      // Exactly one divider (between section 1 and 2)
-      expect(sectionBoxes.length, 1);
-    });
+        // Exactly one divider (between section 1 and 2)
+        expect(sectionBoxes.length, 1);
+      },
+    );
   });
 }
