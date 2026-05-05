@@ -1,7 +1,7 @@
 # Graph Report - /private/tmp/feat-2201-party-list-v2  (2026-05-06)
 
 ## Corpus Check
-- 1220 files · ~1,904,324 words
+- 1220 files · ~1,907,353 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -2615,7 +2615,7 @@ _Questions this graph is uniquely positioned to answer:_
 - **What is the exact relationship between `Architecture Audit #1092 — 2026-04-06` and `AI Basic Law Compliance (Korea 2026)`?**
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
 - **Why does `package:flutter/material.dart` connect `Community 1` to `Community 0`, `Community 2`, `Community 5`, `Community 6`, `Community 9`, `Community 11`, `Community 13`, `Community 14`, `Community 15`, `Community 16`, `Community 18`, `Community 22`, `Community 24`, `Community 27`, `Community 29`?**
-  _High betweenness centrality (0.243) - this node is a cross-community bridge._
+  _High betweenness centrality (0.192) - this node is a cross-community bridge._
 - **What connects `reporter (AutoLabelAllureReporter)`, `_buildPage`, `MaterialApp` to the rest of the system?**
   _2628 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
