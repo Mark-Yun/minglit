@@ -465,7 +465,7 @@ body.dark-mode .viewport {
   <section class="doc">
     <h2>Blueprint &amp; tree</h2>
     <p class="intro">
-      Scaffold + AppBar(title:"정산", actions: 지갑 IconButton, bottom: 2-tab TabBar)
+      Scaffold + AppBar(title:"정산", actions: 도움말 IconButton + 지갑 IconButton, bottom: 2-tab TabBar)
       + TabBarView(<code>_DashboardTab</code> / <code>_ListTab</code>).
       List 탭은 StatusFilterChips(8 chips) + ListView(month header + SettlementCard rows).
     </p>
@@ -496,7 +496,7 @@ body.dark-mode .viewport {
 
       <div class="layout-tree"><b>Scaffold</b>
 ├─ <b>appBar</b>: AppBar(title: '정산')                    ← ①
-│  ├─ <b>actions</b>: [if canEditSettlement] IconButton(account_balance_wallet_outlined → BankAccount)
+│  ├─ <b>actions</b>: [IconButton(info_outline → 정산 도움말 시트), if canEditSettlement → IconButton(account_balance_wallet_outlined → BankAccount)]
 │  └─ <b>bottom</b>: TabBar(controller, length:2)          ← ②
 │     ├─ Tab('대시보드')
 │     └─ Tab('정산 내역')

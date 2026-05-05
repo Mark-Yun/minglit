@@ -88,6 +88,14 @@ void main() {
   }
 
   group('EventApplicationManagePage', () {
+    // Fix #2200: info icon must be present in AppBar
+    testWidgets('has info_outline icon in AppBar actions', (tester) async {
+      await tester.pumpWidget(createTestWidget());
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.info_outline), findsOneWidget);
+    });
+
     testWidgets('renders tab bar with 3 tabs', (tester) async {
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();
