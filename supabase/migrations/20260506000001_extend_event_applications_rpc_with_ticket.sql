@@ -3,9 +3,10 @@
 -- can populate EventApplication.ticket for entry-group filtering without a
 -- second round-trip.
 --
--- RETURNS TABLE change requires CREATE OR REPLACE — PostgreSQL allows this
--- because function identity is based on input params only (p_event_id uuid).
-CREATE OR REPLACE FUNCTION public.get_event_applications_with_user(p_event_id uuid)
+-- DROP + CREATE required: PostgreSQL's CREATE OR REPLACE cannot change the
+-- return type (SQLSTATE 42P13). Must drop the old signature first.
+DROP FUNCTION IF EXISTS public.get_event_applications_with_user(uuid);
+CREATE FUNCTION public.get_event_applications_with_user(p_event_id uuid)
 RETURNS TABLE(
   application_id uuid, event_id uuid, ticket_id uuid, user_id uuid,
   payment_id text, payment_amount int, status text,
