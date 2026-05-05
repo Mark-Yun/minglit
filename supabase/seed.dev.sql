@@ -2,6 +2,7 @@
 -- supabase/seed.dev.sql
 -- DEV ONLY: 560 users (60 legacy + 500 regional) + 5 partner owners + 5 partners
 --           + 3 partner applicant users (needsApplication/draft/pending)
+--           + 1 QA fresh user (qa_fresh — simulator never applies for events on this user)
 --           + locations + verifications + roles + pgmq purge + env setting
 --
 -- Executed by GitHub Actions (dev branch only) via:
@@ -742,4 +743,46 @@ BEGIN
     WHERE partner_id = hp_partner_id
       AND (image_urls IS NULL OR array_length(image_urls, 1) IS NULL);
   END LOOP;
+END $$;
+
+-- ── Phase 10: QA Fresh User (Fix #2256) ──────────────────────────────────────
+-- U-S19 이벤트 신청 위저드 스모크 테스트용 전용 유저.
+-- 시뮬레이터는 username = 'user_%' 패턴만 처리하므로 username='qa_fresh'는
+-- 영구적으로 신청 이력이 없는 상태를 유지한다.
+-- 멱등: 이미 존재하면 생성 건너뜀.
+DO $$
+DECLARE
+  pwd_hash    text;
+  existing_id uuid;
+BEGIN
+  pwd_hash := extensions.crypt('password1234!', extensions.gen_salt('bf'));
+
+  SELECT id INTO existing_id FROM auth.users WHERE email = 'user_qa_fresh@test.com';
+  IF existing_id IS NULL THEN
+    INSERT INTO auth.users (
+      instance_id, id, aud, role, email, encrypted_password,
+      email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
+      created_at, updated_at, confirmation_token, recovery_token,
+      is_sso_user, is_anonymous, phone,
+      email_change, email_change_token_new, email_change_token_current,
+      phone_change, phone_change_token, reauthentication_token,
+      email_change_confirm_status
+    ) VALUES (
+      '00000000-0000-0000-0000-000000000000',
+      gen_random_uuid(), 'authenticated', 'authenticated',
+      'user_qa_fresh@test.com', pwd_hash, now(),
+      '{"provider":"email","providers":["email"],"has_password":true}'::jsonb,
+      '{"name":"[QA] 신청 테스트 유저","username":"qa_fresh","gender":"female","birth_date":"2000-01-01","phone_number":"010-0099-0000","is_verified":true}'::jsonb,
+      now(), now(), '', '',
+      false, false, '',
+      '', '', '',
+      '', '', '',
+      0
+    );
+  ELSE
+    -- 기존 유저 is_verified 보정
+    UPDATE public.user_profiles
+    SET is_verified = true
+    WHERE id = existing_id AND is_verified IS DISTINCT FROM true;
+  END IF;
 END $$;
