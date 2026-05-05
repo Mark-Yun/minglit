@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:app_user/src/features/auth/logic/auth_coordinator.dart';
 import 'package:app_user/src/features/home/logic/home_coordinator.dart';
+import 'package:app_user/src/logic/auth_coordinator.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:package_info_plus/package_info_plus.dart';

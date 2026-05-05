@@ -1,4 +1,4 @@
-import 'package:app_user/src/features/auth/logic/auth_coordinator.dart';
+import 'package:app_user/src/logic/auth_coordinator.dart';
 import 'package:app_user/src/features/auth/login_page.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
