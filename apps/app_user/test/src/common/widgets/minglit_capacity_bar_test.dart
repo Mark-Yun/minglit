@@ -3,13 +3,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 Widget _wrap(Widget child) => MaterialApp(
-      theme: MinglitTheme.materialTheme,
-      home: Scaffold(body: SizedBox(width: 300, child: child)),
-    );
+  theme: MinglitTheme.materialTheme,
+  home: Scaffold(body: SizedBox(width: 300, child: child)),
+);
 
 void main() {
   group('MinglitCapacityBar', () {
-    testWidgets('renders segmented mode when total <= threshold', (tester) async {
+    testWidgets('renders segmented mode when total <= threshold', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _wrap(
           const MinglitCapacityBar(total: 8, filled: 4, pending: 2),
@@ -19,7 +21,9 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('renders continuous mode when total > threshold', (tester) async {
+    testWidgets('renders continuous mode when total > threshold', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _wrap(
           const MinglitCapacityBar(total: 100, filled: 60, pending: 20),
@@ -29,7 +33,9 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('clamps filled and pending to total without overflow', (tester) async {
+    testWidgets('clamps filled and pending to total without overflow', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _wrap(
           const MinglitCapacityBar(total: 5, filled: 10, pending: 10),
