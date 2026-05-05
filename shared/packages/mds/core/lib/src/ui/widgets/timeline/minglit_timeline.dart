@@ -72,6 +72,19 @@ class _TimelineStepItemState extends State<_TimelineStepItem>
     }
   }
 
+  @override
+  void didUpdateWidget(_TimelineStepItem oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.step.pulsing == oldWidget.step.pulsing) return;
+    if (widget.step.pulsing) {
+      if (!MediaQuery.of(context).disableAnimations && !_controller.isAnimating) {
+        unawaited(_controller.repeat(reverse: true));
+      }
+    } else {
+      _controller.stop();
+    }
+  }
+
   void _startPulsingIfNeeded() {
     if (widget.step.pulsing) {
       unawaited(_controller.repeat(reverse: true));

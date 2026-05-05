@@ -1,5 +1,5 @@
-// Fix #2096: regression guard for MinglitTimeline — tone rendering, dot/line
-// structure, pulsing (orthogonal flag), trailing/child slots, step connectivity.
+// MinglitTimeline regression tests — tone rendering, dot/line structure,
+// pulsing (orthogonal flag), trailing/child slots, step connectivity.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -154,6 +154,44 @@ void main() {
       );
 
       expect(find.text('Only'), findsOneWidget);
+    });
+
+    testWidgets('pulsing transition false→true starts animation, true→false stops', (
+      tester,
+    ) async {
+      final pulsingNotifier = ValueNotifier<bool>(false);
+      addTearDown(pulsingNotifier.dispose);
+
+      await tester.pumpWidget(
+        _wrap(
+          ValueListenableBuilder<bool>(
+            valueListenable: pulsingNotifier,
+            builder: (_, pulsing, __) => MinglitTimeline(
+              children: [
+                MinglitTimelineStep(
+                  tone: TimelineTone.progress,
+                  pulsing: pulsing,
+                  title: 'Transition',
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byType(Transform), findsNothing);
+
+      // false → true: Transform appears and controller animates
+      pulsingNotifier.value = true;
+      await tester.pump();
+      expect(find.byType(Transform), findsOneWidget);
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.byType(Transform), findsOneWidget);
+
+      // true → false: Transform disappears
+      pulsingNotifier.value = false;
+      await tester.pump();
+      expect(find.byType(Transform), findsNothing);
     });
 
     testWidgets('renders all five tones without throwing', (tester) async {
