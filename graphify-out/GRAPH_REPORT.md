@@ -1,7 +1,7 @@
-# Graph Report - /private/tmp/minglit-pgrst-admin  (2026-05-05)
+# Graph Report - /Users/mark/workspace/minglit-worker-runtime/repos/minglit/.claude/worktrees/fix-2117-rpc-target-capacity  (2026-05-05)
 
 ## Corpus Check
-- 1178 files · ~1,808,852 words
+- 1178 files · ~1,808,935 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -2464,9 +2464,9 @@ _Questions this graph is uniquely positioned to answer:_
 - **What is the exact relationship between `Architecture Audit #1092 — 2026-04-06` and `AI Basic Law Compliance (Korea 2026)`?**
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
 - **Why does `Log` connect `Community 26` to `Community 6`?**
-  _High betweenness centrality (0.208) - this node is a cross-community bridge._
+  _High betweenness centrality (0.233) - this node is a cross-community bridge._
 - **Why does `Text` connect `Community 26` to `Community 11`?**
-  _High betweenness centrality (0.202) - this node is a cross-community bridge._
+  _High betweenness centrality (0.232) - this node is a cross-community bridge._
 - **What connects `reporter (AutoLabelAllureReporter)`, `BugReporterWrapper Widget Test Suite`, `MinglitListTile Widget Test Suite` to the rest of the system?**
   _2030 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
