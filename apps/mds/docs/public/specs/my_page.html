@@ -57,8 +57,8 @@
 body.dark-mode .my-page-viewport { background: var(--color-dark-background); }
 body.dark-mode .my-group__card { background: var(--color-dark-surface); }
 
-/* MinglitSettingsTile — fixed 48px height. Icon (20) + title-stack + trailing.
-   Title and subtitle are vertically stacked in a Column (NOT inline). */
+/* MinglitSettingsTile — 기본 48px height.
+   Subtitle이 있을 때(테마 설정 "시스템" · 앱 버전 등)는 자동으로 height 늘어남(min 56). */
 .my-tile {
   display: flex;
   align-items: center;
@@ -67,6 +67,11 @@ body.dark-mode .my-group__card { background: var(--color-dark-surface); }
   height: 48px;
   cursor: pointer;
   position: relative;
+}
+.my-tile--has-subtitle {
+  height: auto;
+  min-height: 56px;
+  padding: 8px var(--spacing-medium);
 }
 .my-tile + .my-tile::before {
   content: '';
@@ -206,7 +211,7 @@ body.dark-mode .my-group__card { background: var(--color-dark-surface); }
     <tbody>
       <tr>
         <th style="width: 140px;">Status</th>
-        <td><strong>✅ 디자인완료</strong> <em style="color: var(--color-text-secondary);">— 2 state · 6 SettingsGroup</em></td>
+        <td><strong>✅ 디자인완료</strong> <em style="color: var(--color-text-secondary);">— 2 state · 1 ProfileGroup + 5 SettingsGroup</em></td>
       </tr>
       <tr>
         <th>App</th>
@@ -234,14 +239,14 @@ body.dark-mode .my-group__card { background: var(--color-dark-surface); }
       <tr>
         <th>Purpose</th>
         <td>
-          사용자의 활동(구매 내역 / 내 티켓), 설정(알림 / 테마), 개인정보 / 보안, 약관 / 정보, 계정 관리를 모두 진입 가능한 단일 settings hub. 6개 그룹으로 나뉜 tile list.
+          사용자의 활동(구매 내역 / 내 티켓), 설정(알림 / 테마), 개인정보 / 보안, 약관 / 정보를 모두 진입 가능한 단일 settings hub. 상단 ProfileGroup(프로필 영역)을 탭하면 계정 관리(로그아웃 · 회원 탈퇴 포함) 화면으로 이동. 5개 settings 그룹 + 1 프로필 그룹 구조.
         </td>
       </tr>
       <tr>
         <th>User journey</th>
         <td>
           <strong>Entry points</strong>: HomePage AppBar 우측 아바타 탭 (인증 후) / push 알림에서 일부 settings로 deep-link.<br>
-          <strong>Exit points</strong>: 각 tile 탭 → 하위 settings 화면 / 로그아웃 → LoginRoute / 뒤로 가기 → HomePage 복귀.
+          <strong>Exit points</strong>: 각 tile 탭 → 하위 settings 화면 / 뒤로 가기 → HomePage 복귀.
         </td>
       </tr>
       <tr>
@@ -278,6 +283,14 @@ body.dark-mode .my-group__card { background: var(--color-dark-surface); }
     </thead>
     <tbody>
       <tr>
+        <td>2026-05-03</td>
+        <td>1.1</td>
+        <td>mark-yun</td>
+        <td>
+          하단 AccountGroup(계정 관리 · 로그아웃) 통째로 제거 · <strong>상단 ProfileGroup이 계정 관리 진입점</strong>으로 일원화. iOS / Android 설정 패턴(상단 프로필 → 계정 hub)과 동일. 로그아웃 / 회원 탈퇴는 계정 관리 화면 하위 destructive 카드("계정 관리" 헤더)로 이동. blueprint · tree · 그룹 카운트(7→6) · mockup · 사용자 액션 · 에지케이스 · 컴포넌트 · 토큰 · motion table · 글로벌 에지케이스 · Reference(Icons / Logout flow / Sub-screens) 일괄 정리.
+        </td>
+      </tr>
+      <tr>
         <td>2026-05-01</td>
         <td>1.0</td>
         <td>mark-yun</td>
@@ -304,14 +317,14 @@ body.dark-mode .my-group__card { background: var(--color-dark-surface); }
   <div class="perspective__header">
     <span class="glyph">🧱</span>
     <h2>Layout</h2>
-    <span class="lede">AppBar + scroll body의 6 SettingsGroup. 그룹 사이 spacing-large.</span>
+    <span class="lede">AppBar + scroll body의 1 ProfileGroup + 5 SettingsGroup. 그룹 사이 spacing-large.</span>
   </div>
 
   <section class="doc">
     <h2>Blueprint &amp; tree</h2>
     <p class="intro">
-      Scaffold + AppBar (간단 title only · "마이페이지") + ListView 또는 SingleChildScrollView로 6 그룹 + spacing-medium body padding (vertical).
-      각 그룹은 top/bottom border만 있는 카드 (h-margin 없음 · edge-to-edge), 그 안에 tile들이 배치.
+      Scaffold + AppBar (간단 title only · "마이페이지") + ListView 또는 SingleChildScrollView로 1 ProfileGroup + 5 SettingsGroup + spacing-medium body padding (vertical).
+      각 그룹은 horizontal padding 안의 둥근 카드, 그 안에 tile들이 배치. 상단 ProfileGroup은 단일 _ProfileTile 카드 — 탭 시 계정 관리 화면으로 이동(로그아웃 · 회원 탈퇴 등 위험 액션은 그쪽에서).
     </p>
     <div class="layout-grid">
       <div class="blueprint" style="height: 600px;">
@@ -342,7 +355,7 @@ body.dark-mode .my-group__card { background: var(--color-dark-surface); }
           <span class="blueprint__region-label">⑤ PrivacyGroup — 개인정보 / 권한 / 차단</span>
         </div>
 
-        <div class="blueprint__align-marker" style="bottom:8px;left:8px;">+ TermsGroup ⑥ + AccountGroup ⑦ (스크롤 필요)</div>
+        <div class="blueprint__align-marker" style="bottom:8px;left:8px;">+ TermsGroup ⑥ (스크롤 필요)</div>
       </div>
 
       <div class="layout-tree"><b>Scaffold</b>
@@ -351,7 +364,7 @@ body.dark-mode .my-group__card { background: var(--color-dark-surface); }
    └─ Padding(<i>spacing-medium</i> vertical)
       └─ Column
          ├─ <em>ProfileGroup</em> (MinglitSettingsGroup · 1 tile)              ← ②
-         │  └─ <b>_ProfileTile</b> CircleAvatar(radius:24 → 48px) + name + email + Icons.chevron_right
+         │  └─ <b>_ProfileTile</b> avatar + name + email + chevron — 탭 시 계정 관리 화면 진입
          ├─ Gap: <i>spacing-large (24)</i>
          │
          ├─ <em>ActivityGroup</em> (header: "활동" · 2 tiles)                  ← ③
@@ -370,15 +383,10 @@ body.dark-mode .my-group__card { background: var(--color-dark-surface); }
          │  └─ <b>차단 목록</b> tile
          ├─ Gap: <i>spacing-large</i>
          │
-         ├─ <em>TermsGroup</em> (header: "약관 및 정보" · 3 tiles)             ← ⑥
-         │  ├─ <b>개인정보처리방침</b> tile
-         │  ├─ <b>이용약관</b> tile
-         │  └─ <b>앱 버전</b> tile (subtitle: "26.04.x-dev" · cursor 미적용)
-         ├─ Gap: <i>spacing-large</i>
-         │
-         └─ <em>AccountGroup</em> (header: "계정" · 2 tiles)                   ← ⑦
-            ├─ <b>계정 관리</b> tile
-            └─ <b>로그아웃</b> tile (destructive · color-error)</div>
+         └─ <em>TermsGroup</em> (header: "약관 및 정보" · 3 tiles)             ← ⑥
+            ├─ <b>개인정보처리방침</b> tile
+            ├─ <b>이용약관</b> tile
+            └─ <b>앱 버전</b> tile (subtitle: "26.04.x-dev" · cursor 미적용)</div>
     </div>
 
     <table class="ref" style="margin-top: 16px;">
@@ -391,11 +399,11 @@ body.dark-mode .my-group__card { background: var(--color-dark-surface); }
         </tr>
       </thead>
       <tbody>
-        <tr><td>—</td><td>Body padding</td><td>—</td><td>vertical: <code>spacing-medium (16px)</code> · horizontal: 0 (그룹 자체는 edge-to-edge)</td></tr>
-        <tr><td>①</td><td>AppBar</td><td>title center · showBackButton: false</td><td>height: 56 · 하단 1px <code>color-divider</code></td></tr>
-        <tr><td>②</td><td>ProfileGroup</td><td>edge-to-edge · 1 tile (_ProfileTile)</td><td>height: ~80 (avatar 48 + padding-medium all = 16+48+16) · top/bottom 1px divider · InkWell ripple</td></tr>
-        <tr><td>③–⑦</td><td>SettingsGroup × 5</td><td>edge-to-edge · 헤더 + tile list</td><td>그룹 사이: <code>spacing-large (24)</code> · header 좌우 padding: <code>spacing-screen-edge</code> · header v-padding: <code>spacing-small (8)</code> · tile 좌우 padding: <code>spacing-screen-edge</code> · tile v-padding: 14px (icon 24+ 5px buffer)</td></tr>
-        <tr><td>—</td><td>tile-tile divider</td><td>top border 1px (첫 tile 제외)</td><td><code>color-divider</code> · per-tile</td></tr>
+        <tr><td>—</td><td>Body padding</td><td>—</td><td>vertical: <code>spacing-medium (16px)</code> · horizontal: 0 (그룹 자체에 좌우 padding 16)</td></tr>
+        <tr><td>①</td><td>AppBar</td><td>title center · showBackButton: false · scaffold bg · border 없음</td><td>height: 56 · gray bg · <code>surfaceTintColor: transparent</code> · elevation 0</td></tr>
+        <tr><td>②</td><td>ProfileGroup</td><td>headerless · 1 tile (_ProfileTile · avatar 48 + name/email + chevron)</td><td>card bg <code>color-background</code> · radius <code>radius-card</code> · h-padding <code>spacing-medium</code> · 탭 영역 전체에 ripple — 탭 시 계정 관리 화면으로 이동</td></tr>
+        <tr><td>③–⑥</td><td>SettingsGroup × 4</td><td>헤더 + tile list (그룹 카드)</td><td>그룹 사이: <code>spacing-large (24)</code> · header h-padding: <code>spacing-xsmall</code> · header v-padding: <code>spacing-small (8)</code> · tile h-padding: <code>spacing-medium</code> · tile height: 48 (subtitle 있을 시 56+ 자동)</td></tr>
+        <tr><td>—</td><td>tile-tile divider</td><td>두 번째 tile부터 top hairline 0.5px · indent 52(= padding 16 + icon 20 + gap 16)</td><td><code>color-divider</code> · per-tile</td></tr>
       </tbody>
     </table>
   </section>
@@ -419,7 +427,7 @@ body.dark-mode .my-group__card { background: var(--color-dark-surface); }
     <!-- State 1: Default (logged in, baseline) -->
     <table class="ref state-mini is-baseline-tint">
       <thead>
-        <tr><th colspan="3"><strong>Default · 로그인</strong> 🎯 <small>baseline · 6 SettingsGroup 노출</small></th></tr>
+        <tr><th colspan="3"><strong>Default · 로그인</strong> 🎯 <small>baseline · 1 ProfileGroup + 5 SettingsGroup 노출</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -456,7 +464,7 @@ body.dark-mode .my-group__card { background: var(--color-dark-surface); }
                   <div class="my-group__header">설정</div>
                   <div class="my-group__card">
                     <div class="my-tile"><span class="my-tile__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 16v-5a6 6 0 0 0-12 0v5l-2 2v1h16v-1l-2-2z"/><path d="M10 21a2 2 0 0 0 4 0"/></svg></span><div class="my-tile__body"><span class="my-tile__title">알림 설정</span></div><span class="my-tile__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="9 18 15 12 9 6"/></svg></span></div>
-                  <div class="my-tile"><span class="my-tile__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></svg></span><div class="my-tile__body"><span class="my-tile__title">테마 설정</span><span class="my-tile__subtitle">시스템</span></div><span class="my-tile__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="9 18 15 12 9 6"/></svg></span></div>
+                  <div class="my-tile my-tile--has-subtitle"><span class="my-tile__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></svg></span><div class="my-tile__body"><span class="my-tile__title">테마 설정</span><span class="my-tile__subtitle">시스템</span></div><span class="my-tile__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="9 18 15 12 9 6"/></svg></span></div>
                   </div>
                 </div>
                 <div class="my-group" style="margin-top: var(--spacing-large);">
@@ -472,14 +480,7 @@ body.dark-mode .my-group__card { background: var(--color-dark-surface); }
                   <div class="my-group__card">
                     <div class="my-tile"><span class="my-tile__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L4 5v6c0 5 3.4 9.6 8 11 4.6-1.4 8-6 8-11V5l-8-3z"/></svg></span><div class="my-tile__body"><span class="my-tile__title">개인정보처리방침</span></div><span class="my-tile__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="9 18 15 12 9 6"/></svg></span></div>
                   <div class="my-tile"><span class="my-tile__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg></span><div class="my-tile__body"><span class="my-tile__title">이용약관</span></div><span class="my-tile__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="9 18 15 12 9 6"/></svg></span></div>
-                  <div class="my-tile" style="cursor:default;"><span class="my-tile__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="11" x2="12" y2="16"/><circle cx="12" cy="8" r="0.6" fill="currentColor"/></svg></span><div class="my-tile__body"><span class="my-tile__title">앱 버전</span><span class="my-tile__subtitle">26.04.x-dev</span></div></div>
-                  </div>
-                </div>
-                <div class="my-group" style="margin-top: var(--spacing-large);">
-                  <div class="my-group__header">계정</div>
-                  <div class="my-group__card">
-                    <div class="my-tile"><span class="my-tile__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="8" r="4"/><path d="M2 20c0-4 4-7 8-7 1.5 0 2.9.4 4.1 1"/><circle cx="18" cy="16" r="3"/><line x1="18" y1="11" x2="18" y2="13"/><line x1="18" y1="19" x2="18" y2="21"/></svg></span><div class="my-tile__body"><span class="my-tile__title">계정 관리</span></div><span class="my-tile__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="9 18 15 12 9 6"/></svg></span></div>
-                  <div class="my-tile my-tile--destructive"><span class="my-tile__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></span><div class="my-tile__body"><span class="my-tile__title">로그아웃</span></div></div>
+                  <div class="my-tile my-tile--has-subtitle" style="cursor:default;"><span class="my-tile__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="11" x2="12" y2="16"/><circle cx="12" cy="8" r="0.6" fill="currentColor"/></svg></span><div class="my-tile__body"><span class="my-tile__title">앱 버전</span><span class="my-tile__subtitle">26.04.x-dev</span></div></div>
                   </div>
                 </div>
                 <!-- SizedBox(height: MinglitSpacing.xxlarge) — 64px buffer above safeArea -->
@@ -488,16 +489,15 @@ body.dark-mode .my-group__card { background: var(--color-dark-surface); }
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>로그인된 상태로 마이페이지에 진입한 경우. 6개 그룹의 settings hub 전체가 노출.</td>
+          <td>로그인된 상태로 마이페이지에 진입한 경우. 1 ProfileGroup + 5 SettingsGroup이 모두 노출.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ① <strong>프로필 영역 탭</strong> — 프로필 편집 화면으로 이동.<br>
+            ① <strong>프로필 영역 탭</strong> — 계정 관리 화면으로 이동(본인인증 · 파트너 프로필 · 로그아웃 · 회원 탈퇴는 그 안에서).<br>
             ② <strong>각 settings tile 탭</strong> — 해당 하위 settings 화면으로 이동.<br>
-            ③ <strong>스크롤</strong> — 화면 아래쪽의 약관·정보 그룹과 계정 그룹이 노출.<br>
-            ④ <strong>로그아웃 탭</strong> — 확인 다이얼로그가 뜨고, 사용자가 확인하면 로그아웃 후 로그인 화면으로 이동.<br>
-            ⑤ <strong>뒤로 가기</strong> — 홈으로 복귀.
+            ③ <strong>스크롤</strong> — 화면 아래쪽의 약관·정보 그룹이 노출.<br>
+            ④ <strong>뒤로 가기</strong> — 홈으로 복귀.
           </td>
         </tr>
         <tr>
@@ -505,7 +505,7 @@ body.dark-mode .my-group__card { background: var(--color-dark-surface); }
           <td>
             · 앱 버전 tile은 탭해도 반응이 없음 — 정보 표시 전용.<br>
             · 아직 준비되지 않은 일부 tile은 탭 시 "구현 준비 중" 안내 메시지가 잠깐 나타남.<br>
-            · 로그아웃 확인 다이얼로그의 확인 버튼은 위험 강조 색상으로 표시.
+            · 계정 관리 / 로그아웃 / 회원 탈퇴는 마이페이지에 별도 tile로 노출되지 않음 — 상단 프로필 영역 탭으로만 진입.
           </td>
         </tr>
         <tr>
@@ -513,27 +513,26 @@ body.dark-mode .my-group__card { background: var(--color-dark-surface); }
           <td>
             · <code>MinglitTheme.simpleAppBar(title: '마이페이지', showBackButton: false)</code><br>
             · <code>ListView</code> + <code>EdgeInsets.symmetric(vertical: MinglitSpacing.medium)</code><br>
-            · <code>_ProfileTile</code> (private widget · CircleAvatar radius 24 + Icons.person fallback (또는 NetworkImage avatarUrl) · displayName · email · Icons.chevron_right)<br>
-            · <a href="/components#MinglitSettingsGroup"><code>MinglitSettingsGroup</code></a> × 6 (header + tile list · top/bottom border · edge-to-edge)<br>
+            · <code>_ProfileTile</code> (private widget · CircleAvatar radius 24 + Icons.person fallback · displayName · email · Icons.chevron_right · 탭 시 <a href="/specs/account_management_page.html">계정 관리</a> 화면으로 push)<br>
+            · <a href="/components#MinglitSettingsGroup"><code>MinglitSettingsGroup</code></a> × 6 (1 ProfileGroup + 5 SettingsGroup · header + tile list · 그룹 카드)<br>
             · <a href="/components#MinglitSettingsTile"><code>MinglitSettingsTile</code></a> (leading icon + title + optional subtitle + chevron · destructive variant · trailing 옵션)<br>
             · <code>ThemeSettingsTile</code> (별도 widget · 테마 설정 tile — 시스템/dark/light 분기)<br>
             · <code>FutureBuilder&lt;PackageInfo&gt;</code> (앱 버전 tile — packageInfoFromPlatform)<br>
-            · <code>MinglitAlert.showConfirm</code> (로그아웃 confirm — isDestructive: true)<br>
             · <code>PopScope</code> (시스템 back → <code>homeCoordinator.goToHome()</code>)
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
           <td>
-            · color: <code>color-background</code> (scaffold · 그룹 bg), <code>color-surface</code> (그룹 헤더 bg), <code>color-text-primary</code> (title · name), <code>color-text-secondary</code> (sub · email · 그룹 헤더 · chevron · icon), <code>color-divider</code> (top/bottom · tile separator), <code>color-primary</code> (avatar gradient), <code>color-error</code> (로그아웃 destructive)<br>
-            · spacing: <code>spacing-medium</code> (16 · body v-padding · profile gap), <code>spacing-screen-edge</code> (16 · 그룹 h-padding), <code>spacing-large</code> (24 · 그룹 사이 간격), <code>spacing-small</code> (8 · 헤더 v-padding), <code>spacing-sm</code> (12 · tile icon↔title gap), 14px (tile v-padding)<br>
-            · radius: <code>radius-button</code> (12 · ConfirmDialog 버튼 — Material default)<br>
-            · typography: appBarTitle (18/600), bodyMedium (15/400 · tile title), bodySmall (13 · subtitle · email · 그룹 헤더), titleSmall (16/600 · profile name)
+            · color: <code>color-surface</code> (scaffold bg), <code>color-background</code> (그룹 카드 surface), <code>color-text-primary</code> (tile title · profile name), <code>color-text-secondary</code> (subtitle · email · 그룹 헤더 · chevron · leading icon), <code>color-divider</code> (tile 사이 indent hairline), <code>color-primary</code> (avatar bg)<br>
+            · spacing: <code>spacing-medium</code> (16 · body v-padding · 그룹 h-padding · tile h-padding · icon ↔ title gap), <code>spacing-large</code> (24 · 그룹 사이 gap), <code>spacing-small</code> (8 · 헤더 v-padding · subtitle tile padding), <code>spacing-xsmall</code> (헤더 h-padding)<br>
+            · radius: <code>radius-card</code> (그룹 카드 corner)<br>
+            · typography: appBarTitle (18/600), 그룹 헤더(13 · 500 · uppercase · letter-spacing 0.5), tile title (14), tile subtitle (12), profile name (16/700), profile email (12)
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 위 mockup은 프로필 ~ 개인정보·보안 그룹까지만 보임. 실제 화면에서는 약관·정보 / 계정 그룹은 스크롤로 확인 가능.</td>
+          <td>📝 위 mockup은 프로필 ~ 개인정보·보안 그룹까지만 보임. 실제 화면에서는 약관·정보 그룹은 스크롤로 확인 가능. 계정 관리는 별도 그룹이 아닌 <strong>상단 프로필 영역 탭</strong>으로 진입.</td>
         </tr>
       </tbody>
     </table>
@@ -646,11 +645,6 @@ body.dark-mode .my-group__card { background: var(--color-dark-surface); }
           <td>슬라이드로 다음 화면이 위에 얹힘.</td>
         </tr>
         <tr>
-          <td>로그아웃 확인 다이얼로그</td>
-          <td><code>MinglitAnimation.fast</code> (200ms)</td>
-          <td>화면 중앙에 다이얼로그가 살짝 커지며 부드럽게 페이드 인.</td>
-        </tr>
-        <tr>
           <td>로그인 완료 → settings hub 노출</td>
           <td>—</td>
           <td>별도 전환 애니메이션 없이 즉시 교체. 의도적으로 부드러운 전환을 생략.</td>
@@ -662,7 +656,7 @@ body.dark-mode .my-group__card { background: var(--color-dark-surface); }
   <section class="doc">
     <h2>Global edge cases</h2>
     <ul class="notes">
-      <li><strong>스크롤 끝 도달</strong> — 계정 그룹의 마지막 항목(로그아웃)이 화면 하단 마지막에 위치. 별도 여백 없이 시스템 안전 영역까지 자연스럽게 마감.</li>
+      <li><strong>스크롤 끝 도달</strong> — 약관 및 정보 그룹의 마지막 항목(앱 버전)이 화면 하단 마지막에 위치. 별도 여백 없이 시스템 안전 영역까지 자연스럽게 마감.</li>
       <li><strong>그룹 헤더 스크롤 동작</strong> — 그룹 헤더는 화면 상단에 고정되지 않고 일반 스크롤과 함께 흘러감.</li>
       <li><strong>준비 중인 tile</strong> — 아직 활성화되지 않은 항목은 탭 시 "구현 준비 중" 안내 메시지가 잠깐 노출.</li>
     </ul>
@@ -686,15 +680,14 @@ body.dark-mode .my-group__card { background: var(--color-dark-surface); }
         <tr><th style="width: 200px;">Widget</th><td><code>MyPage</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/home/my_page.dart"><code>apps/app_user/lib/src/features/home/my_page.dart</code></a></td></tr>
         <tr><th>Route</th><td><code>MyPageRoute</code> · <code>/my</code> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/routing/app_routes.dart"><code>app_routes.dart</code></a></td></tr>
         <tr><th>Auth gate</th><td><code>currentUserProvider</code> — null 시 auth guard prompt 노출. HomePage 측에서도 인증 사용자만 아바타 표시 → 일반 진입은 항상 default state.</td></tr>
-        <tr><th>SettingsGroup atom</th><td><a href="/components#MinglitSettingsGroup"><code>MinglitSettingsGroup</code></a> (kit-shared · components 등록됨) — header + tile list · top/bottom border · edge-to-edge</td></tr>
+        <tr><th>SettingsGroup atom</th><td><a href="/components#MinglitSettingsGroup"><code>MinglitSettingsGroup</code></a> (kit-shared · components 등록됨) — uppercase header(13 · 500 · letter-spacing 0.5) outside + 둥근 카드(<code>color-background</code> bg · <code>radius-card</code>) · 카드는 <code>spacing-medium</code> 좌우 padding 안에 위치 (NOT edge-to-edge)</td></tr>
         <tr><th>SettingsTile atom</th><td><a href="/components#MinglitSettingsTile"><code>MinglitSettingsTile</code></a> — leading: <code>IconData</code> · title · subtitle · trailing (chevron / none) · destructive 분기</td></tr>
         <tr><th>ThemeSettingsTile</th><td><code>ThemeSettingsTile</code> 전용 widget — 테마 모드 (system / light / dark) 분기 + 현재 모드 subtitle. <a href="https://github.com/Mark-Yun/minglit/blob/dev/shared/packages/minglit_kit/lib/src/features/theme/theme_settings_tile.dart"><code>shared/packages/minglit_kit/lib/src/features/theme/theme_settings_tile.dart</code></a></td></tr>
-        <tr><th>Icons (Material)</th><td><code>person_outline</code> (auth guard) · <code>person</code> (avatar fallback) · <code>chevron_right</code> · <code>receipt_long_outlined</code> · <code>confirmation_number_outlined</code> · <code>notifications_outlined</code> · <code>lock_outline</code> · <code>admin_panel_settings_outlined</code> · <code>block</code> · <code>shield_outlined</code> · <code>description_outlined</code> · <code>info_outline</code> · <code>manage_accounts_outlined</code> · <code>logout_outlined</code></td></tr>
+        <tr><th>Icons (Material)</th><td><code>person_outline</code> (auth guard) · <code>person</code> (avatar fallback) · <code>chevron_right</code> · <code>receipt_long_outlined</code> · <code>confirmation_number_outlined</code> · <code>notifications_outlined</code> · <code>lock_outline</code> · <code>admin_panel_settings_outlined</code> · <code>block</code> · <code>shield_outlined</code> · <code>description_outlined</code> · <code>info_outline</code></td></tr>
         <tr><th>App version</th><td><code>FutureBuilder&lt;PackageInfo&gt;</code> — <code>package_info_plus.PackageInfo.fromPlatform()</code></td></tr>
         <tr><th>Terms URL</th><td><code>minglitUrlConfigProvider.termsUrl</code> → <code>launchUrl</code> (외부 브라우저)</td></tr>
-        <tr><th>Logout flow</th><td><code>MinglitAlert.showConfirm</code>(isDestructive: true · title "로그아웃" · content "정말 로그아웃 하시겠습니까?") → 확인 시 <code>authControllerProvider.notifier.signOut()</code></td></tr>
         <tr><th>Pop behavior</th><td><code>PopScope</code>(canPop: <code>Navigator.canPop</code>) → 시스템 back / swipe 시 <code>homeCoordinator.goToHome()</code> 호출 (HomePage로 명시 복귀)</td></tr>
-        <tr><th>Sub-screens (각 tile)</th><td>구매 내역 · 내 티켓 · 알림 설정 · 테마 설정 · 개인정보 · 권한 설정 · 차단 목록 · 약관 · 계정 관리 — 각각 별도 spec 후보 (Phase 2 backlog).</td></tr>
+        <tr><th>Sub-screens</th><td>프로필 영역 탭 → <a href="/specs/account_management_page.html">계정 관리</a>(본인인증 · 로그아웃 · 회원 탈퇴 포함) · 각 settings tile → 구매 내역 · 내 티켓 · 알림 설정 · 테마 설정 · 개인정보 · 권한 설정 · 차단 목록 · 약관 — 각각 별도 spec 후보 (Phase 2 backlog).</td></tr>
       </tbody>
     </table>
   </section>
@@ -707,6 +700,10 @@ body.dark-mode .my-group__card { background: var(--color-dark-surface); }
         <tr>
           <td><a href="/specs/home_page.html"><code>HomePage</code></a></td>
           <td>유일한 정상 진입점 — AppBar 아바타 탭.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/account_management_page.html"><code>AccountManagementPage</code></a></td>
+          <td>상단 프로필 영역 탭의 push 목적지 — 본인인증 · 로그아웃 · 회원 탈퇴를 책임지는 sub-settings hub.</td>
         </tr>
         <tr>
           <td><a href="/specs/login_page.html"><code>LoginPage</code></a></td>
