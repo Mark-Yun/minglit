@@ -309,7 +309,7 @@
       <tr>
         <th>User journey</th>
         <td>
-          <strong>Entry points</strong>: <a href="/specs/event_detail_page.html">EventDetailPage</a>의 파트너 행 탭 → 이 화면 (주 경로) · 공유 링크 / 딥링크 직접 진입.<br>
+          <strong>Entry points</strong>: <a href="/specs/event_detail_page.html">EventDetailPage</a>의 파트너 행 탭 → 이 화면 (주 경로) · <a href="/specs/purchase_history_detail_page.html">PurchaseHistoryDetailPage</a>의 파트너 정보 카드 row 탭 (2차 경로 · #2098) · 공유 링크 / 딥링크 직접 진입.<br>
           <strong>Exit points</strong>: 뒤로 가기 → 이전 화면 / 가로 카드 탭 → <a href="/specs/event_detail_page.html">EventDetailPage</a>로 이동 / "더 보기" → <a href="/specs/partner_events_page.html">PartnerEventsPage</a>로 이동 / "알림받기" 토글 → 알림 구독 토글 (비로그인이면 로그인 화면으로 이동).
         </td>
       </tr>
@@ -346,6 +346,12 @@
         <td>1.0</td>
         <td>mark-yun</td>
         <td>v1.4 template으로 작성 — 5 states (Default · Loading · Error · NotFound · EmptyEvents). 가로 이벤트 카드 영역은 <a href="/specs/event_card.html">MinglitEventCard</a> 별도 spec 위임.</td>
+      </tr>
+      <tr>
+        <td>2026-05-05</td>
+        <td>1.0.1</td>
+        <td>needs-uiux-claude-1</td>
+        <td>Entry points / Related screens에 <a href="/specs/purchase_history_detail_page.html">PurchaseHistoryDetailPage</a> 2차 진입 경로 한 줄 추가 — 양방향 hierarchy 비대칭 해소 (#2098).</td>
       </tr>
     </tbody>
   </table>
@@ -982,6 +988,7 @@
       <thead><tr><th style="width: 240px;">Spec</th><th>Relation</th></tr></thead>
       <tbody>
         <tr><td><a href="/specs/event_detail_page.html"><code>EventDetailPage</code></a></td><td>주 진입 경로 — partner row 탭 → 이 화면. ③ 영역의 카드 탭으로 다시 EventDetail로 이동(loop).</td></tr>
+        <tr><td><a href="/specs/purchase_history_detail_page.html"><code>PurchaseHistoryDetailPage</code></a></td><td>2차 진입 경로 — 파트너 정보 카드 row 탭 → 이 화면 (양방향 hierarchy · #2098).</td></tr>
         <tr><td><a href="/specs/event_card.html"><code>MinglitEventCard</code></a></td><td>③ 영역의 카드 위젯 — 별도 spec. D-Day · sold out · 오늘 · ended 4 variant.</td></tr>
         <tr><td><code>PartnerEventsPage</code> (TBD spec)</td><td>"더 보기" 탭 시 진입 — 같은 partnerId의 이벤트 목록 (세로 ListView).</td></tr>
         <tr><td><a href="/specs/login_page.html"><code>LoginPage</code></a></td><td>비로그인 + "알림받기" 탭 시 controller 내부에서 LoginRoute push (auth-required interaction).</td></tr>
