@@ -201,19 +201,24 @@ void main() {
       'pulsing=true with disableAnimations=true renders no Transform',
       (tester) async {
         final key = GlobalKey();
+        // MediaQuery must be inside MaterialApp; placing it outside has no
+        // effect because MaterialApp creates its own MediaQuery from the view.
         await tester.pumpWidget(
-          MediaQuery(
-            data: const MediaQueryData(disableAnimations: true),
-            child: _wrap(
-              MinglitTimeline(
-                key: key,
-                children: const [
-                  MinglitTimelineStep(
-                    tone: TimelineTone.progress,
-                    pulsing: true,
-                    title: 'In Progress',
-                  ),
-                ],
+          MaterialApp(
+            theme: MinglitTheme.materialTheme,
+            home: Scaffold(
+              body: MediaQuery(
+                data: const MediaQueryData(disableAnimations: true),
+                child: MinglitTimeline(
+                  key: key,
+                  children: const [
+                    MinglitTimelineStep(
+                      tone: TimelineTone.progress,
+                      pulsing: true,
+                      title: 'In Progress',
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
