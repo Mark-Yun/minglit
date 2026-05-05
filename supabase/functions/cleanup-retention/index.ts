@@ -1,9 +1,7 @@
-import { createServiceClient } from "../_shared/supabase_client.ts";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { successResponse, errorResponse } from "../_shared/response_utils.ts";
-import { initSentry, withHandler, captureException } from "../_shared/logger.ts";
-import { requireServiceRole } from "../_shared/auth_utils.ts";
-
-initSentry();
+import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
+import { captureException } from "../_shared/logger.ts";
 
 type RetentionKind = "db_table" | "storage_bucket" | "pgmq_archive" | "db_custom_fn";
 
@@ -24,10 +22,10 @@ interface PolicyResult {
 }
 
 async function runDbTableCleanup(
-  supabase: ReturnType<typeof createServiceClient>,
+  supabase: SupabaseClient,
   policy: RetentionPolicy,
 ): Promise<{ rows_deleted: number }> {
-  const { schema, table, ts_col, use_absolute_ts } = policy.target as { schema: string; table: string; ts_col: string; use_absolute_ts?: boolean };
+  const { schema, table, ts_col, use_absolute_ts } = policy.target as unknown as { schema: string; table: string; ts_col: string; use_absolute_ts?: boolean };
   if (use_absolute_ts) {
     const { data, error } = await supabase.schema("admin").rpc("delete_expired_rows", {
       p_schema: schema,
@@ -48,7 +46,7 @@ async function runDbTableCleanup(
 }
 
 async function runStorageBucketCleanup(
-  supabase: ReturnType<typeof createServiceClient>,
+  supabase: SupabaseClient,
   policy: RetentionPolicy,
 ): Promise<{ rows_deleted: number }> {
   const { bucket_id, path_prefix = "" } = policy.target;
@@ -87,7 +85,7 @@ async function runStorageBucketCleanup(
 }
 
 async function runPgmqArchiveCleanup(
-  supabase: ReturnType<typeof createServiceClient>,
+  supabase: SupabaseClient,
   policy: RetentionPolicy,
 ): Promise<{ rows_deleted: number }> {
   const { queue_name } = policy.target;
@@ -103,7 +101,7 @@ async function runPgmqArchiveCleanup(
 // target.fn must be a fully-qualified admin-schema function name (e.g. "admin.anonymize_old_event_participants")
 // that accepts a single p_cutoff_days int parameter and returns bigint (rows affected).
 async function runDbCustomFnCleanup(
-  supabase: ReturnType<typeof createServiceClient>,
+  supabase: SupabaseClient,
   policy: RetentionPolicy,
 ): Promise<{ rows_deleted: number }> {
   const { fn } = policy.target;
@@ -117,7 +115,7 @@ async function runDbCustomFnCleanup(
 }
 
 async function runPolicy(
-  supabase: ReturnType<typeof createServiceClient>,
+  supabase: SupabaseClient,
   policy: RetentionPolicy,
 ): Promise<PolicyResult> {
   const start = Date.now();
@@ -150,7 +148,7 @@ async function runPolicy(
 }
 
 async function updatePolicyRunResult(
-  supabase: ReturnType<typeof createServiceClient>,
+  supabase: SupabaseClient,
   result: PolicyResult,
 ): Promise<void> {
   const now = new Date().toISOString();
@@ -183,15 +181,11 @@ async function updatePolicyRunResult(
   if (auditError) captureException(new Error(`retention_policy_audit insert failed [${result.id}]: ${auditError.message}`));
 }
 
-Deno.serve(withHandler(async (req) => {
+export const handler = async (req: Request, { supabase }: EFContext): Promise<Response> => {
   if (req.method !== "POST") {
     return errorResponse("Method not allowed", 405);
   }
 
-  const auth = requireServiceRole(req);
-  if (auth instanceof Response) return auth;
-
-  const supabase = createServiceClient();
   const totalStart = Date.now();
 
   const { data: policies, error: fetchError } = await supabase
@@ -224,4 +218,6 @@ Deno.serve(withHandler(async (req) => {
       ...(r.error ? { error: r.error } : {}),
     })),
   });
-}));
+};
+
+minglitEdgeFunction(handler);

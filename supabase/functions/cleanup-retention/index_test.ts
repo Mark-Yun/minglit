@@ -11,6 +11,9 @@ import {
 const ENV = {
   SUPABASE_URL: "http://localhost:54321",
   SUPABASE_SERVICE_ROLE_KEY: "test-service-key",
+  // minglitEdgeFunction wrapper 요구 — env 가드 + fnName 자동감지 escape hatch
+  ENVIRONMENT: "dev",
+  MINGLIT_EF_TEST_FN_NAME: "cleanup-retention",
 };
 
 const AUTH_HEADER = { Authorization: "Bearer test-service-key" };
@@ -22,11 +25,14 @@ function postRequest(headers: Record<string, string> = AUTH_HEADER): Request {
 }
 
 Deno.test({
-  name: "cleanup-retention - returns 405 for non-POST",
+  name: "cleanup-retention - returns 405 for non-POST (with auth)",
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     await withEnv(ENV, async () => {
-      const response = await handler(new Request("http://localhost", { method: "GET" }));
+      // wrapper auth 통과시킨 후 handler 의 method 가드가 405 반환
+      const response = await handler(
+        new Request("http://localhost", { method: "GET", headers: AUTH_HEADER }),
+      );
       assertEquals(response.status, 405);
     });
   },
