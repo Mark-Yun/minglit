@@ -653,82 +653,63 @@ body.dark-mode .viewport {
     <p class="intro">
       <code>simpleAppBar</code>(centerTitle · back + info + add) + body
       <code>MinglitAsyncValueWidget</code> wrapping
-      <code>ListView.separated</code>. 카드(<code>PartyListItem</code>)는
-      edge-to-edge(좌우 margin 없음) · 4px vertical · 1px <code>outlineVariant</code> divider로 구분.
-      카드는 <strong>title row(상단 흰 영역)</strong> + <strong>16:9 이미지 본문(중첩 chip + status badge)</strong> 두 영역으로 구성.
+      <code>ListView</code>. 카드(<code>PartyListItem</code>)는 edge-to-edge(horizontal padding 0) · radius 0 · overflow hidden · gap medium 사이.
+      카드는 4 region(Hero / Body / Stats / Bottom CTA) + region 사이 좌우 inset 16 divider.
     </p>
     <div class="layout-grid">
-      <div class="blueprint">
+      <div class="blueprint" style="height: 560px;">
         <div class="blueprint__region blueprint__region--full"></div>
 
         <!-- AppBar -->
         <div class="blueprint__region blueprint__region--shaded" style="top:0;left:0;right:0;height:56px;">
-          <span class="blueprint__region-label">① AppBar — back + 타이틀 "파티 관리" + info + add</span>
-        </div>
-        <!-- Card 1 header -->
-        <div class="blueprint__region blueprint__region--shaded" style="top:60px;left:0;right:0;height:48px;">
-          <span class="blueprint__region-label">② Card 1 · header (title + chevron)</span>
-        </div>
-        <!-- Card 1 media -->
-        <div class="blueprint__region blueprint__region--shaded" style="top:108px;left:0;right:0;height:200px;">
-          <span class="blueprint__region-label">③ Card 1 · 16:9 media + status / like / chips overlay</span>
-        </div>
-        <!-- Divider -->
-        <div class="blueprint__region blueprint__region--shaded" style="top:312px;left:0;right:0;height:4px;">
-          <span class="blueprint__region-label">④ Divider 1px outlineVariant</span>
-        </div>
-        <!-- Card 2 header -->
-        <div class="blueprint__region blueprint__region--shaded" style="top:320px;left:0;right:0;height:48px;">
-          <span class="blueprint__region-label">⑤ Card 2 · header</span>
-        </div>
-        <!-- Card 2 media -->
-        <div class="blueprint__region blueprint__region--shaded" style="top:368px;left:0;right:0;height:200px;">
-          <span class="blueprint__region-label">⑥ Card 2 · media</span>
+          <span class="blueprint__region-label">① AppBar — back + 파티 관리 + info + add (56)</span>
         </div>
 
-        <div class="blueprint__align-marker" style="top:8px;right:8px;">edge-to-edge · screen-edge pad 0</div>
+        <!-- Body padding top (16) -->
+        <div class="blueprint__region" style="top:56px;left:0;right:0;height:16px;">
+          <span class="blueprint__region-label" style="font-size:9px;">— body padding top 16</span>
+        </div>
+
+        <!-- Card 1 -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:72px;left:0;right:0;height:340px;">
+          <span class="blueprint__region-label">② Card 1 (PartyListItem · 4 region · 자세히는 sub-anatomy 참조)</span>
+        </div>
+
+        <!-- Gap -->
+        <div class="blueprint__region" style="top:412px;left:0;right:0;height:16px;">
+          <span class="blueprint__region-label" style="font-size:9px;">— SizedBox spacing-medium 16</span>
+        </div>
+
+        <!-- Card 2 (partial) -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:428px;left:0;right:0;height:120px;">
+          <span class="blueprint__region-label">③ Card 2 (… 이어짐 · 동일 4 region)</span>
+        </div>
+
+        <div class="blueprint__align-marker" style="top:8px;right:8px;">edge-to-edge · horizontal padding 0</div>
       </div>
 
       <div class="layout-tree"><b>Scaffold</b>
-├─ <b>appBar</b>: MinglitTheme.simpleAppBar(centerTitle:true)
-│  ├─ title: Text('파티 기획 관리')                          ← ①
+├─ <b>appBar</b>: MinglitTheme.simpleAppBar(centerTitle:true)             ← ①
+│  ├─ title: Text('파티 관리')
 │  ├─ leading: BackButton (auto)
-│  └─ actions:
-│     ├─ IconButton(info_outline) → showModalBottomSheet(MinglitHelpSheet)
-│     └─ IconButton(add)              → coordinator.goToCreate
-├─ <b>body</b>: MinglitAsyncValueWidget(value: partyListProvider)
+│  └─ actions: [
+│     IconButton(info_outline) → showMinglitHelpSheet(...),
+│     IconButton(add)          → coordinator.goToCreate,
+│  ]
+├─ <b>body</b>: MinglitAsyncValueWidget&lt;List&lt;Party&gt;&gt;(value: partyListProvider)
 │   ├─ loading → MinglitCircularProgressIndicator (centered)
-│   ├─ error   → _DefaultErrorView (Icons.error_outline · titleMedium)
+│   ├─ error   → _DefaultErrorView (titleMedium + 본문 caption)
 │   └─ data:
-│       ├─ if parties.isEmpty → Center( Column(
-│       │     Icon(party_mode_outlined · size 64 · outlineVariant),
-│       │     SizedBox(h:16),
-│       │     Text('등록된 파티가 없습니다.\n새로운 파티를 기획해보세요!')
-│       │  ))
-│       └─ else → ListView.separated(
-│             padding: only(bottom: spacing-large/24)
-│             separator: Divider(h:1, thickness:1, outlineVariant)
-│             item: <b>PartyListItem(party, onTap: goToDetail(party.id))</b>
-│          )
-│             └─ <b>PartyListItem (Card · radius 0 · elevation 0)</b>
-│                └─ InkWell → Column(stretch)
-│                   ├─ <b>Header</b> Container(pad H:16 V:16 · bg colorScheme.surface)
-│                   │  └─ Row(Title titleMedium bold · Spacer · Icons.chevron_right) ← ②/⑤
-│                   └─ <b>Body</b> AspectRatio(16:9) → Stack( ← ③/⑥
-│                       ├─ Image.network(imageUrl, fit cover) OR _placeholder
-│                       │   (ColoredBox(onSurface) · Icon(party_mode · 96px · subtle))
-│                       ├─ DecoratedBox(LinearGradient top→bottom · 0→onSurface 0.5 · stops[.6,1])
-│                       └─ Padding(all 16) → Column(stretch)
-│                          ├─ Row spaceBetween(
-│                          │     <b>_buildStatusBadge</b>(active/closed/draft → tertiary/outline/secondary),
-│                          │     <em>(좋아요/like 제거 — partner 자기 파티에 무의미)</em>
-│                          │  )
-│                          ├─ Spacer
-│                          └─ <em>(InfoChip group 제거 — 조건/인증은 detail에서)</em>
-│                              · location_on / location_off + party.location.name | "지정된 장소 없음"
-│                              · people + "최대 N명"
-│                              · assignment + condition (각 condition 하나당 chip · '조건 없음' 제외)
-│                              · verified_user / verified_user_outlined + 인증 N개 / 불필요</div>
+│      ├─ if parties.isEmpty → Center(Column [
+│      │     icon 64 · text · MinglitButton "+ 새로운 파티 만들기" filled
+│      │   · MinglitButton "파티란 무엇인가요?" outlined → showMinglitHelpSheet(...)
+│      │  ])  ← Empty state (사이즈 통일된 두 CTA)
+│      │
+│      └─ else → ListView(
+│            padding: only(top: medium · bottom: large)
+│            children: [parties.map((p) => Padding(margin-bottom: medium, child: PartyListItem(party: p)))]
+│         )
+│             └─ <b>PartyListItem</b> — 자세한 트리는 PartyListItem sub-anatomy 참조 ← ②/③</div>
     </div>
   </section>
 
@@ -761,6 +742,87 @@ body.dark-mode .viewport {
     <p class="intro">
       카드는 4 region(Hero / Body / Stats / Bottom CTA) + region 사이 좌우 inset divider. 모든 카드 동일 구조 — Bottom CTA region이 4 variants로 분기.
     </p>
+
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 380px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <!-- ① Hero -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:0;left:0;right:0;height:160px;">
+          <span class="blueprint__region-label">① Hero — 2:1 image · partner overlay · tags · gradient fade</span>
+        </div>
+
+        <!-- partner overlay -->
+        <div class="blueprint__region" style="top:8px;left:8px;width:120px;height:24px;border-color:rgba(var(--spec-blueprint-rgb),0.5);">
+          <span class="blueprint__region-label" style="font-size:9px;">partner overlay</span>
+        </div>
+
+        <!-- tags overlay -->
+        <div class="blueprint__region" style="top:128px;left:16px;right:16px;height:24px;border-color:rgba(var(--spec-blueprint-rgb),0.5);">
+          <span class="blueprint__region-label" style="font-size:9px;">tags overlay (image bottom)</span>
+        </div>
+
+        <!-- ② Body -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:160px;left:0;right:0;height:60px;">
+          <span class="blueprint__region-label">② Body — title (+ optional 임시저장 chip) + meta-row(location)</span>
+        </div>
+
+        <!-- Divider -->
+        <div class="blueprint__region" style="top:220px;left:16px;right:16px;height:1px;">
+          <span class="blueprint__region-label" style="font-size:9px;top:-12px;">— Divider 좌우 inset 16</span>
+        </div>
+
+        <!-- ③ Stats -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:222px;left:0;right:0;height:64px;">
+          <span class="blueprint__region-label">③ Stats — 2-line · 완료 N회 · 예정 M회 · gap xlarge</span>
+        </div>
+
+        <!-- Divider -->
+        <div class="blueprint__region" style="top:286px;left:16px;right:16px;height:1px;">
+          <span class="blueprint__region-label" style="font-size:9px;top:-12px;">— Divider</span>
+        </div>
+
+        <!-- ④ Bottom CTA -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:288px;left:0;right:0;height:80px;">
+          <span class="blueprint__region-label">④ Bottom CTA — 4 variants 분기 (다음 이벤트 row · outlined CTA · 격려/안내 · disabled)</span>
+        </div>
+
+        <div class="blueprint__align-marker" style="top:8px;right:8px;">card · radius 0 · overflow hidden</div>
+      </div>
+
+      <div class="layout-tree"><b>PartyListItem</b> (4-region · radius 0 · overflow hidden)
+└─ <b>InkWell</b> wrap
+   └─ <b>Column</b>(stretch)
+      ├─ <em>① Hero</em> — <code>.event-card__image</code>(2:1 · cover) Stack [
+      │     │   <code>.event-card__image-gradient</code>(bottom 45%→100% scrim),
+      │     │   <code>.event-card__partner-overlay</code>(top-left · avatar 20×20 + 운영자 이름),
+      │     │   <code>.event-card__tags</code>(bottom · #태그 chip × max 3 · backdrop blur),
+      │     │ ]
+      │     · 이미지 없으면 <code>--placeholder</code> (divider tint bg + "이미지 없음" caption · partner overlay 그대로)
+      │     · 탭 → PartyDetailRoute push
+      │
+      ├─ <em>② Body</em> — Padding(medium) → Column(gap 6) [
+      │     │   <em>title-row</em>: Text(party.title · titleMedium bold · ellipsis) + optional <code>.pl-chip-draft</code>("임시저장" amber chip),
+      │     │   <em>meta-row</em>: location icon(13 partner-primary) + Text(party.location · bodySmall secondary · ellipsis),
+      │     │ ]
+      │     · 탭 → PartyDetailRoute (hero와 동일)
+      │
+      ├─ <em>Divider</em> — height 1 · color divider · margin 0 medium (좌우 16 inset)
+      │
+      ├─ <em>③ Stats</em> — Padding(medium) → Row(gap xlarge · align flex-start) [
+      │     │   <code>.pl-stat</code>: <code>.pl-stat__lbl</code>("완료" 11/500 secondary) 위 + <code>.pl-stat__num-row</code>(<code>.pl-stat__num</code> 18/700 primary + <code>.pl-stat__suffix</code> "회" 12/regular secondary) 아래,
+      │     │   <code>.pl-stat</code>: 동일 · "예정" + N회,
+      │     │ ]
+      │
+      ├─ <em>Divider</em>
+      │
+      └─ <em>④ Bottom CTA</em> — variant 분기:
+            ├─ (a) 예정 ≥1 → <code>.pl-event</code>(2-line · 라벨 + row[date · <b>MinglitDDayChip</b> · 정원 · chevron]) → EventDetailRoute push
+            ├─ (b) 예정 0, 완료 ≥1 → <code>.pl-cta</code>(outlined "이벤트 생성하기 →") → 이벤트 생성 흐름
+            ├─ (c) published 0/0 → <code>.pl-empty-msg</code>("첫 이벤트를 만들어 호스팅해보세요!" 12 secondary) + <code>.pl-cta</code>(outlined "이벤트 만들기 →")
+            └─ (d) draft 0/0 → <code>.pl-empty-msg--draft</code>("임시저장 중이에요. 파티를 먼저 등록..." 12 warning) + <code>.pl-cta--disabled</code>("이벤트 만들기" 회색)</div>
+    </div>
+
     <table class="ref">
       <thead>
         <tr><th style="width: 200px;">Region</th><th>Alignment</th><th>Notes</th></tr>
