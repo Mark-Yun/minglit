@@ -1,5 +1,5 @@
 -- pgTAP tests for PostgREST exposed schemas (authenticator role pgrst.db_schemas GUC).
--- migration: 20260505000003_postgrest_expose_admin_schema.sql
+-- migration: 20260505000004_postgrest_expose_admin_schema.sql
 --
 -- 의도: GUC 가 누락되거나 다른 migration 에서 덮어써질 때 즉시 fail 시키는 regression 가드.
 --      migration 적용 후 PostgREST 가 노출하는 스키마 목록을 실측 검증.
