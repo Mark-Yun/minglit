@@ -2,10 +2,12 @@ import 'dart:async';
 
 import 'package:app_user/src/features/account_deletion/logic/account_deletion_coordinator.dart';
 import 'package:app_user/src/features/account_deletion/ui/deletion_complete_page.dart';
+
 import 'package:app_user/src/features/account_deletion/ui/deletion_info_page.dart';
 import 'package:app_user/src/features/account_deletion/ui/deletion_reason_page.dart';
 import 'package:app_user/src/features/account_deletion/ui/deletion_verify_page.dart';
 import 'package:app_user/src/features/auth/login_page.dart';
+import 'package:app_user/src/features/dev/user_dev_map.dart';
 import 'package:app_user/src/features/auth/ui/auth_callback_page.dart';
 import 'package:app_user/src/features/consent/ui/signup_consent_page.dart';
 import 'package:app_user/src/features/event/admission/event_application_wizard_page.dart';
@@ -32,6 +34,17 @@ part 'app_routes.g.dart';
 // ---------------------------------------------------------------------------
 // Top-Level Routes (outside the shell)
 // ---------------------------------------------------------------------------
+
+/// **Dev Map Route**: Navigation hub for dev tools (dev flavor only).
+/// Path: `/dev`
+// Fix #2138: /dev route was missing — UserDevMap not reachable
+@TypedGoRoute<DevRoute>(path: '/dev')
+class DevRoute extends GoRouteData with $DevRoute {
+  const DevRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) => const UserDevMap();
+}
 
 /// **Dev User Switch Route**: Screen to switch between test users.
 /// Path: `/dev/switch`
@@ -118,19 +131,18 @@ class PartnerDetailRoute extends GoRouteData with $PartnerDetailRoute {
 
 /// **Partner Events Route**: Full list of events for a partner.
 /// Path: `/partners/:partnerId/events`
+// Fix #2137: partnerName removed from route — PartnerEventsPage fetches it
+// from partnerDetailProvider so the route is self-sufficient and never throws
+// on a missing query param.
 @TypedGoRoute<PartnerEventsRoute>(path: '/partners/:partnerId/events')
 class PartnerEventsRoute extends GoRouteData with $PartnerEventsRoute {
-  const PartnerEventsRoute({
-    required this.partnerId,
-    required this.partnerName,
-  });
+  const PartnerEventsRoute({required this.partnerId});
 
   final String partnerId;
-  final String partnerName;
 
   @override
   Widget build(BuildContext context, GoRouterState state) =>
-      PartnerEventsPage(partnerId: partnerId, partnerName: partnerName);
+      PartnerEventsPage(partnerId: partnerId);
 }
 
 /// **Certification Route**: Identity Verification Screen.
