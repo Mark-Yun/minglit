@@ -205,11 +205,11 @@ class EventApplicationConfirmationRoute extends GoRouteData
   Widget build(BuildContext context, GoRouterState state) {
     return MinglitConfirmationPage(
       title: '참여 신청이 완료됐어요',
-      message: '결제가 완료되었고 신청이 접수되었습니다.\n내 티켓에서 진행 상태를 확인할 수 있어요.',
-      primaryLabel: '내 티켓 보기',
-      onPrimary: () => const PurchaseHistoryRoute().go(context),
-      secondaryLabel: '이벤트로 돌아가기',
-      onSecondary: () => EventDetailRoute(eventId: eventId).go(context),
+      description: '결제가 완료되었고 신청이 접수되었습니다.\n내 티켓에서 진행 상태를 확인할 수 있어요.',
+      icon: Icons.check_circle_outline,
+      tone: MinglitConfirmationTone.success,
+      ctaLabel: '내 티켓 보기',
+      onPressed: () => const PurchaseHistoryRoute().go(context),
     );
   }
 }
