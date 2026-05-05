@@ -293,11 +293,16 @@
   },
   "vault": {
     "required": {
-      "publishable_key": {
-        "desc": "Legacy anon JWT for pg_cron -> EF auth"
+      "service_role_key": {
+        "desc": "Service role JWT for pg_cron -> EF auth (PR #1758: requireServiceRole guard)"
       },
       "supabase_url": {
         "desc": "Project URL for pg_cron -> EF calls"
+      }
+    },
+    "deprecated": {
+      "publishable_key": {
+        "desc": "Replaced by service_role_key in PR #1758. Kept for reference; safe to remove from Vault once verified unused."
       }
     }
   }
