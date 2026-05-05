@@ -1579,7 +1579,7 @@ abstract class AppLocalizations {
   /// No description provided for @eventDetail_title.
   ///
   /// In ko, this message translates to:
-  /// **'회차 상세'**
+  /// **'이벤트 상세'**
   String get eventDetail_title;
 
   /// No description provided for @eventDetail_label_dateTime.
