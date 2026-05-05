@@ -790,7 +790,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get eventCreate_label_maxParticipants => '최대 정원';
 
   @override
-  String get eventDetail_title => '회차 상세';
+  String get eventDetail_title => '이벤트 상세';
 
   @override
   String get eventDetail_label_dateTime => '일시';

@@ -862,6 +862,14 @@
           <td><a href="/specs/event_detail_page.html"><code>EventDetailPage</code></a></td>
           <td>bar에 표시되는 active event의 상세 화면. event card 탭 시 진입 (홈 피드 본문 경로 — bar와 별도).</td>
         </tr>
+        <tr>
+          <td><a href="/specs/event_ongoing_banner.html"><code>EventOngoingBanner</code></a></td>
+          <td><strong>캐노니컬 lifecycle 카드</strong> (MyTicketsPage 안). EventNowBar는 shortcut, OngoingBanner는 본 액션 hub. 같은 lifecycle 데이터 + 5 sheet endpoint 공유. EventNowBar는 phase 1-5(checkIn → matching)만 안내, phase 6(results) / noShow는 OngoingBanner 전속.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/my_tickets_page.html"><code>MyTicketsPage</code></a></td>
+          <td>OngoingBanner의 parent — EventNowBar에서 못 본 액션을 끝까지 수행할 수 있는 캐노니컬 페이지.</td>
+        </tr>
       </tbody>
     </table>
   </section>

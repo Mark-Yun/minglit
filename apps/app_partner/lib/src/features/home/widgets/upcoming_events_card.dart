@@ -99,7 +99,7 @@ class UpcomingEventsCard extends StatelessWidget {
                   horizontal: MinglitSpacing.medium,
                 ),
                 itemCount: events.take(5).length,
-                separatorBuilder: (_, _) => const SizedBox(
+                separatorBuilder: (context, index) => const SizedBox(
                   width: MinglitSpacing.small,
                 ),
                 itemBuilder: (context, index) {

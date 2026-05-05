@@ -90,4 +90,4 @@ final class CurrentMemberPermissionsProvider
 }
 
 String _$currentMemberPermissionsHash() =>
-    r'81f60b3087c80c9c2a5878beeb76e5f203596eb6';
+    r'15d6d6878e028482959535cd623025b01a10e59a';

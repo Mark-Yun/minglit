@@ -169,6 +169,34 @@ class MatchingRepository {
     }
   }
 
+  /// Commits match likes (max 3) for [eventId] via commit-match-likes EF.
+  Future<void> commitMatchLikes({
+    required String eventId,
+    required List<String> candidateIds,
+  }) async {
+    try {
+      // Fix #1945: functions.invoke() never throws on 4xx/5xx — check status.
+      final response = await _supabase.functions.invoke(
+        'commit-match-likes',
+        body: {
+          'event_id': eventId,
+          'candidate_ids': candidateIds,
+        },
+      );
+      if (response.status != 200) {
+        final data = response.data;
+        final msg = data is Map
+            ? (data['error'] as String?) ?? '좋아요 전송에 실패했습니다.'
+            : '좋아요 전송에 실패했습니다.';
+        throw MinglitUserException(msg);
+      }
+      Log.d('commitMatchLikes success | count: ${candidateIds.length}');
+    } catch (e, st) {
+      Log.e('❌ [MatchingRepo] commitMatchLikes Error', e, st);
+      rethrow;
+    }
+  }
+
   /// Fetches successful matches for the current user in an event.
   /// Also fetches basic profile info and secure contact info.
   Future<List<MatchPair>> getMyMatches(String eventId) async {

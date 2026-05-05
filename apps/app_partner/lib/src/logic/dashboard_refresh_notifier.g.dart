@@ -8,12 +8,24 @@ part of 'dashboard_refresh_notifier.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Shared refresh signal for the partner dashboard.
+/// Features that cause dashboard-relevant state changes (e.g. event creation)
+/// call `DashboardRefreshNotifier.bump` instead of directly invalidating
+/// `PartnerDashboardController`, avoiding cross-feature coupling.
 
 @ProviderFor(DashboardRefresh)
 const dashboardRefreshProvider = DashboardRefreshProvider._();
 
+/// Shared refresh signal for the partner dashboard.
+/// Features that cause dashboard-relevant state changes (e.g. event creation)
+/// call `DashboardRefreshNotifier.bump` instead of directly invalidating
+/// `PartnerDashboardController`, avoiding cross-feature coupling.
 final class DashboardRefreshProvider
     extends $NotifierProvider<DashboardRefresh, int> {
+  /// Shared refresh signal for the partner dashboard.
+  /// Features that cause dashboard-relevant state changes (e.g. event creation)
+  /// call `DashboardRefreshNotifier.bump` instead of directly invalidating
+  /// `PartnerDashboardController`, avoiding cross-feature coupling.
   const DashboardRefreshProvider._()
     : super(
         from: null,
@@ -41,7 +53,12 @@ final class DashboardRefreshProvider
   }
 }
 
-String _$dashboardRefreshHash() => r'dashboard_refresh_notifier_v1';
+String _$dashboardRefreshHash() => r'fbe15ef07023ffe1b98764e7ab0dc70c1013ffec';
+
+/// Shared refresh signal for the partner dashboard.
+/// Features that cause dashboard-relevant state changes (e.g. event creation)
+/// call `DashboardRefreshNotifier.bump` instead of directly invalidating
+/// `PartnerDashboardController`, avoiding cross-feature coupling.
 
 abstract class _$DashboardRefresh extends $Notifier<int> {
   int build();

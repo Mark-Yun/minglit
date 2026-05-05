@@ -32,14 +32,23 @@ class EventCoordinator {
     _router.go(EventDetailRoute(eventId: eventId).location);
   }
 
-  void goToApplicationWizard(
-    String eventId, {
-    String? ticketId,
-  }) {
+  void goToApplicationWizard(String eventId, {String? ticketId}) {
     unawaited(
       _router.push(
         EventApplicationRoute(eventId: eventId, ticketId: ticketId).location,
       ),
+    );
+  }
+
+  void replaceWithApplicationConfirmation({
+    required String eventId,
+    String? ticketId,
+  }) {
+    _router.pushReplacement(
+      EventApplicationConfirmationRoute(
+        eventId: eventId,
+        ticketId: ticketId,
+      ).location,
     );
   }
 

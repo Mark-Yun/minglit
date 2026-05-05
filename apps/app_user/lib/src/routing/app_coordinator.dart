@@ -37,6 +37,10 @@ class AppCoordinator {
     unawaited(_router.push(EventDetailRoute(eventId: eventId).location));
   }
 
+  void pushEventMatching(String eventId) {
+    unawaited(_router.push(EventMatchingRoute(eventId: eventId).location));
+  }
+
   // Fix #1526: eventMeta for boarding pass display
   void pushTicketQR(String ticketId, {TicketEventMeta? eventMeta}) {
     unawaited(

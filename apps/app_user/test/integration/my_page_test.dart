@@ -32,9 +32,9 @@ void main() {
       expect(find.byType(MyPage), findsOneWidget);
       expect(find.text('구매 내역'), findsOneWidget);
       expect(find.text('알림 설정'), findsOneWidget);
-      // Fix #1213: 로그아웃/회원탈퇴가 계정 관리 서브페이지로 이동 — MyPage에서는 '계정 관리' 항목 확인
-      await tester.scrollUntilVisible(find.text('계정 관리'), 100);
-      expect(find.text('계정 관리'), findsOneWidget);
+      // Fix #2120: AccountGroup 폐기 — 계정 관리는 Profile 탭에서 직접 접근
+      // '계정 관리' 타일은 MyPage에 더 이상 없음 (AccountManagementPage로 일원화)
+      expect(find.text('계정 관리'), findsNothing);
     });
 
     // Test 2: Unauthenticated /my → LoginPage redirect

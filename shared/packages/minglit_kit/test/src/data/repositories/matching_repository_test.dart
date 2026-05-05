@@ -267,6 +267,87 @@ void main() {
       });
     });
 
+    group('commitMatchLikes', () {
+      test('completes when EF invoke succeeds', () async {
+        when(
+          () => mockFunctions.invoke(
+            'commit-match-likes',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            data: utf8.encode(
+              jsonEncode({'success': true, 'inserted_count': 2}),
+            ),
+            status: 200,
+          ),
+        );
+
+        await expectLater(
+          repository.commitMatchLikes(
+            eventId: 'event_1',
+            candidateIds: const ['user_2', 'user_3'],
+          ),
+          completes,
+        );
+
+        verify(
+          () => mockFunctions.invoke(
+            'commit-match-likes',
+            body: {
+              'event_id': 'event_1',
+              'candidate_ids': const ['user_2', 'user_3'],
+            },
+          ),
+        ).called(1);
+      });
+
+      test('throws when EF invoke fails', () async {
+        when(
+          () => mockFunctions.invoke(
+            'commit-match-likes',
+            body: any(named: 'body'),
+          ),
+        ).thenThrow(Exception('EF failed'));
+
+        expect(
+          () => repository.commitMatchLikes(
+            eventId: 'event_1',
+            candidateIds: const ['user_2'],
+          ),
+          throwsA(isA<Exception>()),
+        );
+      });
+
+      test('throws MinglitUserException on non-200 response', () async {
+        when(
+          () => mockFunctions.invoke(
+            'commit-match-likes',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 409,
+            data: {'error': '선택 가능한 인원은 최대 3명입니다.'},
+          ),
+        );
+
+        await expectLater(
+          repository.commitMatchLikes(
+            eventId: 'event_1',
+            candidateIds: const ['user_2', 'user_3', 'user_4', 'user_5'],
+          ),
+          throwsA(
+            isA<MinglitUserException>().having(
+              (e) => e.message,
+              'message',
+              '선택 가능한 인원은 최대 3명입니다.',
+            ),
+          ),
+        );
+      });
+    });
+
     group('getMyMatches', () {
       test('returns empty when user not authenticated', () async {
         mockClient = createMockSupabase(); // No user
