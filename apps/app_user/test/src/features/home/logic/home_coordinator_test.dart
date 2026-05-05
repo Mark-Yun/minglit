@@ -114,10 +114,7 @@ void main() {
     });
 
     test('pushPartnerEvents calls router.push with partnerId', () {
-      HomeCoordinator(mockRouter, mockApp).pushPartnerEvents(
-        partnerId: 'p_1',
-        partnerName: 'Test Partner',
-      );
+      HomeCoordinator(mockRouter, mockApp).pushPartnerEvents(partnerId: 'p_1');
 
       verify(
         () => mockRouter.push(any(that: contains('p_1'))),

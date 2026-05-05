@@ -6,6 +6,17 @@ import 'package:flutter/material.dart';
 
 import 'package:minglit_kit/minglit_kit.dart';
 
+// Fix #2074: inline FutureProvider inside build() creates a new provider
+// instance on every rebuild → infinite rebuild loop and getMyApplication spam.
+// Top-level provider has stable identity, breaking the cycle.
+// ignore: specify_nonobvious_property_types
+final _myApplicationProvider = FutureProvider.autoDispose<PartnerApplication?>((
+  ref,
+) {
+  final repo = ref.read(partnerRepositoryProvider);
+  return repo.getMyApplication();
+});
+
 /// Application status page shown when user has a pending
 /// or needs_correction application.
 class PartnerApplyStatusPage extends ConsumerWidget {
@@ -15,12 +26,7 @@ class PartnerApplyStatusPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final onboardingAsync = ref.watch(onboardingStateProvider);
-    final applicationAsync = ref.watch(
-      FutureProvider((ref) {
-        final repo = ref.read(partnerRepositoryProvider);
-        return repo.getMyApplication();
-      }),
-    );
+    final applicationAsync = ref.watch(_myApplicationProvider);
 
     return Scaffold(
       appBar: AppBar(

@@ -44,17 +44,11 @@ void main() {
     });
 
     test('pushPartnerEvents pushes correct route', () {
-      coordinator.pushPartnerEvents(
-        partnerId: 'partner-456',
-        partnerName: 'Test Partner',
-      );
+      coordinator.pushPartnerEvents(partnerId: 'partner-456');
 
       verify(
         () => mockRouter.push(
-          const PartnerEventsRoute(
-            partnerId: 'partner-456',
-            partnerName: 'Test Partner',
-          ).location,
+          const PartnerEventsRoute(partnerId: 'partner-456').location,
         ),
       ).called(1);
     });

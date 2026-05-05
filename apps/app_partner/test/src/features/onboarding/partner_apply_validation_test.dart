@@ -94,6 +94,21 @@ void main() {
       expect(notifier.validateStep(99), isFalse);
     });
 
+    // Fix #2163: validateStep(3) gates on bizRegistrationPath and bankbookPath
+    test('validateStep(3) returns false when document paths are null', () {
+      final container = createContainer(
+        overrides: [
+          partnerApplyControllerProvider.overrideWith(
+            PartnerApplyController.new,
+          ),
+        ],
+      );
+
+      final notifier = container.read(partnerApplyControllerProvider.notifier);
+
+      expect(notifier.validateStep(3), isFalse);
+    });
+
     test('validateAll returns false when required file paths are missing', () {
       final container = createContainer(
         overrides: [

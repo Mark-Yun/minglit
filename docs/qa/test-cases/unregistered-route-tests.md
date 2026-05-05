@@ -12,7 +12,7 @@
 | 1 | MatchingVoteScreen | app_user | `features/event/matching/matching_vote_screen.dart` | Navigator.push | EventNowBar → 바텀시트 |
 | 2 | QRScannerScreen | app_partner | `features/checkin/qr_scanner_screen.dart` | Navigator.push (MaterialPageRoute) | PartyListPage AppBar 아이콘 |
 | 3 | MatchingSettingsScreen | app_partner | `features/party/matching/matching_settings_screen.dart` | 미구현 (네비게이션 없음) | — |
-| 4 | ReviewVerificationScreen | app_partner | `features/verification/review/review_verification_screen.dart` | Dev 전용 (PartnerDevMap) | DevMap screenBuilder |
+| 4 | ReviewVerificationScreen | app_partner | `features/verification/review/review_verification_screen.dart` | ⚠️ ORPHANED — 진입점 없음 | PR #274로 PartnerDevMap 제거 후 진입점 소실. 화면 자체 미사용 가능성 검토 필요 |
 | 5 | TicketTemplateManageScreen | app_partner | `features/party/ticket/ui/ticket_template_manage_screen.dart` | Navigator.push | 파티 생성 위저드 내부 |
 | 6 | TicketTemplateCreatePage | app_partner | `features/party/ticket/ticket_template_create_page.dart` | Navigator.push (반환값) | TicketTemplateManageScreen |
 
@@ -112,7 +112,7 @@
 
 ## URT-04: ReviewVerificationScreen 위젯 테스트 [P1] — app_partner
 
-> 유저 자격 심사 화면. 현재 Dev 전용 접근만 가능.
+> 유저 자격 심사 화면. ⚠️ **현재 진입점 없음 (orphaned)** — PR #274로 PartnerDevMap 제거 후 모든 진입 경로 소실. 위젯 자체 테스트는 의미 있으나, 화면 사용 여부 자체를 별도로 검토 필요.
 
 ### 테스트 케이스
 
@@ -182,4 +182,4 @@
 1. **MobileScanner Mock**: `mobile_scanner` 패키지의 카메라를 mock하려면 `MobileScannerController`를 DI로 주입받는 구조가 필요. 현재 `QRScannerScreen`이 직접 생성하고 있다면 테스트를 위한 리팩토링 필요.
 2. **Navigator.pop 반환값 테스트**: `TicketTemplateCreatePage`의 `Navigator.pop(result)` 패턴은 `tester.tap()` → `Navigator`를 mock하여 반환값을 검증.
 3. **MatchingSettingsScreen**: 네비게이션 미구현 상태이므로 통합 테스트는 네비게이션 구현 이슈와 연동.
-4. **ReviewVerificationScreen**: Dev 전용 접근만 가능. 프로덕션 네비게이션 구현 시 CUJ-P07에 심사 스텝 추가 필요 (별도 이슈).
+4. **ReviewVerificationScreen**: ⚠️ 현재 진입점 없음 (PartnerDevMap 제거 후 orphaned). 화면 사용 여부 검토 또는 프로덕션 네비게이션 구현 필요. CUJ-P07에 심사 스텝 추가 시 통합 테스트도 필요 (별도 이슈).
