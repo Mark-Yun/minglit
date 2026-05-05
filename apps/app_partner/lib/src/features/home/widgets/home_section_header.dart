@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:minglit_kit/minglit_kit.dart';
 
 class HomeSectionHeader extends StatelessWidget {
   const HomeSectionHeader({
