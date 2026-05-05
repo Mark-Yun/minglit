@@ -6,6 +6,11 @@
       "callers": ["system"],
       "envs": ["dev", "production"],
       "description": "Cron 전용 retention cleanup (admin.retention_policies 의 enabled 정책 일괄 실행)"
+    },
+    "user-mark-match-results-viewed": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "유저가 본인 이벤트 신청서의 match_results_viewed_at 을 최초 1회 기록"
     }
   }
 }
