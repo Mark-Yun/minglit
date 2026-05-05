@@ -56,7 +56,6 @@
 
 | # | 화면 | 경로 | Page 클래스 | GUEST | AUTH | VERIFIED | 비고 |
 |---|------|------|------------|-------|------|----------|------|
-| U-S20 | ~~개발 도구~~ | ~~`/dev`~~ | ~~`UserDevMap`~~ | — | — | — | **DEPRECATED** — PR #274 (2026-03-22)로 데브맵 제거. 로그인 화면 5클릭 히든 제스처가 `/dev/switch`로 직접 이동 |
 | U-S21 | 유저 전환 | `/dev/switch` | `DevUserSwitchScreen` | OK | OK | OK | dev flavor만 접근 가능. 로그인 화면 로고 5클릭으로도 진입 가능 |
 
 ---
