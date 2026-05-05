@@ -121,9 +121,11 @@ void main() {
           ],
         );
 
-        final decoratedBoxes = tester.widgetList<DecoratedBox>(
-          find.byType(DecoratedBox),
-        ).toList();
+        final decoratedBoxes = tester
+            .widgetList<DecoratedBox>(
+              find.byType(DecoratedBox),
+            )
+            .toList();
 
         final sectionBoxes = decoratedBoxes.where((b) {
           final decoration = b.decoration;
