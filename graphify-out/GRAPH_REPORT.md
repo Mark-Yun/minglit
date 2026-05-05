@@ -1,7 +1,7 @@
 # Graph Report - /private/tmp/fix-2131-sim-refund-eligibility  (2026-05-06)
 
 ## Corpus Check
-- 1220 files · ~1,898,774 words
+- 1220 files · ~1,906,435 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -837,7 +837,7 @@ Nodes (39): fixtures/mock_events.dart, package:mds/mds.dart, package:widgetbook/
 
 ### Community 26 - "Community 26"
 Cohesion: 0.05
-Nodes (40): package:app_user/src/features/home/widgets/featured_tag_chip_bar.dart, package:app_user/src/features/home/widgets/trending_tag_section.dart, package:app_user/src/logic/tag_coordinator.dart, package:app_user/src/widgets/explore_filter_chip_bar.dart, build, Center, FeaturedTagChipBar, GestureDetector (+32 more)
+Nodes (40): package:app_user/src/features/home/widgets/featured_tag_chip_bar.dart, package:app_user/src/features/home/widgets/trending_tag_section.dart, package:app_user/src/logic/tag_coordinator.dart, package:app_user/src/widgets/explore_filter_chip_bar.dart, BugReportAction, build, dispose, _eventFeedSkeleton (+32 more)
 
 ### Community 27 - "Community 27"
 Cohesion: 0.05
@@ -2635,12 +2635,12 @@ _Questions this graph is uniquely positioned to answer:_
 - **What is the exact relationship between `Architecture Audit #1092 — 2026-04-06` and `AI Basic Law Compliance (Korea 2026)`?**
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
 - **Why does `package:flutter/material.dart` connect `Community 1` to `Community 0`, `Community 3`, `Community 7`, `Community 8`, `Community 11`, `Community 12`, `Community 13`, `Community 14`, `Community 16`, `Community 18`, `Community 19`, `Community 20`, `Community 21`, `Community 24`, `Community 25`, `Community 26`, `Community 28`, `Community 30`, `Community 32`, `Community 33`, `Community 36`?**
-  _High betweenness centrality (0.191) - this node is a cross-community bridge._
-- **Why does `Log` connect `Community 24` to `Community 9`, `Community 5`?**
-  _High betweenness centrality (0.174) - this node is a cross-community bridge._
+  _High betweenness centrality (0.241) - this node is a cross-community bridge._
 - **What connects `reporter (AutoLabelAllureReporter)`, `_buildPage`, `MaterialApp` to the rest of the system?**
   _2627 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
   _Cohesion score 0.01 - nodes in this community are weakly interconnected._
 - **Should `Community 1` be split into smaller, more focused modules?**
+  _Cohesion score 0.01 - nodes in this community are weakly interconnected._
+- **Should `Community 2` be split into smaller, more focused modules?**
   _Cohesion score 0.01 - nodes in this community are weakly interconnected._
