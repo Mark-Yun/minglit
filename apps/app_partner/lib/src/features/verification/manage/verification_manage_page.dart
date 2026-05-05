@@ -1,5 +1,4 @@
 import 'package:app_partner/src/features/verification/manage/verification_manage_controller.dart';
-import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
@@ -24,15 +23,6 @@ class VerificationManagePage extends ConsumerWidget {
             color: theme.colorScheme.onSurface,
           ),
           iconTheme: IconThemeData(color: theme.colorScheme.onSurface),
-          // Fix #2142: navigate to pending review queue
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.rate_review_outlined),
-              tooltip: '심사 대기',
-              onPressed: () =>
-                  const VerificationReviewRoute().push<void>(context),
-            ),
-          ],
           bottom: TabBar(
             labelColor: theme.colorScheme.primary,
             unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
