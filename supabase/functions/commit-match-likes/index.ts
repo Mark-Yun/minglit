@@ -184,6 +184,9 @@ Deno.serve(withHandler(async (req: Request): Promise<Response> => {
     }
   }
 
+  // Use the most permissive (max) vote_count across all applicable rules.
+  // Voters in multiple source groups receive the highest quota among their rules;
+  // the DB RPC enforces the actual per-user limit via p_max_vote_count.
   const maxVoteCount = rules.reduce((current, row) => {
     const value = typeof row["vote_count"] === "number"
       ? row["vote_count"] as number
