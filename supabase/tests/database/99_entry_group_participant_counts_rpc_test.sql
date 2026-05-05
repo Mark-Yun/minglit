@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(7);
+SELECT plan(8);
 
 -- ============================================================
 -- Setup: service role로 파트너/이벤트/엔트리그룹/티켓/참가자 데이터 구성
@@ -11,6 +11,7 @@ SELECT tests.create_supabase_user('egpc_user_a');
 SELECT tests.create_supabase_user('egpc_user_b');
 SELECT tests.create_supabase_user('egpc_user_c');
 SELECT tests.create_supabase_user('egpc_anon');
+SELECT tests.create_supabase_user('egpc_no_perm');
 
 DO $$
 DECLARE
@@ -201,6 +202,21 @@ SELECT is(
   ) WHERE entry_group_id = current_setting('tests.egpc_group_a_id')::uuid),
   2::bigint,
   'get_entry_group_participant_counts: soft-deleted 참가자는 participant_count에서 제외'
+);
+
+-- ============================================================
+-- Test 8: PARTY_MANAGE 없는 유저 → permission denied
+-- ============================================================
+
+SELECT tests.authenticate_as('egpc_no_perm');
+
+SELECT throws_like(
+  format(
+    $$SELECT public.get_entry_group_participant_counts('%s'::uuid)$$,
+    current_setting('tests.egpc_event_id')
+  ),
+  '%permission denied%',
+  'get_entry_group_participant_counts: PARTY_MANAGE 없는 유저 → permission denied 예외'
 );
 
 SELECT * FROM finish();
