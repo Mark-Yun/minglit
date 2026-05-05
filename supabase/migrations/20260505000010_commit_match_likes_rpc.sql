@@ -16,6 +16,7 @@ DECLARE
   current_count integer;
   new_unique_count integer;
   requested_unique_count integer;
+  max_likes_per_commit CONSTANT integer := 3;
 BEGIN
   PERFORM pg_advisory_xact_lock(
     hashtext(p_event_id::text || ':' || p_voter_id::text)
@@ -34,7 +35,7 @@ BEGIN
       USING ERRCODE = 'P0001';
   END IF;
 
-  IF requested_unique_count > 3 THEN
+  IF requested_unique_count > max_likes_per_commit THEN
     RAISE EXCEPTION '좋아요는 최대 3명까지 보낼 수 있습니다'
       USING ERRCODE = 'P0001';
   END IF;
@@ -75,7 +76,7 @@ BEGIN
   ON CONFLICT DO NOTHING;
 
   GET DIAGNOSTICS inserted_count = ROW_COUNT;
-  duplicate_count := requested_unique_count - inserted_count;
+  duplicate_count := GREATEST(requested_unique_count - inserted_count, 0);
 
   RETURN QUERY
   SELECT inserted_count, duplicate_count;

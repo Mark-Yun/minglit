@@ -46,17 +46,17 @@ MinglitConfirmationPalette resolveMinglitConfirmationPalette(
 class MinglitConfirmationPage extends StatefulWidget {
   const MinglitConfirmationPage({
     required this.title,
-    required this.description,
     required this.icon,
     required this.tone,
     required this.ctaLabel,
     required this.onPressed,
+    this.description,
     this.autoDismiss,
     super.key,
   });
 
   final String title;
-  final String description;
+  final String? description;
   final IconData icon;
   final MinglitConfirmationTone tone;
   final String ctaLabel;
@@ -205,18 +205,20 @@ class _MinglitConfirmationPageState extends State<MinglitConfirmationPage>
                       ),
                     ),
                   ),
-                  const SizedBox(height: MinglitSpacing.sm),
-                  Opacity(
-                    opacity: descriptionVisibility.opacity,
-                    child: Transform.translate(
-                      offset: Offset(0, descriptionVisibility.dy),
-                      child: Text(
-                        widget.description,
-                        textAlign: TextAlign.center,
-                        style: descriptionStyle,
+                  if (widget.description != null) ...[
+                    const SizedBox(height: MinglitSpacing.sm),
+                    Opacity(
+                      opacity: descriptionVisibility.opacity,
+                      child: Transform.translate(
+                        offset: Offset(0, descriptionVisibility.dy),
+                        child: Text(
+                          widget.description!,
+                          textAlign: TextAlign.center,
+                          style: descriptionStyle,
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                   const Spacer(),
                   Opacity(
                     opacity: ctaVisibility.opacity,

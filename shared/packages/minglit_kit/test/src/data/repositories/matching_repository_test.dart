@@ -290,6 +290,16 @@ void main() {
           ),
           completes,
         );
+
+        verify(
+          () => mockFunctions.invoke(
+            'commit-match-likes',
+            body: {
+              'event_id': 'event_1',
+              'candidate_ids': const ['user_2', 'user_3'],
+            },
+          ),
+        ).called(1);
       });
 
       test('throws when EF invoke fails', () async {

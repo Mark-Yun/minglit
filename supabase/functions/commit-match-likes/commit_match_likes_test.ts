@@ -165,7 +165,7 @@ Deno.test({
     );
     const { fetchMock } = createFetchMock([
       authRoute(),
-      eventRoute({ status: "completed" }),
+      eventRoute({ status: "completed", vote_end_at: "2000-01-02T00:00:00Z" }),
     ]);
 
     await withEnv(ENV, async () => {

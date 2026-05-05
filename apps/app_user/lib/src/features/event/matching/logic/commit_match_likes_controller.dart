@@ -12,6 +12,7 @@ class CommitMatchLikesController extends _$CommitMatchLikesController {
     required String eventId,
     required List<String> candidateIds,
   }) async {
+    if (state.isLoading) return;
     state = const AsyncLoading();
     try {
       final repository = ref.read(matchingRepositoryProvider);

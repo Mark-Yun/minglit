@@ -169,11 +169,13 @@ class MatchingRepository {
     }
   }
 
+  /// Commits match likes (max 3) for [eventId] via commit-match-likes EF.
   Future<void> commitMatchLikes({
     required String eventId,
     required List<String> candidateIds,
   }) async {
     try {
+      // Fix #1945: functions.invoke() never throws on 4xx/5xx — check status.
       final response = await _supabase.functions.invoke(
         'commit-match-likes',
         body: {

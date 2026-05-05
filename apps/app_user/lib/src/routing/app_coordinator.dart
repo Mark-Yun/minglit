@@ -4,6 +4,7 @@ import 'package:app_user/src/features/account_deletion/logic/account_deletion_co
 import 'package:app_user/src/features/ticket/ui/model/ticket_event_meta.dart';
 import 'package:app_user/src/routing/app_router.dart';
 import 'package:app_user/src/routing/app_routes.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
@@ -47,6 +48,22 @@ class AppCoordinator {
       _router.push(
         TicketQRRoute(ticketId: ticketId).location,
         extra: eventMeta,
+      ),
+    );
+  }
+
+  Future<void> pushMatchingConfirmation(BuildContext context) async {
+    if (!context.mounted) return;
+    await Navigator.of(context).pushReplacement(
+      MaterialPageRoute<void>(
+        builder: (ctx) => MinglitConfirmationPage(
+          title: '좋아요를 보냈어요',
+          description: '서로 마음이 맞으면 결과 화면에서 바로 알려드릴게요.',
+          icon: Icons.check_rounded,
+          tone: MinglitConfirmationTone.success,
+          ctaLabel: '닫기',
+          onPressed: () => Navigator.of(ctx).maybePop(),
+        ),
       ),
     );
   }

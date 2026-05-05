@@ -25,9 +25,15 @@ Deno.serve(withHandler(async (req: Request): Promise<Response> => {
   const eventId = body.event_id as string | undefined;
   const candidateIds = body.candidate_ids as string[] | undefined;
 
-  if (!eventId) return errorResponse("Missing event_id", 400);
-  if (!candidateIds || !Array.isArray(candidateIds)) {
-    return errorResponse("Missing candidate_ids", 400);
+  if (!eventId || typeof eventId !== "string") {
+    return errorResponse("Missing or invalid event_id", 400);
+  }
+  if (
+    !candidateIds ||
+    !Array.isArray(candidateIds) ||
+    !candidateIds.every((id) => typeof id === "string")
+  ) {
+    return errorResponse("Missing or invalid candidate_ids", 400);
   }
 
   const normalizedCandidateIds = [...new Set(candidateIds)];
@@ -196,7 +202,9 @@ Deno.serve(withHandler(async (req: Request): Promise<Response> => {
   );
 
   if (rpcError) {
-    if (rpcError.message?.includes("좋아요 수를 초과했습니다")) {
+    // P0001 is the stable ERRCODE raised by commit_match_likes when the per-user quota is exceeded.
+    // Matching on .code is more robust than matching on the localized Korean message string.
+    if (rpcError.code === "P0001") {
       return errorResponse("좋아요 수를 초과했습니다", 400);
     }
     return errorResponse(rpcError.message, 500);
