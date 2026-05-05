@@ -1,0 +1,11 @@
+{
+  "version": "1.0",
+  "_doc": "EF 인증/인가 정책 중앙 manifest. 신규 EF 추가 시 이 파일에 entry 등록 필수. 자세히는 docs/architecture/edge-function-auth.md 참고.",
+  "functions": {
+    "cleanup-retention": {
+      "callers": ["system"],
+      "envs": ["dev", "production"],
+      "description": "Cron 전용 retention cleanup (admin.retention_policies 의 enabled 정책 일괄 실행)"
+    }
+  }
+}
