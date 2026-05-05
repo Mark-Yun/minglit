@@ -107,9 +107,6 @@ void main() {
   // Fix #2224: exercises the actual flat-RPC → nested ticket transformation
   // in mapEventApplicationRpcRow. The tests above only verify fromJson with a
   // pre-nested map; this group ensures the mapping step itself is covered.
-  // Fix #2224: exercises the actual flat-RPC → nested ticket transformation
-  // in mapEventApplicationRpcRow. The tests above only verify fromJson with a
-  // pre-nested map; this group ensures the mapping step itself is covered.
   group('mapEventApplicationRpcRow flat-to-nested transformation', () {
     Map<String, dynamic> flatRow({
       String ticketId = 'ticket-1',
