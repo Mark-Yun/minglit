@@ -41,6 +41,35 @@ class PartnerHomePage extends ConsumerWidget {
         centerTitle: false,
         surfaceTintColor: Colors.transparent,
         actions: [
+          // Fix #2200: AppBar info → help sheet 패턴 적용
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            iconSize: 22,
+            tooltip: '도움말',
+            onPressed: () => showMinglitHelpSheet(
+              context: context,
+              title: '파트너 대시보드 가이드',
+              sections: const [
+                HelpSection(
+                  title: '대시보드가 뭔가요?',
+                  body: '운영 중인 파티와 이벤트 현황을 한눈에 파악하는 화면이에요. 오늘 처리할 일을 빠르게 찾아요.',
+                ),
+                HelpSection(
+                  title: '진행 중·심사 대기·모집 중이란?',
+                  body: '진행 중: 체크인 단계, 심사 대기: pending 신청이 있는 이벤트, '
+                      '모집 중: 신청을 받는 이벤트예요.',
+                ),
+                HelpSection(
+                  title: '카드 탭 동작은?',
+                  body: '카드를 탭하면 이벤트 상세로 이동해요. 심사 대기 카드는 신청 관리로 바로 이동해요.',
+                ),
+                HelpSection(
+                  title: '체크인은 어디서 하나요?',
+                  body: '하단 체크인 탭에서 QR 스캔 또는 수동 체크인을 진행해요.',
+                ),
+              ],
+            ),
+          ),
           const BugReportAction(),
           Stack(
             clipBehavior: Clip.none,
