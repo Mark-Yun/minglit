@@ -110,6 +110,9 @@ import MinglitTimelineSpec, {
 import MinglitConfirmationPageSpec, {
   GUIDELINE_RECIPES as MINGLIT_CONFIRMATION_PAGE_RECIPES,
 } from '@/components/specs/MinglitConfirmationPageSpec';
+import MinglitHelpSheetSpec, {
+  GUIDELINE_RECIPES as MINGLIT_HELP_SHEET_RECIPES,
+} from '@/components/specs/MinglitHelpSheetSpec';
 
 /**
  * Inline visual specs registered by component name.
@@ -167,6 +170,7 @@ const INLINE_SPECS: Record<string, InlineSpecModule> = {
   MinglitHorizontalScrollGroup: { Visual: MinglitHorizontalScrollGroupSpec, recipes: MINGLIT_HORIZONTAL_SCROLL_GROUP_RECIPES },
   MinglitTimeline:            { Visual: MinglitTimelineSpec,            recipes: MINGLIT_TIMELINE_RECIPES },
   MinglitConfirmationPage:    { Visual: MinglitConfirmationPageSpec,    recipes: MINGLIT_CONFIRMATION_PAGE_RECIPES },
+  MinglitHelpSheet:           { Visual: MinglitHelpSheetSpec,           recipes: MINGLIT_HELP_SHEET_RECIPES },
 };
 
 // ---------------------------------------------------------------------------
