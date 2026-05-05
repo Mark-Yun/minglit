@@ -64,7 +64,8 @@ class _SettlementPageState extends ConsumerState<SettlementPage>
                 ),
                 HelpSection(
                   title: '정산 상태 용어',
-                  body: 'PENDING(대기) → READY(확정) → PROCESSING(지급 중) → '
+                  body:
+                      'PENDING(대기) → READY(확정) → PROCESSING(지급 중) → '
                       'COMPLETED(완료). HOLD·FAILED는 예외 상황이에요.',
                 ),
                 HelpSection(
@@ -73,7 +74,8 @@ class _SettlementPageState extends ConsumerState<SettlementPage>
                 ),
                 HelpSection(
                   title: '계좌 관리는?',
-                  body: '우측 상단 지갑 아이콘으로 계좌를 등록·수정할 수 있어요. '
+                  body:
+                      '우측 상단 지갑 아이콘으로 계좌를 등록·수정할 수 있어요. '
                       '계좌가 없으면 정산을 받을 수 없어요.',
                 ),
               ],

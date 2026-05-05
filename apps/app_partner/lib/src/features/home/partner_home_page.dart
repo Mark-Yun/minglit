@@ -56,7 +56,8 @@ class PartnerHomePage extends ConsumerWidget {
                 ),
                 HelpSection(
                   title: '진행 중·심사 대기·모집 중이란?',
-                  body: '진행 중: 체크인 단계, 심사 대기: pending 신청이 있는 이벤트, '
+                  body:
+                      '진행 중: 체크인 단계, 심사 대기: pending 신청이 있는 이벤트, '
                       '모집 중: 신청을 받는 이벤트예요.',
                 ),
                 HelpSection(
