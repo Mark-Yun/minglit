@@ -15,7 +15,6 @@ abstract class PartnerDashboardState with _$PartnerDashboardState {
   const factory PartnerDashboardState({
     @Default(0) int pendingReviewCount,
     @Default([]) List<Event> upcomingEvents,
-    @Default([]) List<Event> closingSoonEvents,
     @Default([]) List<Event> liveEvents,
     @Default([]) List<Event> recruitingEvents,
     @Default([]) List<Event> preparingEvents,
@@ -58,7 +57,6 @@ class PartnerDashboardController extends _$PartnerDashboardController {
           status: const AsyncValue.data(null),
           pendingReviewCount: 0,
           upcomingEvents: [],
-          closingSoonEvents: [],
           liveEvents: [],
           recruitingEvents: [],
           preparingEvents: [],
