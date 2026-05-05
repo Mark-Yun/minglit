@@ -64,7 +64,7 @@ void main() {
     );
   }
 
-  testWidgets('Loading: shows 6 skeleton rows while data is pending', (
+  testWidgets('Loading: shows 6 skeleton rows (4 skeletons each) while data is pending', (
     tester,
   ) async {
     final eventCompleter = Completer<Event>();
@@ -86,7 +86,7 @@ void main() {
       ),
     );
 
-    expect(find.byType(MinglitSkeleton), findsNWidgets(18));
+    expect(find.byType(MinglitSkeleton), findsNWidgets(24));
   });
 
   testWidgets('Default: renders unselected candidates and disabled CTA', (
