@@ -1,4 +1,4 @@
-import 'package:app_user/src/features/tag/logic/tag_coordinator.dart';
+import 'package:app_user/src/logic/tag_coordinator.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
