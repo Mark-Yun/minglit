@@ -17,6 +17,7 @@ export 'src/ui/widgets/common/minglit_button.dart';
 export 'src/ui/widgets/common/minglit_chip.dart';
 export 'src/ui/widgets/common/minglit_chip_group.dart';
 export 'src/ui/widgets/common/minglit_content_card.dart';
+export 'src/ui/widgets/common/minglit_dday_chip.dart';
 export 'src/ui/widgets/common/minglit_content_layout.dart';
 export 'src/ui/widgets/common/minglit_help_sheet.dart';
 export 'src/ui/widgets/common/minglit_dialog.dart';
