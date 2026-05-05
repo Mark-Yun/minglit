@@ -68,7 +68,7 @@ final class EventApplicationDetailProvider
 }
 
 String _$eventApplicationDetailHash() =>
-    r'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0';
+    r'bc1d24eaf085989ddb510cd73fc134a93a9d4f95';
 
 final class EventApplicationDetailFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<EventApplication?>, String> {
