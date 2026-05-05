@@ -43,13 +43,15 @@ Map<String, dynamic> _buildAppMap({
 
 void main() {
   group('getApplicationsByEventId ticket mapping', () {
-    test('ticket relation is null when ticket_name column is null (JOIN miss)',
-        () {
-      // ticket_id is always present; ticket_name can be null if JOIN missed
-      final map = _buildAppMap(ticketId: 'ticket-1', ticketName: null);
-      final app = EventApplication.fromJson(map);
-      expect(app.ticket, isNull);
-    });
+    test(
+      'ticket relation is null when ticket_name column is null (JOIN miss)',
+      () {
+        // ticket_id is always present; ticket_name can be null if JOIN missed
+        final map = _buildAppMap(ticketId: 'ticket-1', ticketName: null);
+        final app = EventApplication.fromJson(map);
+        expect(app.ticket, isNull);
+      },
+    );
 
     test('ticket relation is built when ticket_name is present', () {
       final map = _buildAppMap(

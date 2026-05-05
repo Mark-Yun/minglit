@@ -51,9 +51,11 @@ mixin _EventRepositoryApplicationQueries on _SupabaseEventContext {
               ? {
                   'id': map['ticket_id'].toString(),
                   'name': map['ticket_name'] as String? ?? '',
-                  'created_at': map['ticket_created_at']?.toString() ??
+                  'created_at':
+                      map['ticket_created_at']?.toString() ??
                       DateTime.now().toIso8601String(),
-                  'updated_at': map['ticket_updated_at']?.toString() ??
+                  'updated_at':
+                      map['ticket_updated_at']?.toString() ??
                       DateTime.now().toIso8601String(),
                   'target_entry_group_ids':
                       (map['target_entry_group_ids'] as List?)

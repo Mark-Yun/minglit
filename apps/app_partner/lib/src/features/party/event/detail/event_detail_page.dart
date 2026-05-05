@@ -296,7 +296,9 @@ class _EventInfoTab extends ConsumerWidget {
                     .map(
                       (group) => ListTile(
                         leading: const Icon(Icons.group_outlined),
-                        title: Text(group.label ?? '그룹 ${entryGroups.indexOf(group) + 1}'),
+                        title: Text(
+                          group.label ?? '그룹 ${entryGroups.indexOf(group) + 1}',
+                        ),
                         subtitle: _buildGroupSubtitle(group),
                         trailing: const Icon(
                           Icons.chevron_right,
@@ -324,7 +326,13 @@ class _EventInfoTab extends ConsumerWidget {
   Widget? _buildGroupSubtitle(PartyEntryGroup group) {
     final parts = <String>[];
     if (group.gender != null) {
-      parts.add(group.gender == 'male' ? '남성' : group.gender == 'female' ? '여성' : group.gender!);
+      parts.add(
+        group.gender == 'male'
+            ? '남성'
+            : group.gender == 'female'
+            ? '여성'
+            : group.gender!,
+      );
     }
     if (group.birthYearMin != null && group.birthYearMax != null) {
       parts.add('${group.birthYearMin}~${group.birthYearMax}년생');
