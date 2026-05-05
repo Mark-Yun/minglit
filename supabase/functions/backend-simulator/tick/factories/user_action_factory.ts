@@ -38,7 +38,7 @@ export class UserActionFactory {
     const feedEvents =
       ((feedRes.data as Record<string, unknown>)?.events as Array<Record<string, unknown>>) ?? [];
 
-    // 2. Get my existing applications (with nested event status + start_time for refund eligibility)
+    // Fix #2131: include events.start_time in event_applications query for refund eligibility
     const { data: myApps, error: myAppsError } = await supabase
       .from("event_applications")
       .select("id, event_id, status, events(status, start_time)")
