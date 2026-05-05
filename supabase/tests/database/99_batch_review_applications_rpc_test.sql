@@ -143,8 +143,9 @@ BEGIN
   VALUES (v_party_id, now() + interval '2 days', now() + interval '2 days 2 hours', 0, 1, 1)
   RETURNING id INTO v_full_event_id;
 
+  -- quantity=1 so sync_max_participants trigger keeps max_participants=1 (matching pre-seeded current_participants)
   INSERT INTO public.tickets (event_id, name, quantity, price)
-  VALUES (v_full_event_id, 'General', 10, 0)
+  VALUES (v_full_event_id, 'General', 1, 0)
   RETURNING id INTO v_ticket_id;
 
   INSERT INTO public.event_applications (event_id, ticket_id, user_id, status)
