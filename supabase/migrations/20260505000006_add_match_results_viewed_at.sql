@@ -12,5 +12,4 @@ create index if not exists idx_event_applications_match_results_viewed
   on public.event_applications (match_results_viewed_at)
   where match_results_viewed_at is not null;
 
--- 기존 "Users can update own applications" 정책으로 본인 row 업데이트 가능.
--- 추가 정책 불필요.
+-- 쓰기 경로는 Edge Function(service_role)에서 처리한다.
