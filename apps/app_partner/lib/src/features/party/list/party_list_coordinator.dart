@@ -28,7 +28,9 @@ class PartyListCoordinator {
 
   void goToEventDetail(String partyId, String eventId) {
     unawaited(
-      _router.push(EventDetailRoute(partyId: partyId, eventId: eventId).location),
+      _router.push(
+        EventDetailRoute(partyId: partyId, eventId: eventId).location,
+      ),
     );
   }
 }

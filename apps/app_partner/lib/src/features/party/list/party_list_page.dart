@@ -75,9 +75,9 @@ class PartyListPage extends ConsumerWidget {
                   onTap: () => coordinator.goToDetail(entry.party.id),
                   onNextEventTap: entry.nextEvent != null
                       ? () => coordinator.goToEventDetail(
-                            entry.party.id,
-                            entry.nextEvent!.id,
-                          )
+                          entry.party.id,
+                          entry.nextEvent!.id,
+                        )
                       : null,
                 ),
               );

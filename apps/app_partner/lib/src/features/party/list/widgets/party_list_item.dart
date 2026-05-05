@@ -168,9 +168,18 @@ class _StatusBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final (label, color) = switch (status) {
-      'active' => (context.l10n.partyList_badge_active, theme.colorScheme.tertiary),
-      'closed' => (context.l10n.partyList_badge_closed, theme.colorScheme.outline),
-      'draft' => (context.l10n.partyList_badge_draft, theme.colorScheme.secondary),
+      'active' => (
+        context.l10n.partyList_badge_active,
+        theme.colorScheme.tertiary,
+      ),
+      'closed' => (
+        context.l10n.partyList_badge_closed,
+        theme.colorScheme.outline,
+      ),
+      'draft' => (
+        context.l10n.partyList_badge_draft,
+        theme.colorScheme.secondary,
+      ),
       _ => (status, theme.colorScheme.primary),
     };
 
@@ -422,7 +431,10 @@ class _NextEventRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final daysUntil = event.startTime.difference(DateTime.now()).inDays;
-    final dateLabel = DateFormat('M월 d일 (E) HH:mm', 'ko').format(event.startTime);
+    final dateLabel = DateFormat(
+      'M월 d일 (E) HH:mm',
+      'ko',
+    ).format(event.startTime);
 
     return InkWell(
       onTap: onTap,
@@ -482,7 +494,8 @@ class _CreateEventRow extends StatelessWidget {
         vertical: MinglitSpacing.small,
       ),
       child: OutlinedButton.icon(
-        onPressed: null, // card onTap navigates to PartyDetail where event creation is available
+        onPressed:
+            null, // card onTap navigates to PartyDetail where event creation is available
         icon: const Icon(Icons.add),
         label: Text(context.l10n.partyList_cta_createEvent),
         style: OutlinedButton.styleFrom(
@@ -594,7 +607,9 @@ class _InsetDivider extends StatelessWidget {
       thickness: 1,
       indent: MinglitSpacing.medium,
       endIndent: MinglitSpacing.medium,
-      color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.5),
+      color: Theme.of(
+        context,
+      ).colorScheme.outlineVariant.withValues(alpha: 0.5),
     );
   }
 }
