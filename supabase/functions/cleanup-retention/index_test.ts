@@ -181,15 +181,12 @@ Deno.test({
 });
 
 Deno.test({
-  name: "cleanup-retention - storage_bucket cleanup stops when no stale files",
+  name: "cleanup-retention - storage_bucket deletes stale files in sub-directories (Fix #2204 regression guard)",
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
-    // All files are recent (created_at = now)
-    const recentFiles = [
-      { name: "recent1.png", created_at: new Date().toISOString() },
-      { name: "recent2.png", created_at: new Date().toISOString() },
-    ];
+    let removeCalled = false;
+    let removedNames: string[] = [];
 
     const { fetchMock } = createFetchMock([
       {
@@ -204,9 +201,75 @@ Deno.test({
             },
           ]),
       },
+      // Fix #2204: admin RPC 가 sub-directory 파일 포함 평면화된 list 반환
       {
-        matcher: "/storage/v1/object/list/bug-report-attachments",
-        handler: () => jsonResponse(recentFiles),
+        matcher: "/rest/v1/rpc/find_stale_storage_objects",
+        handler: () =>
+          jsonResponse([
+            { name: "screenshots/old1.png" },
+            { name: "screenshots/old2.png" },
+            { name: "layout-dumps/old1.json" },
+          ]),
+      },
+      // Storage remove API
+      {
+        matcher: "/storage/v1/object/bug-report-attachments",
+        handler: async (req) => {
+          removeCalled = true;
+          const body = await req.json();
+          removedNames = body.prefixes;
+          return jsonResponse([{ name: removedNames[0] }]);
+        },
+      },
+      {
+        matcher: POLICIES_URL,
+        handler: () => jsonResponse({}),
+      },
+      {
+        matcher: AUDIT_URL,
+        handler: () => jsonResponse({}),
+      },
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const response = await handler(postRequest());
+        assertEquals(response.status, 200);
+        const body = await readJson(response);
+        assertEquals(body.results[0].status, "success");
+        assertEquals(body.results[0].rows_deleted, 3);
+      });
+    });
+
+    assertEquals(removeCalled, true, "supabase.storage.remove must be called for stale files");
+    assertEquals(removedNames.length, 3);
+    assertEquals(removedNames[0].startsWith("screenshots/") || removedNames[0].startsWith("layout-dumps/"), true,
+      "removed names must include sub-directory paths (Fix #2204)");
+  },
+});
+
+Deno.test({
+  name: "cleanup-retention - storage_bucket returns 0 when no stale files (Fix #2204)",
+  fn: async () => {
+    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+
+    const { fetchMock } = createFetchMock([
+      {
+        matcher: POLICIES_URL,
+        handler: () =>
+          jsonResponse([
+            {
+              id: "storage_bug_reports",
+              kind: "storage_bucket",
+              retention_days: 30,
+              target: { bucket_id: "bug-report-attachments", path_prefix: "" },
+            },
+          ]),
+      },
+      // Fix #2204: 새 패턴 — admin.find_stale_storage_objects RPC. 빈 array 반환
+      {
+        matcher: "/rest/v1/rpc/find_stale_storage_objects",
+        handler: () => jsonResponse([]),
       },
       {
         matcher: POLICIES_URL,
