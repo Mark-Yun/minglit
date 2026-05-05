@@ -4,9 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 class EventApplicationListView extends ConsumerWidget {
-  const EventApplicationListView({required this.eventId, super.key});
+  const EventApplicationListView({
+    required this.eventId,
+    this.groupId,
+    super.key,
+  });
 
   final String eventId;
+
+  /// Optional entry-group filter — shows only applications for this group.
+  final String? groupId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -29,14 +36,25 @@ class EventApplicationListView extends ConsumerWidget {
     return MinglitAsyncValueWidget(
       value: applicationsAsync,
       data: (applications) {
-        if (applications.isEmpty) {
+        // Fix #2224: apply groupId filter when navigating from group card
+        final filtered = groupId != null
+            ? applications
+                .where(
+                  (app) =>
+                      app.ticket?.targetEntryGroupIds.contains(groupId) ??
+                      false,
+                )
+                .toList()
+            : applications;
+
+        if (filtered.isEmpty) {
           return const Center(child: Text('신청 내역이 없습니다.'));
         }
 
-        final pendingReviews = applications
+        final pendingReviews = filtered
             .where((app) => app.status == 'pending_review')
             .toList();
-        final others = applications
+        final others = filtered
             .where((app) => app.status != 'pending_review')
             .toList();
 

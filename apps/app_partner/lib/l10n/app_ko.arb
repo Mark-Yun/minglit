@@ -325,7 +325,7 @@
   "eventCreate_title": "새 회차(이벤트) 만들기",
   "eventCreate_label_title": "회차 제목 (선택)",
   "eventCreate_label_maxParticipants": "최대 정원",
-  "eventDetail_title": "회차 상세",
+  "eventDetail_title": "이벤트 상세",
   "eventDetail_label_dateTime": "일시",
   "eventDetail_label_time": "시간",
   "eventDetail_label_capacity": "정원",
