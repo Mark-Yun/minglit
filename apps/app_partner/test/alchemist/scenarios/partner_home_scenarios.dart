@@ -1,3 +1,4 @@
+import 'package:app_partner/src/features/home/home_event_phase.dart';
 import 'package:app_partner/src/features/home/partner_dashboard_controller.dart';
 import 'package:app_partner/src/features/home/partner_home_coordinator.dart';
 import 'package:app_partner/src/features/home/partner_home_page.dart';
@@ -61,7 +62,6 @@ class PartnerHomeScenarios {
         () => _LoadedDashboardController(
           pendingCount: 3,
           upcoming: events,
-          closingSoon: [events.first],
           active: _parties,
         ),
       ),
@@ -105,24 +105,32 @@ class _LoadedDashboardController extends PartnerDashboardController {
   _LoadedDashboardController({
     required this.pendingCount,
     required this.upcoming,
-    required this.closingSoon,
     required this.active,
   });
 
   final int pendingCount;
   final List<Event> upcoming;
-  final List<Event> closingSoon;
   final List<Party> active;
 
   @override
-  PartnerDashboardState build() => PartnerDashboardState(
-    status: const AsyncValue.data(null),
-    pendingReviewCount: pendingCount,
-    upcomingEvents: upcoming,
-    closingSoonEvents: closingSoon,
-    activeParties: active,
-    // Fix #1215: 골든 시나리오에서 hasAnyEvents 기본값(false)으로
-    // 온보딩이 재표시되는 회귀를 방지한다.
-    hasAnyEvents: true,
-  );
+  PartnerDashboardState build() {
+    final recruitingEvents = upcoming
+        .where((e) => getEventPhase(e) == EventPhase.recruiting)
+        .toList();
+    final totalAttendees = upcoming.fold<int>(
+      0,
+      (sum, e) => sum + e.currentParticipants,
+    );
+    return PartnerDashboardState(
+      status: const AsyncValue.data(null),
+      pendingReviewCount: pendingCount,
+      upcomingEvents: upcoming,
+      recruitingEvents: recruitingEvents,
+      totalAttendees: totalAttendees,
+      activeParties: active,
+      // Fix #1215: 골든 시나리오에서 hasAnyEvents 기본값(false)으로
+      // 온보딩이 재표시되는 회귀를 방지한다.
+      hasAnyEvents: true,
+    );
+  }
 }

@@ -175,40 +175,7 @@ class MyPage extends ConsumerWidget {
                 ),
               ],
             ),
-            const SizedBox(height: MinglitSpacing.large),
-
-            // Group 6: Account
-            MinglitSettingsGroup(
-              header: '계정',
-              children: [
-                MinglitSettingsTile(
-                  leading: Icons.manage_accounts_outlined,
-                  title: '계정 관리',
-                  onTap: homeCoordinator.pushAccountManagement,
-                ),
-                MinglitSettingsTile(
-                  leading: Icons.logout_outlined,
-                  title: '로그아웃',
-                  destructive: true,
-                  trailing: SettingsTileTrailing.none,
-                  onTap: () async {
-                    final confirmed = await MinglitAlert.showConfirm(
-                      context: context,
-                      title: '로그아웃',
-                      content: '정말 로그아웃 하시겠습니까?',
-                      confirmText: '로그아웃',
-                      isDestructive: true,
-                    );
-                    if (confirmed) {
-                      unawaited(
-                        ref.read(authControllerProvider.notifier).signOut(),
-                      );
-                    }
-                  },
-                ),
-              ],
-            ),
-
+            // Fix #2120: AccountGroup 폐기 — 로그아웃/계정 관리는 AccountManagementPage로 일원화
             const SizedBox(height: MinglitSpacing.xxlarge),
           ],
         ),

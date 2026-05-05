@@ -12,6 +12,7 @@ import 'package:app_user/src/features/auth/ui/auth_callback_page.dart';
 import 'package:app_user/src/features/consent/ui/signup_consent_page.dart';
 import 'package:app_user/src/features/event/admission/event_application_wizard_page.dart';
 import 'package:app_user/src/features/event/detail/event_detail_page.dart';
+import 'package:app_user/src/features/event/matching/ui/event_matching_screen.dart';
 import 'package:app_user/src/features/home/home_page.dart';
 import 'package:app_user/src/features/home/my_page.dart';
 import 'package:app_user/src/features/my_tickets/ui/my_tickets_page.dart';
@@ -169,6 +170,48 @@ class EventApplicationRoute extends GoRouteData with $EventApplicationRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       EventApplicationWizardPage(eventId: eventId, ticketId: ticketId);
+}
+
+@TypedGoRoute<EventMatchingRoute>(path: '/events/:eventId/matching')
+class EventMatchingRoute extends GoRouteData with $EventMatchingRoute {
+  const EventMatchingRoute({required this.eventId});
+
+  final String eventId;
+
+  @override
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      MinglitPageTransitions.sharedAxisScaled(
+        key: state.pageKey,
+        child: EventMatchingScreen(eventId: eventId),
+      );
+}
+
+/// **Event Application Confirmation Route**: Success page after payment.
+/// Path: `/events/:eventId/apply/complete`
+@TypedGoRoute<EventApplicationConfirmationRoute>(
+  path: '/events/:eventId/apply/complete',
+)
+class EventApplicationConfirmationRoute extends GoRouteData
+    with $EventApplicationConfirmationRoute {
+  const EventApplicationConfirmationRoute({
+    required this.eventId,
+    this.ticketId,
+  });
+
+  final String eventId;
+  final String? ticketId;
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) {
+    return MinglitConfirmationPage(
+      title: '참여 신청이 완료됐어요',
+      description: '결제가 완료되었고 신청이 접수되었습니다.\n내 티켓에서 진행 상태를 확인할 수 있어요.',
+      icon: Icons.check_circle_outline,
+      tone: MinglitConfirmationTone.success,
+      ctaLabel: '내 티켓 보기',
+      onPressed: () => const PurchaseHistoryRoute().go(context),
+    );
+  }
 }
 
 /// **My Tickets Route**: User's ticket list page.
