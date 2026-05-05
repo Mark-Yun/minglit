@@ -403,7 +403,7 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
           MyTickets와 분리한 이유: MyTickets는 "지금 갈 수 있는 티켓"에 초점 (active만), Purchase History는 "결제 기록"으로
           회계/환불 관점. 따라서 cancelled/rejected/payment_failed도 모두 보여 환불·문의의 기록 추적이 가능하게 한다.
           환불 플로우는 정책 조회 실패 시 default(grace 2h / cutoff 7d)로 fallback하여 절대 멈추지 않게 설계됨 (Fix #133).
-          영수증 버튼은 paymentId가 있는 유료 결제에만 노출 — 무료 티켓은 iamport 결제 자체가 없음 (Fix #1820).
+          영수증 버튼은 모든 구매에 노출 (Fix #2076). 유료(paymentId ≠ null) → 외부 브라우저로 iamport 영수증 페이지 · 무료(paymentId = null) → 인앱 신청 확인서 다이얼로그 (이벤트명·일시·티켓명·0원 표기).
         </td>
       </tr>
       <tr>
@@ -432,6 +432,12 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
       </tr>
     </thead>
     <tbody>
+      <tr>
+        <td>2026-05-05</td>
+        <td>1.1</td>
+        <td>needs-swe-sonnet-1</td>
+        <td>Fix #2076 — 무료 티켓 영수증 버튼 동작 변경. 기존(Fix #1820): paymentId 없으면 버튼 미렌더. 변경: 항상 "영수증" 버튼 노출 · 유료 → iamport 외부 브라우저 · 무료 → 인앱 신청 확인서 다이얼로그. Actions row sub-anatomy + 에지케이스 · Global Behavior 사용자 액션 반영.</td>
+      </tr>
       <tr>
         <td>2026-05-01</td>
         <td>1.0</td>
@@ -515,7 +521,7 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
                ├─ <em>3. Pay Row</em>: ticket name bodyMedium ↔ "{amount}원" bodyLarge bold
                ├─ SizedBox(spacing-medium)
                └─ <em>4. Actions Row</em> (IntrinsicHeight + Row stretch)
-                  ├─ <em>if paymentId != null</em> → TextButton "영수증" (flex 1)  // Fix #1820
+                  ├─ TextButton "영수증" (flex 1)  // Fix #2076: 항상 노출 — paymentId ≠ null → iamport · null → 신청 확인서 다이얼로그
                   ├─ TextButton "문의하기" (flex 1)
                   └─ <em>if canCancel</em> → ElevatedButton "예매 취소" (flex 2 · errorContainer bg)  // Fix #1234</div>
     </div>
@@ -552,7 +558,7 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
         <tr><td>2. Info row</td><td>start cross-axis</td><td>thumb 80×80 (<code>MinglitImage</code> · radius-small · BoxFit.cover · imageUrl 없으면 placeholder) + <code>spacing-medium</code> gap + Expanded Column(eventName titleMedium bold maxLines 1 ellipsis · "M월 d일 (E) HH:mm" bodySmall · location bodySmall onSurfaceVariant)</td></tr>
         <tr><td>3. Divider</td><td>—</td><td><code>Divider(height: spacing-xlarge 32)</code> — 1px line + 16/16 v-margin (Material Divider default)</td></tr>
         <tr><td>4. Pay row</td><td>spaceBetween baseline</td><td>좌: ticket name bodyMedium · 우: <code>NumberFormat('#,###').format(paymentAmount ?? 0) + '원'</code> bodyLarge bold</td></tr>
-        <tr><td>5. Actions row</td><td>IntrinsicHeight + Row stretch · 가운데 정렬</td><td>paymentId 있음 → "영수증" TextButton flex 1 · 항상 "문의하기" TextButton flex 1 · canCancel → "예매 취소" ElevatedButton flex 2 errorContainer bg (Fix #1234 — 2줄 깨짐 방지로 cancel만 flex 2). 영수증 누락 시 SizedBox(spacing-small) gap도 함께 누락.</td></tr>
+        <tr><td>5. Actions row</td><td>IntrinsicHeight + Row stretch · 가운데 정렬</td><td>항상 "영수증" TextButton flex 1 (Fix #2076) — paymentId ≠ null → iamport 외부 브라우저 · paymentId = null → 인앱 신청 확인서 다이얼로그 · 항상 "문의하기" TextButton flex 1 · canCancel → "예매 취소" ElevatedButton flex 2 errorContainer bg (Fix #1234 — 2줄 깨짐 방지로 cancel만 flex 2).</td></tr>
       </tbody>
     </table>
 
@@ -668,7 +674,7 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ① <strong>"영수증" 탭</strong> (결제건만 노출) → 외부 브라우저로 영수증 페이지 열기 · 열 수 없으면 "영수증 페이지를 열 수 없습니다." 안내<br>
+            ① <strong>"영수증" 탭</strong> (Fix #2076 — 모든 구매에 노출) → 유료(paymentId ≠ null): 외부 브라우저로 iamport 영수증 페이지 · 열 수 없으면 "영수증 페이지를 열 수 없습니다." 안내 / 무료(paymentId = null): 인앱 신청 확인서 다이얼로그 (이벤트명·일시·티켓명·0원)<br>
             ② <strong>"문의하기" 탭</strong> → 연락처가 등록돼 있으면 전화 앱 우선, 없으면 메일 앱으로 이동. 둘 다 없으면 "연락처 정보가 없습니다." 안내<br>
             ③ <strong>"예매 취소" 탭</strong> (취소 가능 건만 노출) → 환불 정책을 조회한 뒤 환불 확인 다이얼로그 노출 (state 5)<br>
             ④ <strong>스크롤</strong> → 더 오래된 결제 노출 (현재 페이지네이션 없이 한 번에 모두 표시)<br>
@@ -678,7 +684,7 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · <strong>무료 티켓</strong> (paymentAmount=0 &amp;&amp; paymentId=null) → "영수증" 버튼 미렌더 (Fix #1820) · "예매 취소"는 isFree branch로 활성 (Fix #1652)<br>
+            · <strong>무료 티켓</strong> (paymentAmount=0 &amp;&amp; paymentId=null) → "영수증" 버튼 노출, 탭 시 인앱 신청 확인서 다이얼로그 표시 (Fix #2076 — Fix #1820 행동 대체) · "예매 취소"는 isFree branch로 활성 (Fix #1652)<br>
             · <strong>event/party 관계 끊김</strong> → eventName "제목 없음" · location "장소 정보 없음" · dateLabel "-"<br>
             · <strong>StatusBadge 색</strong>: paid/approved → success 초록 · pending_review → warning 노랑 · pending/payment_pending → info 파랑 · cancelled → neutral 회색 · rejected/payment_failed → error 빨강 · 그 외 → "알수없음" 회색<br>
             · <strong>"예매 취소" 버튼 라벨 wrap</strong>: flex 2 + maxLines 1 + ellipsis로 1줄 강제 (Fix #1234)<br>
