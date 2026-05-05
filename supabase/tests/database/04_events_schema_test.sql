@@ -190,8 +190,16 @@ SELECT col_not_null('ticket_templates', 'created_at');
 SELECT col_type_is('ticket_templates', 'updated_at', 'timestamp with time zone');
 SELECT col_has_default('ticket_templates', 'updated_at');
 SELECT col_not_null('ticket_templates', 'updated_at');
--- Fix #2235: constraint guards against multi-group ticket_templates (regression from 000011 deploy failure)
-SELECT col_has_check('ticket_templates', 'target_entry_group_ids');
+-- Fix #2235: guard against DROP of the single-entry-group constraint added by migration 000014
+SELECT ok(
+  EXISTS(
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'ticket_templates_target_entry_group_single'
+      AND conrelid = 'public.ticket_templates'::regclass
+      AND contype = 'c'
+  ),
+  'ticket_templates_target_entry_group_single CHECK constraint exists'
+);
 
 -- tickets
 SELECT has_table('tickets');
@@ -230,8 +238,16 @@ SELECT col_not_null('tickets', 'created_at');
 SELECT col_type_is('tickets', 'updated_at', 'timestamp with time zone');
 SELECT col_has_default('tickets', 'updated_at');
 SELECT col_not_null('tickets', 'updated_at');
--- Fix #2235: constraint guards against multi-group tickets (regression from 000010 deploy failure)
-SELECT col_has_check('tickets', 'target_entry_group_ids');
+-- Fix #2235: guard against DROP of the single-entry-group constraint added by migration 000013
+SELECT ok(
+  EXISTS(
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'tickets_target_entry_group_single'
+      AND conrelid = 'public.tickets'::regclass
+      AND contype = 'c'
+  ),
+  'tickets_target_entry_group_single CHECK constraint exists'
+);
 
 SELECT * FROM finish();
 ROLLBACK;
