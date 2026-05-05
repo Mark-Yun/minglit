@@ -2156,6 +2156,80 @@ await showMinglitBottomSheet(
     },
   },
 
+  {
+    name: 'MinglitHelpSheet',
+    category: 'Overlay',
+    purpose: 'Q&A 형식 도움말 bottom sheet. 파트너 앱 AppBar info 아이콘 → 표준 도움말 패턴. handle bar + title + 스크롤 가능 섹션 + sticky 확인 CTA.',
+    props: [
+      { name: 'context',      type: 'BuildContext',     required: true,    notes: 'showMinglitHelpSheet() 최상위 파라미터.' },
+      { name: 'title',        type: 'String',           required: true,    notes: '시트 상단 제목. titleMedium 16/700.' },
+      { name: 'sections',     type: 'List<HelpSection>', required: true,   notes: 'Q&A 항목 리스트. HelpSection(title, body, leading?). 첫 섹션 제외 전부 1px divider 상단.' },
+      { name: 'confirmLabel', type: 'String',           default: '"확인"', notes: 'sticky CTA 버튼 라벨.' },
+    ],
+    variants: ['text-only sections', 'sections with leading icon', 'custom confirmLabel'],
+    states: ['visible', 'scrolled (long content)', 'dismissed (confirm/drag/scrim)'],
+    tokens: [
+      { name: 'gradient opacity (MinglitOpacity.gradient)', where: '시트 배경 스크림 rgba(0,0,0,0.45)' },
+      { name: 'radius-card',                                where: '시트 상단 두 코너 16px (하단 0)' },
+      { name: 'color-divider + muted opacity',              where: '핸들 바 색상 · 섹션 구분선 1px' },
+      { name: 'spacing-small',                              where: '핸들 상하 여백 8px · 섹션 제목→본문 gap' },
+      { name: 'spacing-xsmall',                            where: '핸들 상하 개별 padding 4px' },
+      { name: 'spacing-xxsmall',                           where: '핸들바 최상단 margin 2px' },
+      { name: 'spacing-medium',                            where: '헤더 좌우·상하 16px · 섹션 좌우 패딩 · CTA 마진' },
+      { name: 'partner-primary',                           where: 'sticky CTA 버튼 배경색 (다이나믹 파트너 색상 — 테마 상속 아님)' },
+    ],
+    accessibility: [
+      'showModalBottomSheet barrier 탭 시 dismiss (isDismissible=true)',
+      '핸들 드래그로 dismiss 가능 (enableDrag=true)',
+      '최대 높이 75vh — 긴 컨텐츠는 내부 ListView로 스크롤 (isScrollControlled=true)',
+      'SafeArea 적용 — 홈 인디케이터 위 안전 영역 확보',
+      'confirmLabel ElevatedButton — partner-primary 색상 명시 (테마 상속 아님, 유저/파트너 앱 모두 동일 렌더링 보장)',
+    ],
+    guidelines: [
+      { kind: 'do',   text: '파트너 앱 화면 AppBar 우측 info 아이콘 탭 → showMinglitHelpSheet 패턴으로 일관 적용.',    recipeKey: 'do-info-icon-pattern' },
+      { kind: 'dont', text: 'HelpSheet 안에 버튼/폼/액션 삽입 금지 — 정보 전달 전용. 액션이 필요하면 별도 Route 사용.', recipeKey: 'dont-action-in-help' },
+      { kind: 'do',   text: '섹션 제목은 "질문 형태" — 사용자 mental model에 맞춰 Q&A 구성.',                          recipeKey: 'do-qa-format' },
+      { kind: 'dont', text: '단일 섹션만 있을 때 MinglitHelpSheet 사용 금지 — MinglitBottomSheet + Text 사용.',         recipeKey: 'dont-single-section' },
+    ],
+    dartUsage: `// 파트너 앱 AppBar info 아이콘에서 호출
+await showMinglitHelpSheet(
+  context: context,
+  title: '파티 관리 가이드',
+  sections: [
+    const HelpSection(
+      title: '파티가 뭔가요?',
+      body: '이벤트를 묶어서 관리하는 단위입니다. 하나의 파티에 여러 이벤트를 추가할 수 있어요.',
+    ),
+    const HelpSection(
+      title: '이벤트와 파티의 차이는?',
+      body: '이벤트는 구체적인 활동(날짜·장소·인원 확정), 파티는 여러 이벤트를 묶은 프로그램 단위입니다.',
+    ),
+    HelpSection(
+      leading: const Icon(Icons.check_circle_outline, size: 18),
+      title: '승인이 필요한가요?',
+      body: '파티 생성은 즉시 활성화됩니다. 이벤트 단위로 신청 심사를 설정할 수 있어요.',
+    ),
+  ],
+);`,
+    placement: {
+      where: [
+        '파트너 앱 모든 화면 AppBar 우측 info(help) 아이콘 탭 시 표시.',
+        '어느 화면에서든 showMinglitHelpSheet() 호출로 표시. scaffold 종속 없음.',
+      ],
+      spacing: [
+        { neighbor: '핸들 바',         gap: 'spacing-xxsmall (2px) 최상단 · spacing-xsmall (4px) 상하 · spacing-small (8px) 아래' },
+        { neighbor: '헤더 좌우·상하',  gap: 'spacing-medium (16px)' },
+        { neighbor: '섹션 좌우 패딩',  gap: 'spacing-medium (16px)' },
+        { neighbor: '섹션 제목→본문',  gap: 'spacing-small (8px)' },
+        { neighbor: 'CTA 버튼',        gap: 'spacing-medium (16px) 마진 + SafeArea' },
+      ],
+      compositions: [
+        { label: 'AppBar info 아이콘 → HelpSheet', description: '파트너 앱 도움말 표준 패턴.',       recipeKey: 'do-info-icon-pattern' },
+        { label: 'Q&A multi-section',               description: '다단 Q&A — 개념/차이/규칙 흐름.', recipeKey: 'do-qa-format' },
+      ],
+    },
+  },
+
   // ---------- Media ----------
   {
     name: 'MinglitImage',
