@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(214);
+SELECT plan(216);
 
 -- parties
 SELECT has_table('parties');
