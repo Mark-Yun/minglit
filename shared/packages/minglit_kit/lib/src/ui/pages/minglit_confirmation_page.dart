@@ -40,16 +40,16 @@ class MinglitConfirmationPage extends StatelessWidget {
               Text(
                 title,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                  fontWeight: FontWeight.bold,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: MinglitSpacing.small),
               Text(
                 message,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: MinglitColors.textSecondary,
-                    ),
+                  color: MinglitColors.textSecondary,
+                ),
                 textAlign: TextAlign.center,
               ),
               const Spacer(),
