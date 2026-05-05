@@ -312,7 +312,7 @@ class _FakeEventDetailController extends EventDetailController {
   Future<Event> build(String id) async {
     if (_state is AsyncData<Event>) return _state.value;
     if (_state is AsyncError<Event>) {
-      throw _state.error;
+      Error.throwWithStackTrace(_state.error, _state.stackTrace!);
     }
     await Future<void>.delayed(const Duration(days: 365));
     throw StateError('unreachable');
