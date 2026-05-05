@@ -124,8 +124,11 @@ class _HomePageState extends ConsumerState<HomePage> {
                   // Fix #141: Use IconButton for consistent touch target (48x48)
                   // and ripple effect with other app bar actions
                   // Fix #1630: AppBar context.push() → GoRouter 주입 패턴
+                  // Fix #2107: tooltip exposes accessibility label so QA can
+                  // find button by semantics instead of physical-pixel coords
                   IconButton(
                     onPressed: homeCoordinator.pushMyPage,
+                    tooltip: '마이페이지',
                     // Fix #1936: MinglitAvatarImage handles caching + error fallback
                     icon: MinglitAvatarImage(
                       radius: 14,
@@ -140,6 +143,9 @@ class _HomePageState extends ConsumerState<HomePage> {
                     // fires after login
                     // Fix #634: auth_coordinator 직접 참조 → home_coordinator.goToLogin 전환
                     // Fix #1633: from='/my' — 로그인 후 MyPage로 복귀
+                    // Fix #2107: tooltip exposes accessibility label so QA can
+                    // find button by semantics instead of physical-pixel coords
+                    tooltip: '마이페이지',
                     onPressed: () => homeCoordinator.goToLogin(from: '/my'),
                   ),
                 const SizedBox(width: MinglitSpacing.small),
