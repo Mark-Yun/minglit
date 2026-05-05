@@ -18,7 +18,7 @@ class EventApplicationState {
     required this.identityCompleted,
     required this.partnerVerifications,
     required this.consentGranted,
-    required this.consentCheckedItems,
+    this.consentCheckedItems = const [],
     this.selectedTicket,
     this.verificationData = const {},
     this.errorMessage,
