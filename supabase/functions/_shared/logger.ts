@@ -81,6 +81,10 @@ export async function initSentry(dsn?: string): Promise<void> {
  * - Axiom flush on completion
  *
  * Works with both `Deno.serve()` and legacy `serve()`.
+ *
+ * @deprecated Use `minglitEdgeFunction` from `_shared/edge_function.ts` instead.
+ *   See docs/architecture/edge-function-auth.md for migration guide.
+ *   기존 EF 들은 phase 3 에서 점진적으로 마이그레이션 (issue #2184).
  */
 export function withHandler(
   handler: (req: Request) => Response | Promise<Response>,
