@@ -57,6 +57,7 @@ void main() {
             '/partners/:partnerId/events',
             '/certification',
             '/events/:eventId/apply',
+            '/events/:eventId/apply/complete',
             '/tickets/my',
             '/tickets/:ticketId/qr',
             '/purchase-history',

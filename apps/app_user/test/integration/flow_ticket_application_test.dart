@@ -306,6 +306,16 @@ void main() {
       tester,
     ) async {
       final capture = GoldenCapture('flow_u_ticket');
+      // Fix #2211: partnerVerifications must be non-empty so
+      // shouldShowPartnerVerificationStep returns true and "추가인증" appears
+      // in the step indicator. The Verification has an empty formSchema so
+      // the body shows "추가 인증이 필요하지 않습니다".
+      const testVerif = Verification(
+        id: 'verif-test',
+        category: VerificationCategory.etc,
+        internalName: 'test_verif',
+        displayName: 'Test Verification',
+      );
       await pumpWizard(
         tester,
         event: testEventWithVerification,
@@ -313,7 +323,9 @@ void main() {
           step: EventApplicationStep.partnerVerification,
           status: EventApplicationStatus.initial,
           identityCompleted: true,
-          partnerVerifications: const [],
+          partnerVerifications: const [
+            PartnerVerifEntry(verification: testVerif),
+          ],
           consentGranted: false,
           selectedTicket: testTicketGeneral,
         ),
@@ -321,13 +333,13 @@ void main() {
 
       await capture.after(tester, 1); // 신청 상세
 
-      // Step indicator should show
+      // Step indicator shows "추가인증" because partnerVerifications is non-empty
       expect(find.text('추가인증'), findsOneWidget);
       expect(find.text('결제'), findsOneWidget);
       // "다음" button visible on verification step
       expect(find.text('다음'), findsOneWidget);
-      // Since entryGroups is empty, should show "no verification needed"
-      expect(find.textContaining('추가 인증이 필요하지 않습니다'), findsOneWidget);
+      // Verification entry card rendered (entry has no formSchema so no form fields)
+      expect(find.text('Test Verification'), findsOneWidget);
     });
 
     testWidgets('no verification required → "바로 결제로 진행해주세요" message', (
@@ -459,4 +471,11 @@ class _MockApplicationController extends EventApplicationController {
 
   @override
   EventApplicationState build(Event event) => _state;
+
+  // Fix #2211: _event is a late final field; override selectTicket to avoid
+  // _loadPartnerVerifications accessing _event before it is set.
+  @override
+  Future<void> selectTicket(Ticket ticket) async {
+    state = state.copyWith(selectedTicket: ticket);
+  }
 }

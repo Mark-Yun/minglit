@@ -127,6 +127,13 @@ class _FakeEventApplicationController extends EventApplicationController {
 
   @override
   EventApplicationState build(Event event) => _initialState;
+
+  // Fix #2211: _event is a late final field; override selectTicket to avoid
+  // _loadPartnerVerifications accessing _event before it is set.
+  @override
+  Future<void> selectTicket(Ticket ticket) async {
+    state = state.copyWith(selectedTicket: ticket);
+  }
 }
 
 class _FakeEventDetailController extends EventDetailController {
