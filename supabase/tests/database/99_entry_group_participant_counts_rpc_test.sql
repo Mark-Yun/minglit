@@ -25,6 +25,10 @@ BEGIN
   INSERT INTO public.partners (name) VALUES ('EGPC Test Partner')
   RETURNING id INTO v_partner_id;
 
+  -- egpc_anon을 파트너 owner로 등록 (PARTY_MANAGE 권한 부여)
+  INSERT INTO public.partner_member_permissions (partner_id, user_id, role)
+  VALUES (v_partner_id, tests.get_supabase_uid('egpc_anon'), 'owner');
+
   INSERT INTO public.parties (partner_id, title, min_confirmed_count, max_participants)
   VALUES (v_partner_id, 'EGPC Party', 0, 30)
   RETURNING id INTO v_party_id;
@@ -56,13 +60,14 @@ BEGIN
   VALUES
     (v_event_id, v_ticket_b_id, tests.get_supabase_uid('egpc_user_c'), 'ticket_issued', 'B0001', 'User C');
 
+  PERFORM set_config('tests.egpc_partner_id',  v_partner_id::text,  true);
   PERFORM set_config('tests.egpc_event_id',    v_event_id::text,    true);
   PERFORM set_config('tests.egpc_group_a_id',  v_group_a_id::text,  true);
   PERFORM set_config('tests.egpc_group_b_id',  v_group_b_id::text,  true);
 END $$;
 
 -- ============================================================
--- Test 1: authenticated 유저는 RPC 호출 가능
+-- Test 1: PARTY_MANAGE 권한 파트너는 RPC 호출 가능
 -- ============================================================
 
 SELECT tests.authenticate_as('egpc_anon');
@@ -134,8 +139,7 @@ DECLARE
   v_party_id   uuid;
   v_empty_event_id uuid;
 BEGIN
-  SELECT id INTO v_partner_id
-  FROM public.partners WHERE name = 'EGPC Test Partner';
+  v_partner_id := current_setting('tests.egpc_partner_id')::uuid;
 
   SELECT id INTO v_party_id FROM public.parties WHERE partner_id = v_partner_id LIMIT 1;
 
@@ -157,7 +161,7 @@ SELECT is(
 );
 
 -- ============================================================
--- Test 7: soft-deleted 참가자는 participant_count에서 제외 (security invoker + RLS)
+-- Test 7: soft-deleted 참가자는 participant_count에서 제외 (security definer + 명시 필터)
 -- ============================================================
 
 SELECT tests.authenticate_as_service_role();
