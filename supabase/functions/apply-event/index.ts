@@ -10,6 +10,114 @@ import { initSentry, withHandler } from "../_shared/logger.ts";
 
 initSentry();
 
+type VerifItem = { verification_id: string; data: Record<string, unknown> };
+
+/** Parses the client-sent verification_data into a flat list of VerifItem.
+ *  Accepts new array format { partner_id, verifications: [...] }
+ *  and legacy single format { partner_id, verification_id, data }.
+ */
+function parseVerifications(
+  verification_data: Record<string, unknown> | undefined,
+): { partnerId: string | undefined; items: VerifItem[] } {
+  if (!verification_data) return { partnerId: undefined, items: [] };
+
+  const partnerId = verification_data["partner_id"] as string | undefined;
+
+  if (Array.isArray(verification_data["verifications"])) {
+    // Fix #2107: runtime-validate each entry instead of casting — items with
+    // non-string verification_id or non-object data are silently dropped.
+    const raw = verification_data["verifications"] as unknown[];
+    return {
+      partnerId,
+      items: raw.flatMap((v) => {
+        if (
+          v &&
+          typeof v === "object" &&
+          typeof (v as { verification_id?: unknown }).verification_id === "string"
+        ) {
+          const item = v as { verification_id: string; data?: unknown };
+          const data =
+            item.data &&
+            typeof item.data === "object" &&
+            !Array.isArray(item.data)
+              ? (item.data as Record<string, unknown>)
+              : {};
+          return [{ verification_id: item.verification_id, data }];
+        }
+        return [];
+      }),
+    };
+  }
+
+  // Legacy single-item format
+  const verificationId = verification_data["verification_id"] as
+    | string
+    | undefined;
+  const data = (verification_data["data"] ?? {}) as Record<string, unknown>;
+  if (verificationId) {
+    return { partnerId, items: [{ verification_id: verificationId, data }] };
+  }
+
+  return { partnerId, items: [] };
+}
+
+type SupabaseClient = ReturnType<typeof createServiceClient>;
+
+/** Upserts all verifications and inserts submission records.
+ *  Returns an error Response on first failure, null on success.
+ */
+async function upsertVerifications(
+  supabase: SupabaseClient,
+  userId: string,
+  applicationId: string,
+  partnerId: string | undefined,
+  items: VerifItem[],
+): Promise<Response | null> {
+  // Fix #2107: reject up-front if items were sent without a partnerId — silent
+  // skip would make the caller treat the request as success with no rows saved.
+  if (items.length > 0 && !partnerId) {
+    console.error("upsertVerifications: items provided without partnerId");
+    return errorResponse("Invalid verification payload: missing partner_id", 400);
+  }
+  for (const item of items) {
+    if (!item.verification_id || !partnerId) continue;
+
+    const { error: uvError } = await supabase
+      .from("user_verifications")
+      .upsert(
+        {
+          user_id: userId,
+          verification_id: item.verification_id,
+          data: item.data,
+        },
+        { onConflict: "user_id,verification_id" },
+      );
+    if (uvError) {
+      console.error("Failed to upsert user_verifications:", uvError.message);
+      return errorResponse("Failed to process verification data", 500);
+    }
+
+    const { error: vsError } = await supabase
+      .from("verification_submissions")
+      .insert({
+        partner_id: partnerId,
+        user_id: userId,
+        verification_id: item.verification_id,
+        application_id: applicationId,
+        status: "pending",
+        snapshot_data: item.data,
+      });
+    if (vsError) {
+      console.error(
+        "Failed to insert verification_submissions:",
+        vsError.message,
+      );
+      return errorResponse("Failed to process verification data", 500);
+    }
+  }
+  return null;
+}
+
 Deno.serve(withHandler(async (req) => {
   if (req.method === "OPTIONS") return corsResponse();
 
@@ -26,6 +134,9 @@ Deno.serve(withHandler(async (req) => {
       ticket_id?: string;
       verification_data?: Record<string, unknown>;
     };
+
+    const { partnerId: verifPartnerId, items: verifItems } =
+      parseVerifications(verification_data);
 
     if (!event_id || !ticket_id) {
       return errorResponse(
@@ -213,48 +324,15 @@ Deno.serve(withHandler(async (req) => {
       }
 
       // Fix #1342 Bug2: 유료 경로에서 verification_data 처리 — RPC 미사용으로 인해 직접 삽입
-      if (verification_data) {
-        const verificationId = verification_data["verification_id"] as
-          | string
-          | undefined;
-        const partnerId = verification_data["partner_id"] as string | undefined;
-        const data = verification_data["data"] ?? {};
-
-        if (verificationId && partnerId) {
-          const { error: uvError } = await supabase
-            .from("user_verifications")
-            .upsert(
-              { user_id: userId, verification_id: verificationId, data },
-              { onConflict: "user_id,verification_id" },
-            );
-
-          if (uvError) {
-            console.error(
-              "Failed to upsert user_verifications:",
-              uvError.message,
-            );
-            return errorResponse("Failed to process verification data", 500);
-          }
-
-          const { error: vsError } = await supabase
-            .from("verification_submissions")
-            .insert({
-              partner_id: partnerId,
-              user_id: userId,
-              verification_id: verificationId,
-              application_id: applicationId,
-              status: "pending",
-              snapshot_data: data,
-            });
-
-          if (vsError) {
-            console.error(
-              "Failed to insert verification_submissions:",
-              vsError.message,
-            );
-            return errorResponse("Failed to process verification data", 500);
-          }
-        }
+      if (verifItems.length > 0) {
+        const verifError = await upsertVerifications(
+          supabase,
+          userId,
+          applicationId,
+          verifPartnerId,
+          verifItems,
+        );
+        if (verifError) return verifError;
       }
 
       return successResponse({
@@ -291,7 +369,7 @@ Deno.serve(withHandler(async (req) => {
         }
 
         // Fix #1660: free re-applications use 'approved' (not 'paid') — payment_id is null for free events
-        const newStatus = verification_data ? "pending_review" : "approved";
+        const newStatus = verifItems.length > 0 ? "pending_review" : "approved";
         const { error: updateError } = await supabase
           .from("event_applications")
           .update({
@@ -312,50 +390,15 @@ Deno.serve(withHandler(async (req) => {
         }
 
         // Fix #1342 Bug2: 무료 재신청 경로에서 verification_data 처리
-        if (verification_data) {
-          const verificationId = verification_data["verification_id"] as
-            | string
-            | undefined;
-          const partnerId = verification_data["partner_id"] as
-            | string
-            | undefined;
-          const data = verification_data["data"] ?? {};
-
-          if (verificationId && partnerId) {
-            const { error: uvError } = await supabase
-              .from("user_verifications")
-              .upsert(
-                { user_id: userId, verification_id: verificationId, data },
-                { onConflict: "user_id,verification_id" },
-              );
-
-            if (uvError) {
-              console.error(
-                "Failed to upsert user_verifications:",
-                uvError.message,
-              );
-              return errorResponse("Failed to process verification data", 500);
-            }
-
-            const { error: vsError } = await supabase
-              .from("verification_submissions")
-              .insert({
-                partner_id: partnerId,
-                user_id: userId,
-                verification_id: verificationId,
-                application_id: existingApp.id,
-                status: "pending",
-                snapshot_data: data,
-              });
-
-            if (vsError) {
-              console.error(
-                "Failed to insert verification_submissions:",
-                vsError.message,
-              );
-              return errorResponse("Failed to process verification data", 500);
-            }
-          }
+        if (verifItems.length > 0) {
+          const verifError = await upsertVerifications(
+            supabase,
+            userId,
+            existingApp.id,
+            verifPartnerId,
+            verifItems,
+          );
+          if (verifError) return verifError;
         }
 
         return successResponse({
@@ -365,6 +408,17 @@ Deno.serve(withHandler(async (req) => {
       }
 
       // 신규 무료 신청: apply_event RPC 호출 — DB 레벨 balance 체크 + 신청 완료
+      // RPC handles one verification entry (first item). Additional verifications
+      // are upserted separately after the RPC creates the application record.
+      const rpcVerifData =
+        verifItems.length > 0
+          ? {
+              partner_id: verifPartnerId,
+              verification_id: verifItems[0].verification_id,
+              data: verifItems[0].data,
+            }
+          : null;
+
       const { data: applicationId, error: rpcError } = await supabase.rpc(
         "apply_event",
         {
@@ -373,7 +427,7 @@ Deno.serve(withHandler(async (req) => {
           p_user_id: userId,
           p_payment_id: null,
           p_payment_amount: 0,
-          p_verification_data: verification_data ?? null,
+          p_verification_data: rpcVerifData,
         },
       );
 
@@ -388,6 +442,18 @@ Deno.serve(withHandler(async (req) => {
           return errorResponse("Already applied to this event", 409);
         }
         return errorResponse("Failed to apply to event", 500);
+      }
+
+      // Process extra verifications (index 1+) that the RPC did not handle
+      if (verifItems.length > 1) {
+        const verifError = await upsertVerifications(
+          supabase,
+          userId,
+          applicationId as string,
+          verifPartnerId,
+          verifItems.slice(1),
+        );
+        if (verifError) return verifError;
       }
 
       return successResponse({
