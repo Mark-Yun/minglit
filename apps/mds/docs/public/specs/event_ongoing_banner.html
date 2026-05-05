@@ -82,6 +82,15 @@ body.dark-mode .ongoing-banner { background: var(--color-dark-surface); }
   50%      { opacity: 1; }
 }
 
+/* 알림 표시 error dot (results · 미확인 상태) */
+.ongoing-banner__notif-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-error);
+  flex-shrink: 0;
+}
+
 .ongoing-banner__time {
   font-size: 12px;
   color: var(--color-text-secondary);
@@ -430,7 +439,7 @@ body.dark-mode .viewport.ob-viewport { background: var(--color-dark-background);
                   <button class="ongoing-banner__action ongoing-banner__action--outline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.71 11.29l-9-9a1 1 0 0 0-1.42 0l-9 9a1 1 0 0 0 0 1.42l9 9a1 1 0 0 0 1.42 0l9-9a1 1 0 0 0 0-1.42z"/><path d="M14 9h-4v3H7l5 5 5-5h-3z"/></svg>길찾기</button>
                   <button class="ongoing-banner__action">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="6" height="6"/><rect x="14" y="4" width="6" height="6"/><rect x="4" y="14" width="6" height="6"/><rect x="14" y="14" width="6" height="6"/></svg>
-                    입장 QR 보기
+                    입장 QR 미리 보기
                   </button>
                 </div>
               </div>
@@ -442,7 +451,7 @@ body.dark-mode .viewport.ob-viewport { background: var(--color-dark-background);
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ① <strong>"입장 QR 보기" 탭</strong> — Check-in 시트 열림 (아직 체크인 비활성, QR 미리보기만 가능)<br>
+            ① <strong>"입장 QR 미리 보기" 탭</strong> — Check-in 시트 열림 (아직 체크인 비활성, QR 미리보기만 가능)<br>
             ② <strong>"길찾기" outline 버튼 탭</strong> — 외부 지도 앱(카카오맵 등) 호출<br>
             ③ <strong>title / thumb 영역 탭</strong> — EventDetailRoute push (이벤트 정보 재확인)<br>
           </td>
@@ -547,7 +556,7 @@ body.dark-mode .viewport.ob-viewport { background: var(--color-dark-background);
           <td>
             ↔ baseline +<br>
             + <code>color-success</code>(chip text + chip 16% bg)<br>
-            + <code>color-primary</code>(card border tint · bg gradient · trailing strong · button pulse halo)<br>
+            + <code>color-primary</code>(card border tint · trailing strong · button pulse halo)<br>
             − <code>color-warning</code>(chip 톤 변경)
           </td>
         </tr>
@@ -695,7 +704,7 @@ body.dark-mode .viewport.ob-viewport { background: var(--color-dark-background);
           <td class="state-mini__aspect">토큰</td>
           <td>
             ↔ baseline +<br>
-            + <code>color-primary</code>(chip fill · bg gradient · button bg + pulse · trailing strong)<br>
+            + <code>color-primary</code>(chip fill · button bg + pulse · trailing strong)<br>
             + 흰 dot inside chip<br>
             − warning
           </td>
@@ -793,6 +802,7 @@ body.dark-mode .viewport.ob-viewport { background: var(--color-dark-background);
                 <div class="ongoing-banner__header">
                   <span class="ongoing-banner__chip ongoing-banner__chip--results">
                     <span class="ongoing-banner__chip-dot ongoing-banner__chip-dot--pulse"></span>결과 공개됨
+                    <span class="ongoing-banner__notif-dot"></span>
                   </span>
                   <span class="ongoing-banner__time">어제 진행</span>
                 </div>
@@ -1024,7 +1034,7 @@ body.dark-mode .viewport.ob-viewport { background: var(--color-dark-background);
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · 결과 확인 transition은 즉시 발생 — banner가 page에서 fade out (200ms).<br>
+            · 7일 만료 시 자동 transition — banner가 page에서 fade out (200ms). 결과 확인(6a→6b)은 banner를 즉시 제거하지 않음 — 7일 정책은 결과 공개 시점 기준으로 일관 적용.<br>
             · MyTicketsPage 모든 banner가 ended이면 페이지 자체가 empty state로 분기 (다른 spec에서 정의 예정).
           </td>
         </tr>
@@ -1152,7 +1162,7 @@ body.dark-mode .viewport.ob-viewport { background: var(--color-dark-background);
         <tr><th>Phase</th><th>Footer 라벨</th><th>Sheet (재사용)</th><th>주요 컨텐츠</th></tr>
       </thead>
       <tbody>
-        <tr><td>waiting</td><td>"입장 QR 보기"</td><td>CheckInPreviewSheet</td><td>QR 미리보기 (체크인 비활성 · 시간 전)</td></tr>
+        <tr><td>waiting</td><td>"입장 QR 미리 보기"</td><td>CheckInPreviewSheet</td><td>QR 미리보기 (체크인 비활성 · 시간 전)</td></tr>
         <tr><td>checkInReady</td><td>"입장 QR 보기" (pulse)</td><td>CheckInSheet</td><td>QR 풀스크린 · 운영자 스캔용</td></tr>
         <tr><td>checkedIn</td><td>(passive · "즐거운 시간 보내세요")</td><td>CheckedInSheet (banner 본체 탭으로 진입 가능)</td><td>참가자 명단 · 매칭 안내</td></tr>
         <tr><td>matchingReady</td><td>"매칭 시작하기" (pulse)</td><td>MatchingSheet</td><td>좋아요 swipe UI 진입</td></tr>
