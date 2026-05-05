@@ -67,10 +67,12 @@ class _EventInfoTab extends ConsumerWidget {
     final appsAsync = ref.watch(eventApplicationsProvider(event.id));
     final applications = appsAsync.asData?.value ?? [];
     final appCount = applications.length;
-    final pendingCount =
-        applications.where((a) => a.status == 'pending_review').length;
-    final approvedCount =
-        applications.where((a) => a.status == 'approved').length;
+    final pendingCount = applications
+        .where((a) => a.status == 'pending_review')
+        .length;
+    final approvedCount = applications
+        .where((a) => a.status == 'approved')
+        .length;
     final maxParticipants = event.maxParticipants;
 
     return SingleChildScrollView(

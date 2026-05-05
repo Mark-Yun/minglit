@@ -39,12 +39,12 @@ class EventApplicationListView extends ConsumerWidget {
         // Fix #2224: apply groupId filter when navigating from group card
         final filtered = groupId != null
             ? applications
-                .where(
-                  (app) =>
-                      app.ticket?.targetEntryGroupIds.contains(groupId) ??
-                      false,
-                )
-                .toList()
+                  .where(
+                    (app) =>
+                        app.ticket?.targetEntryGroupIds.contains(groupId) ??
+                        false,
+                  )
+                  .toList()
             : applications;
 
         if (filtered.isEmpty) {
