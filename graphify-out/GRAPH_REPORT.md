@@ -1,7 +1,7 @@
-# Graph Report - /Users/mark/workspace/minglit-worker-runtime/workspace/needs-swe-sonnet-1/.claude/worktrees/test-2175-navigation  (2026-05-05)
+# Graph Report - /private/tmp/needs-qa-pr2180  (2026-05-05)
 
 ## Corpus Check
-- 1177 files · ~1,803,704 words
+- 1177 files · ~1,803,699 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -2484,7 +2484,7 @@ _Questions this graph is uniquely positioned to answer:_
 - **What is the exact relationship between `Architecture Audit #1092 — 2026-04-06` and `AI Basic Law Compliance (Korea 2026)`?**
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
 - **Why does `Text` connect `Community 1` to `Community 25`?**
-  _High betweenness centrality (0.201) - this node is a cross-community bridge._
+  _High betweenness centrality (0.210) - this node is a cross-community bridge._
 - **What connects `reporter (AutoLabelAllureReporter)`, `BugReporterWrapper Widget Test Suite`, `MinglitListTile Widget Test Suite` to the rest of the system?**
   _2016 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
