@@ -1,7 +1,7 @@
 # Graph Report - /Users/mark/workspace/minglit-worker-runtime/workspace/needs-swe-sonnet-1/.repo-fix-2256  (2026-05-06)
 
 ## Corpus Check
-- 1219 files · ~1,905,484 words
+- 1219 files · ~1,905,460 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -2614,10 +2614,10 @@ _Questions this graph is uniquely positioned to answer:_
   _Edge tagged AMBIGUOUS (relation: calls) - confidence is low._
 - **What is the exact relationship between `Architecture Audit #1092 — 2026-04-06` and `AI Basic Law Compliance (Korea 2026)`?**
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
-- **Why does `Text` connect `Community 31` to `Community 14`?**
-  _High betweenness centrality (0.203) - this node is a cross-community bridge._
 - **Why does `Log` connect `Community 31` to `Community 18`, `Community 7`?**
-  _High betweenness centrality (0.199) - this node is a cross-community bridge._
+  _High betweenness centrality (0.213) - this node is a cross-community bridge._
+- **Why does `Text` connect `Community 31` to `Community 14`?**
+  _High betweenness centrality (0.213) - this node is a cross-community bridge._
 - **What connects `reporter (AutoLabelAllureReporter)`, `_buildPage`, `MaterialApp` to the rest of the system?**
   _2627 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
