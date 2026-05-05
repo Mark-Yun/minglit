@@ -37,7 +37,6 @@ void main() {
     when(
       () => mockCoordinator.pushPartnerEvents(
         partnerId: any(named: 'partnerId'),
-        partnerName: any(named: 'partnerName'),
       ),
     ).thenReturn(null);
   });
@@ -75,7 +74,6 @@ void main() {
       verify(
         () => mockCoordinator.pushPartnerEvents(
           partnerId: testPartnerId,
-          partnerName: testPartner.name,
         ),
       ).called(1);
     },
