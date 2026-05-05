@@ -23,7 +23,7 @@ class PartnerHomePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(partnerDashboardControllerProvider);
-    final partner = ref.watch(currentPartnerInfoProvider).valueOrNull;
+    final partner = ref.watch(currentPartnerInfoProvider).asData?.value;
     final coordinator = ref.read(partnerHomeCoordinatorProvider);
     final unreadCount = ref.watch(notificationListProvider).maybeWhen(
       data: (notifications) => notifications
