@@ -897,6 +897,62 @@ MinglitBadge(
     },
   },
   {
+    name: 'MinglitDDayChip',
+    category: 'Tags & Badges',
+    purpose: '이벤트까지 남은 일수를 표시하는 D-day pill. 날짜 거리에 따라 톤이 자동 분기 — today(0일): 임박 warning · soon(1–7일): 이번 주 partner-primary · later(8일+): muted secondary. 항상 read-only. 카드 안 한 줄에 날짜 / 캐피시티와 함께 노출.',
+    props: [
+      { name: 'daysUntil', type: 'int',     required: true,  notes: '이벤트 시작까지 남은 일수. 0=오늘, 양수=미래, 음수=종료(노출 X 권장 — 종료 이벤트는 별도 처리).' },
+      { name: 'label',     type: 'String?', default: 'null', notes: '커스텀 라벨 (기본: daysUntil==0 → "오늘", 그 외 → "D-N"). null이면 자동 생성.' },
+    ],
+    variants: ['today (D-0 → warning amber)', 'soon (D-1 ~ D-7 → partner-primary)', 'later (D-8+ → muted secondary)'],
+    states: ['default (read-only)'],
+    tokens: [
+      { name: 'color-warning',                   where: 'today tier 텍스트 + 12–15% bg' },
+      { name: 'color-partner-primary',           where: 'soon tier 텍스트 + 10% bg' },
+      { name: 'color-text-secondary',            where: 'later tier 텍스트' },
+      { name: 'color-divider',                   where: 'later tier 배경' },
+      { name: 'radius-pill',                     where: '999px fully rounded' },
+      { name: 'spacing-small',                   where: '수평 padding (8px)' },
+      { name: 'spacing-xxsmall',                 where: '수직 padding (2px)' },
+      { name: 'typography-font-size-caption',    where: '폰트 (11px w700, letter-spacing -0.2px)' },
+    ],
+    accessibility: [
+      'MinglitDDayChip은 읽기 전용 — Semantics(label: "이벤트까지 N일 남음" 또는 "오늘 진행").',
+      '색상은 보조 시그널 — 텍스트(D-N 또는 "오늘") 자체가 의미를 전달해야 한다.',
+    ],
+    guidelines: [
+      { kind: 'do',   text: '카드 한 줄 안에서 날짜 + 캐피시티와 함께 노출 — "5/4 (월) 18:00  [D-2]  28/30" 패턴.', recipeKey: 'do-dday-in-event-row' },
+      { kind: 'dont', text: '음수(종료된 이벤트)에 사용하지 말 것 — 종료는 별도 처리(예: 회색 텍스트 "종료" / 비노출).', recipeKey: 'dont-dday-for-ended' },
+      { kind: 'do',   text: 'tier 톤 시스템을 따를 것 — today=warning · soon=partner-primary · later=secondary. 커스텀 색상으로 override 금지.' },
+      { kind: 'dont', text: '큰 강조용으로 키우지 말 것 — caption 사이즈 유지, 라벨/제목으로 대체할 정보가 아니다.' },
+    ],
+    dartUsage: `// 이번 주 이벤트 (D-2 → soon tier)
+MinglitDDayChip(daysUntil: 2)
+
+// 오늘 (자동 라벨 "오늘", warning tone)
+MinglitDDayChip(daysUntil: 0)
+
+// 먼 미래 (D-15 → later tier, muted)
+MinglitDDayChip(daysUntil: 15)`,
+    placement: {
+      where: [
+        'PartyListItem 카드 — "다음 이벤트" row 안에서 날짜 + 캐피시티와 같이 노출.',
+        'EventCard 또는 EventDetail hero — 시간성 강조용 corner overlay.',
+        'TodoSummary / 알림 — 임박 이벤트 강조 시그널.',
+      ],
+      spacing: [
+        { neighbor: '날짜 텍스트',     gap: 'spacing-small (8px)', note: 'row 순서: 날짜 → chip → 캐피시티' },
+        { neighbor: '캐피시티 텍스트', gap: 'spacing-small (8px)' },
+      ],
+      compositions: [
+        { label: 'Next event row', description: 'PartyListItem — "다음 이벤트" 한 줄 안에 날짜 · D-day · 캐피시티.' },
+      ],
+    },
+    usedIn: [
+      'party_list_page',
+    ],
+  },
+  {
     name: 'MinglitParticipantGauge',
     category: 'Tags & Badges',
     purpose: '파티/이벤트 참여자 수를 3-세그먼트 배터리 게이지로 시각화. current/max 비율에 따라 세그먼트 수와 색상이 자동 결정됨. 텍스트(N/M) + people 아이콘 포함 pill 컨테이너.',
