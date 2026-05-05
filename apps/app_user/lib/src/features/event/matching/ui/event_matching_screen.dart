@@ -16,7 +16,8 @@ class EventMatchingScreen extends ConsumerStatefulWidget {
   final String eventId;
 
   @override
-  ConsumerState<EventMatchingScreen> createState() => _EventMatchingScreenState();
+  ConsumerState<EventMatchingScreen> createState() =>
+      _EventMatchingScreenState();
 }
 
 class _EventMatchingScreenState extends ConsumerState<EventMatchingScreen> {
@@ -232,10 +233,12 @@ class _EventMatchingScreenState extends ConsumerState<EventMatchingScreen> {
     );
     if (!confirmed || !mounted) return;
 
-    await ref.read(commitMatchLikesControllerProvider.notifier).commit(
-      eventId: widget.eventId,
-      candidateIds: _selectedCandidateIds.toList(growable: false),
-    );
+    await ref
+        .read(commitMatchLikesControllerProvider.notifier)
+        .commit(
+          eventId: widget.eventId,
+          candidateIds: _selectedCandidateIds.toList(growable: false),
+        );
   }
 
   void _toggleSelection(BuildContext context, String candidateId) {
@@ -338,7 +341,10 @@ class _SkeletonRow extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              MinglitSkeleton(width: double.infinity, height: MinglitSpacing.medium),
+              MinglitSkeleton(
+                width: double.infinity,
+                height: MinglitSpacing.medium,
+              ),
               SizedBox(height: MinglitSpacing.small),
               MinglitSkeleton(
                 width: MinglitSpacing.xxlarge + MinglitSpacing.xlarge,
@@ -399,8 +405,8 @@ class _CandidateRowState extends State<_CandidateRow>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final disableAnimations = MediaQuery.maybeOf(context)?.disableAnimations ??
-        false;
+    final disableAnimations =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
     if (disableAnimations) {
       _entranceController.value = 1;
       _checkController.value = widget.isSelected ? 1 : 0;
@@ -439,7 +445,9 @@ class _CandidateRowState extends State<_CandidateRow>
     final avatarSize = MinglitSpacing.xlarge + MinglitSpacing.large;
     final trailingSize = MinglitSpacing.xlarge + MinglitSpacing.sm;
     final checkCircleSize = MinglitSpacing.large + MinglitSpacing.xsmall;
-    final selectedBackground = theme.colorScheme.primary.withValues(alpha: 0.06);
+    final selectedBackground = theme.colorScheme.primary.withValues(
+      alpha: 0.06,
+    );
     final meta = widget.candidate.username.isNotEmpty
         ? '@${widget.candidate.username}'
         : '프로필 정보 준비 중';
@@ -450,15 +458,16 @@ class _CandidateRowState extends State<_CandidateRow>
         final entranceValue = Curves.easeOutCubic.transform(
           _entranceController.value,
         );
-        final bounceScale = Tween<double>(
-          begin: 0.8,
-          end: 1,
-        ).transform(
-          CurvedAnimation(
-            parent: _checkController,
-            curve: const Cubic(0.34, 1.56, 0.64, 1),
-          ).value,
-        );
+        final bounceScale =
+            Tween<double>(
+              begin: 0.8,
+              end: 1,
+            ).transform(
+              CurvedAnimation(
+                parent: _checkController,
+                curve: const Cubic(0.34, 1.56, 0.64, 1),
+              ).value,
+            );
 
         return Opacity(
           opacity: entranceValue,

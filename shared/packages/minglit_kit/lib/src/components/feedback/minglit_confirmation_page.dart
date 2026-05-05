@@ -94,8 +94,8 @@ class _MinglitConfirmationPageState extends State<MinglitConfirmationPage>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final disableAnimations = MediaQuery.maybeOf(context)?.disableAnimations ??
-        false;
+    final disableAnimations =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
     if (disableAnimations) {
       _controller.value = 1;
     } else if (!_controller.isAnimating && _controller.value == 0) {

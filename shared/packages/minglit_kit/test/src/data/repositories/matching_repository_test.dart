@@ -276,7 +276,9 @@ void main() {
           ),
         ).thenAnswer(
           (_) async => FunctionResponse(
-            data: utf8.encode(jsonEncode({'success': true, 'inserted_count': 2})),
+            data: utf8.encode(
+              jsonEncode({'success': true, 'inserted_count': 2}),
+            ),
             status: 200,
           ),
         );

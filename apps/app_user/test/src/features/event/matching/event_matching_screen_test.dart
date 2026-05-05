@@ -53,9 +53,13 @@ void main() {
       overrides: [
         matchingRepositoryProvider.overrideWithValue(mockMatchingRepository),
         if (eventOverride != null)
-          eventDetailProvider(eventId).overrideWith((_) async => eventOverride.requireValue),
+          eventDetailProvider(
+            eventId,
+          ).overrideWith((_) async => eventOverride.requireValue),
         if (candidatesOverride != null)
-          matchCandidatesProvider(eventId).overrideWith((_) async => candidatesOverride.requireValue),
+          matchCandidatesProvider(
+            eventId,
+          ).overrideWith((_) async => candidatesOverride.requireValue),
       ],
       child: MaterialApp(
         theme: MinglitTheme.materialTheme,
@@ -64,30 +68,37 @@ void main() {
     );
   }
 
-  testWidgets('Loading: shows 6 skeleton rows (4 skeletons each) while data is pending', (
-    tester,
-  ) async {
-    final eventCompleter = Completer<Event>();
-    final candidatesCompleter = Completer<List<UserProfile>>();
+  testWidgets(
+    'Loading: shows 6 skeleton rows (4 skeletons each) while data is pending',
+    (
+      tester,
+    ) async {
+      final eventCompleter = Completer<Event>();
+      final candidatesCompleter = Completer<List<UserProfile>>();
 
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          matchingRepositoryProvider.overrideWithValue(mockMatchingRepository),
-          eventDetailProvider(eventId).overrideWith((_) => eventCompleter.future),
-          matchCandidatesProvider(eventId).overrideWith(
-            (_) => candidatesCompleter.future,
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            matchingRepositoryProvider.overrideWithValue(
+              mockMatchingRepository,
+            ),
+            eventDetailProvider(
+              eventId,
+            ).overrideWith((_) => eventCompleter.future),
+            matchCandidatesProvider(eventId).overrideWith(
+              (_) => candidatesCompleter.future,
+            ),
+          ],
+          child: MaterialApp(
+            theme: MinglitTheme.materialTheme,
+            home: const EventMatchingScreen(eventId: eventId),
           ),
-        ],
-        child: MaterialApp(
-          theme: MinglitTheme.materialTheme,
-          home: const EventMatchingScreen(eventId: eventId),
         ),
-      ),
-    );
+      );
 
-    expect(find.byType(MinglitSkeleton), findsNWidgets(24));
-  });
+      expect(find.byType(MinglitSkeleton), findsNWidgets(24));
+    },
+  );
 
   testWidgets('Default: renders unselected candidates and disabled CTA', (
     tester,
@@ -104,7 +115,9 @@ void main() {
     expect(find.text('나래'), findsOneWidget);
     expect(find.widgetWithText(ElevatedButton, '확인'), findsOneWidget);
     expect(
-      tester.widget<ElevatedButton>(find.widgetWithText(ElevatedButton, '확인')).onPressed,
+      tester
+          .widget<ElevatedButton>(find.widgetWithText(ElevatedButton, '확인'))
+          .onPressed,
       isNull,
     );
   });
@@ -128,7 +141,11 @@ void main() {
     expect(find.text('2명 선택됨'), findsOneWidget);
     expect(find.widgetWithText(ElevatedButton, '확인 (2명)'), findsOneWidget);
     expect(
-      tester.widget<ElevatedButton>(find.widgetWithText(ElevatedButton, '확인 (2명)')).onPressed,
+      tester
+          .widget<ElevatedButton>(
+            find.widgetWithText(ElevatedButton, '확인 (2명)'),
+          )
+          .onPressed,
       isNotNull,
     );
   });
@@ -153,35 +170,40 @@ void main() {
     expect(find.text('보내기'), findsOneWidget);
   });
 
-  testWidgets('Submitted: successful commit replaces screen with confirmation page', (
+  testWidgets(
+    'Submitted: successful commit replaces screen with confirmation page',
+    (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        buildSubject(
+          eventValue: AsyncData(buildEvent()),
+          candidatesValue: AsyncData(buildCandidates()),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('가은'));
+      await tester.pump();
+      await tester.tap(find.widgetWithText(ElevatedButton, '확인 (1명)'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('보내기'));
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      expect(find.text('좋아요를 보냈어요'), findsOneWidget);
+      verify(
+        () => mockMatchingRepository.commitMatchLikes(
+          eventId: eventId,
+          candidateIds: ['candidate-1'],
+        ),
+      ).called(1);
+    },
+  );
+
+  testWidgets('Ended: completed event shows privacy lock state', (
     tester,
   ) async {
-    await tester.pumpWidget(
-      buildSubject(
-        eventValue: AsyncData(buildEvent()),
-        candidatesValue: AsyncData(buildCandidates()),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('가은'));
-    await tester.pump();
-    await tester.tap(find.widgetWithText(ElevatedButton, '확인 (1명)'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('보내기'));
-    await tester.pump();
-    await tester.pumpAndSettle();
-
-    expect(find.text('좋아요를 보냈어요'), findsOneWidget);
-    verify(
-      () => mockMatchingRepository.commitMatchLikes(
-        eventId: eventId,
-        candidateIds: ['candidate-1'],
-      ),
-    ).called(1);
-  });
-
-  testWidgets('Ended: completed event shows privacy lock state', (tester) async {
     await tester.pumpWidget(
       buildSubject(
         eventValue: AsyncData(buildEvent(status: 'completed')),
