@@ -49,36 +49,41 @@ async function runStorageBucketCleanup(
   supabase: SupabaseClient,
   policy: RetentionPolicy,
 ): Promise<{ rows_deleted: number }> {
+  // Fix #2204: 옛 패턴 (supabase.storage.from(b).list(prefix)) 은 sub-directory 안 들여다 봄.
+  // 모든 파일이 sub-dir 에 있으면 stale=0 으로 잘못 판단. admin.find_stale_storage_objects()
+  // 가 storage.objects 직접 query 로 평면화된 모든 stale 파일 반환 → 재귀 무관.
   const { bucket_id, path_prefix = "" } = policy.target;
-  const cutoff = new Date(Date.now() - policy.retention_days * 86400 * 1000);
+  const REMOVE_BATCH = 100;  // Supabase storage remove API batch limit
+  const QUERY_BATCH = 10000;  // admin function 의 LIMIT
 
   let deleted = 0;
-  const BATCH = 1000;
 
-  // Always list from offset=0 to avoid skipping files shifted by prior deletes.
-  // Stop when no stale files found in a batch (oldest files are listed first).
   while (true) {
-    const { data: files, error: listError } = await supabase.storage
-      .from(bucket_id)
-      .list(path_prefix || undefined, {
-        limit: BATCH,
-        offset: 0,
-        sortBy: { column: "created_at", order: "asc" },
+    const { data: staleFiles, error: queryError } = await supabase
+      .schema("admin")
+      .rpc("find_stale_storage_objects", {
+        p_bucket_id: bucket_id,
+        p_path_prefix: path_prefix,
+        p_cutoff_days: policy.retention_days,
+        p_limit: QUERY_BATCH,
       });
-    if (listError) throw new Error(listError.message);
-    if (!files || files.length === 0) break;
+    if (queryError) throw new Error(queryError.message);
+    if (!staleFiles || staleFiles.length === 0) break;
 
-    const stale = files
-      .filter((f) => f.created_at && new Date(f.created_at) < cutoff)
-      .map((f) => (path_prefix ? `${path_prefix}/${f.name}` : f.name));
+    const names = (staleFiles as Array<{ name: string }>).map((f) => f.name);
 
-    if (stale.length === 0) break;
+    // Storage API batch 단위로 삭제 (한번에 너무 많이 보내면 timeout)
+    for (let i = 0; i < names.length; i += REMOVE_BATCH) {
+      const batch = names.slice(i, i + REMOVE_BATCH);
+      const { error: removeError } = await supabase.storage
+        .from(bucket_id)
+        .remove(batch);
+      if (removeError) throw new Error(removeError.message);
+      deleted += batch.length;
+    }
 
-    const { error: removeError } = await supabase.storage
-      .from(bucket_id)
-      .remove(stale);
-    if (removeError) throw new Error(removeError.message);
-    deleted += stale.length;
+    // 한 번에 QUERY_BATCH 미만 받으면 더 없는 거 — 종료
+    if (staleFiles.length < QUERY_BATCH) break;
   }
 
   return { rows_deleted: deleted };
