@@ -188,12 +188,13 @@ class _EventInfoTab extends ConsumerWidget {
                           color: colorScheme.primary,
                         ),
                       ),
-                      Text(
-                        ' / $maxParticipants 명',
-                        style: theme.textTheme.bodyLarge?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
+                      if (maxParticipants > 0)
+                        Text(
+                          ' / $maxParticipants 명',
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
                         ),
-                      ),
                       const Spacer(),
                       if (pendingCount > 0)
                         Flexible(
@@ -284,9 +285,56 @@ class _EventInfoTab extends ConsumerWidget {
               ),
             ),
           ),
+
+          // 입장 그룹별 현황 section
+          if (entryGroups.isNotEmpty)
+            MinglitSection(
+              title: '입장 그룹별 현황',
+              padding: EdgeInsets.zero,
+              child: Column(
+                children: entryGroups
+                    .map(
+                      (group) => ListTile(
+                        leading: const Icon(Icons.group_outlined),
+                        title: Text(group.label ?? '그룹 ${entryGroups.indexOf(group) + 1}'),
+                        subtitle: _buildGroupSubtitle(group),
+                        trailing: const Icon(
+                          Icons.chevron_right,
+                          size: MinglitIconSize.small,
+                        ),
+                        onTap: () {
+                          unawaited(
+                            EventApplicationListRoute(
+                              partyId: event.partyId,
+                              eventId: event.id,
+                              groupId: group.id,
+                            ).push<void>(context),
+                          );
+                        },
+                      ),
+                    )
+                    .toList(),
+              ),
+            ),
         ],
       ),
     );
+  }
+
+  Widget? _buildGroupSubtitle(PartyEntryGroup group) {
+    final parts = <String>[];
+    if (group.gender != null) {
+      parts.add(group.gender == 'male' ? '남성' : group.gender == 'female' ? '여성' : group.gender!);
+    }
+    if (group.birthYearMin != null && group.birthYearMax != null) {
+      parts.add('${group.birthYearMin}~${group.birthYearMax}년생');
+    } else if (group.birthYearMin != null) {
+      parts.add('${group.birthYearMin}년생 이후');
+    } else if (group.birthYearMax != null) {
+      parts.add('${group.birthYearMax}년생 이전');
+    }
+    if (parts.isEmpty) return null;
+    return Text(parts.join(' · '));
   }
 
   String _getStatusLabel(BuildContext context, String status) {
