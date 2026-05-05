@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:minglit_kit/minglit_kit.dart';
+import 'package:mds/mds.dart';
 
 Future<void> _openSheet(
   WidgetTester tester, {
@@ -72,7 +72,7 @@ void main() {
       expect(find.text('안내'), findsNothing);
     });
 
-    testWidgets('section with leading widget renders it', (tester) async {
+    testWidgets('section with leading Icon renders it', (tester) async {
       await _openSheet(
         tester,
         sections: const [
@@ -86,6 +86,25 @@ void main() {
 
       expect(find.byIcon(Icons.info_outline), findsOneWidget);
       expect(find.text('조건 안내'), findsOneWidget);
+    });
+
+    testWidgets('section with non-Icon leading widget renders without clipping',
+        (tester) async {
+      await _openSheet(
+        tester,
+        sections: const [
+          HelpSection(
+            title: '뱃지 안내',
+            body: '뱃지를 확인하세요.',
+            leading: Chip(label: Text('NEW')),
+          ),
+        ],
+      );
+
+      // Chip renders without overflow — finds the Chip and its label.
+      expect(find.byType(Chip), findsOneWidget);
+      expect(find.text('NEW'), findsOneWidget);
+      expect(find.text('뱃지 안내'), findsOneWidget);
     });
 
     testWidgets(

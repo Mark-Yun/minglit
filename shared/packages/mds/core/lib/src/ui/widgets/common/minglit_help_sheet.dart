@@ -9,7 +9,10 @@ class HelpSection {
     this.leading,
   });
 
-  /// Optional icon or chip widget shown before [title] (18×18 partner-primary).
+  /// Optional widget shown before [title].
+  ///
+  /// Rendered as an unconstrained slot. Wrap in [SizedBox] to fix dimensions.
+  /// When the slot contains an [Icon], `IconTheme` applies partner-primary color.
   final Widget? leading;
 
   /// Section question text (e.g. "파티가 뭔가요?").
@@ -207,16 +210,12 @@ class _HelpSectionItem extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 if (section.leading != null) ...[
-                  SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: IconTheme(
-                      data: IconThemeData(
-                        size: 18,
-                        color: partnerPrimary,
-                      ),
-                      child: section.leading!,
+                  IconTheme(
+                    data: IconThemeData(
+                      size: 18,
+                      color: partnerPrimary,
                     ),
+                    child: section.leading!,
                   ),
                   const SizedBox(width: MinglitSpacing.xsmall),
                 ],
