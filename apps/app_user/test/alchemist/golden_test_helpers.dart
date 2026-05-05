@@ -1,7 +1,7 @@
 import 'package:alchemist/alchemist.dart' show GoldenTestScenario;
 import 'package:app_user/src/features/account_deletion/logic/account_deletion_coordinator.dart';
 import 'package:app_user/src/features/auth/logic/auth_coordinator.dart';
-import 'package:app_user/src/features/event/logic/event_coordinator.dart';
+import 'package:app_user/src/logic/event_coordinator.dart';
 import 'package:app_user/src/features/home/logic/home_coordinator.dart';
 import 'package:app_user/src/features/partner/logic/partner_coordinator.dart';
 import 'package:app_user/src/features/party/logic/party_coordinator.dart';
