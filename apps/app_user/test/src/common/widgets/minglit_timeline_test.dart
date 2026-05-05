@@ -165,6 +165,7 @@ void main() {
       (
         tester,
       ) async {
+        final key = GlobalKey();
         final pulsingNotifier = ValueNotifier<bool>(false);
         addTearDown(pulsingNotifier.dispose);
 
@@ -173,6 +174,7 @@ void main() {
             ValueListenableBuilder<bool>(
               valueListenable: pulsingNotifier,
               builder: (_, pulsing, __) => MinglitTimeline(
+                key: key,
                 children: [
                   MinglitTimelineStep(
                     tone: TimelineTone.progress,
@@ -185,10 +187,8 @@ void main() {
           ),
         );
 
-        // Scope to MinglitTimeline to avoid matching MaterialApp's route
-        // transition Transforms that are present during the initial frame.
         final inTimeline = find.descendant(
-          of: find.byType(MinglitTimeline),
+          of: find.byKey(key),
           matching: find.byType(Transform),
         );
 
