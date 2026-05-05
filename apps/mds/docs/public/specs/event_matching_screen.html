@@ -7,314 +7,456 @@
 <style>
 /* ============================================================
    EventMatchingScreen-specific atoms.
-   Modal bottom-sheet route — scrim above + sheet at viewport
-   bottom with top-rounded corners. Tokens / chrome / mini-table
-   / blueprint come from /specs/_spec.css.
+
+   v2 — 풀 화면 페이지 + 후보 리스트(scrollable rows) + 행 단위
+   좋아요 토글. 결과(매치 reveal)는 EventMatchingResultsScreen으로
+   분리(별도 spec).
+
+   bottom sheet 모델 폐기 — 매칭은 이벤트의 클라이맥스라 풀 화면이
+   적합. 사용자가 이벤트에서 만난 사람을 빠르게 찾아 좋아요만
+   토글하는 "scan & tap" 모델.
    ============================================================ */
 
-/* ---------- Sheet chrome (scrim + sheet container) ---------- */
+/* Full-screen viewport — flex column · CTA가 항상 하단 고정되도록 */
+.viewport.matching-viewport {
+  background: var(--color-background);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+body.dark-mode .viewport.matching-viewport { background: var(--color-dark-background); }
 
-.viewport.matching-stage {
+/* AppBar — back button + title + counter trailing */
+.matching-appbar {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--spacing-screen-edge);
+  background: var(--color-background);
+  gap: var(--spacing-sm);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+body.dark-mode .matching-appbar { background: var(--color-dark-background); }
+
+.matching-appbar__back {
+  width: 40px; height: 40px;
+  display: grid; place-items: center;
+  color: var(--color-text-primary);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.matching-appbar__back svg { width: 22px; height: 22px; }
+.matching-appbar__title {
+  flex: 1;
+  font-size: var(--typography-font-size-app-bar-title);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.matching-appbar__counter {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  padding: 4px 10px;
+  border-radius: var(--radius-chip);
   background: var(--color-surface);
 }
-.matching-stage__scrim {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-}
-.matching-sheet {
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  background: var(--color-background);              /* sheet bg = ColorScheme.surface (white) */
-  border-top-left-radius: var(--radius-card);       /* 16 */
-  border-top-right-radius: var(--radius-card);
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.10);
-  padding-bottom: var(--spacing-medium);
-  display: flex;
-  flex-direction: column;
-  max-height: 88%;
-}
-.matching-sheet__handle {
-  width: 40px;
-  height: 4px;
-  margin: 12px auto 0;
-  border-radius: 2px;
-  background: color-mix(in srgb, var(--color-text-secondary) 38%, transparent);
+.matching-appbar__counter--strong {
+  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
 }
 
-/* ---------- Header (title + vote status pill) ---------- */
-.matching-sheet__header {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: var(--spacing-large) var(--spacing-screen-edge) 0;
-  gap: var(--spacing-small);
-}
-.matching-sheet__title {
-  font-size: var(--typography-font-size-app-bar-title);
-  font-weight: 700;
-  color: var(--color-text-primary);
-  text-align: center;
-  margin: 0;
-}
-.matching-sheet__status {
-  font-size: var(--typography-font-size-caption);
-  font-weight: 600;
-  color: var(--color-secondary);
-  text-align: center;
-}
-.matching-sheet__status--done {
-  color: var(--color-success);
-}
-
-/* ---------- Inner vote-meta row (MatchingVoteContent) ---------- */
-.vote-meta-row {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-small);
-  padding: var(--spacing-small) var(--spacing-medium);
-}
-.vote-meta-row__icon {
-  width: 16px; height: 16px;
+/* Help line — "좋아요 보낸 사람과 매치되면 결과 화면에서 서로의 연락처를 알려드려요" */
+.matching-hint {
+  padding: var(--spacing-small) var(--spacing-screen-edge) var(--spacing-medium);
+  font-size: 12px;
   color: var(--color-text-secondary);
-  flex-shrink: 0;
-}
-.vote-meta-row__icon--done { color: var(--color-primary); }
-.vote-meta-row__icon--err  { color: var(--color-error); }
-.vote-meta-row__text {
-  font-size: var(--typography-font-size-body);
-  font-weight: 600;
-  color: var(--color-text-primary);
-}
-.vote-meta-row__text--err {
-  color: var(--color-error);
-  font-weight: 400;
+  line-height: 1.5;
 }
 
-/* ---------- Match success banner (top of sheet body when matches.isNotEmpty) ---------- */
-.match-banner {
-  background: color-mix(in srgb, var(--color-secondary) 12%, var(--color-background));
-  padding: var(--spacing-medium);
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-small);
+/* Candidate list — vertical scroll · 행 단위 row · flex grow로 CTA 위 영역 모두 차지 */
+.matching-list {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: var(--spacing-large);
 }
-.match-banner__row {
+.matching-row {
   display: flex;
   align-items: center;
-  gap: var(--spacing-small);
-}
-.match-banner__heart {
-  width: 16px; height: 16px;
-  color: var(--color-error);
-  flex-shrink: 0;
-}
-.match-banner__title {
-  font-size: var(--typography-font-size-body);
-  font-weight: 700;
-  color: var(--color-error);
-}
-.match-banner__chip-row {
-  display: flex;
   gap: var(--spacing-medium);
-  overflow-x: hidden;
+  padding: 12px var(--spacing-screen-edge);
+  position: relative;
+  transition: background-color 240ms ease;
 }
-.match-banner__chip {
-  width: 200px;
-  height: 60px;
-  padding: var(--spacing-small);
-  border-radius: var(--radius-small);
-  background: var(--color-background);
-  border: 1px solid color-mix(in srgb, var(--color-error) 50%, transparent);
+.matching-row + .matching-row::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: calc(var(--spacing-screen-edge) + 56px + var(--spacing-medium));
+  right: var(--spacing-screen-edge);
+  height: 0.5px;
+  background: var(--color-divider);
+}
+.matching-row--selected {
+  background-color: color-mix(in srgb, var(--color-primary) 6%, transparent);
+  animation: ms-row-tint-in 280ms ease;
+}
+@keyframes ms-row-tint-in {
+  from { background-color: transparent; }
+  to   { background-color: color-mix(in srgb, var(--color-primary) 6%, transparent); }
+}
+
+.matching-row__avatar {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.matching-row__avatar--initial {
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--color-tertiary) 80%, white),
+    color-mix(in srgb, var(--color-tertiary) 60%, white));
+  color: white;
+  font-size: 22px;
+  font-weight: 700;
+}
+.matching-row__avatar__verified {
+  position: absolute;
+  bottom: -2px; right: -2px;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: var(--color-success);
+  color: white;
+  display: grid; place-items: center;
+  border: 2px solid var(--color-background);
+}
+.matching-row__avatar__verified svg { width: 10px; height: 10px; }
+
+.matching-row__body {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 2px;
+}
+.matching-row__name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.matching-row__meta {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.matching-row__meta--placeholder {
+  color: var(--color-divider);
+  font-style: italic;
+}
+
+/* Check button — trailing round circle · multi-select toggle */
+.matching-row__check {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  display: grid; place-items: center;
+  cursor: pointer;
   flex-shrink: 0;
 }
-.match-banner__chip-name {
-  font-size: var(--typography-font-size-body);
-  font-weight: 700;
-  color: var(--color-text-primary);
-}
-.match-banner__chip-contact {
-  font-size: var(--typography-font-size-caption);
-  color: var(--color-text-secondary);
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-xsmall);
-}
-.match-banner__chip-contact svg {
-  width: 12px; height: 12px;
-}
-
-/* ---------- Candidate grid (2 cols) ---------- */
-.candidate-grid {
-  padding: var(--spacing-medium);
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--spacing-medium);
-}
-.candidate-card {
-  position: relative;
-  aspect-ratio: 0.8;
-  background: var(--color-surface);
-  border-radius: var(--radius-card);
-  overflow: hidden;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
-}
-.candidate-card__bg {
-  position: absolute;
-  inset: 0;
-  background: color-mix(in srgb, var(--color-text-secondary) 18%, var(--color-surface));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.candidate-card__bg svg {
-  width: 48px; height: 48px;
-  color: color-mix(in srgb, var(--color-text-secondary) 60%, transparent);
-}
-.candidate-card__overlay {
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  padding: var(--spacing-small);
-  background: linear-gradient(180deg,
-    transparent 0%,
-    color-mix(in srgb, #000 70%, transparent) 100%);
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-small);
-}
-.candidate-card__name {
-  font-size: var(--typography-font-size-body);
-  font-weight: 700;
-  color: var(--color-background);
-}
-.candidate-card__btn {
-  width: 100%;
-  height: 28px;
-  border: none;
-  border-radius: var(--radius-button);
-  background: var(--color-primary);
-  color: var(--color-background);
-  font-size: var(--typography-font-size-caption);
-  font-weight: 600;
-  cursor: pointer;
-}
-.candidate-card__btn--voted {
-  background: color-mix(in srgb, var(--color-text-secondary) 25%, var(--color-surface));
-  color: var(--color-text-secondary);
-}
-.candidate-card__voted-mask {
-  position: absolute;
-  inset: 0;
-  background: color-mix(in srgb, var(--color-primary) 18%, transparent);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.candidate-card__voted-mask svg {
-  width: 48px; height: 48px;
-  color: var(--color-primary);
-}
-
-/* ---------- Loading / error / empty centered blocks ---------- */
-.matching-sheet__center {
-  height: 320px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--spacing-medium);
-  padding: var(--spacing-medium);
-}
-.matching-spinner {
-  width: 32px; height: 32px;
-  border: 3px solid color-mix(in srgb, var(--color-primary) 25%, transparent);
-  border-top-color: var(--color-primary);
+.matching-row__check__circle {
+  width: 28px; height: 28px;
   border-radius: 50%;
-  animation: matching-spin 1s linear infinite;
+  border: 2px solid var(--color-divider);
+  display: grid; place-items: center;
+  background: transparent;
+  transition: background 120ms ease, border-color 120ms ease;
 }
-@keyframes matching-spin { to { transform: rotate(360deg); } }
-.matching-empty-text {
-  font-size: var(--typography-font-size-body);
+.matching-row__check--selected .matching-row__check__circle {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: white;
+  animation: ms-check-bounce 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes ms-check-bounce {
+  0%   { transform: scale(0.8); }
+  55%  { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+.matching-row__check--selected .matching-row__check__circle svg {
+  width: 16px; height: 16px;
+  stroke: currentColor;
+  stroke-width: 3;
+}
+.matching-row__check__circle svg { width: 0; height: 0; }
+.matching-row__check--selected .matching-row__check__circle svg { width: 16px; height: 16px; }
+
+/* CTA helper text — CTA 위 안내 (3 conditions) */
+.matching-cta-hint {
+  padding: var(--spacing-small) var(--spacing-screen-edge);
+  font-size: 12px;
   color: var(--color-text-secondary);
   text-align: center;
+  line-height: 1.4;
 }
-.matching-error-icon {
-  width: 48px; height: 48px;
-  color: var(--color-error);
-}
-
-/* ---------- Confirm dialog overlay (used in matchingReady action mock) ---------- */
-.confirm-dialog {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 280px;
-  background: var(--color-background);
-  border-radius: var(--radius-card);
-  padding: var(--spacing-large) var(--spacing-medium) var(--spacing-medium);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.18);
-  z-index: 20;
-}
-.confirm-dialog__title {
-  font-size: var(--typography-font-size-app-bar-title);
-  font-weight: 700;
-  color: var(--color-text-primary);
-  margin-bottom: var(--spacing-small);
-}
-.confirm-dialog__msg {
-  font-size: var(--typography-font-size-body);
-  color: var(--color-text-secondary);
-  margin-bottom: var(--spacing-medium);
-}
-.confirm-dialog__actions {
-  display: flex;
-  gap: var(--spacing-small);
-  justify-content: flex-end;
-}
-.confirm-dialog__btn {
-  padding: var(--spacing-small) var(--spacing-medium);
-  border-radius: var(--radius-button);
-  font-size: var(--typography-font-size-body);
+.matching-cta-hint--strong {
+  color: var(--color-primary);
   font-weight: 600;
-  border: none;
-  cursor: pointer;
-}
-.confirm-dialog__btn--cancel {
-  background: transparent;
-  color: var(--color-text-secondary);
-}
-.confirm-dialog__btn--ok {
-  background: var(--color-primary);
-  color: var(--color-background);
 }
 
-/* ---------- Background HomePage hint behind scrim ---------- */
-.bg-home {
-  position: absolute;
-  inset: 0;
-  background: var(--color-surface);
-  padding: var(--spacing-screen-edge);
+/* Empty / loading — list 자리(flex)에 들어가는 centered 콘텐츠 */
+.matching-empty {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-medium);
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-small);
+  padding: 0 var(--spacing-large);
+  text-align: center;
 }
-.bg-home__statusbar { height: 24px; }
-.bg-home__title {
-  font-size: var(--typography-font-size-app-bar-title);
+.matching-empty__icon {
+  width: 64px; height: 64px;
+  display: grid; place-items: center;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-small);
+}
+.matching-empty__icon svg { width: 48px; height: 48px; }
+.matching-empty__title {
+  font-size: 16px; font-weight: 700;
+  color: var(--color-text-primary);
+}
+.matching-empty__sub {
+  font-size: 13px; line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+/* Entry stagger — skeleton → 실제 list로 swap 시 row가 살짝 위로 슬라이드 + fade-in */
+.matching-list--entrance .matching-row {
+  opacity: 0;
+  transform: translateY(8px);
+  animation: ms-row-in 320ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.matching-list--entrance .matching-row:nth-child(1) { animation-delay: 0ms; }
+.matching-list--entrance .matching-row:nth-child(2) { animation-delay: 50ms; }
+.matching-list--entrance .matching-row:nth-child(3) { animation-delay: 100ms; }
+.matching-list--entrance .matching-row:nth-child(4) { animation-delay: 150ms; }
+.matching-list--entrance .matching-row:nth-child(5) { animation-delay: 200ms; }
+.matching-list--entrance .matching-row:nth-child(6) { animation-delay: 250ms; }
+.matching-list--entrance .matching-row:nth-child(n+7) { animation-delay: 300ms; }
+@keyframes ms-row-in {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Submitted state — Toss-style success screen (확인 후 잠깐 노출) */
+.matching-submitted {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-medium);
+  padding: 0 var(--spacing-large);
+  text-align: center;
+}
+.matching-submitted__icon {
+  width: 96px; height: 96px;
+  border-radius: 50%;
+  background: var(--color-success);
+  color: white;
+  display: grid; place-items: center;
+  margin-bottom: var(--spacing-small);
+  animation: ms-icon-in 450ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  transform: scale(0);
+}
+.matching-submitted__icon svg {
+  width: 52px; height: 52px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+/* 체크 마크 stroke를 손으로 그리듯 그어지게 — stroke-dasharray 트릭 */
+.matching-submitted__icon svg polyline {
+  stroke-dasharray: 50;
+  stroke-dashoffset: 50;
+  animation: ms-draw-check 520ms cubic-bezier(0.65, 0, 0.45, 1) 320ms forwards;
+}
+@keyframes ms-icon-in {
+  0%   { transform: scale(0); opacity: 0; }
+  60%  { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes ms-draw-check {
+  to { stroke-dashoffset: 0; }
+}
+.matching-submitted__title {
+  font-size: 22px;
   font-weight: 700;
   color: var(--color-text-primary);
-  opacity: 0.5;
+  opacity: 0;
+  transform: translateY(6px);
+  animation: ms-text-in 360ms ease 880ms forwards;
 }
-.bg-home__feed-card {
-  height: 96px;
+.matching-submitted__sub {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+  max-width: 280px;
+  opacity: 0;
+  transform: translateY(6px);
+  animation: ms-text-in 360ms ease 980ms forwards;
+}
+.matching-submitted__cta {
+  opacity: 0;
+  animation: ms-text-in 360ms ease 1120ms forwards;
+}
+@keyframes ms-text-in {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* MinglitSkeleton — 로딩 중 row 형태 유지 (shimmer pulse) */
+.ms-skeleton {
+  background: linear-gradient(90deg,
+    var(--color-divider) 0%,
+    color-mix(in srgb, var(--color-divider) 50%, white) 50%,
+    var(--color-divider) 100%);
+  background-size: 200% 100%;
+  animation: ms-shimmer 1.4s linear infinite;
+  border-radius: var(--radius-small);
+  display: inline-block;
+}
+@keyframes ms-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.ms-skeleton--circle { border-radius: 50%; }
+.ms-skeleton--avatar { width: 56px; height: 56px; border-radius: 50%; }
+.ms-skeleton--text { height: 13px; border-radius: 6px; }
+.ms-skeleton--text-strong { height: 15px; border-radius: 7px; }
+.ms-skeleton--check { width: 28px; height: 28px; border-radius: 50%; }
+.ms-skeleton--hint { height: 13px; width: 80%; border-radius: 6px; margin: 0 auto; }
+
+/* Ended state — privacy-protected centered message (list 비공개) */
+.matching-ended {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-small);
+  padding: 0 var(--spacing-large);
+  text-align: center;
+}
+.matching-ended__icon {
+  width: 64px; height: 64px;
+  display: grid; place-items: center;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-small);
+}
+.matching-ended__icon svg { width: 48px; height: 48px; }
+.matching-ended__title {
+  font-size: 16px; font-weight: 700;
+  color: var(--color-text-primary);
+}
+.matching-ended__sub {
+  font-size: 13px; line-height: 1.6;
+  color: var(--color-text-secondary);
+  max-width: 280px;
+}
+
+/* Bottom CTA — MinglitBottomCta 컴포넌트 contract:
+   · Scaffold.bottomNavigationBar slot · 12px v-padding (spacing-sm) · top 0.5px outlineVariant
+   · button: 56px height · radius-button · primary fill · 16/700
+   · disabled: divider bg + secondary text · onPressed null과 동일 (탭 차단)
+   · SafeArea 자동 처리 (실제 Flutter)
+*/
+.matching-cta {
+  padding: 12px var(--spacing-screen-edge);
+  background: var(--color-background);
+}
+body.dark-mode .matching-cta { background: var(--color-dark-background); }
+.matching-cta__button {
+  width: 100%;
+  height: 56px;
+  border: none;
+  border-radius: var(--radius-button);
+  background: var(--color-primary);
+  color: var(--color-background);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.matching-cta__button:disabled,
+.matching-cta__button--disabled {
+  background: var(--color-divider);
+  color: var(--color-text-secondary);
+  cursor: default;
+}
+
+/* Confirm dialog */
+.matching-dialog-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: grid;
+  place-items: center;
+  padding: 0 var(--spacing-large);
+}
+.matching-dialog {
+  width: 100%;
+  max-width: 280px;
   background: var(--color-background);
   border-radius: var(--radius-card);
-  opacity: 0.5;
+  padding: 24px 24px 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
 }
+body.dark-mode .matching-dialog { background: var(--color-dark-surface); }
+.matching-dialog__title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 8px;
+}
+.matching-dialog__body {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+  margin-bottom: 16px;
+}
+.matching-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.matching-dialog__btn {
+  padding: 8px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  background: none;
+  border: none;
+}
+.matching-dialog__btn--cancel { color: var(--color-text-secondary); }
+.matching-dialog__btn--confirm { color: var(--color-primary); }
 </style>
 </head>
 <body>
@@ -327,14 +469,14 @@
 <div class="page">
 
 <!-- ============================================================
-     HEADER
+     📍 HEADER
      ============================================================ -->
 <header>
-  <h1>Event Matching</h1>
+  <h1>Event Matching Screen</h1>
 </header>
 
 <!-- ============================================================
-     OVERVIEW
+     🎯 OVERVIEW
      ============================================================ -->
 <section class="doc">
   <h2>Overview</h2>
@@ -342,7 +484,7 @@
     <tbody>
       <tr>
         <th style="width: 140px;">Status</th>
-        <td><strong>🚧 디자인중</strong> <em style="color: var(--color-text-secondary);">— 5 state · 홈 위에 올라오는 바텀시트</em></td>
+        <td><strong>📐 디자인 진행 중</strong> <em style="color: var(--color-text-secondary);">— v2.0 · 7 state · 풀 화면 페이지 + entry stagger 애니메이션 + Toss-style 성공 화면 + MinglitBottomCta "확인" + confirm dialog + 매칭 완료 privacy state · 결과는 별도 spec</em></td>
       </tr>
       <tr>
         <th>App</th>
@@ -350,11 +492,11 @@
       </tr>
       <tr>
         <th>Category</th>
-        <td>event · routed bottom-sheet · vote</td>
+        <td>event · full-screen route · matching</td>
       </tr>
       <tr>
         <th>Route / Surface</th>
-        <td><code>EventMatchingRoute</code> · widget: <code>EventMatchingScreen</code> (홈 위에 올라오는 바텀시트)</td>
+        <td><code>EventMatchingRoute</code> · widget: <code>EventMatchingScreen</code> (Scaffold · 풀 화면)</td>
       </tr>
       <tr>
         <th>Path</th>
@@ -363,41 +505,43 @@
       <tr>
         <th>Hierarchy</th>
         <td>
-          <strong>Parent</strong>: <a href="/specs/home_page.html"><code>HomePage</code></a> — 시트가 올라와도 홈 화면은 어두워진 상태로 그대로 보임. 진입은 <a href="/specs/event_now_bar.html"><code>EventNowBar</code></a>가 "투표 가능" 또는 "매칭 중" 상태일 때 탭.<br>
-          <strong>Children</strong>: <em>—</em> <em style="color: var(--color-text-secondary);">(투표 확정은 시트 위에 뜨는 confirm 다이얼로그)</em>
+          <strong>Parent</strong>: <a href="/specs/my_tickets_page.html"><code>MyTicketsPage</code></a> 또는 <a href="/specs/home_page.html"><code>HomePage</code></a> — <a href="/specs/event_ongoing_banner.html">OngoingBanner</a>(matchingReady phase) 또는 <a href="/specs/event_now_bar.html">EventNowBar</a>(matching 상태)에서 push.<br>
+          <strong>Children</strong>: <em>—</em> <em style="color: var(--color-text-secondary);">(매치 결과는 별도 화면 — <a href="/specs/event_matching_results_screen.html"><code>EventMatchingResultsScreen</code></a>이 phase 6 results에서 진입)</em>
         </td>
       </tr>
       <tr>
         <th>Purpose</th>
         <td>
-          매칭 단계에서 사용자가 후보 목록을 보고 "선택" 버튼으로 투표하는 화면. 잔여 투표 수 / 투표 완료 후보 / 양방향 매치 성공 알림을 한 시트에서 모두 다룬다.
-          후보는 2열 grid로 노출, 카드 오버레이의 "선택" 버튼이 1차 액션. 양방향 매치가 성립한 상대는 상단 banner에 즉시 reveal — 결과가 매칭이 끝나기 전에 점진적으로 누적된다.
+          이벤트에서 만난 다른 참가자 중 <strong>"연락처를 교환하고 싶은 사람"에게 좋아요</strong>를 보내는 화면. 풀 화면 페이지에서 후보 리스트(다른 입장 그룹의 참가자만 노출 — 예: 남↔여)를 스크롤하며 기억나는 사람을 찾고, 행 우측 체크 원 탭으로 선택 — 로컬 상태로만 토글, <strong>최대 3명까지 선택 가능</strong>. 바텀 CTA "확인" 탭 → confirm dialog(선택한 사람 list 리뷰) → 확인 시 한꺼번에 backend로 commit.
+          매칭 결과(양방향 매치 reveal)는 매칭이 모두 종료된 후 별도 화면에서 한꺼번에 발표 — 진행 중에는 결과 정보 노출 X (산만함 / 비교의식 방지).
         </td>
       </tr>
       <tr>
         <th>User journey</th>
         <td>
-          <strong>Entry points</strong>: ① <a href="/specs/event_now_bar.html">EventNowBar</a>가 "투표 가능" 상태일 때 탭 (가장 흔한 진입). ② 같은 바가 "매칭 중" 상태일 때 탭 (투표 후 진입 — 보기 전용). ③ "매칭이 시작됐어요" 푸시 알림 진입.<br>
-          <strong>Exit points</strong>: 후보 카드 "선택" → 확정 다이얼로그 → 확정 시 "투표가 완료되었습니다" 안내가 잠깐 노출되고 grid에 투표 완료 마스크 표시 (시트 유지). 모든 투표 소진 또는 매칭이 끝나 결과가 발표되면 시트 자동 닫힘 + EventNowBar가 "결과 발표" 상태로 전환.
+          <strong>Entry points</strong>: ① <a href="/specs/event_ongoing_banner.html">OngoingBanner</a> matchingReady phase에서 "매칭 시작하기" 탭 → push. ② <a href="/specs/event_now_bar.html">EventNowBar</a>가 matching 상태일 때 탭(재진입 — 좋아요 추가/취소).<br>
+          <strong>Exit points</strong>: AppBar back 또는 시스템 back → 진입 surface(MyTicketsPage / HomePage) 복귀. OngoingBanner는 좋아요 ≥1개면 phase 5 matching("결과 대기"), 0개면 phase 4 matchingReady 유지(pulse 계속).
         </td>
       </tr>
       <tr>
         <th>Background</th>
         <td>
-          매칭은 EventNow 5단계의 클라이맥스 — 사용자 입력이 강하게 요구되는 구간 (바가 "투표 가능" 상태에서 강조 표시되는 이유). 기존 인라인 매칭 콘텐츠는 화면을 가득 채우지만, EventNowBar 진입 흐름과 일관되게 바텀시트로 통일하면 "탭하고 끝, 닫으면 홈"의 UX가 그대로 유지된다.
-          시트 안에서 다중 투표 / 양방향 매치 공개 / 파트너 연락처 노출이 모두 일어나기 때문에 시트 높이가 화면의 88%까지 차오를 수 있다.
+          v1.0(2열 grid + "선택" 버튼 + 매치 banner)은 product 쇼핑 톤 + 진행 중 결과 노출로 산만 + "투표" 용어가 emotional moment에 안 어울림.
+          v2 첫 시안(단일 카드 carousel)은 "찾기" mental model에 안 맞음 — 사용자가 이미 만난 사람을 빠르게 스캔해 좋아요만 토글하면 되는 상황. 한 명씩 풀카드는 과대 + 느림.
+          v2 두 번째 시안(88% bottom sheet + 리스트)도 시트 폼이라 가벼움 — 매칭은 이벤트의 클라이맥스라 dismiss 가능한 sheet보다 풀 화면 페이지가 무게감 적합.
+          <strong>최종 v2: 풀 화면 페이지 + 행 단위 좋아요 토글</strong>. AppBar(back + 이벤트 이름 + 좋아요 카운터) + hint line + scroll list. 사용자가 이벤트에서 만난 얼굴을 떠올리며 빠르게 스캔 → 우측 하트 버튼 탭 1번이면 좋아요 끝. 카드 minimal(avatar + 이름 + meta) — 사진 / 직업 / 나이 같은 풍부한 정보가 없어도 동작 가능.
         </td>
       </tr>
       <tr>
         <th>Frequency</th>
-        <td>이벤트당 1단계 — 사용자는 보통 진입 후 여러 번 투표하고 닫는다. 푸시 알림 / EventNowBar 재탭으로 재진입 가능 (투표 추가 / 매치 누적 확인).</td>
+        <td>이벤트당 1단계. 한 번 들어가서 끝까지 스캔하고 닫음 — 재진입은 좋아요 추가 / 취소 시 (드물다).</td>
       </tr>
     </tbody>
   </table>
 </section>
 
 <!-- ============================================================
-     HISTORY
+     🕐 HISTORY
      ============================================================ -->
 <section class="doc">
   <h2>History</h2>
@@ -413,13 +557,21 @@
     </thead>
     <tbody>
       <tr>
-        <td>2026-05-01</td>
-        <td>1.0</td>
+        <td>2026-05-03</td>
+        <td>2.0</td>
         <td>mark-yun</td>
         <td>
-          v1.4 template으로 신규 작성 — EventNowBar가 "투표 가능" / "매칭 중" 상태일 때 진입하는 바텀시트.
-          mini-table per state 5종 (baseline = matchingReady · 첫 reveal). 매치 banner, 잔여 투표 행, 후보 grid, voted 마스크, confirm dialog, error 폴백을 모두 mockup에 반영.
+          <strong>전면 재정의</strong>. (1) bottom sheet → <strong>풀 화면 페이지</strong>, (2) 2열 grid → vertical 리스트(행 단위 row), (3) "선택" 버튼 per row + 확정 dialog → 행 우측 <strong>체크 원</strong>(28px round) 로컬 토글 + 바텀 CTA "확인" + confirm dialog batch commit, (4) <strong>최대 3명 선택 제약</strong>, (5) <strong>입장 그룹 필터링</strong> — 같은 그룹(예: 남↔여) 외 참가자만 list에 노출 (백엔드 처리), (6) AppBar trailing chip 제거 — 카운트 강조는 CTA 위 안내 텍스트로 (3 conditions: 0명 / 1-2명 더 / 3명 도달), (7) 매치 banner 제거 → 결과는 별도 <a href="/specs/event_matching_results_screen.html">EventMatchingResultsScreen</a>으로 분리, (8) Dialog body — 선택한 이름 list + "서로 좋아요시 연락처 교환 가능" + "수정 가능 안내" 3 단락 + <a href="https://github.com/Mark-Yun/minglit/blob/dev/shared/packages/mds/core/lib/src/ui/widgets/common/minglit_alert.dart"><code>MinglitAlert.showConfirm</code></a> 표준 컴포넌트 사용, (9) <strong>색 체계</strong>: avatar 민트(<code>color-tertiary</code> #48c9b0) — identity 자리만, 체크 + 선택 row tint + CTA + hint strong 모두 보라(<code>color-primary</code> #9900ff)로 통일 — selected / primary action 시그널 일관, (10) "투표" 용어 → "좋아요" / "선택"으로 정리, (11) Loading copy "참가자 명단을 불러오고 있습니다". State 5 → 7 (Default · Selecting · Confirm Dialog · <strong>Submitted (Toss-style 성공 화면)</strong> · <strong>Ended (list 비공개)</strong> · Empty · Loading skeleton). + 핵심 CUJ 애니메이션:
+(a) <strong>entry stagger</strong> — skeleton → 실제 list swap 시 row staggered fade-up (50ms 간격 · cubic-bezier 0.22, 1, 0.36, 1).
+(b) <strong>row 선택 시</strong> bg tint fade-in (240ms ease) + 체크 원 scale-bounce (320ms cubic-bezier 0.34, 1.56, 0.64, 1).
+(c) <strong>Submitted culmination</strong> — success 초록 circle scale-bounce(450ms) + check stroke 손글씨 효과 draw(520ms · stroke-dasharray 트릭 · 320ms delay) + 텍스트/CTA stagger fade-up(880/980/1120ms delay) · 약 1.5초 sequence.
         </td>
+      </tr>
+      <tr>
+        <td>2026-04-28</td>
+        <td>1.0</td>
+        <td>mark-yun</td>
+        <td>v1.4 template으로 작성. 5 state · 2열 grid · 매치 banner · "선택" 버튼 + 확정 dialog · 88% bottom sheet 구조.</td>
       </tr>
     </tbody>
   </table>
@@ -434,86 +586,72 @@
 </nav>
 
 <!-- ============================================================
-     LAYOUT
+     🧱 LAYOUT
      ============================================================ -->
 <div class="perspective" id="layout">
   <div class="perspective__header">
     <span class="glyph">🧱</span>
     <h2>Layout</h2>
-    <span class="lede">화면 구조 — 어두워진 홈 위에 올라오는 바텀시트 · 상단 모서리만 radius-card · drag handle / 헤더 / (옵션) 매치 banner / 잔여 투표 행 / 후보 grid 4 region. AppBar 없음.</span>
+    <span class="lede">풀 화면 Scaffold — AppBar(back + title + counter trailing) / hint line / 후보 list / 바텀 CTA "확인 (N명)" 4 region. dirty 시 CTA enabled · 탭 → confirm dialog.</span>
   </div>
 
   <section class="doc">
     <h2>Blueprint &amp; tree</h2>
     <p class="intro">
-      아래에서 위로 슬라이드되며 올라오는 바텀시트. <strong>AppBar 없음</strong> — 상단 drag handle(40×4)이 닫기 단서. 후보 grid가 길어지면 시트 내부에서 스크롤. 시트 본체는 가로 <code>screenEdge</code> 패딩 + 세로 <code>large</code> 패딩, 내부는 위에서 아래로 stacked column이고 grid 영역은 화면 높이의 약 60% 만큼 확보.
+      Scaffold + AppBar(left back · title 이벤트 이름 · trailing 좋아요 카운터 chip) + body(hint line + scroll list) + 바텀 CTA "확인 (N명)". row는 avatar 56 + 이름 + meta + 우측 하트 버튼 — minimal하지만 한눈에 스캔 가능한 row(약 80px). 좋아요한 row는 옅은 primary tint bg + 채워진 하트로 시각 구분. hint 1줄("좋아요 보낸 사람과 매치되면 결과 화면에서 서로의 연락처를 알려드려요") — 결과 미리보기 안 하는 이유 명시.
+      <strong>좋아요는 로컬 상태로만 관리</strong> — 바텀 CTA "확인" 탭 → confirm dialog → "보내기" 시 backend로 batch commit.
     </p>
+
     <div class="layout-grid">
       <div class="blueprint" style="width: 343px; height: 600px;">
         <div class="blueprint__region blueprint__region--full"></div>
-        <div class="blueprint__region" style="top:0;left:0;right:0;height:120px;background:rgba(0,0,0,0.18);border-color:rgba(0,0,0,0.25);">
-          <span class="blueprint__region-label" style="font-size:10px;">Scrim — rgba(0,0,0,0.5) · tap dismisses</span>
+        <div class="blueprint__region blueprint__region--shaded" style="top:0;left:0;right:0;height:56px;">
+          <span class="blueprint__region-label" style="font-size:9px;">① AppBar — back · 이벤트 이름 · "좋아요 N명" chip</span>
         </div>
-        <div class="blueprint__region blueprint__region--shaded" style="top:120px;left:0;right:0;bottom:0;border-top-left-radius:16px;border-top-right-radius:16px;">
-          <span class="blueprint__region-label" style="font-size:10px;">Sheet — bg color-background · top corners radius-card (16) · safeArea bottom · max-height 88%</span>
+        <div class="blueprint__region" style="top:56px;left:16px;right:16px;height:36px;background:rgba(var(--spec-blueprint-rgb), 0.04);border-color:rgba(var(--spec-blueprint-rgb), 0.3);">
+          <span class="blueprint__region-label" style="font-size:9px;">② Hint — "결과는 매칭 종료 후에 알려드려요"</span>
         </div>
-        <div class="blueprint__region" style="top:128px;left:50%;width:40px;height:4px;margin-left:-20px;border-radius:2px;background:rgba(var(--spec-blueprint-rgb), 0.5);border-color:transparent;">
-          <span class="blueprint__region-label" style="font-size:9px;left:50px;">㉠ drag handle (40×4)</span>
-        </div>
-        <div class="blueprint__region" style="top:152px;left:24px;right:24px;height:48px;background:rgba(var(--spec-blueprint-rgb), 0.05);border-color:rgba(var(--spec-blueprint-rgb), 0.4);">
-          <span class="blueprint__region-label" style="font-size:9px;">㉡ 헤더 — title (titleMedium · bold · center) + 잔여 투표 caption</span>
-        </div>
-        <div class="blueprint__region" style="top:212px;left:0;right:0;height:88px;background:rgba(var(--spec-blueprint-rgb), 0.06);border-color:rgba(var(--spec-blueprint-rgb), 0.4);">
-          <span class="blueprint__region-label" style="font-size:9px;">㉢ 매치 banner (matches.isNotEmpty 일 때만) — secondaryContainer @ 0.16</span>
-        </div>
-        <div class="blueprint__region" style="top:308px;left:16px;right:16px;height:32px;background:rgba(var(--spec-blueprint-rgb), 0.05);border-color:rgba(var(--spec-blueprint-rgb), 0.4);">
-          <span class="blueprint__region-label" style="font-size:9px;">㉣ 잔여 투표 행 (icon + "남은 투표 N/M")</span>
-        </div>
-        <div class="blueprint__region" style="top:344px;left:16px;right:16px;bottom:24px;background:rgba(var(--spec-blueprint-rgb), 0.06);border-color:rgba(var(--spec-blueprint-rgb), 0.4);">
-          <span class="blueprint__region-label" style="font-size:9px;">㉤ 후보 grid — 2 cols · aspectRatio 0.8 · spacing-medium gaps</span>
+        <div class="blueprint__region blueprint__region--shaded" style="top:104px;left:0;right:0;bottom:0;">
+          <span class="blueprint__region-label" style="font-size:9px;">③ Candidate list — vertical scroll · 행 단위 row (~80px)</span>
         </div>
       </div>
 
-      <div class="layout-tree"><b>Modal Bottom Sheet</b>
-└─ scrim 0.5 black
-└─ top corners: <i>radius-card 16</i>
-└─ box-shadow: <i>0 -4px 20px rgba(0,0,0,0.10)</i>
-└─ <i>(콘텐츠 길이에 따라 시트 높이 가변, 최대 88%)</i>
-
-<b>EventMatchingScreen</b>
-└─ Safe area + 하단 inset
-   └─ 위에서 아래로 stacked column
-      ├─ <em>Drag handle</em>                             ← ㉠
-      │  · 40×4 · radius 2 · text-secondary 흐린 색
-      │
-      ├─ Gap: <i>spacing-large (24)</i>
-      ├─ <em>Title</em> 이벤트 이름                        ← ㉡
-      │  · titleMedium · w700 · center
-      ├─ Gap: <i>spacing-small (8)</i>
-      ├─ <em>Vote status caption</em>                     ← ㉡
-      │  · "남은 투표: N / M" 또는 "투표 완료!"
-      │  · bodySmall · secondary(잔여>0) | success(=0) · w600
-      ├─ Gap: <i>spacing-medium (16)</i>
-      │
-      └─ 화면 높이 약 60% 영역
-         └─ Column
-            ├─ <em>Match banner</em>                      ← ㉢
-            │  · 매치된 상대가 1명 이상일 때만 노출
-            │  · 살짝 강조된 배경 (secondaryContainer 톤)
-            │  · "매칭 성공! (N명)" + 가로 스와이프 리스트
-            │
-            ├─ <em>Vote-meta row</em>                     ← ㉣
-            │  · 로딩: 16px 스피너
-            │  · 에러: error_outline + "투표 정보를 불러올 수 없습니다."
-            │  · data: how_to_vote / check_circle + "남은 투표 N/M" 또는 "투표 완료!"
-            │
-            └─ <em>Candidates 2열 grid</em>               ← ㉤
-               · 2 cols · childAspect 0.8
-               · 카드 간 spacing: <i>spacing-medium (16)</i>
-               · grid padding: <i>spacing-medium (16)</i>
-               · empty: "투표 가능한 상대가 없습니다."
-               · loading: 스피너
-               · error: 에러 블록</div>
+      <div class="layout-tree"><b>Scaffold</b>
+└─ <b>AppBar</b>                                         ← ①
+│  ├─ leading: <i>Icons.arrow_back</i> (← system back)
+│  ├─ title: 이벤트 이름 (<i>App bar title token</i> · 1줄 ellipsis)
+│  └─ trailing: <em>Counter chip</em>
+│     · "좋아요 N명" · 13/700
+│     · 0개: surface bg + secondary text
+│     · ≥1개: primary 10% tint bg + primary text
+│
+└─ body
+   ├─ <em>Hint line</em>                                ← ②
+   │  · "좋아요 보낸 사람과 매치되면 결과 화면에서 서로의 연락처를 알려드려요"
+   │  · 12/secondary · h-padding screen-edge · v-padding small/medium
+   │
+   ├─ <em>Candidate list (flex: 1)</em>                ← ③
+   │  └─ <code>ListView</code> · vertical scroll
+   │     └─ <b>MatchingRow</b> × N
+   │        ├─ Avatar 56×56 (사진 또는 이니셜+gradient)
+   │        │  └─ verified badge 16px 우하단 (본인인증 완료 시그널 · 모든 후보 universal 노출)
+   │        ├─ Body (flex)
+   │        │  ├─ name (15/600 · 1줄)
+   │        │  └─ meta (12/secondary · 직업·나이 · placeholder if 없음)
+   │        └─ Like button trailing
+   │           · 44×44 round · heart icon 24
+   │           · default: outline gray · liked: filled primary
+   │           · 탭 시 <strong>로컬</strong> 토글 (backend 호출 X)
+   │        <i>· 좋아요한 row: primary 6% tint bg</i>
+   │        <i>· row 사이 hairline 0.5px (avatar+gap 다음 indent: 72px)</i>
+   │
+   └─ <a href="/components#MinglitBottomCta"><em>MinglitBottomCta</em></a>(single)        ← ④
+      · Scaffold.bottomNavigationBar slot
+      · 풀폭 · 56px · radius-button · primary fill
+      · 라벨: "확인"
+      · onPressed null (=0명 선택 시): disabled · divider bg + secondary text
+      · 탭 → confirm dialog 노출 (state 2)
+      · 상단 0.5px outlineVariant · safeArea / 키보드 자동 처리</div>
     </div>
 
     <table class="ref" style="margin-top: 16px;">
@@ -526,508 +664,762 @@
         </tr>
       </thead>
       <tbody>
-        <tr><td>—</td><td>Sheet 외부</td><td>bottom-anchored · 풀폭 · max-height 88%</td><td>top corners <code>radius-card (16)</code> · scrim <code>rgba(0,0,0,0.5)</code></td></tr>
-        <tr><td>—</td><td>Sheet body padding</td><td>H: <code>spacing-screen-edge (16)</code> · V: <code>spacing-large (24)</code></td><td>+ <code>MediaQuery.viewPadding.bottom</code> (홈 인디케이터 회피)</td></tr>
-        <tr><td>㉠</td><td>Drag handle</td><td>top-center</td><td>40×4 · radius 2 · 아래 gap: <code>spacing-large (24)</code></td></tr>
-        <tr><td>㉡</td><td>헤더 (title + caption)</td><td>centered</td><td>title↔caption: <code>spacing-small (8)</code> · caption↔body: <code>spacing-medium (16)</code></td></tr>
-        <tr><td>㉢</td><td>매치 banner (조건부)</td><td>edge-to-edge inside content</td><td>padding: <code>spacing-medium (16)</code> · ListView: 80px 높이 · 카드 200×80 · 카드 gap <code>spacing-medium (16)</code></td></tr>
-        <tr><td>㉣</td><td>잔여 투표 행</td><td>row · left-aligned</td><td>padding: H <code>spacing-medium (16)</code> / V <code>spacing-small (8)</code> · icon↔text: <code>spacing-small (8)</code></td></tr>
-        <tr><td>㉤</td><td>후보 grid</td><td>2 cols · aspect 0.8</td><td>main/cross spacing: <code>spacing-medium (16)</code> · padding: <code>spacing-medium (16)</code></td></tr>
+        <tr><td>—</td><td>Scaffold 외부</td><td>풀 화면 · color-background bg</td><td>safeArea bottom 자동 처리</td></tr>
+        <tr><td>①</td><td>AppBar</td><td>back 좌 · title 좌 · counter chip 우</td><td>height 56 · h-padding <code>spacing-screen-edge</code> · sticky · border 없음 (scaffold bg와 동일)</td></tr>
+        <tr><td>②</td><td>Hint line</td><td>좌 정렬</td><td>v-padding <code>spacing-small</code> top / <code>spacing-medium</code> bottom · h-padding <code>spacing-screen-edge</code> · 12/secondary · 1줄</td></tr>
+        <tr><td>③</td><td>Candidate list</td><td>vertical scroll · flex: 1</td><td>row v-padding 12 / h-padding <code>spacing-screen-edge</code> · row 사이 hairline 0.5px (indent: 72px = avatar 56 + gap 16)</td></tr>
+        <tr><td>④</td><td>Bottom CTA (<a href="/components#MinglitBottomCta"><code>MinglitBottomCta</code></a> single 변형)</td><td>풀폭 · 56px button · Scaffold.bottomNavigationBar slot</td><td>v-padding 12px(<code>spacing-sm</code>) · h-padding <code>spacing-screen-edge</code> · 상단 0.5px outlineVariant border · radius-button(12px) · 0명 선택 시 disabled (<code>onPressed: null</code> + divider bg + secondary text) · SafeArea 자동 처리 (Flutter)</td></tr>
       </tbody>
     </table>
   </section>
 
   <section class="doc">
-    <h2>CandidateCard anatomy</h2>
-    <p class="intro">후보 1명당 1 카드. 배경 placeholder + 투표 완료 마스크(조건부) + 하단 그라디언트 + 이름 + "선택" 버튼이 위에 겹쳐 쌓이는 구조. 카드 자체는 라운드 모서리로 잘림.</p>
+    <h2>MatchingRow sub-anatomy</h2>
+    <p class="intro">
+      행 단위 row는 minimal — avatar + 이름 + meta + 하트. 좋아요 toggle 시 row bg + 하트 아이콘 변화로 시각 구분. 사진 / 직업 / 나이 같은 풍부한 정보는 별도 프로필 필드 확장 issue로 분리.
+    </p>
     <table class="ref">
-      <thead><tr><th style="width: 200px;">Element</th><th>Behavior</th></tr></thead>
+      <thead>
+        <tr><th style="width: 200px;">Region</th><th>Alignment</th><th>Notes</th></tr>
+      </thead>
       <tbody>
-        <tr><td>Background placeholder</td><td>흐린 surface tint 위에 person 아이콘 (48 · onSurfaceVariant) — 프로필 이미지 자리.</td></tr>
-        <tr><td>Voted overlay</td><td>이미 투표한 상대일 때 카드 전체에 primary tint 마스크 + check_circle 아이콘 (48 · primary).</td></tr>
-        <tr><td>Info overlay (bottom)</td><td>아래쪽으로 짙어지는 그라디언트 + 이름 (bodyMedium · w700 · color-background).</td></tr>
-        <tr><td>"선택" 버튼</td><td>카드 폭 풀폭 버튼. 라벨: 미투표=<strong>선택</strong>, 투표완료=<strong>투표 완료</strong>.</td></tr>
-        <tr><td>비활성 조건</td><td>잔여 투표 정보가 로딩/에러이거나, 이미 투표한 상대이거나, 잔여 투표가 0일 때 버튼이 비활성으로 회색 처리.</td></tr>
-        <tr><td>Tap → 확정 다이얼로그</td><td>"투표 확인 — &lt;이름&gt;님에게 투표하시겠습니까? · 투표하기" 다이얼로그가 시트 위에 뜸. 확정 시 투표 처리.</td></tr>
+        <tr><td>Avatar (leading)</td><td>좌측 · 56×56 원형</td><td>사진 있으면 NetworkImage · 없으면 이니셜 + linear-gradient(primary 60% → 30%) · 22/700 흰 글자 · <strong>verified badge 우하단 16px circle</strong> (success bg + check icon · 2px background-tone 테두리로 cutout 효과) — <strong>본인인증 완료 시그널 · universal로 노출</strong>(매칭 candidate는 모두 본인인증을 통과한 상태이므로 정보 가치보다 시각적 신뢰 시그널로 활용)</td></tr>
+        <tr><td>Body (flex)</td><td>중간 · vertical column · gap 2</td><td>name 15/600 · 1줄 ellipsis. meta 12/secondary · 1줄 ellipsis · 데이터 없으면 placeholder italic 톤</td></tr>
+        <tr><td>Like button (trailing)</td><td>우측 · 44×44 round</td><td>icon-only ♡(24) · default outline gray · liked filled primary · 탭 즉시 toggle · 확정 dialog 없음</td></tr>
+        <tr><td>Row bg</td><td>—</td><td>기본: transparent · 좋아요한 row: <code>primary 6% tint</code> · row 사이 hairline 0.5px (avatar+gap 다음 indent 72px)</td></tr>
       </tbody>
     </table>
   </section>
 </div>
 
 <!-- ============================================================
-     STATES — mini-table per state
+     🎨 STATES
      ============================================================ -->
 <div class="perspective" id="states">
   <div class="perspective__header">
     <span class="glyph">🎨</span>
     <h2>States</h2>
-    <span class="lede">시각 변형 5종. baseline = matchingReady (투표 첫 진입). voting in progress / voting complete / loading / error로 분기. 모든 투표를 마치면 시스템 결과 산출 대기 상태(passive).</span>
+    <span class="lede">7가지 변형 — Default(0명 · disabled CTA) · Selecting(1~max · enabled · 재진입 포함) · Confirm Dialog · Submitted(전송 완료 · Toss-style success) · Ended(매칭 종료 · list 비공개) · Empty · Loading(skeleton). baseline = Default. 선택 상태는 행 단위 variant.</span>
   </div>
 
   <section class="doc">
     <p class="intro">
-      후보가 도착했는지, 투표를 한 적이 있는지, 매치가 성립했는지, 잔여 투표가 남았는지에 따라 분기. baseline은 후보 도착 + 투표 0건 + 매치 0건. 투표 진행 중 = 투표 1+건. 투표 완료 = 잔여 투표 0건. 로딩/에러는 후보 또는 투표 정보를 받지 못한 상태.
+      <strong>State 식별 기준</strong>: ① 데이터 로드(loading) → ② 후보 0명(empty) / 후보 ≥1명(default). 좋아요 / 미좋아요는 각 row 단위 variant — 같은 list 안에 mixed.
+      Error는 표준 <code>MinglitAsyncValueWidget</code>이 처리(snackbar / retry).
     </p>
 
-    <!-- State 1: matchingReady (baseline) -->
+    <!-- State 1: Default · 후보 리스트 (0명 선택, 진입 직후) -->
     <table class="ref state-mini is-baseline-tint">
       <thead>
-        <tr><th colspan="3"><strong>matchingReady · 첫 reveal</strong> 🎯 <small>baseline · 후보 grid 도착, 투표 0건</small></th></tr>
+        <tr><th colspan="3"><strong>Default · 후보 리스트</strong> 🎯 <small>baseline · 진입 직후 0명 선택 · CTA disabled</small></th></tr>
       </thead>
       <tbody>
         <tr>
           <td class="state-mini__mock" rowspan="6">
-            <div class="viewport matching-stage">
-              <div class="bg-home">
-                <div class="bg-home__statusbar"></div>
-                <div class="bg-home__title">홈</div>
-                <div class="bg-home__feed-card"></div>
-                <div class="bg-home__feed-card"></div>
+            <div class="viewport matching-viewport">
+              <div class="matching-appbar">
+                <button class="matching-appbar__back">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
+                <div class="matching-appbar__title">루프탑 라운지 · 강남</div>
               </div>
-              <div class="matching-stage__scrim"></div>
-              <div class="matching-sheet">
-                <div class="matching-sheet__handle"></div>
-                <div class="matching-sheet__header">
-                  <h3 class="matching-sheet__title">강남 루프탑 소셜 파티</h3>
-                  <p class="matching-sheet__status">남은 투표: 3 / 3</p>
+              <div class="matching-hint">좋아요 보낸 사람과 매치되면 결과 화면에서 서로의 연락처를 알려드려요</div>
+              <div class="matching-list matching-list--entrance">
+
+                <div class="matching-row">
+                  <div class="matching-row__avatar matching-row__avatar--initial">강</div>
+                  <div class="matching-row__body">
+                    <div class="matching-row__name">강예린</div>
+                    <div class="matching-row__meta">디자이너 · 28세</div>
+                  </div>
+                  <button class="matching-row__check">
+                    <span class="matching-row__check__circle">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>
+                    </span>
+                  </button>
                 </div>
-                <div class="vote-meta-row">
-                  <svg class="vote-meta-row__icon" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" style="display:none"/><path d="M3 11h2v2H3zm16-2h-4V3H9v6H5l7 7 7-7zM5 18h14v2H5z"/></svg>
-                  <span class="vote-meta-row__text">남은 투표: 3 / 3</span>
+
+                <div class="matching-row">
+                  <div class="matching-row__avatar matching-row__avatar--initial">김</div>
+                  <div class="matching-row__body">
+                    <div class="matching-row__name">김민수</div>
+                    <div class="matching-row__meta">개발자 · 31세</div>
+                  </div>
+                  <button class="matching-row__check">
+                    <span class="matching-row__check__circle">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>
+                    </span>
+                  </button>
                 </div>
-                <div class="candidate-grid">
-                  <div class="candidate-card">
-                    <div class="candidate-card__bg">
-                      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-                    </div>
-                    <div class="candidate-card__overlay">
-                      <span class="candidate-card__name">민지</span>
-                      <button class="candidate-card__btn">선택</button>
-                    </div>
+
+                <div class="matching-row">
+                  <div class="matching-row__avatar matching-row__avatar--initial">박</div>
+                  <div class="matching-row__body">
+                    <div class="matching-row__name">박서준</div>
+                    <div class="matching-row__meta">비공개 · 29세</div>
                   </div>
-                  <div class="candidate-card">
-                    <div class="candidate-card__bg">
-                      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-                    </div>
-                    <div class="candidate-card__overlay">
-                      <span class="candidate-card__name">서준</span>
-                      <button class="candidate-card__btn">선택</button>
-                    </div>
-                  </div>
-                  <div class="candidate-card">
-                    <div class="candidate-card__bg">
-                      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-                    </div>
-                    <div class="candidate-card__overlay">
-                      <span class="candidate-card__name">하늘</span>
-                      <button class="candidate-card__btn">선택</button>
-                    </div>
-                  </div>
-                  <div class="candidate-card">
-                    <div class="candidate-card__bg">
-                      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-                    </div>
-                    <div class="candidate-card__overlay">
-                      <span class="candidate-card__name">예린</span>
-                      <button class="candidate-card__btn">선택</button>
-                    </div>
-                  </div>
+                  <button class="matching-row__check">
+                    <span class="matching-row__check__circle">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>
+                    </span>
+                  </button>
                 </div>
+
+                <div class="matching-row">
+                  <div class="matching-row__avatar matching-row__avatar--initial">
+                    이
+                    <span class="matching-row__avatar__verified">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                    </span>
+                  </div>
+                  <div class="matching-row__body">
+                    <div class="matching-row__name">이지은</div>
+                    <div class="matching-row__meta">마케터 · 27세</div>
+                  </div>
+                  <button class="matching-row__check">
+                    <span class="matching-row__check__circle">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>
+                    </span>
+                  </button>
+                </div>
+
+                <div class="matching-row">
+                  <div class="matching-row__avatar matching-row__avatar--initial">정</div>
+                  <div class="matching-row__body">
+                    <div class="matching-row__name">정현우</div>
+                    <div class="matching-row__meta">의사 · 33세</div>
+                  </div>
+                  <button class="matching-row__check">
+                    <span class="matching-row__check__circle">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>
+                    </span>
+                  </button>
+                </div>
+
+                <div class="matching-row">
+                  <div class="matching-row__avatar matching-row__avatar--initial">최</div>
+                  <div class="matching-row__body">
+                    <div class="matching-row__name">최서연</div>
+                    <div class="matching-row__meta">비공개 · 26세</div>
+                  </div>
+                  <button class="matching-row__check">
+                    <span class="matching-row__check__circle">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>
+                    </span>
+                  </button>
+                </div>
+
+                <div class="matching-row">
+                  <div class="matching-row__avatar matching-row__avatar--initial">홍</div>
+                  <div class="matching-row__body">
+                    <div class="matching-row__name">홍길동</div>
+                    <div class="matching-row__meta">기획자 · 30세</div>
+                  </div>
+                  <button class="matching-row__check">
+                    <span class="matching-row__check__circle">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>
+                    </span>
+                  </button>
+                </div>
+
+              </div>
+              <div class="matching-cta-hint">연락처를 교환하고 싶은 분을 선택해주세요</div>
+              <div class="matching-cta">
+                <button class="matching-cta__button matching-cta__button--disabled" disabled>확인</button>
               </div>
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>후보 grid가 도착해 화면에 표시되고, 사용자는 아직 한 번도 투표하지 않은 상태. EventNowBar가 "투표 가능" 상태일 때.</td>
+          <td>매칭 phase 진입(matchingReady 또는 matching) · 같은 입장 그룹의 다른 그룹(예: 남↔여) 참가자만 후보로 노출 · 후보 ≥1명. <strong>baseline = 진입 직후 0명 선택 상태</strong> — CTA disabled · 안내 default 톤. 사용자가 첫 row를 체크하면 즉시 Selecting state로 transition. 최대 <strong>3명</strong>까지 선택 가능. 리스트는 가나다순 정렬.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ① 후보 카드 "선택" 탭 → "투표 확인 — ○○님에게 투표하시겠습니까?" 다이얼로그 → "투표하기" 확정 → "투표가 완료되었습니다" 안내가 잠깐 노출 + 카드에 투표 완료 마스크 표시 + 잔여 카운트 1 감소.<br>
-            ② 핸들 아래로 끌어내리기 · 시트 외곽 어두운 영역 탭 · 시스템 back → 시트 닫힘, 홈 복귀 (투표 진행 상태는 서버에 저장돼 재진입 시 복원).
+            ① <strong>row 우측 체크 원 탭</strong> — 로컬 toggle (체크 채워짐 + row bg primary 6% tint fade-in + bounce + CTA 위 안내 텍스트 갱신). <strong>backend mutation은 아직 X</strong>.<br>
+            ② <strong>3명 도달 시 추가 탭</strong> — 무시 + snackbar "최대 3명까지 선택할 수 있어요". 이미 선택된 사람은 자유롭게 취소 가능.<br>
+            ③ <strong>바텀 CTA "확인" 탭</strong> — 1명 이상 선택 시 enabled · confirm dialog 노출. 0명이면 disabled.<br>
+            ④ <strong>list 스크롤</strong> — 추가 후보 노출.<br>
+            ⑤ <strong>AppBar back / 시스템 back</strong> — 선택 dirty 상태(commit 안 한 변경)면 confirm dialog "저장 안 된 선택이 있어요. 그래도 나가시겠어요?" 노출.
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · 후보가 0명이면 grid 영역에 "투표 가능한 상대가 없습니다."<br>
-            · 이벤트 설정상 잔여 투표가 0이면 모든 카드 비활성<br>
-            · 잔여 투표 1건일 때 다른 사용자가 같은 후보에 투표해 매치 성립 → 잠시 후 매치 banner가 자동으로 등장 (사용자 액션 없이도 갱신)
+            · 후보 많음(20+): list scroll로 자연스럽게 처리.<br>
+            · 같은 사용자 row 다시 탭 → 선택 취소 (idempotent).<br>
+            · <strong>입장 그룹 분리</strong> — backend가 본인과 같은 그룹은 list에서 제외 (프라이버시 + 매칭 의도).<br>
+            · 매칭 마감 후 진입 시 자동으로 Ended state로 라우팅.
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
           <td>
-            · 시트 + 드래그 핸들<br>
-            · Header (title titleMedium w700 · caption bodySmall secondary w600)<br>
-            · Vote-meta row (Icon(how_to_vote · 16 · onSurfaceVariant) + bodyMedium w600)<br>
-            · 후보 grid (2 cols · aspect 0.8)<br>
-            · CandidateCard × N (placeholder + name + "선택" 버튼)
+            · <code>Scaffold</code> + <code>AppBar</code>(back · 이벤트 title only — trailing chip 없음)<br>
+            · Hint line — 결과 미리 안 보여주는 이유 명시<br>
+            · <code>ListView</code> · vertical scroll · expanded body<br>
+            · <code>MatchingRow</code> × N (avatar + body + check toggle 28px round)<br>
+            · <code>CTAHint</code> — CTA 위 안내 텍스트 (3 conditions)<br>
+            · <a href="/components#MinglitBottomCta"><code>MinglitBottomCta</code></a>(<em>single 변형</em>) — "확인" · 0명 선택 시 <code>onPressed: null</code>(=disabled)<br>
+            · 선택은 <strong>로컬 상태</strong>로만 관리 — backend mutation은 confirm dialog 확인 시 batch upsert
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
           <td>
-            · color: <code>color-background</code> (sheet bg), <code>color-surface</code> (card bg), <code>color-primary</code> (선택 button bg), <code>color-secondary</code> (잔여 caption), <code>color-text-primary</code> (title · row text), <code>color-text-secondary</code> (handle · onSurfaceVariant)<br>
-            · radius: <code>radius-card (16)</code> (sheet top + card), <code>radius-button (12)</code> (선택 button)<br>
-            · spacing: <code>spacing-screen-edge (16)</code>, <code>spacing-large (24)</code>, <code>spacing-medium (16)</code>, <code>spacing-small (8)</code>, <code>spacing-xxsmall (2)</code><br>
-            · typography: titleMedium(16/700 · title), bodySmall(12/600 · status caption), bodyMedium(14/700 · candidate name), labelMedium(12/600 · 선택 button)<br>
-            · opacity: <code>MinglitOpacity.muted</code> (handle), <code>MinglitOpacity.highEmphasis</code> (gradient mask)
+            · color: <code>color-background</code>(scaffold bg · default row bg · AppBar bg), <code>color-text-primary</code>(name · AppBar title), <code>color-text-secondary</code>(meta · hint default · 빈 체크 border), <strong><code>color-tertiary</code> = 민트 #48c9b0</strong>(avatar gradient — 60-80% with white), <strong><code>color-primary</code> = 보라 #9900ff</strong>(선택된 row 6% tint bg · 채워진 체크 fill · CTA hint strong 톤 · CTA primary fill button), <code>color-divider</code>(row hairline · 빈 체크 border · CTA disabled bg), <code>color-success</code>(verified badge), <code>color-warning</code>(매칭 종료 banner)<br>
+            · radius: 50%(avatar · check 외곽 button · check 내 원), <code>radius-button</code>(CTA button)<br>
+            · spacing: <code>spacing-screen-edge</code>(h-padding), <code>spacing-medium</code>(avatar↔body gap · hint v-padding bottom), <code>spacing-small</code>(hint v-padding top), 12px(row v-padding · CTA v-padding)<br>
+            · typography: AppBar title token, hint(12), avatar initial(22/700), name(15/600), meta(12), CTA(16/700)
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 baseline은 "후보 다 보임 · 매치 0 · 투표 0". 헤더 caption + 본문 vote-meta row가 둘 다 잔여 투표 정보를 표시 — 약간 중복이지만 헤더가 진입 시 가장 빠르게 보이는 시각 신호라 그대로 둠.</td>
+          <td>
+            📝 mockup은 7명 리스트 가나다순 정렬 (강·김·박·이·정·최·홍). 각 사용자는 직업·나이 노출 — <strong>직업 비공개 케이스</strong>(박서준 · 최서연) 포함. 본인이 이벤트에서 만난 얼굴을 기억하므로 이름만으로도 결정 가능 + 직업/나이가 추가 단서.<br>
+            <strong>CTA 위 안내 (3 conditions)</strong>:<br>
+            · 0명 선택: "연락처를 교환하고 싶은 분을 선택해주세요" (secondary 톤)<br>
+            · 1~2명 선택 (max=3): "N명 더 선택할 수 있어요" (strong primary 톤)<br>
+            · 3명 선택 (=max): "선택하신 분들과 연락처를 교환하시고 싶으시면 확인 버튼을 눌러주세요" (strong primary 톤)
+          </td>
         </tr>
       </tbody>
     </table>
 
-    <!-- State 2: voting in progress (1+ voted, mid-flow) -->
+    <!-- State 2: Selecting · 선택 중 -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>voting in progress</strong> <small>투표 1+건, 매치가 누적 중일 수도 있음</small></th></tr>
+        <tr><th colspan="3"><strong>Selecting · 선택 중</strong> <small>1명 이상 선택 — CTA enabled · hint strong 톤 · 재진입 케이스 포함</small></th></tr>
       </thead>
       <tbody>
         <tr>
           <td class="state-mini__mock" rowspan="6">
-            <div class="viewport matching-stage">
-              <div class="bg-home">
-                <div class="bg-home__statusbar"></div>
-                <div class="bg-home__title">홈</div>
-                <div class="bg-home__feed-card"></div>
-                <div class="bg-home__feed-card"></div>
+            <div class="viewport matching-viewport">
+              <div class="matching-appbar">
+                <button class="matching-appbar__back">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
+                <div class="matching-appbar__title">루프탑 라운지 · 강남</div>
               </div>
-              <div class="matching-stage__scrim"></div>
-              <div class="matching-sheet">
-                <div class="matching-sheet__handle"></div>
-                <div class="matching-sheet__header">
-                  <h3 class="matching-sheet__title">강남 루프탑 소셜 파티</h3>
-                  <p class="matching-sheet__status">남은 투표: 1 / 3</p>
+              <div class="matching-hint">좋아요 보낸 사람과 매치되면 결과 화면에서 서로의 연락처를 알려드려요</div>
+              <div class="matching-list matching-list--entrance">
+
+                <div class="matching-row matching-row--selected">
+                  <div class="matching-row__avatar matching-row__avatar--initial">강</div>
+                  <div class="matching-row__body">
+                    <div class="matching-row__name">강예린</div>
+                    <div class="matching-row__meta">디자이너 · 28세</div>
+                  </div>
+                  <button class="matching-row__check matching-row__check--selected">
+                    <span class="matching-row__check__circle">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>
+                    </span>
+                  </button>
                 </div>
-                <div class="match-banner">
-                  <div class="match-banner__row">
-                    <svg class="match-banner__heart" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-                    <span class="match-banner__title">매칭 성공! (1명)</span>
+
+                <div class="matching-row">
+                  <div class="matching-row__avatar matching-row__avatar--initial">김</div>
+                  <div class="matching-row__body">
+                    <div class="matching-row__name">김민수</div>
+                    <div class="matching-row__meta">개발자 · 31세</div>
                   </div>
-                  <div class="match-banner__chip-row">
-                    <div class="match-banner__chip">
-                      <span class="match-banner__chip-name">민지</span>
-                      <span class="match-banner__chip-contact">
-                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 15.5c-1.25 0-2.45-.2-3.57-.57-.35-.11-.74-.03-1.02.24l-2.2 2.2c-2.83-1.44-5.15-3.75-6.59-6.58l2.2-2.21c.28-.27.36-.66.25-1.01C8.7 6.45 8.5 5.25 8.5 4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1 0 9.39 7.61 17 17 17 .55 0 1-.45 1-1v-3.5c0-.55-.45-1-1-1z"/></svg>
-                        @minji_kim · 인스타
-                      </span>
-                    </div>
-                  </div>
+                  <button class="matching-row__check">
+                    <span class="matching-row__check__circle">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>
+                    </span>
+                  </button>
                 </div>
-                <div class="vote-meta-row">
-                  <svg class="vote-meta-row__icon" viewBox="0 0 24 24" fill="currentColor"><path d="M3 11h2v2H3zm16-2h-4V3H9v6H5l7 7 7-7zM5 18h14v2H5z"/></svg>
-                  <span class="vote-meta-row__text">남은 투표: 1 / 3</span>
+
+                <div class="matching-row">
+                  <div class="matching-row__avatar matching-row__avatar--initial">박</div>
+                  <div class="matching-row__body">
+                    <div class="matching-row__name">박서준</div>
+                    <div class="matching-row__meta">비공개 · 29세</div>
+                  </div>
+                  <button class="matching-row__check">
+                    <span class="matching-row__check__circle">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>
+                    </span>
+                  </button>
                 </div>
-                <div class="candidate-grid">
-                  <div class="candidate-card">
-                    <div class="candidate-card__bg">
-                      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-                    </div>
-                    <div class="candidate-card__voted-mask">
-                      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-                    </div>
-                    <div class="candidate-card__overlay">
-                      <span class="candidate-card__name">민지</span>
-                      <button class="candidate-card__btn candidate-card__btn--voted">투표 완료</button>
-                    </div>
+
+                <div class="matching-row matching-row--selected">
+                  <div class="matching-row__avatar matching-row__avatar--initial">
+                    이
+                    <span class="matching-row__avatar__verified">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                    </span>
                   </div>
-                  <div class="candidate-card">
-                    <div class="candidate-card__bg">
-                      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-                    </div>
-                    <div class="candidate-card__voted-mask">
-                      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-                    </div>
-                    <div class="candidate-card__overlay">
-                      <span class="candidate-card__name">서준</span>
-                      <button class="candidate-card__btn candidate-card__btn--voted">투표 완료</button>
-                    </div>
+                  <div class="matching-row__body">
+                    <div class="matching-row__name">이지은</div>
+                    <div class="matching-row__meta">마케터 · 27세</div>
                   </div>
-                  <div class="candidate-card">
-                    <div class="candidate-card__bg">
-                      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-                    </div>
-                    <div class="candidate-card__overlay">
-                      <span class="candidate-card__name">하늘</span>
-                      <button class="candidate-card__btn">선택</button>
-                    </div>
-                  </div>
-                  <div class="candidate-card">
-                    <div class="candidate-card__bg">
-                      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-                    </div>
-                    <div class="candidate-card__overlay">
-                      <span class="candidate-card__name">예린</span>
-                      <button class="candidate-card__btn">선택</button>
-                    </div>
-                  </div>
+                  <button class="matching-row__check matching-row__check--selected">
+                    <span class="matching-row__check__circle">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>
+                    </span>
+                  </button>
                 </div>
+
+                <div class="matching-row">
+                  <div class="matching-row__avatar matching-row__avatar--initial">정</div>
+                  <div class="matching-row__body">
+                    <div class="matching-row__name">정현우</div>
+                    <div class="matching-row__meta">의사 · 33세</div>
+                  </div>
+                  <button class="matching-row__check">
+                    <span class="matching-row__check__circle">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>
+                    </span>
+                  </button>
+                </div>
+
+              </div>
+              <div class="matching-cta-hint matching-cta-hint--strong">1명 더 선택할 수 있어요</div>
+              <div class="matching-cta">
+                <button class="matching-cta__button">확인</button>
               </div>
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>+ 사용자가 1번 이상 투표한 상태 · 일부 후보와 양방향 매치 성립.</td>
+          <td>Default(0명)에서 사용자가 1명 이상 ~ 최대 미만 선택한 상태. CTA enabled(primary fill), hint strong 톤("N명 더 선택할 수 있어요"), 선택된 row tint bg + 채워진 체크. 매칭 진행 중 가장 흔히 머무는 상태. <strong>재진입 케이스</strong>: 이미 commit한 선택이 있으면 이 state로 진입(서버 데이터 로드 시 선택 row 미리 체크) — 사용자는 추가/취소 후 재commit 가능, 매칭 종료 시점까지.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>+ 미투표 카드만 "선택" 탭 가능 · 투표 완료 카드는 비활성 (마스크 + "투표 완료" 라벨)<br>+ 매치 banner 가로 스와이프하여 매치된 상대 정보 확인</td>
+          <td>
+            ① <strong>다른 row 체크 토글</strong> — 추가 선택 / 취소 (로컬 상태). hint 카운트 갱신.<br>
+            ② <strong>3번째 체크 토글</strong> — 선택 max 도달 시 hint copy 변경 ("선택하신 분들과 연락처를 교환하시고 싶으시면 확인 버튼을 눌러주세요"). 4번째 시도 시 무시 + snackbar.<br>
+            ③ <strong>모든 선택 취소</strong> → Default(0명) state로 돌아감 (CTA disabled · hint default 톤).<br>
+            ④ <strong>CTA "확인" 탭</strong> → Confirm Dialog state로 전환.<br>
+            ⑤ AppBar back: dirty 상태 보호 dialog 노출.
+          </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            + 투표 직후 잠깐 vote-meta row가 로딩 스피너로 깜빡일 수 있음 (의도된 짧은 스피너).<br>
-            + 매치된 상대의 이름/연락처 정보가 비어있을 수 있음 — 상대가 동의하지 않은 매치는 "알 수 없음" / "연락처 없음" 폴백.
+            · <strong>1명 선택 (min)</strong>: hint "2명 더 선택할 수 있어요" · CTA enabled.<br>
+            · <strong>3명 선택 (=max)</strong>: hint "선택하신 분들과 연락처를 교환하시고 싶으시면 확인 버튼을 눌러주세요" · CTA enabled.<br>
+            · 4번째 체크 시도: 무시 + snackbar "최대 3명까지 선택할 수 있어요" · 기존 선택 취소하고 다시 선택해야 변경 가능.<br>
+            · scroll 도중 위쪽에 가려진 selected row도 카운트에 포함 — hint는 list 전체 기준.
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
           <td>
-            + <strong>MatchSuccessBanner</strong> (살짝 강조된 secondaryContainer 톤 bg · Icon(favorite · error 16) + "매칭 성공! (N명)" titleSmall · w700 · error · 가로 스와이프 리스트 80px · MatchPair 카드 200px width · 테두리 error @ strong)<br>
-            ↔ 일부 CandidateCard → voted 변형 (마스크 오버레이 + 회색 "투표 완료" 버튼 · 비활성)
+            ↔ Default 대비:<br>
+            + 일부 row가 <code>--selected</code> variant (tint bg + 채워진 체크)<br>
+            + Hint variant: <code>--strong</code> (보라 · 600 weight)<br>
+            + CTA <code>onPressed</code> non-null → enabled (primary fill)<br>
+            동일: AppBar / hint line / list 구조 / MinglitBottomCta single
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
           <td>
-            + <code>color-secondary</code>(banner bg via secondaryContainer) · <code>color-error</code>(heart icon · banner title · match card border)<br>
-            + <code>MinglitOpacity.subtle</code>(banner bg alpha) · <code>strong</code>(card border alpha)
+            ↔ Default +<br>
+            + <code>color-primary</code>(선택 row 6% tint bg · 체크 fill · hint strong · CTA enabled bg)<br>
+            − <code>color-divider</code>(CTA disabled bg · hint default — variant swap)
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 baseline 대비 변하는 건 매치 banner 추가 + 일부 카드 voted. 사용자가 vote 직후 보는 가장 흔한 mid-flow state. 매치 banner 색상은 <code>secondaryContainer</code> tint라 primary purple과 시각적으로 구분.</td>
+          <td>📝 mockup은 2명 선택 케이스 (강예린 + 이지은). 1명·3명도 같은 시각이지만 hint copy가 다름 — 위 에지케이스 참고. row 선택 시 <strong>bg fade-in 240ms ease + 체크 원 bounce 320ms</strong> (cubic-bezier 0.34, 1.56, 0.64, 1) 같이 실행.</td>
         </tr>
       </tbody>
     </table>
 
-    <!-- State 3: voting complete (all votes used, awaiting results) -->
+    <!-- State 3: Confirm Dialog -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>voting complete</strong> <small>모든 투표 소진 · 결과 산출 대기 (passive)</small></th></tr>
+        <tr><th colspan="3"><strong>Confirm Dialog · 좋아요 보내기 확인</strong> <small>바텀 CTA 탭 직후 dialog 노출 — 확인 시 backend commit · MinglitAlert 표준 컴포넌트</small></th></tr>
       </thead>
       <tbody>
         <tr>
           <td class="state-mini__mock" rowspan="6">
-            <div class="viewport matching-stage">
-              <div class="bg-home">
-                <div class="bg-home__statusbar"></div>
-                <div class="bg-home__title">홈</div>
-                <div class="bg-home__feed-card"></div>
-                <div class="bg-home__feed-card"></div>
+            <div class="viewport matching-viewport" style="position: relative;">
+              <div class="matching-appbar">
+                <button class="matching-appbar__back">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
+                <div class="matching-appbar__title">루프탑 라운지 · 강남</div>
               </div>
-              <div class="matching-stage__scrim"></div>
-              <div class="matching-sheet">
-                <div class="matching-sheet__handle"></div>
-                <div class="matching-sheet__header">
-                  <h3 class="matching-sheet__title">강남 루프탑 소셜 파티</h3>
-                  <p class="matching-sheet__status matching-sheet__status--done">투표 완료!</p>
+              <div class="matching-hint">좋아요 보낸 사람과 매치되면 결과 화면에서 서로의 연락처를 알려드려요</div>
+              <div class="matching-list">
+
+                <div class="matching-row matching-row--selected">
+                  <div class="matching-row__avatar matching-row__avatar--initial">강</div>
+                  <div class="matching-row__body">
+                    <div class="matching-row__name">강예린</div>
+                    <div class="matching-row__meta">디자이너 · 28세</div>
+                  </div>
+                  <button class="matching-row__check matching-row__check--selected">
+                    <span class="matching-row__check__circle">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>
+                    </span>
+                  </button>
                 </div>
-                <div class="match-banner">
-                  <div class="match-banner__row">
-                    <svg class="match-banner__heart" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-                    <span class="match-banner__title">매칭 성공! (2명)</span>
+
+                <div class="matching-row matching-row--selected">
+                  <div class="matching-row__avatar matching-row__avatar--initial">
+                    이
+                    <span class="matching-row__avatar__verified">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                    </span>
                   </div>
-                  <div class="match-banner__chip-row">
-                    <div class="match-banner__chip">
-                      <span class="match-banner__chip-name">민지</span>
-                      <span class="match-banner__chip-contact">
-                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 15.5c-1.25 0-2.45-.2-3.57-.57-.35-.11-.74-.03-1.02.24l-2.2 2.2c-2.83-1.44-5.15-3.75-6.59-6.58l2.2-2.21c.28-.27.36-.66.25-1.01C8.7 6.45 8.5 5.25 8.5 4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1 0 9.39 7.61 17 17 17 .55 0 1-.45 1-1v-3.5c0-.55-.45-1-1-1z"/></svg>
-                        @minji_kim · 인스타
-                      </span>
-                    </div>
+                  <div class="matching-row__body">
+                    <div class="matching-row__name">이지은</div>
+                    <div class="matching-row__meta">마케터 · 27세</div>
                   </div>
+                  <button class="matching-row__check matching-row__check--selected">
+                    <span class="matching-row__check__circle">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>
+                    </span>
+                  </button>
                 </div>
-                <div class="vote-meta-row">
-                  <svg class="vote-meta-row__icon vote-meta-row__icon--done" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-                  <span class="vote-meta-row__text">투표 완료!</span>
-                </div>
-                <div class="candidate-grid">
-                  <div class="candidate-card">
-                    <div class="candidate-card__bg">
-                      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-                    </div>
-                    <div class="candidate-card__voted-mask">
-                      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-                    </div>
-                    <div class="candidate-card__overlay">
-                      <span class="candidate-card__name">민지</span>
-                      <button class="candidate-card__btn candidate-card__btn--voted">투표 완료</button>
-                    </div>
+
+              </div>
+              <div class="matching-cta-hint matching-cta-hint--strong">1명 더 선택할 수 있어요</div>
+              <div class="matching-cta">
+                <button class="matching-cta__button">확인</button>
+              </div>
+              <!-- Scrim + dialog overlay -->
+              <div class="matching-dialog-scrim">
+                <div class="matching-dialog">
+                  <div class="matching-dialog__title">아래 분들에게 좋아요를 보낼까요?</div>
+                  <div class="matching-dialog__body">
+                    <strong style="color: var(--color-text-primary); font-weight: 600;">강예린, 이지은</strong><br><br>
+                    서로 좋아요를 보낸 경우 연락처를 교환할 수 있습니다.<br>
+                    매칭 종료 전까지는 다시 들어와 수정할 수 있어요.
                   </div>
-                  <div class="candidate-card">
-                    <div class="candidate-card__bg">
-                      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-                    </div>
-                    <div class="candidate-card__overlay">
-                      <span class="candidate-card__name">하늘</span>
-                      <button class="candidate-card__btn" disabled>선택</button>
-                    </div>
-                  </div>
-                  <div class="candidate-card">
-                    <div class="candidate-card__bg">
-                      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-                    </div>
-                    <div class="candidate-card__voted-mask">
-                      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-                    </div>
-                    <div class="candidate-card__overlay">
-                      <span class="candidate-card__name">서준</span>
-                      <button class="candidate-card__btn candidate-card__btn--voted">투표 완료</button>
-                    </div>
-                  </div>
-                  <div class="candidate-card">
-                    <div class="candidate-card__bg">
-                      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-                    </div>
-                    <div class="candidate-card__voted-mask">
-                      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-                    </div>
-                    <div class="candidate-card__overlay">
-                      <span class="candidate-card__name">예린</span>
-                      <button class="candidate-card__btn candidate-card__btn--voted">투표 완료</button>
-                    </div>
+                  <div class="matching-dialog__actions">
+                    <button class="matching-dialog__btn matching-dialog__btn--cancel">취소</button>
+                    <button class="matching-dialog__btn matching-dialog__btn--confirm">확인</button>
                   </div>
                 </div>
               </div>
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>+ 사용자가 잔여 투표를 모두 소진. EventNowBar가 "매칭 중"(passive · 시스템 결과 산출 대기) 상태.</td>
+          <td>Selecting state에서 바텀 CTA "확인" 탭 직후. dialog가 scrim 위에 노출되며 배경 list는 그대로 보임(어두워진 채). dirty(선택 ≥1명)인 경우만 진입 가능.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>− 모든 카드 비활성 — 추가 투표 불가<br>↔ 시트 닫기 → 홈 복귀. 결과 발표 단계로 넘어가면 EventNowBar가 "결과 발표"로 전환되며 다음 시트로 진입 유도.</td>
+          <td>
+            + <strong>"확인" 탭</strong> — backend batch mutation 호출 → 성공 시 Submitted state로 cross-fade 240ms.<br>
+            + <strong>"취소" 탭</strong> — dialog만 닫힘 (Selecting state로 복귀 · 로컬 선택 상태 유지).<br>
+            + <strong>scrim 탭 / 시스템 back</strong> — 취소와 동일.
+          </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>+ 매치 0건일 수도 있음 (이 경우 banner 미렌더 · 헤더 + meta row + 모든 카드가 투표 완료 상태로만 보임)<br>+ 사용자가 매치 0인 상태에서 시트 닫고 결과 발표 단계로 넘어가면 결과 화면에서 empty fallback 노출</td>
+          <td>
+            · backend mutation 실패 → snackbar "다시 시도해주세요" + dialog 다시 열림.<br>
+            · 1명만 선택이어도 title 동일 ("아래 분들에게 좋아요를 보낼까요?"). body의 이름 list는 단수/복수 자연스럽게.<br>
+            · 매칭 종료 임박 시점에 진입할 수도 있음 — 종료 직후엔 backend가 reject + Ended state로 라우팅.
+          </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
-          <td>↔ vote-meta row icon → <code>check_circle</code> + 라벨 "투표 완료!" (color-primary)<br>↔ 모든 CandidateCard voted 변형<br>↔ status caption color → <code>color-success</code> ("투표 완료!")</td>
+          <td>
+            ↔ Selecting 동일 + scrim + dialog overlay:<br>
+            + <a href="https://github.com/Mark-Yun/minglit/blob/dev/shared/packages/mds/core/lib/src/ui/widgets/common/minglit_alert.dart"><code>MinglitAlert.showConfirm</code></a> (밍글릿 표준 다이얼로그 컴포넌트)<br>
+            + Title: "아래 분들에게 좋아요를 보낼까요?" (1명이어도 동일)<br>
+            + Body 내용 — 선택한 분들 이름 (bold · text-primary) → "서로 좋아요를 보낸 경우 연락처를 교환할 수 있습니다." → "매칭 종료 전까지는 다시 들어와 수정할 수 있어요."<br>
+            + Actions: "취소"(secondary) + "확인"(primary)
+          </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
-          <td>+ <code>color-success</code> (status caption) · <code>color-primary</code> (check_circle icon) · 비활성 회색 surfaceContainerHighest 인용</td>
+          <td>
+            ↔ Selecting +<br>
+            + <code>color-background</code>(dialog surface)<br>
+            + <code>radius-card</code>(dialog corner)<br>
+            + scrim alpha 0.45 (Material default)<br>
+            + <code>color-primary</code>(확인 버튼 텍스트), <code>color-text-secondary</code>(취소)
+          </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 잠깐 보이는 transient — 보통 짧은 시간 후 결과 발표 단계로 전환되어 다른 시트로 이동. 사용자가 일찍 닫아도 EventNowBar가 다음 단계에서 다시 강조(action variant)하여 진입을 유도.</td>
+          <td>📝 dialog는 표준 형태. body의 "수정 가능" 안내로 부담 완화. backend commit 시점이라 선택 / 취소가 모두 한꺼번에 transactional 처리됨. "확인" → 즉시 Submitted state로 cross-fade.</td>
         </tr>
       </tbody>
     </table>
 
-    <!-- State 4: loading -->
+    <!-- State 4: Submitted · 좋아요 전송 완료 (Toss-style success) -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>loading</strong> <small>후보 정보를 받아오는 중 — 첫 진입 직후</small></th></tr>
+        <tr><th colspan="3"><strong>Submitted · 좋아요 전송 완료</strong> 🎉 <small>Toss-style success · 손글씨 체크 + 텍스트 stagger · 확인 후 MyTicketsPage 복귀</small></th></tr>
       </thead>
       <tbody>
         <tr>
           <td class="state-mini__mock" rowspan="6">
-            <div class="viewport matching-stage">
-              <div class="bg-home">
-                <div class="bg-home__statusbar"></div>
-                <div class="bg-home__title">홈</div>
-                <div class="bg-home__feed-card"></div>
-                <div class="bg-home__feed-card"></div>
+            <div class="viewport matching-viewport">
+              <div class="matching-submitted">
+                <div class="matching-submitted__icon">
+                  <svg viewBox="0 0 24 24"><polyline points="4 12 9 17 20 6"/></svg>
+                </div>
+                <div class="matching-submitted__title">좋아요를 보냈어요</div>
+                <div class="matching-submitted__sub">매칭 결과는 매칭이 모두 종료된 후<br>알려드릴게요</div>
               </div>
-              <div class="matching-stage__scrim"></div>
-              <div class="matching-sheet">
-                <div class="matching-sheet__handle"></div>
-                <div class="matching-sheet__header">
-                  <h3 class="matching-sheet__title">강남 루프탑 소셜 파티</h3>
-                </div>
-                <div class="matching-sheet__center">
-                  <div class="matching-spinner"></div>
-                </div>
+              <div class="matching-cta matching-submitted__cta">
+                <button class="matching-cta__button">확인</button>
               </div>
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>+ 시트가 처음 떠서 후보 / 투표 정보를 받아오고 있는 상태 (보통 200~500ms).</td>
+          <td>Confirm Dialog "확인" 탭 → backend batch mutation 성공 → 이 화면으로 cross-fade 전환. AppBar 미렌더 (focus on success). 매칭 CUJ의 마지막 시각적 culmination.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>− 후보 grid · 투표 액션 · 매치 banner 모두 미노출. 시트 닫기는 가능.</td>
+          <td>
+            ① <strong>"확인" 탭</strong> — MyTicketsPage 복귀 (OngoingBanner phase 5 matching · "결과 대기" passive로 전환).<br>
+            ② <strong>시스템 back / swipe</strong> — 동일 (확인과 같은 동작).<br>
+            <em>(자동 dismiss 없음 — 사용자가 명시적으로 닫음. 이 순간을 충분히 즐기게 함.)</em>
+          </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>+ 이전에 봤던 후보 정보가 캐시되어 있으면 로딩 없이 바로 data state로 점프<br>+ 네트워크 타임아웃 시 스피너 계속 — 별도 다시 시도 버튼 없음 (사용자는 시트 닫고 다시 열면 됨)</td>
+          <td>
+            · backend mutation 성공 후에만 진입 — 실패 시 Confirm Dialog로 복귀 + snackbar.<br>
+            · 재진입(이미 commit한 후 다시 들어와 수정 → 재commit) 시에도 동일하게 노출 — 매번 "보냈어요" 시각 culmination.<br>
+            · 매칭 종료 임박 시점에 진입할 수도 있음 — 종료된 후엔 자동으로 Ended state 또는 ResultsScreen으로 라우팅.
+          </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
-          <td>↔ banner · meta row · grid → <strong>320px LoadingBlock</strong> (32px primary spinner · 1s linear loop)<br>↔ status caption 미노출 (잔여 투표 정보 도착 전)</td>
+          <td>
+            · <a href="/components#MinglitConfirmationPage"><code>MinglitConfirmationPage</code></a> 표준 컴포넌트 사용 — Toss style "Confirmation Page" 패턴.<br>
+            · props: <code>title: '좋아요를 보냈어요'</code> · <code>description: '매칭 결과는 매칭이 모두 종료된 후 알려드릴게요'</code> · <code>tone: success</code> (초록 fill) · <code>icon: Icons.check</code> · <code>ctaLabel: '확인'</code> · <code>onPressed: () =&gt; Navigator.pop()</code><br>
+            · AppBar 미렌더 · 96×96 success 초록 circle + check 52px stroke-draw · CTA 위 divider 없음<br>
+            · 진입 transition: dialog → confirmation cross-fade 240ms
+          </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
-          <td>+ animation: 1s linear infinite (스피너)<br>나머지 동일</td>
+          <td>
+            · color: <strong><code>color-success</code> = 초록 #16a34a</strong>(icon circle bg — 자연스러운 success 톤), <code>color-background</code>(scaffold + icon stroke 흰색), <code>color-primary</code>(CTA bg), <code>color-text-primary</code>(title), <code>color-text-secondary</code>(sub)<br>
+            · radius: 50%(icon circle), <code>radius-button</code>(CTA)<br>
+            · spacing: <code>spacing-medium</code>(layout gap), <code>spacing-large</code>(h-padding)<br>
+            · typography: title(22/700), sub(14/regular)<br>
+            · SVG: stroke-width 4 · linecap/linejoin round · polyline points "4 12 9 17 20 6" (왼쪽 아래 → 오른쪽 위 자연 손글씨 방향)<br>
+            · animation:
+            <br>&nbsp;&nbsp;(1) icon circle scale 0→1.08→1 · 450ms · cubic-bezier(0.34, 1.56, 0.64, 1)
+            <br>&nbsp;&nbsp;(2) <strong>check stroke draw</strong> stroke-dashoffset 50→0 · 520ms · cubic-bezier(0.65, 0, 0.45, 1) · delay 320ms (손글씨 효과)
+            <br>&nbsp;&nbsp;(3) title fade+slide · 360ms ease · delay 880ms
+            <br>&nbsp;&nbsp;(4) sub fade+slide · 360ms ease · delay 980ms
+            <br>&nbsp;&nbsp;(5) CTA fade+slide · 360ms ease · delay 1120ms
+          </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 헤더(title)는 미리 노출 — fetch 중에도 어떤 이벤트의 매칭인지 컨텍스트 유지. 잔여 투표 caption은 정보가 도착해야 표시되므로 로딩 동안에는 보이지 않음.</td>
+          <td>📝 <strong>매칭 CUJ의 마지막 시각 culmination</strong>. Toss style — 큰 success 초록 circle + 손글씨 효과로 그어지는 체크 + bold message + subtle sub. (1) circle scale-bounce → (2) check stroke 손으로 그리듯 그어짐 → (3) 텍스트 stagger fade-up. 약 1.5초의 sequence가 끝까지 구경하게 만듦. 사용자가 명시적으로 "확인" 탭해서 마무리 — 자동 dismiss 안 함.</td>
         </tr>
       </tbody>
     </table>
 
-    <!-- State 5: error -->
+    <!-- State 5: Ended · 매칭 완료됨 (privacy-protected) -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>error</strong> <small>후보 또는 투표 정보 로드 실패</small></th></tr>
+        <tr><th colspan="3"><strong>Ended · 매칭 완료됨</strong> <small>list 비공개 (개인정보 보호) · 안내만 노출 · 결과 화면 진입까지 brief window</small></th></tr>
       </thead>
       <tbody>
         <tr>
           <td class="state-mini__mock" rowspan="6">
-            <div class="viewport matching-stage">
-              <div class="bg-home">
-                <div class="bg-home__statusbar"></div>
-                <div class="bg-home__title">홈</div>
-                <div class="bg-home__feed-card"></div>
-                <div class="bg-home__feed-card"></div>
+            <div class="viewport matching-viewport">
+              <div class="matching-appbar">
+                <button class="matching-appbar__back">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
+                <div class="matching-appbar__title">루프탑 라운지 · 강남</div>
               </div>
-              <div class="matching-stage__scrim"></div>
-              <div class="matching-sheet">
-                <div class="matching-sheet__handle"></div>
-                <div class="matching-sheet__header">
-                  <h3 class="matching-sheet__title">강남 루프탑 소셜 파티</h3>
+              <div class="matching-ended">
+                <div class="matching-ended__icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <rect x="4" y="11" width="16" height="10" rx="2"/>
+                    <path d="M8 11V7a4 4 0 0 1 8 0v4"/>
+                  </svg>
                 </div>
-                <div class="vote-meta-row">
-                  <svg class="vote-meta-row__icon vote-meta-row__icon--err" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
-                  <span class="vote-meta-row__text vote-meta-row__text--err">투표 정보를 불러올 수 없습니다.</span>
-                </div>
-                <div class="matching-sheet__center">
-                  <svg class="matching-error-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
-                  <p class="matching-empty-text">후보를 불러올 수 없습니다</p>
-                </div>
+                <div class="matching-ended__title">매칭이 종료됐어요</div>
+                <div class="matching-ended__sub">참가자 명단은 개인정보 보호를 위해<br>더 이상 볼 수 없어요</div>
+                <div class="matching-ended__sub">결과가 준비되면 알려드릴게요</div>
+              </div>
+              <div class="matching-cta">
+                <button class="matching-cta__button">닫기</button>
               </div>
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>+ 후보 또는 투표 정보 중 하나라도 받지 못한 상태. 네트워크 / 서버 실패 또는 권한 부족.</td>
+          <td>매칭 phase가 종료된 후 진입(이벤트 종료 시점 자동 또는 운영자 강제). <strong>참가자 명단(list)은 개인정보 보호를 위해 비공개</strong>. 결과는 backend가 산출 중 — 산출 완료 시 OngoingBanner phase 6(results)로 전환되며 ResultsScreen으로 라우팅.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>− 투표 액션 모두 비활성<br>+ vote-meta row에 인라인 에러 메시지 표시 — 사용자는 시트 닫고 다시 열면 자동 재시도</td>
+          <td>
+            ① <strong>"닫기" 탭</strong> — 진입 surface(MyTicketsPage / HomePage) 복귀.<br>
+            ② <strong>AppBar back / 시스템 back</strong> — 동일 동작.<br>
+            <em>(결과 산출 완료 후 재진입 시 ResultsScreen으로 자동 redirect — 이 화면은 매칭 종료 ~ 결과 산출 사이의 짧은 window에서만 보임)</em>
+          </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>+ 투표 액션 자체가 실패할 때는 시트는 유지하고 별도 안내 메시지가 잠깐 노출 (fetch 에러와 다른 경로)<br>+ 일부만 실패: 후보는 도착했는데 잔여 투표 정보만 실패 → row 인라인 에러 + grid는 비활성 (안전 모드)</td>
+          <td>
+            · <strong>본인이 commit한 선택은 backend에 저장됨</strong> — 종료 후 list가 비공개여도 본인 선택은 유실되지 않음 (양방향 매치 산출에 정상 사용됨).<br>
+            · 결과 산출은 backend 운영 — 보통 종료 직후 ~ 몇 분 이내. 그 사이 polling / push로 phase 6 transition 받음 → 자동으로 ResultsScreen으로.<br>
+            · 운영자 강제 종료 / 시간 종료 / 시스템 종료 모두 같은 시각 노출 (사유 분기 X — 사용자에게는 동일 결과).
+          </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
-          <td>↔ vote-meta row → <code>error_outline</code> + bodyMedium error 메시지 ("투표 정보를 불러올 수 없습니다.")<br>↔ grid → 에러 블록 (Icon + message)</td>
+          <td>
+            ↔ Default 대비 body 영역만 변경:<br>
+            ↔ Scaffold · AppBar(back · title) 동일<br>
+            + <code>_MatchingEnded</code>(private widget · Center+Column · lock icon + title + 2 sub lines)<br>
+            − ListView / MatchingRow 미렌더 (privacy)<br>
+            − Hint line 미렌더 (banner 아닌 centered 안내로 대체)<br>
+            동일: <a href="/components#MinglitBottomCta"><code>MinglitBottomCta</code></a>(single · "닫기") · onPressed = pop
+          </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
-          <td>+ <code>color-error</code> (icon + 메시지)</td>
+          <td>
+            ↔ Default + <code>color-text-secondary</code>(lock icon · sub) + <code>color-text-primary</code>(title) + <code>spacing-large</code>(empty h-padding · centered 콘텐츠).<br>
+            − checkbox / row tint 토큰 미사용
+          </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 별도 다시 시도 버튼은 현재 미노출 — 향후 "다시 시도" 보조 CTA 추가 후보. 매칭 단계 시간 제약상 사용자는 빠르게 재진입하는 패턴이 일반적이라 인라인 retry 부재가 큰 문제는 아니지만, 계측을 통해 도입 여부 판단 예정.</td>
+          <td>📝 <strong>개인정보 보호 정책</strong> — 매칭 종료 후에는 본인이 누구를 선택했는지도 list로 다시 볼 수 없음 (다른 참가자 명단 노출 방지). 본인 commit은 backend에 안전 저장. 결과 발표는 별도 ResultsScreen에서 양방향 매치 + 본인이 좋아요 보낸 사람 확인 가능.</td>
+        </tr>
+      </tbody>
+    </table>
+    <!-- State 6: Empty (후보 0명) -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Empty · 후보 0명</strong> <small>매우 드문 케이스 — 본인 외 참가자 없음 또는 운영 정책으로 후보 비공개</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport matching-viewport">
+              <div class="matching-appbar">
+                <button class="matching-appbar__back">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
+                <div class="matching-appbar__title">루프탑 라운지 · 강남</div>
+                
+              </div>
+              <div class="matching-empty">
+                <div class="matching-empty__icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
+                </div>
+                <div class="matching-empty__title">매칭할 분이 없어요</div>
+                <div class="matching-empty__sub">참가자가 적거나 모두 매칭에서 빠졌어요</div>
+              </div>
+              <div class="matching-cta">
+                <button class="matching-cta__button">닫기</button>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>로드 완료 후 후보 list 0건. 본인 외 참가자가 없거나, 모두 운영 정책으로 hidden(예: 신원 미인증). 매우 드물지만 가능.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            ① <strong>"닫기" 탭</strong> — 진입 surface(MyTicketsPage / HomePage) 복귀.<br>
+            ② AppBar back / 시스템 back — 동일.
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · 일반적으로 이벤트 운영자가 매칭 phase open 시점에 참가자 ≥2명을 보장 — 그래서 이 상태는 거의 안 보임.<br>
+            · 운영자가 강제로 매칭 종료한 경우도 같은 시각으로 fallback (sub 카피만 분기 가능).
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            ↔ Default body 변경:<br>
+            + <code>_MatchingEmpty</code> (Icon + title + sub · centered)<br>
+            − ListView / MatchingRow 미렌더 · hint line 미렌더<br>
+            동일: AppBar + <a href="/components#MinglitBottomCta"><code>MinglitBottomCta</code></a>(single · "닫기") — onPressed = pop
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>↔ Default + <code>color-text-secondary</code>(icon · sub) + <code>spacing-large</code>(empty h-padding).</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 흔치 않은 상태 — 부정적 톤 X. 운영 사정 / 일시적 상황을 알리는 informational copy.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 7: Loading -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Loading · 후보 데이터 로드 중</strong> <small>진입 직후 잠깐 노출 (~100ms)</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport matching-viewport">
+              <div class="matching-appbar">
+                <button class="matching-appbar__back">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
+                <div class="matching-appbar__title">루프탑 라운지 · 강남</div>
+                
+              </div>
+              <div class="matching-hint"><span class="ms-skeleton ms-skeleton--hint"></span></div>
+              <div class="matching-list">
+
+                
+
+              
+              </div>
+              <div class="matching-cta">
+                <button class="matching-cta__button matching-cta__button--disabled" disabled>확인</button>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>화면 진입 직후 후보 list 데이터 fetch 중. 실제 row 모양을 유지하는 <strong>스켈레톤 placeholder</strong>가 노출 (shimmer pulse) — 빈 화면 / spinner보다 layout shift가 적고 "콘텐츠 곧 도착"이 자연스럽게 인지됨.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>− 입력 무시 (AppBar back은 가능). CTA disabled (라벨만 노출).</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · 100ms 미만 fetch는 스켈레톤 노출 X (jank 방지) — 즉시 데이터 화면.<br>
+            · 1초 이상 지속 시 snackbar / retry prompt + error fallback.<br>
+            · skeleton row 개수는 6 fixed (실제 후보 수 모름) — 데이터 도착 시 list로 즉시 swap.
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            ↔ Default 동일 골격 (AppBar / hint area / list / CTA) +<br>
+            <a href="/components#MinglitSkeleton"><code>MinglitSkeleton</code></a> blocks:<br>
+            · hint 영역: text-line skeleton 80%<br>
+            · row × 6: avatar circle 56 + name text 45-60% + meta text 65-70% + check circle 28<br>
+            · CTA disabled (라벨 "확인")
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            · skeleton: <code>color-divider</code>(shimmer base) + white 50% mix(highlight)<br>
+            · radius: <code>radius-small</code>(text), 50%(circle)<br>
+            · animation: 1.4s linear infinite (shimmer)<br>
+            · 그 외 layout token은 Default와 동일 (row v-padding · h-padding 등)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 spinner 대신 스켈레톤 — 사용자 인지 부담 ↓ + 실제 layout 모양 유지로 "곧 도착" 시각 단서. <a href="/components#MinglitSkeleton"><code>MinglitSkeleton</code></a> 컴포넌트 표준.</td>
         </tr>
       </tbody>
     </table>
@@ -1036,100 +1428,120 @@
 </div>
 
 <!-- ============================================================
-     GLOBAL BEHAVIOR
+     🔄 GLOBAL BEHAVIOR
      ============================================================ -->
 <div class="perspective" id="behavior">
   <div class="perspective__header">
     <span class="glyph">🔄</span>
     <h2>Global Behavior</h2>
-    <span class="lede">cross-cutting — 모든 state에 공통 적용. modal sheet dismiss · vote pipeline · phase stream · realtime invalidate.</span>
+    <span class="lede">back 동작 / OngoingBanner phase 동기화 / 좋아요 mutation / motion.</span>
   </div>
 
   <section class="doc">
-    <h2>Cross-cutting interactions</h2>
+    <h2>좋아요 commit flow (deferred batch)</h2>
+    <ul class="notes">
+      <li>row의 ♡ 버튼 탭 → <strong>로컬 상태만</strong> 토글 (UI 시각 변경 + 카운터 갱신 + CTA 라벨 갱신). backend 호출 X.</li>
+      <li>바텀 CTA "확인 (N명)" 탭 → confirm dialog 노출.</li>
+      <li>Dialog "보내기" 탭 → backend batch mutation 호출 (set + unset 모두 한 transaction · 좋아요 timestamp 저장) → 성공 시 화면 자동 pop.</li>
+      <li>Dialog "취소" / scrim 탭 / 시스템 back → dialog만 닫힘 (로컬 상태 유지 · 다시 mark / 추가 mark 가능).</li>
+      <li>backend 실패 → snackbar "다시 시도해주세요" + 시각 revert · 사용자가 CTA 다시 탭 시도.</li>
+      <li>backend는 idempotent — 같은 user-target 페어 mutation 재호출 시 final 상태가 진실.</li>
+    </ul>
+  </section>
+
+  <section class="doc">
+    <h2>Dirty 상태 보호 (back 시)</h2>
+    <ul class="notes">
+      <li>로컬에 commit 안 한 변경(♡ 토글)이 있는데 사용자가 AppBar back / 시스템 back / scrim swipe로 나가려 할 때 → confirm dialog "저장 안 된 좋아요가 있어요. 그래도 나가시겠어요?" 노출.</li>
+      <li>"나가기" 선택 시 로컬 변경 폐기 + 진입 surface 복귀.</li>
+      <li>"이어서" 선택 시 dialog 닫고 화면 유지.</li>
+      <li>dirty 상태가 아니면(아무 변경 없음 또는 이미 commit됨) back 즉시 동작.</li>
+    </ul>
+  </section>
+
+  <section class="doc">
+    <h2>Back 후 OngoingBanner 동기화</h2>
+    <ul class="notes">
+      <li>back 시 좋아요 ≥1개 → OngoingBanner phase 4(matchingReady) → phase 5(matching · "결과 대기" passive)로 전환.</li>
+      <li>좋아요 0개 → phase 4(matchingReady) 유지 — pulse 계속, 마음 바뀌면 재진입 가능.</li>
+      <li>EventNowBar도 같은 lifecycle 모델 watch — 동일하게 갱신.</li>
+      <li>이벤트 종료 시점 도달 → backend가 결과 산출 → phase 6(results)로 자동 전환 (여기서부터는 EventMatchingScreen 다시 진입 X · ResultsScreen으로).</li>
+    </ul>
+  </section>
+
+  <section class="doc">
+    <h2>Motion timing — 핵심 CUJ 애니메이션</h2>
+    <p class="intro">매칭은 사용자에게 가장 emotional한 순간이라 애니메이션이 중요. 진입은 스근하게, 완료는 뿌듯하게.</p>
     <table class="ref">
       <thead>
-        <tr><th style="width: 240px;">Interaction</th><th>Behavior</th></tr>
+        <tr><th style="width: 220px;">Transition</th><th style="width: 200px;">Token / Duration</th><th>Notes</th></tr>
       </thead>
       <tbody>
         <tr>
-          <td>시트 닫기 — 핸들 아래로 끌어내리기</td>
-          <td>핸들 영역 또는 시트 본문을 아래로 드래그 → 일정 거리 이상 끌면 닫힘. 홈 화면은 그대로 유지. 투표 진행 상태는 서버에 저장돼 재진입 시 그대로 복원.</td>
+          <td>화면 진입 (push)</td>
+          <td><code>MinglitAnimation.fast (200ms)</code></td>
+          <td>표준 GoRouter slide-from-right.</td>
         </tr>
         <tr>
-          <td>시트 닫기 — 외곽 어두운 영역 탭</td>
-          <td>시트 외곽(어두워진 영역) 탭 → 동일하게 닫힘.</td>
+          <td><strong>Skeleton → list swap</strong> (entry stagger)</td>
+          <td>320ms · cubic-bezier(0.22, 1, 0.36, 1) · row 50ms stagger</td>
+          <td>각 row가 8px 위로 슬라이드 + opacity 0→1. 첫 row 0ms, 두 번째 50ms ... 6번째 250ms — 자연스럽게 차오르는 느낌. <code>matching-list--entrance</code> class 1회 적용 (forwards로 한 번만 실행).</td>
         </tr>
         <tr>
-          <td>시트 닫기 — 시스템 back</td>
-          <td>안드로이드 back · iOS swipe-from-edge → 닫힘. 홈 화면으로 복귀.</td>
+          <td><strong>row 체크 토글 (선택 시)</strong></td>
+          <td>row bg fade 240ms ease + check bounce 320ms cubic-bezier(0.34, 1.56, 0.64, 1)</td>
+          <td>(1) row 배경 tint(primary 6%) 부드럽게 fade-in (240ms ease). (2) 체크 원이 scale(0.8 → 1.18 → 1) 살짝 튀어나오는 듯 bounce. 톤다운 / 빠른 반응 둘 다 챙김. 선택 취소도 같은 transition (역방향 fade-out + 체크 fill 사라짐).</td>
         </tr>
         <tr>
-          <td>투표 확정 (탭 선택 → 다이얼로그)</td>
-          <td>"투표 확인 — ○○님에게 투표하시겠습니까? · 투표하기" 다이얼로그가 시트 위에 뜸. 확정 시 투표 처리 → "투표가 완료되었습니다" 안내가 잠깐 노출 + 매치 / 잔여 투표 / 투표 완료 카드가 동시에 갱신.</td>
+          <td>CTA hint 카피 변경 (3 conditions)</td>
+          <td>200ms ease (color + opacity cross-fade)</td>
+          <td>secondary↔primary tone 전환 시 부드럽게.</td>
         </tr>
         <tr>
-          <td>투표 실패 (network / 권한)</td>
-          <td>실패 시 안내 메시지가 잠깐 노출. 시트는 유지되고 카드는 다시 활성으로 복귀해 재시도 가능.</td>
+          <td>Confirm Dialog 노출 / dismiss</td>
+          <td><code>MinglitAnimation.fast (200ms)</code></td>
+          <td>scrim 0→0.45 fade + dialog scale 0.96→1 + opacity. <a href="https://github.com/Mark-Yun/minglit/blob/dev/shared/packages/mds/core/lib/src/ui/widgets/common/minglit_alert.dart"><code>MinglitAlert</code></a> 표준 motion.</td>
         </tr>
         <tr>
-          <td>매칭 단계 자동 반영</td>
-          <td>백엔드에서 단계가 "결과 발표"로 바뀌면 시트가 자동 닫히고 EventNowBar가 "결과 발표" 강조 상태로 표시되어 다음 시트 진입을 유도.</td>
+          <td><strong>Confirm Dialog → Submitted</strong> (success transition)</td>
+          <td>240ms cross-fade</td>
+          <td>dialog dismiss + matching-submitted layout swap. 직후 icon scale-bounce 시작.</td>
         </tr>
         <tr>
-          <td>실시간 매치 갱신</td>
-          <td>다른 사용자가 같은 후보에 투표해 매치가 성립하면 매치 banner 리스트에 카드가 즉시 추가 (별도 전환 애니메이션 없음).</td>
+          <td><strong>Submitted icon circle scale-bounce</strong></td>
+          <td>450ms · cubic-bezier(0.34, 1.56, 0.64, 1)</td>
+          <td>0 → 1.08 → 1 (overshoot bounce). <strong>success 초록</strong>(<code>color-success</code> #16a34a) fill circle 96px. Toss-style culmination.</td>
         </tr>
         <tr>
-          <td>다크 모드 토글</td>
-          <td>sheet bg → <code>color-dark-background</code>. card surface → <code>color-dark-surface</code>. scrim 그대로. 매치 banner secondaryContainer tint도 dark variant로 자동 swap.</td>
+          <td><strong>Submitted check stroke draw (손글씨 효과)</strong></td>
+          <td>520ms · cubic-bezier(0.65, 0, 0.45, 1) · delay 320ms</td>
+          <td><code>stroke-dasharray</code> + <code>stroke-dashoffset</code> 트릭으로 polyline이 왼쪽 아래 → 오른쪽 위로 그어지는 듯 그려짐. circle scale-bounce이 살짝 settling되는 시점부터 시작 (320ms delay) — 자연스러운 layering. SVG: stroke-width 4 · linecap/linejoin round · path direction 4,12 → 9,17 → 20,6.</td>
+        </tr>
+        <tr>
+          <td><strong>Submitted text/CTA stagger</strong></td>
+          <td>360ms ease · 880ms / 980ms / 1120ms delay</td>
+          <td>title → sub → CTA 순서로 6px 위로 슬라이드 + opacity 0→1. <strong>check 그리기 완료 직후</strong> 차곡차곡 등장 — "축하해요" 느낌. 전체 sequence 약 1.5s.</td>
+        </tr>
+        <tr>
+          <td>Submitted "확인" 탭 → MyTicketsPage 복귀</td>
+          <td>200ms slide-back</td>
+          <td>표준 pop. OngoingBanner phase 5(matching · 결과 대기) 즉시 갱신.</td>
         </tr>
       </tbody>
     </table>
   </section>
 
   <section class="doc">
-    <h2>Motion timing</h2>
-    <p class="intro">Source: <code>shared/packages/mds/core/lib/src/theme/minglit_design_tokens.dart</code> — <code>MinglitAnimation</code>.</p>
+    <h2>Cross-cutting interactions</h2>
     <table class="ref">
       <thead>
-        <tr>
-          <th style="width: 240px;">Transition</th>
-          <th style="width: 200px;">Token / Duration</th>
-          <th>Notes</th>
-        </tr>
+        <tr><th style="width: 220px;">사용자 액션</th><th>화면에 보이는 결과</th></tr>
       </thead>
       <tbody>
-        <tr>
-          <td>Sheet 슬라이드업 진입</td>
-          <td><code>MinglitAnimation.medium</code> (350ms)</td>
-          <td>Material 3 modal sheet default · scrim fade-in 동기.</td>
-        </tr>
-        <tr>
-          <td>Sheet dismiss (slide-down)</td>
-          <td><code>MinglitAnimation.medium</code> (350ms)</td>
-          <td>Slide-down + scrim fade-out. drag-to-dismiss는 user velocity 기반.</td>
-        </tr>
-        <tr>
-          <td>Confirm dialog show / hide</td>
-          <td><code>MinglitAnimation.fast</code> (200ms)</td>
-          <td>Material default fade + scale.</td>
-        </tr>
-        <tr>
-          <td>Voted overlay swap (선택 → 투표 완료)</td>
-          <td>—</td>
-          <td>cut. 투표 직후 즉시 swap — 별도 전환 애니메이션 없음 (의도적 단순화).</td>
-        </tr>
-        <tr>
-          <td>SnackBar "투표가 완료되었습니다"</td>
-          <td><code>MinglitAnimation.fast</code> (200ms)</td>
-          <td>slide-up + fade. duration ~3s 기본.</td>
-        </tr>
-        <tr>
-          <td>Loading spinner</td>
-          <td>1s linear infinite (unscoped)</td>
-          <td>스피너 기본 — token 미정의 attention loop.</td>
-        </tr>
+        <tr><td>list 스크롤</td><td>vertical 표준 scroll · momentum + bounce.</td></tr>
+        <tr><td>row ♡ 버튼 탭</td><td>❤ instant fill + row bg primary 6% tint + AppBar counter ±1 (animate ~100ms).</td></tr>
+        <tr><td>AppBar back / 시스템 back</td><td>진입 surface로 pop (200ms slide).</td></tr>
+        <tr><td>다크 모드 토글</td><td>scaffold·row·hint 모두 다크 토큰으로 자동 전환. 좋아요 row tint도 dark primary 톤으로 자연스럽게 매핑.</td></tr>
       </tbody>
     </table>
   </section>
@@ -1137,65 +1549,61 @@
   <section class="doc">
     <h2>Global edge cases</h2>
     <ul class="notes">
-      <li><strong>투표 더블탭 / 동시 요청</strong> — UI 측에서는 이미 투표한 카드가 비활성으로 처리되므로 같은 카드를 다시 탭할 수는 없음. 다른 카드 더블탭 가능성은 백엔드의 unique 제약으로 가드.</li>
-      <li><strong>잔여 투표 0인데 후보는 정상 도착</strong> — 모든 카드 비활성, "선택" 버튼 회색. 사용자 입장에서 보기 전용 상태. EventNowBar가 곧 "결과 발표"로 넘어감.</li>
-      <li><strong>딥링크 진입</strong> — 푸시 알림 / 공유 URL로 직접 진입 시 홈 화면이 뒤에 없을 수 있음. 시트 닫을 때 홈으로 복귀하도록 처리.</li>
-      <li><strong>오프라인</strong> — 후보 / 투표 정보 모두 받지 못해 error state. 투표 액션도 실패 안내. 캐시된 후보가 있으면 보기 전용으로 grid는 노출되나 투표 자체는 불가.</li>
-      <li><strong>이벤트 단계 미스매치</strong> — 사용자가 딥링크로 진입했는데 이미 결과 발표 / 종료 단계면 후보 리스트가 비어있거나 error. error state로 노출.</li>
-      <li><strong>차단된 파트너</strong> — 차단된 파트너의 후보는 자동으로 후보 리스트에서 제외.</li>
+      <li><strong>네트워크 끊김</strong> — 마지막 캐시된 후보 list 표시 + snackbar "오프라인". 좋아요 mutation은 retry queue 또는 시각 revert.</li>
+      <li><strong>매칭 종료 (시간 / 운영자 강제)</strong> — 별도 state로 분리됨 (Ended state 참고). list 비공개 + 안내만 노출. 결과 산출 완료 시 자동으로 ResultsScreen으로 라우팅.</li>
+      <li><strong>본인이 좋아요 받은 사람 보임</strong> — backend가 hidden 처리 (받은 좋아요는 결과 화면에서만 reveal — 진행 중 노출 X).</li>
+      <li><strong>list 길이 — 참가자 ~20명대 기준</strong>: scroll로 충분. 50+ 케이스는 search/filter 별도 spec 고려.</li>
     </ul>
   </section>
 </div>
 
 <!-- ============================================================
-     REFERENCE
+     📖 REFERENCE
      ============================================================ -->
 <div class="perspective" id="reference">
   <div class="perspective__header">
     <span class="glyph">📖</span>
     <h2>Reference</h2>
-    <span class="lede">implementation source + 인접 화면.</span>
+    <span class="lede">implementation source + 인접 spec.</span>
   </div>
 
   <section class="doc">
     <h2>Implementation source</h2>
     <table class="ref">
       <tbody>
-        <tr><th style="width: 200px;">Screen widget (target)</th><td><code>EventMatchingScreen</code> — <em style="color: var(--color-text-secondary);">아직 추출 전. 현재는 <code>MatchingContent</code>가 EventNowBottomSheet 내부 phase로 inline 렌더 중.</em></td></tr>
-        <tr><th>Current phase widget</th><td><code>MatchingContent</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/home/widgets/event_now_phases/matching_content.dart"><code>apps/app_user/lib/src/features/home/widgets/event_now_phases/matching_content.dart</code></a> · drag handle + title + status + <code>SizedBox(0.6 × screen.height)</code> + MatchingVoteContent</td></tr>
-        <tr><th>Vote content</th><td><code>MatchingVoteContent</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/common/widgets/matching_vote_content.dart"><code>apps/app_user/lib/src/common/widgets/matching_vote_content.dart</code></a> · matches banner + vote-meta row + GridView 후보 리스트 (Fix #658에서 Scaffold-free로 추출)</td></tr>
-        <tr><th>Re-export shim</th><td><code>matching_vote_content.dart</code> in <code>features/event/matching/widgets/</code> · re-export from <code>common/widgets/</code> (cross-feature import 회피)</td></tr>
-        <tr><th>Full-screen variant</th><td><code>MatchingVoteScreen</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/event/matching/matching_vote_screen.dart"><code>matching_vote_screen.dart</code></a> · Scaffold + simpleAppBar + MatchingVoteContent (현재 라우트 미연결, 향후 polymorphic 사용처 후보)</td></tr>
-        <tr><th>Sheet wrapper (current)</th><td><code>showEventNowBottomSheet</code> + <code>EventNowBottomSheet</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/home/widgets/event_now_bottom_sheet.dart"><code>event_now_bottom_sheet.dart</code></a> · phase별 콘텐츠 분기</td></tr>
-        <tr><th>Vote controller</th><td><code>MatchingVoteController</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/event/matching/matching_vote_controller.dart"><code>matching_vote_controller.dart</code></a> · <code>vote(eventId, candidateId)</code> → <code>matchingRepository.castVote</code> + 3 provider invalidate</td></tr>
-        <tr><th>Data providers</th><td><code>matchCandidatesProvider</code> · <code>myMatchesProvider</code> · <code>myVoteCountProvider</code> · <code>maxVoteCountProvider</code> · <code>myVotedCandidateIdsProvider</code> — <code>minglit_kit/matching_repository.dart</code></td></tr>
-        <tr><th>Models</th><td><code>UserProfile</code> (candidate · id, name, profileImage), <code>MatchPair</code> (matchId, eventId, partnerId, partnerName?, partnerContact?, partnerProfileImage?, matchedAt) — <code>minglit_kit</code></td></tr>
-        <tr><th>Route registration (planned)</th><td><code>EventMatchingRoute</code> · path <code>/events/:id/matching</code> · <code>ModalBottomSheetRoute</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/routing/app_routes.dart"><code>app_routes.dart</code></a> <em style="color: var(--color-text-secondary);">(추후 추가)</em></td></tr>
-        <tr><th>Theme</th><td><code>MinglitTheme.materialTheme</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/shared/packages/mds/core/lib/src/theme/minglit_theme.dart"><code>minglit_theme.dart</code></a> · sheet bg = <code>ColorScheme.surface</code> (white) · scrim = Material default 0.5 black</td></tr>
+        <tr><th style="width: 200px;">Widget</th><td><code>EventMatchingScreen</code> — <code>apps/app_user/lib/src/features/event/matching/event_matching_screen.dart</code> (v2 폴리시 적용 예정)</td></tr>
+        <tr><th>Route</th><td><code>EventMatchingRoute</code> · <code>/events/:id/matching</code> · 풀 화면 push (sheet 아님)</td></tr>
+        <tr><th>Provider</th><td><code>matchingCandidatesProvider(eventId)</code> — 후보 list + 본인 좋아요 상태 watch. <strong>입장 그룹 필터링은 backend에서 처리</strong> — 같은 입장 그룹(예: "남자")에 속한 사용자는 list에서 제외, 다른 입장 그룹(예: "여자")만 노출.</td></tr>
+        <tr><th>Mutation</th><td><code>commitMatchLikesMutation(eventId, targetUserIds[])</code> — confirm dialog 확인 시 호출 · 선택 list 전체를 batch upsert (idempotent · timestamp 저장). 최대 3명.</td></tr>
+        <tr><th>Selection 제약</th><td>최대 3명 — 클라이언트 측에서 4번째 체크 시도 시 무시 + snackbar "최대 3명까지 선택할 수 있어요". 백엔드도 동일 제약 enforce.</td></tr>
+        <tr><th>Bottom CTA 컴포넌트</th><td><a href="/components#MinglitBottomCta"><code>MinglitBottomCta</code></a> (<em>single 변형</em>) — Scaffold.bottomNavigationBar slot에 배치. label "확인" · onPressed: 선택 ≥1명 시 commit handler · 0명이면 null(=disabled). 키보드 자동 숨김 / SafeArea 자동 처리 / 상단 0.5px outlineVariant 표준.</td></tr>
+        <tr><th>Dialog 컴포넌트</th><td><a href="https://github.com/Mark-Yun/minglit/blob/dev/shared/packages/mds/core/lib/src/ui/widgets/common/minglit_alert.dart"><code>MinglitAlert.showConfirm</code></a> — 밍글릿 표준 컴포넌트. title + multi-line content + (cancel + confirm) actions. content는 String이며 "선택 이름 list" + "서로 좋아요시 연락처 교환" + "수정 가능 안내" 3 단락 줄바꿈 처리.</td></tr>
+        <tr><th>Backend table (예상)</th><td><code>event_match_likes</code> (user_id, target_user_id, event_id, liked_at) — RLS는 본인 own row만 read/write. <em>(별도 migration issue 권장)</em></td></tr>
+        <tr><th>Profile fields</th><td>현재 노출: name, avatarUrl, isVerified. <strong>직업·나이는 placeholder</strong> — 별도 issue로 프로필 필드 확장 예정 (signup_consent_page 또는 my_profile spec에서 입력).</td></tr>
       </tbody>
     </table>
   </section>
 
   <section class="doc">
-    <h2>Related screens</h2>
+    <h2>Related screens / atoms</h2>
     <table class="ref">
       <thead><tr><th style="width: 240px;">Spec</th><th>Relation</th></tr></thead>
       <tbody>
         <tr>
+          <td><a href="/specs/event_ongoing_banner.html"><code>EventOngoingBanner</code></a></td>
+          <td>matchingReady phase에서 "매칭 시작하기" footer가 이 화면 진입점 — phase 4-5 lifecycle source.</td>
+        </tr>
+        <tr>
           <td><a href="/specs/event_now_bar.html"><code>EventNowBar</code></a></td>
-          <td>이 sheet의 진입 trigger — bar의 <code>matchingReady</code>(action) / <code>matching</code>(passive) state 탭. routed-sheet 매핑 5종 중 세 번째.</td>
+          <td>HomePage 하단 shortcut — matching 상태일 때 탭으로도 진입 가능 (재진입).</td>
         </tr>
         <tr>
-          <td><a href="/specs/home_page.html"><code>HomePage</code></a></td>
-          <td>parent route — 시트가 push되는 동안 scrim 아래로 그대로 유지. dismiss 시 복귀.</td>
+          <td><a href="/specs/event_matching_results_screen.html"><code>EventMatchingResultsScreen</code></a></td>
+          <td>결과 화면 (별도 spec) — 매칭이 모두 종료된 후 양방향 매치 reveal. 진행 중 결과 노출은 여기서 일체 안 함.</td>
         </tr>
         <tr>
-          <td><a href="/specs/event_check_in_screen.html"><code>EventCheckInScreen</code></a></td>
-          <td>직전 phase의 routed sheet — checkInReady / waiting 시 진입. 체크인 완료 → matching phase 진입 시 본 sheet으로 자동 transition.</td>
-        </tr>
-        <tr>
-          <td><a href="/specs/event_results_screen.html"><code>EventResultsScreen</code></a></td>
-          <td>다음 phase — voting complete + 결과 산출 후 EventNowBar의 results state에서 push되는 sheet.</td>
+          <td><a href="/specs/my_tickets_page.html"><code>MyTicketsPage</code></a></td>
+          <td>parent surface — OngoingBanner stack hub. back 시 복귀 지점.</td>
         </tr>
       </tbody>
     </table>
