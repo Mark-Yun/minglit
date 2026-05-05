@@ -65,7 +65,11 @@ AdmissionState _checkEligibility({
 }) {
   var isAnyEligible = false;
   var isAnyQualificationNeeded = false;
+  // Fix #2160: track gender-compatible reason separately from pure gender-mismatch
+  // so a female user gets the age error from the female group, not the gender error
+  // from the male group.
   String? firstIneligibleReason;
+  String? bestIneligibleReason;
   final allMissingIds = <String>{};
 
   for (final ticket in tickets) {
@@ -95,7 +99,15 @@ AdmissionState _checkEligibility({
           allMissingIds.addAll(missingIds);
         }
       } else {
-        firstIneligibleReason ??= reason;
+        final isGenderMismatch =
+            group.gender != null &&
+            userProfile.gender != null &&
+            group.gender != userProfile.gender;
+        if (isGenderMismatch) {
+          firstIneligibleReason ??= reason;
+        } else {
+          bestIneligibleReason ??= reason;
+        }
       }
     }
     if (isAnyEligible) break;
@@ -119,7 +131,8 @@ AdmissionState _checkEligibility({
   return AdmissionState(
     status: EventAdmissionStatus.notEligible,
     user: currentUser,
-    ineligibleReason: firstIneligibleReason ?? '참여 조건이 맞지 않습니다.',
+    ineligibleReason:
+        bestIneligibleReason ?? firstIneligibleReason ?? '참여 조건이 맞지 않습니다.',
   );
 }
 

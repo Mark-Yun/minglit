@@ -20,14 +20,33 @@ class PartnerApplyPage extends ConsumerStatefulWidget {
 
 class _PartnerApplyPageState extends ConsumerState<PartnerApplyPage> {
   late final PageController _pageController;
+  // Fix #2130: flag to suppress animateToPage during draft restore — prevents
+  // title/content desync where AppBar shows the restored step title but the
+  // PageView is still animating from page 0 through intermediate steps.
+  bool _isRestoringDraft = false;
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      unawaited(ref.read(partnerApplyControllerProvider.notifier).loadDraft());
+      unawaited(_restoreDraft());
     });
+  }
+
+  Future<void> _restoreDraft() async {
+    _isRestoringDraft = true;
+    try {
+      await ref.read(partnerApplyControllerProvider.notifier).loadDraft();
+    } finally {
+      _isRestoringDraft = false;
+    }
+    if (!mounted) return;
+    final step = ref.read(partnerApplyControllerProvider).currentStep;
+    if (step > 0 && _pageController.hasClients) {
+      // Fix #2130: jumpToPage (instant) avoids animation-period desync
+      _pageController.jumpToPage(step);
+    }
   }
 
   @override
@@ -37,6 +56,8 @@ class _PartnerApplyPageState extends ConsumerState<PartnerApplyPage> {
   }
 
   void _onStepChanged(int step) {
+    // Fix #2130: skip animated transition during draft restore
+    if (_isRestoringDraft) return;
     if (_pageController.hasClients) {
       unawaited(
         _pageController.animateToPage(
@@ -167,11 +188,16 @@ class _PartnerApplyPageState extends ConsumerState<PartnerApplyPage> {
               Expanded(
                 flex: 2,
                 child: ElevatedButton(
+                  // Fix #2162, #2163: validate current step before advancing —
+                  // nextStep() had no validation gate, allowing progression
+                  // through Step 3/4 without required fields
                   onPressed: isLoading
                       ? null
                       : (isLastStep
                             ? (notifier.canProceed() ? notifier.submit : null)
-                            : notifier.nextStep),
+                            : (notifier.validateStep(state.currentStep)
+                                  ? notifier.nextStep
+                                  : null)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: MinglitColors.primary,
                     foregroundColor: MinglitColors.background,

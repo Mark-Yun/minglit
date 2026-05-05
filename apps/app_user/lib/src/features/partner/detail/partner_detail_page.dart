@@ -39,10 +39,8 @@ class PartnerDetailPage extends ConsumerWidget {
           return PartnerDetailView(
             partner: partner,
             onEventTap: (event) => coordinator.pushEventDetail(event.id),
-            onMoreEventsTap: () => coordinator.pushPartnerEvents(
-              partnerId: partnerId,
-              partnerName: partner.name,
-            ),
+            onMoreEventsTap: () =>
+                coordinator.pushPartnerEvents(partnerId: partnerId),
           );
         },
       ),

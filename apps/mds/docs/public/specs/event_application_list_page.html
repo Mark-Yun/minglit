@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Spec — EventApplicationListPage (app_partner · EventApplicationListRoute)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* ============================================================
+   EventApplicationListPage-specific atoms.
+
+   단일 이벤트의 참가 신청 풀 리스트 화면 (v2 — 입장그룹 sub-section + 심사 carousel 진입).
+   - 진입: partner_event_detail_page의 참가 현황 섹션 탭
+   - 심사 대기 카드 탭 → EventApplicationReviewCarouselRoute push (그 사용자부터)
+   - 처리 완료 카드 탭 → EventApplicationDetailRoute push (read-only 회고)
+   - Brand primary = MinglitPartnerColors.primary (#6c3ce1)
+   ============================================================ */
+.viewport {
+  --color-primary: var(--color-partner-primary);
+  --spec-blueprint-rgb: 108, 60, 225;
+}
+body.dark-mode .viewport {
+  --color-primary: var(--color-partner-dark-primary);
+}
+
+/* --- App bar --- */
+.eal-appbar {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  background: var(--color-surface);
+}
+.eal-appbar__back {
+  width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--color-text-primary);
+}
+.eal-appbar__back svg { width: 22px; height: 22px; }
+.eal-appbar__title {
+  flex: 1;
+  font-size: var(--typography-font-size-app-bar-title);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+.eal-appbar__count {
+  margin-right: var(--spacing-screen-edge);
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+/* --- Body --- */
+.eal-body {
+  position: absolute;
+  top: 56px;
+  left: 0; right: 0; bottom: 64px;
+  overflow-y: auto;
+  scrollbar-width: none;
+  background: var(--color-surface);
+  padding: var(--spacing-medium);
+  box-sizing: border-box;
+}
+.eal-body--no-cta { bottom: 0; }
+.eal-body::-webkit-scrollbar { display: none; }
+
+/* --- Group header --- */
+.eal-group {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0 0 var(--spacing-small);
+}
+.eal-group--done {
+  color: var(--color-text-secondary);
+  margin-top: var(--spacing-large);
+  font-weight: 600;
+}
+
+/* --- Entry-group sub-section --- */
+.eal-eg {
+  margin-bottom: var(--spacing-medium);
+}
+.eal-eg__head {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xsmall);
+  margin: 0 0 6px;
+}
+.eal-eg__label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.eal-eg__count {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+.eal-eg__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: var(--spacing-small);
+}
+.eal-eg__chip {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  background: var(--color-divider);
+  border-radius: 999px;
+  padding: 2px 8px;
+  line-height: 1.4;
+}
+.eal-eg__chip--required {
+  color: var(--color-partner-primary);
+  background: rgba(108, 60, 225, 0.1);
+}
+
+/* --- Application card --- */
+.eal-card {
+  background: var(--color-background);
+  border-radius: var(--radius-card);
+  border: 1px solid var(--color-divider);
+  padding: var(--spacing-medium);
+  margin-bottom: var(--spacing-small);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-small);
+}
+.eal-card--done { opacity: 0.85; }
+.eal-card__avatar {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: rgba(108, 60, 225, 0.15);
+  color: var(--color-partner-primary);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700;
+  font-size: 15px;
+}
+.eal-card__body { flex: 1; min-width: 0; }
+.eal-card__name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+.eal-card__sub {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
+.eal-card__badge {
+  padding: 4px 8px;
+  border-radius: var(--radius-small);
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+.eal-card__badge--pending {
+  color: var(--color-warning, #b85a00);
+  background: rgba(255, 165, 0, 0.12);
+  border-color: rgba(255, 165, 0, 0.25);
+}
+.eal-card__badge--approved {
+  color: #15803d;
+  background: rgba(34, 197, 94, 0.12);
+  border-color: rgba(34, 197, 94, 0.25);
+}
+.eal-card__badge--paid {
+  color: var(--color-partner-primary);
+  background: rgba(108, 60, 225, 0.12);
+  border-color: rgba(108, 60, 225, 0.25);
+}
+.eal-card__badge--rejected {
+  color: var(--color-error);
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.25);
+}
+.eal-card__chevron {
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+  margin-left: 4px;
+}
+.eal-card__chevron svg { width: 14px; height: 14px; }
+
+/* --- Sticky bottom CTA --- */
+.eal-cta {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-divider);
+  padding: var(--spacing-small) var(--spacing-medium);
+  box-sizing: border-box;
+}
+.eal-cta__btn {
+  width: 100%;
+  height: 48px;
+  border-radius: var(--radius-card);
+  background: var(--color-partner-primary);
+  color: white;
+  font-size: 15px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+/* --- Empty state --- */
+.eal-empty {
+  position: absolute;
+  inset: 56px 0 0 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  text-align: center;
+  padding: 0 var(--spacing-large);
+  gap: var(--spacing-small);
+}
+.eal-empty__icon {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: var(--color-divider);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-small);
+}
+.eal-empty__icon svg { width: 28px; height: 28px; }
+.eal-empty__title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.eal-empty__sub {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
+</div>
+
+<div class="page">
+
+<!-- ============================================================
+     HEADER
+     ============================================================ -->
+<header>
+  <h1>Event Application List</h1>
+</header>
+
+<!-- ============================================================
+     OVERVIEW
+     ============================================================ -->
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr>
+        <th style="width: 140px;">Status</th>
+        <td><strong>📝 Redesign</strong> <em style="color: var(--color-text-secondary);">— v2 (입장그룹 sub-section + 심사 carousel 진입)</em></td>
+      </tr>
+      <tr>
+        <th>App</th>
+        <td><code>app_partner</code></td>
+      </tr>
+      <tr>
+        <th>Category</th>
+        <td>party · event · application · list (per-event)</td>
+      </tr>
+      <tr>
+        <th>Route / Surface</th>
+        <td><code>EventApplicationListRoute</code> · widget: <code>EventApplicationListPage</code></td>
+      </tr>
+      <tr>
+        <th>Path</th>
+        <td><code>/more/parties/:partyId/events/:eventId/applications</code></td>
+      </tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>: <a href="/specs/partner_event_detail_page.html"><code>EventDetailPage</code></a> (참가 현황 섹션 탭)<br>
+          <strong>Children</strong>:
+          <a href="/specs/event_application_review_carousel_page.html"><code>EventApplicationReviewCarouselRoute</code></a> (심사 대기 카드 탭 — 배치 심사 진입) ·
+          <a href="/specs/event_application_detail_page.html"><code>EventApplicationDetailRoute</code></a> (처리 완료 카드 탭 — read-only 회고)
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>
+          단일 이벤트에 들어온 참가 신청을 두 묶음(<em>심사 대기</em> · <em>처리 완료</em>)으로 보여주는 풀 리스트.
+          심사 대기 묶음은 <strong>입장그룹별 sub-section</strong>으로 정렬해 운영자가 그룹별 조건(성별·연령·required verifications)을 한눈에 확인할 수 있게 한다.
+          심사 대기 카드를 탭하면 <a href="/specs/event_application_review_carousel_page.html">EventApplicationReviewCarouselPage</a>(배치 심사 carousel)에 그 사용자부터 진입해 한 화면에서 연속 심사할 수 있다.
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry points</strong>: 이벤트 상세(<a href="/specs/partner_event_detail_page.html">EventDetailPage</a>)의 "참가 현황" 섹션 탭. 또는 파트너 메인 nav의 <a href="/specs/event_application_manage_page.html">EventApplicationManagePage</a>(전체 이벤트 across)에서 특정 이벤트로 좁혀 진입(향후 — 본 spec 범위 밖).<br>
+          <strong>Exit points</strong>: AppBar back → EventDetailPage 복귀 / 심사 대기 카드 탭 → carousel push / 처리 완료 카드 탭 → detail page push / bottom CTA → carousel push (큐 처음부터).<br>
+          carousel / confirm 화면에서 최종 확정 후 본 화면으로 복귀하면 리스트가 자동 invalidate되어 카드가 적절한 그룹으로 재배치된다.
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          v1은 신청을 단일 평면 리스트로 보여주고 카드별로 상세 페이지에서 개별 처리하는 구조였다. 입장그룹별 조건이 다른데도 그룹 시각화가 없어 운영자가 매번 카드 안으로 들어가서 조건을 재확인해야 했고, 신청이 많은 이벤트에서는 한 건씩 페이지를 오가는 비용이 컸다.
+          v2는 (1) 심사 대기를 입장그룹별로 묶어 조건을 한눈에 보이게 하고, (2) 카드 탭 시 배치 심사 carousel로 진입해 연속 심사 + 최종 확인 화면에서 한 번에 커밋하는 deferred batch 패턴을 도입한다.
+        </td>
+      </tr>
+      <tr>
+        <th>Frequency</th>
+        <td>이벤트 lifecycle 동안 운영자가 평균 5~20회 진입. 신청 흐름 활발한 이벤트일수록 빈도 높음.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================
+     HISTORY
+     ============================================================ -->
+<section class="doc">
+  <h2>History</h2>
+  <table class="ref">
+    <thead>
+      <tr>
+        <th style="width: 110px;">날짜</th>
+        <th style="width: 120px;">버전</th>
+        <th>변경 사항</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2026-05-03</td>
+        <td>v2 (redesign)</td>
+        <td>심사 대기 그룹을 입장그룹별 sub-section으로 분리. 카드 탭 라우팅 분기(심사 대기 → carousel · 처리 완료 → detail). bottom sticky CTA "심사 시작" 추가. Deferred batch review 패턴으로 carousel/confirm 자매 spec 도입.</td>
+      </tr>
+      <tr>
+        <td>2026-05-03</td>
+        <td>v1 (initial)</td>
+        <td>초안 작성. EventDetailPage Tab 2에 있던 신청 리스트를 별도 라우트로 승격. 신청 카드 탭 시 다이얼로그 대신 EventApplicationDetailRoute로 push 통일.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================
+     LAYOUT
+     ============================================================ -->
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Layout</h2>
+    <span class="lede">화면 구조 — 영역, 정렬, 간격 규칙. 색·타이포 무시.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree</h2>
+    <p class="intro">
+      <code>Scaffold</code> — AppBar(title + 우측 small count) + body(<code>ListView</code>: 심사 대기 그룹 → 입장그룹별 sub-section → 카드 / 처리 완료 그룹 → flat 카드) + bottom sticky CTA(심사 대기 ≥1일 때만). 심사 대기 카드 탭 시 carousel로 push, 처리 완료 카드 탭 시 detail로 push.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint">
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <!-- AppBar -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:0;left:0;right:0;height:56px;">
+          <span class="blueprint__region-label">① AppBar — back + '참가 신청' (left) + count 배지(right · '심사 N · 완료 M')</span>
+        </div>
+
+        <!-- Pending group header -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:80px;left:16px;right:16px;height:28px;">
+          <span class="blueprint__region-label" style="font-size:9px;">② 심사 대기 그룹 헤더 — '심사 대기 (N)'</span>
+        </div>
+
+        <!-- Entry group sub-section A -->
+        <div class="blueprint__region" style="top:116px;left:16px;right:16px;height:64px;">
+          <span class="blueprint__region-label">③ 입장그룹 sub-header — 라벨 + 조건 chips</span>
+        </div>
+        <div class="blueprint__region" style="top:188px;left:16px;right:16px;height:80px;">
+          <span class="blueprint__region-label">④ 입장그룹 A 카드 stack</span>
+        </div>
+
+        <!-- Entry group sub-section B -->
+        <div class="blueprint__region" style="top:284px;left:16px;right:16px;height:64px;">
+          <span class="blueprint__region-label">⑤ 입장그룹 B sub-header</span>
+        </div>
+        <div class="blueprint__region" style="top:356px;left:16px;right:16px;height:60px;">
+          <span class="blueprint__region-label">⑥ 입장그룹 B 카드 stack</span>
+        </div>
+
+        <!-- Done group -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:440px;left:16px;right:16px;height:28px;">
+          <span class="blueprint__region-label" style="font-size:9px;">⑦ 처리 완료 그룹 헤더 — '처리 완료 (M)'</span>
+        </div>
+        <div class="blueprint__region" style="top:476px;left:16px;right:16px;height:88px;">
+          <span class="blueprint__region-label">⑧ 처리 완료 카드 stack — flat (입장그룹 무관 · 톤 가라앉힘)</span>
+        </div>
+
+        <!-- Sticky CTA -->
+        <div class="blueprint__region blueprint__region--shaded" style="bottom:0;left:0;right:0;height:64px;">
+          <span class="blueprint__region-label">⑨ Sticky '심사 시작 (N건)' — 심사 대기 ≥1일 때만</span>
+        </div>
+
+        <div class="blueprint__align-marker" style="top:8px;right:8px;">screen-edge pad 16</div>
+        <div class="blueprint__align-marker" style="top:424px;right:8px;">↕ spacing-large (24)</div>
+      </div>
+
+      <div class="layout-tree"><b>Scaffold</b>
+├─ <b>appBar</b>: <b>AppBar</b>                                  ← ①
+│  ├─ leading: BackButton (auto)
+│  ├─ title: Text('참가 신청')
+│  └─ actions: [Text('심사 N · 완료 M') <i>· bodySmall · text-secondary</i>]
+├─ <b>body</b>: <code>MinglitAsyncValueWidget&lt;Bundle&gt;</code>
+│  · Bundle = (entryGroups, applications) — 입장그룹과 신청을 같이 로드
+│  ├─ loading: full-page spinner
+│  ├─ error:   full-page error state
+│  └─ data:
+│     ├─ <em>case A — 빈 상태</em> (신청 0건)
+│     │  └─ Center → 안내 카피 + actionable hint
+│     │
+│     └─ <em>case B — 데이터 있음</em>
+│        └─ <b>ListView</b>(padding: <i>spacing-medium</i>)
+│           ├─ if pending.isNotEmpty:                          ← ②
+│           │  ├─ Text('심사 대기 (N)') <i>· 15px · w700</i>
+│           │  ├─ SizedBox(<i>spacing-small</i>)
+│           │  └─ for each entryGroup with pending ≥1:          ← ③④⑤⑥
+│           │     ├─ <b>_EntryGroupHeader</b>
+│           │     │  ├─ Text(group.label) <i>· 13px · w700</i>
+│           │     │  ├─ Text('· N건') <i>· 11px · secondary</i>
+│           │     │  └─ chip row
+│           │     │     · 성별 · 출생연도 범위 · required verifications (each chip)
+│           │     ├─ SizedBox(<i>spacing-small</i>)
+│           │     └─ <b>_ApplicationCard</b> × N
+│           │        · onTap → push <a href="/specs/event_application_review_carousel_page.html">CarouselRoute</a>(eventId, startApplicationId)
+│           │
+│           └─ if done.isNotEmpty:                              ← ⑦⑧
+│              ├─ SizedBox(<i>spacing-large</i>)
+│              ├─ Text('처리 완료 (M)') <i>· 15px · w600 · secondary</i>
+│              ├─ SizedBox(<i>spacing-small</i>)
+│              └─ <b>_ApplicationCard</b> × M (flat, 입장그룹 무관)
+│                 · status badge별 톤 (approved · paid · rejected)
+│                 · onTap → push <a href="/specs/event_application_detail_page.html">DetailRoute</a>(applicationId)
+│
+└─ <b>bottomNavigationBar</b>: <i>(if pending ≥1)</i>           ← ⑨
+   └─ <b>SafeArea</b> → Sticky CTA
+      └─ <code>FilledButton</code>('심사 시작 (N건)')
+         · onTap → push CarouselRoute(eventId, startApplicationId: 큐 첫 사용자)
+
+<em>각 _EntryGroupHeader chip 종류:</em>
+└─ 성별: '여성만' / '남성만' / '제한 없음' (gender 필드 기반)
+   출생연도: '1990~1999' / '20대 이상' / '제한 없음'
+   required: 'required: 신원확인' / 'required: 직업 인증' (각 verification id별 한 chip · primary 톤)
+
+<em>각 _ApplicationCard 내부:</em>
+└─ Card / InkWell wrap
+   └─ Row(padding: <i>spacing-medium</i>, gap: <i>spacing-small</i>)
+      ├─ <b>CircleAvatar</b>(40 · primaryContainer · 이름 첫 글자)
+      ├─ Expanded Column [
+      │    Text(user.name) · <i>14px · w600</i>
+      │    Text('남/여 · YYYY-MM-DD') · <i>12px · secondary</i>
+      │  ]
+      ├─ <b>_StatusBadge</b>
+      │  · pending_review → '심사 중' (warning 톤)
+      │  · approved       → '승인됨' (success 톤)
+      │  · paid           → '결제완료' (primary 톤)
+      │  · rejected       → '거절됨' (error 톤)
+      └─ Icon(chevron_right · 14 · text-secondary)</div>
+    </div>
+  </section>
+
+  <section class="doc">
+    <h2>Spacing &amp; alignment rules</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing / tokens</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>①</td><td>AppBar</td><td>title left · count action right · 56px</td><td>centerTitle: false · h-pad <code>spacing-screen-edge</code> · count text <code>bodySmall</code> + <code>color-text-secondary</code> · margin-right <code>spacing-screen-edge</code></td></tr>
+        <tr><td>②⑦</td><td>Group header</td><td>좌측 정렬 · 단독 한 줄</td><td>심사 대기: 15px w700 <code>color-text-primary</code> · 처리 완료: 15px w600 <code>color-text-secondary</code> · 헤더↔첫 sub-section gap <code>spacing-small (8)</code></td></tr>
+        <tr><td>③⑤</td><td>Entry-group sub-header</td><td>좌측 정렬 · 라벨 + count + chip row</td><td>라벨 13px w700 · count 11px secondary · chip row gap 4px · sub-header↔첫 카드 <code>spacing-small</code></td></tr>
+        <tr><td>—</td><td>Entry-group chips</td><td>가로 wrap · primary 톤은 required만</td><td>font 10px w500 · radius 999 · padding 2/8 · 일반 chip <code>color-divider</code> bg + secondary text · required chip <code>color-partner-primary</code> 10% bg + primary text</td></tr>
+        <tr><td>④⑥⑧</td><td>Application card</td><td>풀폭 with screen-edge h-margin · row(avatar + body + badge + chevron)</td><td>padding <code>spacing-medium</code> · radius <code>radius-card</code> · border 1px <code>color-divider</code> · bg <code>color-background</code> · 카드 사이 <code>spacing-small (8)</code> · 처리 완료 카드 opacity 0.85</td></tr>
+        <tr><td>—</td><td>Sub-section 간 간격</td><td>—</td><td>이전 sub-section 마지막 카드 ↔ 다음 sub-header: <code>spacing-medium (16)</code></td></tr>
+        <tr><td>—</td><td>그룹 사이</td><td>—</td><td>심사 대기 마지막 카드 ↔ 처리 완료 헤더: <code>spacing-large (24)</code></td></tr>
+        <tr><td>—</td><td>Status badge</td><td>row trailing · before chevron</td><td>padding 4px 8px · radius <code>radius-small</code> · font-size 11px w600 · bg/border = 12% / 25% alpha 톤별</td></tr>
+        <tr><td>⑨</td><td>Sticky CTA</td><td>bottom · full width · SafeArea inset</td><td>bg <code>color-surface</code> + 1px top border <code>color-divider</code> · h-pad <code>spacing-medium</code> · v-pad <code>spacing-small</code> · 버튼 height 48 · radius <code>radius-card</code> · bg <code>color-partner-primary</code> · 라벨 15px w700 white</td></tr>
+        <tr><td>—</td><td>Empty state</td><td>centered · 화면 중앙 · column gap small</td><td>icon 56px circle · bg <code>color-divider</code> · title 15px w700 · sub 13px secondary line-height 1.5</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<!-- ============================================================
+     STATES
+     ============================================================ -->
+<div class="perspective" id="states">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>States</h2>
+    <span class="lede">시각 변형 4종. baseline = 입장그룹 2개 이상 + 처리 완료 모두 있음.</span>
+  </div>
+
+  <section class="doc">
+    <p class="intro">
+      <strong>State 식별 기준</strong>: (a) 심사 대기 그룹의 입장그룹 수(2+ / 1 / 0) (b) 처리 완료 그룹 비어있는지. 모든 카드 탭 동작은 출처 그룹별로 분기 — 심사 대기 카드 탭 시 carousel push, 처리 완료 카드 탭 시 detail push.
+    </p>
+
+    <!-- =================================================
+         STATE 1 — Default (입장그룹 2+ + 처리 완료 ≥1)
+         ================================================= -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>State 1 · Default</strong> 🎯 <span class="tag tag--mute">baseline</span> · <small>입장그룹 ≥2 · 처리 완료 ≥1</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td rowspan="6" class="state-mini__mock"><div class="viewport">
+            <div class="eal-appbar">
+              <div class="eal-appbar__back">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+              </div>
+              <div class="eal-appbar__title">참가 신청</div>
+              <div class="eal-appbar__count">심사 4 · 완료 3</div>
+            </div>
+            <div class="eal-body">
+              <div class="eal-group">심사 대기 (4)</div>
+
+              <div class="eal-eg">
+                <div class="eal-eg__head">
+                  <span class="eal-eg__label">여성 그룹</span>
+                  <span class="eal-eg__count">· 2건</span>
+                </div>
+                <div class="eal-eg__chips">
+                  <span class="eal-eg__chip">여성만</span>
+                  <span class="eal-eg__chip">1990~1999</span>
+                  <span class="eal-eg__chip eal-eg__chip--required">required: 신원확인</span>
+                  <span class="eal-eg__chip eal-eg__chip--required">required: 직업 인증</span>
+                </div>
+                <div class="eal-card">
+                  <div class="eal-card__avatar">김</div>
+                  <div class="eal-card__body">
+                    <div class="eal-card__name">김민지</div>
+                    <div class="eal-card__sub">여 · 1996-03-12</div>
+                  </div>
+                  <div class="eal-card__badge eal-card__badge--pending">심사 중</div>
+                  <div class="eal-card__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+                </div>
+                <div class="eal-card">
+                  <div class="eal-card__avatar">정</div>
+                  <div class="eal-card__body">
+                    <div class="eal-card__name">정유진</div>
+                    <div class="eal-card__sub">여 · 1995-07-08</div>
+                  </div>
+                  <div class="eal-card__badge eal-card__badge--pending">심사 중</div>
+                  <div class="eal-card__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+                </div>
+              </div>
+
+              <div class="eal-eg">
+                <div class="eal-eg__head">
+                  <span class="eal-eg__label">남성 그룹</span>
+                  <span class="eal-eg__count">· 2건</span>
+                </div>
+                <div class="eal-eg__chips">
+                  <span class="eal-eg__chip">남성만</span>
+                  <span class="eal-eg__chip">1990~1999</span>
+                  <span class="eal-eg__chip eal-eg__chip--required">required: 신원확인</span>
+                </div>
+                <div class="eal-card">
+                  <div class="eal-card__avatar">박</div>
+                  <div class="eal-card__body">
+                    <div class="eal-card__name">박지호</div>
+                    <div class="eal-card__sub">남 · 1992-08-04</div>
+                  </div>
+                  <div class="eal-card__badge eal-card__badge--pending">심사 중</div>
+                  <div class="eal-card__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+                </div>
+                <div class="eal-card">
+                  <div class="eal-card__avatar">한</div>
+                  <div class="eal-card__body">
+                    <div class="eal-card__name">한승우</div>
+                    <div class="eal-card__sub">남 · 1994-11-22</div>
+                  </div>
+                  <div class="eal-card__badge eal-card__badge--pending">심사 중</div>
+                  <div class="eal-card__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+                </div>
+              </div>
+
+              <div class="eal-group eal-group--done">처리 완료 (3)</div>
+              <div class="eal-card eal-card--done">
+                <div class="eal-card__avatar">이</div>
+                <div class="eal-card__body">
+                  <div class="eal-card__name">이서연</div>
+                  <div class="eal-card__sub">여 · 1998-11-20</div>
+                </div>
+                <div class="eal-card__badge eal-card__badge--paid">결제완료</div>
+                <div class="eal-card__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+              </div>
+              <div class="eal-card eal-card--done">
+                <div class="eal-card__avatar">최</div>
+                <div class="eal-card__body">
+                  <div class="eal-card__name">최도윤</div>
+                  <div class="eal-card__sub">남 · 1990-05-15</div>
+                </div>
+                <div class="eal-card__badge eal-card__badge--rejected">거절됨</div>
+                <div class="eal-card__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+              </div>
+              <div class="eal-card eal-card--done">
+                <div class="eal-card__avatar">윤</div>
+                <div class="eal-card__body">
+                  <div class="eal-card__name">윤하늘</div>
+                  <div class="eal-card__sub">여 · 1997-02-18</div>
+                </div>
+                <div class="eal-card__badge eal-card__badge--approved">승인됨</div>
+                <div class="eal-card__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+              </div>
+            </div>
+            <div class="eal-cta">
+              <div class="eal-cta__btn">심사 시작 (4건)</div>
+            </div>
+          </div></td>
+          <td class="state-mini__aspect">조건</td>
+          <td>이벤트와 입장그룹 데이터 로드 완료. 심사 대기 신청이 둘 이상의 입장그룹에 분포 · 처리 완료(승인 / 결제완료 / 거절 합산) ≥1건. 두 그룹 헤더 + 두 sub-section 모두 노출 + bottom CTA 활성.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            · <strong>심사 대기 카드 탭</strong> → 그 사용자부터 carousel 진입 (carousel 내부 큐 = 모든 입장그룹의 pending across, 입장그룹 경계 무시)<br>
+            · <strong>bottom '심사 시작' 탭</strong> → 큐 첫 사용자부터 carousel 진입<br>
+            · <strong>처리 완료 카드 탭</strong> → 상세 페이지로 push (조회 + 환불 / 노트 등 후속 액션)<br>
+            · <strong>최종 확정 후 복귀</strong> → 자동 invalidate → 카드가 그룹 사이를 이동 (심사 대기 → 처리 완료)<br>
+            · <strong>뒤로가기</strong> → EventDetailPage 복귀 + 로컬 마킹 캐시 invalidate
+          </td>
+        </tr>
+        <tr><td class="state-mini__aspect">에지케이스</td><td>· 입장그룹 sub-section은 그룹의 pending이 0이면 통째로 숨김 — 빈 헤더 노출 X<br>· 입장그룹 라벨이 비어있으면(template 미지정) "이름 없는 그룹"으로 fallback<br>· chip이 가로 폭을 초과하면 wrap (보존, ellipsis X)<br>· status badge 4종(pending_review / approved / paid / rejected) 모두 한 화면에 동시 가능</td></tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            <code>Scaffold</code> · <code>AppBar</code> · <code>MinglitAsyncValueWidget&lt;Bundle&gt;</code> · <code>ListView</code> · <code>_GroupHeader</code> · <code>_EntryGroupHeader</code>(label · count · chip row) · <code>_ApplicationCard</code> · <code>_StatusBadge</code> · <code>FilledButton</code>(sticky CTA) · <code>SafeArea</code>
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            <code>color-primary</code>(partner #6c3ce1 — avatar bg @ 15% / paid badge @ 12% / required chip 10% / sticky CTA bg 100%) · <code>color-text-primary</code>(이름 / 심사 대기 헤더 / sub-header 라벨) · <code>color-text-secondary</code>(서브 / 처리 완료 헤더 / 일반 chip / count) · <code>color-warning</code>(심사 중 badge) · <code>color-error</code>(거절 badge) · #15803d(승인 badge) · <code>radius-card</code> · <code>radius-small</code> · <code>spacing-screen-edge</code> · <code>spacing-medium</code> · <code>spacing-small</code> · <code>spacing-large</code> · typography 14px w600 (이름) / 12px secondary (서브) / 11px w600 (badge) / 13px w700 (sub-header 라벨) / 11px secondary (sub-header count) / 10px w500 (chip) / 15px w700 (CTA / 심사 대기 헤더) / 15px w600 secondary (처리 완료 헤더)
+          </td>
+        </tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 baseline. 입장그룹별 조건이 한눈에 들어오므로 운영자는 그룹 안 사용자만 빠르게 비교/판단할 수 있다. carousel 진입 시 순회는 입장그룹 경계를 넘어가는 점에 주의 — 큐는 created_at 정렬, 그룹별 batch가 아님.</td></tr>
+      </tbody>
+    </table>
+
+    <!-- =================================================
+         STATE 2 — 단일 입장그룹
+         ================================================= -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>State 2 · 단일 입장그룹</strong> <span class="tag tag--mute">single-group</span> · <small>심사 대기의 입장그룹 1개</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td rowspan="3" class="state-mini__mock"><div class="viewport">
+            <div class="eal-appbar">
+              <div class="eal-appbar__back">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+              </div>
+              <div class="eal-appbar__title">참가 신청</div>
+              <div class="eal-appbar__count">심사 3 · 완료 0</div>
+            </div>
+            <div class="eal-body">
+              <div class="eal-group">심사 대기 (3)</div>
+              <div class="eal-eg">
+                <div class="eal-eg__head">
+                  <span class="eal-eg__label">기본 그룹</span>
+                  <span class="eal-eg__count">· 3건</span>
+                </div>
+                <div class="eal-eg__chips">
+                  <span class="eal-eg__chip">제한 없음</span>
+                  <span class="eal-eg__chip eal-eg__chip--required">required: 신원확인</span>
+                </div>
+                <div class="eal-card">
+                  <div class="eal-card__avatar">김</div>
+                  <div class="eal-card__body">
+                    <div class="eal-card__name">김민지</div>
+                    <div class="eal-card__sub">여 · 1996-03-12</div>
+                  </div>
+                  <div class="eal-card__badge eal-card__badge--pending">심사 중</div>
+                  <div class="eal-card__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+                </div>
+                <div class="eal-card">
+                  <div class="eal-card__avatar">박</div>
+                  <div class="eal-card__body">
+                    <div class="eal-card__name">박지호</div>
+                    <div class="eal-card__sub">남 · 1992-08-04</div>
+                  </div>
+                  <div class="eal-card__badge eal-card__badge--pending">심사 중</div>
+                  <div class="eal-card__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+                </div>
+                <div class="eal-card">
+                  <div class="eal-card__avatar">한</div>
+                  <div class="eal-card__body">
+                    <div class="eal-card__name">한승우</div>
+                    <div class="eal-card__sub">남 · 1994-11-22</div>
+                  </div>
+                  <div class="eal-card__badge eal-card__badge--pending">심사 중</div>
+                  <div class="eal-card__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+                </div>
+              </div>
+            </div>
+            <div class="eal-cta">
+              <div class="eal-cta__btn">심사 시작 (3건)</div>
+            </div>
+          </div></td>
+          <td class="state-mini__aspect">조건</td>
+          <td>심사 대기의 입장그룹이 1개만 있고 처리 완료 0건. State 1 대비 sub-section이 하나뿐 + "처리 완료" 그룹 헤더/카드 모두 렌더 X.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>State 1과 동일. sub-section이 하나여도 헤더 + chip은 동일 표기 — 그룹 조건을 항상 명시.</td>
+        </tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 첫 신청자 도착 직후 단계 또는 단일 입장그룹 정책의 이벤트. carousel 진입 시 큐는 단일 그룹 안에서만 순회된다(자연스럽게).</td></tr>
+      </tbody>
+    </table>
+
+    <!-- =================================================
+         STATE 3 — 처리 완료만
+         ================================================= -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>State 3 · 처리 완료만</strong> <span class="tag tag--mute">done-only</span> · <small>심사 대기 0건 · 처리 완료 ≥1건</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td rowspan="3" class="state-mini__mock"><div class="viewport">
+            <div class="eal-appbar">
+              <div class="eal-appbar__back">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+              </div>
+              <div class="eal-appbar__title">참가 신청</div>
+              <div class="eal-appbar__count">심사 0 · 완료 5</div>
+            </div>
+            <div class="eal-body eal-body--no-cta">
+              <div class="eal-group eal-group--done" style="margin-top:0;">처리 완료 (5)</div>
+              <div class="eal-card eal-card--done">
+                <div class="eal-card__avatar">이</div>
+                <div class="eal-card__body">
+                  <div class="eal-card__name">이서연</div>
+                  <div class="eal-card__sub">여 · 1998-11-20</div>
+                </div>
+                <div class="eal-card__badge eal-card__badge--paid">결제완료</div>
+                <div class="eal-card__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+              </div>
+              <div class="eal-card eal-card--done">
+                <div class="eal-card__avatar">최</div>
+                <div class="eal-card__body">
+                  <div class="eal-card__name">최도윤</div>
+                  <div class="eal-card__sub">남 · 1990-05-15</div>
+                </div>
+                <div class="eal-card__badge eal-card__badge--approved">승인됨</div>
+                <div class="eal-card__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+              </div>
+            </div>
+          </div></td>
+          <td class="state-mini__aspect">조건</td>
+          <td>심사 대기 0건 · 처리 완료 ≥1건 (운영자의 todo zero 상태). 심사 대기 그룹 + sub-section + sticky CTA 모두 렌더 X.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>처리 완료 그룹 헤더가 본문 최상단에 위치 (margin-top 0). 카드 탭 → 상세 페이지로 push (조회 모드).</td>
+        </tr>
+        <tr><td class="state-mini__aspect">노트</td><td>✅ 평온한 상태. 새 신청이 들어오면 자동으로 State 1 / 2로 전환되며 sticky CTA가 다시 등장.</td></tr>
+      </tbody>
+    </table>
+
+    <!-- =================================================
+         STATE 4 — 빈 상태
+         ================================================= -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>State 4 · 빈 상태</strong> <span class="tag tag--mute">empty</span> · <small>신청 0건 (이벤트 직후 또는 마감 후)</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td rowspan="3" class="state-mini__mock"><div class="viewport">
+            <div class="eal-appbar">
+              <div class="eal-appbar__back">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+              </div>
+              <div class="eal-appbar__title">참가 신청</div>
+              <div class="eal-appbar__count">심사 0 · 완료 0</div>
+            </div>
+            <div class="eal-empty">
+              <div class="eal-empty__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+              </div>
+              <div class="eal-empty__title">신청 내역이 없습니다.</div>
+              <div class="eal-empty__sub">신청이 들어오면 여기에 표시됩니다.<br>이벤트가 외부에 잘 노출되고 있는지 확인해보세요.</div>
+            </div>
+          </div></td>
+          <td class="state-mini__aspect">조건</td>
+          <td>심사 대기 0건 · 처리 완료 0건 (신청 자체가 없음 — 새 이벤트 직후 또는 비공개 / 노출 부족). sticky CTA 비활성.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>· 화면 중앙에 빈 상태 가이드 노출<br>· 뒤로가기 → EventDetailPage 복귀<br>· 새 신청 발생 시 (자동 갱신) → State 1 / 2 / 3 중 하나로 자동 전환</td>
+        </tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📭 가이드 텍스트가 운영자에게 다음 액션 힌트(노출 점검)를 던진다 — 단순 "비어있음"이 아니라 actionable copy.</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<!-- ============================================================
+     GLOBAL BEHAVIOR
+     ============================================================ -->
+<div class="perspective" id="behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">모든 state에 동일하게 적용되는 동작.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Sub-section 그룹화 규칙</h2>
+    <ul>
+      <li><strong>심사 대기 그룹</strong>은 입장그룹별 sub-section으로 묶여 표시된다. 매핑은 <code>application.ticketId</code> → <code>ticket.target_entry_group_id(s)</code> → <code>entry_group</code>으로 해석.</li>
+      <li>sub-section 정렬 — <code>entry_group.created_at ASC</code> (이벤트 정의 시 입장그룹이 생성된 순서). 별도 position / display_order 컬럼은 도입하지 않는다 — 운영자가 사후 순서 조정을 요구한 적 없고, #2102 1:1 enforce 작업과 결합해 의도치 않은 컬럼 추가를 피한다.</li>
+      <li>sub-section 안 카드 정렬 — <code>created_at DESC</code> (최근 신청이 위).</li>
+      <li>심사 대기 카운트(상단 헤더 + appbar count)는 모든 sub-section 합산.</li>
+      <li>입장그룹의 pending이 0이면 sub-section은 통째로 숨긴다(빈 헤더 노출 금지).</li>
+      <li><strong>처리 완료 그룹</strong>은 입장그룹 sub-grouping을 적용하지 않는다 — flat list, <code>updated_at DESC</code>(최근 처리한 게 위).</li>
+    </ul>
+  </section>
+
+  <section class="doc">
+    <h2>Carousel 진입 큐 정의</h2>
+    <ul>
+      <li>심사 대기 카드 탭 → carousel push에 <code>startApplicationId</code> 전달. carousel 내부 큐는 <strong>전체 심사 대기 신청</strong>(입장그룹 경계 무시) · <code>created_at ASC</code> 정렬.</li>
+      <li>예: 입장그룹 B의 두 번째 카드를 탭하면, carousel 큐 안에서 그 사용자의 위치(예: 4 / 6)에서 시작 → 자동 다음 사용자 이동 시 입장그룹 A의 사용자로 자연스럽게 넘어갈 수 있다.</li>
+      <li>bottom sticky '심사 시작' CTA → 큐 첫 사용자부터 시작.</li>
+      <li>carousel에서 페이지 이탈(리스트로 pop) 시 마킹은 보존. 본 리스트 화면을 추가로 이탈(EventDetailPage로 pop)하면 마킹 캐시가 invalidate (자세한 룰은 carousel spec 참조).</li>
+    </ul>
+  </section>
+
+  <section class="doc">
+    <h2>리스트 fresh 정책</h2>
+    <ul>
+      <li>화면 진입 시 (entryGroups, applications) 번들을 fresh fetch.</li>
+      <li>carousel/confirm에서 <strong>최종 확정</strong> 후 본 화면 복귀 시 자동 갱신 — 카드가 그룹 사이를 자연스럽게 이동(심사 대기 → 처리 완료).</li>
+      <li>processing 완료 직후 입장그룹 sub-section의 pending이 0이 되면 sub-section 자체가 사라짐 → 자연스러운 "비워짐" 시그널.</li>
+      <li>실시간 갱신(다른 운영자 동시 처리)은 본 spec 범위 밖 — 향후 realtime subscription 고려.</li>
+    </ul>
+  </section>
+
+  <section class="doc">
+    <h2>카드 탭 라우팅 분기</h2>
+    <ul>
+      <li><strong>심사 대기 카드</strong> → <a href="/specs/event_application_review_carousel_page.html"><code>EventApplicationReviewCarouselRoute</code></a> (그 사용자부터 배치 심사).</li>
+      <li><strong>처리 완료 카드</strong> → <a href="/specs/event_application_detail_page.html"><code>EventApplicationDetailRoute</code></a> (read-only 회고 + 환불 / 노트 등 후속 액션).</li>
+      <li>같은 카드 컴포넌트지만 출처 그룹에 따라 도착지가 다르다는 점이 핵심.</li>
+    </ul>
+  </section>
+
+  <section class="doc">
+    <h2>입장그룹 chip 정책</h2>
+    <ul>
+      <li>chip 종류와 표기:
+        <ul>
+          <li><strong>성별</strong>: gender가 'male' → '남성만', 'female' → '여성만', null → '제한 없음'</li>
+          <li><strong>출생연도</strong>: birthYearMin / Max가 모두 null이면 '제한 없음', 둘 다 있으면 '1990~1999', 한쪽만 있으면 '1990 이후' / '1999 이전'</li>
+          <li><strong>required verifications</strong>: 각 verificationId마다 한 chip — 'required: 신원확인' (verification 라벨로 해석)</li>
+        </ul>
+      </li>
+      <li>required chip은 primary 톤 — 운영자가 가장 먼저 봐야 할 시그널이기 때문에 강조.</li>
+      <li>일반 chip(성별 / 출생연도)은 secondary 톤 — 그룹의 인구통계 컨텍스트 제공.</li>
+      <li>chip 가로 폭이 부족하면 wrap (여러 줄 가능). ellipsis 사용 X.</li>
+    </ul>
+  </section>
+</div>
+
+<!-- ============================================================
+     REFERENCE
+     ============================================================ -->
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">🔗</span>
+    <h2>Reference</h2>
+    <span class="lede">관련 라우트 · 화면 · 구현 소스.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Implementation source</h2>
+    <table class="ref">
+      <tbody>
+        <tr><td style="width: 160px;"><strong>Route</strong></td><td><code>EventApplicationListRoute</code></td></tr>
+        <tr><td><strong>Path</strong></td><td><code>/more/parties/:partyId/events/:eventId/applications</code></td></tr>
+        <tr><td><strong>Widget class</strong></td><td><code>EventApplicationListPage</code> (+ <code>_GroupHeader</code> · <code>_EntryGroupHeader</code> · <code>_ApplicationCard</code> · <code>_StatusBadge</code> internal widgets)</td></tr>
+        <tr><td><strong>App</strong></td><td><code>app_partner</code></td></tr>
+        <tr><td><strong>Source (예상)</strong></td><td><code>apps/app_partner/lib/src/features/event/applications/event_application_list_page.dart</code></td></tr>
+        <tr><td><strong>Bundle source</strong></td><td>입장그룹: <code>partyEntryGroupsProvider</code> 또는 이벤트 상세 cache · 신청: <code>eventApplicationsProvider(eventId)</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 280px;">Spec</th><th>관계</th></tr></thead>
+      <tbody>
+        <tr><td><a href="/specs/partner_event_detail_page.html"><code>EventDetailPage</code></a></td><td>Parent — 참가 현황 섹션 탭에서 진입.</td></tr>
+        <tr><td><a href="/specs/event_application_review_carousel_page.html"><code>EventApplicationReviewCarouselPage</code></a></td><td>Child (primary) — 심사 대기 카드 탭 / sticky CTA 탭 시 push되는 배치 심사 carousel.</td></tr>
+        <tr><td><a href="/specs/event_application_review_confirm_page.html"><code>EventApplicationReviewConfirmPage</code></a></td><td>Grandchild — carousel 큐가 끝나면 push되는 최종 확인 화면(리스트에서 직접 진입은 없음).</td></tr>
+        <tr><td><a href="/specs/event_application_detail_page.html"><code>EventApplicationDetailPage</code></a></td><td>Child (secondary) — 처리 완료 카드 탭 시 push. read-only 회고 + 환불 / 노트.</td></tr>
+        <tr><td><a href="/specs/event_application_manage_page.html"><code>EventApplicationManagePage</code></a></td><td>Sibling — 파트너 메인 nav의 cross-event 신청 리스트. 본 화면은 <em>단일 이벤트</em>로 좁힌 버전.</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+</div>
+</body>
+</html>

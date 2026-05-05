@@ -1420,6 +1420,163 @@ MinglitContentLayout(
   ),
 )`,
   },
+  {
+    name: 'MinglitTimeline',
+    category: 'Lists',
+    purpose:
+      '시간 순으로 진행된 이벤트를 vertical stepper로 보여주는 generic wrapper. 각 step은 좌측 dot + 그 아래로 이어지는 line + 우측 heading row(title + trailing slot) + 자유 children slot. 마지막 step은 line 없음. dot 색은 tone 분기 — success / progress / error / neutral / muted (semantic-neutral · 어떤 도메인 lifecycle도 매핑 가능). pulsing은 tone과 orthogonal한 박동 효과 (현재 진행 강조).',
+    props: [
+      { name: 'children', type: 'List<MinglitTimelineStep>', required: true, notes: '하나 이상의 step. 시간 순 (위→아래).' },
+    ],
+    variants: ['(step의 tone 별로 분기 — Tone 표 참조)'],
+    states: [
+      'success (dot color-success — 달성/통과)',
+      'progress (dot color-primary — 현재 진행)',
+      'error (dot + title color-error — 실패/거절)',
+      'neutral (dot color-text-secondary — 종결 비강조)',
+      'muted (outline only · color-text-secondary border — 미래/대기)',
+      'pulsing=true (1.4s loop — tone과 orthogonal)',
+    ],
+    tokens: [
+      { name: 'color-success',        where: 'success tone dot.' },
+      { name: 'color-primary',        where: 'progress tone dot + title.' },
+      { name: 'color-error',          where: 'error tone dot + title.' },
+      { name: 'color-text-secondary', where: 'neutral / muted dot · trailing 메타 텍스트 색.' },
+      { name: 'color-divider',        where: 'connecting line 2px 색.' },
+      { name: 'spacing-xlarge',       where: 'step 간 vertical gap (32px).' },
+      { name: 'spacing-small',        where: 'title ↔ trailing inline gap (8px).' },
+    ],
+    accessibility: [
+      'step title은 의미를 한국어로 명확히 전달 — 색에 의존하지 않고 라벨로도 인지 가능.',
+      'pulsing은 시각 단서 — screen reader는 title만 읽음.',
+      '저성능 디바이스 / OS 모션 감소 설정 시 pulsing 제거하고 정적 dot으로 fallback 권장.',
+    ],
+    guidelines: [
+      { kind: 'do',   text: '시간 순 진행을 보여줄 때 (신청/심사 review · 정산 진행 · 환불 진행 · 주문 추적 등). tone 매핑은 use case별로 자유.', recipeKey: 'application-review' },
+      { kind: 'do',   text: '주문 추적 같이 미래 step도 보여주려면 muted tone 사용 — outline only로 "아직 도달 안 함" 시각화.', recipeKey: 'order-tracking' },
+      { kind: 'do',   text: 'step 안 사유 / 메시지 / collapsible 같은 page-specific 컨텐츠는 children slot으로 주입. component 자체는 structure(dot/line/heading)만 책임.', recipeKey: 'rejection-flow' },
+      { kind: 'dont', text: '단순 step 리스트(번호 매김 / 순서 안내)에 쓰지 말 것 — 시간 / 진행 metaphor가 있을 때만.' },
+    ],
+    placement: {
+      where: [
+        '카드 안의 메인 컨텐츠 — 카드 전체가 timeline 한 개일 때.',
+        '사용 예: EventApplicationReviewPage 진행 단계 카드 (첫 use case).',
+        '향후 use case: 정산 진행 / 환불 진행 / 주문/배송 추적 / 알림 history 등.',
+      ],
+      spacing: [
+        { neighbor: '카드 padding 안쪽', gap: 'spacing-medium (16px)', note: 'dot column 32px 추가 padding-left' },
+        { neighbor: 'step 간',           gap: 'spacing-xlarge (32px)' },
+      ],
+    },
+    dartUsage: `// 신청 review use case (tone 매핑 — completed→success / active→progress+pulsing / failed→error / cancelled→neutral)
+MinglitTimeline(
+  children: [
+    MinglitTimelineStep(
+      tone: TimelineTone.success,
+      title: '신청',
+      trailing: Text('2026.04.10 19:42'),
+    ),
+    MinglitTimelineStep(
+      tone: TimelineTone.success,
+      title: '결제 완료',
+      trailing: Text('2026.04.10 19:43 · 25,000원'),
+    ),
+    MinglitTimelineStep(
+      tone: TimelineTone.progress,
+      pulsing: true,
+      title: '심사 진행 중',
+      isLast: true,
+      child: Text('이벤트 시작까지 자동 환불 안내'),
+    ),
+  ],
+)`,
+    usedIn: [
+      'event_application_review_page',
+    ],
+  },
+
+  // ---------- Confirmation / Success ----------
+  {
+    name: 'MinglitConfirmationPage',
+    category: 'Feedback',
+    purpose:
+      '액션 완료 후 노출되는 풀 화면 success 페이지 (Toss "Confirmation Page" 패턴). 결제 / 신청 / 매칭 / 전송 등 사용자 액션이 성공적으로 끝났을 때 culmination 시각으로 노출. AppBar 미렌더 · centered icon + title + description + 바텀 CTA 단순 구조. 약 1.5초 sequence 애니메이션(circle scale-bounce + check stroke draw + 텍스트 stagger)으로 emotional 마무리.',
+    props: [
+      { name: 'title',       type: 'String',         required: true,  notes: '큰 bold 헤드라인 (22/700). 1-2줄 권장.' },
+      { name: 'description', type: 'String?',        default: 'null', notes: '제목 아래 부가 설명 (14/secondary). 1-2줄 권장 · 긴 안내는 별도 페이지로.' },
+      { name: 'icon',        type: 'IconData',       default: 'Icons.check', notes: '원 안에 흰색으로 노출 (52px · stroke-width 4). check / heart / send / info / warning 등.' },
+      { name: 'tone',        type: 'ConfirmationTone', default: 'success', notes: 'icon circle bg 색 분기 — success(초록) · primary(보라) · info(파랑) · warning(주황).' },
+      { name: 'ctaLabel',    type: 'String',         default: '"확인"', notes: '바텀 CTA 라벨. 다음 단계 forward action으로 사용 가능.' },
+      { name: 'onPressed',   type: 'VoidCallback',   required: true,  notes: '기본 = pop. forward action일 경우 push.' },
+      { name: 'autoDismiss', type: 'Duration?',      default: 'null', notes: '지정 시 일정 시간 후 자동 pop — 짧은 confirmation. CTA는 그대로 노출.' },
+    ],
+    variants: ['success (default)', 'primary', 'info', 'warning'],
+    states: ['default', 'auto-dismissing (timer 진행 중)'],
+    tokens: [
+      { name: 'color-success',        where: 'success tone — icon circle bg 초록 #16a34a.' },
+      { name: 'color-primary',        where: 'primary tone — icon circle bg 보라 + CTA bg.' },
+      { name: 'color-info',           where: 'info tone — icon circle bg 파랑.' },
+      { name: 'color-warning',        where: 'warning tone — icon circle bg 주황.' },
+      { name: 'color-background',     where: 'scaffold + check icon stroke (흰색).' },
+      { name: 'color-text-primary',   where: 'title.' },
+      { name: 'color-text-secondary', where: 'description.' },
+      { name: 'radius-button',        where: 'CTA 버튼 corner.' },
+      { name: 'spacing-medium',       where: 'icon ↔ title ↔ description gap (16px).' },
+      { name: 'spacing-large',        where: 'h-padding (24px) · description max-width 280.' },
+    ],
+    accessibility: [
+      'AppBar 미렌더 — 시스템 back / 명시적 CTA로만 dismiss. iOS swipe-to-back은 그대로 동작.',
+      'autoDismiss 사용 시 screen-reader에 "X초 후 자동으로 닫힙니다" announce 권장.',
+      'icon은 시각 보조 — 의미는 title + description 텍스트로 명확히 전달.',
+      '저성능 디바이스 / OS 모션 감소 설정 시 scale-bounce / draw animation 즉시 완료 상태로 fallback.',
+    ],
+    guidelines: [
+      { kind: 'do',   text: '액션 성공 후 짧은 culmination 순간을 만들 때 — 사용자가 "내 액션이 완료됐다"를 명확히 인지하도록.', recipeKey: 'do-matching-submitted' },
+      { kind: 'do',   text: 'tone은 액션 성격에 맞게 — 일반 성공은 success(초록), brand-distinctive 액션(좋아요 / 연결)은 primary(보라).', recipeKey: 'do-brand-action-primary' },
+      { kind: 'do',   text: 'CTA는 "확인" 기본 · forward action(다음 단계로 가는 흐름)이면 명확한 라벨로 변경 ("이벤트 둘러보기" 등).' },
+      { kind: 'dont', text: 'title / description 너무 길지 않게 — 각 1-2줄 max. 긴 안내는 별도 페이지로.', recipeKey: 'dont-too-many-lines' },
+      { kind: 'dont', text: 'autoDismiss를 default로 X — 사용자가 culmination 순간을 충분히 즐기게.' },
+    ],
+    placement: {
+      where: [
+        'route push로 풀 화면 노출 — Confirm Dialog 또는 mutation 성공 후 자연스러운 transition.',
+        '사용 예: EventMatchingScreen Submitted state · 결제 완료 / 신청 완료 / 회원가입 완료 등.',
+        '향후 use case: 환불 신청 완료 · 후기 작성 완료 · 정산 신청 완료 등.',
+      ],
+      spacing: [
+        { neighbor: '바텀 CTA',         gap: 'spacing-large (24px)', note: 'CTA 위쪽 divider 없음 — centered 레이아웃이라 노이즈가 됨' },
+        { neighbor: 'icon ↔ title',    gap: 'spacing-medium (16px)' },
+        { neighbor: 'title ↔ description', gap: 'spacing-medium (16px)' },
+      ],
+    },
+    dartUsage: `// 매칭 좋아요 전송 완료 — success tone
+MinglitConfirmationPage(
+  title: '좋아요를 보냈어요',
+  description: '매칭 결과는 매칭이 모두 종료된 후 알려드릴게요',
+  ctaLabel: '확인',
+  onPressed: () => Navigator.of(context).pop(),
+)
+
+// brand-distinctive 액션 — primary tone + heart icon
+MinglitConfirmationPage(
+  title: '요청을 보냈어요',
+  description: '상대방이 수락하면 알려드릴게요',
+  icon: Icons.favorite,
+  tone: ConfirmationTone.primary,
+  onPressed: () => Navigator.of(context).pop(),
+)
+
+// 회원가입 완료 — forward action CTA
+MinglitConfirmationPage(
+  title: '회원가입이 완료됐어요',
+  description: '이제 이벤트를 둘러볼 수 있어요',
+  ctaLabel: '이벤트 둘러보기',
+  onPressed: () => homeCoordinator.goToHome(),
+)`,
+    usedIn: [
+      'event_matching_screen',
+    ],
+  },
 
   // ---------- Settings ----------
   {
@@ -1941,8 +2098,7 @@ final reason = await MinglitDialog.show<String>(
       { name: 'color-divider',        where: '드래그 핸들 색상 (with muted opacity)' },
       { name: 'spacing-small',        where: '핸들 상하 여백 8px' },
       { name: 'spacing-screen-edge',  where: '콘텐츠 좌우 패딩 16px' },
-      { name: 'spacing-medium',       where: '콘텐츠 하단 패딩 16px' },
-      { name: 'spacing-medium',       where: '타이틀 → 콘텐츠 간격 16px (MinglitDialog와 통일)' },
+      { name: 'spacing-medium',       where: '콘텐츠 하단 패딩 16px · 타이틀 → 콘텐츠 간격 16px (MinglitDialog와 통일)' },
     ],
     accessibility: [
       'showModalBottomSheet — barrier dismissible by tapping scrim (default isDismissible=true)',
