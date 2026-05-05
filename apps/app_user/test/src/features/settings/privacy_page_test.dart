@@ -277,14 +277,13 @@ void main() {
     ).called(greaterThanOrEqualTo(1));
   });
 
-  testWidgets('계정 섹션에 회원 탈퇴가 표시된다', (tester) async {
+  // Fix #2093: 회원 탈퇴 섹션은 PrivacyPage에서 제거됨 (AccountManagementPage로 이동).
+  // 회귀 가드 — PrivacyPage에 '회원 탈퇴' 텍스트나 버튼이 노출되지 않아야 함.
+  testWidgets('회원 탈퇴 섹션이 PrivacyPage에 노출되지 않는다', (tester) async {
     await pumpPage(tester);
 
-    await tester.scrollUntilVisible(find.text('회원 탈퇴'), 200);
-    expect(find.text('회원 탈퇴'), findsOneWidget);
-    // Fix #1449: 위치정보 이용약관 항목 추가로 ListView 높이 증가 → '회원 탈퇴 시작하기' 버튼까지 추가 스크롤 필요
-    await tester.scrollUntilVisible(find.text('회원 탈퇴 시작하기'), 200);
-    expect(find.text('회원 탈퇴 시작하기'), findsOneWidget);
+    expect(find.text('회원 탈퇴'), findsNothing);
+    expect(find.text('회원 탈퇴 시작하기'), findsNothing);
   });
 
   // Fix #1157: 관심 태그 보유기간·파기 정책이 보관 기간 섹션에 표시되는지 검증
