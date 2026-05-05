@@ -54,7 +54,11 @@ void main() {
         await tester.pump();
 
         await tester.tap(find.byType(OutlinedButton));
-        expect(called, isTrue, reason: '_CreateEventRow CTA must invoke onCreateEventTap');
+        expect(
+          called,
+          isTrue,
+          reason: '_CreateEventRow CTA must invoke onCreateEventTap',
+        );
       },
     );
 
@@ -74,7 +78,11 @@ void main() {
         await tester.pump();
 
         await tester.tap(find.byType(OutlinedButton));
-        expect(called, isTrue, reason: '_NewPartyCtaRow CTA must invoke onCreateEventTap');
+        expect(
+          called,
+          isTrue,
+          reason: '_NewPartyCtaRow CTA must invoke onCreateEventTap',
+        );
       },
     );
   });
