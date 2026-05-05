@@ -93,7 +93,9 @@ void main() {
       expect(find.text('조건 안내'), findsOneWidget);
     });
 
-    testWidgets('section without leading renders no extra icon', (tester) async {
+    testWidgets('section without leading renders no extra icon', (
+      tester,
+    ) async {
       await _openSheet(
         tester,
         sections: const [
@@ -104,12 +106,16 @@ void main() {
       expect(find.byType(Icon), findsNothing);
     });
 
-    testWidgets('renders without crash for empty sections list', (tester) async {
+    testWidgets('renders without crash for empty sections list', (
+      tester,
+    ) async {
       await _openSheet(tester, sections: const []);
       expect(find.text('확인'), findsOneWidget);
     });
 
-    testWidgets('first section has no top divider; second does', (tester) async {
+    testWidgets('first section has no top divider; second does', (
+      tester,
+    ) async {
       await _openSheet(
         tester,
         sections: const [
@@ -118,9 +124,11 @@ void main() {
         ],
       );
 
-      final decoratedBoxes = tester.widgetList<DecoratedBox>(
-        find.byType(DecoratedBox),
-      ).toList();
+      final decoratedBoxes = tester
+          .widgetList<DecoratedBox>(
+            find.byType(DecoratedBox),
+          )
+          .toList();
 
       final sectionBoxes = decoratedBoxes.where((b) {
         final decoration = b.decoration;
