@@ -1,9 +1,7 @@
-import { createServiceClient } from "../_shared/supabase_client.ts";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { successResponse, errorResponse } from "../_shared/response_utils.ts";
-import { initSentry, withHandler, captureException } from "../_shared/logger.ts";
-import { requireServiceRole } from "../_shared/auth_utils.ts";
-
-initSentry();
+import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
+import { captureException } from "../_shared/logger.ts";
 
 type RetentionKind = "db_table" | "storage_bucket" | "pgmq_archive" | "db_custom_fn";
 
@@ -24,10 +22,10 @@ interface PolicyResult {
 }
 
 async function runDbTableCleanup(
-  supabase: ReturnType<typeof createServiceClient>,
+  supabase: SupabaseClient,
   policy: RetentionPolicy,
 ): Promise<{ rows_deleted: number }> {
-  const { schema, table, ts_col, use_absolute_ts } = policy.target as { schema: string; table: string; ts_col: string; use_absolute_ts?: boolean };
+  const { schema, table, ts_col, use_absolute_ts } = policy.target as unknown as { schema: string; table: string; ts_col: string; use_absolute_ts?: boolean };
   if (use_absolute_ts) {
     const { data, error } = await supabase.schema("admin").rpc("delete_expired_rows", {
       p_schema: schema,
@@ -48,46 +46,51 @@ async function runDbTableCleanup(
 }
 
 async function runStorageBucketCleanup(
-  supabase: ReturnType<typeof createServiceClient>,
+  supabase: SupabaseClient,
   policy: RetentionPolicy,
 ): Promise<{ rows_deleted: number }> {
+  // Fix #2204: 옛 패턴 (supabase.storage.from(b).list(prefix)) 은 sub-directory 안 들여다 봄.
+  // 모든 파일이 sub-dir 에 있으면 stale=0 으로 잘못 판단. admin.find_stale_storage_objects()
+  // 가 storage.objects 직접 query 로 평면화된 모든 stale 파일 반환 → 재귀 무관.
   const { bucket_id, path_prefix = "" } = policy.target;
-  const cutoff = new Date(Date.now() - policy.retention_days * 86400 * 1000);
+  const REMOVE_BATCH = 100;  // Supabase storage remove API batch limit
+  const QUERY_BATCH = 10000;  // admin function 의 LIMIT
 
   let deleted = 0;
-  const BATCH = 1000;
 
-  // Always list from offset=0 to avoid skipping files shifted by prior deletes.
-  // Stop when no stale files found in a batch (oldest files are listed first).
   while (true) {
-    const { data: files, error: listError } = await supabase.storage
-      .from(bucket_id)
-      .list(path_prefix || undefined, {
-        limit: BATCH,
-        offset: 0,
-        sortBy: { column: "created_at", order: "asc" },
+    const { data: staleFiles, error: queryError } = await supabase
+      .schema("admin")
+      .rpc("find_stale_storage_objects", {
+        p_bucket_id: bucket_id,
+        p_path_prefix: path_prefix,
+        p_cutoff_days: policy.retention_days,
+        p_limit: QUERY_BATCH,
       });
-    if (listError) throw new Error(listError.message);
-    if (!files || files.length === 0) break;
+    if (queryError) throw new Error(queryError.message);
+    if (!staleFiles || staleFiles.length === 0) break;
 
-    const stale = files
-      .filter((f) => f.created_at && new Date(f.created_at) < cutoff)
-      .map((f) => (path_prefix ? `${path_prefix}/${f.name}` : f.name));
+    const names = (staleFiles as Array<{ name: string }>).map((f) => f.name);
 
-    if (stale.length === 0) break;
+    // Storage API batch 단위로 삭제 (한번에 너무 많이 보내면 timeout)
+    for (let i = 0; i < names.length; i += REMOVE_BATCH) {
+      const batch = names.slice(i, i + REMOVE_BATCH);
+      const { error: removeError } = await supabase.storage
+        .from(bucket_id)
+        .remove(batch);
+      if (removeError) throw new Error(removeError.message);
+      deleted += batch.length;
+    }
 
-    const { error: removeError } = await supabase.storage
-      .from(bucket_id)
-      .remove(stale);
-    if (removeError) throw new Error(removeError.message);
-    deleted += stale.length;
+    // 한 번에 QUERY_BATCH 미만 받으면 더 없는 거 — 종료
+    if (staleFiles.length < QUERY_BATCH) break;
   }
 
   return { rows_deleted: deleted };
 }
 
 async function runPgmqArchiveCleanup(
-  supabase: ReturnType<typeof createServiceClient>,
+  supabase: SupabaseClient,
   policy: RetentionPolicy,
 ): Promise<{ rows_deleted: number }> {
   const { queue_name } = policy.target;
@@ -103,7 +106,7 @@ async function runPgmqArchiveCleanup(
 // target.fn must be a fully-qualified admin-schema function name (e.g. "admin.anonymize_old_event_participants")
 // that accepts a single p_cutoff_days int parameter and returns bigint (rows affected).
 async function runDbCustomFnCleanup(
-  supabase: ReturnType<typeof createServiceClient>,
+  supabase: SupabaseClient,
   policy: RetentionPolicy,
 ): Promise<{ rows_deleted: number }> {
   const { fn } = policy.target;
@@ -117,7 +120,7 @@ async function runDbCustomFnCleanup(
 }
 
 async function runPolicy(
-  supabase: ReturnType<typeof createServiceClient>,
+  supabase: SupabaseClient,
   policy: RetentionPolicy,
 ): Promise<PolicyResult> {
   const start = Date.now();
@@ -150,7 +153,7 @@ async function runPolicy(
 }
 
 async function updatePolicyRunResult(
-  supabase: ReturnType<typeof createServiceClient>,
+  supabase: SupabaseClient,
   result: PolicyResult,
 ): Promise<void> {
   const now = new Date().toISOString();
@@ -183,15 +186,11 @@ async function updatePolicyRunResult(
   if (auditError) captureException(new Error(`retention_policy_audit insert failed [${result.id}]: ${auditError.message}`));
 }
 
-Deno.serve(withHandler(async (req) => {
+export const handler = async (req: Request, { supabase }: EFContext): Promise<Response> => {
   if (req.method !== "POST") {
     return errorResponse("Method not allowed", 405);
   }
 
-  const auth = requireServiceRole(req);
-  if (auth instanceof Response) return auth;
-
-  const supabase = createServiceClient();
   const totalStart = Date.now();
 
   const { data: policies, error: fetchError } = await supabase
@@ -224,4 +223,6 @@ Deno.serve(withHandler(async (req) => {
       ...(r.error ? { error: r.error } : {}),
     })),
   });
-}));
+};
+
+minglitEdgeFunction(handler);

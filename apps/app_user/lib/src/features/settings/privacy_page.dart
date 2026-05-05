@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:app_user/src/common/widgets/consent_detail_sheet.dart';
-import 'package:app_user/src/routing/app_coordinator.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
@@ -19,8 +18,6 @@ class _PrivacyPageState extends ConsumerState<PrivacyPage> {
   @override
   Widget build(BuildContext context) {
     final consentState = ref.watch(consentControllerProvider);
-    final deletionStatus = ref.watch(accountDeletionControllerProvider);
-    final isPending = deletionStatus.value?.isPending ?? false;
 
     ref.listen(consentControllerProvider, (prev, next) {
       if (next.hasError && (prev?.hasValue ?? false)) {
@@ -131,39 +128,7 @@ class _PrivacyPageState extends ConsumerState<PrivacyPage> {
                 ),
               ),
 
-              const Divider(height: 1),
-
-              // — 계정 —
-              const _SectionHeader(title: '계정'),
-              Card(
-                margin: const EdgeInsets.symmetric(
-                  horizontal: MinglitSpacing.screenEdge,
-                ),
-                child: ListTile(
-                  leading: Icon(
-                    isPending
-                        ? Icons.hourglass_top
-                        : Icons.person_remove_outlined,
-                    color: MinglitColors.error,
-                  ),
-                  title: Text(isPending ? '탈퇴 요청 진행 중' : '회원 탈퇴'),
-                  subtitle: Text(
-                    isPending
-                        ? '유예 기간 안에는 다시 로그인해 계정을 복구할 수 있어요.'
-                        : '탈퇴 사유 선택, 안내 확인, 본인 확인 후 요청할 수 있어요.',
-                  ),
-                ),
-              ),
-              const SizedBox(height: MinglitSpacing.medium),
-              SizedBox(
-                width: double.infinity,
-                child: TextButton(
-                  onPressed: () {
-                    ref.read(appCoordinatorProvider).startAccountDeletion();
-                  },
-                  child: Text(isPending ? '탈퇴 진행 상태 보기' : '회원 탈퇴 시작하기'),
-                ),
-              ),
+              // Fix #2093: 회원 탈퇴는 '계정 관리' 페이지로 이동 — PrivacyPage 중복 제거
               const SizedBox(height: MinglitSpacing.large),
             ],
           );
