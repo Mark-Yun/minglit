@@ -19,8 +19,7 @@ returns table (
   target_capacity bigint
 )
 language sql
-security definer
-set search_path = public
+security invoker
 stable
 as $$
   select

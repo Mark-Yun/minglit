@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(6);
+SELECT plan(7);
 
 -- ============================================================
 -- Setup: service role로 파트너/이벤트/엔트리그룹/티켓/참가자 데이터 구성
@@ -154,6 +154,49 @@ SELECT is(
   )),
   0::bigint,
   'get_entry_group_participant_counts: 엔트리 그룹 없는 이벤트 → 0건'
+);
+
+-- ============================================================
+-- Test 7: soft-deleted 참가자는 participant_count에서 제외 (security invoker + RLS)
+-- ============================================================
+
+SELECT tests.authenticate_as_service_role();
+
+SELECT tests.create_supabase_user('egpc_deleted_user');
+
+DO $$
+DECLARE
+  v_event_id    uuid;
+  v_group_a_id  uuid;
+  v_ticket_a_id uuid;
+BEGIN
+  v_event_id   := current_setting('tests.egpc_event_id')::uuid;
+  v_group_a_id := current_setting('tests.egpc_group_a_id')::uuid;
+
+  SELECT id INTO v_ticket_a_id
+  FROM public.tickets
+  WHERE event_id = v_event_id AND name = 'Ticket A'
+  LIMIT 1;
+
+  -- soft-deleted 유저를 Group A 참가자로 추가 (before delete)
+  INSERT INTO public.event_participants (event_id, ticket_id, user_id, status, ticket_code, display_name)
+  VALUES (v_event_id, v_ticket_a_id, tests.get_supabase_uid('egpc_deleted_user'), 'ticket_issued', 'A9999', 'Deleted User');
+
+  -- 유저 soft-delete
+  UPDATE public.user_profiles
+  SET deleted_at = now()
+  WHERE id = tests.get_supabase_uid('egpc_deleted_user');
+END $$;
+
+SELECT tests.authenticate_as('egpc_anon');
+
+-- soft-delete 전 Group A participant_count는 2였음 — soft-delete 후에도 2 유지 (삭제 유저 제외)
+SELECT is(
+  (SELECT participant_count FROM public.get_entry_group_participant_counts(
+    current_setting('tests.egpc_event_id')::uuid
+  ) WHERE entry_group_id = current_setting('tests.egpc_group_a_id')::uuid),
+  2::bigint,
+  'get_entry_group_participant_counts: soft-deleted 참가자는 participant_count에서 제외'
 );
 
 SELECT * FROM finish();
