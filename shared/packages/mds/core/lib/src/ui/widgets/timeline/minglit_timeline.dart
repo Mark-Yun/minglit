@@ -64,9 +64,10 @@ class _TimelineStepItemState extends State<_TimelineStepItem>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Respect OS reduced-motion preference.
     if (MediaQuery.of(context).disableAnimations) {
+      // Stop and reset to avoid freezing mid-animation frame.
       _controller.stop();
+      _controller.reset();
     } else if (widget.step.pulsing && !_controller.isAnimating) {
       unawaited(_controller.repeat(reverse: true));
     }
@@ -82,6 +83,7 @@ class _TimelineStepItemState extends State<_TimelineStepItem>
       }
     } else {
       _controller.stop();
+      _controller.reset();
     }
   }
 
@@ -104,7 +106,7 @@ class _TimelineStepItemState extends State<_TimelineStepItem>
       TimelineTone.progress => theme.colorScheme.primary,
       TimelineTone.error => theme.colorScheme.error,
       TimelineTone.neutral => theme.colorScheme.onSurfaceVariant,
-      TimelineTone.muted => Colors.transparent,
+      TimelineTone.muted => MinglitColors.transparent,
     };
   }
 
@@ -134,7 +136,7 @@ class _TimelineStepItemState extends State<_TimelineStepItem>
       ),
     );
 
-    if (widget.step.pulsing) {
+    if (widget.step.pulsing && !MediaQuery.of(context).disableAnimations) {
       return AnimatedBuilder(
         animation: _controller,
         builder: (_, child) => Transform.scale(

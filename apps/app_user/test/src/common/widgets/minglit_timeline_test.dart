@@ -197,6 +197,39 @@ void main() {
       },
     );
 
+    testWidgets(
+      'pulsing=true with disableAnimations=true renders no Transform',
+      (tester) async {
+        final key = GlobalKey();
+        await tester.pumpWidget(
+          MediaQuery(
+            data: const MediaQueryData(disableAnimations: true),
+            child: _wrap(
+              MinglitTimeline(
+                key: key,
+                children: const [
+                  MinglitTimelineStep(
+                    tone: TimelineTone.progress,
+                    pulsing: true,
+                    title: 'In Progress',
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+        await tester.pump();
+
+        expect(
+          find.descendant(
+            of: find.byKey(key),
+            matching: find.byType(Transform),
+          ),
+          findsNothing,
+        );
+      },
+    );
+
     testWidgets('renders all five tones without throwing', (tester) async {
       await tester.pumpWidget(
         _wrap(
