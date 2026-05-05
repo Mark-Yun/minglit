@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:app_user/src/features/ticket/data/ticket_token_service.dart';
-import 'package:app_user/src/features/ticket/ui/model/ticket_event_meta.dart';
 import 'package:app_user/src/features/ticket/ui/widgets/boarding_pass_card.dart';
+import 'package:app_user/src/logic/ticket_event_meta.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:screen_brightness/screen_brightness.dart';

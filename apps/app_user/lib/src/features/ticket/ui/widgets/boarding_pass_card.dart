@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:app_user/src/features/ticket/logic/boarding_pass_status.dart';
-import 'package:app_user/src/features/ticket/ui/model/ticket_event_meta.dart';
+import 'package:app_user/src/logic/ticket_event_meta.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
