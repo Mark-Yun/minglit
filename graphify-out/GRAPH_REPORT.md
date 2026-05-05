@@ -1,7 +1,7 @@
 # Graph Report - /Users/mark/workspace/minglit-worker-runtime/workspace/needs-qa-claude-1  (2026-05-05)
 
 ## Corpus Check
-- 1192 files · ~1,610,240 words
+- 1192 files · ~1,860,634 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -2495,13 +2495,13 @@ _Questions this graph is uniquely positioned to answer:_
   _Edge tagged AMBIGUOUS (relation: calls) - confidence is low._
 - **What is the exact relationship between `Architecture Audit #1092 — 2026-04-06` and `AI Basic Law Compliance (Korea 2026)`?**
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
-- **Why does `package:flutter/material.dart` connect `Community 1` to `Community 0`, `Community 3`, `Community 6`, `Community 7`, `Community 8`, `Community 9`, `Community 18`, `Community 19`, `Community 21`, `Community 22`, `Community 24`, `Community 27`, `Community 28`?**
-  _High betweenness centrality (0.213) - this node is a cross-community bridge._
 - **Why does `Log` connect `Community 18` to `Community 5`?**
-  _High betweenness centrality (0.212) - this node is a cross-community bridge._
+  _High betweenness centrality (0.220) - this node is a cross-community bridge._
 - **What connects `reporter (AutoLabelAllureReporter)`, `BugReporterWrapper Widget Test Suite`, `MinglitListTile Widget Test Suite` to the rest of the system?**
   _2168 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
   _Cohesion score 0.01 - nodes in this community are weakly interconnected._
 - **Should `Community 1` be split into smaller, more focused modules?**
+  _Cohesion score 0.01 - nodes in this community are weakly interconnected._
+- **Should `Community 2` be split into smaller, more focused modules?**
   _Cohesion score 0.01 - nodes in this community are weakly interconnected._
