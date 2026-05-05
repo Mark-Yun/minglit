@@ -1,4 +1,5 @@
 import 'package:app_partner/src/features/party/list/party_list_controller.dart';
+import 'package:app_partner/src/features/party/list/party_with_stats.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
@@ -39,6 +40,9 @@ void main() {
       when(
         () => mockPartyRepo.getPartiesByPartnerId('partner-1'),
       ).thenAnswer((_) async => parties);
+      when(
+        () => mockPartyRepo.getEventsByPartyId(any()),
+      ).thenAnswer((_) async => []);
 
       final container = createContainer(
         overrides: [
@@ -53,7 +57,8 @@ void main() {
 
       final state = container.read(partyListProvider);
       expect(state.value, hasLength(2));
-      expect(state.value!.first.id, 'p-1');
+      // Fix #2201: controller returns PartyWithStats, not Party directly
+      expect(state.value!.first.party.id, 'p-1');
     });
 
     test('returns empty list when no managed partners', () async {

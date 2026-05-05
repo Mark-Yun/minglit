@@ -190,6 +190,77 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get partyList_appBar_title => '파티 관리';
+
+  @override
+  String partyList_stats_completed(int count) {
+    return '완료 $count회';
+  }
+
+  @override
+  String partyList_stats_upcoming(int count) {
+    return '예정 $count회';
+  }
+
+  @override
+  String get partyList_nextEvent_label => '다음 이벤트';
+
+  @override
+  String get partyList_cta_createEvent => '이벤트 생성하기';
+
+  @override
+  String get partyList_cta_createEventNew => '이벤트 만들기';
+
+  @override
+  String get partyList_cta_createEventSub => '첫 이벤트를 개설해 파티를 시작해보세요!';
+
+  @override
+  String get partyList_cta_draftSub => '임시저장 상태입니다. 파티를 게시해야 이벤트를 만들 수 있어요.';
+
+  @override
+  String get partyList_empty_title => '아직 파티가 없어요';
+
+  @override
+  String get partyList_empty_subtitle => '첫 번째 파티를 만들고 멋진 이벤트를 열어보세요.';
+
+  @override
+  String get partyList_empty_createParty => '새로운 파티 만들기';
+
+  @override
+  String get partyList_empty_helpButton => '파티란 무엇인가요?';
+
+  @override
+  String get partyList_helpSheet_title => '파티 관리 가이드';
+
+  @override
+  String get partyList_helpSheet_q1_title => '파티가 뭔가요?';
+
+  @override
+  String get partyList_helpSheet_q1_body =>
+      '파티는 여러 이벤트를 묶는 공간이에요. 예를 들어 \"금요 밍글 파티\"라는 파티 아래에 매주 금요일 이벤트를 만들 수 있어요.';
+
+  @override
+  String get partyList_helpSheet_q2_title => '이벤트는 뭔가요?';
+
+  @override
+  String get partyList_helpSheet_q2_body =>
+      '이벤트는 실제로 사람이 모이는 날짜·시간 단위예요. 파티 1개에 여러 이벤트를 개설할 수 있어요.';
+
+  @override
+  String get partyList_helpSheet_q3_title => '임시저장과 게시의 차이는요?';
+
+  @override
+  String get partyList_helpSheet_q3_body =>
+      '임시저장은 유저에게 노출되지 않아요. 파티 정보를 완성하고 게시해야 이벤트 개설이 가능해요.';
+
+  @override
+  String get partyList_helpSheet_q4_title => '이벤트를 꼭 만들어야 하나요?';
+
+  @override
+  String get partyList_helpSheet_q4_body =>
+      '네, 유저가 신청할 수 있으려면 이벤트가 있어야 해요. 파티만 있으면 유저가 볼 수 없어요.';
+
+  @override
   String get reviewVerification_title_pending => '인증 심사 대기열';
 
   @override

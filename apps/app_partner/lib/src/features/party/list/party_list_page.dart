@@ -1,6 +1,8 @@
 import 'package:app_partner/src/features/party/list/party_list_controller.dart';
 import 'package:app_partner/src/features/party/list/party_list_coordinator.dart';
+import 'package:app_partner/src/features/party/list/party_with_stats.dart';
 import 'package:app_partner/src/features/party/list/widgets/party_list_item.dart';
+import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
@@ -54,47 +56,119 @@ class PartyListPage extends ConsumerWidget {
       ),
       body: MinglitAsyncValueWidget(
         value: partiesAsync,
-        data: (parties) {
-          if (parties.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.party_mode_outlined,
-                    size: 64,
-                    color: Theme.of(context).colorScheme.outlineVariant,
-                  ),
-                  const SizedBox(height: MinglitSpacing.medium),
-                  Text(
-                    '등록된 파티가 없습니다.\n새로운 파티를 기획해보세요!',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            );
+        data: (entries) {
+          if (entries.isEmpty) {
+            return _PartyListEmptyState(onCreateTap: coordinator.goToCreate);
           }
 
-          return ListView.separated(
-            padding: const EdgeInsets.only(bottom: MinglitSpacing.large),
-            itemCount: parties.length,
-            separatorBuilder: (context, index) => Divider(
-              height: 1,
-              thickness: 1,
-              color: Theme.of(context).colorScheme.outlineVariant,
+          return ListView.builder(
+            padding: const EdgeInsets.symmetric(
+              vertical: MinglitSpacing.medium,
             ),
+            itemCount: entries.length,
             itemBuilder: (context, index) {
-              final party = parties[index];
-              return PartyListItem(
-                party: party,
-                onTap: () => coordinator.goToDetail(party.id),
+              final entry = entries[index];
+              return Padding(
+                padding: const EdgeInsets.only(bottom: MinglitSpacing.medium),
+                child: PartyListItem(
+                  entry: entry,
+                  onTap: () => coordinator.goToDetail(entry.party.id),
+                  onNextEventTap: entry.nextEvent != null
+                      ? () => coordinator.goToEventDetail(
+                            entry.party.id,
+                            entry.nextEvent!.id,
+                          )
+                      : null,
+                ),
               );
             },
           );
         },
+      ),
+    );
+  }
+}
+
+class _PartyListEmptyState extends StatelessWidget {
+  const _PartyListEmptyState({required this.onCreateTap});
+
+  final VoidCallback onCreateTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: MinglitSpacing.large),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.celebration_outlined,
+              size: 56,
+              color: theme.colorScheme.outlineVariant,
+            ),
+            const SizedBox(height: MinglitSpacing.medium),
+            Text(
+              context.l10n.partyList_empty_title,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: MinglitSpacing.xsmall),
+            Text(
+              context.l10n.partyList_empty_subtitle,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: MinglitSpacing.large),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: onCreateTap,
+                icon: const Icon(Icons.add),
+                label: Text(context.l10n.partyList_empty_createParty),
+              ),
+            ),
+            const SizedBox(height: MinglitSpacing.small),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () => showMinglitHelpSheet(
+                  context: context,
+                  title: context.l10n.partyList_helpSheet_title,
+                  sections: [
+                    HelpSection(
+                      leading: const Icon(Icons.celebration_outlined),
+                      title: context.l10n.partyList_helpSheet_q1_title,
+                      body: context.l10n.partyList_helpSheet_q1_body,
+                    ),
+                    HelpSection(
+                      leading: const Icon(Icons.event_outlined),
+                      title: context.l10n.partyList_helpSheet_q2_title,
+                      body: context.l10n.partyList_helpSheet_q2_body,
+                    ),
+                    HelpSection(
+                      leading: const Icon(Icons.save_outlined),
+                      title: context.l10n.partyList_helpSheet_q3_title,
+                      body: context.l10n.partyList_helpSheet_q3_body,
+                    ),
+                    HelpSection(
+                      leading: const Icon(Icons.people_outline),
+                      title: context.l10n.partyList_helpSheet_q4_title,
+                      body: context.l10n.partyList_helpSheet_q4_body,
+                    ),
+                  ],
+                ),
+                icon: const Icon(Icons.help_outline),
+                label: Text(context.l10n.partyList_empty_helpButton),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

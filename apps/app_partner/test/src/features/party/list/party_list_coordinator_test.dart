@@ -25,5 +25,12 @@ void main() {
       coordinator.goToDetail('party-123');
       verify(() => mockRouter.push('/more/parties/party-123')).called(1);
     });
+
+    test('goToEventDetail pushes /more/parties/<partyId>/events/<eventId>', () {
+      coordinator.goToEventDetail('party-123', 'event-456');
+      verify(
+        () => mockRouter.push('/more/parties/party-123/events/event-456'),
+      ).called(1);
+    });
   });
 }
