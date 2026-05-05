@@ -52,7 +52,22 @@ void main() {
     ],
   );
 
+  final verification2 = Verification(
+    id: 'verification_2',
+    category: VerificationCategory.career,
+    internalName: 'school',
+    displayName: '학교 인증',
+    formSchema: const [
+      VerificationFormField(type: 'text', label: '학교명', key: 'school'),
+    ],
+  );
+
   final now = DateTime.now();
+
+  // Event with two required verifications per ticket entry group.
+  // Used to verify _buildVerificationPayload sends ALL matching verifications.
+  late Event multiVerifEvent;
+
   final testEvent = Event(
     id: 'event_1',
     partyId: 'party_1',
@@ -106,6 +121,42 @@ void main() {
     mockVerificationRepo = MockVerificationRepository();
     mockUser = MockUser();
     mockContext = MockBuildContext();
+
+    multiVerifEvent = Event(
+      id: 'event_multi',
+      partyId: 'party_multi',
+      startTime: now,
+      endTime: now.add(const Duration(hours: 2)),
+      createdAt: now,
+      updatedAt: now,
+      contactOptions: const {},
+      party: Party(
+        id: 'party_multi',
+        partnerId: 'partner_multi',
+        title: '멀티 인증 파티',
+        createdAt: now,
+        updatedAt: now,
+      ),
+      tickets: [
+        Ticket(
+          id: 'ticket_multi',
+          eventId: 'event_multi',
+          name: '멀티 인증 티켓',
+          createdAt: now,
+          updatedAt: now,
+          targetEntryGroupIds: const ['group_multi'],
+          requiredVerificationIds: const [],
+          price: 0,
+        ),
+      ],
+      entryGroups: const [
+        EntryGroup(
+          id: 'group_multi',
+          eventId: 'event_multi',
+          requiredVerificationIds: ['verification_1', 'verification_2'],
+        ),
+      ],
+    );
 
     when(() => mockUser.id).thenReturn('user_1');
     when(() => mockUser.userMetadata).thenReturn({'name': 'Test User'});
@@ -342,6 +393,62 @@ void main() {
         await notifier.submitApplication(mockContext);
 
         expect(captureController.capturedData?['buyer_tel'], '');
+      },
+    );
+
+    // Regression: Fix #2234 — _buildVerificationPayload previously used firstWhere,
+    // sending only the first matching verification and losing the rest.
+    test(
+      'all matching verifications are included in applyEvent payload',
+      () async {
+        Map<String, dynamic>? capturedVerifData;
+        when(
+          () => mockVerificationRepo.getPartnerRequirementsStatus(
+            partnerId: any(named: 'partnerId'),
+            requiredVerificationIds: any(named: 'requiredVerificationIds'),
+          ),
+        ).thenAnswer(
+          (_) async => [
+            VerificationRequirementStatus(master: verification),
+            VerificationRequirementStatus(master: verification2),
+          ],
+        );
+        when(
+          () => mockEventRepo.getEventById(any()),
+        ).thenAnswer((_) async => multiVerifEvent);
+        when(
+          () => mockEventRepo.applyEvent(
+            eventId: any(named: 'eventId'),
+            ticketId: any(named: 'ticketId'),
+            verificationData: any(named: 'verificationData'),
+          ),
+        ).thenAnswer((invocation) async {
+          capturedVerifData = invocation.namedArguments[
+              const Symbol('verificationData')] as Map<String, dynamic>?;
+          return const FreeApplyEventResult(applicationId: 'app_multi');
+        });
+
+        final container = _createContainer();
+        final notifier = container.read(
+          eventApplicationControllerProvider(multiVerifEvent).notifier,
+        );
+
+        await notifier.selectTicket(multiVerifEvent.tickets!.first);
+        notifier.updateVerificationData('verification_1', 'company', 'Minglit');
+        notifier.updateVerificationData('verification_2', 'school', 'KAIST');
+        notifier.markIdentityCompleted();
+        notifier.setConsentGranted(true);
+        await notifier.submitApplication(mockContext);
+
+        // Both verifications must be in the payload — not just the first one
+        expect(capturedVerifData, isNotNull);
+        final verifs =
+            capturedVerifData!['verifications'] as List<Map<String, dynamic>>;
+        expect(verifs, hasLength(2));
+        expect(
+          verifs.map((v) => v['verification_id']),
+          containsAll(['verification_1', 'verification_2']),
+        );
       },
     );
 

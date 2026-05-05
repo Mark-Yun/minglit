@@ -10,6 +10,15 @@ class _IdentityStep extends ConsumerWidget {
     final theme = Theme.of(context);
     final state = ref.watch(eventApplicationControllerProvider(event));
 
+    // Auto-complete identity step when an already-verified profile loads after widget mount.
+    ref.listen(currentUserProfileProvider, (_, next) {
+      if (next.value?.isVerified == true) {
+        ref
+            .read(eventApplicationControllerProvider(event).notifier)
+            .markIdentityCompleted();
+      }
+    });
+
     return Container(
       padding: const EdgeInsets.all(MinglitSpacing.large),
       decoration: BoxDecoration(

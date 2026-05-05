@@ -18,6 +18,7 @@ class EventApplicationState {
     required this.identityCompleted,
     required this.partnerVerifications,
     required this.consentGranted,
+    required this.consentCheckedItems,
     this.selectedTicket,
     this.verificationData = const {},
     this.errorMessage,
@@ -28,6 +29,11 @@ class EventApplicationState {
   final bool identityCompleted;
   final List<PartnerVerifEntry> partnerVerifications;
   final bool consentGranted;
+
+  /// Per-item checked state for the consent checkboxes.
+  /// Length matches the number of consent items in the UI.
+  final List<bool> consentCheckedItems;
+
   final Ticket? selectedTicket;
   final Map<String, Map<String, dynamic>> verificationData;
   final String? errorMessage;
@@ -38,6 +44,7 @@ class EventApplicationState {
     bool? identityCompleted,
     List<PartnerVerifEntry>? partnerVerifications,
     bool? consentGranted,
+    List<bool>? consentCheckedItems,
     Ticket? selectedTicket,
     Map<String, Map<String, dynamic>>? verificationData,
     Object? errorMessage = _noChange,
@@ -48,6 +55,7 @@ class EventApplicationState {
       identityCompleted: identityCompleted ?? this.identityCompleted,
       partnerVerifications: partnerVerifications ?? this.partnerVerifications,
       consentGranted: consentGranted ?? this.consentGranted,
+      consentCheckedItems: consentCheckedItems ?? this.consentCheckedItems,
       selectedTicket: selectedTicket ?? this.selectedTicket,
       verificationData: verificationData ?? this.verificationData,
       errorMessage: identical(errorMessage, _noChange)
@@ -90,6 +98,7 @@ class EventApplicationController extends _$EventApplicationController {
       identityCompleted: identityCompleted,
       partnerVerifications: const [],
       consentGranted: false,
+      consentCheckedItems: const [],
     );
   }
 
@@ -121,6 +130,26 @@ class EventApplicationController extends _$EventApplicationController {
 
   void setConsentGranted(bool value) {
     state = state.copyWith(consentGranted: value);
+  }
+
+  /// Initialises [consentCheckedItems] with [count] unchecked items.
+  /// Called by the consent step on first mount with the number of consent items.
+  void initConsentItems(int count) {
+    if (state.consentCheckedItems.length == count) return;
+    final allGranted = state.consentGranted;
+    state = state.copyWith(
+      consentCheckedItems: List.filled(count, allGranted),
+    );
+  }
+
+  /// Toggles the checked state of the consent item at [index] and updates
+  /// [consentGranted] based on whether all items are now checked.
+  void toggleConsentItem(int index, bool value) {
+    final next = List<bool>.from(state.consentCheckedItems)..[index] = value;
+    state = state.copyWith(
+      consentCheckedItems: next,
+      consentGranted: next.every((item) => item),
+    );
   }
 
   void updateVerificationData(
@@ -302,15 +331,14 @@ class EventApplicationController extends _$EventApplicationController {
   Map<String, dynamic>? _buildVerificationPayload(Event event, Ticket ticket) {
     final reqIds = _requiredVerificationIdsFor(ticket, event);
     if (reqIds.isEmpty || state.verificationData.isEmpty) return null;
-    final verificationEntry = state.verificationData.entries.firstWhere(
-      (entry) => reqIds.contains(entry.key) && entry.value.isNotEmpty,
-      orElse: () => const MapEntry('', <String, dynamic>{}),
-    );
-    if (verificationEntry.key.isEmpty) return null;
+    final verifications = state.verificationData.entries
+        .where((e) => reqIds.contains(e.key) && e.value.isNotEmpty)
+        .map((e) => {'verification_id': e.key, 'data': e.value})
+        .toList();
+    if (verifications.isEmpty) return null;
     return {
       'partner_id': event.party?.partnerId,
-      'verification_id': verificationEntry.key,
-      'data': verificationEntry.value,
+      'verifications': verifications,
     };
   }
 
@@ -425,14 +453,8 @@ class EventApplicationController extends _$EventApplicationController {
   }
 
   void resetStatus() {
-    state = EventApplicationState(
-      step: state.step,
+    state = state.copyWith(
       status: EventApplicationStatus.initial,
-      identityCompleted: state.identityCompleted,
-      partnerVerifications: state.partnerVerifications,
-      consentGranted: state.consentGranted,
-      selectedTicket: state.selectedTicket,
-      verificationData: state.verificationData,
       errorMessage: null,
     );
   }
