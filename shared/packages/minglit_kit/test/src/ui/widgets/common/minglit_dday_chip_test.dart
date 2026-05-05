@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:minglit_kit/minglit_kit.dart';
+import 'package:mds/src/theme/minglit_theme.dart';
+import 'package:mds/src/ui/widgets/common/minglit_dday_chip.dart';
 
 Widget _wrap(Widget child) => MaterialApp(
   theme: MinglitTheme.materialTheme,
@@ -43,7 +44,6 @@ void main() {
         _wrap(MinglitDDayChip(key: key, daysUntil: 7)),
       );
       expect(find.text('D-7'), findsOneWidget);
-      // No crash, renders.
     });
 
     testWidgets('boundary D-8 uses later tier', (tester) async {
@@ -52,15 +52,34 @@ void main() {
     });
 
     testWidgets('has Semantics label for accessibility', (tester) async {
+      final handle = tester.ensureSemantics();
       await tester.pumpWidget(_wrap(const MinglitDDayChip(daysUntil: 3)));
+
       final semantics = tester.getSemantics(find.byType(MinglitDDayChip));
       expect(semantics.label, contains('3일'));
+      handle.dispose();
     });
 
     testWidgets('today semantics label indicates 오늘 진행', (tester) async {
+      final handle = tester.ensureSemantics();
       await tester.pumpWidget(_wrap(const MinglitDDayChip(daysUntil: 0)));
+
       final semantics = tester.getSemantics(find.byType(MinglitDDayChip));
       expect(semantics.label, contains('오늘'));
+      handle.dispose();
+    });
+
+    testWidgets('custom label is used for Semantics label override', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(
+        _wrap(const MinglitDDayChip(daysUntil: 5, label: '마감 임박')),
+      );
+
+      final semantics = tester.getSemantics(find.byType(MinglitDDayChip));
+      expect(semantics.label, '마감 임박');
+      handle.dispose();
     });
   });
 }

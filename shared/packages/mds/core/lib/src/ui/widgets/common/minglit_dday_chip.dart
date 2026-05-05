@@ -45,8 +45,9 @@ class MinglitDDayChip extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
     switch (_tier(daysUntil)) {
       case _DDayTier.today:
-        final textColor =
-            isDark ? MinglitColorsDark.warning : MinglitColors.warning;
+        final textColor = isDark
+            ? MinglitColorsDark.warning
+            : MinglitColors.warning;
         return (
           text: textColor,
           bg: textColor.withValues(alpha: MinglitOpacity.skeletonBase),
@@ -75,24 +76,29 @@ class MinglitDDayChip extends StatelessWidget {
     final (:text, :bg) = _colors(theme);
     final displayLabel = label ?? _defaultLabel();
 
+    // Fix #2216: Semantics label uses the caller-supplied label override first.
+    // ExcludeSemantics prevents the inner Text node from appending a duplicate
+    // label to the merged accessibility tree.
     return Semantics(
-      label: daysUntil <= 0 ? '오늘 진행' : '이벤트까지 $daysUntil일 남음',
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: BorderRadius.circular(MinglitRadius.chip),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: MinglitSpacing.small,
-            vertical: MinglitSpacing.xxsmall,
+      label: label ?? (daysUntil <= 0 ? '오늘 진행' : '이벤트까지 $daysUntil일 남음'),
+      child: ExcludeSemantics(
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: BorderRadius.circular(MinglitRadius.chip),
           ),
-          child: Text(
-            displayLabel,
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: text,
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.2,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: MinglitSpacing.small,
+              vertical: MinglitSpacing.xxsmall,
+            ),
+            child: Text(
+              displayLabel,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: text,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.2,
+              ),
             ),
           ),
         ),
