@@ -38,10 +38,10 @@ export class UserActionFactory {
     const feedEvents =
       ((feedRes.data as Record<string, unknown>)?.events as Array<Record<string, unknown>>) ?? [];
 
-    // 2. Get my existing applications (with nested event status)
+    // 2. Get my existing applications (with nested event status + start_time for refund eligibility)
     const { data: myApps, error: myAppsError } = await supabase
       .from("event_applications")
-      .select("id, event_id, status, events(status)")
+      .select("id, event_id, status, events(status, start_time)")
       .eq("user_id", this.userId);
 
     if (myAppsError) throw new Error(`Failed to fetch applications: ${myAppsError.message}`);
@@ -72,13 +72,20 @@ export class UserActionFactory {
     for (const app of (myApps ?? [])) {
       // Fix #1415: app.events is typed as { status: any }[] by PostgREST but the join returns
       // a single object for a to-one FK. Use `unknown` intermediary to avoid TS2352.
-      const eventStatus = (app.events as unknown as { status: string } | null)?.status ?? "";
+      const eventInfo = app.events as unknown as { status: string; start_time: string } | null;
+      const eventStatus = eventInfo?.status ?? "";
       const appId = app.id as string;
       const eventId = app.event_id as string;
 
       // Approved + scheduled → maybe refund
       if (app.status === "approved" && eventStatus === "scheduled") {
-        if (Math.random() < this.config.negativeRate) {
+        // Fix #2131: Only attempt refund when within EF cutoff window (7 days).
+        // Simulator doesn't track paid_at so grace-period path is excluded;
+        // selecting outside the cutoff caused false-positive 400 failures.
+        const eventStart = eventInfo?.start_time ? new Date(eventInfo.start_time) : null;
+        const cutoffMs = 7 * 24 * 60 * 60 * 1000;
+        const refundEligible = eventStart !== null && eventStart.getTime() - Date.now() >= cutoffMs;
+        if (refundEligible && Math.random() < this.config.negativeRate) {
           actions.push(new UserActionRefund(this.userId, appId, eventId, this.token));
         }
       }
