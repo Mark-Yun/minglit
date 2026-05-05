@@ -17,7 +17,9 @@ mixin _EventRepositoryApplicationQueries on _SupabaseEventContext {
         final map = json as Map<String, dynamic>;
         // RPC returns flat columns: application_id, event_id, ticket_id,
         // user_id, payment_id, payment_amount, status, created_at, updated_at,
-        // user_name, user_phone
+        // user_name, user_phone,
+        // ticket_name, ticket_created_at, ticket_updated_at,
+        // target_entry_group_ids
 
         // Map to EventApplication model format
         // (which expects 'id' not 'application_id')
@@ -42,6 +44,24 @@ mixin _EventRepositoryApplicationQueries on _SupabaseEventContext {
                 }
               : null,
           'submission': null, // Not returned by RPC
+          // Fix #2224: build nested 'ticket' object from flat RPC columns so
+          // that EventApplicationListView can filter by entry group without a
+          // separate round-trip.
+          'ticket': map['ticket_id'] != null && map['ticket_name'] != null
+              ? {
+                  'id': map['ticket_id'].toString(),
+                  'name': map['ticket_name'] as String? ?? '',
+                  'created_at': map['ticket_created_at']?.toString() ??
+                      DateTime.now().toIso8601String(),
+                  'updated_at': map['ticket_updated_at']?.toString() ??
+                      DateTime.now().toIso8601String(),
+                  'target_entry_group_ids':
+                      (map['target_entry_group_ids'] as List?)
+                          ?.map((e) => e.toString())
+                          .toList() ??
+                      [],
+                }
+              : null,
         };
         return EventApplication.fromJson(appMap);
       }).toList();

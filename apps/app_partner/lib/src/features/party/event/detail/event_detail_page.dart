@@ -70,9 +70,9 @@ class _EventInfoTab extends ConsumerWidget {
     final pendingCount = applications
         .where((a) => a.status == 'pending_review')
         .length;
-    final approvedCount = applications
-        .where((a) => a.status == 'approved')
-        .length;
+    // Fix #2224: canonical source for confirmed participants is event.currentParticipants,
+    // not the application list count — application list may be paginated/incomplete.
+    final confirmedCount = event.currentParticipants;
     final maxParticipants = event.maxParticipants;
 
     return SingleChildScrollView(
@@ -182,7 +182,7 @@ class _EventInfoTab extends ConsumerWidget {
                   Row(
                     children: [
                       Text(
-                        '$approvedCount',
+                        '$confirmedCount',
                         style: theme.textTheme.headlineMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: colorScheme.primary,
@@ -196,10 +196,13 @@ class _EventInfoTab extends ConsumerWidget {
                       ),
                       const Spacer(),
                       if (pendingCount > 0)
-                        Text(
-                          '신청 $appCount명 (대기 $pendingCount건)',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
+                        Flexible(
+                          child: Text(
+                            '신청 $appCount명 (대기 $pendingCount건)',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                     ],
@@ -208,7 +211,7 @@ class _EventInfoTab extends ConsumerWidget {
                   if (maxParticipants > 0)
                     MinglitCapacityBar(
                       total: maxParticipants,
-                      filled: approvedCount,
+                      filled: confirmedCount,
                       pending: pendingCount,
                     ),
                   if (pendingCount > 0) ...[

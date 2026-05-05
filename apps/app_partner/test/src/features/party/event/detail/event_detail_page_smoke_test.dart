@@ -25,7 +25,8 @@ void main() {
     updatedAt: now,
     tickets: [],
     entryGroups: [],
-    maxParticipants: 20,
+    maxParticipants: 40,
+    currentParticipants: 18,
   );
 
   final testParty = Party(
@@ -140,5 +141,32 @@ void main() {
 
       expect(find.textContaining('처리하기'), findsNothing);
     });
+
+    testWidgets(
+      '확정 인원은 event.currentParticipants 기준으로 표시된다 (신청 목록 count 아님)',
+      (tester) async {
+        // Fix #2224: event has 18 confirmed participants but only 1 approved
+        // application in the list — UI must show 18, not 1.
+        final approvedApp = EventApplication(
+          id: 'app-approved',
+          eventId: 'event-1',
+          ticketId: 'ticket-1',
+          userId: 'user-2',
+          status: 'approved',
+          createdAt: now,
+          updatedAt: now,
+        );
+        await tester.pumpWidget(
+          buildWidget(applications: [approvedApp]),
+        );
+        await tester.pumpAndSettle();
+
+        // testEvent.currentParticipants == 18, maxParticipants == 40
+        expect(find.text('18'), findsOneWidget);
+        expect(find.textContaining('/ 40'), findsOneWidget);
+        // Must NOT show the approved-application count (1)
+        expect(find.text('1'), findsNothing);
+      },
+    );
   });
 }
