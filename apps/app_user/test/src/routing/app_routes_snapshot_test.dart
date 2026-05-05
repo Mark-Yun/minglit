@@ -52,6 +52,7 @@ void main() {
             '/signup/consent',
             '/auth/callback',
             '/events/:eventId',
+            '/events/:eventId/matching',
             '/partners/:partnerId',
             '/partners/:partnerId/events',
             '/certification',
