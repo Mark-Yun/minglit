@@ -190,6 +190,8 @@ SELECT col_not_null('ticket_templates', 'created_at');
 SELECT col_type_is('ticket_templates', 'updated_at', 'timestamp with time zone');
 SELECT col_has_default('ticket_templates', 'updated_at');
 SELECT col_not_null('ticket_templates', 'updated_at');
+-- Fix #2235: constraint guards against multi-group ticket_templates (regression from 000011 deploy failure)
+SELECT col_has_check('ticket_templates', 'target_entry_group_ids');
 
 -- tickets
 SELECT has_table('tickets');
@@ -228,6 +230,8 @@ SELECT col_not_null('tickets', 'created_at');
 SELECT col_type_is('tickets', 'updated_at', 'timestamp with time zone');
 SELECT col_has_default('tickets', 'updated_at');
 SELECT col_not_null('tickets', 'updated_at');
+-- Fix #2235: constraint guards against multi-group tickets (regression from 000010 deploy failure)
+SELECT col_has_check('tickets', 'target_entry_group_ids');
 
 SELECT * FROM finish();
 ROLLBACK;
