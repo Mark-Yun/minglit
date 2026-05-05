@@ -1,5 +1,4 @@
 import 'package:app_partner/src/features/party/list/party_list_controller.dart';
-import 'package:app_partner/src/features/party/list/party_with_stats.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';

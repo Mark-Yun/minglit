@@ -1,6 +1,5 @@
 import 'package:app_partner/src/features/party/list/party_list_controller.dart';
 import 'package:app_partner/src/features/party/list/party_list_coordinator.dart';
-import 'package:app_partner/src/features/party/list/party_with_stats.dart';
 import 'package:app_partner/src/features/party/list/widgets/party_list_item.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
