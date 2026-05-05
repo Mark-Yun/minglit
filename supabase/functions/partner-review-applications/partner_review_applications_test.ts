@@ -14,6 +14,8 @@ import { authRoute } from "../_test_utils/fixtures.ts";
 const ENV = {
   SUPABASE_URL: "https://supabase.test",
   SUPABASE_SERVICE_ROLE_KEY: "service-key",
+  ENVIRONMENT: "dev",
+  MINGLIT_EF_TEST_FN_NAME: "partner-review-applications",
 };
 
 const eventId = "aaaaaaaa-aaaa-1aaa-8aaa-aaaaaaaaaaaa";

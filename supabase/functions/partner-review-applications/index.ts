@@ -1,20 +1,13 @@
 // partner-review-applications — unified approve + reject in a single transaction
 // Issue #2101: deferred batch commit UX — selected approve_ids + rejections with reasons
 
-import { createServiceClient } from "../_shared/supabase_client.ts";
 import {
-  corsResponse,
   errorResponse,
   successResponse,
 } from "../_shared/response_utils.ts";
-import { requireAuth } from "../_shared/auth_utils.ts";
 import { requirePartnerPermission } from "../_shared/partner_permissions.ts";
 import { parseJsonBody } from "../_shared/request_utils.ts";
-import { initSentry, withHandler, log } from "../_shared/logger.ts";
-
-const FN = "partner-review-applications";
-
-initSentry();
+import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -24,36 +17,13 @@ interface RejectionItem {
   reason: string;
 }
 
-Deno.serve(withHandler(async (req: Request): Promise<Response> => {
-  if (req.method === "OPTIONS") return corsResponse();
+export const handler = async (req: Request, ctx: EFContext): Promise<Response> => {
   if (req.method !== "POST") return errorResponse("Method not allowed", 405);
 
-  try {
-    return await handleRequest(req);
-  } catch (e) {
-    const detail = e instanceof Error ? e.message : String(e);
-    log({
-      function: FN,
-      level: "error",
-      message: "partner-review-applications error",
-      metadata: { detail },
-    });
-    const env = Deno.env.get("ENVIRONMENT");
-    const exposeDetail = env === "local" || env === "development";
-    return errorResponse(
-      exposeDetail ? `${FN}: ${detail}` : "Internal server error",
-      500,
-    );
-  }
-}));
+  const { supabase } = ctx;
+  // wrapper guarantees type === "user" per auth-manifest callers: ["user"]
+  const userId = (ctx.auth as { type: "user"; userId: string }).userId;
 
-async function handleRequest(req: Request): Promise<Response> {
-  // 1. Auth
-  const auth = await requireAuth(req);
-  if (auth instanceof Response) return auth;
-  const userId = auth;
-
-  // 2. Parse body
   const body = await parseJsonBody(req);
   if (body instanceof Response) return body;
 
@@ -78,14 +48,12 @@ async function handleRequest(req: Request): Promise<Response> {
     return errorResponse("approvals and rejections cannot both be empty", 400);
   }
 
-  // Validate approval IDs
   for (const id of approvals) {
     if (typeof id !== "string" || !UUID_RE.test(id)) {
       return errorResponse(`Invalid application_id in approvals: ${id}`, 400);
     }
   }
 
-  // Validate rejections
   const validatedRejections: RejectionItem[] = [];
   for (const item of rejections) {
     if (!item || typeof item !== "object") {
@@ -104,9 +72,6 @@ async function handleRequest(req: Request): Promise<Response> {
     });
   }
 
-  const supabase = createServiceClient();
-
-  // 3. Verify partner permission
   const { data: event, error: eventError } = await supabase
     .from("events")
     .select("id, party_id, parties!inner(partner_id)")
@@ -125,9 +90,6 @@ async function handleRequest(req: Request): Promise<Response> {
   ]);
   if (permCheck) return permCheck;
 
-  // 4. Call batch review RPC (single transaction with event lock)
-  const rejectionRows = validatedRejections.map((r) => `(${r.application_id},${r.reason})`);
-
   const { data: result, error: rpcError } = await supabase.rpc(
     "batch_review_event_applications",
     {
@@ -141,13 +103,7 @@ async function handleRequest(req: Request): Promise<Response> {
   );
 
   if (rpcError) {
-    log({
-      function: FN,
-      level: "error",
-      message: "batch_review_event_applications RPC failed",
-      metadata: { detail: rpcError.message, event_id: eventId },
-    });
-    return errorResponse("Failed to process applications", 500);
+    throw new Error(`batch_review_event_applications RPC failed: ${rpcError.message}`);
   }
 
   const row = Array.isArray(result) ? result[0] : result;
@@ -160,4 +116,6 @@ async function handleRequest(req: Request): Promise<Response> {
     skipped_already_processed: row.skipped_already_processed ?? [],
     remaining_slots_after: row.remaining_slots_after ?? 0,
   });
-}
+};
+
+minglitEdgeFunction(handler);
