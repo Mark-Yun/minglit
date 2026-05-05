@@ -24,12 +24,16 @@ class PartnerHomePage extends ConsumerWidget {
     final state = ref.watch(partnerDashboardControllerProvider);
     final partner = ref.watch(currentPartnerInfoProvider).asData?.value;
     final coordinator = ref.read(partnerHomeCoordinatorProvider);
-    final unreadCount = ref.watch(notificationListProvider).maybeWhen(
-      data: (notifications) => notifications
-          .where((notification) => !(notification['is_read'] as bool? ?? false))
-          .length,
-      orElse: () => 0,
-    );
+    final unreadCount = ref
+        .watch(notificationListProvider)
+        .maybeWhen(
+          data: (notifications) => notifications
+              .where(
+                (notification) => !(notification['is_read'] as bool? ?? false),
+              )
+              .length,
+          orElse: () => 0,
+        );
 
     return Scaffold(
       appBar: AppBar(
@@ -103,7 +107,9 @@ class PartnerHomePage extends ConsumerWidget {
                       onCreateParty: coordinator.pushPartyCreate,
                       onCreateEvent: () async {
                         if (state.activeParties.length == 1) {
-                          coordinator.pushEventCreate(state.activeParties.first.id);
+                          coordinator.pushEventCreate(
+                            state.activeParties.first.id,
+                          );
                           return;
                         }
                         final selected = await showModalBottomSheet<Party>(

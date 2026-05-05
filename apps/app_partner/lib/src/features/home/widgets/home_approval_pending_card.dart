@@ -30,7 +30,9 @@ class HomeApprovalPendingCard extends StatelessWidget {
             vertical: MinglitSpacing.xsmall,
           ),
           decoration: BoxDecoration(
-            color: MinglitColors.error.withValues(alpha: MinglitOpacity.tintFill),
+            color: MinglitColors.error.withValues(
+              alpha: MinglitOpacity.tintFill,
+            ),
             borderRadius: BorderRadius.circular(MinglitRadius.button),
           ),
           child: Text(

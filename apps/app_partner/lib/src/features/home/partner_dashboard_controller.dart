@@ -103,7 +103,8 @@ class PartnerDashboardController extends _$PartnerDashboardController {
           .toList();
       final draftParties = activeParties
           .where(
-            (party) => upcomingEvents.every((event) => event.partyId != party.id),
+            (party) =>
+                upcomingEvents.every((event) => event.partyId != party.id),
           )
           .toList();
       // spec: 참가예정 고객 = 활성화된 이벤트의 누적 결제 완료 참가자 수
