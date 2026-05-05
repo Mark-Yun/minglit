@@ -91,17 +91,18 @@ class _WizardBodyState extends ConsumerState<_WizardBody> {
           final ticket = next.selectedTicket;
           if (ticket == null) return;
           // Fix #453: 콜백으로 coordinator 의존을 wizard 페이지가 소유 — payment → event 순환 제거
+          // Fix #2106: pushReplacement 전에 coordinator를 캡처 — 교체 후 ref가 dispose되어
+          // 버튼 콜백에서 ref.read()가 StateError를 발생시키는 버그 방지
+          final coordinator = ref.read(eventCoordinatorProvider);
+          final eventId = widget.event.id;
           unawaited(
             Navigator.of(context).pushReplacement(
               MaterialPageRoute<void>(
                 builder: (_) => PaymentSuccessScreen(
                   event: widget.event,
                   ticketId: ticket.id,
-                  onViewTickets: () =>
-                      ref.read(eventCoordinatorProvider).goToPurchaseHistory(),
-                  onBackToEvent: () => ref
-                      .read(eventCoordinatorProvider)
-                      .goToEventDetail(widget.event.id),
+                  onViewTickets: coordinator.goToPurchaseHistory,
+                  onBackToEvent: () => coordinator.goToEventDetail(eventId),
                 ),
               ),
             ),

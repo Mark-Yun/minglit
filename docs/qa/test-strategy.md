@@ -75,6 +75,19 @@
 | 로그인 상태별 분기 렌더링 | PG/WebView 등 네이티브 브릿지 (→ 3) |
 | 딥링크 파라미터 처리 | |
 
+#### Wizard flow 패턴 — 필수 위젯 테스트 체크리스트
+
+다단계 wizard(2 step 이상) 신규 추가 시 다음 위젯 테스트 필수:
+
+1. 각 step에서 "다음" 버튼이 `validateStep(currentStep)` false일 때 disabled (`onPressed == null`)
+2. 각 step에서 "이전" 버튼이 step > 0일 때 enabled
+3. 마지막 step "신청하기/제출" 버튼이 `validateAll()` false일 때 disabled
+4. Draft 복원 시 `PageView`가 `currentStep`으로 즉시(`jumpToPage`) 이동
+
+**배경**: 2026-05-04 partner onboarding wizard에서 동일 영역 P1 4건이 하루에 동시 보고됨 (#2130, #2161, #2162, #2163). PR #2165가 8개 위젯 테스트로 한꺼번에 픽스. 미래의 wizard flow (signup-consent, event-edit 등)에서 동일 갭 재발 방지 위해 등재.
+
+**레퍼런스 구현**: `apps/app_partner/test/src/features/onboarding/cuj_partner_apply_wizard_test.dart` (TC-P01-001/002/003/004) + PR #2165.
+
 ### Layer 2b — Golden image
 
 | ✅ 책임 | ❌ 비책임 |

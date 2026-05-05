@@ -89,12 +89,14 @@
 
 ### Layer 2: Database 테스트 (pgTAP)
 
+> **pgTAP 번호 규칙**: 현재 `supabase/tests/database/` 가 1~100 범위 + `20260405...` 일부 date-prefixed 가 혼재한다. 신규 파일은 **101~ 범위** 또는 **date-prefixed** (`20260504...`)로 작성한다. 본 문서가 인용하는 `74_/75_/76_/77_` prefix 는 placeholder 이므로 SWE 가 실제 머지 시점의 다음 번호를 사용한다.
+
 | 테스트 파일 | 테스트 케이스 | 우선순위 |
 |-----------|-------------|---------|
-| `supabase/tests/database/74_event_edit_cancel_schema_test.sql` (신규) | `events.metadata` JSONB 컬럼 존재 (기존 컬럼 재활용) | P1 |
+| `supabase/tests/database/1XX_event_edit_cancel_schema_test.sql` (신규) | `events.metadata` JSONB 컬럼 존재 (기존 컬럼 재활용) | P1 |
 | | `event_applications.status` CHECK 제약조건에 `cancelled` 값 포함 | P1 |
 | | `event_applications.status = 'cancelled'`과 `'rejected'` 구분 가능 | P1 |
-| `supabase/tests/database/75_event_edit_cancel_rls_test.sql` (신규) | authenticated 파트너 클라이언트: `events` UPDATE 직접 시도 → RLS deny (`throws_ok` / 0 row affected) | P1 |
+| `supabase/tests/database/1XX_event_edit_cancel_rls_test.sql` (신규) | authenticated 파트너 클라이언트: `events` UPDATE 직접 시도 → RLS deny (`throws_ok` / 0 row affected) | P1 |
 | | authenticated 파트너 클라이언트: `events.status` 를 `cancelled` 로 직접 UPDATE 시도 → RLS deny | P1 |
 | | authenticated 파트너 클라이언트: `event_applications` 를 `cancelled` 로 직접 UPDATE 시도 → RLS deny | P1 |
 | | authenticated 유저 클라이언트: `events` UPDATE 직접 시도 → RLS deny | P1 |
@@ -103,9 +105,9 @@
 | | authenticated 파트너 클라이언트: 자기 파티 `events` SELECT → 허용 (읽기 전용 org scope 유지) | P1 |
 
 > **설계 원칙**: 유저/파트너 클라이언트는 전 테이블 읽기 전용 RLS이고, 모든 INSERT/UPDATE/DELETE 는 service_role Edge Function 을 경유한다. 본 섹션은 "authenticated client 는 쓸 수 없음" 이라는 경계를 **부정형(deny) 어설션**으로만 검증한다. write-path 의 positive 검증(파트너의 자기 이벤트 update 성공, org scope 차단, 취소된 이벤트에 신청 INSERT 차단 등)은 Layer 1 EF 테스트에 귀속한다. 만약 신규 테스트가 authenticated 쓰기를 `ok` 로 어설션한다면 RLS 정책이 느슨해진 증거이므로 즉시 리뷰어 이스컬레이션.
-| `supabase/tests/database/76_event_cancel_cascade_test.sql` (신규) | 이벤트 status=cancelled 시 트리거로 event_applications 일괄 cancelled (구현 방식이 EF가 아닌 트리거인 경우) | P2 |
+| `supabase/tests/database/1XX_event_cancel_cascade_test.sql` (신규) | 이벤트 status=cancelled 시 트리거로 event_applications 일괄 cancelled (구현 방식이 EF가 아닌 트리거인 경우) | P2 |
 | | 트리거가 아니라 EF에서 처리하는 경우 — 본 테스트 파일 생략 | - |
-| `supabase/tests/database/77_event_capacity_guard_test.sql` (신규 또는 기존 #68에 추가) | events.max_participants UPDATE 시 current_participants보다 작으면 트리거/CHECK로 거부 (DB 레벨 가드) | P1 |
+| `supabase/tests/database/1XX_event_capacity_guard_test.sql` (신규) | events.max_participants UPDATE 시 current_participants보다 작으면 트리거/CHECK로 거부 (DB 레벨 가드) | P1 |
 | | DB 가드가 아니라 EF 검증인 경우 — Layer 1로 이관 | - |
 
 > 정원 축소 가드는 EF에서 검증하는 것으로 충분하지만, race condition을 막으려면 DB 트리거 또는 advisory lock 권장. SWE가 구현 방식 결정 후 해당 레이어 테스트 추가.
