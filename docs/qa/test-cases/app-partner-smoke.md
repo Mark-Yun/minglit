@@ -85,8 +85,8 @@
 | # | 화면 | 경로 | Page 클래스 | GUEST | NEEDS_APP | PENDING | PARTNER | 비고 |
 |---|------|------|------------|-------|-----------|---------|---------|------|
 | P-S30 | 알림 센터 | `/notifications` | `NotificationListScreen` | → `/login` | → `/welcome` | → `/apply/status` | OK | |
-| P-S31 | 개발 도구 | `/dev` | `PartnerDevMap` | OK | OK | OK | OK | dev only |
-| P-S32 | 유저 전환 | `/dev/user-switch` | `DevUserSwitchScreen` | OK | OK | OK | OK | dev only |
+| P-S31 | ~~개발 도구~~ | ~~`/dev`~~ | ~~`PartnerDevMap`~~ | — | — | — | — | **DEPRECATED** — PR #274 (2026-03-22)로 데브맵 제거. `/dev` 진입 시 `/dev/user-switch`로 자동 리디렉트 (Fix #1825). 로그인 화면 5클릭 히든 제스처도 `/dev/user-switch`로 이동 |
+| P-S32 | 유저 전환 | `/dev/user-switch` | `DevUserSwitchScreen` | OK | OK | OK | OK | dev only. `/dev` 단독 경로도 여기로 리디렉트됨 |
 
 ---
 

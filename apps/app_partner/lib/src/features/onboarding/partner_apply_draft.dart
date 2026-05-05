@@ -65,8 +65,10 @@ mixin _PartnerApplyDraft on _$PartnerApplyController {
       );
       final result = await repo.saveDraft(application);
       state = state.copyWith(applicationId: result.id, isSaving: false);
-    } on Exception catch (e, st) {
+    } catch (e, st) {
       // Fix #1599: surface save failures so UI can show an error instead of silently blocking submit.
+      // Fix #2161: use bare catch — on Exception misses Error subclasses (StateError, TypeError),
+      // which would leave isSaving = true permanently and lock all navigation buttons.
       state = state.copyWith(isSaving: false, status: AsyncValue.error(e, st));
       Log.e('saveDraft error', e, st);
     }

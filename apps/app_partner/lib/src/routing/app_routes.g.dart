@@ -286,6 +286,10 @@ RouteBase get $partnerShellRoute => StatefulShellRouteData.$route(
               factory: $CreateVerificationRoute._fromState,
             ),
             GoRouteData.$route(
+              path: 'verifications/review',
+              factory: $VerificationReviewRoute._fromState,
+            ),
+            GoRouteData.$route(
               path: 'notification-settings',
               factory: $NotificationSettingsRoute._fromState,
             ),
@@ -839,6 +843,27 @@ mixin $CreateVerificationRoute on GoRouteData {
     '/more/verifications/create',
     queryParams: {if (_self.partnerId != null) 'partner-id': _self.partnerId},
   );
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+mixin $VerificationReviewRoute on GoRouteData {
+  static VerificationReviewRoute _fromState(GoRouterState state) =>
+      const VerificationReviewRoute();
+
+  @override
+  String get location => GoRouteData.$location('/more/verifications/review');
 
   @override
   void go(BuildContext context) => context.go(location);

@@ -188,10 +188,15 @@ void main() {
       setKoreanLocale(tester);
       await tester.pumpWidget(
         createTestApp(
-          initialLocation:
-              '/partners/test-partner-id/events'
-              '?partner-name=Test%20Partner',
+          initialLocation: '/partners/test-partner-id/events',
           additionalOverrides: [
+            partnerDetailProvider.overrideWith(
+              (ref, partnerId) async => Partner(
+                id: partnerId,
+                name: 'Test Partner',
+                introduction: 'Test introduction',
+              ),
+            ),
             partnerEventsProvider.overrideWith(
               (ref, partnerId) async => createMockEventsForTest(),
             ),
@@ -206,6 +211,41 @@ void main() {
       expect(find.text('Test Partner 이벤트'), findsOneWidget);
     });
 
+    // ── Regression #2137: PartnerDetailPage 더보기 탭 → PartnerEventsPage push 플로우 ──
+    testWidgets('파트너 상세 더보기 탭 → PartnerEventsPage로 push 이동', (
+      tester,
+    ) async {
+      setKoreanLocale(tester);
+      await tester.pumpWidget(
+        createTestApp(
+          initialLocation: '/partners/test-partner-id',
+          additionalOverrides: [
+            partnerDetailProvider.overrideWith(
+              (ref, partnerId) async => Partner(
+                id: partnerId,
+                name: 'Test Partner',
+                introduction: 'Test intro',
+              ),
+            ),
+            partnerEventsProvider.overrideWith(
+              (ref, partnerId) async => <Event>[],
+            ),
+          ],
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(PartnerDetailPage), findsOneWidget);
+
+      // Fix #2137: '더 보기' tap from PartnerDetailPage must push PartnerEventsPage,
+      // not navigate away to an unrelated route.
+      await tester.tap(find.text('더 보기'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(PartnerEventsPage), findsOneWidget);
+      expect(find.text('Test Partner 이벤트'), findsOneWidget);
+    });
+
     // ── PartnerEventsPage: 빈 목록 ──
     testWidgets('PartnerEventsPage 빈 목록 → 등록된 이벤트가 없습니다', (
       tester,
@@ -213,10 +253,15 @@ void main() {
       setKoreanLocale(tester);
       await tester.pumpWidget(
         createTestApp(
-          initialLocation:
-              '/partners/test-partner-id/events'
-              '?partner-name=Test%20Partner',
+          initialLocation: '/partners/test-partner-id/events',
           additionalOverrides: [
+            partnerDetailProvider.overrideWith(
+              (ref, partnerId) async => Partner(
+                id: partnerId,
+                name: 'Test Partner',
+                introduction: 'Test introduction',
+              ),
+            ),
             partnerEventsProvider.overrideWith(
               (ref, partnerId) async => <Event>[],
             ),
