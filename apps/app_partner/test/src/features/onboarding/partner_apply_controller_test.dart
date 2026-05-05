@@ -353,6 +353,32 @@ void main() {
       },
     );
 
+    // Regression #2161 ────────────────────────────────────────────────────
+    group(
+      'Regression #2161: isSaving resets to false when Error subclass thrown',
+      () {
+        test(
+          'saveDraft: isSaving resets to false when repository throws StateError',
+          () async {
+            // StateError is an Error subclass (not Exception); bare catch is required.
+            when(
+              () => mockRepo.saveDraft(any()),
+            ).thenThrow(StateError('unexpected internal error'));
+            final container = buildContainer();
+            final notifier = container.read(
+              partnerApplyControllerProvider.notifier,
+            );
+
+            await notifier.saveDraft();
+
+            final state = container.read(partnerApplyControllerProvider);
+            expect(state.isSaving, isFalse);
+            expect(state.status, isA<AsyncError<void>>());
+          },
+        );
+      },
+    );
+
     group(
       'Regression #1599: saveDraft omits null (empty-string) fields before insert/update',
       () {

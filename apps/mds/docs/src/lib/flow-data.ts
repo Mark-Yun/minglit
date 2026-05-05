@@ -117,6 +117,9 @@ const APP_PARTNER_MAIN_FLOW = `flowchart TB
   PartyDetailRoute -->|"edit party"| PartyEditRoute
   PartyDetailRoute -->|"create event"| EventCreateRoute
   PartyDetailRoute -->|"tap event"| EventDetailRoute
+  EventDetailRoute -->|"tap hero (일정)"| EventEditRoute
+  EventDetailRoute -->|"tap 참가 현황"| EventApplicationListRoute
+  EventApplicationListRoute -->|"tap application card"| EventApplicationDetailRoute
   EventDetailRoute -->|"create ticket"| TicketCreateRoute
   EventDetailRoute -->|"edit ticket"| TicketEditRoute
   PartyDetailRoute -->|"manage recurrence"| RecurrenceManagementRoute
@@ -276,8 +279,10 @@ const KNOWN_SPEC_FILES: { user: ReadonlySet<string>; partner: ReadonlySet<string
     'checkin_placeholder_page',
     'create_verification_page',
     'event_application_detail_page',
+    'event_application_list_page',
     'event_application_manage_page',
     'event_create_page',
+    'event_edit_page',
     'location_guide_page',
     'more_page',
     'notification_list_screen',

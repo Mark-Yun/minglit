@@ -19,11 +19,6 @@ void main() {
       mockRepo = MockPartnerRepository();
     });
 
-    /// Builds the widget under test with the given provider overrides.
-    ///
-    /// Uses [SynchronousFuture] for [getMyApplication] so the anonymous
-    /// inline FutureProvider in [PartnerApplyStatusPage] resolves immediately
-    /// without triggering an infinite rebuild loop in tests.
     Widget buildWidget({required List<dynamic> overrides}) {
       return ProviderScope(
         overrides: overrides.cast(),
@@ -39,7 +34,6 @@ void main() {
     testWidgets(
       'shows loading indicator when onboardingStateProvider is loading',
       (tester) async {
-        // Stub getMyApplication so the inline FutureProvider can call it.
         when(
           () => mockRepo.getMyApplication(),
         ).thenAnswer((_) => SynchronousFuture<PartnerApplication?>(null));
@@ -66,8 +60,6 @@ void main() {
     testWidgets(
       'shows pending message when state is pendingReview',
       (tester) async {
-        // SynchronousFuture resolves the inline FutureProvider immediately
-        // so the widget never enters the applicationAsync loading state.
         when(() => mockRepo.getMyApplication()).thenAnswer(
           (_) => SynchronousFuture<PartnerApplication?>(
             const PartnerApplication(
@@ -195,6 +187,44 @@ void main() {
         await tester.pump();
 
         expect(find.text('신청서 수정하기'), findsNothing);
+      },
+    );
+
+    // Regression test for #2074: inline FutureProvider inside build() caused
+    // an infinite rebuild loop — getMyApplication was called on every rebuild.
+    // After the fix (top-level _myApplicationProvider), the provider is created
+    // once and getMyApplication must be called exactly once per widget mount.
+    testWidgets(
+      'getMyApplication is called exactly once — no rebuild loop (regression #2074)',
+      (tester) async {
+        var callCount = 0;
+        when(() => mockRepo.getMyApplication()).thenAnswer((_) async {
+          callCount++;
+          return const PartnerApplication(
+            id: 'app_1',
+            userId: 'user_1',
+            status: 'pending',
+          );
+        });
+
+        await tester.pumpWidget(
+          buildWidget(
+            overrides: [
+              partnerRepositoryProvider.overrideWith((ref) => mockRepo),
+              onboardingStateProvider.overrideWith(
+                (ref) async => OnboardingState.pendingReview,
+              ),
+            ],
+          ),
+        );
+
+        // Pump several frames to surface any rebuild loops.
+        for (var i = 0; i < 10; i++) {
+          await tester.pump(const Duration(milliseconds: 16));
+        }
+
+        // The provider must not call getMyApplication more than once.
+        expect(callCount, 1);
       },
     );
   });
