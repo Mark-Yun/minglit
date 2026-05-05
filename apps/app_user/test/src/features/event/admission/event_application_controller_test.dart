@@ -453,6 +453,68 @@ void main() {
       },
     );
 
+    // Regression: Fix #2211 — approved verifications must NOT be in payload.
+    // Sending them re-inserts with status:pending, overwriting approved state.
+    test(
+      'submitApplication excludes already-approved verifications from payload',
+      () async {
+        // ticket_1 requires verification_1 (group_1)
+        // Simulate verification_1 already approved (verifiedResult != null)
+        when(
+          () => mockVerificationRepo.getPartnerRequirementsStatus(
+            partnerId: any(named: 'partnerId'),
+            requiredVerificationIds: any(named: 'requiredVerificationIds'),
+          ),
+        ).thenAnswer(
+          (_) async => [
+            VerificationRequirementStatus(
+              master: verification,
+              verifiedResult: const {'verification_id': 'verification_1'},
+            ),
+          ],
+        );
+
+        Map<String, dynamic>? capturedVerifData;
+        when(
+          () => mockEventRepo.applyEvent(
+            eventId: any(named: 'eventId'),
+            ticketId: any(named: 'ticketId'),
+            verificationData: any(named: 'verificationData'),
+          ),
+        ).thenAnswer((invocation) async {
+          capturedVerifData =
+              invocation.namedArguments[const Symbol('verificationData')]
+                  as Map<String, dynamic>?;
+          return const FreeApplyEventResult(applicationId: 'app_nodup');
+        });
+
+        final container = _createContainer();
+        final notifier = container.read(
+          eventApplicationControllerProvider(testEvent).notifier,
+        );
+
+        await notifier.selectTicket(testEvent.tickets!.first);
+        // User supplies data for the already-approved verification
+        notifier.updateVerificationData('verification_1', 'company', 'Minglit');
+        notifier.markIdentityCompleted();
+        notifier.setConsentGranted(true);
+        await notifier.submitApplication(mockContext);
+
+        // Payload must be null or empty — no re-submission of approved verif
+        if (capturedVerifData != null) {
+          final verifs =
+              capturedVerifData!['verifications'] as List<Map<String, dynamic>>;
+          expect(
+            verifs.any((v) => v['verification_id'] == 'verification_1'),
+            isFalse,
+            reason:
+                'Approved verification_1 must not appear in the payload — '
+                'would reset status to pending',
+          );
+        }
+      },
+    );
+
     test('payment cancellation sets error status', () async {
       when(
         () => mockEventRepo.applyEvent(

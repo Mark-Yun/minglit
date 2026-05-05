@@ -22,6 +22,9 @@ class EventApplicationState {
     this.selectedTicket,
     this.verificationData = const {},
     this.errorMessage,
+    // Fix #2211: tracks whether _loadPartnerVerifications is in-flight so
+    // canMoveNext can block premature step advance during async load.
+    this.partnerVerificationsLoading = false,
   });
 
   final EventApplicationStep step;
@@ -37,6 +40,7 @@ class EventApplicationState {
   final Ticket? selectedTicket;
   final Map<String, Map<String, dynamic>> verificationData;
   final String? errorMessage;
+  final bool partnerVerificationsLoading;
 
   EventApplicationState copyWith({
     EventApplicationStep? step,
@@ -48,6 +52,7 @@ class EventApplicationState {
     Ticket? selectedTicket,
     Map<String, Map<String, dynamic>>? verificationData,
     Object? errorMessage = _noChange,
+    bool? partnerVerificationsLoading,
   }) {
     return EventApplicationState(
       step: step ?? this.step,
@@ -61,6 +66,8 @@ class EventApplicationState {
       errorMessage: identical(errorMessage, _noChange)
           ? this.errorMessage
           : errorMessage as String?,
+      partnerVerificationsLoading:
+          partnerVerificationsLoading ?? this.partnerVerificationsLoading,
     );
   }
 }
@@ -120,8 +127,14 @@ class EventApplicationController extends _$EventApplicationController {
   }
 
   Future<void> selectTicket(Ticket ticket) async {
-    state = state.copyWith(selectedTicket: ticket);
+    // Fix #2211: set loading=true before async load so canMoveNext blocks
+    // the identity-step "next" button until verifications have settled.
+    state = state.copyWith(
+      selectedTicket: ticket,
+      partnerVerificationsLoading: true,
+    );
     await _loadPartnerVerifications(ticket);
+    state = state.copyWith(partnerVerificationsLoading: false);
   }
 
   void markIdentityCompleted() {
@@ -203,7 +216,10 @@ class EventApplicationController extends _$EventApplicationController {
 
   bool get canMoveNext {
     return switch (state.step) {
-      EventApplicationStep.identity => state.identityCompleted,
+      // Fix #2211: block next while verifications are loading — identity alone
+      // isn't sufficient when selectTicket's async load hasn't settled yet.
+      EventApplicationStep.identity =>
+        state.identityCompleted && !state.partnerVerificationsLoading,
       EventApplicationStep.partnerVerification => true,
       EventApplicationStep.consent => state.consentGranted,
       EventApplicationStep.payment => false,
@@ -331,8 +347,19 @@ class EventApplicationController extends _$EventApplicationController {
   Map<String, dynamic>? _buildVerificationPayload(Event event, Ticket ticket) {
     final reqIds = _requiredVerificationIdsFor(ticket, event);
     if (reqIds.isEmpty || state.verificationData.isEmpty) return null;
+    // Fix #2211: exclude already-approved entries — sending them would create
+    // new pending submissions and overwrite approved verification data.
+    final approvedIds = {
+      for (final entry in state.partnerVerifications)
+        if (entry.isApproved) entry.verification.id,
+    };
     final verifications = state.verificationData.entries
-        .where((e) => reqIds.contains(e.key) && e.value.isNotEmpty)
+        .where(
+          (e) =>
+              reqIds.contains(e.key) &&
+              !approvedIds.contains(e.key) &&
+              e.value.isNotEmpty,
+        )
         .map((e) => {'verification_id': e.key, 'data': e.value})
         .toList();
     if (verifications.isEmpty) return null;

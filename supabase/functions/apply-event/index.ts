@@ -24,11 +24,28 @@ function parseVerifications(
   const partnerId = verification_data["partner_id"] as string | undefined;
 
   if (Array.isArray(verification_data["verifications"])) {
+    // Fix #2107: runtime-validate each entry instead of casting — items with
+    // non-string verification_id or non-object data are silently dropped.
+    const raw = verification_data["verifications"] as unknown[];
     return {
       partnerId,
-      items: (verification_data["verifications"] as VerifItem[]).filter(
-        (v) => v.verification_id,
-      ),
+      items: raw.flatMap((v) => {
+        if (
+          v &&
+          typeof v === "object" &&
+          typeof (v as { verification_id?: unknown }).verification_id === "string"
+        ) {
+          const item = v as { verification_id: string; data?: unknown };
+          const data =
+            item.data &&
+            typeof item.data === "object" &&
+            !Array.isArray(item.data)
+              ? (item.data as Record<string, unknown>)
+              : {};
+          return [{ verification_id: item.verification_id, data }];
+        }
+        return [];
+      }),
     };
   }
 
@@ -56,6 +73,12 @@ async function upsertVerifications(
   partnerId: string | undefined,
   items: VerifItem[],
 ): Promise<Response | null> {
+  // Fix #2107: reject up-front if items were sent without a partnerId — silent
+  // skip would make the caller treat the request as success with no rows saved.
+  if (items.length > 0 && !partnerId) {
+    console.error("upsertVerifications: items provided without partnerId");
+    return errorResponse("Invalid verification payload: missing partner_id", 400);
+  }
   for (const item of items) {
     if (!item.verification_id || !partnerId) continue;
 
