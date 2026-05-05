@@ -4,7 +4,7 @@
 import 'dart:async';
 
 import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
-import 'package:app_partner/src/features/party/event/detail/event_application_controller.dart';
+import 'package:app_partner/src/logic/event_application_logic.dart';
 import 'package:app_partner/src/features/party/event/detail/event_detail_controller.dart';
 import 'package:app_partner/src/features/party/event/detail/event_detail_page.dart';
 import 'package:app_partner/src/l10n/generated/app_localizations.dart';

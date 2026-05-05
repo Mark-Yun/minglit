@@ -1,4 +1,4 @@
-import 'package:app_partner/src/features/party/event/detail/event_application_controller.dart';
+import 'package:app_partner/src/logic/event_application_logic.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
