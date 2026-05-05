@@ -1,12 +1,14 @@
 -- pgTAP tests for PostgREST exposed schemas (authenticator role pgrst.db_schemas GUC).
--- migration: 20260505000002_postgrest_expose_admin_schema.sql
+-- migration: 20260505000003_restore_storage_in_pgrst_db_schemas.sql
 --
 -- 의도: GUC 가 누락되거나 다른 migration 에서 덮어써질 때 즉시 fail 시키는 regression 가드.
 --      migration 적용 후 PostgREST 가 노출하는 스키마 목록을 실측 검증.
+-- Note: 000002 에서 storage 가 누락됐고 이 테스트도 storage 를 검증하지 않았음.
+--      000003 으로 storage 를 복원하고 이 테스트에도 storage 검증 추가.
 
 BEGIN;
 
-SELECT plan(4);
+SELECT plan(5);
 
 -- 헬퍼 view: authenticator role 의 pgrst.db_schemas 값 추출
 CREATE TEMP VIEW _exposed_schemas AS
@@ -23,8 +25,8 @@ SELECT ok(
   'authenticator role must have pgrst.db_schemas GUC set'
 );
 
--- 2~4. 필수 스키마 각각 포함 확인
--- Note: GUC value 형식은 "public, graphql_public, admin" — 공백 무관 contains 매칭
+-- 2~5. 필수 스키마 각각 포함 확인
+-- Note: GUC value 형식은 "public, graphql_public, storage, admin" — 공백 무관 contains 매칭
 SELECT ok(
   EXISTS (
     SELECT 1 FROM _exposed_schemas
@@ -39,6 +41,14 @@ SELECT ok(
     WHERE position('graphql_public' IN value) > 0
   ),
   'pgrst.db_schemas must include ''graphql_public'' (pg_graphql endpoint)'
+);
+
+SELECT ok(
+  EXISTS (
+    SELECT 1 FROM _exposed_schemas
+    WHERE position('storage' IN value) > 0
+  ),
+  'pgrst.db_schemas must include ''storage'' (Supabase Storage — supabase.schema(''storage'') 호출 경로 보존)'
 );
 
 SELECT ok(
