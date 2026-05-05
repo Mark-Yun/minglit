@@ -55,21 +55,25 @@ export const handler = async (
     return successResponse({ success: true, already_viewed: true });
   }
 
-  // Fix #2124: move the write path to an EF/service-role update so clients remain read-only under RLS.
-  const { error: updateError } = await ctx.supabase
+  // Fix #2124: atomic UPDATE — check row count to detect concurrent duplicate calls.
+  // If two requests arrive simultaneously (both pass the read above), only one UPDATE
+  // wins the IS NULL guard; the loser gets 0 rows and must return already_viewed: true.
+  const { data: updatedRows, error: updateError } = await ctx.supabase
     .from("event_applications")
     .update({
       match_results_viewed_at: new Date().toISOString(),
     })
     .eq("id", application_id)
     .eq("user_id", ctx.auth.userId)
-    .is("match_results_viewed_at", null);
+    .is("match_results_viewed_at", null)
+    .select("id");
 
   if (updateError) {
     return errorResponse("Failed to mark match results viewed", 500);
   }
 
-  return successResponse({ success: true, already_viewed: false });
+  const updated = Array.isArray(updatedRows) && updatedRows.length > 0;
+  return successResponse({ success: true, already_viewed: !updated });
 };
 
 minglitEdgeFunction(handler);

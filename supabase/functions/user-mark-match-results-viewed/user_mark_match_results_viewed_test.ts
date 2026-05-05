@@ -38,11 +38,13 @@ function applicationRoute(overrides?: {
   };
 }
 
-const updateRoute = {
-  matcher: (req: Request) =>
-    req.url.includes("/rest/v1/event_applications") && req.method === "PATCH",
-  handler: () => jsonResponse({}),
-};
+function updateRoute(updatedIds: string[] = [OWN_APP_ID]) {
+  return {
+    matcher: (req: Request) =>
+      req.url.includes("/rest/v1/event_applications") && req.method === "PATCH",
+    handler: () => jsonResponse(updatedIds.map((id) => ({ id }))),
+  };
+}
 
 Deno.test("authenticated user marks own application as viewed -> 200", async () => {
   const handler = await captureServeHandler(
@@ -52,7 +54,7 @@ Deno.test("authenticated user marks own application as viewed -> 200", async () 
   const { fetchMock, calls } = createFetchMock([
     authRoute,
     applicationRoute(),
-    updateRoute,
+    updateRoute(),
   ]);
 
   await withEnv(ENV, async () => {
@@ -87,7 +89,7 @@ Deno.test("authenticated user cannot mark another user's application -> error", 
   const { fetchMock, calls } = createFetchMock([
     authRoute,
     applicationRoute({ id: OTHER_APP_ID, user_id: "user-999" }),
-    updateRoute,
+    updateRoute(),
   ]);
 
   await withEnv(ENV, async () => {
@@ -113,6 +115,36 @@ Deno.test("authenticated user cannot mark another user's application -> error", 
   });
 });
 
+Deno.test("concurrent duplicate call: PATCH 0 rows -> already_viewed: true", async () => {
+  // Simulates the race where the first request already won the IS NULL guard,
+  // so the second request's PATCH returns 0 rows. Must return already_viewed: true.
+  const handler = await captureServeHandler(
+    new URL("./index.ts", import.meta.url),
+  );
+
+  const { fetchMock } = createFetchMock([
+    authRoute,
+    applicationRoute({ match_results_viewed_at: null }), // initial read: still null (race not yet detected)
+    updateRoute([]), // PATCH returns 0 rows — concurrent winner already set the timestamp
+  ]);
+
+  await withEnv(ENV, async () => {
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const request = authenticatedJsonRequest("http://localhost", {
+          application_id: OWN_APP_ID,
+        });
+        const response = await handler(request);
+        const payload = await readJson(response);
+
+        assertEquals(response.status, 200);
+        assertEquals(payload.success, true);
+        assertEquals(payload.already_viewed, true);
+      });
+    });
+  });
+});
+
 Deno.test("marking an already-viewed application is idempotent -> 200", async () => {
   const handler = await captureServeHandler(
     new URL("./index.ts", import.meta.url),
@@ -123,7 +155,7 @@ Deno.test("marking an already-viewed application is idempotent -> 200", async ()
     applicationRoute({
       match_results_viewed_at: "2026-05-05T00:00:00.000Z",
     }),
-    updateRoute,
+    updateRoute(),
   ]);
 
   await withEnv(ENV, async () => {
