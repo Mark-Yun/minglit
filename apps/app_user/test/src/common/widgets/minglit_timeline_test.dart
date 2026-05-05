@@ -5,9 +5,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 Widget _wrap(Widget child) => MaterialApp(
-      theme: MinglitTheme.materialTheme,
-      home: Scaffold(body: child),
-    );
+  theme: MinglitTheme.materialTheme,
+  home: Scaffold(body: child),
+);
 
 void main() {
   group('MinglitTimeline', () {
@@ -67,8 +67,9 @@ void main() {
       expect(find.text('심사 사유: 조건 미충족'), findsOneWidget);
     });
 
-    testWidgets('pulsing=true wraps dot in Transform for any tone',
-        (tester) async {
+    testWidgets('pulsing=true wraps dot in Transform for any tone', (
+      tester,
+    ) async {
       final key = GlobalKey();
       await tester.pumpWidget(
         _wrap(
@@ -93,8 +94,9 @@ void main() {
       expect(transforms, findsOneWidget);
     });
 
-    testWidgets('pulsing=false (default) has no Transform on dot',
-        (tester) async {
+    testWidgets('pulsing=false (default) has no Transform on dot', (
+      tester,
+    ) async {
       final key = GlobalKey();
       await tester.pumpWidget(
         _wrap(
@@ -117,8 +119,9 @@ void main() {
       expect(transforms, findsNothing);
     });
 
-    testWidgets('single-step timeline renders without connecting line',
-        (tester) async {
+    testWidgets('single-step timeline renders without connecting line', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _wrap(
           const MinglitTimeline(
