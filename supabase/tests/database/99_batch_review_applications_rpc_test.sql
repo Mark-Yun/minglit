@@ -25,11 +25,11 @@ BEGIN
   RETURNING id INTO v_partner_id;
 
   INSERT INTO public.parties (partner_id, title, min_confirmed_count, max_participants)
-  VALUES (v_partner_id, 'BRV Party', 0, 2)
+  VALUES (v_partner_id, 'BRV Party', 0, 1)
   RETURNING id INTO v_party_id;
 
   INSERT INTO public.events (party_id, start_time, end_time, min_confirmed_count, max_participants, current_participants)
-  VALUES (v_party_id, now() + interval '1 day', now() + interval '1 day 2 hours', 0, 2, 0)
+  VALUES (v_party_id, now() + interval '1 day', now() + interval '1 day 2 hours', 0, 1, 0)
   RETURNING id INTO v_event_id;
 
   INSERT INTO public.tickets (event_id, name, quantity, price)
@@ -106,7 +106,7 @@ SELECT is(
 );
 
 -- ============================================================
--- Test 5: capacity guard skips 3rd applicant when event full (max_participants=2)
+-- Test 5: capacity guard skips 3rd applicant when event full (max_participants=1, app_a already approved)
 -- ============================================================
 
 DO $$
@@ -119,12 +119,12 @@ BEGIN
     ARRAY[current_setting('tests.brv_app_c_id')::uuid],
     ARRAY[]::public.rejection_item[]
   );
-  PERFORM set_config('tests.brv_skipped_count', array_length(v_result.skipped_due_to_capacity, 1)::text, true);
+  PERFORM set_config('tests.brv_skipped_count', COALESCE(array_length(v_result.skipped_due_to_capacity, 1), 0)::text, true);
 END $$;
 
 SELECT is(
   current_setting('tests.brv_skipped_count')::integer, 1,
-  'batch_review: 3rd approval skipped due to capacity (max_participants=2 reached)'
+  'batch_review: 3rd approval skipped due to capacity (max_participants=1 reached)'
 );
 
 -- ============================================================
@@ -142,7 +142,7 @@ BEGIN
     ARRAY[current_setting('tests.brv_app_a_id')::uuid],
     ARRAY[]::public.rejection_item[]
   );
-  PERFORM set_config('tests.brv_processed_count', array_length(v_result.skipped_already_processed, 1)::text, true);
+  PERFORM set_config('tests.brv_processed_count', COALESCE(array_length(v_result.skipped_already_processed, 1), 0)::text, true);
 END $$;
 
 SELECT is(
