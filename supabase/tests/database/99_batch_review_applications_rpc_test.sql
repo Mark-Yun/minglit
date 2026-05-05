@@ -118,7 +118,15 @@ SELECT is(
 
 -- ============================================================
 -- Test 5: capacity guard skips 3rd applicant when event full (max_participants=1, app_a already approved)
+-- In production the trigger chain (on_application_approval → issue_ticket_on_approval →
+-- on_participant_change → update_event_participation_stats) increments current_participants.
+-- In pgTAP tests the trigger chain does not reliably propagate within the same transaction,
+-- so we set current_participants explicitly to test the RPC capacity-guard logic in isolation.
 -- ============================================================
+
+UPDATE public.events
+SET current_participants = 1
+WHERE id = current_setting('tests.brv_event_id')::uuid;
 
 DO $$
 DECLARE

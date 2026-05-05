@@ -59,7 +59,9 @@ function rpcRoute(result: Record<string, unknown>) {
 }
 
 Deno.test("returns 405 for non-POST", async () => {
-  const { fetchMock } = createFetchMock([]);
+  // Auth is verified by minglitEdgeFunction before the handler's method check,
+  // so the request must carry a valid Bearer token to reach the 405 path.
+  const { fetchMock } = createFetchMock([authRoute]);
   await withEnv(ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
@@ -67,7 +69,10 @@ Deno.test("returns 405 for non-POST", async () => {
           new URL("./index.ts", import.meta.url),
         );
         const res = await handler(
-          new Request("https://supabase.test/partner-review-applications", { method: "GET" }),
+          new Request("https://supabase.test/partner-review-applications", {
+            method: "GET",
+            headers: { Authorization: "Bearer user-token" },
+          }),
         );
         assertEquals(res.status, 405);
       });
