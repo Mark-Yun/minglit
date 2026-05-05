@@ -181,19 +181,26 @@ void main() {
           ),
         );
 
-        expect(find.byType(Transform), findsNothing);
+        // Scope to MinglitTimeline to avoid matching MaterialApp's route
+        // transition Transforms that are present during the initial frame.
+        final inTimeline = find.descendant(
+          of: find.byType(MinglitTimeline),
+          matching: find.byType(Transform),
+        );
+
+        expect(inTimeline, findsNothing);
 
         // false → true: Transform appears and controller animates
         pulsingNotifier.value = true;
         await tester.pump();
-        expect(find.byType(Transform), findsOneWidget);
+        expect(inTimeline, findsOneWidget);
         await tester.pump(const Duration(milliseconds: 300));
-        expect(find.byType(Transform), findsOneWidget);
+        expect(inTimeline, findsOneWidget);
 
         // true → false: Transform disappears
         pulsingNotifier.value = false;
         await tester.pump();
-        expect(find.byType(Transform), findsNothing);
+        expect(inTimeline, findsNothing);
       },
     );
 
