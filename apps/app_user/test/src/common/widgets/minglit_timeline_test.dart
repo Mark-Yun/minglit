@@ -48,8 +48,9 @@ void main() {
       expect(find.text('2026.04.10 19:42'), findsOneWidget);
     });
 
-    testWidgets('trailing non-Text widget (Icon) renders without assert',
-        (tester) async {
+    testWidgets('trailing non-Text widget (Icon) renders without assert', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _wrap(
           const MinglitTimeline(
