@@ -64,7 +64,7 @@ const APP_USER_MAIN_FLOW = `flowchart TB
   MyPageRoute -->|"my tickets"| MyTicketsRoute
   MyPageRoute -->|"purchase history"| PurchaseHistoryRoute
   MyPageRoute -->|"notification settings"| NotificationSettingsRoute
-  MyPageRoute -->|"account management"| AccountManagementRoute
+  MyPageRoute -->|"tap profile"| AccountManagementRoute
   MyPageRoute -->|"privacy"| PrivacyRoute
   MyPageRoute -->|"blocked partners"| BlockedPartnersRoute
 
