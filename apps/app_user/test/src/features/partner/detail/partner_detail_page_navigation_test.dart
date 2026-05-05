@@ -1,13 +1,20 @@
-// Fix #2175: Regression guard for #2137 — PartnerDetailPage "더 보기" must route
-// to /partners/:id/events. Verifies UI element → coordinator binding.
+// Fix #2175: Regression guard for #2137 — PartnerDetailPage "더 보기" must push
+// /partners/:id/events to GoRouter. Verifies UI element → route destination binding
+// by injecting a real PartnerCoordinator with a MockGoRouter and asserting the
+// exact push path — coordinator method regressions are caught at the route level.
+import 'dart:async';
+
 import 'package:app_user/src/features/partner/detail/partner_detail_page.dart';
 import 'package:app_user/src/features/partner/logic/partner_coordinator.dart';
+import 'package:app_user/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
+import 'package:minglit_kit/src/features/social/logic/social_interaction_controller.dart';
 import 'package:mocktail/mocktail.dart';
 
-class _MockPartnerCoordinator extends Mock implements PartnerCoordinator {}
+class _MockGoRouter extends Mock implements GoRouter {}
 
 // Suppress Supabase.instance access in SocialInteractionController during tests
 class _NoopSocialInteractionController extends SocialInteractionController {
@@ -20,7 +27,7 @@ class _NoopSocialInteractionController extends SocialInteractionController {
 }
 
 void main() {
-  late _MockPartnerCoordinator mockCoordinator;
+  late _MockGoRouter mockRouter;
 
   const testPartnerId = 'test-partner-id';
   const testPartner = Partner(
@@ -33,18 +40,17 @@ void main() {
   );
 
   setUp(() {
-    mockCoordinator = _MockPartnerCoordinator();
-    when(
-      () => mockCoordinator.pushPartnerEvents(
-        partnerId: any(named: 'partnerId'),
-      ),
-    ).thenReturn(null);
+    mockRouter = _MockGoRouter();
+    when(() => mockRouter.push(any())).thenAnswer((_) async => null);
   });
 
   Widget buildSubject() {
     return ProviderScope(
       overrides: [
-        partnerCoordinatorProvider.overrideWithValue(mockCoordinator),
+        // Use real coordinator with mock router — verifies the push path, not just the call
+        partnerCoordinatorProvider.overrideWithValue(
+          PartnerCoordinator(mockRouter),
+        ),
         partnerDetailProvider.overrideWith(
           (ref, id) async => testPartner,
         ),
@@ -55,15 +61,17 @@ void main() {
           _NoopSocialInteractionController.new,
         ),
       ],
-      child: const MaterialApp(
-        home: PartnerDetailPage(partnerId: testPartnerId),
+      child: MaterialApp(
+        theme: MinglitTheme.materialTheme,
+        home: const PartnerDetailPage(partnerId: testPartnerId),
       ),
     );
   }
 
   testWidgets(
-    // Fix #2137: 더 보기 버튼이 /partners/:id/events가 아닌 Unknown Route로 이동하던 버그 회귀 가드
-    '더 보기 탭 시 coordinator.pushPartnerEvents 호출 — #2137 회귀 가드',
+    // Fix #2137: 더 보기 버튼이 Unknown Route로 이동하던 버그 회귀 가드
+    // — 라우터에 /partners/:id/events가 실제로 push되는지 검증
+    '더 보기 탭 시 /partners/:id/events push — #2137 회귀 가드',
     (tester) async {
       await tester.pumpWidget(buildSubject());
       await tester.pumpAndSettle();
@@ -72,8 +80,8 @@ void main() {
       await tester.pumpAndSettle();
 
       verify(
-        () => mockCoordinator.pushPartnerEvents(
-          partnerId: testPartnerId,
+        () => mockRouter.push(
+          const PartnerEventsRoute(partnerId: testPartnerId).location,
         ),
       ).called(1);
     },
