@@ -186,6 +186,67 @@ void main() {
     });
   });
 
+  group('PurchaseHistoryCard — Fix #2076 무료 티켓 영수증 버튼 회귀 테스트', () {
+    testWidgets('무료 티켓 영수증 버튼 탭 시 신청 확인서 다이얼로그가 표시된다', (
+      tester,
+    ) async {
+      final mockHistory = [
+        EventApplication(
+          id: 'app1',
+          eventId: 'event1',
+          ticketId: 'ticket1',
+          userId: 'user1',
+          status: 'approved',
+          paymentAmount: 0,
+          createdAt: DateTime(2026, 4),
+          updatedAt: DateTime(2026, 4),
+          event: Event(
+            id: 'event1',
+            partyId: 'party1',
+            startTime: DateTime(2026, 5, 1, 19),
+            endTime: DateTime(2026, 5, 1, 21),
+            createdAt: DateTime(2026, 4),
+            updatedAt: DateTime(2026, 4),
+            title: '무료 소셜 이벤트',
+          ),
+          ticket: Ticket(
+            id: 'ticket1',
+            name: '무료 티켓',
+            createdAt: DateTime(2026, 4),
+            updatedAt: DateTime(2026, 4),
+          ),
+        ),
+      ];
+
+      when(
+        () => mockEventRepository.getMyPurchaseHistory('user1'),
+      ).thenAnswer((_) async => mockHistory);
+
+      await tester.pumpWidget(
+        createTestWidget([
+          currentUserProvider.overrideWith((ref) => mockUser),
+          eventRepositoryProvider.overrideWithValue(mockEventRepository),
+        ]),
+      );
+
+      await tester.pump();
+      await tester.pump();
+      await tester.pump();
+
+      // 영수증 버튼이 무료 티켓에도 표시된다
+      expect(find.text('영수증'), findsOneWidget);
+
+      // 탭하면 신청 확인서 다이얼로그가 열린다
+      await tester.tap(find.text('영수증'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('신청 확인서'), findsOneWidget);
+      // The card also shows "0원" for price — dialog adds another instance.
+      expect(find.text('0원'), findsAtLeast(1));
+      expect(find.text('무료 티켓은 결제 영수증이 발행되지 않습니다.'), findsOneWidget);
+    });
+  });
+
   group('PurchaseHistoryCard — Fix #1236 버튼 위계 회귀 테스트', () {
     testWidgets('영수증/문의하기 버튼은 TextButton (OutlinedButton 아님)', (
       tester,
@@ -241,7 +302,9 @@ void main() {
   });
 
   group('PurchaseHistoryCard — Fix #1820 영수증 버튼/버튼 정렬 회귀 테스트', () {
-    testWidgets('paymentId가 null이면 영수증 버튼이 표시되지 않는다', (tester) async {
+    testWidgets('paymentId가 null이어도 영수증 버튼이 표시된다 (Fix #2076)', (
+      tester,
+    ) async {
       final mockHistory = [
         EventApplication(
           id: 'app1',
@@ -284,8 +347,8 @@ void main() {
       await tester.pump();
       await tester.pump();
 
-      // Fix #1820: 무료 티켓(paymentId 없음)에서 영수증 버튼 노출 금지
-      expect(find.text('영수증'), findsNothing);
+      // Fix #2076: 무료 티켓도 영수증 버튼 표시 — CUJ-U03 spec
+      expect(find.text('영수증'), findsOneWidget);
       expect(find.text('문의하기'), findsOneWidget);
     });
 
