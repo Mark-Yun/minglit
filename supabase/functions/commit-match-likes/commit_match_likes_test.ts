@@ -133,6 +133,30 @@ function happyPathRoutes(): FetchRoute[] {
 }
 
 Deno.test({
+  name: "returns 400 when voter_id is in candidate_ids (self-like)",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const { fetchMock } = createFetchMock([authRoute()]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const res = await handler(
+          authenticatedJsonRequest("http://localhost", {
+            event_id: TEST_EVENT_ID,
+            candidate_ids: [TEST_VOTER_ID],
+          }),
+        );
+        assertEquals(res.status, 400);
+        const body = await readJson(res);
+        assertEquals(body.error, "자기 자신에게 좋아요를 보낼 수 없습니다");
+      });
+    });
+  },
+});
+
+Deno.test({
   name: "returns 400 when candidate_ids exceed max 3",
   fn: async () => {
     const handler = await captureServeHandler(

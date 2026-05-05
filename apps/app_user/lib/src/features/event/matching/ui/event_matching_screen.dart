@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:app_user/src/features/event/matching/logic/commit_match_likes_controller.dart';
-import 'package:app_user/src/routing/app_coordinator.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
@@ -260,8 +259,22 @@ class _EventMatchingScreenState extends ConsumerState<EventMatchingScreen> {
     });
   }
 
+  // Fix #2206: Navigator.pushReplacement directly — AppCoordinator is for
+  // GoRouter-managed routes; one-shot post-action overlays belong in the widget.
   Future<void> _showSubmittedPage(BuildContext context) async {
-    await ref.read(appCoordinatorProvider).pushMatchingConfirmation(context);
+    if (!context.mounted) return;
+    await Navigator.of(context).pushReplacement(
+      MaterialPageRoute<void>(
+        builder: (ctx) => MinglitConfirmationPage(
+          title: '좋아요를 보냈어요',
+          description: '서로 마음이 맞으면 결과 화면에서 바로 알려드릴게요.',
+          icon: Icons.check_rounded,
+          tone: MinglitConfirmationTone.success,
+          ctaLabel: '닫기',
+          onPressed: () => Navigator.of(ctx).maybePop(),
+        ),
+      ),
+    );
   }
 }
 
