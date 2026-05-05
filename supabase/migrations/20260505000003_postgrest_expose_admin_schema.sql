@@ -33,7 +33,7 @@ BEGIN
   END IF;
 END $$;
 
-ALTER ROLE authenticator SET pgrst.db_schemas TO 'public, graphql_public, admin';
+ALTER ROLE authenticator SET pgrst.db_schemas TO 'public, graphql_public, storage, admin';
 
 -- PostgREST 즉시 리로드 (NOTIFY 채널은 PostgREST 가 listen 중)
 NOTIFY pgrst, 'reload config';
