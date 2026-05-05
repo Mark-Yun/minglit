@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:app_partner/src/features/home/home_event_phase.dart';
 import 'package:app_partner/src/logic/current_partner_provider.dart';
 import 'package:app_partner/src/logic/dashboard_refresh_notifier.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -15,7 +16,11 @@ abstract class PartnerDashboardState with _$PartnerDashboardState {
     @Default(0) int pendingReviewCount,
     @Default([]) List<Event> upcomingEvents,
     @Default([]) List<Event> closingSoonEvents,
+    @Default([]) List<Event> liveEvents,
+    @Default([]) List<Event> recruitingEvents,
     @Default([]) List<Party> activeParties,
+    @Default([]) List<Party> draftParties,
+    @Default(0) int totalPartyCount,
     // Fix #1215: tracks ALL events ever created, not just upcoming ones.
     // Using upcomingEvents for onboarding check caused the guide to reappear
     // after all events ended or were more than 7 days away.
@@ -28,8 +33,9 @@ abstract class PartnerDashboardState with _$PartnerDashboardState {
 class PartnerDashboardController extends _$PartnerDashboardController {
   @override
   PartnerDashboardState build() {
-    // Fix #1943: watch shared refresh signal — bumped by event_create_controller
-    // after successful creation, triggering auto-rebuild without cross-feature coupling.
+    // Fix #1943: watch shared refresh signal — bumped by
+    // event_create_controller after successful creation, triggering
+    // auto-rebuild without cross-feature coupling.
     ref.watch(dashboardRefreshProvider);
     // Schedule loading after build() returns so that `state` is initialized.
     // unawaited() runs synchronously until the first await, which would
@@ -51,7 +57,11 @@ class PartnerDashboardController extends _$PartnerDashboardController {
           pendingReviewCount: 0,
           upcomingEvents: [],
           closingSoonEvents: [],
+          liveEvents: [],
+          recruitingEvents: [],
           activeParties: [],
+          draftParties: [],
+          totalPartyCount: 0,
           hasAnyEvents: false,
         );
         return;
@@ -80,6 +90,17 @@ class PartnerDashboardController extends _$PartnerDashboardController {
       // Fix #1215: onboarding must not reappear once partner has ever created
       // an event — getUpcomingEvents only covers next 7 days.
       final hasAnyEvents = await eventRepo.getHasAnyEvents(partner.id);
+      final liveEvents = upcomingEvents
+          .where((event) => getEventPhase(event) == EventPhase.live)
+          .toList();
+      final recruitingEvents = upcomingEvents
+          .where((event) => getEventPhase(event) == EventPhase.recruiting)
+          .toList();
+      final draftParties = activeParties
+          .where(
+            (party) => upcomingEvents.every((event) => event.partyId != party.id),
+          )
+          .toList();
 
       if (!ref.mounted) return;
       state = state.copyWith(
@@ -87,7 +108,11 @@ class PartnerDashboardController extends _$PartnerDashboardController {
         pendingReviewCount: pendingCount,
         upcomingEvents: upcomingEvents,
         closingSoonEvents: closingSoonEvents,
+        liveEvents: liveEvents,
+        recruitingEvents: recruitingEvents,
         activeParties: activeParties,
+        draftParties: draftParties,
+        totalPartyCount: activeParties.length,
         hasAnyEvents: hasAnyEvents,
       );
     } on Exception catch (e, st) {

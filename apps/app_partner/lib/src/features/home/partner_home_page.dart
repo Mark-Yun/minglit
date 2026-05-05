@@ -1,11 +1,17 @@
 import 'dart:async' show unawaited;
 
+import 'package:app_partner/src/features/home/home_event_phase.dart';
 import 'package:app_partner/src/features/home/partner_dashboard_controller.dart';
 import 'package:app_partner/src/features/home/partner_home_coordinator.dart';
-import 'package:app_partner/src/features/home/widgets/event_action_card.dart';
+import 'package:app_partner/src/features/home/widgets/home_approval_pending_card.dart';
+import 'package:app_partner/src/features/home/widgets/home_draft_party_card.dart';
+import 'package:app_partner/src/features/home/widgets/home_live_event_card.dart';
+import 'package:app_partner/src/features/home/widgets/home_overview_block.dart';
+import 'package:app_partner/src/features/home/widgets/home_recruiting_event_card.dart';
+import 'package:app_partner/src/features/home/widgets/home_section_header.dart';
+import 'package:app_partner/src/features/home/widgets/home_upcoming_event_card.dart';
 import 'package:app_partner/src/features/home/widgets/location_guide_banner.dart';
 import 'package:app_partner/src/features/home/widgets/onboarding_step_guide.dart';
-import 'package:app_partner/src/features/home/widgets/todo_summary_chips.dart';
 import 'package:app_partner/src/logic/current_partner_provider.dart';
 import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
@@ -17,18 +23,14 @@ class PartnerHomePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(partnerDashboardControllerProvider);
-    final partner = ref.watch(currentPartnerInfoProvider).value;
-    final unreadCount = ref
-        .watch(notificationListProvider)
-        // ignore: use_minglit_async_value_widget, extracts int count not a Widget
-        .maybeWhen(
-          data: (notifications) => notifications
-              .where((n) => !(n['is_read'] as bool? ?? false))
-              .length,
-          orElse: () => 0,
-        );
+    final partner = ref.watch(currentPartnerInfoProvider).valueOrNull;
     final coordinator = ref.read(partnerHomeCoordinatorProvider);
-    final theme = Theme.of(context);
+    final unreadCount = ref.watch(notificationListProvider).maybeWhen(
+      data: (notifications) => notifications
+          .where((notification) => !(notification['is_read'] as bool? ?? false))
+          .length,
+      orElse: () => 0,
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -36,7 +38,6 @@ class PartnerHomePage extends ConsumerWidget {
         centerTitle: false,
         surfaceTintColor: Colors.transparent,
         actions: [
-          // Fix #1285: FAB 대체 — dev 전용 버그 리포트 액션 버튼
           const BugReportAction(),
           Stack(
             clipBehavior: Clip.none,
@@ -48,8 +49,8 @@ class PartnerHomePage extends ConsumerWidget {
               ),
               if (unreadCount > 0)
                 Positioned(
-                  right: 6,
                   top: 6,
+                  right: 6,
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: MinglitSpacing.xsmall2,
@@ -58,13 +59,15 @@ class PartnerHomePage extends ConsumerWidget {
                     decoration: BoxDecoration(
                       color: MinglitColors.error,
                       borderRadius: BorderRadius.circular(MinglitRadius.button),
-                      border: Border.all(color: theme.colorScheme.surface),
+                      border: Border.all(
+                        color: Theme.of(context).colorScheme.surface,
+                      ),
                     ),
                     child: Text(
                       unreadCount > 99 ? '99+' : unreadCount.toString(),
-                      style: theme.textTheme.bodySmall!.copyWith(
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: MinglitColors.background,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),
@@ -76,11 +79,9 @@ class PartnerHomePage extends ConsumerWidget {
       body: MinglitAsyncValueWidget(
         value: state.status,
         data: (_) {
-          // Onboarding: show step guide until partner has created any event.
-          // Fix #1215: use hasAnyEvents (all-time) instead of upcomingEvents
-          // to avoid re-showing onboarding after all events end or are >7d out.
-          final hasParties = state.activeParties.isNotEmpty;
-          final showOnboarding = !state.hasAnyEvents;
+          final preparingEvents = state.closingSoonEvents
+              .where((event) => getEventPhase(event) == EventPhase.preparing)
+              .toList();
 
           return RefreshIndicator(
             onRefresh: () => ref
@@ -92,77 +93,125 @@ class PartnerHomePage extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  if (showOnboarding) ...[
-                    // Onboarding Step Guide
-                    _GreetingSection(
-                      partnerName: partner?.name ?? '파트너',
-                      pendingCount: 0,
-                    ),
-                    const SizedBox(height: MinglitSpacing.medium),
-                    // Fix #1269: P-S06 장소 가이드 배너가 홈에서 렌더링되지 않던 회귀를 복구한다.
+                  _GreetingSection(
+                    partnerName: partner?.name ?? '파트너',
+                    totalPartyCount: state.totalPartyCount,
+                    pendingApplications: state.pendingReviewCount,
+                  ),
+                  const SizedBox(height: MinglitSpacing.medium),
+                  if (!state.hasAnyEvents) ...[
                     LocationGuideBanner(onTap: coordinator.pushLocationGuide),
                     const SizedBox(height: MinglitSpacing.medium),
                     OnboardingStepGuide(
-                      hasParty: hasParties,
-                      partyName: hasParties
-                          ? state.activeParties.first.title
-                          : null,
-                      // Fix #1680: use coordinator to cross shell-branch boundary
+                      hasParty: state.activeParties.isNotEmpty,
+                      partyName: state.activeParties.firstOrNull?.title,
                       onCreateParty: coordinator.pushPartyCreate,
                       onCreateEvent: () async {
-                        final parties = state.activeParties;
-                        if (parties.length == 1) {
-                          unawaited(
-                            EventCreateRoute(
-                              partyId: parties.first.id,
-                            ).push<void>(context),
-                          );
+                        if (state.activeParties.length == 1) {
+                          coordinator.pushEventCreate(state.activeParties.first.id);
                           return;
                         }
                         final selected = await showModalBottomSheet<Party>(
                           context: context,
-                          builder: (ctx) =>
-                              _PartySelectionSheet(parties: parties),
+                          builder: (bottomSheetContext) => _PartySelectionSheet(
+                            parties: state.activeParties,
+                          ),
                         );
-                        if (selected != null && context.mounted) {
-                          unawaited(
-                            EventCreateRoute(
-                              partyId: selected.id,
-                            ).push<void>(context),
-                          );
+                        if (selected != null) {
+                          coordinator.pushEventCreate(selected.id);
                         }
                       },
                     ),
                   ] else ...[
-                    // Normal Dashboard
-                    // 1. Greeting
-                    _GreetingSection(
-                      partnerName: partner?.name ?? '파트너',
-                      pendingCount: state.pendingReviewCount,
-                      primaryEvent: selectPrimaryEvent(state.upcomingEvents),
-                    ),
-                    const SizedBox(height: MinglitSpacing.medium),
-                    // Fix #1269: P-S06 장소 가이드 배너가 홈에서 렌더링되지 않던 회귀를 복구한다.
-                    LocationGuideBanner(onTap: coordinator.pushLocationGuide),
-                    const SizedBox(height: MinglitSpacing.large),
-
-                    // 2. Todo Summary Chips
-                    TodoSummaryChips(
+                    HomeOverviewBlock(
+                      totalPartyCount: state.totalPartyCount,
                       pendingApplications: state.pendingReviewCount,
-                      upcomingEvents: state.upcomingEvents.length,
-                      onPendingTap: coordinator.goToApplicationList,
-                      onUpcomingTap: () {
+                      onPartiesTap: () {
                         unawaited(const PartyListRoute().push<void>(context));
                       },
+                      onPendingTap: coordinator.goToApplicationList,
                     ),
-                    const SizedBox(height: MinglitSpacing.large),
-
-                    // 3. Event Action Card
-                    _buildEventSection(context, ref, state),
-                    const SizedBox(height: MinglitSpacing.large),
-
-                    // Fix #1950: WeeklyStatsRow hidden until backend API is wired —
-                    // hardcoded nulls rendered as ₩0 / 0% and misled partners.
+                    if (state.liveEvents.isNotEmpty) ...[
+                      const SizedBox(height: MinglitSpacing.large),
+                      const HomeSectionHeader(title: '진행 중'),
+                      const SizedBox(height: MinglitSpacing.small),
+                      ...state.liveEvents.map(
+                        (event) => Padding(
+                          padding: const EdgeInsets.only(
+                            bottom: MinglitSpacing.small,
+                          ),
+                          child: HomeLiveEventCard(
+                            event: event,
+                            onCheckin: coordinator.goToCheckin,
+                          ),
+                        ),
+                      ),
+                    ],
+                    if (state.pendingReviewCount > 0) ...[
+                      const SizedBox(height: MinglitSpacing.large),
+                      const HomeSectionHeader(title: '심사 대기'),
+                      const SizedBox(height: MinglitSpacing.small),
+                      HomeApprovalPendingCard(
+                        pendingCount: state.pendingReviewCount,
+                        onReview: coordinator.goToApplicationList,
+                      ),
+                    ],
+                    if (state.recruitingEvents.isNotEmpty) ...[
+                      const SizedBox(height: MinglitSpacing.large),
+                      const HomeSectionHeader(title: '모집 중인 이벤트'),
+                      const SizedBox(height: MinglitSpacing.small),
+                      ...state.recruitingEvents.map(
+                        (event) => Padding(
+                          padding: const EdgeInsets.only(
+                            bottom: MinglitSpacing.small,
+                          ),
+                          child: HomeRecruitingEventCard(
+                            event: event,
+                            pendingCount: 0,
+                            onTap: () => coordinator.pushEventDetail(
+                              partyId: event.partyId,
+                              eventId: event.id,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                    if (preparingEvents.isNotEmpty) ...[
+                      const SizedBox(height: MinglitSpacing.large),
+                      const HomeSectionHeader(title: '준비 중인 이벤트'),
+                      const SizedBox(height: MinglitSpacing.small),
+                      ...preparingEvents.map(
+                        (event) => Padding(
+                          padding: const EdgeInsets.only(
+                            bottom: MinglitSpacing.small,
+                          ),
+                          child: HomeUpcomingEventCard(
+                            event: event,
+                            onTap: () => coordinator.pushEventDetail(
+                              partyId: event.partyId,
+                              eventId: event.id,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                    if (state.draftParties.isNotEmpty) ...[
+                      const SizedBox(height: MinglitSpacing.large),
+                      const HomeSectionHeader(title: '이벤트 없는 파티'),
+                      const SizedBox(height: MinglitSpacing.small),
+                      ...state.draftParties.map(
+                        (party) => Padding(
+                          padding: const EdgeInsets.only(
+                            bottom: MinglitSpacing.small,
+                          ),
+                          child: HomeDraftPartyCard(
+                            party: party,
+                            onCreateEvent: () =>
+                                coordinator.pushEventCreate(party.id),
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ],
               ),
@@ -172,203 +221,78 @@ class PartnerHomePage extends ConsumerWidget {
       ),
     );
   }
-
-  Widget _buildEventSection(
-    BuildContext context,
-    WidgetRef ref,
-    PartnerDashboardState state,
-  ) {
-    final primaryEvent = selectPrimaryEvent(state.upcomingEvents);
-
-    final sectionTitle = switch (primaryEvent != null
-        ? getEventPhase(primaryEvent)
-        : null) {
-      EventPhase.recruiting => '다음 이벤트',
-      EventPhase.preparing => '오늘 이벤트',
-      EventPhase.live => '진행 중 이벤트',
-      EventPhase.ended => '이벤트 결과',
-      null => null,
-    };
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (sectionTitle != null) ...[
-          _SectionHeader(title: sectionTitle),
-          const SizedBox(height: MinglitSpacing.small),
-        ],
-        _buildEventActionCard(context, ref, state, primaryEvent),
-      ],
-    );
-  }
-
-  Widget _buildEventActionCard(
-    BuildContext context,
-    WidgetRef ref,
-    PartnerDashboardState state,
-    Event? primaryEvent,
-  ) {
-    if (primaryEvent == null) {
-      return EventActionCardEmpty(
-        hasParties: state.activeParties.isNotEmpty,
-        onCreateEvent: () async {
-          final parties = state.activeParties;
-          if (parties.isEmpty) return;
-          if (parties.length == 1) {
-            unawaited(
-              EventCreateRoute(partyId: parties.first.id).push<void>(context),
-            );
-            return;
-          }
-          final selected = await showModalBottomSheet<Party>(
-            context: context,
-            builder: (ctx) => _PartySelectionSheet(parties: parties),
-          );
-          if (selected != null && context.mounted) {
-            unawaited(
-              EventCreateRoute(partyId: selected.id).push<void>(context),
-            );
-          }
-        },
-        // Fix #1680: use coordinator to cross shell-branch boundary
-        onCreateParty: ref.read(partnerHomeCoordinatorProvider).pushPartyCreate,
-      );
-    }
-
-    final phase = getEventPhase(primaryEvent);
-    return EventActionCard(
-      event: primaryEvent,
-      onMainAction: () {
-        // Fix #845: coordinator를 통해 탭 전환 위임
-        final coordinator = ref.read(partnerHomeCoordinatorProvider);
-        switch (phase) {
-          case EventPhase.recruiting:
-            coordinator.goToApplicationList();
-          case EventPhase.preparing:
-          case EventPhase.live:
-            coordinator.goToCheckin();
-          case EventPhase.ended:
-            // "다음 회차 만들기" → 이벤트 생성 (pre-fill은 #520에서 구현)
-            coordinator.pushEventCreate(primaryEvent.partyId);
-        }
-      },
-      onSecondaryAction1: () {
-        switch (phase) {
-          case EventPhase.recruiting:
-            unawaited(
-              EventDetailRoute(
-                partyId: primaryEvent.partyId,
-                eventId: primaryEvent.id,
-              ).push<void>(context),
-            );
-          case EventPhase.preparing:
-          case EventPhase.live:
-            unawaited(
-              EventDetailRoute(
-                partyId: primaryEvent.partyId,
-                eventId: primaryEvent.id,
-              ).push<void>(context),
-            );
-          case EventPhase.ended:
-            unawaited(
-              EventDetailRoute(
-                partyId: primaryEvent.partyId,
-                eventId: primaryEvent.id,
-              ).push<void>(context),
-            );
-        }
-      },
-      onSecondaryAction2:
-          phase == EventPhase.recruiting || phase == EventPhase.preparing
-          ? () {
-              // 공유/홍보 or 안내 발송 — placeholder
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(const SnackBar(content: Text('준비 중입니다')));
-            }
-          : null,
-    );
-  }
 }
 
 class _GreetingSection extends StatelessWidget {
   const _GreetingSection({
     required this.partnerName,
-    required this.pendingCount,
-    this.primaryEvent,
+    required this.totalPartyCount,
+    required this.pendingApplications,
   });
 
   final String partnerName;
-  final int pendingCount;
-  final Event? primaryEvent;
+  final int totalPartyCount;
+  final int pendingApplications;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final phase = primaryEvent != null ? getEventPhase(primaryEvent!) : null;
-
-    final subtitle = switch (phase) {
-      EventPhase.live => '이벤트 진행 중!',
-      EventPhase.ended => '오늘 이벤트 수고하셨어요!',
-      _ when pendingCount > 0 => '오늘 할 일 $pendingCount건',
-      _ => '오늘 할 일 없음',
-    };
+    final subtitle = pendingApplications > 0
+        ? '심사 대기 $pendingApplications건을 확인해주세요'
+        : '운영 중인 파티 $totalPartyCount개';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '👋 $partnerName 님',
-          style: theme.textTheme.titleMedium?.copyWith(
+          '$partnerName 님',
+          style: theme.textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.w800,
           ),
         ),
         const SizedBox(height: MinglitSpacing.xxsmall),
-        Text(subtitle, style: theme.textTheme.bodySmall),
+        Text(
+          subtitle,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
       ],
-    );
-  }
-}
-
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.title});
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      title,
-      style: Theme.of(
-        context,
-      ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
     );
   }
 }
 
 class _PartySelectionSheet extends StatelessWidget {
   const _PartySelectionSheet({required this.parties});
+
   final List<Party> parties;
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(MinglitSpacing.large),
-            child: Text(
-              '파티 선택',
-              style: Theme.of(context).textTheme.titleMedium,
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: MinglitSpacing.medium),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(MinglitSpacing.large),
+              child: Text(
+                '이벤트를 만들 파티를 선택하세요',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
             ),
-          ),
-          ...parties.map(
-            (party) => ListTile(
-              title: Text(party.title),
-              onTap: () => Navigator.of(context).pop(party),
+            ...parties.map(
+              (party) => ListTile(
+                leading: const Icon(Icons.storefront_outlined),
+                title: Text(party.title),
+                onTap: () => Navigator.of(context).pop(party),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
