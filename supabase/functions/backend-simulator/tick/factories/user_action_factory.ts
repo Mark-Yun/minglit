@@ -68,6 +68,12 @@ export class UserActionFactory {
       activeAppCount++;
     }
 
+    // Fix #2131: Fetch refund policy from DB to avoid hardcoded drift vs. user-cancel-order EF.
+    // Fallback to 7 days if RPC fails (same default as EF).
+    const { data: refundPolicy } = await supabase.rpc("get_current_policy", { p_key: "refund" });
+    const cutoffDays = (refundPolicy as Record<string, number> | null)?.cutoff_days ?? 7;
+    const cutoffMs = cutoffDays * 24 * 60 * 60 * 1000;
+
     // 4. For existing applications, decide behavior based on DB state
     for (const app of (myApps ?? [])) {
       // Fix #1415: app.events is typed as { status: any }[] by PostgREST but the join returns
@@ -79,11 +85,10 @@ export class UserActionFactory {
 
       // Approved + scheduled → maybe refund
       if (app.status === "approved" && eventStatus === "scheduled") {
-        // Fix #2131: Only attempt refund when within EF cutoff window (7 days).
+        // Fix #2131: Only attempt refund when within EF cutoff window (cutoffDays from policy).
         // Simulator doesn't track paid_at so grace-period path is excluded;
         // selecting outside the cutoff caused false-positive 400 failures.
         const eventStart = eventInfo?.start_time ? new Date(eventInfo.start_time) : null;
-        const cutoffMs = 7 * 24 * 60 * 60 * 1000;
         const refundEligible = eventStart !== null && eventStart.getTime() - Date.now() >= cutoffMs;
         if (refundEligible && Math.random() < this.config.negativeRate) {
           actions.push(new UserActionRefund(this.userId, appId, eventId, this.token));
