@@ -170,8 +170,7 @@ class _TimelineStepItemState extends State<_TimelineStepItem>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Row(
-                    crossAxisAlignment: CrossAxisAlignment.baseline,
-                    textBaseline: TextBaseline.alphabetic,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Flexible(
                         child: Text(

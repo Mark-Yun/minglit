@@ -29,7 +29,7 @@ void main() {
       expect(find.text('Step 3'), findsOneWidget);
     });
 
-    testWidgets('renders trailing widget when provided', (tester) async {
+    testWidgets('renders trailing Text widget when provided', (tester) async {
       await tester.pumpWidget(
         _wrap(
           const MinglitTimeline(
@@ -46,6 +46,26 @@ void main() {
 
       expect(find.text('Done'), findsOneWidget);
       expect(find.text('2026.04.10 19:42'), findsOneWidget);
+    });
+
+    testWidgets('trailing non-Text widget (Icon) renders without assert',
+        (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          const MinglitTimeline(
+            children: [
+              MinglitTimelineStep(
+                tone: TimelineTone.success,
+                title: 'With Icon',
+                trailing: Icon(Icons.check),
+              ),
+            ],
+          ),
+        ),
+      );
+
+      expect(find.text('With Icon'), findsOneWidget);
+      expect(find.byIcon(Icons.check), findsOneWidget);
     });
 
     testWidgets('renders child widget when provided', (tester) async {
