@@ -24,8 +24,9 @@ class _ConsentStepState extends ConsumerState<_ConsentStep> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final checked = ref.watch(
-      eventApplicationControllerProvider(widget.event)
-          .select((s) => s.consentCheckedItems),
+      eventApplicationControllerProvider(
+        widget.event,
+      ).select((s) => s.consentCheckedItems),
     );
 
     return Container(

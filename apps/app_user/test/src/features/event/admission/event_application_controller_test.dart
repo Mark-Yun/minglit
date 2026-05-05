@@ -423,8 +423,9 @@ void main() {
             verificationData: any(named: 'verificationData'),
           ),
         ).thenAnswer((invocation) async {
-          capturedVerifData = invocation.namedArguments[
-              const Symbol('verificationData')] as Map<String, dynamic>?;
+          capturedVerifData =
+              invocation.namedArguments[const Symbol('verificationData')]
+                  as Map<String, dynamic>?;
           return const FreeApplyEventResult(applicationId: 'app_multi');
         });
 
