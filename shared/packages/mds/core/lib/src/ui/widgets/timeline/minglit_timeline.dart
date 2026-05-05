@@ -169,7 +169,11 @@ class _TimelineStepItemState extends State<_TimelineStepItem>
                 if (!widget.isLast)
                   Expanded(
                     child: Center(
-                      child: Container(width: 2, color: dividerColor),
+                      child: Container(
+                        key: const ValueKey('timeline_connector'),
+                        width: 2,
+                        color: dividerColor,
+                      ),
                     ),
                   ),
               ],

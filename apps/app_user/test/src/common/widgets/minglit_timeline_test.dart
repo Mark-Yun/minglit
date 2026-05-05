@@ -154,6 +154,10 @@ void main() {
       );
 
       expect(find.text('Only'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('timeline_connector')),
+        findsNothing,
+      );
     });
 
     testWidgets(
