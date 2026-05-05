@@ -139,7 +139,7 @@ class _FakeEventDetailController extends EventDetailController {
     final data = _state;
     if (data is AsyncData<Event>) return data.value;
     if (data is AsyncError<Event>) {
-      Error.throwWithStackTrace(data.error, data.stackTrace!);
+      Error.throwWithStackTrace(data.error, data.stackTrace);
     }
     // AsyncLoading — never complete
     final completer = Completer<Event>();

@@ -10,7 +10,18 @@ class _ConsentStep extends ConsumerStatefulWidget {
 }
 
 class _ConsentStepState extends ConsumerState<_ConsentStep> {
-  late final List<bool> _checked = [false, false, false];
+  late List<bool> _checked;
+
+  @override
+  void initState() {
+    super.initState();
+    // Fix: sync _checked with controller on widget creation so that
+    // navigating back restores the previously-agreed state visually.
+    final granted = ref
+        .read(eventApplicationControllerProvider(widget.event))
+        .consentGranted;
+    _checked = List.filled(_consentItems.length, granted);
+  }
 
   @override
   Widget build(BuildContext context) {

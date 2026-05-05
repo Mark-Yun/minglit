@@ -19,6 +19,23 @@ class _FakeIamportControllerCancelled extends IamportController {
   }) async => null;
 }
 
+class _FakeIamportControllerCapture extends IamportController {
+  Map<String, dynamic>? capturedData;
+
+  @override
+  AsyncValue<IamportResultModel?> build() => const AsyncData(null);
+
+  @override
+  Future<String?> startPayment({
+    required BuildContext context,
+    required String userCode,
+    required Map<String, dynamic> data,
+  }) async {
+    capturedData = data;
+    return 'imp_uid_test';
+  }
+}
+
 void main() {
   late MockEventRepository mockEventRepo;
   late MockVerificationRepository mockVerificationRepo;
@@ -273,6 +290,100 @@ void main() {
       expect(state.status, EventApplicationStatus.initial);
       expect(state.step, EventApplicationStep.payment);
       expect(state.selectedTicket?.id, 'ticket_free');
+    });
+
+    // Regression test for Fix #1924: buyer_tel must not use fake phone numbers.
+    // Iamport records buyer_tel in PG records; a fake number corrupts prod data.
+    test('buyer_tel is empty string when user phone is null (Fix #1924)', () async {
+      final captureController = _FakeIamportControllerCapture();
+      when(() => mockUser.phone).thenReturn(null);
+      when(
+        () => mockEventRepo.applyEvent(
+          eventId: any(named: 'eventId'),
+          ticketId: any(named: 'ticketId'),
+          verificationData: any(named: 'verificationData'),
+        ),
+      ).thenAnswer(
+        (_) async => const PaidApplyEventResult(
+          applicationId: 'app_paid',
+          orderId: 'order_1',
+          paymentAmount: 10000,
+        ),
+      );
+      when(
+        () => mockEventRepo.confirmPayment(
+          impUid: any(named: 'impUid'),
+          merchantUid: any(named: 'merchantUid'),
+        ),
+      ).thenAnswer((_) async {});
+
+      final container = createContainer(
+        overrides: [
+          currentUserProvider.overrideWith((ref) => mockUser),
+          eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
+          verificationRepositoryProvider.overrideWith(
+            (ref) => mockVerificationRepo,
+          ),
+          iamportControllerProvider.overrideWith(() => captureController),
+          iamportConfigProvider.overrideWithValue(
+            const IamportConfig(userCode: 'imp_test'),
+          ),
+        ],
+      );
+
+      final notifier = container.read(
+        eventApplicationControllerProvider(testEvent).notifier,
+      );
+      await notifier.selectTicket(testEvent.tickets!.first);
+      notifier.markIdentityCompleted();
+      notifier.setConsentGranted(true);
+      await notifier.submitApplication(mockContext);
+
+      expect(captureController.capturedData?['buyer_tel'], '');
+    });
+
+    test('payment cancellation sets error status', () async {
+      when(
+        () => mockEventRepo.applyEvent(
+          eventId: any(named: 'eventId'),
+          ticketId: any(named: 'ticketId'),
+          verificationData: any(named: 'verificationData'),
+        ),
+      ).thenAnswer(
+        (_) async => const PaidApplyEventResult(
+          applicationId: 'app_paid',
+          orderId: 'order_1',
+          paymentAmount: 10000,
+        ),
+      );
+
+      final container = createContainer(
+        overrides: [
+          currentUserProvider.overrideWith((ref) => mockUser),
+          eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
+          verificationRepositoryProvider.overrideWith(
+            (ref) => mockVerificationRepo,
+          ),
+          iamportControllerProvider.overrideWith(
+            () => _FakeIamportControllerCancelled(),
+          ),
+          iamportConfigProvider.overrideWithValue(
+            const IamportConfig(userCode: 'imp_test'),
+          ),
+        ],
+      );
+
+      final notifier = container.read(
+        eventApplicationControllerProvider(testEvent).notifier,
+      );
+      await notifier.selectTicket(testEvent.tickets!.first);
+      notifier.markIdentityCompleted();
+      notifier.setConsentGranted(true);
+      await notifier.submitApplication(mockContext);
+
+      final state = container.read(eventApplicationControllerProvider(testEvent));
+      expect(state.status, EventApplicationStatus.error);
+      expect(state.errorMessage, '결제가 취소되었습니다.');
     });
   });
 }

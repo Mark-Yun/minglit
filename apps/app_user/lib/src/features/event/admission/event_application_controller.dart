@@ -269,7 +269,8 @@ class EventApplicationController extends _$EventApplicationController {
             'name': ticket.name,
             'amount': result.paymentAmount,
             'buyer_name': user.userMetadata?['name'] ?? '게스트',
-            'buyer_tel': user.phone ?? '01000000000',
+            // Fix #1924: empty string avoids fake phone numbers in PG records
+            'buyer_tel': user.phone ?? '',
             'buyer_email': user.email ?? 'guest@minglit.com',
             'app_scheme': 'minglit',
           },
