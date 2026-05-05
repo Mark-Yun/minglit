@@ -57,4 +57,5 @@ end;
 $$;
 
 revoke all on function public.get_entry_group_participant_counts(uuid) from public;
-grant execute on function public.get_entry_group_participant_counts(uuid) to authenticated;
+-- Fix #2254: anon + service_role 복원 — EventDetailPage는 비로그인 진입 가능 (원본 20260319000001과 동일)
+grant execute on function public.get_entry_group_participant_counts(uuid) to anon, authenticated, service_role;

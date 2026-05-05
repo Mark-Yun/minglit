@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(8);
+SELECT plan(9);
 
 -- ============================================================
 -- Setup: service role로 파트너/이벤트/엔트리그룹/티켓/참가자 데이터 구성
@@ -216,6 +216,20 @@ SELECT ok(
     current_setting('tests.egpc_event_id')::uuid
   )) = 2,
   'get_entry_group_participant_counts: PARTY_MANAGE 없는 일반 유저도 호출 가능 (Fix #2254)'
+);
+
+-- ============================================================
+-- Test 9: 비로그인(anon) 사용자도 RPC 호출 가능 (Fix #2254)
+-- EventDetailPage는 AuthGuard 없음 — anon 진입 가능
+-- ============================================================
+
+SELECT tests.clear_authentication();
+
+SELECT ok(
+  (SELECT count(*) FROM public.get_entry_group_participant_counts(
+    current_setting('tests.egpc_event_id')::uuid
+  )) = 2,
+  'get_entry_group_participant_counts: 비로그인(anon) 사용자도 호출 가능 (Fix #2254)'
 );
 
 SELECT * FROM finish();
