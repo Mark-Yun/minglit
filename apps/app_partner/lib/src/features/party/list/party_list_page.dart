@@ -78,6 +78,8 @@ class PartyListPage extends ConsumerWidget {
                           entry.nextEvent!.id,
                         )
                       : null,
+                  onCreateEventTap: () =>
+                      coordinator.goToCreateEvent(entry.party.id),
                 ),
               );
             },

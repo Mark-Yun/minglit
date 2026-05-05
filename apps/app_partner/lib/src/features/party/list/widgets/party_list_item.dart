@@ -12,6 +12,7 @@ class PartyListItem extends StatelessWidget {
     required this.entry,
     required this.onTap,
     this.onNextEventTap,
+    this.onCreateEventTap,
     super.key,
   });
 
@@ -22,6 +23,8 @@ class PartyListItem extends StatelessWidget {
 
   /// Tapping the "다음 이벤트" row navigates to EventDetail. Null if no next event.
   final VoidCallback? onNextEventTap;
+
+  final VoidCallback? onCreateEventTap;
 
   @override
   Widget build(BuildContext context) {
@@ -61,6 +64,7 @@ class PartyListItem extends StatelessWidget {
             _BottomCtaRegion(
               entry: entry,
               onNextEventTap: onNextEventTap,
+              onCreateEventTap: onCreateEventTap,
             ),
           ],
         ),
@@ -92,7 +96,7 @@ class _HeroRegion extends StatelessWidget {
             Image.network(
               party.imageUrl!,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => _ImagePlaceholder(),
+              errorBuilder: (_, _, _) => _ImagePlaceholder(),
             )
           else
             _ImagePlaceholder(),
@@ -112,11 +116,11 @@ class _HeroRegion extends StatelessWidget {
             ),
           ),
 
-          // Status badge (top-left)
+          // Partner overlay (top-left)
           Positioned(
             top: MinglitSpacing.small,
             left: MinglitSpacing.small,
-            child: _StatusBadge(status: party.status),
+            child: _PartnerOverlay(party: party),
           ),
 
           // Tags (bottom-left of image)
@@ -159,29 +163,19 @@ class _ImagePlaceholder extends StatelessWidget {
   }
 }
 
-class _StatusBadge extends StatelessWidget {
-  const _StatusBadge({required this.status});
+class _PartnerOverlay extends StatelessWidget {
+  const _PartnerOverlay({required this.party});
 
-  final String status;
+  final Party party;
 
   @override
   Widget build(BuildContext context) {
+    final partner = party.partner;
+    if (partner == null) {
+      return const SizedBox.shrink();
+    }
+
     final theme = Theme.of(context);
-    final (label, color) = switch (status) {
-      'active' => (
-        context.l10n.partyList_badge_active,
-        theme.colorScheme.tertiary,
-      ),
-      'closed' => (
-        context.l10n.partyList_badge_closed,
-        theme.colorScheme.outline,
-      ),
-      'draft' => (
-        context.l10n.partyList_badge_draft,
-        theme.colorScheme.secondary,
-      ),
-      _ => (status, theme.colorScheme.primary),
-    };
 
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -189,15 +183,29 @@ class _StatusBadge extends StatelessWidget {
         vertical: MinglitSpacing.xxsmall,
       ),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.85),
+        color: theme.colorScheme.onSurface.withAlpha((0.5 * 255).round()),
         borderRadius: BorderRadius.circular(MinglitRadius.small),
       ),
-      child: Text(
-        label,
-        style: theme.textTheme.labelSmall?.copyWith(
-          color: theme.colorScheme.onPrimary,
-          fontWeight: FontWeight.bold,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          CircleAvatar(
+            radius: 10,
+            backgroundImage: partner.profileImageUrl != null
+                ? NetworkImage(partner.profileImageUrl!)
+                : null,
+            child: partner.profileImageUrl == null
+                ? const Icon(Icons.storefront, size: MinglitIconSize.xsmall)
+                : null,
+          ),
+          const SizedBox(width: MinglitSpacing.xxsmall),
+          Text(
+            party.partner?.name ?? '',
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onPrimary,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -391,10 +399,12 @@ class _BottomCtaRegion extends StatelessWidget {
   const _BottomCtaRegion({
     required this.entry,
     required this.onNextEventTap,
+    required this.onCreateEventTap,
   });
 
   final PartyWithStats entry;
   final VoidCallback? onNextEventTap;
+  final VoidCallback? onCreateEventTap;
 
   @override
   Widget build(BuildContext context) {
@@ -413,11 +423,11 @@ class _BottomCtaRegion extends StatelessWidget {
 
     // Variant C: has completed events but no upcoming → "이벤트 생성하기"
     if (entry.completedCount > 0) {
-      return const _CreateEventRow();
+      return _CreateEventRow(onCreateEventTap: onCreateEventTap);
     }
 
     // Variant D: brand new party, no events → "이벤트 만들기" with sub
-    return const _NewPartyCtaRow();
+    return _NewPartyCtaRow(onCreateEventTap: onCreateEventTap);
   }
 }
 
@@ -484,7 +494,9 @@ class _NextEventRow extends StatelessWidget {
 }
 
 class _CreateEventRow extends StatelessWidget {
-  const _CreateEventRow();
+  const _CreateEventRow({this.onCreateEventTap});
+
+  final VoidCallback? onCreateEventTap;
 
   @override
   Widget build(BuildContext context) {
@@ -494,8 +506,7 @@ class _CreateEventRow extends StatelessWidget {
         vertical: MinglitSpacing.small,
       ),
       child: OutlinedButton.icon(
-        onPressed:
-            null, // card onTap navigates to PartyDetail where event creation is available
+        onPressed: onCreateEventTap,
         icon: const Icon(Icons.add),
         label: Text(context.l10n.partyList_cta_createEvent),
         style: OutlinedButton.styleFrom(
@@ -507,7 +518,9 @@ class _CreateEventRow extends StatelessWidget {
 }
 
 class _NewPartyCtaRow extends StatelessWidget {
-  const _NewPartyCtaRow();
+  const _NewPartyCtaRow({this.onCreateEventTap});
+
+  final VoidCallback? onCreateEventTap;
 
   @override
   Widget build(BuildContext context) {
@@ -521,7 +534,7 @@ class _NewPartyCtaRow extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           OutlinedButton.icon(
-            onPressed: null,
+            onPressed: onCreateEventTap,
             icon: const Icon(Icons.add),
             label: Text(context.l10n.partyList_cta_createEventNew),
             style: OutlinedButton.styleFrom(
