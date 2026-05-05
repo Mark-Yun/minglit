@@ -1139,7 +1139,7 @@ void main() {
     });
 
     group('getEntryGroupParticipantCounts', () {
-      test('returns participant counts from RPC', () async {
+      test('returns participant counts and target_capacity from RPC', () async {
         when(
           () => mockClient.rpc<dynamic>(
             'get_entry_group_participant_counts',
@@ -1147,8 +1147,18 @@ void main() {
           ),
         ).thenAnswer(
           (_) => FakeRpcBuilder<dynamic>(<Map<String, dynamic>>[
-            {'entry_group_id': 'eg_1', 'count': 5},
-            {'entry_group_id': 'eg_2', 'count': 3},
+            {
+              'entry_group_id': 'eg_1',
+              'label': 'Group A',
+              'participant_count': 5,
+              'target_capacity': 10,
+            },
+            {
+              'entry_group_id': 'eg_2',
+              'label': 'Group B',
+              'participant_count': 3,
+              'target_capacity': 15,
+            },
           ]),
         );
 
@@ -1157,7 +1167,9 @@ void main() {
         );
 
         expect(result, hasLength(2));
-        expect(result.first['count'], 5);
+        expect(result.first['participant_count'], 5);
+        expect(result.first['target_capacity'], 10);
+        expect(result.last['target_capacity'], 15);
       });
 
       test('throws on RPC error', () async {
