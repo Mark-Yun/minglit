@@ -1,5 +1,5 @@
 import 'package:app_user/src/features/account_deletion/logic/account_deletion_coordinator.dart';
-import 'package:app_user/src/features/ticket/ui/model/ticket_event_meta.dart';
+import 'package:app_user/src/logic/ticket_event_meta.dart';
 import 'package:app_user/src/routing/app_coordinator.dart';
 import 'package:app_user/src/routing/app_router.dart';
 import 'package:app_user/src/routing/app_routes.dart';
