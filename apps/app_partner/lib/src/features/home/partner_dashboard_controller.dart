@@ -77,8 +77,10 @@ class PartnerDashboardController extends _$PartnerDashboardController {
         partner.id,
       );
 
-      // 2. Upcoming Events (next 7 days)
-      final upcomingEvents = await eventRepo.getUpcomingEvents(partner.id);
+      // Fix #2219: use getEventsByPartnerId (gt end_time) so liveEvents is populated.
+      // getUpcomingEvents (gte start_time, 7-day window) excludes started events,
+      // making liveEvents always empty and overview counts too low.
+      final upcomingEvents = await eventRepo.getEventsByPartnerId(partner.id);
 
       // 3. Active Parties
       final activeParties = await partyRepo.getPartiesByPartnerId(
