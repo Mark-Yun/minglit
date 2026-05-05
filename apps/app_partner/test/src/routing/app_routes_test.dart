@@ -100,6 +100,7 @@ void main() {
           'parties',
           'verifications/manage',
           'verifications/create',
+          'verifications/review',
           'notification-settings',
           'delete-account',
           'delete-account/info',
