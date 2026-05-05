@@ -246,6 +246,53 @@ void main() {
       },
     );
 
+    testWidgets(
+      'disableAnimations false→true stops pulsing (didChangeDependencies)',
+      (tester) async {
+        final key = GlobalKey();
+        final disableNotifier = ValueNotifier<bool>(false);
+        addTearDown(disableNotifier.dispose);
+
+        await tester.pumpWidget(
+          ValueListenableBuilder<bool>(
+            valueListenable: disableNotifier,
+            builder: (_, disable, __) => MaterialApp(
+              theme: MinglitTheme.materialTheme,
+              home: Scaffold(
+                body: MediaQuery(
+                  data: MediaQueryData(disableAnimations: disable),
+                  child: MinglitTimeline(
+                    key: key,
+                    children: const [
+                      MinglitTimelineStep(
+                        tone: TimelineTone.progress,
+                        pulsing: true,
+                        title: 'In Progress',
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pump();
+
+        final inTimeline = find.descendant(
+          of: find.byKey(key),
+          matching: find.byType(Transform),
+        );
+
+        // Initially animating — Transform present
+        expect(inTimeline, findsOneWidget);
+
+        // Flip disableAnimations true → didChangeDependencies fires
+        disableNotifier.value = true;
+        await tester.pump();
+        expect(inTimeline, findsNothing);
+      },
+    );
+
     testWidgets('renders all five tones without throwing', (tester) async {
       await tester.pumpWidget(
         _wrap(
