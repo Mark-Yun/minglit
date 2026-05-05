@@ -5,22 +5,19 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'event_application_controller.g.dart';
 
-enum EventApplicationStep {
-  verification,
-  payment,
-}
+const _noChange = Object();
 
-enum EventApplicationStatus {
-  initial,
-  submitting,
-  success,
-  error,
-}
+enum EventApplicationStep { identity, partnerVerification, consent, payment }
+
+enum EventApplicationStatus { initial, submitting, success, error }
 
 class EventApplicationState {
   const EventApplicationState({
     required this.step,
     required this.status,
+    required this.identityCompleted,
+    required this.partnerVerifications,
+    required this.consentGranted,
     this.selectedTicket,
     this.verificationData = const {},
     this.errorMessage,
@@ -28,25 +25,54 @@ class EventApplicationState {
 
   final EventApplicationStep step;
   final EventApplicationStatus status;
+  final bool identityCompleted;
+  final List<PartnerVerifEntry> partnerVerifications;
+  final bool consentGranted;
   final Ticket? selectedTicket;
-  final Map<String, dynamic> verificationData;
+  final Map<String, Map<String, dynamic>> verificationData;
   final String? errorMessage;
 
   EventApplicationState copyWith({
     EventApplicationStep? step,
     EventApplicationStatus? status,
+    bool? identityCompleted,
+    List<PartnerVerifEntry>? partnerVerifications,
+    bool? consentGranted,
     Ticket? selectedTicket,
-    Map<String, dynamic>? verificationData,
-    String? errorMessage,
+    Map<String, Map<String, dynamic>>? verificationData,
+    Object? errorMessage = _noChange,
   }) {
     return EventApplicationState(
       step: step ?? this.step,
       status: status ?? this.status,
+      identityCompleted: identityCompleted ?? this.identityCompleted,
+      partnerVerifications: partnerVerifications ?? this.partnerVerifications,
+      consentGranted: consentGranted ?? this.consentGranted,
       selectedTicket: selectedTicket ?? this.selectedTicket,
       verificationData: verificationData ?? this.verificationData,
-      errorMessage: errorMessage ?? this.errorMessage,
+      errorMessage: identical(errorMessage, _noChange)
+          ? this.errorMessage
+          : errorMessage as String?,
     );
   }
+}
+
+class PartnerVerifEntry {
+  const PartnerVerifEntry({
+    required this.verification,
+    this.status,
+    this.prefill = const {},
+    this.rejectionReason,
+    this.isApproved = false,
+  });
+
+  final Verification verification;
+  final VerificationStatus? status;
+  final Map<String, dynamic> prefill;
+  final String? rejectionReason;
+  final bool isApproved;
+
+  bool get isRejected => status == VerificationStatus.rejected && !isApproved;
 }
 
 @riverpod
@@ -56,32 +82,128 @@ class EventApplicationController extends _$EventApplicationController {
   @override
   EventApplicationState build(Event event) {
     _event = event;
-    return const EventApplicationState(
-      step: EventApplicationStep.verification,
+    final identityCompleted =
+        ref.read(currentUserProfileProvider).value?.isVerified ?? false;
+    return EventApplicationState(
+      step: EventApplicationStep.identity,
       status: EventApplicationStatus.initial,
+      identityCompleted: identityCompleted,
+      partnerVerifications: const [],
+      consentGranted: false,
     );
   }
 
-  void selectTicket(Ticket ticket) {
-    state = state.copyWith(selectedTicket: ticket);
+  List<EventApplicationStep> get visibleSteps {
+    final steps = <EventApplicationStep>[
+      EventApplicationStep.identity,
+      if (shouldShowPartnerVerificationStep)
+        EventApplicationStep.partnerVerification,
+      EventApplicationStep.consent,
+      EventApplicationStep.payment,
+    ];
+    return steps;
   }
 
-  void updateVerificationData(String key, dynamic value) {
-    final newData = Map<String, dynamic>.from(state.verificationData);
-    newData[key] = value;
+  bool get shouldShowPartnerVerificationStep {
+    final entries = state.partnerVerifications;
+    if (entries.isEmpty) return false;
+    return entries.any((entry) => !entry.isApproved);
+  }
+
+  Future<void> selectTicket(Ticket ticket) async {
+    state = state.copyWith(selectedTicket: ticket);
+    await _loadPartnerVerifications(ticket);
+  }
+
+  void markIdentityCompleted() {
+    state = state.copyWith(identityCompleted: true);
+  }
+
+  void setConsentGranted(bool value) {
+    state = state.copyWith(consentGranted: value);
+  }
+
+  void updateVerificationData(
+    String verificationId,
+    String fieldKey,
+    dynamic value,
+  ) {
+    final newData = Map<String, Map<String, dynamic>>.from(
+      state.verificationData,
+    );
+    final fields = Map<String, dynamic>.from(
+      newData[verificationId] ?? const {},
+    );
+    fields[fieldKey] = value;
+    newData[verificationId] = fields;
     state = state.copyWith(verificationData: newData);
   }
 
-  void nextStep() {
-    if (state.step == EventApplicationStep.verification) {
-      state = state.copyWith(step: EventApplicationStep.payment);
+  void setPartnerVerifications(List<PartnerVerifEntry> entries) {
+    final mergedData = Map<String, Map<String, dynamic>>.from(
+      state.verificationData,
+    );
+    for (final entry in entries) {
+      if (!mergedData.containsKey(entry.verification.id) ||
+          mergedData[entry.verification.id]!.isEmpty) {
+        mergedData[entry.verification.id] = Map<String, dynamic>.from(
+          entry.prefill,
+        );
+      }
     }
+    state = state.copyWith(
+      partnerVerifications: entries,
+      verificationData: mergedData,
+    );
+  }
+
+  Future<void> nextStep(BuildContext context) async {
+    if (!_canMoveNext(context)) return;
+    final steps = visibleSteps;
+    final currentIndex = steps.indexOf(state.step);
+    if (currentIndex == -1 || currentIndex >= steps.length - 1) return;
+    state = state.copyWith(step: steps[currentIndex + 1], errorMessage: null);
   }
 
   void previousStep() {
-    if (state.step == EventApplicationStep.payment) {
-      state = state.copyWith(step: EventApplicationStep.verification);
+    final steps = visibleSteps;
+    final currentIndex = steps.indexOf(state.step);
+    if (currentIndex <= 0) return;
+    state = state.copyWith(step: steps[currentIndex - 1]);
+  }
+
+  bool get canMoveNext {
+    return switch (state.step) {
+      EventApplicationStep.identity => state.identityCompleted,
+      EventApplicationStep.partnerVerification => true,
+      EventApplicationStep.consent => state.consentGranted,
+      EventApplicationStep.payment => false,
+    };
+  }
+
+  bool _canMoveNext(BuildContext context) {
+    if (state.step == EventApplicationStep.partnerVerification &&
+        !_hasCompletedRequiredVerificationFields()) {
+      context.showMinglitWarning('필수 인증 항목을 모두 입력해주세요');
+      return false;
     }
+    return canMoveNext;
+  }
+
+  bool _hasCompletedRequiredVerificationFields() {
+    for (final entry in state.partnerVerifications) {
+      if (entry.isApproved) continue;
+      final data =
+          state.verificationData[entry.verification.id] ?? entry.prefill;
+      for (final field in entry.verification.formSchema) {
+        if (!field.required) continue;
+        final value = data[field.key];
+        if (value == null) return false;
+        if (value is String && value.trim().isEmpty) return false;
+        if (value is Iterable && value.isEmpty) return false;
+      }
+    }
+    return true;
   }
 
   /// Submits an event application via the unified `apply-event` Edge Function.
@@ -147,9 +269,7 @@ class EventApplicationController extends _$EventApplicationController {
             'name': ticket.name,
             'amount': result.paymentAmount,
             'buyer_name': user.userMetadata?['name'] ?? '게스트',
-            // Fix #1924: never fabricate a phone number — omit with '' when phone is null.
-            // Iamport accepts an empty string; a hardcoded stub causes false PG records.
-            'buyer_tel': user.phone ?? '',
+            'buyer_tel': user.phone ?? '01000000000',
             'buyer_email': user.email ?? 'guest@minglit.com',
             'app_scheme': 'minglit',
           },
@@ -179,19 +299,122 @@ class EventApplicationController extends _$EventApplicationController {
   }
 
   Map<String, dynamic>? _buildVerificationPayload(Event event, Ticket ticket) {
-    final entryGroups = event.entryGroups ?? [];
-    final reqIds = entryGroups
-        .where((g) => ticket.targetEntryGroupIds.contains(g.id))
-        .expand((g) => g.requiredVerificationIds)
-        .toSet()
-        .toList();
-
+    final reqIds = _requiredVerificationIdsFor(ticket, event);
     if (reqIds.isEmpty || state.verificationData.isEmpty) return null;
+    final verificationEntry = state.verificationData.entries.firstWhere(
+      (entry) => reqIds.contains(entry.key) && entry.value.isNotEmpty,
+      orElse: () => const MapEntry('', <String, dynamic>{}),
+    );
+    if (verificationEntry.key.isEmpty) return null;
     return {
       'partner_id': event.party?.partnerId,
-      'verification_id': reqIds.first,
-      'data': state.verificationData,
+      'verification_id': verificationEntry.key,
+      'data': verificationEntry.value,
     };
+  }
+
+  Future<void> _loadPartnerVerifications(Ticket ticket) async {
+    final partnerId = _event.party?.partnerId;
+    final requiredIds = _requiredVerificationIdsFor(ticket, _event);
+    if (partnerId == null || requiredIds.isEmpty) {
+      state = state.copyWith(
+        partnerVerifications: const [],
+        verificationData: const {},
+      );
+      return;
+    }
+
+    try {
+      final statuses = await ref
+          .read(verificationRepositoryProvider)
+          .getPartnerRequirementsStatus(
+            partnerId: partnerId,
+            requiredVerificationIds: requiredIds,
+          );
+      final entries =
+          statuses
+              .map(
+                (status) => PartnerVerifEntry(
+                  verification: status.master,
+                  status: status.status,
+                  prefill: _extractPrefill(status),
+                  rejectionReason: _extractRejectionReason(status),
+                  isApproved: status.isApproved,
+                ),
+              )
+              .toList()
+            ..sort(
+              (a, b) => requiredIds
+                  .indexOf(a.verification.id)
+                  .compareTo(requiredIds.indexOf(b.verification.id)),
+            );
+      setPartnerVerifications(entries);
+    } on Object catch (error, stackTrace) {
+      Log.e('Failed to load partner verifications', error, stackTrace);
+      state = state.copyWith(
+        partnerVerifications: const [],
+        verificationData: const {},
+      );
+    }
+  }
+
+  List<String> _requiredVerificationIdsFor(Ticket ticket, Event event) {
+    final entryGroups = event.entryGroups ?? [];
+    return entryGroups
+        .where((group) => ticket.targetEntryGroupIds.contains(group.id))
+        .expand((group) => group.requiredVerificationIds)
+        .toSet()
+        .toList();
+  }
+
+  Map<String, dynamic> _extractPrefill(VerificationRequirementStatus status) {
+    final userVerification = status.userVerification;
+    final fromUserVerification =
+        _extractMap(userVerification?['data']) ??
+        _extractMap(userVerification?['claim_data']);
+    if (fromUserVerification != null) {
+      return fromUserVerification;
+    }
+
+    final verifiedData =
+        _extractMap(status.verifiedResult?['data']) ??
+        _extractMap(status.verifiedResult?['claim_data']);
+    if (verifiedData != null) {
+      return verifiedData;
+    }
+
+    final activeSubmission = status.activeSubmission;
+    if (activeSubmission == null) return const {};
+    final snapshotPrefill = <String, dynamic>{};
+    for (final item in activeSubmission.snapshotData) {
+      if (item is! Map<String, dynamic>) continue;
+      final key =
+          item['key'] ?? item['field_key'] ?? item['name'] ?? item['label'];
+      final value = item['value'] ?? item['answer'] ?? item['data'];
+      if (key is String && value != null) {
+        snapshotPrefill[key] = value;
+      }
+    }
+    return snapshotPrefill;
+  }
+
+  String? _extractRejectionReason(VerificationRequirementStatus status) {
+    final verifiedResult = status.verifiedResult;
+    final rejectionReason = verifiedResult?['rejection_reason'];
+    if (rejectionReason is String && rejectionReason.isNotEmpty) {
+      return rejectionReason;
+    }
+    return null;
+  }
+
+  Map<String, dynamic>? _extractMap(dynamic value) {
+    if (value is Map<String, dynamic>) {
+      return Map<String, dynamic>.from(value);
+    }
+    if (value is Map) {
+      return value.map((key, item) => MapEntry(key.toString(), item));
+    }
+    return null;
   }
 
   Future<Event> _loadEvent() async {
@@ -204,8 +427,12 @@ class EventApplicationController extends _$EventApplicationController {
     state = EventApplicationState(
       step: state.step,
       status: EventApplicationStatus.initial,
+      identityCompleted: state.identityCompleted,
+      partnerVerifications: state.partnerVerifications,
+      consentGranted: state.consentGranted,
       selectedTicket: state.selectedTicket,
       verificationData: state.verificationData,
+      errorMessage: null,
     );
   }
 }

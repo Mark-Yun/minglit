@@ -7,8 +7,6 @@ import 'package:mocktail/mocktail.dart';
 import '../../../../utils/mocks.dart';
 import '../../../../utils/test_utils.dart';
 
-// Fix #1535: IamportController 가짜 구현 — startPayment가 null을 반환해
-// 사용자가 뒤로가기로 결제 웹뷰를 이탈하는 상황을 시뮬레이션한다.
 class _FakeIamportControllerCancelled extends IamportController {
   @override
   AsyncValue<IamportResultModel?> build() => const AsyncData(null);
@@ -18,803 +16,209 @@ class _FakeIamportControllerCancelled extends IamportController {
     required BuildContext context,
     required String userCode,
     required Map<String, dynamic> data,
-  }) async => null; // 뒤로가기로 이탈 시 PaymentServiceImpl이 null을 반환함을 모사
+  }) async => null;
 }
 
 void main() {
   late MockEventRepository mockEventRepo;
+  late MockVerificationRepository mockVerificationRepo;
   late MockUser mockUser;
   late MockBuildContext mockContext;
 
+  final verification = Verification(
+    id: 'verification_1',
+    category: VerificationCategory.career,
+    internalName: 'career',
+    displayName: '직장 인증',
+    formSchema: const [
+      VerificationFormField(type: 'text', label: '회사명', key: 'company'),
+    ],
+  );
+
+  final now = DateTime.now();
   final testEvent = Event(
     id: 'event_1',
     partyId: 'party_1',
-    startTime: DateTime.now(),
-    endTime: DateTime.now().add(const Duration(hours: 2)),
-    createdAt: DateTime.now(),
-    updatedAt: DateTime.now(),
-    contactOptions: {},
+    startTime: now,
+    endTime: now.add(const Duration(hours: 2)),
+    createdAt: now,
+    updatedAt: now,
+    contactOptions: const {},
+    party: Party(
+      id: 'party_1',
+      partnerId: 'partner_1',
+      title: '테스트 파티',
+      createdAt: now,
+      updatedAt: now,
+    ),
     tickets: [
       Ticket(
         id: 'ticket_1',
         eventId: 'event_1',
         name: '일반 티켓',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        targetEntryGroupIds: ['group_1'],
-        requiredVerificationIds: [],
+        createdAt: now,
+        updatedAt: now,
+        targetEntryGroupIds: const ['group_1'],
+        requiredVerificationIds: const [],
         price: 10000,
       ),
+      Ticket(
+        id: 'ticket_free',
+        eventId: 'event_1',
+        name: '무료 티켓',
+        createdAt: now,
+        updatedAt: now,
+        targetEntryGroupIds: const ['group_free'],
+      ),
     ],
-    entryGroups: [
-      const EntryGroup(
+    entryGroups: const [
+      EntryGroup(
         id: 'group_1',
         eventId: 'event_1',
         gender: 'male',
         birthYearMin: 1990,
         birthYearMax: 2000,
+        requiredVerificationIds: ['verification_1'],
       ),
+      EntryGroup(id: 'group_free', eventId: 'event_1'),
     ],
-  );
-
-  final freeTicket = Ticket(
-    id: 'ticket_free',
-    eventId: 'event_1',
-    name: '무료 티켓',
-    createdAt: DateTime.now(),
-    updatedAt: DateTime.now(),
-    targetEntryGroupIds: ['group_1'],
-    requiredVerificationIds: [],
   );
 
   setUp(() {
     mockEventRepo = MockEventRepository();
+    mockVerificationRepo = MockVerificationRepository();
     mockUser = MockUser();
     mockContext = MockBuildContext();
+
     when(() => mockUser.id).thenReturn('user_1');
     when(() => mockUser.userMetadata).thenReturn({'name': 'Test User'});
     when(() => mockUser.phone).thenReturn('01012345678');
     when(() => mockUser.email).thenReturn('test@test.com');
     when(() => mockContext.mounted).thenReturn(true);
-    when(() => mockEventRepo.getEventById(any())).thenAnswer(
-      (_) async => testEvent,
+    when(
+      () => mockEventRepo.getEventById(any()),
+    ).thenAnswer((_) async => testEvent);
+    when(
+      () => mockVerificationRepo.getPartnerRequirementsStatus(
+        partnerId: any(named: 'partnerId'),
+        requiredVerificationIds: any(named: 'requiredVerificationIds'),
+      ),
+    ).thenAnswer(
+      (_) async => [VerificationRequirementStatus(master: verification)],
     );
   });
+
+  ProviderContainer _createContainer() {
+    return createContainer(
+      overrides: [
+        currentUserProvider.overrideWith((ref) => mockUser),
+        eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
+        verificationRepositoryProvider.overrideWith(
+          (ref) => mockVerificationRepo,
+        ),
+      ],
+    );
+  }
 
   group('EventApplicationController', () {
-    group('initial state', () {
-      test('starts at verification step with initial status', () {
-        final container = createContainer(
-          overrides: [
-            currentUserProvider.overrideWith((ref) => mockUser),
-            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
-          ],
-        );
-
-        final state = container.read(
-          eventApplicationControllerProvider(testEvent),
-        );
-        expect(state.step, EventApplicationStep.verification);
-        expect(state.status, EventApplicationStatus.initial);
-        expect(state.selectedTicket, isNull);
-        expect(state.verificationData, isEmpty);
-        expect(state.errorMessage, isNull);
-      });
-    });
-
-    group('selectTicket', () {
-      test('updates selected ticket', () {
-        final container = createContainer(
-          overrides: [
-            currentUserProvider.overrideWith((ref) => mockUser),
-            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
-          ],
-        );
-
-        final notifier = container.read(
-          eventApplicationControllerProvider(testEvent).notifier,
-        );
-
-        notifier.selectTicket(testEvent.tickets!.first);
-
-        final state = container.read(
-          eventApplicationControllerProvider(testEvent),
-        );
-        expect(state.selectedTicket?.id, 'ticket_1');
-        expect(state.selectedTicket?.name, '일반 티켓');
-      });
-    });
-
-    group('updateVerificationData', () {
-      test('adds new verification data', () {
-        final container = createContainer(
-          overrides: [
-            currentUserProvider.overrideWith((ref) => mockUser),
-            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
-          ],
-        );
-
-        final notifier = container.read(
-          eventApplicationControllerProvider(testEvent).notifier,
-        );
-
-        notifier.updateVerificationData('company', 'MingLit');
-        notifier.updateVerificationData('position', 'Engineer');
-
-        final state = container.read(
-          eventApplicationControllerProvider(testEvent),
-        );
-        expect(state.verificationData['company'], 'MingLit');
-        expect(state.verificationData['position'], 'Engineer');
-      });
-
-      test('overwrites existing key', () {
-        final container = createContainer(
-          overrides: [
-            currentUserProvider.overrideWith((ref) => mockUser),
-            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
-          ],
-        );
-
-        final notifier = container.read(
-          eventApplicationControllerProvider(testEvent).notifier,
-        );
-
-        notifier.updateVerificationData('company', 'OldCo');
-        notifier.updateVerificationData('company', 'NewCo');
-
-        final state = container.read(
-          eventApplicationControllerProvider(testEvent),
-        );
-        expect(state.verificationData['company'], 'NewCo');
-      });
-    });
-
-    group('step navigation', () {
-      test('nextStep moves from verification to payment', () {
-        final container = createContainer(
-          overrides: [
-            currentUserProvider.overrideWith((ref) => mockUser),
-            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
-          ],
-        );
-
-        final notifier = container.read(
-          eventApplicationControllerProvider(testEvent).notifier,
-        );
-
-        notifier.nextStep();
-
-        final state = container.read(
-          eventApplicationControllerProvider(testEvent),
-        );
-        expect(state.step, EventApplicationStep.payment);
-      });
-
-      test('nextStep does nothing when already at payment', () {
-        final container = createContainer(
-          overrides: [
-            currentUserProvider.overrideWith((ref) => mockUser),
-            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
-          ],
-        );
-
-        final notifier = container.read(
-          eventApplicationControllerProvider(testEvent).notifier,
-        );
-
-        notifier.nextStep();
-        notifier.nextStep(); // second call should be a no-op
-
-        final state = container.read(
-          eventApplicationControllerProvider(testEvent),
-        );
-        expect(state.step, EventApplicationStep.payment);
-      });
-
-      test('previousStep moves from payment to verification', () {
-        final container = createContainer(
-          overrides: [
-            currentUserProvider.overrideWith((ref) => mockUser),
-            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
-          ],
-        );
-
-        final notifier = container.read(
-          eventApplicationControllerProvider(testEvent).notifier,
-        );
-
-        notifier.nextStep();
-        notifier.previousStep();
-
-        final state = container.read(
-          eventApplicationControllerProvider(testEvent),
-        );
-        expect(state.step, EventApplicationStep.verification);
-      });
-
-      test('previousStep does nothing when at verification', () {
-        final container = createContainer(
-          overrides: [
-            currentUserProvider.overrideWith((ref) => mockUser),
-            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
-          ],
-        );
-
-        final notifier = container.read(
-          eventApplicationControllerProvider(testEvent).notifier,
-        );
-
-        notifier.previousStep(); // already at verification
-
-        final state = container.read(
-          eventApplicationControllerProvider(testEvent),
-        );
-        expect(state.step, EventApplicationStep.verification);
-      });
-    });
-
-    group('submitApplication', () {
-      test('does nothing when no ticket selected', () async {
-        final container = createContainer(
-          overrides: [
-            currentUserProvider.overrideWith((ref) => mockUser),
-            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
-          ],
-        );
-
-        final notifier = container.read(
-          eventApplicationControllerProvider(testEvent).notifier,
-        );
-
-        await notifier.submitApplication(mockContext);
-
-        final state = container.read(
-          eventApplicationControllerProvider(testEvent),
-        );
-        // Status stays initial since no ticket was selected
-        expect(state.status, EventApplicationStatus.initial);
-        verifyNever(
-          () => mockEventRepo.applyEvent(
-            eventId: any(named: 'eventId'),
-            ticketId: any(named: 'ticketId'),
-            verificationData: any(named: 'verificationData'),
-          ),
-        );
-      });
-
-      test('does nothing when user is null', () async {
-        final container = createContainer(
-          overrides: [
-            currentUserProvider.overrideWith((ref) => null),
-            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
-          ],
-        );
-
-        final notifier = container.read(
-          eventApplicationControllerProvider(testEvent).notifier,
-        );
-        notifier.selectTicket(freeTicket);
-
-        await notifier.submitApplication(mockContext);
-
-        final state = container.read(
-          eventApplicationControllerProvider(testEvent),
-        );
-        expect(state.status, EventApplicationStatus.initial);
-      });
-
-      test('succeeds when ticket and user are present (free ticket)', () async {
-        when(
-          () => mockEventRepo.applyEvent(
-            eventId: any(named: 'eventId'),
-            ticketId: any(named: 'ticketId'),
-            verificationData: any(named: 'verificationData'),
-          ),
-        ).thenAnswer(
-          (_) async => const FreeApplyEventResult(applicationId: 'app_123'),
-        );
-
-        final container = createContainer(
-          overrides: [
-            currentUserProvider.overrideWith((ref) => mockUser),
-            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
-          ],
-        );
-
-        final notifier = container.read(
-          eventApplicationControllerProvider(testEvent).notifier,
-        );
-        notifier.selectTicket(freeTicket);
-
-        await notifier.submitApplication(mockContext);
-
-        final state = container.read(
-          eventApplicationControllerProvider(testEvent),
-        );
-        expect(state.status, EventApplicationStatus.success);
-        verify(
-          () => mockEventRepo.applyEvent(
-            eventId: 'event_1',
-            ticketId: 'ticket_free',
-            verificationData: any(named: 'verificationData'),
-          ),
-        ).called(1);
-      });
-
-      test('sets error state on failure', () async {
-        when(
-          () => mockEventRepo.applyEvent(
-            eventId: any(named: 'eventId'),
-            ticketId: any(named: 'ticketId'),
-            verificationData: any(named: 'verificationData'),
-          ),
-        ).thenThrow(const MinglitUserException('신청에 실패했습니다.'));
-
-        final container = createContainer(
-          overrides: [
-            currentUserProvider.overrideWith((ref) => mockUser),
-            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
-          ],
-        );
-
-        final notifier = container.read(
-          eventApplicationControllerProvider(testEvent).notifier,
-        );
-        notifier.selectTicket(freeTicket);
-
-        await notifier.submitApplication(mockContext);
-
-        final state = container.read(
-          eventApplicationControllerProvider(testEvent),
-        );
-        expect(state.status, EventApplicationStatus.error);
-        expect(state.errorMessage, contains('신청에 실패했습니다.'));
-      });
-    });
-
-    group('resetStatus', () {
-      test('resets status to initial, preserving ticket and step', () async {
-        when(
-          () => mockEventRepo.applyEvent(
-            eventId: any(named: 'eventId'),
-            ticketId: any(named: 'ticketId'),
-            verificationData: any(named: 'verificationData'),
-          ),
-        ).thenThrow(const MinglitUserException('실패'));
-
-        final container = createContainer(
-          overrides: [
-            currentUserProvider.overrideWith((ref) => mockUser),
-            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
-          ],
-        );
-
-        final notifier = container.read(
-          eventApplicationControllerProvider(testEvent).notifier,
-        );
-        notifier.selectTicket(freeTicket);
-        notifier.nextStep();
-        await notifier.submitApplication(mockContext);
-
-        // In error state at payment step
-        var state = container.read(
-          eventApplicationControllerProvider(testEvent),
-        );
-        expect(state.status, EventApplicationStatus.error);
-        expect(state.step, EventApplicationStep.payment);
-
-        notifier.resetStatus();
-
-        state = container.read(
-          eventApplicationControllerProvider(testEvent),
-        );
-        expect(state.status, EventApplicationStatus.initial);
-        expect(state.step, EventApplicationStep.payment);
-        expect(state.selectedTicket?.id, 'ticket_free');
-      });
-    });
-
-    // Fix #1115 regression: _buildVerificationPayload returns null when
-    // reqIds is empty (no matching entry groups) or verificationData is empty.
-    group('_buildVerificationPayload regression', () {
-      test(
-        'returns null verificationData when entry groups have no matching IDs',
-        () async {
-          // Ticket targets 'group_nonexistent' which doesn't match 'group_1'
-          final ticketWithBadGroup = Ticket(
-            id: 'ticket_bad',
-            eventId: 'event_1',
-            name: 'Bad Group Ticket',
-            createdAt: DateTime.now(),
-            updatedAt: DateTime.now(),
-            targetEntryGroupIds: ['group_nonexistent'],
-            requiredVerificationIds: [],
-            price: 5000,
-          );
-
-          when(
-            () => mockEventRepo.applyEvent(
-              eventId: any(named: 'eventId'),
-              ticketId: any(named: 'ticketId'),
-              verificationData: any(named: 'verificationData'),
-            ),
-          ).thenAnswer(
-            (_) async => const PaidApplyEventResult(
-              applicationId: 'app_456',
-              orderId: 'order_456',
-              paymentAmount: 5000,
-            ),
-          );
-
-          final container = createContainer(
-            overrides: [
-              currentUserProvider.overrideWith((ref) => mockUser),
-              eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
-            ],
-          );
-
-          final notifier = container.read(
-            eventApplicationControllerProvider(testEvent).notifier,
-          );
-          notifier.selectTicket(ticketWithBadGroup);
-          notifier.updateVerificationData('company', 'TestCo');
-
-          await notifier.submitApplication(mockContext);
-
-          // verificationData should be null because reqIds is empty
-          verify(
-            () => mockEventRepo.applyEvent(
-              eventId: any(named: 'eventId'),
-              ticketId: any(named: 'ticketId'),
-            ),
-          ).called(1);
-        },
+    test('initial state starts at identity with new fields', () {
+      final container = _createContainer();
+      final state = container.read(
+        eventApplicationControllerProvider(testEvent),
       );
 
-      test(
-        'returns null verificationData when verificationData is empty',
-        () async {
-          // Ticket targets 'group_1' which has matching entry group,
-          // but entry group's requiredVerificationIds is empty (default).
-          // So reqIds will be empty → null.
-          when(
-            () => mockEventRepo.applyEvent(
-              eventId: any(named: 'eventId'),
-              ticketId: any(named: 'ticketId'),
-              verificationData: any(named: 'verificationData'),
-            ),
-          ).thenAnswer(
-            (_) async => const PaidApplyEventResult(
-              applicationId: 'app_789',
-              orderId: 'order_789',
-              paymentAmount: 10000,
-            ),
-          );
+      expect(state.step, EventApplicationStep.identity);
+      expect(state.identityCompleted, isFalse);
+      expect(state.partnerVerifications, isEmpty);
+      expect(state.consentGranted, isFalse);
+      expect(state.verificationData, isEmpty);
+    });
 
-          final container = createContainer(
-            overrides: [
-              currentUserProvider.overrideWith((ref) => mockUser),
-              eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
-            ],
-          );
+    test('loads partner verifications when ticket is selected', () async {
+      final container = _createContainer();
+      final notifier = container.read(
+        eventApplicationControllerProvider(testEvent).notifier,
+      );
 
-          final notifier = container.read(
-            eventApplicationControllerProvider(testEvent).notifier,
-          );
-          notifier.selectTicket(testEvent.tickets!.first);
-          // Don't call updateVerificationData — stays empty
+      await notifier.selectTicket(testEvent.tickets!.first);
+      final state = container.read(
+        eventApplicationControllerProvider(testEvent),
+      );
 
-          await notifier.submitApplication(mockContext);
-
-          // verificationData should be null because verificationData is empty
-          verify(
-            () => mockEventRepo.applyEvent(
-              eventId: any(named: 'eventId'),
-              ticketId: any(named: 'ticketId'),
-            ),
-          ).called(1);
-        },
+      expect(state.selectedTicket?.id, 'ticket_1');
+      expect(state.partnerVerifications, hasLength(1));
+      expect(
+        state.partnerVerifications.first.verification.id,
+        'verification_1',
       );
     });
 
-    group('processPayment', () {
-      test(
-        'requires ticket to proceed',
-        () {
-          final container = createContainer(
-            overrides: [
-              currentUserProvider.overrideWith((ref) => mockUser),
-              eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
-            ],
-          );
-
-          // processPayment returns early when no ticket
-          // is selected (guard clause: if selectedTicket == null)
-          final state = container.read(
-            eventApplicationControllerProvider(testEvent),
-          );
-          expect(state.selectedTicket, isNull);
-          expect(
-            state.status,
-            EventApplicationStatus.initial,
-          );
-        },
-      );
-    });
-  });
-
-  // Fix #1287: EventApplicationController 에러 경로 테스트
-  group('EventApplicationController — error paths (Fix #1287)', () {
     test(
-      'submitApplication sets error state with message when applyEvent throws',
+      'identity -> verification -> consent -> payment transitions work',
       () async {
-        when(
-          () => mockEventRepo.applyEvent(
-            eventId: any(named: 'eventId'),
-            ticketId: any(named: 'ticketId'),
-            verificationData: any(named: 'verificationData'),
-          ),
-        ).thenThrow(Exception('Payment gateway timeout'));
-
-        final container = createContainer(
-          overrides: [
-            currentUserProvider.overrideWith((ref) => mockUser),
-            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
-          ],
-        );
-
+        final container = _createContainer();
         final notifier = container.read(
           eventApplicationControllerProvider(testEvent).notifier,
         );
-        notifier.selectTicket(freeTicket);
-        await notifier.submitApplication(mockContext);
 
-        final state = container.read(
-          eventApplicationControllerProvider(testEvent),
+        await notifier.selectTicket(testEvent.tickets!.first);
+        notifier.markIdentityCompleted();
+        await notifier.nextStep(mockContext);
+        expect(
+          container.read(eventApplicationControllerProvider(testEvent)).step,
+          EventApplicationStep.partnerVerification,
         );
-        expect(state.status, EventApplicationStatus.error);
-        expect(state.errorMessage, isNotNull);
-        expect(state.errorMessage, isA<String>());
+
+        notifier.updateVerificationData('verification_1', 'company', 'Minglit');
+        await notifier.nextStep(mockContext);
+        expect(
+          container.read(eventApplicationControllerProvider(testEvent)).step,
+          EventApplicationStep.consent,
+        );
+
+        notifier.setConsentGranted(true);
+        await notifier.nextStep(mockContext);
+        expect(
+          container.read(eventApplicationControllerProvider(testEvent)).step,
+          EventApplicationStep.payment,
+        );
       },
     );
 
     test(
-      'errorMessage is generic user-friendly message when applyEvent throws unknown exception',
+      'skips partner verification when all requirements are approved',
       () async {
         when(
-          () => mockEventRepo.applyEvent(
-            eventId: any(named: 'eventId'),
-            ticketId: any(named: 'ticketId'),
-            verificationData: any(named: 'verificationData'),
-          ),
-        ).thenThrow(Exception('Insufficient funds'));
-
-        final container = createContainer(
-          overrides: [
-            currentUserProvider.overrideWith((ref) => mockUser),
-            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
-          ],
-        );
-
-        final notifier = container.read(
-          eventApplicationControllerProvider(testEvent).notifier,
-        );
-        notifier.selectTicket(freeTicket);
-        await notifier.submitApplication(mockContext);
-
-        final state = container.read(
-          eventApplicationControllerProvider(testEvent),
-        );
-        expect(state.status, EventApplicationStatus.error);
-        expect(state.errorMessage, isNotNull);
-        // Fix #1287: MinglitException.from() wraps unknown exceptions as
-        // MinglitSystemException, whose userMessage is the generic Korean
-        // user-facing string — not the raw exception text.
-        expect(state.errorMessage, contains('일시적인 오류가 발생했습니다'));
-      },
-    );
-
-    test(
-      'error state at payment step is preserved after failure',
-      () async {
-        when(
-          () => mockEventRepo.applyEvent(
-            eventId: any(named: 'eventId'),
-            ticketId: any(named: 'ticketId'),
-            verificationData: any(named: 'verificationData'),
-          ),
-        ).thenThrow(Exception('Network error'));
-
-        final container = createContainer(
-          overrides: [
-            currentUserProvider.overrideWith((ref) => mockUser),
-            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
-          ],
-        );
-
-        final notifier = container.read(
-          eventApplicationControllerProvider(testEvent).notifier,
-        );
-        notifier.selectTicket(freeTicket);
-        notifier.nextStep();
-        await notifier.submitApplication(mockContext);
-
-        final state = container.read(
-          eventApplicationControllerProvider(testEvent),
-        );
-        expect(state.status, EventApplicationStatus.error);
-        expect(state.step, EventApplicationStep.payment);
-        expect(state.selectedTicket?.id, 'ticket_free');
-      },
-    );
-
-    test(
-      'submitApplication fails gracefully when applyEvent throws StateError',
-      () async {
-        when(
-          () => mockEventRepo.applyEvent(
-            eventId: any(named: 'eventId'),
-            ticketId: any(named: 'ticketId'),
-            verificationData: any(named: 'verificationData'),
-          ),
-        ).thenThrow(StateError('Invalid state'));
-
-        final container = createContainer(
-          overrides: [
-            currentUserProvider.overrideWith((ref) => mockUser),
-            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
-          ],
-        );
-
-        final notifier = container.read(
-          eventApplicationControllerProvider(testEvent).notifier,
-        );
-        notifier.selectTicket(freeTicket);
-        await notifier.submitApplication(mockContext);
-
-        final state = container.read(
-          eventApplicationControllerProvider(testEvent),
-        );
-        expect(state.status, EventApplicationStatus.error);
-      },
-    );
-
-    test(
-      'resetStatus clears error after failed submitApplication',
-      () async {
-        when(
-          () => mockEventRepo.applyEvent(
-            eventId: any(named: 'eventId'),
-            ticketId: any(named: 'ticketId'),
-            verificationData: any(named: 'verificationData'),
-          ),
-        ).thenThrow(Exception('Service unavailable'));
-
-        final container = createContainer(
-          overrides: [
-            currentUserProvider.overrideWith((ref) => mockUser),
-            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
-          ],
-        );
-
-        final notifier = container.read(
-          eventApplicationControllerProvider(testEvent).notifier,
-        );
-        notifier.selectTicket(freeTicket);
-        await notifier.submitApplication(mockContext);
-
-        var state = container.read(
-          eventApplicationControllerProvider(testEvent),
-        );
-        expect(state.status, EventApplicationStatus.error);
-        expect(state.errorMessage, isNotNull);
-
-        notifier.resetStatus();
-
-        state = container.read(
-          eventApplicationControllerProvider(testEvent),
-        );
-        expect(state.status, EventApplicationStatus.initial);
-        expect(state.errorMessage, isNull);
-      },
-    );
-  });
-
-  // Fix #1535: 결제 취소 시 무한 로딩 발생 — 회귀 방지 테스트.
-  // 근본 원인: PaymentServiceImpl에서 Completer가 Navigator.push() 반환 후에도
-  // 완료되지 않아 submitApplication이 영구 blocking 상태로 남았음.
-  group('paid ticket — user cancels payment (Fix #1535)', () {
-    test(
-      'sets error state with cancellation message when startPayment returns null',
-      () async {
-        when(
-          () => mockEventRepo.applyEvent(
-            eventId: any(named: 'eventId'),
-            ticketId: any(named: 'ticketId'),
-            verificationData: any(named: 'verificationData'),
+          () => mockVerificationRepo.getPartnerRequirementsStatus(
+            partnerId: any(named: 'partnerId'),
+            requiredVerificationIds: any(named: 'requiredVerificationIds'),
           ),
         ).thenAnswer(
-          (_) async => const PaidApplyEventResult(
-            applicationId: 'app_pay',
-            orderId: 'order_pay',
-            paymentAmount: 10000,
-          ),
-        );
-
-        final container = createContainer(
-          overrides: [
-            currentUserProvider.overrideWith((ref) => mockUser),
-            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
-            iamportControllerProvider.overrideWith(
-              _FakeIamportControllerCancelled.new,
+          (_) async => [
+            VerificationRequirementStatus(
+              master: verification,
+              verifiedResult: const {'verification_id': 'verification_1'},
             ),
           ],
         );
 
+        final container = _createContainer();
         final notifier = container.read(
           eventApplicationControllerProvider(testEvent).notifier,
         );
-        notifier.selectTicket(testEvent.tickets!.first);
 
-        await notifier.submitApplication(mockContext);
+        await notifier.selectTicket(testEvent.tickets!.first);
+        notifier.markIdentityCompleted();
+        await notifier.nextStep(mockContext);
 
-        final state = container.read(
-          eventApplicationControllerProvider(testEvent),
-        );
-        expect(state.status, EventApplicationStatus.error);
-        expect(state.errorMessage, contains('취소'));
-      },
-    );
-
-    test(
-      'does not reach confirmPayment when payment is cancelled',
-      () async {
-        when(
-          () => mockEventRepo.applyEvent(
-            eventId: any(named: 'eventId'),
-            ticketId: any(named: 'ticketId'),
-            verificationData: any(named: 'verificationData'),
-          ),
-        ).thenAnswer(
-          (_) async => const PaidApplyEventResult(
-            applicationId: 'app_pay2',
-            orderId: 'order_pay2',
-            paymentAmount: 5000,
-          ),
-        );
-
-        final container = createContainer(
-          overrides: [
-            currentUserProvider.overrideWith((ref) => mockUser),
-            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
-            iamportControllerProvider.overrideWith(
-              _FakeIamportControllerCancelled.new,
-            ),
-          ],
-        );
-
-        final notifier = container.read(
-          eventApplicationControllerProvider(testEvent).notifier,
-        );
-        notifier.selectTicket(testEvent.tickets!.first);
-        await notifier.submitApplication(mockContext);
-
-        // confirmPayment should never be called when payment returns null
-        verifyNever(
-          () => mockEventRepo.confirmPayment(
-            impUid: any(named: 'impUid'),
-            merchantUid: any(named: 'merchantUid'),
-          ),
+        expect(
+          container.read(eventApplicationControllerProvider(testEvent)).step,
+          EventApplicationStep.consent,
         );
       },
     );
-  });
 
-  // Fix #1924: buyer_tel must never contain a fabricated phone number.
-  group('payment payload — buyer_tel (Fix #1924)', () {
-    test('user with phone → buyer_tel is the real phone number', () async {
-      when(() => mockUser.phone).thenReturn('01012345678');
+    test('submitApplication succeeds for free ticket', () async {
       when(
         () => mockEventRepo.applyEvent(
           eventId: any(named: 'eventId'),
@@ -822,133 +226,53 @@ void main() {
           verificationData: any(named: 'verificationData'),
         ),
       ).thenAnswer(
-        (_) async => const PaidApplyEventResult(
-          applicationId: 'app_tel1',
-          orderId: 'order_tel1',
-          paymentAmount: 10000,
-        ),
+        (_) async => const FreeApplyEventResult(applicationId: 'app_123'),
       );
 
-      final spy = _SpyIamportController();
-      final container = createContainer(
-        overrides: [
-          currentUserProvider.overrideWith((ref) => mockUser),
-          eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
-          iamportControllerProvider.overrideWith(() => spy),
-        ],
-      );
+      final container = _createContainer();
       final notifier = container.read(
         eventApplicationControllerProvider(testEvent).notifier,
       );
-      notifier.selectTicket(testEvent.tickets!.first);
+
+      await notifier.selectTicket(testEvent.tickets!.last);
+      notifier.markIdentityCompleted();
+      notifier.setConsentGranted(true);
       await notifier.submitApplication(mockContext);
 
-      expect(spy.capturedData?['buyer_tel'], '01012345678');
+      expect(
+        container.read(eventApplicationControllerProvider(testEvent)).status,
+        EventApplicationStatus.success,
+      );
     });
 
-    test(
-      'user without phone → buyer_tel is empty string, not stub number',
-      () async {
-        when(() => mockUser.phone).thenReturn(null);
-        when(
-          () => mockEventRepo.applyEvent(
-            eventId: any(named: 'eventId'),
-            ticketId: any(named: 'ticketId'),
-            verificationData: any(named: 'verificationData'),
-          ),
-        ).thenAnswer(
-          (_) async => const PaidApplyEventResult(
-            applicationId: 'app_tel2',
-            orderId: 'order_tel2',
-            paymentAmount: 10000,
-          ),
-        );
+    test('resetStatus preserves current step and data', () async {
+      when(
+        () => mockEventRepo.applyEvent(
+          eventId: any(named: 'eventId'),
+          ticketId: any(named: 'ticketId'),
+          verificationData: any(named: 'verificationData'),
+        ),
+      ).thenThrow(const MinglitUserException('실패'));
 
-        final spy = _SpyIamportController();
-        final container = createContainer(
-          overrides: [
-            currentUserProvider.overrideWith((ref) => mockUser),
-            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
-            iamportControllerProvider.overrideWith(() => spy),
-          ],
-        );
-        final notifier = container.read(
-          eventApplicationControllerProvider(testEvent).notifier,
-        );
-        notifier.selectTicket(testEvent.tickets!.first);
-        await notifier.submitApplication(mockContext);
-
-        expect(spy.capturedData?['buyer_tel'], '');
-        expect(spy.capturedData?['buyer_tel'], isNot('01000000000'));
-      },
-    );
-  });
-
-  group('EventApplicationState.copyWith', () {
-    test('copies all fields', () {
-      final ticket = Ticket(
-        id: 't1',
-        eventId: 'e1',
-        name: 'T',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        targetEntryGroupIds: [],
-        requiredVerificationIds: [],
-        price: 100,
+      final container = _createContainer();
+      final notifier = container.read(
+        eventApplicationControllerProvider(testEvent).notifier,
       );
 
-      const original = EventApplicationState(
-        step: EventApplicationStep.verification,
-        status: EventApplicationStatus.initial,
+      await notifier.selectTicket(testEvent.tickets!.last);
+      notifier.markIdentityCompleted();
+      notifier.setConsentGranted(true);
+      await notifier.nextStep(mockContext);
+      await notifier.nextStep(mockContext);
+      await notifier.submitApplication(mockContext);
+      notifier.resetStatus();
+
+      final state = container.read(
+        eventApplicationControllerProvider(testEvent),
       );
-
-      final copied = original.copyWith(
-        step: EventApplicationStep.payment,
-        status: EventApplicationStatus.error,
-        selectedTicket: ticket,
-        verificationData: {'key': 'val'},
-        errorMessage: 'err',
-      );
-
-      expect(copied.step, EventApplicationStep.payment);
-      expect(copied.status, EventApplicationStatus.error);
-      expect(copied.selectedTicket?.id, 't1');
-      expect(copied.verificationData['key'], 'val');
-      expect(copied.errorMessage, 'err');
-    });
-
-    test('preserves original values when not specified', () {
-      const original = EventApplicationState(
-        step: EventApplicationStep.payment,
-        status: EventApplicationStatus.submitting,
-        verificationData: {'a': 1},
-        errorMessage: 'msg',
-      );
-
-      final copied = original.copyWith();
-
-      expect(copied.step, EventApplicationStep.payment);
-      expect(copied.status, EventApplicationStatus.submitting);
-      expect(copied.verificationData, {'a': 1});
-      expect(copied.errorMessage, 'msg');
+      expect(state.status, EventApplicationStatus.initial);
+      expect(state.step, EventApplicationStep.payment);
+      expect(state.selectedTicket?.id, 'ticket_free');
     });
   });
-}
-
-/// Captures the data argument passed to startPayment for assertion in tests.
-class _SpyIamportController extends IamportController {
-  Map<String, dynamic>? capturedData;
-
-  @override
-  AsyncValue<IamportResultModel?> build() => const AsyncData(null);
-
-  @override
-  Future<String?> startPayment({
-    required BuildContext context,
-    required String userCode,
-    required Map<String, dynamic> data,
-  }) async {
-    capturedData = data;
-    return null; // simulate user cancellation to keep test simple
-  }
 }

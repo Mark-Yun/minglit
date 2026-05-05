@@ -16,6 +16,7 @@ export 'src/features/verification/ui/identity_verification_consent_sheet.dart';
 export 'src/features/verification/ui/identity_verification_screen.dart';
 export 'src/components/feedback/minglit_confirmation_page.dart';
 export 'src/ui/pages/account_management_page.dart';
+export 'src/ui/pages/minglit_confirmation_page.dart';
 export 'src/ui/widgets/bug_reporter_wrapper.dart';
 export 'src/ui/widgets/common/add_action_card.dart';
 export 'src/ui/widgets/common/entry_group_detail.dart';

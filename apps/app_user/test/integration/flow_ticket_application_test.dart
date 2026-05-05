@@ -139,17 +139,17 @@ void main() {
         currentUser: testUser,
         initialLocation: '/events/${event.id}',
         additionalOverrides: [
-          eventDetailControllerProvider(event.id).overrideWith(
-            () => _MockEventDetailController(event),
-          ),
+          eventDetailControllerProvider(
+            event.id,
+          ).overrideWith(() => _MockEventDetailController(event)),
           eventAdmissionControllerProvider(event).overrideWith(
             () => _MockAdmissionController(
               AdmissionState(status: EventAdmissionStatus.eligible),
             ),
           ),
-          entryGroupParticipantCountsProvider(event.id).overrideWith(
-            (ref) async => <String, int>{},
-          ),
+          entryGroupParticipantCountsProvider(
+            event.id,
+          ).overrideWith((ref) async => <String, int>{}),
           iamportConfigProvider.overrideWithValue(
             const IamportConfig(userCode: 'imp_test'),
           ),
@@ -279,16 +279,16 @@ void main() {
           currentUser: testUser,
           initialLocation: '/events/${event.id}/apply',
           additionalOverrides: [
-            eventDetailControllerProvider(event.id).overrideWith(
-              () => _MockEventDetailController(event),
-            ),
+            eventDetailControllerProvider(
+              event.id,
+            ).overrideWith(() => _MockEventDetailController(event)),
             if (controllerState != null)
-              eventApplicationControllerProvider(event).overrideWith(
-                () => _MockApplicationController(controllerState),
-              ),
-            entryGroupParticipantCountsProvider(event.id).overrideWith(
-              (ref) async => <String, int>{},
-            ),
+              eventApplicationControllerProvider(
+                event,
+              ).overrideWith(() => _MockApplicationController(controllerState)),
+            entryGroupParticipantCountsProvider(
+              event.id,
+            ).overrideWith((ref) async => <String, int>{}),
             iamportConfigProvider.overrideWithValue(
               const IamportConfig(userCode: 'imp_test'),
             ),
@@ -302,34 +302,33 @@ void main() {
       await tester.pump();
     }
 
-    testWidgets(
-      'Step 1 (verification) renders step indicator + form content',
-      (tester) async {
-        final capture = GoldenCapture('flow_u_ticket');
-        await pumpWizard(
-          tester,
-          event: testEventWithVerification,
-          controllerState: EventApplicationState(
-            step: EventApplicationStep.verification,
-            status: EventApplicationStatus.initial,
-            selectedTicket: testTicketGeneral,
-          ),
-        );
+    testWidgets('Step 1 (verification) renders step indicator + form content', (
+      tester,
+    ) async {
+      final capture = GoldenCapture('flow_u_ticket');
+      await pumpWizard(
+        tester,
+        event: testEventWithVerification,
+        controllerState: EventApplicationState(
+          step: EventApplicationStep.partnerVerification,
+          status: EventApplicationStatus.initial,
+          identityCompleted: true,
+          partnerVerifications: const [],
+          consentGranted: false,
+          selectedTicket: testTicketGeneral,
+        ),
+      );
 
-        await capture.after(tester, 1); // 신청 상세
+      await capture.after(tester, 1); // 신청 상세
 
-        // Step indicator should show
-        expect(find.text('인증'), findsOneWidget);
-        expect(find.text('결제'), findsOneWidget);
-        // "다음" button visible on verification step
-        expect(find.text('다음'), findsOneWidget);
-        // Since entryGroups is empty, should show "no verification needed"
-        expect(
-          find.textContaining('추가 인증이 필요하지 않습니다'),
-          findsOneWidget,
-        );
-      },
-    );
+      // Step indicator should show
+      expect(find.text('추가인증'), findsOneWidget);
+      expect(find.text('결제'), findsOneWidget);
+      // "다음" button visible on verification step
+      expect(find.text('다음'), findsOneWidget);
+      // Since entryGroups is empty, should show "no verification needed"
+      expect(find.textContaining('추가 인증이 필요하지 않습니다'), findsOneWidget);
+    });
 
     testWidgets('no verification required → "바로 결제로 진행해주세요" message', (
       tester,
@@ -338,17 +337,17 @@ void main() {
         tester,
         event: testEventWithVerification,
         controllerState: EventApplicationState(
-          step: EventApplicationStep.verification,
+          step: EventApplicationStep.partnerVerification,
           status: EventApplicationStatus.initial,
+          identityCompleted: true,
+          partnerVerifications: const [],
+          consentGranted: false,
           selectedTicket: testTicketGeneral,
         ),
       );
 
       // Since entryGroups is empty for this ticket, no verification needed
-      expect(
-        find.textContaining('바로 결제로 진행해주세요'),
-        findsOneWidget,
-      );
+      expect(find.textContaining('바로 결제로 진행해주세요'), findsOneWidget);
     });
 
     testWidgets('Step 2 (payment) → renders payment details', (tester) async {
@@ -359,6 +358,9 @@ void main() {
         controllerState: EventApplicationState(
           step: EventApplicationStep.payment,
           status: EventApplicationStatus.initial,
+          identityCompleted: true,
+          partnerVerifications: const [],
+          consentGranted: true,
           selectedTicket: testTicketGeneral,
         ),
       );
@@ -386,6 +388,9 @@ void main() {
         controllerState: EventApplicationState(
           step: EventApplicationStep.payment,
           status: EventApplicationStatus.submitting,
+          identityCompleted: true,
+          partnerVerifications: const [],
+          consentGranted: true,
           selectedTicket: testTicketGeneral,
         ),
       );
@@ -406,10 +411,7 @@ void main() {
       // Progress indicator should be visible
       // Fix #1519: MinglitButton renders CircularProgressIndicator (not
       // MinglitCircularProgressIndicator) when isLoading is true.
-      expect(
-        find.byType(CircularProgressIndicator),
-        findsAtLeast(1),
-      );
+      expect(find.byType(CircularProgressIndicator), findsAtLeast(1));
     });
 
     testWidgets('payment step shows refund notice text', (tester) async {
@@ -419,18 +421,15 @@ void main() {
         controllerState: EventApplicationState(
           step: EventApplicationStep.payment,
           status: EventApplicationStatus.initial,
+          identityCompleted: true,
+          partnerVerifications: const [],
+          consentGranted: true,
           selectedTicket: testTicketGeneral,
         ),
       );
 
-      expect(
-        find.textContaining('파트너 심사 반려 시 100% 환불됩니다'),
-        findsOneWidget,
-      );
-      expect(
-        find.textContaining('최대 24시간이 소요'),
-        findsOneWidget,
-      );
+      expect(find.textContaining('파트너 심사 반려 시 100% 환불됩니다'), findsOneWidget);
+      expect(find.textContaining('최대 24시간이 소요'), findsOneWidget);
     });
   });
 }
