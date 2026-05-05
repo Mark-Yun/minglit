@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(3);
+SELECT plan(6);
 
 SELECT tests.authenticate_as_service_role();
 
@@ -19,6 +19,7 @@ BEGIN
   RETURNING id INTO v_event_id;
   INSERT INTO public.entry_groups (event_id, label) VALUES (v_event_id, 'A') RETURNING id INTO v_group_a_id;
   INSERT INTO public.entry_groups (event_id, label) VALUES (v_event_id, 'B') RETURNING id INTO v_group_b_id;
+  PERFORM set_config('tests.tec_party_id',   v_party_id::text,   true);
   PERFORM set_config('tests.tec_event_id',   v_event_id::text,   true);
   PERFORM set_config('tests.tec_group_a_id', v_group_a_id::text, true);
   PERFORM set_config('tests.tec_group_b_id', v_group_b_id::text, true);
@@ -57,6 +58,45 @@ SELECT throws_ok(
   '23514',
   NULL,
   'tickets_entry_group_single: two entry group ids violates constraint'
+);
+
+-- Tests 4–6: same invariant must hold at the template source (ticket_templates).
+-- Without this, a multi-group template would pass party creation but fail when
+-- events are generated and tickets are inserted from the template.
+
+-- Test 4: empty target_entry_group_ids is allowed on ticket_templates (global template)
+SELECT lives_ok(
+  format(
+    $$INSERT INTO public.ticket_templates (party_id, name, quantity, price, target_entry_group_ids)
+      VALUES ('%s'::uuid, 'Global Template', 5, 0, '{}')$$,
+    current_setting('tests.tec_party_id')
+  ),
+  'ticket_templates_entry_group_single: empty array (global template) is allowed'
+);
+
+-- Test 5: single entry group is allowed on ticket_templates
+SELECT lives_ok(
+  format(
+    $$INSERT INTO public.ticket_templates (party_id, name, quantity, price, target_entry_group_ids)
+      VALUES ('%s'::uuid, 'Group A Template', 5, 0, ARRAY['%s'::uuid])$$,
+    current_setting('tests.tec_party_id'),
+    current_setting('tests.tec_group_a_id')
+  ),
+  'ticket_templates_entry_group_single: single entry group is allowed'
+);
+
+-- Test 6: two entry group ids violates constraint on ticket_templates
+SELECT throws_ok(
+  format(
+    $$INSERT INTO public.ticket_templates (party_id, name, quantity, price, target_entry_group_ids)
+      VALUES ('%s'::uuid, 'Multi Group Template', 5, 0, ARRAY['%s'::uuid, '%s'::uuid])$$,
+    current_setting('tests.tec_party_id'),
+    current_setting('tests.tec_group_a_id'),
+    current_setting('tests.tec_group_b_id')
+  ),
+  '23514',
+  NULL,
+  'ticket_templates_entry_group_single: two entry group ids violates constraint'
 );
 
 SELECT * FROM finish();
