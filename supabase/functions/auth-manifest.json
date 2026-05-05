@@ -11,6 +11,11 @@
       "callers": ["user"],
       "envs": ["dev", "production"],
       "description": "유저가 본인 이벤트 신청서의 match_results_viewed_at 을 최초 1회 기록"
+    },
+    "partner-review-applications": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "파트너 일괄 심사 — approve + reject 단일 트랜잭션 처리 (issue #2101)"
     }
   }
 }
