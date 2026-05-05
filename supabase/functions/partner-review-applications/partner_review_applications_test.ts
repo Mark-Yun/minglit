@@ -59,8 +59,9 @@ function rpcRoute(result: Record<string, unknown>) {
 }
 
 Deno.test("returns 405 for non-POST", async () => {
+  const { fetchMock } = createFetchMock([]);
   await withEnv(ENV, async () => {
-    await withMockedFetch(createFetchMock([]), async () => {
+    await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
         const handler = await captureServeHandler(
           new URL("./index.ts", import.meta.url),
@@ -75,35 +76,34 @@ Deno.test("returns 405 for non-POST", async () => {
 });
 
 Deno.test("returns 401 when unauthenticated", async () => {
+  const { fetchMock } = createFetchMock([
+    {
+      matcher: (req) => req.url.includes("/auth/v1/user"),
+      handler: () => new Response(null, { status: 401 }),
+    },
+  ]);
   await withEnv(ENV, async () => {
-    await withMockedFetch(
-      createFetchMock([
-        {
-          matcher: (req) => req.url.includes("/auth/v1/user"),
-          handler: () => new Response(null, { status: 401 }),
-        },
-      ]),
-      async () => {
-        await withNoIntervals(async () => {
-          const handler = await captureServeHandler(
-            new URL("./index.ts", import.meta.url),
-          );
-          const res = await handler(
-            authenticatedJsonRequest(
-              "https://supabase.test/partner-review-applications",
-              { event_id: eventId, approvals: [appId1], rejections: [] },
-            ),
-          );
-          assertEquals(res.status, 401);
-        });
-      },
-    );
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const handler = await captureServeHandler(
+          new URL("./index.ts", import.meta.url),
+        );
+        const res = await handler(
+          authenticatedJsonRequest(
+            "https://supabase.test/partner-review-applications",
+            { event_id: eventId, approvals: [appId1], rejections: [] },
+          ),
+        );
+        assertEquals(res.status, 401);
+      });
+    });
   });
 });
 
 Deno.test("returns 400 when both approvals and rejections empty", async () => {
+  const { fetchMock } = createFetchMock([authRoute]);
   await withEnv(ENV, async () => {
-    await withMockedFetch(createFetchMock([authRoute]), async () => {
+    await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
         const handler = await captureServeHandler(
           new URL("./index.ts", import.meta.url),
@@ -121,8 +121,9 @@ Deno.test("returns 400 when both approvals and rejections empty", async () => {
 });
 
 Deno.test("returns 400 when rejection has empty reason", async () => {
+  const { fetchMock } = createFetchMock([authRoute]);
   await withEnv(ENV, async () => {
-    await withMockedFetch(createFetchMock([authRoute]), async () => {
+    await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
         const handler = await captureServeHandler(
           new URL("./index.ts", import.meta.url),
@@ -144,101 +145,95 @@ Deno.test("returns 400 when rejection has empty reason", async () => {
 });
 
 Deno.test("returns 403 when caller lacks permission", async () => {
+  const { fetchMock } = createFetchMock([authRoute, eventRoute(), permissionRoute(false)]);
   await withEnv(ENV, async () => {
-    await withMockedFetch(
-      createFetchMock([authRoute, eventRoute(), permissionRoute(false)]),
-      async () => {
-        await withNoIntervals(async () => {
-          const handler = await captureServeHandler(
-            new URL("./index.ts", import.meta.url),
-          );
-          const res = await handler(
-            authenticatedJsonRequest(
-              "https://supabase.test/partner-review-applications",
-              { event_id: eventId, approvals: [appId1], rejections: [] },
-            ),
-          );
-          assertEquals(res.status, 403);
-        });
-      },
-    );
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const handler = await captureServeHandler(
+          new URL("./index.ts", import.meta.url),
+        );
+        const res = await handler(
+          authenticatedJsonRequest(
+            "https://supabase.test/partner-review-applications",
+            { event_id: eventId, approvals: [appId1], rejections: [] },
+          ),
+        );
+        assertEquals(res.status, 403);
+      });
+    });
   });
 });
 
 Deno.test("approves and rejects in single call", async () => {
+  const { fetchMock } = createFetchMock([
+    authRoute,
+    eventRoute(),
+    permissionRoute(true),
+    rpcRoute({
+      approved: [appId1],
+      rejected: [appId2],
+      skipped_due_to_capacity: [],
+      skipped_already_processed: [],
+      remaining_slots_after: 4,
+    }),
+  ]);
   await withEnv(ENV, async () => {
-    await withMockedFetch(
-      createFetchMock([
-        authRoute,
-        eventRoute(),
-        permissionRoute(true),
-        rpcRoute({
-          approved: [appId1],
-          rejected: [appId2],
-          skipped_due_to_capacity: [],
-          skipped_already_processed: [],
-          remaining_slots_after: 4,
-        }),
-      ]),
-      async () => {
-        await withNoIntervals(async () => {
-          const handler = await captureServeHandler(
-            new URL("./index.ts", import.meta.url),
-          );
-          const res = await handler(
-            authenticatedJsonRequest(
-              "https://supabase.test/partner-review-applications",
-              {
-                event_id: eventId,
-                approvals: [appId1],
-                rejections: [{ application_id: appId2, reason: "조건 미충족" }],
-              },
-            ),
-          );
-          assertEquals(res.status, 200);
-          const body = await readJson(res);
-          assertEquals(body.approved, [appId1]);
-          assertEquals(body.rejected, [appId2]);
-          assertEquals(body.skipped_due_to_capacity, []);
-          assertEquals(body.remaining_slots_after, 4);
-        });
-      },
-    );
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const handler = await captureServeHandler(
+          new URL("./index.ts", import.meta.url),
+        );
+        const res = await handler(
+          authenticatedJsonRequest(
+            "https://supabase.test/partner-review-applications",
+            {
+              event_id: eventId,
+              approvals: [appId1],
+              rejections: [{ application_id: appId2, reason: "조건 미충족" }],
+            },
+          ),
+        );
+        assertEquals(res.status, 200);
+        const body = await readJson(res);
+        assertEquals(body.approved, [appId1]);
+        assertEquals(body.rejected, [appId2]);
+        assertEquals(body.skipped_due_to_capacity, []);
+        assertEquals(body.remaining_slots_after, 4);
+      });
+    });
   });
 });
 
 Deno.test("returns skipped_due_to_capacity when event full", async () => {
+  const { fetchMock } = createFetchMock([
+    authRoute,
+    eventRoute(),
+    permissionRoute(true),
+    rpcRoute({
+      approved: [],
+      rejected: [],
+      skipped_due_to_capacity: [appId1, appId2],
+      skipped_already_processed: [],
+      remaining_slots_after: 0,
+    }),
+  ]);
   await withEnv(ENV, async () => {
-    await withMockedFetch(
-      createFetchMock([
-        authRoute,
-        eventRoute(),
-        permissionRoute(true),
-        rpcRoute({
-          approved: [],
-          rejected: [],
-          skipped_due_to_capacity: [appId1, appId2],
-          skipped_already_processed: [],
-          remaining_slots_after: 0,
-        }),
-      ]),
-      async () => {
-        await withNoIntervals(async () => {
-          const handler = await captureServeHandler(
-            new URL("./index.ts", import.meta.url),
-          );
-          const res = await handler(
-            authenticatedJsonRequest(
-              "https://supabase.test/partner-review-applications",
-              { event_id: eventId, approvals: [appId1, appId2], rejections: [] },
-            ),
-          );
-          assertEquals(res.status, 200);
-          const body = await readJson(res);
-          assertEquals(body.skipped_due_to_capacity, [appId1, appId2]);
-          assertEquals(body.remaining_slots_after, 0);
-        });
-      },
-    );
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const handler = await captureServeHandler(
+          new URL("./index.ts", import.meta.url),
+        );
+        const res = await handler(
+          authenticatedJsonRequest(
+            "https://supabase.test/partner-review-applications",
+            { event_id: eventId, approvals: [appId1, appId2], rejections: [] },
+          ),
+        );
+        assertEquals(res.status, 200);
+        const body = await readJson(res);
+        assertEquals(body.skipped_due_to_capacity, [appId1, appId2]);
+        assertEquals(body.remaining_slots_after, 0);
+      });
+    });
   });
 });

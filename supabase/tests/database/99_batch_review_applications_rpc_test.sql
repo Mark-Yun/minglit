@@ -11,6 +11,17 @@ SELECT tests.create_supabase_user('brv_applicant_a');
 SELECT tests.create_supabase_user('brv_applicant_b');
 SELECT tests.create_supabase_user('brv_applicant_c');
 
+-- issue_ticket_on_approval trigger needs user_profiles rows to insert event_participants,
+-- which then fires on_participant_change to increment current_participants.
+-- Explicit insert (ON CONFLICT DO NOTHING) ensures trigger chain works even when
+-- on_auth_user_created creates sparse rows from test metadata.
+INSERT INTO public.user_profiles (id, name, birth_date, gender, username)
+VALUES
+  (tests.get_supabase_uid('brv_applicant_a'), 'BRV Applicant A', '1995-01-01', 'male',   'brv_applicant_a'),
+  (tests.get_supabase_uid('brv_applicant_b'), 'BRV Applicant B', '1995-01-02', 'female', 'brv_applicant_b'),
+  (tests.get_supabase_uid('brv_applicant_c'), 'BRV Applicant C', '1995-01-03', 'male',   'brv_applicant_c')
+ON CONFLICT (id) DO NOTHING;
+
 DO $$
 DECLARE
   v_partner_id  uuid;
