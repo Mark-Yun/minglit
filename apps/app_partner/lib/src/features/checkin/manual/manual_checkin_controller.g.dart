@@ -8,16 +8,28 @@ part of 'manual_checkin_controller.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// 이벤트 참가자 목록 + 수동 체크인 처리 컨트롤러.
+///
+/// - 초기 로드: `get_event_participants_for_checkin` RPC
+/// - 체크인 처리: `process_manual_checkin` RPC + optimistic 업데이트
 
 @ProviderFor(ManualCheckinController)
 const manualCheckinControllerProvider = ManualCheckinControllerFamily._();
 
+/// 이벤트 참가자 목록 + 수동 체크인 처리 컨트롤러.
+///
+/// - 초기 로드: `get_event_participants_for_checkin` RPC
+/// - 체크인 처리: `process_manual_checkin` RPC + optimistic 업데이트
 final class ManualCheckinControllerProvider
     extends
         $AsyncNotifierProvider<
           ManualCheckinController,
           List<CheckinParticipant>
         > {
+  /// 이벤트 참가자 목록 + 수동 체크인 처리 컨트롤러.
+  ///
+  /// - 초기 로드: `get_event_participants_for_checkin` RPC
+  /// - 체크인 처리: `process_manual_checkin` RPC + optimistic 업데이트
   const ManualCheckinControllerProvider._({
     required ManualCheckinControllerFamily super.from,
     required String super.argument,
@@ -56,7 +68,12 @@ final class ManualCheckinControllerProvider
 }
 
 String _$manualCheckinControllerHash() =>
-    r'c3d4e5f6789012345678901234567890123456cd';
+    r'aef24453126f811f236acca34f256a44baf94dc6';
+
+/// 이벤트 참가자 목록 + 수동 체크인 처리 컨트롤러.
+///
+/// - 초기 로드: `get_event_participants_for_checkin` RPC
+/// - 체크인 처리: `process_manual_checkin` RPC + optimistic 업데이트
 
 final class ManualCheckinControllerFamily extends $Family
     with
@@ -76,15 +93,22 @@ final class ManualCheckinControllerFamily extends $Family
         isAutoDispose: true,
       );
 
+  /// 이벤트 참가자 목록 + 수동 체크인 처리 컨트롤러.
+  ///
+  /// - 초기 로드: `get_event_participants_for_checkin` RPC
+  /// - 체크인 처리: `process_manual_checkin` RPC + optimistic 업데이트
+
   ManualCheckinControllerProvider call(String eventId) =>
-      ManualCheckinControllerProvider._(
-        argument: eventId,
-        from: this,
-      );
+      ManualCheckinControllerProvider._(argument: eventId, from: this);
 
   @override
   String toString() => r'manualCheckinControllerProvider';
 }
+
+/// 이벤트 참가자 목록 + 수동 체크인 처리 컨트롤러.
+///
+/// - 초기 로드: `get_event_participants_for_checkin` RPC
+/// - 체크인 처리: `process_manual_checkin` RPC + optimistic 업데이트
 
 abstract class _$ManualCheckinController
     extends $AsyncNotifier<List<CheckinParticipant>> {

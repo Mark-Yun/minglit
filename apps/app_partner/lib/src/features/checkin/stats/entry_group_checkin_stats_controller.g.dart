@@ -8,17 +8,29 @@ part of 'entry_group_checkin_stats_controller.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// 이벤트의 엔트리 그룹별 체크인 현황 컨트롤러.
+///
+/// - `get_event_checkin_stats_by_group` RPC로 초기 데이터 로드
+/// - Supabase Realtime `event_participants` 채널 구독으로 실시간 갱신
 
 @ProviderFor(EntryGroupCheckinStatsController)
 const entryGroupCheckinStatsControllerProvider =
     EntryGroupCheckinStatsControllerFamily._();
 
+/// 이벤트의 엔트리 그룹별 체크인 현황 컨트롤러.
+///
+/// - `get_event_checkin_stats_by_group` RPC로 초기 데이터 로드
+/// - Supabase Realtime `event_participants` 채널 구독으로 실시간 갱신
 final class EntryGroupCheckinStatsControllerProvider
     extends
         $AsyncNotifierProvider<
           EntryGroupCheckinStatsController,
           List<EntryGroupCheckinStats>
         > {
+  /// 이벤트의 엔트리 그룹별 체크인 현황 컨트롤러.
+  ///
+  /// - `get_event_checkin_stats_by_group` RPC로 초기 데이터 로드
+  /// - Supabase Realtime `event_participants` 채널 구독으로 실시간 갱신
   const EntryGroupCheckinStatsControllerProvider._({
     required EntryGroupCheckinStatsControllerFamily super.from,
     required String super.argument,
@@ -58,7 +70,12 @@ final class EntryGroupCheckinStatsControllerProvider
 }
 
 String _$entryGroupCheckinStatsControllerHash() =>
-    r'b2c3d4e5f67890123456789012345678901234ab';
+    r'25721a32637c38ebdeacbd4d910fa8ad80141690';
+
+/// 이벤트의 엔트리 그룹별 체크인 현황 컨트롤러.
+///
+/// - `get_event_checkin_stats_by_group` RPC로 초기 데이터 로드
+/// - Supabase Realtime `event_participants` 채널 구독으로 실시간 갱신
 
 final class EntryGroupCheckinStatsControllerFamily extends $Family
     with
@@ -78,15 +95,22 @@ final class EntryGroupCheckinStatsControllerFamily extends $Family
         isAutoDispose: true,
       );
 
+  /// 이벤트의 엔트리 그룹별 체크인 현황 컨트롤러.
+  ///
+  /// - `get_event_checkin_stats_by_group` RPC로 초기 데이터 로드
+  /// - Supabase Realtime `event_participants` 채널 구독으로 실시간 갱신
+
   EntryGroupCheckinStatsControllerProvider call(String eventId) =>
-      EntryGroupCheckinStatsControllerProvider._(
-        argument: eventId,
-        from: this,
-      );
+      EntryGroupCheckinStatsControllerProvider._(argument: eventId, from: this);
 
   @override
   String toString() => r'entryGroupCheckinStatsControllerProvider';
 }
+
+/// 이벤트의 엔트리 그룹별 체크인 현황 컨트롤러.
+///
+/// - `get_event_checkin_stats_by_group` RPC로 초기 데이터 로드
+/// - Supabase Realtime `event_participants` 채널 구독으로 실시간 갱신
 
 abstract class _$EntryGroupCheckinStatsController
     extends $AsyncNotifier<List<EntryGroupCheckinStats>> {
