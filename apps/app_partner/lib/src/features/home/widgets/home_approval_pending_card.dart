@@ -42,7 +42,7 @@ class HomeApprovalPendingCard extends StatelessWidget {
           ),
         ),
         title: Text(
-          '심사 대기 Xbuilder',
+          '심사 대기',
           style: theme.textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.w700,
           ),

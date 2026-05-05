@@ -1,24 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
+// spec: apps/mds/docs/public/specs/partner_home_page.html#overview-block
+// 3-up stat row: 등록된 파티 / 모집 중인 이벤트 / 참가예정 고객
 class HomeOverviewBlock extends StatelessWidget {
   const HomeOverviewBlock({
     required this.totalPartyCount,
-    required this.pendingApplications,
+    required this.recruitingCount,
+    required this.totalAttendees,
     required this.onPartiesTap,
-    required this.onPendingTap,
+    required this.onEventsTap,
+    required this.onAttendeesTap,
     super.key,
   });
 
   final int totalPartyCount;
-  final int pendingApplications;
+  final int recruitingCount;
+  final int totalAttendees;
   final VoidCallback onPartiesTap;
-  final VoidCallback onPendingTap;
+  final VoidCallback onEventsTap;
+  final VoidCallback onAttendeesTap;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Row(
       children: [
         Expanded(
@@ -31,10 +35,17 @@ class HomeOverviewBlock extends StatelessWidget {
         const SizedBox(width: MinglitSpacing.small),
         Expanded(
           child: _StatChip(
-            value: pendingApplications.toString(),
-            label: '심사 대기',
-            onTap: onPendingTap,
-            highlight: pendingApplications > 0,
+            value: recruitingCount.toString(),
+            label: '모집 중인 이벤트',
+            onTap: onEventsTap,
+          ),
+        ),
+        const SizedBox(width: MinglitSpacing.small),
+        Expanded(
+          child: _StatChip(
+            value: totalAttendees.toString(),
+            label: '참가예정 고객',
+            onTap: onAttendeesTap,
           ),
         ),
       ],
@@ -47,20 +58,15 @@ class _StatChip extends StatelessWidget {
     required this.value,
     required this.label,
     required this.onTap,
-    this.highlight = false,
   });
 
   final String value;
   final String label;
   final VoidCallback onTap;
-  final bool highlight;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final color = highlight
-        ? MinglitColors.error
-        : theme.colorScheme.onSurfaceVariant;
 
     return Material(
       color: theme.colorScheme.surface,
@@ -70,7 +76,7 @@ class _StatChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(MinglitRadius.card),
         child: Padding(
           padding: const EdgeInsets.symmetric(
-            horizontal: MinglitSpacing.medium,
+            horizontal: MinglitSpacing.small,
             vertical: MinglitSpacing.medium,
           ),
           child: Column(
@@ -79,16 +85,15 @@ class _StatChip extends StatelessWidget {
                 value,
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w800,
-                  color: color,
                 ),
               ),
               const SizedBox(height: MinglitSpacing.xxsmall),
               Text(
                 label,
                 style: theme.textTheme.labelSmall?.copyWith(
-                  color: color,
                   fontWeight: FontWeight.w600,
                 ),
+                textAlign: TextAlign.center,
               ),
             ],
           ),

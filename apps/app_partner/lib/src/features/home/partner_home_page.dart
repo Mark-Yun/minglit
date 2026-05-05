@@ -1,6 +1,5 @@
 import 'dart:async' show unawaited;
 
-import 'package:app_partner/src/features/home/home_event_phase.dart';
 import 'package:app_partner/src/features/home/partner_dashboard_controller.dart';
 import 'package:app_partner/src/features/home/partner_home_coordinator.dart';
 import 'package:app_partner/src/features/home/widgets/home_approval_pending_card.dart';
@@ -79,10 +78,6 @@ class PartnerHomePage extends ConsumerWidget {
       body: MinglitAsyncValueWidget(
         value: state.status,
         data: (_) {
-          final preparingEvents = state.closingSoonEvents
-              .where((event) => getEventPhase(event) == EventPhase.preparing)
-              .toList();
-
           return RefreshIndicator(
             onRefresh: () => ref
                 .read(partnerDashboardControllerProvider.notifier)
@@ -125,11 +120,16 @@ class PartnerHomePage extends ConsumerWidget {
                   ] else ...[
                     HomeOverviewBlock(
                       totalPartyCount: state.totalPartyCount,
-                      pendingApplications: state.pendingReviewCount,
+                      recruitingCount: state.recruitingEvents.length,
+                      totalAttendees: state.totalAttendees,
                       onPartiesTap: () {
                         unawaited(const PartyListRoute().push<void>(context));
                       },
-                      onPendingTap: coordinator.goToApplicationList,
+                      // spec: 모집 중인 이벤트 → 이벤트 리스트(파티 리스트 경유)
+                      onEventsTap: () {
+                        unawaited(const PartyListRoute().push<void>(context));
+                      },
+                      onAttendeesTap: coordinator.goToApplicationList,
                     ),
                     if (state.liveEvents.isNotEmpty) ...[
                       const SizedBox(height: MinglitSpacing.large),
@@ -176,11 +176,11 @@ class PartnerHomePage extends ConsumerWidget {
                         ),
                       ),
                     ],
-                    if (preparingEvents.isNotEmpty) ...[
+                    if (state.preparingEvents.isNotEmpty) ...[
                       const SizedBox(height: MinglitSpacing.large),
                       const HomeSectionHeader(title: '준비 중인 이벤트'),
                       const SizedBox(height: MinglitSpacing.small),
-                      ...preparingEvents.map(
+                      ...state.preparingEvents.map(
                         (event) => Padding(
                           padding: const EdgeInsets.only(
                             bottom: MinglitSpacing.small,

@@ -18,9 +18,11 @@ abstract class PartnerDashboardState with _$PartnerDashboardState {
     @Default([]) List<Event> closingSoonEvents,
     @Default([]) List<Event> liveEvents,
     @Default([]) List<Event> recruitingEvents,
+    @Default([]) List<Event> preparingEvents,
     @Default([]) List<Party> activeParties,
     @Default([]) List<Party> draftParties,
     @Default(0) int totalPartyCount,
+    @Default(0) int totalAttendees,
     // Fix #1215: tracks ALL events ever created, not just upcoming ones.
     // Using upcomingEvents for onboarding check caused the guide to reappear
     // after all events ended or were more than 7 days away.
@@ -59,9 +61,11 @@ class PartnerDashboardController extends _$PartnerDashboardController {
           closingSoonEvents: [],
           liveEvents: [],
           recruitingEvents: [],
+          preparingEvents: [],
           activeParties: [],
           draftParties: [],
           totalPartyCount: 0,
+          totalAttendees: 0,
           hasAnyEvents: false,
         );
         return;
@@ -76,43 +80,50 @@ class PartnerDashboardController extends _$PartnerDashboardController {
       // 2. Upcoming Events (next 7 days)
       final upcomingEvents = await eventRepo.getUpcomingEvents(partner.id);
 
-      // 3. Closing Soon Events (next 3 days)
-      final closingSoonEvents = await eventRepo.getClosingSoonEvents(
-        partner.id,
-      );
-
-      // 4. Active Parties
+      // 3. Active Parties
       final activeParties = await partyRepo.getPartiesByPartnerId(
         partner.id,
       );
 
-      // 5. Has Any Events (all-time, for onboarding gate)
+      // 4. Has Any Events (all-time, for onboarding gate)
       // Fix #1215: onboarding must not reappear once partner has ever created
       // an event — getUpcomingEvents only covers next 7 days.
       final hasAnyEvents = await eventRepo.getHasAnyEvents(partner.id);
+
       final liveEvents = upcomingEvents
           .where((event) => getEventPhase(event) == EventPhase.live)
           .toList();
       final recruitingEvents = upcomingEvents
           .where((event) => getEventPhase(event) == EventPhase.recruiting)
           .toList();
+      // Fix #2219: preparing events derived from upcomingEvents (start <3h),
+      // not from closingSoonEvents (next 3 days) — keeps derived state in controller.
+      final preparingEvents = upcomingEvents
+          .where((event) => getEventPhase(event) == EventPhase.preparing)
+          .toList();
       final draftParties = activeParties
           .where(
             (party) => upcomingEvents.every((event) => event.partyId != party.id),
           )
           .toList();
+      // spec: 참가예정 고객 = 활성화된 이벤트의 누적 결제 완료 참가자 수
+      final totalAttendees = upcomingEvents.fold<int>(
+        0,
+        (sum, event) => sum + event.currentParticipants,
+      );
 
       if (!ref.mounted) return;
       state = state.copyWith(
         status: const AsyncValue.data(null),
         pendingReviewCount: pendingCount,
         upcomingEvents: upcomingEvents,
-        closingSoonEvents: closingSoonEvents,
         liveEvents: liveEvents,
         recruitingEvents: recruitingEvents,
+        preparingEvents: preparingEvents,
         activeParties: activeParties,
         draftParties: draftParties,
         totalPartyCount: activeParties.length,
+        totalAttendees: totalAttendees,
         hasAnyEvents: hasAnyEvents,
       );
     } on Exception catch (e, st) {
