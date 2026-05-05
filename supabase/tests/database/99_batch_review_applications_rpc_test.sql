@@ -117,33 +117,53 @@ SELECT is(
 );
 
 -- ============================================================
--- Test 5: capacity guard skips 3rd applicant when event full (max_participants=1, app_a already approved)
--- In production the trigger chain (on_application_approval → issue_ticket_on_approval →
--- on_participant_change → update_event_participation_stats) increments current_participants.
--- In pgTAP tests the trigger chain does not reliably propagate within the same transaction,
--- so we set current_participants explicitly to test the RPC capacity-guard logic in isolation.
+-- Test 5: capacity guard skips applicant when event is already full.
+-- Creates a fresh partner/party/event pre-seeded at full capacity
+-- (current_participants = max_participants = 1) so the RPC capacity-guard
+-- is tested independently of the trigger chain that updates current_participants.
 -- ============================================================
-
-UPDATE public.events
-SET current_participants = 1
-WHERE id = current_setting('tests.brv_event_id')::uuid;
 
 DO $$
 DECLARE
-  v_result record;
+  v_partner_id    uuid;
+  v_party_id      uuid;
+  v_full_event_id uuid;
+  v_ticket_id     uuid;
+  v_app_id        uuid;
+  v_result        record;
 BEGIN
+  INSERT INTO public.partners (name) VALUES ('BRV Capacity Test Partner')
+  RETURNING id INTO v_partner_id;
+
+  INSERT INTO public.parties (partner_id, title, min_confirmed_count, max_participants)
+  VALUES (v_partner_id, 'BRV Capacity Party', 0, 1)
+  RETURNING id INTO v_party_id;
+
+  INSERT INTO public.events (party_id, start_time, end_time, min_confirmed_count, max_participants, current_participants)
+  VALUES (v_party_id, now() + interval '2 days', now() + interval '2 days 2 hours', 0, 1, 1)
+  RETURNING id INTO v_full_event_id;
+
+  INSERT INTO public.tickets (event_id, name, quantity, price)
+  VALUES (v_full_event_id, 'General', 10, 0)
+  RETURNING id INTO v_ticket_id;
+
+  INSERT INTO public.event_applications (event_id, ticket_id, user_id, status)
+  VALUES (v_full_event_id, v_ticket_id, tests.get_supabase_uid('brv_applicant_c'), 'pending')
+  RETURNING id INTO v_app_id;
+
   SELECT * INTO v_result
   FROM public.batch_review_event_applications(
-    current_setting('tests.brv_event_id')::uuid,
-    ARRAY[current_setting('tests.brv_app_c_id')::uuid],
+    v_full_event_id,
+    ARRAY[v_app_id],
     ARRAY[]::public.rejection_item[]
   );
+
   PERFORM set_config('tests.brv_skipped_count', COALESCE(array_length(v_result.skipped_due_to_capacity, 1), 0)::text, true);
 END $$;
 
 SELECT is(
   current_setting('tests.brv_skipped_count')::integer, 1,
-  'batch_review: 3rd approval skipped due to capacity (max_participants=1 reached)'
+  'batch_review: approval skipped due to capacity (event already full)'
 );
 
 -- ============================================================
