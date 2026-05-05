@@ -205,18 +205,17 @@ SELECT is(
 );
 
 -- ============================================================
--- Test 8: PARTY_MANAGE 없는 유저 → permission denied
+-- Test 8: PARTY_MANAGE 없는 일반 유저도 RPC 호출 가능 (Fix #2254)
+-- 참가자 수는 공개 정보 — PARTY_MANAGE 체크 제거됨
 -- ============================================================
 
 SELECT tests.authenticate_as('egpc_no_perm');
 
-SELECT throws_like(
-  format(
-    $$SELECT public.get_entry_group_participant_counts('%s'::uuid)$$,
-    current_setting('tests.egpc_event_id')
-  ),
-  '%permission denied%',
-  'get_entry_group_participant_counts: PARTY_MANAGE 없는 유저 → permission denied 예외'
+SELECT ok(
+  (SELECT count(*) FROM public.get_entry_group_participant_counts(
+    current_setting('tests.egpc_event_id')::uuid
+  )) = 2,
+  'get_entry_group_participant_counts: PARTY_MANAGE 없는 일반 유저도 호출 가능 (Fix #2254)'
 );
 
 SELECT * FROM finish();
