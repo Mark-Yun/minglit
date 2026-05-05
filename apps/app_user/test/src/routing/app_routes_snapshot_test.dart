@@ -46,11 +46,13 @@ void main() {
           paths,
           unorderedEquals(<String>[
             // Top-level routes (outside shell)
+            '/dev',
             '/dev/switch',
             '/login',
             '/signup/consent',
             '/auth/callback',
             '/events/:eventId',
+            '/events/:eventId/matching',
             '/partners/:partnerId',
             '/partners/:partnerId/events',
             '/certification',

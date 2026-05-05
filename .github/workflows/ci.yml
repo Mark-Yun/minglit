@@ -142,6 +142,13 @@ jobs:
             artifact_name: minglit-kit-coverage
             coverage_flag: minglit-kit
             coverage_flag_logic: ''
+          - app: mds_core
+            change_key: mds_core
+            directory: shared/packages/mds/core
+            report_name: 'MDS Core Tests'
+            artifact_name: mds-core-coverage
+            coverage_flag: mds-core
+            coverage_flag_logic: ''
           - app: mds_storybook
             change_key: mds_storybook_or_mds
             directory: apps/mds/storybook

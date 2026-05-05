@@ -70,6 +70,37 @@ void main() {
     ],
   );
 
+  // Fix #2160: event with both male and female entry groups sharing the same
+  // age restriction — used to verify gender-matched reason priority in _checkEligibility.
+  final testMixedGenderEvent = testEvent.copyWith(
+    tickets: [
+      Ticket(
+        id: 'ticket_1',
+        eventId: 'event_1',
+        name: 'Normal Ticket',
+        createdAt: _fixedNow,
+        updatedAt: _fixedNow,
+        targetEntryGroupIds: ['group_m', 'group_f'],
+        requiredVerificationIds: [],
+        price: 10000,
+      ),
+    ],
+    entryGroups: [
+      const EntryGroup(
+        id: 'group_m',
+        eventId: 'event_1',
+        gender: 'male',
+        birthYearMin: 1990,
+      ),
+      const EntryGroup(
+        id: 'group_f',
+        eventId: 'event_1',
+        gender: 'female',
+        birthYearMin: 1990,
+      ),
+    ],
+  );
+
   setUp(() {
     mockEventRepo = MockEventRepository();
     mockUserRepo = MockUserRepository();
@@ -144,6 +175,12 @@ void main() {
           username: 'test_user',
         ),
       );
+      // Fix #2155: getUserProfile and getApprovedVerificationIds are fetched in
+      // parallel, so getApprovedVerificationIds is now called even when
+      // identityRequired would short-circuit.
+      when(
+        () => mockUserRepo.getApprovedVerificationIds('user_1'),
+      ).thenAnswer((_) async => []);
 
       final container = createContainer(
         overrides: [
@@ -194,6 +231,55 @@ void main() {
       );
       expect(state.status, EventAdmissionStatus.notEligible);
     });
+
+    // Fix #2160: regression guard for _checkEligibility — female user with age
+    // mismatch must see age error from the gender-matched female group, not the
+    // gender error from the male group that appears first in the groups list.
+    test(
+      'ineligibleReason prefers age error from gender-matched group over gender error',
+      () async {
+        when(
+          () => mockEventRepo.getApplication(
+            eventId: any(named: 'eventId'),
+            userId: any(named: 'userId'),
+          ),
+        ).thenAnswer((_) async => null);
+
+        when(() => mockUserRepo.getUserProfile('user_1')).thenAnswer(
+          (_) async => UserProfile(
+            id: 'user_1',
+            name: 'Test User',
+            username: 'test_user',
+            isVerified: true,
+            gender: 'female',
+            birthDate: DateTime(
+              1985,
+            ), // 1985 < birthYearMin 1990 → age mismatch on female group
+          ),
+        );
+        when(
+          () => mockUserRepo.getApprovedVerificationIds('user_1'),
+        ).thenAnswer((_) async => []);
+        when(() => mockEventRepo.getEventById(any())).thenAnswer(
+          (_) async => testMixedGenderEvent,
+        );
+
+        final container = createContainer(
+          overrides: [
+            currentUserProvider.overrideWith((ref) => mockUser),
+            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
+            userRepositoryProvider.overrideWith((ref) => mockUserRepo),
+          ],
+        );
+
+        final state = await container.read(
+          eventAdmissionControllerProvider(testMixedGenderEvent).future,
+        );
+        expect(state.status, EventAdmissionStatus.notEligible);
+        expect(state.ineligibleReason, contains('1990'));
+        expect(state.ineligibleReason, isNot(contains('성별')));
+      },
+    );
 
     test(
       'State is qualificationRequired when qualification is missing',
@@ -687,6 +773,53 @@ void main() {
     });
   });
 
+  // Fix #2155: 병렬 패치 회귀 테스트 — getUserProfile 과 getApprovedVerificationIds 가
+  // 동시에 호출되는지 확인 (sequential 으로 되돌아가지 않도록)
+  group('EventAdmissionController — parallel fetch (Fix #2155)', () {
+    test(
+      'both getUserProfile and getApprovedVerificationIds are called for active event',
+      () async {
+        when(
+          () => mockEventRepo.getApplication(
+            eventId: any(named: 'eventId'),
+            userId: any(named: 'userId'),
+          ),
+        ).thenAnswer((_) async => null);
+
+        when(() => mockUserRepo.getUserProfile('user_1')).thenAnswer(
+          (_) async => UserProfile(
+            id: 'user_1',
+            name: 'Test User',
+            username: 'test_user',
+            isVerified: true,
+            gender: 'male',
+            birthDate: DateTime(1995),
+          ),
+        );
+        when(
+          () => mockUserRepo.getApprovedVerificationIds('user_1'),
+        ).thenAnswer((_) async => []);
+
+        final container = createContainer(
+          overrides: [
+            currentUserProvider.overrideWith((ref) => mockUser),
+            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
+            userRepositoryProvider.overrideWith((ref) => mockUserRepo),
+          ],
+        );
+
+        await container.read(
+          eventAdmissionControllerProvider(testEvent).future,
+        );
+
+        verify(() => mockUserRepo.getUserProfile('user_1')).called(1);
+        verify(
+          () => mockUserRepo.getApprovedVerificationIds('user_1'),
+        ).called(1);
+      },
+    );
+  });
+
   // Fix #1287: EventAdmissionController 에러 경로 테스트
   group('EventAdmissionController — error paths (Fix #1287)', () {
     test(
@@ -759,6 +892,44 @@ void main() {
 
         final raw = container.read(eventAdmissionControllerProvider(testEvent));
         expect(raw.error, isA<Exception>());
+      },
+    );
+
+    // Regression #2155: unverified user + verifIds throws => identityRequired (not AsyncError)
+    test(
+      'unverified user gets identityRequired even when getApprovedVerificationIds throws',
+      () async {
+        when(
+          () => mockEventRepo.getApplication(
+            eventId: any(named: 'eventId'),
+            userId: any(named: 'userId'),
+          ),
+        ).thenAnswer((_) async => null);
+
+        when(() => mockUserRepo.getUserProfile('user_1')).thenAnswer(
+          (_) async => const UserProfile(
+            id: 'user_1',
+            name: 'Test User',
+            username: 'test_user',
+            // isVerified defaults to false — triggers identityRequired
+          ),
+        );
+        when(
+          () => mockUserRepo.getApprovedVerificationIds(any()),
+        ).thenThrow(Exception('Verification DB error'));
+
+        final container = createContainer(
+          overrides: [
+            currentUserProvider.overrideWith((ref) => mockUser),
+            eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
+            userRepositoryProvider.overrideWith((ref) => mockUserRepo),
+          ],
+        );
+
+        final state = await container.read(
+          eventAdmissionControllerProvider(testEvent).future,
+        );
+        expect(state.status, EventAdmissionStatus.identityRequired);
       },
     );
 
