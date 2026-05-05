@@ -12,6 +12,7 @@ import 'package:app_user/src/features/auth/ui/auth_callback_page.dart';
 import 'package:app_user/src/features/consent/ui/signup_consent_page.dart';
 import 'package:app_user/src/features/event/admission/event_application_wizard_page.dart';
 import 'package:app_user/src/features/event/detail/event_detail_page.dart';
+import 'package:app_user/src/features/event/matching/ui/event_matching_screen.dart';
 import 'package:app_user/src/features/home/home_page.dart';
 import 'package:app_user/src/features/home/my_page.dart';
 import 'package:app_user/src/features/my_tickets/ui/my_tickets_page.dart';
@@ -169,6 +170,20 @@ class EventApplicationRoute extends GoRouteData with $EventApplicationRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       EventApplicationWizardPage(eventId: eventId, ticketId: ticketId);
+}
+
+@TypedGoRoute<EventMatchingRoute>(path: '/events/:eventId/matching')
+class EventMatchingRoute extends GoRouteData with $EventMatchingRoute {
+  const EventMatchingRoute({required this.eventId});
+
+  final String eventId;
+
+  @override
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      MinglitPageTransitions.sharedAxisScaled(
+        key: state.pageKey,
+        child: EventMatchingScreen(eventId: eventId),
+      );
 }
 
 /// **My Tickets Route**: User's ticket list page.
