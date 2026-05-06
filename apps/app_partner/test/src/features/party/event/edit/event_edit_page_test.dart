@@ -61,7 +61,7 @@ void main() {
       await tester.pumpWidget(buildSubject(state));
       await tester.pump();
 
-      expect(find.textContaining('확정 참가자 2명이 있어'), findsOneWidget);
+      expect(find.textContaining('확정 참가자 2명'), findsOneWidget);
       expect(find.byIcon(Icons.lock_outline), findsOneWidget);
     },
   );
@@ -83,7 +83,7 @@ void main() {
       await tester.pump();
 
       expect(find.byIcon(Icons.lock_outline), findsNothing);
-      expect(find.textContaining('일정·장소 변경 시 알림'), findsNothing);
+      expect(find.textContaining('확정 참가자'), findsNothing);
     },
   );
 

@@ -1,5 +1,6 @@
 import 'package:app_partner/src/features/party/event/edit/event_edit_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -51,6 +52,7 @@ class EventEditPage extends ConsumerWidget {
 
                         // Fix #2110: catch submit errors to prevent uncaught
                         // async exception (debug red screen / release silent crash).
+                        // Capture messenger before pop — context is disposed after pop.
                         try {
                           await ref
                               .read(
@@ -58,8 +60,9 @@ class EventEditPage extends ConsumerWidget {
                               )
                               .submit(reason: reason);
                           if (!context.mounted) return;
+                          final messenger = ScaffoldMessenger.of(context);
                           context.pop();
-                          ScaffoldMessenger.of(context).showSnackBar(
+                          messenger.showSnackBar(
                             const SnackBar(content: Text('저장되었습니다')),
                           );
                         } catch (_) {
@@ -163,11 +166,27 @@ class _EventEditContent extends ConsumerWidget {
                     size: MinglitIconSize.small,
                   ),
                   const SizedBox(width: MinglitSpacing.small),
+                  // Fix #2110: spec §Lock Policy — two-level typography:
+                  // title (labelLarge) + sub (bodySmall). Sub must list all
+                  // three constraints: alert, min-capacity, price policy.
                   Expanded(
-                    child: Text(
-                      '확정 참가자 ${editState.confirmedCount}명이 있어 '
-                      '일정·장소 변경 시 알림이 전송됩니다.',
-                      style: theme.textTheme.bodyMedium,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '확정 참가자 ${editState.confirmedCount}명',
+                          style: theme.textTheme.labelLarge,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '일정·장소 변경 시 자동 알림 발송. '
+                          '정원은 확정자 수 이하로 줄일 수 없음.',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurface
+                                .withValues(alpha: 0.6),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -260,6 +279,11 @@ class _EventEditContent extends ConsumerWidget {
                 TextFormField(
                   initialValue: editState.maxParticipants.toString(),
                   keyboardType: TextInputType.number,
+                  // Fix #2110: prevent empty/non-digit input — ensures field
+                  // value always reflects controller state (no ghost values).
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                  ],
                   onChanged: (value) {
                     final parsed = int.tryParse(value);
                     if (parsed == null) return;

@@ -91,12 +91,11 @@ class EventEditController extends _$EventEditController {
   Future<EventEditState> build(String eventId) async {
     final eventRepository = ref.watch(eventRepositoryProvider);
     final event = await eventRepository.getEventById(eventId);
-    final applications = await eventRepository.getApplicationsByEventId(
-      eventId,
-    );
-    final confirmedCount = applications
-        .where((app) => app.status == 'approved' || app.status == 'paid')
-        .length;
+    // Fix #2110: Use event.currentParticipants as authoritative confirmed count.
+    // getApplicationsByEventId() may return paginated/incomplete results, causing
+    // under-counting that could bypass lock policy and min-participant guards.
+    // Mirrors event_detail_page.dart which already uses the same source.
+    final confirmedCount = event.currentParticipants;
 
     return createEventEditState(
       event: event,
