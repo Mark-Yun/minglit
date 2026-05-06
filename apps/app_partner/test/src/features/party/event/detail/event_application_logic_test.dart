@@ -116,17 +116,21 @@ void main() {
     test('returns applications with matching mock', () async {
       final event = _makeEvent('event_1');
       final applications = [_makeApplication('app_1')];
-      when(() => mockRepo.getEventById('event_1'))
-          .thenAnswer((_) async => event);
-      when(() => mockRepo.getApplicationsByEventId('event_1'))
-          .thenAnswer((_) async => applications);
-      when(() => mockRepo.getEntryGroupParticipantCounts('event_1'))
-          .thenAnswer((_) async => []);
+      when(
+        () => mockRepo.getEventById('event_1'),
+      ).thenAnswer((_) async => event);
+      when(
+        () => mockRepo.getApplicationsByEventId('event_1'),
+      ).thenAnswer((_) async => applications);
+      when(
+        () => mockRepo.getEntryGroupParticipantCounts('event_1'),
+      ).thenAnswer((_) async => []);
       final container = createContainer(
         overrides: [eventRepositoryProvider.overrideWithValue(mockRepo)],
       );
-      final result = await container
-          .read(eventApplicationBundleProvider('event_1').future);
+      final result = await container.read(
+        eventApplicationBundleProvider('event_1').future,
+      );
       expect(result.applications, same(applications));
     });
 
@@ -155,8 +159,7 @@ void main() {
       );
       addTearDown(sub.close);
       await Future<void>.delayed(Duration.zero);
-      final state =
-          container.read(eventApplicationBundleProvider('event_err'));
+      final state = container.read(eventApplicationBundleProvider('event_err'));
       expect(state.hasError, isTrue);
       expect(state.error, isA<Exception>());
     });
@@ -226,16 +229,18 @@ void main() {
       expect(result.map((a) => a.id), orderedEquals(['a1', 'a4']));
     });
 
-    test('returns empty list when no pending applications match groupId',
-        () async {
-      final container = createContainer(
-        overrides: [eventRepositoryProvider.overrideWithValue(mockRepo)],
-      );
-      final result = await container.read(
-        carouselQueueProvider('event_1', 'eg_unknown').future,
-      );
-      expect(result, isEmpty);
-    });
+    test(
+      'returns empty list when no pending applications match groupId',
+      () async {
+        final container = createContainer(
+          overrides: [eventRepositoryProvider.overrideWithValue(mockRepo)],
+        );
+        final result = await container.read(
+          carouselQueueProvider('event_1', 'eg_unknown').future,
+        );
+        expect(result, isEmpty);
+      },
+    );
 
     test('revert check: removing groupId filter includes all pending '
         'statuses', () async {

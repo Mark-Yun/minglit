@@ -57,8 +57,7 @@ Future<List<EventApplication>> carouselQueue(
       : pending.where(
           (a) => a.ticket?.targetEntryGroupIds.contains(groupId) ?? false,
         );
-  return filtered.toList()
-    ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+  return filtered.toList()..sort((a, b) => a.createdAt.compareTo(b.createdAt));
 }
 
 @riverpod

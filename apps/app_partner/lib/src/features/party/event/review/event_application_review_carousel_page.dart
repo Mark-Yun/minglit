@@ -19,8 +19,7 @@ class EventApplicationReviewCarouselPage extends ConsumerStatefulWidget {
   final String? groupId;
 
   @override
-  ConsumerState<EventApplicationReviewCarouselPage> createState() =>
-      _State();
+  ConsumerState<EventApplicationReviewCarouselPage> createState() => _State();
 }
 
 class _State extends ConsumerState<EventApplicationReviewCarouselPage> {
@@ -160,8 +159,7 @@ class _State extends ConsumerState<EventApplicationReviewCarouselPage> {
                   physics: const NeverScrollableScrollPhysics(),
                   onPageChanged: _onPageChanged,
                   itemCount: queue.length,
-                  itemBuilder: (_, i) =>
-                      _ApplicantCard(application: queue[i]),
+                  itemBuilder: (_, i) => _ApplicantCard(application: queue[i]),
                 ),
               ),
               _BottomCta(
@@ -182,8 +180,7 @@ class _State extends ConsumerState<EventApplicationReviewCarouselPage> {
   }
 
   AppBar _buildAppBar(BuildContext context, int? total) {
-    final progressText =
-        total != null ? '${_currentIndex + 1} / $total' : '';
+    final progressText = total != null ? '${_currentIndex + 1} / $total' : '';
     return AppBar(
       leading: IconButton(
         icon: const Icon(Icons.close),
@@ -206,8 +203,7 @@ class _State extends ConsumerState<EventApplicationReviewCarouselPage> {
   }
 }
 
-String _formatDate(DateTime dt) =>
-    dt.toLocal().toString().substring(0, 10);
+String _formatDate(DateTime dt) => dt.toLocal().toString().substring(0, 10);
 
 class _ApplicantCard extends StatelessWidget {
   const _ApplicantCard({required this.application});
@@ -251,19 +247,16 @@ class _ApplicantCard extends StatelessWidget {
                   children: [
                     Text(
                       name,
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleMedium
-                          ?.copyWith(fontWeight: FontWeight.w600),
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     if (subtitle.isNotEmpty)
                       Text(
                         subtitle,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant,
-                            ),
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       ),
                   ],
                 ),
@@ -361,10 +354,9 @@ class _RejectReasonSheetState extends State<_RejectReasonSheet> {
         children: [
           Text(
             '거절 사유',
-            style: Theme.of(context)
-                .textTheme
-                .titleMedium
-                ?.copyWith(fontWeight: FontWeight.w600),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: MinglitSpacing.medium),
           TextField(
@@ -378,8 +370,7 @@ class _RejectReasonSheetState extends State<_RejectReasonSheet> {
           ),
           const SizedBox(height: MinglitSpacing.medium),
           FilledButton(
-            onPressed: () =>
-                Navigator.of(context).pop(_controller.text.trim()),
+            onPressed: () => Navigator.of(context).pop(_controller.text.trim()),
             child: const Text('거절 확인'),
           ),
         ],
