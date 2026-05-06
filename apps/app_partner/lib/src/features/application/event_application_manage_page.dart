@@ -44,37 +44,6 @@ class _EventApplicationManagePageState
       appBar: AppBar(
         title: const Text('신청관리'),
         centerTitle: true,
-        // Fix #2200: AppBar info → help sheet 패턴 적용
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.info_outline),
-            iconSize: 22,
-            tooltip: '도움말',
-            onPressed: () => showMinglitHelpSheet(
-              context: context,
-              title: '신청 관리 가이드',
-              sections: const [
-                HelpSection(
-                  title: '신청 관리가 뭔가요?',
-                  body: '모든 이벤트의 참가 신청을 한 화면에서 승인·거절하는 크로스 이벤트 관리 화면이에요.',
-                ),
-                HelpSection(
-                  title: '대기중·승인됨·거절됨이란?',
-                  body: '대기중: 심사가 필요한 신청, 승인됨: 결제 완료·확정, 거절됨: 거절 처리된 신청이에요.',
-                ),
-                HelpSection(
-                  title: '심사는 어떻게 하나요?',
-                  body:
-                      '대기중 탭의 승인/거절 버튼으로 개별 심사하거나, 이벤트 상세의 "심사하기"에서 그룹별로 진행해요.',
-                ),
-                HelpSection(
-                  title: '거절 시 자동 환불은?',
-                  body: '거절 처리 시 결제 금액이 자동으로 환불돼요. 환불 내역은 정산 탭에서 확인해요.',
-                ),
-              ],
-            ),
-          ),
-        ],
         bottom: TabBar(
           controller: _tabController,
           tabs: const [

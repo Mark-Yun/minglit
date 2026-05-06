@@ -88,19 +88,6 @@ void main() {
   }
 
   group('EventApplicationManagePage', () {
-    // Fix #2200: info icon must be present and tap must open help sheet
-    testWidgets('info_outline icon opens help sheet on tap', (tester) async {
-      await tester.pumpWidget(createTestWidget());
-      await tester.pumpAndSettle();
-
-      expect(find.byIcon(Icons.info_outline), findsOneWidget);
-
-      await tester.tap(find.byIcon(Icons.info_outline));
-      await tester.pumpAndSettle();
-
-      expect(find.text('신청 관리 가이드'), findsOneWidget);
-    });
-
     testWidgets('renders tab bar with 3 tabs', (tester) async {
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();

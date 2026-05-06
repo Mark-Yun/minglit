@@ -49,38 +49,6 @@ class _SettlementPageState extends ConsumerState<SettlementPage>
       appBar: AppBar(
         title: const Text('정산'),
         actions: [
-          // Fix #2200: AppBar info → help sheet 패턴 적용
-          IconButton(
-            icon: const Icon(Icons.info_outline),
-            iconSize: 22,
-            tooltip: '도움말',
-            onPressed: () => showMinglitHelpSheet(
-              context: context,
-              title: '정산 가이드',
-              sections: const [
-                HelpSection(
-                  title: '정산이란?',
-                  body: '참가자 결제액 중 플랫폼 수수료를 제외한 금액을 파트너에게 지급하는 과정이에요.',
-                ),
-                HelpSection(
-                  title: '정산 상태 용어',
-                  body:
-                      'PENDING(대기) → READY(확정) → PROCESSING(지급 중) → '
-                      'COMPLETED(완료). HOLD·FAILED는 예외 상황이에요.',
-                ),
-                HelpSection(
-                  title: '언제 정산되나요?',
-                  body: '이벤트 완료 후 정산 대기 상태로 전환되고, 플랫폼 검토 후 일괄 지급돼요.',
-                ),
-                HelpSection(
-                  title: '계좌 관리는?',
-                  body:
-                      '우측 상단 지갑 아이콘으로 계좌를 등록·수정할 수 있어요. '
-                      '계좌가 없으면 정산을 받을 수 없어요.',
-                ),
-              ],
-            ),
-          ),
           if (canEditSettlement)
             IconButton(
               key: const Key('bankAccountButton'),
