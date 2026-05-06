@@ -28,7 +28,7 @@ class MinglitTextThemeExtension
   /// 10px w500 — 온보딩 플로우 스텝 부제
   final TextStyle captionTiny;
 
-  /// 10px w500 — 배지/칩/태그 레이블용 극소 텍스트
+  /// 10px w600 — 배지/칩/태그 레이블용 극소 텍스트 (draft chip 등)
   final TextStyle labelXSmall;
 
   @override
@@ -81,7 +81,7 @@ class MinglitTextThemeExtension
     ),
     labelXSmall: TextStyle(
       fontSize: 10,
-      fontWeight: FontWeight.w500,
+      fontWeight: FontWeight.w600,
       color: MinglitColors.textPrimary,
     ),
   );
@@ -107,7 +107,7 @@ class MinglitTextThemeExtension
     ),
     labelXSmall: TextStyle(
       fontSize: 10,
-      fontWeight: FontWeight.w500,
+      fontWeight: FontWeight.w600,
       color: MinglitColorsDark.textPrimary,
     ),
   );
