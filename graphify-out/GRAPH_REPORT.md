@@ -1,7 +1,7 @@
-# Graph Report - /private/tmp/fix-2131-sim-refund-eligibility  (2026-05-06)
+# Graph Report - /Users/mark/workspace/minglit-worker-runtime/workspace/needs-swe-sonnet-1/.repo-fix-2256  (2026-05-06)
 
 ## Corpus Check
-- 1220 files · ~1,906,435 words
+- 1220 files · ~1,906,323 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -2635,7 +2635,7 @@ _Questions this graph is uniquely positioned to answer:_
 - **What is the exact relationship between `Architecture Audit #1092 — 2026-04-06` and `AI Basic Law Compliance (Korea 2026)`?**
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
 - **Why does `package:flutter/material.dart` connect `Community 1` to `Community 0`, `Community 3`, `Community 7`, `Community 8`, `Community 11`, `Community 12`, `Community 13`, `Community 14`, `Community 16`, `Community 18`, `Community 19`, `Community 20`, `Community 21`, `Community 24`, `Community 25`, `Community 26`, `Community 28`, `Community 30`, `Community 32`, `Community 33`, `Community 36`?**
-  _High betweenness centrality (0.241) - this node is a cross-community bridge._
+  _High betweenness centrality (0.209) - this node is a cross-community bridge._
 - **What connects `reporter (AutoLabelAllureReporter)`, `_buildPage`, `MaterialApp` to the rest of the system?**
   _2627 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
