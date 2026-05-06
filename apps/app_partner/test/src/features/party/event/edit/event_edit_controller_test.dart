@@ -51,8 +51,9 @@ void main() {
     group('build', () {
       test('confirmedCount comes from event.currentParticipants', () async {
         final event = makeEvent(currentParticipants: 3);
-        when(() => mockRepo.getEventById('event_1'))
-            .thenAnswer((_) async => event);
+        when(
+          () => mockRepo.getEventById('event_1'),
+        ).thenAnswer((_) async => event);
 
         final container = makeContainer();
         final state = await container.read(
@@ -68,8 +69,9 @@ void main() {
     group('updateTitle', () {
       test('marks isDirty when title changes', () async {
         final event = makeEvent(title: '원래 제목');
-        when(() => mockRepo.getEventById('event_1'))
-            .thenAnswer((_) async => event);
+        when(
+          () => mockRepo.getEventById('event_1'),
+        ).thenAnswer((_) async => event);
 
         final container = makeContainer();
         await container.read(eventEditControllerProvider('event_1').future);
@@ -78,16 +80,18 @@ void main() {
             .read(eventEditControllerProvider('event_1').notifier)
             .updateTitle('새 제목');
 
-        final state =
-            container.read(eventEditControllerProvider('event_1')).value!;
+        final state = container
+            .read(eventEditControllerProvider('event_1'))
+            .value!;
         expect(state.title, '새 제목');
         expect(state.isDirty, isTrue);
       });
 
       test('stays clean when title unchanged', () async {
         final event = makeEvent(title: '원래 제목');
-        when(() => mockRepo.getEventById('event_1'))
-            .thenAnswer((_) async => event);
+        when(
+          () => mockRepo.getEventById('event_1'),
+        ).thenAnswer((_) async => event);
 
         final container = makeContainer();
         await container.read(eventEditControllerProvider('event_1').future);
@@ -96,35 +100,41 @@ void main() {
             .read(eventEditControllerProvider('event_1').notifier)
             .updateTitle('원래 제목');
 
-        final state =
-            container.read(eventEditControllerProvider('event_1')).value!;
+        final state = container
+            .read(eventEditControllerProvider('event_1'))
+            .value!;
         expect(state.isDirty, isFalse);
       });
     });
 
     group('updateMaxParticipants', () {
-      test('enforces minimum = confirmedCount when confirmedCount >= 1',
-          () async {
-        final event = makeEvent(currentParticipants: 5);
-        when(() => mockRepo.getEventById('event_1'))
-            .thenAnswer((_) async => event);
+      test(
+        'enforces minimum = confirmedCount when confirmedCount >= 1',
+        () async {
+          final event = makeEvent(currentParticipants: 5);
+          when(
+            () => mockRepo.getEventById('event_1'),
+          ).thenAnswer((_) async => event);
 
-        final container = makeContainer();
-        await container.read(eventEditControllerProvider('event_1').future);
+          final container = makeContainer();
+          await container.read(eventEditControllerProvider('event_1').future);
 
-        container
-            .read(eventEditControllerProvider('event_1').notifier)
-            .updateMaxParticipants(3);
+          container
+              .read(eventEditControllerProvider('event_1').notifier)
+              .updateMaxParticipants(3);
 
-        final state =
-            container.read(eventEditControllerProvider('event_1')).value!;
-        expect(state.maxParticipants, 5);
-      });
+          final state = container
+              .read(eventEditControllerProvider('event_1'))
+              .value!;
+          expect(state.maxParticipants, 5);
+        },
+      );
 
       test('enforces minimum = 1 when no confirmed participants', () async {
         final event = makeEvent(currentParticipants: 0);
-        when(() => mockRepo.getEventById('event_1'))
-            .thenAnswer((_) async => event);
+        when(
+          () => mockRepo.getEventById('event_1'),
+        ).thenAnswer((_) async => event);
 
         final container = makeContainer();
         await container.read(eventEditControllerProvider('event_1').future);
@@ -133,15 +143,17 @@ void main() {
             .read(eventEditControllerProvider('event_1').notifier)
             .updateMaxParticipants(0);
 
-        final state =
-            container.read(eventEditControllerProvider('event_1')).value!;
+        final state = container
+            .read(eventEditControllerProvider('event_1'))
+            .value!;
         expect(state.maxParticipants, 1);
       });
 
       test('accepts valid value above minimum', () async {
         final event = makeEvent(currentParticipants: 3);
-        when(() => mockRepo.getEventById('event_1'))
-            .thenAnswer((_) async => event);
+        when(
+          () => mockRepo.getEventById('event_1'),
+        ).thenAnswer((_) async => event);
 
         final container = makeContainer();
         await container.read(eventEditControllerProvider('event_1').future);
@@ -150,8 +162,9 @@ void main() {
             .read(eventEditControllerProvider('event_1').notifier)
             .updateMaxParticipants(30);
 
-        final state =
-            container.read(eventEditControllerProvider('event_1')).value!;
+        final state = container
+            .read(eventEditControllerProvider('event_1'))
+            .value!;
         expect(state.maxParticipants, 30);
         expect(state.isDirty, isTrue);
       });
@@ -160,8 +173,9 @@ void main() {
     group('updateSchedule', () {
       test('marks isDirty when schedule changes', () async {
         final event = makeEvent();
-        when(() => mockRepo.getEventById('event_1'))
-            .thenAnswer((_) async => event);
+        when(
+          () => mockRepo.getEventById('event_1'),
+        ).thenAnswer((_) async => event);
 
         final container = makeContainer();
         await container.read(eventEditControllerProvider('event_1').future);
@@ -176,8 +190,9 @@ void main() {
               location: null,
             );
 
-        final state =
-            container.read(eventEditControllerProvider('event_1')).value!;
+        final state = container
+            .read(eventEditControllerProvider('event_1'))
+            .value!;
         expect(state.startTime, newStart);
         expect(state.endTime, newEnd);
         expect(state.isDirty, isTrue);
@@ -185,8 +200,9 @@ void main() {
 
       test('normalizes endTime when before startTime', () async {
         final event = makeEvent();
-        when(() => mockRepo.getEventById('event_1'))
-            .thenAnswer((_) async => event);
+        when(
+          () => mockRepo.getEventById('event_1'),
+        ).thenAnswer((_) async => event);
 
         final container = makeContainer();
         await container.read(eventEditControllerProvider('event_1').future);
@@ -201,8 +217,9 @@ void main() {
               location: null,
             );
 
-        final state =
-            container.read(eventEditControllerProvider('event_1')).value!;
+        final state = container
+            .read(eventEditControllerProvider('event_1'))
+            .value!;
         expect(state.endTime, newStart);
       });
     });
@@ -210,8 +227,9 @@ void main() {
     group('submit — failure recovery', () {
       test('restores isLoading=false on EF error', () async {
         final event = makeEvent(title: '원래 제목');
-        when(() => mockRepo.getEventById('event_1'))
-            .thenAnswer((_) async => event);
+        when(
+          () => mockRepo.getEventById('event_1'),
+        ).thenAnswer((_) async => event);
 
         final mockClient = _MockSupabaseClient();
         final mockFunctions = _MockFunctionsClient();
@@ -237,8 +255,9 @@ void main() {
           throwsA(isA<Exception>()),
         );
 
-        final state =
-            container.read(eventEditControllerProvider('event_1')).value!;
+        final state = container
+            .read(eventEditControllerProvider('event_1'))
+            .value!;
         expect(state.isLoading, isFalse);
       });
     });

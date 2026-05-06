@@ -182,8 +182,9 @@ class _EventEditContent extends ConsumerWidget {
                           '일정·장소 변경 시 자동 알림 발송. '
                           '정원은 확정자 수 이하로 줄일 수 없음.',
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurface
-                                .withValues(alpha: 0.6),
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.6,
+                            ),
                           ),
                         ),
                       ],
