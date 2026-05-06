@@ -2,14 +2,13 @@ import 'dart:async';
 
 import 'package:app_user/src/features/account_deletion/logic/account_deletion_coordinator.dart';
 import 'package:app_user/src/features/account_deletion/ui/deletion_complete_page.dart';
-
 import 'package:app_user/src/features/account_deletion/ui/deletion_info_page.dart';
 import 'package:app_user/src/features/account_deletion/ui/deletion_reason_page.dart';
 import 'package:app_user/src/features/account_deletion/ui/deletion_verify_page.dart';
 import 'package:app_user/src/features/auth/login_page.dart';
-import 'package:app_user/src/features/dev/user_dev_map.dart';
 import 'package:app_user/src/features/auth/ui/auth_callback_page.dart';
 import 'package:app_user/src/features/consent/ui/signup_consent_page.dart';
+import 'package:app_user/src/features/dev/user_dev_map.dart';
 import 'package:app_user/src/features/event/admission/event_application_wizard_page.dart';
 import 'package:app_user/src/features/event/detail/event_detail_page.dart';
 import 'package:app_user/src/features/event/matching/ui/event_matching_screen.dart';
@@ -23,8 +22,8 @@ import 'package:app_user/src/features/search/search_page.dart';
 import 'package:app_user/src/features/settings/blocked_partners_page.dart';
 import 'package:app_user/src/features/settings/privacy_page.dart';
 import 'package:app_user/src/features/tag/ui/tag_event_list_page.dart';
-import 'package:app_user/src/features/ticket/ui/model/ticket_event_meta.dart';
 import 'package:app_user/src/features/ticket/ui/ticket_qr_screen.dart';
+import 'package:app_user/src/logic/ticket_event_meta.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_dev.dart';
