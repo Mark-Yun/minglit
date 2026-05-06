@@ -95,61 +95,78 @@ class _EventInfoTab extends ConsumerWidget {
             ),
 
           // Schedule + status info card
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: MinglitSpacing.screenEdge,
+          // Fix #2110: 정보 수정 버튼 — EventEditRoute로 진입
+          MinglitSection(
+            title: '이벤트 정보',
+            trailing: TextButton.icon(
+              onPressed: () {
+                unawaited(
+                  EventEditRoute(
+                    partyId: event.partyId,
+                    eventId: event.id,
+                  ).push<void>(context),
+                );
+              },
+              icon: const Icon(Icons.edit_outlined, size: MinglitIconSize.small),
+              label: const Text('정보 수정'),
             ),
-            child: Container(
-              padding: const EdgeInsets.all(MinglitSpacing.medium),
-              decoration: BoxDecoration(
-                color: colorScheme.surface,
-                borderRadius: BorderRadius.circular(MinglitRadius.card),
-                border: Border.all(color: colorScheme.outlineVariant),
+            padding: EdgeInsets.zero,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: MinglitSpacing.screenEdge,
               ),
-              child: Column(
-                children: [
-                  _DetailRow(
-                    icon: Icons.calendar_today,
-                    label: context.l10n.eventDetail_label_dateTime,
-                    value: dateFormat.format(event.startTime),
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(
-                      vertical: MinglitSpacing.small,
+              child: Container(
+                padding: const EdgeInsets.all(MinglitSpacing.medium),
+                decoration: BoxDecoration(
+                  color: colorScheme.surface,
+                  borderRadius: BorderRadius.circular(MinglitRadius.card),
+                  border: Border.all(color: colorScheme.outlineVariant),
+                ),
+                child: Column(
+                  children: [
+                    _DetailRow(
+                      icon: Icons.calendar_today,
+                      label: context.l10n.eventDetail_label_dateTime,
+                      value: dateFormat.format(event.startTime),
                     ),
-                    child: Divider(height: 1),
-                  ),
-                  _DetailRow(
-                    icon: Icons.access_time,
-                    label: context.l10n.eventDetail_label_time,
-                    value:
-                        '${timeFormat.format(event.startTime)} ~ '
-                        '${timeFormat.format(event.endTime)}',
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(
-                      vertical: MinglitSpacing.small,
+                    const Padding(
+                      padding: EdgeInsets.symmetric(
+                        vertical: MinglitSpacing.small,
+                      ),
+                      child: Divider(height: 1),
                     ),
-                    child: Divider(height: 1),
-                  ),
-                  _DetailRow(
-                    icon: Icons.info_outline,
-                    label: context.l10n.eventDetail_label_status,
-                    value: _getStatusLabel(context, event.status),
-                    valueColor: _getStatusColor(event.status, colorScheme),
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(
-                      vertical: MinglitSpacing.small,
+                    _DetailRow(
+                      icon: Icons.access_time,
+                      label: context.l10n.eventDetail_label_time,
+                      value:
+                          '${timeFormat.format(event.startTime)} ~ '
+                          '${timeFormat.format(event.endTime)}',
                     ),
-                    child: Divider(height: 1),
-                  ),
-                  _DetailRow(
-                    icon: Icons.visibility,
-                    label: '공개 설정',
-                    value: _getVisibilityLabel(event.visibility),
-                  ),
-                ],
+                    const Padding(
+                      padding: EdgeInsets.symmetric(
+                        vertical: MinglitSpacing.small,
+                      ),
+                      child: Divider(height: 1),
+                    ),
+                    _DetailRow(
+                      icon: Icons.info_outline,
+                      label: context.l10n.eventDetail_label_status,
+                      value: _getStatusLabel(context, event.status),
+                      valueColor: _getStatusColor(event.status, colorScheme),
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(
+                        vertical: MinglitSpacing.small,
+                      ),
+                      child: Divider(height: 1),
+                    ),
+                    _DetailRow(
+                      icon: Icons.visibility,
+                      label: '공개 설정',
+                      value: _getVisibilityLabel(event.visibility),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

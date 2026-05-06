@@ -1,0 +1,289 @@
+import 'package:app_partner/src/features/party/event/edit/event_edit_controller.dart';
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+import 'package:minglit_kit/minglit_kit.dart';
+
+class EventEditPage extends ConsumerWidget {
+  const EventEditPage({required this.eventId, super.key});
+
+  final String eventId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final stateAsync = ref.watch(eventEditControllerProvider(eventId));
+
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          onPressed: () => context.pop(),
+          icon: const Icon(Icons.arrow_back),
+        ),
+        title: const Text('이벤트 수정'),
+      ),
+      body: MinglitAsyncValueWidget<EventEditState>(
+        value: stateAsync,
+        data: (editState) => _EventEditContent(
+          eventId: eventId,
+          editState: editState,
+        ),
+      ),
+      bottomNavigationBar: stateAsync.whenOrNull(
+        data: (editState) => SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.all(MinglitSpacing.medium),
+            child: SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: !editState.isDirty || editState.isLoading
+                    ? null
+                    : () async {
+                        await ref
+                            .read(eventEditControllerProvider(eventId).notifier)
+                            .submit();
+                        if (!context.mounted) return;
+                        context.pop();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('저장되었습니다')),
+                        );
+                      },
+                child: Text(editState.isLoading ? '저장 중...' : '저장'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _EventEditContent extends ConsumerWidget {
+  const _EventEditContent({required this.eventId, required this.editState});
+
+  final String eventId;
+  final EventEditState editState;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final controller = ref.read(eventEditControllerProvider(eventId).notifier);
+    final colorScheme = theme.colorScheme;
+    final hasConfirmedParticipants = editState.confirmedCount >= 1;
+    final dateFormat = DateFormat('yyyy년 MM월 dd일 (E)', 'ko');
+    final timeFormat = DateFormat('a h:mm', 'ko');
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(MinglitSpacing.medium),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (hasConfirmedParticipants) ...[
+            Container(
+              padding: const EdgeInsets.all(MinglitSpacing.medium),
+              decoration: BoxDecoration(
+                color: colorScheme.primary.withValues(alpha: 0.08),
+                border: Border.all(
+                  color: colorScheme.primary.withValues(alpha: 0.25),
+                ),
+                borderRadius: BorderRadius.circular(MinglitRadius.card),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.lock_outline,
+                    color: colorScheme.primary,
+                    size: MinglitIconSize.small,
+                  ),
+                  const SizedBox(width: MinglitSpacing.small),
+                  Expanded(
+                    child: Text(
+                      '확정 참가자 ${editState.confirmedCount}명이 있어 '
+                      '일정·장소 변경 시 알림이 전송됩니다.',
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: MinglitSpacing.medium),
+          ],
+          Text('기본 정보', style: theme.textTheme.titleMedium),
+          const SizedBox(height: MinglitSpacing.small),
+          _SectionCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('제목', style: theme.textTheme.labelLarge),
+                const SizedBox(height: MinglitSpacing.xsmall),
+                TextFormField(
+                  initialValue: editState.title,
+                  onChanged: controller.updateTitle,
+                  decoration: const InputDecoration(hintText: '이벤트 제목'),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: MinglitSpacing.medium),
+          Text('일정·장소', style: theme.textTheme.titleMedium),
+          const SizedBox(height: MinglitSpacing.small),
+          _SectionCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('일정', style: theme.textTheme.labelLarge),
+                          const SizedBox(height: MinglitSpacing.xsmall),
+                          Text(
+                            dateFormat.format(editState.startTime),
+                            style: theme.textTheme.bodyLarge,
+                          ),
+                          const SizedBox(height: MinglitSpacing.xxsmall),
+                          Text(
+                            '${timeFormat.format(editState.startTime)} '
+                            '~ ${timeFormat.format(editState.endTime)}',
+                            style: theme.textTheme.bodyMedium,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: MinglitSpacing.small),
+                    if (hasConfirmedParticipants)
+                      Chip(
+                        label: Text(
+                          '변경 시 알림',
+                          style: theme.textTheme.labelSmall,
+                        ),
+                      ),
+                    IconButton(
+                      onPressed: () => _pickSchedule(
+                        context: context,
+                        state: editState,
+                        onApply: controller.updateSchedule,
+                      ),
+                      icon: const Icon(Icons.edit_outlined),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: MinglitSpacing.medium),
+                Text('장소', style: theme.textTheme.labelLarge),
+                const SizedBox(height: MinglitSpacing.xsmall),
+                Text(
+                  editState.location ?? '장소 미정',
+                  style: theme.textTheme.bodyMedium,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: MinglitSpacing.medium),
+          Text('가격·정원', style: theme.textTheme.titleMedium),
+          const SizedBox(height: MinglitSpacing.small),
+          _SectionCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('최대 인원', style: theme.textTheme.labelLarge),
+                const SizedBox(height: MinglitSpacing.xsmall),
+                TextFormField(
+                  initialValue: editState.maxParticipants.toString(),
+                  keyboardType: TextInputType.number,
+                  onChanged: (value) {
+                    final parsed = int.tryParse(value);
+                    if (parsed == null) return;
+                    controller.updateMaxParticipants(parsed);
+                  },
+                  decoration: InputDecoration(
+                    hintText: hasConfirmedParticipants
+                        ? '최소 ${editState.confirmedCount}명'
+                        : '최소 1명',
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _pickSchedule({
+    required BuildContext context,
+    required EventEditState state,
+    required void Function({
+      required DateTime startTime,
+      required DateTime endTime,
+      required String? location,
+    })
+    onApply,
+  }) async {
+    final pickedDate = await showDatePicker(
+      context: context,
+      initialDate: state.startTime,
+      firstDate: state.startTime.subtract(const Duration(days: 365)),
+      lastDate: state.startTime.add(const Duration(days: 365)),
+    );
+    if (pickedDate == null || !context.mounted) return;
+
+    final pickedStart = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(state.startTime),
+    );
+    if (pickedStart == null || !context.mounted) return;
+
+    final pickedEnd = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(state.endTime),
+    );
+    if (pickedEnd == null || !context.mounted) return;
+
+    final startTime = DateTime(
+      pickedDate.year,
+      pickedDate.month,
+      pickedDate.day,
+      pickedStart.hour,
+      pickedStart.minute,
+    );
+    final endTime = DateTime(
+      pickedDate.year,
+      pickedDate.month,
+      pickedDate.day,
+      pickedEnd.hour,
+      pickedEnd.minute,
+    );
+
+    onApply(
+      startTime: startTime,
+      endTime: endTime,
+      location: state.location,
+    );
+  }
+}
+
+class _SectionCard extends StatelessWidget {
+  const _SectionCard({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(MinglitSpacing.medium),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+        borderRadius: BorderRadius.circular(MinglitRadius.card),
+      ),
+      child: child,
+    );
+  }
+}
