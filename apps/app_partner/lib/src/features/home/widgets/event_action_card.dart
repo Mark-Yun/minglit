@@ -3,6 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
+export 'package:app_partner/src/features/home/widgets/event_action_card_empty.dart';
+
+part '_event_action_card_stats.dart';
+
 /// The main event action card on the home dashboard.
 /// Shows the nearest event with phase-appropriate actions.
 class EventActionCard extends StatelessWidget {
@@ -323,144 +327,5 @@ class EventActionCard extends StatelessWidget {
     final hours = DateTime.now().difference(event.endTime).inHours;
     if (hours < 1) return '종료 · 방금 전';
     return '종료 · $hours시간 전';
-  }
-}
-
-class _EndedStatsRow extends StatelessWidget {
-  const _EndedStatsRow({required this.event});
-  final Event event;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final capacity = event.maxParticipants;
-    final current = event.currentParticipants;
-    final fmt = NumberFormat('#,###');
-    // Fix #523: 하드코딩 매출 0 → 실제 티켓 매출 계산
-    final totalRevenue =
-        event.tickets?.fold<int>(
-          0,
-          (sum, ticket) => sum + (ticket.price * ticket.soldCount),
-        ) ??
-        0;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(MinglitRadius.input),
-        border: Border.all(color: colorScheme.outlineVariant),
-      ),
-      child: Row(
-        children: [
-          _StatCell(label: '참석 확정', value: '$current명', theme: theme),
-          // Fix #523: 하드코딩 매출 0 → 실제 티켓 매출 계산
-          _StatCell(
-            label: '매출',
-            value: '₩${fmt.format(totalRevenue)}',
-            theme: theme,
-          ),
-          _StatCell(
-            label: '출석률',
-            value: capacity > 0
-                ? '${(current / capacity * 100).round()}%'
-                : '-',
-            theme: theme,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatCell extends StatelessWidget {
-  const _StatCell({
-    required this.label,
-    required this.value,
-    required this.theme,
-  });
-  final String label;
-  final String value;
-  final ThemeData theme;
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          vertical: MinglitSpacing.small,
-          horizontal: MinglitSpacing.xsmall,
-        ),
-        child: Column(
-          children: [
-            Text(
-              value,
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            Text(label, style: theme.textTheme.labelSmall),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Empty state when no events exist.
-class EventActionCardEmpty extends StatelessWidget {
-  const EventActionCardEmpty({
-    required this.hasParties,
-    required this.onCreateEvent,
-    required this.onCreateParty,
-    super.key,
-  });
-
-  final bool hasParties;
-  final VoidCallback onCreateEvent;
-  final VoidCallback onCreateParty;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(MinglitSpacing.large),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(MinglitRadius.button),
-        border: Border.all(color: theme.colorScheme.outlineVariant),
-      ),
-      child: Column(
-        children: [
-          Icon(
-            hasParties ? Icons.event_outlined : Icons.celebration_outlined,
-            size: MinglitIconSize.xlarge * 1.5,
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-          const SizedBox(height: MinglitSpacing.sm),
-          Text(
-            hasParties ? '이벤트를 만들어 신청을 받아보세요' : '첫 파티를 만들어보세요',
-            style: theme.textTheme.titleSmall,
-          ),
-          const SizedBox(height: MinglitSpacing.medium),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton.icon(
-              onPressed: hasParties ? onCreateEvent : onCreateParty,
-              icon: const Icon(Icons.add, size: MinglitIconSize.small),
-              label: Text(hasParties ? '이벤트 만들기' : '파티 만들기'),
-              style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  vertical: MinglitSpacing.sm,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(MinglitRadius.input),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }
