@@ -228,10 +228,11 @@ class _HeroTag extends StatelessWidget {
       ),
       child: Text(
         label,
-        // TODO(#2274): labelSmall보다 작은 토큰 없음 — MDS 확장 대기
-        style: theme.textTheme.labelSmall?.copyWith(
+        // Fix #2274: spec .event-card__tag — 12px/w500 (distinct from labelXSmall 10px/w600)
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
           color: theme.colorScheme.surface,
-          fontSize: 10,
         ),
       ),
     );
@@ -286,11 +287,13 @@ class _BodyRegion extends StatelessWidget {
                   ),
                   child: Text(
                     context.l10n.partyList_badge_draft,
-                    // TODO(#2274): labelSmall보다 작은 토큰 없음 — MDS 확장 대기
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.onSecondaryContainer,
-                      fontSize: 10,
-                    ),
+                    // Fix #2274: labelSmall.copyWith(fontSize:10) → MDS labelXSmall 토큰
+                    style: Theme.of(context)
+                        .extension<MinglitTextThemeExtension>()!
+                        .labelXSmall
+                        .copyWith(
+                          color: theme.colorScheme.onSecondaryContainer,
+                        ),
                   ),
                 ),
               ],
