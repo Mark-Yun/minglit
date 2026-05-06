@@ -111,13 +111,10 @@ void main() {
         overrides: [eventRepositoryProvider.overrideWithValue(mockRepo)],
       );
 
-      final sub = container.listen(
-        eventApplicationBundleProvider('event_err'),
-        (_, _) {},
+      await expectLater(
+        container.read(eventApplicationBundleProvider('event_err').future),
+        throwsA(isA<Exception>()),
       );
-      addTearDown(sub.close);
-
-      await Future<void>.delayed(const Duration(milliseconds: 50));
 
       final state = container.read(eventApplicationBundleProvider('event_err'));
       expect(state, isA<AsyncError<EventApplicationBundle>>());
