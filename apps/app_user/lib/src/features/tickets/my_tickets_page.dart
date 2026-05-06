@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:app_user/src/features/tickets/active_event_banners_provider.dart';
 import 'package:app_user/src/features/tickets/widgets/event_ongoing_banner.dart';
 import 'package:app_user/src/routing/app_coordinator.dart';
-import 'package:app_user/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
@@ -52,8 +51,9 @@ class MyTicketsPage extends ConsumerWidget {
                       alignment: WrapAlignment.center,
                       children: [
                         OutlinedButton(
-                          onPressed: () =>
-                              const PurchaseHistoryRoute().push<void>(context),
+                          onPressed: () => ref
+                              .read(appCoordinatorProvider)
+                              .pushPurchaseHistory(),
                           child: const Text('구매 내역 보기'),
                         ),
                         FilledButton(
@@ -89,12 +89,16 @@ class MyTicketsPage extends ConsumerWidget {
   }
 
   Future<void> _markResultsViewed(WidgetRef ref, String applicationId) async {
+    // Fix #2123: Only invalidate provider when mutation succeeds.
+    // A finally-block invalidation after failure re-shows resultsUnviewed banner
+    // and triggers repeated calls on each subsequent tap.
     try {
       await ref
           .read(eventRepositoryProvider)
           .markMatchResultsViewed(applicationId: applicationId);
-    } finally {
       ref.invalidate(activeEventBannersProvider);
+    } catch (e, st) {
+      debugPrint('markMatchResultsViewed failed: $e\n$st');
     }
   }
 }

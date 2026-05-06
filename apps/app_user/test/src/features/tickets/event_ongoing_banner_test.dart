@@ -90,6 +90,51 @@ void main() {
     expect(find.text('매칭 결과 보기'), findsOneWidget);
   });
 
+  testWidgets('checkedIn phase shows disabled 즐거운 시간 보내세요', (tester) async {
+    await tester.pumpWidget(buildWidget(EventLifecyclePhase.checkedIn));
+
+    expect(find.text('즐거운 시간 보내세요'), findsOneWidget);
+    final button = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, '즐거운 시간 보내세요'),
+    );
+    expect(button.onPressed, isNull);
+  });
+
+  testWidgets('matching phase shows disabled 매칭 결과를 기다리고 있습니다', (tester) async {
+    await tester.pumpWidget(buildWidget(EventLifecyclePhase.matching));
+
+    expect(find.text('매칭 결과를 기다리고 있습니다'), findsOneWidget);
+    final button = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, '매칭 결과를 기다리고 있습니다'),
+    );
+    expect(button.onPressed, isNull);
+  });
+
+  testWidgets('resultsUnviewed tap calls onMarkResultsViewed exactly once',
+      (tester) async {
+    var callCount = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: MinglitTheme.materialTheme,
+        home: Scaffold(
+          body: EventOngoingBanner(
+            application: makeApplication(),
+            phase: EventLifecyclePhase.resultsUnviewed,
+            onMarkResultsViewed: () => callCount++,
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('매칭 결과 보기'));
+    await tester.pump();
+
+    // Navigation fails in test context (no GoRouter), but callback fires first.
+    tester.takeException();
+
+    expect(callCount, 1);
+  });
+
   group('urgencyRank', () {
     test('higher-priority phases sort earlier', () {
       expect(EventLifecyclePhase.checkInReady.urgencyRank, 1);

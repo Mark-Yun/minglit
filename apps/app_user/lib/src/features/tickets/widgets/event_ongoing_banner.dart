@@ -153,16 +153,15 @@ class EventOngoingBanner extends StatelessWidget {
           ),
         ],
       ),
-      EventLifecyclePhase.checkedIn => null,
+      EventLifecyclePhase.checkedIn => _DisabledFooterButton(
+        label: '즐거운 시간 보내세요',
+      ),
       EventLifecyclePhase.matchingReady => FilledButton(
         onPressed: () => _openMatching(context),
         child: const Text('매칭 시작하기'),
       ),
-      EventLifecyclePhase.matching => Text(
-        '매칭 결과를 기다리고 있습니다',
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
-        ),
+      EventLifecyclePhase.matching => _DisabledFooterButton(
+        label: '매칭 결과를 기다리고 있습니다',
       ),
       EventLifecyclePhase.resultsUnviewed => FilledButton(
         onPressed: () {
@@ -205,7 +204,12 @@ class EventOngoingBanner extends StatelessWidget {
       '?q=${Uri.encodeComponent(location.address)}',
     );
     try {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+      final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!launched && context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('지도 앱을 열 수 없습니다')));
+      }
     } on Object catch (_) {
       if (context.mounted) {
         ScaffoldMessenger.of(
@@ -281,5 +285,23 @@ class _PhaseChip extends StatelessWidget {
       EventLifecyclePhase.noShow => '노쇼',
       EventLifecyclePhase.ended => '종료',
     };
+  }
+}
+
+class _DisabledFooterButton extends StatelessWidget {
+  const _DisabledFooterButton({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 44,
+      child: FilledButton(
+        onPressed: null,
+        child: Text(label),
+      ),
+    );
   }
 }

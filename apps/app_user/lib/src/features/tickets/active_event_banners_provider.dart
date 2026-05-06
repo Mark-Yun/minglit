@@ -42,19 +42,33 @@ final activeEventBannersProvider = FutureProvider<List<ActiveEventBannerItem>>((
 
       var hasMatchResults = false;
       var hasMatchingCandidates = false;
+      var hasSubmittedVotes = false;
       try {
         final matches = await matchingRepository.getMyMatches(event.id);
         hasMatchResults = matches.isNotEmpty;
-      } on Exception {
-        hasMatchResults = false;
+      } on Exception catch (e, st) {
+        // Propagate matching fetch errors so the provider surfaces error state
+        // rather than silently downgrading to a wrong phase.
+        Error.throwWithStackTrace(e, st);
       }
-      try {
-        final candidates = await matchingRepository.getMatchingCandidates(
-          event.id,
-        );
-        hasMatchingCandidates = candidates.isNotEmpty;
-      } on Exception {
-        hasMatchingCandidates = false;
+      // Only fetch matching state when checked-in to avoid unnecessary calls.
+      if (isCheckedIn) {
+        try {
+          final candidates = await matchingRepository.getMatchingCandidates(
+            event.id,
+          );
+          hasMatchingCandidates = candidates.isNotEmpty;
+        } on Exception {
+          hasMatchingCandidates = false;
+        }
+        try {
+          // Fix #2123: matchingReady → matching transition requires at least one
+          // submitted vote, not just candidate availability.
+          final voteCount = await matchingRepository.getMyVoteCount(event.id);
+          hasSubmittedVotes = voteCount > 0;
+        } on Exception {
+          hasSubmittedVotes = false;
+        }
       }
 
       final phase = _resolveEventLifecyclePhase(
@@ -64,6 +78,7 @@ final activeEventBannersProvider = FutureProvider<List<ActiveEventBannerItem>>((
         isNoShow: isNoShow,
         hasMatchResults: hasMatchResults,
         hasMatchingCandidates: hasMatchingCandidates,
+        hasSubmittedVotes: hasSubmittedVotes,
       );
       return (application: application, phase: phase);
     }),
@@ -91,6 +106,7 @@ EventLifecyclePhase _resolveEventLifecyclePhase({
   required bool isNoShow,
   required bool hasMatchResults,
   required bool hasMatchingCandidates,
+  required bool hasSubmittedVotes,
 }) {
   final event = application.event;
   if (event == null) return EventLifecyclePhase.ended;
@@ -117,13 +133,14 @@ EventLifecyclePhase _resolveEventLifecyclePhase({
         : EventLifecyclePhase.resultsViewed;
   }
 
-  if (hasMatchingCandidates) return EventLifecyclePhase.matching;
-
-  if (isCheckedIn) {
-    return event.status == 'ongoing'
-        ? EventLifecyclePhase.matchingReady
-        : EventLifecyclePhase.checkedIn;
+  if (isCheckedIn && event.status == 'ongoing') {
+    // Fix #2123: matchingReady → matching only after user submits at least one
+    // vote. Candidate availability alone does not indicate the user took action.
+    if (hasSubmittedVotes) return EventLifecyclePhase.matching;
+    if (hasMatchingCandidates) return EventLifecyclePhase.matchingReady;
   }
+
+  if (isCheckedIn) return EventLifecyclePhase.checkedIn;
 
   final isCheckInWindow =
       event.status == 'active' ||
