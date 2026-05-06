@@ -38,10 +38,10 @@ export class UserActionFactory {
     const feedEvents =
       ((feedRes.data as Record<string, unknown>)?.events as Array<Record<string, unknown>>) ?? [];
 
-    // 2. Get my existing applications (with nested event status)
+    // Fix #2131: include events.start_time in event_applications query for refund eligibility
     const { data: myApps, error: myAppsError } = await supabase
       .from("event_applications")
-      .select("id, event_id, status, events(status)")
+      .select("id, event_id, status, events(status, start_time)")
       .eq("user_id", this.userId);
 
     if (myAppsError) throw new Error(`Failed to fetch applications: ${myAppsError.message}`);
@@ -68,17 +68,29 @@ export class UserActionFactory {
       activeAppCount++;
     }
 
+    // Fix #2131: Fetch refund policy from DB to avoid hardcoded drift vs. user-cancel-order EF.
+    // Fallback to 7 days if RPC fails (same default as EF).
+    const { data: refundPolicy } = await supabase.rpc("get_current_policy", { p_key: "refund" });
+    const cutoffDays = (refundPolicy as Record<string, number> | null)?.cutoff_days ?? 7;
+    const cutoffMs = cutoffDays * 24 * 60 * 60 * 1000;
+
     // 4. For existing applications, decide behavior based on DB state
     for (const app of (myApps ?? [])) {
       // Fix #1415: app.events is typed as { status: any }[] by PostgREST but the join returns
       // a single object for a to-one FK. Use `unknown` intermediary to avoid TS2352.
-      const eventStatus = (app.events as unknown as { status: string } | null)?.status ?? "";
+      const eventInfo = app.events as unknown as { status: string; start_time: string } | null;
+      const eventStatus = eventInfo?.status ?? "";
       const appId = app.id as string;
       const eventId = app.event_id as string;
 
       // Approved + scheduled → maybe refund
       if (app.status === "approved" && eventStatus === "scheduled") {
-        if (Math.random() < this.config.negativeRate) {
+        // Fix #2131: Only attempt refund when within EF cutoff window (cutoffDays from policy).
+        // Simulator doesn't track paid_at so grace-period path is excluded;
+        // selecting outside the cutoff caused false-positive 400 failures.
+        const eventStart = eventInfo?.start_time ? new Date(eventInfo.start_time) : null;
+        const refundEligible = eventStart !== null && eventStart.getTime() - Date.now() >= cutoffMs;
+        if (refundEligible && Math.random() < this.config.negativeRate) {
           actions.push(new UserActionRefund(this.userId, appId, eventId, this.token));
         }
       }
