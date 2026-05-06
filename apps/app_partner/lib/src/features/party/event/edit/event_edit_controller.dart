@@ -169,7 +169,7 @@ class EventEditController extends _$EventEditController {
             'end_time': current.endTime.toUtc().toIso8601String(),
             'max_participants': current.maxParticipants,
           },
-          ?'reason': reason,
+          if (reason != null) 'reason': reason,
         },
       );
 

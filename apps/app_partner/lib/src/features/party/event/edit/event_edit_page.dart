@@ -65,7 +65,7 @@ class EventEditPage extends ConsumerWidget {
                           messenger.showSnackBar(
                             const SnackBar(content: Text('저장되었습니다')),
                           );
-                        } catch (_) {
+                        } on Exception catch (_) {
                           if (!context.mounted) return;
                           context.showMinglitWarning(
                             '저장에 실패했습니다. 다시 시도해주세요.',
@@ -110,7 +110,7 @@ Future<String?> _showReasonDialog(BuildContext context) async {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(null),
+            onPressed: () => Navigator.of(dialogContext).pop(),
             child: const Text('취소'),
           ),
           FilledButton(
