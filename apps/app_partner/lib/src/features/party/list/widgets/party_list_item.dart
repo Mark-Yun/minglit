@@ -228,11 +228,12 @@ class _HeroTag extends StatelessWidget {
       ),
       child: Text(
         label,
-        // Fix #2274: labelSmall.copyWith(fontSize:10) → MDS labelXSmall 토큰
-        style: Theme.of(context)
-            .extension<MinglitTextThemeExtension>()!
-            .labelXSmall
-            .copyWith(color: theme.colorScheme.surface),
+        // Fix #2274: spec .event-card__tag — 12px/w500 (distinct from labelXSmall 10px/w600)
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          color: theme.colorScheme.surface,
+        ),
       ),
     );
   }
