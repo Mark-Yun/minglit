@@ -221,7 +221,9 @@ void main() {
       await tester.tap(find.text('정보 수정'));
       await tester.pump();
 
-      tester.takeException(); // GoRouter not present in test
+      final error = tester.takeException();
+      expect(error, isNotNull);
+      expect(error.toString(), contains('No GoRouter found'));
     });
 
     testWidgets('완료 상태면 이벤트 정보 카드에 종료됨 레이블이 표시된다', (tester) async {

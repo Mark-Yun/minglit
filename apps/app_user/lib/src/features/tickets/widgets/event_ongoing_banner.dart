@@ -1,7 +1,5 @@
 import 'dart:async';
 
-import 'package:app_user/src/logic/ticket_event_meta.dart';
-import 'package:app_user/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -12,12 +10,18 @@ class EventOngoingBanner extends StatelessWidget {
     required this.application,
     required this.phase,
     required this.onMarkResultsViewed,
+    required this.onOpenDetail,
+    required this.onOpenQr,
+    required this.onOpenMatching,
     super.key,
   });
 
   final EventApplication application;
   final EventLifecyclePhase phase;
   final VoidCallback onMarkResultsViewed;
+  final VoidCallback onOpenDetail;
+  final VoidCallback onOpenQr;
+  final VoidCallback onOpenMatching;
 
   @override
   Widget build(BuildContext context) {
@@ -63,7 +67,7 @@ class EventOngoingBanner extends StatelessWidget {
             const SizedBox(height: MinglitSpacing.medium),
             // spec: event_ongoing_banner.html#overview "thumb / title 영역 탭 → EventDetailRoute push"
             InkWell(
-              onTap: () => _openDetail(context),
+              onTap: onOpenDetail,
               borderRadius: BorderRadius.circular(MinglitRadius.small),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -135,7 +139,7 @@ class EventOngoingBanner extends StatelessWidget {
         runSpacing: MinglitSpacing.small,
         children: [
           OutlinedButton(
-            onPressed: () => _openQr(context),
+            onPressed: onOpenQr,
             child: const Text('입장 QR 미리 보기'),
           ),
           OutlinedButton(
@@ -149,7 +153,7 @@ class EventOngoingBanner extends StatelessWidget {
         runSpacing: MinglitSpacing.small,
         children: [
           FilledButton(
-            onPressed: () => _openQr(context),
+            onPressed: onOpenQr,
             child: const Text('입장 QR 보기'),
           ),
           OutlinedButton(
@@ -162,7 +166,7 @@ class EventOngoingBanner extends StatelessWidget {
         label: '즐거운 시간 보내세요',
       ),
       EventLifecyclePhase.matchingReady => FilledButton(
-        onPressed: () => _openMatching(context),
+        onPressed: onOpenMatching,
         child: const Text('매칭 시작하기'),
       ),
       EventLifecyclePhase.matching => _DisabledFooterButton(
@@ -171,38 +175,17 @@ class EventOngoingBanner extends StatelessWidget {
       EventLifecyclePhase.resultsUnviewed => FilledButton(
         onPressed: () {
           onMarkResultsViewed();
-          _openMatching(context);
+          onOpenMatching();
         },
         child: const Text('매칭 결과 보기'),
       ),
       EventLifecyclePhase.resultsViewed => OutlinedButton(
-        onPressed: () => _openMatching(context),
+        onPressed: onOpenMatching,
         child: const Text('매칭 결과 다시 보기'),
       ),
       EventLifecyclePhase.noShow => null,
       EventLifecyclePhase.ended => null,
     };
-  }
-
-  void _openDetail(BuildContext context) {
-    unawaited(
-      EventDetailRoute(eventId: application.eventId).push<void>(context),
-    );
-  }
-
-  void _openQr(BuildContext context) {
-    unawaited(
-      TicketQRRoute(
-        ticketId: application.ticketId,
-        $extra: _buildTicketEventMeta(),
-      ).push<void>(context),
-    );
-  }
-
-  void _openMatching(BuildContext context) {
-    unawaited(
-      EventMatchingRoute(eventId: application.eventId).push<void>(context),
-    );
   }
 
   Future<void> _openDirections(BuildContext context) async {
@@ -233,18 +216,6 @@ class EventOngoingBanner extends StatelessWidget {
     }
   }
 
-  TicketEventMeta? _buildTicketEventMeta() {
-    final event = application.event;
-    final title = event?.title ?? event?.party?.title;
-    if (event == null || title == null) return null;
-
-    return TicketEventMeta(
-      eventTitle: title,
-      eventDateTime: event.startTime,
-      eventVenue: event.location?.name ?? event.party?.location?.name,
-      ticketName: application.ticket?.name,
-    );
-  }
 }
 
 class _PhaseChip extends StatelessWidget {

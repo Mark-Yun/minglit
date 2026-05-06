@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:app_user/src/features/tickets/active_event_banners_provider.dart';
 import 'package:app_user/src/features/tickets/widgets/event_ongoing_banner.dart';
+import 'package:app_user/src/logic/ticket_event_meta.dart';
 import 'package:app_user/src/routing/app_coordinator.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -81,12 +82,22 @@ class MyTicketsPage extends ConsumerWidget {
             itemCount: items.length,
             itemBuilder: (context, index) {
               final item = items[index];
+              final coordinator = ref.read(appCoordinatorProvider);
+              final application = item.application;
               return EventOngoingBanner(
-                application: item.application,
+                application: application,
                 phase: item.phase,
                 onMarkResultsViewed: () {
-                  unawaited(_markResultsViewed(ref, item.application.id));
+                  unawaited(_markResultsViewed(ref, application.id));
                 },
+                onOpenDetail: () =>
+                    coordinator.pushEventDetail(application.eventId),
+                onOpenQr: () => coordinator.pushTicketQR(
+                  application.ticketId,
+                  eventMeta: _buildTicketEventMeta(application),
+                ),
+                onOpenMatching: () =>
+                    coordinator.pushEventMatching(application.eventId),
               );
             },
           );
@@ -107,5 +118,17 @@ class MyTicketsPage extends ConsumerWidget {
     } catch (e, st) {
       debugPrint('markMatchResultsViewed failed: $e\n$st');
     }
+  }
+
+  TicketEventMeta? _buildTicketEventMeta(EventApplication application) {
+    final event = application.event;
+    final title = event?.title ?? event?.party?.title;
+    if (event == null || title == null) return null;
+    return TicketEventMeta(
+      eventTitle: title,
+      eventDateTime: event.startTime,
+      eventVenue: event.location?.name ?? event.party?.location?.name,
+      ticketName: application.ticket?.name,
+    );
   }
 }

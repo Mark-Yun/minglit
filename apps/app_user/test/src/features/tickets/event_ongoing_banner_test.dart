@@ -13,7 +13,7 @@ void main() {
 
   EventApplication makeApplication() {
     return EventApplication(
-      id: '11111111-1111-4111-8111-111111111111',
+      id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
       eventId: 'event_1',
       ticketId: 'ticket_1',
       userId: 'user_1',
@@ -60,6 +60,9 @@ void main() {
           application: makeApplication(),
           phase: phase,
           onMarkResultsViewed: () {},
+          onOpenDetail: () {},
+          onOpenQr: () {},
+          onOpenMatching: () {},
         ),
       ),
     );
@@ -113,7 +116,8 @@ void main() {
   testWidgets('resultsUnviewed tap calls onMarkResultsViewed exactly once', (
     tester,
   ) async {
-    var callCount = 0;
+    var markCount = 0;
+    var matchingCount = 0;
     await tester.pumpWidget(
       MaterialApp(
         theme: MinglitTheme.materialTheme,
@@ -121,7 +125,10 @@ void main() {
           body: EventOngoingBanner(
             application: makeApplication(),
             phase: EventLifecyclePhase.resultsUnviewed,
-            onMarkResultsViewed: () => callCount++,
+            onMarkResultsViewed: () => markCount++,
+            onOpenDetail: () {},
+            onOpenQr: () {},
+            onOpenMatching: () => matchingCount++,
           ),
         ),
       ),
@@ -130,48 +137,73 @@ void main() {
     await tester.tap(find.text('매칭 결과 보기'));
     await tester.pump();
 
-    // Navigation fails in test context (no GoRouter), but callback fires first.
-    tester.takeException();
-
-    expect(callCount, 1);
+    expect(markCount, 1);
+    expect(matchingCount, 1);
   });
 
   testWidgets(
-    'body tap (thumb + title area) is present for checkedIn phase',
+    'body tap (thumb + title area) calls onOpenDetail for checkedIn phase',
     (tester) async {
-      await tester.pumpWidget(buildWidget(EventLifecyclePhase.checkedIn));
+      var detailCount = 0;
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: MinglitTheme.materialTheme,
+          home: Scaffold(
+            body: EventOngoingBanner(
+              application: makeApplication(),
+              phase: EventLifecyclePhase.checkedIn,
+              onMarkResultsViewed: () {},
+              onOpenDetail: () => detailCount++,
+              onOpenQr: () {},
+              onOpenMatching: () {},
+            ),
+          ),
+        ),
+      );
 
       // InkWell wraps entire info row (thumb + title) per spec:
       // event_ongoing_banner.html#overview "thumb / title 영역 탭 → EventDetailRoute"
-      final inkWell = find.byType(InkWell);
-      expect(inkWell, findsWidgets);
+      expect(find.byType(InkWell), findsWidgets);
 
-      // Tap via text (title area)
       await tester.tap(find.text('강남 밍글링'));
       await tester.pump();
-      tester.takeException(); // no GoRouter in test
+      expect(detailCount, 1);
 
-      // Tap via ClipRRect (thumb area) — also inside the same InkWell
       await tester.tap(find.byType(ClipRRect).first);
       await tester.pump();
-      tester.takeException();
+      expect(detailCount, 2);
     },
   );
 
   testWidgets(
-    'body tap (thumb + title area) is present for noShow phase',
+    'body tap (thumb + title area) calls onOpenDetail for noShow phase',
     (tester) async {
-      await tester.pumpWidget(buildWidget(EventLifecyclePhase.noShow));
+      var detailCount = 0;
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: MinglitTheme.materialTheme,
+          home: Scaffold(
+            body: EventOngoingBanner(
+              application: makeApplication(),
+              phase: EventLifecyclePhase.noShow,
+              onMarkResultsViewed: () {},
+              onOpenDetail: () => detailCount++,
+              onOpenQr: () {},
+              onOpenMatching: () {},
+            ),
+          ),
+        ),
+      );
 
       expect(find.byType(InkWell), findsWidgets);
 
       await tester.tap(find.text('강남 밍글링'));
       await tester.pump();
-      tester.takeException();
+      expect(detailCount, 1);
 
       await tester.tap(find.byType(ClipRRect).first);
       await tester.pump();
-      tester.takeException();
+      expect(detailCount, 2);
     },
   );
 

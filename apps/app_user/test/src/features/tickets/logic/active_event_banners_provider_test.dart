@@ -347,6 +347,42 @@ void main() {
     });
 
     test(
+      'getMyMatches exception propagates as provider error state',
+      () async {
+        // Regression for Fix #2123: getMyMatches errors must surface as provider
+        // error state, not silently downgrade phase.
+        final event = makeEvent(status: 'ongoing');
+        final application = makeApplication(event: event);
+
+        when(
+          () => mockEventRepo.getMyTickets('user-1'),
+        ).thenAnswer((_) async => [application]);
+        when(
+          () => mockEventRepo.getTodayActiveEventsForUser('user-1'),
+        ).thenAnswer(
+          (_) async => [
+            TodayActiveEvent(event: event, participantStatus: 'checked_in'),
+          ],
+        );
+        when(
+          () => mockMatchingRepo.getMyMatches('event-1'),
+        ).thenAnswer((_) async => throw Exception('matches error'));
+        when(
+          () => mockMatchingRepo.getMatchingCandidates('event-1'),
+        ).thenAnswer((_) async => []);
+        when(
+          () => mockMatchingRepo.getMyVoteCount('event-1'),
+        ).thenAnswer((_) async => 0);
+
+        final container = makeContainer();
+        await expectLater(
+          container.read(activeEventBannersProvider.future),
+          throwsA(anything),
+        );
+      },
+    );
+
+    test(
       'getMatchingCandidates exception silently defaults: phase is checkedIn',
       () async {
         // Verifies the silent-catch path: getMatchingCandidates errors are swallowed
