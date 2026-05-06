@@ -629,9 +629,10 @@ class _ApplicationCard extends StatelessWidget {
           ],
         ),
         // Fix #2126: push() preserves back-navigation to list
-        onTap: () => EventApplicationDetailRoute(applicationId: app.id).push<void>(
-          context,
-        ),
+        onTap: () =>
+            EventApplicationDetailRoute(applicationId: app.id).push<void>(
+              context,
+            ),
       ),
     );
   }
@@ -720,9 +721,10 @@ class _RejectedApplicationCard extends StatelessWidget {
             const Icon(Icons.chevron_right),
           ],
         ),
-        onTap: () => EventApplicationDetailRoute(applicationId: app.id).push<void>(
-          context,
-        ),
+        onTap: () =>
+            EventApplicationDetailRoute(applicationId: app.id).push<void>(
+              context,
+            ),
       ),
     );
   }
@@ -793,9 +795,10 @@ class _RefundApplicationCard extends StatelessWidget {
             const Icon(Icons.chevron_right),
           ],
         ),
-        onTap: () => EventApplicationDetailRoute(applicationId: app.id).push<void>(
-          context,
-        ),
+        onTap: () =>
+            EventApplicationDetailRoute(applicationId: app.id).push<void>(
+              context,
+            ),
       ),
     );
   }
