@@ -323,4 +323,3 @@ class MinglitEventCard extends StatelessWidget {
     );
   }
 }
-
