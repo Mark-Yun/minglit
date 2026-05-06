@@ -215,7 +215,6 @@ class EventOngoingBanner extends StatelessWidget {
       }
     }
   }
-
 }
 
 class _PhaseChip extends StatelessWidget {
