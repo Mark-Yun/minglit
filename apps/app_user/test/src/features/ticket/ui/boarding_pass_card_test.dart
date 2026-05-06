@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:app_user/src/features/ticket/ui/model/ticket_event_meta.dart';
+import 'package:app_user/src/logic/ticket_event_meta.dart';
 import 'package:app_user/src/features/ticket/ui/widgets/boarding_pass_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
