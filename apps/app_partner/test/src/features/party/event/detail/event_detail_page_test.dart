@@ -201,6 +201,28 @@ void main() {
     expect(find.byType(MinglitCapacityBar), findsNothing);
   });
 
+  testWidgets('completed state shows CelebrateBanner and CompletedStatsCard', (tester) async {
+    // Fix #2275: completed lifecycle state must render _CelebrateBanner and
+    // _CompletedStatsCard section.
+    await tester.pumpWidget(
+      buildPage(
+        event: buildEvent(status: 'completed', currentParticipants: 10),
+        applications: [
+          buildApplication(id: '1', status: 'approved'),
+          buildApplication(id: '2', status: 'approved'),
+        ],
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // _CelebrateBanner shows confirmed count
+    expect(find.textContaining('완료됐어요'), findsOneWidget);
+    // _CompletedStatsCard section renders
+    expect(find.text('완료 통계'), findsOneWidget);
+    // Revenue section shows completed-specific title (달성 매출)
+    expect(find.text('달성 매출'), findsOneWidget);
+  });
+
   testWidgets('ticketsAsync loading shows spinner when no fallback tickets', (tester) async {
     // Fix #2275: ticketsAsync isLoading must surface the spinner when event.tickets is null
     final ticketsCompleter = Completer<List<Ticket>>();

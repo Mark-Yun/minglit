@@ -239,19 +239,21 @@ class _EventDetailBody extends ConsumerWidget {
                 ),
               ),
             ),
-          MinglitSection(
-            title: state.revenueTitle,
-            padding: EdgeInsets.zero,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: MinglitSpacing.screenEdge,
-              ),
-              child: _RevenueCard(
-                state: state,
-                summary: summary,
+          // Fix #2275: cancelled 상태에서 _RefundCard와 타이틀 중복 방지 — 매출 섹션 숨김
+          if (state != _EventLifecycleState.cancelled)
+            MinglitSection(
+              title: state.revenueTitle,
+              padding: EdgeInsets.zero,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: MinglitSpacing.screenEdge,
+                ),
+                child: _RevenueCard(
+                  state: state,
+                  summary: summary,
+                ),
               ),
             ),
-          ),
           if (state == _EventLifecycleState.completed)
             MinglitSection(
               title: '완료 통계',
