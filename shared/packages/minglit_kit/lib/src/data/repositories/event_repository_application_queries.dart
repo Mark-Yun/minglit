@@ -176,10 +176,15 @@ mixin _EventRepositoryApplicationQueries on _SupabaseEventContext {
   Future<List<EventApplication>> getMyTickets(String userId) async {
     Log.d('getMyTickets called | userId: $userId');
     try {
+      // Fix #2123: include match_results_viewed_at for EventOngoingBanner phase
+      // resolution — null=resultsUnviewed, set=resultsViewed.
       final data = await supabaseClient
           .from('event_applications')
           .select(
-            '*, '
+            'id, event_id, ticket_id, user_id, status, created_at, '
+            'updated_at, payment_id, payment_amount, refund_status, '
+            'rejection_reason, paid_at, refunded_at, cancellation_reason, '
+            'match_results_viewed_at, '
             'event:events(*, party:parties(*, location:locations(*))), '
             'ticket:tickets(*)',
           )

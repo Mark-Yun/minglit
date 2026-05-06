@@ -14,7 +14,7 @@ import 'package:app_user/src/features/event/detail/event_detail_page.dart';
 import 'package:app_user/src/features/event/matching/ui/event_matching_screen.dart';
 import 'package:app_user/src/features/home/home_page.dart';
 import 'package:app_user/src/features/home/my_page.dart';
-import 'package:app_user/src/features/my_tickets/ui/my_tickets_page.dart';
+import 'package:app_user/src/features/tickets/my_tickets_page.dart';
 import 'package:app_user/src/features/partner/detail/partner_detail_page.dart';
 import 'package:app_user/src/features/partner/detail/partner_events_page.dart';
 import 'package:app_user/src/features/payment/ui/event_application_review_page.dart';

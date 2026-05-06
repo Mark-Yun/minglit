@@ -51,6 +51,10 @@ class AppCoordinator {
     );
   }
 
+  void pushPurchaseHistory() {
+    unawaited(_router.push(const PurchaseHistoryRoute().location));
+  }
+
   void startAccountDeletion() {
     _accountDeletion.start();
   }

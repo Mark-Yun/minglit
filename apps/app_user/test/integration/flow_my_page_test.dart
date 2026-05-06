@@ -296,8 +296,10 @@ void main() {
           id: 'evt-1',
           partyId: 'party-1',
           title: 'Test Event',
-          startTime: now.add(const Duration(days: 30)),
-          endTime: now.add(const Duration(days: 30, hours: 2)),
+          // Fix #2282: cutoffDays=7 판정이 real DateTime.now() 기준 → 날짜 의존성 회피
+          // 충분히 먼 미래 날짜로 고정해 시간 경과로 인한 flakiness 방지
+          startTime: DateTime(2030, 1, 1),
+          endTime: DateTime(2030, 1, 1, 2),
           createdAt: now,
           updatedAt: now,
         ),

@@ -1,6 +1,6 @@
-// Ref #2224: Smoke — EventDetailPage spec 준수 검증
+// Ref #2109: Smoke — EventDetailPage hub layout spec 준수 검증
 //
-// Tab 구조 제거 + AppBar 타이틀 "이벤트 상세" + 참가 현황 섹션 렌더링을 검증한다.
+// Tab 구조 제거 + 상태 배너/메타 칩/참가 CTA 렌더링을 검증한다.
 import 'dart:async';
 
 import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
@@ -27,6 +27,7 @@ void main() {
     entryGroups: [],
     maxParticipants: 40,
     currentParticipants: 18,
+    visibility: 'public',
   );
 
   final testParty = Party(
@@ -72,7 +73,7 @@ void main() {
     );
   }
 
-  group('EventDetailPage (Fix #2224)', () {
+  group('EventDetailPage (Fix #2109)', () {
     testWidgets('AppBar 타이틀이 "이벤트 상세"이다', (tester) async {
       await tester.pumpWidget(buildWidget());
       await tester.pumpAndSettle();
@@ -119,7 +120,7 @@ void main() {
       expect(find.byType(Scaffold), findsOneWidget);
     });
 
-    testWidgets('심사 대기 건이 있으면 "처리하기" 링크가 표시된다', (tester) async {
+    testWidgets('심사 대기 건이 있으면 심사 대기 링크가 표시된다', (tester) async {
       final pendingApp = EventApplication(
         id: 'app-1',
         eventId: 'event-1',
@@ -132,41 +133,138 @@ void main() {
       await tester.pumpWidget(buildWidget(applications: [pendingApp]));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('처리하기'), findsOneWidget);
+      expect(find.textContaining('심사 대기'), findsOneWidget);
     });
 
-    testWidgets('심사 대기 건이 없으면 "처리하기" 링크가 없다', (tester) async {
+    testWidgets('심사 대기 건이 없으면 심사 대기 링크가 없다', (tester) async {
       await tester.pumpWidget(buildWidget(applications: []));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('처리하기'), findsNothing);
+      expect(find.textContaining('심사 대기'), findsNothing);
     });
 
     testWidgets(
-      '확정 인원은 event.currentParticipants 기준으로 표시된다 (신청 목록 count 아님)',
+      '확정 인원은 event.currentParticipants 기준으로 표시된다',
       (tester) async {
-        // Fix #2224: event has 18 confirmed participants but only 1 approved
-        // application in the list — UI must show 18, not 1.
-        final approvedApp = EventApplication(
-          id: 'app-approved',
-          eventId: 'event-1',
-          ticketId: 'ticket-1',
-          userId: 'user-2',
-          status: 'approved',
-          createdAt: now,
-          updatedAt: now,
-        );
-        await tester.pumpWidget(
-          buildWidget(applications: [approvedApp]),
-        );
+        // Fix #2224: confirmedCount = event.currentParticipants (not application list)
+        await tester.pumpWidget(buildWidget());
         await tester.pumpAndSettle();
 
-        // testEvent.currentParticipants == 18, maxParticipants == 40
         expect(find.text('18'), findsOneWidget);
-        expect(find.textContaining('/ 40'), findsOneWidget);
-        // Must NOT show the approved-application count (1)
-        expect(find.text('1'), findsNothing);
+        expect(find.text(' / 40 명'), findsOneWidget);
       },
     );
+
+    testWidgets('취소 상태면 이벤트 정보 카드에 취소됨 레이블이 표시된다', (tester) async {
+      await tester.pumpWidget(
+        buildWidget(
+          event: testEvent.copyWith(status: 'cancelled'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('취소됨'), findsOneWidget);
+      // Fix #2224: CTAs must be hidden for terminated states
+      expect(find.text('정보 수정'), findsNothing);
+      expect(find.text('신청 목록 보기'), findsNothing);
+    });
+
+    testWidgets('이벤트 정보 카드와 액션 버튼들이 표시된다', (tester) async {
+      await tester.pumpWidget(buildWidget());
+      await tester.pumpAndSettle();
+
+      // 이벤트 정보 섹션 (MinglitSection)
+      expect(find.text('이벤트 정보'), findsOneWidget);
+      // 공개 설정 레이블 (visibility DetailRow)
+      expect(find.text('공개'), findsOneWidget);
+      // 편집 버튼
+      expect(find.text('정보 수정'), findsOneWidget);
+      // 신청 목록 버튼 (참가 현황 섹션)
+      expect(find.text('신청 목록 보기'), findsOneWidget);
+    });
+
+    testWidgets('티켓이 있으면 티켓 관리 섹션에 티켓명이 표시된다', (tester) async {
+      final ticket = Ticket(
+        id: 'ticket-1',
+        name: '일반 티켓',
+        createdAt: now,
+        updatedAt: now,
+        price: 55000,
+        quantity: 10,
+      );
+
+      await tester.pumpWidget(
+        buildWidget(tickets: [ticket]),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('일반 티켓'), findsOneWidget);
+    });
+
+    testWidgets('확정 인원이 있으면 정보 수정 시 잠금 SnackBar가 표시된다', (tester) async {
+      // Fix #2224: confirmedCount = event.currentParticipants (18) >= 1 → 잠금 토스트
+      await tester.pumpWidget(buildWidget());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('정보 수정'));
+      await tester.pump();
+
+      expect(
+        find.text('확정 참가자가 있어 일부 항목은 잠겨 있습니다.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('확정 인원이 없으면 정보 수정 시 EventEditRoute로 이동한다', (tester) async {
+      // Fix #2224: confirmedCount = 0 → EventEditRoute push (no GoRouter in test)
+      await tester.pumpWidget(
+        buildWidget(event: testEvent.copyWith(currentParticipants: 0)),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('정보 수정'));
+      await tester.pump();
+
+      final error = tester.takeException();
+      expect(error, isNotNull);
+      expect(error.toString(), contains('No GoRouter found'));
+    });
+
+    testWidgets('완료 상태면 이벤트 정보 카드에 종료됨 레이블이 표시된다', (tester) async {
+      await tester.pumpWidget(
+        buildWidget(
+          event: testEvent.copyWith(status: 'completed'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('종료됨'), findsOneWidget);
+      // Fix #2224: CTAs must be hidden for terminated states
+      expect(find.text('정보 수정'), findsNothing);
+      expect(find.text('신청 목록 보기'), findsNothing);
+    });
+
+    testWidgets('scheduled 상태면 모집 예정 레이블이 표시된다', (tester) async {
+      await tester.pumpWidget(
+        buildWidget(
+          event: testEvent.copyWith(status: 'scheduled'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('모집 예정/진행중'), findsOneWidget);
+    });
+
+    testWidgets('private visibility면 비공개 레이블이 표시된다', (tester) async {
+      await tester.pumpWidget(
+        buildWidget(
+          event: testEvent.copyWith(visibility: 'private'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('비공개'), findsOneWidget);
+      expect(find.text('공개'), findsNothing);
+    });
   });
 }
