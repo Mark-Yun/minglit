@@ -67,15 +67,16 @@ class _DashboardBody extends StatelessWidget {
     final pendingApps = applications
         .where((app) => {'pending', 'pending_review'}.contains(app.status))
         .toList();
-    // Fix #2126: paid = approved + payment confirmed; include in approved tab
+    // Fix #2272: spec State 6 — 승인됨 탭은 paid 단독; approved는 결제대기로
+    // 노출 X. State 8 — 환불 탭은 cancelled status 전용.
     final approvedApps = applications
-        .where((app) => {'approved', 'paid'}.contains(app.status))
+        .where((app) => app.status == 'paid')
         .toList();
     final rejectedApps = applications
         .where((app) => app.status == 'rejected')
         .toList();
     final refundApps = applications
-        .where((app) => app.refundStatus != 'none')
+        .where((app) => app.status == 'cancelled')
         .toList();
 
     return TabBarView(
@@ -131,9 +132,9 @@ class _PendingTab extends StatelessWidget {
     final event = bundle.event;
     final groups = event.entryGroups ?? const <EntryGroup>[];
     final pendingCount = pendingApplications.length;
-    // Fix #2126: paid apps are confirmed participants — include in capacity count
+    // Fix #2272: confirmedCount = paid only (spec State 6: paid = 확정 참가자)
     final confirmedCount = bundle.applications
-        .where((app) => {'approved', 'paid'}.contains(app.status))
+        .where((app) => app.status == 'paid')
         .length;
 
     final visibleGroups = selectedGroupId == null

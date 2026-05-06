@@ -197,12 +197,12 @@ void main() {
     expect(find.text('결제실패유저'), findsNothing);
   });
 
-  // Fix #2126: approved tab shows applications with approved status
+  // Fix #2272: spec State 6 — 승인됨 tab shows paid-only; approved = 결제대기
   group('승인됨 tab', () {
-    testWidgets('shows approved applications', (tester) async {
+    testWidgets('shows paid applications in 승인됨 tab', (tester) async {
       final bundle = makeBundle(
         applications: [
-          makeApp(id: 'app_1', status: 'approved', userName: '홍길동'),
+          makeApp(id: 'app_1', status: 'paid', userName: '홍길동'),
         ],
       );
       await tester.pumpWidget(buildPage(bundle: bundle));
@@ -214,11 +214,13 @@ void main() {
       expect(find.text('홍길동'), findsOneWidget);
     });
 
-    // Fix #2126: paid = approved + payment confirmed; must appear in 승인됨 tab
-    testWidgets('paid applications appear in 승인됨 tab', (tester) async {
+    // Fix #2272: approved status is 결제대기 — must NOT appear in 승인됨 tab
+    testWidgets('approved-only applications do not appear in 승인됨 tab', (
+      tester,
+    ) async {
       final bundle = makeBundle(
         applications: [
-          makeApp(id: 'app_1', status: 'paid', userName: '결제완료유저'),
+          makeApp(id: 'app_1', status: 'approved', userName: '결제대기유저'),
         ],
       );
       await tester.pumpWidget(buildPage(bundle: bundle));
@@ -227,10 +229,10 @@ void main() {
       await tester.tap(find.text('승인됨'));
       await tester.pumpAndSettle();
 
-      expect(find.text('결제완료유저'), findsOneWidget);
+      expect(find.text('결제대기유저'), findsNothing);
     });
 
-    // Fix #2126: paid apps count in confirmedCount — capacity bar must reflect them
+    // Fix #2272: confirmedCount = paid only (spec State 6)
     testWidgets('paid apps are counted in confirmed capacity', (tester) async {
       final bundle = makeBundle(
         applications: [
@@ -242,8 +244,8 @@ void main() {
       await tester.pumpWidget(buildPage(bundle: bundle));
       await tester.pumpAndSettle();
 
-      // confirmed=2 (paid+approved), pending=1, total=20
-      expect(find.text('확정 2명 · 대기 1명 · 정원 20명'), findsOneWidget);
+      // confirmed=1 (paid only), pending=1 (pending_review), total=20
+      expect(find.text('확정 1명 · 대기 1명 · 정원 20명'), findsOneWidget);
     });
 
     testWidgets('shows empty state when no approved applications', (
@@ -319,16 +321,15 @@ void main() {
     });
   });
 
-  // Fix #2126: refund tab shows apps where refundStatus != 'none'
+  // Fix #2272: spec State 8 — 환불 tab shows apps where status == 'cancelled'
   group('환불 tab', () {
-    testWidgets('shows refunded applications', (tester) async {
+    testWidgets('shows cancelled applications in 환불 tab', (tester) async {
       final bundle = makeBundle(
         applications: [
           makeApp(
             id: 'app_1',
-            status: 'approved',
+            status: 'cancelled',
             userName: '이환불',
-            refundStatus: 'requested',
             username: 'refund@test.com',
           ),
         ],
@@ -343,9 +344,7 @@ void main() {
       expect(find.text('r***@test.com'), findsOneWidget);
     });
 
-    testWidgets('apps with refundStatus none are not in 환불 tab', (
-      tester,
-    ) async {
+    testWidgets('non-cancelled apps are not in 환불 tab', (tester) async {
       final bundle = makeBundle(
         applications: [
           makeApp(id: 'app_1', status: 'approved', userName: '정상유저'),
@@ -365,10 +364,9 @@ void main() {
         applications: [
           makeApp(
             id: 'app_1',
-            status: 'approved',
+            status: 'cancelled',
             userName: '홍길동',
             username: 'hong@test.com',
-            refundStatus: 'requested',
           ),
         ],
       );
