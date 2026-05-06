@@ -92,6 +92,30 @@ mixin _EventRepositoryApplicationQueries on _SupabaseEventContext {
     }
   }
 
+  /// Fetches a single application with full event, ticket, and submission data
+  /// for the purchase history detail page.
+  Future<EventApplication?> getPurchaseHistoryDetailById(
+    String applicationId,
+  ) async {
+    Log.d('getPurchaseHistoryDetailById called | id: $applicationId');
+    try {
+      final response = await supabaseClient
+          .from('event_applications')
+          .select(
+            '*, '
+            'event:events(*, party:parties(*, location:locations(*))), '
+            'ticket:tickets(*)',
+          )
+          .eq('id', applicationId)
+          .maybeSingle();
+      if (response == null) return null;
+      return EventApplication.fromJson(response);
+    } catch (e, st) {
+      Log.e('❌ [EventRepo] getPurchaseHistoryDetailById Error', e, st);
+      rethrow;
+    }
+  }
+
   /// Fetches the application record for a specific user and event.
   Future<EventApplication?> getApplication({
     required String eventId,

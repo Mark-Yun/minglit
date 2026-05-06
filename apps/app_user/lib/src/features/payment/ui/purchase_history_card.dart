@@ -28,7 +28,12 @@ class PurchaseHistoryCard extends ConsumerWidget {
 
     final canCancel = controller.canCancel(application);
 
-    return Container(
+    return InkWell(
+      onTap: () => PurchaseHistoryDetailRoute(
+        applicationId: application.id,
+      ).push<void>(context),
+      borderRadius: BorderRadius.circular(MinglitRadius.card),
+      child: Container(
       padding: const EdgeInsets.all(MinglitSpacing.medium),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
@@ -240,6 +245,7 @@ class PurchaseHistoryCard extends ConsumerWidget {
           ),
         ],
       ),
+    ),
     );
   }
 
