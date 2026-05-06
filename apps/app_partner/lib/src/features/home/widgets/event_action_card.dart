@@ -329,4 +329,3 @@ class EventActionCard extends StatelessWidget {
     return '종료 · $hours시간 전';
   }
 }
-
