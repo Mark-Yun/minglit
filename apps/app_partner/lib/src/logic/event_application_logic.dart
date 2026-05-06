@@ -41,6 +41,26 @@ Future<EventApplicationBundle> eventApplicationBundle(
   );
 }
 
+// Fix #2127: carousel queue filtered by groupId (ticket.targetEntryGroupIds)
+@riverpod
+Future<List<EventApplication>> carouselQueue(
+  Ref ref,
+  String eventId,
+  String? groupId,
+) async {
+  final all = await ref.watch(eventApplicationsProvider(eventId).future);
+  final pending = all.where(
+    (a) => a.status == 'pending' || a.status == 'pending_review',
+  );
+  final filtered = groupId == null
+      ? pending
+      : pending.where(
+          (a) => a.ticket?.targetEntryGroupIds.contains(groupId) ?? false,
+        );
+  return filtered.toList()
+    ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+}
+
 @riverpod
 class EventApplicationReviewController
     extends _$EventApplicationReviewController {

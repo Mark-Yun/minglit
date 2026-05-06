@@ -145,7 +145,7 @@ final class EventApplicationBundleProvider
 }
 
 String _$eventApplicationBundleHash() =>
-    r'3e0c5a65f597957e09a087544f313c43ba966c1b';
+    r'9da630b95f36f63fc6557f96d13d0cbf0a984e73';
 
 final class EventApplicationBundleFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<EventApplicationBundle>, String> {
@@ -163,6 +163,87 @@ final class EventApplicationBundleFamily extends $Family
 
   @override
   String toString() => r'eventApplicationBundleProvider';
+}
+
+@ProviderFor(carouselQueue)
+const carouselQueueProvider = CarouselQueueFamily._();
+
+final class CarouselQueueProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<EventApplication>>,
+          List<EventApplication>,
+          FutureOr<List<EventApplication>>
+        >
+    with
+        $FutureModifier<List<EventApplication>>,
+        $FutureProvider<List<EventApplication>> {
+  const CarouselQueueProvider._({
+    required CarouselQueueFamily super.from,
+    required (String, String?) super.argument,
+  }) : super(
+         retry: null,
+         name: r'carouselQueueProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$carouselQueueHash();
+
+  @override
+  String toString() {
+    return r'carouselQueueProvider'
+        ''
+        '$argument';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<List<EventApplication>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<EventApplication>> create(Ref ref) {
+    final argument = this.argument as (String, String?);
+    return carouselQueue(ref, argument.$1, argument.$2);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is CarouselQueueProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$carouselQueueHash() => r'8245f792b5bf9215c0ce62d76943d57ea37ae086';
+
+final class CarouselQueueFamily extends $Family
+    with
+        $FunctionalFamilyOverride<
+          FutureOr<List<EventApplication>>,
+          (String, String?)
+        > {
+  const CarouselQueueFamily._()
+    : super(
+        retry: null,
+        name: r'carouselQueueProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  CarouselQueueProvider call(String eventId, String? groupId) =>
+      CarouselQueueProvider._(argument: (eventId, groupId), from: this);
+
+  @override
+  String toString() => r'carouselQueueProvider';
 }
 
 @ProviderFor(EventApplicationReviewController)
