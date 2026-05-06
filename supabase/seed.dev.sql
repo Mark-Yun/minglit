@@ -757,7 +757,13 @@ DECLARE
 BEGIN
   pwd_hash := extensions.crypt('password1234!', extensions.gen_salt('bf'));
 
-  SELECT id INTO existing_id FROM auth.users WHERE email = 'user_qa_fresh@test.com';
+  -- Fix #2279: email must match username@test.com pattern (DevUserSwitch constructs email as '$username@test.com')
+  -- username=qa_fresh → email must be qa_fresh@test.com, not user_qa_fresh@test.com
+  SELECT id INTO existing_id FROM auth.users WHERE email = 'qa_fresh@test.com';
+  IF NOT FOUND THEN
+    -- backfill: also check old incorrect email and delete it so re-seed is idempotent
+    DELETE FROM auth.users WHERE email = 'user_qa_fresh@test.com';
+  END IF;
   IF existing_id IS NULL THEN
     -- Fix #2256: add qa_fresh user with empty application history for U-S19 smoke test
     INSERT INTO auth.users (
@@ -771,7 +777,7 @@ BEGIN
     ) VALUES (
       '00000000-0000-0000-0000-000000000000',
       gen_random_uuid(), 'authenticated', 'authenticated',
-      'user_qa_fresh@test.com', pwd_hash, now(),
+      'qa_fresh@test.com', pwd_hash, now(),
       '{"provider":"email","providers":["email"],"has_password":true}'::jsonb,
       '{"name":"[QA] 신청 테스트 유저","username":"qa_fresh","gender":"female","birth_date":"2000-01-01","phone_number":"010-0099-0000","is_verified":true}'::jsonb,
       now(), now(), '', '',
