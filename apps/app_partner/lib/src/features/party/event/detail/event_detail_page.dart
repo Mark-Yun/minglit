@@ -95,11 +95,20 @@ class _EventInfoTab extends ConsumerWidget {
             ),
 
           // Schedule + status info card
-          // Fix #2110: 정보 수정 버튼 — EventEditRoute로 진입
+          // Fix #2110: 정보 수정 버튼 — confirmedCount >= 1이면 잠금 아이콘 + 토스트,
+          // 없으면 EventEditRoute로 진입.
           MinglitSection(
             title: '이벤트 정보',
             trailing: TextButton.icon(
               onPressed: () {
+                if (confirmedCount >= 1) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('확정 참가자가 있어 일부 항목은 잠겨 있습니다.'),
+                    ),
+                  );
+                  return;
+                }
                 unawaited(
                   EventEditRoute(
                     partyId: event.partyId,
@@ -107,8 +116,8 @@ class _EventInfoTab extends ConsumerWidget {
                   ).push<void>(context),
                 );
               },
-              icon: const Icon(
-                Icons.edit_outlined,
+              icon: Icon(
+                confirmedCount >= 1 ? Icons.lock_outline : Icons.edit_outlined,
                 size: MinglitIconSize.small,
               ),
               label: const Text('정보 수정'),
