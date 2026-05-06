@@ -1,7 +1,7 @@
 # Graph Report - /Users/mark/workspace/minglit-worker-runtime/workspace/needs-swe-sonnet-1/.claude/worktrees/feat-2126-event-app-list  (2026-05-06)
 
 ## Corpus Check
-- 1223 files · ~1,914,853 words
+- 1223 files · ~1,914,874 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -2620,7 +2620,7 @@ _Questions this graph is uniquely positioned to answer:_
 - **What is the exact relationship between `Architecture Audit #1092 — 2026-04-06` and `AI Basic Law Compliance (Korea 2026)`?**
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
 - **Why does `package:flutter/material.dart` connect `Community 2` to `Community 0`, `Community 3`, `Community 4`, `Community 7`, `Community 8`, `Community 9`, `Community 10`, `Community 11`, `Community 43`, `Community 15`, `Community 17`, `Community 18`, `Community 20`, `Community 23`, `Community 26`, `Community 28`?**
-  _High betweenness centrality (0.210) - this node is a cross-community bridge._
+  _High betweenness centrality (0.229) - this node is a cross-community bridge._
 - **What connects `reporter (AutoLabelAllureReporter)`, `_buildPage`, `MaterialApp` to the rest of the system?**
   _2668 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
