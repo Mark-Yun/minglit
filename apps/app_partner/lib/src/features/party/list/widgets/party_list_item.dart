@@ -220,7 +220,7 @@ class _HeroTag extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: MinglitSpacing.xsmall,
-        vertical: 2,
+        vertical: MinglitSpacing.xxsmall,
       ),
       decoration: BoxDecoration(
         color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
@@ -228,6 +228,7 @@ class _HeroTag extends StatelessWidget {
       ),
       child: Text(
         label,
+        // TODO(#2274): labelSmall보다 작은 토큰 없음 — MDS 확장 대기
         style: theme.textTheme.labelSmall?.copyWith(
           color: theme.colorScheme.surface,
           fontSize: 10,
@@ -277,7 +278,7 @@ class _BodyRegion extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: MinglitSpacing.xsmall,
-                    vertical: 2,
+                    vertical: MinglitSpacing.xxsmall,
                   ),
                   decoration: BoxDecoration(
                     color: theme.colorScheme.secondaryContainer,
@@ -285,6 +286,7 @@ class _BodyRegion extends StatelessWidget {
                   ),
                   child: Text(
                     context.l10n.partyList_badge_draft,
+                    // TODO(#2274): labelSmall보다 작은 토큰 없음 — MDS 확장 대기
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: theme.colorScheme.onSecondaryContainer,
                       fontSize: 10,
@@ -606,7 +608,7 @@ class _DraftCtaRow extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: MinglitSpacing.xsmall,
-                  vertical: 2,
+                  vertical: MinglitSpacing.xxsmall,
                 ),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.secondaryContainer,
