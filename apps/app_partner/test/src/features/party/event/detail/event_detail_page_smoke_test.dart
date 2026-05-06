@@ -27,6 +27,7 @@ void main() {
     entryGroups: [],
     maxParticipants: 40,
     currentParticipants: 18,
+    visibility: 'public',
   );
 
   final testParty = Party(
