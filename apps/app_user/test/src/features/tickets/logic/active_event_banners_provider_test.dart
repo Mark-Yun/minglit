@@ -89,16 +89,19 @@ void main() {
       final event = makeEvent(status: 'ongoing');
       final application = makeApplication(event: event);
 
-      when(() => mockEventRepo.getMyTickets('user-1'))
-          .thenAnswer((_) async => [application]);
-      when(() => mockEventRepo.getTodayActiveEventsForUser('user-1'))
-          .thenAnswer(
-            (_) async => [
-              TodayActiveEvent(event: event, participantStatus: 'no_show'),
-            ],
-          );
-      when(() => mockMatchingRepo.getMyMatches('event-1'))
-          .thenAnswer((_) async => []);
+      when(
+        () => mockEventRepo.getMyTickets('user-1'),
+      ).thenAnswer((_) async => [application]);
+      when(
+        () => mockEventRepo.getTodayActiveEventsForUser('user-1'),
+      ).thenAnswer(
+        (_) async => [
+          TodayActiveEvent(event: event, participantStatus: 'no_show'),
+        ],
+      );
+      when(
+        () => mockMatchingRepo.getMyMatches('event-1'),
+      ).thenAnswer((_) async => []);
 
       final container = makeContainer();
       final result = await container.read(activeEventBannersProvider.future);
@@ -107,53 +110,65 @@ void main() {
       expect(result.first.phase, EventLifecyclePhase.noShow);
     });
 
-    test('matchingReady when checked-in + ongoing + candidates + no votes',
-        () async {
-      final event = makeEvent(status: 'ongoing');
-      final application = makeApplication(event: event);
+    test(
+      'matchingReady when checked-in + ongoing + candidates + no votes',
+      () async {
+        final event = makeEvent(status: 'ongoing');
+        final application = makeApplication(event: event);
 
-      when(() => mockEventRepo.getMyTickets('user-1'))
-          .thenAnswer((_) async => [application]);
-      when(() => mockEventRepo.getTodayActiveEventsForUser('user-1'))
-          .thenAnswer(
-            (_) async => [
-              TodayActiveEvent(event: event, participantStatus: 'checked_in'),
-            ],
-          );
-      when(() => mockMatchingRepo.getMyMatches('event-1'))
-          .thenAnswer((_) async => []);
-      when(() => mockMatchingRepo.getMatchingCandidates('event-1'))
-          .thenAnswer((_) async => [MockUserProfile()]);
-      // Fix #2123: zero votes → matchingReady, not matching
-      when(() => mockMatchingRepo.getMyVoteCount('event-1'))
-          .thenAnswer((_) async => 0);
+        when(
+          () => mockEventRepo.getMyTickets('user-1'),
+        ).thenAnswer((_) async => [application]);
+        when(
+          () => mockEventRepo.getTodayActiveEventsForUser('user-1'),
+        ).thenAnswer(
+          (_) async => [
+            TodayActiveEvent(event: event, participantStatus: 'checked_in'),
+          ],
+        );
+        when(
+          () => mockMatchingRepo.getMyMatches('event-1'),
+        ).thenAnswer((_) async => []);
+        when(
+          () => mockMatchingRepo.getMatchingCandidates('event-1'),
+        ).thenAnswer((_) async => [MockUserProfile()]);
+        // Fix #2123: zero votes → matchingReady, not matching
+        when(
+          () => mockMatchingRepo.getMyVoteCount('event-1'),
+        ).thenAnswer((_) async => 0);
 
-      final container = makeContainer();
-      final result = await container.read(activeEventBannersProvider.future);
+        final container = makeContainer();
+        final result = await container.read(activeEventBannersProvider.future);
 
-      expect(result, hasLength(1));
-      expect(result.first.phase, EventLifecyclePhase.matchingReady);
-    });
+        expect(result, hasLength(1));
+        expect(result.first.phase, EventLifecyclePhase.matchingReady);
+      },
+    );
 
     test('matching when checked-in + ongoing + voteCount > 0', () async {
       final event = makeEvent(status: 'ongoing');
       final application = makeApplication(event: event);
 
-      when(() => mockEventRepo.getMyTickets('user-1'))
-          .thenAnswer((_) async => [application]);
-      when(() => mockEventRepo.getTodayActiveEventsForUser('user-1'))
-          .thenAnswer(
-            (_) async => [
-              TodayActiveEvent(event: event, participantStatus: 'checked_in'),
-            ],
-          );
-      when(() => mockMatchingRepo.getMyMatches('event-1'))
-          .thenAnswer((_) async => []);
-      when(() => mockMatchingRepo.getMatchingCandidates('event-1'))
-          .thenAnswer((_) async => [MockUserProfile()]);
+      when(
+        () => mockEventRepo.getMyTickets('user-1'),
+      ).thenAnswer((_) async => [application]);
+      when(
+        () => mockEventRepo.getTodayActiveEventsForUser('user-1'),
+      ).thenAnswer(
+        (_) async => [
+          TodayActiveEvent(event: event, participantStatus: 'checked_in'),
+        ],
+      );
+      when(
+        () => mockMatchingRepo.getMyMatches('event-1'),
+      ).thenAnswer((_) async => []);
+      when(
+        () => mockMatchingRepo.getMatchingCandidates('event-1'),
+      ).thenAnswer((_) async => [MockUserProfile()]);
       // Fix #2123: at least one vote → matching phase
-      when(() => mockMatchingRepo.getMyVoteCount('event-1'))
-          .thenAnswer((_) async => 1);
+      when(
+        () => mockMatchingRepo.getMyVoteCount('event-1'),
+      ).thenAnswer((_) async => 1);
 
       final container = makeContainer();
       final result = await container.read(activeEventBannersProvider.future);
@@ -166,20 +181,25 @@ void main() {
       final event = makeEvent(status: 'active');
       final application = makeApplication(event: event);
 
-      when(() => mockEventRepo.getMyTickets('user-1'))
-          .thenAnswer((_) async => [application]);
-      when(() => mockEventRepo.getTodayActiveEventsForUser('user-1'))
-          .thenAnswer(
-            (_) async => [
-              TodayActiveEvent(event: event, participantStatus: 'checked_in'),
-            ],
-          );
-      when(() => mockMatchingRepo.getMyMatches('event-1'))
-          .thenAnswer((_) async => []);
-      when(() => mockMatchingRepo.getMatchingCandidates('event-1'))
-          .thenAnswer((_) async => []);
-      when(() => mockMatchingRepo.getMyVoteCount('event-1'))
-          .thenAnswer((_) async => 0);
+      when(
+        () => mockEventRepo.getMyTickets('user-1'),
+      ).thenAnswer((_) async => [application]);
+      when(
+        () => mockEventRepo.getTodayActiveEventsForUser('user-1'),
+      ).thenAnswer(
+        (_) async => [
+          TodayActiveEvent(event: event, participantStatus: 'checked_in'),
+        ],
+      );
+      when(
+        () => mockMatchingRepo.getMyMatches('event-1'),
+      ).thenAnswer((_) async => []);
+      when(
+        () => mockMatchingRepo.getMatchingCandidates('event-1'),
+      ).thenAnswer((_) async => []);
+      when(
+        () => mockMatchingRepo.getMyVoteCount('event-1'),
+      ).thenAnswer((_) async => 0);
 
       final container = makeContainer();
       final result = await container.read(activeEventBannersProvider.future);
@@ -188,49 +208,61 @@ void main() {
       expect(result.first.phase, EventLifecyclePhase.checkedIn);
     });
 
-    test('resultsUnviewed for completed event with no matchResultsViewedAt',
-        () async {
-      final event = makeEvent(status: 'completed');
-      final application = makeApplication(
-        event: event,
-        matchResultsViewedAt: null,
-      );
+    test(
+      'resultsUnviewed for completed event with no matchResultsViewedAt',
+      () async {
+        final event = makeEvent(status: 'completed');
+        final application = makeApplication(
+          event: event,
+          matchResultsViewedAt: null,
+        );
 
-      when(() => mockEventRepo.getMyTickets('user-1'))
-          .thenAnswer((_) async => [application]);
-      when(() => mockEventRepo.getTodayActiveEventsForUser('user-1'))
-          .thenAnswer((_) async => []);
-      when(() => mockMatchingRepo.getMyMatches('event-1'))
-          .thenAnswer((_) async => [_makeMatchPair()]);
+        when(
+          () => mockEventRepo.getMyTickets('user-1'),
+        ).thenAnswer((_) async => [application]);
+        when(
+          () => mockEventRepo.getTodayActiveEventsForUser('user-1'),
+        ).thenAnswer((_) async => []);
+        when(
+          () => mockMatchingRepo.getMyMatches('event-1'),
+        ).thenAnswer((_) async => [_makeMatchPair()]);
 
-      final container = makeContainer();
-      final result = await container.read(activeEventBannersProvider.future);
+        final container = makeContainer();
+        final result = await container.read(activeEventBannersProvider.future);
 
-      expect(result, hasLength(1));
-      expect(result.first.phase, EventLifecyclePhase.resultsUnviewed);
-    });
+        expect(result, hasLength(1));
+        expect(result.first.phase, EventLifecyclePhase.resultsUnviewed);
+      },
+    );
 
-    test('resultsViewed for completed event when matchResultsViewedAt set',
-        () async {
-      final event = makeEvent(status: 'completed');
-      final application = makeApplication(
-        event: event,
-        matchResultsViewedAt: DateTime.now().subtract(const Duration(hours: 1)),
-      );
+    test(
+      'resultsViewed for completed event when matchResultsViewedAt set',
+      () async {
+        final event = makeEvent(status: 'completed');
+        final application = makeApplication(
+          event: event,
+          matchResultsViewedAt: DateTime.now().subtract(
+            const Duration(hours: 1),
+          ),
+        );
 
-      when(() => mockEventRepo.getMyTickets('user-1'))
-          .thenAnswer((_) async => [application]);
-      when(() => mockEventRepo.getTodayActiveEventsForUser('user-1'))
-          .thenAnswer((_) async => []);
-      when(() => mockMatchingRepo.getMyMatches('event-1'))
-          .thenAnswer((_) async => [_makeMatchPair()]);
+        when(
+          () => mockEventRepo.getMyTickets('user-1'),
+        ).thenAnswer((_) async => [application]);
+        when(
+          () => mockEventRepo.getTodayActiveEventsForUser('user-1'),
+        ).thenAnswer((_) async => []);
+        when(
+          () => mockMatchingRepo.getMyMatches('event-1'),
+        ).thenAnswer((_) async => [_makeMatchPair()]);
 
-      final container = makeContainer();
-      final result = await container.read(activeEventBannersProvider.future);
+        final container = makeContainer();
+        final result = await container.read(activeEventBannersProvider.future);
 
-      expect(result, hasLength(1));
-      expect(result.first.phase, EventLifecyclePhase.resultsViewed);
-    });
+        expect(result, hasLength(1));
+        expect(result.first.phase, EventLifecyclePhase.resultsViewed);
+      },
+    );
 
     test('ended items are filtered out of results', () async {
       final endedEvent = makeEvent(
@@ -239,12 +271,15 @@ void main() {
       );
       final application = makeApplication(event: endedEvent);
 
-      when(() => mockEventRepo.getMyTickets('user-1'))
-          .thenAnswer((_) async => [application]);
-      when(() => mockEventRepo.getTodayActiveEventsForUser('user-1'))
-          .thenAnswer((_) async => []);
-      when(() => mockMatchingRepo.getMyMatches('event-1'))
-          .thenAnswer((_) async => []);
+      when(
+        () => mockEventRepo.getMyTickets('user-1'),
+      ).thenAnswer((_) async => [application]);
+      when(
+        () => mockEventRepo.getTodayActiveEventsForUser('user-1'),
+      ).thenAnswer((_) async => []);
+      when(
+        () => mockMatchingRepo.getMyMatches('event-1'),
+      ).thenAnswer((_) async => []);
 
       final container = makeContainer();
       final result = await container.read(activeEventBannersProvider.future);
@@ -269,27 +304,39 @@ void main() {
         endTime: base.add(const Duration(hours: 3)),
       );
 
-      final appA =
-          makeApplication(id: 'app-a', eventId: 'event-a', event: eventA);
-      final appB =
-          makeApplication(id: 'app-b', eventId: 'event-b', event: eventB);
+      final appA = makeApplication(
+        id: 'app-a',
+        eventId: 'event-a',
+        event: eventA,
+      );
+      final appB = makeApplication(
+        id: 'app-b',
+        eventId: 'event-b',
+        event: eventB,
+      );
 
-      when(() => mockEventRepo.getMyTickets('user-1'))
-          .thenAnswer((_) async => [appA, appB]);
-      when(() => mockEventRepo.getTodayActiveEventsForUser('user-1'))
-          .thenAnswer(
-            (_) async => [
-              TodayActiveEvent(event: eventB, participantStatus: 'checked_in'),
-            ],
-          );
-      when(() => mockMatchingRepo.getMyMatches('event-a'))
-          .thenAnswer((_) async => []);
-      when(() => mockMatchingRepo.getMyMatches('event-b'))
-          .thenAnswer((_) async => []);
-      when(() => mockMatchingRepo.getMatchingCandidates('event-b'))
-          .thenAnswer((_) async => []);
-      when(() => mockMatchingRepo.getMyVoteCount('event-b'))
-          .thenAnswer((_) async => 0);
+      when(
+        () => mockEventRepo.getMyTickets('user-1'),
+      ).thenAnswer((_) async => [appA, appB]);
+      when(
+        () => mockEventRepo.getTodayActiveEventsForUser('user-1'),
+      ).thenAnswer(
+        (_) async => [
+          TodayActiveEvent(event: eventB, participantStatus: 'checked_in'),
+        ],
+      );
+      when(
+        () => mockMatchingRepo.getMyMatches('event-a'),
+      ).thenAnswer((_) async => []);
+      when(
+        () => mockMatchingRepo.getMyMatches('event-b'),
+      ).thenAnswer((_) async => []);
+      when(
+        () => mockMatchingRepo.getMatchingCandidates('event-b'),
+      ).thenAnswer((_) async => []);
+      when(
+        () => mockMatchingRepo.getMyVoteCount('event-b'),
+      ).thenAnswer((_) async => 0);
 
       final container = makeContainer();
       final result = await container.read(activeEventBannersProvider.future);
@@ -299,59 +346,71 @@ void main() {
       expect(result[1].phase, EventLifecyclePhase.waiting);
     });
 
-    test('getMatchingCandidates exception silently defaults: phase is checkedIn',
-        () async {
-      // Verifies the silent-catch path: getMatchingCandidates errors are swallowed
-      // and hasMatchingCandidates = false, so phase falls back to checkedIn.
-      final event = makeEvent(status: 'ongoing');
-      final application = makeApplication(event: event);
+    test(
+      'getMatchingCandidates exception silently defaults: phase is checkedIn',
+      () async {
+        // Verifies the silent-catch path: getMatchingCandidates errors are swallowed
+        // and hasMatchingCandidates = false, so phase falls back to checkedIn.
+        final event = makeEvent(status: 'ongoing');
+        final application = makeApplication(event: event);
 
-      when(() => mockEventRepo.getMyTickets('user-1'))
-          .thenAnswer((_) async => [application]);
-      when(() => mockEventRepo.getTodayActiveEventsForUser('user-1'))
-          .thenAnswer(
-            (_) async => [
-              TodayActiveEvent(event: event, participantStatus: 'checked_in'),
-            ],
-          );
-      when(() => mockMatchingRepo.getMyMatches('event-1'))
-          .thenAnswer((_) async => []);
-      when(() => mockMatchingRepo.getMatchingCandidates('event-1'))
-          .thenAnswer((_) async => throw Exception('candidates error'));
-      when(() => mockMatchingRepo.getMyVoteCount('event-1'))
-          .thenAnswer((_) async => 0);
+        when(
+          () => mockEventRepo.getMyTickets('user-1'),
+        ).thenAnswer((_) async => [application]);
+        when(
+          () => mockEventRepo.getTodayActiveEventsForUser('user-1'),
+        ).thenAnswer(
+          (_) async => [
+            TodayActiveEvent(event: event, participantStatus: 'checked_in'),
+          ],
+        );
+        when(
+          () => mockMatchingRepo.getMyMatches('event-1'),
+        ).thenAnswer((_) async => []);
+        when(
+          () => mockMatchingRepo.getMatchingCandidates('event-1'),
+        ).thenAnswer((_) async => throw Exception('candidates error'));
+        when(
+          () => mockMatchingRepo.getMyVoteCount('event-1'),
+        ).thenAnswer((_) async => 0);
 
-      final container = makeContainer();
-      final result = await container.read(activeEventBannersProvider.future);
+        final container = makeContainer();
+        final result = await container.read(activeEventBannersProvider.future);
 
-      expect(result, hasLength(1));
-      expect(result.first.phase, EventLifecyclePhase.checkedIn);
-    });
+        expect(result, hasLength(1));
+        expect(result.first.phase, EventLifecyclePhase.checkedIn);
+      },
+    );
   });
 
   group('waiting vs checkInReady transition', () {
-    test('waiting when start time is in the future and status is scheduled',
-        () async {
-      final base = DateTime.now();
-      final event = makeEvent(
-        status: 'scheduled',
-        startTime: base.add(const Duration(hours: 2)),
-        endTime: base.add(const Duration(hours: 4)),
-      );
-      final application = makeApplication(event: event);
+    test(
+      'waiting when start time is in the future and status is scheduled',
+      () async {
+        final base = DateTime.now();
+        final event = makeEvent(
+          status: 'scheduled',
+          startTime: base.add(const Duration(hours: 2)),
+          endTime: base.add(const Duration(hours: 4)),
+        );
+        final application = makeApplication(event: event);
 
-      when(() => mockEventRepo.getMyTickets('user-1'))
-          .thenAnswer((_) async => [application]);
-      when(() => mockEventRepo.getTodayActiveEventsForUser('user-1'))
-          .thenAnswer((_) async => []);
-      when(() => mockMatchingRepo.getMyMatches('event-1'))
-          .thenAnswer((_) async => []);
+        when(
+          () => mockEventRepo.getMyTickets('user-1'),
+        ).thenAnswer((_) async => [application]);
+        when(
+          () => mockEventRepo.getTodayActiveEventsForUser('user-1'),
+        ).thenAnswer((_) async => []);
+        when(
+          () => mockMatchingRepo.getMyMatches('event-1'),
+        ).thenAnswer((_) async => []);
 
-      final container = makeContainer();
-      final result = await container.read(activeEventBannersProvider.future);
+        final container = makeContainer();
+        final result = await container.read(activeEventBannersProvider.future);
 
-      expect(result.first.phase, EventLifecyclePhase.waiting);
-    });
+        expect(result.first.phase, EventLifecyclePhase.waiting);
+      },
+    );
 
     test('checkInReady when event status is active', () async {
       final base = DateTime.now();
@@ -362,12 +421,15 @@ void main() {
       );
       final application = makeApplication(event: event);
 
-      when(() => mockEventRepo.getMyTickets('user-1'))
-          .thenAnswer((_) async => [application]);
-      when(() => mockEventRepo.getTodayActiveEventsForUser('user-1'))
-          .thenAnswer((_) async => []);
-      when(() => mockMatchingRepo.getMyMatches('event-1'))
-          .thenAnswer((_) async => []);
+      when(
+        () => mockEventRepo.getMyTickets('user-1'),
+      ).thenAnswer((_) async => [application]);
+      when(
+        () => mockEventRepo.getTodayActiveEventsForUser('user-1'),
+      ).thenAnswer((_) async => []);
+      when(
+        () => mockMatchingRepo.getMyMatches('event-1'),
+      ).thenAnswer((_) async => []);
 
       final container = makeContainer();
       final result = await container.read(activeEventBannersProvider.future);
@@ -378,8 +440,8 @@ void main() {
 }
 
 MatchPair _makeMatchPair() => MatchPair(
-      matchId: 'match-1',
-      eventId: 'event-1',
-      partnerId: 'partner-1',
-      matchedAt: DateTime.now(),
-    );
+  matchId: 'match-1',
+  eventId: 'event-1',
+  partnerId: 'partner-1',
+  matchedAt: DateTime.now(),
+);
