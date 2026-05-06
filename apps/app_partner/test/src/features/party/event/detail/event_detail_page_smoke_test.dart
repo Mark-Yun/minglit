@@ -1,6 +1,6 @@
-// Ref #2224: Smoke — EventDetailPage spec 준수 검증
+// Ref #2109: Smoke — EventDetailPage hub layout spec 준수 검증
 //
-// Tab 구조 제거 + AppBar 타이틀 "이벤트 상세" + 참가 현황 섹션 렌더링을 검증한다.
+// Tab 구조 제거 + 상태 배너/메타 칩/참가 CTA 렌더링을 검증한다.
 import 'dart:async';
 
 import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
@@ -72,7 +72,7 @@ void main() {
     );
   }
 
-  group('EventDetailPage (Fix #2224)', () {
+  group('EventDetailPage (Fix #2109)', () {
     testWidgets('AppBar 타이틀이 "이벤트 상세"이다', (tester) async {
       await tester.pumpWidget(buildWidget());
       await tester.pumpAndSettle();
@@ -119,7 +119,7 @@ void main() {
       expect(find.byType(Scaffold), findsOneWidget);
     });
 
-    testWidgets('심사 대기 건이 있으면 "처리하기" 링크가 표시된다', (tester) async {
+    testWidgets('심사 대기 건이 있으면 "심사하기" 버튼이 표시된다', (tester) async {
       final pendingApp = EventApplication(
         id: 'app-1',
         eventId: 'event-1',
@@ -132,21 +132,20 @@ void main() {
       await tester.pumpWidget(buildWidget(applications: [pendingApp]));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('처리하기'), findsOneWidget);
+      expect(find.text('심사하기'), findsOneWidget);
     });
 
-    testWidgets('심사 대기 건이 없으면 "처리하기" 링크가 없다', (tester) async {
+    testWidgets('심사 대기 건이 없으면 "심사하기" 버튼이 없다', (tester) async {
       await tester.pumpWidget(buildWidget(applications: []));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('처리하기'), findsNothing);
+      expect(find.text('심사하기'), findsNothing);
     });
 
     testWidgets(
-      '확정 인원은 event.currentParticipants 기준으로 표시된다 (신청 목록 count 아님)',
+      '확정 인원은 approved/paid 신청 수 기준으로 표시된다',
       (tester) async {
-        // Fix #2224: event has 18 confirmed participants but only 1 approved
-        // application in the list — UI must show 18, not 1.
+        // Fix #2109: 허브 페이지는 참가 신청 상태 집계로 summary를 계산한다.
         final approvedApp = EventApplication(
           id: 'app-approved',
           eventId: 'event-1',
@@ -161,12 +160,158 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        // testEvent.currentParticipants == 18, maxParticipants == 40
-        expect(find.text('18'), findsOneWidget);
-        expect(find.textContaining('/ 40'), findsOneWidget);
-        // Must NOT show the approved-application count (1)
-        expect(find.text('1'), findsNothing);
+        expect(find.text('1'), findsOneWidget);
+        expect(find.text('1 / 40명'), findsOneWidget);
       },
     );
+
+    testWidgets('취소 상태면 취소 배너가 표시된다', (tester) async {
+      // Fix #2109: 상태별 상단 배너를 회귀 테스트로 고정한다.
+      await tester.pumpWidget(
+        buildWidget(
+          event: testEvent.copyWith(status: 'cancelled'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('이벤트가 취소되었습니다. 참가자에게 자동 환불 처리됩니다.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('메타 칩과 정보 수정 버튼이 표시된다', (tester) async {
+      await tester.pumpWidget(buildWidget());
+      await tester.pumpAndSettle();
+
+      expect(find.text('모집중'), findsOneWidget);
+      expect(find.text('공개'), findsOneWidget);
+      expect(find.text('정보 수정'), findsOneWidget);
+      expect(find.text('참가자 보기'), findsOneWidget);
+    });
+
+    testWidgets('티켓이 있으면 예상 매출 카드가 표시된다', (tester) async {
+      final approvedApp = EventApplication(
+        id: 'app-approved',
+        eventId: 'event-1',
+        ticketId: 'ticket-1',
+        userId: 'user-2',
+        status: 'approved',
+        createdAt: now,
+        updatedAt: now,
+      );
+      final ticket = Ticket(
+        id: 'ticket-1',
+        name: '일반 티켓',
+        createdAt: now,
+        updatedAt: now,
+        price: 55000,
+        quantity: 10,
+      );
+
+      await tester.pumpWidget(
+        buildWidget(
+          applications: [approvedApp],
+          tickets: [ticket],
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('예상 매출: ₩55,000'), findsOneWidget);
+    });
+
+    testWidgets('visibility 칩 탭 시 설명 SnackBar가 표시된다', (tester) async {
+      await tester.pumpWidget(buildWidget());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('공개'));
+      await tester.pump();
+
+      expect(
+        find.text('공개 이벤트입니다. 파티 탐색과 공유 링크에서 노출됩니다.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('확정 인원이 있으면 정보 수정 시 잠금 SnackBar가 표시된다', (tester) async {
+      final approvedApp = EventApplication(
+        id: 'app-approved',
+        eventId: 'event-1',
+        ticketId: 'ticket-1',
+        userId: 'user-2',
+        status: 'approved',
+        createdAt: now,
+        updatedAt: now,
+      );
+
+      await tester.pumpWidget(buildWidget(applications: [approvedApp]));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('정보 수정'));
+      await tester.pump();
+
+      expect(
+        find.text('참가 확정 이후에는 정보 수정을 할 수 없습니다.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('확정 인원이 없으면 정보 수정 준비 중 SnackBar가 표시된다', (tester) async {
+      await tester.pumpWidget(buildWidget(applications: []));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('정보 수정'));
+      await tester.pump();
+
+      expect(find.text('이벤트 정보 수정 기능은 준비 중입니다.'), findsOneWidget);
+    });
+
+    testWidgets('완료 상태면 완료 배너가 표시된다', (tester) async {
+      await tester.pumpWidget(
+        buildWidget(
+          event: testEvent.copyWith(status: 'completed'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('이벤트가 완료되었습니다. 🎊'), findsOneWidget);
+    });
+
+    testWidgets('scheduled 상태면 상태 배너가 없다', (tester) async {
+      await tester.pumpWidget(
+        buildWidget(
+          event: testEvent.copyWith(status: 'scheduled'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('이벤트가 취소되었습니다. 참가자에게 자동 환불 처리됩니다.'),
+        findsNothing,
+      );
+      expect(find.text('이벤트가 완료되었습니다. 🎊'), findsNothing);
+    });
+
+    testWidgets('길 안내 버튼은 좌표가 없으면 비활성화된다', (tester) async {
+      await tester.pumpWidget(buildWidget());
+      await tester.pumpAndSettle();
+
+      final button = tester.widget<OutlinedButton>(
+        find.widgetWithText(OutlinedButton, '길 안내'),
+      );
+      expect(button.onPressed, isNull);
+    });
+
+    testWidgets('private visibility면 비공개 칩이 표시된다', (tester) async {
+      await tester.pumpWidget(
+        buildWidget(
+          event: testEvent.copyWith(visibility: 'private'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('비공개'), findsOneWidget);
+      expect(find.text('공개'), findsNothing);
+    });
   });
 }
