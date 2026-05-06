@@ -375,13 +375,15 @@ void main() {
         ).thenAnswer((_) async => 0);
 
         final container = makeContainer();
-        Object? caught;
-        try {
-          await container.read(activeEventBannersProvider.future);
-        } catch (e) {
-          caught = e;
-        }
-        expect(caught, isA<Exception>());
+        final sub = container.listen(activeEventBannersProvider, (_, _) {});
+        addTearDown(sub.close);
+        // Drain all pending microtasks so the provider can settle.
+        // FutureProvider.future in Riverpod 3 resolves with StateError on
+        // container disposal; check AsyncValue directly instead.
+        await Future<void>.delayed(Duration.zero);
+        final state = container.read(activeEventBannersProvider);
+        expect(state.hasError, isTrue);
+        expect(state.error, isA<Exception>());
       },
     );
 
