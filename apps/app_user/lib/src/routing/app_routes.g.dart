@@ -22,6 +22,8 @@ List<RouteBase> get $appRoutes => [
   $myTicketsRoute,
   $ticketQRRoute,
   $purchaseHistoryRoute,
+  $purchaseHistoryDetailRoute,
+  $eventApplicationReviewRoute,
   $notificationCenterRoute,
   $notificationSettingsRoute,
   $accountManagementRoute,
@@ -462,6 +464,70 @@ mixin $PurchaseHistoryRoute on GoRouteData {
 
   @override
   String get location => GoRouteData.$location('/purchase-history');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $purchaseHistoryDetailRoute => GoRouteData.$route(
+  path: '/purchase-history/:applicationId',
+  factory: $PurchaseHistoryDetailRoute._fromState,
+);
+
+mixin $PurchaseHistoryDetailRoute on GoRouteData {
+  static PurchaseHistoryDetailRoute _fromState(GoRouterState state) =>
+      PurchaseHistoryDetailRoute(
+        applicationId: state.pathParameters['applicationId']!,
+      );
+
+  PurchaseHistoryDetailRoute get _self => this as PurchaseHistoryDetailRoute;
+
+  @override
+  String get location => GoRouteData.$location(
+    '/purchase-history/${Uri.encodeComponent(_self.applicationId)}',
+  );
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $eventApplicationReviewRoute => GoRouteData.$route(
+  path: '/purchase-history/:applicationId/review',
+  factory: $EventApplicationReviewRoute._fromState,
+);
+
+mixin $EventApplicationReviewRoute on GoRouteData {
+  static EventApplicationReviewRoute _fromState(GoRouterState state) =>
+      EventApplicationReviewRoute(
+        applicationId: state.pathParameters['applicationId']!,
+      );
+
+  EventApplicationReviewRoute get _self => this as EventApplicationReviewRoute;
+
+  @override
+  String get location => GoRouteData.$location(
+    '/purchase-history/${Uri.encodeComponent(_self.applicationId)}/review',
+  );
 
   @override
   void go(BuildContext context) => context.go(location);

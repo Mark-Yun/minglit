@@ -17,6 +17,8 @@ import 'package:app_user/src/features/home/my_page.dart';
 import 'package:app_user/src/features/my_tickets/ui/my_tickets_page.dart';
 import 'package:app_user/src/features/partner/detail/partner_detail_page.dart';
 import 'package:app_user/src/features/partner/detail/partner_events_page.dart';
+import 'package:app_user/src/features/payment/ui/event_application_review_page.dart';
+import 'package:app_user/src/features/payment/ui/purchase_history_detail_page.dart';
 import 'package:app_user/src/features/payment/ui/purchase_history_page.dart';
 import 'package:app_user/src/features/search/search_page.dart';
 import 'package:app_user/src/features/settings/blocked_partners_page.dart';
@@ -260,6 +262,38 @@ class PurchaseHistoryRoute extends GoRouteData with $PurchaseHistoryRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       const PurchaseHistoryPage();
+}
+
+/// **Purchase History Detail Route**
+/// Path: `/purchase-history/:applicationId`
+@TypedGoRoute<PurchaseHistoryDetailRoute>(
+  path: '/purchase-history/:applicationId',
+)
+class PurchaseHistoryDetailRoute extends GoRouteData
+    with $PurchaseHistoryDetailRoute {
+  const PurchaseHistoryDetailRoute({required this.applicationId});
+
+  final String applicationId;
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      PurchaseHistoryDetailPage(applicationId: applicationId);
+}
+
+/// **Event Application Review Route**
+/// Path: `/purchase-history/:applicationId/review`
+@TypedGoRoute<EventApplicationReviewRoute>(
+  path: '/purchase-history/:applicationId/review',
+)
+class EventApplicationReviewRoute extends GoRouteData
+    with $EventApplicationReviewRoute {
+  const EventApplicationReviewRoute({required this.applicationId});
+
+  final String applicationId;
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      EventApplicationReviewPage(applicationId: applicationId);
 }
 
 /// **Notification Center Route**
