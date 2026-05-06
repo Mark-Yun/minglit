@@ -112,6 +112,10 @@ void main() {
       String ticketId = 'ticket-1',
       String? ticketName,
       List<dynamic>? targetEntryGroupIds,
+      // Fix #2272: terminal timestamps and email added to RPC
+      String? paidAt,
+      String? refundedAt,
+      String? userEmail,
     }) {
       return {
         'application_id': 'app-1',
@@ -124,11 +128,14 @@ void main() {
         'user_id': 'user-1',
         'user_name': null,
         'user_phone': null,
+        'user_email': userEmail,
         'payment_id': null,
         'payment_amount': 0,
         'status': 'pending_review',
         'created_at': '2026-01-01T00:00:00.000Z',
         'updated_at': '2026-01-01T00:00:00.000Z',
+        'paid_at': paidAt,
+        'refunded_at': refundedAt,
         'refund_status': 'none',
       };
     }
@@ -164,6 +171,51 @@ void main() {
       );
       final app = EventApplication.fromJson(mapped);
       expect(app.ticket!.targetEntryGroupIds, isEmpty);
+    });
+
+    // Fix #2272: terminal timestamp and email mapping tests
+    test('paid_at is mapped when present in RPC row', () {
+      const ts = '2026-05-01T10:00:00.000Z';
+      final mapped = mapEventApplicationRpcRow(
+        flatRow(ticketName: '티켓', paidAt: ts),
+      );
+      final app = EventApplication.fromJson(mapped);
+      expect(app.paidAt, DateTime.parse(ts));
+    });
+
+    test('paid_at is null when absent from RPC row', () {
+      final mapped = mapEventApplicationRpcRow(flatRow(ticketName: '티켓'));
+      final app = EventApplication.fromJson(mapped);
+      expect(app.paidAt, isNull);
+    });
+
+    test('refunded_at is mapped when present in RPC row', () {
+      const ts = '2026-05-02T15:30:00.000Z';
+      final mapped = mapEventApplicationRpcRow(
+        flatRow(ticketName: '티켓', refundedAt: ts),
+      );
+      final app = EventApplication.fromJson(mapped);
+      expect(app.refundedAt, DateTime.parse(ts));
+    });
+
+    test('user_email is stored in username field for email masking', () {
+      final mapped = mapEventApplicationRpcRow(
+        flatRow(
+          ticketName: '티켓',
+          userEmail: 'test@example.com',
+        )
+          ..['user_name'] = '테스트',
+      );
+      final app = EventApplication.fromJson(mapped);
+      expect(app.user?.username, 'test@example.com');
+    });
+
+    test('username is empty string when user_email is null', () {
+      final mapped = mapEventApplicationRpcRow(
+        flatRow(ticketName: '티켓')..['user_name'] = '테스트',
+      );
+      final app = EventApplication.fromJson(mapped);
+      expect(app.user?.username, '');
     });
   });
 }

@@ -47,12 +47,17 @@ void main() {
     required String status,
     String? userName,
     String? username,
+    // Fix #2272: userEmail stored in username field for email masking in 환불 tab
+    String? userEmail,
     String? gender,
     int? birthYear,
     String refundStatus = 'none',
     String? rejectionReason,
     String? cancellationReason,
     String? groupId,
+    // Fix #2272: terminal timestamps for tab sorting and relative-date trailing
+    DateTime? paidAt,
+    DateTime? refundedAt,
   }) {
     return EventApplication(
       id: id,
@@ -65,11 +70,14 @@ void main() {
       cancellationReason: cancellationReason,
       createdAt: now.subtract(const Duration(hours: 1)),
       updatedAt: now,
+      paidAt: paidAt,
+      refundedAt: refundedAt,
       user: userName != null
           ? UserProfile(
               id: 'user_$id',
               name: userName,
-              username: username ?? userName.toLowerCase(),
+              // userEmail takes priority: carries email for masked-email display
+              username: userEmail ?? username ?? userName.toLowerCase(),
               gender: gender,
               birthYear: birthYear,
             )
@@ -359,7 +367,7 @@ void main() {
       await tester.tap(find.text('환불'));
       await tester.pumpAndSettle();
 
-      // Fix #2126: RPC returns name (not email/username); masked name shown
+      // Fix #2272: username without '@' → name masking fallback (이***)
       expect(find.text('이환불'), findsNothing);
       expect(find.text('이***'), findsOneWidget);
     });
@@ -379,7 +387,29 @@ void main() {
       expect(find.text('정상유저'), findsNothing);
     });
 
-    testWidgets('shows masked name, not real name', (tester) async {
+    testWidgets('shows masked email when userEmail is provided', (tester) async {
+      final bundle = makeBundle(
+        applications: [
+          makeApp(
+            id: 'app_1',
+            status: 'cancelled',
+            userName: '홍길동',
+            userEmail: 'hong@example.com',
+          ),
+        ],
+      );
+      await tester.pumpWidget(buildPage(bundle: bundle));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('환불'));
+      await tester.pumpAndSettle();
+
+      // Fix #2272: spec requires masked email ("h***@example.com") in 환불 tab
+      expect(find.text('홍길동'), findsNothing);
+      expect(find.text('h***@example.com'), findsOneWidget);
+    });
+
+    testWidgets('falls back to masked name when email is unavailable', (tester) async {
       final bundle = makeBundle(
         applications: [
           makeApp(id: 'app_1', status: 'cancelled', userName: '홍길동'),
@@ -391,9 +421,100 @@ void main() {
       await tester.tap(find.text('환불'));
       await tester.pumpAndSettle();
 
-      // Fix #2126: name masked with first char + *** (e.g. 홍***)
+      // Fix #2272: no email → username is '홍길동' (no '@') → name masking
       expect(find.text('홍길동'), findsNothing);
       expect(find.text('홍***'), findsOneWidget);
+    });
+
+    testWidgets('shows relative refund date in trailing', (tester) async {
+      final bundle = makeBundle(
+        applications: [
+          makeApp(
+            id: 'app_1',
+            status: 'cancelled',
+            userName: '환불자',
+            refundedAt: now.subtract(const Duration(days: 3)),
+          ),
+        ],
+      );
+      await tester.pumpWidget(buildPage(bundle: bundle));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('환불'));
+      await tester.pumpAndSettle();
+
+      // Fix #2272: spec State 8 requires relative refund date in trailing
+      expect(
+        find.byWidgetPredicate(
+          (w) =>
+              w is Text &&
+              (w.data == '오늘' ||
+                  w.data == '어제' ||
+                  (w.data?.endsWith('일 전') ?? false)),
+        ),
+        findsAtLeastNWidgets(1),
+      );
+    });
+  });
+
+  group('승인됨 tab — relative payment date', () {
+    testWidgets('shows relative payment date when paidAt is provided',
+        (tester) async {
+      final bundle = makeBundle(
+        applications: [
+          makeApp(
+            id: 'app_1',
+            status: 'paid',
+            userName: '결제자',
+            paidAt: now.subtract(const Duration(days: 7)),
+          ),
+        ],
+      );
+      await tester.pumpWidget(buildPage(bundle: bundle));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('승인됨'));
+      await tester.pumpAndSettle();
+
+      // Fix #2272: spec State 6 requires "결제 N일 전" in trailing
+      expect(
+        find.byWidgetPredicate(
+          (w) =>
+              w is Text && (w.data?.startsWith('결제 ') ?? false),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('sorts approved apps by paidAt desc', (tester) async {
+      final bundle = makeBundle(
+        applications: [
+          makeApp(
+            id: 'app_older',
+            status: 'paid',
+            userName: '오래된결제',
+            paidAt: now.subtract(const Duration(days: 10)),
+          ),
+          makeApp(
+            id: 'app_newer',
+            status: 'paid',
+            userName: '최근결제',
+            paidAt: now.subtract(const Duration(days: 2)),
+          ),
+        ],
+      );
+      await tester.pumpWidget(buildPage(bundle: bundle));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('승인됨'));
+      await tester.pumpAndSettle();
+
+      // Fix #2272: most recently paid app appears first
+      final olderOffset =
+          tester.getTopLeft(find.text('오래된결제')).dy;
+      final newerOffset =
+          tester.getTopLeft(find.text('최근결제')).dy;
+      expect(newerOffset, lessThan(olderOffset));
     });
   });
 }

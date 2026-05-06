@@ -69,15 +69,26 @@ class _DashboardBody extends StatelessWidget {
         .toList();
     // Fix #2272: spec State 6 — 승인됨 탭은 paid 단독; approved는 결제대기로
     // 노출 X. State 8 — 환불 탭은 cancelled status 전용.
+    // Fix #2272: sort each completed tab by terminal timestamp desc (most recent first)
+    // so operators see the latest-processed applications at the top.
     final approvedApps = applications
         .where((app) => app.status == 'paid')
-        .toList();
+        .toList()
+      ..sort(
+        (a, b) =>
+            (b.paidAt ?? b.updatedAt).compareTo(a.paidAt ?? a.updatedAt),
+      );
     final rejectedApps = applications
         .where((app) => app.status == 'rejected')
-        .toList();
+        .toList()
+      ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
     final refundApps = applications
         .where((app) => app.status == 'cancelled')
-        .toList();
+        .toList()
+      ..sort(
+        (a, b) => (b.refundedAt ?? b.updatedAt)
+            .compareTo(a.refundedAt ?? a.updatedAt),
+      );
 
     return TabBarView(
       children: [
@@ -529,8 +540,11 @@ class _EntryGroupCard extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: FilledButton(
-                // Fix #2126: disabled when no pending to prevent empty carousel launch
-                onPressed: counts.pending > 0
+                // Fix #2272: guard on event-wide totalPending (not group-level
+                // counts.pending) — button launches the event-wide carousel
+                // (no groupId), so it should be active whenever any pending
+                // application exists anywhere in the event.
+                onPressed: totalPending > 0
                     ? () => EventApplicationReviewCarouselRoute(
                         partyId: event.partyId,
                         eventId: eventId,
@@ -602,12 +616,26 @@ class _ApplicationCard extends StatelessWidget {
             color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
-        trailing: Row(
+        // Fix #2272: spec State 6 requires relative payment date in trailing
+        trailing: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            _StatusBadge(status: app.status),
-            const SizedBox(width: MinglitSpacing.small),
-            const Icon(Icons.chevron_right),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _StatusBadge(status: app.status),
+                const SizedBox(width: MinglitSpacing.small),
+                const Icon(Icons.chevron_right),
+              ],
+            ),
+            if (app.paidAt != null)
+              Text(
+                '결제 ${_relativeDate(app.paidAt!)}',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
           ],
         ),
         // Fix #2126: push() preserves back-navigation to list
@@ -695,12 +723,26 @@ class _RejectedApplicationCard extends StatelessWidget {
             ],
           ],
         ),
-        trailing: Row(
+        // Fix #2272: spec State 7 requires relative rejection date in trailing;
+        // no dedicated rejected_at column — updatedAt is the proxy.
+        trailing: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            _StatusBadge(status: app.status),
-            const SizedBox(width: MinglitSpacing.small),
-            const Icon(Icons.chevron_right),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _StatusBadge(status: app.status),
+                const SizedBox(width: MinglitSpacing.small),
+                const Icon(Icons.chevron_right),
+              ],
+            ),
+            Text(
+              _relativeDate(app.updatedAt),
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
           ],
         ),
         onTap: () =>
@@ -723,8 +765,15 @@ class _RefundApplicationCard extends StatelessWidget {
     final cancellationReason = app.cancellationReason?.trim();
     final hasCancellationReason =
         cancellationReason != null && cancellationReason.isNotEmpty;
-    // Fix #2126: RPC returns user_name (not username); mask name for refund tab identifier
-    final maskedUsername = _maskIdentifier(app.user?.name ?? '');
+    // Fix #2272: spec requires masked email in 환불 tab to distinguish applicants
+    // with the same surname. user_email is stored in username by
+    // mapEventApplicationRpcRow; _maskIdentifier detects '@' → email masking.
+    // Falls back to name masking when email is unavailable.
+    final maskedIdentifier = _maskIdentifier(
+      app.user?.username.isNotEmpty == true
+          ? app.user!.username
+          : app.user?.name ?? '',
+    );
 
     return Card(
       child: ListTile(
@@ -741,7 +790,7 @@ class _RefundApplicationCard extends StatelessWidget {
           ),
         ),
         title: Text(
-          maskedUsername.isEmpty ? '신청자' : maskedUsername,
+          maskedIdentifier.isEmpty ? '신청자' : maskedIdentifier,
         ),
         subtitle: hasCancellationReason
             ? Row(
@@ -770,12 +819,25 @@ class _RefundApplicationCard extends StatelessWidget {
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
-        trailing: Row(
+        // Fix #2272: spec State 8 requires relative refund date in trailing
+        trailing: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            _StatusBadge(status: app.status),
-            const SizedBox(width: MinglitSpacing.small),
-            const Icon(Icons.chevron_right),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _StatusBadge(status: app.status),
+                const SizedBox(width: MinglitSpacing.small),
+                const Icon(Icons.chevron_right),
+              ],
+            ),
+            Text(
+              _relativeDate(app.refundedAt ?? app.updatedAt),
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
           ],
         ),
         onTap: () =>
@@ -986,6 +1048,15 @@ String _userSummary(UserProfile? user) {
   final birthYear = user?.birthYear?.toString();
   final parts = [if (gender != null) gender, if (birthYear != null) birthYear];
   return parts.isEmpty ? '정보 없음' : parts.join(' · ');
+}
+
+// Fix #2272: relative date for terminal timestamps — matches spec trailing format.
+// Uses day-level granularity: "오늘", "어제", "N일 전".
+String _relativeDate(DateTime dt) {
+  final diff = DateTime.now().difference(dt);
+  if (diff.inDays == 0) return '오늘';
+  if (diff.inDays == 1) return '어제';
+  return '${diff.inDays}일 전';
 }
 
 // Fix #2272: mask identifier for PII minimization in refund tab
