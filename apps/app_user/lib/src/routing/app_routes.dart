@@ -25,6 +25,7 @@ import 'package:app_user/src/features/settings/blocked_partners_page.dart';
 import 'package:app_user/src/features/settings/privacy_page.dart';
 import 'package:app_user/src/features/tag/ui/tag_event_list_page.dart';
 import 'package:app_user/src/features/ticket/ui/ticket_qr_screen.dart';
+import 'package:app_user/src/features/tickets/my_tickets_page.dart';
 import 'package:app_user/src/logic/ticket_event_meta.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
