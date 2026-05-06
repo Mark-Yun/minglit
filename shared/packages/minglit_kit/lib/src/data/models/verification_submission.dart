@@ -22,6 +22,8 @@ abstract class VerificationSubmission with _$VerificationSubmission {
     @JsonKey(name: 'application_id') String? applicationId,
     @JsonKey(name: 'reviewed_at') DateTime? reviewedAt,
     @JsonKey(name: 'reviewed_by') String? reviewedBy,
+    // Fix #2099: 심사 시작 시점 — timeline "심사 진행 중" step time 표시용
+    @JsonKey(name: 'review_started_at') DateTime? reviewStartedAt,
   }) = _VerificationSubmission;
 
   /// Creates a [VerificationSubmission] from a JSON map.

@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(152);
+SELECT plan(158);
 
 -- event_applications
 SELECT has_table('event_applications');
@@ -15,6 +15,11 @@ SELECT has_column('event_applications', 'refund_status');
 SELECT has_column('event_applications', 'created_at');
 SELECT has_column('event_applications', 'updated_at');
 SELECT has_column('event_applications', 'rejection_reason');
+-- Fix #2099: new nullable columns for refund/cancellation tracking
+SELECT has_column('event_applications', 'refunded_at');
+SELECT col_type_is('event_applications', 'refunded_at', 'timestamp with time zone');
+SELECT has_column('event_applications', 'cancellation_reason');
+SELECT col_type_is('event_applications', 'cancellation_reason', 'text');
 SELECT col_type_is('event_applications', 'id', 'uuid');
 SELECT col_is_pk('event_applications', 'id');
 SELECT col_has_default('event_applications', 'id');
@@ -50,6 +55,9 @@ SELECT has_column('verification_submissions', 'snapshot_data');
 -- Fix #301: admin_comment column dropped
 SELECT has_column('verification_submissions', 'reviewed_at');
 SELECT has_column('verification_submissions', 'reviewed_by');
+-- Fix #2099: new nullable column for review timeline
+SELECT has_column('verification_submissions', 'review_started_at');
+SELECT col_type_is('verification_submissions', 'review_started_at', 'timestamp with time zone');
 SELECT has_column('verification_submissions', 'created_at');
 SELECT has_column('verification_submissions', 'updated_at');
 SELECT col_type_is('verification_submissions', 'id', 'uuid');
