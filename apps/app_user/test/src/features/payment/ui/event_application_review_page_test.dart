@@ -47,15 +47,15 @@ void main() {
   }
 
   EventApplication makeApp(String status) => EventApplication(
-        id: 'app1',
-        eventId: 'event1',
-        ticketId: 'ticket1',
-        userId: 'user1',
-        status: status,
-        createdAt: DateTime(2026, 5, 1),
-        updatedAt: DateTime(2026, 5, 1),
-        event: baseEvent,
-      );
+    id: 'app1',
+    eventId: 'event1',
+    ticketId: 'ticket1',
+    userId: 'user1',
+    status: status,
+    createdAt: DateTime(2026, 5, 1),
+    updatedAt: DateTime(2026, 5, 1),
+    event: baseEvent,
+  );
 
   group('EventApplicationReviewPage — #2095', () {
     testWidgets('shows timeline for paid status', (tester) async {

@@ -3,10 +3,11 @@
 import 'package:app_partner/src/features/party/list/party_list_controller.dart';
 import 'package:app_partner/src/features/party/list/party_list_coordinator.dart';
 import 'package:app_partner/src/features/party/list/party_list_page.dart';
+import 'package:app_partner/src/features/party/list/party_with_stats.dart';
+import 'package:app_partner/src/l10n/generated/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
 
 class _MockPartyListCoordinator extends Mock implements PartyListCoordinator {}
@@ -16,10 +17,14 @@ void main() {
     final coordinator = _MockPartyListCoordinator();
     return ProviderScope(
       overrides: [
-        partyListProvider.overrideWith((_) async => <Party>[]),
+        partyListProvider.overrideWith((_) async => <PartyWithStats>[]),
         partyListCoordinatorProvider.overrideWithValue(coordinator),
       ],
-      child: const MaterialApp(home: PartyListPage()),
+      child: const MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: PartyListPage(),
+      ),
     );
   }
 
