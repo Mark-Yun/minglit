@@ -64,7 +64,8 @@ class _EventApplicationManagePageState
                 ),
                 HelpSection(
                   title: '심사는 어떻게 하나요?',
-                  body: '대기중 탭의 승인/거절 버튼으로 개별 심사하거나, 이벤트 상세의 "심사하기"에서 그룹별로 진행해요.',
+                  body:
+                      '대기중 탭의 승인/거절 버튼으로 개별 심사하거나, 이벤트 상세의 "심사하기"에서 그룹별로 진행해요.',
                 ),
                 HelpSection(
                   title: '거절 시 자동 환불은?',
