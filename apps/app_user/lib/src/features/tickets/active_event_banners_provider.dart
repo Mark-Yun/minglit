@@ -52,22 +52,17 @@ final activeEventBannersProvider = FutureProvider<List<ActiveEventBannerItem>>((
         Error.throwWithStackTrace(e, st);
       }
       // Only fetch matching state when checked-in to avoid unnecessary calls.
+      // Fix #2123: matchingReady → matching requires at least one submitted vote.
       if (isCheckedIn) {
         try {
-          final candidates = await matchingRepository.getMatchingCandidates(
-            event.id,
-          );
+          final (candidates, voteCount) = await (
+            matchingRepository.getMatchingCandidates(event.id),
+            matchingRepository.getMyVoteCount(event.id),
+          ).wait;
           hasMatchingCandidates = candidates.isNotEmpty;
-        } on Exception {
-          hasMatchingCandidates = false;
-        }
-        try {
-          // Fix #2123: matchingReady → matching transition requires at least one
-          // submitted vote, not just candidate availability.
-          final voteCount = await matchingRepository.getMyVoteCount(event.id);
           hasSubmittedVotes = voteCount > 0;
-        } on Exception {
-          hasSubmittedVotes = false;
+        } on Object catch (e) {
+          Log.w('⚠️ [ActiveBanners] matching state fetch failed for ${event.id}: $e');
         }
       }
 
