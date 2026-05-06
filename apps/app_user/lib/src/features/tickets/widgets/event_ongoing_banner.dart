@@ -61,36 +61,37 @@ class EventOngoingBanner extends StatelessWidget {
               ],
             ),
             const SizedBox(height: MinglitSpacing.medium),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(MinglitRadius.small),
-                  child: SizedBox(
-                    width: imageSize,
-                    height: imageSize,
-                    child: event?.imageUrl != null
-                        ? MinglitImage(
-                            path: event!.imageUrl!,
-                            width: imageSize,
-                            height: imageSize,
-                            fit: BoxFit.cover,
-                          )
-                        : ColoredBox(
-                            color: colorScheme.surfaceContainerHighest,
-                            child: Icon(
-                              Icons.event_outlined,
-                              size: MinglitIconSize.medium,
-                              color: colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                  ),
-                ),
-                const SizedBox(width: MinglitSpacing.medium),
-                Expanded(
-                  child: InkWell(
-                    onTap: () => _openDetail(context),
+            // spec: event_ongoing_banner.html#overview "thumb / title 영역 탭 → EventDetailRoute push"
+            InkWell(
+              onTap: () => _openDetail(context),
+              borderRadius: BorderRadius.circular(MinglitRadius.small),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ClipRRect(
                     borderRadius: BorderRadius.circular(MinglitRadius.small),
+                    child: SizedBox(
+                      width: imageSize,
+                      height: imageSize,
+                      child: event?.imageUrl != null
+                          ? MinglitImage(
+                              path: event!.imageUrl!,
+                              width: imageSize,
+                              height: imageSize,
+                              fit: BoxFit.cover,
+                            )
+                          : ColoredBox(
+                              color: colorScheme.surfaceContainerHighest,
+                              child: Icon(
+                                Icons.event_outlined,
+                                size: MinglitIconSize.medium,
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                    ),
+                  ),
+                  const SizedBox(width: MinglitSpacing.medium),
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -114,8 +115,8 @@ class EventOngoingBanner extends StatelessWidget {
                       ],
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             if (footer != null) ...[
               const SizedBox(height: MinglitSpacing.medium),

@@ -44,22 +44,29 @@ class MyTicketsPage extends ConsumerWidget {
                       ),
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: MinglitSpacing.large),
-                    Wrap(
-                      spacing: MinglitSpacing.small,
-                      runSpacing: MinglitSpacing.small,
-                      alignment: WrapAlignment.center,
+                    const SizedBox(height: MinglitSpacing.medium),
+                    // spec: my_tickets_page.html#empty-state — vertical column, height 40 each
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        FilledButton(
-                          onPressed: () => ref
-                              .read(appCoordinatorProvider)
-                              .pushPurchaseHistory(),
-                          child: const Text('구매내역 보기'),
+                        SizedBox(
+                          height: 40,
+                          child: FilledButton(
+                            onPressed: () => ref
+                                .read(appCoordinatorProvider)
+                                .pushPurchaseHistory(),
+                            child: const Text('구매내역 보기'),
+                          ),
                         ),
-                        OutlinedButton(
-                          onPressed: () =>
-                              ref.read(appCoordinatorProvider).goToHome(),
-                          child: const Text('이벤트 둘러보기'),
+                        const SizedBox(height: MinglitSpacing.small),
+                        SizedBox(
+                          height: 40,
+                          child: OutlinedButton(
+                            onPressed: () =>
+                                ref.read(appCoordinatorProvider).goToHome(),
+                            child: const Text('이벤트 둘러보기'),
+                          ),
                         ),
                       ],
                     ),
