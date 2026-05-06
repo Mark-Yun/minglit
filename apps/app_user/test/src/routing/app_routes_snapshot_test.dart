@@ -61,6 +61,8 @@ void main() {
             '/tickets/my',
             '/tickets/:ticketId/qr',
             '/purchase-history',
+            '/purchase-history/:applicationId',
+            '/purchase-history/:applicationId/review',
             '/notifications',
             '/my/notification-settings',
             // Fix #1213: 계정 관리 서브페이지 경로 추가
