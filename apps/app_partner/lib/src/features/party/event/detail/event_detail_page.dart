@@ -60,7 +60,8 @@ class _EventHubBody extends ConsumerWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final applicationsAsync = ref.watch(eventApplicationsProvider(event.id));
-    final applications = applicationsAsync.asData?.value ?? const <EventApplication>[];
+    final applications =
+        applicationsAsync.asData?.value ?? const <EventApplication>[];
     // Fix #2109: 확정/대기/환불 집계를 단일 허브 카드에서 일관되게 계산한다.
     final confirmedCount = applications
         .where((app) => app.status == 'approved' || app.status == 'paid')
@@ -72,7 +73,8 @@ class _EventHubBody extends ConsumerWidget {
         .where((app) => app.status == 'cancelled' || app.status == 'refunded')
         .length;
     final location = event.party?.location ?? event.location;
-    final totalRevenue = ticketsAsync.asData?.value.fold<int>(0, (sum, ticket) {
+    final totalRevenue =
+        ticketsAsync.asData?.value.fold<int>(0, (sum, ticket) {
           final ticketConfirmedCount = applications
               .where(
                 (app) =>
@@ -797,7 +799,10 @@ Color _visibilityChipColor(ColorScheme colorScheme, String visibility) {
   return colorScheme.secondaryContainer;
 }
 
-Color _visibilityChipForegroundColor(ColorScheme colorScheme, String visibility) {
+Color _visibilityChipForegroundColor(
+  ColorScheme colorScheme,
+  String visibility,
+) {
   if (visibility == 'private') {
     return colorScheme.onSurfaceVariant;
   }
