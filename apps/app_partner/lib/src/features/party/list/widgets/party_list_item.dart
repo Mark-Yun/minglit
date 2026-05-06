@@ -181,7 +181,7 @@ class _PartnerOverlay extends StatelessWidget {
         vertical: MinglitSpacing.xxsmall,
       ),
       decoration: BoxDecoration(
-        color: theme.colorScheme.onSurface.withAlpha((0.5 * 255).round()),
+        color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(MinglitRadius.small),
       ),
       child: Row(
