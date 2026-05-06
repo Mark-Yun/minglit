@@ -87,11 +87,13 @@ class _DashboardBody extends StatelessWidget {
           bundle: bundle,
           pendingApplications: pendingApps,
         ),
-        _ApplicationListTab(
-          icon: Icons.check_circle_outline,
-          title: '승인된 신청이 없습니다',
-          subtitle: '승인 완료된 신청이 생기면 여기서 확인할 수 있습니다.',
+        _GroupedApplicationsTab(
+          emptyIcon: Icons.check_circle_outline,
+          emptyTitle: '승인된 신청이 없습니다',
+          emptySubtitle: '승인 완료된 신청이 생기면 여기서 확인할 수 있습니다.',
           applications: approvedApps,
+          entryGroups: bundle.event.entryGroups ?? const [],
+          cardBuilder: (app) => _ApplicationCard(app: app),
         ),
         _GroupedApplicationsTab(
           emptyIcon: Icons.cancel_outlined,
@@ -200,35 +202,6 @@ class _PendingTab extends StatelessWidget {
             ),
           ),
       ],
-    );
-  }
-}
-
-class _ApplicationListTab extends StatelessWidget {
-  const _ApplicationListTab({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.applications,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final List<EventApplication> applications;
-
-  @override
-  Widget build(BuildContext context) {
-    if (applications.isEmpty) {
-      return _EmptyState(icon: icon, title: title, subtitle: subtitle);
-    }
-
-    return ListView.separated(
-      padding: const EdgeInsets.all(MinglitSpacing.screenEdge),
-      itemBuilder: (context, index) =>
-          _ApplicationCard(app: applications[index]),
-      separatorBuilder: (_, _) => const SizedBox(height: MinglitSpacing.small),
-      itemCount: applications.length,
     );
   }
 }
@@ -750,7 +723,8 @@ class _RefundApplicationCard extends StatelessWidget {
     final cancellationReason = app.cancellationReason?.trim();
     final hasCancellationReason =
         cancellationReason != null && cancellationReason.isNotEmpty;
-    final maskedUsername = _maskIdentifier(app.user?.username ?? '');
+    // Fix #2126: RPC returns user_name (not username); mask name for refund tab identifier
+    final maskedUsername = _maskIdentifier(app.user?.name ?? '');
 
     return Card(
       child: ListTile(

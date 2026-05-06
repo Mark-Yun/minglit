@@ -259,6 +259,30 @@ void main() {
 
       expect(find.text('승인된 신청이 없습니다'), findsOneWidget);
     });
+
+    // Fix #2126: spec State 6 — 승인됨 tab shows entry group sub-section headers
+    testWidgets('shows entry group sub-section header in 승인됨 tab', (
+      tester,
+    ) async {
+      final bundle = makeBundle(
+        applications: [
+          makeApp(
+            id: 'app_1',
+            status: 'paid',
+            userName: '홍길동',
+            groupId: 'eg_female',
+          ),
+        ],
+      );
+      await tester.pumpWidget(buildPage(bundle: bundle));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('승인됨'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('여성 그룹'), findsOneWidget);
+      expect(find.text('홍길동'), findsOneWidget);
+    });
   });
 
   // Fix #2126: rejected tab shows applications with rejected status
@@ -326,12 +350,7 @@ void main() {
     testWidgets('shows cancelled applications in 환불 tab', (tester) async {
       final bundle = makeBundle(
         applications: [
-          makeApp(
-            id: 'app_1',
-            status: 'cancelled',
-            userName: '이환불',
-            username: 'refund@test.com',
-          ),
+          makeApp(id: 'app_1', status: 'cancelled', userName: '이환불'),
         ],
       );
       await tester.pumpWidget(buildPage(bundle: bundle));
@@ -340,8 +359,9 @@ void main() {
       await tester.tap(find.text('환불'));
       await tester.pumpAndSettle();
 
+      // Fix #2126: RPC returns name (not email/username); masked name shown
       expect(find.text('이환불'), findsNothing);
-      expect(find.text('r***@test.com'), findsOneWidget);
+      expect(find.text('이***'), findsOneWidget);
     });
 
     testWidgets('non-cancelled apps are not in 환불 tab', (tester) async {
@@ -359,15 +379,10 @@ void main() {
       expect(find.text('정상유저'), findsNothing);
     });
 
-    testWidgets('shows masked username, not real name', (tester) async {
+    testWidgets('shows masked name, not real name', (tester) async {
       final bundle = makeBundle(
         applications: [
-          makeApp(
-            id: 'app_1',
-            status: 'cancelled',
-            userName: '홍길동',
-            username: 'hong@test.com',
-          ),
+          makeApp(id: 'app_1', status: 'cancelled', userName: '홍길동'),
         ],
       );
       await tester.pumpWidget(buildPage(bundle: bundle));
@@ -376,8 +391,9 @@ void main() {
       await tester.tap(find.text('환불'));
       await tester.pumpAndSettle();
 
+      // Fix #2126: name masked with first char + *** (e.g. 홍***)
       expect(find.text('홍길동'), findsNothing);
-      expect(find.text('h***@test.com'), findsOneWidget);
+      expect(find.text('홍***'), findsOneWidget);
     });
   });
 }
