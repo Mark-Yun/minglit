@@ -99,7 +99,7 @@ final activeEventBannersProvider = FutureProvider<List<ActiveEventBannerItem>>((
         }
       }
 
-      final phase = _resolveEventLifecyclePhase(
+      final phase = resolveEventLifecyclePhase(
         application: application,
         now: now,
         isCheckedIn: isCheckedIn,
@@ -127,7 +127,7 @@ final activeEventBannersProvider = FutureProvider<List<ActiveEventBannerItem>>((
   return filtered;
 });
 
-EventLifecyclePhase _resolveEventLifecyclePhase({
+EventLifecyclePhase resolveEventLifecyclePhase({
   required EventApplication application,
   required DateTime now,
   required bool isCheckedIn,
