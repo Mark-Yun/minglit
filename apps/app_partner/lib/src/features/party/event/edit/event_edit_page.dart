@@ -39,14 +39,35 @@ class EventEditPage extends ConsumerWidget {
                 onPressed: !editState.isDirty || editState.isLoading
                     ? null
                     : () async {
-                        await ref
-                            .read(eventEditControllerProvider(eventId).notifier)
-                            .submit();
-                        if (!context.mounted) return;
-                        context.pop();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('저장되었습니다')),
-                        );
+                        // Fix #2110: collect reason when confirmed participants ≥1
+                        // and schedule changed — spec §Lock Policy requires it.
+                        String? reason;
+                        if (editState.confirmedCount >= 1 &&
+                            editState.isScheduleChanged) {
+                          if (!context.mounted) return;
+                          reason = await _showReasonDialog(context);
+                          if (reason == null) return; // User cancelled.
+                        }
+
+                        // Fix #2110: catch submit errors to prevent uncaught
+                        // async exception (debug red screen / release silent crash).
+                        try {
+                          await ref
+                              .read(
+                                eventEditControllerProvider(eventId).notifier,
+                              )
+                              .submit(reason: reason);
+                          if (!context.mounted) return;
+                          context.pop();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('저장되었습니다')),
+                          );
+                        } catch (_) {
+                          if (!context.mounted) return;
+                          context.showMinglitWarning(
+                            '저장에 실패했습니다. 다시 시도해주세요.',
+                          );
+                        }
                       },
                 child: Text(editState.isLoading ? '저장 중...' : '저장'),
               ),
@@ -56,6 +77,51 @@ class EventEditPage extends ConsumerWidget {
       ),
     );
   }
+}
+
+// Fix #2110: spec §Lock Policy — schedule change with confirmed participants ≥1
+// must collect a reason. Notifications are sent server-side (via EF).
+Future<String?> _showReasonDialog(BuildContext context) async {
+  String? reason;
+  return showDialog<String>(
+    context: context,
+    builder: (dialogContext) {
+      return AlertDialog(
+        title: const Text('일정 변경 사유'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('확정 참가자에게 일정 변경 알림이 전송됩니다. 변경 사유를 입력해주세요.'),
+            const SizedBox(height: MinglitSpacing.medium),
+            TextField(
+              autofocus: true,
+              maxLines: 3,
+              decoration: const InputDecoration(
+                hintText: '변경 사유 입력 (예: 장소 이전 불가로 인한 날짜 변경)',
+                border: OutlineInputBorder(),
+              ),
+              onChanged: (value) => reason = value.trim(),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(null),
+            child: const Text('취소'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final trimmed = reason?.trim();
+              if (trimmed == null || trimmed.isEmpty) return;
+              Navigator.of(dialogContext).pop(trimmed);
+            },
+            child: const Text('저장 및 알림 전송'),
+          ),
+        ],
+      );
+    },
+  );
 }
 
 class _EventEditContent extends ConsumerWidget {

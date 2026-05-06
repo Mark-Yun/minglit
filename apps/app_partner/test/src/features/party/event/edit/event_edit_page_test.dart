@@ -104,4 +104,53 @@ void main() {
     final button = tester.widget<FilledButton>(find.byType(FilledButton));
     expect(button.onPressed, isNull);
   });
+
+  testWidgets('save button enabled when isDirty=true', (tester) async {
+    // Fix #2110: regression guard — isDirty=true must enable the save button.
+    // This prevents _computeIsDirty from silently always returning false.
+    final state = createEventEditState(
+      event: baseEvent(),
+      confirmedCount: 0,
+      title: '변경된 제목',
+      startTime: DateTime(2026, 5, 6, 19),
+      endTime: DateTime(2026, 5, 6, 21),
+      maxParticipants: 20,
+      location: null,
+      isDirty: true,
+    );
+
+    await tester.pumpWidget(buildSubject(state));
+    await tester.pump();
+
+    final button = tester.widget<FilledButton>(find.byType(FilledButton));
+    expect(button.onPressed, isNotNull);
+  });
+
+  testWidgets(
+    'save with confirmed participants and schedule change shows reason dialog',
+    (tester) async {
+      // Fix #2110: spec §Lock Policy — schedule change + confirmedCount >= 1
+      // must trigger reason dialog before submit.
+      final event = baseEvent();
+      final changedStartTime = event.startTime.add(const Duration(days: 1));
+      final state = createEventEditState(
+        event: event,
+        confirmedCount: 2,
+        title: event.title ?? '',
+        startTime: changedStartTime, // schedule changed
+        endTime: changedStartTime.add(const Duration(hours: 2)),
+        maxParticipants: 20,
+        location: null,
+        isDirty: true,
+      );
+
+      await tester.pumpWidget(buildSubject(state));
+      await tester.pump();
+
+      await tester.tap(find.byType(FilledButton));
+      await tester.pumpAndSettle();
+
+      expect(find.text('일정 변경 사유'), findsOneWidget);
+    },
+  );
 }

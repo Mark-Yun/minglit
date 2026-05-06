@@ -53,6 +53,9 @@ class _EditState {
   final bool isDirty;
   final bool isLoading;
 
+  bool get isScheduleChanged =>
+      startTime != event.startTime || endTime != event.endTime;
+
   _EditState copyWith({
     Event? event,
     int? confirmedCount,
@@ -144,23 +147,43 @@ class EventEditController extends _$EventEditController {
     );
   }
 
-  Future<void> submit() async {
+  // Fix #2110: submit via partner-manage-event EF (action=update) instead of
+  // direct client write — EF enforces PARTY_MANAGE/EVENT_MANAGE permission and
+  // service_role writes, preventing RLS policy bypass.
+  // `reason` is required when confirmedCount >= 1 and schedule changed (UI enforces via dialog).
+  Future<void> submit({String? reason}) async {
     final current = state.asData?.value;
     if (current == null || !current.isDirty || current.isLoading) return;
 
     state = AsyncValue.data(current.copyWith(isLoading: true));
 
     try {
+      final supabase = ref.read(supabaseClientProvider);
+      final response = await supabase.functions.invoke(
+        'partner-manage-event',
+        body: {
+          'action': 'update',
+          'event_id': current.event.id,
+          'event': {
+            'title': current.title,
+            'start_time': current.startTime.toUtc().toIso8601String(),
+            'end_time': current.endTime.toUtc().toIso8601String(),
+            'max_participants': current.maxParticipants,
+          },
+          ?'reason': reason,
+        },
+      );
+
+      if (response.status != 200) {
+        throw Exception(
+          'partner-manage-event update failed (${response.status})',
+        );
+      }
+
+      // Re-fetch event from DB to get the authoritative updated state.
       final updatedEvent = await ref
-          .read(partyRepositoryProvider)
-          .updateEvent(
-            current.event.copyWith(
-              title: current.title,
-              startTime: current.startTime,
-              endTime: current.endTime,
-              maxParticipants: current.maxParticipants,
-            ),
-          );
+          .read(eventRepositoryProvider)
+          .getEventById(current.event.id);
 
       ref
         ..invalidate(partyDetailProvider(current.event.partyId))
@@ -185,12 +208,12 @@ class EventEditController extends _$EventEditController {
   }
 
   bool _computeIsDirty(EventEditState current) {
-    final originalLocation = _displayLocation(current.event);
+    // Fix #2110: location is read from party.location (display-only) and
+    // cannot be changed via this UI — exclude from dirty computation.
     return current.title != (current.event.title ?? '') ||
         current.startTime != current.event.startTime ||
         current.endTime != current.event.endTime ||
-        current.maxParticipants != current.event.maxParticipants ||
-        current.location != originalLocation;
+        current.maxParticipants != current.event.maxParticipants;
   }
 
   static String? _displayLocation(Event event) {
