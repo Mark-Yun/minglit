@@ -255,8 +255,9 @@ MinglitButton.text(
       { name: 'color-primary',         where: 'primary variant 배경' },
       { name: 'color-success',         where: 'success variant 배경' },
       { name: 'color-divider',         where: 'border (outlineVariant, 0.5px)' },
-      { name: 'typography-font-size-caption',    where: 'small 크기 폰트 (10px)' },
-      { name: 'typography-font-size-chip-label', where: 'medium/large 크기 폰트 (13–14px)' },
+      { name: 'typography-font-size-caption',       where: 'small 크기 폰트 (10px, w500)' },
+      { name: 'typography-font-size-label-xsmall',  where: 'draft / status 극소 칩 레이블 (10px w600, ext.labelXSmall) — captionTiny(w500)보다 굵음' },
+      { name: 'typography-font-size-chip-label',    where: 'medium/large 크기 폰트 (13–14px)' },
     ],
     accessibility: [
       'onTap != null 이면 Semantics(button: true, label: label) 적용.',

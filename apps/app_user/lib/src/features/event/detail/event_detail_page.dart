@@ -18,6 +18,7 @@ export 'package:app_user/src/features/event/detail/event_detail_now_provider.dar
 part 'event_bottom_ticket_bar.dart';
 part 'event_detail_content.dart';
 part 'event_detail_content_skeleton.dart';
+part 'event_detail_tab_bar_delegate.dart';
 part 'event_entry_conditions_section.dart';
 part 'event_info_tile.dart';
 part 'event_quill_viewer.dart';

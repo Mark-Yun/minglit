@@ -10,21 +10,24 @@ import 'package:app_user/src/features/auth/login_page.dart';
 import 'package:app_user/src/features/dev/user_dev_map.dart';
 import 'package:app_user/src/features/auth/ui/auth_callback_page.dart';
 import 'package:app_user/src/features/consent/ui/signup_consent_page.dart';
+import 'package:app_user/src/features/dev/user_dev_map.dart';
 import 'package:app_user/src/features/event/admission/event_application_wizard_page.dart';
 import 'package:app_user/src/features/event/detail/event_detail_page.dart';
 import 'package:app_user/src/features/event/matching/ui/event_matching_screen.dart';
 import 'package:app_user/src/features/home/home_page.dart';
 import 'package:app_user/src/features/home/my_page.dart';
-import 'package:app_user/src/features/my_tickets/ui/my_tickets_page.dart';
+import 'package:app_user/src/features/tickets/my_tickets_page.dart';
 import 'package:app_user/src/features/partner/detail/partner_detail_page.dart';
 import 'package:app_user/src/features/partner/detail/partner_events_page.dart';
+import 'package:app_user/src/features/payment/ui/event_application_review_page.dart';
+import 'package:app_user/src/features/payment/ui/purchase_history_detail_page.dart';
 import 'package:app_user/src/features/payment/ui/purchase_history_page.dart';
 import 'package:app_user/src/features/search/search_page.dart';
 import 'package:app_user/src/features/settings/blocked_partners_page.dart';
 import 'package:app_user/src/features/settings/privacy_page.dart';
 import 'package:app_user/src/features/tag/ui/tag_event_list_page.dart';
-import 'package:app_user/src/features/ticket/ui/model/ticket_event_meta.dart';
 import 'package:app_user/src/features/ticket/ui/ticket_qr_screen.dart';
+import 'package:app_user/src/logic/ticket_event_meta.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_dev.dart';
@@ -261,6 +264,38 @@ class PurchaseHistoryRoute extends GoRouteData with $PurchaseHistoryRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       const PurchaseHistoryPage();
+}
+
+/// **Purchase History Detail Route**
+/// Path: `/purchase-history/:applicationId`
+@TypedGoRoute<PurchaseHistoryDetailRoute>(
+  path: '/purchase-history/:applicationId',
+)
+class PurchaseHistoryDetailRoute extends GoRouteData
+    with $PurchaseHistoryDetailRoute {
+  const PurchaseHistoryDetailRoute({required this.applicationId});
+
+  final String applicationId;
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      PurchaseHistoryDetailPage(applicationId: applicationId);
+}
+
+/// **Event Application Review Route**
+/// Path: `/purchase-history/:applicationId/review`
+@TypedGoRoute<EventApplicationReviewRoute>(
+  path: '/purchase-history/:applicationId/review',
+)
+class EventApplicationReviewRoute extends GoRouteData
+    with $EventApplicationReviewRoute {
+  const EventApplicationReviewRoute({required this.applicationId});
+
+  final String applicationId;
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      EventApplicationReviewPage(applicationId: applicationId);
 }
 
 /// **Notification Center Route**

@@ -1,9 +1,10 @@
 import 'dart:async';
 
 import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
-import 'package:app_partner/src/features/party/event/detail/event_application_controller.dart';
 import 'package:app_partner/src/features/party/event/detail/event_detail_controller.dart';
 import 'package:app_partner/src/features/party/event/widgets/ticket_list_item.dart';
+// Fix #2145: moved to logic/ — eliminates cross-feature application ↔ party/event dependency
+import 'package:app_partner/src/logic/event_application_logic.dart';
 import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
@@ -74,6 +75,9 @@ class _EventInfoTab extends ConsumerWidget {
     // not the application list count — application list may be paginated/incomplete.
     final confirmedCount = event.currentParticipants;
     final maxParticipants = event.maxParticipants;
+    // Fix #2224: hide edit/review CTAs when event is no longer actionable.
+    final isTerminated =
+        event.status == 'cancelled' || event.status == 'completed';
 
     return SingleChildScrollView(
       child: MinglitContentLayout(
@@ -94,61 +98,94 @@ class _EventInfoTab extends ConsumerWidget {
             ),
 
           // Schedule + status info card
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: MinglitSpacing.screenEdge,
-            ),
-            child: Container(
-              padding: const EdgeInsets.all(MinglitSpacing.medium),
-              decoration: BoxDecoration(
-                color: colorScheme.surface,
-                borderRadius: BorderRadius.circular(MinglitRadius.card),
-                border: Border.all(color: colorScheme.outlineVariant),
+          // Fix #2224: 정보 수정 버튼 — confirmedCount >= 1이면 잠금 아이콘 + 토스트,
+          // 없으면 EventEditRoute로 진입.
+          MinglitSection(
+            title: '이벤트 정보',
+            trailing: isTerminated
+                ? null
+                : TextButton.icon(
+                    onPressed: () {
+                      if (confirmedCount >= 1) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('확정 참가자가 있어 일부 항목은 잠겨 있습니다.'),
+                          ),
+                        );
+                        return;
+                      }
+                      unawaited(
+                        EventEditRoute(
+                          partyId: event.partyId,
+                          eventId: event.id,
+                        ).push<void>(context),
+                      );
+                    },
+                    icon: Icon(
+                      confirmedCount >= 1
+                          ? Icons.lock_outline
+                          : Icons.edit_outlined,
+                      size: MinglitIconSize.small,
+                    ),
+                    label: const Text('정보 수정'),
+                  ),
+            padding: EdgeInsets.zero,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: MinglitSpacing.screenEdge,
               ),
-              child: Column(
-                children: [
-                  _DetailRow(
-                    icon: Icons.calendar_today,
-                    label: context.l10n.eventDetail_label_dateTime,
-                    value: dateFormat.format(event.startTime),
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(
-                      vertical: MinglitSpacing.small,
+              child: Container(
+                padding: const EdgeInsets.all(MinglitSpacing.medium),
+                decoration: BoxDecoration(
+                  color: colorScheme.surface,
+                  borderRadius: BorderRadius.circular(MinglitRadius.card),
+                  border: Border.all(color: colorScheme.outlineVariant),
+                ),
+                child: Column(
+                  children: [
+                    _DetailRow(
+                      icon: Icons.calendar_today,
+                      label: context.l10n.eventDetail_label_dateTime,
+                      value: dateFormat.format(event.startTime),
                     ),
-                    child: Divider(height: 1),
-                  ),
-                  _DetailRow(
-                    icon: Icons.access_time,
-                    label: context.l10n.eventDetail_label_time,
-                    value:
-                        '${timeFormat.format(event.startTime)} ~ '
-                        '${timeFormat.format(event.endTime)}',
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(
-                      vertical: MinglitSpacing.small,
+                    const Padding(
+                      padding: EdgeInsets.symmetric(
+                        vertical: MinglitSpacing.small,
+                      ),
+                      child: Divider(height: 1),
                     ),
-                    child: Divider(height: 1),
-                  ),
-                  _DetailRow(
-                    icon: Icons.info_outline,
-                    label: context.l10n.eventDetail_label_status,
-                    value: _getStatusLabel(context, event.status),
-                    valueColor: _getStatusColor(event.status, colorScheme),
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(
-                      vertical: MinglitSpacing.small,
+                    _DetailRow(
+                      icon: Icons.access_time,
+                      label: context.l10n.eventDetail_label_time,
+                      value:
+                          '${timeFormat.format(event.startTime)} ~ '
+                          '${timeFormat.format(event.endTime)}',
                     ),
-                    child: Divider(height: 1),
-                  ),
-                  _DetailRow(
-                    icon: Icons.visibility,
-                    label: '공개 설정',
-                    value: _getVisibilityLabel(event.visibility),
-                  ),
-                ],
+                    const Padding(
+                      padding: EdgeInsets.symmetric(
+                        vertical: MinglitSpacing.small,
+                      ),
+                      child: Divider(height: 1),
+                    ),
+                    _DetailRow(
+                      icon: Icons.info_outline,
+                      label: context.l10n.eventDetail_label_status,
+                      value: _getStatusLabel(context, event.status),
+                      valueColor: _getStatusColor(event.status, colorScheme),
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(
+                        vertical: MinglitSpacing.small,
+                      ),
+                      child: Divider(height: 1),
+                    ),
+                    _DetailRow(
+                      icon: Icons.visibility,
+                      label: '공개 설정',
+                      value: _getVisibilityLabel(event.visibility),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -156,21 +193,23 @@ class _EventInfoTab extends ConsumerWidget {
           // 참가 현황 section
           MinglitSection(
             title: '참가 현황',
-            trailing: TextButton.icon(
-              onPressed: () {
-                unawaited(
-                  EventApplicationListRoute(
-                    partyId: event.partyId,
-                    eventId: event.id,
-                  ).push<void>(context),
-                );
-              },
-              icon: const Icon(
-                Icons.people_outline,
-                size: MinglitIconSize.small,
-              ),
-              label: const Text('신청 목록 보기'),
-            ),
+            trailing: isTerminated
+                ? null
+                : TextButton.icon(
+                    onPressed: () {
+                      unawaited(
+                        EventApplicationListRoute(
+                          partyId: event.partyId,
+                          eventId: event.id,
+                        ).push<void>(context),
+                      );
+                    },
+                    icon: const Icon(
+                      Icons.people_outline,
+                      size: MinglitIconSize.small,
+                    ),
+                    label: const Text('신청 목록 보기'),
+                  ),
             padding: EdgeInsets.zero,
             child: Padding(
               padding: const EdgeInsets.symmetric(
