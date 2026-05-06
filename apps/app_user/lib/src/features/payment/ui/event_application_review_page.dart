@@ -52,7 +52,8 @@ class _ReviewBody extends StatelessWidget {
           _ReviewCard(
             child: InkWell(
               onTap: event != null
-                  ? () => EventDetailRoute(eventId: event.id).push<void>(context)
+                  ? () =>
+                        EventDetailRoute(eventId: event.id).push<void>(context)
                   : null,
               borderRadius: BorderRadius.circular(MinglitRadius.card),
               child: Row(
@@ -85,8 +86,10 @@ class _ReviewBody extends StatelessWidget {
                         if (event != null) ...[
                           const SizedBox(height: MinglitSpacing.xxsmall),
                           Text(
-                            DateFormat('M월 d일 (E)', 'ko_KR')
-                                .format(event.startTime),
+                            DateFormat(
+                              'M월 d일 (E)',
+                              'ko_KR',
+                            ).format(event.startTime),
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
@@ -130,7 +133,9 @@ class _ReviewBody extends StatelessWidget {
               width: double.infinity,
               child: FilledButton.icon(
                 onPressed: event != null
-                    ? () => EventDetailRoute(eventId: event.id).push<void>(context)
+                    ? () => EventDetailRoute(
+                        eventId: event.id,
+                      ).push<void>(context)
                     : null,
                 icon: const Icon(Icons.refresh),
                 label: const Text('다시 신청하기'),
