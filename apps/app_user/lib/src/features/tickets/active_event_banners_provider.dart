@@ -43,14 +43,9 @@ final activeEventBannersProvider = FutureProvider<List<ActiveEventBannerItem>>((
       var hasMatchResults = false;
       var hasMatchingCandidates = false;
       var hasSubmittedVotes = false;
-      try {
-        final matches = await matchingRepository.getMyMatches(event.id);
-        hasMatchResults = matches.isNotEmpty;
-      } on Exception catch (e, st) {
-        // Propagate matching fetch errors so the provider surfaces error state
-        // rather than silently downgrading to a wrong phase.
-        Error.throwWithStackTrace(e, st);
-      }
+      // Fix #2123: let errors propagate — no silent catch on getMyMatches
+      final matches = await matchingRepository.getMyMatches(event.id);
+      hasMatchResults = matches.isNotEmpty;
       // Only fetch matching state when checked-in to avoid unnecessary calls.
       // Fix #2123: matchingReady → matching requires at least one submitted vote.
       if (isCheckedIn) {

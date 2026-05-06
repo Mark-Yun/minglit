@@ -375,10 +375,13 @@ void main() {
         ).thenAnswer((_) async => 0);
 
         final container = makeContainer();
-        await expectLater(
-          container.read(activeEventBannersProvider.future),
-          throwsA(anything),
-        );
+        Object? caught;
+        try {
+          await container.read(activeEventBannersProvider.future);
+        } catch (e) {
+          caught = e;
+        }
+        expect(caught, isA<Exception>());
       },
     );
 
