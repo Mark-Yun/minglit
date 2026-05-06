@@ -203,8 +203,7 @@ void main() {
         flatRow(
           ticketName: '티켓',
           userEmail: 'test@example.com',
-        )
-          ..['user_name'] = '테스트',
+        )..['user_name'] = '테스트',
       );
       final app = EventApplication.fromJson(mapped);
       expect(app.user?.username, 'test@example.com');

@@ -387,7 +387,9 @@ void main() {
       expect(find.text('정상유저'), findsNothing);
     });
 
-    testWidgets('shows masked email when userEmail is provided', (tester) async {
+    testWidgets('shows masked email when userEmail is provided', (
+      tester,
+    ) async {
       final bundle = makeBundle(
         applications: [
           makeApp(
@@ -409,7 +411,9 @@ void main() {
       expect(find.text('h***@example.com'), findsOneWidget);
     });
 
-    testWidgets('falls back to masked name when email is unavailable', (tester) async {
+    testWidgets('falls back to masked name when email is unavailable', (
+      tester,
+    ) async {
       final bundle = makeBundle(
         applications: [
           makeApp(id: 'app_1', status: 'cancelled', userName: '홍길동'),
@@ -458,8 +462,9 @@ void main() {
   });
 
   group('승인됨 tab — relative payment date', () {
-    testWidgets('shows relative payment date when paidAt is provided',
-        (tester) async {
+    testWidgets('shows relative payment date when paidAt is provided', (
+      tester,
+    ) async {
       final bundle = makeBundle(
         applications: [
           makeApp(
@@ -479,8 +484,7 @@ void main() {
       // Fix #2272: spec State 6 requires "결제 N일 전" in trailing
       expect(
         find.byWidgetPredicate(
-          (w) =>
-              w is Text && (w.data?.startsWith('결제 ') ?? false),
+          (w) => w is Text && (w.data?.startsWith('결제 ') ?? false),
         ),
         findsOneWidget,
       );
@@ -510,10 +514,8 @@ void main() {
       await tester.pumpAndSettle();
 
       // Fix #2272: most recently paid app appears first
-      final olderOffset =
-          tester.getTopLeft(find.text('오래된결제')).dy;
-      final newerOffset =
-          tester.getTopLeft(find.text('최근결제')).dy;
+      final olderOffset = tester.getTopLeft(find.text('오래된결제')).dy;
+      final newerOffset = tester.getTopLeft(find.text('최근결제')).dy;
       expect(newerOffset, lessThan(olderOffset));
     });
   });

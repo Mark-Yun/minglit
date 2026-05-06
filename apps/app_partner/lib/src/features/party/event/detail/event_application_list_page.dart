@@ -71,24 +71,20 @@ class _DashboardBody extends StatelessWidget {
     // 노출 X. State 8 — 환불 탭은 cancelled status 전용.
     // Fix #2272: sort each completed tab by terminal timestamp desc (most recent first)
     // so operators see the latest-processed applications at the top.
-    final approvedApps = applications
-        .where((app) => app.status == 'paid')
-        .toList()
-      ..sort(
-        (a, b) =>
-            (b.paidAt ?? b.updatedAt).compareTo(a.paidAt ?? a.updatedAt),
-      );
-    final rejectedApps = applications
-        .where((app) => app.status == 'rejected')
-        .toList()
-      ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
-    final refundApps = applications
-        .where((app) => app.status == 'cancelled')
-        .toList()
-      ..sort(
-        (a, b) => (b.refundedAt ?? b.updatedAt)
-            .compareTo(a.refundedAt ?? a.updatedAt),
-      );
+    final approvedApps =
+        applications.where((app) => app.status == 'paid').toList()..sort(
+          (a, b) =>
+              (b.paidAt ?? b.updatedAt).compareTo(a.paidAt ?? a.updatedAt),
+        );
+    final rejectedApps =
+        applications.where((app) => app.status == 'rejected').toList()
+          ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+    final refundApps =
+        applications.where((app) => app.status == 'cancelled').toList()..sort(
+          (a, b) => (b.refundedAt ?? b.updatedAt).compareTo(
+            a.refundedAt ?? a.updatedAt,
+          ),
+        );
 
     return TabBarView(
       children: [
