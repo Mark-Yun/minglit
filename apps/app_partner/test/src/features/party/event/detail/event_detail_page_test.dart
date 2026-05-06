@@ -71,7 +71,7 @@ void main() {
 
   Widget buildPage({
     Event? event,
-    Object? eventError,
+    Exception? eventError,
     Completer<Event>? eventCompleter,
     List<EventApplication> applications = const [],
     List<Ticket>? tickets,
@@ -153,5 +153,85 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('다시 시도'), findsOneWidget);
+  });
+
+  testWidgets('정보 수정 hidden when confirmed participants >= 1', (tester) async {
+    // Fix #2275: confirmedCount >= 1 must lock editing per spec #2109
+    await tester.pumpWidget(
+      buildPage(
+        event: buildEvent(currentParticipants: 2),
+        applications: [
+          buildApplication(id: '1', status: 'approved'),
+        ],
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('정보 수정'), findsNothing);
+  });
+
+  testWidgets('정보 수정 visible when no confirmed participants', (tester) async {
+    await tester.pumpWidget(
+      buildPage(
+        event: buildEvent(currentParticipants: 0),
+        applications: const [],
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('정보 수정'), findsOneWidget);
+  });
+
+  testWidgets('cancelled state shows no capacity bar in revenue section', (tester) async {
+    // Fix #2275: capacity bar always 100% in cancelled state — should be hidden
+    await tester.pumpWidget(
+      buildPage(
+        event: buildEvent(status: 'cancelled', currentParticipants: 1),
+        applications: [
+          buildApplication(
+            id: '1',
+            status: 'approved',
+            refundStatus: 'completed',
+          ),
+        ],
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(MinglitCapacityBar), findsNothing);
+  });
+
+  testWidgets('ticketsAsync loading shows spinner when no fallback tickets', (tester) async {
+    // Fix #2275: ticketsAsync isLoading must surface the spinner when event.tickets is null
+    final ticketsCompleter = Completer<List<Ticket>>();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          eventDetailProvider('event-1').overrideWith(
+            (ref) async => buildEvent(currentParticipants: 0),
+          ),
+          partyDetailProvider('party-1').overrideWith((ref) async => party),
+          eventApplicationsProvider('event-1').overrideWith((ref) async => []),
+          eventTicketsProvider('event-1').overrideWith(
+            (ref) => ticketsCompleter.future,
+          ),
+        ],
+        child: const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: Locale('ko'),
+          home: EventDetailPage(eventId: 'event-1'),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+    ticketsCompleter.complete([buildTicket()]);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(CircularProgressIndicator), findsNothing);
   });
 }

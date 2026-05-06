@@ -47,11 +47,19 @@ class EventDetailPage extends ConsumerWidget {
           final applicationsAsync = ref.watch(eventApplicationsProvider(event.id));
           final ticketsAsync = ref.watch(eventTicketsProvider(event.id));
 
-          if (partyAsync.isLoading || applicationsAsync.isLoading) {
+          // Fix #2275: ticketsAsync loading/error must be gated the same way as
+          // partyAsync/applicationsAsync — but allow fallback to event.tickets
+          // when it is already populated (eager-loaded with the event fetch).
+          final hasFallbackTickets = (event.tickets ?? const <Ticket>[]).isNotEmpty;
+          if (partyAsync.isLoading ||
+              applicationsAsync.isLoading ||
+              (ticketsAsync.isLoading && !hasFallbackTickets)) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (partyAsync.hasError || applicationsAsync.hasError) {
+          if (partyAsync.hasError ||
+              applicationsAsync.hasError ||
+              (ticketsAsync.hasError && !hasFallbackTickets)) {
             return _ErrorView(
               onRetry: () {
                 ref.invalidate(eventDetailProvider(eventId));
@@ -164,7 +172,8 @@ class _EventDetailBody extends ConsumerWidget {
             ),
           if (state == _EventLifecycleState.completed)
             _CelebrateBanner(participantCount: summary.confirmedCount),
-          if (state.isEditable)
+          // Fix #2275: spec #2109 — lock editing when confirmed participants ≥1
+          if (state.isEditable && summary.confirmedCount == 0)
             Padding(
               padding: const EdgeInsets.fromLTRB(
                 MinglitSpacing.screenEdge,
@@ -380,7 +389,6 @@ class _EventPageSummary {
     final groupSummaries = entryGroups
         .map(
           (group) => _EntryGroupSummary.fromData(
-            event: event,
             group: group,
             tickets: tickets,
             applications: applications,
@@ -421,7 +429,6 @@ class _EntryGroupSummary {
   final int maxRevenue;
 
   factory _EntryGroupSummary.fromData({
-    required Event event,
     required EntryGroup group,
     required List<Ticket> tickets,
     required List<EventApplication> applications,
@@ -936,12 +943,15 @@ class _RevenueCard extends StatelessWidget {
               ],
             ],
           ),
-          const SizedBox(height: MinglitSpacing.small),
-          MinglitCapacityBar(
-            total: totalValue,
-            filled: currentValue,
-            pending: pendingValue,
-          ),
+          // Fix #2275: capacity bar is meaningless in cancelled state (always 100%)
+          if (state != _EventLifecycleState.cancelled) ...[
+            const SizedBox(height: MinglitSpacing.small),
+            MinglitCapacityBar(
+              total: totalValue,
+              filled: currentValue,
+              pending: pendingValue,
+            ),
+          ],
           const SizedBox(height: MinglitSpacing.small),
           Text(
             state == _EventLifecycleState.cancelled
