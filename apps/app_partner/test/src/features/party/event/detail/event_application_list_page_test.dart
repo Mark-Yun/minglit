@@ -1,0 +1,261 @@
+import 'package:app_partner/src/features/party/event/detail/event_application_list_page.dart';
+import 'package:app_partner/src/logic/event_application_logic.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:minglit_kit/minglit_kit.dart';
+
+void main() {
+  setUpAll(() async {
+    await initializeDateFormatting('ko_KR');
+  });
+
+  final now = DateTime(2026, 5, 10, 20);
+
+  final testEvent = Event(
+    id: 'event_1',
+    partyId: 'party_1',
+    title: '스피드 데이팅',
+    startTime: now.add(const Duration(hours: 2)),
+    endTime: now.add(const Duration(hours: 4)),
+    createdAt: now,
+    updatedAt: now,
+    maxParticipants: 20,
+    currentParticipants: 5,
+    entryGroups: const [
+      EntryGroup(
+        id: 'eg_female',
+        eventId: 'event_1',
+        label: '여성 그룹',
+        gender: 'female',
+        createdAt: null,
+        updatedAt: null,
+      ),
+      EntryGroup(
+        id: 'eg_male',
+        eventId: 'event_1',
+        label: '남성 그룹',
+        gender: 'male',
+        createdAt: null,
+        updatedAt: null,
+      ),
+    ],
+  );
+
+  EventApplication makeApp({
+    required String id,
+    required String status,
+    String? userName,
+    String? gender,
+    int? birthYear,
+    String refundStatus = 'none',
+    String? groupId,
+  }) {
+    return EventApplication(
+      id: id,
+      eventId: 'event_1',
+      ticketId: 'ticket_1',
+      userId: 'user_$id',
+      status: status,
+      refundStatus: refundStatus,
+      createdAt: now.subtract(const Duration(hours: 1)),
+      updatedAt: now,
+      user: userName != null
+          ? UserProfile(
+              id: 'user_$id',
+              name: userName,
+              username: userName.toLowerCase(),
+              gender: gender,
+              birthYear: birthYear,
+            )
+          : null,
+    );
+  }
+
+  Widget buildPage({
+    required EventApplicationBundle bundle,
+    String? groupId,
+  }) {
+    return ProviderScope(
+      overrides: [
+        eventApplicationBundleProvider(bundle.event.id).overrideWith(
+          (ref) async => bundle,
+        ),
+      ],
+      child: MaterialApp(
+        home: EventApplicationListPage(
+          eventId: bundle.event.id,
+          groupId: groupId,
+        ),
+      ),
+    );
+  }
+
+  EventApplicationBundle makeBundle({
+    List<EventApplication> applications = const [],
+    List<Map<String, dynamic>> groupCounts = const [],
+  }) {
+    return (
+      event: testEvent,
+      applications: applications,
+      groupCounts: groupCounts,
+    );
+  }
+
+  // Fix #2126: verify 4-tab structure is present
+  group('EventApplicationListPage tab structure', () {
+    testWidgets('renders 4 tabs: 대기중 승인됨 거절됨 환불', (tester) async {
+      await tester.pumpWidget(buildPage(bundle: makeBundle()));
+      await tester.pumpAndSettle();
+
+      expect(find.text('대기중'), findsOneWidget);
+      expect(find.text('승인됨'), findsOneWidget);
+      expect(find.text('거절됨'), findsOneWidget);
+      expect(find.text('환불'), findsOneWidget);
+    });
+
+    testWidgets('AppBar title is 참가 신청', (tester) async {
+      await tester.pumpWidget(buildPage(bundle: makeBundle()));
+      await tester.pumpAndSettle();
+
+      expect(find.text('참가 신청'), findsOneWidget);
+    });
+  });
+
+  // Fix #2126: 대기중 tab shows event hero and capacity bar
+  group('대기중 tab content', () {
+    testWidgets('shows event title in hero card', (tester) async {
+      await tester.pumpWidget(buildPage(bundle: makeBundle()));
+      await tester.pumpAndSettle();
+
+      expect(find.text('스피드 데이팅'), findsOneWidget);
+    });
+
+    testWidgets('shows capacity bar section', (tester) async {
+      final bundle = makeBundle(
+        applications: [
+          makeApp(id: 'app_1', status: 'approved', userName: '홍길동'),
+          makeApp(id: 'app_2', status: 'pending_review', userName: '김영희'),
+        ],
+      );
+      await tester.pumpWidget(buildPage(bundle: bundle));
+      await tester.pumpAndSettle();
+
+      expect(find.text('신청 현황'), findsOneWidget);
+    });
+
+    testWidgets('shows entry group cards', (tester) async {
+      await tester.pumpWidget(buildPage(bundle: makeBundle()));
+      await tester.pumpAndSettle();
+
+      expect(find.text('여성 그룹'), findsOneWidget);
+      expect(find.text('남성 그룹'), findsOneWidget);
+    });
+  });
+
+  // Fix #2126: payment_failed applications are excluded from all tabs
+  testWidgets('payment_failed apps are not shown in any tab', (tester) async {
+    final bundle = makeBundle(
+      applications: [
+        makeApp(id: 'app_1', status: 'payment_failed', userName: '결제실패유저'),
+      ],
+    );
+    await tester.pumpWidget(buildPage(bundle: bundle));
+    await tester.pumpAndSettle();
+
+    expect(find.text('결제실패유저'), findsNothing);
+
+    // Check approved tab
+    await tester.tap(find.text('승인됨'));
+    await tester.pumpAndSettle();
+    expect(find.text('결제실패유저'), findsNothing);
+  });
+
+  // Fix #2126: approved tab shows applications with approved status
+  group('승인됨 tab', () {
+    testWidgets('shows approved applications', (tester) async {
+      final bundle = makeBundle(
+        applications: [
+          makeApp(id: 'app_1', status: 'approved', userName: '홍길동'),
+        ],
+      );
+      await tester.pumpWidget(buildPage(bundle: bundle));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('승인됨'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('홍길동'), findsOneWidget);
+    });
+
+    testWidgets('shows empty state when no approved applications', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildPage(bundle: makeBundle()));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('승인됨'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('승인된 신청이 없습니다'), findsOneWidget);
+    });
+  });
+
+  // Fix #2126: rejected tab shows applications with rejected status
+  group('거절됨 tab', () {
+    testWidgets('shows rejected applications', (tester) async {
+      final bundle = makeBundle(
+        applications: [
+          makeApp(id: 'app_1', status: 'rejected', userName: '김철수'),
+        ],
+      );
+      await tester.pumpWidget(buildPage(bundle: bundle));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('거절됨'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('김철수'), findsOneWidget);
+    });
+  });
+
+  // Fix #2126: refund tab shows apps where refundStatus != 'none'
+  group('환불 tab', () {
+    testWidgets('shows refunded applications', (tester) async {
+      final bundle = makeBundle(
+        applications: [
+          makeApp(
+            id: 'app_1',
+            status: 'approved',
+            userName: '이환불',
+            refundStatus: 'requested',
+          ),
+        ],
+      );
+      await tester.pumpWidget(buildPage(bundle: bundle));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('환불'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('이환불'), findsOneWidget);
+    });
+
+    testWidgets('apps with refundStatus none are not in 환불 tab', (
+      tester,
+    ) async {
+      final bundle = makeBundle(
+        applications: [
+          makeApp(id: 'app_1', status: 'approved', userName: '정상유저'),
+        ],
+      );
+      await tester.pumpWidget(buildPage(bundle: bundle));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('환불'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('정상유저'), findsNothing);
+    });
+  });
+}

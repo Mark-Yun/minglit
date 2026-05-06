@@ -12,6 +12,31 @@ Future<List<EventApplication>> eventApplications(
   return repo.getApplicationsByEventId(eventId);
 }
 
+// Fix #2126: bundle provider for EventApplicationListPage
+typedef EventApplicationBundle = ({
+  Event event,
+  List<EventApplication> applications,
+  List<Map<String, dynamic>> groupCounts,
+});
+
+@riverpod
+Future<EventApplicationBundle> eventApplicationBundle(
+  Ref ref,
+  String eventId,
+) async {
+  final repo = ref.watch(eventRepositoryProvider);
+  final results = await Future.wait([
+    repo.getEventById(eventId),
+    repo.getApplicationsByEventId(eventId),
+    repo.getEntryGroupParticipantCounts(eventId),
+  ]);
+  return (
+    event: results[0] as Event,
+    applications: results[1] as List<EventApplication>,
+    groupCounts: results[2] as List<Map<String, dynamic>>,
+  );
+}
+
 @riverpod
 class EventApplicationReviewController
     extends _$EventApplicationReviewController {

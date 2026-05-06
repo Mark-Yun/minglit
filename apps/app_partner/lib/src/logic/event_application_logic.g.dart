@@ -86,6 +86,85 @@ final class EventApplicationsFamily extends $Family
   String toString() => r'eventApplicationsProvider';
 }
 
+@ProviderFor(eventApplicationBundle)
+const eventApplicationBundleProvider = EventApplicationBundleFamily._();
+
+final class EventApplicationBundleProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<EventApplicationBundle>,
+          EventApplicationBundle,
+          FutureOr<EventApplicationBundle>
+        >
+    with
+        $FutureModifier<EventApplicationBundle>,
+        $FutureProvider<EventApplicationBundle> {
+  const EventApplicationBundleProvider._({
+    required EventApplicationBundleFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'eventApplicationBundleProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$eventApplicationBundleHash();
+
+  @override
+  String toString() {
+    return r'eventApplicationBundleProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<EventApplicationBundle> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<EventApplicationBundle> create(Ref ref) {
+    final argument = this.argument as String;
+    return eventApplicationBundle(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is EventApplicationBundleProvider &&
+        other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$eventApplicationBundleHash() =>
+    r'3e0c5a65f597957e09a087544f313c43ba966c1b';
+
+final class EventApplicationBundleFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<EventApplicationBundle>, String> {
+  const EventApplicationBundleFamily._()
+    : super(
+        retry: null,
+        name: r'eventApplicationBundleProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  EventApplicationBundleProvider call(String eventId) =>
+      EventApplicationBundleProvider._(argument: eventId, from: this);
+
+  @override
+  String toString() => r'eventApplicationBundleProvider';
+}
+
 @ProviderFor(EventApplicationReviewController)
 const eventApplicationReviewControllerProvider =
     EventApplicationReviewControllerProvider._();
