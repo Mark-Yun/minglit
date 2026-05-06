@@ -104,26 +104,29 @@ void main() {
     );
   }
 
-  testWidgets('cancelled state shows refund card instead of participation card', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      buildPage(
-        event: buildEvent(status: 'cancelled'),
-        applications: [
-          buildApplication(
-            id: '1',
-            status: 'approved',
-            refundStatus: 'completed',
-          ),
-        ],
-      ),
-    );
-    await tester.pumpAndSettle();
+  testWidgets(
+    'cancelled state shows refund card instead of participation card',
+    (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        buildPage(
+          event: buildEvent(status: 'cancelled'),
+          applications: [
+            buildApplication(
+              id: '1',
+              status: 'approved',
+              refundStatus: 'completed',
+            ),
+          ],
+        ),
+      );
+      await tester.pumpAndSettle();
 
-    expect(find.text('환불 완료'), findsWidgets);
-    expect(find.text('참가 현황'), findsNothing);
-  });
+      expect(find.text('환불 완료'), findsWidgets);
+      expect(find.text('참가 현황'), findsNothing);
+    },
+  );
 
   testWidgets('0-applications hides review link', (tester) async {
     await tester.pumpWidget(
@@ -182,7 +185,9 @@ void main() {
     expect(find.text('정보 수정'), findsOneWidget);
   });
 
-  testWidgets('cancelled state shows no capacity bar in revenue section', (tester) async {
+  testWidgets('cancelled state shows no capacity bar in revenue section', (
+    tester,
+  ) async {
     // Fix #2275: capacity bar always 100% in cancelled state — should be hidden
     await tester.pumpWidget(
       buildPage(
@@ -201,7 +206,9 @@ void main() {
     expect(find.byType(MinglitCapacityBar), findsNothing);
   });
 
-  testWidgets('completed state shows CelebrateBanner and CompletedStatsCard', (tester) async {
+  testWidgets('completed state shows CelebrateBanner and CompletedStatsCard', (
+    tester,
+  ) async {
     // Fix #2275: completed lifecycle state must render _CelebrateBanner and
     // _CompletedStatsCard section.
     await tester.pumpWidget(
@@ -223,7 +230,9 @@ void main() {
     expect(find.text('달성 매출'), findsOneWidget);
   });
 
-  testWidgets('ticketsAsync loading shows spinner when no fallback tickets', (tester) async {
+  testWidgets('ticketsAsync loading shows spinner when no fallback tickets', (
+    tester,
+  ) async {
     // Fix #2275: ticketsAsync isLoading must surface the spinner when event.tickets is null
     final ticketsCompleter = Completer<List<Ticket>>();
     await tester.pumpWidget(

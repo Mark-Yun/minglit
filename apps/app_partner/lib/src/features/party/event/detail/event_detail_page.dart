@@ -44,13 +44,16 @@ class EventDetailPage extends ConsumerWidget {
         ),
         data: (event) {
           final partyAsync = ref.watch(partyDetailProvider(event.partyId));
-          final applicationsAsync = ref.watch(eventApplicationsProvider(event.id));
+          final applicationsAsync = ref.watch(
+            eventApplicationsProvider(event.id),
+          );
           final ticketsAsync = ref.watch(eventTicketsProvider(event.id));
 
           // Fix #2275: ticketsAsync loading/error must be gated the same way as
           // partyAsync/applicationsAsync — but allow fallback to event.tickets
           // when it is already populated (eager-loaded with the event fetch).
-          final hasFallbackTickets = (event.tickets ?? const <Ticket>[]).isNotEmpty;
+          final hasFallbackTickets =
+              (event.tickets ?? const <Ticket>[]).isNotEmpty;
           if (partyAsync.isLoading ||
               applicationsAsync.isLoading ||
               (ticketsAsync.isLoading && !hasFallbackTickets)) {
@@ -72,7 +75,8 @@ class EventDetailPage extends ConsumerWidget {
 
           final party = partyAsync.requireValue;
           final applications = applicationsAsync.requireValue;
-          final tickets = ticketsAsync.asData?.value ?? event.tickets ?? const <Ticket>[];
+          final tickets =
+              ticketsAsync.asData?.value ?? event.tickets ?? const <Ticket>[];
           final entryGroups =
               event.entryGroups ??
               party.entryGroups
@@ -128,7 +132,10 @@ class _EventDetailBody extends ConsumerWidget {
       applications: applications,
       entryGroups: entryGroups,
     );
-    final state = _EventLifecycleState.from(event: event, applications: applications);
+    final state = _EventLifecycleState.from(
+      event: event,
+      applications: applications,
+    );
 
     return SingleChildScrollView(
       child: MinglitContentLayout(
@@ -211,7 +218,11 @@ class _EventDetailBody extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(
               horizontal: MinglitSpacing.screenEdge,
             ),
-            child: _HeroCard(event: event, party: party, isCancelled: state == _EventLifecycleState.cancelled),
+            child: _HeroCard(
+              event: event,
+              party: party,
+              isCancelled: state == _EventLifecycleState.cancelled,
+            ),
           ),
           if (state == _EventLifecycleState.cancelled)
             MinglitSection(
@@ -292,7 +303,8 @@ enum _EventLifecycleState {
   scheduled,
   cancelled,
   completed,
-  emptyApplications;
+  emptyApplications
+  ;
 
   factory _EventLifecycleState.from({
     required Event event,
@@ -310,7 +322,9 @@ enum _EventLifecycleState {
     return _EventLifecycleState.scheduled;
   }
 
-  bool get isEditable => this == _EventLifecycleState.scheduled || this == _EventLifecycleState.emptyApplications;
+  bool get isEditable =>
+      this == _EventLifecycleState.scheduled ||
+      this == _EventLifecycleState.emptyApplications;
 
   bool get canReviewApplications => this == _EventLifecycleState.scheduled;
 
@@ -354,9 +368,12 @@ class _EventPageSummary {
     required List<EventApplication> applications,
     required List<EntryGroup> entryGroups,
   }) {
-    final pendingCount = applications.where((app) => app.status == 'pending_review').length;
-    final refundedApps =
-        applications.where((app) => app.refundStatus == 'completed').toList();
+    final pendingCount = applications
+        .where((app) => app.status == 'pending_review')
+        .length;
+    final refundedApps = applications
+        .where((app) => app.refundStatus == 'completed')
+        .toList();
     final refundedCount = refundedApps.length;
     final refundAmount = refundedApps.fold<int>(
       0,
@@ -367,12 +384,12 @@ class _EventPageSummary {
     final currentRevenue = applications
         .where(
           (app) =>
-              app.status != 'pending_review' &&
-              app.refundStatus != 'completed',
+              app.status != 'pending_review' && app.refundStatus != 'completed',
         )
         .fold<int>(
           0,
-          (sum, app) => sum + (app.paymentAmount ?? ticketById[app.ticketId]?.price ?? 0),
+          (sum, app) =>
+              sum + (app.paymentAmount ?? ticketById[app.ticketId]?.price ?? 0),
         );
     final pendingRevenue = applications
         .where(
@@ -381,7 +398,8 @@ class _EventPageSummary {
         )
         .fold<int>(
           0,
-          (sum, app) => sum + (app.paymentAmount ?? ticketById[app.ticketId]?.price ?? 0),
+          (sum, app) =>
+              sum + (app.paymentAmount ?? ticketById[app.ticketId]?.price ?? 0),
         );
     final maxRevenue = tickets.fold<int>(
       0,
@@ -566,7 +584,9 @@ class _InlineBanner extends StatelessWidget {
               Expanded(
                 child: Text(
                   message,
-                  style: theme.textTheme.bodySmall?.copyWith(color: foregroundColor),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: foregroundColor,
+                  ),
                 ),
               ),
             ],
@@ -640,7 +660,9 @@ class _HeroCard extends StatelessWidget {
     final scheduleStyle = Theme.of(context).textTheme.titleMedium?.copyWith(
       fontWeight: FontWeight.w600,
       decoration: isCancelled ? TextDecoration.lineThrough : null,
-      color: isCancelled ? Theme.of(context).colorScheme.onSurfaceVariant : null,
+      color: isCancelled
+          ? Theme.of(context).colorScheme.onSurfaceVariant
+          : null,
     );
 
     return DecoratedBox(
@@ -657,17 +679,22 @@ class _HeroCard extends StatelessWidget {
             _InfoBlock(
               label: '일정',
               primary: _formatDate(event.startTime),
-              secondary: '${_formatTime(event.startTime)} ~ ${_formatTime(event.endTime)}',
+              secondary:
+                  '${_formatTime(event.startTime)} ~ ${_formatTime(event.endTime)}',
               primaryStyle: scheduleStyle,
             ),
             const SizedBox(height: MinglitSpacing.medium),
             _InfoBlock(
               label: '장소',
               primary: location?.name ?? '장소 미정',
-              secondary: [
-                location?.address,
-                location?.addressDetail,
-              ].whereType<String>().where((value) => value.isNotEmpty).join(' '),
+              secondary:
+                  [
+                        location?.address,
+                        location?.addressDetail,
+                      ]
+                      .whereType<String>()
+                      .where((value) => value.isNotEmpty)
+                      .join(' '),
             ),
             const SizedBox(height: MinglitSpacing.small),
             _MapPlaceholder(locationName: location?.name ?? '장소 미정'),
@@ -685,9 +712,11 @@ class _HeroCard extends StatelessWidget {
     );
   }
 
-  String _formatDate(DateTime value) => DateFormat('yyyy.MM.dd (E)', 'ko').format(value);
+  String _formatDate(DateTime value) =>
+      DateFormat('yyyy.MM.dd (E)', 'ko').format(value);
 
-  String _formatTime(DateTime value) => DateFormat('a h:mm', 'ko').format(value);
+  String _formatTime(DateTime value) =>
+      DateFormat('a h:mm', 'ko').format(value);
 }
 
 class _InfoBlock extends StatelessWidget {
@@ -719,7 +748,11 @@ class _InfoBlock extends StatelessWidget {
         const SizedBox(height: MinglitSpacing.xxsmall),
         Text(
           primary,
-          style: primaryStyle ?? theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+          style:
+              primaryStyle ??
+              theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
         ),
         if (secondary != null && secondary!.isNotEmpty) ...[
           const SizedBox(height: MinglitSpacing.xxsmall),
@@ -818,7 +851,10 @@ class _ParticipationCard extends StatelessWidget {
             spacing: MinglitSpacing.medium,
             runSpacing: MinglitSpacing.xsmall,
             children: [
-              _MetricText(label: event.status == 'completed' ? '참석' : '확정', value: summary.confirmedCount),
+              _MetricText(
+                label: event.status == 'completed' ? '참석' : '확정',
+                value: summary.confirmedCount,
+              ),
               if (summary.pendingCount > 0)
                 _MetricText(label: '심사대기', value: summary.pendingCount),
               if (summary.refundedCount > 0)
@@ -917,7 +953,9 @@ class _RevenueCard extends StatelessWidget {
     final totalValue = state == _EventLifecycleState.cancelled
         ? (summary.refundAmount == 0 ? 1 : summary.refundAmount)
         : (summary.maxRevenue == 0 ? 1 : summary.maxRevenue);
-    final groupTitle = state == _EventLifecycleState.completed ? '그룹별 객단가' : '그룹별 매출';
+    final groupTitle = state == _EventLifecycleState.completed
+        ? '그룹별 객단가'
+        : '그룹별 매출';
 
     return _Panel(
       child: Column(
@@ -1026,7 +1064,8 @@ class _CompletedStatsCard extends StatelessWidget {
                   value: _formatCurrency(
                     groupSummary.confirmedCount == 0
                         ? 0
-                        : groupSummary.currentRevenue ~/ groupSummary.confirmedCount,
+                        : groupSummary.currentRevenue ~/
+                              groupSummary.confirmedCount,
                   ),
                   suffix: '(${groupSummary.confirmedCount}명 참석)',
                 ),
@@ -1061,7 +1100,11 @@ class _EntryGroupBreakdown extends StatelessWidget {
       child: Column(
         children: [
           for (var i = 0; i < summary.groupSummaries.length; i++) ...[
-            if (i > 0) Divider(height: 1, color: Theme.of(context).colorScheme.outlineVariant),
+            if (i > 0)
+              Divider(
+                height: 1,
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
             _EntryGroupTile(
               event: event,
               state: state,
@@ -1107,7 +1150,8 @@ class _EntryGroupTile extends StatelessWidget {
                 label: state == _EventLifecycleState.completed ? '참석' : '확정',
                 value: summary.confirmedCount,
               ),
-              if (summary.pendingCount > 0 && state == _EventLifecycleState.scheduled)
+              if (summary.pendingCount > 0 &&
+                  state == _EventLifecycleState.scheduled)
                 _MetricText(label: '대기', value: summary.pendingCount),
               if (summary.refundedCount > 0)
                 _MetricText(label: '환불', value: summary.refundedCount),
