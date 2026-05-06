@@ -42,6 +42,8 @@ class MinglitSettingsTile extends StatelessWidget {
     this.onToggleChanged,
     this.destructive = false,
     this.enabled = true,
+    this.subtitleColor,
+    this.iconColor,
     super.key,
   });
 
@@ -54,6 +56,14 @@ class MinglitSettingsTile extends StatelessWidget {
   /// Optional secondary text displayed below [title].
   /// Usually shows the current value (e.g. "System", "On").
   final String? subtitle;
+
+  /// Optional override for the subtitle text color.
+  /// Ignored when [destructive] is true.
+  final Color? subtitleColor;
+
+  /// Optional override for the leading icon color.
+  /// Ignored when [destructive] is true.
+  final Color? iconColor;
 
   /// The type of trailing widget to display.
   final SettingsTileTrailing trailing;
@@ -93,20 +103,24 @@ class MinglitSettingsTile extends StatelessWidget {
           : baseColor.withValues(alpha: MinglitOpacity.muted),
     );
 
+    final resolvedSubtitleColor =
+        (!destructive && subtitleColor != null) ? subtitleColor! : secondaryColor;
     final subtitleStyle = theme.textTheme.bodySmall?.copyWith(
       color: enabled
-          ? secondaryColor
-          : secondaryColor.withValues(alpha: MinglitOpacity.muted),
+          ? resolvedSubtitleColor
+          : resolvedSubtitleColor.withValues(alpha: MinglitOpacity.muted),
     );
 
     Widget? leadingWidget;
     if (leading != null) {
+      final resolvedIconColor =
+          (!destructive && iconColor != null) ? iconColor! : secondaryColor;
       leadingWidget = Icon(
         leading,
         size: MinglitIconSize.small,
         color: enabled
-            ? secondaryColor
-            : secondaryColor.withValues(alpha: MinglitOpacity.muted),
+            ? resolvedIconColor
+            : resolvedIconColor.withValues(alpha: MinglitOpacity.muted),
       );
     }
 

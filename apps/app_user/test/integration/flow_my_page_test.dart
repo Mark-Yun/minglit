@@ -55,7 +55,8 @@ void main() {
       expect(find.byType(NotificationSettingsScreen), findsOneWidget);
     });
 
-    testWidgets('개인정보 tap → PrivacyPage → 회원 탈퇴 시작', (tester) async {
+    // Fix #2093: 회원 탈퇴는 계정 관리 페이지로 이동 — PrivacyPage는 동의 현황만 표시
+    testWidgets('개인정보 tap → PrivacyPage — 동의 현황 표시', (tester) async {
       setKoreanLocale(tester);
       final capture = GoldenCapture('flow_u_mypage');
       final user = createMockUserForTest();
@@ -67,9 +68,6 @@ void main() {
           additionalOverrides: [
             consentControllerProvider.overrideWith(
               _MockConsentController.new,
-            ),
-            accountDeletionControllerProvider.overrideWith(
-              _MockAccountDeletionController.new,
             ),
           ],
         ),
@@ -84,17 +82,8 @@ void main() {
       await capture.after(tester, 1); // 개인정보 설정
 
       expect(find.byType(PrivacyPage), findsOneWidget);
-      expect(find.text('개인정보'), findsOneWidget);
-
-      // Fix #886: PrivacyPage has consent management sections above the
-      // account deletion button. The button is below the viewport in the
-      // ListView, so we must scroll to it before tapping.
-      await tester.scrollUntilVisible(find.text('회원 탈퇴 시작하기'), 100);
-      await tester.tap(find.text('회원 탈퇴 시작하기'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('탈퇴 사유'), findsOneWidget);
-      expect(find.text('더 이상 쓰지 않아요'), findsOneWidget);
+      expect(find.text('동의 현황'), findsOneWidget);
+      expect(find.text('회원 탈퇴'), findsNothing);
     });
 
     testWidgets('권한 설정 tap → AppPermissionSettingsScreen (Navigator.push)', (
@@ -307,8 +296,10 @@ void main() {
           id: 'evt-1',
           partyId: 'party-1',
           title: 'Test Event',
-          startTime: now.add(const Duration(days: 30)),
-          endTime: now.add(const Duration(days: 30, hours: 2)),
+          // Fix #2282: cutoffDays=7 판정이 real DateTime.now() 기준 → 날짜 의존성 회피
+          // 충분히 먼 미래 날짜로 고정해 시간 경과로 인한 flakiness 방지
+          startTime: DateTime(2030, 1, 1),
+          endTime: DateTime(2030, 1, 1, 2),
           createdAt: now,
           updatedAt: now,
         ),
@@ -504,12 +495,6 @@ class _MockConsentController extends ConsentController {
       createdAt: _fixedNow,
     ),
   ];
-}
-
-/// AccountDeletionController — returns non-pending status
-class _MockAccountDeletionController extends AccountDeletionController {
-  @override
-  FutureOr<DeletionStatus?> build() async => const DeletionStatus();
 }
 
 /// Fake SocialRepository for BlockedPartnersPage (returns empty list)

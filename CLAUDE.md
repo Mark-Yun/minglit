@@ -15,6 +15,7 @@
 | [payment-pipeline.md](docs/architecture/payment-pipeline.md) | 결제/정산 파이프라인 |
 | [search-and-recommendation.md](docs/architecture/search-and-recommendation.md) | PGroonga 검색 + pgvector 추천 |
 | [global-event-pipeline.md](docs/architecture/global-event-pipeline.md) | PGMQ 2-tier 이벤트 파이프라인 |
+| [edge-function-auth.md](docs/architecture/edge-function-auth.md) | EF 인증/인가 모델 (auth-manifest + minglitEdgeFunction wrapper) |
 | [edge-functions.md](docs/debugging/edge-functions.md) | Edge Function 디버깅 (Axiom, Sentry, 로컬/Dev, 테스트) |
 
 ## Versioning Conventions
@@ -79,10 +80,17 @@ bash scripts/bump-version.sh 26.03.1        # release 버전 세팅
 
 - APK 빌드 요청 시 `--debug`가 디폴트. `--release`는 명시적으로 요청할 때만 사용.
 - Flutter 환경: dev 환경(`minglit_env/dev/flutter.env`)이 디폴트. local/prod는 명시적으로 요청할 때만.
+- **Java 17 필수** — Gradle 8.14 내장 Kotlin DSL이 Java 25 버전 문자열 파싱 미지원 (Fix #2287). 모든 `flutter build` 전에 `JAVA_HOME`을 Java 17로 세팅한다:
+  ```bash
+  export JAVA_HOME="$(/usr/libexec/java_home -v 17)"
+  ```
 
 ### Build Commands
 
 ```bash
+# Java 17 세팅 (Fix #2287: Gradle 8.14 + Java 25 호환성 이슈)
+export JAVA_HOME="$(/usr/libexec/java_home -v 17)"
+
 # Debug APK (디폴트)
 cd apps/app_user && flutter build apk --flavor dev --debug --dart-define-from-file=../../minglit_env/dev/flutter.env
 

@@ -255,8 +255,9 @@ MinglitButton.text(
       { name: 'color-primary',         where: 'primary variant 배경' },
       { name: 'color-success',         where: 'success variant 배경' },
       { name: 'color-divider',         where: 'border (outlineVariant, 0.5px)' },
-      { name: 'typography-font-size-caption',    where: 'small 크기 폰트 (10px)' },
-      { name: 'typography-font-size-chip-label', where: 'medium/large 크기 폰트 (13–14px)' },
+      { name: 'typography-font-size-caption',       where: 'small 크기 폰트 (10px, w500)' },
+      { name: 'typography-font-size-label-xsmall',  where: 'draft / status 극소 칩 레이블 (10px w600, ext.labelXSmall) — captionTiny(w500)보다 굵음' },
+      { name: 'typography-font-size-chip-label',    where: 'medium/large 크기 폰트 (13–14px)' },
     ],
     accessibility: [
       'onTap != null 이면 Semantics(button: true, label: label) 적용.',
@@ -897,6 +898,62 @@ MinglitBadge(
     },
   },
   {
+    name: 'MinglitDDayChip',
+    category: 'Tags & Badges',
+    purpose: '이벤트까지 남은 일수를 표시하는 D-day pill. 날짜 거리에 따라 톤이 자동 분기 — today(0일): 임박 warning · soon(1–7일): 이번 주 partner-primary · later(8일+): muted secondary. 항상 read-only. 카드 안 한 줄에 날짜 / 캐피시티와 함께 노출.',
+    props: [
+      { name: 'daysUntil', type: 'int',     required: true,  notes: '이벤트 시작까지 남은 일수. 0=오늘, 양수=미래, 음수=종료(노출 X 권장 — 종료 이벤트는 별도 처리).' },
+      { name: 'label',     type: 'String?', default: 'null', notes: '커스텀 라벨 (기본: daysUntil==0 → "오늘", 그 외 → "D-N"). null이면 자동 생성.' },
+    ],
+    variants: ['today (D-0 → warning amber)', 'soon (D-1 ~ D-7 → partner-primary)', 'later (D-8+ → muted secondary)'],
+    states: ['default (read-only)'],
+    tokens: [
+      { name: 'color-warning',                   where: 'today tier 텍스트 + 12–15% bg' },
+      { name: 'color-partner-primary',           where: 'soon tier 텍스트 + 10% bg' },
+      { name: 'color-text-secondary',            where: 'later tier 텍스트' },
+      { name: 'color-divider',                   where: 'later tier 배경' },
+      { name: 'radius-pill',                     where: '999px fully rounded' },
+      { name: 'spacing-small',                   where: '수평 padding (8px)' },
+      { name: 'spacing-xxsmall',                 where: '수직 padding (2px)' },
+      { name: 'typography-font-size-caption',    where: '폰트 (11px w700, letter-spacing -0.2px)' },
+    ],
+    accessibility: [
+      'MinglitDDayChip은 읽기 전용 — Semantics(label: "이벤트까지 N일 남음" 또는 "오늘 진행").',
+      '색상은 보조 시그널 — 텍스트(D-N 또는 "오늘") 자체가 의미를 전달해야 한다.',
+    ],
+    guidelines: [
+      { kind: 'do',   text: '카드 한 줄 안에서 날짜 + 캐피시티와 함께 노출 — "5/4 (월) 18:00  [D-2]  28/30" 패턴.', recipeKey: 'do-dday-in-event-row' },
+      { kind: 'dont', text: '음수(종료된 이벤트)에 사용하지 말 것 — 종료는 별도 처리(예: 회색 텍스트 "종료" / 비노출).', recipeKey: 'dont-dday-for-ended' },
+      { kind: 'do',   text: 'tier 톤 시스템을 따를 것 — today=warning · soon=partner-primary · later=secondary. 커스텀 색상으로 override 금지.' },
+      { kind: 'dont', text: '큰 강조용으로 키우지 말 것 — caption 사이즈 유지, 라벨/제목으로 대체할 정보가 아니다.' },
+    ],
+    dartUsage: `// 이번 주 이벤트 (D-2 → soon tier)
+MinglitDDayChip(daysUntil: 2)
+
+// 오늘 (자동 라벨 "오늘", warning tone)
+MinglitDDayChip(daysUntil: 0)
+
+// 먼 미래 (D-15 → later tier, muted)
+MinglitDDayChip(daysUntil: 15)`,
+    placement: {
+      where: [
+        'PartyListItem 카드 — "다음 이벤트" row 안에서 날짜 + 캐피시티와 같이 노출.',
+        'EventCard 또는 EventDetail hero — 시간성 강조용 corner overlay.',
+        'TodoSummary / 알림 — 임박 이벤트 강조 시그널.',
+      ],
+      spacing: [
+        { neighbor: '날짜 텍스트',     gap: 'spacing-small (8px)', note: 'row 순서: 날짜 → chip → 캐피시티' },
+        { neighbor: '캐피시티 텍스트', gap: 'spacing-small (8px)' },
+      ],
+      compositions: [
+        { label: 'Next event row', description: 'PartyListItem — "다음 이벤트" 한 줄 안에 날짜 · D-day · 캐피시티.' },
+      ],
+    },
+    usedIn: [
+      'party_list_page',
+    ],
+  },
+  {
     name: 'MinglitParticipantGauge',
     category: 'Tags & Badges',
     purpose: '파티/이벤트 참여자 수를 3-세그먼트 배터리 게이지로 시각화. current/max 비율에 따라 세그먼트 수와 색상이 자동 결정됨. 텍스트(N/M) + people 아이콘 포함 pill 컨테이너.',
@@ -1495,6 +1552,89 @@ MinglitTimeline(
     ],
   },
 
+  // ---------- Confirmation / Success ----------
+  {
+    name: 'MinglitConfirmationPage',
+    category: 'Feedback',
+    purpose:
+      '액션 완료 후 노출되는 풀 화면 success 페이지 (Toss "Confirmation Page" 패턴). 결제 / 신청 / 매칭 / 전송 등 사용자 액션이 성공적으로 끝났을 때 culmination 시각으로 노출. AppBar 미렌더 · centered icon + title + description + 바텀 CTA 단순 구조. 약 1.5초 sequence 애니메이션(circle scale-bounce + check stroke draw + 텍스트 stagger)으로 emotional 마무리.',
+    props: [
+      { name: 'title',       type: 'String',         required: true,  notes: '큰 bold 헤드라인 (22/700). 1-2줄 권장.' },
+      { name: 'description', type: 'String?',        default: 'null', notes: '제목 아래 부가 설명 (14/secondary). 1-2줄 권장 · 긴 안내는 별도 페이지로.' },
+      { name: 'icon',        type: 'IconData',       default: 'Icons.check', notes: '원 안에 흰색으로 노출 (52px · stroke-width 4). check / heart / send / info / warning 등.' },
+      { name: 'tone',        type: 'ConfirmationTone', default: 'success', notes: 'icon circle bg 색 분기 — success(초록) · primary(보라) · info(파랑) · warning(주황).' },
+      { name: 'ctaLabel',    type: 'String',         default: '"확인"', notes: '바텀 CTA 라벨. 다음 단계 forward action으로 사용 가능.' },
+      { name: 'onPressed',   type: 'VoidCallback',   required: true,  notes: '기본 = pop. forward action일 경우 push.' },
+      { name: 'autoDismiss', type: 'Duration?',      default: 'null', notes: '지정 시 일정 시간 후 자동 pop — 짧은 confirmation. CTA는 그대로 노출.' },
+    ],
+    variants: ['success (default)', 'primary', 'info', 'warning'],
+    states: ['default', 'auto-dismissing (timer 진행 중)'],
+    tokens: [
+      { name: 'color-success',        where: 'success tone — icon circle bg 초록 #16a34a.' },
+      { name: 'color-primary',        where: 'primary tone — icon circle bg 보라 + CTA bg.' },
+      { name: 'color-info',           where: 'info tone — icon circle bg 파랑.' },
+      { name: 'color-warning',        where: 'warning tone — icon circle bg 주황.' },
+      { name: 'color-background',     where: 'scaffold + check icon stroke (흰색).' },
+      { name: 'color-text-primary',   where: 'title.' },
+      { name: 'color-text-secondary', where: 'description.' },
+      { name: 'radius-button',        where: 'CTA 버튼 corner.' },
+      { name: 'spacing-medium',       where: 'icon ↔ title ↔ description gap (16px).' },
+      { name: 'spacing-large',        where: 'h-padding (24px) · description max-width 280.' },
+    ],
+    accessibility: [
+      'AppBar 미렌더 — 시스템 back / 명시적 CTA로만 dismiss. iOS swipe-to-back은 그대로 동작.',
+      'autoDismiss 사용 시 screen-reader에 "X초 후 자동으로 닫힙니다" announce 권장.',
+      'icon은 시각 보조 — 의미는 title + description 텍스트로 명확히 전달.',
+      '저성능 디바이스 / OS 모션 감소 설정 시 scale-bounce / draw animation 즉시 완료 상태로 fallback.',
+    ],
+    guidelines: [
+      { kind: 'do',   text: '액션 성공 후 짧은 culmination 순간을 만들 때 — 사용자가 "내 액션이 완료됐다"를 명확히 인지하도록.', recipeKey: 'do-matching-submitted' },
+      { kind: 'do',   text: 'tone은 액션 성격에 맞게 — 일반 성공은 success(초록), brand-distinctive 액션(좋아요 / 연결)은 primary(보라).', recipeKey: 'do-brand-action-primary' },
+      { kind: 'do',   text: 'CTA는 "확인" 기본 · forward action(다음 단계로 가는 흐름)이면 명확한 라벨로 변경 ("이벤트 둘러보기" 등).' },
+      { kind: 'dont', text: 'title / description 너무 길지 않게 — 각 1-2줄 max. 긴 안내는 별도 페이지로.', recipeKey: 'dont-too-many-lines' },
+      { kind: 'dont', text: 'autoDismiss를 default로 X — 사용자가 culmination 순간을 충분히 즐기게.' },
+    ],
+    placement: {
+      where: [
+        'route push로 풀 화면 노출 — Confirm Dialog 또는 mutation 성공 후 자연스러운 transition.',
+        '사용 예: EventMatchingScreen Submitted state · 결제 완료 / 신청 완료 / 회원가입 완료 등.',
+        '향후 use case: 환불 신청 완료 · 후기 작성 완료 · 정산 신청 완료 등.',
+      ],
+      spacing: [
+        { neighbor: '바텀 CTA',         gap: 'spacing-large (24px)', note: 'CTA 위쪽 divider 없음 — centered 레이아웃이라 노이즈가 됨' },
+        { neighbor: 'icon ↔ title',    gap: 'spacing-medium (16px)' },
+        { neighbor: 'title ↔ description', gap: 'spacing-medium (16px)' },
+      ],
+    },
+    dartUsage: `// 매칭 좋아요 전송 완료 — success tone
+MinglitConfirmationPage(
+  title: '좋아요를 보냈어요',
+  description: '매칭 결과는 매칭이 모두 종료된 후 알려드릴게요',
+  ctaLabel: '확인',
+  onPressed: () => Navigator.of(context).pop(),
+)
+
+// brand-distinctive 액션 — primary tone + heart icon
+MinglitConfirmationPage(
+  title: '요청을 보냈어요',
+  description: '상대방이 수락하면 알려드릴게요',
+  icon: Icons.favorite,
+  tone: ConfirmationTone.primary,
+  onPressed: () => Navigator.of(context).pop(),
+)
+
+// 회원가입 완료 — forward action CTA
+MinglitConfirmationPage(
+  title: '회원가입이 완료됐어요',
+  description: '이제 이벤트를 둘러볼 수 있어요',
+  ctaLabel: '이벤트 둘러보기',
+  onPressed: () => homeCoordinator.goToHome(),
+)`,
+    usedIn: [
+      'event_matching_screen',
+    ],
+  },
+
   // ---------- Settings ----------
   {
     name: 'MinglitSettingsGroup',
@@ -2069,6 +2209,80 @@ await showMinglitBottomSheet(
         { label: 'MinglitImageSourceSheet', description: '이미지 소스 선택의 표준 패턴.', recipeKey: 'do-image-source' },
         { label: 'Sort / filter options',   description: '정렬·필터 옵션 선택.',           recipeKey: 'do-sort-options' },
         { label: 'MinglitListTile rows',    description: '멤버 액션 / 옵션 목록.' },
+      ],
+    },
+  },
+
+  {
+    name: 'MinglitHelpSheet',
+    category: 'Overlay',
+    purpose: 'Q&A 형식 도움말 bottom sheet. 파트너 앱 AppBar info 아이콘 → 표준 도움말 패턴. handle bar + title + 스크롤 가능 섹션 + sticky 확인 CTA.',
+    props: [
+      { name: 'context',      type: 'BuildContext',     required: true,    notes: 'showMinglitHelpSheet() 최상위 파라미터.' },
+      { name: 'title',        type: 'String',           required: true,    notes: '시트 상단 제목. titleMedium 16/700.' },
+      { name: 'sections',     type: 'List<HelpSection>', required: true,   notes: 'Q&A 항목 리스트. HelpSection(title, body, leading?). 첫 섹션 제외 전부 1px divider 상단.' },
+      { name: 'confirmLabel', type: 'String',           default: '"확인"', notes: 'sticky CTA 버튼 라벨.' },
+    ],
+    variants: ['text-only sections', 'sections with leading icon', 'custom confirmLabel'],
+    states: ['visible', 'scrolled (long content)', 'dismissed (confirm/drag/scrim)'],
+    tokens: [
+      { name: 'gradient opacity (MinglitOpacity.gradient)', where: '시트 배경 스크림 rgba(0,0,0,0.45)' },
+      { name: 'radius-card',                                where: '시트 상단 두 코너 16px (하단 0)' },
+      { name: 'color-divider + muted opacity',              where: '핸들 바 색상 · 섹션 구분선 1px' },
+      { name: 'spacing-small',                              where: '핸들 상하 여백 8px · 섹션 제목→본문 gap' },
+      { name: 'spacing-xsmall',                            where: '핸들 상하 개별 padding 4px' },
+      { name: 'spacing-xxsmall',                           where: '핸들바 최상단 margin 2px' },
+      { name: 'spacing-medium',                            where: '헤더 좌우·상하 16px · 섹션 좌우 패딩 · CTA 마진' },
+      { name: 'partner-primary',                           where: 'sticky CTA 버튼 배경색 (다이나믹 파트너 색상 — 테마 상속 아님)' },
+    ],
+    accessibility: [
+      'showModalBottomSheet barrier 탭 시 dismiss (isDismissible=true)',
+      '핸들 드래그로 dismiss 가능 (enableDrag=true)',
+      '최대 높이 75vh — 긴 컨텐츠는 내부 ListView로 스크롤 (isScrollControlled=true)',
+      'SafeArea 적용 — 홈 인디케이터 위 안전 영역 확보',
+      'confirmLabel ElevatedButton — partner-primary 색상 명시 (테마 상속 아님, 유저/파트너 앱 모두 동일 렌더링 보장)',
+    ],
+    guidelines: [
+      { kind: 'do',   text: '파트너 앱 화면 AppBar 우측 info 아이콘 탭 → showMinglitHelpSheet 패턴으로 일관 적용.',    recipeKey: 'do-info-icon-pattern' },
+      { kind: 'dont', text: 'HelpSheet 안에 버튼/폼/액션 삽입 금지 — 정보 전달 전용. 액션이 필요하면 별도 Route 사용.', recipeKey: 'dont-action-in-help' },
+      { kind: 'do',   text: '섹션 제목은 "질문 형태" — 사용자 mental model에 맞춰 Q&A 구성.',                          recipeKey: 'do-qa-format' },
+      { kind: 'dont', text: '단일 섹션만 있을 때 MinglitHelpSheet 사용 금지 — MinglitBottomSheet + Text 사용.',         recipeKey: 'dont-single-section' },
+    ],
+    dartUsage: `// 파트너 앱 AppBar info 아이콘에서 호출
+await showMinglitHelpSheet(
+  context: context,
+  title: '파티 관리 가이드',
+  sections: [
+    const HelpSection(
+      title: '파티가 뭔가요?',
+      body: '이벤트를 묶어서 관리하는 단위입니다. 하나의 파티에 여러 이벤트를 추가할 수 있어요.',
+    ),
+    const HelpSection(
+      title: '이벤트와 파티의 차이는?',
+      body: '이벤트는 구체적인 활동(날짜·장소·인원 확정), 파티는 여러 이벤트를 묶은 프로그램 단위입니다.',
+    ),
+    HelpSection(
+      leading: const Icon(Icons.check_circle_outline, size: 18),
+      title: '승인이 필요한가요?',
+      body: '파티 생성은 즉시 활성화됩니다. 이벤트 단위로 신청 심사를 설정할 수 있어요.',
+    ),
+  ],
+);`,
+    placement: {
+      where: [
+        '파트너 앱 모든 화면 AppBar 우측 info(help) 아이콘 탭 시 표시.',
+        '어느 화면에서든 showMinglitHelpSheet() 호출로 표시. scaffold 종속 없음.',
+      ],
+      spacing: [
+        { neighbor: '핸들 바',         gap: 'spacing-xxsmall (2px) 최상단 · spacing-xsmall (4px) 상하 · spacing-small (8px) 아래' },
+        { neighbor: '헤더 좌우·상하',  gap: 'spacing-medium (16px)' },
+        { neighbor: '섹션 좌우 패딩',  gap: 'spacing-medium (16px)' },
+        { neighbor: '섹션 제목→본문',  gap: 'spacing-small (8px)' },
+        { neighbor: 'CTA 버튼',        gap: 'spacing-medium (16px) 마진 + SafeArea' },
+      ],
+      compositions: [
+        { label: 'AppBar info 아이콘 → HelpSheet', description: '파트너 앱 도움말 표준 패턴.',       recipeKey: 'do-info-icon-pattern' },
+        { label: 'Q&A multi-section',               description: '다단 Q&A — 개념/차이/규칙 흐름.', recipeKey: 'do-qa-format' },
       ],
     },
   },

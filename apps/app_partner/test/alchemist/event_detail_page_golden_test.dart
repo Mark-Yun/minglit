@@ -29,11 +29,9 @@ void main() {
   );
 
   goldenTest(
-    'Partner EventDetailPage applications tab',
-    fileName: 'partner_event_detail_page_applications',
+    'Partner EventDetailPage dark mode',
+    fileName: 'partner_event_detail_page_dark',
     pumpBeforeTest: (tester) async {
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('참가 신청'));
       await tester.pumpAndSettle();
     },
     builder: () => GoldenTestGroup(

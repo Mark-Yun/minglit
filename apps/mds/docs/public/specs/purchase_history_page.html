@@ -312,6 +312,7 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
         <td>
           MyTickets와 분리한 이유: MyTickets는 "지금 갈 수 있는 티켓"에 초점 (active만), Purchase History는 "결제 기록"으로 회계/환불 관점. cancelled/rejected/payment_failed도 모두 보여 환불·문의의 기록 추적이 가능하게 한다.
           v1은 카드마다 인라인 영수증 / 문의 / 예매 취소 버튼을 노출했는데, 카드가 무겁고 환불 confirm 다이얼로그까지 같은 페이지에 얹혀 책임이 과적되어 있었다. v1.1에서 카드는 시그널만 담당하고 액션은 상세 페이지로 분리해 list ↔ detail 책임을 명확히 가른다.
+          Fix #2076 (v1.2): 영수증 버튼은 유료·무료 구분 없이 모든 구매에 노출. 유료(paymentId ≠ null) → iamport 외부 브라우저 · 무료(paymentId = null) → 인앱 신청 확인서 다이얼로그. 환불 플로우는 정책 조회 실패 시 default(grace 2h / cutoff 7d)로 fallback (Fix #133).
         </td>
       </tr>
       <tr>
@@ -345,6 +346,12 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
         <td>1.1</td>
         <td>mark-yun</td>
         <td>책임 분리 정리 (PR #2094 후속). 카드의 인라인 액션(영수증 / 문의하기 / 예매 취소) + 환불 confirm 다이얼로그 state를 상세 페이지로 위임. 카드는 header / info / divider / pay-row 4 region. State 5(Refund confirm) 제거 → 4 state. canCancel 판정 / contactOptions fallback / 환불 정책 조회 / iamport 영수증 등 detail-page 책임도 본 spec에서 모두 제거. <strong>StatusBadge 위치를 header 우측 → info row 내 이벤트 타이틀 위로 이동</strong>해 시각적 묶음 강화, header 우측은 '상세 보기' affordance가 차지.</td>
+      </tr>
+      <tr>
+        <td>2026-05-05</td>
+        <td>1.2</td>
+        <td>needs-swe-sonnet-1</td>
+        <td>Fix #2076 — 무료 티켓 영수증 버튼 동작 변경. 기존(Fix #1820): paymentId 없으면 버튼 미렌더. 변경: 항상 "영수증" 버튼 노출 · 유료 → iamport 외부 브라우저 · 무료 → 인앱 신청 확인서 다이얼로그. Actions row sub-anatomy + 에지케이스 · Global Behavior 사용자 액션 반영.</td>
       </tr>
       <tr>
         <td>2026-05-01</td>
@@ -421,13 +428,17 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
          ├─ padding: <i>EdgeInsets.all(spacing-medium 16)</i>
          ├─ separator: SizedBox(height: <i>spacing-medium 16</i>)
          └─ <b>PurchaseHistoryCard</b> × n                       ← ② / ③
-            └─ <b>InkWell</b>(onTap → push <a href="/specs/purchase_history_detail_page.html">PurchaseHistoryDetailRoute</a>(applicationId))
-               └─ Container · radius-card · 1px outlineVariant · shadowXs · pad-medium
-                  ├─ <em>1. Header Row</em>: paidAt(yyyy.MM.dd) ↔ Text('상세 보기') + Icon(chevron_right · 14 · text-secondary)
-                  ├─ SizedBox(spacing-medium)
-                  ├─ <em>2. Info Row</em>: 80×80 thumb (<b>MinglitImage</b>) + Column(<b>StatusBadge</b> inline-flex · title titleMedium bold · "M월 d일 (E) HH:mm" bodySmall · location bodySmall onSurfaceVariant)
-                  ├─ <b>Divider</b>(height: <i>spacing-xlarge 32</i>)
-                  └─ <em>3. Pay Row</em>: ticket name bodyMedium ↔ "{amount}원" bodyLarge bold</div>
+            └─ Container · radius-card · 1px outlineVariant · shadowXs · pad-medium
+               ├─ <em>1. Header Row</em>: paidAt(yyyy.MM.dd) ↔ <b>StatusBadge</b>
+               ├─ SizedBox(spacing-medium)
+               ├─ <em>2. Info Row</em>: 80×80 thumb (<b>MinglitImage</b>) + Column(title titleMedium bold · "M월 d일 (E) HH:mm" bodySmall · location bodySmall onSurfaceVariant)
+               ├─ <b>Divider</b>(height: <i>spacing-xlarge 32</i>)
+               ├─ <em>3. Pay Row</em>: ticket name bodyMedium ↔ "{amount}원" bodyLarge bold
+               ├─ SizedBox(spacing-medium)
+               └─ <em>4. Actions Row</em> (IntrinsicHeight + Row stretch)
+                  ├─ TextButton "영수증" (flex 1)  // Fix #2076: 항상 노출 — paymentId ≠ null → iamport · null → 신청 확인서 다이얼로그
+                  ├─ TextButton "문의하기" (flex 1)
+                  └─ <em>if canCancel</em> → ElevatedButton "예매 취소" (flex 2 · errorContainer bg)  // Fix #1234</div>
     </div>
 
     <table class="ref" style="margin-top: 16px;">
@@ -538,7 +549,8 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
         <tr><td>1. Header (date · 상세 보기)</td><td>spaceBetween · 좌우 끝</td><td>좌: <code>paidAt ?? createdAt</code>를 <code>toLocal()</code> 후 <code>yyyy.MM.dd</code> 포맷 (Fix #579 · UTC→KST 날짜 차이 방지) · labelMedium onSurfaceVariant. 우: Text('상세 보기') 12px w500 secondary + Icon(chevron_right · 14px · text-secondary) — 카드 전체가 InkWell이라 어디를 탭해도 push되지만 affordance signal로 노출.</td></tr>
         <tr><td>2. Info row (thumb · 텍스트 column)</td><td>start cross-axis</td><td>thumb 80×80 (<code>MinglitImage</code> · radius-small · BoxFit.cover · imageUrl 없으면 placeholder) + <code>spacing-medium</code> gap + Expanded Column [<a href="/components#StatusBadge"><code>StatusBadge</code></a>(inline-flex · 자기 폭만 차지, 좌측 정렬) · eventName titleMedium bold maxLines 1 ellipsis · "M월 d일 (E) HH:mm" bodySmall · location bodySmall onSurfaceVariant]. badge ↔ title 시각 간격 4–6px (Column gap xsmall 4 + badge-wrap margin-bottom 2 → xsmall 미만 시각적 묶음 강조).</td></tr>
         <tr><td>3. Divider</td><td>—</td><td><code>Divider(height: spacing-xlarge 32)</code> — 1px line + 16/16 v-margin (Material Divider default)</td></tr>
-        <tr><td>4. Pay row</td><td>spaceBetween baseline</td><td>좌: ticket name bodyMedium · 우: <code>NumberFormat('#,###').format(paymentAmount ?? 0) + '원'</code> bodyLarge bold. 무료 티켓이면 "0원"으로 표기.</td></tr>
+        <tr><td>4. Pay row</td><td>spaceBetween baseline</td><td>좌: ticket name bodyMedium · 우: <code>NumberFormat('#,###').format(paymentAmount ?? 0) + '원'</code> bodyLarge bold</td></tr>
+        <tr><td>5. Actions row</td><td>IntrinsicHeight + Row stretch · 가운데 정렬</td><td>항상 "영수증" TextButton flex 1 (Fix #2076) — paymentId ≠ null → iamport 외부 브라우저 · paymentId = null → 인앱 신청 확인서 다이얼로그 · 항상 "문의하기" TextButton flex 1 · canCancel → "예매 취소" ElevatedButton flex 2 errorContainer bg (Fix #1234 — 2줄 깨짐 방지로 cancel만 flex 2).</td></tr>
       </tbody>
     </table>
 
@@ -644,16 +656,17 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ① <strong>카드 탭</strong> → <a href="/specs/purchase_history_detail_page.html">PurchaseHistoryDetailRoute</a>로 push (모든 후속 액션은 상세에서 — 결제 정보 / 환불 / 문의 / 영수증 등)<br>
-            ② <strong>스크롤</strong> → 더 오래된 결제 노출 (현재 페이지네이션 없이 한 번에 모두 표시)<br>
-            ③ <strong>뒤로 가기</strong> → 마이페이지로 복귀<br>
-            ④ <strong>상세 페이지에서 status 변경 후 복귀</strong> → 자동 invalidate → 카드의 status badge가 갱신됨 (예: 결제완료 → 환불 완료)
+            ① <strong>"영수증" 탭</strong> (Fix #2076 — 모든 구매에 노출) → 유료(paymentId ≠ null): 외부 브라우저로 iamport 영수증 페이지 · 열 수 없으면 "영수증 페이지를 열 수 없습니다." 안내 / 무료(paymentId = null): 인앱 신청 확인서 다이얼로그 (이벤트명·일시·티켓명·0원)<br>
+            ② <strong>"문의하기" 탭</strong> → 연락처가 등록돼 있으면 전화 앱 우선, 없으면 메일 앱으로 이동. 둘 다 없으면 "연락처 정보가 없습니다." 안내<br>
+            ③ <strong>"예매 취소" 탭</strong> (취소 가능 건만 노출) → 환불 정책을 조회한 뒤 환불 확인 다이얼로그 노출 (state 5)<br>
+            ④ <strong>스크롤</strong> → 더 오래된 결제 노출 (현재 페이지네이션 없이 한 번에 모두 표시)<br>
+            ⑤ <strong>뒤로 가기</strong> → 마이페이지로 복귀
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · <strong>무료 티켓</strong> (paymentAmount=0 &amp;&amp; paymentId=null) → 카드는 동일 표기, "0원"으로 노출. 영수증 / 환불 분기는 상세에서 처리.<br>
+            · <strong>무료 티켓</strong> (paymentAmount=0 &amp;&amp; paymentId=null) → "영수증" 버튼 노출, 탭 시 인앱 신청 확인서 다이얼로그 표시 (Fix #2076 — Fix #1820 행동 대체) · "예매 취소"는 isFree branch로 활성 (Fix #1652)<br>
             · <strong>event/party 관계 끊김</strong> → eventName "제목 없음" · location "장소 정보 없음" · dateLabel "-"<br>
             · <strong>StatusBadge 색</strong>: paid/approved → success 초록 · pending_review → warning 노랑 · pending/payment_pending → info 파랑 · cancelled → neutral 회색 · rejected/payment_failed → error 빨강 · 그 외 → "알수없음" 회색<br>
             · <strong>InkWell 탭 영역</strong>: 카드 전체. chevron 영역만 별도 hit-region 없음 — 어디를 눌러도 동일하게 detail push.
@@ -985,7 +998,7 @@ body.dark-mode .ph-card { background: var(--color-dark-surface); }
         </tr>
         <tr>
           <td><a href="/specs/my_tickets_page.html"><code>MyTicketsPage</code></a></td>
-          <td>형제 화면 — active 티켓만 모이는 곳. PurchaseHistory는 모든 status를 포함하는 점이 차이.</td>
+          <td>형제 화면 — <strong>actionable 활성 이벤트</strong>(<a href="/specs/event_ongoing_banner.html">OngoingBanner</a> stack)만 모임. v2부터 다가오는·지난 timeline 책임은 PurchaseHistory에 위임 — 둘이 actionable hub vs 회계/회고 timeline으로 명확히 분리.</td>
         </tr>
         <tr>
           <td><a href="/specs/event_detail_page.html"><code>EventDetailPage</code></a></td>

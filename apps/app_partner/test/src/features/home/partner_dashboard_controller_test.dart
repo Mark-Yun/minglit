@@ -16,6 +16,20 @@ final _testEvent = Event(
   updatedAt: DateTime(2026),
 );
 
+// Live event: started 2h ago, ends 5h from now — always in EventPhase.live.
+// getUpcomingEvents (gte start_time) would exclude this; getEventsByPartnerId
+// (gt end_time) correctly includes it so the HomeLiveEventCard is populated.
+Event get _testLiveEvent => Event(
+  id: 'event-live',
+  partyId: 'party-1',
+  startTime: DateTime.now().subtract(const Duration(hours: 2)),
+  endTime: DateTime.now().add(const Duration(hours: 5)),
+  status: 'ongoing',
+  currentParticipants: 5,
+  createdAt: DateTime(2026),
+  updatedAt: DateTime(2026),
+);
+
 final _testParty = Party(
   id: 'party-1',
   partnerId: 'partner-1',
@@ -41,8 +55,10 @@ void main() {
     when(
       () => mockEventRepo.getPendingApplicationCount(any()),
     ).thenAnswer((_) async => 3);
+    // Fix #2219: controller now uses getEventsByPartnerId (gt end_time) to include
+    // live events. getUpcomingEvents (gte start_time) excluded started events.
     when(
-      () => mockEventRepo.getUpcomingEvents(any()),
+      () => mockEventRepo.getEventsByPartnerId(any()),
     ).thenAnswer((_) async => [_testEvent]);
     when(
       () => mockEventRepo.getClosingSoonEvents(any()),
@@ -123,11 +139,11 @@ void main() {
     // Regression test for #1215: partner with past events (no upcoming events)
     // must not see the onboarding guide.
     test(
-      'hasAnyEvents is true even when upcomingEvents is empty',
+      'hasAnyEvents is true even when activeEvents is empty',
       () async {
-        // Simulate partner whose events are all in the past (>7 days ago).
+        // Simulate partner whose events are all in the past (ended already).
         when(
-          () => mockEventRepo.getUpcomingEvents(any()),
+          () => mockEventRepo.getEventsByPartnerId(any()),
         ).thenAnswer((_) async => []);
         when(
           () => mockEventRepo.getHasAnyEvents(any()),
@@ -149,7 +165,7 @@ void main() {
       'hasAnyEvents is false for brand-new partner with no events',
       () async {
         when(
-          () => mockEventRepo.getUpcomingEvents(any()),
+          () => mockEventRepo.getEventsByPartnerId(any()),
         ).thenAnswer((_) async => []);
         when(
           () => mockEventRepo.getHasAnyEvents(any()),
@@ -160,6 +176,49 @@ void main() {
 
         expect(state.upcomingEvents, isEmpty);
         expect(state.hasAnyEvents, isFalse);
+      },
+    );
+
+    // Fix #2219: regression guard — liveEvents must be populated when an active
+    // event has started. This was broken when getUpcomingEvents (gte start_time)
+    // was used; getEventsByPartnerId (gt end_time) fixes it.
+    test(
+      'liveEvents is populated from active events that have started',
+      () async {
+        final liveEvent = _testLiveEvent;
+        when(
+          () => mockEventRepo.getEventsByPartnerId(any()),
+        ).thenAnswer((_) async => [liveEvent, _testEvent]);
+
+        final container = await buildAndPump();
+        final state = container.read(partnerDashboardControllerProvider);
+
+        expect(state.liveEvents, contains(liveEvent));
+        expect(
+          state.recruitingEvents,
+          isNot(contains(liveEvent)),
+          reason: 'Live event must not appear in recruitingEvents section',
+        );
+      },
+    );
+
+    test(
+      'totalAttendees includes participants from live events',
+      () async {
+        final liveEvent = _testLiveEvent; // currentParticipants: 5
+        when(
+          () => mockEventRepo.getEventsByPartnerId(any()),
+        ).thenAnswer((_) async => [liveEvent]);
+
+        final container = await buildAndPump();
+        final state = container.read(partnerDashboardControllerProvider);
+
+        expect(
+          state.totalAttendees,
+          5,
+          reason:
+              'Live event participants must count toward overview total (#2219)',
+        );
       },
     );
 

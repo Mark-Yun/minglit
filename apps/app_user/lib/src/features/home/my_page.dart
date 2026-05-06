@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:app_user/src/features/auth/logic/auth_coordinator.dart';
 import 'package:app_user/src/features/home/logic/home_coordinator.dart';
+import 'package:app_user/src/logic/auth_coordinator.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -175,40 +175,7 @@ class MyPage extends ConsumerWidget {
                 ),
               ],
             ),
-            const SizedBox(height: MinglitSpacing.large),
-
-            // Group 6: Account
-            MinglitSettingsGroup(
-              header: '계정',
-              children: [
-                MinglitSettingsTile(
-                  leading: Icons.manage_accounts_outlined,
-                  title: '계정 관리',
-                  onTap: homeCoordinator.pushAccountManagement,
-                ),
-                MinglitSettingsTile(
-                  leading: Icons.logout_outlined,
-                  title: '로그아웃',
-                  destructive: true,
-                  trailing: SettingsTileTrailing.none,
-                  onTap: () async {
-                    final confirmed = await MinglitAlert.showConfirm(
-                      context: context,
-                      title: '로그아웃',
-                      content: '정말 로그아웃 하시겠습니까?',
-                      confirmText: '로그아웃',
-                      isDestructive: true,
-                    );
-                    if (confirmed) {
-                      unawaited(
-                        ref.read(authControllerProvider.notifier).signOut(),
-                      );
-                    }
-                  },
-                ),
-              ],
-            ),
-
+            // Fix #2120: AccountGroup 폐기 — 로그아웃/계정 관리는 AccountManagementPage로 일원화
             const SizedBox(height: MinglitSpacing.xxlarge),
           ],
         ),

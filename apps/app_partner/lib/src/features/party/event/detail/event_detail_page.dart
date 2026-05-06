@@ -1,16 +1,18 @@
 import 'dart:async';
 
 import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
-import 'package:app_partner/src/features/party/event/detail/event_application_controller.dart';
 import 'package:app_partner/src/features/party/event/detail/event_detail_controller.dart';
-import 'package:app_partner/src/features/party/event/widgets/event_application_list_view.dart';
 import 'package:app_partner/src/features/party/event/widgets/ticket_list_item.dart';
+// Fix #2145: moved to logic/ — eliminates cross-feature application ↔ party/event dependency
+import 'package:app_partner/src/logic/event_application_logic.dart';
 import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
+// Fix #2224: Tab 구조 폐기 — 단일 스크롤 페이지로 변경, AppBar 타이틀 수정,
+// 참가 신청은 EventApplicationListRoute로 분리.
 class EventDetailPage extends ConsumerWidget {
   const EventDetailPage({required this.eventId, super.key});
 
@@ -21,40 +23,24 @@ class EventDetailPage extends ConsumerWidget {
     final eventAsync = ref.watch(eventDetailProvider(eventId));
     final ticketsAsync = ref.watch(eventTicketsProvider(eventId));
 
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(context.l10n.eventDetail_title),
-          bottom: TabBar(
-            tabs: [
-              Tab(text: context.l10n.partyDetail_tab_operation),
-              const Tab(text: '참가 신청'),
-            ],
-          ),
-        ),
-        body: MinglitAsyncValueWidget(
-          value: eventAsync,
-          data: (event) {
-            final partyAsync = ref.watch(partyDetailProvider(event.partyId));
-            final entryGroups = partyAsync.asData?.value.entryGroups ?? [];
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(context.l10n.eventDetail_title),
+      ),
+      body: MinglitAsyncValueWidget(
+        value: eventAsync,
+        data: (event) {
+          final partyAsync = ref.watch(partyDetailProvider(event.partyId));
+          final entryGroups = partyAsync.asData?.value.entryGroups ?? [];
 
-            return TabBarView(
-              children: [
-                // Tab 1: 운영 관리
-                _EventInfoTab(
-                  event: event,
-                  ticketsAsync: ticketsAsync,
-                  entryGroups: entryGroups,
-                ),
-                // Tab 2: 참가 신청
-                EventApplicationListView(eventId: event.id),
-              ],
-            );
-          },
-          error: (e, s) => Center(
-            child: Text(context.l10n.partyList_error_load(e.toString())),
-          ),
+          return _EventInfoTab(
+            event: event,
+            ticketsAsync: ticketsAsync,
+            entryGroups: entryGroups,
+          );
+        },
+        error: (e, s) => Center(
+          child: Text(context.l10n.partyList_error_load(e.toString())),
         ),
       ),
     );
@@ -79,18 +65,24 @@ class _EventInfoTab extends ConsumerWidget {
     final dateFormat = DateFormat('yyyy년 MM월 dd일 (E)', 'ko');
     final timeFormat = DateFormat('a h:mm', 'ko');
 
-    // Watch applications to show count
     final appsAsync = ref.watch(eventApplicationsProvider(event.id));
-    final appCount = appsAsync.asData?.value.length ?? 0;
-    final pendingCount =
-        appsAsync.asData?.value
-            .where((a) => a.status == 'pending_review')
-            .length ??
-        0;
+    final applications = appsAsync.asData?.value ?? [];
+    final appCount = applications.length;
+    final pendingCount = applications
+        .where((a) => a.status == 'pending_review')
+        .length;
+    // Fix #2224: canonical source for confirmed participants is event.currentParticipants,
+    // not the application list count — application list may be paginated/incomplete.
+    final confirmedCount = event.currentParticipants;
+    final maxParticipants = event.maxParticipants;
+    // Fix #2224: hide edit/review CTAs when event is no longer actionable.
+    final isTerminated =
+        event.status == 'cancelled' || event.status == 'completed';
 
     return SingleChildScrollView(
       child: MinglitContentLayout(
         sections: [
+          // Event title
           if (event.title != null)
             Padding(
               padding: const EdgeInsets.symmetric(
@@ -104,76 +96,189 @@ class _EventInfoTab extends ConsumerWidget {
                 ),
               ),
             ),
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: MinglitSpacing.screenEdge,
+
+          // Schedule + status info card
+          // Fix #2224: 정보 수정 버튼 — confirmedCount >= 1이면 잠금 아이콘 + 토스트,
+          // 없으면 EventEditRoute로 진입.
+          MinglitSection(
+            title: '이벤트 정보',
+            trailing: isTerminated
+                ? null
+                : TextButton.icon(
+                    onPressed: () {
+                      if (confirmedCount >= 1) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('확정 참가자가 있어 일부 항목은 잠겨 있습니다.'),
+                          ),
+                        );
+                        return;
+                      }
+                      unawaited(
+                        EventEditRoute(
+                          partyId: event.partyId,
+                          eventId: event.id,
+                        ).push<void>(context),
+                      );
+                    },
+                    icon: Icon(
+                      confirmedCount >= 1
+                          ? Icons.lock_outline
+                          : Icons.edit_outlined,
+                      size: MinglitIconSize.small,
+                    ),
+                    label: const Text('정보 수정'),
+                  ),
+            padding: EdgeInsets.zero,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: MinglitSpacing.screenEdge,
+              ),
+              child: Container(
+                padding: const EdgeInsets.all(MinglitSpacing.medium),
+                decoration: BoxDecoration(
+                  color: colorScheme.surface,
+                  borderRadius: BorderRadius.circular(MinglitRadius.card),
+                  border: Border.all(color: colorScheme.outlineVariant),
+                ),
+                child: Column(
+                  children: [
+                    _DetailRow(
+                      icon: Icons.calendar_today,
+                      label: context.l10n.eventDetail_label_dateTime,
+                      value: dateFormat.format(event.startTime),
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(
+                        vertical: MinglitSpacing.small,
+                      ),
+                      child: Divider(height: 1),
+                    ),
+                    _DetailRow(
+                      icon: Icons.access_time,
+                      label: context.l10n.eventDetail_label_time,
+                      value:
+                          '${timeFormat.format(event.startTime)} ~ '
+                          '${timeFormat.format(event.endTime)}',
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(
+                        vertical: MinglitSpacing.small,
+                      ),
+                      child: Divider(height: 1),
+                    ),
+                    _DetailRow(
+                      icon: Icons.info_outline,
+                      label: context.l10n.eventDetail_label_status,
+                      value: _getStatusLabel(context, event.status),
+                      valueColor: _getStatusColor(event.status, colorScheme),
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(
+                        vertical: MinglitSpacing.small,
+                      ),
+                      child: Divider(height: 1),
+                    ),
+                    _DetailRow(
+                      icon: Icons.visibility,
+                      label: '공개 설정',
+                      value: _getVisibilityLabel(event.visibility),
+                    ),
+                  ],
+                ),
+              ),
             ),
-            child: Container(
-              padding: const EdgeInsets.all(MinglitSpacing.medium),
-              decoration: BoxDecoration(
-                color: colorScheme.surface,
-                borderRadius: BorderRadius.circular(MinglitRadius.card),
-                border: Border.all(color: colorScheme.outlineVariant),
+          ),
+
+          // 참가 현황 section
+          MinglitSection(
+            title: '참가 현황',
+            trailing: isTerminated
+                ? null
+                : TextButton.icon(
+                    onPressed: () {
+                      unawaited(
+                        EventApplicationListRoute(
+                          partyId: event.partyId,
+                          eventId: event.id,
+                        ).push<void>(context),
+                      );
+                    },
+                    icon: const Icon(
+                      Icons.people_outline,
+                      size: MinglitIconSize.small,
+                    ),
+                    label: const Text('신청 목록 보기'),
+                  ),
+            padding: EdgeInsets.zero,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: MinglitSpacing.screenEdge,
               ),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _DetailRow(
-                    icon: Icons.calendar_today,
-                    label: context.l10n.eventDetail_label_dateTime,
-                    value: dateFormat.format(event.startTime),
+                  Row(
+                    children: [
+                      Text(
+                        '$confirmedCount',
+                        style: theme.textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.primary,
+                        ),
+                      ),
+                      if (maxParticipants > 0)
+                        Text(
+                          ' / $maxParticipants 명',
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      const Spacer(),
+                      if (pendingCount > 0)
+                        Flexible(
+                          child: Text(
+                            '신청 $appCount명 (대기 $pendingCount건)',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                    ],
                   ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(
-                      vertical: MinglitSpacing.small,
+                  const SizedBox(height: MinglitSpacing.small),
+                  if (maxParticipants > 0)
+                    MinglitCapacityBar(
+                      total: maxParticipants,
+                      filled: confirmedCount,
+                      pending: pendingCount,
                     ),
-                    child: Divider(height: 1),
-                  ),
-                  _DetailRow(
-                    icon: Icons.access_time,
-                    label: context.l10n.eventDetail_label_time,
-                    value:
-                        '${timeFormat.format(event.startTime)} ~ '
-                        '${timeFormat.format(event.endTime)}',
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(
-                      vertical: MinglitSpacing.small,
+                  if (pendingCount > 0) ...[
+                    const SizedBox(height: MinglitSpacing.small),
+                    InkWell(
+                      onTap: () {
+                        unawaited(
+                          EventApplicationListRoute(
+                            partyId: event.partyId,
+                            eventId: event.id,
+                          ).push<void>(context),
+                        );
+                      },
+                      child: Text(
+                        '심사 대기 $pendingCount건 처리하기 →',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
-                    child: Divider(height: 1),
-                  ),
-                  _DetailRow(
-                    icon: Icons.people_outline,
-                    label: '참가 현황', // Changed label
-                    value:
-                        '확정 ${event.currentParticipants}명 / 신청 $appCount명 (대기 $pendingCount)',
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(
-                      vertical: MinglitSpacing.small,
-                    ),
-                    child: Divider(height: 1),
-                  ),
-                  _DetailRow(
-                    icon: Icons.info_outline,
-                    label: context.l10n.eventDetail_label_status,
-                    value: _getStatusLabel(context, event.status),
-                    valueColor: _getStatusColor(event.status, colorScheme),
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(
-                      vertical: MinglitSpacing.small,
-                    ),
-                    child: Divider(height: 1),
-                  ),
-                  _DetailRow(
-                    icon: Icons.visibility,
-                    label: '공개 설정',
-                    value: _getVisibilityLabel(event.visibility),
-                  ),
+                  ],
                 ],
               ),
             ),
           ),
+
           // Tickets Section
           MinglitSection(
             title: context.l10n.eventDetail_section_ticketManage,
@@ -219,9 +324,64 @@ class _EventInfoTab extends ConsumerWidget {
               ),
             ),
           ),
+
+          // 입장 그룹별 현황 section
+          if (entryGroups.isNotEmpty)
+            MinglitSection(
+              title: '입장 그룹별 현황',
+              padding: EdgeInsets.zero,
+              child: Column(
+                children: entryGroups
+                    .map(
+                      (group) => ListTile(
+                        leading: const Icon(Icons.group_outlined),
+                        title: Text(
+                          group.label ?? '그룹 ${entryGroups.indexOf(group) + 1}',
+                        ),
+                        subtitle: _buildGroupSubtitle(group),
+                        trailing: const Icon(
+                          Icons.chevron_right,
+                          size: MinglitIconSize.small,
+                        ),
+                        onTap: () {
+                          unawaited(
+                            EventApplicationListRoute(
+                              partyId: event.partyId,
+                              eventId: event.id,
+                              groupId: group.id,
+                            ).push<void>(context),
+                          );
+                        },
+                      ),
+                    )
+                    .toList(),
+              ),
+            ),
         ],
       ),
     );
+  }
+
+  Widget? _buildGroupSubtitle(PartyEntryGroup group) {
+    final parts = <String>[];
+    if (group.gender != null) {
+      parts.add(
+        group.gender == 'male'
+            ? '남성'
+            : group.gender == 'female'
+            ? '여성'
+            : group.gender!,
+      );
+    }
+    if (group.birthYearMin != null && group.birthYearMax != null) {
+      parts.add('${group.birthYearMin}~${group.birthYearMax}년생');
+    } else if (group.birthYearMin != null) {
+      parts.add('${group.birthYearMin}년생 이후');
+    } else if (group.birthYearMax != null) {
+      parts.add('${group.birthYearMax}년생 이전');
+    }
+    if (parts.isEmpty) return null;
+    return Text(parts.join(' · '));
   }
 
   String _getStatusLabel(BuildContext context, String status) {
