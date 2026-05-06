@@ -2,14 +2,28 @@ import 'package:app_user/src/features/tickets/active_event_banners_provider.dart
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../utils/mocks.dart';
 import '../../../../utils/test_utils.dart';
 
+class _FakePostgresChangeFilter extends Fake implements PostgresChangeFilter {}
+
 void main() {
+  setUpAll(() {
+    registerFallbackValue(PostgresChangeEvent.all);
+    registerFallbackValue(_FakePostgresChangeFilter());
+    registerFallbackValue((PostgresChangePayload payload) {});
+    registerFallbackValue(
+      (RealtimeSubscribeStatus status, [Object? error]) {},
+    );
+  });
+
   late MockEventRepository mockEventRepo;
   late MockMatchingRepository mockMatchingRepo;
   late MockUser mockUser;
+  late MockSupabaseClient mockSupabase;
+  late MockRealtimeChannel mockChannel;
 
   // Provider uses DateTime.now() internally, so event times must be relative
   // to wall-clock time to avoid spurious isCompletedLike evaluations.
@@ -57,8 +71,25 @@ void main() {
     mockEventRepo = MockEventRepository();
     mockMatchingRepo = MockMatchingRepository();
     mockUser = MockUser();
+    mockSupabase = MockSupabaseClient();
+    mockChannel = MockRealtimeChannel();
 
     when(() => mockUser.id).thenReturn('user-1');
+
+    // Fix #2290: Realtime channel setup — mock Supabase to prevent
+    // Supabase.instance initialization assertion in unit tests.
+    when(() => mockSupabase.channel(any())).thenReturn(mockChannel);
+    when(
+      () => mockChannel.onPostgresChanges(
+        event: any(named: 'event'),
+        schema: any(named: 'schema'),
+        table: any(named: 'table'),
+        filter: any(named: 'filter'),
+        callback: any(named: 'callback'),
+      ),
+    ).thenReturn(mockChannel);
+    when(() => mockChannel.subscribe(any(), any())).thenReturn(mockChannel);
+    when(() => mockChannel.unsubscribe(any())).thenAnswer((_) async => 'ok');
   });
 
   ProviderContainer makeContainer() {
@@ -67,6 +98,7 @@ void main() {
         currentUserProvider.overrideWithValue(mockUser),
         eventRepositoryProvider.overrideWith((ref) => mockEventRepo),
         matchingRepositoryProvider.overrideWith((ref) => mockMatchingRepo),
+        supabaseClientProvider.overrideWithValue(mockSupabase),
       ],
     );
   }

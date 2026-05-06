@@ -1,7 +1,7 @@
-# Graph Report - /Users/mark/workspace/minglit-worker-runtime/workspace/needs-swe-sonnet-1/.claude/worktrees/feat-2123-ongoing-banner  (2026-05-07)
+# Graph Report - /Users/mark/workspace/minglit-worker-runtime/workspace/wt-2290-fix  (2026-05-07)
 
 ## Corpus Check
-- 1240 files · ~1,996,950 words
+- 1240 files · ~1,938,212 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -2693,9 +2693,9 @@ _Questions this graph is uniquely positioned to answer:_
 - **What is the exact relationship between `Architecture Audit #1092 — 2026-04-06` and `AI Basic Law Compliance (Korea 2026)`?**
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
 - **Why does `package:flutter/material.dart` connect `Community 1` to `Community 0`, `Community 2`, `Community 6`, `Community 7`, `Community 8`, `Community 9`, `Community 10`, `Community 15`, `Community 16`, `Community 17`, `Community 19`, `Community 20`, `Community 24`, `Community 26`, `Community 27`, `Community 28`, `Community 30`, `Community 33`, `Community 34`, `Community 41`, `Community 48`?**
-  _High betweenness centrality (0.189) - this node is a cross-community bridge._
-- **Why does `Log` connect `Community 13` to `Community 14`?**
-  _High betweenness centrality (0.179) - this node is a cross-community bridge._
+  _High betweenness centrality (0.183) - this node is a cross-community bridge._
+- **Why does `Text` connect `Community 13` to `Community 6`?**
+  _High betweenness centrality (0.180) - this node is a cross-community bridge._
 - **What connects `reporter (AutoLabelAllureReporter)`, `_buildPage`, `MaterialApp` to the rest of the system?**
   _2833 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
