@@ -74,6 +74,12 @@ export async function optionalAuth(req: Request): Promise<string | null> {
   }
 }
 
+/**
+ * @deprecated Use `minglitEdgeFunction` from `_shared/edge_function.ts` instead.
+ *   Wrapper handles caller verification (system/user/external/public) declaratively
+ *   via `auth-manifest.json`. See docs/architecture/edge-function-auth.md.
+ *   기존 EF 들은 phase 3 에서 점진적으로 마이그레이션 (issue #2184).
+ */
 export function requireServiceRole(req: Request): true | Response {
   const authHeader = req.headers.get("Authorization");
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");

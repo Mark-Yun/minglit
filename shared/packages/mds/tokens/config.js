@@ -59,7 +59,7 @@ StyleDictionary.registerTransform({
   type: 'value',
   filter: (token) => {
     const type = token.$type ?? token.type ?? '';
-    return type === 'dimension' || type === 'size' || type === 'fontWeight' || type === 'fontFamily';
+    return type === 'dimension' || type === 'size' || type === 'fontWeight' || type === 'fontFamily' || type === 'number';
   },
   transform: (token) => token.$value ?? token.value,
 });
@@ -153,6 +153,10 @@ StyleDictionary.registerFormat({
       } else if (type === 'fontWeight') {
         dartType = 'int';
         dartValue = String(rawValue);
+      } else if (type === 'number') {
+        dartType = 'double';
+        const num = Number(rawValue);
+        dartValue = Number.isInteger(num) ? `${num}.0` : String(num);
       } else {
         dartType = 'String';
         dartValue = `'${rawValue}'`;

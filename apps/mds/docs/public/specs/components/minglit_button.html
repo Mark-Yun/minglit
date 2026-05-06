@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Spec — MinglitButton</title>
+<style>
+:root {
+  --color-background: #ffffff;
+  --color-surface: #f9fafb;
+  --color-primary: #9900ff;
+  --color-on-primary: #ffffff;
+  --color-error: #ef4444;
+  --color-text-primary: #111827;
+  --color-text-secondary: #4b5563;
+  --color-divider: #e5e7eb;
+  --spacing-xsmall: 4px;
+  --spacing-small: 8px;
+  --spacing-sm: 12px;
+  --spacing-medium: 16px;
+  --spacing-large: 24px;
+  --spacing-screen-edge: 16px;
+  --radius-button: 12px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #e5e5e5;
+  font-family: Pretendard, -apple-system, sans-serif;
+  padding: 24px;
+  min-height: 100vh;
+  color: var(--color-text-primary);
+}
+
+.toolbar {
+  position: fixed; top: 12px; right: 12px;
+  background: white;
+  border: 1px solid #aaa;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font: 13px sans-serif;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.toolbar label { cursor: pointer; user-select: none; }
+
+.page {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.page header {
+  margin-bottom: 24px;
+}
+.page header .breadcrumb {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+.page header h1 {
+  font-size: 24px;
+  font-weight: 700;
+}
+.page header p {
+  margin-top: 4px;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+section {
+  background: white;
+  border: 1px solid var(--color-divider);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+section h2 {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-secondary);
+  margin-bottom: 12px;
+}
+.matrix {
+  display: grid;
+  gap: 12px;
+}
+
+/* ====== Component implementation (the spec output) ====== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-small);
+  padding: var(--spacing-sm) var(--spacing-medium);
+  border-radius: var(--radius-button);
+  font: 600 14px/1 inherit;
+  cursor: pointer;
+  border: 1px solid transparent;
+  user-select: none;
+  transition: opacity 0.12s, transform 0.05s;
+}
+.btn:active { transform: scale(0.98); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.btn--primary { background: var(--color-primary); color: var(--color-on-primary); }
+.btn--secondary {
+  background: transparent; color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+.btn--destructive { background: var(--color-error); color: var(--color-on-primary); }
+
+.btn--sm { padding: var(--spacing-small) var(--spacing-sm); font-size: 13px; }
+.btn--md { padding: var(--spacing-sm) var(--spacing-medium); font-size: 14px; }
+.btn--lg { padding: var(--spacing-medium) var(--spacing-large); font-size: 15px; }
+
+.btn--loading { position: relative; pointer-events: none; }
+.btn--loading::before {
+  content: '';
+  display: inline-block;
+  width: 12px; height: 12px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 999px;
+  animation: spin 0.6s linear infinite;
+}
+.btn--loading > .btn-label { opacity: 0.5; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Matrix layout per section */
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.row .label {
+  width: 100px;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  font-family: ui-monospace, monospace;
+}
+
+/* ====== SPEC MODE annotations ====== */
+body.spec-mode .btn[data-spec-token]::after {
+  content: attr(data-spec-token);
+  position: absolute;
+  bottom: -16px; left: 0;
+  font: 9px/1 'JetBrains Mono', monospace;
+  color: #c06;
+  background: rgba(255, 240, 245, 0.95);
+  border: 1px solid #c06;
+  padding: 1px 4px;
+  border-radius: 3px;
+  white-space: nowrap;
+  z-index: 5;
+}
+body.spec-mode .btn { position: relative; outline: 1px dashed rgba(204, 0, 102, 0.3); }
+
+/* ====== Spec table ====== */
+table.spec {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+table.spec th, table.spec td {
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--color-divider);
+}
+table.spec th {
+  background: var(--color-surface);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-secondary);
+}
+table.spec code {
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  background: var(--color-surface);
+  padding: 1px 5px;
+  border-radius: 3px;
+  color: var(--color-primary);
+}
+
+ul.notes { padding-left: 20px; font-size: 13px; color: var(--color-text-secondary); }
+ul.notes li { margin: 4px 0; }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode</label>
+</div>
+
+<div class="page">
+  <header>
+    <div class="breadcrumb">Components / Buttons</div>
+    <h1>MinglitButton</h1>
+    <p>Primary CTA button with loading + variants (primary / secondary / destructive).</p>
+  </header>
+
+  <!-- Variants -->
+  <section>
+    <h2>Variants</h2>
+    <div class="matrix">
+      <div class="row">
+        <span class="label">primary</span>
+        <button class="btn btn--primary btn--md" data-spec-token="bg: color-primary, radius: radius-button">
+          <span class="btn-label">참여하기</span>
+        </button>
+        <span style="font-size:11px;color:var(--color-text-secondary);font-family:ui-monospace,monospace">
+          bg=color-primary · text=color-on-primary
+        </span>
+      </div>
+      <div class="row">
+        <span class="label">secondary</span>
+        <button class="btn btn--secondary btn--md" data-spec-token="border: color-primary">
+          <span class="btn-label">취소</span>
+        </button>
+        <span style="font-size:11px;color:var(--color-text-secondary);font-family:ui-monospace,monospace">
+          border=color-primary · text=color-primary
+        </span>
+      </div>
+      <div class="row">
+        <span class="label">destructive</span>
+        <button class="btn btn--destructive btn--md" data-spec-token="bg: color-error">
+          <span class="btn-label">삭제</span>
+        </button>
+        <span style="font-size:11px;color:var(--color-text-secondary);font-family:ui-monospace,monospace">
+          bg=color-error · text=color-on-primary
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Sizes -->
+  <section>
+    <h2>Sizes</h2>
+    <div class="matrix">
+      <div class="row">
+        <span class="label">sm</span>
+        <button class="btn btn--primary btn--sm"><span class="btn-label">Small</span></button>
+        <span style="font-size:11px;color:var(--color-text-secondary);font-family:ui-monospace,monospace">
+          py=spacing-small · px=spacing-sm · 13px
+        </span>
+      </div>
+      <div class="row">
+        <span class="label">md (default)</span>
+        <button class="btn btn--primary btn--md"><span class="btn-label">Medium</span></button>
+        <span style="font-size:11px;color:var(--color-text-secondary);font-family:ui-monospace,monospace">
+          py=spacing-sm · px=spacing-medium · 14px
+        </span>
+      </div>
+      <div class="row">
+        <span class="label">lg</span>
+        <button class="btn btn--primary btn--lg"><span class="btn-label">Large</span></button>
+        <span style="font-size:11px;color:var(--color-text-secondary);font-family:ui-monospace,monospace">
+          py=spacing-medium · px=spacing-large · 15px
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <!-- States -->
+  <section>
+    <h2>States</h2>
+    <div class="matrix">
+      <div class="row">
+        <span class="label">default</span>
+        <button class="btn btn--primary btn--md"><span class="btn-label">기본</span></button>
+      </div>
+      <div class="row">
+        <span class="label">disabled</span>
+        <button class="btn btn--primary btn--md" disabled><span class="btn-label">비활성</span></button>
+      </div>
+      <div class="row">
+        <span class="label">loading</span>
+        <button class="btn btn--primary btn--md btn--loading"><span class="btn-label">처리 중</span></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- API contract -->
+  <section>
+    <h2>API</h2>
+    <table class="spec">
+      <thead>
+        <tr><th>Prop</th><th>Type</th><th>Default</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>label</code></td><td>String</td><td>—</td><td>required</td></tr>
+        <tr><td><code>onPressed</code></td><td>VoidCallback?</td><td>null</td><td>null = disabled</td></tr>
+        <tr><td><code>variant</code></td><td>MinglitButtonVariant</td><td>primary</td><td>primary / secondary / destructive</td></tr>
+        <tr><td><code>size</code></td><td>MinglitButtonSize</td><td>md</td><td>sm / md / lg</td></tr>
+        <tr><td><code>icon</code></td><td>IconData?</td><td>null</td><td>leading icon</td></tr>
+        <tr><td><code>isLoading</code></td><td>bool</td><td>false</td><td>replaces label, blocks taps</td></tr>
+        <tr><td><code>isFullWidth</code></td><td>bool</td><td>false</td><td>stretches to parent width</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Tokens consumed -->
+  <section>
+    <h2>Tokens consumed</h2>
+    <table class="spec">
+      <thead>
+        <tr><th>Token</th><th>Usage</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>color-primary</code></td><td>primary bg, secondary border + text</td></tr>
+        <tr><td><code>color-on-primary</code></td><td>primary / destructive text</td></tr>
+        <tr><td><code>color-error</code></td><td>destructive bg</td></tr>
+        <tr><td><code>spacing-small / sm / medium / large</code></td><td>padding by size</td></tr>
+        <tr><td><code>radius-button</code></td><td>border radius (12px)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Accessibility -->
+  <section>
+    <h2>Accessibility</h2>
+    <ul class="notes">
+      <li>Disabled state announced to screen readers (<code>aria-disabled="true"</code>)</li>
+      <li>Loading state replaces label semantically (<code>aria-busy="true"</code>)</li>
+      <li>Min touch target 44px on size=md (Flutter default tap region)</li>
+      <li>Focus ring follows platform conventions</li>
+    </ul>
+  </section>
+
+  <!-- Guidelines -->
+  <section>
+    <h2>Guidelines</h2>
+    <ul class="notes">
+      <li><strong>DO</strong>: one primary per screen (main CTA)</li>
+      <li><strong>DON&apos;T</strong>: stack multiple destructive buttons in same view</li>
+      <li><strong>DO</strong>: use <code>isLoading</code> for async actions (prevents double-tap)</li>
+      <li><strong>DO</strong>: pair destructive with confirm dialog (<code>MinglitAlert.showConfirm</code>)</li>
+    </ul>
+  </section>
+</div>
+
+<script>
+  document.getElementById('spec-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('spec-mode', e.target.checked);
+  });
+</script>
+
+</body>
+</html>

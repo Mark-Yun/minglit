@@ -1,16 +1,35 @@
 {
   "typography": {
     "fontFamily": {
-      "brand": { "$value": "Pretendard", "$type": "fontFamily", "$description": "Primary brand font" }
+      "brand":   { "$value": "Pretendard",      "$type": "fontFamily", "$description": "Body / UI" },
+      "display": { "$value": "RacingSansOne", "$type": "fontFamily", "$description": "Splash / hero" }
     },
+
     "fontSize": {
-      "captionTiny": { "$value": 10, "$type": "dimension", "$description": "10px caption tiny" },
-      "chipLabel": { "$value": 13, "$type": "dimension", "$description": "13px chip label" },
-      "appBarTitle": { "$value": 18, "$type": "dimension", "$description": "18px app bar title" }
+      "captionTiny":  { "$value": 10, "$type": "dimension", "$description": "Legal / disclaimer" },
+      "caption":      { "$value": 11, "$type": "dimension", "$description": "Helper text, metadata" },
+      "chipLabel":    { "$value": 13, "$type": "dimension", "$description": "Chip / tag label" },
+      "body":         { "$value": 14, "$type": "dimension", "$description": "Default body" },
+      "button":       { "$value": 16, "$type": "dimension", "$description": "Button label, emphasised body" },
+      "appBarTitle":  { "$value": 18, "$type": "dimension", "$description": "App bar title" },
+      "sectionTitle": { "$value": 20, "$type": "dimension", "$description": "Section header inside a page" },
+      "pageTitle":    { "$value": 24, "$type": "dimension", "$description": "Page heading" },
+      "dialogTitle":  { "$value": 28, "$type": "dimension", "$description": "Dialog / bottom-sheet title" },
+      "display":      { "$value": 32, "$type": "dimension", "$description": "Hero text" },
+      "displayBrand": { "$value": 48, "$type": "dimension", "$description": "Splash brand" }
     },
+
     "fontWeight": {
-      "medium": { "$value": 500, "$type": "fontWeight", "$description": "500 medium weight" },
-      "semiBold": { "$value": 600, "$type": "fontWeight", "$description": "600 semi-bold weight" }
+      "regular":  { "$value": 400, "$type": "fontWeight", "$description": "Regular" },
+      "medium":   { "$value": 500, "$type": "fontWeight", "$description": "Medium" },
+      "semiBold": { "$value": 600, "$type": "fontWeight", "$description": "Semi-bold" },
+      "bold":     { "$value": 700, "$type": "fontWeight", "$description": "Bold" }
+    },
+
+    "lineHeight": {
+      "tight":   { "$value": 1.2, "$type": "number", "$description": "Display, tight" },
+      "normal":  { "$value": 1.4, "$type": "number", "$description": "Default" },
+      "relaxed": { "$value": 1.6, "$type": "number", "$description": "Long-form body" }
     }
   }
 }

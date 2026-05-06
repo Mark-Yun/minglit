@@ -67,6 +67,9 @@ class MinglitAlert extends StatelessWidget {
             onPressed: () => Navigator.pop(context, false),
             style: TextButton.styleFrom(
               foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
+              textStyle: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
             ),
             child: Text(cancelText),
           ),
@@ -78,7 +81,7 @@ class MinglitAlert extends StatelessWidget {
                   : Theme.of(context).colorScheme.primary,
               textStyle: Theme.of(
                 context,
-              ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold),
+              ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             child: Text(confirmText),
           ),
@@ -94,17 +97,26 @@ class MinglitAlert extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return AlertDialog(
+      // M3 mobile 톤 (2026-05-01) — spec 권장 일치:
+      //   외부 16 H · 24 V · 내부 24 padding
+      //   title↔content 16 / content↔actions 24 (M3 표준)
+      //   destructive 톤은 확인 버튼만 빨강 — 아이콘 / 빨강 타이틀 제거
+      //   (industry 표준 — iOS / Linear / GitHub).
+      insetPadding: const EdgeInsets.symmetric(
+        horizontal: MinglitSpacing.medium,
+        vertical: MinglitSpacing.large,
+      ),
       titlePadding: const EdgeInsets.fromLTRB(
         MinglitSpacing.large,
         MinglitSpacing.large,
         MinglitSpacing.large,
-        MinglitSpacing.small,
+        MinglitSpacing.medium,
       ),
       contentPadding: const EdgeInsets.fromLTRB(
         MinglitSpacing.large,
         MinglitSpacing.zero,
         MinglitSpacing.large,
-        MinglitSpacing.xsmall,
+        MinglitSpacing.large,
       ),
       actionsPadding: const EdgeInsets.fromLTRB(
         MinglitSpacing.sm,
@@ -112,26 +124,19 @@ class MinglitAlert extends StatelessWidget {
         MinglitSpacing.large,
         MinglitSpacing.large,
       ),
-      title: Row(
-        children: [
-          if (type == MinglitAlertType.destructive) ...[
-            Icon(Icons.warning_amber_rounded, color: colorScheme.error),
-            const SizedBox(width: MinglitSpacing.small),
-          ],
-          Expanded(
-            child: Text(
-              title,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: type == MinglitAlertType.destructive
-                    ? colorScheme.error
-                    : null,
-              ),
-            ),
-          ),
-        ],
+      title: Text(
+        title,
+        style: theme.textTheme.bodyLarge?.copyWith(
+          fontWeight: FontWeight.bold,
+          color: colorScheme.onSurface,
+        ),
       ),
-      content: content != null ? Text(content!) : null,
+      content: content != null
+          ? Text(
+              content!,
+              style: theme.textTheme.bodyMedium,
+            )
+          : null,
       actions: actions,
     );
   }

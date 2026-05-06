@@ -14,7 +14,7 @@ const sections = [
     title: 'Screens',
     description:
       'Interactive wireframe gallery. Click any screen to view the full spec in a new tab.',
-    badge: '1 spec',
+    badge: null,
     accent: 'var(--color-success)',
   },
   {
@@ -22,16 +22,24 @@ const sections = [
     title: 'Flows',
     description:
       'Navigation diagrams for app_user and app_partner, derived directly from GoRouter route definitions.',
-    badge: '2 diagrams',
+    badge: null,
     accent: 'var(--color-info)',
   },
   {
-    href: '#',
+    href: '/specs/_authoring.html',
+    title: 'Spec Authoring',
+    description:
+      'How to author a screen / sheet / component spec — status lifecycle, additive diff syntax, motion tokens. Links to the copy-and-edit template.',
+    badge: 'guide',
+    accent: 'var(--color-warning)',
+  },
+  {
+    href: '/components',
     title: 'Components',
     description:
-      'Interactive component playground powered by mds_storybook (Flutter Web). Coming in Phase 2.',
-    badge: 'coming soon',
-    accent: 'var(--color-divider)',
+      'Spec-first manifest of every mds component — props, variants, states, tokens, and inline visual playgrounds.',
+    badge: null,
+    accent: 'var(--color-tertiary)',
   },
 ];
 
@@ -85,8 +93,16 @@ export default function HomePage() {
             </div>
           );
 
-          return isDisabled ? (
-            <div key={title}>{card}</div>
+          if (isDisabled) {
+            return <div key={title}>{card}</div>;
+          }
+          // Static HTML in /public bypasses the App Router — use a plain anchor
+          // so Next.js doesn't attempt client-side navigation.
+          const isStatic = href.endsWith('.html');
+          return isStatic ? (
+            <a key={title} href={href} target="_blank" rel="noreferrer" className="block">
+              {card}
+            </a>
           ) : (
             <Link key={title} href={href} className="block">
               {card}
@@ -98,7 +114,7 @@ export default function HomePage() {
       {/* Meta */}
       <div className="mt-12 pt-6 border-t border-[var(--color-divider)]">
         <p className="text-xs text-[var(--color-text-secondary)]">
-          Phase 1 &mdash; tokens.css pipeline + 4 pages. Source:{' '}
+          Source:{' '}
           <code className="bg-[var(--color-surface)] px-1 rounded text-[var(--color-primary)]">
             apps/mds/docs/
           </code>

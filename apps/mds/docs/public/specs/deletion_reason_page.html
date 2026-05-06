@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Spec — DeletionReasonPage (app_user · DeletionReasonRoute)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* ============================================================
+   DeletionReasonPage — wizard step 1/4. Account deletion 사유 선택.
+   widget: apps/app_user/lib/src/features/account_deletion/ui/deletion_reason_page.dart
+   ============================================================ */
+
+/* Scaffold = MinglitColors.surface (light gray #f9fafb) */
+.dr-viewport { background: var(--color-surface); }
+body.dark-mode .dr-viewport { background: var(--color-dark-background); }
+
+/* AppBar — title "탈퇴 사유" · scaffold-gray bg · no border */
+.dr-appbar {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--spacing-screen-edge);
+  background: var(--color-surface);
+}
+.dr-appbar__back {
+  width: 40px; height: 40px;
+  display: grid; place-items: center;
+  color: var(--color-text-primary);
+  background: none; border: none;
+}
+.dr-appbar__back svg { width: 22px; height: 22px; }
+.dr-appbar h2 {
+  flex: 1;
+  font-size: var(--typography-font-size-app-bar-title);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  text-align: center;
+  margin-right: 40px;
+}
+body.dark-mode .dr-appbar { background: var(--color-dark-background); }
+body.dark-mode .dr-appbar h2,
+body.dark-mode .dr-appbar__back { color: var(--color-dark-text-primary); }
+
+/* Body — ListView padding: large(24) all */
+.dr-body {
+  padding: var(--spacing-large);
+  display: flex; flex-direction: column;
+  gap: var(--spacing-small);
+}
+.dr-title {
+  font-size: 16px; font-weight: 600;
+  line-height: 1.45;
+  color: var(--color-text-primary);
+}
+.dr-sub {
+  font-size: 14px; line-height: 1.45;
+  color: var(--color-text-secondary);
+}
+.dr-spacer-l { height: var(--spacing-large); }
+
+/* Reason card — Material Card wrapping RadioListTile */
+.dr-card {
+  background: var(--color-background);
+  border-radius: var(--radius-card);
+  border: 1px solid var(--color-divider);
+  margin-bottom: var(--spacing-small);
+  overflow: hidden;
+}
+.dr-card--selected {
+  border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 6%, var(--color-background));
+}
+.dr-radio-tile {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+}
+.dr-radio {
+  width: 20px; height: 20px;
+  border: 2px solid var(--color-text-secondary);
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 2px;
+  position: relative;
+}
+.dr-radio--checked {
+  border-color: var(--color-primary);
+}
+.dr-radio--checked::after {
+  content: '';
+  position: absolute;
+  top: 3px; left: 3px;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--color-primary);
+}
+.dr-radio-body {
+  flex: 1; min-width: 0;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.dr-radio-title {
+  font-size: 16px;
+  line-height: 1.4;
+  color: var(--color-text-primary);
+}
+.dr-radio-desc {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--color-text-secondary);
+}
+
+/* MinglitTextField — appears only when "직접 입력할게요" selected */
+.dr-textfield {
+  background: var(--color-background);
+  border-radius: var(--radius-input);
+  border: 1px solid var(--color-divider);
+  padding: 12px 14px;
+  display: flex; flex-direction: column;
+  gap: 6px;
+  min-height: 96px;
+}
+.dr-textfield__label {
+  font-size: 12px; font-weight: 500;
+  color: var(--color-text-secondary);
+}
+.dr-textfield__hint {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  opacity: 0.6;
+}
+.dr-textfield__counter {
+  align-self: flex-end;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+
+/* Bottom CTA region — Padding(24,8,24,24) Column stretch */
+.dr-cta {
+  padding: var(--spacing-small) var(--spacing-large) var(--spacing-large);
+  display: flex; flex-direction: column;
+  gap: var(--spacing-small);
+}
+.dr-btn-text {
+  background: none; border: none;
+  height: 40px;
+  font-size: 14px; font-weight: 600;
+  color: var(--color-primary);
+  text-align: center;
+  cursor: pointer;
+}
+.dr-btn-filled {
+  height: 48px;
+  border: none; border-radius: var(--radius-button);
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 16px; font-weight: 600;
+  cursor: pointer;
+}
+.dr-btn-filled[disabled],
+.dr-btn-filled--disabled {
+  background: color-mix(in srgb, var(--color-text-secondary) 20%, transparent);
+  color: color-mix(in srgb, var(--color-text-secondary) 50%, transparent);
+  cursor: not-allowed;
+}
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
+</div>
+
+<div class="page">
+
+<header>
+  <h1>Deletion Reason Page</h1>
+</header>
+
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr>
+        <th style="width: 140px;">Status</th>
+        <td><strong>디자인완료</strong> <em style="color: var(--color-text-secondary);">— wizard step 1/4 · 4 state</em></td>
+      </tr>
+      <tr><th>App</th><td><code>app_user</code></td></tr>
+      <tr><th>Category</th><td>account · privacy · destructive · wizard-step</td></tr>
+      <tr>
+        <th>Route / Surface</th>
+        <td><code>DeletionReasonRoute</code> — <code>DeletionReasonPage</code></td>
+      </tr>
+      <tr><th>Path</th><td><code>/my/privacy/delete/reason</code></td></tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>: <a href="/specs/privacy_page.html"><code>PrivacyPage</code></a> "회원 탈퇴" 행 → <code>accountDeletionCoordinator.start()</code> push.<br>
+          <strong>Children</strong>:
+          <a href="/specs/deletion_info_page.html"><code>DeletionInfoPage</code></a> (다음 단계 — 사유와 함께 / 또는 미선택 push) ·
+          <a href="/specs/deletion_verify_page.html"><code>DeletionVerifyPage</code></a> (step 3) ·
+          <a href="/specs/deletion_complete_page.html"><code>DeletionCompletePage</code></a> (step 4)
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>
+          탈퇴 wizard의 첫 단계 — 사용자가 떠나는 이유를 선택하게 한다 (선택 자체는 옵셔널).
+          제품 개선 시그널 수집과 동시에 "잠시 멈추고 한 번 더 생각해보는" 마찰을 의도적으로 만들어준다.
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry points</strong>: 개인정보 페이지의 "회원 탈퇴" 항목 탭으로 진입.<br>
+          <strong>Exit points</strong>:
+          ① "선택하지 않고 계속하기" 탭 → 사유 없이 다음 단계 ·
+          ② 사유 선택 + "다음" 탭 → 선택한 사유와 함께 다음 단계 ·
+          ③ 뒤로 가기 → 개인정보 페이지로 복귀.
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          개인정보 삭제 정책 컴플라이언스 요건상 탈퇴 사유 수집은 강제가 아니다 — "선택하지 않고 계속하기" CTA를 동등한 무게로 배치한 이유.
+          6개 사유는 제품 관점의 분류(사용 빈도 / 이벤트 / 대안 서비스 / 개인정보 / 사용성 / 기타)이며, 향후 retention 분석에 활용된다.
+          "직접 입력할게요"는 최대 200자 · 옵셔널 — "다음"은 사유 선택만으로 활성화되고, 상세 입력은 비워두어도 진행할 수 있다.
+        </td>
+      </tr>
+      <tr><th>Frequency</th><td>매우 낮음 — 계정당 ≤ 1회 (탈퇴 wizard 진입 시).</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="doc">
+  <h2>History</h2>
+  <p class="intro">이 spec의 주요 변경 이력. 최신 항목 위.</p>
+  <table class="ref">
+    <thead>
+      <tr><th style="width: 110px;">Date</th><th style="width: 80px;">Version</th><th style="width: 120px;">Author</th><th>Changes</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2026-05-01</td>
+        <td>1.0</td>
+        <td>mark-yun</td>
+        <td>v1.4 template으로 작성. wizard step 1/4 · 4 state mini-table — Default(미선택) baseline · 일반 사유 선택 · "직접 입력할게요" 선택(MinglitTextField 노출) · "다음" 비활성. coordinator API(<code>pushInfo({reason})</code>) · 6개 사유 옵션(<code>accountDeletionReasonOptions</code>) 매핑 반영.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<nav class="perspective-nav">
+  <a href="#layout"><span class="glyph">🧱</span> Layout</a>
+  <a href="#states"><span class="glyph">🎨</span> States</a>
+  <a href="#global-behavior"><span class="glyph">🔄</span> Global Behavior</a>
+  <a href="#reference"><span class="glyph">📖</span> Reference</a>
+</nav>
+
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Layout</h2>
+    <span class="lede">AppBar(title) + Expanded ListView(사유 카드 6개 + 옵셔널 textfield) + Bottom CTA(skip + next 2버튼).</span>
+  </div>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree</h2>
+    <p class="intro">
+      Scaffold + AppBar("탈퇴 사유") + SafeArea Column. body는 <em>Expanded(ListView, padding 24) + Bottom Padding(24/8/24/24) Column</em>.
+      사유 카드는 Material <code>Card</code>(margin-bottom 8)로 감싼 <code>RadioListTile</code>. "직접 입력할게요" 선택 시에만 카드 리스트 아래로 <code>MinglitTextField</code>(maxLines 4 · 200자 limit)이 펼쳐진다.
+    </p>
+
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 700px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <!-- AppBar -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:0;left:0;right:0;height:56px;">
+          <span class="blueprint__region-label">① AppBar — "탈퇴 사유" + back · h=56</span>
+        </div>
+
+        <!-- Body — ListView padding 24 -->
+        <div class="blueprint__region" style="top:56px;left:0;right:0;bottom:152px;">
+          <span class="blueprint__region-label">② Expanded ListView · padding 24 all</span>
+        </div>
+
+        <!-- Heading group -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:80px;left:24px;right:24px;height:60px;">
+          <span class="blueprint__region-label">㉠ heading + sub copy</span>
+        </div>
+
+        <!-- Reason cards -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:172px;left:24px;right:24px;height:340px;">
+          <span class="blueprint__region-label">㉡ 사유 카드 6개 (Card + RadioListTile) · margin-bottom 8</span>
+        </div>
+
+        <!-- Optional textfield (when "직접 입력") -->
+        <div class="blueprint__region" style="top:528px;left:24px;right:24px;height:96px; border-style: dashed;">
+          <span class="blueprint__region-label">㉢ MinglitTextField (조건부 — other 선택 시만)</span>
+        </div>
+
+        <!-- Bottom CTA -->
+        <div class="blueprint__region blueprint__region--shaded" style="bottom:0;left:0;right:0;height:152px;">
+          <span class="blueprint__region-label">③ Bottom CTA · Padding 24/8/24/24 · Column stretch</span>
+        </div>
+
+        <div class="blueprint__align-marker" style="top:60px;right:8px;">title centered</div>
+        <div class="blueprint__align-marker" style="bottom:8px;right:8px;">stretch</div>
+      </div>
+
+      <div class="layout-tree"><b>Scaffold</b>
+└─ <b>AppBar</b>(<i>title: Text("탈퇴 사유")</i>)              ← ①
+└─ <b>SafeArea</b>
+   └─ <b>Column</b>
+      ├─ <b>Expanded</b> ← ②
+      │  └─ <b>ListView</b>(padding: <code>spacing-large (24)</code> all)
+      │     ├─ <em>heading group</em>                       ← ㉠
+      │     │  ├─ Text("떠나시는 이유를…", titleMedium)
+      │     │  ├─ SizedBox(<code>spacing-small (8)</code>)
+      │     │  └─ Text("선택하지 않고 계속 진행해도 괜찮아요.", bodyMedium · onSurfaceVariant)
+      │     │
+      │     ├─ SizedBox(<code>spacing-large (24)</code>)
+      │     │
+      │     ├─ <em>for option in accountDeletionReasonOptions</em>  ← ㉡
+      │     │  └─ <b>Card</b>(margin-bottom: <code>spacing-small (8)</code>)
+      │     │     └─ <b>RadioListTile&lt;WithdrawalReasonCode&gt;</b>
+      │     │        ├─ value: option.code
+      │     │        ├─ groupValue: _selectedCode
+      │     │        ├─ title: Text(option.title)
+      │     │        └─ subtitle: Text(option.description)
+      │     │
+      │     └─ <em>if _selectedCode == other:</em>           ← ㉢
+      │        ├─ SizedBox(<code>spacing-small (8)</code>)
+      │        └─ <b>MinglitTextField</b>(label: "상세 사유" · maxLines: 4 · LengthLimit 200)
+      │
+      └─ <b>Padding</b>(24, 8, 24, 24)                       ← ③
+         └─ <b>Column</b>(crossAxis: stretch)
+            ├─ <b>TextButton</b>("선택하지 않고 계속하기" · onPressed: pushInfo)
+            ├─ SizedBox(<code>spacing-small (8)</code>)
+            └─ <b>FilledButton</b>("다음" · enabled iff _selectedCode != null · onPressed: pushInfo(reason))</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr><th style="width: 60px;">#</th><th style="width: 200px;">Region</th><th style="width: 220px;">Alignment</th><th>Spacing</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>—</td><td>Body padding</td><td>—</td><td>ListView padding <code>spacing-large (24)</code> all sides</td></tr>
+        <tr><td>①</td><td>AppBar</td><td>title centered (Material default) · leading back auto</td><td>height 56 · scaffold gray bg · border-bottom 없음</td></tr>
+        <tr><td>②</td><td>ListView body</td><td>vertical scroll · 카드 stack</td><td>가운데 vertical gap = SizedBox <code>spacing-large (24)</code> · 카드 사이 <code>spacing-small (8)</code> (Card.margin)</td></tr>
+        <tr><td>㉠</td><td>Heading group</td><td>start-aligned</td><td>title (titleMedium) ↔ subtitle 사이 SizedBox <code>spacing-small (8)</code></td></tr>
+        <tr><td>㉡</td><td>사유 카드 (×6)</td><td>RadioListTile default — radio 좌 · title+subtitle 우</td><td>Card margin-bottom <code>spacing-small (8)</code> · radius <code>radius-card (16)</code> · 1px outlineVariant border (Card default elevation 0 + shape)</td></tr>
+        <tr><td>㉢</td><td>MinglitTextField (조건부)</td><td>full width</td><td>maxLines 4 · radius <code>radius-input (12)</code> · label "상세 사유" · counter 우하 · LengthLimit 200</td></tr>
+        <tr><td>③</td><td>Bottom CTA</td><td>Column stretch (full width)</td><td>Padding(24, 8, 24, 24) · 버튼 사이 SizedBox <code>spacing-small (8)</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy ① — 사유 카드 (RadioListTile in Card)</h2>
+    <p class="intro">
+      6개 옵션이 동일 패턴으로 반복된다. 좌측 라디오 + 우측 타이틀/설명 구성. 선택된 카드는 라디오 동그라미가 primary 색으로 채워지는 변화만 일어나고, 카드 외곽선 등 다른 시각 변화는 없다.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 200px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:16px;left:16px;width:24px;height:24px;">
+          <span class="blueprint__region-label">㉠ radio</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:14px;left:56px;right:16px;height:24px;">
+          <span class="blueprint__region-label">㉡ title (option.title)</span>
+        </div>
+        <div class="blueprint__region" style="top:42px;left:56px;right:16px;height:36px;">
+          <span class="blueprint__region-label">㉢ subtitle (option.description)</span>
+        </div>
+      </div>
+      <div class="layout-tree"><b>Card</b>(<i>margin-bottom 8</i>)
+└─ <b>RadioListTile&lt;WithdrawalReasonCode&gt;</b>
+   ├─ value: option.code                          ← ㉠
+   ├─ groupValue: _selectedCode
+   ├─ onChanged: setState(_selectedCode = value)
+   ├─ title:    <b>Text</b>(option.title)         ← ㉡
+   └─ subtitle: <b>Text</b>(option.description)   ← ㉢</div>
+    </div>
+    <table class="ref" style="margin-top: 16px;">
+      <thead><tr><th style="width: 60px;">#</th><th style="width: 180px;">Element</th><th style="width: 220px;">Alignment</th><th>Spacing / tokens</th></tr></thead>
+      <tbody>
+        <tr><td>㉠</td><td>radio</td><td>vertical center · 좌측 16</td><td>Material Radio default 24px · 색은 unselected gray / selected <code>color-primary</code></td></tr>
+        <tr><td>㉡</td><td>title</td><td>start · single line</td><td>typography <code>bodyLarge</code> · color <code>color-text-primary</code></td></tr>
+        <tr><td>㉢</td><td>subtitle</td><td>start · 2-3 lines max</td><td>typography <code>bodyMedium</code> · color <code>color-text-secondary</code></td></tr>
+        <tr><td>—</td><td>Card</td><td>full-width</td><td>radius <code>radius-card (16)</code> · margin-bottom <code>spacing-small (8)</code> · border 1px outlineVariant (Card 기본 outlined shape)</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<div class="perspective" id="states">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>States</h2>
+    <span class="lede">4가지 시각 변형 — baseline = 미선택(둘러보기). 일반 사유 선택 · "직접 입력할게요" 선택(입력란 노출) · 데이터 fetch가 없어 Loading/Error 상태는 다루지 않는다.</span>
+  </div>
+
+  <section class="doc">
+    <p class="intro">
+      <strong>State 식별 기준</strong>:
+      ① 사유 미선택 — "다음" 비활성, "선택하지 않고 계속하기"만 활성 (baseline) ·
+      ② 일반 사유 선택 — "다음" 활성, 입력란 미노출 ·
+      ③ "직접 입력할게요" 선택 — 입력란이 펼쳐지고 "다음" 활성 (상세 입력은 비워둬도 진행 가능) ·
+      ④ "다음" 비활성 — ①과 동일한 상태로, CTA 영역만 강조해 보여주는 별도 mini-table.
+      이 화면은 데이터 fetch가 없어 Loading/Error 상태는 없다.
+    </p>
+
+    <div class="visual-gallery" style="background: var(--color-surface); padding: 16px; border-radius: var(--radius-card); display: flex; flex-direction: column; gap: 16px;">
+
+      <!-- State 1: Default · 미선택 (baseline) -->
+      <table class="ref state-mini is-baseline-tint">
+        <thead>
+          <tr><th colspan="3"><strong>Default · 미선택</strong> 🎯 <small>baseline · 화면 진입 직후, 아직 어떤 사유도 선택하지 않은 상태</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="state-mini__mock" rowspan="6">
+              <div class="viewport dr-viewport">
+                <div class="dr-appbar">
+                  <button class="dr-appbar__back" title="뒤로">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                  </button>
+                  <h2>탈퇴 사유</h2>
+                </div>
+                <div class="dr-body">
+                  <div class="dr-title">떠나시는 이유를 알려주시면 더 나은 밍릿을 만드는 데 도움이 돼요.</div>
+                  <div class="dr-sub">선택하지 않고 계속 진행해도 괜찮아요.</div>
+                  <div class="dr-spacer-l"></div>
+
+                  <span class="annotation" style="top:130px;left:24px;">spacing-large (24) — heading↓</span>
+                  <span class="callout" style="top:178px;right:24px;">ⓐ</span>
+
+                  <div class="dr-card">
+                    <div class="dr-radio-tile">
+                      <div class="dr-radio"></div>
+                      <div class="dr-radio-body">
+                        <div class="dr-radio-title">더 이상 쓰지 않아요</div>
+                        <div class="dr-radio-desc">밍릿이 현재 필요하지 않아요.</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="dr-card">
+                    <div class="dr-radio-tile">
+                      <div class="dr-radio"></div>
+                      <div class="dr-radio-body">
+                        <div class="dr-radio-title">원하는 이벤트가 없어요</div>
+                        <div class="dr-radio-desc">찾고 싶은 분위기나 주제의 이벤트가 부족했어요.</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="dr-card">
+                    <div class="dr-radio-tile">
+                      <div class="dr-radio"></div>
+                      <div class="dr-radio-body">
+                        <div class="dr-radio-title">다른 서비스를 이용 중이에요</div>
+                        <div class="dr-radio-desc">비슷한 목적의 다른 서비스를 더 자주 사용해요.</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="dr-card">
+                    <div class="dr-radio-tile">
+                      <div class="dr-radio"></div>
+                      <div class="dr-radio-body">
+                        <div class="dr-radio-title">개인정보가 걱정돼요</div>
+                        <div class="dr-radio-desc">계정과 개인정보 보관이 걱정돼요.</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="dr-card">
+                    <div class="dr-radio-tile">
+                      <div class="dr-radio"></div>
+                      <div class="dr-radio-body">
+                        <div class="dr-radio-title">앱 사용이 어려워요</div>
+                        <div class="dr-radio-desc">원하는 기능을 찾거나 사용하는 과정이 복잡했어요.</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="dr-card">
+                    <div class="dr-radio-tile">
+                      <div class="dr-radio"></div>
+                      <div class="dr-radio-body">
+                        <div class="dr-radio-title">직접 입력할게요</div>
+                        <div class="dr-radio-desc">자유롭게 이유를 남길 수 있어요.</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="dr-cta">
+                  <button class="dr-btn-text">선택하지 않고 계속하기</button>
+                  <button class="dr-btn-filled dr-btn-filled--disabled" disabled>다음</button>
+                </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>화면 진입 직후, 사용자가 아직 어떤 사유도 선택하지 않은 상태.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              · <strong>"선택하지 않고 계속하기" 탭</strong> → 사유 없이 다음 단계로 진행.<br>
+              · <strong>"다음" 탭</strong> → 비활성 상태라 반응하지 않음.<br>
+              · <strong>아무 사유 카드 탭</strong> → 해당 사유가 선택되며 다음 상태로 전이 ("직접 입력할게요"는 별도 상태).<br>
+              · 뒤로 가기 → 이전 화면(개인정보 페이지)으로 복귀.
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td>
+              · "다음"이 비활성이어도 "선택하지 않고 계속하기"로 동일하게 진행할 수 있다 — 사용자가 막히지 않도록 skip CTA는 항상 활성.<br>
+              · 카드 6개가 화면을 꽉 채워도 하단 CTA 영역은 가려지지 않고 항상 고정 노출된다.
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>
+              <code>Scaffold</code> · <code>AppBar</code> ·
+              <code>Card</code> ×6 · <code>RadioListTile&lt;WithdrawalReasonCode&gt;</code> ×6 ·
+              <code>Text</code>(titleMedium · bodyMedium) ·
+              <code>TextButton</code>("선택하지 않고 계속하기") ·
+              <code>FilledButton</code>("다음" · disabled)
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>
+              <code>color-surface</code> (scaffold) · <code>color-background</code> (Card) ·
+              <code>color-text-primary</code> · <code>color-text-secondary</code> (subtitle / "선택하지 않고") ·
+              <code>color-primary</code> (TextButton text · later radio fill) ·
+              <code>spacing-large (24)</code> · <code>spacing-small (8)</code> ·
+              <code>radius-card (16)</code> (Card) · <code>radius-button (12)</code> (FilledButton) ·
+              typography <code>titleMedium</code> · <code>bodyMedium</code>
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 6개 카드는 동일 간격으로 세로 스택. "직접 입력할게요"가 리스트 마지막에 놓여, 입력란이 펼쳐질 때 자연스럽게 리스트 끝에서 이어진다.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- State 2: General reason selected -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong>일반 사유 선택</strong> <small>"직접 입력할게요"를 제외한 5개 사유 중 하나를 선택한 상태</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="state-mini__mock" rowspan="6">
+              <div class="viewport dr-viewport">
+                <div class="dr-appbar">
+                  <button class="dr-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button>
+                  <h2>탈퇴 사유</h2>
+                </div>
+                <div class="dr-body">
+                  <div class="dr-title">떠나시는 이유를 알려주시면 더 나은 밍릿을 만드는 데 도움이 돼요.</div>
+                  <div class="dr-sub">선택하지 않고 계속 진행해도 괜찮아요.</div>
+                  <div class="dr-spacer-l"></div>
+
+                  <div class="dr-card">
+                    <div class="dr-radio-tile">
+                      <div class="dr-radio"></div>
+                      <div class="dr-radio-body">
+                        <div class="dr-radio-title">더 이상 쓰지 않아요</div>
+                        <div class="dr-radio-desc">밍릿이 현재 필요하지 않아요.</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="dr-card dr-card--selected">
+                    <div class="dr-radio-tile">
+                      <div class="dr-radio dr-radio--checked"></div>
+                      <div class="dr-radio-body">
+                        <div class="dr-radio-title">원하는 이벤트가 없어요</div>
+                        <div class="dr-radio-desc">찾고 싶은 분위기나 주제의 이벤트가 부족했어요.</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="dr-card">
+                    <div class="dr-radio-tile">
+                      <div class="dr-radio"></div>
+                      <div class="dr-radio-body">
+                        <div class="dr-radio-title">다른 서비스를 이용 중이에요</div>
+                        <div class="dr-radio-desc">비슷한 목적의 다른 서비스를 더 자주 사용해요.</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="dr-card">
+                    <div class="dr-radio-tile">
+                      <div class="dr-radio"></div>
+                      <div class="dr-radio-body">
+                        <div class="dr-radio-title">개인정보가 걱정돼요</div>
+                        <div class="dr-radio-desc">계정과 개인정보 보관이 걱정돼요.</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="dr-card">
+                    <div class="dr-radio-tile">
+                      <div class="dr-radio"></div>
+                      <div class="dr-radio-body">
+                        <div class="dr-radio-title">앱 사용이 어려워요</div>
+                        <div class="dr-radio-desc">원하는 기능을 찾거나 사용하는 과정이 복잡했어요.</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="dr-card">
+                    <div class="dr-radio-tile">
+                      <div class="dr-radio"></div>
+                      <div class="dr-radio-body">
+                        <div class="dr-radio-title">직접 입력할게요</div>
+                        <div class="dr-radio-desc">자유롭게 이유를 남길 수 있어요.</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="dr-cta">
+                  <button class="dr-btn-text">선택하지 않고 계속하기</button>
+                  <button class="dr-btn-filled">다음</button>
+                </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>5개 일반 사유 중 하나를 선택한 상태 — 선택한 카드의 라디오가 채워지고 "다음"이 활성으로 바뀜.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              · <strong>"다음" 탭</strong> → 선택한 사유와 함께 다음 단계로 진행.<br>
+              · "선택하지 않고 계속하기" 탭 → 사유는 무시되고 사유 없이 다음 단계로 진행.<br>
+              · 다른 카드 탭 → 단일 선택이라 선택이 새 카드로 옮겨감.<br>
+              · 같은 카드 재탭 → 시각 변화 없음.
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td>
+              · "선택하지 않고 계속하기"는 사유 선택 여부와 무관하게 항상 사유 없이 진행한다 — skip의 의미 그대로.<br>
+              · "직접 입력할게요"에서 일반 사유로 이동하면 입력란에 적었던 내용은 즉시 사라진다.
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>↔ <code>FilledButton</code>(disabled → enabled) · 1개 Card의 radio가 checked 상태 (Material default — primary 동그라미). 컴포넌트 추가/삭제 없음.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>↔ baseline 동일 + selected radio fill = <code>color-primary</code> (Material default RadioListTile activeColor).</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 선택된 카드는 라디오 버튼이 primary 색으로 채워지는 변화만 있다. 카드 외곽선 등 다른 시각 변화는 없다.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- State 3: "직접 입력할게요" selected — textfield reveal -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong>"직접 입력할게요" 선택 — 입력란 노출</strong> <small>마지막 옵션을 선택해 자유 입력란이 펼쳐진 상태</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="state-mini__mock" rowspan="6">
+              <div class="viewport dr-viewport">
+                <div class="dr-appbar">
+                  <button class="dr-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button>
+                  <h2>탈퇴 사유</h2>
+                </div>
+                <div class="dr-body" style="padding-top: 0;">
+                  <!-- 스크롤 하단 — 5개 카드 + other 카드 + textfield -->
+                  <div class="dr-card">
+                    <div class="dr-radio-tile">
+                      <div class="dr-radio"></div>
+                      <div class="dr-radio-body">
+                        <div class="dr-radio-title">앱 사용이 어려워요</div>
+                        <div class="dr-radio-desc">원하는 기능을 찾거나 사용하는 과정이 복잡했어요.</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="dr-card dr-card--selected">
+                    <div class="dr-radio-tile">
+                      <div class="dr-radio dr-radio--checked"></div>
+                      <div class="dr-radio-body">
+                        <div class="dr-radio-title">직접 입력할게요</div>
+                        <div class="dr-radio-desc">자유롭게 이유를 남길 수 있어요.</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="dr-textfield">
+                    <div class="dr-textfield__label">상세 사유</div>
+                    <div class="dr-textfield__hint">남겨주고 싶은 내용을 입력해주세요</div>
+                    <div class="dr-textfield__counter">0/200</div>
+                  </div>
+                </div>
+                <div class="dr-cta">
+                  <button class="dr-btn-text">선택하지 않고 계속하기</button>
+                  <button class="dr-btn-filled">다음</button>
+                </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>"직접 입력할게요" 카드를 선택해 카드 리스트 아래에 자유 입력란이 펼쳐진 상태.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              · <strong>입력란에 텍스트 입력</strong> → 입력에 따라 우하단 글자 수 카운터(0/200)가 갱신.<br>
+              · 200자를 넘기는 입력은 더 이상 추가되지 않는다.<br>
+              · 다른 사유 카드 탭 → 입력란이 닫히며 일반 사유 선택 상태로 전이, 적었던 내용은 사라진다.<br>
+              · <strong>"다음" 탭</strong> → 입력 내용과 함께 다음 단계로 진행 (입력란을 비워둬도 진행 가능).
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td>
+              · 입력란이 비어 있어도 "다음"은 활성 — 사유만 선택해도 진행할 수 있다.<br>
+              · 입력 중 키보드가 올라오면 본문 영역이 자동으로 축소되어 입력란이 가려지지 않는다. 하단 CTA 영역은 안전 영역에 고정.<br>
+              · 입력 중 다른 카드를 탭하면 별도 확인 없이 입력 내용은 즉시 사라진다.
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>+ <code>SizedBox</code>(<code>spacing-small (8)</code>) · <code>MinglitTextField</code>(label · hintText · maxLines 4 · LengthLimitingTextInputFormatter)</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>+ <code>radius-input (12)</code> (TextField) · typography <code>bodyMedium</code> (input text) · <code>color-divider</code> (TextField border)</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 "직접 입력할게요"를 선택해도 입력 자체는 강제가 아니다. 비워둔 채 진행하면 사실상 "기타(미기재)"로 처리된다.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- State 4: edge — 잘못된 setState 후 textfield 비어있는 채 다음 -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong>"다음" 비활성 (skip만 가능)</strong> <small>Default와 같은 상태를 CTA 영역만 강조해 보여주는 별도 컷</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="state-mini__mock" rowspan="6">
+              <div class="viewport dr-viewport">
+                <div class="dr-appbar">
+                  <button class="dr-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button>
+                  <h2>탈퇴 사유</h2>
+                </div>
+                <div class="dr-body">
+                  <div class="dr-title">떠나시는 이유를 알려주시면 더 나은 밍릿을 만드는 데 도움이 돼요.</div>
+                  <div class="dr-sub">선택하지 않고 계속 진행해도 괜찮아요.</div>
+                </div>
+                <div class="dr-cta">
+                  <button class="dr-btn-text">선택하지 않고 계속하기</button>
+                  <button class="dr-btn-filled dr-btn-filled--disabled" disabled>다음</button>
+                </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>Default 상태와 동일. CTA 영역의 비활성 톤을 강조해 보여주는 별도 컷.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              · "다음" 탭 → 비활성 상태라 반응하지 않음.<br>
+              · "선택하지 않고 계속하기"는 항상 활성으로 진행 가능.<br>
+              · 사유 카드 탭 → 일반 사유 선택 / 직접 입력 상태로 전이.
+            </td>
+          </tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>—</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>동일</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>+ FilledButton disabled tint — Material default(<code>onSurface</code> 12% bg + 38% text alpha)</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 비활성 CTA 톤을 다른 spec에서도 빠르게 참조할 수 있도록 별도 컷으로 유지한다.</td></tr>
+        </tbody>
+      </table>
+
+    </div>
+  </section>
+</div>
+
+<div class="perspective" id="global-behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">cross-cutting — 모든 state에 적용되는 액션 / motion / global edge cases.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Cross-cutting interactions</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 220px;">사용자 액션</th><th>화면에 보이는 결과</th></tr></thead>
+      <tbody>
+        <tr><td>뒤로 가기 (시스템 / AppBar)</td><td>이전 화면(개인정보 페이지)으로 복귀. 이번 진입에서 선택했던 사유는 사라진다.</td></tr>
+        <tr><td>"선택하지 않고 계속하기" 탭</td><td>모든 상태에서 항상 활성 — 선택 여부와 무관하게 사유 없이 다음 단계로 진행.</td></tr>
+        <tr><td>"직접 입력할게요" 입력 중 키보드 등장</td><td>본문 영역이 자동으로 축소되어 입력란이 가려지지 않으며, 하단 CTA 영역은 안전 영역 하단에 고정된다.</td></tr>
+        <tr><td>카드 탭</td><td>라디오 + 타이틀 + 설명 영역 전체가 한 번의 탭으로 동작. 탭 시 표준 ripple.</td></tr>
+        <tr><td>다크 모드 토글</td><td>배경/카드/텍스트가 다크 토큰으로 자동 전환. primary 색은 동일하게 유지.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Motion &amp; timing</h2>
+    <p class="intro">Source: <code>shared/packages/mds/core/lib/src/theme/minglit_design_tokens.dart</code> → <code>MinglitAnimation</code>.</p>
+    <table class="ref">
+      <thead><tr><th style="width: 200px;">Token</th><th style="width: 80px;">Value</th><th>Use</th></tr></thead>
+      <tbody>
+        <tr><td><code>MinglitAnimation.micro</code></td><td>100ms</td><td>카드 탭 / 버튼 탭 ripple.</td></tr>
+        <tr><td><code>MinglitAnimation.fast</code></td><td>200ms</td><td>다음 단계로의 화면 전환.</td></tr>
+        <tr><td><code>MinglitAnimation.medium</code></td><td>350ms</td><td>"직접 입력할게요"의 입력란 노출은 의도적으로 즉시 교체로 처리.</td></tr>
+        <tr><td><em>(시스템 기본)</em> 키보드</td><td>250–300ms</td><td>키보드 등장/퇴장 시 본문 영역이 자연스럽게 축소/복귀.</td></tr>
+      </tbody>
+    </table>
+    <table class="ref" style="margin-top: 12px;">
+      <thead><tr><th style="width: 220px;">Transition</th><th style="width: 140px;">Duration (token)</th><th>Curve / notes</th></tr></thead>
+      <tbody>
+        <tr><td>"다음" / "선택하지 않고…" → 다음 단계</td><td><code>fast</code> (200ms)</td><td>표준 좌→우 slide 전환.</td></tr>
+        <tr><td>라디오 토글</td><td><code>micro</code> (100ms)</td><td>선택 시 라디오가 부드럽게 채워짐.</td></tr>
+        <tr><td>"다음" 활성 ↔ 비활성</td><td>cut</td><td>전환 애니메이션 없이 즉시 톤 변화.</td></tr>
+        <tr><td>입력란 노출 ("직접 입력할게요" 선택)</td><td>cut</td><td>즉시 펼쳐짐 — 부드러운 전환 의도적으로 생략.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Global edge cases</h2>
+    <ul class="notes">
+      <li><strong>Loading / Error 상태 없음</strong> — 이 화면은 데이터를 불러오지 않으며, 6개 사유는 항상 동일하게 노출된다.</li>
+      <li><strong>다크 모드</strong> — 배경/카드/텍스트는 다크 토큰으로 자동 전환되고 primary 색은 그대로 유지된다.</li>
+      <li><strong>접근성</strong> — 6개 옵션이 한 그룹의 라디오로 일관되게 안내된다.</li>
+      <li><strong>같은 카드 재탭</strong> — 이미 선택된 카드를 다시 탭해도 시각 변화는 없다.</li>
+      <li><strong>화면 회전</strong> — 카드 레이아웃이 가로/세로에 모두 자연스럽게 대응하고, 자유 입력란은 4줄 높이를 유지한다.</li>
+    </ul>
+  </section>
+</div>
+
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">📖</span>
+    <h2>Reference</h2>
+    <span class="lede">Implementation source + 인접 화면 link. Components / Tokens는 위 mini-table에 분산.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Implementation source</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 200px;">항목</th><th>Path / Reference</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Widget class</strong></td><td><code>DeletionReasonPage</code> · <code>ConsumerStatefulWidget</code></td></tr>
+        <tr><td><strong>File path</strong></td><td><a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/account_deletion/ui/deletion_reason_page.dart"><code>apps/app_user/lib/src/features/account_deletion/ui/deletion_reason_page.dart</code></a></td></tr>
+        <tr><td><strong>Coordinator</strong></td><td><code>accountDeletionCoordinatorProvider</code> · <code>pushInfo({reason})</code> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/account_deletion/logic/account_deletion_coordinator.dart"><code>account_deletion_coordinator.dart</code></a></td></tr>
+        <tr><td><strong>Reason options</strong></td><td><code>accountDeletionReasonOptions</code> (6개 const) · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/account_deletion/account_deletion_flow.dart"><code>account_deletion_flow.dart</code></a></td></tr>
+        <tr><td><strong>Local state</strong></td><td><code>_selectedCode: WithdrawalReasonCode?</code> · <code>_detailController: TextEditingController</code> (other 선택 시만 활용)</td></tr>
+        <tr><td><strong>Route</strong></td><td><code>DeletionReasonRoute</code> · path: <code>/my/privacy/delete/reason</code> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/routing/app_routes.dart"><code>app_routes.dart</code></a></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 240px;">Spec</th><th>Relation</th></tr></thead>
+      <tbody>
+        <tr><td><a href="/specs/privacy_page.html"><code>PrivacyPage</code></a></td><td>Entry — "회원 탈퇴" 항목 탭으로 진입.</td></tr>
+        <tr><td><a href="/specs/deletion_info_page.html"><code>DeletionInfoPage</code></a></td><td>Next — 두 CTA 모두 이 화면으로 push (reason 유/무).</td></tr>
+        <tr><td><a href="/specs/deletion_verify_page.html"><code>DeletionVerifyPage</code></a></td><td>Sibling step 3 — InfoPage 다음.</td></tr>
+        <tr><td><a href="/specs/deletion_complete_page.html"><code>DeletionCompletePage</code></a></td><td>Sibling step 4 — 마지막 confirmation.</td></tr>
+        <tr><td><a href="/specs/account_management_page.html"><code>AccountManagementPage</code></a></td><td>Original entry surface — "회원 탈퇴" tile에서 coordinator.start() 호출.</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+</div>
+
+<script>
+  document.getElementById('spec-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('spec-mode', e.target.checked);
+  });
+  document.getElementById('dark-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('dark-mode', e.target.checked);
+  });
+</script>
+
+</body>
+</html>

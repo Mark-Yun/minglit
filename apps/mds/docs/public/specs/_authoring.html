@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Spec Authoring Guide — MDS</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+.guide section.doc h2 { font-size: 14px; }
+.guide section.doc p { font-size: 13px; line-height: 1.6; color: var(--color-text-primary); margin-bottom: 8px; }
+.guide section.doc ul { font-size: 13px; line-height: 1.6; color: var(--color-text-primary); padding-left: 20px; margin-bottom: 8px; }
+.guide section.doc li { margin-bottom: 4px; }
+.guide section.doc code { background: var(--color-surface); padding: 1px 4px; border-radius: 3px; font-size: 12px; color: var(--color-primary); }
+.guide section.doc strong { color: var(--color-text-primary); }
+.guide section.doc table.ref th { white-space: nowrap; }
+</style>
+</head>
+<body class="guide">
+
+<div class="page">
+
+<header>
+  <div class="breadcrumb">MDS · Foundations</div>
+  <h1>Spec Authoring Guide</h1>
+  <p class="role">
+    화면 / 시트 / 컴포넌트 spec을 작성하는 모든 designer · agent를 위한 단일 참조.
+    아래 가이드를 한 번 읽고, 의문 생길 때 다시 돌아온다.
+  </p>
+  <p style="margin-top: 16px;">
+    <a href="/specs/_template.html"
+       style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; background: var(--color-primary); color: white; border-radius: var(--radius-button); text-decoration: none; font-size: 14px; font-weight: 600;">
+      → <code style="background: rgba(255,255,255,0.18); color: white; padding: 1px 6px;">_template.html</code> 열기 (복사해 새 spec 시작)
+    </a>
+  </p>
+</header>
+
+<section class="doc">
+  <h2>Filename convention</h2>
+  <p>
+    spec 파일명은 widget 클래스명의 snake_case. 디렉토리는 <code>apps/mds/docs/public/specs/</code>.
+  </p>
+  <ul>
+    <li><code>EventDetailPage</code> → <code>event_detail_page.html</code></li>
+    <li><code>PartyCreateWizardPage</code> → <code>party_create_wizard_page.html</code></li>
+  </ul>
+</section>
+
+<section class="doc">
+  <h2>Audience &amp; perspective</h2>
+  <p>
+    Designer 관점에서 작성한다. 독자는 둘 중 하나:
+  </p>
+  <ul>
+    <li>(a) 화면을 처음 구현하는 implementer</li>
+    <li>(b) 구현이 spec과 일치하는지 검증하는 AI agent</li>
+  </ul>
+  <p>
+    사용자가 <strong>보고 / 하고 / 듣는 것</strong>만 적는다. <em>어떻게</em> 구현하는가는 spec의 책임이 아님 —
+    구현 디테일은 <code>/components</code> 또는 widget-level 코드 주석에 둔다.
+  </p>
+</section>
+
+<section class="doc">
+  <h2>Spec status — design lifecycle</h2>
+  <p>
+    spec은 design artifact다. "코드가 spec을 따랐냐"는 spec의 책임 아님 — 그건 code review · CI · PR 링크의 영역.
+    따라서 Status field는 design phase만 추적한다:
+  </p>
+  <table class="ref">
+    <tbody>
+      <tr><th>🚧 디자인중</th><td>작성 / 이터레이션 중. 변경 가능. 다른 design agent의 편집 안전.</td></tr>
+      <tr><th>✅ 디자인완료</th><td>frozen, 최종 디자인. 구현 대기 중. code agent는 이 단계에서만 구현 시작.</td></tr>
+    </tbody>
+  </table>
+  <p style="margin-top: 12px;">
+    라이프사이클: <code>[new] → 🚧 디자인중 → ✅ 디자인완료</code>. 리디자인이 필요하면 ✅에서 다시 🚧로.
+  </p>
+  <p>
+    구현 추적은 별도. <strong>Status를 변경하지 않고</strong> History 섹션에 row를 추가:
+  </p>
+  <ul>
+    <li><code>Implemented in PR #123 (2026-05-15)</code> — 코드 머지 시</li>
+    <li>code drift verify는 ad-hoc trigger (agent가 별도 요청 받아 수행)</li>
+  </ul>
+</section>
+
+<section class="doc">
+  <h2>Spec type — screen vs sheet vs component</h2>
+  <p>
+    템플릿은 SCREEN-first지만 sheet · component-tier spec에도 사용 가능. 변형 포인트만 조정:
+  </p>
+  <table class="ref">
+    <thead><tr><th style="width: 140px;">Type</th><th>변형 포인트</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>screen</strong></td>
+        <td>standard viewport (375×812). State 갤러리는 풀-page 변형.</td>
+      </tr>
+      <tr>
+        <td><strong>sheet</strong></td>
+        <td>viewport는 sheet 너비 (343 or 375) × 자연 높이. State 갤러리는 sheet 컨텐츠 변형 (banner 유무, 빈 상태 등).</td>
+      </tr>
+      <tr>
+        <td><strong>component</strong></td>
+        <td><code>/components/</code> 폴더에 배치. mockup이 컴포넌트 렌더 단독. Layout sub-anatomy가 곧 anatomy 본체. Global Behavior는 motion만. Reference는 사용처(where used) 위주.</td>
+      </tr>
+    </tbody>
+  </table>
+  <p style="margin-top: 12px;">
+    Header의 breadcrumb · Role · Widget만 type별로 다르게 채우면 동일 구조 적용 가능.
+  </p>
+</section>
+
+<section class="doc">
+  <h2>Document structure</h2>
+  <ol style="font-size: 13px; line-height: 1.7; padding-left: 20px;">
+    <li>📍 <strong>Header</strong> — route / context metadata + Status</li>
+    <li>🎯 <strong>Overview</strong> — why this exists, user journey, background</li>
+    <li>🕐 <strong>History</strong> — spec change log</li>
+    <li>🧱 <strong>Layout</strong> — top-level blueprint + tree + spacing rules + REQUIRED sub-anatomy section per numbered region</li>
+    <li>🎨 <strong>States</strong> — stack of mini-tables (1 table per state). Header(state name + tag) → mockup(rowspan=6) + 6 aspect rows: 조건 / 사용자 액션 / 에지케이스 / 컴포넌트 / 토큰 / 노트</li>
+    <li>🔄 <strong>Global Behavior</strong> — cross-cutting only (motion, async, screen-wide edge cases)</li>
+    <li>📖 <strong>Reference</strong> — related screens. Components / Tokens는 STATES 내 mini-table에 분산 — Reference에서 중복 명세 안 함.</li>
+  </ol>
+  <p style="margin-top: 8px;">
+    <strong>Sub-anatomy 자격 기준 (정량)</strong>: 자식 위젯 2개 이상 + 정렬/간격 규칙 있음 → REQUIRED.
+    단일 atom (예: <code>MinglitButton</code> 1개) → 생략 가능, <code>/components/</code> 참조.
+  </p>
+  <p>
+    <strong>Sub-anatomy 구조</strong>: 모든 sub-anatomy는 PARALLEL — Sub-anatomy ①, ②, ③ … 같은 level에서 평면 나열.
+    깊이를 늘리지 않고 region 개수만큼 섹션을 늘림.
+  </p>
+</section>
+
+<section class="doc">
+  <h2>Additive diff syntax (STATES 컴포넌트/토큰 행)</h2>
+  <p>
+    첫 state(보통 Default)는 풀 리스트 — ALL components + tokens 명시.
+    2번째 state 이후는 변경분만, 5가지 prefix만 사용:
+  </p>
+  <table class="ref">
+    <thead><tr><th style="width: 110px;">Prefix</th><th>의미</th><th>예시</th></tr></thead>
+    <tbody>
+      <tr><td><code>+ X</code></td><td>추가됨 (이 state에서만 새로 등장)</td><td><code>+ ErrorBanner</code></td></tr>
+      <tr><td><code>− X</code></td><td>제거됨 (Default에 있던 X가 이 state에선 안 쓰임)</td><td><code>− CTAButton</code></td></tr>
+      <tr><td><code>↔ X → Y</code></td><td>교체됨</td><td><code>↔ EventCard → Skeleton</code></td></tr>
+      <tr><td><code>동일</code></td><td>Default와 완전히 동일 (변경 없음)</td><td><code>동일</code></td></tr>
+      <tr><td><code>—</code></td><td>해당 없음</td><td>Loading state 사용자 액션 row → <code>—</code> (탭 무반응)</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="doc">
+  <h2>Cross-cutting vs state-specific 판단 기준</h2>
+  <table class="ref">
+    <thead><tr><th style="width: 180px;">분류</th><th>기준 / 예시</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>cross-cutting</strong><br><em style="color: var(--color-text-secondary);">(Global Behavior)</em></td>
+        <td>모든 state 또는 다수 state에서 동일하게 가능한 액션 / 이벤트.<br>예: OS back button · pull-to-refresh · scroll · dark mode toggle · 네트워크 끊김.</td>
+      </tr>
+      <tr>
+        <td><strong>state-specific</strong><br><em style="color: var(--color-text-secondary);">(mini-table)</em></td>
+        <td>그 state에서만 가능하거나 그 state 한정 결과를 내는 액션.<br>예: "구매하기" 탭 (eligible state에서만 enabled) · "다시 시도" 탭 (Error state에서만) · wizard step별 다음/이전.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="doc">
+  <h2>States 종류 식별 가이드</h2>
+  <p>
+    Default · Empty · Loading · Error 4개는 default placeholder일 뿐 — 모든 화면이 이 패턴을 갖는 건 아니다.
+    화면이 가질 수 있는 시각 변형을 <strong>실제 코드</strong> (provider state · route param · user state) 기준으로 enumerate한다:
+  </p>
+  <table class="ref">
+    <thead><tr><th style="width: 200px;">화면 유형</th><th>states</th></tr></thead>
+    <tbody>
+      <tr><td>데이터 fetch 화면</td><td>Default · Loading · Error · (Empty)</td></tr>
+      <tr><td>Wizard</td><td>Step1 · Step2 · … · Submitting · Success</td></tr>
+      <tr><td>Event detail</td><td>admission state 분기 (eligible · soldOut · applied · rejected · …)</td></tr>
+      <tr><td>Modal / Sheet</td><td>진입 직후 · 사용자 입력 후 · async 진행 · 완료</td></tr>
+    </tbody>
+  </table>
+  <p style="margin-top: 12px;">
+    Toolbar toggle states (Spec / Dark)는 별도 state 아님 — 모든 state에 적용.
+  </p>
+</section>
+
+<section class="doc">
+  <h2>Motion token 실제 값 — 임시값 사용 금지</h2>
+  <p>
+    Source: <code>shared/packages/mds/core/lib/src/theme/minglit_design_tokens.dart</code>
+  </p>
+  <table class="ref">
+    <thead><tr><th style="width: 220px;">Token</th><th style="width: 80px;">Value</th><th>용도</th></tr></thead>
+    <tbody>
+      <tr><td><code>MinglitAnimation.micro</code></td><td>100ms</td><td>즉각 피드백 — chip toggle, ripple</td></tr>
+      <tr><td><code>MinglitAnimation.fast</code></td><td>200ms</td><td>간단 transition — fade, color</td></tr>
+      <tr><td><code>MinglitAnimation.medium</code></td><td>350ms</td><td>data crossfade · modal slide-up · sheet</td></tr>
+      <tr><td><code>MinglitAnimation.slow</code></td><td>500ms</td><td>긴 전이 — page transition</td></tr>
+    </tbody>
+  </table>
+  <p style="margin-top: 8px;">
+    Attention loop (1.4–1.8s blink/pulse) 같은 별도 카테고리는 token 미정의 — 직접 ms 명시.
+  </p>
+</section>
+
+<section class="doc">
+  <h2>Toolbar &amp; chrome</h2>
+  <p>
+    Toolbar toggles (top-right, always visible):
+  </p>
+  <ul>
+    <li><strong>Spec mode</strong> — annotations + numbered callouts overlay on viewports</li>
+    <li><strong>Dark mode</strong> — flips viewport contents to dark tokens (chrome stays light)</li>
+  </ul>
+  <p>
+    All chrome (tokens · fonts · viewport frame · tables · annotations · callouts · type-specs)는
+    <code>/specs/_spec.css</code>에 산다. Screen-specific atoms (custom layout · brand-locked buttons)만 inline.
+  </p>
+  <p>
+    Standard viewport: <strong>375 × 812</strong> (iPhone 14/15 base) — <code>_spec.css</code>의
+    <code>--spec-viewport-w</code> / <code>--spec-viewport-h</code>로 정의.
+  </p>
+</section>
+
+</div>
+</body>
+</html>

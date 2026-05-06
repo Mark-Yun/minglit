@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Spec — AuthCallbackPage (app_user · AuthCallbackRoute)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* ============================================================
+   AuthCallback-specific atoms.
+   Centered Column on Scaffold(body) — no AppBar.
+   Visible regions: spinner OR error icon + 한국어 메시지 + (실패시) "로그인 화면으로 돌아가기" 버튼.
+   ============================================================ */
+.acb {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-large);
+  gap: var(--spacing-large);
+  background: var(--color-surface);
+}
+.acb__spinner {
+  width: 40px; height: 40px;
+  border: 3px solid var(--color-divider);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: acb-spin 0.7s linear infinite;
+}
+@keyframes acb-spin { to { transform: rotate(360deg); } }
+.acb__error-icon svg {
+  width: 60px; height: 60px;
+  color: var(--color-error);
+  display: block;
+}
+.acb__msg {
+  font-size: 16px;          /* bodyLarge */
+  text-align: center;
+  color: var(--color-text-secondary);
+  line-height: 1.45;
+  white-space: pre-line;
+}
+.acb__back-btn {
+  height: 40px;
+  padding: 0 var(--spacing-large);
+  border-radius: var(--radius-button);
+  border: none;
+  background: var(--color-primary);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
+</div>
+
+<div class="page">
+
+<header>
+  <h1>Auth Callback</h1>
+</header>
+
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr>
+        <th style="width: 140px;">Status</th>
+        <td><strong>✅ 디자인완료</strong> <em style="color: var(--color-text-secondary);">— 3개 state · OAuth redirect 처리 전용 화면</em></td>
+      </tr>
+      <tr><th>App</th><td><code>app_user</code></td></tr>
+      <tr><th>Category</th><td>auth · OAuth bridging</td></tr>
+      <tr>
+        <th>Route / Surface</th>
+        <td><code>AuthCallbackRoute</code> · widget: <code>AuthCallbackPage</code></td>
+      </tr>
+      <tr><th>Path</th><td><code>/auth/callback</code></td></tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>: <em>— (top-level screen)</em><br>
+          <strong>Children</strong>: <em>—</em>
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>
+          외부 로그인 페이지(Google · Apple · Kakao)에서 돌아온 사용자를 인증 처리한 뒤
+          원래 가려던 화면(또는 홈)으로 자동 이동시킨다. 사용자에게 보이는 시간은 보통
+          0.1~0.5초 — 인증 정보를 해석하는 짧은 구간 동안만.
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry points</strong>: 외부 로그인 페이지에서 인증을 승인한 직후 자동 진입. 사용자가 직접 URL로 진입할 일은 거의 없음.<br>
+          <strong>Exit points</strong>: 인증 성공 시 원래 가려던 화면(없으면 홈)으로 자동 이동. 약 10초 시간 초과 또는 처리 실패 시 "로그인 화면으로 돌아가기" 버튼을 통해 로그인 화면으로 복귀.
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          OAuth 흐름은 외부 브라우저로 이탈했다가 다시 앱으로 돌아오기 때문에 앱 내에
+          명시적인 "복귀 처리" 화면이 필요. 사용자는 잠깐의 로딩만 인지 — 사실상 내부 로직 화면.
+          인증이 정상 감지되는 순간 다음 화면으로 자동 이동된다. 약 10초 시간 초과는 인증
+          정보 손상이나 서버 응답 지연에 대비한 안전망.
+        </td>
+      </tr>
+      <tr>
+        <th>Frequency</th>
+        <td>OAuth 로그인 시도 시마다 1회 — 보통 사용자가 인지 못함 (수백 ms).</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="doc">
+  <h2>History</h2>
+  <p class="intro">최신 항목 위.</p>
+  <table class="ref">
+    <thead>
+      <tr>
+        <th style="width: 110px;">Date</th>
+        <th style="width: 80px;">Version</th>
+        <th style="width: 120px;">Author</th>
+        <th>Changes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2026-05-01</td>
+        <td>1.0</td>
+        <td>mark-yun</td>
+        <td>v1.4 template으로 작성. 3 states (Processing baseline · Redirecting · Timeout/Error). LoginPage / OAuth provider redirect와의 cross-link.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<nav class="perspective-nav">
+  <a href="#layout"><span class="glyph">🧱</span> Layout</a>
+  <a href="#states"><span class="glyph">🎨</span> States</a>
+  <a href="#global-behavior"><span class="glyph">🔄</span> Global Behavior</a>
+  <a href="#reference"><span class="glyph">📖</span> Reference</a>
+</nav>
+
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Layout</h2>
+    <span class="lede">Scaffold(body: Center → Column) · AppBar 없음. 단일 column이 화면 정중앙에서 spinner/icon + 메시지 + (조건부) 버튼을 stack.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree</h2>
+    <p class="intro">
+      AppBar 없는 풀-블리드 Scaffold. <code>Center</code> 안에 <code>Column(mainAxis: center)</code>이 1~3개 child를
+      수직으로 정렬. child 사이는 <code>SizedBox(height: MinglitSpacing.large = 24px)</code>.
+    </p>
+
+    <div class="layout-grid">
+      <div class="blueprint">
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <!-- Center indicator/icon -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:340px; left:140px; right:140px; height:60px;">
+          <span class="blueprint__region-label">① Indicator/Icon</span>
+        </div>
+        <!-- Status message -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:424px; left:40px; right:40px; height:40px;">
+          <span class="blueprint__region-label">② Status text · bodyLarge · center</span>
+        </div>
+        <!-- Conditional button -->
+        <div class="blueprint__region" style="top:488px; left:80px; right:80px; height:40px; border-style:dashed;">
+          <span class="blueprint__region-label">③ "로그인 화면으로 돌아가기" — error/timeout 시만</span>
+        </div>
+
+        <div class="blueprint__align-marker" style="top:8px; right:8px;">crossAxis: center</div>
+        <div class="blueprint__align-marker" style="bottom:8px; right:8px;">mainAxis: center</div>
+      </div>
+
+      <div class="layout-tree"><b>Scaffold</b>
+└─ <b>body: Center</b>
+   └─ <b>Column</b>(mainAxis: center)
+      ├─ <em>Indicator / Error icon</em>           ← ①
+      │  ├─ <b>MinglitCircularProgressIndicator</b>  <i>(_isProcessing == true)</i>
+      │  └─ <b>Icon</b>(error_outline · 60px · color-error)  <i>(_isProcessing == false)</i>
+      │
+      ├─ Gap: <code>spacing-large (24px)</code>
+      │
+      ├─ <em>Status text</em>                       ← ②
+      │  └─ <b>Text</b>(<code>bodyLarge</code> · color-text-secondary · center)
+      │
+      ├─ Gap: <code>spacing-large (24px)</code>     <i>(error만)</i>
+      │
+      └─ <em>Back-to-login button</em>              ← ③
+         └─ <b>ElevatedButton</b>("로그인 화면으로 돌아가기")  <i>(error/timeout 시만)</i></div>
+    </div>
+  </section>
+
+  <section class="doc">
+    <h2>Spacing &amp; alignment rules</h2>
+    <table class="ref">
+      <thead>
+        <tr><th style="width:60px;">#</th><th style="width:200px;">Region</th><th style="width:220px;">Alignment</th><th>Spacing</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>—</td><td>Scaffold body</td><td><code>Center</code> — 풀-블리드</td><td>—</td></tr>
+        <tr><td>①</td><td>Indicator/Icon</td><td>cross axis: center</td><td>아래 gap: <code>spacing-large (24px)</code></td></tr>
+        <tr><td>②</td><td>Status text</td><td>textAlign: center · cross axis: center</td><td>아래 gap (error만): <code>spacing-large (24px)</code></td></tr>
+        <tr><td>③</td><td>Back-to-login button</td><td>cross axis: center · 자체 padding 사용</td><td>—</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<div class="perspective" id="states">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>States</h2>
+    <span class="lede">시각 변형 3종. 처리 중 / 인증 성공 후 이동 중 / 시간 초과·실패. 사용자에게 보이는 시간이 짧지만 시간 초과 분기는 명시적 화면으로 노출.</span>
+  </div>
+
+  <section class="doc">
+    <p class="intro">
+      <strong>State 식별 기준</strong>: 처리 진행 여부 · 인증 성공 감지 여부 · 약 10초 시간 초과 여부.
+      Processing(스피너) → Redirecting(같은 스피너 + "인증 성공! 이동 중..." 메시지) → 또는 Timeout(에러 아이콘 + 재시도 버튼).
+    </p>
+
+    <h3 style="margin-top: 24px;">State summary</h3>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 180px;">State</th>
+          <th style="width: 100px;">Tag</th>
+          <th style="width: 240px;">조건 (요약)</th>
+          <th>Key visual differentiator</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Processing</strong> 🎯</td><td>baseline</td><td>로그인 처리가 진행 중이며 아직 인증 결과가 도착하지 않은 상태.</td><td>스피너 + "로그인 처리 중입니다..." 메시지</td></tr>
+        <tr><td><strong>Redirecting</strong></td><td>success</td><td>인증이 성공적으로 감지되어 다음 화면으로 이동을 준비하는 상태.</td><td>스피너 유지 + "인증 성공! 이동 중..." 메시지</td></tr>
+        <tr><td><strong>Timeout / Error</strong></td><td>failure</td><td>약 10초가 지나도록 결과가 도착하지 않거나 처리에 실패한 상태.</td><td>에러 아이콘 + "시간 초과" 메시지 + "로그인 화면으로 돌아가기" 버튼</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ─── Processing (baseline) ─────────────────────────────── -->
+    <table class="ref state-mini is-baseline-tint">
+      <thead>
+        <tr><th colspan="3"><strong>Processing</strong> 🎯 <small>baseline · 외부 로그인에서 막 돌아온 직후</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="acb">
+                <div class="acb__spinner"></div>
+                <div class="acb__msg">로그인 처리 중입니다...</div>
+                <span class="annotation" style="top:340px;left:50%;transform:translateX(-50%);">spacing-large gap</span>
+                <span class="callout" style="top:340px;left:50%;transform:translateX(-50%) translateY(-12px);">ⓐ</span>
+                <span class="callout" style="top:412px;left:50%;transform:translateX(-50%) translateY(-12px);">ⓑ</span>
+                <span class="type-spec" style="top:432px;left:8px;">16 / 400 / 1.45</span>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>로그인 처리가 진행 중이며 아직 인증 결과가 도착하지 않은 상태. 약 10초 시간 초과 카운트가 함께 동작 중.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>화면에 인터랙션 가능한 요소가 없음. 시스템 뒤로가기는 OS 기본 동작 (앱 종료 또는 이전 화면).</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>· 인증 처리가 매우 빠르게 끝나면 사용자가 이 화면을 거의 인지하지 못한 채 다음 화면으로 넘어감 (보통 0.1초 이내).<br>· 외부 로그인에서 돌아온 정보가 손상돼 인증이 감지되지 않으면 약 10초 후 Timeout 상태로 전환됨.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>· <code>MinglitCircularProgressIndicator</code> (default size · color-primary) — ⓐ<br>· Status <code>Text</code> (<code>bodyLarge</code> · color-text-secondary · center · 한국어) — ⓑ</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>· color: <code>color-surface</code> (배경), <code>color-primary</code> (스피너), <code>color-text-secondary</code> (메시지 · 차분한 톤)<br>· spacing: <code>spacing-large</code> (24 · 요소 사이 모든 간격)<br>· typography: <code>bodyLarge</code> (16 / 400 / 1.45)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 메시지는 일부러 시선을 끌지 않는 차분한 톤으로 처리. 스피너는 표준 크기를 그대로 사용.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ─── Redirecting ─────────────────────────────── -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Redirecting</strong> <small>인증 성공 감지 — 다음 화면으로 이동 중</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="acb">
+                <div class="acb__spinner"></div>
+                <div class="acb__msg">인증 성공! 이동 중...</div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>인증이 성공적으로 감지된 직후. 메시지가 "인증 성공! 이동 중..."으로 바뀌고 다음 화면으로의 이동을 준비.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>동일 — 인터랙션 가능한 요소 없음. 보통 0.1~0.3초 안에 다음 화면으로 전환됨.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>이전에 가려던 화면 정보가 없으면 홈으로 이동. 디바이스 처리 속도가 느리면 메시지가 좀 더 오래 보일 수 있음.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>동일</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>동일</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 시각적으로 baseline과 거의 구분되지 않음 — 메시지 텍스트만 바뀜. 사용자에게는 한 화면으로 인지됨.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ─── Timeout / Error ─────────────────────────────── -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Timeout / Error</strong> <small>약 10초가 지나도록 결과가 도착하지 않거나 처리에 실패한 상태</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="acb">
+                <div class="acb__error-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                </div>
+                <div class="acb__msg">로그인 시간이 초과되었습니다.
+다시 시도해주세요.</div>
+                <button class="acb__back-btn">로그인 화면으로 돌아가기</button>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>약 10초가 지나도록 인증 결과가 도착하지 않거나 처리에 실패한 상태. 사용자가 화면에 머물러 있을 때만 노출됨.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>"<strong>로그인 화면으로 돌아가기</strong>" 버튼을 탭하면 로그인 화면으로 복귀.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>· 시간 초과가 발생하기 직전에 인증 결과가 도착하면 시간 초과 화면은 노출되지 않고 정상 이동으로 이어짐.<br>· 사용자가 이미 화면을 떠난 뒤에 시간 초과가 발생하면 화면 갱신 없이 그대로 종료됨.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>↔ 스피너 자리가 에러 아이콘(<code>Icons.error_outline</code> · 60px · color-error)으로 교체됨<br>+ <code>ElevatedButton</code> ("로그인 화면으로 돌아가기")</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>+ <code>color-error</code> (에러 아이콘)<br>+ <code>color-primary</code> (버튼 배경) · <code>radius-button</code> (12px)<br>· typography 동일 (bodyLarge · color-text-secondary)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 시간 초과 한도는 약 10초로 고정. 진행률 표시 없음. 메시지는 두 줄로 표시됨.</td>
+        </tr>
+      </tbody>
+    </table>
+
+  </section>
+</div>
+
+<div class="perspective" id="global-behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">화면 전반 — auth lifecycle, 시간 보장, edge cases.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Cross-cutting interactions</h2>
+    <table class="ref">
+      <thead><tr><th style="width:240px;">사용자 액션</th><th>화면에 보이는 결과</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>OS 뒤로가기 / 뒤로가기 스와이프</td>
+          <td>OS 기본 동작. 보통 사용자가 인지하기 전에 자동으로 다음 화면으로 이동되므로 거의 의미가 없음. 시간 초과 화면이 떠 있다면 로그인 화면으로 명시적으로 돌아가는 것을 권장.</td>
+        </tr>
+        <tr>
+          <td>외부 로그인 페이지에서 거부 / 창 닫기</td>
+          <td>이 화면 자체에 진입하지 않음. 앱은 그대로 백그라운드에 머무름.</td>
+        </tr>
+        <tr>
+          <td>앱이 백그라운드에서 다시 포그라운드로 복귀</td>
+          <td>인증 처리가 한 번 더 시도됨. 처리가 진행 중이었다면 그대로 대기, 이미 시간 초과가 발생했다면 시간 초과 화면이 노출됨.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Motion &amp; timing</h2>
+    <p class="intro">
+      Source: <code>shared/packages/mds/core/lib/src/theme/minglit_design_tokens.dart</code> → <code>MinglitAnimation</code>.
+    </p>
+    <table class="ref" style="margin-bottom: 16px;">
+      <thead><tr><th style="width:200px;">Token</th><th style="width:80px;">Value</th><th>Use case</th></tr></thead>
+      <tbody>
+        <tr><td><code>MinglitAnimation.fast</code></td><td>200ms</td><td>화면이 등장하거나 사라질 때의 표준 라우트 전환</td></tr>
+        <tr><td><em>(unscoped)</em> 스피너 회전</td><td>약 700ms / cycle</td><td>스피너 컴포넌트 내부에서 자체 동작 — Material 기본</td></tr>
+        <tr><td><em>(고정)</em> 인증 시간 초과</td><td>10000ms</td><td>약 10초 한도. 디자인 토큰이 아닌 명시적 약속값.</td></tr>
+      </tbody>
+    </table>
+    <table class="ref">
+      <thead><tr><th style="width:240px;">Transition</th><th style="width:160px;">Duration (token)</th><th>Curve / notes</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>외부 로그인 페이지에서 이 화면으로 진입</td>
+          <td>OS 기본</td>
+          <td>OS가 처리하는 외부 → 앱 복귀 전환. 앱 차원에서 커스터마이징 불가.</td>
+        </tr>
+        <tr>
+          <td>Processing → Redirecting (메시지 변경)</td>
+          <td>즉시</td>
+          <td>페이드 없이 컷 전환. 메시지 텍스트만 교체됨.</td>
+        </tr>
+        <tr>
+          <td>AuthCallback → 목적지 화면 (홈 또는 원래 가려던 화면)</td>
+          <td><code>fast</code> (200ms)</td>
+          <td>표준 라우트 전환 (slide / fade).</td>
+        </tr>
+        <tr>
+          <td>Processing → Timeout 상태</td>
+          <td>즉시</td>
+          <td>약 10초 후 자동으로 시간 초과 화면으로 컷 전환됨. 사용자가 인지하는 시점에 이미 에러 UI가 보이는 형태.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Global edge cases</h2>
+    <ul class="notes">
+      <li><strong>네트워크 끊김</strong> — 인증 결과가 도착하지 않으므로 약 10초 후 시간 초과 화면이 노출됨. "네트워크 오류" 같은 구체적 사유는 일부러 표시하지 않음.</li>
+      <li><strong>다크 모드</strong> — 배경과 메시지는 토큰 기반으로 자동 전환됨. 에러 아이콘과 스피너는 각자의 색 토큰을 그대로 사용.</li>
+      <li><strong>접근성</strong> — 메시지가 한 줄의 한국어 텍스트라 보이스 오버가 자동으로 읽어줌. 스피너는 장식 요소이고, 에러 아이콘의 의미는 옆 메시지가 전달.</li>
+      <li><strong>이미 로그인된 채 재진입</strong> — 화면이 보이기 전에 즉시 다음 화면으로 이동.</li>
+    </ul>
+  </section>
+</div>
+
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">📖</span>
+    <h2>Reference</h2>
+    <span class="lede">implementation source + 인접 화면. Components / Tokens는 위 mini-table 참고.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Implementation source</h2>
+    <table class="ref">
+      <tbody>
+        <tr>
+          <th style="width: 200px;">Widget class</th>
+          <td><code>AuthCallbackPage</code> · <code>ConsumerStatefulWidget</code></td>
+        </tr>
+        <tr>
+          <th>File path</th>
+          <td><a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/auth/ui/auth_callback_page.dart"><code>apps/app_user/lib/src/features/auth/ui/auth_callback_page.dart</code></a></td>
+        </tr>
+        <tr>
+          <th>Coordinator</th>
+          <td><code>authCoordinatorProvider</code> · <code>goToReturnLocation(url)</code> / <code>goToLogin()</code> 사용</td>
+        </tr>
+        <tr>
+          <th>Auth provider</th>
+          <td><code>currentUserProvider</code> (kit-shared · <code>ref.listen</code>으로 SIGNED_IN 감지)</td>
+        </tr>
+        <tr>
+          <th>Persistence</th>
+          <td><code>SharedPreferences</code> key: <code>auth_return_url</code> — LoginPage에서 저장, 여기서 소비 후 즉시 remove</td>
+        </tr>
+        <tr>
+          <th>Route</th>
+          <td><code>AuthCallbackRoute</code> · path: <code>/auth/callback</code> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/routing/app_routes.dart"><code>app_routes.dart</code></a></td>
+        </tr>
+        <tr>
+          <th>Timeout</th>
+          <td>Hard-coded <code>Duration(seconds: 10)</code> — token 미정의</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width:240px;">Spec</th><th>Relation</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><a href="/specs/login_page.html"><code>LoginPage</code></a></td>
+          <td>OAuth 시작점. <code>auth_return_url</code>을 SharedPreferences에 저장 후 외부 OAuth로 이탈. 사용자가 timeout/error 시 "로그인 화면으로 돌아가기" 탭하면 여기로 복귀.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/signup_consent_page.html"><code>SignupConsentPage</code></a></td>
+          <td>최초 가입 사용자는 redirect 후 약관 동의 화면을 거침. 기존 사용자는 곧바로 홈/원래 화면.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/home_page.html"><code>HomePage</code></a></td>
+          <td>기본 redirect 목적지 (<code>auth_return_url</code> 부재 시 <code>/</code>).</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+</div>
+
+<script>
+  document.getElementById('spec-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('spec-mode', e.target.checked);
+  });
+  document.getElementById('dark-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('dark-mode', e.target.checked);
+  });
+</script>
+
+</body>
+</html>

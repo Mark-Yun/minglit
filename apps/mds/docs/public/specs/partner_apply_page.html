@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Spec — PartnerApplyPage (app_partner · PartnerApplyRoute)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* ============================================================
+   PartnerApplyPage-specific atoms.
+   Partner brand override: scoped via .viewport.
+   MinglitPartnerColors.primary = #6c3ce1
+   ============================================================ */
+.viewport {
+  --color-primary: var(--color-partner-primary);   /* #6c3ce1 */
+  --spec-blueprint-rgb: 108, 60, 225;
+}
+body.dark-mode .viewport {
+  --color-primary: var(--color-partner-dark-primary);
+}
+
+/* --- Simple AppBar (matches scaffold gray, no border, centered title) --- */
+.pa-appbar {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--spacing-xsmall);
+  background: var(--color-surface);
+  position: relative;
+}
+.pa-appbar__title {
+  flex: 1;
+  text-align: center;
+  font-size: var(--typography-font-size-app-bar-title);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.pa-appbar__action {
+  width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+}
+.pa-appbar__action svg { width: 22px; height: 22px; color: var(--color-text-primary); }
+
+/* --- Linear progress (4px brand-tinted bar) --- */
+.pa-progress {
+  height: 4px;
+  background: rgba(0,0,0,0.06);
+  position: relative;
+  overflow: hidden;
+}
+.pa-progress__fill {
+  height: 100%;
+  background: var(--color-primary);
+}
+
+/* --- Body (Stack: scrollable form + bottomNavigationBar) --- */
+.pa-body {
+  position: absolute;
+  top: 60px; left: 0; right: 0; bottom: 96px;
+  overflow-y: auto;
+  scrollbar-width: none;
+  background: var(--color-surface);
+  padding: var(--spacing-large);
+}
+.pa-body::-webkit-scrollbar { display: none; }
+
+/* --- Field group --- */
+.pa-field {
+  margin-bottom: var(--spacing-large);
+}
+.pa-field__label {
+  font-size: 16px;          /* titleMedium · bold */
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-medium);
+}
+.pa-field__help {
+  font-size: 13px;          /* bodySmall · withValues alpha=separator */
+  color: var(--color-text-secondary);
+  margin-top: var(--spacing-small);
+}
+
+/* --- Outlined text input mock --- */
+.pa-input {
+  width: 100%;
+  height: 52px;
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-input);
+  padding: 0 var(--spacing-medium);
+  font-size: 16px;
+  color: var(--color-text-primary);
+  background: var(--color-background);
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+}
+.pa-input--placeholder { color: var(--color-text-secondary); }
+.pa-input--filled { border-color: var(--color-primary); }
+.pa-input--error  { border-color: var(--color-error); }
+.pa-input--multiline {
+  height: auto;
+  min-height: 96px;
+  padding: 12px var(--spacing-medium);
+  align-items: flex-start;
+  line-height: 1.5;
+}
+.pa-input__suffix {
+  margin-left: auto;
+  width: 18px; height: 18px;
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+.pa-input__suffix svg { width: 18px; height: 18px; }
+
+/* --- Dropdown mock --- */
+.pa-dropdown {
+  width: 100%;
+  height: 52px;
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-input);
+  padding: 0 var(--spacing-medium);
+  font-size: 16px;
+  color: var(--color-text-primary);
+  background: var(--color-background);
+  display: flex;
+  align-items: center;
+}
+.pa-dropdown__caret {
+  margin-left: auto;
+  width: 16px; height: 16px;
+  color: var(--color-text-secondary);
+}
+
+/* --- Validation error helper text --- */
+.pa-error-text {
+  font-size: 12px;
+  color: var(--color-error);
+  margin-top: 4px;
+}
+
+/* --- Outlined image / file picker --- */
+.pa-picker {
+  width: 100%;
+  height: 56px;
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-input);
+  background: var(--color-background);
+  color: var(--color-primary);
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.pa-picker svg { width: 18px; height: 18px; color: var(--color-primary); }
+
+/* --- File picked confirm card (success-tinted) --- */
+.pa-filecard {
+  border: 1px solid var(--color-success);
+  border-radius: var(--radius-input);
+  background: rgba(34,197,94,0.08);
+  padding: var(--spacing-medium);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-medium);
+  margin-bottom: var(--spacing-medium);
+}
+.pa-filecard svg { width: 20px; height: 20px; color: var(--color-success); flex-shrink: 0; }
+.pa-filecard__name {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-success);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* --- Profile thumbnail preview (Step 1) --- */
+.pa-thumb {
+  width: 100px; height: 100px;
+  border-radius: var(--radius-input);
+  background: var(--color-surface);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: var(--spacing-medium);
+}
+.pa-thumb svg { width: 32px; height: 32px; color: var(--color-primary); }
+
+/* --- Review section (Step 5) --- */
+.pa-review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-medium);
+}
+.pa-review-header__title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.pa-review-header__edit {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-primary);
+  padding: 6px 8px;
+}
+.pa-review-row {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: var(--spacing-medium);
+}
+.pa-review-row__label {
+  width: 120px;
+  flex-shrink: 0;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+.pa-review-row__value {
+  flex: 1;
+  font-size: 14px;
+  color: var(--color-text-primary);
+}
+
+/* --- Bottom nav (prev OutlinedButton + next ElevatedButton) --- */
+.pa-bottombar {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  background: var(--color-surface);
+  padding: var(--spacing-large);
+  padding-bottom: calc(var(--spacing-large) + 12px); /* SafeArea proxy */
+  display: flex;
+  gap: var(--spacing-medium);
+  align-items: center;
+}
+.pa-btn-prev {
+  flex: 1;
+  height: 48px;
+  border: 1px solid var(--color-text-secondary);
+  border-radius: var(--radius-button);
+  background: transparent;
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+.pa-btn-next {
+  flex: 2;
+  height: 48px;
+  border-radius: var(--radius-button);
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  border: none;
+  display: flex; align-items: center; justify-content: center;
+}
+.pa-btn-next--disabled {
+  background: var(--color-divider);
+  color: var(--color-text-secondary);
+}
+
+/* --- Popup menu (logout) --- */
+.pa-popup {
+  position: absolute;
+  top: 50px; right: 12px;
+  background: var(--color-background);
+  border-radius: var(--radius-small);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+  padding: var(--spacing-xsmall) 0;
+  min-width: 140px;
+  z-index: 5;
+}
+.pa-popup__item {
+  padding: 10px var(--spacing-medium);
+  font-size: 14px;
+  color: var(--color-text-primary);
+}
+
+/* --- Loading overlay (scrim + center spinner) --- */
+.pa-loading-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.45);   /* MinglitColors.scrim ~ */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 8;
+}
+.spinner {
+  width: 36px; height: 36px;
+  border: 3px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* --- Error snackbar (submit failure) --- */
+.pa-snackbar {
+  position: absolute;
+  left: 16px; right: 16px; bottom: 112px;
+  background: #323232;
+  color: #fff;
+  border-radius: var(--radius-small);
+  padding: 12px 16px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 7;
+}
+.pa-snackbar svg { width: 18px; height: 18px; color: var(--color-error); flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
+</div>
+
+<div class="page">
+
+<!-- ============================================================
+     HEADER
+     ============================================================ -->
+<header>
+  <h1>Partner Apply</h1>
+</header>
+
+<!-- ============================================================
+     OVERVIEW
+     ============================================================ -->
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr>
+        <th style="width: 140px;">Status</th>
+        <td><strong>✅ 디자인완료</strong> <em style="color: var(--color-text-secondary);">— 5-step wizard · 6 state (5 step + submitting + error)</em></td>
+      </tr>
+      <tr>
+        <th>App</th>
+        <td><code>app_partner</code></td>
+      </tr>
+      <tr>
+        <th>Category</th>
+        <td>onboarding · application · partner-only</td>
+      </tr>
+      <tr>
+        <th>Route / Surface</th>
+        <td>
+          <code>PartnerApplyRoute</code> · widget: <code>PartnerApplyPage</code> (ConsumerStatefulWidget · PageView · NeverScrollableScrollPhysics)
+          + <code>Step1BasicInfo</code> / <code>Step2BizInfo</code> / <code>Step3ContactSettlement</code> / <code>Step4Documents</code> / <code>Step5Review</code>
+        </td>
+      </tr>
+      <tr>
+        <th>Path</th>
+        <td><code>/apply</code></td>
+      </tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>: <em>— (top-level screen, no shell — outside StatefulShellRoute. <a href="/specs/partner_welcome_page.html">PartnerWelcomePage</a> CTA에서 진입)</em><br>
+          <strong>Children</strong>: <em>—</em> <small>(5 step은 internal sub-widget — PageView child로 한 화면 안에서 처리, 별도 spec 없음)</small>
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>
+          파트너 입점 신청서를 5단계(브랜드 · 사업자 · 연락처/정산 · 서류 · 검토)로 입력받아
+          심사 대기 상태로 제출한다. 매 step마다 partial draft가 서버에 저장되어 중간 이탈 시
+          다음 진입에서 이어서 작성 가능 (<code>loadDraft()</code>).
+          제출이 성공하면 <code>onboardingStateProvider</code>가 <code>pendingReview</code>로 전환되어
+          <code>PartnerApplyStatusPage</code>로 자동 이동.
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry</strong>: <code>PartnerWelcomePage</code> CTA → <code>onboardingCoordinator.goToApply()</code>.
+          또는 router redirect: 로그인 + <code>OnboardingState.draftInProgress</code>면 모든 경로에서 <code>/apply</code>로 강제 이동.<br>
+          <strong>Exit</strong>: 마지막 step "신청서 제출하기" → 성공 시 <code>onboardingCoordinator.goToApplyStatus()</code> (<code>/apply/status</code>) ·
+          AppBar 우측 ⋮ → 로그아웃 (<code>/login</code>) · 시스템 back → 한 단계 이전 step (또는 stack pop).
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          입점 정보가 많고(브랜드명·소개·사업자등록·정산계좌·서류 2종) 한 화면에 모으면 인지 부담이 커서 5단계 위저드로 분할.
+          매 step <code>nextStep()</code> 호출 시 <code>saveDraft()</code>가 실행되어 partial 저장 → 네트워크 끊김에도 데이터 보존.
+          PageView는 <code>NeverScrollableScrollPhysics</code>로 swipe 차단 — 사용자는 하단 "다음/이전" 버튼으로만 이동.
+          AppBar title은 step별로 동적 ("브랜드 정보" → "사업자 정보" → "연락처 및 정산" → "서류 제출" → "신청 내용 검토").
+        </td>
+      </tr>
+      <tr>
+        <th>Frequency</th>
+        <td>파트너 계정당 1회. 제출 후엔 router가 <code>/apply/status</code>로 우회. 보완 요청(<code>needsCorrection</code>) 발생 시 재진입 가능.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================
+     HISTORY
+     ============================================================ -->
+<section class="doc">
+  <h2>History</h2>
+  <p class="intro">이 spec의 주요 변경 이력. 최신 항목 위.</p>
+  <table class="ref">
+    <thead>
+      <tr>
+        <th style="width: 110px;">Date</th>
+        <th style="width: 80px;">Version</th>
+        <th style="width: 120px;">Author</th>
+        <th>Changes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2026-05-01</td>
+        <td>1.0</td>
+        <td>mark-yun</td>
+        <td>v1.4 template으로 작성. 5 step (Basic / Biz / Contact&amp;Settlement / Documents / Review) baseline + submitting overlay + submit error 6 state. partner brand primary scoped via <code>.viewport</code>.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================
+     Anchor nav
+     ============================================================ -->
+<nav class="perspective-nav">
+  <a href="#layout"><span class="glyph">🧱</span> Layout</a>
+  <a href="#states"><span class="glyph">🎨</span> States</a>
+  <a href="#behavior"><span class="glyph">🔄</span> Global Behavior</a>
+  <a href="#reference"><span class="glyph">📖</span> Reference</a>
+</nav>
+
+<!-- ============================================================
+     PERSPECTIVE 1 · LAYOUT
+     ============================================================ -->
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Layout</h2>
+    <span class="lede">화면 구조 — 영역, 정렬, 간격 규칙. 색·타이포 무시.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree</h2>
+    <p class="intro">
+      Scaffold + simpleAppBar(56) + Stack(Column[ProgressIndicator + Expanded PageView] · 옵셔널 loading overlay) + bottomNavigationBar(SafeArea + Padding 24 + Row[OutlinedButton 이전 + ElevatedButton 다음/제출]).
+      PageView는 <code>NeverScrollableScrollPhysics</code> · <code>animateToPage</code>로만 이동 (<code>MinglitAnimation.medium</code> · easeInOut).
+      Step 콘텐츠는 <code>SingleChildScrollView</code> + <code>EdgeInsets.all(spacing-large)</code>.
+    </p>
+
+    <div class="layout-grid">
+      <div class="blueprint">
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <!-- AppBar -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:0; left:0; right:0; height:56px;">
+          <span class="blueprint__region-label">① simpleAppBar — step title (centerTitle) + ⋮ action<br>height 56 · no border · bg = scaffold gray</span>
+        </div>
+
+        <!-- LinearProgressIndicator -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:56px; left:0; right:0; height:4px;">
+          <span class="blueprint__region-label">② MinglitLinearProgressIndicator (4px)<br>value = (currentStep + 1) / 5</span>
+        </div>
+
+        <!-- Step body -->
+        <div class="blueprint__region" style="top:60px; left:0; right:0; bottom:96px;">
+          <span class="blueprint__region-label">③ Expanded · PageView (NeverScrollable)<br>5 step: SingleChildScrollView + padding spacing-large(24)<br>field 간 spacing-large(24) · label↔input spacing-medium(16)</span>
+        </div>
+
+        <!-- bottomNavigationBar -->
+        <div class="blueprint__region blueprint__region--shaded" style="bottom:0; left:0; right:0; height:96px;">
+          <span class="blueprint__region-label">④ SafeArea · Padding all spacing-large(24)<br>Row: [step&gt;0] OutlinedButton(이전) flex:1 + ElevatedButton(다음/제출) flex:2</span>
+        </div>
+
+        <div class="blueprint__align-marker" style="top:8px; right:8px;">centerTitle</div>
+        <div class="blueprint__align-marker" style="bottom:100px; right:8px;">flex 1:2</div>
+      </div>
+
+      <div class="layout-tree"><b>Scaffold</b>
+├─ <b>appBar</b>: <i>MinglitTheme.simpleAppBar</i>          ← ①
+│   ├─ title: <i>_getStepTitle(currentStep)</i>
+│   │  · 0 → "브랜드 정보"
+│   │  · 1 → "사업자 정보"
+│   │  · 2 → "연락처 및 정산"
+│   │  · 3 → "서류 제출"
+│   │  · 4 → "신청 내용 검토"
+│   ├─ centerTitle: <i>true</i>
+│   ├─ showBackButton: <i>true</i>  (default)
+│   └─ actions:
+│      └─ <b>PopupMenuButton</b>(icon: more_vert)
+│          └─ "로그아웃" → <i>MinglitAlert.showConfirm</i>
+│
+├─ <b>body</b>: <b>Stack</b>
+│   ├─ <b>Column</b>
+│   │   ├─ <b>MinglitLinearProgressIndicator</b>            ← ②
+│   │   │  · value: (currentStep + 1) / 5
+│   │   │  · color: <i>MinglitColors.primary</i>
+│   │   │  · bg: <i>colorScheme.surfaceContainerHighest</i>
+│   │   └─ <b>Expanded</b>
+│   │      └─ <b>PageView</b>(controller, <i>NeverScrollableScrollPhysics</i>) ← ③
+│   │         ├─ <b>Step1BasicInfo</b>          — 브랜드명 · 소개 · 프로필 이미지(선택)
+│   │         ├─ <b>Step2BizInfo</b>            — 사업자 유형 · 상호 · 등록번호 · 대표자
+│   │         ├─ <b>Step3ContactSettlement</b>  — 전화 · 이메일 · 주소 · 은행 · 계좌 · 예금주 · 세금계산서 이메일
+│   │         ├─ <b>Step4Documents</b>          — 사업자등록증 · 통장 사본 (image_picker)
+│   │         └─ <b>Step5Review</b>             — 4개 섹션 요약 + 수정하기 텍스트버튼
+│   │
+│   └─ [if isLoading] <b>Positioned.fill</b>                ← (overlay)
+│      └─ <b>ColoredBox</b>(<i>MinglitColors.scrim</i>)
+│         └─ <b>Center</b>(MinglitCircularProgressIndicator)
+│
+└─ <b>bottomNavigationBar</b>: <b>SafeArea</b>              ← ④
+    └─ <b>Padding</b>(all: spacing-large = 24)
+       └─ <b>Row</b>
+          ├─ [currentStep &gt; 0] <b>Expanded</b>(flex:1)
+          │   └─ <b>OutlinedButton</b>("이전")
+          │      · vertical pad: spacing-medium (16)
+          │      · radius-button (12)
+          ├─ [currentStep &gt; 0] SizedBox(width: spacing-medium)
+          └─ <b>Expanded</b>(flex:2)
+              └─ <b>ElevatedButton</b>(<i>"다음"</i> or <i>"제출"</i>)
+                 · bg: MinglitColors.primary
+                 · fg: MinglitColors.background (#fff)
+                 · disabled: !canProceed() (last step) || isLoading
+                 · vertical pad: spacing-medium (16)
+                 · radius-button (12)</div>
+    </div>
+  </section>
+
+  <section class="doc">
+    <h2>Spacing &amp; alignment rules</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>①</td><td>AppBar</td><td>centerTitle · back left · ⋮ right</td><td>height 56 · no border · scaffold gray bg · padding-horizontal <code>spacing-xsmall</code></td></tr>
+        <tr><td>②</td><td>LinearProgressIndicator</td><td>full-width · height 4px</td><td>margin 없음 — AppBar 바로 아래 flush</td></tr>
+        <tr><td>③</td><td>Step body</td><td>SingleChildScrollView · column start (crossAxisAlignment.start)</td><td>outer pad <code>spacing-large (24)</code> all · 필드 간 <code>spacing-large (24)</code> · 레이블↔필드 <code>spacing-medium (16)</code> · 주소 도로명↔상세 <code>spacing-small (8)</code></td></tr>
+        <tr><td>④</td><td>bottomNavigationBar</td><td>SafeArea · Row · 이전(flex:1) + 다음(flex:2)</td><td>EdgeInsets.all <code>spacing-large (24)</code> · 버튼 간 <code>spacing-medium (16)</code> · 버튼 vertical pad <code>spacing-medium (16)</code></td></tr>
+        <tr><td>—</td><td>Step 5 review row</td><td>Row · label width 120 · value Expanded</td><td>row 간 <code>spacing-medium (16)</code> · 섹션 간 <code>spacing-large (24)</code> · 섹션 헤더 padding-bottom <code>spacing-medium</code></td></tr>
+        <tr><td>—</td><td>Step 4 file picked card</td><td>Row · check icon + filename ellipsis</td><td>padding <code>spacing-medium</code> · icon↔name <code>spacing-medium</code> · 카드↔picker <code>spacing-medium</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<!-- ============================================================
+     PERSPECTIVE 2 · STATES
+     ============================================================ -->
+<div class="perspective" id="states">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>States</h2>
+    <span class="lede">시각 변형 6종 — 5단계 폼 + 제출 중 오버레이 + 제출 실패 스낵바. baseline = Step 1 (브랜드 정보, 빈 폼). 나머지는 변경분만.</span>
+  </div>
+
+  <section class="doc">
+    <p class="intro">
+      <strong>State 식별 기준</strong>: 현재 노출된 단계(0–4) + 임시 저장/제출 진행 여부 (로딩 오버레이) + 저장/제출 실패 (스낵바). 단계 사이 이동은 좌우 스와이프가 아닌 하단의 "이전 / 다음" 버튼으로만 가능하며, 단계 간 이동은 약 0.35초의 부드러운 전환으로 일어난다.
+      모든 단계는 같은 화면 구조 (AppBar + 진행 바 + 본문 + 하단 버튼)를 공유하며, AppBar 타이틀 / 진행 바 채움 비율 / 본문 / "이전" 버튼 노출 여부만 다르다.
+    </p>
+
+    <!-- ───────── State 1 · Step 1 (baseline · empty form) ───────── -->
+    <table class="ref state-mini is-baseline-tint">
+      <thead>
+        <tr><th colspan="3"><strong>Step 1 · 브랜드 정보 (empty)</strong> 🎯 <small>baseline · 첫 번째 단계 · 빈 폼</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="pa-appbar">
+                <div class="pa-appbar__action" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                </div>
+                <div class="pa-appbar__title">브랜드 정보</div>
+                <div class="pa-appbar__action" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+                </div>
+              </div>
+              <div class="pa-progress"><div class="pa-progress__fill" style="width:20%;"></div></div>
+              <div class="pa-body">
+                <div class="pa-field">
+                  <div class="pa-field__label">브랜드명</div>
+                  <div class="pa-input pa-input--placeholder">예: 밍글릿 라운지</div>
+                </div>
+                <div class="pa-field">
+                  <div class="pa-field__label">소개</div>
+                  <div class="pa-input pa-input--placeholder pa-input--multiline">파트너님의 브랜드를 소개해주세요</div>
+                </div>
+                <div class="pa-field">
+                  <div class="pa-field__label">프로필 이미지 (선택)</div>
+                  <div class="pa-picker">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                    <span>이미지 선택</span>
+                  </div>
+                </div>
+              </div>
+              <div class="pa-bottombar">
+                <button class="pa-btn-next pa-btn-next--disabled">다음</button>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>화면에 진입한 직후 첫 단계가 노출된 상태. 모든 필드가 비어 있고, "이전" 버튼은 노출되지 않으며 "다음" 버튼은 활성 (실제 통과 여부는 탭 시점에 검증).</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            ① <strong>브랜드명 입력</strong> — 입력하는 즉시 화면에 반영됨.<br>
+            ② <strong>소개 입력</strong> (여러 줄 텍스트 영역) — 입력하는 즉시 반영됨.<br>
+            ③ <strong>"이미지 선택" 탭</strong> — 갤러리에서 사진을 고르면 프로필 이미지로 업로드됨.<br>
+            ④ <strong>"다음" 버튼 탭</strong> — 브랜드명이 비어 있지 않으면 통과되어 임시 저장 후 다음 단계로 이동.<br>
+            ⑤ <strong>AppBar 뒤로가기 탭</strong> — 이전 화면으로 복귀. 자동으로 진입한 경우는 갈 곳이 없을 수 있음.<br>
+            ⑥ <strong>AppBar 우상단 ⋮ 탭</strong> — "로그아웃" 항목이 들어 있는 메뉴가 펼쳐짐.
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · 브랜드명을 비운 채 "다음"을 눌러도 다음 단계로 넘어가지 않음. 별도의 에러 토스트나 스낵바는 노출되지 않는다 — 그냥 반응이 없는 형태.<br>
+            · 갤러리 접근 권한이 거부되면 사진 선택이 일어나지 않고 기존 상태가 그대로 유지된다.<br>
+            · 이전에 저장한 임시 데이터가 없는 경우 빈 폼으로 시작 (이 baseline).
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            · <code>MinglitTheme.simpleAppBar</code>(title="브랜드 정보", centerTitle, actions=[PopupMenuButton])<br>
+            · <code>MinglitLinearProgressIndicator</code>(value=0.2, color=primary, bg=surfaceContainerHighest)<br>
+            · <code>TextFormField</code> × 2 (single + maxLines:4) · <code>OutlineInputBorder</code> radius-input(12)<br>
+            · <code>_ProfileImagePicker</code> → <code>OutlinedButton.icon</code>(icon: image_outlined, side: primary, label="이미지 선택")<br>
+            · <code>ElevatedButton</code>(다음 · bg primary · fg #fff · radius-button)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            · color: <code>color-partner-primary</code> (#6c3ce1 · progress fill · 다음 bg · picker border/text), <code>color-surface</code> (scaffold + appbar bg), <code>color-background</code> (input · #fff button fg), <code>color-text-primary</code> (label · input value), <code>color-text-secondary</code> (placeholder · help text), <code>color-divider</code> (input border idle)<br>
+            · radius: <code>radius-input</code> (12 · TextFormField · picker), <code>radius-button</code> (12 · CTA)<br>
+            · spacing: <code>spacing-large</code> (24 · body padding · field 간격 · bottombar pad), <code>spacing-medium</code> (16 · label↔input · row gap · CTA vertical pad), <code>spacing-small</code> (8 · 도로명↔상세주소 in step 3)<br>
+            · typography: titleMedium.bold (16/700 · field label), bodyMedium (16 · input value · placeholder), bodySmall (13 · help text · address note)<br>
+            · motion: <code>MinglitAnimation.medium</code> (350ms · PageView animateToPage curve easeInOut)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 5단계 모두 같은 화면 구조를 공유한다 — 2~5단계는 본문 / AppBar 타이틀 / 진행 바 채움 비율만 바뀐다. baseline은 첫 단계라서 "이전" 버튼이 노출되지 않는다.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ───────── State 2 · Step 2 ───────── -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Step 2 · 사업자 정보</strong> <small>두 번째 단계 · 모든 필드가 채워진 예시</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="pa-appbar">
+                <div class="pa-appbar__action" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                </div>
+                <div class="pa-appbar__title">사업자 정보</div>
+                <div class="pa-appbar__action" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+                </div>
+              </div>
+              <div class="pa-progress"><div class="pa-progress__fill" style="width:40%;"></div></div>
+              <div class="pa-body">
+                <div class="pa-field">
+                  <div class="pa-field__label">사업자 유형</div>
+                  <div class="pa-dropdown">
+                    <span>개인사업자</span>
+                    <svg class="pa-dropdown__caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                  </div>
+                </div>
+                <div class="pa-field">
+                  <div class="pa-field__label">상호명</div>
+                  <div class="pa-input pa-input--filled">밍글릿 라운지</div>
+                </div>
+                <div class="pa-field">
+                  <div class="pa-field__label">사업자등록번호</div>
+                  <div class="pa-input pa-input--filled">123-45-67890</div>
+                </div>
+                <div class="pa-field">
+                  <div class="pa-field__label">대표자명</div>
+                  <div class="pa-input pa-input--filled">김민수</div>
+                </div>
+              </div>
+              <div class="pa-bottombar">
+                <button class="pa-btn-prev">이전</button>
+                <button class="pa-btn-next">다음</button>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>↔ 두 번째 단계 · 사업자 유형 · 상호명 · 등록번호 · 대표자명이 모두 채워진 정상 상태 · "이전" 버튼이 등장.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            ↔ AppBar 타이틀이 "사업자 정보"로 바뀌고 진행 바가 20% → 40%로 채워짐.<br>
+            + <strong>유형 드롭다운 탭</strong> — 개인사업자 / 법인사업자 중 선택 (기본은 개인사업자).<br>
+            + <strong>등록번호 입력</strong> — 숫자 전용 키보드가 올라옴. 대표자명은 일반 텍스트 키보드.<br>
+            + <strong>"이전" 버튼 탭</strong> — 이전 단계로 부드럽게 이동 (약 0.35초의 슬라이드 전환).
+          </td>
+        </tr>
+        <tr><td class="state-mini__aspect">에지케이스</td><td>· 등록번호의 형식은 클라이언트에서 별도로 검증되지 않음 — 비어 있지만 않으면 다음 단계로 진행할 수 있고, 검토 단계에서도 입력값이 그대로 표시된다.</td></tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            ↔ AppBar title<br>
+            ↔ Progress fill 0.2 → 0.4<br>
+            + <code>DropdownButtonFormField&lt;String&gt;</code> (items: individual/corporate · l10n option)<br>
+            + 이전 <code>OutlinedButton</code> (radius-button · partner primary border via partnerOutlinedButton theme)<br>
+            − 이미지 picker (Step 1 전용)
+          </td>
+        </tr>
+        <tr><td class="state-mini__aspect">토큰</td><td>+ <code>color-primary</code>의 OutlinedButton border / fg (이전 버튼 — partnerOutlinedButton theme)<br>나머지 동일</td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 사업자 유형은 처음부터 "개인사업자"가 기본값으로 채워져 있다.</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ───────── State 3 · Step 3 with validation error ───────── -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Step 3 · 연락처/정산 (에러 변형)</strong> <small>세 번째 단계 · 이메일 형식 오류 시각화</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="pa-appbar">
+                <div class="pa-appbar__action" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                </div>
+                <div class="pa-appbar__title">연락처 및 정산</div>
+                <div class="pa-appbar__action" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+                </div>
+              </div>
+              <div class="pa-progress"><div class="pa-progress__fill" style="width:60%;"></div></div>
+              <div class="pa-body">
+                <div class="pa-field">
+                  <div class="pa-field__label">전화번호</div>
+                  <div class="pa-input pa-input--filled">010-1234-5678</div>
+                </div>
+                <div class="pa-field">
+                  <div class="pa-field__label">이메일</div>
+                  <div class="pa-input pa-input--error">invalid-email</div>
+                  <div class="pa-error-text">올바른 이메일 형식이 아닙니다</div>
+                </div>
+                <div class="pa-field">
+                  <div class="pa-field__label">사업자 등록 주소</div>
+                  <div class="pa-input pa-input--placeholder">
+                    <span>도로명 주소를 검색해주세요</span>
+                    <span class="pa-input__suffix" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    </span>
+                  </div>
+                  <div class="pa-input pa-input--placeholder" style="margin-top:8px;opacity:0.5;">상세주소 입력 (동/층/호)</div>
+                  <div class="pa-field__help">등록된 주소는 파트너 정보에 공개됩니다</div>
+                </div>
+                <div class="pa-field">
+                  <div class="pa-field__label">은행</div>
+                  <div class="pa-input pa-input--filled">국민은행</div>
+                </div>
+              </div>
+              <div class="pa-bottombar">
+                <button class="pa-btn-prev">이전</button>
+                <button class="pa-btn-next">다음</button>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>↔ 세 번째 단계 · 이메일 필드에 잘못된 형식이 입력된 상태 · 도로명 주소가 아직 선택되지 않아 상세주소 입력이 비활성 · 이후 필드(계좌번호 / 예금주 / 세금계산서 이메일)는 스크롤 아래에 있음.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            ↔ AppBar 타이틀이 "연락처 및 정산"으로 바뀌고 진행 바가 40% → 60%로 채워짐.<br>
+            + <strong>도로명 주소 탭</strong> — 주소 검색 화면이 전체 화면으로 올라옴. 선택하면 도로명 주소가 채워지고 상세주소는 초기화됨.<br>
+            + <strong>상세주소 입력</strong> — 도로명 주소가 채워진 뒤에만 입력 가능. 입력하면 전체 주소가 자동으로 합쳐진다.<br>
+            + <strong>입력별 키보드</strong> — 전화번호 / 계좌번호는 숫자 키보드, 이메일은 이메일 키보드가 올라옴.<br>
+            ↔ "다음" 버튼 탭 — 전화 · 이메일 · 은행 · 계좌번호 · 예금주 5개 항목이 모두 비어 있지 않아야 다음 단계로 진행됨.
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            <em>주의</em>: 현재 이메일 형식 검증은 클라이언트에서 수행되지 않으며, 비어 있지만 않으면 다음 단계로 진행할 수 있다. 위 mockup의 "올바른 이메일 형식이 아닙니다" 표시는 추후 강화될 수 있는 위치를 미리 보여주는 <em>spec 권고</em>이며 현재는 노출되지 않는다.<br>
+            · 도로명만 선택하고 상세주소를 비워 두면 도로명만 최종 주소로 사용된다.<br>
+            · 도로명 주소를 다시 선택하면 상세주소는 자동으로 초기화된다.
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            ↔ Progress fill 0.4 → 0.6<br>
+            + <code>TextFormField</code>(readOnly, suffixIcon: <code>Icons.search</code>, onTap: openAddressSearch) — 도로명<br>
+            + <code>TextFormField</code>(enabled: roadAddress.isNotEmpty) — 상세<br>
+            + <code>AddressSearchDialog</code> (fullscreenDialog · MaterialPageRoute&lt;String&gt;)<br>
+            + 일반 TextFormField × 5 (phone/email/bankName/accountNumber/accountHolder/taxEmail)<br>
+            + bodySmall help text "등록된 주소는 파트너 정보에 공개됩니다" (textSecondary · alpha=separator)
+          </td>
+        </tr>
+        <tr><td class="state-mini__aspect">토큰</td><td>+ <code>color-error</code> (validation error border + 메시지 — 권고 시각화)<br>나머지 동일</td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 가장 긴 단계 (8개 필드). 이메일과 전화번호의 형식은 서버에서 점검되며, 클라이언트는 비어 있는지만 확인한다. 세금계산서 이메일은 선택 항목.</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ───────── State 4 · Step 4 (documents picked) ───────── -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Step 4 · 서류 제출 (filled)</strong> <small>네 번째 단계 · 두 서류 파일이 모두 선택된 상태</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="pa-appbar">
+                <div class="pa-appbar__action" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                </div>
+                <div class="pa-appbar__title">서류 제출</div>
+                <div class="pa-appbar__action" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+                </div>
+              </div>
+              <div class="pa-progress"><div class="pa-progress__fill" style="width:80%;"></div></div>
+              <div class="pa-body">
+                <div class="pa-field">
+                  <div class="pa-field__label">사업자등록증</div>
+                  <div class="pa-filecard">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    <div class="pa-filecard__name">biz_registration_2026.jpg</div>
+                  </div>
+                  <div class="pa-picker">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                    <span>파일 변경</span>
+                  </div>
+                </div>
+                <div class="pa-field">
+                  <div class="pa-field__label">통장 사본</div>
+                  <div class="pa-filecard">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    <div class="pa-filecard__name">bankbook_kb.jpg</div>
+                  </div>
+                  <div class="pa-picker">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                    <span>파일 변경</span>
+                  </div>
+                </div>
+              </div>
+              <div class="pa-bottombar">
+                <button class="pa-btn-prev">이전</button>
+                <button class="pa-btn-next">다음</button>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>↔ 네 번째 단계 · 사업자등록증과 통장 사본 두 파일이 모두 선택된 상태.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            ↔ AppBar title "서류 제출" · Progress 60% → 80%<br>
+            + <strong>"파일 변경" 탭</strong> → <code>ImagePicker.pickImage(gallery, requestFullMetadata: false)</code> → <code>uploadBizRegistration / uploadBankbook</code><br>
+            + <strong>filename 표시</strong>: <code>file?.name ?? path.split('/').last</code><br>
+            ↔ "다음" 탭 → Step 5 진입 (animateToPage)
+          </td>
+        </tr>
+        <tr><td class="state-mini__aspect">에지케이스</td><td>· 한 개만 picked → validateStep(3) 실패 → 다음 무반응<br>· 동일 파일 재선택 → 새 path 갱신, 이전 파일 cleanup은 controller 내부<br>· iOS EXIF/GPS 메타데이터 → <code>requestFullMetadata: false</code>로 최소화 (Fix #1230)</td></tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            ↔ Progress 0.6 → 0.8 · AppBar title<br>
+            + <code>_DocumentPicker</code> × 2 — 두 영역 (사업자등록증 / 통장사본)<br>
+            + filled 상태일 때 <code>Container</code>(border: success · bg success.withAlpha(highlight)) + <code>Icons.check_circle</code> + filename<br>
+            + <code>OutlinedButton.icon</code>(icon: upload_file · side: primary · minimumSize.height: 56)<br>
+            − 도로명/주소 검색 (Step 3 전용)
+          </td>
+        </tr>
+        <tr><td class="state-mini__aspect">토큰</td><td>+ <code>color-success</code> (file picked card border + icon + text), success.withAlpha(highlight) (card bg)<br>나머지 동일</td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 image_picker만 사용 (PDF 미지원). source: gallery 고정 — camera 옵션 없음. 향후 PDF/카메라 지원 시 spec 갱신 필요.</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ───────── State 5 · Step 5 Review ───────── -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Step 5 · 신청 내용 검토</strong> <small>currentStep = 4 · 마지막 step · 제출 직전</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="pa-appbar">
+                <div class="pa-appbar__action" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                </div>
+                <div class="pa-appbar__title">신청 내용 검토</div>
+                <div class="pa-appbar__action" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+                </div>
+              </div>
+              <div class="pa-progress"><div class="pa-progress__fill" style="width:100%;"></div></div>
+              <div class="pa-body">
+                <div class="pa-review-header">
+                  <div class="pa-review-header__title">브랜드</div>
+                  <div class="pa-review-header__edit">수정하기</div>
+                </div>
+                <div class="pa-review-row"><div class="pa-review-row__label">브랜드명</div><div class="pa-review-row__value">밍글릿 라운지</div></div>
+                <div class="pa-review-row"><div class="pa-review-row__label">소개</div><div class="pa-review-row__value">강남 지역 소셜 라운지</div></div>
+
+                <div class="pa-review-header" style="margin-top:24px;">
+                  <div class="pa-review-header__title">사업자</div>
+                  <div class="pa-review-header__edit">수정하기</div>
+                </div>
+                <div class="pa-review-row"><div class="pa-review-row__label">유형</div><div class="pa-review-row__value">individual</div></div>
+                <div class="pa-review-row"><div class="pa-review-row__label">상호명</div><div class="pa-review-row__value">밍글릿 라운지</div></div>
+                <div class="pa-review-row"><div class="pa-review-row__label">등록번호</div><div class="pa-review-row__value">123-45-67890</div></div>
+                <div class="pa-review-row"><div class="pa-review-row__label">대표자명</div><div class="pa-review-row__value">김민수</div></div>
+
+                <div class="pa-review-header" style="margin-top:24px;">
+                  <div class="pa-review-header__title">연락 / 정산</div>
+                  <div class="pa-review-header__edit">수정하기</div>
+                </div>
+                <div class="pa-review-row"><div class="pa-review-row__label">전화</div><div class="pa-review-row__value">010-1234-5678</div></div>
+                <div class="pa-review-row"><div class="pa-review-row__label">이메일</div><div class="pa-review-row__value">contact@example.com</div></div>
+              </div>
+              <div class="pa-bottombar">
+                <button class="pa-btn-prev">이전</button>
+                <button class="pa-btn-next">제출</button>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>↔ <code>currentStep == 4</code> (isLastStep) · 모든 step 채워짐 · <code>canProceed() == validateAll()</code> true → 제출 버튼 활성</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            ↔ AppBar "신청 내용 검토" · Progress 100%<br>
+            + <strong>"수정하기" 탭</strong> → <code>notifier.setStep(0..3)</code> → 해당 step으로 PageView animate (back)<br>
+            ↔ "다음" → "제출" 라벨 변경 (<code>partnerApplication_wizard_submit</code>)<br>
+            + <strong>"제출" 탭</strong> → <code>notifier.submit()</code> → State 6 (submitting overlay) 전환
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · <code>validateAll()</code> 실패 → 제출 버튼 disabled (<code>canProceed() ? submit : null</code>) — 앞 step 누락 가능성<br>
+            · <code>state.applicationId == null</code> (이전 saveDraft 모두 실패) → submit이 즉시 status=error로 분기, 서버 호출 없음 (Fix #1599)<br>
+            · 비어있는 필드는 "-" 플레이스홀더로 표시
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            ↔ Progress 0.8 → 1.0<br>
+            + <code>_SectionHeader</code> × 4 (브랜드 / 사업자 / 연락·정산 / 서류) — title titleLarge.bold + TextButton "수정하기"<br>
+            + <code>_ReviewItem</code> × 13+ — Row(label width:120 · bodyMedium.textSecondary) + Expanded(value · bodyMedium · "-" 빈값 fallback)<br>
+            ↔ 다음 ElevatedButton label "다음" → "제출" (<code>partnerApplication_wizard_submit</code>)
+          </td>
+        </tr>
+        <tr><td class="state-mini__aspect">토큰</td><td>+ titleLarge (20/700 · section header), bodyMedium (16 · review value), bodyMedium.textSecondary (label)<br>나머지 동일</td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 "수정하기"는 PageView animateToPage라 sub-route push 아님 — back stack은 그대로 유지. Step 5 → Step 1 점프 후 다시 "다음"으로 5까지 빠르게 복귀 가능.</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ───────── State 6 · Submitting overlay ───────── -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Submitting (loading overlay)</strong> <small>isSaving || isSubmitting · scrim + spinner</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="pa-appbar">
+                <div class="pa-appbar__action" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                </div>
+                <div class="pa-appbar__title">신청 내용 검토</div>
+                <div class="pa-appbar__action" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+                </div>
+              </div>
+              <div class="pa-progress"><div class="pa-progress__fill" style="width:100%;"></div></div>
+              <div class="pa-body">
+                <div class="pa-review-header">
+                  <div class="pa-review-header__title">브랜드</div>
+                  <div class="pa-review-header__edit">수정하기</div>
+                </div>
+                <div class="pa-review-row"><div class="pa-review-row__label">브랜드명</div><div class="pa-review-row__value">밍글릿 라운지</div></div>
+                <div class="pa-review-row"><div class="pa-review-row__label">소개</div><div class="pa-review-row__value">강남 지역 소셜 라운지</div></div>
+              </div>
+              <div class="pa-bottombar">
+                <button class="pa-btn-prev pa-btn-next--disabled" style="opacity:0.6;">이전</button>
+                <button class="pa-btn-next pa-btn-next--disabled">제출</button>
+              </div>
+              <div class="pa-loading-overlay">
+                <div class="spinner"></div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>+ <code>state.isSaving || state.isSubmitting == true</code> — Stack의 <code>Positioned.fill</code> branch 활성. <code>nextStep()</code>의 saveDraft, 또는 <code>submit()</code>의 submitDraft 진행 중.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>− <strong>모든 입력 차단</strong> (scrim이 탭을 흡수) · 이전 / 다음 버튼은 비활성으로 흐려짐 · ⋮ AppBar 액션 버튼은 시각적으로는 활성 상태이지만 메뉴 선택은 차단됨</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · 네트워크 늦어짐 → 무한 스피너 · 사용자 cancel 수단 없음 (코드상 timeout 미설정)<br>
+            · saveDraft 실패 → isSaving=false로 복귀하나 별도 에러 표시는 없음 — 다음 step 진입 차단<br>
+            · submit 성공 → status=data → listener가 <code>goToApplyStatus()</code> 호출 → /apply/status로 라우팅
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            + <code>Positioned.fill</code> + <code>ColoredBox</code>(<code>MinglitColors.scrim</code>) + Center(<code>MinglitCircularProgressIndicator</code>)<br>
+            ↔ ElevatedButton onPressed: null (disabled visual)<br>
+            ↔ OutlinedButton onPressed: null
+          </td>
+        </tr>
+        <tr><td class="state-mini__aspect">토큰</td><td>+ <code>MinglitColors.scrim</code> (~rgba(0,0,0,0.45)) · CircularProgressIndicator color = primary (default ColorScheme)<br>나머지 동일</td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 saveDraft 중에도 동일 overlay — submit 전용 분기 없음. 사용자에겐 "저장 중" / "제출 중" 구분 텍스트가 없다.</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ───────── State 7 · Submit error snackbar ───────── -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Submit error</strong> <small>status.whenOrNull(error: handleMinglitError) · transient SnackBar</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="pa-appbar">
+                <div class="pa-appbar__action" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                </div>
+                <div class="pa-appbar__title">신청 내용 검토</div>
+                <div class="pa-appbar__action" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+                </div>
+              </div>
+              <div class="pa-progress"><div class="pa-progress__fill" style="width:100%;"></div></div>
+              <div class="pa-body">
+                <div class="pa-review-header">
+                  <div class="pa-review-header__title">브랜드</div>
+                  <div class="pa-review-header__edit">수정하기</div>
+                </div>
+                <div class="pa-review-row"><div class="pa-review-row__label">브랜드명</div><div class="pa-review-row__value">밍글릿 라운지</div></div>
+                <div class="pa-review-row"><div class="pa-review-row__label">소개</div><div class="pa-review-row__value">강남 지역 소셜 라운지</div></div>
+              </div>
+              <div class="pa-snackbar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <span>임시저장에 실패했습니다. 잠시 후 다시 시도해주세요.</span>
+              </div>
+              <div class="pa-bottombar">
+                <button class="pa-btn-prev">이전</button>
+                <button class="pa-btn-next">제출</button>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>+ 임시저장 또는 제출이 실패한 직후 — 화면 하단에 오류 안내 SnackBar가 노출되고 폼은 다시 조작 가능한 상태로 복귀.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            + <strong>SnackBar 자동 dismiss</strong> (Material default ~4s)<br>
+            + <strong>"제출" 다시 탭</strong> → 재시도. <code>applicationId == null</code>이면 즉시 동일 에러 분기.<br>
+            ↔ 폼은 살아있어 step 이동 가능 — 누락 발견 시 "수정하기" → 보정 → 다시 제출.
+          </td>
+        </tr>
+        <tr><td class="state-mini__aspect">에지케이스</td><td>· 동시에 multi-error (saveDraft + submit) 발생 시 가장 최근 에러만 표시 — Riverpod listener는 prev/next diff 기반<br>· Sentry 등 외부 reporter는 <code>handleMinglitError</code> 내부에서 처리 (별도 spec)</td></tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            + Material <code>SnackBar</code> via <code>handleMinglitError</code> (kit-shared) — bg #323232 · radius-small · padding 12·16 · icon error<br>
+            − Loading overlay (사라짐)<br>
+            ↔ 버튼 활성화 복귀
+          </td>
+        </tr>
+        <tr><td class="state-mini__aspect">토큰</td><td>+ <code>color-error</code> (snackbar icon)<br>나머지 동일</td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 두 가지 에러 경로: ① <code>applicationId == null</code> 즉시 분기 (saveDraft 모두 실패) · ② <code>repo.submitDraft()</code>가 throw — 둘 다 동일 SnackBar로 노출. 사용자 입장 구분 어려움.</td></tr>
+      </tbody>
+    </table>
+
+  </section>
+</div>
+
+<!-- ============================================================
+     PERSPECTIVE 3 · GLOBAL BEHAVIOR
+     ============================================================ -->
+<div class="perspective" id="behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">cross-cutting — 모든 state에 적용되는 액션, motion, 글로벌 에지케이스. step별 차이는 위 mini-table 참고.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Cross-cutting interactions</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 240px;">사용자 액션</th>
+          <th>화면에 보이는 결과</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>"다음" 버튼 탭 (Step 0–3)</td>
+          <td><code>nextStep()</code> → <code>validateStep(currentStep)</code> 통과 시 <code>saveDraft()</code>(서버 호출 · isSaving=true) → 성공 시 <code>currentStep+1</code> → state listener가 <code>animateToPage</code>(<code>MinglitAnimation.medium</code> 350ms · easeInOut). 실패 시 isSaving=false 복귀, 시각적 피드백은 SnackBar 또는 무반응.</td>
+        </tr>
+        <tr>
+          <td>"제출" 버튼 탭 (Step 4)</td>
+          <td><code>submit()</code> → <code>validateAll()</code> 체크 → <code>applicationId</code> 검증 → <code>repo.submitDraft</code>(isSubmitting=true · loading overlay) → 성공 시 <code>onboardingState</code> invalidate + <code>onboardingCoordinator.goToApplyStatus()</code> (<code>/apply/status</code>). 실패 시 SnackBar.</td>
+        </tr>
+        <tr>
+          <td>"이전" 버튼 탭 (Step 1–4)</td>
+          <td><code>previousStep()</code> → <code>currentStep-1</code> → animateToPage 역방향. validation 미수행, draft 저장 미수행.</td>
+        </tr>
+        <tr>
+          <td>Step 5 "수정하기" 탭</td>
+          <td><code>notifier.setStep(target)</code> → 직접 점프 (skip). Step 5 → Step 0/1/2/3 어디든 한 번에 animateToPage. validation 미체크.</td>
+        </tr>
+        <tr>
+          <td>AppBar ⋮ → 로그아웃</td>
+          <td>PopupMenu open → "로그아웃" 선택 → <code>MinglitAlert.showConfirm</code> → 확인 시 <code>Future.delayed(Duration.zero)</code> 후 <code>authRepo.signOut()</code>. router redirect로 <code>/login</code>. <em>이 시점 작성 중인 draft는 서버에 partial 저장된 상태 — 다음 로그인에서 <code>loadDraft()</code>로 복원.</em></td>
+        </tr>
+        <tr>
+          <td>시스템 back / 스와이프 back</td>
+          <td><code>showBackButton: true</code>. 보통 stack에 PartnerWelcomePage가 있으면 그쪽으로 pop. 단 router redirect로 직접 <code>/apply</code> 진입한 경우 stack 비어 종료/무반응. PageView swipe back은 NeverScrollable로 차단.</td>
+        </tr>
+        <tr>
+          <td>onboarding state 변경 (외부 트리거)</td>
+          <td>다른 디바이스에서 application 제출 완료 → <code>onboardingStateProvider</code>가 <code>pendingReview</code>로 갱신 → router refreshListenable이 <code>/apply/status</code>로 자동 redirect.</td>
+        </tr>
+        <tr>
+          <td>다크모드 토글</td>
+          <td>scaffold gray ↔ dark surface · partner-primary 라이트(#6c3ce1) ↔ 다크(#9b7bec) swap. 모든 토큰 자동 매핑.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Motion timing</h2>
+    <p class="intro">
+      Source: <code>shared/packages/mds/core/lib/src/theme/minglit_design_tokens.dart</code> (<code>MinglitAnimation</code>).
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 240px;">Transition</th>
+          <th style="width: 200px;">Token / Duration</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>화면 진입 (router push)</td>
+          <td><code>MinglitAnimation.fast</code> (200ms)</td>
+          <td>GoRouter 기본 라우트 전환 — slide/fade.</td>
+        </tr>
+        <tr>
+          <td>Step 이동 (next / prev / setStep)</td>
+          <td><code>MinglitAnimation.medium</code> (350ms · easeInOut)</td>
+          <td><code>_pageController.animateToPage(step, duration: medium, curve: easeInOut)</code>. listener가 currentStep 변경 감지 후 호출.</td>
+        </tr>
+        <tr>
+          <td>LinearProgressIndicator fill</td>
+          <td>Material default (~250ms)</td>
+          <td>Flutter <code>LinearProgressIndicator</code> 자체 implicit animation. 별도 token 없음.</td>
+        </tr>
+        <tr>
+          <td>Loading overlay in/out</td>
+          <td>즉시 (no animation)</td>
+          <td>Stack의 <code>if (isLoading)</code> 분기 — fade transition 없음.</td>
+        </tr>
+        <tr>
+          <td>SnackBar in/out</td>
+          <td>Material default (~250ms)</td>
+          <td><code>handleMinglitError</code> via ScaffoldMessenger 기본 slide-up/fade.</td>
+        </tr>
+        <tr>
+          <td>PopupMenu open / dismiss</td>
+          <td>Material default (~150ms)</td>
+          <td>fade + scale.</td>
+        </tr>
+        <tr>
+          <td>Confirm dialog (logout)</td>
+          <td><code>MinglitAnimation.fast</code> (200ms)</td>
+          <td>중앙 fade-in scale (Material default).</td>
+        </tr>
+        <tr>
+          <td>AddressSearchDialog (Step 3)</td>
+          <td><code>MinglitAnimation.medium</code> (350ms)</td>
+          <td>fullscreenDialog → bottom-up slide (Material default).</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Global edge cases</h2>
+    <ul class="notes">
+      <li><strong>loadDraft가 진행 중인 상태로 사용자가 빠르게 입력</strong> — initState의 <code>WidgetsBinding.addPostFrameCallback</code> 로 호출되며 result로 state가 덮어써짐. 사용자가 그 사이 입력한 값은 <em>덮일 수 있음</em>. 코드상 race condition 보호 미흡 — 일반적으로 첫 프레임 직후 즉시 resolve되어 체감 불가.</li>
+      <li><strong>제출 성공 후 다시 <code>/apply</code> 직접 진입</strong> — router redirect의 <code>pendingReview</code> 분기로 즉시 <code>/apply/status</code>로 우회. 이 화면이 보이지 않는다.</li>
+      <li><strong>네트워크 끊긴 채 "다음" 탭 반복</strong> — 매번 saveDraft가 실패 → applicationId가 null인 채 누적. Step 4까지 갔다가 제출 시 "임시저장에 실패했습니다" SnackBar (Fix #1599 분기).</li>
+      <li><strong>signOut 도중 step 이동</strong> — <code>Future.delayed(Duration.zero)</code> 패턴이 dialog close 후 signOut 호출을 다음 frame으로 미뤄 invalidated context 회피. 이론상 그 사이 사용자가 step 이동을 시도해도 router redirect가 <code>/login</code>으로 우회한다.</li>
+      <li><strong>이미지/파일 picker 권한 거부</strong> — <code>ImagePicker.pickImage</code>가 null 반환 · onPick 미호출 · 기존 파일 유지 · 별도 안내 미노출. 사용자는 OS 설정에서 직접 권한 부여 필요.</li>
+    </ul>
+  </section>
+</div>
+
+<!-- ============================================================
+     REFERENCE
+     ============================================================ -->
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">📖</span>
+    <h2>Reference</h2>
+    <span class="lede">implementation source + 인접 화면. Components / Tokens는 위 mini-table 참고.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Implementation source</h2>
+    <table class="ref">
+      <tbody>
+        <tr><th style="width: 200px;">Widget</th><td><code>PartnerApplyPage</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/features/onboarding/partner_apply_page.dart"><code>apps/app_partner/lib/src/features/onboarding/partner_apply_page.dart</code></a></td></tr>
+        <tr><th>Step widgets</th>
+          <td>
+            <code>Step1BasicInfo</code> · <code>Step2BizInfo</code> · <code>Step3ContactSettlement</code> · <code>Step4Documents</code> · <code>Step5Review</code> — <a href="https://github.com/Mark-Yun/minglit/tree/dev/apps/app_partner/lib/src/features/onboarding/steps"><code>apps/app_partner/lib/src/features/onboarding/steps/</code></a>
+          </td>
+        </tr>
+        <tr><th>Controller</th><td><code>PartnerApplyController</code> (Riverpod · Freezed · 5 mixins: Validation / Draft / Steps / Submit) — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/features/onboarding/partner_apply_controller.dart"><code>partner_apply_controller.dart</code></a></td></tr>
+        <tr><th>Coordinator</th><td><code>OnboardingCoordinator</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/features/onboarding/onboarding_coordinator.dart"><code>onboarding_coordinator.dart</code></a> · <code>goToApply()</code> · <code>goToApplyStatus()</code></td></tr>
+        <tr><th>Address picker</th><td><code>AddressSearchDialog</code> (fullscreenDialog) — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/features/onboarding/widgets/address_search_dialog.dart"><code>widgets/address_search_dialog.dart</code></a></td></tr>
+        <tr><th>Route</th><td><code>PartnerApplyRoute</code> · <code>/apply</code> · top-level (no shell) · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/routing/app_routes.dart"><code>app_routes.dart</code></a></td></tr>
+        <tr><th>Redirect logic</th><td><code>app_router.dart</code> — <code>OnboardingState.draftInProgress</code>이면 모든 경로에서 <code>/apply</code>로 강제. 제출 후 <code>pendingReview</code> 시 <code>/apply/status</code>로 우회.</td></tr>
+        <tr><th>State enum</th><td><code>OnboardingState</code> · loading / needsApplication / draftInProgress / pendingReview / needsCorrection / hasPartner — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/logic/onboarding_state_provider.dart"><code>onboarding_state_provider.dart</code></a></td></tr>
+        <tr><th>Brand color</th><td><code>MinglitPartnerColors.primary</code> = <code>#6c3ce1</code> · scoped via <code>.viewport</code>의 <code>--color-primary</code> 오버라이드. <code>MinglitColors.primary</code>(#9900ff)는 사용 안 함.</td></tr>
+        <tr><th>l10n</th>
+          <td>
+            <code>partnerApplication_wizard_title / step{1..5}_title / next / prev / submit</code> ·
+            <code>partnerApplication_field_{brandName / intro / bizType / bizName / bizNumber / repName / phone / email / address / bankName / accountNum / holder}</code> ·
+            <code>partnerApplication_hint_*</code> · <code>partnerApplication_option_individual / corporate</code> · <code>partnerApplication_section_{brand / biz / account / files}</code> · <code>partnerApplication_label_{bizReg / bankbook}</code> · <code>partnerApplication_hint_fileSelect</code> · <code>home_button_logout</code> · <code>common_button_cancel</code>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 240px;">Spec</th><th>Relation</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><a href="/specs/partner_welcome_page.html"><code>PartnerWelcomePage</code></a></td>
+          <td>이 화면 직전. CTA "파트너 신청서 작성하기"로 진입. <code>OnboardingState.needsApplication</code>에서 도달, 입력 시작과 동시에 <code>draftInProgress</code>로 전환.</td>
+        </tr>
+        <tr>
+          <td><code>PartnerApplyStatusPage</code> <em>(spec 미작성)</em></td>
+          <td>이 화면 직후. submit 성공 시 자동 이동. <code>pendingReview</code> / <code>needsCorrection</code> 상태에서 머무름.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/login_page.html"><code>LoginPage</code></a></td>
+          <td>⋮ 로그아웃 시 도달.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/partner_home_page.html"><code>PartnerHomePage</code></a></td>
+          <td>심사 승인(<code>hasPartner</code>) 후 최종 도달점.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/party_create_wizard_page.html"><code>PartyCreateWizardPage</code></a></td>
+          <td>유사 패턴 — 파트너 앱의 또 다른 다단계 wizard. 같은 PageView+NeverScrollable+bottomNav 구조.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/event_application_wizard_page.html"><code>EventApplicationWizardPage</code></a></td>
+          <td>유사 제출 패턴(단계별 polling + AsyncValue.error → SnackBar) 참고용.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+</div> <!-- /.page -->
+
+</body>
+</html>

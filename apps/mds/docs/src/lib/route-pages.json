@@ -1,0 +1,250 @@
+{
+  "user": {
+    "DevUserSwitchRoute": {
+      "widget": "DevUserSwitchScreen",
+      "file": "shared/packages/minglit_kit/lib/src/features/dev/dev_user_switch_screen.dart"
+    },
+    "LoginRoute": {
+      "widget": "LoginPage",
+      "file": "apps/app_user/lib/src/features/auth/login_page.dart"
+    },
+    "SignupConsentRoute": {
+      "widget": "SignupConsentPage",
+      "file": "apps/app_user/lib/src/features/consent/ui/signup_consent_page.dart"
+    },
+    "AuthCallbackRoute": {
+      "widget": "AuthCallbackPage",
+      "file": "apps/app_user/lib/src/features/auth/ui/auth_callback_page.dart"
+    },
+    "EventDetailRoute": {
+      "widget": "EventDetailPage",
+      "file": "apps/app_user/lib/src/features/event/detail/event_detail_page.dart"
+    },
+    "PartnerDetailRoute": {
+      "widget": "PartnerDetailPage",
+      "file": "apps/app_user/lib/src/features/partner/detail/partner_detail_page.dart"
+    },
+    "PartnerEventsRoute": {
+      "widget": "PartnerEventsPage",
+      "file": "apps/app_user/lib/src/features/partner/detail/partner_events_page.dart"
+    },
+    "CertificationRoute": {
+      "widget": "IdentityVerificationScreen",
+      "file": "shared/packages/minglit_kit/lib/src/features/verification/ui/identity_verification_screen.dart"
+    },
+    "EventApplicationRoute": {
+      "widget": "EventApplicationWizardPage",
+      "file": "apps/app_user/lib/src/features/event/admission/event_application_wizard_page.dart"
+    },
+    "MyTicketsRoute": {
+      "widget": "MyTicketsPage",
+      "file": "apps/app_user/lib/src/features/my_tickets/ui/my_tickets_page.dart"
+    },
+    "TicketQRRoute": {
+      "widget": "TicketQRScreen",
+      "file": "apps/app_user/lib/src/features/ticket/ui/ticket_qr_screen.dart"
+    },
+    "PurchaseHistoryRoute": {
+      "widget": "PurchaseHistoryPage",
+      "file": "apps/app_user/lib/src/features/payment/ui/purchase_history_page.dart"
+    },
+    "NotificationCenterRoute": {
+      "widget": "NotificationListScreen",
+      "file": "shared/packages/minglit_kit/lib/src/features/notification/notification_list_screen.dart"
+    },
+    "NotificationSettingsRoute": {
+      "widget": "NotificationSettingsScreen",
+      "file": "shared/packages/minglit_kit/lib/src/features/notification/notification_settings_screen.dart"
+    },
+    "AccountManagementRoute": {
+      "widget": "AccountManagementPage",
+      "file": "shared/packages/minglit_kit/lib/src/ui/pages/account_management_page.dart"
+    },
+    "HomeRoute": {
+      "widget": "HomePage",
+      "file": "apps/app_user/lib/src/features/home/home_page.dart"
+    },
+    "SearchRoute": {
+      "widget": "SearchPage",
+      "file": "apps/app_user/lib/src/features/search/search_page.dart"
+    },
+    "MyPageRoute": {
+      "widget": "MyPage",
+      "file": "apps/app_user/lib/src/features/home/my_page.dart"
+    },
+    "PrivacyRoute": {
+      "widget": "PrivacyPage",
+      "file": "apps/app_user/lib/src/features/settings/privacy_page.dart"
+    },
+    "DeletionReasonRoute": {
+      "widget": "DeletionReasonPage",
+      "file": "apps/app_user/lib/src/features/account_deletion/ui/deletion_reason_page.dart"
+    },
+    "DeletionInfoRoute": {
+      "widget": "DeletionInfoPage",
+      "file": "apps/app_user/lib/src/features/account_deletion/ui/deletion_info_page.dart"
+    },
+    "DeletionVerifyRoute": {
+      "widget": "DeletionVerifyPage",
+      "file": "apps/app_user/lib/src/features/account_deletion/ui/deletion_verify_page.dart"
+    },
+    "DeletionCompleteRoute": {
+      "widget": "DeletionCompletePage",
+      "file": "apps/app_user/lib/src/features/account_deletion/ui/deletion_complete_page.dart"
+    },
+    "BlockedPartnersRoute": {
+      "widget": "BlockedPartnersPage",
+      "file": "apps/app_user/lib/src/features/settings/blocked_partners_page.dart"
+    },
+    "TagEventListRoute": {
+      "widget": "TagEventListPage",
+      "file": "apps/app_user/lib/src/features/tag/ui/tag_event_list_page.dart"
+    }
+  },
+  "partner": {
+    "DevUserSwitchRoute": {
+      "widget": "DevUserSwitchScreen",
+      "file": "shared/packages/minglit_kit/lib/src/features/dev/dev_user_switch_screen.dart"
+    },
+    "LoginRoute": {
+      "widget": "PartnerLoginPage",
+      "file": "apps/app_partner/lib/src/features/auth/partner_login_page.dart"
+    },
+    "PartnerApplyRoute": {
+      "widget": "PartnerApplyPage",
+      "file": "apps/app_partner/lib/src/features/onboarding/partner_apply_page.dart"
+    },
+    "PartnerApplyStatusRoute": {
+      "widget": "PartnerApplyStatusPage",
+      "file": "apps/app_partner/lib/src/features/onboarding/partner_apply_status_page.dart"
+    },
+    "PartnerWelcomeRoute": {
+      "widget": "PartnerWelcomePage",
+      "file": "apps/app_partner/lib/src/features/onboarding/partner_welcome_page.dart"
+    },
+    "NotificationCenterRoute": {
+      "widget": "NotificationListScreen",
+      "file": "shared/packages/minglit_kit/lib/src/features/notification/notification_list_screen.dart"
+    },
+    "HomeRoute": {
+      "widget": "PartnerHomePage",
+      "file": "apps/app_partner/lib/src/features/home/partner_home_page.dart"
+    },
+    "ApplicationListRoute": {
+      "widget": "EventApplicationManagePage",
+      "file": "apps/app_partner/lib/src/features/application/event_application_manage_page.dart"
+    },
+    "EventApplicationDetailRoute": {
+      "widget": "EventApplicationDetailPage",
+      "file": "apps/app_partner/lib/src/features/application/event_application_detail_page.dart"
+    },
+    "ApplicationDetailRoute": {
+      "widget": "PartnerApplicationDetailPage",
+      "file": "apps/app_partner/lib/src/features/admin/partner_application_detail_page.dart"
+    },
+    "LocationGuideRoute": {
+      "widget": "LocationGuidePage",
+      "file": "apps/app_partner/lib/src/features/home/guide/location_guide_page.dart"
+    },
+    "CheckinRoute": {
+      "widget": "CheckinPlaceholderPage",
+      "file": "apps/app_partner/lib/src/features/checkin/checkin_placeholder_page.dart"
+    },
+    "PartyListRoute": {
+      "widget": "PartyListPage",
+      "file": "apps/app_partner/lib/src/features/party/list/party_list_page.dart"
+    },
+    "PartyCreateRoute": {
+      "widget": "PartyCreateWizardPage",
+      "file": "apps/app_partner/lib/src/features/party/create/party_create_wizard_page.dart"
+    },
+    "PartyDetailRoute": {
+      "widget": "PartyDetailPage",
+      "file": "apps/app_partner/lib/src/features/party/detail/party_detail_page.dart"
+    },
+    "PartyEditRoute": {
+      "widget": "PartyCreateWizardPage",
+      "file": "apps/app_partner/lib/src/features/party/create/party_create_wizard_page.dart"
+    },
+    "PartyTicketEditRoute": {
+      "widget": "TicketEditPage",
+      "file": "apps/app_partner/lib/src/features/ticket/edit/ticket_edit_page.dart"
+    },
+    "EventCreateRoute": {
+      "widget": "EventCreatePage",
+      "file": "apps/app_partner/lib/src/features/party/event/create/event_create_page.dart"
+    },
+    "EventDetailRoute": {
+      "widget": "EventDetailPage",
+      "file": "apps/app_partner/lib/src/features/party/event/detail/event_detail_page.dart"
+    },
+    "TicketCreateRoute": {
+      "widget": "TicketCreatePage",
+      "file": "apps/app_partner/lib/src/features/ticket/create/ticket_create_page.dart"
+    },
+    "TicketEditRoute": {
+      "widget": "TicketEditPage",
+      "file": "apps/app_partner/lib/src/features/ticket/edit/ticket_edit_page.dart"
+    },
+    "SettlementRoute": {
+      "widget": "SettlementPage",
+      "file": "apps/app_partner/lib/src/features/settlement/settlement_page.dart"
+    },
+    "SettlementDetailRoute": {
+      "widget": "SettlementDetailPage",
+      "file": "apps/app_partner/lib/src/features/settlement/settlement_detail_page.dart"
+    },
+    "BankAccountRoute": {
+      "widget": "BankAccountPage",
+      "file": "apps/app_partner/lib/src/features/settlement/bank_account_page.dart"
+    },
+    "MoreRoute": {
+      "widget": "MorePage",
+      "file": "apps/app_partner/lib/src/features/more/more_page.dart"
+    },
+    "DeletionReasonRoute": {
+      "widget": "DeletionReasonPage",
+      "file": "apps/app_partner/lib/src/features/account_deletion/ui/deletion_reason_page.dart"
+    },
+    "DeletionInfoRoute": {
+      "widget": "DeletionInfoPage",
+      "file": "apps/app_partner/lib/src/features/account_deletion/ui/deletion_info_page.dart"
+    },
+    "DeletionVerifyRoute": {
+      "widget": "DeletionVerifyPage",
+      "file": "apps/app_partner/lib/src/features/account_deletion/ui/deletion_verify_page.dart"
+    },
+    "DeletionCompleteRoute": {
+      "widget": "DeletionCompletePage",
+      "file": "apps/app_partner/lib/src/features/account_deletion/ui/deletion_complete_page.dart"
+    },
+    "VerificationManageRoute": {
+      "widget": "VerificationManagePage",
+      "file": "apps/app_partner/lib/src/features/verification/manage/verification_manage_page.dart"
+    },
+    "CreateVerificationRoute": {
+      "widget": "CreateVerificationPage",
+      "file": "apps/app_partner/lib/src/features/verification/create/create_verification_page.dart"
+    },
+    "MemberListRoute": {
+      "widget": "PartnerMemberListPage",
+      "file": "apps/app_partner/lib/src/features/member/partner_member_list_page.dart"
+    },
+    "MemberPermissionRoute": {
+      "widget": "PartnerMemberPermissionPage",
+      "file": "apps/app_partner/lib/src/features/member/partner_member_permission_page.dart"
+    },
+    "NotificationSettingsRoute": {
+      "widget": "NotificationSettingsScreen",
+      "file": "shared/packages/minglit_kit/lib/src/features/notification/notification_settings_screen.dart"
+    },
+    "RecurrenceManagementRoute": {
+      "widget": "RecurrenceManagementScreen",
+      "file": "apps/app_partner/lib/src/features/party/recurrence/recurrence_management_screen.dart"
+    },
+    "PartnerAccountManagementRoute": {
+      "widget": "AccountManagementPage",
+      "file": "shared/packages/minglit_kit/lib/src/ui/pages/account_management_page.dart"
+    }
+  }
+}

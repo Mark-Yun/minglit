@@ -4,7 +4,8 @@
  * 1. Reads icons/*.svg
  * 2. Optimises each with svgo (currentColor substitution for theme awareness)
  * 3. Writes lib/generated/icons.g.dart — class MdsIcons with static SvgPicture accessors
- * 4. Writes manifest.json — icon metadata for mds_docs /icons page
+ * 4. Writes react/src/generated/index.tsx — React components per icon
+ * 5. Writes manifest.json — icon metadata for mds_docs /icons page
  *
  * Run: npm run build  (inside shared/packages/mds/icons/)
  */
@@ -18,7 +19,8 @@ import { optimize } from 'svgo';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PKG_ROOT = join(__dirname, '..');
 const ICONS_DIR = join(PKG_ROOT, 'icons');
-const OUT_DIR = join(PKG_ROOT, 'lib', 'generated');
+const DART_OUT_DIR = join(PKG_ROOT, 'lib', 'generated');
+const REACT_OUT_DIR = join(PKG_ROOT, 'react', 'src', 'generated');
 const MANIFEST_PATH = join(PKG_ROOT, 'manifest.json');
 
 // ---------------------------------------------------------------------------
@@ -46,6 +48,24 @@ function toCamel(name) {
   return name.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
 }
 
+// snake_case → PascalCase (e.g. "arrow_back" → "ArrowBack")
+function toPascal(name) {
+  const camel = toCamel(name);
+  return camel.charAt(0).toUpperCase() + camel.slice(1);
+}
+
+// Convert SVG attribute names to React JSX (kebab-case → camelCase),
+// and quote attribute values for JSX. Returns the inner SVG body
+// (everything between <svg ...> and </svg>) ready for JSX embedding.
+function svgInnerToJsx(svgString) {
+  const inner = svgString
+    .replace(/<\?xml[^?]*\?>/g, '')
+    .replace(/<svg[^>]*>/, '')
+    .replace(/<\/svg>/, '')
+    .trim();
+  return inner.replace(/([a-z]+)-([a-z])/g, (_, a, b) => a + b.toUpperCase());
+}
+
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
@@ -59,6 +79,22 @@ if (files.length === 0) {
 
 const manifest = [];
 const dartLines = [];
+const reactLines = [];
+
+reactLines.push('// GENERATED FILE — DO NOT EDIT.');
+reactLines.push(
+  '// Re-generate by running: npm run build (inside shared/packages/mds/icons/)',
+);
+reactLines.push(
+  '// Source: icons/*.svg (svgo-optimised, currentColor for theme awareness)',
+);
+reactLines.push('');
+reactLines.push("import * as React from 'react';");
+reactLines.push('');
+reactLines.push("export interface MdsIconProps extends React.SVGProps<SVGSVGElement> {");
+reactLines.push("  size?: number | string;");
+reactLines.push('}');
+reactLines.push('');
 
 dartLines.push('// GENERATED FILE — DO NOT EDIT.');
 dartLines.push(
@@ -80,9 +116,12 @@ dartLines.push('class MdsIcons {');
 dartLines.push('  MdsIcons._();');
 dartLines.push('');
 
+const reactExports = [];
+
 for (const file of files) {
   const name = basename(file, '.svg'); // e.g. "chevron_right"
   const camel = toCamel(name); // e.g. "chevronRight"
+  const pascal = toPascal(name); // e.g. "ChevronRight"
 
   const raw = await readFile(join(ICONS_DIR, file), 'utf8');
   const result = optimize(raw, svgoConfig);
@@ -92,7 +131,29 @@ for (const file of files) {
   const viewBoxMatch = optimized.match(/viewBox="([^"]+)"/);
   const viewBox = viewBoxMatch ? viewBoxMatch[1] : '0 0 24 24';
 
-  manifest.push({ name, camel, viewBox });
+  manifest.push({ name, camel, pascal, viewBox });
+
+  // ---------- React component ----------
+  const jsxInner = svgInnerToJsx(optimized);
+  reactLines.push(`/** ${name} icon. Inherits color via currentColor. */`);
+  reactLines.push(`export const ${pascal}: React.FC<MdsIconProps> = ({ size = 24, ...props }) => (`);
+  reactLines.push(`  <svg`);
+  reactLines.push(`    width={size}`);
+  reactLines.push(`    height={size}`);
+  reactLines.push(`    viewBox="${viewBox}"`);
+  reactLines.push(`    fill="none"`);
+  reactLines.push(`    stroke="currentColor"`);
+  reactLines.push(`    strokeWidth={2}`);
+  reactLines.push(`    strokeLinecap="round"`);
+  reactLines.push(`    strokeLinejoin="round"`);
+  reactLines.push(`    aria-hidden="true"`);
+  reactLines.push(`    {...props}`);
+  reactLines.push(`  >`);
+  reactLines.push(`    ${jsxInner}`);
+  reactLines.push(`  </svg>`);
+  reactLines.push(`);`);
+  reactLines.push('');
+  reactExports.push(pascal);
 
   // Escape SVG string for embedding in a Dart single-quoted string literal.
   const escaped = optimized
@@ -155,8 +216,23 @@ for (const file of files) {
 dartLines.push('}');
 dartLines.push('');
 
-await mkdir(OUT_DIR, { recursive: true });
-await writeFile(join(OUT_DIR, 'icons.g.dart'), dartLines.join('\n'), 'utf8');
+// React: also emit a registry object for dynamic lookup
+reactLines.push('/** Registry of all icons keyed by snake_case name. */');
+reactLines.push('export const MdsIcons = {');
+for (const file of files) {
+  const name = basename(file, '.svg');
+  const pascal = toPascal(name);
+  reactLines.push(`  '${name}': ${pascal},`);
+}
+reactLines.push('} as const;');
+reactLines.push('');
+reactLines.push('export type MdsIconName = keyof typeof MdsIcons;');
+reactLines.push('');
+
+await mkdir(DART_OUT_DIR, { recursive: true });
+await mkdir(REACT_OUT_DIR, { recursive: true });
+await writeFile(join(DART_OUT_DIR, 'icons.g.dart'), dartLines.join('\n'), 'utf8');
+await writeFile(join(REACT_OUT_DIR, 'index.tsx'), reactLines.join('\n'), 'utf8');
 await writeFile(
   MANIFEST_PATH,
   JSON.stringify(manifest, null, 2) + '\n',
@@ -164,5 +240,5 @@ await writeFile(
 );
 
 console.log(
-  `Generated ${files.length} icons → lib/generated/icons.g.dart + manifest.json`,
+  `Generated ${files.length} icons →\n  lib/generated/icons.g.dart\n  react/src/generated/index.tsx\n  manifest.json`,
 );
