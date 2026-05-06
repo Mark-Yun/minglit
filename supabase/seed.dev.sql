@@ -745,7 +745,7 @@ BEGIN
   END LOOP;
 END $$;
 
--- ── Phase 10: QA Fresh User (Fix #2256) ──────────────────────────────────────
+-- ── Phase 10: QA Fresh User ──────────────────────────────────────────────────
 -- U-S19 이벤트 신청 위저드 스모크 테스트용 전용 유저.
 -- 시뮬레이터는 username = 'user_%' 패턴만 처리하므로 username='qa_fresh'는
 -- 영구적으로 신청 이력이 없는 상태를 유지한다.
@@ -759,6 +759,7 @@ BEGIN
 
   SELECT id INTO existing_id FROM auth.users WHERE email = 'user_qa_fresh@test.com';
   IF existing_id IS NULL THEN
+    -- Fix #2256: add qa_fresh user with empty application history for U-S19 smoke test
     INSERT INTO auth.users (
       instance_id, id, aud, role, email, encrypted_password,
       email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
