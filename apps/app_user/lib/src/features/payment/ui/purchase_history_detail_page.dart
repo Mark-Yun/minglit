@@ -63,7 +63,8 @@ class _PurchaseDetailBody extends ConsumerWidget {
           _DetailCard(
             child: InkWell(
               onTap: event != null
-                  ? () => EventDetailRoute(eventId: event.id).push<void>(context)
+                  ? () =>
+                        EventDetailRoute(eventId: event.id).push<void>(context)
                   : null,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -96,8 +97,10 @@ class _PurchaseDetailBody extends ConsumerWidget {
                         ),
                         const SizedBox(width: MinglitSpacing.xxsmall),
                         Text(
-                          DateFormat('M월 d일 (E) HH:mm', 'ko_KR')
-                              .format(event.startTime),
+                          DateFormat(
+                            'M월 d일 (E) HH:mm',
+                            'ko_KR',
+                          ).format(event.startTime),
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
@@ -444,7 +447,10 @@ class _PartnerInfoCard extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(Icons.chevron_right, color: theme.colorScheme.onSurfaceVariant),
+            Icon(
+              Icons.chevron_right,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
           ],
         ),
       ),
