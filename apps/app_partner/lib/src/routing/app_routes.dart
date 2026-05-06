@@ -21,6 +21,7 @@ import 'package:app_partner/src/features/onboarding/partner_welcome_page.dart';
 import 'package:app_partner/src/features/party/create/party_create_wizard_page.dart';
 import 'package:app_partner/src/features/party/detail/party_detail_page.dart';
 import 'package:app_partner/src/features/party/event/create/event_create_page.dart';
+import 'package:app_partner/src/features/party/event/detail/event_application_list_page.dart';
 import 'package:app_partner/src/features/party/event/detail/event_detail_page.dart';
 import 'package:app_partner/src/features/party/list/party_list_page.dart';
 import 'package:app_partner/src/features/party/recurrence/recurrence_management_screen.dart';
@@ -169,6 +170,10 @@ class NotificationCenterRoute extends GoRouteData
                         TypedGoRoute<TicketCreateRoute>(path: 'tickets/create'),
                         TypedGoRoute<TicketEditRoute>(
                           path: 'tickets/:ticketId/edit',
+                        ),
+                        // Fix #2224: Tab 구조 폐기 — 참가 신청 별도 라우트
+                        TypedGoRoute<EventApplicationListRoute>(
+                          path: 'applications',
                         ),
                       ],
                     ),
@@ -381,6 +386,22 @@ class TicketEditRoute extends GoRouteData with $TicketEditRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       TicketEditPage(partyId: partyId, eventId: eventId, ticketId: ticketId);
+}
+
+// Fix #2224: Tab 구조 폐기 — 참가 신청 심사를 별도 라우트로 분리
+class EventApplicationListRoute extends GoRouteData
+    with $EventApplicationListRoute {
+  const EventApplicationListRoute({
+    required this.partyId,
+    required this.eventId,
+    this.groupId,
+  });
+  final String partyId;
+  final String eventId;
+  final String? groupId;
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      EventApplicationListPage(eventId: eventId, groupId: groupId);
 }
 
 // 3. Settlement

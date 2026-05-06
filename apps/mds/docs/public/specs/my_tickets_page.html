@@ -7,12 +7,16 @@
 <style>
 /* ============================================================
    MyTicketsPage-specific atoms.
+
+   v2 — 활성 이벤트 lifecycle hub로 재정의. 다가오는·지난 timeline 뷰는
+   PurchaseHistory가 책임. MyTicketCard / TodayBanner / ResultPendingCard
+   는 모두 EventOngoingBanner atom으로 통합 (별도 spec).
+
    Tokens / chrome / mini-table은 /specs/_spec.css에서 import.
    ============================================================ */
 
-/* Scaffold = MinglitColors.surface (light gray #f9fafb). Cards use
-   ColorScheme.surface (= MinglitColors.background = #ffffff). AppBar
-   shares scaffold bg (elevation: 0 + surfaceTintColor transparent). */
+/* Scaffold = MinglitColors.surface (light gray #f9fafb). 카드 OngoingBanner는
+   color-background(흰) — gray 위에 흰 카드로 떠보이는 형태. */
 .tickets-viewport { background: var(--color-surface); }
 body.dark-mode .tickets-viewport { background: var(--color-dark-background); }
 
@@ -32,204 +36,93 @@ body.dark-mode .tickets-viewport { background: var(--color-dark-background); }
 body.dark-mode .tickets-appbar { background: var(--color-dark-background); }
 body.dark-mode .tickets-appbar h2 { color: var(--color-dark-text-primary); }
 
-.tickets-list { padding: 0; }
-
-/* --- Today banner --- */
-.today-banner {
-  margin: var(--spacing-medium) var(--spacing-screen-edge);
-  padding: var(--spacing-sm) var(--spacing-medium);
-  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
-  border: 1px solid color-mix(in srgb, var(--color-primary) 15%, transparent);
-  border-radius: var(--spacing-sm);
+/* List body — OngoingBanner들이 spacing-medium 간격으로 stack. */
+.tickets-list {
+  padding: var(--spacing-medium) 0;
   display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-}
-.today-banner__icon {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-small);
-  background: var(--color-primary);
-  color: var(--color-background);
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-}
-.today-banner__icon svg { width: 18px; height: 18px; }
-.today-banner__info { flex: 1; min-width: 0; }
-.today-banner__title {
-  font-size: var(--typography-font-size-body);
-  font-weight: 700;
-  color: var(--color-text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.today-banner__time {
-  font-size: var(--typography-font-size-caption);
-  font-weight: 500;
-  color: var(--color-primary);
-  margin-top: 2px;
-}
-.today-banner__qr {
-  border: none;
-  background: var(--color-primary);
-  color: var(--color-background);
-  padding: var(--spacing-xsmall2) var(--spacing-sm);
-  border-radius: var(--radius-small);
-  font-size: var(--typography-font-size-caption);
-  font-weight: 700;
-  flex-shrink: 0;
-  cursor: pointer;
+  flex-direction: column;
+  gap: 0; /* banner 자체 v-margin이 spacing-medium 이라 추가 gap 불필요 */
 }
 
-/* --- Section header (다가오는 이벤트 / 지난 이벤트) --- */
-.tickets-section-header {
-  padding: var(--spacing-large) var(--spacing-screen-edge) var(--spacing-sm);
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--color-text-secondary);
-  letter-spacing: 0.02em;
-}
-
-/* --- MyTicketCard --- */
-.ticket-card {
-  margin: var(--spacing-xsmall2) var(--spacing-screen-edge);
+/* --- OngoingBanner mockup (간소화 버전 — 본 contract은 event_ongoing_banner.html) --- */
+.ob-card {
+  margin: 0 var(--spacing-screen-edge) var(--spacing-medium);
   background: var(--color-background);
-  border: 1px solid var(--color-divider);
-  border-radius: var(--spacing-medium);
+  border-radius: var(--radius-card);
   padding: var(--spacing-medium);
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);
 }
-.ticket-card--past { opacity: 0.55; }
-body.dark-mode .ticket-card { background: var(--color-dark-surface); }
+body.dark-mode .ob-card { background: var(--color-dark-surface); }
 
-.ticket-card__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-/* D-Day chip */
-.dday-chip {
-  display: inline-flex;
-  align-items: center;
-  padding: var(--spacing-xxsmall) calc(var(--spacing-small) + 2px);
-  border-radius: var(--radius-chip);
-  font-size: 11px;
-  font-weight: 700;
-}
-.dday-chip--today {
-  background: var(--color-primary);
-  color: var(--color-background);
-}
-.dday-chip--upcoming {
-  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
-  color: var(--color-primary);
-}
-.dday-chip--past {
-  background: var(--color-surface);
-  color: var(--color-text-secondary);
-  border: 1px solid var(--color-divider);
-}
-
-/* Status badge (MinglitBadge — tinted bg + color text) */
-.status-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: var(--spacing-xsmall) var(--spacing-sm);
-  border-radius: var(--radius-small);
-  font-size: 12px;
-  font-weight: 600;
-}
-.status-badge--success {
-  background: rgba(22, 163, 74, 0.20);
-  color: var(--color-success);
-}
-.status-badge--warning {
-  background: rgba(245, 158, 11, 0.20);
-  color: var(--color-warning);
-}
-.status-badge--neutral {
-  background: rgba(107, 114, 128, 0.20);
-  color: var(--color-text-secondary);
-}
-
-/* Event info row */
-.ticket-card__info {
-  display: flex;
-  gap: var(--spacing-medium);
-  align-items: flex-start;
-}
-.ticket-card__thumb {
-  width: 80px;
-  height: 80px;
-  border-radius: var(--radius-small);
-  background: var(--color-surface);
-  display: grid;
-  place-items: center;
-  color: var(--color-text-secondary);
-  flex-shrink: 0;
-  overflow: hidden;
-}
-.ticket-card__thumb svg { width: 28px; height: 28px; }
-.ticket-card__text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--spacing-xsmall); }
-.ticket-card__title {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--color-text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.ticket-card__meta {
-  font-size: 12px;
-  color: var(--color-text-secondary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Divider */
-.ticket-card__divider {
-  height: 1px;
-  background: var(--color-divider);
-}
-
-/* Footer: ticket name + QR button */
-.ticket-card__footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+.ob-card__head {
+  display: flex; align-items: center; justify-content: space-between;
   gap: var(--spacing-sm);
 }
-.ticket-card__ticket-name {
-  flex: 1;
-  font-size: var(--typography-font-size-body);
+.ob-card__chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border-radius: var(--radius-chip);
+  font-size: 11px; font-weight: 700;
+}
+.ob-card__chip-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: currentColor;
+}
+.ob-card__chip--success { background: color-mix(in srgb, var(--color-success) 16%, transparent); color: var(--color-success); }
+.ob-card__chip--results { background: color-mix(in srgb, var(--color-primary) 14%, transparent); color: var(--color-primary); }
+.ob-card__chip--warning { background: color-mix(in srgb, var(--color-warning) 16%, transparent); color: var(--color-warning); }
+.ob-card__chip-dot--pulse { animation: tk-dot-pulse 1.4s ease-in-out infinite; }
+@keyframes tk-dot-pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+
+.ob-card__time {
+  font-size: 12px;
   color: var(--color-text-secondary);
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
-.ticket-card__qr {
-  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
-  color: var(--color-primary);
-  border: none;
-  padding: var(--spacing-xsmall2) var(--spacing-sm);
+.ob-card__time--strong { color: var(--color-primary); font-weight: 700; }
+
+.ob-card__info {
+  display: flex; gap: var(--spacing-sm); align-items: flex-start;
+}
+.ob-card__thumb {
+  width: 56px; height: 56px;
   border-radius: var(--radius-small);
-  font-size: 12px;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--spacing-xsmall);
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--color-primary) 30%, transparent),
+    color-mix(in srgb, var(--color-primary) 12%, transparent));
   flex-shrink: 0;
+}
+.ob-card__body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.ob-card__title {
+  font-size: 14px; font-weight: 700; color: var(--color-text-primary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ob-card__meta {
+  font-size: 12px; color: var(--color-text-secondary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.ob-card__action {
+  width: 100%; height: 44px;
+  border: none; border-radius: var(--radius-button);
+  background: var(--color-primary); color: var(--color-background);
+  font-size: 14px; font-weight: 700;
+  display: inline-flex; align-items: center; justify-content: center;
   cursor: pointer;
 }
-.ticket-card__qr svg { width: 16px; height: 16px; }
+.ob-card__action--pulse { animation: tk-action-pulse 1.6s ease-in-out infinite; }
+@keyframes tk-action-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-primary) 35%, transparent); }
+  50%      { box-shadow: 0 0 0 6px color-mix(in srgb, var(--color-primary)  0%, transparent); }
+}
+.ob-card__action--outline {
+  background: transparent;
+  color: var(--color-primary);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 35%, transparent);
+}
 
-/* --- Empty state (MinglitEmptyState fullPage) --- */
+/* --- Empty state (활성 이벤트 없음) --- */
 .tickets-empty {
   position: absolute;
   inset: 56px 0 0 0;
@@ -237,69 +130,79 @@ body.dark-mode .ticket-card { background: var(--color-dark-surface); }
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  padding: 0 var(--spacing-large);
   text-align: center;
-  padding: 0 var(--spacing-xlarge);
-  gap: var(--spacing-medium);
+  gap: var(--spacing-small);
 }
-.tickets-empty__icon { color: var(--color-text-secondary); opacity: 0.5; }
+.tickets-empty__icon {
+  width: 64px; height: 64px;
+  display: grid; place-items: center;
+  color: var(--color-text-secondary);
+}
 .tickets-empty__icon svg { width: 48px; height: 48px; }
 .tickets-empty__title {
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 16px; font-weight: 700;
   color: var(--color-text-primary);
+  margin-top: var(--spacing-small);
 }
 .tickets-empty__sub {
-  font-size: 14px;
+  font-size: 13px; line-height: 1.5;
   color: var(--color-text-secondary);
-  margin-top: calc(-1 * var(--spacing-small));
 }
-.tickets-empty__cta {
+.tickets-empty__links {
   margin-top: var(--spacing-medium);
-  padding: 12px 24px;
+  display: flex; flex-direction: column; gap: 8px; width: 80%;
+}
+.tickets-empty__link {
+  height: 40px;
+  border-radius: var(--radius-button);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700;
+}
+.tickets-empty__link--primary {
   background: var(--color-primary);
   color: var(--color-background);
-  border: none;
-  border-radius: var(--radius-button);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
+}
+.tickets-empty__link--outline {
+  background: transparent;
+  color: var(--color-primary);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 35%, transparent);
 }
 
-/* --- Loading state (MinglitCircularProgressIndicator centered) --- */
-.tickets-loading {
-  position: absolute;
-  inset: 56px 0 0 0;
-  display: grid;
-  place-items: center;
-}
-.tickets-spinner {
-  width: 36px; height: 36px;
-  border: 3px solid var(--color-divider);
-  border-top-color: var(--color-primary);
-  border-radius: 50%;
-  animation: tickets-spin 0.7s linear infinite;
-}
-@keyframes tickets-spin { to { transform: rotate(360deg); } }
-
-/* --- Error state (_DefaultErrorView) --- */
-.tickets-error {
+/* --- Auth guard (비로그인) --- */
+.tickets-auth {
   position: absolute;
   inset: 56px 0 0 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  text-align: center;
   padding: 0 var(--spacing-large);
-  gap: var(--spacing-small);
+  text-align: center;
 }
-.tickets-error__icon { color: var(--color-error); }
-.tickets-error__icon svg { width: 32px; height: 32px; }
-.tickets-error__title {
-  margin-top: var(--spacing-medium);
-  font-size: 16px;
-  font-weight: 700;
+.tickets-auth__icon {
+  display: grid; place-items: center;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-medium);
+}
+.tickets-auth__icon svg { width: 64px; height: 64px; }
+.tickets-auth__title {
+  font-size: 18px; font-weight: 700;
   color: var(--color-text-primary);
+}
+.tickets-auth__sub {
+  font-size: 13px; line-height: 1.5;
+  color: var(--color-text-secondary);
+  margin-top: var(--spacing-small);
+}
+.tickets-auth__cta {
+  margin-top: var(--spacing-xlarge);
+  padding: 12px 24px;
+  background: var(--color-primary);
+  color: white;
+  border-radius: var(--radius-button);
+  font-size: 14px;
+  font-weight: 600;
 }
 </style>
 </head>
@@ -316,7 +219,7 @@ body.dark-mode .ticket-card { background: var(--color-dark-surface); }
      📍 HEADER
      ============================================================ -->
 <header>
-  <h1>My Tickets</h1>
+  <h1>My Tickets Page</h1>
 </header>
 
 <!-- ============================================================
@@ -328,7 +231,7 @@ body.dark-mode .ticket-card { background: var(--color-dark-surface); }
     <tbody>
       <tr>
         <th style="width: 140px;">Status</th>
-        <td><strong>✅ 디자인완료</strong> <em style="color: var(--color-text-secondary);">— 4 state · today banner + upcoming/past split</em></td>
+        <td><strong>✅ 디자인완료</strong> <em style="color: var(--color-text-secondary);">— v2.0 · 활성 이벤트 lifecycle hub · 3 state · <a href="/specs/event_ongoing_banner.html"><code>OngoingBanner</code></a> stack</em></td>
       </tr>
       <tr>
         <th>App</th>
@@ -336,7 +239,7 @@ body.dark-mode .ticket-card { background: var(--color-dark-surface); }
       </tr>
       <tr>
         <th>Category</th>
-        <td>my · ticket</td>
+        <td>my · ticket · live event hub</td>
       </tr>
       <tr>
         <th>Route / Surface</th>
@@ -349,35 +252,35 @@ body.dark-mode .ticket-card { background: var(--color-dark-surface); }
       <tr>
         <th>Hierarchy</th>
         <td>
-          <strong>Parent</strong>: <a href="/specs/my_page.html"><code>MyPage</code></a> <em style="color: var(--color-text-secondary);">(MyPage "활동 → 내 티켓" tile에서 진입)</em><br>
-          <strong>Children</strong>: <em>—</em> <em style="color: var(--color-text-secondary);">(QR 버튼은 <code>TicketQRRoute</code>로 이동, card 탭은 <code>EventDetailRoute</code>로 push — 별도 spec)</em>
+          <strong>Parent</strong>: <a href="/specs/my_page.html"><code>MyPage</code></a> "활동 → 내 티켓" tile에서 진입.<br>
+          <strong>Children</strong>: <a href="/specs/event_ongoing_banner.html"><code>EventOngoingBanner</code></a> atom × N (활성 이벤트별 1개) — 각 banner footer 탭 시 routed sheet 5종(check-in / checked-in / matching / results / review)으로 진입. <a href="/specs/event_now_bar.html"><code>EventNowBar</code></a>와 동일한 sheet endpoint 공유.
         </td>
       </tr>
       <tr>
         <th>Purpose</th>
         <td>
-          사용자가 신청/구매한 active 티켓(<code>paid</code> / <code>approved</code> 등)을 한곳에서 확인할 수 있는 단일 list 화면.
-          오늘 시작하는 이벤트는 상단 banner로 강조하고, 나머지는 "다가오는 이벤트 / 지난 이벤트" 두 섹션으로 시간순 정렬한다.
+          <strong>활성 이벤트 lifecycle 액션 hub</strong> — "지금·오늘·결과 대기" actionable 카드만 노출. 진행 중이거나 결과 공개됐거나 체크인 안 한 이벤트들이 OngoingBanner stack으로 쌓임.
+          다가오는 / 지난 이벤트 timeline 뷰는 <a href="/specs/purchase_history_page.html">PurchaseHistory</a>에 위임 — 이 페이지는 actionable에만 집중.
         </td>
       </tr>
       <tr>
         <th>User journey</th>
         <td>
-          <strong>Entry points</strong>: 마이 페이지 "내 티켓" 항목 / 결제 완료 후 푸시 알림 / 외부 딥링크.<br>
-          <strong>Exit points</strong>: 오늘 배너 또는 다가오는 카드의 "입장 QR" 탭 → 입장 QR 화면 · 카드 본체 탭 → 이벤트 상세 화면 · 빈 상태 CTA "이벤트 둘러보기" → 홈 · 뒤로 가기 → 마이 페이지로 복귀.
+          <strong>Entry points</strong>: MyPage "활동 → 내 티켓" tile / 결제 완료·매칭 시작·결과 공개 푸시 알림에서 deep-link.<br>
+          <strong>Exit points</strong>: OngoingBanner footer action 탭 → routed sheet (5종) · 카드 본체 탭 → EventDetailRoute · empty state "구매내역 보기" → PurchaseHistory · "이벤트 둘러보기" → HomePage · 뒤로 가기 → MyPage.
         </td>
       </tr>
       <tr>
         <th>Background</th>
         <td>
-          티켓이 단순 리스트로만 늘어나면 "오늘 갈 이벤트"가 묻혀버려 입장 시 우왕좌왕한다 — 오늘 시작하는 이벤트를 화면 상단 배너로 분리 노출한다.
-          다가오는 이벤트는 가까운 순, 지난 이벤트는 최근 순으로 정렬해 일반적인 캘린더 시간 흐름을 따른다.
-          지난 이벤트 카드는 옅게 톤 다운되고 입장 QR 버튼이 사라져 "끝난 것"을 시각적으로 명확히 한다.
+          v1.0은 Today banner + 다가오는/지난 list로 구성됐으나, 다가오는·지난 timeline은 PurchaseHistory가 이미 cover하므로 중복.
+          v2에서 미션을 <strong>"actionable 이벤트 hub"</strong>로 재정의 — 사용자 시간 압박이 큰 시점(입장 직전 · 매칭 시작 · 결과 공개)에 진입하면 즉시 action 버튼이 보이는 단순한 페이지.
+          MyTicketCard / TodayBanner / ResultPendingCard 모두 OngoingBanner atom으로 통합 (phase prop 분기). EventNowBar(HomePage 하단 64px shortcut)와 같은 lifecycle 모델 + sheet endpoint 공유 — sync source는 backend.
         </td>
       </tr>
       <tr>
         <th>Frequency</th>
-        <td>이벤트 당일 입장 직전 + 일정 확인 시 — 활성 사용자 기준 이벤트 사이클당 1-3회.</td>
+        <td>이벤트 사이클당 1-3회 — 입장 직전 / 매칭 시작 / 결과 확인 시점에 진입.</td>
       </tr>
     </tbody>
   </table>
@@ -388,9 +291,7 @@ body.dark-mode .ticket-card { background: var(--color-dark-surface); }
      ============================================================ -->
 <section class="doc">
   <h2>History</h2>
-  <p class="intro">
-    이 spec의 주요 변경 이력. 최신 항목 위.
-  </p>
+  <p class="intro">이 spec의 주요 변경 이력. 최신 항목 위.</p>
   <table class="ref">
     <thead>
       <tr>
@@ -402,10 +303,18 @@ body.dark-mode .ticket-card { background: var(--color-dark-surface); }
     </thead>
     <tbody>
       <tr>
+        <td>2026-05-03</td>
+        <td>2.0</td>
+        <td>mark-yun</td>
+        <td>
+          <strong>활성 이벤트 lifecycle hub로 재정의</strong>. 기존 Today banner / 다가오는 / 지난 3섹션 구조 폐기 → <a href="/specs/event_ongoing_banner.html">OngoingBanner</a> atom stack으로 통합. MyTicketCard / TodayBanner / ResultPendingCard sub-anatomy 모두 OngoingBanner로 흡수 (phase prop 분기). 다가오는·지난 timeline은 PurchaseHistory에 위임. State: 4 → 3 (Default with banners / Empty / Logged out · Loading-Error는 AsyncValueWidget 표준).
+        </td>
+      </tr>
+      <tr>
         <td>2026-05-01</td>
         <td>1.0</td>
         <td>mark-yun</td>
-        <td>v1.4 template으로 작성. 4 state(Default with tickets / Empty / Loading / Error) mini-table, today banner / upcoming / past 3 sub-anatomy, MyTicketCard atom 분해(D-Day chip · StatusBadge · 80×80 thumbnail · QR button).</td>
+        <td>v1.4 template으로 작성. 4 state mini-table, today banner / upcoming / past 3 sub-anatomy, MyTicketCard atom 분해.</td>
       </tr>
     </tbody>
   </table>
@@ -426,18 +335,17 @@ body.dark-mode .ticket-card { background: var(--color-dark-surface); }
   <div class="perspective__header">
     <span class="glyph">🧱</span>
     <h2>Layout</h2>
-    <span class="lede">AppBar + ListView. 조건부 today banner, 그 다음 upcoming / past 두 section. card 사이 vertical xsmall2 (6px) gap.</span>
+    <span class="lede">AppBar + scroll body — OngoingBanner stack(다발 가능) 또는 empty state. 단순 단층 구조.</span>
   </div>
 
   <section class="doc">
     <h2>Blueprint &amp; tree</h2>
     <p class="intro">
-      Scaffold + AppBar (title "내 티켓") + ListView. 첫 child는 todayEvent가 있을 때만 today banner — 그 외엔 곧장 "다가오는 이벤트" section header로 시작.
-      list 끝에는 spacing-large(24px) bottom padding (SizedBox).
+      Scaffold + AppBar(title "내 티켓") + ListView. 활성 이벤트가 있으면 <a href="/specs/event_ongoing_banner.html">OngoingBanner</a>들이 시간순 정렬로 stack. 활성 이벤트가 없으면 empty state 카드 노출.
+      섹션 헤더 / 그룹 분리 없이 <strong>flat list</strong> — 모든 banner가 동등한 actionable 카드로 보임.
     </p>
-
     <div class="layout-grid">
-      <div class="blueprint" style="height: 600px;">
+      <div class="blueprint" style="height: 480px;">
         <div class="blueprint__region blueprint__region--full"></div>
 
         <!-- AppBar -->
@@ -445,60 +353,39 @@ body.dark-mode .ticket-card { background: var(--color-dark-surface); }
           <span class="blueprint__region-label">① AppBar — "내 티켓"</span>
         </div>
 
-        <!-- Today banner -->
-        <div class="blueprint__region blueprint__region--shaded" style="top:72px;left:16px;right:16px;height:60px;">
-          <span class="blueprint__region-label">② Today banner (조건부)<br>todayEvent != null일 때만</span>
+        <!-- Banner 1 -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:88px;left:16px;right:16px;height:140px;">
+          <span class="blueprint__region-label">② OngoingBanner #1 (가장 시급한 phase 위에)</span>
         </div>
 
-        <!-- Upcoming section header -->
-        <div class="blueprint__region" style="top:156px;left:16px;right:16px;height:32px;">
-          <span class="blueprint__region-label">③ Section header — "다가오는 이벤트"</span>
+        <!-- Banner 2 -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:244px;left:16px;right:16px;height:140px;">
+          <span class="blueprint__region-label">③ OngoingBanner #2 (다발 시 stack)</span>
         </div>
 
-        <!-- Upcoming card -->
-        <div class="blueprint__region blueprint__region--shaded" style="top:196px;left:16px;right:16px;height:160px;">
-          <span class="blueprint__region-label">④ Upcoming card (n개)</span>
-        </div>
-
-        <!-- Past section header -->
-        <div class="blueprint__region" style="top:380px;left:16px;right:16px;height:32px;">
-          <span class="blueprint__region-label">⑤ Section header — "지난 이벤트"</span>
-        </div>
-
-        <!-- Past card -->
-        <div class="blueprint__region blueprint__region--shaded" style="top:420px;left:16px;right:16px;height:140px;">
-          <span class="blueprint__region-label">⑥ Past card (opacity 0.55 · QR 없음)</span>
-        </div>
-
-        <div class="blueprint__align-marker" style="bottom:8px;right:8px;">+ spacing-large 24 (bottom)</div>
+        <div class="blueprint__align-marker" style="bottom:8px;right:8px;">+ 활성 banner N개 가능</div>
       </div>
 
       <div class="layout-tree"><b>Scaffold</b>
-└─ <b>AppBar</b>(<i>title: "내 티켓"</i>)                        ← ①
-└─ <b>MinglitAsyncValueWidget&lt;MyTicketsState&gt;</b>
-   └─ data: <b>ListView</b>
-      ├─ <em>if todayEvent != null</em>
-      │  └─ <b>_TodayBanner</b>                                    ← ②
-      │     ├─ Container 36×36 primary bg + Icons.calendar_today
-      │     ├─ Column(title bodyMedium w700 + timeLabel bodySmall primary)
-      │     └─ TextButton "입장 QR" (filled · primary)
-      │
-      ├─ <em>if upcoming.isNotEmpty</em>
-      │  ├─ <b>_SectionHeader</b>("다가오는 이벤트")             ← ③
-      │  │  └─ labelLarge w700 onSurfaceVariant · pad-large/sm
-      │  └─ <b>MyTicketCard</b>(isPast: false) × n              ← ④
-      │     └─ Card · 1px outlineVariant · radius-medium · pad-medium
-      │        ├─ Header: <em>_DDayChip</em> + <em>StatusBadge</em>
-      │        ├─ Info row: 80×80 thumb + Column(title · date · location)
-      │        ├─ Divider 1px outlineVariant
-      │        └─ Footer: ticket name + TextButton "입장 QR"
-      │
-      ├─ <em>if past.isNotEmpty</em>
-      │  ├─ <b>_SectionHeader</b>("지난 이벤트")                ← ⑤
-      │  └─ <b>MyTicketCard</b>(isPast: true) × n              ← ⑥
-      │     <em>(opacity: 0.55 · footer QR 버튼 미렌더)</em>
-      │
-      └─ SizedBox(height: <i>spacing-large</i>)</div>
+└─ <b>AppBar</b>(<i>title: "내 티켓"</i>)                       ← ①
+└─ <b>MinglitAsyncValueWidget&lt;ActiveBannerList&gt;</b>
+   ├─ data:
+   │  └─ <em>if banners.isNotEmpty</em>
+   │     └─ <b>ListView</b> · vertical · spacing-medium gap
+   │        └─ <a href="/specs/event_ongoing_banner.html"><b>EventOngoingBanner</b></a> × N    ← ②③
+   │           <i>(phase별 정렬 — Behavior 참조)</i>
+   │
+   ├─ data + empty:
+   │  └─ <b>_TicketsEmptyState</b>
+   │     ├─ Icon (ticket_outlined · 64px · onSurfaceVariant)
+   │     ├─ Title "활성 이벤트가 없어요"
+   │     ├─ Sub "다가올 이벤트와 지난 회고는 구매내역에서 볼 수 있어요"
+   │     └─ Actions (vertical stack)
+   │        ├─ "구매내역 보기" primary → PurchaseHistoryRoute
+   │        └─ "이벤트 둘러보기" outline → HomeRoute
+   │
+   └─ unauthenticated:
+      └─ <b>_AuthGuard</b> (Icon + 로그인 안내 + LoginRoute CTA)</div>
     </div>
 
     <table class="ref" style="margin-top: 16px;">
@@ -511,30 +398,9 @@ body.dark-mode .ticket-card { background: var(--color-dark-surface); }
         </tr>
       </thead>
       <tbody>
-        <tr><td>—</td><td>Body padding</td><td>—</td><td>card 자체 margin: <code>spacing-screen-edge (16)</code> horizontal · <code>spacing-xsmall2 (6)</code> vertical</td></tr>
-        <tr><td>①</td><td>AppBar</td><td>title left (Material default · auto-back arrow)</td><td>height: 56 · scaffold gray bg · <strong>border-bottom 없음</strong></td></tr>
-        <tr><td>②</td><td>Today banner</td><td>Padding(h: screen-edge · v: medium)</td><td>내부 padding: h-medium / v-sm · radius-sm · primary 8% bg + 15% border · 36×36 icon + Column + QR TextButton</td></tr>
-        <tr><td>③⑤</td><td>_SectionHeader</td><td>left-align text</td><td>padding: l/r screen-edge (16) · top large (24) · bottom sm (12) · labelLarge w700 onSurfaceVariant</td></tr>
-        <tr><td>④⑥</td><td>MyTicketCard</td><td>edge h-margin: screen-edge · v: xsmall2</td><td>padding all: medium (16) · radius-medium (16) · 1px outlineVariant border · elevation 0 · header→info: sm · info→divider: sm · divider→footer: sm</td></tr>
-        <tr><td>—</td><td>list bottom</td><td>—</td><td>SizedBox height <code>spacing-large (24)</code></td></tr>
-      </tbody>
-    </table>
-  </section>
-
-  <section class="doc">
-    <h2>MyTicketCard sub-anatomy</h2>
-    <p class="intro">
-      재사용 atom (이 화면 한정). isPast prop 하나로 4가지가 같이 변함: opacity · D-Day chip 색 · QR 버튼 노출 · D-Day 라벨("종료" vs "D-N" / "D-Day").
-    </p>
-    <table class="ref">
-      <thead>
-        <tr><th style="width: 200px;">Region</th><th>Alignment</th><th>Notes</th></tr>
-      </thead>
-      <tbody>
-        <tr><td>Header (D-Day + StatusBadge)</td><td>spaceBetween · 좌우 끝 정렬</td><td>D-Day chip은 <code>_DDayChip</code> 내부 widget — 시작시간 기반 분기 (D-Day / D-N / 종료)</td></tr>
-        <tr><td>Info row</td><td>start cross-axis</td><td>thumb 80×80 (radius-small) · 16px gap · 우측 Column(title titleSmall w700 maxLines 1 ellipsis · date bodySmall · location bodySmall optional)</td></tr>
-        <tr><td>Divider</td><td>—</td><td>1px outlineVariant · sm v-padding 양쪽</td></tr>
-        <tr><td>Footer</td><td>spaceBetween</td><td>좌측 ticket name (bodyMedium · onSurfaceVariant · ellipsis) · 우측 TextButton.icon "입장 QR" (Icons.qr_code_2 18px · primary tint bg · primary fg)</td></tr>
+        <tr><td>—</td><td>Body padding</td><td>—</td><td>vertical: <code>spacing-medium (16)</code> · horizontal: 0 (banner 자체에 좌우 padding)</td></tr>
+        <tr><td>①</td><td>AppBar</td><td>title only · scaffold gray bg · no border</td><td>height: 56 · <code>surfaceTintColor: transparent</code> · elevation 0</td></tr>
+        <tr><td>②③</td><td>OngoingBanner stack</td><td>vertical · 시간순 / phase 시급도 정렬</td><td>각 banner v-margin <code>spacing-medium (16)</code> · h-margin <code>spacing-screen-edge (16)</code> · 자세한 시각 contract은 <a href="/specs/event_ongoing_banner.html">event_ongoing_banner</a> spec</td></tr>
       </tbody>
     </table>
   </section>
@@ -547,148 +413,127 @@ body.dark-mode .ticket-card { background: var(--color-dark-surface); }
   <div class="perspective__header">
     <span class="glyph">🎨</span>
     <h2>States</h2>
-    <span class="lede">4가지 시각 변형. baseline = Default(티켓 보유). 데이터를 불러오는 동안 Loading, 결과가 비어있으면 Empty, 실패 시 Error로 분기된다.</span>
+    <span class="lede">3가지 변형 — Default(banner stack) / Empty(활성 X) / Logged out(auth guard). banner 내부 phase 분기는 OngoingBanner spec에서 다룸.</span>
   </div>
 
   <section class="doc">
     <p class="intro">
-      <strong>State 식별 기준</strong>: 티켓 데이터를 불러오는 동안 Loading, 결과를 받으면 Default(보유) 또는 Empty(없음), 실패하면 Error로 분기된다. 비로그인 사용자는 빈 결과로 처리되어 Empty 화면이 보인다.
+      <strong>State 식별 기준</strong>: ① 로그인 여부 (비로그인이면 auth guard) → ② 활성 banner 데이터 (있으면 stack, 없으면 empty). 데이터 로딩 / 에러는 표준 <code>MinglitAsyncValueWidget</code>이 처리(spinner / retry).
     </p>
 
-    <!-- State 1: Default with tickets (baseline) -->
+    <!-- State 1: Default — banner stack -->
     <table class="ref state-mini is-baseline-tint">
       <thead>
-        <tr><th colspan="3"><strong>Default · 티켓 보유</strong> 🎯 <small>baseline · 오늘 배너와 다가오는/지난 이벤트가 함께 노출된 상태</small></th></tr>
+        <tr><th colspan="3"><strong>Default · 활성 이벤트 있음</strong> 🎯 <small>baseline · 1개 이상의 OngoingBanner stack</small></th></tr>
       </thead>
       <tbody>
         <tr>
           <td class="state-mini__mock" rowspan="6">
-            <div class="viewport tickets-viewport">
+            <div class="viewport tickets-viewport" style="height: 480px;">
               <div class="tickets-appbar"><h2>내 티켓</h2></div>
               <div class="tickets-list">
-                <!-- Today banner -->
-                <div class="today-banner">
-                  <div class="today-banner__icon">
-                    <!-- Icons.calendar_today · 18px · onPrimary -->
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+
+                <!-- Banner 1: results 미확인 (가장 시급 — pulse 강조) -->
+                <div class="ob-card">
+                  <div class="ob-card__head">
+                    <span class="ob-card__chip ob-card__chip--results">
+                      <span class="ob-card__chip-dot ob-card__chip-dot--pulse"></span>결과 공개됨
+                    </span>
+                    <span class="ob-card__time">어제 진행</span>
                   </div>
-                  <div class="today-banner__info">
-                    <div class="today-banner__title">금요일 와인 모임</div>
-                    <div class="today-banner__time">오늘 19:00 시작</div>
+                  <div class="ob-card__info">
+                    <div class="ob-card__thumb"></div>
+                    <div class="ob-card__body">
+                      <div class="ob-card__title">루프탑 라운지 · 강남</div>
+                      <div class="ob-card__meta">매치 결과를 확인해보세요</div>
+                      <div class="ob-card__meta">5월 2일 금 · 19:00</div>
+                    </div>
                   </div>
-                  <button class="today-banner__qr">입장 QR</button>
+                  <button class="ob-card__action ob-card__action--pulse">매칭 결과 보기</button>
                 </div>
 
-                <!-- Upcoming section -->
-                <div class="tickets-section-header">다가오는 이벤트</div>
-
-                <!-- Upcoming card 1 -->
-                <div class="ticket-card">
-                  <div class="ticket-card__header">
-                    <span class="dday-chip dday-chip--upcoming">D-3</span>
-                    <span class="status-badge status-badge--success">결제완료</span>
+                <!-- Banner 2: matchingReady (action 단계) -->
+                <div class="ob-card">
+                  <div class="ob-card__head">
+                    <span class="ob-card__chip" style="background: var(--color-primary); color: var(--color-background);">
+                      <span class="ob-card__chip-dot ob-card__chip-dot--pulse" style="background: white;"></span>매칭 시작
+                    </span>
+                    <span class="ob-card__time ob-card__time--strong">지금 시작 가능</span>
                   </div>
-                  <div class="ticket-card__info">
-                    <div class="ticket-card__thumb">
-                      <!-- Icons.event · 28px · onSurfaceVariant -->
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="12" cy="15" r="2"/></svg>
-                    </div>
-                    <div class="ticket-card__text">
-                      <div class="ticket-card__title">스피드 데이팅 · 강남 라운지</div>
-                      <div class="ticket-card__meta">5월 4일 (월) 20:00</div>
-                      <div class="ticket-card__meta">강남역 5번 출구 · 라운지B</div>
+                  <div class="ob-card__info">
+                    <div class="ob-card__thumb"></div>
+                    <div class="ob-card__body">
+                      <div class="ob-card__title">한강 피크닉 · 잠원</div>
+                      <div class="ob-card__meta">참가자 18명</div>
+                      <div class="ob-card__meta">이벤트 종료 1시간 전부터 매칭 가능</div>
                     </div>
                   </div>
-                  <div class="ticket-card__divider"></div>
-                  <div class="ticket-card__footer">
-                    <span class="ticket-card__ticket-name">스탠다드 입장권</span>
-                    <button class="ticket-card__qr">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><line x1="14" y1="14" x2="14" y2="21"/><line x1="18" y1="14" x2="18" y2="18"/><line x1="21" y1="14" x2="21" y2="21"/><line x1="14" y1="21" x2="21" y2="21"/></svg>
-                      입장 QR
-                    </button>
-                  </div>
+                  <button class="ob-card__action ob-card__action--pulse">매칭 시작하기</button>
                 </div>
 
-                <!-- Past section -->
-                <div class="tickets-section-header">지난 이벤트</div>
-
-                <!-- Past card -->
-                <div class="ticket-card ticket-card--past">
-                  <div class="ticket-card__header">
-                    <span class="dday-chip dday-chip--past">종료</span>
-                    <span class="status-badge status-badge--success">결제완료</span>
+                <!-- Banner 3: waiting (passive) -->
+                <div class="ob-card">
+                  <div class="ob-card__head">
+                    <span class="ob-card__chip ob-card__chip--warning">
+                      <span class="ob-card__chip-dot"></span>곧 시작
+                    </span>
+                    <span class="ob-card__time">매칭 2시간 후 시작</span>
                   </div>
-                  <div class="ticket-card__info">
-                    <div class="ticket-card__thumb">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="12" cy="15" r="2"/></svg>
-                    </div>
-                    <div class="ticket-card__text">
-                      <div class="ticket-card__title">봄 가든 파티</div>
-                      <div class="ticket-card__meta">4월 20일 (일) 18:00</div>
-                      <div class="ticket-card__meta">서울숲 가든존</div>
+                  <div class="ob-card__info">
+                    <div class="ob-card__thumb"></div>
+                    <div class="ob-card__body">
+                      <div class="ob-card__title">와인 바 · 성수</div>
+                      <div class="ob-card__meta">서울 성동구 성수동</div>
+                      <div class="ob-card__meta">5월 4일 일 · 19:00 시작</div>
                     </div>
                   </div>
-                  <div class="ticket-card__divider"></div>
-                  <div class="ticket-card__footer">
-                    <span class="ticket-card__ticket-name">얼리버드 입장권</span>
-                    <!-- past card: QR 버튼 미렌더 -->
-                  </div>
+                  <button class="ob-card__action ob-card__action--outline" style="margin-bottom: 8px;">길찾기</button>
+                  <button class="ob-card__action">입장 QR 보기</button>
                 </div>
               </div>
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>로그인된 사용자가 유효한 티켓을 1개 이상 보유한 상태.</td>
+          <td>로그인된 상태로 진입했고 활성 이벤트(waiting ~ results 확인 / noShow phase 중 어떤 것이든)가 1개 이상 존재하는 경우. banner stack으로 노출.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ① <strong>오늘 배너의 "입장 QR" 탭</strong> → <a href="/specs/ticket_qr_screen.html">입장 QR 화면</a>으로 이동.<br>
-            ② <strong>다가오는 카드 본체 탭</strong> → <a href="/specs/event_detail_page.html">이벤트 상세 화면</a>으로 이동.<br>
-            ③ <strong>다가오는 카드의 "입장 QR" 탭</strong> → 입장 QR 화면으로 이동.<br>
-            ④ <strong>지난 카드 탭</strong> → 이벤트 상세 화면 (조회만, 입장 QR 없음).<br>
-            ⑤ <strong>스크롤</strong> → 다가오는 이벤트 → 지난 이벤트 순으로 이어 노출.<br>
-            ⑥ <strong>뒤로 가기</strong> → 마이 페이지로 복귀.
+            ① <strong>OngoingBanner footer action 탭</strong> — 현재 phase에 맞는 routed sheet로 진입 (5종 — check-in / checked-in / matching / results / review).<br>
+            ② <strong>"길찾기" outline 탭</strong> (waiting · checkInReady에만 노출) — 외부 지도 앱 호출.<br>
+            ③ <strong>카드 본체(thumb / title) 탭</strong> — EventDetailRoute push (이벤트 정보 재확인).<br>
+            ④ <strong>뒤로 가기</strong> — MyPage로 복귀.
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · 오늘 시작하는 이벤트가 없으면 상단 배너 없이 곧장 "다가오는 이벤트" 섹션으로 시작한다.<br>
-            · 지난 이벤트만 있고 다가오는 이벤트가 없으면 "다가오는 이벤트" 섹션 헤더 자체가 그려지지 않는다.<br>
-            · 연결된 이벤트 정보를 찾지 못한 티켓은 지난 이벤트 영역의 맨 끝에 배치된다.<br>
-            · D-Day 칩: 오늘이면 채워진 강조 톤 "D-Day", 다가오는 이벤트는 옅은 강조 톤 "D-N", 지난 이벤트는 회색 외곽선 톤 "종료"로 보인다.<br>
-            · 상태 뱃지: 결제완료/승인 → success(초록), 검토 대기 → warning(노랑), 결제 대기 → info(파랑), 취소 → neutral(회색), 거절/결제 실패 → error(빨강).
+            · banner는 phase 시급도 → 시간 임박 순으로 정렬 (Behavior 참조).<br>
+            · 다발 케이스 흔함 — "어제 결과 미확인 + 오늘 시작 예정" 동시 노출.<br>
+            · banner 내부 phase 분기 / sub-state는 <a href="/specs/event_ongoing_banner.html">OngoingBanner</a> spec에서 다룸 — 여기서는 stack 컨테이너만 책임.
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
           <td>
-            · <code>Scaffold</code> + <code>AppBar(title: Text('내 티켓'))</code> — Material default (auto-back arrow when pushed)<br>
-            · <a href="/components#MinglitAsyncValueWidget"><code>MinglitAsyncValueWidget&lt;MyTicketsState&gt;</code></a> 외곽 wrapping<br>
-            · <code>ListView</code> (default scrollable)<br>
-            · <code>_TodayBanner</code> (private · 36×36 primary container + Icons.calendar_today + Column(title bodyMedium w700 + timeLabel bodySmall primary) + filled primary TextButton "입장 QR")<br>
-            · <code>_SectionHeader</code> (private · labelLarge w700 onSurfaceVariant · letter-spacing 0.02 · pad-large/sm)<br>
-            · <code>MyTicketCard</code> (Opacity wrap + Card 1px outlineVariant + InkWell + Padding-medium + Column with header/info/divider/footer)<br>
-            · <code>_DDayChip</code> (private · radius-chip · 3 분기 — D-Day filled · D-N tinted · 종료 surface+border)<br>
-            · <a href="/components#StatusBadge"><code>StatusBadge</code></a> (= MinglitBadge tinted bg + color text · 8 status 분기)<br>
-            · <code>MinglitImage</code> (event.imageUrl 있을 때) 또는 ColoredBox + Icons.event fallback<br>
-            · <code>TextButton.icon</code>(Icons.qr_code_2) — primary 8% bg + primary fg
+            · <code>Scaffold</code> + <code>AppBar(title: "내 티켓")</code><br>
+            · <code>MinglitAsyncValueWidget&lt;ActiveBannerList&gt;</code> (loading spinner / error retry 표준 처리)<br>
+            · <code>ListView</code> · vertical · phase 시급도 정렬<br>
+            · <a href="/specs/event_ongoing_banner.html"><code>EventOngoingBanner</code></a> × N (phase prop으로 시각 분기)
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
           <td>
-            · color: <code>color-surface</code> (scaffold + AppBar bg · light gray), <code>color-background</code> (card bg · 흰색), <code>color-primary</code> (today banner icon bg · D-Day chip · QR 버튼), <code>color-text-primary</code> (title), <code>color-text-secondary</code> (meta · onSurfaceVariant · section header), <code>color-divider</code> (outlineVariant · card border · in-card divider), 의미론적 status: <code>color-success</code> · <code>color-warning</code> · <code>color-error</code> · <code>color-text-secondary</code> (cancelled neutral)<br>
-            · radius: <code>radius-medium</code> (16 · card · today banner — code uses MinglitSpacing.medium for radius), <code>radius-small</code> (8 · thumb · today icon · QR 버튼), <code>radius-chip</code> (100 · D-Day chip), <code>radius-button</code> (12 · empty CTA — Material default)<br>
-            · spacing: <code>spacing-screen-edge</code> (16 · 좌우 외곽), <code>spacing-medium</code> (16 · today banner v · card padding all · today banner internal h), <code>spacing-sm</code> (12 · today banner internal v · card 내부 gap · today banner icon→info gap), <code>spacing-large</code> (24 · section header top · list bottom), <code>spacing-xsmall2</code> (6 · card v-margin · QR 버튼 v-padding), <code>spacing-xsmall</code> (4 · status badge v-pad · card text gap), <code>spacing-xxsmall</code> (2 · D-Day chip v-pad)<br>
-            · opacity: <code>MinglitOpacity.activeChip = 0.08</code> (today banner bg · QR 버튼 bg), <code>placeholder = 0.15</code> (today banner border), <code>highlight = 0.10</code> (D-N chip bg)<br>
-            · typography: appBarTitle (18/600 · "내 티켓"), titleSmall w700 (event title), bodyMedium w700 (today banner title), bodySmall (date · location · timeLabel · ticket name), labelMedium w700 (today banner QR 버튼), labelSmall w700 (D-Day chip)
+            · color: <code>color-surface</code>(scaffold), <code>color-background</code>(banner card surface), <code>color-text-primary</code>(title), <code>color-text-secondary</code>(meta)<br>
+            · spacing: <code>spacing-medium</code>(banner v-margin · body v-padding), <code>spacing-screen-edge</code>(banner h-margin)<br>
+            · radius: <code>radius-card</code>(banner)<br>
+            · 그 외 token은 OngoingBanner spec 참조
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 mockup은 콘텐츠 1개씩 압축해 보여준다. 실제 화면에서는 다가오는/지난 이벤트가 각각 여러 개 시간순으로 이어진다. 오늘 시작하는 이벤트는 상단 배너로 한 번만 노출된다.</td>
+          <td>📝 mockup은 다발 케이스(3 banner stack) 예시 — 실제로는 0~N개 가변. flat list라 섹션 헤더 없음 — 모든 banner가 동등한 actionable 카드.</td>
         </tr>
       </tbody>
     </table>
@@ -696,153 +541,118 @@ body.dark-mode .ticket-card { background: var(--color-dark-surface); }
     <!-- State 2: Empty -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Empty · 티켓 없음</strong> <small>보유한 티켓이 없을 때</small></th></tr>
+        <tr><th colspan="3"><strong>Empty · 활성 이벤트 없음</strong> <small>활성 banner 0개 — 구매내역 / 둘러보기로 안내</small></th></tr>
       </thead>
       <tbody>
         <tr>
           <td class="state-mini__mock" rowspan="6">
-            <div class="viewport tickets-viewport">
+            <div class="viewport tickets-viewport" style="height: 480px; position: relative;">
               <div class="tickets-appbar"><h2>내 티켓</h2></div>
               <div class="tickets-empty">
                 <div class="tickets-empty__icon">
-                  <!-- Icons.confirmation_number_outlined · MinglitIconSize.display (48) · outline -->
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 10V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v4a2 2 0 1 1 0 4v4a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-4a2 2 0 1 1 0-4z"/><line x1="9" y1="9" x2="9" y2="11"/><line x1="9" y1="13" x2="9" y2="15"/></svg>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M22 10V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v4a2 2 0 1 1 0 4v4a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-4a2 2 0 1 1 0-4z"/>
+                    <line x1="9" y1="9" x2="9" y2="11"/>
+                    <line x1="9" y1="13" x2="9" y2="15"/>
+                  </svg>
                 </div>
-                <div class="tickets-empty__title">아직 티켓이 없어요</div>
-                <div class="tickets-empty__sub">관심 있는 이벤트를 찾아보세요</div>
-                <button class="tickets-empty__cta">이벤트 둘러보기</button>
+                <div class="tickets-empty__title">활성 이벤트가 없어요</div>
+                <div class="tickets-empty__sub">다가올 이벤트와 지난 회고는<br>구매내역에서 볼 수 있어요</div>
+                <div class="tickets-empty__links">
+                  <a class="tickets-empty__link tickets-empty__link--primary">구매내역 보기</a>
+                  <a class="tickets-empty__link tickets-empty__link--outline">이벤트 둘러보기</a>
+                </div>
               </div>
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>오늘/다가오는/지난 이벤트가 모두 없는 상태. 비로그인 사용자도 동일하게 보인다.</td>
+          <td>로그인 상태이고 데이터 로드 완료 — 활성 banner 0개. 가장 흔한 진입 케이스 중 하나 (이벤트 사이클 사이의 평소 시점).</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            · 카드/배너가 없으므로 리스트 영역의 액션은 없다.<br>
-            · <strong>"이벤트 둘러보기" 탭</strong> → 홈 화면으로 이동.<br>
-            · 뒤로 가기 → 마이 페이지로 복귀.
+            ① <strong>"구매내역 보기" primary 탭</strong> → PurchaseHistoryRoute (다가올·지난 이벤트 timeline)<br>
+            ② <strong>"이벤트 둘러보기" outline 탭</strong> → HomeRoute (이벤트 추천 feed)<br>
+            ③ <strong>뒤로 가기</strong> → MyPage 복귀
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · 비로그인 사용자가 직접 링크로 진입해도 동일한 빈 상태로 보인다 — 별도의 로그인 강제 안내는 없다.<br>
-            · 결제 직후 데이터가 반영되지 않은 짧은 순간에는 Empty가 잠시 보일 수 있다.<br>
-            · 모든 티켓이 취소/거절 상태라면 유효한 티켓이 없는 것으로 간주되어 Empty가 노출된다.
+            · 사용자가 결제는 했는데 ended 이후로만 들어왔다면 empty 상태 (회고는 PurchaseHistory에).<br>
+            · 신규 가입 직후 결제 0건이면 동일하게 empty — sub 카피가 동일하게 작동 (구매내역으로 보내면 또 empty겠지만 거기서도 추천 link).
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
-          <td>↔ ListView / banner / cards 전부 → <a href="/components#MinglitEmptyState"><code>MinglitEmptyState</code></a> (fullPage variant)<br>· icon: Icons.confirmation_number_outlined · 48px · outline color<br>· title: "아직 티켓이 없어요" titleMedium onSurface<br>· subtitle: "관심 있는 이벤트를 찾아보세요" bodyMedium onSurfaceVariant<br>· FilledButton "이벤트 둘러보기" (CTA — fullPage variant 한정)</td>
+          <td>
+            ↔ Default 대비 body 영역만 변경:<br>
+            ↔ Scaffold · AppBar · MinglitAsyncValueWidget 동일<br>
+            + <code>_TicketsEmptyState</code>(private widget · Center+Column · Icon + title + sub + 2 button stack)<br>
+            − ListView / OngoingBanner stack 미사용
+          </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
           <td>
-            ↔ list 토큰 미사용. <code>color-surface</code> scaffold 유지.<br>
-            + spacing: <code>spacing-xlarge</code> (32 · 외곽 padding · MinglitEmptyState 내부), <code>spacing-medium</code> (16 · icon→title), <code>spacing-small</code> (8 · title→sub), <code>spacing-large</code> (24 · sub→CTA)<br>
-            + color: <code>outline</code> (icon · onSurfaceVariant 보다 진함), <code>onSurface</code> (title), <code>onSurfaceVariant</code> (sub), <code>color-primary</code> (FilledButton bg), <code>color-background</code> (FilledButton fg)<br>
-            + typography: titleMedium · bodyMedium · button label
+            ↔ Default +<br>
+            + <code>color-text-secondary</code>(icon · sub text)<br>
+            + <code>spacing-large</code>(empty wrapper h-padding · icon → title gap)<br>
+            + <code>radius-button</code>(link button)
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 비로그인과 진짜 빈 상태가 같은 화면으로 합쳐진다 — 정상 진입 경로상 비로그인 사용자가 이 화면에 거의 도달하지 않기 때문에 동일한 화면으로 단순화한다.</td>
+          <td>📝 empty는 부정적 톤 X — "할 거 있을 때 다시 와요" 보다 "구매내역 / 둘러보기로 가요"의 forward-leaning 메시지. 사용자가 잘못 들어온 게 아님을 명시.</td>
         </tr>
       </tbody>
     </table>
 
-    <!-- State 3: Loading -->
+    <!-- State 3: Logged out -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Loading</strong> <small>티켓 정보를 불러오는 동안</small></th></tr>
+        <tr><th colspan="3"><strong>Logged out · 비로그인</strong> <small>auth guard — 일반적인 사용자 흐름엔 거의 안 보임</small></th></tr>
       </thead>
       <tbody>
         <tr>
           <td class="state-mini__mock" rowspan="6">
-            <div class="viewport tickets-viewport">
+            <div class="viewport tickets-viewport" style="height: 480px; position: relative;">
               <div class="tickets-appbar"><h2>내 티켓</h2></div>
-              <div class="tickets-loading">
-                <div class="tickets-spinner"></div>
-              </div>
-            </div>
-          </td>
-          <td class="state-mini__aspect">조건</td>
-          <td>화면 진입 직후부터 티켓 정보를 받아오기 전까지의 짧은 사이.</td>
-        </tr>
-        <tr>
-          <td class="state-mini__aspect">사용자 액션</td>
-          <td>· 본문 영역에 카드가 없어 별도 액션은 없다.<br>· 뒤로 가기 → 마이 페이지로 복귀.</td>
-        </tr>
-        <tr>
-          <td class="state-mini__aspect">에지케이스</td>
-          <td>
-            · 네트워크가 느리면 스피너가 더 길게 보일 수 있다.<br>
-            · 인증 만료 등으로 데이터를 못 받으면 Error 상태로 자연스럽게 전이된다.<br>
-            · 이미 한 번 데이터를 받아둔 뒤 재진입하면 기존 화면을 그대로 보여주고 갱신은 백그라운드에서 진행된다.
-          </td>
-        </tr>
-        <tr>
-          <td class="state-mini__aspect">컴포넌트</td>
-          <td>↔ list 전체 → <code>MinglitCircularProgressIndicator</code> (MinglitAsyncValueWidget의 default loading) · 화면 중앙</td>
-        </tr>
-        <tr>
-          <td class="state-mini__aspect">토큰</td>
-          <td>− list 토큰 모두 미사용<br>+ <code>color-primary</code> (spinner 색)<br>+ <code>color-surface</code> (scaffold bg 유지)</td>
-        </tr>
-        <tr>
-          <td class="state-mini__aspect">노트</td>
-          <td>📝 보통 0.2 ~ 0.5초 정도 짧게 지나간다. 상단 AppBar는 이 동안에도 그대로 보인다.</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <!-- State 4: Error -->
-    <table class="ref state-mini">
-      <thead>
-        <tr><th colspan="3"><strong>Error</strong> <small>fetch 실패 — 네트워크 / RLS / 서버</small></th></tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td class="state-mini__mock" rowspan="6">
-            <div class="viewport tickets-viewport">
-              <div class="tickets-appbar"><h2>내 티켓</h2></div>
-              <div class="tickets-error">
-                <div class="tickets-error__icon">
-                  <!-- Icons.error_outline · 32px (xlarge) · color.error -->
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="13"/><circle cx="12" cy="16.5" r="0.7" fill="currentColor"/></svg>
+              <div class="tickets-auth">
+                <div class="tickets-auth__icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="12" cy="8" r="4"/>
+                    <path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8"/>
+                  </svg>
                 </div>
-                <div class="tickets-error__title">오류가 발생했습니다.</div>
+                <div class="tickets-auth__title">로그인이 필요합니다</div>
+                <div class="tickets-auth__sub">로그인하고 내 티켓을 확인해보세요</div>
+                <div class="tickets-auth__cta">로그인</div>
               </div>
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td><code>stateAsync.hasError</code> — repository / 네트워크 / RLS 거부 등 throw</td>
+          <td>로그인되지 않은 상태에서 진입(외부 딥링크 등 예외적 케이스). 일반 사용자는 MyPage 자체가 auth guard라 드물게 발생.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>− list 액션 모두 없음<br>동일: 뒤로 가기 → MyPage 복귀<br>− 화면 내 재시도 버튼 없음 (오류 상세도 표시되지 않음)</td>
+          <td>+ "로그인" CTA 탭 → LoginRoute (성공 시 자동 복귀).</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>
-            · <code>showErrorDetails</code>가 false라 에러 본문은 stack trace 등 노출 안 됨 — 디버깅 시엔 logger / Sentry 확인<br>
-            · refresh 트리거가 명시적으로 없으므로 사용자는 "뒤로 → 다시 진입"으로 retry 해야 함<br>
-            · 인증 토큰 만료도 동일 error 화면 (별도 분기 없음)
-          </td>
+          <td>· 로그인 성공 후 자동으로 Default 또는 Empty로 분기 (banner 데이터 fetch 결과 따라).</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
-          <td>↔ list 전체 → <code>MinglitAsyncValueWidget</code>의 default error → <code>_DefaultErrorView</code> (Icons.error_outline xlarge + Text "오류가 발생했습니다." titleMedium bold)</td>
+          <td>↔ Default body 영역만 변경 → <code>_AuthGuard</code>(Icon + title + sub + MinglitButton).</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
-          <td>− list 토큰 모두 미사용<br>+ <code>color-error</code> (icon)<br>+ <code>color-text-primary</code> (title)<br>+ spacing: <code>spacing-large</code> (외곽 padding · MinglitAsyncValueWidget 내부), <code>spacing-medium</code> (icon → title)</td>
+          <td>↔ Default + <code>color-primary</code>(CTA bg) + <code>spacing-xlarge</code>(sub → CTA gap).</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 화면 내 재시도 CTA가 없는 게 약점 — Phase 2에서 재시도 버튼 추가 검토.</td>
+          <td>📝 거의 안 보이는 예외 상태 — 메인 동선은 MyPage auth guard에서 잡힘.</td>
         </tr>
       </tbody>
     </table>
@@ -857,8 +667,37 @@ body.dark-mode .ticket-card { background: var(--color-dark-surface); }
   <div class="perspective__header">
     <span class="glyph">🔄</span>
     <h2>Global Behavior</h2>
-    <span class="lede">cross-cutting — 모든 state에 적용되는 액션, motion, 글로벌 에지케이스.</span>
+    <span class="lede">stack 정렬 / phase 전환 motion / EventNowBar와의 동기화 / 다발 케이스.</span>
   </div>
+
+  <section class="doc">
+    <h2>Stack 정렬 우선순위</h2>
+    <p class="intro">활성 banner가 다발일 때 시급도 + 시간 임박 순으로 정렬. <a href="/specs/event_ongoing_banner.html">OngoingBanner</a> spec의 phase 우선순위와 동일.</p>
+    <table class="ref">
+      <thead>
+        <tr><th>우선 순위</th><th>Phase</th><th>이유</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>1</td><td>checkInReady · matchingReady · results 미확인</td><td>action — pulse 강조 · 즉시 사용자 입력 필요</td></tr>
+        <tr><td>2</td><td>matching</td><td>passive — 결과 대기 중</td></tr>
+        <tr><td>3</td><td>results 확인 완료</td><td>passive — 회고 진입 (outline)</td></tr>
+        <tr><td>4</td><td>checkedIn</td><td>passive — 자동 전환 대기</td></tr>
+        <tr><td>5</td><td>waiting</td><td>passive — 시작 전 대기</td></tr>
+        <tr><td>6</td><td>noShow</td><td>passive — 정보성 (액션 없음)</td></tr>
+      </tbody>
+    </table>
+    <p class="intro" style="margin-top: 8px;">같은 우선 순위 내에서는 시간 임박 순 (이벤트 시작 시각 / 종료 시각 가까운 것이 위).</p>
+  </section>
+
+  <section class="doc">
+    <h2>EventNowBar와의 동기화</h2>
+    <ul class="notes">
+      <li><a href="/specs/event_now_bar.html">EventNowBar</a>(HomePage 하단 64px shortcut)는 활성 이벤트 1건의 phase 1-5만 안내 — 같은 lifecycle 데이터를 공유.</li>
+      <li>EventNowBar에서 sheet 진입 → mutation → MyTicketsPage banner도 즉시 phase 갱신 (반대 방향도 동일).</li>
+      <li>phase 6(results)부터는 OngoingBanner 전속 — EventNowBar는 결과 안내까진 안 감.</li>
+      <li>noShow alt path / 결과 확인 여부 / 1주일 보관 등 lifecycle 정책은 모두 backend가 진실 source.</li>
+    </ul>
+  </section>
 
   <section class="doc">
     <h2>Cross-cutting interactions</h2>
@@ -867,69 +706,11 @@ body.dark-mode .ticket-card { background: var(--color-dark-surface); }
         <tr><th style="width: 220px;">사용자 액션</th><th>화면에 보이는 결과</th></tr>
       </thead>
       <tbody>
-        <tr>
-          <td>뒤로 가기 (시스템 back · AppBar back)</td>
-          <td>MyPage로 복귀 (Material default pop transition).</td>
-        </tr>
-        <tr>
-          <td>다크 모드 토글</td>
-          <td>scaffold / card / today banner 모두 dark 토큰으로 자동 swap. D-Day chip primary 색은 그대로 (브랜드 보라 유지).</td>
-        </tr>
-        <tr>
-          <td>card / today banner / QR 버튼 tap haptic</td>
-          <td>InkWell ripple + Material default haptic light. past card도 ripple은 동일 (opacity 0.55가 시각적으로만 흐릿 — disabled 아님).</td>
-        </tr>
-        <tr>
-          <td>풀-다운 새로고침</td>
-          <td><strong>구현 안 됨</strong> — ListView 위에 RefreshIndicator 미부착. invalidate 트리거 없음 (Phase 2 후보).</td>
-        </tr>
-        <tr>
-          <td>외부 push 알림 (이벤트 시작 임박)</td>
-          <td>direct deep-link은 보통 EventDetail로 — MyTickets는 일반적인 사용자 진입 경로(MyPage 경유)만 다룸.</td>
-        </tr>
-      </tbody>
-    </table>
-  </section>
-
-  <section class="doc">
-    <h2>Motion timing</h2>
-    <p class="intro">
-      Source: <code>shared/packages/mds/core/lib/src/theme/minglit_design_tokens.dart</code>
-    </p>
-    <table class="ref">
-      <thead>
-        <tr>
-          <th style="width: 240px;">Transition</th>
-          <th style="width: 200px;">Token / Duration</th>
-          <th>Notes</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>화면 진입 (MyPage → MyTickets)</td>
-          <td><code>MinglitAnimation.fast</code> (200ms)</td>
-          <td>GoRouter Material default 좌→우 slide.</td>
-        </tr>
-        <tr>
-          <td>card 탭 → EventDetail push</td>
-          <td><code>MinglitAnimation.medium</code> (350ms)</td>
-          <td><code>MinglitPageTransitions.sharedAxisScaled</code> — EventDetailRoute 정의에 명시.</td>
-        </tr>
-        <tr>
-          <td>QR 버튼 → TicketQR push</td>
-          <td><code>MinglitAnimation.fast</code> (200ms)</td>
-          <td>GoRouter default — TicketQRRoute는 커스텀 transition 미지정.</td>
-        </tr>
-        <tr>
-          <td>Loading → Default state 교체</td>
-          <td>cut</td>
-          <td>MinglitAsyncValueWidget은 AsyncValue.when 직접 분기 — fade 없이 교체.</td>
-        </tr>
-        <tr>
-          <td>InkWell ripple (card · banner · QR)</td>
-          <td><code>MinglitAnimation.micro</code> (100ms)</td>
-          <td>Material default ripple expand.</td>
-        </tr>
+        <tr><td>뒤로 가기 (시스템 back · AppBar back)</td><td>MyPage로 복귀.</td></tr>
+        <tr><td>다크 모드 토글</td><td>scaffold·banner card·empty illust 모두 다크 토큰으로 자동 전환.</td></tr>
+        <tr><td>새로 banner 추가됨 (push 도착 등)</td><td>list 상단에 슬라이드 다운 + opacity fade-in (300ms · MinglitAnimation.medium).</td></tr>
+        <tr><td>banner 제거됨 (1주일 만료 / 결과 확인 후 1주일)</td><td>opacity fade-out → height collapse (200ms · MinglitAnimation.fast).</td></tr>
+        <tr><td>list 끝 도달</td><td>banner 마지막 카드 아래 spacing-medium 여백 후 safeArea로 자연스럽게 마감 (load more 없음 — 활성 이벤트는 finite).</td></tr>
       </tbody>
     </table>
   </section>
@@ -937,10 +718,10 @@ body.dark-mode .ticket-card { background: var(--color-dark-surface); }
   <section class="doc">
     <h2>Global edge cases</h2>
     <ul class="notes">
-      <li><strong>todayEvent 추출 시점</strong> — <code>build()</code> 호출 시 <code>DateTime.now()</code> 기준. 화면 떠 있는 동안 자정이 지나도 자동 재계산 안 됨 (재진입 시 갱신).</li>
-      <li><strong>past sort fallback</strong> — event 관계 끊긴 ticket은 startTime이 <code>DateTime(0)</code>로 처리되어 past 맨 끝에 배치 (orphan 정렬 안전장치).</li>
-      <li><strong>QR navigation</strong> — TicketEventMeta가 GoRouterState.extra로 전달되어 URL deep-link로는 메타가 안 보임. share-link 유즈케이스 부적합 (의도된 제약).</li>
-      <li><strong>Hot reload 시 stale data</strong> — Riverpod 관행대로 invalidate 호출 안 하면 캐시 유지. 결제 직후 push되더라도 invalidate 트리거가 없으면 빈 채로 보일 수 있음.</li>
+      <li><strong>네트워크 끊김</strong> — 마지막 캐시된 banner stack 그대로 유지 + Snackbar "오프라인" 안내. 개별 banner 액션은 시도 시 retry prompt.</li>
+      <li><strong>이벤트 cancel</strong> — banner는 다음 새로고침 시 사라지고 PurchaseHistory에 환불 진행 카드로 이관.</li>
+      <li><strong>phase 동기화 지연</strong> — backend / 클라이언트 phase 불일치 시 polling 또는 push로 자동 보정 (EventNowBar와 동일 동작).</li>
+      <li><strong>매우 많은 활성 이벤트 (10+)</strong> — 이론상 가능하나 실제 사용자 동시 활성은 ≤3건 수준. ListView가 vertical scroll 처리.</li>
     </ul>
   </section>
 </div>
@@ -952,54 +733,51 @@ body.dark-mode .ticket-card { background: var(--color-dark-surface); }
   <div class="perspective__header">
     <span class="glyph">📖</span>
     <h2>Reference</h2>
-    <span class="lede">implementation source + 인접 화면.</span>
+    <span class="lede">implementation source + 인접 spec.</span>
   </div>
 
   <section class="doc">
     <h2>Implementation source</h2>
     <table class="ref">
       <tbody>
-        <tr><th style="width: 200px;">Widget</th><td><code>MyTicketsPage</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/my_tickets/ui/my_tickets_page.dart"><code>apps/app_user/lib/src/features/my_tickets/ui/my_tickets_page.dart</code></a></td></tr>
-        <tr><th>Card atom</th><td><code>MyTicketCard</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/my_tickets/ui/my_ticket_card.dart"><code>apps/app_user/lib/src/features/my_tickets/ui/my_ticket_card.dart</code></a> (private <code>_DDayChip</code> 포함)</td></tr>
-        <tr><th>Controller</th><td><code>MyTicketsController</code> + <code>MyTicketsState</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/my_tickets/logic/my_tickets_controller.dart"><code>apps/app_user/lib/src/features/my_tickets/logic/my_tickets_controller.dart</code></a> (Fix #639 · upcoming/past 분리 + todayEvent 추출)</td></tr>
-        <tr><th>Route</th><td><code>MyTicketsRoute</code> · <code>/tickets/my</code> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/routing/app_routes.dart"><code>app_routes.dart</code></a></td></tr>
-        <tr><th>Navigation</th><td><code>appCoordinatorProvider</code> — <code>pushEventDetail(eventId)</code> · <code>pushTicketQR(ticketId, eventMeta:)</code> · <code>goToHome()</code> (Fix #852 · cross-feature import 제거)</td></tr>
-        <tr><th>Repository</th><td><code>eventRepositoryProvider.getMyTickets(userId)</code> — Supabase에서 <code>EventApplication</code> list 가져옴 (active status 필터)</td></tr>
-        <tr><th>Async wrapper</th><td><a href="/components#MinglitAsyncValueWidget"><code>MinglitAsyncValueWidget</code></a> — loading/error/data 3-way 자동 처리 · default loading: <code>MinglitCircularProgressIndicator</code> · default error: <code>_DefaultErrorView</code></td></tr>
-        <tr><th>Empty state atom</th><td><a href="/components#MinglitEmptyState"><code>MinglitEmptyState</code></a> — fullPage variant (icon 48 outline + title + subtitle + FilledButton CTA)</td></tr>
-        <tr><th>StatusBadge</th><td><a href="/components#StatusBadge"><code>StatusBadge</code></a> = <a href="/components#MinglitBadge"><code>MinglitBadge</code></a>(label, color) · 8 status 분기 (Fix #1236, #1541)</td></tr>
-        <tr><th>TicketEventMeta</th><td><code>TicketEventMeta</code>(eventTitle · eventDateTime · eventVenue · ticketName) — <code>GoRouterState.extra</code>로 TicketQR에 전달 (Fix #1526)</td></tr>
-        <tr><th>Icons (Material)</th><td><code>calendar_today</code> (today banner) · <code>event</code> (thumb fallback) · <code>qr_code_2</code> (card QR 버튼) · <code>confirmation_number_outlined</code> (empty icon) · <code>error_outline</code> (error icon)</td></tr>
-        <tr><th>Sort behavior</th><td>upcoming: <code>startTime ASC</code> (가까운 이벤트 먼저) · past: <code>startTime DESC</code> (최근 종료 먼저, orphan은 끝)</td></tr>
-        <tr><th>todayEvent 추출</th><td>upcoming list를 순회하며 <code>todayStart ≤ startTime &lt; todayEnd</code> 첫 매치 (asc 정렬 덕에 가장 임박한 1건)</td></tr>
+        <tr><th style="width: 200px;">Widget</th><td><code>MyTicketsPage</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/tickets/my_tickets_page.dart"><code>apps/app_user/lib/src/features/tickets/my_tickets_page.dart</code></a> (v2 폴리시 적용 예정)</td></tr>
+        <tr><th>Route</th><td><code>MyTicketsRoute</code> · <code>/tickets/my</code></td></tr>
+        <tr><th>OngoingBanner atom</th><td><a href="/specs/event_ongoing_banner.html"><code>EventOngoingBanner</code></a> — 8 visible state + 1 hidden · phase prop 분기 · 5 sheet endpoint 공유</td></tr>
+        <tr><th>Provider</th><td><code>activeEventBannersProvider</code> — phase 시급도 정렬된 active banner list 제공. EventNowBar와 같은 source.</td></tr>
+        <tr><th>Backend</th><td><code>event_applications.match_results_viewed_at</code> — 결과 확인 여부. 1주일 보관 정책은 server-side timestamp 비교로 enforce.</td></tr>
+        <tr><th>Empty state copy</th><td>"활성 이벤트가 없어요" / "다가올 이벤트와 지난 회고는 구매내역에서 볼 수 있어요"</td></tr>
       </tbody>
     </table>
   </section>
 
   <section class="doc">
-    <h2>Related screens</h2>
+    <h2>Related screens / atoms</h2>
     <table class="ref">
       <thead><tr><th style="width: 240px;">Spec</th><th>Relation</th></tr></thead>
       <tbody>
         <tr>
+          <td><a href="/specs/event_ongoing_banner.html"><code>EventOngoingBanner</code></a></td>
+          <td>이 페이지의 핵심 atom — list 안의 모든 카드. phase별 시각/액션 분기 풀세트.</td>
+        </tr>
+        <tr>
           <td><a href="/specs/my_page.html"><code>MyPage</code></a></td>
-          <td>유일한 정상 진입점 — "활동 → 내 티켓" tile 탭.</td>
+          <td>유일한 진입 surface — "활동 → 내 티켓" tile.</td>
         </tr>
         <tr>
-          <td><a href="/specs/event_detail_page.html"><code>EventDetailPage</code></a></td>
-          <td>card 본체 탭 시 push (sharedAxisScaled 350ms).</td>
+          <td><a href="/specs/purchase_history_page.html"><code>PurchaseHistory</code></a></td>
+          <td>다가오는 / 지난 이벤트 timeline 위임 — empty state primary CTA의 목적지.</td>
         </tr>
         <tr>
-          <td><a href="/specs/ticket_qr_screen.html"><code>TicketQRScreen</code></a></td>
-          <td>upcoming/today QR 버튼 탭 시 push. eventMeta는 extra로 전달.</td>
+          <td><a href="/specs/event_now_bar.html"><code>EventNowBar</code></a></td>
+          <td>HomePage 하단 64px shortcut — 같은 lifecycle 데이터 공유 · phase 1-5만 cover.</td>
         </tr>
         <tr>
           <td><a href="/specs/home_page.html"><code>HomePage</code></a></td>
-          <td>Empty state CTA "이벤트 둘러보기" 탭 시 이동.</td>
+          <td>empty state outline CTA "이벤트 둘러보기" 목적지.</td>
         </tr>
         <tr>
           <td><a href="/specs/login_page.html"><code>LoginPage</code></a></td>
-          <td>비로그인 사용자가 이 화면에 도달하면 controller가 빈 state 반환 → Empty 표시. 로그인 강제 redirect는 없음 (MyPage 측 auth guard로 사실상 차단).</td>
+          <td>logged-out auth guard CTA 목적지.</td>
         </tr>
       </tbody>
     </table>

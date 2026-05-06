@@ -1,5 +1,52 @@
 part of 'event_repository.dart';
 
+// Fix #2224: extracted for testability — maps a flat get_event_applications_with_user
+// RPC row to an EventApplication-compatible JSON map (nested user + ticket).
+// @visibleForTesting via the 'event_application_rpc_mapping_test.dart' test.
+Map<String, dynamic> mapEventApplicationRpcRow(Map<String, dynamic> map) {
+  return {
+    'id': map['application_id'],
+    'event_id': map['event_id'],
+    'ticket_id': map['ticket_id'],
+    'user_id': map['user_id'],
+    'payment_id': map['payment_id'],
+    'payment_amount': map['payment_amount'],
+    'status': map['status'],
+    'created_at': map['created_at'],
+    'updated_at': map['updated_at'],
+    'refund_status': map['refund_status'] ?? 'none',
+    'user': (map['user_name'] != null || map['user_phone'] != null)
+        ? {
+            'id': map['user_id'],
+            'name': map['user_name'],
+            'username': '',
+            'phone_number': map['user_phone'],
+          }
+        : null,
+    'submission': null,
+    // Fix #2224: build nested 'ticket' object from flat RPC columns so
+    // that EventApplicationListView can filter by entry group without a
+    // separate round-trip.
+    'ticket': map['ticket_id'] != null && map['ticket_name'] != null
+        ? {
+            'id': map['ticket_id'].toString(),
+            'name': map['ticket_name'] as String? ?? '',
+            'created_at':
+                map['ticket_created_at']?.toString() ??
+                DateTime.now().toIso8601String(),
+            'updated_at':
+                map['ticket_updated_at']?.toString() ??
+                DateTime.now().toIso8601String(),
+            'target_entry_group_ids':
+                (map['target_entry_group_ids'] as List?)
+                    ?.map((e) => e.toString())
+                    .toList() ??
+                [],
+          }
+        : null,
+  };
+}
+
 mixin _EventRepositoryApplicationQueries on _SupabaseEventContext {
   /// Fetches applications for a specific event.
   Future<List<EventApplication>> getApplicationsByEventId(
@@ -13,38 +60,13 @@ mixin _EventRepositoryApplicationQueries on _SupabaseEventContext {
                 params: {'p_event_id': eventId},
               )
               as List;
-      final result = data.map((json) {
-        final map = json as Map<String, dynamic>;
-        // RPC returns flat columns: application_id, event_id, ticket_id,
-        // user_id, payment_id, payment_amount, status, created_at, updated_at,
-        // user_name, user_phone
-
-        // Map to EventApplication model format
-        // (which expects 'id' not 'application_id')
-        final appMap = <String, dynamic>{
-          'id': map['application_id'],
-          'event_id': map['event_id'],
-          'ticket_id': map['ticket_id'],
-          'user_id': map['user_id'],
-          'payment_id': map['payment_id'],
-          'payment_amount': map['payment_amount'],
-          'status': map['status'],
-          'created_at': map['created_at'],
-          'updated_at': map['updated_at'],
-          'refund_status': map['refund_status'] ?? 'none',
-          // Build nested 'user' object from flat RPC columns
-          'user': (map['user_name'] != null || map['user_phone'] != null)
-              ? {
-                  'id': map['user_id'],
-                  'name': map['user_name'],
-                  'username': '',
-                  'phone_number': map['user_phone'],
-                }
-              : null,
-          'submission': null, // Not returned by RPC
-        };
-        return EventApplication.fromJson(appMap);
-      }).toList();
+      final result = data
+          .map(
+            (json) => EventApplication.fromJson(
+              mapEventApplicationRpcRow(json as Map<String, dynamic>),
+            ),
+          )
+          .toList();
       return result;
     } catch (e, st) {
       Log.e('❌ [EventRepo] getApplicationsByEventId Error', e, st);

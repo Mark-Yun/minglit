@@ -1,69 +1,7 @@
+import 'package:app_partner/src/features/home/home_event_phase.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
-
-/// Phase of the nearest event, determines UI and available actions.
-enum EventPhase {
-  recruiting, // > 3 hours until start
-  preparing, // <= 3 hours until start
-  live, // started, not ended
-  ended, // ended within 24 hours
-}
-
-/// Determines the phase of an event based on current time.
-EventPhase getEventPhase(Event event) {
-  final now = DateTime.now();
-  final start = event.startTime;
-  final end = event.endTime;
-
-  if (now.isAfter(end)) return EventPhase.ended;
-  if (now.isAfter(start)) return EventPhase.live;
-  // Fix #523: <= 3 으로 수정 — enum 문서 "preparing: <= 3시간" 경계와 일치
-  if (start.difference(now).inHours <= 3) return EventPhase.preparing;
-  return EventPhase.recruiting;
-}
-
-/// Selects the most relevant event to display in the action card.
-/// Priority: live > preparing > ended (within 24h) > recruiting (soonest).
-Event? selectPrimaryEvent(List<Event> events) {
-  if (events.isEmpty) return null;
-
-  final now = DateTime.now();
-  final cutoff = now.subtract(const Duration(hours: 24));
-
-  Event? bestLive;
-  Event? bestPreparing;
-  Event? bestEnded;
-  Event? bestRecruiting;
-
-  for (final e in events) {
-    final phase = getEventPhase(e);
-    switch (phase) {
-      case EventPhase.live:
-        if (bestLive == null || e.startTime.isBefore(bestLive.startTime)) {
-          bestLive = e;
-        }
-      case EventPhase.preparing:
-        if (bestPreparing == null ||
-            e.startTime.isBefore(bestPreparing.startTime)) {
-          bestPreparing = e;
-        }
-      case EventPhase.ended:
-        if (e.endTime.isAfter(cutoff)) {
-          if (bestEnded == null || e.endTime.isAfter(bestEnded.endTime)) {
-            bestEnded = e;
-          }
-        }
-      case EventPhase.recruiting:
-        if (bestRecruiting == null ||
-            e.startTime.isBefore(bestRecruiting.startTime)) {
-          bestRecruiting = e;
-        }
-    }
-  }
-
-  return bestLive ?? bestPreparing ?? bestEnded ?? bestRecruiting;
-}
 
 /// The main event action card on the home dashboard.
 /// Shows the nearest event with phase-appropriate actions.
@@ -105,7 +43,8 @@ class EventActionCard extends StatelessWidget {
       EventPhase.recruiting => (
         _recruitingLabel(event),
         MinglitColors.success,
-        // Fix #957: highlight (0.1) preserves original event phase background intensity
+        // Fix #957: highlight (0.1) preserves original event phase
+        // background intensity
         MinglitColors.success.withValues(alpha: MinglitOpacity.highlight),
         colorScheme.outlineVariant,
         colorScheme.surfaceContainerLowest,

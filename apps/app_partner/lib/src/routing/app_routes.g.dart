@@ -271,6 +271,10 @@ RouteBase get $partnerShellRoute => StatefulShellRouteData.$route(
                           path: 'tickets/:ticketId/edit',
                           factory: $TicketEditRoute._fromState,
                         ),
+                        GoRouteData.$route(
+                          path: 'applications',
+                          factory: $EventApplicationListRoute._fromState,
+                        ),
                       ],
                     ),
                   ],
@@ -793,6 +797,36 @@ mixin $TicketEditRoute on GoRouteData {
   @override
   String get location => GoRouteData.$location(
     '/more/parties/${Uri.encodeComponent(_self.partyId)}/events/${Uri.encodeComponent(_self.eventId)}/tickets/${Uri.encodeComponent(_self.ticketId)}/edit',
+  );
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+mixin $EventApplicationListRoute on GoRouteData {
+  static EventApplicationListRoute _fromState(GoRouterState state) =>
+      EventApplicationListRoute(
+        partyId: state.pathParameters['partyId']!,
+        eventId: state.pathParameters['eventId']!,
+        groupId: state.uri.queryParameters['group-id'],
+      );
+
+  EventApplicationListRoute get _self => this as EventApplicationListRoute;
+
+  @override
+  String get location => GoRouteData.$location(
+    '/more/parties/${Uri.encodeComponent(_self.partyId)}/events/${Uri.encodeComponent(_self.eventId)}/applications',
+    queryParams: {if (_self.groupId != null) 'group-id': _self.groupId},
   );
 
   @override
