@@ -45,10 +45,8 @@ class PartyListItem extends StatelessWidget {
             // ── Region 1: Hero (2:1 image) ────────────────────────────────
             _HeroRegion(party: party),
 
-            // ── Inset divider ─────────────────────────────────────────────
-            _InsetDivider(),
-
             // ── Region 2: Body (title + location) ─────────────────────────
+            // Fix #2201: spec says Hero ↔ Body has no divider
             _BodyRegion(party: party),
 
             // ── Inset divider ─────────────────────────────────────────────
@@ -260,13 +258,41 @@ class _BodyRegion extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            party.title,
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  party.title,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              // Fix #2201: optional draft chip per spec title-row blueprint
+              if (party.status == 'draft') ...[
+                const SizedBox(width: MinglitSpacing.xxsmall),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: MinglitSpacing.xsmall,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.secondaryContainer,
+                    borderRadius: BorderRadius.circular(MinglitRadius.chip),
+                  ),
+                  child: Text(
+                    context.l10n.partyList_badge_draft,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onSecondaryContainer,
+                      fontSize: 10,
+                    ),
+                  ),
+                ),
+              ],
+            ],
           ),
           if (party.location != null) ...[
             const SizedBox(height: MinglitSpacing.xxsmall),
