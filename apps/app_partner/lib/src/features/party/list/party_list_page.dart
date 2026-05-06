@@ -1,9 +1,28 @@
 import 'package:app_partner/src/features/party/list/party_list_controller.dart';
 import 'package:app_partner/src/features/party/list/party_list_coordinator.dart';
 import 'package:app_partner/src/features/party/list/widgets/party_list_item.dart';
-import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
+
+// Fix #2200: AppBar info → help sheet 패턴 적용 (QR 아이콘 제거 — Checkin 탭 진입으로 대체)
+const _kPartyHelpSections = [
+  HelpSection(
+    title: '파티가 뭔가요?',
+    body: '소셜 이벤트를 기획하고 운영하는 단위예요. 파티 안에 여러 이벤트를 만들어 참가자를 모집할 수 있어요.',
+  ),
+  HelpSection(
+    title: '이벤트와 파티의 차이는?',
+    body: '파티는 큰 틀(브랜드·카테고리), 이벤트는 실제 모임 일정이에요. 파티 하나에 이벤트를 여러 개 만들 수 있어요.',
+  ),
+  HelpSection(
+    title: '파티 상태는 어떻게 달라지나요?',
+    body: '임시저장(draft) → 게시(published) 순이에요. 게시 상태여야 참가자가 이벤트를 발견하고 신청할 수 있어요.',
+  ),
+  HelpSection(
+    title: '이벤트를 만들려면?',
+    body: '파티를 게시한 뒤 파티 상세에서 "+ 이벤트 추가"를 눌러요. 체크인은 하단 체크인 탭에서 QR 스캔으로 진행해요.',
+  ),
+];
 
 class PartyListPage extends ConsumerWidget {
   const PartyListPage({super.key});
@@ -15,13 +34,17 @@ class PartyListPage extends ConsumerWidget {
 
     return Scaffold(
       appBar: MinglitTheme.simpleAppBar(
-        title: '파티 기획 관리',
+        title: '파티 관리',
         actions: [
-          // Fix #540: route-based navigation to checkin — removes qr→checkin cross-feature import
           IconButton(
-            icon: const Icon(Icons.qr_code_scanner),
-            tooltip: 'QR 스캔',
-            onPressed: () => const CheckinRoute().push<void>(context),
+            icon: const Icon(Icons.info_outline),
+            iconSize: 22,
+            tooltip: '도움말',
+            onPressed: () => showMinglitHelpSheet(
+              context: context,
+              title: '파티 관리 가이드',
+              sections: _kPartyHelpSections,
+            ),
           ),
           IconButton(
             icon: const Icon(Icons.add),
