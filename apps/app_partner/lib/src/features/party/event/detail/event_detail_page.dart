@@ -75,6 +75,9 @@ class _EventInfoTab extends ConsumerWidget {
     // not the application list count — application list may be paginated/incomplete.
     final confirmedCount = event.currentParticipants;
     final maxParticipants = event.maxParticipants;
+    // Fix #2224: hide edit/review CTAs when event is no longer actionable.
+    final isTerminated =
+        event.status == 'cancelled' || event.status == 'completed';
 
     return SingleChildScrollView(
       child: MinglitContentLayout(
@@ -95,11 +98,11 @@ class _EventInfoTab extends ConsumerWidget {
             ),
 
           // Schedule + status info card
-          // Fix #2110: 정보 수정 버튼 — confirmedCount >= 1이면 잠금 아이콘 + 토스트,
+          // Fix #2224: 정보 수정 버튼 — confirmedCount >= 1이면 잠금 아이콘 + 토스트,
           // 없으면 EventEditRoute로 진입.
           MinglitSection(
             title: '이벤트 정보',
-            trailing: TextButton.icon(
+            trailing: isTerminated ? null : TextButton.icon(
               onPressed: () {
                 if (confirmedCount >= 1) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -186,7 +189,7 @@ class _EventInfoTab extends ConsumerWidget {
           // 참가 현황 section
           MinglitSection(
             title: '참가 현황',
-            trailing: TextButton.icon(
+            trailing: isTerminated ? null : TextButton.icon(
               onPressed: () {
                 unawaited(
                   EventApplicationListRoute(

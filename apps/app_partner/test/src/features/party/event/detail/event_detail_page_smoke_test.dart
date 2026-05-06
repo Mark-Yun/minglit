@@ -164,6 +164,9 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('취소됨'), findsOneWidget);
+      // Fix #2224: CTAs must be hidden for terminated states
+      expect(find.text('정보 수정'), findsNothing);
+      expect(find.text('신청 목록 보기'), findsNothing);
     });
 
     testWidgets('이벤트 정보 카드와 액션 버튼들이 표시된다', (tester) async {
@@ -199,7 +202,7 @@ void main() {
     });
 
     testWidgets('확정 인원이 있으면 정보 수정 시 잠금 SnackBar가 표시된다', (tester) async {
-      // Fix #2110: confirmedCount = event.currentParticipants (18) >= 1 → 잠금 토스트
+      // Fix #2224: confirmedCount = event.currentParticipants (18) >= 1 → 잠금 토스트
       await tester.pumpWidget(buildWidget());
       await tester.pumpAndSettle();
 
@@ -213,7 +216,7 @@ void main() {
     });
 
     testWidgets('확정 인원이 없으면 정보 수정 시 EventEditRoute로 이동한다', (tester) async {
-      // Fix #2110: confirmedCount = 0 → EventEditRoute push (no GoRouter in test)
+      // Fix #2224: confirmedCount = 0 → EventEditRoute push (no GoRouter in test)
       await tester.pumpWidget(
         buildWidget(event: testEvent.copyWith(currentParticipants: 0)),
       );
@@ -236,6 +239,9 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('종료됨'), findsOneWidget);
+      // Fix #2224: CTAs must be hidden for terminated states
+      expect(find.text('정보 수정'), findsNothing);
+      expect(find.text('신청 목록 보기'), findsNothing);
     });
 
     testWidgets('scheduled 상태면 모집 예정 레이블이 표시된다', (tester) async {
