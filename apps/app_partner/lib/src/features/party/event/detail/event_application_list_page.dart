@@ -194,6 +194,7 @@ class _PendingTab extends StatelessWidget {
                   bundle.groupCounts,
                   pendingApplications,
                 ),
+                totalPending: pendingCount,
               ),
             ),
           ),
@@ -431,12 +432,15 @@ class _EntryGroupCard extends StatelessWidget {
     required this.eventId,
     required this.group,
     required this.counts,
+    required this.totalPending,
   });
 
   final Event event;
   final String eventId;
   final EntryGroup group;
   final _GroupCounts counts;
+  // Fix #2272: total event-level pending count for the "전체 심사 시작" button
+  final int totalPending;
 
   @override
   Widget build(BuildContext context) {
@@ -453,7 +457,10 @@ class _EntryGroupCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              group.label ?? _genderLabel(group.gender),
+              // Fix #2272: treat empty string same as null — fall back to gender label
+              (group.label?.isNotEmpty == true)
+                  ? group.label!
+                  : _genderLabel(group.gender),
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
@@ -555,7 +562,8 @@ class _EntryGroupCard extends StatelessWidget {
                         eventId: eventId,
                       ).push<void>(context)
                     : null,
-                child: Text('전체 심사 시작 (${counts.pending}건)'),
+                // Fix #2272: button launches event-wide carousel — show total count
+                child: Text('전체 심사 시작 (${totalPending}건)'),
               ),
             ),
             const SizedBox(height: MinglitSpacing.small),

@@ -25,10 +25,12 @@ Future<EventApplicationBundle> eventApplicationBundle(
   String eventId,
 ) async {
   final repo = ref.watch(eventRepositoryProvider);
-  // Fix #2272: typed futures preserve parallelism without runtime casts
+  // Fix #2272: start all futures in parallel; await together so any failure is
+  // surfaced immediately without leaving unhandled rejected futures.
   final eventFuture = repo.getEventById(eventId);
   final applicationsFuture = repo.getApplicationsByEventId(eventId);
   final groupCountsFuture = repo.getEntryGroupParticipantCounts(eventId);
+  await Future.wait([eventFuture, applicationsFuture, groupCountsFuture]);
   final event = await eventFuture;
   final applications = await applicationsFuture;
   final groupCounts = await groupCountsFuture;

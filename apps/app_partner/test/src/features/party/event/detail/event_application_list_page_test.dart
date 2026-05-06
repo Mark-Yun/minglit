@@ -185,6 +185,16 @@ void main() {
     await tester.tap(find.text('승인됨'));
     await tester.pumpAndSettle();
     expect(find.text('결제실패유저'), findsNothing);
+
+    // Check rejected tab
+    await tester.tap(find.text('거절됨'));
+    await tester.pumpAndSettle();
+    expect(find.text('결제실패유저'), findsNothing);
+
+    // Check refunded tab
+    await tester.tap(find.text('환불'));
+    await tester.pumpAndSettle();
+    expect(find.text('결제실패유저'), findsNothing);
   });
 
   // Fix #2126: approved tab shows applications with approved status
