@@ -111,13 +111,19 @@ void main() {
         overrides: [eventRepositoryProvider.overrideWithValue(mockRepo)],
       );
 
-      await expectLater(
-        container.read(eventApplicationBundleProvider('event_err').future),
-        throwsA(isA<Exception>()),
+      // In Riverpod 3, @riverpod async providers auto-retry on error.
+      // The state transitions to AsyncLoading(hasError=true) rather than
+      // AsyncError. Use listen to keep the provider alive, then check
+      // hasError on the AsyncLoading state.
+      final sub = container.listen(
+        eventApplicationBundleProvider('event_err'),
+        (_, _) {},
       );
-
+      addTearDown(sub.close);
+      await Future<void>.delayed(Duration.zero);
       final state = container.read(eventApplicationBundleProvider('event_err'));
-      expect(state, isA<AsyncError<EventApplicationBundle>>());
+      expect(state.hasError, isTrue);
+      expect(state.error, isA<Exception>());
     });
   });
 }
