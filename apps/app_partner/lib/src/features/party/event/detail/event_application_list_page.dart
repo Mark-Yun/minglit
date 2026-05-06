@@ -425,9 +425,9 @@ class _EntryGroupCard extends StatelessWidget {
                 // Fix #2126: disabled when no pending to prevent empty carousel launch
                 onPressed: counts.pending > 0
                     ? () => EventApplicationReviewCarouselRoute(
-                          partyId: event.partyId,
-                          eventId: eventId,
-                        ).push(context)
+                        partyId: event.partyId,
+                        eventId: eventId,
+                      ).push(context)
                     : null,
                 child: Text('전체 심사 시작 (${counts.pending}건)'),
               ),
@@ -535,7 +535,9 @@ class _StatusBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: color.withValues(alpha: MinglitOpacity.highlight),
         borderRadius: BorderRadius.circular(MinglitRadius.small),
-        border: Border.all(color: color.withValues(alpha: MinglitOpacity.muted)),
+        border: Border.all(
+          color: color.withValues(alpha: MinglitOpacity.muted),
+        ),
       ),
       child: Text(
         label,
@@ -672,7 +674,9 @@ class _GroupCounts {
     final confirmed = (row?['participant_count'] as num?)?.toInt() ?? 0;
     final targetCapacity = (row?['target_capacity'] as num?)?.toInt() ?? 0;
     final pending = pendingApplications
-        .where((app) => app.ticket?.targetEntryGroupIds.contains(groupId) ?? false)
+        .where(
+          (app) => app.ticket?.targetEntryGroupIds.contains(groupId) ?? false,
+        )
         .length;
     return _GroupCounts(
       confirmed: confirmed,
