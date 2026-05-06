@@ -88,27 +88,31 @@ class EventOngoingBanner extends StatelessWidget {
                 ),
                 const SizedBox(width: MinglitSpacing.medium),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        event?.title ?? event?.party?.title ?? '이벤트',
-                        style: textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
+                  child: InkWell(
+                    onTap: () => _openDetail(context),
+                    borderRadius: BorderRadius.circular(MinglitRadius.small),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          event?.title ?? event?.party?.title ?? '이벤트',
+                          style: textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: MinglitSpacing.xsmall),
-                      Text(
-                        location?.name ?? '장소 미정',
-                        style: textTheme.bodyMedium?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
+                        const SizedBox(height: MinglitSpacing.xsmall),
+                        Text(
+                          location?.name ?? '장소 미정',
+                          style: textTheme.bodyMedium?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -177,6 +181,12 @@ class EventOngoingBanner extends StatelessWidget {
       EventLifecyclePhase.noShow => null,
       EventLifecyclePhase.ended => null,
     };
+  }
+
+  void _openDetail(BuildContext context) {
+    unawaited(
+      EventDetailRoute(eventId: application.eventId).push<void>(context),
+    );
   }
 
   void _openQr(BuildContext context) {

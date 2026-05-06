@@ -38,7 +38,7 @@ class MyTicketsPage extends ConsumerWidget {
                     ),
                     const SizedBox(height: MinglitSpacing.small),
                     Text(
-                      '참여 중인 이벤트가 없습니다',
+                      '다가올 이벤트와 지난 회고는\n구매내역에서 볼 수 있어요',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
@@ -50,16 +50,16 @@ class MyTicketsPage extends ConsumerWidget {
                       runSpacing: MinglitSpacing.small,
                       alignment: WrapAlignment.center,
                       children: [
-                        OutlinedButton(
+                        FilledButton(
                           onPressed: () => ref
                               .read(appCoordinatorProvider)
                               .pushPurchaseHistory(),
-                          child: const Text('구매 내역 보기'),
+                          child: const Text('구매내역 보기'),
                         ),
-                        FilledButton(
+                        OutlinedButton(
                           onPressed: () =>
                               ref.read(appCoordinatorProvider).goToHome(),
-                          child: const Text('홈으로 이동'),
+                          child: const Text('이벤트 둘러보기'),
                         ),
                       ],
                     ),

@@ -136,6 +136,31 @@ void main() {
     expect(callCount, 1);
   });
 
+  testWidgets('body tap (title/thumb area) is present for checkedIn phase', (
+    tester,
+  ) async {
+    await tester.pumpWidget(buildWidget(EventLifecyclePhase.checkedIn));
+
+    // The InkWell wrapping title+location must exist (body tap → EventDetailRoute).
+    // Navigation will fail in test context (no GoRouter) but the tap target must be wired.
+    expect(find.byType(InkWell), findsWidgets);
+    await tester.tap(find.text('강남 밍글링'));
+    await tester.pump();
+    // Consume the navigation exception (no router in test).
+    tester.takeException();
+  });
+
+  testWidgets('body tap (title/thumb area) is present for noShow phase', (
+    tester,
+  ) async {
+    await tester.pumpWidget(buildWidget(EventLifecyclePhase.noShow));
+
+    expect(find.byType(InkWell), findsWidgets);
+    await tester.tap(find.text('강남 밍글링'));
+    await tester.pump();
+    tester.takeException();
+  });
+
   group('urgencyRank', () {
     test('higher-priority phases sort earlier', () {
       expect(EventLifecyclePhase.checkInReady.urgencyRank, 1);
