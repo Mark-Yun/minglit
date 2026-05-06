@@ -62,10 +62,9 @@ class _EventHubBody extends ConsumerWidget {
     final applicationsAsync = ref.watch(eventApplicationsProvider(event.id));
     final applications =
         applicationsAsync.asData?.value ?? const <EventApplication>[];
-    // Fix #2109: 확정/대기/환불 집계를 단일 허브 카드에서 일관되게 계산한다.
-    final confirmedCount = applications
-        .where((app) => app.status == 'approved' || app.status == 'paid')
-        .length;
+    // Fix #2224: canonical source for confirmed participants is event.currentParticipants,
+    // not the application list count — application list may be paginated/incomplete.
+    final confirmedCount = event.currentParticipants;
     final pendingCount = applications
         .where((app) => app.status == 'pending_review')
         .length;
@@ -173,24 +172,25 @@ class _EventHubBody extends ConsumerWidget {
               ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              MinglitSpacing.screenEdge,
-              MinglitSpacing.small,
-              MinglitSpacing.screenEdge,
-              0,
-            ),
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: () => _handleEditPressed(
-                  context,
-                  confirmedCount: confirmedCount,
+          if (event.status != 'completed' && event.status != 'cancelled')
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                MinglitSpacing.screenEdge,
+                MinglitSpacing.small,
+                MinglitSpacing.screenEdge,
+                0,
+              ),
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () => _handleEditPressed(
+                    context,
+                    confirmedCount: confirmedCount,
+                  ),
+                  child: const Text('정보 수정'),
                 ),
-                child: const Text('정보 수정'),
               ),
             ),
-          ),
           _SectionCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -291,7 +291,9 @@ class _EventHubBody extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: MinglitSpacing.medium),
-                if (pendingCount >= 1) ...[
+                if (pendingCount >= 1 &&
+                    event.status != 'completed' &&
+                    event.status != 'cancelled') ...[
                   FilledButton(
                     onPressed: () => _openApplicationList(context),
                     child: const Text('심사하기'),

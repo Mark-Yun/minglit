@@ -160,8 +160,8 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        expect(find.text('1'), findsOneWidget);
-        expect(find.text('1 / 40명'), findsOneWidget);
+        expect(find.text('18'), findsOneWidget);
+        expect(find.text('18 / 40명'), findsOneWidget);
       },
     );
 
