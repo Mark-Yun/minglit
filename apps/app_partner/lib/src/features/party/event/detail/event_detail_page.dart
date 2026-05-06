@@ -107,7 +107,10 @@ class _EventInfoTab extends ConsumerWidget {
                   ).push<void>(context),
                 );
               },
-              icon: const Icon(Icons.edit_outlined, size: MinglitIconSize.small),
+              icon: const Icon(
+                Icons.edit_outlined,
+                size: MinglitIconSize.small,
+              ),
               label: const Text('정보 수정'),
             ),
             padding: EdgeInsets.zero,
