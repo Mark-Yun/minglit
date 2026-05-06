@@ -25,15 +25,17 @@ Future<EventApplicationBundle> eventApplicationBundle(
   String eventId,
 ) async {
   final repo = ref.watch(eventRepositoryProvider);
-  final results = await Future.wait([
-    repo.getEventById(eventId),
-    repo.getApplicationsByEventId(eventId),
-    repo.getEntryGroupParticipantCounts(eventId),
-  ]);
+  // Fix #2272: typed futures preserve parallelism without runtime casts
+  final eventFuture = repo.getEventById(eventId);
+  final applicationsFuture = repo.getApplicationsByEventId(eventId);
+  final groupCountsFuture = repo.getEntryGroupParticipantCounts(eventId);
+  final event = await eventFuture;
+  final applications = await applicationsFuture;
+  final groupCounts = await groupCountsFuture;
   return (
-    event: results[0] as Event,
-    applications: results[1] as List<EventApplication>,
-    groupCounts: results[2] as List<Map<String, dynamic>>,
+    event: event,
+    applications: applications,
+    groupCounts: groupCounts,
   );
 }
 
