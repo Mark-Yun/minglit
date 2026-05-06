@@ -102,29 +102,33 @@ class _EventInfoTab extends ConsumerWidget {
           // 없으면 EventEditRoute로 진입.
           MinglitSection(
             title: '이벤트 정보',
-            trailing: isTerminated ? null : TextButton.icon(
-              onPressed: () {
-                if (confirmedCount >= 1) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('확정 참가자가 있어 일부 항목은 잠겨 있습니다.'),
+            trailing: isTerminated
+                ? null
+                : TextButton.icon(
+                    onPressed: () {
+                      if (confirmedCount >= 1) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('확정 참가자가 있어 일부 항목은 잠겨 있습니다.'),
+                          ),
+                        );
+                        return;
+                      }
+                      unawaited(
+                        EventEditRoute(
+                          partyId: event.partyId,
+                          eventId: event.id,
+                        ).push<void>(context),
+                      );
+                    },
+                    icon: Icon(
+                      confirmedCount >= 1
+                          ? Icons.lock_outline
+                          : Icons.edit_outlined,
+                      size: MinglitIconSize.small,
                     ),
-                  );
-                  return;
-                }
-                unawaited(
-                  EventEditRoute(
-                    partyId: event.partyId,
-                    eventId: event.id,
-                  ).push<void>(context),
-                );
-              },
-              icon: Icon(
-                confirmedCount >= 1 ? Icons.lock_outline : Icons.edit_outlined,
-                size: MinglitIconSize.small,
-              ),
-              label: const Text('정보 수정'),
-            ),
+                    label: const Text('정보 수정'),
+                  ),
             padding: EdgeInsets.zero,
             child: Padding(
               padding: const EdgeInsets.symmetric(
@@ -189,21 +193,23 @@ class _EventInfoTab extends ConsumerWidget {
           // 참가 현황 section
           MinglitSection(
             title: '참가 현황',
-            trailing: isTerminated ? null : TextButton.icon(
-              onPressed: () {
-                unawaited(
-                  EventApplicationListRoute(
-                    partyId: event.partyId,
-                    eventId: event.id,
-                  ).push<void>(context),
-                );
-              },
-              icon: const Icon(
-                Icons.people_outline,
-                size: MinglitIconSize.small,
-              ),
-              label: const Text('신청 목록 보기'),
-            ),
+            trailing: isTerminated
+                ? null
+                : TextButton.icon(
+                    onPressed: () {
+                      unawaited(
+                        EventApplicationListRoute(
+                          partyId: event.partyId,
+                          eventId: event.id,
+                        ).push<void>(context),
+                      );
+                    },
+                    icon: const Icon(
+                      Icons.people_outline,
+                      size: MinglitIconSize.small,
+                    ),
+                    label: const Text('신청 목록 보기'),
+                  ),
             padding: EdgeInsets.zero,
             child: Padding(
               padding: const EdgeInsets.symmetric(
