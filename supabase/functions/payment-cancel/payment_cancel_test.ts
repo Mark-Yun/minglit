@@ -103,6 +103,8 @@ Deno.test("payment-cancel - eligible (within grace period) → 200", async () =>
         );
         const dbBody = JSON.parse(dbCall!.body!);
         assertEquals(dbBody.refund_status, "completed");
+        // Fix #2099: refunded_at must be set on successful refund
+        assertEquals(typeof dbBody.refunded_at, "string");
       });
     });
   });
