@@ -92,17 +92,21 @@ class _DashboardBody extends StatelessWidget {
           subtitle: '승인 완료된 신청이 생기면 여기서 확인할 수 있습니다.',
           applications: approvedApps,
         ),
-        _ApplicationListTab(
-          icon: Icons.cancel_outlined,
-          title: '거절된 신청이 없습니다',
-          subtitle: '거절 처리된 신청 내역이 여기에 표시됩니다.',
+        _GroupedApplicationsTab(
+          emptyIcon: Icons.cancel_outlined,
+          emptyTitle: '거절된 신청이 없습니다',
+          emptySubtitle: '거절 처리된 신청 내역이 여기에 표시됩니다.',
           applications: rejectedApps,
+          entryGroups: bundle.event.entryGroups ?? const [],
+          cardBuilder: (app) => _RejectedApplicationCard(app: app),
         ),
-        _ApplicationListTab(
-          icon: Icons.undo_outlined,
-          title: '환불 내역이 없습니다',
-          subtitle: '환불 상태가 있는 신청이 생기면 여기서 확인할 수 있습니다.',
+        _GroupedApplicationsTab(
+          emptyIcon: Icons.undo_outlined,
+          emptyTitle: '환불 내역이 없습니다',
+          emptySubtitle: '환불 상태가 있는 신청이 생기면 여기서 확인할 수 있습니다.',
           applications: refundApps,
+          entryGroups: bundle.event.entryGroups ?? const [],
+          cardBuilder: (app) => _RefundApplicationCard(app: app),
         ),
       ],
     );
@@ -223,6 +227,128 @@ class _ApplicationListTab extends StatelessWidget {
           _ApplicationCard(app: applications[index]),
       separatorBuilder: (_, _) => const SizedBox(height: MinglitSpacing.small),
       itemCount: applications.length,
+    );
+  }
+}
+
+class _GroupedApplicationsTab extends StatelessWidget {
+  const _GroupedApplicationsTab({
+    required this.emptyIcon,
+    required this.emptyTitle,
+    required this.emptySubtitle,
+    required this.applications,
+    required this.entryGroups,
+    required this.cardBuilder,
+  });
+
+  final IconData emptyIcon;
+  final String emptyTitle;
+  final String emptySubtitle;
+  final List<EventApplication> applications;
+  final List<EntryGroup> entryGroups;
+  final Widget Function(EventApplication app) cardBuilder;
+
+  @override
+  Widget build(BuildContext context) {
+    if (applications.isEmpty) {
+      return _EmptyState(
+        icon: emptyIcon,
+        title: emptyTitle,
+        subtitle: emptySubtitle,
+      );
+    }
+
+    final remainingApps = [...applications];
+    final children = <Widget>[];
+
+    for (final group in entryGroups) {
+      final groupApps = remainingApps.where((app) {
+        return app.ticket?.targetEntryGroupIds.contains(group.id) ?? false;
+      }).toList();
+      if (groupApps.isEmpty) {
+        continue;
+      }
+      remainingApps.removeWhere((app) => groupApps.contains(app));
+      if (children.isNotEmpty) {
+        children.add(const SizedBox(height: MinglitSpacing.medium));
+      }
+      children.add(
+        _GroupSubSectionHeader(group: group, count: groupApps.length),
+      );
+      children.add(const SizedBox(height: MinglitSpacing.small));
+      for (var i = 0; i < groupApps.length; i++) {
+        children.add(cardBuilder(groupApps[i]));
+        if (i < groupApps.length - 1) {
+          children.add(const SizedBox(height: MinglitSpacing.small));
+        }
+      }
+    }
+
+    if (remainingApps.isNotEmpty) {
+      if (children.isNotEmpty) {
+        children.add(const SizedBox(height: MinglitSpacing.medium));
+      }
+      children.add(
+        _GroupSubSectionHeader(
+          label: '미분류',
+          count: remainingApps.length,
+        ),
+      );
+      children.add(const SizedBox(height: MinglitSpacing.small));
+      for (var i = 0; i < remainingApps.length; i++) {
+        children.add(cardBuilder(remainingApps[i]));
+        if (i < remainingApps.length - 1) {
+          children.add(const SizedBox(height: MinglitSpacing.small));
+        }
+      }
+    }
+
+    return ListView(
+      padding: const EdgeInsets.all(MinglitSpacing.screenEdge),
+      children: children,
+    );
+  }
+}
+
+class _GroupSubSectionHeader extends StatelessWidget {
+  const _GroupSubSectionHeader({
+    this.group,
+    this.label,
+    required this.count,
+  });
+
+  final EntryGroup? group;
+  final String? label;
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final groupLabel = group?.label;
+    final resolvedLabel =
+        label ??
+        ((groupLabel != null && groupLabel.isNotEmpty)
+            ? groupLabel
+            : _genderLabel(group?.gender));
+
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            resolvedLabel,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+        Text(
+          '$count건',
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -511,6 +637,170 @@ class _ApplicationCard extends StatelessWidget {
   }
 }
 
+class _RejectedApplicationCard extends StatelessWidget {
+  const _RejectedApplicationCard({required this.app});
+
+  final EventApplication app;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final user = app.user;
+    final firstChar = (user?.name.isNotEmpty ?? false)
+        ? user!.name.characters.first
+        : null;
+    final rejectionReason = app.rejectionReason?.trim();
+    final hasRejectionReason =
+        rejectionReason != null && rejectionReason.isNotEmpty;
+
+    return Card(
+      child: ListTile(
+        isThreeLine: hasRejectionReason,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: MinglitSpacing.medium,
+          vertical: MinglitSpacing.small,
+        ),
+        leading: CircleAvatar(
+          radius: 20,
+          backgroundColor: MinglitPartnerColors.primary.withValues(
+            alpha: MinglitOpacity.highlight,
+          ),
+          child: firstChar == null
+              ? const Icon(Icons.person_outline)
+              : Text(
+                  firstChar,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    color: MinglitPartnerColors.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+        ),
+        title: Text(user?.name ?? '이름 없음'),
+        subtitle: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              _userSummary(user),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            if (hasRejectionReason) ...[
+              const SizedBox(height: MinglitSpacing.xsmall),
+              Row(
+                children: [
+                  const Icon(
+                    Icons.warning_amber_outlined,
+                    size: 14,
+                    color: MinglitColors.error,
+                  ),
+                  const SizedBox(width: MinglitSpacing.xsmall),
+                  Expanded(
+                    // Fix #2272: rejected tab surfaces rejection reason inline
+                    child: Text(
+                      rejectionReason,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: MinglitColors.error,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _StatusBadge(status: app.status),
+            const SizedBox(width: MinglitSpacing.small),
+            const Icon(Icons.chevron_right),
+          ],
+        ),
+        onTap: () => EventApplicationDetailRoute(applicationId: app.id).push(
+          context,
+        ),
+      ),
+    );
+  }
+}
+
+class _RefundApplicationCard extends StatelessWidget {
+  const _RefundApplicationCard({required this.app});
+
+  final EventApplication app;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cancellationReason = app.cancellationReason?.trim();
+    final hasCancellationReason =
+        cancellationReason != null && cancellationReason.isNotEmpty;
+    final maskedUsername = _maskIdentifier(app.user?.username ?? '');
+
+    return Card(
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: MinglitSpacing.medium,
+          vertical: MinglitSpacing.small,
+        ),
+        leading: CircleAvatar(
+          radius: 20,
+          backgroundColor: theme.colorScheme.surfaceContainerHighest,
+          child: Icon(
+            Icons.person_outline,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        title: Text(
+          maskedUsername.isEmpty ? '신청자' : maskedUsername,
+        ),
+        subtitle: hasCancellationReason
+            ? Row(
+                children: [
+                  const Icon(
+                    Icons.error_outline,
+                    size: 14,
+                    color: MinglitColors.warning,
+                  ),
+                  const SizedBox(width: MinglitSpacing.xsmall),
+                  Expanded(
+                    child: Text(
+                      cancellationReason,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: MinglitColors.warning,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              )
+            : Text(
+                '사용자 환불 요청',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _StatusBadge(status: app.status),
+            const SizedBox(width: MinglitSpacing.small),
+            const Icon(Icons.chevron_right),
+          ],
+        ),
+        onTap: () => EventApplicationDetailRoute(applicationId: app.id).push(
+          context,
+        ),
+      ),
+    );
+  }
+}
+
 class _StatusBadge extends StatelessWidget {
   const _StatusBadge({required this.status});
 
@@ -710,4 +1000,16 @@ String _userSummary(UserProfile? user) {
   final birthYear = user?.birthYear?.toString();
   final parts = [if (gender != null) gender, if (birthYear != null) birthYear];
   return parts.isEmpty ? '정보 없음' : parts.join(' · ');
+}
+
+// Fix #2272: mask identifier for PII minimization in refund tab
+String _maskIdentifier(String identifier) {
+  if (identifier.isEmpty) return '';
+  if (identifier.contains('@')) {
+    final atIndex = identifier.indexOf('@');
+    final local = identifier.substring(0, atIndex);
+    final domain = identifier.substring(atIndex);
+    return '${local.isEmpty ? '' : local[0]}***$domain';
+  }
+  return '${identifier.characters.first}***';
 }

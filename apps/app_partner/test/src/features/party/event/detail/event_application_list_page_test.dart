@@ -46,9 +46,12 @@ void main() {
     required String id,
     required String status,
     String? userName,
+    String? username,
     String? gender,
     int? birthYear,
     String refundStatus = 'none',
+    String? rejectionReason,
+    String? cancellationReason,
     String? groupId,
   }) {
     return EventApplication(
@@ -58,17 +61,29 @@ void main() {
       userId: 'user_$id',
       status: status,
       refundStatus: refundStatus,
+      rejectionReason: rejectionReason,
+      cancellationReason: cancellationReason,
       createdAt: now.subtract(const Duration(hours: 1)),
       updatedAt: now,
       user: userName != null
           ? UserProfile(
               id: 'user_$id',
               name: userName,
-              username: userName.toLowerCase(),
+              username: username ?? userName.toLowerCase(),
               gender: gender,
               birthYear: birthYear,
             )
           : null,
+      ticket: groupId == null
+          ? null
+          : Ticket(
+              id: 'ticket_$id',
+              name: '티켓 $id',
+              eventId: 'event_1',
+              targetEntryGroupIds: [groupId],
+              createdAt: now,
+              updatedAt: now,
+            ),
     );
   }
 
@@ -250,6 +265,48 @@ void main() {
 
       expect(find.text('김철수'), findsOneWidget);
     });
+
+    testWidgets('shows rejection reason line when rejectionReason is set', (
+      tester,
+    ) async {
+      final bundle = makeBundle(
+        applications: [
+          makeApp(
+            id: 'app_1',
+            status: 'rejected',
+            userName: '김철수',
+            rejectionReason: '연령 조건이 맞지 않습니다',
+          ),
+        ],
+      );
+      await tester.pumpWidget(buildPage(bundle: bundle));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('거절됨'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('연령 조건이 맞지 않습니다'), findsOneWidget);
+    });
+
+    testWidgets('shows entry group sub-section header', (tester) async {
+      final bundle = makeBundle(
+        applications: [
+          makeApp(
+            id: 'app_1',
+            status: 'rejected',
+            userName: '김철수',
+            groupId: 'eg_female',
+          ),
+        ],
+      );
+      await tester.pumpWidget(buildPage(bundle: bundle));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('거절됨'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('여성 그룹'), findsOneWidget);
+    });
   });
 
   // Fix #2126: refund tab shows apps where refundStatus != 'none'
@@ -262,6 +319,7 @@ void main() {
             status: 'approved',
             userName: '이환불',
             refundStatus: 'requested',
+            username: 'refund@test.com',
           ),
         ],
       );
@@ -271,7 +329,8 @@ void main() {
       await tester.tap(find.text('환불'));
       await tester.pumpAndSettle();
 
-      expect(find.text('이환불'), findsOneWidget);
+      expect(find.text('이환불'), findsNothing);
+      expect(find.text('r***@test.com'), findsOneWidget);
     });
 
     testWidgets('apps with refundStatus none are not in 환불 tab', (
@@ -289,6 +348,28 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('정상유저'), findsNothing);
+    });
+
+    testWidgets('shows masked username, not real name', (tester) async {
+      final bundle = makeBundle(
+        applications: [
+          makeApp(
+            id: 'app_1',
+            status: 'approved',
+            userName: '홍길동',
+            username: 'hong@test.com',
+            refundStatus: 'requested',
+          ),
+        ],
+      );
+      await tester.pumpWidget(buildPage(bundle: bundle));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('환불'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('홍길동'), findsNothing);
+      expect(find.text('h***@test.com'), findsOneWidget);
     });
   });
 }
