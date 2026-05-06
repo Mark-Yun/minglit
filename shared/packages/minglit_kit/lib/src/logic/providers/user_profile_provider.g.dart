@@ -8,12 +8,9 @@ part of 'user_profile_provider.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// Provides the current signed-in user's profile, if available.
 
 @ProviderFor(currentUserProfile)
 const currentUserProfileProvider = CurrentUserProfileProvider._();
-
-/// Provides the current signed-in user's profile, if available.
 
 final class CurrentUserProfileProvider
     extends
@@ -23,7 +20,6 @@ final class CurrentUserProfileProvider
           FutureOr<UserProfile?>
         >
     with $FutureModifier<UserProfile?>, $FutureProvider<UserProfile?> {
-  /// Provides the current signed-in user's profile, if available.
   const CurrentUserProfileProvider._()
     : super(
         from: null,
@@ -51,4 +47,4 @@ final class CurrentUserProfileProvider
 }
 
 String _$currentUserProfileHash() =>
-    r'bc92d80a2a7056e4550ee728b394e66c05b470c3';
+    r'3642b07e3947c8d507bc462656c761274f76a9ed';
