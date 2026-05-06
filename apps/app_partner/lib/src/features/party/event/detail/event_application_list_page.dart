@@ -370,7 +370,7 @@ class _EventHeroCard extends StatelessWidget {
         onTap: () => EventDetailRoute(
           partyId: event.partyId,
           eventId: eventId,
-        ).push(context),
+        ).push<void>(context),
         child: Padding(
           padding: const EdgeInsets.all(MinglitSpacing.medium),
           child: Column(
@@ -553,7 +553,7 @@ class _EntryGroupCard extends StatelessWidget {
                     ? () => EventApplicationReviewCarouselRoute(
                         partyId: event.partyId,
                         eventId: eventId,
-                      ).push(context)
+                      ).push<void>(context)
                     : null,
                 child: Text('전체 심사 시작 (${counts.pending}건)'),
               ),
@@ -567,7 +567,7 @@ class _EntryGroupCard extends StatelessWidget {
                         partyId: event.partyId,
                         eventId: eventId,
                         groupId: group.id,
-                      ).push(context)
+                      ).push<void>(context)
                     : null,
                 child: Text(groupPendingLabel),
               ),
@@ -629,7 +629,7 @@ class _ApplicationCard extends StatelessWidget {
           ],
         ),
         // Fix #2126: push() preserves back-navigation to list
-        onTap: () => EventApplicationDetailRoute(applicationId: app.id).push(
+        onTap: () => EventApplicationDetailRoute(applicationId: app.id).push<void>(
           context,
         ),
       ),
@@ -720,7 +720,7 @@ class _RejectedApplicationCard extends StatelessWidget {
             const Icon(Icons.chevron_right),
           ],
         ),
-        onTap: () => EventApplicationDetailRoute(applicationId: app.id).push(
+        onTap: () => EventApplicationDetailRoute(applicationId: app.id).push<void>(
           context,
         ),
       ),
@@ -793,7 +793,7 @@ class _RefundApplicationCard extends StatelessWidget {
             const Icon(Icons.chevron_right),
           ],
         ),
-        onTap: () => EventApplicationDetailRoute(applicationId: app.id).push(
+        onTap: () => EventApplicationDetailRoute(applicationId: app.id).push<void>(
           context,
         ),
       ),
