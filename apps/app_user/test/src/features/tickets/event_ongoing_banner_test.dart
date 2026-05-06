@@ -110,8 +110,9 @@ void main() {
     expect(button.onPressed, isNull);
   });
 
-  testWidgets('resultsUnviewed tap calls onMarkResultsViewed exactly once',
-      (tester) async {
+  testWidgets('resultsUnviewed tap calls onMarkResultsViewed exactly once', (
+    tester,
+  ) async {
     var callCount = 0;
     await tester.pumpWidget(
       MaterialApp(

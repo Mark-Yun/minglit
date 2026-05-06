@@ -204,7 +204,10 @@ class EventOngoingBanner extends StatelessWidget {
       '?q=${Uri.encodeComponent(location.address)}',
     );
     try {
-      final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      final launched = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
       if (!launched && context.mounted) {
         ScaffoldMessenger.of(
           context,
