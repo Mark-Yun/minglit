@@ -62,7 +62,9 @@ final activeEventBannersProvider = FutureProvider<List<ActiveEventBannerItem>>((
           hasMatchingCandidates = candidates.isNotEmpty;
           hasSubmittedVotes = voteCount > 0;
         } on Object catch (e) {
-          Log.w('⚠️ [ActiveBanners] matching state fetch failed for ${event.id}: $e');
+          Log.w(
+            '⚠️ [ActiveBanners] matching state fetch failed for ${event.id}: $e',
+          );
         }
       }
 
