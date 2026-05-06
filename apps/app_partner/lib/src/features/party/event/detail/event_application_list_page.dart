@@ -67,8 +67,9 @@ class _DashboardBody extends StatelessWidget {
     final pendingApps = applications
         .where((app) => {'pending', 'pending_review'}.contains(app.status))
         .toList();
+    // Fix #2126: paid = approved + payment confirmed; include in approved tab
     final approvedApps = applications
-        .where((app) => app.status == 'approved')
+        .where((app) => {'approved', 'paid'}.contains(app.status))
         .toList();
     final rejectedApps = applications
         .where((app) => app.status == 'rejected')
@@ -126,8 +127,9 @@ class _PendingTab extends StatelessWidget {
     final event = bundle.event;
     final groups = event.entryGroups ?? const <EntryGroup>[];
     final pendingCount = pendingApplications.length;
+    // Fix #2126: paid apps are confirmed participants — include in capacity count
     final confirmedCount = bundle.applications
-        .where((app) => app.status == 'approved')
+        .where((app) => {'approved', 'paid'}.contains(app.status))
         .length;
 
     final visibleGroups = selectedGroupId == null
@@ -238,10 +240,11 @@ class _EventHeroCard extends StatelessWidget {
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
+        // Fix #2126: push() preserves back-navigation to EventApplicationListPage
         onTap: () => EventDetailRoute(
           partyId: event.partyId,
           eventId: eventId,
-        ).go(context),
+        ).push(context),
         child: Padding(
           padding: const EdgeInsets.all(MinglitSpacing.medium),
           child: Column(
@@ -419,10 +422,13 @@ class _EntryGroupCard extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: FilledButton(
-                onPressed: () => EventApplicationReviewCarouselRoute(
-                  partyId: event.partyId,
-                  eventId: eventId,
-                ).go(context),
+                // Fix #2126: disabled when no pending to prevent empty carousel launch
+                onPressed: counts.pending > 0
+                    ? () => EventApplicationReviewCarouselRoute(
+                          partyId: event.partyId,
+                          eventId: eventId,
+                        ).push(context)
+                    : null,
                 child: Text('전체 심사 시작 (${counts.pending}건)'),
               ),
             ),
@@ -435,7 +441,7 @@ class _EntryGroupCard extends StatelessWidget {
                         partyId: event.partyId,
                         eventId: eventId,
                         groupId: group.id,
-                      ).go(context)
+                      ).push(context)
                     : null,
                 child: Text(groupPendingLabel),
               ),
@@ -496,7 +502,8 @@ class _ApplicationCard extends StatelessWidget {
             const Icon(Icons.chevron_right),
           ],
         ),
-        onTap: () => EventApplicationDetailRoute(applicationId: app.id).go(
+        // Fix #2126: push() preserves back-navigation to list
+        onTap: () => EventApplicationDetailRoute(applicationId: app.id).push(
           context,
         ),
       ),
@@ -512,6 +519,7 @@ class _StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (label, color) = switch (status) {
+      'pending' => ('대기중', MinglitColors.warning),
       'pending_review' => ('심사 중', MinglitColors.warning),
       'approved' => ('승인됨', MinglitColors.success),
       'rejected' => ('거절됨', MinglitColors.error),

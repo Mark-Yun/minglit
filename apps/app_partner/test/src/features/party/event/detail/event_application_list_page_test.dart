@@ -148,8 +148,9 @@ void main() {
       await tester.pumpWidget(buildPage(bundle: makeBundle()));
       await tester.pumpAndSettle();
 
-      expect(find.text('여성 그룹'), findsOneWidget);
-      expect(find.text('남성 그룹'), findsOneWidget);
+      // skipOffstage: false — groups may be below fold in ListView
+      expect(find.text('여성 그룹', skipOffstage: false), findsOneWidget);
+      expect(find.text('남성 그룹', skipOffstage: false), findsOneWidget);
     });
   });
 
@@ -186,6 +187,38 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('홍길동'), findsOneWidget);
+    });
+
+    // Fix #2126: paid = approved + payment confirmed; must appear in 승인됨 tab
+    testWidgets('paid applications appear in 승인됨 tab', (tester) async {
+      final bundle = makeBundle(
+        applications: [
+          makeApp(id: 'app_1', status: 'paid', userName: '결제완료유저'),
+        ],
+      );
+      await tester.pumpWidget(buildPage(bundle: bundle));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('승인됨'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('결제완료유저'), findsOneWidget);
+    });
+
+    // Fix #2126: paid apps count in confirmedCount — capacity bar must reflect them
+    testWidgets('paid apps are counted in confirmed capacity', (tester) async {
+      final bundle = makeBundle(
+        applications: [
+          makeApp(id: 'app_1', status: 'paid', userName: '결제1'),
+          makeApp(id: 'app_2', status: 'approved', userName: '승인1'),
+          makeApp(id: 'app_3', status: 'pending_review', userName: '심사중1'),
+        ],
+      );
+      await tester.pumpWidget(buildPage(bundle: bundle));
+      await tester.pumpAndSettle();
+
+      // confirmed=2 (paid+approved), pending=1, total=20
+      expect(find.text('확정 2명 · 대기 1명 · 정원 20명'), findsOneWidget);
     });
 
     testWidgets('shows empty state when no approved applications', (
