@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:minglit_kit/minglit_kit.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 typedef ActiveEventBannerItem = ({
   EventApplication application,
@@ -12,6 +13,41 @@ final activeEventBannersProvider = FutureProvider<List<ActiveEventBannerItem>>((
 ) async {
   final user = ref.watch(currentUserProvider);
   if (user == null) return const [];
+
+  // Fix #2123: Re-fetch every minute so waiting→checkInReady flips at event
+  // start time without requiring a manual page rebuild.
+  final clockTimer = Timer(const Duration(minutes: 1), ref.invalidateSelf);
+  ref.onDispose(clockTimer.cancel);
+
+  // Fix #2123: Realtime subscription for event_participants changes (check-in,
+  // no-show) so lifecycle cards update without user interaction.
+  // Mirrors EventRealtime in event_now_bar_controller.dart.
+  final supabase = ref.watch(supabaseClientProvider);
+  Timer? pollingTimer;
+  final channel = supabase.channel('active-banners-${user.id}')
+    ..onPostgresChanges(
+      event: PostgresChangeEvent.all,
+      schema: 'public',
+      table: 'event_participants',
+      filter: PostgresChangeFilter(
+        type: PostgresChangeFilterType.eq,
+        column: 'user_id',
+        value: user.id,
+      ),
+      callback: (_) => ref.invalidateSelf(),
+    )
+    ..subscribe((status, [error]) {
+      if (status == RealtimeSubscribeStatus.closed) {
+        pollingTimer = Timer.periodic(
+          const Duration(seconds: 30),
+          (_) => ref.invalidateSelf(),
+        );
+      }
+    });
+  ref.onDispose(() {
+    pollingTimer?.cancel();
+    unawaited(channel.unsubscribe());
+  });
 
   final eventRepository = ref.watch(eventRepositoryProvider);
   final matchingRepository = ref.watch(matchingRepositoryProvider);
@@ -63,7 +99,7 @@ final activeEventBannersProvider = FutureProvider<List<ActiveEventBannerItem>>((
         }
       }
 
-      final phase = _resolveEventLifecyclePhase(
+      final phase = resolveEventLifecyclePhase(
         application: application,
         now: now,
         isCheckedIn: isCheckedIn,
@@ -91,7 +127,7 @@ final activeEventBannersProvider = FutureProvider<List<ActiveEventBannerItem>>((
   return filtered;
 });
 
-EventLifecyclePhase _resolveEventLifecyclePhase({
+EventLifecyclePhase resolveEventLifecyclePhase({
   required EventApplication application,
   required DateTime now,
   required bool isCheckedIn,
