@@ -50,6 +50,7 @@ void main() {
     bool isNoShow = false,
     bool hasMatchResults = false,
     bool hasMatchingCandidates = false,
+    bool hasSubmittedVotes = false,
   }) {
     return resolveEventLifecyclePhase(
       application: application,
@@ -58,6 +59,7 @@ void main() {
       isNoShow: isNoShow,
       hasMatchResults: hasMatchResults,
       hasMatchingCandidates: hasMatchingCandidates,
+      hasSubmittedVotes: hasSubmittedVotes,
     );
   }
 
@@ -141,27 +143,47 @@ void main() {
     },
   );
 
-  test('hasMatchingCandidates=true returns matching', () {
-    final event = makeEvent(status: 'ongoing', endTime: futureEnd);
-    final application = makeApplication(event: event);
-    expect(
-      resolve(
-        application: application,
-        isCheckedIn: false,
-        hasMatchingCandidates: true,
-      ),
-      EventLifecyclePhase.matching,
-    );
-  });
+  test(
+    'isCheckedIn=true, hasMatchingCandidates=true, hasSubmittedVotes=true returns matching',
+    () {
+      final event = makeEvent(status: 'ongoing', endTime: futureEnd);
+      final application = makeApplication(event: event);
+      expect(
+        resolve(
+          application: application,
+          isCheckedIn: true,
+          hasMatchingCandidates: true,
+          hasSubmittedVotes: true,
+        ),
+        EventLifecyclePhase.matching,
+      );
+    },
+  );
 
   test(
-    'isCheckedIn=true with event.status==ongoing returns matchingReady',
+    'isCheckedIn=true, hasMatchingCandidates=true, hasSubmittedVotes=false returns matchingReady',
+    () {
+      final event = makeEvent(status: 'ongoing', endTime: futureEnd);
+      final application = makeApplication(event: event);
+      expect(
+        resolve(
+          application: application,
+          isCheckedIn: true,
+          hasMatchingCandidates: true,
+        ),
+        EventLifecyclePhase.matchingReady,
+      );
+    },
+  );
+
+  test(
+    'isCheckedIn=true with event.status==ongoing and no candidates returns checkedIn',
     () {
       final event = makeEvent(status: 'ongoing', endTime: futureEnd);
       final application = makeApplication(event: event);
       expect(
         resolve(application: application, isCheckedIn: true),
-        EventLifecyclePhase.matchingReady,
+        EventLifecyclePhase.checkedIn,
       );
     },
   );
