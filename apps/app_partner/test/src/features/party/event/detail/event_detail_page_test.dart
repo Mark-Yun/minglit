@@ -230,6 +230,113 @@ void main() {
     expect(find.text('달성 매출'), findsOneWidget);
   });
 
+  testWidgets(
+    'scheduled state with tickets shows ticket row and add button',
+    (tester) async {
+      // Fix #2275: spec §입장 그룹별 현황 — TicketEditRoute + TicketCreateRoute 진입점 노출
+      final entryGroup = EntryGroup(
+        id: 'group-1',
+        eventId: 'event-1',
+        label: '남성',
+        gender: 'male',
+        createdAt: now,
+        updatedAt: now,
+      );
+      final ticket = Ticket(
+        id: 'ticket-1',
+        name: '일반 입장권',
+        createdAt: now,
+        updatedAt: now,
+        price: 35000,
+        quantity: 12,
+        targetEntryGroupIds: ['group-1'],
+      );
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            eventDetailProvider('event-1').overrideWith(
+              (ref) async => buildEvent(
+                currentParticipants: 0,
+              ).copyWith(entryGroups: [entryGroup]),
+            ),
+            partyDetailProvider('party-1').overrideWith((ref) async => party),
+            eventApplicationsProvider('event-1').overrideWith(
+              (ref) async => [],
+            ),
+            eventTicketsProvider('event-1').overrideWith(
+              (ref) async => [ticket],
+            ),
+          ],
+          child: const MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            locale: Locale('ko'),
+            home: EventDetailPage(eventId: 'event-1'),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('일반 입장권'), findsOneWidget);
+      expect(find.text('이 그룹에 티켓 추가'), findsOneWidget);
+    },
+  );
+
+  testWidgets('cancelled state hides ticket rows', (tester) async {
+    // Fix #2275: ticket rows should not appear in non-editable states
+    final entryGroup = EntryGroup(
+      id: 'group-1',
+      eventId: 'event-1',
+      label: '남성',
+      gender: 'male',
+      createdAt: now,
+      updatedAt: now,
+    );
+    final ticket = Ticket(
+      id: 'ticket-1',
+      name: '일반 입장권',
+      createdAt: now,
+      updatedAt: now,
+      price: 35000,
+      quantity: 12,
+      targetEntryGroupIds: ['group-1'],
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          eventDetailProvider('event-1').overrideWith(
+            (ref) async => buildEvent(
+              status: 'cancelled',
+              currentParticipants: 1,
+            ).copyWith(entryGroups: [entryGroup]),
+          ),
+          partyDetailProvider('party-1').overrideWith((ref) async => party),
+          eventApplicationsProvider('event-1').overrideWith(
+            (ref) async => [
+              buildApplication(
+                id: '1',
+                status: 'approved',
+                refundStatus: 'completed',
+              ),
+            ],
+          ),
+          eventTicketsProvider('event-1').overrideWith(
+            (ref) async => [ticket],
+          ),
+        ],
+        child: const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: Locale('ko'),
+          home: EventDetailPage(eventId: 'event-1'),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('이 그룹에 티켓 추가'), findsNothing);
+  });
+
   testWidgets('ticketsAsync loading shows spinner when no fallback tickets', (
     tester,
   ) async {

@@ -306,6 +306,9 @@ enum _EventLifecycleState {
   emptyApplications
   ;
 
+  // MinglitDDayChip.later tier boundary is D-8+ — keep in sync with _tier() in minglit_dday_chip.dart.
+  static const int _outlineTierThreshold = 8;
+
   factory _EventLifecycleState.from({
     required Event event,
     required List<EventApplication> applications,
@@ -432,6 +435,8 @@ class _EventPageSummary {
 class _EntryGroupSummary {
   const _EntryGroupSummary({
     required this.group,
+    required this.tickets,
+    required this.ticketPendingCounts,
     required this.confirmedCount,
     required this.pendingCount,
     required this.refundedCount,
@@ -441,6 +446,10 @@ class _EntryGroupSummary {
   });
 
   final EntryGroup group;
+  /// Tickets targeting this group — displayed as editable rows in the UI.
+  final List<Ticket> tickets;
+  /// Per-ticket pending (심사 대기) count: ticketId → count.
+  final Map<String, int> ticketPendingCounts;
   final int confirmedCount;
   final int pendingCount;
   final int refundedCount;
@@ -495,9 +504,20 @@ class _EntryGroupSummary {
       0,
       (sum, ticket) => sum + (ticket.price * ticket.quantity),
     );
+    final ticketPendingCounts = {
+      for (final ticket in groupTickets)
+        ticket.id: groupApplications
+            .where(
+              (app) =>
+                  app.ticketId == ticket.id && app.status == 'pending_review',
+            )
+            .length,
+    };
 
     return _EntryGroupSummary(
       group: group,
+      tickets: groupTickets,
+      ticketPendingCounts: ticketPendingCounts,
       confirmedCount: confirmedCount,
       pendingCount: pendingCount,
       refundedCount: refundedCount,
@@ -1128,9 +1148,13 @@ class _EntryGroupTile extends StatelessWidget {
   final _EventLifecycleState state;
   final _EntryGroupSummary summary;
 
+  bool get _isEditable =>
+      state == _EventLifecycleState.scheduled ||
+      state == _EventLifecycleState.emptyApplications;
+
   @override
   Widget build(BuildContext context) {
-    final content = Padding(
+    final headerContent = Padding(
       padding: const EdgeInsets.all(MinglitSpacing.medium),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1161,23 +1185,168 @@ class _EntryGroupTile extends StatelessWidget {
       ),
     );
 
-    if (state == _EventLifecycleState.scheduled ||
-        state == _EventLifecycleState.emptyApplications) {
-      return InkWell(
-        onTap: () {
-          unawaited(
-            EventApplicationListRoute(
-              partyId: event.partyId,
-              eventId: event.id,
-              groupId: summary.group.id,
-            ).push<void>(context),
-          );
-        },
-        child: content,
-      );
-    }
+    final header = _isEditable
+        ? InkWell(
+            onTap: () {
+              unawaited(
+                EventApplicationListRoute(
+                  partyId: event.partyId,
+                  eventId: event.id,
+                  groupId: summary.group.id,
+                ).push<void>(context),
+              );
+            },
+            child: headerContent,
+          )
+        : headerContent;
 
-    return content;
+    // Fix #2275: spec §입장 그룹별 현황 — 티켓 row × N (TicketEditRoute) +
+    // "이 그룹에 티켓 추가" 버튼 (TicketCreateRoute), 수정 가능 상태에서만 표시.
+    if (!_isEditable) return header;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        header,
+        if (summary.tickets.isNotEmpty) ...[
+          Divider(
+            height: 1,
+            color: Theme.of(context).colorScheme.outlineVariant,
+          ),
+          ...summary.tickets.map(
+            (ticket) => _TicketRow(
+              event: event,
+              ticket: ticket,
+              pendingCount: summary.ticketPendingCounts[ticket.id] ?? 0,
+            ),
+          ),
+        ],
+        Divider(height: 1, color: Theme.of(context).colorScheme.outlineVariant),
+        _AddTicketRow(event: event),
+      ],
+    );
+  }
+}
+
+class _TicketRow extends StatelessWidget {
+  const _TicketRow({
+    required this.event,
+    required this.ticket,
+    required this.pendingCount,
+  });
+
+  final Event event;
+  final Ticket ticket;
+  final int pendingCount;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: () {
+        unawaited(
+          TicketEditRoute(
+            partyId: event.partyId,
+            eventId: event.id,
+            ticketId: ticket.id,
+          ).push<void>(context),
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: MinglitSpacing.medium,
+          vertical: MinglitSpacing.small,
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    ticket.name,
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: MinglitSpacing.xxsmall),
+                  Text(
+                    _formatCurrency(ticket.price),
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(height: MinglitSpacing.xsmall),
+                  MinglitCapacityBar(
+                    total: ticket.quantity == 0 ? 1 : ticket.quantity,
+                    filled: ticket.soldCount,
+                    pending: pendingCount,
+                  ),
+                  const SizedBox(height: MinglitSpacing.xxsmall),
+                  Text(
+                    '${ticket.soldCount} / ${ticket.quantity} 발행',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: MinglitSpacing.small),
+            Icon(
+              Icons.chevron_right,
+              size: MinglitIconSize.small,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AddTicketRow extends StatelessWidget {
+  const _AddTicketRow({required this.event});
+
+  final Event event;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: () {
+        unawaited(
+          TicketCreateRoute(
+            partyId: event.partyId,
+            eventId: event.id,
+          ).push<void>(context),
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: MinglitSpacing.medium,
+          vertical: MinglitSpacing.small,
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.add,
+              size: MinglitIconSize.small,
+              color: theme.colorScheme.primary,
+            ),
+            const SizedBox(width: MinglitSpacing.xsmall),
+            Text(
+              '이 그룹에 티켓 추가',
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -1463,7 +1632,7 @@ class _EventDDayChip extends StatelessWidget {
         label: '이벤트 종료 후 $elapsed일 경과',
         child: ExcludeSemantics(
           child: MinglitDDayChip(
-            daysUntil: 8,
+            daysUntil: _EventLifecycleState._outlineTierThreshold,
             label: 'D+$elapsed',
           ),
         ),
@@ -1471,11 +1640,12 @@ class _EventDDayChip extends StatelessWidget {
     }
 
     if (state == _EventLifecycleState.cancelled) {
+      // Fix #2275: cancelled 상태는 이미 완료된 이벤트이므로 outline tier로 표시
       return Semantics(
         label: days <= 0 ? '취소된 이벤트 일정 도래' : '취소된 이벤트까지 $days일 남음',
         child: ExcludeSemantics(
           child: MinglitDDayChip(
-            daysUntil: days <= 0 ? 8 : days,
+            daysUntil: days <= 0 ? _EventLifecycleState._outlineTierThreshold : days,
             label: days <= 0 ? '오늘' : 'D-$days',
           ),
         ),
