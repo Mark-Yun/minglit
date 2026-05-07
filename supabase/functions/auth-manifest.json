@@ -16,6 +16,36 @@
       "callers": ["user"],
       "envs": ["dev", "production"],
       "description": "파트너 일괄 심사 — approve + reject 단일 트랜잭션 처리 (issue #2101)"
+    },
+    "cleanup-blocked-dis": {
+      "callers": ["system"],
+      "envs": ["dev", "production"],
+      "description": "만료된 DI 블록 정리 (크론)"
+    },
+    "github-stats-sync": {
+      "callers": ["system"],
+      "envs": ["dev", "production"],
+      "description": "GitHub 이슈/PR 통계 수집 → analytics.github_daily_stats 저장 (pg_cron 트리거)"
+    },
+    "metrics-alert": {
+      "callers": ["system"],
+      "envs": ["dev", "production"],
+      "description": "메트릭 알람 → GitHub 이슈 생성/코멘트"
+    },
+    "payout-sync": {
+      "callers": ["system"],
+      "envs": ["dev", "production"],
+      "description": "지급 상태 동기화 (PortOne)"
+    },
+    "reconciliation-daily": {
+      "callers": ["system"],
+      "envs": ["dev", "production"],
+      "description": "일일 대사 (PG ↔ DB 불일치 검출)"
+    },
+    "recurrence-cron": {
+      "callers": ["system"],
+      "envs": ["dev", "production"],
+      "description": "반복 이벤트 자동 생성 (매일 UTC 00:00, 최대 30일 선행 생성)"
     }
   }
 }

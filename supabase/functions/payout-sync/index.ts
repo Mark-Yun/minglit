@@ -1,14 +1,9 @@
 // Fix #179: esm.sh 직접 URL → deno.json import map 기반으로 통일
-import { createServiceClient } from "../_shared/supabase_client.ts";
 import { getPortoneClient } from "../_shared/portone_client.ts";
-import { successResponse, errorResponse, corsResponse } from "../_shared/response_utils.ts";
-import { requireServiceRole } from "../_shared/auth_utils.ts";
-import { initSentry, withHandler, log } from "../_shared/logger.ts";
-
-const FN = "payout-sync";
-
-
-initSentry();
+import { successResponse, errorResponse } from "../_shared/response_utils.ts";
+import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
+// Fix #593: service_role 전용으로 전환 — 벌크 금융 작업에 일반 유저 접근 차단 (now handled by minglitEdgeFunction wrapper)
+import { log } from "../_shared/logger.ts";
 
 const NON_RETRYABLE_ERRORS = new Set([
   "INVALID_BANK_ACCOUNT",
@@ -30,23 +25,17 @@ function classifyError(errorCode: string): { retryable: boolean } {
   return { retryable: true };
 }
 
-Deno.serve(withHandler(async (req) => {
-  if (req.method === "OPTIONS") return corsResponse();
-
-  // Fix #593: service_role 전용으로 전환 — 벌크 금융 작업에 일반 유저 접근 차단
-  const auth = requireServiceRole(req);
-  if (auth instanceof Response) return auth;
+export const handler = async (req: Request, { supabase }: EFContext): Promise<Response> => {
+  if (req.method !== "POST") return errorResponse("Method Not Allowed", 405);
 
   try {
-    const supabase = createServiceClient();
-
     const { data: activePayout, error: payoutFetchError } = await supabase
       .from("payouts")
       .select("id, partner_id, status, item_count")
       .in("status", ["CREATED", "READY", "PROCESSING"]);
 
     if (payoutFetchError) {
-      log({ function: FN, level: "error", message: `Failed to fetch active payouts: ${payoutFetchError.message}` });
+      log({ function: "payout-sync", level: "error", message: `Failed to fetch active payouts: ${payoutFetchError.message}` });
       return errorResponse("Failed to fetch payouts", 500);
     }
 
@@ -66,7 +55,7 @@ Deno.serve(withHandler(async (req) => {
           .single();
 
         if (partnerError || !partner?.portone_partner_id) {
-          log({ function: FN, level: "error", message: `Partner not found for payout ${payout.id}` });
+          log({ function: "payout-sync", level: "error", message: `Partner not found for payout ${payout.id}` });
           continue;
         }
 
@@ -76,7 +65,7 @@ Deno.serve(withHandler(async (req) => {
           portonePayouts = result.payouts ?? [];
         } catch (e) {
           const message = e instanceof Error ? e.message : String(e);
-          log({ function: FN, level: "error", message: `getPayouts failed for payout ${payout.id}: ${message}` });
+          log({ function: "payout-sync", level: "error", message: `getPayouts failed for payout ${payout.id}: ${message}` });
           continue;
         }
 
@@ -193,14 +182,16 @@ Deno.serve(withHandler(async (req) => {
         }
       } catch (e) {
         const message = e instanceof Error ? e.message : String(e);
-        log({ function: FN, level: "error", message: `Error syncing payout ${payout.id}: ${message}` });
+        log({ function: "payout-sync", level: "error", message: `Error syncing payout ${payout.id}: ${message}` });
       }
     }
 
     return successResponse({ synced });
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
-    log({ function: FN, level: "error", message: `Error in payout-sync: ${message}` });
+    log({ function: "payout-sync", level: "error", message: `Error in payout-sync: ${message}` });
     return errorResponse(message, 500);
   }
-}));
+};
+
+minglitEdgeFunction(handler);

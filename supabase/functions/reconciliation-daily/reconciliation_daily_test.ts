@@ -7,13 +7,14 @@ import {
   readJson,
   withEnv,
   withMockedFetch,
-  withNoIntervals,
 } from "../_test_utils/mock_http.ts";
 
 const ENV = {
   PORTONE_V2_API_KEY: "test-portone-key",
   SUPABASE_URL: "https://supabase.test",
   SUPABASE_SERVICE_ROLE_KEY: "test-service-key",
+  ENVIRONMENT: "dev",
+  MINGLIT_EF_TEST_FN_NAME: "reconciliation-daily",
 };
 
 const RUN_ID = "aaaaaaaa-0000-0000-0000-000000000001";
@@ -121,18 +122,16 @@ Deno.test("reconciliation-daily - successful reconciliation with matched data", 
     ]);
 
     await withMockedFetch(fetchMock, async () => {
-      await withNoIntervals(async () => {
-        const request = jsonRequest("http://localhost", {}, {
-          headers: { Authorization: "Bearer test-service-key" },
-        });
-        const response = await handler(request);
-        const payload = await readJson(response);
-
-        assertEquals(response.status, 200);
-        assertEquals(payload.matched, 1);
-        assertEquals(payload.mismatched, 0);
-        assertEquals(payload.critical, 0);
+      const request = jsonRequest("http://localhost", {}, {
+        headers: { Authorization: "Bearer test-service-key" },
       });
+      const response = await handler(request);
+      const payload = await readJson(response);
+
+      assertEquals(response.status, 200);
+      assertEquals(payload.matched, 1);
+      assertEquals(payload.mismatched, 0);
+      assertEquals(payload.critical, 0);
     });
   });
 });
@@ -169,18 +168,16 @@ Deno.test("reconciliation-daily - MISSING_IN_PORTONE detection", async () => {
     ]);
 
     await withMockedFetch(fetchMock, async () => {
-      await withNoIntervals(async () => {
-        const request = jsonRequest("http://localhost", {}, {
-          headers: { Authorization: "Bearer test-service-key" },
-        });
-        const response = await handler(request);
-        const payload = await readJson(response);
-
-        assertEquals(response.status, 200);
-        assertEquals(payload.critical, 1);
-        assertEquals(payload.mismatched, 1);
-        assertEquals(payload.matched, 0);
+      const request = jsonRequest("http://localhost", {}, {
+        headers: { Authorization: "Bearer test-service-key" },
       });
+      const response = await handler(request);
+      const payload = await readJson(response);
+
+      assertEquals(response.status, 200);
+      assertEquals(payload.critical, 1);
+      assertEquals(payload.mismatched, 1);
+      assertEquals(payload.matched, 0);
     });
   });
 });
@@ -218,18 +215,16 @@ Deno.test("reconciliation-daily - MISSING_IN_LEDGER detection", async () => {
     ]);
 
     await withMockedFetch(fetchMock, async () => {
-      await withNoIntervals(async () => {
-        const request = jsonRequest("http://localhost", {}, {
-          headers: { Authorization: "Bearer test-service-key" },
-        });
-        const response = await handler(request);
-        const payload = await readJson(response);
-
-        assertEquals(response.status, 200);
-        assertEquals(payload.critical, 1);
-        assertEquals(payload.mismatched, 1);
-        assertEquals(payload.matched, 0);
+      const request = jsonRequest("http://localhost", {}, {
+        headers: { Authorization: "Bearer test-service-key" },
       });
+      const response = await handler(request);
+      const payload = await readJson(response);
+
+      assertEquals(response.status, 200);
+      assertEquals(payload.critical, 1);
+      assertEquals(payload.mismatched, 1);
+      assertEquals(payload.matched, 0);
     });
   });
 });
@@ -254,14 +249,12 @@ Deno.test("reconciliation-daily - PortOne API failure → FAILED run, no kill sw
     ]);
 
     await withMockedFetch(fetchMock, async () => {
-      await withNoIntervals(async () => {
-        const request = jsonRequest("http://localhost", {}, {
-          headers: { Authorization: "Bearer test-service-key" },
-        });
-        const response = await handler(request);
-
-        assertEquals(response.status, 500);
+      const request = jsonRequest("http://localhost", {}, {
+        headers: { Authorization: "Bearer test-service-key" },
       });
+      const response = await handler(request);
+
+      assertEquals(response.status, 500);
     });
   });
 });
