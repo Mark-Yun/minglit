@@ -418,6 +418,132 @@ abstract class AppLocalizations {
   /// **'오류가 발생했습니다: {error}'**
   String partyList_error_load(String error);
 
+  /// No description provided for @partyList_appBar_title.
+  ///
+  /// In ko, this message translates to:
+  /// **'파티 관리'**
+  String get partyList_appBar_title;
+
+  /// No description provided for @partyList_stats_completed.
+  ///
+  /// In ko, this message translates to:
+  /// **'완료 {count}회'**
+  String partyList_stats_completed(int count);
+
+  /// No description provided for @partyList_stats_upcoming.
+  ///
+  /// In ko, this message translates to:
+  /// **'예정 {count}회'**
+  String partyList_stats_upcoming(int count);
+
+  /// No description provided for @partyList_nextEvent_label.
+  ///
+  /// In ko, this message translates to:
+  /// **'다음 이벤트'**
+  String get partyList_nextEvent_label;
+
+  /// No description provided for @partyList_cta_createEvent.
+  ///
+  /// In ko, this message translates to:
+  /// **'이벤트 생성하기'**
+  String get partyList_cta_createEvent;
+
+  /// No description provided for @partyList_cta_createEventNew.
+  ///
+  /// In ko, this message translates to:
+  /// **'이벤트 만들기'**
+  String get partyList_cta_createEventNew;
+
+  /// No description provided for @partyList_cta_createEventSub.
+  ///
+  /// In ko, this message translates to:
+  /// **'첫 이벤트를 개설해 파티를 시작해보세요!'**
+  String get partyList_cta_createEventSub;
+
+  /// No description provided for @partyList_cta_draftSub.
+  ///
+  /// In ko, this message translates to:
+  /// **'임시저장 상태입니다. 파티를 게시해야 이벤트를 만들 수 있어요.'**
+  String get partyList_cta_draftSub;
+
+  /// No description provided for @partyList_empty_title.
+  ///
+  /// In ko, this message translates to:
+  /// **'아직 파티가 없어요'**
+  String get partyList_empty_title;
+
+  /// No description provided for @partyList_empty_subtitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'첫 번째 파티를 만들고 멋진 이벤트를 열어보세요.'**
+  String get partyList_empty_subtitle;
+
+  /// No description provided for @partyList_empty_createParty.
+  ///
+  /// In ko, this message translates to:
+  /// **'새로운 파티 만들기'**
+  String get partyList_empty_createParty;
+
+  /// No description provided for @partyList_empty_helpButton.
+  ///
+  /// In ko, this message translates to:
+  /// **'파티란 무엇인가요?'**
+  String get partyList_empty_helpButton;
+
+  /// No description provided for @partyList_helpSheet_title.
+  ///
+  /// In ko, this message translates to:
+  /// **'파티 관리 가이드'**
+  String get partyList_helpSheet_title;
+
+  /// No description provided for @partyList_helpSheet_q1_title.
+  ///
+  /// In ko, this message translates to:
+  /// **'파티가 뭔가요?'**
+  String get partyList_helpSheet_q1_title;
+
+  /// No description provided for @partyList_helpSheet_q1_body.
+  ///
+  /// In ko, this message translates to:
+  /// **'파티는 여러 이벤트를 묶는 공간이에요. 예를 들어 \"금요 밍글 파티\"라는 파티 아래에 매주 금요일 이벤트를 만들 수 있어요.'**
+  String get partyList_helpSheet_q1_body;
+
+  /// No description provided for @partyList_helpSheet_q2_title.
+  ///
+  /// In ko, this message translates to:
+  /// **'이벤트는 뭔가요?'**
+  String get partyList_helpSheet_q2_title;
+
+  /// No description provided for @partyList_helpSheet_q2_body.
+  ///
+  /// In ko, this message translates to:
+  /// **'이벤트는 실제로 사람이 모이는 날짜·시간 단위예요. 파티 1개에 여러 이벤트를 개설할 수 있어요.'**
+  String get partyList_helpSheet_q2_body;
+
+  /// No description provided for @partyList_helpSheet_q3_title.
+  ///
+  /// In ko, this message translates to:
+  /// **'임시저장과 게시의 차이는요?'**
+  String get partyList_helpSheet_q3_title;
+
+  /// No description provided for @partyList_helpSheet_q3_body.
+  ///
+  /// In ko, this message translates to:
+  /// **'임시저장은 유저에게 노출되지 않아요. 파티 정보를 완성하고 게시해야 이벤트 개설이 가능해요.'**
+  String get partyList_helpSheet_q3_body;
+
+  /// No description provided for @partyList_helpSheet_q4_title.
+  ///
+  /// In ko, this message translates to:
+  /// **'이벤트를 꼭 만들어야 하나요?'**
+  String get partyList_helpSheet_q4_title;
+
+  /// No description provided for @partyList_helpSheet_q4_body.
+  ///
+  /// In ko, this message translates to:
+  /// **'네, 유저가 신청할 수 있으려면 이벤트가 있어야 해요. 파티만 있으면 유저가 볼 수 없어요.'**
+  String get partyList_helpSheet_q4_body;
+
   /// No description provided for @reviewVerification_title_pending.
   ///
   /// In ko, this message translates to:
@@ -1579,7 +1705,7 @@ abstract class AppLocalizations {
   /// No description provided for @eventDetail_title.
   ///
   /// In ko, this message translates to:
-  /// **'회차 상세'**
+  /// **'이벤트 상세'**
   String get eventDetail_title;
 
   /// No description provided for @eventDetail_label_dateTime.

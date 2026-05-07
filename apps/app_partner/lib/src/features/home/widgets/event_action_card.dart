@@ -1,69 +1,11 @@
+import 'package:app_partner/src/features/home/home_event_phase.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
-/// Phase of the nearest event, determines UI and available actions.
-enum EventPhase {
-  recruiting, // > 3 hours until start
-  preparing, // <= 3 hours until start
-  live, // started, not ended
-  ended, // ended within 24 hours
-}
+export 'package:app_partner/src/features/home/widgets/event_action_card_empty.dart';
 
-/// Determines the phase of an event based on current time.
-EventPhase getEventPhase(Event event) {
-  final now = DateTime.now();
-  final start = event.startTime;
-  final end = event.endTime;
-
-  if (now.isAfter(end)) return EventPhase.ended;
-  if (now.isAfter(start)) return EventPhase.live;
-  // Fix #523: <= 3 으로 수정 — enum 문서 "preparing: <= 3시간" 경계와 일치
-  if (start.difference(now).inHours <= 3) return EventPhase.preparing;
-  return EventPhase.recruiting;
-}
-
-/// Selects the most relevant event to display in the action card.
-/// Priority: live > preparing > ended (within 24h) > recruiting (soonest).
-Event? selectPrimaryEvent(List<Event> events) {
-  if (events.isEmpty) return null;
-
-  final now = DateTime.now();
-  final cutoff = now.subtract(const Duration(hours: 24));
-
-  Event? bestLive;
-  Event? bestPreparing;
-  Event? bestEnded;
-  Event? bestRecruiting;
-
-  for (final e in events) {
-    final phase = getEventPhase(e);
-    switch (phase) {
-      case EventPhase.live:
-        if (bestLive == null || e.startTime.isBefore(bestLive.startTime)) {
-          bestLive = e;
-        }
-      case EventPhase.preparing:
-        if (bestPreparing == null ||
-            e.startTime.isBefore(bestPreparing.startTime)) {
-          bestPreparing = e;
-        }
-      case EventPhase.ended:
-        if (e.endTime.isAfter(cutoff)) {
-          if (bestEnded == null || e.endTime.isAfter(bestEnded.endTime)) {
-            bestEnded = e;
-          }
-        }
-      case EventPhase.recruiting:
-        if (bestRecruiting == null ||
-            e.startTime.isBefore(bestRecruiting.startTime)) {
-          bestRecruiting = e;
-        }
-    }
-  }
-
-  return bestLive ?? bestPreparing ?? bestEnded ?? bestRecruiting;
-}
+part '_event_action_card_stats.dart';
 
 /// The main event action card on the home dashboard.
 /// Shows the nearest event with phase-appropriate actions.
@@ -105,7 +47,8 @@ class EventActionCard extends StatelessWidget {
       EventPhase.recruiting => (
         _recruitingLabel(event),
         MinglitColors.success,
-        // Fix #957: highlight (0.1) preserves original event phase background intensity
+        // Fix #957: highlight (0.1) preserves original event phase
+        // background intensity
         MinglitColors.success.withValues(alpha: MinglitOpacity.highlight),
         colorScheme.outlineVariant,
         colorScheme.surfaceContainerLowest,
@@ -384,144 +327,5 @@ class EventActionCard extends StatelessWidget {
     final hours = DateTime.now().difference(event.endTime).inHours;
     if (hours < 1) return '종료 · 방금 전';
     return '종료 · $hours시간 전';
-  }
-}
-
-class _EndedStatsRow extends StatelessWidget {
-  const _EndedStatsRow({required this.event});
-  final Event event;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final capacity = event.maxParticipants;
-    final current = event.currentParticipants;
-    final fmt = NumberFormat('#,###');
-    // Fix #523: 하드코딩 매출 0 → 실제 티켓 매출 계산
-    final totalRevenue =
-        event.tickets?.fold<int>(
-          0,
-          (sum, ticket) => sum + (ticket.price * ticket.soldCount),
-        ) ??
-        0;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(MinglitRadius.input),
-        border: Border.all(color: colorScheme.outlineVariant),
-      ),
-      child: Row(
-        children: [
-          _StatCell(label: '참석 확정', value: '$current명', theme: theme),
-          // Fix #523: 하드코딩 매출 0 → 실제 티켓 매출 계산
-          _StatCell(
-            label: '매출',
-            value: '₩${fmt.format(totalRevenue)}',
-            theme: theme,
-          ),
-          _StatCell(
-            label: '출석률',
-            value: capacity > 0
-                ? '${(current / capacity * 100).round()}%'
-                : '-',
-            theme: theme,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatCell extends StatelessWidget {
-  const _StatCell({
-    required this.label,
-    required this.value,
-    required this.theme,
-  });
-  final String label;
-  final String value;
-  final ThemeData theme;
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          vertical: MinglitSpacing.small,
-          horizontal: MinglitSpacing.xsmall,
-        ),
-        child: Column(
-          children: [
-            Text(
-              value,
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            Text(label, style: theme.textTheme.labelSmall),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Empty state when no events exist.
-class EventActionCardEmpty extends StatelessWidget {
-  const EventActionCardEmpty({
-    required this.hasParties,
-    required this.onCreateEvent,
-    required this.onCreateParty,
-    super.key,
-  });
-
-  final bool hasParties;
-  final VoidCallback onCreateEvent;
-  final VoidCallback onCreateParty;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(MinglitSpacing.large),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(MinglitRadius.button),
-        border: Border.all(color: theme.colorScheme.outlineVariant),
-      ),
-      child: Column(
-        children: [
-          Icon(
-            hasParties ? Icons.event_outlined : Icons.celebration_outlined,
-            size: MinglitIconSize.xlarge * 1.5,
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-          const SizedBox(height: MinglitSpacing.sm),
-          Text(
-            hasParties ? '이벤트를 만들어 신청을 받아보세요' : '첫 파티를 만들어보세요',
-            style: theme.textTheme.titleSmall,
-          ),
-          const SizedBox(height: MinglitSpacing.medium),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton.icon(
-              onPressed: hasParties ? onCreateEvent : onCreateParty,
-              icon: const Icon(Icons.add, size: MinglitIconSize.small),
-              label: Text(hasParties ? '이벤트 만들기' : '파티 만들기'),
-              style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  vertical: MinglitSpacing.sm,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(MinglitRadius.input),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }

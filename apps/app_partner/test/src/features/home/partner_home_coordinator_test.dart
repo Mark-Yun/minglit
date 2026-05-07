@@ -77,8 +77,9 @@ void main() {
         );
         final coordinator = container.read(partnerHomeCoordinatorProvider);
 
-        coordinator.pushNotificationCenter();
-        coordinator.pushApplicationList();
+        coordinator
+          ..pushNotificationCenter()
+          ..pushApplicationList();
 
         final captured = verify(() => mockRouter.push(captureAny())).captured;
         expect(captured.length, 2);

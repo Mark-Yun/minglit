@@ -21,7 +21,11 @@ import 'package:app_partner/src/features/onboarding/partner_welcome_page.dart';
 import 'package:app_partner/src/features/party/create/party_create_wizard_page.dart';
 import 'package:app_partner/src/features/party/detail/party_detail_page.dart';
 import 'package:app_partner/src/features/party/event/create/event_create_page.dart';
+import 'package:app_partner/src/features/party/event/detail/event_application_list_page.dart';
 import 'package:app_partner/src/features/party/event/detail/event_detail_page.dart';
+import 'package:app_partner/src/features/party/event/edit/event_edit_page.dart';
+import 'package:app_partner/src/features/party/event/review/event_application_review_carousel_page.dart';
+import 'package:app_partner/src/features/party/event/review/event_application_review_confirm_page.dart';
 import 'package:app_partner/src/features/party/list/party_list_page.dart';
 import 'package:app_partner/src/features/party/recurrence/recurrence_management_screen.dart';
 import 'package:app_partner/src/features/settlement/bank_account_page.dart';
@@ -31,6 +35,7 @@ import 'package:app_partner/src/features/ticket/create/ticket_create_page.dart';
 import 'package:app_partner/src/features/ticket/edit/ticket_edit_page.dart';
 import 'package:app_partner/src/features/verification/create/create_verification_page.dart';
 import 'package:app_partner/src/features/verification/manage/verification_manage_page.dart';
+import 'package:app_partner/src/features/verification/review/review_verification_screen.dart';
 import 'package:app_partner/src/ui/shell/partner_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -165,9 +170,26 @@ class NotificationCenterRoute extends GoRouteData
                     TypedGoRoute<EventDetailRoute>(
                       path: 'events/:eventId',
                       routes: [
+                        TypedGoRoute<EventEditRoute>(path: 'edit'),
                         TypedGoRoute<TicketCreateRoute>(path: 'tickets/create'),
                         TypedGoRoute<TicketEditRoute>(
                           path: 'tickets/:ticketId/edit',
+                        ),
+                        // Fix #2224: Tab 구조 폐기 — 참가 신청 별도 라우트
+                        TypedGoRoute<EventApplicationListRoute>(
+                          path: 'applications',
+                          routes: [
+                            TypedGoRoute<EventApplicationReviewCarouselRoute>(
+                              path: 'review',
+                              routes: [
+                                TypedGoRoute<
+                                  EventApplicationReviewConfirmRoute
+                                >(
+                                  path: 'confirm',
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -178,6 +200,8 @@ class NotificationCenterRoute extends GoRouteData
             // Settings, Profile, etc.
             TypedGoRoute<VerificationManageRoute>(path: 'verifications/manage'),
             TypedGoRoute<CreateVerificationRoute>(path: 'verifications/create'),
+            // Fix #2142: ReviewVerificationScreen had no registered route
+            TypedGoRoute<VerificationReviewRoute>(path: 'verifications/review'),
             TypedGoRoute<NotificationSettingsRoute>(
               path: 'notification-settings',
             ),
@@ -357,6 +381,18 @@ class EventDetailRoute extends GoRouteData with $EventDetailRoute {
       );
 }
 
+class EventEditRoute extends GoRouteData with $EventEditRoute {
+  const EventEditRoute({required this.partyId, required this.eventId});
+  final String partyId;
+  final String eventId;
+  @override
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      MinglitPageTransitions.sharedAxisScaled(
+        key: state.pageKey,
+        child: EventEditPage(eventId: eventId),
+      );
+}
+
 class TicketCreateRoute extends GoRouteData with $TicketCreateRoute {
   const TicketCreateRoute({required this.partyId, required this.eventId});
   final String partyId;
@@ -378,6 +414,60 @@ class TicketEditRoute extends GoRouteData with $TicketEditRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       TicketEditPage(partyId: partyId, eventId: eventId, ticketId: ticketId);
+}
+
+// Fix #2224: Tab 구조 폐기 — 참가 신청 심사를 별도 라우트로 분리
+class EventApplicationListRoute extends GoRouteData
+    with $EventApplicationListRoute {
+  const EventApplicationListRoute({
+    required this.partyId,
+    required this.eventId,
+    this.groupId,
+  });
+  final String partyId;
+  final String eventId;
+  final String? groupId;
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      EventApplicationListPage(eventId: eventId, groupId: groupId);
+}
+
+// Fix #2126: stub route — carousel page implemented in #2127
+class EventApplicationReviewCarouselRoute extends GoRouteData
+    with $EventApplicationReviewCarouselRoute {
+  const EventApplicationReviewCarouselRoute({
+    required this.partyId,
+    required this.eventId,
+    this.startApplicationId,
+    this.groupId,
+  });
+  final String partyId;
+  final String eventId;
+  final String? startApplicationId;
+  final String? groupId;
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      EventApplicationReviewCarouselPage(
+        partyId: partyId,
+        eventId: eventId,
+        startApplicationId: startApplicationId,
+        groupId: groupId,
+      );
+}
+
+class EventApplicationReviewConfirmRoute extends GoRouteData
+    with $EventApplicationReviewConfirmRoute {
+  const EventApplicationReviewConfirmRoute({
+    required this.partyId,
+    required this.eventId,
+  });
+
+  final String partyId;
+  final String eventId;
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      EventApplicationReviewConfirmPage(eventId: eventId);
 }
 
 // 3. Settlement
@@ -468,6 +558,15 @@ class CreateVerificationRoute extends GoRouteData
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       CreateVerificationPage(partnerId: partnerId);
+}
+
+// Fix #2142: register the review route so ReviewVerificationScreen is reachable
+class VerificationReviewRoute extends GoRouteData
+    with $VerificationReviewRoute {
+  const VerificationReviewRoute();
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const ReviewVerificationScreen();
 }
 
 class MemberListRoute extends GoRouteData with $MemberListRoute {

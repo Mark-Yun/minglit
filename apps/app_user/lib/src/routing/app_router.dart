@@ -71,7 +71,8 @@ GoRouter goRouter(Ref ref) {
       final isProtected =
           protectedPrefixes.any(path.startsWith) ||
           path.endsWith('/apply') ||
-          path.endsWith('/qr');
+          path.endsWith('/qr') ||
+          path.endsWith('/matching');
 
       // 3. 비로그인 상태에서 보호된 경로 진입 시 -> 로그인 페이지로
       if (!isLoggedIn && isProtected) {

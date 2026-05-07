@@ -1,4 +1,4 @@
-import 'package:app_user/src/features/auth/logic/auth_coordinator.dart';
+import 'package:app_user/src/logic/auth_coordinator.dart';
 import 'package:app_user/src/routing/app_router.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';

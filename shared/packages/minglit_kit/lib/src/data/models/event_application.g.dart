@@ -22,6 +22,13 @@ _EventApplication _$EventApplicationFromJson(Map<String, dynamic> json) =>
       paidAt: json['paid_at'] == null
           ? null
           : DateTime.parse(json['paid_at'] as String),
+      refundedAt: json['refunded_at'] == null
+          ? null
+          : DateTime.parse(json['refunded_at'] as String),
+      cancellationReason: json['cancellation_reason'] as String?,
+      matchResultsViewedAt: json['match_results_viewed_at'] == null
+          ? null
+          : DateTime.parse(json['match_results_viewed_at'] as String),
       user: json['user'] == null
           ? null
           : UserProfile.fromJson(json['user'] as Map<String, dynamic>),
@@ -38,22 +45,26 @@ _EventApplication _$EventApplicationFromJson(Map<String, dynamic> json) =>
           : Ticket.fromJson(json['ticket'] as Map<String, dynamic>),
     );
 
-Map<String, dynamic> _$EventApplicationToJson(_EventApplication instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'event_id': instance.eventId,
-      'ticket_id': instance.ticketId,
-      'user_id': instance.userId,
-      'status': instance.status,
-      'created_at': instance.createdAt.toIso8601String(),
-      'updated_at': instance.updatedAt.toIso8601String(),
-      'payment_id': instance.paymentId,
-      'payment_amount': instance.paymentAmount,
-      'refund_status': instance.refundStatus,
-      'rejection_reason': instance.rejectionReason,
-      'paid_at': instance.paidAt?.toIso8601String(),
-      'user': instance.user,
-      'submission': instance.submission,
-      'event': instance.event,
-      'ticket': instance.ticket,
-    };
+Map<String, dynamic> _$EventApplicationToJson(
+  _EventApplication instance,
+) => <String, dynamic>{
+  'id': instance.id,
+  'event_id': instance.eventId,
+  'ticket_id': instance.ticketId,
+  'user_id': instance.userId,
+  'status': instance.status,
+  'created_at': instance.createdAt.toIso8601String(),
+  'updated_at': instance.updatedAt.toIso8601String(),
+  'payment_id': instance.paymentId,
+  'payment_amount': instance.paymentAmount,
+  'refund_status': instance.refundStatus,
+  'rejection_reason': instance.rejectionReason,
+  'paid_at': instance.paidAt?.toIso8601String(),
+  'refunded_at': instance.refundedAt?.toIso8601String(),
+  'cancellation_reason': instance.cancellationReason,
+  'match_results_viewed_at': instance.matchResultsViewedAt?.toIso8601String(),
+  'user': instance.user,
+  'submission': instance.submission,
+  'event': instance.event,
+  'ticket': instance.ticket,
+};

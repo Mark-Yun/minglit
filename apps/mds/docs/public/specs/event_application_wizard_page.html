@@ -2,11 +2,11 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>Spec — EventApplicationWizardPage (app_user · EventApplicationRoute)</title>
+<title>Spec — EventApplicationWizardPage v2 (app_user · EventApplicationRoute)</title>
 <link rel="stylesheet" href="/specs/_spec.css">
 <style>
 /* ============================================================
-   EventApplicationWizardPage-specific atoms.
+   EventApplicationWizardPage v2 — 4-step redesign atoms.
    Tokens / chrome / tables / perspectives come from /specs/_spec.css.
    Cardinal rule: Scaffold (page) bg = --color-surface (gray).
    Cards / AppBar are NOT inverted — AppBar matches scaffold (no border),
@@ -36,39 +36,48 @@
   padding-right: 40px;
 }
 
-/* --- Step indicator (two circles + connector) --- */
+/* --- Step indicator (4 circles + 3 connectors · v2) --- */
 .wiz-steps {
   background: var(--color-surface);
   padding: var(--spacing-medium) 0;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
 }
 .wiz-step__circle {
-  width: 32px; height: 32px;
+  width: 28px; height: 28px;
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   color: white;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
 }
 .wiz-step__circle--active { background: var(--color-primary); }
-.wiz-step__circle--inactive { background: var(--color-text-secondary); }
+.wiz-step__circle--inactive { background: var(--color-divider); color: var(--color-text-secondary); }
+/* ✓ checked tone — done step (초록 ✓ · 살짝 dim해서 진행 중과 위계 구분) */
+.wiz-step__circle--done {
+  background: var(--color-success);
+  opacity: 0.7;
+}
+.wiz-step__circle--done svg { width: 14px; height: 14px; color: white; }
 .wiz-step__col {
   display: flex; flex-direction: column; align-items: center; gap: var(--spacing-xsmall);
+  width: 60px;
+  text-align: center;
 }
 .wiz-step__label {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--color-text-secondary);
+  line-height: 1.2;
 }
 .wiz-step__label--active { color: var(--color-primary); font-weight: 700; }
+.wiz-step__label--done { color: var(--color-success); opacity: 0.8; font-weight: 600; }
 .wiz-step__connector {
-  width: 40px; height: 2px;
+  width: 18px; height: 2px;
   background: var(--color-divider);
-  margin: 0 var(--spacing-small);
-  /* connector aligns with circle center, push above label */
-  margin-bottom: 18px;
+  margin: 13px 2px 0 2px; /* align with circle vertical center (14 - 1) */
 }
+.wiz-step__connector--done { background: var(--color-success); opacity: 0.7; }
 
 /* --- Body (scrolls between step indicator and footer) --- */
 .wiz-body {
@@ -86,6 +95,9 @@
   font-weight: 700;
   color: var(--color-text-primary);
   margin-bottom: var(--spacing-medium);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-small);
 }
 .wiz-section-sub {
   font-size: 13px;
@@ -93,6 +105,416 @@
   margin-top: var(--spacing-xxsmall);
   margin-bottom: var(--spacing-large);
   line-height: 1.5;
+}
+/* 파트너 인증 form group — iOS inset grouped 스타일 (title 위쪽 muted + 카드 래핑) */
+.wiz-form-group {
+  margin-top: var(--spacing-large);
+}
+.wiz-form-group:first-of-type {
+  margin-top: var(--spacing-medium);
+}
+.wiz-form-group-head {
+  margin-bottom: var(--spacing-small);
+}
+.wiz-form-group-head__title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  letter-spacing: 0.2px;
+}
+.wiz-form-group__fields {
+  background: var(--color-background);
+  border-radius: var(--radius-card);
+  padding: var(--spacing-medium);
+}
+.wiz-form-group__fields .wiz-field:last-child {
+  margin-bottom: 0;
+}
+
+/* Approved card — 사전 승인된 인증 (uneditable · ✓ tone) */
+.wiz-form-group__approved {
+  background: var(--color-background);
+  border-radius: var(--radius-card);
+  padding: var(--spacing-medium);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-medium);
+}
+.wiz-form-group__approved-icon {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--color-success);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.wiz-form-group__approved-icon svg { width: 16px; height: 16px; color: white; }
+.wiz-form-group__approved-body { flex: 1; }
+.wiz-form-group__approved-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+.wiz-form-group__approved-meta {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
+
+/* Rejected hint — 반려 사유 안내문 (icon + reason · 단순 박스) */
+.wiz-rejected-banner {
+  background: rgba(239, 68, 68, 0.08); /* color-error 8% */
+  border-radius: var(--radius-card);
+  padding: var(--spacing-medium);
+  margin-bottom: var(--spacing-small);
+  display: flex;
+  gap: var(--spacing-small);
+  align-items: flex-start;
+}
+.wiz-rejected-banner__icon {
+  width: 16px; height: 16px;
+  color: var(--color-error);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.wiz-rejected-banner__reason {
+  font-size: 13px;
+  color: var(--color-text-primary);
+  line-height: 1.5;
+  flex: 1;
+}
+
+/* --- 본인인증 (PASS) entry card · Step 1 baseline (border 없음 · 부드럽게) --- */
+.wiz-pass-card {
+  background: var(--color-background);
+  border-radius: var(--radius-card);
+  padding: var(--spacing-large);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-medium);
+  text-align: center;
+  margin-top: var(--spacing-medium);
+}
+.wiz-pass-icon {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: rgba(132, 67, 255, 0.08);
+  display: flex; align-items: center; justify-content: center;
+}
+.wiz-pass-icon svg { width: 28px; height: 28px; color: var(--color-primary); }
+.wiz-pass-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.wiz-pass-desc {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+.wiz-pass-list {
+  text-align: left;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  width: 100%;
+  background: var(--color-surface);
+  border-radius: var(--radius-small);
+  padding: var(--spacing-medium);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.wiz-pass-list__row { display: flex; align-items: center; gap: 6px; }
+.wiz-pass-list__row svg { width: 14px; height: 14px; color: var(--color-primary); flex-shrink: 0; }
+
+/* --- 동의 step (Step 3) — field-stack + 통일된 list-item 카드 --- */
+.wiz-consent-summary-text {
+  font-size: 13px;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-large);
+  line-height: 1.7;
+}
+.wiz-consent-summary-text strong { font-weight: 700; color: var(--color-text-primary); }
+
+.wiz-consent-field {
+  margin-bottom: var(--spacing-medium);
+}
+.wiz-consent-field__label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-xsmall);
+  letter-spacing: 0.3px;
+}
+
+/* 통일 list-item 카드 — 대상 / 만료일 / 내역 모두 같은 atom */
+.wiz-consent-list-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-medium);
+  padding: var(--spacing-medium);
+  background: var(--color-background);
+  border-radius: var(--radius-card);
+  text-decoration: none;
+  margin-bottom: 6px;
+}
+.wiz-consent-list-item--tappable { cursor: pointer; }
+.wiz-consent-list-item__icon {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: rgba(72, 201, 176, 0.18); /* 밍글릿 민트 18% — color-tertiary */
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.wiz-consent-list-item__icon svg {
+  width: 18px; height: 18px;
+  color: #2da898; /* mint 더 진한 톤 — 아이콘 명도 확보 */
+}
+.wiz-consent-list-item__body {
+  flex: 1;
+  min-width: 0;
+}
+.wiz-consent-list-item__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.3;
+}
+.wiz-consent-list-item__sub {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin-top: 3px;
+  line-height: 1.4;
+}
+.wiz-consent-list-item__chevron {
+  width: 16px; height: 16px;
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+
+.wiz-consent-policy-link {
+  display: block;
+  text-align: center;
+  font-size: 12px;
+  color: var(--color-primary);
+  text-decoration: underline;
+  margin-top: var(--spacing-large);
+  margin-bottom: var(--spacing-medium);
+}
+
+/* PASS WebView overlay reuses .pg-overlay style with PASS-specific copy */
+
+/* MinglitConfirmationPage 시각 mock — 결제 성공 culmination 화면 */
+.confirm-page {
+  position: absolute;
+  inset: 0;
+  background: var(--color-background);
+  display: flex;
+  flex-direction: column;
+}
+.confirm-page__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--spacing-large);
+  text-align: center;
+}
+.confirm-page__icon {
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  background: var(--color-success);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: var(--spacing-large);
+  animation: confirm-icon-bounce 1.6s ease-out infinite;
+}
+.confirm-page__icon svg {
+  width: 32px; height: 32px;
+  color: white;
+  stroke-width: 4;
+  stroke-dasharray: 24;
+  stroke-dashoffset: 24;
+  animation: confirm-check-draw 1.6s ease-out infinite;
+}
+.confirm-page__title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-medium);
+  line-height: 1.3;
+  opacity: 0;
+  animation: confirm-stagger-1 1.6s ease-out infinite;
+}
+.confirm-page__description {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  max-width: 280px;
+  opacity: 0;
+  animation: confirm-stagger-2 1.6s ease-out infinite;
+}
+.confirm-page__cta {
+  padding: var(--spacing-medium) var(--spacing-large) var(--spacing-large);
+}
+.confirm-page__cta-btn {
+  height: 48px;
+  background: var(--color-primary);
+  color: white;
+  border-radius: var(--radius-button);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px;
+  font-weight: 600;
+  opacity: 0;
+  animation: confirm-stagger-3 1.6s ease-out infinite;
+}
+
+@keyframes confirm-icon-bounce {
+  0%       { transform: scale(0); }
+  20%      { transform: scale(1.15); }
+  35%      { transform: scale(1); }
+  85%      { transform: scale(1); }
+  100%     { transform: scale(0); }
+}
+@keyframes confirm-check-draw {
+  0%, 25%  { stroke-dashoffset: 24; }
+  45%      { stroke-dashoffset: 0; }
+  85%      { stroke-dashoffset: 0; }
+  100%     { stroke-dashoffset: 24; }
+}
+@keyframes confirm-stagger-1 {
+  0%, 35%  { opacity: 0; transform: translateY(8px); }
+  45%      { opacity: 1; transform: translateY(0); }
+  85%      { opacity: 1; transform: translateY(0); }
+  100%     { opacity: 0; transform: translateY(8px); }
+}
+@keyframes confirm-stagger-2 {
+  0%, 45%  { opacity: 0; transform: translateY(8px); }
+  55%      { opacity: 1; transform: translateY(0); }
+  85%      { opacity: 1; transform: translateY(0); }
+  100%     { opacity: 0; transform: translateY(8px); }
+}
+@keyframes confirm-stagger-3 {
+  0%, 55%  { opacity: 0; transform: translateY(8px); }
+  68%      { opacity: 1; transform: translateY(0); }
+  85%      { opacity: 1; transform: translateY(0); }
+  100%     { opacity: 0; transform: translateY(8px); }
+}
+
+/* ============================================================
+   Step transition animation demo (Motion timing 섹션의 시각 자료)
+   5s loop: hold → celebrate → hold final → reset
+   ============================================================ */
+.wiz-anim-demo {
+  background: var(--color-surface);
+  border-radius: var(--radius-card);
+  padding: var(--spacing-large) var(--spacing-medium);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  margin-top: var(--spacing-medium);
+  margin-bottom: var(--spacing-medium);
+}
+/* Backward demo — 동일 keyframes를 reverse 재생해 "이전" 모션 시각화 */
+.wiz-anim-demo--reverse .wiz-anim__step1-circle,
+.wiz-anim-demo--reverse .wiz-anim__step1-num,
+.wiz-anim-demo--reverse .wiz-anim__step1-check,
+.wiz-anim-demo--reverse .wiz-anim__connector1,
+.wiz-anim-demo--reverse .wiz-anim__step2-circle,
+.wiz-anim-demo--reverse .wiz-anim__step2-num {
+  animation-direction: reverse;
+}
+.wiz-anim-demo__cycle-label {
+  position: absolute;
+  margin-top: 70px;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+.wiz-anim__step1-circle {
+  position: relative;
+  background: var(--color-primary);
+  animation: anim-step1-bg 5s infinite;
+}
+.wiz-anim__step1-num {
+  position: absolute;
+  inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  animation: anim-step1-num 5s infinite;
+}
+.wiz-anim__step1-check {
+  position: absolute;
+  inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0;
+  animation: anim-step1-check 5s infinite;
+}
+.wiz-anim__step1-check svg { width: 14px; height: 14px; color: white; }
+
+.wiz-anim__connector1 {
+  background: var(--color-divider);
+  animation: anim-connector 5s infinite;
+}
+
+.wiz-anim__step2-circle {
+  background: var(--color-divider);
+  color: var(--color-text-secondary);
+  animation: anim-step2-bg 5s infinite;
+}
+.wiz-anim__step2-num {
+  display: flex; align-items: center; justify-content: center;
+  height: 100%;
+  font-size: 11px; font-weight: 700;
+  color: white;
+  animation: anim-step2-text 5s infinite;
+}
+
+@keyframes anim-step1-bg {
+  0%, 20%        { background: var(--color-primary); transform: scale(1); }
+  24%            { transform: scale(1.15); }
+  28%            { background: var(--color-success); transform: scale(1.15); opacity: 1; }
+  32%            { transform: scale(1); }
+  60%            { background: var(--color-success); opacity: 1; }
+  85%            { background: var(--color-success); opacity: 0.7; }
+  90%            { opacity: 0.7; }
+  95%            { background: var(--color-primary); opacity: 1; }
+  100%           { background: var(--color-primary); transform: scale(1); }
+}
+@keyframes anim-step1-num {
+  0%, 18%   { opacity: 1; }
+  22%, 92%  { opacity: 0; }
+  96%, 100% { opacity: 1; }
+}
+@keyframes anim-step1-check {
+  0%, 22%   { opacity: 0; transform: scale(0.4); }
+  28%       { opacity: 1; transform: scale(1); }
+  60%       { opacity: 1; }
+  90%       { opacity: 0.7; }
+  93%, 100% { opacity: 0; transform: scale(0.4); }
+}
+@keyframes anim-connector {
+  0%, 24%        { background: var(--color-divider); }
+  32%            { background: var(--color-success); }
+  60%            { background: var(--color-success); opacity: 1; }
+  85%            { opacity: 0.7; }
+  93%, 100%      { background: var(--color-divider); opacity: 1; }
+}
+@keyframes anim-step2-bg {
+  0%, 28%        { background: var(--color-divider); transform: scale(1); }
+  32%            { background: var(--color-primary); transform: scale(1); }
+  36%            { transform: scale(1.12); }
+  42%            { transform: scale(1); }
+  60%, 90%       { background: var(--color-primary); }
+  93%, 100%      { background: var(--color-divider); transform: scale(1); }
+}
+@keyframes anim-step2-text {
+  0%, 28%        { color: var(--color-text-secondary); }
+  32%, 90%       { color: white; }
+  93%, 100%      { color: var(--color-text-secondary); }
 }
 
 /* --- Verification form fields --- */
@@ -155,15 +577,6 @@
   font-weight: 600;
 }
 
-/* --- Empty/no-verif notice --- */
-.wiz-no-verif {
-  text-align: center;
-  padding: 40px var(--spacing-medium);
-  font-size: 14px;
-  color: var(--color-text-primary);
-  line-height: 1.6;
-}
-
 /* --- Payment summary card --- */
 .wiz-pay-card {
   border: 1px solid var(--color-divider);
@@ -194,6 +607,13 @@
   font-size: 12px;
   color: var(--color-text-secondary);
   line-height: 1.7;
+}
+.wiz-pay-subhead {
+  display: block;
+  margin-top: 6px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  font-size: 11px;
 }
 
 /* --- Footer (prev / next buttons · matches surface bg) --- */
@@ -327,7 +747,7 @@
      HEADER
      ============================================================ -->
 <header>
-  <h1>Event Application Wizard</h1>
+  <h1>Event Application Wizard <small style="font-size: 16px; color: var(--color-text-secondary); font-weight: 400;">v2.0</small></h1>
 </header>
 
 <!-- ============================================================
@@ -339,7 +759,7 @@
     <tbody>
       <tr>
         <th style="width: 140px;">Status</th>
-        <td><strong>✅ 디자인완료</strong> <em style="color: var(--color-text-secondary);">— 2 step + verification 분기 + 결제 PG + 에러/제출 = 7 state</em></td>
+        <td><strong>🟡 v2 디자인 — Flutter 미구현</strong> <em style="color: var(--color-text-secondary);">— 본인인증 + 파트너 인증 (single scroll page · iOS inset grouped 카드) + 공유 동의 (3개 list-item field) + 결제 dynamic step = 12 state. 파트너 인증 0개 / 모두 사전 승인 시 step 2가 indicator에서 자동 제외 (3-step). 부분 사전 승인 / 이전 반려 재제출 분기 포함. v1 (2-step · verifs.first만) 대체 redesign.</em></td>
       </tr>
       <tr>
         <th>App</th>
@@ -347,11 +767,11 @@
       </tr>
       <tr>
         <th>Category</th>
-        <td>event · admission · application</td>
+        <td>event · admission · application · identity-verification · consent</td>
       </tr>
       <tr>
         <th>Route / Surface</th>
-        <td><code>EventApplicationRoute</code> · widget: <code>EventApplicationWizardPage</code> + <code>_VerificationStep</code> + <code>_PaymentStep</code> + <code>_StepIndicator</code> + <code>_Footer</code></td>
+        <td><code>EventApplicationRoute</code> · widget: <code>EventApplicationWizardPage</code> + <code>_IdentityStep</code> + <code>_PartnerVerificationStep</code> + <code>_ConsentStep</code> + <code>_PaymentStep</code> + <code>_StepIndicator</code> + <code>_Footer</code></td>
       </tr>
       <tr>
         <th>Path</th>
@@ -361,37 +781,44 @@
         <th>Hierarchy</th>
         <td>
           <strong>Parent</strong>: <a href="/specs/event_detail_page.html"><code>EventDetailPage</code></a> (apply CTA에서 진입)<br>
-          <strong>Children</strong>: <em>—</em> <em style="color: var(--color-text-secondary);">(2 step은 internal — Column + step content swap, 별도 sub-route 없음)</em>. 성공 시 <code>PaymentSuccessScreen</code>으로 <code>pushReplacement</code>.
+          <strong>Children</strong>: PASS WebView (NICE/KCB 본인인증 SDK · external) · Iamport PG WebView (external). 그 외 step은 internal column swap. 성공 시 <a href="/components/MinglitConfirmationPage"><code>MinglitConfirmationPage</code></a> (success tone)으로 <code>pushReplacement</code> — Toss-style culmination 화면.<br>
+          <strong>Forward refs</strong>: <code>PersonalDataManagementPage</code> (TBD · 후속 PR — 동의 step에서 "내 개인 정보 관리" 링크의 도착지) · 사전 승인 / 반려 분기는 backend의 <code>partner_verified_users</code> + <code>verification_submissions</code> 활용 (스키마 호환 · wizard 진입 시 fetch 필요)
         </td>
       </tr>
       <tr>
         <th>Purpose</th>
         <td>
-          이벤트 참여 신청을 인증(verification) → 결제(payment) 2단계 위저드로 안내한다.
-          티켓에 연결된 EntryGroup이 요구하는 인증 폼(텍스트 / 파일 업로드)을 채운 뒤
-          최종 결제 금액을 확인하고 신청을 제출한다. 무료 티켓은 결제 단계에서도 즉시 확정,
-          유료 티켓은 Iamport WebView로 PG 결제를 진행한다.
+          이벤트 참여 신청을 <strong>본인인증 → 파트너 인증 → 개인 정보 동의 → 결제</strong> 4단계 위저드로 안내한다.
+          본인인증(휴대폰 PASS · NICE/KCB)으로 사용자의 identity를 확정하고,
+          파트너가 요구하는 qualification 인증(재직증명 / 학력증명 등) 폼을 한 step에 한 인증씩 채운 뒤,
+          앞 단계에서 모은 정보가 파트너에게 어떻게 공유될지 한 화면에서 검토하고 동의를 받은 후,
+          최종 결제 금액을 확인하고 신청을 제출한다. 무료 티켓은 결제 단계에서 즉시 확정, 유료 티켓은 Iamport WebView로 PG 결제 진행.
         </td>
       </tr>
       <tr>
         <th>User journey</th>
         <td>
           <strong>Entry points</strong>: <code>EventDetailPage</code>의 <code>EventBottomTicketBar</code>에서 티켓 선택 후 "신청하기" 탭 → <code>?ticketId=</code> 쿼리로 진입.<br>
-          <strong>Exit points</strong>: 신청 성공 → <code>PaymentSuccessScreen</code>으로 교체 (뒤로 못 돌아옴) → "내 티켓 보기" / "이벤트 상세로 돌아가기" 분기. 결제 실패 → confirm 다이얼로그 → 다시 시도 또는 닫기 (page 유지). 닫기 버튼(X) → EventDetail 복귀.
+          <strong>Step 1 (본인인증)</strong>: 이미 본인인증을 마친 사용자는 자동 ✓ pass-through (step indicator에 "통과" 시각적으로 남김 → step 2 진입 시 short banner). 미인증 사용자는 PASS WebView 진행.<br>
+          <strong>Step 2 (파트너 인증)</strong>: 파트너가 요구하는 인증 폼들이 한 페이지 stack scroll. 각 인증마다 진입 시 backend 상태 확인 — 같은 파트너에 이미 승인됐으면 ✓ static card · 이전 반려면 사유 banner + prefill · 신규면 빈 폼. 모두 ✓ 승인되면 step 2 자체가 indicator에서 제외되어 step 3 직행. 폼 0개도 동일.<br>
+          <strong>Step 3 (개인 정보 제공 동의)</strong>: 정책 요약문 + 3개 list-item 필드 (제공 대상 · 제공 만료일(2개 trigger) · 제공 내역). "동의하고 다음" CTA 자체가 동의 행위 (별도 체크박스 X). 만료 = 환불 시점 OR 이벤트 종료 시점 (먼저 도달).<br>
+          <strong>Step 4 (결제)</strong>: 무료 → 즉시 성공 화면. 유료 → Iamport WebView. 실패 → error dialog → 재시도 / 닫기.<br>
+          <strong>Exit points</strong>: 신청 성공 → <code>MinglitConfirmationPage</code>(success tone) <code>pushReplacement</code> — "이벤트 신청이 완료됐어요" + 1.5s scale-bounce + "확인" CTA. 닫기(X) → EventDetail 복귀.
         </td>
       </tr>
       <tr>
         <th>Background</th>
         <td>
-          밍글릿 이벤트는 신뢰 모델의 두 축인 <em>identity</em>(OAuth)와 <em>qualification</em>(직업/소속/특정 자격)을 구분한다.
-          이 화면은 qualification 인증을 받는 마지막 게이트다 — 파트너가 정의한 verification form을 사용자가 채워서 제출하면
-          파트너 측 <code>EventApplicationManagePage</code>에서 심사한다. 결제는 인증과 별개로 진행되지만 wizard에서 묶어 흐름을 단순화한다.
-          반려 시 100% 환불, 심사 최대 24시간이라는 정책이 결제 카드 하단에 명시된다.
+          밍글릿 신뢰 모델의 <em>identity</em>(휴대폰 본인인증)와 <em>qualification</em>(직업/소속/자격) 두 축이 모두 이 화면에서 수집된다.
+          v1은 qualification만 다뤘으나, v2는 본인인증을 명시적 step으로 들이고 — <strong>identity가 확정된 사용자만 파트너 인증을 진행할 수 있다</strong>는 정책을 spec 표면으로 끌어올렸다.
+          개인정보보호법상 데이터 수집·제3자 제공에 대한 사용자 동의 기록이 별도 step으로 분리되어 audit trail이 명확해진다 (이전: 결제 약관에 묻혀 있었음).
+          공유 만료 정책은 <strong>환불 시점 OR 이벤트 종료 시점</strong> 둘 중 먼저 도달하는 trigger — 그 이후 파트너는 조회 불가, 데이터는 자동 만료. 동의 기록은 backend의 <code>personal_data_grants</code> 테이블에 저장되고 <strong>RLS로 본인만 조회 / 철회</strong> 가능. 사용자는 <code>PersonalDataManagementPage</code>(후속 PR)에서 파트너별 만료기간을 확인 / 조기 철회 가능.
+          환불 정책은 v2 갱신 — 파트너 심사 반려 시 100% 환불 + 이벤트 시작 시까지 미심사 상태면 100% 환불 (자동 트리거).
         </td>
       </tr>
       <tr>
         <th>Frequency</th>
-        <td>이벤트 신청 시마다. 한 이벤트에 한 번 (티켓 단위) 신청 가능.</td>
+        <td>이벤트 신청 시마다. 한 이벤트에 한 번 (티켓 단위) 신청 가능. 본인인증은 사용자별 1회 (이후 모든 이벤트에서 ✓ pass).</td>
       </tr>
     </tbody>
   </table>
@@ -413,6 +840,108 @@
       </tr>
     </thead>
     <tbody>
+      <tr>
+        <td>2026-05-05</td>
+        <td>2.16</td>
+        <td>mark-yun</td>
+        <td><strong>Backward 애니메이션 데모 + ConfirmationPage 시각 mock.</strong> (1) Motion timing 섹션에 <strong>backward (이전 탭) 데모</strong> 추가 — forward keyframes를 <code>animation-direction: reverse</code>로 재생해 같은 모션의 되돌리기 시각화. ✓ done step이 다시 active로 회귀, connector 색상 풀림, 사라졌던 숫자 페이드인. (2) Success 섹션에 <strong>MinglitConfirmationPage 실제 mock</strong> 추가 — 80px 초록 circle (scale-bounce) + check stroke-draw + 제목/설명/CTA 순차 fade-up (stagger 애니메이션). 1.6초 loop으로 실제 culmination 모션을 spec에서 확인 가능.</td>
+      </tr>
+      <tr>
+        <td>2026-05-05</td>
+        <td>2.15</td>
+        <td>mark-yun</td>
+        <td><strong>단계 전환 애니메이션 시각 데모 + ConfirmationPage spec block.</strong> (1) Motion timing 섹션에 <strong>live CSS animation 데모</strong> 추가 — 5초 loop으로 step 1→2 transition을 실제로 재생 (number fade-out + check stroke-draw + scale bounce + connector color fill + step 2 activation). 사용자가 spec 페이지에서 직접 모션을 확인 가능. (2) Reference에 <strong>"Success — MinglitConfirmationPage spec"</strong> 신규 섹션 추가 — Dart 코드 블록 + props 표 (title / description / icon / tone / ctaLabel / onPressed / autoDismiss) 각각 의도 설명.</td>
+      </tr>
+      <tr>
+        <td>2026-05-05</td>
+        <td>2.14</td>
+        <td>mark-yun</td>
+        <td><strong>단계 전환 애니메이션 + ConfirmationPage 권장 props.</strong> (1) <strong>Progress bar celebration 애니메이션</strong> 추가 — 완료 step circle: 숫자 fade-out → check stroke-draw 200ms → scale 1.0→1.15→1.0 bounce 200ms → primary→success 색상 morph · connector: divider→success 색상 transition · 다음 active circle도 100ms 지연 후 scale bounce (순차 효과). (2) <strong>Body cross-fade + slide-up</strong> — 이전 fade-out 100ms + translateY -4px → 새 body fade-in 150ms + translateY +4→0px. 두 layer가 parallel로 진행되어 "단계 통과" 피드백이 한순간에 전달. (3) "이전" 탭은 celebration 없이 단순 200ms fade — 성취 모먼트가 아니므로. (4) Reference에 <code>MinglitConfirmationPage</code> 권장 props 명시: title "이벤트 신청이 완료됐어요" · description "파트너 심사 후 결과를 알림으로 알려드릴게요" · ctaLabel "내 티켓 보기" · onPressed → <code>PurchaseHistoryPage</code>.</td>
+      </tr>
+      <tr>
+        <td>2026-05-05</td>
+        <td>2.13</td>
+        <td>mark-yun</td>
+        <td><strong>Step indicator 라벨 + 결제 결과 패턴 정비.</strong> (1) Progress bar 라벨 "공유 동의" → "<strong>개인 정보 동의</strong>". (2) 동의 화면 list-item <strong>아이콘 circle</strong> bg → 밍글릿 민트 (<code>color-tertiary</code> 18% · 아이콘 svg는 진한 민트 #2da898) — 카드 자체 bg는 흰색 유지. (3) Step indicator <strong>inactive 톤 옅게</strong> — <code>color-text-secondary</code> → <code>color-divider</code>로 변경, 진행할 step의 시각 무게 ↓. (4) State 12 redesign: <strong>모달 dialog → snackbar</strong>로 단순화 — "결제가 취소되었어요" 한 줄 + 결제하기 버튼 즉시 재활성 (재시도 1 tap). (5) Success 화면 <code>PaymentSuccessScreen</code> → <strong><code>MinglitConfirmationPage</code></strong> (success tone)으로 교체 — Toss-style culmination atom 재사용 (1.5s scale-bounce + check stroke + text stagger). 매칭 성공 화면과 디자인 일관.</td>
+      </tr>
+      <tr>
+        <td>2026-05-05</td>
+        <td>2.12</td>
+        <td>mark-yun</td>
+        <td><strong>State 6 반려 안내문 단순화 + 분기 기준 명시.</strong> (1) "이전 인증이 반려됐어요" title + "검토 일시" meta 제거 → <strong>아이콘 + 사유 텍스트만</strong> 노출. 안내 자체에 집중하고 부수 정보 제거. (2) 분기 기준 명시: "<strong>최신 submission status</strong>"만 사용 — 과거 반려 후 승인된 인증은 자동으로 ✓ approved 분기 (State 5)로 들어가 안내문 안 보임. 예: 1차(A 반려, B 반려) → 2차(A 승인, B 반려) → 3차 진입 시 A는 ✓ approved 카드, B만 안내문 노출.</td>
+      </tr>
+      <tr>
+        <td>2026-05-05</td>
+        <td>2.11</td>
+        <td>mark-yun</td>
+        <td><strong>파트너 인증 — 사전 승인 / 이전 반려 재제출 분기 추가.</strong> Wizard 진입 시 <code>partner_verified_users</code> + <code>verification_submissions</code> 두 테이블을 fetch해 인증별 분기 결정 (approved / rejected / fresh). State 5 신규: <strong>부분 사전 승인 (mixed)</strong> — 같은 파트너에 이미 승인된 인증은 ✓ static card (uneditable · 승인일 + 항목 요약) · 미승인은 일반 폼. 모든 required 인증이 사전 승인된 경우 step 2 자체가 indicator에서 제외되고 step 3 직행 (3-step 동작). State 6 신규: <strong>이전 반려 재제출</strong> — <code>verification_submissions.status='rejected'</code> 발견 시 warning banner (사유 + 검토 일시) + 이전 입력값 prefill로 빠른 수정 지원. CSS atom 추가: <code>.wiz-form-group__approved</code> (32px 초록 ✓ 카드) + <code>.wiz-rejected-banner</code> (color-error 8% bg). 스키마는 이미 모두 지원 — wizard UI/fetch 로직 보강만 필요. State 10 → 12.</td>
+      </tr>
+      <tr>
+        <td>2026-05-05</td>
+        <td>2.10</td>
+        <td>mark-yun</td>
+        <td><strong>파트너 인증 form group — iOS inset grouped 스타일.</strong> 세로 인덴트 가이드 → <strong>카드 래핑 패턴</strong>. (1) Title을 카드 위쪽으로 빼고 12/600 muted secondary 톤(iOS section header 패턴). (2) fields wrapper를 흰 카드(<code>radius-card</code> 16 + padding spacing-medium)로 변경. (3) 회색 scaffold 위에 흰 카드가 떠 있어 그룹 분리가 자연스럽게 시각화 — divider / 세로 가이드 모두 불필요. 인풋 자체 스타일은 그대로 유지 (변경 범위 최소화).</td>
+      </tr>
+      <tr>
+        <td>2026-05-05</td>
+        <td>2.9</td>
+        <td>mark-yun</td>
+        <td><strong>파트너 인증 form group — 가이드 톤 ↓ + title 위치 조정.</strong> (1) 세로 가이드 색상 <code>color-primary</code> → <code>color-divider</code> (조용한 회색) — 인덴트 가이드는 구조 표시이므로 accent보다 neutral이 적절. (2) 인증명 title을 가이드 <strong>밖 (위쪽)</strong>으로 이동 — 가이드는 fields wrapper만 감싸고, title은 section header처럼 가이드 위에 노출. CSS: <code>.wiz-form-group__fields</code> 추가 (border-left + padding-left), <code>.wiz-form-group</code>에서 가이드 제거.</td>
+      </tr>
+      <tr>
+        <td>2026-05-05</td>
+        <td>2.8</td>
+        <td>mark-yun</td>
+        <td><strong>파트너 인증 form group — 번호 circle 제거, 세로 인덴트 가이드 도입.</strong> 22px primary circle ("1", "2") + horizontal divider 패턴이 너무 튐 → <strong>좌측 3px primary 세로 가이드 + bold title</strong>로 교체. 가이드 + padding-left가 그룹 영역을 indentation 시각으로 묶어서 그룹 간 horizontal divider 없이도 시각 구분 명확. 번호의 sequence 함의(1/2)도 자연스럽게 제거됨 — 인증 종류는 순서가 아니라 분류이므로 더 적합. CSS: <code>.wiz-form-group</code> border-left 3px primary + padding-left 16px.</td>
+      </tr>
+      <tr>
+        <td>2026-05-05</td>
+        <td>2.7</td>
+        <td>mark-yun</td>
+        <td><strong>본인인증 카드 워딩 정비.</strong> "플랫폼 공용 이용을 위한 본인 명의 확인을 시작합니다." → "<strong>안전한 모임을 위해 처음 한 번만, 본인 명의를 확인할게요.</strong>" 안전성(왜) + 1회성(부담 ↓) 두 메시지 압축. 추상적 "공용 이용" 표현 제거, 사용자가 받는 가치(안전한 모임)를 직접 명시. PASS 카드 톤("-요" 어미)과 일치.</td>
+      </tr>
+      <tr>
+        <td>2026-05-05</td>
+        <td>2.6</td>
+        <td>mark-yun</td>
+        <td><strong>결제 화면 환불 정책 — 세 그룹 sub-head 구조.</strong> ① <strong>자동 환불 정책</strong> (3개 trigger): 파트너 심사 반려 / 이벤트 시작 시까지 미심사 / 파트너에 의한 이벤트 취소 — 모두 시스템 자동 100% 환불. ② <strong>플랫폼 환불 정책</strong> (사용자 신청 윈도우): "결제 후 2시간 이내 즉시 환불 / 이벤트 시작 7일 전까지 즉시 환불" — backend의 <code>public.policies</code> 테이블 (key='refund' · v2 effective 2026-03-01) JSONB <code>grace_period_hours: 2</code> + <code>cutoff_days: 7</code>에서 동적 조회 (RPC <code>get_current_policy('refund')</code>). ③ <strong>파트너 환불 정책</strong> (파트너별 추가 환불 윈도우): "이벤트 시작 1일 전까지 파트너 요청 시 환불 가능" — 파트너가 이벤트 단위로 설정 (저장 위치 TBD). DB / 플랫폼 정책 변경 시 ② 그룹만 자동 반영, ① / ③ 은 별도 변경 절차. Reference에 정책 source 행 추가, 기존 <code>event_refund_policy_section.dart</code> 재사용 권장.</td>
+      </tr>
+      <tr>
+        <td>2026-05-05</td>
+        <td>2.5</td>
+        <td>mark-yun</td>
+        <td><strong>동의 화면 — 워딩 단축 + 만료일 두 trigger.</strong> (1) 요약문 단축: "이벤트 운영에 필요한 기간만 ..." 절 제거 → "사용자님의 소중한 개인정보는 이벤트 종료 시점까지만 파트너가 조회 가능해요. 파트너에게 제공된 개인정보는 마이 페이지에서 확인할 수 있어요." 두 문장 하나로 합치고 마지막 "동의하시면 다음 버튼을 눌러 진행해주세요"만 줄바꿈 분리. (2) 개인 정보 제공 만료일 = list-item 2개 (시간 순서) — <strong>환불 시점</strong> (refresh icon · "심사 거절 또는 환불 처리 시 즉시 만료") → <strong>이벤트 종료 시점</strong> (calendar icon · 구체 일시). 두 trigger 중 먼저 도달하는 시점에 만료된다는 정책을 시각적으로 명확히 표현. (3) Step indicator done state opacity 0.7 유지.</td>
+      </tr>
+      <tr>
+        <td>2026-05-05</td>
+        <td>2.4</td>
+        <td>mark-yun</td>
+        <td><strong>동의 화면 — 워딩 + 통일 list-item 구조.</strong> (1) 요약문 갱신: "사용자님의 소중한 개인정보는 이벤트 운영에 필요한 기간만 파트너에게 제공되고, 이벤트 종료 시점까지만 파트너가 조회 가능해요. 동의하시면 다음 버튼을 눌러 진행해주세요." (2) 필드 라벨 갱신: "공유 대상" → "<strong>개인정보 제공 대상</strong>" / "공유 기간" → "<strong>개인 정보 제공 만료일</strong>" / "개인 정보 내용" → "<strong>개인 정보 제공 내역</strong>". (3) 만료일도 list-item 카드로 변경 — calendar 아이콘 + "이벤트 종료 시점까지" + 구체 일시 sub. (4) 제공 내역도 divider stack → <strong>list-item 여러 개</strong>로 — 인증별 적합한 icon (person · briefcase · graduation cap). (5) 통일된 <code>.wiz-consent-list-item</code> atom으로 3개 필드 모두 같은 시각 언어. (6) 만료 정책 갱신 — 이전 "심사 거절 시 즉시 OR 참가 후 7일" → "이벤트 종료 시점까지". (7) Step indicator done state opacity 0.7 복원 (clean 초록 + 살짝 dim 균형점).</td>
+      </tr>
+      <tr>
+        <td>2026-05-05</td>
+        <td>2.3</td>
+        <td>mark-yun</td>
+        <td><strong>공유 동의 화면 — 표 → field-stack 구조.</strong> (1) "상세 내용" sub-label 제거. (2) 표 형식 폐기 — 대상 / 기간 / 내용 각각 독립 필드. (3) "공유 대상" 리스트 아이템 카드 (사업자 building 아이콘 + 사업자명 + chevron). (4) "공유 기간" = label + value + sub. (5) "개인 정보 내용" = 카드 안 정보 그룹 stack list (1px divider).</td>
+      </tr>
+      <tr>
+        <td>2026-05-05</td>
+        <td>2.2</td>
+        <td>mark-yun</td>
+        <td><strong>공유 동의 화면 카피 / 구조 정비.</strong> (1) 화면 이름 "공유 정보 확인" → "<strong>개인 정보 제공 동의</strong>". (2) 구조를 <strong>요약</strong> + <strong>상세 표</strong> 두 영역으로 분리. (3) 표 column "공유 시일" → "공유 기간", 값 "참가 후 7일" + footnote "* 심사 거절 시 즉시 만료". (4) 체크박스 제거 — "동의하고 다음" CTA 자체가 동의. (5) "내 개인 정보 관리". 후속 페이지명 <code>PersonalDataManagementPage</code>. (6) Background에 "심사 거절 OR 참가 후 7일" 만료 trigger 명시.</td>
+      </tr>
+      <tr>
+        <td>2026-05-05</td>
+        <td>2.1</td>
+        <td>mark-yun</td>
+        <td><strong>v2 design feedback iteration.</strong> (1) 완료 step tone: dim primary → clean <code>color-success</code> 풀 strength 초록 ✓. 진행 step만 primary 유지로 시각적 우선순위 강화. (2) ✓ pass-through banner 제거 — step indicator의 ✓ 만으로 통과 인지. (3) 파트너 인증을 한 폼=한 step → <strong>한 페이지 stack scroll</strong>로 변경. sub-progress badge 폐기. 폼 ≥ 1개일 땐 group head (number circle + 인증명) + divider로 묶음. (4) 공유 동의를 그룹 카드 → <strong>표 형식</strong> (개인 정보 내용 / 공유 대상 / 공유 시일). 본인인증·파트너 인증 항목들을 풀어서 행으로 노출. 동의는 backend <code>personal_data_grants</code> RLS 테이블에 기록. (5) 본인인증 PASS 카드 border 제거 + copy "PASS 인증사를 통해" → "플랫폼 공용 이용을 위한 본인 명의 확인을 시작합니다". (6) <strong>파트너 인증 0개 fast-path 제거</strong> — step 2 bucket 자체가 indicator에서 빠져 3-step 동작. (7) 결제 안내 갱신 — "심사 24시간" 빼고 "이벤트 시작 시까지 미심사면 100% 환불" 추가, 환불 정책으로 묶어 명시. (8) 표 헤더 색상 secondary → primary 검정. State 12 → 10.</td>
+      </tr>
+      <tr>
+        <td>2026-05-05</td>
+        <td>2.0</td>
+        <td>mark-yun</td>
+        <td><strong>4-step redesign.</strong> 2-step (인증 → 결제) → 4-step (본인인증 → 파트너 인증 → 공유 동의 → 결제). 본인인증(PASS)을 명시적 step으로 분리 — 기존 사용자는 ✓ pass-through. 다중 파트너 인증을 정식 지원 (한 폼 = 한 step, body sub-progress badge "1 / N"). 개인정보 공유 동의 step 신설 — "이벤트 종료 + 7일" 정책 + 후속 <code>SharedDataManagementPage</code> 링크. 결제 step 토큰/레이아웃 유지. State 7 → 12.</td>
+      </tr>
       <tr>
         <td>2026-05-01</td>
         <td>1.0</td>
@@ -444,7 +973,7 @@
   <section class="doc">
     <h2>Blueprint &amp; tree</h2>
     <p class="intro">
-      Scaffold(scaffold gray bg) + AppBar("참여 신청" · CloseButton X · no border) + Column[StepIndicator(64px) → Expanded(SingleChildScrollView · padding-large) → Footer(SafeArea · prev+next buttons)]. Step 콘텐츠는 <code>state.step</code> 분기로 <code>_VerificationStep</code> 또는 <code>_PaymentStep</code>이 같은 Expanded 슬롯에서 swap된다. PageView가 아니라 단순 분기 Widget이라 스와이프 불가.
+      Scaffold(scaffold gray bg) + AppBar("참여 신청" · CloseButton X · no border) + Column[StepIndicator(72px · dynamic 3 or 4 circles) → Expanded(SingleChildScrollView · padding-large) → Footer(SafeArea · prev+next buttons)]. Step 콘텐츠는 <code>state.currentStep</code> 분기로 <code>_IdentityStep</code> / <code>_PartnerVerificationStep</code> / <code>_ConsentStep</code> / <code>_PaymentStep</code>이 같은 Expanded 슬롯에서 swap된다. PageView가 아니라 단순 분기 Widget이라 스와이프 불가. 파트너 인증은 <strong>한 페이지에 모든 인증 폼을 stack + scroll</strong> (인증 그룹별 head + 필드들). <strong>파트너 인증 폼이 0개일 때는 step 2 자체가 indicator에서 제외</strong>되어 본인인증 → 공유 동의 → 결제 3-step으로 동작.
     </p>
     <div class="layout-grid">
       <div class="blueprint">
@@ -455,16 +984,16 @@
           <span class="blueprint__region-label">① AppBar — title "참여 신청"<br>leading: CloseButton(X) · no border-bottom</span>
         </div>
         <!-- Step indicator -->
-        <div class="blueprint__region blueprint__region--shaded" style="top:56px;left:0;right:0;height:64px;">
-          <span class="blueprint__region-label">② _StepIndicator<br>2 circles + connector · padding vertical-medium</span>
+        <div class="blueprint__region blueprint__region--shaded" style="top:56px;left:0;right:0;height:72px;">
+          <span class="blueprint__region-label">② _StepIndicator<br>4 circles + 3 connectors · padding vertical-medium<br>[본인인증][파트너 인증][개인 정보 동의][결제]</span>
         </div>
         <!-- Step content -->
-        <div class="blueprint__region" style="top:120px;left:0;right:0;bottom:80px;">
-          <span class="blueprint__region-label">③ Expanded → SingleChildScrollView<br>padding: spacing-large (24)<br>_VerificationStep | _PaymentStep</span>
+        <div class="blueprint__region" style="top:128px;left:0;right:0;bottom:80px;">
+          <span class="blueprint__region-label">③ Expanded → SingleChildScrollView<br>padding: spacing-large (24)<br>_IdentityStep | _PartnerVerificationStep | _ConsentStep | _PaymentStep</span>
         </div>
         <!-- Footer -->
         <div class="blueprint__region blueprint__region--shaded" style="bottom:0;left:0;right:0;height:80px;">
-          <span class="blueprint__region-label">④ _Footer — SafeArea · top border<br>[이전(flex:1)] [다음 / 결제하기(flex:2)]</span>
+          <span class="blueprint__region-label">④ _Footer — SafeArea · top border<br>[이전(flex:1)] [다음 / 동의하고 진행 / 결제하기(flex:2)]</span>
         </div>
 
         <div class="blueprint__align-marker" style="top:8px;right:8px;">AppBar (theme default)</div>
@@ -476,24 +1005,59 @@
 └─ <b>body</b>: <b>MinglitAsyncValueWidget</b>(eventDetailControllerProvider)
    └─ <b>_WizardBody</b>
       └─ <b>Column</b>
-         ├─ <b>_StepIndicator</b>(currentStep)                          ← ②
+         ├─ <b>_StepIndicator</b>(currentStep, includePartner)            ← ②
          │  └─ <b>Padding</b>(vertical: spacing-medium)
          │     └─ <b>Row</b>(MainAxisAlignment.center)
-         │        ├─ <b>_buildCircle</b>("1", "인증",  active = step==verification)
-         │        ├─ <b>Container</b>(40 × 2 · spacing-small h-margin)  // connector
-         │        └─ <b>_buildCircle</b>("2", "결제",  active = step==payment)
+         │        ├─ <b>_buildCircle</b>("1", "본인인증", tone)            // active | done | inactive
+         │        ├─ <b>Container</b>(18 × 2 · 2px h-margin)               // connector (--done if step 통과)
+         │        ├─ <i>(if includePartner)</i> <b>_buildCircle</b>("2", "파트너 인증", tone)
+         │        │   <i>+</i> connector
+         │        ├─ <b>_buildCircle</b>("3", "개인 정보 동의", tone)        // includePartner=false면 라벨 번호 "2"로 재할당
+         │        ├─ connector
+         │        └─ <b>_buildCircle</b>("4", "결제", tone)                 // 마찬가지로 "3"으로 재할당
+         │   <i>※ 파트너 인증 폼 0개 / 모두 사전 승인일 때 step 2 bucket 자체를 제외 → 3-step</i>
          │
          ├─ <b>Expanded</b>                                             ← ③
          │  └─ <b>SingleChildScrollView</b>(padding: spacing-large)
-         │     └─ state.step == verification
-         │        ? <b>_VerificationStep</b>(event)
-         │        : <b>_PaymentStep</b>(event)
+         │     └─ switch (state.currentStep)
+         │        ├─ identity     → <b>_IdentityStep</b>(state)
+         │        ├─ partnerVerif → <b>_PartnerVerificationStep</b>(state, formIndex)
+         │        ├─ consent      → <b>_ConsentStep</b>(state, agreed)
+         │        └─ payment      → <b>_PaymentStep</b>(event)
          │
-         │     <i>_VerificationStep</i>:
-         │        ├─ Title (titleMedium bold)
-         │        ├─ Description (bodySmall) — optional
-         │        ├─ Form fields (loop · TextFormField | MinglitFilePicker)
-         │        └─ <i>OR</i>: "이 티켓은 추가 인증이 필요하지 않습니다." Center
+         │     <i>_IdentityStep</i>:
+         │        ├─ Title "본인인증" (titleMedium bold)
+         │        ├─ Description (bodySmall) — "이벤트 신청을 위해 한 번만 진행하면 됩니다"
+         │        └─ <i>OR</i>: pass-through banner (이미 인증됨) + "다음" 자동 enable
+         │           ├─ wiz-pass-card: 64px PASS icon + "휴대폰 본인인증" title +
+         │           │  desc + "수집 항목" 리스트 (이름 · 생년월일 · 휴대폰 · CI/DI)
+         │           └─ CTA 안내: 다음 버튼이 PASS WebView 트리거
+         │
+         │     <i>_PartnerVerificationStep</i>:                         // 모든 인증 폼이 한 페이지에 stack + scroll
+         │        ├─ <i>(진입 시 fetch)</i> partner_verified_users + verification_submissions
+         │        │   → 인증별 분기 결정: approved / rejected / fresh
+         │        ├─ Title "파트너 인증" (titleMedium bold)
+         │        ├─ Description (bodySmall · 분기에 따라 카피 변경)
+         │        └─ ListView of FormGroups (인증 한 개당 한 그룹)
+         │           ├─ Group head: 인증명 (12/600 muted · 카드 위쪽)
+         │           └─ <i>switch (verifState)</i>:
+         │              ├─ approved → ✓ static card (uneditable · 승인일 + 항목 요약)
+         │              ├─ rejected → warning banner (사유 + 검토일) + prefill 폼
+         │              └─ fresh    → 일반 form fields (TextFormField | MinglitFilePicker)
+         │           ※ 폼 1개일 땐 group head 생략 가능
+         │
+         │     <i>_ConsentStep</i>:                                     // ← 신규
+         │        ├─ Title "개인 정보 제공 동의" (titleMedium bold)
+         │        ├─ 요약 텍스트 — "이벤트 운영에 필요한 기간만 / 종료 시점까지만
+         │        │   파트너 조회 가능. 동의하시면 다음 버튼을 눌러 진행해주세요."
+         │        ├─ <b>개인정보 제공 대상</b> 필드 — 라벨 + list-item 카드 (tappable)
+         │        │   building icon + 사업자명 + chevron → 파트너 상세
+         │        ├─ <b>개인 정보 제공 만료일</b> 필드 — 라벨 + list-item 2개 (정적)
+         │        │   ① 환불 시점 (refresh icon) ② 이벤트 종료 시점 (calendar icon)
+         │        │   시간 순서 · 둘 중 먼저 도달하는 시점에 만료
+         │        ├─ <b>개인 정보 제공 내역</b> 필드 — 라벨 + list-item 여러 개 (정적)
+         │        │   각 인증별: 적합한 icon + 그룹 title + 항목 detail
+         │        └─ "내 개인 정보 관리 →" 링크 (centered)
          │
          │     <i>_PaymentStep</i>:
          │        ├─ Title "결제 상세" (titleMedium bold)
@@ -504,10 +1068,16 @@
             └─ Container(padding: spacing-medium · top border outlineVariant)
                └─ <b>SafeArea</b>
                   └─ <b>Row</b>
-                     ├─ <i>(if step != verification)</i> Expanded(MinglitButton.secondary "이전") · flex 1
-                     ├─ SizedBox(width: spacing-medium) // gap
-                     └─ Expanded(MinglitButton "다음" | "결제하기") · flex 2
-                                <i>· isLoading = (status == submitting)</i></div>
+                     ├─ <i>(if step != identity || formIndex > 0)</i>
+                     │   Expanded(MinglitButton.secondary "이전") · flex 1
+                     ├─ SizedBox(width: spacing-medium)
+                     └─ Expanded(MinglitButton primary) · flex 2
+                         label by step:
+                           identity   → "본인인증 시작" (or "다음" if ✓ pass)
+                           partnerVerif → "다음"
+                           consent    → "동의하고 진행" (disabled until checked)
+                           payment    → "결제하기"
+                         <i>· isLoading = (status == submitting)</i></div>
     </div>
   </section>
 
@@ -524,9 +1094,12 @@
       </thead>
       <tbody>
         <tr><td>①</td><td>AppBar</td><td>title center · leading 40 × 40 (CloseButton)</td><td>height 56 · 테마 기본 — <code>elevation:0</code> + <code>surfaceTintColor:transparent</code> 결과 scaffold-gray 일치 · 하단 border 없음.</td></tr>
-        <tr><td>②</td><td>_StepIndicator</td><td>Row · MainAxisAlignment.center</td><td>vertical padding: <code>spacing-medium (16)</code> · 원 직경 32(<code>radius=spacing-medium</code>) · 라벨↔원 gap: <code>spacing-xsmall (4)</code> · 원↔connector horizontal margin: <code>spacing-small (8)</code> · connector 폭 40 = <code>spacing-xlarge + spacing-small</code></td></tr>
-        <tr><td>③</td><td>step content</td><td>SingleChildScrollView · column start · CrossAxisAlignment.start</td><td>outer padding all: <code>spacing-large (24)</code> · 필드↔필드: <code>spacing-medium (16)</code> · 라벨↔input: <code>spacing-small (8)</code> · 결제 카드 padding: <code>spacing-medium</code></td></tr>
-        <tr><td>④</td><td>_Footer</td><td>Row · SafeArea · top border 1px outlineVariant</td><td>outer padding: <code>spacing-medium (16)</code> all · 이전↔다음 gap: <code>spacing-medium (16)</code> · 버튼 height 48 (MinglitButton 기본)</td></tr>
+        <tr><td>②</td><td>_StepIndicator (dynamic 3 or 4 bucket)</td><td>Row · MainAxisAlignment.center · column width 60px (라벨 wrap 안 되게)</td><td>vertical padding: <code>spacing-medium (16)</code> · 원 직경 28 · 라벨↔원 gap: <code>spacing-xsmall (4)</code> · 원↔connector h-margin 2px · connector 폭 18. 라벨 font-size 10px. tone: active = <code>color-primary</code> · done = <code>color-success</code> 풀 strength · inactive = <code>color-text-secondary</code>. 파트너 인증 폼 0개일 때 step 2 bucket 자체 제외.</td></tr>
+        <tr><td>—</td><td>FormGroup (파트너 인증 · iOS inset grouped)</td><td>title 카드 위쪽 muted · fields wrapper 카드 (흰 bg · 라운드)</td><td>head: 12/600 인증명 · <code>color-text-secondary</code> · letter-spacing 0.2px · 카드 edge에 align. fields card: <code>color-background</code> bg + <code>radius-card</code> 16 + padding spacing-medium. 카드 사이 spacing-large gap. 폼 1개일 때 group head 생략 가능.</td></tr>
+        <tr><td>③</td><td>step content</td><td>SingleChildScrollView · column start · CrossAxisAlignment.start</td><td>outer padding all: <code>spacing-large (24)</code> · 필드↔필드: <code>spacing-medium (16)</code> · 라벨↔input: <code>spacing-small (8)</code> · 결제/동의/PASS 카드 padding: <code>spacing-medium~large</code></td></tr>
+        <tr><td>④</td><td>_Footer</td><td>Row · SafeArea · top border 1px outlineVariant</td><td>outer padding: <code>spacing-medium (16)</code> all · 이전↔다음 gap: <code>spacing-medium (16)</code> · 버튼 height 48 (MinglitButton 기본). 동의 step에서 "다음"은 체크박스 미체크 시 disabled (opacity 0.4 · onPressed null).</td></tr>
+        <tr><td>—</td><td>PASS card (Step 1)</td><td>Center column · radius-card 16</td><td>padding: <code>spacing-large</code> · icon 64 · title↔desc gap <code>spacing-small</code> · 수집 항목 list bg surface · padding spacing-medium</td></tr>
+        <tr><td>—</td><td>Consent summary (Step 3)</td><td>Container · radius-card 16 · 그룹 사이 divider</td><td>padding: <code>spacing-medium</code> · 그룹 사이 1px divider + spacing-medium gap · key↔value flex-end 정렬 · key 타이트 (fits) · value 60% max-width 우측 정렬</td></tr>
         <tr><td>—</td><td>결제 카드</td><td>Container · radius-small 8</td><td>padding: <code>spacing-medium</code> · 안내 텍스트는 카드 밖, 위로부터 <code>spacing-xlarge (32)</code> gap</td></tr>
       </tbody>
     </table>
@@ -540,18 +1113,18 @@
   <div class="perspective__header">
     <span class="glyph">🎨</span>
     <h2>States</h2>
-    <span class="lede">시각 변형 7종 (verification baseline + no-verif · validation error · payment · submitting · PG WebView · error dialog). baseline = Step 1 Verification, 나머지 additive diff.</span>
+    <span class="lede">시각 변형 12종 (Step1 본인인증 entry · PASS overlay · ✓ pass-through · Step2 파트너 인증 baseline · 부분 사전 승인 · 이전 반려 재제출 · validation · Step3 개인 정보 동의 · Step4 결제 · Submitting · PG WebView · Error dialog). baseline = Step 1 본인인증 entry, 나머지 additive diff. 파트너 인증 0개 / 모두 사전 승인 시 step 2가 indicator에서 자동 제외 (3-step 동작).</span>
   </div>
 
   <section class="doc">
     <p class="intro">
-      <strong>State 식별 기준</strong>: 진행 중인 단계 (인증 / 결제) + 제출 상태 (대기 / 진행 중 / 성공 / 실패) + 인증 요구 유무 + 결제 분기 (무료 / 유료)에 따라 7가지 변형. 성공 상태는 별도 화면(PaymentSuccessScreen)으로 즉시 교체되어 이 spec 범위 밖.
+      <strong>State 식별 기준</strong>: (1) 현재 step (본인인증 / 파트너 인증 / 개인 정보 동의 / 결제) + (2) 본인인증 캐시 유무 (✓ pass-through 분기) + (3) 파트너 인증 폼 개수 (0 / 모두 사전 승인 → step 2 자체가 indicator에서 제외 · ≥1 → 한 페이지에 stack scroll) + (4) 사전 승인 / 이전 반려 이력 (mixed · rejected re-submit 분기) + (5) 제출 상태 (대기 / 진행 중 / 실패) + (6) 결제 분기 (무료 → 즉시 / 유료 → PG)에 따라 12가지 변형. 성공 상태는 별도 화면(<code>MinglitConfirmationPage</code>)으로 즉시 교체되어 이 spec 범위 밖.
     </p>
 
-    <!-- ============= State 1: Step 1 · Verification (baseline) ============= -->
+    <!-- ============= State 1: Step 1 · 본인인증 entry (baseline) ============= -->
     <table class="ref state-mini is-baseline-tint">
       <thead>
-        <tr><th colspan="3"><strong>Step 1 / 2 · 인증 (Verification)</strong> 🎯</th></tr>
+        <tr><th colspan="3"><strong>Step 1 / 4 · 본인인증 entry</strong> 🎯</th></tr>
       </thead>
       <tbody>
         <tr>
@@ -562,89 +1135,146 @@
                 <div class="wiz-appbar__title">참여 신청</div>
               </div>
               <div class="wiz-steps">
-                <div class="wiz-step__col">
-                  <div class="wiz-step__circle wiz-step__circle--active">1</div>
-                  <div class="wiz-step__label wiz-step__label--active">인증</div>
-                </div>
+                <div class="wiz-step__col"><div class="wiz-step__circle wiz-step__circle--active">1</div><div class="wiz-step__label wiz-step__label--active">본인인증</div></div>
                 <div class="wiz-step__connector"></div>
-                <div class="wiz-step__col">
-                  <div class="wiz-step__circle wiz-step__circle--inactive">2</div>
-                  <div class="wiz-step__label">결제</div>
-                </div>
+                <div class="wiz-step__col"><div class="wiz-step__circle wiz-step__circle--inactive">2</div><div class="wiz-step__label">파트너 인증</div></div>
+                <div class="wiz-step__connector"></div>
+                <div class="wiz-step__col"><div class="wiz-step__circle wiz-step__circle--inactive">3</div><div class="wiz-step__label">개인 정보 동의</div></div>
+                <div class="wiz-step__connector"></div>
+                <div class="wiz-step__col"><div class="wiz-step__circle wiz-step__circle--inactive">4</div><div class="wiz-step__label">결제</div></div>
               </div>
               <div class="wiz-body">
-                <div class="wiz-section-title">재직 증명서 인증</div>
-                <div class="wiz-section-sub">현재 재직 중인 회사명과 사원증/명함을 업로드해주세요. 파트너가 검토 후 승인합니다.</div>
+                <div class="wiz-section-title">본인인증</div>
+                <div class="wiz-section-sub">밍글릿 이벤트 신청을 위해 휴대폰 본인인증이 한 번 필요해요. 다음 신청부터는 자동으로 통과됩니다.</div>
 
-                <div class="wiz-field">
-                  <div class="wiz-field__label">회사명</div>
-                  <div class="wiz-input wiz-input--filled">밍글릿</div>
-                </div>
-                <div class="wiz-field">
-                  <div class="wiz-field__label">증빙 서류</div>
-                  <div class="wiz-file-picker">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                    <div class="wiz-file-picker__hint">증빙 서류를 업로드해주세요</div>
-                    <div class="wiz-file-picker__btn">선택</div>
+                <div class="wiz-pass-card">
+                  <div class="wiz-pass-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="2" width="12" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                  </div>
+                  <div class="wiz-pass-title">휴대폰 본인인증</div>
+                  <div class="wiz-pass-desc">안전한 모임을 위해 처음 한 번만,<br>본인 명의를 확인할게요.</div>
+                  <div class="wiz-pass-list">
+                    <div class="wiz-pass-list__row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> 이름 · 생년월일 · 성별</div>
+                    <div class="wiz-pass-list__row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> 휴대폰 번호 · 통신사</div>
+                    <div class="wiz-pass-list__row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> 본인확인기관 발급 CI / DI</div>
                   </div>
                 </div>
               </div>
               <div class="wiz-footer">
-                <div class="wiz-btn wiz-btn--next">다음</div>
+                <div class="wiz-btn wiz-btn--next">본인인증 시작</div>
               </div>
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>인증 단계에 머물러 있고, 선택한 티켓이 1개 이상의 인증 항목을 요구하며, 아직 제출 전인 상태.</td>
+          <td>본인인증 단계에 진입했고, 사용자가 아직 본인인증을 완료한 적이 없는 상태. 4-step 흐름의 시작점.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ① <strong>텍스트 필드 입력</strong> → 입력하는 즉시 저장됨 (별도 저장 버튼 없음)<br>
-            ② <strong>파일 picker 탭</strong> → OS 파일 선택 → 자동 업로드 후 결과 URL이 폼에 저장됨<br>
-            ③ <strong>"다음" 탭</strong> → 결제 단계로 이동 (현재는 별도 입력 검증 없이 통과)<br>
-            ④ <strong>X(닫기) 탭</strong> → EventDetailPage로 복귀 (별도 확인 없음)
+            ① <strong>"본인인증 시작" 탭</strong> → PASS 인증사 WebView로 진입<br>
+            ② <strong>X(닫기) 탭</strong> → EventDetail로 복귀 (별도 확인 없음 — 입력한 데이터 없으므로 안전)<br>
+            ③ <strong>스크롤</strong> → 수집 항목 리스트가 길어질 경우 본문 영역에서 스크롤
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · 여러 인증을 요구하더라도 현재는 첫 번째 인증 폼만 노출 (다중 인증은 미구현)<br>
-            · 파일 업로드 중 화면 이동 → 업로드는 백그라운드 진행, 완료 시 결과 반영 시도<br>
-            · 비로그인 상태에서 파일 필드 도달 → "로그인이 필요합니다." 안내 (정상 흐름에선 도달 불가)<br>
-            · 인증 정보를 불러오지 못한 응답 → "인증 정보를 불러올 수 없습니다." 안내
+            · 미성년자(만 14세 미만) PASS 시도 → 인증사가 거부 → 별도 안내 화면<br>
+            · 외국인(휴대폰 명의 한국인 제한) → 인증사가 거부 → 별도 안내 화면<br>
+            · 14세 이상이지만 청소년 보호 정책상 차단되는 이벤트 → 인증 통과 후 동의/결제 단계에서 별도 차단 안내<br>
+            · 이전에 본인인증을 마쳤지만 캐시가 만료된 경우 (장기간 미사용) → 재인증 흐름이 동일하게 이 화면부터 시작
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
           <td>
-            · <code>AppBar</code>(title · leading=CloseButton) — theme default<br>
-            · <code>_StepIndicator</code>: CircleAvatar(radius=spacing-medium=16) × 2 + Container connector(40×2)<br>
-            · <code>TextFormField</code> with <code>OutlineInputBorder</code>(default · radius 4 · placeholder)<br>
-            · <code>MinglitFilePicker</code>(label · hint · autoUpload=true · bucket=verification-proofs) — 별도 atom<br>
-            · <code>_Footer</code> + <code>MinglitButton</code> 단일 (이 step에는 prev 없음 · "다음" label · flex 2)
+            · AppBar (CloseButton) — 4 step 모두 공통<br>
+            · 4-bucket Step Indicator (본인인증 active · 나머지 inactive)<br>
+            · PASS 안내 카드: 64px primary tint icon + 제목 + 설명 + 수집 항목 리스트 (border-radius 16, 카드 bg 흰색, 안쪽 리스트 bg 회색)<br>
+            · Footer 단일 CTA "본인인증 시작" (이 step에는 이전 버튼 없음)
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
           <td>
-            · color: <code>color-primary</code> (활성 step circle · "다음" 버튼 · 활성 step 라벨), <code>color-text-secondary</code> (비활성 circle/라벨 · 카드 안내), <code>color-divider</code> (input border · connector · footer 상단 border), <code>color-background</code> (input · file picker bg · footer bg), <code>color-surface</code> (scaffold · AppBar · step indicator strip)<br>
-            · radius: <code>radius-button (12)</code> (다음 버튼) · OutlineInputBorder default 4 (TextFormField) · <code>radius-input (12)</code> (file picker)<br>
-            · spacing: <code>spacing-large (24)</code> (body padding) · <code>spacing-medium (16)</code> (StepIndicator vertical · footer padding · 필드 간격) · <code>spacing-small (8)</code> (라벨↔input · circle↔connector h-margin) · <code>spacing-xsmall (4)</code> (라벨↔원)<br>
-            · typography: appBarTitle (18/600) · titleMedium 14/700 (section title) · bodySmall (description · placeholder) · labelSmall (step circle 숫자 · 라벨) · bodyMedium (input)
+            · color: <code>color-primary</code> (활성 step · CTA · 안내 아이콘 / 체크), <code>color-text-secondary</code> (비활성 step / 라벨), <code>color-divider</code> (카드 border · connector), <code>color-background</code> (카드 bg / footer bg), <code>color-surface</code> (scaffold · 수집 항목 리스트 inner bg)<br>
+            · radius: <code>radius-card (16)</code> (PASS 카드) · <code>radius-small (8)</code> (수집 항목 리스트) · <code>radius-button (12)</code> (CTA)<br>
+            · spacing: <code>spacing-large (24)</code> (카드 padding · body padding) · <code>spacing-medium (16)</code> (icon↔title↔desc gap · 리스트 padding) · <code>spacing-small (8)</code> (리스트 행 gap)<br>
+            · typography: titleMedium 14/700 (section title) · bodySmall 13 (description) · labelMedium 12 (수집 항목)
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 인증 폼 자체는 파트너가 정의. 필드 형식에 따라 텍스트 입력 또는 파일 업로더로 노출. 현재는 첫 번째 인증만 처리하고 다중 인증은 후속 보강. 7개 state 모두 같은 골격(AppBar + Step 표시 + Footer)을 공유하며 본문과 footer 버튼 구성만 변한다.</td>
+          <td>📝 본인인증은 사용자별 1회 — 통과하면 이후 모든 이벤트에서 자동 ✓ pass-through (State 3). 인증 결과는 사용자 프로필에 영구 저장 (변경 불가). 신원 변경(개명 등) 시 별도 재인증 절차 필요. PASS 진행 중 외부 WebView로 화면 전환 → State 2.</td>
         </tr>
       </tbody>
     </table>
 
-    <!-- ============= State 2: No-verification fast-path ============= -->
+    <!-- ============= State 2: Step 1 · PASS WebView overlay ============= -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Step 1 · No verification required</strong> <small>인증 불필요 티켓</small></th></tr>
+        <tr><th colspan="3"><strong>Step 1 · PASS WebView overlay</strong> <small>본인인증 진행 중 · 외부 인증사</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="pg-overlay">
+                <div class="pg-overlay__bar">
+                  <span style="margin-right:8px;">←</span>
+                  <span>nice.checkplus.co.kr</span>
+                </div>
+                <div class="pg-overlay__body">
+                  <div class="pg-overlay__title">본인인증 진행 중</div>
+                  <div class="pg-overlay__sub">
+                    PASS · SMS · 카드 인증<br>
+                    NICE / KCB 인증사 WebView가 표시됩니다.
+                  </div>
+                  <div class="pg-overlay__sub" style="margin-top:24px;font-style:italic;color:#9ca3af;">
+                    [PASS WebView · provider=NICE checkplus]
+                  </div>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>"본인인증 시작"을 탭한 직후, PASS 인증사 WebView가 wizard 위에 덮인 상태. 사용자는 외부 인증 UI에 머물러 있음.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            ① 통신사 / 인증 수단 선택 → 휴대폰 PASS 또는 SMS 인증 → 완료 시 wizard로 자동 복귀 → step 2 (파트너 인증)로 진행<br>
+            ② <strong>WebView 시스템 back / 닫기</strong> → 인증 취소 → wizard step 1 baseline (State 1)로 복귀<br>
+            ③ 인증사 측 오류 (점검 / 차단 등) → 인증사가 자체 안내 후 닫힘 → wizard step 1 baseline 복귀, 다시 시도 가능
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · 인증 도중 앱이 백그라운드로 가면 인증사 측에서 세션 끊김 — 복귀 시 처음부터 다시<br>
+            · 인증사 내부에서 외부 브라우저 / 통신사 앱으로 딥링크 진입 → 다시 wizard로 돌아오는 경로 보장 (app_scheme 등록 필요)<br>
+            · 인증 결과 검증 실패(서버 측 위변조 검증) → wizard 측에서 error dialog "본인인증을 완료하지 못했어요"
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>↔ Wizard 전체가 외부 인증 WebView로 가려짐 (상단 native bar + 인증사 본문). 백그라운드 wizard는 보이지 않음.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>— <em>(외부 SDK 영역 — Minglit 토큰 미적용. native bar는 OS WebView 기본)</em></td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 PG 결제 WebView(State 11)와 동일한 overlay 패턴. 인증사는 NICE checkplus 또는 KCB 중 선택 가능 (구성 토글). 인증 성공 시 발급되는 CI/DI는 사용자 프로필에 영구 저장 — 후속 이벤트에서는 이 step을 건너뛰고 ✓ pass-through (State 3).</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ============= State 3: Step 1 → 2 · ✓ pass-through ============= -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Step 1 → 2 · 본인인증 ✓ pass-through</strong> <small>이미 본인인증을 마친 사용자</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -655,57 +1285,81 @@
                 <div class="wiz-appbar__title">참여 신청</div>
               </div>
               <div class="wiz-steps">
-                <div class="wiz-step__col">
-                  <div class="wiz-step__circle wiz-step__circle--active">1</div>
-                  <div class="wiz-step__label wiz-step__label--active">인증</div>
-                </div>
+                <div class="wiz-step__col"><div class="wiz-step__circle wiz-step__circle--done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><div class="wiz-step__label wiz-step__label--done">본인인증</div></div>
+                <div class="wiz-step__connector wiz-step__connector--done"></div>
+                <div class="wiz-step__col"><div class="wiz-step__circle wiz-step__circle--active">2</div><div class="wiz-step__label wiz-step__label--active">파트너 인증</div></div>
                 <div class="wiz-step__connector"></div>
-                <div class="wiz-step__col">
-                  <div class="wiz-step__circle wiz-step__circle--inactive">2</div>
-                  <div class="wiz-step__label">결제</div>
-                </div>
+                <div class="wiz-step__col"><div class="wiz-step__circle wiz-step__circle--inactive">3</div><div class="wiz-step__label">개인 정보 동의</div></div>
+                <div class="wiz-step__connector"></div>
+                <div class="wiz-step__col"><div class="wiz-step__circle wiz-step__circle--inactive">4</div><div class="wiz-step__label">결제</div></div>
               </div>
               <div class="wiz-body">
-                <div class="wiz-no-verif">
-                  이 티켓은 추가 인증이 필요하지 않습니다.<br>
-                  바로 결제로 진행해주세요.
+                <div class="wiz-section-title">파트너 인증</div>
+                <div class="wiz-section-sub">파트너가 요구한 자격을 모두 등록해주세요. 한 화면에서 위에서 아래로 이어 작성할 수 있어요.</div>
+
+                <div class="wiz-form-group">
+                  <div class="wiz-form-group-head">
+                    <div class="wiz-form-group-head__title">재직증명서</div>
+                  </div>
+                  <div class="wiz-form-group__fields">
+                    <div class="wiz-field">
+                      <div class="wiz-field__label">회사명</div>
+                      <div class="wiz-input wiz-input--placeholder">회사명을(를) 입력하세요</div>
+                    </div>
+                  </div>
                 </div>
               </div>
               <div class="wiz-footer">
+                <div class="wiz-btn wiz-btn--prev">이전</div>
                 <div class="wiz-btn wiz-btn--next">다음</div>
               </div>
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>선택한 티켓이 어떤 인증도 요구하지 않는 상태. 인증 단계에 머물러 있음.</td>
+          <td>이전에 본인인증을 마친 사용자가 wizard에 진입한 직후. step indicator의 본인인증 circle이 초록색 ✓ done 톤으로 표시되고, 화면은 자동으로 step 2 (파트너 인증)에 도착해 있다. 별도 banner 등 부연 안내 없음 — step indicator의 ✓ 만으로 "통과 완료"를 인지하도록 디자인.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>↔ 입력 없음 → "다음" 단일 액션 · 결제 단계로 이동</td>
+          <td>
+            ① <strong>"이전" 탭</strong> → 이미 본인인증 ✓ 상태이므로 단순 noop (또는 "재인증은 프로필에서 진행해주세요" 안내 후 머무름)<br>
+            ② 그 외 액션은 step 2 (파트너 인증) baseline (State 4)와 동일 — 폼 입력 + "다음"
+          </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· 선택된 티켓이 없는 비정상 진입 → "티켓을 먼저 선택해주세요." 안내</td>
+          <td>
+            · 본인인증은 통과했지만 사용자 명의가 변경된 경우 (개명 등) — 인증 결과의 신원과 사용자 입력 간 불일치 발생 가능 → 별도 재인증 흐름 안내 (이 spec 범위 밖)<br>
+            · 본인인증 캐시는 영구 — 그러나 인증사 정책상 재검증이 필요한 경우 step 1 entry로 강제 복귀<br>
+            · 파트너 인증이 0개라면 step 2도 fast-path로 자연스럽게 통과 (State 5 fast-path 분기)
+          </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
-          <td>− form 영역 전부 → <code>Center + Padding(vertical: spacing-xlarge + spacing-small = 40)</code>의 안내 Text 1개로 교체</td>
+          <td>
+            + 4-bucket Step Indicator: 본인인증 done tone (✓ icon + 초록) · 파트너 인증 active · 나머지 inactive · 본인인증→파트너 connector도 done tone<br>
+            ↔ body / footer는 step 2 baseline (State 4)와 동일
+          </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
-          <td>− input/file-picker 토큰 사용 안 됨<br>+ <code>spacing-xlarge (32)</code> + <code>spacing-small (8)</code> = 40 vertical padding (Center 정렬)</td>
+          <td>
+            + done tone: <code>color-success</code> (circle bg / 라벨 / connector — 풀 strength 초록 · opacity 없음)<br>
+            + active tone: <code>color-primary</code> (현재 진행 중인 step만)<br>
+            + check icon: stroke white · stroke-width 3 · viewBox 24<br>
+            <em>※ 완료 step은 흐리게 dim하지 않고, 명확한 초록 ✓로 "통과"를 강조</em>
+          </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 무료/검증 불요 이벤트(예: 일반 모임)의 fast-path. user는 다음 한 번만 누르면 결제 단계로 진입.</td>
+          <td>📝 본인인증을 "사라지게"가 아니라 "통과 완료" 상태로 step indicator에 시각적으로 남기는 것이 핵심 — Toss 결제 / 카카오페이 가입 흐름의 검증된 패턴. 추가 banner 없이 indicator의 초록 ✓ 만으로 충분히 인지된다. 본인인증 미완료 사용자는 본인인증 단계에서 시작 (State 1), 파트너 인증 0개일 경우는 step 2도 fast-path로 통과 (State 5).</td>
         </tr>
       </tbody>
     </table>
 
-    <!-- ============= State 3: Validation error (server) ============= -->
+    <!-- ============= State 4: Step 2 · 파트너 인증 (single scroll page) ============= -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Validation / submit error toast</strong> <small>유효성 실패 안내</small></th></tr>
+        <tr><th colspan="3"><strong>Step 2 / 4 · 파트너 인증</strong> <small>모든 인증 폼이 한 페이지에 stack · scroll</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -716,29 +1370,344 @@
                 <div class="wiz-appbar__title">참여 신청</div>
               </div>
               <div class="wiz-steps">
-                <div class="wiz-step__col">
-                  <div class="wiz-step__circle wiz-step__circle--active">1</div>
-                  <div class="wiz-step__label wiz-step__label--active">인증</div>
-                </div>
+                <div class="wiz-step__col"><div class="wiz-step__circle wiz-step__circle--done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><div class="wiz-step__label wiz-step__label--done">본인인증</div></div>
+                <div class="wiz-step__connector wiz-step__connector--done"></div>
+                <div class="wiz-step__col"><div class="wiz-step__circle wiz-step__circle--active">2</div><div class="wiz-step__label wiz-step__label--active">파트너 인증</div></div>
                 <div class="wiz-step__connector"></div>
-                <div class="wiz-step__col">
-                  <div class="wiz-step__circle wiz-step__circle--inactive">2</div>
-                  <div class="wiz-step__label">결제</div>
-                </div>
+                <div class="wiz-step__col"><div class="wiz-step__circle wiz-step__circle--inactive">3</div><div class="wiz-step__label">개인 정보 동의</div></div>
+                <div class="wiz-step__connector"></div>
+                <div class="wiz-step__col"><div class="wiz-step__circle wiz-step__circle--inactive">4</div><div class="wiz-step__label">결제</div></div>
               </div>
               <div class="wiz-body">
-                <div class="wiz-section-title">재직 증명서 인증</div>
-                <div class="wiz-section-sub">현재 재직 중인 회사명과 사원증/명함을 업로드해주세요.</div>
-                <div class="wiz-field">
-                  <div class="wiz-field__label">회사명</div>
-                  <div class="wiz-input wiz-input--placeholder">회사명을(를) 입력하세요</div>
+                <div class="wiz-section-title">파트너 인증</div>
+                <div class="wiz-section-sub">파트너가 요구한 자격을 모두 등록해주세요. 위에서 아래로 이어 작성할 수 있고, 모두 채운 뒤 다음으로 진행합니다.</div>
+
+                <div class="wiz-form-group">
+                  <div class="wiz-form-group-head">
+                    <div class="wiz-form-group-head__title">재직증명서</div>
+                  </div>
+                  <div class="wiz-form-group__fields">
+                    <div class="wiz-field">
+                      <div class="wiz-field__label">회사명</div>
+                      <div class="wiz-input wiz-input--filled">밍글릿</div>
+                    </div>
+                    <div class="wiz-field">
+                      <div class="wiz-field__label">증빙 서류</div>
+                      <div class="wiz-file-picker wiz-file-picker--filled">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        <div class="wiz-file-picker__file">사원증.jpg</div>
+                        <div class="wiz-file-picker__btn">변경</div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div class="wiz-field">
-                  <div class="wiz-field__label">증빙 서류</div>
-                  <div class="wiz-file-picker">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                    <div class="wiz-file-picker__hint">증빙 서류를 업로드해주세요</div>
-                    <div class="wiz-file-picker__btn">선택</div>
+
+                <div class="wiz-form-group">
+                  <div class="wiz-form-group-head">
+                    <div class="wiz-form-group-head__title">학력증명서</div>
+                  </div>
+                  <div class="wiz-form-group__fields">
+                    <div class="wiz-field">
+                      <div class="wiz-field__label">학교명</div>
+                      <div class="wiz-input wiz-input--placeholder">학교명을(를) 입력하세요</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="wiz-footer">
+                <div class="wiz-btn wiz-btn--prev">이전</div>
+                <div class="wiz-btn wiz-btn--next">다음</div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>본인인증을 마치고 step 2에 진입한 상태. 파트너가 요구하는 인증 폼이 ≥ 1개. 모든 폼이 한 페이지에 위에서 아래로 stack되어 있고, 사용자는 본문 영역에서 scroll하며 각 폼을 채운다. 폼이 많아 한 화면에 안 들어가면 자연스럽게 스크롤되며 footer는 화면에 고정.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            ① <strong>본문 scroll</strong> → 파일 picker / 텍스트 input 탭 시 키보드가 올라오면 해당 필드를 자동 노출하도록 scroll 보정 (Flutter 기본)<br>
+            ② <strong>텍스트 / 파일 입력</strong> → 입력 즉시 메모리에 저장 (별도 저장 버튼 없음)<br>
+            ③ <strong>"이전" 탭</strong> → 본인인증 entry (✓ pass-through인 경우는 noop)<br>
+            ④ <strong>"다음" 탭</strong> → 모든 필수 입력 검증 후 step 3 (공유 동의)로 진행. 누락 시 validation snackbar (State 6) + 누락 필드 첫 번째로 scroll<br>
+            ⑤ <strong>X(닫기) 탭</strong> → 작성 중 데이터 폐기 안내 confirm dialog → "나가기" 시 EventDetail 복귀
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · 한 인증 그룹 안에 여러 필드(텍스트 + 파일)는 가능, 한 그룹 안에서만 묶임<br>
+            · 폼이 1개일 때는 group head ("1 재직증명서")를 생략하고 section title만 노출 (단순화)<br>
+            · 폼이 5개 이상으로 길어지면 "[2 / 5] 학력증명서" 처럼 그룹 head에 진행 인디케이터 추가 검토 (이 spec 범위 밖, 후속 보강)<br>
+            · 파일 업로드 중 페이지 이탈 → 백그라운드 업로드 진행. 미완료 상태로 "다음" 시 "업로드 중입니다" 안내<br>
+            · 인증 폼 정보를 불러오지 못한 경우 → "인증 정보를 불러올 수 없습니다" 안내 + 재시도 버튼
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            · 4-bucket Step Indicator: 본인인증 done · 파트너 인증 active<br>
+            · Section title "파트너 인증" + description (인증 그룹 수에 무관하게 동일)<br>
+            · 인증 그룹 = group head (인증명 12/600 · muted secondary · 카드 위쪽) + fields wrapper (iOS inset grouped 카드 — 흰 bg · radius-card · padding spacing-medium)<br>
+            · 카드 사이 spacing-large gap — 시각 분리 충분, horizontal divider 불필요<br>
+            · Footer: 이전 (flex 1) + 다음 (flex 2)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            + group head title: 12/600 · <code>color-text-secondary</code> · letter-spacing 0.2px (iOS section header tone) · 카드 edge에 align (별도 padding-left 없음)<br>
+            + fields wrapper 카드: <code>color-background</code> bg · <code>radius-card</code> 16 · padding spacing-medium · 회색 scaffold 위에 흰 카드 노출<br>
+            + 카드 사이 spacing-large gap — 그룹 분리에 충분<br>
+            ↔ step circle / 라벨 색은 done = success 초록 / active = primary
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 v2.1 변경 — 초기 plan은 "한 폼 = 한 step" 이었으나 사용자 부담 / step 수 증가 우려로 "한 페이지 scroll"로 통합. step indicator의 "파트너 인증" 한 bucket 안에 모든 인증 폼이 들어간다. 그룹 head로 인증 단위를 시각적으로 구분하고, divider로 분리. 폼이 1개일 땐 group head를 생략해 단순한 폼처럼 보이게 한다.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ============= State 5: Step 2 · 부분 사전 승인 (mixed) ============= -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Step 2 · 부분 사전 승인 (mixed)</strong> <small>일부 인증 ✓ 이미 인증됨 + 미승인 인증 폼</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="wiz-appbar">
+                <div class="wiz-appbar__leading"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+                <div class="wiz-appbar__title">참여 신청</div>
+              </div>
+              <div class="wiz-steps">
+                <div class="wiz-step__col"><div class="wiz-step__circle wiz-step__circle--done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><div class="wiz-step__label wiz-step__label--done">본인인증</div></div>
+                <div class="wiz-step__connector wiz-step__connector--done"></div>
+                <div class="wiz-step__col"><div class="wiz-step__circle wiz-step__circle--active">2</div><div class="wiz-step__label wiz-step__label--active">파트너 인증</div></div>
+                <div class="wiz-step__connector"></div>
+                <div class="wiz-step__col"><div class="wiz-step__circle wiz-step__circle--inactive">3</div><div class="wiz-step__label">개인 정보 동의</div></div>
+                <div class="wiz-step__connector"></div>
+                <div class="wiz-step__col"><div class="wiz-step__circle wiz-step__circle--inactive">4</div><div class="wiz-step__label">결제</div></div>
+              </div>
+              <div class="wiz-body">
+                <div class="wiz-section-title">파트너 인증</div>
+                <div class="wiz-section-sub">이미 인증된 항목은 재입력이 필요 없어요. 남은 항목만 작성해주세요.</div>
+
+                <div class="wiz-form-group">
+                  <div class="wiz-form-group-head">
+                    <div class="wiz-form-group-head__title">재직증명서</div>
+                  </div>
+                  <div class="wiz-form-group__approved">
+                    <div class="wiz-form-group__approved-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                    </div>
+                    <div class="wiz-form-group__approved-body">
+                      <div class="wiz-form-group__approved-title">이미 인증됨</div>
+                      <div class="wiz-form-group__approved-meta">2026.04.18 승인 · 회사명 · 사원증.jpg</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="wiz-form-group">
+                  <div class="wiz-form-group-head">
+                    <div class="wiz-form-group-head__title">학력증명서</div>
+                  </div>
+                  <div class="wiz-form-group__fields">
+                    <div class="wiz-field">
+                      <div class="wiz-field__label">학교명</div>
+                      <div class="wiz-input wiz-input--placeholder">학교명을(를) 입력하세요</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="wiz-footer">
+                <div class="wiz-btn wiz-btn--prev">이전</div>
+                <div class="wiz-btn wiz-btn--next">다음</div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>본인인증을 마치고 step 2에 진입한 상태. 필요한 인증 중 일부가 같은 파트너에 대해 이미 <code>partner_verified_users</code>에 승인 기록이 있어, 해당 인증은 정적 ✓ 카드로 노출되고 미승인 인증만 일반 폼으로 작성. wizard는 진입 시 backend에서 partner+user+verification_id 매칭을 한 번 fetch.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            ① <strong>승인된 카드</strong> → 정적 노출 (탭 무반응) · 재입력 / 변경 불가 — 변경하려면 마이 페이지의 "내 개인 정보 관리"에서 철회 후 재인증<br>
+            ② <strong>미승인 폼</strong> → 일반 입력 (State 4와 동일)<br>
+            ③ <strong>"다음" 탭</strong> → 미승인 폼만 검증 → 통과 시 step 3 (동의)로 진행. 승인된 인증은 신규 submission 생성 없이 기존 grant 재사용
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · 승인된 인증이 만료(<code>valid_until</code>)된 경우 → ✓ 카드 대신 일반 폼으로 노출 (재인증 필요)<br>
+            · 사용자가 "내 개인 정보 관리"에서 grant 철회 → 다음 진입 시 일반 폼으로 노출<br>
+            · 모든 required 인증이 사전 승인된 경우 → step 2 자체를 indicator에서 제외하고 step 3 직행 (별도 분기 — State 4 변형이 아닌 indicator 변경)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            · ✓ 카드 (<code>.wiz-form-group__approved</code>): 32px 초록 ✓ 아이콘 + title("이미 인증됨") + meta(승인일 + 항목 요약). 일반 form-group과 같은 카드 사이즈 / radius로 시각 일관성 유지<br>
+            · 미승인 인증 폼: State 4와 동일<br>
+            · Section sub: "이미 인증된 항목은 재입력이 필요 없어요" 안내
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            + 승인 카드 bg: <code>color-background</code> (white) · radius-card 16 · padding spacing-medium<br>
+            + 승인 아이콘 circle: 32px · <code>color-success</code> bg · 16px white check svg<br>
+            + 카드 title: 13/600 · <code>color-text-primary</code><br>
+            + 카드 meta: 11 · <code>color-text-secondary</code> · margin-top 2
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 같은 파트너에 대한 인증은 한 번 승인되면 영구 — 다른 이벤트에서도 재사용. 사용자 마찰을 줄여 "한 번만 인증하면 끝" 경험 제공. UNIQUE(partner_id, user_id, verification_id)으로 스키마가 이미 보장. 정적 카드 자체에 변경 액션을 두지 않는 이유 — 인증 데이터는 audit 대상이라 직접 변경은 별도 흐름 (마이 페이지)으로 분리해 사고를 방지.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ============= State 6: Step 2 · 이전 반려 재제출 ============= -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Step 2 · 이전 반려 재제출</strong> <small>warning banner + 이전 입력값 prefill</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="wiz-appbar">
+                <div class="wiz-appbar__leading"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+                <div class="wiz-appbar__title">참여 신청</div>
+              </div>
+              <div class="wiz-steps">
+                <div class="wiz-step__col"><div class="wiz-step__circle wiz-step__circle--done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><div class="wiz-step__label wiz-step__label--done">본인인증</div></div>
+                <div class="wiz-step__connector wiz-step__connector--done"></div>
+                <div class="wiz-step__col"><div class="wiz-step__circle wiz-step__circle--active">2</div><div class="wiz-step__label wiz-step__label--active">파트너 인증</div></div>
+                <div class="wiz-step__connector"></div>
+                <div class="wiz-step__col"><div class="wiz-step__circle wiz-step__circle--inactive">3</div><div class="wiz-step__label">개인 정보 동의</div></div>
+                <div class="wiz-step__connector"></div>
+                <div class="wiz-step__col"><div class="wiz-step__circle wiz-step__circle--inactive">4</div><div class="wiz-step__label">결제</div></div>
+              </div>
+              <div class="wiz-body">
+                <div class="wiz-section-title">파트너 인증</div>
+                <div class="wiz-section-sub">이전에 작성하신 정보가 자동으로 채워져 있어요. 사유를 확인하고 수정해주세요.</div>
+
+                <div class="wiz-form-group">
+                  <div class="wiz-form-group-head">
+                    <div class="wiz-form-group-head__title">재직증명서</div>
+                  </div>
+                  <div class="wiz-rejected-banner">
+                    <svg class="wiz-rejected-banner__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    <div class="wiz-rejected-banner__reason">사원증 사진이 흐려서 이름이 보이지 않아요. 또렷한 사진으로 다시 올려주세요.</div>
+                  </div>
+                  <div class="wiz-form-group__fields">
+                    <div class="wiz-field">
+                      <div class="wiz-field__label">회사명</div>
+                      <div class="wiz-input wiz-input--filled">밍글릿</div>
+                    </div>
+                    <div class="wiz-field">
+                      <div class="wiz-field__label">증빙 서류</div>
+                      <div class="wiz-file-picker wiz-file-picker--filled">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        <div class="wiz-file-picker__file">사원증.jpg</div>
+                        <div class="wiz-file-picker__btn">변경</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="wiz-footer">
+                <div class="wiz-btn wiz-btn--prev">이전</div>
+                <div class="wiz-btn wiz-btn--next">다음</div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>이전에 같은 파트너 + 같은 인증으로 제출했던 기록이 <code>verification_submissions.status = 'rejected'</code> 상태인 경우. wizard 진입 시 backend에서 이전 submission을 fetch → 반려 banner 노출 + 마지막 입력값으로 폼 prefill. 사용자가 사유를 보고 빠르게 수정해서 재제출하는 흐름.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            ① <strong>banner 검토</strong> → 반려 사유 확인<br>
+            ② <strong>폼 수정</strong> → prefill된 입력값을 기반으로 사유에 해당하는 필드만 빠르게 변경 (전체 재입력 부담 ↓)<br>
+            ③ <strong>"다음" 탭</strong> → 새 submission 생성 (이전 record는 그대로 보존, snapshot_data 배열에 새 entry append) → step 3로 진행<br>
+            ④ banner는 dismissable 아님 — 재제출 완료 전까지 항상 노출
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · <strong>최신 submission status만 분기 결정</strong> — 예: 1차 시도(A 반려, B 반려) → 2차 시도(A 승인, B 반려) → 3차 시도 진입 시 A는 ✓ approved 카드 (State 5), B만 rejected banner (State 6). 과거 반려 이력이 있어도 latest가 approved면 banner 안 보임.<br>
+            · 반려 사유가 비어있는 경우 → "사유 없음 — 검토자에게 문의해주세요" 기본 메시지<br>
+            · 반려된 인증이 여러 개일 때 → 각 form-group마다 자체 banner 노출<br>
+            · 부분 승인 + 부분 반려 + 부분 신규가 한 화면에 섞일 수 있음 → State 5 (approved card) + State 6 (rejected banner) + State 4 (fresh form) 시각이 동시에 나타날 수 있음<br>
+            · 동일 사유로 반복 반려 → 횟수 제한 없으나, N회 이상 시 별도 안내(예: 고객센터 문의 권장) 검토 가능 (이 spec 범위 밖)<br>
+            · 반려 후 재제출하지 않은 채 wizard 재진입 → 매번 같은 banner 노출
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            · 반려 안내문 (<code>.wiz-rejected-banner</code>): warning 아이콘 + 사유 텍스트만 (별도 title / meta 없음 · 안내 자체에 집중). form-group head와 fields wrapper 사이에 위치<br>
+            · prefill된 폼: filled state로 노출 (이전 입력값 + 파일명) — 사용자가 변경할 부분만 인지 가능<br>
+            · Section sub: "이전 입력 자동 채움 + 수정 안내"
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            + 안내문 bg: <code>color-error</code> 8% (rgba) · radius-card 16 · padding spacing-medium<br>
+            + 안내 아이콘: 16px · <code>color-error</code> · margin-top 1px (텍스트 baseline 정렬)<br>
+            + 안내 reason: 13 · <code>color-text-primary</code> · line-height 1.5
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 v1 wizard는 이전 반려 이력을 fetch하지 않아 사용자가 이유를 모른 채 같은 데이터를 재제출 → 같은 사유로 반복 반려되는 마찰. v2.11에서 wizard 진입 시 <code>verification_submissions.status</code> + <code>snapshot_data[last].comments[]</code>를 함께 fetch해 사유를 명시적으로 노출. 재제출은 backend가 기존 record의 <code>snapshot_data</code> 배열에 append하는 방식이라 audit trail이 보존됨 (스키마 이미 지원 · cooldown 없음).</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ============= State 7: Step 2 · 파트너 인증 validation error ============= -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Step 2 · 필수 입력 누락 안내</strong> <small>validation snackbar · 누락 필드 첫 위치로 scroll</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="wiz-appbar">
+                <div class="wiz-appbar__leading"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+                <div class="wiz-appbar__title">참여 신청</div>
+              </div>
+              <div class="wiz-steps">
+                <div class="wiz-step__col"><div class="wiz-step__circle wiz-step__circle--done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><div class="wiz-step__label wiz-step__label--done">본인인증</div></div>
+                <div class="wiz-step__connector wiz-step__connector--done"></div>
+                <div class="wiz-step__col"><div class="wiz-step__circle wiz-step__circle--active">2</div><div class="wiz-step__label wiz-step__label--active">파트너 인증</div></div>
+                <div class="wiz-step__connector"></div>
+                <div class="wiz-step__col"><div class="wiz-step__circle wiz-step__circle--inactive">3</div><div class="wiz-step__label">개인 정보 동의</div></div>
+                <div class="wiz-step__connector"></div>
+                <div class="wiz-step__col"><div class="wiz-step__circle wiz-step__circle--inactive">4</div><div class="wiz-step__label">결제</div></div>
+              </div>
+              <div class="wiz-body">
+                <div class="wiz-section-title">파트너 인증</div>
+                <div class="wiz-section-sub">파트너가 요구한 자격을 모두 등록해주세요.</div>
+
+                <div class="wiz-form-group">
+                  <div class="wiz-form-group-head">
+                    <div class="wiz-form-group-head__title">재직증명서</div>
+                  </div>
+                  <div class="wiz-form-group__fields">
+                    <div class="wiz-field">
+                      <div class="wiz-field__label">회사명</div>
+                      <div class="wiz-input wiz-input--placeholder wiz-input--error">회사명을(를) 입력하세요</div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -747,12 +1716,13 @@
                 <span>필수 인증 항목을 모두 입력해주세요</span>
               </div>
               <div class="wiz-footer">
+                <div class="wiz-btn wiz-btn--prev">이전</div>
                 <div class="wiz-btn wiz-btn--next">다음</div>
               </div>
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>인증 단계에서 제출이 거절된 상태. 현재는 클라 단의 강제 검증이 없으므로 서버가 누락 필드를 거부하거나 향후 검증이 추가될 때를 대비한 안내 화면.</td>
+          <td>파트너 인증 페이지에서 필수 입력이 누락된 채 "다음"을 탭한 상태. 누락 필드는 빨간 border로 강조되고, 본문은 첫 번째 누락 필드 위치로 자동 scroll. 하단에 "필수 인증 항목을 모두 입력해주세요" snackbar가 약 3초 노출. step은 그대로 머무름.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
@@ -760,27 +1730,37 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· 안내는 짧은 시간 후 자동으로 사라짐<br>· 같은 오류가 반복되면 새 안내가 이전 것을 대체</td>
+          <td>
+            · snackbar는 약 3초 후 자동 fade-out — 같은 오류가 반복되면 새 안내가 이전 것을 대체<br>
+            · 필드별 인라인 에러 메시지는 noisy 방지 위해 일단 미사용 (border 강조 + snackbar + scroll-to로 충분). 향후 필드별 메시지 도입 시 separate state<br>
+            · 파일 업로드 진행 중에 "다음" 탭 → "업로드 중입니다" 별도 메시지 (validation과 다른 흐름)<br>
+            · 누락 필드가 화면 밖에 있을 때 → 첫 번째 누락 필드 위치로 부드럽게 scroll (Flutter 기본 ensureVisible 사용)
+          </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
-          <td>+ 하단 안내 토스트 (footer 위) + 경고 아이콘<br>↔ 입력 필드는 baseline과 동일 (현재는 입력 자체에 오류 강조 없음)</td>
+          <td>
+            + 누락 필드 input border 빨간색 (<code>color-error</code>)<br>
+            + 하단 안내 snackbar (footer 위) + 경고 아이콘<br>
+            + 첫 번째 누락 필드로 자동 scroll (animate)<br>
+            ↔ 그 외는 State 4와 동일 (single scroll page 골격)
+          </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
-          <td>+ <code>color-warning</code> (안내 아이콘) · #323232 (안내 박스 bg · Material 기본)</td>
+          <td>+ <code>color-error</code> (input border 빨강) · <code>color-warning</code> (snackbar icon) · #323232 (snackbar bg · Material 기본)</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 인증 단계에서의 클라 단 검증은 아직 없어, "다음"은 무조건 통과한다. 이 화면은 향후 검증 강화가 추가될 때를 위한 자리. 현재 운영에는 거의 노출되지 않음.</td>
+          <td>📝 v2.1 변경 — 단일 scroll page에서 누락 필드가 여러 개일 때 첫 번째 누락으로 scroll해서 사용자가 즉시 시작점을 알 수 있도록. 모든 누락 필드의 border가 동시에 빨강. 사용자가 한 필드를 채우면 해당 필드는 빨강 border 해제 (다른 누락은 유지).</td>
         </tr>
       </tbody>
     </table>
 
-    <!-- ============= State 4: Step 2 · Payment ============= -->
-    <table class="ref state-mini">
+    <!-- ============= State 8: Step 3 · 개인 정보 제공 동의 ============= -->
+    <table class="ref state-mini is-baseline-tint">
       <thead>
-        <tr><th colspan="3"><strong>Step 2 / 2 · 결제 (Payment)</strong> <small>결제 상세 확인</small></th></tr>
+        <tr><th colspan="3"><strong>Step 3 / 4 · 개인 정보 제공 동의</strong> <small>요약 안내 + 상세 표 (정보 / 대상 / 기간)</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -791,15 +1771,174 @@
                 <div class="wiz-appbar__title">참여 신청</div>
               </div>
               <div class="wiz-steps">
-                <div class="wiz-step__col">
-                  <div class="wiz-step__circle wiz-step__circle--inactive">1</div>
-                  <div class="wiz-step__label">인증</div>
-                </div>
+                <div class="wiz-step__col"><div class="wiz-step__circle wiz-step__circle--done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><div class="wiz-step__label wiz-step__label--done">본인인증</div></div>
+                <div class="wiz-step__connector wiz-step__connector--done"></div>
+                <div class="wiz-step__col"><div class="wiz-step__circle wiz-step__circle--done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><div class="wiz-step__label wiz-step__label--done">파트너 인증</div></div>
+                <div class="wiz-step__connector wiz-step__connector--done"></div>
+                <div class="wiz-step__col"><div class="wiz-step__circle wiz-step__circle--active">3</div><div class="wiz-step__label wiz-step__label--active">개인 정보 동의</div></div>
                 <div class="wiz-step__connector"></div>
-                <div class="wiz-step__col">
-                  <div class="wiz-step__circle wiz-step__circle--active">2</div>
-                  <div class="wiz-step__label wiz-step__label--active">결제</div>
+                <div class="wiz-step__col"><div class="wiz-step__circle wiz-step__circle--inactive">4</div><div class="wiz-step__label">결제</div></div>
+              </div>
+              <div class="wiz-body" style="padding-bottom: var(--spacing-medium);">
+                <div class="wiz-section-title">개인 정보 제공 동의</div>
+
+                <div class="wiz-consent-summary-text">
+                  사용자님의 소중한 개인정보는 <strong>이벤트 종료 시점</strong>까지만 파트너가 조회 가능해요. 파트너에게 제공된 개인정보는 <strong>마이 페이지</strong>에서 확인할 수 있어요.<br>
+                  동의하시면 다음 버튼을 눌러 진행해주세요.
                 </div>
+
+                <div class="wiz-consent-field">
+                  <div class="wiz-consent-field__label">개인정보 제공 대상</div>
+                  <a href="#" class="wiz-consent-list-item wiz-consent-list-item--tappable">
+                    <div class="wiz-consent-list-item__icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="9" y1="7" x2="11" y2="7"/><line x1="13" y1="7" x2="15" y2="7"/><line x1="9" y1="11" x2="11" y2="11"/><line x1="13" y1="11" x2="15" y2="11"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                    </div>
+                    <div class="wiz-consent-list-item__body">
+                      <div class="wiz-consent-list-item__title">○○이벤트 운영사</div>
+                    </div>
+                    <svg class="wiz-consent-list-item__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                  </a>
+                </div>
+
+                <div class="wiz-consent-field">
+                  <div class="wiz-consent-field__label">개인 정보 제공 만료일</div>
+                  <div class="wiz-consent-list-item">
+                    <div class="wiz-consent-list-item__icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+                    </div>
+                    <div class="wiz-consent-list-item__body">
+                      <div class="wiz-consent-list-item__title">환불 시점</div>
+                      <div class="wiz-consent-list-item__sub">심사 거절 또는 환불 처리 시 즉시 만료</div>
+                    </div>
+                  </div>
+                  <div class="wiz-consent-list-item">
+                    <div class="wiz-consent-list-item__icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    </div>
+                    <div class="wiz-consent-list-item__body">
+                      <div class="wiz-consent-list-item__title">이벤트 종료 시점</div>
+                      <div class="wiz-consent-list-item__sub">2026.06.15 (월) 22:00</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="wiz-consent-field">
+                  <div class="wiz-consent-field__label">개인 정보 제공 내역</div>
+                  <div class="wiz-consent-list-item">
+                    <div class="wiz-consent-list-item__icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    </div>
+                    <div class="wiz-consent-list-item__body">
+                      <div class="wiz-consent-list-item__title">본인 인증 내역</div>
+                      <div class="wiz-consent-list-item__sub">이름 · 생년월일 · 휴대폰 · CI/DI</div>
+                    </div>
+                  </div>
+                  <div class="wiz-consent-list-item">
+                    <div class="wiz-consent-list-item__icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                    </div>
+                    <div class="wiz-consent-list-item__body">
+                      <div class="wiz-consent-list-item__title">재직증명서</div>
+                      <div class="wiz-consent-list-item__sub">회사명 · 사원증.jpg</div>
+                    </div>
+                  </div>
+                  <div class="wiz-consent-list-item">
+                    <div class="wiz-consent-list-item__icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                    </div>
+                    <div class="wiz-consent-list-item__body">
+                      <div class="wiz-consent-list-item__title">학력증명서</div>
+                      <div class="wiz-consent-list-item__sub">학교명 · 졸업증.pdf</div>
+                    </div>
+                  </div>
+                </div>
+
+                <span class="wiz-consent-policy-link">내 개인 정보 관리 →</span>
+              </div>
+              <div class="wiz-footer">
+                <div class="wiz-btn wiz-btn--prev">이전</div>
+                <div class="wiz-btn wiz-btn--next">동의하고 다음</div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>step 1 본인인증 + step 2 파트너 인증을 모두 마치고 step 3에 도달한 상태. 화면 구조는 위에서 아래로 <strong>① 요약문</strong>(이벤트 종료 시점까지 조회 가능 + 마이 페이지 안내) → <strong>② 개인정보 제공 대상</strong> (파트너 list-item · 탭 → 파트너 상세) → <strong>③ 개인 정보 제공 만료일</strong> (시간 순서 list-item 2개 — 환불 시점 / 이벤트 종료 시점) → <strong>④ 개인 정보 제공 내역</strong> (인증별 list-item — 사람/가방/학사모 아이콘 + 그룹 title + detail) → <strong>⑤ 내 개인 정보 관리 →</strong> 링크. 별도 체크박스 없으며 "동의하고 다음" CTA 자체가 동의 액션.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            ① <strong>요약문 검토</strong> → 정책 한 줄("이벤트 운영에 필요한 기간만 / 이벤트 종료 시점까지만 조회 가능") 파악<br>
+            ② <strong>"개인정보 제공 대상" list-item 탭</strong> → 파트너 상세 페이지로 이동 (어떤 사업자인지 / 사업자등록번호 / 연락처 등 확인 후 다시 돌아오면 step 3 유지)<br>
+            ③ <strong>"개인 정보 제공 만료일" list-items</strong> → 정적 노출 (탭 무반응) · 두 개 카드 (환불 시점 → 이벤트 종료 시점) 시간 순서로 — 두 trigger 중 먼저 도달하는 시점에 만료<br>
+            ④ <strong>"개인 정보 제공 내역" list-item들</strong> → 정적 노출 — 그룹별로 어떤 항목이 어떤 형식으로 제공되는지 시각 확인<br>
+            ⑤ <strong>"내 개인 정보 관리 →" 링크 탭</strong> → <code>PersonalDataManagementPage</code> (후속 PR)로 이동 — 다른 파트너에게 이미 공유된 정보의 만료기간 / 조기 철회 관리<br>
+            ⑥ <strong>"동의하고 다음" 탭</strong> → 동의 행위로 간주, step 4 (결제)로 이동. 동의 기록이 backend의 <code>personal_data_grants</code> 테이블에 commit (RLS · 본인만 조회/철회)<br>
+            ⑦ <strong>"이전" 탭</strong> → step 2 (파트너 인증)로 복귀 — 작성 데이터는 그대로 유지
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · 별도 동의 체크박스 없이 CTA 탭 = 동의로 간주. 의도치 않은 클릭을 방지하기 위해 CTA 라벨을 "<strong>동의하고</strong> 다음"으로 명시 + 요약문에서 "동의하시면 다음 버튼을 눌러"로 한 번 더 강조<br>
+            · 파트너 상세 페이지 미구현 / 네트워크 오류 → list-item 탭 시 "파트너 정보를 불러올 수 없습니다" 안내 후 동의 step에 머무름<br>
+            · 만료일 list-item은 탭해도 무반응 — 시각적으로 chevron 없이 정적 카드로 표현해 tappability를 차별화<br>
+            · 사용자가 step 2까지 완료한 상태에서 X로 wizard 종료 → 동의는 기록되지 않음 (다음 진입 시 동의 step부터 다시)<br>
+            · 사용자가 동의했지만 결제 직전 X로 종료 → 동의 grant만 기록되고 신청은 미생성. 다시 진입 시 동의 step부터 다시 (재 commit · idempotent)<br>
+            · 휴대폰 번호 등 민감 정보는 표시 시 마스킹 (****) — 실제 파트너에게 전달되는 데이터는 unmasked
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            · 4-bucket Step Indicator (본인인증 done · 파트너 인증 done · 공유 동의 active · 결제 inactive)<br>
+            · 요약 텍스트 블록 — 정책 두 키워드 (이벤트 운영에 필요한 기간 / 이벤트 종료 시점) strong 강조<br>
+            · 통일된 list-item 카드 atom — 40px 아이콘 circle + (title / sub) body + (옵션) chevron. 대상 / 만료일 / 내역에 동일하게 사용<br>
+            · 아이콘 종류: building (사업자) · calendar (만료일) · person (본인 인증) · briefcase (재직) · graduation cap (학력)<br>
+            · "내 개인 정보 관리 →" centered underline link<br>
+            · Footer: "이전" + "동의하고 다음" (CTA 자체가 동의 — 별도 체크박스 없음)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            + 요약 텍스트: 13 일반 · <code>color-text-primary</code> · line-height 1.7 · strong = 700<br>
+            + 필드 라벨: 11/700 · <code>color-text-secondary</code> · letter-spacing 0.3px<br>
+            + list-item 카드 (통일): <code>color-background</code> bg · radius-card 16 · padding spacing-medium · margin-bottom 6<br>
+            + 카드 아이콘 circle: 40px · <code>color-surface</code> bg · 18px svg <code>color-text-primary</code><br>
+            + 카드 title: 14/600 · <code>color-text-primary</code> · line-height 1.3<br>
+            + 카드 sub: 12 · <code>color-text-secondary</code> · margin-top 3 · line-height 1.4<br>
+            + 카드 chevron: 16px · <code>color-text-secondary</code> (tappable일 때만 노출)<br>
+            + 관리 링크: 12 · <code>color-primary</code> · underline · centered
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 동의 기록은 backend의 <code>personal_data_grants</code> 테이블에 RLS로 저장 — 한 행 = (사용자 id + 파트너 id + 정보 그룹 + grant 시각 + 만료 시각). 사용자는 본인 행만 조회 / 철회 가능 (RLS policy). 만료 시 파트너 측 데이터는 자동 삭제 (Edge Function cron). 만료 trigger 정책은 <strong>이벤트 종료 시점</strong> — 그 이전까지만 파트너가 조회 가능. 만료일 list-item에는 구체적 종료 시각을 sub-text로 노출해 사용자가 정확한 만료 시점을 인지할 수 있게 한다. 모든 필드가 <strong>같은 list-item atom</strong>으로 통일돼 시각 일관성을 확보 — 재사용 가능한 단일 컴포넌트(아이콘 + body + chevron)로 디자인 시스템 효율성도 ↑.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ============= State 9: Step 4 · 결제 (baseline) ============= -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Step 4 / 4 · 결제</strong> <small>결제 상세 확인</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="wiz-appbar">
+                <div class="wiz-appbar__leading"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+                <div class="wiz-appbar__title">참여 신청</div>
+              </div>
+              <div class="wiz-steps">
+                <div class="wiz-step__col"><div class="wiz-step__circle wiz-step__circle--done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><div class="wiz-step__label wiz-step__label--done">본인인증</div></div>
+                <div class="wiz-step__connector wiz-step__connector--done"></div>
+                <div class="wiz-step__col"><div class="wiz-step__circle wiz-step__circle--done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><div class="wiz-step__label wiz-step__label--done">파트너 인증</div></div>
+                <div class="wiz-step__connector wiz-step__connector--done"></div>
+                <div class="wiz-step__col"><div class="wiz-step__circle wiz-step__circle--done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><div class="wiz-step__label wiz-step__label--done">개인 정보 동의</div></div>
+                <div class="wiz-step__connector wiz-step__connector--done"></div>
+                <div class="wiz-step__col"><div class="wiz-step__circle wiz-step__circle--active">4</div><div class="wiz-step__label wiz-step__label--active">결제</div></div>
               </div>
               <div class="wiz-body">
                 <div class="wiz-section-title">결제 상세</div>
@@ -815,8 +1954,16 @@
                   </div>
                 </div>
                 <div class="wiz-pay-notice">
-                  • 파트너 심사 반려 시 100% 환불됩니다.<br>
-                  • 결제 완료 후 심사에는 최대 24시간이 소요될 수 있습니다.
+                  <strong style="color: var(--color-text-primary);">환불 정책</strong>
+                  <span class="wiz-pay-subhead">자동 환불 정책</span>
+                  • 파트너 심사 반려 시 100% 환불<br>
+                  • 이벤트 시작 시까지 미심사 상태면 100% 환불<br>
+                  • 파트너에 의한 이벤트 취소 시 100% 환불
+                  <span class="wiz-pay-subhead">플랫폼 환불 정책</span>
+                  • 결제 후 2시간 이내 즉시 환불<br>
+                  • 이벤트 시작 7일 전까지 즉시 환불
+                  <span class="wiz-pay-subhead">파트너 환불 정책</span>
+                  • 이벤트 시작 1일 전까지 파트너 요청 시 환불 가능
                 </div>
               </div>
               <div class="wiz-footer">
@@ -826,34 +1973,33 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>결제 단계에 진입했고 선택된 티켓이 있으며 아직 제출 전인 상태.</td>
+          <td>step 1~3을 모두 완료하고 결제 단계에 진입한 상태. step indicator의 처음 3개 circle은 모두 ✓ done. 무료 티켓이어도 같은 화면을 노출 (가격/총액 모두 "0원").</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ① <strong>"이전" 탭</strong> → 인증 단계로 복귀 · 입력 데이터는 그대로 유지<br>
-            ② <strong>"결제하기" 탭</strong> → 신청 제출 → 무료 티켓이면 즉시 성공 화면, 유료 티켓이면 결제 WebView로 진입<br>
+            ① <strong>"이전" 탭</strong> → step 3 동의 화면으로 복귀 — 동의는 그대로 유지<br>
+            ② <strong>"결제하기" 탭</strong> → 신청 제출 → 무료 티켓이면 즉시 성공 화면, 유료 티켓이면 결제 WebView (State 11)로 진입<br>
             ③ <strong>X 탭</strong> → 종료 (확인 없음)
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· 티켓 정보가 없는 비정상 진입 → "티켓 정보가 없습니다." 안내. · 가격이 0원인 티켓도 카드의 가격 / 총액 모두 "0원"으로 동일하게 표시 (이후 응답이 무료 / 유료 분기를 결정).</td>
+          <td>· 티켓 정보가 없는 비정상 진입 → "티켓 정보가 없습니다." 안내. · 가격이 0원인 티켓도 카드의 가격 / 총액 모두 "0원"으로 동일 표시 (이후 응답이 무료 / 유료 분기를 결정). · step 3까지 마쳤지만 결제 직전에 티켓이 매진된 경우 — 결제 시도 시 backend가 거부 → error dialog (State 12)</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
           <td>
-            ↔ body 전체 교체 → titleMedium "결제 상세" + 결제 카드 + 안내 텍스트<br>
+            ↔ body: titleMedium "결제 상세" + 결제 카드 + 안내 텍스트<br>
             + 결제 카드 (radius-small 8 · outlineVariant 1px border · padding spacing-medium · bg surfaceContainerLowest)<br>
-            + Divider(height 32) — 카드 내 행 분리<br>
+            + Divider — 카드 내 행 분리<br>
             + 안내 텍스트 (labelSmall · color-outline)<br>
-            + <code>MinglitButton.secondary</code> "이전" (flex 1) — Footer에 추가
+            + 이전 + 결제하기 buttons
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
           <td>
-            ↔ step circle: 1 → outline gray · 2 → primary · 라벨 색상 swap<br>
             + <code>color-primary</code> (총액 강조 · titleLarge bold)<br>
             + <code>color-outline</code> (안내 텍스트)<br>
             + <code>radius-small (8)</code> (결제 카드)<br>
@@ -863,12 +2009,12 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 가격은 천 단위 콤마 + "원" 접미사. 총액 색상은 primary(보라). 카드 bg는 약간 더 어두운 surfaceContainerLowest로 본문과 구분.</td>
+          <td>📝 가격은 천 단위 콤마 + "원" 접미사. 총액 색상은 primary(보라). 환불 정책 섹션은 <strong>세 그룹</strong>으로 분리: ① <strong>자동 환불 정책</strong> (시스템 자동 트리거 — 심사 반려 / 이벤트 시작 시 미심사 / 파트너의 이벤트 취소) — 플랫폼 lifecycle 상수. ② <strong>플랫폼 환불 정책</strong> (사용자 신청 가능 윈도우 — 결제 후 N시간 / 시작 N일 전까지) — backend의 <code>public.policies</code> 테이블에서 동적으로 가져옴 (RPC <code>get_current_policy('refund')</code>, JSONB <code>grace_period_hours: 2</code> + <code>cutoff_days: 7</code>). ③ <strong>파트너 환불 정책</strong> (파트너별 추가 환불 윈도우 — 시작 N일 전까지 파트너 요청 시 환불 가능) — 파트너가 이벤트 단위로 설정하는 정책 (TBD: <code>events</code>/<code>partners</code> 테이블의 <code>partner_refund_days</code> 같은 컬럼 또는 <code>policies</code> 테이블의 partner-scoped 행). v2에서 동의가 별도 step으로 분리됐기 때문에 결제 화면에서는 더 이상 약관 / 동의 문구를 다루지 않는다 — 결제 자체에 집중.</td>
         </tr>
       </tbody>
     </table>
 
-    <!-- ============= State 5: Submitting ============= -->
+    <!-- ============= State 10: Submitting ============= -->
     <table class="ref state-mini">
       <thead>
         <tr><th colspan="3"><strong>Submitting</strong> <small>제출 진행 중 · CTA 로딩</small></th></tr>
@@ -882,15 +2028,13 @@
                 <div class="wiz-appbar__title">참여 신청</div>
               </div>
               <div class="wiz-steps">
-                <div class="wiz-step__col">
-                  <div class="wiz-step__circle wiz-step__circle--inactive">1</div>
-                  <div class="wiz-step__label">인증</div>
-                </div>
-                <div class="wiz-step__connector"></div>
-                <div class="wiz-step__col">
-                  <div class="wiz-step__circle wiz-step__circle--active">2</div>
-                  <div class="wiz-step__label wiz-step__label--active">결제</div>
-                </div>
+                <div class="wiz-step__col"><div class="wiz-step__circle wiz-step__circle--done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><div class="wiz-step__label wiz-step__label--done">본인인증</div></div>
+                <div class="wiz-step__connector wiz-step__connector--done"></div>
+                <div class="wiz-step__col"><div class="wiz-step__circle wiz-step__circle--done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><div class="wiz-step__label wiz-step__label--done">파트너 인증</div></div>
+                <div class="wiz-step__connector wiz-step__connector--done"></div>
+                <div class="wiz-step__col"><div class="wiz-step__circle wiz-step__circle--done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><div class="wiz-step__label wiz-step__label--done">개인 정보 동의</div></div>
+                <div class="wiz-step__connector wiz-step__connector--done"></div>
+                <div class="wiz-step__col"><div class="wiz-step__circle wiz-step__circle--active">4</div><div class="wiz-step__label wiz-step__label--active">결제</div></div>
               </div>
               <div class="wiz-body">
                 <div class="wiz-section-title">결제 상세</div>
@@ -906,8 +2050,16 @@
                   </div>
                 </div>
                 <div class="wiz-pay-notice">
-                  • 파트너 심사 반려 시 100% 환불됩니다.<br>
-                  • 결제 완료 후 심사에는 최대 24시간이 소요될 수 있습니다.
+                  <strong style="color: var(--color-text-primary);">환불 정책</strong>
+                  <span class="wiz-pay-subhead">자동 환불 정책</span>
+                  • 파트너 심사 반려 시 100% 환불<br>
+                  • 이벤트 시작 시까지 미심사 상태면 100% 환불<br>
+                  • 파트너에 의한 이벤트 취소 시 100% 환불
+                  <span class="wiz-pay-subhead">플랫폼 환불 정책</span>
+                  • 결제 후 2시간 이내 즉시 환불<br>
+                  • 이벤트 시작 7일 전까지 즉시 환불
+                  <span class="wiz-pay-subhead">파트너 환불 정책</span>
+                  • 이벤트 시작 1일 전까지 파트너 요청 시 환불 가능
                 </div>
               </div>
               <div class="wiz-footer">
@@ -937,12 +2089,12 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 두 버튼 모두 같이 로딩 처리됨 — 보통은 결제 버튼만 로딩해도 충분하지만 현재는 묶여 있음. 본문은 결제 단계 baseline과 동일.</td>
+          <td>📝 두 버튼 모두 같이 로딩 처리됨 — 보통은 결제 버튼만 로딩해도 충분하지만 일관성을 위해 묶음. 본문은 결제 단계 baseline과 동일.</td>
         </tr>
       </tbody>
     </table>
 
-    <!-- ============= State 6: Iamport PG WebView ============= -->
+    <!-- ============= State 11: Iamport PG WebView ============= -->
     <table class="ref state-mini">
       <thead>
         <tr><th colspan="3"><strong>Iamport PG WebView</strong> <small>유료 티켓 결제 진행</small></th></tr>
@@ -975,8 +2127,8 @@
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ① 카드 / 계좌 등 결제 수단 선택 → 인증 → 결제 완료 후 wizard로 자동 복귀<br>
-            ② <strong>WebView 시스템 back / 닫기</strong> → 결제 취소 처리 → 오류 안내 다이얼로그
+            ① 카드 / 계좌 등 결제 수단 선택 → 인증 → 결제 완료 후 wizard로 자동 복귀 → 성공 화면<br>
+            ② <strong>WebView 시스템 back / 닫기</strong> → 결제 취소 처리 → 오류 안내 다이얼로그 (State 12)
           </td>
         </tr>
         <tr>
@@ -993,15 +2145,15 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 결제는 외부 결제사 SDK(Iamport)에 위임. 무료 티켓일 때는 이 단계를 건너뛰고 곧장 성공 화면.</td>
+          <td>📝 결제는 외부 결제사 SDK(Iamport)에 위임. 무료 티켓일 때는 이 단계를 건너뛰고 곧장 성공 화면. PASS 본인인증 overlay (State 2)와 시각적으로 동일한 패턴.</td>
         </tr>
       </tbody>
     </table>
 
-    <!-- ============= State 7: Error confirm dialog ============= -->
+    <!-- ============= State 12: Payment error snackbar ============= -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Payment error confirm dialog</strong> <small>status = error · 다시 시도/닫기</small></th></tr>
+        <tr><th colspan="3"><strong>Payment error snackbar</strong> <small>결제 실패 안내 + 결제하기 버튼 즉시 재활성</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -1012,68 +2164,70 @@
                 <div class="wiz-appbar__title">참여 신청</div>
               </div>
               <div class="wiz-steps">
-                <div class="wiz-step__col">
-                  <div class="wiz-step__circle wiz-step__circle--inactive">1</div>
-                  <div class="wiz-step__label">인증</div>
-                </div>
-                <div class="wiz-step__connector"></div>
-                <div class="wiz-step__col">
-                  <div class="wiz-step__circle wiz-step__circle--active">2</div>
-                  <div class="wiz-step__label wiz-step__label--active">결제</div>
-                </div>
+                <div class="wiz-step__col"><div class="wiz-step__circle wiz-step__circle--done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><div class="wiz-step__label wiz-step__label--done">본인인증</div></div>
+                <div class="wiz-step__connector wiz-step__connector--done"></div>
+                <div class="wiz-step__col"><div class="wiz-step__circle wiz-step__circle--done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><div class="wiz-step__label wiz-step__label--done">파트너 인증</div></div>
+                <div class="wiz-step__connector wiz-step__connector--done"></div>
+                <div class="wiz-step__col"><div class="wiz-step__circle wiz-step__circle--done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div><div class="wiz-step__label wiz-step__label--done">개인 정보 동의</div></div>
+                <div class="wiz-step__connector wiz-step__connector--done"></div>
+                <div class="wiz-step__col"><div class="wiz-step__circle wiz-step__circle--active">4</div><div class="wiz-step__label wiz-step__label--active">결제</div></div>
               </div>
-              <div class="wiz-body" style="opacity:0.4;">
+              <div class="wiz-body">
                 <div class="wiz-section-title">결제 상세</div>
                 <div class="wiz-pay-card">
                   <div class="wiz-pay-row">
                     <div class="wiz-pay-row__label">얼리버드 입장권</div>
                     <div class="wiz-pay-row__value">25,000원</div>
                   </div>
-                </div>
-              </div>
-              <div class="wiz-footer" style="opacity:0.4;">
-                <div class="wiz-btn wiz-btn--prev">이전</div>
-                <div class="wiz-btn wiz-btn--next">결제하기</div>
-              </div>
-              <div class="dialog-scrim">
-                <div class="dialog">
-                  <div class="dialog__title">결제 실패</div>
-                  <div class="dialog__msg">결제가 취소되었습니다.
-
-다시 시도하시겠어요?</div>
-                  <div class="dialog__actions">
-                    <div class="dialog__btn dialog__btn--cancel">닫기</div>
-                    <div class="dialog__btn dialog__btn--confirm">다시 시도</div>
+                  <div class="wiz-pay-divider"></div>
+                  <div class="wiz-pay-row wiz-pay-row--total">
+                    <div class="wiz-pay-row__label">최종 결제 금액</div>
+                    <div class="wiz-pay-row__value">25,000원</div>
                   </div>
                 </div>
+              </div>
+              <div class="snackbar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <span>결제가 취소되었어요. 다시 시도해주세요</span>
+              </div>
+              <div class="wiz-footer">
+                <div class="wiz-btn wiz-btn--prev">이전</div>
+                <div class="wiz-btn wiz-btn--next">결제하기</div>
               </div>
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>결제 실패 직후 (PG 사용자 취소 / 결제 승인 실패 / 네트워크 오류 등) "다시 시도 / 닫기" 옵션이 있는 확인 다이얼로그가 노출된 상태.</td>
+          <td>결제 실패 직후 (PG 사용자 취소 / 결제 승인 실패 / 네트워크 오류 등). 모달 dialog 없이 하단 snackbar로 사유 안내 + 결제하기 버튼이 즉시 재활성 — 사용자가 한 번 더 탭하면 PG WebView 재진입.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ① <strong>"다시 시도"</strong> → 결제 step 처음부터 다시 진행 (Submitting 상태로 복귀)<br>
-            ② <strong>"닫기"</strong> → 다이얼로그가 닫히고 결제 step에 그대로 머무름
+            ① <strong>snackbar 확인</strong> → 약 3초 후 자동 fade-out<br>
+            ② <strong>"결제하기" 재탭</strong> → submitting (State 10) → PG WebView (State 11) 다시 진입<br>
+            ③ <strong>"이전" 탭</strong> → step 3 (개인 정보 동의)로 복귀 — 결제만 빠지고 동의는 유지<br>
+            ④ <strong>X 탭</strong> → wizard 종료, EventDetail 복귀
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· errorMessage가 null → "결제를 완료하지 못했습니다." 기본 메시지<br>· dialog 외부 탭 → barrierDismissible 기본값 따름 (<code>showMinglitConfirm</code> 구현) — 보통 닫힘<br>· 다시 시도 후 또 실패 → 같은 dialog 재표시 (loop 없음, 매번 사용자 결정)</td>
+          <td>
+            · 에러 메시지가 비어있을 때 → "결제를 완료하지 못했어요. 다시 시도해주세요" 기본 메시지<br>
+            · 같은 사유로 반복 실패 → 매번 같은 snackbar (loop 가드 없음)<br>
+            · PG WebView에서 백그라운드 처리 중 wizard 닫힘 → snackbar는 노출 안 됨, race 안전 처리에 의존<br>
+            · 네트워크 끊김 / PG 점검 등 system error → 동일 snackbar 패턴 (사유 텍스트만 분기)
+          </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
-          <td>+ <code>showMinglitConfirm</code>(<code>title</code> · <code>message</code> · <code>confirmLabel</code>="다시 시도" · <code>cancelLabel</code>="닫기") — Material Dialog 위에 wizard scrim · radius-card · padding spacing-large<br>↔ wizard body는 scrim(rgba(0,0,0,0.45)) 아래로 dimmed · 입력 무반응</td>
+          <td>+ snackbar (footer 위 16px gap · 경고 아이콘 + 한 줄 메시지) — Material default behavior · ~3초 자동 dismiss<br>↔ 결제 baseline (State 9)와 동일한 body / footer — body dimming 없음, 버튼 즉시 active</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
-          <td>+ <code>color-primary</code> (다시 시도 confirm btn) · <code>color-text-secondary</code> (닫기 cancel btn) · <code>radius-card (16)</code> (다이얼로그) · <code>spacing-large (24)</code> (다이얼로그 padding) · scrim 0.45 opacity (Material default)</td>
+          <td>+ snackbar bg #323232 (Material 기본) · <code>color-warning</code> (아이콘) · 13/일반 텍스트 화이트 · radius-small 8 · padding 12 16</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 이 다이얼로그는 결제 실패 한정 — 본인 인증 step에서는 노출되지 않음. 닫기를 누르면 step은 그대로 유지된다.</td>
+          <td>📝 v2.13 변경 — 모달 dialog ("다시 시도하시겠어요?") 패턴이 마찰을 늘려서 snackbar로 단순화. 사용자가 결정 단계 없이 결제하기를 바로 다시 탭할 수 있어 retry 흐름이 1 tap 짧아짐. 결제 실패는 보통 일시적 (PG 취소 등)이므로 가벼운 안내가 적절. 더 심각한 system error는 사유 카피로 안내 (예: "잠시 후 다시 시도해주세요") — 별도 dialog 노출 없음.</td>
         </tr>
       </tbody>
     </table>
@@ -1103,23 +2257,43 @@
       <tbody>
         <tr>
           <td>X (CloseButton) 탭</td>
-          <td>Navigator.pop — EventDetail로 복귀. 별도 confirm 없음. submitting 중에도 가능 (race 가능 — 코드의 mounted/context.mounted 가드 의존).</td>
+          <td>step 1 (본인인증 entry · 입력 없음) → 즉시 EventDetail 복귀. step 2 이상 (작성 중 데이터 있음) → "작성 중인 정보가 사라져요" confirm dialog → "나가기" 시 복귀, "계속 작성" 시 머무름. submitting 중에도 X 가능하나 응답은 처리됨 (race 안전 처리).</td>
         </tr>
         <tr>
           <td>시스템 back / 스와이프</td>
-          <td>X와 동일. step별로 가로채지 않음. 입력 데이터는 controller 메모리에만 있어 dispose 시 사라짐.</td>
+          <td>X와 동일한 정책 적용. step별로 가로채지 않음. 입력 데이터는 wizard 메모리에만 있어 화면 종료 시 사라짐.</td>
         </tr>
         <tr>
           <td>step indicator 직접 탭</td>
-          <td>비반응 — circle/label에 onTap 없음. step 이동은 footer 버튼만으로.</td>
+          <td>비반응 — circle / label은 진행 표시용. step 이동은 footer 버튼만으로 (이전/다음). 이미 ✓ done인 step도 직접 탭으로는 돌아갈 수 없음 (이전 버튼으로만).</td>
         </tr>
         <tr>
-          <td>EventApplicationStatus.success</td>
-          <td>ref.listen 트리거 → <code>Navigator.pushReplacement</code>로 <code>PaymentSuccessScreen</code>으로 교체. wizard는 stack에서 제거 → back으로 wizard 복귀 불가.</td>
+          <td>본인인증 통과 (PASS 완료)</td>
+          <td>외부 인증 WebView 닫힘 → 사용자 프로필에 인증 결과 영구 저장 → wizard step 2 (파트너 인증) baseline 또는 fast-path로 자동 advance + 본인인증 ✓ pass-through banner (State 3) 잠시 노출.</td>
+        </tr>
+        <tr>
+          <td>Wizard 진입 시 사전 인증 / 반려 이력 fetch</td>
+          <td>step 2 진입 직전, required <code>verification_id</code>들에 대해 backend 쿼리: ① <code>partner_verified_users</code>(같은 파트너 + 본인 + 인증) — 승인 기록 ✓ 발견 시 form-group을 static card로 렌더 · ② <code>verification_submissions</code> <strong>최신 entry</strong>의 status='rejected' 발견 시 안내문 + prefill. 분기는 항상 latest 기준 — 과거 반려 후 승인된 인증은 ✓ approved 분기로 들어가 안내문 노출 X. 모든 required 인증이 ✓이면 step 2 indicator에서 제외 + step 3 직행.</td>
+        </tr>
+        <tr>
+          <td>파트너 인증 페이지 모든 필드 완료</td>
+          <td>"다음" → step 3 (공유 동의)로 advance. step indicator의 "파트너 인증" circle이 ✓ done으로 전환. 미완료 필드 있으면 첫 번째로 scroll + snackbar (State 5).</td>
+        </tr>
+        <tr>
+          <td>"동의하고 다음"</td>
+          <td>동의 행위가 backend의 <code>personal_data_grants</code> 테이블에 기록 (RLS로 본인만 조회 / 철회 가능). 한 행 = 한 grant (사용자 + 파트너 + 정보 그룹 + 부여 시각 + 만료 시각). step 4 (결제)로 advance.</td>
+        </tr>
+        <tr>
+          <td>"내 개인 정보 관리" 링크 탭</td>
+          <td>새 화면 <code>PersonalDataManagementPage</code>(후속 PR)로 push — 다른 파트너에게 이미 공유된 정보의 만료기간 / 조기 철회 관리. 닫고 돌아오면 wizard는 동일 step에 머물러 있음.</td>
+        </tr>
+        <tr>
+          <td>결제 성공</td>
+          <td><code>MinglitConfirmationPage</code>(success tone)으로 교체 (pushReplacement) — title "이벤트 신청이 완료됐어요" + 1.5s scale-bounce + check stroke + text stagger 애니메이션 + "확인" / "내 티켓 보기" CTA. back으로 wizard 복귀 불가. 동의 시각 / 인증 데이터 / 결제 정보 모두 backend commit 완료.</td>
         </tr>
         <tr>
           <td>이미 결제 진행 중인 동일 이벤트로 재진입</td>
-          <td>중복 신청은 백엔드의 <code>apply-event</code> EF가 reject — error dialog로 안내. 클라 가드 없음.</td>
+          <td>중복 신청은 backend가 reject — snackbar로 안내. 본인인증 / 동의는 이미 기록되어 있으므로 다음 신청에는 재사용.</td>
         </tr>
       </tbody>
     </table>
@@ -1128,6 +2302,78 @@
   <section class="doc">
     <h2>Motion timing</h2>
     <p class="intro">Source: <code>shared/packages/mds/core/lib/src/theme/minglit_design_tokens.dart</code> → <code>MinglitAnimation</code></p>
+
+    <h3 style="margin-top: var(--spacing-large); font-size: 14px; font-weight: 700;">Step indicator transition (live demo)</h3>
+    <p style="font-size: 13px; color: var(--color-text-secondary); margin-top: var(--spacing-small); line-height: 1.6;">
+      "다음" 탭 시 progress bar에서 일어나는 celebration 애니메이션 (5초 loop · 연출용 데모). 실제 wizard에서는 1회만 재생되고 final state로 고정.
+    </p>
+    <div class="wiz-anim-demo">
+      <div class="wiz-step__col">
+        <div class="wiz-step__circle wiz-anim__step1-circle">
+          <div class="wiz-anim__step1-num">1</div>
+          <div class="wiz-anim__step1-check">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+        </div>
+        <div class="wiz-step__label">본인인증</div>
+      </div>
+      <div class="wiz-step__connector wiz-anim__connector1"></div>
+      <div class="wiz-step__col">
+        <div class="wiz-step__circle wiz-anim__step2-circle">
+          <div class="wiz-anim__step2-num">2</div>
+        </div>
+        <div class="wiz-step__label">파트너 인증</div>
+      </div>
+      <div class="wiz-step__connector"></div>
+      <div class="wiz-step__col">
+        <div class="wiz-step__circle wiz-step__circle--inactive">3</div>
+        <div class="wiz-step__label">개인 정보 동의</div>
+      </div>
+      <div class="wiz-step__connector"></div>
+      <div class="wiz-step__col">
+        <div class="wiz-step__circle wiz-step__circle--inactive">4</div>
+        <div class="wiz-step__label">결제</div>
+      </div>
+    </div>
+    <p style="font-size: 12px; color: var(--color-text-secondary); margin-top: -8px; text-align: center;">
+      <em>▲ Forward (다음 탭) — Phase: hold (1s) → celebrate (300ms) → hold final (3.2s) → reset → repeat</em>
+    </p>
+
+    <p style="font-size: 13px; color: var(--color-text-secondary); margin-top: var(--spacing-large); line-height: 1.6;">
+      "이전" 탭 시 — 같은 keyframes를 <strong>reverse</strong>로 재생. celebration bounce가 살짝 들어가지만 <em>방향이 반대</em>라 "되돌리기" 느낌. step indicator의 done 상태가 풀리고 (✓ → 숫자), 진행한 step은 inactive로 회귀.
+    </p>
+    <div class="wiz-anim-demo wiz-anim-demo--reverse">
+      <div class="wiz-step__col">
+        <div class="wiz-step__circle wiz-anim__step1-circle">
+          <div class="wiz-anim__step1-num">1</div>
+          <div class="wiz-anim__step1-check">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+        </div>
+        <div class="wiz-step__label">본인인증</div>
+      </div>
+      <div class="wiz-step__connector wiz-anim__connector1"></div>
+      <div class="wiz-step__col">
+        <div class="wiz-step__circle wiz-anim__step2-circle">
+          <div class="wiz-anim__step2-num">2</div>
+        </div>
+        <div class="wiz-step__label">파트너 인증</div>
+      </div>
+      <div class="wiz-step__connector"></div>
+      <div class="wiz-step__col">
+        <div class="wiz-step__circle wiz-step__circle--inactive">3</div>
+        <div class="wiz-step__label">개인 정보 동의</div>
+      </div>
+      <div class="wiz-step__connector"></div>
+      <div class="wiz-step__col">
+        <div class="wiz-step__circle wiz-step__circle--inactive">4</div>
+        <div class="wiz-step__label">결제</div>
+      </div>
+    </div>
+    <p style="font-size: 12px; color: var(--color-text-secondary); margin-top: -8px; text-align: center;">
+      <em>▼ Backward (이전 탭) — Forward 애니메이션의 reverse 재생 · 같은 keyframes</em>
+    </p>
+
     <table class="ref">
       <thead>
         <tr>
@@ -1143,9 +2389,38 @@
           <td>GoRouter 기본 라우트 전환 — slide / fade.</td>
         </tr>
         <tr>
-          <td>step verification → payment swap</td>
+          <td>step forward (다음 탭) — coordinated 2-layer</td>
+          <td><code>MinglitAnimation.medium</code> (300ms · staged)</td>
+          <td>
+            <strong>① Step indicator celebration</strong>:<br>
+            · 완료 step circle: 숫자 fade-out (100ms) → check svg stroke-draw (200ms) → scale 1.0→1.15→1.0 bounce (200ms) → 색상 primary→success morph<br>
+            · 완료 connector: <code>color-divider</code>→<code>color-success</code> 색상 transition 200ms<br>
+            · 다음 active step circle: scale 1.0→1.12→1.0 bounce (200ms · 100ms 지연)<br>
+            <strong>② Body cross-fade + slide</strong>:<br>
+            · 이전 body: fade-out 100ms + translateY -4px<br>
+            · 새 body: 150ms 후 fade-in 150ms + translateY +4px → 0<br>
+            <em>두 layer가 parallel로 진행되어 "단계 통과" 피드백이 한순간에 전달됨</em>
+          </td>
+        </tr>
+        <tr>
+          <td>step backward (이전 탭)</td>
+          <td><code>MinglitAnimation.fast</code> (200ms)</td>
+          <td>celebration 애니메이션은 trigger되지 않음 (성취 모먼트가 아님). body 단순 cross-fade 200ms만. step indicator의 done step은 그대로 ✓ 유지 (다시 active로 회귀하지 않음 — 이미 완료된 단계로 간주).</td>
+        </tr>
+        <tr>
+          <td>본인인증 ✓ pass-through 진입</td>
           <td>—</td>
-          <td>단순 widget 분기 — AnimatedSwitcher 없음. cut 전환. step circle 색상은 ColorScheme 기본 transition.</td>
+          <td>step 1 진입 시 본인인증 캐시 확인 → 즉시 step 2 (또는 파트너 0개면 step 3)로 advance. step indicator의 본인인증 circle은 ✓ done으로 보이는 상태로 시작.</td>
+        </tr>
+        <tr>
+          <td>본인인증 시작 → PASS WebView push</td>
+          <td><code>MinglitAnimation.fast</code> (200ms)</td>
+          <td>full-screen slide-up — PG WebView와 동일 패턴. native bar는 OS 기본.</td>
+        </tr>
+        <tr>
+          <td>공유 동의 체크박스 토글</td>
+          <td><code>MinglitAnimation.micro</code> (100ms)</td>
+          <td>체크 박스 fill / check icon scale-in 100ms · CTA enabled state transition도 동시.</td>
         </tr>
         <tr>
           <td>결제하기 → submitting</td>
@@ -1158,14 +2433,14 @@
           <td>MaterialPageRoute 기본 — full-screen slide-up.</td>
         </tr>
         <tr>
-          <td>error dialog in/out</td>
-          <td><code>MinglitAnimation.fast</code> (200ms)</td>
-          <td>showMinglitConfirm — Material default fade-in scale.</td>
+          <td>결제 실패 snackbar</td>
+          <td><code>MinglitAnimation.fast</code> (200ms in) · 3s hold · 200ms out</td>
+          <td>Material default fade-in. 결제하기 버튼은 즉시 active 상태로 복원 (재시도 1 tap).</td>
         </tr>
         <tr>
-          <td>success → PaymentSuccessScreen</td>
-          <td><code>MinglitAnimation.fast</code> (200ms)</td>
-          <td>pushReplacement — 같은 stack 위치에서 fade.</td>
+          <td>success → MinglitConfirmationPage</td>
+          <td><code>MinglitAnimation.fast</code> (200ms route) + 1.5s sequence (scale-bounce + check stroke + text stagger)</td>
+          <td>pushReplacement → MinglitConfirmationPage atom 진입 → culmination 애니메이션 자동 재생 → 사용자가 CTA 탭하면 다음 화면.</td>
         </tr>
       </tbody>
     </table>
@@ -1177,7 +2452,7 @@
       <li><strong>initialTicketId 누락 진입</strong> — selectedTicket null 상태 · "티켓 정보가 없습니다." / "티켓을 먼저 선택해주세요." 텍스트로 fallback. 정상 흐름이 아니므로 footer 버튼은 의미 없음 (eventDetail로 돌아가야 함).</li>
       <li><strong>여러 verification 요구</strong> — 코드상 <code>verifs.first</code>만 표시한다. 다중 verification은 미구현 (TODO). 일단 한 개 인증으로만 처리 가능.</li>
       <li><strong>업로드 중 페이지 이탈</strong> — MinglitFilePicker가 백그라운드 업로드 진행. 완료 시 ref가 살아 있다면 state 갱신 시도 (mounted check 무시). 보통은 무해.</li>
-      <li><strong>EF 비동기 결과의 race</strong> — submitting 중 X로 종료 → ref.listen 콜백이 unmounted context에 닿을 수 있음. <code>context.mounted</code> 가드로 PaymentSuccessScreen push만 스킵. status 갱신은 controller 자체 (스킵 안 됨).</li>
+      <li><strong>EF 비동기 결과의 race</strong> — submitting 중 X로 종료 → ref.listen 콜백이 unmounted context에 닿을 수 있음. <code>context.mounted</code> 가드로 MinglitConfirmationPage push만 스킵. status 갱신은 controller 자체 (스킵 안 됨).</li>
       <li><strong>다크 모드</strong> — 페이지 전체가 ColorScheme 토큰 사용 → 자동 swap. dialog/snackbar/Iamport WebView도 자체 다크 대응 (Iamport 외).</li>
     </ul>
   </section>
@@ -1205,8 +2480,101 @@
         <tr><th>Route</th><td><code>EventApplicationRoute</code> · <code>/events/:eventId/apply</code> · query <code>?ticketId=</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/routing/app_routes.dart"><code>app_routes.dart</code></a></td></tr>
         <tr><th>Repository</th><td><code>eventRepositoryProvider.applyEvent</code> → Edge Function <code>apply-event</code>. 응답: <code>FreeApplyEventResult</code> | <code>PaidApplyEventResult</code>.</td></tr>
         <tr><th>PG SDK</th><td>Iamport (<code>iamportControllerProvider</code>) · pg=<code>html5_inicis</code> · pay_method=<code>card</code> · app_scheme=<code>minglit</code>.</td></tr>
-        <tr><th>Success screen</th><td><code>PaymentSuccessScreen</code> — <code>pushReplacement</code>으로 wizard 교체.</td></tr>
+        <tr><th>환불 정책 source</th><td><code>public.policies</code> 테이블 · <code>key='refund'</code> · JSONB <code>{grace_period_hours, cutoff_days}</code> · RPC <code>get_current_policy('refund')</code> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/supabase/migrations/20260316000006_policies_table.sql"><code>supabase/migrations/20260316000006_policies_table.sql</code></a> · 기존 렌더러: <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/event/detail/event_refund_policy_section.dart"><code>event_refund_policy_section.dart</code></a> (재사용 권장)</td></tr>
+        <tr><th>Success screen</th><td><a href="/components/MinglitConfirmationPage"><code>MinglitConfirmationPage</code></a> (success tone) — <code>pushReplacement</code>으로 wizard 교체. Toss-style culmination atom 재사용. 모든 파라미터 customizable. <em>아래 spec 블럭 참고.</em></td></tr>
         <tr><th>Atom widgets</th><td><code>MinglitButton</code> · <code>MinglitButton.secondary</code> · <code>MinglitFilePicker</code> · <code>MinglitAsyncValueWidget</code> · <code>showMinglitConfirm</code> (BuildContext extension).</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Success — MinglitConfirmationPage spec</h2>
+    <p class="intro">
+      결제 성공 시 wizard가 <code>pushReplacement</code>로 교체하는 화면. 모든 props customizable이지만 이 wizard 인스턴스에서는 다음 값으로 호출.
+    </p>
+
+    <p style="font-size: 13px; color: var(--color-text-secondary); margin-top: var(--spacing-medium); line-height: 1.6;">
+      ▼ 시각 mock (1.6초 loop · 실제로는 1회 재생 후 사용자 CTA 탭까지 final state 유지)
+    </p>
+    <div style="display: flex; justify-content: center; margin: var(--spacing-medium) 0 var(--spacing-large);">
+      <div class="viewport">
+        <div class="confirm-page">
+          <div class="confirm-page__body">
+            <div class="confirm-page__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div class="confirm-page__title">이벤트 신청이 완료됐어요</div>
+            <div class="confirm-page__description">파트너 심사 후 결과를 알림으로 알려드릴게요.<br>심사는 보통 24시간 안에 마무리돼요.</div>
+          </div>
+          <div class="confirm-page__cta">
+            <div class="confirm-page__cta-btn">내 티켓 보기</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p style="font-size: 12px; color: var(--color-text-secondary); margin-top: -8px; text-align: center;">
+      <em>Phase: ① circle scale-bounce (0-450ms) → ② check stroke-draw (250-700ms) → ③ title fade-up (550-700ms) → ④ description fade-up (700-850ms) → ⑤ CTA fade-up (850-1100ms) → hold</em>
+    </p>
+
+    <pre style="background: var(--color-surface); border-radius: var(--radius-card); padding: var(--spacing-medium); font-size: 12px; line-height: 1.6; color: var(--color-text-primary); overflow-x: auto;"><code>// apps/app_user/lib/src/features/event/admission/event_application_wizard_page.dart
+// 결제 성공 listener에서 호출
+
+ref.listen(eventApplicationControllerProvider, (prev, next) {
+  if (next.status == EventApplicationStatus.success) {
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) =&gt; MinglitConfirmationPage(
+          title: '이벤트 신청이 완료됐어요',
+          description:
+              '파트너 심사 후 결과를 알림으로 알려드릴게요.\n'
+              '심사는 보통 24시간 안에 마무리돼요.',
+          icon: Icons.check,
+          tone: ConfirmationTone.success,
+          ctaLabel: '내 티켓 보기',
+          onPressed: () =&gt; context.go(AppRoutes.purchaseHistory),
+        ),
+      ),
+    );
+  }
+});</code></pre>
+    <table class="ref" style="margin-top: var(--spacing-medium);">
+      <thead><tr><th style="width: 160px;">Param</th><th style="width: 200px;">Value</th><th>Reason</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>title</code></td>
+          <td>"이벤트 신청이 완료됐어요"</td>
+          <td>사용자 액션의 결과를 명확히 — "결제"가 아닌 "신청"으로 prime (결제는 신청의 일부, 본질은 이벤트 참여).</td>
+        </tr>
+        <tr>
+          <td><code>description</code></td>
+          <td>"파트너 심사 후 결과를 알림으로 알려드릴게요.<br>심사는 보통 24시간 안에 마무리돼요."</td>
+          <td>다음 기대 흐름 안내 — 심사 결과를 어디서/언제 받는지. 24시간 안내로 사용자 불안 ↓.</td>
+        </tr>
+        <tr>
+          <td><code>icon</code></td>
+          <td><code>Icons.check</code> (default)</td>
+          <td>표준 success 아이콘. 필요 시 ticket / verified 아이콘으로 override.</td>
+        </tr>
+        <tr>
+          <td><code>tone</code></td>
+          <td><code>ConfirmationTone.success</code></td>
+          <td>초록 circle bg + 흰 check — 일반 success 시각.</td>
+        </tr>
+        <tr>
+          <td><code>ctaLabel</code></td>
+          <td>"내 티켓 보기"</td>
+          <td><strong>Forward action</strong> — 단순 "확인" 대신 다음 자연스러운 흐름 제시. 결제 후 사용자가 가장 궁금한 건 "내가 산 티켓이 어디 있나".</td>
+        </tr>
+        <tr>
+          <td><code>onPressed</code></td>
+          <td><code>context.go(AppRoutes.purchaseHistory)</code></td>
+          <td>PurchaseHistoryPage로 이동. <code>push</code>가 아닌 <code>go</code>로 stack 정리 (이전 wizard / event detail은 dispose).</td>
+        </tr>
+        <tr>
+          <td><code>autoDismiss</code></td>
+          <td>(미사용 · null)</td>
+          <td>culmination 모먼트 — 자동 닫기 X, 사용자가 명시적 CTA 탭 시 진행.</td>
+        </tr>
       </tbody>
     </table>
   </section>
@@ -1226,7 +2594,7 @@
         </tr>
         <tr>
           <td><a href="/specs/purchase_history_page.html"><code>PurchaseHistoryPage</code></a></td>
-          <td>성공 후 PaymentSuccessScreen "내 티켓 보기" 탭 시 이동하는 화면.</td>
+          <td>성공 후 MinglitConfirmationPage CTA "내 티켓 보기" 탭 시 이동하는 화면.</td>
         </tr>
         <tr>
           <td><a href="/specs/event_application_manage_page.html"><code>EventApplicationManagePage</code> (partner)</a></td>
@@ -1251,6 +2619,10 @@
     document.body.classList.toggle('dark-mode', e.target.checked);
   });
 </script>
+
+</body>
+</html>
+t>
 
 </body>
 </html>

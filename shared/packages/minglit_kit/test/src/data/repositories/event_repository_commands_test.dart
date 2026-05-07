@@ -453,6 +453,67 @@ void main() {
     });
   });
 
+  // Fix #2123: markMatchResultsViewed must throw on non-200 (EF returns HTTP status)
+  group('EventRepository.markMatchResultsViewed', () {
+    test('completes without error on 200 response', () async {
+      when(
+        () => mockFunctions.invoke(
+          'user-mark-match-results-viewed',
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer(
+        (_) async => FunctionResponse(
+          status: 200,
+          data: {'already_viewed': false},
+        ),
+      );
+
+      await expectLater(
+        repository.markMatchResultsViewed(applicationId: 'app_1'),
+        completes,
+      );
+    });
+
+    test('throws MinglitUserException on non-200 with error message', () async {
+      when(
+        () => mockFunctions.invoke(
+          'user-mark-match-results-viewed',
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer(
+        (_) async => FunctionResponse(
+          status: 400,
+          data: {'error': '신청 내역을 찾을 수 없습니다.'},
+        ),
+      );
+
+      await expectLater(
+        repository.markMatchResultsViewed(applicationId: 'app_1'),
+        throwsA(
+          isA<MinglitUserException>().having(
+            (e) => e.message,
+            'message',
+            '신청 내역을 찾을 수 없습니다.',
+          ),
+        ),
+      );
+    });
+
+    test('throws MinglitUserException on non-200 with null data', () async {
+      when(
+        () => mockFunctions.invoke(
+          'user-mark-match-results-viewed',
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer((_) async => FunctionResponse(status: 500));
+
+      await expectLater(
+        repository.markMatchResultsViewed(applicationId: 'app_1'),
+        throwsA(isA<MinglitUserException>()),
+      );
+    });
+  });
+
   group('EventRepository.deleteApplication', () {
     test('completes without error', () async {
       mockTable(mockClient, 'event_applications');

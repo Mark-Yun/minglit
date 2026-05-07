@@ -73,7 +73,8 @@ String? _redirect({
   final isProtected =
       protectedPrefixes.any(path.startsWith) ||
       path.endsWith('/apply') ||
-      path.endsWith('/qr');
+      path.endsWith('/qr') ||
+      path.endsWith('/matching');
 
   // 3. Unauthenticated access to a protected path -> /login?from=<full location>
   // Fix #1249: location (full URI) instead of path to preserve query params
@@ -188,6 +189,14 @@ void main() {
         isLoggedIn: false,
       );
       expect(result, '/login?from=%2Fevents%2Fevent-123%2Fqr');
+    });
+
+    test('/events/:id/matching redirects to /login when not logged in', () {
+      final result = _redirect(
+        location: '/events/event-123/matching',
+        isLoggedIn: false,
+      );
+      expect(result, '/login?from=%2Fevents%2Fevent-123%2Fmatching');
     });
 
     // Fix #1249: query parameters in the original location must be preserved

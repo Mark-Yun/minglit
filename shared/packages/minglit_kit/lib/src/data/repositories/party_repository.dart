@@ -273,7 +273,7 @@ abstract class _SupabasePartyContextBase implements _SupabasePartyContext {
           await supabaseClient
                   .from('parties')
                   .select(
-                    '*, location:locations(*), '
+                    '*, location:locations(*), partner:partners(*), '
                     'ticket_templates(*), entry_group_templates(*)',
                   )
                   .eq('partner_id', partnerId)

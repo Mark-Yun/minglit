@@ -41,6 +41,21 @@ class PartnerHomeCoordinator {
     _router.go(const CheckinRoute().location);
   }
 
+  void pushEventDetail({
+    required String partyId,
+    required String eventId,
+  }) {
+    unawaited(
+      _router.push(
+        EventDetailRoute(partyId: partyId, eventId: eventId).location,
+      ),
+    );
+  }
+
+  void pushPartyEdit(String partyId) {
+    unawaited(_router.push(PartyEditRoute(partyId: partyId).location));
+  }
+
   void pushEventCreate(String partyId) {
     unawaited(_router.push(EventCreateRoute(partyId: partyId).location));
   }

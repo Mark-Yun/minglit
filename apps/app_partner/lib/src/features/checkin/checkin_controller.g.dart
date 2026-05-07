@@ -41,7 +41,7 @@ final class CheckinControllerProvider
   }
 }
 
-String _$checkinControllerHash() => r'1f2eb82b25de3cdf059caa84845ec090b4f5220e';
+String _$checkinControllerHash() => r'5fa220e6820c2e301a0af7665d7ab4daede3934b';
 
 abstract class _$CheckinController extends $Notifier<CheckinState> {
   CheckinState build();

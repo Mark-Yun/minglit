@@ -64,7 +64,7 @@ final class SocialInteractionControllerProvider
 }
 
 String _$socialInteractionControllerHash() =>
-    r'4a7d06244ed794a8f25ea553b0b0cc20eb602360';
+    r'34f597cbca3c5622316c83fc9371f4b4144bfa4c';
 
 /// Manages the state of a single social interaction
 /// (like, subscribe, bookmark, block).

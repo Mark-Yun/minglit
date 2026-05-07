@@ -72,13 +72,9 @@ void main() {
   group('IT-U01: 회원가입→결제→신청', () {
     final capture = GoldenCapture('cuj_u01');
 
-    testWidgets('비로그인 사용자가 신청 페이지 접근 시 login으로 리다이렉트된다', (
-      tester,
-    ) async {
+    testWidgets('비로그인 사용자가 신청 페이지 접근 시 login으로 리다이렉트된다', (tester) async {
       await tester.pumpWidget(
-        createTestApp(
-          initialLocation: '/events/event-paid/apply',
-        ),
+        createTestApp(initialLocation: '/events/event-paid/apply'),
       );
       await tester.pump();
       await tester.pump();
@@ -92,9 +88,7 @@ void main() {
 
     testWidgets('from 파라미터가 login URL에 포함된다', (tester) async {
       await tester.pumpWidget(
-        createTestApp(
-          initialLocation: '/events/event-paid/apply',
-        ),
+        createTestApp(initialLocation: '/events/event-paid/apply'),
       );
       await tester.pump();
       await tester.pump();
@@ -107,9 +101,7 @@ void main() {
       expect(find.byType(Scaffold), findsWidgets);
     });
 
-    testWidgets('U01-V1: 로그인 사용자는 신청 위저드에 바로 접근할 수 있다', (
-      tester,
-    ) async {
+    testWidgets('U01-V1: 로그인 사용자는 신청 위저드에 바로 접근할 수 있다', (tester) async {
       await tester.pumpWidget(
         createTestApp(
           isLoggedIn: true,
@@ -122,8 +114,11 @@ void main() {
             eventApplicationControllerProvider(paidEvent).overrideWith(
               () => _FakeEventApplicationController(
                 const EventApplicationState(
-                  step: EventApplicationStep.verification,
+                  step: EventApplicationStep.identity,
                   status: EventApplicationStatus.initial,
+                  identityCompleted: false,
+                  partnerVerifications: [],
+                  consentGranted: false,
                 ),
               ),
             ),
@@ -153,8 +148,11 @@ void main() {
             eventApplicationControllerProvider(paidEvent).overrideWith(
               () => _FakeEventApplicationController(
                 const EventApplicationState(
-                  step: EventApplicationStep.verification,
+                  step: EventApplicationStep.identity,
                   status: EventApplicationStatus.initial,
+                  identityCompleted: false,
+                  partnerVerifications: [],
+                  consentGranted: false,
                 ),
               ),
             ),
@@ -186,6 +184,9 @@ void main() {
                 EventApplicationState(
                   step: EventApplicationStep.payment,
                   status: EventApplicationStatus.initial,
+                  identityCompleted: true,
+                  partnerVerifications: const [],
+                  consentGranted: true,
                   selectedTicket: freeTicket,
                 ),
               ),
@@ -245,6 +246,9 @@ void main() {
                 EventApplicationState(
                   step: EventApplicationStep.payment,
                   status: EventApplicationStatus.submitting,
+                  identityCompleted: true,
+                  partnerVerifications: const [],
+                  consentGranted: true,
                   selectedTicket: paidTicket,
                 ),
               ),
@@ -276,6 +280,9 @@ void main() {
                 EventApplicationState(
                   step: EventApplicationStep.payment,
                   status: EventApplicationStatus.success,
+                  identityCompleted: true,
+                  partnerVerifications: const [],
+                  consentGranted: true,
                   selectedTicket: paidTicket,
                 ),
               ),
@@ -305,7 +312,7 @@ class _FakeEventDetailController extends EventDetailController {
   Future<Event> build(String id) async {
     if (_state is AsyncData<Event>) return _state.value;
     if (_state is AsyncError<Event>) {
-      throw _state.error;
+      Error.throwWithStackTrace(_state.error, _state.stackTrace);
     }
     await Future<void>.delayed(const Duration(days: 365));
     throw StateError('unreachable');
@@ -322,16 +329,26 @@ class _FakeEventApplicationController extends EventApplicationController {
   EventApplicationState build(Event event) => _initialState;
 
   @override
-  void selectTicket(Ticket ticket) {}
+  Future<void> selectTicket(Ticket ticket) async {}
 
   @override
-  void updateVerificationData(String key, dynamic value) {}
+  void updateVerificationData(
+    String verificationId,
+    String fieldKey,
+    dynamic value,
+  ) {}
 
   @override
-  void nextStep() {}
+  Future<void> nextStep(BuildContext context) async {}
 
   @override
   void previousStep() {}
+
+  @override
+  void markIdentityCompleted() {}
+
+  @override
+  void setConsentGranted(bool value) {}
 
   @override
   Future<void> submitApplication(BuildContext context) async {}

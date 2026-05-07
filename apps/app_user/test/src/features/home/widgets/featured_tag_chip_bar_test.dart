@@ -6,7 +6,7 @@
 // 3. 에러 상태 → SizedBox.shrink
 // 4. 칩 탭 → TagCoordinator.goToTagEventList() 호출
 import 'package:app_user/src/features/home/widgets/featured_tag_chip_bar.dart';
-import 'package:app_user/src/features/tag/logic/tag_coordinator.dart';
+import 'package:app_user/src/logic/tag_coordinator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
