@@ -86,6 +86,166 @@ final class EventApplicationsFamily extends $Family
   String toString() => r'eventApplicationsProvider';
 }
 
+@ProviderFor(eventApplicationBundle)
+const eventApplicationBundleProvider = EventApplicationBundleFamily._();
+
+final class EventApplicationBundleProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<EventApplicationBundle>,
+          EventApplicationBundle,
+          FutureOr<EventApplicationBundle>
+        >
+    with
+        $FutureModifier<EventApplicationBundle>,
+        $FutureProvider<EventApplicationBundle> {
+  const EventApplicationBundleProvider._({
+    required EventApplicationBundleFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'eventApplicationBundleProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$eventApplicationBundleHash();
+
+  @override
+  String toString() {
+    return r'eventApplicationBundleProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<EventApplicationBundle> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<EventApplicationBundle> create(Ref ref) {
+    final argument = this.argument as String;
+    return eventApplicationBundle(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is EventApplicationBundleProvider &&
+        other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$eventApplicationBundleHash() =>
+    r'9da630b95f36f63fc6557f96d13d0cbf0a984e73';
+
+final class EventApplicationBundleFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<EventApplicationBundle>, String> {
+  const EventApplicationBundleFamily._()
+    : super(
+        retry: null,
+        name: r'eventApplicationBundleProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  EventApplicationBundleProvider call(String eventId) =>
+      EventApplicationBundleProvider._(argument: eventId, from: this);
+
+  @override
+  String toString() => r'eventApplicationBundleProvider';
+}
+
+@ProviderFor(carouselQueue)
+const carouselQueueProvider = CarouselQueueFamily._();
+
+final class CarouselQueueProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<EventApplication>>,
+          List<EventApplication>,
+          FutureOr<List<EventApplication>>
+        >
+    with
+        $FutureModifier<List<EventApplication>>,
+        $FutureProvider<List<EventApplication>> {
+  const CarouselQueueProvider._({
+    required CarouselQueueFamily super.from,
+    required (String, String?) super.argument,
+  }) : super(
+         retry: null,
+         name: r'carouselQueueProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$carouselQueueHash();
+
+  @override
+  String toString() {
+    return r'carouselQueueProvider'
+        ''
+        '$argument';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<List<EventApplication>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<EventApplication>> create(Ref ref) {
+    final argument = this.argument as (String, String?);
+    return carouselQueue(ref, argument.$1, argument.$2);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is CarouselQueueProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$carouselQueueHash() => r'8245f792b5bf9215c0ce62d76943d57ea37ae086';
+
+final class CarouselQueueFamily extends $Family
+    with
+        $FunctionalFamilyOverride<
+          FutureOr<List<EventApplication>>,
+          (String, String?)
+        > {
+  const CarouselQueueFamily._()
+    : super(
+        retry: null,
+        name: r'carouselQueueProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  CarouselQueueProvider call(String eventId, String? groupId) =>
+      CarouselQueueProvider._(argument: (eventId, groupId), from: this);
+
+  @override
+  String toString() => r'carouselQueueProvider';
+}
+
 @ProviderFor(EventApplicationReviewController)
 const eventApplicationReviewControllerProvider =
     EventApplicationReviewControllerProvider._();
@@ -131,5 +291,61 @@ abstract class _$EventApplicationReviewController extends $AsyncNotifier<void> {
               Object?
             >;
     element.handleValue(ref, null);
+  }
+}
+
+@ProviderFor(ReviewMarkingsNotifier)
+const reviewMarkingsProvider = ReviewMarkingsNotifierProvider._();
+
+final class ReviewMarkingsNotifierProvider
+    extends $NotifierProvider<ReviewMarkingsNotifier, Map<String, ReviewMark>> {
+  const ReviewMarkingsNotifierProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'reviewMarkingsProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$reviewMarkingsNotifierHash();
+
+  @$internal
+  @override
+  ReviewMarkingsNotifier create() => ReviewMarkingsNotifier();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(Map<String, ReviewMark> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<Map<String, ReviewMark>>(value),
+    );
+  }
+}
+
+String _$reviewMarkingsNotifierHash() =>
+    r'0316104ab35301aa025faf7a9bb279fdf74e75f2';
+
+abstract class _$ReviewMarkingsNotifier
+    extends $Notifier<Map<String, ReviewMark>> {
+  Map<String, ReviewMark> build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final created = build();
+    final ref =
+        this.ref as $Ref<Map<String, ReviewMark>, Map<String, ReviewMark>>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<Map<String, ReviewMark>, Map<String, ReviewMark>>,
+              Map<String, ReviewMark>,
+              Object?,
+              Object?
+            >;
+    element.handleValue(ref, created);
   }
 }

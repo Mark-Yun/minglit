@@ -14,12 +14,22 @@ Map<String, dynamic> mapEventApplicationRpcRow(Map<String, dynamic> map) {
     'status': map['status'],
     'created_at': map['created_at'],
     'updated_at': map['updated_at'],
+    // Fix #2272: surface terminal timestamps for sorting and relative-date trailing
+    'paid_at': map['paid_at'],
+    'refunded_at': map['refunded_at'],
     'refund_status': map['refund_status'] ?? 'none',
-    'user': (map['user_name'] != null || map['user_phone'] != null)
+    // Fix #2272: use user_username (nickname from user_profiles).
+    // email was previously stored here but leaked to all partner-visible screens.
+    // 환불 tab uses _maskIdentifier on username (nickname) for display.
+    'user':
+        (map['user_name'] != null ||
+            map['user_phone'] != null ||
+            map['user_email'] != null ||
+            map['user_username'] != null)
         ? {
             'id': map['user_id'],
             'name': map['user_name'],
-            'username': '',
+            'username': map['user_username'] ?? '',
             'phone_number': map['user_phone'],
           }
         : null,
