@@ -51,7 +51,7 @@ final class EventEditControllerProvider
 }
 
 String _$eventEditControllerHash() =>
-    r'd1453033791ed59cd7fab1ae9aabe7b0c9a0f647';
+    r'104af38893a91d500117f9d9ba05eb70de033cc8';
 
 final class EventEditControllerFamily extends $Family
     with

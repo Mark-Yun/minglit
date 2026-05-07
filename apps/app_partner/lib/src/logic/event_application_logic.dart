@@ -12,6 +12,54 @@ Future<List<EventApplication>> eventApplications(
   return repo.getApplicationsByEventId(eventId);
 }
 
+// Fix #2126: bundle provider for EventApplicationListPage
+typedef EventApplicationBundle = ({
+  Event event,
+  List<EventApplication> applications,
+  List<Map<String, dynamic>> groupCounts,
+});
+
+@riverpod
+Future<EventApplicationBundle> eventApplicationBundle(
+  Ref ref,
+  String eventId,
+) async {
+  final repo = ref.watch(eventRepositoryProvider);
+  // Fix #2272: start all futures in parallel; await together so any failure is
+  // surfaced immediately without leaving unhandled rejected futures.
+  final eventFuture = repo.getEventById(eventId);
+  final applicationsFuture = repo.getApplicationsByEventId(eventId);
+  final groupCountsFuture = repo.getEntryGroupParticipantCounts(eventId);
+  await Future.wait([eventFuture, applicationsFuture, groupCountsFuture]);
+  final event = await eventFuture;
+  final applications = await applicationsFuture;
+  final groupCounts = await groupCountsFuture;
+  return (
+    event: event,
+    applications: applications,
+    groupCounts: groupCounts,
+  );
+}
+
+// Fix #2127: carousel queue filtered by groupId (ticket.targetEntryGroupIds)
+@riverpod
+Future<List<EventApplication>> carouselQueue(
+  Ref ref,
+  String eventId,
+  String? groupId,
+) async {
+  final all = await ref.watch(eventApplicationsProvider(eventId).future);
+  final pending = all.where(
+    (a) => a.status == 'pending' || a.status == 'pending_review',
+  );
+  final filtered = groupId == null
+      ? pending
+      : pending.where(
+          (a) => a.ticket?.targetEntryGroupIds.contains(groupId) ?? false,
+        );
+  return filtered.toList()..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+}
+
 @riverpod
 class EventApplicationReviewController
     extends _$EventApplicationReviewController {
@@ -52,4 +100,26 @@ class EventApplicationReviewController
       }
     });
   }
+}
+
+typedef ReviewMark = ({String status, String? reason});
+
+// Fix #2272: keepAlive so marks survive carousel → confirm page transition
+// without a persistent watcher (autoDispose would lose state between pages).
+@Riverpod(keepAlive: true)
+class ReviewMarkingsNotifier extends _$ReviewMarkingsNotifier {
+  @override
+  Map<String, ReviewMark> build() => {};
+
+  void addMark(String applicationId, String status, {String? reason}) {
+    state = {...state, applicationId: (status: status, reason: reason)};
+  }
+
+  // Fix #2272: remove a single mark after successful server submission so
+  // partial failures do not re-submit already-committed marks on retry.
+  void removeMark(String applicationId) {
+    state = Map.from(state)..remove(applicationId);
+  }
+
+  void clearAll() => state = {};
 }

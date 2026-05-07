@@ -112,6 +112,11 @@ void main() {
       String ticketId = 'ticket-1',
       String? ticketName,
       List<dynamic>? targetEntryGroupIds,
+      // Fix #2272: terminal timestamps, email, and username added to RPC
+      String? paidAt,
+      String? refundedAt,
+      String? userEmail,
+      String? userUsername,
     }) {
       return {
         'application_id': 'app-1',
@@ -124,11 +129,17 @@ void main() {
         'user_id': 'user-1',
         'user_name': null,
         'user_phone': null,
+        'user_email': userEmail,
+        // Fix #2272: user_username is the real nickname; was previously missing
+        // causing user_email to be stored in username slot (model contamination).
+        'user_username': userUsername,
         'payment_id': null,
         'payment_amount': 0,
         'status': 'pending_review',
         'created_at': '2026-01-01T00:00:00.000Z',
         'updated_at': '2026-01-01T00:00:00.000Z',
+        'paid_at': paidAt,
+        'refunded_at': refundedAt,
         'refund_status': 'none',
       };
     }
@@ -164,6 +175,72 @@ void main() {
       );
       final app = EventApplication.fromJson(mapped);
       expect(app.ticket!.targetEntryGroupIds, isEmpty);
+    });
+
+    // Fix #2272: terminal timestamp and email mapping tests
+    test('paid_at is mapped when present in RPC row', () {
+      const ts = '2026-05-01T10:00:00.000Z';
+      final mapped = mapEventApplicationRpcRow(
+        flatRow(ticketName: '티켓', paidAt: ts),
+      );
+      final app = EventApplication.fromJson(mapped);
+      expect(app.paidAt, DateTime.parse(ts));
+    });
+
+    test('paid_at is null when absent from RPC row', () {
+      final mapped = mapEventApplicationRpcRow(flatRow(ticketName: '티켓'));
+      final app = EventApplication.fromJson(mapped);
+      expect(app.paidAt, isNull);
+    });
+
+    test('refunded_at is mapped when present in RPC row', () {
+      const ts = '2026-05-02T15:30:00.000Z';
+      final mapped = mapEventApplicationRpcRow(
+        flatRow(ticketName: '티켓', refundedAt: ts),
+      );
+      final app = EventApplication.fromJson(mapped);
+      expect(app.refundedAt, DateTime.parse(ts));
+    });
+
+    test('refunded_at is null when absent from RPC row', () {
+      final mapped = mapEventApplicationRpcRow(flatRow(ticketName: '티켓'));
+      final app = EventApplication.fromJson(mapped);
+      expect(app.refundedAt, isNull);
+    });
+
+    // Fix #2272: username comes from user_username column (nickname), not email.
+    // email was previously stored in username slot causing model contamination.
+    test('user_username is stored in username field (Fix #2272)', () {
+      final mapped = mapEventApplicationRpcRow(
+        flatRow(
+          ticketName: '티켓',
+          userUsername: '코딩고수',
+        )..['user_name'] = '테스트',
+      );
+      final app = EventApplication.fromJson(mapped);
+      expect(app.user?.username, '코딩고수');
+    });
+
+    test('user_email does NOT contaminate username field (Fix #2272)', () {
+      final mapped = mapEventApplicationRpcRow(
+        flatRow(
+          ticketName: '티켓',
+          userEmail: 'test@example.com',
+          userUsername: null,
+        )..['user_name'] = '테스트',
+      );
+      final app = EventApplication.fromJson(mapped);
+      // email must not leak into the username slot
+      expect(app.user?.username, isNot(contains('@')));
+      expect(app.user?.username, '');
+    });
+
+    test('username is empty string when user_username is null', () {
+      final mapped = mapEventApplicationRpcRow(
+        flatRow(ticketName: '티켓')..['user_name'] = '테스트',
+      );
+      final app = EventApplication.fromJson(mapped);
+      expect(app.user?.username, '');
     });
   });
 }
