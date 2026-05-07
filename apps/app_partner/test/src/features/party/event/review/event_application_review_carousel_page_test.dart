@@ -108,10 +108,12 @@ void main() {
     addTearDown(container.dispose);
 
     // Simulate stale marks left over from a previous carousel session on a different event.
-    container.read(reviewMarkingsProvider.notifier).addMark(
-      'stale_app_other_event',
-      'approved',
-    );
+    container
+        .read(reviewMarkingsProvider.notifier)
+        .addMark(
+          'stale_app_other_event',
+          'approved',
+        );
     expect(container.read(reviewMarkingsProvider), isNotEmpty);
 
     // Mounting the carousel page must clear those stale marks via initState.
