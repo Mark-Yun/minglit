@@ -82,10 +82,12 @@ mixin _EventRepositoryApplicationQueries on _SupabaseEventContext {
       // Fix #2250: column-restricted SELECT — only partner-visible fields per
       // PM #1141 (닉네임, 연령대, 인증 정보) and PIPA §17 data-minimization.
       // Sending ALL user_profiles columns to partner devices was a PIPA violation.
+      // birth_year does not exist on user_profiles table; select birth_date instead
+      // and compute year in Dart (Option A per code-review).
       final response = await supabaseClient
           .from('event_applications')
           .select(
-            '*, user:user_profiles(id, username, birth_year, is_verified, profile_image_url)',
+            '*, user:user_profiles(id, username, birth_date, is_verified, profile_image_url)',
           )
           .eq('id', applicationId)
           .maybeSingle();

@@ -19,7 +19,7 @@ UPDATE public.user_profiles
   SET
     name = '실명김철수',
     username = '닉네임123',
-    birth_year = 1995,
+    birth_date = '1995-01-01',
     gender = 'male',
     is_verified = true
   WHERE id = tests.get_supabase_uid('applicant');
