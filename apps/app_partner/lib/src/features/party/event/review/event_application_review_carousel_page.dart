@@ -245,13 +245,12 @@ class _ApplicantCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = application.user;
-    final name = user?.name ?? '—';
-    final gender = user?.gender;
-    final birthYear = user?.birthYear;
-    final subtitle = [
-      if (gender != null) gender == 'male' ? '남성' : '여성',
-      if (birthYear != null) '$birthYear년생',
-    ].join(' · ');
+    // Fix #2126: PM #1141 — username (닉네임) not name (실명); gender excluded
+    final hasUsername = user?.username.isNotEmpty == true;
+    final displayName = hasUsername ? user!.username : '—';
+    final birthYear = user?.birthDate?.year ?? user?.birthYear;
+    final age = birthYear != null ? DateTime.now().year - birthYear : null;
+    final subtitle = [if (age != null) '$age세'].join(' · ');
 
     return Padding(
       padding: const EdgeInsets.all(MinglitSpacing.screenEdge),
@@ -268,7 +267,7 @@ class _ApplicantCard extends StatelessWidget {
                     : null,
                 child: user?.avatarUrl == null
                     ? Text(
-                        name.isNotEmpty ? name[0] : '?',
+                        displayName.isNotEmpty ? displayName[0] : '?',
                         style: Theme.of(context).textTheme.titleLarge,
                       )
                     : null,
@@ -279,7 +278,7 @@ class _ApplicantCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      name,
+                      displayName,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),

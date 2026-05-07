@@ -2720,7 +2720,7 @@ _Questions this graph is uniquely positioned to answer:_
 - **Why does `package:flutter/material.dart` connect `Community 1` to `Community 0`, `Community 2`, `Community 4`, `Community 6`, `Community 8`, `Community 9`, `Community 11`, `Community 12`, `Community 14`, `Community 15`, `Community 17`, `Community 19`, `Community 21`, `Community 22`, `Community 25`, `Community 27`, `Community 30`, `Community 33`, `Community 36`?**
   _High betweenness centrality (0.229) - this node is a cross-community bridge._
 - **Why does `Text` connect `Community 34` to `Community 8`?**
-  _High betweenness centrality (0.171) - this node is a cross-community bridge._
+  _High betweenness centrality (0.192) - this node is a cross-community bridge._
 - **What connects `reporter (AutoLabelAllureReporter)`, `_buildPage`, `MaterialApp` to the rest of the system?**
   _2940 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**

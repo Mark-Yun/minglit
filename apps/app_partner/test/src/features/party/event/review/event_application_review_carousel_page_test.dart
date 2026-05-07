@@ -20,11 +20,11 @@ EventApplication _makeApplication({
     status: status,
     createdAt: now,
     updatedAt: now,
+    // Fix #2126: PM #1141 — username displayed instead of name in carousel
     user: UserProfile(
       id: 'user_$id',
-      name: '사용자$id',
-      username: 'user_$id',
-      gender: 'female',
+      name: '실명$id',
+      username: '닉네임$id',
       birthYear: 1995,
     ),
   );
@@ -220,8 +220,8 @@ void main() {
 
     // Progress counter should show "2 / 3" (index 1 = 2nd card)
     expect(find.text('2 / 3'), findsOneWidget);
-    // Only the card for app_2 should be visible
-    expect(find.text('사용자app_2'), findsOneWidget);
+    // Fix #2126: PM #1141 — username (닉네임) displayed, not actual name
+    expect(find.text('닉네임app_2'), findsOneWidget);
   });
 
   testWidgets('shows 모든 신청 검토 완료 after last mark', (tester) async {

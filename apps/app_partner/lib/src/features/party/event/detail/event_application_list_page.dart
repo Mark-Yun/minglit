@@ -580,9 +580,10 @@ class _ApplicationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final user = app.user;
-    final firstChar = (user?.name.isNotEmpty ?? false)
-        ? user!.name.characters.first
-        : null;
+    // Fix #2126: PM #1141 — username (닉네임) not name (실명); gender excluded
+    final hasUsername = user?.username.isNotEmpty == true;
+    final displayName = hasUsername ? user!.username : '—';
+    final firstChar = hasUsername ? user!.username.characters.first : null;
 
     return Card(
       child: ListTile(
@@ -605,7 +606,7 @@ class _ApplicationCard extends StatelessWidget {
                   ),
                 ),
         ),
-        title: Text(user?.name ?? '이름 없음'),
+        title: Text(displayName),
         subtitle: Text(
           _userSummary(user),
           style: theme.textTheme.bodySmall?.copyWith(
@@ -653,9 +654,10 @@ class _RejectedApplicationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final user = app.user;
-    final firstChar = (user?.name.isNotEmpty ?? false)
-        ? user!.name.characters.first
-        : null;
+    // Fix #2126: PM #1141 — username (닉네임) not name (실명); gender excluded
+    final hasUsername = user?.username.isNotEmpty == true;
+    final displayName = hasUsername ? user!.username : '—';
+    final firstChar = hasUsername ? user!.username.characters.first : null;
     final rejectionReason = app.rejectionReason?.trim();
     final hasRejectionReason =
         rejectionReason != null && rejectionReason.isNotEmpty;
@@ -682,7 +684,7 @@ class _RejectedApplicationCard extends StatelessWidget {
                   ),
                 ),
         ),
-        title: Text(user?.name ?? '이름 없음'),
+        title: Text(displayName),
         subtitle: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1038,14 +1040,10 @@ String? _birthYearText(EntryGroup group) {
 }
 
 String _userSummary(UserProfile? user) {
-  final gender = switch (user?.gender) {
-    'male' => '남',
-    'female' => '여',
-    _ => null,
-  };
-  final birthYear = user?.birthYear?.toString();
-  final parts = [if (gender != null) gender, if (birthYear != null) birthYear];
-  return parts.isEmpty ? '정보 없음' : parts.join(' · ');
+  // Fix #2126: PM #1141 — gender 제외, 연령대(나이)만 표시
+  final birthYear = user?.birthDate?.year ?? user?.birthYear;
+  final age = birthYear != null ? DateTime.now().year - birthYear : null;
+  return age != null ? '$age세' : '정보 없음';
 }
 
 // Fix #2272: relative date for terminal timestamps — matches spec trailing format.
