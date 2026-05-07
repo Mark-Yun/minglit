@@ -134,12 +134,15 @@ Deno.serve(withHandler(async (req) => {
       throw e;
     }
 
-    // 4. Update DB: refund_status + refund_amount
+    // 4. Update DB: refund_status + refund_amount + refunded_at
     const refundAmount = amount ??
       (cancelResponse.amount as number | undefined);
+    const refundedAt = nowISO();
     const updatePayload: Record<string, unknown> = {
       refund_status: "completed",
-      updated_at: nowISO(),
+      // Fix #2099: 환불 처리 시점 기록
+      refunded_at: refundedAt,
+      updated_at: refundedAt,
     };
     if (refundAmount !== undefined) {
       updatePayload.refund_amount = refundAmount;

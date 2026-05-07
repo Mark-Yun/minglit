@@ -15,11 +15,13 @@ const partyListProvider = PartyListProvider._();
 final class PartyListProvider
     extends
         $FunctionalProvider<
-          AsyncValue<List<Party>>,
-          List<Party>,
-          FutureOr<List<Party>>
+          AsyncValue<List<PartyWithStats>>,
+          List<PartyWithStats>,
+          FutureOr<List<PartyWithStats>>
         >
-    with $FutureModifier<List<Party>>, $FutureProvider<List<Party>> {
+    with
+        $FutureModifier<List<PartyWithStats>>,
+        $FutureProvider<List<PartyWithStats>> {
   const PartyListProvider._()
     : super(
         from: null,
@@ -36,14 +38,14 @@ final class PartyListProvider
 
   @$internal
   @override
-  $FutureProviderElement<List<Party>> $createElement(
+  $FutureProviderElement<List<PartyWithStats>> $createElement(
     $ProviderPointer pointer,
   ) => $FutureProviderElement(pointer);
 
   @override
-  FutureOr<List<Party>> create(Ref ref) {
+  FutureOr<List<PartyWithStats>> create(Ref ref) {
     return partyList(ref);
   }
 }
 
-String _$partyListHash() => r'4de4d4ebeab7c61605f25cce03e4fb3a98ac2676';
+String _$partyListHash() => r'51de73c23da9f7a034ff969c04d7e5b2f45d34b4';

@@ -31,6 +31,11 @@ final class ClockProvider
           DateTime Function()
         >
     with $Provider<DateTime Function()> {
+  /// Returns a clock function that produces the current [DateTime].
+  ///
+  /// The provider returns `() => DateTime.now()` so each call site gets a fresh
+  /// timestamp instead of a cached value. Override in tests with
+  /// `() => fixedNow` to make state transitions deterministic.
   const ClockProvider._()
     : super(
         from: null,
@@ -65,7 +70,7 @@ final class ClockProvider
   }
 }
 
-String _$clockHash() => r'clock_provider_fixed_time_injection';
+String _$clockHash() => r'3b571c5a0c08b7391c0eed04391003191bab6ccf';
 
 /// Fetches today's active events for the current user.
 ///
@@ -187,7 +192,7 @@ final class EventNowBarStateNotifierProvider
 }
 
 String _$eventNowBarStateNotifierHash() =>
-    r'182e06cee3fcad5002f20d2b59dcab8659ce4c09';
+    r'2d523ace9700f6f67018e4c9e6e86dfbfe32fa37';
 
 /// Computes the [EventNowBarState] for a given event.
 ///

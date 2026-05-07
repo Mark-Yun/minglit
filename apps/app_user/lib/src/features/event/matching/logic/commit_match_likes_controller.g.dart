@@ -35,7 +35,7 @@ final class CommitMatchLikesControllerProvider
 }
 
 String _$commitMatchLikesControllerHash() =>
-    r'303aa4caf6cdfa6dca60377f8f4d06e6979f8194';
+    r'8666aded9cae3e8f97a6f3b7b665cfaaf95ebf0d';
 
 abstract class _$CommitMatchLikesController extends $AsyncNotifier<void> {
   FutureOr<void> build();

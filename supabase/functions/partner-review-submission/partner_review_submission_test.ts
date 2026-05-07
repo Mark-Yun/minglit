@@ -318,6 +318,8 @@ Deno.test({
         const parsed = JSON.parse(patchBody!);
         assertEquals(parsed.reviewed_by, TEST_USER_ID);
         assertEquals(typeof parsed.reviewed_at, "string");
+        // Fix #2099: review_started_at must be set on review submission
+        assertEquals(typeof parsed.review_started_at, "string");
       });
     });
   },

@@ -50,7 +50,7 @@ final class PurchaseHistoryControllerProvider
 }
 
 String _$purchaseHistoryControllerHash() =>
-    r'8ee98ad8d5a728fa61269fbb946e733ba84118ec';
+    r'45abf463fae796d8b63f6d96a484b9cd70ca71f8';
 
 /// **Purchase History Controller**
 ///

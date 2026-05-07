@@ -1,4 +1,4 @@
-import 'package:app_user/src/features/event/logic/event_coordinator.dart';
+import 'package:app_user/src/logic/event_coordinator.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';

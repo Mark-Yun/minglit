@@ -22,6 +22,9 @@ _VerificationSubmission _$VerificationSubmissionFromJson(
       ? null
       : DateTime.parse(json['reviewed_at'] as String),
   reviewedBy: json['reviewed_by'] as String?,
+  reviewStartedAt: json['review_started_at'] == null
+      ? null
+      : DateTime.parse(json['review_started_at'] as String),
 );
 
 Map<String, dynamic> _$VerificationSubmissionToJson(
@@ -38,6 +41,7 @@ Map<String, dynamic> _$VerificationSubmissionToJson(
   'application_id': instance.applicationId,
   'reviewed_at': instance.reviewedAt?.toIso8601String(),
   'reviewed_by': instance.reviewedBy,
+  'review_started_at': instance.reviewStartedAt?.toIso8601String(),
 };
 
 const _$VerificationStatusEnumMap = {
