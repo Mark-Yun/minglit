@@ -45,6 +45,19 @@ class _State extends ConsumerState<EventApplicationReviewCarouselPage> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    // Fix #2272: clear stale markings from previous carousel sessions —
+    // keepAlive provider retains state across page navigations, causing
+    // cross-event contamination if not reset on entry.
+    // Post-frame callback avoids Riverpod 3's build-phase write guard while
+    // still running before the user can interact with the page.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) ref.read(reviewMarkingsProvider.notifier).clearAll();
+    });
+  }
+
+  @override
   void dispose() {
     _pageController?.dispose();
     super.dispose();

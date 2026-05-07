@@ -94,6 +94,37 @@ void main() {
     );
   }
 
+  testWidgets('initState clears stale markings from a previous carousel session', (
+    tester,
+  ) async {
+    final container = ProviderContainer(
+      overrides: [
+        carouselQueueProvider(
+          'event_1',
+          null,
+        ).overrideWith((ref) async => [_makeApplication(id: 'app_1')]),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    // Simulate stale marks left over from a previous carousel session on a different event.
+    container.read(reviewMarkingsProvider.notifier).addMark(
+      'stale_app_other_event',
+      'approved',
+    );
+    expect(container.read(reviewMarkingsProvider), isNotEmpty);
+
+    // Mounting the carousel page must clear those stale marks via initState.
+    await tester.pumpWidget(buildPage(container));
+    // First pump builds the widget tree; second pump drains the microtask that
+    // calls clearAll() (deferred to avoid Riverpod's build-phase write guard).
+    await tester.pump();
+    await tester.pump();
+
+    // Fix #2272: stale mark must be gone; initState schedules clearAll().
+    expect(container.read(reviewMarkingsProvider), isEmpty);
+  });
+
   testWidgets('empty queue shows empty state', (tester) async {
     final container = ProviderContainer(
       overrides: [
