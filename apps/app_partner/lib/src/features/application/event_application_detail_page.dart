@@ -111,9 +111,8 @@ class _ApplicationDetailBody extends StatelessWidget {
     // Fix #2250: avatar uses first letter of valid username only — '—' fallback must
     // not bleed into avatar so findsOneWidget('—') holds in the empty-username case.
     final avatarChar = hasUsername ? user!.username[0] : '?';
-    // Fix #2250: birth_date selected from user_profiles; derive year for age display.
-    // birthYear fallback covers unit-test fixtures that supply it directly.
-    final birthYear = user?.birthDate?.year ?? user?.birthYear;
+    // Fix #2250: view exposes birth_year directly — no need to derive from birth_date.
+    final birthYear = user?.birthYear;
     final age = birthYear != null ? DateTime.now().year - birthYear : null;
     // Fix #2250: gender excluded per PM #1141 ("성별은 제외").
 

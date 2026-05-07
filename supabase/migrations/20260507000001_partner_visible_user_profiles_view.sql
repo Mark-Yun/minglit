@@ -19,7 +19,8 @@
 --   is_verified      — 자격 인증 정보
 --   profile_image_url — 프로필 이미지 (비식별)
 
-CREATE OR REPLACE VIEW public.partner_visible_user_profiles AS
+CREATE OR REPLACE VIEW public.partner_visible_user_profiles
+  WITH (security_invoker = true) AS
   SELECT
     id,
     username,
