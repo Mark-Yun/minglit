@@ -18,20 +18,18 @@ Map<String, dynamic> mapEventApplicationRpcRow(Map<String, dynamic> map) {
     'paid_at': map['paid_at'],
     'refunded_at': map['refunded_at'],
     'refund_status': map['refund_status'] ?? 'none',
-    // Fix #2272: include user_email in the null-check so the user object is
-    // created even when user_profiles row is absent (no name/phone) but
-    // auth.users email exists — ensures 환불 tab email masking still works.
+    // Fix #2272: use user_username (nickname from user_profiles).
+    // email was previously stored here but leaked to all partner-visible screens.
+    // 환불 tab uses _maskIdentifier on username (nickname) for display.
     'user':
         (map['user_name'] != null ||
             map['user_phone'] != null ||
-            map['user_email'] != null)
+            map['user_email'] != null ||
+            map['user_username'] != null)
         ? {
             'id': map['user_id'],
             'name': map['user_name'],
-            // Fix #2272: store user_email in username field — _maskIdentifier
-            // detects '@' and applies email masking instead of name masking in
-            // the 환불 tab, avoiding same-surname collisions (e.g. "김***").
-            'username': map['user_email'] ?? '',
+            'username': map['user_username'] ?? '',
             'phone_number': map['user_phone'],
           }
         : null,

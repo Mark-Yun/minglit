@@ -115,5 +115,11 @@ class ReviewMarkingsNotifier extends _$ReviewMarkingsNotifier {
     state = {...state, applicationId: (status: status, reason: reason)};
   }
 
+  // Fix #2272: remove a single mark after successful server submission so
+  // partial failures do not re-submit already-committed marks on retry.
+  void removeMark(String applicationId) {
+    state = Map.from(state)..remove(applicationId);
+  }
+
   void clearAll() => state = {};
 }

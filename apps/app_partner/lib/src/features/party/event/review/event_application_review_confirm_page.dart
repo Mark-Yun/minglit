@@ -22,6 +22,7 @@ class _State extends ConsumerState<EventApplicationReviewConfirmPage> {
   Future<void> _submit(Map<String, ReviewMark> marks) async {
     if (_isSubmitting) return;
     setState(() => _isSubmitting = true);
+    final notifier = ref.read(reviewMarkingsProvider.notifier);
     try {
       final controller = ref.read(
         eventApplicationReviewControllerProvider.notifier,
@@ -32,8 +33,10 @@ class _State extends ConsumerState<EventApplicationReviewConfirmPage> {
           status: entry.value.status,
           reason: entry.value.reason,
         );
+        // Fix #2272: remove each mark immediately after success so partial
+        // failures do not re-submit already-committed marks on retry.
+        notifier.removeMark(entry.key);
       }
-      ref.read(reviewMarkingsProvider.notifier).clearAll();
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {

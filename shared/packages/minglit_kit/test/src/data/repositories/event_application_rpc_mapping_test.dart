@@ -112,10 +112,11 @@ void main() {
       String ticketId = 'ticket-1',
       String? ticketName,
       List<dynamic>? targetEntryGroupIds,
-      // Fix #2272: terminal timestamps and email added to RPC
+      // Fix #2272: terminal timestamps, email, and username added to RPC
       String? paidAt,
       String? refundedAt,
       String? userEmail,
+      String? userUsername,
     }) {
       return {
         'application_id': 'app-1',
@@ -129,6 +130,9 @@ void main() {
         'user_name': null,
         'user_phone': null,
         'user_email': userEmail,
+        // Fix #2272: user_username is the real nickname; was previously missing
+        // causing user_email to be stored in username slot (model contamination).
+        'user_username': userUsername,
         'payment_id': null,
         'payment_amount': 0,
         'status': 'pending_review',
@@ -204,18 +208,34 @@ void main() {
       expect(app.refundedAt, isNull);
     });
 
-    test('user_email is stored in username field for email masking', () {
+    // Fix #2272: username comes from user_username column (nickname), not email.
+    // email was previously stored in username slot causing model contamination.
+    test('user_username is stored in username field (Fix #2272)', () {
+      final mapped = mapEventApplicationRpcRow(
+        flatRow(
+          ticketName: '티켓',
+          userUsername: '코딩고수',
+        )..['user_name'] = '테스트',
+      );
+      final app = EventApplication.fromJson(mapped);
+      expect(app.user?.username, '코딩고수');
+    });
+
+    test('user_email does NOT contaminate username field (Fix #2272)', () {
       final mapped = mapEventApplicationRpcRow(
         flatRow(
           ticketName: '티켓',
           userEmail: 'test@example.com',
+          userUsername: null,
         )..['user_name'] = '테스트',
       );
       final app = EventApplication.fromJson(mapped);
-      expect(app.user?.username, 'test@example.com');
+      // email must not leak into the username slot
+      expect(app.user?.username, isNot(contains('@')));
+      expect(app.user?.username, '');
     });
 
-    test('username is empty string when user_email is null', () {
+    test('username is empty string when user_username is null', () {
       final mapped = mapEventApplicationRpcRow(
         flatRow(ticketName: '티켓')..['user_name'] = '테스트',
       );

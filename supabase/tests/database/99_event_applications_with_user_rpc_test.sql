@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(5);
+SELECT plan(6);
 
 -- ============================================================
 -- Setup: 파트너/이벤트/티켓/신청 데이터 구성
@@ -112,6 +112,21 @@ SELECT is(
   )),
   0,
   'get_event_applications_with_user: PARTY_MANAGE 없는 유저 — 빈 결과'
+);
+
+-- ============================================================
+-- Test 6: user_username 컬럼 존재 확인 (Fix #2272)
+-- ============================================================
+
+SELECT tests.authenticate_as('eawu_partner');
+
+SELECT ok(
+  (SELECT count(*) = 1 FROM (
+    SELECT user_username FROM public.get_event_applications_with_user(
+      current_setting('tests.eawu_event_id')::uuid
+    ) WHERE application_id = current_setting('tests.eawu_app_id')::uuid
+  ) sub),
+  'get_event_applications_with_user: user_username column accessible (Fix #2272)'
 );
 
 SELECT * FROM finish();

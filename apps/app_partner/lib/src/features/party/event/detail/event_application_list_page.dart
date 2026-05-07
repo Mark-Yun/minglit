@@ -763,10 +763,8 @@ class _RefundApplicationCard extends StatelessWidget {
     final cancellationReason = app.cancellationReason?.trim();
     final hasCancellationReason =
         cancellationReason != null && cancellationReason.isNotEmpty;
-    // Fix #2272: spec requires masked email in 환불 tab to distinguish applicants
-    // with the same surname. user_email is stored in username by
-    // mapEventApplicationRpcRow; _maskIdentifier detects '@' → email masking.
-    // Falls back to name masking when email is unavailable.
+    // Fix #2272: mask nickname (username) for 환불 tab display.
+    // username now correctly holds user_profiles.username (nickname), not email.
     final maskedIdentifier = _maskIdentifier(
       app.user?.username.isNotEmpty == true
           ? app.user!.username
@@ -1049,10 +1047,16 @@ String _userSummary(UserProfile? user) {
 // Fix #2272: relative date for terminal timestamps — matches spec trailing format.
 // Uses day-level granularity: "오늘", "어제", "N일 전".
 String _relativeDate(DateTime dt) {
-  final diff = DateTime.now().difference(dt);
-  if (diff.inDays == 0) return '오늘';
-  if (diff.inDays == 1) return '어제';
-  return '${diff.inDays}일 전';
+  // Fix #2272: compare date-only (not Duration.inDays) to avoid midnight
+  // boundary bug where an item at 23:55 yesterday shows "오늘" at 00:05 today.
+  final today = DateTime.now();
+  final dtLocal = dt.toLocal();
+  final todayDate = DateTime(today.year, today.month, today.day);
+  final dtDate = DateTime(dtLocal.year, dtLocal.month, dtLocal.day);
+  final days = todayDate.difference(dtDate).inDays;
+  if (days == 0) return '오늘';
+  if (days == 1) return '어제';
+  return '${days}일 전';
 }
 
 // Fix #2272: mask identifier for PII minimization in refund tab
