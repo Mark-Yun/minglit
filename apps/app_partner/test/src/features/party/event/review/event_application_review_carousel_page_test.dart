@@ -5,6 +5,7 @@ import 'package:app_partner/src/logic/event_application_logic.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 EventApplication _makeApplication({
@@ -66,6 +67,33 @@ void main() {
     );
   }
 
+  // Fix #2272: some tests trigger navigation to confirm page via GoRouter.
+  // buildPageWithRouter wraps with a minimal GoRouter so pushReplacement
+  // succeeds instead of throwing "GoRouter not found in context".
+  // errorBuilder stubs any unregistered destination (e.g. the typed confirm path).
+  Widget buildPageWithRouter(
+    ProviderContainer container, {
+    String? startApplicationId,
+  }) {
+    final router = GoRouter(
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (_, __) => EventApplicationReviewCarouselPage(
+            partyId: 'party_1',
+            eventId: 'event_1',
+            startApplicationId: startApplicationId,
+          ),
+        ),
+      ],
+      errorBuilder: (_, __) => const Scaffold(body: Text('confirm')),
+    );
+    return UncontrolledProviderScope(
+      container: container,
+      child: MaterialApp.router(routerConfig: router),
+    );
+  }
+
   testWidgets('empty queue shows empty state', (tester) async {
     final container = ProviderContainer(
       overrides: [
@@ -98,7 +126,8 @@ void main() {
     );
     addTearDown(container.dispose);
 
-    await tester.pumpWidget(buildPage(container));
+    // Fix #2272: use router builder so 600ms navigation timer drains cleanly.
+    await tester.pumpWidget(buildPageWithRouter(container));
     await tester.pump();
 
     await tester.tap(find.text('승인'));
@@ -107,7 +136,12 @@ void main() {
     final marks = container.read(reviewMarkingsProvider);
     expect(marks['app_1']?.status, 'approved');
     expect(marks['app_1']?.reason, isNull);
+    // Deferred flow: server must NOT be called until confirm page
     expect(_FakeReviewController.calls, isEmpty);
+
+    // Drain the pending 600ms navigation timer.
+    await tester.pump(const Duration(milliseconds: 700));
+    await tester.pumpAndSettle();
   });
 
   testWidgets('reject with reason marks locally', (tester) async {
@@ -122,7 +156,8 @@ void main() {
     );
     addTearDown(container.dispose);
 
-    await tester.pumpWidget(buildPage(container));
+    // Fix #2272: use router builder so 600ms navigation timer drains cleanly.
+    await tester.pumpWidget(buildPageWithRouter(container));
     await tester.pump();
 
     await tester.tap(find.text('거절'));
@@ -135,6 +170,10 @@ void main() {
     final marks = container.read(reviewMarkingsProvider);
     expect(marks['app_1']?.status, 'rejected');
     expect(marks['app_1']?.reason, '조건 불충분');
+
+    // Drain the pending 600ms navigation timer.
+    await tester.pump(const Duration(milliseconds: 700));
+    await tester.pumpAndSettle();
   });
 
   testWidgets(
@@ -236,14 +275,21 @@ void main() {
     );
     addTearDown(container.dispose);
 
-    await tester.pumpWidget(buildPage(container));
+    // Fix #2272: use router-aware builder so the 600ms navigation timer can
+    // complete via GoRouter.pushReplacement without throwing (GoRouter not found).
+    await tester.pumpWidget(buildPageWithRouter(container));
     await tester.pump();
 
     await tester.tap(find.text('승인'));
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 500));
 
+    // _isLastMarked = true is set synchronously; completion overlay is visible.
     expect(find.text('모든 신청 검토 완료'), findsOneWidget);
     expect(find.text('최종 확인 화면으로 이동합니다…'), findsOneWidget);
+
+    // Advance fake clock past 600ms to fire the navigation timer (pushReplacement).
+    // GoRouter handles the route via errorBuilder stub — no throw.
+    await tester.pump(const Duration(milliseconds: 700));
+    await tester.pumpAndSettle();
   });
 }
