@@ -2,7 +2,7 @@ import 'dart:async';
 
 // Fix #1934: use common location to avoid cross-feature import from event→home
 import 'package:app_user/src/common/widgets/match_results_content.dart';
-import 'package:app_user/src/features/auth/logic/auth_coordinator.dart';
+import 'package:app_user/src/logic/auth_coordinator.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -110,9 +110,29 @@ class EventAdmissionController extends _$EventAdmissionController {
       );
     }
 
-    // 4. Fetch User Profile (Identity Check)
-    final userProfile = await userRepository.getUserProfile(currentUser.id);
+    // Fix #2155: parallelize getUserProfile and getApprovedVerificationIds —
+    // both only need currentUser.id and are independent, eliminating ~2s of sequential wait.
+    // Regression guard: an unverified user must still see identityRequired even if
+    // getApprovedVerificationIds throws — capture that error and re-raise only when
+    // the user IS verified (where the error is actually relevant).
+    Object? verifIdsError;
+    StackTrace? verifIdsSt;
+    Future<List<String>> safeGetVerifIds() async {
+      try {
+        return await userRepository.getApprovedVerificationIds(currentUser.id);
+      } catch (e, st) {
+        verifIdsError = e;
+        verifIdsSt = st;
+        return [];
+      }
+    }
 
+    final (userProfile, userVerifIds) = await (
+      userRepository.getUserProfile(currentUser.id),
+      safeGetVerifIds(),
+    ).wait;
+
+    // 4. Check Identity
     if (userProfile == null || !userProfile.isVerified) {
       return AdmissionState(
         status: EventAdmissionStatus.identityRequired,
@@ -120,12 +140,12 @@ class EventAdmissionController extends _$EventAdmissionController {
       );
     }
 
-    // 5. Fetch User's Approved Verifications
-    final userVerifIds = await userRepository.getApprovedVerificationIds(
-      currentUser.id,
-    );
+    // User IS verified — surface deferred verifIds error if it occurred
+    if (verifIdsError != null) {
+      Error.throwWithStackTrace(verifIdsError!, verifIdsSt!);
+    }
 
-    // 6. Check Eligibility & Qualifications
+    // 5. Check Eligibility & Qualifications
     final tickets = event.tickets ?? [];
     final entryGroups = event.entryGroups ?? [];
 

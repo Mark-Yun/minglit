@@ -46,18 +46,23 @@ void main() {
           paths,
           unorderedEquals(<String>[
             // Top-level routes (outside shell)
+            '/dev',
             '/dev/switch',
             '/login',
             '/signup/consent',
             '/auth/callback',
             '/events/:eventId',
+            '/events/:eventId/matching',
             '/partners/:partnerId',
             '/partners/:partnerId/events',
             '/certification',
             '/events/:eventId/apply',
+            '/events/:eventId/apply/complete',
             '/tickets/my',
             '/tickets/:ticketId/qr',
             '/purchase-history',
+            '/purchase-history/:applicationId',
+            '/purchase-history/:applicationId/review',
             '/notifications',
             '/my/notification-settings',
             // Fix #1213: 계정 관리 서브페이지 경로 추가

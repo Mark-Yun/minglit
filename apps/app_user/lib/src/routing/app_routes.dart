@@ -8,20 +8,24 @@ import 'package:app_user/src/features/account_deletion/ui/deletion_verify_page.d
 import 'package:app_user/src/features/auth/login_page.dart';
 import 'package:app_user/src/features/auth/ui/auth_callback_page.dart';
 import 'package:app_user/src/features/consent/ui/signup_consent_page.dart';
+import 'package:app_user/src/features/dev/user_dev_map.dart';
 import 'package:app_user/src/features/event/admission/event_application_wizard_page.dart';
 import 'package:app_user/src/features/event/detail/event_detail_page.dart';
+import 'package:app_user/src/features/event/matching/ui/event_matching_screen.dart';
 import 'package:app_user/src/features/home/home_page.dart';
 import 'package:app_user/src/features/home/my_page.dart';
-import 'package:app_user/src/features/my_tickets/ui/my_tickets_page.dart';
+import 'package:app_user/src/features/tickets/my_tickets_page.dart';
 import 'package:app_user/src/features/partner/detail/partner_detail_page.dart';
 import 'package:app_user/src/features/partner/detail/partner_events_page.dart';
+import 'package:app_user/src/features/payment/ui/event_application_review_page.dart';
+import 'package:app_user/src/features/payment/ui/purchase_history_detail_page.dart';
 import 'package:app_user/src/features/payment/ui/purchase_history_page.dart';
 import 'package:app_user/src/features/search/search_page.dart';
 import 'package:app_user/src/features/settings/blocked_partners_page.dart';
 import 'package:app_user/src/features/settings/privacy_page.dart';
 import 'package:app_user/src/features/tag/ui/tag_event_list_page.dart';
-import 'package:app_user/src/features/ticket/ui/model/ticket_event_meta.dart';
 import 'package:app_user/src/features/ticket/ui/ticket_qr_screen.dart';
+import 'package:app_user/src/logic/ticket_event_meta.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_dev.dart';
@@ -32,6 +36,17 @@ part 'app_routes.g.dart';
 // ---------------------------------------------------------------------------
 // Top-Level Routes (outside the shell)
 // ---------------------------------------------------------------------------
+
+/// **Dev Map Route**: Navigation hub for dev tools (dev flavor only).
+/// Path: `/dev`
+// Fix #2138: /dev route was missing — UserDevMap not reachable
+@TypedGoRoute<DevRoute>(path: '/dev')
+class DevRoute extends GoRouteData with $DevRoute {
+  const DevRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) => const UserDevMap();
+}
 
 /// **Dev User Switch Route**: Screen to switch between test users.
 /// Path: `/dev/switch`
@@ -118,19 +133,18 @@ class PartnerDetailRoute extends GoRouteData with $PartnerDetailRoute {
 
 /// **Partner Events Route**: Full list of events for a partner.
 /// Path: `/partners/:partnerId/events`
+// Fix #2137: partnerName removed from route — PartnerEventsPage fetches it
+// from partnerDetailProvider so the route is self-sufficient and never throws
+// on a missing query param.
 @TypedGoRoute<PartnerEventsRoute>(path: '/partners/:partnerId/events')
 class PartnerEventsRoute extends GoRouteData with $PartnerEventsRoute {
-  const PartnerEventsRoute({
-    required this.partnerId,
-    required this.partnerName,
-  });
+  const PartnerEventsRoute({required this.partnerId});
 
   final String partnerId;
-  final String partnerName;
 
   @override
   Widget build(BuildContext context, GoRouterState state) =>
-      PartnerEventsPage(partnerId: partnerId, partnerName: partnerName);
+      PartnerEventsPage(partnerId: partnerId);
 }
 
 /// **Certification Route**: Identity Verification Screen.
@@ -157,6 +171,48 @@ class EventApplicationRoute extends GoRouteData with $EventApplicationRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       EventApplicationWizardPage(eventId: eventId, ticketId: ticketId);
+}
+
+@TypedGoRoute<EventMatchingRoute>(path: '/events/:eventId/matching')
+class EventMatchingRoute extends GoRouteData with $EventMatchingRoute {
+  const EventMatchingRoute({required this.eventId});
+
+  final String eventId;
+
+  @override
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      MinglitPageTransitions.sharedAxisScaled(
+        key: state.pageKey,
+        child: EventMatchingScreen(eventId: eventId),
+      );
+}
+
+/// **Event Application Confirmation Route**: Success page after payment.
+/// Path: `/events/:eventId/apply/complete`
+@TypedGoRoute<EventApplicationConfirmationRoute>(
+  path: '/events/:eventId/apply/complete',
+)
+class EventApplicationConfirmationRoute extends GoRouteData
+    with $EventApplicationConfirmationRoute {
+  const EventApplicationConfirmationRoute({
+    required this.eventId,
+    this.ticketId,
+  });
+
+  final String eventId;
+  final String? ticketId;
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) {
+    return MinglitConfirmationPage(
+      title: '참여 신청이 완료됐어요',
+      description: '결제가 완료되었고 신청이 접수되었습니다.\n내 티켓에서 진행 상태를 확인할 수 있어요.',
+      icon: Icons.check_circle_outline,
+      tone: MinglitConfirmationTone.success,
+      ctaLabel: '내 티켓 보기',
+      onPressed: () => const PurchaseHistoryRoute().go(context),
+    );
+  }
 }
 
 /// **My Tickets Route**: User's ticket list page.
@@ -206,6 +262,38 @@ class PurchaseHistoryRoute extends GoRouteData with $PurchaseHistoryRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       const PurchaseHistoryPage();
+}
+
+/// **Purchase History Detail Route**
+/// Path: `/purchase-history/:applicationId`
+@TypedGoRoute<PurchaseHistoryDetailRoute>(
+  path: '/purchase-history/:applicationId',
+)
+class PurchaseHistoryDetailRoute extends GoRouteData
+    with $PurchaseHistoryDetailRoute {
+  const PurchaseHistoryDetailRoute({required this.applicationId});
+
+  final String applicationId;
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      PurchaseHistoryDetailPage(applicationId: applicationId);
+}
+
+/// **Event Application Review Route**
+/// Path: `/purchase-history/:applicationId/review`
+@TypedGoRoute<EventApplicationReviewRoute>(
+  path: '/purchase-history/:applicationId/review',
+)
+class EventApplicationReviewRoute extends GoRouteData
+    with $EventApplicationReviewRoute {
+  const EventApplicationReviewRoute({required this.applicationId});
+
+  final String applicationId;
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      EventApplicationReviewPage(applicationId: applicationId);
 }
 
 /// **Notification Center Route**

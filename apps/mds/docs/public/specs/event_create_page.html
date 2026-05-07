@@ -1,0 +1,1392 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Spec — EventCreatePage (app_partner · EventCreateRoute)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* ============================================================
+   EventCreatePage-specific atoms.
+
+   Partner app theme:
+   - Page (Scaffold) bg = light gray (var(--color-surface))
+   - Cards / ColorScheme.surface = white (var(--color-background))
+   - AppBar matches scaffold (light gray, no border-bottom)
+   - Brand primary = MinglitPartnerColors.primary (#6c3ce1 — indigo)
+     scoped via .viewport so docs chrome stays neutral.
+   ============================================================ */
+.viewport {
+  --color-primary: var(--color-partner-primary);   /* #6c3ce1 */
+  --spec-blueprint-rgb: 108, 60, 225;
+}
+body.dark-mode .viewport {
+  --color-primary: var(--color-partner-dark-primary); /* #9b7bec */
+}
+
+/* --- App bar (default Material AppBar — center title + back) --- */
+.ec-appbar {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  background: var(--color-surface);
+  position: relative;
+}
+.ec-appbar__back {
+  width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--color-text-primary);
+}
+.ec-appbar__back svg { width: 22px; height: 22px; }
+.ec-appbar__title {
+  flex: 1;
+  text-align: center;
+  font-size: var(--typography-font-size-app-bar-title);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  padding-right: 40px; /* offset back btn so title centers */
+}
+
+/* --- Tab bar under AppBar (Material default · 48px · 2 tabs) --- */
+.ec-tabbar {
+  height: 48px;
+  display: flex;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-divider);
+}
+.ec-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--typography-font-size-body);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  position: relative;
+}
+.ec-tab--active {
+  color: var(--color-partner-primary);
+  font-weight: 700;
+}
+.ec-tab--active::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 2px;
+  background: var(--color-partner-primary);
+}
+
+/* --- Body (between tab bar and bottom submit) --- */
+.ec-body {
+  position: absolute;
+  top: 104px; /* 56 appbar + 48 tabbar */
+  left: 0; right: 0; bottom: 80px;
+  overflow-y: auto;
+  scrollbar-width: none;
+  background: var(--color-surface);
+}
+.ec-body::-webkit-scrollbar { display: none; }
+
+/* --- Section header (Tab1 · plain titleMedium) --- */
+.ec-section-header {
+  font-size: var(--typography-font-size-body);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  padding: var(--spacing-medium);
+  padding-bottom: var(--spacing-small);
+}
+
+/* --- DateTime picker card (EventDateTimeInput._buildPickerCard) --- */
+.ec-pickcard {
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-card);
+  background: var(--color-background);
+  padding: var(--spacing-medium);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-small);
+}
+.ec-pickcard__row {
+  display: flex; align-items: center; gap: var(--spacing-xsmall);
+}
+.ec-pickcard__row svg {
+  width: 14px; height: 14px;
+  color: var(--color-partner-primary);
+}
+.ec-pickcard__label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-partner-primary);
+}
+.ec-pickcard__value {
+  font-size: var(--typography-font-size-body);
+  color: var(--color-text-primary);
+}
+.ec-pickcard-row {
+  display: flex; gap: var(--spacing-medium);
+}
+.ec-pickcard-row > .ec-pickcard { flex: 1; }
+.ec-duration-note {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  padding: 0 var(--spacing-xsmall);
+  margin-top: var(--spacing-small);
+}
+
+/* --- Recurrence section (SwitchListTile + chips + preview) --- */
+.ec-switch-row {
+  display: flex; align-items: center;
+  padding: var(--spacing-small) var(--spacing-medium);
+  background: var(--color-surface);
+}
+.ec-switch-row__text { flex: 1; }
+.ec-switch-row__title {
+  font-size: var(--typography-font-size-body);
+  color: var(--color-text-primary);
+  font-weight: 500;
+}
+.ec-switch-row__sub {
+  font-size: var(--typography-font-size-caption);
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
+.ec-switch {
+  width: 44px; height: 24px;
+  border-radius: 12px;
+  background: var(--color-divider);
+  position: relative;
+  flex-shrink: 0;
+}
+.ec-switch--on { background: var(--color-partner-primary); }
+.ec-switch__thumb {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: white;
+  position: absolute; top: 2px; left: 2px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+.ec-switch--on .ec-switch__thumb { left: 22px; }
+
+.ec-rec-divider {
+  height: 1px;
+  background: var(--color-divider);
+}
+.ec-rec-block {
+  padding: var(--spacing-small) var(--spacing-medium);
+}
+.ec-rec-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-xsmall);
+}
+.ec-chip-row {
+  display: flex; gap: var(--spacing-xsmall); flex-wrap: wrap;
+}
+.ec-chip {
+  height: 28px;
+  padding: 0 var(--spacing-sm);
+  border: 1px solid var(--color-divider);
+  border-radius: 16px;
+  background: var(--color-background);
+  display: flex; align-items: center;
+  font-size: 12px;
+  color: var(--color-text-primary);
+}
+.ec-chip--selected {
+  background: var(--color-partner-primary-container, var(--color-partner-primary-surface));
+  border-color: var(--color-partner-primary);
+  color: var(--color-partner-primary);
+  font-weight: 600;
+}
+.ec-day-chip {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--color-divider);
+  background: var(--color-background);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px;
+  color: var(--color-text-primary);
+}
+.ec-day-chip--selected {
+  background: var(--color-partner-primary);
+  border-color: var(--color-partner-primary);
+  color: white;
+  font-weight: 700;
+}
+.ec-rec-end-row {
+  display: flex; align-items: center;
+  padding: var(--spacing-small) var(--spacing-medium);
+}
+.ec-rec-end-row__label {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+.ec-rec-end-row__btn {
+  font-size: var(--typography-font-size-body);
+  color: var(--color-partner-primary);
+  font-weight: 500;
+}
+.ec-preview {
+  padding: var(--spacing-small) var(--spacing-medium);
+}
+.ec-preview__row {
+  display: flex; align-items: center; gap: var(--spacing-xsmall);
+  font-size: var(--typography-font-size-body);
+  color: var(--color-text-primary);
+  padding: 2px 0;
+}
+.ec-preview__row svg { width: 14px; height: 14px; color: var(--color-text-secondary); }
+
+/* --- MinglitEditableSection (subtle bg + title + edit pencil) --- */
+.ec-section {
+  background: var(--color-background);
+  padding: var(--spacing-medium);
+}
+.ec-section__header {
+  display: flex; align-items: center; margin-bottom: var(--spacing-small);
+}
+.ec-section__title {
+  flex: 1;
+  font-size: var(--typography-font-size-body);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.ec-section__edit {
+  width: 16px; height: 16px;
+  color: var(--color-text-secondary);
+  opacity: 0.7;
+}
+
+/* --- Ticket row (TicketListItem mini) --- */
+.ec-ticket-row {
+  display: flex; align-items: center;
+  padding: var(--spacing-small) 0;
+  gap: var(--spacing-small);
+}
+.ec-ticket-row__name {
+  flex: 1;
+  font-size: var(--typography-font-size-body);
+  color: var(--color-text-primary);
+  font-weight: 500;
+}
+.ec-ticket-row__price {
+  font-size: var(--typography-font-size-body);
+  font-weight: 700;
+  color: var(--color-secondary);
+}
+
+/* --- Visibility dropdown card (Tab2) --- */
+.ec-visibility-card {
+  background: var(--color-background);
+  padding: var(--spacing-medium);
+  border-radius: var(--radius-card);
+  border: 1px solid var(--color-divider);
+  margin: 0 var(--spacing-medium);
+}
+.ec-visibility-card__title {
+  font-size: var(--typography-font-size-body);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-medium);
+}
+.ec-dropdown {
+  height: 52px;
+  border: 1px solid var(--color-divider);
+  border-radius: 4px;
+  padding: 0 var(--spacing-medium);
+  display: flex; align-items: center; gap: var(--spacing-small);
+  font-size: var(--typography-font-size-body);
+  color: var(--color-text-primary);
+}
+.ec-dropdown svg.lead { width: 18px; height: 18px; color: var(--color-text-secondary); }
+.ec-dropdown__text { flex: 1; }
+.ec-dropdown__chev { width: 16px; height: 16px; color: var(--color-text-secondary); }
+.ec-dropdown__label-floating {
+  position: absolute;
+  top: -8px; left: 12px;
+  background: var(--color-background);
+  padding: 0 4px;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+.ec-dropdown-wrap { position: relative; }
+
+/* --- Summary lines inside editable sections --- */
+.ec-summary-text {
+  font-size: var(--typography-font-size-body);
+  color: var(--color-text-primary);
+  line-height: 1.5;
+}
+.ec-summary-sub {
+  font-size: var(--typography-font-size-caption);
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
+.ec-summary-img-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-xsmall);
+  margin-top: var(--spacing-small);
+}
+.ec-summary-img {
+  aspect-ratio: 1;
+  border-radius: var(--radius-small);
+  background: linear-gradient(135deg, #6c3ce122, #ff990022);
+}
+
+/* --- Bottom submit (Container with shadow + SafeArea + ElevatedButton) --- */
+.ec-bottom {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 80px;
+  padding: var(--spacing-medium);
+  background: var(--color-surface);
+  box-shadow: 0 -4px 10px rgba(0,0,0,0.06);
+  box-sizing: border-box;
+}
+.ec-submit {
+  width: 100%;
+  height: 48px;
+  border-radius: var(--radius-button);
+  background: var(--color-partner-primary);
+  color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: var(--typography-font-size-button);
+  font-weight: 600;
+  gap: var(--spacing-small);
+}
+.ec-submit--loading {
+  opacity: 0.85;
+}
+.btn-spinner {
+  width: 16px; height: 16px;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* --- Initial loading skeleton (post-frame init) --- */
+.ec-skel {
+  background: var(--color-divider);
+  border-radius: var(--radius-small);
+  opacity: 0.6;
+}
+
+/* --- Error snackbar (handleMinglitError) --- */
+.snackbar {
+  position: absolute;
+  bottom: 96px; left: 16px; right: 16px;
+  background: #323232;
+  color: white;
+  border-radius: var(--radius-small);
+  padding: 12px 16px;
+  font-size: 13px;
+  display: flex; align-items: center; gap: 8px;
+}
+.snackbar svg { width: 18px; height: 18px; color: var(--color-error); flex-shrink: 0; }
+
+/* --- Success snackbar (showMinglitSuccess) --- */
+.snackbar--success { background: #14532d; }
+.snackbar--success svg { color: #86efac; }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
+</div>
+
+<div class="page">
+
+<!-- ============================================================
+     HEADER
+     ============================================================ -->
+<header>
+  <h1>Event Create</h1>
+</header>
+
+<!-- ============================================================
+     OVERVIEW
+     ============================================================ -->
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr>
+        <th style="width: 140px;">Status</th>
+        <td><strong>✅ 디자인완료</strong> <em style="color: var(--color-text-secondary);">— 2 tab + recurrence on/off + submit/error/init = 6 state</em></td>
+      </tr>
+      <tr>
+        <th>App</th>
+        <td><code>app_partner</code></td>
+      </tr>
+      <tr>
+        <th>Category</th>
+        <td>party · event · create (new occurrence)</td>
+      </tr>
+      <tr>
+        <th>Route / Surface</th>
+        <td><code>EventCreateRoute</code> · widget: <code>EventCreatePage</code> + <code>EventCreateOperationTab</code> + <code>EventCreateInfoTab</code> (TabBar 2-tab)</td>
+      </tr>
+      <tr>
+        <th>Path</th>
+        <td><code>/more/parties/:partyId/events/create</code></td>
+      </tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>: <a href="/specs/party_detail_page.html"><code>PartyDetailPage</code></a> (Tab1 "이벤트 관리" → "회차 만들기" 버튼에서 진입)<br>
+          <strong>Children</strong>: <em>—</em> <em style="color: var(--color-text-secondary);">(섹션별 편집은 <code>MaterialPageRoute</code>로 push되는 별도 화면 — <code>PartyBasicInfoEditScreen</code>, <code>PartyCapacityContactEditScreen</code>, <code>PartyLocationEditScreen</code>, <code>TicketTemplateManageScreen</code>. 같은 partyId scope을 공유.)</em>
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>
+          파트너가 기존 파티에서 새 회차(이벤트)를 생성한다. 진입 시 부모 파티의
+          기본 정보 / 정원 / 연락처 / 입장 그룹 / 티켓 템플릿이 자동으로 채워져 있으며,
+          파트너는 일정·반복 규칙·티켓 등 회차마다 달라지는 운영 정보만 보강하면 된다.
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry points</strong>: 파티 상세의 "이벤트 관리" 탭에서 "회차 만들기" CTA를 탭하면 진입.<br>
+          <strong>Exit points</strong>: 생성 성공 → 화면이 닫히며 파티 상세로 돌아가고, "새로운 회차가 성공적으로 생성되었습니다." 토스트가 잠시 노출.
+          실패 → 안내 토스트가 잠시 노출되고 화면은 그대로 유지.
+          뒤로가기 → 변경사항 확인 다이얼로그 없이 즉시 닫힘.
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          밍글릿 파티 모델은 <em>party (정기 모임 컨테이너)</em> + <em>event (한 번의 회차)</em>로 분리된다.
+          매 회차마다 동일한 정보(타이틀/소개/장소/티켓)를 다시 입력하지 않도록 부모 파티의
+          template을 instance로 복사해서 시작한다. 반복 일정이 켜진 경우 <code>recurrence_rule</code>이
+          함께 생성되어 매주/격주/매월 자동 회차 생성 잡(server-side)이 활성화된다.
+          단, 화면 자체에는 eventId edit 모드 없음 — 항상 신규 생성.
+        </td>
+      </tr>
+      <tr>
+        <th>Frequency</th>
+        <td>한 파티당 회차마다 1회. 정기 파티(반복 사용)에선 1주~1달에 한 번씩 진입.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================
+     HISTORY
+     ============================================================ -->
+<section class="doc">
+  <h2>History</h2>
+  <p class="intro">
+    이 spec의 주요 변경 이력. 최신 항목 위.
+  </p>
+  <table class="ref">
+    <thead>
+      <tr>
+        <th style="width: 110px;">Date</th>
+        <th style="width: 80px;">Version</th>
+        <th style="width: 120px;">Author</th>
+        <th>Changes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2026-05-01</td>
+        <td>1.0</td>
+        <td>mark-yun</td>
+        <td>v1.4 template으로 작성. 6 state — Tab1 baseline · Tab1 recurrence on · Tab2 info · submitting · error · initial post-frame loading. Partner brand <code>--color-partner-primary</code> viewport-scoped.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- Anchor nav -->
+<nav class="perspective-nav">
+  <a href="#layout"><span class="glyph">🧱</span> Layout</a>
+  <a href="#states"><span class="glyph">🎨</span> States</a>
+  <a href="#behavior"><span class="glyph">🔄</span> Global Behavior</a>
+  <a href="#reference"><span class="glyph">📖</span> Reference</a>
+</nav>
+
+<!-- ============================================================
+     LAYOUT
+     ============================================================ -->
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Layout</h2>
+    <span class="lede">화면 구조 — 영역, 정렬, 간격 규칙. 색·타이포 무시.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree</h2>
+    <p class="intro">
+      <code>DefaultTabController(length: 2)</code>로 감싼 <code>Scaffold</code> — AppBar(title + bottom TabBar) +
+      Column(Expanded(TabBarView) + bottom Container with SafeArea-wrapped ElevatedButton).
+      bottomNavigationBar가 아니라 body 마지막 child로 부착된 submit Container라
+      shadow가 위쪽 방향으로 떨어진다(<code>Offset(0, -4)</code>).
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint">
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <!-- AppBar -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:0;left:0;right:0;height:56px;">
+          <span class="blueprint__region-label">① AppBar — title("회차 생성")<br>← back btn</span>
+        </div>
+        <!-- TabBar -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:56px;left:0;right:0;height:48px;">
+          <span class="blueprint__region-label">② TabBar — 운영 및 티켓 / 파티 정보</span>
+        </div>
+        <!-- TabBarView body -->
+        <div class="blueprint__region" style="top:104px;left:0;right:0;bottom:80px;">
+          <span class="blueprint__region-label">③ TabBarView (Expanded)<br>Tab1: OperationTab · Tab2: InfoTab<br>SingleChildScrollView · column start</span>
+        </div>
+        <!-- Bottom submit -->
+        <div class="blueprint__region blueprint__region--shaded" style="bottom:0;left:0;right:0;height:80px;">
+          <span class="blueprint__region-label">④ Bottom Container — shadow Offset(0,-4)<br>SafeArea + ElevatedButton(회차 생성 완료)</span>
+        </div>
+
+        <div class="blueprint__align-marker" style="top:8px;right:8px;">AppBar(bottom: TabBar)</div>
+        <div class="blueprint__align-marker" style="bottom:82px;right:8px;">SafeArea wrap</div>
+      </div>
+
+      <div class="layout-tree"><b>DefaultTabController</b>(length: 2)
+└─ <b>Scaffold</b>
+   ├─ <b>appBar</b>: <b>AppBar</b>                                  ← ①+②
+   │  ├─ title: Text(l10n.eventCreate_title)
+   │  └─ bottom: <b>TabBar</b>(tabs: [
+   │       Tab("운영 및 티켓"),
+   │       Tab(l10n.partyDetail_tab_info),
+   │     ])
+   └─ <b>body</b>: <b>Column</b>
+      ├─ <b>Expanded</b>
+      │  └─ <b>TabBarView</b>                                       ← ③
+      │     ├─ <b>EventCreateOperationTab</b>
+      │     │  └─ SingleChildScrollView
+      │     │     ├─ "일정 설정" Header
+      │     │     ├─ <b>EventDateTimeInput</b>
+      │     │     │  ├─ pickerCard(이벤트 날짜)
+      │     │     │  └─ Row(시작 시간 picker · 종료 시간 picker)
+      │     │     ├─ "반복 설정" Header
+      │     │     ├─ <b>RecurrenceSettingsSection</b>
+      │     │     │  ├─ SwitchListTile(반복 일정)
+      │     │     │  └─ if enabled:
+      │     │     │     ├─ Divider
+      │     │     │     ├─ _PatternChips(매주/격주/매월)
+      │     │     │     ├─ _DayOfWeekChips OR _MonthDayInput
+      │     │     │     ├─ _EndDateRow(종료일 선택)
+      │     │     │     └─ _PreviewDates(예정 일정)
+      │     │     └─ <b>MinglitEditableSection</b>(티켓)
+      │     │        └─ PartyTicketsSummary(showStats: false)
+      │     └─ <b>EventCreateInfoTab</b>
+      │        └─ SingleChildScrollView
+      │           ├─ MinglitEditableSection(기본 정보 → EventBasicInfoSummary)
+      │           ├─ MinglitEditableSection(인원 및 연락처
+      │           │   → EventCapacitySummary + EventContactSummary)
+      │           ├─ MinglitEditableSection(장소 → EventLocationSummary)
+      │           ├─ MinglitEditableSection(입장 조건 — read-only,
+      │           │   onTap: () {}) → PartyEntranceConditionSummary
+      │           └─ Container(공개 설정 카드)
+      │              └─ DropdownButtonFormField(visibility:
+      │                  null/public/private)
+      └─ <b>Container</b>(shadow Offset(0,-4))                       ← ④
+         └─ <b>SafeArea</b>
+            └─ <b>ElevatedButton</b>
+               onPressed: state.status.isLoading ? null : _submit
+               child: isLoading ? "회차 생성 중..." : "회차 생성 완료"</div>
+    </div>
+  </section>
+
+  <section class="doc">
+    <h2>Spacing &amp; alignment rules</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>①</td><td>AppBar</td><td>title centered (Material default) · 56px</td><td>centerTitle 명시 안됨 — Material default. back 버튼 자동.</td></tr>
+        <tr><td>②</td><td>TabBar</td><td>2-tab equal flex · 48px · indicator 2px under active tab</td><td>indicator color = primary (theme override 없음 → partner indigo).</td></tr>
+        <tr><td>③</td><td>TabBarView body</td><td>SingleChildScrollView · column start</td><td>섹션 간: <code>spacing-large</code> (24px). DateTimeInput 카드 간격: <code>spacing-medium</code> (16px). 카드 padding: <code>spacing-medium</code>. RecurrenceSettings: <code>spacing-small</code> (8) 사이 간격, horizontal pad <code>spacing-medium</code>.</td></tr>
+        <tr><td>④</td><td>Bottom submit</td><td>SafeArea + Padding(<code>spacing-medium</code>)</td><td>Container padding: <code>spacing-medium</code> all · button height ≈ 48px (ElevatedButton default) · BoxShadow blur 10 · alpha = <code>MinglitOpacity.tintFill</code>.</td></tr>
+        <tr><td>—</td><td>MinglitEditableSection</td><td>InkWell · Container padding all</td><td>padding: <code>spacing-medium</code> · header(title + edit pencil 16px) ↔ child gap: <code>spacing-small</code> (8). bg = <code>surfaceContainerLowest</code> @ <code>MinglitOpacity.strong</code> ≈ <code>color-background</code>.</td></tr>
+        <tr><td>—</td><td>공개 설정 Card (Tab2)</td><td>Container with border + radius-card</td><td>Container padding: <code>spacing-medium</code> · title↔dropdown gap: <code>spacing-medium</code>. 외부 horizontal margin 없음 — InfoTab 자체에 padding 없으므로 이 카드만 화면에 edge-to-edge로 붙음 (drift 후보).</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<!-- ============================================================
+     STATES
+     ============================================================ -->
+<div class="perspective" id="states">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>States</h2>
+    <span class="lede">시각 변형 6종. baseline = Tab1 / 일정·반복 off, 나머지는 additive diff.</span>
+  </div>
+
+  <section class="doc">
+    <p class="intro">
+      <strong>State 식별 기준</strong>: 활성 탭(운영 및 티켓 / 파티 정보), 반복 일정 켜짐 여부, 저장 진행/실패 여부에 따라 6가지 변형. 이 화면은 항상 새 회차를 만드는 흐름이며, 수정 모드는 없음. 진입 직후엔 부모 파티의 값으로 입력란이 채워지기 직전의 짧은 한 프레임이 잠시 보일 수 있다 (state 6).
+    </p>
+
+    <!-- State 1: Tab1 baseline -->
+    <table class="ref state-mini is-baseline-tint">
+      <thead>
+        <tr><th colspan="3"><strong>Tab1 / 운영 및 티켓 · 반복 off</strong> 🎯 <small>baseline · 반복 일정 꺼져 있는 일반적인 신규 회차 작성 모습</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="ec-appbar">
+                <div class="ec-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
+                <div class="ec-appbar__title">회차 생성</div>
+              </div>
+              <div class="ec-tabbar">
+                <div class="ec-tab ec-tab--active">운영 및 티켓</div>
+                <div class="ec-tab">파티 정보</div>
+              </div>
+              <div class="ec-body">
+                <div class="ec-section-header">일정 설정</div>
+                <div style="padding: 0 var(--spacing-medium);">
+                  <div class="ec-pickcard">
+                    <div class="ec-pickcard__row">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                      <div class="ec-pickcard__label">이벤트 날짜</div>
+                    </div>
+                    <div class="ec-pickcard__value">2026년 05월 08일 (금)</div>
+                  </div>
+                  <div style="height: var(--spacing-medium);"></div>
+                  <div class="ec-pickcard-row">
+                    <div class="ec-pickcard">
+                      <div class="ec-pickcard__row">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        <div class="ec-pickcard__label">시작 시간</div>
+                      </div>
+                      <div class="ec-pickcard__value">19:00</div>
+                    </div>
+                    <div class="ec-pickcard">
+                      <div class="ec-pickcard__row">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm.5 5h-1v6l4.7 2.8.5-.9-4.2-2.5V7z"/></svg>
+                        <div class="ec-pickcard__label">종료 시간</div>
+                      </div>
+                      <div class="ec-pickcard__value">22:00</div>
+                    </div>
+                  </div>
+                  <div class="ec-duration-note">총 3시간 0분 동안 진행됩니다.</div>
+                </div>
+                <div style="height: var(--spacing-large);"></div>
+
+                <div class="ec-section-header">반복 설정</div>
+                <div class="ec-switch-row">
+                  <div class="ec-switch-row__text">
+                    <div class="ec-switch-row__title">반복 일정</div>
+                    <div class="ec-switch-row__sub">정기적으로 이벤트를 자동 생성합니다</div>
+                  </div>
+                  <div class="ec-switch"><div class="ec-switch__thumb"></div></div>
+                </div>
+                <div style="height: var(--spacing-large);"></div>
+
+                <div class="ec-section">
+                  <div class="ec-section__header">
+                    <div class="ec-section__title">티켓</div>
+                    <svg class="ec-section__edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </div>
+                  <div class="ec-ticket-row">
+                    <div class="ec-ticket-row__name">얼리버드 (남성)</div>
+                    <div class="ec-ticket-row__price">35,000원</div>
+                  </div>
+                  <div class="ec-ticket-row" style="border-top: 1px solid var(--color-divider);">
+                    <div class="ec-ticket-row__name">얼리버드 (여성)</div>
+                    <div class="ec-ticket-row__price">25,000원</div>
+                  </div>
+                </div>
+              </div>
+              <div class="ec-bottom">
+                <div class="ec-submit">회차 생성 완료</div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>활성 탭이 "운영 및 티켓"이고, 반복 일정 토글이 꺼진 상태. 부모 파티의 값이 자동으로 채워져 일정 / 티켓이 표시되는 일반적인 신규 회차 작성 모습.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            ① <strong>날짜 카드 탭</strong> — 날짜 선택기가 열림 (선택 가능 범위: 30일 전 ~ 1년 후).<br>
+            ② <strong>시작 / 종료 시간 카드 탭</strong> — 시간 선택기. 시작 시간을 변경했을 때 종료가 그보다 빠르면 종료가 자동으로 시작 + 3시간으로 보정됨.<br>
+            ③ <strong>"반복 일정" 토글 탭</strong> — 반복 설정 영역이 즉시 펼쳐지며 다음 state로 전환.<br>
+            ④ <strong>"티켓" 섹션 탭</strong> — 티켓 템플릿 편집 화면으로 이동.<br>
+            ⑤ <strong>"파티 정보" 탭 헤더 탭</strong> — Tab2(파티 정보)로 슬라이드 전환.<br>
+            ⑥ <strong>"회차 생성 완료" 버튼 탭</strong> — 저장 진행 상태로 전환.<br>
+            ⑦ <strong>뒤로가기</strong> — 별도 확인 없이 즉시 닫힘.
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · 부모 파티 값이 채워지기 직전 한 프레임 동안은 제목 / 티켓이 비어 있는 모습이 잠시 보일 수 있음 (State 6 참고).<br>
+            · 시작 시간을 종료 시간 이후로 옮기면 종료 시간이 자동으로 시작 + 3시간으로 재설정.<br>
+            · 종료 시간만 시작 시간 이전으로 직접 옮기면 안내 메시지 없이 "총 -X시간"이 표시되는 약점이 있음 — 후속 정리 후보.<br>
+            · 티켓이 비어 있는 경우 — 티켓 섹션 안 본문이 비어 보이는 상태로 노출 (별도 안내 카드는 없음).
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            · <code>AppBar</code>(title + TabBar bottom)<br>
+            · <code>TabBar</code>(2-tab · indicator)<br>
+            · <code>EventDateTimeInput._buildPickerCard</code> × 3 (icon labelSmall primary + value titleMedium · radius-card · outlineVariant border)<br>
+            · <code>SwitchListTile</code> (반복 일정 토글 + sub)<br>
+            · <code>MinglitEditableSection</code>(title + Icons.edit_outlined 16px) + <code>PartyTicketsSummary</code>/<code>TicketListView</code><br>
+            · 하단 <code>ElevatedButton</code>(SafeArea wrap, container shadow Offset(0,-4))
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            · color: <code>color-partner-primary</code> (#6c3ce1 — tab indicator/active label, picker icon/label, 버튼 bg, switch on),
+            <code>color-surface</code> (scaffold + AppBar bg), <code>color-background</code> (picker card · editable section bg),
+            <code>color-divider</code> (TabBar border, picker border, switch off, ticket row 구분선),
+            <code>color-secondary</code> (티켓 가격), <code>color-text-primary/secondary</code><br>
+            · radius: <code>radius-card</code> (16 · pickerCard · editableSection 내부), <code>radius-button</code> (12 · 회차 생성 버튼)<br>
+            · spacing: <code>spacing-medium</code> (16 · body padding · field 간격), <code>spacing-large</code> (24 · 섹션 간), <code>spacing-small</code> (8 · 라벨↔본문)<br>
+            · typography: appBarTitle (18/600), titleMedium (16 · 카드 값/섹션 타이틀), labelSmall bold partner-primary (picker label, 11px), bodyMedium (티켓 라인), bodySmall (duration note)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 진입 시 기본 일정은 다음 주 같은 요일 19:00 ~ 22:00으로 미리 채워짐. 부모 파티의 제목 / 이미지 / 정원 / 연락 수단 / 입장 그룹 / 티켓 / 장소가 자동으로 적용되어, 사용자는 회차 일정과 반복 / 티켓만 손보면 됨.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 2: Tab1 with recurrence ON -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Tab1 · 반복 일정 ON (매주 월/수)</strong> <small>반복 일정이 켜진 모습 — 매주 + 요일 두 개 선택 + 종료일 지정</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="ec-appbar">
+                <div class="ec-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
+                <div class="ec-appbar__title">회차 생성</div>
+              </div>
+              <div class="ec-tabbar">
+                <div class="ec-tab ec-tab--active">운영 및 티켓</div>
+                <div class="ec-tab">파티 정보</div>
+              </div>
+              <div class="ec-body">
+                <div class="ec-section-header" style="padding-bottom: var(--spacing-small);">반복 설정</div>
+                <div class="ec-switch-row">
+                  <div class="ec-switch-row__text">
+                    <div class="ec-switch-row__title">반복 일정</div>
+                  </div>
+                  <div class="ec-switch ec-switch--on"><div class="ec-switch__thumb"></div></div>
+                </div>
+                <div class="ec-rec-divider"></div>
+                <div class="ec-rec-block">
+                  <div class="ec-rec-label">반복 주기</div>
+                  <div class="ec-chip-row">
+                    <div class="ec-chip ec-chip--selected">매주</div>
+                    <div class="ec-chip">격주</div>
+                    <div class="ec-chip">매월</div>
+                  </div>
+                </div>
+                <div class="ec-rec-block">
+                  <div class="ec-rec-label">요일 선택</div>
+                  <div class="ec-chip-row">
+                    <div class="ec-day-chip">일</div>
+                    <div class="ec-day-chip ec-day-chip--selected">월</div>
+                    <div class="ec-day-chip">화</div>
+                    <div class="ec-day-chip ec-day-chip--selected">수</div>
+                    <div class="ec-day-chip">목</div>
+                    <div class="ec-day-chip">금</div>
+                    <div class="ec-day-chip">토</div>
+                  </div>
+                </div>
+                <div class="ec-rec-end-row">
+                  <div class="ec-rec-end-row__label">종료일 (선택)</div>
+                  <div class="ec-rec-end-row__btn">2026-08-01</div>
+                </div>
+                <div class="ec-preview">
+                  <div class="ec-rec-label">예정 일정</div>
+                  <div class="ec-preview__row">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    <span>2026년 5월 4일 (월)</span>
+                  </div>
+                  <div class="ec-preview__row">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    <span>2026년 5월 6일 (수)</span>
+                  </div>
+                  <div class="ec-preview__row">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    <span>2026년 5월 11일 (월)</span>
+                  </div>
+                </div>
+              </div>
+              <div class="ec-bottom">
+                <div class="ec-submit">회차 생성 완료</div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>반복 일정이 켜져 있고, 주기는 "매주", 요일은 월·수 두 개가 선택되어 있으며, 종료일이 지정된 모습.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            + <strong>주기 칩 탭</strong> — "매주 / 격주 / 매월" 중 하나만 선택 가능. "매월"을 고르면 요일 칩 자리에 "1~31일" 드롭다운으로 즉시 교체.<br>
+            + <strong>요일 동그라미 칩 탭</strong> — 요일을 복수 선택 가능. 선택된 요일은 강조 색의 채움 원으로 표시.<br>
+            + <strong>"종료일" 버튼 탭</strong> — 날짜 선택기가 열림 (선택 가능 범위: 30일 후 ~ 2년 후). 선택하면 날짜가 표시되고, 다시 누르면 종료일이 비워져 무기한으로 돌아감.<br>
+            + <strong>"회차 생성 완료" 탭 — 첫 회차와 함께 반복 규칙도 같이 만들어짐.
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · "매월"을 선택하면 요일 칩이 1~31일 드롭다운("매월 반복일")으로 즉시 교체됨.<br>
+            · "매주" / "격주"인데 요일을 한 개도 선택하지 않으면 미리보기 영역에 "요일 또는 날짜를 선택하면 미리보기가 표시됩니다" 안내가 표시.<br>
+            · 종료일 버튼은 미설정일 땐 "날짜 선택", 설정 후엔 "yyyy-MM-dd" 형태로만 라벨이 바뀜.<br>
+            · 저장이 진행되는 동안 사용자가 반복 설정을 바꾸더라도, 누른 시점의 설정대로 안전하게 저장되도록 보장됨.
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            ↔ <code>SwitchListTile</code> → <strong>on state</strong> (subtitle 사라짐)<br>
+            + <code>ChoiceChip</code> × 3 (Wrap)<br>
+            + <code>FilterChip</code> × 7 요일 (또는 <code>DropdownButtonFormField&lt;int&gt;</code> for monthly)<br>
+            + <code>TextButton</code> 종료일 picker<br>
+            + 미리보기 Row(<code>Icons.event</code> 16px + 날짜 텍스트) × N<br>
+            나머지 동일 (DateTimeInput · TicketsSummary · BottomSubmit)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            + ChoiceChip selected → <code>color-partner-primary</code> tint container · text 600<br>
+            + FilterChip selected → fill <code>color-partner-primary</code> · text white<br>
+            + 종료일 TextButton → text <code>color-partner-primary</code><br>
+            + 미리보기 icon → <code>onSurfaceVariant</code> (= <code>color-text-secondary</code>)<br>
+            나머지 동일
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 미리보기 일정은 이번 회차의 시작 시간을 기준으로 앞으로의 몇 개 회차 날짜를 계산해 보여주는 시각화다.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 3: Tab2 (Info) -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Tab2 / 파티 정보</strong> <small>부모 파티의 정보가 자동으로 채워진 모습</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="ec-appbar">
+                <div class="ec-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
+                <div class="ec-appbar__title">회차 생성</div>
+              </div>
+              <div class="ec-tabbar">
+                <div class="ec-tab">운영 및 티켓</div>
+                <div class="ec-tab ec-tab--active">파티 정보</div>
+              </div>
+              <div class="ec-body">
+                <div class="ec-section">
+                  <div class="ec-section__header">
+                    <div class="ec-section__title">기본 정보</div>
+                    <svg class="ec-section__edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </div>
+                  <div class="ec-summary-text"><strong>금요일의 위스키 살롱</strong></div>
+                  <div class="ec-summary-sub">강남 한복판에서 위스키 한 잔. 처음 오시는 분 환영</div>
+                  <div class="ec-summary-img-grid">
+                    <div class="ec-summary-img"></div>
+                    <div class="ec-summary-img" style="opacity:0.7;"></div>
+                  </div>
+                </div>
+                <div style="height: var(--spacing-large);"></div>
+
+                <div class="ec-section">
+                  <div class="ec-section__header">
+                    <div class="ec-section__title">인원 및 연락처</div>
+                    <svg class="ec-section__edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </div>
+                  <div class="ec-summary-text">정원 20명</div>
+                  <div class="ec-summary-sub">연락처: 카카오 오픈채팅 · 010-1234-5678</div>
+                </div>
+                <div style="height: var(--spacing-large);"></div>
+
+                <div class="ec-section">
+                  <div class="ec-section__header">
+                    <div class="ec-section__title">장소</div>
+                    <svg class="ec-section__edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </div>
+                  <div class="ec-summary-text">Skybar Seoul 강남점</div>
+                  <div class="ec-summary-sub">서울 강남구 테헤란로 123 · 3층 오픈 테라스</div>
+                </div>
+                <div style="height: var(--spacing-large);"></div>
+
+                <div class="ec-section">
+                  <div class="ec-section__header">
+                    <div class="ec-section__title">입장 조건</div>
+                    <!-- onTap: () {} → read-only지만 edit 아이콘은 그대로 (drift) -->
+                    <svg class="ec-section__edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </div>
+                  <div class="ec-summary-text">남성 그룹 · 여성 그룹</div>
+                  <div class="ec-summary-sub">총 2그룹 · 인증 필요</div>
+                </div>
+                <div style="height: var(--spacing-large);"></div>
+
+                <div class="ec-visibility-card">
+                  <div class="ec-visibility-card__title">공개 설정</div>
+                  <div class="ec-dropdown-wrap">
+                    <span class="ec-dropdown__label-floating">공개 설정</span>
+                    <div class="ec-dropdown">
+                      <svg class="lead" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                      <div class="ec-dropdown__text" style="color: var(--color-text-secondary);">파티 설정 따라가기</div>
+                      <svg class="ec-dropdown__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="ec-bottom">
+                <div class="ec-submit">회차 생성 완료</div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>활성 탭이 "파티 정보"이고, 부모 파티의 제목 / 설명 / 이미지 / 장소 / 입장 조건 / 정원 / 연락 수단이 자동으로 채워져 노출된 모습.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            + <strong>"기본 정보" 섹션 탭</strong> — 제목 / 설명 / 사진 편집 화면으로 이동.<br>
+            + <strong>"인원 및 연락처" 섹션 탭</strong> — 정원 / 연락 수단 편집 화면으로 이동. 이 화면에선 최대 인원과 연락 수단만 사용되며, 최소 인원은 회차에선 적용되지 않음.<br>
+            + <strong>"장소" 섹션 탭</strong> — 장소 편집 화면으로 이동.<br>
+            + <strong>"입장 조건" 섹션 탭</strong> — 현재는 읽기 전용으로 동작해 탭해도 다음 화면으로 이동하지 않음 (헤더에 펜 아이콘이 보이는 약점은 후속 정리 후보).<br>
+            + <strong>"공개 설정" 드롭다운 탭</strong> — "파티 설정 따라가기 / 공개 / 비공개" 세 가지 중 선택.
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · 부모 파티 값이 채워지기 직전엔 제목 / 부제 영역이 잠시 비어 보일 수 있음.<br>
+            · 등록된 사진이 없는 파티는 사진 영역에 기본 안내 placeholder가 노출.<br>
+            · 입장 그룹이 비어 있는 파티는 "입장 조건" 영역도 비어 보임.<br>
+            · "공개 설정" 카드만 좌우 여백이 다른 섹션들과 살짝 다르게 붙어 보이는 정렬 어긋남이 있음 — 후속 정리 후보.
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            ↔ TabBar active → 1번 탭<br>
+            + <code>MinglitEditableSection</code> × 4 (기본 정보 · 인원·연락처 · 장소 · 입장 조건) — 각 child는 PartyXxxSummary 위젯<br>
+            + <code>EventBasicInfoSummary</code> → 내부적으로 <code>PartyBasicInfoSummary</code> aggregate (title fallback to party.title — Fix #1742)<br>
+            + Container(공개 설정) + <code>DropdownButtonFormField&lt;String?&gt;</code> with prefixIcon <code>Icons.visibility</code> + outline border<br>
+            − DateTimeInput · RecurrenceSettings · TicketsSummary
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            + EditableSection bg → <code>surfaceContainerLowest @ MinglitOpacity.strong</code> ≈ <code>color-background</code><br>
+            + edit pencil icon → <code>color-text-secondary</code> @ MinglitOpacity.strong (16px)<br>
+            + Dropdown border → <code>color-divider</code>, focus border → <code>color-primary</code> (Material default)<br>
+            + Container(공개 설정) → <code>color-background</code> + outline 1px <code>color-divider</code> + radius-card<br>
+            나머지 동일
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 이 탭은 일정과 무관 — 시작 / 종료 시간은 "운영 및 티켓" 탭에서만 손본다. 어느 섹션이든 편집해서 저장하면 변경값이 즉시 화면에 반영되어, 탭을 전환해도 그대로 보존된다.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 4: Submitting -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>제출 중 (submitting)</strong> <small>"회차 생성 완료"를 누른 직후 서버 응답 대기</small></th></tr>
+
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="ec-appbar">
+                <div class="ec-appbar__back" style="opacity:0.5;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
+                <div class="ec-appbar__title">회차 생성</div>
+              </div>
+              <div class="ec-tabbar">
+                <div class="ec-tab ec-tab--active">운영 및 티켓</div>
+                <div class="ec-tab">파티 정보</div>
+              </div>
+              <div class="ec-body">
+                <div class="ec-section-header">일정 설정</div>
+                <div style="padding: 0 var(--spacing-medium); opacity: 0.7;">
+                  <div class="ec-pickcard">
+                    <div class="ec-pickcard__row">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/></svg>
+                      <div class="ec-pickcard__label">이벤트 날짜</div>
+                    </div>
+                    <div class="ec-pickcard__value">2026년 05월 08일 (금)</div>
+                  </div>
+                </div>
+              </div>
+              <div class="ec-bottom">
+                <div class="ec-submit ec-submit--loading">
+                  <div class="btn-spinner"></div>
+                  <span>회차 생성 중...</span>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>"회차 생성 완료"를 누른 직후, 서버에 회차(반복 일정이 켜져 있다면 반복 규칙도 함께)를 만드는 응답을 기다리는 짧은 구간.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            ↔ "회차 생성 완료" 버튼이 비활성화되며 라벨이 "회차 생성 중..."으로 변경, 안에 작은 흰 스피너가 함께 노출.<br>
+            ↔ 본문(탭 / 입력 영역)은 여전히 손댈 수 있는 약점이 있어 후속 정리 후보 — 풀스크린 로딩 오버레이를 쓰지 않음.<br>
+            완료되면 — 성공 시 화면이 닫히고 부모 화면(파티 상세)으로 돌아가며 성공 토스트가 잠시 노출. 실패 시 다음 state로 전환.
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · 새로 입력한 장소가 아직 등록되지 않은 곳이라면, 저장 도중에 장소를 먼저 만들고 그 결과로 회차가 만들어짐.<br>
+            · 반복 일정이 켜져 있더라도, 사용자가 저장 직전에 설정을 바꾸는 경우에 대비해 누른 순간의 설정값으로 안전하게 저장됨.<br>
+            · 저장이 끝나면 부모 화면(파티 상세)의 이벤트 목록과 대시보드 요약이 자동으로 갱신.
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>↔ <code>ElevatedButton</code> child → <code>Text("회차 생성 중...")</code> + (visual approximation in spec) loading spinner — 실제 위젯은 spinner 미포함, 텍스트만 변경<br>나머지 동일</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>↔ button bg → 동일 partner-primary (disabled tint 별도 없음 — Material default disabled state)<br>나머지 동일</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 화면 전체를 덮는 풀스크린 로딩은 사용하지 않으며, 사용자에게 진행을 알리는 신호는 하단 버튼 라벨 변화와 비활성화뿐.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 5: Error -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>제출 실패 (error)</strong> <small>저장 도중 오류로 회차가 만들어지지 못한 경우</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="ec-appbar">
+                <div class="ec-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
+                <div class="ec-appbar__title">회차 생성</div>
+              </div>
+              <div class="ec-tabbar">
+                <div class="ec-tab ec-tab--active">운영 및 티켓</div>
+                <div class="ec-tab">파티 정보</div>
+              </div>
+              <div class="ec-body">
+                <div class="ec-section-header">일정 설정</div>
+                <div style="padding: 0 var(--spacing-medium);">
+                  <div class="ec-pickcard">
+                    <div class="ec-pickcard__row">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/></svg>
+                      <div class="ec-pickcard__label">이벤트 날짜</div>
+                    </div>
+                    <div class="ec-pickcard__value">2026년 05월 08일 (금)</div>
+                  </div>
+                </div>
+              </div>
+              <div class="snackbar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <span>회차 생성에 실패했습니다. 잠시 후 다시 시도해주세요.</span>
+              </div>
+              <div class="ec-bottom">
+                <div class="ec-submit">회차 생성 완료</div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>저장 시도 중 네트워크 또는 서버 문제가 생겨 회차를 만들지 못한 상태.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            + <strong>안내 토스트</strong>가 화면 하단에 잠시 노출되었다가 자동으로 사라짐.<br>
+            ↔ "회차 생성 완료" 버튼이 활성화 상태로 복귀해 사용자가 즉시 다시 시도할 수 있음.<br>
+            입력 중이던 폼 값은 그대로 유지되어, 처음부터 다시 입력하지 않아도 됨.
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · 네트워크 단절 / 서버 오류 / 권한 문제 모두 동일한 일반 안내 메시지로 표시되며, 구체적인 사유는 노출되지 않음.<br>
+            · 새로 만든 장소까지 함께 저장하다가 실패하는 경우 — 회차 자체가 만들어지지 않음.<br>
+            · 회차는 만들어졌지만 반복 규칙이 만들어지지 못해 부분 성공이 발생할 수 있음 — 사용자에겐 일반 안내 토스트만 표기되는 약점이 있어 후속 정리 후보.
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>+ <code>SnackBar</code> (handleMinglitError → MinglitSnackbar.showError) — bottom 96px 위 띄움<br>나머지 동일</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            + snackbar bg → #323232 (Material default surface inverse) · 아이콘 → <code>color-error</code> (#ef4444 ≈)<br>
+            나머지 동일
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 토스트 메시지는 일반적인 사유는 default 안내, 알려진 특정 케이스는 그에 맞는 안내로 자동 분기되어 노출.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 6: Initial post-frame loading -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>초기 prefill 전 (한 프레임 잠깐)</strong> <small>화면 진입 직후 부모 파티 값이 채워지기 직전의 짧은 순간</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="ec-appbar">
+                <div class="ec-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
+                <div class="ec-appbar__title">회차 생성</div>
+              </div>
+              <div class="ec-tabbar">
+                <div class="ec-tab ec-tab--active">운영 및 티켓</div>
+                <div class="ec-tab">파티 정보</div>
+              </div>
+              <div class="ec-body">
+                <div class="ec-section-header">일정 설정</div>
+                <div style="padding: 0 var(--spacing-medium);">
+                  <div class="ec-pickcard">
+                    <div class="ec-pickcard__row">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/></svg>
+                      <div class="ec-pickcard__label">이벤트 날짜</div>
+                    </div>
+                    <div class="ec-pickcard__value">2026년 05월 08일 (금)</div>
+                  </div>
+                </div>
+                <div style="height: var(--spacing-large);"></div>
+
+                <div class="ec-section">
+                  <div class="ec-section__header">
+                    <div class="ec-section__title">티켓</div>
+                    <svg class="ec-section__edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </div>
+                  <div class="ec-skel" style="height:14px; width:80%; margin-bottom:8px;"></div>
+                  <div class="ec-skel" style="height:14px; width:55%;"></div>
+                </div>
+              </div>
+              <div class="ec-bottom">
+                <div class="ec-submit">회차 생성 완료</div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>화면이 그려진 첫 순간, 부모 파티의 값을 가져와 채우기 직전. 화면에는 기본 일정값(다음 주 19시)만 보이고, 제목 / 티켓 / 연락 수단 / 입장 그룹은 잠시 비어 있음.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            ↔ 이 순간에 일정을 손대더라도 잠시 후 부모 파티 값이 채워질 때 사용자가 입력한 시작 / 종료 시간은 그대로 보존됨.<br>
+            ↔ 그 외(제목 / 티켓 / 연락 수단 / 입장 그룹 / 이미지 / 장소)는 부모 파티 값으로 덮여 자동으로 채워짐.
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · 부모 파티의 정보를 끝내 가져오지 못한 경우 — 화면이 비어 있는 상태로 머무름. 사용자에게 명시적인 안내가 노출되지 않는 약점이 있어 후속 정리 후보.<br>
+            · 이 짧은 순간에 사용자가 빠르게 뒤로가기를 눌러도 안전하게 닫히도록 처리됨.<br>
+            · 장소 정보가 없는 파티에서 진입한 경우 — 장소 영역만 비어 있는 상태로 노출.
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>↔ TicketsSummary → 빈 list (showError=false 라 빈 영역 / 카드 자체는 보임)<br>↔ EventBasicInfoSummary (Tab2) → title 빈 문자열 / imageUrls 빈 List<br>나머지 동일</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>+ 스켈레톤 자리에 <code>color-divider</code> 톤 placeholder bar (spec 시각화용 — 실제 위젯에는 명시적 skeleton 없음)<br>나머지 동일</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 보통은 부모 화면(파티 상세)에서 진입하기 때문에 데이터가 캐시되어 있어 사실상 한 프레임만 보이는 매우 짧은 전이 구간. 캐시가 비어 있는 콜드 진입에서만 잠깐 노출됨.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<!-- ============================================================
+     GLOBAL BEHAVIOR
+     ============================================================ -->
+<div class="perspective" id="behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">화면 전체에 적용되는 인터랙션, 모션, edge case.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Cross-cutting interactions</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 220px;">Trigger</th><th>Effect</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>탭 헤더 탭 또는 좌우 스와이프</td>
+          <td>본문이 새 탭으로 부드럽게 슬라이드. 양쪽 탭의 입력값은 그대로 유지.</td>
+        </tr>
+        <tr>
+          <td>시작 시간을 종료 이후로 변경</td>
+          <td>종료 시간이 자동으로 시작 + 3시간으로 보정. (반대로 종료를 시작 이전으로 옮기면 자동 보정은 일어나지 않음 — 후속 정리 후보.)</td>
+        </tr>
+        <tr>
+          <td>섹션 카드 탭 (Tab2)</td>
+          <td>해당 섹션 전용 편집 화면이 우→좌로 슬라이드되어 열리고, 저장하고 돌아오면 변경값이 즉시 화면에 반영됨.</td>
+        </tr>
+        <tr>
+          <td>"회차 생성 완료" 탭</td>
+          <td>저장이 진행되는 동안 버튼 라벨이 "회차 생성 중..."으로 바뀌며 비활성화. 성공하면 화면이 닫히고 부모 화면(파티 상세)으로 복귀, 부모 화면의 이벤트 목록과 대시보드 요약이 자동으로 갱신. 실패하면 안내 토스트가 잠시 노출되고 화면은 그대로 유지.</td>
+        </tr>
+        <tr>
+          <td>뒤로가기</td>
+          <td>별도 확인 다이얼로그 없이 즉시 닫힘. 입력 중이던 값은 보존되지 않음.</td>
+        </tr>
+        <tr>
+          <td>반복 일정 ON + "매월" 선택</td>
+          <td>요일 칩 자리가 1~31일 드롭다운으로 즉시 교체. "매주" / "격주"로 다시 돌아오면 이전에 선택했던 요일들이 그대로 다시 보임.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Motion timing</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 220px;">Transition</th><th style="width: 220px;">Token</th><th>Note</th></tr></thead>
+      <tbody>
+        <tr><td>탭 슬라이드</td><td><code>MinglitAnimation.fast</code> (200ms)</td><td>본문이 좌우로 슬라이드되며 표시선이 따라 이동.</td></tr>
+        <tr><td>"반복 일정" 토글</td><td><code>MinglitAnimation.micro</code> (100ms)</td><td>토글의 thumb이 슬라이드되며 배경 색이 부드럽게 전환.</td></tr>
+        <tr><td>반복 설정 영역 펼치기 / 접기</td><td>cut (no animation)</td><td>토글 상태에 따라 영역이 즉시 나타나거나 사라짐 (별도 부드러운 전환 없음).</td></tr>
+        <tr><td>섹션 편집 화면 진입</td><td><code>MinglitAnimation.medium</code> (350ms)</td><td>우→좌 슬라이드 기본 푸시.</td></tr>
+        <tr><td>안내 토스트 (성공 / 실패)</td><td><code>MinglitAnimation.fast</code> (200ms)</td><td>화면 하단에서 슬라이드 업으로 등장.</td></tr>
+        <tr><td>저장 성공 → 부모 화면 복귀</td><td>좌→우 슬라이드</td><td>표준 닫힘 전환.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Global edge cases</h2>
+    <ul class="notes">
+      <li><strong>부모 파티 정보를 가져오지 못한 경우</strong> — 화면이 빈 상태로 머무르며 사용자에게 명시적인 안내가 노출되지 않는 약점이 있음 — 후속 정리 후보.</li>
+      <li><strong>저장 진행 중 뒤로가기</strong> — 사용자가 화면을 빠져나가더라도 저장은 백그라운드에서 그대로 진행되며, 이미 만들어진 회차는 서버에 그대로 남는다.</li>
+      <li><strong>새 장소 + 반복 일정 동시 저장</strong> — 새 장소 만들기에 실패하면 회차 자체도 만들어지지 않음. 다만 회차는 만들어졌는데 반복 규칙이 만들어지지 못해 부분 성공이 발생할 가능성이 있고, 이때 사용자에겐 일반 안내 토스트만 표기 — 후속 정리 후보.</li>
+      <li><strong>"입장 조건" 섹션</strong> — 현재는 읽기 전용으로 동작해 탭해도 다음 화면으로 이동하지 않으나, 헤더에 펜 아이콘이 그대로 보여 혼동을 줄 수 있음 — 후속 정리 후보.</li>
+      <li><strong>"공개 설정" 카드 정렬</strong> — 다른 섹션과 좌우 여백이 살짝 어긋나 보이는 약점 — 후속 정리 후보.</li>
+      <li><strong>탭 라벨 일관성</strong> — "운영 및 티켓" 탭 라벨은 한국어로 고정되어 있고, "파티 정보" 탭은 다국어 키로 노출되어 있어 일관성이 약간 부족 — 후속 정리 후보.</li>
+    </ul>
+  </section>
+</div>
+
+<!-- ============================================================
+     REFERENCE
+     ============================================================ -->
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">📖</span>
+    <h2>Reference</h2>
+    <span class="lede">implementation source + 인접 화면. Components / Tokens는 위 mini-table 참고.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Implementation source</h2>
+    <table class="ref">
+      <tbody>
+        <tr><th style="width: 200px;">Widget</th><td><code>EventCreatePage</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/features/party/event/create/event_create_page.dart"><code>apps/app_partner/lib/src/features/party/event/create/event_create_page.dart</code></a></td></tr>
+        <tr><th>Tabs</th><td><code>EventCreateOperationTab</code> · <code>EventCreateInfoTab</code> — <a href="https://github.com/Mark-Yun/minglit/tree/dev/apps/app_partner/lib/src/features/party/event/create/tabs"><code>apps/app_partner/lib/src/features/party/event/create/tabs/</code></a></td></tr>
+        <tr><th>Controller</th><td><code>EventCreateController</code> (<code>eventCreateControllerProvider(partyId)</code>) — initWithParty / updateStartTime / updateEndTime / updateMaxParticipants / updateTitle / updateDescription / updateImageUrl / updateContactOptions / updateLocation / updateAddressDetail / updateDirections / setVisibility / submit</td></tr>
+        <tr><th>Coordinator</th><td><code>EventCreateCoordinator</code> — openBasicInfoEdit / openCapacityContactEdit / openLocationEdit / openTicketTemplateManage</td></tr>
+        <tr><th>Sub-widgets</th><td><code>EventDateTimeInput</code> · <code>RecurrenceSettingsSection</code> (<code>recurrenceSettingsControllerProvider</code>) · <code>MinglitEditableSection</code> · <code>PartyTicketsSummary</code> · <code>EventBasicInfoSummary</code> · <code>EventCapacitySummary</code> · <code>EventContactSummary</code> · <code>EventLocationSummary</code> · <code>PartyEntranceConditionSummary</code></td></tr>
+        <tr><th>Route</th><td><code>EventCreateRoute</code> · <code>/more/parties/:partyId/events/create</code> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/routing/app_routes.dart"><code>app_routes.dart</code></a></td></tr>
+        <tr><th>Provider</th><td><code>partyDetailProvider(partyId)</code> · <code>partyTicketsProvider(partyId)</code> · <code>locationDetailProvider(locationId)</code> · <code>recurrenceSettingsControllerProvider</code> · <code>dashboardRefreshProvider</code></td></tr>
+        <tr><th>Repository</th><td><code>partyRepository.createEvent</code> · <code>locationRepository.createLocation</code> · <code>recurrenceRuleRepository.create</code></td></tr>
+        <tr><th>Theme</th><td><code>MinglitTheme.partnerTheme</code> — primary = <code>MinglitPartnerColors.primary</code> (#6c3ce1) · spec var: <code>--color-partner-primary</code></td></tr>
+        <tr><th>⚠️ 알려진 drift / 의문점</th><td>
+          · 입장 조건 EditableSection의 onTap이 빈 함수임에도 isEditable 미지정 → edit 아이콘 노출. <code>isEditable: false</code> 권장.<br>
+          · 공개 설정 Container만 horizontal margin 0 → 다른 섹션과 정렬 어긋남.<br>
+          · Tab1 라벨 "운영 및 티켓"은 하드코딩, Tab2는 l10n 참조 — 일관성 부족.<br>
+          · 제출 중 화면 인터랙션이 막히지 않음 (버튼만 disabled). 글로벌 로딩 오버레이 미사용.<br>
+          · recurrence + event 생성 부분 실패에 대한 cleanup 로직 없음.<br>
+          · "총 -X시간"이 가능한 시간 입력 (start &gt; end) 방어 로직 없음.<br>
+          · partyDetailProvider future 실패 시 사용자에게 명시적 피드백 없음.
+        </td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 240px;">Spec</th><th>Relation</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><a href="/specs/party_detail_page.html"><code>PartyDetailPage</code></a></td>
+          <td>이 화면의 부모 — 이벤트 관리 탭의 "회차 만들기" CTA가 진입점. 저장 성공 시 화면이 닫히면 부모의 이벤트 목록이 자동으로 갱신.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/party_create_wizard_page.html"><code>PartyCreateWizardPage</code></a></td>
+          <td>같은 partner 앱의 sibling — 파티(template) 자체를 만드는 6-step wizard. 이 화면은 그 template의 event(instance)를 만든다.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/event_application_wizard_page.html"><code>EventApplicationWizardPage</code></a></td>
+          <td>user app의 신청 wizard — 여기서 만들어진 event/ticket이 user 측에서 신청 대상으로 노출된다 (대응 화면).</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+</div>
+
+<script>
+  document.getElementById('spec-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('spec-mode', e.target.checked);
+  });
+  document.getElementById('dark-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('dark-mode', e.target.checked);
+  });
+</script>
+</body>
+</html>

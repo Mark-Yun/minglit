@@ -22,7 +22,9 @@ enum SettingsTileTrailing {
 /// Follows the "layered trust system" design for high information density.
 ///
 /// Features:
-/// - Fixed height of 48px for compact layout.
+/// - Minimum height of 48px (1-line). When [subtitle] is provided the row
+///   grows naturally — vertical padding stays fixed at `MinglitSpacing.sm`
+///   (12px) so the second line is not cramped.
 /// - Support for icon, title, and optional subtitle.
 /// - Built-in trailing variants: [SettingsTileTrailing.navigation],
 ///   [SettingsTileTrailing.toggle], [SettingsTileTrailing.value].
@@ -40,6 +42,8 @@ class MinglitSettingsTile extends StatelessWidget {
     this.onToggleChanged,
     this.destructive = false,
     this.enabled = true,
+    this.subtitleColor,
+    this.iconColor,
     super.key,
   });
 
@@ -52,6 +56,14 @@ class MinglitSettingsTile extends StatelessWidget {
   /// Optional secondary text displayed below [title].
   /// Usually shows the current value (e.g. "System", "On").
   final String? subtitle;
+
+  /// Optional override for the subtitle text color.
+  /// Ignored when [destructive] is true.
+  final Color? subtitleColor;
+
+  /// Optional override for the leading icon color.
+  /// Ignored when [destructive] is true.
+  final Color? iconColor;
 
   /// The type of trailing widget to display.
   final SettingsTileTrailing trailing;
@@ -91,20 +103,24 @@ class MinglitSettingsTile extends StatelessWidget {
           : baseColor.withValues(alpha: MinglitOpacity.muted),
     );
 
+    final resolvedSubtitleColor =
+        (!destructive && subtitleColor != null) ? subtitleColor! : secondaryColor;
     final subtitleStyle = theme.textTheme.bodySmall?.copyWith(
       color: enabled
-          ? secondaryColor
-          : secondaryColor.withValues(alpha: MinglitOpacity.muted),
+          ? resolvedSubtitleColor
+          : resolvedSubtitleColor.withValues(alpha: MinglitOpacity.muted),
     );
 
     Widget? leadingWidget;
     if (leading != null) {
+      final resolvedIconColor =
+          (!destructive && iconColor != null) ? iconColor! : secondaryColor;
       leadingWidget = Icon(
         leading,
         size: MinglitIconSize.small,
         color: enabled
-            ? secondaryColor
-            : secondaryColor.withValues(alpha: MinglitOpacity.muted),
+            ? resolvedIconColor
+            : resolvedIconColor.withValues(alpha: MinglitOpacity.muted),
       );
     }
 
@@ -143,8 +159,14 @@ class MinglitSettingsTile extends StatelessWidget {
           ? onTap
           : null,
       child: Container(
-        height: 48,
-        padding: const EdgeInsets.symmetric(horizontal: MinglitSpacing.medium),
+        // 1줄(title만)일 때는 minHeight 48이 발동해 그대로 48px.
+        // 2줄(title + subtitle)일 때는 vertical padding이 고정이라
+        // 자연스럽게 ~58로 자란다 — 두 번째 줄이 답답하지 않도록.
+        constraints: const BoxConstraints(minHeight: 48),
+        padding: const EdgeInsets.symmetric(
+          horizontal: MinglitSpacing.medium,
+          vertical: MinglitSpacing.sm,
+        ),
         child: Row(
           children: [
             if (leadingWidget != null) ...[

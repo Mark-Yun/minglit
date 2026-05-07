@@ -1,5 +1,5 @@
 import 'package:app_partner/src/features/verification/manage/verification_manage_controller.dart';
-import 'package:app_partner/src/routing/app_routes.dart';
+import 'package:app_partner/src/features/verification/verification_coordinator.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
@@ -41,6 +41,11 @@ class VerificationManagePage extends ConsumerWidget {
               // 1. Active List
               _ActiveList(
                 verifications: state.active,
+                // Fix #2281: use coordinator (goRouterProvider) instead of context.push,
+                // which fails silently inside StatefulShellRoute branch navigators
+                onCreate: () => ref
+                    .read(verificationCoordinatorProvider.notifier)
+                    .pushCreateVerification(),
                 onArchive: (id) => _confirmArchive(context, ref, id),
               ),
               // 2. Archived List
@@ -100,9 +105,14 @@ class VerificationManagePage extends ConsumerWidget {
 }
 
 class _ActiveList extends StatelessWidget {
-  const _ActiveList({required this.verifications, required this.onArchive});
+  const _ActiveList({
+    required this.verifications,
+    required this.onCreate,
+    required this.onArchive,
+  });
 
   final List<Verification> verifications;
+  final VoidCallback onCreate;
   final void Function(Verification) onArchive;
 
   @override
@@ -115,7 +125,9 @@ class _ActiveList extends StatelessWidget {
           AddActionCard(
             title: '새로운 인증 만들기',
             subtitle: '우리 가게만의 특별한 입장 조건을 만들어보세요.',
-            onTap: () => const CreateVerificationRoute().push<void>(context),
+            // Fix #2281: use onCreate (coordinator-based) instead of context.push,
+            // which fails silently inside StatefulShellRoute branch navigators
+            onTap: onCreate,
           ),
           const SizedBox(height: MinglitSpacing.medium),
           if (verifications.isEmpty)

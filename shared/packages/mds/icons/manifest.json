@@ -2,41 +2,49 @@
   {
     "name": "add",
     "camel": "add",
+    "pascal": "Add",
     "viewBox": "0 0 24 24"
   },
   {
     "name": "check",
     "camel": "check",
+    "pascal": "Check",
     "viewBox": "0 0 24 24"
   },
   {
     "name": "chevron_right",
     "camel": "chevronRight",
+    "pascal": "ChevronRight",
     "viewBox": "0 0 24 24"
   },
   {
     "name": "close",
     "camel": "close",
+    "pascal": "Close",
     "viewBox": "0 0 24 24"
   },
   {
     "name": "more_vert",
     "camel": "moreVert",
+    "pascal": "MoreVert",
     "viewBox": "0 0 24 24"
   },
   {
     "name": "notifications",
     "camel": "notifications",
+    "pascal": "Notifications",
     "viewBox": "0 0 24 24"
   },
   {
     "name": "person",
     "camel": "person",
+    "pascal": "Person",
     "viewBox": "0 0 24 24"
   },
   {
     "name": "search",
     "camel": "search",
+    "pascal": "Search",
     "viewBox": "0 0 24 24"
   }
 ]

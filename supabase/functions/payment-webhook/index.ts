@@ -154,9 +154,7 @@ Deno.serve(withHandler(async (req) => {
 
       if (application) {
         logStatsigEvent(application.user_id, 'payment_completed', payment.amount, { imp_uid, merchant_uid }).catch(() => {});
-        // TODO(#1892): Migrate to produce_event() pattern via q_global_events
-        // Currently sends directly to q_notifications, bypassing 2-tier architecture
-        // See: docs/architecture/global-event-pipeline.md
+        // TODO(#2026): migrate to produce_event() pattern
         await supabase.rpc("pgmq_send", {
           queue_name: "q_notifications",
           message: {

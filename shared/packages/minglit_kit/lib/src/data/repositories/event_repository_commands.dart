@@ -29,8 +29,7 @@ final class PaidApplyEventResult extends ApplyEventResult {
   final int paymentAmount;
 }
 
-mixin _EventRepositoryCommands
-    on _SupabaseEventContext, _EventRepositoryQueries {
+mixin _EventRepositoryCommands on _SupabaseEventContext {
   /// Deletes an application record.
   Future<void> deleteApplication({
     required String eventId,
@@ -269,6 +268,31 @@ mixin _EventRepositoryCommands
       Log.i('✅ [EventRepo] Bulk approve completed for event: $eventId');
     } catch (e, st) {
       Log.e('❌ [EventRepo] bulkApproveApplications Error', e, st);
+      rethrow;
+    }
+  }
+
+  // Fix #2123: marks match_results_viewed_at via user-mark-match-results-viewed
+  // EF (idempotent — EF returns already_viewed:true on repeat calls).
+  Future<void> markMatchResultsViewed({
+    required String applicationId,
+  }) async {
+    Log.d('markMatchResultsViewed | applicationId: $applicationId');
+    try {
+      final response = await supabaseClient.functions.invoke(
+        'user-mark-match-results-viewed',
+        body: {'application_id': applicationId},
+      );
+      if (response.status != 200) {
+        final data = response.data;
+        final msg = data is Map
+            ? (data['error'] as String?) ?? '결과 확인 처리에 실패했습니다.'
+            : '결과 확인 처리에 실패했습니다.';
+        throw MinglitUserException(msg);
+      }
+      Log.i('✅ [EventRepo] markMatchResultsViewed: $applicationId');
+    } catch (e, st) {
+      Log.e('❌ [EventRepo] markMatchResultsViewed Error', e, st);
       rethrow;
     }
   }

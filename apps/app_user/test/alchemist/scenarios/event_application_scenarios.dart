@@ -62,15 +62,15 @@ const _verification = Verification(
 );
 
 List<dynamic> _buildOverrides(EventApplicationState state) => [
-  eventDetailControllerProvider(_eventId).overrideWith(
-    () => _MockEventDetailController(_event),
-  ),
-  eventApplicationControllerProvider(_event).overrideWith(
-    () => _MockApplicationController(state),
-  ),
-  verificationsByIdsProvider('career-proof').overrideWith(
-    (_) async => [_verification],
-  ),
+  eventDetailControllerProvider(
+    _eventId,
+  ).overrideWith(() => _MockEventDetailController(_event)),
+  eventApplicationControllerProvider(
+    _event,
+  ).overrideWith(() => _MockApplicationController(state)),
+  verificationsByIdsProvider(
+    'career-proof',
+  ).overrideWith((_) async => [_verification]),
 ];
 
 class EventApplicationScenarios {
@@ -81,8 +81,11 @@ class EventApplicationScenarios {
       currentUser: createMockUserForTest(),
       overrides: _buildOverrides(
         EventApplicationState(
-          step: EventApplicationStep.verification,
+          step: EventApplicationStep.partnerVerification,
           status: EventApplicationStatus.initial,
+          identityCompleted: true,
+          partnerVerifications: const [],
+          consentGranted: false,
           selectedTicket: _ticket,
         ),
       ),
@@ -95,6 +98,9 @@ class EventApplicationScenarios {
         EventApplicationState(
           step: EventApplicationStep.payment,
           status: EventApplicationStatus.initial,
+          identityCompleted: true,
+          partnerVerifications: const [],
+          consentGranted: true,
           selectedTicket: _ticket,
         ),
       ),

@@ -43,18 +43,21 @@ void main() {
     final resolvedAppState =
         appState ??
         const EventApplicationState(
-          step: EventApplicationStep.verification,
+          step: EventApplicationStep.identity,
           status: EventApplicationStatus.initial,
+          identityCompleted: false,
+          partnerVerifications: [],
+          consentGranted: false,
         );
 
     return ProviderScope(
       overrides: [
-        eventDetailControllerProvider(testEvent.id).overrideWith(
-          () => _FakeEventDetailController(resolvedEventState),
-        ),
-        eventApplicationControllerProvider(testEvent).overrideWith(
-          () => _FakeEventApplicationController(resolvedAppState),
-        ),
+        eventDetailControllerProvider(
+          testEvent.id,
+        ).overrideWith(() => _FakeEventDetailController(resolvedEventState)),
+        eventApplicationControllerProvider(
+          testEvent,
+        ).overrideWith(() => _FakeEventApplicationController(resolvedAppState)),
       ],
       child: MaterialApp(
         home: EventApplicationWizardPage(
@@ -74,9 +77,7 @@ void main() {
     });
 
     testWidgets('이벤트 로딩 중에는 로딩 인디케이터가 표시된다', (tester) async {
-      await tester.pumpWidget(
-        buildWidget(eventState: const AsyncLoading()),
-      );
+      await tester.pumpWidget(buildWidget(eventState: const AsyncLoading()));
       await tester.pump();
 
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
@@ -85,10 +86,7 @@ void main() {
     testWidgets('이벤트 로드 에러 시 크래시 없이 렌더링된다', (tester) async {
       await tester.pumpWidget(
         buildWidget(
-          eventState: AsyncError<Event>(
-            Exception('네트워크 오류'),
-            StackTrace.empty,
-          ),
+          eventState: AsyncError<Event>(Exception('네트워크 오류'), StackTrace.empty),
         ),
       );
       await tester.pumpAndSettle();
@@ -114,9 +112,7 @@ void main() {
     });
 
     testWidgets('초기 ticketId가 주어지면 크래시 없이 렌더링된다', (tester) async {
-      await tester.pumpWidget(
-        buildWidget(ticketId: testTicket.id),
-      );
+      await tester.pumpWidget(buildWidget(ticketId: testTicket.id));
       await tester.pumpAndSettle();
 
       expect(find.text('참여 신청'), findsOneWidget);
@@ -131,6 +127,13 @@ class _FakeEventApplicationController extends EventApplicationController {
 
   @override
   EventApplicationState build(Event event) => _initialState;
+
+  // Fix #2211: _event is a late final field; override selectTicket to avoid
+  // _loadPartnerVerifications accessing _event before it is set.
+  @override
+  Future<void> selectTicket(Ticket ticket) async {
+    state = state.copyWith(selectedTicket: ticket);
+  }
 }
 
 class _FakeEventDetailController extends EventDetailController {
@@ -142,7 +145,9 @@ class _FakeEventDetailController extends EventDetailController {
   Future<Event> build(String id) async {
     final data = _state;
     if (data is AsyncData<Event>) return data.value;
-    if (data is AsyncError<Event>) throw data.error;
+    if (data is AsyncError<Event>) {
+      Error.throwWithStackTrace(data.error, data.stackTrace);
+    }
     // AsyncLoading — never complete
     final completer = Completer<Event>();
     return completer.future;

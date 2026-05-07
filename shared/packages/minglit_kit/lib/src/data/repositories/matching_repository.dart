@@ -169,6 +169,34 @@ class MatchingRepository {
     }
   }
 
+  /// Commits match likes (max 3) for [eventId] via commit-match-likes EF.
+  Future<void> commitMatchLikes({
+    required String eventId,
+    required List<String> candidateIds,
+  }) async {
+    try {
+      // Fix #1945: functions.invoke() never throws on 4xx/5xx — check status.
+      final response = await _supabase.functions.invoke(
+        'commit-match-likes',
+        body: {
+          'event_id': eventId,
+          'candidate_ids': candidateIds,
+        },
+      );
+      if (response.status != 200) {
+        final data = response.data;
+        final msg = data is Map
+            ? (data['error'] as String?) ?? '좋아요 전송에 실패했습니다.'
+            : '좋아요 전송에 실패했습니다.';
+        throw MinglitUserException(msg);
+      }
+      Log.d('commitMatchLikes success | count: ${candidateIds.length}');
+    } catch (e, st) {
+      Log.e('❌ [MatchingRepo] commitMatchLikes Error', e, st);
+      rethrow;
+    }
+  }
+
   /// Fetches successful matches for the current user in an event.
   /// Also fetches basic profile info and secure contact info.
   Future<List<MatchPair>> getMyMatches(String eventId) async {
@@ -221,19 +249,19 @@ class MatchingRepository {
 
   /// Fetches the voter's current vote count for an event.
   // Fix #306: 잔여 투표 수 표시용
+  // Fix #1959: Use server-side count instead of fetching full rows
   Future<int> getMyVoteCount(String eventId) async {
     final userId = _supabase.auth.currentUser?.id;
     if (userId == null) return 0;
 
     try {
-      final data =
-          await _supabase
-                  .from('match_votes')
-                  .select()
-                  .eq('event_id', eventId)
-                  .eq('voter_id', userId)
-              as List;
-      return data.length;
+      final res = await _supabase
+          .from('match_votes')
+          .select('voter_id')
+          .eq('event_id', eventId)
+          .eq('voter_id', userId)
+          .count(CountOption.exact);
+      return res.count;
     } catch (e, st) {
       Log.e('❌ [MatchingRepo] getMyVoteCount Error', e, st);
       rethrow;

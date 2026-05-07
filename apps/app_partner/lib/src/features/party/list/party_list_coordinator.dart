@@ -25,4 +25,16 @@ class PartyListCoordinator {
   void goToDetail(String partyId) {
     unawaited(_router.push(PartyDetailRoute(partyId: partyId).location));
   }
+
+  void goToCreateEvent(String partyId) {
+    unawaited(_router.push(EventCreateRoute(partyId: partyId).location));
+  }
+
+  void goToEventDetail(String partyId, String eventId) {
+    unawaited(
+      _router.push(
+        EventDetailRoute(partyId: partyId, eventId: eventId).location,
+      ),
+    );
+  }
 }

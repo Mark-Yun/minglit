@@ -267,6 +267,87 @@ void main() {
       });
     });
 
+    group('commitMatchLikes', () {
+      test('completes when EF invoke succeeds', () async {
+        when(
+          () => mockFunctions.invoke(
+            'commit-match-likes',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            data: utf8.encode(
+              jsonEncode({'success': true, 'inserted_count': 2}),
+            ),
+            status: 200,
+          ),
+        );
+
+        await expectLater(
+          repository.commitMatchLikes(
+            eventId: 'event_1',
+            candidateIds: const ['user_2', 'user_3'],
+          ),
+          completes,
+        );
+
+        verify(
+          () => mockFunctions.invoke(
+            'commit-match-likes',
+            body: {
+              'event_id': 'event_1',
+              'candidate_ids': const ['user_2', 'user_3'],
+            },
+          ),
+        ).called(1);
+      });
+
+      test('throws when EF invoke fails', () async {
+        when(
+          () => mockFunctions.invoke(
+            'commit-match-likes',
+            body: any(named: 'body'),
+          ),
+        ).thenThrow(Exception('EF failed'));
+
+        expect(
+          () => repository.commitMatchLikes(
+            eventId: 'event_1',
+            candidateIds: const ['user_2'],
+          ),
+          throwsA(isA<Exception>()),
+        );
+      });
+
+      test('throws MinglitUserException on non-200 response', () async {
+        when(
+          () => mockFunctions.invoke(
+            'commit-match-likes',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 409,
+            data: {'error': '선택 가능한 인원은 최대 3명입니다.'},
+          ),
+        );
+
+        await expectLater(
+          repository.commitMatchLikes(
+            eventId: 'event_1',
+            candidateIds: const ['user_2', 'user_3', 'user_4', 'user_5'],
+          ),
+          throwsA(
+            isA<MinglitUserException>().having(
+              (e) => e.message,
+              'message',
+              '선택 가능한 인원은 최대 3명입니다.',
+            ),
+          ),
+        );
+      });
+    });
+
     group('getMyMatches', () {
       test('returns empty when user not authenticated', () async {
         mockClient = createMockSupabase(); // No user
@@ -375,6 +456,58 @@ void main() {
           participantBuilder.lastSelectColumns,
           contains('user_id'),
           reason: 'Fix #2011: select() must include user_id',
+        );
+      });
+    });
+
+    // Fix #1959: server-side count path
+    group('getMyVoteCount', () {
+      test('returns 0 when user is not authenticated', () async {
+        mockClient = createMockSupabase(); // no user
+        repository = MatchingRepository(supabase: mockClient);
+
+        final result = await repository.getMyVoteCount('event_1');
+        expect(result, 0);
+      });
+
+      test('returns server-side count from PostgREST count response', () async {
+        unawaited(
+          mockTable(mockClient, 'match_votes', countValue: 3),
+        );
+
+        final result = await repository.getMyVoteCount('event_1');
+        expect(result, 3);
+      });
+
+      test('passes event_id and voter_id filters to the query', () async {
+        final builder = mockTable(
+          mockClient,
+          'match_votes',
+          countValue: 2,
+        );
+
+        await repository.getMyVoteCount('event_1');
+
+        final filters = builder.recordedFilters;
+        expect(
+          filters.any(
+            (f) =>
+                f.method == 'eq' &&
+                f.column == 'event_id' &&
+                f.value == 'event_1',
+          ),
+          isTrue,
+          reason: 'Must filter by event_id',
+        );
+        expect(
+          filters.any(
+            (f) =>
+                f.method == 'eq' &&
+                f.column == 'voter_id' &&
+                f.value == 'user_1',
+          ),
+          isTrue,
+          reason: 'Must filter by voter_id (current user)',
         );
       });
     });

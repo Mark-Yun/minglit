@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Spec — PartnerWelcomePage (app_partner · PartnerWelcomeRoute)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* ============================================================
+   PartnerWelcomePage-specific atoms.
+   Partner brand override: this app uses MinglitPartnerColors.primary
+   (#6c3ce1 — toned-down indigo) instead of MinglitColors.primary
+   (#9900ff). Scoped via .viewport so docs chrome stays neutral.
+   ============================================================ */
+.viewport {
+  --color-primary: var(--color-partner-primary);   /* #6c3ce1 */
+  --spec-blueprint-rgb: 108, 60, 225;
+}
+body.dark-mode .viewport {
+  --color-primary: var(--color-partner-dark-primary);
+}
+
+/* --- Simple AppBar (matches scaffold gray, no border) --- */
+.pw-appbar {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--spacing-xsmall);
+  background: var(--color-surface);
+}
+.pw-appbar__title {
+  flex: 1;
+  padding-left: var(--spacing-medium);
+  font-size: var(--typography-font-size-app-bar-title);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.pw-appbar__action {
+  width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+}
+.pw-appbar__action svg { width: 22px; height: 22px; color: var(--color-text-primary); }
+
+/* --- Body — Scaffold bg = surface (light gray) · Column · Expanded PageView --- */
+.pw-body {
+  position: absolute;
+  top: 56px; left: 0; right: 0; bottom: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface);
+}
+.pw-page {
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: none;
+  padding: var(--spacing-xlarge);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.pw-page::-webkit-scrollbar { display: none; }
+.pw-page__icon {
+  margin-top: var(--spacing-xlarge);
+  width: 80px; height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+}
+.pw-page__icon svg { width: 80px; height: 80px; }
+.pw-page__title {
+  margin-top: var(--spacing-large);
+  font-size: 24px;        /* headlineSmall · bold */
+  font-weight: 700;
+  text-align: center;
+  color: var(--color-text-primary);
+  line-height: 1.3;
+}
+.pw-page__body {
+  margin-top: var(--spacing-medium);
+  font-size: 16px;        /* bodyLarge */
+  text-align: center;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  max-width: 320px;
+}
+
+/* --- Dot indicator (4 dots, active = 10px partner-primary, idle = 8px outlineVariant) --- */
+.pw-dots {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--spacing-small);
+  padding-bottom: var(--spacing-large);
+}
+.pw-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--color-divider);
+}
+.pw-dot--active {
+  width: 10px; height: 10px;
+  background: var(--color-primary);
+}
+
+/* --- bottomNavigationBar — SafeArea + 24px padding + ElevatedButton --- */
+.pw-bottombar {
+  padding: var(--spacing-large);
+  padding-bottom: calc(var(--spacing-large) + 12px); /* SafeArea bottom proxy */
+  background: var(--color-surface);
+}
+.pw-cta {
+  width: 100%;
+  height: 48px;
+  border-radius: var(--radius-button);
+  background: var(--color-primary);
+  color: #fff;             /* MinglitColors.background = white */
+  border: none;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* --- Popup menu (logout) — Material default --- */
+.pw-popup {
+  position: absolute;
+  top: 50px; right: 12px;
+  background: var(--color-background);
+  border-radius: var(--radius-small);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+  padding: var(--spacing-xsmall) 0;
+  min-width: 140px;
+  z-index: 5;
+}
+.pw-popup__item {
+  padding: 10px var(--spacing-medium);
+  font-size: 14px;
+  color: var(--color-text-primary);
+}
+
+/* --- Logout confirm dialog (MinglitAlert proxy) --- */
+.pw-dialog-scrim {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.32);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 6;
+}
+.pw-dialog {
+  width: 280px;
+  background: var(--color-background);
+  border-radius: var(--radius-card);
+  padding: var(--spacing-large);
+}
+.pw-dialog__title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.pw-dialog__content {
+  margin-top: var(--spacing-small);
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+.pw-dialog__actions {
+  margin-top: var(--spacing-large);
+  display: flex; gap: var(--spacing-small); justify-content: flex-end;
+}
+.pw-dialog__btn {
+  height: 36px;
+  padding: 0 var(--spacing-medium);
+  border-radius: var(--radius-button);
+  border: none;
+  background: transparent;
+  color: var(--color-primary);
+  font-size: 14px;
+  font-weight: 700;
+}
+.pw-dialog__btn--primary {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+/* --- Loading spinner (router redirect resolving) --- */
+.spinner {
+  width: 36px; height: 36px;
+  border: 3px solid var(--color-divider);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.center-spinner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
+</div>
+
+<div class="page">
+
+<!-- ============================================================
+     HEADER
+     ============================================================ -->
+<header>
+  <h1>Partner Welcome</h1>
+</header>
+
+<!-- ============================================================
+     OVERVIEW
+     ============================================================ -->
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr>
+        <th style="width: 140px;">Status</th>
+        <td><strong>✅ 디자인완료</strong> <em style="color: var(--color-text-secondary);">— 4 PageView 페이지 + logout 변형</em></td>
+      </tr>
+      <tr>
+        <th>App</th>
+        <td><code>app_partner</code></td>
+      </tr>
+      <tr>
+        <th>Category</th>
+        <td>onboarding · entry · partner-only</td>
+      </tr>
+      <tr>
+        <th>Route / Surface</th>
+        <td><code>PartnerWelcomeRoute</code> · widget: <code>PartnerWelcomePage</code> (ConsumerStatefulWidget · PageView · DotIndicator)</td>
+      </tr>
+      <tr>
+        <th>Path</th>
+        <td><code>/welcome</code></td>
+      </tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>: <em>— (top-level screen, no shell — outside StatefulShellRoute)</em><br>
+          <strong>Children</strong>: <em>—</em> <small>(내부 <code>PageView</code> 4페이지는 같은 위젯의 sub-state, 별도 spec 없음)</small>
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>
+          파트너 신청 전 사용자에게 밍글릿 파트너 서비스를 4페이지 carousel로 소개하고
+          신청 마법사(<code>PartnerApplyRoute</code>) 진입점을 제공한다. 로그인은 끝났지만
+          아직 신청서가 없는 사용자(<code>OnboardingState.needsApplication</code>)만 도달.
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry</strong>: 로그인 직후 또는 보호된 화면 직접 진입 시 router redirect.
+          <code>onboardingStateProvider</code>가 <code>needsApplication</code>으로 resolve되면 모든 경로에서 <code>/welcome</code>으로 강제 이동.<br>
+          <strong>Exit</strong>: 하단 "파트너 신청서 작성하기" CTA → <code>PartnerApplyRoute</code> (<code>/apply</code>) ·
+          AppBar 우측 ⋮ → 로그아웃 (<code>/login</code>).
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          신청 플로우는 4단계(기본·사업자·연락처/정산·서류)로 양이 많아 신청서 진입 직전에
+          가치 제안과 절차를 미리 보여주는 단계가 필요했다. <code>OnboardingState</code> enum의
+          6 상태 중 <em>이 화면에 도달하는 유일한 상태가 needsApplication</em> — 즉 onboarding 게이트.
+        </td>
+      </tr>
+      <tr>
+        <th>Frequency</th>
+        <td>신청 시작 전까지 진입할 때마다. draft 생성 후엔 router가 자동으로 <code>/apply</code>로 우회 — 일반적으로 1회성.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================
+     HISTORY
+     ============================================================ -->
+<section class="doc">
+  <h2>History</h2>
+  <p class="intro">이 spec의 주요 변경 이력. 최신 항목 위.</p>
+  <table class="ref">
+    <thead>
+      <tr>
+        <th style="width: 110px;">Date</th>
+        <th style="width: 80px;">Version</th>
+        <th style="width: 120px;">Author</th>
+        <th>Changes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2026-05-01</td>
+        <td>1.0</td>
+        <td>mark-yun</td>
+        <td>v1.4 template으로 작성. 4 PageView 페이지(Welcome/Process/Growth/Testimonial) baseline + logout popup + confirm dialog state 정리. partner brand primary scoped via <code>.viewport</code>.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================
+     Anchor nav
+     ============================================================ -->
+<nav class="perspective-nav">
+  <a href="#layout"><span class="glyph">🧱</span> Layout</a>
+  <a href="#states"><span class="glyph">🎨</span> States</a>
+  <a href="#behavior"><span class="glyph">🔄</span> Global Behavior</a>
+  <a href="#reference"><span class="glyph">📖</span> Reference</a>
+</nav>
+
+<!-- ============================================================
+     PERSPECTIVE 1 · LAYOUT
+     ============================================================ -->
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Layout</h2>
+    <span class="lede">화면 구조 — 영역, 정렬, 간격 규칙. 색·타이포 무시.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree</h2>
+    <p class="intro">
+      AppBar(<code>simpleAppBar</code> · 56) → Expanded PageView(swipe carousel) → DotIndicator → bottomNavigationBar(SafeArea + Padding 24 + ElevatedButton).
+      Scaffold 배경 = scaffold-gray. PageView 페이지 콘텐츠는 <code>SingleChildScrollView</code>로 padding xlarge(32) · 수직 중앙 정렬.
+    </p>
+
+    <div class="layout-grid">
+      <!-- Wireframe blueprint -->
+      <div class="blueprint">
+        <!-- Whole frame outline -->
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <!-- AppBar -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:0; left:0; right:0; height:56px;">
+          <span class="blueprint__region-label">① AppBar — title("파트너 소개") + ⋮ action<br>height 56 · no border · bg = scaffold gray</span>
+        </div>
+
+        <!-- PageView (swipeable carousel) -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:56px; left:0; right:0; bottom:104px;">
+          <span class="blueprint__region-label">② PageView (Expanded) · 4 pages<br>padding xlarge(32) · 수직 중앙<br>icon 80 → spacing-large → title → spacing-medium → body</span>
+        </div>
+
+        <!-- DotIndicator -->
+        <div class="blueprint__region" style="bottom:80px; left:0; right:0; height:24px;">
+          <span class="blueprint__region-label">③ DotIndicator (4 dots · active=10 · idle=8 · gap xsmall*2)<br>bottom padding spacing-large(24)</span>
+        </div>
+
+        <!-- bottomNavigationBar -->
+        <div class="blueprint__region blueprint__region--shaded" style="bottom:0; left:0; right:0; height:80px;">
+          <span class="blueprint__region-label">④ SafeArea · Padding all 24 · ElevatedButton<br>bg = MinglitColors.primary · radius button(12) · vertical pad 16</span>
+        </div>
+
+        <!-- Alignment markers -->
+        <div class="blueprint__align-marker" style="top:8px; right:8px;">crossAxis: stretch</div>
+        <div class="blueprint__align-marker" style="bottom:88px; right:8px;">CTA full-width</div>
+      </div>
+
+      <!-- Tree outline -->
+      <div class="layout-tree"><b>Scaffold</b>
+├─ <b>appBar</b>: <i>MinglitTheme.simpleAppBar</i>          ← ①
+│   ├─ title: "파트너 소개" (<code>welcome_appbar_title</code>)
+│   ├─ showBackButton: <i>false</i>
+│   └─ actions:
+│      └─ <b>PopupMenuButton</b>(icon: more_vert)
+│          └─ "로그아웃" item → <i>MinglitAlert.showConfirm</i>
+│
+├─ <b>body</b>: <b>Column</b>
+│   ├─ <b>Expanded</b>                                       ← ②
+│   │   └─ <b>PageView</b>(controller, ClampingScrollPhysics, onPageChanged)
+│   │      ├─ <em>_WelcomePage</em>(business_center, page1)
+│   │      ├─ <em>_WelcomePage</em>(checklist,         page2)
+│   │      ├─ <em>_WelcomePage</em>(celebration,       page3)
+│   │      └─ <em>_WelcomePage</em>(format_quote,      page4)
+│   │
+│   └─ <b>Padding</b>(bottom: spacing-large)                 ← ③
+│      └─ <b>DotIndicator</b>(currentIndex, totalCount=4)
+│
+└─ <b>bottomNavigationBar</b>: <b>SafeArea</b>               ← ④
+    └─ <b>Padding</b>(all: spacing-large = 24)
+       └─ <b>ElevatedButton</b>
+          ├─ bg: MinglitColors.primary
+          ├─ fg: MinglitColors.background (#fff)
+          ├─ vertical pad: spacing-medium (16)
+          ├─ shape: RoundedRectangleBorder(radius-button = 12)
+          └─ child: Text("파트너 신청서 작성하기")</div>
+    </div>
+  </section>
+
+  <section class="doc">
+    <h2>Spacing &amp; alignment rules</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>①</td><td>AppBar</td><td>start: title · end: actions</td><td>height 56 · no border · scaffold gray bg</td></tr>
+        <tr><td>②</td><td>PageView 페이지 콘텐츠</td><td>mainAxis: center · crossAxis: center</td><td>page outer pad <code>spacing-xlarge (32)</code> · top spacer xlarge → icon 80 → <code>spacing-large (24)</code> → title → <code>spacing-medium (16)</code> → body</td></tr>
+        <tr><td>③</td><td>DotIndicator</td><td>row · mainAxis center</td><td>dot 사이 horizontal <code>spacing-xsmall</code> 양쪽 (=8 gap) · 하단 pad <code>spacing-large (24)</code></td></tr>
+        <tr><td>④</td><td>bottomNavigationBar</td><td>SafeArea wrap · CTA full-width stretch</td><td>EdgeInsets.all <code>spacing-large (24)</code> · 버튼 vertical pad <code>spacing-medium (16)</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<!-- ============================================================
+     PERSPECTIVE 2 · STATES
+     ============================================================ -->
+<div class="perspective" id="states">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>States</h2>
+    <span class="lede">시각 변형 6종 — 캐러셀 4페이지(같은 레이아웃에서 콘텐츠만 교체) + 우상단 메뉴 노출 + 로그아웃 확인 다이얼로그. 첫 페이지 baseline 풀 리스트, 나머지는 변경분만.</span>
+  </div>
+
+  <section class="doc">
+    <p class="intro">
+      <strong>State 식별 기준</strong>: 현재 노출된 캐러셀 페이지 번호 + 우상단 메뉴 노출 여부 + 로그아웃 확인 다이얼로그 노출 여부. 캐러셀 4개 페이지는 레이아웃·간격·CTA 모두 동일하고 아이콘·제목·본문만 교체된다.
+    </p>
+
+    <!-- ───────── State 1 · Page 1 (baseline) ───────── -->
+    <table class="ref state-mini is-baseline-tint">
+      <thead>
+        <tr><th colspan="3"><strong>Page 1 · 환영 인사</strong> 🎯 <small>baseline · 첫 번째 페이지</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="pw-appbar">
+                <div class="pw-appbar__title">파트너 소개</div>
+                <div class="pw-appbar__action" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+                </div>
+              </div>
+              <div class="pw-body">
+                <div class="pw-page">
+                  <div class="pw-page__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7h-4V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2zM10 5h4v2h-4V5z"/><path d="M2 13h20"/></svg>
+                  </div>
+                  <div class="pw-page__title">밍글릿 파트너가<br>되어보세요</div>
+                  <div class="pw-page__body">파티를 직접 기획하고 운영하세요. 밍글릿은 파트너님의 비즈니스를 성장시키는 플랫폼입니다.</div>
+                </div>
+                <div class="pw-dots">
+                  <span class="pw-dot pw-dot--active"></span>
+                  <span class="pw-dot"></span>
+                  <span class="pw-dot"></span>
+                  <span class="pw-dot"></span>
+                </div>
+                <div class="pw-bottombar">
+                  <button class="pw-cta">파트너 신청서 작성하기</button>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>화면에 진입한 직후 노출되는 첫 번째 페이지.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            ① <strong>왼쪽으로 스와이프</strong> — 두 번째 페이지로 이동하고 인디케이터의 활성 dot이 1번째에서 2번째로 옮겨감 (약 0.3초의 부드러운 전환).<br>
+            ② <strong>"파트너 신청서 작성하기" 버튼 탭</strong> — 신청서 작성 화면으로 이동.<br>
+            ③ <strong>AppBar 우상단 ⋮ 탭</strong> — "로그아웃" 항목이 들어 있는 메뉴가 펼쳐짐.<br>
+            ④ <strong>시스템 뒤로가기 / 뒤로가기 스와이프</strong> — 반응 없음. 이 화면은 자동으로 진입한 화면이라 위로 갈 곳이 없음.
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · 첫 페이지 왼쪽으로 더 스와이프해도 반응이 없으며 바운스 효과도 없음.<br>
+            · CTA를 빠르게 여러 번 눌러도 같은 화면이 중복 진입되지 않으며 별도의 로딩 표시는 없음.<br>
+            · 다크 모드 전환 시 화면 배경과 아이콘 / CTA 색이 다크용 파트너 인디고로 자동 교체됨.
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            · <code>MinglitTheme.simpleAppBar</code>(title="파트너 소개", showBackButton=false, actions=[PopupMenuButton])<br>
+            · <code>PopupMenuButton&lt;String&gt;</code>(icon: <code>Icons.more_vert</code>, items: ["로그아웃"])<br>
+            · <code>PageView</code>(<code>ClampingScrollPhysics</code> · 4 children · onPageChanged)<br>
+            · <code>_WelcomePage</code>(icon=<code>Icons.business_center_outlined</code>, title=<code>welcome_page1_title</code>, body=<code>welcome_page1_body</code>)<br>
+            · <code>DotIndicator</code>(currentIndex=0, totalCount=4) — 활성 10px partner-primary, idle 8px <code>outlineVariant</code>, <code>AnimatedContainer</code> with <code>MinglitAnimation.medium</code><br>
+            · <code>ElevatedButton</code>(<code>MinglitColors.primary</code> · <code>MinglitColors.background</code> · radius-button · vertical pad spacing-medium) — Text(<code>welcome_cta_button</code>)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            · color: <code>color-partner-primary</code> (#6c3ce1 · icon · CTA bg · active dot), <code>color-surface</code> (scaffold + appbar 배경), <code>color-background</code> (#fff · CTA fg), <code>color-text-primary</code> (title), <code>color-text-secondary</code> (body), <code>outlineVariant</code> (idle dot)<br>
+            · radius: <code>radius-button</code> (12 · CTA)<br>
+            · spacing: <code>spacing-xlarge</code> (32 · page padding), <code>spacing-large</code> (24 · icon↔title · bottombar padding · DotIndicator 하단 pad), <code>spacing-medium</code> (16 · title↔body · CTA vertical pad), <code>spacing-xsmall</code> (4 · dot 사이 양쪽 horizontal padding)<br>
+            · typography: headlineSmall.bold (title) · bodyLarge (body · onSurfaceVariant) · titleLarge (appbar title)<br>
+            · motion: <code>MinglitAnimation.medium</code> (350ms · DotIndicator 크기/색 transition)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 4 PageView 페이지가 모두 같은 layout — Page 2/3/4는 icon/title/body만 swap, 나머지 동일.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ───────── State 2 · Page 2 ───────── -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Page 2 · 신청 절차 안내</strong> <small>두 번째 페이지</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="pw-appbar">
+                <div class="pw-appbar__title">파트너 소개</div>
+                <div class="pw-appbar__action" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+                </div>
+              </div>
+              <div class="pw-body">
+                <div class="pw-page">
+                  <div class="pw-page__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                  </div>
+                  <div class="pw-page__title">신청 절차 안내</div>
+                  <div class="pw-page__body">기본 정보, 사업자 정보, 연락처 및 정산 정보, 서류(사업자등록증·통장사본) 총 4단계를 완성하면 심사가 시작됩니다.</div>
+                </div>
+                <div class="pw-dots">
+                  <span class="pw-dot"></span>
+                  <span class="pw-dot pw-dot--active"></span>
+                  <span class="pw-dot"></span>
+                  <span class="pw-dot"></span>
+                </div>
+                <div class="pw-bottombar">
+                  <button class="pw-cta">파트너 신청서 작성하기</button>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>첫 페이지에서 왼쪽으로 스와이프해 도착하는 두 번째 페이지.</td>
+        </tr>
+        <tr><td class="state-mini__aspect">사용자 액션</td><td>↔ 좌우 스와이프로 첫 페이지 또는 세 번째 페이지로 이동 가능. CTA와 우상단 메뉴 동작은 동일.</td></tr>
+        <tr><td class="state-mini__aspect">에지케이스</td><td>동일</td></tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>↔ icon: <code>Icons.business_center_outlined</code> → <code>Icons.checklist_outlined</code><br>↔ title/body: <code>welcome_page2_title</code> / <code>welcome_page2_body</code><br>↔ DotIndicator currentIndex 0 → 1</td>
+        </tr>
+        <tr><td class="state-mini__aspect">토큰</td><td>동일</td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 신청서 4단계의 분량을 미리 알려주는 페이지 — 이후 신청서 마법사의 4단계 흐름과 일치.</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ───────── State 3 · Page 3 ───────── -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Page 3 · 함께 성장해요</strong> <small>세 번째 페이지</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="pw-appbar">
+                <div class="pw-appbar__title">파트너 소개</div>
+                <div class="pw-appbar__action" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+                </div>
+              </div>
+              <div class="pw-body">
+                <div class="pw-page">
+                  <div class="pw-page__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5.8 11.3 2 22l10.7-3.79"/><path d="M4 3h.01"/><path d="M22 8h.01"/><path d="M15 2h.01"/><path d="M22 20h.01"/><path d="m22 2-2.24.75a2.9 2.9 0 0 0-1.96 3.12c.1.86-.57 1.63-1.45 1.63h-.38c-.86 0-1.6.6-1.76 1.44L14 10"/><path d="m22 13-1.55-.42a2.04 2.04 0 0 0-2.4 1.45l-.43 1.46c-.21.71-.85 1.21-1.59 1.25-.74.04-1.43-.4-1.71-1.09L14 15"/><path d="M11 2c.71 1.34.59 2.96-.5 4.05L9 8l1.5 1.5"/></svg>
+                  </div>
+                  <div class="pw-page__title">함께 성장해요</div>
+                  <div class="pw-page__body">밍글릿의 검증된 매칭 시스템으로 취향에 맞는 참가자를 만나보세요.</div>
+                </div>
+                <div class="pw-dots">
+                  <span class="pw-dot"></span>
+                  <span class="pw-dot"></span>
+                  <span class="pw-dot pw-dot--active"></span>
+                  <span class="pw-dot"></span>
+                </div>
+                <div class="pw-bottombar">
+                  <button class="pw-cta">파트너 신청서 작성하기</button>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>두 번째 페이지에서 왼쪽으로 스와이프해 도착하는 세 번째 페이지.</td>
+        </tr>
+        <tr><td class="state-mini__aspect">사용자 액션</td><td>동일 (좌우 스와이프 + CTA + 우상단 메뉴)</td></tr>
+        <tr><td class="state-mini__aspect">에지케이스</td><td>동일</td></tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>↔ icon: <code>Icons.celebration_outlined</code><br>↔ title/body: <code>welcome_page3_title</code> / <code>welcome_page3_body</code><br>↔ DotIndicator currentIndex 1 → 2</td>
+        </tr>
+        <tr><td class="state-mini__aspect">토큰</td><td>동일</td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 매칭 가치를 강조하는 페이지. celebration 아이콘의 외곽선 변형을 사용.</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ───────── State 4 · Page 4 ───────── -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Page 4 · 파트너 후기</strong> <small>네 번째 페이지 — 마지막 페이지</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="pw-appbar">
+                <div class="pw-appbar__title">파트너 소개</div>
+                <div class="pw-appbar__action" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+                </div>
+              </div>
+              <div class="pw-body">
+                <div class="pw-page">
+                  <div class="pw-page__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"/></svg>
+                  </div>
+                  <div class="pw-page__title">파트너 후기</div>
+                  <div class="pw-page__body">"밍글릿 덕분에 매월 안정적인 파티를 운영하고 있어요. 운영 도구가 특히 편리합니다." — 실제 파트너 후기</div>
+                </div>
+                <div class="pw-dots">
+                  <span class="pw-dot"></span>
+                  <span class="pw-dot"></span>
+                  <span class="pw-dot"></span>
+                  <span class="pw-dot pw-dot--active"></span>
+                </div>
+                <div class="pw-bottombar">
+                  <button class="pw-cta">파트너 신청서 작성하기</button>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>캐러셀의 마지막 페이지.</td>
+        </tr>
+        <tr><td class="state-mini__aspect">사용자 액션</td><td>↔ 오른쪽으로 스와이프해 세 번째 페이지로 이동만 가능. 더 왼쪽으로 스와이프해도 반응 없음.</td></tr>
+        <tr><td class="state-mini__aspect">에지케이스</td><td>− 자동으로 다음 페이지로 넘어가는 동작은 없음. 사용자가 직접 스와이프해야 페이지가 바뀜.</td></tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>↔ icon: <code>Icons.format_quote_outlined</code><br>↔ title/body: <code>welcome_page4_title</code> / <code>welcome_page4_body</code><br>↔ DotIndicator currentIndex 2 → 3</td>
+        </tr>
+        <tr><td class="state-mini__aspect">토큰</td><td>동일</td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 후기 인용 페이지. 본문에 따옴표가 포함되어 있지만 본문 typography가 별도로 바뀌지는 않는다.</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ───────── State 5 · Popup menu open ───────── -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Popup menu open</strong> <small>우상단 ⋮ 메뉴가 펼쳐진 상태</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="pw-appbar">
+                <div class="pw-appbar__title">파트너 소개</div>
+                <div class="pw-appbar__action" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+                </div>
+              </div>
+              <div class="pw-popup">
+                <div class="pw-popup__item">로그아웃</div>
+              </div>
+              <div class="pw-body">
+                <div class="pw-page">
+                  <div class="pw-page__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7h-4V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2zM10 5h4v2h-4V5z"/><path d="M2 13h20"/></svg>
+                  </div>
+                  <div class="pw-page__title">밍글릿 파트너가<br>되어보세요</div>
+                  <div class="pw-page__body">파티를 직접 기획하고 운영하세요. 밍글릿은 파트너님의 비즈니스를 성장시키는 플랫폼입니다.</div>
+                </div>
+                <div class="pw-dots">
+                  <span class="pw-dot pw-dot--active"></span>
+                  <span class="pw-dot"></span>
+                  <span class="pw-dot"></span>
+                  <span class="pw-dot"></span>
+                </div>
+                <div class="pw-bottombar">
+                  <button class="pw-cta">파트너 신청서 작성하기</button>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>+ AppBar 우상단 ⋮을 탭한 직후 — 메뉴가 우상단 모서리 아래쪽에 펼쳐짐.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>① <strong>"로그아웃" 탭</strong> — 메뉴가 닫히면서 로그아웃 확인 다이얼로그가 노출됨.<br>② <strong>메뉴 바깥 영역 탭</strong> — 메뉴가 닫히고 기본 화면으로 복귀.</td>
+        </tr>
+        <tr><td class="state-mini__aspect">에지케이스</td><td>· 메뉴가 펼쳐진 동안에는 캐러셀 좌우 스와이프가 받아들여지지 않음.</td></tr>
+        <tr><td class="state-mini__aspect">컴포넌트</td><td>+ Material <code>PopupMenuButton</code> overlay (단일 <code>PopupMenuItem</code> · value="logout" · child = Text(<code>home_button_logout</code>))</td>
+        </tr>
+        <tr><td class="state-mini__aspect">토큰</td><td>+ <code>color-background</code> (popup surface) · <code>radius-small</code> (popup card) · 그림자 = Material elevation 8 (token 없음)</td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 메뉴의 위치와 스타일은 Material 기본을 그대로 사용. 별도 커스터마이즈 없음.</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ───────── State 6 · Logout confirm dialog ───────── -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Logout confirm dialog</strong> <small>로그아웃 확인 다이얼로그가 노출된 상태</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="pw-appbar">
+                <div class="pw-appbar__title">파트너 소개</div>
+                <div class="pw-appbar__action" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+                </div>
+              </div>
+              <div class="pw-body">
+                <div class="pw-page">
+                  <div class="pw-page__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7h-4V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2zM10 5h4v2h-4V5z"/><path d="M2 13h20"/></svg>
+                  </div>
+                  <div class="pw-page__title">밍글릿 파트너가<br>되어보세요</div>
+                  <div class="pw-page__body">파티를 직접 기획하고 운영하세요. 밍글릿은 파트너님의 비즈니스를 성장시키는 플랫폼입니다.</div>
+                </div>
+                <div class="pw-dots">
+                  <span class="pw-dot pw-dot--active"></span>
+                  <span class="pw-dot"></span>
+                  <span class="pw-dot"></span>
+                  <span class="pw-dot"></span>
+                </div>
+                <div class="pw-bottombar">
+                  <button class="pw-cta">파트너 신청서 작성하기</button>
+                </div>
+              </div>
+              <div class="pw-dialog-scrim">
+                <div class="pw-dialog">
+                  <div class="pw-dialog__title">로그아웃</div>
+                  <div class="pw-dialog__content">로그아웃 하시겠습니까?</div>
+                  <div class="pw-dialog__actions">
+                    <button class="pw-dialog__btn">취소</button>
+                    <button class="pw-dialog__btn pw-dialog__btn--primary">로그아웃</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>+ 우상단 메뉴에서 "로그아웃"을 선택한 직후 — 화면 중앙에 확인 다이얼로그가 노출됨.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            ① <strong>"로그아웃" 확인 버튼 탭</strong> — 다이얼로그가 닫히고 짧게 뒤이어 로그아웃 처리가 실행됨. 그 결과 자동으로 로그인 화면으로 이동.<br>
+            ② <strong>"취소" 탭 / 다이얼로그 바깥 영역 탭 / 시스템 뒤로가기</strong> — 다이얼로그가 닫히고 기본 화면으로 복귀.
+          </td>
+        </tr>
+        <tr><td class="state-mini__aspect">에지케이스</td><td>· 로그아웃 처리에 실패해도 다이얼로그는 이미 닫힌 상태이고, 화면은 그대로 유지된다. 별도 에러 메시지는 노출되지 않으며 사용자가 다시 시도할 수 있다.</td></tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>+ <code>MinglitAlert.showConfirm</code> (title=<code>home_button_logout</code> · content="로그아웃 하시겠습니까?" · confirmText/cancelText l10n)</td>
+        </tr>
+        <tr><td class="state-mini__aspect">토큰</td><td>+ scrim rgba(0,0,0,0.32) · <code>radius-card</code> (16 · dialog) · <code>spacing-large</code> (24 · dialog padding)</td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 다이얼로그가 닫힌 뒤 한 박자 늦게 로그아웃이 실행되도록 의도된 동작 — 화면 전환 흐름이 어색해지지 않도록 함.</td></tr>
+      </tbody>
+    </table>
+
+  </section>
+</div>
+
+<!-- ============================================================
+     PERSPECTIVE 3 · GLOBAL BEHAVIOR
+     ============================================================ -->
+<div class="perspective" id="behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">cross-cutting — 모든 state에 적용되는 액션, motion, 글로벌 에지케이스. 페이지별 차이는 위 mini-table 참고.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Cross-cutting interactions</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 240px;">사용자 액션</th>
+          <th>화면에 보이는 결과</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>"파트너 신청서 작성하기" CTA 탭</td>
+          <td>신청서 작성 화면(<code>/apply</code>)으로 이동. 한 번 신청서가 시작되면 다음 진입부터는 이 환영 화면을 거치지 않고 곧바로 신청서 화면으로 우회됨.</td>
+        </tr>
+        <tr>
+          <td>좌우 스와이프 (캐러셀)</td>
+          <td>좌우 스와이프로 캐러셀 페이지가 전환됨. 양쪽 끝에서는 바운스 없이 부드럽게 정지. dot 인디케이터는 약 0.35초의 부드러운 전환으로 활성 dot 위치가 따라감.</td>
+        </tr>
+        <tr>
+          <td>AppBar 우상단 ⋮ 탭 → 로그아웃</td>
+          <td>메뉴가 펼쳐지고 "로그아웃" 선택 시 확인 다이얼로그가 노출됨. 확인하면 로그아웃 처리 후 자동으로 로그인 화면으로 이동.</td>
+        </tr>
+        <tr>
+          <td>시스템 뒤로가기 / 뒤로가기 스와이프</td>
+          <td>뒤로가기 버튼 자체가 노출되지 않고, 자동 진입한 화면이라 위로 갈 곳도 없음 — Android는 앱 종료, iOS는 무반응.</td>
+        </tr>
+        <tr>
+          <td>외부에서 신청 상태가 바뀐 경우</td>
+          <td>다른 기기에서 신청서 작성을 시작하면 이 화면이 자동으로 닫히고 신청서 화면으로 이동.</td>
+        </tr>
+        <tr>
+          <td>다크 모드 토글</td>
+          <td>화면 배경이 다크용 surface로 전환되고, 파트너 인디고가 다크 톤으로 자동 교체됨.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Motion timing</h2>
+    <p class="intro">
+      Source: <code>shared/packages/mds/core/lib/src/theme/minglit_design_tokens.dart</code> (<code>MinglitAnimation</code>).
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 240px;">Transition</th>
+          <th style="width: 200px;">Token / Duration</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>화면 진입 (자동 이동)</td>
+          <td><code>MinglitAnimation.fast</code> (200ms)</td>
+          <td>표준 라우트 전환. 자동 이동으로 진입한 경우와 사용자 동작으로 진입한 경우의 시각적 차이는 없음.</td>
+        </tr>
+        <tr>
+          <td>캐러셀 좌우 스와이프 → 다음/이전 페이지</td>
+          <td>약 300ms</td>
+          <td>OS 기본 캐러셀 전환 곡선 (cubic ease-out).</td>
+        </tr>
+        <tr>
+          <td>인디케이터 활성 dot 전환</td>
+          <td><code>MinglitAnimation.medium</code> (350ms)</td>
+          <td>활성 dot의 크기와 색이 부드럽게 전환됨.</td>
+        </tr>
+        <tr>
+          <td>우상단 메뉴 노출 / 닫힘</td>
+          <td>약 150ms</td>
+          <td>OS 기본 fade + scale. 디자인 토큰 없음.</td>
+        </tr>
+        <tr>
+          <td>확인 다이얼로그 노출 / 닫힘</td>
+          <td><code>MinglitAnimation.fast</code> (200ms)</td>
+          <td>중앙에서 페이드 인/아웃 + 살짝 확대. 다이얼로그 뒤 어두워지는 영역도 동시에 페이드.</td>
+        </tr>
+        <tr>
+          <td>CTA 탭 → 신청서 화면 전환</td>
+          <td><code>MinglitAnimation.fast</code> (200ms)</td>
+          <td>표준 라우트 전환 (slide / fade).</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Global edge cases</h2>
+    <ul class="notes">
+      <li><strong>이미 신청서가 있는 사용자가 이 URL로 진입</strong> — 화면이 보이지 않고 자동으로 신청서 화면 또는 홈으로 이동.</li>
+      <li><strong>로그아웃 직후 이 URL로 진입</strong> — 즉시 로그인 화면으로 이동.</li>
+      <li><strong>신청 상태가 아직 확인되지 않은 채 진입</strong> — 화면이 잠깐 보였다가 상태가 확인되면 필요 시 다른 화면으로 자동 이동. 사용자에게는 짧은 깜빡임으로 인지됨.</li>
+      <li><strong>로그아웃 실패</strong> — 별도 에러 메시지가 노출되지 않고 화면이 그대로 유지된다. 사용자는 메뉴를 다시 열어 재시도할 수 있다. <em>의도된 동작</em>.</li>
+    </ul>
+  </section>
+</div>
+
+<!-- ============================================================
+     REFERENCE
+     ============================================================ -->
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">📖</span>
+    <h2>Reference</h2>
+    <span class="lede">implementation source + 인접 화면. Components / Tokens는 위 mini-table 참고.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Implementation source</h2>
+    <table class="ref">
+      <tbody>
+        <tr><th style="width: 200px;">Widget</th><td><code>PartnerWelcomePage</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/features/onboarding/partner_welcome_page.dart"><code>apps/app_partner/lib/src/features/onboarding/partner_welcome_page.dart</code></a></td></tr>
+        <tr><th>Sub-widget</th><td><code>DotIndicator</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/features/onboarding/widgets/dot_indicator.dart"><code>apps/app_partner/lib/src/features/onboarding/widgets/dot_indicator.dart</code></a></td></tr>
+        <tr><th>Coordinator</th><td><code>OnboardingCoordinator</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/features/onboarding/onboarding_coordinator.dart"><code>onboarding_coordinator.dart</code></a> · <code>goToApply()</code> → <code>/apply</code></td></tr>
+        <tr><th>Route</th><td><code>PartnerWelcomeRoute</code> · <code>/welcome</code> · top-level (no shell) · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/routing/app_routes.dart"><code>app_routes.dart</code></a></td></tr>
+        <tr><th>Redirect logic</th><td><code>app_router.dart</code> redirect — 로그인 + <code>OnboardingState.needsApplication</code>일 때 모든 경로에서 <code>/welcome</code>으로 강제. draft 생성 후엔 <code>/apply</code>로 우회.</td></tr>
+        <tr><th>State provider</th><td><code>onboardingStateProvider</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/logic/onboarding_state_provider.dart"><code>onboarding_state_provider.dart</code></a> · enum: loading / needsApplication / draftInProgress / pendingReview / needsCorrection / hasPartner</td></tr>
+        <tr><th>Brand color</th><td><code>MinglitPartnerColors.primary</code> = <code>#6c3ce1</code> (toned-down indigo) · scoped via <code>.viewport</code>에서 <code>--color-primary</code> 오버라이드. <code>MinglitColors.primary</code>(#9900ff)는 사용 안 함.</td></tr>
+        <tr><th>l10n</th><td><code>welcome_appbar_title</code> · <code>welcome_page1~4_title/body</code> · <code>welcome_cta_button</code> · <code>home_button_logout</code> · <code>common_button_cancel</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 240px;">Spec</th><th>Relation</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><a href="/specs/login_page.html"><code>LoginPage</code></a></td>
+          <td>이 화면 직전. 로그인 성공 + <code>needsApplication</code>이면 자동 redirect로 도달.</td>
+        </tr>
+        <tr>
+          <td><code>PartnerApplyPage</code> <em>(spec 미작성)</em></td>
+          <td>CTA 탭 시 진입하는 신청 마법사 (4-step). draft 시작과 동시에 <code>onboardingState</code>가 <code>draftInProgress</code>로 변환.</td>
+        </tr>
+        <tr>
+          <td><code>PartnerApplyStatusPage</code> <em>(spec 미작성)</em></td>
+          <td>제출 완료 후 심사 대기/보완 요청 상태 화면. <code>pendingReview</code> / <code>needsCorrection</code>에서 도달.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/partner_home_page.html"><code>PartnerHomePage</code></a></td>
+          <td>승인 완료(<code>hasPartner</code>) 후 진입하는 메인 홈. 이 화면의 최종 도달점.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+</div> <!-- /.page -->
+
+</body>
+</html>

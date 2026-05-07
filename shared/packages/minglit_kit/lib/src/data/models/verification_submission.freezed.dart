@@ -15,7 +15,8 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$VerificationSubmission {
 
- String get id;@JsonKey(name: 'partner_id') String get partnerId;@JsonKey(name: 'user_id') String get userId;@JsonKey(name: 'verification_id') String get verificationId; VerificationStatus get status;@JsonKey(name: 'snapshot_data') List<dynamic> get snapshotData;@JsonKey(name: 'created_at') DateTime get createdAt;@JsonKey(name: 'updated_at') DateTime get updatedAt;@JsonKey(name: 'application_id') String? get applicationId;@JsonKey(name: 'reviewed_at') DateTime? get reviewedAt;@JsonKey(name: 'reviewed_by') String? get reviewedBy;
+ String get id;@JsonKey(name: 'partner_id') String get partnerId;@JsonKey(name: 'user_id') String get userId;@JsonKey(name: 'verification_id') String get verificationId; VerificationStatus get status;@JsonKey(name: 'snapshot_data') List<dynamic> get snapshotData;@JsonKey(name: 'created_at') DateTime get createdAt;@JsonKey(name: 'updated_at') DateTime get updatedAt;@JsonKey(name: 'application_id') String? get applicationId;@JsonKey(name: 'reviewed_at') DateTime? get reviewedAt;@JsonKey(name: 'reviewed_by') String? get reviewedBy;// Fix #2099: 심사 시작 시점 — timeline "심사 진행 중" step time 표시용
+@JsonKey(name: 'review_started_at') DateTime? get reviewStartedAt;
 /// Create a copy of VerificationSubmission
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +29,16 @@ $VerificationSubmissionCopyWith<VerificationSubmission> get copyWith => _$Verifi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is VerificationSubmission&&(identical(other.id, id) || other.id == id)&&(identical(other.partnerId, partnerId) || other.partnerId == partnerId)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.verificationId, verificationId) || other.verificationId == verificationId)&&(identical(other.status, status) || other.status == status)&&const DeepCollectionEquality().equals(other.snapshotData, snapshotData)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.applicationId, applicationId) || other.applicationId == applicationId)&&(identical(other.reviewedAt, reviewedAt) || other.reviewedAt == reviewedAt)&&(identical(other.reviewedBy, reviewedBy) || other.reviewedBy == reviewedBy));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is VerificationSubmission&&(identical(other.id, id) || other.id == id)&&(identical(other.partnerId, partnerId) || other.partnerId == partnerId)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.verificationId, verificationId) || other.verificationId == verificationId)&&(identical(other.status, status) || other.status == status)&&const DeepCollectionEquality().equals(other.snapshotData, snapshotData)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.applicationId, applicationId) || other.applicationId == applicationId)&&(identical(other.reviewedAt, reviewedAt) || other.reviewedAt == reviewedAt)&&(identical(other.reviewedBy, reviewedBy) || other.reviewedBy == reviewedBy)&&(identical(other.reviewStartedAt, reviewStartedAt) || other.reviewStartedAt == reviewStartedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,partnerId,userId,verificationId,status,const DeepCollectionEquality().hash(snapshotData),createdAt,updatedAt,applicationId,reviewedAt,reviewedBy);
+int get hashCode => Object.hash(runtimeType,id,partnerId,userId,verificationId,status,const DeepCollectionEquality().hash(snapshotData),createdAt,updatedAt,applicationId,reviewedAt,reviewedBy,reviewStartedAt);
 
 @override
 String toString() {
-  return 'VerificationSubmission(id: $id, partnerId: $partnerId, userId: $userId, verificationId: $verificationId, status: $status, snapshotData: $snapshotData, createdAt: $createdAt, updatedAt: $updatedAt, applicationId: $applicationId, reviewedAt: $reviewedAt, reviewedBy: $reviewedBy)';
+  return 'VerificationSubmission(id: $id, partnerId: $partnerId, userId: $userId, verificationId: $verificationId, status: $status, snapshotData: $snapshotData, createdAt: $createdAt, updatedAt: $updatedAt, applicationId: $applicationId, reviewedAt: $reviewedAt, reviewedBy: $reviewedBy, reviewStartedAt: $reviewStartedAt)';
 }
 
 
@@ -48,7 +49,7 @@ abstract mixin class $VerificationSubmissionCopyWith<$Res>  {
   factory $VerificationSubmissionCopyWith(VerificationSubmission value, $Res Function(VerificationSubmission) _then) = _$VerificationSubmissionCopyWithImpl;
 @useResult
 $Res call({
- String id,@JsonKey(name: 'partner_id') String partnerId,@JsonKey(name: 'user_id') String userId,@JsonKey(name: 'verification_id') String verificationId, VerificationStatus status,@JsonKey(name: 'snapshot_data') List<dynamic> snapshotData,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'updated_at') DateTime updatedAt,@JsonKey(name: 'application_id') String? applicationId,@JsonKey(name: 'reviewed_at') DateTime? reviewedAt,@JsonKey(name: 'reviewed_by') String? reviewedBy
+ String id,@JsonKey(name: 'partner_id') String partnerId,@JsonKey(name: 'user_id') String userId,@JsonKey(name: 'verification_id') String verificationId, VerificationStatus status,@JsonKey(name: 'snapshot_data') List<dynamic> snapshotData,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'updated_at') DateTime updatedAt,@JsonKey(name: 'application_id') String? applicationId,@JsonKey(name: 'reviewed_at') DateTime? reviewedAt,@JsonKey(name: 'reviewed_by') String? reviewedBy,@JsonKey(name: 'review_started_at') DateTime? reviewStartedAt
 });
 
 
@@ -65,7 +66,7 @@ class _$VerificationSubmissionCopyWithImpl<$Res>
 
 /// Create a copy of VerificationSubmission
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? partnerId = null,Object? userId = null,Object? verificationId = null,Object? status = null,Object? snapshotData = null,Object? createdAt = null,Object? updatedAt = null,Object? applicationId = freezed,Object? reviewedAt = freezed,Object? reviewedBy = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? partnerId = null,Object? userId = null,Object? verificationId = null,Object? status = null,Object? snapshotData = null,Object? createdAt = null,Object? updatedAt = null,Object? applicationId = freezed,Object? reviewedAt = freezed,Object? reviewedBy = freezed,Object? reviewStartedAt = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,partnerId: null == partnerId ? _self.partnerId : partnerId // ignore: cast_nullable_to_non_nullable
@@ -78,7 +79,8 @@ as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore
 as DateTime,applicationId: freezed == applicationId ? _self.applicationId : applicationId // ignore: cast_nullable_to_non_nullable
 as String?,reviewedAt: freezed == reviewedAt ? _self.reviewedAt : reviewedAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,reviewedBy: freezed == reviewedBy ? _self.reviewedBy : reviewedBy // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,reviewStartedAt: freezed == reviewStartedAt ? _self.reviewStartedAt : reviewStartedAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,
   ));
 }
 
@@ -163,10 +165,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'partner_id')  String partnerId, @JsonKey(name: 'user_id')  String userId, @JsonKey(name: 'verification_id')  String verificationId,  VerificationStatus status, @JsonKey(name: 'snapshot_data')  List<dynamic> snapshotData, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'application_id')  String? applicationId, @JsonKey(name: 'reviewed_at')  DateTime? reviewedAt, @JsonKey(name: 'reviewed_by')  String? reviewedBy)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'partner_id')  String partnerId, @JsonKey(name: 'user_id')  String userId, @JsonKey(name: 'verification_id')  String verificationId,  VerificationStatus status, @JsonKey(name: 'snapshot_data')  List<dynamic> snapshotData, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'application_id')  String? applicationId, @JsonKey(name: 'reviewed_at')  DateTime? reviewedAt, @JsonKey(name: 'reviewed_by')  String? reviewedBy, @JsonKey(name: 'review_started_at')  DateTime? reviewStartedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _VerificationSubmission() when $default != null:
-return $default(_that.id,_that.partnerId,_that.userId,_that.verificationId,_that.status,_that.snapshotData,_that.createdAt,_that.updatedAt,_that.applicationId,_that.reviewedAt,_that.reviewedBy);case _:
+return $default(_that.id,_that.partnerId,_that.userId,_that.verificationId,_that.status,_that.snapshotData,_that.createdAt,_that.updatedAt,_that.applicationId,_that.reviewedAt,_that.reviewedBy,_that.reviewStartedAt);case _:
   return orElse();
 
 }
@@ -184,10 +186,10 @@ return $default(_that.id,_that.partnerId,_that.userId,_that.verificationId,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'partner_id')  String partnerId, @JsonKey(name: 'user_id')  String userId, @JsonKey(name: 'verification_id')  String verificationId,  VerificationStatus status, @JsonKey(name: 'snapshot_data')  List<dynamic> snapshotData, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'application_id')  String? applicationId, @JsonKey(name: 'reviewed_at')  DateTime? reviewedAt, @JsonKey(name: 'reviewed_by')  String? reviewedBy)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'partner_id')  String partnerId, @JsonKey(name: 'user_id')  String userId, @JsonKey(name: 'verification_id')  String verificationId,  VerificationStatus status, @JsonKey(name: 'snapshot_data')  List<dynamic> snapshotData, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'application_id')  String? applicationId, @JsonKey(name: 'reviewed_at')  DateTime? reviewedAt, @JsonKey(name: 'reviewed_by')  String? reviewedBy, @JsonKey(name: 'review_started_at')  DateTime? reviewStartedAt)  $default,) {final _that = this;
 switch (_that) {
 case _VerificationSubmission():
-return $default(_that.id,_that.partnerId,_that.userId,_that.verificationId,_that.status,_that.snapshotData,_that.createdAt,_that.updatedAt,_that.applicationId,_that.reviewedAt,_that.reviewedBy);case _:
+return $default(_that.id,_that.partnerId,_that.userId,_that.verificationId,_that.status,_that.snapshotData,_that.createdAt,_that.updatedAt,_that.applicationId,_that.reviewedAt,_that.reviewedBy,_that.reviewStartedAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -204,10 +206,10 @@ return $default(_that.id,_that.partnerId,_that.userId,_that.verificationId,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id, @JsonKey(name: 'partner_id')  String partnerId, @JsonKey(name: 'user_id')  String userId, @JsonKey(name: 'verification_id')  String verificationId,  VerificationStatus status, @JsonKey(name: 'snapshot_data')  List<dynamic> snapshotData, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'application_id')  String? applicationId, @JsonKey(name: 'reviewed_at')  DateTime? reviewedAt, @JsonKey(name: 'reviewed_by')  String? reviewedBy)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id, @JsonKey(name: 'partner_id')  String partnerId, @JsonKey(name: 'user_id')  String userId, @JsonKey(name: 'verification_id')  String verificationId,  VerificationStatus status, @JsonKey(name: 'snapshot_data')  List<dynamic> snapshotData, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'application_id')  String? applicationId, @JsonKey(name: 'reviewed_at')  DateTime? reviewedAt, @JsonKey(name: 'reviewed_by')  String? reviewedBy, @JsonKey(name: 'review_started_at')  DateTime? reviewStartedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _VerificationSubmission() when $default != null:
-return $default(_that.id,_that.partnerId,_that.userId,_that.verificationId,_that.status,_that.snapshotData,_that.createdAt,_that.updatedAt,_that.applicationId,_that.reviewedAt,_that.reviewedBy);case _:
+return $default(_that.id,_that.partnerId,_that.userId,_that.verificationId,_that.status,_that.snapshotData,_that.createdAt,_that.updatedAt,_that.applicationId,_that.reviewedAt,_that.reviewedBy,_that.reviewStartedAt);case _:
   return null;
 
 }
@@ -219,7 +221,7 @@ return $default(_that.id,_that.partnerId,_that.userId,_that.verificationId,_that
 @JsonSerializable()
 
 class _VerificationSubmission implements VerificationSubmission {
-  const _VerificationSubmission({required this.id, @JsonKey(name: 'partner_id') required this.partnerId, @JsonKey(name: 'user_id') required this.userId, @JsonKey(name: 'verification_id') required this.verificationId, required this.status, @JsonKey(name: 'snapshot_data') required final  List<dynamic> snapshotData, @JsonKey(name: 'created_at') required this.createdAt, @JsonKey(name: 'updated_at') required this.updatedAt, @JsonKey(name: 'application_id') this.applicationId, @JsonKey(name: 'reviewed_at') this.reviewedAt, @JsonKey(name: 'reviewed_by') this.reviewedBy}): _snapshotData = snapshotData;
+  const _VerificationSubmission({required this.id, @JsonKey(name: 'partner_id') required this.partnerId, @JsonKey(name: 'user_id') required this.userId, @JsonKey(name: 'verification_id') required this.verificationId, required this.status, @JsonKey(name: 'snapshot_data') required final  List<dynamic> snapshotData, @JsonKey(name: 'created_at') required this.createdAt, @JsonKey(name: 'updated_at') required this.updatedAt, @JsonKey(name: 'application_id') this.applicationId, @JsonKey(name: 'reviewed_at') this.reviewedAt, @JsonKey(name: 'reviewed_by') this.reviewedBy, @JsonKey(name: 'review_started_at') this.reviewStartedAt}): _snapshotData = snapshotData;
   factory _VerificationSubmission.fromJson(Map<String, dynamic> json) => _$VerificationSubmissionFromJson(json);
 
 @override final  String id;
@@ -239,6 +241,8 @@ class _VerificationSubmission implements VerificationSubmission {
 @override@JsonKey(name: 'application_id') final  String? applicationId;
 @override@JsonKey(name: 'reviewed_at') final  DateTime? reviewedAt;
 @override@JsonKey(name: 'reviewed_by') final  String? reviewedBy;
+// Fix #2099: 심사 시작 시점 — timeline "심사 진행 중" step time 표시용
+@override@JsonKey(name: 'review_started_at') final  DateTime? reviewStartedAt;
 
 /// Create a copy of VerificationSubmission
 /// with the given fields replaced by the non-null parameter values.
@@ -253,16 +257,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _VerificationSubmission&&(identical(other.id, id) || other.id == id)&&(identical(other.partnerId, partnerId) || other.partnerId == partnerId)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.verificationId, verificationId) || other.verificationId == verificationId)&&(identical(other.status, status) || other.status == status)&&const DeepCollectionEquality().equals(other._snapshotData, _snapshotData)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.applicationId, applicationId) || other.applicationId == applicationId)&&(identical(other.reviewedAt, reviewedAt) || other.reviewedAt == reviewedAt)&&(identical(other.reviewedBy, reviewedBy) || other.reviewedBy == reviewedBy));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _VerificationSubmission&&(identical(other.id, id) || other.id == id)&&(identical(other.partnerId, partnerId) || other.partnerId == partnerId)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.verificationId, verificationId) || other.verificationId == verificationId)&&(identical(other.status, status) || other.status == status)&&const DeepCollectionEquality().equals(other._snapshotData, _snapshotData)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.applicationId, applicationId) || other.applicationId == applicationId)&&(identical(other.reviewedAt, reviewedAt) || other.reviewedAt == reviewedAt)&&(identical(other.reviewedBy, reviewedBy) || other.reviewedBy == reviewedBy)&&(identical(other.reviewStartedAt, reviewStartedAt) || other.reviewStartedAt == reviewStartedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,partnerId,userId,verificationId,status,const DeepCollectionEquality().hash(_snapshotData),createdAt,updatedAt,applicationId,reviewedAt,reviewedBy);
+int get hashCode => Object.hash(runtimeType,id,partnerId,userId,verificationId,status,const DeepCollectionEquality().hash(_snapshotData),createdAt,updatedAt,applicationId,reviewedAt,reviewedBy,reviewStartedAt);
 
 @override
 String toString() {
-  return 'VerificationSubmission(id: $id, partnerId: $partnerId, userId: $userId, verificationId: $verificationId, status: $status, snapshotData: $snapshotData, createdAt: $createdAt, updatedAt: $updatedAt, applicationId: $applicationId, reviewedAt: $reviewedAt, reviewedBy: $reviewedBy)';
+  return 'VerificationSubmission(id: $id, partnerId: $partnerId, userId: $userId, verificationId: $verificationId, status: $status, snapshotData: $snapshotData, createdAt: $createdAt, updatedAt: $updatedAt, applicationId: $applicationId, reviewedAt: $reviewedAt, reviewedBy: $reviewedBy, reviewStartedAt: $reviewStartedAt)';
 }
 
 
@@ -273,7 +277,7 @@ abstract mixin class _$VerificationSubmissionCopyWith<$Res> implements $Verifica
   factory _$VerificationSubmissionCopyWith(_VerificationSubmission value, $Res Function(_VerificationSubmission) _then) = __$VerificationSubmissionCopyWithImpl;
 @override @useResult
 $Res call({
- String id,@JsonKey(name: 'partner_id') String partnerId,@JsonKey(name: 'user_id') String userId,@JsonKey(name: 'verification_id') String verificationId, VerificationStatus status,@JsonKey(name: 'snapshot_data') List<dynamic> snapshotData,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'updated_at') DateTime updatedAt,@JsonKey(name: 'application_id') String? applicationId,@JsonKey(name: 'reviewed_at') DateTime? reviewedAt,@JsonKey(name: 'reviewed_by') String? reviewedBy
+ String id,@JsonKey(name: 'partner_id') String partnerId,@JsonKey(name: 'user_id') String userId,@JsonKey(name: 'verification_id') String verificationId, VerificationStatus status,@JsonKey(name: 'snapshot_data') List<dynamic> snapshotData,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'updated_at') DateTime updatedAt,@JsonKey(name: 'application_id') String? applicationId,@JsonKey(name: 'reviewed_at') DateTime? reviewedAt,@JsonKey(name: 'reviewed_by') String? reviewedBy,@JsonKey(name: 'review_started_at') DateTime? reviewStartedAt
 });
 
 
@@ -290,7 +294,7 @@ class __$VerificationSubmissionCopyWithImpl<$Res>
 
 /// Create a copy of VerificationSubmission
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? partnerId = null,Object? userId = null,Object? verificationId = null,Object? status = null,Object? snapshotData = null,Object? createdAt = null,Object? updatedAt = null,Object? applicationId = freezed,Object? reviewedAt = freezed,Object? reviewedBy = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? partnerId = null,Object? userId = null,Object? verificationId = null,Object? status = null,Object? snapshotData = null,Object? createdAt = null,Object? updatedAt = null,Object? applicationId = freezed,Object? reviewedAt = freezed,Object? reviewedBy = freezed,Object? reviewStartedAt = freezed,}) {
   return _then(_VerificationSubmission(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,partnerId: null == partnerId ? _self.partnerId : partnerId // ignore: cast_nullable_to_non_nullable
@@ -303,7 +307,8 @@ as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore
 as DateTime,applicationId: freezed == applicationId ? _self.applicationId : applicationId // ignore: cast_nullable_to_non_nullable
 as String?,reviewedAt: freezed == reviewedAt ? _self.reviewedAt : reviewedAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,reviewedBy: freezed == reviewedBy ? _self.reviewedBy : reviewedBy // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,reviewStartedAt: freezed == reviewStartedAt ? _self.reviewStartedAt : reviewStartedAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,
   ));
 }
 

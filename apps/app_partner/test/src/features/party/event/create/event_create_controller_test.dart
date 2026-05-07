@@ -615,8 +615,9 @@ void main() {
       });
 
       // Fix #1264: 이벤트 생성 후 대시보드 '다가오는 이벤트' 카운트 미갱신
+      // Fix #1943: dashboard refresh via DashboardRefresh signal (no cross-feature import)
       test(
-        'invalidates partnerDashboardControllerProvider after successful event creation',
+        'bumps DashboardRefresh signal, triggering PartnerDashboardController rebuild after event creation',
         () async {
           final party = _makeParty(locationId: 'loc-1');
 
@@ -691,7 +692,7 @@ void main() {
 
           await notifier.submit();
 
-          // 대시보드 재빌드의 loadDashboardData 완료까지 대기
+          // DashboardRefresh 신호 bump 후 대시보드 재빌드의 loadDashboardData 완료까지 대기
           await container.read(currentPartnerInfoProvider.future);
           await Future<void>.delayed(const Duration(milliseconds: 50));
 
@@ -699,13 +700,14 @@ void main() {
             container.read(eventCreateControllerProvider('party-1')).status,
             isA<AsyncData<void>>(),
           );
-          // invalidate 후 대시보드가 재빌드되면 sentinel 값이 사라진다
+          // DashboardRefresh bump 후 대시보드가 재빌드되면 sentinel 값이 사라진다
           expect(
             container
                 .read(partnerDashboardControllerProvider)
                 .pendingReviewCount,
             isNot(99),
-            reason: 'Dashboard must be invalidated after event creation',
+            reason:
+                'Dashboard must rebuild via DashboardRefresh signal after event creation',
           );
         },
       );

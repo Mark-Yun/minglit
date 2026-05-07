@@ -221,6 +221,8 @@ Deno.test("무료 이벤트 (payment_amount = 0) → 취소 → status = 'cancel
         );
         const dbBody = JSON.parse(dbCall!.body!);
         assertEquals(dbBody.status, "cancelled");
+        // Fix #2099: cancellation_reason must be set for user-initiated cancel
+        assertEquals(dbBody.cancellation_reason, "user_requested");
       });
     });
   });
@@ -326,6 +328,9 @@ Deno.test("paid → grace period 내 → 환불 성공 + refund_status = 'comple
         const dbBody = JSON.parse(dbCall!.body!);
         assertEquals(dbBody.refund_status, "completed");
         assertEquals(dbBody.refund_amount, 30000);
+        // Fix #2099: refunded_at + cancellation_reason must be set on paid refund
+        assertEquals(typeof dbBody.refunded_at, "string");
+        assertEquals(dbBody.cancellation_reason, "user_requested");
       });
     });
   });

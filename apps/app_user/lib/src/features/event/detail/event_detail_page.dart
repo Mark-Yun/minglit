@@ -4,8 +4,8 @@ import 'package:app_user/src/features/event/admission/event_admission_controller
 import 'package:app_user/src/features/event/detail/event_detail_now_provider.dart';
 import 'package:app_user/src/features/event/detail/open_in_app_dialog.dart';
 import 'package:app_user/src/features/event/detail/report_bottom_sheet.dart';
-import 'package:app_user/src/features/event/logic/event_coordinator.dart';
 import 'package:app_user/src/features/event/logic/event_detail_controller.dart';
+import 'package:app_user/src/logic/event_coordinator.dart';
 import 'package:app_user/src/utils/share_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -18,6 +18,7 @@ export 'package:app_user/src/features/event/detail/event_detail_now_provider.dar
 part 'event_bottom_ticket_bar.dart';
 part 'event_detail_content.dart';
 part 'event_detail_content_skeleton.dart';
+part 'event_detail_tab_bar_delegate.dart';
 part 'event_entry_conditions_section.dart';
 part 'event_info_tile.dart';
 part 'event_quill_viewer.dart';

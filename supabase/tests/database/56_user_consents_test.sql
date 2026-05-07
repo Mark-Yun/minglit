@@ -269,5 +269,69 @@ SELECT lives_ok(
   'service_role can DELETE consents directly'
 );
 
+-- ============================================================
+-- 18. Fix #2054: server timestamp 강제 — client-supplied consented_at 무시
+-- ============================================================
+SELECT tests.authenticate_as('consent_user_a');
+
+SELECT lives_ok(
+  format(
+    $$SELECT public.save_user_consents(
+      '%s',
+      '[{"consent_key":"marketing_consent","consented":true,"policy_version":1,"consented_at":"2099-01-01T00:00:00Z","withdrawn_at":"2099-01-01T00:00:00Z"}]'::jsonb
+    )$$,
+    tests.get_supabase_uid('consent_user_a')
+  ),
+  'save_user_consents accepts payload with extra timestamp fields (client values ignored)'
+);
+
+SELECT ok(
+  (
+    SELECT consented_at < now() + interval '1 minute'
+    FROM public.user_consents
+    WHERE user_id = tests.get_supabase_uid('consent_user_a')
+      AND consent_key = 'marketing_consent'
+  ),
+  'consented_at is server now(), not client-supplied 2099 value'
+);
+
+-- ============================================================
+-- 19. Fix #2054: policy_version 다운그레이드 거부
+-- ============================================================
+
+-- 먼저 v3 으로 동의 기록
+SELECT lives_ok(
+  format(
+    $$SELECT public.save_user_consents(
+      '%s',
+      '[{"consent_key":"age_confirmation","consented":true,"policy_version":3}]'::jsonb
+    )$$,
+    tests.get_supabase_uid('consent_user_a')
+  ),
+  'set age_confirmation to policy_version 3'
+);
+
+-- v1 (다운그레이드) 페이로드로 재호출
+SELECT lives_ok(
+  format(
+    $$SELECT public.save_user_consents(
+      '%s',
+      '[{"consent_key":"age_confirmation","consented":true,"policy_version":1}]'::jsonb
+    )$$,
+    tests.get_supabase_uid('consent_user_a')
+  ),
+  'save_user_consents with lower policy_version does not error'
+);
+
+SELECT results_eq(
+  format(
+    $$SELECT policy_version FROM public.user_consents
+      WHERE user_id = '%s' AND consent_key = 'age_confirmation'$$,
+    tests.get_supabase_uid('consent_user_a')
+  ),
+  $$VALUES (3)$$,
+  'policy_version remains 3 after downgrade attempt — downgrade rejected'
+);
+
 SELECT * FROM finish();
 ROLLBACK;

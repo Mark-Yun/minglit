@@ -134,22 +134,16 @@ class _MatchResultCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          CircleAvatar(
+          // Fix #1936: MinglitAvatarImage handles caching + error fallback
+          MinglitAvatarImage(
             radius: 24,
+            url: match.partnerProfileImage,
             backgroundColor: MinglitColors.primary.withValues(
               alpha: MinglitOpacity.highlight,
             ),
-            backgroundImage: match.partnerProfileImage != null
-                ? NetworkImage(match.partnerProfileImage!)
-                : null,
-            child: match.partnerProfileImage == null
-                ? Icon(
-                    Icons.person,
-                    color: MinglitColors.primary.withValues(
-                      alpha: MinglitOpacity.separator,
-                    ),
-                  )
-                : null,
+            fallbackIconColor: MinglitColors.primary.withValues(
+              alpha: MinglitOpacity.separator,
+            ),
           ),
           const SizedBox(width: MinglitSpacing.medium),
           Expanded(

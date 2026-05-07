@@ -1,0 +1,2810 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Spec — EventDetailPage (app_partner · EventDetailRoute)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* ============================================================
+   Partner EventDetailPage — partner-side event ops screen.
+   파트너 brand color (#6c3ce1) viewport-scoped — docs chrome 무영향.
+   ============================================================ */
+.viewport {
+  --color-primary: var(--color-partner-primary);   /* #6c3ce1 */
+  --spec-blueprint-rgb: 108, 60, 225;
+}
+body.dark-mode .viewport {
+  --color-primary: var(--color-partner-dark-primary); /* #9b7bec */
+}
+
+/* --- AppBar (partner — left-aligned title only — TabBar 폐기) --- */
+.ped-appbar {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  background: var(--color-background);
+  position: relative;
+}
+.ped-appbar__back {
+  width: 40px; height: 40px;
+  margin-left: var(--spacing-xsmall);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--color-text-primary);
+}
+.ped-appbar__back svg { width: 22px; height: 22px; }
+.ped-appbar__title {
+  flex: 1;
+  font-size: var(--typography-font-size-app-bar-title);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+/* --- Body container (단일 스크롤 — TabBar 폐기) --- */
+.ped-body {
+  position: absolute;
+  top: 56px;           /* AppBar only — TabBar 제거됨 */
+  left: 0; right: 0; bottom: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+  background: var(--color-background);
+  padding-bottom: var(--spacing-large);
+}
+.ped-body::-webkit-scrollbar { display: none; }
+
+/* --- Title row: 이벤트 title 단독 (정보 수정 링크는 분리) --- */
+.ped-title-row {
+  display: flex;
+  align-items: baseline;
+  padding: 0 var(--spacing-screen-edge);
+  gap: var(--spacing-medium);
+  margin-top: var(--spacing-small);
+}
+.ped-title {
+  flex: 1;
+  font-size: 20px;          /* titleLarge */
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.35;
+}
+/* 정보 수정 link row — chip line ↔ Hero 카드 사이, 우측 정렬 */
+.ped-edit-row {
+  display: flex;
+  justify-content: flex-end;
+  padding: var(--spacing-small) var(--spacing-screen-edge) 0;
+}
+
+/* 취소 안내 banner — title 밑, Hero 카드 위. warning tint */
+.ped-cancel-notice {
+  margin: var(--spacing-small) var(--spacing-screen-edge) 0;
+  padding: var(--spacing-small) var(--spacing-medium);
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: var(--radius-small);
+  font-size: 12px;
+  color: var(--color-text-primary);
+  line-height: 1.5;
+  display: flex;
+  gap: var(--spacing-xsmall);
+  align-items: flex-start;
+}
+.ped-cancel-notice svg {
+  width: 14px; height: 14px;
+  color: var(--color-error);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* 완료 축하 banner — title 밑, Hero 카드 위. success tint + 인원수 highlight */
+.ped-celebrate-banner {
+  margin: var(--spacing-small) var(--spacing-screen-edge) 0;
+  padding: var(--spacing-small) var(--spacing-medium);
+  background: rgba(34, 197, 94, 0.1);
+  border-radius: var(--radius-small);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xsmall);
+}
+.ped-celebrate-banner__count {
+  color: #15803d;
+  font-weight: 700;
+}
+
+/* 완료 통계 카드 — 객단가 (전체 + 그룹별) */
+.ped-stats-card {
+  margin: 0 var(--spacing-screen-edge) var(--spacing-medium);
+  padding: var(--spacing-medium);
+  background: var(--color-surface);
+  border-radius: var(--radius-card);
+  display: flex; flex-direction: column;
+  gap: var(--spacing-small);
+}
+.ped-stats-row {
+  display: flex; align-items: baseline;
+  gap: var(--spacing-xsmall);
+}
+.ped-stats-row__label {
+  flex: 1;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+.ped-stats-row__value {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+.ped-stats-row__sub {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin-left: 2px;
+}
+.ped-stats-card__divider {
+  height: 1px;
+  background: var(--color-divider);
+  margin: var(--spacing-xsmall) 0;
+}
+
+/* 신청 트렌드 placeholder card — bar chart 시안 */
+.ped-trend-card {
+  margin: 0 var(--spacing-screen-edge) var(--spacing-medium);
+  padding: var(--spacing-medium);
+  background: var(--color-surface);
+  border-radius: var(--radius-card);
+}
+.ped-trend-chart {
+  height: 80px;
+  display: flex; align-items: flex-end;
+  gap: 3px;
+  padding-top: var(--spacing-small);
+}
+.ped-trend-chart__bar {
+  flex: 1;
+  background: var(--color-primary);
+  border-radius: 1px 1px 0 0;
+  opacity: 0.85;
+  position: relative;
+}
+.ped-trend-chart__bar--peak { opacity: 1; }
+/* 환불한 사람 — 그래프 위쪽에 회색 fill 오버레이 (filled type, neutral gray) */
+.ped-trend-chart__bar-refund {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  background: var(--color-text-secondary);
+  opacity: 0.6;
+  border-radius: 1px 1px 0 0;
+}
+.ped-trend__legend {
+  display: flex; justify-content: space-between;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  margin-top: var(--spacing-xsmall);
+}
+
+/* --- 메타 chip line — title 아래 (메타 강조: 모집/D-12/공개) --- */
+.ped-meta-chips {
+  display: flex;
+  gap: var(--spacing-xsmall);
+  flex-wrap: wrap;
+  padding: var(--spacing-small) var(--spacing-screen-edge) 0;  /* title ↔ chip 사이 breathing */
+}
+
+/* --- Hero 카드 신규 atoms (chip line / label-value rows / edit link) --- */
+.ped-chips {
+  display: flex;
+  gap: var(--spacing-xsmall);
+  flex-wrap: wrap;
+}
+.ped-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;                /* icon ↔ label */
+  padding: 3px 10px;
+  border-radius: var(--radius-small);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+/* Leading icon — visibility chip(globe / lock). 탭 시 설명 토스트 */
+.ped-chip__icon {
+  width: 11px; height: 11px;
+  flex-shrink: 0;
+}
+/* visibility chip은 인터랙티브 — 탭 시 토스트 (cursor pointer) */
+.ped-chip--visibility { cursor: pointer; }
+.ped-chip--accent  { background: rgba(108, 60, 225, 0.12); color: var(--color-primary); }   /* (현재 미사용 — 모집/완료 모두 success로 변경됨) */
+.ped-chip--success { background: rgba(34, 197, 94, 0.12);  color: #15803d; }                  /* 공개 (외부 노출) */
+.ped-chip--warning { background: rgba(255, 165, 0, 0.12);  color: #b85a00; }                  /* D-day (시간 임박) */
+.ped-chip--error   { background: rgba(239, 68, 68, 0.12);  color: var(--color-error); }     /* 취소 */
+.ped-chip--outline { background: var(--color-divider);     color: var(--color-text-secondary); } /* 비공개 / 완료 */
+
+.ped-info-rows {
+  display: flex; flex-direction: column;
+  gap: var(--spacing-medium);     /* 블록 사이 호흡 ↑ — was small */
+}
+/* Stacked block: caption(작은 라벨) → primary(큰 값) → secondary(보조)
+   value 위계가 명확해 운영자 시선이 큰 텍스트로 즉시 잡힘 */
+.ped-info-block {
+  display: flex; flex-direction: column;
+  gap: 2px;
+}
+.ped-info-block__caption {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  letter-spacing: 0.02em;
+}
+.ped-info-block__primary {
+  font-size: 16px;                    /* was 18px — 페이지 title(20px) 위계 유지 */
+  font-weight: 600;                   /* was 700 — title과 같은 weight */
+  color: var(--color-text-primary);
+  line-height: 1.3;
+}
+.ped-info-block__secondary {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+  margin-top: 1px;
+}
+
+/* Kakao Map thumb — 장소 block 안 시각 강조. SDK는 Flutter side에서 인라인 임베드,
+   탭 시 외부 맵 앱 deep-link(kakaomap://place?id= or maps:?q=) — 길 안내 진입.
+   spec mock에서는 grid 패턴 + 보라 핀으로 placeholder 표현 */
+.ped-map-thumb {
+  margin-top: var(--spacing-small);
+  height: 100px;
+  border-radius: var(--radius-input);
+  position: relative;
+  overflow: hidden;
+  background:
+    /* faint road grid */
+    linear-gradient(90deg, rgba(0,0,0,0.04) 1px, transparent 1px) 0 0 / 28px 28px,
+    linear-gradient(rgba(0,0,0,0.04) 1px, transparent 1px) 0 0 / 28px 28px,
+    linear-gradient(135deg, #e8edf5 0%, #f3f6fb 100%);
+  cursor: pointer;
+}
+.ped-map-thumb__pin {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 18px; height: 18px;
+  transform: translate(-50%, -100%);
+  color: var(--color-primary);
+}
+.ped-map-thumb__pin svg { width: 100%; height: 100%; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2)); }
+
+/* 오시는길 — 장소 block 안 sub-section. label + multiline 자유 텍스트
+   (도보 안내 / 입구 / 주차 / 랜드마크 등 운영자가 자유로 작성) */
+.ped-directions {
+  margin-top: var(--spacing-small);
+  display: flex; flex-direction: column;
+  gap: 3px;
+}
+.ped-directions__label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  letter-spacing: 0.04em;
+}
+.ped-directions__text {
+  font-size: 13px;
+  color: var(--color-text-primary);
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+.ped-edit-link {
+  display: inline-flex; align-items: center;
+  gap: 2px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+.ped-edit-link svg { width: 14px; height: 14px; }
+
+/* --- Hero 카드 (chip line + 일정/장소/호스트 rows + 정보 수정 링크) --- */
+.ped-card {
+  margin: var(--spacing-medium) var(--spacing-screen-edge);
+  padding: var(--spacing-medium);
+  background: var(--color-surface);
+  border-radius: var(--radius-card);  /* 16 */
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-medium);
+}
+.ped-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-small);
+}
+.ped-row__icon {
+  width: 18px; height: 18px;
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
+.ped-row__icon svg { width: 18px; height: 18px; }
+
+/* Hero row — 일정 (차분한 톤, primary 강조 최소화) */
+.ped-row--hero {
+  align-items: flex-start;
+  gap: var(--spacing-small);
+  padding-bottom: var(--spacing-xsmall);
+}
+.ped-row--hero .ped-row__icon {
+  width: 18px; height: 18px;
+  margin-top: 2px;
+  color: var(--color-text-secondary);  /* primary X — 차분한 톤 */
+}
+.ped-row--hero .ped-row__icon svg { width: 18px; height: 18px; }
+.ped-row__hero-body {
+  display: flex; flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.ped-row__hero-primary {
+  font-size: 16px;
+  font-weight: 600;        /* w700 → w600 톤 다운 */
+  color: var(--color-text-primary);
+  line-height: 1.35;
+}
+.ped-row__hero-secondary {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+/* D-day 우측 trail 배지 (일정 행 우측, primary 톤 — 유일한 강조) */
+.ped-row__hero-trail {
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-primary);
+  padding: 2px 8px;
+  background: rgba(108, 60, 225, 0.1);
+  border-radius: var(--radius-small);
+  margin-top: 1px;
+}
+
+/* Supporting (meta) rows — 참가 / 상태 / 공개 */
+.ped-row--meta {
+  gap: var(--spacing-small);
+  padding: 2px 0;
+}
+.ped-row__meta-body {
+  display: flex; flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  gap: 1px;
+}
+.ped-row__meta-label {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+.ped-row__meta-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.35;
+}
+.ped-row__meta-value--accent { color: var(--color-primary); font-weight: 700; }
+.ped-row__meta-value--error { color: var(--color-error); font-weight: 700; }
+.ped-row__meta-value--muted { color: var(--color-text-secondary); font-weight: 600; }
+
+.ped-divider {
+  height: 1px;
+  background: var(--color-divider);
+  margin: var(--spacing-small) 0;
+}
+
+/* --- 전체 참가 현황 카드 (이벤트 통합 — 별도 섹션) --- */
+.ped-summary {
+  margin: 0 var(--spacing-screen-edge) var(--spacing-medium);
+  padding: var(--spacing-medium);    /* vertical 여유 */
+  background: var(--color-surface);
+  border-radius: var(--radius-card);
+  display: flex; flex-direction: column;
+  gap: var(--spacing-medium);                              /* gap 여유 — was small */
+}
+.ped-summary__head {
+  display: flex; align-items: baseline;
+  gap: var(--spacing-large);    /* 두 metric 그룹 사이 호흡 */
+  flex-wrap: wrap;
+}
+/* 한 metric = 큰 숫자 + 옆 라벨 (예: 6 / 12 확정, 4 심사대기) */
+.ped-summary__metric {
+  display: inline-flex; align-items: baseline;
+  gap: var(--spacing-xsmall);
+}
+/* stacked variant — 라벨이 위, 큰 숫자가 아래 (취소 환불 완료 카드 등 강조 케이스) */
+.ped-summary__metric--stacked {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+.ped-summary__metric--stacked .ped-summary__count-total {
+  order: -1;     /* 라벨을 위로 이동 (mock에서 순서 그대로 두고 CSS로 처리) */
+}
+.ped-summary__count {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1;
+}
+/* 심사대기 카운트 강조 — 운영자가 처리해야 할 액션 시그널 (≥1일 때만 적용) */
+.ped-summary__count--pulse {
+  color: var(--color-primary);
+  animation: ped-pulse 1.6s ease-in-out infinite;
+}
+@keyframes ped-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.5; }
+}
+/* 환불완료 metric 톤 다운 — 이미 끝난 정보, 액션 X */
+.ped-summary__metric--muted .ped-summary__count {
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
+.ped-summary__metric--muted .ped-summary__count-total {
+  color: var(--color-text-secondary);
+  opacity: 0.7;
+}
+.ped-summary__count-total {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+.ped-summary__breakdown {
+  display: flex;
+  gap: var(--spacing-medium);
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+.ped-summary__breakdown strong {
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+/* 심사 CTA — 대기 ≥1일 때 노출. CTA 버튼 스타일로 터치 영역 / 시인성 ↑ */
+.ped-summary__cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  padding: 0 var(--spacing-medium);
+  background: var(--color-primary);
+  color: white;
+  border-radius: var(--radius-button);
+  font-size: 14px;
+  font-weight: 600;
+  gap: var(--spacing-xsmall);
+  box-sizing: border-box;
+}
+.ped-summary__cta svg { width: 16px; height: 16px; }
+/* outline variant — 보조 액션 (참가자 보기 등) — 같은 h44, primary border, transparent bg */
+.ped-summary__cta--outline {
+  background: transparent;
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary);
+}
+/* CTA stack 컨테이너 — 두 버튼 사이 small gap */
+.ped-summary__actions {
+  display: flex; flex-direction: column;
+  gap: var(--spacing-small);
+  margin-top: var(--spacing-small);
+}
+
+/* --- 입장 그룹 리스트 컨테이너 (단일 카드 안에 그룹 N개 + divider) --- */
+.ped-group-list {
+  margin: 0 var(--spacing-screen-edge) var(--spacing-medium);
+  background: var(--color-surface);
+  border-radius: var(--radius-card);
+  display: flex; flex-direction: column;
+}
+
+/* --- 입장 그룹 (단일 카드 안의 섹션 — 자체 border/radius/margin 없음) --- */
+.ped-group {
+  /* vertical large — divider 위/아래 충분한 호흡 (카드 자체보다 여유 ↑)
+     가로는 medium 유지로 다른 카드와 통일 */
+  padding: var(--spacing-large) var(--spacing-medium);
+  display: flex; flex-direction: column;
+  gap: var(--spacing-medium);
+}
+/* 그룹 사이 divider — 카드 좌우 padding 안쪽으로 inset (full-width 안함) */
+.ped-group + .ped-group {
+  position: relative;
+}
+.ped-group + .ped-group::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: var(--spacing-medium);
+  right: var(--spacing-medium);
+  height: 1px;
+  background: var(--color-divider);
+}
+.ped-group__head {
+  display: flex; align-items: center; gap: var(--spacing-small);
+}
+.ped-group__name {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+.ped-group__count {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+.ped-group__count-total {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin-left: 2px;
+}
+.ped-group__chevron { color: var(--color-text-secondary); flex-shrink: 0; }
+.ped-group__chevron svg { width: 14px; height: 14px; }
+/* MinglitCapacityBar — segmented (total ≤ 30) / continuous (> 30) */
+.mds-capbar {
+  height: 6px;
+  background: var(--color-divider);
+  border-radius: 3px;
+  overflow: hidden;
+  display: flex;
+}
+/* continuous mode children */
+.mds-capbar__fill {
+  height: 100%;
+  background: var(--color-primary);
+}
+.mds-capbar__pending {
+  height: 100%;
+  background: rgba(108, 60, 225, 0.3);
+}
+/* segmented mode (total ≤ segmentThreshold) — 칸 분리, 각 칸 = 1명 */
+.mds-capbar--segmented {
+  height: 8px;
+  background: transparent;        /* 빈 칸은 자식에서 표현 */
+  border-radius: 0;
+  overflow: visible;
+  gap: 2px;
+}
+.mds-capbar__seg {
+  flex: 1;
+  height: 100%;
+  background: var(--color-divider);  /* empty (남은 자리) */
+  border-radius: 2px;
+}
+.mds-capbar__seg--filled  { background: var(--color-primary); }
+.mds-capbar__seg--pending { background: rgba(108, 60, 225, 0.3); }
+
+/* 기존 alias 유지 (다른 mock에서 쓰면 segmented 지정) — 신규 사용 X */
+.ped-group__bar { display: none; }
+.ped-group__breakdown {
+  display: flex;
+  gap: var(--spacing-medium);
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+.ped-group__breakdown strong {
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+/* 환불 항목 톤 다운 — 끝난 정보 */
+.ped-group__breakdown-item--muted {
+  opacity: 0.65;
+}
+.ped-group__alert {
+  padding: var(--spacing-xsmall) var(--spacing-small);
+  background: rgba(255, 165, 0, 0.1);
+  border: 1px solid rgba(255, 165, 0, 0.25);
+  border-radius: var(--radius-small);
+  font-size: 12px;
+  color: var(--color-text-primary);
+  display: flex; align-items: center; gap: 6px;
+}
+.ped-group__alert svg { width: 12px; height: 12px; color: #b85a00; flex-shrink: 0; }
+.ped-group__alert strong { color: #b85a00; font-weight: 700; }
+/* Nest wrapper — 티켓 리스트 컨테이너. 보더는 각 티켓이 자체 보유 (티켓별 분리감) */
+.ped-group__nest {
+  display: flex; flex-direction: column;
+}
+.ped-group__tickets {
+  display: flex; flex-direction: column;
+  gap: var(--spacing-card-gap);   /* 12px — 티켓 카드 사이 호흡 (was small 8px) */
+}
+/* 각 티켓이 자체 좌측 bar 보유 — 티켓 1개여도 single ticket 느낌 명확
+   - 두께 4px (was 3px)
+   - 색: neutral gray rgba(0,0,0,0.15) — primary 톤(capbar 확정/대기)과 의미 충돌 회피
+   - border-radius 2px로 끝 부드럽게 */
+.ped-group__ticket {
+  display: flex; flex-direction: column;
+  padding: var(--spacing-small) 0 var(--spacing-small) var(--spacing-medium); /* 좌측 indent 16px */
+  gap: var(--spacing-small);
+  border-left: 4px solid rgba(0, 0, 0, 0.15);
+  border-radius: 2px;
+}
+.ped-group__ticket-row {
+  display: flex; align-items: center;
+  gap: var(--spacing-medium);
+}
+.ped-group__ticket-name {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;        /* 굵게 — 티켓 이름과 메타 분리 명확 */
+  color: var(--color-text-primary);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ped-group__ticket-sub {
+  font-size: 12px;
+  font-weight: 400;        /* 메타 — 가벼운 톤 */
+  color: var(--color-text-secondary);
+  margin-left: 0;          /* 한 행 → 두 줄 구조로 변경 */
+}
+.ped-group__ticket-price {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+}
+.ped-group__ticket-chevron {
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+  margin-left: 4px;
+}
+.ped-group__ticket-chevron svg { width: 14px; height: 14px; }
+.ped-group__ticket-bar {
+  /* 판매 진행률 시각화 — MinglitCapacityBar mini variant (height 4px) */
+  margin-left: 0;
+}
+.ped-group__add {
+  /* margin-top 제거 — .ped-group__nest 의 gap(small)이 처리 */
+  height: 44px;                       /* 심사하기 CTA와 동일 — 보조 액션도 같은 터치 영역 */
+  padding: 0 var(--spacing-medium);
+  border: 1px dashed var(--color-primary);
+  border-radius: var(--radius-button);
+  color: var(--color-primary);
+  font-size: 14px;
+  font-weight: 600;
+  display: flex; align-items: center; justify-content: center;
+  gap: var(--spacing-xsmall);
+  box-sizing: border-box;
+}
+.ped-group__add svg { width: 16px; height: 16px; }
+
+/* --- (deprecated) 참가 현황 별도 카드 — 입장 그룹 카드 안으로 통합됨 --- */
+.ped-stats { display: none; }
+.ped-stats__head {
+  display: flex; align-items: center; gap: var(--spacing-small);
+}
+.ped-stats__title {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+.ped-stats__count {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1;
+}
+.ped-stats__count-total {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+.ped-stats__chevron {
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+.ped-stats__chevron svg { width: 16px; height: 16px; }
+.ped-stats__bar {
+  height: 6px;
+  background: var(--color-divider);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.ped-stats__bar-fill {
+  height: 100%;
+  background: var(--color-primary);
+  border-radius: 3px;
+}
+.ped-stats__breakdown {
+  display: flex;
+  gap: var(--spacing-medium);
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+.ped-stats__breakdown strong {
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+.ped-stats__alert {
+  margin-top: var(--spacing-xsmall);
+  padding: var(--spacing-small);
+  background: rgba(255, 165, 0, 0.1);
+  border: 1px solid rgba(255, 165, 0, 0.25);
+  border-radius: var(--radius-small);
+  font-size: 12px;
+  color: var(--color-text-primary);
+  display: flex; align-items: center; gap: 6px;
+}
+.ped-stats__alert svg {
+  width: 14px; height: 14px;
+  color: #b85a00;
+  flex-shrink: 0;
+}
+.ped-stats__alert strong { color: #b85a00; font-weight: 700; }
+
+/* --- 공개 설정 chip (제목 옆 — 상단 노출, 즉시 확인용) --- */
+.ped-vis-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: var(--spacing-small);
+  padding: 2px 8px;
+  background: var(--color-divider);
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-small);
+  font-size: 11px;
+  font-weight: 500;
+  vertical-align: middle;
+}
+.ped-vis-chip svg { width: 11px; height: 11px; }
+
+/* --- 기대 매출 카드 (운영자 KPI 요약. 헤더는 카드 밖 .ped-section-header) --- */
+.ped-revenue {
+  margin: 0 var(--spacing-screen-edge) var(--spacing-medium);
+  padding: var(--spacing-medium);    /* vertical 여유 */
+  background: var(--color-surface);
+  border-radius: var(--radius-card);
+  display: flex; flex-direction: column;
+  gap: var(--spacing-medium);                              /* gap 여유 */
+}
+.ped-revenue__head {
+  display: flex; align-items: baseline; gap: var(--spacing-xsmall);
+  flex-wrap: wrap;
+}
+.ped-revenue__current {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1;
+}
+.ped-revenue__max {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+.ped-revenue__breakdown {
+  display: flex;
+  gap: var(--spacing-medium);
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  flex-wrap: wrap;
+}
+.ped-revenue__breakdown strong {
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+/* 그룹별 기대 매출 — 전체 매출 카드 안 sub-section */
+.ped-revenue__groups {
+  display: flex; flex-direction: column;
+  gap: var(--spacing-medium);
+  margin-top: var(--spacing-small);
+  padding-top: var(--spacing-medium);
+  border-top: 1px solid var(--color-divider);
+}
+.ped-revenue__group {
+  display: flex; flex-direction: column;
+  gap: var(--spacing-xsmall);
+}
+.ped-revenue__group-row {
+  display: flex; align-items: baseline;
+  gap: var(--spacing-xsmall);
+}
+.ped-revenue__group-name {
+  flex: 1;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+.ped-revenue__group-amount {
+  font-size: 14px;
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+.ped-revenue__group-amount-max {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  font-weight: 400;
+}
+
+/* --- MinglitSection header (title only — trailing 없음) --- */
+.ped-section-header {
+  display: flex;
+  align-items: center;
+  /* vertical 여유: top large(섹션 사이 호흡), bottom small(헤더↔카드 거리) — was small/xsmall */
+  padding: var(--spacing-large) var(--spacing-screen-edge) var(--spacing-small);
+}
+.ped-section-header__title {
+  font-size: var(--typography-font-size-button);  /* 16px — 섹션 위계 강조 (was body 14px) */
+  font-weight: 700;
+  color: var(--color-text-primary);
+  flex: 1;
+  letter-spacing: -0.01em;
+}
+/* 섹션 헤더 trailing 진입점 — title 옆 우측. 카드 안 CTA와 별개로 섹션 단위 진입 */
+.ped-section-header__link {
+  display: inline-flex; align-items: center;
+  gap: 2px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+.ped-section-header__link svg { width: 14px; height: 14px; }
+
+/* --- Ticket list item card --- */
+.ped-ticket {
+  margin: 0 var(--spacing-screen-edge) var(--spacing-small);
+  padding: var(--spacing-medium);
+  background: var(--color-surface);
+  border-radius: var(--radius-card);
+  border: 1px solid var(--color-divider);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-medium);
+}
+.ped-ticket__body { flex: 1; min-width: 0; }
+.ped-ticket__name {
+  font-size: var(--typography-font-size-body);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-xxsmall);
+}
+.ped-ticket__sub {
+  font-size: var(--typography-font-size-caption);
+  color: var(--color-text-secondary);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xsmall);
+}
+.ped-ticket__price {
+  font-size: var(--typography-font-size-body);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+}
+
+/* --- Ticket status header (sub-row inside tickets section) --- */
+.ped-ticket-stat {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-small) var(--spacing-screen-edge);
+  color: var(--color-text-secondary);
+  gap: var(--spacing-xsmall);
+}
+.ped-ticket-stat svg { width: 14px; height: 14px; flex-shrink: 0; }
+.ped-ticket-stat__label {
+  flex: 1;
+  font-size: var(--typography-font-size-caption);
+}
+.ped-ticket-stat__count {
+  font-size: var(--typography-font-size-caption);
+  white-space: nowrap;
+}
+
+/* --- AddActionCard variant (ticket empty state w/ create button) --- */
+.ped-add {
+  margin: 0 var(--spacing-screen-edge);
+  padding: var(--spacing-medium);
+  border-radius: var(--radius-input);
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  border: 1px dashed color-mix(in srgb, var(--color-primary) 40%, transparent);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-medium);
+}
+.ped-add__icon {
+  width: 24px; height: 24px;
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+.ped-add__icon svg { width: 24px; height: 24px; }
+.ped-add__text { flex: 1; }
+.ped-add__title {
+  font-size: var(--typography-font-size-body);
+  font-weight: 700;
+  color: var(--color-primary);
+}
+.ped-add__sub {
+  font-size: var(--typography-font-size-caption);
+  color: var(--color-text-secondary);
+  margin-top: var(--spacing-xxsmall);
+}
+
+/* --- (deprecated) Application list — moved to event_application_list_page.html --- */
+.ped-app-section {
+  padding: 0 var(--spacing-medium);
+  margin-top: var(--spacing-small);
+}
+.ped-app-section__title {
+  font-size: var(--typography-font-size-app-bar-title);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  padding: var(--spacing-medium) 0 var(--spacing-small);
+}
+.ped-app-section__title--muted {
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+.ped-app-card {
+  background: var(--color-background);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-card);
+  padding: var(--spacing-sm) var(--spacing-medium);
+  margin-bottom: var(--spacing-small);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-medium);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+.ped-app-card__avatar {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-primary) 18%, transparent);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+.ped-app-card__body { flex: 1; min-width: 0; }
+.ped-app-card__name {
+  font-size: var(--typography-font-size-body);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+.ped-app-card__sub {
+  font-size: var(--typography-font-size-caption);
+  color: var(--color-text-secondary);
+}
+.ped-app-card__badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--spacing-small);
+  border-radius: var(--radius-small);
+  font-size: 11px;
+  font-weight: 700;
+  border: 1px solid;
+  background: var(--color-background);
+  flex-shrink: 0;
+}
+.ped-app-card__badge--pending {
+  color: var(--color-warning, #d97706);
+  border-color: color-mix(in srgb, var(--color-warning, #d97706) 60%, transparent);
+  background: color-mix(in srgb, var(--color-warning, #d97706) 10%, transparent);
+}
+.ped-app-card__badge--approved {
+  color: var(--color-success, #16a34a);
+  border-color: color-mix(in srgb, var(--color-success, #16a34a) 60%, transparent);
+  background: color-mix(in srgb, var(--color-success, #16a34a) 10%, transparent);
+}
+.ped-app-card__badge--paid {
+  color: var(--color-primary);
+  border-color: color-mix(in srgb, var(--color-primary) 60%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+}
+.ped-app-card__badge--rejected {
+  color: var(--color-error);
+  border-color: color-mix(in srgb, var(--color-error) 60%, transparent);
+  background: color-mix(in srgb, var(--color-error) 10%, transparent);
+}
+
+/* --- Empty / loading / error variants --- */
+.ped-spinner {
+  width: 32px; height: 32px;
+  border: 3px solid var(--color-divider);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: ped-spin 0.7s linear infinite;
+  margin: auto;
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+}
+@keyframes ped-spin { to { transform: rotate(360deg); } }
+
+.ped-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xlarge) var(--spacing-large);
+  color: var(--color-text-secondary);
+  font-size: var(--typography-font-size-body);
+  text-align: center;
+}
+
+.ped-error {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: var(--spacing-medium);
+  padding: 0 var(--spacing-large);
+  text-align: center;
+}
+.ped-error svg { width: 32px; height: 32px; color: var(--color-error); }
+.ped-error__msg {
+  font-size: var(--typography-font-size-body);
+  color: var(--color-text-primary);
+}
+
+/* --- Skeleton (data 로드 전) --- */
+.ped-skel-bar {
+  border-radius: var(--radius-small);
+  background: linear-gradient(90deg, var(--color-surface) 25%, var(--color-divider) 50%, var(--color-surface) 75%);
+  background-size: 200% 100%;
+  animation: ped-shimmer 1.2s infinite;
+}
+@keyframes ped-shimmer { to { background-position: -200% 0; } }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
+</div>
+
+<div class="page">
+
+<!-- ============================================================
+     HEADER
+     ============================================================ -->
+<header>
+  <h1>Partner Event Detail</h1>
+</header>
+
+<!-- ============================================================
+     OVERVIEW
+     ============================================================ -->
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr>
+        <th style="width: 140px;">Status</th>
+        <td><strong>✅ 디자인완료</strong> <em style="color: var(--color-text-secondary);">— 6 state · 파트너 이벤트 운영(티켓 관리 + 참가 신청 심사) 단일 진입점</em></td>
+      </tr>
+      <tr>
+        <th>App</th>
+        <td><code>app_partner</code></td>
+      </tr>
+      <tr>
+        <th>Category</th>
+        <td>event · partner ops · 운영 관리 + 신청 심사</td>
+      </tr>
+      <tr>
+        <th>Route / Surface</th>
+        <td><code>EventDetailRoute</code> · widget: <code>EventDetailPage</code> (+ <code>_EventInfoTab</code> · <code>_HeroDetailRow</code> / <code>_MetaDetailRow</code> internal widgets)</td>
+      </tr>
+      <tr>
+        <th>Path</th>
+        <td><code>/parties/:partyId/events/:eventId</code></td>
+      </tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>: <a href="/specs/party_detail_page.html"><code>PartyDetailPage</code></a> (이벤트 카드 탭 시 push)<br>
+          <strong>Children</strong>: <a href="/specs/event_edit_page.html"><code>EventEditRoute</code></a> (Hero "일정" 영역 탭 — 이벤트 정보 수정) · <a href="/specs/ticket_create_page.html"><code>TicketCreateRoute</code></a> (Add 카드 탭) · <a href="/specs/ticket_edit_page.html"><code>TicketEditRoute</code></a> (티켓 카드 탭) · <code>EventApplicationReviewDialog</code> (심사 대기 카드 탭 — 다이얼로그)
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>
+          파트너가 자신의 파티에 속한 단일 이벤트를 한 화면에서 운영하도록 한다 — 좌측 탭(운영 관리)에서는 일정 / 정원 / 상태 / 공개 설정 같은 핵심 메타를 한눈에 보고 그 아래에서 입장권을 추가하거나 수정할 수 있고, 우측 탭(참가 신청)에서는 들어온 신청을 심사 대기 / 처리 완료로 묶어 빠르게 승인 · 거절할 수 있다.
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry points</strong>: <a href="/specs/party_detail_page.html">PartyDetailPage</a>의 이벤트 카드 탭 → 이 화면 진입 (운영 관리 탭이 기본).<br>
+          <strong>Exit points</strong>: AppBar back → 파티 상세 / <strong>Hero "일정" 영역 탭 → <a href="/specs/event_edit_page.html">EventEditPage</a></strong> (이벤트 정보 수정) / Add 카드 (또는 빈 상태 카드) → <a href="/specs/ticket_create_page.html">TicketCreatePage</a> / 티켓 카드 탭 → <a href="/specs/ticket_edit_page.html">TicketEditPage</a> / 신청 카드(심사 대기) 탭 → 심사 다이얼로그 → 승인/거절 후 같은 화면 머무름 / "참가 신청" 탭 전환 → 같은 페이지 안에서 본문 교체.
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          이 화면은 user app의 <a href="/specs/event_detail_page.html">EventDetailPage</a>와 같은 이벤트를 보지만 관점이 정반대다 — user는 "이 이벤트에 참여할까?"를 결정하고, partner는 "이 이벤트가 잘 굴러가고 있나, 누구를 받을까?"를 결정한다. 그래서 partner 쪽은 이미지 캐러셀 / 환불 정책 / CTA 바 같은 영업 톤 요소가 모두 빠지고, 대신 운영용 메타 표 + 티켓 CRUD 진입점 + 신청 심사 입구의 3 블록만 남긴다.
+          파티 단위로 묶인 여러 이벤트 중 하나에 대한 "운영 데스크"라고 보면 된다.
+        </td>
+      </tr>
+      <tr>
+        <th>Frequency</th>
+        <td>운영 중인 이벤트 1건당 활성기 동안 다회 — 신청이 들어올 때마다 알림을 받고 진입해 심사한다. 신청자 많은 이벤트는 일 단위로, 한산한 이벤트는 행사 직전 1~2회로 사용량이 갈린다.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================
+     HISTORY
+     ============================================================ -->
+<section class="doc">
+  <h2>History</h2>
+  <p class="intro">이 spec의 주요 변경 이력. 최신 항목 위.</p>
+  <table class="ref">
+    <thead>
+      <tr>
+        <th style="width: 110px;">Date</th>
+        <th style="width: 80px;">Version</th>
+        <th style="width: 120px;">Author</th>
+        <th>Changes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2026-05-01</td>
+        <td>1.0</td>
+        <td>mark-yun</td>
+        <td>
+          v1.4 template으로 신규 작성. 파트너 brand color (<code>#6c3ce1</code>) viewport-scoped override. 3 state(Default · Loading · Error) → mini-table per state, additive diff. Tab 구조 폐기 후 참가 신청은 별도 라우트(<a href="/specs/event_application_list_page.html"><code>EventApplicationListRoute</code></a>)로 분리.
+          4 sub-anatomy (AppBar · Title block · Detail info card · Tickets section) + 1 visual zoom-in (Detail info card 상태별 톤). 참가 신청 도메인은 별도 라우트(<a href="/specs/event_application_list_page.html"><code>EventApplicationListRoute</code></a>)로 분리.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- Anchor nav -->
+<nav class="perspective-nav">
+  <a href="#layout"><span class="glyph">🧱</span> Layout</a>
+  <a href="#states"><span class="glyph">🎨</span> States</a>
+  <a href="#global-behavior"><span class="glyph">🔄</span> Global Behavior</a>
+  <a href="#reference"><span class="glyph">📖</span> Reference</a>
+</nav>
+
+<!-- ============================================================
+     LAYOUT
+     ============================================================ -->
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Layout</h2>
+    <span class="lede">화면 구조 — 영역, 정렬, 간격 규칙. 색·타이포 무시.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree</h2>
+    <p class="intro">
+      Scaffold = AppBar(title '이벤트 상세') + body(이벤트 데이터 비동기 로드 → 단일 스크롤 페이지). 본문은 세 섹션으로 명확히 분리된다:
+      (1) <strong>Hero 카드</strong> — 일정(D-day trail) + 상태 · 탭 → <a href="/specs/event_edit_page.html">EventEditRoute</a>.
+      (2) <strong>참가 현황 섹션</strong> — 이벤트 전체 분수(큰 22+px count) + 누적 CapacityBar(<a href="/components#MinglitCapacityBar">MinglitCapacityBar</a>) + breakdown + <em>심사 대기 ≥1일 때</em> "심사 대기 N건 처리하기 →" 링크(탭 → <a href="/specs/event_application_list_page.html">EventApplicationListRoute</a> · 그룹 필터 없음).
+      (3) <strong>입장 그룹별 현황 섹션</strong> — 입장 그룹 카드 × N(각 그룹: 이름 + 분수 + 누적 CapacityBar + breakdown + 그룹 티켓 row × N(<em>각 row에 발행률 mini CapacityBar</em>) + "이 그룹에 티켓 추가" 버튼 · 카드 자체 탭 → EventApplicationListRoute(groupId)).
+      그 아래 공개 설정 footer 마이크로 텍스트. TabBar / 하단 네비게이션 / CTA 바 없음 — leaf route. 참가 신청 도메인은 별도 라우트로 분리되며, 전체 진입(참가 현황 카드)과 그룹별 진입(그룹 카드) 모두 같은 EventApplicationListRoute로 라우팅 — 그룹별 진입 시만 groupId 파라미터로 필터.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint">
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <!-- AppBar -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:0;left:0;right:0;height:56px;">
+          <span class="blueprint__region-label">① AppBar — back + '이벤트 상세' (left-aligned, TabBar 없음)</span>
+        </div>
+        <!-- Title + visibility chip -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:72px;left:16px;right:16px;height:32px;">
+          <span class="blueprint__region-label">② Event title + 공개 설정 chip (title 우측 inline)</span>
+        </div>
+        <!-- Detail info card -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:120px;left:16px;right:16px;height:110px;">
+          <span class="blueprint__region-label">③ Hero 카드<br>Hero 일정(D-day trail 배지) + 상태 supporting · 탭 → EventEditRoute</span>
+        </div>
+        <!-- Section header: 참가 현황 -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:246px;left:16px;right:16px;height:28px;">
+          <span class="blueprint__region-label" style="font-size:9px;">④ '참가 현황' 섹션 헤더 (전체)</span>
+        </div>
+        <!-- Summary card -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:282px;left:16px;right:16px;height:130px;">
+          <span class="blueprint__region-label" style="font-size:9px;">⑤ 참가 현황 카드 (전체)<br>큰 분수 + 누적 CapacityBar + breakdown + <em>심사 대기 ≥1일 때만</em> 심사 링크<br>탭 → EventApplicationListRoute (no group filter)</span>
+        </div>
+        <!-- Section header: 기대 매출 (전체 KPI — 그룹 디테일 위) -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:422px;left:16px;right:16px;height:28px;">
+          <span class="blueprint__region-label" style="font-size:9px;">⑥ '기대 매출' 섹션 헤더</span>
+        </div>
+        <!-- Revenue summary card -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:458px;left:16px;right:16px;height:100px;">
+          <span class="blueprint__region-label" style="font-size:9px;">⑦ 기대 매출 카드 — 현재/잠재(심사 승인 시)/최대 + continuous CapacityBar</span>
+        </div>
+        <!-- Section header: 입장 그룹별 현황 -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:570px;left:16px;right:16px;height:28px;">
+          <span class="blueprint__region-label" style="font-size:9px;">⑧ '입장 그룹별 현황' 섹션 헤더</span>
+        </div>
+        <!-- Entry group cards -->
+        <div class="blueprint__region blueprint__region--shaded" style="bottom:0;left:16px;right:16px;height:120px;">
+          <span class="blueprint__region-label" style="font-size:9px;">⑨ 입장 그룹 리스트 (단일 카드 + 그룹 사이 divider)<br>각 그룹: 이름 + 분수 + CapacityBar + breakdown + 티켓 row(판매+대기/발행 mini CapacityBar) + 추가 버튼<br>그룹 영역 탭 → EventApplicationListRoute(groupId)</span>
+        </div>
+
+        <div class="blueprint__align-marker" style="top:8px;right:8px;">screen-edge pad 16</div>
+      </div>
+
+      <div class="layout-tree"><b>Scaffold</b>
+├─ <b>appBar</b>: AppBar                                  ← ①
+│  ├─ leading: BackButton (auto)
+│  └─ title: Text('이벤트 상세') · centerTitle: false (TabBar 없음 — 단일 스크롤)
+└─ <b>body</b>: <code>MinglitAsyncValueWidget&lt;Event&gt;</code>
+   ├─ loading: <code>MinglitCircularProgressIndicator</code>
+   ├─ error:   Centered text ('이벤트 로드 실패')
+   └─ data: <b>SingleChildScrollView</b>                  ← ②③④⑤⑥
+      └─ <code>MinglitContentLayout</code>(sections: [
+         ├─ <b>_TitleRow</b>(Row · padding small top + h-screen-edge) ← ②a title row
+         │  └─ Text(event.title) <i>· 20px w600 · color-text-primary</i>
+         │
+         ├─ <b>_MetaChipLine</b>(Row · spacing-xsmall · padding small top + h-screen-edge · title 아래)  ← ②b chips
+         │  · <b>InkWell</b>(onTap: showToast(visibilityDescription))
+         │    └─ <b>MinglitChip</b>(label: '공개'/'비공개', tone: 공개→success / 비공개→outline,
+         │           leadingIcon: 공개→globe / 비공개→lock,
+         │           interactive: true)            /* 탭 시 설명 토스트 */
+         │  · <b>MinglitChip</b>(label: status, tone: scheduled→accent · cancelled→error · completed→outline)
+         │  · <b>MinglitChip</b>(label: 'D-N', tone: warning)             /* 시간 임박 — 주황 */
+         │
+         ├─ <b>_EditRow</b>(Row justify-end · padding small top + h-screen-edge)  ← ②c edit row
+         │  └─ <b>InkWell</b>(onTap: push <a href="/specs/event_edit_page.html">EventEditRoute</a>)
+         │     └─ Row('정보 수정 ›' · 13px w600 primary)                  /* Hero 카드 바로 위, 우측 */
+         │
+         ├─ Padding(<i>screenEdge h</i>) → Container(radius-card · borderless)  ← ③
+         │  └─ <b>_InfoBlocks</b>(Column · spacing-medium) [                /* stacked blocks */
+         │     ├─ <b>_InfoBlock</b>('일정')
+         │     │  ├─ caption 12px w500 secondary ('일정')
+         │     │  ├─ primary 16px w600 primary ('YYYY.MM.DD (E)')
+         │     │  └─ secondary 13px secondary ('오후 H:MM ~ H:MM')
+         │     └─ <b>_InfoBlock</b>('장소')
+         │        ├─ caption 12px w500 secondary ('장소')
+         │        ├─ primary 16px w600 primary (event.location.name)
+         │        ├─ secondary 13px secondary (event.location.address)
+         │        ├─ <b>_KakaoMapThumb</b>(height 100 · radius-input)      /* SDK 임베드 */
+         │        │  · static 또는 light interactive map · 핀 = event.location.geoPoint
+         │        │  · onTap → 외부 맵 앱 deep-link (kakaomap://place?id= or maps:?q=)
+         │        │  · spec mock에서는 grid + 보라 핀으로 placeholder 표현
+         │        └─ <b>_Directions</b>('오시는길')                          /* 자유 텍스트 */
+         │           ├─ label 11px w600 secondary ('오시는길')
+         │           └─ text 13px primary · multiline (도보·입구·주차·랜드마크)
+         │ ]
+         ├─ <code>MinglitSection</code>(title: '참가 현황')                  ← ④
+         │  └─ Padding(<i>screenEdge h</i>) → <b>EventApplicationStatsCard</b>(event)  ← ⑤
+         │     ├─ Row(spacing-large gap) [                                /* 메트릭 한 줄 통합 */
+         │     │    Metric(count event.confirmedCount '24px w700' + label '/ N 확정' '13px w500 secondary'),
+         │     │    Metric(count event.pendingCount + label '심사대기' · count에 pulse 강조 ≥1),
+         │     │    Metric(count event.refundedCount + label '환불완료' · 정적 — 액션 X)
+         │     │ ]  /* refundedCount = refund_status IN ('completed') */
+         │     ├─ <b>MinglitCapacityBar</b>(
+         │     │     total: event.totalCapacity,
+         │     │     filled: event.confirmedCount,
+         │     │     pending: event.pendingCount)
+         │     └─ <b>_Actions</b>(Column · spacing-small · margin-top small) [
+         │          if event.pendingCount &gt; 0:
+         │            <b>InkWell</b>(onTap: push EventApplicationListRoute(anchor: pending))
+         │            └─ <b>_ReviewCtaButton</b>('심사하기' · primary fill · h44 · radius-button)
+         │          /* 항상 노출 — 환불 요청 등 유저별 비정형 액션 진입 */
+         │          <b>InkWell</b>(onTap: push EventApplicationListRoute /* no filter */)
+         │          └─ <b>_ApplicantsCtaButton</b>('참가자 보기' · outline primary · h44 · radius-button)
+         │        ]
+         │
+         ├─ <code>MinglitSection</code>(title: '기대 매출')                  ← ⑥
+         │  └─ Padding(<i>screenEdge h</i>) → <b>_RevenueSummaryCard</b>(event)
+         │     ├─ <em>전체 매출</em>
+         │     │  ├─ Row(event.currentRevenue 22px w700 + '/ 최대 event.maxRevenue' 13px secondary)
+         │     │  ├─ <b>MinglitCapacityBar</b>(continuous,
+         │     │  │     total: maxRevenue, filled: currentRevenue, pending: pendingRevenue)
+         │     │  └─ Row(현재 KKK원 · 심사 승인 시 +KKK원)
+         │     └─ <em>그룹별 매출</em> (Divider · top-border · padding-top medium)
+         │        for each entryGroup in event.entryGroups:
+         │          Column(spacing-xsmall) [
+         │            Row(group.name 13px secondary, group.currentRevenue 14px w600 primary, '/ 최대 group.maxRevenue' 12px secondary)
+         │            <b>MinglitCapacityBar</b>(continuous · height 6,
+         │              total: group.maxRevenue, filled: group.currentRevenue, pending: group.pendingRevenue)
+         │          ]
+         │
+         └─ <code>MinglitSection</code>(title: '입장 그룹별 현황')             ← ⑦
+            └─ Padding(<i>screenEdge h</i>) → <b>EntryGroupListContainer</b>(border + radius)
+               for each entryGroup in event.entryGroups:                  ← ⑧
+                 if not first: Divider(full-width · color-divider)
+                 <b>InkWell</b>(onTap: push EventApplicationListRoute(groupId: g.id))
+                 └─ Padding(spacing-large v · spacing-medium h) → <b>EntryGroupSection</b>(group)
+                    ├─ Row(group.name + Row(count + '/ N 확정') + chevron)
+                    ├─ <b>MinglitCapacityBar</b>(
+                    │     total: group.capacity,
+                    │     filled: group.confirmedCount,
+                    │     pending: group.pendingCount)
+                    ├─ Row(확정 N · 대기 M · 환불 R)  /* 0인 항목은 노이즈, 표시 X */
+                    │  <em>(group-level alert 폐기 — 참가 현황 섹션이 대체)</em>
+                    ├─ <b>_NestContainer</b>(passthrough — 보더 각 티켓이 보유)
+                    │  └─ Column(spacing-small) [
+                    │       for each ticket in group.tickets:
+                    │         <b>InkWell</b>(onTap: push <a href="/specs/ticket_edit_page.html">TicketEditRoute</a>(ticketId))
+                    │         └─ Container(
+                    │              border-left: 3px neutral-gray @ 15%,  /* 티켓별 bar — primary 톤과 의미 분리 */
+                    │              padding: small v · medium left,        /* 16px indent */
+                    │              child: Column(spacing-small) [
+                    │                Row(
+                    │                  Column[ticket.name <i>(14px w600)</i>
+                    │                         + '판매 N · 대기 M / 발행 K장' <i>(12px secondary)</i>],
+                    │                  ticket.price <i>(14px w600)</i>,
+                    │                  chevron_right <i>(14 secondary)</i>      /* 탭 affordance */
+                    │                )
+                    │                <b>MinglitCapacityBar</b>(    /* mini · height 4 — 판매+대기/발행 */
+                    │                  total: ticket.issuedQuantity,
+                    │                  filled: ticket.soldQuantity,
+                    │                  pending: ticket.pendingQuantity)
+                    │              ])
+                    │         <em>탭 시 가격 / 발행수 수정 가능. 티켓별 분리된 좌측 bar로 single ticket도 명확한 티켓 단위 느낌</em>
+                    │     ]
+                    └─ <b>_GroupAddTicketButton</b>(group)              <em>nest 밖 — full-width</em>
+                       · dashed primary border · h44 · radius-button · '+ 이 그룹에 티켓 추가'
+                       · indent 없음 (그룹 본체와 같은 폭 — 그룹 자체에 속한 액션이라 들여쓰기 안 함)
+                       · onTap → push <a href="/specs/ticket_create_page.html">TicketCreateRoute</a>(groupId: g.id)
+            ]
+      ])
+※ 공개 설정 chip은 이벤트 title 우측에 inline (상단 즉시 확인) — footer 폐기.
+
+<em>티켓 정원 정책</em>: 티켓 발행 총수 ≥ 입장 그룹 정원. UI는 발행수가 정원 미만이면 안내(보강 권고). "남은 정원만큼 더 발행" 같은 cap 메시지 사용 X — 추가 발행은 항상 가능.</div>
+    </div>
+  </section>
+
+  <section class="doc">
+    <h2>Spacing &amp; alignment rules</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>①</td><td>AppBar</td><td>height 56 · row crossAxis center · 좌측 정렬 타이틀</td><td>back left: <code>spacing-xsmall (4)</code> · title↔back gap: 0 (BackButton width 흡수)</td></tr>
+                <tr><td>②</td><td>Event title</td><td>좌측 정렬 · multi-line</td><td>h-padding: <code>spacing-screen-edge (16)</code> · 위 <code>spacing-medium (16)</code></td></tr>
+        <tr><td>④</td><td>Detail info card</td><td>풀폭 with screen-edge h-margin · column</td><td>h-margin: <code>spacing-screen-edge (16)</code> · padding: <code>spacing-medium (16)</code> all · radius: <code>radius-card (16)</code> · row 사이 divider top/bottom <code>spacing-small (8)</code></td></tr>
+        <tr><td>⑤</td><td>Tickets section</td><td>풀폭 · column stretch</td><td>section header padding: <code>spacing-medium</code> top · 카드 사이 <code>spacing-small (8)</code> · 카드 h-margin: <code>spacing-screen-edge</code></td></tr>
+              </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Event title block anatomy (②)</h2>
+    <p class="intro">
+      운영 관리 탭의 첫 줄 — 이벤트 제목이 단독 블록으로 떠 있다. 화면 좌우 가장자리에서 16px 떨어져 있고, 한 줄에 안 들어가면 자연스럽게 줄바꿈되며 글자 크기가 줄지 않는다.
+      파트너 보라색 + 굵은 헤드라인 톤으로 화면에서 가장 시각적 무게가 큰 요소 — 사용자가 "지금 운영 중인 이벤트가 무엇인지" 즉시 인지하게 하는 앵커.
+      이벤트에 제목이 비어있으면 이 블록 자체가 사라지고 그 아래 카드가 위로 붙는다.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="width: 343px; height: 80px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:16px;left:16px;right:16px;height:32px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉠ Title — headlineSmall · w700 · color-primary</span>
+        </div>
+        <div class="blueprint__align-marker" style="top:8px;right:8px;">h-padding: spacing-screen-edge (16)</div>
+        <div class="blueprint__align-marker" style="bottom:8px;left:8px;">block bottom → 카드 위 spacing-medium (16)</div>
+      </div>
+
+      <div class="layout-tree"><b>Padding</b>(<i>screenEdge h</i> · top: 0)
+└─ <b>Text</b>(event.title)                              ← ㉠
+   · style: <i>headlineSmall</i>
+   · weight: <i>FontWeight.bold</i>
+   · color: <i>colorScheme.primary (partner #6c3ce1)</i>
+   · 줄바꿈 가능 (maxLines 미지정)
+
+<em>표시 조건:</em>
+· event.title이 비어있지 않으면 노출
+· 비어있으면 블록 통째로 사라지고 그 아래 카드가 위로 붙음 (Padding 자체가 sections 배열에 포함되지 않음)
+
+<em>※ user app 쪽 EventDetailPage의 hero 이미지 위에 떠 있는 타이틀과 달리,
+   partner는 운영 페이지라 시각 무게를 본문 첫 줄에 둔다 — 이미지 캐러셀 없음.</em></div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing / tokens</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>㉠</td><td>Event title</td><td>좌측 정렬 · multi-line</td><td>typography <code>headlineSmall</code> bold · color <code>color-primary (partner)</code> · h-pad <code>spacing-screen-edge (16)</code> · 하단 <code>spacing-medium</code> (다음 카드 사이)</td></tr>
+        <tr><td>—</td><td>제목 없는 케이스</td><td>—</td><td>블록 미노출 — 카드가 위로 collapse</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Hero 영역 anatomy (②③)</h2>
+    <p class="intro">
+      페이지 최상단의 Hero 영역은 <strong>4단 구조</strong>로 분리:
+      <strong>(1) Title row</strong> — 이벤트 title(20px w600 · 일반 톤) 단독. AppBar 바로 아래 페이지 정체성을 명확히.
+      <strong>(2) Meta chip line</strong> — title 바로 아래에 <em>stable→dynamic 순서</em>로 <strong>공개 설정 chip</strong>(공개 → 🌐 globe icon + success 초록 / 비공개 → 🔒 lock icon + outline 회색 · set-once · <em>탭 시 설명 토스트</em>) → 상태 chip(모집 → success 초록 / 취소 → error 빨강 / 완료 → success 초록) → D-day chip(warning 주황 — 시간 임박 시그널). 도메인별 색 + 아이콘 차이로 메타 종류가 한눈에 구분. 공개 설정 chip은 인터랙티브 — 탭하면 토스트로 의미 안내(공개 → "외부에 공개되어 누구나 볼 수 있는 이벤트입니다." / 비공개 → "초대받은 사람만 볼 수 있는 비공개 이벤트입니다."). 다른 chip(상태·D-day)은 정적 노출만.
+      운영자가 화면 들어와 0.3초 안에 "공개됐어 / 어떤 상태야 / 며칠 남았어"를 확인.
+      <strong>(3) 정보 수정 row</strong> — Hero 카드 바로 위, 우측 정렬 "정보 수정 ›" 링크(13px w600 primary). 카드 밖 별도 row에 두어 편집 동작이 카드 콘텐츠와 시각적으로 분리 — 운영자가 정보를 읽다가 "수정해야지" 의도가 생겼을 때 손이 닿기 쉬운 위치. 탭 시 <a href="/specs/event_edit_page.html"><code>EventEditPage</code></a>로 push.
+      <strong>(4) Hero 카드 — stacked info blocks</strong>: '일정' / '장소' 각각 caption(12px w500 secondary · 카테고리) → primary(16px w600 primary · 값) → secondary(13px secondary · 보조). value 폰트는 title(20px)보다 작아 페이지 위계 유지 — Hero 카드의 무게는 stacked 구조와 caption-primary-secondary 위계에서 나옴.
+      <strong>장소 block</strong>은 추가로 <em>Kakao Map thumb</em>(100px · 핀 placement, 탭 시 외부 맵 앱 deep-link로 길 안내)과 <em>오시는길 sub-section</em>(label '오시는길' + 자유 텍스트 — 도보 안내 / 입구 / 주차 / 랜드마크 등 운영자가 작성)을 포함. 운영자뿐 아니라 외부 공유 시 참가자에게도 가치 있는 정보.
+      카드 자체는 borderless(<code>MinglitContentCard</code>의 <code>bordered: false</code> variant).
+      이전 Hero(아이콘 + 단일 일정 텍스트 + 상태 row + divider) → 현재 구조 전환 이유: (a) 정렬 — 아이콘과 multi-line 텍스트의 baseline 충돌 해소, (b) 정보 — 장소 추가 + 메타는 chip line으로 페이지 최상단 강조, (c) 액션 affordance — 카드 전체 탭보다 명시적 텍스트 링크가 의도 명료.
+      호스트 정보는 운영자 본인이 호스트인 경우가 대부분이라 본 영역에서는 생략(필요 시 EventEditPage에서 확인).
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 260px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <!-- Card outer -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:8px;left:16px;right:16px;bottom:8px;border-style:solid;border-color:rgba(var(--spec-blueprint-rgb),0.6);">
+          <span class="blueprint__region-label" style="font-size:9px;top:2px;">㉠ Card — radius 16 · border 1px · padding 16</span>
+        </div>
+
+        <!-- Hero row (일정) -->
+        <div class="blueprint__region" style="top:24px;left:32px;width:22px;height:22px;background:rgba(var(--spec-blueprint-rgb),0.4);">
+          <span class="blueprint__region-label" style="font-size:8px;">📅</span>
+        </div>
+        <div class="blueprint__region" style="top:24px;left:64px;right:32px;height:14px;border-style:dashed;border-color:rgba(var(--spec-blueprint-rgb),0.3);">
+          <span class="blueprint__region-label" style="font-size:8px;">㉡ caption '일정' (11px · secondary)</span>
+        </div>
+        <div class="blueprint__region" style="top:42px;left:64px;right:32px;height:22px;border-style:dashed;border-color:rgba(var(--spec-blueprint-rgb),0.5);">
+          <span class="blueprint__region-label" style="font-size:8px;">㉣ primary '2026-05-15 (금)' (18px · w700 · primary)</span>
+        </div>
+        <div class="blueprint__region" style="top:68px;left:64px;right:32px;height:18px;border-style:dashed;border-color:rgba(var(--spec-blueprint-rgb),0.3);">
+          <span class="blueprint__region-label" style="font-size:8px;">㉤ secondary '오후 7:30 ~ 오후 9:30' (14px · secondary)</span>
+        </div>
+        <!-- Divider after hero -->
+        <div class="blueprint__region" style="top:100px;left:32px;right:32px;height:1px;background:var(--color-divider);"></div>
+
+        <!-- Supporting row 1: 참가 현황 -->
+        <div class="blueprint__align-marker" style="top:116px;left:32px;font-size:8px;">㉦ [👥] 참가 현황 (12px label) / 확정 8명 ... (14px value · primary)</div>
+        <div class="blueprint__region" style="top:148px;left:32px;right:32px;height:1px;background:var(--color-divider);"></div>
+        <!-- Supporting row 2: 상태 -->
+        <div class="blueprint__align-marker" style="top:160px;left:32px;font-size:8px;">㉧ [ℹ️] 상태 / 모집 중 (color-primary if scheduled · w700)</div>
+        <div class="blueprint__region" style="top:192px;left:32px;right:32px;height:1px;background:var(--color-divider);"></div>
+        <!-- Supporting row 3: 공개 설정 -->
+        <div class="blueprint__align-marker" style="top:204px;left:32px;font-size:8px;">㉨ [👁] 공개 설정 / 공개</div>
+
+        <div class="blueprint__align-marker" style="top:8px;right:8px;">h-margin: spacing-screen-edge (16)</div>
+      </div>
+
+      <div class="layout-tree"><b>Padding</b>(<i>screenEdge h</i>)
+└─ <b>Container</b>(                                    ← ㉠
+   │   color: <i>color-surface</i>,
+   │   borderRadius: <i>radius-card (16)</i>,
+   │   border: 1px <i>color-divider (outlineVariant)</i>,
+   │   padding: <i>spacing-medium (16)</i> all)
+   └─ <b>Column</b>
+      ├─ <b>InkWell</b>(onTap: push <a href="/specs/event_edit_page.html">EventEditRoute</a>)
+      │  └─ <b>_HeroDetailRow</b>(calendar_today, '일정',   ← Hero row (탭 가능)
+      │       primary: 'yyyy년 MM월 dd일 (E)',
+      │       secondary: 'a h:mm ~ a h:mm')
+      ├─ Divider(spacing-small v-padding 양쪽)
+      ├─ <b>_MetaDetailRow</b>(people_outline, '참가 현황',  ← Supporting row
+      │     value: '확정 N명 / 신청 M명 (대기 P)')
+      ├─ Divider
+      ├─ <b>_MetaDetailRow</b>(info_outline, '상태',         ← Supporting row
+      │     value: status label,
+      │     valueColor: <i>scheduled→primary · cancelled→error · completed→outline</i>)
+      ├─ Divider
+      └─ <b>_MetaDetailRow</b>(visibility, '공개 설정',      ← Supporting row
+            value: '공개' / '비공개' / '파티 설정 따라가기')
+
+<em>Hero row (_HeroDetailRow) 내부 구조:</em>
+└─ Row(crossAxis: start, gap: spacing-small)
+   ├─ <b>Icon</b>(medium ≈22 · color-primary)           ← ㉡ left
+   └─ Expanded Column(gap: 2px)
+      ├─ <b>Text</b>(caption '일정')                     ← ㉡ caption
+      │  · 11px · w500 · color-text-secondary · letterSpacing 0.02em
+      ├─ <b>Text</b>(primary value)                     ← ㉣ primary
+      │  · 18px · w700 · color-text-primary · maxLines 2 · ellipsis
+      └─ <b>Text</b>(secondary value)                   ← ㉤ secondary
+         · 14px · color-text-secondary · maxLines 2 · ellipsis
+
+<em>Supporting row (_MetaDetailRow) 내부 구조:</em>
+└─ Row(crossAxis: start, gap: spacing-small, padding: 2px v)
+   ├─ <b>Icon</b>(small ≈18 · color-text-secondary)     ← ㉡ left
+   └─ Expanded Column(gap: 1px)
+      ├─ <b>Text</b>(label)                             ← ㉦㉧㉨ label
+      │  · 12px · w500 · color-text-secondary · maxLines 2 · ellipsis
+      └─ <b>Text</b>(value)                             ← ㉦㉧㉨ value
+         · 14px · w600 · color-text-primary (기본)
+         · 상태 행만 valueColor 적용 (primary/error/outline) + w700
+         · maxLines 2 · ellipsis</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 180px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing / tokens</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>㉠</td><td>Card 외곽</td><td>풀폭 with screen-edge h-margin</td><td>radius <code>radius-card (16)</code> · padding <code>spacing-medium (16)</code> all · border 1px <code>color-divider</code> · bg <code>color-surface</code></td></tr>
+        <tr><td>㉡</td><td>Icon 영역 (모든 행)</td><td>row leading · 좌측 정렬 · 행 시작</td><td>Hero 행: <code>iconSize-medium (≈22)</code> · color <code>color-primary</code> · margin-top 2 / Supporting 행: <code>iconSize-small (≈18)</code> · color <code>color-text-secondary</code> · margin-top 0 · gap <code>spacing-small (8)</code></td></tr>
+        <tr><td>㉣</td><td>Hero primary (날짜)</td><td>좌측 정렬 · icon 우측</td><td>typography 18px <code>w700</code> · color <code>color-text-primary</code> · line-height 1.3 · maxLines 2 · ellipsis</td></tr>
+        <tr><td>㉤</td><td>Hero secondary (시간)</td><td>좌측 정렬 · primary 아래</td><td>typography 14px · color <code>color-text-secondary</code> · line-height 1.35 · maxLines 2 · ellipsis · 위 gap 2px</td></tr>
+        <tr><td>—</td><td>Hero caption ('일정')</td><td>좌측 정렬 · primary 위</td><td>typography 11px <code>w500</code> · color <code>color-text-secondary</code> · letterSpacing 0.02em · 아래 gap 2px</td></tr>
+        <tr><td>㉦㉧㉨</td><td>Supporting label</td><td>좌측 정렬 · 행 위쪽</td><td>typography 12px <code>w500</code> · color <code>color-text-secondary</code> · 아래 gap 1px · maxLines 2 · ellipsis</td></tr>
+        <tr><td>㉦㉧㉨</td><td>Supporting value</td><td>좌측 정렬 · label 아래</td><td>typography 14px <code>w600</code> · 기본 <code>color-text-primary</code> · 상태 행만 <code>primary / error / outline</code> 중 하나 + <code>w700</code> · maxLines 2 · ellipsis</td></tr>
+        <tr><td>—</td><td>Divider (행 사이)</td><td>풀폭 · hero ↔ supporting / supporting ↔ supporting</td><td>height 1px <code>color-divider</code> · 위/아래 margin <code>spacing-small (8)</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Entry group cards anatomy (⑤)</h2>
+    <p class="intro">
+      섹션 헤더("참가 현황 / 입장권") 아래에 이어 붙는 <strong>입장 그룹별 카드 stack</strong>. 한 이벤트가 여러 입장 그룹(예: 일반 그룹 / VIP 그룹)을 가질 수 있으며, 각 그룹마다 카드 1개가 만들어져 그룹의 참가 현황 + 티켓 + 추가 버튼이 한 묶음으로 묶인다.
+      카드 안 구조는 위에서 아래로: 그룹 이름 + 분수(확정/정원) + chevron / <strong>누적 진행 바</strong>(확정 = 강한 primary, 대기 = 옅은 primary @ 30%) / breakdown(확정 N · 대기 M · 거절 P) / 심사 대기 alert (있을 때만) / divider / 그룹 티켓 row × N(이름 + 발행수 + 가격) / "+ 이 그룹에 티켓 추가" 버튼(dashed primary border).
+      <strong>카드 자체 탭 → <a href="/specs/event_application_list_page.html"><code>EventApplicationListRoute</code></a>(groupId)</strong> — 해당 그룹으로 필터된 신청 리스트로 이동. 티켓 row 탭 → <a href="/specs/ticket_edit_page.html"><code>TicketEditRoute</code></a>(ticketId), 추가 버튼 탭 → <a href="/specs/ticket_create_page.html"><code>TicketCreateRoute</code></a>(groupId 사전 선택).
+      <strong>티켓 정원 정책</strong>: 티켓 발행 총수 ≥ 그룹 정원이어야 함 (티켓이 정원보다 적으면 안내). "남은 정원만큼" 같은 cap 메시지 사용 X — 추가 발행은 항상 가능하며 운영자가 자유로 늘릴 수 있다.
+      입장 그룹이 0개면 본문 자리에 빈 상태 카드("입장 그룹을 먼저 만들어주세요" + 파티 상세 CTA), 그룹은 있는데 티켓이 0개면 카드 안 티켓 리스트 자리에 작은 안내 + 추가 버튼만.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 280px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <!-- Section header (title only) -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:16px;left:16px;right:16px;height:24px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉠ Section title — '입장권 관리' (trailing 없음)</span>
+        </div>
+
+        <!-- Status header -->
+        <div class="blueprint__region" style="top:56px;left:16px;right:16px;height:24px;border-style:dashed;border-color:rgba(var(--spec-blueprint-rgb),0.3);">
+          <span class="blueprint__region-label" style="font-size:9px;">㉢ TicketStatusHeader — 발행 N / 정원 M</span>
+        </div>
+
+        <!-- Ticket card 1 -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:88px;left:16px;right:16px;height:60px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉣ TicketListItem #1</span>
+        </div>
+        <!-- Ticket card 2 -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:156px;left:16px;right:16px;height:60px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉤ TicketListItem #2</span>
+        </div>
+        <!-- AddActionCard (trailing) -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:224px;left:16px;right:16px;height:48px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉥ AddActionCard — '+ 추가'</span>
+        </div>
+
+        <div class="blueprint__align-marker" style="top:8px;right:8px;">h-margin: 16</div>
+      </div>
+
+      <div class="layout-tree"><code>MinglitSection</code>(title: '입장권 관리',
+   padding: EdgeInsets.zero,
+   child: ...)
+├─ <em>Section header row</em>                          ← ㉠
+│  └─ Title: '입장권 관리' <i>· bodyMedium · w700</i> (trailing 없음 — Add 카드가 단일 진입점)
+│
+└─ <code>MinglitAsyncValueWidget</code>(ticketsAsync)
+   ├─ loading: small spinner
+   ├─ error: 작은 텍스트 ('티켓 로드 실패')
+   └─ data → <b>TicketListView</b>
+      ├─ <em>case A — 빈 상태</em>
+      │  └─ <code>AddActionCard</code> (large)         ← 빈 상태 단독
+      │     · 보라 dashed background · '새 티켓 만들기'
+      │     · onTap → TicketCreateRoute
+      │
+      └─ <em>case B — 티켓 있음</em>
+         ├─ <b>TicketStatusHeader</b>                  ← ㉢
+         │  · ℹ️ '발행 N / 정원 M' (labelMedium · text-secondary)
+         │  · h-padding xxsmall
+         │
+         └─ ListView.separated
+            ├─ <b>TicketListItem</b>(ticket) × N       ← ㉣㉤
+            │  · Card · radius-card · border outlineVariant
+            │  · 좌측: 티켓 이름 + 발행/정원 라벨
+            │  · 우측: 가격
+            │  · onTap → push <a href="/specs/ticket_edit_page.html">TicketEditRoute</a>(ticketId)
+            │
+            └─ <code>AddActionCard</code> (small + 아이콘) ← ㉥
+               · trailing 자리에 늘 한 칸 더 붙음 — 새 티켓 추가의 단일 진입점
+               · onTap → TicketCreateRoute</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing / tokens</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>㉠</td><td>Section title</td><td>좌측 정렬 · 풀폭 (trailing 없음)</td><td>typography <code>bodyMedium</code> w700 · color <code>color-text-primary</code> · h-pad <code>spacing-screen-edge</code></td></tr>
+        <tr><td>㉢</td><td>TicketStatusHeader</td><td>row · icon + label + count(우측)</td><td>typography <code>labelMedium</code>(label) / <code>bodySmall</code>(count) · color <code>color-text-secondary</code> · v-pad <code>spacing-small</code></td></tr>
+        <tr><td>㉣㉤</td><td>TicketListItem</td><td>풀폭 카드 · row 안</td><td>radius <code>radius-card</code> · border outlineVariant · padding <code>spacing-medium</code> · 카드 사이 <code>spacing-small (8)</code></td></tr>
+        <tr><td>㉥</td><td>AddActionCard (trailing)</td><td>풀폭 · 항상 리스트 끝에</td><td>radius <code>radius-input</code> · 보라 dashed border · padding <code>spacing-medium</code> · top margin <code>spacing-xxsmall</code></td></tr>
+        <tr><td>—</td><td>빈 상태 (case A)</td><td>풀폭 단일 카드</td><td>같은 AddActionCard 컴포넌트, 라벨이 '새 티켓 만들기'로 큰 톤</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+</div>
+
+<!-- ============================================================
+     STATES
+     ============================================================ -->
+<div class="perspective" id="states">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>States</h2>
+    <span class="lede">
+      3 state (Default · Loading · Error). Default = baseline (데이터 로드 완료 · 티켓 ≥ 1개 · 신청 진행 중).
+      각 state는 mini-table 6-row (조건/사용자액션/에지케이스/컴포넌트/토큰/노트). 나머지 state는 additive diff (<code>+</code> · <code>−</code> · <code>↔ X → Y</code> · <code>동일</code> · <code>—</code>).
+    </span>
+  </div>
+
+  <section class="doc">
+    <h2>State summary</h2>
+    <p class="intro">한눈에 6 state 비교. 자세한 사양은 아래 각 mini-table.</p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 200px;">State</th>
+          <th style="width: 110px;">Tag</th>
+          <th style="width: 240px;">조건 (요약)</th>
+          <th>Key visual differentiator</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="is-baseline-tint"><td><strong>Default · 모집</strong> 🎯</td><td>primary</td><td>이벤트 데이터 로드 · 상태 'scheduled' · 입장 그룹 ≥ 1 · 티켓 ≥ 1 · 신청 ≥ 1</td><td>제목 + chip(공개·모집·D-N) + Hero 일정/장소 + 참가 현황(심사하기·참가자 보기) + 기대 매출(전체+그룹별) + 입장 그룹별 카드 N개</td></tr>
+        <tr><td><strong>이벤트 취소됨</strong></td><td>cancelled</td><td>상태 'cancelled' (운영자 또는 시스템)</td><td>chip 모집 → 취소(error 빨강) + 정보 수정 / 심사하기 / 티켓 추가 / 티켓 row 탭 모두 숨김·비활성 · Hero ⚠️ 안내 · 매출 카드 라벨 '환불 완료' · 심사대기 metric은 운영자 모니터링용 유지</td></tr>
+        <tr><td><strong>이벤트 완료됨</strong></td><td>completed</td><td>상태 'completed' (cron auto-complete: end_time 도달)</td><td>chip 'outline 회색' + D+N · 정보 수정 / 심사하기 / 티켓 추가 / 티켓 row 탭 모두 숨김·비활성 · 매출 카드 라벨 '달성 매출' · 심사대기 metric 숨김 · '확정' → '참석' 라벨 전환</td></tr>
+        <tr><td><strong>신청 0건</strong></td><td>empty-applications</td><td>입장 그룹 ≥ 1 · 신청 데이터 0건</td><td>참가 현황 분수 0/N · capbar 빈 · 심사대기 metric 숨김 · 환불완료 metric 숨김 · 심사하기 CTA 숨김 · 참가자 보기 outline만</td></tr>
+        <tr><td><strong>Loading</strong></td><td>async</td><td>이벤트 데이터 로드 중</td><td>풀-스크린 spinner (AppBar는 살아있음)</td></tr>
+        <tr><td><strong>Error</strong></td><td>network/server</td><td>이벤트 데이터 로드 실패</td><td>가운데 에러 안내 텍스트 + retry (본문 미렌더)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>States gallery</h2>
+    <p class="intro">
+      각 state mini-table — mockup(rowspan=6) + 6 aspect rows. <strong>Default · 모집이 baseline</strong>; 나머지 5 states는 additive diff prefix(↔ Default + ...) 사용.
+    </p>
+
+    <div class="visual-gallery" style="background: var(--color-surface); padding: 16px; border-radius: var(--radius-card); display: flex; flex-direction: column; gap: 16px;">
+
+      <!-- ===================================================
+           STATE 1 — Default (운영 관리 탭, 티켓 있음)
+           =================================================== -->
+      <table class="ref state-mini is-baseline-tint">
+        <thead>
+          <tr><th colspan="3"><strong>Default · 운영 관리</strong> 🎯 <span class="tag">production</span></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock"><div class="viewport">
+              <!-- AppBar (TabBar 폐기 — 단일 스크롤) -->
+              <div class="ped-appbar">
+                <div class="ped-appbar__back">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                </div>
+                <div class="ped-appbar__title">이벤트 상세</div>
+              </div>
+              <!-- Body (단일 스크롤) -->
+              <div class="ped-body">
+                <!-- Title row: 이벤트 제목 단독 -->
+                <div class="ped-title-row">
+                  <div class="ped-title">금요일 와인 클래스</div>
+                </div>
+                <!-- Meta chips — title 아래, stable→dynamic 순 + 도메인별 색 -->
+                <div class="ped-meta-chips">
+                  <span class="ped-chip ped-chip--success ped-chip--visibility"><svg class="ped-chip__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>공개</span>
+                  <span class="ped-chip ped-chip--success">모집</span>
+                  <span class="ped-chip ped-chip--warning">D-12</span>
+                </div>
+                <!-- 정보 수정 link — Hero 카드 바로 위, 우측 정렬 -->
+                <div class="ped-edit-row">
+                  <a class="ped-edit-link">
+                    정보 수정
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                  </a>
+                </div>
+                <!-- Hero 카드 (stacked blocks: caption / primary / secondary 위계) -->
+                <div class="ped-card">
+                  <div class="ped-info-rows">
+                    <!-- 일정: 날짜(큰 강조) + 시간(보조) -->
+                    <div class="ped-info-block">
+                      <div class="ped-info-block__caption">일정</div>
+                      <div class="ped-info-block__primary">2026.05.15 (금)</div>
+                      <div class="ped-info-block__secondary">오후 7:30 ~ 9:30</div>
+                    </div>
+                    <!-- 장소: 이름 + 주소 + Kakao Map thumb (탭 → 외부 맵 앱 deep-link) -->
+                    <div class="ped-info-block">
+                      <div class="ped-info-block__caption">장소</div>
+                      <div class="ped-info-block__primary">강남 와인바</div>
+                      <div class="ped-info-block__secondary">서울 강남구 신사동 ...</div>
+                      <div class="ped-map-thumb" role="img" aria-label="강남 와인바 위치 미니맵 — 탭 시 외부 맵 앱으로 이동">
+                        <span class="ped-map-thumb__pin">
+                          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>
+                        </span>
+                      </div>
+                      <!-- 오시는길 — 도보·입구·주차·랜드마크 자유 텍스트 -->
+                      <div class="ped-directions">
+                        <div class="ped-directions__label">오시는길</div>
+                        <div class="ped-directions__text">강남역 3번 출구 도보 5분
+1층 카페 안쪽 와인바 입구 · 주차 가능</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <!-- Section header: 참가 현황 (link는 카드 안 actions로 이동) -->
+                <div class="ped-section-header">
+                  <div class="ped-section-header__title">참가 현황</div>
+                </div>
+                <!-- Summary card — 이벤트 전체 정원/확정/심사대기 + 심사 CTA -->
+                <div class="ped-summary">
+                  <div class="ped-summary__head">
+                    <!-- Metric 1: 확정 분수 -->
+                    <span class="ped-summary__metric">
+                      <span class="ped-summary__count">6</span>
+                      <span class="ped-summary__count-total">/ 12 확정</span>
+                    </span>
+                    <!-- Metric 2: 심사대기 카운트 — pulse 강조 (≥1일 때만, 액션 시그널) -->
+                    <span class="ped-summary__metric">
+                      <span class="ped-summary__count ped-summary__count--pulse">4</span>
+                      <span class="ped-summary__count-total">심사대기</span>
+                    </span>
+                    <!-- Metric 3: 환불완료 — muted (이미 끝난 정보, 액션 X) -->
+                    <span class="ped-summary__metric ped-summary__metric--muted">
+                      <span class="ped-summary__count">3</span>
+                      <span class="ped-summary__count-total">환불완료</span>
+                    </span>
+                  </div>
+                  <!-- MinglitCapacityBar(total: 12, filled: 6, pending: 4) → segmented 12칸 (6 강 · 4 옅 · 2 빈) -->
+                  <div class="mds-capbar mds-capbar--segmented" role="progressbar" aria-label="정원 12명 중 확정 6명 · 대기 4명 · 남은 2명">
+                    <div class="mds-capbar__seg mds-capbar__seg--filled"></div>
+                    <div class="mds-capbar__seg mds-capbar__seg--filled"></div>
+                    <div class="mds-capbar__seg mds-capbar__seg--filled"></div>
+                    <div class="mds-capbar__seg mds-capbar__seg--filled"></div>
+                    <div class="mds-capbar__seg mds-capbar__seg--filled"></div>
+                    <div class="mds-capbar__seg mds-capbar__seg--filled"></div>
+                    <div class="mds-capbar__seg mds-capbar__seg--pending"></div>
+                    <div class="mds-capbar__seg mds-capbar__seg--pending"></div>
+                    <div class="mds-capbar__seg mds-capbar__seg--pending"></div>
+                    <div class="mds-capbar__seg mds-capbar__seg--pending"></div>
+                    <div class="mds-capbar__seg"></div>
+                    <div class="mds-capbar__seg"></div>
+                  </div>
+                  <!-- Actions: 심사하기 (primary CTA, 액션 시그널) + 참가자 보기 (outline, 보조 진입) -->
+                  <div class="ped-summary__actions">
+                    <!-- 심사하기 — 심사 대기 ≥1일 때만 primary fill로 강조 (그렇지 않으면 숨김) -->
+                    <div class="ped-summary__cta">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                      <span>심사하기</span>
+                    </div>
+                    <!-- 참가자 보기 — 항상 노출, outline (환불 요청 등 유저별 처리 진입) -->
+                    <div class="ped-summary__cta ped-summary__cta--outline">
+                      <span>참가자 보기</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Section header: 기대 매출 (다른 섹션과 동일한 패턴 — 카드 밖 헤더) -->
+                <div class="ped-section-header">
+                  <div class="ped-section-header__title">기대 매출</div>
+                </div>
+                <!-- 기대 매출 카드 (페이지 하단 — 운영자 KPI 요약) -->
+                <!-- 계산: 얼리버드 35,000×4=140,000 / 정상가 45,000×8=360,000 / VIP 120,000×4=480,000
+                     최대 매출 980,000원
+                     현재 (판매 결제완료): 35,000×3 + 45,000×1 + 120,000×2 = 390,000원
+                     대기 (승인 시 결제 잠재): 35,000×1 + 45,000×1 + 120,000×2 = 320,000원 -->
+                <div class="ped-revenue">
+                  <div class="ped-revenue__head">
+                    <span class="ped-revenue__current">390,000원</span>
+                    <span class="ped-revenue__max">/ 최대 980,000원</span>
+                  </div>
+                  <!-- MinglitCapacityBar(total: 980, filled: 390, pending: 320) — 980 > 30 → continuous fallback -->
+                  <div class="mds-capbar" role="progressbar" aria-label="최대 매출 980,000원 중 현재 390,000원 · 심사 승인 시 잠재 320,000원">
+                    <div class="mds-capbar__fill" style="width: 39.8%;"></div>
+                    <div class="mds-capbar__pending" style="width: 32.7%;"></div>
+                  </div>
+                  <div class="ped-revenue__breakdown">
+                    <span>현재 <strong>390,000원</strong></span>
+                    <span>심사 승인 시 <strong>+320,000원</strong></span>
+                  </div>
+                  <!-- 그룹별 기대 매출 — 전체 카드 안 sub-section -->
+                  <!-- 계산:
+                       일반 그룹 = 얼리버드(35,000×4=140,000) + 정상가(45,000×8=360,000) = 500,000원 max
+                                  현재(35,000×3 + 45,000×1) = 150,000원 / 대기 80,000원
+                       VIP 그룹  = 120,000×4 = 480,000원 max
+                                  현재 240,000원 / 대기 240,000원 -->
+                  <div class="ped-revenue__groups">
+                    <div class="ped-revenue__group">
+                      <div class="ped-revenue__group-row">
+                        <span class="ped-revenue__group-name">일반 그룹</span>
+                        <span class="ped-revenue__group-amount">150,000원</span>
+                        <span class="ped-revenue__group-amount-max">/ 최대 500,000원</span>
+                      </div>
+                      <!-- MinglitCapacityBar(total: 500000, filled: 150000, pending: 80000) — continuous (큰 숫자) -->
+                      <div class="mds-capbar" role="progressbar" aria-label="일반 그룹 최대 매출 500,000원 중 현재 150,000원 · 대기 80,000원">
+                        <div class="mds-capbar__fill" style="width: 30%;"></div>
+                        <div class="mds-capbar__pending" style="width: 16%;"></div>
+                      </div>
+                    </div>
+                    <div class="ped-revenue__group">
+                      <div class="ped-revenue__group-row">
+                        <span class="ped-revenue__group-name">VIP 그룹</span>
+                        <span class="ped-revenue__group-amount">240,000원</span>
+                        <span class="ped-revenue__group-amount-max">/ 최대 480,000원</span>
+                      </div>
+                      <!-- MinglitCapacityBar(total: 480000, filled: 240000, pending: 240000) — continuous -->
+                      <div class="mds-capbar" role="progressbar" aria-label="VIP 그룹 최대 매출 480,000원 중 현재 240,000원 · 대기 240,000원">
+                        <div class="mds-capbar__fill" style="width: 50%;"></div>
+                        <div class="mds-capbar__pending" style="width: 50%;"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <!-- Section header: 입장 그룹별 현황 -->
+                <div class="ped-section-header">
+                  <div class="ped-section-header__title">입장 그룹별 현황</div>
+                </div>
+                <!-- 입장 그룹들을 단일 카드로 묶고 그룹 사이는 divider 자동 (CSS .ped-group + .ped-group) -->
+                <div class="ped-group-list">
+                <!-- Entry group #1 — 일반 그룹 -->
+                <div class="ped-group">
+                  <div class="ped-group__head">
+                    <div class="ped-group__name">일반 그룹</div>
+                    <div>
+                      <span class="ped-group__count">4</span>
+                      <span class="ped-group__count-total">/ 8 확정</span>
+                    </div>
+                    <div class="ped-group__chevron">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                    </div>
+                  </div>
+                  <!-- MinglitCapacityBar(total: 8, filled: 4, pending: 2) -->
+                  <div class="mds-capbar mds-capbar--segmented" role="progressbar" aria-label="정원 8명 중 확정 4명 · 대기 2명 · 남은 2명">
+                    <div class="mds-capbar__seg mds-capbar__seg--filled"></div>
+                    <div class="mds-capbar__seg mds-capbar__seg--filled"></div>
+                    <div class="mds-capbar__seg mds-capbar__seg--filled"></div>
+                    <div class="mds-capbar__seg mds-capbar__seg--filled"></div>
+                    <div class="mds-capbar__seg mds-capbar__seg--pending"></div>
+                    <div class="mds-capbar__seg mds-capbar__seg--pending"></div>
+                    <div class="mds-capbar__seg"></div>
+                    <div class="mds-capbar__seg"></div>
+                  </div>
+                  <div class="ped-group__breakdown">
+                    <span>확정 <strong>4</strong></span>
+                    <span>대기 <strong>2</strong></span>
+                    <span class="ped-group__breakdown-item--muted">환불 <strong>2</strong></span>
+                  </div>
+                  <div class="ped-group__nest">
+                    <div class="ped-group__tickets">
+                    <!-- Ticket row — 탭 시 TicketEditRoute. mini CapacityBar: 판매(강) + 대기(옅) + 빈 -->
+                    <!-- 얼리버드: 발행 4, 판매 3, 대기 1 → 그룹 확정 4 = 3+1(VIP의 1?) — 합산 검증: 일반 그룹 확정 4 = 얼리버드 3 + 정상가 1 ✓ / 대기 2 = 얼리버드 1 + 정상가 1 ✓ -->
+                    <div class="ped-group__ticket">
+                      <div class="ped-group__ticket-row">
+                        <div class="ped-group__ticket-name">
+                          얼리버드 입장권
+                          <span class="ped-group__ticket-sub">판매 3 · 대기 1 / 발행 4장</span>
+                        </div>
+                        <div class="ped-group__ticket-price">35,000원</div>
+                        <div class="ped-group__ticket-chevron">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                        </div>
+                      </div>
+                      <!-- MinglitCapacityBar(total: 4 발행, filled: 3 판매, pending: 1 대기) — 거의 마감 -->
+                      <div class="mds-capbar mds-capbar--segmented" style="height:4px;" role="progressbar" aria-label="발행 4장 중 판매 3장 · 대기 1장">
+                        <div class="mds-capbar__seg mds-capbar__seg--filled"></div>
+                        <div class="mds-capbar__seg mds-capbar__seg--filled"></div>
+                        <div class="mds-capbar__seg mds-capbar__seg--filled"></div>
+                        <div class="mds-capbar__seg mds-capbar__seg--pending"></div>
+                      </div>
+                    </div>
+                    <div class="ped-group__ticket">
+                      <div class="ped-group__ticket-row">
+                        <div class="ped-group__ticket-name">
+                          정상가 입장권
+                          <span class="ped-group__ticket-sub">판매 1 · 대기 1 / 발행 8장</span>
+                        </div>
+                        <div class="ped-group__ticket-price">45,000원</div>
+                        <div class="ped-group__ticket-chevron">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                        </div>
+                      </div>
+                      <!-- MinglitCapacityBar(total: 8 발행, filled: 1 판매, pending: 1 대기) — 신청 적음 -->
+                      <div class="mds-capbar mds-capbar--segmented" style="height:4px;" role="progressbar" aria-label="발행 8장 중 판매 1장 · 대기 1장">
+                        <div class="mds-capbar__seg mds-capbar__seg--filled"></div>
+                        <div class="mds-capbar__seg mds-capbar__seg--pending"></div>
+                        <div class="mds-capbar__seg"></div>
+                        <div class="mds-capbar__seg"></div>
+                        <div class="mds-capbar__seg"></div>
+                        <div class="mds-capbar__seg"></div>
+                        <div class="mds-capbar__seg"></div>
+                        <div class="mds-capbar__seg"></div>
+                      </div>
+                    </div>
+                    </div>
+                  </div>
+
+                  <div class="ped-group__add">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    이 그룹에 티켓 추가
+                  </div>
+                </div>
+                <!-- Entry group card #2 — VIP 그룹 (alert 제거됨) -->
+                <div class="ped-group">
+                  <div class="ped-group__head">
+                    <div class="ped-group__name">VIP 그룹</div>
+                    <div>
+                      <span class="ped-group__count">2</span>
+                      <span class="ped-group__count-total">/ 4 확정</span>
+                    </div>
+                    <div class="ped-group__chevron">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                    </div>
+                  </div>
+                  <!-- MinglitCapacityBar(total: 4, filled: 2, pending: 2) -->
+                  <div class="mds-capbar mds-capbar--segmented" role="progressbar" aria-label="정원 4명 중 확정 2명 · 대기 2명 · 남은 0명">
+                    <div class="mds-capbar__seg mds-capbar__seg--filled"></div>
+                    <div class="mds-capbar__seg mds-capbar__seg--filled"></div>
+                    <div class="mds-capbar__seg mds-capbar__seg--pending"></div>
+                    <div class="mds-capbar__seg mds-capbar__seg--pending"></div>
+                  </div>
+                  <div class="ped-group__breakdown">
+                    <span>확정 <strong>2</strong></span>
+                    <span>대기 <strong>2</strong></span>
+                    <span class="ped-group__breakdown-item--muted">환불 <strong>1</strong></span>
+                  </div>
+                  <div class="ped-group__nest">
+                    <div class="ped-group__tickets">
+                    <div class="ped-group__ticket">
+                      <div class="ped-group__ticket-row">
+                        <div class="ped-group__ticket-name">
+                          VIP 입장권
+                          <span class="ped-group__ticket-sub">판매 2 · 대기 2 / 발행 4장</span>
+                        </div>
+                        <div class="ped-group__ticket-price">120,000원</div>
+                        <div class="ped-group__ticket-chevron">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                        </div>
+                      </div>
+                      <!-- MinglitCapacityBar(total: 4 발행, filled: 2 판매, pending: 2 대기) — 꽉참 -->
+                      <div class="mds-capbar mds-capbar--segmented" style="height:4px;" role="progressbar" aria-label="발행 4장 중 판매 2장 · 대기 2장 (꽉참)">
+                        <div class="mds-capbar__seg mds-capbar__seg--filled"></div>
+                        <div class="mds-capbar__seg mds-capbar__seg--filled"></div>
+                        <div class="mds-capbar__seg mds-capbar__seg--pending"></div>
+                        <div class="mds-capbar__seg mds-capbar__seg--pending"></div>
+                      </div>
+                    </div>
+                    </div>
+                  </div>
+
+                  <div class="ped-group__add">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    이 그룹에 티켓 추가
+                  </div>
+                </div>
+                </div><!-- /.ped-group-list -->
+              </div>
+
+              <!-- Spec annotations -->
+              <span class="annotation" style="top:14px;right:8px;">centerTitle: false</span>
+              <span class="annotation" style="top:80px;left:8px;">title: headlineSmall · primary</span>
+              <span class="annotation" style="top:200px;right:8px;">Hero card · 탭 → EventEditRoute</span>
+              <span class="annotation" style="top:330px;right:8px;">참가 현황 카드 · 탭 → EventApplicationListRoute</span>
+
+              <!-- Callouts -->
+              <span class="callout" style="top:14px;left:8px;">ⓐ</span>
+              <span class="callout" style="top:80px;left:8px;">ⓑ</span>
+              <span class="callout" style="top:115px;left:8px;">ⓒ</span>
+              <span class="callout" style="top:165px;right:8px;">ⓓ</span>
+              <span class="callout" style="top:380px;left:8px;">ⓔ</span>
+            </div></td>
+            <td class="state-mini__aspect">조건</td>
+            <td>이벤트 데이터 로드 완료 · 입장 그룹 ≥1개 (각 그룹은 정원·티켓·신청 메타 보유) · 상태 "모집 중"(scheduled) · D-N (이벤트 시작까지 남은 일수).</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              · <strong>공개/비공개 chip 탭</strong> → 설명 토스트 노출 (3초 자동 사라짐, MinglitToast)<br>
+              · <strong>Hero 카드 "정보 수정 ›" 링크 탭</strong> → <a href="/specs/event_edit_page.html">EventEditPage</a>로 이동 (확정 참가자 ≥1명이면 잠금 정책)<br>
+              · <strong>"심사하기" CTA 탭</strong> (대기 ≥1일 때만 노출, primary fill) → <a href="/specs/event_application_list_page.html">EventApplicationListPage</a>로 이동 (심사 대기 그룹 anchor)<br>
+              · <strong>"참가자 보기" 버튼 탭</strong> (항상 노출, outline) → 같은 EventApplicationListPage로 이동 (전체 — 환불 요청 / 유저별 액션 진입)<br>
+              · <strong>입장 그룹 카드 탭</strong> → EventApplicationListPage로 이동 (해당 그룹 필터)<br>
+              · <strong>티켓 행 탭</strong> → <a href="/specs/ticket_edit_page.html">TicketEditPage</a>로 이동 (해당 티켓 선택 — 가격·발행수 수정 가능)<br>
+              · <strong>"+ 이 그룹에 티켓 추가" 탭</strong> → <a href="/specs/ticket_create_page.html">TicketCreatePage</a>로 이동 (해당 그룹 사전 선택)<br>
+              · <strong>뒤로가기</strong> → 파티 상세로 복귀
+            </td>
+          </tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>· 그룹 안 티켓 0개면 티켓 리스트 자리에 작은 안내 텍스트 + 추가 버튼만<br>· <strong>참가 현황 카드 — 대기 0건이면 심사 링크 영역 숨김</strong> (분수 / CapacityBar / breakdown 유지)<br>· <strong>참가 현황 카드 — 신청 0건이면 분수 "0 / 정원", CapacityBar 빈 상태</strong>, 심사 링크 숨김<br>· 그룹 카드 — 신청 0건이면 분수 "0 / N", 빈 CapacityBar (alert는 본 spec에서 폐기)<br>· CapacityBar: 정원 ≤ segmentThreshold(30) → segmented · 초과 → continuous 자동 분기<br>· 제목 비어있으면 제목 블록 통째로 사라짐 (카드가 위로 붙음)<br>· 티켓 발행수가 정원 이상 (티켓 ≥ 정원 정책) — UI는 발행수가 정원 미만이면 안내</td></tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>
+              <code>Scaffold</code> · <code>AppBar</code>(left-aligned title only — TabBar 폐기) · <code>MinglitAsyncValueWidget</code> · <code>SingleChildScrollView</code> · <code>MinglitContentLayout</code> · 이벤트 title + <code>_VisibilityChip</code>(공개/비공개 — title 우측 inline) · 운영 메타 카드(<code>InkWell</code> → EventEditRoute · 1 <code>_HeroDetailRow</code>(D-day trail) + 1 Divider + 1 <code>_MetaDetailRow</code>(상태)) · <code>MinglitSection</code>(title '참가 현황') · <code>EventApplicationStatsCard</code>(전체 분수 + <code>MinglitCapacityBar</code>(확정+대기) + breakdown(확정·대기 — '거절 0'은 노이즈라 숨김, ≥1일 때만 노출) + 심사 대기 ≥1 시 <code>_ReviewCtaButton</code>('심사하기' · primary fill · h44 · radius-button) → EventApplicationListRoute) · <code>MinglitSection</code>(title '입장 그룹별 현황') · <code>EntryGroupCard</code> × N (분수 + <code>MinglitCapacityBar</code>(확정+대기) + breakdown + 티켓 row × N(<code>InkWell</code> → TicketEditRoute · Column[Row(이름 w600 + 'N · M / K장' sub / 가격 / chevron) + mini <code>MinglitCapacityBar</code>(판매+대기/발행)]) + "이 그룹에 티켓 추가" 버튼(dashed primary border · h44 · radius-button) / <code>InkWell</code> → EventApplicationListRoute(groupId)) · <code>_RevenueSummaryCard</code>(현재 매출 큰 숫자 + '/ 최대' suffix + continuous <code>MinglitCapacityBar</code>(현재 강 + 심사 승인 시 옅) + breakdown('현재 KKK원 · 심사 승인 시 +KKK원'))
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>
+              <code>color-primary</code> (partner #6c3ce1 — D-day trail / 상태값(모집 중) / 진행 바 확정 fill / "+ 그룹에 티켓 추가" border + label) · <code>color-primary @ 30%</code> (진행 바 대기 — 옅은 누적) · <code>color-primary @ 10%</code> (D-day trail bg) · <code>color-text-primary</code> (이벤트 title / Hero primary / Supporting value / 그룹 이름 / 그룹 count) · <code>color-text-secondary</code> (Hero icon / Hero secondary / Supporting label / 분수 분모 / breakdown / 티켓 sub / 공개 footer) · <code>color-divider</code> (카드 border / divider / 진행 바 track) · <code>color-surface</code> (카드 bg) · <code>color-warning</code> rgba 톤 (심사 대기 alert) · <code>radius-card (16)</code> (모든 카드) · <code>radius-input (12)</code> (티켓 추가 dashed border) · <code>radius-small (8)</code> (alert / D-day trail / 진행 바) · <code>spacing-screen-edge (16)</code> · <code>spacing-medium</code> · <code>spacing-small</code> · typography <strong>이벤트 title</strong>: 20px w600(<code>color-text-primary</code> — 일반 텍스트 톤) · <strong>Hero</strong>: 16px w600 / 13px secondary · <strong>D-day trail</strong>: 13px w700 primary · <strong>상태 row</strong>: 12px w500 (label) / 14px w700 + accent (value) · <strong>섹션 헤더</strong>: <code>bodyMedium</code> w700 · <strong>그룹 카드</strong>: 14px w600(이름/count) / 12px(분모/breakdown/alert) · <strong>티켓 row</strong>: 14px(이름) / 12px secondary(sub) / 14px w600(가격) · <strong>티켓 추가 버튼</strong>: 13px w600 primary · <strong>공개 footer</strong>: 11px secondary · iconSize: Hero <code>small (≈18)</code>
+            </td>
+          </tr>
+          <tr><td class="state-mini__aspect">노트</td><td>🎨 톤 다운: 이벤트 title은 일반 텍스트(primary X). Hero 일정도 16px w600으로 차분하게. <strong>primary 강조 = D-day trail + 상태 accent + CapacityBar fill + 티켓 추가 dashed border (h44 CTA와 동일) + 심사 CTA fill</strong> — 두 액션 버튼 같은 typography/h44 통일. 정보 위계: <strong>이벤트 title(공개 chip 옆에) → Hero(일정/상태) → 참가 현황(전체 — 심사 CTA로 즉시 액션) → 입장 그룹별 현황(그룹 단위 책임 + 티켓 가격/발행수 수정) → 기대 매출(KPI 요약)</strong>. breakdown에서 "거절 0"은 표시 X (≥1일 때만 노출 — 노이즈 제거). 티켓 row는 InkWell + chevron으로 탭 affordance 명확화 — TicketEditRoute로 이동해 가격·발행수 수정. CapacityBar 의미 4계층: 전체(이벤트 정원/확정+대기 · segmented) · 그룹(그룹 정원/확정+대기 · segmented) · 티켓 mini(발행수/판매+대기 · segmented) · 매출(최대 매출/현재+잠재 · 큰 숫자라 자동 continuous). 모두 같은 컴포넌트, 의미만 도메인별로 다름.</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ===================================================
+           STATE 2 — 이벤트 취소됨
+           =================================================== -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong>이벤트 취소됨</strong> <span class="tag tag--mute">cancelled</span></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock"><div class="viewport">
+              <div class="ped-appbar">
+                <div class="ped-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
+                <div class="ped-appbar__title">이벤트 상세</div>
+              </div>
+              <div class="ped-body">
+                <div class="ped-meta-chips">
+                  <span class="ped-chip ped-chip--success ped-chip--visibility"><svg class="ped-chip__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>공개</span>
+                  <span class="ped-chip ped-chip--error">취소</span>
+                  <span class="ped-chip ped-chip--outline">D-12</span>
+                </div>
+                <div class="ped-title-row">
+                  <div class="ped-title">금요일 와인 클래스</div>
+                </div>
+                <!-- 정보 수정 link 숨김 (취소 상태) -->
+                <!-- ⚠️ 취소 안내 banner — title 바로 밑 -->
+                <div class="ped-cancel-notice">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                  <span>이벤트가 취소되었습니다 — 결제 사용자에게 환불이 자동 진행됩니다.</span>
+                </div>
+                <!-- Hero 카드 — 일정/장소 정상 (line-through X). 장소 block에 Kakao Map + 오시는길 -->
+                <div class="ped-card">
+                  <div class="ped-info-rows">
+                    <div class="ped-info-block">
+                      <div class="ped-info-block__caption">일정</div>
+                      <div class="ped-info-block__primary">2026.05.15 (금)</div>
+                      <div class="ped-info-block__secondary">오후 7:30 ~ 9:30</div>
+                    </div>
+                    <div class="ped-info-block">
+                      <div class="ped-info-block__caption">장소</div>
+                      <div class="ped-info-block__primary">강남 와인바</div>
+                      <div class="ped-info-block__secondary">서울 강남구 신사동 ...</div>
+                      <div class="ped-map-thumb" role="img" aria-label="강남 와인바 위치 미니맵">
+                        <span class="ped-map-thumb__pin"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg></span>
+                      </div>
+                      <div class="ped-directions">
+                        <div class="ped-directions__label">오시는길</div>
+                        <div class="ped-directions__text">강남역 3번 출구 도보 5분
+1층 카페 안쪽 와인바 입구 · 주차 가능</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <!-- 참가 현황 섹션 삭제 (취소 상태에선 의미 X) -->
+                <div class="ped-section-header"><div class="ped-section-header__title">환불 완료</div></div>
+                <!-- 두 metric — stacked variant: 라벨 위 / 큰 숫자 아래 -->
+                <div class="ped-summary">
+                  <div class="ped-summary__head">
+                    <span class="ped-summary__metric ped-summary__metric--stacked">
+                      <span class="ped-summary__count">780,000원</span>
+                      <span class="ped-summary__count-total">환불액</span>
+                    </span>
+                    <span class="ped-summary__metric ped-summary__metric--stacked">
+                      <span class="ped-summary__count">9건</span>
+                      <span class="ped-summary__count-total">환불 건수</span>
+                    </span>
+                  </div>
+                </div>
+                <div class="ped-section-header"><div class="ped-section-header__title">입장 그룹별 환불 정보</div></div>
+                <!-- 자발적/확정 구분 제거 — 환불 결과만. 티켓별 인원·금액 -->
+                <div class="ped-group-list">
+                  <div class="ped-group">
+                    <div class="ped-group__head">
+                      <div class="ped-group__name">일반 그룹</div>
+                      <div><span class="ped-group__count">6</span><span class="ped-group__count-total">명 환불</span></div>
+                    </div>
+                    <div class="ped-group__nest">
+                      <div class="ped-group__tickets">
+                        <div class="ped-group__ticket">
+                          <div class="ped-group__ticket-row">
+                            <div class="ped-group__ticket-name">얼리버드 입장권<span class="ped-group__ticket-sub">환불 4명 · 35,000원</span></div>
+                            <div class="ped-group__ticket-price">−140,000원</div>
+                          </div>
+                        </div>
+                        <div class="ped-group__ticket">
+                          <div class="ped-group__ticket-row">
+                            <div class="ped-group__ticket-name">정상가 입장권<span class="ped-group__ticket-sub">환불 2명 · 45,000원</span></div>
+                            <div class="ped-group__ticket-price">−90,000원</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="ped-group">
+                    <div class="ped-group__head">
+                      <div class="ped-group__name">VIP 그룹</div>
+                      <div><span class="ped-group__count">3</span><span class="ped-group__count-total">명 환불</span></div>
+                    </div>
+                    <div class="ped-group__nest">
+                      <div class="ped-group__tickets">
+                        <div class="ped-group__ticket">
+                          <div class="ped-group__ticket-row">
+                            <div class="ped-group__ticket-name">VIP 입장권<span class="ped-group__ticket-sub">환불 3명 · 120,000원</span></div>
+                            <div class="ped-group__ticket-price">−360,000원</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div></td>
+            <td class="state-mini__aspect">조건</td>
+            <td>이벤트 상태 'cancelled' (운영자 직접 취소 또는 시스템 자동). 결제완료(paid) 사용자는 자동 환불 트리거 → refund_status가 점진적으로 'completed'로 전환. 심사대기(pending_review) 사용자는 DB 자동 처리 X — 운영자가 별도 통보 필요.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              · <strong>정보 수정 link 숨김</strong> — 취소된 이벤트의 정보 변경 의미 X<br>
+              · <strong>참가자 보기 outline 버튼만</strong> 노출 → <a href="/specs/event_application_list_page.html">EventApplicationListPage</a>로 이동 (환불 진행 모니터링 + 심사대기 사용자 통보 처리)<br>
+              · <strong>심사하기 CTA 숨김</strong> — 취소된 이벤트는 신규 심사 X<br>
+              · <strong>티켓 row 탭 비활성</strong> — chevron 숨김, 정보만 표시 (가격·발행수 수정 X)<br>
+              · <strong>"+ 이 그룹에 티켓 추가" 버튼 숨김</strong> — 추가 의미 X
+            </td>
+          </tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>· 취소 직후 환불 처리는 비동기 — 환불완료 카운트가 점진적 증가 (q_global_events → 환불 처리 Edge Function)<br>· 일부 환불 실패(refund_status: 'failed') 시 운영자 알림 + 수동 처리 안내 (별도 spec)<br>· 심사대기 사용자는 운영자 책임 — 통보 / 별도 환불 처리 (이벤트 취소 안내 등)<br>· 일정 텍스트는 line-through + secondary 톤 + ⚠️ 본문 안내</td></tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>
+              ↔ Default 구조 + 다음 변형: chip 'error' (취소) · D-N chip은 outline tone (이벤트 의미 약화) · Hero 카드 일정 line-through + ⚠️ 안내 메시지 · <strong>정보 수정 row 숨김</strong> · 심사대기 metric은 그대로 (운영자 모니터링) · <strong>심사하기 CTA 숨김</strong> · 매출 카드 라벨 '환불 완료' (was '기대 매출') · 매출 본문은 환불액 차감 표시 · 그룹 티켓 row chevron 숨김 + InkWell 비활성 · "+ 티켓 추가" 버튼 숨김
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>
+              + <code>color-error</code> (취소 chip · 라벨 톤) · <code>color-text-secondary</code> + line-through (취소된 일정) · 환불완료 metric muted tone (이미 끝난 정보)
+            </td>
+          </tr>
+          <tr><td class="state-mini__aspect">노트</td><td>⚠️ 정보 수정 link 숨김 = "비활성 버튼은 보여줄 필요 없다" 정책. 사후 안내(취소 사유 등)는 EventApplicationListPage 또는 별도 알림 흐름에서 처리. 매출 카드 라벨이 '기대 매출' → '환불 완료'로 전환되어 운영자가 KPI 손실을 명확히 인지.</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ===================================================
+           STATE 3 — 이벤트 완료됨
+           =================================================== -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong>이벤트 완료됨</strong> <span class="tag tag--mute">completed</span></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock"><div class="viewport">
+              <div class="ped-appbar">
+                <div class="ped-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
+                <div class="ped-appbar__title">이벤트 상세</div>
+              </div>
+              <div class="ped-body">
+                <div class="ped-meta-chips">
+                  <span class="ped-chip ped-chip--success ped-chip--visibility"><svg class="ped-chip__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>공개</span>
+                  <!-- 완료 chip — success 초록으로 (was outline) -->
+                  <span class="ped-chip ped-chip--success">완료</span>
+                  <span class="ped-chip ped-chip--outline">D+5</span>
+                </div>
+                <div class="ped-title-row">
+                  <div class="ped-title">금요일 와인 클래스</div>
+                </div>
+                <!-- 🎉 축하 banner — title 밑, Hero 카드 위 -->
+                <div class="ped-celebrate-banner">
+                  <span>🎉</span>
+                  <span><span class="ped-celebrate-banner__count">8명</span>과 함께한 이벤트가 완료됐어요</span>
+                </div>
+                <!-- Hero 카드 — 일정/장소 정상. 장소 block에 Kakao Map + 오시는길 -->
+                <div class="ped-card">
+                  <div class="ped-info-rows">
+                    <div class="ped-info-block">
+                      <div class="ped-info-block__caption">일정</div>
+                      <div class="ped-info-block__primary">2026.05.10 (일)</div>
+                      <div class="ped-info-block__secondary">오후 7:30 ~ 9:30</div>
+                    </div>
+                    <div class="ped-info-block">
+                      <div class="ped-info-block__caption">장소</div>
+                      <div class="ped-info-block__primary">강남 와인바</div>
+                      <div class="ped-info-block__secondary">서울 강남구 신사동 ...</div>
+                      <div class="ped-map-thumb" role="img" aria-label="강남 와인바 위치 미니맵">
+                        <span class="ped-map-thumb__pin"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg></span>
+                      </div>
+                      <div class="ped-directions">
+                        <div class="ped-directions__label">오시는길</div>
+                        <div class="ped-directions__text">강남역 3번 출구 도보 5분
+1층 카페 안쪽 와인바 입구 · 주차 가능</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="ped-section-header"><div class="ped-section-header__title">참가 현황</div></div>
+                <div class="ped-summary">
+                  <div class="ped-summary__head">
+                    <span class="ped-summary__metric">
+                      <span class="ped-summary__count">8</span>
+                      <span class="ped-summary__count-total">/ 12 참석</span>
+                    </span>
+                    <!-- 심사대기 metric 숨김 (0건) -->
+                    <span class="ped-summary__metric ped-summary__metric--muted">
+                      <span class="ped-summary__count">3</span>
+                      <span class="ped-summary__count-total">환불완료</span>
+                    </span>
+                  </div>
+                  <div class="mds-capbar mds-capbar--segmented">
+                    <div class="mds-capbar__seg mds-capbar__seg--filled"></div><div class="mds-capbar__seg mds-capbar__seg--filled"></div><div class="mds-capbar__seg mds-capbar__seg--filled"></div><div class="mds-capbar__seg mds-capbar__seg--filled"></div><div class="mds-capbar__seg mds-capbar__seg--filled"></div><div class="mds-capbar__seg mds-capbar__seg--filled"></div><div class="mds-capbar__seg mds-capbar__seg--filled"></div><div class="mds-capbar__seg mds-capbar__seg--filled"></div><div class="mds-capbar__seg"></div><div class="mds-capbar__seg"></div><div class="mds-capbar__seg"></div><div class="mds-capbar__seg"></div>
+                  </div>
+                  <!-- 심사하기 CTA / 참가자 보기 모두 숨김 (완료 상태) -->
+                </div>
+                <div class="ped-section-header"><div class="ped-section-header__title">달성 매출</div></div>
+                <!-- 환불 차감 line 제거 — 깔끔한 큰 숫자 + bar -->
+                <div class="ped-revenue">
+                  <div class="ped-revenue__head">
+                    <span class="ped-revenue__current">630,000원</span>
+                    <span class="ped-revenue__max">/ 최대 980,000원</span>
+                  </div>
+                  <div class="mds-capbar" role="progressbar" aria-label="달성 매출 630,000원 (정원 대비 64%)">
+                    <div class="mds-capbar__fill" style="width: 64.3%;"></div>
+                  </div>
+                </div>
+                <div class="ped-section-header"><div class="ped-section-header__title">완료 통계</div></div>
+                <!-- 객단가 통계 카드 (전체 + 그룹별) -->
+                <div class="ped-stats-card">
+                  <div class="ped-stats-row">
+                    <span class="ped-stats-row__label">전체 객단가</span>
+                    <span class="ped-stats-row__value">78,750원</span>
+                    <span class="ped-stats-row__sub">(매출 630,000 ÷ 8명)</span>
+                  </div>
+                  <div class="ped-stats-card__divider"></div>
+                  <div class="ped-stats-row">
+                    <span class="ped-stats-row__label">일반 그룹</span>
+                    <span class="ped-stats-row__value">35,000원</span>
+                    <span class="ped-stats-row__sub">(6명 참석)</span>
+                  </div>
+                  <div class="ped-stats-row">
+                    <span class="ped-stats-row__label">VIP 그룹</span>
+                    <span class="ped-stats-row__value">120,000원</span>
+                    <span class="ped-stats-row__sub">(2명 참석)</span>
+                  </div>
+                </div>
+                <div class="ped-section-header"><div class="ped-section-header__title">신청 트렌드</div></div>
+                <!-- 신청 트렌드 — 게시일부터 당일까지 일별 신청 수 bar chart -->
+                <div class="ped-trend-card">
+                  <div class="ped-trend-chart" role="img" aria-label="게시일부터 당일까지 일별 신청 수 추이 (환불 상위 회색 표시)">
+                    <!-- 14일 일별 bar — primary fill = 활성 신청, top gray overlay = 환불됨 -->
+                    <div class="ped-trend-chart__bar ped-trend-chart__bar--peak" style="height:90%;"><div class="ped-trend-chart__bar-refund" style="height:22%;"></div></div>
+                    <div class="ped-trend-chart__bar" style="height:62%;"><div class="ped-trend-chart__bar-refund" style="height:18%;"></div></div>
+                    <div class="ped-trend-chart__bar" style="height:48%;"><div class="ped-trend-chart__bar-refund" style="height:25%;"></div></div>
+                    <div class="ped-trend-chart__bar" style="height:35%;"><div class="ped-trend-chart__bar-refund" style="height:20%;"></div></div>
+                    <div class="ped-trend-chart__bar" style="height:22%;"><div class="ped-trend-chart__bar-refund" style="height:15%;"></div></div>
+                    <div class="ped-trend-chart__bar" style="height:18%;"></div>
+                    <div class="ped-trend-chart__bar" style="height:14%;"></div>
+                    <div class="ped-trend-chart__bar" style="height:12%;"></div>
+                    <div class="ped-trend-chart__bar" style="height:16%;"></div>
+                    <div class="ped-trend-chart__bar" style="height:22%;"><div class="ped-trend-chart__bar-refund" style="height:10%;"></div></div>
+                    <div class="ped-trend-chart__bar" style="height:30%;"><div class="ped-trend-chart__bar-refund" style="height:14%;"></div></div>
+                    <div class="ped-trend-chart__bar" style="height:38%;"><div class="ped-trend-chart__bar-refund" style="height:18%;"></div></div>
+                    <div class="ped-trend-chart__bar" style="height:45%;"><div class="ped-trend-chart__bar-refund" style="height:22%;"></div></div>
+                    <div class="ped-trend-chart__bar" style="height:55%;"><div class="ped-trend-chart__bar-refund" style="height:25%;"></div></div>
+                  </div>
+                  <div class="ped-trend__legend">
+                    <span>게시 직후</span>
+                    <span>당일</span>
+                  </div>
+                </div>
+                <div class="ped-section-header"><div class="ped-section-header__title">입장 그룹별 현황</div></div>
+                <div class="ped-group-list">
+                  <div class="ped-group">
+                    <div class="ped-group__head">
+                      <div class="ped-group__name">일반 그룹</div>
+                      <div><span class="ped-group__count">6</span><span class="ped-group__count-total">/ 8 참석</span></div>
+                    </div>
+                    <div class="mds-capbar mds-capbar--segmented">
+                      <div class="mds-capbar__seg mds-capbar__seg--filled"></div><div class="mds-capbar__seg mds-capbar__seg--filled"></div><div class="mds-capbar__seg mds-capbar__seg--filled"></div><div class="mds-capbar__seg mds-capbar__seg--filled"></div><div class="mds-capbar__seg mds-capbar__seg--filled"></div><div class="mds-capbar__seg mds-capbar__seg--filled"></div><div class="mds-capbar__seg"></div><div class="mds-capbar__seg"></div>
+                    </div>
+                    <div class="ped-group__breakdown">
+                      <span>참석 <strong>6</strong></span>
+                      <span class="ped-group__breakdown-item--muted">환불 <strong>2</strong></span>
+                    </div>
+                    <div class="ped-group__nest">
+                      <div class="ped-group__tickets">
+                        <div class="ped-group__ticket">
+                          <div class="ped-group__ticket-row">
+                            <div class="ped-group__ticket-name">얼리버드 입장권<span class="ped-group__ticket-sub">판매 4 / 발행 4장</span></div>
+                            <div class="ped-group__ticket-price">35,000원</div>
+                            <!-- chevron 숨김 (탭 비활성) -->
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- "+ 이 그룹에 티켓 추가" 버튼 숨김 -->
+                  </div>
+                </div>
+              </div>
+            </div></td>
+            <td class="state-mini__aspect">조건</td>
+            <td>이벤트 status 'completed' (cron auto-complete-past-events: end_time 도달 시 자동 전환). D-day가 음수(D+N) — N은 days_since_start. 모든 신청 lifecycle 종료, 매출은 실현 / 환불 차감 후 최종.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              · <strong>정보 수정 link 숨김</strong> — 끝난 이벤트의 정보 변경 의미 X (사후 메모는 별도 화면)<br>
+              · <strong>참가자 보기 outline 버튼만</strong> 노출 → EventApplicationListPage (참석 명단 / 후기 처리 / 환불 요청 검토)<br>
+              · <strong>심사하기 CTA 숨김</strong> — 신규 심사 X (심사대기 metric도 숨김 — 0건이거나 lifecycle 종료)<br>
+              · <strong>티켓 row 탭 비활성</strong> — chevron 숨김, 정보만 표시<br>
+              · <strong>"+ 이 그룹에 티켓 추가" 버튼 숨김</strong>
+            </td>
+          </tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>· 환불 요청 (refund_status: 'requested')은 완료 후에도 발생 가능 — 운영자 처리 진입은 EventApplicationListPage<br>· 정산 데이터는 별도 SettlementPage에서 (본 화면은 운영 hub 역할만)<br>· '확정' → '참석' 라벨 변환 (실제 참가한 사람 = checked-in)<br>· 후기 / 리뷰 진입은 별도 화면 (향후)</td></tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>
+              ↔ Default 구조 + 다음 변형: chip 'outline' (완료 + D+N) · <strong>정보 수정 row 숨김</strong> · 심사대기 metric 숨김 (0건) · <strong>심사하기 CTA 숨김</strong> · 매출 카드 라벨 '달성 매출' (was '기대 매출') · 매출 본문 = 실현 + 환불 차감 · '확정' → '참석' label 전환 · 그룹 티켓 row chevron 숨김 + InkWell 비활성 · "+ 티켓 추가" 버튼 숨김
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>
+              + <code>color-divider</code> bg + <code>color-text-secondary</code> (outline chip · D+N · '환불' breakdown) · 그 외는 Default와 동일
+            </td>
+          </tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📋 완료 후 본 화면은 회고용 — 운영자 KPI 검토 + 후속 처리 진입. <strong>달성 매출</strong> 라벨이 가장 중요한 차이 — 더 이상 잠재(pending revenue)가 아닌 실현 매출. 향후 정산 페이지 / 리뷰 페이지 진입 link 추가 고려.</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ===================================================
+           STATE 4 — 신청 0건
+           =================================================== -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong>신청 0건</strong> <span class="tag tag--mute">empty-applications</span></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock"><div class="viewport">
+              <div class="ped-appbar">
+                <div class="ped-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
+                <div class="ped-appbar__title">이벤트 상세</div>
+              </div>
+              <div class="ped-body">
+                <div class="ped-meta-chips">
+                  <span class="ped-chip ped-chip--success ped-chip--visibility"><svg class="ped-chip__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>공개</span>
+                  <span class="ped-chip ped-chip--success">모집</span>
+                  <span class="ped-chip ped-chip--warning">D-12</span>
+                </div>
+                <div class="ped-section-header" style="padding-top:var(--spacing-medium);"><div class="ped-section-header__title">참가 현황</div></div>
+                <div class="ped-summary">
+                  <div class="ped-summary__head">
+                    <span class="ped-summary__metric">
+                      <span class="ped-summary__count">0</span>
+                      <span class="ped-summary__count-total">/ 12 확정</span>
+                    </span>
+                  </div>
+                  <div class="mds-capbar mds-capbar--segmented" style="height:8px;">
+                    <div class="mds-capbar__seg"></div><div class="mds-capbar__seg"></div><div class="mds-capbar__seg"></div><div class="mds-capbar__seg"></div><div class="mds-capbar__seg"></div><div class="mds-capbar__seg"></div><div class="mds-capbar__seg"></div><div class="mds-capbar__seg"></div><div class="mds-capbar__seg"></div><div class="mds-capbar__seg"></div><div class="mds-capbar__seg"></div><div class="mds-capbar__seg"></div>
+                  </div>
+                  <div class="ped-summary__actions">
+                    <div class="ped-summary__cta ped-summary__cta--outline"><span>참가자 보기</span></div>
+                  </div>
+                </div>
+              </div>
+            </div></td>
+            <td class="state-mini__aspect">조건</td>
+            <td>입장 그룹 ≥ 1 · 신청 데이터 0건 (이벤트 직후 또는 노출 부족). 심사대기 / 환불완료 metric은 카운트가 0이라 노출 자체 X.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              · <strong>참가자 보기 탭</strong> → EventApplicationListPage 빈 상태 ("신청 내역이 없습니다.")<br>
+              · <strong>심사하기 CTA 숨김</strong> (대기 0)<br>
+              · 다른 액션(정보 수정 / 입장 그룹 / 티켓) 모두 평소와 동일
+            </td>
+          </tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>· 0건일 때 metric은 "0 / N 확정"만 노출. 심사대기 / 환불완료는 ≥1일 때만 metric 노출<br>· capbar는 12칸 모두 빈(divider 톤) — 정원이 보이지만 채워진 게 없음<br>· "심사하기" CTA가 빠져 actions 영역에 "참가자 보기" outline 단독</td></tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>
+              ↔ Default − 심사대기 metric − 환불완료 metric − 심사하기 CTA · 참가자 보기 outline 버튼은 그대로 노출
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>
+              ↔ Default와 동일 (단순 데이터 0 케이스)
+            </td>
+          </tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📭 가이드 시그널이 약함 — 운영자에게 "노출 점검" 안내가 필요할 수도. 현재 spec에선 별도 안내 없음 — 향후 보강 가능 (예: "신청이 들어오지 않으면 외부 공유 / 가격 점검을 검토해보세요" hint).</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ===================================================
+           STATE 5 — Loading
+           =================================================== -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong>Loading</strong> <span class="tag tag--mute">async</span></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock"><div class="viewport">
+              <div class="ped-appbar">
+                <div class="ped-appbar__back">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                </div>
+                <div class="ped-appbar__title">이벤트 상세</div>
+              </div>
+              <div style="position:absolute;top:56px;left:0;right:0;bottom:0;">
+                <div class="ped-spinner"></div>
+              </div>
+              <span class="annotation" style="top:60px;right:8px;">탭 동작 가능</span>
+              <span class="annotation" style="top:260px;right:8px;">center spinner · primary 톤</span>
+            </div></td>
+            <td class="state-mini__aspect">조건</td>
+            <td>이벤트 데이터를 처음 받아오는 중. AppBar는 이미 그려져 있고, 본문 영역에 풀-스크린 spinner가 도는 중.</td>
+          </tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>· 탭 전환은 가능 (다만 본문은 같은 spinner를 보여줌)<br>· 데이터가 도착하면 spinner가 사라지고 Default 본문으로 자동 전환</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>로딩이 길어져도 spinner가 그대로 유지됨 (timeout 별도 처리 없음 — 실패 시 Error로 전환)</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ Default 본문(메타 카드 + 티켓 리스트) → <code>MinglitCircularProgressIndicator</code> 단독 (가운데 정렬)</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>+ <code>color-primary</code> (spinner accent)<br>− 메타 카드 / 티켓 / Add 카드 토큰들</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>—</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ===================================================
+           STATE 6 — Error
+           =================================================== -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong>Error</strong> <span class="tag tag--mute">network/server</span></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock"><div class="viewport">
+              <div class="ped-appbar">
+                <div class="ped-appbar__back">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                </div>
+                <div class="ped-appbar__title">이벤트 상세</div>
+              </div>
+              <div class="ped-error" style="top:56px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <div class="ped-error__msg">이벤트를 불러오지 못했습니다.<br>잠시 후 다시 시도해 주세요.</div>
+              </div>
+              <span class="annotation" style="top:200px;right:8px;">error icon · color-error</span>
+              <span class="annotation" style="top:260px;right:8px;">centered message</span>
+            </div></td>
+            <td class="state-mini__aspect">조건</td>
+            <td>이벤트 데이터 로드 실패 (네트워크 끊김 / 서버 오류 / 권한). 본문 영역은 통째로 에러 안내로 대체.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              · <strong>뒤로가기</strong> → 파티 상세로 복귀<br>
+              · <strong>탭 전환</strong>은 가능하지만 양쪽 본문이 같은 에러 안내로 대체 (이벤트 자체가 안 들어와서)<br>
+              · (자동 retry는 없음 — 사용자가 다시 진입해야 함)
+            </td>
+          </tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>네트워크 / 서버 / 권한 오류를 별도로 구분하지 않고 동일한 안내를 보여줌.</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ Default 본문 → 가운데 정렬 에러 안내(<code>Icon</code> error_outline + <code>Text</code>)</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>+ <code>color-error</code> (icon)<br>− 운영 관리 토큰 전체</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 retry 버튼 없음 — 다음 진입에서 자동으로 다시 받아옴.</td></tr>
+        </tbody>
+      </table>
+
+    </div>
+  </section>
+
+  <!-- ============================================================
+       Page-atom zoom-ins — Detail card 상태별 톤
+       ============================================================ -->
+
+  <section class="doc">
+    <h2>Meta chip — visual (도메인별 톤)</h2>
+    <p class="intro">
+      페이지 최상단 chip line은 운영 단계 메타를 색으로 구분해 운영자가 0.3초 안에 인지하도록 한다. 도메인별 색 매핑이 단일 진실:
+      <strong>공개 설정</strong>(success / outline) · <strong>이벤트 상태</strong>(success / error / success) · <strong>D-day</strong>(warning · 시간 임박 시그널).
+      모든 chip은 동일 토큰(<code>radius-small</code> · 12px w600 · 3px 10px padding)을 공유하며 색만 variant로 분기.
+    </p>
+    <div class="visual-gallery" style="background: var(--color-surface); padding: 24px; border-radius: var(--radius-card); display: flex; flex-direction: column; gap: 20px;">
+
+      <!-- Group 1: 공개 설정 -->
+      <div>
+        <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:8px;font-weight:600;">공개 설정 (set-once)</div>
+        <div class="viewport" style="width:375px;padding:16px;">
+          <div class="ped-meta-chips" style="padding:0;">
+            <span class="ped-chip ped-chip--success ped-chip--visibility"><svg class="ped-chip__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>공개</span>
+            <span class="ped-chip ped-chip--outline ped-chip--visibility"><svg class="ped-chip__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>비공개</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Group 2: 이벤트 상태 -->
+      <div>
+        <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:8px;font-weight:600;">이벤트 상태 (운영 단계)</div>
+        <div class="viewport" style="width:375px;padding:16px;">
+          <div class="ped-meta-chips" style="padding:0;">
+            <span class="ped-chip ped-chip--success">모집</span>
+            <span class="ped-chip ped-chip--error">취소</span>
+            <span class="ped-chip ped-chip--outline">완료</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Group 3: D-day -->
+      <div>
+        <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:8px;font-weight:600;">D-day (시간 임박)</div>
+        <div class="viewport" style="width:375px;padding:16px;">
+          <div class="ped-meta-chips" style="padding:0;">
+            <span class="ped-chip ped-chip--warning">D-30</span>
+            <span class="ped-chip ped-chip--warning">D-7</span>
+            <span class="ped-chip ped-chip--warning">D-1</span>
+            <span class="ped-chip ped-chip--warning">D-day</span>
+            <span class="ped-chip ped-chip--outline">D+1</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Group 4: 통합 (실제 페이지 chip line 예시) -->
+      <div>
+        <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:8px;font-weight:600;">실제 페이지 chip line — stable→dynamic 순서</div>
+        <div class="viewport" style="width:375px;padding:16px;">
+          <div class="ped-meta-chips" style="padding:0;">
+            <span class="ped-chip ped-chip--success ped-chip--visibility"><svg class="ped-chip__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>공개</span>
+            <span class="ped-chip ped-chip--success">모집</span>
+            <span class="ped-chip ped-chip--warning">D-12</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr><th style="width: 140px;">Chip 라벨</th><th style="width: 140px;">Variant / 색</th><th>의미 / 노출 조건</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>공개</td><td><code>success</code> · 초록 #15803d</td><td>이벤트가 외부에 노출됨. set-once — 운영자가 거의 안 바꿈.</td></tr>
+        <tr><td>비공개</td><td><code>outline</code> · 회색</td><td>외부 노출 X. 초대 / draft 단계.</td></tr>
+        <tr><td>모집</td><td><code>success</code> · 초록 #15803d</td><td>이벤트 시작 전 — 신청 받는 활발한 단계. (공개 chip과 동일 톤이지만 도메인 다름 — visibility vs lifecycle)</td></tr>
+        <tr><td>취소</td><td><code>error</code> · 빨강</td><td>이벤트 취소됨 — 주의 (환불 / 사후 안내 필요).</td></tr>
+        <tr><td>완료</td><td><code>outline</code> · 회색</td><td>이벤트 종료 — 정산 / 리뷰 단계로 이동.</td></tr>
+        <tr><td>D-N (N&gt;0)</td><td><code>warning</code> · 주황 #b85a00</td><td>이벤트 시작까지 N일. 항상 동일 톤 (D-30 ~ D-1).</td></tr>
+        <tr><td>D-day</td><td><code>warning</code> · 주황</td><td>이벤트 당일. label만 'D-day'로 변경 (숫자 없음).</td></tr>
+        <tr><td>D+N (지남)</td><td><code>outline</code> · 회색</td><td>이벤트 시작 시간 지남. 보통 '완료' 상태와 함께 노출.</td></tr>
+      </tbody>
+    </table>
+    <p class="intro" style="margin-top:12px;margin-bottom:0;">
+      ※ Chip 순서는 stable→dynamic — 공개 chip(set-once)이 가장 좌측, 상태 chip(occasional change), D-day chip(매일 변함)이 우측. 운영자 시선이 변하지 않는 메타 → 변하는 메타 순으로 흘러가도록 설계.
+    </p>
+  </section>
+</div>
+
+<!-- ============================================================
+     GLOBAL BEHAVIOR
+     ============================================================ -->
+<div class="perspective" id="global-behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">
+      Cross-cutting / global only — 모든/다수 state에 동일하게 적용되는 동작.
+      state-specific 인터랙션은 위 States section의 각 state mini-table 참조.
+    </span>
+  </div>
+
+  <section class="doc">
+    <h2>Cross-cutting interactions</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 220px;">사용자 액션</th>
+          <th>화면에 보이는 결과</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>뒤로 가기 (OS back / AppBar 뒤로 버튼)</td>
+          <td>파티 상세로 복귀 — 모든 state에서 동일.</td>
+        </tr>
+        <tr>
+          <td>(deprecated) 탭 전환</td>
+          <td>(deprecated) Tab 구조 폐기 후 단일 스크롤로 전환. 참가 신청은 별도 라우트(EventApplicationListRoute)로 분리되어 push 네비게이션으로 이동.</td>
+        </tr>
+        <tr>
+          <td>다른 화면에서 돌아옴 (TicketCreate / TicketEdit / 심사 다이얼로그)</td>
+          <td>이 화면은 자동으로 최신 데이터를 다시 받아옴 — 새로 만든 티켓이 리스트에 추가되거나, 심사 처리된 신청이 처리 완료 그룹으로 이동한다.</td>
+        </tr>
+        <tr>
+          <td>심사 처리 성공 (참가 신청 탭에서)</td>
+          <td>다이얼로그 닫힘 → SnackBar('심사 처리가 완료되었습니다.') 잠깐 표시 → 신청 리스트가 자동 갱신되며 해당 카드가 처리 완료 그룹으로 이동.</td>
+        </tr>
+        <tr>
+          <td>심사 처리 실패</td>
+          <td>SnackBar 대신 공통 에러 안내가 노출되고, 카드는 심사 대기 그룹에 그대로 유지된다.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="intro" style="margin-top: 12px; margin-bottom: 0;">
+      ※ state-specific 액션 (티켓 카드 탭 / 심사 대기 카드 탭 등)은 위 States section의 mini-table에 분산.
+    </p>
+  </section>
+
+  <section class="doc">
+    <h2>Motion &amp; timing</h2>
+    <p class="intro">
+      <strong>임시값 사용 금지</strong> — duration은 <code>MinglitAnimation</code> 토큰에서 선택.
+    </p>
+    <table class="ref" style="margin-bottom: 16px;">
+      <thead>
+        <tr><th style="width: 200px;">Token</th><th style="width: 80px;">Value</th><th>Use case</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>MinglitAnimation.micro</code></td><td>100ms</td><td>탭 active indicator 슬라이드 (탭 → 다음 탭)</td></tr>
+        <tr><td><code>MinglitAnimation.fast</code></td><td>200ms</td><td>심사 다이얼로그 scale fade-in/out</td></tr>
+        <tr><td><code>MinglitAnimation.medium</code></td><td>350ms</td><td>loading → data 크로스페이드 · push 화면 전환</td></tr>
+        <tr><td><em>(OS default)</em> SnackBar</td><td>~250ms 진입 / 4s 표시 / 200ms 퇴장</td><td>Material SnackBar 기본</td></tr>
+      </tbody>
+    </table>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 220px;">Transition</th>
+          <th style="width: 140px;">Duration (token)</th>
+          <th>Curve / notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>탭 전환 (본문 슬라이드)</td>
+          <td><code>medium</code> (350ms)</td>
+          <td>(deprecated — Tab 구조 폐기됨) push/pop은 Material 기본 슬라이드</td>
+        </tr>
+        <tr>
+          <td>활성 indicator 이동</td>
+          <td><code>micro</code> 근사 (~100ms)</td>
+          <td>(deprecated — TabBar 폐기됨)</td>
+        </tr>
+        <tr>
+          <td>이벤트 데이터 로드 (Loading → Default)</td>
+          <td><code>medium</code> (350ms)</td>
+          <td>spinner fade-out + 본문 fade-in 크로스페이드</td>
+        </tr>
+        <tr>
+          <td>심사 다이얼로그 진입/퇴장</td>
+          <td><code>fast</code> (200ms)</td>
+          <td>Material Dialog scale fade</td>
+        </tr>
+        <tr>
+          <td>심사 처리 후 리스트 갱신</td>
+          <td>~ms (즉시)</td>
+          <td>리스트가 새 데이터로 다시 그려짐 — 카드 위치 변경은 별도 애니메이션 없이 즉시 반영</td>
+        </tr>
+        <tr>
+          <td>SnackBar 등장</td>
+          <td>OS default</td>
+          <td>화면 하단에서 슬라이드 업 → 약 4초 머무름 → 자동 사라짐</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Global edge cases</h2>
+    <p class="intro">
+      화면 전반에 영향을 주는 edge case. state-specific edge case는 위 States section의 각 mini-table 에지케이스 행에.
+    </p>
+    <ul class="notes">
+      <li><strong>이벤트 제목이 비어있음</strong> — 본문 상단의 제목 블록 통째로 사라짐. Hero 카드가 곧바로 시작 위치로 올라간다.</li>
+      <li><strong>참가 현황 / 신청 카운트가 0</strong> — 메타 카드의 "참가 현황" 행은 "확정 0명 / 신청 0명 (대기 0)"으로 노출 (행 자체는 사라지지 않음).</li>
+      <li><strong>티켓이 0개</strong> — 입장권 섹션 본문이 큰 보라 빈 상태 카드("새 티켓 만들기") 한 장으로 대체. 섹션 헤더는 타이틀만 노출(trailing 버튼 없음).</li>
+      <li><strong>정원(maxParticipants)이 정해지지 않음</strong> — 입장권 섹션의 status header(발행/정원 라인)가 사라지고 곧바로 카드부터 시작.</li>
+      <li><strong>입장 그룹이 정의되지 않은 단순 이벤트</strong> — 티켓 카드 sub-라벨에서 "그룹" 정보가 빠지고 발행/정원 텍스트만 남는다.</li>
+      <li><strong>다크 모드</strong> — 활성 탭 / 이벤트 제목 / Add 카드의 partner primary 톤이 다크 브랜드 톤(#9b7bec)으로 자동 전환. 메타 카드 / 티켓 카드 / 신청 카드 / divider / status badge 모두 mds 다크 토큰 자동 반영. 상태값 색(모집/취소/완료)도 동일 매핑이 다크 컬러 셋으로 적용.</li>
+      <li><strong>접근성</strong> — Hero 카드 / 참가 현황 카드는 InkWell이라 Material 기본 a11y(스크린 리더 "버튼" 인식). 메타 카드의 라벨/값은 row 단위로 grouped. status badge 텍스트는 색 의존이 아니라 라벨 자체를 읽으면 의미가 전달되도록 작성. 심사 흐름은 별도 라우트(EventApplicationListRoute → EventApplicationDetailRoute)로 분리되어 키보드 nav 자연스럽게 가능.</li>
+      <li><strong>네트워크 끊김 (재진입 전)</strong> — Loading이 길어지다 결국 Error state로 전환. AppBar는 살아있어 사용자가 뒤로갈 수 있음.</li>
+    </ul>
+    <p class="intro" style="margin-top: 12px; margin-bottom: 0;">
+      ※ <strong>티켓 / 심사 다이얼로그 자체의 edge</strong> (가격 미정 / 심사 거절 사유 미입력 등)는 각 child spec / 다이얼로그 내부 사양 참고.
+    </p>
+  </section>
+</div>
+
+<!-- ============================================================
+     REFERENCE
+     ============================================================ -->
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">📖</span>
+    <h2>Reference</h2>
+    <span class="lede">
+      Implementation source + 인접 화면 link만. <strong>Components / Tokens는 States section의 각 mini-table</strong>에 분산됨.
+    </span>
+  </div>
+
+  <section class="doc">
+    <h2>Implementation source</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 200px;">항목</th><th>Path / Reference</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Widget class</strong></td><td><code>EventDetailPage</code> (+ <code>_EventInfoTab</code> · <code>_HeroDetailRow</code> / <code>_MetaDetailRow</code> internal widgets)</td></tr>
+        <tr><td><strong>File path</strong></td><td><a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/features/party/event/detail/event_detail_page.dart"><code>apps/app_partner/lib/src/features/party/event/detail/event_detail_page.dart</code></a></td></tr>
+                <tr><td><strong>Ticket list widget</strong></td><td><a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/features/party/event/widgets/ticket_list_item.dart"><code>ticket_list_item.dart</code></a> (<code>TicketListView</code> · <code>TicketListItem</code> · <code>TicketStatusHeader</code>)</td></tr>
+        <tr><td><strong>Controller / Provider</strong></td><td><code>eventDetailProvider(eventId)</code> · <code>eventTicketsProvider(eventId)</code> · <code>eventApplicationsProvider(eventId)</code> · <code>eventApplicationReviewControllerProvider</code> · <code>partyDetailProvider(partyId)</code></td></tr>
+        <tr><td><strong>Review dialog</strong></td><td><code>EventApplicationReviewDialog</code> — 심사 대기 카드 탭 시 노출되는 승인/거절 다이얼로그</td></tr>
+        <tr><td><strong>Route</strong></td><td><code>EventDetailRoute</code> · path: <code>/parties/:partyId/events/:eventId</code> · <code>app_partner/lib/src/routing/app_routes.dart</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 240px;">Spec</th><th>Relation</th></tr></thead>
+      <tbody>
+        <tr><td><a href="/specs/party_detail_page.html"><code>PartyDetailPage</code></a></td><td>Parent — 이 화면으로 진입하는 주 경로 (이벤트 카드 탭).</td></tr>
+        <tr><td><a href="/specs/event_edit_page.html"><code>EventEditPage</code></a></td><td>Hero "일정" 영역 탭 → 이벤트 정보 수정 화면. 확정 참가자 ≥1명이면 일정·장소 변경 시 사유 입력 + 자동 알림 정책 발동.</td></tr>
+        <tr><td><a href="/specs/ticket_create_page.html"><code>TicketCreatePage</code></a></td><td>빈 상태 카드(티켓 0개) / 리스트 끝 Add 카드 → 모두 여기로 이동 (단일 진입점).</td></tr>
+        <tr><td><a href="/specs/ticket_edit_page.html"><code>TicketEditPage</code></a></td><td>입장권 카드 탭 → 해당 티켓을 선택한 상태로 이 화면으로 이동.</td></tr>
+        <tr><td><a href="/specs/event_application_manage_page.html"><code>EventApplicationManagePage</code></a></td><td>여러 이벤트의 신청을 한꺼번에 관리하는 화면 — 본 화면의 참가 현황 카드 → EventApplicationListRoute가 단일 이벤트 버전이고, 이 화면은 cross-event 버전.</td></tr>
+        <tr><td><a href="/specs/event_application_detail_page.html"><code>EventApplicationDetailPage</code></a></td><td>개별 신청 상세 — 본 화면에서는 다이얼로그로 처리하지만, 더 깊은 정보가 필요할 때 이쪽으로 향한다.</td></tr>
+        <tr><td><a href="/specs/event_create_page.html"><code>EventCreatePage</code></a></td><td>이 화면이 보여주는 이벤트를 처음 만든 화면 — 같은 event 데이터의 생성 단계.</td></tr>
+        <tr><td><a href="/specs/event_detail_page.html"><code>EventDetailPage (user)</code></a></td><td>같은 이벤트의 user 측 화면 — 영업 톤(이미지 캐러셀 + CTA 바). 같은 데이터, 정반대 관점.</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<!-- ============================================================
+     ✅ AUTHORING CHECKLIST
+     ============================================================ -->
+<section class="doc" style="border: 2px solid var(--color-primary); border-radius: var(--radius-card); padding: 16px 24px; margin-top: 32px;">
+  <h2 style="color: var(--color-primary);">✅ Authoring checklist</h2>
+  <ul class="notes" style="line-height: 1.9;">
+    <li>✅ <strong>Header</strong> — Title (h1)만</li>
+    <li>✅ <strong>Overview</strong> — Status (✅ 디자인완료) · App · Category · Route · Path · Hierarchy · Purpose · User journey · Background · Frequency 10행 모두 채움</li>
+    <li>✅ <strong>History</strong> — v1.0 (2026-05-01) 초기 작성</li>
+    <li>✅ <strong>Layout — top blueprint</strong> — AppBar + Title + Detail card + Stats card + Tickets section + Visibility footer 6블록 + tree</li>
+    <li>✅ <strong>Layout — Sub-anatomy 3종</strong> — Title block · Detail info card · Tickets section (참가 신청은 EventApplicationListRoute 별도 spec)</li>
+    <li>✅ <strong>States — 6종</strong> — Default · 이벤트 취소됨 · 이벤트 완료됨 · 신청 0건 · Loading · Error</li>
+    <li>✅ <strong>States — mini-table 6 rows</strong> — 6 state 모두 (조건/액션/에지/컴포넌트/토큰/노트)</li>
+    <li>✅ <strong>States — Default baseline 풀 리스트</strong> — 컴포넌트 + 토큰 풀 명시</li>
+    <li>✅ <strong>States — additive diff</strong> — 나머지 3 state는 ↔ / + / − prefix 사용</li>
+    <li>✅ <strong>State summary matrix</strong> — 6 state 한눈 비교</li>
+    <li>✅ <strong>Visual zoom-in 1종</strong> — Meta chip 도메인별 톤 (공개·상태·D-day 4 그룹 + 통합 예시)</li>
+    <li>✅ <strong>Global Behavior — cross-cutting only</strong> — 뒤로가기 · 탭 전환 · 화면 복귀 시 새로고침 · 심사 처리 성공/실패</li>
+    <li>✅ <strong>Global Behavior — Motion</strong> — MinglitAnimation token 매핑 표 + transitions 표</li>
+    <li>✅ <strong>Global edge cases</strong> — 제목 빈/카운트 0/티켓 0/정원 미정/그룹 없음/다크모드/접근성/네트워크</li>
+    <li>✅ <strong>Reference — Implementation source</strong> — widget · file · tab2 widget · ticket widget · controllers · review dialog · route</li>
+    <li>✅ <strong>Reference — Related screens</strong> — PartyDetail · TicketCreate · TicketEdit · ApplicationManage · ApplicationDetail · EventCreate · user EventDetail</li>
+    <li>✅ <strong>Partner brand color</strong> — viewport-scoped <code>--color-primary</code> 오버라이드 (#6c3ce1 / dark #9b7bec)</li>
+    <li>✅ <strong>톤 룰</strong> — 사용자 관찰 가능 묘사. provider/method/AsyncValue/Riverpod 용어 사용 안 함 (widget 트리 내 컴포넌트 contract만 widget 이름 사용)</li>
+  </ul>
+</section>
+
+</div>
+
+<script>
+  document.getElementById('spec-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('spec-mode', e.target.checked);
+  });
+  document.getElementById('dark-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('dark-mode', e.target.checked);
+  });
+</script>
+</body>
+</html>

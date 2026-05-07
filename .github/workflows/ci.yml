@@ -27,6 +27,24 @@ jobs:
             exit 1
           fi
           echo "✅ All migration versions unique ($(echo "$VERSIONS" | wc -l | tr -d ' ') files checked)"
+      - name: Warn on same-day sequence gaps
+        run: |
+          GAP_FOUND=false
+          for DATE in $(ls supabase/migrations/*.sql 2>/dev/null | xargs -n1 basename | sed 's/^\([0-9]\{8\}\).*/\1/' | sort -u); do
+            SEQS=$(ls supabase/migrations/${DATE}*.sql 2>/dev/null | xargs -n1 basename | sed "s/^${DATE}\([0-9]*\)_.*/\1/" | sort -n)
+            PREV=""
+            for SEQ in $SEQS; do
+              if [ -n "$PREV" ] && [ $((10#$SEQ - 10#$PREV)) -gt 1 ]; then
+                echo "⚠️  Gap: ${DATE} jumps from ${PREV} to ${SEQ} — check KNOWN_GAPS.md or git history"
+                GAP_FOUND=true
+              fi
+              PREV="$SEQ"
+            done
+          done
+          if [ "$GAP_FOUND" = "true" ]; then
+            echo "→ Undocumented gaps may indicate a deleted migration. Verify intentional."
+          fi
+          echo "✅ Sequence gap check complete"
 
   # env-manifest.json ↔ EnvKeyStore drift 검사 (항상 실행 — path filter 없음)
   check-env-manifest-sync:
@@ -70,6 +88,7 @@ jobs:
             - 'apps/app_partner/**'
           minglit_kit:
             - 'shared/packages/minglit_kit/**'
+            - 'shared/packages/**'
           mds_core:
             - 'shared/packages/mds/core/**'
           mds_storybook:
@@ -122,6 +141,13 @@ jobs:
             report_name: 'Minglit Kit Tests'
             artifact_name: minglit-kit-coverage
             coverage_flag: minglit-kit
+            coverage_flag_logic: ''
+          - app: mds_core
+            change_key: mds_core
+            directory: shared/packages/mds/core
+            report_name: 'MDS Core Tests'
+            artifact_name: mds-core-coverage
+            coverage_flag: mds-core
             coverage_flag_logic: ''
           - app: mds_storybook
             change_key: mds_storybook_or_mds

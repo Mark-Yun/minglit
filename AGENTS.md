@@ -12,6 +12,7 @@
 | [payment-pipeline.md](docs/architecture/payment-pipeline.md) | 결제/정산 파이프라인 |
 | [search-and-recommendation.md](docs/architecture/search-and-recommendation.md) | PGroonga 검색 + pgvector 추천 |
 | [global-event-pipeline.md](docs/architecture/global-event-pipeline.md) | PGMQ 2-tier 이벤트 파이프라인 |
+| [edge-function-auth.md](docs/architecture/edge-function-auth.md) | EF 인증/인가 모델 (auth-manifest + minglitEdgeFunction wrapper) |
 | [edge-functions.md](docs/debugging/edge-functions.md) | Edge Function 디버깅 (Axiom, Sentry, 로컬/Dev, 테스트) |
 
 ## Versioning Conventions
@@ -76,10 +77,17 @@ bash scripts/bump-version.sh 26.03.1        # release 버전 세팅
 
 - APK 빌드 요청 시 `--debug`가 디폴트. `--release`는 명시적으로 요청할 때만 사용.
 - Flutter 환경: dev 환경(`minglit_env/dev/flutter.env`)이 디폴트. local/prod는 명시적으로 요청할 때만.
+- **Java 17 필수** — Gradle 8.14 내장 Kotlin DSL이 Java 25 버전 문자열 파싱 미지원 (Fix #2287). 모든 `flutter build` 전에 `JAVA_HOME`을 Java 17로 세팅한다:
+  ```bash
+  export JAVA_HOME="$(/usr/libexec/java_home -v 17)"
+  ```
 
 ### Build Commands
 
 ```bash
+# Java 17 세팅 (Fix #2287: Gradle 8.14 + Java 25 호환성 이슈)
+export JAVA_HOME="$(/usr/libexec/java_home -v 17)"
+
 # Debug APK (디폴트)
 cd apps/app_user && flutter build apk --flavor dev --debug --dart-define-from-file=../../minglit_env/dev/flutter.env
 
@@ -311,3 +319,5 @@ Rules:
 - If graphify-out/wiki/index.md exists, navigate it instead of reading raw files
 - For cross-module "how does X relate to Y" questions, prefer `graphify query "<question>"`, `graphify path "<A>" "<B>"`, or `graphify explain "<concept>"` over grep — these traverse the graph's EXTRACTED + INFERRED edges instead of scanning files
 - After modifying code files in this session, run `graphify update .` to keep the graph current (AST-only, no API cost)
+- `graphify-out/` 안 파일이 commit/checkout/merge 직후 dirty 로 남으면 post-commit hook 부산물 — 사용자 작업이 아님. `git checkout HEAD -- graphify-out/` 또는 `git stash` 로 자유롭게 정리 가능 (별도 승인 불필요). 새 commit 에 포함 필요한 변경(코드 수정으로 인한 그래프 변화)이면 `git add graphify-out/` 로 묶어 커밋
+- 머지 충돌이 `graphify-out/` 파일에서만 발생하면 `git checkout --theirs graphify-out/` + `graphify update .` 로 재생성하여 해결 (사용자 작업이 아닌 hook 산출물이므로 어느 쪽이든 안전)

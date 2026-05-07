@@ -1,6 +1,6 @@
 import 'package:app_user/src/features/my_tickets/ui/my_ticket_card.dart';
 import 'package:app_user/src/features/my_tickets/ui/my_tickets_page.dart';
-import 'package:app_user/src/features/ticket/ui/model/ticket_event_meta.dart';
+import 'package:app_user/src/logic/ticket_event_meta.dart';
 import 'package:app_user/src/routing/app_coordinator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';

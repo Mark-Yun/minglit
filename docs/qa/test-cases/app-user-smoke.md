@@ -50,14 +50,13 @@
 
 | # | 화면 | 경로 | Page 클래스 | GUEST | AUTH | VERIFIED | 비고 |
 |---|------|------|------------|-------|------|----------|------|
-| U-S19 | 이벤트 신청 위저드 | `/events/:eventId/apply` | `EventApplicationWizardPage` | → `/login` | OK | OK | suffix `/apply` 보호. 위저드 내부에서 본인인증 스텝 포함 |
+| U-S19 | 이벤트 신청 위저드 | `/events/:eventId/apply` | `EventApplicationWizardPage` | → `/login` | OK | OK | suffix `/apply` 보호. 위저드 내부에서 본인인증 스텝 포함. **사전조건**: 시드 유저(`user_*_*_*@test.com`)가 미신청 상태인 이벤트 1개 이상 존재. 모든 이벤트가 이미 신청 처리된 경우 위저드 진입 불가 — `applied/full/closed` 상태별로 EventApplyButton이 disabled 또는 "이미 신청한 이벤트" 분기로 빠진다. 막혔을 때는 다른 시드 유저로 전환하거나 #2256 진행 상황 확인 |
 
 ### 2.4 개발 전용 화면 (Dev Only)
 
 | # | 화면 | 경로 | Page 클래스 | GUEST | AUTH | VERIFIED | 비고 |
 |---|------|------|------------|-------|------|----------|------|
-| U-S20 | 개발 도구 | `/dev` | `UserDevMap` | OK | OK | OK | dev flavor만 접근 가능 |
-| U-S21 | 유저 전환 | `/dev/switch` | `DevUserSwitchScreen` | OK | OK | OK | dev flavor만 접근 가능 |
+| U-S21 | 유저 전환 | `/dev/switch` | `DevUserSwitchScreen` | OK | OK | OK | dev flavor만 접근 가능. 로그인 화면 로고 5클릭으로도 진입 가능 |
 
 ---
 

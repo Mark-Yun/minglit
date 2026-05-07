@@ -40,34 +40,28 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Minglit Kit - Fix & Format
-        run: |
-          dart fix --apply
-          dart format .
+      - name: Minglit Kit - Format
+        run: dart format .
         working-directory: shared/packages/minglit_kit
 
-      - name: App User - Fix & Format
-        run: |
-          dart fix --apply
-          dart format .
+      - name: App User - Format
+        run: dart format .
         working-directory: apps/app_user
 
-      - name: App Partner - Fix & Format
-        run: |
-          dart fix --apply
-          dart format .
+      - name: App Partner - Format
+        run: dart format .
         working-directory: apps/app_partner
 
       - name: Commit changes if needed
         env:
-          # PAT injected only here, not during pub get/dart fix/format above.
+          # PAT injected only here, not during pub get/dart format above.
           GH_PAT: ${{ secrets.GH_PAT_VERSION_BUMP }}
         run: |
           if [[ -n "$(git status --porcelain)" ]]; then
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git add -- '**/*.dart'
-            git commit -m "chore: auto-fix and format"
+            git commit -m "chore: auto-format"
             git remote set-url origin "https://x-access-token:${GH_PAT}@github.com/${GITHUB_REPOSITORY}.git"
             git push
             git remote set-url origin "https://github.com/${GITHUB_REPOSITORY}.git"
