@@ -198,6 +198,12 @@ void main() {
       expect(app.refundedAt, DateTime.parse(ts));
     });
 
+    test('refunded_at is null when absent from RPC row', () {
+      final mapped = mapEventApplicationRpcRow(flatRow(ticketName: '티켓'));
+      final app = EventApplication.fromJson(mapped);
+      expect(app.refundedAt, isNull);
+    });
+
     test('user_email is stored in username field for email masking', () {
       final mapped = mapEventApplicationRpcRow(
         flatRow(
