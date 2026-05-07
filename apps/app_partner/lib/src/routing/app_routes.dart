@@ -182,7 +182,9 @@ class NotificationCenterRoute extends GoRouteData
                             TypedGoRoute<EventApplicationReviewCarouselRoute>(
                               path: 'review',
                               routes: [
-                                TypedGoRoute<EventApplicationReviewConfirmRoute>(
+                                TypedGoRoute<
+                                  EventApplicationReviewConfirmRoute
+                                >(
                                   path: 'confirm',
                                 ),
                               ],

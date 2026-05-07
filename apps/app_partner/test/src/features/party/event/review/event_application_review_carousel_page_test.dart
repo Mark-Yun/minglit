@@ -137,33 +137,35 @@ void main() {
     expect(marks['app_1']?.reason, '조건 불충분');
   });
 
-  testWidgets('dismiss reject sheet without confirming does not mark application',
-      (tester) async {
-    final queue = [_makeApplication(id: 'app_1')];
-    final container = ProviderContainer(
-      overrides: [
-        carouselQueueProvider(
-          'event_1',
-          null,
-        ).overrideWith((ref) async => queue),
-      ],
-    );
-    addTearDown(container.dispose);
+  testWidgets(
+    'dismiss reject sheet without confirming does not mark application',
+    (tester) async {
+      final queue = [_makeApplication(id: 'app_1')];
+      final container = ProviderContainer(
+        overrides: [
+          carouselQueueProvider(
+            'event_1',
+            null,
+          ).overrideWith((ref) async => queue),
+        ],
+      );
+      addTearDown(container.dispose);
 
-    await tester.pumpWidget(buildPage(container));
-    await tester.pump();
+      await tester.pumpWidget(buildPage(container));
+      await tester.pump();
 
-    await tester.tap(find.text('거절'));
-    await tester.pumpAndSettle();
+      await tester.tap(find.text('거절'));
+      await tester.pumpAndSettle();
 
-    // Dismiss sheet by tapping outside (barrier)
-    await tester.tapAt(const Offset(200, 100));
-    await tester.pumpAndSettle();
+      // Dismiss sheet by tapping outside (barrier)
+      await tester.tapAt(const Offset(200, 100));
+      await tester.pumpAndSettle();
 
-    // Fix #2272: sheet dismissed (null returned) → no marking should occur
-    final marks = container.read(reviewMarkingsNotifierProvider);
-    expect(marks, isEmpty);
-  });
+      // Fix #2272: sheet dismissed (null returned) → no marking should occur
+      final marks = container.read(reviewMarkingsNotifierProvider);
+      expect(marks, isEmpty);
+    },
+  );
 
   testWidgets('empty queue does not show progress text', (tester) async {
     final container = ProviderContainer(
@@ -183,8 +185,9 @@ void main() {
     expect(find.textContaining('/ 0'), findsNothing);
   });
 
-  testWidgets('startApplicationId positions carousel at correct card',
-      (tester) async {
+  testWidgets('startApplicationId positions carousel at correct card', (
+    tester,
+  ) async {
     final queue = [
       _makeApplication(id: 'app_1'),
       _makeApplication(id: 'app_2'),

@@ -205,7 +205,9 @@ class _State extends ConsumerState<EventApplicationReviewCarouselPage> {
 
   AppBar _buildAppBar(BuildContext context, int? total) {
     // Fix #2272: total == 0 would show "1 / 0" — only show progress when queue is non-empty
-    final progressText = (total != null && total > 0) ? '${_currentIndex + 1} / $total' : '';
+    final progressText = (total != null && total > 0)
+        ? '${_currentIndex + 1} / $total'
+        : '';
     return AppBar(
       leading: IconButton(
         icon: const Icon(Icons.close),

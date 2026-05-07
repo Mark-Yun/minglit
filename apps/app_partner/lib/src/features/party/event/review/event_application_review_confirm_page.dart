@@ -49,10 +49,12 @@ class _State extends ConsumerState<EventApplicationReviewConfirmPage> {
   @override
   Widget build(BuildContext context) {
     final marks = ref.watch(reviewMarkingsNotifierProvider);
-    final approvedCount =
-        marks.values.where((m) => m.status == 'approved').length;
-    final rejectedCount =
-        marks.values.where((m) => m.status == 'rejected').length;
+    final approvedCount = marks.values
+        .where((m) => m.status == 'approved')
+        .length;
+    final rejectedCount = marks.values
+        .where((m) => m.status == 'rejected')
+        .length;
 
     return Scaffold(
       appBar: AppBar(

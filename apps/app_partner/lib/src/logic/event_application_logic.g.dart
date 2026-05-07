@@ -336,7 +336,8 @@ abstract class _$ReviewMarkingsNotifier
   @override
   void runBuild() {
     final created = build();
-    final ref = this.ref as $Ref<Map<String, ReviewMark>, Map<String, ReviewMark>>;
+    final ref =
+        this.ref as $Ref<Map<String, ReviewMark>, Map<String, ReviewMark>>;
     final element =
         ref.element
             as $ClassProviderElement<

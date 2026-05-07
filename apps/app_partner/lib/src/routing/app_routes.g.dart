@@ -286,9 +286,8 @@ RouteBase get $partnerShellRoute => StatefulShellRouteData.$route(
                               routes: [
                                 GoRouteData.$route(
                                   path: 'confirm',
-                                  factory:
-                                      $EventApplicationReviewConfirmRoute
-                                          ._fromState,
+                                  factory: $EventApplicationReviewConfirmRoute
+                                      ._fromState,
                                 ),
                               ],
                             ),
