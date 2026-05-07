@@ -166,14 +166,14 @@ class _State extends ConsumerState<EventApplicationReviewCarouselPage> {
                       color: MinglitColors.background,
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: MinglitSpacing.medium),
                   Text(
                     '모든 신청 검토 완료',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: MinglitSpacing.small),
                   Text(
                     '최종 확인 화면으로 이동합니다…',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
