@@ -7,7 +7,7 @@
 -- 4. Non-applicant rows are still blocked (row-level RLS intact)
 
 BEGIN;
-SELECT plan(5);
+SELECT plan(6);
 
 SELECT tests.create_supabase_user('partner_user', 'partner@test.com');
 SELECT tests.create_supabase_user('applicant', 'applicant@test.com');
@@ -92,7 +92,14 @@ SELECT hasnt_column(
   'partner_visible_user_profiles view does not expose birth_date'
 );
 
--- Test 4: partner can read allowed columns via view for their applicant
+SELECT hasnt_column(
+  'public',
+  'partner_visible_user_profiles',
+  'phone_number',
+  'partner_visible_user_profiles view does not expose phone_number'
+);
+
+-- Test 5 (was 4): partner can read allowed columns via view for their applicant
 SELECT tests.authenticate_as('partner_user');
 SELECT results_eq(
   $$SELECT username, birth_year, is_verified
@@ -102,7 +109,7 @@ SELECT results_eq(
   'partner can read allowed columns (username/birth_year/is_verified) via view'
 );
 
--- Test 5: non-applicant rows blocked via view (RLS from user_profiles applies)
+-- Test 6 (was 5): non-applicant rows blocked via view (RLS from user_profiles applies)
 SELECT is_empty(
   $$SELECT id FROM public.partner_visible_user_profiles
     WHERE id = tests.get_supabase_uid('other_user')$$,

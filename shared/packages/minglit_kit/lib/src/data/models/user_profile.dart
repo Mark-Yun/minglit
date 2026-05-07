@@ -9,7 +9,9 @@ abstract class UserProfile with _$UserProfile {
   /// Creates a [UserProfile] with identity information.
   const factory UserProfile({
     required String id,
-    required String name,
+    // Fix #2250: name (실명) absent from partner_visible_user_profiles view —
+    // default to '' so UserProfile.fromJson() doesn't crash when view is used.
+    @Default('') String name,
     required String username,
     @JsonKey(name: 'phone_number') String? phoneNumber,
     String? gender,

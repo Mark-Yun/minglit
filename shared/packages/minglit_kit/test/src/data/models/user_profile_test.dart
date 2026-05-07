@@ -82,6 +82,49 @@ void main() {
       expect(p1, isNot(equals(p2)));
     });
 
+    // Fix #2250: partner_visible_user_profiles view omits name (실명) column.
+    // UserProfile.fromJson() must not throw when name is absent — runtime crash
+    // on getApplicationById() would make the entire detail page fail to load.
+    test('fromJson without name field defaults to empty string', () {
+      final profile = UserProfile.fromJson({
+        'id': 'u1',
+        'username': '닉네임123',
+        'birth_year': 1995,
+        'is_verified': true,
+        'profile_image_url': null,
+      });
+
+      expect(profile.name, '');
+      expect(profile.username, '닉네임123');
+      expect(profile.birthYear, 1995);
+      expect(profile.isVerified, isTrue);
+    });
+
+    // Fix #2250: simulates the exact JSON shape returned by PostgREST when
+    // getApplicationById() embeds user:partner_visible_user_profiles(...).
+    // If this test passes, the partner application detail page will load without crash.
+    test('fromJson with partner_visible_user_profiles view shape', () {
+      // Mirrors the PostgREST response for:
+      // .select('*, user:partner_visible_user_profiles(id, username, birth_year,
+      //          is_verified, profile_image_url)')
+      final viewJson = {
+        'id': 'user_abc',
+        'username': '파트너뷰닉네임',
+        'birth_year': 1990,
+        'is_verified': false,
+        'profile_image_url': 'https://example.com/img.jpg',
+        // name, phone_number, gender, birth_date intentionally absent (view-restricted)
+      };
+
+      expect(() => UserProfile.fromJson(viewJson), returnsNormally);
+      final profile = UserProfile.fromJson(viewJson);
+      expect(profile.name, '');
+      expect(profile.birthYear, 1990);
+      expect(profile.birthDate, isNull);
+      expect(profile.phoneNumber, isNull);
+      expect(profile.gender, isNull);
+    });
+
     test('JSON contains expected keys', () {
       final profile = UserProfile.fromJson(profileJson());
       final json = profile.toJson();

@@ -15,7 +15,9 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$UserProfile {
 
- String get id; String get name; String get username;@JsonKey(name: 'phone_number') String? get phoneNumber; String? get gender;@JsonKey(name: 'birth_date') DateTime? get birthDate;@JsonKey(name: 'is_verified') bool get isVerified;@JsonKey(name: 'birth_year') int? get birthYear;@JsonKey(name: 'avatar_url') String? get avatarUrl;@JsonKey(name: 'profile_image_url') String? get profileImageUrl;@JsonKey(name: 'created_at') DateTime? get createdAt;@JsonKey(name: 'updated_at') DateTime? get updatedAt;
+ String get id;// Fix #2250: name (실명) absent from partner_visible_user_profiles view —
+// default to '' so UserProfile.fromJson() doesn't crash when view is used.
+ String get name; String get username;@JsonKey(name: 'phone_number') String? get phoneNumber; String? get gender;@JsonKey(name: 'birth_date') DateTime? get birthDate;@JsonKey(name: 'is_verified') bool get isVerified;@JsonKey(name: 'birth_year') int? get birthYear;@JsonKey(name: 'avatar_url') String? get avatarUrl;@JsonKey(name: 'profile_image_url') String? get profileImageUrl;@JsonKey(name: 'created_at') DateTime? get createdAt;@JsonKey(name: 'updated_at') DateTime? get updatedAt;
 /// Create a copy of UserProfile
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -220,11 +222,13 @@ return $default(_that.id,_that.name,_that.username,_that.phoneNumber,_that.gende
 @JsonSerializable()
 
 class _UserProfile implements UserProfile {
-  const _UserProfile({required this.id, required this.name, required this.username, @JsonKey(name: 'phone_number') this.phoneNumber, this.gender, @JsonKey(name: 'birth_date') this.birthDate, @JsonKey(name: 'is_verified') this.isVerified = false, @JsonKey(name: 'birth_year') this.birthYear, @JsonKey(name: 'avatar_url') this.avatarUrl, @JsonKey(name: 'profile_image_url') this.profileImageUrl, @JsonKey(name: 'created_at') this.createdAt, @JsonKey(name: 'updated_at') this.updatedAt});
+  const _UserProfile({required this.id, this.name = '', required this.username, @JsonKey(name: 'phone_number') this.phoneNumber, this.gender, @JsonKey(name: 'birth_date') this.birthDate, @JsonKey(name: 'is_verified') this.isVerified = false, @JsonKey(name: 'birth_year') this.birthYear, @JsonKey(name: 'avatar_url') this.avatarUrl, @JsonKey(name: 'profile_image_url') this.profileImageUrl, @JsonKey(name: 'created_at') this.createdAt, @JsonKey(name: 'updated_at') this.updatedAt});
   factory _UserProfile.fromJson(Map<String, dynamic> json) => _$UserProfileFromJson(json);
 
 @override final  String id;
-@override final  String name;
+// Fix #2250: name (실명) absent from partner_visible_user_profiles view —
+// default to '' so UserProfile.fromJson() doesn't crash when view is used.
+@override@JsonKey() final  String name;
 @override final  String username;
 @override@JsonKey(name: 'phone_number') final  String? phoneNumber;
 @override final  String? gender;
