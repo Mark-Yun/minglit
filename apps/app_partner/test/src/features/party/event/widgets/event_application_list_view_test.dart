@@ -2,7 +2,7 @@
 //
 // RPC가 ticket 정보를 함께 반환하므로 EventApplication.ticket이 null이 아니어야 하며,
 // groupId 필터가 올바르게 동작해야 한다.
-import 'package:app_partner/src/features/party/event/detail/event_application_controller.dart';
+import 'package:app_partner/src/logic/event_application_logic.dart';
 import 'package:app_partner/src/features/party/event/widgets/event_application_list_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

@@ -120,6 +120,8 @@ async function handleRequest(req: Request): Promise<Response> {
         status: result,
         reviewed_at: now,
         reviewed_by: userId,
+        // Fix #2099: 심사 시작 시점 기록 — 단일 submit flow에서 시작=종료 시각 동일
+        review_started_at: now,
         snapshot_data: snapshotArray,
       })
       .eq("id", submissionId);

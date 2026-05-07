@@ -23,6 +23,7 @@ import 'package:app_partner/src/features/party/detail/party_detail_page.dart';
 import 'package:app_partner/src/features/party/event/create/event_create_page.dart';
 import 'package:app_partner/src/features/party/event/detail/event_application_list_page.dart';
 import 'package:app_partner/src/features/party/event/detail/event_detail_page.dart';
+import 'package:app_partner/src/features/party/event/edit/event_edit_page.dart';
 import 'package:app_partner/src/features/party/list/party_list_page.dart';
 import 'package:app_partner/src/features/party/recurrence/recurrence_management_screen.dart';
 import 'package:app_partner/src/features/settlement/bank_account_page.dart';
@@ -167,6 +168,7 @@ class NotificationCenterRoute extends GoRouteData
                     TypedGoRoute<EventDetailRoute>(
                       path: 'events/:eventId',
                       routes: [
+                        TypedGoRoute<EventEditRoute>(path: 'edit'),
                         TypedGoRoute<TicketCreateRoute>(path: 'tickets/create'),
                         TypedGoRoute<TicketEditRoute>(
                           path: 'tickets/:ticketId/edit',
@@ -362,6 +364,18 @@ class EventDetailRoute extends GoRouteData with $EventDetailRoute {
       MinglitPageTransitions.sharedAxisScaled(
         key: state.pageKey,
         child: EventDetailPage(eventId: eventId),
+      );
+}
+
+class EventEditRoute extends GoRouteData with $EventEditRoute {
+  const EventEditRoute({required this.partyId, required this.eventId});
+  final String partyId;
+  final String eventId;
+  @override
+  Page<void> buildPage(BuildContext context, GoRouterState state) =>
+      MinglitPageTransitions.sharedAxisScaled(
+        key: state.pageKey,
+        child: EventEditPage(eventId: eventId),
       );
 }
 

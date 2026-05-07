@@ -1,5 +1,6 @@
-import 'package:app_partner/src/features/party/event/detail/event_application_controller.dart';
+// Fix #2145: moved to logic/
 import 'package:app_partner/src/features/party/event/widgets/event_application_review_dialog.dart';
+import 'package:app_partner/src/logic/event_application_logic.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 

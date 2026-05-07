@@ -24,6 +24,14 @@ abstract class EventApplication with _$EventApplication {
     @Default('none') @JsonKey(name: 'refund_status') String refundStatus,
     @JsonKey(name: 'rejection_reason') String? rejectionReason,
     @JsonKey(name: 'paid_at') DateTime? paidAt,
+    // Fix #2099: 환불 처리 시점 — PurchaseHistoryDetailPage 환불 카드 표시용
+    @JsonKey(name: 'refunded_at') DateTime? refundedAt,
+    // Fix #2099: 취소 사유 — "system:..." prefix면 시스템 취소, 없으면 본인 취소
+    @JsonKey(name: 'cancellation_reason') String? cancellationReason,
+    // Fix #2123: match results viewed timestamp for EventOngoingBanner phase.
+    // Set server-side when user first opens ResultsSheet via
+    // user-mark-match-results-viewed EF. null = unviewed.
+    @JsonKey(name: 'match_results_viewed_at') DateTime? matchResultsViewedAt,
 
     // Relations (Nullable)
     UserProfile? user,

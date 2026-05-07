@@ -93,7 +93,7 @@ final class ActiveFiltersProvider
   }
 }
 
-String _$activeFiltersHash() => r'1993d5e37e4b5d2a9f5cd1926fe7898bf17c757f';
+String _$activeFiltersHash() => r'b87e6e1f1f91c04b6190cc1bf4e570f29b6d14b6';
 
 abstract class _$ActiveFilters extends $Notifier<ExploreFilters> {
   ExploreFilters build();
@@ -190,7 +190,7 @@ final class SearchResultsProvider
   }
 }
 
-String _$searchResultsHash() => r'1e0ac41dea7e827a16504833246fcec7a0728f68';
+String _$searchResultsHash() => r'f736aef74b0ebf915c7fa0a4d6c33af7cb13b459';
 
 /// Fetches bulk eligibility data (user profile + verified status).
 
@@ -440,8 +440,8 @@ abstract class _$RecommendationFeedNotifier
 /// - closingSoon → closingSoon
 /// - nearestDate → nearest
 ///
-// TODO: migrate to [recommendationEventsFromEf] once the user-event-feed EF
-// is validated in production.
+// TODO(#1891): migrate to [recommendationEventsFromEf] once the user-event-feed
+// EF is validated in production.
 
 @ProviderFor(recommendationEvents)
 const recommendationEventsProvider = RecommendationEventsProvider._();
@@ -453,8 +453,8 @@ const recommendationEventsProvider = RecommendationEventsProvider._();
 /// - closingSoon → closingSoon
 /// - nearestDate → nearest
 ///
-// TODO: migrate to [recommendationEventsFromEf] once the user-event-feed EF
-// is validated in production.
+// TODO(#1891): migrate to [recommendationEventsFromEf] once the user-event-feed
+// EF is validated in production.
 
 final class RecommendationEventsProvider
     extends
@@ -471,8 +471,8 @@ final class RecommendationEventsProvider
   /// - closingSoon → closingSoon
   /// - nearestDate → nearest
   ///
-  // TODO: migrate to [recommendationEventsFromEf] once the user-event-feed EF
-  // is validated in production.
+  // TODO(#1891): migrate to [recommendationEventsFromEf] once the user-event-feed
+  // EF is validated in production.
   const RecommendationEventsProvider._()
     : super(
         from: null,
@@ -508,8 +508,8 @@ String _$recommendationEventsHash() =>
 /// and cursor pagination are handled by the DB function, so no
 /// client-side post-processing is needed.
 ///
-// TODO: wire this into the explore UI behind a feature flag, then remove the
-// legacy [recommendationEvents] path.
+// TODO(#1891): wire this into the explore UI behind a feature flag, then
+// remove the legacy [recommendationEvents] path.
 
 @ProviderFor(recommendationEventsFromEf)
 const recommendationEventsFromEfProvider =
@@ -521,8 +521,8 @@ const recommendationEventsFromEfProvider =
 /// and cursor pagination are handled by the DB function, so no
 /// client-side post-processing is needed.
 ///
-// TODO: wire this into the explore UI behind a feature flag, then remove the
-// legacy [recommendationEvents] path.
+// TODO(#1891): wire this into the explore UI behind a feature flag, then
+// remove the legacy [recommendationEvents] path.
 
 final class RecommendationEventsFromEfProvider
     extends
@@ -540,8 +540,8 @@ final class RecommendationEventsFromEfProvider
   /// and cursor pagination are handled by the DB function, so no
   /// client-side post-processing is needed.
   ///
-  // TODO: wire this into the explore UI behind a feature flag, then remove the
-  // legacy [recommendationEvents] path.
+  // TODO(#1891): wire this into the explore UI behind a feature flag, then
+  // remove the legacy [recommendationEvents] path.
   const RecommendationEventsFromEfProvider._()
     : super(
         from: null,

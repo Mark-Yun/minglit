@@ -40,4 +40,4 @@ final class AppStartupProvider
   }
 }
 
-String _$appStartupHash() => r'20139d156771b14e48bc4b3e8bf79a9e61444cd1';
+String _$appStartupHash() => r'69ded5e4b59911a75b980f877e28d2d8f7ec1303';
