@@ -28,211 +28,262 @@ class PurchaseHistoryCard extends ConsumerWidget {
 
     final canCancel = controller.canCancel(application);
 
-    return Container(
-      padding: const EdgeInsets.all(MinglitSpacing.medium),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(MinglitRadius.card),
-        border: Border.all(color: theme.colorScheme.outlineVariant),
-        boxShadow: [
-          BoxShadow(
-            color: MinglitColors.textPrimary.withValues(
-              alpha: MinglitOpacity.shadowXs,
-            ),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 1. Header: Date & Status
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                // Fix #579: 구매일은 paidAt(실제 결제일)을 표시, 없으면 createdAt 폴백
-                // UTC → 로컬 변환 후 포맷 (KST 등에서 날짜 하루 차이 방지)
-                DateFormat('yyyy.MM.dd').format(
-                  (application.paidAt ?? application.createdAt).toLocal(),
-                ),
-                style: theme.textTheme.labelMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
+    return InkWell(
+      onTap: () => PurchaseHistoryDetailRoute(
+        applicationId: application.id,
+      ).push<void>(context),
+      borderRadius: BorderRadius.circular(MinglitRadius.card),
+      child: Container(
+        padding: const EdgeInsets.all(MinglitSpacing.medium),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(MinglitRadius.card),
+          border: Border.all(color: theme.colorScheme.outlineVariant),
+          boxShadow: [
+            BoxShadow(
+              color: MinglitColors.textPrimary.withValues(
+                alpha: MinglitOpacity.shadowXs,
               ),
-              // Fix #638: StatusBadge를 공용 위젯으로 승격하여 재사용
-              StatusBadge(status: application.status),
-            ],
-          ),
-          const SizedBox(height: MinglitSpacing.medium),
-
-          // 2. Event Info Row
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Thumbnail
-              ClipRRect(
-                borderRadius: BorderRadius.circular(MinglitRadius.small),
-                child: SizedBox(
-                  width: 80,
-                  height: 80,
-                  child: MinglitImage(
-                    path: event?.imageUrl ?? '',
-                    fit: BoxFit.cover,
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 1. Header: Date & Status
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  // Fix #579: 구매일은 paidAt(실제 결제일)을 표시, 없으면 createdAt 폴백
+                  // UTC → 로컬 변환 후 포맷 (KST 등에서 날짜 하루 차이 방지)
+                  DateFormat('yyyy.MM.dd').format(
+                    (application.paidAt ?? application.createdAt).toLocal(),
+                  ),
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
-              ),
-              const SizedBox(width: MinglitSpacing.medium),
-              // Text Info
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      eventName,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: MinglitSpacing.xsmall),
-                    Text(dateLabel, style: theme.textTheme.bodySmall),
-                    Text(
-                      location?.name ?? '장소 정보 없음',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const Divider(height: MinglitSpacing.xlarge),
+                // Fix #638: StatusBadge를 공용 위젯으로 승격하여 재사용
+                StatusBadge(status: application.status),
+              ],
+            ),
+            const SizedBox(height: MinglitSpacing.medium),
 
-          // 3. Ticket & Price
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                ticket?.name ?? '티켓 정보 없음',
-                style: theme.textTheme.bodyMedium,
-              ),
-              Text(
-                '${formatter.format(paymentAmount ?? 0)}원',
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: MinglitSpacing.medium),
-
-          // 4. Actions
-          // Fix #1234: 예매 취소 버튼 2줄 깨짐 — 버튼 3개 Expanded 균등 분할 시
-          // '예매 취소' 텍스트가 2줄로 넘침. 취소 버튼은 flex:2로 넓히고
-          // 나머지 버튼은 flex:1로 유지하여 1줄 표시 보장.
-          // Fix #1236: 보조 버튼(영수증/문의하기)을 OutlinedButton → TextButton으로
-          // 낮춤 — 브랜드 보라 아웃라인 제거, 정보 위계 명확화
-          // Fix #1820: IntrinsicHeight + stretch로 ElevatedButton/TextButton 높이 통일
-          // IntrinsicHeight is required because the Row lives inside an
-          // unbounded-height Column (ListView item), and CrossAxisAlignment.stretch
-          // would propagate infinite height constraints to children without it.
-          IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+            // 2. Event Info Row
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Fix #1820: 무료 티켓(paymentId 없음)에서 영수증 버튼 노출 금지
-                if (paymentId != null && paymentId.isNotEmpty) ...[
+                // Thumbnail
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(MinglitRadius.small),
+                  child: SizedBox(
+                    width: 80,
+                    height: 80,
+                    child: MinglitImage(
+                      path: event?.imageUrl ?? '',
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: MinglitSpacing.medium),
+                // Text Info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        eventName,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: MinglitSpacing.xsmall),
+                      Text(dateLabel, style: theme.textTheme.bodySmall),
+                      Text(
+                        location?.name ?? '장소 정보 없음',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const Divider(height: MinglitSpacing.xlarge),
+
+            // 3. Ticket & Price
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  ticket?.name ?? '티켓 정보 없음',
+                  style: theme.textTheme.bodyMedium,
+                ),
+                Text(
+                  '${formatter.format(paymentAmount ?? 0)}원',
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: MinglitSpacing.medium),
+
+            // 4. Actions
+            // Fix #1234: 예매 취소 버튼 2줄 깨짐 — 버튼 3개 Expanded 균등 분할 시
+            // '예매 취소' 텍스트가 2줄로 넘침. 취소 버튼은 flex:2로 넓히고
+            // 나머지 버튼은 flex:1로 유지하여 1줄 표시 보장.
+            // Fix #1236: 보조 버튼(영수증/문의하기)을 OutlinedButton → TextButton으로
+            // 낮춤 — 브랜드 보라 아웃라인 제거, 정보 위계 명확화
+            // Fix #1820: IntrinsicHeight + stretch로 ElevatedButton/TextButton 높이 통일
+            // IntrinsicHeight is required because the Row lives inside an
+            // unbounded-height Column (ListView item), and CrossAxisAlignment.stretch
+            // would propagate infinite height constraints to children without it.
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Fix #2076: 무료 티켓도 영수증 버튼 표시 — CUJ-U03 spec.
+                  // 유료: iamport 링크 / 무료: 인앱 신청 확인서 다이얼로그
                   Expanded(
                     child: TextButton(
                       onPressed: () async {
-                        final receiptUrl = Uri.parse(
-                          'https://service.iamport.kr/payments/detail/$paymentId',
-                        );
-
-                        final launched = await launchUrl(
-                          receiptUrl,
-                          mode: LaunchMode.externalApplication,
-                        );
-
-                        if (!launched && context.mounted) {
-                          context.showMinglitWarning('영수증 페이지를 열 수 없습니다.');
+                        if (paymentId != null && paymentId.isNotEmpty) {
+                          final receiptUrl = Uri.parse(
+                            'https://service.iamport.kr/payments/detail/$paymentId',
+                          );
+                          final launched = await launchUrl(
+                            receiptUrl,
+                            mode: LaunchMode.externalApplication,
+                          );
+                          if (!launched && context.mounted) {
+                            context.showMinglitWarning('영수증 페이지를 열 수 없습니다.');
+                          }
+                        } else {
+                          await _showFreeTicketReceipt(
+                            context: context,
+                            eventName: eventName,
+                            dateLabel: dateLabel,
+                            ticketName: ticket?.name ?? '티켓 정보 없음',
+                            status: application.status,
+                          );
                         }
                       },
                       child: const Text('영수증'),
                     ),
                   ),
                   const SizedBox(width: MinglitSpacing.small),
-                ],
-                Expanded(
-                  child: TextButton(
-                    onPressed: () async {
-                      final phone =
-                          _resolveContactValue(contactOptions, 'phone') ??
-                          party?.partner?.contactPhone;
-                      final email =
-                          _resolveContactValue(contactOptions, 'email') ??
-                          party?.partner?.contactEmail;
-
-                      Uri? uri;
-                      if (phone != null && phone.isNotEmpty) {
-                        uri = Uri.parse('tel:$phone');
-                      } else if (email != null && email.isNotEmpty) {
-                        uri = Uri.parse('mailto:$email');
-                      }
-
-                      if (uri == null) {
-                        context.showMinglitWarning('연락처 정보가 없습니다.');
-                        return;
-                      }
-
-                      final launched = await launchUrl(
-                        uri,
-                        mode: LaunchMode.externalApplication,
-                      );
-
-                      if (!launched && context.mounted) {
-                        context.showMinglitWarning('연락처를 열 수 없습니다.');
-                      }
-                    },
-                    child: const Text('문의하기'),
-                  ),
-                ),
-                if (canCancel) ...[
-                  const SizedBox(width: MinglitSpacing.small),
                   Expanded(
-                    flex: 2,
-                    child: ElevatedButton(
-                      onPressed: () => _onCancelPressed(
-                        context: context,
-                        ref: ref,
-                        eventName: eventName,
-                        eventId: application.eventId,
-                        paymentId: paymentId,
-                        paymentAmount: paymentAmount,
-                        eventStartTime: eventStartTime,
-                        paidAt: application.paidAt,
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: theme.colorScheme.errorContainer,
-                        foregroundColor: theme.colorScheme.onErrorContainer,
-                      ),
-                      child: const Text(
-                        '예매 취소',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                    child: TextButton(
+                      onPressed: () async {
+                        final phone =
+                            _resolveContactValue(contactOptions, 'phone') ??
+                            party?.partner?.contactPhone;
+                        final email =
+                            _resolveContactValue(contactOptions, 'email') ??
+                            party?.partner?.contactEmail;
+
+                        Uri? uri;
+                        if (phone != null && phone.isNotEmpty) {
+                          uri = Uri.parse('tel:$phone');
+                        } else if (email != null && email.isNotEmpty) {
+                          uri = Uri.parse('mailto:$email');
+                        }
+
+                        if (uri == null) {
+                          context.showMinglitWarning('연락처 정보가 없습니다.');
+                          return;
+                        }
+
+                        final launched = await launchUrl(
+                          uri,
+                          mode: LaunchMode.externalApplication,
+                        );
+
+                        if (!launched && context.mounted) {
+                          context.showMinglitWarning('연락처를 열 수 없습니다.');
+                        }
+                      },
+                      child: const Text('문의하기'),
                     ),
                   ),
+                  if (canCancel) ...[
+                    const SizedBox(width: MinglitSpacing.small),
+                    Expanded(
+                      flex: 2,
+                      child: ElevatedButton(
+                        onPressed: () => _onCancelPressed(
+                          context: context,
+                          ref: ref,
+                          eventName: eventName,
+                          eventId: application.eventId,
+                          paymentId: paymentId,
+                          paymentAmount: paymentAmount,
+                          eventStartTime: eventStartTime,
+                          paidAt: application.paidAt,
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: theme.colorScheme.errorContainer,
+                          foregroundColor: theme.colorScheme.onErrorContainer,
+                        ),
+                        child: const Text(
+                          '예매 취소',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
-              ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showFreeTicketReceipt({
+    required BuildContext context,
+    required String eventName,
+    required String dateLabel,
+    required String ticketName,
+    required String status,
+  }) async {
+    final theme = Theme.of(context);
+    await MinglitDialog.show<void>(
+      context: context,
+      title: '신청 확인서',
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _RefundRow(label: '이벤트', value: eventName),
+          _RefundRow(label: '일시', value: dateLabel),
+          _RefundRow(label: '티켓', value: ticketName),
+          const _RefundRow(label: '결제 금액', value: '0원'),
+          _RefundRow(label: '상태', value: status),
+          const SizedBox(height: MinglitSpacing.small),
+          Text(
+            '무료 티켓은 결제 영수증이 발행되지 않습니다.',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
         ],
       ),
+      actions: [
+        ElevatedButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('확인'),
+        ),
+      ],
     );
   }
 

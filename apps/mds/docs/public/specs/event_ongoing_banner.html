@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Spec — EventOngoingBanner (app_user · embedded in MyTicketsPage)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* ============================================================
+   EventOngoingBanner-specific atoms.
+
+   캐노니컬 lifecycle 카드 — MyTicketsPage 안에 inline으로 배치.
+   EventNowBar(HomePage 하단 64px shortcut)와 같은 7 phase 모델을
+   재사용하지만, banner 폼으로 더 큰 카드에 액션 버튼을 직접 노출.
+
+   카드 키: 약 150~180px · radius-card · border 없음 (light gray surface 위에 흰 card).
+   header(phase chip + meta) / info(thumb + title/loc/time) / footer(action).
+   ============================================================ */
+
+/* Banner 외곽 카드 */
+.ongoing-banner {
+  margin: var(--spacing-medium) var(--spacing-screen-edge);
+  background: var(--color-background);
+  border-radius: var(--radius-card);
+  padding: var(--spacing-medium);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  position: relative;
+}
+body.dark-mode .ongoing-banner { background: var(--color-dark-surface); }
+
+/* --- Header row : phase chip + 시간 trailing --- */
+.ongoing-banner__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+}
+.ongoing-banner__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-chip);
+  font-size: 11px;
+  font-weight: 700;
+}
+.ongoing-banner__chip--waiting {
+  background: color-mix(in srgb, var(--color-warning) 16%, transparent);
+  color: var(--color-warning);
+}
+.ongoing-banner__chip--success {
+  background: color-mix(in srgb, var(--color-success) 16%, transparent);
+  color: var(--color-success);
+}
+.ongoing-banner__chip--primary {
+  background: var(--color-primary);
+  color: var(--color-background);
+}
+.ongoing-banner__chip--neutral {
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-divider);
+}
+.ongoing-banner__chip--results {
+  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+  color: var(--color-primary);
+}
+
+/* dot inside chip (phase 시그널) */
+.ongoing-banner__chip-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.ongoing-banner__chip-dot--pulse {
+  animation: ob-dot-pulse 1.4s ease-in-out infinite;
+}
+@keyframes ob-dot-pulse {
+  0%, 100% { opacity: 0.5; }
+  50%      { opacity: 1; }
+}
+
+/* 알림 표시 error dot (results · 미확인 상태) */
+.ongoing-banner__notif-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-error);
+  flex-shrink: 0;
+}
+
+.ongoing-banner__time {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+.ongoing-banner__time--strong {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+/* --- Info row : thumb + title/location/time --- */
+.ongoing-banner__info {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: flex-start;
+}
+.ongoing-banner__thumb {
+  width: 56px; height: 56px;
+  border-radius: var(--radius-small);
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--color-primary) 30%, transparent),
+    color-mix(in srgb, var(--color-primary) 12%, transparent));
+  flex-shrink: 0;
+}
+.ongoing-banner__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ongoing-banner__title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ongoing-banner__meta {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* --- Footer : full-width primary action --- */
+.ongoing-banner__action {
+  width: 100%;
+  height: 44px;
+  border: none;
+  border-radius: var(--radius-button);
+  background: var(--color-primary);
+  color: var(--color-background);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.ongoing-banner__action svg {
+  width: 18px;
+  height: 18px;
+}
+.ongoing-banner__action--passive {
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-divider);
+  cursor: default;
+}
+.ongoing-banner__action--outline {
+  background: transparent;
+  color: var(--color-primary);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 35%, transparent);
+}
+/* Footer는 stack 가능 — 길찾기(outline) 위 + CTA(primary) 아래 */
+.ongoing-banner__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ongoing-banner__action--pulse {
+  animation: ob-action-pulse 1.6s ease-in-out infinite;
+}
+@keyframes ob-action-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-primary) 35%, transparent); }
+  50%      { box-shadow: 0 0 0 6px color-mix(in srgb, var(--color-primary)  0%, transparent); }
+}
+
+/* mockup viewport — banner는 list 안 단일 카드로 띄움 (스택 버튼이 들어가는 phase 대비 320px) */
+.viewport.ob-viewport { background: var(--color-surface); height: 320px; padding: 0; }
+body.dark-mode .viewport.ob-viewport { background: var(--color-dark-background); }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
+</div>
+
+<div class="page">
+
+<!-- ============================================================
+     📍 HEADER
+     ============================================================ -->
+<header>
+  <h1>Event Ongoing Banner</h1>
+</header>
+
+<!-- ============================================================
+     🎯 OVERVIEW
+     ============================================================ -->
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr>
+        <th style="width: 140px;">Status</th>
+        <td><strong>📐 디자인 진행 중</strong> <em style="color: var(--color-text-secondary);">— v1.0 초안 · 8 visible state (results 미확인/확인 분리 + noShow alt path) + 1 hidden · MyTicketsPage 캐노니컬 카드</em></td>
+      </tr>
+      <tr>
+        <th>App</th>
+        <td><code>app_user</code></td>
+      </tr>
+      <tr>
+        <th>Category</th>
+        <td>my · ticket · live event hub · sub-component</td>
+      </tr>
+      <tr>
+        <th>Route / Surface</th>
+        <td><code>EventOngoingBanner</code> (MyTicketsPage 안에 list로 배치되는 sub-component, 자체 route 없음)</td>
+      </tr>
+      <tr>
+        <th>Path</th>
+        <td><code>/tickets/my</code> (부모 페이지 경로 — banner 자체는 자체 경로 없음)</td>
+      </tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>: <a href="/specs/my_tickets_page.html"><code>MyTicketsPage</code></a> — 활성 이벤트가 있을 때 list로 노출 (다발 가능).<br>
+          <strong>Children</strong>: <em>—</em> <em style="color: var(--color-text-secondary);">(footer action 탭 시 routed sheet로 진입 — Reference 섹션의 sheet 매핑 참고. <a href="/specs/event_now_bar.html"><code>EventNowBar</code></a>와 동일한 5 sheet endpoint 재사용)</em>
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>
+          MyTicketsPage 안에 inline으로 배치되는 <strong>활성 이벤트 lifecycle 카드</strong>. 진행 단계(waiting → results)에 따라 phase chip / 시간 표시 / 액션 버튼이 자동 변경.
+          <a href="/specs/event_now_bar.html">EventNowBar</a>가 HomePage 하단 64px shortcut으로 "지금 무슨 단계인지"만 알리는 용도라면, OngoingBanner는 <strong>같은 액션을 버튼 단위로 직접 노출하는 캐노니컬 카드</strong> — 사용자가 EventNowBar를 못 보거나 무시해도 MyTicketsPage에 들어오면 같은 액션을 끝까지 수행할 수 있게 함.
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry points</strong>: MyTicketsPage 진입 시 활성 이벤트가 있으면 자동 노출. 다발 가능 (예: 어제 결과 공개 + 오늘 매칭 진행).<br>
+          <strong>Exit points</strong>: footer action 탭 → 현재 phase에 맞는 routed sheet로 진입 (5종 — check-in / checked-in / matching / results / review). thumb / title 영역 탭 → EventDetailRoute push (이벤트 정보 재확인).
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          기존 MyTicketsPage v1.0은 today banner(D-Day) + upcoming/past 카드 list로 구성됐는데, 다가오는·지난 timeline은 PurchaseHistory가 이미 cover하므로 중복.
+          MyTicketsPage의 미션을 <strong>"actionable 이벤트 hub"</strong>로 재정의하고, today / ongoing / result-pending 세 가지 actionable 카드를 OngoingBanner 한 atom으로 통합 (phase prop만 다름).
+          이렇게 통합하면 (1) MyTicketCard / TodayBanner / ResultPendingCard가 모두 OngoingBanner의 phase variant가 되어 spec / 구현이 단일 atom으로 수렴, (2) EventNowBar의 lifecycle 모델과 1:1 매핑되어 데이터 / sheet route를 그대로 재사용, (3) 사용자에게는 "활성 이벤트 = 한 종류의 카드"로 mental model이 단순해짐.
+        </td>
+      </tr>
+      <tr>
+        <th>Frequency</th>
+        <td>이벤트 사이클당 1-3회 — 입장 직전 / 매칭 시작 / 결과 확인 시점에 사용자가 MyTicketsPage 진입.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================
+     🕐 HISTORY
+     ============================================================ -->
+<section class="doc">
+  <h2>History</h2>
+  <p class="intro">이 spec의 주요 변경 이력. 최신 항목 위.</p>
+  <table class="ref">
+    <thead>
+      <tr>
+        <th style="width: 110px;">Date</th>
+        <th style="width: 80px;">Version</th>
+        <th style="width: 120px;">Author</th>
+        <th>Changes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2026-05-03</td>
+        <td>1.0</td>
+        <td>mark-yun</td>
+        <td>
+          신규 spec. EventNowBar(HomePage 하단 shortcut)의 lifecycle 모델을 재사용해 MyTicketsPage 안 캐노니컬 banner로 분리. waiting / checkInReady / checkedIn / matchingReady / matching / results(미확인) / results(확인 완료) / noShow 8 visible state mini-table + 1 hidden(ended). 결과 확인 여부는 <code>event_applications.match_results_viewed_at</code>로 백엔드 저장(device간 동기화). 체크인은 이벤트 종료 시점까지 가능, 미체크인 시 noShow alt path. 좋아요 0개로 시트 닫으면 matchingReady 유지. EventNowBar 5 sheet endpoint 그대로 재사용. MyTicketCard / TodayBanner / ResultPendingCard 통합 atom. <em>(MyTicketsPage v2 폴리시 후속 PR에서 적용 예정)</em>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- Anchor nav -->
+<nav class="perspective-nav">
+  <a href="#layout"><span class="glyph">🧱</span> Layout</a>
+  <a href="#states"><span class="glyph">🎨</span> States</a>
+  <a href="#behavior"><span class="glyph">🔄</span> Global Behavior</a>
+  <a href="#reference"><span class="glyph">📖</span> Reference</a>
+</nav>
+
+<!-- ============================================================
+     🧱 LAYOUT
+     ============================================================ -->
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Layout</h2>
+    <span class="lede">3 region — header(phase chip + 시간 trailing) · info(thumb + title/location) · footer(full-width primary action). 카드 폼이라 EventNowBar의 1줄 row와 다름.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree</h2>
+    <p class="intro">
+      MyTicketsPage list 안에 들어가는 카드. <code>spacing-medium</code> v-margin · <code>spacing-screen-edge</code> h-margin. 카드 자체는 둥근 모서리만 (border 없음 · 모든 phase 공통 흰 surface · scaffold gray 위에 떠 있음). action 강조는 <strong>chip dot pulse + footer button pulse</strong>로만 표현 (카드 bg 변형 없음). 내부 padding <code>spacing-medium</code>, 3 region 사이 <code>spacing-sm</code> gap.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 200px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <!-- Header row -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:16px;left:16px;right:16px;height:24px;">
+          <span class="blueprint__region-label" style="font-size:9px;">① Header — phase chip(좌) + 시간/D-day trailing(우)</span>
+        </div>
+
+        <!-- Info row -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:48px;left:16px;right:16px;height:64px;">
+          <span class="blueprint__region-label" style="font-size:9px;">② Info — thumb 56×56 + Column(title · location · time)</span>
+        </div>
+
+        <!-- Footer button -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:120px;left:16px;right:16px;height:44px;">
+          <span class="blueprint__region-label" style="font-size:9px;">③ Footer — full-width primary action button (44px)</span>
+        </div>
+
+        <div class="blueprint__align-marker" style="top:170px;right:8px;">card padding: spacing-medium</div>
+      </div>
+
+      <div class="layout-tree"><b>EventOngoingBanner</b> (Card)
+├─ margin: <i>spacing-medium</i> v · <i>spacing-screen-edge</i> h
+├─ background: <i>color-background</i>  <i>(모든 phase 공통 — bg 변형 없음)</i>
+├─ <i>border 없음</i>  <i>(scaffold gray surface 위에 흰 card로 떠 있음)</i>
+├─ borderRadius: <i>radius-card (16)</i>
+├─ padding: <i>spacing-medium (16)</i>
+│
+├─ <em>Header row</em>                                        ← ①
+│  ├─ <b>PhaseChip</b> (좌)
+│  │  · 4×10 padding · radius-chip · 11/700
+│  │  · waiting=warning · checkIn/checked=success · matching=primary
+│  │  · results=primary tint + dot pulse (미확인) / success 초록 + solid dot (확인 완료)
+│  └─ <b>Trailing meta</b> (우)
+│     · "X시간 후 시작" / "X분 남음" / D-Day · D+N
+│     · matching phase는 strong tone (primary w700)
+│
+├─ <em>Info row</em>                                          ← ②
+│  ├─ <b>Thumb</b> 56×56  (radius-small · gradient placeholder)
+│  └─ <b>Column</b> (flex 1 · gap 4)
+│     ├─ title (14/700 · 1줄 ellipsis)
+│     ├─ location (12/secondary)
+│     └─ datetime (12/secondary)
+│
+└─ <em>Actions stack</em>                                     ← ③
+   · vertical · gap 8
+   ├─ <em>OutlineActionButton</em> "길찾기"  <i>(waiting · checkInReady에만 노출)</i>
+   │  · full-width 44px · radius-button · primary 35% border · transparent bg · primary text
+   │  · 외부 지도 앱(카카오맵 등) 호출
+   └─ <em>FooterActionButton</em> (primary fill — phase별 라벨/아이콘)
+      · full-width 44px · radius-button
+      · primary fill (active phase) · pulse animation (action phase)
+      · passive variant: surface bg · text-secondary · cursor default
+      · phase별 라벨 분기 (States 참조)</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>—</td><td>Card 외부</td><td>list 안 단일 카드 · 다발 가능</td><td>v-margin <code>spacing-medium (16)</code> · h-margin <code>spacing-screen-edge (16)</code> · radius-card · border 없음 (scaffold gray surface 위 흰 카드)</td></tr>
+        <tr><td>①</td><td>Header row</td><td>spaceBetween · phase chip 좌 / 시간 trailing 우</td><td>chip 11/700 · trailing 12/secondary · matching일 땐 strong</td></tr>
+        <tr><td>②</td><td>Info row</td><td>start cross-axis · 56 thumb + flex column</td><td>thumb↔body gap <code>spacing-sm</code> · body 안 행 gap 4 · title 14/700 · meta 12/secondary</td></tr>
+        <tr><td>③</td><td>Actions stack</td><td>vertical · gap 8 · 길찾기 outline(waiting · checkInReady만) + primary CTA</td><td>각 button full-width 44px · radius-button · 14/700 · gap 8(icon-text) · outline은 transparent bg + primary 35% border</td></tr>
+        <tr><td>—</td><td>region 사이 gap</td><td>—</td><td><code>spacing-sm (12)</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<!-- ============================================================
+     🎨 STATES
+     ============================================================ -->
+<div class="perspective" id="states">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>States</h2>
+    <span class="lede">시각 변형 8 visible (waiting · checkInReady · checkedIn · matchingReady · matching · results 미확인 · results 확인 완료 · noShow) + 1 hidden(ended). baseline = waiting. action phase(checkInReady · matchingReady · results 미확인)는 chip dot pulse + footer button pulse로 강조.</span>
+  </div>
+
+  <section class="doc">
+    <p class="intro">
+      EventNowBar와 동일한 lifecycle 모델을 따르되 results phase는 <strong>viewed/unviewed로 sub-state 분리</strong>, 추가로 <strong>noShow alt path</strong>를 둠 (체크인 안 한 사용자). 전체: waiting · checkInReady · checkedIn · matchingReady · matching · results-미확인 · results-확인 · noShow · ended. banner는 ended에서 자동으로 사라짐 (hidden).
+      각 visible phase는 같은 layout(header / info / footer)을 공유하고, <strong>phase chip 색·라벨</strong>, <strong>trailing 시간 표현</strong>, <strong>footer action 라벨·시각 강조</strong>가 변경됨.
+    </p>
+
+    <!-- State 1: waiting (baseline) -->
+    <table class="ref state-mini is-baseline-tint">
+      <thead>
+        <tr><th colspan="3"><strong>waiting · 시작 전 대기</strong> 🎯 <small>baseline · 이벤트 시작 전 (보통 D-Day · ~1-2시간 전)</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport ob-viewport">
+              <div class="ongoing-banner">
+                <div class="ongoing-banner__header">
+                  <span class="ongoing-banner__chip ongoing-banner__chip--waiting">
+                    <span class="ongoing-banner__chip-dot"></span>곧 시작
+                  </span>
+                  <span class="ongoing-banner__time">매칭 2시간 후 시작</span>
+                </div>
+                <div class="ongoing-banner__info">
+                  <div class="ongoing-banner__thumb"></div>
+                  <div class="ongoing-banner__body">
+                    <div class="ongoing-banner__title">루프탑 라운지 · 강남</div>
+                    <div class="ongoing-banner__meta">서울 강남구 테헤란로</div>
+                    <div class="ongoing-banner__meta">5월 3일 토 · 19:00 시작</div>
+                  </div>
+                </div>
+                <div class="ongoing-banner__actions">
+                  <button class="ongoing-banner__action ongoing-banner__action--outline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.71 11.29l-9-9a1 1 0 0 0-1.42 0l-9 9a1 1 0 0 0 0 1.42l9 9a1 1 0 0 0 1.42 0l9-9a1 1 0 0 0 0-1.42z"/><path d="M14 9h-4v3H7l5 5 5-5h-3z"/></svg>길찾기</button>
+                  <button class="ongoing-banner__action">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="6" height="6"/><rect x="14" y="4" width="6" height="6"/><rect x="4" y="14" width="6" height="6"/><rect x="14" y="14" width="6" height="6"/></svg>
+                    입장 QR 미리 보기
+                  </button>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>이벤트 시작 시간 전(보통 D-Day · 시작 1-2시간 전 활성). 아직 체크인 받기 시작 전 상태. 사용자는 입장 정보를 미리 확인하거나 길찾기를 사용.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            ① <strong>"입장 QR 미리 보기" 탭</strong> — Check-in 시트 열림 (아직 체크인 비활성, QR 미리보기만 가능)<br>
+            ② <strong>"길찾기" outline 버튼 탭</strong> — 외부 지도 앱(카카오맵 등) 호출<br>
+            ③ <strong>title / thumb 영역 탭</strong> — EventDetailRoute push (이벤트 정보 재확인)<br>
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · 시작 시간이 매우 임박해도(예: 5분 전) 체크인이 아직 활성화 안 됐으면 이 상태 유지 — 운영자가 체크인 open한 시점이 phase 분기 트리거.<br>
+            · 사용자가 다른 이벤트에 동시 참석(다발) 중이면 banner가 둘 노출됨 — 시간순(임박 우선) 정렬.
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            · Card container · border 없음 · radius-card · padding-medium · 흰 bg<br>
+            · <code>PhaseChip</code> (warning tone · "곧 시작") + <code>TimeText</code> (매칭 시작까지 남은 시간 — "매칭 X시간 후 시작")<br>
+            · <code>Thumb</code> 56×56 · <code>TitleColumn</code> (title · location · datetime)<br>
+            · <code>ActionsStack</code> (vertical · gap 8)<br>
+            ·   ├ <code>OutlineActionButton</code> ("길찾기" · primary 35% border · 외부 지도 앱 호출)<br>
+            ·   └ <code>FooterActionButton</code> (primary fill · "입장 QR 보기" + qr_code icon · 미리보기 sheet 호출)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            · color: <code>color-background</code>(card surface · 흰), <code>color-surface</code>(scaffold bg · scaffold gray로 카드가 떠보이게), <code>color-text-primary</code>(title), <code>color-text-secondary</code>(meta · time), <code>color-warning</code>(chip text + chip 16% bg), <code>color-primary</code>(footer button bg · outline button text+border)<br>
+            · radius: <code>radius-card</code>(card · 16) · <code>radius-button</code>(footer button · 12) · <code>radius-chip</code>(phase chip)<br>
+            · spacing: <code>spacing-medium</code>(card padding · h-margin), <code>spacing-sm</code>(region gap · thumb-body gap), <code>spacing-screen-edge</code>(외곽)<br>
+            · typography: chip(11/700), trailing time(12/secondary), title(14/700), meta(12/secondary), action(14/700)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 baseline phase는 "아직 액션 단계가 아니지만 곧 다가옴"의 신호 — chip 톤은 warning(주황)로 attention 끌고, footer button은 primary fill이지만 pulse 없음. 사용자에게 "QR을 미리 한 번 봐두자" 정도의 가벼운 prompt.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 2: checkInReady -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>checkInReady · 체크인 가능</strong> <small>현장 체크인 open · 사용자 액션 강하게 유도</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport ob-viewport">
+              <div class="ongoing-banner">
+                <div class="ongoing-banner__header">
+                  <span class="ongoing-banner__chip ongoing-banner__chip--success">
+                    <span class="ongoing-banner__chip-dot ongoing-banner__chip-dot--pulse"></span>체크인 가능
+                  </span>
+                  <span class="ongoing-banner__time ongoing-banner__time--strong">지금 입장 가능</span>
+                </div>
+                <div class="ongoing-banner__info">
+                  <div class="ongoing-banner__thumb"></div>
+                  <div class="ongoing-banner__body">
+                    <div class="ongoing-banner__title">루프탑 라운지 · 강남</div>
+                    <div class="ongoing-banner__meta">서울 강남구 테헤란로</div>
+                    <div class="ongoing-banner__meta">5월 3일 토 · 19:00 시작</div>
+                  </div>
+                </div>
+                <div class="ongoing-banner__actions">
+                  <button class="ongoing-banner__action ongoing-banner__action--outline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.71 11.29l-9-9a1 1 0 0 0-1.42 0l-9 9a1 1 0 0 0 0 1.42l9 9a1 1 0 0 0 1.42 0l9-9a1 1 0 0 0 0-1.42z"/><path d="M14 9h-4v3H7l5 5 5-5h-3z"/></svg>길찾기</button>
+                  <button class="ongoing-banner__action ongoing-banner__action--pulse">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="6" height="6"/><rect x="14" y="4" width="6" height="6"/><rect x="4" y="14" width="6" height="6"/><rect x="14" y="14" width="6" height="6"/></svg>
+                    입장 QR 보기
+                  </button>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>운영자가 체크인을 open한 시점부터 <strong>이벤트 종료 시점까지</strong> 활성. 늦게 도착해도 종료 전이면 체크인 가능 (checkInReady → checkedIn 정상 진입). 시간 압박이 가장 큰 단계 — 사용자는 "지금 들어가야 함"을 즉시 인지해야. 이벤트 종료 시 미체크인이면 noShow phase로 분기.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            + <strong>"입장 QR 보기" 탭</strong> (pulse) — Check-in 시트 열림 (QR 풀스크린 노출 · 운영자가 스캔)<br>
+            동일: 길찾기 / EventDetail 진입
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · 사용자가 지각한 경우 — 체크인 시간이 끝나도 이 phase가 유지되다가 운영자가 강제 종료하면 ended로 분기.<br>
+            · QR 시트는 화면이 켜져 있는 동안 자동 갱신 (단, 위변조 방지 위한 짧은 TTL).
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            ↔ baseline 대비:<br>
+            + PhaseChip tone: success + dot pulse (action 시그널)<br>
+            + Trailing 시간 표현: "지금 입장 가능" (strong primary)<br>
+            + Footer primary button: pulse animation (1.6s) — chip dot pulse + button pulse 두 단서로 사용자 attention 유도. 길찾기 outline 버튼은 위에 그대로 stack<br>
+            <em>(카드 bg는 모든 phase 공통 흰 surface — gradient 변형 없음)</em>
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            ↔ baseline +<br>
+            + <code>color-success</code>(chip text + chip 16% bg)<br>
+            + <code>color-primary</code>(card border tint · trailing strong · button pulse halo)<br>
+            − <code>color-warning</code>(chip 톤 변경)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 가장 강한 시선 유도 단계. action 변형 카드 외곽 + chip dot pulse + footer button pulse 3중으로 사용자 attention을 끌어 입장 누락 방지.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 3: checkedIn -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>checkedIn · 체크인 완료, 매칭 전 대기</strong> <small>passive · 매칭 시작 전까지 기다림</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport ob-viewport">
+              <div class="ongoing-banner">
+                <div class="ongoing-banner__header">
+                  <span class="ongoing-banner__chip ongoing-banner__chip--success">
+                    <span class="ongoing-banner__chip-dot"></span>체크인 완료
+                  </span>
+                  <span class="ongoing-banner__time">매칭 18분 후 시작</span>
+                </div>
+                <div class="ongoing-banner__info">
+                  <div class="ongoing-banner__thumb"></div>
+                  <div class="ongoing-banner__body">
+                    <div class="ongoing-banner__title">루프탑 라운지 · 강남</div>
+                    <div class="ongoing-banner__meta">서울 강남구 테헤란로</div>
+                    <div class="ongoing-banner__meta">19:00 시작 · 매칭 19:30</div>
+                  </div>
+                </div>
+                <button class="ongoing-banner__action ongoing-banner__action--passive">
+                  즐거운 시간 보내세요
+                </button>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>QR 체크인 완료 시점부터 매칭 시작까지의 대기 구간 (보통 10-30분). 사용자는 자리에 앉아 기다리거나 안내를 받음.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            ⊝ Footer action 비활성 — 탭해도 변화 없음 (cursor default)<br>
+            − 길찾기 outline 버튼은 노출 안 함 (이미 현장 도착)<br>
+            동일: title / thumb 탭 → EventDetailRoute (운영 안내 / 매칭 룰 등)<br>
+            + 별도: CheckedIn 시트 진입 가능 (참가자 명단 / 매칭 안내) — banner 본체 탭으로 진입
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · 매칭 시작 시간이 운영 사정으로 지연되면 trailing 시간이 "매칭 곧 시작"으로 변경 (정확한 시간 미정 시).<br>
+            · 사용자가 화면을 보지 않아도 phase 5(matching)로 자동 전환되며 EventNowBar 알림이 뜸.
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            ↔ baseline 대비:<br>
+            + PhaseChip: success outline (체크인 완료 시그널)<br>
+            + Footer button variant: <code>--passive</code> (surface bg · secondary text · cursor default)<br>
+            + Banner body 탭 영역 활성화 → CheckedIn 시트
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            ↔ baseline +<br>
+            + <code>color-success</code>(chip)<br>
+            + <code>color-surface</code>(button bg)<br>
+            − <code>color-warning</code> · primary footer
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 passive phase. 사용자에게 "지금은 기다리세요"를 명확히 — pulse / 강조 없음. 다만 banner는 살아있어서 시간 카운트가 자동 갱신됨.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 4: matchingReady -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>matchingReady · 매칭 시작 가능</strong> <small>action 단계 · 매칭 진입 강하게 유도</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport ob-viewport">
+              <div class="ongoing-banner">
+                <div class="ongoing-banner__header">
+                  <span class="ongoing-banner__chip ongoing-banner__chip--primary">
+                    <span class="ongoing-banner__chip-dot ongoing-banner__chip-dot--pulse" style="background:white;"></span>매칭 시작
+                  </span>
+                  <span class="ongoing-banner__time ongoing-banner__time--strong">지금 시작 가능</span>
+                </div>
+                <div class="ongoing-banner__info">
+                  <div class="ongoing-banner__thumb"></div>
+                  <div class="ongoing-banner__body">
+                    <div class="ongoing-banner__title">루프탑 라운지 · 강남</div>
+                    <div class="ongoing-banner__meta">참가자 24명</div>
+                    <div class="ongoing-banner__meta">이벤트 종료 1시간 전부터 매칭 가능</div>
+                  </div>
+                </div>
+                <button class="ongoing-banner__action ongoing-banner__action--pulse">
+                  매칭 시작하기
+                </button>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><strong>이벤트 종료 1시간 전부터 활성</strong>. 모든 체크인 참가자가 매칭에 참여할 수 있는 시점. 사용자가 시트에 진입해 좋아요를 보내면 phase 5(matching · 결과 대기)로 전환.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            + <strong>"매칭 시작하기" 탭</strong> (pulse) — Matching 시트 열림 (좋아요 보낼 상대 카드 swipe UI 진입)<br>
+            동일: title / thumb 탭 → EventDetail
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · <strong>좋아요 0개로 시트 닫음 / 시트 진입 X</strong>: matchingReady에 머무름 — pulse + "매칭 시작하기" 그대로 유지. 사용자가 마음 바뀌어 다시 들어갈 수 있도록 강조 회수하지 않음.<br>
+            · 이벤트 종료 시점까지 0개로 끝나면 자동으로 phase 6(results)로 전환 + 좋아요 0건 처리 (= 매치 0건 결과).<br>
+            · 좋아요 보낼 카드 수가 0명(체크인 참가자 본인 1명뿐)이면 안내 메시지 후 자동 phase 5/6 skip.<br>
+            · <strong>≥1개 보내고 시트 닫음</strong>: phase 5(matching · 결과 대기)로 전환 — passive 톤.
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            ↔ baseline 대비:<br>
+            + PhaseChip tone: primary fill (흰 dot + pulse) — 가장 강한 액션 시그널<br>
+            + Trailing: "지금 시작 가능" (strong primary)<br>
+            + Footer button: pulse · 텍스트 only ("매칭 시작하기")<br>
+            <em>(카드 bg는 모든 phase 공통 흰 surface — gradient 변형 없음. action 강조는 chip dot pulse + button pulse만으로)</em>
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            ↔ baseline +<br>
+            + <code>color-primary</code>(chip fill · button bg + pulse · trailing strong)<br>
+            + 흰 dot inside chip<br>
+            − warning
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 checkInReady와 더불어 가장 강한 attention phase. 차이는 chip이 success(체크인) → primary(매칭)로 바뀌어 "다음 단계로 이동"을 시그널.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 5: matching -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>matching · 매칭 진행 중</strong> <small>live · 시간 카운트 + 계속하기 액션</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport ob-viewport">
+              <div class="ongoing-banner">
+                <div class="ongoing-banner__header">
+                  <span class="ongoing-banner__chip ongoing-banner__chip--primary">
+                    <span class="ongoing-banner__chip-dot ongoing-banner__chip-dot--pulse" style="background:white;"></span>매칭 중
+                  </span>
+                  <span class="ongoing-banner__time">결과 대기</span>
+                </div>
+                <div class="ongoing-banner__info">
+                  <div class="ongoing-banner__thumb"></div>
+                  <div class="ongoing-banner__body">
+                    <div class="ongoing-banner__title">루프탑 라운지 · 강남</div>
+                    <div class="ongoing-banner__meta">5명 선택함</div>
+                  </div>
+                </div>
+                <button class="ongoing-banner__action ongoing-banner__action--passive">
+                  매칭 결과를 기다리고 있습니다
+                </button>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><strong>사용자가 좋아요 ≥1개를 보내고 시트를 닫은 후</strong>의 대기 구간. 결과 공개 전까지 passive 톤 유지. 마감 시간 개념은 없고, 운영자가 결과를 산출하면 자동으로 phase 6(results)로 전환. <em>(좋아요 0개로 시트 닫은 경우는 matchingReady 그대로 유지)</em></td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            ⊝ Footer action 비활성 — 탭해도 변화 없음 (cursor default).<br>
+            동일: title / thumb 탭 → EventDetail.<br>
+            <em>(매칭 자체는 시트 안에서 완결되고, banner는 결과 공개까지의 상태 표시 역할만)</em>
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · 사용자가 0명 선택했어도 banner는 동일하게 노출 ("0명 선택함").<br>
+            · 결과 산출은 백엔드 운영 — 클라이언트는 push / polling으로 phase 6 transition 받음.
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            ↔ matchingReady 대비:<br>
+            + PhaseChip dot pulse 유지 ("매칭 중") — 백엔드에서 결과 처리 중인 시그널<br>
+            + Trailing: "결과 대기" (passive · secondary)<br>
+            + Info meta: "X명 선택함" (선택 카운트만 · 진행률·마감시간 없음)<br>
+            + Footer button variant: <code>--passive</code> (surface bg · secondary text · cursor default)<br>
+            + Footer 라벨: "매칭 결과를 기다리고 있습니다"
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            ↔ matchingReady +<br>
+            + <code>color-surface</code>(button bg passive)<br>
+            − <code>color-primary</code> footer fill / pulse 제거 — "내 할 일은 끝났다" 시그널
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 matching phase는 "내가 할 일은 다 했고, 결과 기다리는 중"의 passive 상태. matchingReady의 적극적 톤(pulse)과 대비되어 사용자 인지를 분리. 시트 활동(좋아요 보내기)은 matchingReady에서 진입한 시트 안에서 완결되며, banner는 그 후 상태 표시만 담당.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 6a: results · 미확인 -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>results · 매칭 결과 공개됨 (미확인)</strong> 🎯 <small>가장 두근거리는 transition · 결과 시트 진입 전</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport ob-viewport">
+              <div class="ongoing-banner">
+                <div class="ongoing-banner__header">
+                  <span class="ongoing-banner__chip ongoing-banner__chip--results">
+                    <span class="ongoing-banner__chip-dot ongoing-banner__chip-dot--pulse"></span>결과 공개됨
+                    <span class="ongoing-banner__notif-dot"></span>
+                  </span>
+                  <span class="ongoing-banner__time">어제 진행</span>
+                </div>
+                <div class="ongoing-banner__info">
+                  <div class="ongoing-banner__thumb"></div>
+                  <div class="ongoing-banner__body">
+                    <div class="ongoing-banner__title">루프탑 라운지 · 강남</div>
+                    <div class="ongoing-banner__meta">매치 결과를 확인해보세요</div>
+                    <div class="ongoing-banner__meta">5월 2일 금 · 19:00</div>
+                  </div>
+                </div>
+                <button class="ongoing-banner__action ongoing-banner__action--pulse">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01"/></svg>
+                  매칭 결과 보기
+                </button>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>매칭 마감 후 결과가 공개된 상태. 결과 공개 시점부터 <strong>최대 1주일(7일)</strong> 동안 banner가 노출됨. <strong>핵심 transition</strong> — 사용자가 가장 기다리는 순간. 결과 확인(시트 진입) 또는 1주일 경과 시 phase 7(ended)로 전환되며 banner 사라짐.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            + <strong>"매칭 결과 보기" 탭</strong> (pulse) — Results 시트 열림 (매치된 사람 / 받은 좋아요 / 채팅 진입점)<br>
+            + 결과 확인 후에도 banner는 1주일까지 유지 (재진입 가능). 1주일 경과 시 자동 사라짐 → 회고는 PurchaseHistory에서
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · 매치 0건이어도 banner는 동일하게 노출 — 결과 시트에서 "이번엔 매치가 없었어요" 빈 상태 표시.<br>
+            · <strong>조회 가능 기간 1주일(7일)</strong> 정책 — 결과 공개 시점부터 7일까지 banner 노출. 시간 경과 시 자동으로 PurchaseHistory 지난 티켓 timeline으로 이관 (재진입은 그쪽에서).<br>
+            · 한 사용자가 동시에 여러 이벤트의 results phase일 수 있음 — banner stack에 시간순 정렬 (최신 결과 위).
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            ↔ matchingReady 대비:<br>
+            + PhaseChip tone: results variant (primary 14% bg + primary text + dot pulse + 알림 error dot)<br>
+            + Trailing: 진행 일자(과거형 — "어제" / "X일 전" 같은 상대 표기)<br>
+            + Info meta: "매치 결과를 확인해보세요" copy<br>
+            + Footer 아이콘: 매칭 결과 (smile / heart_check 등)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            ↔ matchingReady +<br>
+            + <code>color-error</code>(알림 dot — 미확인 시그널 · 8×8)<br>
+            + chip variant: primary 14% bg + primary text<br>
+            − chip primary fill (results variant로 swap)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 본 페이지 신설의 가장 큰 add-value. 기존 v1.0에서는 Past 카드 회색에 묻혀 있던 결과 발표가 명시적 banner + 알림 dot으로 격상. 결과 확인 = 사용자에게 가장 두근거리는 순간이라 시각적 강조 + AppBar bottom-nav badge와 동기화 권장.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 6b: results · 확인 완료 -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>results · 매칭 결과 확인 완료</strong> <small>이미 결과 시트 본 상태 · 1주일까지 재진입 가능 · pulse 없음</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport ob-viewport">
+              <div class="ongoing-banner">
+                <div class="ongoing-banner__header">
+                  <span class="ongoing-banner__chip ongoing-banner__chip--success">
+                    <span class="ongoing-banner__chip-dot"></span>매칭 결과 확인함
+                  </span>
+                  <span class="ongoing-banner__time">3일 전</span>
+                </div>
+                <div class="ongoing-banner__info">
+                  <div class="ongoing-banner__thumb"></div>
+                  <div class="ongoing-banner__body">
+                    <div class="ongoing-banner__title">루프탑 라운지 · 강남</div>
+                    <div class="ongoing-banner__meta">3일 후 보관 종료</div>
+                    <div class="ongoing-banner__meta">5월 2일 금 · 19:00</div>
+                  </div>
+                </div>
+                <button class="ongoing-banner__action ongoing-banner__action--outline">
+                  매칭 결과 다시 보기
+                </button>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>사용자가 결과 시트를 한 번 진입한 후의 상태. 결과 공개 시점부터 1주일까지 banner 유지되며, 그 안에서 재진입 가능. <code>match_results_viewed_at</code> 백엔드 저장값으로 분기 — device간 동기화됨.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            + <strong>"매칭 결과 다시 보기" 탭</strong> (outline · pulse 없음) — Results 시트 재진입<br>
+            동일: title / thumb 탭 → EventDetail
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · 1주일 보관 만료 임박 시(예: 1일/3일 남음) info meta에 "X일 후 보관 종료" 표시 — 사용자가 회고 종료 시점을 알 수 있도록.<br>
+            · 보관 만료 후 phase 7(ended)로 자동 전환 — banner 사라지고 PurchaseHistory로 이관.<br>
+            · 한 사용자가 동시에 여러 이벤트의 6b 상태일 수 있음 — banner stack 시간순 정렬.
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            ↔ 6a(미확인) 대비:<br>
+            + PhaseChip variant: <code>--success</code> 초록 (확인 완료 의미) · 라벨 "매칭 결과 확인함" (dot pulse 없음 — solid dot)<br>
+            + Footer button variant: <code>--outline</code> (primary 35% border · transparent bg · primary text · pulse 없음)<br>
+            + Footer 라벨: "매칭 결과 다시 보기"<br>
+            + Info meta 추가: "X일 후 보관 종료" (만료 임박 시 노출)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            ↔ 6a +<br>
+            + <code>color-success</code>(chip text + chip 16% bg) — "확인 완료" 시그널<br>
+            + outline button border: <code>color-primary</code> @ 35%<br>
+            − chip dot pulse animation 제거 (solid dot)<br>
+            − footer pulse animation 제거 (이미 봤으니 attention 회수)<br>
+            − results variant chip(primary tint) 제거 — 6a 전속
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 6a → 6b transition은 결과 시트 첫 진입 시점에 백엔드 mutation. <code>match_results_viewed_at</code> 컬럼이 set되면 클라이언트가 6b로 자동 전환. 이후 1주일까지는 회고용으로 banner 유지 — 매치된 상대와의 채팅 진입점 등 follow-up 액션 빠른 접근.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 7: noShow · 체크인 안 함 -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>noShow · 체크인 안 함</strong> <small>참석하지 않은 이벤트 · 매칭 / 결과 진입 없이 종료된 alt path</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport ob-viewport">
+              <div class="ongoing-banner">
+                <div class="ongoing-banner__header">
+                  <span class="ongoing-banner__chip ongoing-banner__chip--neutral">
+                    <span class="ongoing-banner__chip-dot"></span>체크인 안 함
+                  </span>
+                  <span class="ongoing-banner__time">어제</span>
+                </div>
+                <div class="ongoing-banner__info">
+                  <div class="ongoing-banner__thumb"></div>
+                  <div class="ongoing-banner__body">
+                    <div class="ongoing-banner__title">루프탑 라운지 · 강남</div>
+                    <div class="ongoing-banner__meta">참석하지 않은 이벤트</div>
+                    <div class="ongoing-banner__meta">5월 2일 금 · 19:00</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>이벤트 종료 시점까지 사용자가 체크인을 하지 않은 경우. matching / results phase 진입 없이 종료되는 alt path. 환불 진행 없음 — 단순 정보성 표시.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            ⊝ Footer action 없음 (pure informational banner).<br>
+            동일: title / thumb 영역 탭 → EventDetailRoute (놓친 이벤트 정보 재확인).
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · <strong>체크인 가능 시점은 이벤트 종료까지</strong> — 늦게 도착해도 종료 전이면 checkInReady → checkedIn 정상 진입. 종료 시점에 미체크인이면 자동으로 noShow.<br>
+            · 환불 정책과 분리 — 체크인 안 했다고 자동 환불은 없음. 환불은 사용자가 별도 요청 (취소 정책 따름).<br>
+            · noShow 상태도 1주일까지 banner 노출 후 ended로 전환 — 같은 정책 라인 유지.
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            ↔ baseline 대비:<br>
+            + PhaseChip variant: <code>--neutral</code> (gray · 회색 톤 · solid dot · pulse 없음)<br>
+            + Trailing: 진행 일자(과거형 — "어제" / "X일 전")<br>
+            + Info meta: "참석하지 않은 이벤트"<br>
+            − 길찾기 outline 버튼 미노출 (이미 종료된 이벤트)<br>
+            − Footer primary action 미노출 (informational only · 카드 본체만 EventDetail로 탭 가능)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            ↔ baseline +<br>
+            + <code>color-text-secondary</code>(chip + dot · 옅은 회색 톤)<br>
+            + chip neutral variant: surface bg + divider border<br>
+            − warning / primary / pulse 일체 제거 — informational
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 사용자에게 "이 이벤트는 참석하지 않았어요"를 가볍게 알려주는 회고용 표시. 환불은 별도 동선이고, 이 banner 자체는 액션이 없는 정보성 카드. 1주일 후 자동 사라짐.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 8: ended (hidden) -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>ended · 종료 (banner 사라짐)</strong> <small>hidden · 결과 공개 후 1주일 경과</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6" style="background: var(--color-surface); color: var(--color-text-secondary); font-size: 12px; text-align: center; padding: 32px;">
+            <em>banner not rendered</em><br><br>
+            (이 phase는 hidden state — MyTicketsPage에서 자동으로 사라지고, 회고는 <a href="/specs/purchase_history_page.html">PurchaseHistory</a>에서 timeline으로 확인)
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>매칭 결과 공개 후 또는 noShow 시점부터 <strong>1주일(7일)</strong> 경과 시 자동으로 ended로 전환. results / noShow 모두 동일한 7일 정책. 7일 초과 시점에 banner는 MyTicketsPage list에서 사라지고, PurchaseHistory 지난 티켓 timeline으로 이관 (재진입 가능).</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>− banner 자체가 없어 직접 액션 없음. 회고 / 영수증 / 매칭 결과 재진입은 PurchaseHistory에서 진입.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · 7일 만료 시 자동 transition — banner가 page에서 fade out (200ms). 결과 확인(6a→6b)은 banner를 즉시 제거하지 않음 — 7일 정책은 결과 공개 시점 기준으로 일관 적용.<br>
+            · MyTicketsPage 모든 banner가 ended이면 페이지 자체가 empty state로 분기 (다른 spec에서 정의 예정).
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>− banner 미렌더 (parent list가 해당 entry 자체를 제외).</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 ended는 lifecycle 종착점이며 더 이상 actionable이 없음. PurchaseHistory의 timeline 카드(영수증 · 후기 · 매칭 결과 재진입 등)가 이후 모든 회고 액션의 캐노니컬 진입점.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<!-- ============================================================
+     🔄 GLOBAL BEHAVIOR
+     ============================================================ -->
+<div class="perspective" id="behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">phase 전환 · 다발 케이스 정렬 · EventNowBar와의 동기화 · 모션.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Phase 전환 동작</h2>
+    <ul class="notes">
+      <li>phase는 운영자 / 시스템 트리거로 자동 전환 — 클라이언트는 push / polling으로 갱신.</li>
+      <li>전환 시 banner 본체는 유지된 채 chip · trailing · footer만 cross-fade (200ms).</li>
+      <li><code>waiting → checkInReady</code>는 운영자가 체크인 open · <code>checkInReady → checkedIn</code>은 사용자 QR 스캔 완료 시.</li>
+      <li><code>checkInReady → noShow</code>는 이벤트 종료 시점까지 미체크인이면 자동 분기 (alt path).</li>
+      <li><code>checkedIn → matchingReady</code>는 운영자가 매칭 phase open (이벤트 종료 1시간 전 자동).</li>
+      <li><code>matchingReady → matching</code>은 사용자가 좋아요 ≥1개 보내고 시트 닫음. 0개면 matchingReady 유지.</li>
+      <li><code>matching/matchingReady → results</code>는 이벤트 종료 + 백엔드 결과 산출 완료 시 (0개로 끝나면 0건 결과 처리).</li>
+      <li><code>results 미확인 → results 확인</code>은 사용자가 결과 시트 첫 진입 시점 — 백엔드에 <code>match_results_viewed_at</code>이 set되며 chip dot pulse / footer button pulse 회수. 시트는 그대로 닫혀도 banner는 outline 톤으로 유지(재진입 가능).</li>
+      <li><code>results → ended</code>는 결과 공개 후 <strong>1주일(7일) 경과</strong> 시 자동 전환. 미확인/확인 무관하게 7일 초과 시 banner 제거 + PurchaseHistory 지난 티켓으로 이관.</li>
+    </ul>
+  </section>
+
+  <section class="doc">
+    <h2>다발 케이스 — banner stack</h2>
+    <ul class="notes">
+      <li>한 사용자가 동시에 여러 활성 이벤트를 가질 수 있음 (예: 어제 results pending + 오늘 ongoing).</li>
+      <li>MyTicketsPage list 정렬 우선순위 — <strong>action 시급도 → 시간 임박도</strong>.</li>
+      <li>같은 시급도 내에서는 시간 임박 순 (matchingReady 19:30 시작 &gt; matchingReady 20:30 시작).</li>
+      <li>action phase(checkInReady · matchingReady · results)는 항상 passive phase(waiting · checkedIn) 위에 노출.</li>
+    </ul>
+    <table class="ref">
+      <thead>
+        <tr><th>우선 순위</th><th>Phase</th><th>이유</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>1</td><td>checkInReady · matchingReady · results 미확인</td><td>action — pulse 강조 · 즉시 사용자 입력 필요 또는 가장 기다린 transition</td></tr>
+        <tr><td>2</td><td>matching</td><td>passive — 결과 대기 중</td></tr>
+        <tr><td>3</td><td>results 확인 완료</td><td>passive — 회고 진입 가능 (outline 톤)</td></tr>
+        <tr><td>4</td><td>checkedIn</td><td>passive — 자동 전환 대기</td></tr>
+        <tr><td>5</td><td>waiting</td><td>passive — 시작 전 대기</td></tr>
+        <tr><td>6</td><td>noShow</td><td>passive — 정보성만 (액션 없음)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>EventNowBar와의 동기화</h2>
+    <ul class="notes">
+      <li>EventNowBar(HomePage 하단 64px shortcut)와 OngoingBanner는 <strong>같은 lifecycle 데이터</strong>를 보지만 표현이 다름.</li>
+      <li>EventNowBar phase 1-5(waiting → matching)는 양쪽 모두 노출. phase 6(results)는 OngoingBanner 전속 (EventNowBar는 결과 안내까진 안 가도록 분리).</li>
+      <li>EventNowBar 탭 → 해당 phase 시트 진입 = OngoingBanner footer action 탭 → 동일 시트 진입 (5 sheet endpoint 공유).</li>
+      <li>사용자가 EventNowBar로 액션 처리하면 OngoingBanner도 즉시 phase 갱신 (반대로도 동일).</li>
+    </ul>
+  </section>
+
+  <section class="doc">
+    <h2>Motion timing</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 240px;">Transition</th>
+          <th style="width: 200px;">Token / Duration</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>phase 전환 (chip · trailing · footer)</td><td><code>MinglitAnimation.fast (200ms)</code></td><td>cross-fade — banner 본체 위치 유지.</td></tr>
+        <tr><td>banner 추가 (다발)</td><td><code>MinglitAnimation.medium (300ms)</code></td><td>위에서 슬라이드 다운 + opacity fade-in.</td></tr>
+        <tr><td>banner 제거 (ended transition)</td><td><code>MinglitAnimation.fast (200ms)</code></td><td>opacity fade-out → height collapse.</td></tr>
+        <tr><td>phase chip dot pulse</td><td>1.4s loop</td><td>action phase에만 적용 (checkInReady · matchingReady · matching · results).</td></tr>
+        <tr><td>footer button pulse halo</td><td>1.6s loop</td><td>action phase에만 적용. box-shadow 변화로 표현.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Global edge cases</h2>
+    <ul class="notes">
+      <li><strong>네트워크 끊김</strong> — banner는 마지막 phase 그대로 유지 + Snackbar로 "오프라인" 안내. 액션 탭 시 시트 진입은 시도하되 실패 시 retry prompt.</li>
+      <li><strong>시간이 매우 임박한 다발</strong> — 두 이벤트가 같은 시각에 겹치면(이론상) banner 두 개가 모두 action phase. 정렬 우선순위 따름.</li>
+      <li><strong>이벤트 취소</strong> — 운영자가 이벤트를 cancel하면 banner는 다음 새로고침에서 사라지고 PurchaseHistory에 환불 진행 카드로 이관.</li>
+      <li><strong>thumb 이미지 누락</strong> — 기본 gradient placeholder (현재 mockup도 placeholder 사용).</li>
+    </ul>
+  </section>
+</div>
+
+<!-- ============================================================
+     📖 REFERENCE
+     ============================================================ -->
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">📖</span>
+    <h2>Reference</h2>
+    <span class="lede">routed sheet 매핑 + implementation source + 인접 spec.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Routed sheet 매핑 (footer action → phase별 시트)</h2>
+    <p class="intro">EventNowBar와 동일한 5 sheet endpoint를 재사용. footer 라벨/아이콘만 phase 별로 분기.</p>
+    <table class="ref">
+      <thead>
+        <tr><th>Phase</th><th>Footer 라벨</th><th>Sheet (재사용)</th><th>주요 컨텐츠</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>waiting</td><td>"입장 QR 미리 보기"</td><td>CheckInPreviewSheet</td><td>QR 미리보기 (체크인 비활성 · 시간 전)</td></tr>
+        <tr><td>checkInReady</td><td>"입장 QR 보기" (pulse)</td><td>CheckInSheet</td><td>QR 풀스크린 · 운영자 스캔용</td></tr>
+        <tr><td>checkedIn</td><td>(passive · "즐거운 시간 보내세요")</td><td>CheckedInSheet (banner 본체 탭으로 진입 가능)</td><td>참가자 명단 · 매칭 안내</td></tr>
+        <tr><td>matchingReady</td><td>"매칭 시작하기" (pulse)</td><td>MatchingSheet</td><td>좋아요 swipe UI 진입</td></tr>
+        <tr><td>matching</td><td>(passive · "매칭 결과를 기다리고 있습니다")</td><td>—</td><td>좋아요 ≥1개 보낸 후 결과 대기 — footer 비활성</td></tr>
+        <tr><td>results · 미확인</td><td>"매칭 결과 보기" (pulse)</td><td>ResultsSheet (첫 진입 시 <code>match_results_viewed_at</code> mutation)</td><td>매치된 사람 / 받은 좋아요 / 채팅 진입점</td></tr>
+        <tr><td>results · 확인 완료</td><td>"매칭 결과 다시 보기" (outline)</td><td>ResultsSheet (재진입)</td><td>회고 / 채팅 진입점 — 1주일까지 유지</td></tr>
+        <tr><td>noShow</td><td>(footer 없음)</td><td>—</td><td>informational only · 카드 본체 탭 → EventDetail</td></tr>
+        <tr><td>ended</td><td>—</td><td>(banner 미렌더)</td><td>회고는 PurchaseHistory에서</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Implementation source (예상)</h2>
+    <table class="ref">
+      <tbody>
+        <tr><th style="width: 200px;">Widget</th><td><code>EventOngoingBanner</code> — <code>apps/app_user/lib/src/features/my/event_ongoing_banner.dart</code> (신설 예정)</td></tr>
+        <tr><th>Phase enum</th><td><code>EventLifecyclePhase</code> (재사용 — EventNowBar와 공유) · <code>shared/packages/minglit_kit/lib/src/models/event_lifecycle_phase.dart</code></td></tr>
+        <tr><th>Provider</th><td><code>activeEventBannersProvider</code> — phase 별 정렬된 active 이벤트 list 제공 · MyTicketsPage가 watch</td></tr>
+        <tr><th>Backend 저장</th><td><code>event_applications.match_results_viewed_at TIMESTAMPTZ</code> 컬럼 (또는 별도 <code>event_match_result_views(user_id, event_id, viewed_at)</code> 정규화 테이블) — ResultsSheet 첫 진입 시 mutation. device간 동기화 source.</td></tr>
+        <tr><th>1주일 만료 정책</th><td>banner 노출 윈도우는 결과 공개 시점부터 7일 — backend가 phase 6/7 분기 진실값 (server-side timestamp 비교).</td></tr>
+        <tr><th>Animations</th><td><code>MinglitAnimation.fast</code> · <code>MinglitAnimation.medium</code> · phase chip / footer button pulse는 widget-level (1.4s · 1.6s)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens / atoms</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 240px;">Spec</th><th>Relation</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><a href="/specs/my_tickets_page.html"><code>MyTicketsPage</code></a></td>
+          <td>유일한 parent — banner는 이 페이지 안의 list element. v2 폴리시에서 today/upcoming/past 구조 폐기 + OngoingBanner stack으로 재정의.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/event_now_bar.html"><code>EventNowBar</code></a></td>
+          <td>HomePage 하단 64px shortcut. 같은 lifecycle 모델 + 5 sheet endpoint 공유. phase 1-5만 안내, phase 6(results)는 OngoingBanner 전속.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/purchase_history_page.html"><code>PurchaseHistory</code></a></td>
+          <td>ended phase 이후 회고 timeline. 다가오는 / 지난 이벤트 list 역할은 여기로 위임.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/home_page.html"><code>HomePage</code></a></td>
+          <td>EventNowBar의 parent. OngoingBanner의 같은 액션을 shortcut 폼으로 보여줌.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+</div>
+
+<script>
+  document.getElementById('spec-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('spec-mode', e.target.checked);
+  });
+  document.getElementById('dark-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('dark-mode', e.target.checked);
+  });
+</script>
+</body>
+</html>

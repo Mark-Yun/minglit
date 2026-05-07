@@ -331,17 +331,17 @@ async function handleUpdate(
     return errorResponse("Missing event_id", 400);
   }
 
-  // Fetch event → party → partner
-  const { data: event, error: fetchError } = await supabase
+  // Fix #2110: Fetch OLD event values for change_log before/after snapshot.
+  const { data: oldEvent, error: fetchError } = await supabase
     .from("events")
-    .select("id, party_id, parties!inner(partner_id)")
+    .select("id, party_id, start_time, end_time, parties!inner(partner_id)")
     .eq("id", eventId)
     .maybeSingle();
 
   if (fetchError) return errorResponse("Failed to load event", 500);
-  if (!event) return errorResponse("Event not found", 404);
+  if (!oldEvent) return errorResponse("Event not found", 404);
 
-  const partnerId = (event.parties as Record<string, unknown>)
+  const partnerId = (oldEvent.parties as Record<string, unknown>)
     .partner_id as string;
 
   // Check partner permission
@@ -394,6 +394,39 @@ async function handleUpdate(
 
   if (updateError) {
     return errorResponse(`Failed to update event: ${updateError.message}`, 500);
+  }
+
+  // Fix #2110: Record change_log when schedule changes and reason is provided.
+  // spec §알림 발송 정책: event_change_log must be persisted alongside push.
+  // Push notification is already triggered by trigger_produce_event_events().
+  // Constraint: reason-enriched notification body + SMS fan-out deferred
+  // (tracked separately — notification-worker extension needed).
+  const reason = typeof body.reason === "string" ? body.reason.trim() : null;
+  const isScheduleChanged =
+    (updates.start_time !== undefined &&
+      updates.start_time !== (oldEvent as Record<string, unknown>).start_time) ||
+    (updates.end_time !== undefined &&
+      updates.end_time !== (oldEvent as Record<string, unknown>).end_time);
+
+  if (reason && isScheduleChanged) {
+    const changeLog: Record<string, unknown> = {
+      event_id: eventId,
+      changed_by: userId,
+      reason,
+      previous_start_time: (oldEvent as Record<string, unknown>).start_time,
+      new_start_time: updates.start_time ?? (oldEvent as Record<string, unknown>).start_time,
+      previous_end_time: (oldEvent as Record<string, unknown>).end_time,
+      new_end_time: updates.end_time ?? (oldEvent as Record<string, unknown>).end_time,
+    };
+    // Use service_role client — event_change_logs has no INSERT RLS for users.
+    const { error: logError } = await supabase
+      .from("event_change_logs")
+      .insert(changeLog);
+    if (logError) {
+      // Log insert failure must not block the update response — the event is
+      // already saved. Log and continue.
+      console.error("event_change_logs insert failed:", logError.message);
+    }
   }
 
   return successResponse({ success: true });

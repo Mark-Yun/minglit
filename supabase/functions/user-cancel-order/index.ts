@@ -156,6 +156,8 @@ Deno.serve(withHandler(async (req) => {
               .from("event_applications")
               .update({
                 status: "cancelled",
+                // Fix #2099: 취소 사유 기록 — system vs user 구분
+                cancellation_reason: "user_requested",
                 updated_at: new Date().toISOString(),
               })
               .eq("id", application.id),
@@ -259,10 +261,14 @@ Deno.serve(withHandler(async (req) => {
       // Fix #1515: Set status='cancelled' so on_application_cancel trigger removes event_participants
       const refundAmount = paymentAmount ??
         (cancelResponse.amount as number | undefined);
+      const nowISO = new Date().toISOString();
       const updatePayload: Record<string, unknown> = {
         status: "cancelled",
         refund_status: "completed",
-        updated_at: new Date().toISOString(),
+        // Fix #2099: 환불 처리 시점 + 취소 사유 기록
+        refunded_at: nowISO,
+        cancellation_reason: "user_requested",
+        updated_at: nowISO,
       };
       if (refundAmount !== undefined) {
         updatePayload.refund_amount = refundAmount;
