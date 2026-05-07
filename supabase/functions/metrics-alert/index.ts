@@ -1,10 +1,6 @@
-import {
-  corsResponse,
-  errorResponse,
-  successResponse,
-} from "../_shared/response_utils.ts";
+import { errorResponse, successResponse } from "../_shared/response_utils.ts";
 import { parseJsonBody } from "../_shared/request_utils.ts";
-import { initSentry, withHandler } from "../_shared/logger.ts";
+import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
 
 const GITHUB_TOKEN = Deno.env.get("GITHUB_ACCESS_TOKEN");
 const GITHUB_REPO = "Mark-Yun/minglit";
@@ -16,20 +12,7 @@ export const ALERT_LABELS: Record<string, string[]> = {
   report: ["metrics-alert", "auto-generated", "report"],
 };
 
-initSentry();
-
-Deno.serve(withHandler(async (req) => {
-  if (req.method === "OPTIONS") return corsResponse();
-
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  if (!serviceRoleKey) {
-    return errorResponse("SUPABASE_SERVICE_ROLE_KEY not configured", 500);
-  }
-  const authHeader = req.headers.get("Authorization") ?? "";
-  if (authHeader !== `Bearer ${serviceRoleKey}`) {
-    return errorResponse("Unauthorized", 401);
-  }
-
+export const handler = async (req: Request, _ctx: EFContext): Promise<Response> => {
   const body = await parseJsonBody(req);
   if (body instanceof Response) return body;
 
@@ -121,4 +104,6 @@ Deno.serve(withHandler(async (req) => {
     issue_number: issue.number,
     url: issue.html_url,
   });
-}));
+};
+
+minglitEdgeFunction(handler);
