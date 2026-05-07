@@ -94,8 +94,7 @@ void main() {
       await tester.pumpWidget(_buildPage(app));
       await tester.pump();
 
-      // 2026 - 1995 = 31
-      expect(find.text('31세'), findsOneWidget);
+      expect(find.text('${DateTime.now().year - 1995}세'), findsOneWidget);
     });
 
     testWidgets('shows fallback when username is empty', (tester) async {
