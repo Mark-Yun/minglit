@@ -106,9 +106,11 @@ class _ApplicationDetailBody extends StatelessWidget {
     final user = application.user;
     // Fix #2250: use username (닉네임) not name (실명) — PM #1141 & PIPA §17.
     // name is actual name; partners are allowed to see nickname + age group only.
-    final displayName = user?.username.isNotEmpty == true
-        ? user!.username
-        : '—';
+    final hasUsername = user?.username.isNotEmpty == true;
+    final displayName = hasUsername ? user!.username : '—';
+    // Fix #2250: avatar uses first letter of valid username only — '—' fallback must
+    // not bleed into avatar so findsOneWidget('—') holds in the empty-username case.
+    final avatarChar = hasUsername ? user!.username[0] : '?';
     // Fix #2250: birth_year only (연령대) — exact birth_date excluded per PM #1141.
     final age = user?.birthYear != null
         ? DateTime.now().year - user!.birthYear!
@@ -132,7 +134,7 @@ class _ApplicationDetailBody extends StatelessWidget {
                       alpha: MinglitOpacity.highlight,
                     ),
                     child: Text(
-                      displayName.isNotEmpty ? displayName[0] : '?',
+                      avatarChar,
                       style: theme.textTheme.titleLarge?.copyWith(
                         color: theme.colorScheme.primary,
                         fontWeight: FontWeight.w700,

@@ -23,7 +23,9 @@ CREATE OR REPLACE VIEW public.partner_visible_user_profiles AS
   SELECT
     id,
     username,
-    birth_year,
+    -- Fix #2250: user_profiles stores birth_date (DATE), not birth_year.
+    -- Expose only the derived year (연령대) — exact DOB excluded per PM #1141 & PIPA §17.
+    EXTRACT(YEAR FROM birth_date)::int AS birth_year,
     is_verified,
     profile_image_url
   FROM public.user_profiles;
