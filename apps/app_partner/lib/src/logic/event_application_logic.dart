@@ -104,7 +104,9 @@ class EventApplicationReviewController
 
 typedef ReviewMark = ({String status, String? reason});
 
-@riverpod
+// Fix #2272: keepAlive so marks survive carousel → confirm page transition
+// without a persistent watcher (autoDispose would lose state between pages).
+@Riverpod(keepAlive: true)
 class ReviewMarkingsNotifier extends _$ReviewMarkingsNotifier {
   @override
   Map<String, ReviewMark> build() => {};

@@ -76,7 +76,7 @@ class _State extends ConsumerState<EventApplicationReviewCarouselPage> {
   Future<void> _approve(List<EventApplication> queue, String applicationId) {
     // Fix #2272: local marking only — no server calls until confirm page
     ref
-        .read(reviewMarkingsNotifierProvider.notifier)
+        .read(reviewMarkingsProvider.notifier)
         .addMark(applicationId, 'approved');
     return _advance(queue);
   }
@@ -94,7 +94,7 @@ class _State extends ConsumerState<EventApplicationReviewCarouselPage> {
     if (!mounted || result == null) return;
     // Fix #2272: local marking only — no server calls until confirm page
     ref
-        .read(reviewMarkingsNotifierProvider.notifier)
+        .read(reviewMarkingsProvider.notifier)
         .addMark(
           applicationId,
           'rejected',
@@ -113,7 +113,12 @@ class _State extends ConsumerState<EventApplicationReviewCarouselPage> {
 
     return Scaffold(
       appBar: queueAsync.when(
-        data: (queue) => _buildAppBar(context, queue.length),
+        // Fix #2272: _getController must be called before _buildAppBar so
+        // _currentIndex is initialized from startApplicationId first.
+        data: (queue) {
+          _getController(queue);
+          return _buildAppBar(context, queue.length);
+        },
         loading: () => _buildAppBar(context, null),
         error: (err, _) => _buildAppBar(context, null),
       ),

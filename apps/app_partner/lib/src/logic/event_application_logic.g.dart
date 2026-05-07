@@ -295,7 +295,7 @@ abstract class _$EventApplicationReviewController extends $AsyncNotifier<void> {
 }
 
 @ProviderFor(ReviewMarkingsNotifier)
-const reviewMarkingsNotifierProvider = ReviewMarkingsNotifierProvider._();
+const reviewMarkingsProvider = ReviewMarkingsNotifierProvider._();
 
 final class ReviewMarkingsNotifierProvider
     extends $NotifierProvider<ReviewMarkingsNotifier, Map<String, ReviewMark>> {
@@ -304,8 +304,8 @@ final class ReviewMarkingsNotifierProvider
         from: null,
         argument: null,
         retry: null,
-        name: r'reviewMarkingsNotifierProvider',
-        isAutoDispose: true,
+        name: r'reviewMarkingsProvider',
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -327,7 +327,7 @@ final class ReviewMarkingsNotifierProvider
 }
 
 String _$reviewMarkingsNotifierHash() =>
-    r'36cd6a1f7b5ef64b7d3a7413b39c7f87fe581ca0';
+    r'0316104ab35301aa025faf7a9bb279fdf74e75f2';
 
 abstract class _$ReviewMarkingsNotifier
     extends $Notifier<Map<String, ReviewMark>> {

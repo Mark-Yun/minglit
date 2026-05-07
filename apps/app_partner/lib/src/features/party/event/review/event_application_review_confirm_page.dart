@@ -33,7 +33,7 @@ class _State extends ConsumerState<EventApplicationReviewConfirmPage> {
           reason: entry.value.reason,
         );
       }
-      ref.read(reviewMarkingsNotifierProvider.notifier).clearAll();
+      ref.read(reviewMarkingsProvider.notifier).clearAll();
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
@@ -48,7 +48,7 @@ class _State extends ConsumerState<EventApplicationReviewConfirmPage> {
 
   @override
   Widget build(BuildContext context) {
-    final marks = ref.watch(reviewMarkingsNotifierProvider);
+    final marks = ref.watch(reviewMarkingsProvider);
     final approvedCount = marks.values
         .where((m) => m.status == 'approved')
         .length;

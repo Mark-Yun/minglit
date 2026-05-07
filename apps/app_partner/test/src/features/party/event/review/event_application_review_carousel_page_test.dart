@@ -104,7 +104,7 @@ void main() {
     await tester.tap(find.text('승인'));
     await tester.pump();
 
-    final marks = container.read(reviewMarkingsNotifierProvider);
+    final marks = container.read(reviewMarkingsProvider);
     expect(marks['app_1']?.status, 'approved');
     expect(marks['app_1']?.reason, isNull);
     expect(_FakeReviewController.calls, isEmpty);
@@ -132,7 +132,7 @@ void main() {
     await tester.tap(find.text('거절 확인'));
     await tester.pump();
 
-    final marks = container.read(reviewMarkingsNotifierProvider);
+    final marks = container.read(reviewMarkingsProvider);
     expect(marks['app_1']?.status, 'rejected');
     expect(marks['app_1']?.reason, '조건 불충분');
   });
@@ -162,7 +162,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Fix #2272: sheet dismissed (null returned) → no marking should occur
-      final marks = container.read(reviewMarkingsNotifierProvider);
+      final marks = container.read(reviewMarkingsProvider);
       expect(marks, isEmpty);
     },
   );

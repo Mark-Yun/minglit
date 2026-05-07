@@ -17,7 +17,7 @@ void main() {
   testWidgets('shows correct summary counts', (tester) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
-    final notifier = container.read(reviewMarkingsNotifierProvider.notifier);
+    final notifier = container.read(reviewMarkingsProvider.notifier);
     notifier.addMark('app_1', 'approved');
     notifier.addMark('app_2', 'approved');
     notifier.addMark('app_3', 'rejected', reason: '사유');
@@ -43,7 +43,7 @@ void main() {
   testWidgets('submit button shows correct count label', (tester) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
-    final notifier = container.read(reviewMarkingsNotifierProvider.notifier);
+    final notifier = container.read(reviewMarkingsProvider.notifier);
     notifier.addMark('app_1', 'approved');
     notifier.addMark('app_2', 'approved');
     notifier.addMark('app_3', 'rejected', reason: '사유');
