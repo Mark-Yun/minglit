@@ -293,3 +293,58 @@ abstract class _$EventApplicationReviewController extends $AsyncNotifier<void> {
     element.handleValue(ref, null);
   }
 }
+
+@ProviderFor(ReviewMarkingsNotifier)
+const reviewMarkingsNotifierProvider = ReviewMarkingsNotifierProvider._();
+
+final class ReviewMarkingsNotifierProvider
+    extends $NotifierProvider<ReviewMarkingsNotifier, Map<String, ReviewMark>> {
+  const ReviewMarkingsNotifierProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'reviewMarkingsNotifierProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$reviewMarkingsNotifierHash();
+
+  @$internal
+  @override
+  ReviewMarkingsNotifier create() => ReviewMarkingsNotifier();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(Map<String, ReviewMark> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<Map<String, ReviewMark>>(value),
+    );
+  }
+}
+
+String _$reviewMarkingsNotifierHash() =>
+    r'36cd6a1f7b5ef64b7d3a7413b39c7f87fe581ca0';
+
+abstract class _$ReviewMarkingsNotifier
+    extends $Notifier<Map<String, ReviewMark>> {
+  Map<String, ReviewMark> build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final created = build();
+    final ref = this.ref as $Ref<Map<String, ReviewMark>, Map<String, ReviewMark>>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<Map<String, ReviewMark>, Map<String, ReviewMark>>,
+              Map<String, ReviewMark>,
+              Object?,
+              Object?
+            >;
+    element.handleValue(ref, created);
+  }
+}

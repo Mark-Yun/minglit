@@ -101,3 +101,17 @@ class EventApplicationReviewController
     });
   }
 }
+
+typedef ReviewMark = ({String status, String? reason});
+
+@riverpod
+class ReviewMarkingsNotifier extends _$ReviewMarkingsNotifier {
+  @override
+  Map<String, ReviewMark> build() => {};
+
+  void addMark(String applicationId, String status, {String? reason}) {
+    state = {...state, applicationId: (status: status, reason: reason)};
+  }
+
+  void clearAll() => state = {};
+}

@@ -25,6 +25,7 @@ import 'package:app_partner/src/features/party/event/detail/event_application_li
 import 'package:app_partner/src/features/party/event/detail/event_detail_page.dart';
 import 'package:app_partner/src/features/party/event/edit/event_edit_page.dart';
 import 'package:app_partner/src/features/party/event/review/event_application_review_carousel_page.dart';
+import 'package:app_partner/src/features/party/event/review/event_application_review_confirm_page.dart';
 import 'package:app_partner/src/features/party/list/party_list_page.dart';
 import 'package:app_partner/src/features/party/recurrence/recurrence_management_screen.dart';
 import 'package:app_partner/src/features/settlement/bank_account_page.dart';
@@ -180,6 +181,11 @@ class NotificationCenterRoute extends GoRouteData
                           routes: [
                             TypedGoRoute<EventApplicationReviewCarouselRoute>(
                               path: 'review',
+                              routes: [
+                                TypedGoRoute<EventApplicationReviewConfirmRoute>(
+                                  path: 'confirm',
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -440,10 +446,26 @@ class EventApplicationReviewCarouselRoute extends GoRouteData
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       EventApplicationReviewCarouselPage(
+        partyId: partyId,
         eventId: eventId,
         startApplicationId: startApplicationId,
         groupId: groupId,
       );
+}
+
+class EventApplicationReviewConfirmRoute extends GoRouteData
+    with $EventApplicationReviewConfirmRoute {
+  const EventApplicationReviewConfirmRoute({
+    required this.partyId,
+    required this.eventId,
+  });
+
+  final String partyId;
+  final String eventId;
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      EventApplicationReviewConfirmPage(eventId: eventId);
 }
 
 // 3. Settlement

@@ -858,6 +858,8 @@ class _StatusBadge extends StatelessWidget {
       'approved' => ('승인됨', MinglitColors.success),
       'rejected' => ('거절됨', MinglitColors.error),
       'paid' => ('결제완료', MinglitPartnerColors.primary),
+      // Fix #2272: cancelled = 환불 완료 상태 — 영문 원문이 노출되지 않도록 매핑
+      'cancelled' => ('환불', MinglitColors.warning),
       _ => (status, Theme.of(context).colorScheme.outline),
     };
 

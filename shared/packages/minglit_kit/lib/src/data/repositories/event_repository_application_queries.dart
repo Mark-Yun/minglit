@@ -18,7 +18,10 @@ Map<String, dynamic> mapEventApplicationRpcRow(Map<String, dynamic> map) {
     'paid_at': map['paid_at'],
     'refunded_at': map['refunded_at'],
     'refund_status': map['refund_status'] ?? 'none',
-    'user': (map['user_name'] != null || map['user_phone'] != null)
+    // Fix #2272: include user_email in the null-check so the user object is
+    // created even when user_profiles row is absent (no name/phone) but
+    // auth.users email exists — ensures 환불 tab email masking still works.
+    'user': (map['user_name'] != null || map['user_phone'] != null || map['user_email'] != null)
         ? {
             'id': map['user_id'],
             'name': map['user_name'],

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app_partner/src/logic/event_application_logic.dart';
+import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
@@ -9,11 +10,14 @@ import 'package:minglit_kit/minglit_kit.dart';
 // groupId null → all pending applications (backward-compatible)
 class EventApplicationReviewCarouselPage extends ConsumerStatefulWidget {
   const EventApplicationReviewCarouselPage({
+    required this.partyId,
     required this.eventId,
     this.startApplicationId,
     this.groupId,
     super.key,
   });
+
+  final String partyId;
   final String eventId;
   final String? startApplicationId;
   final String? groupId;
@@ -23,74 +27,80 @@ class EventApplicationReviewCarouselPage extends ConsumerStatefulWidget {
 }
 
 class _State extends ConsumerState<EventApplicationReviewCarouselPage> {
-  late final PageController _pageController;
+  // Fix #2272: lazily initialized to set initialPage from startApplicationId
+  PageController? _pageController;
   int _currentIndex = 0;
-  bool _isSubmitting = false;
-  bool _isDone = false;
+  bool _isLastMarked = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _pageController = PageController();
+  PageController _getController(List<EventApplication> queue) {
+    if (_pageController != null) return _pageController!;
+    var startIdx = 0;
+    if (widget.startApplicationId != null) {
+      final idx = queue.indexWhere((a) => a.id == widget.startApplicationId);
+      if (idx >= 0) startIdx = idx;
+    }
+    _currentIndex = startIdx;
+    _pageController = PageController(initialPage: startIdx);
+    return _pageController!;
   }
 
   @override
   void dispose() {
-    _pageController.dispose();
+    _pageController?.dispose();
     super.dispose();
   }
 
   Future<void> _advance(List<EventApplication> queue) async {
-    if (_currentIndex >= queue.length - 1) {
-      if (mounted) setState(() => _isDone = true);
-      await Future<void>.delayed(const Duration(milliseconds: 600));
-      if (mounted) Navigator.of(context).pop();
+    if (_currentIndex < queue.length - 1) {
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+      if (!mounted) return;
+      unawaited(
+        _pageController!.nextPage(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        ),
+      );
+      setState(() => _currentIndex++);
       return;
     }
-    await Future<void>.delayed(const Duration(milliseconds: 200));
+
+    setState(() => _isLastMarked = true);
+    await Future<void>.delayed(const Duration(milliseconds: 600));
     if (!mounted) return;
-    unawaited(
-      _pageController.nextPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      ),
-    );
-    if (mounted) setState(() => _currentIndex++);
+    EventApplicationReviewConfirmRoute(
+      partyId: widget.partyId,
+      eventId: widget.eventId,
+    ).pushReplacement(context);
   }
 
-  Future<void> _review(
-    List<EventApplication> queue,
-    String applicationId,
-    String status, {
-    String? reason,
-  }) async {
-    if (_isSubmitting) return;
-    setState(() => _isSubmitting = true);
-    try {
-      await ref
-          .read(eventApplicationReviewControllerProvider.notifier)
-          .reviewApplication(
-            applicationId: applicationId,
-            status: status,
-            reason: reason,
-          );
-      await _advance(queue);
-    } finally {
-      if (mounted) setState(() => _isSubmitting = false);
-    }
+  Future<void> _approve(List<EventApplication> queue, String applicationId) {
+    // Fix #2272: local marking only — no server calls until confirm page
+    ref
+        .read(reviewMarkingsNotifierProvider.notifier)
+        .addMark(applicationId, 'approved');
+    return _advance(queue);
   }
 
   Future<void> _showRejectSheet(
     List<EventApplication> queue,
     String applicationId,
   ) async {
-    final reason = await showModalBottomSheet<String>(
+    final result = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
       builder: (ctx) => const _RejectReasonSheet(),
     );
-    if (!mounted) return;
-    await _review(queue, applicationId, 'rejected', reason: reason);
+    // Fix #2272: null = user dismissed the sheet without confirming rejection
+    if (!mounted || result == null) return;
+    // Fix #2272: local marking only — no server calls until confirm page
+    ref
+        .read(reviewMarkingsNotifierProvider.notifier)
+        .addMark(
+          applicationId,
+          'rejected',
+          reason: result.isEmpty ? null : result,
+        );
+    await _advance(queue);
   }
 
   void _onPageChanged(int index) => setState(() => _currentIndex = index);
@@ -132,30 +142,49 @@ class _State extends ConsumerState<EventApplicationReviewCarouselPage> {
               ),
             );
           }
-          if (_isDone) {
+
+          if (_isLastMarked) {
             return Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    Icons.check_circle,
-                    size: 64,
-                    color: Theme.of(context).colorScheme.primary,
+                  Container(
+                    width: 88,
+                    height: 88,
+                    decoration: const BoxDecoration(
+                      color: MinglitColors.success,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.check,
+                      size: 48,
+                      color: MinglitColors.background,
+                    ),
                   ),
-                  const SizedBox(height: MinglitSpacing.medium),
+                  const SizedBox(height: 16),
                   Text(
-                    '심사 완료',
-                    style: Theme.of(context).textTheme.titleLarge,
+                    '모든 신청 검토 완료',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '최종 확인 화면으로 이동합니다…',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
             );
           }
+
           return Column(
             children: [
               Expanded(
                 child: PageView.builder(
-                  controller: _pageController,
+                  controller: _getController(queue),
                   physics: const NeverScrollableScrollPhysics(),
                   onPageChanged: _onPageChanged,
                   itemCount: queue.length,
@@ -163,12 +192,7 @@ class _State extends ConsumerState<EventApplicationReviewCarouselPage> {
                 ),
               ),
               _BottomCta(
-                isSubmitting: _isSubmitting,
-                onApprove: () => _review(
-                  queue,
-                  queue[_currentIndex].id,
-                  'approved',
-                ),
+                onApprove: () => _approve(queue, queue[_currentIndex].id),
                 onReject: () =>
                     _showRejectSheet(queue, queue[_currentIndex].id),
               ),
@@ -180,7 +204,8 @@ class _State extends ConsumerState<EventApplicationReviewCarouselPage> {
   }
 
   AppBar _buildAppBar(BuildContext context, int? total) {
-    final progressText = total != null ? '${_currentIndex + 1} / $total' : '';
+    // Fix #2272: total == 0 would show "1 / 0" — only show progress when queue is non-empty
+    final progressText = (total != null && total > 0) ? '${_currentIndex + 1} / $total' : '';
     return AppBar(
       leading: IconButton(
         icon: const Icon(Icons.close),
@@ -207,6 +232,7 @@ String _formatDate(DateTime dt) => dt.toLocal().toString().substring(0, 10);
 
 class _ApplicantCard extends StatelessWidget {
   const _ApplicantCard({required this.application});
+
   final EventApplication application;
 
   @override
@@ -278,11 +304,10 @@ class _ApplicantCard extends StatelessWidget {
 
 class _BottomCta extends StatelessWidget {
   const _BottomCta({
-    required this.isSubmitting,
     required this.onApprove,
     required this.onReject,
   });
-  final bool isSubmitting;
+
   final VoidCallback onApprove;
   final VoidCallback onReject;
 
@@ -298,22 +323,15 @@ class _BottomCta extends StatelessWidget {
           children: [
             Expanded(
               child: OutlinedButton(
-                onPressed: isSubmitting ? null : onReject,
+                onPressed: onReject,
                 child: const Text('거절'),
               ),
             ),
             const SizedBox(width: MinglitSpacing.medium),
             Expanded(
               child: FilledButton(
-                onPressed: isSubmitting ? null : onApprove,
-                child: isSubmitting
-                    ? const SizedBox.square(
-                        dimension: 20,
-                        child: CircularProgressIndicator.adaptive(
-                          strokeWidth: 2,
-                        ),
-                      )
-                    : const Text('승인'),
+                onPressed: onApprove,
+                child: const Text('승인'),
               ),
             ),
           ],

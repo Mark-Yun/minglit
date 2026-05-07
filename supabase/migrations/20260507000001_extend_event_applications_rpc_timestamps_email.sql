@@ -46,3 +46,8 @@ BEGIN
   END IF;
 END;
 $$;
+
+-- Fix #2272: DROP FUNCTION removes all existing GRANTs — must re-apply.
+-- Original grant was in 20260301000007_07_rls_grants.sql line 427.
+GRANT EXECUTE ON FUNCTION public.get_event_applications_with_user(uuid)
+  TO authenticated;
