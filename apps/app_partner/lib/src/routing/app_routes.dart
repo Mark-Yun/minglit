@@ -24,6 +24,8 @@ import 'package:app_partner/src/features/party/event/create/event_create_page.da
 import 'package:app_partner/src/features/party/event/detail/event_application_list_page.dart';
 import 'package:app_partner/src/features/party/event/detail/event_detail_page.dart';
 import 'package:app_partner/src/features/party/event/edit/event_edit_page.dart';
+import 'package:app_partner/src/features/party/event/review/event_application_review_carousel_page.dart';
+import 'package:app_partner/src/features/party/event/review/event_application_review_confirm_page.dart';
 import 'package:app_partner/src/features/party/list/party_list_page.dart';
 import 'package:app_partner/src/features/party/recurrence/recurrence_management_screen.dart';
 import 'package:app_partner/src/features/settlement/bank_account_page.dart';
@@ -176,6 +178,18 @@ class NotificationCenterRoute extends GoRouteData
                         // Fix #2224: Tab 구조 폐기 — 참가 신청 별도 라우트
                         TypedGoRoute<EventApplicationListRoute>(
                           path: 'applications',
+                          routes: [
+                            TypedGoRoute<EventApplicationReviewCarouselRoute>(
+                              path: 'review',
+                              routes: [
+                                TypedGoRoute<
+                                  EventApplicationReviewConfirmRoute
+                                >(
+                                  path: 'confirm',
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -416,6 +430,44 @@ class EventApplicationListRoute extends GoRouteData
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       EventApplicationListPage(eventId: eventId, groupId: groupId);
+}
+
+// Fix #2126: stub route — carousel page implemented in #2127
+class EventApplicationReviewCarouselRoute extends GoRouteData
+    with $EventApplicationReviewCarouselRoute {
+  const EventApplicationReviewCarouselRoute({
+    required this.partyId,
+    required this.eventId,
+    this.startApplicationId,
+    this.groupId,
+  });
+  final String partyId;
+  final String eventId;
+  final String? startApplicationId;
+  final String? groupId;
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      EventApplicationReviewCarouselPage(
+        partyId: partyId,
+        eventId: eventId,
+        startApplicationId: startApplicationId,
+        groupId: groupId,
+      );
+}
+
+class EventApplicationReviewConfirmRoute extends GoRouteData
+    with $EventApplicationReviewConfirmRoute {
+  const EventApplicationReviewConfirmRoute({
+    required this.partyId,
+    required this.eventId,
+  });
+
+  final String partyId;
+  final String eventId;
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      EventApplicationReviewConfirmPage(eventId: eventId);
 }
 
 // 3. Settlement

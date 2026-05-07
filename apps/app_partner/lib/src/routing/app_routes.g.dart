@@ -278,6 +278,20 @@ RouteBase get $partnerShellRoute => StatefulShellRouteData.$route(
                         GoRouteData.$route(
                           path: 'applications',
                           factory: $EventApplicationListRoute._fromState,
+                          routes: [
+                            GoRouteData.$route(
+                              path: 'review',
+                              factory: $EventApplicationReviewCarouselRoute
+                                  ._fromState,
+                              routes: [
+                                GoRouteData.$route(
+                                  path: 'confirm',
+                                  factory: $EventApplicationReviewConfirmRoute
+                                      ._fromState,
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -858,6 +872,71 @@ mixin $EventApplicationListRoute on GoRouteData {
   String get location => GoRouteData.$location(
     '/more/parties/${Uri.encodeComponent(_self.partyId)}/events/${Uri.encodeComponent(_self.eventId)}/applications',
     queryParams: {if (_self.groupId != null) 'group-id': _self.groupId},
+  );
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+mixin $EventApplicationReviewCarouselRoute on GoRouteData {
+  static EventApplicationReviewCarouselRoute _fromState(GoRouterState state) =>
+      EventApplicationReviewCarouselRoute(
+        partyId: state.pathParameters['partyId']!,
+        eventId: state.pathParameters['eventId']!,
+        startApplicationId: state.uri.queryParameters['start-application-id'],
+        groupId: state.uri.queryParameters['group-id'],
+      );
+
+  EventApplicationReviewCarouselRoute get _self =>
+      this as EventApplicationReviewCarouselRoute;
+
+  @override
+  String get location => GoRouteData.$location(
+    '/more/parties/${Uri.encodeComponent(_self.partyId)}/events/${Uri.encodeComponent(_self.eventId)}/applications/review',
+    queryParams: {
+      if (_self.startApplicationId != null)
+        'start-application-id': _self.startApplicationId,
+      if (_self.groupId != null) 'group-id': _self.groupId,
+    },
+  );
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+mixin $EventApplicationReviewConfirmRoute on GoRouteData {
+  static EventApplicationReviewConfirmRoute _fromState(GoRouterState state) =>
+      EventApplicationReviewConfirmRoute(
+        partyId: state.pathParameters['partyId']!,
+        eventId: state.pathParameters['eventId']!,
+      );
+
+  EventApplicationReviewConfirmRoute get _self =>
+      this as EventApplicationReviewConfirmRoute;
+
+  @override
+  String get location => GoRouteData.$location(
+    '/more/parties/${Uri.encodeComponent(_self.partyId)}/events/${Uri.encodeComponent(_self.eventId)}/applications/review/confirm',
   );
 
   @override
