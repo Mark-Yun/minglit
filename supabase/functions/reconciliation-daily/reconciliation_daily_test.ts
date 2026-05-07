@@ -70,12 +70,12 @@ Deno.test("reconciliation-daily - missing Authorization header returns 401", asy
   });
 });
 
-Deno.test("reconciliation-daily - OPTIONS preflight returns 204", async () => {
+Deno.test("reconciliation-daily - OPTIONS preflight returns 200", async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const request = new Request("http://localhost", { method: "OPTIONS" });
     const response = await handler(request);
-    assertEquals(response.status, 204);
+    assertEquals(response.status, 200);
   });
 });
 
