@@ -79,9 +79,14 @@ mixin _EventRepositoryApplicationQueries on _SupabaseEventContext {
   Future<EventApplication?> getApplicationById(String applicationId) async {
     Log.d('getApplicationById called | id: $applicationId');
     try {
+      // Fix #2250: column-restricted SELECT — only partner-visible fields per
+      // PM #1141 (닉네임, 연령대, 인증 정보) and PIPA §17 data-minimization.
+      // Sending ALL user_profiles columns to partner devices was a PIPA violation.
       final response = await supabaseClient
           .from('event_applications')
-          .select('*, user:user_profiles(*)')
+          .select(
+            '*, user:user_profiles(id, username, birth_year, is_verified, profile_image_url)',
+          )
           .eq('id', applicationId)
           .maybeSingle();
       if (response == null) return null;

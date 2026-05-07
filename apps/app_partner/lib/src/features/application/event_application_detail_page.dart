@@ -104,16 +104,16 @@ class _ApplicationDetailBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final user = application.user;
-    final name = user?.name ?? '이름 없음';
-    final gender = switch (user?.gender) {
-      'male' => '남',
-      'female' => '여',
-      _ => null,
-    };
-    final birthDate = user?.birthDate;
+    // Fix #2250: use username (닉네임) not name (실명) — PM #1141 & PIPA §17.
+    // name is actual name; partners are allowed to see nickname + age group only.
+    final displayName = user?.username.isNotEmpty == true
+        ? user!.username
+        : '—';
+    // Fix #2250: birth_year only (연령대) — exact birth_date excluded per PM #1141.
     final age = user?.birthYear != null
         ? DateTime.now().year - user!.birthYear!
         : null;
+    // Fix #2250: gender excluded per PM #1141 ("성별은 제외").
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(MinglitSpacing.medium),
@@ -132,7 +132,7 @@ class _ApplicationDetailBody extends StatelessWidget {
                       alpha: MinglitOpacity.highlight,
                     ),
                     child: Text(
-                      name.isNotEmpty ? name[0] : '?',
+                      displayName.isNotEmpty ? displayName[0] : '?',
                       style: theme.textTheme.titleLarge?.copyWith(
                         color: theme.colorScheme.primary,
                         fontWeight: FontWeight.w700,
@@ -145,25 +145,16 @@ class _ApplicationDetailBody extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          name,
+                          displayName,
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w700,
                           ),
                         ),
-                        if (age != null || gender != null)
+                        // Fix #2250: age (연령대) only — no gender per PM #1141
+                        if (age != null)
                           Text(
-                            [
-                              if (age != null) '$age세',
-                              ?gender,
-                            ].join(' · '),
+                            '$age세',
                             style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        if (birthDate != null)
-                          Text(
-                            '${birthDate.year}.${birthDate.month.toString().padLeft(2, '0')}.${birthDate.day.toString().padLeft(2, '0')}',
-                            style: theme.textTheme.labelSmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
                           ),
