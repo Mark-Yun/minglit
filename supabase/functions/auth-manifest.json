@@ -46,6 +46,26 @@
       "callers": ["system"],
       "envs": ["dev", "production"],
       "description": "반복 이벤트 자동 생성 (매일 UTC 00:00, 최대 30일 선행 생성)"
+    },
+    "process-pending-deletions": {
+      "callers": ["system"],
+      "envs": ["dev", "production"],
+      "description": "탈퇴 유예 기간 만료 유저 아카이빙 + DI 블록 + auth 삭제 (크론)"
+    },
+    "settlement-register-transfers": {
+      "callers": ["system"],
+      "envs": ["dev", "production"],
+      "description": "PENDING 정산 항목 PortOne 이체 등록 (벌크 금융 작업 — Fix #593)"
+    },
+    "settlement-transfer": {
+      "callers": ["system"],
+      "envs": ["dev", "production"],
+      "description": "단건 정산 이체 생성 — PortOne createOrderTransfer 호출 (Fix #1489)"
+    },
+    "event-matching": {
+      "callers": ["system"],
+      "envs": ["dev", "production"],
+      "description": "이벤트 체크인 참가자 매치 페어 생성 (Fix #592)"
     }
   }
 }
