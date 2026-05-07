@@ -79739,8 +79739,8 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/needs-swe-sonnet-1/.worktree-2147/supabase/functions/recurrence-rules/_handlers/resume.ts",
       "source_location": "L84",
       "weight": 1.0,
-      "_src": "resume_handleresume",
-      "_tgt": "event_generator_generateevents",
+      "_src": "event_generator_generateevents",
+      "_tgt": "resume_handleresume",
       "source": "event_generator_generateevents",
       "target": "resume_handleresume"
     },
