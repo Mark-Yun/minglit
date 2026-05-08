@@ -3,11 +3,12 @@ import {
   authenticatedJsonRequest,
   captureServeHandler,
   createFetchMock,
+  type FetchRoute,
   jsonResponse,
   readJson,
   withEnv,
   withMockedFetch,
-  type FetchRoute,
+  withNoIntervals,
 } from "../_test_utils/mock_http.ts";
 
 const TEST_USER_ID = "user-partner-owner";
@@ -18,6 +19,8 @@ const TEST_EVENT_ID = "00000000-0000-1000-8000-000000000002";
 const ENV = {
   SUPABASE_URL: "http://localhost:54321",
   SUPABASE_SERVICE_ROLE_KEY: "test-service-key",
+  ENVIRONMENT: "dev",
+  MINGLIT_EF_TEST_FN_NAME: "partner-approve-application",
 };
 
 const BASE_URL = "http://localhost:54321/functions/v1/partner-approve-application";
@@ -165,36 +168,54 @@ function bulkApproveRpcRoute(
 Deno.test({
   name: "OPTIONS returns CORS preflight",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-    const req = new Request(BASE_URL, { method: "OPTIONS" });
-    const res = await handler(req);
-    assertEquals(res.status, 200);
+    const { fetchMock } = createFetchMock([]);
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const res = await handler(new Request(BASE_URL, { method: "OPTIONS" }));
+          assertEquals(res.status, 200);
+        });
+      });
+    });
   },
 });
 
 Deno.test({
-  name: "GET returns 405",
+  name: "GET returns 405 (requires auth — wrapper checks auth before handler checks method)",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-    const req = new Request(BASE_URL, { method: "GET" });
-    const res = await handler(req);
-    assertEquals(res.status, 405);
+    const { fetchMock } = createFetchMock([authRoute()]);
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const res = await handler(
+            new Request(BASE_URL, {
+              method: "GET",
+              headers: { Authorization: "Bearer user-token" },
+            }),
+          );
+          assertEquals(res.status, 405);
+        });
+      });
+    });
   },
 });
 
 Deno.test({
   name: "Missing action returns 400",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
-
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
-        const req = authenticatedJsonRequest(BASE_URL, {});
-        const res = await handler(req);
-        assertEquals(res.status, 400);
-        const json = await readJson(res);
-        assertEquals(json.error, "Missing or invalid \"action\" field");
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const req = authenticatedJsonRequest(BASE_URL, {});
+          const res = await handler(req);
+          assertEquals(res.status, 400);
+          const json = await readJson(res);
+          assertEquals(json.error, 'Missing or invalid "action" field');
+        });
       });
     });
   },
@@ -203,24 +224,25 @@ Deno.test({
 Deno.test({
   name: "approve: single approve success returns 200 with approved:1",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
       authRoute(),
       appRoute("pending"),
       permRoute("owner"),
       approveRpcRoute(),
     ]);
-
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
-        const req = authenticatedJsonRequest(BASE_URL, {
-          action: "approve",
-          application_id: TEST_APP_ID,
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const req = authenticatedJsonRequest(BASE_URL, {
+            action: "approve",
+            application_id: TEST_APP_ID,
+          });
+          const res = await handler(req);
+          assertEquals(res.status, 200);
+          const json = await readJson(res);
+          assertEquals(json.approved, 1);
         });
-        const res = await handler(req);
-        assertEquals(res.status, 200);
-        const json = await readJson(res);
-        assertEquals(json.approved, 1);
       });
     });
   },
@@ -229,20 +251,21 @@ Deno.test({
 Deno.test({
   name: "approve: application not found returns 404",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
       authRoute(),
       appNotFoundRoute(),
     ]);
-
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
-        const req = authenticatedJsonRequest(BASE_URL, {
-          action: "approve",
-          application_id: "00000000-0000-1000-8000-999999999999",
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const req = authenticatedJsonRequest(BASE_URL, {
+            action: "approve",
+            application_id: "00000000-0000-1000-8000-999999999999",
+          });
+          const res = await handler(req);
+          assertEquals(res.status, 404);
         });
-        const res = await handler(req);
-        assertEquals(res.status, 404);
       });
     });
   },
@@ -251,21 +274,22 @@ Deno.test({
 Deno.test({
   name: "approve: already approved status returns 400",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
       authRoute(),
       appRoute("approved"),
       permRoute("owner"),
     ]);
-
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
-        const req = authenticatedJsonRequest(BASE_URL, {
-          action: "approve",
-          application_id: TEST_APP_ID,
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const req = authenticatedJsonRequest(BASE_URL, {
+            action: "approve",
+            application_id: TEST_APP_ID,
+          });
+          const res = await handler(req);
+          assertEquals(res.status, 400);
         });
-        const res = await handler(req);
-        assertEquals(res.status, 400);
       });
     });
   },
@@ -274,17 +298,18 @@ Deno.test({
 Deno.test({
   name: "approve: unauthorized (no auth) returns 401",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authFailRoute()]);
-
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
-        const req = authenticatedJsonRequest(BASE_URL, {
-          action: "approve",
-          application_id: TEST_APP_ID,
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const req = authenticatedJsonRequest(BASE_URL, {
+            action: "approve",
+            application_id: TEST_APP_ID,
+          });
+          const res = await handler(req);
+          assertEquals(res.status, 401);
         });
-        const res = await handler(req);
-        assertEquals(res.status, 401);
       });
     });
   },
@@ -293,21 +318,22 @@ Deno.test({
 Deno.test({
   name: "approve: forbidden (insufficient permissions) returns 403",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
       authRoute(),
       appRoute("pending"),
       permForbiddenRoute(),
     ]);
-
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
-        const req = authenticatedJsonRequest(BASE_URL, {
-          action: "approve",
-          application_id: TEST_APP_ID,
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const req = authenticatedJsonRequest(BASE_URL, {
+            action: "approve",
+            application_id: TEST_APP_ID,
+          });
+          const res = await handler(req);
+          assertEquals(res.status, 403);
         });
-        const res = await handler(req);
-        assertEquals(res.status, 403);
       });
     });
   },
@@ -316,7 +342,6 @@ Deno.test({
 Deno.test({
   name: "approve: owner role bypasses permissions check returns 200",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
       authRoute(),
       appRoute("pending"),
@@ -327,17 +352,19 @@ Deno.test({
       },
       approveRpcRoute(),
     ]);
-
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
-        const req = authenticatedJsonRequest(BASE_URL, {
-          action: "approve",
-          application_id: TEST_APP_ID,
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const req = authenticatedJsonRequest(BASE_URL, {
+            action: "approve",
+            application_id: TEST_APP_ID,
+          });
+          const res = await handler(req);
+          assertEquals(res.status, 200);
+          const json = await readJson(res);
+          assertEquals(json.approved, 1);
         });
-        const res = await handler(req);
-        assertEquals(res.status, 200);
-        const json = await readJson(res);
-        assertEquals(json.approved, 1);
       });
     });
   },
@@ -346,22 +373,23 @@ Deno.test({
 Deno.test({
   name: "approve: already processed (compare-and-set returns empty) returns 409",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
       authRoute(),
       appRoute("pending"),
       permRoute("owner"),
       approveRpcRoute("already_processed", 0),
     ]);
-
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
-        const req = authenticatedJsonRequest(BASE_URL, {
-          action: "approve",
-          application_id: TEST_APP_ID,
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const req = authenticatedJsonRequest(BASE_URL, {
+            action: "approve",
+            application_id: TEST_APP_ID,
+          });
+          const res = await handler(req);
+          assertEquals(res.status, 409);
         });
-        const res = await handler(req);
-        assertEquals(res.status, 409);
       });
     });
   },
@@ -370,24 +398,25 @@ Deno.test({
 Deno.test({
   name: "approve: returns 409 when event is already full",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
       authRoute(),
       appRoute("pending"),
       permRoute("owner"),
       approveRpcRoute("event_full", 0),
     ]);
-
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
-        const req = authenticatedJsonRequest(BASE_URL, {
-          action: "approve",
-          application_id: TEST_APP_ID,
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const req = authenticatedJsonRequest(BASE_URL, {
+            action: "approve",
+            application_id: TEST_APP_ID,
+          });
+          const res = await handler(req);
+          assertEquals(res.status, 409);
+          const json = await readJson(res);
+          assertEquals(json.error, "정원이 초과되었습니다.");
         });
-        const res = await handler(req);
-        assertEquals(res.status, 409);
-        const json = await readJson(res);
-        assertEquals(json.error, "정원이 초과되었습니다.");
       });
     });
   },
@@ -396,24 +425,25 @@ Deno.test({
 Deno.test({
   name: "approve: returns 500 when capacity data is invalid",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
       authRoute(),
       appRoute("pending"),
       permRoute("owner"),
       approveRpcRoute("invalid_capacity", 0),
     ]);
-
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
-        const req = authenticatedJsonRequest(BASE_URL, {
-          action: "approve",
-          application_id: TEST_APP_ID,
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const req = authenticatedJsonRequest(BASE_URL, {
+            action: "approve",
+            application_id: TEST_APP_ID,
+          });
+          const res = await handler(req);
+          assertEquals(res.status, 500);
+          const json = await readJson(res);
+          assertEquals(json.error, "Event capacity data is invalid");
         });
-        const res = await handler(req);
-        assertEquals(res.status, 500);
-        const json = await readJson(res);
-        assertEquals(json.error, "Event capacity data is invalid");
       });
     });
   },
@@ -422,24 +452,25 @@ Deno.test({
 Deno.test({
   name: "bulk_approve: success returns 200 with approved count",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
       authRoute(),
       eventRoute(),
       permRoute("owner"),
       bulkApproveRpcRoute(),
     ]);
-
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
-        const req = authenticatedJsonRequest(BASE_URL, {
-          action: "bulk_approve",
-          event_id: TEST_EVENT_ID,
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const req = authenticatedJsonRequest(BASE_URL, {
+            action: "bulk_approve",
+            event_id: TEST_EVENT_ID,
+          });
+          const res = await handler(req);
+          assertEquals(res.status, 200);
+          const json = await readJson(res);
+          assertEquals(json.approved, 2);
         });
-        const res = await handler(req);
-        assertEquals(res.status, 200);
-        const json = await readJson(res);
-        assertEquals(json.approved, 2);
       });
     });
   },
@@ -448,7 +479,6 @@ Deno.test({
 Deno.test({
   name: "bulk_approve: only approves up to remaining capacity",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
       authRoute(),
       eventRoute(),
@@ -459,19 +489,21 @@ Deno.test({
         remainingSlotsBeforeApproval: 2,
       }),
     ]);
-
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
-        const req = authenticatedJsonRequest(BASE_URL, {
-          action: "bulk_approve",
-          event_id: TEST_EVENT_ID,
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const req = authenticatedJsonRequest(BASE_URL, {
+            action: "bulk_approve",
+            event_id: TEST_EVENT_ID,
+          });
+          const res = await handler(req);
+          assertEquals(res.status, 200);
+          const json = await readJson(res);
+          assertEquals(json.approved, 2);
+          assertEquals(json.skipped_due_to_capacity, 1);
+          assertEquals(json.remaining_slots_before_approval, 2);
         });
-        const res = await handler(req);
-        assertEquals(res.status, 200);
-        const json = await readJson(res);
-        assertEquals(json.approved, 2);
-        assertEquals(json.skipped_due_to_capacity, 1);
-        assertEquals(json.remaining_slots_before_approval, 2);
       });
     });
   },
@@ -480,7 +512,6 @@ Deno.test({
 Deno.test({
   name: "bulk_approve: returns 500 when capacity data is invalid",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
       authRoute(),
       eventRoute(),
@@ -492,17 +523,19 @@ Deno.test({
         remainingSlotsBeforeApproval: 0,
       }),
     ]);
-
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
-        const req = authenticatedJsonRequest(BASE_URL, {
-          action: "bulk_approve",
-          event_id: TEST_EVENT_ID,
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const req = authenticatedJsonRequest(BASE_URL, {
+            action: "bulk_approve",
+            event_id: TEST_EVENT_ID,
+          });
+          const res = await handler(req);
+          assertEquals(res.status, 500);
+          const json = await readJson(res);
+          assertEquals(json.error, "Event capacity data is invalid");
         });
-        const res = await handler(req);
-        assertEquals(res.status, 500);
-        const json = await readJson(res);
-        assertEquals(json.error, "Event capacity data is invalid");
       });
     });
   },
@@ -511,7 +544,6 @@ Deno.test({
 Deno.test({
   name: "bulk_approve: no pending apps returns 200 with approved:0",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
       authRoute(),
       eventRoute(),
@@ -523,17 +555,19 @@ Deno.test({
         remainingSlotsBeforeApproval: 15,
       }),
     ]);
-
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
-        const req = authenticatedJsonRequest(BASE_URL, {
-          action: "bulk_approve",
-          event_id: TEST_EVENT_ID,
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const req = authenticatedJsonRequest(BASE_URL, {
+            action: "bulk_approve",
+            event_id: TEST_EVENT_ID,
+          });
+          const res = await handler(req);
+          assertEquals(res.status, 200);
+          const json = await readJson(res);
+          assertEquals(json.approved, 0);
         });
-        const res = await handler(req);
-        assertEquals(res.status, 200);
-        const json = await readJson(res);
-        assertEquals(json.approved, 0);
       });
     });
   },
