@@ -136,7 +136,7 @@ Deno.test("contract: payment-verify response matches schema", async () => {
 Deno.test("contract: identity-verify response matches schema", async () => {
   const schema = await loadSchema("identity_verify");
 
-  await withEnv(COMMON_ENV, async () => {
+  await withEnv({ ...COMMON_ENV, MINGLIT_EF_TEST_FN_NAME: "identity-verify" }, async () => {
     const handler = await captureServeHandler(
       new URL("../identity-verify/index.ts", import.meta.url),
     );
