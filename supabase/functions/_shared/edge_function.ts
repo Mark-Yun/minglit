@@ -48,6 +48,12 @@ export interface EFPolicy {
   callers: Caller[];
   envs: Environment[];
   external_auth?: ExternalAuth;
+  /**
+   * ISO date string (e.g. "2026-12-01") — if set, every response from this EF
+   * will carry `Deprecation` and `Sunset` headers (RFC 8594) so clients can
+   * detect the upcoming EOL without reading documentation.
+   */
+  deprecated?: string;
   description?: string;
 }
 
@@ -107,6 +113,25 @@ function readEnvironment(): Environment {
 // --------------------------------------------------------------------------
 // Per-request helpers
 // --------------------------------------------------------------------------
+
+/**
+ * Injects RFC 8594 `Deprecation` and `Sunset` response headers.
+ * Exported for unit testing; not part of the stable public API.
+ *
+ * @param res        Original handler response.
+ * @param deprecated ISO date string from the manifest (e.g. "2026-12-01").
+ * @returns          New Response with the deprecation headers added.
+ */
+export function addDeprecationHeaders(res: Response, deprecated: string): Response {
+  const date = new Date(deprecated);
+  const httpDate = date.toUTCString();
+  const headers = new Headers(res.headers);
+  // RFC 8594 §2 — Deprecation header: date-tagged form "@<HTTP-date>"
+  headers.set("Deprecation", `@${httpDate}`);
+  // RFC 8594 §3 — Sunset header: the point at which the resource is removed
+  headers.set("Sunset", httpDate);
+  return new Response(res.body, { status: res.status, statusText: res.statusText, headers });
+}
 
 function checkExternalAuth(req: Request, external: ExternalAuth): { ok: true; reason: string } | { ok: false } {
   if (external.type === "ip_allowlist") {
@@ -235,7 +260,8 @@ export function minglitEdgeFunction(handler: EFHandler, opts: MinglitEFOptions =
 
       // Context + handler 호출
       const ctx = makeContext({ auth, fnName, env, requestId });
-      const res = await handler(req, ctx);
+      let res = await handler(req, ctx);
+      if (policy.deprecated) res = addDeprecationHeaders(res, policy.deprecated);
       axiomLog({ function: fnName, level: "info", message: "completed", metadata: { status: res.status, requestId } });
       return res;
     } catch (e) {

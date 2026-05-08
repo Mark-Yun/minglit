@@ -1,0 +1,48 @@
+// Tests for manifest `deprecated` field — RFC 8594 Deprecation + Sunset headers (#2188)
+import { assertEquals, assertStringIncludes } from "@std/assert";
+import { addDeprecationHeaders } from "./edge_function.ts";
+
+function okResponse(body = "ok"): Response {
+  return new Response(body, { status: 200 });
+}
+
+Deno.test("addDeprecationHeaders: adds Deprecation header in @<HTTP-date> format", () => {
+  const res = addDeprecationHeaders(okResponse(), "2026-12-01");
+  const deprecation = res.headers.get("Deprecation");
+  assertStringIncludes(deprecation ?? "", "@");
+  assertStringIncludes(deprecation ?? "", "2026");
+});
+
+Deno.test("addDeprecationHeaders: adds Sunset header as HTTP-date", () => {
+  const res = addDeprecationHeaders(okResponse(), "2026-12-01");
+  const sunset = res.headers.get("Sunset");
+  assertStringIncludes(sunset ?? "", "2026");
+  // Should be a valid HTTP-date (contains day-of-week abbreviation)
+  assertStringIncludes(sunset ?? "", "Dec");
+});
+
+Deno.test("addDeprecationHeaders: preserves original status and body", async () => {
+  const original = new Response("hello", { status: 201 });
+  const res = addDeprecationHeaders(original, "2026-06-30");
+  assertEquals(res.status, 201);
+  assertEquals(await res.text(), "hello");
+});
+
+Deno.test("addDeprecationHeaders: preserves existing response headers", () => {
+  const original = new Response("ok", {
+    status: 200,
+    headers: { "Content-Type": "application/json" },
+  });
+  const res = addDeprecationHeaders(original, "2026-12-01");
+  assertEquals(res.headers.get("Content-Type"), "application/json");
+  assertEquals(res.headers.has("Deprecation"), true);
+  assertEquals(res.headers.has("Sunset"), true);
+});
+
+Deno.test("addDeprecationHeaders: Deprecation and Sunset reference the same date", () => {
+  const res = addDeprecationHeaders(okResponse(), "2027-03-15");
+  const deprecation = res.headers.get("Deprecation") ?? "";
+  const sunset = res.headers.get("Sunset") ?? "";
+  // Deprecation is "@<sunset>", so removing "@" prefix should equal Sunset
+  assertEquals(deprecation, `@${sunset}`);
+});
