@@ -11,8 +11,8 @@ import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts
 const FN = "identity-verify";
 
 export const handler = async (req: Request, ctx: EFContext): Promise<Response> => {
-  // wrapper guarantees type === "user" per auth-manifest callers: ["user"]
-  const userId = (ctx.auth as { type: "user"; userId: string }).userId;
+  if (ctx.auth.type !== "user") return errorResponse("Unexpected auth type", 500);
+  const userId = ctx.auth.userId;
   try {
     const body = await parseJsonBody(req);
     if (body instanceof Response) return body;
