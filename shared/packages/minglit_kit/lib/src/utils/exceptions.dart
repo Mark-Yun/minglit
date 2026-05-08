@@ -46,8 +46,7 @@ abstract class MinglitException implements Exception {
         final fieldErrors = rawDetails is List
             ? rawDetails.whereType<Map<String, dynamic>>().toList()
             : null;
-        final firstMessage =
-            fieldErrors?.firstOrNull?['message'] as String?;
+        final firstMessage = fieldErrors?.firstOrNull?['message'] as String?;
         return MinglitUserException(
           firstMessage ?? '입력 정보를 확인해주세요',
           details: fieldErrors,
