@@ -462,6 +462,9 @@ Deno.test({
           const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
           const response = await handler(new Request(BASE_URL, { method: "OPTIONS" }));
           assertEquals(response.status, 200);
+          assertEquals(response.headers.get("Access-Control-Allow-Origin"), "*");
+          assertEquals(response.headers.get("Access-Control-Allow-Methods"), "GET, POST, OPTIONS");
+          assertEquals(response.headers.has("Access-Control-Allow-Headers"), true);
         });
       });
     });
