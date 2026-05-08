@@ -28,6 +28,8 @@ const ENV = {
   PORTONE_API_SECRET: "test-secret",
   SUPABASE_URL: "https://supabase.test",
   SUPABASE_SERVICE_ROLE_KEY: "service-key",
+  ENVIRONMENT: "dev",
+  MINGLIT_EF_TEST_FN_NAME: "payment-verify",
 };
 
 // ─── 시나리오 1: 유료 이벤트 신청 → PG 결제 → 결제 검증 → 티켓 발급 ────────────

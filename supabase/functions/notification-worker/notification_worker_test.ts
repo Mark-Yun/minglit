@@ -290,15 +290,15 @@ Deno.test({
 });
 
 Deno.test({
-  name: "notification-worker - missing env returns 500",
+  name: "notification-worker - missing FIREBASE_SERVICE_ACCOUNT returns 500",
   fn: async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
   const { fetchMock } = createFetchMock([]);
 
   await withEnv(
     {
-      SUPABASE_URL: undefined,
-      SUPABASE_SERVICE_ROLE_KEY: undefined,
+      SUPABASE_URL: "https://supabase.test",
+      SUPABASE_SERVICE_ROLE_KEY: "service-key",
       FIREBASE_SERVICE_ACCOUNT: undefined,
       ENVIRONMENT: "dev",
       MINGLIT_EF_TEST_FN_NAME: "notification-worker",
@@ -307,7 +307,9 @@ Deno.test({
       await withMockedFetch(fetchMock, async () => {
         await withNoIntervals(async () => {
           await withFastTimers(async () => {
-            const response = await handler(new Request("http://localhost"));
+            // Auth passes (Bearer service-key matches SUPABASE_SERVICE_ROLE_KEY)
+            // but FIREBASE_SERVICE_ACCOUNT missing → handler throws → 500
+            const response = await handler(new Request("http://localhost", { headers: { "Authorization": "Bearer service-key" } }));
             const payload = await readJson(response);
 
             assertEquals(response.status, 500);
