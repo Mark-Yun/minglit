@@ -1,19 +1,12 @@
 // Fix #1413: dev-seed EF는 이미지 업로드만 담당.
 // 유저/파트너 시딩은 seed.dev.sql + psql 직접 실행으로 전환됨.
+// Fix #2184 (Batch 9): migrate to minglitEdgeFunction wrapper — public caller, dev-only
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
-import { createServiceClient } from "../_shared/supabase_client.ts";
 import { errorResponse, successResponse } from "../_shared/response_utils.ts";
-import { initSentry, withHandler, log } from "../_shared/logger.ts";
+import { log } from "../_shared/logger.ts";
+import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
 
 const FN = "dev-seed";
-
-initSentry();
-
-function isProduction(): boolean {
-  const env = Deno.env.get("ENVIRONMENT");
-  // Fix #1614: "dev" = Supabase dev project (set by supabase-deploy.yml secrets)
-  return env !== "local" && env !== "development" && env !== "dev";
-}
 
 // Partner owner that already exists via seed.dev.sql (used for authed storage upload)
 const SEED_IMAGE_OWNER_EMAIL = "partner_owner_1@test.com";
@@ -98,24 +91,7 @@ async function uploadSeedImages(supabase: SupabaseClient): Promise<string[]> {
   return urls;
 }
 
-Deno.serve(withHandler(async (req) => {
-  // Handle CORS preflight before any auth/env checks
-  if (req.method === "OPTIONS") {
-    return new Response(null, {
-      status: 204,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers":
-          "authorization, x-client-info, apikey, content-type",
-        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-      },
-    });
-  }
-
-  if (isProduction()) {
-    return errorResponse("Dev-only function. Blocked in production.", 403);
-  }
-
+export const handler = async (req: Request, ctx: EFContext): Promise<Response> => {
   const url = new URL(req.url);
   const mode = url.searchParams.get("mode") ?? "images-only";
 
@@ -127,10 +103,11 @@ Deno.serve(withHandler(async (req) => {
   }
 
   try {
-    const supabase = createServiceClient();
-    const imageUrls = await uploadSeedImages(supabase);
+    const imageUrls = await uploadSeedImages(ctx.supabase);
     return successResponse({ mode, image_urls: imageUrls });
   } catch (err) {
     return errorResponse((err as Error).message, 500);
   }
-}));
+};
+
+minglitEdgeFunction(handler);

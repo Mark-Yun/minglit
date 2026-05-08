@@ -230,6 +230,31 @@
       "callers": ["user"],
       "envs": ["dev", "production"],
       "description": "결제 취소 및 환불 처리"
+    },
+    "identity-verify": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "PortOne V2 본인인증 → 유저 프로필 업데이트 (CI/DI 암호화 저장)"
+    },
+    "bug-report": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "유저 버그 리포트 제출 → GitHub 이슈 생성"
+    },
+    "dev-mock-portone": {
+      "callers": ["public"],
+      "envs": ["local", "development", "dev"],
+      "description": "PortOne API 모킹 (dev/local 전용 — users/getToken, payments)"
+    },
+    "dev-seed": {
+      "callers": ["public"],
+      "envs": ["local", "development", "dev"],
+      "description": "Dev 시딩 — 이미지 업로드 전용 (seed.dev.sql로 데이터 시딩)"
+    },
+    "dev-session-switch": {
+      "callers": ["public"],
+      "envs": ["local", "development", "dev"],
+      "description": "Dev 세션 전환 — 유저 목록 조회 (테스트용)"
     }
   }
 }

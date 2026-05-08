@@ -1,24 +1,18 @@
 // Fix #179: esm.sh 직접 URL → deno.json import map 기반으로 통일
-import { createServiceClient } from "../_shared/supabase_client.ts";
+// Fix #2184 (Batch 9): migrate to minglitEdgeFunction wrapper — auth via manifest (user caller)
 import { getPortoneClient } from "../_shared/portone_client.ts";
-import { successResponse, errorResponse, corsResponse } from "../_shared/response_utils.ts";
-import { requireAuth } from "../_shared/auth_utils.ts";
+import { successResponse, errorResponse } from "../_shared/response_utils.ts";
 import { parseJsonBody } from "../_shared/request_utils.ts";
-import { initSentry, log, withHandler } from "../_shared/logger.ts";
+import { log } from "../_shared/logger.ts";
 // Fix #763: Portone 에러 응답에 PII 포함 가능 — JSON 문자열 내 PII 마스킹
 import { maskJsonString } from "../_shared/pii_masker.ts";
+import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
 
 const FN = "identity-verify";
 
-
-initSentry();
-
-Deno.serve(withHandler(async (req) => {
-  if (req.method === "OPTIONS") return corsResponse();
-
-  const auth = await requireAuth(req);
-  if (auth instanceof Response) return auth;
-  const userId = auth;
+export const handler = async (req: Request, ctx: EFContext): Promise<Response> => {
+  // wrapper guarantees type === "user" per auth-manifest callers: ["user"]
+  const userId = (ctx.auth as { type: "user"; userId: string }).userId;
   try {
     const body = await parseJsonBody(req);
     if (body instanceof Response) return body;
@@ -68,13 +62,11 @@ Deno.serve(withHandler(async (req) => {
 
     // 3. Supabase DB 업데이트 — update_user_identity RPC로 암호화 저장
     // Fix #809: ci/di 평문 컬럼 제거 후 ci_encrypted/di_encrypted/di_hash로 전환
-    const supabase = createServiceClient();
-
     const gender = typeof customer.gender === "string"
       ? customer.gender.toLowerCase()
       : undefined;
 
-    const { error: updateError } = await supabase.rpc("update_user_identity", {
+    const { error: updateError } = await ctx.supabase.rpc("update_user_identity", {
       p_user_id: userId,
       p_ci: customer.ci as string,
       p_di: customer.di as string,
@@ -105,4 +97,6 @@ Deno.serve(withHandler(async (req) => {
     });
     return errorResponse(message, 500);
   }
-}));
+};
+
+minglitEdgeFunction(handler);
