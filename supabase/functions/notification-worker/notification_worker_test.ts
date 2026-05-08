@@ -132,6 +132,8 @@ Deno.test({
         SUPABASE_URL: "https://supabase.test",
         SUPABASE_SERVICE_ROLE_KEY: "service-key",
         FIREBASE_SERVICE_ACCOUNT: firebaseServiceAccountJson,
+        ENVIRONMENT: "dev",
+        MINGLIT_EF_TEST_FN_NAME: "notification-worker",
       },
       async () => {
         await withMockedFetch(fetchMock, async () => {
@@ -202,6 +204,8 @@ Deno.test({
         SUPABASE_URL: "https://supabase.test",
         SUPABASE_SERVICE_ROLE_KEY: "service-key",
         FIREBASE_SERVICE_ACCOUNT: firebaseServiceAccountJson,
+        ENVIRONMENT: "dev",
+        MINGLIT_EF_TEST_FN_NAME: "notification-worker",
       },
       async () => {
         await withMockedFetch(fetchMock, async () => {
@@ -238,6 +242,8 @@ Deno.test({
       SUPABASE_URL: "https://supabase.test",
       SUPABASE_SERVICE_ROLE_KEY: "service-key",
       FIREBASE_SERVICE_ACCOUNT: firebaseServiceAccountJson,
+      ENVIRONMENT: "dev",
+      MINGLIT_EF_TEST_FN_NAME: "notification-worker",
     },
     async () => {
       await withMockedFetch(fetchMock, async () => {
@@ -264,6 +270,8 @@ Deno.test({
       SUPABASE_URL: "https://supabase.test",
       SUPABASE_SERVICE_ROLE_KEY: "service-key",
       FIREBASE_SERVICE_ACCOUNT: firebaseServiceAccountJson,
+      ENVIRONMENT: "dev",
+      MINGLIT_EF_TEST_FN_NAME: "notification-worker",
     },
     async () => {
       await withMockedFetch(fetchMock, async () => {
@@ -292,6 +300,8 @@ Deno.test({
       SUPABASE_URL: undefined,
       SUPABASE_SERVICE_ROLE_KEY: undefined,
       FIREBASE_SERVICE_ACCOUNT: undefined,
+      ENVIRONMENT: "dev",
+      MINGLIT_EF_TEST_FN_NAME: "notification-worker",
     },
     async () => {
       await withMockedFetch(fetchMock, async () => {
@@ -375,6 +385,8 @@ Deno.test({
         SUPABASE_URL: "https://supabase.test",
         SUPABASE_SERVICE_ROLE_KEY: "service-key",
         FIREBASE_SERVICE_ACCOUNT: firebaseServiceAccountJson,
+        ENVIRONMENT: "dev",
+        MINGLIT_EF_TEST_FN_NAME: "notification-worker",
       },
       async () => {
         await withMockedFetch(fetchMock, async () => {
@@ -430,6 +442,8 @@ Deno.test({
         SUPABASE_URL: "https://supabase.test",
         SUPABASE_SERVICE_ROLE_KEY: "service-key",
         FIREBASE_SERVICE_ACCOUNT: firebaseServiceAccountJson,
+        ENVIRONMENT: "dev",
+        MINGLIT_EF_TEST_FN_NAME: "notification-worker",
       },
       async () => {
         await withMockedFetch(fetchMock, async () => {
@@ -508,6 +522,8 @@ Deno.test({
         SUPABASE_URL: "https://supabase.test",
         SUPABASE_SERVICE_ROLE_KEY: "service-key",
         FIREBASE_SERVICE_ACCOUNT: firebaseServiceAccountJson,
+        ENVIRONMENT: "dev",
+        MINGLIT_EF_TEST_FN_NAME: "notification-worker",
       },
       async () => {
         await withMockedFetch(fetchMock, async () => {
@@ -562,6 +578,8 @@ Deno.test({
         SUPABASE_URL: "https://supabase.test",
         SUPABASE_SERVICE_ROLE_KEY: "service-key",
         FIREBASE_SERVICE_ACCOUNT: firebaseServiceAccountJson,
+        ENVIRONMENT: "dev",
+        MINGLIT_EF_TEST_FN_NAME: "notification-worker",
       },
       async () => {
         await withMockedFetch(fetchMock, async () => {
@@ -620,6 +638,8 @@ Deno.test({
         SUPABASE_URL: "https://supabase.test",
         SUPABASE_SERVICE_ROLE_KEY: "service-key",
         FIREBASE_SERVICE_ACCOUNT: firebaseServiceAccountJson,
+        ENVIRONMENT: "dev",
+        MINGLIT_EF_TEST_FN_NAME: "notification-worker",
       },
       async () => {
         await withMockedFetch(fetchMock, async () => {
@@ -686,6 +706,8 @@ Deno.test({
         SUPABASE_URL: "https://supabase.test",
         SUPABASE_SERVICE_ROLE_KEY: "service-key",
         FIREBASE_SERVICE_ACCOUNT: firebaseServiceAccountJson,
+        ENVIRONMENT: "dev",
+        MINGLIT_EF_TEST_FN_NAME: "notification-worker",
       },
       async () => {
         await withMockedFetch(fetchMock, async () => {

@@ -1,15 +1,14 @@
+// Fix #2185 (Batch 8): migrate to minglitEdgeFunction wrapper — auth via manifest
 // Fix #179: esm.sh 직접 URL → deno.json import map 기반으로 통일
-import { createServiceClient } from "../_shared/supabase_client.ts";
+import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
 import { nowISO } from "../_shared/temporal_utils.ts";
 import { IamportClient } from "../_shared/iamport_client.ts";
 import {
-  corsResponse,
   errorResponse,
   successResponse,
 } from "../_shared/response_utils.ts";
-import { requireAuth } from "../_shared/auth_utils.ts";
 import { parseJsonBody } from "../_shared/request_utils.ts";
-import { initSentry, log, withHandler, withSpan } from "../_shared/logger.ts";
+import { log, withSpan } from "../_shared/logger.ts";
 
 const FN = "payment-verify";
 import { initStatsig, logStatsigEvent } from "../_shared/statsig_utils.ts";
@@ -23,14 +22,12 @@ if (!IMP_KEY || !IMP_SECRET) {
   );
 }
 
-initSentry();
 initStatsig();
 
-Deno.serve(withHandler(async (req) => {
-  if (req.method === "OPTIONS") return corsResponse();
+export const handler = async (req: Request, ctx: EFContext): Promise<Response> => {
+  const { supabase } = ctx;
+  const userId = (ctx.auth as { type: "user"; userId: string }).userId;
 
-  const auth = await requireAuth(req);
-  if (auth instanceof Response) return auth;
   try {
     const body = await parseJsonBody(req);
     if (body instanceof Response) return body;
@@ -42,9 +39,6 @@ Deno.serve(withHandler(async (req) => {
     if (!imp_uid || !merchant_uid) {
       return errorResponse("Missing required parameters", 400);
     }
-
-    // 0. Supabase Client 초기화
-    const supabase = createServiceClient();
 
     // 1. DB에서 주문 정보 조회 (금액 확인)
     const { data: order, error: orderError } = await withSpan(
@@ -63,7 +57,7 @@ Deno.serve(withHandler(async (req) => {
     }
 
     // Fix #1490: 호출자가 신청자 본인인지 검증 — service role은 RLS를 우회하므로 명시적 확인 필요
-    if (order.user_id !== auth) {
+    if (order.user_id !== userId) {
       return errorResponse("Forbidden", 403);
     }
 
@@ -78,7 +72,7 @@ Deno.serve(withHandler(async (req) => {
 
     // 3. 결제 상태 및 금액 검증
     if (payment.status !== "paid") {
-      logStatsigEvent(auth, "payment_failed", undefined, {
+      logStatsigEvent(userId, "payment_failed", undefined, {
         reason: "payment_not_completed",
         imp_uid,
       }).catch(() => {});
@@ -99,7 +93,7 @@ Deno.serve(withHandler(async (req) => {
           });
         },
       );
-      logStatsigEvent(auth, "payment_failed", undefined, {
+      logStatsigEvent(userId, "payment_failed", undefined, {
         reason: "amount_mismatch",
         imp_uid,
       }).catch(() => {});
@@ -137,14 +131,14 @@ Deno.serve(withHandler(async (req) => {
         message: "DB Update Error",
         metadata: { detail: updateError },
       });
-      logStatsigEvent(auth, "payment_failed", undefined, {
+      logStatsigEvent(userId, "payment_failed", undefined, {
         reason: "db_update_error",
         imp_uid,
       }).catch(() => {});
       return errorResponse("Failed to update order status", 500);
     }
 
-    logStatsigEvent(auth, "payment_completed", payment.amount, {
+    logStatsigEvent(userId, "payment_completed", payment.amount, {
       imp_uid,
       merchant_uid,
     }).catch(() => {});
@@ -159,4 +153,6 @@ Deno.serve(withHandler(async (req) => {
     });
     return errorResponse(message, 500);
   }
-}));
+}
+
+minglitEdgeFunction(handler);
