@@ -7,13 +7,14 @@ import {
   readJson,
   withEnv,
   withMockedFetch,
-  withNoIntervals,
 } from "../_test_utils/mock_http.ts";
 
 const ENV = {
   PORTONE_V2_API_KEY: "test-v2-key",
   SUPABASE_URL: "https://supabase.test",
   SUPABASE_SERVICE_ROLE_KEY: "service-key",
+  ENVIRONMENT: "dev",
+  MINGLIT_EF_TEST_FN_NAME: "payout-sync",
 };
 
 const NON_RETRYABLE_ERRORS = new Set([
@@ -69,16 +70,14 @@ Deno.test("payout-sync - 빈 목록: 비종결 payouts 없으면 synced=0 반환
     ]);
 
     await withMockedFetch(fetchMock, async () => {
-      await withNoIntervals(async () => {
-        const request = jsonRequest("http://localhost", {}, {
-          headers: { Authorization: "Bearer service-key" },
-        });
-        const response = await handler(request);
-        const payload = await readJson(response);
-
-        assertEquals(response.status, 200);
-        assertEquals(payload.synced, 0);
+      const request = jsonRequest("http://localhost", {}, {
+        headers: { Authorization: "Bearer service-key" },
       });
+      const response = await handler(request);
+      const payload = await readJson(response);
+
+      assertEquals(response.status, 200);
+      assertEquals(payload.synced, 0);
     });
   });
 });

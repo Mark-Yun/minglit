@@ -1,12 +1,11 @@
-import { createServiceClient } from "../_shared/supabase_client.ts";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import {
-  corsResponse,
   errorResponse,
   successResponse,
 } from "../_shared/response_utils.ts";
-import { initSentry, log, withHandler, withSpan } from "../_shared/logger.ts";
-// Fix #1784: 로컬 requireServiceRole 복사본 제거 → 공식 _shared/auth_utils.ts 사용
-import { requireServiceRole } from "../_shared/auth_utils.ts";
+import { log, withSpan } from "../_shared/logger.ts";
+// Fix #2185 (Batch 2): migrate to minglitEdgeFunction wrapper — auth via manifest (system caller)
+import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
 
 const FN = "process-pending-deletions";
 
@@ -79,8 +78,6 @@ type UserResult = {
   error?: string;
 };
 
-await initSentry();
-
 function addDays(date: Date, days: number): string {
   return new Date(date.getTime() + days * 24 * 60 * 60 * 1000).toISOString();
 }
@@ -146,8 +143,7 @@ function specFromRow(
   return fallback;
 }
 
-async function loadRetentionConfig(): Promise<RetentionConfig> {
-  const supabase = createServiceClient();
+async function loadRetentionConfig(supabase: SupabaseClient): Promise<RetentionConfig> {
   const { data, error } = await withSpan(
     "db.query.retention_config",
     "db.query",
@@ -204,9 +200,9 @@ async function sha256Hex(value: string): Promise<string> {
 }
 
 async function loadPendingUsers(
+  supabase: SupabaseClient,
   cutoffIso: string,
 ): Promise<PendingDeletionUser[]> {
-  const supabase = createServiceClient();
   const { data, error } = await withSpan(
     "db.query.pending_deletion_users",
     "db.query",
@@ -226,9 +222,9 @@ async function loadPendingUsers(
 }
 
 async function loadEventApplications(
+  supabase: SupabaseClient,
   userId: string,
 ): Promise<EventApplicationArchive[]> {
-  const supabase = createServiceClient();
   const { data, error } = await withSpan(
     "db.query.event_applications_for_archive",
     "db.query",
@@ -249,9 +245,9 @@ async function loadEventApplications(
 }
 
 async function loadReportDetails(
+  supabase: SupabaseClient,
   userId: string,
 ): Promise<ReportDetailArchive[]> {
-  const supabase = createServiceClient();
   const { data, error } = await withSpan(
     "db.query.report_details_for_archive",
     "db.query",
@@ -280,9 +276,9 @@ type UserConsentArchive = {
 };
 
 async function loadUserConsents(
+  supabase: SupabaseClient,
   userId: string,
 ): Promise<UserConsentArchive[]> {
-  const supabase = createServiceClient();
   const { data, error } = await withSpan(
     "db.query.user_consents_for_archive",
     "db.query",
@@ -303,16 +299,16 @@ async function loadUserConsents(
 }
 
 async function buildArchivedRecords(
+  supabase: SupabaseClient,
   user: PendingDeletionUser,
   archivedRunId: string,
   now: Date,
   retention: RetentionConfig,
 ): Promise<ArchivedRecordInsert[]> {
   const userIdHash = await sha256Hex(user.id);
-  const eventApplications = await loadEventApplications(user.id);
-  const reportDetails = await loadReportDetails(user.id);
-  const userConsents = await loadUserConsents(user.id);
-  const supabase = createServiceClient();
+  const eventApplications = await loadEventApplications(supabase, user.id);
+  const reportDetails = await loadReportDetails(supabase, user.id);
+  const userConsents = await loadUserConsents(supabase, user.id);
   const { data: authUserData, error: authUserError } = await withSpan(
     "auth.admin.get_user_for_archive",
     "auth.admin",
@@ -428,13 +424,13 @@ async function buildArchivedRecords(
 }
 
 async function insertArchivedRecords(
+  supabase: SupabaseClient,
   records: ArchivedRecordInsert[],
 ): Promise<number> {
   if (records.length === 0) {
     return 0;
   }
 
-  const supabase = createServiceClient();
   const { error } = await withSpan(
     "db.insert.archived_records",
     "db.insert",
@@ -448,8 +444,7 @@ async function insertArchivedRecords(
   return records.length;
 }
 
-async function blockedDiExists(diHash: string): Promise<boolean> {
-  const supabase = createServiceClient();
+async function blockedDiExists(supabase: SupabaseClient, diHash: string): Promise<boolean> {
   const { data, error } = await withSpan(
     "db.query.blocked_dis_existing",
     "db.query",
@@ -468,8 +463,7 @@ async function blockedDiExists(diHash: string): Promise<boolean> {
   return (data?.length ?? 0) > 0;
 }
 
-async function upsertBlockedDi(diHash: string, blockedUntil: string) {
-  const supabase = createServiceClient();
+async function upsertBlockedDi(supabase: SupabaseClient, diHash: string, blockedUntil: string) {
   const { error } = await withSpan(
     "db.upsert.blocked_dis",
     "db.upsert",
@@ -487,8 +481,7 @@ async function upsertBlockedDi(diHash: string, blockedUntil: string) {
   }
 }
 
-async function deleteAuthUser(userId: string) {
-  const supabase = createServiceClient();
+async function deleteAuthUser(supabase: SupabaseClient, userId: string) {
   const { error } = await withSpan(
     "auth.admin.delete_user",
     "auth.admin",
@@ -501,10 +494,10 @@ async function deleteAuthUser(userId: string) {
 }
 
 async function rollbackArchivedRecords(
+  supabase: SupabaseClient,
   userIdHash: string,
   archivedRunId: string,
 ) {
-  const supabase = createServiceClient();
   const { error } = await withSpan(
     "db.rollback.archived_records",
     "db.delete",
@@ -526,8 +519,7 @@ async function rollbackArchivedRecords(
   }
 }
 
-async function rollbackBlockedDi(diHash: string) {
-  const supabase = createServiceClient();
+async function rollbackBlockedDi(supabase: SupabaseClient, diHash: string) {
   const { error } = await withSpan(
     "db.rollback.blocked_dis",
     "db.delete",
@@ -548,27 +540,19 @@ async function rollbackBlockedDi(diHash: string) {
   }
 }
 
-Deno.serve(withHandler(async (req) => {
-  if (req.method === "OPTIONS") {
-    return corsResponse();
-  }
+export const handler = async (req: Request, { supabase }: EFContext): Promise<Response> => {
   if (req.method !== "POST") {
     return errorResponse("Method Not Allowed", 405);
-  }
-
-  const auth = requireServiceRole(req);
-  if (auth instanceof Response) {
-    return auth;
   }
 
   const now = new Date();
   const archivedRunId = crypto.randomUUID();
 
   try {
-    const retention = await loadRetentionConfig();
+    const retention = await loadRetentionConfig(supabase);
     const cutoffIso = addDays(now, -retention.deletionGraceDays);
     const blockedUntil = addDays(now, retention.blockedDiDays);
-    const users = await loadPendingUsers(cutoffIso);
+    const users = await loadPendingUsers(supabase, cutoffIso);
     const results: UserResult[] = [];
     let archivedRecordCount = 0;
     let blockedCount = 0;
@@ -583,13 +567,13 @@ Deno.serve(withHandler(async (req) => {
           throw new Error("Missing di_hash for deleted user");
         }
 
-        const records = await buildArchivedRecords(user, archivedRunId, now, retention);
-        const archivedRecords = await insertArchivedRecords(records);
-        const blockedAlreadyExisted = await blockedDiExists(user.di_hash);
+        const records = await buildArchivedRecords(supabase, user, archivedRunId, now, retention);
+        const archivedRecords = await insertArchivedRecords(supabase, records);
+        const blockedAlreadyExisted = await blockedDiExists(supabase, user.di_hash);
 
-        await upsertBlockedDi(user.di_hash, blockedUntil);
+        await upsertBlockedDi(supabase, user.di_hash, blockedUntil);
         shouldRollbackBlockedDi = !blockedAlreadyExisted;
-        await deleteAuthUser(user.id);
+        await deleteAuthUser(supabase, user.id);
 
         archivedRecordCount += archivedRecords;
         if (!blockedAlreadyExisted) {
@@ -604,9 +588,9 @@ Deno.serve(withHandler(async (req) => {
         });
       } catch (error) {
         if (user.di_hash && shouldRollbackBlockedDi) {
-          await rollbackBlockedDi(user.di_hash);
+          await rollbackBlockedDi(supabase, user.di_hash);
         }
-        await rollbackArchivedRecords(userIdHash, archivedRunId);
+        await rollbackArchivedRecords(supabase, userIdHash, archivedRunId);
 
         const message = error instanceof Error ? error.message : String(error);
         log({
@@ -644,4 +628,6 @@ Deno.serve(withHandler(async (req) => {
     });
     return errorResponse(message, 500);
   }
-}));
+};
+
+minglitEdgeFunction(handler);

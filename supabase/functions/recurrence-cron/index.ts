@@ -1,15 +1,7 @@
-import { createServiceClient } from "../_shared/supabase_client.ts";
-import {
-  corsResponse,
-  errorResponse,
-  successResponse,
-} from "../_shared/response_utils.ts";
-import { requireServiceRole } from "../_shared/auth_utils.ts";
-import { initSentry, log, withHandler } from "../_shared/logger.ts";
-
-await initSentry();
-
-const FN = "recurrence-cron";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { errorResponse, successResponse } from "../_shared/response_utils.ts";
+import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
+import { log } from "../_shared/logger.ts";
 const LOOKAHEAD_DAYS = 30;
 
 interface RecurrenceRule {
@@ -91,7 +83,7 @@ interface RuleProcessResult {
 }
 
 async function processRule(
-  supabase: ReturnType<typeof createServiceClient>,
+  supabase: SupabaseClient,
   rule: RecurrenceRule,
   today: Date,
   lookaheadEnd: Date,
@@ -135,7 +127,7 @@ async function processRule(
       ticketTemplatesResult.error?.message,
     ].filter(Boolean).join("; ");
     log({
-      function: FN,
+      function: "recurrence-cron",
       level: "error",
       message: "Failed to load templates",
       metadata: { rule_id: rule.id, party_id: rule.party_id, detail },
@@ -194,7 +186,7 @@ async function processRule(
         continue;
       }
       log({
-        function: FN,
+        function: "recurrence-cron",
         level: "error",
         message: "Failed to insert event",
         metadata: { rule_id: rule.id, date: dateStr, detail: eventError.message },
@@ -232,7 +224,7 @@ async function processRule(
 
       if (groupError) {
         log({
-          function: FN,
+          function: "recurrence-cron",
           level: "error",
           message: "Failed to insert entry_groups",
           metadata: { event_id: eventId, rule_id: rule.id, detail: groupError.message },
@@ -271,7 +263,7 @@ async function processRule(
 
       if (ticketError) {
         log({
-          function: FN,
+          function: "recurrence-cron",
           level: "error",
           message: "Failed to insert tickets",
           metadata: { event_id: eventId, rule_id: rule.id, detail: ticketError.message },
@@ -303,7 +295,7 @@ async function processRule(
 }
 
 async function processAllActiveRules(
-  supabase: ReturnType<typeof createServiceClient>,
+  supabase: SupabaseClient,
 ): Promise<RuleProcessResult[]> {
   const { data: rules, error } = await supabase
     .from("recurrence_rules")
@@ -331,7 +323,7 @@ async function processAllActiveRules(
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       log({
-        function: FN,
+        function: "recurrence-cron",
         level: "error",
         message: "Unhandled error processing recurrence rule",
         metadata: { rule_id: rule.id, detail: message },
@@ -343,14 +335,8 @@ async function processAllActiveRules(
   return results;
 }
 
-Deno.serve(withHandler(async (req) => {
-  if (req.method === "OPTIONS") return corsResponse();
+export const handler = async (req: Request, { supabase }: EFContext): Promise<Response> => {
   if (req.method !== "POST") return errorResponse("Method Not Allowed", 405);
-
-  const authCheck = requireServiceRole(req);
-  if (authCheck instanceof Response) return authCheck;
-
-  const supabase = createServiceClient();
 
   try {
     const results = await processAllActiveRules(supabase);
@@ -368,11 +354,13 @@ Deno.serve(withHandler(async (req) => {
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     log({
-      function: FN,
+      function: "recurrence-cron",
       level: "error",
       message: "Unhandled error in recurrence-cron",
       metadata: { detail: message },
     });
     return errorResponse(message, 500);
   }
-}));
+};
+
+minglitEdgeFunction(handler);

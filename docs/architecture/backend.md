@@ -252,6 +252,7 @@ Supabase Edge Functions는 Deno 런타임 기반이며, `supabase/functions/` �
 | `user-delete-account` | User | 계정 삭제 요청 (소프트 삭제 + 30일 유예) |
 | `user-cancel-deletion` | User | 계정 삭제 요청 취소 |
 | `cleanup-blocked-dis` | System | 만료된 DI 블록 정리 (크론) |
+| `cleanup-retention` | System | 보존 기간 만료 데이터 정리 (db_table/storage/pgmq_archive/custom_fn 4종 — `retention_policies` 기반) |
 | `process-pending-deletions` | System | 유예 기간 만료 계정 하드 삭제 (크론) |
 | `identity-verify` | Identity | 본인인증 (Portone V2/PASS) |
 | `partner-sync` | Partner | 플랫폼 파트너 동기화 |
