@@ -18,11 +18,7 @@ type SortBy = typeof VALID_SORT_BY[number];
 const NEARBY_RATE_LIMIT_PER_MINUTE = 30;
 
 export const handler = async (req: Request, ctx: EFContext): Promise<Response> => {
-  // auth.type === "user" (authenticated) or "public" (anonymous)
-  // Manifest callers: ["user", "public"] — both allowed, nearby requires "user"
-  const userId: string | null = ctx.auth.type === "user"
-    ? (ctx.auth as { type: "user"; userId: string }).userId
-    : null;
+  const userId: string | null = ctx.auth.type === "user" ? ctx.auth.userId : null;
   const { supabase } = ctx;
 
   if (req.method !== "POST") {

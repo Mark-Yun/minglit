@@ -44,8 +44,8 @@ async function parseRequestBody(
 export const handler = async (req: Request, ctx: EFContext): Promise<Response> => {
   if (req.method !== "POST") return errorResponse("Method Not Allowed", 405);
 
-  // auth.type === "user" is guaranteed by manifest (callers: ["user"])
-  const userId = (ctx.auth as { type: "user"; userId: string }).userId;
+  if (ctx.auth.type !== "user") return errorResponse("Unexpected auth type", 500);
+  const userId = ctx.auth.userId;
   const { supabase } = ctx;
 
   try {

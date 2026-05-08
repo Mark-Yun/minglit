@@ -14,7 +14,8 @@ initStatsig();
 
 export const handler = async (req: Request, ctx: EFContext): Promise<Response> => {
   const { supabase } = ctx;
-  const userId = (ctx.auth as { type: "user"; userId: string }).userId;
+  if (ctx.auth.type !== "user") return errorResponse("Unexpected auth type", 500);
+  const userId = ctx.auth.userId;
 
   try {
     const body = await parseJsonBody(req);

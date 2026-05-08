@@ -47,7 +47,8 @@ export const handler = async (req: Request, ctx: EFContext): Promise<Response> =
 
   // 2. Auth
   const { supabase } = ctx;
-  const userId = (ctx.auth as { type: "user"; userId: string }).userId;
+  if (ctx.auth.type !== "user") return errorResponse("Unexpected auth type", 500);
+  const userId = ctx.auth.userId;
 
   // 3. Parse body
   const result = await parseAction(req);

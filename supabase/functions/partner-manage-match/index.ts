@@ -20,8 +20,8 @@ export const handler = async (req: Request, ctx: EFContext): Promise<Response> =
   if (req.method !== "POST") return errorResponse("Method not allowed", 405);
 
   const { supabase } = ctx;
-  // wrapper guarantees type === "user" per auth-manifest callers: ["user"]
-  const userId = (ctx.auth as { type: "user"; userId: string }).userId;
+  if (ctx.auth.type !== "user") return errorResponse("Unexpected auth type", 500);
+  const userId = ctx.auth.userId;
 
   // Parse body
   const result = await parseAction(req);
@@ -48,7 +48,7 @@ export const handler = async (req: Request, ctx: EFContext): Promise<Response> =
     return errorResponse("Event not found", 404);
   }
 
-  const party = event.party as { id: string; partner_id: string } | null;
+  const party = event.party as unknown as { id: string; partner_id: string } | null;
   if (!party) {
     return errorResponse("Event has no associated party", 404);
   }
