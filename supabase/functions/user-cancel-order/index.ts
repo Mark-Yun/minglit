@@ -1,12 +1,11 @@
-import { createServiceClient } from "../_shared/supabase_client.ts";
+// Fix #2185 (Batch 5): migrate to minglitEdgeFunction wrapper — auth via manifest (user caller)
 import {
-  corsResponse,
   errorResponse,
   successResponse,
 } from "../_shared/response_utils.ts";
-import { requireAuth } from "../_shared/auth_utils.ts";
+import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
 import { parseJsonBody } from "../_shared/request_utils.ts";
-import { initSentry, log, withHandler, withSpan } from "../_shared/logger.ts";
+import { log, withSpan } from "../_shared/logger.ts";
 import { initStatsig, logStatsigEvent } from "../_shared/statsig_utils.ts";
 import {
   executeRefund,
@@ -16,15 +15,12 @@ import {
 
 const FN = "user-cancel-order";
 
-initSentry();
 initStatsig();
 
-Deno.serve(withHandler(async (req) => {
-  if (req.method === "OPTIONS") return corsResponse();
-
-  const auth = await requireAuth(req);
-  if (auth instanceof Response) return auth;
-  const userId = auth;
+export const handler = async (req: Request, ctx: EFContext): Promise<Response> => {
+  // auth.type === "user" is guaranteed by manifest (callers: ["user"])
+  const userId = (ctx.auth as { type: "user"; userId: string }).userId;
+  const { supabase } = ctx;
 
   try {
     // 1. Parse Request
@@ -40,10 +36,7 @@ Deno.serve(withHandler(async (req) => {
       return errorResponse("Missing required field: event_id", 400);
     }
 
-    // 2. Init Supabase (service role for cross-table operations)
-    const supabase = createServiceClient();
-
-    // 3. Fetch application by (event_id, user_id)
+    // 2. Fetch application by (event_id, user_id)
     const { data: application, error: appError } = await withSpan(
       "db.query.event_applications",
       "db.query",
@@ -62,13 +55,13 @@ Deno.serve(withHandler(async (req) => {
       return errorResponse("해당 이벤트에 신청 내역이 없습니다", 404);
     }
 
-    // 4. Status validation
+    // 3. Status validation
     const { status } = application;
     if (status === "cancelled" || status === "rejected") {
       return errorResponse("이미 취소/거절된 신청입니다", 400);
     }
 
-    // 5. Branch: pre-payment vs post-payment
+    // 4. Branch: pre-payment vs post-payment
     const isPaid = status === "paid" || status === "pending_review" ||
       status === "approved";
     const isPrePayment = status === "pending" || status === "payment_failed";
@@ -324,4 +317,6 @@ Deno.serve(withHandler(async (req) => {
     });
     return errorResponse(message, 500);
   }
-}));
+};
+
+minglitEdgeFunction(handler);

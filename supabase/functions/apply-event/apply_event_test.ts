@@ -13,6 +13,8 @@ import {
 const ENV = {
   SUPABASE_URL: "https://supabase.test",
   SUPABASE_SERVICE_ROLE_KEY: "service-key",
+  ENVIRONMENT: "dev",
+  MINGLIT_EF_TEST_FN_NAME: "apply-event",
 };
 
 // ──────────────────────────────────────────────
