@@ -188,21 +188,28 @@ export async function checkExternalAuth(
       if (!secret) return { ok: false };
 
       const body = await req.clone().text();
+      // Fix #2336: import key for "verify" to use crypto.subtle.verify — constant-time
+      // comparison (CWE-208: string === is not timing-safe).
       const key = await crypto.subtle.importKey(
         "raw",
         new TextEncoder().encode(secret),
         { name: "HMAC", hash: "SHA-256" },
         false,
-        ["sign"],
+        ["verify"],
       );
-      const mac = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(body));
-      const computedHex = Array.from(new Uint8Array(mac))
-        .map(b => b.toString(16).padStart(2, "0"))
-        .join("");
 
       // Accept both "<hex>" and "sha256=<hex>" formats (PortOne V2 uses the prefixed form).
       const sigHex = signature.startsWith("sha256=") ? signature.slice(7) : signature;
-      if (computedHex === sigHex) {
+      // Decode hex to bytes; odd-length hex is invalid.
+      if (sigHex.length % 2 !== 0) return { ok: false };
+      const sigBytes = new Uint8Array(sigHex.length / 2);
+      for (let i = 0; i < sigHex.length; i += 2) {
+        sigBytes[i / 2] = parseInt(sigHex.slice(i, i + 2), 16);
+      }
+
+      // crypto.subtle.verify performs constant-time HMAC comparison internally.
+      const valid = await crypto.subtle.verify("HMAC", key, sigBytes, new TextEncoder().encode(body));
+      if (valid) {
         return { ok: true, reason: `hmac:${external.header}` };
       }
       return { ok: false };
