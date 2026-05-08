@@ -1,24 +1,16 @@
-import { createServiceClient } from "../_shared/supabase_client.ts";
-import { successResponse, errorResponse, corsResponse } from "../_shared/response_utils.ts";
-import { requireAuth } from "../_shared/auth_utils.ts";
-import { initSentry, withHandler, withSpan, log } from "../_shared/logger.ts";
+import { successResponse, errorResponse } from "../_shared/response_utils.ts";
+import { withSpan, log } from "../_shared/logger.ts";
+import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
 
 const FN = "user-cancel-deletion";
 const DELETION_GRACE_PERIOD_MS = 7 * 24 * 60 * 60 * 1000;
 
-initSentry();
-
-Deno.serve(withHandler(async (req) => {
-  if (req.method === "OPTIONS") return corsResponse();
+export const handler = async (req: Request, { auth, supabase }: EFContext): Promise<Response> => {
   if (req.method !== "POST") return errorResponse("Method not allowed", 405);
 
-  const auth = await requireAuth(req);
-  if (auth instanceof Response) return auth;
-  const userId = auth;
+  const { userId } = auth as { type: "user"; userId: string };
 
   try {
-    const supabase = createServiceClient();
-
     const { data: profile, error: profileError } = await withSpan(
       "db.query.user_profiles",
       "db.query",
@@ -91,4 +83,6 @@ Deno.serve(withHandler(async (req) => {
     });
     return errorResponse("Internal server error", 500);
   }
-}));
+};
+
+minglitEdgeFunction(handler);

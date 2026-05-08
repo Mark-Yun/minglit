@@ -7,11 +7,14 @@ import {
   readJson,
   withEnv,
   withMockedFetch,
+  withNoIntervals,
 } from "../_test_utils/mock_http.ts";
 
 const BASE_ENV = {
   SUPABASE_URL: "http://localhost:54321",
   SUPABASE_SERVICE_ROLE_KEY: "test-service-key",
+  ENVIRONMENT: "dev",
+  MINGLIT_EF_TEST_FN_NAME: "event-checkin",
 };
 
 const BASE_URL = "http://localhost";
@@ -82,8 +85,6 @@ Deno.test({
       TICKET_SIGNING_PUBLIC_KEY_JWK: JSON.stringify(publicKeyJwk),
     };
 
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-
     const { fetchMock } = createFetchMock([
       {
         matcher: "/auth/v1/user",
@@ -105,19 +106,22 @@ Deno.test({
 
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
-        const response = await handler(
-          authenticatedJsonRequest(BASE_URL, {
-            event_id: "evt-1",
-            participant_id: "part-1",
-            signature,
-            expires_at: expiresAt,
-          }),
-        );
-        assertEquals(response.status, 200);
-        const body = await readJson(response);
-        assertEquals(body.success, true);
-        assertEquals(body.status, "checked_in");
-        assertEquals(body.participant_id, "part-1");
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const response = await handler(
+            authenticatedJsonRequest(BASE_URL, {
+              event_id: "evt-1",
+              participant_id: "part-1",
+              signature,
+              expires_at: expiresAt,
+            }),
+          );
+          assertEquals(response.status, 200);
+          const body = await readJson(response);
+          assertEquals(body.success, true);
+          assertEquals(body.status, "checked_in");
+          assertEquals(body.participant_id, "part-1");
+        });
       });
     });
   },
@@ -126,8 +130,6 @@ Deno.test({
 Deno.test({
   name: "event-checkin - returns 400 when missing event_id/participant_id",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-
     const { fetchMock } = createFetchMock([
       {
         matcher: "/auth/v1/user",
@@ -137,12 +139,15 @@ Deno.test({
 
     await withEnv(BASE_ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
-        const response = await handler(
-          authenticatedJsonRequest(BASE_URL, { event_id: "evt-1" }),
-        );
-        assertEquals(response.status, 400);
-        const body = await readJson(response);
-        assertEquals(body.error, "Missing required parameters: event_id, participant_id");
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const response = await handler(
+            authenticatedJsonRequest(BASE_URL, { event_id: "evt-1" }),
+          );
+          assertEquals(response.status, 400);
+          const body = await readJson(response);
+          assertEquals(body.error, "Missing required parameters: event_id, participant_id");
+        });
       });
     });
   },
@@ -151,8 +156,6 @@ Deno.test({
 Deno.test({
   name: "event-checkin - returns 400 when missing signature/expires_at",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-
     const { fetchMock } = createFetchMock([
       {
         matcher: "/auth/v1/user",
@@ -162,15 +165,18 @@ Deno.test({
 
     await withEnv(BASE_ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
-        const response = await handler(
-          authenticatedJsonRequest(BASE_URL, {
-            event_id: "evt-1",
-            participant_id: "part-1",
-          }),
-        );
-        assertEquals(response.status, 400);
-        const body = await readJson(response);
-        assertEquals(body.error, "Missing required parameters: signature, expires_at");
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const response = await handler(
+            authenticatedJsonRequest(BASE_URL, {
+              event_id: "evt-1",
+              participant_id: "part-1",
+            }),
+          );
+          assertEquals(response.status, 400);
+          const body = await readJson(response);
+          assertEquals(body.error, "Missing required parameters: signature, expires_at");
+        });
       });
     });
   },
@@ -179,8 +185,6 @@ Deno.test({
 Deno.test({
   name: "event-checkin - returns 400 when QR token is expired",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-
     const { fetchMock } = createFetchMock([
       {
         matcher: "/auth/v1/user",
@@ -192,17 +196,20 @@ Deno.test({
 
     await withEnv(BASE_ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
-        const response = await handler(
-          authenticatedJsonRequest(BASE_URL, {
-            event_id: "evt-1",
-            participant_id: "part-1",
-            signature: "any-sig",
-            expires_at: expiredAt,
-          }),
-        );
-        assertEquals(response.status, 400);
-        const body = await readJson(response);
-        assertEquals(body.error, "QR token expired");
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const response = await handler(
+            authenticatedJsonRequest(BASE_URL, {
+              event_id: "evt-1",
+              participant_id: "part-1",
+              signature: "any-sig",
+              expires_at: expiredAt,
+            }),
+          );
+          assertEquals(response.status, 400);
+          const body = await readJson(response);
+          assertEquals(body.error, "QR token expired");
+        });
       });
     });
   },
@@ -211,7 +218,6 @@ Deno.test({
 Deno.test({
   name: "event-checkin - returns 404 when participant not found",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const futureExpiry = new Date(Date.now() + 3600000).toISOString();
 
     const { fetchMock } = createFetchMock([
@@ -227,17 +233,20 @@ Deno.test({
 
     await withEnv(BASE_ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
-        const response = await handler(
-          authenticatedJsonRequest(BASE_URL, {
-            event_id: "evt-1",
-            participant_id: "nonexistent",
-            signature: "dummy-sig",
-            expires_at: futureExpiry,
-          }),
-        );
-        assertEquals(response.status, 404);
-        const body = await readJson(response);
-        assertEquals(body.error, "Participant not found");
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const response = await handler(
+            authenticatedJsonRequest(BASE_URL, {
+              event_id: "evt-1",
+              participant_id: "nonexistent",
+              signature: "dummy-sig",
+              expires_at: futureExpiry,
+            }),
+          );
+          assertEquals(response.status, 404);
+          const body = await readJson(response);
+          assertEquals(body.error, "Participant not found");
+        });
       });
     });
   },
@@ -246,7 +255,6 @@ Deno.test({
 Deno.test({
   name: "event-checkin - returns 403 when caller is not the participant",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const futureExpiry = new Date(Date.now() + 3600000).toISOString();
 
     const { fetchMock } = createFetchMock([
@@ -262,17 +270,20 @@ Deno.test({
 
     await withEnv(BASE_ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
-        const response = await handler(
-          authenticatedJsonRequest(BASE_URL, {
-            event_id: "evt-1",
-            participant_id: "part-1",
-            signature: "dummy-sig",
-            expires_at: futureExpiry,
-          }),
-        );
-        assertEquals(response.status, 403);
-        const body = await readJson(response);
-        assertEquals(body.error, "Forbidden: caller is not the participant's user");
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const response = await handler(
+            authenticatedJsonRequest(BASE_URL, {
+              event_id: "evt-1",
+              participant_id: "part-1",
+              signature: "dummy-sig",
+              expires_at: futureExpiry,
+            }),
+          );
+          assertEquals(response.status, 403);
+          const body = await readJson(response);
+          assertEquals(body.error, "Forbidden: caller is not the participant's user");
+        });
       });
     });
   },
@@ -289,8 +300,6 @@ Deno.test({
       TICKET_SIGNING_PUBLIC_KEY_JWK: JSON.stringify(publicKeyJwk),
     };
 
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-
     const { fetchMock } = createFetchMock([
       {
         matcher: "/auth/v1/user",
@@ -304,17 +313,20 @@ Deno.test({
 
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
-        const response = await handler(
-          authenticatedJsonRequest(BASE_URL, {
-            event_id: "evt-1",
-            participant_id: "part-1",
-            signature: "aW52YWxpZC1zaWduYXR1cmU", // invalid base64url
-            expires_at: expiresAt,
-          }),
-        );
-        assertEquals(response.status, 403);
-        const body = await readJson(response);
-        assertEquals(body.error, "Invalid QR signature");
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const response = await handler(
+            authenticatedJsonRequest(BASE_URL, {
+              event_id: "evt-1",
+              participant_id: "part-1",
+              signature: "aW52YWxpZC1zaWduYXR1cmU", // invalid base64url
+              expires_at: expiresAt,
+            }),
+          );
+          assertEquals(response.status, 403);
+          const body = await readJson(response);
+          assertEquals(body.error, "Invalid QR signature");
+        });
       });
     });
   },
@@ -331,8 +343,6 @@ Deno.test({
       ...BASE_ENV,
       TICKET_SIGNING_PUBLIC_KEY_JWK: JSON.stringify(publicKeyJwk),
     };
-
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
     const { fetchMock } = createFetchMock([
       {
@@ -351,17 +361,20 @@ Deno.test({
 
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
-        const response = await handler(
-          authenticatedJsonRequest(BASE_URL, {
-            event_id: "evt-1",
-            participant_id: "part-1",
-            signature,
-            expires_at: expiresAt,
-          }),
-        );
-        assertEquals(response.status, 409);
-        const body = await readJson(response);
-        assertEquals(body.error, "Participant already checked in");
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const response = await handler(
+            authenticatedJsonRequest(BASE_URL, {
+              event_id: "evt-1",
+              participant_id: "part-1",
+              signature,
+              expires_at: expiresAt,
+            }),
+          );
+          assertEquals(response.status, 409);
+          const body = await readJson(response);
+          assertEquals(body.error, "Participant already checked in");
+        });
       });
     });
   },
@@ -378,8 +391,6 @@ Deno.test({
       ...BASE_ENV,
       TICKET_SIGNING_PUBLIC_KEY_JWK: JSON.stringify(publicKeyJwk),
     };
-
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
     const { fetchMock } = createFetchMock([
       {
@@ -398,17 +409,20 @@ Deno.test({
 
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
-        const response = await handler(
-          authenticatedJsonRequest(BASE_URL, {
-            event_id: "evt-1",
-            participant_id: "part-1",
-            signature,
-            expires_at: expiresAt,
-          }),
-        );
-        assertEquals(response.status, 400);
-        const body = await readJson(response);
-        assertEquals(body.error, "Cannot check in participant with status 'cancelled'");
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const response = await handler(
+            authenticatedJsonRequest(BASE_URL, {
+              event_id: "evt-1",
+              participant_id: "part-1",
+              signature,
+              expires_at: expiresAt,
+            }),
+          );
+          assertEquals(response.status, 400);
+          const body = await readJson(response);
+          assertEquals(body.error, "Cannot check in participant with status 'cancelled'");
+        });
       });
     });
   },
@@ -417,20 +431,21 @@ Deno.test({
 Deno.test({
   name: "event-checkin - returns 401 without auth token",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-
     const { fetchMock } = createFetchMock([]);
 
     await withEnv(BASE_ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
-        const request = new Request(BASE_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ event_id: "evt-1", participant_id: "part-1" }),
-        });
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const request = new Request(BASE_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ event_id: "evt-1", participant_id: "part-1" }),
+          });
 
-        const response = await handler(request);
-        assertEquals(response.status, 401);
+          const response = await handler(request);
+          assertEquals(response.status, 401);
+        });
       });
     });
   },
@@ -439,9 +454,19 @@ Deno.test({
 Deno.test({
   name: "event-checkin - OPTIONS returns CORS response",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const { fetchMock } = createFetchMock([]);
 
-    const response = await handler(new Request(BASE_URL, { method: "OPTIONS" }));
-    assertEquals(response.status, 200);
+    await withEnv(BASE_ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const response = await handler(new Request(BASE_URL, { method: "OPTIONS" }));
+          assertEquals(response.status, 200);
+          assertEquals(response.headers.get("Access-Control-Allow-Origin"), "*");
+          assertEquals(response.headers.get("Access-Control-Allow-Methods"), "GET, POST, OPTIONS");
+          assertEquals(response.headers.has("Access-Control-Allow-Headers"), true);
+        });
+      });
+    });
   },
 });

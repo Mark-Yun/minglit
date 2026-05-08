@@ -39,15 +39,39 @@ export interface EFContext {
   readonly supabase: SupabaseClient;
 }
 
-export interface ExternalAuth {
-  type: "ip_allowlist";
-  ips: string[];
+// Discriminated union — manifest schema §3.4
+export type ExternalAuth =
+  | { type: "ip_allowlist"; ips: string[] }
+  | {
+      type: "hmac";
+      /** Deno env var name that holds the HMAC secret */
+      secret_env: string;
+      /** Request header carrying the signature (e.g. "x-portone-signature-v2") */
+      header: string;
+    }
+  | {
+      type: "custom";
+      /** Path to an auth checker module, relative to the EF directory.
+       *  The module must export `check(req: Request): Promise<{ok:true;reason:string}|{ok:false}>`.
+       */
+      module: string;
+    };
+
+/** Interface that a `custom` external_auth module must satisfy. */
+export interface CustomAuthChecker {
+  check(req: Request): Promise<{ ok: true; reason: string } | { ok: false }>;
 }
 
 export interface EFPolicy {
   callers: Caller[];
   envs: Environment[];
   external_auth?: ExternalAuth;
+  /**
+   * ISO date string (e.g. "2026-12-01") — if set, every response from this EF
+   * will carry `Deprecation` and `Sunset` headers (RFC 8594) so clients can
+   * detect the upcoming EOL without reading documentation.
+   */
+  deprecated?: string;
   description?: string;
 }
 
@@ -108,24 +132,103 @@ function readEnvironment(): Environment {
 // Per-request helpers
 // --------------------------------------------------------------------------
 
-function checkExternalAuth(req: Request, external: ExternalAuth): { ok: true; reason: string } | { ok: false } {
-  if (external.type === "ip_allowlist") {
-    // Fix #1892 H2 패턴: x-real-ip > cf-connecting-ip > x-forwarded-for rightmost
-    const realIp = req.headers.get("x-real-ip");
-    const cfIp = req.headers.get("cf-connecting-ip");
-    const xff = req.headers.get("x-forwarded-for");
-    const xffRightmost = xff ? xff.split(",").map(s => s.trim()).pop() : null;
-    const clientIp = realIp || cfIp || xffRightmost;
-    if (clientIp && external.ips.includes(clientIp)) {
-      return { ok: true, reason: `ip_allowlist:${clientIp}` };
+/**
+ * Injects RFC 8594 `Deprecation` and `Sunset` response headers.
+ * Exported for unit testing; not part of the stable public API.
+ *
+ * @param res        Original handler response.
+ * @param deprecated ISO date string from the manifest (e.g. "2026-12-01").
+ * @returns          New Response with the deprecation headers added.
+ */
+export function addDeprecationHeaders(res: Response, deprecated: string): Response {
+  const date = new Date(deprecated);
+  if (Number.isNaN(date.getTime())) return res;
+  const httpDate = date.toUTCString();
+  const headers = new Headers(res.headers);
+  // RFC 8594 §2 — Deprecation header: date-tagged form "@<HTTP-date>"
+  headers.set("Deprecation", `@${httpDate}`);
+  // RFC 8594 §3 — Sunset header: the point at which the resource is removed
+  headers.set("Sunset", httpDate);
+  return new Response(res.body, { status: res.status, statusText: res.statusText, headers });
+}
+
+/**
+ * Verifies external caller auth per the manifest's `external_auth` policy.
+ * Exported for unit testing; not part of the stable public API.
+ *
+ * @param req     Incoming request (body is NOT consumed — uses req.clone() for HMAC).
+ * @param external Parsed external_auth entry from the manifest.
+ * @param fnName  EF name, used to resolve relative `custom` module paths.
+ */
+export async function checkExternalAuth(
+  req: Request,
+  external: ExternalAuth,
+  fnName: string,
+): Promise<{ ok: true; reason: string } | { ok: false }> {
+  switch (external.type) {
+    case "ip_allowlist": {
+      // Fix #1892 H2 패턴: x-real-ip > cf-connecting-ip > x-forwarded-for rightmost
+      const realIp = req.headers.get("x-real-ip");
+      const cfIp = req.headers.get("cf-connecting-ip");
+      const xff = req.headers.get("x-forwarded-for");
+      const xffRightmost = xff ? xff.split(",").map(s => s.trim()).pop() : null;
+      const clientIp = realIp || cfIp || xffRightmost;
+      if (clientIp && external.ips.includes(clientIp)) {
+        return { ok: true, reason: `ip_allowlist:${clientIp}` };
+      }
+      return { ok: false };
+    }
+
+    case "hmac": {
+      // Verify HMAC-SHA256 signature without consuming the original request body.
+      const signature = req.headers.get(external.header);
+      if (!signature) return { ok: false };
+
+      const secret = Deno.env.get(external.secret_env);
+      if (!secret) return { ok: false };
+
+      const body = await req.clone().text();
+      // Fix #2336: import key for "verify" to use crypto.subtle.verify — constant-time
+      // comparison (CWE-208: string === is not timing-safe).
+      const key = await crypto.subtle.importKey(
+        "raw",
+        new TextEncoder().encode(secret),
+        { name: "HMAC", hash: "SHA-256" },
+        false,
+        ["verify"],
+      );
+
+      // Accept both "<hex>" and "sha256=<hex>" formats (PortOne V2 uses the prefixed form).
+      const sigHex = signature.startsWith("sha256=") ? signature.slice(7) : signature;
+      // Reject odd-length or non-hex chars before decoding. parseInt("aZ",16) silently
+      // stops at "Z" returning 10, so a regex guard is required to reject malformed input.
+      if (sigHex.length % 2 !== 0 || !/^[0-9a-fA-F]+$/.test(sigHex)) return { ok: false };
+      const sigBytes = new Uint8Array(sigHex.length / 2);
+      for (let i = 0; i < sigHex.length; i += 2) {
+        sigBytes[i / 2] = parseInt(sigHex.slice(i, i + 2), 16);
+      }
+
+      // crypto.subtle.verify performs constant-time HMAC comparison internally.
+      const valid = await crypto.subtle.verify("HMAC", key, sigBytes, new TextEncoder().encode(body));
+      if (valid) {
+        return { ok: true, reason: `hmac:${external.header}` };
+      }
+      return { ok: false };
+    }
+
+    case "custom": {
+      // Resolve path relative to this EF's directory (escape hatch for bespoke auth).
+      const moduleUrl = new URL(external.module, new URL(`../${fnName}/`, import.meta.url));
+      const mod = await import(moduleUrl.href) as CustomAuthChecker;
+      return await mod.check(req);
     }
   }
-  return { ok: false };
 }
 
 async function verifyAuth(
   req: Request,
   policy: EFPolicy,
+  fnName: string,
 ): Promise<AuthContext | Response> {
   const allow = (c: Caller) => policy.callers.includes(c);
   const authHeader = req.headers.get("Authorization") ?? "";
@@ -153,7 +256,7 @@ async function verifyAuth(
     if (!policy.external_auth) {
       throw new Error(`[minglitEdgeFunction] policy.callers includes 'external' but external_auth missing`);
     }
-    const ext = checkExternalAuth(req, policy.external_auth);
+    const ext = await checkExternalAuth(req, policy.external_auth, fnName);
     if (ext.ok) return { type: "external", reason: ext.reason };
   }
 
@@ -230,12 +333,13 @@ export function minglitEdgeFunction(handler: EFHandler, opts: MinglitEFOptions =
       }
 
       // Auth 검증
-      const auth = await verifyAuth(req, policy);
+      const auth = await verifyAuth(req, policy, fnName);
       if (auth instanceof Response) return auth;
 
       // Context + handler 호출
       const ctx = makeContext({ auth, fnName, env, requestId });
-      const res = await handler(req, ctx);
+      let res = await handler(req, ctx);
+      if (policy.deprecated) res = addDeprecationHeaders(res, policy.deprecated);
       axiomLog({ function: fnName, level: "info", message: "completed", metadata: { status: res.status, requestId } });
       return res;
     } catch (e) {

@@ -1,17 +1,12 @@
 // user-manage-social — Manage social interactions (like, block, report)
 // Replaces direct client writes to social_interactions + report_details
 
-import { createServiceClient } from "../_shared/supabase_client.ts";
 import {
-  corsResponse,
   errorResponse,
   successResponse,
 } from "../_shared/response_utils.ts";
-import { requireAuth } from "../_shared/auth_utils.ts";
 import { parseAction } from "../_shared/request_utils.ts";
-import { initSentry, withHandler } from "../_shared/logger.ts";
-
-initSentry();
+import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
 
 const VALID_INTERACTION_TYPES = ["like", "dislike", "subscribe", "bookmark"];
 const VALID_TARGET_TYPES = ["party", "partner", "review", "comment"];
@@ -23,14 +18,8 @@ const VALID_REPORT_REASONS = [
   "other",
 ];
 
-Deno.serve(withHandler(async (req: Request): Promise<Response> => {
-  if (req.method === "OPTIONS") return corsResponse();
-
-  const auth = await requireAuth(req);
-  if (auth instanceof Response) return auth;
-  const userId = auth;
-
-  const supabase = createServiceClient();
+export const handler = async (req: Request, { auth, supabase }: EFContext): Promise<Response> => {
+  const { userId } = auth as { type: "user"; userId: string };
 
   const result = await parseAction(req);
   if (result instanceof Response) return result;
@@ -181,4 +170,6 @@ Deno.serve(withHandler(async (req: Request): Promise<Response> => {
   }
 
   return errorResponse(`Unknown action: ${action}`, 400);
-}));
+};
+
+minglitEdgeFunction(handler);

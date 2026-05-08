@@ -1,18 +1,14 @@
 // partner-manage-verification — Manage verification definitions (create, update)
 // Issue #308: RLS write strategy 전환
+// Fix #2185 (Batch 7): migrate to minglitEdgeFunction wrapper — auth via manifest (user caller)
 
-import { createServiceClient } from "../_shared/supabase_client.ts";
+import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
 import {
-  corsResponse,
   errorResponse,
   successResponse,
 } from "../_shared/response_utils.ts";
-import { requireAuth } from "../_shared/auth_utils.ts";
 import { requirePartnerPermission } from "../_shared/partner_permissions.ts";
 import { parseAction } from "../_shared/request_utils.ts";
-import { initSentry, withHandler } from "../_shared/logger.ts";
-
-initSentry();
 
 const VALID_CATEGORIES = [
   "career",
@@ -44,25 +40,21 @@ const UPDATE_FIELDS = [
   "is_active",
 ] as const;
 
-Deno.serve(withHandler(async (req: Request): Promise<Response> => {
-  if (req.method === "OPTIONS") return corsResponse();
+export const handler = async (req: Request, ctx: EFContext): Promise<Response> => {
   if (req.method !== "POST") return errorResponse("Method not allowed", 405);
 
   // 1. Environment check (handled by createServiceClient)
 
   // 2. Auth
-  const auth = await requireAuth(req);
-  if (auth instanceof Response) return auth;
-  const userId = auth;
+  const { supabase } = ctx;
+  if (ctx.auth.type !== "user") return errorResponse("Unexpected auth type", 500);
+  const userId = ctx.auth.userId;
 
   // 3. Parse body
   const result = await parseAction(req);
   if (result instanceof Response) return result;
   const { action, body } = result;
   if (!action) return errorResponse("Missing action", 400);
-
-  // 4. Supabase client (service role)
-  const supabase = createServiceClient();
 
   // ─── create ───
   if (action === "create") {
@@ -178,4 +170,6 @@ Deno.serve(withHandler(async (req: Request): Promise<Response> => {
   }
 
   return errorResponse(`Unknown action: ${action}`, 400);
-}));
+};
+
+minglitEdgeFunction(handler);

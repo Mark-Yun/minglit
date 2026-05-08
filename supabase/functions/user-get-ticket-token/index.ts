@@ -1,19 +1,15 @@
 // user-get-ticket-token/index.ts — Issue a signed ticket token for QR display
 // Fix #1206: QR screen now fetches token from Edge Function if not in local wallet
 
-import { createServiceClient } from "../_shared/supabase_client.ts";
 import {
-  corsResponse,
   errorResponse,
   successResponse,
 } from "../_shared/response_utils.ts";
-import { requireAuth } from "../_shared/auth_utils.ts";
 import { parseJsonBody } from "../_shared/request_utils.ts";
-import { initSentry, log, withHandler } from "../_shared/logger.ts";
+import { log } from "../_shared/logger.ts";
+import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
 
 const FN = "user-get-ticket-token";
-
-initSentry();
 
 function base64UrlEncode(bytes: Uint8Array): string {
   let binary = "";
@@ -23,12 +19,8 @@ function base64UrlEncode(bytes: Uint8Array): string {
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
 }
 
-Deno.serve(withHandler(async (req) => {
-  if (req.method === "OPTIONS") return corsResponse();
-
-  const auth = await requireAuth(req);
-  if (auth instanceof Response) return auth;
-  const authUid = auth;
+export const handler = async (req: Request, { auth, supabase }: EFContext): Promise<Response> => {
+  const { userId: authUid } = auth as { type: "user"; userId: string };
 
   const body = await parseJsonBody(req);
   if (body instanceof Response) return body;
@@ -38,8 +30,6 @@ Deno.serve(withHandler(async (req) => {
   if (!ticket_id) {
     return errorResponse("Missing required parameter: ticket_id", 400);
   }
-
-  const supabase = createServiceClient();
 
   // Verify the user has a paid/approved application for this ticket
   const { data: application, error: appErr } = await supabase
@@ -130,4 +120,6 @@ Deno.serve(withHandler(async (req) => {
     signature,
     expires_at: expiresAt.toISOString(),
   });
-}));
+};
+
+minglitEdgeFunction(handler);

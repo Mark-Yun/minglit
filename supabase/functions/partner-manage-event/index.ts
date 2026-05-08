@@ -1,19 +1,15 @@
 // partner-manage-event — Event/ticket/entry-group CRUD for partners
 // Issue #317: RLS write strategy 전환 — 이벤트/티켓 CRUD
+// Fix #2185 (Batch 6): migrate to minglitEdgeFunction wrapper — auth via manifest (user caller)
 
-import { createServiceClient } from "../_shared/supabase_client.ts";
+import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
-  corsResponse,
   errorResponse,
   successResponse,
 } from "../_shared/response_utils.ts";
-import { requireAuth } from "../_shared/auth_utils.ts";
 import { requirePartnerPermission } from "../_shared/partner_permissions.ts";
 import { parseAction } from "../_shared/request_utils.ts";
-import { initSentry, withHandler } from "../_shared/logger.ts";
-
-initSentry();
 
 const VALID_EVENT_STATUSES = ["scheduled", "cancelled", "completed"];
 const _VALID_GENDERS = ["male", "female"];
@@ -40,34 +36,29 @@ const TICKET_UPDATE_FIELDS = [
   "quantity",
 ] as const;
 
-Deno.serve(withHandler(async (req: Request): Promise<Response> => {
-  if (req.method === "OPTIONS") return corsResponse();
+export const handler = async (req: Request, ctx: EFContext): Promise<Response> => {
   if (req.method !== "POST") return errorResponse("Method not allowed", 405);
 
+  const { supabase } = ctx;
+  if (ctx.auth.type !== "user") return errorResponse("Unexpected auth type", 500);
+  const userId = ctx.auth.userId;
+
   try {
-    return await handleRequest(req);
+    return await handleRequest(supabase, userId, req);
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     return errorResponse(message, 500);
   }
-}));
+};
 
-async function handleRequest(req: Request): Promise<Response> {
-  // 1. Environment check (handled by createServiceClient)
+minglitEdgeFunction(handler);
 
-  // 2. Auth
-  const auth = await requireAuth(req);
-  if (auth instanceof Response) return auth;
-  const userId = auth;
-
-  // 3. Parse body
+async function handleRequest(supabase: SupabaseClient, userId: string, req: Request): Promise<Response> {
+  // Parse body
   const result = await parseAction(req);
   if (result instanceof Response) return result;
   const { action, body } = result;
   if (!action) return errorResponse("Missing action", 400);
-
-  // 4. Supabase client (service role)
-  const supabase = createServiceClient();
 
   // ─── create ───
   if (action === "create") {

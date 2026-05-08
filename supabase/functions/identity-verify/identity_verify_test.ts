@@ -19,6 +19,8 @@ Deno.test("identity-verify - happy path updates profile", async () => {
       PORTONE_V2_API_KEY: "test-key",
       SUPABASE_URL: "https://supabase.test",
       SUPABASE_SERVICE_ROLE_KEY: "service-key",
+      ENVIRONMENT: "dev",
+      MINGLIT_EF_TEST_FN_NAME: "identity-verify",
     },
     async () => {
       const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
@@ -62,6 +64,8 @@ Deno.test("identity-verify - missing id returns 400", async () => {
       PORTONE_V2_API_KEY: "test-key",
       SUPABASE_URL: "https://supabase.test",
       SUPABASE_SERVICE_ROLE_KEY: "service-key",
+      ENVIRONMENT: "dev",
+      MINGLIT_EF_TEST_FN_NAME: "identity-verify",
     },
     async () => {
       const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
@@ -87,6 +91,8 @@ Deno.test("identity-verify - external API error returns status", async () => {
       PORTONE_V2_API_KEY: "test-key",
       SUPABASE_URL: "https://supabase.test",
       SUPABASE_SERVICE_ROLE_KEY: "service-key",
+      ENVIRONMENT: "dev",
+      MINGLIT_EF_TEST_FN_NAME: "identity-verify",
     },
     async () => {
       const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
@@ -120,6 +126,8 @@ Deno.test("identity-verify - unauthorized returns 401", async () => {
       PORTONE_V2_API_KEY: "test-key",
       SUPABASE_URL: "https://supabase.test",
       SUPABASE_SERVICE_ROLE_KEY: "service-key",
+      ENVIRONMENT: "dev",
+      MINGLIT_EF_TEST_FN_NAME: "identity-verify",
     },
     async () => {
       const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
@@ -156,6 +164,8 @@ Deno.test("identity-verify - malformed JSON returns 400", async () => {
       PORTONE_V2_API_KEY: "test-key",
       SUPABASE_URL: "https://supabase.test",
       SUPABASE_SERVICE_ROLE_KEY: "service-key",
+      ENVIRONMENT: "dev",
+      MINGLIT_EF_TEST_FN_NAME: "identity-verify",
     },
     async () => {
       const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));

@@ -450,6 +450,29 @@ jobs:
           fi
           echo "✅ All Edge Functions have deno.json"
         working-directory: supabase
+      - name: Lint #4 — no legacy auth helpers (Fix #2184)
+        run: |
+          violations=()
+          for f in functions/*/index.ts; do
+            ef=$(basename "$(dirname "$f")")
+            # Exclude comment-only lines (// ...) before checking
+            if grep -v '^\s*//' "$f" | grep -qE 'from.*_shared/auth_utils|withHandler\b|withSentry\b|withSentryHandler\b|requireServiceRole\b|requireAuth\b|optionalAuth\b'; then
+              violations+=("$ef")
+            fi
+          done
+          if [ ${#violations[@]} -gt 0 ]; then
+            echo "❌ Legacy auth helpers found in the following Edge Functions:"
+            for ef in "${violations[@]}"; do
+              echo "  - $ef"
+              grep -v '^\s*//' "functions/${ef}/index.ts" | grep -nE 'from.*_shared/auth_utils|withHandler\b|withSentry\b|withSentryHandler\b|requireServiceRole\b|requireAuth\b|optionalAuth\b' || true
+            done
+            echo ""
+            echo "Use minglitEdgeFunction from _shared/edge_function.ts instead."
+            echo "See docs/architecture/edge-function-auth.md for migration guide."
+            exit 1
+          fi
+          echo "✅ No legacy auth helpers found"
+        working-directory: supabase
       - name: Test (edge functions)
         run: deno test --allow-all functions/
         working-directory: supabase
@@ -532,7 +555,10 @@ jobs:
           echo "✅ CI jobs passed"
 
           # 2. Wait for CodeRabbit review (PR only, skip for dependabot)
-          if [ "${{ github.event_name }}" = "pull_request" ] && [ "${{ github.actor }}" != "dependabot[bot]" ]; then
+          # Fix #2149: check PR author (user.login), not github.actor — when a human
+          # updates a dependabot branch (merge/rebase), actor becomes that human but
+          # CodeRabbit still doesn't review dependabot PRs → 30-minute timeout.
+          if [ "${{ github.event_name }}" = "pull_request" ] && [ "${{ github.event.pull_request.user.login }}" != "dependabot[bot]" ]; then
             SHA="${{ github.event.pull_request.head.sha }}"
             echo ""
             echo "Waiting for CodeRabbit review on $SHA ..."

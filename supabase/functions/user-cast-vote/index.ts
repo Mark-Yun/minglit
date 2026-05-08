@@ -1,26 +1,15 @@
 // user-cast-vote — Cast a matching vote for a candidate in an event
 // Replaces direct client writes to match_votes (RLS write → EF)
 
-import { createServiceClient } from "../_shared/supabase_client.ts";
 import {
-  corsResponse,
   errorResponse,
   successResponse,
 } from "../_shared/response_utils.ts";
-import { requireAuth } from "../_shared/auth_utils.ts";
 import { parseJsonBody } from "../_shared/request_utils.ts";
-import { initSentry, withHandler } from "../_shared/logger.ts";
+import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
 
-initSentry();
-
-Deno.serve(withHandler(async (req: Request): Promise<Response> => {
-  if (req.method === "OPTIONS") return corsResponse();
-
-  const auth = await requireAuth(req);
-  if (auth instanceof Response) return auth;
-  const voterId = auth;
-
-  const supabase = createServiceClient();
+export const handler = async (req: Request, { auth, supabase }: EFContext): Promise<Response> => {
+  const { userId: voterId } = auth as { type: "user"; userId: string };
 
   const body = await parseJsonBody(req);
   if (body instanceof Response) return body;
@@ -164,4 +153,6 @@ Deno.serve(withHandler(async (req: Request): Promise<Response> => {
   }
 
   return successResponse({ success: true });
-}));
+};
+
+minglitEdgeFunction(handler);

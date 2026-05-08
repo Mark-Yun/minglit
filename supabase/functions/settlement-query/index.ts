@@ -1,19 +1,14 @@
 import { getPortoneClient } from "../_shared/portone_client.ts";
-import { successResponse, errorResponse, corsResponse } from "../_shared/response_utils.ts";
-import { requireAuth } from "../_shared/auth_utils.ts";
+import { successResponse, errorResponse } from "../_shared/response_utils.ts";
 import { parseJsonBody } from "../_shared/request_utils.ts";
-import { initSentry, log, withHandler } from "../_shared/logger.ts";
+import { log } from "../_shared/logger.ts";
+import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
 
 const FN = "settlement-query";
 
+export const handler = async (req: Request, { auth }: EFContext): Promise<Response> => {
+  const { userId: _userId } = auth as { type: "user"; userId: string };
 
-initSentry();
-
-Deno.serve(withHandler(async (req) => {
-  if (req.method === "OPTIONS") return corsResponse();
-
-  const auth = await requireAuth(req);
-  if (auth instanceof Response) return auth;
   try {
     const body = await parseJsonBody(req);
     if (body instanceof Response) return body;
@@ -82,4 +77,6 @@ Deno.serve(withHandler(async (req) => {
     });
     return errorResponse(message, 500);
   }
-}));
+};
+
+minglitEdgeFunction(handler);

@@ -5,12 +5,13 @@ import {
   jsonRequest,
   jsonResponse,
   readJson,
-  withNoIntervals,
   withEnv,
   withMockedFetch,
 } from "../_test_utils/mock_http.ts";
 
 const ENV = {
+  ENVIRONMENT: "dev",
+  MINGLIT_EF_TEST_FN_NAME: "user-manage-notification",
   SUPABASE_URL: "https://supabase.test",
   SUPABASE_SERVICE_ROLE_KEY: "service-key",
 };
@@ -40,18 +41,16 @@ Deno.test({
       ]);
 
       await withMockedFetch(fetchMock, async () => {
-        await withNoIntervals(async () => {
-          const request = jsonRequest(
-            "http://localhost",
-            { action: "mark_read", notification_id: "notif-1" },
-            { headers: AUTH_HEADER },
-          );
-          const response = await handler(request);
-          const payload = await readJson(response);
+        const request = jsonRequest(
+          "http://localhost",
+          { action: "mark_read", notification_id: "notif-1" },
+          { headers: AUTH_HEADER },
+        );
+        const response = await handler(request);
+        const payload = await readJson(response);
 
-          assertEquals(response.status, 200);
-          assertEquals(payload.success, true);
-        });
+        assertEquals(response.status, 200);
+        assertEquals(payload.success, true);
       });
     });
   },
@@ -72,18 +71,16 @@ Deno.test({
       ]);
 
       await withMockedFetch(fetchMock, async () => {
-        await withNoIntervals(async () => {
-          const request = jsonRequest(
-            "http://localhost",
-            { action: "mark_read", notification_id: "notif-999" },
-            { headers: AUTH_HEADER },
-          );
-          const response = await handler(request);
-          const payload = await readJson(response);
+        const request = jsonRequest(
+          "http://localhost",
+          { action: "mark_read", notification_id: "notif-999" },
+          { headers: AUTH_HEADER },
+        );
+        const response = await handler(request);
+        const payload = await readJson(response);
 
-          assertEquals(response.status, 404);
-          assertEquals(payload.error, "Notification not found");
-        });
+        assertEquals(response.status, 404);
+        assertEquals(payload.error, "Notification not found");
       });
     });
   },
@@ -97,18 +94,16 @@ Deno.test({
       const { fetchMock } = createFetchMock([mockGetUser()]);
 
       await withMockedFetch(fetchMock, async () => {
-        await withNoIntervals(async () => {
-          const request = jsonRequest(
-            "http://localhost",
-            { action: "mark_read" },
-            { headers: AUTH_HEADER },
-          );
-          const response = await handler(request);
-          const payload = await readJson(response);
+        const request = jsonRequest(
+          "http://localhost",
+          { action: "mark_read" },
+          { headers: AUTH_HEADER },
+        );
+        const response = await handler(request);
+        const payload = await readJson(response);
 
-          assertEquals(response.status, 400);
-          assertEquals(payload.error, "Missing required parameter: notification_id");
-        });
+        assertEquals(response.status, 400);
+        assertEquals(payload.error, "Missing required parameter: notification_id");
       });
     });
   },
@@ -129,19 +124,17 @@ Deno.test({
       ]);
 
       await withMockedFetch(fetchMock, async () => {
-        await withNoIntervals(async () => {
-          const request = jsonRequest(
-            "http://localhost",
-            { action: "mark_all_read" },
-            { headers: AUTH_HEADER },
-          );
-          const response = await handler(request);
-          const payload = await readJson(response);
+        const request = jsonRequest(
+          "http://localhost",
+          { action: "mark_all_read" },
+          { headers: AUTH_HEADER },
+        );
+        const response = await handler(request);
+        const payload = await readJson(response);
 
-          assertEquals(response.status, 200);
-          assertEquals(payload.success, true);
-          assertEquals(payload.count, 2);
-        });
+        assertEquals(response.status, 200);
+        assertEquals(payload.success, true);
+        assertEquals(payload.count, 2);
       });
     });
   },
@@ -162,19 +155,17 @@ Deno.test({
       ]);
 
       await withMockedFetch(fetchMock, async () => {
-        await withNoIntervals(async () => {
-          const request = jsonRequest(
-            "http://localhost",
-            { action: "mark_all_read" },
-            { headers: AUTH_HEADER },
-          );
-          const response = await handler(request);
-          const payload = await readJson(response);
+        const request = jsonRequest(
+          "http://localhost",
+          { action: "mark_all_read" },
+          { headers: AUTH_HEADER },
+        );
+        const response = await handler(request);
+        const payload = await readJson(response);
 
-          assertEquals(response.status, 200);
-          assertEquals(payload.success, true);
-          assertEquals(payload.count, 0);
-        });
+        assertEquals(response.status, 200);
+        assertEquals(payload.success, true);
+        assertEquals(payload.count, 0);
       });
     });
   },
@@ -195,18 +186,16 @@ Deno.test({
       ]);
 
       await withMockedFetch(fetchMock, async () => {
-        await withNoIntervals(async () => {
-          const request = jsonRequest(
-            "http://localhost",
-            { action: "delete", notification_id: "notif-1" },
-            { headers: AUTH_HEADER },
-          );
-          const response = await handler(request);
-          const payload = await readJson(response);
+        const request = jsonRequest(
+          "http://localhost",
+          { action: "delete", notification_id: "notif-1" },
+          { headers: AUTH_HEADER },
+        );
+        const response = await handler(request);
+        const payload = await readJson(response);
 
-          assertEquals(response.status, 200);
-          assertEquals(payload.success, true);
-        });
+        assertEquals(response.status, 200);
+        assertEquals(payload.success, true);
       });
     });
   },
@@ -227,18 +216,16 @@ Deno.test({
       ]);
 
       await withMockedFetch(fetchMock, async () => {
-        await withNoIntervals(async () => {
-          const request = jsonRequest(
-            "http://localhost",
-            { action: "delete", notification_id: "notif-999" },
-            { headers: AUTH_HEADER },
-          );
-          const response = await handler(request);
-          const payload = await readJson(response);
+        const request = jsonRequest(
+          "http://localhost",
+          { action: "delete", notification_id: "notif-999" },
+          { headers: AUTH_HEADER },
+        );
+        const response = await handler(request);
+        const payload = await readJson(response);
 
-          assertEquals(response.status, 404);
-          assertEquals(payload.error, "Notification not found");
-        });
+        assertEquals(response.status, 404);
+        assertEquals(payload.error, "Notification not found");
       });
     });
   },
@@ -252,17 +239,15 @@ Deno.test({
       const { fetchMock } = createFetchMock([]);
 
       await withMockedFetch(fetchMock, async () => {
-        await withNoIntervals(async () => {
-          const request = jsonRequest("http://localhost", {
-            action: "mark_read",
-            notification_id: "notif-1",
-          });
-          const response = await handler(request);
-          const payload = await readJson(response);
-
-          assertEquals(response.status, 401);
-          assertEquals(typeof payload.error, "string");
+        const request = jsonRequest("http://localhost", {
+          action: "mark_read",
+          notification_id: "notif-1",
         });
+        const response = await handler(request);
+        const payload = await readJson(response);
+
+        assertEquals(response.status, 401);
+        assertEquals(typeof payload.error, "string");
       });
     });
   },
@@ -276,38 +261,16 @@ Deno.test({
       const { fetchMock } = createFetchMock([mockGetUser()]);
 
       await withMockedFetch(fetchMock, async () => {
-        await withNoIntervals(async () => {
-          const request = jsonRequest(
-            "http://localhost",
-            { action: "invalid_action" },
-            { headers: AUTH_HEADER },
-          );
-          const response = await handler(request);
-          const payload = await readJson(response);
+        const request = jsonRequest(
+          "http://localhost",
+          { action: "invalid_action" },
+          { headers: AUTH_HEADER },
+        );
+        const response = await handler(request);
+        const payload = await readJson(response);
 
-          assertEquals(response.status, 400);
-          assertEquals(payload.error, "Unknown action: invalid_action");
-        });
-      });
-    });
-  },
-});
-
-Deno.test({
-  name: "user-manage-notification - OPTIONS returns CORS response",
-  fn: async () => {
-    await withEnv(ENV, async () => {
-      const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-      const { fetchMock } = createFetchMock([]);
-
-      await withMockedFetch(fetchMock, async () => {
-        await withNoIntervals(async () => {
-          const request = new Request("http://localhost", { method: "OPTIONS" });
-          const response = await handler(request);
-
-          assertEquals(response.status, 200);
-          assertEquals(response.headers.get("Access-Control-Allow-Origin"), "*");
-        });
+        assertEquals(response.status, 400);
+        assertEquals(payload.error, "Unknown action: invalid_action");
       });
     });
   },

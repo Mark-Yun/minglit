@@ -35,6 +35,30 @@ abstract class MinglitException implements Exception {
       );
     }
 
+    // Fix #2318: FunctionException with validation_failed must show the field-
+    // level error message from the EF, not fall through to the generic system
+    // error. The functions_client throws for non-2xx responses, so the
+    // repository's response.status check is never reached — map it here.
+    if (error is FunctionException) {
+      final details = error.details;
+      if (details is Map && details['error'] == 'validation_failed') {
+        final rawDetails = details['details'];
+        final fieldErrors = rawDetails is List
+            ? rawDetails.whereType<Map<String, dynamic>>().toList()
+            : null;
+        final firstMessage = fieldErrors?.firstOrNull?['message'] as String?;
+        return MinglitUserException(
+          firstMessage ?? '입력 정보를 확인해주세요',
+          details: fieldErrors,
+        );
+      }
+      return MinglitSystemException(
+        'Function error: ${error.status} — ${error.reasonPhrase}',
+        originalError: error,
+        stackTrace: stackTrace,
+      );
+    }
+
     if (error is SocketException || error is TimeoutException) {
       return MinglitSystemException(
         'Network error',
