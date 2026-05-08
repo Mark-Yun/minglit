@@ -64,6 +64,8 @@ Deno.test({
   try {
     await withEnv(
       {
+        ENVIRONMENT: "dev",
+        MINGLIT_EF_TEST_FN_NAME: "ai-embed",
         SUPABASE_URL: "https://supabase.test",
         SUPABASE_SERVICE_ROLE_KEY: "service-key",
         OPENAI_API_KEY: "openai-key",
@@ -129,6 +131,8 @@ Deno.test({
   try {
     await withEnv(
       {
+        ENVIRONMENT: "dev",
+        MINGLIT_EF_TEST_FN_NAME: "ai-embed",
         SUPABASE_URL: "https://supabase.test",
         SUPABASE_SERVICE_ROLE_KEY: "service-key",
         OPENAI_API_KEY: "openai-key",
@@ -178,6 +182,8 @@ Deno.test({
   try {
     await withEnv(
       {
+        ENVIRONMENT: "dev",
+        MINGLIT_EF_TEST_FN_NAME: "ai-embed",
         SUPABASE_URL: "https://supabase.test",
         SUPABASE_SERVICE_ROLE_KEY: "service-key",
         OPENAI_API_KEY: "openai-key",
@@ -208,8 +214,10 @@ Deno.test({
 
   await withEnv(
     {
+      ENVIRONMENT: "dev",
+      MINGLIT_EF_TEST_FN_NAME: "ai-embed",
       SUPABASE_URL: undefined,
-      SUPABASE_SERVICE_ROLE_KEY: undefined,
+      SUPABASE_SERVICE_ROLE_KEY: "service-key",
       OPENAI_API_KEY: undefined,
     },
     async () => {
@@ -257,6 +265,8 @@ Deno.test({
   try {
     await withEnv(
       {
+        ENVIRONMENT: "dev",
+        MINGLIT_EF_TEST_FN_NAME: "ai-embed",
         SUPABASE_URL: "https://supabase.test",
         SUPABASE_SERVICE_ROLE_KEY: "service-key",
         OPENAI_API_KEY: "openai-key",
@@ -315,6 +325,8 @@ Deno.test({
   try {
     await withEnv(
       {
+        ENVIRONMENT: "dev",
+        MINGLIT_EF_TEST_FN_NAME: "ai-embed",
         SUPABASE_URL: "https://supabase.test",
         SUPABASE_SERVICE_ROLE_KEY: "service-key",
         OPENAI_API_KEY: "openai-key",
@@ -373,6 +385,8 @@ Deno.test({
   try {
     await withEnv(
       {
+        ENVIRONMENT: "dev",
+        MINGLIT_EF_TEST_FN_NAME: "ai-embed",
         SUPABASE_URL: "https://supabase.test",
         SUPABASE_SERVICE_ROLE_KEY: "service-key",
         OPENAI_API_KEY: "openai-key",
@@ -487,6 +501,8 @@ Deno.test({
   try {
     await withEnv(
       {
+        ENVIRONMENT: "dev",
+        MINGLIT_EF_TEST_FN_NAME: "ai-embed",
         SUPABASE_URL: "https://supabase.test",
         SUPABASE_SERVICE_ROLE_KEY: "service-key",
         OPENAI_API_KEY: "openai-key",
@@ -544,6 +560,8 @@ Deno.test({
   try {
     await withEnv(
       {
+        ENVIRONMENT: "dev",
+        MINGLIT_EF_TEST_FN_NAME: "ai-embed",
         SUPABASE_URL: "https://supabase.test",
         SUPABASE_SERVICE_ROLE_KEY: "service-key",
         OPENAI_API_KEY: "openai-key",
@@ -614,6 +632,8 @@ Deno.test({
   try {
     await withEnv(
       {
+        ENVIRONMENT: "dev",
+        MINGLIT_EF_TEST_FN_NAME: "ai-embed",
         SUPABASE_URL: "https://supabase.test",
         SUPABASE_SERVICE_ROLE_KEY: "service-key",
         OPENAI_API_KEY: "openai-key",

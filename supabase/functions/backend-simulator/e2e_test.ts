@@ -256,43 +256,9 @@ function createBroadMock() {
   ]);
 }
 
-Deno.test({
-  name: "backend-simulator - blocks in production",
-  fn: async () => {
-    const h = await getHandler();
-
-    await withEnv({ ENVIRONMENT: "production" }, async () => {
-      const response = await h(new Request("http://localhost", { method: "POST" }));
-      assertEquals(response.status, 403);
-    });
-  },
-});
-
-// Fix #1596: fail-safe regression tests — any non-"dev" value must block.
-Deno.test({
-  name: "backend-simulator - blocks when ENVIRONMENT is unset",
-  fn: async () => {
-    const h = await getHandler();
-
-    // undefined → withEnv deletes the key, simulating an unset secret
-    await withEnv({ ENVIRONMENT: undefined }, async () => {
-      const response = await h(new Request("http://localhost", { method: "POST" }));
-      assertEquals(response.status, 403);
-    });
-  },
-});
-
-Deno.test({
-  name: "backend-simulator - blocks when ENVIRONMENT is unknown value",
-  fn: async () => {
-    const h = await getHandler();
-
-    await withEnv({ ENVIRONMENT: "staging" }, async () => {
-      const response = await h(new Request("http://localhost", { method: "POST" }));
-      assertEquals(response.status, 403);
-    });
-  },
-});
+// Fix #2185 (Batch 10): env-gate (dev-only) is now enforced by minglitEdgeFunction wrapper
+// via auth-manifest envs: ["local", "development", "dev"]. Wrapper tests cover this behavior;
+// isProduction() guard removed from this file.
 
 Deno.test({
   name: "backend-simulator - full run returns success structure",
@@ -303,6 +269,7 @@ Deno.test({
     await withEnv(
       {
         ENVIRONMENT: "dev",
+        MINGLIT_EF_TEST_FN_NAME: "backend-simulator",
         SUPABASE_URL: "http://localhost:54321",
         SUPABASE_SERVICE_ROLE_KEY: "test-service-role-key",
         SUPABASE_ANON_KEY: "test-anon-key",
@@ -341,6 +308,7 @@ Deno.test({
     await withEnv(
       {
         ENVIRONMENT: "dev",
+        MINGLIT_EF_TEST_FN_NAME: "backend-simulator",
         SUPABASE_URL: "http://localhost:54321",
         SUPABASE_SERVICE_ROLE_KEY: "test-service-role-key",
         SUPABASE_ANON_KEY: "test-anon-key",
@@ -373,6 +341,7 @@ Deno.test({
     await withEnv(
       {
         ENVIRONMENT: "dev",
+        MINGLIT_EF_TEST_FN_NAME: "backend-simulator",
         SUPABASE_URL: "http://localhost:54321",
         SUPABASE_SERVICE_ROLE_KEY: "test-service-role-key",
         SUPABASE_ANON_KEY: "test-anon-key",
@@ -405,6 +374,7 @@ Deno.test({
     await withEnv(
       {
         ENVIRONMENT: "dev",
+        MINGLIT_EF_TEST_FN_NAME: "backend-simulator",
         SUPABASE_URL: "http://localhost:54321",
         SUPABASE_SERVICE_ROLE_KEY: "test-service-role-key",
         SUPABASE_ANON_KEY: "test-anon-key",
@@ -511,6 +481,7 @@ Deno.test({
     await withEnv(
       {
         ENVIRONMENT: "dev",
+        MINGLIT_EF_TEST_FN_NAME: "backend-simulator",
         SUPABASE_URL: "http://localhost:54321",
         SUPABASE_SERVICE_ROLE_KEY: "test-service-role-key",
         SUPABASE_ANON_KEY: "test-anon-key",
@@ -619,6 +590,7 @@ Deno.test({
     await withEnv(
       {
         ENVIRONMENT: "dev",
+        MINGLIT_EF_TEST_FN_NAME: "backend-simulator",
         SUPABASE_URL: "http://localhost:54321",
         SUPABASE_SERVICE_ROLE_KEY: "test-service-role-key",
         SUPABASE_ANON_KEY: "test-anon-key",
@@ -673,6 +645,7 @@ Deno.test({
     await withEnv(
       {
         ENVIRONMENT: "dev",
+        MINGLIT_EF_TEST_FN_NAME: "backend-simulator",
         SUPABASE_URL: "http://localhost:54321",
         SUPABASE_SERVICE_ROLE_KEY: "test-service-role-key",
         SUPABASE_ANON_KEY: "test-anon-key",

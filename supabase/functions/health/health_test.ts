@@ -20,6 +20,8 @@ Deno.test({
     ]);
 
     await withEnv({
+      ENVIRONMENT: "dev",
+      MINGLIT_EF_TEST_FN_NAME: "health",
       SUPABASE_URL: "http://localhost:54321",
       SUPABASE_ANON_KEY: "test-anon-key",
       SUPABASE_SERVICE_ROLE_KEY: "test-service-key",
@@ -50,6 +52,8 @@ Deno.test({
     ]);
 
     await withEnv({
+      ENVIRONMENT: "dev",
+      MINGLIT_EF_TEST_FN_NAME: "health",
       SUPABASE_URL: "http://localhost:54321",
       SUPABASE_ANON_KEY: "test-anon-key",
       SUPABASE_SERVICE_ROLE_KEY: "test-service-key",
@@ -79,6 +83,8 @@ Deno.test({
     ]);
 
     await withEnv({
+      ENVIRONMENT: "dev",
+      MINGLIT_EF_TEST_FN_NAME: "health",
       SUPABASE_URL: "http://localhost:54321",
       SUPABASE_ANON_KEY: "test-anon-key",
       SUPABASE_SERVICE_ROLE_KEY: "test-service-key",
@@ -110,6 +116,8 @@ Deno.test({
     ]);
 
     await withEnv({
+      ENVIRONMENT: "dev",
+      MINGLIT_EF_TEST_FN_NAME: "health",
       SUPABASE_URL: "http://localhost:54321",
       SUPABASE_ANON_KEY: "test-anon-key",
       SUPABASE_SERVICE_ROLE_KEY: "test-service-key",
@@ -145,6 +153,8 @@ Deno.test({
     ]);
 
     await withEnv({
+      ENVIRONMENT: "dev",
+      MINGLIT_EF_TEST_FN_NAME: "health",
       SUPABASE_URL: "http://localhost:54321",
       SUPABASE_ANON_KEY: "test-anon-key",
       SUPABASE_SERVICE_ROLE_KEY: "test-service-key",
@@ -171,6 +181,8 @@ Deno.test({
     ]);
 
     await withEnv({
+      ENVIRONMENT: "dev",
+      MINGLIT_EF_TEST_FN_NAME: "health",
       SUPABASE_URL: "http://localhost:54321",
       SUPABASE_ANON_KEY: "test-anon-key",
       SUPABASE_SERVICE_ROLE_KEY: "test-service-key",
@@ -200,6 +212,8 @@ Deno.test({
     ]);
 
     await withEnv({
+      ENVIRONMENT: "dev",
+      MINGLIT_EF_TEST_FN_NAME: "health",
       SUPABASE_URL: "http://localhost:54321",
       SUPABASE_ANON_KEY: "test-anon-key",
       SUPABASE_SERVICE_ROLE_KEY: "test-service-key",
