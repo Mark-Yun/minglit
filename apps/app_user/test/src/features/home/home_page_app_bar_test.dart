@@ -254,6 +254,62 @@ void main() {
       });
     });
 
+    // Fix #2339: 검색 버튼 — 접근성 라벨 + 내비게이션 회귀 가드
+    // QA automation이 좌표 대신 시맨틱(tooltip)으로 버튼을 찾을 수 있는지 검증한다.
+    group('Search button navigation — #2339 regression guard', () {
+      testWidgets('비로그인 상태: 검색 버튼 tooltip이 존재한다', (tester) async {
+        await tester.pumpWidget(
+          createTestWidget(
+            overrides: [currentUserProvider.overrideWith((_) => null)],
+          ),
+        );
+        await tester.pump();
+
+        expect(find.byTooltip('검색'), findsOneWidget);
+      });
+
+      testWidgets('로그인 상태: 검색 버튼 tooltip이 존재한다', (tester) async {
+        final mockUser = _createMockUser(
+          id: 'user123',
+          email: 'test@example.com',
+        );
+
+        await tester.pumpWidget(
+          createTestWidget(
+            overrides: [currentUserProvider.overrideWith((_) => mockUser)],
+          ),
+        );
+        await tester.pump();
+
+        expect(find.byTooltip('검색'), findsOneWidget);
+      });
+
+      testWidgets('비로그인 상태: 검색 버튼 탭 시 /search push', (tester) async {
+        final mockRouter = MockGoRouter();
+        when(() => mockRouter.push(any())).thenAnswer((_) async => null);
+        when(
+          () => mockRouter.go(any(), extra: any(named: 'extra')),
+        ).thenReturn(null);
+
+        await tester.pumpWidget(
+          createTestWidget(
+            overrides: [
+              currentUserProvider.overrideWith((_) => null),
+              goRouterProvider.overrideWithValue(mockRouter),
+            ],
+          ),
+        );
+        await tester.pump();
+
+        await tester.tap(find.byTooltip('검색'));
+        await tester.pump();
+
+        verify(
+          () => mockRouter.push(const SearchRoute().location),
+        ).called(1);
+      });
+    });
+
     // Fix #2107: 마이페이지 버튼 — 접근성 라벨 + 내비게이션 회귀 가드
     // QA automation이 좌표 대신 시맨틱(tooltip)으로 버튼을 찾을 수 있는지 검증한다.
     group('Profile button navigation — #2107 regression guard', () {

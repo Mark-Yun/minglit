@@ -209,10 +209,11 @@ class _DevTriggerLogoState extends State<_DevTriggerLogo> {
   int _tapCount = 0;
   DateTime? _lastTap;
 
+  // Fix #2340: reset threshold 2s → 3s — ADB 자동화 탭 간격(~2s)이 2s 경계에서
+  // inSeconds 정수 절사에 의해 reset되는 문제 방지.
   void _handleTap() {
     final now = DateTime.now();
-    // Reset if more than 2 seconds since last tap.
-    if (_lastTap != null && now.difference(_lastTap!).inSeconds >= 2) {
+    if (_lastTap != null && now.difference(_lastTap!).inSeconds >= 3) {
       _tapCount = 0;
     }
     _lastTap = now;
