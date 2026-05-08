@@ -223,7 +223,7 @@ Deno.test({
     async () => {
       await withMockedFetch(fetchMock, async () => {
         await withNoIntervals(async () => {
-          const response = await handler(new Request("http://localhost"));
+          const response = await handler(makeRequest({}));
           const payload = await readJson(response);
 
           assertEquals(response.status, 500);
@@ -417,6 +417,8 @@ Deno.test({
 
   await withEnv(
     {
+      ENVIRONMENT: "dev",
+      MINGLIT_EF_TEST_FN_NAME: "ai-embed",
       SUPABASE_URL: "https://supabase.test",
       SUPABASE_SERVICE_ROLE_KEY: "service-key",
       OPENAI_API_KEY: "openai-key",
@@ -441,6 +443,8 @@ Deno.test({
 
   await withEnv(
     {
+      ENVIRONMENT: "dev",
+      MINGLIT_EF_TEST_FN_NAME: "ai-embed",
       SUPABASE_URL: "https://supabase.test",
       SUPABASE_SERVICE_ROLE_KEY: "service-key",
       OPENAI_API_KEY: "openai-key",

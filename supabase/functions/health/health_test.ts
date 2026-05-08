@@ -135,8 +135,16 @@ Deno.test({
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
-    const response = await handler(new Request("http://localhost", { method: "POST" }));
-    assertEquals(response.status, 405);
+    await withEnv({
+      ENVIRONMENT: "dev",
+      MINGLIT_EF_TEST_FN_NAME: "health",
+      SUPABASE_URL: "http://localhost:54321",
+      SUPABASE_ANON_KEY: "test-anon-key",
+      SUPABASE_SERVICE_ROLE_KEY: "test-service-key",
+    }, async () => {
+      const response = await handler(new Request("http://localhost", { method: "POST" }));
+      assertEquals(response.status, 405);
+    });
   },
 });
 
