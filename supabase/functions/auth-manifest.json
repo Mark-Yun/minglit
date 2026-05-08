@@ -205,6 +205,31 @@
       "callers": ["user"],
       "envs": ["dev", "production"],
       "description": "유저 계정 삭제 요청 (7일 유예 기간, 활성 예약/미정산 잔액 선차단)"
+    },
+    "partner-manage-verification": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "파트너 인증 항목 관리 (KYC 카테고리 정의)"
+    },
+    "partner-review-submission": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "파트너 인증 심사 (승인/거부)"
+    },
+    "partner-sync": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "파트너 정보 PortOne 동기화"
+    },
+    "recurrence-rules": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "반복 이벤트 규칙 생성/수정/일시정지/재개/취소"
+    },
+    "payment-cancel": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "결제 취소 및 환불 처리"
     }
   }
 }

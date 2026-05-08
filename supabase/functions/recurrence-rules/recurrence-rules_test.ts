@@ -19,6 +19,8 @@ const TEST_RULE_ID = "rule-001";
 const ENV = {
   SUPABASE_URL: "http://localhost:54321",
   SUPABASE_SERVICE_ROLE_KEY: "test-service-key",
+  ENVIRONMENT: "dev",
+  MINGLIT_EF_TEST_FN_NAME: "recurrence-rules",
 };
 
 // ─── Route helpers ───
@@ -189,20 +191,24 @@ function insertTicketsRoute(): FetchRoute {
 Deno.test({
   name: "OPTIONS returns CORS preflight",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-    const req = new Request("http://localhost", { method: "OPTIONS" });
-    const res = await handler(req);
-    assertEquals(res.status, 200);
+    await withEnv(ENV, async () => {
+      const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+      const req = new Request("http://localhost", { method: "OPTIONS" });
+      const res = await handler(req);
+      assertEquals(res.status, 200);
+    });
   },
 });
 
 Deno.test({
   name: "GET returns 405",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-    const req = new Request("http://localhost", { method: "GET" });
-    const res = await handler(req);
-    assertEquals(res.status, 405);
+    await withEnv(ENV, async () => {
+      const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+      const req = new Request("http://localhost", { method: "GET" });
+      const res = await handler(req);
+      assertEquals(res.status, 405);
+    });
   },
 });
 
