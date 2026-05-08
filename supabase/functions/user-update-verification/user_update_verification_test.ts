@@ -16,6 +16,8 @@ import { authRoute } from "../_test_utils/fixtures.ts";
 const ENV = {
   SUPABASE_URL: "https://supabase.test",
   SUPABASE_SERVICE_ROLE_KEY: "service-key",
+  ENVIRONMENT: "dev",
+  MINGLIT_EF_TEST_FN_NAME: "user-update-verification",
 };
 
 // --- Route helpers ---

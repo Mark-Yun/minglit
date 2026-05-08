@@ -88,12 +88,13 @@ const COMMON_ENV = {
   PORTONE_V2_API_KEY: "test-v2-key",
   SUPABASE_URL: "https://supabase.test",
   SUPABASE_SERVICE_ROLE_KEY: "service-key",
+  ENVIRONMENT: "dev",
 };
 
 Deno.test("contract: payment-verify response matches schema", async () => {
   const schema = await loadSchema("payment_verify");
 
-  await withEnv(COMMON_ENV, async () => {
+  await withEnv({ ...COMMON_ENV, MINGLIT_EF_TEST_FN_NAME: "payment-verify" }, async () => {
     const handler = await captureServeHandler(
       new URL("../payment-verify/index.ts", import.meta.url),
     );
@@ -275,7 +276,7 @@ Deno.test("contract: settlement-query response matches schema", async () => {
 Deno.test("contract: payment-verify error matches error schema", async () => {
   const schema = await loadSchema("error");
 
-  await withEnv(COMMON_ENV, async () => {
+  await withEnv({ ...COMMON_ENV, MINGLIT_EF_TEST_FN_NAME: "payment-verify" }, async () => {
     const handler = await captureServeHandler(
       new URL("../payment-verify/index.ts", import.meta.url),
     );

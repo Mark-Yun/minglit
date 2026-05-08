@@ -96,6 +96,35 @@
       "callers": ["user"],
       "envs": ["dev", "production"],
       "description": "QR 코드용 서명된 티켓 토큰 발급 (Fix #1206)"
+    },
+    "notification-worker": {
+      "callers": ["system"],
+      "envs": ["dev", "production"],
+      "description": "알림 발송 워커 (cron 트리거)"
+    },
+    "payment-verify": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "결제 완료 검증 (PortOne V1)"
+    },
+    "user-submit-verification": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "유저 인증 데이터 제출"
+    },
+    "user-update-verification": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "유저 인증 폼 데이터 저장/수정"
+    },
+    "payment-webhook": {
+      "callers": ["external"],
+      "envs": ["dev", "production"],
+      "external_auth": {
+        "type": "ip_allowlist",
+        "ips": ["52.78.100.19", "52.78.48.223", "52.78.17.128"]
+      },
+      "description": "PortOne V1 결제 웹훅 수신"
     }
   }
 }
