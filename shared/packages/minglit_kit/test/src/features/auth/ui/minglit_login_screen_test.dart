@@ -28,18 +28,21 @@ void main() {
       );
     });
 
-    testWidgets('onDevTrigger 비-null → devTriggerKey 존재 (GestureDetector 렌더링)', (
-      tester,
-    ) async {
-      await tester.pumpWidget(_buildLoginScreen(onDevTrigger: () {}));
-      await tester.pump();
+    testWidgets(
+      'onDevTrigger 비-null → devTriggerKey 존재 (GestureDetector 렌더링)',
+      (
+        tester,
+      ) async {
+        await tester.pumpWidget(_buildLoginScreen(onDevTrigger: () {}));
+        await tester.pump();
 
-      expect(
-        find.byKey(MinglitLoginScreen.devTriggerKey),
-        findsOneWidget,
-        reason: 'onDevTrigger가 있으면 GestureDetector가 렌더링되어야 함',
-      );
-    });
+        expect(
+          find.byKey(MinglitLoginScreen.devTriggerKey),
+          findsOneWidget,
+          reason: 'onDevTrigger가 있으면 GestureDetector가 렌더링되어야 함',
+        );
+      },
+    );
 
     testWidgets('5회 연속 탭 → onTrigger 호출', (tester) async {
       var triggered = 0;
