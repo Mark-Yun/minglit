@@ -531,8 +531,8 @@ jobs:
           fi
           echo "✅ CI jobs passed"
 
-          # 2. Wait for CodeRabbit review (PR only)
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
+          # 2. Wait for CodeRabbit review (PR only, skip for dependabot)
+          if [ "${{ github.event_name }}" = "pull_request" ] && [ "${{ github.actor }}" != "dependabot[bot]" ]; then
             SHA="${{ github.event.pull_request.head.sha }}"
             echo ""
             echo "Waiting for CodeRabbit review on $SHA ..."
