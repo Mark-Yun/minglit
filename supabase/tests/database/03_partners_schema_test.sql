@@ -47,10 +47,10 @@ SELECT col_is_fk('partner_settlements', 'partner_id');
 SELECT col_not_null('partner_settlements', 'partner_id');
 SELECT col_type_is('partner_settlements', 'biz_type', 'business_type');
 -- Fix #2322: biz 정보 컬럼 nullable 허용 — 은행 계좌만 먼저 upsert 가능
-SELECT col_is_nullable('partner_settlements', 'biz_type');
-SELECT col_is_nullable('partner_settlements', 'biz_name');
-SELECT col_is_nullable('partner_settlements', 'biz_number');
-SELECT col_is_nullable('partner_settlements', 'representative_name');
+SELECT col_is_null('partner_settlements', 'biz_type');
+SELECT col_is_null('partner_settlements', 'biz_name');
+SELECT col_is_null('partner_settlements', 'biz_number');
+SELECT col_is_null('partner_settlements', 'representative_name');
 SELECT col_not_null('partner_settlements', 'bank_name');
 SELECT col_not_null('partner_settlements', 'account_number');
 SELECT col_not_null('partner_settlements', 'account_holder');
