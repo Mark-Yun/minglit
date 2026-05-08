@@ -1,4 +1,5 @@
 import { assertEquals } from "@std/assert";
+import { stub } from "@std/testing/mock";
 import {
   authenticatedJsonRequest,
   captureServeHandler,
@@ -9,6 +10,7 @@ import {
   withMockedFetch,
   type FetchRoute,
 } from "../_test_utils/mock_http.ts";
+import type { EFContext } from "../_shared/edge_function.ts";
 
 const TEST_USER_ID = "user-partner-owner";
 const TEST_EVENT_ID = "event-001";
@@ -20,6 +22,8 @@ const GROUP_FEMALE = "group-female";
 const ENV = {
   SUPABASE_URL: "http://localhost:54321",
   SUPABASE_SERVICE_ROLE_KEY: "test-service-key",
+  ENVIRONMENT: "dev",
+  MINGLIT_EF_TEST_FN_NAME: "partner-manage-match",
 };
 
 function authRoute(): FetchRoute {
@@ -504,6 +508,45 @@ Deno.test({
         const body = await readJson(res);
         assertEquals(body.error, "Unknown action: unknown_action");
       });
+    });
+  },
+});
+
+// Fix #2323: runtime type guard — non-user caller must return 500 immediately
+Deno.test({
+  name: "returns 500 when auth type is not user (system caller guard)",
+  fn: async () => {
+    // Stub Deno.serve to prevent resource leak when importing index.ts
+    const serveOwner = Deno as unknown as { serve: (...args: unknown[]) => unknown };
+    const serveStub = stub(serveOwner, "serve", () => ({
+      shutdown: async () => {},
+      finished: Promise.resolve(),
+    } as unknown as Deno.HttpServer));
+    let handler: (req: Request, ctx: EFContext) => Promise<Response>;
+    try {
+      const mod = await import(`./index.ts?guard=${crypto.randomUUID()}`);
+      handler = mod.handler;
+    } finally {
+      serveStub.restore();
+    }
+
+    await withEnv(ENV, async () => {
+      const fakeCtx: EFContext = {
+        auth: { type: "system" },
+        supabase: {} as EFContext["supabase"],
+        fnName: "partner-manage-match",
+        env: "dev",
+        requestId: "test-req-guard",
+      };
+      const req = new Request("http://localhost", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "set_rules", event_id: "event-1", rules: [] }),
+      });
+      const res = await handler(req, fakeCtx);
+      assertEquals(res.status, 500);
+      const body = await res.json();
+      assertEquals(body.error, "Unexpected auth type");
     });
   },
 });

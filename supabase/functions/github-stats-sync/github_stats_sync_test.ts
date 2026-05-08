@@ -12,6 +12,8 @@ import {
 const ENV = {
   SUPABASE_URL: "https://supabase.test",
   SUPABASE_SERVICE_ROLE_KEY: "valid-key",
+  ENVIRONMENT: "dev",
+  MINGLIT_EF_TEST_FN_NAME: "github-stats-sync",
 };
 
 Deno.test("github-stats-sync - unauthorized request returns 401", async () => {

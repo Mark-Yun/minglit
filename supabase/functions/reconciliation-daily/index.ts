@@ -1,10 +1,7 @@
 // Fix #179: esm.sh 직접 URL → deno.json import map 기반으로 통일
-import { createServiceClient } from "../_shared/supabase_client.ts";
+// Fix #1116: 공통 유틸 사용 — env 미설정 시 빈 문자열 비교로 통과되던 취약점 제거 (now handled by minglitEdgeFunction wrapper)
 import { getPortoneClient, PortoneSettlement } from "../_shared/portone_client.ts";
-import { initSentry, withHandler } from "../_shared/logger.ts";
-import { requireServiceRole } from "../_shared/auth_utils.ts";
-
-await initSentry();
+import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
 
 
 const CORS_HEADERS = {
@@ -81,16 +78,13 @@ function computeSourceHash(ledgerData: unknown[], portoneData: unknown[]): strin
   return Math.abs(hash).toString(16);
 }
 
-Deno.serve(withHandler(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { status: 204, headers: CORS_HEADERS });
+export const handler = async (req: Request, { supabase }: EFContext): Promise<Response> => {
+  if (req.method !== "POST") {
+    return new Response(
+      JSON.stringify({ error: "Method Not Allowed" }),
+      { status: 405, headers: { ...CORS_HEADERS, "Content-Type": "application/json" } },
+    );
   }
-
-  // Fix #1116: 공통 유틸 사용 — env 미설정 시 빈 문자열 비교로 통과되던 취약점 제거
-  const authResult = requireServiceRole(req);
-  if (authResult instanceof Response) return authResult;
-
-  const supabase = createServiceClient();
 
   const nowKst = new Date(Date.now() + 9 * 60 * 60 * 1000);
   const yesterdayKst = new Date(nowKst);
@@ -295,4 +289,6 @@ Deno.serve(withHandler(async (req) => {
       { status: 500, headers: { ...CORS_HEADERS, "Content-Type": "application/json" } },
     );
   }
-}));
+};
+
+minglitEdgeFunction(handler);

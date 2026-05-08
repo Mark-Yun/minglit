@@ -12,12 +12,12 @@ Deno.test({
   name: "dev-session-switch - blocks in production (ENVIRONMENT=production)",
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-    
-    await withEnv({ ENVIRONMENT: "production" }, async () => {
+
+    await withEnv({ ENVIRONMENT: "production", MINGLIT_EF_TEST_FN_NAME: "dev-session-switch" }, async () => {
       const response = await handler(new Request("http://localhost"));
       assertEquals(response.status, 403);
       const body = await readJson(response);
-      assertEquals(body.error, "Dev-only function. Blocked in production.");
+      assertEquals(body.error, "Function disabled in production");
     });
   },
 });
@@ -26,23 +26,24 @@ Deno.test({
   name: "dev-session-switch - returns user profiles in local env",
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-    
+
     const mockUsers = [
       { id: "1", name: "Test User", username: "user_25_m_ok" },
       { id: "2", name: "Test User 2", username: "user_30_f_ok" },
     ];
-    
+
     const { fetchMock } = createFetchMock([
       {
         matcher: /user_profiles/,
         handler: () => jsonResponse(mockUsers),
       },
     ]);
-    
+
     await withEnv({
       ENVIRONMENT: "local",
       SUPABASE_URL: "http://localhost:54321",
       SUPABASE_SERVICE_ROLE_KEY: "test-service-role-key",
+      MINGLIT_EF_TEST_FN_NAME: "dev-session-switch",
     }, async () => {
       await withMockedFetch(fetchMock, async () => {
         const response = await handler(new Request("http://localhost"));
@@ -59,18 +60,19 @@ Deno.test({
   name: "dev-session-switch - handles Supabase error",
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-    
+
     const { fetchMock } = createFetchMock([
       {
         matcher: /user_profiles/,
         handler: () => jsonResponse({ message: "Database connection failed" }, { status: 500 }),
       },
     ]);
-    
+
     await withEnv({
       ENVIRONMENT: "development",
       SUPABASE_URL: "http://localhost:54321",
       SUPABASE_SERVICE_ROLE_KEY: "test-service-role-key",
+      MINGLIT_EF_TEST_FN_NAME: "dev-session-switch",
     }, async () => {
       await withMockedFetch(fetchMock, async () => {
         const response = await handler(new Request("http://localhost"));

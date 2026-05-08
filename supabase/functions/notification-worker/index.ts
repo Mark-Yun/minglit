@@ -1,11 +1,12 @@
+// Fix #2185 (Batch 8): migrate to minglitEdgeFunction wrapper — auth via manifest
+import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
 import { createServiceClient } from '../_shared/supabase_client.ts'
 import { requireEnv } from '../_shared/env_keystore.ts'
 import { runWorkerLoop } from './loop_worker.ts'
 import { WorkerUtils } from '../_shared/worker_utils.ts'
 import { isoToUnix } from '../_shared/temporal_utils.ts'
 import * as jose from 'jose'
-import { initSentry, withHandler, log } from '../_shared/logger.ts'
-import { requireServiceRole } from '../_shared/auth_utils.ts'
+import { log } from '../_shared/logger.ts'
 import { isNightTimeKST, secondsUntilKST8AM } from './marketing_guards.ts'
 
 const FN = "notification-worker";
@@ -239,13 +240,8 @@ async function sendToAllParticipants(
   }
 }
 
-
-initSentry();
-
-Deno.serve(withHandler(async (req) => {
-  // Fix #1489: 시스템 전용 EF — service_role만 허용
-  const auth = requireServiceRole(req);
-  if (auth instanceof Response) return auth;
+export const handler = async (_req: Request, ctx: EFContext): Promise<Response> => {
+  const { supabase } = ctx;
   // env-manifest: validate all required env vars for this function
   const envErr = requireEnv("notification-worker");
   if (envErr) return envErr;
@@ -257,7 +253,6 @@ Deno.serve(withHandler(async (req) => {
         throw new Error("Missing environment variable: FIREBASE_SERVICE_ACCOUNT");
     }
 
-    const supabase = createServiceClient()
     const utils = new WorkerUtils(supabase, 'q_notifications')
 
     log({ function: FN, level: "info", message: "Notification Worker v2 Started" });
@@ -504,4 +499,6 @@ Deno.serve(withHandler(async (req) => {
       headers: { "Content-Type": "application/json" }
     })
   }
-}))
+}
+
+minglitEdgeFunction(handler);

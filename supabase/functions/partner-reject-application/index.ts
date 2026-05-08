@@ -1,52 +1,26 @@
 // partner-reject-application — Reject event applications with reason
 // Issue #517: 파트너 대시보드 리디자인 — 신청 거절 API
 
-import { createServiceClient } from "../_shared/supabase_client.ts";
 import {
-  corsResponse,
   errorResponse,
   successResponse,
 } from "../_shared/response_utils.ts";
-import { requireAuth } from "../_shared/auth_utils.ts";
 import { requirePartnerPermission } from "../_shared/partner_permissions.ts";
 import { parseJsonBody } from "../_shared/request_utils.ts";
-import { initSentry, withHandler, log } from "../_shared/logger.ts";
-
-const FN = "partner-reject-application";
-
-initSentry();
+import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-Deno.serve(withHandler(async (req: Request): Promise<Response> => {
-  if (req.method === "OPTIONS") return corsResponse();
+export const handler = async (req: Request, ctx: EFContext): Promise<Response> => {
   if (req.method !== "POST") return errorResponse("Method not allowed", 405);
 
-  try {
-    return await handleRequest(req);
-  } catch (e) {
-    log({
-      function: FN,
-      level: "error",
-      message: "partner-reject-application error",
-      metadata: { detail: e instanceof Error ? e.message : String(e) },
-    });
-    return errorResponse("Internal server error", 500);
-  }
-}));
+  const { supabase } = ctx;
+  if (ctx.auth.type !== "user") return errorResponse("Unexpected auth type", 500);
+  const userId = ctx.auth.userId;
 
-async function handleRequest(req: Request): Promise<Response> {
-  // 1. Auth
-  const auth = await requireAuth(req);
-  if (auth instanceof Response) return auth;
-  const userId = auth;
-
-  // 2. Parse body
   const body = await parseJsonBody(req);
   if (body instanceof Response) return body;
-
-  const supabase = createServiceClient();
 
   const applicationId = body.application_id;
   if (typeof applicationId !== "string" || !applicationId) {
@@ -110,4 +84,6 @@ async function handleRequest(req: Request): Promise<Response> {
     rejected: 1,
     application_id: applicationId,
   });
-}
+};
+
+minglitEdgeFunction(handler);

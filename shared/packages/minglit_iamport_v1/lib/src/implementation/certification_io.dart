@@ -20,6 +20,12 @@ class CertificationServiceImpl implements CertificationService {
       MaterialPageRoute<void>(
         builder: (context) => IamportCertification(
           appBar: AppBar(title: const Text('본인인증')),
+          // Fix #2315: show loading indicator while iamport.js HTML loads
+          // — IamportWebView uses initialChild as the initial IndexedStack
+          // page and switches to the WebView on onPageFinished.
+          initialChild: const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          ),
           userCode: userCode,
           data: CertificationData(
             merchantUid: merchantUid,

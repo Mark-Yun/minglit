@@ -88,12 +88,13 @@ const COMMON_ENV = {
   PORTONE_V2_API_KEY: "test-v2-key",
   SUPABASE_URL: "https://supabase.test",
   SUPABASE_SERVICE_ROLE_KEY: "service-key",
+  ENVIRONMENT: "dev",
 };
 
 Deno.test("contract: payment-verify response matches schema", async () => {
   const schema = await loadSchema("payment_verify");
 
-  await withEnv(COMMON_ENV, async () => {
+  await withEnv({ ...COMMON_ENV, MINGLIT_EF_TEST_FN_NAME: "payment-verify" }, async () => {
     const handler = await captureServeHandler(
       new URL("../payment-verify/index.ts", import.meta.url),
     );
@@ -135,7 +136,7 @@ Deno.test("contract: payment-verify response matches schema", async () => {
 Deno.test("contract: identity-verify response matches schema", async () => {
   const schema = await loadSchema("identity_verify");
 
-  await withEnv(COMMON_ENV, async () => {
+  await withEnv({ ...COMMON_ENV, MINGLIT_EF_TEST_FN_NAME: "identity-verify" }, async () => {
     const handler = await captureServeHandler(
       new URL("../identity-verify/index.ts", import.meta.url),
     );
@@ -172,7 +173,8 @@ Deno.test("contract: payment-cancel response matches schema", async () => {
   const eligiblePaidAt = new Date(nowMs - 1 * 60 * 60 * 1000).toISOString();
   const farFutureEvent = new Date(nowMs + 10 * 24 * 60 * 60 * 1000).toISOString();
 
-  await withEnv(COMMON_ENV, async () => {
+  // payment-cancel is migrated to minglitEdgeFunction — needs ENVIRONMENT + fn name
+  await withEnv({ ...COMMON_ENV, ENVIRONMENT: "dev", MINGLIT_EF_TEST_FN_NAME: "payment-cancel" }, async () => {
     const handler = await captureServeHandler(
       new URL("../payment-cancel/index.ts", import.meta.url),
     );
@@ -233,7 +235,7 @@ Deno.test("contract: payment-cancel response matches schema", async () => {
 Deno.test("contract: settlement-query response matches schema", async () => {
   const schema = await loadSchema("settlement_query");
 
-  await withEnv(COMMON_ENV, async () => {
+  await withEnv({ ...COMMON_ENV, ENVIRONMENT: "dev", MINGLIT_EF_TEST_FN_NAME: "settlement-query" }, async () => {
     const handler = await captureServeHandler(
       new URL("../settlement-query/index.ts", import.meta.url),
     );
@@ -275,7 +277,7 @@ Deno.test("contract: settlement-query response matches schema", async () => {
 Deno.test("contract: payment-verify error matches error schema", async () => {
   const schema = await loadSchema("error");
 
-  await withEnv(COMMON_ENV, async () => {
+  await withEnv({ ...COMMON_ENV, MINGLIT_EF_TEST_FN_NAME: "payment-verify" }, async () => {
     const handler = await captureServeHandler(
       new URL("../payment-verify/index.ts", import.meta.url),
     );

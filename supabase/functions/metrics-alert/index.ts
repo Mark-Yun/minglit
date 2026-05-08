@@ -1,13 +1,20 @@
-import {
-  corsResponse,
-  errorResponse,
-  successResponse,
-} from "../_shared/response_utils.ts";
+import { errorResponse, successResponse } from "../_shared/response_utils.ts";
 import { parseJsonBody } from "../_shared/request_utils.ts";
-import { initSentry, withHandler } from "../_shared/logger.ts";
+import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
 
 const GITHUB_TOKEN = Deno.env.get("GITHUB_ACCESS_TOKEN");
 const GITHUB_REPO = "Mark-Yun/minglit";
+const FETCH_TIMEOUT_MS = 10_000;
+
+async function fetchWithTimeout(url: string, init?: RequestInit): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
 
 export const ALERT_LABELS: Record<string, string[]> = {
   performance: ["metrics-alert", "auto-generated", "performance"],
@@ -16,30 +23,24 @@ export const ALERT_LABELS: Record<string, string[]> = {
   report: ["metrics-alert", "auto-generated", "report"],
 };
 
-initSentry();
-
-Deno.serve(withHandler(async (req) => {
-  if (req.method === "OPTIONS") return corsResponse();
-
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  if (!serviceRoleKey) {
-    return errorResponse("SUPABASE_SERVICE_ROLE_KEY not configured", 500);
-  }
-  const authHeader = req.headers.get("Authorization") ?? "";
-  if (authHeader !== `Bearer ${serviceRoleKey}`) {
-    return errorResponse("Unauthorized", 401);
-  }
-
+export const handler = async (req: Request, _ctx: EFContext): Promise<Response> => {
   const body = await parseJsonBody(req);
   if (body instanceof Response) return body;
 
   const { type, title, body: alertBody } = body as {
-    type?: string;
-    title?: string;
-    body?: string;
+    type?: unknown;
+    title?: unknown;
+    body?: unknown;
   };
 
-  if (!type || !title || !alertBody) {
+  if (
+    typeof type !== "string" ||
+    typeof title !== "string" ||
+    typeof alertBody !== "string" ||
+    !type.trim() ||
+    !title.trim() ||
+    !alertBody.trim()
+  ) {
     return errorResponse("Missing required fields: type, title, body", 400);
   }
 
@@ -55,7 +56,7 @@ Deno.serve(withHandler(async (req) => {
     )
   }`;
 
-  const searchRes = await fetch(searchUrl, {
+  const searchRes = await fetchWithTimeout(searchUrl, {
     headers: {
       "Authorization": `Bearer ${GITHUB_TOKEN}`,
       "Accept": "application/vnd.github.v3+json",
@@ -72,7 +73,7 @@ Deno.serve(withHandler(async (req) => {
   const existingIssue = searchData.items?.[0];
 
   if (existingIssue) {
-    const commentRes = await fetch(
+    const commentRes = await fetchWithTimeout(
       `https://api.github.com/repos/${GITHUB_REPO}/issues/${existingIssue.number}/comments`,
       {
         method: "POST",
@@ -96,7 +97,7 @@ Deno.serve(withHandler(async (req) => {
     });
   }
 
-  const createRes = await fetch(
+  const createRes = await fetchWithTimeout(
     `https://api.github.com/repos/${GITHUB_REPO}/issues`,
     {
       method: "POST",
@@ -121,4 +122,6 @@ Deno.serve(withHandler(async (req) => {
     issue_number: issue.number,
     url: issue.html_url,
   });
-}));
+};
+
+minglitEdgeFunction(handler);

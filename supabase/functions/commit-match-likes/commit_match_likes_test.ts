@@ -8,11 +8,14 @@ import {
   readJson,
   withEnv,
   withMockedFetch,
+  withNoIntervals,
 } from "../_test_utils/mock_http.ts";
 
 const ENV = {
   SUPABASE_URL: "http://localhost:54321",
   SUPABASE_SERVICE_ROLE_KEY: "test-service-key",
+  ENVIRONMENT: "dev",
+  MINGLIT_EF_TEST_FN_NAME: "commit-match-likes",
 };
 
 const TEST_EVENT_ID = "event-001";
@@ -135,22 +138,24 @@ function happyPathRoutes(): FetchRoute[] {
 Deno.test({
   name: "returns 400 when voter_id is in candidate_ids (self-like)",
   fn: async () => {
-    const handler = await captureServeHandler(
-      new URL("./index.ts", import.meta.url),
-    );
     const { fetchMock } = createFetchMock([authRoute()]);
 
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
-        const res = await handler(
-          authenticatedJsonRequest("http://localhost", {
-            event_id: TEST_EVENT_ID,
-            candidate_ids: [TEST_VOTER_ID],
-          }),
-        );
-        assertEquals(res.status, 400);
-        const body = await readJson(res);
-        assertEquals(body.error, "자기 자신에게 좋아요를 보낼 수 없습니다");
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(
+            new URL("./index.ts", import.meta.url),
+          );
+          const res = await handler(
+            authenticatedJsonRequest("http://localhost", {
+              event_id: TEST_EVENT_ID,
+              candidate_ids: [TEST_VOTER_ID],
+            }),
+          );
+          assertEquals(res.status, 400);
+          const body = await readJson(res);
+          assertEquals(body.error, "자기 자신에게 좋아요를 보낼 수 없습니다");
+        });
       });
     });
   },
@@ -159,22 +164,24 @@ Deno.test({
 Deno.test({
   name: "returns 400 when candidate_ids exceed max 3",
   fn: async () => {
-    const handler = await captureServeHandler(
-      new URL("./index.ts", import.meta.url),
-    );
     const { fetchMock } = createFetchMock([authRoute()]);
 
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
-        const res = await handler(
-          authenticatedJsonRequest("http://localhost", {
-            event_id: TEST_EVENT_ID,
-            candidate_ids: ["u1", "u2", "u3", "u4"],
-          }),
-        );
-        assertEquals(res.status, 400);
-        const body = await readJson(res);
-        assertEquals(body.error, "좋아요는 최대 3명까지 보낼 수 있습니다");
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(
+            new URL("./index.ts", import.meta.url),
+          );
+          const res = await handler(
+            authenticatedJsonRequest("http://localhost", {
+              event_id: TEST_EVENT_ID,
+              candidate_ids: ["u1", "u2", "u3", "u4"],
+            }),
+          );
+          assertEquals(res.status, 400);
+          const body = await readJson(res);
+          assertEquals(body.error, "좋아요는 최대 3명까지 보낼 수 있습니다");
+        });
       });
     });
   },
@@ -184,9 +191,6 @@ Deno.test({
   name:
     "returns structured phase mismatch when event is outside matching window",
   fn: async () => {
-    const handler = await captureServeHandler(
-      new URL("./index.ts", import.meta.url),
-    );
     const { fetchMock } = createFetchMock([
       authRoute(),
       eventRoute({ status: "completed", vote_end_at: "2000-01-02T00:00:00Z" }),
@@ -194,16 +198,21 @@ Deno.test({
 
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
-        const res = await handler(
-          authenticatedJsonRequest("http://localhost", {
-            event_id: TEST_EVENT_ID,
-            candidate_ids: TEST_CANDIDATE_IDS,
-          }),
-        );
-        assertEquals(res.status, 409);
-        const body = await readJson(res);
-        assertEquals(body.error, "매칭 선택 가능 시간이 아니에요");
-        assertEquals(body.details.code, "phase_mismatch");
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(
+            new URL("./index.ts", import.meta.url),
+          );
+          const res = await handler(
+            authenticatedJsonRequest("http://localhost", {
+              event_id: TEST_EVENT_ID,
+              candidate_ids: TEST_CANDIDATE_IDS,
+            }),
+          );
+          assertEquals(res.status, 409);
+          const body = await readJson(res);
+          assertEquals(body.error, "매칭 선택 가능 시간이 아니에요");
+          assertEquals(body.details.code, "phase_mismatch");
+        });
       });
     });
   },
@@ -212,9 +221,6 @@ Deno.test({
 Deno.test({
   name: "returns idempotent counts when duplicate likes are submitted again",
   fn: async () => {
-    const handler = await captureServeHandler(
-      new URL("./index.ts", import.meta.url),
-    );
     const { fetchMock } = createFetchMock([
       authRoute(),
       eventRoute(),
@@ -228,16 +234,21 @@ Deno.test({
 
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
-        const res = await handler(
-          authenticatedJsonRequest("http://localhost", {
-            event_id: TEST_EVENT_ID,
-            candidate_ids: TEST_CANDIDATE_IDS,
-          }),
-        );
-        assertEquals(res.status, 200);
-        const body = await readJson(res);
-        assertEquals(body.inserted_count, 0);
-        assertEquals(body.duplicate_count, 2);
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(
+            new URL("./index.ts", import.meta.url),
+          );
+          const res = await handler(
+            authenticatedJsonRequest("http://localhost", {
+              event_id: TEST_EVENT_ID,
+              candidate_ids: TEST_CANDIDATE_IDS,
+            }),
+          );
+          assertEquals(res.status, 200);
+          const body = await readJson(res);
+          assertEquals(body.inserted_count, 0);
+          assertEquals(body.duplicate_count, 2);
+        });
       });
     });
   },
@@ -246,20 +257,22 @@ Deno.test({
 Deno.test({
   name: "commits likes in one batch mutation",
   fn: async () => {
-    const handler = await captureServeHandler(
-      new URL("./index.ts", import.meta.url),
-    );
     const { fetchMock, calls } = createFetchMock(happyPathRoutes());
 
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
-        const res = await handler(
-          authenticatedJsonRequest("http://localhost", {
-            event_id: TEST_EVENT_ID,
-            candidate_ids: TEST_CANDIDATE_IDS,
-          }),
-        );
-        assertEquals(res.status, 200);
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(
+            new URL("./index.ts", import.meta.url),
+          );
+          const res = await handler(
+            authenticatedJsonRequest("http://localhost", {
+              event_id: TEST_EVENT_ID,
+              candidate_ids: TEST_CANDIDATE_IDS,
+            }),
+          );
+          assertEquals(res.status, 200);
+        });
       });
     });
 

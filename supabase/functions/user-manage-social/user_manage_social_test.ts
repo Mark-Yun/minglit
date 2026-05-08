@@ -12,6 +12,8 @@ import {
 const TEST_USER_ID = "user-111";
 const TEST_TARGET_ID = "partner-222";
 const ENV = {
+  ENVIRONMENT: "dev",
+  MINGLIT_EF_TEST_FN_NAME: "user-manage-social",
   SUPABASE_URL: "http://localhost:54321",
   SUPABASE_SERVICE_ROLE_KEY: "test-service-key",
 };
@@ -300,12 +302,3 @@ Deno.test({
   },
 });
 
-Deno.test({
-  name: "returns CORS headers for OPTIONS",
-  fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-    const res = await handler(new Request("http://localhost", { method: "OPTIONS" }));
-    assertEquals(res.status, 200);
-    assertEquals(res.headers.get("Access-Control-Allow-Origin"), "*");
-  },
-});

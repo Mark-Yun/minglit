@@ -17,11 +17,11 @@ Deno.test({
       new URL("./index.ts", import.meta.url),
     );
 
-    await withEnv({ ENVIRONMENT: "production" }, async () => {
+    await withEnv({ ENVIRONMENT: "production", MINGLIT_EF_TEST_FN_NAME: "dev-seed" }, async () => {
       const response = await handler(new Request("http://localhost"));
       assertEquals(response.status, 403);
       const body = await readJson(response);
-      assertEquals(body.error, "Dev-only function. Blocked in production.");
+      assertEquals(body.error, "Function disabled in production");
     });
   },
 });
@@ -34,9 +34,10 @@ Deno.test({
       new URL("./index.ts", import.meta.url),
     );
 
-    await withEnv({ ENVIRONMENT: undefined }, async () => {
+    // wrapper init fails when ENVIRONMENT is unset → returns 500 on request
+    await withEnv({ ENVIRONMENT: undefined, MINGLIT_EF_TEST_FN_NAME: "dev-seed" }, async () => {
       const response = await handler(new Request("http://localhost"));
-      assertEquals(response.status, 403);
+      assertEquals(response.status, 500);
     });
   },
 });
@@ -71,6 +72,7 @@ Deno.test({
       ENVIRONMENT: "dev",
       SUPABASE_URL: "http://localhost:54321",
       SUPABASE_SERVICE_ROLE_KEY: "test-service-role-key",
+      MINGLIT_EF_TEST_FN_NAME: "dev-seed",
     }, async () => {
       await withMockedFetch(fetchMock, async () => {
         const response = await handler(
@@ -115,6 +117,7 @@ Deno.test({
       ENVIRONMENT: "development",
       SUPABASE_URL: "http://localhost:54321",
       SUPABASE_SERVICE_ROLE_KEY: "test-service-role-key",
+      MINGLIT_EF_TEST_FN_NAME: "dev-seed",
     }, async () => {
       await withMockedFetch(fetchMock, async () => {
         const response = await handler(
@@ -158,6 +161,7 @@ Deno.test({
       ENVIRONMENT: "development",
       SUPABASE_URL: "http://localhost:54321",
       SUPABASE_SERVICE_ROLE_KEY: "test-service-role-key",
+      MINGLIT_EF_TEST_FN_NAME: "dev-seed",
     }, async () => {
       await withMockedFetch(fetchMock, async () => {
         // No ?mode param — should default to images-only
@@ -181,6 +185,7 @@ Deno.test({
       ENVIRONMENT: "development",
       SUPABASE_URL: "http://localhost:54321",
       SUPABASE_SERVICE_ROLE_KEY: "test-service-role-key",
+      MINGLIT_EF_TEST_FN_NAME: "dev-seed",
     }, async () => {
       const response = await handler(
         new Request("http://localhost?mode=static"),
@@ -203,6 +208,7 @@ Deno.test({
       ENVIRONMENT: "development",
       SUPABASE_URL: "http://localhost:54321",
       SUPABASE_SERVICE_ROLE_KEY: "test-service-role-key",
+      MINGLIT_EF_TEST_FN_NAME: "dev-seed",
     }, async () => {
       const response = await handler(
         new Request("http://localhost?mode=full"),
@@ -228,6 +234,7 @@ Deno.test({
       ENVIRONMENT: "development",
       SUPABASE_URL: undefined,
       SUPABASE_SERVICE_ROLE_KEY: undefined,
+      MINGLIT_EF_TEST_FN_NAME: "dev-seed",
     }, async () => {
       const response = await handler(
         new Request("http://localhost?mode=images-only"),

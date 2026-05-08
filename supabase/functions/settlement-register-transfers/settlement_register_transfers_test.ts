@@ -7,13 +7,14 @@ import {
   readJson,
   withEnv,
   withMockedFetch,
-  withNoIntervals,
 } from "../_test_utils/mock_http.ts";
 
 const ENV = {
   PORTONE_V2_API_KEY: "test-v2-key",
   SUPABASE_URL: "https://supabase.test",
   SUPABASE_SERVICE_ROLE_KEY: "service-key",
+  ENVIRONMENT: "dev",
+  MINGLIT_EF_TEST_FN_NAME: "settlement-register-transfers",
 };
 
 Deno.test("settlement-register-transfers - 인증 실패: 잘못된 토큰은 401 반환", async () => {
@@ -49,18 +50,16 @@ Deno.test("settlement-register-transfers - 빈 목록: PENDING items 없으면 p
     ]);
 
     await withMockedFetch(fetchMock, async () => {
-      await withNoIntervals(async () => {
-        const request = jsonRequest("http://localhost", {}, {
-          headers: { Authorization: "Bearer service-key" },
-        });
-        const response = await handler(request);
-        const payload = await readJson(response);
-
-        assertEquals(response.status, 200);
-        assertEquals(payload.processed, 0);
-        assertEquals(payload.succeeded, 0);
-        assertEquals(payload.failed, 0);
+      const request = jsonRequest("http://localhost", {}, {
+        headers: { Authorization: "Bearer service-key" },
       });
+      const response = await handler(request);
+      const payload = await readJson(response);
+
+      assertEquals(response.status, 200);
+      assertEquals(payload.processed, 0);
+      assertEquals(payload.succeeded, 0);
+      assertEquals(payload.failed, 0);
     });
   });
 });
@@ -115,28 +114,26 @@ Deno.test("settlement-register-transfers - 정상 처리: createOrderTransfer �
     ]);
 
     await withMockedFetch(fetchMock, async () => {
-      await withNoIntervals(async () => {
-        const request = jsonRequest("http://localhost", {}, {
-          headers: { Authorization: "Bearer service-key" },
-        });
-        const response = await handler(request);
-        const payload = await readJson(response);
-
-        assertEquals(response.status, 200);
-        assertEquals(payload.processed, 1);
-        assertEquals(payload.succeeded, 1);
-        assertEquals(payload.failed, 0);
-
-        const transferCall = calls.find((c) =>
-          c.url.includes("/platform/transfers/order")
-        );
-        assertEquals(transferCall !== undefined, true);
-
-        const transferBody = JSON.parse(transferCall!.body!);
-        assertEquals(transferBody.partnerId, "portone-partner-001");
-        assertEquals(transferBody.paymentId, "imp_pay_001");
-        assertEquals(transferBody.orderDetail.orderAmount, 50000);
+      const request = jsonRequest("http://localhost", {}, {
+        headers: { Authorization: "Bearer service-key" },
       });
+      const response = await handler(request);
+      const payload = await readJson(response);
+
+      assertEquals(response.status, 200);
+      assertEquals(payload.processed, 1);
+      assertEquals(payload.succeeded, 1);
+      assertEquals(payload.failed, 0);
+
+      const transferCall = calls.find((c) =>
+        c.url.includes("/platform/transfers/order")
+      );
+      assertEquals(transferCall !== undefined, true);
+
+      const transferBody = JSON.parse(transferCall!.body!);
+      assertEquals(transferBody.partnerId, "portone-partner-001");
+      assertEquals(transferBody.paymentId, "imp_pay_001");
+      assertEquals(transferBody.orderDetail.orderAmount, 50000);
     });
   });
 });
@@ -180,18 +177,16 @@ Deno.test("settlement-register-transfers - PortOne 에러: createOrderTransfer �
     ]);
 
     await withMockedFetch(fetchMock, async () => {
-      await withNoIntervals(async () => {
-        const request = jsonRequest("http://localhost", {}, {
-          headers: { Authorization: "Bearer service-key" },
-        });
-        const response = await handler(request);
-        const payload = await readJson(response);
-
-        assertEquals(response.status, 200);
-        assertEquals(payload.processed, 1);
-        assertEquals(payload.succeeded, 0);
-        assertEquals(payload.failed, 1);
+      const request = jsonRequest("http://localhost", {}, {
+        headers: { Authorization: "Bearer service-key" },
       });
+      const response = await handler(request);
+      const payload = await readJson(response);
+
+      assertEquals(response.status, 200);
+      assertEquals(payload.processed, 1);
+      assertEquals(payload.succeeded, 0);
+      assertEquals(payload.failed, 1);
     });
   });
 });
@@ -209,22 +204,20 @@ Deno.test("settlement-register-transfers - 멱등성: portone_transfer_id IS NUL
     ]);
 
     await withMockedFetch(fetchMock, async () => {
-      await withNoIntervals(async () => {
-        const request = jsonRequest("http://localhost", {}, {
-          headers: { Authorization: "Bearer service-key" },
-        });
-        const response = await handler(request);
-        const payload = await readJson(response);
-
-        assertEquals(response.status, 200);
-        assertEquals(payload.processed, 0);
-
-        const itemsCall = calls.find((c) =>
-          c.url.includes("/rest/v1/settlement_items") && c.method === "GET"
-        );
-        assertEquals(itemsCall !== undefined, true);
-        assertEquals(itemsCall!.url.includes("portone_transfer_id"), true);
+      const request = jsonRequest("http://localhost", {}, {
+        headers: { Authorization: "Bearer service-key" },
       });
+      const response = await handler(request);
+      const payload = await readJson(response);
+
+      assertEquals(response.status, 200);
+      assertEquals(payload.processed, 0);
+
+      const itemsCall = calls.find((c) =>
+        c.url.includes("/rest/v1/settlement_items") && c.method === "GET"
+      );
+      assertEquals(itemsCall !== undefined, true);
+      assertEquals(itemsCall!.url.includes("portone_transfer_id"), true);
     });
   });
 });

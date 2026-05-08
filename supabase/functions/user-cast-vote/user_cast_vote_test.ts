@@ -19,6 +19,8 @@ const GROUP_MALE = "group-male";
 const GROUP_FEMALE = "group-female";
 
 const ENV = {
+  ENVIRONMENT: "dev",
+  MINGLIT_EF_TEST_FN_NAME: "user-cast-vote",
   SUPABASE_URL: "http://localhost:54321",
   SUPABASE_SERVICE_ROLE_KEY: "test-service-key",
 };
@@ -138,24 +140,6 @@ function happyPathRoutes(): FetchRoute[] {
     rpcCastVoteRoute(),
   ];
 }
-
-// ─── CORS preflight ───
-Deno.test({
-  name: "handles OPTIONS preflight request",
-  fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-    const { fetchMock } = createFetchMock([]);
-
-    await withEnv(ENV, async () => {
-      await withMockedFetch(fetchMock, async () => {
-        const res = await handler(
-          new Request("http://localhost", { method: "OPTIONS" }),
-        );
-        assertEquals(res.status, 200);
-      });
-    });
-  },
-});
 
 // ─── 401: no auth ───
 Deno.test({

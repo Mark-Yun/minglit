@@ -13,6 +13,8 @@ import { WorkerUtils } from "../_shared/worker_utils.ts";
 import { OpenAILLM } from "../_shared/ai/adapters/openai_llm.ts";
 
 const BASE_ENV = {
+  ENVIRONMENT: "dev",
+  MINGLIT_EF_TEST_FN_NAME: "ai-extract-tags",
   SUPABASE_URL: "https://supabase.test",
   SUPABASE_SERVICE_ROLE_KEY: "service-key",
   OPENAI_API_KEY: "openai-key",
