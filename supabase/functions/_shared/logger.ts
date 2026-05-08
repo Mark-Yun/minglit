@@ -6,19 +6,12 @@
  *
  * Usage:
  * ```ts
- * import { initSentry, withHandler, log, withSpan } from "../_shared/logger.ts";
- * await initSentry();
- * Deno.serve(withHandler(async (req) => {
- *   log({ function: "my-fn", level: "info", message: "doing work" });
- *   const data = await withSpan("db.query", "db", () => supabase.from("t").select("*"));
- *   return successResponse(data);
- * }));
+ * import { initSentry, log, withSpan } from "../_shared/logger.ts";
  * ```
  *
  * Gracefully no-ops when SENTRY_DSN / AXIOM_API_TOKEN is not set.
  */
 
-import { log as axiomLog, flush as axiomFlush, extractFunctionName } from "./axiom_logger.ts";
 // Fix #763: Sentry beforeSend PII 필터링
 import { maskPii } from "./pii_masker.ts";
 export { log, flush, isEnabled, debugStatus } from "./axiom_logger.ts";
@@ -75,46 +68,6 @@ export async function initSentry(dsn?: string): Promise<void> {
 }
 
 /**
- * Request handler wrapper. Provides:
- * - Axiom structured logging (invoked/completed/error)
- * - Sentry error capture
- * - Axiom flush on completion
- *
- * Works with both `Deno.serve()` and legacy `serve()`.
- *
- * @deprecated Use `minglitEdgeFunction` from `_shared/edge_function.ts` instead.
- *   See docs/architecture/edge-function-auth.md for migration guide.
- *   기존 EF 들은 phase 3 에서 점진적으로 마이그레이션 (issue #2184).
- */
-export function withHandler(
-  handler: (req: Request) => Response | Promise<Response>,
-): (req: Request) => Promise<Response> {
-  return async (req: Request): Promise<Response> => {
-    const fn = extractFunctionName(req);
-    axiomLog({ function: fn, level: "info", message: "invoked", metadata: { method: req.method } });
-    try {
-      const res = await handler(req);
-      axiomLog({ function: fn, level: "info", message: "completed", metadata: { status: res.status } });
-      return res;
-    } catch (error) {
-      axiomLog({ function: fn, level: "error", message: error instanceof Error ? error.message : String(error) });
-      if (_enabled && _Sentry) {
-        _Sentry.captureException(error);
-        await _Sentry.flush(2000);
-      }
-      throw error;
-    } finally {
-      await axiomFlush();
-    }
-  };
-}
-
-/** @deprecated Use `withHandler` instead. */
-export const withSentry = withHandler;
-/** @deprecated Use `withHandler` instead. */
-export const withSentryHandler = withHandler;
-
-/**
  * Wrap an async operation in a Sentry performance span.
  * No-ops if Sentry is not initialized.
  */
@@ -134,8 +87,7 @@ export async function withSpan<T>(
 
 /**
  * Capture an exception to Sentry. No-ops if Sentry is not initialized.
- * Use in handlers that catch exceptions internally and return error responses
- * (i.e., exceptions that never propagate to withHandler's catch block).
+ * Use in handlers that catch exceptions internally and return error responses.
  */
 export function captureException(error: unknown): void {
   if (_enabled && _Sentry) {

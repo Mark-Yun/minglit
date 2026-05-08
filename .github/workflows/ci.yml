@@ -450,6 +450,28 @@ jobs:
           fi
           echo "✅ All Edge Functions have deno.json"
         working-directory: supabase
+      - name: Lint #4 — no legacy auth helpers (Fix #2184)
+        run: |
+          violations=()
+          for f in functions/*/index.ts; do
+            ef=$(basename "$(dirname "$f")")
+            if grep -qE 'from.*_shared/auth_utils|withHandler\b|withSentry\b|withSentryHandler\b|requireServiceRole\b|requireAuth\b|optionalAuth\b' "$f"; then
+              violations+=("$ef")
+            fi
+          done
+          if [ ${#violations[@]} -gt 0 ]; then
+            echo "❌ Legacy auth helpers found in the following Edge Functions:"
+            for ef in "${violations[@]}"; do
+              echo "  - $ef"
+              grep -nE 'from.*_shared/auth_utils|withHandler\b|withSentry\b|withSentryHandler\b|requireServiceRole\b|requireAuth\b|optionalAuth\b' "functions/${ef}/index.ts"
+            done
+            echo ""
+            echo "Use minglitEdgeFunction from _shared/edge_function.ts instead."
+            echo "See docs/architecture/edge-function-auth.md for migration guide."
+            exit 1
+          fi
+          echo "✅ No legacy auth helpers found"
+        working-directory: supabase
       - name: Test (edge functions)
         run: deno test --allow-all functions/
         working-directory: supabase
