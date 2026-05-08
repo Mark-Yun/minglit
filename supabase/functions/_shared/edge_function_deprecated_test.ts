@@ -1,5 +1,5 @@
 // Tests for manifest `deprecated` field — RFC 8594 Deprecation + Sunset headers (#2188)
-import { assertEquals, assertStringIncludes } from "@std/assert";
+import { assertEquals } from "@std/assert";
 import { addDeprecationHeaders } from "./edge_function.ts";
 
 function okResponse(body = "ok"): Response {
@@ -9,16 +9,15 @@ function okResponse(body = "ok"): Response {
 Deno.test("addDeprecationHeaders: adds Deprecation header in @<HTTP-date> format", () => {
   const res = addDeprecationHeaders(okResponse(), "2026-12-01");
   const deprecation = res.headers.get("Deprecation");
-  assertStringIncludes(deprecation ?? "", "@");
-  assertStringIncludes(deprecation ?? "", "2026");
+  const expected = new Date("2026-12-01").toUTCString();
+  assertEquals(deprecation, `@${expected}`);
 });
 
 Deno.test("addDeprecationHeaders: adds Sunset header as HTTP-date", () => {
   const res = addDeprecationHeaders(okResponse(), "2026-12-01");
   const sunset = res.headers.get("Sunset");
-  assertStringIncludes(sunset ?? "", "2026");
-  // Should be a valid HTTP-date (contains day-of-week abbreviation)
-  assertStringIncludes(sunset ?? "", "Dec");
+  const expected = new Date("2026-12-01").toUTCString();
+  assertEquals(sunset, expected);
 });
 
 Deno.test("addDeprecationHeaders: preserves original status and body", async () => {
