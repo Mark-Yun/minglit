@@ -455,7 +455,8 @@ jobs:
           violations=()
           for f in functions/*/index.ts; do
             ef=$(basename "$(dirname "$f")")
-            if grep -qE 'from.*_shared/auth_utils|withHandler\b|withSentry\b|withSentryHandler\b|requireServiceRole\b|requireAuth\b|optionalAuth\b' "$f"; then
+            # Exclude comment-only lines (// ...) before checking
+            if grep -v '^\s*//' "$f" | grep -qE 'from.*_shared/auth_utils|withHandler\b|withSentry\b|withSentryHandler\b|requireServiceRole\b|requireAuth\b|optionalAuth\b'; then
               violations+=("$ef")
             fi
           done
@@ -463,7 +464,7 @@ jobs:
             echo "❌ Legacy auth helpers found in the following Edge Functions:"
             for ef in "${violations[@]}"; do
               echo "  - $ef"
-              grep -nE 'from.*_shared/auth_utils|withHandler\b|withSentry\b|withSentryHandler\b|requireServiceRole\b|requireAuth\b|optionalAuth\b' "functions/${ef}/index.ts"
+              grep -v '^\s*//' "functions/${ef}/index.ts" | grep -nE 'from.*_shared/auth_utils|withHandler\b|withSentry\b|withSentryHandler\b|requireServiceRole\b|requireAuth\b|optionalAuth\b' || true
             done
             echo ""
             echo "Use minglitEdgeFunction from _shared/edge_function.ts instead."
