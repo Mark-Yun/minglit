@@ -1,20 +1,15 @@
 // partner-manage-party — Party/location/template CRUD for partners
 // Issue #316: RLS write strategy 전환
 
-import { createServiceClient } from "../_shared/supabase_client.ts";
 import {
-  corsResponse,
   errorResponse,
 } from "../_shared/response_utils.ts";
-import { requireAuth } from "../_shared/auth_utils.ts";
 import { parseAction } from "../_shared/request_utils.ts";
-import { initSentry, withHandler } from "../_shared/logger.ts";
+import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { handleCreate } from "./_handlers/create.ts";
 import { handleUpdate } from "./_handlers/update.ts";
 import { handleUpdateStatus } from "./_handlers/update_status.ts";
-
-initSentry();
 
 type ActionHandler = (
   body: Record<string, unknown>,
@@ -28,26 +23,20 @@ const DISPATCH: Record<string, ActionHandler> = {
   update_status: handleUpdateStatus,
 };
 
-Deno.serve(withHandler(async (req: Request): Promise<Response> => {
-  if (req.method === "OPTIONS") return corsResponse();
+export const handler = async (req: Request, ctx: EFContext): Promise<Response> => {
   if (req.method !== "POST") return errorResponse("Method not allowed", 405);
 
-  try {
-    const auth = await requireAuth(req);
-    if (auth instanceof Response) return auth;
-    const userId = auth;
+  const { supabase } = ctx;
+  if (ctx.auth.type !== "user") return errorResponse("Unexpected auth type", 500);
+  const userId = ctx.auth.userId;
 
-    const result = await parseAction(req);
-    if (result instanceof Response) return result;
-    const { action, body } = result;
-    if (!action) return errorResponse("Missing action", 400);
+  const result = await parseAction(req);
+  if (result instanceof Response) return result;
+  const { action, body } = result;
 
-    const supabase = createServiceClient();
-    const handler = DISPATCH[action];
-    if (!handler) return errorResponse(`Unknown action: ${action}`, 400);
-    return handler(body, supabase, userId);
-  } catch (e) {
-    const message = e instanceof Error ? e.message : String(e);
-    return errorResponse(message, 500);
-  }
-}));
+  const actionHandler = DISPATCH[action];
+  if (!actionHandler) return errorResponse(`Unknown action: ${action}`, 400);
+  return actionHandler(body, supabase, userId);
+};
+
+minglitEdgeFunction(handler);

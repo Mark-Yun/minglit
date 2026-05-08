@@ -1,21 +1,15 @@
 // Fix #179: esm.sh 직접 URL → deno.json import map 기반으로 통일
-import { createServiceClient } from "../_shared/supabase_client.ts";
+// Fix #2185 (Batch 7): migrate to minglitEdgeFunction wrapper — auth via manifest (user caller)
+import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
 import { getPortoneClient } from "../_shared/portone_client.ts";
-import { successResponse, errorResponse, corsResponse } from "../_shared/response_utils.ts";
-import { requireAuth } from "../_shared/auth_utils.ts";
+import { successResponse, errorResponse } from "../_shared/response_utils.ts";
 import { parseJsonBody } from "../_shared/request_utils.ts";
-import { initSentry, log, withHandler } from "../_shared/logger.ts";
+import { log } from "../_shared/logger.ts";
 
 const FN = "partner-sync";
 
-
-initSentry();
-
-Deno.serve(withHandler(async (req) => {
-  if (req.method === "OPTIONS") return corsResponse();
-
-  const auth = await requireAuth(req);
-  if (auth instanceof Response) return auth;
+export const handler = async (req: Request, ctx: EFContext): Promise<Response> => {
+  const { supabase } = ctx;
   try {
     const body = await parseJsonBody(req);
     if (body instanceof Response) return body;
@@ -24,8 +18,6 @@ Deno.serve(withHandler(async (req) => {
     if (!partner_id) {
       return errorResponse("Missing partner_id", 400);
     }
-
-    const supabase = createServiceClient();
 
     const { data: partner, error: partnerError } = await supabase
       .from("partners")
@@ -92,4 +84,6 @@ Deno.serve(withHandler(async (req) => {
     });
     return errorResponse(message, 500);
   }
-}));
+};
+
+minglitEdgeFunction(handler);

@@ -1,14 +1,14 @@
+// Fix #2185 (Batch 10): migrate to minglitEdgeFunction wrapper — auth via manifest (system caller)
 import { createServiceClient } from "../_shared/supabase_client.ts";
 import { createLLMAdapter } from "../_shared/ai/factory.ts";
 import { WorkerUtils } from "../_shared/worker_utils.ts";
-import { initSentry, withHandler } from "../_shared/logger.ts";
-import { requireServiceRole } from "../_shared/auth_utils.ts";
 import { parseJsonBody } from "../_shared/request_utils.ts";
 import {
   buildTagExtractionPrompt,
   extractDescriptionText,
   parseTagResponse,
 } from "./tag_extractor.ts";
+import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
 
 const FN = "ai-extract-tags";
 const MAX_TAGS = 5;
@@ -26,12 +26,8 @@ const TAGS_SKIP_CODES = new Set([
   "P0001", // raise_exception      — PL/pgSQL RAISE
 ]);
 
-initSentry();
-
-Deno.serve(withHandler(async (req) => {
-  // Fix #1489: 시스템 전용 EF — service_role만 허용
-  const auth = requireServiceRole(req);
-  if (auth instanceof Response) return auth;
+export const handler = async (req: Request, _ctx: EFContext): Promise<Response> => {
+  // wrapper guarantees caller === "system" per auth-manifest
   console.log(`[${FN}] triggered`);
 
   try {
@@ -243,4 +239,6 @@ Deno.serve(withHandler(async (req) => {
       headers: { "Content-Type": "application/json" },
     });
   }
-}));
+};
+
+minglitEdgeFunction(handler);

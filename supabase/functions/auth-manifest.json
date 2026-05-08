@@ -66,6 +66,215 @@
       "callers": ["system"],
       "envs": ["dev", "production"],
       "description": "이벤트 체크인 참가자 매치 페어 생성 (Fix #592)"
+    },
+    "settlement-query": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "파트너 정산/지급 내역 조회 — PortOne getPartnerSettlements / getPayouts"
+    },
+    "user-cancel-deletion": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "탈퇴 유예 기간 중 취소 — deleted_at 복구"
+    },
+    "user-cast-vote": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "이벤트 체크인 참가자 매칭 투표"
+    },
+    "user-manage-notification": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "유저 알림 읽음/삭제 처리"
+    },
+    "user-manage-social": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "소셜 인터랙션 관리 (좋아요, 차단, 신고)"
+    },
+    "user-get-ticket-token": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "QR 코드용 서명된 티켓 토큰 발급 (Fix #1206)"
+    },
+    "notification-worker": {
+      "callers": ["system"],
+      "envs": ["dev", "production"],
+      "description": "알림 발송 워커 (cron 트리거)"
+    },
+    "payment-verify": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "결제 완료 검증 (PortOne V1)"
+    },
+    "user-submit-verification": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "유저 인증 데이터 제출"
+    },
+    "user-update-verification": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "유저 인증 폼 데이터 저장/수정"
+    },
+    "payment-webhook": {
+      "callers": ["external"],
+      "envs": ["dev", "production"],
+      "external_auth": {
+        "type": "ip_allowlist",
+        "ips": ["52.78.100.19", "52.78.48.223", "52.78.17.128"]
+      },
+      "description": "PortOne V1 결제 웹훅 수신"
+    },
+    "user-manage-settings": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "FCM 토큰 및 사용자 설정 관리 — upsert/delete_token, update_settings (Fix #2040)"
+    },
+    "partner-reject-application": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "파트너 신청 거절 — 단건, compare-and-set 상태 보호 (Issue #517)"
+    },
+    "partner-approve-application": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "파트너 신청 승인 — 단건/일괄, DB 용량 가드 포함 (Fix #1219)"
+    },
+    "partner-manage-party": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "파티/장소/템플릿 CRUD — create/update/update_status (Issue #316)"
+    },
+    "partner-register": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "파트너 신청 — save_draft/submit/update, 서버사이드 검증 포함 (Issue #311)"
+    },
+    "event-checkin": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "이벤트 체크인 처리"
+    },
+    "commit-match-likes": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "매치 좋아요 확정 제출"
+    },
+    "partner-manage-event": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "파트너 이벤트 관리 (생성/수정/삭제/상태변경)"
+    },
+    "partner-manage-match": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "파트너 매치 결과 관리"
+    },
+    "partner-manage-member": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "파트너 멤버 관리"
+    },
+    "partner-manage-settlement": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "파트너 정산 관리"
+    },
+    "apply-event": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "유저 이벤트 신청 (무료/유료 분기, verification_data 처리)"
+    },
+    "user-create-order": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "유저 결제 주문 생성 (apply_event RPC 호출)"
+    },
+    "user-cancel-order": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "유저 주문 취소 + PortOne 환불 처리"
+    },
+    "user-event-feed": {
+      "callers": ["user", "public"],
+      "envs": ["dev", "production"],
+      "description": "이벤트 피드 조회 (정렬/필터/커서 페이지네이션, nearby는 user 필수)"
+    },
+    "user-delete-account": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "유저 계정 삭제 요청 (7일 유예 기간, 활성 예약/미정산 잔액 선차단)"
+    },
+    "partner-manage-verification": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "파트너 인증 항목 관리 (KYC 카테고리 정의)"
+    },
+    "partner-review-submission": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "파트너 인증 심사 (승인/거부)"
+    },
+    "partner-sync": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "파트너 정보 PortOne 동기화"
+    },
+    "recurrence-rules": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "반복 이벤트 규칙 생성/수정/일시정지/재개/취소"
+    },
+    "payment-cancel": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "결제 취소 및 환불 처리"
+    },
+    "identity-verify": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "PortOne V2 본인인증 → 유저 프로필 업데이트 (CI/DI 암호화 저장)"
+    },
+    "bug-report": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "유저 버그 리포트 제출 → GitHub 이슈 생성"
+    },
+    "dev-mock-portone": {
+      "callers": ["public"],
+      "envs": ["local", "development", "dev"],
+      "description": "PortOne API 모킹 (dev/local 전용 — users/getToken, payments)"
+    },
+    "dev-seed": {
+      "callers": ["public"],
+      "envs": ["local", "development", "dev"],
+      "description": "Dev 시딩 — 이미지 업로드 전용 (seed.dev.sql로 데이터 시딩)"
+    },
+    "dev-session-switch": {
+      "callers": ["public"],
+      "envs": ["local", "development", "dev"],
+      "description": "Dev 세션 전환 — 유저 목록 조회 (테스트용)"
+    },
+    "ai-embed": {
+      "callers": ["system"],
+      "envs": ["dev", "production"],
+      "description": "PGMQ q_vectors 파티 임베딩 + 유저 인터랙션 벡터 갱신 워커 (Fix #1489: system caller 전용)"
+    },
+    "ai-extract-tags": {
+      "callers": ["system"],
+      "envs": ["dev", "production"],
+      "description": "PGMQ q_tags LLM 태그 추출 워커 (Fix #1489: system caller 전용)"
+    },
+    "backend-simulator": {
+      "callers": ["public"],
+      "envs": ["local", "development", "dev"],
+      "description": "E2E/시나리오 시뮬레이터 — dev 전용 (wrapper의 auth-manifest envs 게이팅으로 dev-only 보장)"
+    },
+    "health": {
+      "callers": ["system", "public"],
+      "envs": ["dev", "production"],
+      "description": "인프라 헬스 체크 (DB/Auth/Storage). ?env=true 는 system caller 전용"
     }
   }
 }

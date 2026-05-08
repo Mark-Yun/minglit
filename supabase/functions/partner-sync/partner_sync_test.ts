@@ -15,6 +15,8 @@ const ENV = {
   PORTONE_V2_API_KEY: "test-v2-key",
   SUPABASE_URL: "https://supabase.test",
   SUPABASE_SERVICE_ROLE_KEY: "service-key",
+  ENVIRONMENT: "dev",
+  MINGLIT_EF_TEST_FN_NAME: "partner-sync",
 };
 
 Deno.test("partner-sync - new partner creates PortOne partner and saves ID", async () => {

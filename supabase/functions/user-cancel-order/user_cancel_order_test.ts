@@ -18,6 +18,8 @@ const ENV = {
   PORTONE_API_SECRET: "test-secret",
   SUPABASE_URL: "https://supabase.test",
   SUPABASE_SERVICE_ROLE_KEY: "service-key",
+  ENVIRONMENT: "dev",
+  MINGLIT_EF_TEST_FN_NAME: "user-cancel-order",
 };
 
 const nowMs = Date.now();

@@ -17,6 +17,8 @@ const TEST_PARTNER_ID = "partner-001";
 const ENV = {
   SUPABASE_URL: "http://localhost:54321",
   SUPABASE_SERVICE_ROLE_KEY: "test-service-key",
+  ENVIRONMENT: "dev",
+  MINGLIT_EF_TEST_FN_NAME: "partner-manage-member",
 };
 
 function authRoute(): FetchRoute {

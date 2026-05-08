@@ -10,11 +10,11 @@ Deno.test({
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
-    await withEnv({ ENVIRONMENT: "production" }, async () => {
+    await withEnv({ ENVIRONMENT: "production", MINGLIT_EF_TEST_FN_NAME: "dev-mock-portone" }, async () => {
       const response = await handler(new Request("http://localhost/users/getToken", { method: "POST" }));
       assertEquals(response.status, 403);
       const body = await readJson(response);
-      assertEquals(body.error, "Dev-only function. Blocked in production.");
+      assertEquals(body.error, "Function disabled in production");
     });
   },
 });
@@ -24,7 +24,7 @@ Deno.test({
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
-    await withEnv({ ENVIRONMENT: "local" }, async () => {
+    await withEnv({ ENVIRONMENT: "local", MINGLIT_EF_TEST_FN_NAME: "dev-mock-portone" }, async () => {
       const response = await handler(
         new Request("http://localhost/users/getToken", {
           method: "POST",
@@ -45,7 +45,7 @@ Deno.test({
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
-    await withEnv({ ENVIRONMENT: "development" }, async () => {
+    await withEnv({ ENVIRONMENT: "development", MINGLIT_EF_TEST_FN_NAME: "dev-mock-portone" }, async () => {
       const response = await handler(
         new Request("http://localhost/payments/imp_test_123", {
           method: "GET",
@@ -68,7 +68,7 @@ Deno.test({
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
-    await withEnv({ ENVIRONMENT: "local" }, async () => {
+    await withEnv({ ENVIRONMENT: "local", MINGLIT_EF_TEST_FN_NAME: "dev-mock-portone" }, async () => {
       const response = await handler(
         new Request("http://localhost/payments/imp_fail_abc", {
           method: "GET",
@@ -88,7 +88,7 @@ Deno.test({
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
-    await withEnv({ ENVIRONMENT: "local" }, async () => {
+    await withEnv({ ENVIRONMENT: "local", MINGLIT_EF_TEST_FN_NAME: "dev-mock-portone" }, async () => {
       const response = await handler(
         new Request("http://localhost/payments/cancel", {
           method: "POST",
@@ -114,7 +114,7 @@ Deno.test({
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
-    await withEnv({ ENVIRONMENT: "local" }, async () => {
+    await withEnv({ ENVIRONMENT: "local", MINGLIT_EF_TEST_FN_NAME: "dev-mock-portone" }, async () => {
       const response = await handler(
         new Request("http://localhost/unknown/path", { method: "GET" }),
       );

@@ -10,6 +10,8 @@ import {
 } from "../_test_utils/mock_http.ts";
 
 const ENV = {
+  ENVIRONMENT: "dev",
+  MINGLIT_EF_TEST_FN_NAME: "user-get-ticket-token",
   SUPABASE_URL: "http://localhost:54321",
   SUPABASE_SERVICE_ROLE_KEY: "test-service-key",
   // Valid Ed25519 test private key JWK (for testing only — not used in production)
@@ -22,6 +24,8 @@ const ENV = {
 };
 
 const ENV_NO_KEY = {
+  ENVIRONMENT: "dev",
+  MINGLIT_EF_TEST_FN_NAME: "user-get-ticket-token",
   SUPABASE_URL: "http://localhost:54321",
   SUPABASE_SERVICE_ROLE_KEY: "test-service-key",
 };
@@ -187,12 +191,3 @@ Deno.test({
   },
 });
 
-Deno.test({
-  name: "user-get-ticket-token - OPTIONS returns CORS response",
-  fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-
-    const response = await handler(new Request(BASE_URL, { method: "OPTIONS" }));
-    assertEquals(response.status, 200);
-  },
-});

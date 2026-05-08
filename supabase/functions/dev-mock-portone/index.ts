@@ -1,7 +1,6 @@
-import { initSentry, withHandler } from "../_shared/logger.ts";
+// Fix #2184 (Batch 9): migrate to minglitEdgeFunction wrapper — public caller, dev-only
 import { parseJsonBody } from "../_shared/request_utils.ts";
-
-initSentry();
+import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -17,19 +16,7 @@ function json(body: unknown, status = 200): Response {
   });
 }
 
-Deno.serve(withHandler(async (req) => {
-  // Handle CORS preflight
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
-
-  // Dev-only guard
-  const env = Deno.env.get("ENVIRONMENT");
-  // Fix #1614: "dev" = Supabase dev project (set by supabase-deploy.yml secrets)
-  if (env !== "local" && env !== "development" && env !== "dev") {
-    return json({ error: "Dev-only function. Blocked in production." }, 403);
-  }
-
+export const handler = async (req: Request, _ctx: EFContext): Promise<Response> => {
   const url = new URL(req.url);
   const path = url.pathname;
 
@@ -78,4 +65,6 @@ Deno.serve(withHandler(async (req) => {
   }
 
   return json({ error: "Not found" }, 404);
-}));
+};
+
+minglitEdgeFunction(handler);

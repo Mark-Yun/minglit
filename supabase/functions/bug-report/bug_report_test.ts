@@ -19,6 +19,8 @@ const BASE_ENV = {
   GITHUB_ACCESS_TOKEN: "test-token",
   SUPABASE_URL: "https://test.supabase.co",
   SUPABASE_SERVICE_ROLE_KEY: "test-service-key",
+  ENVIRONMENT: "dev",
+  MINGLIT_EF_TEST_FN_NAME: "bug-report",
 };
 
 const SUPABASE_AUTH_ROUTE = {
