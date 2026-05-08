@@ -1,26 +1,18 @@
+// Fix #2184 (Batch 9): migrate to minglitEdgeFunction wrapper — auth via manifest (user caller)
 import {
-  corsResponse,
   errorResponse,
   successResponse,
 } from "../_shared/response_utils.ts";
-import { requireAuth } from "../_shared/auth_utils.ts";
 import { parseJsonBody } from "../_shared/request_utils.ts";
-import { initSentry, log, withHandler } from "../_shared/logger.ts";
+import { log } from "../_shared/logger.ts";
+import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
 
 const FN = "bug-report";
 
 const GITHUB_TOKEN = Deno.env.get("GITHUB_ACCESS_TOKEN");
 const GITHUB_REPO = "Mark-Yun/minglit";
 
-initSentry();
-
-Deno.serve(withHandler(async (req) => {
-  if (req.method === "OPTIONS") return corsResponse();
-
-  // Verify JWT (ES256-compatible, via Auth server)
-  const auth = await requireAuth(req);
-  if (auth instanceof Response) return auth;
-
+export const handler = async (req: Request, _ctx: EFContext): Promise<Response> => {
   try {
     const body = await parseJsonBody(req);
     if (body instanceof Response) return body;
@@ -140,4 +132,6 @@ ${screenshotSection}${environmentSection}${layoutDumpSection}`;
     });
     return errorResponse(message, 500);
   }
-}));
+};
+
+minglitEdgeFunction(handler);
