@@ -1,4 +1,5 @@
 import { assertEquals } from "@std/assert";
+import { stub } from "@std/testing/mock";
 import {
   authenticatedJsonRequest,
   captureServeHandler,
@@ -515,8 +516,21 @@ Deno.test({
 Deno.test({
   name: "returns 500 when auth type is not user (system caller guard)",
   fn: async () => {
+    // Stub Deno.serve to prevent resource leak when importing index.ts
+    const serveOwner = Deno as unknown as { serve: (...args: unknown[]) => unknown };
+    const serveStub = stub(serveOwner, "serve", () => ({
+      shutdown: async () => {},
+      finished: Promise.resolve(),
+    } as unknown as Deno.HttpServer));
+    let handler: (req: Request, ctx: EFContext) => Promise<Response>;
+    try {
+      const mod = await import(`./index.ts?guard=${crypto.randomUUID()}`);
+      handler = mod.handler;
+    } finally {
+      serveStub.restore();
+    }
+
     await withEnv(ENV, async () => {
-      const mod = await import("./index.ts");
       const fakeCtx: EFContext = {
         auth: { type: "system" },
         supabase: {} as EFContext["supabase"],
@@ -529,7 +543,7 @@ Deno.test({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "set_rules", event_id: "event-1", rules: [] }),
       });
-      const res = await mod.handler(req, fakeCtx);
+      const res = await handler(req, fakeCtx);
       assertEquals(res.status, 500);
       const body = await res.json();
       assertEquals(body.error, "Unexpected auth type");
