@@ -555,7 +555,10 @@ jobs:
           echo "✅ CI jobs passed"
 
           # 2. Wait for CodeRabbit review (PR only, skip for dependabot)
-          if [ "${{ github.event_name }}" = "pull_request" ] && [ "${{ github.actor }}" != "dependabot[bot]" ]; then
+          # Fix #2149: check PR author (user.login), not github.actor — when a human
+          # updates a dependabot branch (merge/rebase), actor becomes that human but
+          # CodeRabbit still doesn't review dependabot PRs → 30-minute timeout.
+          if [ "${{ github.event_name }}" = "pull_request" ] && [ "${{ github.event.pull_request.user.login }}" != "dependabot[bot]" ]; then
             SHA="${{ github.event.pull_request.head.sha }}"
             echo ""
             echo "Waiting for CodeRabbit review on $SHA ..."
