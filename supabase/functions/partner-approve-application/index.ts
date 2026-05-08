@@ -1,65 +1,30 @@
 // partner-approve-application — Approve event applications (single + bulk)
 // Issue #517: 파트너 대시보드 리디자인 — 신청 승인 API
 
-import { createServiceClient } from "../_shared/supabase_client.ts";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
-  corsResponse,
   errorResponse,
   successResponse,
 } from "../_shared/response_utils.ts";
-import { requireAuth } from "../_shared/auth_utils.ts";
 import { requirePartnerPermission } from "../_shared/partner_permissions.ts";
 import { parseAction } from "../_shared/request_utils.ts";
-import { initSentry, withHandler, log } from "../_shared/logger.ts";
-
-const FN = "partner-approve-application";
-
-initSentry();
+import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 // Fix #1219: keep approval status filtering aligned with the capacity guard paths.
 const APPROVABLE_STATUSES = ["pending", "pending_review"] as const;
 
-Deno.serve(withHandler(async (req: Request): Promise<Response> => {
-  if (req.method === "OPTIONS") return corsResponse();
+export const handler = async (req: Request, ctx: EFContext): Promise<Response> => {
   if (req.method !== "POST") return errorResponse("Method not allowed", 405);
 
-  try {
-    return await handleRequest(req);
-  } catch (e) {
-    const detail = e instanceof Error ? e.message : String(e);
-    log({
-      function: FN,
-      level: "error",
-      message: "partner-approve-application error",
-      metadata: { detail },
-    });
-    const env = Deno.env.get("ENVIRONMENT");
-    const exposeDetail = env === "local" || env === "development";
-    return errorResponse(
-      exposeDetail ? `${FN}: ${detail}` : "Internal server error",
-      500,
-    );
-  }
-}));
+  const { supabase } = ctx;
+  // wrapper guarantees type === "user" per auth-manifest callers: ["user"]
+  const userId = (ctx.auth as { type: "user"; userId: string }).userId;
 
-async function handleRequest(req: Request): Promise<Response> {
-  // 1. Auth
-  const auth = await requireAuth(req);
-  if (auth instanceof Response) return auth;
-  const userId = auth;
-
-  // 2. Parse body
   const result = await parseAction(req);
   if (result instanceof Response) return result;
   const { action, body } = result;
-  if (!action) {
-    return errorResponse("Missing action", 400);
-  }
-
-  const supabase = createServiceClient();
 
   // ─── approve (single) ───
   if (action === "approve") {
@@ -72,7 +37,7 @@ async function handleRequest(req: Request): Promise<Response> {
   }
 
   return errorResponse(`Unknown action: ${action}`, 400);
-}
+};
 
 // ── Single approve ──
 async function handleApprove(
@@ -226,3 +191,5 @@ async function handleBulkApprove(
     remaining_slots_before_approval: remainingSlotsBeforeApproval,
   });
 }
+
+minglitEdgeFunction(handler);

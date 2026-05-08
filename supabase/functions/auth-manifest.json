@@ -125,6 +125,31 @@
         "ips": ["52.78.100.19", "52.78.48.223", "52.78.17.128"]
       },
       "description": "PortOne V1 결제 웹훅 수신"
+    },
+    "user-manage-settings": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "FCM 토큰 및 사용자 설정 관리 — upsert/delete_token, update_settings (Fix #2040)"
+    },
+    "partner-reject-application": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "파트너 신청 거절 — 단건, compare-and-set 상태 보호 (Issue #517)"
+    },
+    "partner-approve-application": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "파트너 신청 승인 — 단건/일괄, DB 용량 가드 포함 (Fix #1219)"
+    },
+    "partner-manage-party": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "파티/장소/템플릿 CRUD — create/update/update_status (Issue #316)"
+    },
+    "partner-register": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "파트너 신청 — save_draft/submit/update, 서버사이드 검증 포함 (Issue #311)"
     }
   }
 }
