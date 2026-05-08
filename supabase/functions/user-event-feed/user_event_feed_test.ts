@@ -13,6 +13,8 @@ import {
 const ENV = {
   SUPABASE_URL: "http://localhost:54321",
   SUPABASE_SERVICE_ROLE_KEY: "test-service-key",
+  ENVIRONMENT: "dev",
+  MINGLIT_EF_TEST_FN_NAME: "user-event-feed",
 };
 
 const BASE_URL = "http://localhost";
@@ -121,14 +123,18 @@ Deno.test({
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
-    await withEnv(ENV, async () => {
-      const response = await handler(
-        jsonRequest(BASE_URL, { sort_by: "invalid_sort" }),
-      );
-      assertEquals(response.status, 400);
+    const { fetchMock } = createFetchMock([]);
 
-      const body = await readJson(response);
-      assertEquals(body.error.includes("Invalid sort_by"), true);
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const response = await handler(
+          jsonRequest(BASE_URL, { sort_by: "invalid_sort" }),
+        );
+        assertEquals(response.status, 400);
+
+        const body = await readJson(response);
+        assertEquals(body.error.includes("Invalid sort_by"), true);
+      });
     });
   },
 });
@@ -138,17 +144,21 @@ Deno.test({
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
-    await withEnv(ENV, async () => {
-      const response = await handler(
-        jsonRequest(BASE_URL, {
-          sort_by: "recommended",
-          cursor: { bad_field: "oops" },
-        }),
-      );
-      assertEquals(response.status, 400);
+    const { fetchMock } = createFetchMock([]);
 
-      const body = await readJson(response);
-      assertEquals(body.error.includes("Invalid cursor"), true);
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const response = await handler(
+          jsonRequest(BASE_URL, {
+            sort_by: "recommended",
+            cursor: { bad_field: "oops" },
+          }),
+        );
+        assertEquals(response.status, 400);
+
+        const body = await readJson(response);
+        assertEquals(body.error.includes("Invalid cursor"), true);
+      });
     });
   },
 });
@@ -433,8 +443,10 @@ Deno.test({
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
-    const response = await handler(new Request(BASE_URL, { method: "OPTIONS" }));
-    assertEquals(response.status, 200);
+    await withEnv(ENV, async () => {
+      const response = await handler(new Request(BASE_URL, { method: "OPTIONS" }));
+      assertEquals(response.status, 200);
+    });
   },
 });
 
@@ -443,7 +455,9 @@ Deno.test({
   fn: async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
-    const response = await handler(new Request(BASE_URL, { method: "GET" }));
-    assertEquals(response.status, 405);
+    await withEnv(ENV, async () => {
+      const response = await handler(new Request(BASE_URL, { method: "GET" }));
+      assertEquals(response.status, 405);
+    });
   },
 });

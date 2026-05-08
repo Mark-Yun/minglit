@@ -180,6 +180,31 @@
       "callers": ["user"],
       "envs": ["dev", "production"],
       "description": "파트너 정산 관리"
+    },
+    "apply-event": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "유저 이벤트 신청 (무료/유료 분기, verification_data 처리)"
+    },
+    "user-create-order": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "유저 결제 주문 생성 (apply_event RPC 호출)"
+    },
+    "user-cancel-order": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "유저 주문 취소 + PortOne 환불 처리"
+    },
+    "user-event-feed": {
+      "callers": ["user", "public"],
+      "envs": ["dev", "production"],
+      "description": "이벤트 피드 조회 (정렬/필터/커서 페이지네이션, nearby는 user 필수)"
+    },
+    "user-delete-account": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "유저 계정 삭제 요청 (7일 유예 기간, 활성 예약/미정산 잔액 선차단)"
     }
   }
 }

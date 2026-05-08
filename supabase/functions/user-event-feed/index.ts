@@ -1,14 +1,13 @@
 // user-event-feed/index.ts — Server-side event feed with sorting, filtering & cursor pagination (#614)
+// Fix #2185 (Batch 5): migrate to minglitEdgeFunction wrapper — auth via manifest (user + public callers)
 
-import { createServiceClient } from "../_shared/supabase_client.ts";
 import {
-  corsResponse,
   errorResponse,
   successResponse,
 } from "../_shared/response_utils.ts";
-import { optionalAuth, requireAuth } from "../_shared/auth_utils.ts";
+import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
 import { parseJsonBody } from "../_shared/request_utils.ts";
-import { initSentry, log, withHandler } from "../_shared/logger.ts";
+import { log } from "../_shared/logger.ts";
 
 const FN = "user-event-feed";
 
@@ -18,10 +17,13 @@ type SortBy = typeof VALID_SORT_BY[number];
 // Fix #1748: nearby 분당 최대 요청 수
 const NEARBY_RATE_LIMIT_PER_MINUTE = 30;
 
-initSentry();
-
-Deno.serve(withHandler(async (req) => {
-  if (req.method === "OPTIONS") return corsResponse();
+export const handler = async (req: Request, ctx: EFContext): Promise<Response> => {
+  // auth.type === "user" (authenticated) or "public" (anonymous)
+  // Manifest callers: ["user", "public"] — both allowed, nearby requires "user"
+  const userId: string | null = ctx.auth.type === "user"
+    ? (ctx.auth as { type: "user"; userId: string }).userId
+    : null;
+  const { supabase } = ctx;
 
   if (req.method !== "POST") {
     return errorResponse("Method not allowed", 405);
@@ -55,14 +57,8 @@ Deno.serve(withHandler(async (req) => {
 
   // Fix #1748: nearby requires authentication — unauthenticated nearby would
   // insert user_id=NULL into location_access_log, polluting the §16 legal log.
-  let userId: string | null;
-  if (nearby !== null) {
-    const authResult = await requireAuth(req);
-    if (authResult instanceof Response) return authResult;
-    userId = authResult;
-  } else {
-    // Non-nearby paths allow anonymous access for basic feed
-    userId = await optionalAuth(req);
+  if (nearby !== null && userId === null) {
+    return errorResponse("Unauthorized", 401);
   }
 
   // Validate sort_by
@@ -112,8 +108,6 @@ Deno.serve(withHandler(async (req) => {
     }
     nearbyTyped = { lat, lng, radius_km };
   }
-
-  const supabase = createServiceClient();
 
   // Fix #1748: rate limit — max NEARBY_RATE_LIMIT_PER_MINUTE requests/minute/user.
   // Fails open: a DB hiccup logs a warning but does not block the request.
@@ -223,4 +217,6 @@ Deno.serve(withHandler(async (req) => {
     sort_by,
     limit,
   });
-}));
+};
+
+minglitEdgeFunction(handler);

@@ -1,14 +1,10 @@
-import { createServiceClient } from "../_shared/supabase_client.ts";
+// Fix #2185 (Batch 5): migrate to minglitEdgeFunction wrapper — auth via manifest (user caller)
 import {
-  corsResponse,
   errorResponse,
   successResponse,
 } from "../_shared/response_utils.ts";
-import { requireAuth } from "../_shared/auth_utils.ts";
+import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
 import { parseJsonBody } from "../_shared/request_utils.ts";
-import { initSentry, withHandler } from "../_shared/logger.ts";
-
-initSentry();
 
 type VerifItem = { verification_id: string; data: Record<string, unknown> };
 
@@ -61,7 +57,7 @@ function parseVerifications(
   return { partnerId, items: [] };
 }
 
-type SupabaseClient = ReturnType<typeof createServiceClient>;
+type SupabaseClient = EFContext["supabase"];
 
 /** Upserts all verifications and inserts submission records.
  *  Returns an error Response on first failure, null on success.
@@ -118,12 +114,10 @@ async function upsertVerifications(
   return null;
 }
 
-Deno.serve(withHandler(async (req) => {
-  if (req.method === "OPTIONS") return corsResponse();
-
-  const auth = await requireAuth(req);
-  if (auth instanceof Response) return auth;
-  const userId = auth;
+export const handler = async (req: Request, ctx: EFContext): Promise<Response> => {
+  // auth.type === "user" is guaranteed by manifest (callers: ["user"])
+  const userId = (ctx.auth as { type: "user"; userId: string }).userId;
+  const { supabase } = ctx;
 
   try {
     const body = await parseJsonBody(req);
@@ -144,8 +138,6 @@ Deno.serve(withHandler(async (req) => {
         400,
       );
     }
-
-    const supabase = createServiceClient();
 
     // 1. 이벤트 + 티켓 정보 조회
     const { data: event, error: eventError } = await supabase
@@ -466,4 +458,6 @@ Deno.serve(withHandler(async (req) => {
     console.error("Error in apply-event:", message);
     return errorResponse(message, 500);
   }
-}));
+};
+
+minglitEdgeFunction(handler);

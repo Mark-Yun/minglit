@@ -1,25 +1,21 @@
-import { createServiceClient } from "../_shared/supabase_client.ts";
+// Fix #2185 (Batch 5): migrate to minglitEdgeFunction wrapper — auth via manifest (user caller)
 import {
-  corsResponse,
   errorResponse,
   successResponse,
 } from "../_shared/response_utils.ts";
-import { requireAuth } from "../_shared/auth_utils.ts";
+import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
 import { parseJsonBody } from "../_shared/request_utils.ts";
-import { initSentry, log, withHandler, withSpan } from "../_shared/logger.ts";
+import { log, withSpan } from "../_shared/logger.ts";
 import { initStatsig, logStatsigEvent } from "../_shared/statsig_utils.ts";
 
 const FN = "user-create-order";
 
-initSentry();
 initStatsig();
 
-Deno.serve(withHandler(async (req) => {
-  if (req.method === "OPTIONS") return corsResponse();
-
-  const auth = await requireAuth(req);
-  if (auth instanceof Response) return auth;
-  const userId = auth;
+export const handler = async (req: Request, ctx: EFContext): Promise<Response> => {
+  // auth.type === "user" is guaranteed by manifest (callers: ["user"])
+  const userId = (ctx.auth as { type: "user"; userId: string }).userId;
+  const { supabase } = ctx;
 
   try {
     const body = await parseJsonBody(req);
@@ -41,8 +37,6 @@ Deno.serve(withHandler(async (req) => {
     if (!ticket_id) {
       return errorResponse("Missing required field: ticket_id", 400);
     }
-
-    const supabase = createServiceClient();
 
     // 2. Fetch event
     const { data: event, error: eventError } = await withSpan(
@@ -328,4 +322,6 @@ Deno.serve(withHandler(async (req) => {
     });
     return errorResponse("주문 생성 중 오류가 발생했습니다.", 500);
   }
-}));
+};
+
+minglitEdgeFunction(handler);

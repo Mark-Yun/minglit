@@ -1,12 +1,11 @@
-import { createServiceClient } from "../_shared/supabase_client.ts";
+// Fix #2185 (Batch 5): migrate to minglitEdgeFunction wrapper — auth via manifest (user caller)
 import {
-  corsResponse,
   errorResponse,
   successResponse,
 } from "../_shared/response_utils.ts";
-import { requireAuth } from "../_shared/auth_utils.ts";
+import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
 import { parseJsonBody } from "../_shared/request_utils.ts";
-import { initSentry, log, withHandler, withSpan } from "../_shared/logger.ts";
+import { log, withSpan } from "../_shared/logger.ts";
 
 const FN = "user-delete-account";
 const GRACE_PERIOD_DAYS = 7;
@@ -22,8 +21,6 @@ type DeleteAccountRequest = {
   reason_code?: unknown;
   reason_text?: unknown;
 };
-
-initSentry();
 
 async function parseRequestBody(
   req: Request,
@@ -44,13 +41,12 @@ async function parseRequestBody(
   return body as DeleteAccountRequest;
 }
 
-Deno.serve(withHandler(async (req) => {
-  if (req.method === "OPTIONS") return corsResponse();
+export const handler = async (req: Request, ctx: EFContext): Promise<Response> => {
   if (req.method !== "POST") return errorResponse("Method Not Allowed", 405);
 
-  const auth = await requireAuth(req);
-  if (auth instanceof Response) return auth;
-  const userId = auth;
+  // auth.type === "user" is guaranteed by manifest (callers: ["user"])
+  const userId = (ctx.auth as { type: "user"; userId: string }).userId;
+  const { supabase } = ctx;
 
   try {
     const body = await parseRequestBody(req);
@@ -75,7 +71,6 @@ Deno.serve(withHandler(async (req) => {
       return errorResponse("reason_text must be 200 characters or fewer", 400);
     }
 
-    const supabase = createServiceClient();
     const now = new Date();
     const nowIso = now.toISOString();
     const gracePeriodEnds = new Date(
@@ -252,4 +247,6 @@ Deno.serve(withHandler(async (req) => {
     });
     return errorResponse(message, 500);
   }
-}));
+};
+
+minglitEdgeFunction(handler);
