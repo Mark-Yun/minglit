@@ -234,7 +234,7 @@ Deno.test("contract: payment-cancel response matches schema", async () => {
 Deno.test("contract: settlement-query response matches schema", async () => {
   const schema = await loadSchema("settlement_query");
 
-  await withEnv(COMMON_ENV, async () => {
+  await withEnv({ ...COMMON_ENV, ENVIRONMENT: "dev", MINGLIT_EF_TEST_FN_NAME: "settlement-query" }, async () => {
     const handler = await captureServeHandler(
       new URL("../settlement-query/index.ts", import.meta.url),
     );

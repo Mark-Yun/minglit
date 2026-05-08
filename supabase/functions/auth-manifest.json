@@ -67,6 +67,36 @@
       "envs": ["dev", "production"],
       "description": "이벤트 체크인 참가자 매치 페어 생성 (Fix #592)"
     },
+    "settlement-query": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "파트너 정산/지급 내역 조회 — PortOne getPartnerSettlements / getPayouts"
+    },
+    "user-cancel-deletion": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "탈퇴 유예 기간 중 취소 — deleted_at 복구"
+    },
+    "user-cast-vote": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "이벤트 체크인 참가자 매칭 투표"
+    },
+    "user-manage-notification": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "유저 알림 읽음/삭제 처리"
+    },
+    "user-manage-social": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "소셜 인터랙션 관리 (좋아요, 차단, 신고)"
+    },
+    "user-get-ticket-token": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "QR 코드용 서명된 티켓 토큰 발급 (Fix #1206)"
+    },
     "notification-worker": {
       "callers": ["system"],
       "envs": ["dev", "production"],
