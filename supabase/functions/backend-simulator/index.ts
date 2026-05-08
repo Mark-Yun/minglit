@@ -1,3 +1,4 @@
+// Fix #2185 (Batch 10): migrate to minglitEdgeFunction wrapper — auth via manifest (public, dev-only)
 // backend-simulator/index.ts — Main Edge Function handler for backend simulation
 
 import { createServiceClient } from "../_shared/supabase_client.ts";
@@ -31,18 +32,7 @@ import type {
   SimLogEntry,
   SimSummary,
 } from "./sim_types.ts";
-
-// ─────────────────────────────────────────────────────────
-// Dev guard
-// ─────────────────────────────────────────────────────────
-
-function isProduction(): boolean {
-  const env = Deno.env.get("ENVIRONMENT");
-  // Fix #1596: fail-safe guard — only allow explicit "dev". Any other value
-  // (unset, "staging", "production", typo) blocks access, protecting the
-  // service_role client from running outside dev.
-  return env !== "dev";
-}
+import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
 
 // ─────────────────────────────────────────────────────────
 // Defaults
@@ -65,9 +55,8 @@ const DEFAULT_CONFIG: SimConfig = {
 
 const FN = "backend-simulator";
 
-Deno.serve(async (req: Request): Promise<Response> => {
-  if (req.method === "OPTIONS") return corsResponse();
-  if (isProduction()) return errorResponse("Dev only", 403);
+export const handler = async (req: Request, _ctx: EFContext): Promise<Response> => {
+  // wrapper enforces envs: ["local", "development", "dev"] per auth-manifest
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -603,4 +592,6 @@ Deno.serve(async (req: Request): Promise<Response> => {
       console.error("[backend-simulator] failed to flush logs", flushErr);
     }
   }
-});
+};
+
+minglitEdgeFunction(handler);
