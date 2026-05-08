@@ -1,27 +1,17 @@
 // event-matching/index.ts — Create match pairs for checked-in participants of an event
 
-import { createServiceClient } from "../_shared/supabase_client.ts";
 import {
-  corsResponse,
   errorResponse,
   successResponse,
 } from "../_shared/response_utils.ts";
-// Fix #592: requireAuth(일반 JWT) → requireServiceRole로 전환하여 인가 우회 차단
-import { requireServiceRole } from "../_shared/auth_utils.ts";
+// Fix #2185 (Batch 2): migrate to minglitEdgeFunction wrapper — auth via manifest (system caller)
+import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
 import { parseJsonBody } from "../_shared/request_utils.ts";
-import { initSentry, log, withHandler } from "../_shared/logger.ts";
+import { log } from "../_shared/logger.ts";
 
 const FN = "event-matching";
 
-initSentry();
-
-Deno.serve(withHandler(async (req) => {
-  if (req.method === "OPTIONS") return corsResponse();
-
-  // Fix #592: service_role 전용 — 일반 유저 JWT로 호출 불가
-  const auth = requireServiceRole(req);
-  if (auth instanceof Response) return auth;
-
+export const handler = async (req: Request, { supabase }: EFContext): Promise<Response> => {
   const body = await parseJsonBody(req);
   if (body instanceof Response) return body;
 
@@ -30,8 +20,6 @@ Deno.serve(withHandler(async (req) => {
   if (!event_id) {
     return errorResponse("Missing required parameter: event_id", 400);
   }
-
-  const supabase = createServiceClient();
 
   // Check idempotency: if match_pairs already exist for this event, return existing
   const { data: existingPairs, error: existingErr } = await supabase
@@ -73,7 +61,8 @@ Deno.serve(withHandler(async (req) => {
   const { data: groups, error: groupsErr } = await supabase
     .from("entry_groups")
     .select("id, gender")
-    .eq("event_id", event_id);
+    .eq("event_id", event_id)
+    .order("id");
 
   if (groupsErr) {
     log({
@@ -186,4 +175,6 @@ Deno.serve(withHandler(async (req) => {
     })),
     idempotent: false,
   });
-}));
+};
+
+minglitEdgeFunction(handler);

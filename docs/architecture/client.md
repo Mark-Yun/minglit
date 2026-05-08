@@ -120,6 +120,21 @@ Supabase SDK를 직접 UI에서 호출하지 않습니다. `Repository` 클래�
 
 ## 4. Design System & UI Infrastructure
 
+### 4.0 Design System Spec (SSOT)
+
+화면 spec과 컴포넌트 spec의 단일 진실은 `apps/mds/docs/`에 있다.
+
+| 아티팩트 | 위치 | 용도 |
+|----------|------|------|
+| 화면 spec | `apps/mds/docs/public/specs/{screen}.html` | 레이아웃/상태/동작 명세 (68개 화면) |
+| 컴포넌트 카탈로그 | `apps/mds/docs/src/lib/components.ts` | 컴포넌트 manifest SSOT |
+| 컴포넌트 spec | `apps/mds/docs/src/components/specs/*Spec.tsx` | Next.js 시각 playground (~14k LOC) |
+
+- UI 변경 PR은 본문에 관련 spec 파일 경로 + 섹션을 **반드시 인용**한다 (CLAUDE.md "UI 변경 게이트").
+- `apps/mds/storybook/`은 Widgetbook 런타임 카탈로그 (Flutter) — 시각 playground 용.
+- `apps/mds/docs/`는 시각/IA spec 카탈로그 (Next.js) — 권위 source.
+- spec 자체는 Mark(디자인 시스템 오너)만 수정한다. SWE/에이전트는 read-only.
+
 ### 4.1 Design Tokens
 `minglit_design_tokens.dart`에 정의된 `MinglitColors`, 간격(spacing), 타이포그래피를 사용하여 일관된 UI를 유지합니다.
 

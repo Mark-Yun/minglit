@@ -83,6 +83,12 @@ void main() {
       );
 
       final container = makeContainer(eventId: 'event_1');
+      // Fix #2017: Riverpod 3.x autoDispose 레이스 — listen()으로 provider를 살려두고 tearDown에서 정리
+      final sub = container.listen(
+        eventNowBarStateProvider(activeEvent),
+        (_, _) {},
+      );
+      addTearDown(sub.close);
 
       final result = await container.read(
         eventNowBarStateProvider(activeEvent).future,
@@ -99,6 +105,11 @@ void main() {
         );
 
         final container = makeContainer(eventId: 'event_1');
+        final sub = container.listen(
+          eventNowBarStateProvider(activeEvent),
+          (_, _) {},
+        );
+        addTearDown(sub.close);
 
         final result = await container.read(
           eventNowBarStateProvider(activeEvent).future,
@@ -119,6 +130,11 @@ void main() {
           eventId: 'event_1',
           candidates: [],
         );
+        final sub = container.listen(
+          eventNowBarStateProvider(activeEvent),
+          (_, _) {},
+        );
+        addTearDown(sub.close);
 
         final result = await container.read(
           eventNowBarStateProvider(activeEvent).future,
@@ -243,9 +259,14 @@ void main() {
         matches: [],
       );
 
+      final sub1 = container.listen(
+        eventNowBarStateProvider(endedEvent),
+        (_, _) {},
+      );
       final result1 = await container.read(
         eventNowBarStateProvider(endedEvent).future,
       );
+      sub1.close();
       expect(result1, EventNowBarState.ended);
 
       // A different event (event_2) should compute its own state independently.
@@ -262,6 +283,11 @@ void main() {
         endTime: _fixedNow.add(const Duration(hours: 5)),
       );
 
+      final sub2 = container.listen(
+        eventNowBarStateProvider(waitingEvent),
+        (_, _) {},
+      );
+      addTearDown(sub2.close);
       final result2 = await container.read(
         eventNowBarStateProvider(waitingEvent).future,
       );
@@ -310,6 +336,12 @@ void main() {
         // candidates: null → throws Exception('not available') from mock
         // matches: null → throws Exception('not available') from mock
       );
+
+      final sub = container.listen(
+        eventNowBarStateProvider(activeEvent),
+        (_, _) {},
+      );
+      addTearDown(sub.close);
 
       final result = await container.read(
         eventNowBarStateProvider(activeEvent).future,

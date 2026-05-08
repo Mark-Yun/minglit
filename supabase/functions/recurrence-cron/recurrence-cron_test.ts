@@ -7,7 +7,6 @@ import {
   readJson,
   withEnv,
   withMockedFetch,
-  withNoIntervals,
   type FetchRoute,
 } from "../_test_utils/mock_http.ts";
 
@@ -15,6 +14,8 @@ import {
 const ENV = {
   SUPABASE_URL: "https://supabase.test",
   SUPABASE_SERVICE_ROLE_KEY: "test-service-key",
+  ENVIRONMENT: "dev",
+  MINGLIT_EF_TEST_FN_NAME: "recurrence-cron",
 };
 
 const TODAY = "2026-04-05";
@@ -118,11 +119,9 @@ Deno.test("recurrence-cron - missing auth returns 401", async () => {
     const handler = await captureServeHandler(
       new URL("./index.ts", import.meta.url),
     );
-    await withNoIntervals(async () => {
-      const req = new Request("http://localhost", { method: "POST" });
-      const res = await handler(req);
-      assertEquals(res.status, 401);
-    });
+    const req = new Request("http://localhost", { method: "POST" });
+    const res = await handler(req);
+    assertEquals(res.status, 401);
   });
 });
 
@@ -131,14 +130,12 @@ Deno.test("recurrence-cron - wrong service role key returns 401", async () => {
     const handler = await captureServeHandler(
       new URL("./index.ts", import.meta.url),
     );
-    await withNoIntervals(async () => {
-      const req = new Request("http://localhost", {
-        method: "POST",
-        headers: { Authorization: "Bearer wrong-key" },
-      });
-      const res = await handler(req);
-      assertEquals(res.status, 401);
+    const req = new Request("http://localhost", {
+      method: "POST",
+      headers: { Authorization: "Bearer wrong-key" },
     });
+    const res = await handler(req);
+    assertEquals(res.status, 401);
   });
 });
 
@@ -147,11 +144,9 @@ Deno.test("recurrence-cron - OPTIONS preflight returns 200", async () => {
     const handler = await captureServeHandler(
       new URL("./index.ts", import.meta.url),
     );
-    await withNoIntervals(async () => {
-      const req = new Request("http://localhost", { method: "OPTIONS" });
-      const res = await handler(req);
-      assertEquals(res.status, 200);
-    });
+    const req = new Request("http://localhost", { method: "OPTIONS" });
+    const res = await handler(req);
+    assertEquals(res.status, 200);
   });
 });
 
@@ -181,16 +176,14 @@ Deno.test(
       ]);
 
       await withMockedFetch(fetchMock, async () => {
-        await withNoIntervals(async () => {
-          const res = await handler(serviceRoleRequest());
-          const payload = await readJson(res);
+        const res = await handler(serviceRoleRequest());
+        const payload = await readJson(res);
 
-          assertEquals(res.status, 200);
-          assertEquals(payload.processed, 1);
-          // 30-day window with Mon+Fri: expect 8 or 9 events
-          const totalEvents = payload.total_events as number;
-          assertEquals(totalEvents >= 8 && totalEvents <= 9, true);
-        });
+        assertEquals(res.status, 200);
+        assertEquals(payload.processed, 1);
+        // 30-day window with Mon+Fri: expect 8 or 9 events
+        const totalEvents = payload.total_events as number;
+        assertEquals(totalEvents >= 8 && totalEvents <= 9, true);
       });
     });
   },
@@ -211,14 +204,12 @@ Deno.test(
       ]);
 
       await withMockedFetch(fetchMock, async () => {
-        await withNoIntervals(async () => {
-          const res = await handler(serviceRoleRequest());
-          const payload = await readJson(res);
+        const res = await handler(serviceRoleRequest());
+        const payload = await readJson(res);
 
-          assertEquals(res.status, 200);
-          assertEquals(payload.processed, 0);
-          assertEquals(payload.total_events, 0);
-        });
+        assertEquals(res.status, 200);
+        assertEquals(payload.processed, 0);
+        assertEquals(payload.total_events, 0);
       });
     });
   },
@@ -239,14 +230,12 @@ Deno.test(
       ]);
 
       await withMockedFetch(fetchMock, async () => {
-        await withNoIntervals(async () => {
-          const res = await handler(serviceRoleRequest());
-          const payload = await readJson(res);
+        const res = await handler(serviceRoleRequest());
+        const payload = await readJson(res);
 
-          assertEquals(res.status, 200);
-          assertEquals(payload.processed, 0);
-          assertEquals(payload.total_events, 0);
-        });
+        assertEquals(res.status, 200);
+        assertEquals(payload.processed, 0);
+        assertEquals(payload.total_events, 0);
       });
     });
   },
@@ -271,14 +260,12 @@ Deno.test(
       ]);
 
       await withMockedFetch(fetchMock, async () => {
-        await withNoIntervals(async () => {
-          const res = await handler(serviceRoleRequest());
-          const payload = await readJson(res);
+        const res = await handler(serviceRoleRequest());
+        const payload = await readJson(res);
 
-          assertEquals(res.status, 200);
-          assertEquals(payload.processed, 1);
-          assertEquals(payload.total_events, 0);
-        });
+        assertEquals(res.status, 200);
+        assertEquals(payload.processed, 1);
+        assertEquals(payload.total_events, 0);
       });
     });
   },
@@ -319,15 +306,13 @@ Deno.test(
       ]);
 
       await withMockedFetch(fetchMock, async () => {
-        await withNoIntervals(async () => {
-          const res = await handler(serviceRoleRequest());
-          const payload = await readJson(res);
+        const res = await handler(serviceRoleRequest());
+        const payload = await readJson(res);
 
-          assertEquals(res.status, 200);
-          assertEquals(payload.processed, 1);
-          // From today to today+10 inclusive = 11 days, all days of week → exactly 11 events
-          assertEquals(payload.total_events, 11);
-        });
+        assertEquals(res.status, 200);
+        assertEquals(payload.processed, 1);
+        // From today to today+10 inclusive = 11 days, all days of week → exactly 11 events
+        assertEquals(payload.total_events, 11);
       });
     });
   },
@@ -369,15 +354,13 @@ Deno.test(
         ]);
 
         await withMockedFetch(fetchMock, async () => {
-          await withNoIntervals(async () => {
-            const res = await handler(serviceRoleRequest());
-            const payload = await readJson(res);
+          const res = await handler(serviceRoleRequest());
+          const payload = await readJson(res);
 
-            assertEquals(res.status, 200);
-            assertEquals(payload.processed, 1);
-            // Frozen at 2026-04-05 → window [Apr 5, May 5] → month_day=15 → Apr 15 → 1 event
-            assertEquals(payload.total_events, 1);
-          });
+          assertEquals(res.status, 200);
+          assertEquals(payload.processed, 1);
+          // Frozen at 2026-04-05 → window [Apr 5, May 5] → month_day=15 → Apr 15 → 1 event
+          assertEquals(payload.total_events, 1);
         });
       });
     } finally {
@@ -414,16 +397,14 @@ Deno.test(
         ]);
 
         await withMockedFetch(fetchMock, async () => {
-          await withNoIntervals(async () => {
-            const res = await handler(serviceRoleRequest());
-            const payload = await readJson(res);
+          const res = await handler(serviceRoleRequest());
+          const payload = await readJson(res);
 
-            assertEquals(res.status, 200);
-            assertEquals(payload.processed, 1);
-            assertEquals(payload.total_events, 0);
-            assertEquals(payload.total_skipped, 1);
-            assertEquals(payload.total_errors, 0);
-          });
+          assertEquals(res.status, 200);
+          assertEquals(payload.processed, 1);
+          assertEquals(payload.total_events, 0);
+          assertEquals(payload.total_skipped, 1);
+          assertEquals(payload.total_errors, 0);
         });
       });
     } finally {
@@ -508,17 +489,15 @@ Deno.test(
       ]);
 
       await withMockedFetch(fetchMock, async () => {
-        await withNoIntervals(async () => {
-          const res = await handler(serviceRoleRequest());
-          const payload = await readJson(res);
+        const res = await handler(serviceRoleRequest());
+        const payload = await readJson(res);
 
-          assertEquals(res.status, 200);
-          assertEquals(payload.total_events, 1);
+        assertEquals(res.status, 200);
+        assertEquals(payload.total_events, 1);
 
-          // Ticket target_entry_group_ids should reference new group id, not template id
-          const ticketRows = ticketInsertBody as Array<{ target_entry_group_ids: string[] }>;
-          assertEquals(ticketRows[0].target_entry_group_ids[0], newGroupId);
-        });
+        // Ticket target_entry_group_ids should reference new group id, not template id
+        const ticketRows = ticketInsertBody as Array<{ target_entry_group_ids: string[] }>;
+        assertEquals(ticketRows[0].target_entry_group_ids[0], newGroupId);
       });
     });
     } finally {
@@ -565,10 +544,8 @@ Deno.test(
         ]);
 
         await withMockedFetch(fetchMock, async () => {
-          await withNoIntervals(async () => {
-            const res = await handler(serviceRoleRequest());
-            assertEquals(res.status, 200);
-          });
+          const res = await handler(serviceRoleRequest());
+          assertEquals(res.status, 200);
         });
 
         // start_time and end_time must carry KST offset, not Z
@@ -631,10 +608,8 @@ Deno.test(
         ]);
 
         await withMockedFetch(fetchMock, async () => {
-          await withNoIntervals(async () => {
-            const res = await handler(serviceRoleRequest());
-            assertEquals(res.status, 200);
-          });
+          const res = await handler(serviceRoleRequest());
+          assertEquals(res.status, 200);
         });
 
         assertExists(capturedBody, "POST /events must have been called");
@@ -671,14 +646,12 @@ Deno.test(
       ]);
 
       await withMockedFetch(fetchMock, async () => {
-        await withNoIntervals(async () => {
-          const res = await handler(serviceRoleRequest());
-          const payload = await readJson(res);
+        const res = await handler(serviceRoleRequest());
+        const payload = await readJson(res);
 
-          assertEquals(res.status, 200);
-          assertEquals(payload.processed, 0);
-          assertEquals(payload.total_events, 0);
-        });
+        assertEquals(res.status, 200);
+        assertEquals(payload.processed, 0);
+        assertEquals(payload.total_events, 0);
       });
     });
   },

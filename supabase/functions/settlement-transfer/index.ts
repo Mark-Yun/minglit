@@ -1,22 +1,14 @@
 // Fix #179: esm.sh 직접 URL → deno.json import map 기반으로 통일
-import { createServiceClient } from "../_shared/supabase_client.ts";
 import { getPortoneClient } from "../_shared/portone_client.ts";
-import { successResponse, errorResponse, corsResponse } from "../_shared/response_utils.ts";
-import { requireServiceRole } from "../_shared/auth_utils.ts";
+import { successResponse, errorResponse } from "../_shared/response_utils.ts";
 import { parseJsonBody } from "../_shared/request_utils.ts";
-import { initSentry, log, withHandler } from "../_shared/logger.ts";
+import { log } from "../_shared/logger.ts";
+// Fix #2185 (Batch 2): migrate to minglitEdgeFunction wrapper — auth via manifest (system caller)
+import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
 
 const FN = "settlement-transfer";
 
-
-initSentry();
-
-Deno.serve(withHandler(async (req) => {
-  if (req.method === "OPTIONS") return corsResponse();
-
-  // Fix #1489: 벌크 금융 작업 — service_role 전용으로 전환, 일반 유저 접근 차단
-  const auth = requireServiceRole(req);
-  if (auth instanceof Response) return auth;
+export const handler = async (req: Request, { supabase }: EFContext): Promise<Response> => {
   try {
     const body = await parseJsonBody(req);
     if (body instanceof Response) return body;
@@ -34,8 +26,6 @@ Deno.serve(withHandler(async (req) => {
         400,
       );
     }
-
-    const supabase = createServiceClient();
 
     const { data: partner, error: partnerError } = await supabase
       .from("partners")
@@ -88,4 +78,6 @@ Deno.serve(withHandler(async (req) => {
     });
     return errorResponse(message, 500);
   }
-}));
+};
+
+minglitEdgeFunction(handler);
