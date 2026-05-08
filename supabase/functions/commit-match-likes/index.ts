@@ -1,23 +1,16 @@
-import { requireAuth } from "../_shared/auth_utils.ts";
-import { initSentry, withHandler } from "../_shared/logger.ts";
+// Fix #2185 (Batch 6): migrate to minglitEdgeFunction wrapper — auth via manifest (user caller)
+import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
 import { parseJsonBody } from "../_shared/request_utils.ts";
 import {
-  corsResponse,
   errorResponse,
   successResponse,
 } from "../_shared/response_utils.ts";
-import { createServiceClient } from "../_shared/supabase_client.ts";
-
-initSentry();
 
 const MAX_LIKES_PER_COMMIT = 3;
 
-Deno.serve(withHandler(async (req: Request): Promise<Response> => {
-  if (req.method === "OPTIONS") return corsResponse();
-
-  const auth = await requireAuth(req);
-  if (auth instanceof Response) return auth;
-  const voterId = auth;
+export const handler = async (req: Request, ctx: EFContext): Promise<Response> => {
+  const { supabase } = ctx;
+  const voterId = (ctx.auth as { type: "user"; userId: string }).userId;
 
   const body = await parseJsonBody(req);
   if (body instanceof Response) return body;
@@ -46,8 +39,6 @@ Deno.serve(withHandler(async (req: Request): Promise<Response> => {
   if (normalizedCandidateIds.includes(voterId)) {
     return errorResponse("자기 자신에게 좋아요를 보낼 수 없습니다", 400);
   }
-
-  const supabase = createServiceClient();
 
   const { data: event, error: eventError } = await supabase
     .from("events")
@@ -223,4 +214,6 @@ Deno.serve(withHandler(async (req: Request): Promise<Response> => {
     "inserted_count": result["inserted_count"] ?? 0,
     "duplicate_count": result["duplicate_count"] ?? 0,
   });
-}));
+};
+
+minglitEdgeFunction(handler);

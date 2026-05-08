@@ -150,6 +150,36 @@
       "callers": ["user"],
       "envs": ["dev", "production"],
       "description": "파트너 신청 — save_draft/submit/update, 서버사이드 검증 포함 (Issue #311)"
+    },
+    "event-checkin": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "이벤트 체크인 처리"
+    },
+    "commit-match-likes": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "매치 좋아요 확정 제출"
+    },
+    "partner-manage-event": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "파트너 이벤트 관리 (생성/수정/삭제/상태변경)"
+    },
+    "partner-manage-match": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "파트너 매치 결과 관리"
+    },
+    "partner-manage-member": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "파트너 멤버 관리"
+    },
+    "partner-manage-settlement": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "파트너 정산 관리"
     }
   }
 }

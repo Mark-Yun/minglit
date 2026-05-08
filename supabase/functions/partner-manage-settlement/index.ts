@@ -1,20 +1,17 @@
 // partner-manage-settlement — Manage partner settlement bank account
 // Issue #312: RLS write strategy 전환
+// Fix #2185 (Batch 6): migrate to minglitEdgeFunction wrapper — auth via manifest (user caller)
 
-import { createServiceClient } from "../_shared/supabase_client.ts";
+import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
 import {
-  corsResponse,
   errorResponse,
   successResponse,
 } from "../_shared/response_utils.ts";
-import { requireAuth } from "../_shared/auth_utils.ts";
 import { requirePartnerPermission } from "../_shared/partner_permissions.ts";
 import { parseAction } from "../_shared/request_utils.ts";
-import { initSentry, withHandler, log } from "../_shared/logger.ts";
+import { log } from "../_shared/logger.ts";
 
 const FN = "partner-manage-settlement";
-
-initSentry();
 
 // Fields allowed in upsert_bank_account action
 const UPSERT_FIELDS = [
@@ -26,24 +23,19 @@ const UPSERT_FIELDS = [
 // Fix #312: 계좌번호 형식 검증 — 하이픈/공백 제거 후 숫자 6~20자리
 const ACCOUNT_NUMBER_RE = /^[0-9]{6,20}$/;
 
-Deno.serve(withHandler(async (req: Request): Promise<Response> => {
-  if (req.method === "OPTIONS") return corsResponse();
+export const handler = async (req: Request, ctx: EFContext): Promise<Response> => {
   if (req.method !== "POST") return errorResponse("Method not allowed", 405);
 
-  try {
-    // 1. Auth
-    const auth = await requireAuth(req);
-    if (auth instanceof Response) return auth;
-    const userId = auth;
+  const { supabase } = ctx;
+  // wrapper guarantees type === "user" per auth-manifest callers: ["user"]
+  const userId = (ctx.auth as { type: "user"; userId: string }).userId;
 
-    // 2. Parse body
+  try {
+    // Parse body
     const result = await parseAction(req);
     if (result instanceof Response) return result;
     const { action, body } = result;
     if (!action) return errorResponse("Missing action", 400);
-
-    // 3. Supabase client (service role)
-    const supabase = createServiceClient();
 
     // ─── upsert_bank_account ───
     if (action === "upsert_bank_account") {
@@ -120,4 +112,6 @@ Deno.serve(withHandler(async (req: Request): Promise<Response> => {
     });
     return errorResponse("Internal server error", 500);
   }
-}));
+};
+
+minglitEdgeFunction(handler);
