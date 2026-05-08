@@ -111,8 +111,10 @@ class _HomePageState extends ConsumerState<HomePage> {
               actions: [
                 // Fix #1285: FAB 대체 — dev 전용 버그 리포트 액션 버튼
                 const BugReportAction(),
+                // Fix #2339: tooltip으로 접근성 라벨 노출 — QA가 find.byTooltip()으로 버튼 탐색 가능
                 IconButton(
                   icon: const Icon(Icons.search),
+                  tooltip: '검색',
                   // Fix #1630: AppBar context.push() → GoRouter 주입 패턴
                   onPressed: homeCoordinator.pushSearch,
                 ),
