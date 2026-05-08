@@ -46,3 +46,10 @@ Deno.test("addDeprecationHeaders: Deprecation and Sunset reference the same date
   // Deprecation is "@<sunset>", so removing "@" prefix should equal Sunset
   assertEquals(deprecation, `@${sunset}`);
 });
+
+Deno.test("addDeprecationHeaders: returns original response unchanged for invalid date", () => {
+  const original = okResponse();
+  const res = addDeprecationHeaders(original, "not-a-date");
+  assertEquals(res.headers.has("Deprecation"), false);
+  assertEquals(res.headers.has("Sunset"), false);
+});

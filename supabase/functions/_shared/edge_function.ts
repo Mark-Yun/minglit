@@ -124,6 +124,7 @@ function readEnvironment(): Environment {
  */
 export function addDeprecationHeaders(res: Response, deprecated: string): Response {
   const date = new Date(deprecated);
+  if (Number.isNaN(date.getTime())) return res;
   const httpDate = date.toUTCString();
   const headers = new Headers(res.headers);
   // RFC 8594 §2 — Deprecation header: date-tagged form "@<HTTP-date>"
