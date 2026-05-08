@@ -200,8 +200,9 @@ export async function checkExternalAuth(
 
       // Accept both "<hex>" and "sha256=<hex>" formats (PortOne V2 uses the prefixed form).
       const sigHex = signature.startsWith("sha256=") ? signature.slice(7) : signature;
-      // Decode hex to bytes; odd-length hex is invalid.
-      if (sigHex.length % 2 !== 0) return { ok: false };
+      // Reject odd-length or non-hex chars before decoding. parseInt("aZ",16) silently
+      // stops at "Z" returning 10, so a regex guard is required to reject malformed input.
+      if (sigHex.length % 2 !== 0 || !/^[0-9a-fA-F]+$/.test(sigHex)) return { ok: false };
       const sigBytes = new Uint8Array(sigHex.length / 2);
       for (let i = 0; i < sigHex.length; i += 2) {
         sigBytes[i / 2] = parseInt(sigHex.slice(i, i + 2), 16);

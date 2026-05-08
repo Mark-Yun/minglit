@@ -151,6 +151,26 @@ Deno.test("checkExternalAuth: hmac — odd-length hex signature fails", async ()
   }
 });
 
+// Fix #2336: even-length non-hex string must fail — parseInt("aZ",16)===10 silently
+// parses partial chars; regex guard is required to reject malformed input.
+Deno.test("checkExternalAuth: hmac — even-length non-hex signature fails", async () => {
+  Deno.env.set("TEST_WEBHOOK_SECRET", "some-secret");
+  try {
+    const req = makeRequest({
+      body: '{}',
+      headers: { "x-sig": "aZ" },  // even length but "Z" is not hex
+    });
+    const result = await checkExternalAuth(
+      req,
+      { type: "hmac", secret_env: "TEST_WEBHOOK_SECRET", header: "x-sig" },
+      "test-fn",
+    );
+    assertEquals(result, { ok: false });
+  } finally {
+    Deno.env.delete("TEST_WEBHOOK_SECRET");
+  }
+});
+
 Deno.test("checkExternalAuth: hmac — wrong secret fails", async () => {
   const body = '{"event":"payment"}';
   const sig = await computeHmac("correct-secret", body);
