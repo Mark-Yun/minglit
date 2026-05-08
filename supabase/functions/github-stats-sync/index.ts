@@ -39,11 +39,17 @@ export const handler = async (req: Request, { supabase }: EFContext): Promise<Re
 
   while (page <= 10) {
     const url = `${GITHUB_API}/repos/${REPO}/issues?state=all&since=${since}&per_page=100&page=${page}`;
-    const res = await fetch(url, { headers });
-    if (!res.ok) {
-      return errorResponse(`GitHub API error: ${res.status} ${res.statusText}`, 502);
+    let data: GitHubItem[];
+    try {
+      const res = await fetch(url, { headers });
+      if (!res.ok) {
+        return errorResponse(`GitHub API error: ${res.status} ${res.statusText}`, 502);
+      }
+      data = (await res.json()) as GitHubItem[];
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return errorResponse(`GitHub API request failed: ${message}`, 502);
     }
-    const data = (await res.json()) as GitHubItem[];
     if (data.length === 0) break;
     items.push(...data);
     page++;

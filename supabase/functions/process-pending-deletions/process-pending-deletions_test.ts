@@ -8,13 +8,14 @@ import {
   textRequest,
   withEnv,
   withMockedFetch,
-  withNoIntervals,
 } from "../_test_utils/mock_http.ts";
 
 
 const ENV = {
   SUPABASE_URL: "https://supabase.test",
   SUPABASE_SERVICE_ROLE_KEY: "service-key",
+  ENVIRONMENT: "dev",
+  MINGLIT_EF_TEST_FN_NAME: "process-pending-deletions",
 };
 
 const USER_ID = "11111111-1111-4111-8111-111111111111";
@@ -164,15 +165,13 @@ Deno.test("unauthorized request returns 401", async () => {
   );
 
   await withEnv(ENV, async () => {
-    await withNoIntervals(async () => {
-      const response = await handler(
-        textRequest("http://localhost", "{}", { method: "POST" }),
-      );
-      const payload = await readJson(response);
+    const response = await handler(
+      textRequest("http://localhost", "{}", { method: "POST" }),
+    );
+    const payload = await readJson(response);
 
-      assertEquals(response.status, 401);
-      assertEquals(payload.error, "Unauthorized");
-    });
+    assertEquals(response.status, 401);
+    assertEquals(payload.error, "Unauthorized");
   });
 });
 
@@ -201,7 +200,7 @@ Deno.test(
 
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
-        await withNoIntervals(async () => {
+        {
           const response = await handler(serviceRoleRequest());
           const payload = await readJson(response);
 
@@ -258,7 +257,7 @@ Deno.test(
             ),
             true,
           );
-        });
+        }
       });
     });
   },
@@ -292,7 +291,7 @@ Deno.test("retention_until uses calendar arithmetic — leap year 2024-02-29 + 5
 
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
-        await withNoIntervals(async () => {
+        {
           const response = await handler(serviceRoleRequest());
           assertEquals(response.status, 200);
 
@@ -311,7 +310,7 @@ Deno.test("retention_until uses calendar arithmetic — leap year 2024-02-29 + 5
           assertEquals(contractRecord.retention_until, "2029-03-01T00:00:00.000Z");
           // addDays(1825) 회귀 방지: 1825일 고정이면 2029-02-27 (3일 짧음)
           assertNotEquals(contractRecord.retention_until, "2029-02-27T00:00:00.000Z");
-        });
+        }
       });
     });
   } finally {
@@ -346,7 +345,7 @@ Deno.test("retention_until uses calendar arithmetic — month-end Nov-30 + 3 mon
 
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
-        await withNoIntervals(async () => {
+        {
           const response = await handler(serviceRoleRequest());
           assertEquals(response.status, 200);
 
@@ -365,7 +364,7 @@ Deno.test("retention_until uses calendar arithmetic — month-end Nov-30 + 3 mon
           assertEquals(loginRecord.retention_until, "2027-03-02T00:00:00.000Z");
           // addDays(90) 회귀 방지: Nov 30 + 90d = 2027-02-28 (Feb 28까지만 있음)
           assertNotEquals(loginRecord.retention_until, "2027-02-28T00:00:00.000Z");
-        });
+        }
       });
     });
   } finally {
@@ -384,7 +383,7 @@ Deno.test("no eligible users returns zero summary", async () => {
 
   await withEnv(ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
-      await withNoIntervals(async () => {
+      {
         const response = await handler(serviceRoleRequest());
         const payload = await readJson(response);
 
@@ -393,7 +392,7 @@ Deno.test("no eligible users returns zero summary", async () => {
         assertEquals(payload.deleted_count, 0);
         assertEquals(payload.failed_count, 0);
         assertEquals(calls.length, 2); // retention_policies + user_profiles
-      });
+      }
     });
   });
 });

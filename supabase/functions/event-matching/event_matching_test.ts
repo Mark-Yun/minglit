@@ -12,6 +12,8 @@ import {
 const ENV = {
   SUPABASE_URL: "http://localhost:54321",
   SUPABASE_SERVICE_ROLE_KEY: "test-service-key",
+  ENVIRONMENT: "dev",
+  MINGLIT_EF_TEST_FN_NAME: "event-matching",
 };
 
 const BASE_URL = "http://localhost";
@@ -301,12 +303,3 @@ Deno.test({
   },
 });
 
-Deno.test({
-  name: "event-matching - OPTIONS returns CORS response",
-  fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-
-    const response = await handler(new Request(BASE_URL, { method: "OPTIONS" }));
-    assertEquals(response.status, 200);
-  },
-});

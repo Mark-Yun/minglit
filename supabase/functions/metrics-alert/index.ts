@@ -4,6 +4,17 @@ import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts
 
 const GITHUB_TOKEN = Deno.env.get("GITHUB_ACCESS_TOKEN");
 const GITHUB_REPO = "Mark-Yun/minglit";
+const FETCH_TIMEOUT_MS = 10_000;
+
+async function fetchWithTimeout(url: string, init?: RequestInit): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
 
 export const ALERT_LABELS: Record<string, string[]> = {
   performance: ["metrics-alert", "auto-generated", "performance"],
@@ -17,12 +28,19 @@ export const handler = async (req: Request, _ctx: EFContext): Promise<Response> 
   if (body instanceof Response) return body;
 
   const { type, title, body: alertBody } = body as {
-    type?: string;
-    title?: string;
-    body?: string;
+    type?: unknown;
+    title?: unknown;
+    body?: unknown;
   };
 
-  if (!type || !title || !alertBody) {
+  if (
+    typeof type !== "string" ||
+    typeof title !== "string" ||
+    typeof alertBody !== "string" ||
+    !type.trim() ||
+    !title.trim() ||
+    !alertBody.trim()
+  ) {
     return errorResponse("Missing required fields: type, title, body", 400);
   }
 
@@ -38,7 +56,7 @@ export const handler = async (req: Request, _ctx: EFContext): Promise<Response> 
     )
   }`;
 
-  const searchRes = await fetch(searchUrl, {
+  const searchRes = await fetchWithTimeout(searchUrl, {
     headers: {
       "Authorization": `Bearer ${GITHUB_TOKEN}`,
       "Accept": "application/vnd.github.v3+json",
@@ -55,7 +73,7 @@ export const handler = async (req: Request, _ctx: EFContext): Promise<Response> 
   const existingIssue = searchData.items?.[0];
 
   if (existingIssue) {
-    const commentRes = await fetch(
+    const commentRes = await fetchWithTimeout(
       `https://api.github.com/repos/${GITHUB_REPO}/issues/${existingIssue.number}/comments`,
       {
         method: "POST",
@@ -79,7 +97,7 @@ export const handler = async (req: Request, _ctx: EFContext): Promise<Response> 
     });
   }
 
-  const createRes = await fetch(
+  const createRes = await fetchWithTimeout(
     `https://api.github.com/repos/${GITHUB_REPO}/issues`,
     {
       method: "POST",
