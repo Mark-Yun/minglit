@@ -48,7 +48,7 @@ export const handler = async (req: Request, ctx: EFContext): Promise<Response> =
     return errorResponse("Event not found", 404);
   }
 
-  const party = event.party as { id: string; partner_id: string } | null;
+  const party = event.party as unknown as { id: string; partner_id: string } | null;
   if (!party) {
     return errorResponse("Event has no associated party", 404);
   }
