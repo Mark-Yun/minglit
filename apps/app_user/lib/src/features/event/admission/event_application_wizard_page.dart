@@ -31,8 +31,7 @@ class EventApplicationWizardPage extends ConsumerStatefulWidget {
 
 class _EventApplicationWizardPageState
     extends ConsumerState<EventApplicationWizardPage> {
-  // Fix #2314: show confirmation dialog on back navigation — wizard state is
-  // lost on pop and there is no auto-save, so guard every exit attempt.
+  // Fix #2314: show confirmation dialog on back navigation
   void _onPopInvoked(bool didPop, Object? result) {
     if (didPop) return;
     unawaited(_confirmExit());
@@ -72,8 +71,7 @@ class _EventApplicationWizardPageState
       child: Scaffold(
         appBar: AppBar(
           title: const Text('참여 신청'),
-          // Fix #2314: custom onPressed routes through the same confirmation
-          // dialog as the Android back gesture, preventing silent state loss.
+          // Fix #2314: CloseButton routes through the same dialog as Android back
           leading: CloseButton(onPressed: () => unawaited(_confirmExit())),
         ),
         body: MinglitAsyncValueWidget(

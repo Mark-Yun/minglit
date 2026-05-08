@@ -84,6 +84,16 @@ void main() {
   }
 
   group('EventApplicationWizardPage — 뒤로가기 가드', () {
+    testWidgets('Android 시스템 백키 입력 시 확인 다이얼로그가 표시된다', (tester) async {
+      // Fix #2314: PopScope(canPop: false)가 시스템 백을 가로채고 다이얼로그를 보여야 함
+      await openWizard(tester);
+
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+
+      expect(find.text('신청을 중단할까요?'), findsOneWidget);
+    });
+
     testWidgets('CloseButton 탭 시 확인 다이얼로그가 표시된다', (tester) async {
       // Fix #2314: CloseButton이 이전처럼 즉시 pop하지 않고 다이얼로그를 보여야 함
       await openWizard(tester);
