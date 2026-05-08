@@ -10,7 +10,8 @@ const MAX_LIKES_PER_COMMIT = 3;
 
 export const handler = async (req: Request, ctx: EFContext): Promise<Response> => {
   const { supabase } = ctx;
-  const voterId = (ctx.auth as { type: "user"; userId: string }).userId;
+  if (ctx.auth.type !== "user") return errorResponse("Unexpected auth type", 500);
+  const voterId = ctx.auth.userId;
 
   const body = await parseJsonBody(req);
   if (body instanceof Response) return body;

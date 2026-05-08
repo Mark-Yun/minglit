@@ -9,6 +9,7 @@ import {
   withMockedFetch,
   type FetchRoute,
 } from "../_test_utils/mock_http.ts";
+import type { EFContext } from "../_shared/edge_function.ts";
 
 const TEST_USER_ID = "user-partner-owner";
 const TEST_EVENT_ID = "event-001";
@@ -506,6 +507,32 @@ Deno.test({
         const body = await readJson(res);
         assertEquals(body.error, "Unknown action: unknown_action");
       });
+    });
+  },
+});
+
+// Fix #2323: runtime type guard — non-user caller must return 500 immediately
+Deno.test({
+  name: "returns 500 when auth type is not user (system caller guard)",
+  fn: async () => {
+    await withEnv(ENV, async () => {
+      const mod = await import("./index.ts");
+      const fakeCtx: EFContext = {
+        auth: { type: "system" },
+        supabase: {} as EFContext["supabase"],
+        fnName: "partner-manage-match",
+        env: "dev",
+        requestId: "test-req-guard",
+      };
+      const req = new Request("http://localhost", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "set_rules", event_id: "event-1", rules: [] }),
+      });
+      const res = await mod.handler(req, fakeCtx);
+      assertEquals(res.status, 500);
+      const body = await res.json();
+      assertEquals(body.error, "Unexpected auth type");
     });
   },
 });
