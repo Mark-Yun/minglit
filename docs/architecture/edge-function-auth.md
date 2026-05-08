@@ -144,14 +144,18 @@ EF 들과 같은 디렉토리 — wrapper 가 import 가능 + locality 좋음.
   "ips": ["52.78.100.19", "52.78.48.223", "52.78.17.128"]
 }
 
-// HMAC signature (미래 확장)
+// HMAC-SHA256 signature — PortOne V2 webhook 예시.
+// signature 형식: 헤더 값이 "sha256=<hex>" 또는 "<hex>" 모두 허용.
+// body는 req.clone()으로 읽어 원본 request를 보존한다.
 "external_auth": {
   "type": "hmac",
   "secret_env": "PORTONE_WEBHOOK_SECRET",
-  "header": "x-portone-signature"
+  "header": "x-portone-signature-v2"
 }
 
-// 임의 검증 (escape hatch, 미래 확장)
+// 임의 검증 (escape hatch — bespoke 인증 로직이 필요한 경우).
+// module은 EF 디렉토리 기준 상대 경로.
+// 해당 모듈은 `check(req: Request): Promise<{ok:true;reason:string}|{ok:false}>` 를 export해야 한다.
 "external_auth": {
   "type": "custom",
   "module": "./payment_webhook_auth.ts"
@@ -618,7 +622,7 @@ Phase 1~4 동안 **옛 헬퍼와 새 wrapper 가 공존**. 마이그레이션되
 | ~~TBD-1~~ | ~~manifest 누락 → startup throw 시나리오 검증~~ (완료: `_shared/edge_function_manifest_test.ts`, 실제 동작은 HTTP 500/request — deploy 성공) | ~~P2~~ |
 | TBD-2 | 60 EF 마이그레이션 진척 트래킹 (Phase 3 의 epic) | P2 |
 | TBD-3 | 옛 auth 헬퍼 deprecation timeline + 제거 (Phase 5) | P3 |
-| TBD-4 | `external_auth` HMAC / custom 패턴 실제 적용 (PortOne 등) | P3 |
+| ~~TBD-4~~ | ~~`external_auth` HMAC / custom 패턴 실제 적용 (PortOne 등)~~ (완료: `checkExternalAuth` — hmac/custom 모두 구현, issue #2186) | ~~P3~~ |
 | TBD-5 | rate limit / deprecation / audit 등 manifest 확장 | P3 |
 | TBD-6 | 신규 sb_secret_ 형식으로 service_role 마이그레이션 (verify_jwt=true cron-호출 EF 의 verify_jwt=false 전환 검토 포함) | P3 |
 

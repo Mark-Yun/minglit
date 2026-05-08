@@ -39,9 +39,27 @@ export interface EFContext {
   readonly supabase: SupabaseClient;
 }
 
-export interface ExternalAuth {
-  type: "ip_allowlist";
-  ips: string[];
+// Discriminated union — manifest schema §3.4
+export type ExternalAuth =
+  | { type: "ip_allowlist"; ips: string[] }
+  | {
+      type: "hmac";
+      /** Deno env var name that holds the HMAC secret */
+      secret_env: string;
+      /** Request header carrying the signature (e.g. "x-portone-signature-v2") */
+      header: string;
+    }
+  | {
+      type: "custom";
+      /** Path to an auth checker module, relative to the EF directory.
+       *  The module must export `check(req: Request): Promise<{ok:true;reason:string}|{ok:false}>`.
+       */
+      module: string;
+    };
+
+/** Interface that a `custom` external_auth module must satisfy. */
+export interface CustomAuthChecker {
+  check(req: Request): Promise<{ ok: true; reason: string } | { ok: false }>;
 }
 
 export interface EFPolicy {
@@ -108,24 +126,75 @@ function readEnvironment(): Environment {
 // Per-request helpers
 // --------------------------------------------------------------------------
 
-function checkExternalAuth(req: Request, external: ExternalAuth): { ok: true; reason: string } | { ok: false } {
-  if (external.type === "ip_allowlist") {
-    // Fix #1892 H2 패턴: x-real-ip > cf-connecting-ip > x-forwarded-for rightmost
-    const realIp = req.headers.get("x-real-ip");
-    const cfIp = req.headers.get("cf-connecting-ip");
-    const xff = req.headers.get("x-forwarded-for");
-    const xffRightmost = xff ? xff.split(",").map(s => s.trim()).pop() : null;
-    const clientIp = realIp || cfIp || xffRightmost;
-    if (clientIp && external.ips.includes(clientIp)) {
-      return { ok: true, reason: `ip_allowlist:${clientIp}` };
+/**
+ * Verifies external caller auth per the manifest's `external_auth` policy.
+ * Exported for unit testing; not part of the stable public API.
+ *
+ * @param req     Incoming request (body is NOT consumed — uses req.clone() for HMAC).
+ * @param external Parsed external_auth entry from the manifest.
+ * @param fnName  EF name, used to resolve relative `custom` module paths.
+ */
+export async function checkExternalAuth(
+  req: Request,
+  external: ExternalAuth,
+  fnName: string,
+): Promise<{ ok: true; reason: string } | { ok: false }> {
+  switch (external.type) {
+    case "ip_allowlist": {
+      // Fix #1892 H2 패턴: x-real-ip > cf-connecting-ip > x-forwarded-for rightmost
+      const realIp = req.headers.get("x-real-ip");
+      const cfIp = req.headers.get("cf-connecting-ip");
+      const xff = req.headers.get("x-forwarded-for");
+      const xffRightmost = xff ? xff.split(",").map(s => s.trim()).pop() : null;
+      const clientIp = realIp || cfIp || xffRightmost;
+      if (clientIp && external.ips.includes(clientIp)) {
+        return { ok: true, reason: `ip_allowlist:${clientIp}` };
+      }
+      return { ok: false };
+    }
+
+    case "hmac": {
+      // Verify HMAC-SHA256 signature without consuming the original request body.
+      const signature = req.headers.get(external.header);
+      if (!signature) return { ok: false };
+
+      const secret = Deno.env.get(external.secret_env);
+      if (!secret) return { ok: false };
+
+      const body = await req.clone().text();
+      const key = await crypto.subtle.importKey(
+        "raw",
+        new TextEncoder().encode(secret),
+        { name: "HMAC", hash: "SHA-256" },
+        false,
+        ["sign"],
+      );
+      const mac = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(body));
+      const computedHex = Array.from(new Uint8Array(mac))
+        .map(b => b.toString(16).padStart(2, "0"))
+        .join("");
+
+      // Accept both "<hex>" and "sha256=<hex>" formats (PortOne V2 uses the prefixed form).
+      const sigHex = signature.startsWith("sha256=") ? signature.slice(7) : signature;
+      if (computedHex === sigHex) {
+        return { ok: true, reason: `hmac:${external.header}` };
+      }
+      return { ok: false };
+    }
+
+    case "custom": {
+      // Resolve path relative to this EF's directory (escape hatch for bespoke auth).
+      const moduleUrl = new URL(external.module, new URL(`../${fnName}/`, import.meta.url));
+      const mod = await import(moduleUrl.href) as CustomAuthChecker;
+      return await mod.check(req);
     }
   }
-  return { ok: false };
 }
 
 async function verifyAuth(
   req: Request,
   policy: EFPolicy,
+  fnName: string,
 ): Promise<AuthContext | Response> {
   const allow = (c: Caller) => policy.callers.includes(c);
   const authHeader = req.headers.get("Authorization") ?? "";
@@ -153,7 +222,7 @@ async function verifyAuth(
     if (!policy.external_auth) {
       throw new Error(`[minglitEdgeFunction] policy.callers includes 'external' but external_auth missing`);
     }
-    const ext = checkExternalAuth(req, policy.external_auth);
+    const ext = await checkExternalAuth(req, policy.external_auth, fnName);
     if (ext.ok) return { type: "external", reason: ext.reason };
   }
 
@@ -230,7 +299,7 @@ export function minglitEdgeFunction(handler: EFHandler, opts: MinglitEFOptions =
       }
 
       // Auth 검증
-      const auth = await verifyAuth(req, policy);
+      const auth = await verifyAuth(req, policy, fnName);
       if (auth instanceof Response) return auth;
 
       // Context + handler 호출
