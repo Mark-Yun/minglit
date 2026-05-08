@@ -104,6 +104,73 @@ Deno.test("checkExternalAuth: hmac — sha256=<hex> prefixed signature passes (P
   }
 });
 
+// Fix #2336: verifies that a signature differing by one byte is rejected.
+// Regression guard for CWE-208 timing attack: string === would accept identical
+// prefixes if short-circuited; crypto.subtle.verify must reject partial matches.
+Deno.test("checkExternalAuth: hmac — signature with flipped last byte fails (timing-safe guard)", async () => {
+  const secret = "test-secret";
+  const body = '{"status":"paid"}';
+  const validHex = await computeHmac(secret, body);
+  // Flip the last byte of the valid hex signature.
+  const lastByte = parseInt(validHex.slice(-2), 16);
+  const flippedHex = validHex.slice(0, -2) + ((lastByte ^ 0xff) & 0xff).toString(16).padStart(2, "0");
+
+  Deno.env.set("TEST_WEBHOOK_SECRET", secret);
+  try {
+    const req = makeRequest({
+      body,
+      headers: { "x-sig": flippedHex },
+    });
+    const result = await checkExternalAuth(
+      req,
+      { type: "hmac", secret_env: "TEST_WEBHOOK_SECRET", header: "x-sig" },
+      "test-fn",
+    );
+    assertEquals(result, { ok: false });
+  } finally {
+    Deno.env.delete("TEST_WEBHOOK_SECRET");
+  }
+});
+
+// Fix #2336: odd-length hex is invalid and must fail before byte decoding.
+Deno.test("checkExternalAuth: hmac — odd-length hex signature fails", async () => {
+  Deno.env.set("TEST_WEBHOOK_SECRET", "some-secret");
+  try {
+    const req = makeRequest({
+      body: '{}',
+      headers: { "x-sig": "abc" },  // odd length
+    });
+    const result = await checkExternalAuth(
+      req,
+      { type: "hmac", secret_env: "TEST_WEBHOOK_SECRET", header: "x-sig" },
+      "test-fn",
+    );
+    assertEquals(result, { ok: false });
+  } finally {
+    Deno.env.delete("TEST_WEBHOOK_SECRET");
+  }
+});
+
+// Fix #2336: even-length non-hex string must fail — parseInt("aZ",16)===10 silently
+// parses partial chars; regex guard is required to reject malformed input.
+Deno.test("checkExternalAuth: hmac — even-length non-hex signature fails", async () => {
+  Deno.env.set("TEST_WEBHOOK_SECRET", "some-secret");
+  try {
+    const req = makeRequest({
+      body: '{}',
+      headers: { "x-sig": "aZ" },  // even length but "Z" is not hex
+    });
+    const result = await checkExternalAuth(
+      req,
+      { type: "hmac", secret_env: "TEST_WEBHOOK_SECRET", header: "x-sig" },
+      "test-fn",
+    );
+    assertEquals(result, { ok: false });
+  } finally {
+    Deno.env.delete("TEST_WEBHOOK_SECRET");
+  }
+});
+
 Deno.test("checkExternalAuth: hmac — wrong secret fails", async () => {
   const body = '{"event":"payment"}';
   const sig = await computeHmac("correct-secret", body);
