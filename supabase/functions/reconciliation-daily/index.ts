@@ -79,6 +79,12 @@ function computeSourceHash(ledgerData: unknown[], portoneData: unknown[]): strin
 }
 
 export const handler = async (req: Request, { supabase }: EFContext): Promise<Response> => {
+  if (req.method !== "POST") {
+    return new Response(
+      JSON.stringify({ error: "Method Not Allowed" }),
+      { status: 405, headers: { ...CORS_HEADERS, "Content-Type": "application/json" } },
+    );
+  }
 
   const nowKst = new Date(Date.now() + 9 * 60 * 60 * 1000);
   const yesterdayKst = new Date(nowKst);

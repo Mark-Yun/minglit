@@ -4,7 +4,6 @@ import {
   errorResponse,
   successResponse,
 } from "../_shared/response_utils.ts";
-// Fix #592: requireAuth(일반 JWT) → requireServiceRole로 전환하여 인가 우회 차단
 // Fix #2185 (Batch 2): migrate to minglitEdgeFunction wrapper — auth via manifest (system caller)
 import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
 import { parseJsonBody } from "../_shared/request_utils.ts";
@@ -62,7 +61,8 @@ export const handler = async (req: Request, { supabase }: EFContext): Promise<Re
   const { data: groups, error: groupsErr } = await supabase
     .from("entry_groups")
     .select("id, gender")
-    .eq("event_id", event_id);
+    .eq("event_id", event_id)
+    .order("id");
 
   if (groupsErr) {
     log({

@@ -10,7 +10,10 @@ const FN = "settlement-register-transfers";
 
 const CHUNK_SIZE = 500;
 
-export const handler = async (_req: Request, { supabase }: EFContext): Promise<Response> => {
+export const handler = async (req: Request, { supabase }: EFContext): Promise<Response> => {
+  if (req.method !== "POST") {
+    return errorResponse("Method Not Allowed", 405);
+  }
   try {
     const { data: pendingItems, error: fetchError } = await supabase
       .from("settlement_items")
