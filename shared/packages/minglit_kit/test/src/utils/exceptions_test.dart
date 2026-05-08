@@ -76,6 +76,51 @@ void main() {
       );
     });
 
+    // Fix #2318: FunctionException with validation_failed must surface the
+    // field-level error, not fall through to the generic system error.
+    test(
+        'maps FunctionException validation_failed to MinglitUserException with field message',
+        () {
+      final funcError = FunctionException(
+        status: 400,
+        details: {
+          'error': 'validation_failed',
+          'details': [
+            {'field': 'biz_number', 'message': '올바른 사업자번호 형식이 아닙니다'},
+          ],
+        },
+      );
+      final result = MinglitException.from(funcError);
+
+      expect(result, isA<MinglitUserException>());
+      expect(result.message, '올바른 사업자번호 형식이 아닙니다');
+      expect((result as MinglitUserException).details, hasLength(1));
+    });
+
+    test(
+        'maps FunctionException validation_failed without field message to generic prompt',
+        () {
+      final funcError = FunctionException(
+        status: 400,
+        details: {'error': 'validation_failed', 'details': <dynamic>[]},
+      );
+      final result = MinglitException.from(funcError);
+
+      expect(result, isA<MinglitUserException>());
+      expect(result.message, '입력 정보를 확인해주세요');
+    });
+
+    test('maps non-validation FunctionException to MinglitSystemException', () {
+      final funcError = FunctionException(
+        status: 500,
+        details: {'error': 'internal_error'},
+        reasonPhrase: 'Internal Server Error',
+      );
+      final result = MinglitException.from(funcError);
+
+      expect(result, isA<MinglitSystemException>());
+    });
+
     test('wraps generic error into MinglitSystemException', () {
       final result = MinglitException.from(Exception('unknown'));
 
