@@ -259,17 +259,17 @@
     "ai-embed": {
       "callers": ["system"],
       "envs": ["dev", "production"],
-      "description": "PGMQ q_vectors 파티 임베딩 + 유저 인터랙션 벡터 갱신 워커 (Fix #1489: service_role 전용)"
+      "description": "PGMQ q_vectors 파티 임베딩 + 유저 인터랙션 벡터 갱신 워커 (Fix #1489: system caller 전용)"
     },
     "ai-extract-tags": {
       "callers": ["system"],
       "envs": ["dev", "production"],
-      "description": "PGMQ q_tags LLM 태그 추출 워커 (Fix #1489: service_role 전용)"
+      "description": "PGMQ q_tags LLM 태그 추출 워커 (Fix #1489: system caller 전용)"
     },
     "backend-simulator": {
       "callers": ["public"],
       "envs": ["local", "development", "dev"],
-      "description": "E2E/시나리오 시뮬레이터 — dev 전용 (isProduction guard로 production 차단)"
+      "description": "E2E/시나리오 시뮬레이터 — dev 전용 (wrapper의 auth-manifest envs 게이팅으로 dev-only 보장)"
     },
     "health": {
       "callers": ["system", "public"],
