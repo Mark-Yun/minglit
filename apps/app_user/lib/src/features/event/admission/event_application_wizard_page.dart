@@ -14,7 +14,7 @@ part 'wizard_payment_step.dart';
 part 'wizard_verification_step.dart';
 part 'wizard_widgets.dart';
 
-class EventApplicationWizardPage extends ConsumerWidget {
+class EventApplicationWizardPage extends ConsumerStatefulWidget {
   const EventApplicationWizardPage({
     required this.eventId,
     this.ticketId,
@@ -25,14 +25,60 @@ class EventApplicationWizardPage extends ConsumerWidget {
   final String? ticketId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final eventAsync = ref.watch(eventDetailControllerProvider(eventId));
+  ConsumerState<EventApplicationWizardPage> createState() =>
+      _EventApplicationWizardPageState();
+}
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('참여 신청'), leading: const CloseButton()),
-      body: MinglitAsyncValueWidget(
-        value: eventAsync,
-        data: (event) => _WizardBody(event: event, initialTicketId: ticketId),
+class _EventApplicationWizardPageState
+    extends ConsumerState<EventApplicationWizardPage> {
+  // Fix #2314: show confirmation dialog on back navigation
+  void _onPopInvoked(bool didPop, Object? result) {
+    if (didPop) return;
+    unawaited(_confirmExit());
+  }
+
+  Future<void> _confirmExit() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: const Text('신청을 중단할까요?'),
+        content: const Text('지금 나가면 입력한 내용이 모두 사라집니다.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('계속하기'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('나가기'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && mounted) {
+      Navigator.pop(context);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final eventAsync = ref.watch(eventDetailControllerProvider(widget.eventId));
+
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: _onPopInvoked,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('참여 신청'),
+          // Fix #2314: CloseButton routes through the same dialog as Android back
+          leading: CloseButton(onPressed: () => unawaited(_confirmExit())),
+        ),
+        body: MinglitAsyncValueWidget(
+          value: eventAsync,
+          data: (event) =>
+              _WizardBody(event: event, initialTicketId: widget.ticketId),
+        ),
       ),
     );
   }

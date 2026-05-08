@@ -8,6 +8,7 @@ import {
   readJson,
   withEnv,
   withMockedFetch,
+  withNoIntervals,
   type FetchRoute,
 } from "../_test_utils/mock_http.ts";
 
@@ -23,6 +24,8 @@ const TEST_TEMPLATE_ID_2 = "tpl-002";
 const ENV = {
   SUPABASE_URL: "http://localhost:54321",
   SUPABASE_SERVICE_ROLE_KEY: "test-service-key",
+  ENVIRONMENT: "dev",
+  MINGLIT_EF_TEST_FN_NAME: "partner-manage-event",
 };
 
 const FUTURE_START = new Date(Date.now() + 86400000).toISOString(); // +1 day
@@ -216,20 +219,35 @@ function updateTicketRoute(): FetchRoute {
 Deno.test({
   name: "OPTIONS returns CORS preflight",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-    const req = new Request("http://localhost", { method: "OPTIONS" });
-    const res = await handler(req);
-    assertEquals(res.status, 200);
+    await withEnv(ENV, async () => {
+      await withNoIntervals(async () => {
+        const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+        const req = new Request("http://localhost", { method: "OPTIONS" });
+        const res = await handler(req);
+        assertEquals(res.status, 200);
+      });
+    });
   },
 });
 
 Deno.test({
   name: "GET returns 405",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-    const req = new Request("http://localhost", { method: "GET" });
-    const res = await handler(req);
-    assertEquals(res.status, 405);
+    // minglitEdgeFunction runs auth before handler; authenticated GET reaches handler → 405
+    const { fetchMock } = createFetchMock([authRoute()]);
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const req = new Request("http://localhost", {
+            method: "GET",
+            headers: { Authorization: "Bearer test-token" },
+          });
+          const res = await handler(req);
+          assertEquals(res.status, 405);
+        });
+      });
+    });
   },
 });
 

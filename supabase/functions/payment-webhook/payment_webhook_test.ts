@@ -15,11 +15,11 @@ const ENV = {
   PORTONE_API_SECRET: "test-secret",
   SUPABASE_URL: "https://supabase.test",
   SUPABASE_SERVICE_ROLE_KEY: "service-key",
+  ENVIRONMENT: "dev",
+  MINGLIT_EF_TEST_FN_NAME: "payment-webhook",
 };
 
-const DEV_ENV = { ...ENV, ENVIRONMENT: "dev" };
-
-// Real Portone webhook IP (used in non-dev tests to pass IP gate)
+// Real Portone webhook IP (used to pass IP allowlist gate in auth-manifest)
 const PORTONE_IP = "52.78.100.19";
 
 Deno.test("payment-webhook - happy path updates status", async () => {
@@ -64,7 +64,7 @@ Deno.test("payment-webhook - happy path updates status", async () => {
   });
 });
 
-Deno.test("payment-webhook - unauthorized IP returns 403", async () => {
+Deno.test("payment-webhook - unauthorized IP returns 401", async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([]);
@@ -77,15 +77,17 @@ Deno.test("payment-webhook - unauthorized IP returns 403", async () => {
           { headers: { "x-forwarded-for": "10.0.0.1" } },
         );
         const response = await handler(request);
-        assertEquals(response.status, 403);
-        assertEquals(await response.text(), "Unauthorized IP");
+        // Fix #2185 (Batch 8): IP check now via wrapper manifest; returns 401 JSON (not 403 text)
+        assertEquals(response.status, 401);
+        const body = await response.json();
+        assertEquals(body.error, "Unauthorized");
       });
     });
   });
 });
 
-// Fix #1892 H1: 127.0.0.1은 production에서 차단되어야 함
-Deno.test("payment-webhook - localhost IP blocked in production", async () => {
+// Fix #2185 (Batch 8): 127.0.0.1 is not in manifest ips — always blocked (manifest-enforced, not env-specific)
+Deno.test("payment-webhook - localhost IP always blocked (not in manifest allowlist)", async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([]);
@@ -98,49 +100,10 @@ Deno.test("payment-webhook - localhost IP blocked in production", async () => {
           { headers: { "x-forwarded-for": "127.0.0.1" } },
         );
         const response = await handler(request);
-        assertEquals(response.status, 403);
-        assertEquals(await response.text(), "Unauthorized IP");
-      });
-    });
-  });
-});
-
-// Fix #1892 H1: ENVIRONMENT=dev에서는 127.0.0.1 허용
-Deno.test("payment-webhook - localhost IP allowed in dev env", async () => {
-  await withEnv(DEV_ENV, async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-    const { fetchMock } = createFetchMock([
-      {
-        matcher: (req) => req.url.includes("/rest/v1/webhook_imp_uid_log") && req.method === "GET",
-        handler: () => new Response("null", { status: 200, headers: { "Content-Type": "application/json" } }),
-      },
-      {
-        matcher: (req) => req.url.includes("/rest/v1/webhook_imp_uid_log") && req.method === "POST",
-        handler: () => jsonResponse({}),
-      },
-      {
-        matcher: "https://api.iamport.kr/users/getToken",
-        handler: () => jsonResponse({ code: 0, response: { access_token: "token" } }),
-      },
-      {
-        matcher: "https://api.iamport.kr/payments/imp_dev",
-        handler: () => jsonResponse({ code: 0, response: { merchant_uid: "order-dev", status: "paid" } }),
-      },
-      {
-        matcher: (req) => req.url.includes("/rest/v1/event_applications") && req.method === "PATCH",
-        handler: () => jsonResponse({}),
-      },
-    ]);
-
-    await withMockedFetch(fetchMock, async () => {
-      await withNoIntervals(async () => {
-        const request = jsonRequest(
-          "http://localhost",
-          { imp_uid: "imp_dev", merchant_uid: "order-dev", status: "paid" },
-          { headers: { "x-forwarded-for": "127.0.0.1" } },
-        );
-        const response = await handler(request);
-        assertEquals(response.status, 200);
+        // IP allowlist declared in auth-manifest.json (3 Portone IPs, no 127.0.0.1)
+        assertEquals(response.status, 401);
+        const body = await response.json();
+        assertEquals(body.error, "Unauthorized");
       });
     });
   });
@@ -161,9 +124,10 @@ Deno.test("payment-webhook - spoofed XFF first hop blocked", async () => {
           { headers: { "x-forwarded-for": `${PORTONE_IP}, evil.example.com` } },
         );
         const response = await handler(request);
-        // rightmost(evil.example.com)가 선택되므로 403
-        assertEquals(response.status, 403);
-        assertEquals(await response.text(), "Unauthorized IP");
+        // rightmost(evil.example.com)가 선택되므로 401 (Fix #2185: wrapper returns JSON 401)
+        assertEquals(response.status, 401);
+        const body = await response.json();
+        assertEquals(body.error, "Unauthorized");
       });
     });
   });

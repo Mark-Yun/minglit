@@ -1,17 +1,13 @@
+// Fix #2185 (Batch 10): migrate to minglitEdgeFunction wrapper — auth via manifest (system caller)
 import { createServiceClient } from "../_shared/supabase_client.ts";
 import { nowISO } from "../_shared/temporal_utils.ts";
 import { createEmbeddingAdapter } from "../_shared/ai/factory.ts";
 import { serializeParty } from "./party_serializer.ts";
 import { HybridCalculator } from "./calculator.ts";
 import { WorkerUtils } from "../_shared/worker_utils.ts";
-import {
-  captureException,
-  initSentry,
-  log,
-  withHandler,
-} from "../_shared/logger.ts";
-import { requireServiceRole } from "../_shared/auth_utils.ts";
+import { captureException, log } from "../_shared/logger.ts";
 import { parseJsonBody } from "../_shared/request_utils.ts";
+import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
 
 const FN = "ai-embed";
 
@@ -24,12 +20,8 @@ const WEIGHTS: Record<string, number> = {
 
 const calculator = new HybridCalculator({ decayRate: 0.05 });
 
-initSentry();
-
-Deno.serve(withHandler(async (req) => {
-  // Fix #1489: 시스템 전용 EF — service_role만 허용
-  const auth = requireServiceRole(req);
-  if (auth instanceof Response) return auth;
+export const handler = async (req: Request, _ctx: EFContext): Promise<Response> => {
+  // wrapper guarantees caller === "system" per auth-manifest
   log({
     function: FN,
     level: "info",
@@ -299,11 +291,12 @@ Deno.serve(withHandler(async (req) => {
       level: "error",
       message: `AI Embed Worker Error: ${errorMessage}`,
     });
-    // captureException: withHandler의 catch에 도달하지 않으므로 여기서 직접 Sentry에 캡처
     captureException(err);
     return new Response(JSON.stringify({ error: errorMessage }), {
       status: 500,
       headers: { "Content-Type": "application/json" },
     });
   }
-}));
+};
+
+minglitEdgeFunction(handler);

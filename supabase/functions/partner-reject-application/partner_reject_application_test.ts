@@ -7,6 +7,7 @@ import {
   readJson,
   withEnv,
   withMockedFetch,
+  withNoIntervals,
   type FetchRoute,
 } from "../_test_utils/mock_http.ts";
 
@@ -18,6 +19,8 @@ const TEST_EVENT_ID = "00000000-0000-1000-8000-000000000002";
 const ENV = {
   SUPABASE_URL: "http://localhost:54321",
   SUPABASE_SERVICE_ROLE_KEY: "test-service-key",
+  ENVIRONMENT: "dev",
+  MINGLIT_EF_TEST_FN_NAME: "partner-reject-application",
 };
 
 const BASE_URL = "http://localhost:54321/functions/v1/partner-reject-application";
@@ -102,29 +105,36 @@ function updateRoute(updated = [{ id: TEST_APP_ID }]): FetchRoute {
 Deno.test({
   name: "OPTIONS returns CORS",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([]);
-
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
-        const res = await handler(new Request(BASE_URL, { method: "OPTIONS" }));
-        assertEquals(res.status, 200);
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const res = await handler(new Request(BASE_URL, { method: "OPTIONS" }));
+          assertEquals(res.status, 200);
+        });
       });
     });
   },
 });
 
-// ─── GET: 405 ───
+// ─── GET: 405 (requires auth — wrapper checks auth before handler checks method) ───
 Deno.test({
   name: "GET returns 405",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-    const { fetchMock } = createFetchMock([]);
-
+    const { fetchMock } = createFetchMock([authRoute()]);
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
-        const res = await handler(new Request(BASE_URL, { method: "GET" }));
-        assertEquals(res.status, 405);
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const res = await handler(
+            new Request(BASE_URL, {
+              method: "GET",
+              headers: { Authorization: "Bearer user-token" },
+            }),
+          );
+          assertEquals(res.status, 405);
+        });
       });
     });
   },
@@ -134,17 +144,18 @@ Deno.test({
 Deno.test({
   name: "Missing application_id returns 400",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
-
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
-        const res = await handler(
-          authenticatedJsonRequest(BASE_URL, { reason: "Not a good fit" }),
-        );
-        assertEquals(res.status, 400);
-        const json = await readJson(res);
-        assertEquals(json.error, "Missing application_id");
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const res = await handler(
+            authenticatedJsonRequest(BASE_URL, { reason: "Not a good fit" }),
+          );
+          assertEquals(res.status, 400);
+          const json = await readJson(res);
+          assertEquals(json.error, "Missing application_id");
+        });
       });
     });
   },
@@ -154,17 +165,18 @@ Deno.test({
 Deno.test({
   name: "Missing reason returns 400",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authRoute()]);
-
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
-        const res = await handler(
-          authenticatedJsonRequest(BASE_URL, { application_id: TEST_APP_ID }),
-        );
-        assertEquals(res.status, 400);
-        const json = await readJson(res);
-        assertEquals(json.error, "Missing or empty rejection reason");
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const res = await handler(
+            authenticatedJsonRequest(BASE_URL, { application_id: TEST_APP_ID }),
+          );
+          assertEquals(res.status, 400);
+          const json = await readJson(res);
+          assertEquals(json.error, "Missing or empty rejection reason");
+        });
       });
     });
   },
@@ -174,25 +186,26 @@ Deno.test({
 Deno.test({
   name: "Reject success returns 200 with rejected count",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
       authRoute(),
       appRoute("pending"),
       permRoute(),
       updateRoute(),
     ]);
-
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
-        const res = await handler(
-          authenticatedJsonRequest(BASE_URL, {
-            application_id: TEST_APP_ID,
-            reason: "Not a good fit",
-          }),
-        );
-        assertEquals(res.status, 200);
-        const json = await readJson(res);
-        assertEquals(json.rejected, 1);
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const res = await handler(
+            authenticatedJsonRequest(BASE_URL, {
+              application_id: TEST_APP_ID,
+              reason: "Not a good fit",
+            }),
+          );
+          assertEquals(res.status, 200);
+          const json = await readJson(res);
+          assertEquals(json.rejected, 1);
+        });
       });
     });
   },
@@ -202,23 +215,24 @@ Deno.test({
 Deno.test({
   name: "Application not found returns 404",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
       authRoute(),
       appNotFoundRoute(),
     ]);
-
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
-        const res = await handler(
-          authenticatedJsonRequest(BASE_URL, {
-            application_id: "00000000-0000-1000-8000-999999999999",
-            reason: "Not a good fit",
-          }),
-        );
-        assertEquals(res.status, 404);
-        const json = await readJson(res);
-        assertEquals(json.error, "Application not found");
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const res = await handler(
+            authenticatedJsonRequest(BASE_URL, {
+              application_id: "00000000-0000-1000-8000-999999999999",
+              reason: "Not a good fit",
+            }),
+          );
+          assertEquals(res.status, 404);
+          const json = await readJson(res);
+          assertEquals(json.error, "Application not found");
+        });
       });
     });
   },
@@ -228,24 +242,24 @@ Deno.test({
 Deno.test({
   name: "Already rejected status returns 400",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
       authRoute(),
       appRoute("rejected"),
-      permRoute("owner"),
     ]);
-
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
-        const res = await handler(
-          authenticatedJsonRequest(BASE_URL, {
-            application_id: TEST_APP_ID,
-            reason: "Not a good fit",
-          }),
-        );
-        assertEquals(res.status, 400);
-        const json = await readJson(res);
-        assertEquals(json.error, "Cannot reject application with status 'rejected'");
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const res = await handler(
+            authenticatedJsonRequest(BASE_URL, {
+              application_id: TEST_APP_ID,
+              reason: "Not a good fit",
+            }),
+          );
+          assertEquals(res.status, 400);
+          const json = await readJson(res);
+          assertEquals(json.error, "Cannot reject application with status 'rejected'");
+        });
       });
     });
   },
@@ -255,18 +269,19 @@ Deno.test({
 Deno.test({
   name: "Unauthorized returns 401",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([authFailRoute()]);
-
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
-        const res = await handler(
-          authenticatedJsonRequest(BASE_URL, {
-            application_id: TEST_APP_ID,
-            reason: "Not a good fit",
-          }),
-        );
-        assertEquals(res.status, 401);
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const res = await handler(
+            authenticatedJsonRequest(BASE_URL, {
+              application_id: TEST_APP_ID,
+              reason: "Not a good fit",
+            }),
+          );
+          assertEquals(res.status, 401);
+        });
       });
     });
   },
@@ -276,24 +291,25 @@ Deno.test({
 Deno.test({
   name: "Forbidden (insufficient permissions) returns 403",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
       authRoute(),
       appRoute("pending"),
       permForbiddenRoute(),
     ]);
-
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
-        const res = await handler(
-          authenticatedJsonRequest(BASE_URL, {
-            application_id: TEST_APP_ID,
-            reason: "Not a good fit",
-          }),
-        );
-        assertEquals(res.status, 403);
-        const json = await readJson(res);
-        assertEquals(json.error, "Forbidden: insufficient partner permissions");
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const res = await handler(
+            authenticatedJsonRequest(BASE_URL, {
+              application_id: TEST_APP_ID,
+              reason: "Not a good fit",
+            }),
+          );
+          assertEquals(res.status, 403);
+          const json = await readJson(res);
+          assertEquals(json.error, "Forbidden: insufficient partner permissions");
+        });
       });
     });
   },
@@ -303,7 +319,6 @@ Deno.test({
 Deno.test({
   name: "Owner role bypasses permissions check",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
       authRoute(),
       appRoute("pending"),
@@ -313,18 +328,20 @@ Deno.test({
       },
       updateRoute(),
     ]);
-
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
-        const res = await handler(
-          authenticatedJsonRequest(BASE_URL, {
-            application_id: TEST_APP_ID,
-            reason: "Not a good fit",
-          }),
-        );
-        assertEquals(res.status, 200);
-        const json = await readJson(res);
-        assertEquals(json.rejected, 1);
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const res = await handler(
+            authenticatedJsonRequest(BASE_URL, {
+              application_id: TEST_APP_ID,
+              reason: "Not a good fit",
+            }),
+          );
+          assertEquals(res.status, 200);
+          const json = await readJson(res);
+          assertEquals(json.rejected, 1);
+        });
       });
     });
   },
@@ -334,25 +351,26 @@ Deno.test({
 Deno.test({
   name: "Already processed (compare-and-set returns empty) returns 409",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
     const { fetchMock } = createFetchMock([
       authRoute(),
       appRoute("pending"),
       permRoute(),
       updateRoute([]),
     ]);
-
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
-        const res = await handler(
-          authenticatedJsonRequest(BASE_URL, {
-            application_id: TEST_APP_ID,
-            reason: "Not a good fit",
-          }),
-        );
-        assertEquals(res.status, 409);
-        const json = await readJson(res);
-        assertEquals(json.error, "Application already processed");
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const res = await handler(
+            authenticatedJsonRequest(BASE_URL, {
+              application_id: TEST_APP_ID,
+              reason: "Not a good fit",
+            }),
+          );
+          assertEquals(res.status, 409);
+          const json = await readJson(res);
+          assertEquals(json.error, "Application already processed");
+        });
       });
     });
   },

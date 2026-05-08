@@ -1,12 +1,13 @@
-import { createServiceClient } from "../_shared/supabase_client.ts";
+// user-manage-settings — FCM token registration and user settings management
+// Issue #2040: atomic upsert for user_settings + user_consents via RPC
+
+import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
 import {
-  corsResponse,
   errorResponse,
   successResponse,
 } from "../_shared/response_utils.ts";
-import { requireAuth } from "../_shared/auth_utils.ts";
 import { parseAction } from "../_shared/request_utils.ts";
-import { initSentry, log, withHandler, withSpan } from "../_shared/logger.ts";
+import { log, withSpan } from "../_shared/logger.ts";
 import { initStatsig, logStatsigEvent } from "../_shared/statsig_utils.ts";
 
 const FN = "user-manage-settings";
@@ -14,28 +15,19 @@ const FN = "user-manage-settings";
 const ALLOWED_SETTINGS_FIELDS = ["marketing_consent", "service_notification"];
 const VALID_DEVICE_TYPES = ["android", "ios", "web"];
 
-initSentry();
 initStatsig();
 
-Deno.serve(withHandler(async (req) => {
-  if (req.method === "OPTIONS") return corsResponse();
+export const handler = async (req: Request, ctx: EFContext): Promise<Response> => {
+  if (req.method !== "POST") return errorResponse("Method not allowed", 405);
 
-  const auth = await requireAuth(req);
-  if (auth instanceof Response) return auth;
-  const userId = auth;
+  if (ctx.auth.type !== "user") return errorResponse("Unexpected auth type", 500);
+  const userId = ctx.auth.userId;
+  const { supabase } = ctx;
 
   try {
-    // 1. Parse Request
     const result = await parseAction(req);
     if (result instanceof Response) return result;
     const { action, body } = result;
-
-    if (!action) {
-      return errorResponse("Missing required field: action", 400);
-    }
-
-    // 2. Init Supabase (service role)
-    const supabase = createServiceClient();
 
     switch (action) {
       case "upsert_token": {
@@ -49,9 +41,7 @@ Deno.serve(withHandler(async (req) => {
         }
         if (!device_type || !VALID_DEVICE_TYPES.includes(device_type)) {
           return errorResponse(
-            `Invalid device_type. Must be one of: ${
-              VALID_DEVICE_TYPES.join(", ")
-            }`,
+            `Invalid device_type. Must be one of: ${VALID_DEVICE_TYPES.join(", ")}`,
             400,
           );
         }
@@ -145,9 +135,7 @@ Deno.serve(withHandler(async (req) => {
 
         if (Object.keys(sanitized).length === 0) {
           return errorResponse(
-            `No valid settings fields. Allowed: ${
-              ALLOWED_SETTINGS_FIELDS.join(", ")
-            }`,
+            `No valid settings fields. Allowed: ${ALLOWED_SETTINGS_FIELDS.join(", ")}`,
             400,
           );
         }
@@ -202,4 +190,6 @@ Deno.serve(withHandler(async (req) => {
     });
     return errorResponse(message, 500);
   }
-}));
+};
+
+minglitEdgeFunction(handler);

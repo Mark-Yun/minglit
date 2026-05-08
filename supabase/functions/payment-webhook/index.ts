@@ -1,9 +1,9 @@
-// Fix #1892: 호출자 검증 강화 (H1 — 127.0.0.1 prod 제거, H2 — XFF 파싱 개선)
-// V1은 HMAC 미지원이므로 IP whitelist + Portone cross-check가 방어선. V2 마이그레이션 시 HMAC 추가 가능.
+// Fix #2185 (Batch 8): migrate to minglitEdgeFunction wrapper — auth via manifest
+// IP allowlist now handled by wrapper via external_auth in auth-manifest.json
 // Fix #179: esm.sh 직접 URL → deno.json import map 기반으로 통일
-import { createServiceClient } from "../_shared/supabase_client.ts";
+import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
 import { IamportClient } from "../_shared/iamport_client.ts";
-import { initSentry, withHandler, log } from "../_shared/logger.ts";
+import { log } from "../_shared/logger.ts";
 import { initStatsig, logStatsigEvent } from "../_shared/statsig_utils.ts";
 import { nowISO } from "../_shared/temporal_utils.ts";
 
@@ -16,37 +16,13 @@ if (!IMP_KEY || !IMP_SECRET) {
   throw new Error("Missing required environment variables: PORTONE_API_KEY, PORTONE_API_SECRET");
 }
 
-// Portone (Iamport V1) Webhook IP Whitelist
-// Fix #1892 H1: 127.0.0.1은 dev 환경에서만 허용 — production에서 localhost를 허용하면
-// X-Forwarded-For 스푸핑으로 IP 게이트가 무력화될 수 있음
-const _IS_DEV_ENV = Deno.env.get("ENVIRONMENT") === "dev";
-const ALLOWED_IPS = _IS_DEV_ENV
-  ? ["52.78.100.19", "52.78.48.223", "52.78.17.128", "127.0.0.1"]
-  : ["52.78.100.19", "52.78.48.223", "52.78.17.128"];
-
-initSentry();
 initStatsig();
 
-Deno.serve(withHandler(async (req) => {
+export const handler = async (req: Request, ctx: EFContext): Promise<Response> => {
+  const { supabase } = ctx;
+
   try {
     const rawBody = await req.text();
-
-    // 1. IP Validation (Primary Security Layer for V1 — V1 has no HMAC signing)
-    // Fix #1892 H2: 우선순위 — edge/CDN이 주입하는 헤더를 신뢰, 클라이언트가 조작 가능한 leftmost XFF 금지.
-    //   1) x-real-ip: Supabase Edge/CDN이 실제 연결 IP로 설정
-    //   2) cf-connecting-ip: Cloudflare가 설정하는 클라이언트 IP (Supabase가 CF 인프라 사용 시)
-    //   3) XFF rightmost fallback: CDN이 XFF에 연결 IP를 append하는 구조에서의 안전한 fallback.
-    //      leftmost는 클라이언트가 임의 조작 가능하므로 사용하지 않음.
-    const clientIp =
-      req.headers.get("x-real-ip")?.trim() ||
-      req.headers.get("cf-connecting-ip")?.trim() ||
-      req.headers.get("x-forwarded-for")?.split(",").map((s) => s.trim()).filter(Boolean).pop() ||
-      "";
-
-    if (!clientIp || !ALLOWED_IPS.includes(clientIp)) {
-      log({ function: FN, level: "warn", message: `Blocked Webhook Request from unauthorized IP: ${clientIp || "(empty)"}` });
-      return new Response("Unauthorized IP", { status: 403 });
-    }
 
     let body: Record<string, unknown>;
     try {
@@ -65,7 +41,6 @@ Deno.serve(withHandler(async (req) => {
     // Fix #1949: Idempotency check — reject replayed webhooks before hitting PortOne API.
     // SELECT-first is intentional: INSERT-first would consume the key on transient failures,
     // blocking PortOne retries. We insert only after a successful DB update below.
-    const supabase = createServiceClient();
     const { data: existingLog } = await supabase
       .from("webhook_imp_uid_log")
       .select("imp_uid")
@@ -180,4 +155,6 @@ Deno.serve(withHandler(async (req) => {
     log({ function: FN, level: "error", message: `Webhook Error: ${errorMessage}` });
     return new Response(errorMessage, { status: 500 });
   }
-}));
+}
+
+minglitEdgeFunction(handler);

@@ -1,10 +1,8 @@
+// Fix #2185 (Batch 10): migrate to minglitEdgeFunction wrapper — auth via manifest (system + public)
 import { successResponse, errorResponse } from "../_shared/response_utils.ts";
-import { initSentry, withHandler } from "../_shared/logger.ts";
 import { checkAllFunctions } from "../_shared/env_keystore.ts";
 import { nowISO } from "../_shared/temporal_utils.ts";
-import { requireServiceRole } from "../_shared/auth_utils.ts";
-
-initSentry();
+import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
 
 interface CheckResult {
   status: "up" | "down";
@@ -114,7 +112,7 @@ async function checkStorage(): Promise<CheckResult> {
   }
 }
 
-Deno.serve(withHandler(async (req) => {
+export const handler = async (req: Request, ctx: EFContext): Promise<Response> => {
   if (req.method !== "GET") {
     return errorResponse("Method not allowed", 405);
   }
@@ -146,8 +144,10 @@ Deno.serve(withHandler(async (req) => {
   // Fix #1944: env-check exposes infra key names — require service role.
   // The no-arg health check remains public for smoke tests.
   if (includeEnv) {
-    const auth = requireServiceRole(req);
-    if (auth instanceof Response) return auth;
+    // wrapper sets auth.type === "system" only when service_role key is presented
+    if (ctx.auth.type !== "system") {
+      return errorResponse("Unauthorized", 401);
+    }
 
     const missingByFunction = checkAllFunctions();
     const totalMissing = Object.values(missingByFunction).flat().length;
@@ -162,4 +162,6 @@ Deno.serve(withHandler(async (req) => {
     return successResponse(body, 200);
   }
   return errorResponse("unhealthy", 503, body);
-}));
+};
+
+minglitEdgeFunction(handler);

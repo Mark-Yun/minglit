@@ -28,6 +28,8 @@ const ENV = {
   PORTONE_API_SECRET: "test-secret",
   SUPABASE_URL: "https://supabase.test",
   SUPABASE_SERVICE_ROLE_KEY: "service-key",
+  ENVIRONMENT: "dev",
+  MINGLIT_EF_TEST_FN_NAME: "payment-verify",
 };
 
 // ─── 시나리오 1: 유료 이벤트 신청 → PG 결제 → 결제 검증 → 티켓 발급 ────────────
@@ -165,7 +167,8 @@ Deno.test("integration - approved payment: cancel within grace period → refund
   const eligiblePaidAt = new Date(nowMs - 30 * 60 * 1000).toISOString(); // 30분 전 결제
   const farFutureEvent = new Date(nowMs + 10 * 24 * 60 * 60 * 1000).toISOString(); // 10일 후
 
-  await withEnv(ENV, async () => {
+  // payment-cancel is migrated to minglitEdgeFunction — needs ENVIRONMENT + fn name
+  await withEnv({ ...ENV, ENVIRONMENT: "dev", MINGLIT_EF_TEST_FN_NAME: "payment-cancel" }, async () => {
     const handler = await captureServeHandler(
       new URL("../payment-cancel/index.ts", import.meta.url),
     );

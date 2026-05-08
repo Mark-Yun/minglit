@@ -1,20 +1,17 @@
 // partner-manage-member — Manage partner member roles and permissions
 // Issue #313: RLS write strategy 전환
+// Fix #2185 (Batch 6): migrate to minglitEdgeFunction wrapper — auth via manifest (user caller)
 
-import { createServiceClient } from "../_shared/supabase_client.ts";
+import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
 import {
-  corsResponse,
   errorResponse,
   successResponse,
 } from "../_shared/response_utils.ts";
-import { requireAuth } from "../_shared/auth_utils.ts";
 import { requirePartnerPermission } from "../_shared/partner_permissions.ts";
 import { parseAction } from "../_shared/request_utils.ts";
-import { initSentry, withHandler, log } from "../_shared/logger.ts";
+import { log } from "../_shared/logger.ts";
 
 const FN = "partner-manage-member";
-
-initSentry();
 
 // Fix #313: role 화이트리스트 — partner_role enum과 일치
 const VALID_ROLES = ["owner", "manager", "staff"] as const;
@@ -32,24 +29,19 @@ const VALID_PERMISSIONS = [
   "COMMENT_MANAGE",
 ] as const;
 
-Deno.serve(withHandler(async (req: Request): Promise<Response> => {
-  if (req.method === "OPTIONS") return corsResponse();
+export const handler = async (req: Request, ctx: EFContext): Promise<Response> => {
   if (req.method !== "POST") return errorResponse("Method not allowed", 405);
 
-  try {
-    // 1. Auth
-    const auth = await requireAuth(req);
-    if (auth instanceof Response) return auth;
-    const userId = auth;
+  const { supabase } = ctx;
+  if (ctx.auth.type !== "user") return errorResponse("Unexpected auth type", 500);
+  const userId = ctx.auth.userId;
 
-    // 2. Parse body
+  try {
+    // Parse body
     const result = await parseAction(req);
     if (result instanceof Response) return result;
     const { action, body } = result;
     if (!action) return errorResponse("Missing action", 400);
-
-    // 3. Supabase client (service role)
-    const supabase = createServiceClient();
 
     // ─── update_role ───
     if (action === "update_role") {
@@ -160,4 +152,6 @@ Deno.serve(withHandler(async (req: Request): Promise<Response> => {
       500,
     );
   }
-}));
+};
+
+minglitEdgeFunction(handler);

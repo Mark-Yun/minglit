@@ -7,12 +7,13 @@ import {
   readJson,
   withEnv,
   withMockedFetch,
-  withNoIntervals,
 } from "../_test_utils/mock_http.ts";
 import { authRoute } from "../_test_utils/fixtures.ts";
 
 
 const ENV = {
+  ENVIRONMENT: "dev",
+  MINGLIT_EF_TEST_FN_NAME: "user-cancel-deletion",
   SUPABASE_URL: "https://supabase.test",
   SUPABASE_SERVICE_ROLE_KEY: "service-key",
 };
@@ -38,13 +39,11 @@ Deno.test("인증 없는 요청 → 401", async () => {
 
   await withEnv(ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
-      await withNoIntervals(async () => {
-        const response = await handler(new Request("http://localhost", { method: "POST" }));
-        const payload = await readJson(response);
+      const response = await handler(new Request("http://localhost", { method: "POST" }));
+      const payload = await readJson(response);
 
-        assertEquals(response.status, 401);
-        assertEquals(payload.error, "Missing or invalid Authorization header");
-      });
+      assertEquals(response.status, 401);
+      assertEquals(payload.error, "Unauthorized");
     });
   });
 });
@@ -61,19 +60,17 @@ Deno.test("유예 기간 중 취소 → deleted_at 복구", async () => {
 
   await withEnv(ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
-      await withNoIntervals(async () => {
-        const response = await handler(authenticatedJsonRequest("http://localhost", {}));
-        const payload = await readJson(response);
+      const response = await handler(authenticatedJsonRequest("http://localhost", {}));
+      const payload = await readJson(response);
 
-        assertEquals(response.status, 200);
-        assertEquals(payload.success, true);
+      assertEquals(response.status, 200);
+      assertEquals(payload.success, true);
 
-        const restoreCall = calls.find(
-          (call) => call.url.includes("/rest/v1/user_profiles") && call.method === "PATCH",
-        );
-        assertEquals(restoreCall !== undefined, true);
-        assertEquals(JSON.parse(restoreCall!.body ?? "{}").deleted_at, null);
-      });
+      const restoreCall = calls.find(
+        (call) => call.url.includes("/rest/v1/user_profiles") && call.method === "PATCH",
+      );
+      assertEquals(restoreCall !== undefined, true);
+      assertEquals(JSON.parse(restoreCall!.body ?? "{}").deleted_at, null);
     });
   });
 });
@@ -88,13 +85,11 @@ Deno.test("deleted_at 이 null인 유저 → 404", async () => {
 
   await withEnv(ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
-      await withNoIntervals(async () => {
-        const response = await handler(authenticatedJsonRequest("http://localhost", {}));
-        const payload = await readJson(response);
+      const response = await handler(authenticatedJsonRequest("http://localhost", {}));
+      const payload = await readJson(response);
 
-        assertEquals(response.status, 404);
-        assertEquals(payload.error, "탈퇴 진행 중인 계정이 아닙니다");
-      });
+      assertEquals(response.status, 404);
+      assertEquals(payload.error, "탈퇴 진행 중인 계정이 아닙니다");
     });
   });
 });
@@ -110,18 +105,16 @@ Deno.test("유예 기간 초과 → 400", async () => {
 
   await withEnv(ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
-      await withNoIntervals(async () => {
-        const response = await handler(authenticatedJsonRequest("http://localhost", {}));
-        const payload = await readJson(response);
+      const response = await handler(authenticatedJsonRequest("http://localhost", {}));
+      const payload = await readJson(response);
 
-        assertEquals(response.status, 400);
-        assertEquals(payload.error, "탈퇴 유예 기간이 만료되었습니다");
+      assertEquals(response.status, 400);
+      assertEquals(payload.error, "탈퇴 유예 기간이 만료되었습니다");
 
-        const restoreCall = calls.find(
-          (call) => call.url.includes("/rest/v1/user_profiles") && call.method === "PATCH",
-        );
-        assertEquals(restoreCall, undefined);
-      });
+      const restoreCall = calls.find(
+        (call) => call.url.includes("/rest/v1/user_profiles") && call.method === "PATCH",
+      );
+      assertEquals(restoreCall, undefined);
     });
   });
 });

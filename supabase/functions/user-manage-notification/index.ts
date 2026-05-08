@@ -1,21 +1,12 @@
-import { createServiceClient } from "../_shared/supabase_client.ts";
 import {
-  corsResponse,
   errorResponse,
   successResponse,
 } from "../_shared/response_utils.ts";
-import { requireAuth } from "../_shared/auth_utils.ts";
 import { parseAction } from "../_shared/request_utils.ts";
-import { initSentry, withHandler } from "../_shared/logger.ts";
+import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
 
-initSentry();
-
-Deno.serve(withHandler(async (req) => {
-  if (req.method === "OPTIONS") return corsResponse();
-
-  const auth = await requireAuth(req);
-  if (auth instanceof Response) return auth;
-  const userId = auth;
+export const handler = async (req: Request, { auth, supabase }: EFContext): Promise<Response> => {
+  const { userId } = auth as { type: "user"; userId: string };
 
   const result = await parseAction(req);
   if (result instanceof Response) return result;
@@ -26,8 +17,6 @@ Deno.serve(withHandler(async (req) => {
   if (!action) {
     return errorResponse("Missing required parameter: action", 400);
   }
-
-  const supabase = createServiceClient();
 
   if (action === "mark_read") {
     if (!notification_id) {
@@ -91,4 +80,6 @@ Deno.serve(withHandler(async (req) => {
   }
 
   return errorResponse(`Unknown action: ${action}`, 400);
-}));
+};
+
+minglitEdgeFunction(handler);

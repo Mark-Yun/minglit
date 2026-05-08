@@ -1,17 +1,12 @@
 // partner-register — Partner application (save draft, submit, update)
 // Issue #311: RLS write strategy 전환
 
-import { createServiceClient } from "../_shared/supabase_client.ts";
 import {
-  corsResponse,
   errorResponse,
   successResponse,
 } from "../_shared/response_utils.ts";
-import { requireAuth } from "../_shared/auth_utils.ts";
 import { parseAction } from "../_shared/request_utils.ts";
-import { initSentry, withHandler } from "../_shared/logger.ts";
-
-initSentry();
+import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
 import {
   requireNonEmpty,
   validateBizNumber,
@@ -50,34 +45,16 @@ const CLEARABLE_FIELDS: ReadonlySet<string> = new Set([
   "profile_image_path",
 ]);
 
-Deno.serve(withHandler(async (req: Request): Promise<Response> => {
-  if (req.method === "OPTIONS") return corsResponse();
+export const handler = async (req: Request, ctx: EFContext): Promise<Response> => {
   if (req.method !== "POST") return errorResponse("Method not allowed", 405);
 
-  try {
-    return await handleRequest(req);
-  } catch (e) {
-    const message = e instanceof Error ? e.message : String(e);
-    return errorResponse(message, 500);
-  }
-}));
+  const { supabase } = ctx;
+  if (ctx.auth.type !== "user") return errorResponse("Unexpected auth type", 500);
+  const userId = ctx.auth.userId;
 
-async function handleRequest(req: Request): Promise<Response> {
-  // 1. Environment check (handled by createServiceClient)
-
-  // 2. Auth
-  const auth = await requireAuth(req);
-  if (auth instanceof Response) return auth;
-  const userId = auth;
-
-  // 3. Parse body
   const result = await parseAction(req);
   if (result instanceof Response) return result;
   const { action, body } = result;
-  if (!action) return errorResponse("Missing action", 400);
-
-  // 4. Supabase client (service role)
-  const supabase = createServiceClient();
 
   // ─── save_draft ───
   if (action === "save_draft") {
@@ -120,7 +97,7 @@ async function handleRequest(req: Request): Promise<Response> {
       }
 
       // Fix #311: 상태 조건을 UPDATE WHERE에 포함하여 원자적 검사
-      const { error: updateError, count: _count } = await supabase
+      const { error: updateError } = await supabase
         .from("partner_applications")
         .update(record)
         .eq("id", applicationId)
@@ -353,4 +330,6 @@ async function handleRequest(req: Request): Promise<Response> {
   }
 
   return errorResponse(`Unknown action: ${action}`, 400);
-}
+};
+
+minglitEdgeFunction(handler);

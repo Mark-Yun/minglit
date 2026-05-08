@@ -9,6 +9,7 @@ import {
   readJson,
   withEnv,
   withMockedFetch,
+  withNoIntervals,
 } from "../_test_utils/mock_http.ts";
 
 const TEST_USER_ID = "user-partner-owner";
@@ -19,6 +20,8 @@ const TEST_LOCATION_ID = "loc-001";
 const ENV = {
   SUPABASE_URL: "http://localhost:54321",
   SUPABASE_SERVICE_ROLE_KEY: "test-service-key",
+  ENVIRONMENT: "dev",
+  MINGLIT_EF_TEST_FN_NAME: "partner-manage-party",
 };
 
 // ─── Route helpers ───
@@ -253,24 +256,41 @@ function insertTicketTemplatesRoute(): FetchRoute {
 Deno.test({
   name: "OPTIONS returns CORS preflight",
   fn: async () => {
-    const handler = await captureServeHandler(
-      new URL("./index.ts", import.meta.url),
-    );
-    const req = new Request("http://localhost", { method: "OPTIONS" });
-    const res = await handler(req);
-    assertEquals(res.status, 200);
+    const { fetchMock } = createFetchMock([]);
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(
+            new URL("./index.ts", import.meta.url),
+          );
+          const req = new Request("http://localhost", { method: "OPTIONS" });
+          const res = await handler(req);
+          assertEquals(res.status, 200);
+        });
+      });
+    });
   },
 });
 
 Deno.test({
-  name: "GET returns 405",
+  name: "GET returns 405 (requires auth — wrapper checks auth before handler checks method)",
   fn: async () => {
-    const handler = await captureServeHandler(
-      new URL("./index.ts", import.meta.url),
-    );
-    const req = new Request("http://localhost", { method: "GET" });
-    const res = await handler(req);
-    assertEquals(res.status, 405);
+    const { fetchMock } = createFetchMock([authRoute()]);
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(
+            new URL("./index.ts", import.meta.url),
+          );
+          const req = new Request("http://localhost", {
+            method: "GET",
+            headers: { Authorization: "Bearer user-token" },
+          });
+          const res = await handler(req);
+          assertEquals(res.status, 405);
+        });
+      });
+    });
   },
 });
 
