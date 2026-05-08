@@ -173,7 +173,8 @@ Deno.test("contract: payment-cancel response matches schema", async () => {
   const eligiblePaidAt = new Date(nowMs - 1 * 60 * 60 * 1000).toISOString();
   const farFutureEvent = new Date(nowMs + 10 * 24 * 60 * 60 * 1000).toISOString();
 
-  await withEnv(COMMON_ENV, async () => {
+  // payment-cancel is migrated to minglitEdgeFunction — needs ENVIRONMENT + fn name
+  await withEnv({ ...COMMON_ENV, ENVIRONMENT: "dev", MINGLIT_EF_TEST_FN_NAME: "payment-cancel" }, async () => {
     const handler = await captureServeHandler(
       new URL("../payment-cancel/index.ts", import.meta.url),
     );

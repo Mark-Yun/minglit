@@ -1,14 +1,13 @@
 // Fix #179: esm.sh 직접 URL → deno.json import map 기반으로 통일
-import { createServiceClient } from "../_shared/supabase_client.ts";
+// Fix #2185 (Batch 7): migrate to minglitEdgeFunction wrapper — auth via manifest (user caller)
+import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
 import { nowISO } from "../_shared/temporal_utils.ts";
 import {
-  corsResponse,
   errorResponse,
   successResponse,
 } from "../_shared/response_utils.ts";
-import { requireAuth } from "../_shared/auth_utils.ts";
 import { parseJsonBody } from "../_shared/request_utils.ts";
-import { initSentry, log, withHandler } from "../_shared/logger.ts";
+import { log } from "../_shared/logger.ts";
 // Fix #299: 환불 로직을 shared 모듈로 추출 — user-cancel-order와 공유
 import {
   executeRefund,
@@ -18,13 +17,11 @@ import {
 
 const FN = "payment-cancel";
 
-initSentry();
+export const handler = async (req: Request, ctx: EFContext): Promise<Response> => {
+  const { supabase } = ctx;
+  // wrapper guarantees type === "user" per auth-manifest callers: ["user"]
+  const userId = (ctx.auth as { type: "user"; userId: string }).userId;
 
-Deno.serve(withHandler(async (req) => {
-  if (req.method === "OPTIONS") return corsResponse();
-
-  const auth = await requireAuth(req);
-  if (auth instanceof Response) return auth;
   try {
     // 1. Parse Request
     const body = await parseJsonBody(req);
@@ -40,9 +37,6 @@ Deno.serve(withHandler(async (req) => {
       return errorResponse("Missing payment_id", 400);
     }
 
-    // 1.5 Init Supabase (reused throughout)
-    const supabase = createServiceClient();
-
     // 1.5a Fetch application for eligibility check
     const { data: application, error: appError } = await supabase
       .from("event_applications")
@@ -55,7 +49,7 @@ Deno.serve(withHandler(async (req) => {
     }
 
     // Fix #133: 호출자가 신청자 본인인지 검증 — service role은 RLS를 우회하므로 명시적 확인 필요
-    if (application.user_id !== auth) {
+    if (application.user_id !== userId) {
       return errorResponse("Forbidden", 403);
     }
 
@@ -173,4 +167,6 @@ Deno.serve(withHandler(async (req) => {
     });
     return errorResponse(message, 500);
   }
-}));
+};
+
+minglitEdgeFunction(handler);
