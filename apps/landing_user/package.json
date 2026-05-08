@@ -1,6 +1,6 @@
 {
   "name": "landing_user",
-  "version": "26.05.2337-dev",
+  "version": "26.05.2048-dev",
   "private": true,
   "scripts": {
     "dev": "next dev -p 3002",
@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@statsig/react-bindings": "^3.33.0",
-    "lucide-react": "^1.12.0",
+    "lucide-react": "^1.14.0",
     "next": "16.2.4",
     "react": "19.2.5",
     "react-dom": "19.2.5"
