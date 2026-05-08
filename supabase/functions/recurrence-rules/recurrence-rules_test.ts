@@ -8,6 +8,7 @@ import {
   readJson,
   withEnv,
   withMockedFetch,
+  withNoIntervals,
   type FetchRoute,
 } from "../_test_utils/mock_http.ts";
 
@@ -203,11 +204,20 @@ Deno.test({
 Deno.test({
   name: "GET returns 405",
   fn: async () => {
+    // minglitEdgeFunction runs auth before handler; authenticated GET reaches handler → 405
+    const { fetchMock } = createFetchMock([authRoute()]);
     await withEnv(ENV, async () => {
-      const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-      const req = new Request("http://localhost", { method: "GET" });
-      const res = await handler(req);
-      assertEquals(res.status, 405);
+      await withMockedFetch(fetchMock, async () => {
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const req = new Request("http://localhost", {
+            method: "GET",
+            headers: { Authorization: "Bearer test-token" },
+          });
+          const res = await handler(req);
+          assertEquals(res.status, 405);
+        });
+      });
     });
   },
 });
