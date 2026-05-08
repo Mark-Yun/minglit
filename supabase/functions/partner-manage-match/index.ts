@@ -1,18 +1,14 @@
 // partner-manage-match — Manage match rules for events (set_rules, clear_rules)
 // Issue #305: RLS write strategy 전환 + vote_count 지원
+// Fix #2185 (Batch 6): migrate to minglitEdgeFunction wrapper — auth via manifest (user caller)
 
-import { createServiceClient } from "../_shared/supabase_client.ts";
+import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
 import {
-  corsResponse,
   errorResponse,
   successResponse,
 } from "../_shared/response_utils.ts";
-import { requireAuth } from "../_shared/auth_utils.ts";
 import { requirePartnerPermission } from "../_shared/partner_permissions.ts";
 import { parseAction } from "../_shared/request_utils.ts";
-import { initSentry, withHandler } from "../_shared/logger.ts";
-
-initSentry();
 
 interface RuleInput {
   source_group_id: string;
@@ -20,16 +16,14 @@ interface RuleInput {
   vote_count?: number;
 }
 
-Deno.serve(withHandler(async (req: Request): Promise<Response> => {
-  if (req.method === "OPTIONS") return corsResponse();
+export const handler = async (req: Request, ctx: EFContext): Promise<Response> => {
   if (req.method !== "POST") return errorResponse("Method not allowed", 405);
 
-  // 1. Auth
-  const auth = await requireAuth(req);
-  if (auth instanceof Response) return auth;
-  const userId = auth;
+  const { supabase } = ctx;
+  // wrapper guarantees type === "user" per auth-manifest callers: ["user"]
+  const userId = (ctx.auth as { type: "user"; userId: string }).userId;
 
-  // 3. Parse body
+  // Parse body
   const result = await parseAction(req);
   if (result instanceof Response) return result;
   const { action, body } = result;
@@ -40,10 +34,7 @@ Deno.serve(withHandler(async (req: Request): Promise<Response> => {
     return errorResponse("Missing event_id", 400);
   }
 
-  // 4. Supabase client (service role)
-  const supabase = createServiceClient();
-
-  // 5. Verify ownership: event → party → partner
+  // Verify ownership: event → party → partner
   const { data: event, error: eventError } = await supabase
     .from("events")
     .select("id, status, party:party_id(id, partner_id)")
@@ -169,4 +160,6 @@ Deno.serve(withHandler(async (req: Request): Promise<Response> => {
   }
 
   return errorResponse(`Unknown action: ${action}`, 400);
-}));
+};
+
+minglitEdgeFunction(handler);
