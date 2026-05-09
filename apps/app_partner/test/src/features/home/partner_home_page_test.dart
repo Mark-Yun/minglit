@@ -55,6 +55,22 @@ void main() {
     });
 
     testWidgets(
+      'Fix #2354: AppBar shows PARTNER wordmark, not bare minglit logo',
+      (tester) async {
+        await tester.pumpWidget(_buildPage());
+        await tester.pump();
+        // partnerAppBarLogo() must render 'PARTNER' text in the AppBar.
+        // If this fails, appBarLogo() was used instead of partnerAppBarLogo().
+        expect(
+          find.text('PARTNER'),
+          findsOneWidget,
+          reason:
+              'AppBar must show minglit · PARTNER wordmark (partner_home_page.html#① AppBar)',
+        );
+      },
+    );
+
+    testWidgets(
       'Fix #1950: WeeklyStatsRow is not rendered on PartnerHomePage',
       (tester) async {
         // Regression guard: WeeklyStatsRow was showing hardcoded ₩0 / 0%
