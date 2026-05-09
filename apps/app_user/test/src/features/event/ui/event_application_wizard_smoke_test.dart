@@ -118,9 +118,7 @@ void main() {
       expect(find.text('참여 신청'), findsOneWidget);
     });
 
-    // Regression: Fix #2343 — initConsentItems was called in initState,
-    // triggering "Tried to modify a provider while the widget tree was
-    // building" on Step 1 → consent step transition.
+    // Fix #2343: initConsentItems called in initState causing provider modification during widget build
     testWidgets(
       'consent 단계 진입 시 Riverpod 예외 없이 렌더링된다 (Fix #2343)',
       (tester) async {
