@@ -98,6 +98,14 @@
 > 결제 후 환불 경로. 환불 정책 준수 검증 포함.
 > 제품 UX 상 진입 버튼은 "예매 취소"로 표기되며, 자동 환불(PG 취소) 처리를 포함한다.
 
+### 관련 spec
+
+워커는 시나리오 진행 중 각 화면 도착 시 해당 spec을 read하여 화면 구조/요소/토큰 차이를 검사한다.
+
+- `apps/mds/docs/public/specs/my_page.html` (entry)
+- `apps/mds/docs/public/specs/purchase_history_page.html`
+- `apps/mds/docs/public/specs/purchase_history_detail_page.html` (예매 취소 다이얼로그 포함)
+
 ### 사전 조건
 - 로그인 유저
 - 환불 가능한 구매 건 1건 이상 (환불 정책 기간 내)
