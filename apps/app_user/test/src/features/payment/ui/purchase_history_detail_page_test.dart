@@ -71,6 +71,110 @@ void main() {
     );
   }
 
+  // Fix #2345: regression — successful cancel must re-fetch purchase history list.
+  // Uses an external ProviderContainer listener to simulate PurchaseHistoryPage
+  // watching purchaseHistoryControllerProvider, then verifies a post-cancel
+  // re-fetch happens — which only occurs if ref.invalidate is called in onSuccess.
+  group('PurchaseHistoryDetailPage cancel refresh — Fix #2345', () {
+    testWidgets(
+      'successful cancel triggers purchaseHistoryController re-fetch',
+      (tester) async {
+        var historyFetchCount = 0;
+        final now = DateTime.now();
+
+        final futureEvent = Event(
+          id: 'event1',
+          partyId: 'party1',
+          startTime: now.add(const Duration(days: 1)),
+          endTime: now.add(const Duration(days: 1, hours: 2)),
+          createdAt: now,
+          updatedAt: now,
+          title: 'Free Cancel Event',
+        );
+
+        final freeApp = EventApplication(
+          id: 'app1',
+          eventId: 'event1',
+          ticketId: 'ticket1',
+          userId: 'user1',
+          status: 'approved',
+          paymentAmount: 0,
+          paymentId: null,
+          refundStatus: 'none',
+          createdAt: now,
+          updatedAt: now,
+          event: futureEvent,
+        );
+
+        when(
+          () => mockEventRepository.getMyPurchaseHistory('user1'),
+        ).thenAnswer((_) async {
+          historyFetchCount++;
+          return [freeApp];
+        });
+        when(
+          () => mockEventRepository.cancelOrder(
+            eventId: any(named: 'eventId'),
+            reason: any(named: 'reason'),
+          ),
+        ).thenAnswer(
+          (_) async => const CancelOrderResult(type: 'cancelled'),
+        );
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              currentUserProvider.overrideWith((ref) => mockUser),
+              eventRepositoryProvider.overrideWithValue(mockEventRepository),
+              // Override detail provider so it returns freeApp directly,
+              // bypassing getPurchaseHistoryDetailById. The external listener
+              // below independently detects the post-cancel re-fetch.
+              purchaseHistoryDetailProvider('app1').overrideWith(
+                (ref) async => freeApp,
+              ),
+            ],
+            child: const MaterialApp(
+              home: PurchaseHistoryDetailPage(applicationId: 'app1'),
+            ),
+          ),
+        );
+
+        // Attach a listener via ProviderScope.containerOf to simulate
+        // PurchaseHistoryPage keeping the list controller alive across
+        // the navigation pop — mirrors the real app's base-route watcher.
+        final container = ProviderScope.containerOf(
+          tester.element(find.byType(PurchaseHistoryDetailPage)),
+        );
+        final sub = container.listen(
+          purchaseHistoryControllerProvider,
+          (_, _) {},
+        );
+        addTearDown(sub.close);
+
+        await tester.pumpAndSettle();
+        final fetchCountAfterLoad = historyFetchCount;
+        expect(fetchCountAfterLoad, greaterThan(0));
+
+        // Cancel button must be enabled (approved free ticket, future event).
+        // The button is inside a SingleChildScrollView — scroll it into view.
+        final cancelBtn = find.widgetWithText(ElevatedButton, '예매 취소');
+        expect(tester.widget<ElevatedButton>(cancelBtn).onPressed, isNotNull);
+        await tester.ensureVisible(cancelBtn);
+        await tester.pumpAndSettle();
+        await tester.tap(cancelBtn);
+        await tester.pumpAndSettle();
+
+        // Confirm cancel in dialog
+        await tester.tap(find.text('취소하기'));
+        await tester.pumpAndSettle();
+
+        // Removing ref.invalidate from onSuccess (the Fix #2345 change) must
+        // make this assertion fail.
+        expect(historyFetchCount, greaterThan(fetchCountAfterLoad));
+      },
+    );
+  });
+
   group('PurchaseHistoryDetailPage — #2095', () {
     testWidgets('shows event title and payment info', (tester) async {
       await tester.pumpWidget(createTestWidget(baseApplication));

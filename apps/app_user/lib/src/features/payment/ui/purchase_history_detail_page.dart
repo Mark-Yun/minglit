@@ -399,6 +399,11 @@ class _PurchaseDetailBody extends ConsumerWidget {
       },
       onSuccess: () async {
         if (context.mounted) {
+          // Fix #2345: invalidate before pop. The notifier-level invalidate in
+          // _requestRefund fires after Navigator.pop schedules route removal —
+          // at that point the widget-tree transition absorbs the Riverpod
+          // notification and PurchaseHistoryPage never re-fetches.
+          ref.invalidate(purchaseHistoryControllerProvider);
           context.showMinglitSuccess('예매가 취소되었습니다.');
           Navigator.pop(context);
         }
