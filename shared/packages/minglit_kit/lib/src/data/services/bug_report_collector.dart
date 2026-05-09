@@ -139,8 +139,9 @@ class BugReportCollector {
     bool includeDump = true,
   }) async {
     final needArtifacts = uploadToSupabase || artifactDir != null;
-    final screenshotBytes =
-        needArtifacts ? await captureScreenshotBytes() : null;
+    final screenshotBytes = needArtifacts
+        ? await captureScreenshotBytes()
+        : null;
 
     String? screenshotUrl;
     String? layoutDumpJson;
