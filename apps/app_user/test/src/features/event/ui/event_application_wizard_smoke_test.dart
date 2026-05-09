@@ -117,6 +117,31 @@ void main() {
 
       expect(find.text('참여 신청'), findsOneWidget);
     });
+
+    // Fix #2343: initConsentItems called in initState causing provider modification during widget build
+    testWidgets(
+      'consent 단계 진입 시 Riverpod 예외 없이 렌더링된다 (Fix #2343)',
+      (tester) async {
+        await tester.pumpWidget(
+          buildWidget(
+            appState: const EventApplicationState(
+              step: EventApplicationStep.consent,
+              status: EventApplicationStatus.initial,
+              identityCompleted: true,
+              partnerVerifications: [],
+              consentGranted: false,
+              // consentCheckedItems is intentionally empty (length=0) so
+              // initConsentItems modifies state on first mount — the exact
+              // condition that triggered the exception before the fix.
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('참여 신청'), findsOneWidget);
+        expect(find.text('개인정보 및 심사 동의'), findsOneWidget);
+      },
+    );
   });
 }
 

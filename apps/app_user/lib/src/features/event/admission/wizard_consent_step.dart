@@ -13,11 +13,16 @@ class _ConsentStepState extends ConsumerState<_ConsentStep> {
   @override
   void initState() {
     super.initState();
-    // Initialise per-item checkbox state in the controller so that
-    // navigating back restores the previously-agreed state visually.
-    ref
-        .read(eventApplicationControllerProvider(widget.event).notifier)
-        .initConsentItems(_consentItems.length);
+    // Fix #2343: defer state modification to post-frame to avoid
+    // "Tried to modify a provider while the widget tree was building".
+    // initState is called synchronously during the parent's build phase,
+    // so any state mutation must be deferred.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref
+          .read(eventApplicationControllerProvider(widget.event).notifier)
+          .initConsentItems(_consentItems.length);
+    });
   }
 
   @override
