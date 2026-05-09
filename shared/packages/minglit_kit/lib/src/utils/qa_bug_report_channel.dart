@@ -34,10 +34,16 @@ class QaBugReportChannel {
       final description = (args['description'] as String?) ?? '';
       final scenarioId = _nonEmptyString(args['scenario_id'] as String?);
       final sessionId = _nonEmptyString(args['session_id'] as String?);
+      final fileIssue = (args['file_issue'] as bool?) ?? true;
+      final uploadToSupabase = (args['upload_to_supabase'] as bool?) ?? true;
+      final artifactDir = _nonEmptyString(args['artifact_dir'] as String?);
+      final includeDump = (args['include_dump'] as bool?) ?? true;
 
       Log.i(
         'QaBugReportChannel: received triggerBugReport '
-        'title="$title" scenario=$scenarioId session=$sessionId',
+        'title="$title" scenario=$scenarioId session=$sessionId '
+        'fileIssue=$fileIssue upload=$uploadToSupabase '
+        'artifactDir=$artifactDir includeDump=$includeDump',
       );
 
       try {
@@ -46,6 +52,10 @@ class QaBugReportChannel {
           description: description,
           scenarioId: scenarioId,
           sessionId: sessionId,
+          fileIssue: fileIssue,
+          uploadToSupabase: uploadToSupabase,
+          artifactDir: artifactDir,
+          includeDump: includeDump,
         );
         Log.i('QaBugReportChannel: report submitted successfully');
       } on Exception catch (e, st) {
