@@ -36,7 +36,8 @@ class BugReportCollector {
     required this.boundaryKey,
     @visibleForTesting StorageRepository? storage,
     @visibleForTesting BugReportRepository? bugReportRepository,
-    @visibleForTesting Future<Map<String, dynamic>> Function()? environmentInfoCollector,
+    @visibleForTesting
+    Future<Map<String, dynamic>> Function()? environmentInfoCollector,
   }) : _storage = storage,
        _bugReportRepository = bugReportRepository,
        _environmentInfoCollector = environmentInfoCollector;

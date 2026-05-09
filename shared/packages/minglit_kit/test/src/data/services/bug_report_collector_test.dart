@@ -145,8 +145,8 @@ void main() {
       final dumpFile = File('${tmpDir.path}/dump.json');
       expect(dumpFile.existsSync(), isTrue);
 
-      final content = json.decode(dumpFile.readAsStringSync())
-          as Map<String, dynamic>;
+      final content =
+          json.decode(dumpFile.readAsStringSync()) as Map<String, dynamic>;
       expect(content['capturedAt'], isA<String>());
       expect(content['viewportSize'], isA<Map<String, dynamic>>());
       expect(content['nodes'], isA<List<dynamic>>());
