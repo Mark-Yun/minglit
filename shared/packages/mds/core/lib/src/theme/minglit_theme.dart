@@ -25,6 +25,42 @@ class MinglitTheme {
     );
   }
 
+  /// Partner app AppBar wordmark — minglit · PARTNER.
+  ///
+  /// spec: apps/mds/docs/public/specs/partner_home_page.html
+  /// Spacing: minglit SVG 18px + 4px gap + PARTNER 11px uppercase
+  // Fix #2354: partner home AppBar에 PARTNER 워드마크 누락 — 유저 앱 로고만 노출
+  static Widget partnerAppBarLogo() {
+    return Builder(
+      builder: (context) {
+        final color = Theme.of(context).colorScheme.primary;
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            SvgPicture.asset(
+              'packages/minglit_kit/assets/images/minglit_logo_background_transparent.svg',
+              height: 18,
+              fit: BoxFit.contain,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              'PARTNER',
+              style: TextStyle(
+                // ignore: minglit_no_hardcoded_text_style -- partner brand wordmark, fixed spec value
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.5,
+                color: color,
+                height: 1,
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   /// Scroll-to-hide AppBar (SliverAppBar)
   static Widget sliverAppBar({
     required String title,

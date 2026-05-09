@@ -37,7 +37,8 @@ class PartnerHomePage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: MinglitTheme.appBarLogo(height: 36),
+        // Fix #2354: PARTNER 워드마크 누락 — spec: partner_home_page.html#①
+        title: MinglitTheme.partnerAppBarLogo(),
         centerTitle: false,
         surfaceTintColor: Colors.transparent,
         actions: [
