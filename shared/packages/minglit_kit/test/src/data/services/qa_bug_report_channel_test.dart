@@ -26,6 +26,10 @@ void main() {
           description: any(named: 'description'),
           scenarioId: any(named: 'scenarioId'),
           sessionId: any(named: 'sessionId'),
+          fileIssue: any(named: 'fileIssue'),
+          uploadToSupabase: any(named: 'uploadToSupabase'),
+          artifactDir: any(named: 'artifactDir'),
+          includeDump: any(named: 'includeDump'),
         ),
       ).thenAnswer((_) async {});
     });
@@ -39,29 +43,29 @@ void main() {
           );
     });
 
+    Future<void> _invoke(Map<String, dynamic> args) async {
+      const channel = MethodChannel('com.minglit.dev/qa_bug_report');
+      await TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .handlePlatformMessage(
+            channel.name,
+            channel.codec.encodeMethodCall(
+              MethodCall('triggerBugReport', args),
+            ),
+            (_) {},
+          );
+    }
+
     test(
       'triggerBugReport call invokes BugReportCollector.submitReport',
       () async {
         QaBugReportChannel.initialize(mockCollector);
 
-        // Simulate what the Android BroadcastReceiver sends to Flutter
-        const channel = MethodChannel('com.minglit.dev/qa_bug_report');
-        await TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-            .handlePlatformMessage(
-              channel.name,
-              channel.codec.encodeMethodCall(
-                const MethodCall(
-                  'triggerBugReport',
-                  {
-                    'title': 'U-S04 이벤트 상세 — CTA 버튼 잘림',
-                    'description': '이벤트 상세 하단 신청하기 버튼이 SafeArea 밖으로 나감',
-                    'scenario_id': 'U-S04',
-                    'session_id': '20260412-173833',
-                  },
-                ),
-              ),
-              (_) {},
-            );
+        await _invoke({
+          'title': 'U-S04 이벤트 상세 — CTA 버튼 잘림',
+          'description': '이벤트 상세 하단 신청하기 버튼이 SafeArea 밖으로 나감',
+          'scenario_id': 'U-S04',
+          'session_id': '20260412-173833',
+        });
 
         verify(
           () => mockCollector.submitReport(
@@ -69,6 +73,9 @@ void main() {
             description: '이벤트 상세 하단 신청하기 버튼이 SafeArea 밖으로 나감',
             scenarioId: 'U-S04',
             sessionId: '20260412-173833',
+            fileIssue: true,
+            uploadToSupabase: true,
+            includeDump: true,
           ),
         ).called(1);
       },
@@ -100,20 +107,67 @@ void main() {
     test('missing optional fields use defaults', () async {
       QaBugReportChannel.initialize(mockCollector);
 
-      const channel = MethodChannel('com.minglit.dev/qa_bug_report');
-      await TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .handlePlatformMessage(
-            channel.name,
-            channel.codec.encodeMethodCall(
-              const MethodCall('triggerBugReport', <String, dynamic>{}),
-            ),
-            (_) {},
-          );
+      await _invoke(<String, dynamic>{});
 
       verify(
         () => mockCollector.submitReport(
           title: 'QA Bug Report',
           description: '',
+        ),
+      ).called(1);
+    });
+
+    test('file_issue=false is forwarded to submitReport', () async {
+      QaBugReportChannel.initialize(mockCollector);
+
+      await _invoke({
+        'title': 'home_page',
+        'file_issue': false,
+        'upload_to_supabase': false,
+        'artifact_dir': '/sdcard/qa/walk-001/home_page',
+      });
+
+      verify(
+        () => mockCollector.submitReport(
+          title: 'home_page',
+          description: '',
+          fileIssue: false,
+          uploadToSupabase: false,
+          artifactDir: '/sdcard/qa/walk-001/home_page',
+        ),
+      ).called(1);
+    });
+
+    test('include_dump=false is forwarded to submitReport', () async {
+      QaBugReportChannel.initialize(mockCollector);
+
+      await _invoke({
+        'title': 'screenshot only',
+        'include_dump': false,
+      });
+
+      verify(
+        () => mockCollector.submitReport(
+          title: 'screenshot only',
+          description: '',
+          includeDump: false,
+        ),
+      ).called(1);
+    });
+
+    test('empty artifact_dir string is normalised to null', () async {
+      QaBugReportChannel.initialize(mockCollector);
+
+      await _invoke({
+        'title': 'test',
+        'artifact_dir': '',
+      });
+
+      verify(
+        () => mockCollector.submitReport(
+          title: 'test',
+          description: '',
+          // artifactDir omitted → defaults to null
         ),
       ).called(1);
     });

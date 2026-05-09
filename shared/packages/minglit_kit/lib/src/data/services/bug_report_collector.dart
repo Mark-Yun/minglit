@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io' show Directory, File;
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
@@ -27,16 +28,39 @@ class BugReportCollector {
   /// Creates a [BugReportCollector] bound to [boundaryKey].
   ///
   /// [boundaryKey] must be attached to a [RepaintBoundary] widget.
-  const BugReportCollector({required this.boundaryKey});
+  ///
+  /// The optional [storage], [bugReportRepository], and
+  /// [environmentInfoCollector] parameters are for testing only — production
+  /// code should omit them.
+  BugReportCollector({
+    required this.boundaryKey,
+    @visibleForTesting StorageRepository? storage,
+    @visibleForTesting BugReportRepository? bugReportRepository,
+    @visibleForTesting
+    Future<Map<String, dynamic>> Function()? environmentInfoCollector,
+  }) : _storage = storage,
+       _bugReportRepository = bugReportRepository,
+       _environmentInfoCollector = environmentInfoCollector;
 
   /// The key attached to the [RepaintBoundary] for screenshot capture.
   final GlobalKey boundaryKey;
 
-  /// Captures a screenshot of the widget subtree under [boundaryKey].
+  final StorageRepository? _storage;
+  final BugReportRepository? _bugReportRepository;
+  final Future<Map<String, dynamic>> Function()? _environmentInfoCollector;
+
+  StorageRepository get _storageInstance => _storage ?? StorageRepository();
+
+  BugReportRepository get _repoInstance =>
+      _bugReportRepository ?? BugReportRepository(Supabase.instance.client);
+
+  Future<Map<String, dynamic>> _collectEnv() =>
+      _environmentInfoCollector?.call() ?? collectEnvironmentInfo();
+
+  /// Captures raw PNG bytes from the widget subtree under [boundaryKey].
   ///
-  /// Returns the public Storage URL on success, or null on failure
-  /// (best-effort — never throws).
-  Future<String?> captureScreenshot() async {
+  /// Returns null on web or if capture fails (best-effort — never throws).
+  Future<Uint8List?> captureScreenshotBytes() async {
     if (kIsWeb) return null;
     try {
       final boundary =
@@ -45,15 +69,28 @@ class BugReportCollector {
       if (boundary == null) return null;
       final image = await boundary.toImage();
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-      if (byteData == null) return null;
-      final bytes = byteData.buffer.asUint8List();
-      return StorageRepository().uploadBytes(
+      return byteData?.buffer.asUint8List();
+    } on Exception catch (e) {
+      Log.e('Screenshot capture failed (best-effort)', e);
+      return null;
+    }
+  }
+
+  /// Captures a screenshot of the widget subtree under [boundaryKey].
+  ///
+  /// Returns the public Storage URL on success, or null on failure
+  /// (best-effort — never throws).
+  Future<String?> captureScreenshot() async {
+    final bytes = await captureScreenshotBytes();
+    if (bytes == null) return null;
+    try {
+      return _storageInstance.uploadBytes(
         bytes: bytes,
         bucket: 'bug-report-attachments',
         pathPrefix: 'screenshots',
       );
     } on Exception catch (e) {
-      Log.e('Screenshot capture failed (best-effort)', e);
+      Log.e('Screenshot upload failed (best-effort)', e);
       return null;
     }
   }
@@ -66,7 +103,7 @@ class BugReportCollector {
     final layoutDump = await captureLayoutDump();
     if (layoutDump == null) return null;
     try {
-      return await StorageRepository().uploadBytes(
+      return await _storageInstance.uploadBytes(
         bytes: Uint8List.fromList(utf8.encode(layoutDump)),
         bucket: 'bug-report-attachments',
         pathPrefix: 'layout-dumps',
@@ -79,46 +116,139 @@ class BugReportCollector {
     }
   }
 
-  /// Collects all artifacts in parallel and submits the bug report.
+  /// Collects all artifacts and submits the bug report.
   ///
-  /// Prepends `[QA]` to [title] when [scenarioId] or [sessionId] is provided
-  /// to distinguish automated QA reports from manual shake-triggered ones.
+  /// All boolean flags default to `true` so that callers without the new
+  /// parameters retain the original behaviour unchanged.
+  ///
+  /// - [fileIssue]: when false, skips the Edge-Function call that creates a
+  ///   GitHub issue. Use for capture-only flows (e.g. spec walk).
+  /// - [uploadToSupabase]: when false, skips screenshot/dump upload to
+  ///   Supabase Storage.
+  /// - [artifactDir]: when non-null, saves `screenshot.png` and `dump.json`
+  ///   to the given absolute device path so a worker can `adb pull` them.
+  /// - [includeDump]: when false, skips layout dump capture entirely.
   Future<void> submitReport({
     required String title,
     required String description,
     String? scenarioId,
     String? sessionId,
+    bool fileIssue = true,
+    bool uploadToSupabase = true,
+    String? artifactDir,
+    bool includeDump = true,
   }) async {
-    final results = await Future.wait([
-      captureScreenshot(),
-      collectEnvironmentInfo(),
-      captureAndUploadLayoutDump(),
-    ]);
+    final needArtifacts = uploadToSupabase || artifactDir != null;
+    final screenshotBytes = needArtifacts
+        ? await captureScreenshotBytes()
+        : null;
 
-    final screenshotUrl = results[0] as String?;
-    final environment = results[1] as Map<String, dynamic>?;
-    final layoutDumpUrl = results[2] as String?;
-    final logs = Log.export();
+    String? screenshotUrl;
+    String? layoutDumpJson;
+    String? layoutDumpUrl;
+    Map<String, dynamic>? environment;
 
-    final effectiveTitle = (scenarioId != null || sessionId != null)
-        ? '[QA] $title'
-        : title;
-    final effectiveDescription = _buildDescription(
-      description,
-      scenarioId,
-      sessionId,
-    );
+    if (includeDump && needArtifacts) {
+      layoutDumpJson = await captureLayoutDumpJson();
+    }
 
-    final repo = BugReportRepository(Supabase.instance.client);
-    await repo.reportBug(
-      title: effectiveTitle,
-      description: effectiveDescription,
-      logs: logs,
-      screenshotUrl: screenshotUrl,
-      environment: environment,
-      platform: defaultTargetPlatform.name,
-      layoutDumpUrl: layoutDumpUrl,
-    );
+    if (uploadToSupabase) {
+      // Collect environment only when we will use it (fileIssue needs it for
+      // the Edge Function payload; upload-only flows don't need env info).
+      final results = await Future.wait([
+        _uploadScreenshot(screenshotBytes),
+        fileIssue ? _collectEnv() : Future<Object?>.value(null),
+        _uploadLayoutDump(layoutDumpJson),
+      ]);
+      screenshotUrl = results[0] as String?;
+      environment = results[1] as Map<String, dynamic>?;
+      layoutDumpUrl = results[2] as String?;
+    } else if (fileIssue) {
+      environment = await _collectEnv();
+    }
+
+    if (artifactDir != null && !kIsWeb) {
+      await _saveToArtifactDir(
+        artifactDir: artifactDir,
+        screenshotBytes: screenshotBytes,
+        layoutDumpJson: layoutDumpJson,
+      );
+    }
+
+    if (fileIssue) {
+      final effectiveTitle = (scenarioId != null || sessionId != null)
+          ? '[QA] $title'
+          : title;
+      final effectiveDescription = _buildDescription(
+        description,
+        scenarioId,
+        sessionId,
+      );
+      final logs = Log.export();
+
+      await _repoInstance.reportBug(
+        title: effectiveTitle,
+        description: effectiveDescription,
+        logs: logs,
+        screenshotUrl: screenshotUrl,
+        environment: environment,
+        platform: defaultTargetPlatform.name,
+        layoutDumpUrl: layoutDumpUrl,
+      );
+    }
+  }
+
+  Future<String?> _uploadScreenshot(Uint8List? bytes) async {
+    if (bytes == null) return null;
+    try {
+      return await _storageInstance.uploadBytes(
+        bytes: bytes,
+        bucket: 'bug-report-attachments',
+        pathPrefix: 'screenshots',
+      );
+    } on Exception catch (e) {
+      Log.e('Screenshot upload failed (best-effort)', e);
+      return null;
+    }
+  }
+
+  Future<String?> _uploadLayoutDump(String? json) async {
+    if (json == null) return null;
+    try {
+      return await _storageInstance.uploadBytes(
+        bytes: Uint8List.fromList(utf8.encode(json)),
+        bucket: 'bug-report-attachments',
+        pathPrefix: 'layout-dumps',
+        contentType: 'text/plain',
+        extension: '.txt',
+      );
+    } on Exception catch (e) {
+      Log.e('Layout dump upload failed (best-effort)', e);
+      return null;
+    }
+  }
+
+  Future<void> _saveToArtifactDir({
+    required String artifactDir,
+    Uint8List? screenshotBytes,
+    String? layoutDumpJson,
+  }) async {
+    try {
+      await Directory(artifactDir).create(recursive: true);
+      if (screenshotBytes != null) {
+        await File('$artifactDir/screenshot.png').writeAsBytes(screenshotBytes);
+      }
+      if (layoutDumpJson != null) {
+        await File('$artifactDir/dump.json').writeAsString(layoutDumpJson);
+      }
+      Log.i('[BugReportCollector] Saved artifacts to $artifactDir');
+    } on Exception catch (e, st) {
+      Log.e(
+        '[BugReportCollector] Failed to save artifacts to $artifactDir',
+        e,
+        st,
+      );
+    }
   }
 
   String _buildDescription(

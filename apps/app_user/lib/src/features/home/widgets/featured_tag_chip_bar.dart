@@ -58,7 +58,10 @@ class _TagChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    // Fix #2349: GestureDetector deferToChild → opaque so the chip's entire
+    // rendered area accepts hits without relying on RenderParagraph.hitTestSelf.
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(
