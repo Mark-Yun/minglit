@@ -130,9 +130,11 @@ extension _TicketSelectionWidgets on _TicketSelectionSheetState {
       ),
       child: Row(
         children: [
+          // Fix #2358: tooltip 누락 — NAF="true" 회귀
           const IconButton(
             onPressed: null,
             icon: Icon(Icons.remove, size: MinglitIconSize.xsmall),
+            tooltip: '수량 감소',
             padding: EdgeInsets.zero,
             constraints: BoxConstraints(minWidth: 32, minHeight: 32),
           ),
@@ -146,6 +148,7 @@ extension _TicketSelectionWidgets on _TicketSelectionSheetState {
             onPressed: () =>
                 context.showMinglitInfo('친구와 함께 참가하기 기능은 준비 중입니다.'),
             icon: const Icon(Icons.add, size: MinglitIconSize.xsmall),
+            tooltip: '수량 증가',
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
           ),
