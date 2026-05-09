@@ -121,5 +121,36 @@ void main() {
         expect(fakeCoordinator.calls.first.$2, '클럽');
       },
     );
+
+    // Fix #2349: GestureDetector.behavior = opaque 회귀 방지.
+    // deferToChild로 되돌리면 RenderDecoratedBox.hitTestSelf()가 false를 반환하므로
+    // padding 영역 탭이 실패한다. 여기서는 GestureDetector 설정을 직접 단언한다.
+    testWidgets(
+      '_TagChip GestureDetector — HitTestBehavior.opaque 설정 확인',
+      (tester) async {
+        await tester.pumpWidget(
+          buildSubject(
+            stub: () => when(
+              () => mockTagRepo.getFeaturedTags(),
+            ).thenAnswer((_) async => [makeTag('클럽')]),
+          ),
+        );
+        await tester.pump();
+
+        // FeaturedTagChipBar 내부의 GestureDetector를 찾는다.
+        // _TagChip이 최하위에 있으므로 마지막 GestureDetector가 칩의 것.
+        final chipGestureDetector = tester.widget<GestureDetector>(
+          find
+              .descendant(
+                of: find.byType(FeaturedTagChipBar),
+                matching: find.byType(GestureDetector),
+              )
+              .last,
+        );
+
+        // behavior: deferToChild로 되돌리면 이 단언이 깨진다.
+        expect(chipGestureDetector.behavior, equals(HitTestBehavior.opaque));
+      },
+    );
   });
 }
