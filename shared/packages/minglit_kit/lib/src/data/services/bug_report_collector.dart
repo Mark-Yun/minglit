@@ -231,12 +231,12 @@ class BugReportCollector {
     String? layoutDumpJson,
   }) async {
     try {
-      Directory(artifactDir).createSync(recursive: true);
+      await Directory(artifactDir).create(recursive: true);
       if (screenshotBytes != null) {
-        File('$artifactDir/screenshot.png').writeAsBytesSync(screenshotBytes);
+        await File('$artifactDir/screenshot.png').writeAsBytes(screenshotBytes);
       }
       if (layoutDumpJson != null) {
-        File('$artifactDir/dump.json').writeAsStringSync(layoutDumpJson);
+        await File('$artifactDir/dump.json').writeAsString(layoutDumpJson);
       }
       Log.i('[BugReportCollector] Saved artifacts to $artifactDir');
     } on Exception catch (e, st) {
