@@ -134,13 +134,17 @@ void main() {
       final tmpDir = Directory.systemTemp.createTempSync('qa_collector_test_');
       addTearDown(() => tmpDir.deleteSync(recursive: true));
 
-      await collector.submitReport(
-        title: 'walk',
-        description: '',
-        fileIssue: false,
-        uploadToSupabase: false,
-        artifactDir: tmpDir.path,
-      );
+      // runAsync: submitReport uses real async IO (Directory.create / File.writeAsString)
+      // which does not resolve in testWidgets' fake-async context without it.
+      await tester.runAsync(() async {
+        await collector.submitReport(
+          title: 'walk',
+          description: '',
+          fileIssue: false,
+          uploadToSupabase: false,
+          artifactDir: tmpDir.path,
+        );
+      });
 
       final dumpFile = File('${tmpDir.path}/dump.json');
       expect(dumpFile.existsSync(), isTrue);
@@ -158,14 +162,16 @@ void main() {
       final tmpDir = Directory.systemTemp.createTempSync('qa_collector_test2_');
       addTearDown(() => tmpDir.deleteSync(recursive: true));
 
-      await collector.submitReport(
-        title: 'T',
-        description: '',
-        fileIssue: false,
-        uploadToSupabase: false,
-        artifactDir: tmpDir.path,
-        includeDump: false,
-      );
+      await tester.runAsync(() async {
+        await collector.submitReport(
+          title: 'T',
+          description: '',
+          fileIssue: false,
+          uploadToSupabase: false,
+          artifactDir: tmpDir.path,
+          includeDump: false,
+        );
+      });
 
       // dump.json must NOT be created when includeDump=false
       expect(File('${tmpDir.path}/dump.json').existsSync(), isFalse);
