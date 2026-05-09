@@ -62,9 +62,9 @@ class _ConsentStepState extends ConsumerState<_ConsentStep> {
             ...List.generate(
               _consentItems.length,
               // Fix #2346: contentPadding: zero로 인해 체크박스가 카드 내부 edge에
-            // 붙어 좌표 기반 자동화의 예상 위치와 달랐음. 기본 패딩으로 복원해
-            // 표준 터치 타겟 위치 확보.
-            (index) => CheckboxListTile(
+              // 붙어 좌표 기반 자동화의 예상 위치와 달랐음. 기본 패딩으로 복원해
+              // 표준 터치 타겟 위치 확보.
+              (index) => CheckboxListTile(
                 value: checked[index],
                 onChanged: (value) {
                   ref
