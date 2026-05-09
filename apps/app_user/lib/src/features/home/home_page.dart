@@ -119,8 +119,10 @@ class _HomePageState extends ConsumerState<HomePage> {
                   onPressed: homeCoordinator.pushSearch,
                 ),
                 if (user != null) ...[
+                  // Fix #2356: tooltip 누락 — NAF="true" 회귀, spec: home_page.html L1244
                   IconButton(
                     icon: const Icon(Icons.notifications_outlined),
+                    tooltip: '알림',
                     onPressed: homeCoordinator.pushNotificationCenter,
                   ),
                   // Fix #141: Use IconButton for consistent touch target (48x48)

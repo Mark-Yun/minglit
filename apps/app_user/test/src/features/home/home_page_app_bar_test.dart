@@ -254,6 +254,25 @@ void main() {
       });
     });
 
+    // Fix #2356: 알림 버튼 — 접근성 라벨 회귀 가드 (NAF="true" 재발 방지)
+    group('Notification button tooltip — #2356 regression guard', () {
+      testWidgets('로그인 상태: 알림 버튼 tooltip이 존재한다', (tester) async {
+        final mockUser = _createMockUser(
+          id: 'user123',
+          email: 'test@example.com',
+        );
+
+        await tester.pumpWidget(
+          createTestWidget(
+            overrides: [currentUserProvider.overrideWith((_) => mockUser)],
+          ),
+        );
+        await tester.pump();
+
+        expect(find.byTooltip('알림'), findsOneWidget);
+      });
+    });
+
     // Fix #2339: 검색 버튼 — 접근성 라벨 + 내비게이션 회귀 가드
     // QA automation이 좌표 대신 시맨틱(tooltip)으로 버튼을 찾을 수 있는지 검증한다.
     group('Search button navigation — #2339 regression guard', () {
