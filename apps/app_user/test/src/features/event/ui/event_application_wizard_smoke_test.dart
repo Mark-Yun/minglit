@@ -118,6 +118,36 @@ void main() {
       expect(find.text('참여 신청'), findsOneWidget);
     });
 
+    // Fix #2346: contentPadding: EdgeInsets.zero 회귀 방지.
+    // contentPadding zero이면 체크박스가 카드 내부 좌측 edge에 붙어
+    // 좌표 기반 자동화의 예상 좌표와 어긋난다.
+    testWidgets(
+      'consent 단계 체크박스 — contentPadding이 EdgeInsets.zero가 아님 (Fix #2346)',
+      (tester) async {
+        await tester.pumpWidget(
+          buildWidget(
+            appState: const EventApplicationState(
+              step: EventApplicationStep.consent,
+              status: EventApplicationStatus.initial,
+              identityCompleted: true,
+              partnerVerifications: [],
+              consentGranted: false,
+              consentCheckedItems: [false, false, false],
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.byType(CheckboxListTile), findsNWidgets(3));
+
+        // contentPadding: EdgeInsets.zero로 되돌리면 이 단언이 깨진다.
+        final tile = tester.widget<CheckboxListTile>(
+          find.byType(CheckboxListTile).first,
+        );
+        expect(tile.contentPadding, isNot(equals(EdgeInsets.zero)));
+      },
+    );
+
     // Fix #2343: initConsentItems called in initState causing provider modification during widget build
     testWidgets(
       'consent 단계 진입 시 Riverpod 예외 없이 렌더링된다 (Fix #2343)',
