@@ -104,123 +104,123 @@ class _EventInfoSection extends StatelessWidget {
       label: semanticLabel.toString(),
       excludeSemantics: true,
       child: Container(
-      color: MinglitColors.background,
-      padding: const EdgeInsets.fromLTRB(
-        MinglitSpacing.large,
-        MinglitSpacing.medium,
-        MinglitSpacing.large,
-        MinglitSpacing.medium,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Flight-style info row: DATE → VENUE
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Left: DATE section
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const _FieldLabel('DATE'),
-                    const SizedBox(height: 2),
-                    Text(
-                      dateLabel,
-                      style: const TextStyle(
-                        color: MinglitColors.textPrimary,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
+        color: MinglitColors.background,
+        padding: const EdgeInsets.fromLTRB(
+          MinglitSpacing.large,
+          MinglitSpacing.medium,
+          MinglitSpacing.large,
+          MinglitSpacing.medium,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Flight-style info row: DATE → VENUE
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Left: DATE section
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const _FieldLabel('DATE'),
+                      const SizedBox(height: 2),
+                      Text(
+                        dateLabel,
+                        style: const TextStyle(
+                          color: MinglitColors.textPrimary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
-                    ),
-                    Text(
-                      timeLabel,
-                      style: const TextStyle(
-                        color: MinglitColors.primary,
-                        fontSize: 22,
-                        fontWeight: FontWeight.w800,
-                        height: 1.1,
+                      Text(
+                        timeLabel,
+                        style: const TextStyle(
+                          color: MinglitColors.primary,
+                          fontSize: 22,
+                          fontWeight: FontWeight.w800,
+                          height: 1.1,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-              // Center: arrow aligned to time row
-              const Padding(
-                padding: EdgeInsets.only(top: 30),
-                child: Text(
-                  '→',
-                  style: TextStyle(
-                    color: MinglitColors.textSecondary,
-                    fontSize: 18,
+                    ],
                   ),
                 ),
-              ),
-              // Right: VENUE section
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    const _FieldLabel('VENUE', rightAligned: true),
-                    const SizedBox(height: 2),
-                    Text(
-                      venueLabel,
-                      style: const TextStyle(
-                        color: MinglitColors.textPrimary,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                      ),
-                      textAlign: TextAlign.right,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                // Center: arrow aligned to time row
+                const Padding(
+                  padding: EdgeInsets.only(top: 30),
+                  child: Text(
+                    '→',
+                    style: TextStyle(
+                      color: MinglitColors.textSecondary,
+                      fontSize: 18,
                     ),
-                  ],
+                  ),
                 ),
+                // Right: VENUE section
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      const _FieldLabel('VENUE', rightAligned: true),
+                      const SizedBox(height: 2),
+                      Text(
+                        venueLabel,
+                        style: const TextStyle(
+                          color: MinglitColors.textPrimary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        textAlign: TextAlign.right,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+
+            // Divider
+            // Fix #1931: use theme-aware color so divider renders correctly in dark mode
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: MinglitSpacing.sm),
+              child: Divider(
+                height: 1,
+                color: Theme.of(context).colorScheme.outlineVariant,
               ),
-            ],
-          ),
-
-          // Divider
-          // Fix #1931: use theme-aware color so divider renders correctly in dark mode
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: MinglitSpacing.sm),
-            child: Divider(
-              height: 1,
-              color: Theme.of(context).colorScheme.outlineVariant,
             ),
-          ),
 
-          // Event title (center aligned, 2-line ellipsis)
-          Text(
-            eventTitle,
-            style: const TextStyle(
-              color: MinglitColors.textPrimary,
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-            ),
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-
-          // Ticket type (optional)
-          if (ticketName != null) ...[
-            const SizedBox(height: MinglitSpacing.xsmall),
+            // Event title (center aligned, 2-line ellipsis)
             Text(
-              'TICKET · $ticketName',
+              eventTitle,
               style: const TextStyle(
-                color: MinglitColors.textSecondary,
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-                letterSpacing: 0.5,
+                color: MinglitColors.textPrimary,
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
               ),
               textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
+
+            // Ticket type (optional)
+            if (ticketName != null) ...[
+              const SizedBox(height: MinglitSpacing.xsmall),
+              Text(
+                'TICKET · $ticketName',
+                style: const TextStyle(
+                  color: MinglitColors.textSecondary,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: 0.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
           ],
-        ],
+        ),
       ),
-    ),
-  );
+    );
   }
 }
 

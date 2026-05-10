@@ -9,7 +9,8 @@ enum BoardingPassStatus {
   confirmed,
 
   /// Event was in the past (started yesterday or earlier).
-  used;
+  used
+  ;
 
   // Fix #2374: 스크린리더가 읽을 수 있는 한글 상태 레이블
   String get semanticLabel => switch (this) {

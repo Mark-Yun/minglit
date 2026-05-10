@@ -302,8 +302,7 @@ void main() {
 
       expect(
         find.byWidgetPredicate(
-          (w) =>
-              w is Semantics && w.properties.label == 'Minglit 보딩패스 입장권',
+          (w) => w is Semantics && w.properties.label == 'Minglit 보딩패스 입장권',
         ),
         findsOneWidget,
         reason: 'Fix #2374: _HeaderStrip에 semantic label 없으면 스크린리더가 헤더 인식 불가',
@@ -339,7 +338,10 @@ void main() {
         dateTime: DateTime.now().add(const Duration(days: 7)),
       );
       await tester.pumpWidget(
-        _wrap(token: _makeToken(ticketId: 'abcd1234'), eventMeta: futureMeta),
+        _wrap(
+          token: _makeToken(ticketId: 'abcd1234'),
+          eventMeta: futureMeta,
+        ),
       );
       await tester.pump();
 
