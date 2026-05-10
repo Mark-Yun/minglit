@@ -1,28 +1,23 @@
 #!/usr/bin/env node
 /**
- * Render MDS spec mockups to PNG (per-folder layout).
+ * Render MDS spec assets (PNGs + index.md per spec folder).
  *
- * Expected input layout (post folder migration):
- *   public/specs/
- *     {screen_name}/
- *       index.html          ← spec source
+ * For each spec under `public/specs/{name}/index.html`:
  *
- * Output (committed alongside index.html):
- *     {screen_name}/
- *       blueprint.png       ← top-level Layout > .blueprint (wireframe)
- *       blueprint_2.png     ← Sub-anatomy ② .blueprint
- *       blueprint_3.png     ← Sub-anatomy ③ .blueprint
- *       visual_1.png        ← .visual-gallery (component-level CSS render)
- *       visual_2.png
- *       state_1.png         ← .state-mini (page-level state variant, full table incl. header)
- *       state_2.png
+ *   1. PNG mockups (headless chromium):
+ *      - blueprint.png, blueprint_2.png ...   ← .blueprint elements (wireframes, document order)
+ *      - visual_1.png, visual_2.png ...       ← .visual-gallery (CSS-rendered components)
+ *      - state_1.png, state_2.png ...         ← .state-mini__mock .viewport (state mockups, viewport only)
  *
- * State naming: each `.state-mini` is a discrete state variant (Default / Empty /
- * Loading / Error / etc) — captured as a separate PNG so spec walker can compare
- * app's actual state vs spec's intended state side by side.
+ *   2. index.md (textual representation for AI workers, ~7x token reduction vs HTML):
+ *      - Headings, tables, code, links preserved (turndown)
+ *      - Visual elements replaced with MD image refs (relative paths in same folder)
+ *      - State sections: heading + ![state](state_N.png) + meta table
+ *      - Toolbar / scripts / styles stripped
  *
- * Loads spec html via a temporary local http server so absolute paths
- * (/specs/_spec.css, /tokens.css, /logos/*.svg) resolve. No external server.
+ * Worker access pattern:
+ *   - Cheap text pass: read index.md (~13KB, structured content + image refs)
+ *   - Vision pass: selectively Read referenced PNGs only when visual diff needed
  *
  * Usage:
  *   npm run tokens:sync
@@ -33,6 +28,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const { chromium } = require('playwright');
+const TurndownService = require('turndown');
 
 const PUBLIC_DIR = path.resolve(__dirname, '../public');
 const SPEC_DIR = path.join(PUBLIC_DIR, 'specs');
@@ -58,7 +54,6 @@ function startServer() {
       if (!filePath.startsWith(PUBLIC_DIR)) {
         res.writeHead(403); res.end('forbidden'); return;
       }
-      // Auto-serve index.html for folder URLs (mimics conventional static servers).
       if (fs.existsSync(filePath) && fs.statSync(filePath).isDirectory()) {
         filePath = path.join(filePath, 'index.html');
       }
@@ -75,8 +70,6 @@ function startServer() {
 }
 
 function listSpecFolders() {
-  // Each spec lives under specs/{name}/index.html.
-  // Skip names starting with underscore (e.g. _template, _authoring).
   return fs.readdirSync(SPEC_DIR)
     .filter(name => {
       if (name.startsWith('_')) return false;
@@ -87,40 +80,173 @@ function listSpecFolders() {
     .sort();
 }
 
-async function captureAllByLocator(page, selector, outDir, baseName) {
-  const items = page.locator(selector);
-  const count = await items.count();
-  const written = [];
-  for (let i = 0; i < count; i++) {
-    const suffix = baseName === 'blueprint' && i === 0
-      ? 'blueprint.png'              // top-level wireframe gets unsuffixed name
-      : `${baseName}_${i + 1}.png`;
-    const out = path.join(outDir, suffix);
-    await items.nth(i).scrollIntoViewIfNeeded();
-    await items.nth(i).screenshot({ path: out });
-    written.push(suffix);
+// ────────────────────────────────────────────────────────────
+// PNG capture
+// ────────────────────────────────────────────────────────────
+
+async function capturePngs(page, folderPath) {
+  const result = { blueprints: [], visuals: [], states: [] };
+
+  const blueprints = page.locator('.blueprint');
+  const bpCount = await blueprints.count();
+  for (let i = 0; i < bpCount; i++) {
+    const file = i === 0 ? 'blueprint.png' : `blueprint_${i + 1}.png`;
+    const out = path.join(folderPath, file);
+    await blueprints.nth(i).scrollIntoViewIfNeeded();
+    await blueprints.nth(i).screenshot({ path: out });
+    result.blueprints.push(file);
   }
-  return written;
+
+  const galleries = page.locator('.visual-gallery');
+  const vgCount = await galleries.count();
+  for (let i = 0; i < vgCount; i++) {
+    const file = `visual_${i + 1}.png`;
+    const out = path.join(folderPath, file);
+    await galleries.nth(i).scrollIntoViewIfNeeded();
+    await galleries.nth(i).screenshot({ path: out });
+    result.visuals.push(file);
+  }
+
+  // State mockup viewport only (metadata text goes in MD, not in PNG)
+  const states = page.locator('.state-mini');
+  const stateCount = await states.count();
+  for (let i = 0; i < stateCount; i++) {
+    const file = `state_${i + 1}.png`;
+    const out = path.join(folderPath, file);
+    const viewport = states.nth(i).locator('.state-mini__mock .viewport, .state-mini__mock').first();
+    if (await viewport.count() === 0) continue;
+    await viewport.scrollIntoViewIfNeeded();
+    await viewport.screenshot({ path: out });
+    result.states.push(file);
+  }
+
+  return result;
 }
+
+// ────────────────────────────────────────────────────────────
+// Markdown generation (turndown with custom rules)
+// ────────────────────────────────────────────────────────────
+
+// Turndown's DOM (htmlparser2-based) doesn't expose classList. Use getAttribute.
+function hasClass(node, className) {
+  const cls = node.getAttribute && node.getAttribute('class');
+  if (!cls) return false;
+  return cls.split(/\s+/).includes(className);
+}
+
+function makeTurndown() {
+  const td = new TurndownService({
+    headingStyle: 'atx',
+    codeBlockStyle: 'fenced',
+    bulletListMarker: '-',
+  });
+
+  td.remove(['style', 'script', 'meta', 'link']);
+
+  td.addRule('skipToolbar', {
+    filter: (node) => hasClass(node, 'toolbar') || hasClass(node, 'perspective__nav'),
+    replacement: () => '',
+  });
+
+  // Counters maintained across rules — must match capture order exactly.
+  const counters = { blueprint: 0, visual: 0, state: 0 };
+
+  td.addRule('blueprintImg', {
+    filter: (node) =>
+      hasClass(node, 'blueprint') &&
+      !hasClass(node, 'blueprint__region') &&
+      !hasClass(node, 'blueprint__align-marker'),
+    replacement: () => {
+      counters.blueprint++;
+      const file = counters.blueprint === 1 ? 'blueprint.png' : `blueprint_${counters.blueprint}.png`;
+      return `\n\n![blueprint](${file})\n\n`;
+    },
+  });
+
+  td.addRule('visualImg', {
+    filter: (node) => hasClass(node, 'visual-gallery'),
+    replacement: () => {
+      counters.visual++;
+      return `\n\n![visual](visual_${counters.visual}.png)\n\n`;
+    },
+  });
+
+  td.addRule('stateMini', {
+    filter: (node) => node.nodeName === 'TABLE' && hasClass(node, 'state-mini'),
+    replacement: (content, node) => {
+      counters.state++;
+      const stateNum = counters.state;
+
+      const headingEl = node.querySelector('thead th');
+      const heading = headingEl
+        ? headingEl.textContent.replace(/\s+/g, ' ').trim()
+        : `State ${stateNum}`;
+
+      const rows = Array.from(node.querySelectorAll('tbody tr'));
+      const lines = [];
+      rows.forEach(row => {
+        const cells = Array.from(row.querySelectorAll('td')).filter(td =>
+          !hasClass(td, 'state-mini__mock')
+        );
+        if (cells.length >= 2) {
+          const label = cells[0].textContent.replace(/\s+/g, ' ').trim();
+          const value = cells[1].textContent.replace(/\s+/g, ' ').replace(/\|/g, '\\|').trim();
+          lines.push(`| ${label} | ${value} |`);
+        }
+      });
+
+      const metaTable = lines.length
+        ? `| 항목 | 내용 |\n|---|---|\n${lines.join('\n')}`
+        : '_(no metadata)_';
+
+      return `\n\n### ${heading}\n\n![state](state_${stateNum}.png)\n\n${metaTable}\n\n`;
+    },
+  });
+
+  td.addRule('genericTable', {
+    filter: (node) => node.nodeName === 'TABLE' && !hasClass(node, 'state-mini'),
+    replacement: (content, node) => {
+      const rows = Array.from(node.querySelectorAll('tr'));
+      if (rows.length === 0) return '';
+      const md = [];
+      rows.forEach((row, idx) => {
+        const cells = Array.from(row.querySelectorAll('th, td')).map(c =>
+          c.textContent.replace(/\s+/g, ' ').replace(/\|/g, '\\|').trim()
+        );
+        md.push('| ' + cells.join(' | ') + ' |');
+        if (idx === 0) md.push('|' + cells.map(() => '---').join('|') + '|');
+      });
+      return '\n\n' + md.join('\n') + '\n\n';
+    },
+  });
+
+  return td;
+}
+
+function generateMd(folderPath, htmlPath) {
+  const html = fs.readFileSync(htmlPath, 'utf8');
+  const td = makeTurndown();
+  const md = td.turndown(html);
+  const out = path.join(folderPath, 'index.md');
+  fs.writeFileSync(out, md);
+  return { file: 'index.md', size: md.length };
+}
+
+// ────────────────────────────────────────────────────────────
+// Main
+// ────────────────────────────────────────────────────────────
 
 async function renderSpec(page, folderName) {
   const folderPath = path.join(SPEC_DIR, folderName);
+  const htmlPath = path.join(folderPath, 'index.html');
   const url = `http://127.0.0.1:${PORT}/specs/${folderName}/`;
-  const results = { blueprints: [], visuals: [], states: [], skipped: [] };
 
   await page.goto(url, { waitUntil: 'networkidle', timeout: 15000 });
 
-  // 1. Layout blueprints (top-level + sub-anatomy + atom anatomies).
-  results.blueprints = await captureAllByLocator(page, '.blueprint', folderPath, 'blueprint');
-  if (results.blueprints.length === 0) results.skipped.push('no .blueprint');
+  const pngs = await capturePngs(page, folderPath);
+  const md = generateMd(folderPath, htmlPath);
 
-  // 2. Component-level visual galleries (CSS-rendered actual visuals).
-  results.visuals = await captureAllByLocator(page, '.visual-gallery', folderPath, 'visual');
-
-  // 3. Page-level state variants (each state-mini is one state).
-  results.states = await captureAllByLocator(page, '.state-mini', folderPath, 'state');
-
-  return results;
+  return { ...pngs, md };
 }
 
 async function main() {
@@ -131,8 +257,7 @@ async function main() {
 
   const folders = listSpecFolders();
   if (folders.length === 0) {
-    console.error('FAIL: no spec folders found under public/specs/{name}/index.html.');
-    console.error('      Folder migration may not be complete yet (looking for {name}/index.html structure).');
+    console.error('FAIL: no spec folders under public/specs/{name}/index.html.');
     process.exit(1);
   }
 
@@ -150,20 +275,17 @@ async function main() {
 
   console.log(`렌더링 대상: ${folders.length}개 spec`);
 
-  let blueprintTotal = 0;
-  let visualTotal = 0;
-  let stateTotal = 0;
-  let skipCount = 0;
+  let bpTotal = 0, vTotal = 0, sTotal = 0, mdTotal = 0, skipCount = 0;
   const startedAt = Date.now();
 
   for (const folder of folders) {
     try {
       const r = await renderSpec(page, folder);
       const parts = [];
-      if (r.blueprints.length) { parts.push(`blueprints=${r.blueprints.length}`); blueprintTotal += r.blueprints.length; }
-      if (r.visuals.length)    { parts.push(`visuals=${r.visuals.length}`);       visualTotal += r.visuals.length; }
-      if (r.states.length)     { parts.push(`states=${r.states.length}`);         stateTotal += r.states.length; }
-      if (r.skipped.length)    { parts.push(`skipped=${r.skipped.join(',')}`);    skipCount++; }
+      if (r.blueprints.length) { parts.push(`bp=${r.blueprints.length}`); bpTotal += r.blueprints.length; }
+      if (r.visuals.length)    { parts.push(`v=${r.visuals.length}`);     vTotal += r.visuals.length; }
+      if (r.states.length)     { parts.push(`s=${r.states.length}`);      sTotal += r.states.length; }
+      parts.push(`md=${(r.md.size/1024).toFixed(1)}KB`); mdTotal += r.md.size;
       console.log(`  ✓ ${folder.padEnd(45)} ${parts.join(' · ')}`);
     } catch (err) {
       console.log(`  ✗ ${folder.padEnd(45)} ERROR: ${err.message}`);
@@ -176,7 +298,7 @@ async function main() {
 
   const elapsed = ((Date.now() - startedAt) / 1000).toFixed(1);
   console.log('');
-  console.log(`완료: blueprints ${blueprintTotal}, visuals ${visualTotal}, states ${stateTotal}, skipped ${skipCount} (${elapsed}s)`);
+  console.log(`완료: blueprints ${bpTotal}, visuals ${vTotal}, states ${sTotal}, md ${(mdTotal/1024).toFixed(1)}KB total, skipped ${skipCount} (${elapsed}s)`);
 }
 
 main().catch(err => { console.error('FATAL:', err); process.exit(1); });
