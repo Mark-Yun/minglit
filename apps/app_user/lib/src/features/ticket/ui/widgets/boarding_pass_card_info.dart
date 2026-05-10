@@ -11,53 +11,58 @@ class _HeaderStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 64,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [MinglitColors.primary, MinglitColors.primaryDark],
+    // Fix #2374: header strip 전체를 단일 라벨로 — 장식적 요소(로고·"BOARDING PASS") 중복 읽기 방지
+    return Semantics(
+      label: 'Minglit 보딩패스 입장권',
+      excludeSemantics: true,
+      child: Container(
+        height: 64,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [MinglitColors.primary, MinglitColors.primaryDark],
+          ),
         ),
-      ),
-      padding: const EdgeInsets.symmetric(
-        horizontal: MinglitSpacing.large,
-      ),
-      child: Row(
-        children: [
-          // White logo — ColorFiltered wraps the themed SVG
-          ColorFiltered(
-            colorFilter: const ColorFilter.mode(
-              MinglitColors.background,
-              BlendMode.srcIn,
+        padding: const EdgeInsets.symmetric(
+          horizontal: MinglitSpacing.large,
+        ),
+        child: Row(
+          children: [
+            // White logo — ColorFiltered wraps the themed SVG
+            ColorFiltered(
+              colorFilter: const ColorFilter.mode(
+                MinglitColors.background,
+                BlendMode.srcIn,
+              ),
+              child: MinglitTheme.appBarLogo(height: 24),
             ),
-            child: MinglitTheme.appBarLogo(height: 24),
-          ),
-          const Spacer(),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              const Text(
-                'BOARDING PASS',
-                style: TextStyle(
-                  color: MinglitColors.background,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 2,
-                ),
-              ),
-              Text(
-                '입장권',
-                style: TextStyle(
-                  color: MinglitColors.background.withValues(
-                    alpha: MinglitOpacity.scrimDark,
+            const Spacer(),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                const Text(
+                  'BOARDING PASS',
+                  style: TextStyle(
+                    color: MinglitColors.background,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 2,
                   ),
-                  fontSize: 10,
-                  fontWeight: FontWeight.w500,
                 ),
-              ),
-            ],
-          ),
-        ],
+                Text(
+                  '입장권',
+                  style: TextStyle(
+                    color: MinglitColors.background.withValues(
+                      alpha: MinglitOpacity.scrimDark,
+                    ),
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -87,7 +92,18 @@ class _EventInfoSection extends StatelessWidget {
     final eventTitle = meta?.eventTitle ?? '—';
     final ticketName = meta?.ticketName;
 
-    return Container(
+    // Fix #2374: 이벤트 정보 섹션 전체를 하나의 semantic 노드로 병합
+    // 날짜/장소/이벤트명을 스크린리더가 한 번에 읽도록 label 제공
+    final semanticLabel = StringBuffer()
+      ..write('이벤트 정보. 날짜: $dateLabel $timeLabel. ')
+      ..write('장소: $venueLabel. ')
+      ..write('이벤트: $eventTitle');
+    if (ticketName != null) semanticLabel.write('. 티켓: $ticketName');
+
+    return Semantics(
+      label: semanticLabel.toString(),
+      excludeSemantics: true,
+      child: Container(
       color: MinglitColors.background,
       padding: const EdgeInsets.fromLTRB(
         MinglitSpacing.large,
@@ -203,7 +219,8 @@ class _EventInfoSection extends StatelessWidget {
           ],
         ],
       ),
-    );
+    ),
+  );
   }
 }
 

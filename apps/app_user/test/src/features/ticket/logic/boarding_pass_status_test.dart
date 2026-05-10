@@ -78,4 +78,19 @@ void main() {
       );
     });
   });
+
+  // Fix #2374 regression guard: semanticLabel 접근성 레이블 검증
+  group('BoardingPassStatus.semanticLabel', () {
+    test('boarding → "입장 가능"', () {
+      expect(BoardingPassStatus.boarding.semanticLabel, '입장 가능');
+    });
+
+    test('confirmed → "예약 확정"', () {
+      expect(BoardingPassStatus.confirmed.semanticLabel, '예약 확정');
+    });
+
+    test('used → "사용 완료"', () {
+      expect(BoardingPassStatus.used.semanticLabel, '사용 완료');
+    });
+  });
 }

@@ -121,26 +121,32 @@ class _TicketQRScreenState extends State<TicketQRScreen>
 
                     const SizedBox(height: MinglitSpacing.large),
 
-                    // Instruction text (below card)
-                    Text(
-                      '입장 시 파트너에게 이 화면을 보여주세요',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
+                    // Fix #2374: 입장 안내 — 명시적 semantic label (스크린리더 접근성)
+                    Semantics(
+                      label: '입장 안내: 입장 시 파트너에게 이 화면을 보여주세요',
+                      child: Text(
+                        '입장 시 파트너에게 이 화면을 보여주세요',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                        textAlign: TextAlign.center,
                       ),
-                      textAlign: TextAlign.center,
                     ),
 
                     const SizedBox(height: MinglitSpacing.small),
 
-                    // Anti-fraud notice
-                    Text(
-                      '스크린샷은 입장에 사용할 수 없습니다',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant.withValues(
-                          alpha: MinglitOpacity.muted,
+                    // Fix #2374: 캡처 방지 안내 — 명시적 semantic label
+                    Semantics(
+                      label: '캡처 방지 안내: 스크린샷은 입장에 사용할 수 없습니다',
+                      child: Text(
+                        '스크린샷은 입장에 사용할 수 없습니다',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant.withValues(
+                            alpha: MinglitOpacity.muted,
+                          ),
                         ),
+                        textAlign: TextAlign.center,
                       ),
-                      textAlign: TextAlign.center,
                     ),
                   ],
                 ),
