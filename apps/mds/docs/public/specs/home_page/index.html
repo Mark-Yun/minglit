@@ -772,10 +772,10 @@ body.dark-mode .visual-gallery .chip-bar__divider {
       ├─ <b>SliverAppBar</b>(floating, snap)              ← ①
       │  ├─ title: <b>Logo</b> (h=36 · tap → scroll-to-top)
       │  ├─ actions: <b>BugReportAction</b> (dev)
-      │  │           <b>IconButton</b> search
-      │  │           <b>IconButton</b> notifications  <i>(authenticated)</i>
-      │  │           <b>CircleAvatar</b> 28px profile  <i>(authenticated)</i>
-      │  │           <b>IconButton</b> person_outline  <i>(unauthenticated)</i>
+      │  │           <b>IconButton</b> search (tooltip "검색")
+      │  │           <b>IconButton</b> notifications (tooltip "알림")  <i>(authenticated)</i>
+      │  │           <b>CircleAvatar</b> 28px profile (wrap IconButton tooltip "마이페이지")  <i>(authenticated)</i>
+      │  │           <b>IconButton</b> person_outline (tooltip "마이페이지")  <i>(unauthenticated)</i>
       │  └─ backgroundColor: surface
       │
       ├─ <b>SliverToBoxAdapter</b>                        ← ②
@@ -870,9 +870,9 @@ body.dark-mode .visual-gallery .chip-bar__divider {
    │
    ├─ <em>Actions</em>                                    ← ㉡
    │  ├─ [dev] <b>BugReportAction</b> (visibleForTesting)
-   │  ├─ <b>IconButton</b>(Icons.search, 22) — 40×40 hit zone
-   │  ├─ <b>IconButton</b>(Icons.notifications_outlined, 22) <i>— authenticated only</i>
-   │  └─ <b>CircleAvatar</b>(28) <i>or</i> <b>IconButton</b>(person_outline, 22)
+   │  ├─ <b>IconButton</b>(Icons.search, 22, tooltip "검색") — 40×40 hit zone
+   │  ├─ <b>IconButton</b>(Icons.notifications_outlined, 22, tooltip "알림") <i>— authenticated only</i>
+   │  └─ <b>CircleAvatar</b>(28, wrap tooltip "마이페이지") <i>or</i> <b>IconButton</b>(person_outline, 22, tooltip "마이페이지")
    │     <i>— authenticated → 프로필 사진 / unauthenticated → 사람 아이콘</i>
    │
    └─ Padding(right: <i>spacing-small = 8px</i>)
