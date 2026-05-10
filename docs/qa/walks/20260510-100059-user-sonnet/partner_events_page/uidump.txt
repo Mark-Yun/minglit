@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8' standalone='yes' ?>
+<hierarchy rotation="0">
+<node index="0" text="" resource-id="" class="android.widget.FrameLayout" package="com.minglit.app_user.dev" content-desc="" checkable="false" checked="false" clickable="false" enabled="true" focusable="false" focused="false" scrollable="false" long-clickable="false" password="false" selected="false" bounds="[0,0][1080,2020]">
+<node index="0" text="" resource-id="" class="android.widget.LinearLayout" package="com.minglit.app_user.dev" content-desc="" checkable="false" checked="false" clickable="false" enabled="true" focusable="false" focused="false" scrollable="false" long-clickable="false" password="false" selected="false" bounds="[0,0][1080,2020]">
+<node index="0" text="" resource-id="android:id/content" class="android.widget.FrameLayout" package="com.minglit.app_user.dev" content-desc="" checkable="false" checked="false" clickable="false" enabled="true" focusable="false" focused="false" scrollable="false" long-clickable="false" password="false" selected="false" bounds="[0,0][1080,2020]">
+<node index="0" text="" resource-id="" class="android.widget.FrameLayout" package="com.minglit.app_user.dev" content-desc="" checkable="false" checked="false" clickable="false" enabled="true" focusable="true" focused="true" scrollable="false" long-clickable="false" password="false" selected="false" bounds="[0,0][1080,2020]">
+<node index="0" text="" resource-id="" class="android.view.View" package="com.minglit.app_user.dev" content-desc="" checkable="false" checked="false" clickable="false" enabled="true" focusable="false" focused="false" scrollable="false" long-clickable="false" password="false" selected="false" bounds="[0,0][1080,2020]">
+<node index="0" text="" resource-id="" class="android.view.View" package="com.minglit.app_user.dev" content-desc="" checkable="false" checked="false" clickable="false" enabled="true" focusable="false" focused="false" scrollable="false" long-clickable="false" password="false" selected="false" bounds="[0,0][1080,2020]">
+<node index="0" text="" resource-id="" class="android.view.View" package="com.minglit.app_user.dev" content-desc="" checkable="false" checked="false" clickable="false" enabled="true" focusable="false" focused="false" scrollable="false" long-clickable="false" password="false" selected="false" bounds="[0,0][1080,2020]">
+<node index="0" text="" resource-id="" class="android.view.View" package="com.minglit.app_user.dev" content-desc="" checkable="false" checked="false" clickable="false" enabled="true" focusable="false" focused="false" scrollable="false" long-clickable="false" password="false" selected="false" bounds="[0,0][1080,285]">
+<node index="0" text="" resource-id="" class="android.widget.Button" package="com.minglit.app_user.dev" content-desc="뒤로" checkable="false" checked="false" clickable="true" enabled="true" focusable="true" focused="false" scrollable="false" long-clickable="false" password="false" selected="false" bounds="[12,129][156,273]" />
+<node index="1" text="" resource-id="" class="android.view.View" package="com.minglit.app_user.dev" content-desc="밍글 스튜디오 이벤트" checkable="false" checked="false" clickable="false" enabled="true" focusable="true" focused="false" scrollable="false" long-clickable="false" password="false" selected="false" bounds="[310,170][770,233]" />
+</node>
+<node index="1" text="" resource-id="" class="android.view.View" package="com.minglit.app_user.dev" content-desc="" checkable="false" checked="false" clickable="false" enabled="true" focusable="false" focused="false" scrollable="false" long-clickable="false" password="false" selected="false" bounds="[0,285][1080,2020]">
+<node index="0" text="" resource-id="" class="android.widget.ScrollView" package="com.minglit.app_user.dev" content-desc="" checkable="false" checked="false" clickable="false" enabled="true" focusable="true" focused="false" scrollable="true" long-clickable="false" password="false" selected="false" bounds="[0,285][1080,2020]">
+<node index="0" text="" resource-id="" class="android.view.View" package="com.minglit.app_user.dev" content-desc="" checkable="false" checked="false" clickable="false" enabled="true" focusable="false" focused="false" scrollable="false" long-clickable="false" password="false" selected="false" bounds="[0,285][1080,1014]">
+<node index="0" text="" resource-id="" class="android.widget.Button" package="com.minglit.app_user.dev" content-desc="이벤트: [QA] 아트 &amp; 문화 이벤트, 5월 19일 (화) 22:27, 서울 강남, 무료, D-9, 참가자 1/30명" checkable="false" checked="false" clickable="true" enabled="true" focusable="true" focused="false" scrollable="false" long-clickable="false" password="false" selected="false" bounds="[0,285][1080,1014]" />
+</node>
+<node index="1" text="" resource-id="" class="android.view.View" package="com.minglit.app_user.dev" content-desc="" checkable="false" checked="false" clickable="false" enabled="true" focusable="false" focused="false" scrollable="false" long-clickable="false" password="false" selected="false" bounds="[0,1014][1080,1743]">
+<node index="0" text="" resource-id="" class="android.widget.Button" package="com.minglit.app_user.dev" content-desc="이벤트: [QA] 소셜 클래스, 5월 19일 (화) 22:27, 서울 강남, 무료, D-9, 참가자 1/30명" checkable="false" checked="false" clickable="true" enabled="true" focusable="true" focused="false" scrollable="false" long-clickable="false" password="false" selected="false" bounds="[0,1014][1080,1743]" />
+</node>
+<node index="2" text="" resource-id="" class="android.view.View" package="com.minglit.app_user.dev" content-desc="" checkable="false" checked="false" clickable="false" enabled="true" focusable="false" focused="false" scrollable="false" long-clickable="false" password="false" selected="false" bounds="[0,1743][1080,2020]">
+<node index="0" text="" resource-id="" class="android.widget.Button" package="com.minglit.app_user.dev" content-desc="이벤트: [QA] 스포츠 소셜 모임, 5월 19일 (화) 22:27, 서울 강남, 무료, D-9, 참가자 3/30명" checkable="false" checked="false" clickable="true" enabled="true" focusable="true" focused="false" scrollable="false" long-clickable="false" password="false" selected="false" bounds="[0,1743][1080,2020]" />
+</node>
+</node>
+</node>
+</node>
+</node>
+</node>
+</node>
+</node>
+</node>
+<node index="1" text="" resource-id="android:id/navigationBarBackground" class="android.view.View" package="com.minglit.app_user.dev" content-desc="" checkable="false" checked="false" clickable="false" enabled="true" focusable="false" focused="false" scrollable="false" long-clickable="false" password="false" selected="false" bounds="[0,0][0,0]" />
+</node>
+</hierarchy>UI hierchary dumped to: /dev/tty
