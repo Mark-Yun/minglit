@@ -496,7 +496,10 @@ body.dark-mode .viewport {
 
       <div class="layout-tree"><b>Scaffold</b>
 ├─ <b>appBar</b>: AppBar(title: '정산')                    ← ①
-│  ├─ <b>actions</b>: [if canEditSettlement] IconButton(account_balance_wallet_outlined → BankAccount)
+│  ├─ <b>actions</b>: [
+│  │  IconButton(info_outline) → showMinglitHelpSheet(...),
+│  │  if canEditSettlement: IconButton(account_balance_wallet_outlined → BankAccount),
+│  │ ]
 │  └─ <b>bottom</b>: TabBar(controller, length:2)          ← ②
 │     ├─ Tab('대시보드')
 │     └─ Tab('정산 내역')
@@ -539,13 +542,51 @@ body.dark-mode .viewport {
         </tr>
       </thead>
       <tbody>
-        <tr><td>①</td><td>AppBar</td><td>height 56 · title 좌측 (centerTitle 미설정) · action 우측</td><td>표준 AppBar · scaffold-gray bg · 하단 border 없음</td></tr>
+        <tr><td>①</td><td>AppBar</td><td>height 56 · title 좌측 (centerTitle 미설정) · 2 actions trailing (info + 지갑)</td><td>표준 AppBar · scaffold-gray bg · 하단 border 없음</td></tr>
         <tr><td>②</td><td>TabBar</td><td>height 48 · 2 equal-flex tabs · indicator 2px</td><td>indicator color = partner primary · active label = primary, inactive = secondary · 하단 1px <code>color-divider</code></td></tr>
         <tr><td>③</td><td>StatusFilterChips</td><td>row · h-scroll · 칩 8개 (전체 + 7 status)</td><td>chip 간: <code>spacing-small (8)</code> · row v-pad: <code>spacing-small</code> 위/아래 · h-pad: <code>spacing-medium</code></td></tr>
         <tr><td>④a</td><td>SettlementCard row (List 탭)</td><td>Row · 좌 Column(title/date/amount stacked) · 우 SettlementStatusBadge</td><td>row pad: <code>spacing-medium (16h)</code> · <code>spacing-sm (12v)</code> · 행 분리: 1px Divider · column 내부: <code>spacing-xsmall (4)</code></td></tr>
         <tr><td>④b</td><td>_MonthHeaderWidget</td><td>좌측 정렬 · UPPERCASE 아님 · bold</td><td>pad: 16/16/16/4 (top/right/bottom/left? 실제는 16,16,16,4 fromLTRB) · onSurfaceVariant · labelMedium bold</td></tr>
         <tr><td>④c</td><td>RevenueSummaryCard (Dashboard)</td><td>column start · gradient bg · 큰 금액 강조</td><td>card outer margin: <code>spacing-medium</code> · inner pad: <code>spacing-large (24)</code> · 라벨↔금액: <code>spacing-xsmall</code> · row 간격: <code>spacing-sm</code></td></tr>
         <tr><td>④d</td><td>StatusSummaryGrid (Dashboard)</td><td>4-col grid · childAspectRatio 1.2 · 7 status (PENDING/READY/PROCESSING/COMPLETED/FAILED/HOLD/CANCELED)</td><td>card inner pad: <code>spacing-medium</code> · grid main/cross spacing: <code>spacing-small</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>AppBar sub-anatomy</h2>
+    <p class="intro">
+      파트너 앱 AppBar — title 좌측 + 우측 actions(info + 지갑). info icon은 화면별 컨텍스트 도움말 sheet 트리거 (파트너 앱 일관 패턴).
+    </p>
+    <table class="ref">
+      <thead>
+        <tr><th style="width: 180px;">Region</th><th>Alignment</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>① Title (leading)</td><td>좌측 정렬 · 1줄</td><td>"정산" · <code>--typography-font-size-app-bar-title</code> 18 · w600 · <code>color-text-primary</code>. padding-left medium.</td></tr>
+        <tr><td>② Info action (1st trailing)</td><td>우측 · 40×40 hit-region</td><td>info_outline 22×22 · 탭 시 <strong>도움말 bottom sheet</strong> 진입 (State 7). 파트너 앱 모든 화면에 동일 패턴 적용.</td></tr>
+        <tr><td>③ Wallet action (2nd trailing)</td><td>우측 · 40×40 hit-region · SETTLEMENT_EDIT 권한 보유 시만</td><td>account_balance_wallet_outlined 22×22 · 탭 시 정산 계좌 화면 push.</td></tr>
+        <tr><td>—</td><td>AppBar bg</td><td><code>--color-surface</code> · surfaceTint transparent · border-bottom 없음.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Help bottom sheet sub-anatomy <em style="color: var(--color-text-secondary); font-size: 13px;">(MinglitHelpSheet 컴포넌트 후보)</em></h2>
+    <p class="intro">
+      info 아이콘 탭 시 노출되는 컨텍스트 도움말 sheet. 파트너 앱 모든 주요 화면에서 같은 chrome 재사용 — 화면별 sections 콘텐츠만 다름.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr><th style="width: 180px;">Region</th><th>Alignment</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>① Scrim (barrier)</td><td>full-screen overlay</td><td><code>rgba(0,0,0,0.45)</code> · 하단 정렬 컨테이너 · 탭 시 sheet dismiss.</td></tr>
+        <tr><td>② Sheet container</td><td>bottom-anchored · max-height 75%</td><td>bg <code>--color-background</code> · 상단 모서리 <code>radius-card</code> 16.</td></tr>
+        <tr><td>③ Handle bar</td><td>중앙 정렬</td><td>36×4 · radius 2 · <code>--color-divider</code> · drag-down dismiss affordance.</td></tr>
+        <tr><td>④ Header</td><td>좌측 정렬</td><td>"정산 가이드" · 16/700 primary · padding small/medium.</td></tr>
+        <tr><td>⑤ Body (scrollable)</td><td>flex 1 · 세로 스크롤</td><td>sections list · 항목 사이 1px <code>--color-divider</code> top border (첫 항목 제외). 화면별 콘텐츠는 호출 측 정의.</td></tr>
+        <tr><td>⑥ Confirm CTA</td><td>bottom · sticky</td><td>"확인" · filled partner-primary · height 48 · 15/700 white · margin medium.</td></tr>
       </tbody>
     </table>
   </section>
@@ -581,6 +622,7 @@ body.dark-mode .viewport {
             <div class="viewport">
               <div class="sp-appbar">
                 <div class="sp-appbar__title">정산</div>
+                <div class="sp-appbar__action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div>
                 <div class="sp-appbar__action">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>
                 </div>
@@ -716,6 +758,7 @@ body.dark-mode .viewport {
             <div class="viewport">
               <div class="sp-appbar">
                 <div class="sp-appbar__title">정산</div>
+                <div class="sp-appbar__action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div>
                 <div class="sp-appbar__action">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>
                 </div>
@@ -801,6 +844,7 @@ body.dark-mode .viewport {
             <div class="viewport">
               <div class="sp-appbar">
                 <div class="sp-appbar__title">정산</div>
+                <div class="sp-appbar__action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div>
                 <div class="sp-appbar__action">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>
                 </div>
@@ -870,6 +914,7 @@ body.dark-mode .viewport {
             <div class="viewport">
               <div class="sp-appbar">
                 <div class="sp-appbar__title">정산</div>
+                <div class="sp-appbar__action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div>
                 <div class="sp-appbar__action">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>
                 </div>
@@ -963,6 +1008,7 @@ body.dark-mode .viewport {
             <div class="viewport">
               <div class="sp-appbar">
                 <div class="sp-appbar__title">정산</div>
+                <div class="sp-appbar__action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div>
                 <div class="sp-appbar__action">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>
                 </div>
@@ -1024,6 +1070,7 @@ body.dark-mode .viewport {
             <div class="viewport">
               <div class="sp-appbar">
                 <div class="sp-appbar__title">정산</div>
+                <div class="sp-appbar__action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div>
                 <div class="sp-appbar__action">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>
                 </div>
@@ -1075,6 +1122,69 @@ body.dark-mode .viewport {
         <tr>
           <td class="state-mini__aspect">노트</td>
           <td>📝 시각적으로 빈 상태와 매우 유사. 차이는 아이콘 / 타이틀 / CTA 라벨. 일반 빈 상태와 명확히 구분하기 위함 (Fix #127).</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ─── State 7: Help bottom sheet ─────────────────── -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Help · 도움말 bottom sheet</strong> 🆘 <small>info 아이콘 탭 시 노출 — 파트너 앱 일관 패턴</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="5">
+            <div class="viewport">
+              <div class="sp-appbar">
+                <div class="sp-appbar__title">정산</div>
+                <div class="sp-appbar__action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div>
+                <div class="sp-appbar__action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg></div>
+              </div>
+              <div class="sp-tabbar">
+                <div class="sp-tab">대시보드</div>
+                <div class="sp-tab sp-tab--active">정산 내역</div>
+              </div>
+              <div style="position:absolute;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:flex-end;z-index:10;">
+                <div style="background:var(--color-background);border-radius:16px 16px 0 0;width:100%;padding-bottom:8px;">
+                  <div style="width:36px;height:4px;background:var(--color-divider);border-radius:2px;margin:8px auto 0;"></div>
+                  <div style="font-size:14px;font-weight:700;color:var(--color-text-primary);padding:12px 16px 8px;">정산 가이드</div>
+                  <div style="font-size:11px;color:var(--color-text-secondary);padding:8px 16px;">📝 화면별 도움말 Q&amp;A 콘텐츠는 추후 별도 이슈로 정의 예정.</div>
+                  <div style="margin:8px 16px 0;background:var(--color-partner-primary);border-radius:12px;height:40px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:white;">확인</div>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>AppBar의 info 아이콘 탭 → 화면 위 bottom sheet 슬라이드 업. 파트너 앱 전체 일관 패턴.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            ① "확인" 버튼 탭 — sheet dismiss (primary).<br>
+            ② handle 드래그 / scrim 탭 — dismiss (보조).<br>
+            ③ sheet 내부 스크롤 — max-height 초과 시.
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            · <strong>MinglitHelpSheet</strong> — props: <code>title: String</code> · <code>sections: List&lt;HelpSection&gt;</code>.<br>
+            · 화면별 도움말 내용은 호출 측에서 정의 — sheet chrome만 책임.<br>
+            · 진입: <code>showModalBottomSheet</code>(isScrollControlled · barrierColor · shape rounded top).
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            · scrim: rgba(0,0,0,0.45) · sheet bg <code>--color-background</code> · 상단 모서리 <code>radius-card</code><br>
+            · handle 36×4 · <code>--color-divider</code> · header 16/700 primary<br>
+            · CTA "확인" — height 48 · partner-primary filled · 15/700 white · margin medium<br>
+            · max-height 75vh
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 화면별 sections 콘텐츠(도움말 Q&amp;A)는 추후 별도 이슈로 디자인 결정 예정.</td>
         </tr>
       </tbody>
     </table>

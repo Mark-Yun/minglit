@@ -30,11 +30,19 @@ body.dark-mode .viewport {
   height: 56px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  padding: 0 var(--spacing-xsmall);
   background: var(--color-surface);
   position: relative;
 }
+.eam-appbar__action {
+  width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--color-text-primary);
+}
+.eam-appbar__action svg { width: 22px; height: 22px; }
 .eam-appbar__title {
+  flex: 1;
+  text-align: center;
   font-size: var(--typography-font-size-app-bar-title);
   font-weight: 600;
   color: var(--color-text-primary);
@@ -434,6 +442,9 @@ body.dark-mode .viewport {
 
       <div class="layout-tree"><b>Scaffold</b>
 ├─ <b>AppBar</b>('신청관리', 가운데 정렬)
+│  ├─ actions: [
+│  │  IconButton(info_outline) → showMinglitHelpSheet(...),
+│  │ ]
 │  └─ <b>하단 TabBar</b> (3개 탭)                              ← ②
 │     ├─ '대기중'
 │     ├─ '승인됨'
@@ -477,12 +488,51 @@ body.dark-mode .viewport {
         </tr>
       </thead>
       <tbody>
-        <tr><td>①</td><td>AppBar</td><td>height 56 · centerTitle · bg = surface (no border)</td><td>title typography <code>app-bar-title (18px)</code></td></tr>
+        <tr><td>①</td><td>AppBar</td><td>height 56 · centerTitle · bg = surface (no border) · 1 action trailing</td><td>title typography <code>app-bar-title (18px)</code></td></tr>
         <tr><td>②</td><td>TabBar</td><td>height 48 · 3 equal-flex tabs · indicator 2px</td><td>indicator color = partner primary · label color (active = primary, inactive = secondary)</td></tr>
         <tr><td>③</td><td>TabBarView body</td><td>vertical scroll · group header (sticky-look) + inline rows · pull-to-refresh</td><td>group header pad: <code>spacing-medium (16h)</code> · <code>spacing-sm (12v)</code> · row pad: <code>spacing-medium (16h)</code> · <code>spacing-sm (12v)</code> · row 분리: 1px border-bottom <code>color-divider</code> @alpha .3</td></tr>
         <tr><td>—</td><td>_ApplicationItem 내부</td><td>row · avatar(40) + flex info column + actions/badge</td><td>avatar↔info: <code>spacing-sm (12px)</code> · reject↔approve 간격: <code>spacing-xsmall (4px)</code></td></tr>
         <tr><td>④</td><td>Bulk approve CTA</td><td>SafeArea + Padding all 16 · 풀폭 FilledButton</td><td>버튼 height 44 (default FilledButton minimumSize) · border-radius <code>radius-button (12px)</code></td></tr>
         <tr><td>⑤</td><td>NavigationBar</td><td>shell이 관리 — 5 destinations · 신청관리 active</td><td>height 56 · indicator partner primary · bg = colorScheme.surface (= white)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>AppBar sub-anatomy</h2>
+    <p class="intro">
+      파트너 앱 simpleAppBar — centered title + 우측 actions(info). 글로벌 일관 패턴이라 모든 파트너 화면이 동일 구조를 따른다 (info icon은 화면별 컨텍스트 도움말 sheet 트리거).
+    </p>
+    <table class="ref">
+      <thead>
+        <tr><th style="width: 180px;">Region</th><th>Alignment</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>① Title (centered)</td><td>중앙 정렬 · 1줄</td><td>"신청관리" · <code>--typography-font-size-app-bar-title</code> 18 · w600 · <code>color-text-primary</code>.</td></tr>
+        <tr><td>② Info action (trailing)</td><td>우측 · 40×40 hit-region</td><td>info_outline 22×22 · 탭 시 <strong>도움말 bottom sheet</strong> 진입 (State 7). 파트너 앱 모든 화면에 동일 패턴 적용 — 각 화면별 컨텍스트 도움말 콘텐츠는 호출 측에서 정의.</td></tr>
+        <tr><td>—</td><td>AppBar bg</td><td><code>--color-surface</code> · surfaceTint transparent · border-bottom 없음.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Help bottom sheet sub-anatomy <em style="color: var(--color-text-secondary); font-size: 13px;">(MinglitHelpSheet 컴포넌트 후보)</em></h2>
+    <p class="intro">
+      info 아이콘 탭 시 노출되는 컨텍스트 도움말 sheet. 파트너 앱 모든 주요 화면에서 같은 chrome 재사용 — 화면별 sections 콘텐츠만 다름.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr><th style="width: 180px;">Region</th><th>Alignment</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>① Scrim (barrier)</td><td>full-screen overlay</td><td><code>rgba(0,0,0,0.45)</code> · 하단 정렬 컨테이너 · 탭 시 sheet dismiss (gesture path).</td></tr>
+        <tr><td>② Sheet container</td><td>bottom-anchored · max-height 75%</td><td>bg <code>--color-background</code> · 상단 모서리 <code>radius-card</code> 16 · column flex (handle / header / body / cta).</td></tr>
+        <tr><td>③ Handle bar</td><td>중앙 정렬</td><td>36×4 · radius 2 · <code>--color-divider</code> · margin small/xsmall — drag-down dismiss affordance.</td></tr>
+        <tr><td>④ Header</td><td>좌측 정렬 · 단독 한 줄</td><td>"신청관리 가이드" · 16/700 primary · padding small/medium · close ✕ 없음(handle/scrim/CTA로 dismiss).</td></tr>
+        <tr><td>⑤ Body (scrollable)</td><td>flex 1 · 세로 스크롤</td><td>padding 0/medium · 항목 사이 1px <code>--color-divider</code> top border (첫 항목 제외) · sections list.</td></tr>
+        <tr><td>⑥ Section title</td><td>row · 14/700 primary</td><td>자연어 Q (첫 사용자가 가질 만한 질문). 화면별 콘텐츠는 호출 측에서 정의.</td></tr>
+        <tr><td>⑦ Section body</td><td>좌측 정렬 · 13 secondary</td><td>line-height 1.55 · 1-3문장 답변 · 친근한 톤.</td></tr>
+        <tr><td>⑧ Confirm CTA</td><td>bottom · sticky · margin medium</td><td>"확인" · filled partner-primary · height 48 · 15/700 white · primary dismiss path.</td></tr>
       </tbody>
     </table>
   </section>
@@ -503,7 +553,7 @@ body.dark-mode .viewport {
       활성 탭(대기중/승인됨/거절됨) + 데이터 로딩 단계 + 그룹 비어있음 여부에 따라 갈린다. 색상은 <em>partner brand <code>#6c3ce1</code></em>이며 사용자 앱(<code>#9900ff</code>)과 다르다.
     </p>
 
-    <h3 style="margin-top: 24px;">State summary <small style="font-size:12px;font-weight:400;color:var(--color-text-secondary);">— 5 states</small></h3>
+    <h3 style="margin-top: 24px;">State summary <small style="font-size:12px;font-weight:400;color:var(--color-text-secondary);">— 7 states</small></h3>
     <table class="ref">
       <thead>
         <tr>
@@ -520,6 +570,7 @@ body.dark-mode .viewport {
         <tr><td><strong>Empty</strong></td><td>no data</td><td>해당 탭에 신청이 없을 때</td><td>중앙 큰 아이콘 + 라벨 (탭별 카피 다름)</td></tr>
         <tr><td><strong>Loading</strong></td><td>async</td><td>데이터 로딩 중</td><td>중앙 스피너</td></tr>
         <tr><td><strong>Error</strong></td><td>network/server</td><td>로딩 실패</td><td>중앙 텍스트 + "다시 시도" 버튼</td></tr>
+        <tr><td><strong>Help bottom sheet</strong></td><td>overlay</td><td>AppBar info 아이콘 탭</td><td>도움말 sheet 슬라이드 업 (기존 화면 위 overlay)</td></tr>
       </tbody>
     </table>
 
@@ -534,6 +585,7 @@ body.dark-mode .viewport {
             <div class="viewport">
               <div class="eam-appbar">
                 <div class="eam-appbar__title">신청관리</div>
+                <div class="eam-appbar__action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div>
               </div>
               <div class="eam-tabbar">
                 <div class="eam-tab eam-tab--active">대기중</div>
@@ -668,6 +720,7 @@ body.dark-mode .viewport {
             <div class="viewport">
               <div class="eam-appbar">
                 <div class="eam-appbar__title">신청관리</div>
+                <div class="eam-appbar__action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div>
               </div>
               <div class="eam-tabbar">
                 <div class="eam-tab">대기중</div>
@@ -752,6 +805,7 @@ body.dark-mode .viewport {
             <div class="viewport">
               <div class="eam-appbar">
                 <div class="eam-appbar__title">신청관리</div>
+                <div class="eam-appbar__action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div>
               </div>
               <div class="eam-tabbar">
                 <div class="eam-tab">대기중</div>
@@ -815,6 +869,7 @@ body.dark-mode .viewport {
             <div class="viewport">
               <div class="eam-appbar">
                 <div class="eam-appbar__title">신청관리</div>
+                <div class="eam-appbar__action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div>
               </div>
               <div class="eam-tabbar">
                 <div class="eam-tab eam-tab--active">대기중</div>
@@ -865,6 +920,7 @@ body.dark-mode .viewport {
             <div class="viewport">
               <div class="eam-appbar">
                 <div class="eam-appbar__title">신청관리</div>
+                <div class="eam-appbar__action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div>
               </div>
               <div class="eam-tabbar">
                 <div class="eam-tab eam-tab--active">대기중</div>
@@ -905,6 +961,7 @@ body.dark-mode .viewport {
             <div class="viewport">
               <div class="eam-appbar">
                 <div class="eam-appbar__title">신청관리</div>
+                <div class="eam-appbar__action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div>
               </div>
               <div class="eam-tabbar">
                 <div class="eam-tab eam-tab--active">대기중</div>
@@ -940,6 +997,87 @@ body.dark-mode .viewport {
         </tr>
         <tr><td class="state-mini__aspect">토큰</td><td>+ <code>spacing-small (8)</code> (메시지↔버튼)</td></tr>
         <tr><td class="state-mini__aspect">노트</td><td>📝 사용자에겐 일반 안내 카피만. 디버깅 정보는 별도 모니터링 시스템에서 확인.</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ─── State 7: Help bottom sheet ─────────────────── -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Help · 도움말 bottom sheet</strong> 🆘 <small>info 아이콘 탭 시 노출 — 파트너 앱 일관 패턴</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="eam-appbar">
+                <div class="eam-appbar__title">신청관리</div>
+                <div class="eam-appbar__action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div>
+              </div>
+              <div class="eam-tabbar">
+                <div class="eam-tab eam-tab--active">대기중</div>
+                <div class="eam-tab">승인됨</div>
+                <div class="eam-tab">거절됨</div>
+              </div>
+              <div style="position:absolute;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:flex-end;z-index:10;">
+                <div style="background:var(--color-background);border-radius:16px 16px 0 0;width:100%;padding-bottom:8px;">
+                  <div style="width:36px;height:4px;background:var(--color-divider);border-radius:2px;margin:8px auto 0;"></div>
+                  <div style="font-size:14px;font-weight:700;color:var(--color-text-primary);padding:12px 16px 8px;">신청관리 가이드</div>
+                  <div style="font-size:11px;color:var(--color-text-secondary);padding:8px 16px;">📝 화면별 도움말 Q&amp;A 콘텐츠는 추후 별도 이슈로 정의 예정.</div>
+                  <div style="margin:8px 16px 0;background:var(--color-partner-primary);border-radius:12px;height:40px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:white;">확인</div>
+                </div>
+              </div>
+              <div class="eam-bottomnav">
+                <div class="eam-bottomnav__item"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l9 8h-3v9h-4v-6h-4v6H6v-9H3z"/></svg>홈</div>
+                <div class="eam-bottomnav__item eam-bottomnav__item--active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 12h8M8 17h5"/></svg>신청관리</div>
+                <div class="eam-bottomnav__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>체크인</div>
+                <div class="eam-bottomnav__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6"/></svg>정산</div>
+                <div class="eam-bottomnav__item"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>더보기</div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>AppBar의 info 아이콘 탭 → 화면 위 bottom sheet 슬라이드 업. 파트너 앱 전체 일관 패턴 (모든 주요 화면에서 info → 컨텍스트 도움말).</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            ① <strong>"확인" 버튼 탭</strong> — sheet dismiss, 원래 화면으로 복귀 (primary path).<br>
+            ② <strong>handle 드래그 다운 / scrim 탭</strong> — 동일하게 dismiss (gesture path · 보조).<br>
+            ③ <strong>sheet 내부 스크롤</strong> — 도움말 항목이 많을 때 세로 스크롤 (max-height 75% · scrollable body · CTA는 sheet 하단 고정).
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · 도움말 항목이 길어 max-height 초과 시 sheet 내부 스크롤 (scaffold body는 잠금).<br>
+            · keyboard가 올라오는 입력 시나리오는 본 sheet에 없음 — 입력 도구 X.<br>
+            · 다중 sheet 진입 (info 안에서 또 info 등) 금지 — sheet 위 sheet stacking 안 함.
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트 (제안)</td>
+          <td>
+            · <strong>MinglitHelpSheet</strong> (mds_core 신규 컴포넌트 후보) — 파트너 앱 일관 패턴화.<br>
+            · props: <code>title: String</code> · <code>sections: List&lt;HelpSection&gt;</code>.<br>
+            · 화면별 도움말 내용은 호출 측에서 정의 — sheet 컴포넌트는 chrome만 책임.<br>
+            · 진입: <code>showModalBottomSheet</code>(isScrollControlled · barrierColor · shape rounded top).
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            · scrim: rgba(0,0,0,0.45)<br>
+            · sheet bg <code>--color-background</code> · 상단 모서리 <code>radius-card</code><br>
+            · handle 36×4 · radius 2 · <code>--color-divider</code><br>
+            · header 16/700 primary · CTA "확인" — bottom sticky · height 48 · partner-primary filled · 15/700 white · margin medium<br>
+            · section title 14/700 primary · section body 13 secondary · line-height 1.55<br>
+            · max-height 75vh
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 화면별 sections 콘텐츠(도움말 Q&amp;A)는 추후 별도 이슈로 디자인 결정 예정. 파트너 앱 모든 화면이 동일 info 아이콘 → bottom sheet 패턴을 따른다.</td>
+        </tr>
       </tbody>
     </table>
   </section>
